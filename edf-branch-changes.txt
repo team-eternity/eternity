@@ -1,0 +1,419 @@
+===============================================================================
+This log contains a summary  of changes performed in the edf-branch to obtain
+fully additive processing of EDF lumps, additive logic for state definitions,
+and functional DECORATE state support. edf-branch spans SVN revisions from
+1014 to 1244.
+===============================================================================
+-------------------------------------------------------------------------------
+06/23/10
+
+DECORATE states are now fully functional and have been tested to an almost full
+extent (only a few features remain untried so far).
+
+Linux errors and warnings in edf-branch have been repaired in preparation for
+merger with trunk.
+
+Gez noticed that I hadn't allowed for non-specification of the action at the
+end of DECORATE states, but this turned out to be simple to fix with addition
+of a state transition from PSTATE_NEEDBRIGHTORACTION back to the core looping
+state, PSTATE_NEEDLABELORKWORSTATE, along with a call to the new subroutine
+PSWrapStates, which is now executed at all three places that a state 
+defintion can be terminated with an EOL token.
+
+Later on I discovered an error in the tokenizer that was leaving out '.'
+characters from tokens. This caused a Death.Fire state added to the DoomImpTest
+object for testing purposes to appear under the name DeathFire.
+
+I hoisted a call to M_QStrAtoi out of the state run-down loop in the parser
+state callback for PSTATE_NEEDSTATETICS, which was a minor efficiency booboo.
+
+Last of all, I created a separate e_dstate.c module and moved all DECORATE
+state parsing and processing code into that module and out of the now
+overgrown e_states.c.
+
+Visual C++ 6.0 project files have been updated to build edf-branch. The branch
+is now ready for merger with trunk. This is the termination of this log file,
+and this branch of independent development.
+
+-------------------------------------------------------------------------------
+06/22/10
+
+Significant work has been completed on the DECORATE parser, and it is now at
+an approximate 80% completion. Code is present to generate the full "DSO," or
+Decorate State Ouput object, which contains the following outputs:
+
+* A list of "edecstate_t" objects, which consist of a label string and a state
+  pointer. These are states which should be bound to the data structure that
+  owns the DECORATE state block. They may be either native states or metatable
+  states, and that determination will be made in the calling module.
+  
+* A list of "egoto_t" objects, which consist of a goto destination label and
+  a pointer to a state_t's "nextstate" field. These represent goto labels
+  which could not be resolved to state-block-local labels during DECORATE
+  parsing. These labels must be resolved by the calling module, as they refer
+  to states implicitly defined through native state fields or through mobjinfo
+  inheritance.
+  
+* A list of "ekillstate_t" objects, which consist of a simple label name. 
+  These represent states which should be removed or nullified in the context
+  of the object that owns the state block. These are generated when the "stop"
+  keyword is used immediately after a label.
+  
+No code to free the DSO object or other data structures generated during
+DECORATE state parsing is yet present.
+
+-------------------------------------------------------------------------------
+06/21/10
+
+Merged from trunk.
+
+-------------------------------------------------------------------------------
+06/02/10
+
+Merged from trunk. Completed DECORATE parsing for "principals," which are the
+numbers of various definition types that need to be allocated, as well as a
+clean simple list of "buffered state" objects that represent labels, states,
+and keywords in the order in which they were defined by the state block.
+
+I will be able to run down this buffered state list during a secondary parsing
+run to do the arbitrary look-forward required for state population, and the
+deferred transition required for label resolution.
+
+-------------------------------------------------------------------------------
+05/27/10
+
+Merged from trunk. Added \n's to all libConfuse error messages, carrying on
+similar work that was done in trunk.
+
+-------------------------------------------------------------------------------
+05/25/10
+
+Added support for boolean "flag" options to EDF, which set a boolean value to
+either true or false simply by existing in the file, or by being prefaced with
+a + or - depending on the cfg_opt_t entry's flags. This allows matching syntax
+for DECORATE booleans and flag fields. This syntax is not yet used for any EDF
+fields, but I will be changing that soon.
+
+-------------------------------------------------------------------------------
+05/22/10
+
+Merged from trunk.
+
+-------------------------------------------------------------------------------
+05/17/10
+
+edf-branch has been merged with the result of the merger between trunk and
+SoM's critical experimental branch which added support for tall textures,
+flat and wall texture interchangeability, etc. Only a few conflicts resulted
+in the branch, which I easily resolved.
+
+-------------------------------------------------------------------------------
+04/05/10 - 05/04/10
+
+Merges from trunk, but no additional progress has been made. A number of 
+problems in the processing of DECORATE states have caused me to repeatedly
+restart and abandon various approaches.
+
+-------------------------------------------------------------------------------
+04/04/10
+
+Defined E_ReallocStates, which attempts to resize the states[] pointer array
+intelligently based on the current size of states[] and the number of states
+that are being added. The logic is such that states[] can actually be larger
+than NUMSTATES - the extra state_t pointers are all nullified and shouldn't be
+accessed by any properly behaved code.
+
+Started work on DECORATE state label collection, and started writing the
+E_CreateDECORATEStates function.
+
+-------------------------------------------------------------------------------
+04/01/10
+
+Merged from trunk. States are now fully dynamic and additive.
+
+-------------------------------------------------------------------------------
+03/30/10
+
+Random sound lists were being leaked if the sound definitions were overwritten
+by newer EDF definitions of the same name.
+
+States now use the universal ehash_t data structure for hashing, and duplicate
+DeHackEd numbers are now allowed for states. The newest state seen with a given
+DeHackEd number "wins" that number, the same way that all other hashes are 
+handled in Eternity.
+
+-------------------------------------------------------------------------------
+03/29/10
+
+In a similar vein to the clearing of argument evaluation caching, I have 
+eliminated the caching of state lookups in all action functions.
+
+-------------------------------------------------------------------------------
+03/28/10
+
+Merged from trunk. Cached EDF argument evaluations are now cleared when EDFs
+are processed at runtime via runtime wad loading, to ensure that any name-to-
+number lookups they performed are re-evaluated in the face of altered EDF
+definitions.
+
+-------------------------------------------------------------------------------
+03/27/10
+
+I replaced Lee's state cycle detection mechanism in P_SetMobjState with a
+freelist-based solution which tracks the visited states in seenstate_t 
+structures instead of using giant NUMSTATES-sized arrays which would not be
+compatible with fully dynamic states. I believe this is ultimately a more
+efficient solution and would have made sense even in the absence of the current
+work.
+
+-------------------------------------------------------------------------------
+03/25/10
+
+Storage of sprite names in memory has been merged into the storage for the
+esprite_t objects, to avoid unnecessary increase in the amount of memory
+allocations.
+
+Fixed a bug with sprite definitions that would have caused any sprites defined
+within runtime-loaded EDF lumps to make the game exit with an error message
+referring to there being no spritenames defined via the spritenames array.
+
+The old binary TERTYPES lump, which was already deprecated and undocumented, is
+now obsoleted and will not be loaded in any fashion. It is no longer possible 
+to safely process it due to the way in which additive EDF processing works.
+
+I eliminated the redundant TRUE and FALSE defines used in d_deh.c while
+cleaning up some code in there that deals with sprite names, It has been 
+transitioned to use the engine-standard boolean enumeration typedef instead.
+
+In preparation for making states fully dynamic, I have added an oldaction field
+to state_t that stores the prior value of the state's action pointer when that
+pointer has been displaced via DeHackEd/BEX. This eliminates the runtime-fixed
+size deh_codeptrs array entirely.
+
+All use of NUMSTATES as a value meaning "state not found" has been replaced
+with use of the value -1 instead, as was previously done in trunk on the way to
+making sprites fully dynamic.
+
+-------------------------------------------------------------------------------
+03/24/10
+
+I moved the esprite_t structure into e_sprite.c from the header, as I don't
+anticipate that it should be needed externally at all (all external access to
+sprites is only concerned with the sprite name string itself).
+
+I made a lot of the include tracking code functions in e_edf static to that
+module, since they didn't end up being needed externally.
+
+All included EDF files and lumps will now be listed in the verbose log file at
+the head of the file, including the full path and SHA-1 hash of each data
+source.
+
+Support for parsing additional EDF definitions from lumps in wads loaded at
+runtime has been restored to full functionality.
+
+States have been modified so that they implicitly define any undefined sprite
+name that they reference, with use of the new E_ProcessSingleSprite function.
+
+-------------------------------------------------------------------------------
+03/23/10
+
+With completion of the core EDF restructuring project, it is now possible to
+begin work on revamping sprite handling. Sprite processing is being moved to
+the previously created but unused e_sprite.c module.
+
+With completion of dynamic sprites, the spritenames array in EDF will now only
+be used to define the sprite names which must be in a certain order: chiefly,
+the original DOOM sprite names. Other sprites will be definable within states
+implicitly, though this is not yet enabled within the state processing code.
+
+-------------------------------------------------------------------------------
+03/22/10
+
+Core EDF restructuring is complete with full consolidation of the parsing of
+root EDFs and independent EDF lumps into a single parsing pass followed by a
+single processing pass, accumulating all definitions into a single cfg_t object
+instead of using separate ones for the root and for each lump.
+
+All default fallback processing code in e_edf and in the other e_ modules has
+been fully removed.
+
+-------------------------------------------------------------------------------
+03/21/10
+
+Performed the first series of mergers from trunk to edf-branch in order to
+keep it up-to-date.
+
+I added support for data sources to the DWFILE IO abstraction, although this
+isn't currently used anywhere, and cannot currently be used by the EDF parser
+due to some limitations and assumptions it makes about files vs lumps.
+
+All the code being shared between cfg_parse and cfg_parselump has been merged
+into a new cfg_parse_dwfile function to avoid unnecessary duplication of logic
+being added there now.
+
+cfg_parselump has now been modified to accept a lumpnum parameter rather than
+doing its own W_GetNumForName operation, as it can no longer assume it is 
+dealing with the root lump of the hash chain for that lump name.
+
+I eliminated a potential double-free in the otherwise highly secure qstring
+module in M_QStrFree, so that I can call that function on a qstring without
+having to make sure it was actually allocated first.
+
+Started work on E_CheckRoot to support conditional inclusion and hashing of
+files through the root EDF (be it base/root.edf or an EDFROOT lump). As part
+of this I added a lexer file open callback mechanism to libConfuse. A function
+pointer is passed down through the cfg_t structure to the lexer, and the lexer
+will call that function any time it opens a file for processing within that
+cfg_t. The E_CheckRoot function, which will perform hashing and verification
+for the root files, is registered as the callback for all cfg_t's employed
+within EDF parsing.
+
+I have eliminated all separate options arrays used for parsing separate EDF
+lumps, as these are no longer needed under the new scheme which allows all
+definitions in any lump name. I have also removed all the arrays that supported
+"default fallbacks" parsing, as the notion of retroactively including new EDF
+modules into old broken EDFs that did not use stdinclude("root.edf") to get to
+the standard definitions is no longer supportable.
+
+I also created an E_CreateCfg function that takes responsibility for allocation
+and initialization of cfg_t structures for the core EDF parsing process.
+
+E_ParseEDFLump has been made fully recursive in order to enable additive 
+processing of independent EDF lumps, a major milestone for this branch.
+
+-------------------------------------------------------------------------------
+03/19/10
+
+Added a W_GetLumpNameChain function to replace several code segments throughout
+the engine which are doing a specific sequence of actions to get the start of
+the wad lump hash chain for a particular lump name, as this operation is going
+to be needed as part of recursive processing of EDF lumps.
+
+bex_include and include_prev are now deprecated functions. The former is 
+deprecated because it is preferential to include BEX as DEHACKED lumps inside
+wads, or to make reference to them via a GFS script, and the latter is 
+deprecated because it has been superceded by automatic recursive processing of
+all EDF lumps. include_prev is still syntactically recognized, but is actually
+a no-op function now aside from printing a deprecation warning to the verbose
+log file.
+
+Added E_FindLumpInclude function, and restricted EDFs to inclusion of lumps
+ONLY within the same physical wad file (or eventually other archive types).
+This is required in order to establish a well-defined oldest-to-newest parsing
+order when multiple EDF-bearing wads are loaded at one time.
+
+With this restriction, EDF loading functions as such:
+
+1. EDFROOT [oldest wad]
+    |
+    |- lumps included from this EDFROOT
+    |
+2. EDFROOT [other wads...]
+    |
+    |- lumps included from this EDFROOT
+    |
+N. EDFROOT [newest wad]
+    |
+    |- lumps included from this EDFROOT
+
+Without the restriction, what lump is included from what EDFROOT becomes 
+entirely arbitrary and will more than likely result in undefined situations
+(from an EDF coder's viewpoint) that simply cause the EDF processor to error 
+out complaining about missing definitions.
+
+Doing it this way provides the best, most predictable results. Independent
+EDF lumps which call include function in the same manner. This was discussed
+with several core users on IRC and all of them agreed that this was the best
+course of action.
+
+Changed some possibly undefined behavior in M_ExtractFileBase.
+
+I also fixed a serious potential memory corruption error caused by the call to
+M_AddDefaultExtension in W_AddFile. BOOM team was extremely lax with the use
+of strcat in this function. If all strings passed to W_AddFile do not have
+room for an additional ".wad" to be added to them if they're missing it, this
+would cause memory corruption, quite likely on the stack. This probably 
+should have been fixed in trunk instead, but so far it's never caused an
+error so I considered it low enough priority to just fix here.
+
+-------------------------------------------------------------------------------
+03/18/10
+
+Finished E_OpenAndCheckInclude, which opens the desired included file or lump,
+computes its SHA-1 checksum, and then compares that code against a cache of
+codes for previous data sources. If a match is found, the function silently 
+fails and the data source will not be included again. If no match is found, the
+new source is loaded as the current include for the lexer and is added to the
+cache of hashed data sources.
+
+Still needed is logic to do similar processing on files included as part of the
+root EDF.
+
+-------------------------------------------------------------------------------
+03/17/10
+
+I split cfg_lexer_include into several functions, including new functions
+cfg_lexer_open and cfg_lexer_mustopen to provide some separation between the
+actual opening of a file and verification that the file has been opened, since
+under the new processing system, EDF will ignore any files that are attempted
+for inclusion that it has already parsed, powered by storing SHA-1 hashes for
+each data source.
+
+Changed lexer_buffer_curfile into lexer_buffer_file, since the file it is now
+buffering may or may not become the current file being parsed.
+
+Fixed a very minor memory leak in E_BuildDefaultFn by making it use the newer
+M_StringAlloca function instead of a qstring.
+
+Added a lexer.h header because the number of externs from lexer.c being 
+declared at the top of confuse.c finally became unruly enough to require it.
+There were previously only two externs in this module, so I considered it
+unjustified before.
+
+With all of these changes in place, I was able to start work on the include
+tracking code that will keep track of what files and lumps have already been
+parsed into the EDF data hive using SHA-1 hash codes, and will reject any
+subsequent inclusions of those data sources. As a means toward this end,
+cfg_lexer_mustopen will now return the size of the data it has included in 
+the *len parameter if that parameter is non-NULL. This is needed so that the 
+size of the file can be sent to the m_hash routines.
+
+-------------------------------------------------------------------------------
+03/16/10
+
+I have eliminated the long redundant and unused caching of DWFILE pointers in
+the libConfuse lexer's include stack structure. I have modified D_OpenFile and
+D_OpenLump in the DWFILE abstraction to memset the DWFILE structure for safety.
+I also changed all uses of char * to the more type-size-agnostic byte * in the
+z_native module, though this really should have been done in trunk. Another
+change that should have been in trunk was changing Cardboard so that it does
+not store ints into the float openings array.
+
+-------------------------------------------------------------------------------
+03/15/10
+
+Kicked things off by performing the promised deprecation for use of stdinclude
+on any filename that does not contain "root.edf". This is in order to ensure
+backward and forward compatibility is maintained by EDF mods by forcing them
+not to assume anything about the presence or structure of any other EDF files
+in the base directory, which was previously allowed but discouraged.
+
+I removed special treatment of \f characters in the libConfuse lexer, since I
+really don't know what a \f even is, and it shouldn't be in an EDF file.
+
+I added the m_hash.c module which I wrote several months ago which provides a
+generic data hash structure that can be initialized to use one of several
+streaming hash algorithms - CRC-32, Adler32, MD5, and SHA-1 are supported.
+This code was originally written for EE's future zip-based savegame format,
+and will most likely still find use there.
+
+-------------------------------------------------------------------------------
+03/12/10
+
+Created edf-branch at SVN revision 1014 in order to work on transforming EDF to
+support fully additive loading logic, which is a prerequisite to support for
+DECORATE state syntax within thingtype blocks.
+
+===============================================================================
+EOF
+===============================================================================

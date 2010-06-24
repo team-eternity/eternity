@@ -77,8 +77,7 @@ void P_InitSwitchList(void)
    //jff 3/23/98 read the switch table from a predefined lump
 
    // haleyjd 08/29/09: run down the hash chain for SWITCHES
-   lump = w_GlobalDir.lumpinfo[W_LumpNameHash("SWITCHES") % 
-                               (unsigned int)w_GlobalDir.numlumps];   
+   lump = W_GetLumpNameChain("SWITCHES");
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
@@ -406,7 +405,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
       int (*linefunc)(line_t *line)=NULL;
 
       // check each range of generalized linedefs
-      if((unsigned int)line->special >= GenFloorBase)
+      if((unsigned)line->special >= GenFloorBase)
       {
          if(!thing->player)
          {
@@ -418,7 +417,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
             return false;                         // generalized types require tag
          linefunc = EV_DoGenFloor;
       }
-      else if((unsigned int)line->special >= GenCeilingBase)
+      else if((unsigned)line->special >= GenCeilingBase)
       {
          if(!thing->player)
          {
@@ -430,7 +429,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
             return false;                         // generalized types require tag
          linefunc = EV_DoGenCeiling;
       }
-      else if((unsigned int)line->special >= GenDoorBase)
+      else if((unsigned)line->special >= GenDoorBase)
       {
          if(!thing->player)
          {
@@ -444,7 +443,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
          genDoorThing = thing;
          linefunc = EV_DoGenDoor;
       }
-      else if((unsigned int)line->special >= GenLockedBase)
+      else if((unsigned)line->special >= GenLockedBase)
       {
          if(!thing->player)
             return false;   // monsters disallowed from unlocking doors
@@ -456,7 +455,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
          genDoorThing = thing;
          linefunc = EV_DoGenLockedDoor;
       }
-      else if((unsigned int)line->special >= GenLiftBase)
+      else if((unsigned)line->special >= GenLiftBase)
       {
          if(!thing->player)
          {
@@ -467,7 +466,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
             return false;                         // generalized types require tag
          linefunc = EV_DoGenLift;
       }
-      else if ((unsigned int)line->special >= GenStairsBase)
+      else if ((unsigned)line->special >= GenStairsBase)
       {
          if(!thing->player)
          {
@@ -478,7 +477,7 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
             return false;                         // generalized types require tag
          linefunc = EV_DoGenStairs;
       }
-      else if ((unsigned int)line->special >= GenCrusherBase)
+      else if ((unsigned)line->special >= GenCrusherBase)
       {
          if(!thing->player)
          {

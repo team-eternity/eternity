@@ -47,7 +47,9 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_sprite.h"
 #include "e_states.h"
+#include "e_dstate.h"
 #include "e_things.h"
 #include "e_sound.h"
 #include "e_mod.h"
@@ -84,6 +86,9 @@ int UnknownThingType;
 #define ITEM_TNG_XDEATHSTATE  "xdeathstate"
 #define ITEM_TNG_RAISESTATE   "raisestate"
 #define ITEM_TNG_CRASHSTATE   "crashstate"
+
+// DECORATE state block
+#define ITEM_TNG_STATES       "states"
 
 // Sounds
 #define ITEM_TNG_SEESOUND     "seesound"
@@ -404,6 +409,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_RAISESTATE,   "S_NULL",  CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_STATES,       0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_SEESOUND,     "none",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE                ), \
@@ -653,7 +659,7 @@ void E_CollectThings(cfg_t *tcfg)
       thing_namechains[i] = thing_dehchains[i] = NUMMOBJTYPES;
 
    // build hash tables
-   E_EDFLogPuts("\t* Building thing hash tables\n");
+   E_EDFLogPuts("\t\tBuilding thing hash tables\n");
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
@@ -661,6 +667,9 @@ void E_CollectThings(cfg_t *tcfg)
       cfg_t *thingcfg = cfg_getnsec(tcfg, EDF_SEC_THING, i);
       const char *name = cfg_title(thingcfg);
       int tempint;
+
+      // set index
+      mobjinfo[i].index = i;
 
       // verify length
       if(strlen(name) > 40)
@@ -752,7 +761,7 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 {
    int index;
 
-   if((index = E_StateNumForName(data)) == NUMSTATES)
+   if((index = E_StateNumForName(data)) < 0)
    {
       E_EDFLoggedErr(2, "E_ThingFrame: thing '%s': invalid %s '%s'\n",
                      mobjinfo[thingnum].name, fieldname, data);
@@ -1034,7 +1043,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          statenum = E_StateNumForName(statename);
 
          // unknown state? ignore
-         if(statenum == NUMSTATES)
+         if(statenum < 0)
             continue;
 
          state = states[statenum];
@@ -1063,6 +1072,211 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
          E_RemoveMetaState(mi, E_ModFieldName(base, mod));
       }
    }
+}
+
+//
+// E_IsMobjInfoDescendantOf
+//
+// Returns true if the given mobjinfo inherits from the given type by name.
+// Returns false otherwise. Self-identity is *not* considered inheritance.
+//
+boolean E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+{
+   mobjinfo_t *curmi = mi->parent;
+   int targettype = E_ThingNumForName(type);
+
+   while(curmi)
+   {
+      if(curmi->index == targettype)
+         return true;
+
+      // walk up the inheritance tree
+      curmi = curmi->parent;
+   }
+
+   return false;
+}
+
+//
+// E_splitTypeAndState
+//
+// haleyjd 06/22/10: Takes a single string containing a :: operator and returns
+// the tokens on either side of it. The string passed in src should be mutable.
+//
+// The pointers will not be modified if an error occurs.
+//
+static void E_splitTypeAndState(char *src, char **type, char **state)
+{
+   char *colon1, *colon2;
+
+   colon1 = strchr(src, ':');
+   colon2 = strrchr(src, ':');
+
+   if(!colon1 || !colon2)
+      return;
+
+   *colon1 = *colon2 = '\0';
+
+   *type  = src;
+   *state = colon2 + 1;
+}
+
+//
+// E_processDecorateGotos
+//
+// haleyjd 06/22/10: Deal with unresolved goto entries in the DECORATE
+// state object.
+//
+static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
+{
+   int i;
+
+   for(i = 0; i < dso->numgotos; ++i)
+   {
+      mobjinfo_t *type = NULL;
+      state_t *state;
+      statenum_t statenum;
+      char *statename = NULL;
+
+      // see if the label contains a colon, and if so, it may be an
+      // access to an inherited state
+      char *colon = strchr(dso->gotos[i].label, ':');
+
+      if(colon)
+      {
+         char *typestr = NULL;
+
+         E_splitTypeAndState(dso->gotos[i].label, &typestr, &statename);
+
+         if(!(typestr && statename))
+         {
+            // error, set to null state
+            *(dso->gotos[i].nextstate) = NullStateNum;
+            continue;
+         }
+
+         // if "super" this means find the state in the parent type;
+         // otherwise, check if the indicated type inherits from this one
+         if(!strcasecmp(typestr, "super") && mi->parent)
+            type = mi->parent;
+         else if(E_IsMobjInfoDescendantOf(mi, typestr))
+            type = &mobjinfo[E_GetThingNumForName(typestr)];
+
+      }
+      else
+      {
+         // otherwise this is a name to resolve within the scope of the local
+         // thingtype - it may be a state acquired through inheritance, for
+         // example, and is thus not defined within the thingtype's state block.
+         type = mi;
+         statename = dso->gotos[i].label;
+      }
+
+      if(!type)
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      // find the state in the proper type
+      if(!(state = E_GetStateForMobjInfo(type, statename)))
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      statenum = state->index + dso->gotos[i].offset;
+
+      if(statenum < 0 || statenum >= NUMSTATES)
+      {
+         // error; set to null state and continue
+         *(dso->gotos[i].nextstate) = NullStateNum;
+         continue;
+      }
+
+      // resolve the goto
+      *(dso->gotos[i].nextstate) = statenum;
+   }
+}
+
+//
+// E_processDecorateStates
+//
+// haleyjd 06/22/10: Add all labeled states from a DECORATE state block to the
+// given mobjinfo.
+//
+static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
+{
+   int i;
+
+   for(i = 0; i < dso->numstates; ++i)
+   {
+      int *nativefield;
+      
+      // first see if this is a native state
+      if((nativefield = E_GetNativeStateLoc(mi, dso->states[i].label)))
+         *nativefield = dso->states[i].state->index;
+      else
+      {
+         metastate_t *msnode;
+
+         // there is not a matching native field, so add the state as a 
+         // metastate
+         if((msnode = E_GetMetaState(mi, dso->states[i].label)))
+            msnode->state = dso->states[i].state;
+         else
+            E_AddMetaState(mi, dso->states[i].state, dso->states[i].label);
+      }
+   }
+}
+
+//
+// E_processKillStates
+//
+// haleyjd 06/22/10: Processes killstates (states to be removed) in the
+// DECORATE state block.
+//
+static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
+{
+   int i;
+
+   for(i = 0; i < dso->numkillstates; ++i)
+   {
+      int *nativefield;
+
+      // first see if this is a native state
+      if((nativefield = E_GetNativeStateLoc(mi, dso->killstates[i].killname)))
+         *nativefield = NullStateNum;
+      else
+         E_RemoveMetaState(mi, dso->killstates[i].killname);
+   }
+}
+
+//
+// E_ProcessDecorateStateList
+//
+// haleyjd 06/22/10: Processes the DECORATE state list in a thing
+//
+static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
+{
+   edecstateout_t *dso = E_ParseDecorateStates(str);
+
+   // first deal with any gotos that still need resolution
+   if(dso->numgotos)
+      E_processDecorateGotos(mi, dso);
+
+   // add all labeled states from the block to the mobjinfo
+   if(dso->numstates)
+      E_processDecorateStates(mi, dso);
+
+   // deal with kill states
+   if(dso->numkillstates)
+      E_processKillStates(mi, dso);
+
+   // free the DSO object
+   E_FreeDSO(dso);
 }
 
 //
@@ -1122,7 +1336,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       if(tlnum == -1)
       {
          if(cfg)
-            cfg_error(cfg, "bad translation lump '%s'", value);
+            cfg_error(cfg, "bad translation lump '%s'\n", value);
          return -1;
       }
          
@@ -1212,7 +1426,7 @@ static void E_CopyThing(int num, int pnum)
    char name[41];
    mobjinfo_t *this_mi;
    metatable_t *meta;
-   int dehnum, dehnext, namenext;
+   int dehnum, dehnext, namenext, index;
    
    this_mi = &mobjinfo[num];
 
@@ -1221,6 +1435,7 @@ static void E_CopyThing(int num, int pnum)
    dehnum     = this_mi->dehnum;
    dehnext    = this_mi->dehnext;
    namenext   = this_mi->namenext;
+   index      = this_mi->index;
    memcpy(name, this_mi->name, 41);
 
    // copy from source to destination
@@ -1244,6 +1459,7 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum   = dehnum;
    this_mi->dehnext  = dehnext;
    this_mi->namenext = namenext;
+   this_mi->index    = index;
    memcpy(this_mi->name, name, 41);
 
    // other fields not inherited:
@@ -1344,7 +1560,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          mobjinfo[i].flags3 = basicType->flags3;
 
          if(basicType->spawnstate &&
-            (tempint = E_StateNumForName(basicType->spawnstate)) != NUMSTATES)
+            (tempint = E_StateNumForName(basicType->spawnstate)) >= 0)
             mobjinfo[i].spawnstate = tempint;
          else if(!inherits) // don't init to default if the thingtype inherits
             mobjinfo[i].spawnstate = NullStateNum;
@@ -1856,6 +2072,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       }
    }
 
+   // haleyjd 06/22/10: Process DECORATE state block
+   if(cfg_size(thingsec, ITEM_TNG_STATES) > 0)
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_STATES);
+      E_ProcessDecorateStateList(&mobjinfo[i], tempstr);
+   }
+
    // output end message if processing a definition
    if(def)
       E_EDFLogPrintf("\t\tFinished thing %s(#%d)\n", mobjinfo[i].name, i);
@@ -1950,6 +2173,113 @@ void E_SetThingDefaultSprites(void)
       if(mobjinfo[i].defsprite == -1)
          mobjinfo[i].defsprite = states[mobjinfo[i].spawnstate]->sprite;
    }
+}
+
+//=============================================================================
+//
+// State finding routines for thing types
+//
+// These provide some glue between native and metastate fields.
+//
+
+//
+// DECORATE state labels that correspond to native states
+//
+static const char *nativeStateLabels[] =
+{
+   "Spawn",
+   "See",
+   "Melee",
+   "Missile",
+   "Pain",
+   "Death",
+   "XDeath",
+   "Raise",
+   "Crash"
+};
+
+//
+// Matching enumeration for above names
+//
+enum
+{
+   NSTATE_SPAWN,
+   NSTATE_SEE,
+   NSTATE_MELEE,
+   NSTATE_MISSILE,
+   NSTATE_PAIN,
+   NSTATE_DEATH,
+   NSTATE_XDEATH,
+   NSTATE_RAISE,
+   NSTATE_CRASH
+};
+
+#define NUMNATIVESTATES (sizeof(nativeStateLabels) / sizeof(const char *))
+
+//
+// E_GetNativeStateLoc
+//
+// Returns a pointer to an mobjinfo's native state field if the given name
+// is a match for that field's corresponding DECORATE label. Returns NULL
+// if the name is not a match for a native state field.
+//
+int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
+{
+   int nativenum = E_StrToNumLinear(nativeStateLabels, NUMNATIVESTATES, label);
+   int *ret = NULL;
+
+   switch(nativenum)
+   {
+   case NSTATE_SPAWN:   ret = &mi->spawnstate;   break;
+   case NSTATE_SEE:     ret = &mi->seestate;     break;
+   case NSTATE_MELEE:   ret = &mi->meleestate;   break;
+   case NSTATE_MISSILE: ret = &mi->missilestate; break;
+   case NSTATE_PAIN:    ret = &mi->painstate;    break;
+   case NSTATE_DEATH:   ret = &mi->deathstate;   break;
+   case NSTATE_XDEATH:  ret = &mi->xdeathstate;  break;
+   case NSTATE_RAISE:   ret = &mi->raisestate;   break;
+   case NSTATE_CRASH:   ret = &mi->crashstate;   break;
+   default:
+      break;
+   }
+
+   return ret;
+}
+
+//
+// E_GetStateForMobjInfo
+//
+// Retrieves any state for an mobjinfo, either native or metastate.
+// Returns NULL if no such state can be found. Note that the null state is
+// not considered a valid state.
+//
+state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
+{
+   metastate_t *ms;
+   state_t *ret = NULL;
+   int *nativefield = NULL;
+
+   // check metastates
+   if((ms = E_GetMetaState(mi, label)))
+      ret = ms->state;
+   else if((nativefield = E_GetNativeStateLoc(mi, label)))
+   {
+      // only if not S_NULL
+      if(*nativefield != NullStateNum)
+         ret = states[*nativefield];
+   }
+
+   return ret;
+}
+
+//
+// E_GetStateForMobj
+//
+// Convenience routine to call the above give an mobj_t.
+//
+state_t *E_GetStateForMobj(mobj_t *mo, const char *label)
+{
+   return E_GetStateForMobjInfo(mo->info, label);
 }
 
 // EOF

@@ -2380,7 +2380,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "dehacked", 8) &&
+      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "DEHACKED", 8) &&
          w_GlobalDir.lumpinfo[i]->li_namespace == ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
@@ -2389,9 +2389,7 @@ static void D_ProcessDehInWad(int i)
 static void D_ProcessDehInWads(void)
 {
    // haleyjd: start at the top of the hash chain
-   lumpinfo_t *root =
-      w_GlobalDir.lumpinfo[W_LumpNameHash("DEHACKED") % 
-                           (unsigned int)w_GlobalDir.numlumps];
+   lumpinfo_t *root = W_GetLumpNameChain("DEHACKED");
 
    D_ProcessDehInWad(root->index);
 }
@@ -3228,7 +3226,8 @@ static void D_DoomInit(void)
    startupmsg("D_CheckNetGame","Check netgame status.");
    D_CheckNetGame();
 
-   // haleyjd 04/10/03
+   // haleyjd 04/10/03: set coop gametype
+   // haleyjd 04/01/10: support -solo-net parameter
    if((netgame || M_CheckParm("-solo-net")) && GameType == gt_single)
    {
       GameType = DefaultGameType = gt_coop;
@@ -3484,7 +3483,7 @@ void D_DoomMain(void)
 void D_ReInitWadfiles(void)
 {
    R_FreeData();
-   E_ProcessEDFLumps(); // haleyjd 07/24/05: reproc. optional EDF lumps
+   E_ProcessNewEDF();   // haleyjd 03/24/10: process any new EDF lumps
    D_ProcessDEHQueue(); // haleyjd 09/12/03: run any queued DEHs
    R_Init();
    P_Init();

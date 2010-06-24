@@ -43,6 +43,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
 
 void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
+void E_UpdateSoundCache(void);
 
 // haleyjd: EDF ambience types
 enum
@@ -122,8 +123,6 @@ void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
 void    E_ProcessSndSeqs(cfg_t *cfg);
 void    E_ProcessAmbience(cfg_t *cfg);
 boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
-boolean E_NeedDefaultSounds(void);
-boolean E_NeedDefaultSequences(void);
 
 #define EDF_SEC_SOUND     "sound"
 #define EDF_SEC_SDELTA    "sounddelta"

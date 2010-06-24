@@ -1644,15 +1644,12 @@ void A_MntrFloorFire(mobj_t *actor)
 //
 void A_LichFire(mobj_t *actor)
 {
-   static int headfxType = -1, frameNum = -1;
+   int headfxType, frameNum;
    mobj_t *target, *baseFire, *fire;
    int i;
 
-   if(headfxType == -1)
-   {
-      headfxType = E_SafeThingType(MT_LICHFX3);
-      frameNum   = E_SafeState(S_LICHFX3_4);
-   }
+   headfxType = E_SafeThingType(MT_LICHFX3);
+   frameNum   = E_SafeState(S_LICHFX3_4);
 
    if(!(target = actor->target))
       return;
@@ -1864,10 +1861,7 @@ void A_LichIceImpact(mobj_t *actor)
 //
 void A_LichFireGrow(mobj_t *actor)
 {
-   static int frameNum = -1;
-
-   if(frameNum == -1)
-      frameNum = E_SafeState(S_LICHFX3_4);
+   int frameNum = E_SafeState(S_LICHFX3_4);
 
    actor->z += 9*FRACUNIT;
    
@@ -2003,7 +1997,7 @@ void A_ImpXDeath2(mobj_t *actor)
 //
 void A_ImpExplode(mobj_t *actor)
 {
-   static int fxType1 = -1, fxType2 = -1, stateNum = -1;
+   int fxType1, fxType2, stateNum;
    mobj_t *mo;
 
    // haleyjd 09/13/04: it's possible for an imp to enter its
@@ -2013,12 +2007,9 @@ void A_ImpExplode(mobj_t *actor)
 
    actor->flags &= ~MF_NOGRAVITY;
 
-   if(fxType1 == -1)
-   {
-      fxType1 = E_SafeThingType(MT_IMPCHUNK1);
-      fxType2 = E_SafeThingType(MT_IMPCHUNK2);
-      stateNum = E_SafeState(S_IMP_XCRASH1);
-   }
+   fxType1  = E_SafeThingType(MT_IMPCHUNK1);
+   fxType2  = E_SafeThingType(MT_IMPCHUNK2);
+   stateNum = E_SafeState(S_IMP_XCRASH1);
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, fxType1);
    mo->momx = P_SubRandom(pr_impcrash) << 10;
@@ -2811,7 +2802,7 @@ void A_HealthJump(mobj_t *mo)
    checkhealth = E_ArgAsInt(mo->state->args, 2, 0);
 
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
    
    // 08/02/04:
@@ -2877,7 +2868,7 @@ void A_CounterJump(mobj_t *mo)
    cnum      = E_ArgAsInt(mo->state->args, 3, 0);
    
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
@@ -2953,7 +2944,7 @@ void A_CounterSwitch(mobj_t *mo)
    counter = &(mo->counters[cnum]);
 
    // verify startstate
-   if(startstate == NUMSTATES)
+   if(startstate < 0)
       return;
 
    // verify last state is < NUMSTATES
@@ -3208,7 +3199,7 @@ void A_TargetJump(mobj_t *mo)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
       return;
    
    // 1) must be valid
@@ -3246,7 +3237,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) < 0)
          return;
 
       P_SetPsprite(player, player->curpsprite, statenum);
@@ -3302,7 +3293,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
          return;
       
       P_SetMobjState(mo, statenum);
@@ -3376,7 +3367,7 @@ void A_CheckPlayerDone(mobj_t *mo)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) == NUMSTATES)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
       return;
 
    if(!mo->player)
@@ -3536,7 +3527,7 @@ void A_WeaponCtrJump(mobj_t *mo)
    psprnum   = E_ArgAsKwd(pspr->state->args, 4, &psprkwds, 0);
    
    // validate state
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    // validate psprite number
@@ -3647,7 +3638,7 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    }
 
    // verify startstate
-   if(startstate == NUMSTATES)
+   if(startstate < 0)
       return;
 
    // verify last state is < NUMSTATES
@@ -3965,7 +3956,7 @@ void A_JumpIfNoAmmo(mobj_t *mo)
       weaponinfo_t *w = P_GetReadyWeapon(p);
 
       // validate state
-      if(statenum == NUMSTATES)
+      if(statenum < 0)
          return;
 
       if(w->ammo < NUMAMMO && p->ammo[w->ammo] < w->ammopershot)
@@ -4015,7 +4006,7 @@ void A_CheckReloadEx(mobj_t *mo)
    
 
    // validate state number
-   if(statenum == NUMSTATES)
+   if(statenum < 0)
       return;
 
    // validate psprite number

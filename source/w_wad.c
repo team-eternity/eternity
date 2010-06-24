@@ -115,6 +115,7 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
 //
 static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
 {
+   static int  source; // haleyjd 03/18/10
    wadinfo_t   header;
    lumpinfo_t* lump_p;
    unsigned    i;
@@ -123,9 +124,13 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    int         startlump;
    filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
    filelump_t  singleinfo;
-   char        *filename = strdup(name);
+   char        *filename;
    lumpinfo_t  *newlumps;
    boolean     isWad;     // haleyjd 05/23/04
+
+   // haleyjd 03/18/10: filename fix
+   M_StringAlloca(&filename, 2, 1, name, ".wad");
+   strcpy(filename, name);
 
    M_NormalizeSlashes(M_AddDefaultExtension(filename, ".wad"));  // killough 11/98
 
@@ -133,12 +138,11 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    if((handle = fopen(filename, "rb")) == NULL)
    {
       if(strlen(name) > 4 && !strcasecmp(name + strlen(name) - 4 , ".lmp" ))
-      {
-         free(filename);
          return false; // sf: no errors
-      }
+
       // killough 11/98: allow .lmp extension if none existed before
       M_NormalizeSlashes(M_AddDefaultExtension(strcpy(filename, name), ".lmp"));
+      
       if((handle = fopen(filename, "rb")) == NULL)
       {
          if(in_textmode)
@@ -146,7 +150,6 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
          else
          {
             C_Printf(FC_ERROR "Couldn't open %s\n", name);
-            free(filename);
             return true; // error
          }
       }
@@ -194,8 +197,6 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       
       dir->numlumps += header.numlumps;
    }
-
-   free(filename);           // killough 11/98
    
    // Fill in lumpinfo
    dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
@@ -219,13 +220,14 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
          iwadhandle = handle;
    }
   
-   for(i = startlump; i < (unsigned int)dir->numlumps; i++, lump_p++, fileinfo++)
+   for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
    {
       dir->lumpinfo[i] = lump_p;
       lump_p->type     = lump_direct; // haleyjd
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
+      lump_p->source   = source; // haleyjd
       
       lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
       lump_p->li_namespace = li_namespace;         // killough 4/17/98
@@ -233,6 +235,9 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
    }
+
+   // haleyjd: increment source
+   ++source;
    
    if(fileinfo2free)
       free(fileinfo2free); // killough
@@ -459,7 +464,7 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
   
-   for(i = 0; i < (unsigned int)dir->numlumps; i++)
+   for(i = 0; i < (unsigned)dir->numlumps; i++)
    {
       lump = dir->lumpinfo[i];
       
@@ -534,9 +539,9 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
 // Can be used for any 8-character names.
 // by Lee Killough
 //
-unsigned W_LumpNameHash(const char *s)
+unsigned int W_LumpNameHash(const char *s)
 {
-  unsigned hash;
+  unsigned int hash;
   (void) ((hash =        toupper(s[0]), s[1]) &&
           (hash = hash*3+toupper(s[1]), s[2]) &&
           (hash = hash*2+toupper(s[2]), s[3]) &&
@@ -575,7 +580,7 @@ int W_CheckNumForNameInDir(waddir_t *dir, const char *name, int li_namespace)
    // It has been tuned so that the average chain length never exceeds 2.
    
    register int i = dir->lumpinfo[W_LumpNameHash(name) % 
-                                  (unsigned int)dir->numlumps]->index;
+                                  (unsigned)dir->numlumps]->index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -631,6 +636,28 @@ int W_CheckNumForNameNSG(const char *name, int ns)
    return num;
 }
 
+//
+// W_GetLumpNameChainInDir
+//
+// haleyjd 03/18/10: routine for getting the lumpinfo hash chain for lumps of a
+// given name, to replace code segments doing this in several different places.
+//
+lumpinfo_t *W_GetLumpNameChainInDir(waddir_t *dir, const char *name)
+{
+   return dir->lumpinfo[W_LumpNameHash(name) % (unsigned int)dir->numlumps];
+}
+
+//
+// W_GetLumpNameChain
+//
+// haleyjd 03/18/10: convenience routine to do the above on the global wad
+// directory.
+//
+lumpinfo_t *W_GetLumpNameChain(const char *name)
+{
+   return W_GetLumpNameChainInDir(&w_GlobalDir, name);
+}
+
 
 //
 // W_InitLumpHash
@@ -650,7 +677,9 @@ void W_InitLumpHash(waddir_t *dir)
 
    for(i = 0; i < dir->numlumps; i++)
    {                                           // hash function:
-      int j = W_LumpNameHash(dir->lumpinfo[i]->name) % (unsigned int)dir->numlumps;
+      unsigned int j;
+
+      j = W_LumpNameHash(dir->lumpinfo[i]->name) % (unsigned int)dir->numlumps;
       dir->lumpinfo[i]->next = dir->lumpinfo[j]->index;     // Prepend to list
       dir->lumpinfo[j]->index = i;
    }
@@ -743,7 +772,7 @@ void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files)
    }
    
    if(!dir->numlumps)
-      I_Error("W_InitFiles: no files found\n");
+      I_Error("W_InitMultipleFiles: no files found\n");
    
    W_InitResources(dir);
 }
@@ -993,7 +1022,7 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest, size_t size)
 static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
 {
    // killough 1/31/98: predefined lump data
-   memcpy(dest, l->data, size);
+   memcpy(dest, (byte *)(l->data) + l->position, size);
 
    return size;
 }
@@ -1053,4 +1082,3 @@ static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
 // Improve hashing algorithm
 //
 //----------------------------------------------------------------------------
-

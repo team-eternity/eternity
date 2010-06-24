@@ -45,11 +45,11 @@
 char *D_Fgets(char *buf, size_t n, DWFILE *fp)
 {
    // If this is a real file, return regular fgets
-   if(!fp->lump)
+   if(fp->type == DWF_FILE)
       return fgets(buf, n, (FILE *) fp->inp);
    
    // If no more characters
-   if(!n || !*fp->inp || fp->size<=0)
+   if(!n || !*fp->inp || fp->size <= 0)
       return NULL;
   
    if(n == 1)
@@ -69,14 +69,15 @@ char *D_Fgets(char *buf, size_t n, DWFILE *fp)
 
 int D_Feof(DWFILE *fp)
 {
-   return !fp->lump ? feof((FILE *)fp->inp) : 
-                      !*fp->inp || fp->size <= 0;
+   return (fp->type == DWF_FILE) ? 
+             feof((FILE *)fp->inp) : !*fp->inp || fp->size <= 0;
 }
 
 int D_Fgetc(DWFILE *fp)
 {
-   return !fp->lump ? fgetc((FILE *) fp->inp) : fp->size > 0 ?
-      fp->size--, *fp->inp++ : EOF;
+   return (fp->type == DWF_FILE) ? 
+             fgetc((FILE *) fp->inp) : fp->size > 0 ?
+                fp->size--, *fp->inp++ : EOF;
 }
 
 
@@ -89,9 +90,9 @@ int D_Fgetc(DWFILE *fp)
 //
 int D_Ungetc(int c, DWFILE *fp)
 {
-   return !fp->lump ? ungetc(c, (FILE *)fp->inp) :
-              fp->size < fp->origsize ?
-                 fp->size++, *(--fp->inp) : EOF;
+   return (fp->type == DWF_FILE) ? 
+             ungetc(c, (FILE *)fp->inp) :
+                fp->size < fp->origsize ? fp->size++, *(--fp->inp) : EOF;
 }
 
 //
@@ -102,9 +103,10 @@ int D_Ungetc(int c, DWFILE *fp)
 //
 void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
 {
-   infile->inp  = (byte *)fopen(filename, mode);
-   infile->lump = NULL;
+   memset(infile, 0, sizeof(*infile));
+   infile->inp = (byte *)fopen(filename, mode);
    infile->lumpnum = -1;
+   infile->type = DWF_FILE;
 }
 
 //
@@ -116,10 +118,20 @@ void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
 void D_OpenLump(DWFILE *infile, int lumpnum)
 {
    // haleyjd 04/03/03: added origsize field for D_Ungetc
-
+   memset(infile, 0, sizeof(*infile));
    infile->size = infile->origsize = W_LumpLength(lumpnum);
    infile->inp = infile->lump = W_CacheLumpNum(lumpnum, PU_STATIC);
    infile->lumpnum = lumpnum;
+   infile->type = DWF_LUMP;
+}
+
+void D_OpenData(DWFILE *infile, char *data, int size)
+{
+   memset(infile, 0, sizeof(*infile));
+   infile->size = infile->origsize = size;
+   infile->inp = infile->data = data;
+   infile->lumpnum = -1;
+   infile->type = DWF_DATA;
 }
 
 //
@@ -133,16 +145,22 @@ void D_Fclose(DWFILE *dwfile)
    if(!D_IsOpen(dwfile))
       return;
 
-   if(dwfile->lump)
+   switch(dwfile->type)
    {
+   case DWF_LUMP:
       Z_ChangeTag(dwfile->lump, PU_CACHE);
-   }
-   else
-   {
+      break;
+   case DWF_DATA:
+      free(dwfile->data);
+      break;
+   case DWF_FILE:
       fclose((FILE *)dwfile->inp);
+      break;
+   default:
+      break;
    }
 
-   dwfile->inp = dwfile->lump = NULL;
+   dwfile->inp = dwfile->lump = dwfile->data = NULL;
 }
 
 //
@@ -152,7 +170,7 @@ void D_Fclose(DWFILE *dwfile)
 //
 size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 {
-   if(!file->lump)
+   if(file->type == DWF_FILE)
       return fread(dest, size, num, (FILE *)(file->inp));
    else
    {
@@ -178,9 +196,8 @@ size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file)
 //
 size_t D_FileLength(DWFILE *file)
 {
-   return 
-      !file->lump ? M_FileLength((FILE *)(file->inp)) :
-                    W_LumpLength(file->lumpnum);
+   return (file->type == DWF_FILE) ?
+             M_FileLength((FILE *)(file->inp)) : file->origsize;
 }
 
 // EOF

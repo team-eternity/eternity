@@ -45,7 +45,6 @@
 #define ITEM_FONT_CONS    "c_font"
 
 extern cfg_opt_t edf_font_opts[];
-boolean E_NeedDefaultFonts(void);
 void    E_ProcessFonts(cfg_t *);
 
 #endif

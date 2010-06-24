@@ -898,6 +898,43 @@ boolean S_CheckSoundPlaying(mobj_t *mo, sfxinfo_t *sfx)
    return false;
 }
 
+//
+// S_StopSounds
+//
+// Stops only sourced sounds, or all sounds if "killall" is true. This is called
+// on transitions between levels, when going into console gamestate, and when
+// resetting the state of EDF definitions.
+//
+void S_StopSounds(boolean killall)
+{
+   int cnum;
+   // kill all playing sounds at start of level
+   //  (trust me - a good idea)
+
+   // jff 1/22/98 skip sound init if sound not enabled
+   // haleyjd 08/29/07: kill only sourced sounds.
+   if(snd_card && !nosfxparm)
+      for(cnum = 0; cnum < numChannels; ++cnum)
+         if(channels[cnum].sfxinfo && (killall || channels[cnum].origin))
+            S_StopChannel(cnum);
+}
+
+//
+// S_StopLoopedSounds
+//
+// haleyjd 10/06/06: Looped sounds need to stop playing when the intermission
+// starts up, or else they'll play all the way til the next level.
+//
+void S_StopLoopedSounds(void)
+{
+   int cnum;
+
+   if(snd_card && !nosfxparm)
+      for(cnum = 0; cnum < numChannels; ++cnum)
+         if(channels[cnum].sfxinfo && channels[cnum].looping)
+            S_StopChannel(cnum);
+}
+
 void S_SetMusicVolume(int volume)
 {
    //jff 1/22/98 return if music is not enabled
@@ -1034,36 +1071,6 @@ void S_StopMusic(void)
    mus_playing = NULL;
 }
 
-void S_StopSounds(void)
-{
-   int cnum;
-   // kill all playing sounds at start of level
-   //  (trust me - a good idea)
-
-   // jff 1/22/98 skip sound init if sound not enabled
-   // haleyjd 08/29/07: kill only sourced sounds.
-   if(snd_card && !nosfxparm)
-      for(cnum = 0; cnum < numChannels; ++cnum)
-         if(channels[cnum].sfxinfo && channels[cnum].origin)
-            S_StopChannel(cnum);
-}
-
-//
-// S_StopLoopedSounds
-//
-// haleyjd 10/06/06: Looped sounds need to stop playing when the intermission
-// starts up, or else they'll play all the way til the next level.
-//
-void S_StopLoopedSounds(void)
-{
-   int cnum;
-
-   if(snd_card && !nosfxparm)
-      for(cnum = 0; cnum < numChannels; ++cnum)
-         if(channels[cnum].sfxinfo && channels[cnum].looping)
-            S_StopChannel(cnum);
-}
-
 //=============================================================================
 //
 // S_Start Music Handlers
@@ -1141,7 +1148,7 @@ void S_Start(void)
 {
    int mnum;
    
-   S_StopSounds();
+   S_StopSounds(false);
    
    //jff 1/22/98 return if music is not enabled
    if(!mus_card || nomusicparm)

@@ -384,16 +384,16 @@ void R_PushMasked(void)
    }
    else
    {
-      mstack[stacksize].firstds = mstack[stacksize-1].lastds;
+      mstack[stacksize].firstds     = mstack[stacksize-1].lastds;
       mstack[stacksize].firstsprite = mstack[stacksize-1].lastsprite;
    }
 
-   mstack[stacksize].lastds = ds_p - drawsegs;
+   mstack[stacksize].lastds     = ds_p - drawsegs;
    mstack[stacksize].lastsprite = num_vissprite;
 
-   memcpy(mstack[stacksize].ceilingclip, portaltop, MAX_SCREENWIDTH * sizeof(float));
-   memcpy(mstack[stacksize].floorclip, portalbottom, MAX_SCREENWIDTH * sizeof(float));
-   stacksize ++;
+   memcpy(mstack[stacksize].ceilingclip, portaltop,    MAX_SCREENWIDTH * sizeof(float));
+   memcpy(mstack[stacksize].floorclip,   portalbottom, MAX_SCREENWIDTH * sizeof(float));
+   stacksize++;
 }
 
 //
@@ -437,7 +437,7 @@ void R_DrawMaskedColumn(column_t *tcolumn)
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
-      column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
+      column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewheight)
@@ -445,8 +445,6 @@ void R_DrawMaskedColumn(column_t *tcolumn)
          column.source = (byte *)tcolumn + 3;
          column.texmid = basetexturemid - (tcolumn->topdelta << FRACBITS);
 
-         // Drawn by either R_DrawColumn
-         //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
       }
 

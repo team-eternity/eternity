@@ -74,6 +74,7 @@
 #include "z_zone.h"
 
 #include "Confuse/confuse.h"
+#include "Confuse/lexer.h"
 
 #include "w_wad.h"
 #include "i_system.h"
@@ -93,7 +94,9 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_args.h"
 #include "e_sound.h"
+#include "e_sprite.h"
 #include "e_string.h"
 #include "e_things.h"
 #include "e_states.h"
@@ -105,25 +108,22 @@
 
 // EDF Keywords used by features implemented in this module
 
-// Sprite names list
-#define SEC_SPRITE "spritenames"
-
 // Sprite variables
 #define ITEM_PLAYERSPRITE "playersprite"
-#define ITEM_BLANKSPRITE "blanksprite"
+#define ITEM_BLANKSPRITE  "blanksprite"
 
 // Sprite pick-up effects
-#define SEC_PICKUPFX "pickupitem"
+#define SEC_PICKUPFX  "pickupitem"
 #define ITEM_PICKUPFX "effect"
 
 // Cast call
-#define SEC_CAST "castinfo"
-#define ITEM_CAST_TYPE "type"
-#define ITEM_CAST_NAME "name"
-#define ITEM_CAST_SA   "stopattack"
-#define ITEM_CAST_SOUND "sound"
+#define SEC_CAST             "castinfo"
+#define ITEM_CAST_TYPE       "type"
+#define ITEM_CAST_NAME       "name"
+#define ITEM_CAST_SA         "stopattack"
+#define ITEM_CAST_SOUND      "sound"
 #define ITEM_CAST_SOUNDFRAME "frame"
-#define ITEM_CAST_SOUNDNAME "sfx"
+#define ITEM_CAST_SOUNDNAME  "sfx"
 
 // Cast order array
 #define SEC_CASTORDER "castorder"
@@ -214,26 +214,6 @@ const char *pickupnames[PFX_NUMFX] =
 // with size NUMSPRITES)
 int *pickupfx = NULL;
 
-// Hash tables
-//
-// Note:
-// For maximum efficiency, the number of chains in these hash tables
-// should be a prime number at least as large as the number of
-// elements to be contained in each respective table. Since definitions
-// can be added by the user, it is best to choose a number a bit larger
-// than necessary, which allows more of a buffer for user-defined types.
-
-// Sprite hashing
-#define NUMSPRCHAINS 257
-static int *sprchains = NULL;
-static int *sprnext = NULL;
-
-// prototype of libConfuse parser inclusion function
-extern int cfg_lexer_include(cfg_t *cfg, const char *filename, int data);
-
-// 02/09/05: prototype of custom source type query function
-extern int cfg_lexer_source_type(cfg_t *cfg);
-
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
 static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc, 
@@ -266,10 +246,12 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                            const char **argv);
 
+//=============================================================================
+//
 // EDF libConfuse option structures
+//
 
 // sprite-based pickup items
-
 static cfg_opt_t pickup_opts[] =
 {
    CFG_STR(ITEM_PICKUPFX, "PFX_NONE", CFGF_NONE),
@@ -293,260 +275,78 @@ static cfg_opt_t cast_opts[] =
    CFG_END()
 };
 
+//=============================================================================
 //
 // EDF Root Options
 //
 
+#define EDF_TSEC_FLAGS (CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE)
+#define EDF_NSEC_FLAGS (CFGF_MULTI | CFGF_NOCASE)
+
 static cfg_opt_t edf_opts[] =
 {
-   CFG_STR(SEC_SPRITE,        0,                 CFGF_LIST),
-   CFG_STR(ITEM_PLAYERSPRITE, "PLAY",            CFGF_NONE),
-   CFG_STR(ITEM_BLANKSPRITE,  "TNT1",            CFGF_NONE),
-   CFG_SEC(SEC_PICKUPFX,      pickup_opts,       CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_MOD,       edf_dmgtype_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FRAME,     edf_frame_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_THING,     edf_thing_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(SEC_CAST,          cast_opts,         CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_MENU,      edf_menu_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(SEC_CASTORDER,     0,                 CFGF_LIST),
-   CFG_STR(SEC_BOSSTYPES,     0,                 CFGF_LIST),
-   CFG_INT(SEC_BOSSPROBS,     0,                 CFGF_LIST), // schepe
-   CFG_SEC(EDF_SEC_FRMDELTA,  edf_fdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TNGDELTA,  edf_tdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_STRING,    edf_string_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_INT(ITEM_D2TITLETICS,  0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERPAUSE,   0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERFADE,   -1,                 CFGF_NONE),
-   CFG_INT_CB(ITEM_INTERTL,   0,                 CFGF_NONE, E_TranslucCB),
-   CFG_STR(ITEM_MN_EPISODE,   NULL,              CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_finalefont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   CFG_FUNC("include",        E_Include),
-   CFG_FUNC("lumpinclude",    E_LumpInclude),
-   CFG_FUNC("include_prev",   E_IncludePrev),
-   CFG_FUNC("stdinclude",     E_StdInclude),
-   CFG_FUNC("userinclude",    E_UserInclude),
-   CFG_FUNC("bexinclude",     bex_include),
-   CFG_FUNC("ifenabled",      edf_ifenabled),
-   CFG_FUNC("ifenabledany",   edf_ifenabledany),
-   CFG_FUNC("ifdisabled",     edf_ifdisabled),
-   CFG_FUNC("ifdisabledany",  edf_ifdisabledany),
-   CFG_FUNC("endif",          E_Endif),
-   CFG_FUNC("enable",         edf_enable),
-   CFG_FUNC("disable",        edf_disable),
+   CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
+   CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
+   CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
+   CFG_SEC(SEC_PICKUPFX,        pickup_opts,       EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SOUND,       edf_sound_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
+   CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TERDELTA,    edf_terdelta_opts, EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FLOOR,       edf_floor_opts,    EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_MENU,        edf_menu_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
+   CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
+   CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
+   CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
+   CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
+   CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
+   CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
+   CFG_INT_CB(ITEM_INTERTL,     0,                 CFGF_NONE, E_TranslucCB),
+   CFG_STR(ITEM_MN_EPISODE,     NULL,              CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_MENU,      "ee_menufont",     CFGF_NONE),
+   CFG_STR(ITEM_FONT_BMENU,     "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_NMENU,     "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_FINAL,     "ee_finalefont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTR,      "ee_smallfont",    CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
+   CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
+   CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
+   CFG_FUNC("include",          E_Include),
+   CFG_FUNC("lumpinclude",      E_LumpInclude),
+   CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED
+   CFG_FUNC("stdinclude",       E_StdInclude),
+   CFG_FUNC("userinclude",      E_UserInclude),
+   CFG_FUNC("bexinclude",       bex_include),      // DEPRECATED
+   CFG_FUNC("ifenabled",        edf_ifenabled),
+   CFG_FUNC("ifenabledany",     edf_ifenabledany),
+   CFG_FUNC("ifdisabled",       edf_ifdisabled),
+   CFG_FUNC("ifdisabledany",    edf_ifdisabledany),
+   CFG_FUNC("endif",            E_Endif),
+   CFG_FUNC("enable",           edf_enable),
+   CFG_FUNC("disable",          edf_disable),
    CFG_FUNC("includeifenabled", edf_includeifenabled),
-   CFG_FUNC("ifgametype",     edf_ifgametype),
-   CFG_FUNC("ifngametype",    edf_ifngametype),
+   CFG_FUNC("ifgametype",       edf_ifgametype),
+   CFG_FUNC("ifngametype",      edf_ifngametype),
    CFG_END()
 };
 
-// These EDF functions should be available in all defaults
-#define DEF_FUNCTIONS \
-   CFG_FUNC("include",       E_Include), \
-   CFG_FUNC("lumpinclude",   E_LumpInclude), \
-   CFG_FUNC("include_prev",  E_IncludePrev), \
-   CFG_FUNC("stdinclude",    E_StdInclude), \
-   CFG_FUNC("userinclude",   E_UserInclude), \
-   CFG_FUNC("bexinclude",    bex_include), \
-   CFG_FUNC("ifenabled",     edf_ifenabled), \
-   CFG_FUNC("ifenabledany",  edf_ifenabledany), \
-   CFG_FUNC("ifdisabled",    edf_ifdisabled), \
-   CFG_FUNC("ifdisabledany", edf_ifdisabledany), \
-   CFG_FUNC("endif",         E_Endif), \
-   CFG_FUNC("enable",        edf_enable), \
-   CFG_FUNC("disable",       edf_disable), \
-   CFG_FUNC("includeifenabled", edf_includeifenabled), \
-   CFG_FUNC("ifgametype",    edf_ifgametype), \
-   CFG_FUNC("ifngametype",   edf_ifngametype)
-
-// Default opt arrays -- these are for detection and correction
-// of missing required definitions. They rely on the documented
-// structure and presence of the default EDF files.
-
-// Options for stuff in sprites.edf only.
-static cfg_opt_t sprite_only_opts[] =
-{
-   CFG_STR(SEC_SPRITE,   0,           CFGF_LIST),
-   CFG_SEC(SEC_PICKUPFX, pickup_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in frames.edf only.
-static cfg_opt_t frame_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_FRAME, edf_frame_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in things.edf only.
-static cfg_opt_t thing_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_THING, edf_thing_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in cast.edf only
-static cfg_opt_t cast_only_opts[] =
-{
-   CFG_SEC(SEC_CAST,      cast_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(SEC_CASTORDER, 0,         CFGF_LIST),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in sounds.edf only
-static cfg_opt_t sound_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SOUND,  edf_sound_opts,  CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ, edf_sndseq_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in terrain.edf only
-static cfg_opt_t terrain_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in player.edf only
-static cfg_opt_t pclass_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_SKIN,      edf_skin_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_PCLASS,    edf_pclass_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in fonts.edf only
-static cfg_opt_t font_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   DEF_FUNCTIONS,
-   CFG_END()
-};
-
-
-//
-// Separate Lump opt Arrays. These are for lumps that can be parsed
-// on their own to add some types of definitions to EDF.
-//
-
-// These EDF functions should be available in all separate lumps.
-#define LUMP_FUNCTIONS \
-   CFG_FUNC("include",       E_Include), \
-   CFG_FUNC("lumpinclude",   E_LumpInclude), \
-   CFG_FUNC("include_prev",  E_IncludePrev), \
-   CFG_FUNC("stdinclude",    E_StdInclude), \
-   CFG_FUNC("userinclude",   E_UserInclude), \
-   CFG_FUNC("ifenabled",     edf_ifenabled), \
-   CFG_FUNC("ifenabledany",  edf_ifenabledany), \
-   CFG_FUNC("ifdisabled",    edf_ifdisabled), \
-   CFG_FUNC("ifdisabledany", edf_ifdisabledany), \
-   CFG_FUNC("endif",         E_Endif), \
-   CFG_FUNC("enable",        edf_enable), \
-   CFG_FUNC("disable",       edf_disable), \
-   CFG_FUNC("includeifenabled", edf_includeifenabled), \
-   CFG_FUNC("ifgametype",    edf_ifgametype), \
-   CFG_FUNC("ifngametype",   edf_ifngametype)
-
-
-// Options for stuff in ESTRINGS lump
-static cfg_opt_t string_only_opts[] =
-{
-   CFG_SEC(EDF_SEC_STRING, edf_string_opts, CFGF_MULTI|CFGF_TITLE|CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in ETERRAIN lump
-static cfg_opt_t terrain_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_SPLASH,    edf_splash_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERRAIN,   edf_terrn_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_TERDELTA,  edf_terdelta_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_FLOOR,     edf_floor_opts,    CFGF_MULTI | CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in EMENUS lump
-static cfg_opt_t menu_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_MENU,    edf_menu_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_MN_EPISODE, NULL,          CFGF_NONE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in ESNDSEQ and ESNDINFO lumps
-static cfg_opt_t sndseq_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_SOUND,     edf_sound_opts,    CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SDELTA,    edf_sdelta_opts,   CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_AMBIENCE,  edf_ambience_opts, CFGF_MULTI | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_SNDSEQ,    edf_sndseq_opts,   CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_ENVIROMGR, edf_seqmgr_opts,   CFGF_NOCASE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
-// Options for stuff in EFONTS lump
-static cfg_opt_t font_lump_opts[] =
-{
-   CFG_SEC(EDF_SEC_FONT,      edf_font_opts,     CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_HUD,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,    "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,    "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,   "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,    "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,   "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,  "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,    "ee_consolefont",  CFGF_NONE),
-   LUMP_FUNCTIONS,
-   CFG_END()
-};
-
+//=============================================================================
 //
 // Error Reporting and Logging
 //
@@ -660,6 +460,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
    I_Error("%s", msgbuffer);
 }
 
+//=============================================================================
 //
 // EDF-Specific Callback Functions
 //
@@ -704,24 +505,27 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    char *filename = NULL;
    size_t len;
 
+   // haleyjd 03/18/10: deprecation warning
+   E_EDFLogPuts("Warning: bexinclude is deprecated. Please use a GFS or DEHACKED lump instead.\n");
+
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to bexinclude()");
+      cfg_error(cfg, "wrong number of args to bexinclude()\n");
       return 1;
    }
    if(!cfg->filename)
    {
-      cfg_error(cfg, "bexinclude: cfg_t filename is undefined");
+      cfg_error(cfg, "bexinclude: cfg_t filename is undefined\n");
       return 1;
    }
    if(cfg_lexer_source_type(cfg) >= 0)
    {
-      cfg_error(cfg, "bexinclude: cannot call from a wad lump");
+      cfg_error(cfg, "bexinclude: cannot call from a wad lump\n");
       return 1;
    }
 
-   currentpath = Z_Alloca(strlen(cfg->filename));
-   M_GetFilePath(cfg->filename, currentpath, strlen(currentpath) + 1);
+   currentpath = Z_Alloca(strlen(cfg->filename) + 1);
+   M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
    len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
       
@@ -734,6 +538,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0;
 }
 
+//=============================================================================
 //
 // "Enables" code
 //
@@ -812,7 +617,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifenabled()");
+      cfg_error(cfg, "wrong number of args to ifenabled()\n");
       return 1;
    }
 
@@ -820,7 +625,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -855,7 +660,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifenabled()");
+      cfg_error(cfg, "wrong number of args to ifenabledany()\n");
       return 1;
    }
 
@@ -863,7 +668,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -900,7 +705,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifdisabled()");
+      cfg_error(cfg, "wrong number of args to ifdisabled()\n");
       return 1;
    }
 
@@ -908,7 +713,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -941,7 +746,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifdisabledany()");
+      cfg_error(cfg, "wrong number of args to ifdisabledany()\n");
       return 1;
    }
 
@@ -949,7 +754,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -981,13 +786,13 @@ static int edf_enable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to enable()");
+      cfg_error(cfg, "wrong number of args to enable()\n");
       return 1;
    }
 
    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
    {
-      cfg_error(cfg, "unknown enable value '%s'", argv[0]);
+      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
       return 1;
    }
 
@@ -1007,13 +812,13 @@ static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc != 1)
    {
-      cfg_error(cfg, "wrong number of args to disable()");
+      cfg_error(cfg, "wrong number of args to disable()\n");
       return 1;
    }
 
    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
    {
-      cfg_error(cfg, "unknown enable value '%s'", argv[0]);
+      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
       return 1;
    }
 
@@ -1041,7 +846,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 2)
    {
-      cfg_error(cfg, "wrong number of args to includeifenabled()");
+      cfg_error(cfg, "wrong number of args to includeifenabled()\n");
       return 1;
    }
 
@@ -1049,7 +854,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
    {
       if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
       {
-         cfg_error(cfg, "invalid enable value '%s'", argv[i]);
+         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
          return 1;
       }
 
@@ -1068,8 +873,9 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 }
 
 
+//=============================================================================
 //
-// Game type functions
+// Game Type Functions
 //
 // haleyjd 09/06/05:
 // These are for things which must vary strictly on game type and not 
@@ -1096,7 +902,7 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifgametype()");
+      cfg_error(cfg, "wrong number of args to ifgametype()\n");
       return 1;
    }
 
@@ -1134,7 +940,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    if(argc < 1)
    {
-      cfg_error(cfg, "wrong number of args to ifngametype()");
+      cfg_error(cfg, "wrong number of args to ifngametype()\n");
       return 1;
    }
 
@@ -1159,24 +965,41 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0;
 }
 
+//=============================================================================
+//
+// EDF Parsing Functions
+//
 
 //
-// EDF processing routines, mostly in order of execution in E_ProcessEDF
+// E_CreateCfg
 //
+// haleyjd 03/21/10: Separated from E_ParseEDF[File|Lump]. Creates and 
+// initializes a libConfuse cfg_t object for use by EDF. All definitions
+// are now accumulated into this singular cfg_t, as opposed to being
+// merged from separately allocated ones for secondary EDF sources such
+// as wad lumps.
+//
+static cfg_t *E_CreateCfg(cfg_opt_t *opts)
+{
+   cfg_t *cfg;
+
+   E_EDFLogPuts("Creating global cfg_t object\n");
+
+   cfg = cfg_init(opts, CFGF_NOCASE);
+   cfg_set_error_function(cfg, edf_error);
+   cfg_set_lexer_callback(cfg, E_CheckRoot);
+
+   return cfg;
+}
 
 //
 // E_ParseEDFFile
 //
-// Initializes a libConfuse cfg object, and then loads and parses
-// the requested EDF file. Returns a pointer to the cfg object.
+// Parses the specified file.
 //
-static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
+static void E_ParseEDFFile(cfg_t *cfg, const char *filename)
 {
    int err;
-   cfg_t *cfg;
-
-   cfg = cfg_init(opts, CFGF_NOCASE);
-   cfg_set_error_function(cfg, edf_error);
 
    if((err = cfg_parse(cfg, filename)))
    {
@@ -1184,325 +1007,111 @@ static cfg_t *E_ParseEDFFile(const char *filename, cfg_opt_t *opts)
          "E_ParseEDFFile: failed to parse %s (code %d)\n",
          filename, err);
    }
+}
 
-   return cfg;
+//
+// E_ParseLumpRecursive
+//
+// haleyjd 03/21/10: helper routine for E_ParseEDFLump.
+// Recursively descends the lump hash chain.
+//
+static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
+{
+   if(ln >= 0) // terminal case - lumpnum is -1
+   {
+      // recurse on next item
+      E_ParseLumpRecursive(cfg, name, w_GlobalDir.lumpinfo[ln]->next);
+
+      // handle this lump
+      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) && // name match
+         w_GlobalDir.lumpinfo[ln]->li_namespace == ns_global)     // is global
+      {
+         int err;
+
+         // try to parse it
+         if((err = cfg_parselump(cfg, name, ln)))
+         {
+            E_EDFLoggedErr(1, 
+               "E_ParseEDFLump: failed to parse EDF lump %s (#%d, code %d)\n",
+               name, ln, err);
+         }
+      }
+   }
 }
 
 //
 // E_ParseEDFLump
 //
-// Initializes a libConfuse cfg object, and then loads and parses
-// the requested EDF lump. Returns a pointer to the cfg object.
+// Parses the specified lump. All lumps of the given name will be parsed
+// recursively from oldest to newest.
 //
-static cfg_t *E_ParseEDFLump(const char *lumpname, cfg_opt_t *opts)
+static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 {
-   int err;
-   cfg_t *cfg;
+   lumpinfo_t *root;
 
-   cfg = cfg_init(opts, CFGF_NOCASE);
-   cfg_set_error_function(cfg, edf_error);
+   // make sure there is at least one lump before starting recursive parsing
+   if(W_CheckNumForName(lumpname) < 0)
+      E_EDFLoggedErr(1, "E_ParseEDFLump: lump %s not found\n", lumpname);
 
-   if((err = cfg_parselump(cfg, lumpname)))
-   {
-      E_EDFLoggedErr(1, 
-         "E_ParseEDFLump: failed to parse EDF lump %s (code %d)\n",
-         lumpname, err);
-   }
+   // get root of the hash chain for the indicated name
+   root = W_GetLumpNameChain(lumpname);
 
-   return cfg;
+   // parse all lumps of this name recursively in last-to-first order
+   E_ParseLumpRecursive(cfg, lumpname, root->index);
 }
 
 //
 // E_ParseEDFLumpOptional
 //
 // Calls the function above, but checks to make sure the lump exists
-// first so that an error will not occur. Returns NULL if the lump
-// wasn't found, so you must check the return value before using it.
+// first so that an error will not occur. Returns immediately if the 
+// lump wasn't found.
 //
-static cfg_t *E_ParseEDFLumpOptional(const char *lumpname, cfg_opt_t *opts)
+static boolean E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
 {
+   // check first and return without an error
    if(W_CheckNumForName(lumpname) == -1)
-      return NULL;
+      return false;
 
-   return E_ParseEDFLump(lumpname, opts);
+   E_ParseEDFLump(cfg, lumpname);
+
+   return true;
 }
 
 //
-// E_ProcessStringLump
+// Independent EDF Lump Names
 //
-// Parses the ESTRINGS lump, which may optionally include the next
-// ESTRINGS lump down the chain by using the include_prev function.
-// This allows cascading behavior to be optional at the discretion
-// of the EDF author.
-//
-static void E_ProcessStringLump(void)
+static const char *edf_lumpnames[] =
 {
-   cfg_t *cfg;
-
-   E_EDFLogPuts("\t* Parsing ESTRINGS lump...\n");
-   
-   if(!(cfg = E_ParseEDFLumpOptional("ESTRINGS", string_only_opts)))
-   {
-      E_EDFLogPuts("\t\tNo ESTRINGS lump found\n");
-      return;
-   }
-
-   E_ProcessStrings(cfg);
-
-   cfg_free(cfg);
-}
+   "ESTRINGS",
+   "ETERRAIN",
+   "EMENUS",
+   "ESNDSEQ",
+   "ESNDINFO",
+   "EFONTS",
+   NULL
+};
 
 //
-// E_ProcessTerrainLump
+// E_ParseIndividualLumps
 //
-// Parses the ETERRAIN lump, which may optionally include the next
-// ETERRAIN lump down the chain by using the include_prev function.
-// This allows cascading behavior to be optional at the discretion
-// of the EDF author.
+// haleyjd 03/21/10: consolidated function to handle the parsing of all
+// independent EDF lumps.
 //
-static void E_ProcessTerrainLump(void)
+static void E_ParseIndividualLumps(cfg_t *cfg)
 {
-   cfg_t *cfg;
+   const char *lumpname;
+   int i = 0;
 
-   E_EDFLogPuts("\t* Parsing ETERRAIN lump...\n");
-   
-   if(!(cfg = E_ParseEDFLumpOptional("ETERRAIN", terrain_lump_opts)))
+   while((lumpname = edf_lumpnames[i++]))
    {
-      E_EDFLogPuts("\t\tNo ETERRAIN lump found.\n");
-      return;
+      E_EDFLogPrintf("\t* Parsing %s lump", lumpname);
+
+      if(!E_ParseEDFLumpOptional(cfg, lumpname))
+         E_EDFLogPuts(" - not found, skipping.\n");
+      else
+         E_EDFLogPuts("\n");
    }
-
-   E_ProcessTerrainTypes(cfg);
-
-   cfg_free(cfg);
-}
-
-
-//
-// E_ProcessMenuLump
-//
-// Parses the EMENUS lumps, which may optionally include the next
-// EMENUS lump down the chain by using the include_prev function.
-// This allows cascading behavior to be optional at the discretion
-// of the EDF author.
-//
-static void E_ProcessMenuLump(void)
-{
-   cfg_t *cfg;
-
-   E_EDFLogPuts("\t* Parsing EMENUS lump...\n");
-
-   if(!(cfg = E_ParseEDFLumpOptional("EMENUS", menu_lump_opts)))
-   {
-      E_EDFLogPuts("\t\tNo EMENUS lump found.\n");
-      return;
-   }
-
-   MN_ProcessMenus(cfg);
-
-   cfg_free(cfg);
-}
-
-//
-// E_ProcessSoundLumps
-//
-// Parses the ESNDSEQ and ESNDINFO lumps, which may optionally include
-// the next lumps on their respective chains. These lumps may both include
-// any type of sound-related sections.
-//
-static void E_ProcessSoundLumps(void)
-{
-   cfg_t *cfg;
-
-   E_EDFLogPuts("\t* Parsing ESNDSEQ lump...\n");
-
-   if(!(cfg = E_ParseEDFLumpOptional("ESNDSEQ", sndseq_lump_opts)))
-      E_EDFLogPuts("\t\tNo ESNDSEQ lump found.\n");
-   else
-   {
-      E_ProcessSounds(cfg);
-      E_ProcessSoundDeltas(cfg, true);
-      E_ProcessAmbience(cfg);
-      E_ProcessSndSeqs(cfg);
-      cfg_free(cfg);
-   }
-
-   E_EDFLogPuts("\t* Parsing ESNDINFO lump...\n");
-
-   if(!(cfg = E_ParseEDFLumpOptional("ESNDINFO", sndseq_lump_opts)))
-      E_EDFLogPuts("\t\tNo ESNDINFO lump found.\n");
-   else
-   {
-      E_ProcessSounds(cfg);
-      E_ProcessSoundDeltas(cfg, true);
-      E_ProcessAmbience(cfg);
-      E_ProcessSndSeqs(cfg);
-      cfg_free(cfg);
-   }
-}
-
-//
-// E_ProcessFontLump
-//
-// Loads and processes the EFONTS lump.
-//
-void E_ProcessFontLump(void)
-{
-   cfg_t *cfg;
-
-   E_EDFLogPuts("\t* Parsing EFONTS lump...\n");
-
-   if(!(cfg = E_ParseEDFLumpOptional("EFONTS", font_lump_opts)))
-      E_EDFLogPuts("\t\tNo EFONTS lump found.\n");
-   else
-   {
-      E_ProcessFonts(cfg);
-      cfg_free(cfg);
-   }
-}
-
-//
-// E_TryDefaultTerrain
-//
-// Loads the default terrain.edf as a last-chance default when zero
-// splash, terrain, and floor objects have been defined.
-//
-void E_TryDefaultTerrain(void)
-{
-   cfg_t *tcfg;
-   const char *tfn;
-
-   E_EDFLogPuts("\t\tAttempting to load default terrain.edf\n");
-
-   tfn  = E_BuildDefaultFn("terrain.edf");
-   tcfg = E_ParseEDFFile(tfn, terrain_only_opts);
-
-   E_ProcessTerrainTypes(tcfg);
-
-   // free the temporary cfg
-   cfg_free(tcfg);
-}
-
-// These are needed by E_ProcessSprites:
-static void E_TryDefaultSprites(void);
-static void E_ProcessItems(cfg_t *);
-
-int E_SpriteNumForName(const char *name);
-
-//
-// E_ProcessSprites
-//
-// Sets NUMSPRITES, allocates sprnames, sprchains, and sprnext,
-// initializes the sprite hash table, and reads in all sprite names,
-// adding each to the hash table as it is read.
-//
-static void E_ProcessSprites(cfg_t *cfg)
-{
-   char *spritestr;
-   int i;
-
-   E_EDFLogPuts("\t* Processing sprites\n");
-
-   // set NUMSPRITES and allocate tables
-   NUMSPRITES = cfg_size(cfg, SEC_SPRITE);
-
-   E_EDFLogPrintf("\t\t%d sprite name(s) defined\n", NUMSPRITES);
-
-   // at least one sprite is required -- if zero, try the defaults
-   if(!NUMSPRITES)
-   {
-      E_TryDefaultSprites();
-      return;
-   }
-
-   // 10/17/03: allocate a single sprite string instead of a bunch
-   // of separate ones to save tons of memory and some time
-   spritestr = Z_Calloc(NUMSPRITES, 8, PU_STATIC, 0);
-
-   // allocate with size+1 for the NULL terminator
-   sprnames  = Z_Malloc((NUMSPRITES + 1) * sizeof(char *),PU_STATIC,0);
-   sprchains = Z_Malloc(NUMSPRCHAINS * sizeof(int),PU_STATIC,0);
-   sprnext   = Z_Malloc((NUMSPRITES + 1) * sizeof(int),PU_STATIC,0);
-
-   // initialize the sprite hash table
-   for(i = 0; i < NUMSPRCHAINS; ++i)
-      sprchains[i] = -1;
-   for(i = 0; i < NUMSPRITES + 1; ++i)
-      sprnext[i] = -1;
-
-   for(i = 0; i < NUMSPRITES; ++i)
-   {
-      unsigned int key;
-      // read in all sprite names
-      const char *sprname = cfg_getnstr(cfg, SEC_SPRITE, i);
-
-      if(strlen(sprname) != 4)
-      {
-         E_EDFLoggedErr(2, 
-            "E_ProcessSprites: invalid sprite mnemonic '%s'\n", sprname);
-      }
-
-      // initialize sprnames[i] to point into the single string
-      // allocation above, then copy the EDF value into that location
-      sprnames[i] = spritestr + i * 8;
-      
-      strncpy(sprnames[i], sprname, 4);
-      
-      // build sprite name hash table
-      key = D_HashTableKey(sprnames[i]) % NUMSPRCHAINS;
-      sprnext[i] = sprchains[key];
-      sprchains[key] = i;
-   }
-
-   // set the pointer at index NUMSPRITES to NULL (used by the
-   // renderer when it iterates over the sprites)
-   sprnames[NUMSPRITES] = NULL;
-
-   E_EDFLogPrintf("\t\tFirst sprite = %s\n\t\tLast sprite = %s\n",
-                  sprnames[0], sprnames[NUMSPRITES-1]);
-
-   // haleyjd: call this from here now so that if the default
-   // sprites.edf is loaded, these options will come from it
-
-   // process sprite-related pickup item effects
-   E_ProcessItems(cfg);
-}
-
-//
-// E_TryDefaultSprites
-//
-// When there are zero sprite definitions, this function will
-// try to load and parse the default sprites.edf module using
-// options limited to the items in that file. It will then
-// test the number of sprites again. If it's still zero, it's
-// a fatal error. Otherwise, it calls E_ProcessSprites again
-// to set the new sprites.
-//
-static void E_TryDefaultSprites(void)
-{
-   cfg_t *sprcfg;
-   const char *sprfn;
-
-   E_EDFLogPuts("\t\tAttempting to load default sprites.edf\n");
-
-   sprfn = E_BuildDefaultFn("sprites.edf");
-
-   sprcfg = E_ParseEDFFile(sprfn, sprite_only_opts);
-
-   // Test NUMSPRITES again -- if it's still zero, fatal error time.
-   NUMSPRITES = cfg_size(sprcfg, SEC_SPRITE);
-
-   if(!NUMSPRITES)
-      E_EDFLoggedErr(2, "E_TryDefaultSprites: missing default sprites.\n");
-
-   // call E_ProcessSprites again (note this cannot cause another
-   // recursive call to this function, since we verified that 
-   // NUMSPRITES is not zero).
-
-   E_ProcessSprites(sprcfg);
-
-   // free the temporary cfg
-   cfg_free(sprcfg);
 }
 
 //
@@ -1591,44 +1200,6 @@ static void E_ProcessItems(cfg_t *cfg)
    }
 }
 
-static void E_AllocSounds(cfg_t *cfg);
-
-//
-// E_TryDefaultSounds
-//
-// Tries to load the default sounds.edf file.
-//
-static void E_TryDefaultSounds(void)
-{
-   cfg_t *soundcfg;
-   const char *soundfn;
-   int numsfx;
-
-   E_EDFLogPuts("\t\tAttempting to load default sounds.edf\n");
-
-   soundfn = E_BuildDefaultFn("sounds.edf");
-
-   soundcfg = E_ParseEDFFile(soundfn, sound_only_opts);
-
-   numsfx = cfg_size(soundcfg, EDF_SEC_SOUND);
-
-   if(E_NeedDefaultSounds())
-   {
-      if(!numsfx)
-         E_EDFLoggedErr(2, "E_TryDefaultSounds: missing default sounds.\n");
-
-      E_AllocSounds(soundcfg);
-   }
-
-   // haleyjd 04/13/08: Though no sequences are required, if there are none
-   // defined, we should parse sounds.edf for any that are defined there.
-   // This is for compatibility with older mods predating sequences.
-   if(E_NeedDefaultSequences())
-      E_ProcessSndSeqs(soundcfg);
-
-   cfg_free(soundcfg);
-}
-
 // haleyjd 04/13/08: this replaces S_sfx[0].
 sfxinfo_t NullSound;
 
@@ -1645,8 +1216,7 @@ static void E_AllocSounds(cfg_t *cfg)
    strcpy(NullSound.name,     "none");
    strcpy(NullSound.mnemonic, "none");
 
-   // 08/10/05: must call this from here now, so that defaults
-   // can kick in when no sounds exist
+   // 08/10/05: must call this from here now
 
    E_ProcessSounds(cfg); // see e_sounds.c
 }
@@ -1657,67 +1227,10 @@ static void E_AllocSounds(cfg_t *cfg)
 // Pre-creates and hashes by name the states and things, for purpose 
 // of mutual and forward references.
 //
-// Note: scfg and tcfg may or may not point to the same cfg_t, since
-// E_ProcessStatesAndThings now loads defaults from the standard EDF
-// files when the number of one or both types is zero.
-//
-static void E_CollectNames(cfg_t *scfg, cfg_t *tcfg)
+static void E_CollectNames(cfg_t *cfg)
 {
-   E_EDFLogPuts("\t* Allocating states and things\n");
-
-   E_EDFLogPrintf("\t\tNUMSTATES = %d, NUMMOBJTYPES = %d\n",
-                  NUMSTATES, NUMMOBJTYPES);
-
-   E_CollectStates(scfg); // see e_states.c
-   E_CollectThings(tcfg); // see e_things.c
-}
-
-//
-// E_TryDefaultStates
-//
-// This is called below when no frames are found in the root EDF.
-// This function will attempt to load and parse frames.edf directly,
-// and then returns a new cfg_t on success.
-//
-static cfg_t *E_TryDefaultStates(void)
-{
-   cfg_t *statecfg;
-   const char *statefn;
-
-   E_EDFLogPuts("\t\tZero frames found, attempting to load default frames.edf\n");
-
-   statefn = E_BuildDefaultFn("frames.edf");
-
-   statecfg = E_ParseEDFFile(statefn, frame_only_opts);
-
-   // Reset NUMSTATES -- it will be tested again below
-   NUMSTATES = cfg_size(statecfg, EDF_SEC_FRAME);
-
-   return statecfg;
-}
-
-//
-// E_TryDefaultThings
-//
-// This is called below when no things are found in the root EDF.
-// This function will attempt to load and parse things.edf directly,
-// and then returns a new cfg_t on success.
-//
-static cfg_t *E_TryDefaultThings(void)
-{
-   cfg_t *thingcfg;
-   const char *thingfn;
-
-   E_EDFLogPuts("\t\tZero things found, attempting to load default things.edf\n");
-
-   thingfn = E_BuildDefaultFn("things.edf");
-
-   thingcfg = E_ParseEDFFile(thingfn, thing_only_opts);
-
-   // Reset NUMMOBJTYPES -- it will be tested again below
-   NUMMOBJTYPES = cfg_size(thingcfg, EDF_SEC_THING);
-
-   return thingcfg;
+   E_CollectStates(cfg); // see e_states.c
+   E_CollectThings(cfg); // see e_things.c
 }
 
 //
@@ -1730,52 +1243,22 @@ static cfg_t *E_TryDefaultThings(void)
 //
 static void E_ProcessStatesAndThings(cfg_t *cfg)
 {
-   cfg_t *thingcfg, *framecfg;
    boolean thingdefs = false, framedefs = false;
 
    E_EDFLogPuts("\t* Beginning state and thing processing\n");
 
-   // start out pointers pointing at the parameter cfg_t
-   framecfg = cfg;
-   thingcfg = cfg;
-
-   // check number of states
-   NUMSTATES = cfg_size(cfg, EDF_SEC_FRAME);
-   if(NUMSTATES == 0)
-   {
-      // try the defaults
-      framecfg = E_TryDefaultStates();
-      framedefs = true;
-      if(NUMSTATES == 0)
-         E_EDFLoggedErr(2, "E_ProcessStatesAndThings: zero frames defined\n");
-   }
-
    // check number of things
-   NUMMOBJTYPES = cfg_size(cfg, EDF_SEC_THING);
-   if(NUMMOBJTYPES == 0)
-   {
-      // try the defaults
-      thingcfg = E_TryDefaultThings();
-      thingdefs = true;
-      if(NUMMOBJTYPES == 0)
-         E_EDFLoggedErr(2, "E_ProcessStatesAndThings: zero things defined\n");
-   }
+   if((NUMMOBJTYPES = cfg_size(cfg, EDF_SEC_THING)) == 0)
+      E_EDFLoggedErr(2, "E_ProcessStatesAndThings: no things defined\n");
 
    // allocate structures, build mnemonic and dehnum hash tables
-   E_CollectNames(framecfg, thingcfg);
+   E_CollectNames(cfg);
 
    // process states: see e_states.c
-   E_ProcessStates(framecfg);
+   E_ProcessStates(cfg);
 
    // process things: see e_things.c
-   E_ProcessThings(thingcfg);
-
-   // free default cfgs if they were loaded
-   if(framedefs)
-      cfg_free(framecfg);
-
-   if(thingdefs)
-      cfg_free(thingcfg);
+   E_ProcessThings(cfg);
 }
 
 //
@@ -1788,52 +1271,6 @@ static void E_ProcessPlayerData(cfg_t *cfg)
    E_ProcessSkins(cfg);
    E_ProcessPlayerClasses(cfg);
 }
-
-//
-// E_TryDefaultPlayerData
-//
-// Last-chance defaults processing for player data. This is invoked after all
-// EDF lump processing in order to give lumps a chance to fill in the missing
-// required definitions.
-//
-static void E_TryDefaultPlayerData(void)
-{
-   cfg_t *pcfg;
-   const char *pfn;
-
-   E_EDFLogPuts("\t\tAttempting to load default player.edf\n");
-
-   pfn  = E_BuildDefaultFn("player.edf");
-   pcfg = E_ParseEDFFile(pfn, pclass_only_opts);
-
-   E_ProcessPlayerData(pcfg);
-
-   // free the temporary cfg
-   cfg_free(pcfg);
-}
-
-//
-// E_TryDefaultFonts
-//
-// Last-chance defaults processing for fonts.
-//
-static void E_TryDefaultFonts(void)
-{
-   cfg_t *fcfg;
-   const char *ffn;
-
-   E_EDFLogPuts("\t\tAttempting to load default fonts.edf\n");
-
-   ffn  = E_BuildDefaultFn("fonts.edf");
-   fcfg = E_ParseEDFFile(ffn, font_only_opts);
-
-   E_ProcessFonts(fcfg);
-
-   // free the temporary cfg
-   cfg_free(fcfg);
-}
-
-static void E_TryDefaultCast(void);
 
 //
 // E_ProcessCast
@@ -1851,13 +1288,7 @@ static void E_ProcessCast(cfg_t *cfg)
    numcastsections = cfg_size(cfg, SEC_CAST);
 
    if(!numcastsections)
-   {
-      E_EDFLogPuts("\t\tNo cast members defined\n");
-
-      // 11/04/03: try the default cast.edf definitions
-      E_TryDefaultCast();
-      return;
-   }
+      E_EDFLoggedErr(2, "E_ProcessCast: no cast members defined.\n");
 
    E_EDFLogPrintf("\t\t%d cast member(s) defined\n", numcastsections);
 
@@ -1871,8 +1302,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = malloc(sizeof(castinfo_t)*(max_castorder + 1));
-   ci_order  = malloc(sizeof(cfg_t *) * max_castorder);
+   castorder = calloc(sizeof(castinfo_t), max_castorder + 1);
+   ci_order  = calloc(sizeof(cfg_t *), max_castorder);
 
    if(numcastorder > 0)
    {
@@ -1971,7 +1402,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
          // name of frame that triggers sound event
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);
-         if((num = E_StateNumForName(name)) == NUMSTATES)
+         if((num = E_StateNumForName(name)) < 0)
             num = 0;
          castorder[i].sounds[j].frame = num;
       }
@@ -1982,27 +1413,6 @@ static void E_ProcessCast(cfg_t *cfg)
 
    // free the ci_order table
    free(ci_order);
-}
-
-static void E_TryDefaultCast(void)
-{
-   cfg_t *castcfg;
-   const char *castfn;
-
-   E_EDFLogPuts("\t\tAttempting to load defaults from cast.edf\n");
-
-   castfn = E_BuildDefaultFn("cast.edf");
-
-   castcfg = E_ParseEDFFile(castfn, cast_only_opts);
-
-   max_castorder = cfg_size(castcfg, SEC_CAST);
-
-   if(!max_castorder)
-      E_EDFLoggedErr(2, "E_TryDefaultCast: missing default cast.\n");
-
-   E_ProcessCast(castcfg);
-
-   cfg_free(castcfg);
 }
 
 // haleyjd 11/19/03:
@@ -2129,94 +1539,115 @@ static void E_ProcessMiscVars(cfg_t *cfg)
    }
 }
 
+//=============================================================================
 //
-// E_ProcessEDFLumps
+// Main EDF Routines
 //
-// Call to process reloadable separate EDF lumps.
-// Only object types that can be dynamically added to and overwritten
-// with new values can be loaded in this way. Currently this does
-// NOT include sprites, frames, or things.
+
 //
-void E_ProcessEDFLumps(void)
+// E_InitEDF
+//
+// Shared initialization code for E_ProcessEDF and E_ProcessNewEDF
+//
+static cfg_t *E_InitEDF(void)
 {
-   E_EDFLogPuts("Processing separate lumps\n");
-   
-   // process ESTRINGS
-   E_ProcessStringLump();
+   // Check for -edfout to enable verbose logging
+   if(M_CheckParm("-edfout"))
+      E_EDFOpenVerboseLog();
 
-   // process ETERRAIN
-   E_ProcessTerrainLump();
-
-   // process EMENUS
-   E_ProcessMenuLump();
-
-   // process ESNDSEQ and ESNDINFO
-   E_ProcessSoundLumps();
-
-   // process EFONTS
-   E_ProcessFontLump();
+   // Create the one and only cfg_t
+   return E_CreateCfg(edf_opts);
 }
 
 //
-// E_ProcessLastChance
+// E_ParseEDF
 //
-// Loads absolute-last-chance defaults, which must be tested for after
-// all lump processing has finished.
+// Shared parsing phase code for E_ProcessEDF and E_ProcessNewEDF
 //
-void E_ProcessLastChance(void)
+static void E_ParseEDF(cfg_t *cfg, const char *filename)
 {
-   E_EDFLogPuts("Processing last-chance defaults\n");
+   E_EDFLogPuts("\n===================== Parsing Phase =====================\n");
 
-   // terrain defaults
-   if(E_NeedDefaultTerrain())
-      E_TryDefaultTerrain();
+   // Parse the "root" EDF, which is either a chain of wad lumps named EDFROOT;
+   // or a single file, which is determined by the -edf parameter, a GFS script,
+   // the /base/game directory, or the default master EDF, which is root.edf in
+   // /base.
 
-   // player data defaults
-   if(E_NeedDefaultPlayerData())
-      E_TryDefaultPlayerData();
+   if(W_CheckNumForName("EDFROOT") != -1)
+   {
+      puts("E_ProcessEDF: Loading root lump.\n");
+      E_EDFLogPuts("\t* Parsing lump EDFROOT\n");
 
-   // sound defaults
-   if(E_NeedDefaultSounds() || E_NeedDefaultSequences())
-      E_TryDefaultSounds();
+      E_ParseEDFLump(cfg, "EDFROOT");
+   }
+   else if(filename)
+   {
+      printf("E_ProcessEDF: Loading root file %s\n", filename);
+      E_EDFLogPrintf("\t* Parsing EDF file %s\n", filename);
 
-   // font defaults
-   if(E_NeedDefaultFonts())
-      E_TryDefaultFonts();
+      E_ParseEDFFile(cfg, filename);
+   }
+
+   // Parse independent EDF lumps, which are not supposed to have been included
+   // through any of the above (though if they have been, this is now accounted
+   // for via the SHA-1 hashing mechanism which avoids reparses).
+   E_ParseIndividualLumps(cfg);
 }
 
-// Main EDF Routine
+//
+// E_CleanUpEDF
+//
+// Shared shutdown phase code for E_ProcessEDF and E_ProcessNewEDF
+//
+static void E_CleanUpEDF(cfg_t *cfg)
+{
+   E_EDFLogPuts("\n==================== Shutdown Phase =====================\n");
+
+   // Free the cfg_t object.
+   E_EDFLogPuts("\t* Freeing main cfg object\n");
+   cfg_free(cfg);
+
+   // check heap integrity for safety
+   E_EDFLogPuts("\t* Checking zone heap integrity\n");
+   Z_CheckHeap();
+
+   // close the verbose log file
+   E_EDFCloseVerboseLog();
+}
 
 //
 // E_ProcessEDF
 //
-// Public function to parse the root EDF file. Called by D_DoomInit. 
-// Assumes that certain BEX data structures, especially the 
+// Public function to parse and process the root EDF file. Called by 
+// D_DoomInit.  Assumes that certain BEX data structures, especially the
 // codepointer hash table, have already been built.
 //
 void E_ProcessEDF(const char *filename)
 {
    cfg_t *cfg;
+   
+   //
+   // Initialization - open log and create a cfg_t
+   //
+   cfg = E_InitEDF();
 
-   // check for -edfout to enable verbose logging
-   if(M_CheckParm("-edfout"))
-      E_EDFOpenVerboseLog();
+   //
+   // Parsing
+   //
+   // haleyjd 03/21/10: All parsing is now streamlined into a single process,
+   // using the unified cfg_t object created above.
+   //
+   E_ParseEDF(cfg, filename);
 
-   // 02/09/05: check for root EDF lump
-   if(W_CheckNumForName("EDFROOT") != -1)
-   {
-      puts("E_ProcessEDF: Loading root lump.\n");
-      E_EDFLogPuts("Processing lump EDFROOT\n");
+   //
+   // Processing
+   //
+   // Now we chew on all of the data accumulated from the various sources.
+   //
 
-      cfg = E_ParseEDFLump("EDFROOT", edf_opts);
-   }
-   else
-   {
-      printf("E_ProcessEDF: Loading root file %s\n", filename);
-      E_EDFLogPrintf("Processing EDF file %s\n", filename);
+   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
 
-      cfg = E_ParseEDFFile(filename, edf_opts);
-   }
-
+   // Echo final enable values to the log file for reference.
    E_EchoEnables();
 
    // NOTE: The order of most of the following calls is extremely 
@@ -2228,6 +1659,9 @@ void E_ProcessEDF(const char *filename)
 
    // process sprites, sprite-related variables, and pickup item fx
    E_ProcessSprites(cfg);
+
+   // process sprite-related pickup item effects
+   E_ProcessItems(cfg);
 
    // process sprite-related variables
    E_ProcessSpriteVars(cfg);
@@ -2273,49 +1707,88 @@ void E_ProcessEDF(const char *filename)
    E_ProcessSoundDeltas(cfg, false);
    E_ProcessStateDeltas(cfg); // see e_states.c
    E_ProcessThingDeltas(cfg); // see e_things.c
-   
-   E_EDFLogPuts("Processing finished, freeing main cfg object\n");
-
-   // haleyjd 11/07/06: sprite hash table is now persistent for skin support
-
-   // free the config object
-   cfg_free(cfg);
-
-   // process separate optional lumps
-   E_ProcessEDFLumps();
-
-   // process last-chance defaults
-   E_ProcessLastChance();
 
    // post-processing routines
    E_SetThingDefaultSprites();
 
-   // check heap integrity for safety
-   E_EDFLogPuts("Checking zone heap integrity\n");
-   Z_CheckHeap();
-
-   // close the verbose log file
-   E_EDFCloseVerboseLog();
+   //
+   // Shutdown and Cleanup
+   //
+   E_CleanUpEDF(cfg);
 }
 
-// utility functions
-
 //
-// E_SpriteNumForName
+// E_ProcessNewEDF
 //
-// Sprite hashing function. Returns the index of "name" in the sprnames array,
-// if found. If not, returns -1.
+// haleyjd 03/24/10: This routine is called to do parsing and processing of new
+// EDF lumps when loading wad files at runtime. Ideally the processing phase
+// will be shared with the routine above, but currently not all EDF definitions
+// are runtime additive - chiefly, states and things. These will be individually
+// remedied in the future, at which time a separate routine can be created to
+// do the shared processing phase.
 //
-int E_SpriteNumForName(const char *name)
+void E_ProcessNewEDF(void)
 {
-   int sprnum;
-   unsigned int sprkey = D_HashTableKey(name) % NUMSPRCHAINS;
+   cfg_t *cfg;
+   
+   //
+   // Initialization - open log and create a cfg_t
+   //
+   cfg = E_InitEDF();
 
-   sprnum = sprchains[sprkey];
-   while(sprnum != -1 && strcasecmp(name, sprnames[sprnum]))
-      sprnum = sprnext[sprnum];
+   //
+   // Parsing - parse only EDFROOT lumps, not root.edf
+   //
+   E_ParseEDF(cfg, NULL);
 
-   return sprnum;
+   //
+   // Processing
+   //
+
+   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
+   
+   // process strings
+   E_ProcessStrings(cfg);
+
+   // process sprites
+   E_ProcessSprites(cfg);
+
+   // process sounds
+   E_ProcessSounds(cfg);
+
+   // process ambience information
+   E_ProcessAmbience(cfg);
+
+   // process sound sequences
+   E_ProcessSndSeqs(cfg);
+
+   // process damage types
+   E_ProcessDamageTypes(cfg);
+
+   // process TerrainTypes
+   E_ProcessTerrainTypes(cfg);
+
+   // process dynamic menus
+   MN_ProcessMenus(cfg);
+
+   // process fonts
+   E_ProcessFonts(cfg);
+
+   // 08/30/03: apply deltas
+   E_ProcessSoundDeltas(cfg, true);
+   E_ProcessStateDeltas(cfg); // see e_states.c
+   E_ProcessThingDeltas(cfg); // see e_things.c
+
+   //
+   // Shutdown and Cleanup
+   //
+   E_CleanUpEDF(cfg);
+
+   // clear cached state argument evaluations
+   E_ResetAllArgEvals();
+
+   // clear cached sounds
+   E_UpdateSoundCache();
 }
 
 // EOF

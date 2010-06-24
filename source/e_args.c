@@ -148,6 +148,30 @@ void E_ResetArgEval(arglist_t *al, int index)
 }
 
 //
+// E_ResetAllArgEvals
+//
+// haleyjd 03/28/10: Reset the evaluation state of all state argument lists,
+// to flush the state of the system after a runtime modification to EDF.
+//
+void E_ResetAllArgEvals(void)
+{
+   int stnum;
+
+   for(stnum = 0; stnum < NUMSTATES; ++stnum)
+   {
+      arglist_t *args = states[stnum]->args;
+
+      if(args)
+      {
+         int argnum;
+
+         for(argnum = 0; argnum < args->numargs; ++argnum)
+            args->values[argnum].type = EVALTYPE_NONE;
+      }
+   }
+}
+
+//
 // E_ArgAsString
 //
 // This is just a safe method to get the argument string at the given
@@ -386,7 +410,7 @@ int E_ArgAsStateNum(arglist_t *al, int index)
 //
 // Gets the arg value at index i as a state number, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NUMSTATES is returned.
+// calls. If the arg does not exist, -1 is returned.
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
@@ -397,7 +421,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index)
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NUMSTATES;
+      return -1;
 
    eval = &(al->values[index]);
 
@@ -440,7 +464,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index)
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
    if(!al || index >= al->numargs)
-      return NUMSTATES;
+      return -1;
 
    eval = &(al->values[index]);
 

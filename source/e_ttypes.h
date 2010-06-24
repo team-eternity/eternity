@@ -42,7 +42,6 @@ extern cfg_opt_t edf_terdelta_opts[];
 extern cfg_opt_t edf_floor_opts[];
 
 void E_ProcessTerrainTypes(cfg_t *cfg);
-boolean E_NeedDefaultTerrain(void);
 
 #endif
 

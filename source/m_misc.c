@@ -1780,17 +1780,24 @@ void M_ExtractFileBase(const char *path, char *dest)
    while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
          && *(src-1) != '\\'
          && *(src-1) != '/')
+   {
       src--;
+   }
 
    // copy up to eight characters
    memset(dest, 0, 8);
    length = 0;
 
    while(*src && *src != '.')
+   {
       if(++length == 9)
-         I_Error("Filename base of %s > 8 chars\n", path);
+         I_Error("M_ExtractFileBase: %s > 8 chars\n", path);
       else
-         *dest++ = toupper(*src++);
+      {
+         *dest++ = toupper(*src);
+         ++src;
+      }
+   }
 }
 
 //

@@ -55,21 +55,23 @@ enum cfg_type_t
    CFGT_FUNC,    /**< function */
    CFGT_STRFUNC, /**< function-valued string */
    CFGT_MVPROP,  /**< multi-valued property */
+   CFGT_FLAG     /**< flag property, no value is given */
 };
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
-#define CFGF_NONE 0
-#define CFGF_MULTI 1       /**< option may be specified multiple times */
-#define CFGF_LIST 2        /**< option is a list */
-#define CFGF_NOCASE 4      /**< configuration file is case insensitive */
-#define CFGF_TITLE 8       /**< option has a title (only applies to section) */
-#define CFGF_ALLOCATED 16
-#define CFGF_RESET 32
-#define CFGF_DEFINIT 64
+#define CFGF_NONE          0
+#define CFGF_MULTI         1 /**< option may be specified multiple times */
+#define CFGF_LIST          2 /**< option is a list */
+#define CFGF_NOCASE        4 /**< configuration file is case insensitive */
+#define CFGF_TITLE         8 /**< option has a title (only applies to section) */
+#define CFGF_ALLOCATED    16
+#define CFGF_RESET        32
+#define CFGF_DEFINIT      64
 // haleyjd: custom flags
 #define CFGF_LOOKFORFUNC 128 /**< will do nothing until "lookfor" function is found */
 #define CFGF_STRSPACE    256 /**< unquoted strings within this section may contain spaces */
+#define CFGF_SIGNPREFIX  512 /**< CFGT_FLAG items expect a + or - prefix on the property */
 
 /** Return codes from cfg_parse(). */
 #define CFG_SUCCESS 0
@@ -143,6 +145,9 @@ typedef enum {cfg_false, cfg_true} cfg_bool_t;
 /** Error reporting function. */
 typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
 
+/** Lexer open callback */
+typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
+
 /** Data structure holding information about a "section". Sections can
  * be nested. A section has a list of options (strings, numbers,
  * booleans or other sections) grouped together.
@@ -162,6 +167,8 @@ struct cfg_t
    cfg_errfunc_t errfunc;  /**< This function (set with
                                 * cfg_set_error_function) is called for
                                 * any error message. */
+   cfg_lexfunc_t lexfunc;  /**< haleyjd: A callback dispatched by the lexer
+                                * when initially opening a file. */
    const char *lookfor;    /**< Name of a function to look for. */
 };
 
@@ -312,6 +319,14 @@ struct cfg_opt_t
 #define CFG_MVPROP(name, opts, flags) \
                    {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, 0, 0, 0}
 
+/** Initialize a flag property option.
+ */
+#define CFG_FLAG(name, def, flags) \
+                 {name, CFGT_FLAG, 0, 0, flags, 0, (void *)def, 0, 0, 0, 0}
+
+#define CFG_FLAG_CB(name, def, flags, cb) \
+                 {name, CFGT_FLAG, 0, 0, flags, 0, (void *)def, 0, 0, 0, cb}
+
 /** Terminate list of options. This must be the last initializer in
  * the option list.
  */
@@ -356,14 +371,15 @@ int           cfg_parse(cfg_t *cfg, const char *filename);
 /** Parse a configuration lump. By James Haley.
  *
  * @param cfg The configuration file context.
- * @param lumpname The name of the lump to parse.
+ * @param lumpname The name of the lump to parse (for reference only).
+ * @param lumpnum The number of the lump to parse.
  *
  * @return On success, CFG_SUCCESS is returned. If the file couldn't
  * be opened for reading, CFG_FILE_ERROR is returned. On all other
  * errors, CFG_PARSE_ERROR is returned and cfg_error() was called with
  * a descriptive error message.
  */
-int           cfg_parselump(cfg_t *cfg, const char *lumpname);
+int           cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum);
 
 /** Free the memory allocated for the values of a given option. Only
  * the values are freed, not the option itself (it is often statically
@@ -380,6 +396,11 @@ void          cfg_free(cfg_t *cfg);
  * @return The old error reporting function is returned.
  */
 cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc);
+
+/** Install a user-defined lexer callback function.
+ * @return The old lexer callback function is returned.
+ */
+cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc);
 
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
@@ -456,6 +477,26 @@ cfg_t *       cfg_getsec(cfg_t *cfg, const char *name);
  * values for a multi-valued property.
  */
 cfg_t *       cfg_getmvprop(cfg_t *cfg, const char *name);
+
+/** Returns the value of a flag option. This is the same as
+ * calling cfg_getnflag with index 0.
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @return The requested value is returned. If the option was not set
+ * in the configuration file, the default value given in the
+ * corresponding cfg_opt_t structure is returned. If no option is found
+ * with that name, 0 is returned.
+ */
+int           cfg_getflag(cfg_t *cfg, const char *name);
+
+/** Indexed version of cfg_getflag().
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @param index Index of values. Zero based.
+ * @see cfg_getflag
+ */
+int           cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index);
+
 
 cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value);
 

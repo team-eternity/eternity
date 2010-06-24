@@ -250,8 +250,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    foundGlobalMap = false;
 
    // run down the hash chain for EMAPINFO
-   lump = w_GlobalDir.lumpinfo[W_LumpNameHash("EMAPINFO") % 
-                               (unsigned int)w_GlobalDir.numlumps];   
+   lump = W_GetLumpNameChain("EMAPINFO");
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {

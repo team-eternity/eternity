@@ -46,7 +46,7 @@ cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 lighttable_t **walllights;
-static int    *maskedtexturecol;
+static float  *maskedtexturecol;
 
 //
 // R_RenderMaskedSegRange
@@ -107,7 +107,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
    maskedtexturecol = ds->maskedtexturecol;
 
-   mfloorclip = ds->sprbottomclip;
+   mfloorclip   = ds->sprbottomclip;
    mceilingclip = ds->sprtopclip;
 
    diststep = ds->diststep;
@@ -150,7 +150,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // draw the columns
    for(column.x = x1; column.x <= x2; ++column.x, dist += diststep, scale += scalestep)
    {
-      if(maskedtexturecol[column.x] != 0x7fffffff)
+      if(maskedtexturecol[column.x] != FLT_MAX)
       {
          if(!fixedcolormap)
          {                             // killough 11/98:
@@ -177,10 +177,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          // when forming multipatched textures (see r_data.c).
 
          // draw the texture
-         col = R_GetMaskedColumn(texnum, maskedtexturecol[column.x]);
+         col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
          R_DrawNewMaskedColumn(textures[texnum], col);
          
-         maskedtexturecol[column.x] = 0x7fffffff;
+         maskedtexturecol[column.x] = FLT_MAX;
       }
    }
 
@@ -201,7 +201,8 @@ static void R_RenderSegLoop(void)
 {
    int t, b, line;
    int cliptop, clipbot;
-   int i, texx;
+   int i;
+   float texx;
    float basescale;
 
 #ifdef RANGECHECK
@@ -286,7 +287,7 @@ static void R_RenderSegLoop(void)
          column.step = M_FloatToFixed(basescale);
          column.x = i;
 
-         texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
+         texx = segclip.len * basescale + segclip.toffsetx;
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
@@ -321,7 +322,7 @@ static void R_RenderSegLoop(void)
 
                column.texmid = segclip.midtexmid;
 
-               column.source = R_GetRawColumn(segclip.midtex, texx);
+               column.source = R_GetRawColumn(segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
 
                colfunc();
@@ -341,7 +342,7 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.toptexmid;
 
-                  column.source = R_GetRawColumn(segclip.toptex, texx);
+                  column.source = R_GetRawColumn(segclip.toptex, (int)texx);
                   column.texheight = segclip.toptexh;
 
                   colfunc();
@@ -366,7 +367,7 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.bottomtexmid;
 
-                  column.source = R_GetRawColumn(segclip.bottomtex, texx);
+                  column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
                   column.texheight = segclip.bottomtexh;
 
                   colfunc();
@@ -545,13 +546,14 @@ static void R_DetectClosedColumns()
 
 static void R_StoreTextureColumns(void)
 {
-   int i, texx;
+   int i;
+   float texx;
    float basescale;
    
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
-      texx = (int)(((segclip.len) * basescale) + segclip.toffsetx);
+      texx = segclip.len * basescale + segclip.toffsetx;
 
       if(ds_p->maskedtexturecol)
          ds_p->maskedtexturecol[i] = texx;
@@ -741,16 +743,17 @@ void R_StoreWallRange(const int start, const int stop)
 
       if(segclip.maskedtex)
       {
-         register int i, *mtc;
+         register int i;
+         float *mtc;
          int xlen;
          xlen = segclip.x2 - segclip.x1 + 1;
 
-         ds_p->maskedtexturecol = (int *)(lastopening - segclip.x1);
+         ds_p->maskedtexturecol = lastopening - segclip.x1;
          
-         mtc = (int *)lastopening;
+         mtc = lastopening;
 
          for(i = 0; i < xlen; i++)
-            mtc[i] = 0x7fffffff;
+            mtc[i] = FLT_MAX;
 
          lastopening += xlen;
       }

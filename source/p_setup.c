@@ -2215,7 +2215,7 @@ static void P_PreZoneFreeLevel(void)
    S_StopLoopedSounds();
 
    // Make sure all sourced sounds are stopped
-   S_StopSounds();
+   S_StopSounds(false);
 
    //==============================================
    // Renderer

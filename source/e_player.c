@@ -38,6 +38,7 @@
 
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_player.h"
@@ -451,7 +452,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
 
       // altattackstate should be specified, but if it's not, use the 
       // thing type's normal missilestate.
-      if(!tempstr || (statenum = E_StateNumForName(tempstr)) == NUMSTATES)
+      if(!tempstr || (statenum = E_StateNumForName(tempstr)) < 0)
       {
          mobjinfo_t *mi = &mobjinfo[pc->type];
          statenum = mi->missilestate;
@@ -523,19 +524,6 @@ void E_ProcessPlayerClasses(cfg_t *cfg)
       E_ProcessPlayerClass(cfg_getnsec(cfg, EDF_SEC_PCLASS, i));
 
    E_VerifyDefaultPlayerClass();
-}
-
-//
-// E_NeedDefaultPlayerData
-//
-// Returns true if EDF needs to perform last-chance defaults parsing for
-// player.edf. This is true in the event that the number of ANY of the
-// sections processed in this file is zero (at least one of each is
-// required).
-//
-boolean E_NeedDefaultPlayerData(void)
-{
-   return !(num_edf_skins && num_edf_pclasses);
 }
 
 //==============================================================================

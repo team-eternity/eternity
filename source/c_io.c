@@ -931,7 +931,7 @@ void C_SetConsole(void)
    Console.current_target = SCREENHEIGHT;
    
    S_StopMusic();                  // stop music if any
-   S_StopSounds();                 // and sounds
+   S_StopSounds(true);             // and sounds
    G_StopDemo();                   // stop demo playing
 }
 

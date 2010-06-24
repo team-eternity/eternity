@@ -83,6 +83,7 @@ boolean       E_SetArg(arglist_t *al, int index, const char *value);
 boolean       E_SetArgFromNumber(arglist_t *al, int index, int value);
 void          E_DisposeArgs(arglist_t *al);
 void          E_ResetArgEval(arglist_t *al, int index);
+void          E_ResetAllArgEvals(void);
 
 const char   *E_ArgAsString(arglist_t *al, int index, const char *defvalue);
 int           E_ArgAsInt(arglist_t *al, int index, int defvalue);

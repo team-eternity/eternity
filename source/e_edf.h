@@ -100,7 +100,7 @@ enum
 extern int *pickupfx;
 
 void E_ProcessEDF(const char *filename);
-void E_ProcessEDFLumps(void);
+void E_ProcessNewEDF(void);
 
 void E_EDFSetEnableValue(const char *, int); // enables
 
@@ -112,8 +112,6 @@ void E_EDFLoggedErr(int lv, const char *msg, ...) __attribute__((noreturn));
 #else
 void E_EDFLoggedErr(int lv, const char *msg, ...);
 #endif
-
-int  E_SpriteNumForName(const char *name);
 
 #endif
 

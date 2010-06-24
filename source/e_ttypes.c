@@ -540,88 +540,6 @@ static void E_AddFloorToHash(EFloor *floor)
    ++numfloors;
 }
 
-// Old floor type values for deprecated binary lump
-enum
-{
-   FLOOR_SOLID,
-   FLOOR_WATER,
-   FLOOR_LAVA,
-   FLOOR_SLUDGE,
-   MAXTERRAINDEF,
-};
-
-// names to use for resolving old types
-static const char *oldtnames[MAXTERRAINDEF] =
-{
-   "Solid",
-   "Water",
-   "Lava",
-   "Sludge",
-};
-
-//
-// E_LoadTerrainTypeDefs
-//
-// Support for deprecated binary TERTYPES lump.
-//
-static void E_LoadTerrainTypeDefs(void)
-{
-   byte *lump;
-   int16_t *shrtptr, temp;
-   int lumpnum, i, j, numterraindefs;
-   char *chrptr, name[9];
-   EFloor *floor;
-
-   if((lumpnum = W_CheckNumForName("TERTYPES")) == -1)
-      return;
-
-   E_EDFLogPuts("\t\t\tFound deprecated TERTYPES lump, processing.\n");
-
-   lump = W_CacheLumpNum(lumpnum, PU_STATIC);
-   
-   shrtptr = (int16_t *)lump;   
-   numterraindefs = SwapShort(*shrtptr);
-   shrtptr++;
-   
-   chrptr = (char *)shrtptr;
-   
-   for(i = 0; i < numterraindefs; ++i)
-   {
-      // get null-terminated flat name
-      for(j = 0; j < 9; ++j)
-         name[j] = *chrptr++;
-      
-      // read short terrain type index
-      shrtptr = (int16_t *)chrptr;
-      temp = SwapShort(*shrtptr);
-      shrtptr++;
-      
-      if(temp < 0 || temp >= MAXTERRAINDEF)
-         temp = 0;
-
-      // Create or modify a floor object to match this old 
-      // TerrainType definition
-      if(!(floor = E_FloorForName(name)))
-      {
-         floor = calloc(1, sizeof(EFloor));
-         strncpy(floor->name, name, 9);
-         E_AddFloorToHash(floor);
-      }
-
-      // Try to find a matching terrain object. If none exists,
-      // set the floor to solid, which is defined internally.
-      if(!(floor->terrain = E_TerrainForName(oldtnames[temp])))
-         floor->terrain = &solid;
-
-      E_EDFLogPrintf("\t\t\tFlat '%s' = Terrain '%s'\n",
-                     floor->name, floor->terrain->name);
-     
-      chrptr = (char *)shrtptr;
-   }
-  
-   Z_ChangeTag(lump, PU_CACHE); // 02/05/05: make purgable
-}
-
 //
 // E_ProcessFloor
 //
@@ -682,10 +600,6 @@ static void E_ProcessFloors(cfg_t *cfg)
       cfg_t *floorsec = cfg_getnsec(cfg, EDF_SEC_FLOOR, i);
       E_ProcessFloor(floorsec);
    }
-
-   // Load the old deprecated binary lump for backwards compatibility.
-   // This will create or modify floor objects.
-   E_LoadTerrainTypeDefs();
 }
 
 //
@@ -708,20 +622,6 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
 
    // Last, process floors
    E_ProcessFloors(cfg);
-}
-
-//
-// E_NeedDefaultTerrain
-//
-// Returns true if EDF should try loading the default terrain.edf
-// file. This will only be done after all other processing, and when
-// all three types of definitions remain at zero. If a user wants to
-// forbid default loading, they can just define a dummy floor. The
-// "Solid" terrain is not counted for this purpose.
-//
-boolean E_NeedDefaultTerrain(void)
-{
-   return !(numsplashes || numterrains || numfloors);
 }
 
 // TerrainTypes lookup array

@@ -53,6 +53,10 @@ boolean E_AutoAllocStateDEHNum(int statenum);
 
 #endif
 
+// For DECORATE states:
+void E_ReallocStates(int numnewstates);
+void E_CreateArgList(state_t *state);
+
 #endif
 
 // EOF

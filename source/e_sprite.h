@@ -27,11 +27,18 @@
 #ifndef E_SPRITE_H__
 #define E_SPRITE_H__
 
-typedef struct esprite_s
-{
-   struct mdllistitem_s link; // hash links
-   char  *name;               // sprite name
-} esprite_t;
+#ifdef NEED_EDF_DEFINITIONS
+
+#define SEC_SPRITE "spritenames"
+
+void    E_ProcessSprites(cfg_t *cfg);
+
+#endif
+
+// For DECORATE states in particular:
+boolean E_ProcessSingleSprite(const char *sprname);
+
+int E_SpriteNumForName(const char *name);
 
 #endif
 

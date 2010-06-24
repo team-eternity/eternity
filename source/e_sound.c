@@ -325,9 +325,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
    int i;
    sfxinfo_t *cursfx;
 
-   // run down all the mnemonic hash chains so that we precache 
-   // all sounds, not just ones stored in S_sfx
-
+   // run down all the mnemonic hash chains
    for(i = 0; i < NUMSFXCHAINS; ++i)
    {
       cursfx = sfxchains[i];
@@ -462,6 +460,40 @@ void E_PreCacheSounds(void)
 }
 
 //
+// E_UpdateSoundCache
+//
+// haleyjd 03/28/10: For loading EDF definitions at runtime, we need to purge
+// the sound cache.
+//
+void E_UpdateSoundCache(void)
+{
+   int i;
+   sfxinfo_t *cursfx;
+
+   // be sure all sounds are stopped
+   S_StopSounds(true);
+
+   for(i = 0; i < NUMSFXCHAINS; ++i)
+   {
+      cursfx = sfxchains[i];
+
+      while(cursfx)
+      {
+         if(cursfx->data)
+         {
+            free(cursfx->data);
+            cursfx->data = NULL;
+         }
+         cursfx = cursfx->next;
+      }
+   }
+
+   // recache sounds if so requested
+   if(s_precache)
+      E_PreCacheSounds();
+}
+
+//
 // EDF Processing Functions
 //
 
@@ -576,6 +608,16 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
 
       for(i = 0; i < sfx->numrandomsounds; ++i)
          sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
+   }
+   else if(def)
+   {
+      // if defining and a randomsound list is already defined, we need to destroy it,
+      // as the new definition has not specified any random sounds.
+      if(sfx->randomsounds)
+         free(sfx->randomsounds);
+
+      sfx->randomsounds    = NULL;
+      sfx->numrandomsounds = 0;
    }
    
    // process the skin index
@@ -787,17 +829,6 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
 
       E_EDFLogPrintf("\t\tApplied sounddelta #%d to sound %s\n", i, tempstr);
    }
-}
-
-//
-// E_NeedDefaultSounds
-//
-// haleyjd 04/13/08: Returns true if EDF needs to load sounds.edf for
-// default fallbacks.
-//
-boolean E_NeedDefaultSounds(void)
-{
-   return (e_sound_count == 0);
 }
 
 //=============================================================================
@@ -1589,17 +1620,6 @@ void E_ProcessSndSeqs(cfg_t *cfg)
    // process the environment sequence manager
    E_ProcessEnviroMgr(cfg);
 }
-
-//
-// E_NeedDefaultSequences
-//
-// haleyjd 04/13/08: Returns true if no sequences exist.
-//
-boolean E_NeedDefaultSequences(void)
-{
-   return (e_sequence_count == 0);
-}
-
 
 //=============================================================================
 //

@@ -29,6 +29,7 @@
 //--------------------------------------------------------------------
 
 // killough 5/2/98: fixed headers, removed rendunant external declarations:
+#include "z_zone.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_io.h"
@@ -47,14 +48,6 @@
 #include "e_sound.h"
 #include "e_args.h"
 #include "d_dehtbl.h"
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
@@ -452,13 +445,15 @@ char *deh_misc[] =
   "IDKFA Armor Class", // idkfa_armor_class
   "BFG Cells/Shot",    // BFGCELLS
   "Monsters Infight"   // Unknown--not a specific number it seems, but
-  // the logic has to be here somewhere or
-  // it'd happen always
+                       // the logic has to be here somewhere or
+                       // it'd happen always
 };
 
 // TEXT - Dehacked block name = "Text"
 // Usage: Text fromlen tolen
 // Dehacked allows a bit of adjustment to the length (why?)
+//   haleyjd 03/25/10: Because Watcom aligns strings to 4-byte boundaries,
+//   leaving as many as 3 unused bytes before the next string in the binary.
 
 // haleyjd: moved text table to d_dehtbl.c
 
@@ -468,9 +463,8 @@ char *deh_misc[] =
 
 // haleyjd: moved BEX ptr table to d_dehtbl.c
 
-// to hold startup code pointers from INFO.C
-// haleyjd: now dynamic for EDF
-void (**deh_codeptr)(mobj_t *);
+// haleyjd 03/25/10: eliminated deh_codeptr cache by storing original
+// codepointer values in the states themselves.
 
 // haleyjd 10/08/06: DeHackEd log file made module-global
 static FILE *fileout;
@@ -569,20 +563,6 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
    usermsg("Loading DEH file %s",filename);
    
    deh_LogPrintf("\nLoading DEH file %s\n\n", filename);
-
-   {
-      static int i;   // killough 10/98: only run once, by keeping index static
-
-      if(!i)
-      {
-         // haleyjd: allocate dynamically for EDF support
-         deh_codeptr = Z_Malloc(sizeof(void (*)(mobj_t *)) * NUMSTATES,
-                                PU_STATIC, NULL);
-      }
-
-      for(; i < NUMSTATES; ++i)  // remember what they start as for deh xref
-         deh_codeptr[i] = states[i]->action;
-   }
 
    deh_loaded = true;
    
@@ -711,12 +691,6 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
 
       deh_LogPrintf("Processing pointer at index %d: %s\n", indexnum, mnemonic);
       
-      if(indexnum < 0 || indexnum >= NUMSTATES)
-      {
-         deh_LogPrintf("Bad pointer number %d of %d\n", indexnum, NUMSTATES);
-         return; // killough 10/98: fix SegViol
-      }
-
       // haleyjd 03/14/03: why do this? how wasteful and useless...
       //strcpy(key,"A_");  // reusing the key area to prefix the mnemonic
 
@@ -1087,14 +1061,12 @@ void deh_procFrame(DWFILE *fpin, char *line)
    
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%s %i",key, &indexnum);
+
    // haleyjd: resolve state number through EDF
    indexnum = E_GetStateNumForDEHNum(indexnum);
    
    deh_LogPrintf("Processing Frame at index %d: %s\n", indexnum, key);
-   
-   if(indexnum < 0 || indexnum >= NUMSTATES)
-      deh_LogPrintf("Bad frame number %d of %d\n", indexnum, NUMSTATES);
-   
+      
    while(!D_Feof(fpin) && *inbuffer && (*inbuffer != ' '))
    {
       if(!D_Fgets(inbuffer, sizeof(inbuffer), fpin))
@@ -1228,12 +1200,6 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
    deh_LogPrintf("Processing Pointer at index %d: %s\n", indexnum, key);
    
-   if(indexnum < 0 || indexnum >= NUMSTATES)
-   {
-      deh_LogPrintf("Bad pointer number %d of %d\n", indexnum, NUMSTATES);
-      return;
-   }
-
    while(!D_Feof(fpin) && *inbuffer && (*inbuffer != ' '))
    {
       if(!D_Fgets(inbuffer, sizeof(inbuffer), fpin))
@@ -1250,17 +1216,11 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
       // haleyjd: resolve xref state number through EDF
       value = E_GetStateNumForDEHNum(value);
 
-      if(value < 0 || value >= NUMSTATES)
-      {
-         deh_LogPrintf("Bad pointer number %ld of %d\n", value, NUMSTATES);
-         return;
-      }
-
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {
-         states[indexnum]->action = deh_codeptr[value];
+         states[indexnum]->action = states[value]->oldaction;;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
-                       deh_codeptr[value], value, indexnum);
+                       states[value]->oldaction, value, indexnum);
          
          // Write BEX-oriented line to match:
          
@@ -1272,7 +1232,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
          
          for(i = 0; i < num_bexptrs; ++i)
          {
-            if(deh_bexptrs[i].cptr == deh_codeptr[value])
+            if(deh_bexptrs[i].cptr == states[value]->oldaction)
             {
                // haleyjd 07/05/03: use oldindex for proper #
                deh_LogPrintf("BEX [CODEPTR] -> FRAME %d = %s\n",
@@ -1282,8 +1242,10 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
          }
       }
       else
+      {
          deh_LogPrintf("Invalid frame pointer index for '%s' at %ld, xref %p\n",
-                       key, value, deh_codeptr[value]);
+                       key, value, states[value]->oldaction);
+      }
    }
 }
 
@@ -1793,7 +1755,7 @@ void deh_procText(DWFILE *fpin, char *line)
    int i;                          // loop variable
    unsigned int fromlen, tolen;    // as specified on the text block line
    int usedlen;                    // shorter of fromlen and tolen if not matched
-   boolean found = FALSE;          // to allow early exit once found
+   boolean found = false;          // to allow early exit once found
    char* line2 = NULL;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
@@ -1857,7 +1819,7 @@ void deh_procText(DWFILE *fpin, char *line)
             // sprnames[i] = strdup(sprnames[i]);
 
             strncpy(sprnames[i],&inbuffer[fromlen],tolen);
-            found = TRUE;
+            found = true;
             break;  // only one will match--quit early
          }
          ++i;  // next array element
@@ -1883,7 +1845,7 @@ void deh_procText(DWFILE *fpin, char *line)
          // haleyjd 09/03/03: changed to strncpy
          memset(sfx->name, 0, 9);
          strncpy(sfx->name, &inbuffer[fromlen], usedlen);
-         found = TRUE;
+         found = true;
       }
 
       if(!found)  // not yet
@@ -1900,7 +1862,7 @@ void deh_procText(DWFILE *fpin, char *line)
                              S_music[i].name, usedlen, &inbuffer[fromlen]);
 
                S_music[i].name = strdup(&inbuffer[fromlen]);
-               found = TRUE;
+               found = true;
                break;  // only one matches, quit early
             }
          }
@@ -2393,7 +2355,7 @@ boolean deh_GetData(char *s, char *k, int *l, char **strval)
    char *t;                    // current char
    int  val = 0;               // to hold value of pair
    char buffer[DEH_MAXKEYLEN]; // to hold key in progress
-   boolean okrc = TRUE;        // assume good unless we have problems
+   boolean okrc = true;        // assume good unless we have problems
    int i;                      // iterator
 
    memset(buffer, 0, sizeof(buffer));
@@ -2408,11 +2370,11 @@ boolean deh_GetData(char *s, char *k, int *l, char **strval)
    buffer[--i] = '\0';  // terminate the key before the '='
    
    if(!*t)  // end of string with no equal sign
-      okrc = FALSE;
+      okrc = false;
    else
    {
       if(!*++t) // in case "thiskey =" with no value 
-         okrc = FALSE; 
+         okrc = false; 
 
       // we've incremented t
       val = strtol(t, NULL, 0);  // killough 8/9/98: allow hex or octal input

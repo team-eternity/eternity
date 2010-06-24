@@ -556,6 +556,10 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath="..\source\Confuse\lexer.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="D_"
@@ -974,6 +978,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_dstate.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_edf.c"
 						>
 						<FileConfiguration
@@ -1247,6 +1255,10 @@
 					>
 					<File
 						RelativePath="..\source\e_args.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_dstate.h"
 						>
 					</File>
 					<File
@@ -1768,6 +1780,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\m_hash.c"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_misc.c"
 						>
 						<FileConfiguration
@@ -1955,6 +1971,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\m_fixed.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_hash.h"
 						>
 					</File>
 					<File

@@ -33,12 +33,7 @@
 #include "../w_wad.h"
 
 #include "confuse.h"
-
-extern char *mytext; // haleyjd
-int mylex(cfg_t *cfg);
-void lexer_init(DWFILE *);
-void lexer_reset(void);
-void lexer_set_unquoted_spaces(boolean);
+#include "lexer.h"
 
 // haleyjd 03/08/03: Modifications for Eternity
 // #define PACKAGE_VERSION "Eternity version"
@@ -51,9 +46,6 @@ void lexer_set_unquoted_spaces(boolean);
 const char *confuse_version   = "Eternity version";
 const char *confuse_copyright = "libConfuse by Martin Hedenfalk <mhe@home.se>";
 const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
-
-// haleyjd: added data param
-extern int cfg_lexer_include(cfg_t *cfg, const char *fname, int data);
 
 #if defined(NDEBUG)
 #define cfg_assert(test) ((void)0)
@@ -118,7 +110,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
          secname = cfg_strndup(name, len);
          sec = cfg_getsec(sec, secname);
          if(sec == 0)
-            cfg_error(cfg, _("no such option '%s'"), secname);
+            cfg_error(cfg, _("no such option '%s'\n"), secname);
          free(secname);
          if(sec == 0)
             return 0;
@@ -126,6 +118,10 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
       name += len;
       name += strspn(name, "|");
    }
+
+   // haleyjd 05/25/10: check for +/- prefixes for flag items
+   if(name[0] == '+' || name[0] == '-')
+      ++name; // skip past it for lookup
    
    for(i = 0; sec->opts[i].name; i++)
    {
@@ -140,7 +136,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
             return &sec->opts[i];
       }
    }
-   cfg_error(cfg, _("no such option '%s'"), name);
+   cfg_error(cfg, _("no such option '%s'\n"), name);
    return 0;
 }
 
@@ -326,6 +322,41 @@ cfg_t *cfg_getmvprop(cfg_t *cfg, const char *name)
    return cfg_getnmvprop(cfg, name, 0);
 }
 
+//
+// cfg_getnflag
+//
+// haleyjd 05/25/10
+//
+signed int cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index)
+{
+   cfg_opt_t *opt = cfg_getopt(cfg, name);
+   
+   if(opt)
+   {
+      cfg_assert(opt->type == CFGT_FLAG);
+      if(opt->nvalues == 0)
+         return (signed int)opt->def;
+      else
+      {
+         cfg_assert(index < opt->nvalues);
+         return opt->values[index]->number;
+      }
+   }
+   else
+      return 0;
+}
+
+//
+// cfg_getflag
+//
+// haleyjd 05/25/10
+//
+signed int cfg_getflag(cfg_t *cfg, const char *name)
+{
+   return cfg_getnflag(cfg, name, 0);
+}
+
+
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
    opt->values = (cfg_value_t **)realloc(opt->values,
@@ -428,14 +459,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          val->number = strtol(value, &endptr, 0);
          if(*endptr != '\0')
          {            
-            cfg_error(cfg, _("invalid integer value '%s' for option '%s'"),
+            cfg_error(cfg, _("invalid integer value '%s' for option '%s'\n"),
                       value, opt->name);
             return 0;
          }
          if(errno == ERANGE) 
          {
             cfg_error(cfg,
-               _("integer value '%s' for option '%s' is out of range"),
+               _("integer value '%s' for option '%s' is out of range\n"),
                value, opt->name);
             return 0;
          }
@@ -454,14 +485,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          if(*endptr != '\0')
          {
             cfg_error(cfg,
-               _("invalid floating point value for option '%s'"),
+               _("invalid floating point value for option '%s'\n"),
                opt->name);
             return 0;
          }
          if(errno == ERANGE)
          {
             cfg_error(cfg,
-               _("floating point value for option '%s' is out of range"),
+               _("floating point value for option '%s' is out of range\n"),
                opt->name);
             return 0;
          }
@@ -506,15 +537,35 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          b = cfg_parse_boolean(value);
          if(b == -1)
          {
-            cfg_error(cfg, _("invalid boolean value for option '%s'"),
+            cfg_error(cfg, _("invalid boolean value for option '%s'\n"),
                opt->name);
             return 0;
          }
       }
       val->boolean = (cfg_bool_t)b;
       break;
+   case CFGT_FLAG: // haleyjd
+      if(opt->cb)
+      {
+         if((*opt->cb)(cfg, opt, value, &i) != 0)
+            return 0;
+         val->number = i;
+      }
+      else
+      {
+         // If this flag item has the SIGNPREFIX flag, it is expected to begin
+         // with a + or - character. + means to set the value to 1, and - means
+         // to set it to 0.
+         // Otherwise, presence of the option in the input is expected to invert 
+         // the default value of the option.
+         if(is_set(CFGF_SIGNPREFIX, opt->flags))
+            val->number = (value[0] == '+');
+         else
+            val->number = !((signed int)opt->def);
+      }
+      break;
    default:
-      cfg_error(cfg, "internal error in cfg_setopt(%s, %s)",
+      cfg_error(cfg, "internal error in cfg_setopt(%s, %s)\n",
                 opt->name, value);
       cfg_assert(0);
       break;
@@ -549,6 +600,21 @@ cfg_errfunc_t cfg_set_error_function(cfg_t *cfg, cfg_errfunc_t errfunc)
    cfg_assert(cfg);   
    old = cfg->errfunc;
    cfg->errfunc = errfunc;
+   return old;
+}
+
+//
+// cfg_set_lexer_callback
+//
+// haleyjd 03/21/10
+//
+cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc)
+{
+   cfg_lexfunc_t old;
+
+   cfg_assert(cfg);
+   old = cfg->lexfunc;
+   cfg->lexfunc = lexfunc;
    return old;
 }
 
@@ -645,9 +711,9 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          {
             // haleyjd: catch EOF while in lookfor state
             if(state == STATE_EXPECT_LOOKFOR) 
-               cfg_error(cfg, "missing closing conditional function");
+               cfg_error(cfg, "missing closing conditional function\n");
             else
-               cfg_error(cfg, _("premature end of file"));
+               cfg_error(cfg, _("premature end of file\n"));
             return STATE_ERROR;
          }
          return STATE_EOF;
@@ -660,34 +726,39 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          {
             if(level == 0)
             {
-               cfg_error(cfg, _("unexpected closing brace"));
+               cfg_error(cfg, _("unexpected closing brace\n"));
                return STATE_ERROR;
             }
             return STATE_EOF;
          }
          if(tok != CFGT_STR)
          {
-            cfg_error(cfg, _("unexpected token '%s'"), mytext);
+            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
             return STATE_ERROR;
          }         
          
          if((opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
             return STATE_ERROR;
          
-         if(opt->type == CFGT_SEC)
+         switch(opt->type)
          {
+         case CFGT_SEC:
             if(is_set(CFGF_TITLE, opt->flags))
                state = STATE_EXPECT_TITLE;
             else
                state = STATE_EXPECT_SECBRACE;
-         } 
-         else if(opt->type == CFGT_FUNC)
-         {
+            break;
+         case CFGT_FUNC:
             state = STATE_EXPECT_PAREN;
-         }
-         else
+            break;
+         case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
+            if(cfg_setopt(cfg, opt, mytext) == 0)
+               return STATE_ERROR;
+            // remain in STATE_EXPECT_OPTION
+            break;
+         default:
             state = STATE_EXPECT_ASSIGN;
-
+         }
          break;
 
       case STATE_EXPECT_ASSIGN: /* expecting an equal sign or plus-equal sign */
@@ -697,7 +768,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             if(!is_set(CFGF_LIST, opt->flags))
             {
                cfg_error(cfg,
-                  _("attempt to append to non-list option %s"),
+                  _("attempt to append to non-list option %s\n"),
                   opt->name);
                return STATE_ERROR;
             }
@@ -745,14 +816,14 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_VALUE: /* expecting an option value */
          if(tok == '}' && is_set(CFGF_LIST, opt->flags))
          {
-            lexer_set_unquoted_spaces(false); /* haleyjd */
+            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = 0;
             break;
          }
          
          if(tok != CFGT_STR)
          {
-            cfg_error(cfg, _("unexpected token '%s'"), mytext);
+            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
             return STATE_ERROR;
          }
 
@@ -771,13 +842,13 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_LISTBRACE: /* expecting an opening brace for a list option */
          if(tok != '{')
          {
-            cfg_error(cfg, _("missing opening brace for option '%s'"),
+            cfg_error(cfg, _("missing opening brace for option '%s'\n"),
                opt->name);
             return STATE_ERROR;
          }
          /* haleyjd 12/23/06: set unquoted string state */
          if(is_set(CFGF_STRSPACE, opt->flags))
-            lexer_set_unquoted_spaces(true);
+            lexer_set_unquoted_spaces(cfg_true);
          state = STATE_EXPECT_VALUE;
          next_state = STATE_EXPECT_LISTNEXT;
          break;
@@ -791,12 +862,12 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else if(tok == '}')
          {
-            lexer_set_unquoted_spaces(false); /* haleyjd */
+            lexer_set_unquoted_spaces(cfg_false); /* haleyjd */
             state = STATE_EXPECT_OPTION;
          }
          else
          {
-            cfg_error(cfg, _("unexpected token '%s'"), mytext);
+            cfg_error(cfg, _("unexpected token '%s'\n"), mytext);
             return STATE_ERROR;
          }
          break;
@@ -804,7 +875,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_SECBRACE: /* expecting an opening brace for a section */
          if(tok != '{')
          {
-            cfg_error(cfg, _("missing opening brace for section '%s'"),
+            cfg_error(cfg, _("missing opening brace for section '%s'\n"),
                opt->name);
             return STATE_ERROR;
          }
@@ -823,7 +894,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
       case STATE_EXPECT_TITLE: /* expecting a title for a section */
          if(tok != CFGT_STR)
          {
-            cfg_error(cfg, _("missing title for section '%s'"),
+            cfg_error(cfg, _("missing title for section '%s'\n"),
                       opt->name);
             return STATE_ERROR;
          }
@@ -850,7 +921,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             }
             else
             {
-               cfg_error(cfg, _("missing parenthesis for function '%s'"),
+               cfg_error(cfg, _("missing parenthesis for function '%s'\n"),
                          opt->name);
                return STATE_ERROR;
             }
@@ -881,7 +952,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          } 
          else 
          {
-            cfg_error(cfg, _("syntax error in call of function '%s'"),
+            cfg_error(cfg, _("syntax error in call of function '%s'\n"),
                       opt->name);
             return STATE_ERROR;
          }
@@ -908,7 +979,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          }
          else 
          {
-            cfg_error(cfg, _("syntax error in call of function '%s'"),
+            cfg_error(cfg, _("syntax error in call of function '%s'\n"),
                       opt->name);
             return STATE_ERROR;
          }
@@ -937,7 +1008,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
                state = STATE_EXPECT_PAREN; // parse the function call
             else
             {
-               cfg_error(cfg, "internal error");
+               cfg_error(cfg, "internal error\n");
                return STATE_ERROR;
             }
          }
@@ -982,14 +1053,15 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
    cfg_assert(cfg);
    memset(cfg, 0, sizeof(cfg_t));
 
-   cfg->name = "root";
-   cfg->opts = opts;
-   cfg->flags = flags;
+   cfg->name     = "root";
+   cfg->opts     = opts;
+   cfg->flags    = flags;
    cfg->filename = 0;
-   cfg->line = 0;
-   cfg->lumpnum = -1; // haleyjd
-   cfg->errfunc = 0;
-   cfg->lookfor = NULL; // haleyjd
+   cfg->line     = 0;
+   cfg->lumpnum  = -1;   // haleyjd
+   cfg->errfunc  = 0;
+   cfg->lexfunc  = 0;    // haleyjd
+   cfg->lookfor  = NULL; // haleyjd
 
    // haleyjd: removed ENABLE_NLS
 
@@ -1002,10 +1074,9 @@ char *cfg_tilde_expand(const char *filename)
    return strdup(filename);
 }
 
-int cfg_parse(cfg_t *cfg, const char *filename)
+int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
 {
-   DWFILE dwfile; // haleyjd
-   int ret; // haleyjd
+   int ret = CFG_SUCCESS; // haleyjd
 
    cfg_assert(cfg && filename);
  
@@ -1016,26 +1087,17 @@ int cfg_parse(cfg_t *cfg, const char *filename)
    cfg->filename = cfg_tilde_expand(filename);
    if(cfg->filename == 0)
    {
-      cfg_error(cfg, _("%s: can't expand home directory"), filename);
+      cfg_error(cfg, _("%s: can't expand home directory\n"), filename);
       return CFG_FILE_ERROR;
    }
 
    cfg->line = 1;
 
-   cfg->lumpnum = -1; // haleyjd 07/20/05
-
-   D_OpenFile(&dwfile, filename, "rb");
-   
-   if(!D_IsOpen(&dwfile))
-      return CFG_FILE_ERROR;
+   cfg->lumpnum = file->lumpnum;
 
    // haleyjd: initialize the lexer
-   lexer_init(&dwfile);
-
-   ret = cfg_parse_internal(cfg, 0);
-
-   // haleyjd: wow, should probably close the file huh?
-   D_Fclose(&dwfile);
+   if(lexer_init(cfg, file) == 0)
+      ret = cfg_parse_internal(cfg, 0);
 
    // haleyjd: reset the lexer state
    lexer_reset();
@@ -1046,53 +1108,45 @@ int cfg_parse(cfg_t *cfg, const char *filename)
    return CFG_SUCCESS;
 }
 
+int cfg_parse(cfg_t *cfg, const char *filename)
+{
+   DWFILE dwfile; // haleyjd
+   int ret;
+
+   D_OpenFile(&dwfile, filename, "rb");
+   
+   if(!D_IsOpen(&dwfile))
+      return CFG_FILE_ERROR;
+
+   ret = cfg_parse_dwfile(cfg, filename, &dwfile);
+
+   // haleyjd: wow, should probably close the file huh?
+   D_Fclose(&dwfile);
+
+   return ret;
+}
+
 // 
 // cfg_parselump
 // 
 // haleyjd 04/03/03: allow input from WAD lumps
 //
-int cfg_parselump(cfg_t *cfg, const char *lumpname)
+int cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum)
 {
    DWFILE dwfile; // haleyjd
    int ret; // haleyjd
 
-   cfg_assert(cfg && lumpname);
-
-   // haleyjd 07/11/03: CVS fix
-   if(cfg->filename)
-      free(cfg->filename);
-   
-   cfg->filename = cfg_tilde_expand(lumpname);
-   if(cfg->filename == 0)
-   {
-      cfg_error(cfg, _("%s: can't expand home directory"), lumpname);
-      return CFG_FILE_ERROR;
-   }
-
-   cfg->line = 1;
-
-   cfg->lumpnum = W_GetNumForName(cfg->filename); // haleyjd 07/20/05
-
-   D_OpenLump(&dwfile, cfg->lumpnum);
+   D_OpenLump(&dwfile, lumpnum);
    
    if(!D_IsOpen(&dwfile))
       return CFG_FILE_ERROR;
 
-   // haleyjd 02/28/05: woops, forgot this!
-   lexer_init(&dwfile);
-   
-   ret = cfg_parse_internal(cfg, 0);
+   ret = cfg_parse_dwfile(cfg, lumpname, &dwfile);
 
    // haleyjd: wow, should probably close the file huh?
    D_Fclose(&dwfile);
 
-   // reset the lexer state
-   lexer_reset();
-
-   if(ret == STATE_ERROR)
-      return CFG_PARSE_ERROR;
-   
-   return CFG_SUCCESS;
+   return ret;
 }
 
 void cfg_free(cfg_t *cfg)
@@ -1119,13 +1173,18 @@ void cfg_free(cfg_t *cfg)
 
 int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
+   char *data;
+
    if(argc != 1)      
    {
-      cfg_error(cfg, _("wrong number of arguments to cfg_include()"));
+      cfg_error(cfg, _("wrong number of arguments to cfg_include()\n"));
       return 1;
    }
-   
-   return cfg_lexer_include(cfg, argv[0], -1); // haleyjd
+
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, NULL)))
+      return 1;
+
+   return cfg_lexer_include(cfg, data, argv[0], -1);
 }
 
 // haleyjd 04/03/08: added cfg_t value-setting functions from libConfuse 2.0

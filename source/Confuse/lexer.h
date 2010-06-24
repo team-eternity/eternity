@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2010 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,45 +18,26 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  IO. Deals with the differences between VC++ and other languages.
+// DESCRIPTION:  
+//    Lexer header for custom libConfuse lexer.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_IO_H__
-#define __D_IO_H__
+#ifndef LEXER_H__
+#define LEXER_H__
 
-// SoM 3/12/2002: Take all of this out of the source files themselves
+extern char *mytext; // haleyjd
 
-#ifdef _MSC_VER
-
-   #include <direct.h>
-   #include <io.h>
-   #define F_OK 0
-   #define W_OK 2
-   #define R_OK 4
-   #define S_ISDIR(x) (((sbuf.st_mode & S_IFDIR)==S_IFDIR)?1:0)
-   #ifndef PATH_MAX
-      #define PATH_MAX _MAX_PATH
-   #endif
-
-#else
-#include <unistd.h>
-#endif
-
-#ifdef LINUX
-   #ifdef __FreeBSD__ // [Kate] Yeeaah...
-   #include <limits.h>
-   #else
-   #include <linux/limits.h>
-   #endif
-#endif
+int   mylex(cfg_t *cfg);
+int   lexer_init(cfg_t *cfg, struct DWFILE_s *);
+void  lexer_reset(void);
+void  lexer_set_unquoted_spaces(cfg_bool_t);
+char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len);
+char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len);
+int   cfg_lexer_include(cfg_t *cfg, char *buffer, const char *fname, int lumpnum);
+int   cfg_lexer_source_type(cfg_t *cfg);
 
 #endif
 
-//----------------------------------------------------------------------------
-//
-// $Log: d_io.h,v $
-//
-//
-//----------------------------------------------------------------------------
+// EOF
+

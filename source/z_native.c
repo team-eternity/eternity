@@ -364,7 +364,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    
    block->tag = tag;           // tag
    block->user = user;         // user
-   block = (memblock_t *)((char *) block + header_size);
+   block = (memblock_t *)((byte *) block + header_size);
    if(user)                    // if there is a user
       *user = block;           // set user to point to new block
 
@@ -388,7 +388,7 @@ void (Z_Free)(void *p, const char *file, int line)
 
    if(p)
    {
-      memblock_t *block = (memblock_t *)((char *) p - header_size);
+      memblock_t *block = (memblock_t *)((byte *) p - header_size);
 
       Z_IDCheck(IDBOOL(block->id != ZONEID),
                 "Z_Free: freed a pointer without ZONEID", block, file, line);
@@ -456,7 +456,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
                    "Z_FreeTags: Changed a tag without ZONEID", 
                    block, file, line);
 
-         (Z_Free)((char *)block + header_size, file, line);
+         (Z_Free)((byte *)block + header_size, file, line);
          block = next;               // Advance to next block
       }
    }
@@ -470,7 +470,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 //
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((char *) ptr - header_size);
+   memblock_t *block = (memblock_t *)((byte *) ptr - header_size);
    
    DEBUG_CHECKHEAP();
 
@@ -536,7 +536,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    DEBUG_CHECKHEAP();
 
-   block = (memblock_t *)((char *)ptr - header_size);
+   block = (memblock_t *)((byte *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_Realloc: Reallocated a block without ZONEID\n", 
@@ -573,7 +573,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block->size = n;
    block->tag  = tag;
 
-   p = (char *)block + header_size;
+   p = (byte *)block + header_size;
 
    // set new user, if any
    block->user = user;
@@ -678,7 +678,7 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    alloca_root = hdr;
 
    // return a pointer to the actual allocation
-   return (void *)((char *)ptr + sizeof(alloca_header_t));
+   return (void *)((byte *)ptr + sizeof(alloca_header_t));
 }
 
 //
@@ -731,7 +731,7 @@ void (Z_CheckHeap)(const char *file, int line)
 //
 int (Z_CheckTag)(void *ptr, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((char *) ptr - header_size);
+   memblock_t *block = (memblock_t *)((byte *) ptr - header_size);
 
    DEBUG_CHECKHEAP();
 
