@@ -396,6 +396,10 @@ SOURCE=.\Source\e_cmd.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\e_dstate.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\e_edf.c
 # End Source File
 # Begin Source File
@@ -453,6 +457,10 @@ SOURCE=.\Source\e_ttypes.c
 # Begin Source File
 
 SOURCE=.\source\e_args.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\e_dstate.h
 # End Source File
 # Begin Source File
 
@@ -668,6 +676,10 @@ SOURCE=.\Source\m_fcvt.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\source\m_hash.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\m_misc.c
 # End Source File
 # Begin Source File
@@ -729,6 +741,10 @@ SOURCE=.\Source\m_fcvt.h
 # Begin Source File
 
 SOURCE=.\Source\m_fixed.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\source\m_hash.h
 # End Source File
 # Begin Source File
 
