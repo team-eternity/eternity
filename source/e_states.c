@@ -1812,6 +1812,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // numbers up to this point, we will consider it a number, but the
       // parser can sort this out if the wrong token type appears when it
       // is expecting TOKEN_LABEL.
+      M_QStrPutc(token, '.');
       
       strtol(token->buffer, &endpos, 10);
       
