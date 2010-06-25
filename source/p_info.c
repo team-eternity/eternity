@@ -72,6 +72,16 @@
 extern char gamemapname[9];
 
 //
+// haleyjd 06/25/10: prototype source types
+//
+enum
+{
+   LI_PROTO_HEXEN,    // this prototype comes from Hexen MAPINFO (not used yet)
+   LI_PROTO_EMAPINFO, // this prototype comes from EMAPINFO
+   LI_PROTO_CURRENT   // this prototype is the temporary parsing prototype
+};
+
+//
 // LevelInfoProto
 //
 // haleyjd 06/21/10: This structure is a prototype for LevelInfo. Information
@@ -87,19 +97,25 @@ extern char gamemapname[9];
 typedef struct LevelInfoProto_s
 {
    mdllistitem_t links;                        // links for hashing
+   int           type;                         // type id via above enumeration
    char          mapname[9];                   // name of map to which this belongs
    LevelInfo_t   info;                         // the LevelInfo object
    boolean       modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
 } LevelInfoProto_t;
 
 // haleyjd: moved everything into the LevelInfo struct
-
 LevelInfo_t LevelInfo;
 
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum);
+// haleyjd 06/25/10: LevelInfo prototype used for parsing. Data fields marked as
+// "modified" are then copied to the destination LevelInfo (either a prototype, 
+// or the actual LevelInfo object for the current level).
+LevelInfoProto_t LevelInfoProto = { { 0 }, LI_PROTO_CURRENT };
+static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
 
-static int  P_ParseInfoCmd(qstring_t *line);
-static void P_ParseLevelVar(qstring_t *cmd);
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel);
+
+static int  P_ParseInfoCmd(qstring_t *line, int cachelevel);
+static void P_ParseLevelVar(qstring_t *cmd, int cachelevel);
 
 static void P_ClearLevelVars(void);
 static void P_InitWeapons(void);
@@ -261,16 +277,22 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       {
          // reset the parser state         
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&w_GlobalDir, glumpnum); // FIXME
+         P_ParseLevelInfo(&w_GlobalDir, glumpnum, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
    }
+
+   // FIXME/TODO: eliminate code above and copy fields from global prototype
+   // if one exists.
    
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(&w_GlobalDir, lumpnum); // FIXME
+   P_ParseLevelInfo(&w_GlobalDir, lumpnum, PU_LEVEL); // FIXME
+
+   // copy modified fields from the parsing prototype into LevelInfo
+   P_copyPrototypeToLevelInfo(&LevelInfoProto, &LevelInfo);
    
    // haleyjd: call post-processing routines
    P_LoadInterTextLump();
@@ -371,6 +393,79 @@ static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
    return E_HashObjectForKey(&protoHash, &mapname);
 }
 
+
+#define LI_COPY(enumval, field) \
+   if(proto->modified[(LI_FIELD_ ## enumval)]) \
+      info-> field = proto->info. field
+
+//
+// P_copyPrototypeToLevelInfo
+//
+// haleyjd 06/25/10: Copies data from a LevelInfoProto object into a
+// LevelInfo_t
+//
+static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info)
+{
+   LI_COPY(ALTSKYNAME,       altSkyName);
+   LI_COPY(BOSSSPECS,        bossSpecs);
+   LI_COPY(COLORMAP,         colorMap);
+   LI_COPY(CREATOR,          creator);
+   LI_COPY(DOUBLESKY,        doubleSky);
+   LI_COPY(USEEDFINTERNAME,  useEDFInterName);
+   LI_COPY(ENDOFGAME,        endOfGame);
+   LI_COPY(EXTRADATA,        extraData);
+   LI_COPY(FINALESECRETONLY, finaleSecretOnly); 
+   LI_COPY(FINALETYPE,       finaleType);
+   LI_COPY(USEFULLBRIGHT,    useFullBright);
+   LI_COPY(GRAVITY,          gravity);
+   LI_COPY(BACKDROP,         backDrop);
+   LI_COPY(INTERMUSIC,       interMusic);
+   LI_COPY(INTERPIC,         interPic);
+   LI_COPY(INTERTEXTLUMP,    interTextLump);
+   LI_COPY(KILLFINALE,       killFinale);
+   LI_COPY(KILLSTATS,        killStats);
+   LI_COPY(LEVELNAME,        levelName);
+   LI_COPY(LEVELPIC,         levelPic);
+   LI_COPY(NEXTLEVELPIC,     nextLevelPic);
+   LI_COPY(NEXTSECRETPIC,    nextSecretPic);
+   LI_COPY(SCRIPTLUMP,       scriptLump);
+   LI_COPY(LEVELTYPE,        levelType);
+   LI_COPY(HASLIGHTNING,     hasLightning);
+   LI_COPY(MUSICNAME,        musicName);
+   LI_COPY(NEXTLEVEL,        nextLevel);
+   LI_COPY(NEXTSECRET,       nextSecret);
+   LI_COPY(NOAUTOSEQUENCES,  noAutoSequences);
+   LI_COPY(OUTDOORFOG,       outdoorFog);
+   LI_COPY(PARTIME,          partime);
+   LI_COPY(SKYDELTA,         skyDelta);
+   LI_COPY(SKY2DELTA,        sky2Delta);
+   LI_COPY(SKYNAME,          skyName);
+   LI_COPY(SKY2NAME,         sky2Name);
+   LI_COPY(SOUNDSWTCHN,      sound_swtchn);
+   LI_COPY(SOUNDSWTCHX,      sound_swtchx);
+   LI_COPY(SOUNDSTNMOV,      sound_stnmov);
+   LI_COPY(SOUNDPSTOP,       sound_pstop);
+   LI_COPY(SOUNDBDCLS,       sound_bdcls);
+   LI_COPY(SOUNDBDOPN,       sound_bdopn);
+   LI_COPY(SOUNDDORCLS,      sound_dorcls);
+   LI_COPY(SOUNDDOROPN,      sound_doropn);
+   LI_COPY(SOUNDPSTART,      sound_pstart);
+   LI_COPY(SOUNDFCMOVE,      sound_fcmove);
+   LI_COPY(UNEVENLIGHT,      unevenLight);
+}
+
+//
+// P_copyLevelInfoPrototype
+//
+// haleyjd 06/25/10: Copies data out of the LevelInfoProto object into the 
+// destination LevelInfoProto object.
+//
+static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
+{
+   // for prototypes, there are no pre-existing defaults, so just do a memcpy
+   memcpy(dest, &LevelInfoProto, sizeof(LevelInfoProto));
+}
+
 //
 // P_LoadGlobalLevelInfo
 //
@@ -401,7 +496,7 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
       {
          // reset parser state
          readtype = RT_OTHER;
-         P_ParseLevelInfo(dir, glumpnum);
+         P_ParseLevelInfo(dir, glumpnum, PU_STATIC);
       }
    }
 }
@@ -416,7 +511,7 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum)
+static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
 {
    qstring_t line;
    char *lump, *rover;
@@ -451,7 +546,7 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum)
       {
          // hack for global MapInfo: if P_ParseInfoCmd returns -1,
          // we can break out of parsing early
-         if(P_ParseInfoCmd(&line) == -1)
+         if(P_ParseInfoCmd(&line, cachelevel) == -1)
             break;
          M_QStrClear(&line); // clear line buffer
       }
@@ -473,10 +568,11 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum)
 //
 // Parses a single line of a MapInfo lump.
 //
-static int P_ParseInfoCmd(qstring_t *line)
+static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
 {
    unsigned int len;
    const char *label = NULL;
+   LevelInfoProto_t *curproto = NULL;
 
    M_QStrReplace(line, "\t\r\n", ' '); // erase any control characters
    M_QStrLwr(line);                    // make everything lowercase
@@ -497,6 +593,8 @@ static int P_ParseInfoCmd(qstring_t *line)
 
       if(limode == LI_MODE_GLOBAL)
       {
+// TODO: new global parsing logic
+#if 1
          // when in global mode, returning -1 will make
          // P_ParseLevelInfo break out early, saving time
          if(foundGlobalMap)
@@ -507,6 +605,15 @@ static int P_ParseInfoCmd(qstring_t *line)
             foundGlobalMap = true;
             readtype = RT_LEVELINFO;
          }
+#else
+         // TODO: test if label is mapname
+         //       if so, commit current prototype if any
+         // TODO: determine priority of new potential prototype relative
+         //       to any that may already exist (ie from Hexen MAPINFO)
+         // TODO: dump or clear existing prototype if necessary, else
+         //       keep readtype == RT_OTHER
+         // TODO: create new prototype or modify existing
+#endif
       }
       else
       {
@@ -521,7 +628,7 @@ static int P_ParseInfoCmd(qstring_t *line)
    switch(readtype)
    {
    case RT_LEVELINFO:
-      P_ParseLevelVar(line);
+      P_ParseLevelVar(line, cachelevel);
       break;
 
    case RT_OTHER:
@@ -559,67 +666,77 @@ typedef struct levelvar_s
    void *extra;
 } levelvar_t;
 
+
+//
+// levelvars field prototype macros
+//
+// These provide a mapping between keywords and the fields of the LevelInfo
+// structure.
+//
 #define LI_STRING(name, enumval, field) \
-   { IVT_STRING, name, LI_FIELD_ ## enumval, (void *)(&(field)) }
+   { IVT_STRING, name, LI_FIELD_ ## enumval, \
+     (void *)(&(LevelInfoProto.info . field)) }
 #define LI_STRNUM(name, enumval, field, extra) \
-   { IVT_STRNUM, name, LI_FIELD_ ## enumval, (void *)(&(field)), &(extra) }
+   { IVT_STRNUM, name, LI_FIELD_ ## enumval, \
+     (void *)(&(LevelInfoProto.info . field)), &(extra) }
 #define LI_INTEGR(name, enumval, field) \
-   { IVT_INT, name, LI_FIELD_ ## enumval, &(field) }
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
 #define LI_BOOLNF(name, enumval, field) \
-   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(field) }
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
 #define LI_FLAGSF(name, enumval, field, extra) \
-   { IVT_FLAGS, name, LI_FIELD_ ## enumval, &(field), &(extra) }
+   { IVT_FLAGS, name, LI_FIELD_ ## enumval, \
+     &(LevelInfoProto.info . field), &(extra) }
 #define LI_END() \
    { IVT_END, NULL, LI_FIELD_NUMFIELDS }
 
 levelvar_t levelvars[]=
 {
-   LI_STRING("altskyname",      ALTSKYNAME,       LevelInfo.altSkyName),
-   LI_FLAGSF("boss-specials",   BOSSSPECS,        LevelInfo.bossSpecs,        boss_flagset),
-   LI_STRING("colormap",        COLORMAP,         LevelInfo.colorMap),
-   LI_STRING("creator",         CREATOR,          LevelInfo.creator),
-   LI_BOOLNF("doublesky",       DOUBLESKY,        LevelInfo.doubleSky),
-   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  LevelInfo.useEDFInterName),
-   LI_BOOLNF("endofgame",       ENDOFGAME,        LevelInfo.endOfGame),
-   LI_STRING("extradata",       EXTRADATA,        LevelInfo.extraData),
-   LI_BOOLNF("finale-secret",   FINALESECRETONLY, LevelInfo.finaleSecretOnly), 
-   LI_STRNUM("finaletype",      FINALETYPE,       LevelInfo.finaleType,       finaleTypeVals),
-   LI_BOOLNF("fullbright",      USEFULLBRIGHT,    LevelInfo.useFullBright),
-   LI_INTEGR("gravity",         GRAVITY,          LevelInfo.gravity),
-   LI_STRING("inter-backdrop",  BACKDROP,         LevelInfo.backDrop),
-   LI_STRING("intermusic",      INTERMUSIC,       LevelInfo.interMusic),
-   LI_STRING("interpic",        INTERPIC,         LevelInfo.interPic),
-   LI_STRING("intertext",       INTERTEXTLUMP,    LevelInfo.interTextLump),
-   LI_BOOLNF("killfinale",      KILLFINALE,       LevelInfo.killFinale),
-   LI_BOOLNF("killstats",       KILLSTATS,        LevelInfo.killStats),
-   LI_STRING("levelname",       LEVELNAME,        LevelInfo.levelName),
-   LI_STRING("levelpic",        LEVELPIC,         LevelInfo.levelPic),
-   LI_STRING("levelpicnext",    NEXTLEVELPIC,     LevelInfo.nextLevelPic),
-   LI_STRING("levelpicsecret",  NEXTSECRETPIC,    LevelInfo.nextSecretPic),
-   LI_STRING("levelscript",     SCRIPTLUMP,       LevelInfo.scriptLump),
-   LI_STRNUM("leveltype",       LEVELTYPE,        LevelInfo.levelType,        levelTypeVals),
-   LI_BOOLNF("lightning",       HASLIGHTNING,     LevelInfo.hasLightning),
-   LI_STRING("music",           MUSICNAME,        LevelInfo.musicName),
-   LI_STRING("nextlevel",       NEXTLEVEL,        LevelInfo.nextLevel),
-   LI_STRING("nextsecret",      NEXTSECRET,       LevelInfo.nextSecret),
-   LI_BOOLNF("noautosequences", NOAUTOSEQUENCES,  LevelInfo.noAutoSequences),
-   LI_STRING("outdoorfog",      OUTDOORFOG,       LevelInfo.outdoorFog),
-   LI_INTEGR("partime",         PARTIME,          LevelInfo.partime),
-   LI_INTEGR("skydelta",        SKYDELTA,         LevelInfo.skyDelta),
-   LI_INTEGR("sky2delta",       SKY2DELTA,        LevelInfo.sky2Delta),
-   LI_STRING("skyname",         SKYNAME,          LevelInfo.skyName),
-   LI_STRING("sky2name",        SKY2NAME,         LevelInfo.sky2Name),
-   LI_STRING("sound-swtchn",    SOUNDSWTCHN,      LevelInfo.sound_swtchn),
-   LI_STRING("sound-swtchx",    SOUNDSWTCHX,      LevelInfo.sound_swtchx),
-   LI_STRING("sound-stnmov",    SOUNDSTNMOV,      LevelInfo.sound_stnmov),
-   LI_STRING("sound-pstop",     SOUNDPSTOP,       LevelInfo.sound_pstop),
-   LI_STRING("sound-bdcls",     SOUNDBDCLS,       LevelInfo.sound_bdcls),
-   LI_STRING("sound-bdopn",     SOUNDBDOPN,       LevelInfo.sound_bdopn),
-   LI_STRING("sound-dorcls",    SOUNDDORCLS,      LevelInfo.sound_dorcls),
-   LI_STRING("sound-doropn",    SOUNDDOROPN,      LevelInfo.sound_doropn),
-   LI_STRING("sound-pstart",    SOUNDPSTART,      LevelInfo.sound_pstart),
-   LI_STRING("sound-fcmove",    SOUNDFCMOVE,      LevelInfo.sound_fcmove),
-   LI_BOOLNF("unevenlight",     UNEVENLIGHT,      LevelInfo.unevenLight),
+   LI_STRING("altskyname",      ALTSKYNAME,       altSkyName),
+   LI_FLAGSF("boss-specials",   BOSSSPECS,        bossSpecs,        boss_flagset),
+   LI_STRING("colormap",        COLORMAP,         colorMap),
+   LI_STRING("creator",         CREATOR,          creator),
+   LI_BOOLNF("doublesky",       DOUBLESKY,        doubleSky),
+   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  useEDFInterName),
+   LI_BOOLNF("endofgame",       ENDOFGAME,        endOfGame),
+   LI_STRING("extradata",       EXTRADATA,        extraData),
+   LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly), 
+   LI_STRNUM("finaletype",      FINALETYPE,       finaleType,       finaleTypeVals),
+   LI_BOOLNF("fullbright",      USEFULLBRIGHT,    useFullBright),
+   LI_INTEGR("gravity",         GRAVITY,          gravity),
+   LI_STRING("inter-backdrop",  BACKDROP,         backDrop),
+   LI_STRING("intermusic",      INTERMUSIC,       interMusic),
+   LI_STRING("interpic",        INTERPIC,         interPic),
+   LI_STRING("intertext",       INTERTEXTLUMP,    interTextLump),
+   LI_BOOLNF("killfinale",      KILLFINALE,       killFinale),
+   LI_BOOLNF("killstats",       KILLSTATS,        killStats),
+   LI_STRING("levelname",       LEVELNAME,        levelName),
+   LI_STRING("levelpic",        LEVELPIC,         levelPic),
+   LI_STRING("levelpicnext",    NEXTLEVELPIC,     nextLevelPic),
+   LI_STRING("levelpicsecret",  NEXTSECRETPIC,    nextSecretPic),
+   LI_STRING("levelscript",     SCRIPTLUMP,       scriptLump),
+   LI_STRNUM("leveltype",       LEVELTYPE,        levelType,        levelTypeVals),
+   LI_BOOLNF("lightning",       HASLIGHTNING,     hasLightning),
+   LI_STRING("music",           MUSICNAME,        musicName),
+   LI_STRING("nextlevel",       NEXTLEVEL,        nextLevel),
+   LI_STRING("nextsecret",      NEXTSECRET,       nextSecret),
+   LI_BOOLNF("noautosequences", NOAUTOSEQUENCES,  noAutoSequences),
+   LI_STRING("outdoorfog",      OUTDOORFOG,       outdoorFog),
+   LI_INTEGR("partime",         PARTIME,          partime),
+   LI_INTEGR("skydelta",        SKYDELTA,         skyDelta),
+   LI_INTEGR("sky2delta",       SKY2DELTA,        sky2Delta),
+   LI_STRING("skyname",         SKYNAME,          skyName),
+   LI_STRING("sky2name",        SKY2NAME,         sky2Name),
+   LI_STRING("sound-swtchn",    SOUNDSWTCHN,      sound_swtchn),
+   LI_STRING("sound-swtchx",    SOUNDSWTCHX,      sound_swtchx),
+   LI_STRING("sound-stnmov",    SOUNDSTNMOV,      sound_stnmov),
+   LI_STRING("sound-pstop",     SOUNDPSTOP,       sound_pstop),
+   LI_STRING("sound-bdcls",     SOUNDBDCLS,       sound_bdcls),
+   LI_STRING("sound-bdopn",     SOUNDBDOPN,       sound_bdopn),
+   LI_STRING("sound-dorcls",    SOUNDDORCLS,      sound_dorcls),
+   LI_STRING("sound-doropn",    SOUNDDOROPN,      sound_doropn),
+   LI_STRING("sound-pstart",    SOUNDPSTART,      sound_pstart),
+   LI_STRING("sound-fcmove",    SOUNDFCMOVE,      sound_fcmove),
+   LI_BOOLNF("unevenlight",     UNEVENLIGHT,      unevenLight),
 
    //{ IVT_STRING,  "defaultweapons", &info_weapons },
    
@@ -641,7 +758,7 @@ enum
 // any appropriate matching MapInfo variable to the retrieved
 // value.
 //
-static void P_ParseLevelVar(qstring_t *cmd)
+static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
 {
    int state = 0;
    qstring_t var, value;
@@ -693,12 +810,12 @@ static void P_ParseLevelVar(qstring_t *cmd)
    // TODO: improve linear search? fixed small set, so may not matter
    while(current->type != IVT_END)
    {
-      if(!M_QStrCmp(&var, current->name))
+      if(!M_QStrCaseCmp(&var, current->name))
       {
          switch(current->type)
          {
          case IVT_STRING:
-            *(char**)current->variable = M_QStrCDup(&value, PU_LEVEL);
+            *(char**)current->variable = M_QStrCDup(&value, cachelevel);
             break;
 
             // haleyjd 10/05/05: named value support
@@ -735,6 +852,9 @@ static void P_ParseLevelVar(qstring_t *cmd)
          default:
             I_Error("P_ParseLevelVar: unknown level variable type\n");
          }
+
+         // mark this field as modified in the prototype object
+         LevelInfoProto.modified[current->fieldenum] = true;
       }
       current++;
    }
@@ -1217,6 +1337,9 @@ static void P_ClearLevelVars(void)
 {
    static char nextlevel[10];
    static char nextsecret[10];
+
+   // 06/25/10: clear the LevelInfoProto object
+   memset(&LevelInfoProto, 0, sizeof(LevelInfoProto));
 
    // find a metainfo for the level if one exists
    curmetainfo = P_GetMetaInfoForLevel(gamemap);
