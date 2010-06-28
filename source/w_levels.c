@@ -363,7 +363,6 @@ static void W_doMasterLevelsStart(const char *filename)
    inmasterlevels = true;
 }
 
-
 //
 // W_EnumerateMasterLevels
 //
@@ -415,6 +414,8 @@ void W_DoMasterLevels(boolean allowexit)
    {
       if(menuactive)
          MN_ErrorMsg("Could not list directory");
+      else
+         C_Printf(FC_ERROR "Could not list directory\n");
       return;
    }
 
@@ -442,11 +443,10 @@ CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 //
 // w_startlevel
 // 
-// Internal command, undocumented.
 // Executed by the menu filebox widget when displaying the Master Levels
 // directory listing, in order to load and start the proper map.
 //
-CONSOLE_COMMAND(w_startlevel, cf_notnet|cf_hidden)
+CONSOLE_COMMAND(w_startlevel, cf_notnet)
 {
    if(Console.argc < 1)
       return;
