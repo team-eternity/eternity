@@ -33,9 +33,16 @@
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //  Lesser General Public License for more details.
 //
+//  As a special exception, the code may be used in a closed-source derivative
+//  of the DOOM source code without meeting the requirement of Section 6(a) 
+//  that object files for the work combining with this code be distributed for
+//  purposes of relinking, so long as all other requirements of the license
+//  have been fulfilled. Any other use must adhere to the complete terms of
+//  the GNU Lesser General Public License.
+//
 // Note that application of the LGPL license to this code requires that any
 // modified code derived from this module be made available publicly under
-// this license or a valid combining version of the GPL, including to the 
+// the LGPL, or a valid combining version of the GPL, including to the 
 // original author, and requires explicit attribution of the use of the code 
 // to be released with the documentation for any binary distribution, as well
 // as a copy of the relevant license files and instructions on how the source 
