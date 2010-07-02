@@ -17,37 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-// ----------------------------------------------------------------------------
-//
-// Alternatively, applying to this module only, excepting any and all external
-// dependencies and all code inside the function R_SplitDist, you may apply
-// the following license:
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-// 
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
-//
-//  As a special exception, the code may be used in a closed-source derivative
-//  of the DOOM source code without meeting the requirement of Section 6(a) 
-//  that object files for the work combining with this code be distributed for
-//  purposes of relinking, so long as all other requirements of the license
-//  have been fulfilled. Any other use must adhere to the complete terms of
-//  the GNU Lesser General Public License.
-//
-// Note that application of the LGPL license to this code requires that any
-// modified code derived from this module be made available publicly under
-// the LGPL, or a valid combining version of the GPL, including to the 
-// original author, and requires explicit attribution of the use of the code 
-// to be released with the documentation for any binary distribution, as well
-// as a copy of the relevant license files and instructions on how the source 
-// code for the modified version may be obtained.
-//
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:

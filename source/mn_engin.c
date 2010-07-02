@@ -228,7 +228,7 @@ static int MN_FindLastSelectable(menu_t *menu)
 //
 // draw a 'slider' (for sound volume, etc)
 //
-static void MN_DrawSlider(int x, int y, int pct)
+static int MN_DrawSlider(int x, int y, int pct)
 {
    int i;
    int draw_x = x;
@@ -281,6 +281,8 @@ static void MN_DrawSlider(int x, int y, int pct)
    Z_ChangeTag(slider_gfx[slider_right],  PU_CACHE);
    Z_ChangeTag(slider_gfx[slider_mid],    PU_CACHE);
    Z_ChangeTag(slider_gfx[slider_slider], PU_CACHE);
+
+   return x + draw_x /*+ ws / 2*/;
 }
 
 //
@@ -565,8 +567,30 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
       {
          double range = var->dmax - var->dmin;
          double posn  = *(double *)var->variable - var->dmin;
+         int sliderxpos;
 
-         MN_DrawSlider(x + GAP, y, (int)((posn*100) / range));
+         sliderxpos = MN_DrawSlider(x + GAP, y, (int)((posn*100) / range));
+
+         if(drawing_menu &&
+            item - drawing_menu->menuitems == drawing_menu->selected)
+         {
+            char doublebuf[128];
+            int box_x, box_y, box_w, box_h, text_x, text_y, text_w, text_h;
+
+            psnprintf(doublebuf, sizeof(doublebuf), "%.2f", *(double *)var->variable);
+            text_w = V_FontStringWidth(menu_font, doublebuf);
+            text_h = V_FontStringHeight(menu_font, doublebuf);
+            text_x = sliderxpos - text_w / 2;
+            text_y = y - (text_h + 4 + 2) - 1;
+
+            box_x = text_x - 4;
+            box_y = text_y - 4;
+            box_w = text_w + 8;
+            box_h = text_h + 8;
+
+            V_DrawBox(box_x, box_y, box_w, box_h);
+            V_FontWriteText(menu_font, doublebuf, text_x, text_y);
+         }
       }
    }
 }
@@ -1494,6 +1518,21 @@ boolean MN_Responder(event_t *ev)
             // change variable
             psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
          }
+         else if(menuitem->var->type == vt_float)
+         {
+            double range = menuitem->var->dmax - menuitem->var->dmin;
+            double value = *(double *)(menuitem->var->variable);
+
+            value -= range / 10.0;
+
+            if(value < menuitem->var->dmin)
+               value = menuitem->var->dmin;
+            else if(value > menuitem->var->dmax)
+               value = menuitem->var->dmax;
+
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
+                      menuitem->data, value);
+         }
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1528,12 +1567,29 @@ boolean MN_Responder(event_t *ev)
       case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
-         if(menuitem->var->type == vt_int &&
-            menuitem->var->max - menuitem->var->min == 1) 
-            break;
+         if(menuitem->var->type == vt_int)
+         {
+            if(menuitem->var->max - menuitem->var->min == 1) 
+               break;
          
-         // change variable
-         psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
+            // change variable
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
+         }
+         else if(menuitem->var->type == vt_float)
+         {
+            double range = menuitem->var->dmax - menuitem->var->dmin;
+            double value = *(double *)(menuitem->var->variable);
+
+            value += range / 10.0;
+
+            if(value < menuitem->var->dmin)
+               value = menuitem->var->dmin;
+            else if(value > menuitem->var->dmax)
+               value = menuitem->var->dmax;
+
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
+                      menuitem->data, value);
+         }
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
