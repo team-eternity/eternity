@@ -1011,6 +1011,388 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
    }
 }
 
+//=============================================================================
+//
+// Methods for different types of default items
+//
+
+// 
+// Strings
+//
+
+// Write help for a string option
+static boolean M_writeDefaultHelpString(default_t *dp, FILE *f)
+{
+   return (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
+}
+
+// Write a string option key/value pair
+static boolean M_writeDefaultString(default_t *dp, FILE *f)
+{
+   const char *value = 
+      dp->modified ? dp->orig_default_s : *(const char **)dp->location;
+
+   return (fprintf(f, "%-25s \"%s\"\n", dp->name, value) == EOF);
+}
+
+// Set the value of a string option
+static void M_setDefaultValueString(default_t *dp, void *value, boolean wad)
+{
+   const char *strparm = (const char *)value;
+
+   if(wad && !dp->modified)                        // Modified by wad
+   {                                               // First time modified
+      dp->modified = 1;                            // Mark it as modified
+      dp->orig_default_s = *(char **)dp->location; // Save original default
+   }
+   else
+      free(*(char **)dp->location);               // Free old value
+
+   *(char **)dp->location = strdup(strparm);      // Change default value
+
+   if(dp->current)                                // Current value
+   {
+      free(*(char **)dp->current);                // Free old value
+      *(char **)dp->current = strdup(strparm);    // Change current value
+   }
+}
+
+// Read a string option and set it
+static boolean M_readDefaultString(default_t *dp, char *src, boolean wad)
+{
+   int len = strlen(src) - 1;
+
+   while(isspace(src[len]))
+      len--;
+
+   if(src[len] == '"')
+      len--;
+
+   src[len+1] = 0;
+
+   dp->methods->setValue(dp, src+1, wad);
+
+   return false;
+}
+
+// Set to default value
+static void M_setDefaultString(default_t *dp)
+{
+   // phares 4/13/98:
+   // provide default strings with their own malloced memory so that when
+   // we leave this routine, that's what we're dealing with whether there
+   // was a config file or not, and whether there were chat definitions
+   // in it or not. This provides consistency later on when/if we need to
+   // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
+
+   *(char **)dp->location = strdup(dp->defaultvalue_s);
+}
+
+//
+// Integers
+//
+
+// Write help for an integer option
+static boolean M_writeDefaultHelpInt(default_t *dp, FILE *f)
+{
+   boolean written = false;
+
+   if(dp->limit.min == UL)
+   {
+      if(dp->limit.max == UL)
+         written = (fprintf(f, "[?-?(%d)]", dp->defaultvalue_i) == EOF);
+      else 
+      {
+         written = (fprintf(f, "[?-%d(%d)]", dp->limit.max, 
+                            dp->defaultvalue_i) == EOF);
+      }
+   }
+   else if(dp->limit.max == UL)
+   {
+      written = (fprintf(f, "[%d-?(%d)]", dp->limit.min, 
+                         dp->defaultvalue_i) == EOF);
+   }
+   else
+   {
+      written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max, 
+                         dp->defaultvalue_i) == EOF);
+   }
+
+   return written;
+}
+
+// Write an integer key/value pair
+static boolean M_writeDefaultInt(default_t *dp, FILE *f)
+{
+   int value = dp->modified ? dp->orig_default_i : *(int *)dp->location;
+
+   return (fprintf(f, "%-25s %5i\n", dp->name,
+                   strncmp(dp->name, "key_", 4) ? value : 
+                   I_DoomCode2ScanCode(value)) == EOF);
+}
+
+// Set the value of an integer option
+static void M_setDefaultValueInt(default_t *dp, void *value, boolean wad)
+{
+   int parm = *(int *)value;
+
+   if((dp->limit.min == UL || dp->limit.min <= parm) &&
+      (dp->limit.max == UL || dp->limit.max >= parm))
+   {
+      if(wad)
+      {
+         if(!dp->modified) // First time it's modified by wad
+         {
+            dp->modified = 1;                           // Mark it as modified
+            dp->orig_default_i = *(int *)dp->location;  // Save original default
+         }
+         if(dp->current)            // Change current value
+            *(int *)dp->current = parm;
+      }
+      *(int *)dp->location = parm;  // Change default
+   }
+}
+
+// Read the value of an integer option and set it to the default
+static boolean M_readDefaultInt(default_t *dp, char *src, boolean wad)
+{
+   int parm = 0;
+
+   if(sscanf(src, "%i", &parm) != 1)
+      return true;                         // Not A Number
+
+   if(!strncmp(dp->name, "key_", 4))    // killough
+      parm = I_ScanCode2DoomCode(parm);
+
+   // call setValue method through method table rather than directly
+   // (could allow redirection in the future)
+   dp->methods->setValue(dp, &parm, wad);
+
+   return false;
+}
+
+// Set to default value
+static void M_setDefaultInt(default_t *dp)
+{
+   *(int *)dp->location = dp->defaultvalue_i;
+}
+
+//
+// Floats
+//
+
+// Write help for a float option
+static boolean M_writeDefaultHelpFloat(default_t *dp, FILE *f)
+{
+   boolean written = false;
+
+   if(dp->limit.min == UL)
+   {
+      if(dp->limit.max == UL)
+         written = (fprintf(f, "[?-?](%g)]", dp->defaultvalue_f) == EOF);
+      else
+      {
+         written = (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0,
+                            dp->defaultvalue_f) == EOF);
+      }
+   }
+   else if(dp->limit.max == UL)
+   {
+      written = (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0,
+                         dp->defaultvalue_f) == EOF);
+   }
+   else
+   {
+      written = (fprintf(f, "[%g-%g(%g)]",
+                         (double)dp->limit.min / 100.0,
+                         (double)dp->limit.max / 100.0,
+                         dp->defaultvalue_f) == EOF);
+   }
+
+   return written;
+}
+
+// Write a key/value pair for a float option
+static boolean M_writeDefaultFloat(default_t *dp, FILE *f)
+{
+   double value = dp->modified ? dp->orig_default_f : *(double *)dp->location;
+
+   return (fprintf(f, "%-25s %#g\n", dp->name, value) == EOF);
+}
+
+// Set the value of a float option
+static void M_setDefaultValueFloat(default_t *dp, void *value, boolean wad)
+{
+   double tmp = *(double *)value;
+
+   //jff 3/4/98 range check numeric parameters
+   if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
+      (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
+   {
+      if(wad)
+      {
+         if(!dp->modified) // First time it's modified by wad
+         {
+            dp->modified = 1;                             // Mark it as modified
+            dp->orig_default_f = *(double *)dp->location; // Save original default
+         }
+         if(dp->current)              // Change current value
+            *(double *)dp->current = tmp;
+      }
+      *(double *)dp->location = tmp;  // Change default
+   }
+}
+
+// Read the value of a float option from a string and set it
+static boolean M_readDefaultFloat(default_t *dp, char *src, boolean wad)
+{
+   double tmp;
+
+   if(sscanf(src, "%lg", &tmp) != 1)
+      return true;                       // Not A Number
+
+   dp->methods->setValue(dp, &tmp, wad);
+
+   return false;
+}
+
+// Set to default value
+static void M_setDefaultFloat(default_t *dp)
+{
+   *(double *)dp->location = dp->defaultvalue_f;
+}
+
+//
+// Booleans
+//
+
+// Write help for a boolean option
+static boolean M_writeDefaultHelpBool(default_t *dp, FILE *f)
+{
+   return (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
+}
+
+// Write a key/value pair for a boolean option
+static boolean M_writeDefaultBool(default_t *dp, FILE *f)
+{
+   boolean value = dp->modified ? dp->orig_default_b : *(boolean *)dp->location;
+
+   return (fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF);
+}
+
+// Sets the value of a boolean option
+static void M_setDefaultValueBool(default_t *dp, void *value, boolean wad)
+{
+   boolean parm = *(boolean *)value;
+
+   //jff 3/4/98 range check numeric parameters
+   if((dp->limit.min == UL || dp->limit.min <= parm) &&
+      (dp->limit.max == UL || dp->limit.max >= parm))
+   {
+      if(wad)
+      {
+         if(!dp->modified) // First time it's modified by wad
+         {
+            dp->modified = 1;                               // Mark it as modified
+            dp->orig_default_b = *(boolean *)dp->location;  // Save original default
+         }
+         if(dp->current)            // Change current value
+            *(boolean *)dp->current = !!parm;
+      }
+      *(boolean *)dp->location = !!parm;  // Change default
+   }
+}
+
+// Reads the value of a boolean option from a string and sets it
+static boolean M_readDefaultBool(default_t *dp, char *src, boolean wad)
+{
+   int parm;
+
+   if(sscanf(src, "%i", &parm) != 1)
+      return true;                       // Not A Number
+
+   dp->methods->setValue(dp, &parm, wad);
+
+   return false;
+}
+
+// Set to default value
+static void M_setDefaultBool(default_t *dp)
+{
+   *(boolean *)dp->location = dp->defaultvalue_b;
+}
+
+//
+// Interface objects for defaults
+//
+static default_i defaultInterfaces[] =
+{
+   // dt_integer
+   { 
+      M_writeDefaultHelpInt,
+      M_writeDefaultInt,
+      M_setDefaultValueInt,
+      M_readDefaultInt,
+      M_setDefaultInt
+   },
+   // dt_string
+   { 
+      M_writeDefaultHelpString,
+      M_writeDefaultString,
+      M_setDefaultValueString,
+      M_readDefaultString,
+      M_setDefaultString,
+   },
+   // dt_float
+   { 
+      M_writeDefaultHelpFloat,
+      M_writeDefaultFloat,
+      M_setDefaultValueFloat,
+      M_readDefaultFloat,
+      M_setDefaultFloat
+   },
+   // dt_boolean
+   { 
+      M_writeDefaultHelpBool,
+      M_writeDefaultBool,
+      M_setDefaultValueBool,
+      M_readDefaultBool,
+      M_setDefaultBool
+   },
+};
+
+//
+// M_populateDefaultMethods
+//
+// Method population for default objects
+//
+static void M_populateDefaultMethods(defaultfile_t *df)
+{
+   default_t *dp;
+
+   for(dp = df->defaults; dp->name; dp++)
+      dp->methods = &defaultInterfaces[dp->type];
+}
+
+//=============================================================================
+//
+// Default File Writing
+//
+
+//
+// M_defaultFileWriteError
+//
+// Call this when a fatal error occurs writing the configuration file.
+//
+static void M_defaultFileWriteError(defaultfile_t *df, char *tmpfile)
+{
+   // haleyjd: I_FatalError should be called here, since this can be invoked
+   // via an I_Error action already.
+   I_FatalError(I_ERR_KILL,
+      "Could not write defaults to %s: %s\n%s left unchanged\n",
+      tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+}
+
 //
 // M_SaveDefaultFile
 //
@@ -1033,7 +1415,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    errno = 0;
    if(!(f = fopen(tmpfile, "w")))  // killough 9/21/98
-      goto error;
+   {
+      M_defaultFileWriteError(df, tmpfile);
+      return;
+   }
 
    // 3/3/98 explain format of file
    // killough 10/98: use executable's name
@@ -1043,7 +1428,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
               ";[min-max(default)] description of variable\n"
               ";* at end indicates variable is settable in wads\n"
               ";variable   value\n\n", D_DoomExeName()) == EOF)
-      goto error;
+   {
+      M_defaultFileWriteError(df, tmpfile);
+      return;
+   }
 
    // killough 10/98: output comment lines which were read in during input
 
@@ -1063,7 +1451,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
                             *(df->comments[line].text) != '\n' &&
                             putc('\n',f) == EOF)) ||
                fputs(df->comments[line].text, f) == EOF)
-               goto error;
+            {
+               M_defaultFileWriteError(df, tmpfile);
+               return;
+            }
          }
       }
 
@@ -1071,7 +1462,10 @@ void M_SaveDefaultFile(defaultfile_t *df)
       // Output a blank line for separation
 
       if(!blanks && putc('\n',f) == EOF)
-         goto error;
+      {
+         M_defaultFileWriteError(df, tmpfile);
+         return;
+      }
 
       if(!dp->name)      // If we're at end of defaults table, exit loop
          break;
@@ -1084,71 +1478,12 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
       if(config_help && !brackets)
       {
-         boolean printError = false;
-
-         switch(dp->type)
-         {
-         case dt_string:
-            printError = (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
-            break;
-         case dt_integer:
-            if(dp->limit.min == UL)
-            {
-               if(dp->limit.max == UL)
-                  printError = (fprintf(f, "[?-?(%d)]", dp->defaultvalue_i) == EOF);
-               else 
-               {
-                  printError = 
-                     (fprintf(f, "[?-%d(%d)]", dp->limit.max, dp->defaultvalue_i) == EOF);
-               }
-            }
-            else if(dp->limit.max == UL)
-            {
-               printError = 
-                  (fprintf(f, "[%d-?(%d)]", dp->limit.min, dp->defaultvalue_i) == EOF);
-            }
-            else
-            {
-               printError = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max,
-                             dp->defaultvalue_i) == EOF);
-            }
-            break;
-         case dt_float:
-            if(dp->limit.min == UL)
-            {
-               if(dp->limit.max == UL)
-                  printError = (fprintf(f, "[?-?](%g)]", dp->defaultvalue_f) == EOF);
-               else
-               {
-                  printError =
-                     (fprintf(f, "[?-%g(%g)]", (double)dp->limit.max / 100.0, 
-                              dp->defaultvalue_f) == EOF);
-               }
-            }
-            else if(dp->limit.max == UL)
-            {
-               printError = 
-                  (fprintf(f, "[%g-?(%g)]", (double)dp->limit.min / 100.0,
-                           dp->defaultvalue_f) == EOF);
-            }
-            else
-            {
-               printError = (fprintf(f, "[%g-%g(%g)]",
-                             (double)dp->limit.min / 100.0,
-                             (double)dp->limit.max / 100.0,
-                             dp->defaultvalue_f) == EOF);
-            }
-            break;
-         case dt_boolean:
-            printError = (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
-            break;
-         default:
-            break;
-         }
-
-         if(printError ||
+         if(dp->methods->writeHelp(dp, f) ||
             fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
-            goto error;
+         {
+            M_defaultFileWriteError(df, tmpfile);
+            return;         
+         }
       }
 
       // killough 11/98:
@@ -1158,60 +1493,16 @@ void M_SaveDefaultFile(defaultfile_t *df)
       // killough 3/6/98:
       // use spaces instead of tabs for uniform justification
 
-      switch(dp->type)
+      if(dp->methods->writeOpt(dp, f))
       {
-      case dt_integer:
-         {
-            int value = 
-               dp->modified ? dp->orig_default_i : *(int *)dp->location;
-
-            if(fprintf(f, "%-25s %5i\n", dp->name,
-                       strncmp(dp->name, "key_", 4) ? value : 
-                       I_DoomCode2ScanCode(value)) == EOF)
-               goto error;
-         }
-         break;
-      case dt_string:
-         {
-            const char *value = 
-               dp->modified ? dp->orig_default_s : *(const char **)dp->location;
-
-            if(fprintf(f, "%-25s \"%s\"\n", dp->name, value) == EOF)
-               goto error;
-         }
-         break;
-      case dt_float:
-         {
-            double value = 
-               dp->modified ? dp->orig_default_f : *(double *)dp->location;
-
-            if(fprintf(f, "%-25s %#g\n", dp->name, value) == EOF)
-               goto error;
-         }
-         break;
-      case dt_boolean:
-         {
-            boolean value = 
-               dp->modified ? dp->orig_default_b : *(boolean *)dp->location;
-
-            if(fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF)
-               goto error;
-         }
-         break;
-      default:
-         break;
+         M_defaultFileWriteError(df, tmpfile);
+         return;
       }
    }
 
-   // haleyjd: I_FatalError should be called here, since this can be invoked
-   // via an I_Error action already.
-
    if(fclose(f) == EOF)
    {
-   error:
-      I_FatalError(I_ERR_KILL,
-                   "Could not write defaults to %s: %s\n%s left unchanged\n",
-                   tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+      M_defaultFileWriteError(df, tmpfile);
       return;
    }
 
@@ -1246,8 +1537,6 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
 {
    char name[80], strparm[100];
    default_t *dp;
-   int parm;
-   double tmp;
    
    while(isspace(*p))  // killough 10/98: skip leading whitespace
       p++;
@@ -1260,117 +1549,10 @@ boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
       (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))
    {
-      return 1;
+      return true;
    }
 
-   switch(dp->type)
-   {
-   case dt_integer:
-      {
-         if(sscanf(strparm, "%i", &parm) != 1)
-            return 1;                       // Not A Number
-         
-         if(!strncmp(name, "key_", 4))    // killough
-            parm = I_ScanCode2DoomCode(parm);
-         
-         //jff 3/4/98 range check numeric parameters
-         if((dp->limit.min == UL || dp->limit.min <= parm) &&
-            (dp->limit.max == UL || dp->limit.max >= parm))
-         {
-            if(wad)
-            {
-               if(!dp->modified) // First time it's modified by wad
-               {
-                  dp->modified = 1;                           // Mark it as modified
-                  dp->orig_default_i = *(int *)dp->location;  // Save original default
-               }
-               if(dp->current)            // Change current value
-                  *(int *)dp->current = parm;
-            }
-            *(int *)dp->location = parm;  // Change default
-         }
-      }
-      break;
-   case dt_string:
-      {
-         int len = strlen(strparm) - 1;
-
-         while(isspace(strparm[len]))
-            len--;
-
-         if(strparm[len] == '"')
-            len--;
-
-         strparm[len+1] = 0;
-
-         if(wad && !dp->modified)                        // Modified by wad
-         {                                               // First time modified
-            dp->modified = 1;                            // Mark it as modified
-            dp->orig_default_s = *(char **)dp->location; // Save original default
-         }
-         else
-            free(*(char **)dp->location);               // Free old value
-
-         *(char **)dp->location = strdup(strparm+1);    // Change default value
-
-         if(dp->current)                                // Current value
-         {
-            free(*(char **)dp->current);                // Free old value
-            *(char **)dp->current = strdup(strparm+1);  // Change current value
-         }
-      }
-      break;
-   case dt_float:
-      {
-         if(sscanf(strparm, "%lg", &tmp) != 1)
-            return 1;                       // Not A Number
-                  
-         //jff 3/4/98 range check numeric parameters
-         if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
-            (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
-         {
-            if(wad)
-            {
-               if(!dp->modified) // First time it's modified by wad
-               {
-                  dp->modified = 1;                             // Mark it as modified
-                  dp->orig_default_f = *(double *)dp->location; // Save original default
-               }
-               if(dp->current)              // Change current value
-                  *(double *)dp->current = tmp;
-            }
-            *(double *)dp->location = tmp;  // Change default
-         }
-      }
-      break;
-   case dt_boolean:
-      {
-         if(sscanf(strparm, "%i", &parm) != 1)
-            return 1;                       // Not A Number
-                  
-         //jff 3/4/98 range check numeric parameters
-         if((dp->limit.min == UL || dp->limit.min <= parm) &&
-            (dp->limit.max == UL || dp->limit.max >= parm))
-         {
-            if(wad)
-            {
-               if(!dp->modified) // First time it's modified by wad
-               {
-                  dp->modified = 1;                               // Mark it as modified
-                  dp->orig_default_b = *(boolean *)dp->location;  // Save original default
-               }
-               if(dp->current)            // Change current value
-                  *(boolean *)dp->current = !!parm;
-            }
-            *(boolean *)dp->location = !!parm;  // Change default
-         }
-      }
-      break;
-   default:
-      break;
-   }
-
-   return 0;                          // Success
+   return dp->methods->readOpt(dp, strparm, wad); // Success (false) or failure (true)
 }
 
 //
@@ -1414,35 +1596,12 @@ void M_LoadDefaultFile(defaultfile_t *df)
    register default_t *dp;
    FILE *f;
 
-   // set everything to base values
-   //
-   // phares 4/13/98:
-   // provide default strings with their own malloced memory so that when
-   // we leave this routine, that's what we're dealing with whether there
-   // was a config file or not, and whether there were chat definitions
-   // in it or not. This provides consistency later on when/if we need to
-   // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
+   // haleyjd 07/03/10: set default object methods for easy calls
+   M_populateDefaultMethods(df);
 
+   // set everything to base values
    for(dp = df->defaults; dp->name; dp++)
-   {
-      switch(dp->type)
-      {
-      case dt_integer:
-         *(int *)dp->location = dp->defaultvalue_i;
-         break;
-      case dt_string:
-         *(char **)dp->location = strdup(dp->defaultvalue_s);
-         break;
-      case dt_float:
-         *(double *)dp->location = dp->defaultvalue_f;
-         break;
-      case dt_boolean:
-         *(boolean *)dp->location = dp->defaultvalue_b;
-         break;
-      default:
-         break;
-      }
-   }
+      dp->methods->setDefault(dp);
 
    M_NormalizeSlashes(df->fileName);
    

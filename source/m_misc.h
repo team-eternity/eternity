@@ -77,6 +77,19 @@ typedef enum
 //
 // killough 11/98: totally restructured
 
+// Forward declaration for interface (mainly for GCC)
+typedef struct default_s *defaultptr;
+
+// haleyjd 07/03/10: interface object for defaults
+typedef struct default_i_s
+{
+   boolean (*writeHelp) (defaultptr, FILE *);          // write help message
+   boolean (*writeOpt)  (defaultptr, FILE *);          // write option key and value
+   void    (*setValue)  (defaultptr, void *, boolean); // set value
+   boolean (*readOpt)   (defaultptr, char *, boolean); // read option from string
+   void    (*setDefault)(defaultptr);                  // set to hardcoded default
+} default_i;
+
 typedef struct default_s
 {
    const char *const   name;                 // name
@@ -104,6 +117,8 @@ typedef struct default_s
    const char *orig_default_s;
    double      orig_default_f;
    boolean     orig_default_b;
+
+   default_i  *methods;
    
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 } default_t;
