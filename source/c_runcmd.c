@@ -57,7 +57,7 @@ static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int C_Sync(command_t *command);
 static void C_ArgvtoArgs(void);
-static boolean C_Strcmp(char *pa, char *pb);
+static boolean C_Strcmp(const char *pa, const char *pb);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -267,7 +267,7 @@ static void C_DoRunCommand(command_t *command, char *options)
       if(command->handler)
          command->handler();
       else
-         C_Printf(FC_ERROR"error: no command handler for %s\n", 
+         C_Printf(FC_ERROR "error: no command handler for %s\n", 
                   command->name);
       break;
       
@@ -436,6 +436,11 @@ const char *C_VariableValue(variable_t *variable)
    case vt_int:
       psnprintf(value, sizeof(value), "%i", *(int*)variable->variable);
       break;
+
+   case vt_toggle:
+      // haleyjd 07/05/10
+      psnprintf(value, sizeof(value), "%i", (int)(*(boolean *)variable->variable));
+      break;
       
    case vt_string:
       // haleyjd 01/24/03: added null check from prboom
@@ -481,8 +486,15 @@ const char *C_VariableStringValue(variable_t *variable)
    {
       // print defined value
       // haleyjd 03/17/02: needs rangechecking
-      int varValue = *((int *)variable->variable);
-      int valStrIndex = varValue - variable->min;
+      int varValue;
+      int valStrIndex;
+
+      if(variable->type == vt_int)
+         varValue = *((int *)variable->variable);
+      else if(variable->type == vt_toggle)
+         varValue = (int)(*(boolean *)variable->variable);
+
+      valStrIndex = varValue - variable->min;
 
       if(valStrIndex < 0 || valStrIndex > variable->max - variable->min)
          return "";
@@ -509,20 +521,27 @@ static void C_EchoValue(command_t *command)
 
 // is a string a number?
 
-static boolean isnum(char *text)
+static boolean isnum(const char *text)
 {
+   // haleyjd 07/05/10: skip over signs here
+   if(strlen(text) > 1 && (*text == '-' || *text == '+'))
+      ++text;
+
    for(; *text; text++)
    {
-      if((*text>'9' || *text<'0') && *text!='-')
+      if(*text > '9' || *text < '0')
          return false;
    }
    return true;
 }
 
-// take a string and see if it matches a define for a
-// variable. Replace with the literal value if so.
-
-static char *C_ValueForDefine(variable_t *variable, char *s)
+//
+// C_ValueForDefine
+//
+// Take a string and see if it matches a define for a variable. Replace with the
+// literal value if so.
+//
+static const char *C_ValueForDefine(variable_t *variable, const char *s)
 {
    int count;
    static char returnstr[48];
@@ -543,11 +562,18 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
    
    // special hacks for menu
    
-   if(variable->type == vt_int)    // int values only
+   if(variable->type == vt_int || variable->type == vt_toggle)    // int values only
    {
+      int value;
+
+      if(variable->type == vt_int)
+         value = *(int *)variable->variable;
+      else
+         value = (int)(*(boolean *)variable->variable);
+
       if(!strcmp(s, "+"))     // increase value
       {
-         int value = *(int *)variable->variable + 1;
+         value += 1;
          if(variable->max != UL && value > variable->max) 
             value = variable->max;
          sprintf(returnstr, "%i", value);
@@ -555,7 +581,7 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
       }
       if(!strcmp(s, "-"))     // decrease value
       {
-         int value = *(int *)variable->variable - 1;
+         value -= 1;
          if(variable->min != UL && value < variable->min)
             value = variable->min;
          sprintf(returnstr, "%i", value);
@@ -563,14 +589,20 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
       }
       if(!strcmp(s, "/"))     // toggle value
       {
-         int value = *(int *)variable->variable + 1;
+         if(variable->type == vt_int)
+            value += 1;
+         else
+            value = !value;
+
          if(variable->max != UL && value > variable->max)
             value = variable->min; // wrap around
+
          sprintf(returnstr, "%i", value);
          return returnstr;
       }
       
-      if(!isnum(s)) return NULL;
+      if(!isnum(s))
+         return NULL;
    }
    
    return s;
@@ -592,7 +624,7 @@ static void C_SetVariable(command_t *command)
    int size = 0;
    double fs = 0.0;
    char *errormsg;
-   char *temp;
+   const char *temp;
    
    // cut off the leading spaces
    
@@ -622,6 +654,7 @@ static void C_SetVariable(command_t *command)
    switch(variable->type)
    {
    case vt_int:
+   case vt_toggle:
       size = atoi(Console.argv[0]);
       break;
       
@@ -687,6 +720,13 @@ static void C_SetVariable(command_t *command)
          *(int*)variable->variable = size;
          if(variable->v_default && cmd_setdefault)  // default
             *(int*)variable->v_default = size;
+         break;
+
+      case vt_toggle:
+         // haleyjd 07/05/10
+         *(boolean *)variable->variable = !!size;
+         if(variable->v_default && cmd_setdefault) // default
+            *(boolean *)variable->v_default = !!size;
          break;
          
       case vt_string:
@@ -1125,10 +1165,10 @@ void C_ClearBuffer(int cmdtype)
 }
 
         // compare regardless of font colour
-static boolean C_Strcmp(char *pa, char *pb)
+static boolean C_Strcmp(const char *pa, const char *pb)
 {
-   unsigned char *a = (unsigned char *)pa;
-   unsigned char *b = (unsigned char *)pb;
+   const unsigned char *a = (const unsigned char *)pa;
+   const unsigned char *b = (const unsigned char *)pb;
 
    while(*a || *b)
    {
@@ -1166,9 +1206,7 @@ command_t *cmdroots[CMDCHAINS];
 
 void (C_AddCommand)(command_t *command)
 {
-   int hash;
-   
-   hash = CmdHashKey(command->name);
+   int hash = CmdHashKey(command->name);
    
    command->next = cmdroots[hash]; // hook it in at the start of
    cmdroots[hash] = command;       // the table
@@ -1178,6 +1216,10 @@ void (C_AddCommand)(command_t *command)
       C_Printf(FC_ERROR"C_AddCommand: cf_netvar without a netcmd (%s)\n", command->name);
    
    c_netcmds[command->netcmd] = command;
+
+   // haleyjd 07/04/10: find default in config for cvars that have one
+   if(command->type == ct_variable)
+      command->variable->cfgDefault = M_FindDefaultForCVar(command->variable);
 }
 
 // add a list of commands terminated by one of type ct_end

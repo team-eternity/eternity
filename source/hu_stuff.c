@@ -1651,14 +1651,14 @@ VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 
 // haleyjd 02/12/06: lost/new hud options
-VARIABLE_BOOLEAN(hu_showtime,   NULL,                   yesno);
-VARIABLE_BOOLEAN(hu_showcoords, NULL,                   yesno);
+VARIABLE_TOGGLE(hu_showtime,    NULL,                   yesno);
+VARIABLE_TOGGLE(hu_showcoords,  NULL,                   yesno);
 VARIABLE_INT(hu_timecolor,      NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_LIMIT-1,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
-VARIABLE_BOOLEAN(crosshair_hilite,  NULL,               onoff);
+VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}

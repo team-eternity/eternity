@@ -238,5 +238,15 @@ void M_ResetSysComments(void)
    M_ResetDefaultFileComments(&sysdeffile);
 }
 
+//
+// M_GetSysDefaults
+//
+// haleyjd 07/04/10: Needed in m_misc.c for cvar searches.
+//
+default_t *M_GetSysDefaults(void)
+{
+   return sysdefaults;
+}
+
 // EOF
 

@@ -30,6 +30,7 @@
 void M_LoadSysConfig(const char *filename);
 void M_SaveSysConfig(void);
 void M_ResetSysComments(void);
+default_t *M_GetSysDefaults(void);
 
 #endif
 

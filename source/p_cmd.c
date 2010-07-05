@@ -228,7 +228,7 @@ CONSOLE_NETVAR(fraglimit, levelFragLimit, cf_server, netcmd_fraglimit) {}
 
 // fast monsters
 
-VARIABLE_BOOLEAN(fastparm, &clfastparm,                    onoff);
+VARIABLE_TOGGLE(fastparm, &clfastparm,                    onoff);
 CONSOLE_NETVAR(fast, fastparm, cf_server, netcmd_fast)
 {
    G_SetFastParms(fastparm); // killough 4/10/98: set -fast parameter correctly
@@ -236,7 +236,7 @@ CONSOLE_NETVAR(fast, fastparm, cf_server, netcmd_fast)
 
 // no monsters
 
-VARIABLE_BOOLEAN(nomonsters, &clnomonsters,                  onoff);
+VARIABLE_TOGGLE(nomonsters, &clnomonsters,                  onoff);
 CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 {
    if(gamestate == GS_LEVEL)
@@ -247,7 +247,7 @@ CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 
 // respawning monsters
 
-VARIABLE_BOOLEAN(respawnparm, &clrespawnparm,                 onoff);
+VARIABLE_TOGGLE(respawnparm, &clrespawnparm,                 onoff);
 CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 {
    if(gamestate == GS_LEVEL)
@@ -302,7 +302,7 @@ static char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
 VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
 CONSOLE_VARIABLE(spechits_emulation, spechits_emulation, 0) {}
 
-VARIABLE_BOOLEAN(donut_emulation, NULL, onoff);
+VARIABLE_TOGGLE(donut_emulation, NULL, onoff);
 CONSOLE_VARIABLE(donut_emulation, donut_emulation, 0) {}
 
 // haleyjd 01/24/07: spawn Unknowns for missing things on maps?
@@ -321,7 +321,7 @@ CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
 CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 
-VARIABLE_BOOLEAN(map_draw_nodelines, NULL, onoff);
+VARIABLE_TOGGLE(map_draw_nodelines, NULL, onoff);
 CONSOLE_VARIABLE(am_drawnodelines, map_draw_nodelines, 0) {}
 
 void P_Chase_AddCommands(void);

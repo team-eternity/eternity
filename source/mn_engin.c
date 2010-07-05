@@ -556,10 +556,15 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
    // draw slider -- ints or floats (haleyjd 04/22/10)
    if((var = item->var))
    {
-      if(var->type == vt_int)
+      if(var->type == vt_int || var->type == vt_toggle)
       {
          int range = var->max - var->min;
-         int posn  = *(int *)var->variable - var->min;
+         int posn;
+         
+         if(var->type == vt_int)
+            posn = *(int *)var->variable - var->min;
+         else
+            posn = (int)(*(boolean *)var->variable) - var->min;
 
          MN_DrawSlider(x + GAP, y, (posn*100) / range);
       }
@@ -774,7 +779,8 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
    // enter to change boolean variables
    // left/right otherwise
 
-   if(item->var->type == vt_int && item->var->max - item->var->min == 1)
+   if(item->var->type == vt_toggle ||
+      (item->var->type == vt_int && item->var->max - item->var->min == 1))
    {
       char *key = G_FirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "press %s to change", key);
@@ -1266,7 +1272,7 @@ boolean MN_Responder(event_t *ev)
       {
          if(strlen((char *)input_buffer) <=
             ((var->type == vt_string) ? (unsigned int)var->max :
-             (var->type == vt_int) ? 33 : 20))
+             (var->type == vt_int || var->type == vt_toggle) ? 33 : 20))
          {
             input_buffer[strlen((char *)input_buffer) + 1] = 0;
             input_buffer[strlen((char *)input_buffer)] = ch;
@@ -1423,7 +1429,7 @@ boolean MN_Responder(event_t *ev)
          
       case it_toggle:
          // boolean values only toggled on enter
-         if(menuitem->var->type != vt_int ||
+         if((menuitem->var->type != vt_toggle && menuitem->var->type != vt_int) ||
             menuitem->var->max - menuitem->var->min > 1) 
             break;
          
@@ -1510,7 +1516,7 @@ boolean MN_Responder(event_t *ev)
       case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
-         if(menuitem->var->type == vt_int)
+         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
          {
             if(menuitem->var->max - menuitem->var->min == 1) 
                break;
@@ -1567,7 +1573,7 @@ boolean MN_Responder(event_t *ev)
       case it_bigslider: // haleyjd 08/31/06: old-school big slider
       case it_toggle:
          // no on-off int values
-         if(menuitem->var->type == vt_int)
+         if(menuitem->var->type == vt_int || menuitem->var->type == vt_toggle)
          {
             if(menuitem->var->max - menuitem->var->min == 1) 
                break;
@@ -2212,7 +2218,7 @@ static void MN_ShowContents(void)
 // Console Commands
 //
 
-VARIABLE_BOOLEAN(menu_toggleisback, NULL, yesno);
+VARIABLE_TOGGLE(menu_toggleisback, NULL, yesno);
 CONSOLE_VARIABLE(mn_toggleisback, menu_toggleisback, 0) {}
 
 VARIABLE_STRING(mn_background, NULL, 8);

@@ -77,8 +77,9 @@ typedef enum
 //
 // killough 11/98: totally restructured
 
-// Forward declaration for interface (mainly for GCC)
+// Forward declarations for interface (mainly for GCC)
 typedef struct default_s *defaultptr;
+typedef struct variable_s *variableptr;
 
 // haleyjd 07/03/10: interface object for defaults
 typedef struct default_i_s
@@ -88,6 +89,7 @@ typedef struct default_i_s
    void    (*setValue)  (defaultptr, void *, boolean); // set value
    boolean (*readOpt)   (defaultptr, char *, boolean); // read option from string
    void    (*setDefault)(defaultptr);                  // set to hardcoded default
+   boolean (*checkCVar) (defaultptr, variableptr);     // check against a cvar
 } default_i;
 
 typedef struct default_s
@@ -170,6 +172,7 @@ void       M_ResetDefaultFileComments(defaultfile_t *df);
 void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
 void       M_ResetDefaultComments(void);
+default_t *M_FindDefaultForCVar(variableptr var);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 

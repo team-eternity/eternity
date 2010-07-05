@@ -130,11 +130,16 @@ typedef struct variable_s variable_t;
                         vt_chararray, 0, max, NULL};
 
 // Boolean. Note that although the name here is boolean, the
-// actual type is int.
+// actual type is int. haleyjd 07/05/10: For real booleans, use
+// the vt_toggle type with VARIABLE_TOGGLE
 
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, 0, 1, strings };
+
+#define VARIABLE_TOGGLE(name, defaultvar, strings)           \
+        variable_t var_ ## name = { &name, defaultvar,       \
+                        vt_toggle, 0, 1, strings };
 
 // haleyjd 04/21/10: support for vt_float
 
@@ -188,16 +193,13 @@ enum    // command flag
                           // rendered before running command
 };
 
-//
-// CONSOLE_FIXME: Implement float and toggle (boolean) ASAP.
-//
-
 enum    // variable type
 {
-  vt_int,      // normal integer 
-  vt_float,    // decimal
-  vt_string,   // string
-  vt_chararray // char array -- haleyjd 03/13/06
+  vt_int,       // normal integer 
+  vt_float,     // decimal
+  vt_string,    // string
+  vt_chararray, // char array -- haleyjd 03/13/06
+  vt_toggle     // boolean (for real boolean-type variables)
 };
 
 /******************************** STRUCTS ********************************/
@@ -212,6 +214,8 @@ struct variable_s
   char **defines;  // strings representing the value: eg "on" not "1"
   double dmin;     // haleyjd 04/21/10: min for double vars
   double dmax;     //                   max for double vars
+  
+  struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
 };
 
 struct command_s
