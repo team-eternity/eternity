@@ -139,7 +139,6 @@ typedef struct wfileadd_s
 extern waddir_t w_GlobalDir; // the global wad directory
 
 void        W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
-int         W_AddNewFile(waddir_t *dir, char *filename); // sf: add a new wad file
 int         W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
 int         W_CheckNumForName(const char *name);   // killough 4/17/98
 int         W_CheckNumForNameNS(const char *name, int li_namespace);
@@ -158,7 +157,7 @@ int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 void        W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
 
 // sf: add a new wad file after the game has already begun
-int W_AddNewFile(waddir_t *dir, char *filename);
+int W_AddNewFile(waddir_t *dir, const char *filename);
 
 // haleyjd 06/15/10: special private wad file support
 int W_AddNewPrivateFile(waddir_t *dir, const char *filename);

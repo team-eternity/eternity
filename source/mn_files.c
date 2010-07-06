@@ -611,10 +611,10 @@ void MN_DisplayFileSelector(mndir_t *dir, const char *title,
 CONSOLE_COMMAND(dir, 0)
 {
    int i;
-   char *wildcard;
+   const char *wildcard;
    
    if(Console.argc)
-      wildcard = Console.argv[0];
+      wildcard = Console.argv[0].buffer;
    else
       wildcard = "*.*";
    

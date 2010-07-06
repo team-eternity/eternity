@@ -775,7 +775,7 @@ void W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files)
    W_InitResources(dir);
 }
 
-int W_AddNewFile(waddir_t *dir, char *filename)
+int W_AddNewFile(waddir_t *dir, const char *filename)
 {
    // haleyjd 09/13/03: use S_UpdateSound here
    w_sound_update_type = 1;

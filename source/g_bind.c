@@ -481,7 +481,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
 //
 // Obtain a key from its name
 //
-static int G_KeyForName(char *name)
+static int G_KeyForName(const char *name)
 {
    int i;
    
@@ -497,7 +497,7 @@ static int G_KeyForName(char *name)
 //
 // G_BindKeyToAction
 //
-static void G_BindKeyToAction(char *key_name, char *action_name)
+static void G_BindKeyToAction(const char *key_name, const char *action_name)
 {
    int key;
    keyaction_t *action;
@@ -885,11 +885,11 @@ CONSOLE_COMMAND(bind, 0)
 {
    if(Console.argc >= 2)
    {
-      G_BindKeyToAction(Console.argv[0], Console.argv[1]);
+      G_BindKeyToAction(Console.argv[0].buffer, Console.argv[1].buffer);
    }
    else if(Console.argc == 1)
    {
-      int key = G_KeyForName(Console.argv[0]);
+      int key = G_KeyForName(Console.argv[0].buffer);
 
       if(key < 0)
          C_Printf(FC_ERROR "no such key!\n");
@@ -949,7 +949,7 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding class
    if(Console.argc == 2)
    {
-      bclass = atoi(Console.argv[1]);
+      bclass = M_QStrAtoi(&(Console.argv[1]));
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
          C_Printf(FC_ERROR "invalid action class %d\n", bclass);
@@ -957,7 +957,7 @@ CONSOLE_COMMAND(unbind, 0)
       }
    }
    
-   if((key = G_KeyForName(Console.argv[0])) != -1)
+   if((key = G_KeyForName(Console.argv[0].buffer)) != -1)
    {
       if(bclass == -1)
       {

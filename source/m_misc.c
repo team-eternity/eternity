@@ -1102,6 +1102,11 @@ static boolean M_checkCVarString(default_t *dp, variable_t *var)
    return (dp->location == var->variable || dp->location == var->v_default);
 }
 
+static void M_getDefaultString(default_t *dp, void *dest)
+{
+   *(const char **)dest = dp->defaultvalue_s;
+}
+
 //
 // Integers
 //
@@ -1200,6 +1205,11 @@ static boolean M_checkCVarInt(default_t *dp, variable_t *var)
    return (dp->location == var->variable || dp->location == var->v_default);
 }
 
+static void M_getDefaultInt(default_t *dp, void *dest)
+{
+   *(int *)dest = dp->defaultvalue_i;
+}
+
 //
 // Floats
 //
@@ -1294,6 +1304,11 @@ static boolean M_checkCVarFloat(default_t *dp, variable_t *var)
    return (dp->location == var->variable || dp->location == var->v_default);
 }
 
+static void M_getDefaultFloat(default_t *dp, void *dest)
+{
+   *(double *)dest = dp->defaultvalue_f;
+}
+
 //
 // Booleans
 //
@@ -1363,6 +1378,11 @@ static boolean M_checkCVarBool(default_t *dp, variable_t *var)
    return (dp->location == var->variable || dp->location == var->v_default);
 }
 
+static void M_getDefaultBool(default_t *dp, void *dest)
+{
+   *(boolean *)dest = dp->defaultvalue_b;
+}
+
 //
 // Interface objects for defaults
 //
@@ -1375,7 +1395,8 @@ static default_i defaultInterfaces[] =
       M_setDefaultValueInt,
       M_readDefaultInt,
       M_setDefaultInt,
-      M_checkCVarInt
+      M_checkCVarInt,
+      M_getDefaultInt
    },
    // dt_string
    { 
@@ -1384,7 +1405,8 @@ static default_i defaultInterfaces[] =
       M_setDefaultValueString,
       M_readDefaultString,
       M_setDefaultString,
-      M_checkCVarString
+      M_checkCVarString,
+      M_getDefaultString
    },
    // dt_float
    { 
@@ -1393,7 +1415,8 @@ static default_i defaultInterfaces[] =
       M_setDefaultValueFloat,
       M_readDefaultFloat,
       M_setDefaultFloat,
-      M_checkCVarFloat
+      M_checkCVarFloat,
+      M_getDefaultFloat
    },
    // dt_boolean
    { 
@@ -1402,7 +1425,8 @@ static default_i defaultInterfaces[] =
       M_setDefaultValueBool,
       M_readDefaultBool,
       M_setDefaultBool,
-      M_checkCVarBool
+      M_checkCVarBool,
+      M_getDefaultBool
    },
 };
 

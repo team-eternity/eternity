@@ -97,17 +97,17 @@ CONSOLE_COMMAND(alias, 0)
   
    if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(Console.argv[0]);
+      C_RemoveAlias(Console.argv[0].buffer);
       return;
    }
    
    // find it or make a new one
    
-   temp = Console.args + strlen(Console.argv[0]);
+   temp = Console.args.buffer + M_QStrLen(&(Console.argv[0]));
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(Console.argv[0], temp);
+   C_NewAlias(Console.argv[0].buffer, temp);
 }
 
 // %opt for aliases
@@ -123,7 +123,7 @@ CONSOLE_COMMAND(cmdlist, 0)
    int maxchar = 'z';
 
    // SoM: This could be a little better
-   char *mask = NULL;
+   const char *mask = NULL;
    int  masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
@@ -131,12 +131,12 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      if(strlen(Console.argv[0]) == 1)
-         charnum = maxchar = Console.argv[0][0];
+      if(M_QStrLen(&(Console.argv[0])) == 1)
+         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
       else
       {
-         charnum = maxchar = Console.argv[0][0];
-         mask = Console.argv[0];
+         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
+         mask = Console.argv[0].buffer;
          masklen = strlen(mask);
       }
    }
@@ -178,14 +178,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(Console.args);
+   C_Puts(Console.args.buffer);
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-   C_BufferDelay(Console.cmdtype, Console.argc ? atoi(Console.argv[0]) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? M_QStrAtoi(&(Console.argv[0])) : 1);
 }
 
 // flood the console with crap
@@ -208,7 +208,7 @@ CONSOLE_COMMAND(dumplog, 0)
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(Console.argv[0]);
+      C_DumpMessages(Console.argv[0].buffer);
 }
 
 // haleyjd 09/07/03: true console logging commands
@@ -218,7 +218,7 @@ CONSOLE_COMMAND(openlog, 0)
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(Console.argv[0]);
+      C_OpenConsoleLog(Console.argv[0].buffer);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -233,7 +233,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
    command_t *current;
    variable_t *var;
    int count;
-   char *name;
+   const char *name;
    default_t *def;
 
    if(Console.argc != 1)
@@ -243,7 +243,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       return;
    }
 
-   name = Console.argv[0];
+   name = Console.argv[0].buffer;
 
    // haleyjd 07/05/10: use hashing!
    current = C_GetCmdForName(name);

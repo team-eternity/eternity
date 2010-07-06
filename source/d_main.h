@@ -37,7 +37,7 @@ extern char *startlevel;
 void D_ListWads(void);
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle, int sound_update_type);
-boolean D_AddNewFile(char *s);
+boolean D_AddNewFile(const char *s);
 
 
 char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir

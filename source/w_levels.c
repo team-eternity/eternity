@@ -451,7 +451,7 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
    if(Console.argc < 1)
       return;
 
-   W_doMasterLevelsStart(Console.argv[0]);
+   W_doMasterLevelsStart(Console.argv[0].buffer);
 }
 
 //

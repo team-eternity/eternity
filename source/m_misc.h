@@ -90,6 +90,7 @@ typedef struct default_i_s
    boolean (*readOpt)   (defaultptr, char *, boolean); // read option from string
    void    (*setDefault)(defaultptr);                  // set to hardcoded default
    boolean (*checkCVar) (defaultptr, variableptr);     // check against a cvar
+   void    (*getDefault)(defaultptr, void *);          // get the default externally
 } default_i;
 
 typedef struct default_s

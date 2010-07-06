@@ -986,7 +986,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
       return;
    }
 
-   vmNum = atoi(Console.argv[0]);
+   vmNum = M_QStrAtoi(&(Console.argv[0]));
 
    switch(vmNum)
    {
@@ -1016,7 +1016,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
    if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameV(vm, Console.argv[1]);
+   SM_ExecScriptNameV(vm, Console.argv[1].buffer);
 
    SM_ClearInvocation(context);
 }
@@ -1041,7 +1041,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
       return;
    }
 
-   vmNum = atoi(Console.argv[0]);
+   vmNum = M_QStrAtoi(&(Console.argv[0]));
 
    switch(vmNum)
    {
@@ -1072,7 +1072,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    for(i = 2; i < Console.argc; i++)
    {
-      params[i-2] = (cell)(atoi(Console.argv[i]));
+      params[i-2] = (cell)(M_QStrAtoi(&(Console.argv[i])));
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
@@ -1080,7 +1080,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameI(vm, Console.argv[1], argcount, params);
+   SM_ExecScriptNameI(vm, Console.argv[1].buffer, argcount, params);
 
    SM_ClearInvocation(context);
 

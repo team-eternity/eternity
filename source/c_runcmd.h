@@ -24,6 +24,7 @@
 
 #include "d_dwfile.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
 // variables need tweaks and extensions to fully support archiving in
@@ -37,8 +38,7 @@ typedef struct variable_s variable_t;
 
 /******************************** #defines ********************************/
 
-#define MAXTOKENS 32
-#define MAXTOKENLENGTH 64
+#define MAXTOKENS 64
 #define CMDCHAINS 16
 
 // zdoom _inspired_:
@@ -254,9 +254,9 @@ typedef struct console_s
    int cmdsrc;         // player source of current command being run
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
-   char args[128];     // args as single string   
    int  argc;          // number of argv's
-   char argv[MAXTOKENS][MAXTOKENLENGTH]; // argument values to current command
+   qstring_t args;     // args as single string   
+   qstring_t argv[MAXTOKENS]; // argument values to current command
 } console_t;
 
 extern console_t Console; // the one and only Console object
@@ -308,7 +308,7 @@ extern command_t *cmdroots[CMDCHAINS];   // the commands in hash chains
 void (C_AddCommand)(command_t *command);
 void C_AddCommandList(command_t *list);
 void C_AddCommands();
-command_t *C_GetCmdForName(char *cmdname);
+command_t *C_GetCmdForName(const char *cmdname);
 
 /***** define strings for variables *****/
 

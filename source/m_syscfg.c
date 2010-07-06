@@ -149,16 +149,16 @@ static default_t sysdefaults[] =
    DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, wad_no,
                  "Low end of high pass band"),
 
-   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 10, 100, wad_no,
+   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 0, 100, wad_no,
                  "Preamplification factor"),
 
-   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 290, wad_no,
+   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 300, wad_no,
                  "Low pass gain"),
 
-   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 290, wad_no,
+   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 300, wad_no,
                  "Midrange gain"),
 
-   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 290, wad_no,
+   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, wad_no,
                  "High pass gain"),                 
 
    // jff 3/30/98 add ability to take screenshots in BMP format

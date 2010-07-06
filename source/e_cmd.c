@@ -67,7 +67,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
       return;
    }
 
-   num = E_ThingNumForName(Console.argv[0]);
+   num = E_ThingNumForName(Console.argv[0].buffer);
 
    if(num == NUMMOBJTYPES)
    {
@@ -172,7 +172,7 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
       return;
    }
 
-   num = E_ThingNumForName(Console.argv[0]);
+   num = E_ThingNumForName(Console.argv[0].buffer);
 
    if(num == NUMMOBJTYPES)
    {
@@ -232,7 +232,7 @@ CONSOLE_COMMAND(e_playsound, 0)
       return;
    }
 
-   sfx = E_SoundForName(Console.argv[0]);
+   sfx = E_SoundForName(Console.argv[0].buffer);
 
    if(!sfx)
    {
@@ -279,7 +279,7 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
       return;
    }
 
-   recordnum = atoi(Console.argv[0]);
+   recordnum = M_QStrAtoi(&(Console.argv[0]));
 
    E_GetEDMapThings(&things, &numthings);
 
@@ -348,7 +348,7 @@ CONSOLE_COMMAND(e_linedef, cf_level)
       return;
    }
 
-   recordnum = atoi(Console.argv[0]);
+   recordnum = M_QStrAtoi(&(Console.argv[0]));
 
    E_GetEDLines(&lines, &numlines);
 

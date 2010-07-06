@@ -1195,6 +1195,7 @@ boolean MN_Responder(event_t *ev)
    int *menuSounds = GameModeInfo->menuSounds; // haleyjd
    static boolean ctrldown = false;
    static boolean shiftdown = false;
+   static boolean altdown = false;
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -1207,6 +1208,10 @@ boolean MN_Responder(event_t *ev)
    // haleyjd 03/11/06
    if(ev->data1 == KEYD_RSHIFT)
       shiftdown = (ev->type == ev_keydown);
+
+   // haleyjd 07/05/10
+   if(ev->data1 == KEYD_RALT)
+      altdown = (ev->type == ev_keydown);
 
    // we only care about key presses
    switch(ev->type)
@@ -1529,7 +1534,12 @@ boolean MN_Responder(event_t *ev)
             double range = menuitem->var->dmax - menuitem->var->dmin;
             double value = *(double *)(menuitem->var->variable);
 
-            value -= range / 10.0;
+            if(altdown)
+               value -= 0.1;
+            else if(shiftdown)
+               value -= 0.01;
+            else
+               value -= range / 10.0;
 
             if(value < menuitem->var->dmin)
                value = menuitem->var->dmin;
@@ -1586,7 +1596,12 @@ boolean MN_Responder(event_t *ev)
             double range = menuitem->var->dmax - menuitem->var->dmin;
             double value = *(double *)(menuitem->var->variable);
 
-            value += range / 10.0;
+            if(altdown)
+               value += 0.1;
+            else if(shiftdown)
+               value += 0.01;
+            else
+               value += range / 10.0;
 
             if(value < menuitem->var->dmin)
                value = menuitem->var->dmin;

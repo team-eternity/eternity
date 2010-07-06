@@ -83,7 +83,7 @@ static void P_AddSkin(skin_t *newskin);
 static void P_AddEDFSkins(void);
 static void P_CacheFaces(skin_t *skin);
 static void P_InitMonsterSkins(void);
-static skin_t *P_SkinForName(char *s);
+static skin_t *P_SkinForName(const char *s);
 
 //
 // P_ResolveSkinSounds
@@ -363,7 +363,7 @@ static void P_CacheFaces(skin_t *skin)
 // i cant be bothered tho, its not something likely to be
 // being done constantly, only now and again
 
-static skin_t *P_SkinForName(char *s)
+static skin_t *P_SkinForName(const char *s)
 {
    int i;
 
@@ -543,14 +543,14 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
       return;
    }
 
-   if(!strcmp(Console.argv[0], "+"))
+   if(!M_QStrCmp(&(Console.argv[0]), "+"))
       skin = P_NextSkin(Console.cmdsrc);
-   else if(!strcmp(Console.argv[0], "-"))
+   else if(!M_QStrCmp(&(Console.argv[0]), "-"))
       skin = P_PrevSkin(Console.cmdsrc);
-   else if(!(skin = P_SkinForName(Console.argv[0])))
+   else if(!(skin = P_SkinForName(Console.argv[0].buffer)))
    {
       if(consoleplayer == Console.cmdsrc)
-         C_Printf("skin not found: '%s'\n", Console.argv[0]);
+         C_Printf("skin not found: '%s'\n", Console.argv[0].buffer);
       return;
    }
 

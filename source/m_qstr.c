@@ -273,6 +273,18 @@ qstring_t *M_QStrCpy(qstring_t *qstr, const char *str)
 }
 
 //
+// M_QStrCopyTo
+//
+// Copies one qstring into another.
+//
+qstring_t *M_QStrCopyTo(qstring_t *dest, const qstring_t *src)
+{
+   M_QStrClear(dest);
+   
+   return M_QStrCat(dest, src->buffer);
+}
+
+//
 // M_QStrUpr
 //
 // Converts the string to uppercase.

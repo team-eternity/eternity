@@ -114,9 +114,12 @@ VARIABLE_INT(default_colour, NULL, 0, TRANSLATIONCOLOURS-1, colournames);
 CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 {
    int playernum, colour;
+
+   if(!Console.argc)
+      return;
    
    playernum = Console.cmdsrc;
-   colour = atoi(Console.argv[0]) % TRANSLATIONCOLOURS;
+   colour = M_QStrAtoi(&(Console.argv[0])) % TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
@@ -147,7 +150,10 @@ CONSOLE_NETVAR(gametype, GameType, cf_server, netcmd_deathmatch)
 VARIABLE_INT(gameskill, &defaultskill,          0, 4, skills);
 CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
 {
-   startskill = gameskill = atoi(Console.argv[0]);
+   if(!Console.argc)
+      return;
+
+   startskill = gameskill = M_QStrAtoi(&(Console.argv[0]));
    if(Console.cmdsrc == consoleplayer)
       defaultskill = gameskill + 1;
 }
@@ -342,9 +348,9 @@ CONSOLE_COMMAND(puke, cf_notnet)
       return;
 
    for(i = 1; i < Console.argc; ++i)
-      args[i - 1] = atoi(Console.argv[i]);
+      args[i - 1] = M_QStrAtoi(&(Console.argv[i]));
 
-   ACS_StartScript(atoi(Console.argv[0]), gamemap, args,
+   ACS_StartScript(M_QStrAtoi(&(Console.argv[0])), gamemap, args,
                    players[Console.cmdsrc].mo, NULL, 0, NULL);
 }
 
