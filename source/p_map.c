@@ -1514,6 +1514,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    {
       while(clip.numspechit--)
       {
+// PTODO
 #ifdef R_LINKEDPORTALS
          if(R_LinkedLineActive(clip.spechit[clip.numspechit]))
          {
@@ -1524,7 +1525,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             {
                linkoffset_t *link = 
                   P_GetLinkOffset(clip.spechit[clip.numspechit]->frontsector->groupid, 
-                                  clip.spechit[clip.numspechit]->portal->data.link.groupid);
+                                  clip.spechit[clip.numspechit]->portal->data.link.toid);
                EV_PortalTeleport(thing, link);
             }
          }

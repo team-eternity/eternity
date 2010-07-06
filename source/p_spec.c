@@ -4833,13 +4833,15 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
 //
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
-   sector_t  *sector, *frontsector;
-   portal_t  *portal = NULL;
-   mobj_t    *skycam;
-   static int CamType = -1;
-   int s;
-   fixed_t planez = 0;
-   int anchortype = 0; // SoM 3-10-04: new plan.
+   static int  CamType = -1;
+
+   sector_t    *sector;
+   portal_t    *portal = NULL;
+   mobj_t      *skycam;
+   fixed_t     planez = 0;
+   int         anchortype = 0; // SoM 3-10-04: new plan.
+   int         s;
+   int         fromid, toid;
 
    if(!(sector = line->frontsector))
       return;
@@ -4939,20 +4941,16 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       if(demo_version < 333)
          return;
 
-      frontsector = line->frontsector;
-      if(!frontsector) 
-         frontsector = line->backsector;
-
       // linked portals can only be applied to either the floor or ceiling.
       if(line->special == 358)
       {
          anchortype = 360;
-         planez = frontsector->floorheight;
+         planez = sector->floorheight;
       }
       else if(line->special == 359)
       {
          anchortype = 361;
-         planez = frontsector->ceilingheight;
+         planez = sector->ceilingheight;
       }
       else if(line->special == 376)
       {
@@ -4966,7 +4964,8 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
-         if(lines[s].special != anchortype || line == &lines[s])
+         if(lines[s].special != anchortype || line == &lines[s] 
+           || lines[s].frontsector == NULL)
             continue;
 
          break;
@@ -4977,16 +4976,24 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetLinkedPortal(line - lines, s, planez, P_CreatePortalGroup(frontsector));
+      // Setup main groups. Keep in mind, the linedef that actually creates the 
+      // portal will be on the 'other side' of that portal, so it is actually the 
+      // 'to group' and the anchor line is in the 'from group'
+      if(sector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(sector);
+         
+      if(lines[s].frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(lines[s].frontsector);
+      
+      toid = sector->groupid;
+      fromid = lines[s].frontsector->groupid;
+            
+      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
+      // Special case where the portal was created with the line-to-line portal type
       if(line->special == 376)
       {
-         int group;
-
-         group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
-                                                            lines[s].backsector);
-
-         line->portal = R_GetLinkedPortal(s, line - lines, planez, group);
+         line->portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
          lines[s].portal = portal;
          return;
       }
@@ -5000,6 +5007,12 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
    {
+      if(type == portal_linked && sectors[s].groupid == R_NOGROUP)
+      {
+         // Add the sector and all adjacent sectors to the from group
+         P_GatherSectors(sectors + s, portal->data.link.fromid);
+      }
+      
       switch(effects)
       {
       case portal_ceiling:
@@ -5020,8 +5033,14 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    // attach portal to like-tagged 289 lines
    for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
    {
-      if(line == &lines[s] || lines[s].special != 289)
+      if(line == &lines[s] || lines[s].special != 289 || !lines[s].frontsector)
          continue;
+         
+      if(type == portal_linked && lines[s].frontsector->groupid == R_NOGROUP)
+      {
+         // Add the sector and all adjacent sectors to the from group
+         P_GatherSectors(lines[s].frontsector, portal->data.link.fromid);
+      }
 
       lines[s].special = 0;
       lines[s].portal = portal;
@@ -5034,6 +5053,12 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       if(line == &lines[s] || lines[s].special != 385 || !lines[s].frontsector)
          continue;
 
+      if(type == portal_linked && lines[s].frontsector->groupid == R_NOGROUP)
+      {
+         // Add the sector and all adjacent sectors to the from group
+         P_GatherSectors(lines[s].frontsector, portal->data.link.fromid);
+      }
+      
       lines[s].special = 0;
 
       switch(effects)

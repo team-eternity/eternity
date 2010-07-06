@@ -39,12 +39,17 @@ extern boolean useportalgroups;
 #define R_NOGROUP -1
 #endif
 
+
 // P_CreatePortalGroup
-// Defines a grouping of sectors in the map as its own seperate subspace of the 
-// map. This subspace can be related to other subspaces in the map by offset 
-// values, thus allowing things like sound travel and monster AI to work through
-// portrals. 
+// This creates an portal group, and returns the id of that group
 int P_CreatePortalGroup(sector_t *from);
+
+
+// P_GatherSectors
+// This function gathers adjacent sectors, starting with the supplied sector,
+// and adds them to the specified group.
+void P_GatherSectors(sector_t *from, int groupid);
+
 
 // R_BuildLinkTable
 // Builds the link table. This should only be called after all the portals for

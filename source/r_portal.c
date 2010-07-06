@@ -1122,13 +1122,15 @@ void R_RenderPortals(void)
 // SoM: Begin linked portals
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
-                            fixed_t planez,    int groupid)
+                            fixed_t planez,    int fromid,
+                            int toid)
 {
    portal_t *rover, *ret;
    linkdata_t ldata;
 
    memset(&ldata, 0, sizeof(ldata));
-   ldata.groupid = groupid;
+   ldata.fromid = fromid;
+   ldata.toid = toid;
    ldata.planez = planez;
 
    R_CalculateDeltas(markerlinenum, anchorlinenum, 
@@ -1143,7 +1145,8 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
          ldata.deltax != rover->data.link.deltax ||
          ldata.deltay != rover->data.link.deltay ||
          ldata.deltaz != rover->data.link.deltaz ||
-         ldata.groupid != rover->data.link.groupid ||
+         ldata.fromid != rover->data.link.fromid ||
+         ldata.toid != rover->data.link.toid ||
          ldata.planez != rover->data.link.planez)
          continue;
 

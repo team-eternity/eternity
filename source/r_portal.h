@@ -61,8 +61,12 @@ typedef struct linkdata_s
 {
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
-   int       groupid;
    fixed_t   planez;
+   
+   // gromid is the group where the portal actually is, toid is the group on 
+   // the 'other side' of the portal.
+   int       fromid, toid;
+      
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
@@ -143,7 +147,7 @@ void R_RenderPortals(void);
 
 #ifdef R_LINKEDPORTALS
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
-                            fixed_t planez, int groupid);
+                            fixed_t planez, int fromid, int toid);
 #endif
 
 

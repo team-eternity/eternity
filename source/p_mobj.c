@@ -1070,6 +1070,7 @@ void P_NightmareRespawn(mobj_t* mobj)
    P_RemoveMobj(mobj);
 }
 
+// PTODO
 #ifdef R_LINKEDPORTALS
 static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
@@ -1092,7 +1093,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       if(passheight < ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->groupid);
+                                              ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
@@ -1118,7 +1119,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       if(passheight >= ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->groupid);
+                                              ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
