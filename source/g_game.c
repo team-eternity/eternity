@@ -864,7 +864,7 @@ boolean G_Responder(event_t* ev)
 
 static boolean longtics_demo; // if true, demo playing is longtics format
 
-static const char *defdemoname;
+static char *defdemoname;
 
 //
 // G_DemoStartMessage
@@ -2861,7 +2861,7 @@ void G_DeferedInitNewNum(skill_t skill, int episode, int map)
    G_DeferedInitNew(skill, G_GetNameForMap(episode, map) );
 }
 
-void G_DeferedInitNew(skill_t skill, char *levelname)
+void G_DeferedInitNew(skill_t skill, const char *levelname)
 {
    strncpy(d_mapname, levelname, 8);
    d_map = G_GetMapForName(levelname);
@@ -3609,14 +3609,16 @@ void G_BeginRecording(void)
 void G_DeferedPlayDemo(const char *name)
 {
    // haleyjd: removed SMMU cruft in attempt to fix
-   defdemoname = name;
+   if(defdemoname)
+      free(defdemoname);
+   defdemoname = strdup(name);
    gameaction = ga_playdemo;
 }
 
 //
 // G_TimeDemo - sf
 //
-void G_TimeDemo(char *name, boolean showmenu)
+void G_TimeDemo(const char *name, boolean showmenu)
 {
    // haleyjd 10/19/01: hoo boy this had problems
    // It was using a variable called "name" from who knows where --
@@ -3632,7 +3634,9 @@ void G_TimeDemo(char *name, boolean showmenu)
    
    //G_StopDemo();         // stop any previous demos
    
-   defdemoname = name;
+   if(defdemoname)
+      free(defdemoname);
+   defdemoname = strdup(name);
    gameaction = ga_playdemo;
    singledemo = true;      // sf: moved from reloaddefaults
    

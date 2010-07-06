@@ -24,6 +24,7 @@
 
 #include "d_dwfile.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
 // variables need tweaks and extensions to fully support archiving in
@@ -37,8 +38,7 @@ typedef struct variable_s variable_t;
 
 /******************************** #defines ********************************/
 
-#define MAXTOKENS 32
-#define MAXTOKENLENGTH 64
+#define MAXTOKENS 64
 #define CMDCHAINS 16
 
 // zdoom _inspired_:
@@ -130,11 +130,16 @@ typedef struct variable_s variable_t;
                         vt_chararray, 0, max, NULL};
 
 // Boolean. Note that although the name here is boolean, the
-// actual type is int.
+// actual type is int. haleyjd 07/05/10: For real booleans, use
+// the vt_toggle type with VARIABLE_TOGGLE
 
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, 0, 1, strings };
+
+#define VARIABLE_TOGGLE(name, defaultvar, strings)           \
+        variable_t var_ ## name = { &name, defaultvar,       \
+                        vt_toggle, 0, 1, strings };
 
 // haleyjd 04/21/10: support for vt_float
 
@@ -188,16 +193,13 @@ enum    // command flag
                           // rendered before running command
 };
 
-//
-// CONSOLE_FIXME: Implement float and toggle (boolean) ASAP.
-//
-
 enum    // variable type
 {
-  vt_int,      // normal integer 
-  vt_float,    // decimal
-  vt_string,   // string
-  vt_chararray // char array -- haleyjd 03/13/06
+  vt_int,       // normal integer 
+  vt_float,     // decimal
+  vt_string,    // string
+  vt_chararray, // char array -- haleyjd 03/13/06
+  vt_toggle     // boolean (for real boolean-type variables)
 };
 
 /******************************** STRUCTS ********************************/
@@ -212,6 +214,8 @@ struct variable_s
   char **defines;  // strings representing the value: eg "on" not "1"
   double dmin;     // haleyjd 04/21/10: min for double vars
   double dmax;     //                   max for double vars
+  
+  struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
 };
 
 struct command_s
@@ -250,9 +254,9 @@ typedef struct console_s
    int cmdsrc;         // player source of current command being run
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
-   char args[128];     // args as single string   
    int  argc;          // number of argv's
-   char argv[MAXTOKENS][MAXTOKENLENGTH]; // argument values to current command
+   qstring_t args;     // args as single string   
+   qstring_t argv[MAXTOKENS]; // argument values to current command
 } console_t;
 
 extern console_t Console; // the one and only Console object
@@ -304,7 +308,7 @@ extern command_t *cmdroots[CMDCHAINS];   // the commands in hash chains
 void (C_AddCommand)(command_t *command);
 void C_AddCommandList(command_t *list);
 void C_AddCommands();
-command_t *C_GetCmdForName(char *cmdname);
+command_t *C_GetCmdForName(const char *cmdname);
 
 /***** define strings for variables *****/
 

@@ -97,17 +97,17 @@ CONSOLE_COMMAND(alias, 0)
   
    if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(Console.argv[0]);
+      C_RemoveAlias(Console.argv[0].buffer);
       return;
    }
    
    // find it or make a new one
    
-   temp = Console.args + strlen(Console.argv[0]);
+   temp = Console.args.buffer + M_QStrLen(&(Console.argv[0]));
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(Console.argv[0], temp);
+   C_NewAlias(Console.argv[0].buffer, temp);
 }
 
 // %opt for aliases
@@ -123,7 +123,7 @@ CONSOLE_COMMAND(cmdlist, 0)
    int maxchar = 'z';
 
    // SoM: This could be a little better
-   char *mask = NULL;
+   const char *mask = NULL;
    int  masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
@@ -131,12 +131,12 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      if(strlen(Console.argv[0]) == 1)
-         charnum = maxchar = Console.argv[0][0];
+      if(M_QStrLen(&(Console.argv[0])) == 1)
+         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
       else
       {
-         charnum = maxchar = Console.argv[0][0];
-         mask = Console.argv[0];
+         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
+         mask = Console.argv[0].buffer;
          masklen = strlen(mask);
       }
    }
@@ -178,14 +178,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(Console.args);
+   C_Puts(Console.args.buffer);
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-  C_BufferDelay(Console.cmdtype, Console.argc ? atoi(Console.argv[0]) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? M_QStrAtoi(&(Console.argv[0])) : 1);
 }
 
 // flood the console with crap
@@ -195,7 +195,7 @@ CONSOLE_COMMAND(flood, 0)
 {
   int a;
 
-  for(a=0; a<300; a++)
+  for(a = 0; a < 300; a++)
     C_Printf("%c\n", a%64 + 32);
 }
 
@@ -208,7 +208,7 @@ CONSOLE_COMMAND(dumplog, 0)
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(Console.argv[0]);
+      C_DumpMessages(Console.argv[0].buffer);
 }
 
 // haleyjd 09/07/03: true console logging commands
@@ -218,7 +218,7 @@ CONSOLE_COMMAND(openlog, 0)
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(Console.argv[0]);
+      C_OpenConsoleLog(Console.argv[0].buffer);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -232,9 +232,9 @@ CONSOLE_COMMAND(cvarhelp, 0)
 {
    command_t *current;
    variable_t *var;
-   int i, count;
-   char *name;
-
+   int count;
+   const char *name;
+   default_t *def;
 
    if(Console.argc != 1)
    {
@@ -243,90 +243,124 @@ CONSOLE_COMMAND(cvarhelp, 0)
       return;
    }
 
-   name = Console.argv[0];
+   name = Console.argv[0].buffer;
 
-   for(i = 0; i < CMDCHAINS; ++i)
+   // haleyjd 07/05/10: use hashing!
+   current = C_GetCmdForName(name);
+
+   if(current && current->type == ct_variable && !(current->flags & cf_hidden))
    {
-      for(current = cmdroots[i]; current; current = current->next)
+      var = current->variable;
+      def = current->variable->cfgDefault; // haleyjd 07/05/10: print defaults
+
+      switch(var->type)
       {
-         if(current->type == ct_variable &&
-            !strcasecmp(current->name, name) &&
-            !(current->flags & cf_hidden))
+      case vt_int:
+         if(var->defines && var->min <= var->max)
          {
-            var = current->variable;
-
-            switch(var->type)
+            C_Printf("Possible values for '%s':\n", name);
+            for(count = var->min; count <= var->max; count++)
             {
-            case vt_int:
-               if(var->defines && var->min <= var->max)
-               {
-                  C_Printf("Possible values for '%s': ", name);
-                  for(count = var->min; count <= var->max; count++)
-                  {
-                     C_Printf("%s", var->defines[count - var->min]);
-                  }
-               }
-               else
-               {
-                  // haleyjd 04/21/10: respect use of UL
-                  if(var->min == UL && var->max == UL)
-                  {
-                     C_Printf("'%s' accepts any integer value\n", name);
-                  }
-                  else if(var->min == UL)
-                  {
-                     C_Printf("Value range for '%s': any integer <= %d\n", 
-                              name, var->max);
-                  }
-                  else if(var->max == UL)
-                  {
-                     C_Printf("Value range for '%s': any integer >= %d\n",
-                              name, var->min);
-                  }
-                  else
-                  {
-                     C_Printf("Value range for '%s': %d through %d\n", 
-                              name, var->min, var->max);
-                  }
-               }
-               break;
-
-            case vt_float:
-               // haleyjd 04/21/10: implemented vt_float
-                  if(var->dmin == UL && var->dmax == UL)
-                  {
-                     C_Printf("'%s' accepts any float value\n", name);
-                  }
-                  else if(var->dmin == UL)
-                  {
-                     C_Printf("Value range for '%s': any float <= %f\n", 
-                              name, var->dmax);
-                  }
-                  else if(var->dmax == UL)
-                  {
-                     C_Printf("Value range for '%s': any float >= %f\n",
-                              name, var->dmin);
-                  }
-                  else
-                  {
-                     C_Printf("Value range for '%s': %f through %f\n", 
-                              name, var->dmin, var->dmax);
-                  }
-                  break;
-
-            default:
-               if(var->max != UL)
-               {
-                  C_Printf("Value for '%s': String no more than %d characters long\n", 
-                           name, var->max);
-               }
-               else
-                  C_Printf("Value for '%s': Unlimited-length string\n", name);
+               C_Printf("%s\n", var->defines[count - var->min]);
             }
 
-            return;
+            if(def)
+            {
+               C_Printf("Default value: %s\n", 
+                        var->defines[def->defaultvalue_i - var->min]);
+            }
          }
+         else
+         {
+            // haleyjd 04/21/10: respect use of UL
+            if(var->min == UL && var->max == UL)
+            {
+               C_Printf("'%s' accepts any integer value\n", name);
+            }
+            else if(var->min == UL)
+            {
+               C_Printf("Value range for '%s':\n Any integer <= %d\n", 
+                        name, var->max);
+            }
+            else if(var->max == UL)
+            {
+               C_Printf("Value range for '%s':\n Any integer >= %d\n",
+                        name, var->min);
+            }
+            else
+            {
+               C_Printf("Value range for '%s':\n %d through %d\n", 
+                        name, var->min, var->max);
+            }
+
+            if(def)
+               C_Printf("Default value: %d\n", def->defaultvalue_i);
+         }
+         break;
+
+      case vt_toggle:
+         // haleyjd 07/05/10: for true boolean variables
+         if(var->defines)
+         {
+            C_Printf("Possible values for '%s':\n", name);
+            for(count = var->min; count <= var->max; count++)
+               C_Printf(" %s\n", var->defines[count - var->min]);
+
+            if(def)
+            {
+               C_Printf("Default value: %s\n", 
+                        var->defines[def->defaultvalue_b]);
+            }
+         }
+         else
+         {
+            C_Printf("'%s' is a boolean value (0 or 1)\n", name);
+            if(def)
+               C_Printf("Default value: %d\n", (int)def->defaultvalue_b);
+         }
+         break;
+
+      case vt_float:
+         // haleyjd 04/21/10: implemented vt_float
+         if(var->dmin == UL && var->dmax == UL)
+         {
+            C_Printf("'%s' accepts any float value\n", name);
+         }
+         else if(var->dmin == UL)
+         {
+            C_Printf("Value range for '%s':\n any float <= %f\n", 
+                     name, var->dmax);
+         }
+         else if(var->dmax == UL)
+         {
+            C_Printf("Value range for '%s':\n any float >= %f\n",
+                     name, var->dmin);
+         }
+         else
+         {
+            C_Printf("Value range for '%s':\n %f through %f\n", 
+                     name, var->dmin, var->dmax);
+         }
+
+         if(def)
+            C_Printf("Default value: %f\n", def->defaultvalue_f);
+         break;
+
+      default:
+         if(var->max != UL)
+         {
+            C_Printf("Value for '%s':\n String of max %d length\n", 
+                     name, var->max);
+         }
+         else
+            C_Printf("Value for '%s':\n Unlimited-length string\n", name);
+
+         if(def)
+            C_Printf("Default value:\n \"%s\"\n", def->defaultvalue_s);
+         break;
       }
+
+      return;
    }
 
    C_Printf("Variable %s not found\n", name);

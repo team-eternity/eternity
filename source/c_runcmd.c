@@ -57,7 +57,7 @@ static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int C_Sync(command_t *command);
 static void C_ArgvtoArgs(void);
-static boolean C_Strcmp(char *pa, char *pb);
+static boolean C_Strcmp(const char *pa, const char *pb);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -71,20 +71,68 @@ console_t Console;
 // Parsing/Running Commands
 //
 
-static char cmdtokens[MAXTOKENS][MAXTOKENLENGTH];
+static qstring_t cmdtokens[MAXTOKENS];
 static int numtokens;
 
-        // break up the command into tokens
+//
+// C_initCmdTokens
+//
+// haleyjd 07/05/10: create qstrings for the console tokenizer.
+//
+static void C_initCmdTokens(void)
+{
+   static boolean cmdtokensinit;
+
+   if(!cmdtokensinit)
+   {
+      int i;
+
+      for(i = 0; i < MAXTOKENS; ++i)
+      {
+         M_QStrCreateSize(&cmdtokens[i], 128);      // local tokens
+         M_QStrCreateSize(&(Console.argv[i]), 128); // console argvs
+      }
+
+      M_QStrCreateSize(&Console.args, 1024); // congealed args
+      
+      cmdtokensinit = true;
+   }
+}
+
+//
+// C_clearCmdTokens
+//
+// haleyjd 07/05/10: clear all console tokens
+//
+static void C_clearCmdTokens(void)
+{
+   int i;
+
+   for(i = 0; i < MAXTOKENS; ++i)
+      M_QStrClear(&cmdtokens[i]);
+}
+
+//
+// C_GetTokens
+//
+// Break up the command into tokens.
+// haleyjd 07/05/10: rewritten to remove token length limitation
+//
 static void C_GetTokens(const char *command)
 {
    const char *rover;
    boolean quotemark=0;
    
    rover = command;
-   cmdtokens[0][0] = 0;
+   
+   C_initCmdTokens();
+   C_clearCmdTokens();
+
    numtokens = 1;
    
-   while(*rover == ' ') rover++;
+   while(*rover == ' ') 
+      rover++;
+   
    if(!*rover)     // end of string already
    {
       numtokens = 0;
@@ -93,33 +141,25 @@ static void C_GetTokens(const char *command)
 
    while(*rover)
    {
-      if(*rover=='"')
+      if(*rover == '"')
       {
          quotemark = !quotemark;
-         rover++;
-         continue;
       }
-      if(*rover==' ' && !quotemark)   // end of token
+      else if(*rover == ' ' && !quotemark)   // end of token
       {
          // only if the current one actually contains something
-         if(cmdtokens[numtokens-1][0])
+         if(M_QStrCharAt(&cmdtokens[numtokens - 1], 0))
          {
             numtokens++;
-            cmdtokens[numtokens-1][0] = 0;
          }
-         rover++;
-         continue;
       }
-      
-      // add char to line
+      else // add char to line
       {
          // 01/12/09: repaired by fraggle to fix mystery sprintf issue on linux
-         char *p = cmdtokens[numtokens - 1];
-         p += strlen(p);
-         *p = *rover;
-         ++p;
-         *p = '\0';
+         // 07/05/10: rewritten to use qstrings
+         M_QStrPutc(&cmdtokens[numtokens - 1], *rover);
       }
+
       rover++;
    }
 }
@@ -137,39 +177,42 @@ static void C_RunIndivTextCmd(const char *cmdname)
    alias_t *alias;
    
    // cut off leading spaces
-   while(*cmdname == ' ') cmdname++;
+   while(*cmdname == ' ')
+      cmdname++;
    
    // break into tokens
    C_GetTokens(cmdname);
    
    // find the command being run from the first token.
-   command = C_GetCmdForName(cmdtokens[0]);
+   command = C_GetCmdForName(cmdtokens[0].buffer);
    
    if(!numtokens) 
       return; // no command
    
-   if(!command)    // no _command_ called that
+   if(!command) // no _command_ called that
    {
       // alias?
-      if((alias = C_GetAlias(cmdtokens[0])))
+      if((alias = C_GetAlias(cmdtokens[0].buffer)))
       {
          // save the options into cmdoptions
-         cmdoptions = (char *)cmdname + strlen(cmdtokens[0]);
+         cmdoptions = (char *)cmdname + M_QStrLen(&cmdtokens[0]);
          C_RunAlias(alias);
       }
       else         // no alias either
-         C_Printf("unknown command: '%s'\n", cmdtokens[0]);
+         C_Printf("unknown command: '%s'\n", cmdtokens[0].buffer);
    }
    else
    {
       // run the command (buffer it)
-      C_RunCommand(command, cmdname+strlen(cmdtokens[0]));
+      C_RunCommand(command, cmdname + M_QStrLen(&cmdtokens[0]));
    }
 }
 
-// check the flags of a command to see if it
-// should be run or not
-
+//
+// C_CheckFlags
+//
+// Check the flags of a command to see if it should be run or not.
+//
 static boolean C_CheckFlags(command_t *command)
 {
    const char *errormsg;
@@ -214,15 +257,20 @@ void C_RunCommand(command_t *command, const char *options)
    Console.cmdtype = c_typed;  // reset to typed command as default
 }
 
+//
+// C_DoRunCommand
+//
 // actually run a command. Same as C_RunCommand only instant.
-
-static void C_DoRunCommand(command_t *command, char *options)
+//
+static void C_DoRunCommand(command_t *command, const char *options)
 {
    int i;
    
    C_GetTokens(options);
    
-   memcpy(Console.argv, cmdtokens, sizeof cmdtokens);
+   for(i = 0; i < MAXTOKENS; ++i)
+      M_QStrCopyTo(&(Console.argv[i]), &cmdtokens[i]);
+
    Console.argc = numtokens;
    Console.command = command;
    
@@ -231,23 +279,25 @@ static void C_DoRunCommand(command_t *command, char *options)
    // check through the tokens for variable names
    for(i = 0; i < Console.argc; i++)
    {
-      if(Console.argv[i][0] == '%' || Console.argv[i][0] == '$') // variable
+      char c = M_QStrCharAt(&(Console.argv[i]), 0);
+
+      if(c == '%' || c == '$') // variable
       {
          command_t *variable;
          
-         variable = C_GetCmdForName(Console.argv[i] + 1);
+         variable = C_GetCmdForName(Console.argv[i].buffer + 1);
          if(!variable || !variable->variable)
          {
-            C_Printf("unknown variable '%s'\n", Console.argv[i] + 1);
+            C_Printf("unknown variable '%s'\n", Console.argv[i].buffer + 1);
             // clear for next time
             Console.cmdtype = c_typed; 
             Console.cmdsrc  = consoleplayer;
             return;
          }
          
-         strcpy(Console.argv[i], Console.argv[i][0] == '%' ?
-                C_VariableValue(variable->variable) :
-                C_VariableStringValue(variable->variable) );
+         M_QStrCpy(&(Console.argv[i]), 
+                   c == '%' ? C_VariableValue(variable->variable) :
+                              C_VariableStringValue(variable->variable));
       }
    }
    
@@ -267,7 +317,7 @@ static void C_DoRunCommand(command_t *command, char *options)
       if(command->handler)
          command->handler();
       else
-         C_Printf(FC_ERROR"error: no command handler for %s\n", 
+         C_Printf(FC_ERROR "error: no command handler for %s\n", 
                   command->name);
       break;
       
@@ -299,32 +349,27 @@ static void C_DoRunCommand(command_t *command, char *options)
 static void C_ArgvtoArgs(void)
 {
    int i, n;
-   qstring_t tempBuf;
-
-   M_QStrInitCreate(&tempBuf);
-   
+ 
    for(i = 0; i < Console.argc; i++)
    {
-      if(!Console.argv[i][0])       // empty string
+      if(!M_QStrLen(&(Console.argv[i])))       // empty string
       {
          for(n = i; n < Console.argc - 1; n++)
-            strcpy(Console.argv[n], Console.argv[n+1]);
-         Console.argc--; i--;
+            M_QStrCopyTo(&(Console.argv[n]), &(Console.argv[n+1]));
+
+         Console.argc--; 
+         i--;
       }
    }
    
+   M_QStrClear(&Console.args);
+
    for(i = 0; i < Console.argc; ++i)
    {
       // haleyjd: use qstring_t to avoid sprintf problems and to be secure
-      M_QStrCat(&tempBuf, Console.argv[i]);
-      M_QStrPutc(&tempBuf, ' ');
+      M_QStrCat(&Console.args, Console.argv[i].buffer);
+      M_QStrPutc(&Console.args, ' ');
    }
-
-   // haleyjd: psnprintf into Console.args; ensures string is null-terminated even
-   // if it has to be truncated.
-   psnprintf(Console.args, sizeof(Console.args), "%s", tempBuf.buffer);
-
-   M_QStrFree(&tempBuf);
 }
 
 //
@@ -351,7 +396,7 @@ static char *C_QuotedArgvToArgs(void)
    for(i = 0; i < Console.argc; ++i)
    {
       M_QStrPutc(&returnbuf, '"');
-      M_QStrCat(&returnbuf, Console.argv[i]);
+      M_QStrCat(&returnbuf, Console.argv[i].buffer);
       M_QStrCat(&returnbuf, "\" ");      
    }
    
@@ -424,7 +469,7 @@ void C_RunTextCmd(const char *command)
 
 const char *C_VariableValue(variable_t *variable)
 {
-   static char value[1024];
+   static char value[1024]; // FIXME: unacceptable static limit
    
    memset(value, 0, 1024);
    
@@ -435,6 +480,11 @@ const char *C_VariableValue(variable_t *variable)
    {
    case vt_int:
       psnprintf(value, sizeof(value), "%i", *(int*)variable->variable);
+      break;
+
+   case vt_toggle:
+      // haleyjd 07/05/10
+      psnprintf(value, sizeof(value), "%i", (int)(*(boolean *)variable->variable));
       break;
       
    case vt_string:
@@ -466,7 +516,7 @@ const char *C_VariableValue(variable_t *variable)
 
 const char *C_VariableStringValue(variable_t *variable)
 {
-   static char value[1024];
+   static char value[1024]; // FIXME: unacceptable static limit
    
    memset(value, 0, 1024);
    
@@ -481,8 +531,15 @@ const char *C_VariableStringValue(variable_t *variable)
    {
       // print defined value
       // haleyjd 03/17/02: needs rangechecking
-      int varValue = *((int *)variable->variable);
-      int valStrIndex = varValue - variable->min;
+      int varValue;
+      int valStrIndex;
+
+      if(variable->type == vt_int)
+         varValue = *((int *)variable->variable);
+      else if(variable->type == vt_toggle)
+         varValue = (int)(*(boolean *)variable->variable);
+
+      valStrIndex = varValue - variable->min;
 
       if(valStrIndex < 0 || valStrIndex > variable->max - variable->min)
          return "";
@@ -509,25 +566,38 @@ static void C_EchoValue(command_t *command)
 
 // is a string a number?
 
-static boolean isnum(char *text)
+static boolean isnum(const char *text)
 {
+   // haleyjd 07/05/10: skip over signs here
+   if(strlen(text) > 1 && (*text == '-' || *text == '+'))
+      ++text;
+
    for(; *text; text++)
    {
-      if((*text>'9' || *text<'0') && *text!='-')
+      if(*text > '9' || *text < '0')
          return false;
    }
    return true;
 }
 
-// take a string and see if it matches a define for a
-// variable. Replace with the literal value if so.
-
-static char *C_ValueForDefine(variable_t *variable, char *s)
+//
+// C_ValueForDefine
+//
+// Take a string and see if it matches a define for a variable. Replace with the
+// literal value if so.
+//
+static const char *C_ValueForDefine(variable_t *variable, const char *s)
 {
    int count;
-   static char returnstr[48];
+   char tempstr[1024];
+   static qstring_t returnstr;
 
-   memset(returnstr, 0, 48);
+   if(!returnstr.buffer)
+      M_QStrInitCreate(&returnstr);
+
+   // haleyjd 07/05/10: ALWAYS copy param to returnstr, or else strcpy will have
+   // undefined behavior in C_SetVariable.
+   M_QStrCpy(&returnstr, s);
 
    if(variable->defines)
    {
@@ -535,45 +605,113 @@ static char *C_ValueForDefine(variable_t *variable, char *s)
       {
          if(!C_Strcmp(s, variable->defines[count-variable->min]))
          {
-            sprintf(returnstr, "%i", count);
-            return returnstr;
+            psnprintf(tempstr, sizeof(tempstr), "%d", count);
+            M_QStrCpy(&returnstr, tempstr);
+            return returnstr.buffer;
          }
       }
    }
-   
+
    // special hacks for menu
-   
-   if(variable->type == vt_int)    // int values only
+
+   if(strlen(s) == 1 && *s == '*' && variable->cfgDefault)
    {
+      default_t *dp = variable->cfgDefault;
+
+      switch(variable->type)
+      {
+      case vt_int:
+         {
+            int i;
+            dp->methods->getDefault(dp, &i);
+            psnprintf(tempstr, sizeof(tempstr), "%d", i);
+            M_QStrCpy(&returnstr, tempstr);
+         }
+         break;
+      case vt_toggle:
+         {
+            boolean b;
+            dp->methods->getDefault(dp, &b);
+            psnprintf(tempstr, sizeof(tempstr), "%d", !!b);
+            M_QStrCpy(&returnstr, tempstr);
+         }
+         break;
+      case vt_float:
+         {
+            double f;
+            dp->methods->getDefault(dp, &f);
+            psnprintf(tempstr, sizeof(tempstr), "%f", f);
+            M_QStrCpy(&returnstr, tempstr);
+         }
+         break;
+      case vt_string:
+         {
+            char *def;
+            dp->methods->getDefault(dp, &def);
+            M_QStrCpy(&returnstr, def);
+         }
+         break;
+      case vt_chararray:
+         {
+            // TODO
+         }
+         break;
+      }
+
+      return returnstr.buffer;
+   }
+   
+   if(variable->type == vt_int || variable->type == vt_toggle)    // int values only
+   {
+      int value;
+
+      if(variable->type == vt_int)
+         value = *(int *)variable->variable;
+      else
+         value = (int)(*(boolean *)variable->variable);
+
       if(!strcmp(s, "+"))     // increase value
       {
-         int value = *(int *)variable->variable + 1;
+         value += 1;
+
          if(variable->max != UL && value > variable->max) 
             value = variable->max;
-         sprintf(returnstr, "%i", value);
-         return returnstr;
+         
+         psnprintf(tempstr, sizeof(tempstr), "%d", value);
+         M_QStrCpy(&returnstr, tempstr);
+         return returnstr.buffer;
       }
       if(!strcmp(s, "-"))     // decrease value
       {
-         int value = *(int *)variable->variable - 1;
+         value -= 1;
+         
          if(variable->min != UL && value < variable->min)
             value = variable->min;
-         sprintf(returnstr, "%i", value);
-         return returnstr;
+         
+         psnprintf(tempstr, sizeof(tempstr), "%d", value);
+         M_QStrCpy(&returnstr, tempstr);
+         return returnstr.buffer;
       }
       if(!strcmp(s, "/"))     // toggle value
       {
-         int value = *(int *)variable->variable + 1;
+         if(variable->type == vt_int)
+            value += 1;
+         else
+            value = !value;
+
          if(variable->max != UL && value > variable->max)
             value = variable->min; // wrap around
-         sprintf(returnstr, "%i", value);
-         return returnstr;
+
+         psnprintf(tempstr, sizeof(tempstr), "%d", value);
+         M_QStrCpy(&returnstr, tempstr);
+         return returnstr.buffer;
       }
       
-      if(!isnum(s)) return NULL;
+      if(!isnum(s))
+         return NULL;
    }
    
-   return s;
+   return returnstr.buffer;
 }
 
 // haleyjd 08/30/09: local-origin netcmds need love too
@@ -592,7 +730,7 @@ static void C_SetVariable(command_t *command)
    int size = 0;
    double fs = 0.0;
    char *errormsg;
-   char *temp;
+   const char *temp;
    
    // cut off the leading spaces
    
@@ -609,10 +747,10 @@ static void C_SetVariable(command_t *command)
    // ok, set the value
    variable = command->variable;
    
-   temp = C_ValueForDefine(variable, Console.argv[0]);
+   temp = C_ValueForDefine(variable, Console.argv[0].buffer);
    
    if(temp)
-      strcpy(Console.argv[0], temp);
+      M_QStrCpy(&(Console.argv[0]), temp);
    else
    {
       C_Printf("not a possible value for '%s'\n", command->name);
@@ -622,17 +760,18 @@ static void C_SetVariable(command_t *command)
    switch(variable->type)
    {
    case vt_int:
-      size = atoi(Console.argv[0]);
+   case vt_toggle:
+      size = M_QStrAtoi(&(Console.argv[0]));
       break;
       
    case vt_string:
    case vt_chararray:
-      size = strlen(Console.argv[0]);
+      size = M_QStrLen(&(Console.argv[0]));
       break;
 
    case vt_float:
       // haleyjd 04/21/10: vt_float
-      fs = strtod(Console.argv[0], NULL);
+      fs = strtod(Console.argv[0].buffer, NULL);
       break;
       
    default:
@@ -688,25 +827,32 @@ static void C_SetVariable(command_t *command)
          if(variable->v_default && cmd_setdefault)  // default
             *(int*)variable->v_default = size;
          break;
+
+      case vt_toggle:
+         // haleyjd 07/05/10
+         *(boolean *)variable->variable = !!size;
+         if(variable->v_default && cmd_setdefault) // default
+            *(boolean *)variable->v_default = !!size;
+         break;
          
       case vt_string:
          free(*(char**)variable->variable);
-         *(char**)variable->variable = strdup(Console.argv[0]);
+         *(char**)variable->variable = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
          if(variable->v_default && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
-            *(char**)variable->v_default = strdup(Console.argv[0]);
+            *(char**)variable->v_default = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
          }
          break;
 
       case vt_chararray:
          // haleyjd 03/13/06: static strings
          memset(variable->variable, 0, variable->max+1);
-         strcpy((char *)variable->variable, Console.argv[0]);
+         strcpy((char *)variable->variable, Console.argv[0].buffer);
          if(variable->v_default && cmd_setdefault)
          {
             memset(variable->v_default, 0, variable->max+1);
-            strcpy((char *)variable->v_default, Console.argv[0]);
+            strcpy((char *)variable->v_default, Console.argv[0].buffer);
          }
          break;
 
@@ -1125,10 +1271,10 @@ void C_ClearBuffer(int cmdtype)
 }
 
         // compare regardless of font colour
-static boolean C_Strcmp(char *pa, char *pb)
+static boolean C_Strcmp(const char *pa, const char *pb)
 {
-   unsigned char *a = (unsigned char *)pa;
-   unsigned char *b = (unsigned char *)pb;
+   const unsigned char *a = (const unsigned char *)pa;
+   const unsigned char *b = (const unsigned char *)pb;
 
    while(*a || *b)
    {
@@ -1166,9 +1312,7 @@ command_t *cmdroots[CMDCHAINS];
 
 void (C_AddCommand)(command_t *command)
 {
-   int hash;
-   
-   hash = CmdHashKey(command->name);
+   int hash = CmdHashKey(command->name);
    
    command->next = cmdroots[hash]; // hook it in at the start of
    cmdroots[hash] = command;       // the table
@@ -1178,6 +1322,10 @@ void (C_AddCommand)(command_t *command)
       C_Printf(FC_ERROR"C_AddCommand: cf_netvar without a netcmd (%s)\n", command->name);
    
    c_netcmds[command->netcmd] = command;
+
+   // haleyjd 07/04/10: find default in config for cvars that have one
+   if(command->type == ct_variable)
+      command->variable->cfgDefault = M_FindDefaultForCVar(command->variable);
 }
 
 // add a list of commands terminated by one of type ct_end
@@ -1190,12 +1338,13 @@ void C_AddCommandList(command_t *list)
 
 // get a command from a string if possible
         
-command_t *C_GetCmdForName(char *cmdname)
+command_t *C_GetCmdForName(const char *cmdname)
 {
    command_t *current;
    int hash;
    
-   while(*cmdname==' ') cmdname++;
+   while(*cmdname == ' ')
+      cmdname++;
 
    // start hashing
    
@@ -1330,17 +1479,23 @@ void C_RunScriptFromFile(const char *filename)
 
    if(!D_IsOpen(file))
    {
-      C_Printf("couldn't exec script '%s'\n", filename);
+      C_Printf(FC_ERROR "Couldn't exec script '%s'\n", filename);
    }
    else
    {
-      C_Printf("executing script '%s'\n", filename);
+      C_Printf("Executing script '%s'\n", filename);
       C_RunScript(file);
    }
 
    D_Fclose(file);
 }
 
+//
+// C_RunCmdLineScripts
+//
+// Called at startup to look for scripts to run specified via the -exec command
+// line parameter.
+//
 void C_RunCmdLineScripts(void)
 {
    int p;

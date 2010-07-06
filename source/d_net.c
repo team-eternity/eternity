@@ -960,7 +960,7 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 }
 */
 
-VARIABLE_BOOLEAN(d_fastrefresh, NULL, onoff);
+VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
 
 void net_AddCommands()

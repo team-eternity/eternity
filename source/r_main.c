@@ -1186,7 +1186,7 @@ VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
 VARIABLE_BOOLEAN(flashing_hom, NULL,                onoff);
 VARIABLE_BOOLEAN(visplane_view, NULL,               onoff);
 VARIABLE_BOOLEAN(r_precache, NULL,                  onoff);
-VARIABLE_BOOLEAN(showpsprites, NULL,                yesno);
+VARIABLE_TOGGLE(showpsprites,  NULL,                yesno);
 VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
 VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
 VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);

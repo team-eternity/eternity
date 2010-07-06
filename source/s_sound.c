@@ -1447,7 +1447,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    }
 
    // check to see if there's a music by this name
-   if(!(music = S_MusicForName(Console.argv[0])))
+   if(!(music = S_MusicForName(Console.argv[0].buffer)))
    {
       C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]);
       return;

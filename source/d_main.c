@@ -3585,7 +3585,7 @@ void usermsg(const char *s, ...)
 // add a new .wad file
 // returns true if successfully loaded
 
-boolean D_AddNewFile(char *s)
+boolean D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
    if(W_AddNewFile(&w_GlobalDir, s))

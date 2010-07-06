@@ -453,13 +453,15 @@ static double rational_tanh(double x)
 //
 static double do_3band(EQSTATE *es, double sample)
 {
-   //static double vsa = (1.0 / 4294967295.0);
+   // haleyjd: This "very small addend" is supposed to take care of P4
+   // renormalization problems. Do we actually need it?
+   static double vsa = (1.0 / 4294967295.0);
 
    // Locals
    double l, m, h;    // Low / Mid / High - Sample Values
 
    // Filter #1 (lowpass)
-   es->f1p0  += (es->lf * (sample   - es->f1p0)); // + vsa;
+   es->f1p0  += (es->lf * (sample   - es->f1p0)) + vsa;
    es->f1p1  += (es->lf * (es->f1p0 - es->f1p1));
    es->f1p2  += (es->lf * (es->f1p1 - es->f1p2));
    es->f1p3  += (es->lf * (es->f1p2 - es->f1p3));
@@ -467,7 +469,7 @@ static double do_3band(EQSTATE *es, double sample)
    l          = es->f1p3;
 
    // Filter #2 (highpass)
-   es->f2p0  += (es->hf * (sample   - es->f2p0)); // + vsa;
+   es->f2p0  += (es->hf * (sample   - es->f2p0)) + vsa;
    es->f2p1  += (es->hf * (es->f2p0 - es->f2p1));
    es->f2p2  += (es->hf * (es->f2p1 - es->f2p2));
    es->f2p3  += (es->hf * (es->f2p2 - es->f2p3));
@@ -475,8 +477,8 @@ static double do_3band(EQSTATE *es, double sample)
    h          = es->sdm3 - es->f2p3;
 
    // Calculate midrange (signal - (low + high))
-   //m          = es->sdm3 - (h + l);
-   m          = sample - (h + l);
+   m          = es->sdm3 - (h + l); // haleyjd 07/05/10: which is right?
+   //m          = sample - (h + l); // the one above seems more correct to me.
 
    // Scale, Combine and store
    l         *= es->lg;

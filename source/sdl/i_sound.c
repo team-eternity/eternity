@@ -405,10 +405,10 @@ VARIABLE_BOOLEAN(s_equalizer, NULL, onoff);
 
 VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
 VARIABLE_FLOAT(s_highfreq, NULL, 0.0, UL);
-VARIABLE_FLOAT(s_eqpreamp, NULL, 0.1, 1.0);
-VARIABLE_FLOAT(s_lowgain,  NULL, 0.0, 2.9);
-VARIABLE_FLOAT(s_midgain,  NULL, 0.0, 2.9);
-VARIABLE_FLOAT(s_highgain, NULL, 0.0, 2.9);
+VARIABLE_FLOAT(s_eqpreamp, NULL, 0.0, 1.0);
+VARIABLE_FLOAT(s_lowgain,  NULL, 0.0, 3.0);
+VARIABLE_FLOAT(s_midgain,  NULL, 0.0, 3.0);
+VARIABLE_FLOAT(s_highgain, NULL, 0.0, 3.0);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {

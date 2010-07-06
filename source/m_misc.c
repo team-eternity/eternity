@@ -39,6 +39,7 @@
 #include "z_zone.h"
 #include "d_gi.h"
 #include "m_misc.h"
+#include "m_syscfg.h"
 #include "m_argv.h"
 #include "w_wad.h"
 
@@ -1088,6 +1089,24 @@ static void M_setDefaultString(default_t *dp)
    *(char **)dp->location = strdup(dp->defaultvalue_s);
 }
 
+// Test if a string default matches the given cvar
+static boolean M_checkCVarString(default_t *dp, variable_t *var)
+{
+   // config strings only match string and chararray cvar types
+   if(var->type != vt_string && var->type != vt_chararray)
+      return false;
+
+   // FIXME: this test may not work for vt_chararray (* vs **)
+
+   // test the pointer
+   return (dp->location == var->variable || dp->location == var->v_default);
+}
+
+static void M_getDefaultString(default_t *dp, void *dest)
+{
+   *(const char **)dest = dp->defaultvalue_s;
+}
+
 //
 // Integers
 //
@@ -1177,6 +1196,20 @@ static void M_setDefaultInt(default_t *dp)
    *(int *)dp->location = dp->defaultvalue_i;
 }
 
+// Test if an integer default matches the given cvar
+static boolean M_checkCVarInt(default_t *dp, variable_t *var)
+{
+   if(var->type != vt_int)
+      return false;
+
+   return (dp->location == var->variable || dp->location == var->v_default);
+}
+
+static void M_getDefaultInt(default_t *dp, void *dest)
+{
+   *(int *)dest = dp->defaultvalue_i;
+}
+
 //
 // Floats
 //
@@ -1262,6 +1295,20 @@ static void M_setDefaultFloat(default_t *dp)
    *(double *)dp->location = dp->defaultvalue_f;
 }
 
+// Test if a float default matches the given cvar
+static boolean M_checkCVarFloat(default_t *dp, variable_t *var)
+{
+   if(var->type != vt_float)
+      return false;
+
+   return (dp->location == var->variable || dp->location == var->v_default);
+}
+
+static void M_getDefaultFloat(default_t *dp, void *dest)
+{
+   *(double *)dest = dp->defaultvalue_f;
+}
+
 //
 // Booleans
 //
@@ -1322,6 +1369,20 @@ static void M_setDefaultBool(default_t *dp)
    *(boolean *)dp->location = dp->defaultvalue_b;
 }
 
+// Test if a boolean default matches the given cvar
+static boolean M_checkCVarBool(default_t *dp, variable_t *var)
+{
+   if(var->type != vt_toggle)
+      return false;
+
+   return (dp->location == var->variable || dp->location == var->v_default);
+}
+
+static void M_getDefaultBool(default_t *dp, void *dest)
+{
+   *(boolean *)dest = dp->defaultvalue_b;
+}
+
 //
 // Interface objects for defaults
 //
@@ -1333,7 +1394,9 @@ static default_i defaultInterfaces[] =
       M_writeDefaultInt,
       M_setDefaultValueInt,
       M_readDefaultInt,
-      M_setDefaultInt
+      M_setDefaultInt,
+      M_checkCVarInt,
+      M_getDefaultInt
    },
    // dt_string
    { 
@@ -1342,6 +1405,8 @@ static default_i defaultInterfaces[] =
       M_setDefaultValueString,
       M_readDefaultString,
       M_setDefaultString,
+      M_checkCVarString,
+      M_getDefaultString
    },
    // dt_float
    { 
@@ -1349,7 +1414,9 @@ static default_i defaultInterfaces[] =
       M_writeDefaultFloat,
       M_setDefaultValueFloat,
       M_readDefaultFloat,
-      M_setDefaultFloat
+      M_setDefaultFloat,
+      M_checkCVarFloat,
+      M_getDefaultFloat
    },
    // dt_boolean
    { 
@@ -1357,7 +1424,9 @@ static default_i defaultInterfaces[] =
       M_writeDefaultBool,
       M_setDefaultValueBool,
       M_readDefaultBool,
-      M_setDefaultBool
+      M_setDefaultBool,
+      M_checkCVarBool,
+      M_getDefaultBool
    },
 };
 
@@ -1706,6 +1775,47 @@ void M_ResetDefaultFileComments(defaultfile_t *df)
 void M_ResetDefaultComments(void)
 {
    M_ResetDefaultFileComments(&maindefaults);
+}
+
+//
+// M_findCVarInDefaults
+//
+// haleyjd 07/04/10: static subroutine for M_FindDefaultForCVar that looks
+// for a match in a single set of defaults.
+//
+static default_t *M_findCVarInDefaults(default_t *defaults, variable_t *var)
+{
+   default_t *dp, *ret = NULL;
+
+   for(dp = defaults; dp->name; dp++)
+   {
+      if(dp->methods->checkCVar(dp, var))
+      {
+         ret = dp;
+         break;
+      }
+   }
+
+   return ret;
+}
+
+//
+// M_FindDefaultForCVar
+//
+// haleyjd 07/04/10: Given a cvar, this function will try to find a matching
+// default object amongst the various default sets. This is a stopgap 
+// implementation to create some coherence between the console and config
+// systems.
+//
+default_t *M_FindDefaultForCVar(variable_t *var)
+{
+   default_t *ret = NULL;
+
+   // check normal defaults array first, then system defaults
+   if(!(ret = M_findCVarInDefaults(defaults, var)))
+      ret = M_findCVarInDefaults(M_GetSysDefaults(), var);
+
+   return ret;
 }
 
 //=============================================================================
