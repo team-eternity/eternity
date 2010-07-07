@@ -143,9 +143,7 @@ boolean P_StartQuake(int *args)
       qt->origin.x       = mo->x;
       qt->origin.y       = mo->y;
       qt->origin.z       = mo->z;
-#ifdef R_LINKEDPORTALS
       qt->origin.groupid = mo->groupid;
-#endif
    }
 
    return ret;

@@ -29,7 +29,6 @@
 #define P_PORTAL_H__
 
 
-#ifdef R_LINKEDPORTALS
 extern boolean useportalgroups;
 
 #ifndef R_NOGROUP
@@ -81,10 +80,6 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h);
 // the float version of the ceiling height as well.
 void P_SetCeilingHeight(sector_t *sec, fixed_t h);
 
-
-
-
-#endif
 
 #endif
 

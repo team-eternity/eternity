@@ -46,17 +46,15 @@ typedef enum
    // If set the portal will be turned off
    R_HIDDEN = 0x01,
 
-#ifdef R_LINKEDPORTALS
    // Linked portal options:
    // If set, the linked portal will not allow travel between 
    R_BLOCKING = 0x02
-#endif
 } rportalflag_e;
 
 
-#ifdef R_LINKEDPORTALS
-#define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
+//#define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
 
+// Contains information representing a link from one portal group to another
 typedef struct linkdata_s
 {
    // SoM: linked portals are similar to anchored portals
@@ -71,16 +69,22 @@ typedef struct linkdata_s
    // causing problems)
    int       maker, anchor;
 } linkdata_t;
-#endif
 
+
+
+// Represents the information needed for an anchored portal
 typedef struct anchordata_s
 {
    fixed_t   deltax, deltay, deltaz;
+   
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
 
+
+
+// Represents the data needed for a horizon portal
 typedef struct horizondata_s
 {
    int     *floorpic, *ceilingpic;
@@ -92,6 +96,8 @@ typedef struct horizondata_s
    float   *ceilingbaseangle, *ceilingangle;
 } horizondata_t;
 
+
+// The data needed for a skyplane portal
 typedef struct skyplanedata_s
 {
    int     *pic;
@@ -101,6 +107,9 @@ typedef struct skyplanedata_s
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplanedata_t;
 
+
+// The portal struct. This is what is assigned to sectors and can represent any
+// kind of portal.
 typedef struct portal_s
 {
    rportaltype_e type;
@@ -145,12 +154,15 @@ void R_ClearPortals(void);
 void R_RenderPortals(void);
 
 
-#ifdef R_LINKEDPORTALS
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
-#endif
 
 
+
+// ----------------------------------------------------------------------------
+// Portal windows
+// A portal window represents the screen reigon through which the player is 
+// 'looking' at the portal.
 typedef enum
 {
    pw_floor,

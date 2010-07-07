@@ -822,7 +822,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_RenderAnchoredPortal(window->child);
 }
 
-#ifdef R_LINKEDPORTALS
+
+
 static void R_RenderLinkedPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -915,7 +916,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    if(window->child)
       R_RenderLinkedPortal(window->child);
 }
-#endif
+
+
 
 //
 // R_UntaintPortals
@@ -941,6 +943,10 @@ void R_UntaintPortals(void)
    }
 }
 
+
+
+
+
 static void R_SetPortalFunction(pwindow_t *window)
 {
    switch(window->portal->type)
@@ -962,18 +968,19 @@ static void R_SetPortalFunction(pwindow_t *window)
       window->func     = R_RenderAnchoredPortal;
       window->clipfunc = segclipfuncs[window->type];
       break;
-#ifdef R_LINKEDPORTALS
    case R_LINKED:
       window->func     = R_RenderLinkedPortal;
       window->clipfunc = segclipfuncs[window->type];
       break;
-#endif
    default:
       window->func     = R_RenderPortalNOP;
       window->clipfunc = NULL;
       break;
    }
 }
+
+
+
 
 //
 // R_Get*PortalWindow
@@ -1013,6 +1020,9 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
 }
 
 
+
+
+
 pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
 {
    pwindow_t *rover = windowhead;
@@ -1042,6 +1052,9 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
 
    return rover;
 }
+
+
+
 
 
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
@@ -1075,6 +1088,9 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 
    return rover;
 }
+
+
+
 
 //
 // R_RenderPortals
@@ -1117,7 +1133,9 @@ void R_RenderPortals(void)
    windowlast = windowhead;
 }
 
-#ifdef R_LINKEDPORTALS
+
+
+
 // ----------------------------------------------------------------------------
 // SoM: Begin linked portals
 
@@ -1162,8 +1180,6 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 
    return ret;
 }
-
-#endif
 
 //----------------------------------------------------------------------------
 //

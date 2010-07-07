@@ -74,32 +74,24 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 {
    const portal_t *fp = sector->f_portal;
 
-#ifdef R_LINKEDPORTALS
    return 
       (fp &&
        ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
         (fp->type == R_TWOWAY && sector->floorheight < viewz) ||         
         (fp->type == R_LINKED && sector->floorheight <= viewz && 
                                  sector->floorheight <= fp->data.link.planez)));
-#else
-   return (fp && (fp->type != R_TWOWAY || sector->floorheight < viewz));
-#endif
 }
 
 d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
 {
    const portal_t *cp = sector->c_portal;
 
-#ifdef R_LINKEDPORTALS
    return 
       (cp &&
        ((cp->type != R_TWOWAY && cp->type != R_LINKED) ||
         (cp->type == R_TWOWAY && sector->ceilingheight > viewz) ||         
         (cp->type == R_LINKED && sector->ceilingheight > viewz && 
                                  sector->ceilingheight >= cp->data.link.planez)));
-#else
-   return (cp && (cp->type != R_TWOWAY || sector->ceilingheight > viewz));
-#endif
 }
 
 //

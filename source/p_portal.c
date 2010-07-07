@@ -35,8 +35,6 @@
 #include "p_setup.h"
 #include "p_map.h"
 
-#ifdef R_LINKEDPORTALS
-
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
 // table is built it is allocated as a linear buffer of groupcount * groupcount
@@ -320,6 +318,9 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 
    return 0;
 }
+
+
+
 
 //
 // P_CheckLinkedPortal
@@ -636,6 +637,7 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 // ----------------------------------------------------------------------------
 // SoM: Sector utility functions
 
+
 //
 // P_SetFloorHeight
 //
@@ -648,6 +650,7 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
 }
+
 
 //
 // P_SetCeilingHeight
@@ -684,8 +687,6 @@ void P_CreateDummy(mobj_t *owner)
       return;
 
 }
-#endif
-
 #endif
 
 // EOF

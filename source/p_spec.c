@@ -120,9 +120,7 @@ typedef enum
    portal_skybox,
    portal_anchored,
    portal_twoway,
-#ifdef R_LINKEDPORTALS
    portal_linked
-#endif
 } portal_type;
 
 typedef enum
@@ -2788,7 +2786,6 @@ void P_SpawnSpecials(int mapformat)
       case 345:
          P_SpawnPortal(&lines[i], portal_twoway, lines[i].special - 344);
          break;
-#ifdef R_LINKEDPORTALS
       case 358:
       case 359:
          P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 358);
@@ -2796,7 +2793,6 @@ void P_SpawnSpecials(int mapformat)
       case 376:
          P_SpawnPortal(&lines[i], portal_linked, portal_lineonly);
          break;
-#endif
       case 378: // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
          P_SetLineID(&lines[i], lines[i].args[0]);
@@ -2823,7 +2819,6 @@ void P_SpawnSpecials(int mapformat)
       }
    }
 
-#ifdef R_LINKEDPORTALS
    // SoM: This seems like the place to put this.
    if(!P_BuildLinkTable())
    {
@@ -2831,7 +2826,6 @@ void P_SpawnSpecials(int mapformat)
       for(i = 0; i < numsectors; i++)
          R_SetSectorGroupID(sectors + i, R_NOGROUP);
    }
-#endif
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
@@ -4936,7 +4930,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       portal = R_GetTwoWayPortal(line - lines, s);
       break;
-#ifdef R_LINKEDPORTALS
    case portal_linked:
       if(demo_version < 333)
          return;
@@ -4998,7 +4991,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
       break;
-#endif
    default:
       I_Error("P_SpawnPortal: unknown portal type\n");
    }

@@ -55,9 +55,7 @@ typedef struct sector_s sector_t;
 
 // Portals
 #include "r_portal.h"
-#ifdef R_LINKEDPORTALS
 #include "p_portal.h"
-#endif
 
 #include "p_partcl.h"
 
@@ -104,10 +102,8 @@ typedef struct degenmobj_s
    thinker_t thinker;  // not used for anything (haleyjd: not true now,
    fixed_t x, y, z;    //    earthquake code)
 
-#ifdef R_LINKEDPORTALS
    // SoM: yes Quasar, this is entirely necessary
    int     groupid; // The group the sound originated in
-#endif
 } degenmobj_t;
 
 // haleyjd: polyobj.h needs degenmobj_t, so it must be here
@@ -274,9 +270,7 @@ struct sector_s
 
    portal_t *c_portal;
    portal_t *f_portal;
-#ifdef R_LINKEDPORTALS
    int groupid;
-#endif
 
    // haleyjd 03/12/03: Heretic wind specials
    int     hticPushType;
@@ -585,9 +579,7 @@ typedef struct vissprite_s
 
   fixed_t footclip; // haleyjd: foot clipping
 
-  #ifdef R_LINKEDPORTALS
   int    sector; // SoM: sector the sprite is in.
-  #endif
 
   int pcolor; // haleyjd 08/25/09: for particles
 

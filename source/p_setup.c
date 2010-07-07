@@ -504,9 +504,7 @@ void P_LoadSectors(int lumpnum)
 
       // SoM: init portals
       ss->c_portal = ss->f_portal = NULL;
-#ifdef R_LINKEDPORTALS
       ss->groupid = R_NOGROUP;
-#endif
 
       // SoM: Slopes!
       ss->c_slope = ss->f_slope = NULL;
@@ -1900,12 +1898,10 @@ void P_GroupLines(void)
                            sector->blockbox[BOXLEFT] / 2;
       sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
                            sector->blockbox[BOXBOTTOM] / 2;
-#ifdef R_LINKEDPORTALS
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for
       // initialization.
       sector->soundorg.groupid = sector->groupid;
-#endif
 
       // haleyjd 10/16/06: copy all properties to ceiling origin
       sector->csoundorg = sector->soundorg;

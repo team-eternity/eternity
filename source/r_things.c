@@ -823,9 +823,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-#ifdef R_LINKEDPORTALS
    vis->sector = thing->subsector->sector - sectors;
-#endif
    vis->pcolor = 0;
 
    //if(x1 < vis->x1)
@@ -1009,9 +1007,7 @@ void R_DrawPSprite(pspdef_t *psp)
    vis->scale = view.pspriteyscale;
    vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
-#ifdef R_LINKEDPORTALS
    vis->sector = viewplayer->mo->subsector->sector - sectors;
-#endif
    vis->pcolor = 0;
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
@@ -1556,7 +1552,6 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    }
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
-#ifdef R_LINKEDPORTALS
    // SoM: special clipping for linked portals
    if(useportalgroups)
    {
@@ -1589,7 +1584,6 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
                cliptop[x] = h;
       }
    }
-#endif
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
@@ -1862,9 +1856,7 @@ void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
-#ifdef R_LINKEDPORTALS
    vis->sector = sector - sectors;  
-#endif
    
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))

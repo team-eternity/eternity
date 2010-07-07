@@ -590,7 +590,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
 
    if(sec->c_portal)
    {
-#ifdef R_LINKEDPORTALS
       if(sec->c_portal->type == R_LINKED)
       {
          if(sec->ceilingheight < R_CPLink(sec)->planez)
@@ -599,9 +598,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
-      else
-#endif
-      if(sec->c_portal->flags & R_HIDDEN)
+      else if(sec->c_portal->flags & R_HIDDEN)
       {
          tempsec->c_portal = NULL;
          sec = tempsec;
@@ -609,7 +606,6 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
    }
    if(sec->f_portal)
    {
-#ifdef R_LINKEDPORTALS
       if(sec->f_portal->type == R_LINKED)
       {
          if(sec->floorheight > R_FPLink(sec)->planez)
@@ -618,9 +614,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
          sec = tempsec;
       }
-      else
-#endif
-      if(sec->f_portal->flags & R_HIDDEN)
+      else if(sec->f_portal->flags & R_HIDDEN)
       {
          tempsec->f_portal = NULL;
          sec = tempsec;
@@ -1177,7 +1171,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.markflags |= SEG_MARKFLOOR;
    }
 
-#ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
    // or below the ceiling or floor plane.
    // haleyjd 03/12/06: inverted predicates to simplify
@@ -1196,7 +1189,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
    }
-#endif
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
@@ -1351,7 +1343,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.markflags |= SEG_MARKFLOOR;
    }
 
-#ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
    // or below the ceiling or floor plane.
    // haleyjd 03/12/06: inverted predicates to simplify
@@ -1370,7 +1361,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
    }
-#endif
 
    seg.low  = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
@@ -1699,7 +1689,6 @@ static void R_AddLine(seg_t *line)
       seg.l_window    = line->linedef->portal ?
                         R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 
-#ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
       if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
          seg.frontsec->f_portal->type != R_TWOWAY)
@@ -1707,7 +1696,6 @@ static void R_AddLine(seg_t *line)
       if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
-#endif
    }
    else
    {

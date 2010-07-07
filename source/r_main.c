@@ -777,9 +777,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewangle = mobj->angle;// + viewangleoffset;
       pitch = player->pitch;
       // SoM
-#ifdef R_LINKEDPORTALS
       viewgroup = mobj->groupid;
-#endif
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -798,9 +796,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewz = camera->z;
       viewangle = camera->angle;
       pitch = camera->pitch;
-#ifdef R_LINKEDPORTALS
       viewgroup = camera->groupid;
-#endif
    }
 
    extralight = player->extralight;

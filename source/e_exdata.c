@@ -570,12 +570,10 @@ static struct exlinespec
    { 357, "Polyobj_OR_RotateLeft" },
 
    // SoM: linked portal types
-#ifdef R_LINKEDPORTALS
    { 358, "Portal_LinkedCeiling" },
    { 359, "Portal_LinkedFloor" },
    { 360, "Portal_LinkedAnchorLine" },
    { 361, "Portal_LinkedAnchorLineFloor" },
-#endif
 
    { 362, "Pillar_Build" },
    { 363, "Pillar_BuildAndCrush" },
@@ -592,10 +590,8 @@ static struct exlinespec
    { 374, "Light_Strobe" },
    { 375, "Radius_Quake" },
 
-#ifdef R_LINKEDPORTALS
    { 376, "Portal_LinkedLineToLine" },
    { 377, "Portal_LinkedLineToLineAnchor" },
-#endif
 
    { 378, "Line_SetIdentification" },
 
