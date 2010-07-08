@@ -589,7 +589,6 @@ static boolean isnum(const char *text)
 static const char *C_ValueForDefine(variable_t *variable, const char *s)
 {
    int count;
-   char tempstr[1024];
    static qstring_t returnstr;
 
    if(!returnstr.buffer)
@@ -605,8 +604,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
       {
          if(!C_Strcmp(s, variable->defines[count-variable->min]))
          {
-            psnprintf(tempstr, sizeof(tempstr), "%d", count);
-            M_QStrCpy(&returnstr, tempstr);
+            M_QStrPrintf(&returnstr, 0, "%d", count);
             return returnstr.buffer;
          }
       }
@@ -625,24 +623,21 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          {
             int i;
             dp->methods->getDefault(dp, &i);
-            psnprintf(tempstr, sizeof(tempstr), "%d", i);
-            M_QStrCpy(&returnstr, tempstr);
+            M_QStrPrintf(&returnstr, 0, "%d", i);
          }
          break;
       case vt_toggle:
          {
             boolean b;
             dp->methods->getDefault(dp, &b);
-            psnprintf(tempstr, sizeof(tempstr), "%d", !!b);
-            M_QStrCpy(&returnstr, tempstr);
+            M_QStrPrintf(&returnstr, 0, "%d", !!b);
          }
          break;
       case vt_float:
          {
             double f;
             dp->methods->getDefault(dp, &f);
-            psnprintf(tempstr, sizeof(tempstr), "%f", f);
-            M_QStrCpy(&returnstr, tempstr);
+            M_QStrPrintf(&returnstr, 0, "%f", f);
          }
          break;
       case vt_string:
@@ -678,8 +673,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->max != UL && value > variable->max) 
             value = variable->max;
          
-         psnprintf(tempstr, sizeof(tempstr), "%d", value);
-         M_QStrCpy(&returnstr, tempstr);
+         M_QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       if(!strcmp(s, "-"))     // decrease value
@@ -689,8 +683,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->min != UL && value < variable->min)
             value = variable->min;
          
-         psnprintf(tempstr, sizeof(tempstr), "%d", value);
-         M_QStrCpy(&returnstr, tempstr);
+         M_QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       if(!strcmp(s, "/"))     // toggle value
@@ -703,8 +696,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->max != UL && value > variable->max)
             value = variable->min; // wrap around
 
-         psnprintf(tempstr, sizeof(tempstr), "%d", value);
-         M_QStrCpy(&returnstr, tempstr);
+         M_QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       
