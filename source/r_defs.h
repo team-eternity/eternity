@@ -52,6 +52,7 @@ typedef struct patch_s patch_t;
 
 // SoM: I had to move this for linked portals.
 typedef struct sector_s sector_t;
+typedef struct line_s   line_t;
 
 // Portals
 #include "r_portal.h"
@@ -268,8 +269,13 @@ struct sector_s
    int f_asurfacecount;
    attachedsurface_t *f_asurfaces;
 
+   // Flags for portals
+   int c_pflags, f_pflags;
+   
+   // Portals
    portal_t *c_portal;
    portal_t *f_portal;
+   
    int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials
@@ -366,6 +372,7 @@ typedef struct line_s
    degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
+   int      pflags;
    portal_t *portal;
 
    // SoM 05/11/09: Pre-calculated 2D normal for the line
@@ -376,7 +383,7 @@ typedef struct line_s
    int  args[NUMLINEARGS]; // argument values for param specials
 
    struct seg_s *segs;     // haleyjd: link to segs
-} line_t;
+};
 
 //
 // A SubSector.

@@ -69,6 +69,33 @@ void R_SetSectorGroupID(sector_t *sector, int groupid);
 
 
 
+//
+// P_CheckCPortalState
+// 
+// Checks the state of the ceiling portal in the given sector and updates
+// the state flags accordingly.
+void P_CheckCPortalState(sector_t *sec);
+
+
+
+//
+// P_CheckFPortalState
+// 
+// Checks the state of the floor portal in the given sector and updates
+// the state flags accordingly.
+void P_CheckFPortalState(sector_t *sec);
+
+
+
+//
+// P_CheckLPortalState
+// 
+// Checks the state of the portal in the given line and updates
+// the state flags accordingly.
+void P_CheckLPortalState(line_t *line);
+
+
+
 // P_SetFloorHeight
 // This function will set the floor height, and update
 // the float version of the floor height as well.

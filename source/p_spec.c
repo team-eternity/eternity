@@ -4818,6 +4818,45 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
 // Portals
 //
 
+
+//
+// P_SetPortal
+//
+static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
+{
+   if(portal->type == R_LINKED && sec->groupid == R_NOGROUP)
+   {
+      // Add the sector and all adjacent sectors to the from group
+      P_GatherSectors(sec, portal->data.link.fromid);
+   }
+   
+   switch(effects)
+   {
+   case portal_ceiling:
+      sec->c_portal = portal;
+      P_CheckCPortalState(sec);
+      break;
+   case portal_floor:
+      sec->f_portal = portal;
+      P_CheckFPortalState(sec);
+      break;
+   case portal_both:
+      sec->c_portal = sec->f_portal = portal;
+      P_CheckCPortalState(sec);
+      P_CheckFPortalState(sec);
+      break;
+   case portal_lineonly:
+      line->portal = portal;
+      P_CheckLPortalState(line);
+      break;
+   default:
+      I_Error("P_SpawnPortal: unknown portal effect\n");
+   }
+}
+
+
+
+
 //
 // P_SpawnPortal
 //
@@ -4986,8 +5025,10 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       // Special case where the portal was created with the line-to-line portal type
       if(line->special == 376)
       {
-         line->portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
-         lines[s].portal = portal;
+         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         
+         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
       break;
@@ -4999,74 +5040,23 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
    {
-      if(type == portal_linked && sectors[s].groupid == R_NOGROUP)
-      {
-         // Add the sector and all adjacent sectors to the from group
-         P_GatherSectors(sectors + s, portal->data.link.fromid);
-      }
-      
-      switch(effects)
-      {
-      case portal_ceiling:
-         sectors[s].c_portal = portal;
-         break;
-      case portal_floor:
-         sectors[s].f_portal = portal;
-         break;
-      case portal_both:
-         sectors[s].c_portal = sectors[s].f_portal = portal;
-         break;
-      default:
-         I_Error("P_SpawnPortal: unknown portal effect\n");
-      }
-
+      P_SetPortal(sectors + s, NULL, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
    for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
    {
-      if(line == &lines[s] || lines[s].special != 289 || !lines[s].frontsector)
+      if(line == &lines[s] || !lines[s].frontsector)
          continue;
-         
-      if(type == portal_linked && lines[s].frontsector->groupid == R_NOGROUP)
-      {
-         // Add the sector and all adjacent sectors to the from group
-         P_GatherSectors(lines[s].frontsector, portal->data.link.fromid);
-      }
-
-      lines[s].special = 0;
-      lines[s].portal = portal;
-   }
-
-   // Attach portal to front-sectors of 
-   // attach portal to like-tagged 385 lines
-   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
-   {
-      if(line == &lines[s] || lines[s].special != 385 || !lines[s].frontsector)
-         continue;
-
-      if(type == portal_linked && lines[s].frontsector->groupid == R_NOGROUP)
-      {
-         // Add the sector and all adjacent sectors to the from group
-         P_GatherSectors(lines[s].frontsector, portal->data.link.fromid);
-      }
       
-      lines[s].special = 0;
+      if(lines[s].special == 289)
+         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+      else if(lines[s].special == 385)
+         P_SetPortal(lines[s].frontsector, lines + s, portal, effects);
+      else
+         continue;
 
-      switch(effects)
-      {
-      case portal_ceiling:
-         lines[s].frontsector->c_portal = portal;
-         break;
-      case portal_floor:
-         lines[s].frontsector->f_portal = portal;
-         break;
-      case portal_both:
-         lines[s].frontsector->c_portal = lines[s].frontsector->f_portal = portal;
-         break;
-      default:
-         I_Error("P_SpawnPortal: unknown portal effect\n");
-      }
+      lines[s].special = 0;
    }
 }
 

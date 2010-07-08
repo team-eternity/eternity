@@ -593,14 +593,18 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       if(sec->c_portal->type == R_LINKED)
       {
          if(sec->ceilingheight < R_CPLink(sec)->planez)
+         {
             tempsec->c_portal = NULL;
+            tempsec->c_pflags = 0;
+         }
          else
             P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
-      else if(sec->c_portal->flags & R_HIDDEN)
+      else if(!sec->c_pflags & PS_VISIBLE)
       {
          tempsec->c_portal = NULL;
+         tempsec->c_pflags = 0;
          sec = tempsec;
       }
    }
@@ -609,14 +613,19 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
       if(sec->f_portal->type == R_LINKED)
       {
          if(sec->floorheight > R_FPLink(sec)->planez)
+         {
             tempsec->f_portal = NULL;
+            tempsec->f_pflags = 0;
+         }
          else
             P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
+            
          sec = tempsec;
       }
-      else if(sec->f_portal->flags & R_HIDDEN)
+      else if(!sec->f_pflags & PS_VISIBLE)
       {
          tempsec->f_portal = NULL;
+         tempsec->f_pflags = 0;
          sec = tempsec;
       }
    }

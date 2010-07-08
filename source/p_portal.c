@@ -635,7 +635,90 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 
 
 // ----------------------------------------------------------------------------
-// SoM: Sector utility functions
+// SoM: Utility functions
+
+
+
+//
+// P_GetPortalState
+//
+// Returns the combined state flags for the given portal based on various
+// behavior flags
+static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
+{
+   boolean   active;
+   int       ret = sflags & PF_FLAGMASK;
+   
+   if(!portal)
+      return 0;
+      
+   active = !obscured && !(portal->flags & PF_DISABLED) && !(sflags & PF_DISABLED);
+   
+   if(active && !(portal->flags & PF_NORENDER) && !(sflags & PF_NORENDER))
+      ret |= PS_VISIBLE;
+      
+   if(active && !(portal->flags & PF_NOPASS) && !(sflags & PF_NOPASS))
+      ret |= PS_PASSABLE;
+   
+   if(active && !(portal->flags & PF_BLOCKSOUND) && !(sflags & PF_BLOCKSOUND))
+      ret |= PS_PASSSOUND;
+      
+   return ret;
+}
+
+
+
+
+
+void P_CheckCPortalState(sector_t *sec)
+{
+   boolean     obscured;
+   
+   if(!sec->c_portal)
+   {
+      sec->c_pflags = 0;
+      return;
+   }
+   
+   obscured = (sec->c_portal->type == R_LINKED && 
+               sec->ceilingheight < sec->c_portal->data.link.planez);
+               
+   sec->c_pflags = P_GetPortalState(sec->c_portal, sec->c_pflags, obscured);
+}
+
+
+
+
+
+void P_CheckFPortalState(sector_t *sec)
+{
+   boolean     obscured;
+   
+   if(!sec->f_portal)
+   {
+      sec->f_pflags = 0;
+      return;
+   }
+
+   obscured = (sec->f_portal->type == R_LINKED && 
+               sec->floorheight > sec->f_portal->data.link.planez);
+               
+   sec->f_pflags = P_GetPortalState(sec->f_portal, sec->f_pflags, obscured);
+}
+
+
+
+
+void P_CheckLPortalState(line_t *line)
+{
+   if(!line->portal)
+   {
+      line->pflags = 0;
+      return;
+   }
+   
+   line->pflags = P_GetPortalState(line->portal, line->pflags, false);
+}
 
 
 //

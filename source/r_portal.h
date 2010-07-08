@@ -40,19 +40,37 @@ typedef enum
 } rportaltype_e;
 
 
+
 // These are flags used to represent configurable options for portals
 typedef enum
 {
-   // If set the portal will be turned off
-   R_HIDDEN = 0x01,
+   // -- Portal behavior flags --
+   // Portal is completely disabled
+   PF_DISABLED           = 0x1,
+   // Portal does not render
+   PF_NORENDER           = 0x2,
+   // Portal does not allow passage
+   PF_NOPASS             = 0x4,
+   // Portal does not allow recursive sound to pass through
+   PF_BLOCKSOUND         = 0x8,
+   // Mask for the flags portion
+   PF_FLAGMASK           = 0xF,
+   
+   // -- State flags --
+   // These are only used per-surface
+   
+   // Portal can be rendered
+   PS_VISIBLE            = 0x10,
+   // Portal can be passed through
+   PS_PASSABLE           = 0x20,
+   // Portal allows recursive sound
+   PS_PASSSOUND          = 0x40,
+   // Mask for state flags
+   PS_STATEMASK          = 0x70,
+} portalflag_e;
 
-   // Linked portal options:
-   // If set, the linked portal will not allow travel between 
-   R_BLOCKING = 0x02
-} rportalflag_e;
 
 
-//#define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
 
 // Contains information representing a link from one portal group to another
 typedef struct linkdata_s
@@ -123,6 +141,7 @@ typedef struct portal_s
       mobj_t         *camera;
    } data;
 
+   // See: portalflag_e
    int    flags;
 
    struct portal_s *next;

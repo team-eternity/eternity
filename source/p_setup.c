@@ -503,6 +503,7 @@ void P_LoadSectors(int lumpnum)
       ss->c_asurfaces = ss->f_asurfaces = NULL;
 
       // SoM: init portals
+      ss->c_pflags = ss->f_pflags = 0;
       ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
 
@@ -1145,6 +1146,10 @@ void P_LoadLineDefs(int lump)
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
       ld->soundorg.y       = ld->v1->y + ld->dy / 2;
       ld->soundorg.groupid = R_NOGROUP;
+      
+      // SoM: Line portals
+      ld->portal = NULL;
+      ld->pflags = 0;
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
