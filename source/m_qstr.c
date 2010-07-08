@@ -464,5 +464,117 @@ qstring_t *M_QStrRStrip(qstring_t *qstr, char c)
    return qstr;
 }
 
+//
+// M_QStrPrintf
+//
+// Performs formatted printing into a qstring. If maxlen is > 0, the qstring
+// will be reallocated to a minimum of that size for the formatted printing.
+// Otherwise, the qstring will be allocated to a worst-case size for the given
+// format string, and in this case, the format string MAY NOT contain any
+// padding directives, as they will be ignored, and the resulting output may
+// then be truncated to qstr->size - 1.
+//
+int M_QStrPrintf(qstring_t *qstr, unsigned int maxlen, const char *fmt, ...)
+{
+   va_list va2;
+   int returnval;
+
+   if(maxlen)
+   {
+      // maxlen is specified. Check it against the qstring's current size.
+      if(maxlen > qstr->size)
+         M_QStrCreateSize(qstr, maxlen);
+      else
+         M_QStrClear(qstr);
+   }
+   else
+   {
+      // determine a worst-case size by parsing the fmt string
+      va_list va1;                     // args
+      char c;                          // current character
+      const char *s = fmt;             // pointer into format string
+      boolean pctstate = false;        // seen a percentage?
+      int dummyint;                    // dummy vars just to get args
+      double dummydbl;
+      const char *dummystr;
+      void *dummyptr;
+      unsigned int charcount = strlen(fmt) + 1; // start at strlen of format string
+
+      va_start(va1, fmt);
+      while((c = *s++))
+      {
+         if(pctstate)
+         {
+            switch(c)
+            {
+            case 'x': // Integer formats
+            case 'X':
+               charcount += 2; // for 0x
+               // fall-through
+            case 'd':
+            case 'i':
+            case 'o':
+            case 'u':
+               // highest 32-bit octal is 11, plus 1 for possible sign
+               dummyint = va_arg(va1, int);
+               charcount += 12; 
+               pctstate = false;
+               break;
+            case 'p': // Pointer
+               dummyptr = va_arg(va1, void *);
+               charcount += 8 * sizeof(void *) / 4 + 2;
+               pctstate = false;
+               break;
+            case 'e': // Float formats
+            case 'E':
+            case 'f':
+            case 'g':
+            case 'G':
+               // extremely excessive, but it's possible according to fcvt
+               dummydbl = va_arg(va1, double);
+               charcount += 626; 
+               pctstate = false;
+               break;
+            case 'c': // Character
+               c = va_arg(va1, int);
+               pctstate = false;
+               break;
+            case 's': // String
+               dummystr = va_arg(va1, const char *);
+               charcount += strlen(dummystr);
+               pctstate = false;
+               break;
+            case '%': // Just a percent sign
+               pctstate = false;
+               break;
+            default:
+               // subtract width specifiers, signs, etc.
+               charcount -= 1;
+               break;
+            }
+         }
+         else if(c == '%')
+         {
+            pctstate = true;
+            charcount -= 1;
+         }
+      }
+      va_end(va1);
+
+      if(charcount > qstr->size)
+         M_QStrCreateSize(qstr, charcount);
+      else
+         M_QStrClear(qstr);
+   }
+
+   va_start(va2, fmt);
+   returnval = pvsnprintf(qstr->buffer, qstr->size, fmt, va2);
+   va_end(va2);
+
+   qstr->index = strlen(qstr->buffer);
+
+   return returnval;
+}
+
 // EOF
 

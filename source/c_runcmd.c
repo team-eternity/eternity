@@ -614,7 +614,8 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
 
    // special hacks for menu
 
-   if(strlen(s) == 1 && *s == '*' && variable->cfgDefault)
+   // haleyjd 07/05/10: support * syntax for setting default value
+   if(!strcmp(s, "*") && variable->cfgDefault)
    {
       default_t *dp = variable->cfgDefault;
 
