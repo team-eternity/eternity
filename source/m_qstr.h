@@ -70,6 +70,7 @@ const char   *M_QStrChr(qstring_t *qstr, char c);
 const char   *M_QStrRChr(qstring_t *qstr, char c);
 qstring_t    *M_QStrLStrip(qstring_t *qstr, char c);
 qstring_t    *M_QStrRStrip(qstring_t *qstr, char c);
+int           M_QStrPrintf(qstring_t *qstr, unsigned int maxlen, const char *fmt, ...);
 
 #endif
 
