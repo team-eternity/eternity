@@ -980,7 +980,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    if(text[*index] == '\0')
       return NULL;
 
-   M_QStrClear(token);
+   QStrClear(token);
 
    while((c = text[*index]) != '\0')
    {
@@ -1002,22 +1002,22 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
             continue;
          case '(':     // end of current token
          case ',':
-            return M_QStrBuffer(token);
+            return QStrBuffer(token);
          default:      // everything else == part of value
-            M_QStrPutc(token, c);
+            QStrPutc(token, c);
             continue;
          }
       case 1: // in quoted area (double quotes)
          if(c == '"') // end of quoted area
             state = 0;
          else
-            M_QStrPutc(token, c); // everything inside is literal
+            QStrPutc(token, c); // everything inside is literal
          continue;
       case 2: // in quoted area (single quotes)
          if(c == '\'') // end of quoted area
             state = 0;
          else
-            M_QStrPutc(token, c); // everything inside is literal
+            QStrPutc(token, c); // everything inside is literal
          continue;
       default:
          I_Error("E_GenTokenizer: internal error - undefined lexer state\n");
@@ -1025,7 +1025,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    }
 
    // return final token, next call will return NULL
-   return M_QStrBuffer(token);
+   return QStrBuffer(token);
 }
 
 //
@@ -1321,7 +1321,7 @@ static int16_t E_ProcessGenSpec(const char *value)
    int16_t trigger;
 
    // first things first, we have to initialize the qstring
-   M_QStrInitCreate(&buffer);
+   QStrInitCreate(&buffer);
 
    // get special name (starts at beginning, ends at '[')
    // and convert to base trigger type
@@ -1412,7 +1412,7 @@ static int16_t E_ProcessGenSpec(const char *value)
    trigger += (E_GenTrigger(curtoken) << TriggerTypeShift);
 
    // free the qstring
-   M_QStrFree(&buffer);
+   QStrFree(&buffer);
 
    return trigger;
 }

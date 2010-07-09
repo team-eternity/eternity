@@ -986,7 +986,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
       return;
    }
 
-   vmNum = M_QStrAtoi(&(Console.argv[0]));
+   vmNum = QStrAtoi(&(Console.argv[0]));
 
    switch(vmNum)
    {
@@ -1041,7 +1041,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
       return;
    }
 
-   vmNum = M_QStrAtoi(&(Console.argv[0]));
+   vmNum = QStrAtoi(&(Console.argv[0]));
 
    switch(vmNum)
    {
@@ -1072,7 +1072,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    for(i = 2; i < Console.argc; i++)
    {
-      params[i-2] = (cell)(M_QStrAtoi(&(Console.argv[i])));
+      params[i-2] = (cell)(QStrAtoi(&(Console.argv[i])));
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
@@ -1544,16 +1544,16 @@ static int dochar(AMX *amx, char ch, cell param)
    switch(ch)
    {
    case '%':
-      M_QStrPutc(&small_qstr, ch);
+      QStrPutc(&small_qstr, ch);
       return 0;
    case 'c':
       amx_GetAddr(amx, param, &cptr);
-      M_QStrPutc(&small_qstr, (char)*cptr);
+      QStrPutc(&small_qstr, (char)*cptr);
       return 1;
    case 'd':
       amx_GetAddr(amx, param, &cptr);
       M_Itoa((int)*cptr, intbuffer, 10);
-      M_QStrCat(&small_qstr, intbuffer);
+      QStrCat(&small_qstr, intbuffer);
       return 1;
    case 's':
       amx_GetAddr(amx, param, &cptr);
@@ -1565,7 +1565,7 @@ static int dochar(AMX *amx, char ch, cell param)
    } /* switch */
 
    /* error in the string format, try to repair */
-   M_QStrPutc(&small_qstr, ch);
+   QStrPutc(&small_qstr, ch);
    return 0;
 }
 
@@ -1599,7 +1599,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          } 
          else
          {
-            M_QStrPutc(&small_qstr, c);
+            QStrPutc(&small_qstr, c);
          } /* if */
          if(j == 0)
             i++;
@@ -1625,7 +1625,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          } 
          else
          {
-            M_QStrPutc(&small_qstr, (char)cstr[i]);
+            QStrPutc(&small_qstr, (char)cstr[i]);
          } /* if */
       } /* for */
    } /* if */
@@ -1643,7 +1643,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    // first time: initialize the qstring
    if(first)
    {
-      M_QStrCreate(&small_qstr);
+      QStrCreate(&small_qstr);
       first = false;
    }
 
@@ -1655,7 +1655,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    printstring(amx, cstr, params+3, (int)(params[0] / sizeof(cell)) - 2);
 
    // now, display the qstring appropriately
-   msg = M_QStrBuffer(&small_qstr);
+   msg = QStrBuffer(&small_qstr);
 
    switch(destination)
    {
@@ -1672,7 +1672,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    }
 
    // clear the qstring
-   M_QStrClear(&small_qstr);
+   QStrClear(&small_qstr);
 
    return 0;
 }

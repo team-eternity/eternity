@@ -161,7 +161,7 @@ void C_NetInit(void)
   for(i = 0; i < MAXPLAYERS; ++i)
   {
      incomingdest[i] = -1;
-     M_QStrInitCreate(&incomingmsg[i]);
+     QStrInitCreate(&incomingmsg[i]);
   }  
 }
 
@@ -203,7 +203,7 @@ void C_DealWithChar(unsigned char c, int source)
       if(incomingdest[source] == -1)  // first char: the destination
          incomingdest[source] = c-1;
       else
-         M_QStrPutc(&incomingmsg[source], c); // append to string
+         QStrPutc(&incomingmsg[source], c); // append to string
    }
    else
    {
@@ -228,7 +228,7 @@ void C_DealWithChar(unsigned char c, int source)
                             incomingmsg[source].buffer + 1);
             }
          }
-         M_QStrClear(&incomingmsg[source]);
+         QStrClear(&incomingmsg[source]);
          incomingdest[source] = -1;
       }
    }

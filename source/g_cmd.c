@@ -142,7 +142,7 @@ CONSOLE_COMMAND(animshot, 0)
          "usage: animshot <frames>\n");
       return;
    }
-   animscreenshot = M_QStrAtoi(&(Console.argv[0]));
+   animscreenshot = QStrAtoi(&(Console.argv[0]));
    C_InstaPopup();    // turn off console
 }
 
@@ -271,7 +271,7 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
       C_Printf("usage: timedemo demoname showmenu\n");
       return;
    }
-   G_TimeDemo(Console.argv[0].buffer, !!M_QStrAtoi(&(Console.argv[1])));
+   G_TimeDemo(Console.argv[0].buffer, !!QStrAtoi(&(Console.argv[1])));
 }
 
 // 'cool' demo
@@ -346,10 +346,10 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(!netgame && M_QStrLen(&(Console.argv[0])) > 4)
+   if(!netgame && QStrLen(&(Console.argv[0])) > 4)
    {
       const char *extension;
-      extension = Console.argv[0].buffer + M_QStrLen(&(Console.argv[0])) - 4;
+      extension = Console.argv[0].buffer + QStrLen(&(Console.argv[0])) - 4;
       if(!strcmp(extension, ".wad"))
       {
          if(D_AddNewFile(Console.argv[0].buffer))
@@ -386,7 +386,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
    if(playernum == consoleplayer)
    {
       free(default_name);
-      default_name = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
+      default_name = QStrCDup(&(Console.argv[0]), PU_STATIC);
    }
 }
 
@@ -609,7 +609,7 @@ void G_WeapPrefHandler(void)
    {
       int prefnum = 
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
-      G_SetWeapPref(prefnum, M_QStrAtoi(&(Console.argv[0])));
+      G_SetWeapPref(prefnum, QStrAtoi(&(Console.argv[0])));
    }
 }
 

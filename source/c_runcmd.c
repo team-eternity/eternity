@@ -89,11 +89,11 @@ static void C_initCmdTokens(void)
 
       for(i = 0; i < MAXTOKENS; ++i)
       {
-         M_QStrCreateSize(&cmdtokens[i], 128);      // local tokens
-         M_QStrCreateSize(&(Console.argv[i]), 128); // console argvs
+         QStrCreateSize(&cmdtokens[i], 128);      // local tokens
+         QStrCreateSize(&(Console.argv[i]), 128); // console argvs
       }
 
-      M_QStrCreateSize(&Console.args, 1024); // congealed args
+      QStrCreateSize(&Console.args, 1024); // congealed args
       
       cmdtokensinit = true;
    }
@@ -109,7 +109,7 @@ static void C_clearCmdTokens(void)
    int i;
 
    for(i = 0; i < MAXTOKENS; ++i)
-      M_QStrClear(&cmdtokens[i]);
+      QStrClear(&cmdtokens[i]);
 }
 
 //
@@ -148,7 +148,7 @@ static void C_GetTokens(const char *command)
       else if(*rover == ' ' && !quotemark)   // end of token
       {
          // only if the current one actually contains something
-         if(M_QStrCharAt(&cmdtokens[numtokens - 1], 0))
+         if(QStrCharAt(&cmdtokens[numtokens - 1], 0))
          {
             numtokens++;
          }
@@ -157,7 +157,7 @@ static void C_GetTokens(const char *command)
       {
          // 01/12/09: repaired by fraggle to fix mystery sprintf issue on linux
          // 07/05/10: rewritten to use qstrings
-         M_QStrPutc(&cmdtokens[numtokens - 1], *rover);
+         QStrPutc(&cmdtokens[numtokens - 1], *rover);
       }
 
       rover++;
@@ -195,7 +195,7 @@ static void C_RunIndivTextCmd(const char *cmdname)
       if((alias = C_GetAlias(cmdtokens[0].buffer)))
       {
          // save the options into cmdoptions
-         cmdoptions = (char *)cmdname + M_QStrLen(&cmdtokens[0]);
+         cmdoptions = (char *)cmdname + QStrLen(&cmdtokens[0]);
          C_RunAlias(alias);
       }
       else         // no alias either
@@ -204,7 +204,7 @@ static void C_RunIndivTextCmd(const char *cmdname)
    else
    {
       // run the command (buffer it)
-      C_RunCommand(command, cmdname + M_QStrLen(&cmdtokens[0]));
+      C_RunCommand(command, cmdname + QStrLen(&cmdtokens[0]));
    }
 }
 
@@ -269,7 +269,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
    C_GetTokens(options);
    
    for(i = 0; i < MAXTOKENS; ++i)
-      M_QStrCopyTo(&(Console.argv[i]), &cmdtokens[i]);
+      QStrCopyTo(&(Console.argv[i]), &cmdtokens[i]);
 
    Console.argc = numtokens;
    Console.command = command;
@@ -279,7 +279,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
    // check through the tokens for variable names
    for(i = 0; i < Console.argc; i++)
    {
-      char c = M_QStrCharAt(&(Console.argv[i]), 0);
+      char c = QStrCharAt(&(Console.argv[i]), 0);
 
       if(c == '%' || c == '$') // variable
       {
@@ -295,7 +295,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
             return;
          }
          
-         M_QStrCpy(&(Console.argv[i]), 
+         QStrCpy(&(Console.argv[i]), 
                    c == '%' ? C_VariableValue(variable->variable) :
                               C_VariableStringValue(variable->variable));
       }
@@ -352,23 +352,23 @@ static void C_ArgvtoArgs(void)
  
    for(i = 0; i < Console.argc; i++)
    {
-      if(!M_QStrLen(&(Console.argv[i])))       // empty string
+      if(!QStrLen(&(Console.argv[i])))       // empty string
       {
          for(n = i; n < Console.argc - 1; n++)
-            M_QStrCopyTo(&(Console.argv[n]), &(Console.argv[n+1]));
+            QStrCopyTo(&(Console.argv[n]), &(Console.argv[n+1]));
 
          Console.argc--; 
          i--;
       }
    }
    
-   M_QStrClear(&Console.args);
+   QStrClear(&Console.args);
 
    for(i = 0; i < Console.argc; ++i)
    {
       // haleyjd: use qstring_t to avoid sprintf problems and to be secure
-      M_QStrCat(&Console.args, Console.argv[i].buffer);
-      M_QStrPutc(&Console.args, ' ');
+      QStrCat(&Console.args, Console.argv[i].buffer);
+      QStrPutc(&Console.args, ' ');
    }
 }
 
@@ -386,18 +386,18 @@ static char *C_QuotedArgvToArgs(void)
 
    if(firsttime)
    {
-      M_QStrInitCreate(&returnbuf);
+      QStrInitCreate(&returnbuf);
       firsttime = false;
    }
    else
-      M_QStrClear(&returnbuf);
+      QStrClear(&returnbuf);
    
    // haleyjd: use qstring to eliminate undefined sprintf behavior
    for(i = 0; i < Console.argc; ++i)
    {
-      M_QStrPutc(&returnbuf, '"');
-      M_QStrCat(&returnbuf, Console.argv[i].buffer);
-      M_QStrCat(&returnbuf, "\" ");      
+      QStrPutc(&returnbuf, '"');
+      QStrCat(&returnbuf, Console.argv[i].buffer);
+      QStrCat(&returnbuf, "\" ");      
    }
    
    return returnbuf.buffer;
@@ -592,11 +592,11 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
    static qstring_t returnstr;
 
    if(!returnstr.buffer)
-      M_QStrInitCreate(&returnstr);
+      QStrInitCreate(&returnstr);
 
    // haleyjd 07/05/10: ALWAYS copy param to returnstr, or else strcpy will have
    // undefined behavior in C_SetVariable.
-   M_QStrCpy(&returnstr, s);
+   QStrCpy(&returnstr, s);
 
    if(variable->defines)
    {
@@ -604,7 +604,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
       {
          if(!C_Strcmp(s, variable->defines[count-variable->min]))
          {
-            M_QStrPrintf(&returnstr, 0, "%d", count);
+            QStrPrintf(&returnstr, 0, "%d", count);
             return returnstr.buffer;
          }
       }
@@ -623,28 +623,28 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          {
             int i;
             dp->methods->getDefault(dp, &i);
-            M_QStrPrintf(&returnstr, 0, "%d", i);
+            QStrPrintf(&returnstr, 0, "%d", i);
          }
          break;
       case vt_toggle:
          {
             boolean b;
             dp->methods->getDefault(dp, &b);
-            M_QStrPrintf(&returnstr, 0, "%d", !!b);
+            QStrPrintf(&returnstr, 0, "%d", !!b);
          }
          break;
       case vt_float:
          {
             double f;
             dp->methods->getDefault(dp, &f);
-            M_QStrPrintf(&returnstr, 0, "%f", f);
+            QStrPrintf(&returnstr, 0, "%f", f);
          }
          break;
       case vt_string:
          {
             char *def;
             dp->methods->getDefault(dp, &def);
-            M_QStrCpy(&returnstr, def);
+            QStrCpy(&returnstr, def);
          }
          break;
       case vt_chararray:
@@ -673,7 +673,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->max != UL && value > variable->max) 
             value = variable->max;
          
-         M_QStrPrintf(&returnstr, 0, "%d", value);
+         QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       if(!strcmp(s, "-"))     // decrease value
@@ -683,7 +683,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->min != UL && value < variable->min)
             value = variable->min;
          
-         M_QStrPrintf(&returnstr, 0, "%d", value);
+         QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       if(!strcmp(s, "/"))     // toggle value
@@ -696,7 +696,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
          if(variable->max != UL && value > variable->max)
             value = variable->min; // wrap around
 
-         M_QStrPrintf(&returnstr, 0, "%d", value);
+         QStrPrintf(&returnstr, 0, "%d", value);
          return returnstr.buffer;
       }
       
@@ -743,7 +743,7 @@ static void C_SetVariable(command_t *command)
    temp = C_ValueForDefine(variable, Console.argv[0].buffer);
    
    if(temp)
-      M_QStrCpy(&(Console.argv[0]), temp);
+      QStrCpy(&(Console.argv[0]), temp);
    else
    {
       C_Printf("not a possible value for '%s'\n", command->name);
@@ -754,12 +754,12 @@ static void C_SetVariable(command_t *command)
    {
    case vt_int:
    case vt_toggle:
-      size = M_QStrAtoi(&(Console.argv[0]));
+      size = QStrAtoi(&(Console.argv[0]));
       break;
       
    case vt_string:
    case vt_chararray:
-      size = M_QStrLen(&(Console.argv[0]));
+      size = QStrLen(&(Console.argv[0]));
       break;
 
    case vt_float:
@@ -830,11 +830,11 @@ static void C_SetVariable(command_t *command)
          
       case vt_string:
          free(*(char**)variable->variable);
-         *(char**)variable->variable = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
+         *(char**)variable->variable = QStrCDup(&(Console.argv[0]), PU_STATIC);
          if(variable->v_default && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
-            *(char**)variable->v_default = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
+            *(char**)variable->v_default = QStrCDup(&(Console.argv[0]), PU_STATIC);
          }
          break;
 
@@ -892,9 +892,9 @@ static void GetTabs(const char *key)
       key++;
 
    if(!origkey.buffer)
-      M_QStrCreateSize(&origkey, 100);
+      QStrCreateSize(&origkey, 100);
    
-   M_QStrCpy(&origkey, key);
+   QStrCpy(&origkey, key);
    gotkey = true;
    
    if(!*key)
@@ -931,9 +931,9 @@ void C_InitTab(void)
    numtabs = 0;
 
    if(!origkey.buffer)
-      M_QStrCreateSize(&origkey, 100);
+      QStrCreateSize(&origkey, 100);
    else
-      M_QStrClear(&origkey);
+      QStrClear(&origkey);
 
    gotkey = false;
    thistab = -1;
@@ -948,9 +948,9 @@ const char *C_NextTab(const char *key)
    const char *ret = NULL;
 
    if(!returnstr.buffer)
-      M_QStrCreateSize(&returnstr, 100);
+      QStrCreateSize(&returnstr, 100);
    else
-      M_QStrClear(&returnstr);
+      QStrClear(&returnstr);
    
    // get tabs if not done already
    if(!gotkey)
@@ -966,8 +966,8 @@ const char *C_NextTab(const char *key)
    }
    else
    {   
-      M_QStrCpy(&returnstr, tabs[thistab]->name);
-      M_QStrPutc(&returnstr, ' ');
+      QStrCpy(&returnstr, tabs[thistab]->name);
+      QStrPutc(&returnstr, ' ');
       ret = returnstr.buffer;
    }
 
@@ -983,9 +983,9 @@ const char *C_PrevTab(const char *key)
    const char *ret = NULL;
 
    if(!returnstr.buffer)
-      M_QStrCreateSize(&returnstr, 100);
+      QStrCreateSize(&returnstr, 100);
    else
-      M_QStrClear(&returnstr);
+      QStrClear(&returnstr);
    
    // get tabs if neccesary
    if(!gotkey)
@@ -1002,8 +1002,8 @@ const char *C_PrevTab(const char *key)
    }
    else
    {
-      M_QStrCpy(&returnstr, tabs[thistab]->name);
-      M_QStrPutc(&returnstr, ' ');
+      QStrCpy(&returnstr, tabs[thistab]->name);
+      QStrPutc(&returnstr, ' ');
       ret = returnstr.buffer;
    }
    
@@ -1384,7 +1384,7 @@ void C_RunScript(DWFILE *dwfile)
    char c;
 
    // initialize and allocate the qstring
-   M_QStrInitCreate(&qstring);
+   QStrInitCreate(&qstring);
 
    // parse script
    while((c = D_Fgetc(dwfile)) != EOF)
@@ -1413,12 +1413,12 @@ void C_RunScript(DWFILE *dwfile)
          if(c == '\n' || c == '\f') // end of line - run command
          {
             Console.cmdtype = c_script;
-            C_RunTextCmd(M_QStrBuffer(&qstring));
+            C_RunTextCmd(QStrBuffer(&qstring));
             C_RunBuffer(c_script);  // force to run now
             state = CSC_NONE;
          }
          else
-            M_QStrPutc(&qstring, c);
+            QStrPutc(&qstring, c);
          continue;
       }
 
@@ -1440,8 +1440,8 @@ void C_RunScript(DWFILE *dwfile)
          continue;
 #endif
       default:                // anything else starts a command
-         M_QStrClear(&qstring);
-         M_QStrPutc(&qstring, c);
+         QStrClear(&qstring);
+         QStrPutc(&qstring, c);
          state = CSC_COMMAND;
          continue;
       }
@@ -1450,12 +1450,12 @@ void C_RunScript(DWFILE *dwfile)
    if(state == CSC_COMMAND) // EOF on command line - run final command
    {
       Console.cmdtype = c_script;
-      C_RunTextCmd(M_QStrBuffer(&qstring));
+      C_RunTextCmd(QStrBuffer(&qstring));
       C_RunBuffer(c_script);  // force to run now
    }
 
    // free the qstring
-   M_QStrFree(&qstring);
+   QStrFree(&qstring);
 }
 
 //

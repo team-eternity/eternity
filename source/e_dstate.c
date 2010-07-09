@@ -369,7 +369,7 @@ static void DoTokenStateScan(tkstate_t *tks)
    {
       // start a text token - we'll determine the more specific type, if any,
       // later.
-      M_QStrPutc(token, str[i]);
+      QStrPutc(token, str[i]);
       tks->tokentype = TOKEN_TEXT;
       tks->state     = TSTATE_TEXT;
    }
@@ -389,22 +389,22 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_STRING;
          break;
       case '+':  // plus - used in relative goto statement
-         M_QStrPutc(token, '+');
+         QStrPutc(token, '+');
          tks->tokentype = TOKEN_PLUS;
          tks->state     = TSTATE_DONE;
          break;
       case '(':  // lparen - for action argument lists
-         M_QStrPutc(token, '(');
+         QStrPutc(token, '(');
          tks->tokentype = TOKEN_LPAREN;
          tks->state     = TSTATE_DONE;
          break;
       case ',':  // comma - for action argument lists
-         M_QStrPutc(token, ',');
+         QStrPutc(token, ',');
          tks->tokentype = TOKEN_COMMA;
          tks->state     = TSTATE_DONE;
          break;
       case ')':  // rparen - for action argument lists
-         M_QStrPutc(token, ')');
+         QStrPutc(token, ')');
          tks->tokentype = TOKEN_RPAREN;
          tks->state     = TSTATE_DONE;
          break;
@@ -412,7 +412,7 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_SLASH;
          break;
       default: // whatever it is, we don't care for it.
-         M_QStrPutc(token, str[i]);
+         QStrPutc(token, str[i]);
          tks->tokentype  = TOKEN_ERROR;
          tks->tokenerror = TERR_UNEXPECTEDCHAR;
          tks->state      = TSTATE_DONE;
@@ -434,7 +434,7 @@ static void DoTokenStateSlash(tkstate_t *tks)
       tks->state = TSTATE_COMMENT;
    else
    {
-      M_QStrPutc(token, str[i]);
+      QStrPutc(token, str[i]);
       tks->tokentype  = TOKEN_ERROR;
       tks->tokenerror = TERR_UNEXPECTEDCHAR;
       tks->state      = TSTATE_DONE;
@@ -503,7 +503,7 @@ static void DoTokenStateText(tkstate_t *tks)
    if(isalnum(str[i]) || str[i] == '_')
    {
       // continuing in label, keyword, or text
-      M_QStrPutc(token, str[i]);
+      QStrPutc(token, str[i]);
    }
    else if(str[i] == '.')
    {
@@ -526,7 +526,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // otherwise, proceed as normal
       
       // add the dot character to the token
-      M_QStrPutc(token, '.');
+      QStrPutc(token, '.');
    }
    else if(str[i] == ':')
    {
@@ -563,7 +563,7 @@ static void DoTokenStateColon(tkstate_t *tks)
       // Two colons in a row means we've found the namespace declarator.
       // Add two colons to the token buffer, and return to TSTATE_TEXT to
       // parse out the rest of the token.
-      M_QStrCat(token, "::");
+      QStrCat(token, "::");
       tks->state = TSTATE_TEXT;
    }
    else // anything else means this was a label
@@ -589,7 +589,7 @@ static void DoTokenStateLabel(tkstate_t *tks)
    if(isalnum(str[i]) || str[i] == '_')
    {
       // continuing in label
-      M_QStrPutc(token, str[i]);
+      QStrPutc(token, str[i]);
    }
    else if(str[i] == ':')
    {
@@ -633,7 +633,7 @@ static void DoTokenStateString(tkstate_t *tks)
       break;
    default:
       // add character and continue scanning
-      M_QStrPutc(token, str[i]);
+      QStrPutc(token, str[i]);
       break;
    }
 }
@@ -670,7 +670,7 @@ static int E_GetDSToken(pstate_t *ps)
    tks.line       = ps->linebuffer;
    tks.token      = ps->tokenbuffer;
 
-   M_QStrClear(tks.token);
+   QStrClear(tks.token);
 
    while(tks.state != TSTATE_DONE)
    {
@@ -937,7 +937,7 @@ static void doKeyword(pstate_t *ps)
       // if the keyword is "stop" and the previous buffered object is a label, 
       // this is a "kill state"
       if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
-         !M_QStrCaseCmp(ps->tokenbuffer, "stop"))
+         !QStrCaseCmp(ps->tokenbuffer, "stop"))
          DSP.numstops++;
 
       // make a keyword object
@@ -1082,7 +1082,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 
    case TOKEN_KEYWORD:
       // generate appropriate state for keyword
-      if(!M_QStrCaseCmp(ps->tokenbuffer, "goto"))
+      if(!QStrCaseCmp(ps->tokenbuffer, "goto"))
          doGoto(ps);
       else
          doKeyword(ps);
@@ -1118,7 +1118,7 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
          if(DSP.neweststate->type != BUF_GOTO)
             I_Error("DoPSNeedGotoLabel: internal error - last state != GOTO\n");
 
-         DSP.neweststate->gotodest = M_QStrCDup(ps->tokenbuffer, PU_STATIC);
+         DSP.neweststate->gotodest = QStrCDup(ps->tokenbuffer, PU_STATIC);
       }
       // Nothing is required outside of principals
       ps->state = PSTATE_NEEDGOTOEOLORPLUS;
@@ -1174,7 +1174,7 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
          if(DSP.neweststate->type != BUF_GOTO)
             I_Error("DoPSNeedGotoOffset: internal error - last state != GOTO\n");
 
-         DSP.neweststate->gotooffset = M_QStrAtoi(ps->tokenbuffer);
+         DSP.neweststate->gotooffset = QStrAtoi(ps->tokenbuffer);
       }
       // Nothing is required outside of principals
       ps->state = PSTATE_NEEDKWEOL;
@@ -1235,7 +1235,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          // values to all states from the current one to the last one found 
          // having the same line number.
          int i;
-         int numstatestomake = (int)(M_QStrLen(ps->tokenbuffer));
+         int numstatestomake = (int)(QStrLen(ps->tokenbuffer));
 
          for(i = 0; i < numstatestomake; ++i)
             E_AddBufferedState(BUF_STATE, NULL, ps->linenum);
@@ -1253,7 +1253,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          while(state && state->type == BUF_STATE && 
                state->linenum == DSP.curbufstate->linenum)
          {
-            char c = toupper(M_QStrCharAt(ps->tokenbuffer, stridx));
+            char c = toupper(QStrCharAt(ps->tokenbuffer, stridx));
 
             states[statenum]->frame = c - 'A';
 
@@ -1297,7 +1297,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
       {
          estatebuf_t *state = DSP.curbufstate;
          int statenum = DSP.currentstate;
-         int tics = M_QStrAtoi(ps->tokenbuffer);
+         int tics = QStrAtoi(ps->tokenbuffer);
 
          while(state && state->type == BUF_STATE && 
                state->linenum == DSP.curbufstate->linenum)
@@ -1343,7 +1343,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       return;
    }
 
-   if(!M_QStrCaseCmp(ps->tokenbuffer, "bright"))
+   if(!QStrCaseCmp(ps->tokenbuffer, "bright"))
    {
       // Apply fullbright to all states in the current range
       if(!ps->principals)
@@ -1636,7 +1636,7 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
    boolean isdone = false;
    const char *srctxt = *src;
 
-   M_QStrClear(ps->linebuffer);
+   QStrClear(ps->linebuffer);
    ps->index = 0;
 
    if(!*srctxt) // at end?
@@ -1654,7 +1654,7 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
          if(c == '\n')
             break;
          
-         M_QStrPutc(ps->linebuffer, c);
+         QStrPutc(ps->linebuffer, c);
       }
 
       // track line numbers
@@ -1681,8 +1681,8 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
    const char *inputstr = input;
 
    // create line and token buffers
-   M_QStrInitCreate(&linebuffer);
-   M_QStrInitCreate(&tokenbuffer);
+   QStrInitCreate(&linebuffer);
+   QStrInitCreate(&tokenbuffer);
 
    // initialize pstate structure
    ps.index       = 0;
@@ -1723,8 +1723,8 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
    }
 
    // destroy qstrings
-   M_QStrFree(&linebuffer);
-   M_QStrFree(&tokenbuffer);
+   QStrFree(&linebuffer);
+   QStrFree(&tokenbuffer);
 }
 
 //

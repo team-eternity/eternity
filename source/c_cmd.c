@@ -103,7 +103,7 @@ CONSOLE_COMMAND(alias, 0)
    
    // find it or make a new one
    
-   temp = Console.args.buffer + M_QStrLen(&(Console.argv[0]));
+   temp = Console.args.buffer + QStrLen(&(Console.argv[0]));
    while(*temp == ' ')
       temp++;
    
@@ -131,11 +131,11 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      if(M_QStrLen(&(Console.argv[0])) == 1)
-         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
+      if(QStrLen(&(Console.argv[0])) == 1)
+         charnum = maxchar = QStrCharAt(&(Console.argv[0]), 0);
       else
       {
-         charnum = maxchar = M_QStrCharAt(&(Console.argv[0]), 0);
+         charnum = maxchar = QStrCharAt(&(Console.argv[0]), 0);
          mask = Console.argv[0].buffer;
          masklen = strlen(mask);
       }
@@ -185,7 +185,7 @@ CONSOLE_COMMAND(echo, 0)
 
 CONSOLE_COMMAND(delay, 0)
 {
-   C_BufferDelay(Console.cmdtype, Console.argc ? M_QStrAtoi(&(Console.argv[0])) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? QStrAtoi(&(Console.argv[0])) : 1);
 }
 
 // flood the console with crap

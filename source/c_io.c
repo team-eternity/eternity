@@ -190,7 +190,7 @@ static void C_updateInputPoint(void)
 void C_Init(void)
 {
    // haleyjd: initialize console qstrings
-   M_QStrCreateSize(&inputtext, 100);
+   QStrCreateSize(&inputtext, 100);
 
    Console.enabled = true;
 
@@ -378,7 +378,7 @@ boolean C_Responder(event_t *ev)
       // tab-completion list depending on whether
       // shift is being held down
       action_console_tab = false;
-      M_QStrCpy(&inputtext, shiftdown ? C_NextTab(inputtext.buffer) :
+      QStrCpy(&inputtext, shiftdown ? C_NextTab(inputtext.buffer) :
                 C_PrevTab(inputtext.buffer));      
       C_updateInputPoint(); // reset scrolling
       return true;
@@ -391,7 +391,7 @@ boolean C_Responder(event_t *ev)
 
       C_addToHistory(inputtext.buffer); // add to history
       
-      if(!M_QStrCmp(&inputtext, "r0x0rz delux0rz"))
+      if(!QStrCmp(&inputtext, "r0x0rz delux0rz"))
          Egg(); // shh!
       
       // run the command
@@ -400,7 +400,7 @@ boolean C_Responder(event_t *ev)
       
       C_InitTab();            // reset tab completion
       
-      M_QStrClear(&inputtext); // clear inputtext now
+      QStrClear(&inputtext); // clear inputtext now
       C_updateInputPoint();    // reset scrolling
       
       return true;
@@ -420,7 +420,7 @@ boolean C_Responder(event_t *ev)
          (history_current <= 0) ? 0 : history_current - 1;
       
       // read history from inputtext
-      M_QStrCpy(&inputtext, history[history_current]);
+      QStrCpy(&inputtext, history[history_current]);
       
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
@@ -437,7 +437,7 @@ boolean C_Responder(event_t *ev)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
-      M_QStrCpy(&inputtext, (history_current == history_last) ?
+      QStrCpy(&inputtext, (history_current == history_last) ?
                 "" : (char*)history[history_current]);
       
       C_InitTab();            // reset tab-completion
@@ -455,7 +455,7 @@ boolean C_Responder(event_t *ev)
    {
       action_console_backspace = false;
 
-      M_QStrDelc(&inputtext);
+      QStrDelc(&inputtext);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -474,7 +474,7 @@ boolean C_Responder(event_t *ev)
    
    if(ch > 31 && ch < 127)
    {
-      M_QStrPutc(&inputtext, ch);
+      QStrPutc(&inputtext, ch);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling

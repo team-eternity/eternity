@@ -949,7 +949,7 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding class
    if(Console.argc == 2)
    {
-      bclass = M_QStrAtoi(&(Console.argv[1]));
+      bclass = QStrAtoi(&(Console.argv[1]));
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
          C_Printf(FC_ERROR "invalid action class %d\n", bclass);

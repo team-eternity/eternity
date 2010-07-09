@@ -188,7 +188,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    {
       if(mn_start_mapname)
          free(mn_start_mapname);
-      start_mapname = mn_start_mapname = M_QStrCDup(&(Console.argv[0]), PU_STATIC);
+      start_mapname = mn_start_mapname = QStrCDup(&(Console.argv[0]), PU_STATIC);
    }
 
    if(menuactive)
@@ -328,7 +328,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
       return;
    }
    
-   start_episode = M_QStrAtoi(&(Console.argv[0]));
+   start_episode = QStrAtoi(&(Console.argv[0]));
    
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
@@ -415,7 +415,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    // skill level is argv 0
    
    if(Console.argc)
-      skill = M_QStrAtoi(&(Console.argv[0]));
+      skill = QStrAtoi(&(Console.argv[0]));
 
    // haleyjd 07/27/05: restored nightmare behavior
    if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
@@ -1307,7 +1307,7 @@ CONSOLE_COMMAND(mn_load, 0)
    if(Console.argc < 1)
       return;
    
-   slot = M_QStrAtoi(&(Console.argv[0]));
+   slot = QStrAtoi(&(Console.argv[0]));
    
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])

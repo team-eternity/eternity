@@ -989,7 +989,7 @@ void T_ACSThinker(acsthinker_t *script)
          }
          break;
       case OP_STARTPRINT:
-         M_QStrClear(script->printBuffer);
+         QStrClear(script->printBuffer);
          break;
       case OP_ENDPRINT:
          if(script->trigger && script->trigger->player)
@@ -998,16 +998,16 @@ void T_ACSThinker(acsthinker_t *script)
             player_printf(&players[consoleplayer], script->printBuffer->buffer);
          break;
       case OP_PRINTSTRING:
-         M_QStrCat(script->printBuffer, script->stringtable[POP()]);
+         QStrCat(script->printBuffer, script->stringtable[POP()]);
          break;
       case OP_PRINTINT:
          {
             char buffer[33];
-            M_QStrCat(script->printBuffer, M_Itoa(POP(), buffer, 10));
+            QStrCat(script->printBuffer, M_Itoa(POP(), buffer, 10));
          }
          break;
       case OP_PRINTCHAR:
-         M_QStrPutc(script->printBuffer, (char)POP());
+         QStrPutc(script->printBuffer, (char)POP());
          break;
       case OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
@@ -1146,7 +1146,7 @@ void T_ACSThinker(acsthinker_t *script)
 void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
-   M_QStrInitCreate(&(acsLevelScriptVM.printBuffer));
+   QStrInitCreate(&(acsLevelScriptVM.printBuffer));
 
    // add levelscript vm as vm #0
    ACS_addVirtualMachine(&acsLevelScriptVM);

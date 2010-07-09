@@ -785,9 +785,9 @@ static const char *MetaDefToString(void *object)
    size_t bytestoprint = metaobjlen;
 
    if(!qstr.buffer)
-      M_QStrInitCreate(&qstr);
+      QStrInitCreate(&qstr);
    else
-      M_QStrClear(&qstr);
+      QStrClear(&qstr);
 
    while(bytestoprint)
    {
@@ -801,9 +801,9 @@ static const char *MetaDefToString(void *object)
 
          sprintf(bytes, "%02x ", val);
 
-         M_QStrCat(&qstr, bytes);
+         QStrCat(&qstr, bytes);
       }
-      M_QStrPutc(&qstr, '\n');
+      QStrPutc(&qstr, '\n');
    }
 
    return qstr.buffer;

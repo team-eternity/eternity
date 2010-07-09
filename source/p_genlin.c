@@ -2436,7 +2436,7 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
    numargs = Console.argc - 1;
 
    for(i = 0; i < numargs; ++i)
-      args[i] = M_QStrAtoi(&(Console.argv[i + 1]));
+      args[i] = QStrAtoi(&(Console.argv[i + 1]));
 
    P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
                        SPAC_CROSS, true);

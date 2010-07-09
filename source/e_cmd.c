@@ -279,7 +279,7 @@ CONSOLE_COMMAND(e_mapthing, cf_level)
       return;
    }
 
-   recordnum = M_QStrAtoi(&(Console.argv[0]));
+   recordnum = QStrAtoi(&(Console.argv[0]));
 
    E_GetEDMapThings(&things, &numthings);
 
@@ -348,7 +348,7 @@ CONSOLE_COMMAND(e_linedef, cf_level)
       return;
    }
 
-   recordnum = M_QStrAtoi(&(Console.argv[0]));
+   recordnum = QStrAtoi(&(Console.argv[0]));
 
    E_GetEDLines(&lines, &numlines);
 

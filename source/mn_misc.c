@@ -92,34 +92,34 @@ static void WriteCenteredText(char *message)
    int x, y;
 
    if(!pqstr)
-      pqstr = M_QStrCreate(&qstring);
+      pqstr = QStrCreate(&qstring);
    
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
 
    y = (SCREENHEIGHT - V_FontStringHeight(menu_font_normal, popup_message)) / 2;
-   M_QStrClear(pqstr);
+   QStrClear(pqstr);
    rover = message;
 
    while(*rover)
    {
       if(*rover == '\n')
       {
-         buffer = M_QStrBuffer(pqstr);
+         buffer = QStrBuffer(pqstr);
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
          V_FontWriteText(menu_font_normal, buffer, x, y);         
-         M_QStrClear(pqstr); // clear buffer
+         QStrClear(pqstr); // clear buffer
          y += menu_font_normal->absh; // next line
       }
       else      // add next char
-         M_QStrPutc(pqstr, *rover);
+         QStrPutc(pqstr, *rover);
 
       ++rover;
    }
 
    // dont forget the last line.. prob. not \n terminated
-   buffer = M_QStrBuffer(pqstr);
+   buffer = QStrBuffer(pqstr);
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
    V_FontWriteText(menu_font_normal, buffer, x, y);   
 }

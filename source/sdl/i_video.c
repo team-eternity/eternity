@@ -378,7 +378,7 @@ static void I_ParseGeom(const char *geom,
    qstring_t qstr;
    boolean errorflag = false;
 
-   M_QStrInitCreate(&qstr);
+   QStrInitCreate(&qstr);
 
    while(*c)
    {
@@ -386,7 +386,7 @@ static void I_ParseGeom(const char *geom,
       {
       case STATE_WIDTH:
          if(*c >= '0' && *c <= '9')
-            M_QStrPutc(&qstr, *c);
+            QStrPutc(&qstr, *c);
          else
          {
             int width = atoi(qstr.buffer);
@@ -398,14 +398,14 @@ static void I_ParseGeom(const char *geom,
             else
             {
                tmpwidth = width;
-               M_QStrClear(&qstr);
+               QStrClear(&qstr);
                state = STATE_HEIGHT;
             }
          }
          break;
       case STATE_HEIGHT:
          if(*c >= '0' && *c <= '9')
-            M_QStrPutc(&qstr, *c);
+            QStrPutc(&qstr, *c);
          else
          {
             int height = atoi(qstr.buffer);
@@ -475,7 +475,7 @@ static void I_ParseGeom(const char *geom,
    *w = tmpwidth;
    *h = tmpheight;
 
-   M_QStrFree(&qstr);
+   QStrFree(&qstr);
 }
 
 //

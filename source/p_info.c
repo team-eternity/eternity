@@ -538,7 +538,7 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
    rover = lump;
 
    // create the line buffer
-   M_QStrInitCreate(&line);
+   QStrInitCreate(&line);
    
    while(*rover)
    {
@@ -548,16 +548,16 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
          // we can break out of parsing early
          if(P_ParseInfoCmd(&line, cachelevel) == -1)
             break;
-         M_QStrClear(&line); // clear line buffer
+         QStrClear(&line); // clear line buffer
       }
       else
-         M_QStrPutc(&line, *rover); // add char to line buffer
+         QStrPutc(&line, *rover); // add char to line buffer
 
       ++rover;
    }
 
    // free the line buffer
-   M_QStrFree(&line);
+   QStrFree(&line);
 
    // free the lump
    Z_Free(lump);
@@ -574,12 +574,12 @@ static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
    const char *label = NULL;
    LevelInfoProto_t *curproto = NULL;
 
-   M_QStrReplace(line, "\t\r\n", ' '); // erase any control characters
-   M_QStrLwr(line);                    // make everything lowercase
-   M_QStrLStrip(line, ' ');            // strip spaces at beginning
-   M_QStrRStrip(line, ' ');            // strip spaces at end
+   QStrReplace(line, "\t\r\n", ' '); // erase any control characters
+   QStrLwr(line);                    // make everything lowercase
+   QStrLStrip(line, ' ');            // strip spaces at beginning
+   QStrRStrip(line, ' ');            // strip spaces at end
    
-   if(!(len = M_QStrLen(line)))                // ignore totally empty lines
+   if(!(len = QStrLen(line)))                // ignore totally empty lines
       return 0;
 
    // detect comments at beginning
@@ -587,7 +587,7 @@ static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
       (len > 1 && line->buffer[0] == '/' && line->buffer[1] == '/'))
       return 0;
      
-   if((label = M_QStrChr(line, '[')))  // a new section separator
+   if((label = QStrChr(line, '[')))  // a new section separator
    {
       ++label;
 
@@ -771,8 +771,8 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
    // the variable and value tokens -- now uses qstring_t.
 
    // create qstrings to hold the tokens
-   M_QStrInitCreate(&var);
-   M_QStrInitCreate(&value);
+   QStrInitCreate(&var);
+   QStrInitCreate(&value);
 
    while((c = *rover++))
    {
@@ -782,17 +782,17 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
          if(c == ' ' || c == '=')
             state = STATE_BETWEEN;
          else
-            M_QStrPutc(&var, c);
+            QStrPutc(&var, c);
          continue;
       case STATE_BETWEEN: // between -- skip whitespace or =
          if(c != ' ' && c != '=')
          {
             state = STATE_VAL;
-            M_QStrPutc(&value, c);
+            QStrPutc(&value, c);
          }
          continue;
       case STATE_VAL: // value -- everything else goes here
-         M_QStrPutc(&value, c);
+         QStrPutc(&value, c);
          continue;
       default:
          I_Error("P_ParseLevelVar: undefined state in lexer\n");
@@ -800,22 +800,22 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
    }
 
    // detect some syntax errors
-   if(state != STATE_VAL || !M_QStrLen(&var) || !M_QStrLen(&value))
+   if(state != STATE_VAL || !QStrLen(&var) || !QStrLen(&value))
    {
-      M_QStrFree(&var);
-      M_QStrFree(&value);
+      QStrFree(&var);
+      QStrFree(&value);
       return;
    }
 
    // TODO: improve linear search? fixed small set, so may not matter
    while(current->type != IVT_END)
    {
-      if(!M_QStrCaseCmp(&var, current->name))
+      if(!QStrCaseCmp(&var, current->name))
       {
          switch(current->type)
          {
          case IVT_STRING:
-            *(char**)current->variable = M_QStrCDup(&value, cachelevel);
+            *(char**)current->variable = QStrCDup(&value, cachelevel);
             break;
 
             // haleyjd 10/05/05: named value support
@@ -832,13 +832,13 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             break;
             
          case IVT_INT:
-            *(int*)current->variable = M_QStrAtoi(&value);
+            *(int*)current->variable = QStrAtoi(&value);
             break;
             
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
             *(boolean *)current->variable = 
-               !M_QStrCaseCmp(&value, "true") ? true : false;
+               !QStrCaseCmp(&value, "true") ? true : false;
             break;
 
             // haleyjd 03/14/05: flags support
@@ -860,8 +860,8 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
    }
 
    // free the qstrings
-   M_QStrFree(&var);
-   M_QStrFree(&value);
+   QStrFree(&var);
+   QStrFree(&value);
 }
 
 //
@@ -1595,14 +1595,14 @@ static void TmplStateStart(tmplpstate_t *state)
    case 't':
       if(state->titleOrAuthor)
          break;
-      M_QStrPutc(state->tokenbuf, c);
+      QStrPutc(state->tokenbuf, c);
       state->state = TMPL_STATE_TITLE; // start reading out "Title"
       break;
    case 'A':
    case 'a':
       if(state->titleOrAuthor)
       {
-         M_QStrPutc(state->tokenbuf, c);
+         QStrPutc(state->tokenbuf, c);
          state->state = TMPL_STATE_TITLE; // start reading out "Title"
       }
       break;
@@ -1620,7 +1620,7 @@ static void TmplStateQuote(tmplpstate_t *state)
    case ' ':
       if(++state->spacecount == 2)
       {
-         M_QStrPutc(state->tokenbuf, ' ');
+         QStrPutc(state->tokenbuf, ' ');
          state->spacecount = 0;
       }
       break;
@@ -1631,7 +1631,7 @@ static void TmplStateQuote(tmplpstate_t *state)
       break;
    default:
       state->spacecount = 0;
-      M_QStrPutc(state->tokenbuf, c);
+      QStrPutc(state->tokenbuf, c);
       break;
    }
 }
@@ -1648,19 +1648,19 @@ static void TmplStateTitle(tmplpstate_t *state)
    case '\t':
    case ':':
       // whitespace - check to see if we have "Title" or "Author" in the token buffer
-      if(!M_QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
+      if(!QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
       {
-         M_QStrClear(state->tokenbuf);
+         QStrClear(state->tokenbuf);
          state->state = TMPL_STATE_SPACE;
       }
       else
       {
-         M_QStrClear(state->tokenbuf);
+         QStrClear(state->tokenbuf);
          state->state = TMPL_STATE_START; // start over
       }
       break;
    default:
-      M_QStrPutc(state->tokenbuf, c);
+      QStrPutc(state->tokenbuf, c);
       break;
    }
 }
@@ -1680,7 +1680,7 @@ static void TmplStateSpace(tmplpstate_t *state)
       break; // stay in same state
    default:
       // should be start of title
-      M_QStrPutc(state->tokenbuf, c);
+      QStrPutc(state->tokenbuf, c);
       state->state = TMPL_STATE_INTITLE;
       break;
    }
@@ -1695,7 +1695,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
    case '"':
       if(state->titleOrAuthor) // for authors, quotes are allowed
       {
-         M_QStrPutc(state->tokenbuf, c);
+         QStrPutc(state->tokenbuf, c);
          break;
       }
       // intentional fall-through for titles (end of title)
@@ -1705,7 +1705,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
       state->state = TMPL_STATE_DONE;
       break;
    default:
-      M_QStrPutc(state->tokenbuf, c);
+      QStrPutc(state->tokenbuf, c);
       break;
    }
 }
@@ -1733,7 +1733,7 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    qstring_t tokenbuffer;
    char *ret = NULL;
 
-   M_QStrInitCreate(&tokenbuffer);
+   QStrInitCreate(&tokenbuffer);
 
    state.text          = text;
    state.len           = len;
@@ -1751,9 +1751,9 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    // valid termination states are DONE or INTITLE (though it's pretty unlikely
    // that we would hit EOF in the title string, I'll allow for it)
    if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
-      ret = M_QStrCDup(&tokenbuffer, PU_LEVEL);
+      ret = QStrCDup(&tokenbuffer, PU_LEVEL);
 
-   M_QStrFree(&tokenbuffer);
+   QStrFree(&tokenbuffer);
 
    return ret;
 }

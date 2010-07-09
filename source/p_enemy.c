@@ -3963,9 +3963,9 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 
    if(Console.argc >= 3)
    {
-      if(!M_QStrCaseCmp(&(Console.argv[2]), "set"))
+      if(!QStrCaseCmp(&(Console.argv[2]), "set"))
          flagsmode = 0; // set
-      else if(!M_QStrCaseCmp(&(Console.argv[2]), "remove"))
+      else if(!QStrCaseCmp(&(Console.argv[2]), "remove"))
          flagsmode = 2; // remove
    }
 
@@ -4014,7 +4014,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       C_Printf("thing type is not a special\n");
       return;
    }
-   itemnum = (Console.argc >= 2) ? M_QStrAtoi(&(Console.argv[1])) : 1;
+   itemnum = (Console.argc >= 2) ? QStrAtoi(&(Console.argv[1])) : 1;
 
    for(i = 0; i < itemnum; i++)
    {
