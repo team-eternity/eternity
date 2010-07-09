@@ -1560,7 +1560,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       sector_t *sector = sectors + spr->sector;
 
       mh = M_FixedToFloat(sector->floorheight) - view.z;
-      if(R_LinkedFloorActive(sector) && sector->floorheight > spr->gz)
+      if(sector->f_pflags & PS_PASSABLE && sector->floorheight > spr->gz)
       {
          h = view.ycenter - (mh * spr->scale);
          if(h < 0) h = 0;
@@ -1573,7 +1573,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
 
       mh = M_FixedToFloat(sector->ceilingheight) - view.z;
-      if(R_LinkedCeilingActive(sector) && sector->ceilingheight < spr->gzt)
+      if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
       {
          h = view.ycenter - (mh * spr->scale);
          if(h < 0) h = 0;

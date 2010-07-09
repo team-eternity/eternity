@@ -406,7 +406,7 @@ void P_ParticleThinker(void)
          particle->z = floorheight;
 
       // floor clipping
-      if(particle->z < floorheight && R_LinkedFloorActive(psec))
+      if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
       {
          linkdata_t *ldata = R_FPLink(psec);
 

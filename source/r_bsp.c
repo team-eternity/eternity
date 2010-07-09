@@ -1448,9 +1448,9 @@ static void R_AddLine(seg_t *line)
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((R_LinkedCeilingActive(seg.frontsec) && 
+      !((seg.frontsec->c_pflags & PS_PASSABLE && 
         viewz > R_CPLink(seg.frontsec)->planez) || 
-        (R_LinkedFloorActive(seg.frontsec) && 
+        (seg.frontsec->f_pflags & PS_PASSABLE && 
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
@@ -2035,7 +2035,7 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
-   seg.f_portal = R_FloorPortalActive(seg.frontsec) 
+   seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
                && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
                ? seg.frontsec->f_portal : NULL;
@@ -2060,7 +2060,7 @@ static void R_Subsector(int num)
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
-   seg.c_portal = R_CeilingPortalActive(seg.frontsec) 
+   seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_floor)
                && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
                ? seg.frontsec->c_portal : NULL;

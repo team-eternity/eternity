@@ -112,7 +112,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    P_SetTarget(&sec->soundtarget, soundtarget);    // killough 11/98
 
 #ifdef R_LINKEDPORTALS
-   if(R_LinkedFloorActive(sec))
+   if(sec->f_pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
@@ -129,7 +129,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
    
-   if(R_LinkedCeilingActive(sec))
+   if(sec->c_pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even lines, the portal
       // structure won't tell you what sector is on the other side of the portal. SO
@@ -150,7 +150,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[i];
       
 #ifdef R_LINKEDPORTALS
-      if(R_LinkedLineActive(check))
+      if(check->pflags & PS_PASSSOUND)
       {
          sector_t *other;
 

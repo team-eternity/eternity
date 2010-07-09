@@ -457,6 +457,35 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
 
 
 
+
+static void P_GlobalPortalStateCheck()
+{
+   sector_t *sec;
+   line_t   *line;
+   int      i;
+   
+   for(i = 0; i < numsectors; i++)
+   {
+      sec = sectors + i;
+      
+      if(sec->c_portal)
+         P_CheckCPortalState(sec);
+      if(sec->f_portal)
+         P_CheckFPortalState(sec);
+   }
+   
+   for(i = 0; i < numlines; i++)
+   {
+      line = lines + i;
+      
+      if(line->portal)
+         P_CheckLPortalState(line);
+   }
+}
+
+
+
+
 //
 // P_BuildLinkTable
 //
@@ -550,6 +579,8 @@ boolean P_BuildLinkTable(void)
 
    // Everything checks out... let's run the portals
    useportalgroups = true;
+   P_GlobalPortalStateCheck();
+   
    return true;
 }
 
@@ -656,6 +687,9 @@ static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
    
    if(active && !(portal->flags & PF_NORENDER) && !(sflags & PF_NORENDER))
       ret |= PS_VISIBLE;
+      
+   // Next two flags are for linked portals only
+   active = active && portal->type == R_LINKED && useportalgroups == true;
       
    if(active && !(portal->flags & PF_NOPASS) && !(sflags & PF_NOPASS))
       ret |= PS_PASSABLE;

@@ -32,43 +32,6 @@
 
 extern int demo_version;
 
-d_inline static boolean R_LinkedFloorActive(sector_t *sector)
-{
-   return (useportalgroups && 
-           sector->f_portal && 
-           sector->f_portal->type == R_LINKED &&
-           sector->floorheight <= sector->f_portal->data.link.planez);
-}
-
-
-d_inline static boolean R_LinkedCeilingActive(sector_t *sector)
-{
-   return (useportalgroups && 
-           sector->c_portal && 
-           sector->c_portal->type == R_LINKED &&
-           sector->ceilingheight >= sector->c_portal->data.link.planez);
-}
-
-
-d_inline static boolean R_LinkedLineActive(line_t *line)
-{
-   return (useportalgroups && 
-           line->portal && line->portal->type == R_LINKED);
-}
-
-d_inline static boolean R_FloorPortalActive(sector_t *sector)
-{
-   return 
-       sector->f_portal && (sector->f_portal->type != R_LINKED || 
-       sector->floorheight <= sector->f_portal->data.link.planez);
-}
-
-d_inline static boolean R_CeilingPortalActive(sector_t *sector)
-{
-   return 
-       sector->c_portal && (sector->c_portal->type != R_LINKED || 
-       sector->ceilingheight >= sector->c_portal->data.link.planez);
-}
 
 d_inline static boolean R_RenderFloorPortal(sector_t *sector)
 {
@@ -77,9 +40,7 @@ d_inline static boolean R_RenderFloorPortal(sector_t *sector)
    return 
       (fp &&
        ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
-        (fp->type == R_TWOWAY && sector->floorheight < viewz) ||         
-        (fp->type == R_LINKED && sector->floorheight <= viewz && 
-                                 sector->floorheight <= fp->data.link.planez)));
+        (sector->f_pflags & PS_VISIBLE && sector->floorheight <= viewz)));
 }
 
 d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
@@ -89,9 +50,7 @@ d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
    return 
       (cp &&
        ((cp->type != R_TWOWAY && cp->type != R_LINKED) ||
-        (cp->type == R_TWOWAY && sector->ceilingheight > viewz) ||         
-        (cp->type == R_LINKED && sector->ceilingheight > viewz && 
-                                 sector->ceilingheight >= cp->data.link.planez)));
+        (sector->c_pflags & PS_VISIBLE && sector->ceilingheight > viewz)));
 }
 
 //

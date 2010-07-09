@@ -1076,7 +1076,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
    boolean ret = false;
 
-   if(R_LinkedFloorActive(mobj->subsector->sector))
+   if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
       linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
@@ -1102,7 +1102,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       }
    }
    
-   if(!ret && R_LinkedCeilingActive(mobj->subsector->sector))
+   if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
