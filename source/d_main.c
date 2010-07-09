@@ -1185,7 +1185,7 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
    if(input[i] == '\0')
       return false;
 
-   M_QStrClear(qstr);
+   QStrClear(qstr);
 
    while(input[i] != '\n' && input[i] != '\0')
    {
@@ -1193,10 +1193,10 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
       {
          // make \n sequence into a \n character
          ++i;
-         M_QStrPutc(qstr, '\n');
+         QStrPutc(qstr, '\n');
       }
       else if(input[i] != '\r')
-         M_QStrPutc(qstr, input[i]);
+         QStrPutc(qstr, input[i]);
 
       ++i;
    }
@@ -1255,29 +1255,29 @@ static void D_DiskMetaData(void)
    // parse it
 
    // setup qstring
-   M_QStrInitCreate(qstr);
+   QStrInitCreate(qstr);
 
    // get first line, which is an episode id
    D_metaGetLine(qstr, metatext, &index);
 
    // get episode name
    if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = M_QStrCDup(qstr, PU_STATIC);
+      GameModeInfo->versionName = QStrCDup(qstr, PU_STATIC);
 
    // get end text
    if(D_metaGetLine(qstr, metatext, &index))
-      endtext = M_QStrCDup(qstr, PU_STATIC);
+      endtext = QStrCDup(qstr, PU_STATIC);
 
    // get next level after secret
    if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = M_QStrAtoi(qstr);
+      exitreturn = QStrAtoi(qstr);
 
    // skip next line (wad name)
    D_metaGetLine(qstr, metatext, &index);
 
    // get secret level
    if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = M_QStrAtoi(qstr);
+      secretlevel = QStrAtoi(qstr);
 
    // get levels
    while(D_metaGetLine(qstr, metatext, &index))
@@ -1285,10 +1285,10 @@ static void D_DiskMetaData(void)
       switch(linenum)
       {
       case 0: // levelname
-         levelname = M_QStrCDup(qstr, PU_STATIC);
+         levelname = QStrCDup(qstr, PU_STATIC);
          break;
       case 1: // music number
-         musicnum = mus_runnin + M_QStrAtoi(qstr) - 1;
+         musicnum = mus_runnin + QStrAtoi(qstr) - 1;
 
          if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
             musicname = S_music[musicnum].name;
@@ -1296,7 +1296,7 @@ static void D_DiskMetaData(void)
             musicname = "";
          break;
       case 2: // partime (final field)
-         partime = M_QStrAtoi(qstr);
+         partime = QStrAtoi(qstr);
 
          // create a metainfo object for LevelInfo
          P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
@@ -1316,7 +1316,7 @@ static void D_DiskMetaData(void)
    }
    
    // done with qstring buffer
-   M_QStrFree(qstr);
+   QStrFree(qstr);
 
    // done with metadata resource
    free(metatext);

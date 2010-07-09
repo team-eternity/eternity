@@ -26,7 +26,7 @@
 // * Indexing functions always check array bounds
 // * Insertion functions always reallocate when needed
 //
-// Of course, using M_QStrBuffer can negate these, so avoid it
+// Of course, using QStrBuffer can negate these, so avoid it
 // except for passing a char * to read op functions.
 //
 // By James Haley
@@ -43,34 +43,34 @@ typedef struct qstring_s
    unsigned int size;
 } qstring_t;
 
-qstring_t    *M_QStrInitCreate(qstring_t *qstr);
-qstring_t    *M_QStrCreateSize(qstring_t *qstr, unsigned int size);
-qstring_t    *M_QStrCreate(qstring_t *qstr);
-unsigned int  M_QStrLen(qstring_t *qstr);
-unsigned int  M_QStrSize(qstring_t *qstr);
-char         *M_QStrBuffer(qstring_t *qstr);
-qstring_t    *M_QStrGrow(qstring_t *qstr, unsigned int len);
-qstring_t    *M_QStrClear(qstring_t *qstr);
-void          M_QStrFree(qstring_t *qstr);
-char          M_QStrCharAt(qstring_t *qstr, unsigned int idx);
-qstring_t    *M_QStrPutc(qstring_t *qstr, char ch);
-qstring_t    *M_QStrDelc(qstring_t *qstr);
-qstring_t    *M_QStrCat(qstring_t *qstr, const char *str);
-int           M_QStrCmp(qstring_t *qstr, const char *str);
-int           M_QStrCaseCmp(qstring_t *qstr, const char *str);
-qstring_t    *M_QStrCpy(qstring_t *qstr, const char *str);
-qstring_t    *M_QStrCopyTo(qstring_t *dest, const qstring_t *src);
-qstring_t    *M_QStrUpr(qstring_t *qstr);
-qstring_t    *M_QStrLwr(qstring_t *qstr);
-unsigned int  M_QStrReplace(qstring_t *qstr, const char *filter, char repl);
-unsigned int  M_QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
-char         *M_QStrCDup(qstring_t *qstr, int tag);
-int           M_QStrAtoi(qstring_t *qstr);
-const char   *M_QStrChr(qstring_t *qstr, char c);
-const char   *M_QStrRChr(qstring_t *qstr, char c);
-qstring_t    *M_QStrLStrip(qstring_t *qstr, char c);
-qstring_t    *M_QStrRStrip(qstring_t *qstr, char c);
-int           M_QStrPrintf(qstring_t *qstr, unsigned int maxlen, const char *fmt, ...);
+qstring_t    *QStrInitCreate(qstring_t *qstr);
+qstring_t    *QStrCreateSize(qstring_t *qstr, unsigned int size);
+qstring_t    *QStrCreate(qstring_t *qstr);
+unsigned int  QStrLen(qstring_t *qstr);
+unsigned int  QStrSize(qstring_t *qstr);
+char         *QStrBuffer(qstring_t *qstr);
+qstring_t    *QStrGrow(qstring_t *qstr, unsigned int len);
+qstring_t    *QStrClear(qstring_t *qstr);
+void          QStrFree(qstring_t *qstr);
+char          QStrCharAt(qstring_t *qstr, unsigned int idx);
+qstring_t    *QStrPutc(qstring_t *qstr, char ch);
+qstring_t    *QStrDelc(qstring_t *qstr);
+qstring_t    *QStrCat(qstring_t *qstr, const char *str);
+int           QStrCmp(qstring_t *qstr, const char *str);
+int           QStrCaseCmp(qstring_t *qstr, const char *str);
+qstring_t    *QStrCpy(qstring_t *qstr, const char *str);
+qstring_t    *QStrCopyTo(qstring_t *dest, const qstring_t *src);
+qstring_t    *QStrUpr(qstring_t *qstr);
+qstring_t    *QStrLwr(qstring_t *qstr);
+unsigned int  QStrReplace(qstring_t *qstr, const char *filter, char repl);
+unsigned int  QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
+char         *QStrCDup(qstring_t *qstr, int tag);
+int           QStrAtoi(qstring_t *qstr);
+const char   *QStrChr(qstring_t *qstr, char c);
+const char   *QStrRChr(qstring_t *qstr, char c);
+qstring_t    *QStrLStrip(qstring_t *qstr, char c);
+qstring_t    *QStrRStrip(qstring_t *qstr, char c);
+int           QStrPrintf(qstring_t *qstr, unsigned int maxlen, const char *fmt, ...);
 
 #endif
 

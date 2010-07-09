@@ -543,9 +543,9 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
       return;
    }
 
-   if(!M_QStrCmp(&(Console.argv[0]), "+"))
+   if(!QStrCmp(&(Console.argv[0]), "+"))
       skin = P_NextSkin(Console.cmdsrc);
-   else if(!M_QStrCmp(&(Console.argv[0]), "-"))
+   else if(!QStrCmp(&(Console.argv[0]), "-"))
       skin = P_PrevSkin(Console.cmdsrc);
    else if(!(skin = P_SkinForName(Console.argv[0].buffer)))
    {

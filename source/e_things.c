@@ -877,13 +877,13 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
    static qstring_t namebuffer;
 
    if(!namebuffer.buffer)
-      M_QStrCreate(&namebuffer);
+      QStrCreate(&namebuffer);
    else
-      M_QStrClear(&namebuffer);
+      QStrClear(&namebuffer);
 
-   M_QStrCat(&namebuffer, base);
-   M_QStrPutc(&namebuffer, '.');
-   M_QStrCat(&namebuffer, mod->name);
+   QStrCat(&namebuffer, base);
+   QStrPutc(&namebuffer, '.');
+   QStrCat(&namebuffer, mod->name);
 
    return namebuffer.buffer;
 }

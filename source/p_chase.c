@@ -153,7 +153,7 @@ CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
    if(!Console.argc)
       return;
 
-   if(M_QStrAtoi(&(Console.argv[0])))
+   if(QStrAtoi(&(Console.argv[0])))
       P_ChaseStart();
    else
       P_ChaseEnd();
@@ -371,7 +371,7 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
    if(!Console.argc)
       walkcam_active = !walkcam_active;
    else
-      walkcam_active = M_QStrAtoi(&(Console.argv[0]));
+      walkcam_active = QStrAtoi(&(Console.argv[0]));
 
    if(walkcam_active)
    {

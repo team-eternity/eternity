@@ -1007,22 +1007,22 @@ void HU_CenterMessage(const char *s)
 
    if(first)
    {
-      M_QStrCreate(&qstr);
+      QStrCreate(&qstr);
       first = false;
    }
    else
-      M_QStrClear(&qstr);
+      QStrClear(&qstr);
 
    // haleyjd 02/28/06: colored center message
    if(centermsg_color)
    {
-      M_QStrCat(&qstr, centermsg_color);
+      QStrCat(&qstr, centermsg_color);
       centermsg_color = NULL;
    }
    
-   M_QStrCat(&qstr, s);
+   QStrCat(&qstr, s);
   
-   tw->message = M_QStrBuffer(&qstr);
+   tw->message = QStrBuffer(&qstr);
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;

@@ -103,7 +103,7 @@ CONSOLE_COMMAND(defdmflags, cf_server)
       }
    }
    else
-      mode = M_QStrAtoi(&(Console.argv[0]));
+      mode = QStrAtoi(&(Console.argv[0]));
 
    switch(mode)
    {

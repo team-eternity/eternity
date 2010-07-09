@@ -140,7 +140,7 @@ int lexer_init(cfg_t *cfg, DWFILE *file)
 
    if(!code)
    {
-      M_QStrCreate(&qstring);
+      QStrCreate(&qstring);
       bufferpos = lexbuffer = buf;
    }
 
@@ -165,7 +165,7 @@ void lexer_reset(void)
    unquoted_spaces = false;
 
    // free qstring buffer
-   M_QStrFree(&qstring);
+   QStrFree(&qstring);
 
    // ensure that buffer state is reset
    lexer_free_buffer();
@@ -294,23 +294,23 @@ static int lexer_state_string(lexerstate_t *ls)
             --bufferpos;
             break;
          case 'n':
-            M_QStrPutc(&qstring, '\n');
+            QStrPutc(&qstring, '\n');
             break;
          case 't':
-            M_QStrPutc(&qstring, '\t');
+            QStrPutc(&qstring, '\t');
             break;
          case 'a':
-            M_QStrPutc(&qstring, '\a');
+            QStrPutc(&qstring, '\a');
             break;
          case 'b':
-            M_QStrPutc(&qstring, '\b');
+            QStrPutc(&qstring, '\b');
             break;                     
          case '0':
-            M_QStrPutc(&qstring, '\0');
+            QStrPutc(&qstring, '\0');
             break;
             // haleyjd 03/14/06: color codes
          case 'K':
-            M_QStrPutc(&qstring, (char)128);
+            QStrPutc(&qstring, (char)128);
             break;
          case '1':
          case '2':
@@ -321,29 +321,29 @@ static int lexer_state_string(lexerstate_t *ls)
          case '7':
          case '8':
          case '9':
-            M_QStrPutc(&qstring, (char)((s - '0') + 128));
+            QStrPutc(&qstring, (char)((s - '0') + 128));
             break;
             // haleyjd 03/14/06: special codes
          case 'T': // translucency
-            M_QStrPutc(&qstring, (char)138);
+            QStrPutc(&qstring, (char)138);
             break;
          case 'N': // normal
-            M_QStrPutc(&qstring, (char)139);
+            QStrPutc(&qstring, (char)139);
             break;
          case 'H': // hi
-            M_QStrPutc(&qstring, (char)140);
+            QStrPutc(&qstring, (char)140);
             break;
          case 'E': // error
-            M_QStrPutc(&qstring, (char)141);
+            QStrPutc(&qstring, (char)141);
             break;
          case 'S': // shadowed
-            M_QStrPutc(&qstring, (char)142);
+            QStrPutc(&qstring, (char)142);
             break;
          case 'C': // absCentered
-            M_QStrPutc(&qstring, (char)143);
+            QStrPutc(&qstring, (char)143);
             break;
          default:
-            M_QStrPutc(&qstring, s);
+            QStrPutc(&qstring, s);
             break;
          }
       }
@@ -351,23 +351,23 @@ static int lexer_state_string(lexerstate_t *ls)
    case '"':
       if(ls->stringtype == 1) // double-quoted string, end it
       {
-         mytext = M_QStrBuffer(&qstring);
+         mytext = QStrBuffer(&qstring);
          ret = CFGT_STR;
       }
       else
-         M_QStrPutc(&qstring, ls->c);
+         QStrPutc(&qstring, ls->c);
       break;
    case '\'':
       if(ls->stringtype == 2) // single-quoted string, end it
       {               
-         mytext = M_QStrBuffer(&qstring);
+         mytext = QStrBuffer(&qstring);
          ret = CFGT_STR;
       }
       else
-         M_QStrPutc(&qstring, ls->c);
+         QStrPutc(&qstring, ls->c);
       break;
    default:
-      M_QStrPutc(&qstring, ls->c);
+      QStrPutc(&qstring, ls->c);
       break;
    }
 
@@ -389,13 +389,13 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
-      mytext = M_QStrBuffer(&qstring);
+      mytext = QStrBuffer(&qstring);
       
       return CFGT_STR; // return a string token
    }
    else // normal characters
    {
-      M_QStrPutc(&qstring, c);
+      QStrPutc(&qstring, c);
       
       return -1; // continue parsing
    }
@@ -424,7 +424,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
    if(ls->c == c && *bufferpos == '@')
    {
       ++bufferpos; // move forward past @
-      mytext = M_QStrBuffer(&qstring);
+      mytext = QStrBuffer(&qstring);
 
       return CFGT_STR; // return a string token
    }
@@ -433,7 +433,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
       if(ls->c == '\n')
          ls->cfg->line++; // still need to track line numbers
       
-      M_QStrPutc(&qstring, ls->c);
+      QStrPutc(&qstring, ls->c);
 
       return -1; // continue parsing
    }
@@ -498,8 +498,8 @@ static int lexer_state_none(lexerstate_t *ls)
       if(*bufferpos != '=') // look ahead to next character
       {
          // if not '=', start an unquoted string
-         M_QStrClear(&qstring);
-         M_QStrPutc(&qstring, ls->c);
+         QStrClear(&qstring);
+         QStrPutc(&qstring, ls->c);
          ls->state = STATE_UNQUOTEDSTRING;
       }
       else
@@ -514,12 +514,12 @@ static int lexer_state_none(lexerstate_t *ls)
       ret = ',';
       break;
    case '"': // open double-quoted string
-      M_QStrClear(&qstring);
+      QStrClear(&qstring);
       ls->state = STATE_STRING;
       ls->stringtype = 1;
       break;
    case '\'': // open single-quoted string
-      M_QStrClear(&qstring);
+      QStrClear(&qstring);
       ls->state = STATE_STRING;
       ls->stringtype = 2;
       break;
@@ -537,14 +537,14 @@ static int lexer_state_none(lexerstate_t *ls)
             break;
          }
          ++bufferpos; // move past secondary delimiter character
-         M_QStrClear(&qstring);
+         QStrClear(&qstring);
          ls->state = STATE_HEREDOC;
          break;
       }
       // fall through, @ is not special unless followed by " or '
    default:  // anything else is part of an unquoted string
-      M_QStrClear(&qstring);
-      M_QStrPutc(&qstring, ls->c);
+      QStrClear(&qstring);
+      QStrPutc(&qstring, ls->c);
       ls->state = STATE_UNQUOTEDSTRING;
       break;
    }
@@ -600,7 +600,7 @@ include:
       // EOF after unquoted string -- return the string, next
       // call will return EOF
       --bufferpos;
-      mytext = M_QStrBuffer(&qstring);
+      mytext = QStrBuffer(&qstring);
       return CFGT_STR;
 
    default:      
