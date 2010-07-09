@@ -39,26 +39,16 @@
 #include "m_misc.h"   // for M_Strupr/M_Strlwr
 #include "d_io.h"     // for strcasecmp
 
+//=============================================================================
+//
+// Constructors, Destructors, and Reinitializers
+//
+
 // 32 bytes is the minimum block size currently used by the zone 
 // allocator, so it makes sense to use it as the base default 
 // string size too.
 
 #define QSTR_BASESIZE 32
-
-//
-// QStrInitCreate
-//
-// Initializes a qstring struct to all zeroes, then calls
-// QStrCreate. This is for safety the first time a qstring
-// is created (if qstr->buffer is uninitialized, realloc will
-// crash).
-//
-qstring_t *QStrInitCreate(qstring_t *qstr)
-{
-   memset(qstr, 0, sizeof(*qstr));
-
-   return QStrCreate(qstr);
-}
 
 //
 // QStrCreateSize
@@ -90,71 +80,18 @@ qstring_t *QStrCreate(qstring_t *qstr)
 }
 
 //
-// QStrLen
+// QStrInitCreate
 //
-// Calls strlen on the internal buffer. Convenience method.
+// Initializes a qstring struct to all zeroes, then calls
+// QStrCreate. This is for safety the first time a qstring
+// is created (if qstr->buffer is uninitialized, realloc will
+// crash).
 //
-unsigned int QStrLen(qstring_t *qstr)
+qstring_t *QStrInitCreate(qstring_t *qstr)
 {
-   return strlen(qstr->buffer);
-}
+   memset(qstr, 0, sizeof(*qstr));
 
-//
-// QStrSize
-//
-// Returns the amount of size allocated for this qstring
-// (will be >= strlen). You are allowed to index into the
-// qstring up to size - 1, although any bytes beyond the
-// strlen will be zero.
-//
-unsigned int QStrSize(qstring_t *qstr)
-{
-   return qstr->size;
-}
-
-//
-// QStrBuffer
-//
-// Retrieves a pointer to the internal buffer. This pointer
-// shouldn't be cached, and is not meant for writing into
-// (although it is safe to do so, it circumvents the
-// encapsulation and security of this structure).
-//
-char *QStrBuffer(qstring_t *qstr)
-{
-   return qstr->buffer;
-}
-
-//
-// QStrGrow
-//
-// Grows the qstring's buffer by the indicated amount.
-// This is automatically called by other qstring methods,
-// so there is generally no need to call it yourself.
-//
-qstring_t *QStrGrow(qstring_t *qstr, unsigned int len)
-{   
-   int newsize = qstr->size + len;
-
-   qstr->buffer = realloc(qstr->buffer, newsize);
-   memset(qstr->buffer + qstr->size, 0, len);
-   qstr->size += len;
-   
-   return qstr;
-}
-
-//
-// QStrClear
-//
-// Sets the entire qstring buffer to zero, and resets the
-// insertion index. Does not reallocate the buffer.
-//
-qstring_t *QStrClear(qstring_t *qstr)
-{
-   memset(qstr->buffer, 0, qstr->size);
-   qstr->index = 0;
-
-   return qstr;
+   return QStrCreate(qstr);
 }
 
 //
@@ -172,12 +109,28 @@ void QStrFree(qstring_t *qstr)
    qstr->index = qstr->size = 0;
 }
 
+//=============================================================================
+//
+// Basic Properties
+//
+
+//
+// QStrBuffer
+//
+// Retrieves a pointer to the internal buffer. This pointer shouldn't be 
+// cached, and is not meant for writing into (although it is safe to do so, it
+// circumvents the encapsulation and security of this structure).
+//
+char *QStrBuffer(qstring_t *qstr)
+{
+   return qstr->buffer;
+}
+
 //
 // QStrCharAt
 //
-// Indexing function to access a character in a qstring.
-// This is slower but more secure than using QStrBuffer
-// with array indexing.
+// Indexing function to access a character in a qstring. This is slower but 
+// more secure than using QStrBuffer with array indexing.
 //
 char QStrCharAt(qstring_t *qstr, unsigned int idx)
 {
@@ -188,10 +141,74 @@ char QStrCharAt(qstring_t *qstr, unsigned int idx)
 }
 
 //
+// QStrLen
+//
+// Calls strlen on the internal buffer. Convenience method.
+//
+unsigned int QStrLen(qstring_t *qstr)
+{
+   return strlen(qstr->buffer);
+}
+
+//
+// QStrSize
+//
+// Returns the amount of size allocated for this qstring (will be >= strlen).
+// You are allowed to index into the qstring up to size - 1, although any bytes
+// beyond the strlen will be zero.
+//
+unsigned int QStrSize(qstring_t *qstr)
+{
+   return qstr->size;
+}
+
+//=============================================================================
+//
+// Basic String Ops
+//
+
+//
+// QStrClear
+//
+// Sets the entire qstring buffer to zero, and resets the insertion index. 
+// Does not reallocate the buffer.
+//
+qstring_t *QStrClear(qstring_t *qstr)
+{
+   memset(qstr->buffer, 0, qstr->size);
+   qstr->index = 0;
+
+   return qstr;
+}
+
+//
+// QStrGrow
+//
+// Grows the qstring's buffer by the indicated amount. This is automatically
+// called by other qstring methods, so there is generally no need to call it 
+// yourself.
+//
+qstring_t *QStrGrow(qstring_t *qstr, unsigned int len)
+{   
+   int newsize = qstr->size + len;
+
+   qstr->buffer = realloc(qstr->buffer, newsize);
+   memset(qstr->buffer + qstr->size, 0, len);
+   qstr->size += len;
+   
+   return qstr;
+}
+
+//=============================================================================
+// 
+// Concatenation and Insertion/Deletion/Copying Functions
+//
+
+//
 // QStrPutc
 //
-// Adds a character to the end of the qstring, reallocating
-// via buffer doubling if necessary.
+// Adds a character to the end of the qstring, reallocating via buffer doubling
+// if necessary.
 //
 qstring_t *QStrPutc(qstring_t *qstr, char ch)
 {
@@ -221,8 +238,8 @@ qstring_t *QStrDelc(qstring_t *qstr)
 //
 // QStrCat
 //
-// Concatenates a C string onto the end of a qstring, expanding
-// the buffer if necessary.
+// Concatenates a C string onto the end of a qstring, expanding the buffer if
+// necessary.
 //
 qstring_t *QStrCat(qstring_t *qstr, const char *str)
 {
@@ -237,26 +254,6 @@ qstring_t *QStrCat(qstring_t *qstr, const char *str)
    qstr->index = newsize - 1;
 
    return qstr;
-}
-
-//
-// QStrCmp
-//
-// String compare.
-//
-int QStrCmp(qstring_t *qstr, const char *str)
-{
-   return strcmp(qstr->buffer, str);
-}
-
-//
-// QStrCaseCmp
-//
-// Case-insensitive string compare.
-//
-int QStrCaseCmp(qstring_t *qstr, const char *str)
-{
-   return strcasecmp(qstr->buffer, str);
 }
 
 //
@@ -285,15 +282,146 @@ qstring_t *QStrCopyTo(qstring_t *dest, const qstring_t *src)
 }
 
 //
-// QStrUpr
+// QStrSwap
 //
-// Converts the string to uppercase.
+// Exchanges the contents of two qstrings.
 //
-qstring_t *QStrUpr(qstring_t *qstr)
+void QStrSwap(qstring_t *str1, qstring_t *str2)
 {
-   M_Strupr(qstr->buffer);
+   qstring_t temp = *str1; // make a shallow copy of string 1
+
+   *str1 = *str2;
+   *str2 = temp;
+}
+
+//
+// QStrLStrip
+//
+// Removes occurrences of a specified character at the beginning of a qstring.
+//
+qstring_t *QStrLStrip(qstring_t *qstr, char c)
+{
+   unsigned int i = 0;
+   size_t len = strlen(qstr->buffer);
+
+   while(qstr->buffer[i] != '\0' && qstr->buffer[i] == c)
+      ++i;
+
+   if(i)
+   {
+      if((len -= i) == 0)
+         QStrClear(qstr);
+      else
+      {
+         memmove(qstr->buffer, qstr->buffer + i, len);
+         memset(qstr->buffer + len, 0, qstr->size - len);
+         qstr->index -= i;
+      }
+   }
+
    return qstr;
 }
+
+//
+// QStrRStrip
+//
+// Removes occurrences of a specified character at the end of a qstring.
+//
+qstring_t *QStrRStrip(qstring_t *qstr, char c)
+{
+   while(qstr->index && qstr->buffer[qstr->index - 1] == c)
+      QStrDelc(qstr);
+
+   return qstr;
+}
+
+//=============================================================================
+//
+// Comparison Functions
+//
+
+//
+// QStrCmp
+//
+// String compare.
+//
+int QStrCmp(qstring_t *qstr, const char *str)
+{
+   return strcmp(qstr->buffer, str);
+}
+
+//
+// QStrCaseCmp
+//
+// Case-insensitive string compare.
+//
+int QStrCaseCmp(qstring_t *qstr, const char *str)
+{
+   return strcasecmp(qstr->buffer, str);
+}
+
+//=============================================================================
+//
+// Search Functions
+//
+
+//
+// QStrChr
+//
+// Calls strchr on the qstring ("find first of").
+//
+const char *QStrChr(qstring_t *qstr, char c)
+{
+   return strchr(qstr->buffer, c);
+}
+
+//
+// QStrRChr
+//
+// Calls strrchr on the qstring ("find last of")
+//
+const char *QStrRChr(qstring_t *qstr, char c)
+{
+   return strrchr(qstr->buffer, c);
+}
+
+//=============================================================================
+//
+// Conversion Functions
+//
+
+//
+// Integers
+//
+
+//
+// QStrAtoi
+//
+// Returns the qstring converted to an integer via atoi.
+//
+int QStrAtoi(qstring_t *qstr)
+{
+   return atoi(qstr->buffer);
+}
+
+//
+// Other String Types
+//
+
+//
+// QStrCDup
+//
+// Creates a C string duplicate of a qstring's contents.
+//
+char *QStrCDup(qstring_t *qstr, int tag)
+{
+   return (char *)Z_Strdup(qstr->buffer, tag, NULL);
+}
+
+//=============================================================================
+//
+// Case Handling
+//
 
 //
 // QStrLwr
@@ -305,6 +433,22 @@ qstring_t *QStrLwr(qstring_t *qstr)
    M_Strlwr(qstr->buffer);
    return qstr;
 }
+
+//
+// QStrUpr
+//
+// Converts the string to uppercase.
+//
+qstring_t *QStrUpr(qstring_t *qstr)
+{
+   M_Strupr(qstr->buffer);
+   return qstr;
+}
+
+//=============================================================================
+//
+// Replacement Operations
+//
 
 static byte qstr_repltable[256];
 
@@ -370,99 +514,10 @@ unsigned int QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
    return QStrReplaceInternal(qstr, repl);
 }
 
+//=============================================================================
+// 
+// Formatting
 //
-// QStrCDup
-//
-// Creates a C string duplicate of a qstring's contents.
-//
-char *QStrCDup(qstring_t *qstr, int tag)
-{
-   return (char *)Z_Strdup(qstr->buffer, tag, NULL);
-}
-
-//
-// QStrSwap
-//
-// Exchanges the contents of two qstrings.
-//
-void QStrSwap(qstring_t *str1, qstring_t *str2)
-{
-   qstring_t temp = *str1; // make a shallow copy of string 1
-
-   *str1 = *str2;
-   *str2 = temp;
-}
-
-//
-// QStrAtoi
-//
-// Returns the qstring converted to an integer via atoi.
-//
-int QStrAtoi(qstring_t *qstr)
-{
-   return atoi(qstr->buffer);
-}
-
-//
-// QStrChr
-//
-// Calls strchr on the qstring.
-//
-const char *QStrChr(qstring_t *qstr, char c)
-{
-   return strchr(qstr->buffer, c);
-}
-
-//
-// QStrRChr
-//
-// Calls strrchr on the qstring.
-//
-const char *QStrRChr(qstring_t *qstr, char c)
-{
-   return strrchr(qstr->buffer, c);
-}
-
-//
-// QStrLStrip
-//
-// Removes occurrences of a specified character at the beginning of a qstring.
-//
-qstring_t *QStrLStrip(qstring_t *qstr, char c)
-{
-   unsigned int i = 0;
-   size_t len = strlen(qstr->buffer);
-
-   while(qstr->buffer[i] != '\0' && qstr->buffer[i] == c)
-      ++i;
-
-   if(i)
-   {
-      if((len -= i) == 0)
-         QStrClear(qstr);
-      else
-      {
-         memmove(qstr->buffer, qstr->buffer + i, len);
-         memset(qstr->buffer + len, 0, qstr->size - len);
-         qstr->index -= i;
-      }
-   }
-
-   return qstr;
-}
-
-//
-// QStrRStrip
-//
-// Removes occurrences of a specified character at the end of a qstring.
-//
-qstring_t *QStrRStrip(qstring_t *qstr, char c)
-{
-   while(qstr->index && qstr->buffer[qstr->index - 1] == c)
-      QStrDelc(qstr);
-
-   return qstr;
-}
 
 //
 // QStrPrintf

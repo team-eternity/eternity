@@ -76,6 +76,7 @@ enum
    PU_SOUND,    // currently unused
    PU_MUSIC,    // currently unused
    PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
+   PU_AUTO,     // haleyjd 07/08/10: automatic allocation
    
    // these must remain together:
 

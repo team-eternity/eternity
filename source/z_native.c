@@ -160,7 +160,7 @@ static void Z_IDCheck(boolean err, const char *errmsg,
    if(err)
    {
       I_FatalError(I_ERR_KILL,
-                   "%s\nSource: %s:%d\nSource of malloc: %s:%d",
+                   "%s\nSource: %s:%d\nSource of malloc: %s:%d\n",
                    errmsg, file, line,
 #if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
                    block->file, block->line
@@ -336,15 +336,19 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
    
-   while(!(block = (malloc)(size + header_size)))
+   if(!(block = (malloc)(size + header_size)))
    {
-      if(!blockbytag[PU_CACHE])
+      if(blockbytag[PU_CACHE])
       {
-         I_FatalError(I_ERR_KILL,
-                      "Z_Malloc: Failure trying to allocate %u bytes\n"
-                      "Source: %s:%d", (unsigned int)size, file, line);
+         Z_FreeTags(PU_CACHE, PU_CACHE);
+         block = (malloc)(size + header_size);
       }
-      Z_FreeTags(PU_CACHE, PU_CACHE);
+   }
+
+   if(!block)
+   {
+      I_FatalError(I_ERR_KILL, "Z_Malloc: Failure trying to allocate %u bytes\n"
+                               "Source: %s:%d\n", (unsigned int)size, file, line);
    }
    
    block->size = size;
@@ -618,81 +622,6 @@ char *(Z_Strdup)(const char *s, int tag, void **user,
 
 //=============================================================================
 //
-// Zone Alloca
-//
-// haleyjd 12/06/06
-//
-
-typedef struct alloca_header_s
-{
-   struct alloca_header_s *next;
-} alloca_header_t;
-
-static alloca_header_t *alloca_root;
-
-//
-// Z_FreeAlloca
-//
-// haleyjd 12/06/06: Frees all blocks allocated with Z_Alloca.
-//
-void Z_FreeAlloca(void)
-{
-   alloca_header_t *hdr = alloca_root, *next;
-
-   Z_LogPuts("* Freeing alloca blocks\n");
-
-   while(hdr)
-   {
-      next = hdr->next;
-
-      Z_Free(hdr);
-
-      hdr = next;
-   }
-
-   alloca_root = NULL;
-}
-
-//
-// Z_Alloca
-//
-// haleyjd 12/06/06:
-// Implements a portable garbage-collected alloca on the zone heap.
-//
-void *(Z_Alloca)(size_t n, const char *file, int line)
-{
-   alloca_header_t *hdr;
-   void *ptr;
-
-   if(n == 0)
-      return NULL;
-
-   // add an alloca_header_t to the requested allocation size
-   ptr = (Z_Calloc)(n + sizeof(alloca_header_t), 1, PU_STATIC, NULL, file, line);
-
-   Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", ptr, n, file, line);
-
-   // add to linked list
-   hdr = (alloca_header_t *)ptr;
-   hdr->next = alloca_root;
-   alloca_root = hdr;
-
-   // return a pointer to the actual allocation
-   return (void *)((byte *)ptr + sizeof(alloca_header_t));
-}
-
-//
-// Z_Strdupa
-//
-// haleyjd 05/07/08: strdup that uses alloca, for convenience.
-//
-char *(Z_Strdupa)(const char *s, const char *file, int line)
-{      
-   return strcpy((Z_Alloca)(strlen(s)+1, file, line), s);
-}
-
-//=============================================================================
-//
 // Heap Verification
 //
 
@@ -813,9 +742,6 @@ void Z_DumpCore(void)
 //
 // Guaranteed access to system malloc and free, regardless of the heap in use.
 //
-// Note: these are now redundant with the native heap in place.
-// Eliminate if z_zone is permanently removed.
-//
 
 //
 // Z_SysMalloc
@@ -889,6 +815,103 @@ void Z_SysFree(void *p)
 {
    if(p)
       (free)(p);
+}
+
+//=============================================================================
+//
+// Zone Alloca
+//
+// haleyjd 12/06/06
+//
+
+//
+// Z_FreeAlloca
+//
+// haleyjd 12/06/06: Frees all blocks allocated with Z_Alloca.
+//
+void Z_FreeAlloca(void)
+{
+   memblock_t *block = blockbytag[PU_AUTO];
+
+   if(!block)
+      return;
+   
+   Z_LogPuts("* Freeing alloca blocks\n");
+
+   blockbytag[PU_AUTO] = NULL;
+
+   while(block)
+   {
+      memblock_t *next = block->next;
+
+      Z_IDCheckNB(IDBOOL(block->id != ZONEID),
+                  "Z_FreeAlloca: Freed a tag without ZONEID", 
+                  __FILE__, __LINE__);
+
+      Z_Free((byte *)block + header_size);
+      block = next;               // Advance to next block
+   }
+}
+
+//
+// Z_Alloca
+//
+// haleyjd 12/06/06:
+// Implements a portable garbage-collected alloca on the zone heap.
+//
+void *(Z_Alloca)(size_t n, const char *file, int line)
+{
+   void *ptr;
+
+   if(n == 0)
+      return NULL;
+
+   // allocate it
+   ptr = (Z_Calloc)(n, 1, PU_AUTO, NULL, file, line);
+
+   Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", 
+               ptr, n, file, line);
+
+   return ptr;
+}
+
+//
+// Z_Realloca
+//
+// haleyjd 07/08/10: realloc for automatic allocations.
+//
+void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
+{
+   void *ret;
+
+   if(ptr)
+   {
+      // get zone block
+      memblock_t *block = (memblock_t *)((byte *)ptr - header_size);
+
+      Z_IDCheck(IDBOOL(block->id != ZONEID),
+         "Z_Realloca: block found without ZONEID", block, file, line);
+
+      if(block->tag != PU_AUTO)
+         I_FatalError(I_ERR_KILL, "Z_Realloca: strange block tag %d\n", block->tag);
+   }
+   
+   ret = (Z_Realloc)(ptr, n, PU_AUTO, NULL, file, line);
+
+   Z_LogPrintf("* %p = Z_Realloca(ptr = %p, n = %lu, file = %s, line = %d)\n", 
+               ret, ptr, n, file, line);
+
+   return ret;
+}
+
+//
+// Z_Strdupa
+//
+// haleyjd 05/07/08: strdup that uses alloca, for convenience.
+//
+char *(Z_Strdupa)(const char *s, const char *file, int line)
+{      
+   return strcpy((Z_Alloca)(strlen(s)+1, file, line), s);
 }
 
 #endif // ZONE_NATIVE
