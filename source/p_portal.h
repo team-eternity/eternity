@@ -108,6 +108,40 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h);
 void P_SetCeilingHeight(sector_t *sec, fixed_t h);
 
 
+//
+// P_SetPortalBehavior
+//
+// Sets the behavior flags for a portal. This function then iterates through all
+// the sectors and lines in the currently loaded map and updates the state flags
+// as such, this function shouldn't really be used a lot.
+void P_SetPortalBehavior(portal_t *portal, int newbehavior);
+
+
+//
+// P_SetFPortalBehavior
+//
+// This function sets the behavior flags for the floor portal of a given sector
+// and updates the state flags for the surface.
+void P_SetFPortalBehavior(sector_t *sec, int newbehavior);
+
+
+
+//
+// P_SetCPortalBehavior
+//
+// This function sets the behavior flags for the ceiling portal of a given 
+// sector and updates the state flags for the surface.
+void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
+
+
+
+//
+// P_SetLPortalBehavior
+//
+// This function sets the behavior flags for the portal of a given line
+// and updates the state flags for the surface.
+void P_SetLPortalBehavior(line_t *line, int newbehavior);
+
 #endif
 
 // EOF

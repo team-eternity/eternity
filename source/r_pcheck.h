@@ -33,26 +33,6 @@
 extern int demo_version;
 
 
-d_inline static boolean R_RenderFloorPortal(sector_t *sector)
-{
-   const portal_t *fp = sector->f_portal;
-
-   return 
-      (fp &&
-       ((fp->type != R_TWOWAY && fp->type != R_LINKED) ||
-        (sector->f_pflags & PS_VISIBLE && sector->floorheight <= viewz)));
-}
-
-d_inline static boolean R_RenderCeilingPortal(sector_t *sector)
-{
-   const portal_t *cp = sector->c_portal;
-
-   return 
-      (cp &&
-       ((cp->type != R_TWOWAY && cp->type != R_LINKED) ||
-        (sector->c_pflags & PS_VISIBLE && sector->ceilingheight > viewz)));
-}
-
 //
 // R_FPCam
 //

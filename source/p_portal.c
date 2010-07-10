@@ -763,7 +763,6 @@ void P_CheckLPortalState(line_t *line)
 //
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
-   // TODO: Support for diabling a linked portal on a surface
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
    
@@ -779,7 +778,6 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 //
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
-   // TODO: Support for diabling a linked portal on a surface
    sec->ceilingheight = h;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
 
@@ -787,6 +785,64 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 }
 
 
+
+void P_SetPortalBehavior(portal_t *portal, int newbehavior)
+{
+   int   i;
+   
+   portal->flags = newbehavior & PF_FLAGMASK;
+   for(i = 0; i < numsectors; i++)
+   {
+      sector_t *sec = sectors + i;
+      
+      if(sec->c_portal == portal)
+         P_CheckCPortalState(sec);
+      if(sec->f_portal == portal)
+         P_CheckFPortalState(sec);
+   }
+   
+   
+   for(i = 0; i < numlines; i++)
+   {
+      if(lines[i].portal == portal)
+         P_CheckLPortalState(lines + i);
+   }
+}
+
+
+
+
+
+void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
+{
+   if(!sec->f_portal)
+      return;
+      
+   sec->f_pflags = newbehavior & PF_FLAGMASK;
+   P_CheckFPortalState(sec);
+}
+
+
+
+void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
+{
+   if(!sec->c_portal)
+      return;
+      
+   sec->c_pflags = newbehavior & PF_FLAGMASK;
+   P_CheckCPortalState(sec);
+}
+
+
+
+void P_SetLPortalBehavior(line_t *line, int newbehavior)
+{
+   if(!line->portal)
+      return;
+      
+   line->pflags = newbehavior & PF_FLAGMASK;
+   P_CheckLPortalState(line);
+}
 
 
 // ----------------------------------------------------------------------------
