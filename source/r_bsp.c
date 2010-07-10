@@ -1677,13 +1677,15 @@ static void R_AddLine(seg_t *line)
       seg.c_window = seg.f_window = NULL;
 
       // SoM: these should be treated differently! 
-      if(R_RenderCeilingPortal(seg.frontsec))
+      if(seg.frontsec->c_portal && (seg.frontsec->c_portal->type < R_TWOWAY ||
+         (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->ceilingheight > viewz)))
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
       }
 
-      if(R_RenderFloorPortal(seg.frontsec))
+      if(seg.frontsec->f_portal && (seg.frontsec->f_portal->type < R_TWOWAY ||
+        (seg.frontsec->f_pflags & PS_VISIBLE && seg.frontsec->floorheight <= viewz)))
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);

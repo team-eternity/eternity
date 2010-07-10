@@ -766,6 +766,8 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
    // TODO: Support for diabling a linked portal on a surface
    sec->floorheight = h;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
+   
+   P_CheckFPortalState(sec);
 }
 
 
@@ -780,6 +782,8 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
    // TODO: Support for diabling a linked portal on a surface
    sec->ceilingheight = h;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
+
+   P_CheckCPortalState(sec);
 }
 
 
