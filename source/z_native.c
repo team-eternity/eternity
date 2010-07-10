@@ -521,11 +521,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
    void *p;
-   memblock_t *block;
-
-   // haleyjd: no reallocation under purgable tags
-   if(tag >= PU_PURGELEVEL)
-      I_FatalError(I_ERR_KILL, "Z_Realloc: Reallocated a purgable tag\n");
+   memblock_t *block, *newblock;
 
    // if not allocated at all, defer to Z_Malloc
    if(!ptr)
@@ -546,10 +542,6 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
              "Z_Realloc: Reallocated a block without ZONEID\n", 
              block, file, line);
 
-   // haleyjd: no reallocation of purgable blocks
-   if(block->tag >= PU_PURGELEVEL)
-      I_FatalError(I_ERR_KILL, "Z_Realloc: Reallocated a purgable block\n");
-
    // nullify current user, if any
    if(block->user)
       *(block->user) = NULL;
@@ -563,15 +555,21 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    INSTRUMENT(active_memory -= block->size);
 
-   while(!(block = (realloc)(block, n + header_size)))
+   if(!(newblock = (realloc)(block, n + header_size)))
    {
-      if(!blockbytag[PU_CACHE])
+      // haleyjd 07/09/10: Note that unlinking the block above makes this safe 
+      // even if the current block is PU_CACHE; Z_FreeTags won't find it.
+      if(blockbytag[PU_CACHE])
       {
-         I_FatalError(I_ERR_KILL, 
-                      "Z_Realloc: Failure trying to allocate %u bytes\n"
-                      "Source: %s:%d\n", (unsigned int)n, file, line);
+         Z_FreeTags(PU_CACHE, PU_CACHE);
+         newblock = (realloc)(block, n + header_size);
       }
-      Z_FreeTags(PU_CACHE, PU_CACHE);
+   }
+
+   if(!(block = newblock))
+   {
+      I_FatalError(I_ERR_KILL, "Z_Realloc: Failure trying to allocate %u bytes\n"
+                               "Source: %s:%d\n", (unsigned int)n, file, line);
    }
 
    block->size = n;
