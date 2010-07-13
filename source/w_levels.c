@@ -184,6 +184,11 @@ waddir_t *W_AddManagedWad(const char *filename)
 {
    manageddir_t *newdir = NULL;
 
+   // Haha, yeah right, you wanker :P
+   // At least be smart enough to ju4r3z if nothing else.
+   if(GameModeInfo->flags & GIF_SHAREWARE)
+      return NULL;
+
    // create a new managed wad directory object
    if(!(newdir = W_addManagedDir(filename)))
       return NULL;
