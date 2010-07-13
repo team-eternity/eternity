@@ -787,10 +787,13 @@ typedef struct metastate_s
 //
 // toString method for nice display of metastate properties.
 //
-static const char *metaStateToString(void *obj)
+static const char *metaStateToString(metatype_t *t, void *obj)
 {
    return ((metastate_t *)obj)->state->name;
 }
+
+static metatype_t metaStateType;
+static metatype_i metaStateMethods = { NULL, NULL, NULL, metaStateToString };
 
 //
 // E_AddMetaState
@@ -799,7 +802,6 @@ static const char *metaStateToString(void *obj)
 //
 static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 {
-   static metatype_t metaStateType;
    metastate_t *newMetaState = NULL;
 
    // first time, register a metatype for metastates
@@ -807,7 +809,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
    {
       MetaRegisterTypeEx(&metaStateType, 
                          METATYPE(metastate_t), sizeof(metastate_t),
-                         NULL, NULL, NULL, metaStateToString);
+                         METATYPE(metaobject_t), &metaStateMethods);
    }
 
    newMetaState = calloc(1, sizeof(metastate_t));

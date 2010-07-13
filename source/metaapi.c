@@ -94,7 +94,7 @@ void MetaInit(metatable_t *metatable)
 // Provides RTTI for metaobjects. Pass types to this function using the
 // METATYPE macro.
 //
-boolean IsMetaKindOf(metaobject_t *object, const char *type)
+boolean IsMetaKindOf(metaobject_t *object, metatypename_t type)
 {
    return !strcmp(object->type, type);
 }
@@ -115,7 +115,7 @@ boolean MetaHasKey(metatable_t *metatable, const char *key)
 //
 // Returns true or false if an object of the same type is in the metatable.
 //
-boolean MetaHasType(metatable_t *metatable, const char *type)
+boolean MetaHasType(metatable_t *metatable, metatypename_t type)
 {
    return (E_HashObjectForKey(&metatable->typehash, type) != NULL);
 }
@@ -128,7 +128,7 @@ boolean MetaHasType(metatable_t *metatable, const char *type)
 // search down the key hash chain for a type match.
 //
 boolean MetaHasKeyAndType(metatable_t *metatable, const char *key, 
-                          const char *type)
+                          metatypename_t type)
 {
    metaobject_t *obj = NULL;
    boolean found = false;
@@ -167,7 +167,7 @@ int MetaCountOf(metatable_t *metatable, const char *key)
 //
 // Returns the count of objects in the metatable with the given type.
 //
-int MetaCountOfType(metatable_t *metatable, const char *type)
+int MetaCountOfType(metatable_t *metatable, metatypename_t type)
 {
    metaobject_t *obj = NULL;
    int count = 0;
@@ -184,7 +184,7 @@ int MetaCountOfType(metatable_t *metatable, const char *type)
 // As above, but satisfying both conditions at once.
 //
 int MetaCountOfKeyAndType(metatable_t *metatable, const char *key, 
-                          const char *type)
+                          metatypename_t type)
 {
    metaobject_t *obj = NULL;
    int count = 0;
@@ -215,7 +215,7 @@ int MetaCountOfKeyAndType(metatable_t *metatable, const char *key,
 // references between metaobjects.
 //
 void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object,
-                   void *data, const char *type)
+                   void *data, metatypename_t type)
 {
    ehash_t *keyhash = &metatable->keyhash;
 
@@ -277,7 +277,7 @@ metaobject_t *MetaGetObject(metatable_t *metatable, const char *key)
 // Returns the first object found in the metatable which matches the type. 
 // Returns NULL if no such object exists.
 //
-metaobject_t *MetaGetObjectType(metatable_t *metatable, const char *type)
+metaobject_t *MetaGetObjectType(metatable_t *metatable, metatypename_t type)
 {
    return E_HashObjectForKey(&metatable->typehash, &type);
 }
@@ -288,7 +288,7 @@ metaobject_t *MetaGetObjectType(metatable_t *metatable, const char *type)
 // As above, but satisfying both conditions at once.
 //
 metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
-                                      const char *type)
+                                      metatypename_t type)
 {
    metaobject_t *obj = NULL;
 
@@ -325,7 +325,7 @@ metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object,
 // the specified type.
 //
 metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object,
-                              const char *type)
+                              metatypename_t type)
 {
    return E_HashObjectIterator(&metatable->typehash, object, &type);
 }
@@ -336,7 +336,7 @@ metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object,
 // As above, but satisfying both conditions at once.
 //
 metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object,
-                                    const char *key, const char *type)
+                                    const char *key, metatypename_t type)
 {
    metaobject_t *obj = object;
 
@@ -378,7 +378,7 @@ metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object)
 //
 // toString method for metaint objects.
 //
-static const char *metaIntToString(void *obj)
+static const char *metaIntToString(metatype_t *t, void *obj)
 {
    metaint_t *mi = (metaint_t *)obj;
    static char str[33];
@@ -390,6 +390,9 @@ static const char *metaIntToString(void *obj)
    return str;
 }
 
+static metatype_t metaIntType;
+static metatype_i metaIntMethods = { NULL, NULL, NULL, metaIntToString };
+
 //
 // MetaAddInt
 //
@@ -397,14 +400,14 @@ static const char *metaIntToString(void *obj)
 //
 void MetaAddInt(metatable_t *metatable, const char *key, int value)
 {
-   static metatype_t metaIntType;
    metaint_t *newInt = calloc(1, sizeof(metaint_t));
 
    if(!metaIntType.isinit)
    {
       // register metaint type
-      MetaRegisterTypeEx(&metaIntType, METATYPE(metaint_t), sizeof(metaint_t),
-                         NULL, NULL, NULL, metaIntToString);
+      MetaRegisterTypeEx(&metaIntType, 
+                         METATYPE(metaint_t), sizeof(metaint_t),
+                         METATYPE(metaobject_t), &metaIntMethods);
    }
 
    newInt->value = value;
@@ -502,7 +505,7 @@ int MetaRemoveInt(metatable_t *metatable, const char *key)
 //
 // toString method for metadouble objects.
 //
-static const char *metaDoubleToString(void *obj)
+static const char *metaDoubleToString(metatype_t *t, void *obj)
 {
    static char str[64];
    metadouble_t *md = (metadouble_t *)obj;
@@ -513,6 +516,9 @@ static const char *metaDoubleToString(void *obj)
    return str;
 }
 
+static metatype_t metaDoubleType;
+static metatype_i metaDoubleMethods = { NULL, NULL, NULL, metaDoubleToString };
+
 //
 // MetaAddDouble
 //
@@ -520,7 +526,6 @@ static const char *metaDoubleToString(void *obj)
 //
 void MetaAddDouble(metatable_t *metatable, const char *key, double value)
 {
-   static metatype_t metaDoubleType;
    metadouble_t *newDouble = calloc(1, sizeof(metadouble_t));
 
    if(!metaDoubleType.isinit)
@@ -528,7 +533,7 @@ void MetaAddDouble(metatable_t *metatable, const char *key, double value)
       // register metadouble type
       MetaRegisterTypeEx(&metaDoubleType, 
                          METATYPE(metadouble_t), sizeof(metadouble_t),
-                         NULL, NULL, NULL, metaDoubleToString);
+                         METATYPE(metaobject_t), &metaDoubleMethods);
    }
 
    newDouble->value = value;
@@ -620,41 +625,60 @@ double MetaRemoveDouble(metatable_t *metatable, const char *key)
 //
 // Strings
 //
-// metastrings created with these APIs do NOT assume ownership of the
-// string. If the string is dynamically allocated, you are responsible for
-// releasing its storage after destroying the metastring.
+// metastrings created with these APIs assume ownership of the string. 
 //
-// If the metatable has been copied, more than one object may point to the
-// string in question.
+
 //
+// metaStringCopy
+//
+// copy method for metastrings
+//
+static void metaStringCopy(metatype_t *t, void *dest, const void *src)
+{
+   metastring_t *newString = (metastring_t *)dest;
+
+   // invoke parent implementation, which will copy the entire object
+   t->super->methods.copy(t, dest, src);
+
+   // make string value a copy of the existing one
+   newString->value = strdup(newString->value);
+}
 
 //
 // metaStringToString
 //
 // toString method for metastrings
 //
-static const char *metaStringToString(void *obj)
+static const char *metaStringToString(metatype_t *t, void *obj)
 {
    return ((metastring_t *)obj)->value;
 }
+
+static metatype_t metaStringType;
+static metatype_i metaStringMethods = 
+{ 
+   NULL,              // alloc
+   metaStringCopy,    // copy
+   NULL,              // objptr
+   metaStringToString // toString
+};
 
 //
 // MetaAddString
 //
 void MetaAddString(metatable_t *metatable, const char *key, const char *value)
 {
-   static metatype_t metaStrType;
    metastring_t *newString = calloc(1, sizeof(metastring_t));
 
-   if(!metaStrType.isinit)
+   if(!metaStringType.isinit)
    {
       // register metastring type
-      MetaRegisterTypeEx(&metaStrType, 
+      MetaRegisterTypeEx(&metaStringType, 
                          METATYPE(metastring_t), sizeof(metastring_t), 
-                         NULL, NULL, NULL, metaStringToString);
+                         METATYPE(metaobject_t), &metaStringMethods);
    }
 
-   newString->value = value;
+   newString->value = strdup(value);
 
    MetaAddObject(metatable, key, &newString->parent, newString, 
                  METATYPE(metastring_t));
@@ -690,6 +714,28 @@ const char *MetaGetString(metatable_t *metatable, const char *key, const char *d
 }
 
 //
+// MetaSetString
+//
+// If the metatable already contains a metastring of the given name, it will
+// be edited to have the provided value. Otherwise, a new metastring will be
+// added to the table with that value. 
+//
+void MetaSetString(metatable_t *metatable, const char *key, const char *newvalue)
+{
+   metaobject_t *obj;
+
+   if(!(obj = MetaGetObjectKeyAndType(metatable, key, METATYPE(metastring_t))))
+      MetaAddString(metatable, key, newvalue);
+   else
+   {
+      metastring_t *ms = (metastring_t *)(obj->object);
+
+      free(ms->value);
+      ms->value = strdup(newvalue);
+   }
+}
+
+//
 // MetaRemoveString
 //
 // Removes the given field if it exists as a metastring_t.
@@ -697,14 +743,15 @@ const char *MetaGetString(metatable_t *metatable, const char *key, const char *d
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
-// The value of the object is returned in case it is needed, and
-// if the string is dynamically allocated, you will need to then
-// free it yourself using the proper routine.
+// When calling this routine, the value of the object is returned 
+// in case it is needed, and you will need to then free it yourself 
+// using free(). If the return value is not needed, call
+// MetaRemoveStringNR instead and the string value will be destroyed.
 //
-const char *MetaRemoveString(metatable_t *metatable, const char *key)
+char *MetaRemoveString(metatable_t *metatable, const char *key)
 {
    metaobject_t *obj;
-   const char *value;
+   char *value;
 
    metaerrno = META_ERR_NOERR;
 
@@ -721,6 +768,21 @@ const char *MetaRemoveString(metatable_t *metatable, const char *key)
    free(obj->object);
 
    return value;
+}
+
+//
+// MetaRemoveStringNR
+//
+// As above, but the string value is not returned, but instead freed, to
+// alleviate any need the user code might have to free string values in
+// which it isn't interested.
+//
+void MetaRemoveStringNR(metatable_t *metatable, const char *key)
+{
+   char *value = MetaRemoveString(metatable, key);
+
+   if(value)
+      free(value);
 }
 
 //=============================================================================
@@ -741,9 +803,9 @@ static metatable_t metaTypeRegistry;
 //
 // Default method for allocation of an object given its metatype.
 //
-static void *MetaAlloc(size_t size)
+static void *MetaAlloc(metatype_t *t)
 {
-   return calloc(1, size);
+   return calloc(1, t->size);
 }
 
 //
@@ -752,9 +814,9 @@ static void *MetaAlloc(size_t size)
 // Default method for copying of an object given its metatype.
 // Performs a shallow copy only.
 //
-static void MetaCopy(void *dest, const void *src, size_t size)
+static void MetaCopy(metatype_t *t, void *dest, const void *src)
 {
-   memcpy(dest, src, size);
+   memcpy(dest, src, t->size);
 }
 
 //
@@ -764,13 +826,10 @@ static void MetaCopy(void *dest, const void *src, size_t size)
 // Returns the same pointer. Works for objects which have the
 // metaobject_t as their first item only.
 //
-static metaobject_t *MetaObjectPtr(void *object)
+static metaobject_t *MetaObjectPtr(metatype_t *t, void *object)
 {
    return object;
 }
-
-// data for MetaDefToString
-static size_t metaobjlen;
 
 //
 // MetaDefToString
@@ -778,11 +837,11 @@ static size_t metaobjlen;
 // Default method for string display of a metaobject_t via a registered
 // metatype.
 //
-static const char *MetaDefToString(void *object)
+static const char *MetaDefToString(metatype_t *t, void *object)
 {
    static qstring_t qstr;
    byte *data = (byte *)object;
-   size_t bytestoprint = metaobjlen;
+   size_t bytestoprint = t->size;
 
    if(!qstr.buffer)
       QStrInitCreate(&qstr);
@@ -810,9 +869,43 @@ static const char *MetaDefToString(void *object)
 }
 
 //
+// MetaTypeInit
+//
+// Called once before any metatype operation is performed.
+//
+static void MetaTypeInit(void)
+{
+   // This is the ultimate parent class for all metatypes.
+   static metatype_t metaObjectMetaType =
+   {
+      { { NULL } },           // parent metaobject
+      METATYPE(metaobject_t), // name
+      sizeof(metaobject_t),   // size
+      false,                  // isinit
+      {                       // methods:
+         MetaAlloc,           //   alloc
+         MetaCopy,            //   copy
+         MetaObjectPtr,       //   objptr
+         MetaDefToString      //   toString
+      },
+      NULL                    // super class (none)
+   };
+
+   // one time only
+   if(!metaTypeRegistry.keyhash.isinit)
+   {
+      MetaInit(&metaTypeRegistry);
+
+      // Add metatype for generic metaobjects
+      MetaRegisterType(&metaObjectMetaType);
+   }
+}
+
+//
 // MetaRegisterType
 //
 // Registers a metatype, but only if that type isn't already registered.
+// The type must be externally initialized.
 //
 void MetaRegisterType(metatype_t *type)
 {
@@ -821,22 +914,7 @@ void MetaRegisterType(metatype_t *type)
       return;
 
    // init table the first time
-   if(!metaTypeRegistry.keyhash.isinit)
-      MetaInit(&metaTypeRegistry);
-
-   // set default methods if any are NULL
-
-   if(!type->alloc)
-      type->alloc = MetaAlloc;
-
-   if(!type->copy)
-      type->copy = MetaCopy;
-
-   if(!type->objptr)
-      type->objptr = MetaObjectPtr;
-
-   if(!type->toString)
-      type->toString = MetaDefToString;
+   MetaTypeInit();
 
    // sanity check: we do not allow multiple metatypes of the same name
    if(MetaGetObject(&metaTypeRegistry, type->name))
@@ -849,25 +927,62 @@ void MetaRegisterType(metatype_t *type)
 }
 
 //
+// MetaTypeInheritFrom
+//
+// Sets up inheritance for a metatype
+//
+void MetaTypeInheritFrom(metatype_t *parent, metatype_t *child)
+{
+   child->super = parent;
+
+   // inherit any non-overridden methods from the parent type
+
+   if(!child->methods.alloc)
+      child->methods.alloc = parent->methods.alloc;
+
+   if(!child->methods.copy)
+      child->methods.copy = parent->methods.copy;
+
+   if(!child->methods.objptr)
+      child->methods.objptr = parent->methods.objptr;
+
+   if(!child->methods.toString)
+      child->methods.toString = parent->methods.toString;
+}
+
+//
 // MetaRegisterTypeEx
 //
 // Registers a metatype as above, but takes the information to put into the
 // metatype structure as parameters.
 //
-void MetaRegisterTypeEx(metatype_t *type, const char *typeName, size_t typeSize,
-                        MetaAllocFn_t alloc, MetaCopyFn_t copy, 
-                        MetaObjPtrFn_t objptr, MetaToStrFn_t tostr)
+void MetaRegisterTypeEx(metatype_t *type, metatypename_t typeName, size_t typeSize,
+                        metatypename_t inheritsFrom, metatype_i *mInterface)
 {
+   metatype_t   *parentType;
+
    // early check for already-initialized metatype
    if(type->isinit)
       return;
 
-   type->name     = typeName;
-   type->size     = typeSize;
-   type->alloc    = alloc;
-   type->copy     = copy;
-   type->objptr   = objptr;
-   type->toString = tostr;
+   // init table the first time
+   MetaTypeInit();
+
+   // look for a parent metatype; default is metaobject_t
+   if(!inheritsFrom)
+      inheritsFrom = METATYPE(metaobject_t);
+
+   if(!(parentType = (metatype_t *)MetaGetObject(&metaTypeRegistry, inheritsFrom)))
+   {
+      I_Error("MetaRegisterTypeEx: invalid parent class %s for metatype %s\n",
+              inheritsFrom, typeName);
+   }
+
+   type->name    = typeName;
+   type->size    = typeSize;
+   if(mInterface)
+      type->methods = *mInterface;
+   MetaTypeInheritFrom(parentType, type);
 
    MetaRegisterType(type);
 }
@@ -891,11 +1006,11 @@ void MetaCopyTable(metatable_t *desttable, metatable_t *srctable)
       if((type = (metatype_t *)MetaGetObject(&metaTypeRegistry, srcobj->type)))
       {
          // create the new object
-         void *destobj         = type->alloc(type->size);
-         metaobject_t *newmeta = type->objptr(destobj);
+         void *destobj         = type->methods.alloc(type);
+         metaobject_t *newmeta = type->methods.objptr(type, destobj);
 
          // copy from the old object
-         type->copy(destobj, srcobj->object, type->size);
+         type->methods.copy(type, destobj, srcobj->object);
 
          // clear metaobject for safety
          memset(newmeta, 0, sizeof(metaobject_t));
@@ -919,10 +1034,7 @@ const char *MetaToString(metaobject_t *obj)
 
    // see if the object has a registered metatype
    if((type = (metatype_t *)MetaGetObject(&metaTypeRegistry, obj->type)))
-   {
-      metaobjlen = type->size; // needed by default method
-      ret = type->toString(obj->object);
-   }
+      ret = type->methods.toString(type, obj->object);
    else
       ret = "(unregistered object type)";
 
