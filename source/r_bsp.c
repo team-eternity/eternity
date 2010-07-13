@@ -2055,7 +2055,7 @@ static void R_Subsector(int num)
                  floorlightlevel,                // killough 3/16/98
                  seg.frontsec->floor_xoffs,       // killough 3/7/98
                  seg.frontsec->floor_yoffs,
-                 floorangle, seg.frontsec->f_slope) : NULL;
+                 floorangle, seg.frontsec->f_slope, NULL) : NULL;
 
    visible  = (!seg.frontsec->c_slope && seg.frontsec->ceilingheight > viewz)
            || (seg.frontsec->c_slope 
@@ -2080,7 +2080,7 @@ static void R_Subsector(int num)
                  ceilinglightlevel,              // killough 4/11/98
                  seg.frontsec->ceiling_xoffs,     // killough 3/7/98
                  seg.frontsec->ceiling_yoffs,
-                 ceilingangle, seg.frontsec->c_slope) : NULL;
+                 ceilingangle, seg.frontsec->c_slope, NULL) : NULL;
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

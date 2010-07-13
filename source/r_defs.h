@@ -690,6 +690,12 @@ typedef struct visplane
    rslope_t rslope;
 } visplane_t;
 
+
+typedef struct
+{
+   int          chaincount;
+   visplane_t   **chains;
+} planehash_t;
 #endif
 
 //----------------------------------------------------------------------------

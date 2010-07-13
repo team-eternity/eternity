@@ -57,26 +57,33 @@
 #include "p_user.h"
 #include "p_slopes.h"
 
-#define MAXVISPLANES 128    /* must be a power of 2 */
 
-static visplane_t *visplanes[MAXVISPLANES];   // killough
-static visplane_t *freetail;                  // killough
-static visplane_t **freehead = &freetail;     // killough
+#define MAINHASHCHAINS 128    /* must be a power of 2 */
+
+static visplane_t *freetail;                   // killough
+static visplane_t **freehead = &freetail;      // killough
 visplane_t *floorplane, *ceilingplane;
+
+
+// SoM: New visplane hash
+// This is the main hash object used by the normal scene.
+static visplane_t *mainchains[MAINHASHCHAINS];   // killough
+static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
+
 
 int num_visplanes;      // sf: count visplanes
 
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
+#define visplane_hash(picnum, lightlevel, height, chains) \
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & ((chains) - 1))
 
-#define visplane_hash(picnum,lightlevel,height) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & (MAXVISPLANES-1))
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
 #define MAXOPENINGS (MAX_SCREENWIDTH*MAX_SCREENHEIGHT)
-
 float openings[MAXOPENINGS], *lastopening;
+
 
 // Clip values are the solid pixel bounding the range.
 //  floorclip starts out SCREENHEIGHT
@@ -87,8 +94,8 @@ float openings[MAXOPENINGS], *lastopening;
 float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
 float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
 
-// spanstart holds the start of a plane span; initialized to 0 at start
 
+// spanstart holds the start of a plane span; initialized to 0 at start
 static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
 
 //
@@ -111,6 +118,8 @@ cb_slopespan_t slopespan;
 
 float slopevis; // SoM: used in slope lighting
 
+
+
 // BIG FLATS
 void R_Throw(void)
 {
@@ -128,6 +137,8 @@ void R_InitPlanes(void)
 {
 }
 
+
+
 //
 // R_SpanLight
 //
@@ -141,6 +152,8 @@ static int R_SpanLight(float dist)
    return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
 }
 
+
+
 // 
 // R_PlaneLight
 //
@@ -152,6 +165,8 @@ static void R_PlaneLight(void)
    // table is generated.
    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
 }
+
+
 
 //
 // R_doubleToUint32
@@ -424,6 +439,9 @@ static void R_SlopeLights(int len, double startmap, double endmap)
    }
 }
 
+
+
+
 //
 // R_MapSlope
 //
@@ -467,6 +485,9 @@ static void R_MapSlope(int y, int x1, int x2)
    slopefunc();
 }
 
+
+
+
 #define CompFloats(x, y) (fabs(x - y) < 0.001f)
 
 //
@@ -487,6 +508,9 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 }
 
 #undef CompFloats
+
+
+
 
 //
 // R_CalcSlope
@@ -512,7 +536,6 @@ static void R_CalcSlope(visplane_t *pl)
    xl = tex->width;
    yl = tex->height;
 
-#if 1
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
    rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
@@ -526,20 +549,6 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->N.x = rslope->P.x + yl * tcos;
    rslope->N.z = rslope->P.z + yl * tsin;
    rslope->N.y = P_GetZAtf(pl->pslope, (float)rslope->N.x, (float)rslope->N.z);
-#else
-   // TODO: rotation/offsets
-   rslope->P.x = x * tcos + y * tsin;
-   rslope->P.z = y * tcos - x * tsin;
-   rslope->P.y = P_GetZAtf(pl->pslope, rslope->P.x, rslope->P.z);
-
-   rslope->M.x = rslope->P.x - tex->width * tsin;
-   rslope->M.z = rslope->P.z + tex->width * tcos;
-   rslope->M.y = P_GetZAtf(pl->pslope, rslope->M.x, rslope->M.z);
-
-   rslope->N.x = rslope->P.x + tex->height * tcos;
-   rslope->N.z = rslope->P.z + tex->height * tsin;
-   rslope->N.y = P_GetZAtf(pl->pslope, rslope->N.x, rslope->N.z);
-#endif
 
    M_TranslateVec3(&rslope->P);
    M_TranslateVec3(&rslope->M);
@@ -576,6 +585,9 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
 }
 
+
+
+
 //
 // R_ClearPlanes
 //
@@ -600,8 +612,8 @@ void R_ClearPlanes(void)
       ceilingclip[i] = a;
    }
 
-   for(i = 0; i < MAXVISPLANES; ++i)    // new code -- killough
-      for(*freehead = visplanes[i], visplanes[i] = NULL; *freehead; )
+   for(i = 0; i < mainhash.chaincount; ++i)    // new code -- killough
+      for(*freehead = mainhash.chains[i], mainhash.chains[i] = NULL; *freehead; )
          freehead = &(*freehead)->next;
 
    lastopening = openings;
@@ -613,12 +625,13 @@ void R_ClearPlanes(void)
 }
 
 
+
 //
 // new_visplane
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(unsigned hash)
+static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 {
    visplane_t *check = freetail;
 
@@ -628,8 +641,8 @@ static visplane_t *new_visplane(unsigned hash)
       if(!(freetail = freetail->next))
          freehead = &freetail;
    
-   check->next = visplanes[hash];
-   visplanes[hash] = check;
+   check->next = table->chains[hash];
+   table->chains[hash] = check;
 
    if(check->max_width < (unsigned int)video.width)
    {
@@ -653,6 +666,9 @@ static visplane_t *new_visplane(unsigned hash)
    return check;
 }
 
+
+
+
 //
 // R_FindPlane
 //
@@ -661,14 +677,15 @@ static visplane_t *new_visplane(unsigned hash)
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
                         fixed_t xoffs, fixed_t yoffs, float angle,
-                        pslope_t *slope)
+                        pslope_t *slope, planehash_t *table)
 {
    visplane_t *check;
    unsigned int hash;                      // killough
    float tsin, tcos;
 
-   // SoM: TEST
-   //angle = 2 * 3.14159265f * ((gametic % 512) / 512.0f);
+   // SoM: table == NULL means use main table
+   if(!table)
+      table = &mainhash;
       
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
@@ -683,9 +700,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    }
 
    // New visplane algorithm uses hash table -- killough
-   hash = visplane_hash(picnum, lightlevel, height >> 16);
+   hash = visplane_hash(picnum, lightlevel, height >> 16, table->chaincount);
 
-   for(check = visplanes[hash]; check; check = check->next)  // killough
+   for(check = table->chains[hash]; check; check = check->next)  // killough
    {
       // FIXME: ok this has gotten out of hand now!
       // We need a more intelligent hash function or something.
@@ -705,7 +722,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
         return check;
    }
 
-   check = new_visplane(hash);         // killough
+   check = new_visplane(hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
@@ -763,13 +780,18 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    return check;
 }
 
+
+
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop, planehash_t *table)
 {
    int intrl, intrh, unionl, unionh, x;
    
+   if(!table)
+      table = &mainhash;
+      
    if(start < pl->minx)
       intrl   = pl->minx, unionl = start;
    else
@@ -787,8 +809,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->minx = unionl, pl->maxx = unionh;
    else
    {
-      unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height);
-      visplane_t *new_pl = new_visplane(hash);
+      unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
+      visplane_t *new_pl = new_visplane(hash, table);
       
       new_pl->height = pl->height;
       new_pl->picnum = pl->picnum;
@@ -832,6 +854,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    return pl;
 }
 
+
+
 //
 // R_MakeSpans
 //
@@ -852,6 +876,8 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
    while(b2 > b1 && t2 <= b2)
       spanstart[b2--] = x;
 }
+
+
 
 extern void R_DrawNewSkyColumn(void);
 
@@ -1212,6 +1238,9 @@ static void do_draw_plane(visplane_t *pl)
    }
 }
 
+
+
+
 //
 // R_DrawPlanes
 //
@@ -1222,9 +1251,9 @@ void R_DrawPlanes(void)
    visplane_t *pl;
    int i;
    
-   for(i = 0; i < MAXVISPLANES; ++i)
+   for(i = 0; i < mainhash.chaincount; ++i)
    {
-      for(pl = visplanes[i]; pl; pl = pl->next)
+      for(pl = mainhash.chains[i]; pl; pl = pl->next)
          do_draw_plane(pl);
    }
 }

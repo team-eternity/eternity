@@ -50,12 +50,13 @@ void R_DrawPlanes(void);
 visplane_t *R_FindPlane(fixed_t height, 
                         int picnum,
                         int lightlevel,
-                        fixed_t xoffs,    // killough 2/28/98: add x-y offsets
+                        fixed_t xoffs,       // killough 2/28/98: add x-y offsets
                         fixed_t yoffs,
-                        float angle,      // haleyjd 01/08/05: add angle
-                        pslope_t *slope); // SoM: slopes
+                        float angle,         // haleyjd 01/08/05: add angle
+                        pslope_t *slope,     // SoM: slopes
+                        planehash_t *table); // SoM: Table. Can be NULL
 
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop, planehash_t *table);
 
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 

@@ -615,10 +615,10 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x2 = stop;
 
    if(segclip.floorplane)
-      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
+      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop, NULL);
 
    if(segclip.ceilingplane)
-      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop, NULL);
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
       segclip.line->linedef->flags |= ML_MAPPED;

@@ -46,27 +46,35 @@ typedef enum
 {
    // -- Portal behavior flags --
    // Portal is completely disabled
-   PF_DISABLED           = 0x1,
+   PF_DISABLED           = 0x001,
    // Portal does not render
-   PF_NORENDER           = 0x2,
+   PF_NORENDER           = 0x002,
    // Portal does not allow passage
-   PF_NOPASS             = 0x4,
+   PF_NOPASS             = 0x004,
    // Portal does not allow recursive sound to pass through
-   PF_BLOCKSOUND         = 0x8,
+   PF_BLOCKSOUND         = 0x008,
    // Mask for the flags portion
-   PF_FLAGMASK           = 0xF,
+   PF_FLAGMASK           = 0x00F,
    
    // -- State flags --
    // These are only used per-surface
    
    // Portal can be rendered
-   PS_VISIBLE            = 0x10,
+   PS_VISIBLE            = 0x010,
    // Portal can be passed through
-   PS_PASSABLE           = 0x20,
+   PS_PASSABLE           = 0x020,
    // Portal allows recursive sound
-   PS_PASSSOUND          = 0x40,
+   PS_PASSSOUND          = 0x040,
+   // Portal has a blended texture overlay (alpha is default)
+   PS_OVERLAY            = 0x080,
+   // Overlay uses additive blending (must be used with PS_OVERLAY)
+   PS_ADDOVERLAY         = 0x100,
+   // Overlay uses a global texture set in the portal struct (must be used with PS_OVERLAY)
+   PS_GLOBALOVERLAY      = 0x200,
+   // Mask for overlay flags
+   PS_OVERLAYFLAGS       = 0x380,
    // Mask for state flags
-   PS_STATEMASK          = 0x70,
+   PS_STATEMASK          = 0x3F0,
 } portalflag_e;
 
 
