@@ -45,7 +45,12 @@ extern fixed_t origyslope[], distscale[];
 
 void R_InitPlanes(void);
 void R_ClearPlanes(void);
-void R_DrawPlanes(void);
+void R_DrawPlanes(planehash_t *table);
+
+// Planehash stuff
+planehash_t *R_NewPlaneHash(int chaincount);
+void R_ClearPlaneHash(planehash_t *table);
+
 
 visplane_t *R_FindPlane(fixed_t height, 
                         int picnum,
@@ -56,7 +61,7 @@ visplane_t *R_FindPlane(fixed_t height,
                         pslope_t *slope,     // SoM: slopes
                         planehash_t *table); // SoM: Table. Can be NULL
 
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop, planehash_t *table);
+visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 

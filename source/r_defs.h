@@ -688,10 +688,13 @@ typedef struct visplane
    // Slopes!
    pslope_t *pslope;
    rslope_t rslope;
+   
+   // Needed for overlays
+   struct planehash_s *table;
 } visplane_t;
 
 
-typedef struct
+typedef struct planehash_s
 {
    int          chaincount;
    visplane_t   **chains;

@@ -2032,6 +2032,7 @@ static void R_Subsector(int num)
    cam.y = view.y;
    cam.z = view.z;
 
+   // -- Floor plane and portal --
    visible  = (!seg.frontsec->f_slope && seg.frontsec->floorheight < viewz)
            || (seg.frontsec->f_slope 
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
@@ -2042,21 +2043,36 @@ static void R_Subsector(int num)
                && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
                ? seg.frontsec->f_portal : NULL;
 
-   // SoM: If there is an active portal, forget about the floorplane.
-   seg.floorplane = !seg.f_portal && 
-     (visible || // killough 3/7/98
-      (seg.frontsec->heightsec != -1 &&
-       sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
-     R_FindPlane(seg.frontsec->floorheight, 
-                 (seg.frontsec->floorpic == skyflatnum ||
-                  seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
-                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                 seg.frontsec->floorpic,
-                 floorlightlevel,                // killough 3/16/98
-                 seg.frontsec->floor_xoffs,       // killough 3/7/98
-                 seg.frontsec->floor_yoffs,
-                 floorangle, seg.frontsec->f_slope, NULL) : NULL;
+   // This gets a little convoluted if you try to do it on one inequality
+   if(seg.f_portal)
+   {
+      seg.floorplane = visible && seg.f_portal->flags & PS_OVERLAY ?
+        R_FindPlane(seg.frontsec->floorheight,
+                    seg.frontsec->floorpic,
+                    floorlightlevel,                // killough 3/16/98
+                    seg.frontsec->floor_xoffs,       // killough 3/7/98
+                    seg.frontsec->floor_yoffs,
+                    floorangle, seg.frontsec->f_slope, seg.f_portal->poverlay) : NULL;
+   }
+   else
+   {
+      // SoM: If there is an active portal, forget about the floorplane.
+      seg.floorplane = (visible || // killough 3/7/98
+         (seg.frontsec->heightsec != -1 &&
+          sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
+        R_FindPlane(seg.frontsec->floorheight, 
+                    (seg.frontsec->floorpic == skyflatnum ||
+                     seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
+                    seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                    seg.frontsec->floorpic,
+                    floorlightlevel,                // killough 3/16/98
+                    seg.frontsec->floor_xoffs,       // killough 3/7/98
+                    seg.frontsec->floor_yoffs,
+                    floorangle, seg.frontsec->f_slope, NULL) : NULL;
+   }
+   
 
+   // -- Ceiling plane and portal --
    visible  = (!seg.frontsec->c_slope && seg.frontsec->ceilingheight > viewz)
            || (seg.frontsec->c_slope 
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
@@ -2067,20 +2083,34 @@ static void R_Subsector(int num)
                && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
                ? seg.frontsec->c_portal : NULL;
 
-   seg.ceilingplane = !seg.c_portal &&
-     (visible ||
-      (seg.frontsec->intflags & SIF_SKY) ||
-     (seg.frontsec->heightsec != -1 &&
-      (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
-       sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
-     R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
-                 (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
-                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                 seg.frontsec->ceilingpic,
-                 ceilinglightlevel,              // killough 4/11/98
-                 seg.frontsec->ceiling_xoffs,     // killough 3/7/98
-                 seg.frontsec->ceiling_yoffs,
-                 ceilingangle, seg.frontsec->c_slope, NULL) : NULL;
+   // This gets a little convoluted if you try to do it on one inequality
+   if(seg.c_portal)
+   {
+      seg.ceilingplane = visible /*&& seg.c_portal->flags & PS_OVERLAY */ ?
+        R_FindPlane(seg.frontsec->ceilingheight,
+                    seg.frontsec->ceilingpic,
+                    ceilinglightlevel,                // killough 3/16/98
+                    seg.frontsec->ceiling_xoffs,       // killough 3/7/98
+                    seg.frontsec->ceiling_yoffs,
+                    ceilingangle, seg.frontsec->c_slope, seg.c_portal->poverlay) : NULL;
+   }
+   else
+   {
+      seg.ceilingplane = (visible ||
+         (seg.frontsec->intflags & SIF_SKY) ||
+        (seg.frontsec->heightsec != -1 &&
+         (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
+          sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
+        R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
+                    (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
+                    seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                    seg.frontsec->ceilingpic,
+                    ceilinglightlevel,              // killough 4/11/98
+                    seg.frontsec->ceiling_xoffs,     // killough 3/7/98
+                    seg.frontsec->ceiling_yoffs,
+                    ceilingangle, seg.frontsec->c_slope, NULL) : NULL;
+   }
+   
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

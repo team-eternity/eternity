@@ -42,7 +42,7 @@ extern float *mfloorclip, *mceilingclip;
 extern int r_vissprite_limit;
 
 // SoM 12/13/03: the stack for use with portals
-typedef struct maskedstack_s
+typedef struct maskedrange_s
 {
    int firstds, lastds;
    int firstsprite, lastsprite;
@@ -50,12 +50,22 @@ typedef struct maskedstack_s
    // SoM: Cardboard
    float floorclip[MAX_SCREENWIDTH];
    float ceilingclip[MAX_SCREENWIDTH];
-} maskedstack_t;
+   
+   // for unused head
+   struct maskedrange_s *next;
+} maskedrange_t;
+
+
+
+typedef struct poststack_s
+{
+   struct planehash_s  *overlay;
+   maskedrange_t       *masked;
+} poststack_t;
 
 void R_SortVisSpriteRange (int first, int last);
 void R_DrawSpriteInDSRange (vissprite_t* spr, int firstds, int lastds);
-void R_PushMasked();
-void R_PopMasked();
+void R_PushPost(boolean pushmasked, struct planehash_s *overlay);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);
@@ -68,7 +78,7 @@ void R_AddPSprites(void);
 void R_DrawSprites(void);
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
-void R_DrawMasked(void);
+void R_DrawPostBSP(void);
 
 void R_ClipVisSprite(vissprite_t *vis, int xl, int xh);
 

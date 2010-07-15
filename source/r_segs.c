@@ -246,7 +246,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKCPORTAL)
                R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
-            else
+            
+            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
             {
                segclip.ceilingplane->top[i]    = cliptop;
                segclip.ceilingplane->bottom[i] = line;
@@ -268,7 +269,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKFPORTAL)
                R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
-            else
+            
+            if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
             {
                segclip.floorplane->top[i]    = line;
                segclip.floorplane->bottom[i] = clipbot;
@@ -615,10 +617,10 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x2 = stop;
 
    if(segclip.floorplane)
-      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop, NULL);
+      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
 
    if(segclip.ceilingplane)
-      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop, NULL);
+      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
       segclip.line->linedef->flags |= ML_MAPPED;

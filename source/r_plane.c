@@ -129,6 +129,8 @@ void R_Throw(void)
 void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
 
+
+
 //
 // R_InitPlanes
 // Only at game startup.
@@ -587,6 +589,52 @@ static void R_CalcSlope(visplane_t *pl)
 
 
 
+//
+// R_NewPlaneHash
+//
+// Allocates and returns a new planehash_t object. The hash object is allocated
+// PU_LEVEL
+planehash_t *R_NewPlaneHash(int chaincount)
+{
+   planehash_t*  ret;
+   int           i;
+   
+   // Make sure chaincount is a power of 2
+   if((chaincount - 1) & chaincount)
+   {
+      int c = 2;
+      while(c < chaincount)
+         c <<= 1;
+      
+      chaincount = c;
+   }
+   
+   ret = Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL);
+   ret->chaincount = chaincount;
+   ret->chains = Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL);
+   
+   for(i = 0; i < chaincount; i++)
+      ret->chains[i] = NULL;
+      
+   return ret;
+}
+
+
+
+//
+// R_ClearPlaneHash
+//
+// Empties the chains of the given hash table and places the planes within 
+// in the free stack.
+void R_ClearPlaneHash(planehash_t *table)
+{
+   int    i;
+   
+   for(i = 0; i < table->chaincount; ++i)    // new code -- killough
+      for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
+         freehead = &(*freehead)->next;
+}
+
 
 //
 // R_ClearPlanes
@@ -612,9 +660,7 @@ void R_ClearPlanes(void)
       ceilingclip[i] = a;
    }
 
-   for(i = 0; i < mainhash.chaincount; ++i)    // new code -- killough
-      for(*freehead = mainhash.chains[i], mainhash.chains[i] = NULL; *freehead; )
-         freehead = &(*freehead)->next;
+   R_ClearPlaneHash(&mainhash);
 
    lastopening = openings;
 
@@ -643,6 +689,8 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    
    check->next = table->chains[hash];
    table->chains[hash] = check;
+   
+   check->table = table;
 
    if(check->max_width < (unsigned int)video.width)
    {
@@ -785,13 +833,12 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop, planehash_t *table)
+visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
-   if(!table)
-      table = &mainhash;
-      
+   planehash_t *table = pl->table;
+   
    if(start < pl->minx)
       intrl   = pl->minx, unionl = start;
    else
@@ -1244,16 +1291,20 @@ static void do_draw_plane(visplane_t *pl)
 //
 // R_DrawPlanes
 //
-// Called at the end of each frame.
+// Called after the BSP has been traversed and walls have rendered. This 
+// function is also now used to render portal overlays.
 //
-void R_DrawPlanes(void)
+void R_DrawPlanes(planehash_t *table)
 {
    visplane_t *pl;
    int i;
    
-   for(i = 0; i < mainhash.chaincount; ++i)
+   if(!table)
+      table = &mainhash;
+   
+   for(i = 0; i < table->chaincount; ++i)
    {
-      for(pl = mainhash.chains[i]; pl; pl = pl->next)
+      for(pl = table->chains[i]; pl; pl = pl->next)
          do_draw_plane(pl);
    }
 }

@@ -954,6 +954,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearClipSegs();
    R_ClearDrawSegs();
    R_ClearPlanes();
+   R_ClearPortals();
    R_ClearSprites();
 
    if(autodetect_hom)
@@ -980,16 +981,20 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    NetUpdate();
 
    R_SetMaskedSilhouette(NULL, NULL);
-   R_PushMasked();
+   
+   // Push the first element on the Post-BSP stack
+   R_PushPost(true, NULL);
+   
    // SoM 12/9/03: render the portals.
    R_RenderPortals();
 
-   R_DrawPlanes();
+   R_DrawPlanes(NULL);
    
    // Check for new console commands.
    NetUpdate();
 
-   R_DrawMasked();
+   // Draw Post-BSP elements such as sprites, masked textures, and portal overlays
+   R_DrawPostBSP();
    
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)

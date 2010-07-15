@@ -56,25 +56,28 @@ typedef enum
    // Mask for the flags portion
    PF_FLAGMASK           = 0x00F,
    
-   // -- State flags --
-   // These are only used per-surface
-   
-   // Portal can be rendered
-   PS_VISIBLE            = 0x010,
-   // Portal can be passed through
-   PS_PASSABLE           = 0x020,
-   // Portal allows recursive sound
-   PS_PASSSOUND          = 0x040,
+   // -- Overlay flags --
+   // Only used per-surface and indicate various overlay options for the portal
    // Portal has a blended texture overlay (alpha is default)
-   PS_OVERLAY            = 0x080,
+   PS_OVERLAY            = 0x010,
    // Overlay uses additive blending (must be used with PS_OVERLAY)
-   PS_ADDOVERLAY         = 0x100,
+   PS_ADDOVERLAY         = 0x020,
    // Overlay uses a global texture set in the portal struct (must be used with PS_OVERLAY)
-   PS_GLOBALOVERLAY      = 0x200,
+   PS_GLOBALOVERLAY      = 0x040,
    // Mask for overlay flags
-   PS_OVERLAYFLAGS       = 0x380,
+   PS_OVERLAYFLAGS       = 0x070,
+   
+   // -- State flags --
+   // These are only used per-surface and indicate the current state of the portal
+  
+   // Portal can be rendered
+   PS_VISIBLE            = 0x080,
+   // Portal can be passed through
+   PS_PASSABLE           = 0x100,
+   // Portal allows recursive sound
+   PS_PASSSOUND          = 0x200,
    // Mask for state flags
-   PS_STATEMASK          = 0x3F0,
+   PS_STATEMASK          = 0x380,
 } portalflag_e;
 
 
@@ -151,6 +154,10 @@ typedef struct portal_s
 
    // See: portalflag_e
    int    flags;
+   
+   // Planes that makeup a blended overlay
+   int    globaltex;
+   struct planehash_s *poverlay;
 
    struct portal_s *next;
 
@@ -203,6 +210,7 @@ typedef void (*R_ClipSegFunc)();
 
 extern R_ClipSegFunc segclipfuncs[];
 
+// SoM: TODO: Overlays go in here.
 typedef struct pwindow_s
 {
    portal_t *portal;
@@ -218,7 +226,12 @@ typedef struct pwindow_s
    R_WindowFunc func;
    R_ClipSegFunc clipfunc;
 
-   struct pwindow_s *next, *child;
+   // Next window in the main chain
+   struct pwindow_s *next;
+   
+   // Families of windows. Head is the main window, and child is the next
+   // child down the chain.
+   struct pwindow_s *head, *child;
 } pwindow_t;
 
 // SoM: Cardboard
@@ -240,6 +253,8 @@ typedef struct portalrender_s
    pwindow_t *w;
 
    void (*segClipFunc)();
+   
+   struct planehash_s   *overlay;
 } portalrender_t;
 
 extern portalrender_t  portalrender;
