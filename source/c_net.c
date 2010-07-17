@@ -216,7 +216,7 @@ void C_DealWithChar(unsigned char c, int source)
             Console.cmdtype = c_netcmd;
 
             // the first byte is the command num
-            netcmdnum = *(incomingmsg[source].buffer);
+            netcmdnum = *(QStrConstPtr(&incomingmsg[source]));
             
             if(netcmdnum >= NUMNETCMDS || netcmdnum <= 0)
                C_Printf(FC_ERROR"unknown netcmd: %i\n", netcmdnum);
@@ -225,7 +225,7 @@ void C_DealWithChar(unsigned char c, int source)
                // C_Printf("%s, %s", c_netcmds[netcmdnum].name,
                //          incomingmsg[source]+1);
                C_RunCommand(c_netcmds[netcmdnum],
-                            incomingmsg[source].buffer + 1);
+                            QStrConstPtr(&incomingmsg[source]) + 1);
             }
          }
          QStrClear(&incomingmsg[source]);

@@ -97,17 +97,19 @@ CONSOLE_COMMAND(alias, 0)
   
    if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(Console.argv[0].buffer);
+      C_RemoveAlias(&Console.argv[0]);
       return;
    }
    
    // find it or make a new one
+     
+   temp = QStrBufferAt(&Console.args, QStrLen(&Console.argv[0]));
    
-   temp = Console.args.buffer + QStrLen(&(Console.argv[0]));
+   // QSTR_FIXME: needs a routine
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(Console.argv[0].buffer, temp);
+   C_NewAlias(QStrConstPtr(&Console.argv[0]), temp);
 }
 
 // %opt for aliases
@@ -124,20 +126,22 @@ CONSOLE_COMMAND(cmdlist, 0)
 
    // SoM: This could be a little better
    const char *mask = NULL;
-   int  masklen = 0;
+   unsigned int masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
    // character will be used to make the loop below run only for one
    // letter
    if(Console.argc == 1)
    {
-      if(QStrLen(&(Console.argv[0])) == 1)
-         charnum = maxchar = QStrCharAt(&(Console.argv[0]), 0);
+      unsigned int len = QStrLen(&Console.argv[0]);
+
+      if(len == 1)
+         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
       else
       {
-         charnum = maxchar = QStrCharAt(&(Console.argv[0]), 0);
-         mask = Console.argv[0].buffer;
-         masklen = strlen(mask);
+         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
+         mask    = QStrConstPtr(&Console.argv[0]);
+         masklen = len;
       }
    }
    
@@ -178,14 +182,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(Console.args.buffer);
+   C_Puts(QStrConstPtr(&Console.args));
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-   C_BufferDelay(Console.cmdtype, Console.argc ? QStrAtoi(&(Console.argv[0])) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? QStrAtoi(&Console.argv[0]) : 1);
 }
 
 // flood the console with crap
@@ -208,7 +212,7 @@ CONSOLE_COMMAND(dumplog, 0)
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(Console.argv[0].buffer);
+      C_DumpMessages(&Console.argv[0]);
 }
 
 // haleyjd 09/07/03: true console logging commands
@@ -218,7 +222,7 @@ CONSOLE_COMMAND(openlog, 0)
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(Console.argv[0].buffer);
+      C_OpenConsoleLog(&Console.argv[0]);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -243,7 +247,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       return;
    }
 
-   name = Console.argv[0].buffer;
+   name = QStrConstPtr(&Console.argv[0]);
 
    // haleyjd 07/05/10: use hashing!
    current = C_GetCmdForName(name);

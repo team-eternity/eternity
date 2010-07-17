@@ -26,6 +26,7 @@
 #include "d_event.h"
         // for text colours:
 #include "v_video.h"
+#include "m_qstr.h"
 
 #define INPUTLENGTH 512
 #define LINELENGTH  128
@@ -45,9 +46,9 @@ void C_Popup(void);
 void C_InstaPopup(void);
 
 // haleyjd
-void C_OpenConsoleLog(const char *filename);
+void C_OpenConsoleLog(qstring_t *filename);
 void C_CloseConsoleLog(void);
-void C_DumpMessages(const char *filename);
+void C_DumpMessages(qstring_t *filename);
 
 // sf 9/99: made a #define
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)

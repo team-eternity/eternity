@@ -1177,6 +1177,11 @@ static void D_LoadDiskFilePWAD(void)
    }
 }
 
+//
+// D_metaGetLine
+//
+// Gets a single line of input from the metadata.txt resource.
+//
 static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
 {
    int i = *idx;

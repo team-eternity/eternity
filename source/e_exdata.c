@@ -1002,7 +1002,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
             continue;
          case '(':     // end of current token
          case ',':
-            return QStrBuffer(token);
+            return QStrConstPtr(token);
          default:      // everything else == part of value
             QStrPutc(token, c);
             continue;
@@ -1025,7 +1025,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    }
 
    // return final token, next call will return NULL
-   return QStrBuffer(token);
+   return QStrConstPtr(token);
 }
 
 //

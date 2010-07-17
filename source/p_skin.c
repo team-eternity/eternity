@@ -543,14 +543,14 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
       return;
    }
 
-   if(!QStrCmp(&(Console.argv[0]), "+"))
+   if(!QStrCmp(&Console.argv[0], "+"))
       skin = P_NextSkin(Console.cmdsrc);
-   else if(!QStrCmp(&(Console.argv[0]), "-"))
+   else if(!QStrCmp(&Console.argv[0], "-"))
       skin = P_PrevSkin(Console.cmdsrc);
-   else if(!(skin = P_SkinForName(Console.argv[0].buffer)))
+   else if(!(skin = P_SkinForName(QStrConstPtr(&Console.argv[0]))))
    {
       if(consoleplayer == Console.cmdsrc)
-         C_Printf("skin not found: '%s'\n", Console.argv[0].buffer);
+         C_Printf("skin not found: '%s'\n", QStrConstPtr(&Console.argv[0]));
       return;
    }
 

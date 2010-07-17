@@ -142,7 +142,7 @@ CONSOLE_COMMAND(animshot, 0)
          "usage: animshot <frames>\n");
       return;
    }
-   animscreenshot = QStrAtoi(&(Console.argv[0]));
+   animscreenshot = QStrAtoi(&Console.argv[0]);
    C_InstaPopup();    // turn off console
 }
 
@@ -248,13 +248,13 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(W_CheckNumForNameNSG(Console.argv[0].buffer, ns_demos) < 0)
+   if(W_CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), ns_demos) < 0)
    {
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
       return;
    }
    
-   G_DeferedPlayDemo(Console.argv[0].buffer);
+   G_DeferedPlayDemo(QStrConstPtr(&Console.argv[0]));
    singledemo = true;            // quit after one demo
 }
 
@@ -271,7 +271,7 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
       C_Printf("usage: timedemo demoname showmenu\n");
       return;
    }
-   G_TimeDemo(Console.argv[0].buffer, !!QStrAtoi(&(Console.argv[1])));
+   G_TimeDemo(QStrConstPtr(&Console.argv[0]), !!QStrAtoi(&Console.argv[1]));
 }
 
 // 'cool' demo
@@ -294,7 +294,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
       C_Printf(FC_ERROR"command not available in shareware games\n");
       return;
    }
-   D_AddNewFile(Console.argv[0].buffer);
+   D_AddNewFile(QStrConstPtr(&Console.argv[0]));
 }
 
 // list loaded wads
@@ -346,13 +346,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(!netgame && QStrLen(&(Console.argv[0])) > 4)
+   if(!netgame && QStrLen(&Console.argv[0]) > 4)
    {
       const char *extension;
-      extension = Console.argv[0].buffer + QStrLen(&(Console.argv[0])) - 4;
+      extension = QStrBufferAt(&Console.argv[0], QStrLen(&Console.argv[0]) - 4);
       if(!strcmp(extension, ".wad"))
       {
-         if(D_AddNewFile(Console.argv[0].buffer))
+         if(D_AddNewFile(QStrConstPtr(&Console.argv[0])))
          {
             G_DeferedInitNew(gameskill, firstlevel);
          }
@@ -361,14 +361,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    }
 
    // haleyjd 02/23/04: strict error checking
-   lumpnum = W_CheckNumForName(Console.argv[0].buffer);
+   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
 
    if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
-      G_DeferedInitNew(gameskill, Console.argv[0].buffer);
+      G_DeferedInitNew(gameskill, QStrConstPtr(&Console.argv[0]));
    }
    else
-      C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0].buffer);
+      C_Printf(FC_ERROR "%s not found or is not a valid map\n", QStrConstPtr(&Console.argv[0]));
 }
 
         // player name
@@ -382,11 +382,12 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
    
    playernum = Console.cmdsrc;
    
-   strncpy(players[playernum].name, Console.argv[0].buffer, 20);
+   QStrCNCopy(players[playernum].name, &Console.argv[0], 20);
+
    if(playernum == consoleplayer)
    {
       free(default_name);
-      default_name = QStrCDup(&(Console.argv[0]), PU_STATIC);
+      default_name = QStrCDup(&Console.argv[0], PU_STATIC);
    }
 }
 
@@ -609,7 +610,7 @@ void G_WeapPrefHandler(void)
    {
       int prefnum = 
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
-      G_SetWeapPref(prefnum, QStrAtoi(&(Console.argv[0])));
+      G_SetWeapPref(prefnum, QStrAtoi(&Console.argv[0]));
    }
 }
 

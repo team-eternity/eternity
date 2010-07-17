@@ -389,7 +389,7 @@ static void I_ParseGeom(const char *geom,
             QStrPutc(&qstr, *c);
          else
          {
-            int width = atoi(qstr.buffer);
+            int width = QStrAtoi(&qstr);
             if(width < 320 || width > MAX_SCREENWIDTH)
             {
                state = STATE_FLAGS;
@@ -408,7 +408,7 @@ static void I_ParseGeom(const char *geom,
             QStrPutc(&qstr, *c);
          else
          {
-            int height = atoi(qstr.buffer);
+            int height = QStrAtoi(&qstr);
             if(height < 200 || height > MAX_SCREENHEIGHT)
             {
                state = STATE_FLAGS;
@@ -457,7 +457,7 @@ static void I_ParseGeom(const char *geom,
    // handle termination of loop during STATE_HEIGHT (no flags)
    if(state == STATE_HEIGHT)
    {
-      int height = atoi(qstr.buffer);
+      int height = QStrAtoi(&qstr);
 
       if(height < 200 || height > MAX_SCREENHEIGHT)
          errorflag = true;

@@ -579,7 +579,7 @@ static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
    QStrLStrip(line, ' ');            // strip spaces at beginning
    QStrRStrip(line, ' ');            // strip spaces at end
    
-   if(!(len = QStrLen(line)))                // ignore totally empty lines
+   if(!(len = QStrLen(line)))        // ignore totally empty lines
       return 0;
 
    // detect comments at beginning
@@ -822,7 +822,7 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
          case IVT_STRNUM:
             {
                textvals_t *tv = (textvals_t *)current->extra;
-               int val = E_StrToNumLinear(tv->vals, tv->numvals, value.buffer);
+               int val = E_StrToNumLinear(tv->vals, tv->numvals, QStrConstPtr(&value));
 
                if(val >= tv->numvals)
                   val = tv->defaultval;
@@ -846,7 +846,7 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(value.buffer, flagset);
+               *(int *)current->variable = E_ParseFlags(QStrConstPtr(&value), flagset);
             }
             break;
          default:

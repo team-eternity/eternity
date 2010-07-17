@@ -262,7 +262,7 @@ void C_Ticker(void)
 // CONSOLE_FIXME: history needs to be more efficient. Use pointers 
 // instead of copying strings back and forth.
 //
-static void C_addToHistory(const char *s)
+static void C_addToHistory(qstring_t *s)
 {
    const char *t;
    const char *a_prompt;
@@ -276,16 +276,18 @@ static void C_addToHistory(const char *s)
    else
       a_prompt = inputprompt;
    
-   C_Printf("%s%s\n", a_prompt, s);
+   C_Printf("%s%s\n", a_prompt, QStrConstPtr(s));
    
-   t = s;                  // check for nothing typed
+   // QSTR_FIXME: QStrFindFirstNotOf?
+   t = QStrConstPtr(s);      // check for nothing typed
    while(*t == ' ') t++;   // or just spaces
    if(!*t)
       return;
    
    // add it to the history
    // 6/8/99 maximum linelength to prevent segfaults
-   strncpy(history[history_last], s, LINELENGTH);
+   // QSTR_FIXME: change history -> qstring_t
+   QStrCNCopy(history[history_last], s, LINELENGTH);
    history_last++;
    
    // scroll the history if neccesary
@@ -378,8 +380,8 @@ boolean C_Responder(event_t *ev)
       // tab-completion list depending on whether
       // shift is being held down
       action_console_tab = false;
-      QStrCpy(&inputtext, shiftdown ? C_NextTab(inputtext.buffer) :
-                C_PrevTab(inputtext.buffer));      
+      QStrQCopy(&inputtext, 
+                shiftdown ? C_NextTab(&inputtext) : C_PrevTab(&inputtext));
       C_updateInputPoint(); // reset scrolling
       return true;
     }
@@ -389,14 +391,14 @@ boolean C_Responder(event_t *ev)
    {
       action_console_enter = false;
 
-      C_addToHistory(inputtext.buffer); // add to history
+      C_addToHistory(&inputtext); // add to history
       
       if(!QStrCmp(&inputtext, "r0x0rz delux0rz"))
          Egg(); // shh!
       
       // run the command
       Console.cmdtype = c_typed;
-      C_RunTextCmd(inputtext.buffer);
+      C_RunTextCmd(QStrConstPtr(&inputtext));
       
       C_InitTab();            // reset tab completion
       
@@ -420,7 +422,7 @@ boolean C_Responder(event_t *ev)
          (history_current <= 0) ? 0 : history_current - 1;
       
       // read history from inputtext
-      QStrCpy(&inputtext, history[history_current]);
+      QStrCopy(&inputtext, history[history_current]);
       
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
@@ -437,7 +439,7 @@ boolean C_Responder(event_t *ev)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
-      QStrCpy(&inputtext, (history_current == history_last) ?
+      QStrCopy(&inputtext, (history_current == history_last) ?
                 "" : (char*)history[history_current]);
       
       C_InitTab();            // reset tab-completion
@@ -827,7 +829,7 @@ static void C_StripColorChars(const unsigned char *src,
 //
 // haleyjd 03/01/02: now you can dump the console to file :)
 //
-void C_DumpMessages(const char *filename)
+void C_DumpMessages(qstring_t *filename)
 {
    int i, len;
    FILE *outfile;
@@ -835,7 +837,7 @@ void C_DumpMessages(const char *filename)
 
    memset(tmpmessage, 0, LINELENGTH);
 
-   if(!(outfile = fopen(filename, "a+")))
+   if(!(outfile = fopen(QStrConstPtr(filename), "a+")))
    {
       C_Printf(FC_ERROR "Could not append console buffer to file %s\n", 
                filename);
@@ -863,18 +865,15 @@ void C_DumpMessages(const char *filename)
 //
 // haleyjd 09/07/03: true console logging
 //
-void C_OpenConsoleLog(const char *filename)
+void C_OpenConsoleLog(qstring_t *filename)
 {
    // don't do anything if a log is already open
    if(console_log)
       return;
 
    // open file in append mode
-   if(!(console_log = fopen(filename, "a+")))
-   {
-      C_Printf(FC_ERROR"Couldn't open file %s for console logging\n", 
-               filename);
-   }
+   if(!(console_log = fopen(QStrConstPtr(filename), "a+")))
+      C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename);
    else
       C_Printf("Opened file %s for console logging\n", filename);
 }

@@ -1001,17 +1001,10 @@ static const char *centermsg_color;
 void HU_CenterMessage(const char *s)
 {
    static qstring_t qstr;
-   static boolean first = true;  
    int st_height = GameModeInfo->StatusBar->height;
    hu_textwidget_t *tw = &centermessage_widget;
 
-   if(first)
-   {
-      QStrCreate(&qstr);
-      first = false;
-   }
-   else
-      QStrClear(&qstr);
+   QStrClearOrCreate(&qstr, 128);
 
    // haleyjd 02/28/06: colored center message
    if(centermsg_color)
@@ -1022,7 +1015,7 @@ void HU_CenterMessage(const char *s)
    
    QStrCat(&qstr, s);
   
-   tw->message = QStrBuffer(&qstr);
+   tw->message = QStrConstPtr(&qstr);
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;

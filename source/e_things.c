@@ -878,10 +878,7 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 {
    static qstring_t namebuffer;
 
-   if(!namebuffer.buffer)
-      QStrCreate(&namebuffer);
-   else
-      QStrClear(&namebuffer);
+   QStrClearOrCreate(&namebuffer, 64);
 
    QStrCat(&namebuffer, base);
    QStrPutc(&namebuffer, '.');

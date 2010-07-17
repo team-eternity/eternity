@@ -843,10 +843,7 @@ static const char *MetaDefToString(metatype_t *t, void *object)
    byte *data = (byte *)object;
    size_t bytestoprint = t->size;
 
-   if(!qstr.buffer)
-      QStrInitCreate(&qstr);
-   else
-      QStrClear(&qstr);
+   QStrClearOrCreate(&qstr, 128);
 
    while(bytestoprint)
    {
@@ -865,7 +862,7 @@ static const char *MetaDefToString(metatype_t *t, void *object)
       QStrPutc(&qstr, '\n');
    }
 
-   return qstr.buffer;
+   return QStrConstPtr(&qstr);
 }
 
 //
