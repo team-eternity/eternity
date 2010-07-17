@@ -119,7 +119,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       return;
    
    playernum = Console.cmdsrc;
-   colour = QStrAtoi(&(Console.argv[0])) % TRANSLATIONCOLOURS;
+   colour = QStrAtoi(&Console.argv[0]) % TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
@@ -153,7 +153,7 @@ CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
    if(!Console.argc)
       return;
 
-   startskill = gameskill = QStrAtoi(&(Console.argv[0]));
+   startskill = gameskill = QStrAtoi(&Console.argv[0]);
    if(Console.cmdsrc == consoleplayer)
       defaultskill = gameskill + 1;
 }
@@ -348,9 +348,9 @@ CONSOLE_COMMAND(puke, cf_notnet)
       return;
 
    for(i = 1; i < Console.argc; ++i)
-      args[i - 1] = QStrAtoi(&(Console.argv[i]));
+      args[i - 1] = QStrAtoi(&Console.argv[i]);
 
-   ACS_StartScript(QStrAtoi(&(Console.argv[0])), gamemap, args,
+   ACS_StartScript(QStrAtoi(&Console.argv[0]), gamemap, args,
                    players[Console.cmdsrc].mo, NULL, 0, NULL);
 }
 

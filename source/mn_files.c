@@ -614,7 +614,7 @@ CONSOLE_COMMAND(dir, 0)
    const char *wildcard;
    
    if(Console.argc)
-      wildcard = Console.argv[0].buffer;
+      wildcard = QStrConstPtr(&Console.argv[0]);
    else
       wildcard = "*.*";
    

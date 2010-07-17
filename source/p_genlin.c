@@ -2431,12 +2431,12 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
       return;
    }
 
-   spec = E_LineSpecForName(Console.argv[0].buffer);
+   spec = E_LineSpecForName(QStrConstPtr(&Console.argv[0]));
 
    numargs = Console.argc - 1;
 
    for(i = 0; i < numargs; ++i)
-      args[i] = QStrAtoi(&(Console.argv[i + 1]));
+      args[i] = QStrAtoi(&Console.argv[i + 1]);
 
    P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
                        SPAC_CROSS, true);

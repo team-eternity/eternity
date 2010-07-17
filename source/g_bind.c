@@ -885,11 +885,12 @@ CONSOLE_COMMAND(bind, 0)
 {
    if(Console.argc >= 2)
    {
-      G_BindKeyToAction(Console.argv[0].buffer, Console.argv[1].buffer);
+      G_BindKeyToAction(QStrConstPtr(&Console.argv[0]), 
+                        QStrConstPtr(&Console.argv[1]));
    }
    else if(Console.argc == 1)
    {
-      int key = G_KeyForName(Console.argv[0].buffer);
+      int key = G_KeyForName(QStrConstPtr(&Console.argv[0]));
 
       if(key < 0)
          C_Printf(FC_ERROR "no such key!\n");
@@ -949,7 +950,8 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding class
    if(Console.argc == 2)
    {
-      bclass = QStrAtoi(&(Console.argv[1]));
+      bclass = QStrAtoi(&Console.argv[1]);
+
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
          C_Printf(FC_ERROR "invalid action class %d\n", bclass);
@@ -957,7 +959,7 @@ CONSOLE_COMMAND(unbind, 0)
       }
    }
    
-   if((key = G_KeyForName(Console.argv[0].buffer)) != -1)
+   if((key = G_KeyForName(QStrConstPtr(&Console.argv[0]))) != -1)
    {
       if(bclass == -1)
       {

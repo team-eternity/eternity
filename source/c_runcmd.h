@@ -280,8 +280,8 @@ void C_RunCmdLineScripts(void);
 /**** tab completion ****/
 
 void C_InitTab(void);
-const char *C_NextTab(const char *key);
-const char *C_PrevTab(const char *key);
+qstring_t *C_NextTab(qstring_t *key);
+qstring_t *C_PrevTab(qstring_t *key);
 
 /**** aliases ****/
 
@@ -289,7 +289,7 @@ extern alias_t aliases; // haleyjd 04/14/03: changed to linked list
 extern char *cmdoptions;
 
 alias_t *C_NewAlias(const char *aliasname, const char *command);
-void C_RemoveAlias(const char *aliasname);
+void     C_RemoveAlias(qstring_t *aliasname);
 alias_t *C_GetAlias(const char *name);
 
 /**** command buffers ****/

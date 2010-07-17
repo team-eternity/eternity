@@ -184,6 +184,11 @@ waddir_t *W_AddManagedWad(const char *filename)
 {
    manageddir_t *newdir = NULL;
 
+   // Haha, yeah right, you wanker :P
+   // At least be smart enough to ju4r3z if nothing else.
+   if(GameModeInfo->flags & GIF_SHAREWARE)
+      return NULL;
+
    // create a new managed wad directory object
    if(!(newdir = W_addManagedDir(filename)))
       return NULL;
@@ -451,7 +456,7 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
    if(Console.argc < 1)
       return;
 
-   W_doMasterLevelsStart(Console.argv[0].buffer);
+   W_doMasterLevelsStart(QStrConstPtr(&Console.argv[0]));
 }
 
 //

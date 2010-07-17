@@ -106,7 +106,7 @@ static void WriteCenteredText(char *message)
    {
       if(*rover == '\n')
       {
-         buffer = QStrBuffer(pqstr);
+         buffer = QStrConstPtr(pqstr);
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
          V_FontWriteText(menu_font_normal, buffer, x, y);         
          QStrClear(pqstr); // clear buffer
@@ -119,7 +119,7 @@ static void WriteCenteredText(char *message)
    }
 
    // dont forget the last line.. prob. not \n terminated
-   buffer = QStrBuffer(pqstr);
+   buffer = QStrConstPtr(pqstr);
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
    V_FontWriteText(menu_font_normal, buffer, x, y);   
 }

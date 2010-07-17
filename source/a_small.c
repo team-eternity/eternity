@@ -986,7 +986,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
       return;
    }
 
-   vmNum = QStrAtoi(&(Console.argv[0]));
+   vmNum = QStrAtoi(&Console.argv[0]);
 
    switch(vmNum)
    {
@@ -1041,7 +1041,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
       return;
    }
 
-   vmNum = QStrAtoi(&(Console.argv[0]));
+   vmNum = QStrAtoi(&Console.argv[0]);
 
    switch(vmNum)
    {
@@ -1072,7 +1072,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    for(i = 2; i < Console.argc; i++)
    {
-      params[i-2] = (cell)(QStrAtoi(&(Console.argv[i])));
+      params[i-2] = (cell)(QStrAtoi(&Console.argv[i]));
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
@@ -1655,7 +1655,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    printstring(amx, cstr, params+3, (int)(params[0] / sizeof(cell)) - 2);
 
    // now, display the qstring appropriately
-   msg = QStrBuffer(&small_qstr);
+   msg = QStrConstPtr(&small_qstr);
 
    switch(destination)
    {

@@ -3018,9 +3018,31 @@ typedef struct speedset_s
    int fastSpeed;           // -fast speed
 } speedset_t;
 
+static const char *speedSetToString(metatype_t *t, void *obj)
+{
+   static char buf[128];
+   speedset_t *speedset = (speedset_t *)obj;
+   int normalSpeed, fastSpeed;
+
+   normalSpeed = speedset->normalSpeed;
+   fastSpeed   = speedset->fastSpeed;
+
+   if(normalSpeed >= FRACUNIT)
+      normalSpeed >>= FRACBITS;
+   if(fastSpeed >= FRACUNIT)
+      fastSpeed >>= FRACBITS;
+
+   psnprintf(buf, sizeof(buf), "type: %d, normal: %d, fast: %d",
+             speedset->mobjType, normalSpeed, fastSpeed);
+
+   return buf;
+}
+
+static metatype_t metaSpeedSetType;
+static metatype_i speedSetMethods = { NULL, NULL, NULL, speedSetToString };
+
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   static metatype_t metaSpeedSetType;
    metaobject_t *o;
    mobjinfo_t   *mi = &mobjinfo[thingtype];
 
@@ -3029,7 +3051,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
    {
       MetaRegisterTypeEx(&metaSpeedSetType, 
                          METATYPE(speedset_t), sizeof(speedset_t),
-                         NULL, NULL, NULL, NULL);
+                         METATYPE(metaobject_t), &speedSetMethods);
    }
 
    if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))
