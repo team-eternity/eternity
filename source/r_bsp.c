@@ -1292,16 +1292,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    seg.markflags = 0;
    
-   if(seg.c_portal && 
-      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-       seg.frontsec->c_portal != seg.backsec->c_portal))
-   {
-      seg.markflags |= SEG_MARKCPORTAL;
-      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
-   }
-   else
-      seg.c_window = NULL;
-
    if(seg.ceilingplane && 
       (mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
@@ -1313,6 +1303,17 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    {
       seg.markflags |= SEG_MARKCEILING;
    }
+   
+   if(seg.c_portal && 
+      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
+       seg.frontsec->c_portal != seg.backsec->c_portal ||
+       (seg.markflags & SEG_MARKCEILING && seg.floorplane->bflags & PS_OVERLAY)))
+   {
+      seg.markflags |= SEG_MARKCPORTAL;
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+   }
+   else
+      seg.c_window = NULL;
 
    if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
@@ -1329,16 +1330,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
-   if(seg.f_portal &&
-      (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-       seg.frontsec->f_portal != seg.backsec->f_portal))
-   {
-      seg.markflags |= SEG_MARKFPORTAL;
-      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
-   }
-   else
-      seg.f_window = NULL;
-
    if(seg.floorplane && 
       (mark || seg.clipsolid ||  
        seg.frontsec->floorheight != seg.backsec->floorheight ||
@@ -1351,6 +1342,17 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    {
       seg.markflags |= SEG_MARKFLOOR;
    }
+   
+   if(seg.f_portal &&
+      (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
+       seg.frontsec->f_portal != seg.backsec->f_portal ||
+       (seg.markflags & SEG_MARKFLOOR && seg.floorplane->bflags & PS_OVERLAY)))
+   {
+      seg.markflags |= SEG_MARKFPORTAL;
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+   }
+   else
+      seg.f_window = NULL;
 
    // SoM: some portal types should be rendered even if the player is above
    // or below the ceiling or floor plane.
@@ -2046,13 +2048,16 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.f_portal)
    {
-      seg.floorplane = visible && seg.f_portal->flags & PS_OVERLAY ?
+      seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->floorheight,
-                    seg.frontsec->floorpic,
+                    seg.frontsec->f_pflags & PS_USEGLOBALTEX ? 
+                    seg.f_portal->globaltex : seg.frontsec->floorpic,
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
-                    floorangle, seg.frontsec->f_slope, seg.f_portal->poverlay) : NULL;
+                    floorangle, seg.frontsec->f_slope, 
+                    seg.frontsec->f_pflags, 255,  // TODO: Opacity
+                    seg.f_portal->poverlay) : NULL;
    }
    else
    {
@@ -2068,7 +2073,7 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
-                    floorangle, seg.frontsec->f_slope, NULL) : NULL;
+                    floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
    }
    
 
@@ -2086,13 +2091,16 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.c_portal)
    {
-      seg.ceilingplane = visible /*&& seg.c_portal->flags & PS_OVERLAY */ ?
+      seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->ceilingheight,
-                    seg.frontsec->ceilingpic,
+                    seg.frontsec->c_pflags & PS_USEGLOBALTEX ? 
+                    seg.c_portal->globaltex : seg.frontsec->ceilingpic,
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->ceiling_xoffs,       // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
-                    ceilingangle, seg.frontsec->c_slope, seg.c_portal->poverlay) : NULL;
+                    ceilingangle, seg.frontsec->c_slope, 
+                    seg.frontsec->c_pflags, 127, // TODO: Opacity
+                    seg.c_portal->poverlay) : NULL;
    }
    else
    {
@@ -2108,7 +2116,7 @@ static void R_Subsector(int num)
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->ceiling_xoffs,     // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
-                    ceilingangle, seg.frontsec->c_slope, NULL) : NULL;
+                    ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
    
   

@@ -725,7 +725,8 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
                         fixed_t xoffs, fixed_t yoffs, float angle,
-                        pslope_t *slope, planehash_t *table)
+                        pslope_t *slope, int blendflags, byte opacity,
+                        planehash_t *table)
 {
    visplane_t *check;
    unsigned int hash;                      // killough
@@ -734,6 +735,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    // SoM: table == NULL means use main table
    if(!table)
       table = &mainhash;
+      
+   blendflags &= PS_OBLENDFLAGS;
       
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
@@ -765,6 +768,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          viewx == check->viewx && 
          viewy == check->viewy && 
          viewz == check->viewz &&
+         blendflags == check->bflags &&
+         opacity == check->opacity &&
          R_CompareSlopes(check->pslope, slope)
         )
         return check;
@@ -791,6 +796,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->heightf = M_FixedToFloat(height);
    check->xoffsf  = M_FixedToFloat(xoffs);
    check->yoffsf  = M_FixedToFloat(yoffs);
+   
+   check->bflags = blendflags;
+   check->opacity = opacity;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
    check->viewsin = (float) sin(view.angle + check->angle);
@@ -883,6 +891,9 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       new_pl->heightf = pl->heightf;
       new_pl->xoffsf = pl->xoffsf;
       new_pl->yoffsf = pl->yoffsf;
+      
+      new_pl->bflags = pl->bflags;
+      new_pl->opacity = pl->opacity;
 
       new_pl->pslope = pl->pslope;
       memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
@@ -1164,9 +1175,10 @@ static void do_draw_plane(visplane_t *pl)
    }
    else      // regular flat
    {  
-      texture_t *tex;
-      int stop, light;
-      boolean   lptex64 = false; // haleyjd 06/09/10
+      texture_t  *tex;
+      int        stop, light;
+      boolean    lptex64 = false; // haleyjd 06/09/10
+      int        stylenum;
 
       int picnum = texturetranslation[pl->picnum];
 
@@ -1188,8 +1200,29 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      flatfunc  = r_span_engine->DrawSpan[0][tex->flatsize];
-      slopefunc = r_span_engine->DrawSlope[0][tex->flatsize];
+      stylenum = pl->bflags & PS_ADDOVERLAY ? SPAN_STYLE_ADD : 
+                 pl->bflags & PS_OVERLAY    ? SPAN_STYLE_TL :
+                 SPAN_STYLE_NORMAL;
+                
+      flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
+      slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
+      
+      if(stylenum == SPAN_STYLE_TL)
+      {
+         int level = (pl->opacity >> 2) + 1;
+         
+         span.fg2rgb = Col2RGB8[level];
+         span.bg2rgb = Col2RGB8[64 - level];
+      }
+      else if(stylenum == SPAN_STYLE_ADD)
+      {
+         int level = (pl->opacity >> 2) + 1;
+         
+         span.fg2rgb = Col2RGB8_LessPrecision[level];
+         span.bg2rgb = Col2RGB8_LessPrecision[64];
+      }
+      else
+         span.fg2rgb = span.bg2rgb = NULL;
 
       // haleyjd: check for combination of low precision and texture size 64x64
       if(r_span_engine->haslp64 && !tex->flatsize)

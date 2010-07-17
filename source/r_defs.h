@@ -690,7 +690,12 @@ typedef struct visplane
    rslope_t rslope;
    
    // Needed for overlays
-   struct planehash_s *table;
+   // This is the table the visplane currently belongs to
+   struct planehash_s     *table;
+   // This is the blending flags from the portal surface (flags & PS_OVERLAYFLAGS)
+   int                    bflags; 
+   // Opacity of the overlay (255 - opaque, 0 - translucent)
+   byte                   opacity;
 } visplane_t;
 
 
