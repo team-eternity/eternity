@@ -346,8 +346,8 @@ void QStrSwap(qstring_t *str1, qstring_t *str2)
 //
 qstring_t *QStrLStrip(qstring_t *qstr, char c)
 {
-   unsigned int i = 0;
-   size_t len = strlen(qstr->buffer);
+   size_t i = 0;
+   size_t len = qstr->index;
 
    while(qstr->buffer[i] != '\0' && qstr->buffer[i] == c)
       ++i;
@@ -495,6 +495,17 @@ double QStrToDouble(qstring_t *str, char **endptr)
 char *QStrCDup(qstring_t *qstr, int tag)
 {
    return (char *)Z_Strdup(qstr->buffer, tag, NULL);
+}
+
+//
+// QStrCDupAuto
+//
+// Creates an automatic allocation (disposable) copy of the qstring's
+// contents.
+//
+char *QStrCDupAuto(qstring_t *qstr)
+{
+   return (char *)Z_Strdupa(qstr->buffer);
 }
 
 //=============================================================================

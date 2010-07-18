@@ -91,6 +91,7 @@ fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
 double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
+state_t      *E_ArgAsStateLabel(mobj_t *mo, int index);
 int           E_ArgAsStateNum(arglist_t *al, int index);
 int           E_ArgAsStateNumNI(arglist_t *al, int index);
 int           E_ArgAsStateNumG0(arglist_t *al, int index);

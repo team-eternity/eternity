@@ -324,10 +324,7 @@ void A_Jump(mobj_t *actor)
 {
    int     chance, choice;
    arglist_t *al = actor->state->args;
-   const char *arg;
-   char *end = NULL;
    state_t *state;
-   long num;
 
    // no args?
    if(!al || al->numargs < 2)
@@ -345,32 +342,9 @@ void A_Jump(mobj_t *actor)
    // increment by one to skip over the chance argument
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
-   // get the chosen argument
-   arg = E_ArgAsString(al, choice, "1");
-
-   // call strtol
-   num = strtol(arg, &end, 0);
-
-   // not a number?
-   if(end && *end != '\0')
-   {
-      if(!(state = E_GetStateForMobjInfo(actor->info, arg)))
-         return;
-   }
-   else
-   {
-      // calculate number to jump to
-      long idx = actor->state->index + num;
-
-      // check for validity
-      if(idx < 0 || idx >= NUMSTATES)
-         return;
-
-      state = states[idx];
-   }
-
-   // jump to it
-   P_SetMobjState(actor, state->index);
+   // if the state is found, jump to it.
+   if((state = E_ArgAsStateLabel(actor, choice)))
+      P_SetMobjState(actor, state->index);
 }
 
 //==============================================================================

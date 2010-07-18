@@ -3370,7 +3370,8 @@ void A_SetFlags(mobj_t *actor)
 
    flagfield = E_ArgAsInt(actor->state->args, 0, 0);
 
-   flags = E_ArgAsThingFlags(actor->state->args, 1);
+   if(!(flags = E_ArgAsThingFlags(actor->state->args, 1)))
+      return;
    
    switch(flagfield)
    {
@@ -3410,7 +3411,8 @@ void A_UnSetFlags(mobj_t *actor)
 
    flagfield = E_ArgAsInt(actor->state->args, 0, 0);
 
-   flags = E_ArgAsThingFlags(actor->state->args, 1);
+   if(!(flags = E_ArgAsThingFlags(actor->state->args, 1)))
+      return;
 
    switch(flagfield)
    {

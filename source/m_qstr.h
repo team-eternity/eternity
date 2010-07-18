@@ -110,6 +110,7 @@ qstring_t  *QStrLwr(qstring_t *qstr);
 size_t      QStrReplace(qstring_t *qstr, const char *filter, char repl);
 size_t      QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
 char       *QStrCDup(qstring_t *qstr, int tag);
+char       *QStrCDupAuto(qstring_t *qstr);
 int         QStrAtoi(qstring_t *qstr);
 double      QStrToDouble(qstring_t *str, char **endptr);
 const char *QStrChr(qstring_t *qstr, char c);
