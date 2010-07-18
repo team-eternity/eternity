@@ -129,7 +129,7 @@ void A_SpawnAbove(mobj_t *actor)
    mobj_t *mo;
 
    thingtype = E_ArgAsThingNum(actor->state->args, 0);
-   statenum  = E_ArgAsStateNumG0(actor->state->args, 1);
+   statenum  = E_ArgAsStateNumG0(actor->state->args, 1, actor);
    zamt      = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
@@ -2143,7 +2143,7 @@ void A_MissileAttack(mobj_t *actor)
    homing   = E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
    z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(actor->state->args,           3, 0);
-   statenum = E_ArgAsStateNumG0(actor->state->args,    4);
+   statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);
 
    if(hastarget)
    {
@@ -2220,7 +2220,7 @@ void A_MissileSpread(mobj_t *actor)
    num      = E_ArgAsInt(actor->state->args,           1, 0);
    z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(actor->state->args,           3, 0);
-   statenum = E_ArgAsStateNumG0(actor->state->args,    4);
+   statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);
 
    if(num < 2)
       return;
@@ -2797,7 +2797,7 @@ void A_HealthJump(mobj_t *mo)
    boolean branch  = false;   
    int statenum, checktype, checkhealth;
 
-   statenum    = E_ArgAsStateNumNI(mo->state->args, 0);
+   statenum    = E_ArgAsStateNumNI(mo->state->args, 0, mo);
    checktype   = E_ArgAsKwd(mo->state->args, 1, &cpckwds, 0);
    checkhealth = E_ArgAsInt(mo->state->args, 2, 0);
 
@@ -2862,7 +2862,7 @@ void A_CounterJump(mobj_t *mo)
    int statenum, checktype, value, cnum;
    int *counter;
 
-   statenum  = E_ArgAsStateNumNI(mo->state->args, 0);
+   statenum  = E_ArgAsStateNumNI(mo->state->args, 0, mo);
    checktype = E_ArgAsKwd(mo->state->args, 1, &cpckwds, 0);
    value     = E_ArgAsInt(mo->state->args, 2, 0);
    cnum      = E_ArgAsInt(mo->state->args, 3, 0);
@@ -2934,7 +2934,7 @@ void A_CounterSwitch(mobj_t *mo)
    int *counter;
 
    cnum       = E_ArgAsInt(mo->state->args,        0, 0);
-   startstate = E_ArgAsStateNumNI(mo->state->args, 1);
+   startstate = E_ArgAsStateNumNI(mo->state->args, 1, mo);
    numstates  = E_ArgAsInt(mo->state->args,        2, 0) - 1;
 
    // get counter
@@ -3199,7 +3199,7 @@ void A_TargetJump(mobj_t *mo)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
+   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
       return;
    
    // 1) must be valid
@@ -3237,7 +3237,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0)) < 0)
+      if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0, NULL)) < 0)
          return;
 
       P_SetPsprite(player, player->curpsprite, statenum);
@@ -3293,7 +3293,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
+      if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
          return;
       
       P_SetMobjState(mo, statenum);
@@ -3363,15 +3363,15 @@ void A_AlertMonsters(mobj_t *mo)
 // Extension: 
 //    args[0] == state DeHackEd number to transfer into
 //
-void A_CheckPlayerDone(mobj_t *mo)
+void A_CheckPlayerDone(mobj_t *actor)
 {
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(mo->state->args, 0)) < 0)
+   if((statenum = E_ArgAsStateNumNI(actor->state->args, 0, actor)) < 0)
       return;
 
-   if(!mo->player)
-      P_SetMobjState(mo, statenum);
+   if(!actor->player)
+      P_SetMobjState(actor, statenum);
 }
 
 //
@@ -3520,7 +3520,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
+   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0, NULL);
    checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(pspr->state->args, 2, 0);
    cnum      = E_ArgAsInt(pspr->state->args, 3, 0);
@@ -3617,7 +3617,7 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    pspr = &(player->psprites[player->curpsprite]);
 
    cnum       = E_ArgAsInt(pspr->state->args, 0, 0);
-   startstate = E_ArgAsStateNumNI(pspr->state->args, 1);
+   startstate = E_ArgAsStateNumNI(pspr->state->args, 1, NULL);
    numstates  = E_ArgAsInt(pspr->state->args, 2, 0) - 1;
    psprnum    = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);
 
@@ -3952,7 +3952,7 @@ void A_JumpIfNoAmmo(mobj_t *mo)
    {
       player_t *p     = mo->player;
       state_t  *s     = p->psprites[p->curpsprite].state;
-      int statenum    = E_ArgAsStateNumNI(s->args, 0);
+      int statenum    = E_ArgAsStateNumNI(s->args, 0, NULL);
       weaponinfo_t *w = P_GetReadyWeapon(p);
 
       // validate state
@@ -3999,7 +3999,7 @@ void A_CheckReloadEx(mobj_t *mo)
 
    pspr = &(player->psprites[player->curpsprite]);
 
-   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0);
+   statenum  = E_ArgAsStateNumNI(pspr->state->args, 0, NULL);
    checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(pspr->state->args, 2, 0);
    psprnum   = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);

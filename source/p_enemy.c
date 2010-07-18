@@ -3259,6 +3259,7 @@ static argkeywd_t scratchkwds =
 //              * 1 == use mo->damage
 //              * 2 == use counter specified in args[1]
 // * args[1] == counter number for mode 2
+// * args[2] == EDF sound name
 //
 void A_Scratch(mobj_t *mo)
 {
@@ -3297,6 +3298,13 @@ void A_Scratch(mobj_t *mo)
    {
       if(mo->state->misc2)
          S_StartSound(mo, mo->state->misc2);
+      else
+      {
+         // check to see if args[2] is a valid sound
+         sfxinfo_t *sfx = E_ArgAsSound(mo->state->args, 2);
+         if(sfx)
+            S_StartSfxInfo(mo, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
+      }
 
       P_DamageMobj(mo->target, mo, mo, damage, MOD_HIT);
    }
@@ -3637,7 +3645,7 @@ void A_GenRefire(mobj_t *actor)
    int statenum;
    int chance;
 
-   statenum = E_ArgAsStateNum(actor->state->args, 0);
+   statenum = E_ArgAsStateNum(actor->state->args, 0, actor);
    chance   = E_ArgAsInt(actor->state->args, 1, 0);
 
    A_FaceTarget(actor);

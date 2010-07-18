@@ -786,8 +786,8 @@ void A_BishopDoBlur(mobj_t *actor)
 void A_SpawnBlur(mobj_t *actor)
 {
    mobj_t *mo;
-   int walkState = E_ArgAsStateNum(actor->state->args, 0);
-   int atkState  = E_ArgAsStateNum(actor->state->args, 1);
+   int walkState = E_ArgAsStateNum(actor->state->args, 0, actor);
+   int atkState  = E_ArgAsStateNum(actor->state->args, 1, actor);
    int thingType = E_ArgAsThingNum(actor->state->args, 2);
    
    if(!--actor->counters[0])
@@ -892,7 +892,7 @@ void A_DragonFX2(mobj_t *actor)
 //
 void A_PainCounterBEQ(mobj_t *actor)
 {
-   int stateNum   = E_ArgAsStateNum(actor->state->args, 0);
+   int stateNum   = E_ArgAsStateNum(actor->state->args, 0, actor);
    int counterNum = E_ArgAsInt(actor->state->args, 1, 0);
    int *counter;
 
