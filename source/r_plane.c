@@ -1209,14 +1209,14 @@ static void do_draw_plane(visplane_t *pl)
       
       if(stylenum == SPAN_STYLE_TL)
       {
-         int level = (pl->opacity >> 2) + 1;
+         int level = (pl->opacity + 1) >> 2;
          
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
       else if(stylenum == SPAN_STYLE_ADD)
       {
-         int level = (pl->opacity >> 2) + 1;
+         int level = (pl->opacity + 1) >> 2;
          
          span.fg2rgb = Col2RGB8_LessPrecision[level];
          span.bg2rgb = Col2RGB8_LessPrecision[64];

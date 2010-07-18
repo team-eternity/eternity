@@ -2056,7 +2056,7 @@ static void R_Subsector(int num)
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
                     floorangle, seg.frontsec->f_slope, 
-                    seg.frontsec->f_pflags, 255,  // TODO: Opacity
+                    seg.frontsec->f_pflags, 128,  // TODO: Opacity
                     seg.f_portal->poverlay) : NULL;
    }
    else
@@ -2099,7 +2099,7 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_xoffs,       // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 
-                    seg.frontsec->c_pflags, 127, // TODO: Opacity
+                    seg.frontsec->c_pflags, 128, // TODO: Opacity
                     seg.c_portal->poverlay) : NULL;
    }
    else
