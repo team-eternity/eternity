@@ -361,6 +361,125 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
    return eval->value.i;
 }
 
+//=============================================================================
+//
+// State Evaluators
+//
+// haleyjd 07/17/10: With the advent of DECORATE state support, the need for
+// more featured evaluation of state arguments has developed. When functions
+// which traditionally took global state names do not find a state of the given
+// name, their behavior should be to subsequently look for a DECORATE state of
+// that name.
+//
+// For pointers implemented for DECORATE state compatibility, the evaluation 
+// order should be opposite - DECORATE state labels have priority over global
+// state names, and for some pointers, global state names are not allowed.
+//
+
+// static utilities
+
+typedef struct jumpinfo_s
+{
+   mobjinfo_t *mi;  // mobjinfo the jump is relative to
+   char *statename; // state name or label
+} jumpinfo_t;
+
+//
+// E_getJumpInfo
+//
+// Returns the target mobjtype and jump label/state name, given an initial
+// type and label text. Assuming that the text does not contain a :: operator,
+// the information returned will be the same information passed in. Otherwise,
+// both the mobjinfo and statename may be redirected.
+//
+static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
+{
+   jumpinfo_t ji;
+   char *temparg = Z_Strdupa(arg);
+   char *colon   = strchr(temparg, ':');
+
+   char *statename = NULL, *type = NULL;
+
+   // if the statename does not contain a colon, there is no potential for 
+   // redirection.
+   if(!colon)
+   {
+      ji.mi = mi;
+      ji.statename = temparg;
+      return ji;
+   }
+
+   // split temparg at the :: operator
+   E_SplitTypeAndState(temparg, &type, &statename);
+
+   // if both are not valid, we can't do this sort of operation
+   if(!(type && statename))
+   {
+      ji.mi = mi;
+      ji.statename = temparg;
+      return ji;
+   }
+
+   // Check for super::, which is an explicit reference to the parent type;
+   // Otherwise, treat the left side as a thingtype EDF class name.
+   if(!strcasecmp(type, "super") && mi->parent)
+      ji.mi = mi->parent;
+   else
+   {
+      int thingtype = E_ThingNumForName(type);
+      
+      // non-existent thingtype is an error, no jump will happen
+      if(thingtype == NUMMOBJTYPES)
+      {
+         ji.mi = mi;
+         ji.statename = "";
+         return ji;
+      }
+      else
+         ji.mi = &mobjinfo[thingtype];
+   }
+
+   ji.statename = statename;
+
+   return ji;
+}
+
+//
+// E_ArgAsStateLabel
+//
+// This evaluator only allows DECORATE state labels or numbers, and will not 
+// make reference to global states. Because evaluation of this type of argument
+// is relative to the mobjinfo, this evaluation is never cached.
+//
+state_t *E_ArgAsStateLabel(mobj_t *mo, int index)
+{
+   const char *arg;
+   char       *end   = NULL;
+   state_t    *state = mo->state;
+   arglist_t  *al    = state->args;
+   long        num;
+
+   if(!al || index >= al->numargs)
+      return NULL;
+
+   arg = al->args[index];
+
+   num = strtol(arg, &end, 0);
+
+   // if not a number, this is a state label
+   if(end && *end != '\0')
+   {
+      jumpinfo_t ji = E_getJumpInfo(mo->info, arg);
+
+      return E_GetStateForMobjInfo(ji.mi, ji.statename);
+   }
+   else
+   {
+      long idx = state->index + num;
+
+      return (idx >= 0 && idx < NUMSTATES) ? states[idx] : NULL;
+   }
+}
 
 //
 // E_ArgAsStateNum

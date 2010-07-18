@@ -70,6 +70,7 @@ int E_SafeThingName(const char *name);      //   fallback version
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);
 state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
 
+void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
 

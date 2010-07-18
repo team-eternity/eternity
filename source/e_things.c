@@ -1097,14 +1097,14 @@ boolean E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 }
 
 //
-// E_splitTypeAndState
+// E_SplitTypeAndState
 //
 // haleyjd 06/22/10: Takes a single string containing a :: operator and returns
 // the tokens on either side of it. The string passed in src should be mutable.
 //
 // The pointers will not be modified if an error occurs.
 //
-static void E_splitTypeAndState(char *src, char **type, char **state)
+void E_SplitTypeAndState(char *src, char **type, char **state)
 {
    char *colon1, *colon2;
 
@@ -1145,7 +1145,7 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
       {
          char *typestr = NULL;
 
-         E_splitTypeAndState(dso->gotos[i].label, &typestr, &statename);
+         E_SplitTypeAndState(dso->gotos[i].label, &typestr, &statename);
 
          if(!(typestr && statename))
          {
