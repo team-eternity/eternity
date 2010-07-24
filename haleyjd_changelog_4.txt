@@ -277,7 +277,7 @@ statement in it. Added support for experimental code files to the Visual C++
 SoM fixed a bug in the experimental flat code that caused 0-length lumps such
 as F1_START to be treated as 64x64 flats. The menu would crash quite nicely if
 you tried to select such an item as a menu background, since my previous safety
-checks were removed or accidentally cirumvented in experimental branch.
+checks were removed or accidentally circumvented in experimental branch.
 
 --------------------------------------------------------------------------------
 05/08/10
@@ -670,12 +670,12 @@ but not the doll, and the doll is then pushed by the force of the explosion
 into a health-imbuing item on the very next gametic, the player's weapon
 changing logic will malfunction.
 
-The weapon change starts on the tic the voodoo doll died on, and the player's
-weapon is set to state S_NULL as usual. However it takes several frames for the
-player's weapon to finish lowering. The voodoo doll picking up health during
-this time causes the player's HP to be replenished. The next call to A_Lower
-sees this and assumes, incorrectly, that the player's current weapon change must
-have been caused by explicit player input.
+The weapon change starts on the tic the voodoo doll was injured on, and the 
+player's weapon is set to state S_NULL as usual. However it takes several 
+frames for the player's weapon to finish lowering. The voodoo doll picking up
+health during this time causes the player's HP to be replenished. The next call
+to A_Lower sees this and assumes, incorrectly, that the player's current weapon
+change must have been caused by explicit player input.
 
 However, because it was not caused by input, the player_t::pendingweapon value
 is still set to wp_nochange. This is a special-purpose ordinal which is greater

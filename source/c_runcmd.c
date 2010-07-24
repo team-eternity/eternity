@@ -394,9 +394,12 @@ static const char *C_QuotedArgvToArgs(void)
    return QStrConstPtr(&returnbuf);
 }
 
-// see if the command needs to be sent to other computers
+//
+// C_Sync
+//
+// See if the command needs to be sent to other computers
 // to maintain sync and do so if neccesary
-
+//
 static int C_Sync(command_t *command)
 {
    if(command->flags & cf_netvar)
@@ -413,8 +416,11 @@ static int C_Sync(command_t *command)
    return false;
 }
 
-// execute a compound command (with or without ;'s)
-
+//
+// C_RunTextCmd
+//
+// Execute a compound command (with or without ;'s)
+//
 void C_RunTextCmd(const char *command)
 {
    boolean quotemark = false;  // for " quote marks
@@ -456,13 +462,16 @@ void C_RunTextCmd(const char *command)
    C_RunIndivTextCmd(command);
 }
 
-// get the literal value of a variable (ie. "1" not "on")
-
+//
+// C_VariableValue
+//
+// Get the literal value of a variable (ie. "1" not "on")
+//
 const char *C_VariableValue(variable_t *variable)
 {
-   static char value[1024]; // FIXME: unacceptable static limit
+   static qstring_t value;
    
-   memset(value, 0, 1024);
+   QStrClearOrCreate(&value, 1024);
    
    if(!variable)
       return "";
@@ -470,46 +479,49 @@ const char *C_VariableValue(variable_t *variable)
    switch(variable->type)
    {
    case vt_int:
-      psnprintf(value, sizeof(value), "%i", *(int*)variable->variable);
+      QStrPrintf(&value, 0, "%d", *(int *)variable->variable);
       break;
 
    case vt_toggle:
       // haleyjd 07/05/10
-      psnprintf(value, sizeof(value), "%i", (int)(*(boolean *)variable->variable));
+      QStrPrintf(&value, 0, "%d", (int)(*(boolean *)variable->variable));
       break;
       
    case vt_string:
       // haleyjd 01/24/03: added null check from prboom
       if(*(char **)variable->variable)
-         psnprintf(value, sizeof(value), "%s", *(char**)variable->variable);
+         QStrCopy(&value, *(char **)variable->variable);
       else
          return "null";
       break;
 
    case vt_chararray:
       // haleyjd 03/13/06: static string support
-      psnprintf(value, sizeof(value), "%s", (char *)variable->variable);
+      QStrCopy(&value, (const char *)variable->variable);
       break;
 
    case vt_float:
       // haleyjd 04/21/10: implemented vt_float
-      psnprintf(value, sizeof(value), "%+.5f", *(double *)variable->variable);
+      QStrPrintf(&value, 0, "%+.5f", *(double *)variable->variable);
       break;
       
    default:
       I_Error("C_VariableValue: unknown variable type %d\n", variable->type);
    }
    
-   return value;
+   return QStrConstPtr(&value);
 }
 
-// get the string value (ie. "on" not "1")
-
+//
+// C_VariableStringValue
+//
+// Get the string value (ie. "on" not "1")
+//
 const char *C_VariableStringValue(variable_t *variable)
 {
-   static char value[1024]; // FIXME: unacceptable static limit
+   static qstring_t value;
    
-   memset(value, 0, 1024);
+   QStrClearOrCreate(&value, 1024);
    
    if(!variable) 
       return "";
@@ -535,15 +547,15 @@ const char *C_VariableStringValue(variable_t *variable)
       if(valStrIndex < 0 || valStrIndex > variable->max - variable->min)
          return "";
       else
-         strncpy(value, variable->defines[valStrIndex], 1024);
+         QStrCopy(&value, variable->defines[valStrIndex]);
    }
    else
    {
       // print literal value
-      strncpy(value, C_VariableValue(variable), 1024);
+      QStrCopy(&value, C_VariableValue(variable));
    }
    
-   return value;
+   return QStrConstPtr(&value);
 }
 
 
