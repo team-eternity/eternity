@@ -43,6 +43,8 @@ typedef struct qstring_s
    size_t  size;
 } qstring_t;
 
+#define qstring_npos ((size_t) -1)
+
 //
 // Basic Property Getters
 //
@@ -115,6 +117,8 @@ int         QStrAtoi(qstring_t *qstr);
 double      QStrToDouble(qstring_t *str, char **endptr);
 const char *QStrChr(qstring_t *qstr, char c);
 const char *QStrRChr(qstring_t *qstr, char c);
+size_t      QStrFindFirstOfChar(qstring_t *qstr, char c);
+size_t      QStrFindFirstNotOfChar(qstring_t *qstr, char c);
 qstring_t  *QStrLStrip(qstring_t *qstr, char c);
 qstring_t  *QStrRStrip(qstring_t *qstr, char c);
 qstring_t  *QStrMakeQuoted(qstring_t *s);

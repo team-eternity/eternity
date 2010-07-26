@@ -433,7 +433,7 @@ int QStrNCaseCmp(qstring_t *qstr, const char *str, size_t maxcount)
 //
 // QStrChr
 //
-// Calls strchr on the qstring ("find first of").
+// Calls strchr on the qstring ("find first of", C-style).
 //
 const char *QStrChr(qstring_t *qstr, char c)
 {
@@ -443,11 +443,59 @@ const char *QStrChr(qstring_t *qstr, char c)
 //
 // QStrRChr
 //
-// Calls strrchr on the qstring ("find last of")
+// Calls strrchr on the qstring ("find last of", C-style)
 //
 const char *QStrRChr(qstring_t *qstr, char c)
 {
    return strrchr(qstr->buffer, c);
+}
+
+//
+// QStrFindFirstOfChar
+//
+// Finds the first occurance of a character in the qstring and returns its 
+// position. Returns qstring_npos if not found.
+//
+size_t QStrFindFirstOfChar(qstring_t *qstr, char c)
+{
+   const char *rover = qstr->buffer;
+   boolean found = false;
+
+   while(*rover)
+   {
+      if(*rover == c)
+      {
+         found = true;
+         break;
+      }
+      ++rover;
+   }
+
+   return found ? rover - qstr->buffer : qstring_npos;
+}
+
+//
+// QStrFindFirstNotOfChar
+//
+// Finds the first occurance of a character in the qstring which does not
+// match the provided character. Returns qstring_npos if not found.
+//
+size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
+{
+   const char *rover = qstr->buffer;
+   boolean found = false;
+
+   while(*rover)
+   {
+      if(*rover != c)
+      {
+         found = true;
+         break;
+      }
+      ++rover;
+   }
+
+   return found ? rover - qstr->buffer : qstring_npos;
 }
 
 //=============================================================================

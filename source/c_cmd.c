@@ -70,7 +70,7 @@ CONSOLE_CONST(ver_name, vername_hack);
 CONSOLE_COMMAND(alias, 0)
 {
    alias_t *alias;
-   char *temp;
+   const char *temp;
 
    // haleyjd 04/14/03: rewritten
    
@@ -102,7 +102,7 @@ CONSOLE_COMMAND(alias, 0)
    }
    
    // find it or make a new one
-     
+   
    temp = QStrBufferAt(&Console.args, QStrLen(&Console.argv[0]));
    
    // QSTR_FIXME: needs a routine

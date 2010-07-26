@@ -320,6 +320,26 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       // on the same side as the polyobj origin. Why? People like to build
       // polyobject doors flush with their door tracks. This breaks using the
       // usual assumptions.
+#if 1
+      if(dist_v1 <= DS_EPSILON)
+      {
+         if(dist_v2 <= DS_EPSILON)
+         {
+            // both vertices are within epsilon distance; classify the seg
+            // with respect to the polyobject center point
+            side_v1 = side_v2 = R_PointOnSide(dseg->polyobj->centerPt.x,
+                                              dseg->polyobj->centerPt.y, 
+                                              bsp);
+         }
+         else
+            side_v1 = side_v2; // v1 is very close; classify as v2 side
+      }
+      else if(dist_v2 <= DS_EPSILON)
+      {         
+         side_v2 = side_v1; // v2 is very close; classify as v1 side
+      }
+#else
+      // DYNASEG_FIXME: eliminate if above tests out
       if(dist_v1 <= DS_EPSILON && dist_v2 <= DS_EPSILON)
       {
          // test polyobj origin against node line
@@ -327,9 +347,11 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
                                  dseg->polyobj->centerPt.y,
                                  bsp);
       }
-      else if(side_v1 != side_v2)
+      else
+#endif
+      if(side_v1 != side_v2)
       {
-         // if the partition line crosses this seg, we must split it.
+         // the partition line crosses this seg, so we must split it.
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 

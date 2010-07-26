@@ -90,7 +90,7 @@ static void C_initCmdTokens(void)
       for(i = 0; i < MAXTOKENS; ++i)
       {
          QStrCreateSize(&cmdtokens[i], 128);      // local tokens
-         QStrCreateSize(&(Console.argv[i]), 128); // console argvs
+         QStrCreateSize(&Console.argv[i], 128); // console argvs
       }
 
       QStrCreateSize(&Console.args, 1024); // congealed args
@@ -870,16 +870,31 @@ static void C_SetVariable(command_t *command)
       command->handler();
 }
 
-////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Tab Completion
 //
 
 static qstring_t origkey;
 static boolean gotkey;
-static command_t *tabs[128];
+static command_t **tabs;
+static int numtabsalloc; // haleyjd 07/25/10
 static int numtabs = 0;
 static int thistab = -1;
+
+//
+// CheckTabs
+//
+// haleyjd 07/25/10: Removed dangerous unchecked limit on tab completion.
+//
+static void CheckTabs(void)
+{
+   if(numtabs >= numtabsalloc)
+   {
+      numtabsalloc = numtabsalloc ? 2 * numtabsalloc : 128;
+      tabs = realloc(tabs, numtabsalloc * sizeof(command_t *));
+   }
+}
 
 //
 // GetTabs
@@ -890,23 +905,26 @@ static int thistab = -1;
 static void GetTabs(qstring_t *qkey)
 {
    int i;
-   int keylen;
-   const char *key = QStrConstPtr(qkey);
+   size_t pos, keylen;
    
    numtabs = 0;
-   while(*key == ' ') // QSTR_FIXME: Needs QStrFindFirstNotOf
-      key++;
 
    if(!origkey.buffer)
-      QStrCreateSize(&origkey, 100);
-   
-   QStrCopy(&origkey, key);
-   gotkey = true;
-   
-   if(!*key)
+      QStrCreateSize(&origkey, 128);
+
+   // remember input
+   QStrQCopy(&origkey, qkey);
+
+   // find the first non-space character; if none, we can't do this
+   if((pos = QStrFindFirstNotOfChar(qkey, ' ')) == qstring_npos)
       return;
    
-   keylen = strlen(key);
+   // save the input from the first non-space character, and lowercase it
+   QStrLwr(QStrCopy(&origkey, QStrBufferAt(qkey, pos)));
+
+   gotkey = true;
+      
+   keylen = QStrLen(&origkey);
 
    // check each hash chain in turn
    
@@ -918,11 +936,10 @@ static void GetTabs(qstring_t *qkey)
       for(; browser; browser = browser->next)
       {
          if(!(browser->flags & cf_hidden) && // ignore hidden ones
-            !strncmp(browser->name, key, keylen))
+            !QStrNCmp(&origkey, browser->name, keylen))
          {
             // found a new tab
-
-            // CONSOLE_FIXME: overflowable array!
+            CheckTabs();
             tabs[numtabs] = browser;
             numtabs++;
          }
@@ -930,8 +947,11 @@ static void GetTabs(qstring_t *qkey)
    }
 }
 
-// reset the tab list 
-
+//
+// C_InitTab
+//
+// Reset the tab list 
+//
 void C_InitTab(void)
 {
    numtabs = 0;
@@ -942,18 +962,20 @@ void C_InitTab(void)
    thistab = -1;
 }
 
-// called when tab pressed. get the next tab
-// from the list
-
+//
+// C_NextTab
+//
+// Called when tab pressed. Get the next tab from the list.
+//
 qstring_t *C_NextTab(qstring_t *key)
 {
    static qstring_t returnstr;
    qstring_t *ret = NULL;
-
-   QStrClearOrCreate(&returnstr, 100);
+ 
+   QStrClearOrCreate(&returnstr, 128);
    
    // get tabs if not done already
-   if(!gotkey)
+    if(!gotkey)
       GetTabs(key);
    
    // select next tab
@@ -974,15 +996,17 @@ qstring_t *C_NextTab(qstring_t *key)
    return ret;
 }
 
-// called when shift-tab pressed. get the
-// previous tab from the lift
-
+//
+// C_PrevTab
+//
+// Called when shift-tab pressed. Get the previous tab from the list.
+//
 qstring_t *C_PrevTab(qstring_t *key)
 {
    static qstring_t returnstr;
    qstring_t *ret = NULL;
 
-   QStrClearOrCreate(&returnstr, 100);
+   QStrClearOrCreate(&returnstr, 128);
    
    // get tabs if neccesary
    if(!gotkey)
