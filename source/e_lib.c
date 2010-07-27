@@ -191,7 +191,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
          lump->li_namespace == ns_global &&   // is in global namespace
          lump->source == inclump->source)     // is from same source
       {
-         return lump->index;
+         return i; // haleyjd 07/26/10: i, not lump->index!!!
       }
    }
 
