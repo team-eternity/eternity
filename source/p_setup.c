@@ -2359,6 +2359,10 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
 {
    int lumpnum;
 
+   // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
+   // this routine.
+   gamestate = GS_LOADING;
+
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
    
@@ -2510,6 +2514,9 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    if(mapformat == LEVEL_FORMAT_HEXEN)
       ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
+
+   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
+   gamestate = GS_LEVEL;
 }
 
 //

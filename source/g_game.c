@@ -648,7 +648,8 @@ static void G_DoLoadLevel(void)
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
       basetic = gametic;
 
-   gamestate = GS_LEVEL;
+   // haleyjd 07/28/10: Waaaay too early for this.
+   //gamestate = GS_LEVEL;
 
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
