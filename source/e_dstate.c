@@ -271,6 +271,7 @@ typedef struct pstate_s
    int linenum;            // line number (relative to start of state block)
    boolean needline;       // if true, feed a line from the input
    boolean principals;     // parsing for principals only
+   boolean error;          // if true, an error has occurred.
 
    int tokentype;    // current token type, once decided upon
    int tokenerror;   // current token error code
@@ -719,12 +720,14 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
    if(ps->tokenerror)
       tokenname = ds_token_errors[ps->tokenerror];
 
-   E_EDFLoggedErr(3, "Error on line %d of DECORATE state block:\n"
-                     "\t\t\tExpected %s %s but found %s %s with value '%s'\n",
-                     ps->linenum, 
-                     hasvowel(expected)  ? "an" : "a", expected, 
-                     hasvowel(tokenname) ? "an" : "a", tokenname, 
-                     ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+   E_EDFLogPrintf("\t\tError on line %d of DECORATE state block:\n"
+                  "\t\tExpected %s %s but found %s %s with value '%s'\n",
+                  ps->linenum,
+                  hasvowel(expected)  ? "an" : "a", expected,
+                  hasvowel(tokenname) ? "an" : "a", tokenname,
+                  ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+   
+   ps->error = true;
 }
 
 //
@@ -1259,9 +1262,11 @@ static void DoPSNeedStateFrames(pstate_t *ps)
 
             if(states[statenum]->frame < 0 || states[statenum]->frame > 28)
             {
-               E_EDFLoggedErr(3, 
-                  "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
+               E_EDFLogPrintf( 
+                  "\t\tDoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
                   DSP.curbufstate->linenum, c);
+               ps->error = true;
+               return;
             }
 
             if(statenum != NUMSTATES - 1)
@@ -1374,9 +1379,10 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 
          if(!ptr)
          {
-            E_EDFLoggedErr(3, 
-               "DoPSNeedBrightOrAction: unknown action %s\n", 
-               ps->tokenbuffer->buffer);
+            E_EDFLogPrintf("\t\tDoPSNeedBrightOrAction: unknown action %s\n",
+                           ps->tokenbuffer->buffer);
+            ps->error = true;
+            return;
          }
 
          while(state && state->type == BUF_STATE && 
@@ -1418,9 +1424,10 @@ static void DoPSNeedStateAction(pstate_t *ps)
 
          if(!ptr)
          {
-            E_EDFLoggedErr(3, 
-               "DoPSNeedBrightOrAction: unknown action %s\n", 
-               ps->tokenbuffer->buffer);
+            E_EDFLogPrintf("\t\tDoPSNeedBrightOrAction: unknown action %s\n",
+                           ps->tokenbuffer->buffer);
+            ps->error = true;
+            return;
          }
 
          while(state && state->type == BUF_STATE && 
@@ -1590,7 +1597,10 @@ static void DoPSNeedStateEOL(pstate_t *ps)
    E_GetDSToken(ps);
 
    if(ps->tokentype != TOKEN_EOL)
+   {
       PSExpectedErr(ps, "end of line");
+      return;
+   }
 
    // Finalize state range
    PSWrapStates(ps);
@@ -1673,7 +1683,7 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
 // Can be called either to collect principals or to run the final collection
 // of data.
 //
-static void E_parseDecorateInternal(const char *input, boolean principals)
+static boolean E_parseDecorateInternal(const char *input, boolean principals)
 {
    pstate_t ps;
    qstring_t linebuffer;
@@ -1692,6 +1702,7 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
    ps.linebuffer  = &linebuffer;
    ps.tokenbuffer = &tokenbuffer;
    ps.principals  = principals;
+   ps.error       = false;
 
    // set initial state
    ps.state = PSTATE_NEEDLABEL;
@@ -1717,6 +1728,10 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
 
       pstatefuncs[ps.state](&ps);
 
+      // if an error occured, end the loop
+      if(ps.error)
+         break;
+
       // if last token processed was an EOL, we need a new line of input
       if(ps.tokentype == TOKEN_EOL)
          ps.needline = true;
@@ -1725,6 +1740,8 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
    // destroy qstrings
    QStrFree(&linebuffer);
    QStrFree(&tokenbuffer);
+
+   return !ps.error;
 }
 
 //
@@ -1732,32 +1749,33 @@ static void E_parseDecorateInternal(const char *input, boolean principals)
 //
 // Looks for simple errors in the principals.
 //
-static void E_checkPrincipalSemantics(void)
+static boolean E_checkPrincipalSemantics(void)
 {
    estatebuf_t *bstate = DSP.statebuffer, *prev = NULL;
 
    // Empty? No way bub. Not gonna deal with it.
    if(!bstate)
    {
-      E_EDFLoggedErr(3, 
-         "E_checkPrincipalSemantics: illegal empty DECORATE state block\n");
+      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: illegal empty DECORATE "
+                     "state block\n");
+      return false;
    }
 
    // At least one label must be defined.
    if(!DSP.numdeclabels)
    {
-      E_EDFLoggedErr(3,
-         "E_checkPrincipalSemantics: no labels defined in "
-         "DECORATE state block\n");
+      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: no labels defined in "
+                     "DECORATE state block\n");
+      return false;
    }
 
    // At least one keyword or one state must be defined.
    // Note that implicit goto states will be included by the count of keywords.
    if(!DSP.numkeywords && !DSP.numdecstates)
    {
-      E_EDFLoggedErr(3,
-         "E_checkPrincipalSemantics: no keywords or states defined in "
-         "DECORATE state block\n");
+      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: no keywords or states "
+                     "defined in DECORATE state block\n");
+      return false;
    }
 
    while(bstate)
@@ -1769,9 +1787,10 @@ static void E_checkPrincipalSemantics(void)
          if(!strcasecmp(bstate->name, "loop") || 
             !strcasecmp(bstate->name, "wait"))
          {
-            E_EDFLoggedErr(3,
-               "E_checkPrincipalSemantics: illegal keyword in DECORATE states: "
-               "line %d: %s\n", bstate->linenum, bstate->name);
+            E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: illegal keyword in "
+                           "DECORATE states: line %d: %s\n", 
+                           bstate->linenum, bstate->name);
+            return false;
          }
       }
 
@@ -1782,11 +1801,13 @@ static void E_checkPrincipalSemantics(void)
    // Orphaned label at the end?
    if(prev && prev->type == BUF_LABEL)
    {
-      E_EDFLoggedErr(3,
-         "E_checkPrincipalSemantics: orphaned label in DECORATE states: "
-         "line %d: %s\n",
-         prev->linenum, prev->name);
+      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: orphaned label in "
+                     "DECORATE states: line %d: %s\n",
+                     prev->linenum, prev->name);
+      return false;
    }
+
+   return true;
 }
 
 //
@@ -1801,10 +1822,12 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
 
    // Parse for principals (basic grammatic acceptance/rejection,
    // counting objects, recording some basic information).
-   E_parseDecorateInternal(input, true);
+   if(!E_parseDecorateInternal(input, true))
+      return NULL;
 
    // Run basic semantic checks
-   E_checkPrincipalSemantics();
+   if(!E_checkPrincipalSemantics())
+      return NULL;
 
    // Create the DSO object
    newdso = calloc(1, sizeof(edecstateout_t));
@@ -1876,7 +1899,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
 // Parses through the data again, using the generated principals to drive
 // population of the states and DSO object.
 //
-static void E_DecorateMainPass(const char *input, edecstateout_t *dso)
+static boolean E_DecorateMainPass(const char *input, edecstateout_t *dso)
 {
    // Set the global DSO for parsing
    DSP.pDSO = dso;
@@ -1885,7 +1908,7 @@ static void E_DecorateMainPass(const char *input, edecstateout_t *dso)
    DSP.curbufstate = DSP.statebuffer;
 
    // Parse for keeps this time
-   E_parseDecorateInternal(input, false);
+   return E_parseDecorateInternal(input, false);
 }
 
 //
@@ -1895,7 +1918,7 @@ static void E_DecorateMainPass(const char *input, edecstateout_t *dso)
 // Any goto which cannot be resolved in such a way must be added 
 // instead to the DSO goto set for external resolution.
 //
-static void E_resolveGotos(edecstateout_t *dso)
+static boolean E_resolveGotos(edecstateout_t *dso)
 {
    int gi;
 
@@ -1926,8 +1949,10 @@ static void E_resolveGotos(edecstateout_t *dso)
                else
                {
                   // invalid!
-                  E_EDFLoggedErr(3, "E_resolveGotos: bad DECORATE goto offset %s+%d\n",
+                  E_EDFLogPrintf("\t\tE_resolveGotos: bad DECORATE goto offset "
+                                 "%s+%d\n", 
                                  gotoInfo->gotodest, gotoInfo->gotooffset);
+                  return false;
                }     
             } // end if
          } // end if
@@ -1944,6 +1969,8 @@ static void E_resolveGotos(edecstateout_t *dso)
          dso->numgotos++;
       }
    } // end for
+
+   return true;
 }
 
 //
@@ -1998,22 +2025,34 @@ static void E_freeDecorateData(void)
 edecstateout_t *E_ParseDecorateStates(const char *input)
 {
    edecstateout_t *dso = NULL;
+   boolean isgood = false;
 
    // init variables
    memset(&DSP, 0, sizeof(DSP));
    DSP.firststate = DSP.currentstate = DSP.lastlabelstate = NullStateNum;
 
    // parse for principals
-   dso = E_DecoratePrincipals(input);
+   if(!(dso = E_DecoratePrincipals(input)))
+      return NULL;
 
    // do main pass
-   E_DecorateMainPass(input, dso);
-
-   // resolve goto labels
-   E_resolveGotos(dso);
+   if(E_DecorateMainPass(input, dso))
+   {
+     // resolve goto labels
+     if(E_resolveGotos(dso))
+        isgood = true; // all processing checks out
+   }
 
    // free temporary parsing structures
    E_freeDecorateData();
+
+   // if an error occured during processing, destroy whatever was created and
+   // return NULL
+   if(!isgood)
+   {
+      E_FreeDSO(dso);
+      dso = NULL;
+   }
 
    // return the DSO!
    return dso;
@@ -2031,7 +2070,10 @@ void E_FreeDSO(edecstateout_t *dso)
    if(dso->states)
    {
       for(i = 0; i < dso->numstates; ++i)
-         free(dso->states[i].label);
+      {
+         if(dso->states[i].label)
+            free(dso->states[i].label);
+      }
       free(dso->states);
       dso->states = NULL;
    }
@@ -2039,7 +2081,10 @@ void E_FreeDSO(edecstateout_t *dso)
    if(dso->gotos)
    {
       for(i = 0; i < dso->numgotos; ++i)
-         free(dso->gotos[i].label);
+      {
+         if(dso->gotos[i].label)
+            free(dso->gotos[i].label);
+      }
       free(dso->gotos);
       dso->gotos = NULL;
    }
@@ -2047,7 +2092,10 @@ void E_FreeDSO(edecstateout_t *dso)
    if(dso->killstates)
    {
       for(i = 0; i < dso->numkillstates; ++i)
-         free(dso->killstates[i].killname);
+      {
+         if(dso->killstates[i].killname)
+            free(dso->killstates[i].killname);
+      }
       free(dso->killstates);
       dso->killstates = NULL;
    }

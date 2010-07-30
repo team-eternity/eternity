@@ -1262,6 +1262,13 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
 {
    edecstateout_t *dso = E_ParseDecorateStates(str);
 
+   if(!dso)
+   {
+      E_EDFLogPrintf("\t\tWarning: could not attach DECORATE states to thing "
+                     "'%s' due to previous error.\n", mi->name);
+      return;
+   }
+
    // first deal with any gotos that still need resolution
    if(dso->numgotos)
       E_processDecorateGotos(mi, dso);
