@@ -530,12 +530,12 @@ const char *C_VariableStringValue(variable_t *variable)
       return "null";
    
    // does the variable have alternate 'defines' ?
-   if(variable->defines)
+   if((variable->type == vt_int || variable->type == vt_toggle) && variable->defines)
    {
       // print defined value
       // haleyjd 03/17/02: needs rangechecking
-      int varValue;
-      int valStrIndex;
+      int varValue = 0;
+      int valStrIndex = 0;
 
       if(variable->type == vt_int)
          varValue = *((int *)variable->variable);
