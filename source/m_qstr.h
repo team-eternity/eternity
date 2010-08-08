@@ -87,6 +87,7 @@ typedef struct qstring_s
 //
 
 qstring_t  *QStrInitCreate(qstring_t *qstr);
+qstring_t  *QStrInitCreateSize(qstring_t *qstr, size_t size);
 qstring_t  *QStrCreateSize(qstring_t *qstr, size_t size);
 qstring_t  *QStrCreate(qstring_t *qstr);
 qstring_t  *QStrGrow(qstring_t *qstr, size_t len);

@@ -255,8 +255,9 @@ typedef struct console_s
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
    int  argc;          // number of argv's
-   qstring_t args;     // args as single string   
-   qstring_t argv[MAXTOKENS]; // argument values to current command
+   qstring_t  args;    // args as single string   
+   qstring_t *argv;    // argument values to current command
+   int numargvsalloc;  // number of arguments available to command parsing
 } console_t;
 
 extern console_t Console; // the one and only Console object

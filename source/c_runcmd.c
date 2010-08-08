@@ -55,7 +55,7 @@
 static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
-static int C_Sync(command_t *command);
+static int  C_Sync(command_t *command);
 static void C_ArgvtoArgs(void);
 static boolean C_Strcmp(const char *pa, const char *pb);
 
@@ -71,8 +71,36 @@ console_t Console;
 // Parsing/Running Commands
 //
 
-static qstring_t cmdtokens[MAXTOKENS];
+static qstring_t *cmdtokens;
 static int numtokens;
+static int numtokensalloc;
+
+//
+// C_nextCmdToken
+//
+// haleyjd 08/08/10: Used to remove SMMU limit on console command tokens.
+//
+static void C_nextCmdToken(void)
+{
+   if(numtokens >= numtokensalloc)
+   {
+      int i;
+
+      // grow by MAXTOKENS at a time (doubling is likely to waste memory)
+      numtokensalloc += MAXTOKENS;
+      cmdtokens = realloc(cmdtokens, numtokensalloc * sizeof(qstring_t));
+
+      for(i = numtokens; i < numtokensalloc; i++)
+         QStrInitCreateSize(&cmdtokens[i], 128);
+
+      Console.numargvsalloc += MAXTOKENS;
+      Console.argv = realloc(Console.argv, Console.numargvsalloc * sizeof(qstring_t));
+
+      for(i = numtokens; i < Console.numargvsalloc; i++)
+         QStrInitCreateSize(&Console.argv[i], 128);
+   }
+   numtokens++;
+}
 
 //
 // C_initCmdTokens
@@ -87,9 +115,16 @@ static void C_initCmdTokens(void)
    {
       int i;
 
-      for(i = 0; i < MAXTOKENS; ++i)
+      // haleyjd: MAXTOKENS is now just the starting size of the array
+      cmdtokens = calloc(MAXTOKENS, sizeof(qstring_t));
+      numtokensalloc = MAXTOKENS;
+
+      Console.argv = calloc(MAXTOKENS, sizeof(qstring_t));
+      Console.numargvsalloc = MAXTOKENS;
+
+      for(i = 0; i < numtokensalloc; i++)
       {
-         QStrCreateSize(&cmdtokens[i], 128);      // local tokens
+         QStrCreateSize(&cmdtokens[i],    128); // local tokens
          QStrCreateSize(&Console.argv[i], 128); // console argvs
       }
 
@@ -108,7 +143,7 @@ static void C_clearCmdTokens(void)
 {
    int i;
 
-   for(i = 0; i < MAXTOKENS; ++i)
+   for(i = 0; i < numtokensalloc; i++)
       QStrClear(&cmdtokens[i]);
 }
 
@@ -121,7 +156,7 @@ static void C_clearCmdTokens(void)
 static void C_GetTokens(const char *command)
 {
    const char *rover;
-   boolean quotemark=0;
+   boolean quotemark = false;
    
    rover = command;
    
@@ -149,9 +184,7 @@ static void C_GetTokens(const char *command)
       {
          // only if the current one actually contains something
          if(*(QStrConstPtr(&cmdtokens[numtokens - 1])))
-         {
-            numtokens++;
-         }
+            C_nextCmdToken();
       }
       else // add char to line
       {
@@ -269,7 +302,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
    
    C_GetTokens(options);
    
-   for(i = 0; i < MAXTOKENS; ++i)
+   for(i = 0; i < numtokensalloc; ++i)
       QStrQCopy(&Console.argv[i], &cmdtokens[i]);
 
    Console.argc = numtokens;

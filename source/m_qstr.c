@@ -95,6 +95,18 @@ qstring_t *QStrInitCreate(qstring_t *qstr)
 }
 
 //
+// QStrInitCreateSize
+//
+// Initialization and creation with size specification.
+//
+qstring_t *QStrInitCreateSize(qstring_t *qstr, size_t size)
+{
+   memset(qstr, 0, sizeof(*qstr));
+
+   return QStrCreateSize(qstr, size);
+}
+
+//
 // QStrFree
 //
 // Frees the qstring object. It should not be used after this,
