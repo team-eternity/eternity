@@ -358,8 +358,8 @@ void E_CollectStates(cfg_t *cfg)
    // initialize hash tables if needed
    if(!state_namehash.isinit)
    {
-      E_StrHashInit(&state_namehash, NUMSTATECHAINS, 
-                    E_KEYFUNCNAME(state_t, name), NULL);   
+      E_NCStrHashInit(&state_namehash, NUMSTATECHAINS, 
+                      E_KEYFUNCNAME(state_t, name), NULL);   
       E_SintHashInit(&state_numhash, NUMSTATECHAINS,
                      E_KEYFUNCNAME(state_t, dehnum), 
                      E_LINKFUNCNAME(state_t, numlinks));
