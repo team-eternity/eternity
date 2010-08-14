@@ -36,12 +36,10 @@
 #include "polyobj.h"
 #include "p_map3d.h"
 
-
 //
 // P_AproxDistance
 // Gives an estimation of distance (not exact)
 //
-
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 {
    dx = D_abs(dx);
@@ -56,7 +54,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 // Returns 0 or 1
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
 {
    return
@@ -72,7 +70,7 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, line_t *line)
 // Returns side 0 or 1, -1 if box crosses the line.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
 {
    int p;
@@ -104,7 +102,7 @@ int P_BoxOnLineSide(fixed_t *tmbox, line_t *ld)
 // Returns 0 or 1.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line)
 {
    return
@@ -117,7 +115,6 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, divline_t *line)
 //
 // P_MakeDivline
 //
-
 void P_MakeDivline(line_t *li, divline_t *dl)
 {
    dl->x = li->v1->x;
@@ -134,7 +131,7 @@ void P_MakeDivline(line_t *li, divline_t *dl)
 // and addlines traversers.
 //
 // killough 5/3/98: reformatted, cleaned up
-
+//
 fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 {
    fixed_t den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy);
@@ -349,8 +346,15 @@ void P_UnsetThingPosition(mobj_t *thing)
       // pointers, allows head node pointers to be treated like everything else
       mobj_t **sprev = thing->sprev;
       mobj_t  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
+      if((demo_version <= 337 || *sprev) && (*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
+
+      // haleyjd 08/13/10: nullify sector links in mobj to avoid multiple detachments
+      if(demo_version > 337)
+      {
+         thing->sprev = NULL;
+         thing->snext = NULL;
+      }
 
       // phares 3/14/98
       //
@@ -384,6 +388,13 @@ void P_UnsetThingPosition(mobj_t *thing)
       mobj_t *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
+
+      // haleyjd 08/13/10: nullify links in mobj to avoid multiple detachments
+      if(demo_version > 337)
+      {
+         thing->bprev = NULL;
+         thing->bnext = NULL;
+      }
    }
 
 #ifdef R_LINKEDPORTALS
@@ -400,9 +411,9 @@ void P_UnsetThingPosition(mobj_t *thing)
 // killough 5/3/98: reformatted, cleaned up
 //
 void P_SetThingPosition(mobj_t *thing)
-{                                                      // link into subsector
-   subsector_t *ss = thing->subsector = 
-      R_PointInSubsector(thing->x, thing->y);
+{
+   // link into subsector
+   subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
 
    P_LogThingPosition(thing, " set ");
 
@@ -448,7 +459,7 @@ void P_SetThingPosition(mobj_t *thing)
       int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
       int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
       
-      if(blockx>=0 && blockx < bmapwidth && blocky>=0 && blocky < bmapheight)
+      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
       {
          // killough 8/11/98: simpler scheme using pointer-to-pointer prev
          // pointers, allows head nodes to be treated like everything else
