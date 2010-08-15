@@ -1261,12 +1261,12 @@ static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 //
 static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
 {
-   edecstateout_t *dso = E_ParseDecorateStates(str);
+   edecstateout_t *dso;
 
-   if(!dso)
+   if(!(dso = E_ParseDecorateStates(str)))
    {
-      E_EDFLoggedWarning(2, "Warning: could not attach DECORATE states to thing "
-                            "'%s' due to previous error.\n", mi->name);
+      E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to thing '%s'.\n",
+                         mi->name);
       return;
    }
 

@@ -178,14 +178,14 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
         <keyword> := "stop" | "wait" | "loop" | "goto" <jumplabel>
           <jumplabel> := <jlabel> | <jlabel> '+' number
             <jlabel> := [A-Za-z0-9_:]+('.'[A-Za-z0-9_]+)?
-        <frame_token_list> := <sprite><frameletters><tics><action>
-                            | <sprite><frameletters><tics><bright><action>
+        <frame_token_list> := <sprite><frameletters><tics><bright><action>
           <sprite> := [A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]
           <frameletters> := [A-Z\[\\\]]+
           <tics> := [0-9]+
-          <bright> := "bright"
+          <bright> := "bright" | nil
           <action> := <name>
                     | <name> '(' <arglist> ')'
+                    | nil
             <name> := [A-Za-z0-9_]+
             <arglist> := <arg> ',' <arglist> | <arg> | nil
               <arg> := "string" | number
@@ -222,6 +222,7 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
       EOL      : NEEDLABELORKWORSTATE
    NEEDSTATEACTION:
       <text> : NEEDSTATEEOLORPAREN
+      EOL    : NEEDLABELORKWORSTATE
    NEEDSTATEEOLORPAREN:
       EOL : NEEDLABELORKWORSTATE
       '(' : NEEDSTATEARGORPAREN
@@ -1404,9 +1405,20 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 //
 // Expecting an action name after having dealt with the "bright" command.
 //
+// 08/15/10: Bugfix - we also need to accept EOL here as well!
+//  
+//
 static void DoPSNeedStateAction(pstate_t *ps)
 {
    E_GetDSToken(ps);
+
+   // Allow EOL here to indicate null action
+   if(ps->tokentype == TOKEN_EOL)
+   {
+      PSWrapStates(ps);
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
 
    if(ps->tokentype != TOKEN_TEXT)
    {
