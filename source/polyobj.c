@@ -778,17 +778,19 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
          {
             mobj_t *mo = blocklinks[y * bmapwidth + x];
 
-            for(; mo; mo = mo->bnext)
+            // haleyjd 08/14/10: use modification-safe traversal
+            while(mo)
             {
+               mobj_t *next = mo->bnext;
+
                // always push players even if not solid
-               if(!((mo->flags & MF_SOLID) || mo->player))
-                  continue;
-
-               if(Polyobj_untouched(line, mo))
-                  continue;
-
-               Polyobj_pushThing(po, line, mo);
-               hitthing = true;
+               if(((mo->flags & MF_SOLID) || mo->player) && 
+                  !Polyobj_untouched(line, mo))
+               {
+                  Polyobj_pushThing(po, line, mo);
+                  hitthing = true;
+               }
+               mo = next; // demo compatibility is not a factor here
             }
          } // end if
       } // end for(x)

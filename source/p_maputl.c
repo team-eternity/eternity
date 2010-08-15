@@ -346,7 +346,7 @@ void P_UnsetThingPosition(mobj_t *thing)
       // pointers, allows head node pointers to be treated like everything else
       mobj_t **sprev = thing->sprev;
       mobj_t  *snext = thing->snext;
-      if((demo_version <= 337 || *sprev) && (*sprev = snext))  // unlink from sector list
+      if((demo_version <= 337 || sprev) && (*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
 
       // haleyjd 08/13/10: nullify sector links in mobj to avoid multiple detachments
@@ -606,11 +606,19 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 
 boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t*))
 {
-   mobj_t *mobj;
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
-      for(mobj = blocklinks[y*bmapwidth+x]; mobj; mobj = mobj->bnext)
+   {
+      mobj_t *mobj = blocklinks[y * bmapwidth + x];
+
+      // haleyjd 08/14/10: use modification-safe traversal
+      while(mobj)
+      {
+         mobj_t *next = mobj->bnext;
          if(!func(mobj))
             return false;
+         mobj = mobj_bnext(mobj, next);
+      }
+   }
    return true;
 }
 

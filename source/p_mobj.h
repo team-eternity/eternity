@@ -326,7 +326,15 @@ typedef struct backpack_s
    int16_t ammo[NUMAMMO];
    char weapon;
 } backpack_t;
-  
+
+// haleyjd 08/14/10: macro for stepping to the next thing by blockmap link. This
+// is necessitated by the change to nullify mobj_t sector/blockmap links for 
+// safety in P_RemoveMobj. The idea is to pass a local cached copy of the bnext
+// pointer and step to that link rather than using the now-dead pointer inside
+// the mobj_t. However demos are extremely sensitive to changes in the list 
+// iteration, and so this cannot be done while running them.
+#define mobj_bnext(mo, ptr) (demo_version > 337 ? ptr : mo->bnext)
+
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -339,10 +347,10 @@ typedef struct backpack_s
 // pointer was simply nullified after loading, to prevent Doom from crashing),
 // and the whole reason behind loadgames crashing on savegames of AV attacks.
 // 
-
+//
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
-
+//
 struct mobj_s
 {
    // List: thinker links.

@@ -231,9 +231,14 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
    else
       mobj = actor->bnext;
 
-   for(; mobj; mobj = mobj->bnext)
+   // haleyjd 08/14/10: use modification-safe traversal
+   while(mobj)
+   {
+      mobj_t *next = mobj->bnext;
       if(!func(mobj))
          return false;
+      mobj = mobj_bnext(mobj, next); 
+   }
    
    return true;
 }
