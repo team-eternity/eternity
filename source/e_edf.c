@@ -442,6 +442,7 @@ void E_EDFLogPrintf(const char *msg, ...)
 //
 void E_EDFLoggedErr(int lv, const char *msg, ...)
 {
+   qstring_t msg_no_tabs;
    va_list va;
 
    if(edf_output)
@@ -456,9 +457,87 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
       va_end(va2);
    }
 
+   QStrInitCreate(&msg_no_tabs);
+   QStrCopy(&msg_no_tabs, msg);
+   QStrReplace(&msg_no_tabs, "\t", ' ');
+
    va_start(va, msg);
-   I_ErrorVA(msg, va);
+   I_ErrorVA(QStrConstPtr(&msg_no_tabs), va);
    va_end(va);
+
+   QStrFree(&msg_no_tabs);
+}
+
+static int edf_warning_count;
+static boolean edf_warning_out;
+
+//
+// E_EDFLoggedWarning
+//
+// Similar to above, but this is just a warning message. The number of warnings
+// that occur will be printed to the system console after EDF processing is 
+// finished, so that users are aware that warnings have occured even if verbose
+// logging is not enabled.
+//
+void E_EDFLoggedWarning(int lv, const char *msg, ...)
+{
+   ++edf_warning_count;
+
+   if(edf_output)
+   {
+      va_list va;
+      while(lv--)
+         putc('\t', edf_output);
+
+      va_start(va, msg);
+      vfprintf(edf_output, msg, va);
+      va_end(va);
+   }
+   
+   // allow display of warning messages on the system console too
+   if(edf_warning_out)
+   {
+      qstring_t msg_no_tabs;
+      va_list va;
+
+      QStrInitCreate(&msg_no_tabs);
+      QStrCopy(&msg_no_tabs, msg);
+      QStrReplace(&msg_no_tabs, "\t", ' ');
+
+      va_start(va, msg);
+      vfprintf(stderr, QStrConstPtr(&msg_no_tabs), va);
+      va_end(va);
+
+      QStrFree(&msg_no_tabs);
+   }
+}
+
+//
+// E_EDFPrintWarningCount
+//
+// Displays the EDF warning count after EDF processing.
+//
+void E_EDFPrintWarningCount(void)
+{
+   if(in_textmode && edf_warning_count)
+   {
+      printf(" %d warnings occured during EDF processing.\n", edf_warning_count);
+
+      if(!edf_warning_out)
+         printf(" To see warnings, run Eternity with the -edf-show-warnings parameter.\n");
+   }
+}
+
+//
+// E_EDFResetWarnings
+//
+// Resets the count of warnings to zero.
+//
+void E_EDFResetWarnings(void)
+{
+   edf_warning_count = 0;
+
+   edf_warning_out = !!M_CheckParm("-edf-show-warnings");
 }
 
 //=============================================================================
@@ -507,7 +586,8 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    size_t len;
 
    // haleyjd 03/18/10: deprecation warning
-   E_EDFLogPuts("Warning: bexinclude is deprecated. Please use a GFS or DEHACKED lump instead.\n");
+   E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
+                         "Please use a GFS or DEHACKED lump instead.\n");
 
    if(argc != 1)
    {
@@ -1180,8 +1260,8 @@ static void E_ProcessItems(cfg_t *cfg)
       if(sprnum == -1)
       {
          // haleyjd 05/31/06: downgraded to warning, substitute blanksprite
-         E_EDFLogPrintf(
-            "\t\tWarning: invalid sprite mnemonic for pickup item: '%s'\n",
+         E_EDFLoggedWarning(2,
+            "Warning: invalid sprite mnemonic for pickup item: '%s'\n",
             title);
          sprnum = blankSpriteNum;
       }
@@ -1190,8 +1270,7 @@ static void E_ProcessItems(cfg_t *cfg)
       fxnum = E_StrToNumLinear(pickupnames, PFX_NUMFX, pfx);
       if(fxnum == PFX_NUMFX)
       {
-         E_EDFLoggedErr(2, 
-            "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
+         E_EDFLoggedErr(2, "E_ProcessItems: invalid pickup effect: '%s'\n", pfx);
       }
       
       E_EDFLogPrintf("\t\tSet sprite %s(#%d) to pickup effect %s(#%d)\n",
@@ -1342,8 +1421,8 @@ static void E_ProcessCast(cfg_t *cfg)
       if(!tempstr || 
          (tempint = E_ThingNumForName(tempstr)) == NUMMOBJTYPES)
       {
-         E_EDFLogPrintf("\t\tWarning: cast %d: unknown thing type %s\n",
-                        i, tempstr);
+         E_EDFLoggedWarning(2, "Warning: cast %d: unknown thing type %s\n",
+                            i, tempstr);
 
          tempint = UnknownThingType;
       }
@@ -1383,8 +1462,8 @@ static void E_ProcessCast(cfg_t *cfg)
          // haleyjd 03/22/06: modified to support dehnum auto-allocation
          if((sfx = E_EDFSoundForName(name)) == NULL)
          {
-            E_EDFLogPrintf("\t\tWarning: cast member references invalid sound %s\n",
-                           name);
+            E_EDFLoggedWarning(2, "Warning: cast member references invalid sound %s\n",
+                               name);
             castorder[i].sounds[j].sound = 0;
          }
          else
@@ -1393,8 +1472,8 @@ static void E_ProcessCast(cfg_t *cfg)
                castorder[i].sounds[j].sound = sfx->dehackednum;
             else
             {
-               E_EDFLogPrintf("\t\tWarning: could not auto-allocate a DeHackEd number "
-                              "for sound %s\n", name);
+               E_EDFLoggedWarning(2, "Warning: could not auto-allocate a DeHackEd number "
+                                     "for sound %s\n", name);
                castorder[i].sounds[j].sound = 0;
             }
          }
@@ -1488,7 +1567,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
 
       if(typeNum == NUMMOBJTYPES)
       {
-         E_EDFLogPrintf("\t\tWarning: invalid boss type '%s'\n", typeName);
+         E_EDFLoggedWarning(2, "Warning: invalid boss type '%s'\n", typeName);
 
          typeNum = UnknownThingType;
       }
@@ -1550,6 +1629,9 @@ static void E_ProcessMiscVars(cfg_t *cfg)
 //
 static cfg_t *E_InitEDF(void)
 {
+   // set warning count to zero
+   E_EDFResetWarnings();
+
    // Check for -edfout to enable verbose logging
    if(M_CheckParm("-edfout"))
       E_EDFOpenVerboseLog();
@@ -1612,6 +1694,9 @@ static void E_CleanUpEDF(cfg_t *cfg)
 
    // close the verbose log file
    E_EDFCloseVerboseLog();
+
+   // Output warnings display
+   E_EDFPrintWarningCount();
 }
 
 //

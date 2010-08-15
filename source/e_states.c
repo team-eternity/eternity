@@ -502,8 +502,10 @@ static void E_StateSprite(const char *tempstr, int i)
          // haleyjd 03/24/10: add implicitly-defined sprite
          if(!E_ProcessSingleSprite(tempstr))
          {
-            E_EDFLogPrintf("\t\tWarning: frame '%s': couldn't implicitly "
-                           "define sprite '%s'\n", states[i]->name, tempstr);
+            E_EDFLoggedWarning(2, 
+                               "Warning: frame '%s': couldn't implicitly "
+                               "define sprite '%s'\n", 
+                               states[i]->name, tempstr);
             sprnum = blankSpriteNum;
          }
          else
@@ -579,8 +581,9 @@ static void E_AssignMiscThing(int *target, int thingnum)
       *target = mobjinfo[thingnum].dehnum;
    else
    {
-      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                     "for thing %s\n", mobjinfo[thingnum].name);
+      E_EDFLoggedWarning(2, 
+                         "Warning: failed to auto-allocate DeHackEd number "
+                         "for thing %s\n", mobjinfo[thingnum].name);
       *target = UnknownThingType;
    }
 }
@@ -593,8 +596,9 @@ static void E_AssignMiscState(int *target, int framenum)
       *target = states[framenum]->dehnum;
    else
    {
-      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                     "for frame %s\n", states[framenum]->name);
+      E_EDFLoggedWarning(2,
+                         "Warning: failed to auto-allocate DeHackEd number "
+                         "for frame %s\n", states[framenum]->name);
       *target = NullStateNum;
    }
 }
@@ -610,8 +614,9 @@ static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
       *target = sfx->dehackednum;
    else
    {
-      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                     "for sound %s\n", sfx->mnemonic);
+      E_EDFLoggedWarning(2, 
+                         "Warning: failed to auto-allocate DeHackEd number "
+                         "for sound %s\n", sfx->mnemonic);
       *target = 0;
    }
 }
@@ -620,7 +625,7 @@ static void E_AssignMiscString(int *target, edf_string_t *str, const char *name)
 {
    if(!str || str->numkey < 0)
    {
-      E_EDFLogPrintf("\t\tWarning: bad string %s\n", name);
+      E_EDFLoggedWarning(2, "Warning: bad string %s\n", name);
       *target = 0;
    }
    else
@@ -670,8 +675,8 @@ static void E_ParseMiscField(char *value, int *target)
             int framenum = E_StateNumForName(strval);
             if(framenum < 0)
             {
-               E_EDFLogPrintf("\t\tWarning: invalid state '%s' in misc field\n",
-                              strval);
+               E_EDFLoggedWarning(2, "tWarning: invalid state '%s' in misc field\n",
+                                  strval);
                *target = NullStateNum;
             }
             else
@@ -683,8 +688,8 @@ static void E_ParseMiscField(char *value, int *target)
             int thingnum = E_ThingNumForName(strval);
             if(thingnum == NUMMOBJTYPES)
             {
-               E_EDFLogPrintf("\t\tWarning: invalid thing '%s' in misc field\n",
-                              strval);
+               E_EDFLoggedWarning(2, "Warning: invalid thing '%s' in misc field\n",
+                                  strval);
                *target = UnknownThingType;
             }
             else
@@ -697,8 +702,8 @@ static void E_ParseMiscField(char *value, int *target)
             if(!sfx)
             {
                // haleyjd 05/31/06: relaxed to warning
-               E_EDFLogPrintf("\t\tWarning: invalid sound '%s' in misc field\n", 
-                              strval);
+               E_EDFLoggedWarning(2, "Warning: invalid sound '%s' in misc field\n", 
+                                  strval);
                sfx = &NullSound;
             }
             E_AssignMiscSound(target, sfx);
@@ -729,8 +734,8 @@ static void E_ParseMiscField(char *value, int *target)
          }
          break;
       default:
-         E_EDFLogPrintf("\t\tWarning: unknown value prefix '%s'\n",
-                        prefix);
+         E_EDFLoggedWarning(2, "Warning: unknown value prefix '%s'\n",
+                            prefix);
          *target = 0;
          break;
       }

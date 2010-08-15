@@ -1269,7 +1269,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 
       // figure out the command (first token on the line)
       if(!tempcmd.strs[0])
-         E_EDFLogPuts("\t\tWarning: invalid command in sequence, ignored\n");
+         E_EDFLoggedWarning(2, "Warning: invalid command in sequence, ignored\n");
       else
       {  
          // translate to command index
@@ -1353,8 +1353,8 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
             break;
          default:
             // invalid opcode :P
-            E_EDFLogPrintf("\t\tWarning: invalid cmd '%s' in sequence, ignored\n",
-                           tempcmd.strs[0]);
+            E_EDFLoggedWarning(2, "Warning: invalid cmd '%s' in sequence, ignored\n",
+                               tempcmd.strs[0]);
             break;
          }
       } // end else
@@ -1403,7 +1403,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    type = E_StrToNumLinear(seq_types, NUM_SEQ_TYPES, tempstr);
    if(type == NUM_SEQ_TYPES)
    {
-      E_EDFLogPrintf("\t\tWarning: invalid sequence type '%s'\n", tempstr);
+      E_EDFLoggedWarning(2, "Warning: invalid sequence type '%s'\n", tempstr);
       type = SEQ_SECTOR; // default is sector-type if invalid
    }
 
@@ -1456,8 +1456,8 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
       E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, tempstr);
    if(newSeq->attenuation == NUM_ATTENUATION_TYPES)
    {
-      E_EDFLogPrintf("\t\tWarning: sequence %d uses unknown attn type '%s'\n",
-                     newSeq->index, tempstr);
+      E_EDFLoggedWarning(2, "Warning: sequence %d uses unknown attn type '%s'\n",
+                         newSeq->index, tempstr);
       newSeq->attenuation = ATTN_NORMAL; // normal attenuation is fine
    }
 
@@ -1708,8 +1708,8 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    // issue a warning if index is undefined
    if(cfg_size(cfg, ITEM_AMB_INDEX) == 0)
    {
-      E_EDFLogPrintf("\t\tWarning: ambience %d defines no index, "
-                     "ambience index 0 may be overwritten.\n", i);
+      E_EDFLoggedWarning(2, "Warning: ambience %d defines no index, "
+                            "ambience index 0 may be overwritten.\n", i);
    }
 
    // get index
@@ -1730,8 +1730,8 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    newAmb->type = E_StrToNumLinear(ambience_types, NUM_AMBIENCE_TYPES, tempstr);
    if(newAmb->type == NUM_AMBIENCE_TYPES)
    {
-      E_EDFLogPrintf("\t\tWarning: ambience %d uses bad type '%s'\n",
-                     newAmb->index, tempstr);
+      E_EDFLoggedWarning(2, "Warning: ambience %d uses bad type '%s'\n",
+                         newAmb->index, tempstr);
       newAmb->type = 0; // use continuous as a default
    }
 
@@ -1741,8 +1741,8 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    if(!newAmb->sound)
    {
       // issue a warning just in case this is a mistake
-      E_EDFLogPrintf("\t\tWarning: ambience %d references bad sound '%s'\n",
-                     newAmb->index, tempstr);
+      E_EDFLoggedWarning(2, "Warning: ambience %d references bad sound '%s'\n",
+                         newAmb->index, tempstr);
    }
 
    // process volume
@@ -1759,8 +1759,8 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
       E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, tempstr);
    if(newAmb->attenuation == NUM_ATTENUATION_TYPES)
    {
-      E_EDFLogPrintf("\t\tWarning: ambience %d uses unknown attn type '%s'\n",
-                     newAmb->index, tempstr);
+      E_EDFLoggedWarning(2, "Warning: ambience %d uses unknown attn type '%s'\n",
+                         newAmb->index, tempstr);
       newAmb->attenuation = ATTN_NORMAL; // normal attenuation is fine
    }
 

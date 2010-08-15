@@ -720,12 +720,13 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
    if(ps->tokenerror)
       tokenname = ds_token_errors[ps->tokenerror];
 
-   E_EDFLogPrintf("\t\tError on line %d of DECORATE state block:\n"
-                  "\t\tExpected %s %s but found %s %s with value '%s'\n",
-                  ps->linenum,
-                  hasvowel(expected)  ? "an" : "a", expected,
-                  hasvowel(tokenname) ? "an" : "a", tokenname,
-                  ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+   E_EDFLoggedWarning(2, 
+                      "Error on line %d of DECORATE state block:\n\t\t"
+                      "Expected %s %s but found %s %s with value '%s'\n",
+                      ps->linenum,
+                      hasvowel(expected)  ? "an" : "a", expected,
+                      hasvowel(tokenname) ? "an" : "a", tokenname,
+                      ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
    
    ps->error = true;
 }
@@ -1262,8 +1263,8 @@ static void DoPSNeedStateFrames(pstate_t *ps)
 
             if(states[statenum]->frame < 0 || states[statenum]->frame > 28)
             {
-               E_EDFLogPrintf( 
-                  "\t\tDoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
+               E_EDFLoggedWarning(2,
+                  "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
                   DSP.curbufstate->linenum, c);
                ps->error = true;
                return;
@@ -1379,8 +1380,8 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
 
          if(!ptr)
          {
-            E_EDFLogPrintf("\t\tDoPSNeedBrightOrAction: unknown action %s\n",
-                           ps->tokenbuffer->buffer);
+            E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
+                               ps->tokenbuffer->buffer);
             ps->error = true;
             return;
          }
@@ -1424,8 +1425,8 @@ static void DoPSNeedStateAction(pstate_t *ps)
 
          if(!ptr)
          {
-            E_EDFLogPrintf("\t\tDoPSNeedBrightOrAction: unknown action %s\n",
-                           ps->tokenbuffer->buffer);
+            E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
+                               ps->tokenbuffer->buffer);
             ps->error = true;
             return;
          }
@@ -1756,16 +1757,16 @@ static boolean E_checkPrincipalSemantics(void)
    // Empty? No way bub. Not gonna deal with it.
    if(!bstate)
    {
-      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: illegal empty DECORATE "
-                     "state block\n");
+      E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: illegal empty DECORATE "
+                            "state block\n");
       return false;
    }
 
    // At least one label must be defined.
    if(!DSP.numdeclabels)
    {
-      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: no labels defined in "
-                     "DECORATE state block\n");
+      E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: no labels defined in "
+                            "DECORATE state block\n");
       return false;
    }
 
@@ -1773,8 +1774,8 @@ static boolean E_checkPrincipalSemantics(void)
    // Note that implicit goto states will be included by the count of keywords.
    if(!DSP.numkeywords && !DSP.numdecstates)
    {
-      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: no keywords or states "
-                     "defined in DECORATE state block\n");
+      E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: no keywords or states "
+                            "defined in DECORATE state block\n");
       return false;
    }
 
@@ -1787,9 +1788,10 @@ static boolean E_checkPrincipalSemantics(void)
          if(!strcasecmp(bstate->name, "loop") || 
             !strcasecmp(bstate->name, "wait"))
          {
-            E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: illegal keyword in "
-                           "DECORATE states: line %d: %s\n", 
-                           bstate->linenum, bstate->name);
+            E_EDFLoggedWarning(2, 
+                               "E_checkPrincipalSemantics: illegal keyword in "
+                               "DECORATE states: line %d: %s\n", 
+                               bstate->linenum, bstate->name);
             return false;
          }
       }
@@ -1801,9 +1803,10 @@ static boolean E_checkPrincipalSemantics(void)
    // Orphaned label at the end?
    if(prev && prev->type == BUF_LABEL)
    {
-      E_EDFLogPrintf("\t\tE_checkPrincipalSemantics: orphaned label in "
-                     "DECORATE states: line %d: %s\n",
-                     prev->linenum, prev->name);
+      E_EDFLoggedWarning(2,
+                         "E_checkPrincipalSemantics: orphaned label in "
+                         "DECORATE states: line %d: %s\n",
+                         prev->linenum, prev->name);
       return false;
    }
 
@@ -1949,9 +1952,9 @@ static boolean E_resolveGotos(edecstateout_t *dso)
                else
                {
                   // invalid!
-                  E_EDFLogPrintf("\t\tE_resolveGotos: bad DECORATE goto offset "
-                                 "%s+%d\n", 
-                                 gotoInfo->gotodest, gotoInfo->gotooffset);
+                  E_EDFLoggedWarning(2, 
+                                     "E_resolveGotos: bad DECORATE goto offset %s+%d\n", 
+                                     gotoInfo->gotodest, gotoInfo->gotooffset);
                   return false;
                }     
             } // end if

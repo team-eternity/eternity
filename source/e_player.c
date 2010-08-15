@@ -280,8 +280,8 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       // check sprite for validity
       if(E_SpriteNumForName(tempstr) == -1)
       {
-         E_EDFLogPrintf("\t\tWarning: skin '%s' references unknown sprite '%s'\n",
-                        newSkin->skinname, tempstr);
+         E_EDFLoggedWarning(2, "Warning: skin '%s' references unknown sprite '%s'\n",
+                            newSkin->skinname, tempstr);
          tempstr = sprnames[blankSpriteNum];
       }
 
@@ -612,7 +612,7 @@ boolean E_PlayerInWalkingState(player_t *player)
 
       if(++count >= 100) // seen 100 states? get out.
       {
-         doom_printf(FC_ERROR "open player walk sequence detected\a\n");
+         doom_printf(FC_ERROR "Open player walk sequence detected!\a\n");
          break;
       }
    }

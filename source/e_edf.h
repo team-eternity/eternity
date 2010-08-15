@@ -113,6 +113,8 @@ void E_EDFLoggedErr(int lv, const char *msg, ...) __attribute__((noreturn));
 void E_EDFLoggedErr(int lv, const char *msg, ...);
 #endif
 
+void E_EDFLoggedWarning(int lv, const char *msg, ...);
+
 #endif
 
 // EOF

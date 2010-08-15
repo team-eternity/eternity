@@ -734,8 +734,8 @@ static void E_ThingSound(const char *data, const char *fieldname,
    if((sfx = E_EDFSoundForName(data)) == NULL)
    {
       // haleyjd 05/31/06: relaxed to warning
-      E_EDFLogPrintf("\t\tWarning: thing '%s': invalid %s '%s'\n",
-                     mobjinfo[thingnum].name, fieldname, data);
+      E_EDFLoggedWarning(2, "Warning: thing '%s': invalid %s '%s'\n",
+                         mobjinfo[thingnum].name, fieldname, data);
       sfx = &NullSound;
    }
    
@@ -744,8 +744,9 @@ static void E_ThingSound(const char *data, const char *fieldname,
       *target = sfx->dehackednum;
    else
    {
-      E_EDFLogPrintf("\t\tWarning: failed to auto-allocate DeHackEd number "
-                     "for sound %s\n", sfx->mnemonic);
+      E_EDFLoggedWarning(2, 
+                         "Warning: failed to auto-allocate DeHackEd number "
+                         "for sound %s\n", sfx->mnemonic);
       *target = 0;
    }
 }
@@ -1264,8 +1265,8 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
 
    if(!dso)
    {
-      E_EDFLogPrintf("\t\tWarning: could not attach DECORATE states to thing "
-                     "'%s' due to previous error.\n", mi->name);
+      E_EDFLoggedWarning(2, "Warning: could not attach DECORATE states to thing "
+                            "'%s' due to previous error.\n", mi->name);
       return;
    }
 
@@ -1882,8 +1883,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          if(tempint == NUMMOBJTYPES)
          {
             // haleyjd 05/31/06: demoted to warning
-            E_EDFLogPrintf("\t\tWarning: thing '%s': bad drop type '%s'\n",
-                           mobjinfo[i].name, tempstr);
+            E_EDFLoggedWarning(2, "Warning: thing '%s': bad drop type '%s'\n",
+                               mobjinfo[i].name, tempstr);
             tempint = UnknownThingType;
          }
 
@@ -2062,7 +2063,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       // rangecheck number
       if(tempint >= ACS_NUM_THINGTYPES)
       {
-         E_EDFLogPrintf("\t\tWarning: invalid ACS spawn number %d\n", tempint);
+         E_EDFLoggedWarning(2, "Warning: invalid ACS spawn number %d\n", tempint);
       }
       else if(tempint >= 0) // negative numbers mean no spawn number
       {

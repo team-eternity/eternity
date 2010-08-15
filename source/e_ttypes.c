@@ -370,8 +370,8 @@ static void E_ProcessTerrain(cfg_t *cfg, boolean def)
 
       if(!(newTerrain = E_TerrainForName(tempstr)))
       {
-         E_EDFLogPrintf("\t\t\tWarning: terrain '%s' doesn't exist\n",
-                        tempstr);
+         E_EDFLoggedWarning(3, "Warning: terrain '%s' doesn't exist\n",
+                            tempstr);
          return;
       }
    }
@@ -571,8 +571,8 @@ static void E_ProcessFloor(cfg_t *cfg)
    tempstr = cfg_getstr(cfg, ITEM_FLOOR_TERRAIN);
    if(!(newFloor->terrain = E_TerrainForName(tempstr)))
    {
-      E_EDFLogPrintf("\t\t\tWarning: Flat '%s' uses bad terrain '%s'\n",
-                     newFloor->name, tempstr);
+      E_EDFLoggedWarning(3, "Warning: Flat '%s' uses bad terrain '%s'\n",
+                         newFloor->name, tempstr);
       newFloor->terrain = &solid;
    }
 
