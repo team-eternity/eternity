@@ -346,15 +346,8 @@ void P_UnsetThingPosition(mobj_t *thing)
       // pointers, allows head node pointers to be treated like everything else
       mobj_t **sprev = thing->sprev;
       mobj_t  *snext = thing->snext;
-      if((demo_version <= 337 || sprev) && (*sprev = snext))  // unlink from sector list
+      if((*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
-
-      // haleyjd 08/13/10: nullify sector links in mobj to avoid multiple detachments
-      if(demo_version > 337)
-      {
-         thing->sprev = NULL;
-         thing->snext = NULL;
-      }
 
       // phares 3/14/98
       //
@@ -388,13 +381,6 @@ void P_UnsetThingPosition(mobj_t *thing)
       mobj_t *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
-
-      // haleyjd 08/13/10: nullify links in mobj to avoid multiple detachments
-      if(demo_version > 337)
-      {
-         thing->bprev = NULL;
-         thing->bnext = NULL;
-      }
    }
 
 #ifdef R_LINKEDPORTALS
@@ -611,13 +597,9 @@ boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t*))
       mobj_t *mobj = blocklinks[y * bmapwidth + x];
 
       // haleyjd 08/14/10: use modification-safe traversal
-      while(mobj)
-      {
-         mobj_t *next = mobj->bnext;
+      for(; mobj; mobj = mobj->bnext)
          if(!func(mobj))
             return false;
-         mobj = mobj_bnext(mobj, next);
-      }
    }
    return true;
 }
