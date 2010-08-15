@@ -216,6 +216,7 @@ struct variable_s
   double dmax;     //                   max for double vars
   
   struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
+  struct command_s *command;    // haleyjd 08/15/10: parent command
 };
 
 struct command_s

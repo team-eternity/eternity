@@ -242,41 +242,79 @@ static void C_RunIndivTextCmd(const char *cmdname)
    }
 }
 
+typedef enum flagcheckval
+{
+   CCF_CANNOTSET = 0,    // cannot set anything.
+   CCF_CANSETVAR = 0x01, // can set the variable's normal value
+   CCF_CANSETDEF = 0x02, // can set the variable's default
+   
+   CCF_CANSETALL = CCF_CANSETVAR | CCF_CANSETDEF
+} flagcheckval_e;
+
 //
 // C_CheckFlags
 //
 // Check the flags of a command to see if it should be run or not.
 //
-static boolean C_CheckFlags(command_t *command)
+static flagcheckval_e C_CheckFlags(command_t *command, const char **errormsg)
 {
-   const char *errormsg;
+   static char error_buffer[256];
+   flagcheckval_e returnval = CCF_CANSETALL;
    
+   if(!command->variable || !command->variable->v_default || 
+      (command->flags & cf_handlerset))
+   {
+      // remove default flag if there is no default.
+      returnval &= ~CCF_CANSETDEF;
+   }
+
    // check the flags
-   errormsg = NULL;
+   *errormsg = NULL;
    
    if((command->flags & cf_notnet) && (netgame && !demoplayback))
-      errormsg = "not available in netgame";
+      *errormsg = "not available in netgame";
    if((command->flags & cf_netonly) && !netgame && !demoplayback)
-      errormsg = "only available in netgame";
+      *errormsg = "only available in netgame";
    if((command->flags & cf_server) && consoleplayer && !demoplayback
       && Console.cmdtype != c_netcmd)
-      errormsg = "for server only";
+      *errormsg = "for server only";
    if((command->flags & cf_level) && gamestate != GS_LEVEL)
-      errormsg = "can be run in levels only";
+      *errormsg = "can be run in levels only";
    
-   // net-sync critical variables are usually critical to
-   // demo sync too
+   // net-sync critical variables are usually critical to demo sync too
    if((command->flags & cf_netvar) && demoplayback)
-      errormsg = "not during demo playback";
+      *errormsg = "not during demo playback";
+
+   if(*errormsg)
+   {
+      // haleyjd 08/15/10: allow setting of default values in certain conditions   
+      if(demoplayback && (returnval & CCF_CANSETDEF))
+      {
+         *errormsg = "will take effect after demo ends";
+         returnval = CCF_CANSETDEF; // we can still modify the default value.
+      }
+      else
+         returnval = CCF_CANNOTSET; // we can't set anything to this variable now.
+   }
    
+   return returnval;
+}
+
+//
+// C_doErrorMsg
+//
+// haleyjd 08/15/10: I had to separate out printing of errors from C_CheckFlags since
+// that function can now be called just for checking a variable's state and not just
+// for setting it.
+//
+static void C_doErrorMsg(command_t *command, const char *errormsg)
+{
    if(errormsg)
    {
       C_Printf("%s: %s\n", command->name, errormsg);
-      MN_ErrorMsg(errormsg);   // menu error
-      return true;
+      if(menuactive)
+         MN_ErrorMsg(errormsg);
    }
-   
-   return false;
 }
 
 // C_RunCommand.
@@ -299,6 +337,7 @@ void C_RunCommand(command_t *command, const char *options)
 static void C_DoRunCommand(command_t *command, const char *options)
 {
    int i;
+   const char *errormsg = NULL;
    
    C_GetTokens(options);
    
@@ -343,9 +382,10 @@ static void C_DoRunCommand(command_t *command, const char *options)
    {
    case ct_command:
       // not to be run ?
-      if(C_CheckFlags(command) || C_Sync(command))
+      if(C_CheckFlags(command, &errormsg) == CCF_CANNOTSET || C_Sync(command))
       {
-         Console.cmdtype = c_typed; 
+         C_doErrorMsg(command, errormsg);
+         Console.cmdtype = c_typed;
          Console.cmdsrc = consoleplayer; 
          return;
       }
@@ -503,39 +543,48 @@ void C_RunTextCmd(const char *command)
 const char *C_VariableValue(variable_t *variable)
 {
    static qstring_t value;
+   void *loc;
+   const char *dummymsg = NULL;
    
    QStrClearOrCreate(&value, 1024);
    
    if(!variable)
       return "";
+
+   // haleyjd 08/15/10: if only the default can be set right now, return the
+   // default value rather than the current value.
+   if(C_CheckFlags(variable->command, &dummymsg) == CCF_CANSETDEF)
+      loc = variable->v_default;
+   else
+      loc = variable->variable;
    
    switch(variable->type)
    {
    case vt_int:
-      QStrPrintf(&value, 0, "%d", *(int *)variable->variable);
+      QStrPrintf(&value, 0, "%d", *(int *)loc);
       break;
 
    case vt_toggle:
       // haleyjd 07/05/10
-      QStrPrintf(&value, 0, "%d", (int)(*(boolean *)variable->variable));
+      QStrPrintf(&value, 0, "%d", (int)(*(boolean *)loc));
       break;
       
    case vt_string:
       // haleyjd 01/24/03: added null check from prboom
       if(*(char **)variable->variable)
-         QStrCopy(&value, *(char **)variable->variable);
+         QStrCopy(&value, *(char **)loc);
       else
          return "null";
       break;
 
    case vt_chararray:
       // haleyjd 03/13/06: static string support
-      QStrCopy(&value, (const char *)variable->variable);
+      QStrCopy(&value, (const char *)loc);
       break;
 
    case vt_float:
       // haleyjd 04/21/10: implemented vt_float
-      QStrPrintf(&value, 0, "%+.5f", *(double *)variable->variable);
+      QStrPrintf(&value, 0, "%+.5f", *(double *)loc);
       break;
       
    default:
@@ -553,6 +602,8 @@ const char *C_VariableValue(variable_t *variable)
 const char *C_VariableStringValue(variable_t *variable)
 {
    static qstring_t value;
+   flagcheckval_e stateflags;
+   const char *dummymsg = NULL;
    
    QStrClearOrCreate(&value, 1024);
    
@@ -561,6 +612,9 @@ const char *C_VariableStringValue(variable_t *variable)
 
    if(!variable->variable)
       return "null";
+
+   // haleyjd: get the "check" flags
+   stateflags = C_CheckFlags(variable->command, &dummymsg);
    
    // does the variable have alternate 'defines' ?
    if((variable->type == vt_int || variable->type == vt_toggle) && variable->defines)
@@ -569,11 +623,19 @@ const char *C_VariableStringValue(variable_t *variable)
       // haleyjd 03/17/02: needs rangechecking
       int varValue = 0;
       int valStrIndex = 0;
+      void *loc;
+
+      // if this is a variable that can only currently have its default set, use its
+      // default value rather than its actual value.
+      if(stateflags == CCF_CANSETDEF)
+         loc = variable->v_default;
+      else
+         loc = variable->variable;
 
       if(variable->type == vt_int)
-         varValue = *((int *)variable->variable);
+         varValue = *((int *)loc);
       else if(variable->type == vt_toggle)
-         varValue = (int)(*(boolean *)variable->variable);
+         varValue = (int)(*(boolean *)loc);
 
       valStrIndex = varValue - variable->min;
 
@@ -622,7 +684,7 @@ static boolean isnum(const char *text)
 // Take a string and see if it matches a define for a variable. Replace with the
 // literal value if so.
 //
-static const char *C_ValueForDefine(variable_t *variable, const char *s)
+static const char *C_ValueForDefine(variable_t *variable, const char *s, flagcheckval_e setflags)
 {
    int count;
    static qstring_t returnstr;
@@ -696,11 +758,18 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s)
    if(variable->type == vt_int || variable->type == vt_toggle)    // int values only
    {
       int value;
+      void *loc;
+
+      // if we can only set the default right now, use the default value.
+      if(setflags == CCF_CANSETDEF)
+         loc = variable->v_default;
+      else
+         loc = variable->variable;
 
       if(variable->type == vt_int)
-         value = *(int *)variable->variable;
+         value = *(int *)loc;
       else
-         value = (int)(*(boolean *)variable->variable);
+         value = (int)(*(boolean *)loc);
 
       if(!strcmp(s, "+"))     // increase value
       {
@@ -760,6 +829,8 @@ static void C_SetVariable(command_t *command)
    double fs = 0.0;
    char *errormsg;
    const char *temp;
+   flagcheckval_e setflags;
+   const char *varerror = NULL;
    
    // cut off the leading spaces
    
@@ -768,15 +839,18 @@ static void C_SetVariable(command_t *command)
       C_EchoValue(command);
       return;
    }
-   
-   // change it?
-   if(C_CheckFlags(command)) 
-      return; // no
+
+   // find out how we can change it.
+   setflags = C_CheckFlags(command, &varerror);
+   C_doErrorMsg(command, varerror); // show a message if one was set.
+
+   if(setflags == CCF_CANNOTSET) 
+      return; // can't set anything.
    
    // ok, set the value
    variable = command->variable;
    
-   temp = C_ValueForDefine(variable, QStrConstPtr(&Console.argv[0]));
+   temp = C_ValueForDefine(variable, QStrConstPtr(&Console.argv[0]), setflags);
    
    if(temp)
       QStrCopy(&Console.argv[0], temp);
@@ -838,7 +912,8 @@ static void C_SetVariable(command_t *command)
    }
    
    // netgame sync: send command to other nodes
-   if(C_Sync(command)) return;
+   if(C_Sync(command))
+      return;
    
    // now set it
    // 5/8/99 set default value also
@@ -852,23 +927,27 @@ static void C_SetVariable(command_t *command)
       switch(variable->type)  // implicitly set the variable
       {
       case vt_int:
-         *(int*)variable->variable = size;
-         if(variable->v_default && cmd_setdefault)  // default
+         if(setflags & CCF_CANSETVAR)
+            *(int*)variable->variable = size;
+         if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
             *(int*)variable->v_default = size;
          break;
 
       case vt_toggle:
          // haleyjd 07/05/10
-         *(boolean *)variable->variable = !!size;
-         if(variable->v_default && cmd_setdefault) // default
+         if(setflags & CCF_CANSETVAR)
+            *(boolean *)variable->variable = !!size;
+         if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
             *(boolean *)variable->v_default = !!size;
          break;
          
       case vt_string:
-         free(*(char**)variable->variable);
-         *(char**)variable->variable = QStrCDup(&Console.argv[0], PU_STATIC);
-
-         if(variable->v_default && cmd_setdefault)  // default
+         if(setflags & CCF_CANSETVAR)
+         {
+            free(*(char**)variable->variable);
+            *(char**)variable->variable = QStrCDup(&Console.argv[0], PU_STATIC);
+         }
+         if((setflags & CCF_CANSETDEF) && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
             *(char**)variable->v_default = QStrCDup(&Console.argv[0], PU_STATIC);
@@ -877,10 +956,12 @@ static void C_SetVariable(command_t *command)
 
       case vt_chararray:
          // haleyjd 03/13/06: static strings
-         memset(variable->variable, 0, variable->max + 1);
-         QStrCNCopy((char *)variable->variable, &Console.argv[0], variable->max + 1);
-
-         if(variable->v_default && cmd_setdefault)
+         if(setflags & CCF_CANSETVAR)
+         {
+            memset(variable->variable, 0, variable->max + 1);
+            QStrCNCopy((char *)variable->variable, &Console.argv[0], variable->max + 1);
+         }
+         if((setflags & CCF_CANSETDEF) && cmd_setdefault)
          {
             memset(variable->v_default, 0, variable->max+1);
             strcpy((char *)variable->v_default, Console.argv[0].buffer);
@@ -889,8 +970,9 @@ static void C_SetVariable(command_t *command)
 
       case vt_float:
          // haleyjd 04/21/10: implemented vt_float
-         *(double *)variable->variable = fs;
-         if(variable->v_default && cmd_setdefault)
+         if(setflags & CCF_CANSETVAR)
+            *(double *)variable->variable = fs;
+         if((setflags & CCF_CANSETDEF) && cmd_setdefault)
             *(double *)variable->v_default = fs;
          break;
          
@@ -1366,13 +1448,18 @@ void (C_AddCommand)(command_t *command)
    
    // save the netcmd link
    if(command->flags & cf_netvar && command->netcmd == 0)
-      C_Printf(FC_ERROR"C_AddCommand: cf_netvar without a netcmd (%s)\n", command->name);
+      C_Printf(FC_ERROR "C_AddCommand: cf_netvar without a netcmd (%s)\n", command->name);
    
    c_netcmds[command->netcmd] = command;
 
-   // haleyjd 07/04/10: find default in config for cvars that have one
    if(command->type == ct_variable)
+   {
+      // haleyjd 07/04/10: find default in config for cvars that have one
       command->variable->cfgDefault = M_FindDefaultForCVar(command->variable);
+
+      // haleyjd 08/15/10: set variable's pointer to command
+      command->variable->command = command;
+   }
 }
 
 // add a list of commands terminated by one of type ct_end

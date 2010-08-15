@@ -251,30 +251,29 @@ void C_SendNetData()
            FC_HI"Please Wait"FC_NORMAL" Sending game data..\n");
 
 
-  // go thru all hash chains, check for net sync variables
-  
-  for(i=0; i<CMDCHAINS; i++)
-    {
-      command = cmdroots[i];
-      
-      while(command)
+  // go thru all hash chains, check for net sync variables  
+  for(i = 0; i < CMDCHAINS; i++)
+  {
+     command = cmdroots[i];
+
+     while(command)
+     {
+        if(command->type == ct_variable && command->flags & cf_netvar && 
+           (consoleplayer == 0 || !(command->flags & cf_server)))
         {
-	  if(command->type == ct_variable && command->flags & cf_netvar
-	     && ( consoleplayer==0 || !(command->flags & cf_server)))
-            {
-	      C_UpdateVar(command);
-            }
-	  command = command->next;
+           C_UpdateVar(command);
         }
-    }
+        command = command->next;
+     }
+  }
 
   demo_insurance = 1;      // always use 1 in multiplayer
   
   if(consoleplayer == 0)      // if server, send command to warp to map
-    {
-      sprintf(tempstr, "map %s", startlevel);
-      C_RunTextCmd(tempstr);
-    }
+  {
+     sprintf(tempstr, "map %s", startlevel);
+     C_RunTextCmd(tempstr);
+  }
 }
 
 //
