@@ -2662,6 +2662,7 @@
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories=""
 								PreprocessorDefinitions=""
+								AssemblerOutput="0"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2671,6 +2672,7 @@
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories=""
 								PreprocessorDefinitions=""
+								AssemblerOutput="0"
 							/>
 						</FileConfiguration>
 					</File>

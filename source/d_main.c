@@ -85,6 +85,7 @@
 #include "g_dmflag.h"
 #include "e_edf.h"
 #include "e_player.h"
+#include "e_fonts.h"
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -213,6 +214,35 @@ extern boolean setsizeneeded;
 boolean        redrawsbar;      // sf: globaled
 boolean        redrawborder;    // sf: cleaned up border redraw
 int            wipewait;        // haleyjd 10/09/07
+
+boolean        d_drawfps;       // haleyjd 09/07/10: show drawn fps
+
+//
+// D_showFPS
+//
+static void D_showDrawnFPS(void)
+{
+   static unsigned int lastms, accms, frames;
+   unsigned int curms;
+   static int lastfps;
+   vfont_t *font;
+   char msg[64];
+   
+   accms += (curms = I_GetTicks()) - lastms;
+   lastms = curms;
+   ++frames;
+
+   if(accms >= 1000)
+   {
+      lastfps = frames * 1000 / accms;
+      frames = 0;
+      accms -= 1000;
+   }
+
+   font = E_FontForName("ee_smallfont");
+   psnprintf(msg, 64, "DFPS: %d", lastfps);
+   V_FontWriteText(font, msg, 5, 20);
+}
 
 //
 // D_Display
@@ -360,6 +390,9 @@ void D_Display(void)
    //sf : now system independent
    if(v_ticker)
       V_FPSDrawer();
+
+   if(d_drawfps)
+      D_showDrawnFPS();
    
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop
@@ -3600,6 +3633,19 @@ boolean D_AddNewFile(const char *s)
    C_SetConsole();
    D_ReInitWadfiles();
    return true;
+}
+
+//============================================================================
+// 
+// Console Commands
+//
+
+VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
+CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
+
+void D_AddCommands(void)
+{
+   C_AddCommand(d_drawfps);
 }
 
 //----------------------------------------------------------------------------
