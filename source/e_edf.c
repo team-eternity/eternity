@@ -220,6 +220,9 @@ int *pickupfx = NULL;
 static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc, 
                        const char **argv);
 
+static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc, 
+                        const char **argv);
+
 static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                          const char **argv);
 
@@ -334,6 +337,7 @@ static cfg_opt_t edf_opts[] =
    CFG_FUNC("stdinclude",       E_StdInclude),
    CFG_FUNC("userinclude",      E_UserInclude),
    CFG_FUNC("bexinclude",       bex_include),      // DEPRECATED
+   CFG_FUNC("bexoverride",      bex_override),
    CFG_FUNC("ifenabled",        edf_ifenabled),
    CFG_FUNC("ifenabledany",     edf_ifenabledany),
    CFG_FUNC("ifdisabled",       edf_ifdisabled),
@@ -616,6 +620,17 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    // queue the file for later processing
    D_QueueDEH(filename, 0);
 
+   return 0;
+}
+
+// 
+// bex_override
+//
+// haleyjd 09/26/10: Setting this flag in an EDF will disable loading of
+// DEHACKED lumps from the same wad file.
+//
+static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
+{
    return 0;
 }
 

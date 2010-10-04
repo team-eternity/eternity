@@ -766,7 +766,7 @@ static boolean RunGameTics(void)
       counts = availabletics;
   
    // haleyjd 09/07/10: enhanced d_fastrefresh w/early return when no tics to run
-   if(counts <= 0 && d_fastrefresh)
+   if(counts <= 0 && d_fastrefresh && !timingdemo) // 10/03/10: not in timedemos!
       return true;
 
    if(counts < 1)
