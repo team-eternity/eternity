@@ -3400,6 +3400,10 @@
 							/>
 						</FileConfiguration>
 					</File>
+					<File
+						RelativePath="..\source\r_voxels.c"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="R_ Headers"
@@ -3466,6 +3470,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\r_things.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\r_voxels.h"
 						>
 					</File>
 				</Filter>
