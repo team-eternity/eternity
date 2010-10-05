@@ -71,6 +71,10 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
    model         = Z_Calloc(1,       sizeof(rvoxelmodel_t), PU_RENDERER, NULL);
    model->voxels = Z_Calloc(voxsize, sizeof(byte),          PU_RENDERER, NULL);
 
+   model->xsize = xsize;
+   model->ysize = ysize;
+   model->zsize = zsize;
+
    // get voxel data
    memcpy(model->voxels, rover, voxsize);
    rover += voxsize;
