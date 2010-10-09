@@ -1372,7 +1372,8 @@ static char **iwadVarForNum[] =
 {
    &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
    &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
-   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,
+   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg, 
+   &gi_path_sosr,
 };
 
 //

@@ -536,13 +536,15 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
 
 extern menu_t menu_loadwad;
 extern menu_t menu_wadmisc;
-extern menu_t menu_wadiwads;
+extern menu_t menu_wadiwads1;
+extern menu_t menu_wadiwads2;
 
 static const char *mn_wad_names[] =
 {
    "File Selection",
    "Misc Settings",
-   "IWAD Paths",
+   "IWAD Paths - DOOM",
+   "IWAD Paths - Raven",
    NULL
 };
 
@@ -550,7 +552,8 @@ static menu_t *mn_wad_pages[] =
 {
    &menu_loadwad,
    &menu_wadmisc,
-   &menu_wadiwads,
+   &menu_wadiwads1,
+   &menu_wadiwads2,
    NULL
 };
 
@@ -588,11 +591,11 @@ static menuitem_t mn_wadmisc_items[] =
    {it_end},
 };
 
-static menuitem_t mn_wadiwad_items[] =
+static menuitem_t mn_wadiwad1_items[] =
 {
    {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
    {it_gap},
-   {it_info,     FC_GOLD "IWAD Paths",  NULL,                     NULL, MENUITEM_CENTERED },
+   {it_info,     FC_GOLD "IWAD Paths - DOOM", NULL,               NULL, MENUITEM_CENTERED },
    {it_gap}, 
    {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    NULL, MENUITEM_LALIGNED },
    {it_variable, "DOOM (Reg):",         "iwad_doom",              NULL, MENUITEM_LALIGNED },
@@ -600,6 +603,16 @@ static menuitem_t mn_wadiwad_items[] =
    {it_variable, "DOOM II:",            "iwad_doom2",             NULL, MENUITEM_LALIGNED },
    {it_variable, "Evilution:",          "iwad_tnt",               NULL, MENUITEM_LALIGNED },
    {it_variable, "Plutonia:",           "iwad_plutonia",          NULL, MENUITEM_LALIGNED },
+   {it_variable, "HACX:",               "iwad_hacx",              NULL, MENUITEM_LALIGNED },
+   {it_end}
+};
+
+static menuitem_t mn_wadiwad2_items[] =
+{
+   {it_title,    FC_GOLD "Wad Options", NULL,                     "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "IWAD Paths - Raven", NULL,              NULL, MENUITEM_CENTERED },
+   {it_gap}, 
    {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
    {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      NULL, MENUITEM_LALIGNED },
@@ -624,7 +637,7 @@ menu_t menu_wadmisc =
 {
    mn_wadmisc_items,
    &menu_loadwad,
-   &menu_wadiwads,
+   &menu_wadiwads1,
    &menu_loadwad, // rootpage
    200, 15,
    4,
@@ -634,10 +647,24 @@ menu_t menu_wadmisc =
    mn_wad_pages,
 };
 
-menu_t menu_wadiwads =
+menu_t menu_wadiwads1 =
 {
-   mn_wadiwad_items,
+   mn_wadiwad1_items,
    &menu_wadmisc,
+   &menu_wadiwads2,
+   &menu_loadwad, // rootpage
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadiwads2 =
+{
+   mn_wadiwad2_items,
+   &menu_wadiwads1,
    NULL,
    &menu_loadwad, // rootpage
    200, 15,

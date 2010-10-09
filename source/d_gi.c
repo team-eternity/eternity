@@ -606,6 +606,7 @@ char *gi_path_doomu;
 char *gi_path_doom2;
 char *gi_path_tnt;
 char *gi_path_plut;
+char *gi_path_hacx;
 char *gi_path_hticsw;
 char *gi_path_hticreg;
 char *gi_path_sosr;
@@ -729,7 +730,7 @@ static missioninfo_t gmHacx =
    VNAME_HACX,      // versionNameOR
    BANNER_HACX,     // startupBannerOR
    0,               // numEpisodesOR
-   NULL,            // iwadPathOR -- HACX_FIXME
+   &gi_path_hacx,   // iwadPathOR
    NULL,            // finaleDataOR
    &menu_old_main,  // mainMenuOR
    HACXMENUBACK,    // menuBackgroundOR

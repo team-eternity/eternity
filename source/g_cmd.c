@@ -455,6 +455,7 @@ VARIABLE_STRING(gi_path_doomu,   NULL, UL);
 VARIABLE_STRING(gi_path_doom2,   NULL, UL);
 VARIABLE_STRING(gi_path_tnt,     NULL, UL);
 VARIABLE_STRING(gi_path_plut,    NULL, UL);
+VARIABLE_STRING(gi_path_hacx,    NULL, UL);
 VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
@@ -507,6 +508,11 @@ CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     0)
 CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    0) 
 {
    G_TestIWADPath(gi_path_plut);
+}
+
+CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,    0)
+{
+   G_TestIWADPath(gi_path_hacx);
 }
 
 CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  0) 
@@ -861,6 +867,7 @@ void G_AddCommands(void)
    C_AddCommand(iwad_doom2);
    C_AddCommand(iwad_tnt);
    C_AddCommand(iwad_plutonia);
+   C_AddCommand(iwad_hacx);
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
