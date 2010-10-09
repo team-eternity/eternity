@@ -31,7 +31,7 @@
 int version = 339;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 0;
+unsigned char SUBVERSION = 20;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
@@ -41,7 +41,7 @@ const char version_name[] = "Resheph";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.39.00 \"Resheph\"";
+const char ee_wmCaption[] = "Eternity Engine v3.39.20 \"Resheph\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -69,6 +69,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.39.00 \"Resheph\"";
 // 3.35.90 'Simorgh'   -- 01/11/09
 // 3.35.92 'Nekhbet'   -- 03/22/09
 // 3.37.00 'Sekhmet'   -- 01/01/10
+// 3.39.20 'Resheph'   -- 10/09/10
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

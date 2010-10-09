@@ -2,6 +2,377 @@
 Changes since Eternity Engine v3.37.00
 ================================================================================
 --------------------------------------------------------------------------------
+10/09/10
+
+Added iwad_hacx variable and added the HACX titlescreen to startup.wad, and 
+made modifications to the IWAD picker to allow choosing it, to finish up
+support for the HACX 1.2 release.
+
+Updated the changelog and version info for upcoming 3.39.20 "Resheph" release.
+
+--------------------------------------------------------------------------------
+10/05/10
+
+I added an r_voxels module and code to load .vox format voxel models.
+
+--------------------------------------------------------------------------------
+10/03/10
+
+CSonicGo found a bug in the d_fastrefresh tweak which caused -timedemo to break
+completely - it would dump you to the console, where you could enter commands
+that would be acknowledged but never executed, and where you could access the
+menus, but changing certain variables would cause the game to crash. Indeed,
+the game was stuck in GS_STARTUP state because the first gametic could never
+be run with TryRunTics returning immediately every time.
+
+The fix is to not do the early return from TryRunTics if the timer is being
+used unlatched, as in -timedemo mode.
+
+--------------------------------------------------------------------------------
+09/07/10
+
+I made some changes to d_fastrefresh which make it even faster and allow it to
+behave as proper unlatched framerate support - though note that there is still
+no interpolation support and so the apparent FPS is 35 even though the drawn
+framerate is 200 or higher. I can definitely tell the difference though,
+especially since d_fastrefresh=false cannot attain even 35 FPS under Windows 7
+due to some kind of bizarre lag in getting the refresh to the display. I 
+suspect this is related to Aero somehow, and seems to affect all SDL apps when
+running under Vista or 7.
+
+I also added a new d_drawfps cvar that will show the drawn FPS on screen, 
+rather than the count of gameloops per second, which caps at 35.
+
+--------------------------------------------------------------------------------
+08/15/10
+
+Added a logical warning output system for EDF which, with use of the 
+-edf-show-warnings parameter, can print out warnings to the Win32 (or Linux)
+console window. Warnings will additionally always appear in the verbose log
+even when this parameter is not used. A count of EDF warnings is always shown
+on the console.
+
+printz found another DECORATE states bug; I needed to allow transition back to
+the NEEDLABELORKWORSTATE state after accepting a 'bright' keyword as well, and I
+somehow failed to notice this oversight while adding support for making the
+transition after parsing the tics token.
+
+It is now possible to edit the default values of sync-critical variables while
+a demo is in progress, rather than being told by the menu system that you cannot
+do something because a demo is playing. This required some special checks in
+the console system which switch over to setting only defaults when the cvars
+are in a state where their runtime value should not be modified.
+
+The end of a demo will automatically propagate defaults of sync-critical vars
+back into their runtime versions, courtesy of the BOOM code which has always
+worked this way, and so this is just exploiting a facility that already exists
+and was only overlooked by fraggle while implementing the console in SMMU.
+
+--------------------------------------------------------------------------------
+08/14/10
+
+After attempting to implement modification-safe blockamp list traversal, I 
+realized that nullification of blockmap and sector lists in P_UnsetThingPosition
+is actually unnecessary and causes many more problems than it solves. Instead
+it suffices entirely to do the addition of MF_NOBLOCKMAP|MF_NOSECTOR when
+removing the thing, so that it cannot be relinked into the lists. Not nullfiying
+the links does at least still allow the object to be traversed through while
+completing traversals during the current gametic, while the object is still
+valid in memory even though it has been removed from the gamesim.
+
+--------------------------------------------------------------------------------
+08/13/10
+
+Added some safety tweaks when demos are not being played. Sector and blockmap
+links should be nullified in P_UnsetThingPosition, and the old_sectorlist in
+mobj_t should be cleared when calling P_RemoveMobj. MF_NOBLOCKMAP and 
+MF_NOSECTOR *must* be set on objects when they are removed, or other code in the
+engine could force them to be relinked into the blockmap and sector lists while
+they are pending to be freed.
+
+The sound engine is also now allowed to increment and decrement reference counts
+on objects, in the unlikely event that a thing plays a sound AFTER having
+S_StopSound called on it but before actually getting freed. This may come in 
+handy later for supporting transient sound origins.
+
+--------------------------------------------------------------------------------
+08/09/10
+
+Another major bug was found in edf-branch code, this time by printz. I was using
+the wrong ehash_t specialization for the new system of state hashing which would
+cause lower-case state names to inappropriately go unrecognized. Fixed by 
+changing E_StateNumForName to use the case-insensitive specialization.
+
+I also added additional use of ZONEVERBOSE in z_native.c to #if out some more
+dangerous message prints which can wipe out the original cause of a memory error
+when the game is trying to report it.
+
+--------------------------------------------------------------------------------
+08/08/10
+
+I removed the SMMU limit on console argvs and tokens, including a fix to an
+unchecked crash condition if a command had more than 64 tokens. The token and
+argv arrays are now fully dynamic and will reallocate if their initial size
+is exceeded.
+
+--------------------------------------------------------------------------------
+07/29/10
+
+A long-time fear of mine was confirmed today when I discovered that DOOM sets 
+the game into the GS_LEVEL gamestate too early - at the start of G_DoLoadLevel
+instead of at the end of P_SetupLevel when everything has been created. To fix
+this I added a new GS_LOADING gamestate which is entered in G_DoLoadLevel, and
+then I do not set GS_LEVEL until everything is actually ready to be manipulated
+externally.
+
+I have rewritten (already) the DECORATE state parser so that it is semi-tolerant
+of errors, rather than bombing out for any little mistake. No states defind in
+an erroneous DECORATE state block can be used, however, and the DSO will be
+disposed of when any error occurs, causing a NULL return value from 
+E_ProcessDecorateStates.
+
+DECORATE state processing errors will now appear in the EDF verbose log file.
+
+--------------------------------------------------------------------------------
+07/26/10
+
+esselfortium found a major bug from edf-branch which disabled the ability to
+load EDF from wads - this was caused by returning lump->index (the hash chain)
+instead of i (the lump number) from E_FindLumpInclude.
+
+--------------------------------------------------------------------------------
+07/25/10
+
+Implemented an experimental change to dynasegs that hopefully fixes the problem
+of inconsistent splitting of polyobjects with vertices that are too close to
+node lines found by Graf Zahl in ZDoom. I also added QStrFindFirstOfChar and
+QStrFindFirstNotOfChar routines which are similar to std::string's
+find_first_of in C++, and employed them immediately in the console. I rewrote
+tab completion in the console to use qstrings and to eliminate some dangerous
+unchecked static limits from SMMU.
+
+--------------------------------------------------------------------------------
+07/24/10
+
+I have eliminated most of the rest of the static limits in the console via 
+additional application of qstrings.
+
+--------------------------------------------------------------------------------
+07/18/10
+
+I added a QStrCDupAuto method for creating an automatic-allocation copy of a
+qstring_t's contents, so that temporary, disposable copies of qstrings can be
+made for one-off operations
+
+I made E_SpiltTypeAndState in e_things.c global so that it can be used by the
+state evaluator in e_args.c, and implemented a new E_ArgAsStateLabel evaluator
+with support for the :: scope operator in state jump targets. This allows the 
+A_Jump codepointer to jump to any foreign object state.
+
+All other state evaluators also now support DECORATE state labels, when the 
+jump target is not found as a global state name first (this makes DECORATE 
+labels a fall-back in pointers that use these routines). I also added an 
+args[2] parameter to A_Scratch which allows the pointer to play a sound when it
+is invoked from a DECORATE state.
+
+--------------------------------------------------------------------------------
+07/16/10
+
+I gave the qstring module another massive overhaul. I changed all size and index
+variables/parameters to use size_t rather than unsigned int, changed the
+QStrBuffer, QStrSize, and QStrLen functions into macros for efficiency, and 
+added new macros and functions QStrConstPtr, QStrClearOrCreate, QStrBufferAt,
+QStrCNCopy, QStrInsert, QStrMakeQuoted, QStrNCaseCmp, QStrNCmp, QStrQCat,
+QStrQCopy, and QStrToDouble.
+
+--------------------------------------------------------------------------------
+07/12/10
+
+I have added a basic inheritance mechanism to metatype_t's so that they can call
+into their parent class's methods. For example, in the new toString method for
+metastrings, the metaobject base class copy method is invoked first to do a
+shallow copy, and then the referenced string is sent to strdup so that the new
+metastring gets an independent copy of the string.
+
+I also added a toString method for speedsets, the only metaobject type that was
+currently missing this method.
+
+Tweaked the w_levels module so that the w_masterlevels command cannot be 
+exploited to load PWADs in shareware games.
+
+--------------------------------------------------------------------------------
+07/10/10
+
+I found a problem in Z_Realloc that would have crashed the game if a memory
+outage occurred and the game tried and failed to remove purgable blocks. I was
+also able, with a realization that the currently reallocating block is detached
+from the zone block list beforehand, to restore support for reallocation of
+purgable blocks.
+
+--------------------------------------------------------------------------------
+07/08/10
+
+I got sick of typing M_ everywhere just to do string operations, and so I
+dropped this prefix from all qstring routines, leaving them with names such as
+QStrCopy. I think this is a vast improvement.
+
+While in m_qstr.c I took the opportunity to reorganize the module, giving each
+function a proper categorization.
+
+I rewrote the native heap's zone alloca system to exploit the native heap's
+blockbytag list so that it no longer has to add an extra header into the 
+allocation or do its own linked list tracking. This allows me to add a 
+Z_Realloca for reallocation of automatic blocks.
+
+--------------------------------------------------------------------------------
+07/07/10
+
+I re-removed the error message length limitation in E_EDFLogPrintf by using two
+va_list objects. An initial implementation of M_QStrPrintf, a function that can
+do formatted printing into a qstring, has been added. I started replacing all
+instances of psnprintf/M_QStrCpy pairs with calls to this new function.
+
+--------------------------------------------------------------------------------
+07/05/10
+
+Added support for the mythic, unimplemented vt_toggle cvar type mentioned in 
+comments from SMMU, and then I changed all actual boolean variables to use that
+cvar type, so that they are not using int * to write into boolean locations
+(even though this is generally perfectly safe under C, it's still semantically
+poor).
+
+I have created a stopgap solution for associating cvars with their corresponding
+default_t in the config file, so that the console now has access to defaults.
+The default value is now printed when the cvarhelp command is used. I also
+rewrote cvarhelp so that it properly uses the console's hashing mechanism, 
+rather than doing an inefficient linear search over all console command objects.
+
+Console.argv and Console.argc have been changed from char arrays into qstring_t
+objects, eliminating all SMMU static limits on console token and command length.
+Fixed undefined strcpy behavior in C_SetVariable in the process.
+
+cvars can now be reset to their default value by using the syntax:
+  
+  <variablename> *
+  
+That is, following the variable name with a star character.
+
+--------------------------------------------------------------------------------
+07/03/10
+
+I rewrote the config file system to use a pseudo-object-oriented design for 
+default_t objects, default_t's are populated with methods from their 
+corresponding static interfaces at startup.
+
+--------------------------------------------------------------------------------
+07/02/10
+
+I have added full support for floating point cvars to menu slider controls,
+including the snazzy ability to display the current value of the slider above
+the slider in a framed box while the slider is the currently selected menuitem.
+
+--------------------------------------------------------------------------------
+06/25/10
+
+Work continues on the LevelInfo rewrite but I'm running into some problems that
+may take a good while to overcome.
+
+--------------------------------------------------------------------------------
+06/24/10
+
+edf-branch has been merged into trunk, bringing in support for dynamic states,
+sprites, and DECORATE states.
+
+Some post-merge cleanup work was required, including resolving the issue in
+w_wad.c so that all wad files, even ones loaded into private directories, are
+given a unique source identification number.
+
+The A_Jump DECORATE pointer is now fully functional.
+
+I finally got around to changing all EMACS mode select strings in the source
+code so that automatic source code analyzers such as ohloh will not misidentify
+the code as C++.
+
+
+--------------------------------------------------------------------------------
+06/21/10
+
+Started work on rewrites that will hopefully enable LevelInfo to be cached, so
+that Hexen-style MAPINFO can be supported properly within the same system.
+
+--------------------------------------------------------------------------------
+06/20/10
+
+Added a GIF_HUDSTATBARNAME flag to GameModeInfo which controls the position of
+the automap levelname widget, rather than branching on GameModeInfo->type in
+HU_Init. I also added a clear method to the leveltime widget which will move
+the widget up if the automap level name is so long that it would overlap with
+the timer.
+
+--------------------------------------------------------------------------------
+06/19/10
+
+I finally got around to changing the array of gamemission paths in d_main into
+a field in GameModeInfo. Now when new gamemissions are added I don't have to 
+remember to add an item to an array in another module.
+
+--------------------------------------------------------------------------------
+06/18/10
+
+The Master Levels directory can now be re-enumerated if the path is changed at
+runtime.
+
+--------------------------------------------------------------------------------
+06/17/10
+
+Master Levels support is now complete with the ability to set the directory to
+use, and support for reading the author names and map titles out of their wad
+template files when such are present.Added w_masterlevels command to bring up
+the special loading menu.
+
+--------------------------------------------------------------------------------
+06/16/10
+
+Additional work has been done on the w_levels module. It is now possible to save
+and reload the game while on a level loaded out of a managed private wad
+directory. Did another round of GCC warning fixing.
+
+--------------------------------------------------------------------------------
+06/15/10
+
+Added a new w_levels module for maintaining managed private wad directories.
+Made modifications to mn_files that will allow the file selector widget to be
+used externally on an arbitrary directory structure, rather than being
+restricted to operating on a single data structure private to that module.
+
+Fixed a bug whereby the IWAD picker module could access freed memory while
+closing startup.wad.
+
+--------------------------------------------------------------------------------
+06/14/10
+
+I have added support for ZDoom's new uncompressed extended node format, which 
+has support for maps too massive for the original format. Also fixed a problem
+I caused in the new texture system that temporarily broke runtime loading of 
+PWADs with new textures in them.
+
+Mouse motion events are now finally ignored for real at startup, so you once
+again shouldn't start out facing a random direction and looking up at the 
+ceiling when starting games with parameters such as -warp.
+
+Finally, I have gotten support into p_setup.c for loading levels out of private
+wad directories. This is going to come in handy for an idea I have for the
+implementation of native Master Levels support.
+
+--------------------------------------------------------------------------------
+06/13/10
+
+Simplified the screenshot IO macros in m_shots.c. Also made an experimental
+change to span projection to use a Mozilla routine from SpiderMonkey for what I
+hope is a portable means of converting doubles into unsigned integers. It works
+on PC, but needs to be tested on Linux and MacOS.
+
+--------------------------------------------------------------------------------
 06/09/10
 
 Static analyzer fixes continue, though they are all very minor now. I fixed the
