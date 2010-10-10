@@ -69,7 +69,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.39.20 \"Resheph\"";
 // 3.35.90 'Simorgh'   -- 01/11/09
 // 3.35.92 'Nekhbet'   -- 03/22/09
 // 3.37.00 'Sekhmet'   -- 01/01/10
-// 3.39.20 'Resheph'   -- 10/09/10
+// 3.39.20 'Resheph'   -- 10/10/10
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
