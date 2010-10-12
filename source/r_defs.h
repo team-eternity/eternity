@@ -305,7 +305,7 @@ struct sector_s
    
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
-   int damagemask;  // damage is done when !(leveltime & mask)
+   int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
    int damageflags; // special damage behaviors
 

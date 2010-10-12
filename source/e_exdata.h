@@ -90,9 +90,6 @@ typedef struct maplinedefext_s
 
 typedef struct mapsectorext_s
 {
-   // standard fields
-   mapsector_t stdfields;
-
    // extended fields
    double floor_xoffs;
    double floor_yoffs;
@@ -100,6 +97,9 @@ typedef struct mapsectorext_s
    double ceiling_yoffs;
    double floorangle;
    double ceilingangle;
+   int    flags;
+   int    flagsadd;
+   int    flagsrem;
    int    topmap;
    int    midmap;
    int    bottommap;
@@ -107,8 +107,12 @@ typedef struct mapsectorext_s
    int    damagemask;
    int    damagemod;
    int    damageflags;
+   int    damageflagsadd;
+   int    damageflagsrem;
 
    // internal fields (used by ExtraData only)
+   boolean hasflags;
+   boolean hasdamageflags;
    int recordnum;
    int next;
 

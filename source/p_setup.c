@@ -535,17 +535,17 @@ void P_LoadSectors(int lumpnum)
          {
          case 1:
             ss->damage     = 5;
-            ss->damagemask = 0x1f;
+            ss->damagemask = 32;
             ss->damagemod  = MOD_SLIME;
             break;
          case 2:
             ss->damage     = 10;
-            ss->damagemask = 0x1f;
+            ss->damagemask = 32;
             ss->damagemod  = MOD_SLIME;
             break;
          case 3:
             ss->damage       = 20;
-            ss->damagemask   = 0x1f;
+            ss->damagemask   = 32;
             ss->damagemod    = MOD_SLIME;
             ss->damageflags |= SDMG_LEAKYSUIT;
             break;

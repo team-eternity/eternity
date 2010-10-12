@@ -2387,7 +2387,7 @@ void P_PlayerInSpecialSector(player_t *player)
             player->cheats &= ~CF_GODMODE;
 
          // check time
-         if(!(leveltime & sector->damagemask))
+         if(sector->damagemask <= 0 || !(leveltime % sector->damagemask))
          {
             // do the damage
             P_DamageMobj(player->mo, NULL, NULL, sector->damage, 
@@ -2590,7 +2590,7 @@ void P_SpawnSpecials(int mapformat)
          // haleyjd 12/31/08: sector damage conversion
          // sector->special |= 3 << DAMAGE_SHIFT; //jff 3/14/98 put damage bits in
          sector->damage       = 20;
-         sector->damagemask   = 0x1f;
+         sector->damagemask   = 32;
          sector->damagemod    = MOD_SLIME;
          sector->damageflags |= SDMG_LEAKYSUIT;
          break;
@@ -2600,7 +2600,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage     = 10;
-            sector->damagemask = 0x1f;
+            sector->damagemask = 32;
             sector->damagemod  = MOD_SLIME;
          }
          break;
@@ -2610,7 +2610,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage     = 5;
-            sector->damagemask = 0x1f;
+            sector->damagemask = 32;
             sector->damagemod  = MOD_SLIME;
          }
          break;
@@ -2640,7 +2640,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage       = 20;
-            sector->damagemask   = 0x1f;
+            sector->damagemask   = 32;
             sector->damagemod    = MOD_SLIME;
             sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
          }
@@ -2666,7 +2666,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage       = 20;
-            sector->damagemask   = 0x1f;
+            sector->damagemask   = 32;
             sector->damagemod    = MOD_SLIME;
             sector->damageflags |= SDMG_LEAKYSUIT;
          }
@@ -4432,7 +4432,7 @@ void P_ConvertHereticSpecials(void)
       case 4: // Scroll_EastLavaDamage
          // custom damage parameters:
          sector->damage       = 5;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          // heretic current pusher type:
@@ -4445,19 +4445,19 @@ void P_ConvertHereticSpecials(void)
          continue;
       case 5: // Damage_LavaWimpy
          sector->damage       = 5;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          sector->special      = 0;
          continue;
       case 7: // Damage_Sludge
          sector->damage     = 4;
-         sector->damagemask = 0x1f;
+         sector->damagemask = 32;
          sector->special    = 0;
          continue;
       case 16: // Damage_LavaHefty
          sector->damage       = 8;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          sector->special      = 0;

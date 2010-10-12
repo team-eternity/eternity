@@ -98,13 +98,15 @@ static unsigned int sector_chains[NUMSECCHAINS];
 
 // sector fields:
 #define FIELD_SECTOR_NUM            "recordnum"
-#define FIELD_SECTOR_SPECIAL        "special"
-#define FIELD_SECTOR_TAG            "tag"
 #define FIELD_SECTOR_FLAGS          "flags"
+#define FIELD_SECTOR_FLAGSADD       "flagsadd"
+#define FIELD_SECTOR_FLAGSREM       "flagsremove"
 #define FIELD_SECTOR_DAMAGE         "damage"
 #define FIELD_SECTOR_DAMAGEMASK     "damagemask"
 #define FIELD_SECTOR_DAMAGEMOD      "damagemod"
 #define FIELD_SECTOR_DAMAGEFLAGS    "damageflags"
+#define FIELD_SECTOR_DMGFLAGSADD    "damageflagsadd"
+#define FIELD_SECTOR_DMGFLAGSREM    "damageflagsremove"
 #define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
 #define FIELD_SECTOR_FLOORANGLE     "floorangle"
 #define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
@@ -173,22 +175,84 @@ static cfg_opt_t linedef_opts[] =
 
 static dehflags_t extlineflags[] =
 {
-   { "CROSS",   EX_ML_CROSS },
-   { "USE",     EX_ML_USE },
-   { "IMPACT",  EX_ML_IMPACT },
-   { "PUSH",    EX_ML_PUSH },
-   { "PLAYER",  EX_ML_PLAYER },
+   { "CROSS",   EX_ML_CROSS   },
+   { "USE",     EX_ML_USE     },
+   { "IMPACT",  EX_ML_IMPACT  },
+   { "PUSH",    EX_ML_PUSH    },
+   { "PLAYER",  EX_ML_PLAYER  },
    { "MONSTER", EX_ML_MONSTER },
    { "MISSILE", EX_ML_MISSILE },
-   { "REPEAT",  EX_ML_REPEAT },
-   { "1SONLY",  EX_ML_1SONLY },
-   { NULL,      0 }
+   { "REPEAT",  EX_ML_REPEAT  },
+   { "1SONLY",  EX_ML_1SONLY  },
+   { NULL,      0             }
 };
 
 static dehflagset_t ld_flagset =
 {
    extlineflags, // flaglist
    0,            // mode
+};
+
+// haleyjd 06/26/07: sector options and related data structures
+
+static cfg_opt_t sector_opts[] =
+{
+   CFG_INT(FIELD_SECTOR_NUM,              0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLAGS,            "",         CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLAGSADD,         "",         CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLAGSREM,         "",         CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGE,           0,          CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,          CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        "Unknown",  CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DAMAGEFLAGS,      "",         CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DMGFLAGSADD,      "",         CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_DMGFLAGSREM,      "",         CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
+
+   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETX,   0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETY,   0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETX, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
+   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
+   
+   CFG_END()
+};
+
+static dehflags_t sectorflags[] =
+{
+   { "SECRET",        SECF_SECRET        },
+   { "FRICTION",      SECF_FRICTION      },
+   { "PUSH",          SECF_PUSH          },
+   { "KILLSOUND",     SECF_KILLSOUND     },
+   { "KILLMOVESOUND", SECF_KILLMOVESOUND },
+   { NULL,            0                  }
+};
+
+static dehflagset_t sector_flagset =
+{
+   sectorflags, // flaglist
+   0,           // mode
+};
+
+static dehflags_t sectordamageflags[] =
+{
+   { "LEAKYSUIT",  SDMG_LEAKYSUIT  },
+   { "IGNORESUIT", SDMG_IGNORESUIT },
+   { "ENDGODMODE", SDMG_ENDGODMODE },
+   { "EXITLEVEL",  SDMG_EXITLEVEL  },
+   { "TERRAINHIT", SDMG_TERRAINHIT },
+   { NULL,         0               }
+};
+
+static dehflagset_t sectordamage_flagset =
+{
+   sectordamageflags, // flaglist
+   0                  // mode
 };
 
 //
@@ -632,39 +696,6 @@ static struct exlinespec
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
-
-
-// haleyjd 06/26/07: sector options and related data structures
-
-static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
-                          void *result);
-
-static cfg_opt_t sector_opts[] =
-{
-   CFG_INT(FIELD_SECTOR_NUM,              0,          CFGF_NONE),
-   CFG_INT_CB(FIELD_SECTOR_SPECIAL,       0,          CFGF_NONE, E_SectorSpecCB),
-   CFG_INT(FIELD_SECTOR_TAG,              0,          CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_FLAGS,            "",         CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_DAMAGE,           0,          CFGF_NONE),
-   CFG_INT(FIELD_SECTOR_DAMAGEMASK,       0,          CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_DAMAGEMOD,        "Unknown",  CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_DAMAGEFLAGS,      "",         CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
-
-   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETX,   0.0,        CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOOROFFSETY,   0.0,        CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETX, 0.0,        CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
-   CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
-   
-   CFG_END()
-};
-
 
 // primary ExtraData options table
 
@@ -1603,42 +1634,31 @@ static unsigned int E_EDSectorForRecordNum(int recnum)
 }
 
 //
-// E_SectorSpecCB
+// E_NormalizeFlatAngle
 //
-// libConfuse callback function for processing the sector special.
+// ZDoom decided for us that floors and ceilings should rotate backward with 
+// respect to DOOM's normal angular coordinate system, so don't blame me for 
+// the reversal.
 //
-static int E_SectorSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
-                          void *result)
+static double E_NormalizeFlatAngle(double input)
 {
-   int  num;
-   char *endptr;
+   // first account for negative angles
+   while(input < 0.0)
+      input += 360.0;
 
-   num = strtol(value, &endptr, 0);
+   // now account for super angles
+   while(input >= 360.0)
+      input -= 360.0;
 
-   // check if value is a number or not
-   if(*endptr != '\0')
-   {
-   }
-   else
-   {
-      // value is a number
-      if(errno == ERANGE)
-      {
-         if(cfg)
-         {
-            cfg_error(cfg,
-                      "integer value for option '%s' is out of range\n",
-                      opt->name);
-         }
-         return -1;
-      }
+   // now that we're between 0 and 359, reverse the angle...
+   input = 360.0 - input;
 
-      *(int *)result = num;
-   }
+   // don't return 360 for 0
+   if(input == 360.0)
+      input = 0.0;
 
-   return 0;
+   return input;
 }
-
 
 //
 // E_ProcessEDSectors
@@ -1657,8 +1677,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       return;
 
    // allocate the mapsectorext_t structures
-   EDSectors = Z_Malloc(numEDSectors * sizeof(mapsectorext_t),
-                        PU_LEVEL, NULL);
+   EDSectors = Z_Calloc(numEDSectors, sizeof(mapsectorext_t), PU_LEVEL, NULL);
 
    // initialize the hash chains
    for(i = 0; i < NUMSECCHAINS; ++i)
@@ -1669,6 +1688,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
    {
       cfg_t *section;
       int tempint;
+      double tempdouble;
       const char *tempstr;
       mapsectorext_t *sec = &EDSectors[i];
 
@@ -1686,18 +1706,30 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->next = sector_chains[tempint];
       sector_chains[tempint] = i;
 
-      // standard fields
-
-      // special
-      sec->stdfields.special = (int16_t)cfg_getint(section, FIELD_SECTOR_SPECIAL);
-
-      // tag
-      sec->stdfields.tag = (int16_t)cfg_getint(section, FIELD_SECTOR_TAG);
-
       // extended fields
-
+      /*
+      TODO:
+      CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
+      CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
+      CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
+      CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
+      CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
+      */
       // flags
-      // TODO
+      tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGS); // flags to set
+      if(*tempstr != '\0')
+      {
+         sec->hasflags = true; // flags were set
+         sec->flags = E_ParseFlags(tempstr, &sector_flagset);
+      }
+      
+      tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGSADD); // flags to add
+      if(*tempstr != '\0')
+         sec->flagsadd = E_ParseFlags(tempstr, &sector_flagset);
+      
+      tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGSREM); // flags to remove
+      if(*tempstr != '\0')
+         sec->flagsrem = E_ParseFlags(tempstr, &sector_flagset);
 
       // damage properties
 
@@ -1712,7 +1744,34 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->damagemod = E_DamageTypeNumForName(tempstr);
 
       // damageflags
-      // TODO
+      tempstr = cfg_getstr(section, FIELD_SECTOR_DAMAGEFLAGS); // flags to set
+      if(*tempstr != '\0')
+      {
+         sec->hasdamageflags = true; // flags were set
+         sec->damageflags = E_ParseFlags(tempstr, &sectordamage_flagset);
+      }
+      
+      tempstr = cfg_getstr(section, FIELD_SECTOR_DMGFLAGSADD); // flags to add
+      if(*tempstr != '\0')
+         sec->damageflagsadd = E_ParseFlags(tempstr, &sectordamage_flagset);
+      
+      tempstr = cfg_getstr(section, FIELD_SECTOR_DMGFLAGSREM); // flags to remove
+      if(*tempstr != '\0')
+         sec->damageflagsrem = E_ParseFlags(tempstr, &sectordamage_flagset);
+
+      // floor and ceiling offsets
+      sec->floor_xoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETX);
+      sec->floor_yoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETY);
+      sec->ceiling_xoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETX);
+      sec->ceiling_yoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETY);
+
+      // floor and ceiling angles
+      tempdouble = cfg_getfloat(section, FIELD_SECTOR_FLOORANGLE);
+      sec->floorangle = E_NormalizeFlatAngle(tempdouble);
+
+      tempdouble = cfg_getfloat(section, FIELD_SECTOR_CEILINGANGLE);
+      sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
+
    }
 }
 
@@ -1856,42 +1915,58 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
 //
 // E_LoadSectorExt
 //
-void E_LoadSectorExt(sector_t *sector)
+void E_LoadSectorExt(line_t *line)
 {
-   unsigned int edSectorIdx;
+   unsigned int    edSectorIdx;
    mapsectorext_t *edsector;
+   sector_t       *sector;
 
-   // ExtraData record number is stored in sector tag
-   if(!LevelInfo.extraData || numEDSectors == 0 ||
-      (edSectorIdx = E_EDSectorForRecordNum((uint16_t)(sector->tag))) == numEDSectors)
+   // ExtraData must be loaded
+   if(!LevelInfo.extraData || numEDSectors == 0)
    {
-      // if no ExtraData or no such record, zero special and tag,
-      // and we're finished here.
-      sector->special = 0;
-      sector->tag     = 0;
+      line->tag = 0;
+      return;
+   }
+   
+   sector = line->frontsector;
+   
+   // The ExtraData record number is the line's tag; the line's frontsector is the 
+   // sector to adjust.
+   if((edSectorIdx = E_EDSectorForRecordNum(line->tag)) == numEDSectors)
+   {
+      line->tag = 0;
       return;
    }
 
    // get a pointer to the proper ExtraData sector record
    edsector = &EDSectors[edSectorIdx];
 
-   // apply standard fields to the sector
-   sector->special = edsector->stdfields.special;
-   sector->tag     = edsector->stdfields.tag;
-
    // apply extended fields to the sector
+
+   // sector flags
+   if(edsector->hasflags) // if flags-to-set were specified, set them.
+      sector->flags = edsector->flags;
+
+   sector->flags |=   edsector->flagsadd;  // add any flags-to-add
+   sector->flags &= ~(edsector->flagsrem); // remove any flags-to-remove
 
    // damage fields
    sector->damage      = edsector->damage;
    sector->damagemask  = edsector->damagemask;
    sector->damagemod   = edsector->damagemod;
-   sector->damageflags = edsector->damageflags;
+   
+   if(edsector->hasdamageflags) // if flags-to-set were specified, set them.
+      sector->damageflags = edsector->damageflags;
+
+   sector->damageflags |=   edsector->damageflagsadd;  // add any flags-to-add
+   sector->damageflags &= ~(edsector->damageflagsrem); // remove any flags-to-remove
+
 
    // flat offsets
-   sector->floor_xoffs   = (fixed_t)(edsector->floor_xoffs   * FRACUNIT);
-   sector->floor_yoffs   = (fixed_t)(edsector->floor_yoffs   * FRACUNIT);
-   sector->ceiling_xoffs = (fixed_t)(edsector->ceiling_xoffs * FRACUNIT);
-   sector->ceiling_yoffs = (fixed_t)(edsector->ceiling_yoffs * FRACUNIT);
+   sector->floor_xoffs   = M_DoubleToFixed(edsector->floor_xoffs);
+   sector->floor_yoffs   = M_DoubleToFixed(edsector->floor_yoffs);
+   sector->ceiling_xoffs = M_DoubleToFixed(edsector->ceiling_xoffs);
+   sector->ceiling_yoffs = M_DoubleToFixed(edsector->ceiling_yoffs);
 
    // flat angles
    sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);
@@ -1903,6 +1978,9 @@ void E_LoadSectorExt(sector_t *sector)
    sector->bottommap = edsector->bottommap;
 
    // TODO: more
+
+   // clear the line tag
+   line->tag = 0;
 }
 
 //
