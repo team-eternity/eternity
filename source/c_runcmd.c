@@ -258,7 +258,6 @@ typedef enum flagcheckval
 //
 static flagcheckval_e C_CheckFlags(command_t *command, const char **errormsg)
 {
-   static char error_buffer[256];
    flagcheckval_e returnval = CCF_CANSETALL;
    
    if(!command->variable || !command->variable->v_default || 

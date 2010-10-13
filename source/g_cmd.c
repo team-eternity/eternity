@@ -72,12 +72,12 @@ CONSOLE_COMMAND(i_exitwithmessage, 0)
 
 CONSOLE_COMMAND(i_fatalerror, 0)
 {
-   I_FatalError(I_ERR_KILL, "%s\n", Console.args);
+   I_FatalError(I_ERR_KILL, "%s\n", QStrConstPtr(&Console.args));
 }
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s\n", Console.args);
+   I_Error("%s\n", QStrConstPtr(&Console.args));
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
