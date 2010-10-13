@@ -28,7 +28,7 @@
 // By James Haley
 //
 //----------------------------------------------------------------------------
-
+#if 0
 #include "z_zone.h"
 #include "d_main.h"
 #include "doomdef.h"
@@ -489,5 +489,7 @@ void DLG_WriteText(void)
    // local color needs to be reset at the end of each drawing pass
    localcolor = -1;  
 }
+
+#endif /* 0 */
 
 // EOF
