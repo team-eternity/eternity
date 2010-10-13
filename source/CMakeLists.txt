@@ -1,184 +1,106 @@
-cmake_minimum_required(VERSION 2.4)
+## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+##
+## This software is free software; you can redistribute it and/or
+## modify it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 2 of the License, or
+## (at your option) any later version.
+##
+## This software is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program; if not, write to the Free Software
+## Foundation, Inc., 51 Franklin St, Fifth Floor,
+## Boston, MA  02110-1301  USA
+##
+################################################################################
+######################### CMake Configuration ##################################
+CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
+IF (COMMAND cmake_policy)
+        CMAKE_POLICY (SET CMP0003 NEW)
+ENDIF (COMMAND cmake_policy)
 
-add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -DEE_NO_SMALL_SUPPORT)
+################################################################################
+######################### Set Project Source  ##################################
+ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
+ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
 
-find_package(SDL REQUIRED)
-find_package(SDL_mixer REQUIRED)
-find_package(SDL_net REQUIRED)
-include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLNET_INCLUDE_DIR})
+## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really mean any *nix ?
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        ADD_DEFINITIONS (-DLINUX)
+ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
-set(SDL_SOURCES
-	sdl/i_cpu_posix.c
-	sdl/i_input.c
-	sdl/i_main.c
-	sdl/i_net.c
-	sdl/i_pcsound.c
-	sdl/i_picker.c
-	sdl/i_sdlmusic.c
-	sdl/i_sdlsound.c
-	sdl/i_sound.c
-	sdl/i_system.c
-	sdl/i_video.c
-	sdl/mmus2mid.c
-	sdl/SDLMain.m
-	sdl/ser_main.c
-)
+IF (WIN32)
+        ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
+ENDIF (WIN32)
 
-add_executable(eternity WIN32
-	${SDL_SOURCES}
-	a_fixed.c
-	acs_intr.c
-	am_color.c
-	am_map.c
-	c_cmd.c
-	c_io.c
-	c_net.c
-	c_runcmd.c
-	d_deh.c
-	d_dehtbl.c
-	d_gi.c
-	d_io.c
-	d_items.c
-	d_iwad.c
-	d_main.c
-	d_net.c
-	doomdef.c
-	doomstat.c
-	dstrings.c
-	e_args.c
-	e_cmd.c
-	e_edf.c
-	e_exdata.c
-	e_fonts.c
-	e_hash.c
-	e_lib.c
-	e_mod.c
-	e_player.c
-	e_sound.c
-	e_states.c
-	e_string.c
-	e_things.c
-	e_ttypes.c
-	f_finale.c
-	f_wipe.c
-	g_bind.c
-	g_cmd.c
-	g_dmflag.c
-	g_game.c
-	g_gfs.c
-	hi_stuff.c
-	hu_frags.c
-	hu_over.c
-	hu_stuff.c
-	in_lude.c
-	info.c
-	m_argv.c
-	m_bbox.c
-	m_buffer.c
-	m_cheat.c
-	m_fcvt.c
-	m_misc.c
-	m_qstr.c
-	m_queue.c
-	m_random.c
-	m_shots.c
-	m_syscfg.c
-	m_vector.c
-	metaapi.c
-	mn_emenu.c
-	mn_engin.c
-	mn_files.c
-	mn_htic.c
-	mn_menus.c
-	mn_misc.c
-	mn_skinv.c
-	p_anim.c
-	p_ceilng.c
-	p_chase.c
-	p_cmd.c
-	p_doors.c
-	p_enemy.c
-	p_floor.c
-	p_genlin.c
-	p_henemy.c
-	p_hubs.c
-	p_info.c
-	p_inter.c
-	p_lights.c
-	p_map.c
-	p_map3d.c
-	p_maputl.c
-	p_mobj.c
-	p_partcl.c
-	p_plats.c
-	p_portal.c
-	p_pspr.c
-	p_saveg.c
-	p_setup.c
-	p_sight.c
-	p_skin.c
-	p_slopes.c
-	p_spec.c
-	p_switch.c
-	p_telept.c
-	p_things.c
-	p_tick.c
-	p_trace.c
-	p_user.c
-	p_xenemy.c
-	polyobj.c
-	psnprntf.c
-	r_bsp.c
-	r_data.c
-	r_draw.c
-	r_drawl.c
-	r_drawq.c
-	r_dynseg.c
-	r_main.c
-	r_plane.c
-	r_portal.c
-	r_ripple.c
-	r_segs.c
-	r_sky.c
-	r_span.c
-	r_things.c
-	s_sndseq.c
-	s_sound.c
-	sounds.c
-	st_hbar.c
-	st_lib.c
-	st_stuff.c
-	tables.c
-	v_block.c
-	v_buffer.c
-	v_font.c
-	v_misc.c
-	v_patch.c
-	v_video.c
-	version.c
-	w_wad.c
-	wi_stuff.c
-	z_native.c
-	z_zone.c
-	Confuse/confuse.c
-	Confuse/lexer.c
-	textscreen/txt_button.c
-	textscreen/txt_checkbox.c
-	textscreen/txt_desktop.c
-	textscreen/txt_dropdown.c
-	textscreen/txt_gui.c
-	textscreen/txt_inputbox.c
-	textscreen/txt_io.c
-	textscreen/txt_label.c
-	textscreen/txt_radiobutton.c
-	textscreen/txt_scrollpane.c
-	textscreen/txt_sdl.c
-	textscreen/txt_separator.c
-	textscreen/txt_spinctrl.c
-	textscreen/txt_strut.c
-	textscreen/txt_table.c
-	textscreen/txt_widget.c
-	textscreen/txt_window_action.c
-	textscreen/txt_window.c
-)
-target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY})
+## Small does not work on 64bit systems. The most reliable way
+## to determine if we are building on a 64bit system is to
+## check the size of a pointer - it is 8 bytes under
+## 64bit *NIX and 64bit Windows.
+IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
+        ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
+ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
+
+IF (WIN32)
+        INCLUDE_DIRECTORIES (win32/)
+        FILE (GLOB ARCH_SPECIFIC_SOURCES win32/*.c)
+ENDIF (WIN32)
+
+IF (APPLE)
+        INCLUDE_DIRECTORIES (sdl/macosx/)
+        FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
+ENDIF (APPLE)
+
+INCLUDE_DIRECTORIES (Confuse/)
+FILE (GLOB CONFUSE_SOURCES Confuse/*.c)
+
+INCLUDE_DIRECTORIES (textscreen/)
+FILE (GLOB TEXTSCREEN_SOURCES textscreen/*.c)
+
+INCLUDE_DIRECTORIES (./)
+FILE (GLOB ETERNITY_SOURCES *.c)
+
+## FIXME: It would be better to pull i_cpu_posix.c out into a
+## *NIX specfic folder to turn this into a glob to catch new files.
+INCLUDE_DIRECTORIES (sdl/)
+SET (SDL_SOURCES sdl/i_input.c sdl/i_main.c sdl/i_net.c sdl/i_pcsound.c
+sdl/i_picker.c sdl/i_sdlmusic.c sdl/i_sdlsound.c sdl/i_sound.c
+sdl/i_system.c sdl/i_video.c sdl/mmus2mid.c sdl/ser_main.c)
+IF (NOT WIN32)
+        SET ($SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
+ENDIF (NOT WIN32)
+
+################################################################################
+######################### Set Build Targets   ##################################
+## Eternity is a Windows CONSOLE application, so it's entry point is main,
+## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
+ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
+                ${TEXTSCREEN_SOURCES} ${SDL_SOURCES})
+TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} snes_spc)
+INSTALL (TARGETS eternity
+        RUNTIME DESTINATION ${BIN_DIR}
+        LIBRARY DESTINATION ${LIB_DIR}
+        ARCHIVE DESTINATION ${LIB_DIR})
+IF (UNIX)
+        IF (NOT APPLE OR NOT MINGW)
+                SET_TARGET_PROPERTIES (eternity PROPERTIES OUTPUT_NAME eternity.real)
+        ENDIF (NOT APPLE OR NOT MINGW)
+ENDIF (UNIX)
+## FIXME: base really needs to be refactored into read only and writeable
+## data to conform to *NIX and Windows file system standards.
+## On *NIX we use a wrapper script that set's up a per user
+## $HOME/.eternity/base, symlinks in the IWADS, then sets up
+## ETERNITYBASE to point to that directory, before executing
+## eternity. It's a hack,but it will work for now. A solution for
+## Windows would be welcome.
+INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/base
+        DESTINATION ${SHARE_DIR}
+        PATTERN ".svn" EXCLUDE)
+IF (UNIX)
+        IF (NOT APPLE OR NOT MINGW)
+                INSTALL (PROGRAMS ../eternity.sh DESTINATION ${BIN_DIR} RENAME eternity)
+        ENDIF (NOT APPLE OR NOT MINGW)
+ENDIF (UNIX)
