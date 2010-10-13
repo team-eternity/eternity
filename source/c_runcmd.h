@@ -53,7 +53,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                    \
         command_t Cmd_ ## name = { # name, ct_command,  \
                        flags, NULL, Handler_ ## name,   \
-                       0 };                             \
+                       0, NULL };                       \
         void Handler_ ## name(void)
 
 		 
@@ -66,7 +66,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                                 \
         command_t Cmd_ ## name = { # name, ct_variable,              \
                         flags, &var_ ## variable, Handler_ ## name,  \
-                        0 };                                         \
+                        0, NULL };                                   \
         void Handler_ ## name(void)
 
 // Same as CONSOLE_COMMAND, but sync-ed across network. When
@@ -74,11 +74,11 @@ typedef struct variable_s variable_t;
 //      You must assign your variable a unique netgame
 //      variable (list in c_net.h)
 
-#define CONSOLE_NETCMD(name, flags, netcmd)             \
-        void Handler_ ## name(void);                    \
-        command_t Cmd_ ## name = { # name, ct_command,  \
-                       (flags) | cf_netvar, NULL,       \
-                       Handler_ ## name, netcmd };      \
+#define CONSOLE_NETCMD(name, flags, netcmd)              \
+        void Handler_ ## name(void);                     \
+        command_t Cmd_ ## name = { # name, ct_command,   \
+                       (flags) | cf_netvar, NULL,        \
+                       Handler_ ## name, netcmd, NULL }; \
         void Handler_ ## name()
 
 // As for CONSOLE_VARIABLE, but for net, see above
@@ -87,7 +87,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                                \
         command_t Cmd_ ## name = { # name, ct_variable,             \
                         cf_netvar | (flags), &var_ ## variable,     \
-                        Handler_ ## name, netcmd };                 \
+                        Handler_ ## name, netcmd, NULL };           \
         void Handler_ ## name(void)
 
 // Create a constant. You must declare the variable holding
@@ -95,7 +95,7 @@ typedef struct variable_s variable_t;
 
 #define CONSOLE_CONST(name, variable)                           \
         command_t Cmd_ ## name = { # name, ct_constant, 0,      \
-                &var_ ## variable, NULL, 0 };
+                &var_ ## variable, NULL, 0, NULL };
 
         /*********** variable macros *************/
 
@@ -109,7 +109,7 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE(name, defaultvar, type, min, max, strings)  \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        type, min, max, strings};
+                  type, min, max, strings, 0, 0, NULL, NULL};
 
 // simpler macro for int. You do not need to specify the type
 
@@ -121,13 +121,13 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE_STRING(name, defaultvar, max)               \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_string, 0, max, NULL};
+                  vt_string, 0, max, NULL, 0, 0, NULL, NULL};
 
 // haleyjd 03/13/06: support static strings as cvars
 
 #define VARIABLE_CHARARRAY(name, defaultvar, max)            \
         variable_t var_ ## name = { name, defaultvar,        \
-                        vt_chararray, 0, max, NULL};
+                  vt_chararray, 0, max, NULL, 0, 0, NULL, NULL};
 
 // Boolean. Note that although the name here is boolean, the
 // actual type is int. haleyjd 07/05/10: For real booleans, use
@@ -135,27 +135,27 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, 0, 1, strings };
+                  vt_int, 0, 1, strings, 0, 0, NULL, NULL };
 
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_toggle, 0, 1, strings };
+                   vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
 
 // haleyjd 04/21/10: support for vt_float
 
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_float, 0, 0, NULL, min, max };
+                  vt_float, 0, 0, NULL, min, max, NULL, NULL };
 
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
         variable_t var_ ## name = { &name, NULL,             \
-                        vt_int, -1, -1, NULL};
+                  vt_int, -1, -1, NULL, 0, 0, NULL, NULL };
 
 #define CONST_STRING(name)                                   \
         variable_t var_ ## name = { &name, NULL,             \
-                        vt_string, -1, -1, NULL};
+                  vt_string, -1, -1, NULL, 0, 0, NULL, NULL };
 
 
 #define C_AddCommand(c)  (C_AddCommand)(&Cmd_ ## c) 
