@@ -81,6 +81,8 @@ int P_WeaponPreferred(int w1, int w2);
 extern int weapon_speed, default_weapon_speed;
 extern int action_from_pspr;                     // haleyjd 05/21/08
 
+void P_SetPsprite(player_t *player, int position, statenum_t stnum);
+
 int P_NextWeapon(player_t *player);
 int P_PrevWeapon(player_t *player);
 

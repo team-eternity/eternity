@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2010 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,12 +20,25 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
+//      Action Pointer Functions
+//      that are associated with states/frames.
 //
-// Parameterized and Heretic-inspired action functions
+//      Common action functions shared by all games.
 //
 //-----------------------------------------------------------------------------
 
-// Dead module. All code moved to either a_heretic.c or a_general.c
+#ifndef A_COMMON_H__
+#define A_COMMON_H__
+
+void A_Chase(mobj_t *actor);
+void A_Die(mobj_t *actor);
+void A_Explode(mobj_t *thingy);
+void A_FaceTarget(mobj_t *actor);
+void A_Fall(mobj_t *actor);
+void A_Look(mobj_t *actor);
+void A_Pain(mobj_t *actor);
+
+#endif
 
 // EOF
 

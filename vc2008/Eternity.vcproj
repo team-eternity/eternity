@@ -2389,28 +2389,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\Source\p_henemy.c"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\Source\p_hubs.c"
 						>
 						<FileConfiguration
@@ -4949,6 +4927,54 @@
 					</File>
 					<File
 						RelativePath="..\source\textscreen\txt_window_action.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="A_"
+				>
+				<Filter
+					Name="A_ Source"
+					>
+					<File
+						RelativePath="..\source\a_common.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_counters.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_decorate.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_doom.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_general.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_heretic.c"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_hexen.c"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="A_ Headers"
+					>
+					<File
+						RelativePath="..\source\a_common.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\a_doom.h"
 						>
 					</File>
 				</Filter>

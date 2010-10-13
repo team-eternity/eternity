@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2010 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,12 +20,19 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
+//      Action Pointer Functions
+//      that are associated with states/frames.
 //
-// Parameterized and Heretic-inspired action functions
+//      DOOM action functions.
 //
 //-----------------------------------------------------------------------------
 
-// Dead module. All code moved to either a_heretic.c or a_general.c
+#ifndef A_DOOM_H__
+#define A_DOOM_H__
+
+void A_Fire(mobj_t *actor);
+
+#endif
 
 // EOF
 

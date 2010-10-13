@@ -591,6 +591,9 @@ void P_AdjustFloorClip(mobj_t *thing);
 int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
 
+// extern data
+extern int FloatBobOffsets[];
+
 // Thing Collections
 
 typedef struct MobjCollection_s
