@@ -1438,7 +1438,7 @@ void A_SorcNukeSpec(mobj_t *);
 // A_ prefixes on mnemonics
 
 // haleyjd 10/04/08: macros to save my wrists
-#define POINTER(name)  { A_ ## name , #name }
+#define POINTER(name)  { A_ ## name , #name , -1 }
 
 deh_bexptr deh_bexptrs[] =
 {
@@ -1958,12 +1958,6 @@ static void D_BEXPtrHashInit(void)
 
       deh_bexptrs[i].next = bexcpchains[key];
       bexcpchains[key] = i;
-
-      // haleyjd 06/12/08: also add EDF keywords if defined
-      /*
-      if(deh_bexptrs[i].kwds)
-         E_AddKeywords((E_Keyword_t *)deh_bexptrs[i].kwds);
-      */
    }
 }
 
