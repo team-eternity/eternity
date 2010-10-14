@@ -1323,6 +1323,42 @@ static void DoPSNeedStateTics(pstate_t *ps)
 }
 
 //
+// doAction
+//
+// haleyjd 10/14/10: Factored common code for assigning state actions out of
+// the two state handlers below.
+//
+static void doAction(pstate_t *ps)
+{
+   // Verify is valid codepointer name and apply action to all
+   // states in the current range.
+   if(!ps->principals)
+   {
+      estatebuf_t *state = DSP.curbufstate;
+      int statenum = DSP.currentstate;
+      deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
+
+      if(!ptr)
+      {
+         E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
+            ps->tokenbuffer->buffer);
+         ps->error = true;
+         return;
+      }
+
+      while(state && state->type == BUF_STATE && 
+         state->linenum == DSP.curbufstate->linenum)
+      {
+         states[statenum]->action = ptr->cptr;
+
+         ++statenum; // move forward one state in states[]
+         state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+      }
+   }
+   ps->state = PSTATE_NEEDSTATEEOLORPAREN;
+}
+
+//
 // DoPSNeedBrightOrAction
 //
 // Expecting either "bright", which modifies the current state block to use
@@ -1370,34 +1406,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEACTION;
    }
    else
-   {
-      // Verify is valid codepointer name and apply action to all
-      // states in the current range.
-      if(!ps->principals)
-      {
-         estatebuf_t *state = DSP.curbufstate;
-         int statenum = DSP.currentstate;
-         deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
-
-         if(!ptr)
-         {
-            E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
-                               ps->tokenbuffer->buffer);
-            ps->error = true;
-            return;
-         }
-
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
-         {
-            states[statenum]->action = ptr->cptr;
-
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
-         }
-      }
-      ps->state = PSTATE_NEEDSTATEEOLORPAREN;
-   }
+      doAction(ps); // otherwise verify & assign action
 }
 
 //
@@ -1426,34 +1435,7 @@ static void DoPSNeedStateAction(pstate_t *ps)
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
-   {
-      // Verify is valid codepointer name and apply action to all
-      // states in the current range.
-      if(!ps->principals)
-      {
-         estatebuf_t *state = DSP.curbufstate;
-         int statenum = DSP.currentstate;
-         deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
-
-         if(!ptr)
-         {
-            E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
-                               ps->tokenbuffer->buffer);
-            ps->error = true;
-            return;
-         }
-
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
-         {
-            states[statenum]->action = ptr->cptr;
-
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
-         }
-      }
-      ps->state = PSTATE_NEEDSTATEEOLORPAREN;
-   }
+      doAction(ps); // otherwise verify & assign action
 }
 
 //

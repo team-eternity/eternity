@@ -178,11 +178,11 @@ void A_HealthJump(mobj_t *mo)
    switch(checktype)
    {
    case CPC_LESS:
-      branch = (mo->health < checkhealth); break;
+      branch = (mo->health < checkhealth);  break;
    case CPC_LESSOREQUAL:
       branch = (mo->health <= checkhealth); break;
    case CPC_GREATER:
-      branch = (mo->health > checkhealth); break;
+      branch = (mo->health > checkhealth);  break;
    case CPC_GREATEROREQUAL:
       branch = (mo->health >= checkhealth); break;
    case CPC_EQUAL:
@@ -190,7 +190,7 @@ void A_HealthJump(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (mo->health != checkhealth); break;
    case CPC_BITWISEAND:
-      branch = (mo->health & checkhealth); break;
+      branch = (mo->health & checkhealth);  break;
    default:
       break;
    }
@@ -249,11 +249,11 @@ void A_CounterJump(mobj_t *mo)
    switch(checktype)
    {
    case CPC_LESS:
-      branch = (*counter < value); break;
+      branch = (*counter < value);  break;
    case CPC_LESSOREQUAL:
       branch = (*counter <= value); break;
    case CPC_GREATER:
-      branch = (*counter > value); break;
+      branch = (*counter > value);  break;
    case CPC_GREATEROREQUAL:
       branch = (*counter >= value); break;
    case CPC_EQUAL:
@@ -261,7 +261,7 @@ void A_CounterJump(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (*counter != value); break;
    case CPC_BITWISEAND:
-      branch = (*counter & value); break;
+      branch = (*counter & value);  break;
    default:
       break;
    }
@@ -392,7 +392,8 @@ void A_SetCounter(mobj_t *mo)
       *counter = P_Random(pr_setcounter); break;
    case CPOP_RNDMOD:
       if(value > 0)
-         *counter = P_Random(pr_setcounter) % value; break;
+         *counter = P_Random(pr_setcounter) % value;
+      break;
    case CPOP_SHIFTLEFT:
       *counter <<= value; break;
    case CPOP_SHIFTRIGHT:
