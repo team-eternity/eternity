@@ -128,17 +128,23 @@ typedef struct default_s
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
+#define M_ZEROFIELDS NULL, NULL, 0, 0, NULL, 0, false, NULL
+
 #define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_integer, loc, cur, def, NULL, 0.0f, false, { min, max }, wad, help }
+   { name, dt_integer, loc, cur, def, NULL, 0.0f, false, { min, max }, wad, help, \
+     M_ZEROFIELDS }
 
 #define DEFAULT_STR(name, loc, cur, def, wad, help) \
-   { name, dt_string, loc, cur, 0, def, 0.0f, false, { 0 }, wad, help }
+   { name, dt_string, loc, cur, 0, def, 0.0f, false, { 0, 0 }, wad, help, \
+     M_ZEROFIELDS }
 
 #define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help }
+   { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help, \
+     M_ZEROFIELDS }
 
 #define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
-   { name, dt_boolean, loc, cur, 0, NULL, 0.0f, def, { 0, 1 }, wad, help }
+   { name, dt_boolean, loc, cur, 0, NULL, 0.0f, def, { 0, 1 }, wad, help, \
+     M_ZEROFIELDS }
 
 // haleyjd 03/14/09: defaultfile_t structure
 typedef struct defaultfile_s
