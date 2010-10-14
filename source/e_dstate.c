@@ -1328,7 +1328,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
 // haleyjd 10/14/10: Factored common code for assigning state actions out of
 // the two state handlers below.
 //
-static void doAction(pstate_t *ps)
+static void doAction(pstate_t *ps, const char *fn)
 {
    // Verify is valid codepointer name and apply action to all
    // states in the current range.
@@ -1340,8 +1340,8 @@ static void doAction(pstate_t *ps)
 
       if(!ptr)
       {
-         E_EDFLoggedWarning(2, "DoPSNeedBrightOrAction: unknown action %s\n",
-            ps->tokenbuffer->buffer);
+         E_EDFLoggedWarning(2, "%s: unknown action %s\n",
+                            fn, ps->tokenbuffer->buffer);
          ps->error = true;
          return;
       }
@@ -1406,7 +1406,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       ps->state = PSTATE_NEEDSTATEACTION;
    }
    else
-      doAction(ps); // otherwise verify & assign action
+      doAction(ps, "DoPSNeedBrightOrAction"); // otherwise verify & assign action
 }
 
 //
@@ -1435,7 +1435,7 @@ static void DoPSNeedStateAction(pstate_t *ps)
       ps->state = PSTATE_NEEDLABELORKWORSTATE;
    }
    else
-      doAction(ps); // otherwise verify & assign action
+      doAction(ps, "DoPSNeedStateAction"); // otherwise verify & assign action
 }
 
 //
