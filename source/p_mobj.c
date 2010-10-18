@@ -699,10 +699,10 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
          }
          else if(mo->momz < -12*FRACUNIT)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         else if(onthing || !E_GetThingFloorType(mo)->liquid)
+         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
-      else if(onthing || !E_GetThingFloorType(mo)->liquid)
+      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }

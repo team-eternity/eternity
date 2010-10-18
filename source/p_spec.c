@@ -2434,7 +2434,7 @@ void P_PlayerOnSpecialFlat(player_t *player)
    if(player->mo->z != floorz)
       return;
 
-   terrain = E_GetThingFloorType(player->mo);
+   terrain = E_GetThingFloorType(player->mo, true);
 
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
