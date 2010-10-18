@@ -221,8 +221,8 @@ void *E_HashObjectIterator(ehash_t *table, void *object, const void *key)
 // E_HashTableIterator
 //
 // Iterates over all objects in a hash table, in chain order.
-// Pass NULL in object and -1 in *index to start a new search.
-// NULL is returned when the entire table has been iterated over.
+// Pass NULL in object to start a new search. NULL is returned when the entire 
+// table has been iterated over.
 //
 void *E_HashTableIterator(ehash_t *table, void *object)
 {

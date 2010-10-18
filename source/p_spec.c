@@ -2419,13 +2419,19 @@ void P_PlayerInSpecialSector(player_t *player)
 //
 void P_PlayerOnSpecialFlat(player_t *player)
 {
-   sector_t *sector = player->mo->subsector->sector;
+   //sector_t *sector = player->mo->subsector->sector;
    ETerrain *terrain;
+   fixed_t floorz;
+
+   if(full_demo_version < make_full_version(339, 21))
+      floorz = player->mo->subsector->sector->floorheight;
+   else
+      floorz = player->mo->floorz; // use more correct floorz
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != floorz)
       return;
 
    terrain = E_GetThingFloorType(player->mo);
@@ -2806,9 +2812,8 @@ void P_SpawnSpecials(int mapformat)
       // SoM 10/14/07: Surface/Surface attachments
       case 379:
       case 380:
-         P_AttachSectors(lines + i);
+         P_AttachSectors(&lines[i]);
          break;
-
 
       // SoM 05/10/09: Slopes
       case 386:
@@ -2820,6 +2825,12 @@ void P_SpawnSpecials(int mapformat)
       case 392:
       case 393:
          P_SpawnSlope_Line(i);
+         break;
+
+      case 401:
+         // haleyjd 10/16/10: ExtraData sector
+         E_LoadSectorExt(&lines[i]);
+         break;
       }
    }
 
@@ -2837,14 +2848,11 @@ void P_SpawnSpecials(int mapformat)
    Polyobj_InitLevel();
 }
 
-
-
-
 // 
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate 
-// pass
+// SoM: Specials that copy slopes, ect., need to be collected in a separate pass
+//
 void P_SpawnDeferredSpecials(int mapformat)
 {
    int      i;
@@ -2865,8 +2873,6 @@ void P_SpawnDeferredSpecials(int mapformat)
       }
    }
 }
-
-
 
 
 // killough 2/28/98:

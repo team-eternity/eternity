@@ -53,6 +53,7 @@
 #include "e_lib.h"
 #include "e_exdata.h"
 #include "e_things.h"
+#include "e_ttypes.h"
 
 // statics
 
@@ -617,11 +618,14 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
+   
    // SoM: two-way portals
    { 344, "Portal_TwowayCeiling" },
    { 345, "Portal_TwowayFloor" },
    { 346, "Portal_TwowayAnchorLine" },
    { 347, "Portal_TwowayAnchorLineFloor" },
+
+   // Polyobjects
    { 348, "Polyobj_StartLine" },
    { 349, "Polyobj_ExplicitLine" },
    { 350, "Polyobj_DoorSlide" },
@@ -672,7 +676,7 @@ static struct exlinespec
    { 384, "Attach_MirrorCeilingToControl" },
 
    // Apply tagged portals to frontsector
-   { 385, "Apply_PortalToFrontsector" },
+   { 385, "Portal_ApplyToFrontsector" },
 
    // Slopes
    { 386, "Slope_FrontsectorFloor" },
@@ -693,6 +697,9 @@ static struct exlinespec
    { 398, "Thing_Spawn"  }, 
    { 399, "Thing_SpawnNoFog" },
    { 400, "Teleport_EndGame" },
+
+   // ExtraData sector control line
+   { 401, "ExtraDataSector" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1707,14 +1714,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sector_chains[tempint] = i;
 
       // extended fields
-      /*
-      TODO:
-      CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
-      */
+
       // flags
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGS); // flags to set
       if(*tempstr != '\0')
@@ -1772,6 +1772,27 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempdouble = cfg_getfloat(section, FIELD_SECTOR_CEILINGANGLE);
       sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
 
+      // sector colormaps
+      tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->topmap = R_ColormapNumForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_MIDMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->midmap = R_ColormapNumForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->bottommap = R_ColormapNumForName(tempstr);
+
+      // terrain type overrides
+      tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);
+      if(strcasecmp(tempstr, "@flat"))
+         sec->floorterrain = E_TerrainForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
+      if(strcasecmp(tempstr, "@flat"))
+         sec->ceilingterrain = E_TerrainForName(tempstr);
    }
 }
 
@@ -1823,7 +1844,8 @@ void E_LoadExtraData(void)
    // load lines
    E_ProcessEDLines(cfg);
 
-   // TODO: more processing
+   // load sectors
+   E_ProcessEDSectors(cfg);
 
    // free the cfg
    cfg_free(cfg);
@@ -1977,7 +1999,11 @@ void E_LoadSectorExt(line_t *line)
    sector->midmap    = edsector->midmap;
    sector->bottommap = edsector->bottommap;
 
-   // TODO: more
+   // terrain overrides
+   sector->floorterrain   = edsector->floorterrain;
+   sector->ceilingterrain = edsector->ceilingterrain;
+
+   // TODO: more?
 
    // clear the line tag
    line->tag = 0;

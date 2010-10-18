@@ -90,6 +90,7 @@ typedef struct EFloor_s
 } EFloor;
 
 void E_InitTerrainTypes(void);
+ETerrain *E_TerrainForName(const char *name);
 ETerrain *E_GetThingFloorType(mobj_t *thing);
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int pos);
 fixed_t E_SectorFloorClip(sector_t *sector);

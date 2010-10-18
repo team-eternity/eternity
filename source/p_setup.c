@@ -475,8 +475,6 @@ void P_LoadSectors(int lumpnum)
       ss->lightlevel         = GetLevelWord(&data);
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
-      ss->thinglist          = NULL;
-      ss->touching_thinglist = NULL; // phares 3/14/98
       
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
@@ -494,28 +492,13 @@ void P_LoadSectors(int lumpnum)
       ss->bottommap = ss->midmap = ss->topmap =
          ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
             
-      // SoM 9/19/02: Initialize the attached sector list for 3dsides
-      ss->c_attached = ss->f_attached = NULL;
-      // SoM 11/9/04: 
-      ss->c_attsectors = ss->f_attsectors = NULL;
-
-      // SoM 10/14/07:
-      ss->c_asurfaces = ss->f_asurfaces = NULL;
-
-      // SoM: init portals
-      ss->c_portal = ss->f_portal = NULL;
 #ifdef R_LINKEDPORTALS
       ss->groupid = R_NOGROUP;
 #endif
 
-      // SoM: Slopes!
-      ss->c_slope = ss->f_slope = NULL;
-
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
-
-      ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
@@ -2115,13 +2098,10 @@ int P_CheckLevel(struct waddir_s *dir, int lumpnum)
    }
 
    // if we got here, we're dealing with a Hexen-format map
-
    return LEVEL_FORMAT_HEXEN;
 }
 
 void P_ConvertHereticSpecials(void); // haleyjd
-
-void P_LoadOlo(void);
 
 void P_InitThingLists(void); // haleyjd
 
@@ -2579,7 +2559,7 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
    if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
       return;
    
-   // handle ordinary heretic things -- all are less than 100
+   // handle ordinary Heretic things -- all are less than 100
    if(mthing->type < 100)
    {
       // add 7000 to normal doomednum

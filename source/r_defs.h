@@ -183,7 +183,7 @@ typedef struct pslope_s
    float   zdeltaf;
 } pslope_t;
 
-
+typedef struct ETerrain_s *secterrainptr;
 
 //
 // The SECTORS record, at runtime.
@@ -315,6 +315,10 @@ struct sector_s
 
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
+
+   // haleyjd 10/17/10: terrain type overrides
+   secterrainptr floorterrain;
+   secterrainptr ceilingterrain;
 };
 
 //
