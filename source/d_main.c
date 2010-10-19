@@ -2123,7 +2123,6 @@ void IdentifyVersion(void)
 #define MAXARGVS 100
 
 //
-//
 // FindResponseFile
 //
 // Find a Response File, identified by an "@" argument.

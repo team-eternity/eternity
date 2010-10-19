@@ -386,7 +386,7 @@ void W_EnumerateMasterLevels(boolean forceRefresh)
 
    if(!w_masterlevelsdirname || !*w_masterlevelsdirname)
    {
-      C_Printf(FC_ERROR "Set master_levels_dir first\n");
+      C_Printf(FC_ERROR "Set master_levels_dir first!\n");
       return;
    }
 
@@ -420,7 +420,7 @@ void W_DoMasterLevels(boolean allowexit)
       if(menuactive)
          MN_ErrorMsg("Could not list directory");
       else
-         C_Printf(FC_ERROR "Could not list directory\n");
+         C_Printf(FC_ERROR "w_masterlevels: could not list directory\n");
       return;
    }
 

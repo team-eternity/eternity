@@ -392,6 +392,23 @@ qstring_t *QStrRStrip(qstring_t *qstr, char c)
    return qstr;
 }
 
+//
+// QStrTruncate
+//
+// Truncates the qstring to the indicated position.
+//
+qstring_t *QStrTruncate(qstring_t *qstr, size_t pos)
+{
+   // pos must be between 0 and qstr->index - 1
+   if(pos >= qstr->index)
+      I_Error("QStrTruncate: position out of range\n");
+
+   memset(qstr->buffer + pos, 0, qstr->index - pos);
+   qstr->index = pos;
+
+   return qstr;
+}
+
 //=============================================================================
 //
 // Comparison Functions
