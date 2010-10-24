@@ -1570,7 +1570,7 @@ static void G_DoWorldDone(void)
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
-   gamestate = GS_LEVEL;
+   gamestate = GS_LOADING;
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels
@@ -1595,6 +1595,22 @@ static void G_DoWorldDone(void)
          G_SetGameMapName(LevelInfo.nextLevel);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
+   }
+
+   // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
+   // in the wad directory, and if so, use it. Otherwise, return to the Master
+   // Levels selection menu.
+   if(inmasterlevels)
+   {
+      wadlevel_t *level = W_FindLevelInDir(g_dir, gamemapname);
+
+      if(!level)
+      {
+         gameaction = ga_nothing;
+         inmasterlevels = false;
+         W_DoMasterLevels(false);
+         return;
+      }
    }
    
    hub_changelevel = false;
@@ -2775,18 +2791,16 @@ int cpars[34] =
 //
 // G_WorldDone
 //
-
 void G_WorldDone(void)
 {
-   if(inmasterlevels)
-   {
-      inmasterlevels = false;
-      W_DoMasterLevels(false);
-      return;
-   }
-
    gameaction = ga_worlddone;
-   
+
+   // haleyjd 10/24/10: if in Master Levels mode, just return from here now.
+   // The choice of whether to go to another level or show the Master Levels
+   // menu is taken care of in G_DoWorldDone.
+   if(inmasterlevels)
+      return;
+
    if(secretexit)
       players[consoleplayer].didsecret = true;
    
@@ -2885,7 +2899,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 // haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
 // directory, for use when loading the level.
 //
-void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir)
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir)
 {
    G_DeferedInitNew(skill, levelname);
    d_dir = dir;

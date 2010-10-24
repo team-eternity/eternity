@@ -37,6 +37,7 @@
 #include "m_misc.h"
 #include "mn_files.h"
 #include "mn_engin.h"
+#include "p_setup.h"
 
 //=============================================================================
 // 
@@ -48,7 +49,7 @@ extern int defaultskill;
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir);
 
-void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir);
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir);
 
 //=============================================================================
 //
@@ -64,6 +65,7 @@ typedef struct manageddir_s
    mdllistitem_t  links;  // links
    waddir_t       waddir; // directory
    char          *name;   // name
+   wadlevel_t    *levels; // enumerated levels
 } manageddir_t;
 
 //=============================================================================
@@ -150,6 +152,13 @@ static void W_delManagedDir(manageddir_t *dir)
       dir->name = NULL;
    }
 
+   // free list of levels
+   if(dir->levels)
+   {
+      free(dir->levels);
+      dir->levels = NULL;
+   }
+
    // free directory
    free(dir);
 }
@@ -200,6 +209,9 @@ waddir_t *W_AddManagedWad(const char *filename)
       W_delManagedDir(newdir);
       return NULL;
    }
+
+   // 10/23/10: enumerate all levels in the directory
+   newdir->levels = W_FindAllMapsInLevelWad(&newdir->waddir);
 
    // success!
    return &(newdir->waddir);
@@ -286,6 +298,102 @@ char *W_FindMapInLevelWad(waddir_t *dir, boolean mapxy)
    return name;
 }
 
+//
+// W_sortLevels
+//
+// Static qsort callback for W_FindAllMapsInLevelWad
+//
+static int W_sortLevels(const void *first, const void *second)
+{
+   wadlevel_t *firstLevel  = (wadlevel_t *)first;
+   wadlevel_t *secondLevel = (wadlevel_t *)second;
+
+   return strncasecmp(firstLevel->header, secondLevel->header, 9);
+}
+
+//
+// W_FindAllMapsInLevelWad
+//
+// haleyjd 10/23/10: Finds all valid maps in a wad directory and returns them
+// as a sorted set of wadlevel_t's.
+//
+wadlevel_t *W_FindAllMapsInLevelWad(waddir_t *dir)
+{
+   int i, format;
+   wadlevel_t *levels = NULL;
+   int numlevels;
+   int numlevelsalloc;
+
+   // start out with a small set of levels
+   numlevels = 0;
+   numlevelsalloc = 8;
+   levels = calloc(numlevelsalloc, sizeof(wadlevel_t));
+
+   // find all the lumps
+   for(i = 0; i < dir->numlumps; i++)
+   {
+      if((format = P_CheckLevel(dir, i)) != LEVEL_FORMAT_INVALID)
+      {
+         // grow the array if needed, leaving one at the end
+         if(numlevels + 1 >= numlevelsalloc)
+         {
+            numlevelsalloc *= 2;
+            levels = realloc(levels, numlevelsalloc * sizeof(wadlevel_t));
+         }
+         memset(&levels[numlevels], 0, sizeof(wadlevel_t));
+         levels[numlevels].dir = dir;
+         levels[numlevels].lumpnum = i;
+         strncpy(levels[numlevels].header, dir->lumpinfo[i]->name, 9);
+         ++numlevels;
+
+         // skip past the level's directory entries
+         i += (format == LEVEL_FORMAT_HEXEN ? 11 : 10);
+      }
+   }
+
+   // sort the levels if necessary
+   if(numlevels > 1)
+      qsort(levels, numlevels, sizeof(wadlevel_t), W_sortLevels);
+
+   // set the entry at numlevels to all zeroes as a terminator
+   memset(&levels[numlevels], 0, sizeof(wadlevel_t));
+
+   return levels;
+}
+
+//
+// W_FindLevelInDir
+//
+// haleyjd 10/23/2010: Looks for a level by the given name in the wad directory
+// and returns its wadlevel_t object if it is present. Returns NULL otherwise.
+//
+wadlevel_t *W_FindLevelInDir(waddir_t *waddir, const char *name)
+{
+   wadlevel_t *retlevel = NULL, *curlevel = NULL;
+
+   if(waddir->data && waddir->type == WADDIR_MANAGED)
+   {
+      // get the managed directory
+      manageddir_t *dir = (manageddir_t *)(waddir->data);
+      curlevel = dir->levels;
+
+      // loop on the levels list so long as the header names are valid
+      while(*curlevel->header)
+      {
+         if(!strncasecmp(curlevel->header, name, 9))
+         {
+            // found it
+            retlevel = curlevel;
+            break;
+         }
+         // step to the next level
+         ++curlevel;
+      }
+   }
+
+   return retlevel;
+}
+
 //=============================================================================
 //
 // Master Levels
@@ -332,10 +440,10 @@ static waddir_t *W_loadMasterLevelWad(const char *filename)
 // Command handling for starting a level from the Master Levels wad selection
 // menu. Executed by w_startlevel console command.
 //
-static void W_doMasterLevelsStart(const char *filename)
+static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 {
    waddir_t *dir = NULL;
-   char *mapname = NULL;
+   const char *mapname = NULL;
 
    // Try to load the indicated wad from the Master Levels directory
    if(!(dir = W_loadMasterLevelWad(filename)))
@@ -348,10 +456,19 @@ static void W_doMasterLevelsStart(const char *filename)
    }
 
    // Find the first map in the wad file
-   mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
+   if(dir->data && dir->type == WADDIR_MANAGED)
+   {
+      // if levelname is valid, try to find that particular map
+      if(levelname && W_FindLevelInDir(dir, levelname))
+         mapname = levelname;
+      else
+         mapname = ((manageddir_t *)(dir->data))->levels[0].header;
+   }
+   else
+      mapname = W_FindMapInLevelWad(dir, !!(GameModeInfo->flags & GIF_MAPXY));
 
    // none??
-   if(!mapname)
+   if(!mapname || !*mapname)
    {
       if(menuactive)
          MN_ErrorMsg("No maps found in wad");
@@ -453,10 +570,16 @@ CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 //
 CONSOLE_COMMAND(w_startlevel, cf_notnet)
 {
+   const char *levelname = NULL;
+
    if(Console.argc < 1)
       return;
 
-   W_doMasterLevelsStart(QStrConstPtr(&Console.argv[0]));
+   // 10/24/10: support a level name as argument 2
+   if(Console.argc >= 2)
+      levelname = QStrConstPtr(&Console.argv[1]);
+
+   W_doMasterLevelsStart(QStrConstPtr(&Console.argv[0]), levelname);
 }
 
 //
