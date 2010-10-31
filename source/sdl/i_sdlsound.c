@@ -99,10 +99,11 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx);
 // cph 
 // Stops a sound, unlocks the data 
 //
-static void stopchan(int handle)
+static boolean stopchan(int handle)
 {
    int cnum;
    boolean freeSound = true;
+   boolean stoppedSound = false;
    sfxinfo_t *sfx;
    
 #ifdef RANGECHECK
@@ -129,6 +130,7 @@ static void stopchan(int handle)
          channelinfo[handle].id    = NULL;
          channelinfo[handle].data  = NULL;
          channelinfo[handle].idnum = 0;
+         stoppedSound = true;
       }
 
       // haleyjd 06/07/09: release the semaphore now. The faster the better.
@@ -154,6 +156,8 @@ static void stopchan(int handle)
             Z_ChangeTag(sfx->data, PU_CACHE);
       }
    }
+
+   return stoppedSound; // haleyjd 10/30/10: return true if stopped
 }
 
 #define SOUNDHDRSIZE 8
@@ -639,7 +643,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
 {
    static unsigned int id = 1;
    int handle;
-   
+
    // haleyjd: turns out this is too simplistic. see below.
    /*
    // SoM: reimplement hardware channel wrap-around
@@ -652,6 +656,21 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    {
       if(channelinfo[handle].data == NULL)
          break;
+   }
+
+   // haleyjd 10/30/10: if none found, look for channels to stop that are pending
+   // to be cleared - this is a much more efficient time to do this than in the
+   // I_UpdateSound handler.
+   if(handle == numChannels)
+   {
+      for(handle = 0; handle < numChannels; ++handle)
+      {
+         if(channelinfo[handle].stopChannel == true)
+         {
+            if(stopchan(handle))
+               break; // end loop if one is successfully cleared
+         }
+      }
    }
 
    // all used? don't play the sound. It's preferable to miss a sound
@@ -729,13 +748,9 @@ static int I_SDLSoundID(int handle)
 // 
 static void I_SDLUpdateSound(void)
 {
-   int chan;
-
-   for(chan = 0; chan < numChannels; ++chan)
-   {
-      if(channelinfo[chan].stopChannel == true)
-         stopchan(chan);
-   }
+   // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
+   // with thread contention when running with d_fastrefresh enabled. Calling
+   // this from the main loop too often caused the sound to stutter.
 }
 
 // size of a single sample
