@@ -1057,9 +1057,9 @@ static void do_draw_plane(visplane_t *pl)
       // Because of this hack, sky is not affected by INVUL inverse mapping.
       //
       // killough 7/19/98: fix hack to be more realistic:
-
-      if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
-         column.colormap = fullcolormap;          // killough 3/20/98
+      // haleyjd 10/31/10: use plane colormaps, not global vars!
+      if(comp[comp_skymap] || !(column.colormap = pl->fixedcolormap))
+        column.colormap = pl->fullcolormap;
 
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
       // haleyjd: use height determined from patches in texture
