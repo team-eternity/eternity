@@ -109,7 +109,7 @@ static boolean stopchan(int handle)
 #ifdef RANGECHECK
    // haleyjd 02/18/05: bounds checking
    if(handle < 0 || handle >= MAX_CHANNELS)
-      return;
+      return false;
 #endif
    
    // haleyjd 10/02/08: critical section

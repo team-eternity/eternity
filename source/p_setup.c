@@ -177,6 +177,14 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
    {
       // Convert to extended type
       *loc  = value & ~0x8000;
+
+      // haleyjd 11/06/10: check for invalid subsector reference
+      if(*loc >= numsubsectors)
+      {
+         *loc = 0;
+         C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a", *loc);
+      }
+
       *loc |= NF_SUBSECTOR;
    }
    else

@@ -1196,16 +1196,14 @@ static void do_draw_plane(visplane_t *pl)
       stop = pl->maxx + 1;
       pl->top[pl->minx-1] = pl->top[stop] = 0x7FFFFFFF;
 
-      plane.planezlight = pl->colormap[light]; //zlight[light];
-      plane.colormap = pl->fullcolormap;
-      // haleyjd 10/16/06
-      plane.fixedcolormap = pl->fixedcolormap;
-
-      plane.lightlevel = pl->lightlevel;
+      plane.planezlight   = pl->colormap[light]; //zlight[light];
+      plane.colormap      = pl->fullcolormap;
+      plane.fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
+      plane.lightlevel    = pl->lightlevel;
 
       R_PlaneLight();
 
-      plane.MapFunc = plane.slope == NULL ? R_MapPlane : R_MapSlope;
+      plane.MapFunc = (plane.slope == NULL ? R_MapPlane : R_MapSlope);
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
