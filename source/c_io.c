@@ -264,7 +264,6 @@ void C_Ticker(void)
 //
 static void C_addToHistory(qstring_t *s)
 {
-   const char *t;
    const char *a_prompt;
    
    // display the command in console
@@ -278,10 +277,8 @@ static void C_addToHistory(qstring_t *s)
    
    C_Printf("%s%s\n", a_prompt, QStrConstPtr(s));
    
-   // QSTR_FIXME: QStrFindFirstNotOf?
-   t = QStrConstPtr(s);      // check for nothing typed
-   while(*t == ' ') t++;   // or just spaces
-   if(!*t)
+   // check for nothing typed or just spaces
+   if(QStrFindFirstNotOfChar(s, ' ') == qstring_npos)
       return;
    
    // add it to the history

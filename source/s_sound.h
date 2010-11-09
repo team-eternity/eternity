@@ -76,14 +76,14 @@ typedef enum
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
 //
-void S_StartSound(const mobj_t *origin, int sound_id);
-void S_StartSoundName(const mobj_t *origin, const char *name);
-void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
+void S_StartSound(mobj_t *origin, int sound_id);
+void S_StartSoundName(mobj_t *origin, const char *name);
+void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx, 
                     int volumeScale, soundattn_e attenuation,
                     boolean loop, schannel_e subchannel);
-void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
+void S_StartSoundAtVolume(mobj_t *origin, int sfx_id, 
                           int volume, soundattn_e attn, schannel_e subchannel);
-void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
+void S_StartSoundNameAtVolume(mobj_t *origin, const char *name, 
                               int volume, soundattn_e attn,
                               schannel_e subchannel);
 

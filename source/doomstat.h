@@ -87,6 +87,11 @@ extern int demo_subversion;
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
 
+// haleyjd 10/16/10: full version macros
+#define make_full_version(v, sv) ((v << 8) | sv)
+#define full_demo_version        make_full_version(demo_version, demo_subversion)
+
+
 // killough 7/19/98: whether monsters should fight against each other
 extern int monster_infighting, default_monster_infighting;
 

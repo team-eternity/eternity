@@ -69,6 +69,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_DOOM2         "iwad_doom2"
 #define ITEM_IWAD_TNT           "iwad_tnt"
 #define ITEM_IWAD_PLUTONIA      "iwad_plutonia"
+#define ITEM_IWAD_HACX          "iwad_hacx"
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
@@ -104,6 +105,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", wad_no,
                "IWAD path for Final DOOM: The Plutonia Experiment"),
+
+   DEFAULT_STR(ITEM_IWAD_HACX, &gi_path_hacx, NULL, "", wad_no,
+               "IWAD path for HACX - Twitch 'n Kill (v1.2 or later)"),
 
    DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", wad_no,
                "IWAD path for Heretic Shareware"),

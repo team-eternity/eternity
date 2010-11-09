@@ -1981,7 +1981,7 @@ void A_PlayerThunk(mobj_t *mo)
 
    cptrnum   =   E_ArgAsBexptr(psp->state->args, 0);
    face      = !!E_ArgAsKwd(psp->state->args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(psp->state->args, 2);
+   statenum  =   E_ArgAsStateNumG0(psp->state->args, 2, NULL);
    settarget = !!E_ArgAsKwd(psp->state->args, 3, &targetkwds, 0);
    useammo   = !!E_ArgAsKwd(psp->state->args, 4, &ammokwds, 0);
 

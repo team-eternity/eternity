@@ -302,7 +302,7 @@ static void E_ProcessSplashes(cfg_t *cfg)
 // Returns a terrain object for a name.
 // Returns NULL if no such terrain exists.
 //
-static ETerrain *E_TerrainForName(const char *name)
+ETerrain *E_TerrainForName(const char *name)
 {
    int key = D_HashTableKey(name) % NUMTERRAINCHAINS;
    ETerrain *terrain = TerrainChains[key];
@@ -370,8 +370,8 @@ static void E_ProcessTerrain(cfg_t *cfg, boolean def)
 
       if(!(newTerrain = E_TerrainForName(tempstr)))
       {
-         E_EDFLogPrintf("\t\t\tWarning: terrain '%s' doesn't exist\n",
-                        tempstr);
+         E_EDFLoggedWarning(3, "Warning: terrain '%s' doesn't exist\n",
+                            tempstr);
          return;
       }
    }
@@ -571,8 +571,8 @@ static void E_ProcessFloor(cfg_t *cfg)
    tempstr = cfg_getstr(cfg, ITEM_FLOOR_TERRAIN);
    if(!(newFloor->terrain = E_TerrainForName(tempstr)))
    {
-      E_EDFLogPrintf("\t\t\tWarning: Flat '%s' uses bad terrain '%s'\n",
-                     newFloor->name, tempstr);
+      E_EDFLoggedWarning(3, "Warning: Flat '%s' uses bad terrain '%s'\n",
+                         newFloor->name, tempstr);
       newFloor->terrain = &solid;
    }
 
@@ -632,7 +632,7 @@ static ETerrain **TerrainTypes = NULL;
 //
 void E_InitTerrainTypes(void)
 {
-   int numf, size, i;
+   int numf, i;
 
    // if TerrainTypes already exists, free it
    if(TerrainTypes)
@@ -640,8 +640,7 @@ void E_InitTerrainTypes(void)
 
    // allocate the TerrainTypes lookup
    numf = (texturecount + 1);
-   size = numf * sizeof(ETerrain *);
-   TerrainTypes = (ETerrain **)malloc(size);
+   TerrainTypes = (ETerrain **)calloc(numf, sizeof(ETerrain*));
 
    // initialize all flats to Solid terrain
    for(i = 0; i < numf; ++i)
@@ -670,10 +669,40 @@ void E_InitTerrainTypes(void)
 //
 // Note: this returns the floor type of the thing's subsector
 // floorpic, not necessarily the floor the thing is standing on.
+// haleyjd 10/16/10: Except that's never been sufficient. So in 
+// newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(mobj_t *thing)
+ETerrain *E_GetThingFloorType(mobj_t *thing, boolean usefloorz)
 {
-   ETerrain *terrain = TerrainTypes[thing->subsector->sector->floorpic];
+   ETerrain *terrain = NULL;
+   
+   if(full_demo_version >= make_full_version(339, 21))
+   {
+      msecnode_t *m = NULL;
+
+      // determine what touched sector the thing is standing on
+      for(m = thing->touching_sectorlist; m; m = m->m_tnext)
+      {
+         fixed_t z = usefloorz ? thing->floorz : thing->z;
+         if(z == m->m_sector->floorheight)
+            break;
+      }
+
+      // if found one that's valid, use that terrain
+      if(m)
+      {
+         if(!(terrain = m->m_sector->floorterrain))
+            terrain = TerrainTypes[m->m_sector->floorpic];
+      }
+      else
+         terrain = &solid;
+   }
+
+   if(!terrain) 
+   {
+      if(!(terrain = thing->subsector->sector->floorterrain))
+         terrain = TerrainTypes[thing->subsector->sector->floorpic];
+   }
    
    if(demo_version < terrain->minversion || comp[comp_terrain])
       terrain = &solid;
@@ -689,15 +718,23 @@ ETerrain *E_GetThingFloorType(mobj_t *thing)
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 {
    subsector_t *subsec = R_PointInSubsector(x, y);
+   sector_t *sector = subsec->sector;
+   ETerrain *floorterrain = NULL, *ceilingterrain = NULL;
+
+   if(!(floorterrain = sector->floorterrain))
+      floorterrain = TerrainTypes[sector->floorpic];
+
+   if(!(ceilingterrain = sector->ceilingterrain))
+      ceilingterrain = TerrainTypes[sector->ceilingpic];
 
    // can retrieve a TerrainType for either the floor or the
    // ceiling
    switch(position)
    {
    case 0:
-      return TerrainTypes[subsec->sector->floorpic];
+      return floorterrain;
    case 1:
-      return TerrainTypes[subsec->sector->ceilingpic];
+      return ceilingterrain;
    default:
       return &solid;
    }
@@ -711,7 +748,11 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 //
 fixed_t E_SectorFloorClip(sector_t *sector)
 {
-   ETerrain *terrain = TerrainTypes[sector->floorpic];
+   ETerrain *terrain = NULL;
+   
+   // override with sector terrain if one is specified
+   if(!(terrain = sector->floorterrain))
+      terrain = TerrainTypes[sector->floorpic];
 
    return (demo_version >= terrain->minversion) ? terrain->footclip : 0;
 }
@@ -723,10 +764,11 @@ fixed_t E_SectorFloorClip(sector_t *sector)
 //
 void E_PtclTerrainHit(particle_t *p)
 {
-   ETerrain *terrain;
-   ETerrainSplash *splash;
+   ETerrain *terrain = NULL;
+   ETerrainSplash *splash = NULL;
    mobj_t *mo = NULL;
    fixed_t x, y, z;
+   sector_t *sector = NULL;
 
    // particles could never hit terrain before v3.33
    if(demo_version < 333 || comp[comp_terrain])
@@ -738,7 +780,11 @@ void E_PtclTerrainHit(particle_t *p)
    if(netgame || demoplayback || demorecording)
       return;
 
-   terrain = TerrainTypes[p->subsector->sector->floorpic];
+   sector = p->subsector->sector;
+
+   // override with sector terrain if one is specified
+   if(!(terrain = sector->floorterrain))
+      terrain = TerrainTypes[sector->floorpic];
 
    // some terrains didn't exist before a certain version
    if(demo_version < terrain->minversion)
@@ -830,7 +876,9 @@ boolean E_HitWater(mobj_t *thing, sector_t *sector)
    fixed_t z;
    ETerrain *terrain;
 
-   terrain = TerrainTypes[sector->floorpic];
+   // override with sector terrain if one is specified
+   if(!(terrain = sector->floorterrain))
+      terrain = TerrainTypes[sector->floorpic];
 
    // no TerrainTypes in old demos or if comp enabled
    if(demo_version < terrain->minversion || comp[comp_terrain])
@@ -856,7 +904,7 @@ boolean E_HitWater(mobj_t *thing, sector_t *sector)
 //
 boolean E_HitFloor(mobj_t *thing)
 {
-   msecnode_t  *m;
+   msecnode_t  *m = NULL;
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)

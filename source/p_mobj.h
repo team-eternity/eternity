@@ -294,6 +294,7 @@ typedef enum
    MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
    MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
+   MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -326,7 +327,7 @@ typedef struct backpack_s
    int16_t ammo[NUMAMMO];
    char weapon;
 } backpack_t;
-  
+
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -339,10 +340,10 @@ typedef struct backpack_s
 // pointer was simply nullified after loading, to prevent Doom from crashing),
 // and the whole reason behind loadgames crashing on savegames of AV attacks.
 // 
-
+//
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
-
+//
 struct mobj_s
 {
    // List: thinker links.
@@ -590,6 +591,9 @@ void P_AdjustFloorClip(mobj_t *thing);
 
 int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
+
+// extern data
+extern int FloatBobOffsets[];
 
 // Thing Collections
 

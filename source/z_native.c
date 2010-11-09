@@ -406,7 +406,7 @@ void (Z_Free)(void *p, const char *file, int line)
          I_FatalError(I_ERR_KILL,
                       "Z_Free: freed a pointer with invalid tag %d\n"
                       "Source: %s:%d\n"
-#ifdef INSTRUMENTED
+#if defined(ZONEVERBOSE) && defined(INSTRUMENTED)
                       "Source of malloc: %s:%d\n"
                       , block->tag, file, line, block->file, block->line
 #else
@@ -704,7 +704,11 @@ void Z_PrintZoneHeap(void)
                  block->next, block->prev, block->size,
                  block->user, block->tag
 #if defined(INSTRUMENTED)
+#if defined(ZONEVERBOSE)
                  , block->file, block->line
+#else
+                 , "not printed", 0
+#endif
 #endif
                  );
          // warnings

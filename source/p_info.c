@@ -357,6 +357,8 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 
    // add it to the hash table
    E_HashAddObject(&protoHash, newProto);
+
+   return newProto;
 }
 
 //

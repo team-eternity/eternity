@@ -88,11 +88,10 @@ typedef struct maplinedefext_s
 
 // ExtraData sector structure
 
+typedef struct ETerrain_s *eterrainptr;
+
 typedef struct mapsectorext_s
 {
-   // standard fields
-   mapsector_t stdfields;
-
    // extended fields
    double floor_xoffs;
    double floor_yoffs;
@@ -100,6 +99,9 @@ typedef struct mapsectorext_s
    double ceiling_yoffs;
    double floorangle;
    double ceilingangle;
+   int    flags;
+   int    flagsadd;
+   int    flagsrem;
    int    topmap;
    int    midmap;
    int    bottommap;
@@ -107,8 +109,15 @@ typedef struct mapsectorext_s
    int    damagemask;
    int    damagemod;
    int    damageflags;
+   int    damageflagsadd;
+   int    damageflagsrem;
+
+   eterrainptr floorterrain;
+   eterrainptr ceilingterrain;
 
    // internal fields (used by ExtraData only)
+   boolean hasflags;
+   boolean hasdamageflags;
    int recordnum;
    int next;
 
@@ -123,6 +132,7 @@ boolean E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
 short   E_LineSpecForName(const char *name);
+void    E_LoadSectorExt(line_t *line);
 
 #endif
 

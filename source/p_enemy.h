@@ -29,8 +29,31 @@
 #ifndef __P_ENEMY__
 #define __P_ENEMY__
 
-#include "m_random.h"
-#include "p_mobj.h"
+typedef enum 
+{
+   DI_EAST,
+   DI_NORTHEAST,
+   DI_NORTH,
+   DI_NORTHWEST,
+   DI_WEST,
+   DI_SOUTHWEST,
+   DI_SOUTH,
+   DI_SOUTHEAST,
+   DI_NODIR,
+   NUMDIRS
+} dirtype_t;
+
+extern fixed_t xspeed[8];
+extern fixed_t yspeed[8];
+
+boolean P_CheckMissileRange(mobj_t *actor);
+boolean P_HelpFriend(mobj_t *actor);
+boolean P_HitFriend(mobj_t *actor);
+boolean P_LookForPlayers(mobj_t *actor, boolean allaround);
+boolean P_LookForTargets(mobj_t *actor, int allaround);
+boolean P_Move(mobj_t *actor, boolean dropoff); // killough 9/12/98
+void    P_NewChaseDir(mobj_t *actor);
+boolean P_SmartMove(mobj_t *actor);
 
 void P_NoiseAlert (mobj_t *target, mobj_t *emmiter);
 void P_SpawnBrainTargets(void); // killough 3/26/98: spawn icon landings

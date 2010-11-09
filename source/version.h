@@ -25,8 +25,8 @@
 
 // DOOM version
 // enum { VERSION =  203 };
-extern int version;     // sf: made version an int
-extern unsigned char SUBVERSION; // haleyjd
+extern int version;              // sf: made version an int
+extern unsigned char subversion; // haleyjd
 
 extern const char version_date[];
 extern const char version_time[];

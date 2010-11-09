@@ -177,6 +177,14 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
    {
       // Convert to extended type
       *loc  = value & ~0x8000;
+
+      // haleyjd 11/06/10: check for invalid subsector reference
+      if(*loc >= numsubsectors)
+      {
+         *loc = 0;
+         C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a", *loc);
+      }
+
       *loc |= NF_SUBSECTOR;
    }
    else
@@ -190,14 +198,15 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
-                                  const char *item)
+d_inline static int SafeUintIndex(int16_t input, int limit, 
+                                  const char *func, int index, const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "%s error: %s #%d out of range\a\n", func, item, ret);
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+               func, index, item, ret);
       ret = 0;
    }
 
@@ -211,13 +220,14 @@ d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
 // short format.
 //
 d_inline static int SafeRealUintIndex(uint16_t input, int limit, 
-                                      const char *func, const char *item)
+                                      const char *func, int index, const char *item)
 {
    int ret = (int)(SwapUShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "%s error: %s #%d out of range\a\n", func, item, ret);
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+               func, index, item, ret);
       ret = 0;
    }
 
@@ -233,6 +243,16 @@ d_inline static int SafeRealUintIndex(uint16_t input, int limit,
 // such direct mapping.
 //
 
+// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
+#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
+
+// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
+#define read32_le(b, t) \
+   ((b)[0] | \
+    ((t)((b)[1]) <<  8) | \
+    ((t)((b)[2]) << 16) | \
+    ((t)((b)[3]) << 24))
+
 //
 // GetLevelWord
 //
@@ -240,9 +260,7 @@ d_inline static int SafeRealUintIndex(uint16_t input, int limit,
 //
 static int16_t GetLevelWord(byte **data)
 {
-   int16_t *loc = (int16_t *)(*data);
-   int16_t  val = SwapShort(*loc);
-
+   int16_t val = SwapShort(read16_le(*data, int16_t));
    *data += 2;
 
    return val;
@@ -255,9 +273,7 @@ static int16_t GetLevelWord(byte **data)
 //
 static uint16_t GetLevelWordU(byte **data)
 {
-   uint16_t *loc = (uint16_t *)(*data);
-   uint16_t  val = SwapUShort(*loc);
-
+   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
    *data += 2;
 
    return val;
@@ -270,9 +286,7 @@ static uint16_t GetLevelWordU(byte **data)
 //
 static int32_t GetLevelDWord(byte **data)
 {
-   int32_t *loc = (int32_t *)(*data);
-   int32_t  val = SwapLong(*loc);
-
+   int32_t val = SwapLong(read32_le(*data, int32_t));
    *data += 4;
 
    return val;
@@ -285,9 +299,7 @@ static int32_t GetLevelDWord(byte **data)
 //
 static uint32_t GetLevelDWordU(byte **data)
 {
-   uint32_t *loc = (uint32_t *)(*data);
-   uint32_t  val = SwapULong(*loc);
-
+   uint32_t val = SwapULong(read32_le(*data, uint32_t));
    *data += 4;
 
    return val;
@@ -371,13 +383,13 @@ void P_LoadSegs(int lump)
       line_t *ldef;
 
       // haleyjd 06/19/06: convert indices to unsigned
-      li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "seg", "vertex")];
-      li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "seg", "vertex")];
+      li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "seg", i, "vertex")];
+      li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "seg", i, "vertex")];
 
       li->offset = (float)(SwapShort(ml->offset));
 
       // haleyjd 06/19/06: convert indices to unsigned
-      linedef = SafeUintIndex(ml->linedef, numlines, "seg", "line");
+      linedef = SafeUintIndex(ml->linedef, numlines, "seg", i, "line");
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SwapShort(ml->side);
@@ -475,8 +487,6 @@ void P_LoadSectors(int lumpnum)
       ss->lightlevel         = GetLevelWord(&data);
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
-      ss->thinglist          = NULL;
-      ss->touching_thinglist = NULL; // phares 3/14/98
       
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
@@ -507,14 +517,9 @@ void P_LoadSectors(int lumpnum)
       ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
 
-      // SoM: Slopes!
-      ss->c_slope = ss->f_slope = NULL;
-
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
-
-      ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
@@ -534,17 +539,17 @@ void P_LoadSectors(int lumpnum)
          {
          case 1:
             ss->damage     = 5;
-            ss->damagemask = 0x1f;
+            ss->damagemask = 32;
             ss->damagemod  = MOD_SLIME;
             break;
          case 2:
             ss->damage     = 10;
-            ss->damagemask = 0x1f;
+            ss->damagemask = 32;
             ss->damagemod  = MOD_SLIME;
             break;
          case 3:
             ss->damage       = 20;
-            ss->damagemask   = 0x1f;
+            ss->damagemask   = 32;
             ss->damagemod    = MOD_SLIME;
             ss->damageflags |= SDMG_LEAKYSUIT;
             break;
@@ -722,7 +727,7 @@ static void P_LoadZSegs(byte *data)
       ml.linedef = GetLevelWordU(&data);
       ml.side    = *data++;
 
-      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", "line");
+      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
 
       ldef = &lines[linedef];
       li->linedef = ldef;
@@ -1087,8 +1092,8 @@ void P_LoadLineDefs(int lump)
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", "vertex")];
-      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", "vertex")];
+      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -1421,7 +1426,7 @@ void P_LoadSideDefs2(int lumpnum)
       GetLevelString(&data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", "sector");
+      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", i, "sector");
       sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
@@ -2116,13 +2121,10 @@ int P_CheckLevel(struct waddir_s *dir, int lumpnum)
    }
 
    // if we got here, we're dealing with a Hexen-format map
-
    return LEVEL_FORMAT_HEXEN;
 }
 
 void P_ConvertHereticSpecials(void); // haleyjd
-
-void P_LoadOlo(void);
 
 void P_InitThingLists(void); // haleyjd
 
@@ -2360,6 +2362,10 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
 {
    int lumpnum;
 
+   // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
+   // this routine.
+   gamestate = GS_LOADING;
+
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
    
@@ -2511,6 +2517,9 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    if(mapformat == LEVEL_FORMAT_HEXEN)
       ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
+
+   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
+   gamestate = GS_LEVEL;
 }
 
 //
@@ -2573,7 +2582,7 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
    if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
       return;
    
-   // handle ordinary heretic things -- all are less than 100
+   // handle ordinary Heretic things -- all are less than 100
    if(mthing->type < 100)
    {
       // add 7000 to normal doomednum

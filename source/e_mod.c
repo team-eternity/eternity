@@ -243,8 +243,8 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       // do not override the Unknown type
       if(!strcasecmp(title, "Unknown"))
       {
-         E_EDFLogPuts("\t\tWarning: attempt to override default Unknown "
-                      "damagetype ignored\n");
+         E_EDFLoggedWarning(2, "Warning: attempt to override default Unknown "
+                               "damagetype ignored\n");
          return;
       }
 

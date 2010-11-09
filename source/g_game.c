@@ -648,7 +648,8 @@ static void G_DoLoadLevel(void)
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
       basetic = gametic;
 
-   gamestate = GS_LEVEL;
+   // haleyjd 07/28/10: Waaaay too early for this.
+   //gamestate = GS_LEVEL;
 
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
@@ -1143,8 +1144,7 @@ static void G_DoPlayDemo(void)
       consoleplayer = *demo_p++;
 
       // haleyjd 10/08/06: determine longtics support in new demos
-      longtics_demo = (demo_version > 333 || 
-                       (demo_version == 333 && demo_subversion >= 50));
+      longtics_demo = (full_demo_version >= make_full_version(333, 50));
 
       // haleyjd 04/14/03: retrieve dmflags if appropriate version
       if(demo_version >= 331)
@@ -1157,8 +1157,7 @@ static void G_DoPlayDemo(void)
 
       // haleyjd 12/14/01: retrieve gamemapname if in appropriate
       // version
-      if(demo_version > 329 || 
-         (demo_version == 329 && demo_subversion >= 5))
+      if(full_demo_version >= make_full_version(329, 5))
       {
          int i;
          
@@ -1226,11 +1225,8 @@ static void G_DoPlayDemo(void)
       precache = timingdemo;
       
       // haleyjd: choose appropriate G_InitNew based on version
-      if(demo_version > 329 ||
-         (demo_version == 329 && demo_subversion >= 5))
-      {
+      if(full_demo_version >= make_full_version(329, 5))
          G_InitNew(skill, gamemapname);
-      }
       else
          G_InitNewNum(skill, episode, map);
 
@@ -1574,7 +1570,7 @@ static void G_DoWorldDone(void)
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
-   gamestate = GS_LEVEL;
+   gamestate = GS_LOADING;
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels
@@ -1599,6 +1595,22 @@ static void G_DoWorldDone(void)
          G_SetGameMapName(LevelInfo.nextLevel);
       else
          G_SetGameMapName(G_GetNameForMap(gameepisode, gamemap));
+   }
+
+   // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
+   // in the wad directory, and if so, use it. Otherwise, return to the Master
+   // Levels selection menu.
+   if(inmasterlevels)
+   {
+      wadlevel_t *level = W_FindLevelInDir(g_dir, gamemapname);
+
+      if(!level)
+      {
+         gameaction = ga_nothing;
+         inmasterlevels = false;
+         W_DoMasterLevels(false);
+         return;
+      }
    }
    
    hub_changelevel = false;
@@ -1974,8 +1986,8 @@ static void G_DoLoadGame(void)
    
    // killough 2/14/98: load compatibility mode
    compatibility = *save_p++;
-   demo_version = version;     // killough 7/19/98: use this version's id
-   demo_subversion = SUBVERSION; // haleyjd 06/17/01   
+   demo_version = version;       // killough 7/19/98: use this version's id
+   demo_subversion = subversion; // haleyjd 06/17/01   
    
    gameskill = *save_p++;
 
@@ -2779,18 +2791,16 @@ int cpars[34] =
 //
 // G_WorldDone
 //
-
 void G_WorldDone(void)
 {
-   if(inmasterlevels)
-   {
-      inmasterlevels = false;
-      W_DoMasterLevels(false);
-      return;
-   }
-
    gameaction = ga_worlddone;
-   
+
+   // haleyjd 10/24/10: if in Master Levels mode, just return from here now.
+   // The choice of whether to go to another level or show the Master Levels
+   // menu is taken care of in G_DoWorldDone.
+   if(inmasterlevels)
+      return;
+
    if(secretexit)
       players[consoleplayer].didsecret = true;
    
@@ -2889,7 +2899,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 // haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
 // directory, for use when loading the level.
 //
-void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir)
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir)
 {
    G_DeferedInitNew(skill, levelname);
    d_dir = dir;
@@ -2974,8 +2984,8 @@ void G_ReloadDefaults(void)
    compatibility = false;     // killough 10/98: replaced by comp[] vector
    memcpy(comp, default_comp, sizeof comp);
    
-   demo_version = version;     // killough 7/19/98: use this version's id
-   demo_subversion = SUBVERSION; // haleyjd 06/17/01
+   demo_version = version;       // killough 7/19/98: use this version's id
+   demo_subversion = subversion; // haleyjd 06/17/01
    
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
@@ -3409,11 +3419,8 @@ byte *G_ReadOptions(byte *demoptr)
       // Options new to v2.04, etc.
 
       // haleyjd 05/23/04: autoaim is sync-critical
-      if(demo_version > 331 ||
-         (demo_version == 331 && demo_subversion > 7))
-      {
+      if(full_demo_version >= make_full_version(331, 8))
          autoaim = *demoptr++;
-      }
 
       if(demo_version >= 333)
       {
@@ -3587,13 +3594,13 @@ void G_BeginRecording(void)
    *demo_p++ = (version >> 16) & 255;
    *demo_p++ = (version >> 24) & 255;
    
-   *demo_p++ = SUBVERSION; // always ranges from 0 to 255
+   *demo_p++ = subversion; // always ranges from 0 to 255
    
    // killough 2/22/98: save compatibility flag in new demos
    *demo_p++ = compatibility;       // killough 2/22/98
    
-   demo_version = version;     // killough 7/19/98: use this version's id
-   demo_subversion = SUBVERSION; // haleyjd 06/17/01
+   demo_version = version;       // killough 7/19/98: use this version's id
+   demo_subversion = subversion; // haleyjd 06/17/01
    
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;

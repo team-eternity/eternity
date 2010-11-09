@@ -699,10 +699,10 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
          }
          else if(mo->momz < -12*FRACUNIT)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         else if(onthing || !E_GetThingFloorType(mo)->liquid)
+         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
-      else if(onthing || !E_GetThingFloorType(mo)->liquid)
+      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }
@@ -1519,7 +1519,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void P_RemoveMobj (mobj_t *mobj)
+void P_RemoveMobj(mobj_t *mobj)
 {
    // haleyjd 04/14/03: restructured
    boolean respawnitem = false;
@@ -1528,8 +1528,7 @@ void P_RemoveMobj (mobj_t *mobj)
    {
       respawnitem = true; // respawning super powerups
    }
-   else if(mobj->type == E_ThingNumForDEHNum(MT_BARREL) &&
-           (dmflags & DM_BARRELRESPAWN))
+   else if((dmflags & DM_BARRELRESPAWN) && mobj->type == E_ThingNumForDEHNum(MT_BARREL))
    {
       respawnitem = true; // respawning barrels
    }
@@ -1557,9 +1556,17 @@ void P_RemoveMobj (mobj_t *mobj)
 
    P_UnsetThingPosition(mobj);
 
-   // Delete all nodes on the current sector_list               phares 3/16/98
+   // Delete all nodes on the current sector_list -- phares 3/16/98
    if(mobj->old_sectorlist)
       P_DelSeclist(mobj->old_sectorlist);
+
+   // haleyjd 08/13/10: ensure that the object cannot be relinked, and
+   // nullify old_sectorlist to avoid multiple release of msecnodes.
+   if(demo_version > 337)
+   {
+      mobj->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
+      mobj->old_sectorlist = NULL; 
+   }
 
    // stop any playing sound
 

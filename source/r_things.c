@@ -667,6 +667,9 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
+#define IS_FULLBRIGHT(actor) \
+   (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
+
 //
 // R_ProjectSprite
 //
@@ -886,7 +889,7 @@ void R_ProjectSprite(mobj_t *thing)
       vis->colormap = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    else if(fixedcolormap)
       vis->colormap = fixedcolormap;      // fixed map
-   else if(LevelInfo.useFullBright && (thing->frame & FF_FULLBRIGHT)) // haleyjd
+   else if(LevelInfo.useFullBright && IS_FULLBRIGHT(thing)) // haleyjd
       vis->colormap = fullcolormap;       // full bright  // killough 3/20/98
    else
    {     

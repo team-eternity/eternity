@@ -191,7 +191,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
          lump->li_namespace == ns_global &&   // is in global namespace
          lump->source == inclump->source)     // is from same source
       {
-         return lump->index;
+         return i; // haleyjd 07/26/10: i, not lump->index!!!
       }
    }
 
@@ -322,7 +322,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    int i;
 
    // haleyjd 03/18/10: deprecation warning
-   E_EDFLogPuts("Warning: include_prev is deprecated\n");
+   E_EDFLoggedWarning(0, "Warning: include_prev is deprecated\n");
 
    if(argc != 0)
    {
@@ -395,8 +395,8 @@ int E_StdInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    // compatibility of EDF mods when new EDF modules are added.
    if(!strstr(argv[0], "root.edf"))
    {
-      E_EDFLogPuts("Warning: stdinclude() is deprecated except for the "
-                   "inclusion of file 'root.edf'.\n");
+      E_EDFLoggedWarning(0, "Warning: stdinclude() is deprecated except for "
+                            "the inclusion of file 'root.edf'.\n");
    }
 
    filename = E_BuildDefaultFn(argv[0]);

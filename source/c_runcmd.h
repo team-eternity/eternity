@@ -53,7 +53,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                    \
         command_t Cmd_ ## name = { # name, ct_command,  \
                        flags, NULL, Handler_ ## name,   \
-                       0 };                             \
+                       0, NULL };                       \
         void Handler_ ## name(void)
 
 		 
@@ -66,7 +66,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                                 \
         command_t Cmd_ ## name = { # name, ct_variable,              \
                         flags, &var_ ## variable, Handler_ ## name,  \
-                        0 };                                         \
+                        0, NULL };                                   \
         void Handler_ ## name(void)
 
 // Same as CONSOLE_COMMAND, but sync-ed across network. When
@@ -74,11 +74,11 @@ typedef struct variable_s variable_t;
 //      You must assign your variable a unique netgame
 //      variable (list in c_net.h)
 
-#define CONSOLE_NETCMD(name, flags, netcmd)             \
-        void Handler_ ## name(void);                    \
-        command_t Cmd_ ## name = { # name, ct_command,  \
-                       (flags) | cf_netvar, NULL,       \
-                       Handler_ ## name, netcmd };      \
+#define CONSOLE_NETCMD(name, flags, netcmd)              \
+        void Handler_ ## name(void);                     \
+        command_t Cmd_ ## name = { # name, ct_command,   \
+                       (flags) | cf_netvar, NULL,        \
+                       Handler_ ## name, netcmd, NULL }; \
         void Handler_ ## name()
 
 // As for CONSOLE_VARIABLE, but for net, see above
@@ -87,7 +87,7 @@ typedef struct variable_s variable_t;
         void Handler_ ## name(void);                                \
         command_t Cmd_ ## name = { # name, ct_variable,             \
                         cf_netvar | (flags), &var_ ## variable,     \
-                        Handler_ ## name, netcmd };                 \
+                        Handler_ ## name, netcmd, NULL };           \
         void Handler_ ## name(void)
 
 // Create a constant. You must declare the variable holding
@@ -95,7 +95,7 @@ typedef struct variable_s variable_t;
 
 #define CONSOLE_CONST(name, variable)                           \
         command_t Cmd_ ## name = { # name, ct_constant, 0,      \
-                &var_ ## variable, NULL, 0 };
+                &var_ ## variable, NULL, 0, NULL };
 
         /*********** variable macros *************/
 
@@ -109,7 +109,7 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE(name, defaultvar, type, min, max, strings)  \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        type, min, max, strings};
+                  type, min, max, strings, 0, 0, NULL, NULL};
 
 // simpler macro for int. You do not need to specify the type
 
@@ -121,13 +121,13 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE_STRING(name, defaultvar, max)               \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_string, 0, max, NULL};
+                  vt_string, 0, max, NULL, 0, 0, NULL, NULL};
 
 // haleyjd 03/13/06: support static strings as cvars
 
 #define VARIABLE_CHARARRAY(name, defaultvar, max)            \
         variable_t var_ ## name = { name, defaultvar,        \
-                        vt_chararray, 0, max, NULL};
+                  vt_chararray, 0, max, NULL, 0, 0, NULL, NULL};
 
 // Boolean. Note that although the name here is boolean, the
 // actual type is int. haleyjd 07/05/10: For real booleans, use
@@ -135,27 +135,27 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, 0, 1, strings };
+                  vt_int, 0, 1, strings, 0, 0, NULL, NULL };
 
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_toggle, 0, 1, strings };
+                   vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
 
 // haleyjd 04/21/10: support for vt_float
 
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_float, 0, 0, NULL, min, max };
+                  vt_float, 0, 0, NULL, min, max, NULL, NULL };
 
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
         variable_t var_ ## name = { &name, NULL,             \
-                        vt_int, -1, -1, NULL};
+                  vt_int, -1, -1, NULL, 0, 0, NULL, NULL };
 
 #define CONST_STRING(name)                                   \
         variable_t var_ ## name = { &name, NULL,             \
-                        vt_string, -1, -1, NULL};
+                  vt_string, -1, -1, NULL, 0, 0, NULL, NULL };
 
 
 #define C_AddCommand(c)  (C_AddCommand)(&Cmd_ ## c) 
@@ -181,16 +181,17 @@ enum    // command type
 
 enum    // command flag
 {
-  cf_notnet       =1,     // not in netgames
-  cf_netonly      =2,     // only in netgames
-  cf_server       =4,     // server only 
-  cf_handlerset   =8,     // if set, the handler sets the variable,
-                          // not c_runcmd.c itself
-  cf_netvar       =16,    // sync with other pcs
-  cf_level        =32,    // only works in levels
-  cf_hidden       =64,    // hidden in cmdlist
-  cf_buffered     =128,   // buffer command: wait til all screen
-                          // rendered before running command
+  cf_notnet       = 0x001, // not in netgames
+  cf_netonly      = 0x002, // only in netgames
+  cf_server       = 0x004, // server only 
+  cf_handlerset   = 0x008, // if set, the handler sets the variable,
+                           // not c_runcmd.c itself
+  cf_netvar       = 0x010, // sync with other pcs
+  cf_level        = 0x020, // only works in levels
+  cf_hidden       = 0x040, // hidden in cmdlist
+  cf_buffered     = 0x080, // buffer command: wait til all screen
+                           // rendered before running command
+  cf_allowblank   = 0x100, // string variable allows empty value
 };
 
 enum    // variable type
@@ -216,6 +217,7 @@ struct variable_s
   double dmax;     //                   max for double vars
   
   struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
+  struct command_s *command;    // haleyjd 08/15/10: parent command
 };
 
 struct command_s
@@ -255,8 +257,9 @@ typedef struct console_s
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
    int  argc;          // number of argv's
-   qstring_t args;     // args as single string   
-   qstring_t argv[MAXTOKENS]; // argument values to current command
+   qstring_t  args;    // args as single string   
+   qstring_t *argv;    // argument values to current command
+   int numargvsalloc;  // number of arguments available to command parsing
 } console_t;
 
 extern console_t Console; // the one and only Console object

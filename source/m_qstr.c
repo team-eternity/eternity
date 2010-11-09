@@ -95,6 +95,18 @@ qstring_t *QStrInitCreate(qstring_t *qstr)
 }
 
 //
+// QStrInitCreateSize
+//
+// Initialization and creation with size specification.
+//
+qstring_t *QStrInitCreateSize(qstring_t *qstr, size_t size)
+{
+   memset(qstr, 0, sizeof(*qstr));
+
+   return QStrCreateSize(qstr, size);
+}
+
+//
 // QStrFree
 //
 // Frees the qstring object. It should not be used after this,
@@ -380,6 +392,23 @@ qstring_t *QStrRStrip(qstring_t *qstr, char c)
    return qstr;
 }
 
+//
+// QStrTruncate
+//
+// Truncates the qstring to the indicated position.
+//
+qstring_t *QStrTruncate(qstring_t *qstr, size_t pos)
+{
+   // pos must be between 0 and qstr->index - 1
+   if(pos >= qstr->index)
+      I_Error("QStrTruncate: position out of range\n");
+
+   memset(qstr->buffer + pos, 0, qstr->index - pos);
+   qstr->index = pos;
+
+   return qstr;
+}
+
 //=============================================================================
 //
 // Comparison Functions
@@ -433,7 +462,7 @@ int QStrNCaseCmp(qstring_t *qstr, const char *str, size_t maxcount)
 //
 // QStrChr
 //
-// Calls strchr on the qstring ("find first of").
+// Calls strchr on the qstring ("find first of", C-style).
 //
 const char *QStrChr(qstring_t *qstr, char c)
 {
@@ -443,11 +472,59 @@ const char *QStrChr(qstring_t *qstr, char c)
 //
 // QStrRChr
 //
-// Calls strrchr on the qstring ("find last of")
+// Calls strrchr on the qstring ("find last of", C-style)
 //
 const char *QStrRChr(qstring_t *qstr, char c)
 {
    return strrchr(qstr->buffer, c);
+}
+
+//
+// QStrFindFirstOfChar
+//
+// Finds the first occurance of a character in the qstring and returns its 
+// position. Returns qstring_npos if not found.
+//
+size_t QStrFindFirstOfChar(qstring_t *qstr, char c)
+{
+   const char *rover = qstr->buffer;
+   boolean found = false;
+
+   while(*rover)
+   {
+      if(*rover == c)
+      {
+         found = true;
+         break;
+      }
+      ++rover;
+   }
+
+   return found ? rover - qstr->buffer : qstring_npos;
+}
+
+//
+// QStrFindFirstNotOfChar
+//
+// Finds the first occurance of a character in the qstring which does not
+// match the provided character. Returns qstring_npos if not found.
+//
+size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
+{
+   const char *rover = qstr->buffer;
+   boolean found = false;
+
+   while(*rover)
+   {
+      if(*rover != c)
+      {
+         found = true;
+         break;
+      }
+      ++rover;
+   }
+
+   return found ? rover - qstr->buffer : qstring_npos;
 }
 
 //=============================================================================

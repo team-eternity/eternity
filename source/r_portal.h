@@ -80,6 +80,11 @@ typedef enum
    PS_PASSSOUND          = 0x200,
    // Mask for state flags
    PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
+   
+   // -- Opactiy -- 
+   // The left-most 8 bits are reserved for the opacity value of the portal overlay
+   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYMASK        = 0xFF000000,
 } portalflag_e;
 
 

@@ -43,6 +43,7 @@
 #include "e_sound.h"
 #include "m_queue.h"
 #include "p_spec.h"
+#include "p_tick.h"
 
 // haleyjd 07/13/05: redefined to use sound-specific attenuation params
 #define S_ATTENUATOR ((sfx->clipping_dist - sfx->close_dist) >> FRACBITS)
@@ -81,7 +82,7 @@ extern boolean nosfxparm, nomusicparm;
 typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  const mobj_t *origin;    // origin of sound
+  mobj_t *origin;          // origin of sound
   schannel_e subchannel;   // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
@@ -148,6 +149,10 @@ static void S_StopChannel(int cnum)
       if(I_SoundIsPlaying(channels[cnum].handle))
          I_StopSound(channels[cnum].handle);      // stop the sound playing
       
+      // haleyjd 08/13/10: sound origins should count as thinker references
+      if(demo_version >= 337 && channels[cnum].origin)
+         P_SetTarget(&(channels[cnum].origin), NULL);
+
       // haleyjd 09/27/06: clear the entire channel
       memset(&channels[cnum], 0, sizeof(channel_t));
    }
@@ -406,7 +411,7 @@ static int S_countChannels(void)
 // range from 0 to 127. Also added customizable attenuation types.
 // haleyjd 06/03/06: added ability to loop sound samples
 //
-void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx, 
+void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx, 
                     int volumeScale, soundattn_e attenuation, boolean loop,
                     schannel_e subchannel)
 {
@@ -608,7 +613,10 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 #endif
 
    channels[cnum].sfxinfo = sfx;
-   channels[cnum].origin  = origin;
+   if(demo_version >= 337) // haleyjd 08/13/10: sound channels are thinker references.
+      P_SetTarget(&(channels[cnum].origin), origin);
+   else
+      channels[cnum].origin = origin;
 
    while(sfx->link)
       sfx = sfx->link;     // sf: skip thru link(s)
@@ -636,7 +644,11 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
       channels[cnum].idnum       = I_SoundID(handle); // unique instance id
    }
    else // haleyjd: the sound didn't start, so clear the channel info
+   {
+      if(demo_version >= 337)
+         P_SetTarget(&(channels[cnum].origin), NULL);
       memset(&channels[cnum], 0, sizeof(channel_t));
+   }
 }
 
 //
@@ -646,7 +658,7 @@ void S_StartSfxInfo(const mobj_t *origin, sfxinfo_t *sfx,
 // removed, apparently by the BOOM team, because it was never used for 
 // anything useful (it was always called with snd_SfxVolume...).
 //
-void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id, 
+void S_StartSoundAtVolume(mobj_t *origin, int sfx_id, 
                           int volume, soundattn_e attn, schannel_e subchannel)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
@@ -668,7 +680,7 @@ void S_StartSoundAtVolume(const mobj_t *origin, int sfx_id,
 // retains full compatibility.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSound(const mobj_t *origin, int sfx_id)
+void S_StartSound(mobj_t *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -678,7 +690,7 @@ void S_StartSound(const mobj_t *origin, int sfx_id)
 //
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
-void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name, 
+void S_StartSoundNameAtVolume(mobj_t *origin, const char *name, 
                               int volume, soundattn_e attn, 
                               schannel_e subchannel)
 {
@@ -700,7 +712,7 @@ void S_StartSoundNameAtVolume(const mobj_t *origin, const char *name,
 // WAD sounds.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSoundName(const mobj_t *origin, const char *name)
+void S_StartSoundName(mobj_t *origin, const char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -710,7 +722,7 @@ void S_StartSoundName(const mobj_t *origin, const char *name)
 //
 // haleyjd 06/03/06: support playing looped sounds.
 //
-void S_StartSoundLooped(const mobj_t *origin, char *name, int volume, 
+void S_StartSoundLooped(mobj_t *origin, char *name, int volume, 
                         soundattn_e attn, schannel_e subchannel)
 {
    sfxinfo_t *sfx;

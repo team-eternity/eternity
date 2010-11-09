@@ -678,7 +678,7 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
 {
    boolean   active;
-   int       ret = sflags & PF_FLAGMASK;
+   int       ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
    
    if(!portal)
       return 0;
@@ -818,7 +818,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
    if(!sec->f_portal)
       return;
       
-   sec->f_pflags = newbehavior & PF_FLAGMASK;
+   sec->f_pflags = newbehavior;
    P_CheckFPortalState(sec);
 }
 
@@ -829,7 +829,7 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
    if(!sec->c_portal)
       return;
       
-   sec->c_pflags = newbehavior & PF_FLAGMASK;
+   sec->c_pflags = newbehavior;
    P_CheckCPortalState(sec);
 }
 
@@ -840,7 +840,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
    if(!line->portal)
       return;
       
-   line->pflags = newbehavior & PF_FLAGMASK;
+   line->pflags = newbehavior;
    P_CheckLPortalState(line);
 }
 

@@ -72,12 +72,12 @@ CONSOLE_COMMAND(i_exitwithmessage, 0)
 
 CONSOLE_COMMAND(i_fatalerror, 0)
 {
-   I_FatalError(I_ERR_KILL, "%s\n", Console.args);
+   I_FatalError(I_ERR_KILL, "%s\n", QStrConstPtr(&Console.args));
 }
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s\n", Console.args);
+   I_Error("%s\n", QStrConstPtr(&Console.args));
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
@@ -455,6 +455,7 @@ VARIABLE_STRING(gi_path_doomu,   NULL, UL);
 VARIABLE_STRING(gi_path_doom2,   NULL, UL);
 VARIABLE_STRING(gi_path_tnt,     NULL, UL);
 VARIABLE_STRING(gi_path_plut,    NULL, UL);
+VARIABLE_STRING(gi_path_hacx,    NULL, UL);
 VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
@@ -479,52 +480,57 @@ static boolean G_TestIWADPath(char *path)
    return true;
 }
 
-CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  0) 
+CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  cf_allowblank) 
 {
    G_TestIWADPath(gi_path_doomsw);
 }
 
-CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, 0) 
+CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, cf_allowblank) 
 {
    G_TestIWADPath(gi_path_doomreg);
 }
 
-CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   0) 
+CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   cf_allowblank) 
 {
    G_TestIWADPath(gi_path_doomu);
 }
 
-CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   0) 
+CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   cf_allowblank) 
 {
    G_TestIWADPath(gi_path_doom2);
 }
 
-CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     0) 
+CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     cf_allowblank) 
 {
    G_TestIWADPath(gi_path_tnt);
 }
 
-CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    0) 
+CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    cf_allowblank) 
 {
    G_TestIWADPath(gi_path_plut);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  0) 
+CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,    cf_allowblank)
+{
+   G_TestIWADPath(gi_path_hacx);
+}
+
+CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  cf_allowblank) 
 {
    G_TestIWADPath(gi_path_hticsw);
 }
 
-CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, 0) 
+CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, cf_allowblank) 
 {
    G_TestIWADPath(gi_path_hticreg);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    0) 
+CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank) 
 {
    G_TestIWADPath(gi_path_sosr);
 }
 
-CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, 0)
+CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
 {
    if(G_TestIWADPath(w_masterlevelsdirname))
       W_EnumerateMasterLevels(true);
@@ -702,7 +708,7 @@ void G_AddAutoloadFiles(void)
       command = malloc(sizeof(*command));
       command->name = autoload_names[i];
       command->type = ct_variable;
-      command->flags = 0;
+      command->flags = cf_allowblank;
       command->variable = variable;
       command->handler = NULL;
       command->netcmd = 0;
@@ -861,6 +867,7 @@ void G_AddCommands(void)
    C_AddCommand(iwad_doom2);
    C_AddCommand(iwad_tnt);
    C_AddCommand(iwad_plutonia);
+   C_AddCommand(iwad_hacx);
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);

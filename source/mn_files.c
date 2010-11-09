@@ -40,6 +40,7 @@
 
 #include "z_zone.h"
 #include "c_io.h"
+#include "d_main.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "m_misc.h"
@@ -473,12 +474,16 @@ static boolean MN_FileResponder(event_t *ev)
    
    if(action_menu_toggle || action_menu_previous)
    {
-      if(allow_exit)
+      // When allow_exit flag is false, call D_StartTitle
+      if(!allow_exit)
       {
-         action_menu_toggle = action_menu_previous = false;
-         current_menuwidget = NULL; // cancel widget
-         S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+         MN_ClearMenus();
+         D_StartTitle();
       }
+
+      action_menu_toggle = action_menu_previous = false;
+      current_menuwidget = NULL; // cancel widget
+      S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       return true;
    }
   
@@ -537,7 +542,7 @@ static boolean MN_FileResponder(event_t *ev)
 char *wad_directory; // directory where user keeps wads
 
 VARIABLE_STRING(wad_directory,  NULL,          1024);
-CONSOLE_VARIABLE(wad_directory, wad_directory, 0)
+CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
    char *a;
 

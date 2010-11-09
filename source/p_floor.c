@@ -1325,7 +1325,11 @@ int EV_DoDonut(line_t *line)
          //jff 3/29/98 use true two-sidedness, not the flag
          if(comp[comp_model])
          {
-            if((!s2->lines[i]->flags & ML_TWOSIDED) ||
+            // haleyjd 10/12/10: The first check here, which has a typo that
+            // goes all the way back to vanilla DOOM, is inconsequential 
+            // because it always evaluates to false. Since this is causing
+            // a warning in GCC 4, I have commented it out.
+            if(/*(!s2->lines[i]->flags & ML_TWOSIDED) ||*/
                (s2->lines[i]->backsector == s1))
                continue;
          }

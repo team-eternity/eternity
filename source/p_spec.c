@@ -2385,7 +2385,7 @@ void P_PlayerInSpecialSector(player_t *player)
             player->cheats &= ~CF_GODMODE;
 
          // check time
-         if(!(leveltime & sector->damagemask))
+         if(sector->damagemask <= 0 || !(leveltime % sector->damagemask))
          {
             // do the damage
             P_DamageMobj(player->mo, NULL, NULL, sector->damage, 
@@ -2417,16 +2417,22 @@ void P_PlayerInSpecialSector(player_t *player)
 //
 void P_PlayerOnSpecialFlat(player_t *player)
 {
-   sector_t *sector = player->mo->subsector->sector;
+   //sector_t *sector = player->mo->subsector->sector;
    ETerrain *terrain;
+   fixed_t floorz;
+
+   if(full_demo_version < make_full_version(339, 21))
+      floorz = player->mo->subsector->sector->floorheight;
+   else
+      floorz = player->mo->floorz; // use more correct floorz
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != floorz)
       return;
 
-   terrain = E_GetThingFloorType(player->mo);
+   terrain = E_GetThingFloorType(player->mo, true);
 
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
@@ -2588,7 +2594,7 @@ void P_SpawnSpecials(int mapformat)
          // haleyjd 12/31/08: sector damage conversion
          // sector->special |= 3 << DAMAGE_SHIFT; //jff 3/14/98 put damage bits in
          sector->damage       = 20;
-         sector->damagemask   = 0x1f;
+         sector->damagemask   = 32;
          sector->damagemod    = MOD_SLIME;
          sector->damageflags |= SDMG_LEAKYSUIT;
          break;
@@ -2598,7 +2604,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage     = 10;
-            sector->damagemask = 0x1f;
+            sector->damagemask = 32;
             sector->damagemod  = MOD_SLIME;
          }
          break;
@@ -2608,7 +2614,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage     = 5;
-            sector->damagemask = 0x1f;
+            sector->damagemask = 32;
             sector->damagemod  = MOD_SLIME;
          }
          break;
@@ -2638,7 +2644,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage       = 20;
-            sector->damagemask   = 0x1f;
+            sector->damagemask   = 32;
             sector->damagemod    = MOD_SLIME;
             sector->damageflags |= SDMG_IGNORESUIT|SDMG_ENDGODMODE|SDMG_EXITLEVEL;
          }
@@ -2664,7 +2670,7 @@ void P_SpawnSpecials(int mapformat)
          if(sector->special < 32)
          {
             sector->damage       = 20;
-            sector->damagemask   = 0x1f;
+            sector->damagemask   = 32;
             sector->damagemod    = MOD_SLIME;
             sector->damageflags |= SDMG_LEAKYSUIT;
          }
@@ -2802,9 +2808,8 @@ void P_SpawnSpecials(int mapformat)
       // SoM 10/14/07: Surface/Surface attachments
       case 379:
       case 380:
-         P_AttachSectors(lines + i);
+         P_AttachSectors(&lines[i]);
          break;
-
 
       // SoM 05/10/09: Slopes
       case 386:
@@ -2816,6 +2821,12 @@ void P_SpawnSpecials(int mapformat)
       case 392:
       case 393:
          P_SpawnSlope_Line(i);
+         break;
+
+      case 401:
+         // haleyjd 10/16/10: ExtraData sector
+         E_LoadSectorExt(&lines[i]);
+         break;
       }
    }
 
@@ -2831,14 +2842,11 @@ void P_SpawnSpecials(int mapformat)
    Polyobj_InitLevel();
 }
 
-
-
-
 // 
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate 
-// pass
+// SoM: Specials that copy slopes, ect., need to be collected in a separate pass
+//
 void P_SpawnDeferredSpecials(int mapformat)
 {
    int      i;
@@ -2859,8 +2867,6 @@ void P_SpawnDeferredSpecials(int mapformat)
       }
    }
 }
-
-
 
 
 // killough 2/28/98:
@@ -4426,7 +4432,7 @@ void P_ConvertHereticSpecials(void)
       case 4: // Scroll_EastLavaDamage
          // custom damage parameters:
          sector->damage       = 5;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          // heretic current pusher type:
@@ -4439,19 +4445,19 @@ void P_ConvertHereticSpecials(void)
          continue;
       case 5: // Damage_LavaWimpy
          sector->damage       = 5;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          sector->special      = 0;
          continue;
       case 7: // Damage_Sludge
          sector->damage     = 4;
-         sector->damagemask = 0x1f;
+         sector->damagemask = 32;
          sector->special    = 0;
          continue;
       case 16: // Damage_LavaHefty
          sector->damage       = 8;
-         sector->damagemask   = 0x0f;
+         sector->damagemask   = 16;
          sector->damagemod    = MOD_LAVA;
          sector->damageflags |= SDMG_TERRAINHIT;
          sector->special      = 0;

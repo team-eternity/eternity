@@ -488,7 +488,7 @@ state_t *E_ArgAsStateLabel(mobj_t *mo, int index)
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index)
+int E_ArgAsStateNum(arglist_t *al, int index, mobj_t *mo)
 {
    evalcache_t *eval;
 
@@ -504,19 +504,43 @@ int E_ArgAsStateNum(arglist_t *al, int index)
       char *pos = NULL;
       long num;
 
-      eval->type = EVALTYPE_STATENUM;
-
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
       if(pos && *pos != '\0')
       {
          // it is a name
-         eval->value.i = E_SafeStateName(al->args[index]);
+         int statenum;
+         
+         // haleyjd 07/18/10: Try EDF state name first; if this turns out as
+         // invalid, check to see if it's a DECORATE state label before returning
+         // NullStateNum.
+         if((statenum = E_StateNumForName(al->args[index])) >= 0)
+         {
+            // it was a valid EDF state mnemonic
+            eval->type = EVALTYPE_STATENUM;
+            eval->value.i = statenum;
+         }
+         else
+         {
+            // see if it is a valid DECORATE state label
+            // if it is valid, it is NOT cached, because DECORATE label
+            // resolution is "virtual" (ie relative to the calling thingtype).
+            state_t *state;
+            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+               return state->index;
+            else
+            {
+               // whatever it is, we dunno of it.
+               eval->type = EVALTYPE_STATENUM;
+               eval->value.i = NullStateNum;
+            }
+         }
       }
       else
       {
          // it is a DeHackEd number
+         eval->type = EVALTYPE_STATENUM;
          eval->value.i = E_SafeState((int)num);
       }
    }
@@ -533,7 +557,7 @@ int E_ArgAsStateNum(arglist_t *al, int index)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index)
+int E_ArgAsStateNumNI(arglist_t *al, int index, mobj_t *mo)
 {
    evalcache_t *eval;
 
@@ -549,19 +573,43 @@ int E_ArgAsStateNumNI(arglist_t *al, int index)
       char *pos = NULL;
       long num;
 
-      eval->type = EVALTYPE_STATENUM;
-
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
       if(pos && *pos != '\0')
       {
          // it is a name
-         eval->value.i = E_StateNumForName(al->args[index]);
+         int statenum;
+         
+         // haleyjd 07/18/10: Try EDF state name first; if this turns out as
+         // invalid, check to see if it's a DECORATE state label before returning
+         // NullStateNum.
+         if((statenum = E_StateNumForName(al->args[index])) >= 0)
+         {
+            // it was a valid EDF state mnemonic
+            eval->type = EVALTYPE_STATENUM;
+            eval->value.i = statenum;
+         }
+         else
+         {
+            // see if it is a valid DECORATE state label
+            // if it is valid, it is NOT cached, because DECORATE label
+            // resolution is "virtual" (ie relative to the calling thingtype).
+            state_t *state;
+            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+               return state->index;
+            else
+            {
+               // whatever it is, we dunno of it.
+               eval->type = EVALTYPE_STATENUM;
+               eval->value.i = -1;
+            }
+         }      
       }
       else
       {
          // it is a DeHackEd number
+         eval->type = EVALTYPE_STATENUM;
          eval->value.i = E_StateNumForDEHNum((int)num);
       }
    }
@@ -576,7 +624,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index)
+int E_ArgAsStateNumG0(arglist_t *al, int index, mobj_t *mo)
 {
    evalcache_t *eval;
 
@@ -592,18 +640,43 @@ int E_ArgAsStateNumG0(arglist_t *al, int index)
       char *pos = NULL;
       long num;
 
-      eval->type = EVALTYPE_STATENUM;
-
       // see if this is a string or an integer
       num = strtol(al->args[index], &pos, 0);
 
       if(pos && *pos != '\0')
       {
          // it is a name
-         eval->value.i = E_StateNumForName(al->args[index]);
+         int statenum;
+       
+         // haleyjd 07/18/10: Try EDF state name first; if this turns out as
+         // invalid, check to see if it's a DECORATE state label before returning
+         // NullStateNum.
+         if((statenum = E_StateNumForName(al->args[index])) >= 0)
+         {
+            // it was a valid EDF state mnemonic
+            eval->type = EVALTYPE_STATENUM;
+            eval->value.i = statenum;
+         }
+         else
+         {
+            // see if it is a valid DECORATE state label
+            // if it is valid, it is NOT cached, because DECORATE label
+            // resolution is "virtual" (ie relative to the calling thingtype).
+            state_t *state;
+            if(mo && (state = E_ArgAsStateLabel(mo, index)))
+               return state->index;
+            else
+            {
+               // whatever it is, we dunno of it.
+               eval->type = EVALTYPE_STATENUM;
+               eval->value.i = -1;
+            }
+         }      
       }
       else
       {
+         eval->type = EVALTYPE_STATENUM;
+         
          // it is a DeHackEd number if it is >= 0
          if(num >= 0)
             eval->value.i = E_StateNumForDEHNum((int)num);

@@ -180,7 +180,7 @@ typedef struct pslope_s
    float   zdeltaf;
 } pslope_t;
 
-
+typedef struct ETerrain_s *secterrainptr;
 
 //
 // The SECTORS record, at runtime.
@@ -305,7 +305,7 @@ struct sector_s
    
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
-   int damagemask;  // damage is done when !(leveltime & mask)
+   int damagemask;  // damage is done when !(leveltime % mask)
    int damagemod;   // damage method to use
    int damageflags; // special damage behaviors
 
@@ -315,6 +315,10 @@ struct sector_s
 
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
+
+   // haleyjd 10/17/10: terrain type overrides
+   secterrainptr floorterrain;
+   secterrainptr ceilingterrain;
 };
 
 //

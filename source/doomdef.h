@@ -129,7 +129,8 @@ typedef enum {
   GS_FINALE,
   GS_DEMOSCREEN,
   GS_CONSOLE,
-  GS_STARTUP
+  GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
+  GS_LOADING  // haleyjd: value given to gamestate during level load
 } gamestate_t;
 
 //

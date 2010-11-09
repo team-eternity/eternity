@@ -499,23 +499,29 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->c_portal = NULL;
 
          // head-below-floor hack
-         tempsec->floorpic    = s->floorpic;
-         tempsec->floor_xoffs = s->floor_xoffs;
-         tempsec->floor_yoffs = s->floor_yoffs;
+         tempsec->floorpic       = s->floorpic;
+         tempsec->floor_xoffs    = s->floor_xoffs;
+         tempsec->floor_yoffs    = s->floor_yoffs;
+         tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
+         tempsec->floorangle     = s->floorangle;
 
          // haleyjd 03/13/05: removed redundant if(underwater) check
          if(s->intflags & SIF_SKY)
          {
-            tempsec->floorheight   = tempsec->ceilingheight+1;
-            tempsec->ceilingpic    = tempsec->floorpic;
-            tempsec->ceiling_xoffs = tempsec->floor_xoffs;
-            tempsec->ceiling_yoffs = tempsec->floor_yoffs;
+            tempsec->floorheight      = tempsec->ceilingheight+1;
+            tempsec->ceilingpic       = tempsec->floorpic;
+            tempsec->ceiling_xoffs    = tempsec->floor_xoffs;
+            tempsec->ceiling_yoffs    = tempsec->floor_yoffs;
+            tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
+            tempsec->ceilingangle     = tempsec->floorangle;
          }
          else
          {
-            tempsec->ceilingpic    = s->ceilingpic;
-            tempsec->ceiling_xoffs = s->ceiling_xoffs;
-            tempsec->ceiling_yoffs = s->ceiling_yoffs;
+            tempsec->ceilingpic       = s->ceilingpic;
+            tempsec->ceiling_xoffs    = s->ceiling_xoffs;
+            tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+            tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
+            tempsec->ceilingangle     = s->ceilingangle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
@@ -546,16 +552,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->ceilingheight = s->ceilingheight;
          tempsec->floorheight   = s->ceilingheight + 1;
 
-         tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
-         tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
-         tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
+         tempsec->floorpic       = tempsec->ceilingpic       = s->ceilingpic;
+         tempsec->floor_xoffs    = tempsec->ceiling_xoffs    = s->ceiling_xoffs;
+         tempsec->floor_yoffs    = tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+         tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
+         tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
          if(s->floorpic != skyflatnum && s->floorpic != sky2flatnum)
          {
-            tempsec->ceilingheight = sec->ceilingheight;
-            tempsec->floorpic      = s->floorpic;
-            tempsec->floor_xoffs   = s->floor_xoffs;
-            tempsec->floor_yoffs   = s->floor_yoffs;
+            tempsec->ceilingheight  = sec->ceilingheight;
+            tempsec->floorpic       = s->floorpic;
+            tempsec->floor_xoffs    = s->floor_xoffs;
+            tempsec->floor_yoffs    = s->floor_yoffs;
+            tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
+            tempsec->floorangle     = s->floorangle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
@@ -583,9 +593,9 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->f_portal = NULL;
       }
       
-      tempsec->ceilingheightf= M_FixedToFloat(tempsec->ceilingheight);
-      tempsec->floorheightf  = M_FixedToFloat(tempsec->floorheight);
-      sec = tempsec;               // Use other sector
+      tempsec->ceilingheightf = M_FixedToFloat(tempsec->ceilingheight);
+      tempsec->floorheightf   = M_FixedToFloat(tempsec->floorheight);
+      sec = tempsec;            // Use other sector
    }
 
    if(sec->c_portal)
@@ -1130,6 +1140,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
+         seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
@@ -1171,6 +1183,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       (mark || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle != 
+        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
@@ -1296,6 +1310,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       (mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+       (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
+        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
@@ -1335,6 +1351,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
+        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
@@ -1468,6 +1486,12 @@ static void R_AddLine(seg_t *line)
       && seg.backsec->floor_yoffs   == seg.frontsec->floor_yoffs
       && seg.backsec->ceiling_xoffs == seg.frontsec->ceiling_xoffs
       && seg.backsec->ceiling_yoffs == seg.frontsec->ceiling_yoffs
+
+      // haleyjd 11/04/10: angles
+      && (seg.backsec->floorbaseangle + seg.backsec->floorangle ==
+          seg.frontsec->floorbaseangle + seg.frontsec->floorangle)
+      && (seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle ==
+          seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle)
       
       // killough 4/16/98: consider altered lighting
       && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
@@ -2056,7 +2080,8 @@ static void R_Subsector(int num)
                     seg.frontsec->floor_xoffs,       // killough 3/7/98
                     seg.frontsec->floor_yoffs,
                     floorangle, seg.frontsec->f_slope, 
-                    seg.frontsec->f_pflags, 128,  // TODO: Opacity
+                    seg.frontsec->f_pflags,
+                    (seg.frontsec->f_pflags >> PO_OPACITYSHIFT) & 0xFF,
                     seg.f_portal->poverlay) : NULL;
    }
    else
@@ -2099,7 +2124,8 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_xoffs,       // killough 3/7/98
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 
-                    seg.frontsec->c_pflags, 128, // TODO: Opacity
+                    seg.frontsec->c_pflags,
+                    (seg.frontsec->c_pflags >> PO_OPACITYSHIFT) & 0xFF,
                     seg.c_portal->poverlay) : NULL;
    }
    else
