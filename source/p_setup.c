@@ -504,9 +504,18 @@ void P_LoadSectors(int lumpnum)
       ss->bottommap = ss->midmap = ss->topmap =
          ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
             
-#ifdef R_LINKEDPORTALS
+      // SoM 9/19/02: Initialize the attached sector list for 3dsides
+      ss->c_attached = ss->f_attached = NULL;
+      // SoM 11/9/04: 
+      ss->c_attsectors = ss->f_attsectors = NULL;
+
+      // SoM 10/14/07:
+      ss->c_asurfaces = ss->f_asurfaces = NULL;
+
+      // SoM: init portals
+      ss->c_pflags = ss->f_pflags = 0;
+      ss->c_portal = ss->f_portal = NULL;
       ss->groupid = R_NOGROUP;
-#endif
 
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
@@ -1142,6 +1151,10 @@ void P_LoadLineDefs(int lump)
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
       ld->soundorg.y       = ld->v1->y + ld->dy / 2;
       ld->soundorg.groupid = R_NOGROUP;
+      
+      // SoM: Line portals
+      ld->portal = NULL;
+      ld->pflags = 0;
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
@@ -1895,12 +1908,10 @@ void P_GroupLines(void)
                            sector->blockbox[BOXLEFT] / 2;
       sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
                            sector->blockbox[BOXBOTTOM] / 2;
-#ifdef R_LINKEDPORTALS
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for
       // initialization.
       sector->soundorg.groupid = sector->groupid;
-#endif
 
       // haleyjd 10/16/06: copy all properties to ceiling origin
       sector->csoundorg = sector->soundorg;

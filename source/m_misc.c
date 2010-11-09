@@ -640,14 +640,12 @@ default_t defaults[] =
                "color used for friends"),
    
 
-#ifdef R_LINKEDPORTALS
    DEFAULT_INT("mapcolor_prtl",&mapcolor_prtl, NULL, 109, 0, 255, wad_yes,
                "color for lines not in the player's portal area"),
    
    DEFAULT_INT("mapportal_overlay",&mapportal_overlay, NULL, 1, 0, 1, wad_yes,
                "1 to overlay different linked portal areas in the automap"),
             
-#endif
 
    DEFAULT_INT("map_point_coord", &map_point_coordinates, NULL, 1, 0, 1, wad_yes,
                "1 to show automap pointer coordinates in non-follow mode"),

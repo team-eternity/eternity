@@ -166,8 +166,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         R_LinkedCeilingActive(clip.openfrontsector) &&
-         R_LinkedCeilingActive(clip.openbacksector) && 
+         clip.openfrontsector->c_pflags & PS_PASSABLE &&
+         clip.openbacksector->c_pflags & PS_PASSABLE && 
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
       {
          frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
@@ -187,8 +187,8 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         R_LinkedFloorActive(clip.openfrontsector) &&
-         R_LinkedFloorActive(clip.openbacksector) && 
+         clip.openfrontsector->f_pflags & PS_PASSABLE &&
+         clip.openbacksector->f_pflags & PS_PASSABLE && 
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
       {
          frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;

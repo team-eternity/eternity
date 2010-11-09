@@ -39,9 +39,7 @@
 #include "d_deh.h"    // Ty 03/27/98 - externalizations
 #include "d_gi.h"
 #include "g_bind.h"
-#ifdef R_LINKEDPORTALS
 #include "r_portal.h"
-#endif
 
 
 //jff 1/7/98 default acolors added
@@ -67,14 +65,12 @@ int mapcolor_hair;    // crosshair color
 int mapcolor_sngl;    // single player arrow color
 int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 int mapcolor_frnd;    // colors for friends of player
-#ifdef R_LINKEDPORTALS
 int mapcolor_prtl;    // SoM: color of lines not in the current portal group
 
 // SoM: map mode. True means the portal groups are overlayed (the group the 
 // player is in being displayed in color and the other groups being grayed 
 // out and underneath) and false means the map is not modified.
 int mapportal_overlay;
-#endif
 
 //jff 3/9/98 add option to not show secret sectors until entered
 int map_secret_after;
@@ -369,7 +365,6 @@ static void AM_restoreScaleAndLoc(void)
    }
    else
    {
-#ifdef R_LINKEDPORTALS
       linkoffset_t *link;
 
       if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
@@ -383,10 +378,6 @@ static void AM_restoreScaleAndLoc(void)
          m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
          m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
       }
-#else
-      m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-      m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-#endif
    }
    m_x2 = m_x + m_w;
    m_y2 = m_y + m_h;
@@ -564,7 +555,6 @@ static void AM_initVariables(void)
          
    plr = &players[pnum];
 
-#ifdef R_LINKEDPORTALS
    {
       linkoffset_t *link;
 
@@ -580,10 +570,6 @@ static void AM_initVariables(void)
          m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
       }
    }
-#else
-   m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-   m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-#endif
 
    AM_changeWindowLoc();
          
@@ -1047,7 +1033,6 @@ static void AM_doFollowPlayer(void)
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
-#ifdef R_LINKEDPORTALS
       linkoffset_t *link;
       if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
@@ -1060,10 +1045,6 @@ static void AM_doFollowPlayer(void)
          m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
          m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
       }
-#else
-      m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
-      m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
-#endif
       m_x2 = m_x + m_w;
       m_y2 = m_y + m_h;
       f_oldloc.x = M_FixedToDouble(plr->mo->x);
@@ -1749,9 +1730,10 @@ static void AM_drawWalls(void)
    int i;
    static mline_t l;
    
-#ifdef R_LINKEDPORTALS
    int plrgroup = plr->mo->groupid;
 
+   // Draw overlay lines first so they will not obscure the (more important)
+   // normal map lines
    if(mapportal_overlay && useportalgroups)
    {
       for(i = 0; i < numlines; ++i)
@@ -1809,7 +1791,6 @@ static void AM_drawWalls(void)
       
       }
    }
-#endif
 
    // draw the unclipped visible portions of all lines
    for(i = 0; i < numlines; ++i)
@@ -1821,7 +1802,6 @@ static void AM_drawWalls(void)
       l.b.x = line->v2->fx;
       l.b.y = line->v2->fy;
 
-#ifdef R_LINKEDPORTALS
       if(mapportal_overlay && useportalgroups)
       {
          if(line->frontsector && line->frontsector->groupid != plrgroup)
@@ -1840,7 +1820,6 @@ static void AM_drawWalls(void)
             }
          }
       }
-#endif
 
       // if line has been seen or IDDT has been used
       if(ddt_cheating || (line->flags & ML_MAPPED))
@@ -2080,13 +2059,10 @@ static void AM_drawPlayers(void)
    int   color;
    // SoM: player x and y
    fixed_t px, py;
-#ifdef R_LINKEDPORTALS
    linkoffset_t *link;
-#endif
 
    if(!netgame)
    {
-#ifdef R_LINKEDPORTALS
       if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
@@ -2094,7 +2070,6 @@ static void AM_drawPlayers(void)
          py = plr->mo->y + link->y;
       }
       else
-#endif
       {
          px = plr->mo->x;
          py = plr->mo->y;
@@ -2141,7 +2116,6 @@ static void AM_drawPlayers(void)
       if(!playeringame[i])
          continue;
       
-#ifdef R_LINKEDPORTALS
       if(mapportal_overlay && useportalgroups && plr->mo->groupid > 0 && 
          (link = P_GetLinkOffset(0, plr->mo->groupid)))
       {
@@ -2149,7 +2123,6 @@ static void AM_drawPlayers(void)
          py = p->mo->y + link->y;
       }
       else
-#endif
       {
          px = p->mo->x;
          py = p->mo->y;
@@ -2213,7 +2186,6 @@ static void AM_drawThings(int colors, int colorrange)
          tx = t->x;
          ty = t->y;
 
-#ifdef R_LINKEDPORTALS
          if(mapportal_overlay && useportalgroups && t->subsector->sector->groupid > 0)
          {
             linkoffset_t *link;
@@ -2224,7 +2196,6 @@ static void AM_drawThings(int colors, int colorrange)
                ty += link->y;
             }
          }
-#endif
          // FIXME / HTIC_TODO: Heretic support and EDF editing?
 
          //jff 1/5/98 case over doomednum of thing being drawn

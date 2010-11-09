@@ -370,7 +370,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
+   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS);
    else
 #endif
@@ -378,7 +378,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
+   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
       clip.ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS);
    else
 #endif
@@ -1514,8 +1514,9 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    {
       while(clip.numspechit--)
       {
+// PTODO
 #ifdef R_LINKEDPORTALS
-         if(R_LinkedLineActive(clip.spechit[clip.numspechit]))
+         if(clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
@@ -1524,7 +1525,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             {
                linkoffset_t *link = 
                   P_GetLinkOffset(clip.spechit[clip.numspechit]->frontsector->groupid, 
-                                  clip.spechit[clip.numspechit]->portal->data.link.groupid);
+                                  clip.spechit[clip.numspechit]->portal->data.link.toid);
                EV_PortalTeleport(thing, link);
             }
          }

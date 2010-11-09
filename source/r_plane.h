@@ -45,15 +45,23 @@ extern fixed_t origyslope[], distscale[];
 
 void R_InitPlanes(void);
 void R_ClearPlanes(void);
-void R_DrawPlanes(void);
+void R_DrawPlanes(planehash_t *table);
+
+// Planehash stuff
+planehash_t *R_NewPlaneHash(int chaincount);
+void R_ClearPlaneHash(planehash_t *table);
+
 
 visplane_t *R_FindPlane(fixed_t height, 
                         int picnum,
                         int lightlevel,
-                        fixed_t xoffs,    // killough 2/28/98: add x-y offsets
+                        fixed_t xoffs,       // killough 2/28/98: add x-y offsets
                         fixed_t yoffs,
-                        float angle,      // haleyjd 01/08/05: add angle
-                        pslope_t *slope); // SoM: slopes
+                        float angle,         // haleyjd 01/08/05: add angle
+                        pslope_t *slope,     // SoM: slopes
+                        int blendflags,      // SoM: Blending flags for the plane
+                        byte opacity,        // SoM: Opacity for translucent planes
+                        planehash_t *table); // SoM: Table. Can be NULL
 
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 

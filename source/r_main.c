@@ -777,9 +777,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewangle = mobj->angle;// + viewangleoffset;
       pitch = player->pitch;
       // SoM
-#ifdef R_LINKEDPORTALS
       viewgroup = mobj->groupid;
-#endif
 
       // haleyjd 01/21/07: earthquakes
       if(player->quake &&
@@ -798,9 +796,7 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       viewz = camera->z;
       viewangle = camera->angle;
       pitch = camera->pitch;
-#ifdef R_LINKEDPORTALS
       viewgroup = camera->groupid;
-#endif
    }
 
    extralight = player->extralight;
@@ -958,6 +954,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearClipSegs();
    R_ClearDrawSegs();
    R_ClearPlanes();
+   R_ClearPortals();
    R_ClearSprites();
 
    if(autodetect_hom)
@@ -984,16 +981,20 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    NetUpdate();
 
    R_SetMaskedSilhouette(NULL, NULL);
-   R_PushMasked();
+   
+   // Push the first element on the Post-BSP stack
+   R_PushPost(true, NULL);
+   
    // SoM 12/9/03: render the portals.
    R_RenderPortals();
 
-   R_DrawPlanes();
+   R_DrawPlanes(NULL);
    
    // Check for new console commands.
    NetUpdate();
 
-   R_DrawMasked();
+   // Draw Post-BSP elements such as sprites, masked textures, and portal overlays
+   R_DrawPostBSP();
    
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)

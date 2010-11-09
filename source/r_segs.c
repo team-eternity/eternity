@@ -246,7 +246,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKCPORTAL)
                R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
-            else
+            
+            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
             {
                segclip.ceilingplane->top[i]    = cliptop;
                segclip.ceilingplane->bottom[i] = line;
@@ -268,7 +269,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKFPORTAL)
                R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
-            else
+            
+            if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
             {
                segclip.floorplane->top[i]    = line;
                segclip.floorplane->bottom[i] = clipbot;

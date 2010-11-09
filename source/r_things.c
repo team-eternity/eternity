@@ -366,35 +366,72 @@ void R_ClearSprites(void)
    r_vissprite_count = 0; // haleyjd
 }
 
-// SoM 12/13/03: the masked stack
-static maskedstack_t *mstack = NULL;
-static int stacksize = 0, stackmax = 0;
+// SoM 12/13/03: the post-BSP stack
+static poststack_t    *pstack = NULL;
+static int            stacksize = 0, stackmax = 0;
+static maskedrange_t  *unusedmasked = NULL;
 
-void R_PushMasked(void)
+
+//
+// R_PushPost
+//
+// Pushes a new element on the post-BSP stack. 
+void R_PushPost(boolean pushmasked, planehash_t *overlay)
 {
+   poststack_t *post;
+   
    if(stacksize == stackmax)
    {
       stackmax += 10;
-      mstack = realloc(mstack, sizeof(maskedstack_t) * stackmax);
+      pstack = realloc(pstack, sizeof(poststack_t) * stackmax);
    }
+   
+   post = pstack + stacksize;
+   
+   post->overlay = overlay;
 
-   if(!stacksize)
+   if(pushmasked)
    {
-      mstack[0].firstds = mstack[0].firstsprite = 0;
+      int i;
+      
+      // Get an unused maskedrange object, or allocate a new one
+      if(unusedmasked)
+      {
+         post->masked = unusedmasked;
+         unusedmasked = unusedmasked->next;
+      }
+      else
+         post->masked = malloc(sizeof(maskedrange_t));
+         
+      memset(post->masked, 0, sizeof(*post->masked));
+      
+      for(i = stacksize - 1; i >= 0; i--)
+      {
+         if(pstack[i].masked)
+            break;
+      }
+      
+      if(i >= 0)
+      {
+         post->masked->firstds      = pstack[i].masked->lastds;
+         post->masked->firstsprite  = pstack[i].masked->lastsprite;
+      }
+      else
+         post->masked->firstds = post->masked->firstsprite = 0;
+         
+      post->masked->lastds     = ds_p - drawsegs;
+      post->masked->lastsprite = num_vissprite;
+      
+      memcpy(post->masked->ceilingclip, portaltop,    MAX_SCREENWIDTH * sizeof(float));
+      memcpy(post->masked->floorclip,   portalbottom, MAX_SCREENWIDTH * sizeof(float));
    }
    else
-   {
-      mstack[stacksize].firstds     = mstack[stacksize-1].lastds;
-      mstack[stacksize].firstsprite = mstack[stacksize-1].lastsprite;
-   }
+      post->masked = NULL;
 
-   mstack[stacksize].lastds     = ds_p - drawsegs;
-   mstack[stacksize].lastsprite = num_vissprite;
-
-   memcpy(mstack[stacksize].ceilingclip, portaltop,    MAX_SCREENWIDTH * sizeof(float));
-   memcpy(mstack[stacksize].floorclip,   portalbottom, MAX_SCREENWIDTH * sizeof(float));
    stacksize++;
 }
+
+
 
 //
 // R_NewVisSprite
@@ -826,9 +863,7 @@ void R_ProjectSprite(mobj_t *thing)
 
    vis->ytop = y1;
    vis->ybottom = y2;
-#ifdef R_LINKEDPORTALS
    vis->sector = thing->subsector->sector - sectors;
-#endif
    vis->pcolor = 0;
 
    //if(x1 < vis->x1)
@@ -1012,9 +1047,7 @@ void R_DrawPSprite(pspdef_t *psp)
    vis->scale = view.pspriteyscale;
    vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
-#ifdef R_LINKEDPORTALS
    vis->sector = viewplayer->mo->subsector->sector - sectors;
-#endif
    vis->pcolor = 0;
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
@@ -1559,7 +1592,6 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
    }
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
-#ifdef R_LINKEDPORTALS
    // SoM: special clipping for linked portals
    if(useportalgroups)
    {
@@ -1568,7 +1600,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
       sector_t *sector = sectors + spr->sector;
 
       mh = M_FixedToFloat(sector->floorheight) - view.z;
-      if(R_LinkedFloorActive(sector) && sector->floorheight > spr->gz)
+      if(sector->f_pflags & PS_PASSABLE && sector->floorheight > spr->gz)
       {
          h = view.ycenter - (mh * spr->scale);
          if(h < 0) h = 0;
@@ -1581,7 +1613,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
 
       mh = M_FixedToFloat(sector->ceilingheight) - view.z;
-      if(R_LinkedCeilingActive(sector) && sector->ceilingheight < spr->gzt)
+      if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
       {
          h = view.ycenter - (mh * spr->scale);
          if(h < 0) h = 0;
@@ -1592,7 +1624,6 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
                cliptop[x] = h;
       }
    }
-#endif
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
@@ -1613,68 +1644,95 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 
 
 //
-// R_DrawMasked
+// R_DrawPostBSP
 //
-void R_DrawMasked(void)
+// Draws the items in the Post-BSP stack.
+void R_DrawPostBSP(void)
 {
-   int firstds, lastds, firstsprite, lastsprite;
-   int i;
-   drawseg_t *ds;
+   maskedrange_t  *masked;
+   drawseg_t      *ds;
+   int            firstds, lastds, firstsprite, lastsprite;
+   int            i;
+ 
  
    while(stacksize > 0)
    {
       --stacksize;
 
-      firstds = mstack[stacksize].firstds;
-      lastds  = mstack[stacksize].lastds;
-      firstsprite = mstack[stacksize].firstsprite;
-      lastsprite  = mstack[stacksize].lastsprite;
-
-      R_SortVisSpriteRange(firstsprite, lastsprite);
-
-      // haleyjd 04/25/10: 
-      // e6y
-      // Reducing of cache misses in the following R_DrawSprite()
-      // Makes sense for scenes with huge amount of drawsegs.
-      // ~12% of speed improvement on epic.wad map05
-      drawsegs_xrange_count = 0;
-      if(num_vissprite > 0)
+      if(masked = pstack[stacksize].masked)
       {
-         if(drawsegs_xrange_size <= maxdrawsegs+1)
+         firstds = masked->firstds;
+         lastds  = masked->lastds;
+         firstsprite = masked->firstsprite;
+         lastsprite  = masked->lastsprite;
+
+         if(lastsprite > firstsprite)
          {
-            // haleyjd: fix reallocation to track 2x size
-            drawsegs_xrange_size =  2 * maxdrawsegs;
-            drawsegs_xrange = realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange));
-         }
-         for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
-         {
-            if (ds->silhouette || ds->maskedtexturecol)
+            R_SortVisSpriteRange(firstsprite, lastsprite);
+
+            // haleyjd 04/25/10: 
+            // e6y
+            // Reducing of cache misses in the following R_DrawSprite()
+            // Makes sense for scenes with huge amount of drawsegs.
+            // ~12% of speed improvement on epic.wad map05
+            drawsegs_xrange_count = 0;
+            if(num_vissprite > 0)
             {
-               drawsegs_xrange[drawsegs_xrange_count].x1    = ds->x1;
-               drawsegs_xrange[drawsegs_xrange_count].x2    = ds->x2;
-               drawsegs_xrange[drawsegs_xrange_count].user  = ds;
-               drawsegs_xrange_count++;
+               if(drawsegs_xrange_size <= maxdrawsegs+1)
+               {
+                  // haleyjd: fix reallocation to track 2x size
+                  drawsegs_xrange_size =  2 * maxdrawsegs;
+                  drawsegs_xrange = realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange));
+               }
+               for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
+               {
+                  if (ds->silhouette || ds->maskedtexturecol)
+                  {
+                     drawsegs_xrange[drawsegs_xrange_count].x1    = ds->x1;
+                     drawsegs_xrange[drawsegs_xrange_count].x2    = ds->x2;
+                     drawsegs_xrange[drawsegs_xrange_count].user  = ds;
+                     drawsegs_xrange_count++;
+                  }
+               }
+               // haleyjd: terminate with a NULL user for faster loop - adds ~3 FPS
+               drawsegs_xrange[drawsegs_xrange_count].user = NULL;
             }
+
+            ptop    = masked->ceilingclip;
+            pbottom = masked->floorclip;
+
+            for(i = lastsprite - firstsprite; --i >= 0; )
+               R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough
          }
-         // haleyjd: terminate with a NULL user for faster loop - adds ~3 FPS
-         drawsegs_xrange[drawsegs_xrange_count].user = NULL;
+
+         // render any remaining masked mid textures
+
+         // Modified by Lee Killough:
+         // (pointer check was originally nonportable
+         // and buggy, by going past LEFT end of array):
+
+         for(ds=drawsegs + lastds ; ds-- > drawsegs + firstds; )  // new -- killough
+            if(ds->maskedtexturecol)
+               R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
+         
+         // Done with the masked range
+         pstack[stacksize].masked = NULL;
+         masked->next = unusedmasked;
+         unusedmasked = masked;
+         
+         masked = NULL;
       }
-
-      ptop    = mstack[stacksize].ceilingclip;
-      pbottom = mstack[stacksize].floorclip;
-
-      for(i = lastsprite - firstsprite; --i >= 0; )
-         R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough
-
-      // render any remaining masked mid textures
-
-      // Modified by Lee Killough:
-      // (pointer check was originally nonportable
-      // and buggy, by going past LEFT end of array):
-
-      for(ds=drawsegs + lastds ; ds-- > drawsegs + firstds; )  // new -- killough
-         if(ds->maskedtexturecol)
-            R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
+       
+      if(pstack[stacksize].overlay)
+      {
+         // haleyjd 09/04/06: handle through column engine
+         /*if(r_column_engine->ResetBuffer)
+            r_column_engine->ResetBuffer();*/
+            
+         // SoM: TODO
+         // This is where rendering the overlay would be done
+         R_DrawPlanes(pstack[stacksize].overlay);
+      }
    }
 
    // draw the psprites on top of everything
@@ -1865,9 +1923,7 @@ void R_ProjectParticle(particle_t *particle)
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->scale = yscale;
-#ifdef R_LINKEDPORTALS
    vis->sector = sector - sectors;  
-#endif
    
    if(fixedcolormap ==
       fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))

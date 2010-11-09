@@ -517,7 +517,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // will adjust them.
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
+   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
       !(clip.thing->flags & MF_NOCLIP))
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
@@ -525,7 +525,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
+   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
       clip.ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else

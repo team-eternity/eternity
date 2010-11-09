@@ -28,8 +28,6 @@
 #ifndef P_LINKOFFSET_H__
 #define P_LINKOFFSET_H__
 
-#ifdef R_LINKEDPORTALS
-
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
 // do you think anyone is going to make a level with 2147483647 groups that 
@@ -44,7 +42,6 @@ typedef struct linkoffset_s
 
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 
-#endif
 
 #endif
 
