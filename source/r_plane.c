@@ -118,8 +118,6 @@ cb_slopespan_t slopespan;
 
 float slopevis; // SoM: used in slope lighting
 
-
-
 // BIG FLATS
 void R_Throw(void)
 {
@@ -129,8 +127,6 @@ void R_Throw(void)
 void (*flatfunc)(void)  = R_Throw;
 void (*slopefunc)(void) = R_Throw;
 
-
-
 //
 // R_InitPlanes
 // Only at game startup.
@@ -138,8 +134,6 @@ void (*slopefunc)(void) = R_Throw;
 void R_InitPlanes(void)
 {
 }
-
-
 
 //
 // R_SpanLight
@@ -154,8 +148,6 @@ static int R_SpanLight(float dist)
    return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
 }
 
-
-
 // 
 // R_PlaneLight
 //
@@ -167,8 +159,6 @@ static void R_PlaneLight(void)
    // table is generated.
    plane.startmap = 2.0f * (30.0f - (plane.lightlevel / 8.0f));
 }
-
-
 
 //
 // R_doubleToUint32
@@ -441,9 +431,6 @@ static void R_SlopeLights(int len, double startmap, double endmap)
    }
 }
 
-
-
-
 //
 // R_MapSlope
 //
@@ -487,9 +474,6 @@ static void R_MapSlope(int y, int x1, int x2)
    slopefunc();
 }
 
-
-
-
 #define CompFloats(x, y) (fabs(x - y) < 0.001f)
 
 //
@@ -510,9 +494,6 @@ boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 }
 
 #undef CompFloats
-
-
-
 
 //
 // R_CalcSlope
@@ -587,8 +568,6 @@ static void R_CalcSlope(visplane_t *pl)
    rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
 }
 
-
-
 //
 // R_NewPlaneHash
 //
@@ -619,8 +598,6 @@ planehash_t *R_NewPlaneHash(int chaincount)
    return ret;
 }
 
-
-
 //
 // R_ClearPlaneHash
 //
@@ -634,7 +611,6 @@ void R_ClearPlaneHash(planehash_t *table)
       for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
          freehead = &(*freehead)->next;
 }
-
 
 //
 // R_ClearPlanes
@@ -669,7 +645,6 @@ void R_ClearPlanes(void)
    
    num_visplanes = 0;    // reset
 }
-
 
 
 //
@@ -713,9 +688,6 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    
    return check;
 }
-
-
-
 
 //
 // R_FindPlane
@@ -836,8 +808,6 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    return check;
 }
 
-
-
 //
 // R_CheckPlane
 //
@@ -912,8 +882,6 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    return pl;
 }
 
-
-
 //
 // R_MakeSpans
 //
@@ -934,8 +902,6 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
    while(b2 > b1 && t2 <= b2)
       spanstart[b2--] = x;
 }
-
-
 
 extern void R_DrawNewSkyColumn(void);
 
@@ -1048,16 +1014,12 @@ void do_draw_newsky(visplane_t *pl)
    }
 }
 
-
-
-
 // Log base 2 LUT
 static const int MultiplyDeBruijnBitPosition2[32] = 
 {
   0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
   31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
-
 
 //
 // do_draw_plane
@@ -1315,9 +1277,6 @@ static void do_draw_plane(visplane_t *pl)
          R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
    }
 }
-
-
-
 
 //
 // R_DrawPlanes
