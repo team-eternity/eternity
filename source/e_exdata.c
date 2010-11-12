@@ -96,6 +96,7 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_LINE_EXTFLAGS  "extflags"
 #define FIELD_LINE_ARGS      "args"
 #define FIELD_LINE_ID        "id"
+#define FIELD_LINE_ALPHA     "alpha"
 
 // sector fields:
 #define FIELD_SECTOR_NUM            "recordnum"
@@ -163,12 +164,13 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
 static cfg_opt_t linedef_opts[] =
 {
-   CFG_INT(FIELD_LINE_NUM,        0,  CFGF_NONE),
-   CFG_INT_CB(FIELD_LINE_SPECIAL, 0,  CFGF_NONE, E_LineSpecCB),
-   CFG_INT(FIELD_LINE_TAG,        0,  CFGF_NONE),
+   CFG_INT(FIELD_LINE_NUM,         0, CFGF_NONE),
+   CFG_INT_CB(FIELD_LINE_SPECIAL,  0, CFGF_NONE, E_LineSpecCB),
+   CFG_INT(FIELD_LINE_TAG,         0, CFGF_NONE),
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
-   CFG_STR(FIELD_LINE_ARGS,       0,  CFGF_LIST),
-   CFG_INT(FIELD_LINE_ID,        -1,  CFGF_NONE),
+   CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
+   CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
+   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
    CFG_END()
 };
 
@@ -176,16 +178,17 @@ static cfg_opt_t linedef_opts[] =
 
 static dehflags_t extlineflags[] =
 {
-   { "CROSS",   EX_ML_CROSS   },
-   { "USE",     EX_ML_USE     },
-   { "IMPACT",  EX_ML_IMPACT  },
-   { "PUSH",    EX_ML_PUSH    },
-   { "PLAYER",  EX_ML_PLAYER  },
-   { "MONSTER", EX_ML_MONSTER },
-   { "MISSILE", EX_ML_MISSILE },
-   { "REPEAT",  EX_ML_REPEAT  },
-   { "1SONLY",  EX_ML_1SONLY  },
-   { NULL,      0             }
+   { "CROSS",    EX_ML_CROSS    },
+   { "USE",      EX_ML_USE      },
+   { "IMPACT",   EX_ML_IMPACT   },
+   { "PUSH",     EX_ML_PUSH     },
+   { "PLAYER",   EX_ML_PLAYER   },
+   { "MONSTER",  EX_ML_MONSTER  },
+   { "MISSILE",  EX_ML_MISSILE  },
+   { "REPEAT",   EX_ML_REPEAT   },
+   { "1SONLY",   EX_ML_1SONLY   },
+   { "ADDITIVE", EX_ML_ADDITIVE },
+   { NULL,       0              }
 };
 
 static dehflagset_t ld_flagset =
@@ -1607,6 +1610,13 @@ static void E_ProcessEDLines(cfg_t *cfg)
       else
          EDLines[i].id = -1;
 
+      // 11/11/10: alpha
+      EDLines[i].alpha = (float)(cfg_getfloat(linesec, FIELD_LINE_ALPHA));
+      if(EDLines[i].alpha < 0.0f)
+         EDLines[i].alpha = 0.0f;
+      else if(EDLines[i].alpha > 1.0f)
+         EDLines[i].alpha = 1.0f;
+
       // TODO: any other new fields
    }
 }
@@ -1928,6 +1938,9 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
    // 03/03/07: id
    if(edline->id != -1) // haleyjd: only use this field when it is specified
       line->tag = edline->id;
+
+   // 11/11/10: alpha
+   line->alpha = edline->alpha;
 }
 
 //

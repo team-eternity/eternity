@@ -42,6 +42,7 @@
 #include "p_user.h"
 #include "e_edf.h"
 #include "p_info.h"
+#include "r_plane.h"
 
 #define MINZ        (FRACUNIT*4)
 #define BASEYCENTER 100

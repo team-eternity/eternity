@@ -57,15 +57,16 @@
 // future expansion.
 enum
 {
-   EX_ML_CROSS   = 0x00000001, // crossable
-   EX_ML_USE     = 0x00000002, // usable
-   EX_ML_IMPACT  = 0x00000004, // shootable
-   EX_ML_PUSH    = 0x00000008, // reserved for future use
-   EX_ML_PLAYER  = 0x00000010, // enabled for players
-   EX_ML_MONSTER = 0x00000020, // enabled for monsters
-   EX_ML_MISSILE = 0x00000040, // enabled for missiles
-   EX_ML_REPEAT  = 0x00000080, // can be used multiple times
-   EX_ML_1SONLY  = 0x00000100, // only activated from first side
+   EX_ML_CROSS    = 0x00000001, // crossable
+   EX_ML_USE      = 0x00000002, // usable
+   EX_ML_IMPACT   = 0x00000004, // shootable
+   EX_ML_PUSH     = 0x00000008, // reserved for future use
+   EX_ML_PLAYER   = 0x00000010, // enabled for players
+   EX_ML_MONSTER  = 0x00000020, // enabled for monsters
+   EX_ML_MISSILE  = 0x00000040, // enabled for missiles
+   EX_ML_REPEAT   = 0x00000080, // can be used multiple times
+   EX_ML_1SONLY   = 0x00000100, // only activated from first side
+   EX_ML_ADDITIVE = 0x00000200, // uses additive blending
 };
 
 // ExtraData line structure
@@ -76,9 +77,10 @@ typedef struct maplinedefext_s
    maplinedef_t stdfields;
 
    // extended fields
-   int extflags;
-   int args[NUMLINEARGS];
-   int id;
+   int   extflags;
+   int   args[NUMLINEARGS];
+   int   id;
+   float alpha;
 
    // internal fields (used by ExtraData only)
    int recordnum;

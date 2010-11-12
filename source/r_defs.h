@@ -383,8 +383,9 @@ typedef struct line_s
    float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
-   int  extflags;          // activation flags for param specials
-   int  args[NUMLINEARGS]; // argument values for param specials
+   int   extflags;          // activation flags for param specials
+   int   args[NUMLINEARGS]; // argument values for param specials
+   float alpha;             // alpha
 
    struct seg_s *segs;     // haleyjd: link to segs
 };

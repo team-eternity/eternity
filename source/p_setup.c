@@ -181,8 +181,8 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
       // haleyjd 11/06/10: check for invalid subsector reference
       if(*loc >= numsubsectors)
       {
-         *loc = 0;
          C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a", *loc);
+         *loc = 0;
       }
 
       *loc |= NF_SUBSECTOR;
@@ -1101,6 +1101,7 @@ void P_LoadLineDefs(int lump)
       P_MakeLineNormal(ld);
 
       ld->tranlump = -1;   // killough 4/11/98: no translucency by default
+      ld->alpha    = 1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
 
       ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
          FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
