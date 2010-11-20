@@ -172,8 +172,8 @@ static void MN_addFile(mndir_t *dir, const char *filename)
    {
       // realloc bigger: limitless
       dir->numfilesalloc = dir->numfilesalloc ? dir->numfilesalloc * 2 : 32;
-      dir->filenames = (char **)realloc(dir->filenames, 
-                                        dir->numfilesalloc * sizeof(char *));
+      dir->filenames = (char **)(realloc(dir->filenames, 
+                                         dir->numfilesalloc * sizeof(char *)));
    }
 
    (dir->filenames)[dir->numfiles++] = strdup(filename);

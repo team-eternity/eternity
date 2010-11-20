@@ -87,7 +87,7 @@ extern int  usegamma;
 
 extern boolean flexTranInit;
 extern unsigned int Col2RGB8[65][256];
-unsigned int *Col2RGB8_LessPrecision[65];
+extern unsigned int *Col2RGB8_LessPrecision[65];
 extern byte RGB32k[32][32][32];
 
 

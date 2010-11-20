@@ -283,7 +283,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
-      channelinfo[channel].data = sfx->data;
+      channelinfo[channel].data = (unsigned char *)(sfx->data);
       
       // Set pointer to end of raw data.
       channelinfo[channel].enddata = (byte *)sfx->data + sfx->alen - 1;

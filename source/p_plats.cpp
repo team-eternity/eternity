@@ -239,7 +239,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      plat = Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0);
+      plat = (plat_t *)(Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0));
       P_AddThinker(&plat->thinker);
       
       plat->type = type;
@@ -409,7 +409,7 @@ int EV_StopPlat(line_t *line)
 //
 void P_AddActivePlat(plat_t *plat)
 {
-   platlist_t *list = malloc(sizeof *list);
+   platlist_t *list = (platlist_t *)(malloc(sizeof *list));
    list->plat = plat;
    plat->list = list;
    if((list->next = activeplats))

@@ -58,7 +58,7 @@ typedef struct lumptype_s
 static size_t W_DirectReadLump(lumpinfo_t *, void *, size_t);
 static size_t W_MemoryReadLump(lumpinfo_t *, void *, size_t);
 
-static lumptype_t LumpHandlers[lump_numtypes] =
+static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 {
    // direct lump
    {
@@ -93,7 +93,7 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
    {
       dir->numallocsa = dir->numallocsa ? dir->numallocsa * 2 : 32;
 
-      dir->infoptrs = realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *));
+      dir->infoptrs = (lumpinfo_t **)(realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *)));
    }
    
    // add it
@@ -188,7 +188,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
       header.infotableofs = SwapLong(header.infotableofs);
       
       length = header.numlumps * sizeof(filelump_t);
-      fileinfo2free = fileinfo = malloc(length);    // killough
+      fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
       
       fseek(handle, header.infotableofs, SEEK_SET);
 
@@ -199,10 +199,10 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    }
    
    // Fill in lumpinfo
-   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
+   dir->lumpinfo = (lumpinfo_t **)(realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *)));
 
    // space for new lumps
-   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
+   newlumps = (lumpinfo_t *)(malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t)));
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
@@ -223,7 +223,7 @@ static int W_AddFile(waddir_t *dir, const char *name, int li_namespace)
    for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
    {
       dir->lumpinfo[i] = lump_p;
-      lump_p->type     = lump_direct; // haleyjd
+      lump_p->type     = lumpinfo_t::lump_direct; // haleyjd
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
@@ -284,7 +284,7 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    header.infotableofs = SwapLong(header.infotableofs);
       
    length = header.numlumps * sizeof(filelump_t);
-   fileinfo2free = fileinfo = malloc(length);    // killough
+   fileinfo2free = fileinfo = (filelump_t *)(malloc(length));    // killough
       
    fseek(handle, baseoffset + (unsigned int)header.infotableofs, SEEK_SET);
 
@@ -294,10 +294,10 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    dir->numlumps += header.numlumps;
    
    // Fill in lumpinfo
-   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
+   dir->lumpinfo = (lumpinfo_t **)(realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *)));
 
    // space for new lumps
-   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
+   newlumps = (lumpinfo_t *)(malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t)));
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
@@ -318,7 +318,7 @@ static boolean W_AddSubFile(waddir_t *dir, const char *name, int li_namespace,
    for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
    {
       dir->lumpinfo[i] = lump_p;
-      lump_p->type     = lump_direct; // haleyjd
+      lump_p->type     = lumpinfo_t::lump_direct; // haleyjd
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos)) + baseoffset;
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
@@ -387,7 +387,7 @@ static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
    header.infotableofs = SwapLong(header.infotableofs);
       
    length = header.numlumps * sizeof(filelump_t);
-   fileinfo2free = fileinfo = malloc(length);    // killough
+   fileinfo2free = fileinfo = (filelump_t *)(malloc(length));    // killough
       
    fseek(handle, (unsigned int)header.infotableofs, SEEK_SET);
 
@@ -402,10 +402,10 @@ static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
    dir->numlumps += header.numlumps;
    
    // Fill in lumpinfo
-   dir->lumpinfo = realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *));
+   dir->lumpinfo = (lumpinfo_t **)(realloc(dir->lumpinfo, dir->numlumps * sizeof(lumpinfo_t *)));
 
    // space for new lumps
-   newlumps = malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t));
+   newlumps = (lumpinfo_t *)(malloc((dir->numlumps - startlump) * sizeof(lumpinfo_t)));
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
@@ -414,14 +414,14 @@ static boolean W_AddPrivateFile(waddir_t *dir, const char *filename)
    for(i = startlump; i < (unsigned)dir->numlumps; i++, lump_p++, fileinfo++)
    {
       dir->lumpinfo[i] = lump_p;
-      lump_p->type     = lump_direct; // haleyjd
+      lump_p->type     = lumpinfo_t::lump_direct; // haleyjd
       lump_p->file     = handle;
       lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size     = (size_t)(SwapLong(fileinfo->size));
       lump_p->source   = source;
       
-      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
-      lump_p->li_namespace = ns_global;            // killough 4/17/98
+      lump_p->data = lump_p->cache = NULL;          // killough 1/31/98
+      lump_p->li_namespace = lumpinfo_t::ns_global; // killough 4/17/98
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
@@ -457,7 +457,7 @@ static int IsMarker(const char *marker, const char *name)
 static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
                                      const char *end_marker, int li_namespace)
 {
-   lumpinfo_t **marked = calloc(sizeof(*marked), dir->numlumps);
+   lumpinfo_t **marked = (lumpinfo_t **)(calloc(sizeof(*marked), dir->numlumps));
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -472,7 +472,7 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
          if(!num_marked)
          {
             marked[0] = lump;
-            marked[0]->li_namespace = ns_global;        // killough 4/17/98
+            marked[0]->li_namespace = lumpinfo_t::ns_global; // killough 4/17/98
             num_marked = 1;
          }
          is_marked = 1;                            // start marking lumps
@@ -494,9 +494,9 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
          // as an 'empty' graphics resource
          
          // SoM: Ignore marker lumps inside F_START and F_END
-         if((li_namespace == ns_sprites && lump->size > 8) ||
-            (li_namespace == ns_flats && lump->size > 0) ||
-            (li_namespace != ns_sprites && li_namespace != ns_flats))
+         if((li_namespace == lumpinfo_t::ns_sprites && lump->size > 8) ||
+            (li_namespace == lumpinfo_t::ns_flats && lump->size > 0) ||
+            (li_namespace != lumpinfo_t::ns_sprites && li_namespace != lumpinfo_t::ns_flats))
          {
             marked[num_marked] = lump;
             marked[num_marked]->li_namespace = li_namespace;
@@ -519,11 +519,11 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
    
    if(mark_end)                                    // add end marker
    {
-      lumpinfo_t *newlump = calloc(1, sizeof(lumpinfo_t));
+      lumpinfo_t *newlump = (lumpinfo_t *)(calloc(1, sizeof(lumpinfo_t)));
       W_addInfoPtr(dir, newlump); // haleyjd: track it
       dir->lumpinfo[dir->numlumps] = newlump;
       dir->lumpinfo[dir->numlumps]->size = 0;  // killough 3/20/98: force size to be 0
-      dir->lumpinfo[dir->numlumps]->li_namespace = ns_global;   // killough 4/17/98
+      dir->lumpinfo[dir->numlumps]->li_namespace = lumpinfo_t::ns_global;   // killough 4/17/98
       strncpy(dir->lumpinfo[dir->numlumps]->name, end_marker, 8);
       dir->numlumps++;
    }
@@ -601,7 +601,7 @@ int W_CheckNumForNameInDir(waddir_t *dir, const char *name, int li_namespace)
 //
 int W_CheckNumForName(register const char *name)
 {
-   return W_CheckNumForNameInDir(&w_GlobalDir, name, ns_global);
+   return W_CheckNumForNameInDir(&w_GlobalDir, name, lumpinfo_t::ns_global);
 }
 
 //
@@ -629,7 +629,7 @@ int W_CheckNumForNameNSG(const char *name, int ns)
    {
       num = W_CheckNumForNameInDir(&w_GlobalDir, name, curnamespace);
    }
-   while(num < 0 && curnamespace == ns ? curnamespace = ns_global, 1 : 0);
+   while(num < 0 && curnamespace == ns ? curnamespace = lumpinfo_t::ns_global, 1 : 0);
 
    return num;
 }
@@ -708,15 +708,15 @@ static void W_InitResources(waddir_t *dir) // sf
    // killough 1/24/98: change interface to use M_START/M_END explicitly
    // killough 4/17/98: Add namespace tags to each entry
    
-   W_CoalesceMarkedResource(dir, "S_START", "S_END", ns_sprites);
+   W_CoalesceMarkedResource(dir, "S_START", "S_END", lumpinfo_t::ns_sprites);
    
-   W_CoalesceMarkedResource(dir, "F_START", "F_END", ns_flats);
+   W_CoalesceMarkedResource(dir, "F_START", "F_END", lumpinfo_t::ns_flats);
 
    // killough 4/4/98: add colormap markers
-   W_CoalesceMarkedResource(dir, "C_START", "C_END", ns_colormaps);
+   W_CoalesceMarkedResource(dir, "C_START", "C_END", lumpinfo_t::ns_colormaps);
    
    // haleyjd 01/12/04: add translation markers
-   W_CoalesceMarkedResource(dir, "T_START", "T_END", ns_translations);
+   W_CoalesceMarkedResource(dir, "T_START", "T_END", lumpinfo_t::ns_translations);
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's
@@ -779,7 +779,7 @@ int W_AddNewFile(waddir_t *dir, const char *filename)
 {
    // haleyjd 09/13/03: use S_UpdateSound here
    w_sound_update_type = 1;
-   if(W_AddFile(dir, filename, ns_global)) 
+   if(W_AddFile(dir, filename, lumpinfo_t::ns_global)) 
       return true;
    W_InitResources(dir);         // reinit lump lookups etc
    return false;
@@ -929,7 +929,7 @@ int W_LumpCheckSum(int lumpnum)
    char *lump;
    int   checksum = 0;
    
-   lump = W_CacheLumpNum(lumpnum, PU_CACHE);
+   lump = (char *)(W_CacheLumpNum(lumpnum, PU_CACHE));
    lumplength = W_LumpLength(lumpnum);
    
    for(i = 0; i < lumplength; i++)

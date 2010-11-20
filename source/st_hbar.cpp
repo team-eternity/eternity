@@ -67,7 +67,7 @@ static void ST_HticInit(void)
       memset(lumpname, 0, 9);
       sprintf(lumpname, "IN%d", i);
 
-      invnums[i] = W_CacheLumpName(lumpname, PU_STATIC);
+      invnums[i] = (patch_t *)W_CacheLumpName(lumpname, PU_STATIC);
    }
 
    // haleyjd 10/09/05: load key graphics for HUD
@@ -148,7 +148,7 @@ static void ST_drawInvNum(int num, int x, int y)
       if(num < -9)
       {
          V_DrawPatch(x - 26, y + 1, &vbscreen, 
-                     W_CacheLumpName("LAME", PU_CACHE));
+                     (patch_t *)W_CacheLumpName("LAME", PU_CACHE));
          return;
       }
          
@@ -166,7 +166,7 @@ static void ST_drawInvNum(int num, int x, int y)
    }
    
    if(neg)
-      V_DrawPatch(x - 18, y, &vbscreen, W_CacheLumpName("NEGNUM", PU_CACHE));
+      V_DrawPatch(x - 18, y, &vbscreen, (patch_t *)W_CacheLumpName("NEGNUM", PU_CACHE));
 }
 
 //
@@ -177,19 +177,19 @@ static void ST_drawInvNum(int num, int x, int y)
 static void ST_drawBackground(void)
 {
    // draw the background
-   V_DrawPatch(0, 158, &vbscreen, W_CacheLumpName("BARBACK", PU_CACHE));
+   V_DrawPatch(0, 158, &vbscreen, (patch_t *)W_CacheLumpName("BARBACK", PU_CACHE));
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
    if(plyr->cheats & CF_GODMODE)
    {
-      V_DrawPatch(16,  167, &vbscreen, W_CacheLumpName("GOD1", PU_CACHE));
-      V_DrawPatch(287, 167, &vbscreen, W_CacheLumpName("GOD2", PU_CACHE));
+      V_DrawPatch(16,  167, &vbscreen, (patch_t *)W_CacheLumpName("GOD1", PU_CACHE));
+      V_DrawPatch(287, 167, &vbscreen, (patch_t *)W_CacheLumpName("GOD2", PU_CACHE));
    }
    
    // draw the tops of the faces
-   V_DrawPatch(0,   148, &vbscreen, W_CacheLumpName("LTFCTOP", PU_CACHE));
-   V_DrawPatch(290, 148, &vbscreen, W_CacheLumpName("RTFCTOP", PU_CACHE));
+   V_DrawPatch(0,   148, &vbscreen, (patch_t *)W_CacheLumpName("LTFCTOP", PU_CACHE));
+   V_DrawPatch(290, 148, &vbscreen, (patch_t *)W_CacheLumpName("RTFCTOP", PU_CACHE));
 }
 
 #define SHADOW_BOX_WIDTH  16
@@ -284,16 +284,16 @@ static void ST_drawLifeChain(void)
    // draw the chain -- links repeat every 17 pixels, so we
    // wrap the chain back to the starting position every 17
    V_DrawPatch(2 + (chainpos%17), y, &vbscreen, 
-               W_CacheLumpName("CHAIN", PU_CACHE));
+               (patch_t *)W_CacheLumpName("CHAIN", PU_CACHE));
    
    // draw the gem (17 is the far left pos., 273 is max)   
    // TODO: fix life gem for multiplayer modes
    V_DrawPatch(17 + chainpos, y, &vbscreen, 
-               W_CacheLumpName("LIFEGEM2", PU_CACHE));
+               (patch_t *)W_CacheLumpName("LIFEGEM2", PU_CACHE));
    
    // draw face patches to cover over spare ends of chain
-   V_DrawPatch(0,   190, &vbscreen, W_CacheLumpName("LTFACE", PU_CACHE));
-   V_DrawPatch(276, 190, &vbscreen, W_CacheLumpName("RTFACE", PU_CACHE));
+   V_DrawPatch(0,   190, &vbscreen, (patch_t *)W_CacheLumpName("LTFACE", PU_CACHE));
+   V_DrawPatch(276, 190, &vbscreen, (patch_t *)W_CacheLumpName("RTFACE", PU_CACHE));
    
    // use the colormap to shadow the ends of the chain
    ST_chainShadow();
@@ -314,10 +314,10 @@ static void ST_drawStatBar(void)
    switch(GameType)
    {
    case gt_dm:
-      statbar = W_CacheLumpName("STATBAR", PU_CACHE);
+      statbar = (patch_t *)W_CacheLumpName("STATBAR", PU_CACHE);
       break;
    default:
-      statbar = W_CacheLumpName("LIFEBAR", PU_CACHE);
+      statbar = (patch_t *)W_CacheLumpName("LIFEBAR", PU_CACHE);
       break;
    }
 
@@ -345,11 +345,11 @@ static void ST_drawStatBar(void)
 
    // draw key icons
    if(plyr->cards[it_yellowcard])
-      V_DrawPatch(153, 164, &vbscreen, W_CacheLumpName("YKEYICON", PU_CACHE));
+      V_DrawPatch(153, 164, &vbscreen, (patch_t *)W_CacheLumpName("YKEYICON", PU_CACHE));
    if(plyr->cards[it_redcard])
-      V_DrawPatch(153, 172, &vbscreen, W_CacheLumpName("GKEYICON", PU_CACHE));
+      V_DrawPatch(153, 172, &vbscreen, (patch_t *)W_CacheLumpName("GKEYICON", PU_CACHE));
    if(plyr->cards[it_bluecard])
-      V_DrawPatch(153, 180, &vbscreen, W_CacheLumpName("BKEYICON", PU_CACHE));
+      V_DrawPatch(153, 180, &vbscreen, (patch_t *)W_CacheLumpName("BKEYICON", PU_CACHE));
 
    // TODO: ammo icon stuff
    // draw ammo amount

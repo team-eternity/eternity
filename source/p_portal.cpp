@@ -135,13 +135,12 @@ int P_CreatePortalGroup(sector_t *from)
    {
       grouplimit = grouplimit ? (grouplimit << 1) : 8;
       groups = 
-         (pgroup_t **)realloc(groups, sizeof(pgroup_t **) * grouplimit);
+         (pgroup_t **)(realloc(groups, sizeof(pgroup_t **) * grouplimit));
    }
    groupcount++;   
    
    
-   group = groups[groupid] = 
-      (pgroup_t *)Z_Malloc(sizeof(pgroup_t), PU_LEVEL, 0);
+   group = groups[groupid] = (pgroup_t *)(Z_Malloc(sizeof(pgroup_t), PU_LEVEL, 0));
       
    group->seclist = NULL;
    group->listsize = 0;
@@ -189,7 +188,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    if(!list || listmax <= numsectors)
    {
       listmax = numsectors + 1;
-      list = (sector_t **)realloc(list, sizeof(sector_t *) * listmax);
+      list = (sector_t **)(realloc(list, sizeof(sector_t *) * listmax));
    }
 
    R_SetSectorGroupID(from, groupid);
@@ -236,7 +235,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    }
 
    // Ok, so expand the group list
-   group->seclist = (sector_t **)realloc(group->seclist, sizeof(sector_t *) * (group->listsize + count));
+   group->seclist = (sector_t **)(realloc(group->seclist, sizeof(sector_t *) * (group->listsize + count)));
    
    memcpy(group->seclist + group->listsize, list, count * sizeof(sector_t *));
    group->listsize += count;
@@ -309,7 +308,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
    if(startgroup == targetgroup)
       return 0;
 
-   link = (linkoffset_t *)Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0);
+   link = (linkoffset_t *)(Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0));
    linktable[startgroup * groupcount + targetgroup] = link;
    
    link->x = x;
@@ -501,8 +500,8 @@ boolean P_BuildLinkTable(void)
    // SoM: the last line of the table (starting at groupcount * groupcount) is
    // used as a temporary list for gathering links.
    linktable = 
-      (linkoffset_t **)Z_Calloc(1, sizeof(linkoffset_t *)*groupcount*groupcount,
-                                PU_LEVEL, 0);
+      (linkoffset_t **)(Z_Calloc(1, sizeof(linkoffset_t *)*groupcount*groupcount,
+                                PU_LEVEL, 0));
 
    // Run through the sectors check for invalid portal references.
    for(i = 0; i < numsectors; i++)

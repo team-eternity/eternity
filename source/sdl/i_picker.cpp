@@ -130,8 +130,8 @@ static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, "FRAME", ns_global)) != -1)
-      bgframe = W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC);
+   if((lumpnum = W_CheckNumForNameInDir(&pickwad, "FRAME", lumpinfo_t::ns_global)) != -1)
+      bgframe = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
 }
 
 //
@@ -152,14 +152,14 @@ static void I_Pick_LoadIWAD(int num)
    palnum   = iwadPicPals[num];
    palname  = palNames[palnum];
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, lumpname, ns_global)) != -1)
-      iwadpics[num] = W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC);
+   if((lumpnum = W_CheckNumForNameInDir(&pickwad, lumpname, lumpinfo_t::ns_global)) != -1)
+      iwadpics[num] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
 
    // load palette if needed also
    if(!pals[palnum])
    {
-      if((lumpnum = W_CheckNumForNameInDir(&pickwad, palname, ns_global)) != -1)
-         pals[palnum] = W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC);
+      if((lumpnum = W_CheckNumForNameInDir(&pickwad, palname, lumpinfo_t::ns_global)) != -1)
+         pals[palnum] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
    }
 }
 

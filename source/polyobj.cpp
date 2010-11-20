@@ -192,18 +192,18 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
       po->vertices = 
-         (vertex_t **)Z_Realloc(po->vertices,
-                                po->numVerticesAlloc * sizeof(vertex_t *),
-                                PU_LEVEL, NULL);
+         (vertex_t **)(Z_Realloc(po->vertices,
+                                 po->numVerticesAlloc * sizeof(vertex_t *),
+                                 PU_LEVEL, NULL));
       po->origVerts =
-         (vertex_t *)Z_Realloc(po->origVerts,
-                               po->numVerticesAlloc * sizeof(vertex_t),
-                               PU_LEVEL, NULL);
+         (vertex_t *)(Z_Realloc(po->origVerts,
+                                po->numVerticesAlloc * sizeof(vertex_t),
+                                PU_LEVEL, NULL));
 
       po->tmpVerts =
-         (vertex_t *)Z_Realloc(po->tmpVerts,
-                               po->numVerticesAlloc * sizeof(vertex_t),
-                               PU_LEVEL, NULL);
+         (vertex_t *)(Z_Realloc(po->tmpVerts,
+                                po->numVerticesAlloc * sizeof(vertex_t),
+                                PU_LEVEL, NULL));
    }
    po->vertices[po->numVertices] = v;
    po->origVerts[po->numVertices] = *v;
@@ -235,9 +235,9 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
-      po->lines = (line_t **)Z_Realloc(po->lines, 
-                                       po->numLinesAlloc * sizeof(line_t *),
-                                       PU_LEVEL, NULL);
+      po->lines = (line_t **)(Z_Realloc(po->lines, 
+                                        po->numLinesAlloc * sizeof(line_t *),
+                                        PU_LEVEL, NULL));
    }
    po->lines[po->numLines++] = l;
 
@@ -352,7 +352,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
          if(numLineItems >= numLineItemsAlloc)
          {
             numLineItemsAlloc = numLineItemsAlloc ? numLineItemsAlloc*2 : 4;
-            lineitems = realloc(lineitems, numLineItemsAlloc*sizeof(lineitem_t));
+            lineitems = (lineitem_t *)(realloc(lineitems, numLineItemsAlloc*sizeof(lineitem_t)));
          }
          lineitems[numLineItems].line = &lines[i];
          lineitems[numLineItems].num  = lines[i].args[1];
@@ -582,17 +582,17 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 //
 static polymaplink_t *Polyobj_getLink(void)
 {
-   polymaplink_t *l;
+   polymaplink_t *link;
 
    if(bmap_freelist)
    {
-      l = bmap_freelist;
-      bmap_freelist = l->po_next;
+      link = bmap_freelist;
+      bmap_freelist = link->po_next;
    }
    else
-      l = Z_Calloc(1, sizeof(*l), PU_LEVEL, NULL);
+      link = (polymaplink_t *)(Z_Calloc(1, sizeof(*l), PU_LEVEL, NULL));
 
-   return l;
+   return link;
 }
 
 //
@@ -1094,8 +1094,8 @@ void Polyobj_InitLevel(void)
    if(numPolyObjects)
    {
       // allocate the PolyObjects array
-      PolyObjects = Z_Calloc(numPolyObjects, sizeof(polyobj_t), 
-                             PU_LEVEL, NULL);
+      PolyObjects = (polyobj_t *)(Z_Calloc(numPolyObjects, sizeof(polyobj_t), 
+                                           PU_LEVEL, NULL));
 
       // setup hash fields
       for(i = 0; i < numPolyObjects; ++i)
@@ -1477,7 +1477,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       return 0;
 
    // create a new thinker
-   th = Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+   th = (polyrotate_t *)(Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL));
    th->thinker.function = T_PolyObjRotate;
    P_AddThinker(&th->thinker);
    po->thinker = &th->thinker;
@@ -1515,7 +1515,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          break;
       
       // create a new thinker
-      th = Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL);
+      th = (polyrotate_t *)(Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL));
       th->thinker.function = T_PolyObjRotate;
       P_AddThinker(&th->thinker);
       po->thinker = &th->thinker;
@@ -1572,7 +1572,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       return 0;
 
    // create a new thinker
-   th = Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL);
+   th = (polymove_t *)(Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL));
    th->thinker.function = T_PolyObjMove;
    P_AddThinker(&th->thinker);
    po->thinker = &th->thinker;
@@ -1606,7 +1606,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
          break;
 
       // create a new thinker
-      th = Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL);
+      th = (polymove_t *)(Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL));
       th->thinker.function = T_PolyObjMove;
       P_AddThinker(&th->thinker);
       po->thinker = &th->thinker;
@@ -1643,7 +1643,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
-   th = Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+   th = (polyslidedoor_t *)(Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL));
    th->thinker.function = T_PolyDoorSlide;
    P_AddThinker(&th->thinker);
    
@@ -1684,7 +1684,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL);
+      th = (polyslidedoor_t *)(Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL));
       th->thinker.function = T_PolyDoorSlide;
       P_AddThinker(&th->thinker);
 
@@ -1724,7 +1724,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    int diracc = -1;
 
    // allocate and add a new swing door thinker
-   th = Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+   th = (polyswingdoor_t *)(Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL));
    th->thinker.function = T_PolyDoorSwing;
    P_AddThinker(&th->thinker);
    
@@ -1757,7 +1757,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL);
+      th = (polyswingdoor_t *)(Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL));
       th->thinker.function = T_PolyDoorSwing;
       P_AddThinker(&th->thinker);
 

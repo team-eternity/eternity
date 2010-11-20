@@ -275,8 +275,8 @@ void Wipe_StartScreen(void)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
       // haleyjd: make purgable, allocate at required size
-      wipe_buffer = Z_Malloc(video.height * video.width, PU_STATIC, 
-                             (void **)&wipe_buffer);
+      wipe_buffer = (byte *)(Z_Malloc(video.height * video.width, PU_STATIC, 
+                                      (void **)&wipe_buffer));
    }
    else
       Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use

@@ -70,8 +70,8 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
    {
       po->numDSSAlloc = po->numDSSAlloc ? po->numDSSAlloc * 2 : 8;
       po->dynaSubsecs = 
-         (subsector_t **)realloc(po->dynaSubsecs, 
-                                 po->numDSSAlloc * sizeof(subsector_t *));
+         (subsector_t **)(realloc(po->dynaSubsecs, 
+                                  po->numDSSAlloc * sizeof(subsector_t *)));
    }
    po->dynaSubsecs[po->numDSS++] = ss;
 }
@@ -92,7 +92,7 @@ static vertex_t *R_GetFreeDynaVertex(void)
       memset(ret, 0, sizeof(vertex_t));
    }
    else
-      ret = calloc(1, sizeof(vertex_t));
+      ret = (vertex_t *)(calloc(1, sizeof(vertex_t)));
 
    return ret;
 }
@@ -125,7 +125,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
       memset(ret, 0, sizeof(dynaseg_t));
    }
    else
-      ret = calloc(1, sizeof(dynaseg_t));
+      ret = (dynaseg_t *)(calloc(1, sizeof(dynaseg_t)));
 
    return ret;
 }
@@ -157,7 +157,7 @@ static rpolyobj_t *R_GetFreeRPolyObj(void)
       memset(ret, 0, sizeof(rpolyobj_t));
    }
    else
-      ret = calloc(1, sizeof(rpolyobj_t));
+      ret = (rpolyobj_t *)(calloc(1, sizeof(rpolyobj_t)));
 
    return ret;
 }

@@ -838,7 +838,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       return;
 
    // allocate the mapthing_t structures
-   EDThings = Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL);
+   EDThings = (mapthing_t *)(Z_Malloc(numEDMapThings * sizeof(mapthing_t), PU_LEVEL, NULL));
 
    // initialize the hash chains
    for(i = 0; i < NUMMTCHAINS; ++i)
@@ -1486,7 +1486,7 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    if(*endptr != '\0')
    {
       // value is a special name
-      char *bracket_loc = strchr(value, '(');
+      const char *bracket_loc = strchr(value, '(');
 
       // if it has a parenthesis, it's a generalized type
       if(bracket_loc)
@@ -1555,8 +1555,8 @@ static void E_ProcessEDLines(cfg_t *cfg)
       return;
 
    // allocate the maplinedefext_t structures
-   EDLines = Z_Malloc(numEDLines * sizeof(maplinedefext_t),
-                      PU_LEVEL, NULL);
+   EDLines = (maplinedefext_t *)(Z_Malloc(numEDLines * sizeof(maplinedefext_t),
+                                          PU_LEVEL, NULL));
 
    // initialize the hash chains
    for(i = 0; i < NUMLDCHAINS; ++i)
@@ -1690,7 +1690,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       return;
 
    // allocate the mapsectorext_t structures
-   EDSectors = Z_Calloc(numEDSectors, sizeof(mapsectorext_t), PU_LEVEL, NULL);
+   EDSectors = (mapsectorext_t *)(Z_Calloc(numEDSectors, sizeof(mapsectorext_t), PU_LEVEL, NULL));
 
    // initialize the hash chains
    for(i = 0; i < NUMSECCHAINS; ++i)

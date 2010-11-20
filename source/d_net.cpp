@@ -529,8 +529,8 @@ static void D_ArbitrateNetStart(void)
 
             usermsg("Received %d %d\n",
                     netbuffer->retransmitfrom, netbuffer->starttic);
-            startskill = netbuffer->retransmitfrom & 15;
-            dm = (netbuffer->retransmitfrom & 0xc0) >> 6;
+            startskill = (skill_t)(netbuffer->retransmitfrom & 15);
+            dm = !!((netbuffer->retransmitfrom & 0xc0) >> 6);
             nomonsters = (netbuffer->retransmitfrom & 0x20) > 0;
             respawnparm = (netbuffer->retransmitfrom & 0x10) > 0;
             startmap = netbuffer->starttic & 0x3f;

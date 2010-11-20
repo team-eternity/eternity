@@ -340,10 +340,10 @@ void P_LoadVertexes(int lump)
    numvertexes = W_LumpLengthInDir(setupwad, lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
-   vertexes = Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0);
+   vertexes = (vertex_t *)(Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0));
    
    // Load data into cache.
-   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
@@ -371,8 +371,8 @@ void P_LoadSegs(int lump)
    byte *data;
    
    numsegs = W_LumpLengthInDir(setupwad, lump) / sizeof(mapseg_t);
-   segs = Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL);
-   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   segs = (seg_t *)(Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL));
+   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    
    for(i = 0; i < numsegs; ++i)
    {
@@ -436,8 +436,8 @@ void P_LoadSubsectors(int lump)
    int  i;
    
    numsubsectors = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsubsector_t);
-   subsectors = Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0);
-   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   subsectors = (subsector_t *)(Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0));
+   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -464,8 +464,8 @@ void P_LoadSectors(int lumpnum)
    char namebuf[9];
    
    numsectors  = W_LumpLengthInDir(setupwad, lumpnum) / sizeof(mapsector_t);
-   sectors     = Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0);
-   lump = data = W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC);
+   sectors     = (sector_t *)(Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0));
+   lump = data = (byte *)(W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC));
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -605,8 +605,8 @@ void P_LoadNodes(int lump)
       return;
    }
 
-   nodes = Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0);
-   data  = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   nodes = (node_t *)(Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0));
+   data  = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
 
    for(i = 0; i < numnodes; ++i)
    {
@@ -784,7 +784,7 @@ static void P_LoadZNodes(int lump)
    uint32_t numNodes;
    vertex_t *newvertarray = NULL;
 
-   data = lumpptr = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   data = lumpptr = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    len  = W_LumpLengthInDir(setupwad, lump);
 
    // skip header
@@ -944,7 +944,7 @@ static void P_ConvertHereticThing(mapthing_t *mthing);
 void P_LoadThings(int lump)
 {
    int  i;
-   byte *data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   byte *data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    mapthing_t *mapthings;
    
    numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthingdoom_t); //sf: use global
@@ -1016,7 +1016,7 @@ void P_LoadThings(int lump)
 void P_LoadHexenThings(int lump)
 {
    int  i;
-   byte *data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   byte *data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
    mapthing_t *mapthings;
    
    numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthinghexen_t);
@@ -1078,8 +1078,8 @@ void P_LoadLineDefs(int lump)
    int  i;
 
    numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedef_t);
-   lines    = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
-   data     = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
+   data     = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1241,8 +1241,8 @@ void P_LoadHexenLineDefs(int lump)
    int  i;
 
    numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedefhexen_t);
-   lines = Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0);
-   data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
+   lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
+   data     = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
@@ -1389,7 +1389,7 @@ void P_LoadLineDefs2(void)
 void P_LoadSideDefs(int lump)
 {
    numsides = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsidedef_t);
-   sides    = Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0);
+   sides    = (side_t *)(Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0));
 }
 
 // killough 4/4/98: delay using texture names until
@@ -1398,7 +1398,7 @@ void P_LoadSideDefs(int lump)
 
 void P_LoadSideDefs2(int lumpnum)
 {
-   byte *lump = W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC);
+   byte *lump = (byte *)(W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC));
    byte *data = lump;
    int  i;
    char toptexture[9], bottomtexture[9], midtexture[9];
@@ -1606,9 +1606,9 @@ static void P_CreateBlockMap(void)
             if(bmap[b].n >= bmap[b].nalloc)
             {
                bmap[b].list = 
-                  realloc(bmap[b].list,
-                          (bmap[b].nalloc = bmap[b].nalloc ? 
-                           bmap[b].nalloc*2 : 8)*sizeof*bmap->list);
+                  (int *)(realloc(bmap[b].list,
+                                  (bmap[b].nalloc = bmap[b].nalloc ? 
+                                   bmap[b].nalloc*2 : 8)*sizeof*bmap->list));
             }
 
             // Add linedef to end of list
@@ -1646,8 +1646,8 @@ static void P_CreateBlockMap(void)
          }
 
          // Allocate blockmap lump with computed count
-         blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count, 
-                                 PU_LEVEL, 0);
+         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count, 
+                                         PU_LEVEL, 0));
       }
 
       // Now compress the blockmap.
@@ -1776,9 +1776,9 @@ void P_LoadBlockMap(int lump)
    else
    {
       int i;
-      int16_t *wadblockmaplump = W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL);
-      blockmaplump = Z_Malloc(sizeof(*blockmaplump) * count,
-                              PU_LEVEL, NULL);
+      int16_t *wadblockmaplump = (int16_t *)(W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL));
+      blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
+                                      PU_LEVEL, NULL));
 
       // killough 3/1/98: Expand wad blockmap into larger internal one,
       // by treating all offsets except -1 as unsigned and zero-extending
@@ -1814,13 +1814,13 @@ void P_LoadBlockMap(int lump)
    }
 
    // clear out mobj chains
-   count = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = Z_Calloc(1, count, PU_LEVEL, NULL);
-   blockmap = blockmaplump + 4;
+   count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
+   blocklinks = (mobj_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   blockmap   = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = Z_Calloc(1, count, PU_LEVEL, NULL);
+   polyblocklinks = (polymaplink_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
 }
 
 
@@ -1873,7 +1873,7 @@ void P_GroupLines(void)
    }
 
    // build line tables for each sector
-   linebuffer = Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0);
+   linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
 
    for(i = 0; i < numsectors; ++i)
    {
@@ -2055,15 +2055,15 @@ static void P_LoadReject(int lump)
    // 2. if size <  expectedsize, allocate a zero-filled buffer and copy
    //    in whatever exists from the actual lump.
    if(size >= expectedsize)
-      rejectmatrix = W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL);
+      rejectmatrix = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL));
    else
    {
       // set to all zeroes so that the reject has no effect
-      rejectmatrix = Z_Calloc(1, expectedsize, PU_LEVEL, NULL);
+      rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
 
       if(size > 0)
       {
-         byte *temp = W_CacheLumpNumInDir(setupwad, lump, PU_CACHE);
+         byte *temp = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
       }
    }
@@ -2371,7 +2371,7 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
    setupwad = dir;
    
    // get the map name lump number
-   if((lumpnum = W_CheckNumForNameInDir(setupwad, mapname, ns_global)) == -1)
+   if((lumpnum = W_CheckNumForNameInDir(setupwad, mapname, lumpinfo_t::ns_global)) == -1)
    {
       P_SetupLevelError("Map not found", mapname);
       return;
@@ -2558,7 +2558,7 @@ void P_LoadOlo(void)
    if((lumpnum = W_CheckNumForName("OLO")) == -1)
       return;
    
-   lump = W_CacheLumpNum(lumpnum, PU_CACHE);
+   lump = (char *)(W_CacheLumpNum(lumpnum, PU_CACHE));
    
    if(strncmp(lump, "OLO", 3))
       return;

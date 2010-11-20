@@ -940,7 +940,7 @@ static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
    if(mo->type == MT_MISC24) // put all the players stuff into the
    {                         // backpack
       int a;
-      mo->extradata.backpack = Z_Malloc(sizeof(backpack_t), PU_LEVEL, NULL);
+      mo->extradata.backpack = (backpack_t *)(Z_Malloc(sizeof(backpack_t), PU_LEVEL, NULL));
       for(a=0; a<NUMAMMO; a++)
          mo->extradata.backpack->ammo[a] = target->player->ammo[a];
       mo->extradata.backpack->weapon = target->player->readyweapon;

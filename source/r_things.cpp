@@ -223,12 +223,12 @@ void R_InitSpriteDefs(char **namelist)
    
    numsprites = (signed int)i;
 
-   sprites = Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL);
+   sprites = (spritedef_t *)(Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL));
    
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
    
-   hash = malloc(sizeof(*hash) * numentries); // allocate hash table
+   hash = (rsprhash_s *)(malloc(sizeof(*hash) * numentries)); // allocate hash table
 
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
       hash[i].index = -1;
@@ -314,7 +314,7 @@ void R_InitSpriteDefs(char **namelist)
             }
             // allocate space for the frames present and copy sprtemp to it
             sprites[i].spriteframes =
-               Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
+               (spriteframe_t *)(Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL));
             memcpy(sprites[i].spriteframes, sprtemp,
                    maxframe*sizeof(spriteframe_t));
          }
@@ -384,7 +384,7 @@ void R_PushPost(boolean pushmasked, planehash_t *overlay)
    if(stacksize == stackmax)
    {
       stackmax += 10;
-      pstack = realloc(pstack, sizeof(poststack_t) * stackmax);
+      pstack = (poststack_t *)(realloc(pstack, sizeof(poststack_t) * stackmax));
    }
    
    post = pstack + stacksize;
@@ -402,7 +402,7 @@ void R_PushPost(boolean pushmasked, planehash_t *overlay)
          unusedmasked = unusedmasked->next;
       }
       else
-         post->masked = malloc(sizeof(maskedrange_t));
+         post->masked = (maskedrange_t *)(malloc(sizeof(maskedrange_t)));
          
       memset(post->masked, 0, sizeof(*post->masked));
       
@@ -444,7 +444,7 @@ vissprite_t *R_NewVisSprite(void)
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
-      vissprites = realloc(vissprites,num_vissprite_alloc*sizeof(*vissprites));
+      vissprites = (vissprite_t *)(realloc(vissprites,num_vissprite_alloc*sizeof(*vissprites)));
    }
 
    return vissprites + num_vissprite++;
@@ -549,7 +549,7 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       return;
    }
   
-   patch = W_CacheLumpNum(vis->patch+firstspritelump, PU_CACHE);
+   patch = (patch_t *)(W_CacheLumpNum(vis->patch+firstspritelump, PU_CACHE));
    
    column.colormap = vis->colormap;
    
@@ -758,13 +758,13 @@ void R_ProjectSprite(mobj_t *thing)
       angle_t ang = R_PointToAngle(thing->x, thing->y);
       unsigned int rot = (ang - thing->angle + (unsigned int)(ANG45/2)*9) >> 29;
       lump = sprframe->lump[rot];
-      flip = (boolean)sprframe->flip[rot];
+      flip = !!sprframe->flip[rot];
    }
    else
    {
       // use single rotation for all views
       lump = sprframe->lump[0];
-      flip = (boolean) sprframe->flip[0];
+      flip = !!sprframe->flip[0];
    }
 
 
@@ -1001,7 +1001,7 @@ void R_DrawPSprite(pspdef_t *psp)
    sprframe = &sprdef->spriteframes[psp->state->frame & FF_FRAMEMASK];
    
    lump = sprframe->lump[0];
-   flip = ( (boolean) sprframe->flip[0] ) ^ lefthanded;
+   flip = !!(sprframe->flip[0] ^ lefthanded);
    
    // calculate edges of the shape
    tx  = M_FixedToFloat(psp->sx) - 160.0f;
@@ -1226,8 +1226,9 @@ void R_SortVisSprites(void)
       if(num_vissprite_ptrs < num_vissprite*2)
       {
          free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                  * sizeof *vissprite_ptrs);
+         vissprite_ptrs = 
+            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
+                                    * sizeof *vissprite_ptrs));
       }
 
       while(--i >= 0)
@@ -1261,8 +1262,9 @@ void R_SortVisSpriteRange(int first, int last)
       if(num_vissprite_ptrs < numsprites*2)
       {
          free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                  * sizeof *vissprite_ptrs);
+         vissprite_ptrs = 
+            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
+                                    * sizeof *vissprite_ptrs));
       }
 
       while(--i >= 0)
@@ -1683,7 +1685,8 @@ void R_DrawPostBSP(void)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * maxdrawsegs;
-                  drawsegs_xrange = realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange));
+                  drawsegs_xrange = (drawsegs_xrange_t *)(
+                     realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange)));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
                {
@@ -1790,7 +1793,7 @@ void R_InitParticles(void)
    else if(numParticles < 100)
       numParticles = 100;
    
-   Particles = Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL);
+   Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL));
    R_ClearParticles();
 }
 

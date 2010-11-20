@@ -119,7 +119,8 @@ typedef struct sc_callback_s
       wt_delay,         // wait for a set amount of time
       wt_tagwait,       // wait for sector to stop moving
       wt_numtypes,
-   } wait_type;
+   };
+   int wait_type;
 
    int wait_data;       // data used for waiting, varies by type
 

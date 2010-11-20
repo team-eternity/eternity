@@ -88,13 +88,13 @@ gfs_t *G_LoadGFS(const char *filename)
    gfs.numcsc  = cfg_size(cfg, SEC_CSCFILE);
 
    if(gfs.numwads)
-      gfs.wadnames = malloc(gfs.numwads * sizeof(char *));
+      gfs.wadnames = (char **)(malloc(gfs.numwads * sizeof(char *)));
 
    if(gfs.numdehs)
-      gfs.dehnames = malloc(gfs.numdehs * sizeof(char *));
+      gfs.dehnames = (char **)(malloc(gfs.numdehs * sizeof(char *)));
 
    if(gfs.numcsc)
-      gfs.cscnames = malloc(gfs.numcsc  * sizeof(char *));
+      gfs.cscnames = (char **)(malloc(gfs.numcsc  * sizeof(char *)));
 
    // load wads, dehs, csc
    for(i = 0; i < gfs.numwads; i++)
@@ -147,7 +147,7 @@ gfs_t *G_LoadGFS(const char *filename)
    }
    else
    {
-      gfs.filepath = malloc(strlen(filename) + 1);
+      gfs.filepath = (char *)(malloc(strlen(filename) + 1));
       M_GetFilePath(filename, gfs.filepath, strlen(filename));
    }
 

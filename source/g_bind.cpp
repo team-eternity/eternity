@@ -448,7 +448,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    else
    {
       // first time only - cons_keyactions was NULL
-      cons_keyactions = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
+      cons_keyactions = (keyaction_t *)(Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0));
       cons_keyactions->bclass = kac_cmd;
       cons_keyactions->type = at_conscmd;
       cons_keyactions->name = Z_Strdup(name, PU_STATIC, 0);
@@ -465,7 +465,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       prev = temp;
       temp = temp->next;
    }
-   newaction = Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0);
+   newaction = (keyaction_t *)(Z_Malloc(sizeof(keyaction_t), PU_STATIC, 0));
    newaction->bclass = kac_cmd;
    newaction->type = at_conscmd;
    newaction->name = Z_Strdup(name, PU_STATIC, 0);

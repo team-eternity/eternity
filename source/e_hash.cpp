@@ -49,7 +49,7 @@ static void *E_LinkForObject(void *object)
 //
 void E_HashInit(ehash_t *table, unsigned int numchains, ehashable_i *hinterface)
 {
-   table->chains      = calloc(numchains, sizeof(mdllistitem_t *));
+   table->chains      = (mdllistitem_t **)(calloc(numchains, sizeof(mdllistitem_t *)));
    table->numchains   = numchains;
    table->numitems    = 0;
    table->loadfactor  = 0.0f;
@@ -86,7 +86,7 @@ void E_HashAddObject(ehash_t *table, void *object)
    {
       unsigned int hashcode;
       const void *key     = table->keyfunc(object);
-      mdllistitem_t *link = table->linkfunc(object);
+      mdllistitem_t *link = (mdllistitem_t *)(table->linkfunc(object));
       link->data          = table->hashfunc(key);   // cache hash value in node
       hashcode            = link->data % table->numchains;
 
@@ -108,7 +108,7 @@ void E_HashRemoveObject(ehash_t *table, void *object)
 {
    if(table->isinit)
    {
-      M_DLListRemove(table->linkfunc(object));
+      M_DLListRemove((mdllistitem_t *)(table->linkfunc(object)));
       
       table->numitems--;
       table->loadfactor = (float)table->numitems / table->numchains;
@@ -166,7 +166,7 @@ void *E_HashNextOnChain(ehash_t *table, void *object)
 {
    if(table->isinit)
    {
-      mdllistitem_t *link = table->linkfunc(object);
+      mdllistitem_t *link = (mdllistitem_t *)(table->linkfunc(object));
 
       return link->next ? link->next->object : NULL;
    }
@@ -202,7 +202,7 @@ void *E_HashObjectIterator(ehash_t *table, void *object, const void *key)
       ret = E_HashObjectForKey(table, key);
    else
    {
-      mdllistitem_t *item = table->linkfunc(object);
+      mdllistitem_t *item = (mdllistitem_t *)(table->linkfunc(object));
 
       // start on next object in hash chain
       item = item->next; 
@@ -235,7 +235,7 @@ void *E_HashTableIterator(ehash_t *table, void *object)
    if(object)
    {
       // is there another object on the same chain?
-      mdllistitem_t *item = table->linkfunc(object);
+      mdllistitem_t *item = (mdllistitem_t *)(table->linkfunc(object));
 
       if(item->next)
          ret = item->next->object;
@@ -271,7 +271,7 @@ void E_HashRebuild(ehash_t *table, unsigned int newnumchains)
       return;
 
    // allocate a new chains table
-   table->chains    = calloc(newnumchains, sizeof(mdllistitem_t *));
+   table->chains    = (mdllistitem_t **)(calloc(newnumchains, sizeof(mdllistitem_t *)));
    table->numchains = newnumchains;
 
    // run down the old chains

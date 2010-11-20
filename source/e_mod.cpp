@@ -199,7 +199,7 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
-   return E_HashObjectForKey(&e_mod_namehash, &name);
+   return (emod_t *)(E_HashObjectForKey(&e_mod_namehash, &name));
 }
 
 #define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
@@ -249,7 +249,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       }
 
       // create a new mod
-      mod = calloc(1, sizeof(emod_t));
+      mod = (emod_t *)(calloc(1, sizeof(emod_t)));
 
       mod->name = strdup(title);
       mod->num  = num;
@@ -314,7 +314,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
    // process sourceless flag
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
-      mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
+      mod->sourceless = (cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS) == cfg_true);
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n", 
                   def ? "Defined" : "Modified", mod->name);
@@ -351,7 +351,7 @@ emod_t *E_DamageTypeForName(const char *name)
 {
    emod_t *mod;
 
-   if((mod = E_HashObjectForKey(&e_mod_namehash, &name)) == NULL)
+   if((mod = (emod_t *)(E_HashObjectForKey(&e_mod_namehash, &name))) == NULL)
       mod = &unknown_mod;
 
    return mod;
@@ -367,7 +367,7 @@ emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
    
-   if((mod = E_HashObjectForKey(&e_mod_numhash, &num)) == NULL)
+   if((mod = (emod_t *)(E_HashObjectForKey(&e_mod_numhash, &num))) == NULL)
       mod = &unknown_mod;
 
    return mod;

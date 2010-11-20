@@ -193,12 +193,12 @@ static void I_InitDiskFlash(void)
 
    // setup VBuffer and point it into the SDL_Surface
    V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, 
-                     disktmp->pixels);
+                     (byte *)(disktmp->pixels));
    V_SetScaling(&diskvb, 16, 15);
 
    // draw the disk graphic into the VBuffer
    V_DrawPatch(0, -1, &diskvb,
-               W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
+               (patch_t *)W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
 
    // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
@@ -653,7 +653,7 @@ static boolean I_InitGraphicsMode(void)
    setsizeneeded = true;
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SetPaletteDirect(W_CacheLumpName("PLAYPAL", PU_CACHE));
+   I_SetPaletteDirect((byte *)W_CacheLumpName("PLAYPAL", PU_CACHE));
 
    I_InitDiskFlash();        // Initialize disk icon
     

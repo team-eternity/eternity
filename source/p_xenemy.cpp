@@ -115,7 +115,7 @@ boolean P_StartQuake(int *args)
       quakethinker_t *qt;
       ret = true;
 
-      qt = Z_Calloc(1, sizeof(*qt), PU_LEVSPEC, NULL);
+      qt = (quakethinker_t *)(Z_Calloc(1, sizeof(*qt), PU_LEVSPEC, NULL));
       qt->origin.thinker.function = T_QuakeThinker;
 
       P_AddThinker(&(qt->origin.thinker));

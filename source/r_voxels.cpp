@@ -48,7 +48,7 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
       return NULL;
 
    // cache the lump
-   rover = buffer = W_CacheLumpNum(lumpnum, PU_STATIC);
+   rover = buffer = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
 
    // get sizes
    xsize = SwapLong(*(int32_t *)rover);
@@ -68,8 +68,8 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
    }
 
    // create the model and its voxel buffer
-   model         = Z_Calloc(1,       sizeof(rvoxelmodel_t), PU_RENDERER, NULL);
-   model->voxels = Z_Calloc(voxsize, sizeof(byte),          PU_RENDERER, NULL);
+   model         = (rvoxelmodel_t *)(Z_Calloc(1,       sizeof(rvoxelmodel_t), PU_RENDERER, NULL));
+   model->voxels =          (byte *)(Z_Calloc(voxsize, sizeof(byte),          PU_RENDERER, NULL));
 
    model->xsize = xsize;
    model->ysize = ysize;

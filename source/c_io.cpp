@@ -132,7 +132,7 @@ static void C_initBackdrop(void)
    V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
    
    lumpnum = W_GetNumForName(lumpname);
-   patch   = W_CacheLumpNum(lumpnum, PU_STATIC);
+   patch   = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
 
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
@@ -159,7 +159,7 @@ static void C_initBackdrop(void)
          clumpnum = W_GetNumForName("COLORMAP");
          csize    = W_LumpLength(clumpnum);
 
-         colormap = malloc(csize);
+         colormap = (byte *)(malloc(csize));
          W_ReadLump(clumpnum, colormap);
          
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
@@ -972,7 +972,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    int numparams = (int)(params[0] / sizeof(cell));
 
    // create a string table
-   msgs = Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL);
+   msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL));
 
    for(i = 1; i <= numparams; i++)
    {      
@@ -995,7 +995,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       // get length of string
       amx_StrLen(cstr, &len);
 
-      msgs[i-1] = Z_Malloc(len + 1, PU_STATIC, NULL);
+      msgs[i-1] = (char *)(Z_Malloc(len + 1, PU_STATIC, NULL));
 
       // convert from small string to C string
       amx_GetString(msgs[i-1], cstr, 0);
@@ -1006,7 +1006,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       totallen += (int)strlen(msgs[i]);
   
    // create complete message
-   msg = Z_Calloc(1, totallen + 1, PU_STATIC, NULL);
+   msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, NULL));
 
    for(i = 0; i < numparams; i++)
       strcat(msg, msgs[i]);

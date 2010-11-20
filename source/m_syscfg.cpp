@@ -80,119 +80,119 @@ extern int disable_sysmenu;
 static default_t sysdefaults[] =
 {
       //jff 3/3/98
-   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, default_t::wad_no,
                "1 to show help strings about each variable in config file"),
 
-   DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 0, 0, 1, default_t::wad_no,
                "1 to use base/doom/eternity.cfg for all DOOM gamemodes"),
 
    // IWAD paths
 
-   DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", default_t::wad_no,
                "IWAD path for DOOM Shareware"),
 
-   DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, NULL, "", default_t::wad_no,
                "IWAD path for DOOM Registered"),
 
-   DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, NULL, "", default_t::wad_no,
                "IWAD path for The Ultimate DOOM"),
 
-   DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", default_t::wad_no,
                "IWAD path for DOOM 2"),
 
-   DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", default_t::wad_no,
                "IWAD path for Final DOOM: TNT - Evilution"),
 
-   DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", default_t::wad_no,
                "IWAD path for Final DOOM: The Plutonia Experiment"),
 
-   DEFAULT_STR(ITEM_IWAD_HACX, &gi_path_hacx, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_HACX, &gi_path_hacx, NULL, "", default_t::wad_no,
                "IWAD path for HACX - Twitch 'n Kill (v1.2 or later)"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", default_t::wad_no,
                "IWAD path for Heretic Shareware"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, NULL, "", default_t::wad_no,
                "IWAD path for Heretic Registered"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", default_t::wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
 
-   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, wad_no,
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
-   DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", wad_no,
+   DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", default_t::wad_no,
                "Directory containing Master Levels wad files"),
 
    // 11/04/09: system-level options moved here from the main config
 
-   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, default_t::wad_no,
                "Start up ETERNITY in text mode"),
 
-   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable wait for vsync to avoid display tearing"),
 
-   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, wad_no,
+   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, default_t::wad_no,
                "Percentage of normal speed (35 fps) realtic clock runs at"),
 
    // killough
-   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 32, wad_no,
+   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 32, default_t::wad_no,
                "number of sound effects handled simultaneously"),
 
    // haleyjd 12/08/01
-   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, default_t::wad_no,
                "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
 
    // haleyjd 04/21/10
-   DEFAULT_INT("s_equalizer", &s_equalizer, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("s_equalizer", &s_equalizer, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable three-band equalizer"),
 
-   DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, wad_no,
+   DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, default_t::wad_no,
                  "High end of low pass band"),
    
-   DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, wad_no,
+   DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, default_t::wad_no,
                  "Low end of high pass band"),
 
-   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 0, 100, wad_no,
+   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 0, 100, default_t::wad_no,
                  "Preamplification factor"),
 
-   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 300, wad_no,
+   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 300, default_t::wad_no,
                  "Low pass gain"),
 
-   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 300, wad_no,
+   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 300, default_t::wad_no,
                  "Midrange gain"),
 
-   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, wad_no,
+   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
                  "High pass gain"),                 
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, wad_no,
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
                "screenshot format (0=BMP,1=PCX,2=TGA)"),
    
-   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
 
-   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, wad_no,
+   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
 #ifdef _SDL_VER
-   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, wad_no,
+   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
                 "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
 
-   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
-   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
-   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, wad_no, 
+   DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no, 
                "process affinity mask - warning: expert setting only!"),
 #endif
 
 #ifdef _MSC_VER
-   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 0, 0, 1, wad_no,
+   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 0, 0, 1, default_t::wad_no,
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 

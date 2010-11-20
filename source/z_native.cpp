@@ -336,12 +336,12 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
    
-   if(!(block = (malloc)(size + header_size)))
+   if(!(block = (memblock_t *)((malloc)(size + header_size))))
    {
       if(blockbytag[PU_CACHE])
       {
          Z_FreeTags(PU_CACHE, PU_CACHE);
-         block = (malloc)(size + header_size);
+         block = (memblock_t *)((malloc)(size + header_size));
       }
    }
 
@@ -555,14 +555,14 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    INSTRUMENT(active_memory -= block->size);
 
-   if(!(newblock = (realloc)(block, n + header_size)))
+   if(!(newblock = (memblock_t *)((realloc)(block, n + header_size))))
    {
       // haleyjd 07/09/10: Note that unlinking the block above makes this safe 
       // even if the current block is PU_CACHE; Z_FreeTags won't find it.
       if(blockbytag[PU_CACHE])
       {
          Z_FreeTags(PU_CACHE, PU_CACHE);
-         newblock = (realloc)(block, n + header_size);
+         newblock = (memblock_t *)((realloc)(block, n + header_size));
       }
    }
 
@@ -615,7 +615,7 @@ void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
 char *(Z_Strdup)(const char *s, int tag, void **user,
                  const char *file, int line)
 {
-   return strcpy((Z_Malloc)(strlen(s)+1, tag, user, file, line), s);
+   return strcpy((char *)((Z_Malloc)(strlen(s)+1, tag, user, file, line)), s);
 }
 
 //=============================================================================
@@ -913,7 +913,7 @@ void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
 //
 char *(Z_Strdupa)(const char *s, const char *file, int line)
 {      
-   return strcpy((Z_Alloca)(strlen(s)+1, file, line), s);
+   return strcpy((char *)((Z_Alloca)(strlen(s)+1, file, line)), s);
 }
 
 #endif // ZONE_NATIVE

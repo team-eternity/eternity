@@ -98,10 +98,10 @@ DIR *opendir(const _TCHAR *szPath)
 
    /* Allocate enough space to store DIR structure and the complete
    * directory path given. */
-   nd = (DIR *) malloc(sizeof(DIR) + (_tcslen(szFullPath)
+   nd = (DIR *)(malloc(sizeof(DIR) + (_tcslen(szFullPath)
                                        + _tcslen(SLASH)
                                        + _tcslen(SUFFIX) + 1)
-                                     * sizeof(_TCHAR));
+                                     * sizeof(_TCHAR)));
 
    if(!nd)
    {

@@ -985,7 +985,7 @@ static void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
    
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = W_CheckNumForNameNSG(basename, ns_demos)) < 0)
+   if((lumpnum = W_CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -998,7 +998,7 @@ static void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = W_CacheLumpNum(lumpnum, PU_STATIC); // killough
+   demobuffer = demo_p = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC)); // killough
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1383,7 +1383,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = realloc(demobuffer, maxdemosize);
+      demobuffer = (byte *)(realloc(demobuffer, maxdemosize));
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
@@ -1726,7 +1726,7 @@ void CheckSaveGame(size_t size)
    {
       // haleyjd: deobfuscated
       savegamesize += (size + 1023) & ~1023;
-      savebuffer = realloc(savebuffer, savegamesize);
+      savebuffer = (byte *)(realloc(savebuffer, savegamesize));
       save_p = savebuffer + pos;
    }
 }
@@ -1765,7 +1765,7 @@ static uint64_t G_Signature(waddir_t *dir)
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForNameInDir(dir, gamemapname, ns_global);
+   lump = W_CheckNumForNameInDir(dir, gamemapname, lumpinfo_t::ns_global);
    
    if(lump != -1 && (i = lump + 10) < dir->numlumps)
    {
@@ -1789,7 +1789,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    char name2[VERSIONSIZE];
    const char *fn;
    
-   save_p = savebuffer = malloc(savegamesize);
+   save_p = savebuffer = (byte *)(malloc(savegamesize));
 
    // haleyjd: somebody got really lax with checking the savegame
    // buffer size on these first few writes -- granted that the
@@ -2542,7 +2542,7 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
 
       if(queuesize < (unsigned int)bodyquesize)
       {
-         bodyque = realloc(bodyque, bodyquesize*sizeof*bodyque);
+         bodyque = (mobj_t **)(realloc(bodyque, bodyquesize*sizeof*bodyque));
          memset(bodyque+queuesize, 0, 
                 (bodyquesize-queuesize)*sizeof*bodyque);
          queuesize = bodyquesize;
@@ -3232,7 +3232,7 @@ void G_RecordDemo(char *name)
 
    if(demoname)
       free(demoname);
-   demoname = malloc(strlen(name) + 8);
+   demoname = (char *)(malloc(strlen(name) + 8));
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
    
@@ -3244,7 +3244,7 @@ void G_RecordDemo(char *name)
    if(maxdemosize < 0x20000)  // killough
       maxdemosize = 0x20000;
    
-   demobuffer = malloc(maxdemosize); // killough
+   demobuffer = (byte *)(malloc(maxdemosize)); // killough
    
    demorecording = true;
 }

@@ -1376,7 +1376,7 @@ extern fixed_t tmsecceilz;
 //
 mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   mobj_t     *mobj = Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL);
+   mobj_t     *mobj = (mobj_t *)(Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL));
    mobjinfo_t *info = &mobjinfo[type];
    state_t    *st;
 
@@ -1606,7 +1606,7 @@ int P_FindDoomedNum(int type)
 
    if(!hash)
    {
-      hash = Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash);
+      hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
       for(i = 0; i < NUMMOBJTYPES; ++i)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; ++i)
@@ -1804,9 +1804,9 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
       {
          num_deathmatchstarts = num_deathmatchstarts ?
             num_deathmatchstarts*2 : 16;
-         deathmatchstarts = realloc(deathmatchstarts,
-                                    num_deathmatchstarts *
-                                    sizeof(*deathmatchstarts));
+         deathmatchstarts = (mapthing_t *)(realloc(deathmatchstarts,
+                                           num_deathmatchstarts *
+                                           sizeof(*deathmatchstarts)));
          deathmatch_p = deathmatchstarts + offset;
       }
       memcpy(deathmatch_p++, mthing, sizeof*mthing);
@@ -2691,7 +2691,7 @@ void P_CollectThings(MobjCollection *mc)
          {
             if(mc->num >= mc->numalloc)
             {
-               mc->ptrarray = realloc(mc->ptrarray,
+               mc->ptrarray = (mobj_t **)realloc(mc->ptrarray,
                   (mc->numalloc = mc->numalloc ?
                    mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
             }
@@ -2711,7 +2711,7 @@ void P_AddToCollection(MobjCollection *mc, mobj_t *mo)
 {
    if(mc->num >= mc->numalloc)
    {
-      mc->ptrarray = realloc(mc->ptrarray,
+      mc->ptrarray = (mobj_t **)realloc(mc->ptrarray,
          (mc->numalloc = mc->numalloc ?
          mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
    }

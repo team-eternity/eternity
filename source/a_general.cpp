@@ -601,7 +601,7 @@ void A_MissileAttack(mobj_t *actor)
       hastarget = false;
 
    type     = E_ArgAsThingNum(actor->state->args,      0);   
-   homing   = E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
+   homing   = !!E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
    z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(actor->state->args,           3, 0);
    statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);

@@ -92,15 +92,14 @@ void P_InitSwitchList(void)
    if(lumpnum < 0)
       I_Error("P_InitSwitchList: missing SWITCHES lump\n");
 
-   alphSwitchList = 
-      (switchlist_t *)W_CacheLumpNum(lumpnum, PU_STATIC);
+   alphSwitchList = (switchlist_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
 
    for(i = 0; ; i++)
    {
       if(index + 1 >= max_numswitches)
       {
-         switchlist = realloc(switchlist, sizeof(*switchlist) *
-         (max_numswitches = max_numswitches ? max_numswitches * 2 : 8));
+         switchlist = (int *)(realloc(switchlist, sizeof(*switchlist) *
+         (max_numswitches = max_numswitches ? max_numswitches * 2 : 8)));
       }
       if(SwapShort(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
       {
@@ -138,7 +137,7 @@ button_t *P_FindFreeButton(void)
    // if we get here, there are no free buttons. Reallocate.
    oldnumbuttons = numbuttonsalloc;
    numbuttonsalloc = numbuttonsalloc ? numbuttonsalloc * 2 : MAXPLAYERS * 4;
-   buttonlist = realloc(buttonlist, numbuttonsalloc * sizeof(button_t));
+   buttonlist = (button_t *)(realloc(buttonlist, numbuttonsalloc * sizeof(button_t)));
 
    // 05/04/08: be sure all the new buttons are initialized
    for(i = oldnumbuttons; i < numbuttonsalloc; ++i)

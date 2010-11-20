@@ -54,7 +54,7 @@ typedef struct filelump_s
 // haleyjd 07/12/07: altered lumpinfo_t for separation of logical and physical
 // lump fields.
 
-typedef struct lumpinfo_s
+struct lumpinfo_t
 {
    // haleyjd: logical lump data
    char   name[9];
@@ -73,7 +73,8 @@ typedef struct lumpinfo_s
       ns_translations,
       ns_fonts,
       ns_demos
-   } li_namespace;
+   };
+   int li_namespace;
    
    void *cache;  //sf
 
@@ -83,7 +84,8 @@ typedef struct lumpinfo_s
       lump_direct,  // lump accessed via stdio (physical file)
       lump_memory,  // lump is a memory buffer
       lump_numtypes
-   } type;
+   }; 
+   int type;
 
    int source; // haleyjd: unique id # for source of this lump
    
@@ -93,7 +95,7 @@ typedef struct lumpinfo_s
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
 
-} lumpinfo_t;
+};
 
 // directory types
 enum

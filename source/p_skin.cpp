@@ -138,7 +138,7 @@ void P_InitSkins(void)
    if((numskinsprites = numskins - numedfskins) < 0)
       I_Error("P_InitSkins: numedfskins > numskins\n");
 
-   spritelist = malloc((numskinsprites + NUMSPRITES + 1) * sizeof(char *));
+   spritelist = (char **)(malloc((numskinsprites + NUMSPRITES + 1) * sizeof(char *)));
 
    // add the normal sprites
    currentsprite = spritelist;
@@ -210,8 +210,7 @@ static void P_AddSkin(skin_t *newskin)
    if(numskins >= numskinsalloc)
    {
       numskinsalloc = numskinsalloc ? numskinsalloc*2 : 32;
-
-      skins = realloc(skins, numskinsalloc*sizeof(skin_t *));
+      skins = (skint_t **)(realloc(skins, numskinsalloc*sizeof(skin_t *)));
    }
    
    skins[numskins] = newskin;
@@ -228,7 +227,7 @@ static void P_AddSpriteLumps(const char *named)
       {
          // mark as sprites so that W_CoalesceMarkedResource
          // will group them as sprites
-         w_GlobalDir.lumpinfo[i]->li_namespace = ns_sprites;
+         w_GlobalDir.lumpinfo[i]->li_namespace = lumpinfo_t::ns_sprites;
       }
    }
 }
@@ -297,9 +296,9 @@ void P_ParseSkin(int lumpnum)
 
    memset(inputline, 0, 256);
       
-   newskin = Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0);
+   newskin = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
 
-   newskin->spritename = Z_Malloc(5, PU_STATIC, 0);
+   newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
    strncpy(newskin->spritename, w_GlobalDir.lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
@@ -312,7 +311,7 @@ void P_ParseSkin(int lumpnum)
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
-   lump = W_CacheLumpNum(lumpnum, PU_STATIC);  // get the lump
+   lump = (char *)(W_CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
    
    rover = lump; 
    comment = false;
@@ -354,7 +353,7 @@ static void P_CacheFaces(skin_t *skin)
    }
    else
    {
-      skin->faces = Z_Malloc(ST_NUMFACES * sizeof(patch_t *), PU_STATIC, 0);
+      skin->faces = (patch_t **)(Z_Malloc(ST_NUMFACES * sizeof(patch_t *), PU_STATIC, 0));
       ST_CacheFaces(skin->faces, skin->facename);
    }
 }
@@ -482,7 +481,7 @@ static skin_t *P_NextSkin(int player)
 static void P_InitMonsterSkins(void)
 {
    if(!monster_skins)
-      monster_skins = Z_Calloc(NUMSPRITES, sizeof(skin_t *), PU_STATIC, 0);
+      monster_skins = (skin_t **)(Z_Calloc(NUMSPRITES, sizeof(skin_t *), PU_STATIC, 0));
 }
 
 //
@@ -501,7 +500,7 @@ skin_t *P_GetMonsterSkin(spritenum_t sprnum)
 
    if(!monster_skins[sprnum])
    {
-      monster_skins[sprnum] = Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0);
+      monster_skins[sprnum] = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
 
       monster_skins[sprnum]->type = SKIN_MONSTER;
       monster_skins[sprnum]->sprite = sprnum;

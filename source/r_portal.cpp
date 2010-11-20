@@ -87,7 +87,7 @@ static pwindow_t *newPortalWindow()
       unusedhead = unusedhead->next;
    }
    else
-      ret = Z_Malloc(sizeof(pwindow_t), PU_LEVEL, 0);
+      ret = (pwindow_t *)(Z_Malloc(sizeof(pwindow_t), PU_LEVEL, 0));
 
    R_ClearPortalWindow(ret);
    
@@ -258,7 +258,7 @@ static portal_t *R_CreatePortal(void)
 {
    portal_t *ret;
 
-   ret = Z_Malloc(sizeof(portal_t), PU_LEVEL, NULL);
+   ret = (portal_t *)(Z_Malloc(sizeof(portal_t), PU_LEVEL, NULL));
    memset(ret, 0, sizeof(*ret));
 
    if(!portals)
@@ -542,7 +542,7 @@ static void R_RenderPlanePortal(pwindow_t *window)
       }
    }
 
-   if(window->head == window && window->portal->poverlay);
+   if(window->head == window && window->portal->poverlay)
       R_PushPost(false, window->portal->poverlay);
       
    if(window->child)
@@ -627,7 +627,7 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
 
-   if(window->head == window && window->portal->poverlay);
+   if(window->head == window && window->portal->poverlay)
       R_PushPost(false, window->portal->poverlay);
       
    if(window->child)

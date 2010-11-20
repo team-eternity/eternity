@@ -354,7 +354,7 @@ typedef enum
 
 #define NUMLINEARGS 5
 
-typedef struct line_s
+struct line_s
 {
    vertex_t *v1, *v2;     // Vertices, from v1 to v2.
    fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.

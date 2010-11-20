@@ -246,7 +246,7 @@ void I_InitNetwork(void)
 {
    int i, p;
    
-   doomcom = calloc(1, sizeof(*doomcom));
+   doomcom = (doomcom_t *)(calloc(1, sizeof(*doomcom)));
    
    // set up for network
    i = M_CheckParm("-dup");

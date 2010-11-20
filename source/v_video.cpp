@@ -190,7 +190,7 @@ void V_InitColorTranslation(void)
 {
   register const crdef_t *p;
   for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_STATIC);
+    *p->map1 = *p->map2 = (byte *)(W_CacheLumpName(p->name, PU_STATIC));
 }
 
 //
@@ -775,7 +775,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL);
+   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

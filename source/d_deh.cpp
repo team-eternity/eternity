@@ -1041,7 +1041,7 @@ void deh_procThing(DWFILE *fpin, char *line)
 static void deh_createArgList(state_t *state)
 {
    if(!state->args)
-      state->args = calloc(1, sizeof(arglist_t));
+      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t)));
 }
 
 // ====================================================================
@@ -1921,7 +1921,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
    deh_LogPrintf("Processing extended string substitution\n");
 
    if(!holdstring)
-      holdstring = malloc(maxstrlen * sizeof(*holdstring));
+      holdstring = (char *)(malloc(maxstrlen * sizeof(*holdstring)));
 
    *holdstring = '\0'; // empty string to start with
 
@@ -1956,7 +1956,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
          deh_LogPrintf("* Increased buffer from to %d for buffer size %d\n",
                        maxstrlen, (int)strlen(inbuffer));
 
-         holdstring = realloc(holdstring,maxstrlen*sizeof(*holdstring));
+         holdstring = (char *)(realloc(holdstring,maxstrlen*sizeof(*holdstring)));
       }
       // concatenate the whole buffer if continuation or the value iffirst
       strcat(holdstring,ptr_lstrip(((*holdstring) ? inbuffer : strval)));

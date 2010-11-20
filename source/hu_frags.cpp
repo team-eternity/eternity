@@ -105,7 +105,7 @@ void HU_FragsDrawer(void)
       // haleyjd 01/12/04: changed translation handling
 
       V_DrawPatchTranslated(FRAGNUMX, y, &vbscreen,
-                            W_CacheLumpName("HU_FRGBX", PU_CACHE),
+                            (patch_t *)W_CacheLumpName("HU_FRGBX", PU_CACHE),
                             sortedplayers[i]->colormap ?
                             translationtables[(sortedplayers[i]->colormap - 1)] :
                             NULL, false);

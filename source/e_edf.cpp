@@ -609,7 +609,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
       return 1;
    }
 
-   currentpath = Z_Alloca(strlen(cfg->filename) + 1);
+   currentpath = (char *)(Z_Alloca(strlen(cfg->filename) + 1));
    M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
    len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
@@ -1119,8 +1119,8 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
       E_ParseLumpRecursive(cfg, name, w_GlobalDir.lumpinfo[ln]->next);
 
       // handle this lump
-      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) && // name match
-         w_GlobalDir.lumpinfo[ln]->li_namespace == ns_global)     // is global
+      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) &&         // name match
+         w_GlobalDir.lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
       {
          int err;
 
@@ -1253,7 +1253,7 @@ static void E_ProcessItems(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing pickup items\n");
 
    // allocate and initialize pickup effects array
-   pickupfx  = Z_Malloc(NUMSPRITES * sizeof(int), PU_STATIC, 0);
+   pickupfx  = (int *)(Z_Malloc(NUMSPRITES * sizeof(int), PU_STATIC, 0));
    
    for(i = 0; i < NUMSPRITES; ++i)
       pickupfx[i] = PFX_NONE;
@@ -1395,8 +1395,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = calloc(sizeof(castinfo_t), max_castorder + 1);
-   ci_order  = calloc(sizeof(cfg_t *), max_castorder);
+   castorder = (castinfo_t *)(calloc(sizeof(castinfo_t), max_castorder + 1));
+   ci_order  = (cfg_t **)    (calloc(sizeof(cfg_t *),    max_castorder));
 
    if(numcastorder > 0)
    {
@@ -1452,7 +1452,7 @@ static void E_ProcessCast(cfg_t *cfg)
          castorder[i].name = strdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
-      castorder[i].stopattack = cfg_getbool(castsec, ITEM_CAST_SA);
+      castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
 
       // process sound blocks (up to four will be processed)
       tempint = cfg_size(castsec, ITEM_CAST_SOUND);
@@ -1553,8 +1553,8 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    }
 
    NumBossTypes = numTypes;
-   BossSpawnTypes = malloc(numTypes * sizeof(int));
-   BossSpawnProbs = malloc(numTypes * sizeof(int));
+   BossSpawnTypes = (int *)(malloc(numTypes * sizeof(int)));
+   BossSpawnProbs = (int *)(malloc(numTypes * sizeof(int)));
 
    // load boss spawn probabilities
    for(i = 0; i < numTypes; ++i)

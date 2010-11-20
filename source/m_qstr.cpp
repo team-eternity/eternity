@@ -59,7 +59,7 @@
 //
 qstring_t *QStrCreateSize(qstring_t *qstr, size_t size)
 {
-   qstr->buffer = realloc(qstr->buffer, size);
+   qstr->buffer = (char *)(realloc(qstr->buffer, size));
    qstr->size   = size;
    qstr->index  = 0;
    memset(qstr->buffer, 0, size);
@@ -196,7 +196,7 @@ qstring_t *QStrGrow(qstring_t *qstr, size_t len)
 {   
    size_t newsize = qstr->size + len;
 
-   qstr->buffer = realloc(qstr->buffer, newsize);
+   qstr->buffer = (char *)(realloc(qstr->buffer, newsize));
    memset(qstr->buffer + qstr->size, 0, len);
    qstr->size += len;
    

@@ -206,7 +206,8 @@ typedef enum {
 } weapontype_t;
 
 // Ammunition types defined.
-typedef enum {
+enum 
+{
   am_clip,    // Pistol / chaingun ammo.
   am_shell,   // Shotgun / double barreled shotgun.
   am_cell,    // Plasma rifle, BFG.
@@ -214,7 +215,8 @@ typedef enum {
   
   NUMAMMO,
   am_noammo   // Unlimited for chainsaw / fist.
-} ammotype_t;
+};
+typedef int ammotype_t;
 
 // Power up artifacts.
 typedef enum {

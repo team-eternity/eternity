@@ -705,7 +705,7 @@ boolean PIT_CheckLine(line_t *ld)
       if(clip.numspechit >= clip.spechit_max)
       {
          clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
+         clip.spechit = (line_t **)(realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max));
       }
       clip.spechit[clip.numspechit++] = ld;
 
@@ -2394,7 +2394,7 @@ static msecnode_t *P_GetSecnode(void)
    
    return headsecnode ?
       node = headsecnode, headsecnode = node->m_snext, node :
-      Z_Malloc(sizeof *node, PU_LEVEL, NULL); 
+      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 
 //
