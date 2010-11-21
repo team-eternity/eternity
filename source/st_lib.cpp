@@ -197,7 +197,7 @@ void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
 //
 // jff 2/16/98 add color translation to digit output
 //
-void STlib_updatePercent(st_percent_t *per, byte *outrng, int refresh, int alpha)
+void STlib_updatePercent(st_percent_t *per, byte *outrng, boolean refresh, int alpha)
 {
    if(refresh || *per->n.on) // killough 2/21/98: fix percents not updated;
    {

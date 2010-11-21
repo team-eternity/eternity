@@ -649,10 +649,10 @@ void E_CollectThings(cfg_t *tcfg)
    metatable_t *metatables;
 
    // allocate array
-   mobjinfo = calloc(NUMMOBJTYPES, sizeof(mobjinfo_t));
+   mobjinfo = (mobjinfo_t *)(calloc(NUMMOBJTYPES, sizeof(mobjinfo_t)));
 
    // 08/17/09: allocate metatables
-   metatables = calloc(NUMMOBJTYPES, sizeof(metatable_t));
+   metatables = (metatable_t *)(calloc(NUMMOBJTYPES, sizeof(metatable_t)));
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)
@@ -813,7 +813,7 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
                          METATYPE(metaobject_t), &metaStateMethods);
    }
 
-   newMetaState = calloc(1, sizeof(metastate_t));
+   newMetaState = (metastate_t *)(calloc(1, sizeof(metastate_t)));
 
    newMetaState->state = state;
 

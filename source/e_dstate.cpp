@@ -1883,7 +1883,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
    // We have counted the number of stops after labels exactly.
    if(DSP.numstops)
    {
-      newdso->killstates = (ekilstate_t *)(calloc(DSP.numstops, sizeof(*newdso->killstates)));
+      newdso->killstates = (ekillstate_t *)(calloc(DSP.numstops, sizeof(*newdso->killstates)));
       newdso->numkillsalloc = DSP.numstops;
    }
 

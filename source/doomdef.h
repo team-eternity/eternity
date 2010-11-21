@@ -124,6 +124,7 @@ extern cb_video_t video;
 // at the intermission screen, the game final animation, or a demo.
 
 typedef enum {
+  GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
   GS_LEVEL,
   GS_INTERMISSION,
   GS_FINALE,

@@ -190,7 +190,7 @@ void F_Ticker(void)
             // no wipe before Heretic E2 or E3 finales
             if(LevelInfo.finaleType != FINALE_HTIC_WATER &&
                LevelInfo.finaleType != FINALE_HTIC_DEMON)
-               wipegamestate = -1;     // force a wipe
+               wipegamestate = GS_NOSTATE;     // force a wipe
 
             // special actions
             switch(LevelInfo.finaleType)
@@ -374,7 +374,7 @@ void F_StartCast(void)
          castorder[i].name = DEH_String(oldnames[i]);
    }
 
-   wipegamestate = -1;         // force a screen wipe
+   wipegamestate = GS_NOSTATE;         // force a screen wipe
    castnum = 0;
    caststate = states[mobjinfo[castorder[castnum].type].seestate];
    casttics = caststate->tics;
@@ -575,7 +575,7 @@ void F_CastDrawer(void)
    
    sprframe = &sprdef->spriteframes[caststate->frame & FF_FRAMEMASK];
    lump = sprframe->lump[0];
-   flip = (boolean)sprframe->flip[0];
+   flip = !!sprframe->flip[0];
    
    patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
    if(flip)

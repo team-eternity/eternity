@@ -377,7 +377,7 @@ void E_CollectStates(cfg_t *cfg)
    if(numnew)
    {
       // allocate state_t structures for the new states
-      statestructs = calloc(numnew, sizeof(state_t));
+      statestructs = (state_t *)(calloc(numnew, sizeof(state_t)));
 
       // add space to the states array
       curnewstate = firstnewstate = NUMSTATES;
@@ -476,7 +476,7 @@ void E_CollectStates(cfg_t *cfg)
 void E_CreateArgList(state_t *state)
 {
    if(!state->args)
-      state->args = calloc(1, sizeof(arglist_t)); // create one
+      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t))); // create one
    else
       E_DisposeArgs(state->args);                 // clear it out
 }

@@ -182,10 +182,10 @@ boolean *mousebuttons = &mousearray[1];    // allow [-1]
 int mousex;
 int mousey;
 int dclicktime;
-int dclickstate;
+boolean dclickstate;
 int dclicks;
 int dclicktime2;
-int dclickstate2;
+boolean dclickstate2;
 int dclicks2;
 
 // joystick values are repeated
@@ -260,7 +260,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
-   strafe = action_strafe;
+   strafe = !!action_strafe;
    //speed = autorun || action_speed;
    speed = (autorun ? !(runiswalk && action_speed) : action_speed);
    
@@ -461,7 +461,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else if((dclicktime += ticdup) > 20)
    {
       dclicks = 0;
-      dclickstate = 0;
+      dclickstate = false;
    }
 
    // strafe double click
@@ -485,7 +485,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else if((dclicktime2 += ticdup) > 20)
    {
       dclicks2 = 0;
-      dclickstate2 = 0;
+      dclickstate2 = false;
    }
 
    // sf: smooth out the mouse movement
@@ -696,7 +696,7 @@ static void G_DoLoadLevel(void)
    else
    {  // sf: no screen wipe while changing hub level
       if(wipegamestate == GS_LEVEL)
-         wipegamestate = -1;             // force a wipe
+         wipegamestate = GS_NOSTATE;             // force a wipe
    }
 }
 
@@ -826,9 +826,9 @@ boolean G_Responder(event_t* ev)
       return false;   // always let key up events filter down
       
    case ev_mouse:
-      mousebuttons[0] = ev->data1 & 1;
-      mousebuttons[1] = ev->data1 & 2;
-      mousebuttons[2] = ev->data1 & 4;
+      mousebuttons[0] = !!(ev->data1 & 1);
+      mousebuttons[1] = !!(ev->data1 & 2);
+      mousebuttons[2] = !!(ev->data1 & 4);
 
       // SoM: this mimics the doom2 behavior better. 
       mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
@@ -1089,15 +1089,15 @@ static void G_DoPlayDemo(void)
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
-      if((skill = demover) >= 100)         // For demos from versions >= 1.4
+      if((skill = (skill_t)demover) >= 100)         // For demos from versions >= 1.4
       {
-         skill = *demo_p++;
+         skill = (skill_t)(*demo_p++);
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = *demo_p++;
-         respawnparm = *demo_p++;
-         fastparm = *demo_p++;
-         nomonsters = *demo_p++;
+         deathmatch = !!(*demo_p++);
+         respawnparm = !!(*demo_p++);
+         fastparm = !!(*demo_p++);
+         nomonsters = !!(*demo_p++);
          consoleplayer = *demo_p++;
       }
       else
@@ -1137,10 +1137,10 @@ static void G_DoPlayDemo(void)
       }
       
       compatibility = *demo_p++;       // load old compatibility flag
-      skill = *demo_p++;
+      skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
       map = *demo_p++;
-      deathmatch = *demo_p++;
+      deathmatch = !!(*demo_p++);
       consoleplayer = *demo_p++;
 
       // haleyjd 10/08/06: determine longtics support in new demos
@@ -1180,14 +1180,14 @@ static void G_DoPlayDemo(void)
    if(demo_compatibility)  // only 4 players can exist in old demos
    {
       for(i=0; i<4; i++)  // intentionally hard-coded 4 -- killough
-         playeringame[i] = *demo_p++;
+         playeringame[i] = !!(*demo_p++);
       for(;i < MAXPLAYERS; i++)
          playeringame[i] = 0;
    }
    else
    {
       for(i = 0; i < MAXPLAYERS; ++i)
-         playeringame[i] = *demo_p++;
+         playeringame[i] = !!(*demo_p++);
       demo_p += MIN_MAXPLAYERS - MAXPLAYERS;
    }
 
@@ -1213,7 +1213,7 @@ static void G_DoPlayDemo(void)
    {
       // dmflags was already set above,
       // "deathmatch" now holds the game type
-      GameType = deathmatch;
+      GameType = (gametype_t)deathmatch;
    }
    
    // don't spend a lot of time in loadlevel
@@ -1989,7 +1989,7 @@ static void G_DoLoadGame(void)
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01   
    
-   gameskill = *save_p++;
+   gameskill = (skill_t)(*save_p++);
 
    // haleyjd 06/16/10: reload "inmasterlevels" state
    inmasterlevels = *save_p++;
@@ -2021,7 +2021,7 @@ static void G_DoLoadGame(void)
       waddir_t *dir;
 
       // read a name of len bytes 
-      char *fn = calloc(1, len);
+      char *fn = (char *)(calloc(1, len));
       memcpy(fn, save_p, len);
       save_p += len;
 
@@ -2043,7 +2043,7 @@ static void G_DoLoadGame(void)
 
       if(memcmp(&checksum, save_p, sizeof checksum))
       {
-         char *msg = calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128);
+         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
             strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
@@ -2069,7 +2069,7 @@ static void G_DoLoadGame(void)
 
    // haleyjd 04/14/03: game type
    // note: don't set DefaultGameType from save games
-   GameType = *save_p++;
+   GameType = (gametype_t)(*save_p++);
 
    /* cph 2001/05/23 - Must read options before we set up the level */
    G_ReadOptions(save_p);
@@ -3066,7 +3066,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 
    if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
-      speedset_t *ss  = o->object;
+      speedset_t *ss  = (speedset_t *)(o->object);
       ss->normalSpeed = nspeed;
       ss->fastSpeed   = fspeed;
    }

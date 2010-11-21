@@ -640,7 +640,8 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
                  void *result)
 {
-   const char *endptr, *pctloc;
+   char *endptr;
+   const char *pctloc;
 
    // test for a percent sign (start looking at end)
    pctloc = strrchr(value, '%');

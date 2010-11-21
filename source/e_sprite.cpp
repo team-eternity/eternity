@@ -147,7 +147,7 @@ void E_ProcessSprites(cfg_t *cfg)
 
    // 10/17/03: allocate a single array of sprite objects to save a lot of
    // memory and some time.
-   sprites = calloc(numarraysprites, sizeof(*sprites));
+   sprites = (esprite_t *)(calloc(numarraysprites, sizeof(*sprites)));
 
    // process each spritename
    for(i = 0; i < numarraysprites; ++i)
@@ -184,7 +184,7 @@ boolean E_ProcessSingleSprite(const char *sprname)
       return false;
 
    // allocate separate storage for implicit sprites
-   spr = calloc(1, sizeof(*spr));
+   spr = (esprite_t *)(calloc(1, sizeof(*spr)));
 
    // try adding it; if this fails, we need to free spr
    if(!E_AddSprite(sprname, spr))

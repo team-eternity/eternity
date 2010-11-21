@@ -206,7 +206,7 @@ void D_ProcessEvents(void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 
-gamestate_t    oldgamestate  = -1;  // sf: globaled
+gamestate_t    oldgamestate  = GS_NOSTATE;  // sf: globaled
 gamestate_t    wipegamestate = GS_DEMOSCREEN;
 void           R_ExecuteSetViewSize(void);
 camera_t       *camera;
@@ -3480,7 +3480,7 @@ void D_DoomMain(void)
    // haleyjd 02/23/04: fix problems with -warp
    if(autostart)
    {
-      oldgamestate = -1;
+      oldgamestate = GS_NOSTATE;
       redrawborder = true;
    }
 
