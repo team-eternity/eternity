@@ -658,7 +658,7 @@ void F_DrawUnderwater(void)
       // fall through
    case 3:
       Console.enabled = false; // let console key fall through
-      paused = false;
+      paused = 0;
       menuactive = false;
       break;
    

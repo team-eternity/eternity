@@ -242,7 +242,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          else
          {  
             // use start map 
-            G_DeferedInitNew(defaultskill - 1, "START");
+            G_DeferedInitNew((skill_t)(defaultskill - 1), "START");
             MN_ClearMenus();
          }
       }
@@ -428,20 +428,20 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    if(mn_episode_override)
    {
       if(start_mapname) // if set, use name, else use episode num as usual
-         G_DeferedInitNew(skill, start_mapname);
+         G_DeferedInitNew((skill_t)skill, start_mapname);
       else
-         G_DeferedInitNewNum(skill, start_episode, 1);
+         G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    else if(GameModeInfo->id == commercial && modifiedgame && startOnNewMap)
    {  
       // haleyjd 03/02/03: changed to use startOnNewMap config variable
       // start on newest level from wad
-      G_DeferedInitNew(skill, firstlevel);
+      G_DeferedInitNew((skill_t)skill, firstlevel);
    }
    else
    {
       // start on first level of selected episode
-      G_DeferedInitNewNum(skill, start_episode, 1);
+      G_DeferedInitNewNum((skill_t)skill, start_episode, 1);
    }
    
    MN_ClearMenus();
@@ -2095,10 +2095,10 @@ static void MN_BuildJSTables(void)
       char tempstr[20];
 
       // allocate arrays
-      mn_js_desc = (char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
-                                      PU_STATIC, NULL));
-      mn_js_cmds = (char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
-                                      PU_STATIC, NULL));
+      mn_js_desc = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
+                                            PU_STATIC, NULL));
+      mn_js_cmds = (const char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
+                                            PU_STATIC, NULL));
       
       mn_js_desc[0] = "none";
       mn_js_cmds[0] = "i_joystick -1";

@@ -750,7 +750,7 @@ char *M_HashDigestToStr(hashdata_t *hash)
    numdigest = HashAlgorithms[hash->type].numdigest;
    size = (8 * numdigest + 1) * sizeof(char);
    
-   c = buffer = calloc(1, size);
+   c = buffer = (char *)(calloc(1, size));
    
    for(i = 0; i < numdigest; ++i)
    {

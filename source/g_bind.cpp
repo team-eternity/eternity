@@ -131,6 +131,13 @@ int action_console_backspace;
 // Handler Functions
 //
 
+enum
+{
+   at_variable,
+   at_function,
+   at_conscmd,     // console command
+};
+
 //
 // Actions List
 //
@@ -142,12 +149,7 @@ typedef struct keyaction_s
    // haleyjd 07/03/04: key binding classes
    int bclass;
    
-   enum keyactiontype
-   {
-      at_variable,
-      at_function,
-      at_conscmd,     // console command
-   } type;
+   int type;
    
    union keyactiondata
    {

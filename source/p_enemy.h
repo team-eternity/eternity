@@ -50,9 +50,9 @@ extern fixed_t yspeed[8];
 boolean P_CheckMissileRange(mobj_t *actor);
 boolean P_HelpFriend(mobj_t *actor);
 boolean P_HitFriend(mobj_t *actor);
-boolean P_LookForPlayers(mobj_t *actor, boolean allaround);
+boolean P_LookForPlayers(mobj_t *actor, int allaround);
 boolean P_LookForTargets(mobj_t *actor, int allaround);
-boolean P_Move(mobj_t *actor, boolean dropoff); // killough 9/12/98
+int     P_Move(mobj_t *actor, int dropoff); // killough 9/12/98
 void    P_NewChaseDir(mobj_t *actor);
 boolean P_SmartMove(mobj_t *actor);
 

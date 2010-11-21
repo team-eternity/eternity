@@ -309,12 +309,12 @@ static void MN_SkinDrawer(void)
    if(sprframe->rotate)
    {
       lump = sprframe->lump[skview_rot];
-      flip = (boolean)sprframe->flip[skview_rot];
+      flip = !!sprframe->flip[skview_rot];
    }
    else
    {
       lump = sprframe->lump[0];
-      flip = (boolean)sprframe->flip[0];
+      flip = !!sprframe->flip[0];
    }
 
    // cache the sprite patch -- watch out for "firstspritelump"!

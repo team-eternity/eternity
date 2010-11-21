@@ -89,7 +89,7 @@ typedef struct st_binicon_s
 {
    int      x;      // center-justified location of icon
    int      y;
-   int      oldval; // last icon value
+   boolean  oldval; // last icon value
    boolean *val;    // pointer to current icon status
    boolean *on;     // pointer to boolean stating whether to update icon
    patch_t *p;      // icon

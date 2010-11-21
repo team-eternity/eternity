@@ -879,7 +879,9 @@ default_t defaults[] =
    
 #endif
 
-   { NULL }         // last entry
+   // last entry
+   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
+     NULL, M_ZEROFIELDS }
 };
 
 //
@@ -1329,23 +1331,17 @@ static boolean M_writeDefaultBool(default_t *dp, FILE *f)
 static void M_setDefaultValueBool(default_t *dp, void *value, boolean wad)
 {
    boolean parm = *(boolean *)value;
-
-   //jff 3/4/98 range check numeric parameters
-   if((dp->limit.min == UL || dp->limit.min <= parm) &&
-      (dp->limit.max == UL || dp->limit.max >= parm))
+   if(wad)
    {
-      if(wad)
+      if(!dp->modified) // First time it's modified by wad
       {
-         if(!dp->modified) // First time it's modified by wad
-         {
-            dp->modified = 1;                               // Mark it as modified
-            dp->orig_default_b = *(boolean *)dp->location;  // Save original default
-         }
-         if(dp->current)            // Change current value
-            *(boolean *)dp->current = !!parm;
+         dp->modified = 1;                               // Mark it as modified
+         dp->orig_default_b = *(boolean *)dp->location;  // Save original default
       }
-      *(boolean *)dp->location = !!parm;  // Change default
+      if(dp->current)            // Change current value
+         *(boolean *)dp->current = !!parm;
    }
+   *(boolean *)dp->location = !!parm;  // Change default
 }
 
 // Reads the value of a boolean option from a string and sets it
@@ -1869,7 +1865,7 @@ int M_ReadFile(char const *name, byte **buffer)
       length = ftell(fp);
       fseek(fp, 0, SEEK_SET);
 
-      *buffer = calloc(1, length);
+      *buffer = (byte *)(calloc(1, length));
       
       if(fread(*buffer, 1, length, fp) == length)
       {
@@ -2158,7 +2154,7 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 
    ++len;
 
-   *str = Z_Alloca(len);
+   *str = (char *)(Z_Alloca(len));
 
    return len;
 }

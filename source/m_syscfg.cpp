@@ -196,7 +196,9 @@ static default_t sysdefaults[] =
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 
-   { NULL }
+   // last entry
+   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
+     NULL, M_ZEROFIELDS }
 };
 
 //

@@ -288,7 +288,7 @@ void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i,
 {
    b->x      = x;
    b->y      = y;
-   b->oldval = 0;
+   b->oldval = false;
    b->val    = val;
    b->on     = on;
    b->p      = i;

@@ -316,7 +316,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
             plat->high = sec->floorheight;
          
          plat->wait = 35*PLATWAIT;
-         plat->status = P_Random(pr_plats) & 1;
+         plat->status = (P_Random(pr_plats) & 1) ? down : up;
          
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;

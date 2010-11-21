@@ -113,7 +113,7 @@ static gunaction_t *P_GetGunAction(void)
       freegunactions = ret->next;
    }
    else
-      ret = calloc(1, sizeof(gunaction_t));
+      ret = (gunaction_t *)(calloc(1, sizeof(gunaction_t)));
 
    return ret;
 }
@@ -382,11 +382,11 @@ int weapon_preferences[2][NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-int P_SwitchWeapon(player_t *player)
+weapontype_t P_SwitchWeapon(player_t *player)
 {
    int *prefer = weapon_preferences[demo_compatibility != 0]; // killough 3/22/98
-   int currentweapon = player->readyweapon;
-   int newweapon = currentweapon;
+   weapontype_t currentweapon = player->readyweapon;
+   weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
    // killough 2/8/98: follow preferences and fix BFG/SSG bugs

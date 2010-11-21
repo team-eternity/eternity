@@ -315,7 +315,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
-                       useAgain, sound); // start timer
+                       !!useAgain, sound); // start timer
          
          return;
       }
@@ -324,7 +324,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
-                       useAgain, sound); // start timer
+                       !!useAgain, sound); // start timer
          
          return;
       }
@@ -333,7 +333,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
-                       useAgain, sound); // start timer
+                       !!useAgain, sound); // start timer
          
          return;
       }

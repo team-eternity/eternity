@@ -63,7 +63,7 @@ static void R_LowDrawColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       
@@ -155,7 +155,7 @@ static void R_LowDrawTLColumn(void)
    // killough 2/1/98, 2/21/98: more performance tuning
    
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       
@@ -254,7 +254,7 @@ static void R_LowDrawTLTRColumn(void)
    // killough 2/1/98, 2/21/98: more performance tuning
    
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
@@ -393,7 +393,7 @@ static void R_LowDrawTRColumn(void)
 
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
@@ -481,7 +481,7 @@ static void R_LowDrawFlexColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if (column.texheight & heightmask)   // not a power of 2 -- killough
@@ -601,7 +601,7 @@ static void R_LowDrawFlexTRColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if (column.texheight & heightmask)   // not a power of 2 -- killough
@@ -720,7 +720,7 @@ static void R_LowDrawAddColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
@@ -857,7 +857,7 @@ static void R_LowDrawAddTRColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough

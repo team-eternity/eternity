@@ -611,7 +611,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
-      else if(!sec->c_pflags & PS_VISIBLE)
+      else if(!(sec->c_pflags & PS_VISIBLE))
       {
          tempsec->c_portal = NULL;
          tempsec->c_pflags = 0;
@@ -632,7 +632,7 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             
          sec = tempsec;
       }
-      else if(!sec->f_pflags & PS_VISIBLE)
+      else if(!(sec->f_pflags & PS_VISIBLE))
       {
          tempsec->f_portal = NULL;
          tempsec->f_pflags = 0;

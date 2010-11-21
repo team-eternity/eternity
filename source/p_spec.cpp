@@ -196,7 +196,7 @@ void P_InitPicAnims(void)
          lastanim->basepic = R_FindFlat(animdefs[i].startname);
       }
       
-      lastanim->istexture = animdefs[i].istexture;
+      lastanim->istexture = !!animdefs[i].istexture;
       lastanim->numpics = lastanim->picnum - lastanim->basepic + 1;
       lastanim->speed = SwapLong(animdefs[i].speed); // killough 5/5/98: add LONG()
 
@@ -2771,30 +2771,30 @@ void P_SpawnSpecials(int mapformat)
       case 283:
       case 284:
       case 285:
-         P_SpawnPortal(&lines[i], portal_plane, lines[i].special - 283);
+         P_SpawnPortal(&lines[i], portal_plane, (portal_effect)(lines[i].special - 283));
          break;
       case 286:
       case 287:
       case 288:
-         P_SpawnPortal(&lines[i], portal_horizon, lines[i].special - 286);
+         P_SpawnPortal(&lines[i], portal_horizon, (portal_effect)(lines[i].special - 286));
          break;
       case 290:
       case 291:
       case 292:
-         P_SpawnPortal(&lines[i], portal_skybox, lines[i].special - 290);
+         P_SpawnPortal(&lines[i], portal_skybox, (portal_effect)(lines[i].special - 290));
          break;
       case 295:
       case 296:
       case 297:
-         P_SpawnPortal(&lines[i], portal_anchored, lines[i].special - 295);
+         P_SpawnPortal(&lines[i], portal_anchored, (portal_effect)(lines[i].special - 295));
          break;
       case 344:
       case 345:
-         P_SpawnPortal(&lines[i], portal_twoway, lines[i].special - 344);
+         P_SpawnPortal(&lines[i], portal_twoway, (portal_effect)(lines[i].special - 344));
          break;
       case 358:
       case 359:
-         P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 358);
+         P_SpawnPortal(&lines[i], portal_linked, (portal_effect)(lines[i].special - 358));
          break;
       case 376:
          P_SpawnPortal(&lines[i], portal_linked, portal_lineonly);
@@ -2920,25 +2920,25 @@ void T_Scroll(scroll_t *s)
       msecnode_t *node;
       mobj_t *thing;
 
-   case sc_side:                   // killough 3/7/98: Scroll wall texture
+   case scroll_t::sc_side:          // killough 3/7/98: Scroll wall texture
       side = sides + s->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
       break;
 
-   case sc_floor:                  // killough 3/7/98: Scroll floor texture
+   case scroll_t::sc_floor:         // killough 3/7/98: Scroll floor texture
       sec = sectors + s->affectee;
       sec->floor_xoffs += dx;
       sec->floor_yoffs += dy;
       break;
 
-   case sc_ceiling:               // killough 3/7/98: Scroll ceiling texture
+   case scroll_t::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + s->affectee;
       sec->ceiling_xoffs += dx;
       sec->ceiling_yoffs += dy;
       break;
 
-   case sc_carry:
+   case scroll_t::sc_carry:
       
       // killough 3/7/98: Carry things on floor
       // killough 3/20/98: use new sector list which reflects true members
@@ -2969,7 +2969,7 @@ void T_Scroll(scroll_t *s)
       }
       break;
 
-   case sc_carry_ceiling:       // to be added later
+   case scroll_t::sc_carry_ceiling:   // to be added later
       break;
    }
 }
@@ -3030,7 +3030,7 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 
    x = (int)((dy * -l->dy - dx * l->dx) / d);  // killough 10/98:
    y = (int)((dy * l->dx - dx * l->dy) / d);   // Use 64-bit arithmetic
-   Add_Scroller(sc_side, x, y, control, *l->sidenum, accel);
+   Add_Scroller(scroll_t::sc_side, x, y, control, *l->sidenum, accel);
 }
 
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
@@ -3079,13 +3079,13 @@ static void P_SpawnScrollers(void)
 
       case 250:   // scroll effect ceiling
          for(s=-1; (s = P_FindSectorFromLineTag(l,s)) >= 0;)
-            Add_Scroller(sc_ceiling, -dx, dy, control, s, accel);
+            Add_Scroller(scroll_t::sc_ceiling, -dx, dy, control, s, accel);
          break;
 
       case 251:   // scroll effect floor
       case 253:   // scroll and carry objects on floor
          for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
-            Add_Scroller(sc_floor, -dx, dy, control, s, accel);
+            Add_Scroller(scroll_t::sc_floor, -dx, dy, control, s, accel);
          if(special != 253)
             break;
 
@@ -3093,7 +3093,7 @@ static void P_SpawnScrollers(void)
          dx = FixedMul(dx,CARRYFACTOR);
          dy = FixedMul(dy,CARRYFACTOR);
          for(s=-1; (s = P_FindSectorFromLineTag(l,s)) >= 0;)
-            Add_Scroller(sc_carry, dx, dy, control, s, accel);
+            Add_Scroller(scroll_t::sc_carry, dx, dy, control, s, accel);
          break;
 
          // killough 3/1/98: scroll wall according to linedef
@@ -3108,16 +3108,16 @@ static void P_SpawnScrollers(void)
 
       case 255:    // killough 3/2/98: scroll according to sidedef offsets
          s = lines[i].sidenum[0];
-         Add_Scroller(sc_side, -sides[s].textureoffset,
+         Add_Scroller(scroll_t::sc_side, -sides[s].textureoffset,
                       sides[s].rowoffset, -1, s, accel);
          break;
 
       case 48:                  // scroll first side
-         Add_Scroller(sc_side,  FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
+         Add_Scroller(scroll_t::sc_side,  FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
          break;
          
       case 85:                  // jff 1/30/98 2-way scroll
-         Add_Scroller(sc_side, -FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
+         Add_Scroller(scroll_t::sc_side, -FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
          break;
       }
    }
@@ -3496,7 +3496,7 @@ void T_Pusher(pusher_t *p)
    //
    //    Apply nothing at any time!
 
-   if(p->type == p_push)
+   if(p->type == pusher_t::p_push)
    {
       // Seek out all pushable things within the force radius of this
       // point pusher. Crosses sectors, so use blockmap.
@@ -3532,7 +3532,7 @@ void T_Pusher(pusher_t *p)
          (thing->flags2 & MF2_NOTHRUST) ||                // haleyjd
          (thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
          continue;
-      if(p->type == p_wind)
+      if(p->type == pusher_t::p_wind)
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
@@ -3639,18 +3639,18 @@ static void P_SpawnPushers(void)
       {
       case 224: // wind
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
-            Add_Pusher(p_wind,l->dx,l->dy,NULL,s);
+            Add_Pusher(pusher_t::p_wind, l->dx, l->dy, NULL, s);
          break;
       case 225: // current
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
-            Add_Pusher(p_current,l->dx,l->dy,NULL,s);
+            Add_Pusher(pusher_t::p_current, l->dx, l->dy, NULL, s);
          break;
       case 226: // push/pull
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
          {
             thing = P_GetPushThing(s);
             if(thing) // No P* means no effect
-               Add_Pusher(p_push,l->dx,l->dy,thing,s);
+               Add_Pusher(pusher_t::p_push, l->dx, l->dy, thing, s);
          }
          break;
       }
@@ -4442,7 +4442,7 @@ void P_ConvertHereticSpecials(void)
          sector->hticPushAngle = 0;
          sector->hticPushForce = 2048*28;
          // scrolls to the east:
-         Add_Scroller(sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
+         Add_Scroller(scroll_t::sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
          sector->special = 0;
          continue;
       case 5: // Damage_LavaWimpy
@@ -4483,7 +4483,7 @@ void P_ConvertHereticSpecials(void)
          sector->hticPushType  = sector->special;
          sector->hticPushAngle = 0;
          sector->hticPushForce = pushForces[sector->special - 20];         
-         Add_Scroller(sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
+         Add_Scroller(scroll_t::sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
                       0, -1, sector-sectors, 0);
          sector->special = 0;
       }

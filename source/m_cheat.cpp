@@ -117,25 +117,25 @@ struct cheat_s cheat[] = {
    cheat_mus,      -2},
 
   {"idchoppers", "Chainsaw",          not_net | not_demo,
-   cheat_choppers },
+   cheat_choppers, 0 },
 
   {"iddqd",      "God mode",          not_net | not_demo,
-   cheat_god      },
+   cheat_god, 0  },
 
   {"idk",        NULL,                not_net | not_demo | not_deh,
-   cheat_k },  // The most controversial cheat code in Doom history!!!
+   cheat_k, 0 },  // The most controversial cheat code in Doom history!!!
 
   {"idkfa",      "Ammo & Keys",       not_net | not_demo,
-   cheat_kfa },
+   cheat_kfa, 0 },
 
   {"idfa",       "Ammo",              not_net | not_demo,
-   cheat_fa  },
+   cheat_fa, 0  },
 
   {"idspispopd", "No Clipping 1",     not_net | not_demo,
-   cheat_noclip },
+   cheat_noclip, 0 },
 
   {"idclip",     "No Clipping 2",     not_net | not_demo,
-   cheat_noclip },
+   cheat_noclip, 0 },
 
   {"idbeholdv",  "Invincibility",     not_net | not_demo,
    cheat_pw,  pw_invulnerability },
@@ -156,37 +156,37 @@ struct cheat_s cheat[] = {
    cheat_pw,  pw_infrared        },
 
   {"idbehold",   "BEHOLD menu",       not_net | not_demo,
-   cheat_behold   },
+   cheat_behold, 0 },
 
   {"idclev",     "Level Warp",        not_net | not_demo | not_menu,
    cheat_clev,    -2},
 
   {"idmypos",    "Player Position",   not_net | not_demo,
-   cheat_mypos    },
+   cheat_mypos, 0    },
 
   {"comp",    NULL,                   not_net | not_demo,
-   cheat_comp     },     // phares
+   cheat_comp, 0     },     // phares
 
   {"killem",     NULL,                not_net | not_demo,
-   cheat_massacre },     // jff 2/01/98 kill all monsters
+   cheat_massacre, 0 },     // jff 2/01/98 kill all monsters
 
   {"iddt",       "Map cheat",         not_dm,
-   cheat_ddt      },     // killough 2/07/98: moved from am_map.c
+   cheat_ddt, 0      },     // killough 2/07/98: moved from am_map.c
 
   {"hom",     NULL,                   always,
-   cheat_hom      },     // killough 2/07/98: HOM autodetector
+   cheat_hom, 0      },     // killough 2/07/98: HOM autodetector
 
   {"key",     NULL,                   not_net | not_demo, 
-   cheat_key   },     // killough 2/16/98: generalized key cheats
+   cheat_key, 0   },     // killough 2/16/98: generalized key cheats
 
   {"keyr",    NULL,                   not_net | not_demo,
-   cheat_keyx  },
+   cheat_keyx, 0  },
 
   {"keyy",    NULL,                   not_net | not_demo,
-   cheat_keyx  },
+   cheat_keyx, 0  },
 
   {"keyb",    NULL,                   not_net | not_demo,
-   cheat_keyx  },
+   cheat_keyx, 0  },
 
   {"keyrc",   NULL,                   not_net | not_demo, 
    cheat_keyxx, it_redcard    },
@@ -207,32 +207,32 @@ struct cheat_s cheat[] = {
    cheat_keyxx, it_blueskull  },  // killough 2/16/98: end generalized keys
 
   {"weap",    NULL,                   not_net | not_demo,
-   cheat_weap  },     // killough 2/16/98: generalized weapon cheats
+   cheat_weap, 0  },     // killough 2/16/98: generalized weapon cheats
 
   {"weap",    NULL,                   not_net | not_demo,
    cheat_weapx, -1},
 
   {"ammo",    NULL,                   not_net | not_demo,
-   cheat_ammo  },
+   cheat_ammo, 0  },
 
   {"ammo",    NULL,                   not_net | not_demo,
    cheat_ammox, -1},  // killough 2/16/98: end generalized weapons
 
   {"tran",    NULL,                   always,
-   cheat_tran  },     // invoke translucency         // phares
+   cheat_tran, 0  },     // invoke translucency         // phares
 
   {"ice",     NULL,                   not_net | not_demo,
-   cheat_friction   },   // phares 3/10/98: toggle variable friction effects
+   cheat_friction, 0   },   // phares 3/10/98: toggle variable friction effects
 
   {"push",    NULL,                   not_net | not_demo, 
-   cheat_pushers    },   // phares 3/10/98: toggle pushers
+   cheat_pushers, 0    },   // phares 3/10/98: toggle pushers
 
   {"nuke",    NULL,                   not_net | not_demo,
-   cheat_nuke       },   // killough 12/98: disable nukage damage
+   cheat_nuke, 0       },   // killough 12/98: disable nukage damage
 
 #ifdef INSTRUMENTED
   {"stat",       NULL,                always,
-   cheat_printstats},
+   cheat_printstats, 0 },
 #endif
 
   // haleyjd: total invis cheat -- hideme
@@ -244,15 +244,15 @@ struct cheat_s cheat[] = {
     cheat_pw, pw_ghost },
 
   {"infshots", NULL,    not_net | not_demo,
-    cheat_infammo },
+    cheat_infammo, 0 },
 
   {"silence", NULL,     not_net | not_demo,
     cheat_pw, pw_silencer },
 
   {"iamtheone", NULL,   not_net | not_demo,
-    cheat_one },
+    cheat_one, 0 },
 
-  {NULL}                 // end-of-list marker
+  {NULL, NULL, 0, NULL, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -616,7 +616,7 @@ static void cheat_weapx(const void *arg)
             doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
          else 
          {
-            int P_SwitchWeapon(player_t *player);
+            weapontype_t P_SwitchWeapon(player_t *player);
             
             doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
             if(w == plyr->readyweapon)     // maybe switch if weapon removed
@@ -706,7 +706,8 @@ boolean M_FindCheats(int key)
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
-   int i, ret, matchedbefore;
+   int i, matchedbefore; 
+   boolean ret;
 
    // If we are expecting arguments to a cheat
    // (e.g. idclev), put them in the arg buffer
@@ -716,14 +717,14 @@ boolean M_FindCheats(int key)
       *arg++ = tolower(key);             // store key in arg buffer
       if(!--argsleft)                    // if last key in arg list,
          cheat[cht].func(argbuf);        // process the arg buffer
-      return 1;                          // affirmative response
+      return true;                          // affirmative response
    }
 
    key = tolower(key) - 'a';
    if(key < 0 || key >= 32)              // ignore most non-alpha cheat letters
    {
       sr = 0;        // clear shift register
-      return 0;
+      return false;
    }
 
    if(!init)                             // initialize aux entries of table
@@ -765,7 +766,8 @@ boolean M_FindCheats(int key)
     "cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
 #endif
 
-   for(matchedbefore = ret = i = 0; cheat[i].cheat; i++)
+   ret = false;
+   for(matchedbefore = i = 0; cheat[i].cheat; i++)
    {
       if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
          !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
@@ -779,11 +781,12 @@ boolean M_FindCheats(int key)
             cht = i;                        // remember this cheat code
             arg = argbuf;                   // point to start of arg buffer
             argsleft = -cheat[i].arg;       // number of args expected
-            ret = 1;                        // responder has eaten key
+            ret = true;                     // responder has eaten key
          }
          else if(!matchedbefore)            // allow only one cheat at a time 
          {
-            matchedbefore = ret = 1;        // responder has eaten key
+            matchedbefore = 1;              // responder has eaten key
+            ret = true;
             cheat[i].func(&(cheat[i].arg)); // call cheat handler
          }
       }

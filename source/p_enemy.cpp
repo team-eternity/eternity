@@ -381,7 +381,7 @@ static int P_IsUnderDamage(mobj_t *actor)
 
    for(seclist=actor->touching_sectorlist; seclist; seclist=seclist->m_tnext)
    {
-      if((cl = seclist->m_sector->ceilingdata) && 
+      if((cl = (const ceiling_t *)(seclist->m_sector->ceilingdata)) && 
          cl->thinker.function == T_MoveCeiling)
          dir |= cl->direction;
    }
@@ -401,7 +401,7 @@ extern  int    numspechit;
 //
 // Move in the current direction; returns false if the move is blocked.
 //
-boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
+int P_Move(mobj_t *actor, int dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
    boolean try_ok;
@@ -590,7 +590,7 @@ boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 boolean P_SmartMove(mobj_t *actor)
 {
    mobj_t *target = actor->target;
-   int on_lift, dropoff = false, under_damage;
+   int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
    on_lift = !comp[comp_staylift] && target && target->health > 0 &&
@@ -906,10 +906,10 @@ void P_NewChaseDir(mobj_t *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
+static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, int allaround)
 {
    if(mo->flags2 & MF2_DONTDRAW)
-      return false;  // haleyjd: total invisibility!
+      return 0;  // haleyjd: total invisibility!
 
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
@@ -919,10 +919,10 @@ static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
       {
          // when distant and moving slow, target is considered
          // to be "sneaking"
-         return false;
+         return 0;
       }
       if(P_Random(pr_ghostsneak) < 225)
-         return false;
+         return 0;
    }
 
    if(!allaround)
@@ -931,7 +931,7 @@ static boolean P_IsVisible(mobj_t *actor, mobj_t *mo, boolean allaround)
                                    mo->x, mo->y) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
          P_AproxDistance(mo->x-actor->x, mo->y-actor->y) > MELEERANGE)
-         return false;
+         return 0;
    }
 
    return P_CheckSight(actor, mo);
@@ -1042,7 +1042,7 @@ static boolean P_HereticMadMelee(mobj_t *actor)
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
+boolean P_LookForPlayers(mobj_t *actor, int allaround)
 {
    player_t *player;
    int stop, stopc, c;
@@ -1152,7 +1152,7 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-static boolean P_LookForMonsters(mobj_t *actor, boolean allaround)
+static boolean P_LookForMonsters(mobj_t *actor, int allaround)
 {
    thinker_t *cap, *th;
    

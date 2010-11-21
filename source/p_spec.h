@@ -935,7 +935,8 @@ typedef struct scroll_s
     sc_ceiling,
     sc_carry,
     sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-  } type;              // Type of scroll effect
+  };
+  int type;              // Type of scroll effect
 } scroll_t;
 
 // haleyjd 04/11/10: friction_t restored
@@ -960,7 +961,8 @@ typedef struct pusher_s
     p_pull,
     p_wind,
     p_current,
-  } type;
+  }; 
+  int type;
   mobj_t *source;      // Point source if point pusher
   int x_mag;           // X Strength
   int y_mag;           // Y Strength

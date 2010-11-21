@@ -618,7 +618,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_chaingun, !!(special->flags & MF_DROPPED)))
          return;
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
@@ -646,14 +646,14 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_shotgun, !!(special->flags & MF_DROPPED)))
          return;
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_supershotgun, !!(special->flags & MF_DROPPED)))
          return;
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
       sound = sfx_wpnup;

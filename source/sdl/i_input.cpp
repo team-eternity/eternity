@@ -428,8 +428,8 @@ static void I_GetEvent(void)
 
    SDL_Event  event;
    int        sendmouseevent = 0;
-   event_t    d_event        = { 0, 0, 0, 0 };
-   event_t    mouseevent     = { ev_mouse, 0, 0, 0 };
+   event_t    d_event        = { ev_keydown, 0, 0, 0 };
+   event_t    mouseevent     = { ev_mouse,   0, 0, 0 };
 
    calltic = gametic;
 

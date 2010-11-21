@@ -210,7 +210,7 @@ static void P_AddSkin(skin_t *newskin)
    if(numskins >= numskinsalloc)
    {
       numskinsalloc = numskinsalloc ? numskinsalloc*2 : 32;
-      skins = (skint_t **)(realloc(skins, numskinsalloc*sizeof(skin_t *)));
+      skins = (skin_t **)(realloc(skins, numskinsalloc*sizeof(skin_t *)));
    }
    
    skins[numskins] = newskin;

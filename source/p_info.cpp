@@ -331,7 +331,7 @@ E_KEYFUNC(LevelInfoProto_t, mapname)
 //
 static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 {
-   LevelInfoProto_t *newProto = calloc(1, sizeof(LevelInfoProto_t));
+   LevelInfoProto_t *newProto = (LevelInfoProto_t *)(calloc(1, sizeof(LevelInfoProto_t)));
 
    // reallocate prototype pointers array if necessary
    if(numPrototypes >= numPrototypesAlloc)
@@ -392,7 +392,7 @@ static void P_clearLevelInfoPrototypes(void)
 //
 static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
 {
-   return E_HashObjectForKey(&protoHash, &mapname);
+   return (LevelInfoProto_t *)(E_HashObjectForKey(&protoHash, &mapname));
 }
 
 

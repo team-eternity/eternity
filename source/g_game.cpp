@@ -106,7 +106,7 @@ int             gameepisode;
 int             gamemap;
 // haleyjd: changed to an array
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
-boolean         paused;
+int             paused;
 boolean         sendpause;     // send a pause event next tic
 boolean         sendsave;      // send a save event next tic
 boolean         usergame;      // ok to save / end game
@@ -674,7 +674,8 @@ static void G_DoLoadLevel(void)
    memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0;
-   sendpause = sendsave = paused = false;
+   sendpause = sendsave = false;
+   paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
    G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
 
@@ -1104,8 +1105,8 @@ static void G_DoPlayDemo(void)
       {
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = respawnparm = fastparm =
-            nomonsters = consoleplayer = 0;
+         deathmatch = respawnparm = fastparm = nomonsters = false;
+         consoleplayer = 0;
       }
    }
    else    // new versions of demos
@@ -1992,7 +1993,7 @@ static void G_DoLoadGame(void)
    gameskill = (skill_t)(*save_p++);
 
    // haleyjd 06/16/10: reload "inmasterlevels" state
-   inmasterlevels = *save_p++;
+   inmasterlevels = !!(*save_p++);
    
    // sf: use string rather than episode, map
 
@@ -2059,7 +2060,7 @@ static void G_DoLoadGame(void)
    while(*save_p++);
 
    for(i = 0; i < MAXPLAYERS; ++i)
-      playeringame[i] = *save_p++;
+      playeringame[i] = !!(*save_p++);
    save_p += MIN_MAXPLAYERS-MAXPLAYERS;         // killough 2/28/98
 
    // jff 3/17/98 restore idmus music
@@ -2276,7 +2277,7 @@ void G_Ticker(void)
    // P_Ticker() does not stop netgames if a menu is activated, so
    // we do not need to stop if a menu is pulled up during netgames.
 
-   if(paused & 2 || (!demoplayback && (menuactive || consoleactive) && !netgame))
+   if((paused & 2) || (!demoplayback && (menuactive || consoleactive) && !netgame))
    {
       basetic++;  // For revenant tracers and RNG -- we must maintain sync
    }
@@ -3072,7 +3073,7 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
    }
    else
    {
-      speedset_t *newSpeedSet = calloc(1, sizeof(speedset_t));
+      speedset_t *newSpeedSet = (speedset_t *)(calloc(1, sizeof(speedset_t)));
 
       newSpeedSet->mobjType    = thingtype;
       newSpeedSet->normalSpeed = nspeed;
@@ -3158,7 +3159,7 @@ void G_InitNew(skill_t skill, char *name)
 
    if(paused)
    {
-      paused = false;
+      paused = 0;
       S_ResumeSound();
    }
 
@@ -3180,7 +3181,7 @@ void G_InitNew(skill_t skill, char *name)
       players[i].playerstate = PST_REBORN;
 
    usergame = true;                // will be set false if a demo
-   paused = false;
+   paused = 0;
 
    if(demoplayback)
    {
@@ -3367,9 +3368,9 @@ byte *G_ReadOptions(byte *demoptr)
    demoptr++;
 
    // killough 3/6/98: add parameters to savegame, move from demo
-   respawnparm = *demoptr++;
-   fastparm    = *demoptr++;
-   nomonsters  = *demoptr++;
+   respawnparm = !!(*demoptr++);
+   fastparm    = !!(*demoptr++);
+   nomonsters  = !!(*demoptr++);
 
    demo_insurance = *demoptr++;              // killough 3/31/98
 
@@ -3390,7 +3391,7 @@ byte *G_ReadOptions(byte *demoptr)
       
       dogs = *demoptr++;                 // killough 7/19/98
       
-      bfgtype = *demoptr++;              // killough 7/19/98
+      bfgtype = (bfg_t)(*demoptr++);     // killough 7/19/98
       demoptr++;                         // sf: where beta was
       
       distfriend = *demoptr++ << 8;      // killough 8/8/98
@@ -3655,7 +3656,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForNameNSG(name, ns_demos) == -1)
+   if(W_CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
@@ -3894,11 +3895,11 @@ static cell AMX_NATIVE_CALL sm_exitsecret(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_startgame(AMX *amx, cell *params)
 {
    int err;
-   int skill;
+   skill_t skill;
    char *levelname;
 
    // note: user view of skill is 1 - 5, internal view is 0 - 4
-   skill = (int)(params[1]) - 1;
+   skill = (skill_t)(params[1] - 1);
 
    // get level name
    if((err = SM_GetSmallString(amx, &levelname, params[2])) != AMX_ERR_NONE)

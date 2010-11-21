@@ -594,7 +594,7 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    // display input buffer if inputting new var value
    if(input_command && item->var == input_command->variable)
    {
-      QStrPutc(QStrCopy(&varvalue, input_buffer), '_');
+      QStrPutc(QStrCopy(&varvalue, (char *)input_buffer), '_');
       MN_truncateInput(&varvalue, x);
    }
    else

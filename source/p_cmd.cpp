@@ -153,7 +153,7 @@ CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
    if(!Console.argc)
       return;
 
-   startskill = gameskill = QStrAtoi(&Console.argv[0]);
+   startskill = gameskill = (skill_t)(QStrAtoi(&Console.argv[0]));
    if(Console.cmdsrc == consoleplayer)
       defaultskill = gameskill + 1;
 }

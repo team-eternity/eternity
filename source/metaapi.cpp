@@ -133,7 +133,7 @@ boolean MetaHasKeyAndType(metatable_t *metatable, const char *key,
    metaobject_t *obj = NULL;
    boolean found = false;
 
-   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, obj, &key))))
    {
       // for each object that matches the key, test the type
       if(IsMetaKindOf(obj, type))
@@ -156,7 +156,7 @@ int MetaCountOf(metatable_t *metatable, const char *key)
    metaobject_t *obj = NULL;
    int count = 0;
 
-   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, obj, &key))))
       ++count;
 
    return count;
@@ -172,7 +172,7 @@ int MetaCountOfType(metatable_t *metatable, metatypename_t type)
    metaobject_t *obj = NULL;
    int count = 0;
 
-   while((obj = E_HashObjectIterator(&metatable->typehash, obj, &type)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->typehash, obj, &type))))
       ++count;
 
    return count;
@@ -189,7 +189,7 @@ int MetaCountOfKeyAndType(metatable_t *metatable, const char *key,
    metaobject_t *obj = NULL;
    int count = 0;
 
-   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, obj, &key))))
    {
       if(IsMetaKindOf(obj, type))
          ++count;
@@ -268,7 +268,7 @@ void MetaRemoveObject(metatable_t *metatable, metaobject_t *object)
 //
 metaobject_t *MetaGetObject(metatable_t *metatable, const char *key)
 {
-   return E_HashObjectForKey(&metatable->keyhash, &key);
+   return (metaobject_t *)(E_HashObjectForKey(&metatable->keyhash, &key));
 }
 
 //
@@ -279,7 +279,7 @@ metaobject_t *MetaGetObject(metatable_t *metatable, const char *key)
 //
 metaobject_t *MetaGetObjectType(metatable_t *metatable, metatypename_t type)
 {
-   return E_HashObjectForKey(&metatable->typehash, &type);
+   return (metaobject_t *)(E_HashObjectForKey(&metatable->typehash, &type));
 }
 
 //
@@ -292,7 +292,7 @@ metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
 {
    metaobject_t *obj = NULL;
 
-   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, obj, &key))))
    {
       if(IsMetaKindOf(obj, type))
          break;
@@ -315,7 +315,7 @@ metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
 metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object,
                                 const char *key)
 {
-   return E_HashObjectIterator(&metatable->keyhash, object, &key);
+   return (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, object, &key));
 }
 
 //
@@ -327,7 +327,7 @@ metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object,
 metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object,
                               metatypename_t type)
 {
-   return E_HashObjectIterator(&metatable->typehash, object, &type);
+   return (metaobject_t *)(E_HashObjectIterator(&metatable->typehash, object, &type));
 }
 
 //
@@ -340,7 +340,7 @@ metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object
 {
    metaobject_t *obj = object;
 
-   while((obj = E_HashObjectIterator(&metatable->keyhash, obj, &key)))
+   while((obj = (metaobject_t *)(E_HashObjectIterator(&metatable->keyhash, obj, &key))))
    {
       if(IsMetaKindOf(obj, type))
          break;
@@ -356,7 +356,7 @@ metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object
 //
 metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object)
 {
-   return E_HashTableIterator(&metatable->keyhash, object);
+   return (metaobject_t *)(E_HashTableIterator(&metatable->keyhash, object));
 }
 
 //=============================================================================
@@ -400,7 +400,7 @@ static metatype_i metaIntMethods = { NULL, NULL, NULL, metaIntToString };
 //
 void MetaAddInt(metatable_t *metatable, const char *key, int value)
 {
-   metaint_t *newInt = calloc(1, sizeof(metaint_t));
+   metaint_t *newInt = (metaint_t *)(calloc(1, sizeof(metaint_t)));
 
    if(!metaIntType.isinit)
    {
@@ -526,7 +526,7 @@ static metatype_i metaDoubleMethods = { NULL, NULL, NULL, metaDoubleToString };
 //
 void MetaAddDouble(metatable_t *metatable, const char *key, double value)
 {
-   metadouble_t *newDouble = calloc(1, sizeof(metadouble_t));
+   metadouble_t *newDouble = (metadouble_t *)(calloc(1, sizeof(metadouble_t)));
 
    if(!metaDoubleType.isinit)
    {
@@ -668,7 +668,7 @@ static metatype_i metaStringMethods =
 //
 void MetaAddString(metatable_t *metatable, const char *key, const char *value)
 {
-   metastring_t *newString = calloc(1, sizeof(metastring_t));
+   metastring_t *newString = (metastring_t *)(calloc(1, sizeof(metastring_t)));
 
    if(!metaStringType.isinit)
    {
@@ -828,7 +828,7 @@ static void MetaCopy(metatype_t *t, void *dest, const void *src)
 //
 static metaobject_t *MetaObjectPtr(metatype_t *t, void *object)
 {
-   return object;
+   return (metaobject_t *)(object);
 }
 
 //

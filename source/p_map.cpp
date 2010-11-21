@@ -75,7 +75,7 @@ void P_PushClipStack(void)
    doom_mapinter_t *newclip;
 
    if(!unusedclip)
-      newclip = calloc(1, sizeof(doom_mapinter_t));
+      newclip = (doom_mapinter_t *)(calloc(1, sizeof(doom_mapinter_t)));
    else
    {
       // SoM: Do not clear out the spechit stuff
@@ -123,7 +123,7 @@ extern boolean reset_viewz;
 
 // haleyjd 09/20/06: moved to top for maximum visibility
 static int crushchange;
-static boolean nofit;
+static int nofit;
 
 //
 // TELEPORT MOVE
@@ -1192,7 +1192,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 //
 // haleyjd 04/15/2010: Dropoff check for vanilla DOOM compatibility
 //
-static boolean P_CheckDropOffVanilla(mobj_t *thing, boolean dropoff)
+static boolean P_CheckDropOffVanilla(mobj_t *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
       clip.floorz - clip.dropoffz > 24 * FRACUNIT)
@@ -1206,7 +1206,7 @@ static boolean P_CheckDropOffVanilla(mobj_t *thing, boolean dropoff)
 //
 // haleyjd 04/15/2010: Dropoff check for BOOM compatibility
 //
-static boolean P_CheckDropOffBOOM(mobj_t *thing, boolean dropoff)
+static boolean P_CheckDropOffBOOM(mobj_t *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    if(compatibility || !dropoff)
@@ -1227,7 +1227,7 @@ static boolean P_CheckDropOffBOOM(mobj_t *thing, boolean dropoff)
 // I am of the opinion that this is the single most-butchered segment of code
 // in the entire engine.
 //
-static boolean P_CheckDropOffMBF(mobj_t *thing, boolean dropoff)
+static boolean P_CheckDropOffMBF(mobj_t *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    // killough 7/24/98, 8/1/98: 
@@ -1272,7 +1272,7 @@ static boolean on3dmidtex;
 //
 // haleyjd 04/15/2010: Dropoff checking code for Eternity.
 //
-static boolean P_CheckDropOffEE(mobj_t *thing, boolean dropoff)
+static boolean P_CheckDropOffEE(mobj_t *thing, int dropoff)
 {
    fixed_t floorz = clip.floorz;
 
@@ -1341,7 +1341,7 @@ static boolean P_CheckDropOffEE(mobj_t *thing, boolean dropoff)
    return true;
 }
 
-typedef boolean (*dropoff_func_t)(mobj_t *, boolean);
+typedef boolean (*dropoff_func_t)(mobj_t *, int);
 
 //
 // P_TryMove
@@ -1351,7 +1351,7 @@ typedef boolean (*dropoff_func_t)(mobj_t *, boolean);
 //
 // killough 3/15/98: allow dropoff as option
 //
-boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
+boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
    dropoff_func_t dropofffunc;
@@ -2235,7 +2235,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    if(!(thing->flags & MF_SHOOTABLE))
       return true;        // assume it is bloody gibs or something
 
-   nofit = true;
+   nofit = 1;
    
    // haleyjd 06/19/00: fix for invulnerable things -- no crusher effects
    // haleyjd 05/20/05: allow custom crushing damage
@@ -2274,7 +2274,7 @@ boolean P_ChangeSector(sector_t *sector, int crunch)
 {
    int x, y;
    
-   nofit = false;
+   nofit = 0;
    crushchange = crunch;
    
    // ARRGGHHH!!!!
@@ -2287,7 +2287,7 @@ boolean P_ChangeSector(sector_t *sector, int crunch)
       for(y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
          P_BlockThingsIterator(x, y, PIT_ChangeSector);
       
-   return nofit;
+   return !!nofit;
 }
 
 //
@@ -2312,7 +2312,7 @@ boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    if(!comp[comp_overunder])
       return P_ChangeSector3D(sector, crunch, amt, floorOrCeil);
    
-   nofit = false;
+   nofit = 0;
    crushchange = crunch;
    
    // killough 4/4/98: scan list front-to-back until empty or exhausted,
@@ -2342,7 +2342,7 @@ boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    }
    while(n); // repeat from scratch until all things left are marked valid
    
-   return nofit;
+   return !!nofit;
 }
 
 // phares 3/21/98
