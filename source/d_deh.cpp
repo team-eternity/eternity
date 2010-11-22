@@ -40,7 +40,7 @@
 #include "p_inter.h"
 #include "g_game.h"
 #include "d_main.h" // haleyjd
-#include "d_think.h"
+#include "p_tick.h"
 #include "w_wad.h"
 #include "m_misc.h"
 #include "e_states.h"

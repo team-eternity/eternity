@@ -37,6 +37,8 @@
 #define E_EXDATA_H__
 
 #include "doomdata.h"
+#include "doomtype.h"
+#include "r_defs.h"
 
 // defines
 

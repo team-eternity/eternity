@@ -31,8 +31,11 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "d_event.h"
+#include "d_mod.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"
@@ -54,6 +57,7 @@
 #include "d_gi.h"
 #include "e_lib.h"
 #include "e_args.h"
+#include "e_player.h"
 
 int weapon_speed = 6;
 int default_weapon_speed = 6;
@@ -1133,7 +1137,7 @@ void A_FireOldBFG(mobj_t *mo)
                        mo->z + 62*FRACUNIT - player->psprites[ps_weapon].sy,
                        type);
 
-      P_SetTarget(&th->target, mo);
+      P_SetTarget<mobj_t>(&th->target, mo);
       th->angle = an1;
       th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
       th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
@@ -1466,7 +1470,7 @@ void A_BouncingBFG(mobj_t *mo)
       // haleyjd: can't use P_SpawnMissile here
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
-      P_SetTarget(&newmo->target, mo->target); // pass on the player
+      P_SetTarget<mobj_t>(&newmo->target, mo->target); // pass on the player
       an2 = P_PointToAngle(newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y);
       newmo->angle = an2;
       
@@ -1485,7 +1489,7 @@ void A_BouncingBFG(mobj_t *mo)
          (clip.linetarget->z + (clip.linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget(&newmo->tracer, clip.linetarget); // haleyjd: track target
+      P_SetTarget<mobj_t>(&newmo->tracer, clip.linetarget); // haleyjd: track target
 
       P_CheckMissileSpawn(newmo);
 
@@ -1580,7 +1584,7 @@ void A_BFGBurst(mobj_t *mo)
       an += ANG90 / 10;
 
       th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
-      P_SetTarget(&th->target, mo->target);
+      P_SetTarget<mobj_t>(&th->target, mo->target);
 
       th->angle = an;
       th->momx = finecosine[an >> ANGLETOFINESHIFT] << 4;
@@ -1806,7 +1810,7 @@ void A_FirePlayerMissile(mobj_t *actor)
       P_BulletSlope(actor);
 
       if(clip.linetarget)
-         P_SetTarget(&mo->tracer, clip.linetarget);
+         P_SetTarget<mobj_t>(&mo->tracer, clip.linetarget);
    }
 }
 
@@ -1998,7 +2002,7 @@ void A_PlayerThunk(mobj_t *mo)
       P_BulletSlope(mo);
       if(clip.linetarget)
       {
-         P_SetTarget(&(mo->target), clip.linetarget);
+         P_SetTarget<mobj_t>(&(mo->target), clip.linetarget);
          localtarget = clip.linetarget;
       }
       else
@@ -2036,7 +2040,7 @@ void A_PlayerThunk(mobj_t *mo)
    // restore player's old target if a new one was found & set
    if(settarget && localtarget)
    {
-      P_SetTarget(&(mo->target), oldtarget);
+      P_SetTarget<mobj_t>(&(mo->target), oldtarget);
    }
 
    // put player back into his normal state

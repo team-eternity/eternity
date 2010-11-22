@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "c_runcmd.h"
 #include "c_io.h"
@@ -40,21 +41,37 @@
 int leveltime;
 boolean reset_viewz;
 
+//=============================================================================
+//
+// haleyjd 11/21/10: CZoneLevelItem base class for thinkers
+//
+
+void *CZoneLevelItem::operator new (size_t size)
+{
+   return Z_Calloc(1, size, PU_LEVEL, NULL);
+}
+
+void CZoneLevelItem::operator delete (void *p)
+{
+   Z_Free(p);
+}
+
+//=============================================================================
 //
 // THINKERS
-// All thinkers should be allocated by Z_Malloc
-// so they can be operated on uniformly.
-// The actual structures will vary in size,
-// but the first element must be thinker_t.
+//
+// All thinkers should be allocated by Z_Malloc so they can be operated on 
+// uniformly. The actual structures will vary in size, but the first element 
+// must be thinker_t.
 //
 
 // Both the head and tail of the thinker list.
-thinker_t thinkercap;
+CThinker thinkercap;
 
 // killough 8/29/98: we maintain several separate threads, each containing
 // a special class of thinkers, to allow more efficient searches. 
 
-thinker_t thinkerclasscap[NUMTHCLASS];
+CThinker thinkerclasscap[NUMTHCLASS];
 
 //
 // P_InitThinkers
@@ -70,6 +87,28 @@ void P_InitThinkers(void)
 }
 
 //
+// CThinker::AddToThreadedList
+//
+// haleyjd 11/22/10:
+// Puts the thinker in the indicated threaded list.
+//
+void CThinker::AddToThreadedList(int tclass)
+{
+   register CThinker *th;
+   
+   // Remove from current thread, if in one -- haleyjd: from PrBoom
+   if((th = this->cnext) != NULL)
+      (th->cprev = this->cprev)->cnext = th;
+
+   // Add to appropriate thread
+   th = &thinkerclasscap[tclass];
+   th->cprev->cnext = this;
+   this->cnext = th;
+   this->cprev = th->cprev;
+   th->cprev = this;
+}
+
+//
 // P_UpdateThinker
 //
 // killough 8/29/98:
@@ -82,38 +121,9 @@ void P_InitThinkers(void)
 // code due to corruption of the th_enemies/th_friends lists when monsters get
 // removed at an inopportune moment.
 //
-void P_UpdateThinker(thinker_t *thinker)
+void CThinker::Update()
 {
-   register thinker_t *th;
-   int tclass = th_misc; // haleyjd 07/12/03: don't use "class" as a variable name
-   
-   // find the class to which the thinker belongs
-   if(thinker->function == P_RemoveThinkerDelayed)
-      tclass = th_delete;
-   else if(thinker->function == P_MobjThinker)
-   {
-      mobj_t *mo = (mobj_t *)thinker;
-
-      if(mo->health > 0 && 
-         (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
-      {
-         if(mo->flags & MF_FRIEND)
-            tclass = th_friends;
-         else
-            tclass = th_enemies;
-      }
-   }
-
-   // Remove from current thread, if in one -- haleyjd: from PrBoom
-   if((th = thinker->cnext) != NULL)
-      (th->cprev = thinker->cprev)->cnext = th;
-  
-   // Add to appropriate thread
-   th = &thinkerclasscap[tclass];
-   th->cprev->cnext = thinker;
-   thinker->cnext = th;
-   thinker->cprev = th->cprev;
-   th->cprev = thinker;
+   AddToThreadedList(this->removed ? th_delete : th_misc);
 }
 
 //
@@ -121,18 +131,18 @@ void P_UpdateThinker(thinker_t *thinker)
 //
 // Adds a new thinker at the end of the list.
 //
-void P_AddThinker(thinker_t* thinker)
+void CThinker::Add()
 {
-   thinkercap.prev->next = thinker;
-   thinker->next = &thinkercap;
-   thinker->prev = thinkercap.prev;
-   thinkercap.prev = thinker;
+   thinkercap.prev->next = this;
+   this->next = &thinkercap;
+   this->prev = thinkercap.prev;
+   thinkercap.prev = this;
    
-   thinker->references = 0;    // killough 11/98: init reference counter to 0
+   this->references = 0;    // killough 11/98: init reference counter to 0
    
    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
-   thinker->cnext = thinker->cprev = thinker;
-   P_UpdateThinker(thinker);
+   this->cnext = this->cprev = this;
+   this->Update();
 }
 
 //
@@ -141,10 +151,10 @@ void P_AddThinker(thinker_t* thinker)
 // Make currentthinker external, so that P_RemoveThinkerDelayed
 // can adjust currentthinker when thinkers self-remove.
 
-static thinker_t *currentthinker;
+static CThinker *currentthinker;
 
 //
-// P_RemoveThinkerDelayed()
+// P_RemoveThinkerDelayed
 //
 // Called automatically as part of the thinker loop in P_RunThinkers(),
 // on nodes which are pending deletion.
@@ -153,17 +163,17 @@ static thinker_t *currentthinker;
 // remove it, and set currentthinker to one node preceeding it, so
 // that the next step in P_RunThinkers() will get its successor.
 //
-void P_RemoveThinkerDelayed(thinker_t *thinker)
+void CThinker::RemoveDelayed()
 {
-   if(!thinker->references)
+   if(!references)
    {
-      thinker_t *next = thinker->next;
-      (next->prev = currentthinker = thinker->prev)->next = next;
+      CThinker *lnext = this->next;
+      (lnext->prev = currentthinker = this->prev)->next = lnext;
       
       // haleyjd 11/09/06: remove from threaded list now
-      (thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
+      (this->cnext->cprev = this->cprev)->cnext = this->cnext;
       
-      Z_Free(thinker);
+      delete this;
    }
 }
 
@@ -179,9 +189,9 @@ void P_RemoveThinkerDelayed(thinker_t *thinker)
 // set the function to P_RemoveThinkerDelayed(), so that later, it will be
 // removed automatically as part of the thinker process.
 //
-void P_RemoveThinker(thinker_t *thinker)
+void CThinker::Remove()
 {
-   thinker->function = P_RemoveThinkerDelayed;
+   removed = true;
    
    // killough 8/29/98: remove immediately from threaded list
    
@@ -195,7 +205,7 @@ void P_RemoveThinker(thinker_t *thinker)
    //(thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
 
    // Move to th_delete class.
-   P_UpdateThinker(thinker);
+   Update();
 }
 
 //
@@ -209,12 +219,12 @@ void P_RemoveThinker(thinker_t *thinker)
 // checked during every gametic). Now, we keep a count of the number of
 // references, and delay removal until the count is 0.
 //
-void P_SetTarget(mobj_t **mop, mobj_t *targ)
+template<typename T> void P_SetTarget(T **mop, T *targ)
 {
    if(*mop)             // If there was a target already, decrease its refcount
-      (*mop)->thinker.references--;
+      (*mop)->references--;
    if((*mop = targ))    // Set new target and if non-NULL, increase its counter
-      targ->thinker.references++;
+      targ->references++;
 }
 
 //
@@ -239,13 +249,17 @@ void P_SetTarget(mobj_t **mop, mobj_t *targ)
 // Rewritten to delete nodes implicitly, by making currentthinker
 // external and using P_RemoveThinkerDelayed() implicitly.
 //
-static void P_RunThinkers(void)
+void CThinker::RunThinkers(void)
 {
-   for(currentthinker = thinkercap.next;
+   for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
-      if(currentthinker->function)
-         currentthinker->function(currentthinker);
+   {
+      if(currentthinker->removed)
+         currentthinker->RemoveDelayed();
+      else
+         currentthinker->Think();
+   }
 }
 
 //
@@ -280,7 +294,7 @@ void P_Ticker(void)
 
    reset_viewz = false;  // sf
 
-   P_RunThinkers();
+   CThinker::RunThinkers();
    P_UpdateSpecials();
    P_RespawnSpecials();
    if(demo_version >= 329)

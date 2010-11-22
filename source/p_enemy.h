@@ -80,6 +80,8 @@ enum
    BOSSTELE_DEST
 };
 
+struct MobjCollection;
+
 // haleyjd: bossteleport_t
 //
 // holds a ton of information to allow for the teleportation of

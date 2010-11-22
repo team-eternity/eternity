@@ -35,6 +35,7 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "doomtype.h"
 #include "e_lib.h"
 #include "e_edf.h"

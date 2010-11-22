@@ -34,9 +34,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <sys/stat.h>
-
 #include "z_zone.h"
+#include "i_system.h"
 #include "d_gi.h"
 #include "m_misc.h"
 #include "m_syscfg.h"
@@ -60,6 +59,7 @@
 #include "mn_files.h"
 #include "mn_menus.h"
 #include "p_map.h"
+#include "p_partcl.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_sky.h"

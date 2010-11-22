@@ -24,10 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "d_main.h"
 #include "st_stuff.h"
 #include "r_main.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_maputl.h"
 #include "r_draw.h"
@@ -40,6 +43,7 @@
 #include "d_gi.h"
 #include "g_bind.h"
 #include "r_portal.h"
+#include "v_block.h"
 
 
 //jff 1/7/98 default acolors added

@@ -27,6 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "r_sky.h"
 #include "r_data.h"

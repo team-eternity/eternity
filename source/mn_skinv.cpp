@@ -47,6 +47,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_fonts.h"
+#include "e_player.h"
 
 // player skin sprite states
 enum

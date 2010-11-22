@@ -25,9 +25,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_dynseg.h"
+#include "r_state.h"
 
 extern void P_CalcSegLength(seg_t *);
 

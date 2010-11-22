@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_info.h"
@@ -85,11 +87,10 @@ manual_floor:
 
       // new floor thinker
       rtn = 1;
-      floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0));
-      P_AddThinker(&floor->thinker);
+      floor = new floormove_t;
+      floor->Add();
       sec->floordata = floor;
       
-      floor->thinker.function = T_MoveFloor;
       floor->crush = fd->crush;
       floor->direction = fd->direction ? plat_up : plat_down;
       floor->sector = sec;
@@ -329,11 +330,10 @@ manual_ceiling:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = (ceiling_t *)(Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0));
-      P_AddThinker(&ceiling->thinker);
+      ceiling = new ceiling_t;
+      ceiling->Add();
       sec->ceilingdata = ceiling; //jff 2/22/98
 
-      ceiling->thinker.function = T_MoveCeiling;
       ceiling->crush = cd->crush;
       ceiling->direction = cd->direction ? plat_up : plat_down;
       ceiling->sector = sec;
@@ -597,12 +597,11 @@ manual_lift:
       
       // Setup the plat thinker
       rtn = 1;
-      plat = (plat_t *)(Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0));
-      P_AddThinker(&plat->thinker);
+      plat = new plat_t;
+      plat->Add();
       
       plat->sector = sec;
       plat->sector->floordata = plat;
-      plat->thinker.function = T_PlatRaise;
       plat->crush = -1;
       plat->tag = line->tag;
       
@@ -742,11 +741,10 @@ manual_stair:
       
       // new floor thinker
       rtn = 1;
-      floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL));
-      P_AddThinker(&floor->thinker);
+      floor = new floormove_t;
+      floor->Add();
       sec->floordata = floor;
 
-      floor->thinker.function = T_MoveFloor;
       floor->direction = sd->direction ? plat_up : plat_down;
       floor->sector = sec;
 
@@ -866,12 +864,11 @@ manual_stair:
             
             sec = tsec;
             secnum = newsecnum;
-            floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL));
+            floor = new floormove_t;
             
-            P_AddThinker(&floor->thinker);
+            floor->Add();
             
             sec->floordata = floor;
-            floor->thinker.function = T_MoveFloor;
             floor->direction = sd->direction ? plat_up : plat_down;
             floor->sector = sec;
 
@@ -1004,10 +1001,9 @@ manual_crusher:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = (ceiling_t *)(Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0));
-      P_AddThinker (&ceiling->thinker);
+      ceiling = new ceiling_t;
+      ceiling->Add();
       sec->ceilingdata = ceiling; //jff 2/22/98
-      ceiling->thinker.function = T_MoveCeiling;
       ceiling->crush = 10;
       ceiling->direction = plat_down;
       ceiling->sector = sec;
@@ -1066,10 +1062,14 @@ mobj_t *genDoorThing;
 // ** genDoorThing must be set before the calling routine is
 //    executed! If it is NULL, no retrigger can occur.
 //
-static int GenDoorRetrigger(vldoor_t *door, int trig)
+static int GenDoorRetrigger(CThinker *th, int trig)
 {
-   if(genDoorThing && door->thinker.function == T_VerticalDoor &&
-      (door->type == genRaise || door->type == genBlazeRaise) &&
+   vldoor_t *door;
+
+   if(!(door = dynamic_cast<vldoor_t *>(th)))
+      return 0;
+
+   if(genDoorThing && (door->type == genRaise || door->type == genBlazeRaise) &&
       trig == PushMany)
    {
       if(door->direction == plat_down) // door is closing
@@ -1142,7 +1142,7 @@ manual_door:
             // haleyjd 02/23/04: allow repushing of certain generalized
             // doors
             if(demo_version >= 331)
-               rtn = GenDoorRetrigger((vldoor_t *)(sec->ceilingdata), dd->trigger_type);
+               rtn = GenDoorRetrigger(sec->ceilingdata, dd->trigger_type);
 
             return rtn;
          }
@@ -1151,11 +1151,10 @@ manual_door:
 
       // new door thinker
       rtn = 1;
-      door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
-      P_AddThinker(&door->thinker);
+      door = new vldoor_t;
+      door->Add();
       sec->ceilingdata = door; //jff 2/22/98
       
-      door->thinker.function = T_VerticalDoor;
       door->sector = sec;
       
       // setup delay for door remaining open/closed

@@ -38,9 +38,8 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"  /* memory allocation wrappers -- killough */
-
+#include "i_system.h"
 #include "doomstat.h"
-
 #include "c_io.h"
 #include "d_gi.h"
 #include "w_wad.h"
@@ -51,12 +50,10 @@
 #include "r_ripple.h"
 #include "r_plane.h"
 #include "v_video.h"
-
 #include "p_info.h"
 #include "p_anim.h"
 #include "p_user.h"
 #include "p_slopes.h"
-
 
 #define MAINHASHCHAINS 128    /* must be a power of 2 */
 

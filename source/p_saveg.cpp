@@ -24,6 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_maputl.h"
@@ -34,6 +36,7 @@
 #include "am_map.h"
 #include "p_enemy.h"
 #include "p_xenemy.h"
+#include "p_portal.h"
 #include "p_hubs.h"
 #include "p_skin.h"
 #include "p_setup.h"
@@ -42,6 +45,7 @@
 #include "s_sndseq.h"
 #include "d_gi.h"
 #include "acs_intr.h"
+#include "e_player.h"
 
 byte *save_p;
 
@@ -67,7 +71,7 @@ void P_FreeObjTable(void)
 
 void P_NumberObjects(void)
 {
-   thinker_t *th;
+   CThinker *th;
    
    num_thinkers = 0; // init to 0
    
@@ -80,13 +84,13 @@ void P_NumberObjects(void)
    // the new ordinal member of thinker_t.
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
-      if(th->function == P_MobjThinker)
+      if(dynamic_cast<mobj_t *>(th) != NULL)
          th->ordinal = ++num_thinkers;
 }
 
 void P_DeNumberObjects(void)
 {
-   thinker_t *th;
+   CThinker *th;
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
       th->ordinal = 0;
@@ -100,7 +104,7 @@ void P_DeNumberObjects(void)
 //
 static unsigned int P_MobjNum(mobj_t *mo)
 {
-   unsigned int n = mo ? mo->thinker.ordinal : 0;   // 0 = NULL
+   unsigned int n = mo ? mo->ordinal : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
    if(n < 0 || n > num_thinkers) 
@@ -479,7 +483,7 @@ typedef enum {
 
 void P_ArchiveThinkers(void)
 {
-   thinker_t *th;
+   CThinker *th;
    
    CheckSaveGame(sizeof brain);   // killough 3/26/98: Save boss brain state
    memcpy(save_p, &brain, sizeof brain);
@@ -511,13 +515,13 @@ void P_ArchiveThinkers(void)
          if(mobj->target)
             mobj->target = (mobj_t *)
               (mobj->target->thinker.function == P_MobjThinker ?
-                mobj->target->thinker.ordinal : 0);
+                mobj->target->ordinal : 0);
 
          if(mobj->tracer)
          {
             mobj->tracer = (mobj_t *)
                (mobj->tracer->thinker.function == P_MobjThinker ?
-                 mobj->tracer->thinker.ordinal : 0);
+                 mobj->tracer->ordinal : 0);
          }
 
          // killough 2/14/98: new field: save last known enemy. Prevents
@@ -528,7 +532,7 @@ void P_ArchiveThinkers(void)
          {
             mobj->lastenemy = (mobj_t *)
               (mobj->lastenemy->thinker.function == P_MobjThinker ?
-               mobj->lastenemy->thinker.ordinal : 0);
+               mobj->lastenemy->ordinal : 0);
          }
         
          if(mobj->player)
@@ -556,7 +560,7 @@ void P_ArchiveThinkers(void)
             // on savegame load!
             target = (mobj_t *)
                (target->thinker.function == P_MobjThinker ? 
-                target->thinker.ordinal : 0);
+                target->ordinal : 0);
          }
          memcpy(save_p, &target, sizeof target);
          save_p += sizeof target;
@@ -578,7 +582,7 @@ void P_ArchiveThinkers(void)
 static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
 {
    *mop = NULL;
-   P_SetTarget(mop, targ);
+   P_SetTarget<mobj_t>(mop, targ);
 }
 
 //
@@ -588,7 +592,7 @@ static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
 //
 void P_UnArchiveThinkers(void)
 {
-   thinker_t *th;
+   CThinker *th;
    size_t    size;        // killough 2/14/98: size of into table
    size_t    idx;         // haleyjd 11/03/06: separate index var
    
@@ -599,7 +603,7 @@ void P_UnArchiveThinkers(void)
    // remove all the current thinkers
    for(th = thinkercap.next; th != &thinkercap; )
    {
-      thinker_t *next;
+      CThinker *next;
       next = th->next;
       if(th->function == P_MobjThinker)
          P_RemoveMobj((mobj_t *) th);
@@ -675,8 +679,7 @@ void P_UnArchiveThinkers(void)
       //      mobj->floorz = mobj->subsector->sector->floorheight;
       //      mobj->ceilingz = mobj->subsector->sector->ceilingheight;
       
-      mobj->thinker.function = P_MobjThinker;
-      P_AddThinker(&mobj->thinker);
+      mobj->Add();
 
       // haleyjd 02/02/04: possibly add thing to tid hash table
       P_AddThingTID(mobj, mobj->tid);
@@ -784,7 +787,7 @@ enum {
 
 void P_ArchiveSpecials(void)
 {
-   thinker_t *th;
+   CThinker *th;
    size_t    size = 0;          // killough
    
    // save off the current thinkers (memory size calculation -- killough)
@@ -1121,7 +1124,7 @@ void P_UnArchiveSpecials(void)
             if(ceiling->thinker.function)
                ceiling->thinker.function = T_MoveCeiling;
             
-            P_AddThinker(&ceiling->thinker);
+            ceiling->Add();
             P_AddActiveCeiling(ceiling);
             break;
          }
@@ -1139,7 +1142,7 @@ void P_UnArchiveSpecials(void)
             
             door->sector->ceilingdata = door;       //jff 2/22/98
             door->thinker.function = T_VerticalDoor;
-            P_AddThinker(&door->thinker);
+            door->Add();
             break;
          }
 
@@ -1153,7 +1156,7 @@ void P_UnArchiveSpecials(void)
             floor->sector = &sectors[(int)floor->sector];
             floor->sector->floordata = floor; //jff 2/22/98
             floor->thinker.function = T_MoveFloor;
-            P_AddThinker(&floor->thinker);
+            floor->Add();
             break;
          }
 
@@ -1169,7 +1172,7 @@ void P_UnArchiveSpecials(void)
             if(plat->thinker.function)
                plat->thinker.function = T_PlatRaise;
             
-            P_AddThinker(&plat->thinker);
+            plat->Add();
             P_AddActivePlat(plat);
             break;
          }
@@ -1183,7 +1186,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(*flash);
             flash->sector = &sectors[(int)flash->sector];
             flash->thinker.function = T_LightFlash;
-            P_AddThinker(&flash->thinker);
+            flash->Add();
             break;
          }
 
@@ -1196,7 +1199,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(*strobe);
             strobe->sector = &sectors[(int)strobe->sector];
             strobe->thinker.function = T_StrobeFlash;
-            P_AddThinker(&strobe->thinker);
+            strobe->Add();
             break;
          }
 
@@ -1208,7 +1211,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(*glow);
             glow->sector = &sectors[(int)glow->sector];
             glow->thinker.function = T_Glow;
-            P_AddThinker(&glow->thinker);
+            glow->Add();
             break;
          }
 
@@ -1221,7 +1224,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(*flicker);
             flicker->sector = &sectors[(int)flicker->sector];
             flicker->thinker.function = T_FireFlicker;
-            P_AddThinker(&flicker->thinker);
+            flicker->Add();
             break;
          }
 
@@ -1237,7 +1240,7 @@ void P_UnArchiveSpecials(void)
             elevator->sector->floordata = elevator; //jff 2/22/98
             elevator->sector->ceilingdata = elevator; //jff 2/22/98
             elevator->thinker.function = T_MoveElevator;
-            P_AddThinker(&elevator->thinker);
+            elevator->Add();
             break;
          }
 
@@ -1248,7 +1251,7 @@ void P_UnArchiveSpecials(void)
             memcpy(scroll, save_p, sizeof(scroll_t));
             save_p += sizeof(scroll_t);
             scroll->thinker.function = T_Scroll;
-            P_AddThinker(&scroll->thinker);
+            scroll->Add();
             break;
          }
 
@@ -1260,7 +1263,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(pusher_t);
             pusher->thinker.function = T_Pusher;
             pusher->source = P_GetPushThing(pusher->affectee);
-            P_AddThinker(&pusher->thinker);
+            pusher->Add();
             break;
          }
 
@@ -1273,7 +1276,7 @@ void P_UnArchiveSpecials(void)
             memcpy(polyrot, save_p, sizeof(polyrotate_t));
             save_p += sizeof(polyrotate_t);
             polyrot->thinker.function = T_PolyObjRotate;
-            P_AddThinker(&polyrot->thinker);
+            polyrot->Add();
             break;
          }
 
@@ -1284,7 +1287,7 @@ void P_UnArchiveSpecials(void)
             memcpy(polymove, save_p, sizeof(polymove_t));
             save_p += sizeof(polymove_t);
             polymove->thinker.function = T_PolyObjMove;
-            P_AddThinker(&polymove->thinker);
+            polymove->Add();
             break;
          }
 
@@ -1295,7 +1298,7 @@ void P_UnArchiveSpecials(void)
             memcpy(psldoor, save_p, sizeof(polyslidedoor_t));
             save_p += sizeof(polyslidedoor_t);
             psldoor->thinker.function = T_PolyDoorSlide;
-            P_AddThinker(&psldoor->thinker);
+            psldoor->Add();
             break;
          }
 
@@ -1306,7 +1309,7 @@ void P_UnArchiveSpecials(void)
             memcpy(pswdoor, save_p, sizeof(polyswingdoor_t));
             save_p += sizeof(polyswingdoor_t);
             pswdoor->thinker.function = T_PolyDoorSwing;
-            P_AddThinker(&pswdoor->thinker);
+            pswdoor->Add();
             break;
          }
       
@@ -1319,7 +1322,7 @@ void P_UnArchiveSpecials(void)
             pillar->sector->floordata = pillar; 
             pillar->sector->ceilingdata = pillar;
             pillar->thinker.function = T_MovePillar;
-            P_AddThinker(&pillar->thinker);
+            pillar->Add();
             break;
          }
 
@@ -1330,7 +1333,7 @@ void P_UnArchiveSpecials(void)
             memcpy(quake, save_p, sizeof(quakethinker_t));
             save_p += sizeof(quakethinker_t);
             quake->origin.thinker.function = T_QuakeThinker;
-            P_AddThinker(&(quake->origin.thinker));
+            quake->Add();
             break;
          }
 
@@ -1342,7 +1345,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(lightfade_t);
             fade->thinker.function = T_LightFade;
             fade->sector = &sectors[(int)fade->sector];
-            P_AddThinker(&fade->thinker);
+            fade->Add();
             break;
          }
       
@@ -1354,7 +1357,7 @@ void P_UnArchiveSpecials(void)
             save_p += sizeof(floorwaggle_t);
             waggle->thinker.function = T_FloorWaggle;
             waggle->sector = &sectors[(int)waggle->sector];
-            P_AddThinker(&waggle->thinker);
+            waggle->Add();
             break;
          }
 
@@ -1369,7 +1372,7 @@ void P_UnArchiveSpecials(void)
             acs->line = acs->line ? &lines[(size_t)acs->line - 1] : NULL;
             mo = P_MobjForNum((int)acs->trigger);
             P_SetNewTarget(&acs->trigger, mo);
-            P_AddThinker(&acs->thinker);
+            acs->Add();
             ACS_RestartSavedScript(acs);
             break;
          }

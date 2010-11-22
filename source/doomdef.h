@@ -30,21 +30,21 @@
 
 // killough 4/25/98: Make gcc extensions mean nothing on other compilers
 // haleyjd 05/22/02: moved to d_keywds.h
-#include "d_keywds.h"
+//#include "d_keywds.h"
 
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
-#include "z_zone.h"
+//#include "z_zone.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <ctype.h>
+//#include <limits.h>
 
-#include "m_swap.h"
-#include "version.h"
-#include "d_mod.h"
-#include "m_fixed.h" // SoM 2-4-04: ANYRES
+//#include "m_swap.h"
+//#include "version.h"
+//#include "d_mod.h"
+//#include "m_fixed.h" // SoM 2-4-04: ANYRES
 
 // Identify language to use, software localization.
 typedef enum {
@@ -75,33 +75,6 @@ typedef enum {
 // SoM 2-4-04: ANYRES
 #define MAX_SCREENWIDTH  2560
 #define MAX_SCREENHEIGHT 1600
-
-// SoM: replaced globals with a struct and a single global
-typedef struct cb_video_s
-{
-   // SoM: Not implemented (yet)
-   int         bitdepth, pixelsize;
-
-   int         width, height;
-   int         pitch;
-   fixed_t     widthfrac, heightfrac;
-   fixed_t     xscale, yscale;
-   fixed_t     xstep, ystep;
-
-   float       xscalef, yscalef;
-   float       xstepf, ystepf;
-   boolean     scaled; // SoM: should be set when the scale values are
-
-   byte        *screens[5];
-
-   // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
-   int x1lookup[321];
-   int y1lookup[201];
-   int x2lookup[321];
-   int y2lookup[201];
-} cb_video_t;
-
-extern cb_video_t video;
 
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200

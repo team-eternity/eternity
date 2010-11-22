@@ -28,6 +28,7 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "m_argv.h"
 #include "m_fixed.h"
 #include "d_io.h"

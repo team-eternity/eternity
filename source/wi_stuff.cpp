@@ -24,29 +24,31 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "doomstat.h"
-#include "m_random.h"
-#include "w_wad.h"
-#include "w_levels.h"
-#include "g_game.h"
-#include "r_main.h"
-#include "p_info.h"
-#include "r_main.h"
-#include "v_video.h"
-#include "wi_stuff.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "p_mobj.h"
-#include "d_gi.h"
-#include "st_stuff.h"
-#include "hu_stuff.h"
+#include "z_zone.h"
+#include "i_system.h"
 #include "am_map.h"
-#include "p_tick.h"
-#include "in_lude.h"
 #include "c_io.h"
 #include "d_deh.h"
+#include "d_gi.h"
+#include "doomstat.h"
 #include "e_string.h"
 #include "e_fonts.h"
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "in_lude.h"
+#include "m_random.h"
+#include "m_swap.h"
+#include "p_info.h"
+#include "p_mobj.h"
+#include "p_tick.h"
+#include "r_main.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_video.h"
+#include "w_levels.h"
+#include "w_wad.h"
+#include "wi_stuff.h"
 
 extern vfont_t *in_bigfont;
 
@@ -355,7 +357,7 @@ static patch_t*   items;
 static patch_t*   frags;
 
 // Time sucks.
-static patch_t*   time;
+static patch_t*   time_patch;
 static patch_t*   par;
 static patch_t*   sucks;
 
@@ -860,7 +862,7 @@ static void WI_unloadData(void)
    Z_ChangeTag(sp_secret, PU_CACHE);
    Z_ChangeTag(items, PU_CACHE);
    Z_ChangeTag(frags, PU_CACHE);
-   Z_ChangeTag(time, PU_CACHE);
+   Z_ChangeTag(time_patch, PU_CACHE);
    Z_ChangeTag(sucks, PU_CACHE);
    Z_ChangeTag(par, PU_CACHE);
 
@@ -1779,7 +1781,7 @@ static void WI_drawStats(void)
    V_DrawPatch(SP_STATSX, SP_STATSY+2*lh, &vbscreen, sp_secret);
    WI_drawPercent(SCREENWIDTH - SP_STATSX, SP_STATSY+2*lh, cnt_secret[0]);
    
-   V_DrawPatch(SP_TIMEX, SP_TIMEY, &vbscreen, time);
+   V_DrawPatch(SP_TIMEX, SP_TIMEY, &vbscreen, time_patch);
    WI_drawTime(SCREENWIDTH/2 - SP_TIMEX, SP_TIMEY, cnt_time);
 
    // Ty 04/11/98: redid logic: should skip only if with pwad but 
@@ -2018,7 +2020,7 @@ static void WI_loadData(void)
    colon = (patch_t *)W_CacheLumpName("WICOLON", PU_STATIC); 
    
    // "time"
-   time = (patch_t *)W_CacheLumpName("WITIME", PU_STATIC);   
+   time_patch = (patch_t *)W_CacheLumpName("WITIME", PU_STATIC);   
 
    // "sucks"
    sucks = (patch_t *)W_CacheLumpName("WISUCKS", PU_STATIC);  

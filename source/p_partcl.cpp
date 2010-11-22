@@ -442,7 +442,7 @@ void P_ParticleThinker(void)
 void P_RunEffects(void)
 {
    int snum = 0;
-   thinker_t *currentthinker = &thinkercap;
+   CThinker *th = &thinkercap;
 
    if(camera)
    {
@@ -455,13 +455,12 @@ void P_RunEffects(void)
       snum = (ss->sector - sectors) * numsectors;
    }
 
-   while((currentthinker = currentthinker->next) != &thinkercap)
+   while((th = th->next) != &thinkercap)
    {
-      if(currentthinker->function == P_MobjThinker)
+      mobj_t *mobj;
+      if((mobj = dynamic_cast<mobj_t *>(th)))
       {
-         int rnum;
-         mobj_t *mobj = (mobj_t *)currentthinker;
-         rnum = snum + (mobj->subsector->sector - sectors);
+         int rnum = snum + (mobj->subsector->sector - sectors);
          if(mobj->effects)
          {
             // run only if possibly visible

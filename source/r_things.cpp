@@ -27,11 +27,14 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "c_io.h"
 #include "doomstat.h"
 #include "w_wad.h"
 #include "g_game.h"
 #include "d_main.h"
+#include "m_swap.h"
 #include "p_skin.h"
 #include "r_main.h"
 #include "r_bsp.h"
@@ -39,6 +42,8 @@
 #include "r_draw.h"
 #include "r_things.h"
 #include "m_argv.h"
+#include "p_partcl.h"
+#include "p_portal.h"
 #include "p_user.h"
 #include "e_edf.h"
 #include "p_info.h"

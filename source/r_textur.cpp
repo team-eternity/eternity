@@ -24,21 +24,21 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <time.h>
-
 #include "z_zone.h"
+#include "i_system.h"
 #include "c_io.h"
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
 #include "e_hash.h"
+#include "m_swap.h"
 #include "p_setup.h"
 #include "r_data.h"
 #include "r_draw.h"
 #include "r_ripple.h"
-#include "w_wad.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 //
 // Texture definition.

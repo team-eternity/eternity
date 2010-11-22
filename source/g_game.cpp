@@ -27,10 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <time.h>
-#include <stdarg.h>
-#include <errno.h>
-
+#include "z_zone.h"
+#include "i_system.h"
 #include "d_io.h"
 #include "c_io.h"
 #include "c_net.h"
@@ -82,6 +80,8 @@
 #include "acs_intr.h"
 #include "metaapi.h"
 #include "p_maputl.h"
+#include "e_player.h"
+#include "version.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -3001,7 +3001,6 @@ void G_ScrambleRand()
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
    rngseed = (unsigned int) time(NULL);
-
 }
 
 void G_DoNewGame (void)

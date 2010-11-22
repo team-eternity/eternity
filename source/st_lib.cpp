@@ -24,13 +24,15 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "v_video.h"
-#include "w_wad.h"
+#include "m_swap.h"
 #include "st_stuff.h"
 #include "st_lib.h"
 #include "r_main.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 int sts_always_red;      //jff 2/18/98 control to disable status color changes
 int sts_pct_always_gray; // killough 2/21/98: always gray %'s? bug or feature?

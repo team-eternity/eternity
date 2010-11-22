@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "g_game.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
@@ -382,7 +383,7 @@ void A_SkelMissile(mobj_t *actor)
    
    mo->x += mo->momx;
    mo->y += mo->momy;
-   P_SetTarget(&mo->tracer, actor->target);  // killough 11/98
+   P_SetTarget<mobj_t>(&mo->tracer, actor->target);  // killough 11/98
 }
 
 #define TRACEANGLE 0xc000000   /* killough 9/9/98: change to #define */
@@ -665,16 +666,16 @@ void A_VileChase(mobj_t *actor)
                   (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
                
                corpsehit->health = info->spawnhealth;
-               P_SetTarget(&corpsehit->target, NULL);  // killough 11/98
+               P_SetTarget<mobj_t>(&corpsehit->target, NULL);  // killough 11/98
 
                if(demo_version >= 203)
                {         // kilough 9/9/98
-                  P_SetTarget(&corpsehit->lastenemy, NULL);
+                  P_SetTarget<mobj_t>(&corpsehit->lastenemy, NULL);
                   corpsehit->flags &= ~MF_JUSTHIT;
                }
                
                // killough 8/29/98: add to appropriate thread
-               P_UpdateThinker(&corpsehit->thinker);
+               corpsehit->Update();
                
                return;
             }
@@ -764,9 +765,9 @@ void A_VileTarget(mobj_t *actor)
                      demo_version < 203 ? actor->target->x : actor->target->y,
                      actor->target->z,E_SafeThingType(MT_FIRE));
    
-   P_SetTarget(&actor->tracer, fog);   // killough 11/98
-   P_SetTarget(&fog->target, actor);
-   P_SetTarget(&fog->tracer, actor->target);
+   P_SetTarget<mobj_t>(&actor->tracer, fog);   // killough 11/98
+   P_SetTarget<mobj_t>(&fog->target, actor);
+   P_SetTarget<mobj_t>(&fog->tracer, actor->target);
    A_Fire(fog);
 }
 
@@ -1008,13 +1009,11 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    {
       // count total number of skulls currently on the level
       int count = 20;
-      thinker_t *currentthinker;
-      for(currentthinker = thinkercap.next;
-          currentthinker != &thinkercap;
-          currentthinker = currentthinker->next)
+      CThinker *th;
+      for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
-         if((currentthinker->function == P_MobjThinker) &&
-            ((mobj_t *)currentthinker)->type == skullType)
+         mobj_t *mo;
+         if((mo = dynamic_cast<mobj_t *>(th)) && mo->type == skullType)
          {
             if(--count < 0)         // killough 8/29/98: early exit
                return;
@@ -1064,7 +1063,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
+   newmobj->Update();
 
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
@@ -1076,7 +1075,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
       return;
    }
    
-   P_SetTarget(&newmobj->target, actor->target);
+   P_SetTarget<mobj_t>(&newmobj->target, actor->target);
    A_SkullAttack(newmobj);
 }
 
@@ -1141,7 +1140,7 @@ static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 //
 void A_BossDeath(mobj_t *mo)
 {
-   thinker_t *th;
+   CThinker *th;
    line_t    junk;
    int       i;
 
@@ -1166,9 +1165,9 @@ void A_BossDeath(mobj_t *mo)
          // scan the remaining thinkers to see if all bosses are dead
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
-            if(th->function == P_MobjThinker)
+            mobj_t *mo2;
+            if((mo2 = dynamic_cast<mobj_t *>(th)))
             {
-               mobj_t *mo2 = (mobj_t *)th;
                if(mo2 != mo && 
                   (mo2->flags2 & boss_specs[i].thing_flag) && 
                   mo2->health > 0)
@@ -1216,7 +1215,7 @@ void A_BossDeath(mobj_t *mo)
 //
 void A_KeenDie(mobj_t* mo)
 {
-   thinker_t *th;
+   CThinker *th;
    line_t   junk;
    
    A_Fall(mo);
@@ -1225,9 +1224,9 @@ void A_KeenDie(mobj_t* mo)
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
+      mobj_t *mo2;
+      if((mo2 = dynamic_cast<mobj_t *>(th)))
       {
-         mobj_t *mo2 = (mobj_t *) th;
          if(mo2 != mo && mo2->type == mo->type && mo2->health > 0)
             return;                           // other Keen not dead
       }
@@ -1382,14 +1381,14 @@ void A_BrainSpit(mobj_t *mo)
    // spawn brain missile
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 
                             mo->z + DEFAULTMISSILEZ);
-   P_SetTarget(&newmobj->target, targ);
+   P_SetTarget<mobj_t>(&newmobj->target, targ);
    newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
    // killough 7/18/98: brain friendliness is transferred
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
    
    // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
+   newmobj->Update();
    
    S_StartSound(NULL, sfx_bospit);
 }
@@ -1468,7 +1467,7 @@ void A_SpawnFly(mobj_t *mo)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
+   newmobj->Update();
    
    if(P_LookForTargets(newmobj,true))      // killough 9/4/98
       P_SetMobjState(newmobj, newmobj->info->seestate);

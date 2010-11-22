@@ -25,21 +25,19 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_PLAYER__
-#define __D_PLAYER__
-
-typedef struct player_s player_t;
+#ifndef D_PLAYER_H__
+#define D_PLAYER_H__
 
 // The player data structure depends on a number
 // of other structs: items (internal inventory),
 // animation states (closely tied to the sprites
 // used to represent them, unfortunately).
-#include "d_items.h"
+//#include "d_items.h"
 #include "p_pspr.h"
 
 // In addition, the player is just a special
 // case of the generic moving object/actor.
-#include "p_mobj.h"
+//#include "p_mobj.h"
 
 // Finally, for odd reasons, the player input
 // is buffered within the player data struct,
@@ -47,11 +45,13 @@ typedef struct player_s player_t;
 #include "d_ticcmd.h"
 
 // skins.
-#include "p_skin.h"
+//#include "p_skin.h"
 
 // haleyjd: player classes
-#include "e_player.h"
+//#include "e_player.h"
 
+struct playerclass_t;
+struct skin_t;
 
 //
 // Player states.
@@ -88,7 +88,7 @@ typedef enum
 //
 // Extended player object info: player_t
 //
-struct player_s
+struct player_t
 {
    mobj_t        *mo;
    playerclass_t *pclass;      // haleyjd 09/27/07: player class

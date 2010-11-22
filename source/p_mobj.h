@@ -27,27 +27,23 @@
 #ifndef __P_MOBJ__
 #define __P_MOBJ__
 
-typedef struct mobj_s mobj_t;   //sf: move up here
-
-// Basics.
-#include "tables.h"
-#include "m_fixed.h"
-#include "m_random.h"
-
 // We need the thinker_t stuff.
-#include "d_think.h"
-
+#include "p_tick.h"
 // We need the WAD data structure for Map things,
 // from the THINGS lump.
 #include "doomdata.h"
-
+#include "doomdef.h"
 // States are tied to finite states are
 //  tied to animation frames.
 // Needs precompiled tables/data structures.
 #include "info.h"
-
 // sf: skins
 #include "p_skin.h"
+#include "m_fixed.h"
+#include "m_random.h"
+#include "tables.h"
+
+struct subsector_t;
 
 //
 // NOTES: mobj_t
@@ -328,6 +324,15 @@ typedef struct backpack_s
    char weapon;
 } backpack_t;
 
+// Each sector has a degenmobj_t in its center for sound origin purposes.
+class degenmobj_t : public CThinker
+{
+public:
+   fixed_t x, y, z;
+   // SoM: yes Quasar, this is entirely necessary
+   int     groupid; // The group the sound originated in
+};
+
 // Map Object definition.
 //
 // killough 2/20/98:
@@ -344,24 +349,22 @@ typedef struct backpack_s
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
 //
-struct mobj_s
+class mobj_t : public degenmobj_t
 {
-   // List: thinker links.
-   thinker_t           thinker;
+protected:
+   void Think();
 
-   // Info for drawing: position.
-   fixed_t             x;
-   fixed_t             y;
-   fixed_t             z;
+public:
+   
+   // Virtual methods (overridables)
+   // Inherited from CThinker:
+   virtual void Update();
 
-#ifdef R_LINKEDPORTALS
-   // SoM: yes Quasar, this is entirely necessary (see degenmobj_t)
-   int     groupid; // The group the sound originated in
-#endif
+   // Data members
 
    // More list: links in sector (if needed)
-   struct mobj_s*      snext;
-   struct mobj_s**     sprev; // killough 8/10/98: change to ptr-to-ptr
+   mobj_t             *snext;
+   mobj_t            **sprev; // killough 8/10/98: change to ptr-to-ptr
 
    //More drawing info: to determine current sprite.
    angle_t             angle;  // orientation
@@ -370,10 +373,10 @@ struct mobj_s
 
    // Interaction info, by BLOCKMAP.
    // Links in blocks (if needed).
-   struct mobj_s*      bnext;
-   struct mobj_s**     bprev; // killough 8/11/98: change to ptr-to-ptr
+   mobj_t             *bnext;
+   mobj_t            **bprev; // killough 8/11/98: change to ptr-to-ptr
 
-   struct subsector_s* subsector;
+   subsector_t        *subsector;
 
    // The closest interval over all contacted Sectors.
    fixed_t             floorz;
@@ -421,7 +424,7 @@ struct mobj_s
 
    // Thing being chased/attacked (or NULL),
    // also the originator for missiles.
-   struct mobj_s*      target;
+   mobj_t             *target;
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
@@ -438,7 +441,7 @@ struct mobj_s
 
    // Additional info record for player avatars only.
    // Only valid if thing is a player
-   struct player_s*    player;
+   player_t *          player;
    skin_t *            skin;   //sf: skin
 
    // Player number last looked for.
@@ -448,10 +451,10 @@ struct mobj_s
    mapthing_t          spawnpoint;     
 
    // Thing being chased/attacked for tracers.
-   struct mobj_s*      tracer; 
+   mobj_t             *tracer; 
 
    // new field: last known enemy -- killough 2/15/98
-   struct mobj_s*      lastenemy;
+   mobj_t             *lastenemy;
 
    // killough 8/2/98: friction properties part of sectors,
    // not objects -- removed friction properties from here
@@ -497,7 +500,7 @@ struct mobj_s
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are
    // spawned.
-   mobj_t *tid_next;   // ptr to next thing in tid chain
+   mobj_t  *tid_next;  // ptr to next thing in tid chain
    mobj_t **tid_prevn; // ptr to last thing's next pointer
 
 #ifdef R_LINKEDPORTALS
@@ -597,7 +600,7 @@ extern int FloatBobOffsets[];
 
 // Thing Collections
 
-typedef struct MobjCollection_s
+struct MobjCollection
 {
    int type;          // internal mobj type #
    int num;           // number of mobj_t's in collection
@@ -605,7 +608,7 @@ typedef struct MobjCollection_s
    mobj_t **ptrarray; // reallocating pointer array
 
    int wrapiterator;  // persistent index for wrap iteration
-} MobjCollection;
+}; 
 
 void P_InitMobjCollection(MobjCollection *, int);
 void P_ReInitMobjCollection(MobjCollection *, int);

@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "w_wad.h"
 #include "r_draw.h"

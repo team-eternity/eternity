@@ -25,7 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
-
+#include "z_zone.h"
+#include "i_system.h"
 #include "c_io.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -34,6 +35,7 @@
 #include "r_things.h"
 #include "p_setup.h"
 #include "p_map.h"
+#include "p_portal.h"
 
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
@@ -41,9 +43,6 @@
 // entries. The entries are arranged much like pixels in a screen buffer where 
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
 linkoffset_t **linktable = NULL;
-
-
-
 
 // The group list is allocated PU_STATIC because it isn't level specific, however,
 // each element is allocated PU_LEVEL. P_InitPortals clears the list and sets the 
@@ -61,15 +60,10 @@ static pgroup_t **groups = NULL;
 static int      groupcount = 0;
 static int      grouplimit = 0;
 
-
-
-
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
 boolean useportalgroups = false;
-
-
 
 //
 // P_InitPortals
@@ -86,8 +80,6 @@ void P_InitPortals(void)
 
    useportalgroups = false;
 }
-
-
 
 //
 // R_SetSectorGroupID
@@ -113,8 +105,6 @@ void R_SetSectorGroupID(sector_t *sector, int groupid)
    for(i = 0; i < sector->linecount; ++i)
       sector->lines[i]->soundorg.groupid = groupid;
 }
-
-
 
 //
 // P_CreatePortalGroup
@@ -148,8 +138,6 @@ int P_CreatePortalGroup(sector_t *from)
    P_GatherSectors(from, groupid);
    return groupid;
 }
-
-
 
 //
 // P_GatherSectors
@@ -241,9 +229,6 @@ void P_GatherSectors(sector_t *from, int groupid)
    group->listsize += count;
 }
 
-
-
-
 //
 // P_GetLinkOffset
 //
@@ -277,9 +262,6 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 
    return linktable[startgroup * groupcount + targetgroup];
 }
-
-
-
 
 //
 // P_AddLinkOffset
@@ -317,9 +299,6 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 
    return 0;
 }
-
-
-
 
 //
 // P_CheckLinkedPortal
@@ -397,9 +376,6 @@ static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
    return true;
 }
 
-
-
-
 //
 // P_GatherLinks
 //
@@ -453,10 +429,6 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
    }
 }
 
-
-
-
-
 static void P_GlobalPortalStateCheck()
 {
    sector_t *sec;
@@ -481,9 +453,6 @@ static void P_GlobalPortalStateCheck()
          P_CheckLPortalState(line);
    }
 }
-
-
-
 
 //
 // P_BuildLinkTable
@@ -583,8 +552,6 @@ boolean P_BuildLinkTable(void)
    return true;
 }
 
-
-
 //
 // P_LinkRejectTable
 //
@@ -619,8 +586,6 @@ void P_LinkRejectTable(void)
       } // s
    } // i
 }
-
-
 
 // -----------------------------------------
 // Begin portal teleportation
@@ -660,14 +625,10 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
    return 1;
 }
 
-
-
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // SoM: Utility functions
-
-
+//
 
 //
 // P_GetPortalState
@@ -699,10 +660,6 @@ static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
    return ret;
 }
 
-
-
-
-
 void P_CheckCPortalState(sector_t *sec)
 {
    boolean     obscured;
@@ -718,10 +675,6 @@ void P_CheckCPortalState(sector_t *sec)
                
    sec->c_pflags = P_GetPortalState(sec->c_portal, sec->c_pflags, obscured);
 }
-
-
-
-
 
 void P_CheckFPortalState(sector_t *sec)
 {
@@ -739,9 +692,6 @@ void P_CheckFPortalState(sector_t *sec)
    sec->f_pflags = P_GetPortalState(sec->f_portal, sec->f_pflags, obscured);
 }
 
-
-
-
 void P_CheckLPortalState(line_t *line)
 {
    if(!line->portal)
@@ -752,7 +702,6 @@ void P_CheckLPortalState(line_t *line)
    
    line->pflags = P_GetPortalState(line->portal, line->pflags, false);
 }
-
 
 //
 // P_SetFloorHeight
@@ -768,7 +717,6 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
    P_CheckFPortalState(sec);
 }
 
-
 //
 // P_SetCeilingHeight
 //
@@ -782,8 +730,6 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 
    P_CheckCPortalState(sec);
 }
-
-
 
 void P_SetPortalBehavior(portal_t *portal, int newbehavior)
 {
@@ -808,10 +754,6 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
    }
 }
 
-
-
-
-
 void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
 {
    if(!sec->f_portal)
@@ -820,8 +762,6 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
    sec->f_pflags = newbehavior;
    P_CheckFPortalState(sec);
 }
-
-
 
 void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
 {
@@ -832,8 +772,6 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
    P_CheckCPortalState(sec);
 }
 
-
-
 void P_SetLPortalBehavior(line_t *line, int newbehavior)
 {
    if(!line->portal)
@@ -843,19 +781,16 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
    P_CheckLPortalState(line);
 }
 
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // SoM: Begin dummy mobj code
-
+//
 
 #if 0
 void P_DummyMobjThinker(mobj_t *mobj)
 {
    
 }
-
-
-
 
 void P_CreateDummy(mobj_t *owner)
 {

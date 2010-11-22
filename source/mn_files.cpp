@@ -49,6 +49,7 @@
 #include "r_data.h"
 #include "s_sound.h"
 #include "v_font.h"
+#include "v_block.h"
 #include "w_wad.h"
 
 //=============================================================================

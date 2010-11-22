@@ -26,6 +26,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "d_event.h"
 #include "c_net.h"
@@ -40,6 +41,7 @@
 #include "sounds.h"
 #include "s_sound.h"
 #include "a_small.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "d_gi.h"
 

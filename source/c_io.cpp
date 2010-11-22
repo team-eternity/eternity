@@ -55,6 +55,7 @@
 #include "a_small.h" // haleyjd
 #include "e_fonts.h"
 #include "m_qstr.h"
+#include "v_block.h"
 
 #define MESSAGES 384
 // keep the last 32 typed commands

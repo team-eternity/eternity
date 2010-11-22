@@ -27,10 +27,12 @@
 #ifndef __D_NET__
 #define __D_NET__
 
-#include "d_player.h"
+//#include "d_player.h"
+
+#include "d_ticcmd.h"
 
 // haleyjd 10/16/07: structures in this file must be packed
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -71,7 +73,7 @@ enum
 //
 // Network packet data.
 //
-struct doomdata_s
+struct doomdata_t
 {
     // High bit is retransmit request.
     unsigned int        checksum;
@@ -87,9 +89,7 @@ struct doomdata_s
        byte                data[GAME_OPTION_SIZE];
        ticcmd_t            cmds[BACKUPTICS];
     } d;
-} __attribute__((packed));
-
-typedef struct doomdata_s doomdata_t;
+};
 
 //
 // Startup packet difference
@@ -121,7 +121,7 @@ typedef struct doomdata_s doomdata_t;
 
 // haleyjd 10/18/07: removed unused startup_t structure
 
-struct doomcom_s
+struct doomcom_t
 {
     // Supposed to be DOOMCOM_ID?
     int32_t             id;
@@ -169,9 +169,7 @@ struct doomcom_s
     // The packet data to be sent.
     doomdata_t          data;
     
-} __attribute__((packed));
-
-typedef struct doomcom_s doomcom_t;
+};
 
 // Create any new ticcmds and broadcast to other players.
 void NetUpdate(void);
@@ -197,7 +195,7 @@ extern boolean opensocket;
 //extern int newtics, ticnum;     //sf
 
 // haleyjd 10/16/07
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

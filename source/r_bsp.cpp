@@ -32,6 +32,7 @@
 #include "r_plane.h"
 #include "r_things.h"
 #include "r_dynseg.h"
+#include "p_portal.h"
 #include "p_slopes.h"
 
 drawseg_t *ds_p;

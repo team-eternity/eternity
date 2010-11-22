@@ -37,11 +37,10 @@ enum
    LEVEL_FORMAT_HEXEN
 };
 
-typedef struct waddir_s *pwaddirptr;
+struct waddir_t;
+int P_CheckLevel(waddir_t *dir, int lumpnum); // haleyjd: now used in d_main.c
 
-int P_CheckLevel(pwaddirptr dir, int lumpnum); // haleyjd: now used in d_main.c
-
-void P_SetupLevel(pwaddirptr dir, const char *mapname, int playermask, skill_t skill);
+void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init(void);               // Called by startup code.
 void P_InitThingLists(void);
 
@@ -84,7 +83,7 @@ extern olo_t olo;
 extern int olo_loaded;
 #endif
 
-
+struct seg_t;
 void P_CalcSegLength(seg_t *seg);
 
 #endif

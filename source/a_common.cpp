@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -91,7 +92,7 @@ void A_Look(mobj_t *actor)
             return;
 
          // soundtarget is valid, acquire it.
-         P_SetTarget(&actor->target, sndtarget);
+         P_SetTarget<mobj_t>(&actor->target, sndtarget);
 
          // If an ambush monster, we must additionally be able to see it.
          if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))

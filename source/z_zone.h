@@ -54,8 +54,12 @@
 #include <strings.h>
 #endif
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <float.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <time.h>
 
 // haleyjd: inttypes.h - on Windows, this comes from the source\Win32
 // directory.

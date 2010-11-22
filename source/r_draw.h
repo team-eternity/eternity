@@ -36,7 +36,7 @@
 // multiple sets of column drawing functions (ie., normal, low detail, and
 // quad buffer optimized).
 //
-typedef struct columndrawer_s
+struct columndrawer_t
 {
    void (*DrawColumn)(void);       // normal
    void (*DrawTLColumn)(void);     // translucent
@@ -50,7 +50,7 @@ typedef struct columndrawer_s
 
    void (*ResetBuffer)(void);      // reset function (may be null)
    
-} columndrawer_t;
+};
 
 extern columndrawer_t r_normal_drawer;
 
@@ -90,13 +90,13 @@ enum
 // multiple sets of span drawing functions (ie, low detail, low precision,
 // high precision, etc.)
 //
-typedef struct spandrawer_s
+struct spandrawer_t
 {
    void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
 
    boolean haslp64; // haleyjd: if true, 64x64 flat drawer is low-precision
-} spandrawer_t;
+};
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
 extern spandrawer_t r_spandrawer;    // normal

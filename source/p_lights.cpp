@@ -30,6 +30,7 @@
 #include "doomdef.h"
 #include "m_random.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "p_spec.h"
 #include "p_tick.h"
 
@@ -47,21 +48,21 @@
 // Passed a fireflicker_t structure containing light levels and timing
 // Returns nothing
 //
-void T_FireFlicker(fireflicker_t *flick)
+void fireflicker_t::Think()
 {
    int amount;
    
-   if(--flick->count)
+   if(--this->count)
       return;
    
    amount = (P_Random(pr_lights)&3)*16;
    
-   if(flick->sector->lightlevel - amount < flick->minlight)
-      flick->sector->lightlevel = flick->minlight;
+   if(this->sector->lightlevel - amount < this->minlight)
+      this->sector->lightlevel = this->minlight;
    else
-      flick->sector->lightlevel = flick->maxlight - amount;
+      this->sector->lightlevel = this->maxlight - amount;
    
-   flick->count = 4;
+   this->count = 4;
 }
 
 //
@@ -72,20 +73,20 @@ void T_FireFlicker(fireflicker_t *flick)
 // Passed a lightflash_t structure containing light levels and timing
 // Returns nothing
 //
-void T_LightFlash(lightflash_t* flash)
+void lightflash_t::Think()
 {
-   if(--flash->count)
+   if(--this->count)
       return;
    
-   if(flash->sector->lightlevel == flash->maxlight)
+   if(this->sector->lightlevel == this->maxlight)
    {
-      flash->sector->lightlevel = flash->minlight;
-      flash->count = (P_Random(pr_lights)&flash->mintime)+1;
+      this->sector->lightlevel = this->minlight;
+      this->count = (P_Random(pr_lights)&this->mintime)+1;
    }
    else
    {
-      flash->sector->lightlevel = flash->maxlight;
-      flash->count = (P_Random(pr_lights)&flash->maxtime)+1;
+      this->sector->lightlevel = this->maxlight;
+      this->count = (P_Random(pr_lights)&this->maxtime)+1;
    }
 }
 
@@ -97,20 +98,20 @@ void T_LightFlash(lightflash_t* flash)
 // Passed a strobe_t structure containing light levels and timing
 // Returns nothing
 //
-void T_StrobeFlash(strobe_t *flash)
+void strobe_t::Think()
 {
-   if(--flash->count)
+   if(--this->count)
       return;
    
-   if(flash->sector->lightlevel == flash->minlight)
+   if(this->sector->lightlevel == this->minlight)
    {
-      flash-> sector->lightlevel = flash->maxlight;
-      flash->count = flash->brighttime;
+      this->sector->lightlevel = this->maxlight;
+      this->count = this->brighttime;
    }
    else
    {
-      flash-> sector->lightlevel = flash->minlight;
-      flash->count = flash->darktime;
+      this->sector->lightlevel = this->minlight;
+      this->count = this->darktime;
    }
 }
 
@@ -122,27 +123,27 @@ void T_StrobeFlash(strobe_t *flash)
 // Passed a glow_t structure containing light levels and timing
 // Returns nothing
 //
-void T_Glow(glow_t *g)
+void glow_t::Think()
 {
-   switch(g->direction)
+   switch(this->direction)
    {
    case -1:
       // light dims
-      g->sector->lightlevel -= GLOWSPEED;
-      if(g->sector->lightlevel <= g->minlight)
+      this->sector->lightlevel -= GLOWSPEED;
+      if(this->sector->lightlevel <= this->minlight)
       {
-         g->sector->lightlevel += GLOWSPEED;
-         g->direction = 1;
+         this->sector->lightlevel += GLOWSPEED;
+         this->direction = 1;
       }
       break;
       
    case 1:
       // light brightens
-      g->sector->lightlevel += GLOWSPEED;
-      if(g->sector->lightlevel >= g->maxlight)
+      this->sector->lightlevel += GLOWSPEED;
+      if(this->sector->lightlevel >= this->maxlight)
       {
-         g->sector->lightlevel -= GLOWSPEED;
-         g->direction = -1;
+         this->sector->lightlevel -= GLOWSPEED;
+         this->direction = -1;
       }
       break;
    }
@@ -156,38 +157,38 @@ void T_Glow(glow_t *g)
 //
 // haleyjd 01/10/07: changes for param line specs
 //
-void T_LightFade(lightfade_t *lf)
+void lightfade_t::Think()
 {
    boolean done = false;
 
    // fade light by one step
-   lf->lightlevel += lf->step;
+   this->lightlevel += this->step;
 
    // fading up or down? check if done
-   if((lf->step > 0) ? lf->lightlevel >= lf->destlevel 
-                     : lf->lightlevel <= lf->destlevel)
+   if((this->step > 0) ? this->lightlevel >= this->destlevel 
+                       : this->lightlevel <= this->destlevel)
    {
-      lf->lightlevel = lf->destlevel;
+      this->lightlevel = this->destlevel;
       done = true;
    }
 
    // write light level back to sector
-   lf->sector->lightlevel = (int16_t)(lf->lightlevel / FRACUNIT);
+   this->sector->lightlevel = (int16_t)(this->lightlevel / FRACUNIT);
 
-   if(lf->sector->lightlevel < 0)
-      lf->sector->lightlevel = 0;
-   else if(lf->sector->lightlevel > 255)
-      lf->sector->lightlevel = 255;
+   if(this->sector->lightlevel < 0)
+      this->sector->lightlevel = 0;
+   else if(this->sector->lightlevel > 255)
+      this->sector->lightlevel = 255;
 
    if(done)
    {
-      if(lf->type == fade_once)
-         P_RemoveThinker(&lf->thinker);
+      if(this->type == fade_once)
+         this->Remove();
       else
       {
          // reverse glow direction
-         lf->destlevel = (lf->lightlevel == lf->glowmax) ? lf->glowmin : lf->glowmax;
-         lf->step      = (lf->destlevel - lf->lightlevel) / lf->glowspeed;
+         this->destlevel = (this->lightlevel == this->glowmax) ? this->glowmin : this->glowmax;
+         this->step      = (this->destlevel - this->lightlevel) / this->glowspeed;
       }
    }
 }
@@ -218,11 +219,9 @@ void P_SpawnFireFlicker(sector_t *sector)
    // Nothing special about it during gameplay.
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flick = (fireflicker_t *)(Z_Calloc(1, sizeof(*flick), PU_LEVSPEC, 0));
+   flick = new fireflicker_t;
+   flick->Add();
    
-   P_AddThinker(&flick->thinker);
-   
-   flick->thinker.function = T_FireFlicker;
    flick->sector = sector;
    flick->maxlight = sector->lightlevel;
    flick->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel)+16;
@@ -244,11 +243,9 @@ void P_SpawnLightFlash(sector_t *sector)
    // nothing special about it during gameplay
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flash = (lightflash_t *)(Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0));
+   flash = new lightflash_t;
+   flash->Add();
    
-   P_AddThinker(&flash->thinker);
-   
-   flash->thinker.function = T_LightFlash;
    flash->sector = sector;
    flash->maxlight = sector->lightlevel;
    
@@ -272,14 +269,12 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 {
    strobe_t *flash;
    
-   flash = (strobe_t *)(Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0));
-   
-   P_AddThinker(&flash->thinker);
+   flash = new strobe_t;
+   flash->Add();
    
    flash->sector = sector;
    flash->darktime = fastOrSlow;
    flash->brighttime = STROBEBRIGHT;
-   flash->thinker.function = T_StrobeFlash;
    flash->maxlight = sector->lightlevel;
    flash->minlight = P_FindMinSurroundingLight(sector, sector->lightlevel);
    
@@ -307,14 +302,13 @@ void P_SpawnGlowingLight(sector_t *sector)
 {
    glow_t *g;
    
-   g = (glow_t *)(Z_Calloc(1, sizeof(*g), PU_LEVSPEC, 0));
+   g = new glow_t;
    
-   P_AddThinker(&g->thinker);
+   g->Add();
    
    g->sector = sector;
    g->minlight = P_FindMinSurroundingLight(sector,sector->lightlevel);
    g->maxlight = sector->lightlevel;
-   g->thinker.function = T_Glow;
    g->direction = -1;
    
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
@@ -571,10 +565,8 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 dobackside:
       rtn = 1;
 
-      lf = (lightfade_t *)(Z_Calloc(1, sizeof(*lf), PU_LEVSPEC, NULL));
-      lf->thinker.function = T_LightFade;
-      
-      P_AddThinker(&lf->thinker);       // add thinker
+      lf = new lightfade_t;
+      lf->Add();       // add thinker
 
       lf->sector = &sectors[i];
       
@@ -633,10 +625,8 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 dobackside:
       rtn = 1;
 
-      lf = (lightfade_t *)(Z_Calloc(1, sizeof(*lf), PU_LEVSPEC, NULL));
-      lf->thinker.function = T_LightFade;
-
-      P_AddThinker(&lf->thinker);
+      lf = new lightfade_t;
+      lf->Add();
 
       lf->sector = &sectors[i];
 
@@ -686,10 +676,8 @@ int EV_StrobeLight(line_t *line, int tag,
    {
 dobackside:
       rtn = 1;
-      flash = (strobe_t *)(Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0));
-      
-      flash->thinker.function = T_StrobeFlash;
-      P_AddThinker(&flash->thinker);
+      flash = new strobe_t;
+      flash->Add();
       
       flash->sector     = &sectors[i];
       flash->maxlight   = maxval;
@@ -734,10 +722,8 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
    {
 dobackside:
       rtn = 1;
-      flash = (lightflash_t *)(Z_Calloc(1, sizeof(*flash), PU_LEVSPEC, 0));
-      
-      flash->thinker.function = T_LightFlash;
-      P_AddThinker(&flash->thinker);      
+      flash = new lightflash_t;
+      flash->Add();
       
       flash->sector   = &sectors[i];
       flash->maxlight = maxval;

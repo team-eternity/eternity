@@ -70,6 +70,9 @@ void R_PushPost(boolean pushmasked, struct planehash_s *overlay);
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);
 
+struct texture_t;
+struct texcol_t;
+
 void R_DrawMaskedColumn(column_t *tcolumn);
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
 void R_SortVisSprites(void);

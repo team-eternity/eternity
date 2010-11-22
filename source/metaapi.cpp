@@ -27,6 +27,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "doomtype.h"
 #include "m_dllist.h"
 #include "e_hash.h"

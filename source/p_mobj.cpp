@@ -25,13 +25,17 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
+#include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "m_random.h"
+#include "r_draw.h"
 #include "r_main.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_portal.h"
 #include "p_tick.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -47,6 +51,7 @@
 #include "d_gi.h"
 #include "p_user.h"
 #include "g_dmflag.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -519,10 +524,10 @@ void P_XYMovement(mobj_t* mo)
                {
                   // send it back after the SOB who fired it
                   if(mo->tracer)
-                     P_SetTarget(&mo->tracer, mo->target);
+                     P_SetTarget<mobj_t>(&mo->tracer, mo->target);
                }
 
-               P_SetTarget(&mo->target, clip.BlockingMobj);
+               P_SetTarget<mobj_t>(&mo->target, clip.BlockingMobj);
                return;
             }
             // explode a missile
@@ -1136,87 +1141,87 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
 //
 // P_MobjThinker
 //
-void P_MobjThinker(mobj_t *mobj)
+void mobj_t::Think()
 {
    int oldwaterstate, waterstate = 0;
-   fixed_t z;
+   fixed_t lz;
 
    // killough 11/98:
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
    // haleyjd 05/23/08: increment counters
-   if(mobj->alphavelocity)
+   if(alphavelocity)
    {
-      mobj->translucency += mobj->alphavelocity;
-      if(mobj->translucency < 0)
+      translucency += alphavelocity;
+      if(translucency < 0)
       {
-         mobj->translucency = 0;
-         if(mobj->flags3 & MF3_CYCLEALPHA)
-            mobj->alphavelocity = -mobj->alphavelocity;
+         translucency = 0;
+         if(flags3 & MF3_CYCLEALPHA)
+            alphavelocity = -alphavelocity;
       }
-      else if(mobj->translucency > FRACUNIT)
+      else if(translucency > FRACUNIT)
       {
-         mobj->translucency = FRACUNIT;
-         if(mobj->flags3 & MF3_CYCLEALPHA)
-            mobj->alphavelocity = -mobj->alphavelocity;
+         translucency = FRACUNIT;
+         if(flags3 & MF3_CYCLEALPHA)
+            alphavelocity = -alphavelocity;
       }
    }
 
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
-   if(mobj->subsector->sector->heightsec != -1)
+   if(subsector->sector->heightsec != -1)
    {
-      sector_t *hs = &sectors[mobj->subsector->sector->heightsec];
+      sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (mobj->z < hs->floorheight);
+      waterstate = (z < hs->floorheight);
    }
 
    // haleyjd 03/12/03: Heretic Wind transfer specials
    // haleyjd 03/19/06: moved here from P_XYMovement
-   if(mobj->flags3 & MF3_WINDTHRUST && !(mobj->flags & MF_NOCLIP))
+   if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
    {
-      sector_t *sec = mobj->subsector->sector;
+      sector_t *sec = subsector->sector;
 
       if(sec->hticPushType >= 40 && sec->hticPushType <= 51)
-         P_ThrustMobj(mobj, sec->hticPushAngle, sec->hticPushForce);
+         P_ThrustMobj(this, sec->hticPushAngle, sec->hticPushForce);
    }
 
    // momentum movement
    clip.BlockingMobj = NULL;
-   if(mobj->momx | mobj->momy || mobj->flags & MF_SKULLFLY)
+   if(momx | momy || flags & MF_SKULLFLY)
    {
-      P_XYMovement(mobj);
-      if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
+      P_XYMovement(this);
+      if(removed) // killough
          return;       // mobj was removed
    }
 
    if(comp[comp_overunder])
       clip.BlockingMobj = NULL;
 
-   z = mobj->z;
+   lz = z;
 
-   if(mobj->flags2 & MF2_FLOATBOB) // haleyjd
+   if(flags2 & MF2_FLOATBOB) // haleyjd
    {
-      int idx = (mobj->floatbob + leveltime) & 63;
+      int idx = (floatbob + leveltime) & 63;
 
-      mobj->z += FloatBobDiffs[idx];
-      z = mobj->z - FloatBobOffsets[idx];
+      z += FloatBobDiffs[idx];
+      lz = z - FloatBobOffsets[idx];
    }
 
    // haleyjd: OVER_UNDER: major changes
-   if(mobj->momz || clip.BlockingMobj || z != mobj->floorz)
+   if(momz || clip.BlockingMobj || lz != floorz)
    {
       if(!comp[comp_overunder]  &&
-         ((mobj->flags3 & MF3_PASSMOBJ) || (mobj->flags & MF_SPECIAL)))
+         ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
          mobj_t *onmo;
 
-         if(!(onmo = P_GetThingUnder(mobj)))
+         if(!(onmo = P_GetThingUnder(this)))
          {
-            P_ZMovement(mobj);
-            mobj->intflags &= ~MIF_ONMOBJ;
+            P_ZMovement(this);
+            intflags &= ~MIF_ONMOBJ;
          }
          else
          {
@@ -1225,115 +1230,113 @@ void P_MobjThinker(mobj_t *mobj)
             if(demo_version >= 333 && onmo->info->topdamage > 0)
             {
                if(!(leveltime & onmo->info->topdamagemask) &&
-                  (!mobj->player || !mobj->player->powers[pw_ironfeet]))
+                  (!player || !player->powers[pw_ironfeet]))
                {
-                  P_DamageMobj(mobj, onmo, onmo,
+                  P_DamageMobj(this, onmo, onmo,
                                onmo->info->topdamage, 
                                onmo->info->mod);
                }
             }
 
-            if(mobj->player && mobj == mobj->player->mo &&
-               mobj->momz < -LevelInfo.gravity*8)
+            if(player && this == player->mo &&
+               momz < -LevelInfo.gravity*8)
             {
-               P_PlayerHitFloor(mobj, true);
+               P_PlayerHitFloor(this, true);
             }
-            if(onmo->z + onmo->height - mobj->z <= 24*FRACUNIT)
+            if(onmo->z + onmo->height - z <= 24*FRACUNIT)
             {
-               player_t *player = mobj->player;
-
-               if(player && player->mo == mobj)
+               if(player && player->mo == this)
                {
                   fixed_t deltaview;
-                  player->viewheight -= onmo->z + onmo->height - mobj->z;
+                  player->viewheight -= onmo->z + onmo->height - z;
                   deltaview = (VIEWHEIGHT - player->viewheight)>>3;
                   if(deltaview > player->deltaviewheight)
                   {
                      player->deltaviewheight = deltaview;
                   }
                }
-               mobj->z = onmo->z + onmo->height;
+               z = onmo->z + onmo->height;
             }
-            mobj->intflags |= MIF_ONMOBJ;
-            mobj->momz = 0;
+            intflags |= MIF_ONMOBJ;
+            momz = 0;
 
-            if(mobj->info->crashstate != NullStateNum
-               && mobj->flags & MF_CORPSE
-               && !(mobj->intflags & MIF_CRASHED))
+            if(info->crashstate != NullStateNum
+               && flags & MF_CORPSE
+               && !(intflags & MIF_CRASHED))
             {
-               mobj->intflags |= MIF_CRASHED;
-               P_SetMobjState(mobj, mobj->info->crashstate);
+               intflags |= MIF_CRASHED;
+               P_SetMobjState(this, info->crashstate);
             }
          }
       }
       else
-         P_ZMovement(mobj);
+         P_ZMovement(this);
 
-      if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
+      if(removed) // killough
          return;       // mobj was removed
    }
-   else if(!(mobj->momx | mobj->momy) && !sentient(mobj))
+   else if(!(momx | momy) && !sentient(this))
    {                                  // non-sentient objects at rest
-      mobj->intflags |= MIF_ARMED;    // arm a mine which has come to rest
+      intflags |= MIF_ARMED;    // arm a mine which has come to rest
 
       // killough 9/12/98: objects fall off ledges if they are hanging off
       // slightly push off of ledge if hanging more than halfway off
 
-      if(mobj->z > mobj->dropoffz       &&  // Only objects contacting dropoff
-         !(mobj->flags & MF_NOGRAVITY)  &&  // Only objects which fall
-         !(mobj->flags2 & MF2_FLOATBOB) &&  // haleyjd: not floatbobbers
+      if(z > dropoffz       &&  // Only objects contacting dropoff
+         !(flags & MF_NOGRAVITY)  &&  // Only objects which fall
+         !(flags2 & MF2_FLOATBOB) &&  // haleyjd: not floatbobbers
          !comp[comp_falloff] && demo_version >= 203) // Not in old demos
-         P_ApplyTorque(mobj);               // Apply torque
+         P_ApplyTorque(this);               // Apply torque
       else
-         mobj->intflags &= ~MIF_FALLING, mobj->gear = 0;  // Reset torque
+         intflags &= ~MIF_FALLING, gear = 0;  // Reset torque
    }
 
 #ifdef R_LINKEDPORTALS
-   P_CheckPortalTeleport(mobj);
+   P_CheckPortalTeleport(this);
 #endif
 
    // haleyjd 11/06/05: handle crashstate here
-   if(mobj->info->crashstate != NullStateNum
-      && mobj->flags & MF_CORPSE
-      && !(mobj->intflags & MIF_CRASHED)
-      && mobj->z <= mobj->floorz)
+   if(info->crashstate != NullStateNum
+      && flags & MF_CORPSE
+      && !(intflags & MIF_CRASHED)
+      && z <= floorz)
    {
-      mobj->intflags |= MIF_CRASHED;
-      P_SetMobjState(mobj, mobj->info->crashstate);
+      intflags |= MIF_CRASHED;
+      P_SetMobjState(this, info->crashstate);
    }
 
    // haleyjd 08/07/04: handle deep water plane hits
    oldwaterstate = waterstate;
 
-   if(mobj->subsector->sector->heightsec != -1)
+   if(subsector->sector->heightsec != -1)
    {
-      sector_t *hs = &sectors[mobj->subsector->sector->heightsec];
+      sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (mobj->z < hs->floorheight);
+      waterstate = (z < hs->floorheight);
    }
    else
       waterstate = 0;
 
-   if(mobj->flags & (MF_MISSILE|MF_BOUNCES))
+   if(flags & (MF_MISSILE|MF_BOUNCES))
    {
       // any time a missile or bouncer crosses, splash
       if(oldwaterstate != waterstate)
-         E_HitWater(mobj, mobj->subsector->sector);
+         E_HitWater(this, subsector->sector);
    }
    else if(oldwaterstate == 0 && waterstate != 0)
    {
       // normal things only splash going into the water
-      E_HitWater(mobj, mobj->subsector->sector);
+      E_HitWater(this, subsector->sector);
    }
 
    // cycle through states,
    // calling action functions at transitions
    // killough 11/98: simplify
 
-   if(mobj->tics != -1) // you can cycle through multiple states in a tic
+   if(tics != -1) // you can cycle through multiple states in a tic
    {
-      if(!--mobj->tics)
-         P_SetMobjState(mobj, mobj->state->nextstate);
+      if(!--tics)
+         P_SetMobjState(this, state->nextstate);
    }
    else
    {
@@ -1343,29 +1346,53 @@ void P_MobjThinker(mobj_t *mobj)
       // 2) respawn is on OR
       // 3) thing always respawns or removes itself after death.
       boolean can_respawn =
-         mobj->flags & MF_COUNTKILL &&
+         flags & MF_COUNTKILL &&
            (respawnmonsters ||
-            (mobj->flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
+            (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
 
       // haleyjd 07/13/05: increment mobj->movecount earlier
-      if(can_respawn || mobj->effects & FX_FLIESONDEATH)
-         ++mobj->movecount;
+      if(can_respawn || effects & FX_FLIESONDEATH)
+         ++movecount;
 
       // don't respawn dormant things
       // don't respawn norespawn things
-      if(mobj->flags2 & (MF2_DORMANT | MF2_NORESPAWN))
+      if(flags2 & (MF2_DORMANT | MF2_NORESPAWN))
          return;
 
-      if(can_respawn && mobj->movecount >= mobj->info->respawntime &&
-         !(leveltime & 31) && P_Random(pr_respawn) <= mobj->info->respawnchance)
+      if(can_respawn && movecount >= info->respawntime &&
+         !(leveltime & 31) && P_Random(pr_respawn) <= info->respawnchance)
       { 
          // check for nightmare respawn
-         if(mobj->flags2 & MF2_REMOVEDEAD)
-            P_RemoveMobj(mobj);
+         if(flags2 & MF2_REMOVEDEAD)
+            P_RemoveMobj(this);
          else
-            P_NightmareRespawn(mobj);
+            P_NightmareRespawn(this);
       }
    }
+}
+
+//
+// Update
+//
+// haleyjd 11/22/10: Overrides CThinker::Update.
+// Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
+// 
+void mobj_t::Update()
+{
+   int tclass = th_misc;
+
+   if(this->removed)
+      tclass = th_delete;
+   else if(this->health > 0 && 
+           (this->flags & MF_COUNTKILL || this->flags3 & MF3_KILLABLE))
+   {
+      if(this->flags & MF_FRIEND)
+         tclass = th_friends;
+      else
+         tclass = th_enemies;
+   }
+
+   AddToThreadedList(tclass);
 }
 
 extern fixed_t tmsecfloorz;
@@ -1376,7 +1403,7 @@ extern fixed_t tmsecceilz;
 //
 mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   mobj_t     *mobj = (mobj_t *)(Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL));
+   mobj_t     *mobj = new mobj_t;
    mobjinfo_t *info = &mobjinfo[type];
    state_t    *st;
 
@@ -1387,11 +1414,11 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->radius  = info->radius;
    mobj->height  = P_ThingInfoHeight(info); // phares
    mobj->flags   = info->flags;
-   mobj->flags2  = info->flags2; // haleyjd
-   mobj->flags3  = info->flags3; // haleyjd
-   mobj->flags4  = info->flags4; // haleyjd
-   mobj->effects = info->particlefx;  // haleyjd 07/13/03
-   mobj->damage  = info->damage;      // haleyjd 08/02/04
+   mobj->flags2  = info->flags2;     // haleyjd
+   mobj->flags3  = info->flags3;     // haleyjd
+   mobj->flags4  = info->flags4;     // haleyjd
+   mobj->effects = info->particlefx; // haleyjd 07/13/03
+   mobj->damage  = info->damage;     // haleyjd 08/02/04
 
 #ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
@@ -1486,9 +1513,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // haleyjd 08/07/04: new floorclip system
    P_AdjustFloorClip(mobj);
 
-   mobj->thinker.function = P_MobjThinker;
-
-   P_AddThinker(&mobj->thinker);
+   mobj->Add();
 
    // e6y
    mobj->friction = ORIG_FRICTION;
@@ -1582,14 +1607,14 @@ void P_RemoveMobj(mobj_t *mobj)
 
    if(demo_version >= 203)
    {
-      P_SetTarget(&mobj->target,    NULL);
-      P_SetTarget(&mobj->tracer,    NULL);
-      P_SetTarget(&mobj->lastenemy, NULL);
+      P_SetTarget<mobj_t>(&mobj->target,    NULL);
+      P_SetTarget<mobj_t>(&mobj->tracer,    NULL);
+      P_SetTarget<mobj_t>(&mobj->lastenemy, NULL);
    }
 
    // free block
 
-   P_RemoveThinker(&mobj->thinker);
+   mobj->Remove();
 }
 
 //
@@ -1984,7 +2009,7 @@ spawnit:
       demo_version >= 203)
    {
       mobj->flags |= MF_FRIEND;            // killough 10/98:
-      P_UpdateThinker(&mobj->thinker);     // transfer friendliness flag
+      mobj->Update();                      // transfer friendliness flag
    }
 
    // killough 7/20/98: exclude friends
@@ -2220,7 +2245,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 
    S_StartSound(th, th->info->seesound);
 
-   P_SetTarget(&th->target, source); // where it came from // killough 11/98
+   P_SetTarget<mobj_t>(&th->target, source); // where it came from // killough 11/98
    an = P_PointToAngle(source->x, source->y, dest->x, dest->y);
 
    // fuzzy player --  haleyjd: add total invisibility, ghost
@@ -2303,7 +2328,7 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    else
       S_StartSound(th, th->info->seesound);
 
-   P_SetTarget(&th->target, source);   // killough 11/98
+   P_SetTarget<mobj_t>(&th->target, source);   // killough 11/98
    th->angle = an;
    th->momx = FixedMul(th->info->speed,finecosine[an>>ANGLETOFINESHIFT]);
    th->momy = FixedMul(th->info->speed,finesine[an>>ANGLETOFINESHIFT]);
@@ -2331,7 +2356,7 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
    S_StartSound(mo, mo->info->seesound);
 
    // haleyjd 09/21/03: don't set this directly!
-   P_SetTarget(&mo->target, source);
+   P_SetTarget<mobj_t>(&mo->target, source);
 
    mo->angle = angle;
    angle >>= ANGLETOFINESHIFT;
@@ -2347,14 +2372,12 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
 void P_Massacre(int friends)
 {
    mobj_t *mo;
-   thinker_t *think;
+   CThinker *think;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
-      if(think->function != P_MobjThinker)
+      if(!(mo = dynamic_cast<mobj_t *>(think)))
          continue;
-
-      mo = (mobj_t *)think;
 
       if((mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) &&
          mo->health > 0)
@@ -2480,19 +2503,16 @@ int P_ThingInfoHeight(mobjinfo_t *mi)
 //
 void P_ChangeThingHeights(void)
 {
-   thinker_t *th;
+   CThinker *th;
 
    if(gamestate != GS_LEVEL)
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
-      {
-         mobj_t *mo = (mobj_t *)th;
-
+      mobj_t *mo;
+      if((mo = dynamic_cast<mobj_t *>(th)))
          mo->height = P_ThingInfoHeight(mo->info);
-      }
    }
 }
 
@@ -2679,14 +2699,13 @@ void P_ClearMobjCollection(MobjCollection *mc)
 //
 void P_CollectThings(MobjCollection *mc)
 {
-   thinker_t *th;
+   CThinker *th;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
+      mobj_t *mo;
+      if((mo = dynamic_cast<mobj_t *>(th)))
       {
-         mobj_t *mo = (mobj_t *)th;
-
          if(mo->type == mc->type)
          {
             if(mc->num >= mc->numalloc)
@@ -3201,7 +3220,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
          break;
       }
 
-      P_UpdateThinker(&mo->thinker);
+      mo->Update();
    }
 
    return 0;

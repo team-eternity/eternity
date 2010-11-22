@@ -26,14 +26,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-
+#include "i_system.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "d_mod.h"
 #include "r_main.h"
 #include "p_mobj.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "s_sound.h"

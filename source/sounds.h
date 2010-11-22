@@ -37,10 +37,6 @@
 // SoundFX struct.
 //
 
-struct sfxinfo_s;
-
-typedef struct musicinfo_s musicinfo_t;
-
 // haleyjd 06/12/08: origin subchannels
 typedef enum
 {
@@ -149,7 +145,7 @@ struct sfxinfo_t
 // MusicInfo struct.
 //
 
-struct musicinfo_s
+struct musicinfo_t
 {
    // up to 6-character name
    char *name;

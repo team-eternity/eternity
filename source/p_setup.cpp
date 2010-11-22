@@ -30,10 +30,12 @@
 #include "d_gi.h"
 #include "d_main.h"
 #include "hu_stuff.h"
+#include "d_mod.h"
 #include "doomstat.h"
 #include "hu_frags.h"
 #include "m_bbox.h"
 #include "m_argv.h"
+#include "m_swap.h"
 #include "g_game.h"
 #include "w_wad.h"
 #include "w_levels.h"
@@ -44,6 +46,7 @@
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
@@ -2100,7 +2103,7 @@ static const char *levellumps[] =
 // sf 11/9/99: We need to do this now because we no longer have to conform to
 // the MAPxy or ExMy standard previously imposed.
 //
-int P_CheckLevel(struct waddir_s *dir, int lumpnum)
+int P_CheckLevel(waddir_t *dir, int lumpnum)
 {
    int i, ln;
    
@@ -2358,7 +2361,7 @@ void P_InitThingLists(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask, 
+void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask, 
                   skill_t skill)
 {
    int lumpnum;

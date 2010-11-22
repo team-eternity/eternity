@@ -110,7 +110,7 @@ enum
 // Adding this allows a level of indirection to be added to the wad system,
 // letting us have wads that are not part of the master directory.
 //
-typedef struct waddir_s
+struct waddir_t
 {
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
@@ -120,7 +120,7 @@ typedef struct waddir_s
    int        numallocsa; // number of entries allocated for the infoptrs table   
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
-} waddir_t;
+};
 
 //
 // haleyjd 10/09/09: wfileadd_t

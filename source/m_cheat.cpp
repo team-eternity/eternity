@@ -35,12 +35,12 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "m_cheat.h"
-
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"  // Ty 03/27/98 - externalized strings
 #include "d_gi.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "d_io.h"   // SoM 3/14/2002: strncasecmp
+#include "d_mod.h"
 #include "dstrings.h"
 #include "e_states.h"
 #include "g_game.h"
@@ -896,7 +896,7 @@ void A_SorcNukeSpec(mobj_t *actor)
 static void M_NukeMonsters(void)
 {   
    int killcount = 0;
-   thinker_t *currentthinker = &thinkercap;
+   CThinker *currentthinker = &thinkercap;
    int mask = MF_FRIEND;
       
    do
@@ -906,10 +906,9 @@ static void M_NukeMonsters(void)
          mobj_t *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
 
-         if(currentthinker->function != P_MobjThinker)
+         if(!(mo = dynamic_cast<mobj_t *>(currentthinker)))
             continue;
 
-         mo = (mobj_t *)currentthinker;
          mi = &mobjinfo[mo->type];
 
          if(!(mo->flags & mask) && // killough 7/20/98

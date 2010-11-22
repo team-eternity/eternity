@@ -26,12 +26,14 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "i_video.h"
 #include "c_runcmd.h"
 #include "g_game.h"
 #include "hu_over.h"
 #include "mn_engin.h" 
+#include "p_partcl.h"
 #include "p_xenemy.h"
 #include "r_main.h"
 #include "r_things.h"
@@ -45,6 +47,7 @@
 #include "m_bbox.h"
 #include "r_sky.h"
 #include "s_sound.h"
+#include "v_block.h"
 #include "v_video.h"
 #include "w_wad.h"
 #include "d_deh.h"
@@ -1144,14 +1147,13 @@ void R_DoomTLStyle(void)
       // if we are in-level, update all things of the corresponding type too
       if(gamestate == GS_LEVEL)
       {
-         thinker_t *th;
+         CThinker *th;
          
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
-            if(th->function == P_MobjThinker)
+            mobj_t *mo;
+            if((mo = dynamic_cast<mobj_t *>(th)))
             {
-               mobj_t *mo = (mobj_t *)th;
-               
                if(mo->type == tnum)
                {
                   if(action & R_CLEARTL)

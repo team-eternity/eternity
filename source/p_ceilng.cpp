@@ -24,11 +24,15 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_info.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_data.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
@@ -99,11 +103,14 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void T_MoveCeiling(ceiling_t *ceiling)
+void ceiling_t::Think()
 {
    result_e  res;
-   
-   switch(ceiling->direction)
+
+   if(inStasis)
+      return;
+
+   switch(direction)
    {
    case plat_stop:
       // If ceiling in stasis, do nothing
@@ -111,15 +118,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
 
    case plat_up:
       // Ceiling is moving up
-      res = T_MovePlane
-            (
-               ceiling->sector,
-               ceiling->speed,
-               ceiling->topheight,
-               -1,
-               1,
-               ceiling->direction
-            );
+      res = T_MovePlane(sector, speed, topheight, -1, 1, direction);
 
       // if not a silent crusher, make moving sound
       // haleyjd: now handled through sound sequences
@@ -127,34 +126,34 @@ void T_MoveCeiling(ceiling_t *ceiling)
       // handle reaching destination height
       if(res == pastdest)
       {
-         switch(ceiling->type)
+         switch(type)
          {
             // plain movers are just removed
          case raiseToHighest:
          case genCeiling:
-            P_RemoveActiveCeiling(ceiling);
+            P_RemoveActiveCeiling(this);
             break;
 
             // movers with texture change, change the texture then get removed
          case genCeilingChgT:
          case genCeilingChg0:
             //jff 3/14/98 transfer old special field as well
-            P_TransferSectorSpecial(ceiling->sector, &(ceiling->special));
+            P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
-            P_SetSectorCeilingPic(ceiling->sector, ceiling->texture);
-            P_RemoveActiveCeiling(ceiling);
+            P_SetSectorCeilingPic(sector, texture);
+            P_RemoveActiveCeiling(this);
             break;
 
             // crushers reverse direction at the top
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(ceiling->sector, true))
-               P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
+            if(!S_CheckSectorSequenceLoop(sector, true))
+               P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case genSilentCrusher:
          case genCrusher:
          case fastCrushAndRaise:
          case crushAndRaise:
-            ceiling->direction = plat_down;
+            direction = plat_down;
             break;
             
          default:
@@ -165,15 +164,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
   
    case plat_down:
       // Ceiling moving down
-      res = T_MovePlane
-            (
-               ceiling->sector,
-               ceiling->speed,
-               ceiling->bottomheight,
-               ceiling->crush,
-               1,
-               ceiling->direction
-            );
+      res = T_MovePlane(sector, speed, bottomheight, crush, 1, direction);
 
       // if not silent crusher type make moving sound
       // haleyjd: now handled through sound sequences
@@ -181,27 +172,27 @@ void T_MoveCeiling(ceiling_t *ceiling)
       // handle reaching destination height
       if(res == pastdest)
       {
-         switch(ceiling->type)
+         switch(this->type)
          {
             // 02/09/98 jff change slow crushers' speed back to normal
             // start back up
          case genSilentCrusher:
          case genCrusher:
-            if(ceiling->oldspeed < CEILSPEED*3)
-               ceiling->speed = ceiling->oldspeed;
-            ceiling->direction = plat_up; //jff 2/22/98 make it go back up!
+            if(oldspeed < CEILSPEED*3)
+               speed = this->oldspeed;
+            direction = plat_up; //jff 2/22/98 make it go back up!
             break;
             
             // make platform stop at bottom of all crusher strokes
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(ceiling->sector, true))
-               P_CeilingSequence(ceiling->sector, CNOISE_SEMISILENT);
+            if(!S_CheckSectorSequenceLoop(sector, true))
+               P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case crushAndRaise: 
-            ceiling->speed = CEILSPEED;
+            speed = CEILSPEED;
          case fastCrushAndRaise:
-            ceiling->direction = plat_up;
+            direction = plat_up;
             break;
             
             // in the case of ceiling mover/changer, change the texture
@@ -209,10 +200,10 @@ void T_MoveCeiling(ceiling_t *ceiling)
          case genCeilingChgT:
          case genCeilingChg0:
             //jff add to fix bug in special transfers from changes
-            P_TransferSectorSpecial(ceiling->sector, &(ceiling->special));
+            P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
-            P_SetSectorCeilingPic(ceiling->sector, ceiling->texture);
-            P_RemoveActiveCeiling(ceiling);
+            P_SetSectorCeilingPic(sector, texture);
+            P_RemoveActiveCeiling(this);
             break;
 
             // all other case, just remove the active ceiling
@@ -221,7 +212,7 @@ void T_MoveCeiling(ceiling_t *ceiling)
          case lowerToLowest:
          case lowerToMaxFloor:
          case genCeiling:
-            P_RemoveActiveCeiling(ceiling);
+            P_RemoveActiveCeiling(this);
             break;
             
          default:
@@ -233,18 +224,18 @@ void T_MoveCeiling(ceiling_t *ceiling)
          // handle the crusher encountering an obstacle
          if(res == crushed)
          {
-            switch(ceiling->type)
+            switch(type)
             {
                //jff 02/08/98 slow down slow crushers on obstacle
             case genCrusher:  
             case genSilentCrusher:
-               if(ceiling->oldspeed < CEILSPEED*3)
-                  ceiling->speed = CEILSPEED / 8;
+               if(oldspeed < CEILSPEED*3)
+                  speed = CEILSPEED / 8;
                break;
             case silentCrushAndRaise:
             case crushAndRaise:
             case lowerAndCrush:
-               ceiling->speed = CEILSPEED / 8;
+               speed = CEILSPEED / 8;
                break;
                
             default:
@@ -297,10 +288,9 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
   
       // create a new ceiling thinker
       rtn = 1;
-      ceiling = (ceiling_t *)(Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0));
-      P_AddThinker (&ceiling->thinker);
+      ceiling = new ceiling_t;
+      ceiling->Add();
       sec->ceilingdata = ceiling;               //jff 2/22/98
-      ceiling->thinker.function = T_MoveCeiling;
       ceiling->sector = sec;
       ceiling->crush = -1;
   
@@ -399,7 +389,7 @@ int P_ActivateInStasisCeiling(line_t *line)
       if(ceiling->tag == line->tag && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
-         ceiling->thinker.function = T_MoveCeiling;
+         ceiling->inStasis = false;
 
          // haleyjd: restart sound sequence
          switch(ceiling->type)
@@ -443,7 +433,7 @@ int EV_CeilingCrushStop(line_t* line)
       {
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;
-         ceiling->thinker.function = NULL;
+         ceiling->inStasis = true;
          S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
          rtn = 1;
       }
@@ -483,7 +473,7 @@ void P_RemoveActiveCeiling(ceiling_t* ceiling)
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
-   P_RemoveThinker(&ceiling->thinker);
+   ceiling->Remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    free(list);

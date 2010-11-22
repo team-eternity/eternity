@@ -48,6 +48,7 @@
 /* includes ************************/
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"

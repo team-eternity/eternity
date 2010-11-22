@@ -3419,6 +3419,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\r_patch.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\r_pcheck.h"
 						>
 					</File>

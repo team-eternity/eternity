@@ -33,9 +33,12 @@
 #ifndef __A_SMALL_H__
 #define __A_SMALL_H__
 
-#include "p_mobj.h"
-
 #ifndef EE_NO_SMALL_SUPPORT
+
+//#include "p_mobj.h"
+#include "doomtype.h"
+class mobj_t;
+struct line_t;
 
 #include "amx.h"
 

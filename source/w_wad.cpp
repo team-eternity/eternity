@@ -24,6 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
 #include <fcntl.h>
@@ -32,6 +34,7 @@
 #include "s_sound.h"
 #include "p_skin.h"
 #include "m_misc.h"
+#include "m_swap.h"
 #include "w_wad.h"
 
 //

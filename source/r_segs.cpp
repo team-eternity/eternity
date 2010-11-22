@@ -23,10 +23,11 @@
 //      All the clipping: columns, horizontal spans, sky columns.
 //
 //-----------------------------------------------------------------------------
-//
+
 // 4/25/98, 5/2/98 killough: reformatted, beautified
 
-
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "r_main.h"

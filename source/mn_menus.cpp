@@ -50,6 +50,7 @@
 #include "i_video.h"
 #include "m_misc.h"
 #include "m_random.h"
+#include "m_swap.h"
 #include "mn_htic.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"

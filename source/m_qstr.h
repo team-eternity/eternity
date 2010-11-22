@@ -36,12 +36,12 @@
 #ifndef M_QSTR_H__
 #define M_QSTR_H__
 
-typedef struct qstring_s
+struct qstring_t
 {
    char   *buffer;
    size_t  index;
    size_t  size;
-} qstring_t;
+};
 
 #define qstring_npos ((size_t) -1)
 

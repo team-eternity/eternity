@@ -24,6 +24,10 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
+#include "m_swap.h"
+#include "v_block.h"
 #include "v_video.h"
 
 // patch rendering globals -- like dc_ in r_draw.c

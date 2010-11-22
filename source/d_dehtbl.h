@@ -23,7 +23,6 @@
 
 #include "sounds.h"
 #include "info.h"
-#include "d_think.h" // for actionf_t
 #include "p_mobj.h"
 
 typedef struct deh_bexptr_s

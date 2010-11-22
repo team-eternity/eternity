@@ -35,6 +35,8 @@
 #include "hu_stuff.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "m_swap.h"
+#include "p_mobj.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -230,9 +232,9 @@ static void ACS_addThread(acsthinker_t *script, acscript_t *acscript)
 {
    acsthinker_t *next = acscript->threads;
 
-   if((script->next = next))
-      next->prev = &script->next;
-   script->prev = &acscript->threads;
+   if((script->nextthread = next))
+      next->prevthread = &script->nextthread;
+   script->prevthread = &acscript->threads;
    acscript->threads = script;
 }
 
@@ -243,11 +245,11 @@ static void ACS_addThread(acsthinker_t *script, acscript_t *acscript)
 //
 static void ACS_removeThread(acsthinker_t *script)
 {
-   acsthinker_t **prev = script->prev;
-   acsthinker_t *next  = script->next;
+   acsthinker_t **prev = script->prevthread;
+   acsthinker_t *next  = script->nextthread;
    
    if((*prev = next))
-      next->prev = prev;
+      next->prevthread = prev;
 }
 
 //
@@ -274,7 +276,7 @@ static void ACS_scriptFinished(acsthinker_t *script)
    for(i = 0; i < vm->numScripts; ++i)
    {
       // loop on threads list for each script
-      for(th = vm->scripts[i].threads; th; th = th->next)
+      for(th = vm->scripts[i].threads; th; th = th->nextthread)
       {
          if(th->sreg  == ACS_STATE_WAITSCRIPT &&
             th->sdata == acscript->number)
@@ -299,9 +301,9 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
    // notify waiting scripts that this script has ended
    ACS_scriptFinished(script);
 
-   P_SetTarget(&script->trigger, NULL);
+   P_SetTarget<mobj_t>(&script->trigger, NULL);
 
-   P_RemoveThinker(&script->thinker);
+   script->Remove();
 }
 
 //
@@ -312,10 +314,8 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 //
 static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
 {
-   acsthinker_t *newScript;
+   acsthinker_t *newScript = new acsthinker_t;
 
-   newScript = (acsthinker_t *)(Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL));
-	
    newScript->vmID        = vmID;
    newScript->scriptNum   = acs->number;
    newScript->internalNum = iNum;
@@ -335,8 +335,7 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
    newScript->vm          = vm;
 
    // set up thinker
-   newScript->thinker.function = T_ACSThinker;
-   P_AddThinker(&newScript->thinker);
+   newScript->Add();
 
    // mark as running
    newScript->sreg = ACS_STATE_RUNNING;
@@ -416,7 +415,7 @@ static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, int16_t spec, int side,
 //
 static int ACS_countThings(int type, int tid)
 {
-   thinker_t *th;
+   CThinker *th;
    int count = 0;
 
    // don't bother counting if no valid search is specified
@@ -431,10 +430,9 @@ static int ACS_countThings(int type, int tid)
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
+      mobj_t *mo;
+      if((mo = dynamic_cast<mobj_t *>(th)))
       {
-         mobj_t *mo = (mobj_t *)th;
-
          if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
          {
             // don't count killable things that are dead
@@ -547,28 +545,27 @@ enum
 // Function for acs thinkers. Runs the script by interpreting its bytecode
 // until the script terminates, is suspended, or waits on some condition.
 //
-void T_ACSThinker(acsthinker_t *script)
+void acsthinker_t::Think()
 {
    // cache vm data in local vars for efficiency
-   register int *ip    = script->ip;
-   register int stp    = script->stp;
-   register int *stack = script->stack;
-
+   register int *ip    = this->ip;
+   register int stp    = this->stp;    
+   register int *stack = this->stack;
    int action = ACTION_RUN;
    int opcode, temp, count = 0;
 
    // should the script terminate?
-   if(script->sreg == ACS_STATE_TERMINATE)
-      ACS_stopScript(script, script->acscript);
+   if(this->sreg == ACS_STATE_TERMINATE)
+      ACS_stopScript(this, this->acscript);
 
    // is the script running?
-   if(script->sreg != ACS_STATE_RUNNING)
+   if(this->sreg != ACS_STATE_RUNNING)
       return;
 
    // check for delays
-   if(script->delay)
+   if(this->delay)
    {
-      --script->delay;
+      --this->delay;
       return;
    }
   
@@ -587,70 +584,70 @@ void T_ACSThinker(acsthinker_t *script)
          action = ACTION_ENDSCRIPT;
          break;
       case OP_SUSPEND:
-         script->sreg = ACS_STATE_SUSPEND;
+         this->sreg = ACS_STATE_SUSPEND;
          action = ACTION_STOP;
          break;
       case OP_PUSHNUMBER:
          PUSH(IPNEXT());
          break;
       case OP_LINESPEC1:
-         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
-                          script->lineSide,
+         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
+                          this->lineSide,
                           STACK_AT(1), 0, 0, 0, 0);
          DECSTP();
          break;
       case OP_LINESPEC2:
-         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
-                          script->lineSide,
+         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
+                          this->lineSide,
                           STACK_AT(2), STACK_AT(1), 0, 0, 0);
          DECSTP2();
          break;
       case OP_LINESPEC3:
-         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
-                          script->lineSide,
+         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
+                          this->lineSide,
                           STACK_AT(3), STACK_AT(2), STACK_AT(1), 0, 0);
          DECSTP3();
          break;
       case OP_LINESPEC4:
-         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
-                          script->lineSide,
+         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
+                          this->lineSide,
                           STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1), 0);
          DECSTP4();
          break;
       case OP_LINESPEC5:
-         ACS_execLineSpec(script->line, script->trigger, (int16_t) IPNEXT(), 
-                          script->lineSide,
+         ACS_execLineSpec(this->line, this->trigger, (int16_t) IPNEXT(), 
+                          this->lineSide,
                           STACK_AT(5), STACK_AT(4), STACK_AT(3), STACK_AT(2), STACK_AT(1));
          DECSTP5();
          break;
       case OP_LINESPEC1_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp, 
-                             script->lineSide, 1, ip);
+         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp, 
+                             this->lineSide, 1, ip);
          ++ip; // skip past arg
          break;
       case OP_LINESPEC2_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
-                             script->lineSide, 2, ip);
+         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
+                             this->lineSide, 2, ip);
          ip += 2; // skip past args
          break;
       case OP_LINESPEC3_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
-                             script->lineSide, 3, ip);
+         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
+                             this->lineSide, 3, ip);
          ip += 3; // skip past args
          break;
       case OP_LINESPEC4_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
-                             script->lineSide, 4, ip);
+         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
+                             this->lineSide, 4, ip);
          ip += 4; // skip past args
          break;
       case OP_LINESPEC5_IMM:
          temp = IPNEXT(); // read special
-         ACS_execLineSpecImm(script->line, script->trigger, (int16_t) temp,
-                             script->lineSide, 5, ip);
+         ACS_execLineSpecImm(this->line, this->trigger, (int16_t) temp,
+                             this->lineSide, 5, ip);
          ip += 5; // skip past args
          break;
       case OP_ADD:
@@ -699,7 +696,7 @@ void T_ACSThinker(acsthinker_t *script)
          ST_BINOP(ST_OP1 >= ST_OP2);
          break;
       case OP_ASSIGNSCRIPTVAR:
-         script->locals[IPNEXT()] = POP();
+         this->locals[IPNEXT()] = POP();
          break;
       case OP_ASSIGNMAPVAR:
          ACSmapvars[IPNEXT()] = POP();
@@ -708,7 +705,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] = POP();
          break;
       case OP_PUSHSCRIPTVAR:
-         PUSH(script->locals[IPNEXT()]);
+         PUSH(this->locals[IPNEXT()]);
          break;
       case OP_PUSHMAPVAR:
          PUSH(ACSmapvars[IPNEXT()]);
@@ -717,7 +714,7 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(ACSworldvars[IPNEXT()]);
          break;
       case OP_ADDSCRIPTVAR:
-         script->locals[IPNEXT()] += POP();
+         this->locals[IPNEXT()] += POP();
          break;
       case OP_ADDMAPVAR:
          ACSmapvars[IPNEXT()] += POP();
@@ -726,7 +723,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] += POP();
          break;
       case OP_SUBSCRIPTVAR:
-         script->locals[IPNEXT()] -= POP();
+         this->locals[IPNEXT()] -= POP();
          break;
       case OP_SUBMAPVAR:
          ACSmapvars[IPNEXT()] -= POP();
@@ -735,7 +732,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] -= POP();
          break;
       case OP_MULSCRIPTVAR:
-         script->locals[IPNEXT()] *= POP();
+         this->locals[IPNEXT()] *= POP();
          break;
       case OP_MULMAPVAR:
          ACSmapvars[IPNEXT()] *= POP();
@@ -750,7 +747,7 @@ void T_ACSThinker(acsthinker_t *script)
             action = ACTION_ENDSCRIPT;
             break;
          }
-         script->locals[IPNEXT()] /= temp;
+         this->locals[IPNEXT()] /= temp;
          break;
       case OP_DIVMAPVAR:
          if(!(temp = POP()))
@@ -777,7 +774,7 @@ void T_ACSThinker(acsthinker_t *script)
             action = ACTION_ENDSCRIPT;
             break;
          }
-         script->locals[IPNEXT()] %= temp;
+         this->locals[IPNEXT()] %= temp;
          break;
       case OP_MODMAPVAR:
          if(!(temp = POP()))
@@ -798,7 +795,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] %= temp;
          break;
       case OP_INCSCRIPTVAR:
-         script->locals[IPNEXT()] += 1;
+         this->locals[IPNEXT()] += 1;
          break;
       case OP_INCMAPVAR:
          ACSmapvars[IPNEXT()] += 1;
@@ -807,7 +804,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] += 1;
          break;
       case OP_DECSCRIPTVAR:
-         script->locals[IPNEXT()] -= 1;
+         this->locals[IPNEXT()] -= 1;
          break;
       case OP_DECMAPVAR:
          ACSmapvars[IPNEXT()] -= 1;
@@ -816,7 +813,7 @@ void T_ACSThinker(acsthinker_t *script)
          ACSworldvars[IPNEXT()] -= 1;
          break;
       case OP_BRANCH:
-         ip = (int *)(script->data + IPCURR());
+         ip = (int *)(this->data + IPCURR());
          if(count >= 500000)
          {
             doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
@@ -825,7 +822,7 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_BRANCHNOTZERO:
          if(POP())
-            ip = (int *)(script->data + IPCURR());
+            ip = (int *)(this->data + IPCURR());
          else
             ++ip;
          if(count >= 500000)
@@ -838,11 +835,11 @@ void T_ACSThinker(acsthinker_t *script)
          DECSTP();
          break;
       case OP_DELAY:
-         script->delay = POP();
+         this->delay = POP();
          action = ACTION_STOP;
          break;
       case OP_DELAY_IMM:
-         script->delay = IPNEXT();
+         this->delay = IPNEXT();
          action = ACTION_STOP;
          break;
       case OP_RANDOM:
@@ -874,43 +871,43 @@ void T_ACSThinker(acsthinker_t *script)
          PUSH(temp);
          break;
       case OP_TAGWAIT:
-         script->sreg  = ACS_STATE_WAITTAG;
-         script->sdata = POP(); // get sector tag
+         this->sreg  = ACS_STATE_WAITTAG;
+         this->sdata = POP(); // get sector tag
          action = ACTION_STOP;
          break;
       case OP_TAGWAIT_IMM:
-         script->sreg  = ACS_STATE_WAITTAG;
-         script->sdata = IPNEXT(); // get sector tag
+         this->sreg  = ACS_STATE_WAITTAG;
+         this->sdata = IPNEXT(); // get sector tag
          action = ACTION_STOP;
          break;
       case OP_POLYWAIT:
-         script->sreg  = ACS_STATE_WAITPOLY;
-         script->sdata = POP(); // get poly tag
+         this->sreg  = ACS_STATE_WAITPOLY;
+         this->sdata = POP(); // get poly tag
          action = ACTION_STOP;
          break;
       case OP_POLYWAIT_IMM:
-         script->sreg  = ACS_STATE_WAITPOLY;
-         script->sdata = IPNEXT(); // get poly tag
+         this->sreg  = ACS_STATE_WAITPOLY;
+         this->sdata = IPNEXT(); // get poly tag
          action = ACTION_STOP;
          break;
       case OP_CHANGEFLOOR:
          temp = POP(); // get flat string index
-         P_ChangeFloorTex(script->stringtable[temp], POP()); // get tag
+         P_ChangeFloorTex(this->stringtable[temp], POP()); // get tag
          break;
       case OP_CHANGEFLOOR_IMM:
          temp = *ip++; // get tag
-         P_ChangeFloorTex(script->stringtable[IPNEXT()], temp);
+         P_ChangeFloorTex(this->stringtable[IPNEXT()], temp);
          break;
       case OP_CHANGECEILING:
          temp = POP(); // get flat string index
-         P_ChangeCeilingTex(script->stringtable[temp], POP()); // get tag
+         P_ChangeCeilingTex(this->stringtable[temp], POP()); // get tag
          break;
       case OP_CHANGECEILING_IMM:
          temp = IPNEXT(); // get tag
-         P_ChangeCeilingTex(script->stringtable[IPNEXT()], temp);
+         P_ChangeCeilingTex(this->stringtable[IPNEXT()], temp);
          break;
       case OP_RESTART:
-         ip = script->code;
+         ip = this->code;
          if(count >= 500000)
          {
             doom_printf(FC_ERROR "ACS Error: terminated runaway script\a");
@@ -948,7 +945,7 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_BRANCHZERO:
          if(!(POP()))
-            ip = (int *)(script->data + IPCURR());
+            ip = (int *)(this->data + IPCURR());
          else
             ++ip;
          if(count >= 500000)
@@ -958,27 +955,27 @@ void T_ACSThinker(acsthinker_t *script)
          }
          break;
       case OP_LINESIDE:
-         PUSH(script->lineSide);
+         PUSH(this->lineSide);
          break;
       case OP_SCRIPTWAIT:
-         script->sreg  = ACS_STATE_WAITSCRIPT;
-         script->sdata = POP(); // get script num
+         this->sreg  = ACS_STATE_WAITSCRIPT;
+         this->sdata = POP(); // get script num
          action = ACTION_STOP;
          break;
       case OP_SCRIPTWAIT_IMM:
-         script->sreg  = ACS_STATE_WAITSCRIPT;
-         script->sdata = IPNEXT(); // get script num
+         this->sreg  = ACS_STATE_WAITSCRIPT;
+         this->sdata = IPNEXT(); // get script num
          action = ACTION_STOP;
          break;
       case OP_CLEARLINESPECIAL:
-         if(script->line)
-            script->line->special = 0;
+         if(this->line)
+            this->line->special = 0;
          break;
       case OP_CASEJUMP:
          if(PEEK() == IPNEXT()) // compare top of stack against op+1
          {
             DECSTP(); // take the value off the stack
-            ip = (int *)(script->data + IPCURR()); // jump to op+2
+            ip = (int *)(this->data + IPCURR()); // jump to op+2
          }
          else
             ++ip; // increment past offset at op+2, leave value on stack
@@ -989,25 +986,25 @@ void T_ACSThinker(acsthinker_t *script)
          }
          break;
       case OP_STARTPRINT:
-         QStrClear(script->printBuffer);
+         QStrClear(this->printBuffer);
          break;
       case OP_ENDPRINT:
-         if(script->trigger && script->trigger->player)
-            player_printf(script->trigger->player, script->printBuffer->buffer);
+         if(this->trigger && this->trigger->player)
+            player_printf(this->trigger->player, this->printBuffer->buffer);
          else
-            player_printf(&players[consoleplayer], script->printBuffer->buffer);
+            player_printf(&players[consoleplayer], this->printBuffer->buffer);
          break;
       case OP_PRINTSTRING:
-         QStrCat(script->printBuffer, script->stringtable[POP()]);
+         QStrCat(this->printBuffer, this->stringtable[POP()]);
          break;
       case OP_PRINTINT:
          {
             char buffer[33];
-            QStrCat(script->printBuffer, M_Itoa(POP(), buffer, 10));
+            QStrCat(this->printBuffer, M_Itoa(POP(), buffer, 10));
          }
          break;
       case OP_PRINTCHAR:
-         QStrPutc(script->printBuffer, (char)POP());
+         QStrPutc(this->printBuffer, (char)POP());
          break;
       case OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
@@ -1023,15 +1020,15 @@ void T_ACSThinker(acsthinker_t *script)
          break;
       case OP_SECTORSOUND:
          {
-            mobj_t *src = NULL;
-            int vol    = POP();
-            int strnum = POP();
+            degenmobj_t *src = NULL;
+            int vol          = POP();
+            int strnum       = POP();
 
             // if script started from a line, use the frontsector's sound origin
-            if(script->line)
-               src = (mobj_t *)&(script->line->frontsector->soundorg);
+            if(this->line)
+               src = &(this->line->frontsector->soundorg);
 
-            S_StartSoundNameAtVolume(src, script->stringtable[strnum], vol, 
+            S_StartSoundNameAtVolume(src, this->stringtable[strnum], vol, 
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
@@ -1040,7 +1037,7 @@ void T_ACSThinker(acsthinker_t *script)
             int vol    = POP();
             int strnum = POP();
 
-            S_StartSoundNameAtVolume(NULL, script->stringtable[strnum], vol, 
+            S_StartSoundNameAtVolume(NULL, this->stringtable[strnum], vol, 
                                      ATTN_NORMAL, CHAN_AUTO);
          }
          break;
@@ -1049,8 +1046,8 @@ void T_ACSThinker(acsthinker_t *script)
             sector_t *sec;
             int strnum = POP();
 
-            if(script->line && (sec = script->line->frontsector))
-               S_StartSectorSequenceName(sec, script->stringtable[strnum], false);
+            if(this->line && (sec = this->line->frontsector))
+               S_StartSectorSequenceName(sec, this->stringtable[strnum], false);
             /*
             FIXME
             else
@@ -1070,7 +1067,7 @@ void T_ACSThinker(acsthinker_t *script)
             side   = POP();
             tag    = POP();
 
-            P_ChangeLineTex(script->stringtable[strnum], pos, side, tag, false);
+            P_ChangeLineTex(this->stringtable[strnum], pos, side, tag, false);
          }
          break;
       case OP_SETLINEBLOCKING:
@@ -1106,13 +1103,13 @@ void T_ACSThinker(acsthinker_t *script)
 
             while((mo = P_FindMobjFromTID(tid, mo, NULL)))
             {
-               S_StartSoundNameAtVolume(mo, script->stringtable[strnum], vol,
+               S_StartSoundNameAtVolume(mo, this->stringtable[strnum], vol,
                                         ATTN_NORMAL, CHAN_AUTO);
             }
          }
          break;
       case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(script->printBuffer->buffer, FC_GOLD, 20*35);
+         HU_CenterMsgTimedColor(this->printBuffer->buffer, FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution
@@ -1128,12 +1125,12 @@ void T_ACSThinker(acsthinker_t *script)
    {
    case ACTION_ENDSCRIPT:
       // end the script
-      ACS_stopScript(script, script->acscript);
+      ACS_stopScript(this, this->acscript);
       break;
    default:
       // copy fields back into script
-      script->ip  = ip;
-      script->stp = stp;
+      this->ip  = ip;
+      this->stp = stp;
       break;
    }
 }
@@ -1365,7 +1362,7 @@ void ACS_RunDeferredScripts(void)
                      rover->sreg != ACS_STATE_TERMINATE)
                      rover->sreg = ACS_STATE_SUSPEND;
 
-                  rover = rover->next;
+                  rover = rover->nextthread;
                }
             }
             break;
@@ -1380,7 +1377,7 @@ void ACS_RunDeferredScripts(void)
                   if(rover->sreg != ACS_STATE_STOPPED)
                      rover->sreg = ACS_STATE_TERMINATE;
 
-                  rover = rover->next;
+                  rover = rover->nextthread;
                }
             }
             break;
@@ -1438,7 +1435,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
          rover->sreg = ACS_STATE_RUNNING;
       }
 
-      rover = rover->next;
+      rover = rover->nextthread;
    }
 
    // if not an always-execute action and we restarted a stopped script,
@@ -1448,14 +1445,14 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       return foundScripts;
 
    // setup the new script thinker
-   newScript = (acsthinker_t *)(Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL));
+   newScript = new acsthinker_t;
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;
    newScript->ip          = scrData->code;
    newScript->line        = line;
    newScript->lineSide    = side;
-   P_SetTarget(&newScript->trigger, mo);
+   P_SetTarget<mobj_t>(&newScript->trigger, mo);
 
    // copy in some important data
    newScript->code        = scrData->code;
@@ -1470,8 +1467,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       newScript->locals[i] = args[i];
 
    // attach the thinker
-   newScript->thinker.function = T_ACSThinker;
-   P_AddThinker(&newScript->thinker);
+   newScript->Add();
 
    // add as a thread of the acscript
    ACS_addThread(newScript, scrData);
@@ -1531,7 +1527,7 @@ boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
                rover->sreg = ACS_STATE_TERMINATE;
                ret = true;
             }
-            rover = rover->next;
+            rover = rover->nextthread;
          }
       }
    }
@@ -1637,8 +1633,8 @@ void ACS_PrepareForLoad(void)
 void ACS_RestartSavedScript(acsthinker_t *th)
 {
    // nullify list links for safety
-   th->prev = NULL;
-   th->next = NULL;
+   th->prevthread = NULL;
+   th->nextthread = NULL;
 
    // reinitialize pointers
    th->vm          = acsVMs[th->vmID];
