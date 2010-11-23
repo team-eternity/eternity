@@ -611,7 +611,7 @@ void P_UnArchiveThinkers(void)
          Z_Free(th);
       th = next;
    }
-   P_InitThinkers();
+   CThinker::InitThinkers();
 
    // killough 2/14/98: count number of thinkers by skipping through them
    {
@@ -1480,7 +1480,7 @@ static void P_UnArchivePolyObj(polyobj_t *po)
 {
    int id;
    unsigned int angle;
-   degenmobj_t spawnSpot;
+   CPointThinker spawnSpot;
 
    // nullify all polyobject thinker pointers;
    // the thinkers themselves will fight over who gets the field

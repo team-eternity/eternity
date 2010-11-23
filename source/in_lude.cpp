@@ -123,7 +123,7 @@ void IN_StartCamera(void)
          // even kill it!) even tho it has been removed from the level. I make
          // it unshootable first so they lose interest.
          players[i].mo->flags &= ~MF_SHOOTABLE;
-         P_RemoveMobj(players[i].mo);
+         players[i].mo->Remove();
       }
             
       intercam.x = wi_camera->x;

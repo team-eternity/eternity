@@ -1020,9 +1020,9 @@ void acsthinker_t::Think()
          break;
       case OP_SECTORSOUND:
          {
-            degenmobj_t *src = NULL;
-            int vol          = POP();
-            int strnum       = POP();
+            CPointThinker *src = NULL;
+            int vol            = POP();
+            int strnum         = POP();
 
             // if script started from a line, use the frontsector's sound origin
             if(this->line)

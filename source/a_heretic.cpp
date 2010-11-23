@@ -682,7 +682,7 @@ void A_GenWizard(mobj_t *actor)
       (mo->z < mo->subsector->sector->floorheight))
    {
       // doesn't fit, so remove it immediately
-      P_RemoveMobj(mo);
+      mo->Remove();
       return;
    }
 
@@ -696,7 +696,7 @@ void A_GenWizard(mobj_t *actor)
    if(!P_TryMove(mo, mo->x, mo->y, false))
    {
       // can't move, remove it immediately
-      P_RemoveMobj(mo);
+      mo->Remove();
       return;
    }
 
@@ -924,7 +924,7 @@ void A_MakePod(mobj_t *actor)
    mo = P_SpawnMobj(x, y, ONFLOORZ, E_SafeThingType(MT_POD));
    if(!P_CheckPosition(mo, x, y))
    {
-      P_RemoveMobj(mo);
+      mo->Remove();
       return;
    }
    

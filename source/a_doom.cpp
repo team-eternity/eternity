@@ -1476,7 +1476,7 @@ void A_SpawnFly(mobj_t *mo)
    P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
    
    // remove self (i.e., cube).
-   P_RemoveMobj(mo);
+   mo->Remove();
 }
 
 // EOF

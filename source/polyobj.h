@@ -86,7 +86,7 @@ typedef struct polyobj_s
    line_t **lines;             // linedefs this polyobject must move
 
    mobj_t *spawnSpotMobj;      // for use during init only!
-   degenmobj_t spawnSpot;      // location of spawn spot
+   CPointThinker spawnSpot;    // location of spawn spot
    struct vertex_s centerPt;   // center point
    fixed_t zdist;              // viewz distance for sorting
    angle_t angle;              // for rotation

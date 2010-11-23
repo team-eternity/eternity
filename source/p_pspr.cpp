@@ -1493,7 +1493,7 @@ void A_BouncingBFG(mobj_t *mo)
 
       P_CheckMissileSpawn(newmo);
 
-      P_RemoveMobj(mo); // remove the old one
+      mo->Remove(); // remove the old one
 
       break; //only spawn 1
    }

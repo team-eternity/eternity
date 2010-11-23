@@ -171,14 +171,14 @@ struct sector_t
    int16_t lightlevel;
    int16_t special;
    int16_t tag;
-   int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
-   int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
-   mobj_t *soundtarget;   // thing that made a sound (or null)
-   int blockbox[4];       // mapblock bounding box for height changes
-   degenmobj_t soundorg;  // origin for any sounds played by the sector
-   degenmobj_t csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
-   int validcount;        // if == validcount, already checked
-   mobj_t *thinglist;     // list of mobjs in sector
+   int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
+   int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
+   mobj_t *soundtarget;     // thing that made a sound (or null)
+   int blockbox[4];         // mapblock bounding box for height changes
+   CPointThinker soundorg;  // origin for any sounds played by the sector
+   CPointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
+   int validcount;          // if == validcount, already checked
+   mobj_t *thinglist;       // list of mobjs in sector
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in mobj_t, but presented performance problems
@@ -332,24 +332,24 @@ struct seg_t;
 
 struct line_t
 {
-   vertex_t *v1, *v2;     // Vertices, from v1 to v2.
-   fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.
-   int16_t flags;           // Animation related.
+   vertex_t *v1, *v2;      // Vertices, from v1 to v2.
+   fixed_t dx, dy;         // Precalculated v2 - v1 for side checking.
+   int16_t flags;          // Animation related.
    int16_t special;         
-   int   tag;             // haleyjd 02/27/07: line id's
+   int   tag;              // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
-   int   sidenum[2];      // Visual appearance: SideDefs.
+   int   sidenum[2];       // Visual appearance: SideDefs.
 
-   fixed_t bbox[4];       // A bounding box, for the linedef's extent
-   slopetype_t slopetype; // To aid move clipping.
-   sector_t *frontsector; // Front and back sector.
+   fixed_t bbox[4];        // A bounding box, for the linedef's extent
+   slopetype_t slopetype;  // To aid move clipping.
+   sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
-   int validcount;        // if == validcount, already checked
-   void *specialdata;     // thinker_t for reversable actions
-   int tranlump;          // killough 4/11/98: translucency filter, -1 == none
-   int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
-   degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
+   int validcount;         // if == validcount, already checked
+   void *specialdata;      // thinker_t for reversable actions
+   int tranlump;           // killough 4/11/98: translucency filter, -1 == none
+   int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
+   CPointThinker soundorg; // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
    int      pflags;

@@ -896,17 +896,17 @@ void A_SorcNukeSpec(mobj_t *actor)
 static void M_NukeMonsters(void)
 {   
    int killcount = 0;
-   CThinker *currentthinker = &thinkercap;
+   CThinker *th = &thinkercap;
    int mask = MF_FRIEND;
       
    do
    {
-      while((currentthinker = currentthinker->next) != &thinkercap)
+      while((th = th->next) != &thinkercap)
       {
          mobj_t *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
 
-         if(!(mo = dynamic_cast<mobj_t *>(currentthinker)))
+         if(!(mo = dynamic_cast<mobj_t *>(th)))
             continue;
 
          mi = &mobjinfo[mo->type];

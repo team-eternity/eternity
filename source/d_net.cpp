@@ -283,7 +283,7 @@ static void GetPackets(void)
                tflash->flags2 |= MF2_DONTDRAW;
                P_DisconnectEffect(players[netconsole].mo);
             }
-            P_RemoveMobj(players[netconsole].mo);
+            players[netconsole].mo->Remove();
          }
          if(demorecording)
             G_CheckDemoStatus();

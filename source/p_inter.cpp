@@ -821,7 +821,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       player->itemcount++;
 
    if(removeobj)
-      P_RemoveMobj(special);
+      special->Remove();
 
    // haleyjd 07/08/05: inverted condition
    if(pickup_fx)

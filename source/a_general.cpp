@@ -912,7 +912,7 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
-         P_RemoveMobj(newmobj);
+         newmobj->Remove();
          break;
       }
       return;
@@ -936,7 +936,7 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
-         P_RemoveMobj(newmobj);
+         newmobj->Remove();
          break;
       }
       return;
@@ -973,7 +973,7 @@ void A_KillChildren(mobj_t *actor)
             A_Die(mo);
             break;
          case 1:
-            P_RemoveMobj(mo);
+            mo->Remove();
             break;
          }
       }

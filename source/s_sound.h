@@ -76,19 +76,19 @@ enum
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
 //
-void S_StartSound(degenmobj_t *origin, int sound_id);
-void S_StartSoundName(degenmobj_t *origin, const char *name);
-void S_StartSfxInfo(degenmobj_t *origin, sfxinfo_t *sfx, 
+void S_StartSound(CPointThinker *origin, int sound_id);
+void S_StartSoundName(CPointThinker *origin, const char *name);
+void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx, 
                     int volumeScale, int attenuation,
                     boolean loop, int subchannel);
-void S_StartSoundAtVolume(degenmobj_t *origin, int sfx_id, 
+void S_StartSoundAtVolume(CPointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel);
-void S_StartSoundNameAtVolume(degenmobj_t *origin, const char *name, 
+void S_StartSoundNameAtVolume(CPointThinker *origin, const char *name, 
                               int volume, int attn,
                               int subchannel);
 
 // Stop sound for thing at <origin>
-void S_StopSound(const degenmobj_t *origin, int subchannel);
+void S_StopSound(const CPointThinker *origin, int subchannel);
 
 // Start music using <music_id> from sounds.h
 void S_StartMusic(int music_id);
@@ -124,7 +124,7 @@ void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
 // haleyjd: rudimentary sound checker
-boolean S_CheckSoundPlaying(degenmobj_t *, sfxinfo_t *sfx);
+boolean S_CheckSoundPlaying(CPointThinker *, sfxinfo_t *sfx);
 
 // precache sound?
 extern int s_precache;

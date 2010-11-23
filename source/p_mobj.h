@@ -325,7 +325,9 @@ typedef struct backpack_s
 } backpack_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
-class degenmobj_t : public CThinker
+// haleyjd 11/22/10: degenmobj is now the base class for all thinkers that want
+// to be located somewhere in the game world.
+class CPointThinker : public CThinker
 {
 public:
    fixed_t x, y, z;
@@ -349,7 +351,7 @@ public:
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
 //
-class mobj_t : public degenmobj_t
+class mobj_t : public CPointThinker
 {
 protected:
    void Think();
@@ -359,6 +361,7 @@ public:
    // Virtual methods (overridables)
    // Inherited from CThinker:
    virtual void Update();
+   virtual void Remove();
 
    // Data members
 
@@ -562,7 +565,6 @@ extern int iquetail;
 
 void    P_RespawnSpecials(void);
 mobj_t  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-void    P_RemoveMobj(mobj_t *th);
 boolean P_SetMobjState(mobj_t *mobj, statenum_t state);
 void    P_MobjThinker(mobj_t *mobj);
 void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);

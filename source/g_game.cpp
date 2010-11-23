@@ -2550,12 +2550,12 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
       }
       
       if(bodyqueslot >= bodyquesize) 
-         P_RemoveMobj(bodyque[bodyqueslot % bodyquesize]); 
+         bodyque[bodyqueslot % bodyquesize]->Remove();
       
       bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo; 
    } 
    else if(!bodyquesize)
-      P_RemoveMobj(players[playernum].mo);
+      players[playernum].mo->Remove();
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);

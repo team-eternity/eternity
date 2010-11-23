@@ -1845,8 +1845,8 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       P_TouchSpecialThing(mo, plyr->mo);
 
       // if it wasn't picked up, remove it
-      if(!mo->removed)
-         P_RemoveMobj(mo);
+      if(!mo->isRemoved())
+         mo->Remove();
    }
 }
 
@@ -1917,7 +1917,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
    P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
    if(clip.linetarget)
-      P_RemoveMobj(clip.linetarget);
+      clip.linetarget->Remove();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
