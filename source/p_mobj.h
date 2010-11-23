@@ -195,7 +195,7 @@ typedef enum
     // If 0x4 0x8 or 0xc,
     //  use a translation table for player colormaps
     MF_TRANSLATION      = 0xc000000,
-    // Hmm ???.         -- well, what? sf  -- ty halderman again, probably -- haleyjd
+    // Hmm ???.         -- well, what? sf  -- Bernd Kremeier again, probably -- haleyjd
     MF_TRANSSHIFT       = 26,
 
     MF_TOUCHY = 0x10000000,        // killough 11/98: dies when solids touch it
