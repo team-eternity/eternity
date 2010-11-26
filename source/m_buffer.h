@@ -27,32 +27,33 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
-// endianness values
-enum
+class COutBuffer
 {
-   OUTBUFFER_NENDIAN, // doesn't swap shorts or ints
-   OUTBUFFER_LENDIAN, // swaps shorts/ints to little endian
-   OUTBUFFER_BENDIAN  // swaps shorts/ints to big endian
-};
-
-typedef struct outbuffer_s
-{
+private:
    FILE *f;            // destination file
    byte *buffer;       // buffer
    unsigned int len;   // total buffer length
    unsigned int idx;   // current index
    int endian;         // endianness indicator
-} outbuffer_t;
 
-boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len, int endian);
-boolean M_BufferFlush(outbuffer_t *ob);
-void    M_BufferClose(outbuffer_t *ob);
-long    M_BufferTell(outbuffer_t *ob);
-boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size);
-boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num);
-boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num);
-boolean M_BufferWriteUint8(outbuffer_t *ob, uint8_t num);
+public:
+   boolean CreateFile(const char *filename, unsigned int len, int endian);
+   boolean Flush();
+   void    Close();
+   long    Tell();
+   boolean Write(const void *data, unsigned int size);
+   boolean WriteUint32(uint32_t num);
+   boolean WriteUint16(uint16_t num);
+   boolean WriteUint8(uint8_t num);
+
+   // endianness values
+   enum
+   {
+      NENDIAN, // doesn't swap shorts or ints
+      LENDIAN, // swaps shorts/ints to little endian
+      BENDIAN  // swaps shorts/ints to big endian
+   };
+};
 
 #endif
 

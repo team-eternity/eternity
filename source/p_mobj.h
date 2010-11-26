@@ -24,8 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_MOBJ__
-#define __P_MOBJ__
+#ifndef P_MOBJ_H__
+#define P_MOBJ_H__
 
 // We need the thinker_t stuff.
 #include "p_tick.h"
@@ -43,6 +43,37 @@
 #include "m_random.h"
 #include "tables.h"
 
+// Defines
+
+#define VIEWHEIGHT      (41*FRACUNIT)
+
+// sf: gravity >>> defaultgravity
+#define DEFAULTGRAVITY  FRACUNIT
+#define MAXMOVE         (30*FRACUNIT)
+
+#define ONFLOORZ        D_MININT
+#define ONCEILINGZ      D_MAXINT
+// haleyjd 10/13/02: floatrand 
+#define FLOATRANDZ     (D_MAXINT - 1)
+#define MINFLTRNDZ     (40*FRACUNIT)
+
+// Time interval for item respawning.
+#define ITEMQUESIZE     128
+
+#define FLOATSPEED      (FRACUNIT*4)
+#define STOPSPEED       (FRACUNIT/16)
+
+// killough 11/98:
+// For torque simulation:
+#define OVERDRIVE 6
+#define MAXGEAR (OVERDRIVE+16)
+
+// haleyjd 11/28/02: default z coord addend for missile spawn
+#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+
+#define NUMMOBJCOUNTERS 8
+
+// Mobjs are attached to subsectors by pointer.
 struct subsector_t;
 
 //
@@ -109,224 +140,17 @@ struct subsector_t;
 // Any questions?
 //
 
-//
-// Misc. mobj flags
-//
-typedef enum
-{
-    // Call P_SpecialThing when touched.
-    MF_SPECIAL          = 1,
-    // Blocks.
-    MF_SOLID            = 2,
-    // Can be hit.
-    MF_SHOOTABLE        = 4,
-    // Don't use the sector links (invisible but touchable).
-    MF_NOSECTOR         = 8,
-    // Don't use the blocklinks (inert but displayable)
-    MF_NOBLOCKMAP       = 16,                    
-
-    // Not to be activated by sound, deaf monster.
-    MF_AMBUSH           = 32,
-    // Will try to attack right back.
-    MF_JUSTHIT          = 64,
-    // Will take at least one step before attacking.
-    MF_JUSTATTACKED     = 128,
-    // On level spawning (initial position),
-    //  hang from ceiling instead of stand on floor.
-    MF_SPAWNCEILING     = 256,
-    // Don't apply gravity (every tic),
-    //  that is, object will float, keeping current height
-    //  or changing it actively.
-    MF_NOGRAVITY        = 512,
-
-    // Movement flags.
-    // This allows jumps from high places.
-    MF_DROPOFF          = 0x400,
-    // For players, will pick up items.
-    MF_PICKUP           = 0x800,
-    // Player cheat. ???
-    MF_NOCLIP           = 0x1000,
-    // Player: keep info about sliding along walls.
-    MF_SLIDE            = 0x2000,
-    // Allow moves to any height, no gravity.
-    // For active floaters, e.g. cacodemons, pain elementals.
-    MF_FLOAT            = 0x4000,
-    // Don't cross lines
-    //   ??? or look at heights on teleport.
-    MF_TELEPORT         = 0x8000,
-    // Don't hit same species, explode on block.
-    // Player missiles as well as fireballs of various kinds.
-    MF_MISSILE          = 0x10000,      
-    // Dropped by a demon, not level spawned.
-    // E.g. ammo clips dropped by dying former humans.
-    MF_DROPPED          = 0x20000,
-    // Use fuzzy draw (shadow demons or spectres),
-    //  temporary player invisibility powerup.
-    MF_SHADOW           = 0x40000,
-    // Flag: don't bleed when shot (use puff),
-    //  barrels and shootable furniture shall not bleed.
-    MF_NOBLOOD          = 0x80000,
-    // Don't stop moving halfway off a step,
-    //  that is, have dead bodies slide down all the way.
-    MF_CORPSE           = 0x100000,
-    // Floating to a height for a move, ???
-    //  don't auto float to target's height.
-    MF_INFLOAT          = 0x200000,
-
-    // On kill, count this enemy object
-    //  towards intermission kill total.
-    // Happy gathering.
-    MF_COUNTKILL        = 0x400000,
-    
-    // On picking up, count this item object
-    //  towards intermission item total.
-    MF_COUNTITEM        = 0x800000,
-
-    // Special handling: skull in flight.
-    // Neither a cacodemon nor a missile.
-    MF_SKULLFLY         = 0x1000000,
-
-    // Don't spawn this object
-    //  in death match mode (e.g. key cards).
-    MF_NOTDMATCH        = 0x2000000,
-
-    // Player sprites in multiplayer modes are modified
-    //  using an internal color lookup table for re-indexing.
-    // If 0x4 0x8 or 0xc,
-    //  use a translation table for player colormaps
-    MF_TRANSLATION      = 0xc000000,
-    // Hmm ???.         -- well, what? sf  -- Bernd Kremeier again, probably -- haleyjd
-    MF_TRANSSHIFT       = 26,
-
-    MF_TOUCHY = 0x10000000,        // killough 11/98: dies when solids touch it
-    MF_BOUNCES = 0x20000000,       // killough 7/11/98: for beta BFG fireballs
-    MF_FRIEND = 0x40000000,        // killough 7/18/98: friendly monsters
-
-    // Translucent sprite?                                          // phares
-    MF_TRANSLUCENT      = 0x80000000                                // phares
-} mobjflag_t;
-
-typedef enum
-{
-  // haleyjd 04/09/99: extended mobj flags
-  // More of these will be filled in as I add support.
-  MF2_LOGRAV        = 0x00000001,  // subject to low gravity
-  MF2_NOSPLASH      = 0x00000002,  // does not splash
-  MF2_NOSTRAFE      = 0x00000004,  // never strafes
-  MF2_NORESPAWN     = 0x00000008,  // never respawns
-  MF2_ALWAYSRESPAWN = 0x00000010,  // respawns in ALL difficulties
-  MF2_REMOVEDEAD    = 0x00000020,  // removed shortly after death
-  MF2_NOTHRUST      = 0x00000040,  // not affected by push/pull/wind/current
-  MF2_NOCROSS       = 0x00000080,  // cannot trigger special lines
-  MF2_JUMPDOWN      = 0x00000100,  // if friend, can jump down
-  MF2_PUSHABLE      = 0x00000200,  // can be pushed by moving things
-  MF2_MAP07BOSS1    = 0x00000400,  // is a MAP07 boss type 1
-  MF2_MAP07BOSS2    = 0x00000800,  // is a MAP07 boss type 2
-  MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss 
-  MF2_E2M8BOSS      = 0x00002000,  // is an E2M8 boss
-  MF2_E3M8BOSS      = 0x00004000,  // is an E3M8 boss
-  MF2_BOSS          = 0x00008000,  // is a boss
-  MF2_E4M6BOSS      = 0x00010000,  // is an E4M6 boss
-  MF2_E4M8BOSS      = 0x00020000,  // is an E4M8 boss
-  MF2_FOOTCLIP      = 0x00040000,  // feet are clipped by liquids
-  MF2_FLOATBOB      = 0x00080000,  // uses floatbob z movement
-  MF2_DONTDRAW      = 0x00100000,  // doesn't generate vissprite
-  MF2_SHORTMRANGE   = 0x00200000,  // has short missile range
-  MF2_LONGMELEE     = 0x00400000,  // has long melee range
-  MF2_RANGEHALF     = 0x00800000,  // uses half actual distance
-  MF2_HIGHERMPROB   = 0x01000000,  // min prob. of miss. att. = 37.5% vs 22%
-  MF2_CANTLEAVEFLOORPIC = 0x02000000,  // restricted to current floorpic
-  MF2_SPAWNFLOAT    = 0x04000000,  // random initial z coordinate
-  MF2_INVULNERABLE  = 0x08000000,  // invulnerable to damage
-  MF2_DORMANT       = 0x10000000,  // dormant (internal)
-  MF2_SEEKERMISSILE = 0x20000000,  // might use tracer effects
-  MF2_DEFLECTIVE    = 0x40000000,  // deflects projectiles
-  MF2_REFLECTIVE    = 0x80000000   // reflects projectiles
-} mobjflag2_t;
-
-// haleyjd 11/03/02: flags3 -- even more stuff!
-typedef enum
-{
-   MF3_GHOST        = 0x00000001,  // heretic ghost effect
-   MF3_THRUGHOST    = 0x00000002,  // object passes through ghosts
-   MF3_NODMGTHRUST  = 0x00000004,  // don't thrust target on damage
-   MF3_ACTSEESOUND  = 0x00000008,  // use seesound as activesound 50% of time
-   MF3_LOUDACTIVE   = 0x00000010,  // play activesound full-volume
-   MF3_E5M8BOSS     = 0x00000020,  // thing is heretic E5M8 boss
-   MF3_DMGIGNORED   = 0x00000040,  // other things ignore its attacks
-   MF3_BOSSIGNORE   = 0x00000080,  // attacks ignored if both have flag
-   MF3_SLIDE        = 0x00000100,  // slides against walls
-   MF3_TELESTOMP    = 0x00000200,  // thing can telefrag other things
-   MF3_WINDTHRUST   = 0x00000400,  // affected by heretic wind sectors
-   MF3_FIREDAMAGE   = 0x00000800,  // does fire damage
-   MF3_KILLABLE     = 0x00001000,  // mobj is killable, but doesn't count
-   MF3_DEADFLOAT    = 0x00002000,  // NOGRAVITY isn't removed on death
-   MF3_NOTHRESHOLD  = 0x00004000,  // has no target threshold
-   MF3_FLOORMISSILE = 0x00008000,  // is a floor missile
-   MF3_SUPERITEM    = 0x00010000,  // is a super powerup item
-   MF3_NOITEMRESP   = 0x00020000,  // item doesn't respawn
-   MF3_SUPERFRIEND  = 0x00040000,  // monster won't attack friends
-   MF3_INVULNCHARGE = 0x00080000,  // invincible when skull flying
-   MF3_EXPLOCOUNT   = 0x00100000,  // doesn't explode until this expires
-   MF3_CANNOTPUSH   = 0x00200000,  // thing can't push pushable things
-   MF3_TLSTYLEADD   = 0x00400000,  // uses additive translucency
-   MF3_SPACMONSTER  = 0x00800000,  // monster can activate param lines
-   MF3_SPACMISSILE  = 0x01000000,  // missile can activate param lines
-   MF3_NOFRIENDDMG  = 0x02000000,  // object isn't hurt by friends
-   MF3_3DDECORATION = 0x04000000,  // object is a decor. with 3D height info
-   MF3_ALWAYSFAST   = 0x08000000,  // object is always in -fast mode
-   MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
-   MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
-   MF3_CYCLEALPHA   = 0x40000000,  // alpha cycles from 0 to 65536 perpetually
-   MF3_RIP          = 0x80000000   // ripper - goes through everything
-} mobjflag3_t;
-
-typedef enum
-{
-   MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
-   MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
-   MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
-   MF4_LOOKALLAROUND  = 0x00000008, // Looks all around (like an AMBUSH monster)
-   MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
-   MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
-   MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
-   MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
-} mobjflag4_t;
-
-// killough 9/15/98: Same, but internal flags, not intended for .deh
-// (some degree of opaqueness is good, to avoid compatibility woes)
-
-enum
-{
-   MIF_FALLING     = 0x00000001, // Object is falling
-   MIF_ARMED       = 0x00000002, // Object is armed (for MF_TOUCHY objects)
-   MIF_LINEDONE    = 0x00000004, // Object has activated W1 or S1 linedef via DEH frame
-   MIF_DIEDFALLING = 0x00000008, // haleyjd: object died by falling
-   MIF_ONFLOOR     = 0x00000010, // SoM: object stands on floor
-   MIF_ONSECFLOOR  = 0x00000020, // SoM: Object stands on sector floor *specific*
-   MIF_SCREAMED    = 0x00000040, // haleyjd: player has screamed
-   MIF_NOFACE      = 0x00000080, // haleyjd: thing won't face its target
-   MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
-   MIF_NOPTCLEVTS  = 0x00000200, // haleyjd: thing can't trigger particle events
-   MIF_ISCHILD     = 0x00000400, // haleyjd: thing spawned as a child
-   MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
-   MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
-   MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
-};
-
-#define NUMMOBJCOUNTERS 8
-
 // ammo + weapon in a dropped backpack 
 
 typedef struct backpack_s
 {
    int16_t ammo[NUMAMMO];
-   char weapon;
+   char    weapon;
 } backpack_t;
 
 // Each sector has a degenmobj_t in its center for sound origin purposes.
-// haleyjd 11/22/10: degenmobj is now the base class for all thinkers that want
-// to be located somewhere in the game world.
+// haleyjd 11/22/10: degenmobj, which has become CPointThinker, is now the base
+// class for all thinkers that want to be located somewhere in the game world.
 class CPointThinker : public CThinker
 {
 public:
@@ -524,41 +348,11 @@ public:
 #endif
 };
 
-        // put it here, it works, ok?
-#include "d_player.h"
-
 // External declarations (formerly in p_local.h) -- killough 5/2/98
-
-#define VIEWHEIGHT      (41*FRACUNIT)
-
-// sf: gravity >>> defaultgravity
-#define DEFAULTGRAVITY  FRACUNIT
-#define MAXMOVE         (30*FRACUNIT)
-
-#define ONFLOORZ        D_MININT
-#define ONCEILINGZ      D_MAXINT
-// haleyjd 10/13/02: floatrand 
-#define FLOATRANDZ     (D_MAXINT - 1)
-#define MINFLTRNDZ     (40*FRACUNIT)
-
-// Time interval for item respawning.
-#define ITEMQUESIZE     128
-
-#define FLOATSPEED      (FRACUNIT*4)
-#define STOPSPEED       (FRACUNIT/16)
-
-// killough 11/98:
-// For torque simulation:
-
-#define OVERDRIVE 6
-#define MAXGEAR (OVERDRIVE+16)
 
 // killough 11/98:
 // Whether an object is "sentient" or not. Used for environmental influences.
 #define sentient(mobj) ((mobj)->health > 0 && (mobj)->info->seestate != NullStateNum)
-
-// haleyjd 11/28/02: default z coord addend for missile spawn
-#define DEFAULTMISSILEZ (4*8*FRACUNIT)
 
 extern int iquehead;
 extern int iquetail;
@@ -704,6 +498,159 @@ d_inline static fixed_t getThingY(mobj_t *mo1, mobj_t *mo2)
 }
 
 #endif
+
+//=============================================================================
+//
+// Misc. mobj flags
+//
+
+#ifdef _MSC_VER
+enum {}; // Fixes a retarded glitch in the Visual Studio IDE.
+#endif
+
+enum
+{
+   MF_SPECIAL      = 0x00000001, // Call P_SpecialThing when touched.
+   MF_SOLID        = 0x00000002, // Blocks.    
+   MF_SHOOTABLE    = 0x00000004, // Can be hit.    
+   MF_NOSECTOR     = 0x00000008, // Don't use the sector links (invisible but touchable).
+   MF_NOBLOCKMAP   = 0x00000010, // Don't use the blocklinks (inert but displayable)
+   MF_AMBUSH       = 0x00000020, // Not to be activated by sound, deaf monster.    
+   MF_JUSTHIT      = 0x00000040, // Will try to attack right back.
+   MF_JUSTATTACKED = 0x00000080, // Will take at least one step before attacking.
+   MF_SPAWNCEILING = 0x00000100, // Hangs from ceiling instead of standing on floor.
+   MF_NOGRAVITY    = 0x00000200, // Don't apply gravity.
+   MF_DROPOFF      = 0x00000400, // Movement flags. This allows jumps from high places.
+   MF_PICKUP       = 0x00000800, // For players, will pick up items.
+   MF_NOCLIP       = 0x00001000, // Player cheat.
+   MF_SLIDE        = 0x00002000, // Player: keep info about sliding along walls.
+   MF_FLOAT        = 0x00004000, // Allow moves to any height. For active floaters.
+   MF_TELEPORT     = 0x00008000, // Don't cross lines ??? or look at heights on teleport.
+   MF_MISSILE      = 0x00010000, // Don't hit same species, explode on block.
+   MF_DROPPED      = 0x00020000, // Dropped by a demon, not level spawned. 
+   MF_SHADOW       = 0x00040000, // Use fuzzy draw (shadow demons or spectres)
+   MF_NOBLOOD      = 0x00080000, // Don't bleed when shot (use puff).
+   MF_CORPSE       = 0x00100000, // Don't stop moving halfway off a step.
+   MF_INFLOAT      = 0x00200000, // Floating to a height for a move.
+   MF_COUNTKILL    = 0x00400000, // On kill, count this enemy object towards intermission kill total. Happy gathering.
+   MF_COUNTITEM    = 0x00800000, // On picking up, count this item object towards intermission item total.
+   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a missile.
+   MF_NOTDMATCH    = 0x02000000, // Don't spawn this object in deathmatch mode (e.g. key cards).
+   MF_TRANSLATION  = 0x0c000000, // Player translation mask for sprite re-indexing.
+   MF_TRANSSHIFT   = 26,         // Hmm ???. -- well, what? sf  -- Bernd Kremeier again, probably. haleyjd
+   MF_TOUCHY       = 0x10000000, // killough 11/98: dies when solids touch it
+   MF_BOUNCES      = 0x20000000, // killough 7/11/98: for beta BFG fireballs
+   MF_FRIEND       = 0x40000000, // killough 7/18/98: friendly monsters
+   MF_TRANSLUCENT  = 0x80000000  // Translucent sprite - phares
+};
+
+enum
+{
+   // haleyjd 04/09/99: extended mobj flags
+   // More of these will be filled in as I add support.
+   MF2_LOGRAV        = 0x00000001,  // subject to low gravity
+   MF2_NOSPLASH      = 0x00000002,  // does not splash
+   MF2_NOSTRAFE      = 0x00000004,  // never strafes
+   MF2_NORESPAWN     = 0x00000008,  // never respawns
+   MF2_ALWAYSRESPAWN = 0x00000010,  // respawns in ALL difficulties
+   MF2_REMOVEDEAD    = 0x00000020,  // removed shortly after death
+   MF2_NOTHRUST      = 0x00000040,  // not affected by push/pull/wind/current
+   MF2_NOCROSS       = 0x00000080,  // cannot trigger special lines
+   MF2_JUMPDOWN      = 0x00000100,  // if friend, can jump down
+   MF2_PUSHABLE      = 0x00000200,  // can be pushed by moving things
+   MF2_MAP07BOSS1    = 0x00000400,  // is a MAP07 boss type 1
+   MF2_MAP07BOSS2    = 0x00000800,  // is a MAP07 boss type 2
+   MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss 
+   MF2_E2M8BOSS      = 0x00002000,  // is an E2M8 boss
+   MF2_E3M8BOSS      = 0x00004000,  // is an E3M8 boss
+   MF2_BOSS          = 0x00008000,  // is a boss
+   MF2_E4M6BOSS      = 0x00010000,  // is an E4M6 boss
+   MF2_E4M8BOSS      = 0x00020000,  // is an E4M8 boss
+   MF2_FOOTCLIP      = 0x00040000,  // feet are clipped by liquids
+   MF2_FLOATBOB      = 0x00080000,  // uses floatbob z movement
+   MF2_DONTDRAW      = 0x00100000,  // doesn't generate vissprite
+   MF2_SHORTMRANGE   = 0x00200000,  // has short missile range
+   MF2_LONGMELEE     = 0x00400000,  // has long melee range
+   MF2_RANGEHALF     = 0x00800000,  // uses half actual distance
+   MF2_HIGHERMPROB   = 0x01000000,  // min prob. of miss. att. = 37.5% vs 22%
+   MF2_CANTLEAVEFLOORPIC = 0x02000000,  // restricted to current floorpic
+   MF2_SPAWNFLOAT    = 0x04000000,  // random initial z coordinate
+   MF2_INVULNERABLE  = 0x08000000,  // invulnerable to damage
+   MF2_DORMANT       = 0x10000000,  // dormant (internal)
+   MF2_SEEKERMISSILE = 0x20000000,  // might use tracer effects
+   MF2_DEFLECTIVE    = 0x40000000,  // deflects projectiles
+   MF2_REFLECTIVE    = 0x80000000   // reflects projectiles
+};
+
+// haleyjd 11/03/02: flags3 -- even more stuff!
+enum
+{
+   MF3_GHOST        = 0x00000001,  // heretic ghost effect
+   MF3_THRUGHOST    = 0x00000002,  // object passes through ghosts
+   MF3_NODMGTHRUST  = 0x00000004,  // don't thrust target on damage
+   MF3_ACTSEESOUND  = 0x00000008,  // use seesound as activesound 50% of time
+   MF3_LOUDACTIVE   = 0x00000010,  // play activesound full-volume
+   MF3_E5M8BOSS     = 0x00000020,  // thing is heretic E5M8 boss
+   MF3_DMGIGNORED   = 0x00000040,  // other things ignore its attacks
+   MF3_BOSSIGNORE   = 0x00000080,  // attacks ignored if both have flag
+   MF3_SLIDE        = 0x00000100,  // slides against walls
+   MF3_TELESTOMP    = 0x00000200,  // thing can telefrag other things
+   MF3_WINDTHRUST   = 0x00000400,  // affected by heretic wind sectors
+   MF3_FIREDAMAGE   = 0x00000800,  // does fire damage
+   MF3_KILLABLE     = 0x00001000,  // mobj is killable, but doesn't count
+   MF3_DEADFLOAT    = 0x00002000,  // NOGRAVITY isn't removed on death
+   MF3_NOTHRESHOLD  = 0x00004000,  // has no target threshold
+   MF3_FLOORMISSILE = 0x00008000,  // is a floor missile
+   MF3_SUPERITEM    = 0x00010000,  // is a super powerup item
+   MF3_NOITEMRESP   = 0x00020000,  // item doesn't respawn
+   MF3_SUPERFRIEND  = 0x00040000,  // monster won't attack friends
+   MF3_INVULNCHARGE = 0x00080000,  // invincible when skull flying
+   MF3_EXPLOCOUNT   = 0x00100000,  // doesn't explode until this expires
+   MF3_CANNOTPUSH   = 0x00200000,  // thing can't push pushable things
+   MF3_TLSTYLEADD   = 0x00400000,  // uses additive translucency
+   MF3_SPACMONSTER  = 0x00800000,  // monster can activate param lines
+   MF3_SPACMISSILE  = 0x01000000,  // missile can activate param lines
+   MF3_NOFRIENDDMG  = 0x02000000,  // object isn't hurt by friends
+   MF3_3DDECORATION = 0x04000000,  // object is a decor. with 3D height info
+   MF3_ALWAYSFAST   = 0x08000000,  // object is always in -fast mode
+   MF3_PASSMOBJ     = 0x10000000,  // haleyjd: OVER_UNDER
+   MF3_DONTOVERLAP  = 0x20000000,  // haleyjd: OVER_UNDER
+   MF3_CYCLEALPHA   = 0x40000000,  // alpha cycles from 0 to 65536 perpetually
+   MF3_RIP          = 0x80000000   // ripper - goes through everything
+};
+
+enum
+{
+   MF4_AUTOTRANSLATE  = 0x00000001, // DOOM sprite is automatically translated
+   MF4_NORADIUSDMG    = 0x00000002, // Doesn't take damage from blast radii
+   MF4_FORCERADIUSDMG = 0x00000004, // Does radius damage to everything, no exceptions
+   MF4_LOOKALLAROUND  = 0x00000008, // Looks all around (like an AMBUSH monster)
+   MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
+   MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
+   MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
+   MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
+};
+
+// killough 9/15/98: Same, but internal flags, not intended for .deh
+// (some degree of opaqueness is good, to avoid compatibility woes)
+
+enum
+{
+   MIF_FALLING     = 0x00000001, // Object is falling
+   MIF_ARMED       = 0x00000002, // Object is armed (for MF_TOUCHY objects)
+   MIF_LINEDONE    = 0x00000004, // Object has activated W1 or S1 linedef via DEH frame
+   MIF_DIEDFALLING = 0x00000008, // haleyjd: object died by falling
+   MIF_ONFLOOR     = 0x00000010, // SoM: object stands on floor
+   MIF_ONSECFLOOR  = 0x00000020, // SoM: Object stands on sector floor *specific*
+   MIF_SCREAMED    = 0x00000040, // haleyjd: player has screamed
+   MIF_NOFACE      = 0x00000080, // haleyjd: thing won't face its target
+   MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
+   MIF_NOPTCLEVTS  = 0x00000200, // haleyjd: thing can't trigger particle events
+   MIF_ISCHILD     = 0x00000400, // haleyjd: thing spawned as a child
+   MIF_NOTOUCH     = 0x00000800, // haleyjd: OVER_UNDER: don't blow up touchies
+   MIF_ONMOBJ      = 0x00001000, // haleyjd: OVER_UNDER: is on another thing
+   MIF_WIMPYDEATH  = 0x00002000, // haleyjd: for player, died wimpy (10 damage or less)
+};
 
 #endif
 

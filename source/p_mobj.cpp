@@ -1137,7 +1137,6 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
 }
 #endif
 
-
 //
 // P_MobjThinker
 //

@@ -45,6 +45,7 @@
 #include "e_dstate.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "p_pspr.h"
 
 //==============================================================================
 //

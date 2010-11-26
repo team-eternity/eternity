@@ -30,80 +30,89 @@
 #include "m_swap.h"
 
 //
-// M_BufferCreateFile
+// COutBuffer::CreateFile
 //
 // Opens a file for buffered binary output with the given filename. The buffer
 // size is determined by the len parameter.
 //
-boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len, int endian)
+boolean COutBuffer::CreateFile(const char *filename, unsigned int len, int endian)
 {
-   if(!(ob->f = fopen(filename, "wb")))
+   if(!(this->f = fopen(filename, "wb")))
       return false;
 
-   ob->buffer = (byte *)(calloc(len, sizeof(byte)));
+   this->buffer = (byte *)(calloc(len, sizeof(byte)));
 
-   ob->len = len;
-   ob->idx = 0;
+   this->len = len;
+   this->idx = 0;
 
-   ob->endian = endian;
+   this->endian = endian;
 
    return true;
 }
 
 //
-// M_BufferFlush
+// COutBuffer::Flush
 //
 // Call to flush the contents of the buffer to the output file. This will be
 // called automatically before the file is closed, but must be called explicitly
 // if a current file offset is needed. Returns false if an IO error occurs.
 //
-boolean M_BufferFlush(outbuffer_t *ob)
+boolean COutBuffer::Flush()
 {
-   if(ob->idx)
+   if(idx)
    {
-      if(fwrite(ob->buffer, sizeof(byte), ob->idx, ob->f) < (size_t)ob->idx)
+      if(fwrite(buffer, sizeof(byte), idx, f) < (size_t)idx)
          return false;
 
-      ob->idx = 0;
+      idx = 0;
    }
 
    return true;
 }
 
 //
-// M_BufferClose
+// COutBuffer::Close
 //
 // Closes the output file, writing any pending data in the buffer first.
 // The output buffer is also freed.
 //
-void M_BufferClose(outbuffer_t *ob)
+void COutBuffer::Close()
 {
-   M_BufferFlush(ob);
-   fclose(ob->f);
-   free(ob->buffer);
+   if(this->f)
+   {
+      this->Flush();
+      fclose(this->f);
+      f = NULL;
+   }
 
-   memset(ob, 0, sizeof(outbuffer_t));
+   this->idx = 0;
+   this->len = 0;
+
+   if(this->buffer)
+   {
+      free(this->buffer);
+      this->buffer = NULL;
+   }
 }
 
 //
-// M_BufferTell
+// COutBuffer::Tell
 //
 // Gives the current file offset, minus any data that might be currently
 // pending in the output buffer. Call M_BufferFlush first if you need an
 // absolute file offset.
 //
-long M_BufferTell(outbuffer_t *ob)
+long COutBuffer::Tell()
 {
-   return ftell(ob->f);
+   return ftell(this->f);
 }
 
 //
-// M_BufferWrite
+// COutBuffer::Write
 //
 // Buffered writing function.
 //
-boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
+boolean COutBuffer::Write(const void *data, unsigned int size)
 {
    const byte *src = (const byte *)data;
    unsigned int writeAmt;
@@ -111,21 +120,21 @@ boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
 
    while(bytesToWrite)
    {
-      writeAmt = ob->len - ob->idx;
+      writeAmt = this->len - this->idx;
       
       if(!writeAmt)
       {
-         if(!M_BufferFlush(ob))
+         if(!this->Flush())
             return false;
-         writeAmt = ob->len;
+         writeAmt = this->len;
       }
 
       if(bytesToWrite < writeAmt)
          writeAmt = bytesToWrite;
 
-      memcpy(&(ob->buffer[ob->idx]), src, writeAmt);
+      memcpy(&(this->buffer[this->idx]), src, writeAmt);
 
-      ob->idx += writeAmt;
+      this->idx += writeAmt;
       src += writeAmt;
       bytesToWrite -= writeAmt;
    }
@@ -134,63 +143,63 @@ boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
 }
 
 //
-// M_BufferWriteUint32
+// COutBuffer::WriteUint32
 //
 // Convenience routine to write an unsigned integer into the buffer.
 //
-boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num)
+boolean COutBuffer::WriteUint32(uint32_t num)
 {
-   switch(ob->endian)
+   switch(this->endian)
    {
-   case OUTBUFFER_LENDIAN:
+   case LENDIAN:
       num = SwapULong(num);
       break;
-   case OUTBUFFER_BENDIAN:
+   case BENDIAN:
       num = SwapBigULong(num);
       break;
    default:
       break;
    }
-   return M_BufferWrite(ob, &num, sizeof(uint32_t));
+   return this->Write(&num, sizeof(uint32_t));
 }
 
 //
-// M_BufferWriteUint16
+// COutBuffer::WriteUint16
 //
 // Convenience routine to write an unsigned short int into the buffer.
 //
-boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num)
+boolean COutBuffer::WriteUint16(uint16_t num)
 {
-   switch(ob->endian)
+   switch(this->endian)
    {
-   case OUTBUFFER_LENDIAN:
+   case LENDIAN:
       num = SwapUShort(num);
       break;
-   case OUTBUFFER_BENDIAN:
+   case BENDIAN:
       num = SwapBigUShort(num);
       break;
    default:
       break;
    }
-   return M_BufferWrite(ob, &num, sizeof(uint16_t));
+   return this->Write(&num, sizeof(uint16_t));
 }
 
 //
-// M_BufferWriteUint8
+// COutBuffer::WriteUint8
 //
 // Routine to write an unsigned byte into the buffer.
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
-boolean M_BufferWriteUint8(outbuffer_t *ob, uint8_t num)
+boolean COutBuffer::WriteUint8(uint8_t num)
 {     
-   if(ob->idx == ob->len)
+   if(this->idx == this->len)
    {
-      if(!M_BufferFlush(ob))
+      if(!this->Flush())
          return false;
    }
 
-   ob->buffer[ob->idx] = num;
-   ob->idx++;
+   this->buffer[this->idx] = num;
+   this->idx++;
  
    return true;
 }

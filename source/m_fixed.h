@@ -29,7 +29,6 @@
 
 #include "d_keywds.h" // haleyjd 05/22/02
 #include "doomtype.h"
-//#include "i_system.h"
 
 //
 // Fixed point, 32bit as 16.16.
