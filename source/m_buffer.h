@@ -27,24 +27,23 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
-class COutBuffer
+class CBufferedFileBase
 {
-private:
-   FILE *f;            // destination file
-   byte *buffer;       // buffer
-   unsigned int len;   // total buffer length
-   unsigned int idx;   // current index
-   int endian;         // endianness indicator
+protected:
+   FILE *f;      // destination or source file
+   byte *buffer; // buffer
+   size_t len;   // total buffer length
+   size_t idx;   // current index
+   int endian;   // endianness indicator
+   
+   void InitBuffer(size_t pLen, int pEndian);
 
 public:
-   boolean CreateFile(const char *filename, unsigned int len, int endian);
-   boolean Flush();
-   void    Close();
-   long    Tell();
-   boolean Write(const void *data, unsigned int size);
-   boolean WriteUint32(uint32_t num);
-   boolean WriteUint16(uint16_t num);
-   boolean WriteUint8(uint8_t num);
+   long Tell();
+   virtual void Close();
+
+   void SwapULong(uint32_t &x);
+   void SwapUShort(uint16_t &x);
 
    // endianness values
    enum
@@ -53,6 +52,35 @@ public:
       LENDIAN, // swaps shorts/ints to little endian
       BENDIAN  // swaps shorts/ints to big endian
    };
+};
+
+class COutBuffer : public CBufferedFileBase
+{
+public:
+   boolean CreateFile(const char *filename, size_t pLen, int pEndian);
+   boolean Flush();
+   void    Close();
+   boolean Write(const void *data, size_t size);
+   boolean WriteUint32(uint32_t num);
+   boolean WriteUint16(uint16_t num);
+   boolean WriteUint8(uint8_t num);
+
+};
+
+class CInBuffer : public CBufferedFileBase
+{
+protected:
+   size_t readlen; // amount actually read (may be less than len)
+   boolean atEOF;
+   boolean ReadFile();
+
+public:
+   boolean OpenFile(const char *filename, size_t pLen, int pEndian);
+   void    Close();
+   boolean Read(void *dest, size_t size);
+   boolean ReadUint32(uint32_t &num);
+   boolean ReadUint16(uint16_t &num);
+   boolean ReadUint8(uint8_t &num);
 };
 
 #endif

@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Buffered file output.
+//   Buffered file input/output.
 //
 //-----------------------------------------------------------------------------
 
@@ -29,23 +29,120 @@
 #include "m_buffer.h"
 #include "m_swap.h"
 
+//=============================================================================
+//
+// CBufferedFileBase
+//
+// haleyjd 11/26/10: Having converted to C++ with the aim of adding an input
+// buffer as well, these base class methods implement shared functionality.
+//
+
+//
+// CBufferedFileBase::InitBuffer
+//
+// Sets up the buffer
+//
+void CBufferedFileBase::InitBuffer(size_t pLen, int pEndian)
+{
+   buffer = (byte *)(calloc(pLen, sizeof(byte)));
+   len    = pLen;
+   idx    = 0;
+   endian = pEndian;
+}
+
+//
+// CBufferedFileBase::Tell
+//
+// Gives the current file offset, minus any data that might be currently
+// pending in an output buffer.
+//
+long CBufferedFileBase::Tell()
+{
+   return ftell(f);
+}
+
+//
+// CBufferedFileBase::Close
+//
+// Common functionality for closing the file.
+//
+void CBufferedFileBase::Close()
+{
+   if(f)
+   {
+      fclose(f);
+      f = NULL;
+   }
+
+   idx = 0;
+   len = 0;
+
+   if(buffer)
+   {
+      free(buffer);
+      buffer = NULL;
+   }
+}
+
+//
+// CBufferedFileBase::SwapULong
+//
+// Transform a uint32 value based on the 'endian' setting.
+//
+void CBufferedFileBase::SwapULong(uint32_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapULong(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigULong(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// CBufferedFileBase::SwapUShort
+//
+// Transform a uint16 value based on the 'endian' setting.
+//
+void CBufferedFileBase::SwapUShort(uint16_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapUShort(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigUShort(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//=============================================================================
+//
+// COutBuffer
+//
+// Buffered file output
+//
+
 //
 // COutBuffer::CreateFile
 //
 // Opens a file for buffered binary output with the given filename. The buffer
 // size is determined by the len parameter.
 //
-boolean COutBuffer::CreateFile(const char *filename, unsigned int len, int endian)
+boolean COutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 {
-   if(!(this->f = fopen(filename, "wb")))
+   if(!(f = fopen(filename, "wb")))
       return false;
 
-   this->buffer = (byte *)(calloc(len, sizeof(byte)));
-
-   this->len = len;
-   this->idx = 0;
-
-   this->endian = endian;
+   InitBuffer(pLen, pEndian);
 
    return true;
 }
@@ -61,7 +158,7 @@ boolean COutBuffer::Flush()
 {
    if(idx)
    {
-      if(fwrite(buffer, sizeof(byte), idx, f) < (size_t)idx)
+      if(fwrite(buffer, sizeof(byte), idx, f) < idx)
          return false;
 
       idx = 0;
@@ -73,38 +170,16 @@ boolean COutBuffer::Flush()
 //
 // COutBuffer::Close
 //
+// Overrides CBufferedFileBase::Close()
 // Closes the output file, writing any pending data in the buffer first.
 // The output buffer is also freed.
 //
 void COutBuffer::Close()
 {
-   if(this->f)
-   {
-      this->Flush();
-      fclose(this->f);
-      f = NULL;
-   }
+   if(f)
+      Flush();
 
-   this->idx = 0;
-   this->len = 0;
-
-   if(this->buffer)
-   {
-      free(this->buffer);
-      this->buffer = NULL;
-   }
-}
-
-//
-// COutBuffer::Tell
-//
-// Gives the current file offset, minus any data that might be currently
-// pending in the output buffer. Call M_BufferFlush first if you need an
-// absolute file offset.
-//
-long COutBuffer::Tell()
-{
-   return ftell(this->f);
+   CBufferedFileBase::Close();
 }
 
 //
@@ -112,31 +187,31 @@ long COutBuffer::Tell()
 //
 // Buffered writing function.
 //
-boolean COutBuffer::Write(const void *data, unsigned int size)
+boolean COutBuffer::Write(const void *data, size_t size)
 {
-   const byte *src = (const byte *)data;
-   unsigned int writeAmt;
-   unsigned int bytesToWrite = size;
+   const byte *lSrc = (const byte *)data;
+   size_t lWriteAmt;
+   size_t lBytesToWrite = size;
 
-   while(bytesToWrite)
+   while(lBytesToWrite)
    {
-      writeAmt = this->len - this->idx;
+      lWriteAmt = len - idx;
       
-      if(!writeAmt)
+      if(!lWriteAmt)
       {
-         if(!this->Flush())
+         if(!Flush())
             return false;
-         writeAmt = this->len;
+         lWriteAmt = len;
       }
 
-      if(bytesToWrite < writeAmt)
-         writeAmt = bytesToWrite;
+      if(lBytesToWrite < lWriteAmt)
+         lWriteAmt = lBytesToWrite;
 
-      memcpy(&(this->buffer[this->idx]), src, writeAmt);
+      memcpy(&(buffer[idx]), lSrc, lWriteAmt);
 
-      this->idx += writeAmt;
-      src += writeAmt;
-      bytesToWrite -= writeAmt;
+      idx  += lWriteAmt;
+      lSrc += lWriteAmt;
+      lBytesToWrite -= lWriteAmt;
    }
 
    return true;
@@ -149,18 +224,8 @@ boolean COutBuffer::Write(const void *data, unsigned int size)
 //
 boolean COutBuffer::WriteUint32(uint32_t num)
 {
-   switch(this->endian)
-   {
-   case LENDIAN:
-      num = SwapULong(num);
-      break;
-   case BENDIAN:
-      num = SwapBigULong(num);
-      break;
-   default:
-      break;
-   }
-   return this->Write(&num, sizeof(uint32_t));
+   SwapULong(num);
+   return Write(&num, sizeof(uint32_t));
 }
 
 //
@@ -170,18 +235,8 @@ boolean COutBuffer::WriteUint32(uint32_t num)
 //
 boolean COutBuffer::WriteUint16(uint16_t num)
 {
-   switch(this->endian)
-   {
-   case LENDIAN:
-      num = SwapUShort(num);
-      break;
-   case BENDIAN:
-      num = SwapBigUShort(num);
-      break;
-   default:
-      break;
-   }
-   return this->Write(&num, sizeof(uint16_t));
+   SwapUShort(num);
+   return Write(&num, sizeof(uint16_t));
 }
 
 //
@@ -192,16 +247,159 @@ boolean COutBuffer::WriteUint16(uint16_t num)
 //
 boolean COutBuffer::WriteUint8(uint8_t num)
 {     
-   if(this->idx == this->len)
+   if(idx == len)
    {
-      if(!this->Flush())
+      if(!Flush())
          return false;
    }
 
-   this->buffer[this->idx] = num;
-   this->idx++;
+   buffer[idx] = num;
+   ++idx;
  
    return true;
+}
+
+//=============================================================================
+//
+// CInBuffer
+//
+// haleyjd 11/26/10: Buffered file input
+//
+
+//
+// CInBuffer::OpenFile
+//
+// Opens a file for binary input.
+//
+boolean CInBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
+{
+   if(!(f = fopen(filename, "rb")))
+      return false;
+
+   InitBuffer(pLen, pEndian);
+   readlen = 0;
+   atEOF = false;
+   return true;
+}
+
+//
+// CInBuffer::ReadFile
+//
+// Read the buffer's amount of data from the file or as much as is left.
+// If has hit EOF, no further reads are made.
+//
+boolean CInBuffer::ReadFile()
+{
+   if(!atEOF)
+   {
+      readlen = fread(buffer, 1, len, f);
+
+      if(readlen != len)
+         atEOF = true;
+      idx = 0;
+   }
+   else
+   {
+      // exhausted input
+      idx = 0;
+      readlen = 0; 
+   }
+
+   return atEOF;
+}
+
+//
+// CInBuffer::Read
+//
+// Read 'size' amount of bytes from the file. Reads are done from the physical
+// medium in chunks of the buffer's length.
+//
+boolean CInBuffer::Read(void *dest, unsigned int size)
+{
+   byte *lDest = (byte *)dest;
+   size_t lReadAmt;
+   size_t lBytesToRead = size;
+
+   while(lBytesToRead)
+   {
+      lReadAmt = readlen - idx;
+
+      if(!lReadAmt) // nothing left in the buffer?
+      {
+         if(!ReadFile()) // try to read more
+         {
+            if(!readlen) // nothing was read? uh oh!
+               return false;
+         }
+         lReadAmt = readlen;
+      }
+
+      if(lBytesToRead < lReadAmt)
+         lReadAmt = lBytesToRead;
+
+      memcpy(lDest, &(buffer[idx]), lReadAmt);
+
+      idx += lReadAmt;
+      lDest += lReadAmt;
+      lBytesToRead -= lReadAmt;
+   }
+
+   return true;
+}
+
+//
+// CInBuffer::ReadUint32
+//
+// Read a uint32 value from the input file.
+//
+boolean CInBuffer::ReadUint32(uint32_t &num)
+{
+   uint32_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapULong(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadUint16
+//
+// Read a uint16 value from the input file.
+//
+boolean CInBuffer::ReadUint16(uint16_t &num)
+{
+   uint16_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapUShort(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadUint8
+//
+// Read a uint8 value from input file.
+//
+boolean CInBuffer::ReadUint8(uint8_t &num)
+{
+   if(idx == readlen) // nothing left in the buffer?
+   {
+      if(!ReadFile()) // try to read more
+      {
+         if(!readlen) // nothing was read? uh oh!
+            return false;
+      }
+   }
+
+   num = buffer[idx];
+   ++idx;
+    return true;
 }
 
 // EOF
