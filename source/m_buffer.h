@@ -27,6 +27,13 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
+//
+// CBufferedFileBase
+//
+// Base class for buffers. Eventually I hpe to add an extra layer of indirection
+// so that this can function on more than just raw physical files (for example a
+// compressed data source).
+//
 class CBufferedFileBase
 {
 protected:
@@ -54,6 +61,11 @@ public:
    };
 };
 
+//
+// COutBuffer
+//
+// Buffered binary file output.
+//
 class COutBuffer : public CBufferedFileBase
 {
 public:
@@ -67,6 +79,11 @@ public:
 
 };
 
+//
+// CInBuffer
+//
+// Buffered binary file input.
+//
 class CInBuffer : public CBufferedFileBase
 {
 protected:

@@ -962,7 +962,7 @@ void A_KillChildren(mobj_t *actor)
    {
       mobj_t *mo;
 
-      if(!(mo = dynamic_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<mobj_t *>(th)))
          continue;
 
       if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)

@@ -342,7 +342,7 @@ static boolean P_IsOnLift(const mobj_t *actor)
    int l;
 
    // Short-circuit: it's on a lift which is active.
-   if(dynamic_cast<plat_t *>(sec->floordata) != NULL)
+   if(thinker_cast<plat_t *>(sec->floordata) != NULL)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -384,7 +384,7 @@ static int P_IsUnderDamage(mobj_t *actor)
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = dynamic_cast<ceiling_t *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<ceiling_t *>(seclist->m_sector->ceilingdata)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }
@@ -1009,7 +1009,7 @@ static boolean P_HereticMadMelee(mobj_t *actor)
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(!(mo = dynamic_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<mobj_t *>(th)))
          continue;
 
       // Must be:

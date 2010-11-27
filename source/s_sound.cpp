@@ -454,7 +454,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
 
    // haleyjd:  we must weed out degenmobj_t's before trying to 
    // dereference these fields -- a thinker check perhaps?
-   if(origin && (mo = dynamic_cast<mobj_t *>(origin)))
+   if(origin && (mo = thinker_cast<mobj_t *>(origin)))
    {
       if(sfx->skinsound) // check for skin sounds
       {

@@ -1066,7 +1066,7 @@ static int GenDoorRetrigger(CThinker *th, int trig)
 {
    vldoor_t *door;
 
-   if(!(door = dynamic_cast<vldoor_t *>(th)))
+   if(!(door = thinker_cast<vldoor_t *>(th)))
       return 0;
 
    if(genDoorThing && (door->type == genRaise || door->type == genBlazeRaise) &&

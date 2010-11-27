@@ -818,7 +818,7 @@ void A_HticBossDeath(mobj_t *actor)
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             mobj_t *mo;
-            if((mo = dynamic_cast<mobj_t *>(th)))
+            if((mo = thinker_cast<mobj_t *>(th)))
             {
                unsigned int moflags =
                   hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;

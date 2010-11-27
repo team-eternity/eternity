@@ -906,7 +906,7 @@ static void M_NukeMonsters(void)
          mobj_t *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
 
-         if(!(mo = dynamic_cast<mobj_t *>(th)))
+         if(!(mo = thinker_cast<mobj_t *>(th)))
             continue;
 
          mi = &mobjinfo[mo->type];

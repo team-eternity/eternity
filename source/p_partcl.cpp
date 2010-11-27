@@ -458,7 +458,7 @@ void P_RunEffects(void)
    while((th = th->next) != &thinkercap)
    {
       mobj_t *mobj;
-      if((mobj = dynamic_cast<mobj_t *>(th)))
+      if((mobj = thinker_cast<mobj_t *>(th)))
       {
          int rnum = snum + (mobj->subsector->sector - sectors);
          if(mobj->effects)

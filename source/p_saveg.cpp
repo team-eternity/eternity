@@ -79,21 +79,15 @@ void P_NumberObjects(void)
    // count the number of thinkers, and mark each one with its index, using
    // the prev field as a placeholder, since it can be restored later.
 
-   // haleyjd 08/01/09: GCC doesn't like writing integer values into pointers,
-   // and I always thought it was messy anway. Instead, store the value into
-   // the new ordinal member of thinker_t.
+   // haleyjd 11/26/10: Replaced with virtual enumeration facility
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
-      if(dynamic_cast<mobj_t *>(th) != NULL)
-         th->ordinal = ++num_thinkers;
+      num_thinkers = th->Enumerate(num_thinkers);
 }
 
 void P_DeNumberObjects(void)
 {
-   CThinker *th;
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-      th->ordinal = 0;
+   // TODO: no-op
 }
 
 // 
@@ -104,10 +98,10 @@ void P_DeNumberObjects(void)
 //
 static unsigned int P_MobjNum(mobj_t *mo)
 {
-   unsigned int n = mo ? mo->ordinal : 0;   // 0 = NULL
+   unsigned int n = mo ? mo->getEnumeration() : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
-   if(n < 0 || n > num_thinkers) 
+   if(n > num_thinkers) 
       n = 0;
    
    return n;

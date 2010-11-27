@@ -1589,7 +1589,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
    // look for a friend of the indicated type
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(!(mo = dynamic_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<mobj_t *>(th)))
          continue;
 
       // must be friendly, alive, and of the right type

@@ -70,15 +70,22 @@ public:
 
    // Methods
    void Add();
-
-   // Virtual methods (overridables)
-   virtual void Update();
-   virtual void Remove();
-
+   
    // Accessors
    boolean isRemoved()    { return removed; }
    void    addReference() { ++references;   }
    void    delReference() { --references;   }
+
+   // Virtual methods (overridables)
+   virtual void Update();
+   virtual void Remove();
+   
+   // Enumeration 
+   // For thinkers needing savegame enumeration.
+   // Must be implemented by a child class. Return the next enumeration
+   // value from Enumerate.
+   virtual unsigned int Enumerate(unsigned int val) { return val; }
+   virtual unsigned int getEnumeration() { return 0; }
 
    // Data Members
 
@@ -88,11 +95,21 @@ public:
    // according to various criteria, so as to allow quicker searches.
 
    CThinker *cnext, *cprev; // Next, previous thinkers in same class
-
-   // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
-   // GCC with thoughts of writing pointers into integers.
-   unsigned int ordinal;
 };
+
+//
+// thinker_cast
+//
+// Use this dynamic_cast variant to automatically check if something is a valid
+// unremoved CThinker subclass instance. This is necessary because the old 
+// behavior of checking function pointer values effectively changed the type 
+// that a thinker was considered to be when it was set into a deferred removal
+// state.
+//
+template<typename T> inline T thinker_cast(CThinker *th)
+{
+   return (th && !th->isRemoved()) ? dynamic_cast<T>(th) : NULL;
+}
 
 // Called by C_Ticker, can call G_PlayerExited.
 // Carries out all thinking of monsters and players.

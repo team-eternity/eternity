@@ -550,7 +550,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
-   if((door = dynamic_cast<vldoor_t *>(sec->ceilingdata))) // is a door
+   if((door = thinker_cast<vldoor_t *>(sec->ceilingdata))) // is a door
    {
       switch(line->special)
       {

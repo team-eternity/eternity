@@ -431,7 +431,7 @@ static int ACS_countThings(int type, int tid)
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo;
-      if((mo = dynamic_cast<mobj_t *>(th)))
+      if((mo = thinker_cast<mobj_t *>(th)))
       {
          if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
          {

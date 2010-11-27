@@ -2374,7 +2374,7 @@ void P_Massacre(int friends)
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
-      if(!(mo = dynamic_cast<mobj_t *>(think)))
+      if(!(mo = thinker_cast<mobj_t *>(think)))
          continue;
 
       if((mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) &&
@@ -2509,7 +2509,7 @@ void P_ChangeThingHeights(void)
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo;
-      if((mo = dynamic_cast<mobj_t *>(th)))
+      if((mo = thinker_cast<mobj_t *>(th)))
          mo->height = P_ThingInfoHeight(mo->info);
    }
 }
@@ -2702,7 +2702,7 @@ void P_CollectThings(MobjCollection *mc)
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo;
-      if((mo = dynamic_cast<mobj_t *>(th)))
+      if((mo = thinker_cast<mobj_t *>(th)))
       {
          if(mo->type == mc->type)
          {
