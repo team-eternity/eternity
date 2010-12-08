@@ -129,14 +129,14 @@ struct waddir_t
 // certain files being added can be treated specially while being linked into
 // the global wad directory.
 //
-typedef struct wfileadd_s
+struct wfileadd_t
 {
    const char *filename; // name of file
    int li_namespace;     // if not 0, special namespace to add file under
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
    int privatedir;       // if not 0, has a private directory
-} wfileadd_t;
+};
 
 extern waddir_t w_GlobalDir; // the global wad directory
 

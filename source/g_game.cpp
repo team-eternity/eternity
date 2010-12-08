@@ -83,20 +83,18 @@
 #include "e_player.h"
 #include "version.h"
 
-#define SAVEGAMESIZE  0x20000
-#define SAVESTRINGSIZE  24
-
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
 
-static size_t   savegamesize = SAVEGAMESIZE; // killough
+//static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
 static boolean  netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
-static waddir_t *g_dir = &w_GlobalDir;
+
+waddir_t *g_dir = &w_GlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -852,13 +850,6 @@ boolean G_Responder(event_t* ev)
 //
 // DEMO RECORDING
 //
-
-// killough 2/28/98: A ridiculously large number
-// of players, the most you'll ever need in a demo
-// or savegame. This is used to prevent problems, in
-// case more players in a game are supported later.
-
-#define MIN_MAXPLAYERS 32
 
 // haleyjd 10/08/06: longtics demo support -- DOOM v1.91 writes 111 into the
 // version field of its demos (because it's one more than v1.10 I guess).
@@ -1649,11 +1640,6 @@ void G_ForceFinale(void)
    gameaction = ga_victory;
 }
 
-#define VERSIONSIZE   16
-
-// killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
-
 static char *savename;
 
 //
@@ -1712,6 +1698,7 @@ void G_SaveGame(int slot, char *description)
    hub_changelevel = false;
 }
 
+/*
 //
 // CheckSaveGame
 //
@@ -1731,6 +1718,7 @@ void CheckSaveGame(size_t size)
       save_p = savebuffer + pos;
    }
 }
+*/
 
 // killough 3/22/98: form savegame name in one location
 // (previously code was scattered around in multiple places)
@@ -1760,7 +1748,7 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 //
-static uint64_t G_Signature(waddir_t *dir)
+uint64_t G_Signature(waddir_t *dir)
 {
    uint64_t s = 0;
    int lump, i;
@@ -1780,162 +1768,8 @@ static uint64_t G_Signature(waddir_t *dir)
    return s;
 }
 
-extern wfileadd_t *wadfiles;       // killough 11/98
-
 // sf: split into two functions
-
-void G_SaveCurrentLevel(char *filename, char *description)
-{
-   int  length, i;
-   char name2[VERSIONSIZE];
-   const char *fn;
-   
-   save_p = savebuffer = (byte *)(malloc(savegamesize));
-
-   // haleyjd: somebody got really lax with checking the savegame
-   // buffer size on these first few writes -- granted that the
-   // buffer starts out large enough by default to handle them,
-   // but it should be done properly for safety.
-   
-   CheckSaveGame(SAVESTRINGSIZE+VERSIONSIZE+3); // haleyjd: was wrong
-   memcpy(save_p, description, SAVESTRINGSIZE);
-   save_p += SAVESTRINGSIZE;
-   memset(name2, 0, sizeof(name2));
-   
-   // killough 2/22/98: "proprietary" version string :-)
-   sprintf(name2, VERSIONID, version);
-   
-   memcpy(save_p, name2, VERSIONSIZE);
-   save_p += VERSIONSIZE;
-   
-   // killough 2/14/98: save old compatibility flag:
-   *save_p++ = compatibility;
-
-   *save_p++ = gameskill;
-
-   // haleyjd 06/16/10: save "inmasterlevels" state
-   *save_p++ = inmasterlevels;
-   
-   // sf: use string rather than episode, map
-   {
-      int i;
-      CheckSaveGame(8); // haleyjd: added 
-      for(i=0; i<8; i++)
-         *save_p++ = levelmapname[i];
-   }
-
-   // haleyjd 06/16/10: support for saving/loading levels in managed wad
-   // directories.
-   CheckSaveGame(sizeof(int));
-   if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
-   {
-      int len = strlen(fn) + 1;
-
-      // save length of managed directory filename string
-      memcpy(save_p, &len, sizeof(len));
-      save_p += sizeof(len);
-
-      // save managed directory filename string
-      CheckSaveGame(len);
-      memcpy(save_p, fn, len);
-      save_p += len;
-   }
-   else
-   {
-      int len = 0;
-
-      // just save 0; there is no name to save
-      memcpy(save_p, &len, sizeof(len));
-      save_p += sizeof(len);
-   }
-  
-   {  // killough 3/16/98, 12/98: store lump name checksum
-      uint64_t checksum = G_Signature(g_dir);
-
-      CheckSaveGame(sizeof checksum); // haleyjd: added
-      memcpy(save_p, &checksum, sizeof checksum);
-      save_p += sizeof checksum;
-   }
-
-   // killough 3/16/98: store pwad filenames in savegame
-   {
-      wfileadd_t *file = wadfiles;
-
-      for(*save_p = 0; file->filename; ++file)
-      {
-         const char *fn = file->filename;
-         CheckSaveGame(strlen(fn) + 2);
-         strcat(strcat((char *)save_p, fn), "\n");
-      }
-      save_p += strlen((char *)save_p) + 1;
-   }
-
-   CheckSaveGame(GAME_OPTION_SIZE+MIN_MAXPLAYERS+11);
-   
-   for(i=0 ; i<MAXPLAYERS ; i++)
-      *save_p++ = playeringame[i];
-   
-   for(;i<MIN_MAXPLAYERS;i++)         // killough 2/28/98
-      *save_p++ = 0;
-
-   // haleyjd: uses 1 (byte 1)
-   *save_p++ = idmusnum;               // jff 3/17/98 save idmus state
-
-   // haleyjd 04/14/03: save game type (uses byte 2)
-   *save_p++ = GameType;
-   
-   save_p = G_WriteOptions(save_p);    // killough 3/1/98: save game options
-   
-   // haleyjd: uses 4 (bytes 3-6)
-   memcpy(save_p, &leveltime, sizeof(leveltime)); //killough 11/98: save entire word
-   save_p += sizeof(leveltime);
-   
-   // haleyjd: uses 1 (byte 7)
-   // killough 11/98: save revenant tracer state
-   *save_p++ = (gametic-basetic) & 255;
-
-   // haleyjd: bytes 8-11
-   memcpy(save_p, &dmflags, sizeof(dmflags));
-   save_p += sizeof(dmflags);
-   
-   // killough 3/22/98: add Z_CheckHeap after each call to ensure consistency
-   // haleyjd 07/06/09: just Z_CheckHeap after the end. This stuff works by now.
-   
-   P_NumberObjects();    // turn ptrs to numbers
-
-   P_ArchivePlayers();
-   P_ArchiveWorld();
-   P_ArchivePolyObjects(); // haleyjd 03/27/06
-   P_ArchiveThinkers();
-   P_ArchiveSpecials();
-   P_ArchiveRNG();    // killough 1/18/98: save RNG information
-   P_ArchiveMap();    // killough 1/22/98: save automap information
-   P_ArchiveScripts();   // sf: archive scripts
-   P_ArchiveSoundSequences();
-   P_ArchiveButtons();
-   
-   P_DeNumberObjects();
-
-   CheckSaveGame(1); // haleyjd
-
-   *save_p++ = 0xe6;   // consistancy marker
-   
-   length = save_p - savebuffer;
-   
-   Z_CheckHeap();
-
-   if(!M_WriteFile(filename, savebuffer, length))
-   {
-      const char *str = 
-         errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
-      doom_printf("%s", str);
-   }
-   else if(!hub_changelevel) // sf: no 'game saved' message for hubs
-      doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
-
-   free(savebuffer);  // killough
-   savebuffer = save_p = NULL;
-}
+// haleyjd 11/27/10: moved all savegame writing to p_saveg.cpp
 
 static void G_DoSaveGame(void)
 {
@@ -1944,7 +1778,7 @@ static void G_DoSaveGame(void)
    
    G_SaveGameName(name, len, savegameslot);
    
-   G_SaveCurrentLevel(name, savedescription);
+   P_SaveCurrentLevel(name, savedescription);
    
    gameaction = ga_nothing;
    savedescription[0] = 0;
@@ -1969,7 +1803,7 @@ static void G_DoLoadGame(void)
       return;
    }
 
-   save_p = savebuffer + SAVESTRINGSIZE;
+   //save_p = savebuffer + SAVESTRINGSIZE;
    
    // skip the description field
    

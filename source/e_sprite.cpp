@@ -45,10 +45,10 @@ static ehash_t spritehash;      // sprite hash table
 
 typedef struct esprite_s
 {
-   struct mdllistitem_s link; // hash links
-   int num;                   // sprite number
-   char name[5];              // sprite name
-   char *nameptr;             // pointer to name
+   mdllistitem_t link; // hash links
+   int num;            // sprite number
+   char name[5];       // sprite name
+   char *nameptr;      // pointer to name
 } esprite_t;
 
 E_KEYFUNC(esprite_t, nameptr)

@@ -972,7 +972,6 @@ floater:
 //
 // P_NightmareRespawn
 //
-
 void P_NightmareRespawn(mobj_t* mobj)
 {
    fixed_t      x;
@@ -3396,7 +3395,8 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
    return 0;
 }
 
-enum {
+enum 
+{
    TELE_NORMAL,
    TELE_SILENT,
 };

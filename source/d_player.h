@@ -56,7 +56,7 @@ struct skin_t;
 //
 // Player states.
 //
-typedef enum
+enum 
 {
   // Playing or camping.
   PST_LIVE,
@@ -65,8 +65,9 @@ typedef enum
   // Ready to restart/respawn???
   PST_REBORN            
 
-} playerstate_t;
+};
 
+typedef int playerstate_t;
 
 //
 // Player internal flags, for cheats and debug.

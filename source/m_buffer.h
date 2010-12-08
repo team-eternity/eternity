@@ -28,6 +28,19 @@
 #define M_BUFFER_H__
 
 //
+// An exception class for buffered IO errors
+//
+class CBufferedIOException
+{
+protected:
+   const char *message;
+
+public:
+   CBufferedIOException(const char *pMsg) : message(pMsg) {}
+   const char *GetMessage() { return message; }
+};
+
+//
 // CBufferedFileBase
 //
 // Base class for buffers. Eventually I hpe to add an extra layer of indirection
@@ -37,11 +50,12 @@
 class CBufferedFileBase
 {
 protected:
-   FILE *f;      // destination or source file
-   byte *buffer; // buffer
-   size_t len;   // total buffer length
-   size_t idx;   // current index
-   int endian;   // endianness indicator
+   FILE *f;          // destination or source file
+   byte *buffer;     // buffer
+   size_t len;       // total buffer length
+   size_t idx;       // current index
+   int endian;       // endianness indicator
+   boolean throwing; // throws exceptions on IO errors
    
    void InitBuffer(size_t pLen, int pEndian);
 
@@ -49,8 +63,13 @@ public:
    long Tell();
    virtual void Close();
 
-   void SwapULong(uint32_t &x);
+   void SwapLong  (int32_t  &x);
+   void SwapShort (int16_t  &x);
+   void SwapULong (uint32_t &x);
    void SwapUShort(uint16_t &x);
+
+   void setThrowing(boolean val) { throwing = val;  }
+   boolean getThrowing() const   { return throwing; }
 
    // endianness values
    enum
@@ -72,11 +91,14 @@ public:
    boolean CreateFile(const char *filename, size_t pLen, int pEndian);
    boolean Flush();
    void    Close();
-   boolean Write(const void *data, size_t size);
-   boolean WriteUint32(uint32_t num);
-   boolean WriteUint16(uint16_t num);
-   boolean WriteUint8(uint8_t num);
 
+   boolean Write(const void *data, size_t size);
+   boolean WriteSint32(int32_t  num);
+   boolean WriteUint32(uint32_t num);
+   boolean WriteSint16(int16_t  num);
+   boolean WriteUint16(uint16_t num);
+   boolean WriteSint8 (int8_t   num);
+   boolean WriteUint8 (uint8_t  num);
 };
 
 //
@@ -95,9 +117,12 @@ public:
    boolean OpenFile(const char *filename, size_t pLen, int pEndian);
    void    Close();
    boolean Read(void *dest, size_t size);
+   boolean ReadSint32(int32_t  &num);
    boolean ReadUint32(uint32_t &num);
+   boolean ReadSint16(int16_t  &num);
    boolean ReadUint16(uint16_t &num);
-   boolean ReadUint8(uint8_t &num);
+   boolean ReadSint8 (int8_t   &num);
+   boolean ReadUint8 (uint8_t  &num);
 };
 
 #endif

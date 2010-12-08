@@ -29,29 +29,65 @@
 
 // Persistent storage/archiving.
 // These are the load / save game routines.
-void P_ArchivePlayers(void);
+
+class COutBuffer;
+class CInBuffer;
+
+class CSaveArchive
+{
+protected:
+   COutBuffer *savefile; // valid when saving
+   CInBuffer  *loadfile; // valid when loading
+
+public:
+   CSaveArchive(COutBuffer *pSaveFile);
+   CSaveArchive(CInBuffer  *pLoadFile);
+
+   // Accessors
+   boolean isSaving()  const { return (savefile != NULL); }
+   boolean isLoading() const { return (loadfile != NULL); }
+   COutBuffer *getSaveFile() { return savefile; }
+   CInBuffer  *getLoadFile() { return loadfile; }
+
+   // Methods
+   void ArchiveCString(char *str,  size_t maxLen);
+   void ArchiveLString(char *&str, size_t &len);
+
+   // Operators
+   // Similar to ZDoom's FArchive class, these are symmetric - they are used
+   // both for reading and writing.
+   CSaveArchive &operator << (int32_t  &x);
+   CSaveArchive &operator << (uint32_t &x);
+   CSaveArchive &operator << (int16_t  &x);
+   CSaveArchive &operator << (uint16_t &x);
+   CSaveArchive &operator << (int8_t   &x);
+   CSaveArchive &operator << (uint8_t  &x); 
+   CSaveArchive &operator << (boolean  &x);
+   CSaveArchive &operator << (CThinker *th);
+};
+
 void P_UnArchivePlayers(void);
-void P_ArchiveWorld(void);
+
 void P_UnArchiveWorld(void);
-void P_ArchivePolyObjects(void);
+
 void P_UnArchivePolyObjects(void);
-void P_ArchiveThinkers(void);
+
 void P_UnArchiveThinkers(void);
-void P_ArchiveSpecials(void);
+
 void P_UnArchiveSpecials(void);
-void P_ArchiveScripts(void);
+
 void P_UnArchiveScripts(void);
-void P_ArchiveSoundSequences(void);
+
 void P_UnArchiveSoundSequences(void);
-void P_ArchiveButtons(void);
+
 void P_UnArchiveButtons(void);
 
 // 1/18/98 killough: add RNG info to savegame
-void P_ArchiveRNG(void);
+
 void P_UnArchiveRNG(void);
 
 // 2/21/98 killough: add automap info to savegame
-void P_ArchiveMap(void);
+
 void P_UnArchiveMap(void);
 
 void P_FreeObjTable(void);
@@ -59,7 +95,9 @@ void P_NumberObjects(void);
 void P_DeNumberObjects(void);
 
 extern byte *save_p;
-void CheckSaveGame(size_t);              // killough
+//void CheckSaveGame(size_t);              // killough
+
+void P_SaveCurrentLevel(char *filename, char *description);
 
 #endif
 

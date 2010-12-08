@@ -105,6 +105,26 @@ void CBufferedFileBase::SwapULong(uint32_t &x)
 }
 
 //
+// CBufferedFileBase::SwapLong
+//
+// As above but for signed ints.
+//
+void CBufferedFileBase::SwapLong(int32_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapLong(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigLong(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
 // CBufferedFileBase::SwapUShort
 //
 // Transform a uint16 value based on the 'endian' setting.
@@ -118,6 +138,26 @@ void CBufferedFileBase::SwapUShort(uint16_t &x)
       break;
    case BENDIAN:
       x = ::SwapBigUShort(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// CBufferedFileBase::SwapShort
+//
+// As above but for signed 16-bit shorts.
+//
+void CBufferedFileBase::SwapShort(int16_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapShort(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigShort(x);
       break;
    default:
       break;
@@ -159,8 +199,11 @@ boolean COutBuffer::Flush()
    if(idx)
    {
       if(fwrite(buffer, sizeof(byte), idx, f) < idx)
+      {
+         if(throwing)
+            throw CBufferedIOException("fwrite did not write the requested amount");
          return false;
-
+      }
       idx = 0;
    }
 
@@ -176,10 +219,23 @@ boolean COutBuffer::Flush()
 //
 void COutBuffer::Close()
 {
-   if(f)
-      Flush();
+   try
+   {
+     if(f)
+        Flush();
+      
+     CBufferedFileBase::Close();
+   }
+   catch(CBufferedIOException)
+   {
+      // if it didn't close, close it now. 
+      // CPP_FIXME: should really use a proper RAII idiom
+      if(f)
+         CBufferedFileBase::Close();
 
-   CBufferedFileBase::Close();
+      // propagate the exception
+      throw; 
+   }
 }
 
 //
@@ -229,6 +285,17 @@ boolean COutBuffer::WriteUint32(uint32_t num)
 }
 
 //
+// COutBuffer::WriteSint32
+//
+// Convenience routine to write an integer into the buffer.
+//
+boolean COutBuffer::WriteSint32(int32_t num)
+{
+   SwapLong(num);
+   return Write(&num, sizeof(int32_t));
+}
+
+//
 // COutBuffer::WriteUint16
 //
 // Convenience routine to write an unsigned short int into the buffer.
@@ -237,6 +304,17 @@ boolean COutBuffer::WriteUint16(uint16_t num)
 {
    SwapUShort(num);
    return Write(&num, sizeof(uint16_t));
+}
+
+//
+// COutBuffer::WriteSint16
+//
+// Convenience routine to write a short int into the buffer.
+//
+boolean COutBuffer::WriteSint16(int16_t num)
+{
+   SwapShort(num);
+   return Write(&num, sizeof(int16_t));
 }
 
 //
@@ -257,6 +335,17 @@ boolean COutBuffer::WriteUint8(uint8_t num)
    ++idx;
  
    return true;
+}
+
+//
+// COutBuffer::WriteSint8
+//
+// Routine to write a byte into the buffer.
+// This is much more efficient than calling M_BufferWrite for individual bytes.
+//
+boolean COutBuffer::WriteSint8(int8_t num)
+{     
+   return WriteUint8((uint8_t)num);
 }
 
 //=============================================================================
@@ -365,6 +454,23 @@ boolean CInBuffer::ReadUint32(uint32_t &num)
 }
 
 //
+// CInBuffer::ReadSint32
+//
+// Read an int32 value from the input file.
+//
+boolean CInBuffer::ReadSint32(int32_t &num)
+{
+   int32_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapLong(lNum);
+   num = lNum;
+   return true;
+}
+
+//
 // CInBuffer::ReadUint16
 //
 // Read a uint16 value from the input file.
@@ -377,6 +483,23 @@ boolean CInBuffer::ReadUint16(uint16_t &num)
       return false;
 
    SwapUShort(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadSint16
+//
+// Read an int16 value from the input file.
+//
+boolean CInBuffer::ReadSint16(int16_t &num)
+{
+   int16_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapShort(lNum);
    num = lNum;
    return true;
 }
@@ -398,6 +521,27 @@ boolean CInBuffer::ReadUint8(uint8_t &num)
    }
 
    num = buffer[idx];
+   ++idx;
+    return true;
+}
+
+//
+// CInBuffer::ReadSint8
+//
+// Read an int8 value from input file.
+//
+boolean CInBuffer::ReadSint8(int8_t &num)
+{
+   if(idx == readlen) // nothing left in the buffer?
+   {
+      if(!ReadFile()) // try to read more
+      {
+         if(!readlen) // nothing was read? uh oh!
+            return false;
+      }
+   }
+
+   num = (int8_t)(buffer[idx]);
    ++idx;
     return true;
 }

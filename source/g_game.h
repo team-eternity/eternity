@@ -30,6 +30,7 @@
 //
 // GAME
 //
+struct waddir_t;
 
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
@@ -57,7 +58,6 @@ void G_ForceFinale(void);
 void G_Ticker(void);
 void G_ScreenShot(void);
 void G_ReloadDefaults(void);     // killough 3/1/98: loads game defaults
-void G_SaveCurrentLevel(char *filename, char *description); // sf
 void G_SaveGameName(char *,size_t,int); // killough 3/22/98: sets savegame filename
 void G_SetFastParms(int);        // killough 4/10/98: sets -fast parameters
 void G_DoNewGame(void);
@@ -70,6 +70,7 @@ void G_InitNew(skill_t skill, char*);
 void G_DoVictory(void);
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
+uint64_t G_Signature(waddir_t *dir);
 
 void R_InitPortals();
 
@@ -118,6 +119,20 @@ extern boolean scriptSecret;   // haleyjd
 extern boolean sendpause;
 
 extern int novert; // haleyjd
+
+#define VERSIONSIZE   16
+
+// killough 2/22/98: version id string format for savegames
+#define VERSIONID "MBF %d"
+
+extern waddir_t *g_dir;
+
+// killough 2/28/98: A ridiculously large number
+// of players, the most you'll ever need in a demo
+// or savegame. This is used to prevent problems, in
+// case more players in a game are supported later.
+
+#define MIN_MAXPLAYERS 32
 
 #endif
 

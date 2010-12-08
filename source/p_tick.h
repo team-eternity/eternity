@@ -72,9 +72,11 @@ public:
    void Add();
    
    // Accessors
-   boolean isRemoved()    { return removed; }
-   void    addReference() { ++references;   }
-   void    delReference() { --references;   }
+   boolean isRemoved() const { return removed; }
+
+   // Reference counting
+   void addReference() { ++references; }
+   void delReference() { --references; }
 
    // Virtual methods (overridables)
    virtual void Update();
@@ -84,7 +86,7 @@ public:
    // For thinkers needing savegame enumeration.
    // Must be implemented by a child class. Return the next enumeration
    // value from Enumerate.
-   virtual unsigned int Enumerate(unsigned int val) { return val; }
+   virtual void Enumerate(unsigned int val) {}
    virtual unsigned int getEnumeration() { return 0; }
 
    // Data Members
@@ -133,6 +135,29 @@ extern CThinker thinkerclasscap[];
 
 // sf: jumping-viewz-on-hyperlift bug
 extern boolean reset_viewz;
+
+//
+// Thinker Factory
+//
+// haleyjd 12/07/10: The save game code needs to be able to construct thinkers
+// of any class without resort to a gigantic switch statement. This calls for
+// a factory pattern.
+//
+
+class CThinkerType
+{
+protected:
+   const char *name;
+
+public:
+};
+
+class CThinkerFactory
+{
+protected:
+public:
+};
+
 
 #endif
 

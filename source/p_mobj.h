@@ -191,7 +191,7 @@ public:
    virtual void Remove();
 
    // Savegame enumeration
-   virtual unsigned int Enumerate(unsigned int val) { ordinal = val; return val + 1; }
+   virtual void Enumerate(unsigned int val) { ordinal = val; }
    virtual unsigned int getEnumeration() { return ordinal; }
 
    // Data members

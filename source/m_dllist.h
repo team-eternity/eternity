@@ -41,15 +41,15 @@
 
 #include "d_keywds.h"
 
-typedef struct mdllistitem_s
+struct mdllistitem_t
 {
-   struct mdllistitem_s  *next;
-   struct mdllistitem_s **prev;
-   void                  *object; // 08/02/09: pointer back to object
-   unsigned int           data;   // 02/07/10: arbitrary data cached at node
-} mdllistitem_t;
+   mdllistitem_t  *next;
+   mdllistitem_t **prev;
+   void           *object; // 08/02/09: pointer back to object
+   unsigned int    data;   // 02/07/10: arbitrary data cached at node
+};
 
-d_inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
+inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
 {
    mdllistitem_t *next = *head;
 
@@ -61,8 +61,8 @@ d_inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
    item->object = item; // 08/02/09: defaults to being self-referential
 }
 
-d_inline static void M_DLListInsertWithPtr(mdllistitem_t *item, void *object,
-                                           mdllistitem_t **head)
+inline static void M_DLListInsertWithPtr(mdllistitem_t *item, void *object,
+                                         mdllistitem_t **head)
 {
    mdllistitem_t *next = *head;
 
@@ -77,7 +77,7 @@ d_inline static void M_DLListInsertWithPtr(mdllistitem_t *item, void *object,
 d_inline static void M_DLListRemove(mdllistitem_t *item)
 {
    mdllistitem_t **prev = item->prev;
-   mdllistitem_t *next  = item->next;
+   mdllistitem_t  *next = item->next;
    
    if((*prev = next))
       next->prev = prev;

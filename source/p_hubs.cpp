@@ -154,7 +154,7 @@ static void SaveHubLevel(void)
    if(!hublevel->tmpfile)
       hublevel->tmpfile = temp_hubfile();
    
-   G_SaveCurrentLevel(hublevel->tmpfile, "smmu hubs");
+   P_SaveCurrentLevel(hublevel->tmpfile, "smmu hubs");
 }
 
 static void LoadHubLevel(char *levelname)

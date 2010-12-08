@@ -26,6 +26,7 @@
 //-----------------------------------------------------------------------------
 
 // We are referring to sprite numbers.
+#include "z_zone.h"
 #include "info.h"
 #include "d_items.h"
 #include "d_gi.h"

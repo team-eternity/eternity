@@ -164,7 +164,8 @@ typedef enum {
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-typedef enum {
+enum 
+{
   wp_fist,
   wp_pistol,
   wp_shotgun,
@@ -177,7 +178,9 @@ typedef enum {
 
   NUMWEAPONS,
   wp_nochange              // No pending weapon change.
-} weapontype_t;
+};
+
+typedef int weapontype_t;
 
 // Ammunition types defined.
 enum 

@@ -2414,7 +2414,7 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
    P_PreZoneFreeLevel();
    
    // free the old level
-   Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
+   Z_FreeTags(PU_LEVEL, PU_LEVEL);
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);
