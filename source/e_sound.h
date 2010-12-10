@@ -81,9 +81,9 @@ enum
 };
 
 // haleyjd 06/04/06: EDF sound sequences
-typedef struct ESoundSeq_s
+struct ESoundSeq_t
 {
-   mdllistitem_t numlinks;       // next, prev links for numeric hash chain
+   CDLListItem<ESoundSeq_t> numlinks; // next, prev links for numeric hash chain
 
    int index;                    // numeric id
    int type;                     // type of sequence (see above enum)
@@ -98,13 +98,13 @@ typedef struct ESoundSeq_s
    sfxinfo_t *stopsound;         // stopsound, if any
    boolean nostopcutoff;         // if true, sounds aren't cut off at end
 
-   struct ESoundSeq_s *doorseq;  // redirect for door sequence use
-   struct ESoundSeq_s *platseq;  // redirect for platform sequence use
-   struct ESoundSeq_s *floorseq; // redirect for floor sequence use
-   struct ESoundSeq_s *ceilseq;  // redirect for ceiling sequence use
+   ESoundSeq_t *doorseq;  // redirect for door sequence use
+   ESoundSeq_t *platseq;  // redirect for platform sequence use
+   ESoundSeq_t *floorseq; // redirect for floor sequence use
+   ESoundSeq_t *ceilseq;  // redirect for ceiling sequence use
 
-   struct ESoundSeq_s *namenext; // for hashing by name
-} ESoundSeq_t;
+   ESoundSeq_t *namenext; // for hashing by name
+};
 
 ESoundSeq_t *E_SequenceForName(const char *name);
 ESoundSeq_t *E_SequenceForNum(int id);

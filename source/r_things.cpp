@@ -917,7 +917,6 @@ void R_ProjectSprite(mobj_t *thing)
 void R_AddSprites(sector_t* sec, int lightlevel)
 {
    mobj_t *thing;
-   particle_t *ptcl;
    int    lightnum;
    
    // BSP is traversed by subsector.
@@ -949,8 +948,10 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 
    if(drawparticles)
    {
-      for(ptcl = sec->ptcllist; ptcl; ptcl = (particle_t *)(ptcl->seclinks.next))
-         R_ProjectParticle(ptcl);
+      CDLListItem<particle_t> *link;
+
+      for(link = sec->ptcllist; link; link = link->dllNext)
+         R_ProjectParticle(link->dllObject);
    }
 }
 

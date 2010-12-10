@@ -132,15 +132,16 @@ enum
 //
 // This struct keeps track of scripts to be executed on other maps.
 //
-typedef struct deferredacs_s
+struct deferredacs_t
 {
-   mdllistitem_t link;     // list links
+   CDLListItem<deferredacs_t> link; // list links
+   
    int  scriptNum;         // ACS script number to execute
    int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
    int  type;              // type of action to perform...
    int  args[NUMLINEARGS]; // additional arguments from linedef
-} deferredacs_t;
+};
 
 //
 // acsvm

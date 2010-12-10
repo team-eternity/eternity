@@ -37,8 +37,8 @@
 //
 struct emod_t
 {
-   mdllistitem_t numlinks;  // for numeric hash
-   mdllistitem_t namelinks; // for name hash
+   CDLListItem<emod_t> numlinks;  // for numeric hash
+   CDLListItem<emod_t> namelinks; // for name hash
 
    char *name;
    int num;

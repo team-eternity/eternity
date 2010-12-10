@@ -87,8 +87,8 @@
 // Static sound hash tables
 //
 #define NUMSFXCHAINS 307
-static sfxinfo_t *sfxchains[NUMSFXCHAINS];
-static sfxinfo_t *sfx_dehchains[NUMSFXCHAINS];
+static sfxinfo_t              *sfxchains[NUMSFXCHAINS];
+static CDLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
 
 //
 // Singularity types
@@ -239,13 +239,13 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
    unsigned int hash = dehnum % NUMSFXCHAINS;
-   sfxinfo_t  *rover = sfx_dehchains[hash];
+   CDLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
 
    // haleyjd 04/13/08: rewritten for dynamic hash chains
-   while(rover && rover->dehackednum != dehnum)
-      rover = (sfxinfo_t *)(rover->numlinks.next);
+   while(rover && rover->dllObject->dehackednum != dehnum)
+      rover = rover->dllNext;
 
-   return rover;
+   return rover ? rover->dllObject : NULL;
 }
 
 // haleyjd 04/13/08: for last-chance defaults, keep count of sounds
@@ -296,8 +296,7 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
       E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
    // haleyjd 04/13/08: use M_DLListInsert to support removal & reinsertion
-   M_DLListInsert((mdllistitem_t *)sfx,
-                  (mdllistitem_t **)(&sfx_dehchains[hash]));
+   sfx->numlinks.insert(sfx, &sfx_dehchains[hash]);
 }
 
 //
@@ -309,7 +308,7 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
 //
 static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 {
-   M_DLListRemove((mdllistitem_t *)sfx);
+   sfx->numlinks.remove();
 }
 
 //
@@ -936,12 +935,12 @@ cfg_opt_t edf_sndseq_opts[] =
 };
 
 #define NUM_EDFSEQ_CHAINS 127
-static ESoundSeq_t *edf_seq_chains[NUM_EDFSEQ_CHAINS];
-static ESoundSeq_t *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
+static ESoundSeq_t              *edf_seq_chains[NUM_EDFSEQ_CHAINS];
+static CDLListItem<ESoundSeq_t> *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
 
 // need a separate hash for environmental sequences
 #define NUM_EDFSEQ_ENVCHAINS 31
-static ESoundSeq_t *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
+static CDLListItem<ESoundSeq_t> *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
 
 // translator tables for specific types
 
@@ -985,8 +984,7 @@ static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
    {
       idx = seq->index % NUM_EDFSEQ_CHAINS;
       
-      M_DLListInsert((mdllistitem_t *)seq, 
-                     (mdllistitem_t **)(&edf_seq_numchains[idx]));
+      seq->numlinks.insert(seq, &edf_seq_numchains[idx]);
 
       // possibly add to the specific type translation tables
       if(seq->index < NUM_SEQ_TRANSLATE)
@@ -1008,8 +1006,7 @@ static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
    {
       idx = seq->index % NUM_EDFSEQ_ENVCHAINS;
 
-      M_DLListInsert((mdllistitem_t *)seq,
-                     (mdllistitem_t **)(&edf_seq_envchains[idx]));
+      seq->numlinks.insert(seq, &edf_seq_envchains[idx]);
    }
 }
 
@@ -1022,7 +1019,7 @@ static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
 //
 static void E_DelSequenceFromNumHash(ESoundSeq_t *seq)
 {
-   M_DLListRemove((mdllistitem_t *)seq);
+   seq->numlinks.remove();
 }
 
 //
@@ -1051,12 +1048,12 @@ ESoundSeq_t *E_SequenceForName(const char *name)
 ESoundSeq_t *E_SequenceForNum(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_CHAINS;
-   ESoundSeq_t *seq = edf_seq_numchains[key];
+   CDLListItem<ESoundSeq_t> *link = edf_seq_numchains[key];
 
-   while(seq && seq->index != id)
-      seq = (ESoundSeq_t *)(seq->numlinks.next);
+   while(link && link->dllObject->index != id)
+      link = link->dllNext;
 
-   return seq;
+   return link ? link->dllObject : NULL;
 }
 
 //
@@ -1098,12 +1095,12 @@ ESoundSeq_t *E_SequenceForNumType(int id, int type)
 ESoundSeq_t *E_EnvironmentSequence(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_ENVCHAINS;
-   ESoundSeq_t *seq = edf_seq_envchains[key];
+   CDLListItem<ESoundSeq_t> *link = edf_seq_envchains[key];
 
-   while(seq && seq->index != id)
-      seq = (ESoundSeq_t *)(seq->numlinks.next);
+   while(link && link->dllObject->index != id)
+      link = link->dllNext;
 
-   return seq;
+   return link ? link->dllObject : NULL;
 }
 
 //

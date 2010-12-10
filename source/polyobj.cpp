@@ -112,7 +112,7 @@ polyobj_t *PolyObjects;
 int numPolyObjects;
 
 // Polyobject Blockmap -- initialized in P_LoadBlockMap
-polymaplink_t **polyblocklinks;
+CDLListItem<polymaplink_t> **polyblocklinks;
 
 
 //
@@ -656,8 +656,7 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
             l->po_next = po->linkhead;
             po->linkhead = l;
             
-            M_DLListInsert(&l->link, 
-                           (mdllistitem_t **)(&polyblocklinks[y*bmapwidth + x]));
+            l->link.insert(l, &polyblocklinks[y * bmapwidth + x]);
          }
       }
    }
@@ -687,7 +686,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
    while(l)
    {
       polymaplink_t *next = l->po_next;
-      M_DLListRemove(&l->link);
+      l->link.remove();
       Polyobj_putLink(l);
       l = next;
    }

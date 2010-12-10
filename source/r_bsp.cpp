@@ -1934,17 +1934,17 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
 // must be sorted to draw in DOOM's front-to-back order within individual
 // subsectors. This is a modified version of R_SortVisSprites.
 //
-static void R_SortPolyObjects(rpolyobj_t *rpo)
+static void R_SortPolyObjects(CDLListItem<rpolyobj_t> *list)
 {
    int i = 0;
          
-   while(rpo)
+   while(list)
    {
-      polyobj_t *po = rpo->polyobj;
+      polyobj_t *po = list->dllObject->polyobj;
 
       po->zdist = R_PointToDist2(viewx, viewy, po->centerPt.x, po->centerPt.y);
-      po_ptrs[i++] = rpo;
-      rpo = (rpolyobj_t *)(rpo->link.next);
+      po_ptrs[i++] = list->dllObject;
+      list = list->dllNext;
    }
    
    // the polyobjects are NOT in any particular order, so use qsort
@@ -1964,16 +1964,16 @@ static void R_SortPolyObjects(rpolyobj_t *rpo)
 //
 static void R_AddDynaSegs(subsector_t *sub)
 {
-   rpolyobj_t *rpo = (rpolyobj_t *)(sub->polyList->link.next);
+   CDLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
    int i;
 
    numpolys = 1; // we know there is at least one
 
    // count polyobject fragments
-   while(rpo)
+   while(link)
    {
       ++numpolys;
-      rpo = (rpolyobj_t *)(rpo->link.next);
+      link = link->dllNext;
    }
 
    // allocate twice the number needed to minimize allocations
@@ -1988,7 +1988,7 @@ static void R_AddDynaSegs(subsector_t *sub)
    if(numpolys > 1)
       R_SortPolyObjects(sub->polyList);
    else
-      po_ptrs[0] = sub->polyList;
+      po_ptrs[0] = sub->polyList->dllObject;
 
    // render polyobject fragments
    for(i = 0; i < numpolys; ++i)

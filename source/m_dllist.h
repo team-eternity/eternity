@@ -41,47 +41,46 @@
 
 #include "d_keywds.h"
 
-struct mdllistitem_t
+// 
+// CDLListItem
+//
+// This template class is an evolution of the original mdllistitem_t.
+// However rather than using an is-a relationship, this functions best
+// in a has-a relationship (which is the same role it could already
+// play via use of the object member pointer).
+//
+// This class is intentionally a POD and will most likely remain that way
+// for speed and efficiency concerns.
+//
+template<typename T> class CDLListItem
 {
-   mdllistitem_t  *next;
-   mdllistitem_t **prev;
-   void           *object; // 08/02/09: pointer back to object
-   unsigned int    data;   // 02/07/10: arbitrary data cached at node
+public:
+   CDLListItem<T>  *dllNext;
+   CDLListItem<T> **dllPrev;
+   T               *dllObject; // 08/02/09: pointer back to object
+   unsigned int     dllData;   // 02/07/10: arbitrary data cached at node
+
+   inline void insert(T *parentObject, CDLListItem<T> **head)
+   {
+      CDLListItem<T> *next = *head;
+
+      if((this->dllNext = next))
+         next->dllPrev = &this->dllNext;
+      this->dllPrev = head;
+      *head = this;
+
+      this->dllObject = parentObject; // set to object, which is generally distinct
+   }
+
+   inline void remove()
+   {
+      CDLListItem<T> **prev = this->dllPrev;
+      CDLListItem<T>  *next = this->dllNext;
+
+      if((*prev = next))
+         next->dllPrev = prev;
+   }
 };
-
-inline static void M_DLListInsert(mdllistitem_t *item, mdllistitem_t **head)
-{
-   mdllistitem_t *next = *head;
-
-   if((item->next = next))
-      next->prev = &item->next;
-   item->prev = head;
-   *head = item;
-
-   item->object = item; // 08/02/09: defaults to being self-referential
-}
-
-inline static void M_DLListInsertWithPtr(mdllistitem_t *item, void *object,
-                                         mdllistitem_t **head)
-{
-   mdllistitem_t *next = *head;
-
-   if((item->next = next))
-      next->prev = &item->next;
-   item->prev = head;
-   *head = item;
-
-   item->object = object; // set to object, which is possibly distinct
-}
-
-d_inline static void M_DLListRemove(mdllistitem_t *item)
-{
-   mdllistitem_t **prev = item->prev;
-   mdllistitem_t  *next = item->next;
-   
-   if((*prev = next))
-      next->prev = prev;
-}
 
 #endif
 

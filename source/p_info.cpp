@@ -95,14 +95,14 @@ enum
 // the fields of a static object without overwriting the LevelInfo object 
 // itself.
 //
-typedef struct LevelInfoProto_s
+struct LevelInfoProto_t
 {
-   mdllistitem_t links;                        // links for hashing
-   int           type;                         // type id via above enumeration
-   char          mapname[9];                   // name of map to which this belongs
-   LevelInfo_t   info;                         // the LevelInfo object
-   boolean       modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
-} LevelInfoProto_t;
+   CDLListItem<LevelInfoProto_t> links;        // links for hashing
+   int         type;                           // type id via above enumeration
+   char        mapname[9];                     // name of map to which this belongs
+   LevelInfo_t info;                           // the LevelInfo object
+   boolean     modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
+};
 
 // haleyjd: moved everything into the LevelInfo struct
 LevelInfo_t LevelInfo;

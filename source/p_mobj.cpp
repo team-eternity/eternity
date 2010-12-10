@@ -103,14 +103,14 @@ fixed_t FloatBobDiffs[64] =
 };
 
 // haleyjd 03/27/10: new solution for state cycle detection
-typedef struct seenstate_s
+struct seenstate_t
 {
-   mdllistitem_t link;
+   CDLListItem<seenstate_t> link;
    int statenum;
-} seenstate_t;
+};
 
 // haleyjd 03/27/10: freelist of seenstate objects
-static mdllistitem_t *seenstate_freelist;
+static CDLListItem<seenstate_t> *seenstate_freelist;
 
 //
 // P_InitSeenStates
@@ -125,7 +125,7 @@ static void P_InitSeenStates(void)
    newss = (seenstate_t *)(calloc(32, sizeof(seenstate_t)));
 
    for(i = 0; i < 32; ++i)
-      M_DLListInsert(&(newss[i].link), &seenstate_freelist);
+      newss[i].link.insert(&newss[i], &seenstate_freelist);
 }
 
 //
@@ -133,23 +133,23 @@ static void P_InitSeenStates(void)
 //
 // haleyjd 03/27/10: puts a set of seenstates back onto the freelist
 //
-static void P_FreeSeenStates(seenstate_t *list)
+static void P_FreeSeenStates(CDLListItem<seenstate_t> *list)
 {
-   mdllistitem_t *oldhead = seenstate_freelist;
-   mdllistitem_t *newtail = &list->link;
+   CDLListItem<seenstate_t> *oldhead = seenstate_freelist;
+   CDLListItem<seenstate_t> *newtail = list;
 
    // find tail of list of objects to free
-   while(newtail->next)
-      newtail = newtail->next;
+   while(newtail->dllNext)
+      newtail = newtail->dllNext;
 
    // attach current freelist to tail
-   newtail->next = oldhead;
+   newtail->dllNext = oldhead;
    if(oldhead)
-      oldhead->prev = &newtail->next;
+      oldhead->dllPrev = &newtail->dllNext;
 
    // attach new list to seenstate_freelist
-   seenstate_freelist = &list->link;
-   list->link.prev = &seenstate_freelist;
+   seenstate_freelist = list;
+   list->dllPrev = &seenstate_freelist;
 }
 
 //
@@ -164,12 +164,11 @@ static seenstate_t *P_GetSeenState(void)
 
    if(seenstate_freelist)
    {
-      mdllistitem_t *item = seenstate_freelist;
+      CDLListItem<seenstate_t> *item = seenstate_freelist;
 
-      M_DLListRemove(item);
+      item->remove();
 
-      ret = (seenstate_t *)item;
-
+      ret = item->dllObject;
       memset(ret, 0, sizeof(seenstate_t));
    }
    else
@@ -183,13 +182,13 @@ static seenstate_t *P_GetSeenState(void)
 //
 // Marks a new state as having been seen.
 //
-static void P_AddSeenState(int statenum, seenstate_t **list)
+static void P_AddSeenState(int statenum, CDLListItem<seenstate_t> **list)
 {
    seenstate_t *newss = P_GetSeenState();
 
    newss->statenum = statenum;
 
-   M_DLListInsert(&newss->link, (mdllistitem_t **)list);
+   newss->link.insert(newss, list);
 }
 
 //
@@ -197,16 +196,16 @@ static void P_AddSeenState(int statenum, seenstate_t **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, seenstate_t *list)
+static boolean P_CheckSeenState(int statenum, CDLListItem<seenstate_t> *list)
 {
-   seenstate_t *curstate = list;
+   CDLListItem<seenstate_t> *link = list;
 
-   while(curstate)
+   while(link)
    {
-      if(statenum == curstate->statenum)
+      if(statenum == link->dllObject->statenum)
          return true;
 
-      curstate = (seenstate_t *)(curstate->link.next);
+      link = link->dllNext;
    }
 
    return false;
@@ -223,8 +222,8 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // haleyjd 03/27/10: new state cycle detection
    static boolean firsttime = true; // for initialization
-   seenstate_t *seenstates  = NULL; // list of seenstates for this instance
-   boolean ret = true;                         // return value
+   CDLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
+   boolean ret = true;                           // return value
 
    if(firsttime)
    {

@@ -60,13 +60,14 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir
 // Managed wad directory structure.
 // This adds hashability to a waddir_t structure.
 //
-typedef struct manageddir_s
+struct manageddir_t
 {
-   mdllistitem_t  links;  // links
+   //CDLListItem<manageddir_t> links;  // links
+
    waddir_t       waddir; // directory
    char          *name;   // name
    wadlevel_t    *levels; // enumerated levels
-} manageddir_t;
+};
 
 //=============================================================================
 //

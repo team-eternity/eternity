@@ -172,7 +172,7 @@ enum
 //
 
 // deferred scripts
-static deferredacs_t *acsDeferred;
+static CDLListItem<deferredacs_t> *acsDeferred;
 
 // haleyjd 06/24/08: level script vm for ACS
 static acsvm_t acsLevelScriptVM;
@@ -1156,7 +1156,7 @@ void ACS_Init(void)
 //
 void ACS_NewGame(void)
 {
-   deferredacs_t *cur, *next;
+   CDLListItem<deferredacs_t> *cur, *next;
 
    // clear out the world variables
    memset(ACSworldvars, 0, sizeof(ACSworldvars));
@@ -1166,13 +1166,12 @@ void ACS_NewGame(void)
 
    while(cur)
    {
-      next = (deferredacs_t *)(cur->link.next);
-
-      M_DLListRemove(&cur->link);
-      free(cur);
-
+      next = cur->dllNext;
+      cur->remove();      
+      free(cur->dllObject);
       cur = next;
    }
+
    acsDeferred = NULL;
 }
 
@@ -1285,15 +1284,18 @@ void ACS_LoadLevelScript(int lump)
 static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
                                        int type, int args[NUMLINEARGS])
 {
-   deferredacs_t *cur = acsDeferred, *newdacs;
+   CDLListItem<deferredacs_t> *cur = acsDeferred;
+   deferredacs_t *newdacs;
 
    // check to make sure the script isn't already scheduled
    while(cur)
    {
-      if(cur->targetMap == mapnum && cur->scriptNum == scrnum)
+      deferredacs_t *dacs = cur->dllObject;
+
+      if(dacs->targetMap == mapnum && dacs->scriptNum == scrnum)
          return false;
 
-      cur = (deferredacs_t *)(cur->link.next);
+      cur = cur->dllNext;
    }
 
    // allocate a new deferredacs_t
@@ -1315,7 +1317,7 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
    newdacs->targetMap = mapnum;
 
    // add it to the linked list
-   M_DLListInsert(&newdacs->link, (mdllistitem_t **)&acsDeferred);
+   newdacs->link.insert(newdacs, &acsDeferred);
 
    return true;
 }
@@ -1327,7 +1329,7 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
 //
 void ACS_RunDeferredScripts(void)
 {
-   deferredacs_t *cur = acsDeferred, *next;
+   CDLListItem<deferredacs_t> *cur = acsDeferred, *next;
    acsthinker_t *newScript = NULL;
    acsthinker_t *rover = NULL;
    int internalNum;
@@ -1335,23 +1337,24 @@ void ACS_RunDeferredScripts(void)
    while(cur)
    {
       acsvm_t *vm;
+      deferredacs_t *dacs = cur->dllObject;
 
-      next = (deferredacs_t *)(cur->link.next);
+      next = cur->dllNext; 
 
-      vm = acsVMs[cur->vmID];
+      vm = acsVMs[dacs->vmID];
 
-      if(cur->targetMap == gamemap)
+      if(dacs->targetMap == gamemap)
       {
-         switch(cur->type)
+         switch(dacs->type)
          {
          case ACS_DEFERRED_EXECUTE:
-            ACS_StartScriptVM(vm, cur->scriptNum, 0, cur->args, NULL, NULL, 0, 
+            ACS_StartScriptVM(vm, dacs->scriptNum, 0, dacs->args, NULL, NULL, 0, 
                               &newScript, false);
             if(newScript)
                newScript->delay = TICRATE;
             break;
          case ACS_DEFERRED_SUSPEND:
-            if((internalNum = ACS_indexForNum(vm, cur->scriptNum)) != vm->numScripts)
+            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
             {
                acscript_t *script = &(vm->scripts[internalNum]);
                rover = script->threads;
@@ -1367,7 +1370,7 @@ void ACS_RunDeferredScripts(void)
             }
             break;
          case ACS_DEFERRED_TERMINATE:
-            if((internalNum = ACS_indexForNum(vm, cur->scriptNum)) != vm->numScripts)
+            if((internalNum = ACS_indexForNum(vm, dacs->scriptNum)) != vm->numScripts)
             {
                acscript_t *script = &(vm->scripts[internalNum]);
                rover = script->threads;
@@ -1384,8 +1387,8 @@ void ACS_RunDeferredScripts(void)
          }
 
          // unhook and delete this deferred script
-         M_DLListRemove(&cur->link);
-         free(cur);
+         cur->remove();
+         free(dacs);
       }
 
       cur = next;

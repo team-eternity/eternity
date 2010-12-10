@@ -81,7 +81,7 @@ typedef enum
 struct texture_t
 {
    // SoM: New dog's in town
-   mdllistitem_t link;
+   CDLListItem<texture_t> link;
    
    // Index within the texture array of this object.
    int           index;

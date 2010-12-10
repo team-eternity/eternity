@@ -184,14 +184,15 @@ static void R_FreeRPolyObj(rpolyobj_t *rpo)
 //
 static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 {
-   rpolyobj_t *rpo = ss->polyList;
+   CDLListItem<rpolyobj_t> *link = ss->polyList;
+   rpolyobj_t *rpo;
 
-   while(rpo)
+   while(link)
    {
-      if(rpo->polyobj == po)
-         return rpo;
+      if(link->dllObject->polyobj == po)
+         return link->dllObject;
 
-      rpo = (rpolyobj_t *)(rpo->link.next);
+      link = link->dllNext;
    }
    
    // there is not one, so create a new one and link it in
@@ -199,7 +200,7 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 
    rpo->polyobj = po;
 
-   M_DLListInsert((mdllistitem_t *)rpo, (mdllistitem_t **)&ss->polyList);
+   rpo->link.insert(rpo, &ss->polyList);
 
    return rpo;
 }
@@ -492,13 +493,14 @@ void R_DetachPolyObject(polyobj_t *poly)
    for(i = 0; i < poly->numDSS; ++i)
    {
       subsector_t *ss = poly->dynaSubsecs[i];
-      rpolyobj_t *rpo = ss->polyList;
-      rpolyobj_t *next;
+      CDLListItem<rpolyobj_t> *link = ss->polyList;
+      CDLListItem<rpolyobj_t> *next;
       
       // iterate on subsector rpolyobj_t lists
-      while(rpo)
+      while(link)
       {
-         next = (rpolyobj_t *)(rpo->link.next);
+         next = link->dllNext;
+         rpolyobj_t *rpo = link->dllObject;
 
          if(rpo->polyobj == poly)
          {
@@ -525,13 +527,13 @@ void R_DetachPolyObject(polyobj_t *poly)
             }
             
             // unlink this rpolyobj_t
-            M_DLListRemove((mdllistitem_t *)rpo);
+            link->remove();
             
             // put it on the freelist
             R_FreeRPolyObj(rpo);
          }
 
-         rpo = next;
+         link = next;
       }
 
       // no longer tracking this subsector

@@ -55,7 +55,7 @@ typedef enum
 struct sfxinfo_t
 {
    // haleyjd 04/13/08: numeric hash links
-   mdllistitem_t numlinks;
+   CDLListItem<sfxinfo_t> numlinks;
 
    // haleyjd: up to 8-character lump name
    char name[9];

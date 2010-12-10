@@ -157,8 +157,8 @@ class mobj_t;
 // ********************************************************************
 struct state_t
 {
-   mdllistitem_t namelinks;            // haleyjd 03/30/10: new hashing: by name
-   mdllistitem_t numlinks;             // haleyjd 03/30/10: new hashing: by dehnum
+   CDLListItem<state_t> namelinks;     // haleyjd 03/30/10: new hashing: by name
+   CDLListItem<state_t> numlinks;      // haleyjd 03/30/10: new hashing: by dehnum
 
    spritenum_t sprite;                 // sprite number to show
    int         frame;                  // which frame/subframe of the sprite is shown

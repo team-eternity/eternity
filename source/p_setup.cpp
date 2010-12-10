@@ -1836,7 +1836,7 @@ void P_LoadBlockMap(int lump)
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = (polymaplink_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   polyblocklinks = (CDLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
 }
 
 

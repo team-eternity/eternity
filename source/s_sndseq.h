@@ -85,13 +85,16 @@ enum
    SEQ_FLAG_ENVIRO  = 0x02,
 };
 
+struct ESoundSeq_t;
+
+//
 // SndSeq_t -- a running sound sequence
-
-typedef struct SndSeq_s
+//
+struct SndSeq_t
 {
-   mdllistitem_t link;           // double-linked list node -- must be first
+   CDLListItem<SndSeq_t> link;   // double-linked list node -- must be first
 
-   struct ESoundSeq_s *sequence; // pointer to EDF sound sequence
+   ESoundSeq_t *sequence;        // pointer to EDF sound sequence
    seqcmd_t *cmdPtr;             // current position in command sequence
 
    mobj_t *origin;               // the origin of the sequence
@@ -106,10 +109,10 @@ typedef struct SndSeq_s
    // 10/17/06: data needed for savegames
    int originType;               // type of origin (sector, polyobj, other)
    int originIdx;                // sector or polyobj number, (or -1)
-} SndSeq_t;
+};
 
 // Sound sequence pointers, needed for savegame support
-extern SndSeq_t *SoundSequences;
+extern CDLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
 void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,

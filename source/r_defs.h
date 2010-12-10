@@ -260,7 +260,7 @@ struct sector_t
    // haleyjd 09/24/06: sound sequence id
    int sndSeqID;
 
-   particle_t *ptcllist; // haleyjd 02/20/04: list of particles in sector
+   CDLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
    // haleyjd 07/04/07: Happy July 4th :P
    // Angles for flat rotation!
@@ -366,6 +366,8 @@ struct line_t
    seg_t *segs;             // haleyjd: link to segs
 };
 
+struct rpolyobj_t;
+
 //
 // A SubSector.
 // References a Sector.
@@ -380,7 +382,7 @@ struct subsector_t
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   int    numlines, firstline;
 
-  struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  CDLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
 };
 
 // phares 3/14/98
