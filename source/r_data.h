@@ -87,7 +87,7 @@ struct texture_t
    int           index;
 
    // For use with ehash stuff
-   char       *name;
+   ENCStringHashKey name;
    char       namebuf[9];       // Keep name for switch changing, etc.
    int16_t    width, height;
    

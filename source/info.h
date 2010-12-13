@@ -29,8 +29,8 @@
 #ifndef __INFO__
 #define __INFO__
 
-//#include "e_mod.h"
 #include "m_dllist.h"
+#include "e_hashkeys.h"
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -172,10 +172,10 @@ struct state_t
    struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   char       *name;        // pointer to name of this state
-   char        namebuf[41]; // buffer for name (max 40 chars)
-   int         dehnum;      // DeHackEd number for fast access, comp.
-   int         index;       // 06/12/09: number of state in states array
+   ENCStringHashKey name;        // pointer to name of this state
+   char             namebuf[41]; // buffer for name (max 40 chars)
+   EIntHashKey      dehnum;      // DeHackEd number for fast access, comp.
+   int              index;       // 06/12/09: number of state in states array
 };
 
 // these are in info.c

@@ -25,6 +25,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "r_defs.h"
 #include "r_state.h"

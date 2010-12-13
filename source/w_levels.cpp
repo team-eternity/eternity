@@ -62,11 +62,11 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir
 //
 struct manageddir_t
 {
-   //CDLListItem<manageddir_t> links;  // links
+   CDLListItem<manageddir_t> links; // links
+   EStringHashKey            name;  // name
 
-   waddir_t       waddir; // directory
-   char          *name;   // name
-   wadlevel_t    *levels; // enumerated levels
+   waddir_t    waddir; // directory
+   wadlevel_t *levels; // enumerated levels
 };
 
 //=============================================================================
@@ -75,15 +75,13 @@ struct manageddir_t
 //
 
 // hash table
-static ehash_t w_dirhash;
+static EHashTable<manageddir_t, EStringHashKey> w_dirhash(&manageddir_t::name,
+                                                          &manageddir_t::links);
 
 //=============================================================================
 //
 // Implementation
 //
-
-// key function for manageddir_t
-E_KEYFUNC(manageddir_t, name)
 
 //
 // W_addManagedDir
@@ -95,11 +93,11 @@ static manageddir_t *W_addManagedDir(const char *filename)
    manageddir_t *newdir = NULL;
 
    // initialize hash table if first time
-   if(!w_dirhash.isinit)
-      E_StrHashInit(&w_dirhash, 31, E_KEYFUNCNAME(manageddir_t, name), NULL);
+   if(!w_dirhash.isInitialized())
+      w_dirhash.Initialize(31);
 
    // make sure there isn't one by this name already
-   if(E_HashObjectForKey(&w_dirhash, &filename))
+   if(w_dirhash.objectForKey(filename))
       return NULL;
 
    newdir = (manageddir_t *)(calloc(1, sizeof(manageddir_t)));
@@ -111,7 +109,7 @@ static manageddir_t *W_addManagedDir(const char *filename)
    newdir->waddir.data = newdir;         // opaque pointer back to parent
 
    // add it to the hash table
-   E_HashAddObject(&w_dirhash, newdir);
+   w_dirhash.addObject(newdir);
 
    return newdir;
 }
@@ -144,13 +142,13 @@ static void W_delManagedDir(manageddir_t *dir)
    }
 
    // remove managed directory from the hash table
-   E_HashRemoveObject(&w_dirhash, dir);
+   w_dirhash.removeObject(dir);
 
    // free directory filename
-   if(dir->name)
+   if(dir->name.hashKey)
    {
-      free(dir->name);
-      dir->name = NULL;
+      free(const_cast<char *>(dir->name.hashKey)); // FIXME: ugh.
+      dir->name.hashKey = NULL;
    }
 
    // free list of levels
@@ -225,12 +223,12 @@ waddir_t *W_AddManagedWad(const char *filename)
 //
 boolean W_CloseManagedWad(const char *filename)
 {
-   void    *object = NULL;
+   manageddir_t *dir = NULL;
    boolean retcode = false;
 
-   if((object = E_HashObjectForKey(&w_dirhash, &filename)))
+   if((dir = w_dirhash.objectForKey(filename)))
    {
-      W_delManagedDir((manageddir_t *)object);
+      W_delManagedDir(dir);
       retcode = true;
    }
 
@@ -245,11 +243,11 @@ boolean W_CloseManagedWad(const char *filename)
 //
 waddir_t *W_GetManagedWad(const char *filename)
 {
-   void     *object = NULL;
+   manageddir_t *dir = NULL;
    waddir_t *waddir = NULL;
 
-   if((object = E_HashObjectForKey(&w_dirhash, &filename)))
-      waddir = &(((manageddir_t *)object)->waddir);
+   if((dir = w_dirhash.objectForKey(filename)))
+      waddir = &(dir->waddir);
 
    return waddir;
 }

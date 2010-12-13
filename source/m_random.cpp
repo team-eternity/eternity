@@ -30,6 +30,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "m_random.h"
 #include "a_small.h"

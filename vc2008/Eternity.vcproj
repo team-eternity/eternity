@@ -1279,6 +1279,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\e_hashkeys.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_lib.h"
 						>
 					</File>

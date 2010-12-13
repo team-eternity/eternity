@@ -27,6 +27,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "r_main.h"

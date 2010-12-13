@@ -34,9 +34,9 @@
 
 // We need globally shared data structures,
 //  for defining the global state variables.
-//#include "doomdata.h"
 
 #include "d_net.h"
+
 // We need the player data structure as well.
 #include "d_player.h"
 #include "p_tick.h"

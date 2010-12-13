@@ -39,20 +39,20 @@
 // Data
 
 static int     numspritesalloc; // number of sprites allocated
-static ehash_t spritehash;      // sprite hash table
 
 // Sprite hashing
 
 struct esprite_t
 {
-   CDLListItem<esprite_t> link; // hash links
-
-   int num;       // sprite number
-   char name[5];  // sprite name
-   char *nameptr; // pointer to name
+   CDLListItem<esprite_t> link;    // hash links
+   ENCStringHashKey       nameptr; // hash key
+   
+   int  num;      // sprite number
+   char name[5];  // sprite name   
 };
 
-E_KEYFUNC(esprite_t, nameptr)
+// sprite hash table
+static EHashTable<esprite_t, ENCStringHashKey> spritehash(&esprite_t::nameptr, &esprite_t::link);
 
 //
 // E_SpriteNumForName
@@ -62,11 +62,11 @@ E_KEYFUNC(esprite_t, nameptr)
 //
 int E_SpriteNumForName(const char *name)
 {
-   void *obj;
+   esprite_t *obj;
    int spritenum = -1;
 
-   if((obj = E_HashObjectForKey(&spritehash, &name)))
-      spritenum = ((esprite_t *)obj)->num;
+   if((obj = spritehash.objectForKey(name)))
+      spritenum = obj->num;
 
    return spritenum;
 }
@@ -85,15 +85,15 @@ static boolean E_AddSprite(const char *name, esprite_t *sprite)
    sprite->nameptr = sprite->name;
 
    // initialize the sprite hash if it has not been initialized
-   if(!spritehash.isinit)
-      E_NCStrHashInit(&spritehash, 257, E_KEYFUNCNAME(esprite_t, nameptr), NULL);
-   else if(E_HashObjectForKey(&spritehash, &name))
+   if(!spritehash.isInitialized())
+      spritehash.Initialize(257);
+   else if(spritehash.objectForKey(name))
       return false; // don't add the same sprite name twice
    
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
    
    // add esprite to hash
-   E_HashAddObject(&spritehash, sprite);
+   spritehash.addObject(sprite);
 
    // reallocate sprnames if necessary
    if(NUMSPRITES + 1 >= numspritesalloc)
