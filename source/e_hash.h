@@ -83,7 +83,9 @@ public:
    // Basic accessors
    int   isInitialized() const { return isInit;     }
    float getLoadFactor() const { return loadFactor; }
-   int   getNumItems()   const { return numItems;   }
+   
+   unsigned int getNumItems()  const { return numItems;  }
+   unsigned int getNumChains() const { return numChains; }
 
    // 
    // Initialize

@@ -30,11 +30,13 @@
 #define METAAPI_H__
 
 #include "z_zone.h"
-#include "e_hash.h"
+#include "e_hashkeys.h"
 
+// A metatypename is just a string constant.
 typedef const char *metatypename_t;
 
-#define METATYPE(type) #type
+// METATYPE macro - make a string from a typename
+#define METATYPE(t) #t
 
 // enumeration for metaerrno
 enum
@@ -47,164 +49,174 @@ enum
 
 extern int metaerrno;
 
-// metatable
+class metaTablePimpl;
 
-typedef struct metatable_s
+//
+// MetaObject
+//
+class MetaObject
 {
-   ehash_t keyhash;  // hash of objects by key
-   ehash_t typehash; // hash of objects by type
-} metatable_t;
+protected:
+   CDLListItem<MetaObject> links;     // links by key
+   CDLListItem<MetaObject> typelinks; // links by type
+   EStringHashKey          type;      // type hash key
+   ENCStringHashKey        key;       // primary hash key
+   
+   metatypename_t type_name; // storage pointer for type (static string)
+   char *key_name;           // storage pointer for key  (alloc'd string)
 
-// metaobject
+   // Protected Methods
+   void setType(metatypename_t t) { type_name = t; type = type_name; }
 
-typedef struct metaobject_s
+   friend class metaTablePimpl;
+
+public:
+   // Constructors/Destructor
+   MetaObject(metatypename_t pType, const char *pKey);
+   MetaObject(const MetaObject &other);
+   virtual ~MetaObject();
+
+   // RTTI Methods
+   boolean isKindOf(metatypename_t) const;
+   metatypename_t getType() const { return type_name; }
+   const char   * getKey()  const { return key_name;  }
+
+   // Virtual Methods
+   virtual MetaObject *clone() const;
+   virtual const char *toString() const;   
+
+   // Operators
+   void *operator new (size_t size);
+   void  operator delete (void *p);
+};
+
+// MetaObject specializations for basic types
+
+class MetaInteger : public MetaObject
 {
-   mdllistitem_t  links;
-   mdllistitem_t  typelinks;
-   metatypename_t type;
-   char *key;   
-   void *object;
-} metaobject_t;
-
-// metaobject specializations for basic types
-
-typedef struct metaint_s
-{
-   metaobject_t parent;
+protected:
    int value;
-} metaint_t;
 
-typedef struct metadouble_s
+public:
+   MetaInteger(const char *key, int i);
+   MetaInteger(const MetaInteger &other);
+
+   // Virtual Methods
+   virtual MetaObject *clone() const;
+   virtual const char *toString() const; 
+
+   // Accessors
+   int getValue() const { return value; }
+   void setValue(int i) { value = i;    }
+
+   friend class MetaTable;
+};
+
+class MetaDouble : public MetaObject
 {
-   metaobject_t parent;
+protected:
    double value;
-} metadouble_t;
 
-typedef struct metastring_s
+public:
+   MetaDouble(const char *key, double d);
+   MetaDouble(const MetaDouble &other);
+
+   // Virtual Methods
+   virtual MetaObject *clone() const;
+   virtual const char *toString() const;
+
+   // Accessors
+   double getValue() const { return value; }
+   void setValue(double d) { value = d;    }
+
+   friend class MetaTable;
+};
+
+class MetaString : public MetaObject
 {
-   metaobject_t parent;
+protected:
    char *value;
-} metastring_t;
 
-// metatypes
+public:
+   MetaString(const char *key, const char *s);
+   MetaString(const MetaString &other);
+   virtual ~MetaString();
 
-typedef struct metatype_s *mtptr;
+   // Virtual Methods
+   virtual MetaObject *clone() const;
+   virtual const char *toString() const;
 
-// metatype method prototypes
-typedef void         *(*MetaAllocFn_t) (mtptr);
-typedef void          (*MetaCopyFn_t)  (mtptr, void *, const void *);
-typedef metaobject_t *(*MetaObjPtrFn_t)(mtptr, void *);
-typedef const char   *(*MetaToStrFn_t) (mtptr, void *);
+   // Accessors
+   const char *getValue() const { return value; }
+   void setValue(const char *s, char **ret = NULL);
 
-// interface object for metatypes
-typedef struct metatype_i_s
+   friend class MetaTable;
+};
+
+// MetaTable
+
+class MetaTable
 {
-   MetaAllocFn_t  alloc;    // allocation method
-   MetaCopyFn_t   copy;     // copy method
-   MetaObjPtrFn_t objptr;   // object pointer method (returns metaobject)
-   MetaToStrFn_t  toString; // string conversion method
-} metatype_i;
+private:
+   metaTablePimpl *pImpl;
 
-typedef struct metatype_s
-{
-   metaobject_t   parent;   // metatypes are also metaobjects
-   metatypename_t name;     // name of metatype (derived from C type)
-   size_t         size;     // size of type for allocation purposes
-   boolean        isinit;   // if true, this type has been registered
-   metatype_i     methods;  // methods for this metatype
+public:
+   MetaTable();
 
-   struct metatype_s *super; // superclass type (NULL if none)
-} metatype_t;
+   // Search functions. Frankly, it's more efficient to just use the "get" routines :P
+   boolean hasKey(const char *key);
+   boolean hasType(metatypename_t type);
+   boolean hasKeyAndType(const char *key, metatypename_t type);
 
-// global functions
+   // Count functions.
+   int countOfKey(const char *key);
+   int countOfType(metatypename_t type);
+   int countOfKeyAndType(const char *key, metatypename_t type);
 
-// Initialize a metatable
-void    MetaInit(metatable_t *metatable);
+   // Add/Remove Objects
+   void addObject(MetaObject *object);
+   void addObject(MetaObject &object);
+   void removeObject(MetaObject *object);
+   void removeObject(MetaObject &object);
 
-// RTTI for metaobjects
-boolean IsMetaKindOf(metaobject_t *object, metatypename_t type);
+   // Find objects in the table:
+   // * By Key
+   MetaObject *getObject(const char *key);
+   // * By Type
+   MetaObject *getObjectType(metatypename_t type);
+   // * By Key AND Type
+   MetaObject *getObjectKeyAndType(const char *key, metatypename_t type);
 
-// Search functions. Frankly, it's more efficient to just use the MetaGet routines :P
-boolean MetaHasKey(metatable_t *metatable, const char *key);
-boolean MetaHasType(metatable_t *metatable, metatypename_t type);
-boolean MetaHasKeyAndType(metatable_t *metatable, const char *key, metatypename_t type);
+   // Iterators
+   MetaObject *getNextObject(MetaObject *object);
+   MetaObject *getNextType(MetaObject *object);
+   MetaObject *getNextKeyAndType(MetaObject *object);
+   MetaObject *tableIterator(MetaObject *object);
 
-// Count functions.
-int MetaCountOfKey(metatable_t *metatable, const char *key);
-int MetaCountOfType(metatable_t *metatable, metatypename_t type);
-int MetaCountOfKeyAndType(metatable_t *metatable, const char *key, metatypename_t type);
+   // Add/Get/Set Convenience Methods for Basic MetaObjects
+   
+   // Signed integer
+   void addInt(const char *key, int value);
+   int  getInt(const char *key, int defValue);
+   void setInt(const char *key, int newValue);
+   int  removeInt(const char *key);
 
-// Add and remove objects
-void MetaAddObject(metatable_t *metatable, const char *key, metaobject_t *object, 
-                   void *data, metatypename_t type);
-void MetaRemoveObject(metatable_t *metatable, metaobject_t *object);
+   // Double floating-point
+   void   addDouble(const char *key, double value);
+   double getDouble(const char *key, double defValue);
+   void   setDouble(const char *key, double newValue);
+   double removeDouble(const char *key);
 
-// Find objects in the table by key, by type, or by key AND type.
-metaobject_t *MetaGetObject(metatable_t *metatable, const char *key);
-metaobject_t *MetaGetObjectType(metatable_t *metatable, metatypename_t type);
-metaobject_t *MetaGetObjectKeyAndType(metatable_t *metatable, const char *key,
-                                      metatypename_t type);
+   // Managed strings
+   void        addString(const char *key, const char *value);
+   const char *getString(const char *key, const char *defValue);
+   void        setString(const char *key, const char *newValue);
+   char       *removeString(const char *key);
+   void        removeStringNR(const char *key);
 
-// Iterator functions
-metaobject_t *MetaGetNextObject(metatable_t *metatable, metaobject_t *object, 
-                                const char *key);
-metaobject_t *MetaGetNextType(metatable_t *metatable, metaobject_t *object, 
-                              metatypename_t type);
-metaobject_t *MetaGetNextKeyAndType(metatable_t *metatable, metaobject_t *object,
-                                    const char *key, metatypename_t type);
-metaobject_t *MetaTableIterator(metatable_t *metatable, metaobject_t *object);
-
-//
-// Metaobject specializations for basic C types
-//
-
-// Signed integer
-void MetaAddInt(metatable_t *metatable, const char *key, int value);
-int  MetaGetInt(metatable_t *metatable, const char *key, int defvalue);
-void MetaSetInt(metatable_t *metatable, const char *key, int newvalue);
-int  MetaRemoveInt(metatable_t *metatable, const char *key);
-
-// Double floating-point
-void   MetaAddDouble(metatable_t *metatable, const char *key, double value);
-double MetaGetDouble(metatable_t *metatable, const char *key, double defvalue);
-void   MetaSetDouble(metatable_t *metatable, const char *key, double newvalue);
-double MetaRemoveDouble(metatable_t *metatable, const char *key);
-
-// Managed strings
-void        MetaAddString(metatable_t *metatable, const char *key, const char *value);
-const char *MetaGetString(metatable_t *metatable, const char *key, const char *defvalue);
-char       *MetaRemoveString(metatable_t *metatable, const char *key);
-void        MetaRemoveStringNR(metatable_t *metatable, const char *key);
-
-//
-// Metatypes
-//
-// Metatypes are like the classes for metaobjects. Pass the name, size, and optional
-// method overrides for a particular metaobject type into here and it will be 
-// recorded for use with the below metatype methods.
-//
-
-void MetaRegisterType(metatype_t *type);
-void MetaRegisterTypeEx(metatype_t *type, metatypename_t typeName, size_t typeSize,
-                        metatypename_t inheritsFrom, metatype_i *mInterface);
-void MetaTypeInheritFrom(metatype_t *parent, metatype_t *child);
-
-//
-// Metatype Methods
-//
-
-// MetaCopyTable will copy all the objects in the table that have a registered
-// metatype (the metatype's name must match the METATYPE() of the metaobject).
-// Most objects interested in supporting copying through this method will need
-// to define a MetaCopyFn method if they contain any sub-allocations.
-void MetaCopyTable(metatable_t *desttable, metatable_t *srctable);
-
-// Convert a metaobject to a string representation using its MetaToStrFn method.
-// Strings returned by this function point to temporary buffers and shouldn't be
-// cached. Metaobjects with a registered type but no custom toString method will
-// return a hex dump of the object courtesy of the default implementation. Objects
-// without metatypes will only appear as "(unregistered object type)".
-const char *MetaToString(metaobject_t *obj);
+   // Copy routine - clones the entire MetaTable
+   void copyTable(MetaTable &other);
+};
 
 #endif
 
