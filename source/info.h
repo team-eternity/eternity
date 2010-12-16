@@ -391,7 +391,7 @@ typedef struct mobjinfo_s
    int index;         // index in mobjinfo
 
    // 08/17/09: metatable
-   struct metatable_s *meta;
+   MetaTable *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    struct mobjinfo_s *parent;

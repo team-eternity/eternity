@@ -29,7 +29,7 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
-#include "z_zone.h"
+//#include "z_zone.h"
 #include "e_hashkeys.h"
 
 // A metatypename is just a string constant.
@@ -188,9 +188,9 @@ public:
    MetaObject *getObjectKeyAndType(const char *key, metatypename_t type);
 
    // Iterators
-   MetaObject *getNextObject(MetaObject *object);
-   MetaObject *getNextType(MetaObject *object);
-   MetaObject *getNextKeyAndType(MetaObject *object);
+   MetaObject *getNextObject(MetaObject *object const char *key);
+   MetaObject *getNextType(MetaObject *object, metatypename_t type);
+   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type);
    MetaObject *tableIterator(MetaObject *object);
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
@@ -215,7 +215,12 @@ public:
    void        removeStringNR(const char *key);
 
    // Copy routine - clones the entire MetaTable
-   void copyTable(MetaTable &other);
+   void copyTableTo(MetaTable *dest);
+   void copyTableFrom(MetaTable *source);
+
+   // Operators
+   void *operator new (size_t size);
+   void  operator delete (void *p);
 };
 
 #endif

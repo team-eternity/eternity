@@ -28,12 +28,12 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-//#include "r_defs.h"
 #include "m_dllist.h"
 #include "p_tick.h"
 
 struct qstring_t;
 class  mobj_t;
+struct line_t;
 
 //
 // Defines

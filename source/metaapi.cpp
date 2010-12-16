@@ -534,6 +534,11 @@ int MetaTable::countOfKeyAndType(const char *key, metatypename_t type)
    return count;
 }
 
+// Le Sigh x 2. CPP_FIXME: We need a global way to deal with this.
+void *MetaTable::operator new (size_t size) { return Z_Calloc(1, size, PU_STATIC, NULL); }
+void  MetaTable::operator delete (void *p)  { Z_Free(p); }
+
+
 //=============================================================================
 //
 // MetaTable Methods - General Metaobjects
@@ -648,9 +653,14 @@ MetaObject *MetaTable::getObjectKeyAndType(const char *key, metatypename_t type)
 // call this anyway if you want to pretend you don't know how the
 // metatable is implemented.
 //
-MetaObject *MetaTable::getNextObject(MetaObject *object)
+MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key)
 {
-   return pImpl->keyhash.keyIterator(object, object->getKey());
+   // If no key is provided but object is valid, get the next object with the 
+   // same key as the current one.
+   if(object && !key)
+      key = object->getKey();
+
+   return pImpl->keyhash.keyIterator(object, key);
 }
 
 //
@@ -659,9 +669,13 @@ MetaObject *MetaTable::getNextObject(MetaObject *object)
 // Similar to above, but this returns the next object which also matches
 // the specified type.
 //
-MetaObject *MetaTable::getNextType(MetaObject *object)
+MetaObject *MetaTable::getNextType(MetaObject *object, metatypename_t type)
 {
-   return pImpl->typehash.keyIterator(object, object->getType());
+   // As above, allow using the same type as the current object
+   if(object && !type)
+      type = object->getType();
+
+   return pImpl->typehash.keyIterator(object, type);
 }
 
 //
@@ -669,13 +683,23 @@ MetaObject *MetaTable::getNextType(MetaObject *object)
 //
 // As above, but satisfying both conditions at once.
 //
-MetaObject *MetaTable::getNextKeyAndType(MetaObject *object)
+MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type)
 {
    MetaObject *obj = object;
 
-   while((obj = pImpl->keyhash.keyIterator(obj, object->getKey())))
+   if(object)
    {
-      if(obj->isKindOf(object->getType()))
+      // As above, allow NULL in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isKindOf(type))
          break;
    }
 
@@ -957,9 +981,9 @@ char *MetaTable::removeString(const char *key)
 
    // Destroying the MetaString will destroy the value inside it too, unless we
    // get and then nullify its value manually. This is one reason why MetaTable
-   // is a friend to these basic types, as it makes some simple management chores
-   // like this more efficient. Otherwise I'd have to strdup the string and that's
-   // stupid.
+   // is a friend to these basic types, as it makes some simple management 
+   // chores like this more efficient. Otherwise I'd have to strdup the string 
+   // and that's stupid.
 
    str = static_cast<MetaString *>(obj);
    
@@ -996,11 +1020,11 @@ void MetaTable::removeStringNR(const char *key)
 }
 
 //
-// MetaTable::copyTable
+// MetaTable::copyTableTo
 //
-// Adds copies of all objects with in the source table to the destination table.
+// Adds copies of all objects in the source table to the destination table.
 //
-void MetaTable::copyTable(MetaTable &other)
+void MetaTable::copyTableTo(MetaTable *dest)
 {
    MetaObject *srcobj = NULL;
 
@@ -1011,8 +1035,19 @@ void MetaTable::copyTable(MetaTable &other)
       MetaObject *newObject = srcobj->clone();
 
       // add the new object to the destination table
-      other.addObject(newObject);
+      dest->addObject(newObject);
    }
+}
+
+//
+// MetaTable::copyTableFrom
+//
+// Convenience method
+// Adds copies of all objects in the source table to *this* table.
+//
+void MetaTable::copyTableFrom(MetaTable *source)
+{
+   source->copyTableTo(this);
 }
 
 // EOF
