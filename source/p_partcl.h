@@ -35,7 +35,6 @@ struct particle_t
    int  styleflags; // haleyjd 07/03/03
 };
 
-extern int numParticles;
 extern int activeParticles;
 extern int inactiveParticles;
 extern particle_t *Particles;

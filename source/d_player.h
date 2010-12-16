@@ -32,12 +32,11 @@
 // of other structs: items (internal inventory),
 // animation states (closely tied to the sprites
 // used to represent them, unfortunately).
-//#include "d_items.h"
+
 #include "p_pspr.h"
 
 // In addition, the player is just a special
 // case of the generic moving object/actor.
-//#include "p_mobj.h"
 
 // Finally, for odd reasons, the player input
 // is buffered within the player data struct,
@@ -45,10 +44,7 @@
 #include "d_ticcmd.h"
 
 // skins.
-//#include "p_skin.h"
-
 // haleyjd: player classes
-//#include "e_player.h"
 
 struct playerclass_t;
 struct skin_t;

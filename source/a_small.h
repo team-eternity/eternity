@@ -35,7 +35,6 @@
 
 #ifndef EE_NO_SMALL_SUPPORT
 
-//#include "p_mobj.h"
 #include "doomtype.h"
 class mobj_t;
 struct line_t;

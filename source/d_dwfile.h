@@ -28,8 +28,6 @@
 #ifndef D_DWFILE_H__
 #define D_DWFILE_H__
 
-#include <stdio.h>
-
 #include "doomtype.h"
 #include "d_keywds.h"
 

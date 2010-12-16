@@ -28,10 +28,12 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-//#include "p_mobj.h"
-//#include "m_dllist.h"
-#include "m_qstr.h"
-#include "r_defs.h"
+//#include "r_defs.h"
+#include "m_dllist.h"
+#include "p_tick.h"
+
+struct qstring_t;
+class  mobj_t;
 
 //
 // Defines
@@ -153,7 +155,7 @@ typedef struct acsvm_s
 {
    byte       *data;         // ACS lump; jumps are relative to this
    char       **stringtable; // self-explanatory, yes?
-   qstring_t  printBuffer;   // used for message printing
+   qstring_t  *printBuffer;  // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
    boolean    loaded;        // for static VMs, if it's valid or not

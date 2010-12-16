@@ -330,7 +330,7 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
    newScript->code        = acs->code;
    newScript->data        = vm->data;
    newScript->stringtable = vm->stringtable;
-   newScript->printBuffer = &vm->printBuffer;
+   newScript->printBuffer = vm->printBuffer;
    newScript->acscript    = acs;
    newScript->vm          = vm;
 
@@ -1143,7 +1143,8 @@ void acsthinker_t::Think()
 void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
-   QStrInitCreate(&(acsLevelScriptVM.printBuffer));
+   acsLevelScriptVM.printBuffer = (qstring_t *)(calloc(1, sizeof(qstring_t)));
+   QStrInitCreate(acsLevelScriptVM.printBuffer);
 
    // add levelscript vm as vm #0
    ACS_addVirtualMachine(&acsLevelScriptVM);
@@ -1461,7 +1462,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
    newScript->code        = scrData->code;
    newScript->data        = vm->data;
    newScript->stringtable = vm->stringtable;
-   newScript->printBuffer = &vm->printBuffer;
+   newScript->printBuffer = vm->printBuffer;
    newScript->acscript    = scrData;
    newScript->vm          = vm;
 
@@ -1645,7 +1646,7 @@ void ACS_RestartSavedScript(acsthinker_t *th)
    th->code        = th->acscript->code;
    th->data        = th->vm->data;
    th->stringtable = th->vm->stringtable;
-   th->printBuffer = &(th->vm->printBuffer);
+   th->printBuffer = th->vm->printBuffer;
 
    // note: line and trigger pointers are restored in p_saveg.c
 

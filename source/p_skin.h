@@ -26,12 +26,6 @@
 
 struct player_t;
 
-//#include "d_player.h"
-//#include "info.h"
-//#include "sounds.h"
-//#include "st_stuff.h"
-//#include "r_defs.h"
-
 enum
 {
    sk_plpain,

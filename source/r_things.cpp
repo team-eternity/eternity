@@ -49,10 +49,62 @@
 #include "p_info.h"
 #include "r_plane.h"
 
+//=============================================================================
+//
+// External Declarations
+//
+
+extern int columnofs[];
+extern int global_cmap_index; // haleyjd: NGCS
+
+//=============================================================================
+// 
+// Defines
+
 #define MINZ        (FRACUNIT*4)
 #define BASEYCENTER 100
 
-extern int columnofs[];
+#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
+
+#define IS_FULLBRIGHT(actor) \
+   (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
+
+//=============================================================================
+//
+// Globals
+//
+
+// haleyjd 10/09/06: optional vissprite limit
+int r_vissprite_limit;
+
+
+// constant arrays
+//  used for psprite clipping and initializing clipping
+
+float zeroarray[MAX_SCREENWIDTH];
+float screenheightarray[MAX_SCREENWIDTH];
+int   lefthanded = 0;
+
+// variables used to look up and range check thing_t sprites patches
+
+spritedef_t *sprites;
+int numsprites;
+
+// haleyjd: global particle system state
+
+int        activeParticles;
+int        inactiveParticles;
+particle_t *Particles;
+int        particle_trans;
+
+float *mfloorclip, *mceilingclip;
+
+cb_maskedcolumn_t maskedcolumn;
+
+//=============================================================================
+//
+// Structures
+//
 
 typedef struct maskdraw_s
 {
@@ -63,15 +115,44 @@ typedef struct maskdraw_s
   int bottomclip;
 } maskdraw_t;
 
-// top and bottom of portal silhouette
-static float portaltop[MAX_SCREENWIDTH];
-static float portalbottom[MAX_SCREENWIDTH];
+//
+// A vissprite_t is a thing that will be drawn during a refresh.
+// i.e. a sprite object that is partly visible.
+//
+// haleyjd 12/15/10: Moved out of r_defs.h
+//
+typedef struct vissprite_s
+{
+  int x1, x2;
+  fixed_t gx, gy;              // for line side calculation
+  fixed_t gz, gzt;             // global bottom / top for silhouette clipping
+  fixed_t xiscale;             // negative if flipped
+  fixed_t texturemid;
+  int patch;
+  int mobjflags, mobjflags3;   // flags, flags3 from thing
 
-static float *ptop, *pbottom;
+  float   startx;
+  float   dist, xstep, ystep;
+  float   ytop, ybottom;
+  float   scale;
 
-// haleyjd 10/09/06: optional vissprite limit
-int r_vissprite_limit;
-static int r_vissprite_count;
+  // for color translation and shadow draw, maxbright frames as well
+        // sf: also coloured lighting
+  lighttable_t *colormap;
+  int colour;   //sf: translated colour
+
+  // killough 3/27/98: height sector for underwater/fake ceiling support
+  int heightsec;
+
+  int translucency; // haleyjd: zdoom-style translucency
+
+  fixed_t footclip; // haleyjd: foot clipping
+
+  int    sector; // SoM: sector the sprite is in.
+
+  int pcolor; // haleyjd 08/25/09: for particles
+
+} vissprite_t;
 
 // haleyjd 04/25/10: drawsegs optimization
 typedef struct drawsegs_xrange_s
@@ -79,14 +160,61 @@ typedef struct drawsegs_xrange_s
    int x1, x2;
    drawseg_t *user;
 } drawsegs_xrange_t;
+
+//=============================================================================
+//
+// Statics
+//
+
+// top and bottom of portal silhouette
+static float portaltop[MAX_SCREENWIDTH];
+static float portalbottom[MAX_SCREENWIDTH];
+
+static float *ptop, *pbottom;
+
+// haleyjd 10/09/06: optional vissprite limit
+static int r_vissprite_count;
+
+// haleyjd 04/25/10: drawsegs optimization
 static drawsegs_xrange_t *drawsegs_xrange;
 static unsigned int drawsegs_xrange_size = 0;
 static int drawsegs_xrange_count = 0;
 
+static float pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
+
+static lighttable_t **spritelights; // killough 1/25/98 made static
+
+static spriteframe_t sprtemp[MAX_SPRITE_FRAMES];
+static int maxframe;
+
+// Max number of particles
+static int numParticles;
+
+static vissprite_t *vissprites, **vissprite_ptrs;  // killough
+static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
+
+// SoM 12/13/03: the post-BSP stack
+static poststack_t   *pstack       = NULL;
+static int            stacksize    = 0;
+static int            stackmax     = 0;
+static maskedrange_t *unusedmasked = NULL;
+
+// haleyjd: made static global
+static float clipbot[MAX_SCREENWIDTH];
+static float cliptop[MAX_SCREENWIDTH];
+
+//=============================================================================
+//
+// Functions
+//
+
+// Forward declarations:
+static void R_DrawParticle(vissprite_t *vis);
+static void R_ProjectParticle(particle_t *particle);
+
 //
 // R_SetMaskedSilhouette
 //
-
 void R_SetMaskedSilhouette(float *top, float *bottom)
 {
    if(!top || !bottom)
@@ -115,40 +243,9 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 // There was a lot of stuff grabbed wrong, so I changed it...
 //
 
-extern int global_cmap_index; // haleyjd: NGCS
-
-float pscreenheightarray[MAX_SCREENWIDTH]; // for psprites
-
-static lighttable_t **spritelights;        // killough 1/25/98 made static
-
-// constant arrays
-//  used for psprite clipping and initializing clipping
-
-float zeroarray[MAX_SCREENWIDTH];
-float screenheightarray[MAX_SCREENWIDTH];
-int lefthanded=0;
-
 //
 // INITIALIZATION FUNCTIONS
 //
-
-// variables used to look up and range check thing_t sprites patches
-
-spritedef_t *sprites;
-int numsprites;
-
-#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
-
-static spriteframe_t sprtemp[MAX_SPRITE_FRAMES];
-static int maxframe;
-
-// haleyjd: global particle system state
-
-int        numParticles;
-int        activeParticles;
-int        inactiveParticles;
-particle_t *Particles;
-int        particle_trans;
 
 //
 // R_InstallSpriteLump
@@ -187,6 +284,8 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
    }
 }
 
+#define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
+
 //
 // R_InitSpriteDefs
 // Pass a null terminated list of sprite names
@@ -210,10 +309,8 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 //
 // Empirically verified to have excellent hash
 // properties across standard Doom sprites:
-
-#define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
-
-void R_InitSpriteDefs(char **namelist)
+//
+static void R_InitSpriteDefs(char **namelist)
 {
    size_t numentries = lastspritelump-firstspritelump+1;
    struct rsprhash_s { int index, next; } *hash;
@@ -344,14 +441,11 @@ void R_InitSpriteDefs(char **namelist)
 // GAME FUNCTIONS
 //
 
-static vissprite_t *vissprites, **vissprite_ptrs;  // killough
-static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
-
 //
 // R_InitSprites
+//
 // Called at program start.
 //
-
 void R_InitSprites(char **namelist)
 {
    int i;
@@ -372,16 +466,11 @@ void R_ClearSprites(void)
    r_vissprite_count = 0; // haleyjd
 }
 
-// SoM 12/13/03: the post-BSP stack
-static poststack_t    *pstack = NULL;
-static int            stacksize = 0, stackmax = 0;
-static maskedrange_t  *unusedmasked = NULL;
-
-
 //
 // R_PushPost
 //
 // Pushes a new element on the post-BSP stack. 
+//
 void R_PushPost(boolean pushmasked, planehash_t *overlay)
 {
    poststack_t *post;
@@ -437,14 +526,12 @@ void R_PushPost(boolean pushmasked, planehash_t *overlay)
    stacksize++;
 }
 
-
-
 //
 // R_NewVisSprite
 //
 // Creates a new vissprite if needed, or recycles an unused one.
 //
-vissprite_t *R_NewVisSprite(void)
+static vissprite_t *R_NewVisSprite(void)
 {
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
@@ -457,16 +544,12 @@ vissprite_t *R_NewVisSprite(void)
 
 //
 // R_DrawMaskedColumn
+//
 // Used for sprites and masked mid textures.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-
-float *mfloorclip, *mceilingclip;
-
-cb_maskedcolumn_t maskedcolumn;
-
-void R_DrawMaskedColumn(column_t *tcolumn)
+static void R_DrawMaskedColumn(column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -497,7 +580,9 @@ void R_DrawMaskedColumn(column_t *tcolumn)
    column.texmid = basetexturemid;
 }
 
-
+//
+// R_DrawNewMaskedColumn
+//
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
 {
    float y1, y2;
@@ -531,13 +616,12 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    column.texmid = basetexturemid;
 }
 
-
 //
 // R_DrawVisSprite
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
+static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 {
    column_t *tcolumn;
    int      texturecolumn;
@@ -673,15 +757,12 @@ void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
-#define IS_FULLBRIGHT(actor) \
-   (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
-
 //
 // R_ProjectSprite
 //
 // Generates a vissprite for a thing if it might be visible.
 //
-void R_ProjectSprite(mobj_t *thing)
+static void R_ProjectSprite(mobj_t *thing)
 {
    fixed_t       gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
@@ -910,8 +991,8 @@ void R_ProjectSprite(mobj_t *thing)
 
 //
 // R_AddSprites
-// During BSP traversal, this adds sprites by sector.
 //
+// During BSP traversal, this adds sprites by sector.
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
 void R_AddSprites(sector_t* sec, int lightlevel)
@@ -960,7 +1041,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-void R_DrawPSprite(pspdef_t *psp)
+static void R_DrawPSprite(pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1108,7 +1189,7 @@ void R_DrawPSprite(pspdef_t *psp)
 //
 // R_DrawPlayerSprites
 //
-void R_DrawPlayerSprites(void)
+static void R_DrawPlayerSprites(void)
 {
    int i, lightnum;
    pspdef_t *psp;
@@ -1149,12 +1230,6 @@ void R_DrawPlayerSprites(void)
          R_DrawPSprite(psp);
 }
 
-//
-// R_SortVisSprites
-//
-// Rewritten by Lee Killough to avoid using unnecessary
-// linked lists, and to use faster sorting algorithm.
-//
 
 // killough 9/22/98: inlined memcpy of pointer arrays
 
@@ -1219,7 +1294,13 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
    }
 }
 
-void R_SortVisSprites(void)
+//
+// R_SortVisSprites
+//
+// Rewritten by Lee Killough to avoid using unnecessary
+// linked lists, and to use faster sorting algorithm.
+//
+static void R_SortVisSprites(void)
 {
    if(num_vissprite)
    {
@@ -1253,7 +1334,7 @@ void R_SortVisSprites(void)
 //
 // Sorts only a subset of the vissprites, for portal rendering.
 //
-void R_SortVisSpriteRange(int first, int last)
+static void R_SortVisSpriteRange(int first, int last)
 {
    unsigned int numsprites = last - first;
    
@@ -1283,9 +1364,6 @@ void R_SortVisSpriteRange(int first, int last)
    }
 }
 
-// haleyjd: made static global
-static float clipbot[MAX_SCREENWIDTH];
-static float cliptop[MAX_SCREENWIDTH];
 
 #if 0
 //
@@ -1428,7 +1506,7 @@ void R_DrawSprite(vissprite_t *spr)
 //
 // Draws a sprite within a given drawseg range, for portals.
 //
-void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
+static void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 {
    drawseg_t *ds;
    //float     clipbot[MAX_SCREENWIDTH];       // killough 2/8/98:
@@ -1656,6 +1734,7 @@ void R_DrawSpriteInDSRange(vissprite_t* spr, int firstds, int lastds)
 // R_DrawPostBSP
 //
 // Draws the items in the Post-BSP stack.
+//
 void R_DrawPostBSP(void)
 {
    maskedrange_t  *masked;
@@ -1751,14 +1830,14 @@ void R_DrawPostBSP(void)
       R_DrawPlayerSprites();
 }
 
-//=====================================================================
+//=============================================================================
 //
 // haleyjd 09/30/01
 //
 // Particle Rendering
-// This incorporates itself mostly seamlessly within the
-// vissprite system, incurring only minor changes to the functions
-// above.
+// This incorporates itself mostly seamlessly within the vissprite system, 
+// incurring only minor changes to the functions above.
+//
 
 //
 // newParticle
@@ -1823,7 +1902,7 @@ void R_ClearParticles(void)
 //
 // R_ProjectParticle
 //
-void R_ProjectParticle(particle_t *particle)
+static void R_ProjectParticle(particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
@@ -1987,7 +2066,7 @@ void R_ProjectParticle(particle_t *particle)
 //
 // haleyjd: this function had to be mostly rewritten
 //
-void R_DrawParticle(vissprite_t *vis)
+static void R_DrawParticle(vissprite_t *vis)
 {
    int x1, x2, ox1, ox2;
    int yl, yh;

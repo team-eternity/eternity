@@ -3420,6 +3420,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\r_lighting.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\r_main.h"
 						>
 					</File>

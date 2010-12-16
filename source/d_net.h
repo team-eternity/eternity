@@ -27,8 +27,6 @@
 #ifndef __D_NET__
 #define __D_NET__
 
-//#include "d_player.h"
-
 #include "d_ticcmd.h"
 
 // haleyjd 10/16/07: structures in this file must be packed
