@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // This module, except for code marked otherwise, is covered by the 

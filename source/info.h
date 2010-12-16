@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,8 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __INFO__
-#define __INFO__
+#ifndef INFO_H__
+#define INFO_H__
 
 #include "m_dllist.h"
 #include "e_hashkeys.h"
