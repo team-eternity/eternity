@@ -2854,67 +2854,70 @@ void G_DoNewGame (void)
 
 // haleyjd 07/13/03: -fast projectile information list
 
-typedef struct speedset_s
+class MetaSpeedSet : public MetaObject
 {
-   metaobject_t parent;     // metatable link
+protected:
    int mobjType;            // the type this speedset is for
    int normalSpeed;         // the normal speed of this thing type
    int fastSpeed;           // -fast speed
-} speedset_t;
 
-static const char *speedSetToString(metatype_t *t, void *obj)
-{
-   static char buf[128];
-   speedset_t *speedset = (speedset_t *)obj;
-   int normalSpeed, fastSpeed;
+public:
+   // Constructor
+   MetaSpeedSet(int pMobjType, int pNormalSpeed, int pFastSpeed) 
+      : MetaObject("MetaSpeedSet", "speedset"), mobjType(pMobjType), 
+        normalSpeed(pNormalSpeed), fastSpeed(pFastSpeed)
+   {
+   }
 
-   normalSpeed = speedset->normalSpeed;
-   fastSpeed   = speedset->fastSpeed;
+   // Copy Constructor
+   MetaSpeedSet(const MetaSpeedSet &other) : MetaObject(other) 
+   {
+      this->mobjType    = other.mobjType;
+      this->normalSpeed = other.normalSpeed;
+      this->fastSpeed   = other.fastSpeed;
+   }
 
-   if(normalSpeed >= FRACUNIT)
-      normalSpeed >>= FRACBITS;
-   if(fastSpeed >= FRACUNIT)
-      fastSpeed >>= FRACBITS;
+   // Virtual Methods
+   virtual MetaObject *clone() const { return new MetaSpeedSet(*this); }
+   virtual const char *toString() const
+   {
+      static char buf[128];
+      int ns = normalSpeed;
+      int fs = fastSpeed;
 
-   psnprintf(buf, sizeof(buf), "type: %d, normal: %d, fast: %d",
-             speedset->mobjType, normalSpeed, fastSpeed);
+      if(ns >= FRACUNIT)
+         ns >>= FRACBITS;
+      if(fs >= FRACUNIT)
+         fs >>= FRACBITS;
 
-   return buf;
-}
+      psnprintf(buf, sizeof(buf), "type: %d, normal: %d, fast: %d", 
+                mobjType, ns, fs);
 
-static metatype_t metaSpeedSetType;
-static metatype_i speedSetMethods = { NULL, NULL, NULL, speedSetToString };
+      return buf;
+   }
+
+   // Accessors
+   int getMobjType()    const { return mobjType;    }
+   int getNormalSpeed() const { return normalSpeed; }
+   int getFastSpeed()   const { return fastSpeed;   }
+
+   int setNormalSpeed(int i)   { normalSpeed = i; }
+   int setFastSpeed(int i)     { fastSpeed   = i; }
+   
+   int setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
+};
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
-   metaobject_t *o;
-   mobjinfo_t   *mi = &mobjinfo[thingtype];
+   MetaObject *o;
+   mobjinfo_t *mi = &mobjinfo[thingtype];
 
-   // first time, register a metatype for speedsets
-   if(!metaSpeedSetType.isinit)
+   if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
    {
-      MetaRegisterTypeEx(&metaSpeedSetType, 
-                         METATYPE(speedset_t), sizeof(speedset_t),
-                         METATYPE(metaobject_t), &speedSetMethods);
-   }
-
-   if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))
-   {
-      speedset_t *ss  = (speedset_t *)(o->object);
-      ss->normalSpeed = nspeed;
-      ss->fastSpeed   = fspeed;
+      static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
    }
    else
-   {
-      speedset_t *newSpeedSet = (speedset_t *)(calloc(1, sizeof(speedset_t)));
-
-      newSpeedSet->mobjType    = thingtype;
-      newSpeedSet->normalSpeed = nspeed;
-      newSpeedSet->fastSpeed   = fspeed;
-
-      MetaAddObject(mi->meta, "speedset", &newSpeedSet->parent, newSpeedSet, 
-                    METATYPE(speedset_t));
-   }
+      mi->meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
 
 // killough 4/10/98: New function to fix bug which caused Doom
@@ -2924,7 +2927,7 @@ void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
    int i;
-   metaobject_t *o;
+   MetaObject *o;
 
    // TODO: Heretic support?
    // EDF FIXME: demon frame speedup difficult to generalize
@@ -2945,10 +2948,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            if((o = MetaGetObjectKeyAndType(mobjinfo[i].meta, "speedset", 
-                                            METATYPE(speedset_t))))
+            MetaTable *meta = mobjinfo[i].meta;
+            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = ((speedset_t *)o->object)->fastSpeed;
+               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
          }
       }
@@ -2959,10 +2962,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            if((o = MetaGetObjectKeyAndType(mobjinfo[i].meta, "speedset", 
-                                            METATYPE(speedset_t))))
+            MetaTable *meta = mobjinfo[i].meta;
+            if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = ((speedset_t *)o->object)->normalSpeed;
+               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
          }
       }

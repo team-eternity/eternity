@@ -188,7 +188,7 @@ public:
    MetaObject *getObjectKeyAndType(const char *key, metatypename_t type);
 
    // Iterators
-   MetaObject *getNextObject(MetaObject *object const char *key);
+   MetaObject *getNextObject(MetaObject *object, const char *key);
    MetaObject *getNextType(MetaObject *object, metatypename_t type);
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type);
    MetaObject *tableIterator(MetaObject *object);

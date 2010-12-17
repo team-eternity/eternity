@@ -32,6 +32,8 @@
 #include "m_dllist.h"
 #include "e_hashkeys.h"
 
+class MetaTable;
+
 // haleyjd 07/17/04: sprite constants removed
 
 typedef int spritenum_t;

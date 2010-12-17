@@ -1298,9 +1298,9 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
-      double df = MetaGetDouble(target->info->meta, 
-                                E_ModFieldName("damagefactor", emod), 
-                                1.0);
+      MetaTable *meta = target->info->meta;
+      double df = meta->getDouble(E_ModFieldName("damagefactor", emod), 1.0);
+         
       damage = (int)(damage * df);
    }
 

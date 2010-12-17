@@ -31,6 +31,7 @@
 
 #include "Confuse/confuse.h"
 
+#include "r_defs.h"
 #include "acs_intr.h"
 #include "i_system.h"
 #include "w_wad.h"
@@ -890,7 +891,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
    MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
-      ret = mstate->state;
+      ret = mstate->getValue();
 
    return ret;
 }
@@ -2252,13 +2253,13 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 //
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 {
-   metastate_t *ms;
+   MetaState *ms;
    state_t *ret = NULL;
    int *nativefield = NULL;
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
-      ret = ms->state;
+      ret = ms->getValue();
    else if((nativefield = E_GetNativeStateLoc(mi, label)))
    {
       // only if not S_NULL

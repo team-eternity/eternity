@@ -26,6 +26,7 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "r_defs.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
