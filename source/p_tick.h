@@ -84,8 +84,7 @@ public:
    
    // Enumeration 
    // For thinkers needing savegame enumeration.
-   // Must be implemented by a child class. Return the next enumeration
-   // value from Enumerate.
+   // Must be implemented by a child class.
    virtual void Enumerate(unsigned int val) {}
    virtual unsigned int getEnumeration() { return 0; }
 
@@ -143,21 +142,57 @@ extern boolean reset_viewz;
 // of any class without resort to a gigantic switch statement. This calls for
 // a factory pattern.
 //
-
 class CThinkerType
 {
 protected:
-   const char *name;
+   CThinkerType *next;
+   const char   *name;
 
 public:
+   CThinkerType(const char *pName);
+
+   // newThinker is a pure virtual method that must be overridden by a child 
+   // class to construct a specific type of thinker
+   virtual CThinker *newThinker() const = 0;
+
+   // FindType is a static method that will find the CThinkerType given the
+   // name of a CThinker-descendent class (ie., "CFireFlicker"). The returned
+   // object can then be used to construct a new instance of that type by 
+   // calling the newThinker method. The instance can then be fed to the
+   // serialization mechanism.
+   static CThinkerType *FindType(const char *pName); // find a type in the list
 };
 
-class CThinkerFactory
-{
-protected:
-public:
+//
+// DECLARE_THINKER_TYPE
+//
+// Use this macro once per CThinker descendant. Best placed near the Think 
+// routine.
+// Example:
+//   DECLARE_THINKER_TYPE(CFireFlicker)
+//   This defines CFireFlickerType, which constructs a CThinkerType parent
+//   with "CFireFlicker" as its name member and which returns a new CFireFlicker
+//   instance via its newThinker virtual method.
+// 
+#define DECLARE_THINKER_TYPE(name) \
+class name ## Type : public CThinkerType \
+{ \
+protected: \
+   static name ## Type global ## name ## Type ; \
+public: \
+   name ## Type() : CThinkerType(#name) {} \
+   virtual CThinker *newThinker() const { return new #name ; } \
 };
 
+//
+// IMPLEMENT_THINKER_TYPE
+//
+// Use this macro to define the static member declared by
+// DECLARE_THINKER_TYPE.
+//
+#define IMPLEMENT_THINKER_TYPE(name) \
+   name ## Type name ## Type :: global ## name ## Type;
+   
 
 #endif
 

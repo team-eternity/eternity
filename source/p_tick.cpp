@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "c_runcmd.h"
 #include "c_io.h"
@@ -311,6 +312,51 @@ void P_Ticker(void)
       P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
    
    P_RunEffects(); // haleyjd: run particle effects
+}
+
+//=============================================================================
+//
+// Thinker Factory
+//
+// haleyjd 12/18/10: The functions and methods below here help the savegame
+// code create new thinkers.
+//
+
+// thinkerTypes - this is a list of all the CThinkerType global objects.
+static CThinkerType *thinkerTypes;
+
+//
+// CThinkerType::FindType
+//
+// Static method to find a CThinkerType in the list by name. There are a 
+// limited number of thinker types so this is just a linear search. The
+// overhead of hashing is not worth it here. Returns NULL if no such type 
+// exists (or it hasn't been registered yet).
+//
+CThinkerType *CThinkerType::FindType(const char *pName)
+{
+   CThinkerType *curType = thinkerTypes;
+
+   while(curType && strcmp(curType->name, pName))
+      curType = curType->next;
+
+   return curType;
+}
+
+// 
+// CThinkerType Constructor
+//
+// The object will automatically be added into the thinker factory list.
+//
+CThinkerType::CThinkerType(const char *pName) : name(pName)
+{
+   // CThinkerTypes must be singletons with unique names.
+   if(FindType(pName))
+      I_Error("CThinkerType: duplicate class registered with name %s\n", pName);
+
+   // Add it to the global list; order is unimportant.
+   this->next = thinkerTypes;
+   thinkerTypes = this;
 }
 
 //----------------------------------------------------------------------------
