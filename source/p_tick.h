@@ -39,22 +39,24 @@ public:
    void  operator delete (void *p);
 };
 
+class CSaveArchive;
+
 // Doubly linked list of actors.
 class CThinker : public CZoneLevelItem
 {
 private:
    // Private implementation details
-   void RemoveDelayed(); 
+   void removeDelayed(); 
    
    // Current position in list during RunThinkers
-   static CThinker *CThinker::currentthinker;
+   static CThinker *currentthinker;
 
 protected:
    // Virtual methods (overridables)
    virtual void Think() {}
 
    // Methods
-   void AddToThreadedList(int tclass);
+   void addToThreadedList(int tclass);
 
    // Data Members
    boolean removed;
@@ -63,30 +65,39 @@ protected:
    // this one using pointers. Used for garbage collection.
    unsigned int references;
 
+   // haleyjd 12/22/2010: for savegame enumeration
+   unsigned int ordinal;
+
 public:
    // Static functions
    static void InitThinkers();
    static void RunThinkers();
 
    // Methods
-   void Add();
+   void addThinker();
    
    // Accessors
    boolean isRemoved() const { return removed; }
-
+   
    // Reference counting
    void addReference() { ++references; }
    void delReference() { --references; }
 
-   // Virtual methods (overridables)
-   virtual void Update();
-   virtual void Remove();
-   
    // Enumeration 
    // For thinkers needing savegame enumeration.
-   // Must be implemented by a child class.
-   virtual void Enumerate(unsigned int val) {}
-   virtual unsigned int getEnumeration() { return 0; }
+   void setOrdinal(unsigned int i) { ordinal = !removed ? i : 0; }
+   unsigned int getOrdinal() const { return ordinal; }
+
+   // Virtual methods (overridables)
+   virtual void updateThinker();
+   virtual void removeThinker();
+
+   // Serialization
+   // When using serialize, always call your parent implementation!
+   virtual void serialize(CSaveArchive &arc);
+   virtual void deswizzle() {}
+   virtual boolean shouldSerialize()  const { return !removed;   }
+   virtual const char *getClassName() const { return "CThinker"; }
 
    // Data Members
 
@@ -118,7 +129,25 @@ void P_Ticker(void);
 
 extern CThinker thinkercap;  // Both the head and tail of the thinker list
 
-template<typename T> void P_SetTarget(T **mop, T *targ); // killough 11/98
+//
+// P_SetTarget
+//
+// killough 11/98
+// This function is used to keep track of pointer references to mobj thinkers.
+// In Doom, objects such as lost souls could sometimes be removed despite 
+// their still being referenced. In Boom, 'target' mobj fields were tested
+// during each gametic, and any objects pointed to by them would be prevented
+// from being removed. But this was incomplete, and was slow (every mobj was
+// checked during every gametic). Now, we keep a count of the number of
+// references, and delay removal until the count is 0.
+//
+template<typename T> void P_SetTarget(T **mop, T *targ)
+{
+   if(*mop)             // If there was a target already, decrease its refcount
+      (*mop)->delReference();
+   if((*mop = targ))    // Set new target and if non-NULL, increase its counter
+      targ->addReference();
+}
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
 typedef enum 

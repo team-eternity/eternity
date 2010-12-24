@@ -36,7 +36,7 @@
 
 // Earthquakes
 
-class quakethinker_t : public CPointThinker
+class CQuakeThinker : public CPointThinker
 {
 protected:
    void Think();

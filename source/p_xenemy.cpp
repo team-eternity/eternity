@@ -42,7 +42,7 @@
 //
 // Earthquake effect thinker.
 //
-void quakethinker_t::Think()
+void CQuakeThinker::Think()
 {
    int i, tics;
    sfxinfo_t *quakesound;
@@ -51,7 +51,7 @@ void quakethinker_t::Think()
    if(this->duration == 0)
    {
       S_StopSound(this, CHAN_ALL);
-      this->Remove();
+      this->removeThinker();
       return;
    }
    
@@ -112,11 +112,11 @@ boolean P_StartQuake(int *args)
 
    while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
    {
-      quakethinker_t *qt;
+      CQuakeThinker *qt;
       ret = true;
 
-      qt = new quakethinker_t;
-      qt->Add();
+      qt = new CQuakeThinker;
+      qt->addThinker();
 
       qt->intensity    = args[0];
       qt->duration     = args[1];

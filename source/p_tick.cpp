@@ -32,6 +32,7 @@
 #include "d_main.h"
 #include "p_user.h"
 #include "p_chase.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_anim.h"  // haleyjd
@@ -88,12 +89,12 @@ void CThinker::InitThinkers(void)
 }
 
 //
-// CThinker::AddToThreadedList
+// CThinker::addToThreadedList
 //
 // haleyjd 11/22/10:
 // Puts the thinker in the indicated threaded list.
 //
-void CThinker::AddToThreadedList(int tclass)
+void CThinker::addToThreadedList(int tclass)
 {
    register CThinker *th;
    
@@ -122,9 +123,9 @@ void CThinker::AddToThreadedList(int tclass)
 // code due to corruption of the th_enemies/th_friends lists when monsters get
 // removed at an inopportune moment.
 //
-void CThinker::Update()
+void CThinker::updateThinker()
 {
-   AddToThreadedList(this->removed ? th_delete : th_misc);
+   addToThreadedList(this->removed ? th_delete : th_misc);
 }
 
 //
@@ -132,18 +133,18 @@ void CThinker::Update()
 //
 // Adds a new thinker at the end of the list.
 //
-void CThinker::Add()
+void CThinker::addThinker()
 {
    thinkercap.prev->next = this;
-   this->next = &thinkercap;
-   this->prev = thinkercap.prev;
+   next = &thinkercap;
+   prev = thinkercap.prev;
    thinkercap.prev = this;
    
-   this->references = 0;    // killough 11/98: init reference counter to 0
+   references = 0;    // killough 11/98: init reference counter to 0
    
    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
-   this->cnext = this->cprev = this;
-   this->Update();
+   cnext = cprev = this;
+   updateThinker();
 }
 
 //
@@ -164,7 +165,7 @@ CThinker *CThinker::currentthinker;
 // remove it, and set currentthinker to one node preceeding it, so
 // that the next step in P_RunThinkers() will get its successor.
 //
-void CThinker::RemoveDelayed()
+void CThinker::removeDelayed()
 {
    if(!this->references)
    {
@@ -190,7 +191,7 @@ void CThinker::RemoveDelayed()
 // set the function to P_RemoveThinkerDelayed(), so that later, it will be
 // removed automatically as part of the thinker process.
 //
-void CThinker::Remove()
+void CThinker::removeThinker()
 {
    removed = true;
    
@@ -206,26 +207,7 @@ void CThinker::Remove()
    //(thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
 
    // Move to th_delete class.
-   Update();
-}
-
-//
-// P_SetTarget
-//
-// This function is used to keep track of pointer references to mobj thinkers.
-// In Doom, objects such as lost souls could sometimes be removed despite 
-// their still being referenced. In Boom, 'target' mobj fields were tested
-// during each gametic, and any objects pointed to by them would be prevented
-// from being removed. But this was incomplete, and was slow (every mobj was
-// checked during every gametic). Now, we keep a count of the number of
-// references, and delay removal until the count is 0.
-//
-template<typename T> void P_SetTarget(T **mop, T *targ)
-{
-   if(*mop)             // If there was a target already, decrease its refcount
-      (*mop)->delReference();
-   if((*mop = targ))    // Set new target and if non-NULL, increase its counter
-      targ->addReference();
+   updateThinker();
 }
 
 //
@@ -257,10 +239,27 @@ void CThinker::RunThinkers(void)
        currentthinker = currentthinker->next)
    {
       if(currentthinker->removed)
-         currentthinker->RemoveDelayed();
+         currentthinker->removeDelayed();
       else
          currentthinker->Think();
    }
+}
+
+//
+// CThinker::serialize
+//
+// CThinker serialization works together with the CSaveArchive class and the
+// series of CThinkerType-derived classes. CThinker subclasses should always
+// call their parent implementation's serialize method. This default 
+// implementation takes care of writing the class name when the archive is in
+// save mode. If the thinker is being loaded from a save, the save archive
+// has already read out the thinker name in order to instantiate an instance
+// of the proper class courtesy of CThinkerType.
+//
+void CThinker::serialize(CSaveArchive &arc)
+{
+   if(arc.isSaving())
+      arc.WriteLString(getClassName());
 }
 
 //

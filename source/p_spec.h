@@ -610,7 +610,7 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-class fireflicker_t : public CThinker
+class CFireFlicker : public CThinker
 {
 protected:
    void Think();
@@ -622,7 +622,7 @@ public:
   int minlight;
 };
 
-class lightflash_t : public CThinker
+class CLightFlash : public CThinker
 {
 protected:
    void Think();
@@ -636,7 +636,7 @@ public:
   int mintime;
 };
 
-class strobe_t : public CThinker
+class CStrobeThinker : public CThinker
 {
 protected:
    void Think();
@@ -650,7 +650,7 @@ public:
   int brighttime;
 };
 
-class glow_t : public CThinker
+class CGlowThinker : public CThinker
 {
 protected:
    void Think();
@@ -665,7 +665,7 @@ public:
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-class lightfade_t : public CThinker
+class CLightFade : public CThinker
 {
 protected:
    void Think();
@@ -683,7 +683,7 @@ public:
 
 // p_plats
 
-class plat_t : public CThinker
+class CPlat : public CThinker
 {
 protected:
    void Think();
@@ -706,7 +706,7 @@ public:
 // New limit-free plat structure -- killough
 
 typedef struct platlist {
-  plat_t *plat; 
+  CPlat *plat; 
   struct platlist *next,**prev;
 } platlist_t;
 
@@ -720,7 +720,7 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-class vldoor_t : public CThinker
+class CVerticalDoor : public CThinker
 {
 protected:
    void Think();
@@ -777,7 +777,7 @@ typedef struct spectransfer_s
 
 // p_doors
 
-class ceiling_t : public CThinker
+class CCeiling : public CThinker
 {
 protected:
    void Think();
@@ -810,7 +810,7 @@ public:
 
 typedef struct ceilinglist 
 {
-  ceiling_t *ceiling; 
+  CCeiling *ceiling; 
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
@@ -834,7 +834,7 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-class floormove_t : public CThinker
+class CFloorMove : public CThinker
 {
 protected:
    void Think();
@@ -894,7 +894,7 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-class elevator_t : public CThinker
+class CElevator : public CThinker
 {
 protected:
    void Think();
@@ -909,7 +909,7 @@ public:
 };
 
 // joek: pillars
-class pillar_t : public CThinker
+class CPillar : public CThinker
 {
 protected:
    void Think();
@@ -936,7 +936,7 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-class floorwaggle_t : public CThinker
+class CFloorWaggle : public CThinker
 {
 protected:
    void Think();
@@ -957,7 +957,7 @@ public:
 
 // killough 3/7/98: Add generalized scroll effects
 
-class scroll_t : public CThinker
+class CScroller : public CThinker
 {
 protected:
    void Think();
@@ -980,10 +980,10 @@ public:
   int type;              // Type of scroll effect
 };
 
-// haleyjd 04/11/10: friction_t restored
+// haleyjd 04/11/10: CFrictionThinker restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
 
-class friction_t : public CThinker
+class CFrictionThinker : public CThinker
 {
 protected:
    void Think();
@@ -996,7 +996,7 @@ public:
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
-class pusher_t : public CThinker
+class CPusher : public CThinker
 {
 protected:
    void Think();
@@ -1286,9 +1286,9 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-void P_AddActivePlat(plat_t *plat);
+void P_AddActivePlat(CPlat *plat);
 
-void P_RemoveActivePlat(plat_t *plat);
+void P_RemoveActivePlat(CPlat *plat);
 
 void P_RemoveAllActivePlats(void);    // killough
 
@@ -1311,13 +1311,13 @@ void P_FloorSequence(sector_t *s);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
-void P_RemoveActiveCeiling(ceiling_t *ceiling);  //jff 2/22/98
+void P_RemoveActiveCeiling(CCeiling *ceiling);  //jff 2/22/98
 
 void P_RemoveAllActiveCeilings(void);                //jff 2/22/98
 
-void P_AddActiveCeiling(ceiling_t *c);
+void P_AddActiveCeiling(CCeiling *c);
 
-void P_RemoveActiveCeiling(ceiling_t *c);
+void P_RemoveActiveCeiling(CCeiling *c);
 
 int P_ActivateInStasisCeiling(line_t *line); 
 
@@ -1410,7 +1410,7 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special,
 // Added instant toggle floor type
 //
 // Revision 1.15  1998/03/09  07:24:40  killough
-// Add scroll_t for generalized scrollers
+// Add CScroller for generalized scrollers
 //
 // Revision 1.14  1998/03/02  12:11:35  killough
 // Add scroll_effect_offset declaration

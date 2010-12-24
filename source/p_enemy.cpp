@@ -342,7 +342,7 @@ static boolean P_IsOnLift(const mobj_t *actor)
    int l;
 
    // Short-circuit: it's on a lift which is active.
-   if(thinker_cast<plat_t *>(sec->floordata) != NULL)
+   if(thinker_cast<CPlat *>(sec->floordata) != NULL)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -379,12 +379,12 @@ static boolean P_IsOnLift(const mobj_t *actor)
 static int P_IsUnderDamage(mobj_t *actor)
 { 
    const struct msecnode_s *seclist;
-   const ceiling_t *cl;             // Crushing ceiling
+   const CCeiling *cl;             // Crushing ceiling
    int dir = 0;
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = thinker_cast<ceiling_t *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<CCeiling *>(seclist->m_sector->ceilingdata)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }
@@ -1760,7 +1760,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       newmobj->player = plyr;
    
    // killough 8/29/98: add to appropriate thread
-   newmobj->Update();
+   newmobj->updateThinker();
 }
 
 CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
@@ -1846,7 +1846,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
 
       // if it wasn't picked up, remove it
       if(!mo->isRemoved())
-         mo->Remove();
+         mo->removeThinker();
    }
 }
 
@@ -1917,7 +1917,7 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
    P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
 
    if(clip.linetarget)
-      clip.linetarget->Remove();
+      clip.linetarget->removeThinker();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)

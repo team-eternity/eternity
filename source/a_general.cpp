@@ -912,7 +912,7 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
-         newmobj->Remove();
+         newmobj->removeThinker();
          break;
       }
       return;
@@ -922,7 +922,7 @@ void A_ThingSummon(mobj_t *actor)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   newmobj->Update();
+   newmobj->updateThinker();
    
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
@@ -936,7 +936,7 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
-         newmobj->Remove();
+         newmobj->removeThinker();
          break;
       }
       return;
@@ -973,7 +973,7 @@ void A_KillChildren(mobj_t *actor)
             A_Die(mo);
             break;
          case 1:
-            mo->Remove();
+            mo->removeThinker();
             break;
          }
       }

@@ -2221,7 +2221,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
-      thing->Remove();
+      thing->removeThinker();
       return true;      // keep checking
    }
 

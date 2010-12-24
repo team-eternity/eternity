@@ -99,7 +99,7 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 
-void vldoor_t::Think()
+void CVerticalDoor::Think()
 {
    result_e  res;
    
@@ -193,7 +193,7 @@ void vldoor_t::Think()
          case genBlazeClose:
          case paramBlazeCloseIn: // haleyjd 03/01/05
             sector->ceilingdata = NULL;  //jff 2/22/98
-            this->Remove();  // unlink and free
+            this->removeThinker();  // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
             break;
@@ -204,7 +204,7 @@ void vldoor_t::Think()
          case genClose:
          case paramCloseIn: // haleyjd 03/01/05
             sector->ceilingdata = NULL; //jff 2/22/98
-            this->Remove();  // unlink and free
+            this->removeThinker();  // unlink and free
             // haleyjd 10/06/06: sound stuff removed
             break;
 
@@ -281,7 +281,7 @@ void vldoor_t::Think()
          case genBlazeCdO:
             S_StopSectorSequence(sector, true);
             sector->ceilingdata = NULL; //jff 2/22/98
-            this->Remove(); // unlink and free
+            this->removeThinker(); // unlink and free
             break;
             
          default:
@@ -392,7 +392,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
-   vldoor_t *door;
+   CVerticalDoor *door;
 
    // open all doors with the same tag as the activating line
    while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
@@ -404,8 +404,8 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 
       // new door thinker
       rtn = 1;
-      door = new vldoor_t;
-      door->Add();
+      door = new CVerticalDoor;
+      door->addThinker();
       sec->ceilingdata = door; //jff 2/22/98
 
       door->sector = sec;
@@ -479,7 +479,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
 {
    player_t* player;
    sector_t* sec;
-   vldoor_t* door;
+   CVerticalDoor* door;
    
    //  Check for locks
    player = thing->player;
@@ -551,7 +551,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
-   if((door = thinker_cast<vldoor_t *>(sec->ceilingdata))) // is a door
+   if((door = thinker_cast<CVerticalDoor *>(sec->ceilingdata))) // is a door
    {
       switch(line->special)
       {
@@ -581,12 +581,12 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    if(sec->ceilingdata ||
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
-      door = (vldoor_t *)(sec->ceilingdata); //jff 2/22/98
+      door = (CVerticalDoor *)(sec->ceilingdata); //jff 2/22/98
       
       if(demo_compatibility) // haleyjd
       {
-         if(!door) door = (vldoor_t *)(sec->floordata);
-         if(!door) door = (vldoor_t *)(sec->lightingdata);
+         if(!door) door = (CVerticalDoor *)(sec->floordata);
+         if(!door) door = (CVerticalDoor *)(sec->lightingdata);
       }
 
       switch(line->special)
@@ -634,8 +634,8 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    }
 
    // new door thinker
-   door = new vldoor_t;
-   door->Add();
+   door = new CVerticalDoor;
+   door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
    door->sector = sec;
    door->direction = plat_up;
@@ -703,9 +703,9 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
 
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
-   vldoor_t *door = new vldoor_t;
+   CVerticalDoor *door = new CVerticalDoor;
    
-   door->Add();
+   door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
@@ -730,11 +730,11 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   vldoor_t* door;
+   CVerticalDoor* door;
    
-   door = new vldoor_t;
+   door = new CVerticalDoor;
    
-   door->Add();
+   door->addThinker();
    
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;

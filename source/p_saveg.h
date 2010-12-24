@@ -52,6 +52,11 @@ public:
    // Methods
    void ArchiveCString(char *str,  size_t maxLen);
    void ArchiveLString(char *&str, size_t &len);
+   
+   // WriteLString is valid during saving only. This is to accomodate const
+   // char *'s which must be saved, and are read into temporary buffers 
+   // during loading.
+   void WriteLString(const char *str, size_t len = 0);
 
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used

@@ -180,19 +180,11 @@ class mobj_t : public CPointThinker
 protected:
    void Think();
 
-   // haleyjd 11/26/10: For savegame enumeration
-   unsigned int ordinal; 
-
-public:
-   
+public:   
    // Virtual methods (overridables)
    // Inherited from CThinker:
-   virtual void Update();
-   virtual void Remove();
-
-   // Savegame enumeration
-   virtual void Enumerate(unsigned int val) { ordinal = val; }
-   virtual unsigned int getEnumeration() { return ordinal; }
+   virtual void updateThinker();
+   virtual void removeThinker();
 
    // Data members
 

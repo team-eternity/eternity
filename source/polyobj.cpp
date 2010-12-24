@@ -1160,7 +1160,7 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 //
 // Thinker function for PolyObject rotation.
 //
-void polyrotate_t::Think()
+void CPolyRotate::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1200,7 +1200,7 @@ void polyrotate_t::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->Remove();
+         this->removeThinker();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1226,7 +1226,7 @@ d_inline static void Polyobj_componentSpeed(int resVel, int angle,
    *yVel = FixedMul(resVel,   finesine[angle]);
 }
 
-void polymove_t::Think()
+void CPolyMove::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1265,7 +1265,7 @@ void polymove_t::Think()
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         this->Remove();
+         this->removeThinker();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
@@ -1280,7 +1280,7 @@ void polymove_t::Think()
    }
 }
 
-void polyslidedoor_t::Think()
+void CPolySlideDoor::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1347,7 +1347,7 @@ void polyslidedoor_t::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->Remove();
+            this->removeThinker();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1372,7 +1372,7 @@ void polyslidedoor_t::Think()
    }
 }
 
-void polyswingdoor_t::Think()
+void CPolySwingDoor::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1434,7 +1434,7 @@ void polyswingdoor_t::Think()
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            this->Remove();
+            this->removeThinker();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
@@ -1463,7 +1463,7 @@ void polyswingdoor_t::Think()
 int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 {
    polyobj_t *po;
-   polyrotate_t *th;
+   CPolyRotate *th;
    int diracc = -1;
 
    if(!(po = Polyobj_GetForNum(prdata->polyObjNum)))
@@ -1482,8 +1482,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       return 0;
 
    // create a new thinker
-   th = new polyrotate_t;
-   th->Add();
+   th = new CPolyRotate;
+   th->addThinker();
    po->thinker = th;
 
    // set fields
@@ -1519,8 +1519,8 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          break;
       
       // create a new thinker
-      th = new polyrotate_t;
-      th->Add();
+      th = new CPolyRotate;
+      th->addThinker();
       po->thinker = th;
       
       // set fields
@@ -1556,7 +1556,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 int EV_DoPolyObjMove(polymovedata_t *pmdata)
 {
    polyobj_t *po;
-   polymove_t *th;
+   CPolyMove *th;
    unsigned int angadd = ANG180;
 
    if(!(po = Polyobj_GetForNum(pmdata->polyObjNum)))
@@ -1575,8 +1575,8 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       return 0;
 
    // create a new thinker
-   th = new polymove_t;
-   th->Add();
+   th = new CPolyMove;
+   th->addThinker();
    po->thinker = th;
 
    // set fields
@@ -1608,8 +1608,8 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
          break;
 
       // create a new thinker
-      th = new polymove_t;
-      th->Add();
+      th = new CPolyMove;
+      th->addThinker();
       po->thinker = th;
       
       // set fields
@@ -1640,12 +1640,12 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
 
 static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 {
-   polyslidedoor_t *th;
+   CPolySlideDoor *th;
    unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
-   th = new polyslidedoor_t;
-   th->Add();
+   th = new CPolySlideDoor;
+   th->addThinker();
    
    // point the polyobject to this thinker
    po->thinker = th;
@@ -1684,8 +1684,8 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = new polyslidedoor_t;
-      th->Add();
+      th = new CPolySlideDoor;
+      th->addThinker();
 
       // point the polyobject to this thinker
       po->thinker = th;
@@ -1719,12 +1719,12 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 
 static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
 {
-   polyswingdoor_t *th;
+   CPolySwingDoor *th;
    int diracc = -1;
 
    // allocate and add a new swing door thinker
-   th = new polyswingdoor_t;
-   th->Add();
+   th = new CPolySwingDoor;
+   th->addThinker();
    
    // point the polyobject to this thinker
    po->thinker = th;
@@ -1755,8 +1755,8 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = new polyswingdoor_t;
-      th->Add();
+      th = new CPolySwingDoor;
+      th->addThinker();
 
       // point the polyobject to this thinker
       po->thinker = th;

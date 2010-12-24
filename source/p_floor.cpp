@@ -459,14 +459,14 @@ result_e T_MovePlane
 // Move a floor to it's destination (up or down). 
 // Called once per tick for each moving floor.
 //
-// Passed a floormove_t structure that contains all pertinent info about the
+// Passed a CFloorMove structure that contains all pertinent info about the
 // move. See P_SPEC.H for fields.
 // No return value.
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 
-void floormove_t::Think()
+void CFloorMove::Think()
 {
    result_e      res;
 
@@ -582,7 +582,7 @@ void floormove_t::Think()
       }
       
       sector->floordata = NULL; //jff 2/22/98
-      this->Remove(); //remove this floor from list of movers
+      this->removeThinker(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
@@ -624,13 +624,13 @@ void floormove_t::Think()
 // Move an elevator to it's destination (up or down)
 // Called once per tick for each moving floor.
 //
-// Passed an elevator_t structure that contains all pertinent info about the
+// Passed an CElevator structure that contains all pertinent info about the
 // move. See P_SPEC.H for fields.
 // No return value.
 //
 // jff 02/22/98 added to support parallel floor/ceiling motion
 //
-void elevator_t::Think()
+void CElevator::Think()
 {
    result_e      res;
    
@@ -658,7 +658,7 @@ void elevator_t::Think()
       S_StopSectorSequence(sector, false);
       sector->floordata = NULL;     //jff 2/22/98
       sector->ceilingdata = NULL;   //jff 2/22/98
-      this->Remove();               // remove elevator from actives
+      this->removeThinker();               // remove elevator from actives
       
       // make floor stop sound
       // haleyjd: handled through sound sequences
@@ -673,7 +673,7 @@ void elevator_t::Think()
 // Pillar thinker function
 // joek 4/9/06
 //
-void pillar_t::Think()
+void CPillar::Think()
 {
    boolean result;
    
@@ -690,7 +690,7 @@ void pillar_t::Think()
       sector->ceilingdata = NULL;      
       // TODO: notify scripts
       //P_TagFinished(sector->tag);
-      this->Remove();
+      this->removeThinker();
    }
 }
 
@@ -714,7 +714,7 @@ int EV_DoFloor(line_t *line, floor_e floortype )
    int           rtn;
    int           i;
    sector_t*     sec;
-   floormove_t*  floor;
+   CFloorMove*  floor;
 
    secnum = -1;
    rtn = 0;
@@ -729,8 +729,8 @@ int EV_DoFloor(line_t *line, floor_e floortype )
       
       // new floor thinker
       rtn = 1;
-      floor = new floormove_t;
-      floor->Add();
+      floor = new CFloorMove;
+      floor->addThinker();
       sec->floordata = floor; //jff 2/22/98
       floor->type = floortype;
       floor->crush = -1;
@@ -1051,7 +1051,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
       // don't start a stair if the first step's floor is already moving
       if(!P_SectorActive(floor_special,sec)) //jff 2/22/98
       { 
-         floormove_t*  floor;
+         CFloorMove*  floor;
          int           texture, height;
          fixed_t       stairsize;
          fixed_t       speed;
@@ -1059,8 +1059,8 @@ int EV_BuildStairs(line_t *line, stair_e type)
 
          // create new floor thinker for first step
          rtn = 1;
-         floor = new floormove_t;
-         floor->Add();
+         floor = new CFloorMove;
+         floor->addThinker();
          sec->floordata = floor;
          floor->direction = 1;
          floor->sector = sec;
@@ -1141,8 +1141,8 @@ int EV_BuildStairs(line_t *line, stair_e type)
                secnum = newsecnum;
 
                // create and initialize a thinker for the next step
-               floor = new floormove_t;
-               floor->Add();
+               floor = new CFloorMove;
+               floor->addThinker();
 
                sec->floordata = floor; //jff 2/22/98
                floor->direction = 1;
@@ -1253,7 +1253,7 @@ int EV_DoDonut(line_t *line)
    int          secnum;
    int          rtn;
    int          i;
-   floormove_t *floor;
+   CFloorMove *floor;
    fixed_t      s3_floorheight;
    int16_t      s3_floorpic;
 
@@ -1316,8 +1316,8 @@ int EV_DoDonut(line_t *line)
          }
         
          //  Spawn rising slime
-         floor = new floormove_t;
-         floor->Add();
+         floor = new CFloorMove;
+         floor->addThinker();
          s2->floordata = floor; //jff 2/22/98
          floor->type = donutRaise;
          floor->crush = -1;
@@ -1330,8 +1330,8 @@ int EV_DoDonut(line_t *line)
          P_FloorSequence(floor->sector);
         
          //  Spawn lowering donut-hole pillar
-         floor = new floormove_t;
-         floor->Add();
+         floor = new CFloorMove;
+         floor->addThinker();
          s1->floordata = floor; //jff 2/22/98
          floor->type = lowerFloor;
          floor->crush = -1;
@@ -1362,7 +1362,7 @@ int EV_DoElevator
    int                   secnum;
    int                   rtn;
    sector_t*             sec;
-   elevator_t*           elevator;
+   CElevator*           elevator;
 
    secnum = -1;
    rtn = 0;
@@ -1377,8 +1377,8 @@ int EV_DoElevator
       
       // create and initialize new elevator thinker
       rtn = 1;
-      elevator = new elevator_t;
-      elevator->Add();
+      elevator = new CElevator;
+      elevator->addThinker();
       sec->floordata = elevator; //jff 2/22/98
       sec->ceilingdata = elevator; //jff 2/22/98
       elevator->type = elevtype;
@@ -1435,7 +1435,7 @@ int EV_DoElevator
 //
 int EV_PillarBuild(line_t *line, pillardata_t *pd)
 {
-   pillar_t *pillar;
+   CPillar *pillar;
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
@@ -1468,10 +1468,10 @@ manual_pillar:
             continue;
       }
             
-      pillar = new pillar_t;
+      pillar = new CPillar;
       sector->floordata = pillar;
       sector->ceilingdata = pillar;
-      pillar->Add();
+      pillar->addThinker();
       pillar->sector = sector;
       
       if(pd->height == 0) // height == 0 so we meet in the middle
@@ -1525,7 +1525,7 @@ manual_pillar:
 //
 int EV_PillarOpen(line_t *line, pillardata_t *pd)
 {
-   pillar_t *pillar;
+   CPillar *pillar;
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
@@ -1556,10 +1556,10 @@ manual_pillar:
             continue;
       }
 
-      pillar = new pillar_t;
+      pillar = new CPillar;
       sector->floordata   = pillar;
       sector->ceilingdata = pillar;
-      pillar->Add();
+      pillar->addThinker();
       pillar->sector = sector;
       
       if(pd->fdist == 0) // floordist == 0 so we find the next lowest floor
@@ -1627,7 +1627,7 @@ void P_ChangeFloorTex(const char *name, int tag)
 //
 // haleyjd: thinker for floor waggle action.
 //
-void floorwaggle_t::Think()
+void CFloorWaggle::Think()
 {
    fixed_t destheight;
    fixed_t dist;
@@ -1658,7 +1658,7 @@ void floorwaggle_t::Think()
          this->sector->floordata = NULL;
          // HEXEN_TODO: P_TagFinished
          // P_TagFinished(waggle->sector->tag);
-         this->Remove();
+         this->removeThinker();
          return;
       }
       break;
@@ -1692,7 +1692,7 @@ int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
    int           retCode = 0;
    boolean       manual = false;
    sector_t      *sector;
-   floorwaggle_t *waggle;
+   CFloorWaggle *waggle;
 
    if(tag == 0)
    {
@@ -1718,9 +1718,9 @@ manual_waggle:
       }
 
       retCode = 1;
-      waggle = new floorwaggle_t;
+      waggle = new CFloorWaggle;
       sector->floordata = waggle;      
-      waggle->Add();
+      waggle->addThinker();
 
       waggle->sector         = sector;
       waggle->originalHeight = sector->floorheight;

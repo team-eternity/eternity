@@ -675,7 +675,7 @@ void A_VileChase(mobj_t *actor)
                }
                
                // killough 8/29/98: add to appropriate thread
-               corpsehit->Update();
+               corpsehit->updateThinker();
                
                return;
             }
@@ -1063,7 +1063,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   newmobj->Update();
+   newmobj->updateThinker();
 
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
@@ -1388,7 +1388,7 @@ void A_BrainSpit(mobj_t *mo)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
    
    // killough 8/29/98: add to appropriate thread
-   newmobj->Update();
+   newmobj->updateThinker();
    
    S_StartSound(NULL, sfx_bospit);
 }
@@ -1467,7 +1467,7 @@ void A_SpawnFly(mobj_t *mo)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   newmobj->Update();
+   newmobj->updateThinker();
    
    if(P_LookForTargets(newmobj,true))      // killough 9/4/98
       P_SetMobjState(newmobj, newmobj->info->seestate);
@@ -1476,7 +1476,7 @@ void A_SpawnFly(mobj_t *mo)
    P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
    
    // remove self (i.e., cube).
-   mo->Remove();
+   mo->removeThinker();
 }
 
 // EOF

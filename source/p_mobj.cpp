@@ -236,7 +236,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       if(state == NullStateNum)
       {
          mobj->state = NULL;
-         mobj->Remove();
+         mobj->removeThinker();
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -299,7 +299,7 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
    {
       // remove mobj
       mobj->state = NULL;
-      mobj->Remove();
+      mobj->removeThinker();
       return false;
    }
 
@@ -340,7 +340,7 @@ void P_ExplodeMissile(mobj_t *mo)
       if(mo->subsector->sector->intflags & SIF_SKY &&
          mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
-         mo->Remove(); // don't explode on the actual sky itself
+         mo->removeThinker(); // don't explode on the actual sky itself
          return;
       }
    }
@@ -545,7 +545,7 @@ void P_XYMovement(mobj_t* mo)
                   // this fix is for "sky hack walls" only apparently --
                   // see P_ExplodeMissile for my real sky fix
 
-                  mo->Remove();
+                  mo->removeThinker();
                   return;
                }
             }
@@ -786,7 +786,7 @@ static void P_ZMovement(mobj_t* mo)
             {
                if(mo->flags & MF_MISSILE)
                {
-                  mo->Remove();      // missiles don't bounce off skies
+                  mo->removeThinker();      // missiles don't bounce off skies
                   if(demo_version >= 331)
                      return; // haleyjd: return here for below fix
                }
@@ -828,7 +828,7 @@ static void P_ZMovement(mobj_t* mo)
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
             clip.ceilingline->backsector->intflags & SIF_SKY)
          {
-            mo->Remove();  // don't explode on skies
+            mo->removeThinker();  // don't explode on skies
          }
          else
          {
@@ -1070,7 +1070,7 @@ void P_NightmareRespawn(mobj_t* mobj)
 
    // remove the old monster,
 
-   mobj->Remove();
+   mobj->removeThinker();
 }
 
 // PTODO
@@ -1361,7 +1361,7 @@ void mobj_t::Think()
       { 
          // check for nightmare respawn
          if(flags2 & MF2_REMOVEDEAD)
-            this->Remove();
+            this->removeThinker();
          else
             P_NightmareRespawn(this);
       }
@@ -1374,7 +1374,7 @@ void mobj_t::Think()
 // haleyjd 11/22/10: Overrides CThinker::Update.
 // Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
 // 
-void mobj_t::Update()
+void mobj_t::updateThinker()
 {
    int tclass = th_misc;
 
@@ -1389,7 +1389,7 @@ void mobj_t::Update()
          tclass = th_enemies;
    }
 
-   AddToThreadedList(tclass);
+   addToThreadedList(tclass);
 }
 
 extern fixed_t tmsecfloorz;
@@ -1510,7 +1510,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    // haleyjd 08/07/04: new floorclip system
    P_AdjustFloorClip(mobj);
 
-   mobj->Add();
+   mobj->addThinker();
 
    // e6y
    mobj->friction = ORIG_FRICTION;
@@ -1541,7 +1541,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void mobj_t::Remove()
+void mobj_t::removeThinker()
 {
    // haleyjd 04/14/03: restructured
    boolean respawnitem = false;
@@ -1610,7 +1610,7 @@ void mobj_t::Remove()
    }
 
    // free block
-   CThinker::Remove();
+   CThinker::removeThinker();
 }
 
 //
@@ -2005,7 +2005,7 @@ spawnit:
       demo_version >= 203)
    {
       mobj->flags |= MF_FRIEND;            // killough 10/98:
-      mobj->Update();                      // transfer friendliness flag
+      mobj->updateThinker();                      // transfer friendliness flag
    }
 
    // killough 7/20/98: exclude friends
@@ -3216,7 +3216,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
          break;
       }
 
-      mo->Update();
+      mo->updateThinker();
    }
 
    return 0;

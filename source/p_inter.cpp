@@ -821,7 +821,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       player->itemcount++;
 
    if(removeobj)
-      special->Remove();
+      special->removeThinker();
 
    // haleyjd 07/08/05: inverted condition
    if(pickup_fx)
@@ -849,7 +849,7 @@ static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
    target->height >>= 2;
 
    // killough 8/29/98: remove from threaded list
-   target->Update();
+   target->updateThinker();
    
    if(source && source->player)
    {
@@ -863,7 +863,7 @@ static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       if(target->player)
       {
          source->player->frags[target->player-players]++;
-         HU_FragsUpdate();
+         HU_FragsupdateThinker();
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))

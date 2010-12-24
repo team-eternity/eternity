@@ -76,7 +76,7 @@ int EV_ThingSpawn(int *args, boolean fog)
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
       
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y)) // Didn't fit?
-         newMobj->Remove();
+         newMobj->removeThinker();
       else
       {
          newMobj->angle = angle;

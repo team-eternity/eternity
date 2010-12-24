@@ -121,7 +121,7 @@ struct polymaplink_t
 // Polyobject Special Thinkers
 //
 
-class polyrotate_t : public CThinker
+class CPolyRotate : public CThinker
 {
 protected:
    void Think();
@@ -132,7 +132,7 @@ public:
    int distance;      // distance to move
 };
 
-class polymove_t : public CThinker
+class CPolyMove : public CThinker
 {
 protected:
    void Think();
@@ -146,7 +146,7 @@ public:
    unsigned int angle; // angle along which to move
 };
 
-class polyslidedoor_t : public CThinker
+class CPolySlideDoor : public CThinker
 {
 protected:
    void Think();
@@ -167,7 +167,7 @@ public:
    boolean closing;        // if true, is closing
 };
 
-class polyswingdoor_t : public CThinker
+class CPolySwingDoor : public CThinker
 {
 protected:
    void Think();

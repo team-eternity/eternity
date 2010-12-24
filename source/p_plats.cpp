@@ -66,7 +66,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void plat_t::Think()
+void CPlat::Think()
 {
    result_e      res;
    
@@ -206,7 +206,7 @@ void plat_t::Think()
 //
 int EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
-   plat_t   *plat;
+   CPlat   *plat;
    int       secnum;
    int       rtn;
    sector_t *sec;
@@ -241,8 +241,8 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      plat = new plat_t;
-      plat->Add();
+      plat = new CPlat;
+      plat->addThinker();
       
       plat->type = type;
       plat->sector = sec;
@@ -362,7 +362,7 @@ void P_ActivateInStasis(int tag)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
-      plat_t *plat = pl->plat;              // for one in stasis with right tag
+      CPlat *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -388,7 +388,7 @@ int EV_StopPlat(line_t *line)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
-      plat_t *plat = pl->plat;             // for one with the tag not in stasis
+      CPlat *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -406,7 +406,7 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(plat_t *plat)
+void P_AddActivePlat(CPlat *plat)
 {
    platlist_t *list = (platlist_t *)(malloc(sizeof *list));
    list->plat = plat;
@@ -425,11 +425,11 @@ void P_AddActivePlat(plat_t *plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(plat_t *plat)
+void P_RemoveActivePlat(CPlat *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   plat->Remove();
+   plat->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    free(list);

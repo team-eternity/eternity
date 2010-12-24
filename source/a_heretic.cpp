@@ -524,7 +524,7 @@ void A_SorcererRise(mobj_t *actor)
    mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // add to appropriate thread
-   mo->Update();
+   mo->updateThinker();
    
    if(actor->target && !(mo->flags & MF_FRIEND))
       P_SetTarget<mobj_t>(&mo->target, actor->target);
@@ -682,7 +682,7 @@ void A_GenWizard(mobj_t *actor)
       (mo->z < mo->subsector->sector->floorheight))
    {
       // doesn't fit, so remove it immediately
-      mo->Remove();
+      mo->removeThinker();
       return;
    }
 
@@ -690,13 +690,13 @@ void A_GenWizard(mobj_t *actor)
    mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // add to appropriate thread
-   mo->Update();
+   mo->updateThinker();
 
    // Check for movements.
    if(!P_TryMove(mo, mo->x, mo->y, false))
    {
       // can't move, remove it immediately
-      mo->Remove();
+      mo->removeThinker();
       return;
    }
 
@@ -924,7 +924,7 @@ void A_MakePod(mobj_t *actor)
    mo = P_SpawnMobj(x, y, ONFLOORZ, E_SafeThingType(MT_POD));
    if(!P_CheckPosition(mo, x, y))
    {
-      mo->Remove();
+      mo->removeThinker();
       return;
    }
    
