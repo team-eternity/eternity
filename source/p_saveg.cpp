@@ -517,14 +517,22 @@ static void P_ArchiveThinkers(CSaveArchive &arc)
             th->serialize(arc);
       }
 
+      // add a terminating marker
       arc.WriteLString(tc_end);
    }
    else
    {
       char *className = "";
       size_t len;
+      unsigned int idx = 1; // Start at index 1, as 0 means NULL
       CThinkerType *thinkerType;
-      CThinker     *newThinker;
+      CThinker     *newThinker, *th;
+
+      // get number of thinkers
+      arc << num_thinkers;
+
+      // allocate thinker table
+      thinker_p = (CThinker **)(calloc(num_thinkers+1, sizeof(CThinker *)));
 
       while(1)
       {
@@ -539,17 +547,25 @@ static void P_ArchiveThinkers(CSaveArchive &arc)
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
-            else
-            {
-               // Unknown thinker type
+            else 
                I_FatalError(I_ERR_KILL, "Unknown tclass %s in savegame\n", className);
-            }
          }
 
          // Create a thinker of the appropriate type and load it
          newThinker = thinkerType->newThinker();
          newThinker->serialize(*this);
+
+         // Put it in the table
+         thinker_p[idx++] = newThinker;
+
+         // Add it
+         newThinker->addThinker();
       }
+
+      // Now, call deswizzle to fix up mutual references between thinkers, such
+      // as mobj targets/tracers and ACS triggers.
+      for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         th->deswizzle();
    }
 
    /*
@@ -641,10 +657,6 @@ void P_UnArchiveThinkers(void)
    CThinker *th;
    size_t    size;        // killough 2/14/98: size of into table
    size_t    idx;         // haleyjd 11/03/06: separate index var
-   
-   // killough 3/26/98: Load boss brain state
-   memcpy(&brain, save_p, sizeof brain);
-   save_p += sizeof brain;
 
    // remove all the current thinkers
    for(th = thinkercap.next; th != &thinkercap; )

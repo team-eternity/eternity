@@ -666,9 +666,8 @@ fixed_t P_FindShortestUpperAround(int secnum)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
    if(!comp[comp_model])
-      minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow
+      minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
 
-   // in height calcs
    for(i = 0; i < sec->linecount; i++)
    {
       if(twoSided(secnum, i))

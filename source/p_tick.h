@@ -85,7 +85,7 @@ public:
 
    // Enumeration 
    // For thinkers needing savegame enumeration.
-   void setOrdinal(unsigned int i) { ordinal = !removed ? i : 0; }
+   void setOrdinal(unsigned int i) { ordinal = shouldSerialize() ? i : 0; }
    unsigned int getOrdinal() const { return ordinal; }
 
    // Virtual methods (overridables)
@@ -95,6 +95,7 @@ public:
    // Serialization
    // When using serialize, always call your parent implementation!
    virtual void serialize(CSaveArchive &arc);
+   // De-swizzling should restore pointers to other thinkers.
    virtual void deswizzle() {}
    virtual boolean shouldSerialize()  const { return !removed;   }
    virtual const char *getClassName() const { return "CThinker"; }
