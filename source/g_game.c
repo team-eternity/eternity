@@ -3435,10 +3435,6 @@ byte *G_ReadOptions(byte *demoptr)
          comp[i] = compatibility;
 
       G_SetCompatibility();
-
-      // haleyjd 05/18/06: BOOM fix: allow zombie exits
-      if(demo_version >= 200 && demo_version <= 202)
-         comp[comp_zombie] = false;
       
       monster_infighting = 1;           // killough 7/19/98
       
