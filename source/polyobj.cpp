@@ -1155,6 +1155,8 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 
 // Thinker Functions
 
+IMPLEMENT_THINKER_TYPE(CPolyRotate)
+
 //
 // T_PolyObjRotate
 //
@@ -1215,6 +1217,18 @@ void CPolyRotate::Think()
 }
 
 //
+// CPolyRotate::serialize
+//
+// Saves/loads a CPolyRotate thinker.
+//
+void CPolyRotate::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << polyObjNum << speed << distance;
+}
+
+//
 // Polyobj_componentSpeed
 //
 // Calculates the speed components from the desired resultant velocity.
@@ -1225,6 +1239,8 @@ d_inline static void Polyobj_componentSpeed(int resVel, int angle,
    *xVel = FixedMul(resVel, finecosine[angle]);
    *yVel = FixedMul(resVel,   finesine[angle]);
 }
+
+IMPLEMENT_THINKER_TYPE(CPolyMove)
 
 void CPolyMove::Think()
 {
@@ -1279,6 +1295,21 @@ void CPolyMove::Think()
       }
    }
 }
+
+//
+// CPolyMove::serialize
+//
+// Saves/loads a CPolyMove thinker.
+//
+void CPolyMove::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << polyObjNum << speed << momx << momy << distance << angle;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CPolySlideDoor)
 
 void CPolySlideDoor::Think()
 {
@@ -1372,6 +1403,23 @@ void CPolySlideDoor::Think()
    }
 }
 
+//
+// CPolySlideDoor::serialize
+//
+// Saves/loads a CPolySlideDoor thinker.
+//
+void CPolySlideDoor::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << polyObjNum << delay << delayCount << initSpeed << speed
+       << initDistance << distance << initAngle << angle << revAngle
+       << momx << momy << closing;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CPolySwingDoor)
+
 void CPolySwingDoor::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
@@ -1456,6 +1504,19 @@ void CPolySwingDoor::Think()
 
       S_StartPolySequence(po);
    }
+}
+
+//
+// CPolySwingDoor::serialize
+//
+// Saves/loads a CPolySwingDoor thinker.
+//
+void CPolySwingDoor::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << polyObjNum << delay << delayCount << initSpeed << speed
+       << initDistance << distance << closing;
 }
 
 // Linedef Handlers

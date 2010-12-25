@@ -69,6 +69,7 @@
 #include "polyobj.h"
 #include "p_slopes.h"
 #include "p_portal.h"
+#include "p_saveg.h"
 
 //
 // Animating textures and planes
@@ -2873,6 +2874,8 @@ void P_SpawnDeferredSpecials(int mapformat)
 }
 
 
+IMPLEMENT_THINKER_TYPE(CScroller)
+
 // killough 2/28/98:
 //
 // This function, with the help of r_plane.c and r_bsp.c, supports generalized
@@ -2976,6 +2979,19 @@ void CScroller::Think()
    case CScroller::sc_carry_ceiling:   // to be added later
       break;
    }
+}
+
+//
+// CScroller::serialize
+//
+// Save/load a CScroller thinker.
+//
+void CScroller::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << dx << dy << affectee << control << last_height << vdx << vdy
+       << accel << type;
 }
 
 //
@@ -3200,6 +3216,19 @@ void CFrictionThinker::Think()
       }
       node = node->m_snext;
    }
+}
+
+//
+// CFrictionThinker::serialize
+//
+// haleyjd 12/25/10: This was actually missing, but is in fact needed in the
+// event that a user tries to save the game during playback of a BOOM demo.
+//
+void CFrictionThinker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << friction << movefactor << affectee;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -3453,6 +3482,9 @@ boolean PIT_PushThing(mobj_t* thing)
    return true;
 }
 
+
+IMPLEMENT_THINKER_TYPE(CPusher)
+
 //
 // T_Pusher 
 //
@@ -3596,6 +3628,22 @@ void CPusher::Think()
       thing->momx += xspeed<<(FRACBITS-PUSH_FACTOR);
       thing->momy += yspeed<<(FRACBITS-PUSH_FACTOR);
    }
+}
+
+//
+// CPusher::serialize
+//
+// Saves/loads a CPusher thinker.
+//
+void CPusher::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
+
+   // Restore point source origin if loading
+   if(arc.isLoading())
+      source = P_GetPushThing(affectee);
 }
 
 /////////////////////////////

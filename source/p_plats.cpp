@@ -55,6 +55,8 @@ void P_PlatSequence(sector_t *s, const char *seqname)
       S_StartSectorSequenceName(s, seqname, false);
 }
 
+IMPLEMENT_THINKER_TYPE(CPlat)
+
 //
 // T_PlatRaise()
 //
@@ -191,6 +193,26 @@ void CPlat::Think()
 
    case in_stasis: // do nothing if in stasis
       break;
+   }
+}
+
+//
+// CPlat::serialize
+//
+// Saves/loads CPlat thinkers.
+//
+void CPlat::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << speed << low << high << wait << count << status << oldstatus
+       << crush << tag << type;
+
+   if(arc.isLoading())
+   {
+      // Reattach to sector and to active plats list
+      sector->floordata = this;
+      P_AddActivePlat(this);
    }
 }
 

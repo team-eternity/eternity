@@ -42,6 +42,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CQuakeThinker"; }
+
+   // Data Members
    int intensity;        // richter scale (hardly realistic)
    int duration;         // how long it lasts
    fixed_t quakeRadius;  // radius of shaking effects

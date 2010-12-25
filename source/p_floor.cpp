@@ -32,6 +32,7 @@
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -453,6 +454,8 @@ result_e T_MovePlane
    return ok;
 }
 
+IMPLEMENT_THINKER_TYPE(CFloorMove)
+
 //
 // T_MoveFloor()
 //
@@ -465,7 +468,7 @@ result_e T_MovePlane
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
-
+//
 void CFloorMove::Think()
 {
    result_e      res;
@@ -619,6 +622,27 @@ void CFloorMove::Think()
 }
 
 //
+// CFloorMove::serialize
+//
+// Saves/loads CFloorMove thinkers.
+//
+void CFloorMove::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << type << crush << sector << direction << special << texture 
+       << floordestheight << speed << resetTime << resetHeight
+       << stepRaiseTime << delayTime << delayTimer;
+
+   // If loading, reattach to sector
+   if(arc.isLoading())
+      sector->floordata = this;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CElevator)
+
+//
 // T_MoveElevator()
 //
 // Move an elevator to it's destination (up or down)
@@ -665,7 +689,29 @@ void CElevator::Think()
    }
 }
 
+//
+// CElevator::serialize
+//
+// Saves/loads a CElevator thinker
+//
+void CElevator::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << type << sector << direction << floordestheight << ceilingdestheight 
+       << speed;
+
+   if(arc.isLoading())
+   {
+      // Reattach to both floor and ceiling of sector
+      sector->floordata   = this;
+      sector->ceilingdata = this;
+   }
+}
+
 // haleyjd 10/07/06: Pillars by Joe :)
+
+IMPLEMENT_THINKER_TYPE(CPillar)
 
 //
 // T_MovePillar
@@ -691,6 +737,26 @@ void CPillar::Think()
       // TODO: notify scripts
       //P_TagFinished(sector->tag);
       this->removeThinker();
+   }
+}
+
+//
+// CPillar::serialize
+//
+// Saves/loads a CPillar thinker.
+//
+void CPillar::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << ceilingSpeed << floorSpeed << floordest 
+       << ceilingdest << direction << crush;
+
+   if(arc.isLoading())
+   {
+      // Reattach to floor and ceiling
+      sector->floordata   = this;
+      sector->ceilingdata = this;
    }
 }
 
@@ -1618,6 +1684,8 @@ void P_ChangeFloorTex(const char *name, int tag)
 // haleyjd 06/30/09: joe was supposed to do these but he quit instead :P
 //
 
+IMPLEMENT_THINKER_TYPE(CFloorWaggle)
+
 #define WGLSTATE_EXPAND 1
 #define WGLSTATE_STABLE 2
 #define WGLSTATE_REDUCE 3
@@ -1683,6 +1751,23 @@ void CFloorWaggle::Think()
 }
 
 //
+// CFloorWaggle::serialize
+//
+// Saves/loads a CFloorWaggle thinker.
+//
+void CFloorWaggle::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << originalHeight << accumulator << accDelta << targetScale
+       << scale << scaleDelta << ticker << state;
+
+   // If loading, reattach to sector floor
+   if(arc.isLoading())
+      sector->floordata = this;
+}
+
+//
 // EV_StartFloorWaggle
 //
 int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
@@ -1691,7 +1776,7 @@ int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
    int           sectorIndex = -1;
    int           retCode = 0;
    boolean       manual = false;
-   sector_t      *sector;
+   sector_t     *sector;
    CFloorWaggle *waggle;
 
    if(tag == 0)

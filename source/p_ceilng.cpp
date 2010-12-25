@@ -29,6 +29,7 @@
 #include "doomstat.h"
 #include "r_main.h"
 #include "p_info.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -91,6 +92,8 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
 // Ceiling action routine and linedef type handler
 //
 /////////////////////////////////////////////////////////////////
+
+IMPLEMENT_THINKER_TYPE(CCeiling)
 
 //
 // T_MoveCeiling
@@ -245,6 +248,27 @@ void CCeiling::Think()
       } // end else
       break;
    } // end switch
+}
+
+//
+// CCeiling::serialize
+//
+// Saves and loads CCeiling thinkers.
+//
+void CCeiling::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << type << sector << bottomheight << topheight << speed << oldspeed
+       << crush << special << texture << direction << inStasis << tag 
+       << olddirection;
+
+   if(arc.isLoading())
+   {
+      // Reattach to sector, and to active ceilings list
+      sector->ceilingdata = this;
+      P_AddActiveCeiling(this);
+   }
 }
 
 

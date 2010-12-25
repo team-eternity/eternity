@@ -29,6 +29,8 @@
 #include "r_defs.h"
 #include "d_player.h"
 
+class CSaveArchive;
+
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
 
@@ -577,7 +579,8 @@ typedef enum
 
 // switch animation structure type
 
-#ifdef _MSC_VER
+//jff 3/23/98 pack to read from memory
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -586,11 +589,11 @@ struct switchlist_s
   char    name1[9];
   char    name2[9];
   int16_t episode;
-} __attribute__((packed)); //jff 3/23/98 pack to read from memory
+}; 
 
 typedef struct switchlist_s switchlist_t;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
@@ -616,10 +619,15 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int maxlight;
-  int minlight;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CFireFlicker"; }
+
+   // Data Members
+   sector_t *sector;
+   int count;
+   int maxlight;
+   int minlight;
 };
 
 class CLightFlash : public CThinker
@@ -628,12 +636,17 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int maxlight;
-  int minlight;
-  int maxtime;
-  int mintime;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CLightFlash"; }
+   
+   // Data Members
+   sector_t *sector;
+   int count;
+   int maxlight;
+   int minlight;
+   int maxtime;
+   int mintime;
 };
 
 class CStrobeThinker : public CThinker
@@ -642,12 +655,17 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int minlight;
-  int maxlight;
-  int darktime;
-  int brighttime;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CStrobeThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   int count;
+   int minlight;
+   int maxlight;
+   int darktime;
+   int brighttime;
 };
 
 class CGlowThinker : public CThinker
@@ -656,10 +674,15 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int minlight;
-  int maxlight;
-  int direction;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CGlowThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   int minlight;
+   int maxlight;
+   int direction;
 };
 
 // sf 13/10/99
@@ -671,14 +694,19 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  fixed_t lightlevel;
-  fixed_t destlevel;
-  fixed_t step;
-  fixed_t glowmin;
-  fixed_t glowmax;
-  int     glowspeed;
-  lightfade_e type;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CLightFade"; }
+
+   // Data Members
+   sector_t *sector;
+   fixed_t lightlevel;
+   fixed_t destlevel;
+   fixed_t step;
+   fixed_t glowmin;
+   fixed_t glowmax;
+   int     glowspeed;
+   lightfade_e type;
 };
 
 // p_plats
@@ -689,18 +717,23 @@ protected:
    void Think();
 
 public:
-  sector_t *sector;
-  fixed_t speed;
-  fixed_t low;
-  fixed_t high;
-  int wait;
-  int count;
-  plat_e status;
-  plat_e oldstatus;
-  int crush;
-  int tag;
-  plattype_e type;
-  struct platlist *list;   // killough
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPlat" };
+
+   // Data Members
+   sector_t *sector;
+   fixed_t speed;
+   fixed_t low;
+   fixed_t high;
+   int wait;
+   int count;
+   plat_e status;
+   plat_e oldstatus;
+   int crush;
+   int tag;
+   plattype_e type;
+   struct platlist *list;   // killough
 };
 
 // New limit-free plat structure -- killough
@@ -726,24 +759,29 @@ protected:
    void Think();
 
 public:
-  vldoor_e type;
-  sector_t *sector;
-  fixed_t topheight;
-  fixed_t speed;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CVerticalDoor"; }
 
-  // 1 = up, 0 = waiting at top, -1 = down
-  int direction;
-  
-  // tics to wait at the top
-  int topwait;
-  // (keep in case a door going down is reset)
-  // when it reaches 0, start going down
-  int topcountdown;
-  
-  //jff 1/31/98 keep track of line door is triggered by
-  line_t *line;
+   // Data Members
+   vldoor_e type;
+   sector_t *sector;
+   fixed_t topheight;
+   fixed_t speed;
 
-  int lighttag; //killough 10/98: sector tag for gradual lighting effects
+   // 1 = up, 0 = waiting at top, -1 = down
+   int direction;
+
+   // tics to wait at the top
+   int topwait;
+   // (keep in case a door going down is reset)
+   // when it reaches 0, start going down
+   int topcountdown;
+
+   //jff 1/31/98 keep track of line door is triggered by
+   line_t *line;
+
+   int lighttag; //killough 10/98: sector tag for gradual lighting effects
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
@@ -783,29 +821,34 @@ protected:
    void Think();
 
 public:
-  ceiling_e type;
-  sector_t *sector;
-  fixed_t bottomheight;
-  fixed_t topheight;
-  fixed_t speed;
-  fixed_t oldspeed;
-  int crush;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CCeiling"; }
 
-  //jff 02/04/98 add these to support ceiling changers
-  //jff 3/14/98 add to fix bug in change transfers
-  spectransfer_t special; // haleyjd 09/06/07: spectransfer
-  int texture;
+   // Data Members
+   ceiling_e type;
+   sector_t *sector;
+   fixed_t bottomheight;
+   fixed_t topheight;
+   fixed_t speed;
+   fixed_t oldspeed;
+   int crush;
 
-  // 1 = up, 0 = waiting, -1 = down
-  int direction;
+   //jff 02/04/98 add these to support ceiling changers
+   //jff 3/14/98 add to fix bug in change transfers
+   spectransfer_t special; // haleyjd 09/06/07: spectransfer
+   int texture;
 
-  // haleyjd: stasis
-  boolean inStasis;
+   // 1 = up, 0 = waiting, -1 = down
+   int direction;
 
-  // ID
-  int tag;                   
-  int olddirection;
-  struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+   // haleyjd: stasis
+   boolean inStasis;
+
+   // ID
+   int tag;                   
+   int olddirection;
+   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
 };
 
 typedef struct ceilinglist 
@@ -840,23 +883,28 @@ protected:
    void Think();
 
 public:
-  floor_e type;
-  int crush;
-  sector_t *sector;
-  int direction;
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CFloorMove"; }
 
-  // jff 3/14/98 add to fix bug in change transfers
-  // haleyjd 09/06/07: spectransfer
-  spectransfer_t special;
+   // Data Members
+   floor_e type;
+   int crush;
+   sector_t *sector;
+   int direction;
 
-  int16_t texture;
-  fixed_t floordestheight;
-  fixed_t speed;
-  int resetTime;       // haleyjd 10/13/05: resetting stairs
-  fixed_t resetHeight;
-  int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
-  int delayTime;       
-  int delayTimer;
+   // jff 3/14/98 add to fix bug in change transfers
+   // haleyjd 09/06/07: spectransfer
+   spectransfer_t special;
+
+   int16_t texture;
+   fixed_t floordestheight;
+   fixed_t speed;
+   int resetTime;       // haleyjd 10/13/05: resetting stairs
+   fixed_t resetHeight;
+   int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
+   int delayTime;       
+   int delayTimer;
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
@@ -900,6 +948,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CElevator"; }
+
+   // Data Members
    elevator_e type;
    sector_t *sector;
    int direction;
@@ -915,6 +968,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPillar"; }
+
+   // Data Members
    sector_t *sector;
    int ceilingSpeed;
    int floorSpeed;
@@ -942,6 +1000,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CFloorWaggle"; }
+
+   // Data Members
    sector_t *sector;
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -963,21 +1026,26 @@ protected:
    void Think();
 
 public:
-  fixed_t dx, dy;      // (dx,dy) scroll speeds
-  int affectee;        // Number of affected sidedef, sector, tag, or whatever
-  int control;         // Control sector (-1 if none) used to control scrolling
-  fixed_t last_height; // Last known height of control sector
-  fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-  int accel;           // Whether it's accelerative
-  enum
-  {
-    sc_side,
-    sc_floor,
-    sc_ceiling,
-    sc_carry,
-    sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-  };
-  int type;              // Type of scroll effect
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CScroller"; }
+
+   // Data Members
+   fixed_t dx, dy;      // (dx,dy) scroll speeds
+   int affectee;        // Number of affected sidedef, sector, tag, or whatever
+   int control;         // Control sector (-1 if none) used to control scrolling
+   fixed_t last_height; // Last known height of control sector
+   fixed_t vdx, vdy;    // Accumulated velocity if accelerative
+   int accel;           // Whether it's accelerative
+   enum
+   {
+      sc_side,
+      sc_floor,
+      sc_ceiling,
+      sc_carry,
+      sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
+   };
+   int type;              // Type of scroll effect
 };
 
 // haleyjd 04/11/10: CFrictionThinker restored
@@ -989,6 +1057,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CFrictionThinker"; }
+
+   // Data Members
    int friction;      // friction value (E800 = normal)
    int movefactor;    // inertia factor when adding to momentum
    int affectee;      // Number of affected sector
@@ -1002,22 +1075,27 @@ protected:
    void Think();
 
 public:
-  enum
-  {
-    p_push,
-    p_pull,
-    p_wind,
-    p_current,
-  }; 
-  int type;
-  mobj_t *source;      // Point source if point pusher
-  int x_mag;           // X Strength
-  int y_mag;           // Y Strength
-  int magnitude;       // Vector strength for point pusher
-  int radius;          // Effective radius for point pusher
-  int x;               // X of point source if point pusher
-  int y;               // Y of point source if point pusher
-  int affectee;        // Number of affected sector
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPusher"; }
+
+   // Data Members
+   enum
+   {
+      p_push,
+      p_pull,
+      p_wind,
+      p_current,
+   }; 
+   int type;
+   mobj_t *source;      // Point source if point pusher
+   int x_mag;           // X Strength
+   int y_mag;           // Y Strength
+   int magnitude;       // Vector strength for point pusher
+   int radius;          // Effective radius for point pusher
+   int x;               // X of point source if point pusher
+   int y;               // Y of point source if point pusher
+   int affectee;        // Number of affected sector
 };
 
 // sf: direction plat moving

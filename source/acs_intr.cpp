@@ -1137,6 +1137,42 @@ void CACSThinker::Think()
 }
 
 //
+// CACSThinker::serialize
+//
+// Saves/loads a CACSThinker.
+//
+void CACSThinker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   // TODO:
+   /*
+   CACSThinker *acs;
+   *save_p++ = tc_acs;
+   acs = (CACSThinker *)save_p;
+   memcpy(save_p, th, sizeof(CACSThinker));
+   save_p += sizeof(CACSThinker);
+   acs->ip      = (int *)(acs->ip - acs->code);
+   acs->line    = acs->line ? (line_t *)(acs->line - lines + 1) : NULL;
+   acs->trigger = (mobj_t *)P_MobjNum(acs->trigger);
+   continue;
+   */
+}
+
+//
+// CACSThinker::deswizzle
+//
+// Fixes up the trigger reference in a CACSThinker.
+//
+void CACSThinker::deswizzle()
+{
+   // TODO:
+   // mo = P_MobjForNum((int)acs->trigger);
+   // P_SetNewTarget(&acs->trigger, mo);
+}
+
+
+//
 // ACS_Init
 //
 // Called at startup.

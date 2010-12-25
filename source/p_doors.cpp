@@ -28,6 +28,7 @@
 #include "doomstat.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -88,6 +89,8 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 // Door action routines, called once per tick
 //
 ///////////////////////////////////////////////////////////////
+
+IMPLEMENT_THINKER_TYPE(CVerticalDoor)
 
 //
 // T_VerticalDoor
@@ -314,6 +317,23 @@ void CVerticalDoor::Think()
       // killough 10/98: replaced with gradual lighting code
       break;
    }
+}
+
+//
+// CVerticalDoor::serialize
+//
+// Saves/loads CVerticalDoor thinkers.
+//
+void CVerticalDoor::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << type << sector << topheight << speed << direction << topwait
+       << topcountdown << line << lighttag;
+
+   // Reattach to sector when loading
+   if(arc.isLoading())
+      sector->ceilingdata = this;
 }
 
 ///////////////////////////////////////////////////////////////

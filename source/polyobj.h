@@ -121,12 +121,19 @@ struct polymaplink_t
 // Polyobject Special Thinkers
 //
 
+class CSaveArchive;
+
 class CPolyRotate : public CThinker
 {
 protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPolyRotate"; }
+
+   // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
    int distance;      // distance to move
@@ -138,6 +145,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPolyMove"; }
+
+   // Data Members
    int polyObjNum;     // numeric id of polyobject
    int speed;          // resultant velocity
    int momx;           // x component of speed along angle
@@ -152,6 +164,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPolySlideDoor"; }
+
+   // Data Members
    int polyObjNum;         // numeric id of affected polyobject
    int delay;              // delay time
    int delayCount;         // delay counter
@@ -173,6 +190,11 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPolySwingDoor"; }
+
+   // Data Members
    int polyObjNum;    // numeric id of affected polyobject
    int delay;         // delay time
    int delayCount;    // delay counter

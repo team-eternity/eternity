@@ -36,6 +36,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_portal.h"
+#include "p_saveg.h"
 #include "p_tick.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -101,6 +102,30 @@ fixed_t FloatBobDiffs[64] =
    38123, 41326, 44131, 46511,
    48444, 49909, 50895
 };
+
+//=============================================================================
+// 
+// CPointThinker Methods
+//
+
+IMPLEMENT_THINKER_TYPE(CPointThinker)
+
+//
+// CPointThinker::serialize
+//
+// Saves/loads a CPointThinker.
+//
+void CPointThinker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << x << y << z << groupid;
+}
+
+//=============================================================================
+//
+// Mobj
+//
 
 // haleyjd 03/27/10: new solution for state cycle detection
 struct seenstate_t

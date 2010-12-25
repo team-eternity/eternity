@@ -61,6 +61,7 @@ public:
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used
    // both for reading and writing.
+   // Basic types:
    CSaveArchive &operator << (int32_t  &x);
    CSaveArchive &operator << (uint32_t &x);
    CSaveArchive &operator << (int16_t  &x);
@@ -68,7 +69,11 @@ public:
    CSaveArchive &operator << (int8_t   &x);
    CSaveArchive &operator << (uint8_t  &x); 
    CSaveArchive &operator << (boolean  &x);
-   CSaveArchive &operator << (CThinker *th);
+   // Pointers:
+   CSaveArchive &operator << (sector_t *&s);
+   CSaveArchive &operator << (line_t   *&ln);
+   // Structures:
+   CSaveArchive &operator << (spectransfer_t &st);
 };
 
 void P_UnArchivePlayers(void);

@@ -194,17 +194,17 @@ public:
 };
 
 //
-// DECLARE_THINKER_TYPE
+// IMPLEMENT_THINKER_TYPE
 //
 // Use this macro once per CThinker descendant. Best placed near the Think 
 // routine.
 // Example:
-//   DECLARE_THINKER_TYPE(CFireFlicker)
+//   IMPLEMENT_THINKER_TYPE(CFireFlicker)
 //   This defines CFireFlickerType, which constructs a CThinkerType parent
 //   with "CFireFlicker" as its name member and which returns a new CFireFlicker
 //   instance via its newThinker virtual method.
 // 
-#define DECLARE_THINKER_TYPE(name) \
+#define IMPLEMENT_THINKER_TYPE(name) \
 class name ## Type : public CThinkerType \
 { \
 protected: \
@@ -212,16 +212,8 @@ protected: \
 public: \
    name ## Type() : CThinkerType(#name) {} \
    virtual CThinker *newThinker() const { return new #name ; } \
-};
-
-//
-// IMPLEMENT_THINKER_TYPE
-//
-// Use this macro to define the static member declared by
-// DECLARE_THINKER_TYPE.
-//
-#define IMPLEMENT_THINKER_TYPE(name) \
-   name ## Type name ## Type :: global ## name ## Type;
+}; \
+name ## Type name ## Type :: global ## name ## Type;
    
 
 #endif

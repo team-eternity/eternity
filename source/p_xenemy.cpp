@@ -37,6 +37,8 @@
 #include "e_sound.h"
 #include "s_sound.h"
 
+IMPLEMENT_THINKER_TYPE(CQuakeThinker)
+
 //
 // T_QuakeThinker
 //
@@ -98,6 +100,18 @@ void CQuakeThinker::Think()
          }
       }
    }
+}
+
+//
+// CQuakeThinker::serialize
+//
+// Saves/loads a CQuakeThinker.
+//
+void CQuakeThinker::serialize(CSaveArchive &arc)
+{
+   CPointThinker::serialize(arc);
+
+   arc << intensity << duration << quakeRadius << damageRadius;
 }
 
 //

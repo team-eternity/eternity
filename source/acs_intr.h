@@ -89,6 +89,12 @@ protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual void deswizzle();
+   virtual const char *getClassName() const { return "CACSThinker"; }
+
+   // Data Members
    // thread links
    CACSThinker **prevthread;
    CACSThinker  *nextthread;

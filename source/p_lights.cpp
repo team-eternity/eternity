@@ -32,6 +32,7 @@
 #include "m_random.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 
@@ -40,6 +41,8 @@
 // Lighting action routines, called once per tick
 //
 //////////////////////////////////////////////////////////
+
+IMPLEMENT_THINKER_TYPE(CFireFlicker)
 
 //
 // T_FireFlicker()
@@ -67,6 +70,21 @@ void CFireFlicker::Think()
 }
 
 //
+// CFireFlicker::serialize
+//
+// Saves/loads a CFireFlicker thinker.
+//
+void CFireFlicker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << count << maxlight << minlight;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CLightFlash)
+
+//
 // T_LightFlash()
 //
 // Broken light flashing action routine, called once per tick
@@ -92,6 +110,21 @@ void CLightFlash::Think()
 }
 
 //
+// CLightFlash::serialize
+//
+// Saves/loads CLightFlash thinkers.
+//
+void CLightFlash::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << count << maxlight << minlight << maxtime << mintime;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CStrobeThinker)
+
+//
 // T_StrobeFlash()
 //
 // Strobe light flashing action routine, called once per tick
@@ -115,6 +148,21 @@ void CStrobeThinker::Think()
       this->count = this->darktime;
    }
 }
+
+//
+// CStrobeThinker::serialize
+//
+// Saves/loads a CStrobeThinker.
+//
+void CStrobeThinker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << count << minlight << maxlight << darktime << brighttime;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CGlowThinker)
 
 //
 // T_Glow
@@ -149,6 +197,21 @@ void CGlowThinker::Think()
       break;
    }
 }
+
+//
+// CGlowThinker::serialize
+//
+// Saves/loads a CGlowThinker.
+//
+void CGlowThinker::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << minlight << maxlight << direction;
+}
+
+
+IMPLEMENT_THINKER_TYPE(CLightFade)
 
 //
 // T_LightFade
@@ -194,6 +257,18 @@ void CLightFade::Think()
    }
 }
 
+//
+// CLightFade::serialize
+//
+// Saves/loads a CLightFade thinker.
+//
+void CLightFade::serialize(CSaveArchive &arc)
+{
+   CThinker::serialize(arc);
+
+   arc << sector << lightlevel << destlevel << step << glowmin << glowmax
+       << glowspeed << type;
+}
 
 //////////////////////////////////////////////////////////
 //

@@ -238,15 +238,61 @@ CSaveArchive &CSaveArchive::operator << (boolean &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (CThinker *th)
+CSaveArchive &CSaveArchive::operator << (sector_t *&s)
 {
+   int sectornum;
+
    if(savefile)
    {
+      sectornum = s - sectors;
+      savefile->WriteSint32(sectornum);
    }
    else
    {
+      loadfile->ReadSint32(sectornum);
+      if(sectornum < 0 || sectornum >= numsectors)
+      {
+         I_FatalError(I_ERR_KILL, "CSaveArchive: sector num %d out of range\n",
+                      sectornum);
+      }
+      s = &sectors[sectornum];
    }
 
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (line_t *&ln)
+{
+   int linenum = -1;
+
+   if(savefile)
+   {
+      if(ln)
+         linenum = ln - lines;
+      savefile->WriteSint32(linenum);
+   }
+   else
+   {
+      loadfile->ReadSint32(linenum);
+      if(linenum == -1) // Some line pointers can be NULL
+         ln = NULL;
+      else if(linenum < 0 || linenum >= numlines)
+      {
+         I_FatalError(I_ERR_KILL, "CSaveArchive: line num %d out of range\n",
+                      linenum);
+      }
+      else
+         ln = &lines[linenum];
+   }
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (spectransfer_t &st)
+{
+   *this << st.damage << st.damageflags << st.damagemask << st.damagemod
+         << st.flags << st.newspecial;
+   
    return *this;
 }
 
@@ -851,223 +897,6 @@ void P_ArchiveSpecials(COutBuffer &savefile)
    // save off the current thinkers
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == T_MoveCeiling)
-      {
-         CCeiling *ceiling;
-         *save_p++ = tc_ceiling;
-         PADSAVEP();
-         ceiling = (CCeiling *)save_p;
-         memcpy(ceiling, th, sizeof(*ceiling));
-         save_p += sizeof(*ceiling);
-         ceiling->sector = (sector_t *)(ceiling->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_VerticalDoor)
-      {
-         CVerticalDoor *door;
-         *save_p++ = tc_door;
-         PADSAVEP();
-         door = (CVerticalDoor *) save_p;
-         memcpy(door, th, sizeof *door);
-         save_p += sizeof(*door);
-         door->sector = (sector_t *)(door->sector - sectors);
-         //jff 1/31/98 archive line remembered by door as well
-         door->line = (line_t *) (door->line ? door->line-lines : -1);
-         continue;
-      }
-
-      if(th->function == T_MoveFloor)
-      {
-         CFloorMove *floor;
-         *save_p++ = tc_floor;
-         PADSAVEP();
-         floor = (CFloorMove *)save_p;
-         memcpy(floor, th, sizeof(*floor));
-         save_p += sizeof(*floor);
-         floor->sector = (sector_t *)(floor->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_PlatRaise)
-      {
-         CPlat *plat;
-         *save_p++ = tc_plat;
-         PADSAVEP();
-         plat = (CPlat *)save_p;
-         memcpy(plat, th, sizeof(*plat));
-         save_p += sizeof(*plat);
-         plat->sector = (sector_t *)(plat->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_LightFlash)
-      {
-         CLightFlash *flash;
-         *save_p++ = tc_flash;
-         PADSAVEP();
-         flash = (CLightFlash *)save_p;
-         memcpy(flash, th, sizeof(*flash));
-         save_p += sizeof(*flash);
-         flash->sector = (sector_t *)(flash->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_StrobeFlash)
-      {
-         CStrobeThinker *strobe;
-         *save_p++ = tc_strobe;
-         PADSAVEP();
-         strobe = (CStrobeThinker *)save_p;
-         memcpy(strobe, th, sizeof(*strobe));
-         save_p += sizeof(*strobe);
-         strobe->sector = (sector_t *)(strobe->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_Glow)
-      {
-         CGlowThinker *glow;
-         *save_p++ = tc_glow;
-         PADSAVEP();
-         glow = (CGlowThinker *)save_p;
-         memcpy(glow, th, sizeof(*glow));
-         save_p += sizeof(*glow);
-         glow->sector = (sector_t *)(glow->sector - sectors);
-         continue;
-      }
-
-      // killough 10/4/98: save flickers
-      if(th->function == T_FireFlicker)
-      {
-         CFireFlicker *flicker;
-         *save_p++ = tc_flicker;
-         PADSAVEP();
-         flicker = (CFireFlicker *)save_p;
-         memcpy(flicker, th, sizeof(*flicker));
-         save_p += sizeof(*flicker);
-         flicker->sector = (sector_t *)(flicker->sector - sectors);
-         continue;
-      }
-
-      //jff 2/22/98 new case for elevators
-      if(th->function == T_MoveElevator)
-      {
-         CElevator *elevator;         //jff 2/22/98
-         *save_p++ = tc_elevator;
-         PADSAVEP();
-         elevator = (CElevator *)save_p;
-         memcpy(elevator, th, sizeof(*elevator));
-         save_p += sizeof(*elevator);
-         elevator->sector = (sector_t *)(elevator->sector - sectors);
-         continue;
-      }
-
-      // killough 3/7/98: Scroll effect thinkers
-      if(th->function == T_Scroll)
-      {
-         *save_p++ = tc_scroll;
-         memcpy(save_p, th, sizeof(CScroller));
-         save_p += sizeof(CScroller);
-         continue;
-      }
-
-      // phares 3/22/98: Push/Pull effect thinkers
-
-      if(th->function == T_Pusher)
-      {
-         *save_p++ = tc_pusher;
-         memcpy(save_p, th, sizeof(CPusher));
-         save_p += sizeof(CPusher);
-         continue;
-      }
-
-      // haleyjd 03/26/06: PolyObject thinkers
-      if(th->function == T_PolyObjRotate)
-      {
-         *save_p++ = tc_polyrotate;
-         memcpy(save_p, th, sizeof(CPolyRotate));
-         save_p += sizeof(CPolyRotate);
-         continue;
-      }
-
-      if(th->function == T_PolyObjMove)
-      {
-         *save_p++ = tc_polymove;
-         memcpy(save_p, th, sizeof(CPolyMove));
-         save_p += sizeof(CPolyMove);
-         continue;
-      }
-
-      if(th->function == T_PolyDoorSlide)
-      {
-         *save_p++ = tc_polyslidedoor;
-         memcpy(save_p, th, sizeof(CPolySlideDoor));
-         save_p += sizeof(CPolySlideDoor);
-         continue;
-      }
-
-      if(th->function == T_PolyDoorSwing)
-      {
-         *save_p++ = tc_polyswingdoor;
-         memcpy(save_p, th, sizeof(CPolySwingDoor));
-         save_p += sizeof(CPolySwingDoor);
-         continue;
-      }
-
-      if(th->function == T_MovePillar)
-      {
-      	 CPillar *pillar;
-         *save_p++ = tc_pillar;     
-         pillar = (CPillar *)save_p;
-         memcpy(save_p, th, sizeof(CPillar));
-         save_p += sizeof(CPillar);
-         pillar->sector = (sector_t *)(pillar->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_QuakeThinker)
-      {
-         *save_p++ = tc_quake;
-         memcpy(save_p, th, sizeof(CQuakeThinker));
-         save_p += sizeof(CQuakeThinker);
-         continue;
-      }
-
-      if(th->function == T_LightFade)
-      {
-         CLightFade *fade;
-         *save_p++ = tc_lightfade;
-         fade = (CLightFade *)save_p;
-         memcpy(save_p, th, sizeof(CLightFade));
-         save_p += sizeof(CLightFade);
-         fade->sector = (sector_t *)(fade->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_FloorWaggle)
-      {
-         CFloorWaggle *waggle;
-         *save_p++ = tc_floorwaggle;
-         waggle = (CFloorWaggle *)save_p;
-         memcpy(save_p, th, sizeof(CFloorWaggle));
-         save_p += sizeof(CFloorWaggle);
-         waggle->sector = (sector_t *)(waggle->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_ACSThinker)
-      {
-         CACSThinker *acs;
-         *save_p++ = tc_acs;
-         acs = (CACSThinker *)save_p;
-         memcpy(save_p, th, sizeof(CACSThinker));
-         save_p += sizeof(CACSThinker);
-         acs->ip      = (int *)(acs->ip - acs->code);
-         acs->line    = acs->line ? (line_t *)(acs->line - lines + 1) : NULL;
-         acs->trigger = (mobj_t *)P_MobjNum(acs->trigger);
-         continue;
-      }
    }
    
    // add a terminating marker
@@ -1087,272 +916,6 @@ void P_UnArchiveSpecials(void)
    {
       switch(tclass)
       {
-      case tc_ceiling:
-         PADSAVEP();
-         {
-            CCeiling *ceiling = 
-               (CCeiling *)(Z_Malloc(sizeof(*ceiling), PU_LEVEL, NULL));
-            memcpy(ceiling, save_p, sizeof(*ceiling));
-            save_p += sizeof(*ceiling);
-            ceiling->sector = &sectors[(int)ceiling->sector];
-            ceiling->sector->ceilingdata = ceiling; //jff 2/22/98
-            
-            if(ceiling->thinker.function)
-               ceiling->thinker.function = T_MoveCeiling;
-            
-            ceiling->addThinker();
-            P_AddActiveCeiling(ceiling);
-            break;
-         }
-
-      case tc_door:
-         PADSAVEP();
-         {
-            CVerticalDoor *door = (CVerticalDoor *)(Z_Malloc(sizeof(*door), PU_LEVEL, NULL));
-            memcpy(door, save_p, sizeof(*door));
-            save_p += sizeof(*door);
-            door->sector = &sectors[(int)door->sector];
-            
-            //jff 1/31/98 unarchive line remembered by door as well
-            door->line = (int)door->line!=-1? &lines[(int)door->line] : NULL;
-            
-            door->sector->ceilingdata = door;       //jff 2/22/98
-            door->thinker.function = T_VerticalDoor;
-            door->addThinker();
-            break;
-         }
-
-      case tc_floor:
-         PADSAVEP();
-         {
-            CFloorMove *floor = 
-               (CFloorMove *)(Z_Malloc(sizeof(*floor), PU_LEVEL, NULL));
-            memcpy(floor, save_p, sizeof(*floor));
-            save_p += sizeof(*floor);
-            floor->sector = &sectors[(int)floor->sector];
-            floor->sector->floordata = floor; //jff 2/22/98
-            floor->thinker.function = T_MoveFloor;
-            floor->addThinker();
-            break;
-         }
-
-      case tc_plat:
-         PADSAVEP();
-         {
-            CPlat *plat = (CPlat *)(Z_Malloc(sizeof(*plat), PU_LEVEL, NULL));
-            memcpy(plat, save_p, sizeof(*plat));
-            save_p += sizeof(*plat);
-            plat->sector = &sectors[(int)plat->sector];
-            plat->sector->floordata = plat; //jff 2/22/98
-            
-            if(plat->thinker.function)
-               plat->thinker.function = T_PlatRaise;
-            
-            plat->addThinker();
-            P_AddActivePlat(plat);
-            break;
-         }
-
-      case tc_flash:
-         PADSAVEP();
-         {
-            CLightFlash *flash = 
-               (CLightFlash *)(Z_Malloc(sizeof(*flash), PU_LEVEL, NULL));
-            memcpy(flash, save_p, sizeof(*flash));
-            save_p += sizeof(*flash);
-            flash->sector = &sectors[(int)flash->sector];
-            flash->thinker.function = T_LightFlash;
-            flash->addThinker();
-            break;
-         }
-
-      case tc_strobe:
-         PADSAVEP();
-         {
-            CStrobeThinker *strobe = 
-               (CStrobeThinker *)(Z_Malloc(sizeof(*strobe), PU_LEVEL, NULL));
-            memcpy(strobe, save_p, sizeof(*strobe));
-            save_p += sizeof(*strobe);
-            strobe->sector = &sectors[(int)strobe->sector];
-            strobe->thinker.function = T_StrobeFlash;
-            strobe->addThinker();
-            break;
-         }
-
-      case tc_glow:
-         PADSAVEP();
-         {
-            CGlowThinker *glow = (CGlowThinker *)(Z_Malloc(sizeof(*glow), PU_LEVEL, NULL));
-            memcpy(glow, save_p, sizeof(*glow));
-            save_p += sizeof(*glow);
-            glow->sector = &sectors[(int)glow->sector];
-            glow->thinker.function = T_Glow;
-            glow->addThinker();
-            break;
-         }
-
-      case tc_flicker:           // killough 10/4/98
-         PADSAVEP();
-         {
-            CFireFlicker *flicker = 
-               (CFireFlicker *)(Z_Malloc(sizeof(*flicker), PU_LEVEL, NULL));
-            memcpy(flicker, save_p, sizeof(*flicker));
-            save_p += sizeof(*flicker);
-            flicker->sector = &sectors[(int)flicker->sector];
-            flicker->thinker.function = T_FireFlicker;
-            flicker->addThinker();
-            break;
-         }
-
-         //jff 2/22/98 new case for elevators
-      case tc_elevator:
-         PADSAVEP();
-         {
-            CElevator *elevator = 
-               (CElevator *)(Z_Malloc(sizeof(*elevator), PU_LEVEL, NULL));
-            memcpy(elevator, save_p, sizeof(*elevator));
-            save_p += sizeof(*elevator);
-            elevator->sector = &sectors[(int)elevator->sector];
-            elevator->sector->floordata = elevator; //jff 2/22/98
-            elevator->sector->ceilingdata = elevator; //jff 2/22/98
-            elevator->thinker.function = T_MoveElevator;
-            elevator->addThinker();
-            break;
-         }
-
-      case tc_scroll:       // killough 3/7/98: scroll effect thinkers
-         {
-            CScroller *scroll = 
-               (CScroller *)(Z_Malloc(sizeof(CScroller), PU_LEVEL, NULL));
-            memcpy(scroll, save_p, sizeof(CScroller));
-            save_p += sizeof(CScroller);
-            scroll->thinker.function = T_Scroll;
-            scroll->addThinker();
-            break;
-         }
-
-      case tc_pusher:   // phares 3/22/98: new Push/Pull effect thinkers
-         {
-            CPusher *pusher = 
-               (CPusher *)(Z_Malloc(sizeof(CPusher), PU_LEVEL, NULL));
-            memcpy(pusher, save_p, sizeof(CPusher));
-            save_p += sizeof(CPusher);
-            pusher->thinker.function = T_Pusher;
-            pusher->source = P_GetPushThing(pusher->affectee);
-            pusher->addThinker();
-            break;
-         }
-
-         // haleyjd 03/26/06: PolyObjects
-
-      case tc_polyrotate: 
-         {
-            CPolyRotate *polyrot =
-               (CPolyRotate *)(Z_Malloc(sizeof(CPolyRotate), PU_LEVEL, NULL));
-            memcpy(polyrot, save_p, sizeof(CPolyRotate));
-            save_p += sizeof(CPolyRotate);
-            polyrot->thinker.function = T_PolyObjRotate;
-            polyrot->addThinker();
-            break;
-         }
-
-      case tc_polymove:
-         {
-            CPolyMove *polymove =
-               (CPolyMove *)(Z_Malloc(sizeof(CPolyMove), PU_LEVEL, NULL));
-            memcpy(polymove, save_p, sizeof(CPolyMove));
-            save_p += sizeof(CPolyMove);
-            polymove->thinker.function = T_PolyObjMove;
-            polymove->addThinker();
-            break;
-         }
-
-      case tc_polyslidedoor:
-         {
-            CPolySlideDoor *psldoor =
-               (CPolySlideDoor *)(Z_Malloc(sizeof(CPolySlideDoor), PU_LEVEL, NULL));
-            memcpy(psldoor, save_p, sizeof(CPolySlideDoor));
-            save_p += sizeof(CPolySlideDoor);
-            psldoor->thinker.function = T_PolyDoorSlide;
-            psldoor->addThinker();
-            break;
-         }
-
-      case tc_polyswingdoor:
-         {
-            CPolySwingDoor *pswdoor =
-               (CPolySwingDoor *)(Z_Malloc(sizeof(CPolySwingDoor), PU_LEVEL, NULL));
-            memcpy(pswdoor, save_p, sizeof(CPolySwingDoor));
-            save_p += sizeof(CPolySwingDoor);
-            pswdoor->thinker.function = T_PolyDoorSwing;
-            pswdoor->addThinker();
-            break;
-         }
-      
-      case tc_pillar:
-         {
-            CPillar *pillar = (CPillar *)(Z_Malloc(sizeof(CPillar), PU_LEVEL, NULL));
-            memcpy(pillar, save_p, sizeof(CPillar));
-            save_p += sizeof(CPillar);
-            pillar->sector = &sectors[(int)pillar->sector];
-            pillar->sector->floordata = pillar; 
-            pillar->sector->ceilingdata = pillar;
-            pillar->thinker.function = T_MovePillar;
-            pillar->addThinker();
-            break;
-         }
-
-      case tc_quake:
-         {
-            CQuakeThinker *quake = 
-               (CQuakeThinker *)(Z_Malloc(sizeof(CQuakeThinker), PU_LEVEL, NULL));
-            memcpy(quake, save_p, sizeof(CQuakeThinker));
-            save_p += sizeof(CQuakeThinker);
-            quake->origin.thinker.function = T_QuakeThinker;
-            quake->addThinker();
-            break;
-         }
-
-      case tc_lightfade:
-         {
-            CLightFade *fade = 
-               (CLightFade *)(Z_Malloc(sizeof(CLightFade), PU_LEVEL, NULL));
-            memcpy(fade, save_p, sizeof(CLightFade));
-            save_p += sizeof(CLightFade);
-            fade->thinker.function = T_LightFade;
-            fade->sector = &sectors[(int)fade->sector];
-            fade->addThinker();
-            break;
-         }
-      
-      case tc_floorwaggle:
-         {
-            CFloorWaggle *waggle = 
-               (CFloorWaggle *)(Z_Malloc(sizeof(CFloorWaggle), PU_LEVEL, NULL));
-            memcpy(waggle, save_p, sizeof(CFloorWaggle));
-            save_p += sizeof(CFloorWaggle);
-            waggle->thinker.function = T_FloorWaggle;
-            waggle->sector = &sectors[(int)waggle->sector];
-            waggle->addThinker();
-            break;
-         }
-
-      case tc_acs:
-         {
-            mobj_t *mo;
-            CACSThinker *acs = 
-               (CACSThinker *)(Z_Malloc(sizeof(CACSThinker), PU_LEVEL, NULL));
-            memcpy(acs, save_p, sizeof(CACSThinker));
-            save_p += sizeof(CACSThinker);
-            acs->thinker.function = T_ACSThinker;
-            acs->line = acs->line ? &lines[(size_t)acs->line - 1] : NULL;
-            mo = P_MobjForNum((int)acs->trigger);
-            P_SetNewTarget(&acs->trigger, mo);
-            acs->addThinker();
-            ACS_RestartSavedScript(acs);
-            break;
-         }
-
       default:
          // haleyjd: savegame read errors can cause heap corruption, so trigger
          // a fatal error exit.

@@ -154,6 +154,11 @@ typedef struct backpack_s
 class CPointThinker : public CThinker
 {
 public:
+   // Methods
+   virtual void serialize(CSaveArchive &arc);
+   virtual const char *getClassName() const { return "CPointThinker"; }
+
+   // Data Members
    fixed_t x, y, z;
    // SoM: yes Quasar, this is entirely necessary
    int     groupid; // The group the sound originated in
