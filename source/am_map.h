@@ -67,8 +67,8 @@ void AM_Start(void);
 
 void AM_clearMarks(void);
 
-class mobj_t;
-void AM_Coordinates(const mobj_t *, fixed_t *, fixed_t *, fixed_t *);
+class Mobj;
+void AM_Coordinates(const Mobj *, fixed_t *, fixed_t *, fixed_t *);
 
 typedef struct mpoint_s
 {

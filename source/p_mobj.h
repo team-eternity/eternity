@@ -77,9 +77,9 @@
 struct subsector_t;
 
 //
-// NOTES: mobj_t
+// NOTES: Mobj
 //
-// mobj_ts are used to tell the refresh where to draw an image,
+// Mobjs are used to tell the refresh where to draw an image,
 // tell the world simulation when objects are contacted,
 // and tell the sound driver how to position a sound.
 //
@@ -100,23 +100,23 @@ struct subsector_t;
 // it is standing on.
 //
 // The sound code uses the x,y, and subsector fields
-// to do stereo positioning of any sound effited by the mobj_t.
+// to do stereo positioning of any sound effited by the Mobj.
 //
 // The play simulation uses the blocklinks, x,y,z, radius, height
-// to determine when mobj_ts are touching each other,
+// to determine when Mobjs are touching each other,
 // touching lines in the map, or hit by trace lines (gunshots,
 // lines of sight, etc).
-// The mobj_t->flags element has various bit flags
+// The Mobj->flags element has various bit flags
 // used by the simulation.
 //
-// Every mobj_t is linked into a single sector
+// Every Mobj is linked into a single sector
 // based on its origin coordinates.
 // The subsector_t is found with R_PointInSubsector(x,y),
 // and the sector_t can be found with subsector->sector.
 // The sector links are only used by the rendering code,
 // the play simulation does not care about them at all.
 //
-// Any mobj_t that needs to be acted upon by something else
+// Any Mobj that needs to be acted upon by something else
 // in the play world (block movement, be shot, etc) will also
 // need to be linked into the blockmap.
 // If the thing has the MF_NOBLOCK flag set, it will not use
@@ -125,9 +125,9 @@ struct subsector_t;
 // things, but nothing can run into a missile).
 // Each block in the grid is 128*128 units, and knows about
 // every line_t that it contains a piece of, and every
-// interactable mobj_t that has its origin contained.  
+// interactable Mobj that has its origin contained.  
 //
-// A valid mobj_t is a mobj_t that has the proper subsector_t
+// A valid Mobj is a Mobj that has the proper subsector_t
 // filled in for its xy coordinates and is linked into the
 // sector from which the subsector was made, or has the
 // MF_NOSECTOR flag set (the subsector_t needs to be valid
@@ -148,15 +148,15 @@ typedef struct backpack_s
    char    weapon;
 } backpack_t;
 
-// Each sector has a degenmobj_t in its center for sound origin purposes.
-// haleyjd 11/22/10: degenmobj, which has become CPointThinker, is now the base
+// Each sector has a degenMobj in its center for sound origin purposes.
+// haleyjd 11/22/10: degenmobj, which has become PointThinker, is now the base
 // class for all thinkers that want to be located somewhere in the game world.
-class CPointThinker : public CThinker
+class PointThinker : public Thinker
 {
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CPointThinker"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PointThinker"; }
 
    // Data Members
    fixed_t x, y, z;
@@ -164,38 +164,54 @@ public:
    int     groupid; // The group the sound originated in
 };
 
+//
 // Map Object definition.
 //
 // killough 2/20/98:
 //
-// WARNING: Special steps must be taken in p_saveg.c if C pointers are added to
-// this mobj_s struct, or else savegames will crash when loaded. See p_saveg.c.
-// Do not add "struct mobj_s *fooptr" without adding code to p_saveg.c to
+// WARNING: Special steps must be taken here if C pointers are added to this 
+// Mobj class, or else savegames will crash when loaded.
+//
+// Do not add "Mobj *fooptr" without adding code to serialize and deswizzle to
 // convert the pointers to ordinals and back for savegames. This was the whole
-// reason behind monsters going to sleep when loading savegames (the "target"
+// reason behind monsters going to sleep when loading savegames (the "target" 
 // pointer was simply nullified after loading, to prevent Doom from crashing),
 // and the whole reason behind loadgames crashing on savegames of AV attacks.
-// 
 //
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
 //
-class mobj_t : public CPointThinker
+class Mobj : public PointThinker
 {
 protected:
+   // Data Members
+   struct deswizzle_info
+   {
+      // Add a corresponding field here, with code to handle it in the
+      // serialization routines, any time you add an Mobj * to this class.
+      unsigned int target;
+      unsigned int tracer;
+      unsigned int lastenemy;
+   };
+   deswizzle_info *dsInfo; // valid only during deserialization
+
+   // Methods
    void Think();
 
 public:   
    // Virtual methods (overridables)
-   // Inherited from CThinker:
+   // Inherited from Thinker:
    virtual void updateThinker();
    virtual void removeThinker();
+   virtual void serialize(SaveArchive &arc);
+   virtual void deswizzle();
+   virtual const char *getClassName() const { return "Mobj"; }
 
    // Data members
 
    // More list: links in sector (if needed)
-   mobj_t             *snext;
-   mobj_t            **sprev; // killough 8/10/98: change to ptr-to-ptr
+   Mobj             *snext;
+   Mobj            **sprev; // killough 8/10/98: change to ptr-to-ptr
 
    //More drawing info: to determine current sprite.
    angle_t             angle;  // orientation
@@ -204,8 +220,8 @@ public:
 
    // Interaction info, by BLOCKMAP.
    // Links in blocks (if needed).
-   mobj_t             *bnext;
-   mobj_t            **bprev; // killough 8/11/98: change to ptr-to-ptr
+   Mobj             *bnext;
+   Mobj            **bprev; // killough 8/11/98: change to ptr-to-ptr
 
    subsector_t        *subsector;
 
@@ -255,7 +271,7 @@ public:
 
    // Thing being chased/attacked (or NULL),
    // also the originator for missiles.
-   mobj_t             *target;
+   Mobj             *target;
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
@@ -282,10 +298,10 @@ public:
    mapthing_t          spawnpoint;     
 
    // Thing being chased/attacked for tracers.
-   mobj_t             *tracer; 
+   Mobj             *tracer; 
 
    // new field: last known enemy -- killough 2/15/98
-   mobj_t             *lastenemy;
+   Mobj             *lastenemy;
 
    // killough 8/2/98: friction properties part of sectors,
    // not objects -- removed friction properties from here
@@ -331,8 +347,8 @@ public:
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are
    // spawned.
-   mobj_t  *tid_next;  // ptr to next thing in tid chain
-   mobj_t **tid_prevn; // ptr to last thing's next pointer
+   Mobj  *tid_next;  // ptr to next thing in tid chain
+   Mobj **tid_prevn; // ptr to last thing's next pointer
 
 #ifdef R_LINKEDPORTALS
    // SoM: When a mobj partially passes through a floor/ceiling portal, it 
@@ -342,13 +358,13 @@ public:
    // that to occupy space for the mobj / send feedback to the main mobj as to
    // where its position will be on the other side. This will require a lot of
    // special clipping code...
-   mobj_t *portaldummy;
+   Mobj *portaldummy;
 
    // This should only be set if the mobj is a portaldummy. This is the link 
    // back to the object that this is a dummy for. This link will be used for
    // such things as the dummy taking damage (intersecting bullets and rockets, 
    // anyone?)
-   mobj_t *dummyto;
+   Mobj *dummyto;
 #endif
 };
 
@@ -362,35 +378,35 @@ extern int iquehead;
 extern int iquetail;
 
 void    P_RespawnSpecials(void);
-mobj_t  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-boolean P_SetMobjState(mobj_t *mobj, statenum_t state);
-void    P_MobjThinker(mobj_t *mobj);
+Mobj  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+boolean P_SetMobjState(Mobj *mobj, statenum_t state);
+void    P_MobjThinker(Mobj *mobj);
 void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
-void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, mobj_t *target);
-mobj_t  *P_SpawnMissile(mobj_t *source, mobj_t *dest, mobjtype_t type, fixed_t z);
-mobj_t  *P_SpawnPlayerMissile(mobj_t *source, mobjtype_t type);
-mobj_t  *P_SpawnMapThing(mapthing_t *);
-void    P_CheckMissileSpawn(mobj_t *);  // killough 8/2/98
-void    P_ExplodeMissile(mobj_t *);     // killough
+void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
+Mobj  *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
+Mobj  *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj  *P_SpawnMapThing(mapthing_t *);
+void    P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
+void    P_ExplodeMissile(Mobj *);     // killough
 
 // particles and lines: sf
 /*
 void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z);
-void P_ParticleLine(mobj_t *source, mobj_t *dest);
+void P_ParticleLine(Mobj *source, Mobj *dest);
 */
 
 // new Eternity mobj function prototypes  haleyjd
 void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
-boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state); // sets state without calling action function
-mobj_t  *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
-void    P_ThrustMobj(mobj_t *mo, angle_t angle, fixed_t move);
+boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
+Mobj  *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
+void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
 
 void P_InitTIDHash(void);
-void P_AddThingTID(mobj_t *mo, int tid);
-void P_RemoveThingTID(mobj_t *mo);
+void P_AddThingTID(Mobj *mo, int tid);
+void P_RemoveThingTID(Mobj *mo);
 
-void P_AdjustFloorClip(mobj_t *thing);
+void P_AdjustFloorClip(Mobj *thing);
 
 int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
@@ -403,9 +419,9 @@ extern int FloatBobOffsets[];
 struct MobjCollection
 {
    int type;          // internal mobj type #
-   int num;           // number of mobj_t's in collection
-   int numalloc;      // number of mobj_t* allocated
-   mobj_t **ptrarray; // reallocating pointer array
+   int num;           // number of Mobj's in collection
+   int numalloc;      // number of Mobj* allocated
+   Mobj **ptrarray; // reallocating pointer array
 
    int wrapiterator;  // persistent index for wrap iteration
 }; 
@@ -415,10 +431,10 @@ void P_ReInitMobjCollection(MobjCollection *, int);
 void P_ClearMobjCollection(MobjCollection *);
 void P_CollectThings(MobjCollection *);
 boolean P_CollectionIsEmpty(MobjCollection *);
-mobj_t *P_CollectionWrapIterator(MobjCollection *);
-mobj_t *P_CollectionGetAt(MobjCollection *mc, unsigned int at);
-mobj_t *P_CollectionGetRandom(MobjCollection *, pr_class_t);
-void P_AddToCollection(MobjCollection *mc, mobj_t *mo);
+Mobj *P_CollectionWrapIterator(MobjCollection *);
+Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at);
+Mobj *P_CollectionGetRandom(MobjCollection *, pr_class_t);
+void P_AddToCollection(MobjCollection *mc, Mobj *mo);
 void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *));
 
 // end new Eternity mobj functions
@@ -426,7 +442,7 @@ void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
 #ifdef R_LINKEDPORTALS
 #include "linkoffs.h"
 
-d_inline static fixed_t getTargetX(mobj_t *mo)
+d_inline static fixed_t getTargetX(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -440,7 +456,7 @@ d_inline static fixed_t getTargetX(mobj_t *mo)
    return mo->target->x + link->x;
 }
 
-d_inline static fixed_t getTargetY(mobj_t *mo)
+d_inline static fixed_t getTargetY(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -456,7 +472,7 @@ d_inline static fixed_t getTargetY(mobj_t *mo)
 
 // SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
 // x and y offset... Maybe I should phase out the z offset stuff?
-d_inline static fixed_t getTargetZ(mobj_t *mo)
+d_inline static fixed_t getTargetZ(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -471,9 +487,9 @@ d_inline static fixed_t getTargetZ(mobj_t *mo)
 }
 
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
-// mobj_t pointer we want to use, and not mo->target.
+// Mobj pointer we want to use, and not mo->target.
 
-d_inline static fixed_t getThingX(mobj_t *mo1, mobj_t *mo2)
+d_inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 
@@ -487,7 +503,7 @@ d_inline static fixed_t getThingX(mobj_t *mo1, mobj_t *mo2)
    return mo2->x + link->x;
 }
 
-d_inline static fixed_t getThingY(mobj_t *mo1, mobj_t *mo2)
+d_inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 

@@ -97,7 +97,7 @@ enum
 //
 struct LevelInfoProto_t
 {
-   CDLListItem<LevelInfoProto_t> links;        // links for hashing
+   DLListItem<LevelInfoProto_t> links;        // links for hashing
    ENCStringHashKey mapname;                   // name of map to which this belongs
    char        mapnamestr[9];                  // storage for name
    int         type;                           // type id via above enumeration   

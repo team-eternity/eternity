@@ -57,7 +57,7 @@ int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
    int         rtn = 0;
    boolean     manual = false;
    sector_t    *sec;
-   CFloorMove *floor;
+   FloorMoveThinker *floor;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/07/04: only line actions can be manual
@@ -87,7 +87,7 @@ manual_floor:
 
       // new floor thinker
       rtn = 1;
-      floor = new CFloorMove;
+      floor = new FloorMoveThinker;
       floor->addThinker();
       sec->floordata = floor;
       
@@ -301,7 +301,7 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
    boolean   manual = false;
    fixed_t   targheight;
    sector_t  *sec;
-   CCeiling *ceiling;
+   CeilingThinker *ceiling;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(cd->trigger_type == PushOnce || cd->trigger_type == PushMany)
@@ -330,7 +330,7 @@ manual_ceiling:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = new CCeiling;
+      ceiling = new CeilingThinker;
       ceiling->addThinker();
       sec->ceilingdata = ceiling; //jff 2/22/98
 
@@ -547,7 +547,7 @@ int EV_DoGenCeiling(line_t *line)
 //
 int EV_DoGenLift(line_t *line)
 {
-   CPlat   *plat;
+   PlatThinker   *plat;
    int      secnum;
    int      rtn;
    boolean  manual;
@@ -597,7 +597,7 @@ manual_lift:
       
       // Setup the plat thinker
       rtn = 1;
-      plat = new CPlat;
+      plat = new PlatThinker;
       plat->addThinker();
       
       plat->sector = sec;
@@ -706,7 +706,7 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    sector_t *sec;
    sector_t *tsec;
    
-   CFloorMove *floor;
+   FloorMoveThinker *floor;
    
    fixed_t  stairsize;
    fixed_t  speed;  
@@ -741,7 +741,7 @@ manual_stair:
       
       // new floor thinker
       rtn = 1;
-      floor = new CFloorMove;
+      floor = new FloorMoveThinker;
       floor->addThinker();
       sec->floordata = floor;
 
@@ -864,7 +864,7 @@ manual_stair:
             
             sec = tsec;
             secnum = newsecnum;
-            floor = new CFloorMove;
+            floor = new FloorMoveThinker;
             
             floor->addThinker();
             
@@ -959,7 +959,7 @@ int EV_DoGenCrusher(line_t *line)
    int       rtn;
    boolean   manual;
    sector_t  *sec;
-   CCeiling *ceiling;
+   CeilingThinker *ceiling;
    unsigned  value = (unsigned int)line->special - GenCrusherBase;
    
    // parse the bit fields in the line's special type
@@ -1001,7 +1001,7 @@ manual_crusher:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = new CCeiling;
+      ceiling = new CeilingThinker;
       ceiling->addThinker();
       sec->ceilingdata = ceiling; //jff 2/22/98
       ceiling->crush = 10;
@@ -1047,7 +1047,7 @@ manual_crusher:
 
 // haleyjd 02/23/04: yuck, a global -- this is necessary because
 // I can't change the prototype of EV_DoGenDoor
-mobj_t *genDoorThing;
+Mobj *genDoorThing;
 
 //
 // GenDoorRetrigger
@@ -1062,11 +1062,11 @@ mobj_t *genDoorThing;
 // ** genDoorThing must be set before the calling routine is
 //    executed! If it is NULL, no retrigger can occur.
 //
-static int GenDoorRetrigger(CThinker *th, int trig)
+static int GenDoorRetrigger(Thinker *th, int trig)
 {
-   CVerticalDoor *door;
+   VerticalDoorThinker *door;
 
-   if(!(door = thinker_cast<CVerticalDoor *>(th)))
+   if(!(door = thinker_cast<VerticalDoorThinker *>(th)))
       return 0;
 
    if(genDoorThing && (door->type == genRaise || door->type == genBlazeRaise) &&
@@ -1111,7 +1111,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
 {
    int secnum, rtn = 0;
    sector_t *sec;
-   CVerticalDoor *door;
+   VerticalDoorThinker *door;
    boolean manual = false;
    boolean turbo;
 
@@ -1151,7 +1151,7 @@ manual_door:
 
       // new door thinker
       rtn = 1;
-      door = new CVerticalDoor;
+      door = new VerticalDoorThinker;
       door->addThinker();
       sec->ceilingdata = door; //jff 2/22/98
       
@@ -1421,7 +1421,7 @@ static int param_door_kinds[6] =
 //
 // Parses arguments for parameterized Door specials.
 //
-static boolean pspec_Door(line_t *line, mobj_t *thing, int *args, 
+static boolean pspec_Door(line_t *line, Mobj *thing, int *args, 
                           int16_t special, int trigger_type)
 {
    int kind;
@@ -1950,7 +1950,7 @@ static boolean pspec_Pillar(line_t *line, int *args, int16_t special)
 // haleyjd 01/07/07: Runs an ACS script.
 //
 static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
-                                int side, mobj_t *thing)
+                                int side, Mobj *thing)
 {
    int snum, mnum;
    int script_args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -1977,7 +1977,7 @@ static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
 // side:    Side of line activated. May be ignored.
 // reuse:   if action is repeatable
 //
-boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special, 
+boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
                             int *args, int side, int spac, boolean reuse)
 {
    boolean success = false;
@@ -2120,7 +2120,7 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special,
 // spac:  Type of activation. This is de-wed from the special with
 //        parameterized lines using the ExtraData extflags line field.
 //
-boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
+boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac)
 {
    boolean success = false, reuse = false;
    int flags = 0;
@@ -2386,7 +2386,7 @@ static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
    int i, numparams = params[0] / sizeof(cell);
    SmallContext_t *ctx;
    line_t *line  = NULL;
-   mobj_t *thing = NULL;
+   Mobj *thing = NULL;
 
    if(gamestate != GS_LEVEL)
    {

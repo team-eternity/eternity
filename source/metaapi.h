@@ -57,8 +57,8 @@ class metaTablePimpl;
 class MetaObject
 {
 protected:
-   CDLListItem<MetaObject> links;     // links by key
-   CDLListItem<MetaObject> typelinks; // links by type
+   DLListItem<MetaObject> links;     // links by key
+   DLListItem<MetaObject> typelinks; // links by type
    EStringHashKey          type;      // type hash key
    ENCStringHashKey        key;       // primary hash key
    

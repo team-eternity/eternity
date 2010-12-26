@@ -45,7 +45,7 @@
 // Line Attacks
 //
 
-static mobj_t *shootthing;
+static Mobj *shootthing;
 
 static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 
@@ -63,7 +63,7 @@ static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 //
 static boolean P_AimAtThing(intercept_t *in)
 {
-   mobj_t *th = in->d.thing;
+   Mobj *th = in->d.thing;
    fixed_t thingtopslope, thingbottomslope, dist;
    
    if(th == shootthing)
@@ -297,7 +297,7 @@ static boolean P_ShootSky(line_t *li, fixed_t z)
 static boolean P_ShootThing(intercept_t *in)
 {
    fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
-   mobj_t *th = in->d.thing;
+   Mobj *th = in->d.thing;
    
    if(th == shootthing)
       return true;  // can't shoot self
@@ -541,7 +541,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 // killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
 // makes autoaiming skip past friends.
 //
-fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 {
    fixed_t x2, y2;
    fixed_t lookslope = 0;
@@ -598,7 +598,7 @@ fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance, int mask)
 //
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
-void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
+void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage)
 {
    fixed_t x2, y2;
@@ -623,7 +623,7 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
 // USE LINES
 //
 
-static mobj_t *usething;
+static Mobj *usething;
 
 // killough 11/98: reformatted
 // haleyjd  09/02: reformatted again.
@@ -789,7 +789,7 @@ boolean PIT_AddLineIntercepts(line_t *ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean PIT_AddThingIntercepts(mobj_t *thing)
+boolean PIT_AddThingIntercepts(Mobj *thing)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;

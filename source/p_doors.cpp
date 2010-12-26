@@ -90,7 +90,7 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 //
 ///////////////////////////////////////////////////////////////
 
-IMPLEMENT_THINKER_TYPE(CVerticalDoor)
+IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 
 //
 // T_VerticalDoor
@@ -102,7 +102,7 @@ IMPLEMENT_THINKER_TYPE(CVerticalDoor)
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 
-void CVerticalDoor::Think()
+void VerticalDoorThinker::Think()
 {
    result_e  res;
    
@@ -320,13 +320,13 @@ void CVerticalDoor::Think()
 }
 
 //
-// CVerticalDoor::serialize
+// VerticalDoorThinker::serialize
 //
-// Saves/loads CVerticalDoor thinkers.
+// Saves/loads VerticalDoorThinker thinkers.
 //
-void CVerticalDoor::serialize(CSaveArchive &arc)
+void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << type << sector << topheight << speed << direction << topwait
        << topcountdown << line << lighttag;
@@ -351,7 +351,7 @@ void CVerticalDoor::serialize(CSaveArchive &arc)
 // and the thing that activated the line
 // Returns true if a thinker created
 //
-int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
+int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
 {
    player_t *p = thing->player;
    
@@ -412,7 +412,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
-   CVerticalDoor *door;
+   VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
    while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
@@ -424,7 +424,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 
       // new door thinker
       rtn = 1;
-      door = new CVerticalDoor;
+      door = new VerticalDoorThinker;
       door->addThinker();
       sec->ceilingdata = door; //jff 2/22/98
 
@@ -495,11 +495,11 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 // jff 2/12/98 added int return value, fixed all returns
 //
-int EV_VerticalDoor(line_t *line, mobj_t *thing)
+int EV_VerticalDoor(line_t *line, Mobj *thing)
 {
    player_t* player;
    sector_t* sec;
-   CVerticalDoor* door;
+   VerticalDoorThinker* door;
    
    //  Check for locks
    player = thing->player;
@@ -571,7 +571,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
-   if((door = thinker_cast<CVerticalDoor *>(sec->ceilingdata))) // is a door
+   if((door = thinker_cast<VerticalDoorThinker *>(sec->ceilingdata))) // is a door
    {
       switch(line->special)
       {
@@ -601,12 +601,12 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    if(sec->ceilingdata ||
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
-      door = (CVerticalDoor *)(sec->ceilingdata); //jff 2/22/98
+      door = (VerticalDoorThinker *)(sec->ceilingdata); //jff 2/22/98
       
       if(demo_compatibility) // haleyjd
       {
-         if(!door) door = (CVerticalDoor *)(sec->floordata);
-         if(!door) door = (CVerticalDoor *)(sec->lightingdata);
+         if(!door) door = (VerticalDoorThinker *)(sec->floordata);
+         if(!door) door = (VerticalDoorThinker *)(sec->lightingdata);
       }
 
       switch(line->special)
@@ -654,7 +654,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    }
 
    // new door thinker
-   door = new CVerticalDoor;
+   door = new VerticalDoorThinker;
    door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
    door->sector = sec;
@@ -723,7 +723,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
 
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
-   CVerticalDoor *door = new CVerticalDoor;
+   VerticalDoorThinker *door = new VerticalDoorThinker;
    
    door->addThinker();
    
@@ -750,9 +750,9 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   CVerticalDoor* door;
+   VerticalDoorThinker* door;
    
-   door = new CVerticalDoor;
+   door = new VerticalDoorThinker;
    
    door->addThinker();
    

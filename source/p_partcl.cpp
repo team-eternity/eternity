@@ -261,13 +261,13 @@ static vec3_t bytedirs[NUMVERTEXNORMALS] =
 //
 
 static particle_t *JitterParticle(int ttl);
-static void P_RunEffect(mobj_t *actor, int effects);
-static void P_FlyEffect(mobj_t *actor);
-static void P_BFGEffect(mobj_t *actor);
-static void P_DripEffect(mobj_t *actor);
+static void P_RunEffect(Mobj *actor, int effects);
+static void P_FlyEffect(Mobj *actor);
+static void P_BFGEffect(Mobj *actor);
+static void P_DripEffect(Mobj *actor);
 static void P_ExplosionParticles(fixed_t, fixed_t, fixed_t, byte, byte);
-static void P_RocketExplosion(mobj_t *actor);
-static void P_BFGExplosion(mobj_t *actor);
+static void P_RocketExplosion(Mobj *actor);
+static void P_BFGExplosion(Mobj *actor);
 
 //
 // P_GenVelocities
@@ -439,7 +439,7 @@ void P_ParticleThinker(void)
 void P_RunEffects(void)
 {
    int snum = 0;
-   CThinker *th = &thinkercap;
+   Thinker *th = &thinkercap;
 
    if(camera)
    {
@@ -454,8 +454,8 @@ void P_RunEffects(void)
 
    while((th = th->next) != &thinkercap)
    {
-      mobj_t *mobj;
-      if((mobj = thinker_cast<mobj_t *>(th)))
+      Mobj *mobj;
+      if((mobj = thinker_cast<Mobj *>(th)))
       {
          int rnum = snum + (mobj->subsector->sector - sectors);
          if(mobj->effects)
@@ -501,7 +501,7 @@ static particle_t *JitterParticle(int ttl)
    return particle;
 }
 
-static void MakeFountain(mobj_t *actor, byte color1, byte color2)
+static void MakeFountain(Mobj *actor, byte color1, byte color2)
 {
    particle_t *particle;
    
@@ -541,7 +541,7 @@ static void MakeFountain(mobj_t *actor, byte color1, byte color2)
    }
 }
 
-static void P_RunEffect(mobj_t *actor, int effects)
+static void P_RunEffect(Mobj *actor, int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
    particle_t *particle;
@@ -865,7 +865,7 @@ static struct bloodColor
    { &orange, &yorange },
 };
 
-void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
                   angle_t angle)
 {
    byte color1, color2;
@@ -1098,7 +1098,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
 }
 */
 
-void P_DisconnectEffect(mobj_t *actor)
+void P_DisconnectEffect(Mobj *actor)
 {
    int i;
    
@@ -1130,7 +1130,7 @@ void P_DisconnectEffect(mobj_t *actor)
 //
 // Derived from Quake 2. Available under the GNU General Public License.
 //
-static void P_FlyEffect(mobj_t *actor)
+static void P_FlyEffect(Mobj *actor)
 {
    int i, count;
    particle_t *p;
@@ -1192,7 +1192,7 @@ static void P_FlyEffect(mobj_t *actor)
 //
 // Derived from Quake 2. Available under the GNU General Public License.
 //
-static void P_BFGEffect(mobj_t *actor)
+static void P_BFGEffect(Mobj *actor)
 {
    int i;
    particle_t *p;
@@ -1249,7 +1249,7 @@ static void P_BFGEffect(mobj_t *actor)
 // args[3] = make splash?
 // args[4] = fullbright?
 //
-static void P_DripEffect(mobj_t *actor)
+static void P_DripEffect(Mobj *actor)
 {
    boolean makesplash = !!actor->args[3];
    boolean fullbright = !!actor->args[4];
@@ -1308,7 +1308,7 @@ particle_event_t particleEvents[P_EVENT_NUMEVENTS] =
 // Called from P_SetMobjState, immediately after the action function
 // for the actor's current state has been executed.
 //
-void P_RunEvent(mobj_t *actor)
+void P_RunEvent(Mobj *actor)
 {
    int effectNum;
 
@@ -1386,12 +1386,12 @@ static void P_ExplosionParticles(fixed_t x, fixed_t y, fixed_t z,
    }
 }
 
-static void P_RocketExplosion(mobj_t *actor)
+static void P_RocketExplosion(Mobj *actor)
 {
    P_ExplosionParticles(actor->x, actor->y, actor->z, orange, yorange);
 }
 
-static void P_BFGExplosion(mobj_t *actor)
+static void P_BFGExplosion(Mobj *actor)
 {
    P_ExplosionParticles(actor->x, actor->y, actor->z, green, green);
 }
@@ -1457,7 +1457,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
 {
    int tid;
    byte col1, col2;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)

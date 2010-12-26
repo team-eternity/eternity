@@ -356,7 +356,7 @@ static void SM_AMXError(int err)
    C_Printf(FC_ERROR "Script error: %s\a\n", errmsg);
 }
 
-extern AMX_NATIVE_INFO    core_Natives[];
+//extern AMX_NATIVE_INFO    core_Natives[];
 extern AMX_NATIVE_INFO cons_io_Natives[];
 extern AMX_NATIVE_INFO   local_Natives[]; // actually in this module
 extern AMX_NATIVE_INFO    ccmd_Natives[];
@@ -374,6 +374,8 @@ extern AMX_NATIVE_INFO  genlin_Natives[];
 extern AMX_NATIVE_INFO   pspec_Natives[];
 extern AMX_NATIVE_INFO hustuff_Natives[];
 extern AMX_NATIVE_INFO    ptcl_Natives[];
+
+extern int AMXEXPORT amx_CoreInit(AMX *amx);
 
 //
 // SM_RegisterNatives
@@ -405,7 +407,7 @@ static int SM_RegisterNatives(AMX *amx)
    amx_Register(amx, ptcl_Natives,    -1); // p_partcl
 
    // finally, load the core functions
-   return amx_Register(amx, core_Natives, -1); // amxcore.c
+   return amx_CoreInit(amx); // amxcore.c
 }
 
 //
@@ -1170,7 +1172,7 @@ static cell AMX_NATIVE_CALL sm_getPlayerSrc(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_getThingSrc(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   mobj_t *mo;
+   Mobj *mo;
 
    if((mo = context->invocationData.trigger))
    {

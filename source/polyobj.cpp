@@ -40,6 +40,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_saveg.h"
 #include "p_setup.h"
 #include "p_tick.h"
 #include "polyobj.h"
@@ -112,7 +113,7 @@ polyobj_t *PolyObjects;
 int numPolyObjects;
 
 // Polyobject Blockmap -- initialized in P_LoadBlockMap
-CDLListItem<polymaplink_t> **polyblocklinks;
+DLListItem<polymaplink_t> **polyblocklinks;
 
 
 //
@@ -390,7 +391,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
 //
 // Sets up a Polyobject.
 //
-static void Polyobj_spawnPolyObj(int num, mobj_t *spawnSpot, int id)
+static void Polyobj_spawnPolyObj(int num, Mobj *spawnSpot, int id)
 {
    int i;
    polyobj_t *po = &PolyObjects[num];
@@ -525,7 +526,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
    // update linedef bounding boxes
    for(i = 0; i < po->numLines; ++i)
    {
-      mobj_t *mo;
+      Mobj *mo;
 
       Polyobj_bboxSub(po->lines[i]->bbox, &dist);
 
@@ -613,7 +614,7 @@ static void Polyobj_putLink(polymaplink_t *l)
 //
 // Polyobj_linkToBlockmap
 //
-// Inserts a polyobject into the polyobject blockmap. Unlike mobj_t's,
+// Inserts a polyobject into the polyobject blockmap. Unlike Mobj's,
 // polyobjects need to be linked into every blockmap cell which their
 // bounding box intersects. This ensures the accurate level of clipping
 // which is present with linedefs but absent from most mobj interactions.
@@ -706,7 +707,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 // argument instead of using tmthing. Returns true if the line isn't contacted
 // and false otherwise.
 //
-d_inline static boolean Polyobj_untouched(line_t *ld, mobj_t *mo)
+d_inline static boolean Polyobj_untouched(line_t *ld, Mobj *mo)
 {
    fixed_t x, y, tmbbox[4];
 
@@ -725,7 +726,7 @@ d_inline static boolean Polyobj_untouched(line_t *ld, mobj_t *mo)
 // blocking the motion of a polyobject. The default thrust amount is only one
 // unit, but the motion of the polyobject can be used to change this.
 //
-static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
+static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 {
    angle_t lineangle;
    fixed_t momx, momy;
@@ -774,12 +775,12 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
       {
          if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
          {
-            mobj_t *mo = blocklinks[y * bmapwidth + x];
+            Mobj *mo = blocklinks[y * bmapwidth + x];
 
             // haleyjd 08/14/10: use modification-safe traversal
             while(mo)
             {
-               mobj_t *next = mo->bnext;
+               Mobj *next = mo->bnext;
 
                // always push players even if not solid
                if(((mo->flags & MF_SOLID) || mo->player) && 
@@ -1037,7 +1038,7 @@ polyobj_t *Polyobj_GetMirror(polyobj_t *po)
 typedef struct mobjqitem_s
 {
    mqueueitem_t mqitem;
-   mobj_t *mo;
+   Mobj *mo;
 } mobjqitem_t;
 
 //
@@ -1048,7 +1049,7 @@ typedef struct mobjqitem_s
 //
 void Polyobj_InitLevel(void)
 {
-   CThinker   *th;
+   Thinker   *th;
    mqueue_t    spawnqueue;
    mqueue_t    anchorqueue;
    mobjqitem_t *qitem;
@@ -1065,11 +1066,11 @@ void Polyobj_InitLevel(void)
    bmap_freelist  = NULL;
 
    // run down the thinker list, count the number of spawn points, and save
-   // the mobj_t pointers on a queue for use below.
+   // the Mobj pointers on a queue for use below.
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      mobj_t *mo;
-      if((mo = thinker_cast<mobj_t *>(th)))
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
       {
          if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
             mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||
@@ -1100,7 +1101,7 @@ void Polyobj_InitLevel(void)
 
       // CPP_FIXME: temporary in-place construction of origin
       for(i = 0; i < numPolyObjects; ++i)
-         ::new (&(PolyObjects[i].spawnSpot)) CPointThinker;
+         ::new (&(PolyObjects[i].spawnSpot)) PointThinker;
 
       // setup hash fields
       for(i = 0; i < numPolyObjects; ++i)
@@ -1155,14 +1156,14 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 
 // Thinker Functions
 
-IMPLEMENT_THINKER_TYPE(CPolyRotate)
+IMPLEMENT_THINKER_TYPE(PolyRotateThinker)
 
 //
 // T_PolyObjRotate
 //
 // Thinker function for PolyObject rotation.
 //
-void CPolyRotate::Think()
+void PolyRotateThinker::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1217,13 +1218,13 @@ void CPolyRotate::Think()
 }
 
 //
-// CPolyRotate::serialize
+// PolyRotateThinker::serialize
 //
-// Saves/loads a CPolyRotate thinker.
+// Saves/loads a PolyRotateThinker thinker.
 //
-void CPolyRotate::serialize(CSaveArchive &arc)
+void PolyRotateThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << polyObjNum << speed << distance;
 }
@@ -1240,9 +1241,9 @@ d_inline static void Polyobj_componentSpeed(int resVel, int angle,
    *yVel = FixedMul(resVel,   finesine[angle]);
 }
 
-IMPLEMENT_THINKER_TYPE(CPolyMove)
+IMPLEMENT_THINKER_TYPE(PolyMoveThinker)
 
-void CPolyMove::Think()
+void PolyMoveThinker::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1297,21 +1298,21 @@ void CPolyMove::Think()
 }
 
 //
-// CPolyMove::serialize
+// PolyMoveThinker::serialize
 //
-// Saves/loads a CPolyMove thinker.
+// Saves/loads a PolyMoveThinker thinker.
 //
-void CPolyMove::serialize(CSaveArchive &arc)
+void PolyMoveThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
 }
 
 
-IMPLEMENT_THINKER_TYPE(CPolySlideDoor)
+IMPLEMENT_THINKER_TYPE(PolySlideDoorThinker)
 
-void CPolySlideDoor::Think()
+void PolySlideDoorThinker::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1404,13 +1405,13 @@ void CPolySlideDoor::Think()
 }
 
 //
-// CPolySlideDoor::serialize
+// PolySlideDoorThinker::serialize
 //
-// Saves/loads a CPolySlideDoor thinker.
+// Saves/loads a PolySlideDoorThinker thinker.
 //
-void CPolySlideDoor::serialize(CSaveArchive &arc)
+void PolySlideDoorThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
@@ -1418,9 +1419,9 @@ void CPolySlideDoor::serialize(CSaveArchive &arc)
 }
 
 
-IMPLEMENT_THINKER_TYPE(CPolySwingDoor)
+IMPLEMENT_THINKER_TYPE(PolySwingDoorThinker)
 
-void CPolySwingDoor::Think()
+void PolySwingDoorThinker::Think()
 {
    polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
@@ -1507,13 +1508,13 @@ void CPolySwingDoor::Think()
 }
 
 //
-// CPolySwingDoor::serialize
+// PolySwingDoorThinker::serialize
 //
-// Saves/loads a CPolySwingDoor thinker.
+// Saves/loads a PolySwingDoorThinker thinker.
 //
-void CPolySwingDoor::serialize(CSaveArchive &arc)
+void PolySwingDoorThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing;
@@ -1524,7 +1525,7 @@ void CPolySwingDoor::serialize(CSaveArchive &arc)
 int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 {
    polyobj_t *po;
-   CPolyRotate *th;
+   PolyRotateThinker *th;
    int diracc = -1;
 
    if(!(po = Polyobj_GetForNum(prdata->polyObjNum)))
@@ -1543,7 +1544,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       return 0;
 
    // create a new thinker
-   th = new CPolyRotate;
+   th = new PolyRotateThinker;
    th->addThinker();
    po->thinker = th;
 
@@ -1580,7 +1581,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          break;
       
       // create a new thinker
-      th = new CPolyRotate;
+      th = new PolyRotateThinker;
       th->addThinker();
       po->thinker = th;
       
@@ -1617,7 +1618,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
 int EV_DoPolyObjMove(polymovedata_t *pmdata)
 {
    polyobj_t *po;
-   CPolyMove *th;
+   PolyMoveThinker *th;
    unsigned int angadd = ANG180;
 
    if(!(po = Polyobj_GetForNum(pmdata->polyObjNum)))
@@ -1636,7 +1637,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       return 0;
 
    // create a new thinker
-   th = new CPolyMove;
+   th = new PolyMoveThinker;
    th->addThinker();
    po->thinker = th;
 
@@ -1669,7 +1670,7 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
          break;
 
       // create a new thinker
-      th = new CPolyMove;
+      th = new PolyMoveThinker;
       th->addThinker();
       po->thinker = th;
       
@@ -1701,11 +1702,11 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
 
 static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 {
-   CPolySlideDoor *th;
+   PolySlideDoorThinker *th;
    unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
-   th = new CPolySlideDoor;
+   th = new PolySlideDoorThinker;
    th->addThinker();
    
    // point the polyobject to this thinker
@@ -1745,7 +1746,7 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = new CPolySlideDoor;
+      th = new PolySlideDoorThinker;
       th->addThinker();
 
       // point the polyobject to this thinker
@@ -1780,11 +1781,11 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
 
 static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
 {
-   CPolySwingDoor *th;
+   PolySwingDoorThinker *th;
    int diracc = -1;
 
    // allocate and add a new swing door thinker
-   th = new CPolySwingDoor;
+   th = new PolySwingDoorThinker;
    th->addThinker();
    
    // point the polyobject to this thinker
@@ -1816,7 +1817,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = new CPolySwingDoor;
+      th = new PolySwingDoorThinker;
       th->addThinker();
 
       // point the polyobject to this thinker

@@ -41,6 +41,7 @@
 #include "c_io.h"
 #include "g_game.h"
 #include "p_maputl.h"
+#include "p_saveg.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "d_io.h" // SoM 3/14/2002: strncasecmp
@@ -206,7 +207,7 @@ void P_DumpHubs(void)
 
 static fixed_t  save_xoffset;
 static fixed_t  save_yoffset;
-static mobj_t   save_mobj;
+static Mobj   save_mobj;
 static int      save_sectag;
 static player_t *save_player;
 static pspdef_t save_psprites[NUMPSPRITES];
@@ -243,7 +244,7 @@ void P_SavePlayerPosition(player_t *player, int sectag)
    
    // save mobj so we can restore various bits of data
    
-   memcpy(&save_mobj, player->mo, sizeof(mobj_t));
+   memcpy(&save_mobj, player->mo, sizeof(Mobj));
 }
 
 // restore the players position -- sector must be the same shape

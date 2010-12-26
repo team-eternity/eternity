@@ -215,7 +215,7 @@ void P_CalcHeight(player_t *player)
 void P_MovePlayer(player_t* player)
 {
    ticcmd_t *cmd = &player->cmd;
-   mobj_t *mo = player->mo;
+   Mobj *mo = player->mo;
    
    mo->angle += cmd->angleturn << 16;
    
@@ -351,12 +351,12 @@ void P_DeathThink(player_t *player)
 // Applies Heretic current effects to the player.
 //
 // haleyjd 09/09/07: Rewritten to use msecnodes and eliminate the redundant 
-// mobj_t::floorsec field.
+// Mobj::floorsec field.
 //
 static void P_HereticCurrent(player_t *player)
 {
    msecnode_t *m;
-   mobj_t     *thing = player->mo;
+   Mobj     *thing = player->mo;
 
    // don't affect the player if noclipping is on (pushes you through walls)
    if(thing->flags & MF_NOCLIP)

@@ -87,8 +87,8 @@ typedef struct polyobj_s
    int numLinesAlloc;          // number of linedefs allocated
    line_t **lines;             // linedefs this polyobject must move
 
-   mobj_t *spawnSpotMobj;      // for use during init only!
-   CPointThinker spawnSpot;    // location of spawn spot
+   Mobj *spawnSpotMobj;      // for use during init only!
+   PointThinker spawnSpot;    // location of spawn spot
    struct vertex_s centerPt;   // center point
    fixed_t zdist;              // viewz distance for sorting
    angle_t angle;              // for rotation
@@ -101,7 +101,7 @@ typedef struct polyobj_s
 
    int seqId;                      // 10/17/06: sound sequence id
 
-   CThinker *thinker;  // pointer to a thinker affecting this polyobj
+   Thinker *thinker;  // pointer to a thinker affecting this polyobj
 
    unsigned int flags;  // 09/11/09: polyobject flags
 
@@ -112,7 +112,7 @@ typedef struct polyobj_s
 //
 struct polymaplink_t
 {
-   CDLListItem<polymaplink_t> link; // for blockmap links
+   DLListItem<polymaplink_t> link; // for blockmap links
    polyobj_t *po;                   // pointer to polyobject
    polymaplink_t *po_next;          // haleyjd 05/18/06: unlink optimization
 };
@@ -121,17 +121,17 @@ struct polymaplink_t
 // Polyobject Special Thinkers
 //
 
-class CSaveArchive;
+class SaveArchive;
 
-class CPolyRotate : public CThinker
+class PolyRotateThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CPolyRotate"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PolyRotateThinker"; }
 
    // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
@@ -139,15 +139,15 @@ public:
    int distance;      // distance to move
 };
 
-class CPolyMove : public CThinker
+class PolyMoveThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CPolyMove"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PolyMoveThinker"; }
 
    // Data Members
    int polyObjNum;     // numeric id of polyobject
@@ -158,15 +158,15 @@ public:
    unsigned int angle; // angle along which to move
 };
 
-class CPolySlideDoor : public CThinker
+class PolySlideDoorThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CPolySlideDoor"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PolySlideDoorThinker"; }
 
    // Data Members
    int polyObjNum;         // numeric id of affected polyobject
@@ -184,15 +184,15 @@ public:
    boolean closing;        // if true, is closing
 };
 
-class CPolySwingDoor : public CThinker
+class PolySwingDoorThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CPolySwingDoor"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PolySwingDoorThinker"; }
 
    // Data Members
    int polyObjNum;    // numeric id of affected polyobject
@@ -263,7 +263,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *);
 
 extern polyobj_t *PolyObjects;
 extern int numPolyObjects;
-extern CDLListItem<polymaplink_t> **polyblocklinks; // polyobject blockmap
+extern DLListItem<polymaplink_t> **polyblocklinks; // polyobject blockmap
 
 #endif
 

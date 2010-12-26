@@ -84,7 +84,7 @@ extern boolean nosfxparm, nomusicparm;
 typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  CPointThinker *origin;   // origin of sound
+  PointThinker *origin;   // origin of sound
   int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   int attenuation;         // attenuation type -- haleyjd 05/29/06
@@ -153,7 +153,7 @@ static void S_StopChannel(int cnum)
       
       // haleyjd 08/13/10: sound origins should count as thinker references
       if(demo_version >= 337 && channels[cnum].origin)
-         P_SetTarget<CPointThinker>(&(channels[cnum].origin), NULL);
+         P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
 
       // haleyjd 09/27/06: clear the entire channel
       memset(&channels[cnum], 0, sizeof(channel_t));
@@ -166,7 +166,7 @@ static void S_StopChannel(int cnum)
 // haleyjd: isolated code to check for sector sound killing.
 // Returns true if the sound should be killed.
 //
-static boolean S_CheckSectorKill(const camera_t *ear, const CPointThinker *src)
+static boolean S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
@@ -196,7 +196,7 @@ static boolean S_CheckSectorKill(const camera_t *ear, const CPointThinker *src)
 // haleyjd: added channel volume scale value
 // haleyjd: added priority scaling
 //
-static int S_AdjustSoundParams(camera_t *listener, const CPointThinker *source,
+static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
                                int chanvol, int chanattn, int *vol, int *sep,
                                int *pitch, int *pri, sfxinfo_t *sfx)
 {
@@ -320,7 +320,7 @@ static int S_AdjustSoundParams(camera_t *listener, const CPointThinker *source,
 //   haleyjd 09/27/06: fixed priority/singularity bugs
 //   Note that a higher priority number means lower priority!
 //
-static int S_getChannel(const CPointThinker *origin, sfxinfo_t *sfxinfo,
+static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
                         int priority, int singularity, int schan)
 {
    // channel number to use
@@ -413,7 +413,7 @@ static int S_countChannels(void)
 // range from 0 to 127. Also added customizable attenuation types.
 // haleyjd 06/03/06: added ability to loop sound samples
 //
-void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx, 
+void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
                     int volumeScale, int attenuation, boolean loop, int subchannel)
 {
    int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
@@ -422,7 +422,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
    boolean extcamera = false;
    camera_t playercam;
    camera_t *listener = &playercam;
-   mobj_t *mo;
+   Mobj *mo;
 
    // haleyjd 09/03/03: allow NULL sounds to fall through
    if(!sfx)
@@ -452,9 +452,9 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
       }
    }
 
-   // haleyjd:  we must weed out degenmobj_t's before trying to 
+   // haleyjd:  we must weed out degenMobj's before trying to 
    // dereference these fields -- a thinker check perhaps?
-   if(origin && (mo = thinker_cast<mobj_t *>(origin)))
+   if(origin && (mo = thinker_cast<Mobj *>(origin)))
    {
       if(sfx->skinsound) // check for skin sounds
       {
@@ -522,7 +522,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
       }
       else
       {
-         mobj_t *pmo = players[displayplayer].mo;
+         Mobj *pmo = players[displayplayer].mo;
 
          // haleyjd 10/20/07: do not crash in multiplayer trying to
          // adjust sounds for a player that hasn't been spawned yet!
@@ -615,7 +615,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
 
    channels[cnum].sfxinfo = sfx;
    if(demo_version >= 337) // haleyjd 08/13/10: sound channels are thinker references.
-      P_SetTarget<CPointThinker>(&(channels[cnum].origin), origin);
+      P_SetTarget<PointThinker>(&(channels[cnum].origin), origin);
    else
       channels[cnum].origin = origin;
 
@@ -647,7 +647,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
    else // haleyjd: the sound didn't start, so clear the channel info
    {
       if(demo_version >= 337)
-         P_SetTarget<CPointThinker>(&(channels[cnum].origin), NULL);
+         P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
       memset(&channels[cnum], 0, sizeof(channel_t));
    }
 }
@@ -659,7 +659,7 @@ void S_StartSfxInfo(CPointThinker *origin, sfxinfo_t *sfx,
 // removed, apparently by the BOOM team, because it was never used for 
 // anything useful (it was always called with snd_SfxVolume...).
 //
-void S_StartSoundAtVolume(CPointThinker *origin, int sfx_id, 
+void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
@@ -681,7 +681,7 @@ void S_StartSoundAtVolume(CPointThinker *origin, int sfx_id,
 // retains full compatibility.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSound(CPointThinker *origin, int sfx_id)
+void S_StartSound(PointThinker *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -691,7 +691,7 @@ void S_StartSound(CPointThinker *origin, int sfx_id)
 //
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
-void S_StartSoundNameAtVolume(CPointThinker *origin, const char *name, 
+void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
                               int volume, int attn, int subchannel)
 {
    sfxinfo_t *sfx;
@@ -712,7 +712,7 @@ void S_StartSoundNameAtVolume(CPointThinker *origin, const char *name,
 // WAD sounds.
 // haleyjd 05/29/06: reimplemented in terms of the above function.
 //
-void S_StartSoundName(CPointThinker *origin, const char *name)
+void S_StartSoundName(PointThinker *origin, const char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL, CHAN_AUTO);
 }
@@ -722,7 +722,7 @@ void S_StartSoundName(CPointThinker *origin, const char *name)
 //
 // haleyjd 06/03/06: support playing looped sounds.
 //
-void S_StartSoundLooped(CPointThinker *origin, char *name, int volume, 
+void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
                         int attn, int subchannel)
 {
    sfxinfo_t *sfx;
@@ -737,7 +737,7 @@ void S_StartSoundLooped(CPointThinker *origin, char *name, int volume,
 //
 // S_StopSound
 //
-void S_StopSound(const CPointThinker *origin, int subchannel)
+void S_StopSound(const PointThinker *origin, int subchannel)
 {
    int cnum;
    
@@ -789,7 +789,7 @@ void S_ResumeSound(void)
 //
 // Called from main loop. Updates digital sound positional effects.
 //
-void S_UpdateSounds(const mobj_t *listener)
+void S_UpdateSounds(const Mobj *listener)
 {
    int cnum;
 
@@ -885,7 +885,7 @@ void S_UpdateSounds(const mobj_t *listener)
 //
 // haleyjd: rudimentary sound checking function
 //
-boolean S_CheckSoundPlaying(CPointThinker *mo, sfxinfo_t *sfx)
+boolean S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 {
    int cnum;
 
@@ -1541,7 +1541,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
    {
       sector_t *sector = &sectors[secnum];
       
-      S_StartSoundName((mobj_t *)&sector->soundorg, sndname);
+      S_StartSoundName((Mobj *)&sector->soundorg, sndname);
    }
 
    Z_Free(sndname);
@@ -1567,7 +1567,7 @@ static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
    {
       sector_t *sector = &sectors[secnum];
       
-      S_StartSound((mobj_t *)&sector->soundorg, sndnum);
+      S_StartSound((Mobj *)&sector->soundorg, sndnum);
    }
 
    return 0;

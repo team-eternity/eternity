@@ -146,7 +146,7 @@ static argkeywd_t cpckwds =
 // args[1] : comparison type
 // args[2] : health value OR counter number
 //
-void A_HealthJump(mobj_t *mo)
+void A_HealthJump(Mobj *mo)
 {
    boolean branch  = false;   
    int statenum, checktype, checkhealth;
@@ -210,7 +210,7 @@ void A_HealthJump(mobj_t *mo)
 // args[2] : immediate value OR counter number
 // args[3] : counter # to use
 //
-void A_CounterJump(mobj_t *mo)
+void A_CounterJump(Mobj *mo)
 {
    boolean branch = false;
    int statenum, checktype, value, cnum;
@@ -282,7 +282,7 @@ void A_CounterJump(mobj_t *mo)
 // args[1] : DeHackEd number of first frame in consecutive set
 // args[2] : number of frames in consecutive set
 //
-void A_CounterSwitch(mobj_t *mo)
+void A_CounterSwitch(Mobj *mo)
 {
    int cnum, startstate, numstates;
    int *counter;
@@ -348,7 +348,7 @@ static argkeywd_t cpsetkwds =
 // args[1] : value to utilize
 // args[2] : operation to perform
 //
-void A_SetCounter(mobj_t *mo)
+void A_SetCounter(Mobj *mo)
 {
    int cnum, value, specialop;
    int *counter;
@@ -442,7 +442,7 @@ static argkeywd_t cpopkwds =
 // args[2] : counter destination
 // args[3] : operation to perform
 //
-void A_CounterOp(mobj_t *mo)
+void A_CounterOp(Mobj *mo)
 {
    int c_oper1_num, c_oper2_num, c_dest_num, specialop;
    int *c_oper1, *c_oper2, *c_dest;
@@ -521,7 +521,7 @@ void A_CounterOp(mobj_t *mo)
 // args[0] : source counter #
 // args[1] : destination counter #
 //
-void A_CopyCounter(mobj_t *mo)
+void A_CopyCounter(Mobj *mo)
 {
    int cnum1, cnum2;
    int *src, *dest;
@@ -596,7 +596,7 @@ static argkeywd_t psprkwds =
 // args[3] : counter # to use
 // args[4] : psprite to affect (weapon or flash)
 //
-void A_WeaponCtrJump(mobj_t *mo)
+void A_WeaponCtrJump(Mobj *mo)
 {
    boolean branch = false;
    int statenum, checktype, cnum, psprnum;
@@ -693,7 +693,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 // args[2] : number of frames in consecutive set
 // args[3] : psprite to affect (weapon or flash)
 //
-void A_WeaponCtrSwitch(mobj_t *mo)
+void A_WeaponCtrSwitch(Mobj *mo)
 {
    int cnum, startstate, numstates, psprnum;
    int *counter;
@@ -777,7 +777,7 @@ static argkeywd_t weapsetkwds =
 // args[1] : value to utilize
 // args[2] : operation to perform
 //
-void A_WeaponSetCtr(mobj_t *mo)
+void A_WeaponSetCtr(Mobj *mo)
 {
    int cnum;
    int value;
@@ -884,7 +884,7 @@ static argkeywd_t weapctropkwds =
 // args[2] : counter destination
 // args[3] : operation to perform
 //
-void A_WeaponCtrOp(mobj_t *mo)
+void A_WeaponCtrOp(Mobj *mo)
 {
    player_t *player;
    pspdef_t *pspr;
@@ -991,7 +991,7 @@ void A_WeaponCtrOp(mobj_t *mo)
 // args[0] : source counter #
 // args[1] : destination counter #
 //
-void A_WeaponCopyCtr(mobj_t *mo)
+void A_WeaponCopyCtr(Mobj *mo)
 {
    int cnum1, cnum2;
    int *src, *dest;
@@ -1042,7 +1042,7 @@ void A_WeaponCopyCtr(mobj_t *mo)
 //
 // Note: uses the exact same keyword set as A_WeaponCtrJump. Not redefined.
 //
-void A_CheckReloadEx(mobj_t *mo)
+void A_CheckReloadEx(Mobj *mo)
 {
    boolean branch = false;
    int statenum, checktype, psprnum;

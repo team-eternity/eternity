@@ -32,7 +32,7 @@
 #include "p_tick.h"
 
 struct qstring_t;
-class  mobj_t;
+class  Mobj;
 struct line_t;
 
 //
@@ -60,7 +60,7 @@ enum
 // Structures
 //
 
-class CACSThinker;
+class ACSThinker;
 
 //
 // acscript
@@ -75,7 +75,7 @@ typedef struct acscript_s
    int *code;      // bytecode entry point
    boolean isOpen; // if true, is an open script
 
-   CACSThinker *threads;
+   ACSThinker *threads;
 } acscript_t;
 
 //
@@ -83,21 +83,25 @@ typedef struct acscript_s
 //
 // A thinker which runs a script.
 //
-class CACSThinker : public CThinker
+class ACSThinker : public Thinker
 {
 protected:
+   // Data Members
+   unsigned int triggerSwizzle; // Holds the swizzled target during loading
+
+   // Methods
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
+   virtual void serialize(SaveArchive &arc);
    virtual void deswizzle();
-   virtual const char *getClassName() const { return "CACSThinker"; }
+   virtual const char *getClassName() const { return "ACSThinker"; }
 
    // Data Members
    // thread links
-   CACSThinker **prevthread;
-   CACSThinker  *nextthread;
+   ACSThinker **prevthread;
+   ACSThinker  *nextthread;
 
    // script info
    int vmID;                  // vm id number
@@ -122,7 +126,7 @@ public:
 
    // misc
    int    delay;              // counter for script delays
-   mobj_t *trigger;           // thing that activated
+   Mobj *trigger;           // thing that activated
    line_t *line;              // line that activated
    int    lineSide;           // line side of activation
 };
@@ -142,7 +146,7 @@ enum
 //
 struct deferredacs_t
 {
-   CDLListItem<deferredacs_t> link; // list links
+   DLListItem<deferredacs_t> link; // list links
    
    int  scriptNum;         // ACS script number to execute
    int  vmID;              // id # of vm on which to execute the script
@@ -178,14 +182,14 @@ void    ACS_LoadScript(acsvm_t *vm, int lump);
 void    ACS_LoadLevelScript(int lump);
 void    ACS_RunDeferredScripts(void);
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          mobj_t *mo, line_t *line, int side,
-                          CACSThinker **scr, boolean always);
-boolean ACS_StartScript(int scrnum, int map, int *args, mobj_t *mo, 
-                        line_t *line, int side, CACSThinker **scr);
+                          Mobj *mo, line_t *line, int side,
+                          ACSThinker **scr, boolean always);
+boolean ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
+                        line_t *line, int side, ACSThinker **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
 void    ACS_PrepareForLoad(void);
-void    ACS_RestartSavedScript(CACSThinker *th);
+void    ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
 

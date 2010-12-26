@@ -60,7 +60,7 @@
 // killough 9/98: a mushroom explosion effect, sorta :)
 // Original idea: Linguica
 //
-void A_Mushroom(mobj_t *actor)
+void A_Mushroom(Mobj *actor)
 {
    int i, j, n = actor->damage;
    int ShotType;
@@ -85,7 +85,7 @@ void A_Mushroom(mobj_t *actor)
    {
       for(j = -n; j <= n; j += 8)
       {
-         mobj_t target = *actor, *mo;
+         Mobj target = *actor, *mo;
          target.x += i << FRACBITS;    // Aim in many directions from source
          target.y += j << FRACBITS;
          target.z += P_AproxDistance(i,j) * misc1;         // Aim fairly high
@@ -107,11 +107,11 @@ void A_Mushroom(mobj_t *actor)
 // A small set of highly-sought-after code pointers
 //
 
-void A_Spawn(mobj_t *mo)
+void A_Spawn(Mobj *mo)
 {
    if(mo->state->misc1)
    {
-      mobj_t *newmobj;
+      Mobj *newmobj;
 
       // haleyjd 03/06/03 -- added error check
       //         07/05/03 -- adjusted for EDF
@@ -126,12 +126,12 @@ void A_Spawn(mobj_t *mo)
    }
 }
 
-void A_Turn(mobj_t *mo)
+void A_Turn(Mobj *mo)
 {
    mo->angle += (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
 
-void A_Face(mobj_t *mo)
+void A_Face(Mobj *mo)
 {
    mo->angle = (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
 }
@@ -164,7 +164,7 @@ static argkeywd_t scratchkwds =
 // * args[1] == counter number for mode 2
 // * args[2] == EDF sound name
 //
-void A_Scratch(mobj_t *mo)
+void A_Scratch(Mobj *mo)
 {
    int damage, cnum;
    int mode;
@@ -213,12 +213,12 @@ void A_Scratch(mobj_t *mo)
    }
 }
 
-void A_PlaySound(mobj_t *mo)
+void A_PlaySound(Mobj *mo)
 {
    S_StartSound(mo->state->misc2 ? NULL : mo, mo->state->misc1);
 }
 
-void A_RandomJump(mobj_t *mo)
+void A_RandomJump(Mobj *mo)
 {
    // haleyjd 03/06/03: rewrote to be failsafe
    //         07/05/03: adjusted for EDF
@@ -235,7 +235,7 @@ void A_RandomJump(mobj_t *mo)
 //
 // This allows linedef effects to be activated inside deh frames.
 //
-void A_LineEffect(mobj_t *mo)
+void A_LineEffect(Mobj *mo)
 {
    // haleyjd 05/02/04: bug fix:
    // This line can end up being referred to long after this
@@ -273,7 +273,7 @@ void A_LineEffect(mobj_t *mo)
 // args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to OR with thing flags
 //
-void A_SetFlags(mobj_t *actor)
+void A_SetFlags(Mobj *actor)
 {
    int flagfield;
    int *flags;
@@ -314,7 +314,7 @@ void A_SetFlags(mobj_t *actor)
 // args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
 // args[1] == flags value to inverse AND with thing flags
 //
-void A_UnSetFlags(mobj_t *actor)
+void A_UnSetFlags(Mobj *actor)
 {
    int flagfield;
    int *flags;
@@ -368,7 +368,7 @@ static argkeywd_t sscriptkwds =
 // args[1] - select vm (0 == gamescript, 1 == levelscript)
 // args[2-4] - parameters to script (must accept 3 params)
 //
-void A_StartScript(mobj_t *actor)
+void A_StartScript(Mobj *actor)
 {
 #ifndef EE_NO_SMALL_SUPPORT
    SmallContext_t *rootContext, *useContext;
@@ -424,7 +424,7 @@ void A_StartScript(mobj_t *actor)
 // Face a walking object in the direction it is moving.
 // haleyjd TODO: this is not documented or available in BEX yet.
 //
-void A_FaceMoveDir(mobj_t *actor)
+void A_FaceMoveDir(Mobj *actor)
 {
    angle_t moveangles[NUMDIRS] = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
@@ -440,7 +440,7 @@ void A_FaceMoveDir(mobj_t *actor)
 // args[0] : state to branch to when ceasing to fire
 // args[1] : random chance of still firing if target out of sight
 //
-void A_GenRefire(mobj_t *actor)
+void A_GenRefire(Mobj *actor)
 {
    int statenum;
    int chance;
@@ -476,12 +476,12 @@ void A_GenRefire(mobj_t *actor)
 //
 // Generic homing missile maintenance
 //
-void A_GenTracer(mobj_t *actor)
+void A_GenTracer(Mobj *actor)
 {
    angle_t       exact;
    fixed_t       dist;
    fixed_t       slope;
-   mobj_t        *dest;
+   Mobj        *dest;
   
    // adjust direction
    dest = actor->tracer;
@@ -548,7 +548,7 @@ static argkeywd_t settickwds =
 // * args[1] : randomizer modulus value (0 == not randomized)
 // * args[2] : counter toggle
 //
-void A_SetTics(mobj_t *actor)
+void A_SetTics(Mobj *actor)
 {
    int baseamt = E_ArgAsInt(actor->state->args, 0, 0);
    int rnd     = E_ArgAsInt(actor->state->args, 1, 0);
@@ -588,13 +588,13 @@ static argkeywd_t missileatkkwds =
 // * args[3] = amount to add to actor angle
 // * args[4] = optional state to enter for melee attack
 //
-void A_MissileAttack(mobj_t *actor)
+void A_MissileAttack(Mobj *actor)
 {
    int type, a;
    fixed_t z, momz;
    boolean homing;
    angle_t ang;
-   mobj_t *mo;
+   Mobj *mo;
    int statenum;
    boolean hastarget = true;
 
@@ -643,7 +643,7 @@ void A_MissileAttack(mobj_t *actor)
    else
    {
       // calculate z momentum
-      mobj_t *target = actor->target;
+      Mobj *target = actor->target;
 
       momz = P_MissileMomz(target->x - actor->x,
                            target->y - actor->y,
@@ -654,7 +654,7 @@ void A_MissileAttack(mobj_t *actor)
    }
 
    if(homing)
-      P_SetTarget<mobj_t>(&mo->tracer, actor->target);
+      P_SetTarget<Mobj>(&mo->tracer, actor->target);
 }
 
 //
@@ -668,7 +668,7 @@ void A_MissileAttack(mobj_t *actor)
 // * args[3] = total angular sweep
 // * args[4] = optional state to enter for melee attack
 //
-void A_MissileSpread(mobj_t *actor)
+void A_MissileSpread(Mobj *actor)
 {
    int type, num, a, i;
    fixed_t z, momz;
@@ -775,7 +775,7 @@ static argkeywd_t bulletkwdsnew =
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
 //
-void A_BulletAttack(mobj_t *actor)
+void A_BulletAttack(Mobj *actor)
 {
    int i, accurate, numbullets, damage, dmgmod, slope;
    sfxinfo_t *sfx;
@@ -865,10 +865,10 @@ static argkeywd_t makechildkwds =
    2
 };
 
-void A_ThingSummon(mobj_t *actor)
+void A_ThingSummon(Mobj *actor)
 {
    fixed_t x, y, z;
-   mobj_t  *newmobj;
+   Mobj  *newmobj;
    angle_t an;
    int     type, prestep, deltaz, kill_or_remove, make_child;
 
@@ -943,26 +943,26 @@ void A_ThingSummon(mobj_t *actor)
    }
 
    // give same target
-   P_SetTarget<mobj_t>(&newmobj->target, actor->target);
+   P_SetTarget<Mobj>(&newmobj->target, actor->target);
 
    // set child properties
    if(make_child)
    {
-      P_SetTarget<mobj_t>(&newmobj->tracer, actor);
+      P_SetTarget<Mobj>(&newmobj->tracer, actor);
       newmobj->intflags |= MIF_ISCHILD;
    }
 }
 
-void A_KillChildren(mobj_t *actor)
+void A_KillChildren(Mobj *actor)
 {
-   CThinker *th;
+   Thinker *th;
    int kill_or_remove = !!E_ArgAsKwd(actor->state->args, 0, &killremovekwds, 0);
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      mobj_t *mo;
+      Mobj *mo;
 
-      if(!(mo = thinker_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<Mobj *>(th)))
          continue;
 
       if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)
@@ -987,7 +987,7 @@ void A_KillChildren(mobj_t *actor)
 // a thing and its target in the indicated counter.
 // * args[0] == destination counter
 //
-void A_AproxDistance(mobj_t *actor)
+void A_AproxDistance(Mobj *actor)
 {
    int *dest = NULL;
    fixed_t distance;
@@ -1039,7 +1039,7 @@ static argkeywd_t messagekwds =
 // args[0] = EDF message number
 // args[1] = message type
 //
-void A_ShowMessage(mobj_t *actor)
+void A_ShowMessage(Mobj *actor)
 {
    edf_string_t *msg;
    int type;
@@ -1069,7 +1069,7 @@ void A_ShowMessage(mobj_t *actor)
 //
 // haleyjd 05/31/06: Ambient sound driver function
 //
-void A_AmbientThinker(mobj_t *mo)
+void A_AmbientThinker(Mobj *mo)
 {
    EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
    boolean loop = false;
@@ -1104,9 +1104,9 @@ void A_AmbientThinker(mobj_t *mo)
    S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO);
 }
 
-void A_SteamSpawn(mobj_t *mo)
+void A_SteamSpawn(Mobj *mo)
 {
-   mobj_t *steamthing;
+   Mobj *steamthing;
    int thingtype;
    int vrange, hrange;
    int tvangle, thangle;
@@ -1165,7 +1165,7 @@ void A_SteamSpawn(mobj_t *mo)
 //
 // args[0] : state number
 //
-void A_TargetJump(mobj_t *mo)
+void A_TargetJump(Mobj *mo)
 {
    int statenum;
    
@@ -1191,7 +1191,7 @@ void A_TargetJump(mobj_t *mo)
 //   args[2] : z height relative to player's viewpoint in 16th's of a unit
 //   args[3] : thingtype to toss
 //
-void A_EjectCasing(mobj_t *actor)
+void A_EjectCasing(Mobj *actor)
 {
    angle_t angle = actor->angle;
    fixed_t x, y, z;
@@ -1200,7 +1200,7 @@ void A_EjectCasing(mobj_t *actor)
    fixed_t sidedist;
    fixed_t zheight;
    int     thingtype;
-   mobj_t *mo;
+   Mobj *mo;
 
    frontdisti = E_ArgAsInt(actor->state->args, 0, 0);
    
@@ -1244,7 +1244,7 @@ void A_EjectCasing(mobj_t *actor)
 //    args[0] : lateral force in 16ths of a unit
 //    args[1] : z force in 16ths of a unit
 //
-void A_CasingThrust(mobj_t *actor)
+void A_CasingThrust(Mobj *actor)
 {
    fixed_t moml, momz;
 

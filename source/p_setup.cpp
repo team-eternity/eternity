@@ -126,7 +126,7 @@ int       *blockmaplump;          // was short -- killough
 
 fixed_t   bmaporgx, bmaporgy;     // origin of block map
 
-mobj_t    **blocklinks;           // for thing chains
+Mobj    **blocklinks;           // for thing chains
 
 //
 // REJECT
@@ -531,8 +531,8 @@ void P_LoadSectors(int lumpnum)
       ss->sndSeqID = defaultSndSeq;
 
       // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ss->soundorg)  CPointThinker;
-      ::new (&ss->csoundorg) CPointThinker;
+      ::new (&ss->soundorg)  PointThinker;
+      ::new (&ss->csoundorg) PointThinker;
 
       // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
       //         12/31/08: convert BOOM generalized damage
@@ -1159,7 +1159,7 @@ void P_LoadLineDefs(int lump)
          sides[*ld->sidenum].special = ld->special;
 
       // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) CPointThinker;
+      ::new (&ld->soundorg) PointThinker;
 
       // haleyjd 04/19/09: position line sound origin
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
@@ -1325,7 +1325,7 @@ void P_LoadHexenLineDefs(int lump)
          sides[*ld->sidenum].special = ld->special;
 
       // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) CPointThinker;
+      ::new (&ld->soundorg) PointThinker;
 
       // haleyjd 04/19/09: position line sound origin
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
@@ -1831,12 +1831,12 @@ void P_LoadBlockMap(int lump)
 
    // clear out mobj chains
    count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = (mobj_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   blocklinks = (Mobj **)(Z_Calloc(1, count, PU_LEVEL, NULL));
    blockmap   = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = (CDLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   polyblocklinks = (DLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
 }
 
 
@@ -1920,7 +1920,7 @@ void P_GroupLines(void)
       //    EE does not bother with presentation compatibility for sounds
       //    except where playability is a concern (ie. in deathmatch).
 
-      // set the degenmobj_t to the middle of the bounding box
+      // set the degenMobj to the middle of the bounding box
       sector->soundorg.x = sector->blockbox[BOXRIGHT] / 2 + 
                            sector->blockbox[BOXLEFT] / 2;
       sector->soundorg.y = sector->blockbox[BOXTOP] / 2 + 
@@ -2270,7 +2270,7 @@ static void P_InitNewLevel(int lumpnum, waddir_t *waddir)
    // Playsim
 
    // re-initialize thinker list
-   CThinker::InitThinkers();   
+   Thinker::InitThinkers();   
    
    // haleyjd 02/02/04 -- clear the TID hash table
    P_InitTIDHash();     

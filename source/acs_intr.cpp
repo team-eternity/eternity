@@ -38,6 +38,7 @@
 #include "m_qstr.h"
 #include "m_swap.h"
 #include "p_mobj.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -173,7 +174,7 @@ enum
 //
 
 // deferred scripts
-static CDLListItem<deferredacs_t> *acsDeferred;
+static DLListItem<deferredacs_t> *acsDeferred;
 
 // haleyjd 06/24/08: level script vm for ACS
 static acsvm_t acsLevelScriptVM;
@@ -229,9 +230,9 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
 //
 // Adds a thinker as a thread on the given script.
 //
-static void ACS_addThread(CACSThinker *script, acscript_t *acscript)
+static void ACS_addThread(ACSThinker *script, acscript_t *acscript)
 {
-   CACSThinker *next = acscript->threads;
+   ACSThinker *next = acscript->threads;
 
    if((script->nextthread = next))
       next->prevthread = &script->nextthread;
@@ -244,10 +245,10 @@ static void ACS_addThread(CACSThinker *script, acscript_t *acscript)
 //
 // Removes a thinker from the acscript thread list.
 //
-static void ACS_removeThread(CACSThinker *script)
+static void ACS_removeThread(ACSThinker *script)
 {
-   CACSThinker **prev = script->prevthread;
-   CACSThinker *next  = script->nextthread;
+   ACSThinker **prev = script->prevthread;
+   ACSThinker  *next = script->nextthread;
    
    if((*prev = next))
       next->prevthread = prev;
@@ -260,12 +261,12 @@ static void ACS_removeThread(CACSThinker *script)
 // same VM which are waiting on this one. All threads of the specified
 // script must be terminated first.
 //
-static void ACS_scriptFinished(CACSThinker *script)
+static void ACS_scriptFinished(ACSThinker *script)
 {
    int i;
    acsvm_t *vm          = script->vm;
    acscript_t *acscript = script->acscript;
-   CACSThinker *th;
+   ACSThinker *th;
 
    // first check that all threads of the same script have terminated
    if(acscript->threads)
@@ -295,14 +296,14 @@ static void ACS_scriptFinished(CACSThinker *script)
 //
 // Ultimately terminates the script and removes its thinker.
 //
-static void ACS_stopScript(CACSThinker *script, acscript_t *acscript)
+static void ACS_stopScript(ACSThinker *script, acscript_t *acscript)
 {
    ACS_removeThread(script);
    
    // notify waiting scripts that this script has ended
    ACS_scriptFinished(script);
 
-   P_SetTarget<mobj_t>(&script->trigger, NULL);
+   P_SetTarget<Mobj>(&script->trigger, NULL);
 
    script->removeThinker();
 }
@@ -315,7 +316,7 @@ static void ACS_stopScript(CACSThinker *script, acscript_t *acscript)
 //
 static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
 {
-   CACSThinker *newScript = new CACSThinker;
+   ACSThinker *newScript = new ACSThinker;
 
    newScript->vmID        = vmID;
    newScript->scriptNum   = acs->number;
@@ -369,7 +370,7 @@ int ACS_indexForNum(acsvm_t *vm, int num)
 // Executes a line special that has been encoded in the script with
 // operands on the stack.
 //
-static void ACS_execLineSpec(line_t *l, mobj_t *mo, int16_t spec, int side,
+static void ACS_execLineSpec(line_t *l, Mobj *mo, int16_t spec, int side,
                              int arg0, int arg1, int arg2, int arg3, int arg4)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -392,7 +393,7 @@ static void ACS_execLineSpec(line_t *l, mobj_t *mo, int16_t spec, int side,
 // Executes a line special that has been encoded in the script with
 // immediate operands.
 //
-static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, int16_t spec, int side,
+static void ACS_execLineSpecImm(line_t *l, Mobj *mo, int16_t spec, int side,
                                 int argc, int *argv)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
@@ -416,7 +417,7 @@ static void ACS_execLineSpecImm(line_t *l, mobj_t *mo, int16_t spec, int side,
 //
 static int ACS_countThings(int type, int tid)
 {
-   CThinker *th;
+   Thinker *th;
    int count = 0;
 
    // don't bother counting if no valid search is specified
@@ -431,8 +432,8 @@ static int ACS_countThings(int type, int tid)
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      mobj_t *mo;
-      if((mo = thinker_cast<mobj_t *>(th)))
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
       {
          if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
          {
@@ -540,13 +541,15 @@ enum
    ACTION_ENDSCRIPT, // end script execution on cmd or error
 };
 
+IMPLEMENT_THINKER_TYPE(ACSThinker)
+
 //
 // T_ACSThinker
 //
 // Function for acs thinkers. Runs the script by interpreting its bytecode
 // until the script terminates, is suspended, or waits on some condition.
 //
-void CACSThinker::Think()
+void ACSThinker::Think()
 {
    // cache vm data in local vars for efficiency
    register int *ip    = this->ip;
@@ -1021,7 +1024,7 @@ void CACSThinker::Think()
          break;
       case OP_SECTORSOUND:
          {
-            CPointThinker *src = NULL;
+            PointThinker *src = NULL;
             int vol            = POP();
             int strnum         = POP();
 
@@ -1100,7 +1103,7 @@ void CACSThinker::Think()
             int vol    = POP();
             int strnum = POP();
             int tid    = POP();
-            mobj_t *mo = NULL;
+            Mobj *mo = NULL;
 
             while((mo = P_FindMobjFromTID(tid, mo, NULL)))
             {
@@ -1137,38 +1140,61 @@ void CACSThinker::Think()
 }
 
 //
-// CACSThinker::serialize
+// ACSThinker::serialize
 //
-// Saves/loads a CACSThinker.
+// Saves/loads a ACSThinker.
 //
-void CACSThinker::serialize(CSaveArchive &arc)
+void ACSThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
-   // TODO:
-   /*
-   CACSThinker *acs;
-   *save_p++ = tc_acs;
-   acs = (CACSThinker *)save_p;
-   memcpy(save_p, th, sizeof(CACSThinker));
-   save_p += sizeof(CACSThinker);
-   acs->ip      = (int *)(acs->ip - acs->code);
-   acs->line    = acs->line ? (line_t *)(acs->line - lines + 1) : NULL;
-   acs->trigger = (mobj_t *)P_MobjNum(acs->trigger);
-   continue;
-   */
+   // Basic properties
+   arc << vmID << scriptNum << internalNum << stp << sreg << sdata 
+       << delay << lineSide;
+
+   // Arrays
+   P_ArchiveArray<int>(arc, stack,  ACS_STACK_LEN);
+   P_ArchiveArray<int>(arc, locals, ACS_NUMLOCALS);
+
+   // Pointers
+   if(arc.isSaving())
+   {
+      unsigned int tempIp, tempLine, tempTrigger;
+
+      // Save instruction pointer, line pointer, and trigger
+      tempIp      = ip - code;
+      tempLine    = line ? line - lines + 1 : 0;
+      tempTrigger = P_NumForThinker(trigger);
+      
+      arc << tempIp << tempLine << tempTrigger;
+   }
+   else
+   {
+      unsigned int ipnum, linenum;
+      
+      // Restore line pointer; IP is restored in ACS_RestartSavedScript,
+      // and trigger must be restored in deswizzle() after all thinkers
+      // have been spawned.
+      arc << ipnum << linenum << triggerSwizzle;
+
+      line = linenum ? &lines[linenum - 1] : NULL;
+
+      // This will restore all the various data structure pointers such as
+      // prev/next thread, stringtable, code/data, printBuffer, vm, etc.
+      ACS_RestartSavedScript(this, ipnum);
+   }
 }
 
 //
-// CACSThinker::deswizzle
+// ACSThinker::deswizzle
 //
-// Fixes up the trigger reference in a CACSThinker.
+// Fixes up the trigger reference in a ACSThinker.
 //
-void CACSThinker::deswizzle()
+void ACSThinker::deswizzle()
 {
-   // TODO:
-   // mo = P_MobjForNum((int)acs->trigger);
-   // P_SetNewTarget(&acs->trigger, mo);
+   Mobj *mo = dynamic_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
+   P_SetNewTarget(&trigger, mo);
+   triggerSwizzle = 0;
 }
 
 
@@ -1194,7 +1220,7 @@ void ACS_Init(void)
 //
 void ACS_NewGame(void)
 {
-   CDLListItem<deferredacs_t> *cur, *next;
+   DLListItem<deferredacs_t> *cur, *next;
 
    // clear out the world variables
    memset(ACSworldvars, 0, sizeof(ACSworldvars));
@@ -1322,7 +1348,7 @@ void ACS_LoadLevelScript(int lump)
 static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
                                        int type, int args[NUMLINEARGS])
 {
-   CDLListItem<deferredacs_t> *cur = acsDeferred;
+   DLListItem<deferredacs_t> *cur = acsDeferred;
    deferredacs_t *newdacs;
 
    // check to make sure the script isn't already scheduled
@@ -1367,9 +1393,9 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
 //
 void ACS_RunDeferredScripts(void)
 {
-   CDLListItem<deferredacs_t> *cur = acsDeferred, *next;
-   CACSThinker *newScript = NULL;
-   CACSThinker *rover = NULL;
+   DLListItem<deferredacs_t> *cur = acsDeferred, *next;
+   ACSThinker *newScript = NULL;
+   ACSThinker *rover = NULL;
    int internalNum;
 
    while(cur)
@@ -1439,11 +1465,11 @@ void ACS_RunDeferredScripts(void)
 // Standard method for starting an ACS script.
 //
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          mobj_t *mo, line_t *line, int side,
-                          CACSThinker **scr, boolean always)
+                          Mobj *mo, line_t *line, int side,
+                          ACSThinker **scr, boolean always)
 {
    acscript_t   *scrData;
-   CACSThinker *newScript, *rover;
+   ACSThinker *newScript, *rover;
    boolean foundScripts = false;
    int i, internalNum;
 
@@ -1486,14 +1512,14 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       return foundScripts;
 
    // setup the new script thinker
-   newScript = new CACSThinker;
+   newScript = new ACSThinker;
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;
    newScript->ip          = scrData->code;
    newScript->line        = line;
    newScript->lineSide    = side;
-   P_SetTarget<mobj_t>(&newScript->trigger, mo);
+   P_SetTarget<Mobj>(&newScript->trigger, mo);
 
    // copy in some important data
    newScript->code        = scrData->code;
@@ -1530,8 +1556,8 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 // Convenience routine; starts a script in the levelscript vm.
 //
 boolean ACS_StartScript(int scrnum, int map, int *args, 
-                        mobj_t *mo, line_t *line, int side,
-                        CACSThinker **scr)
+                        Mobj *mo, line_t *line, int side,
+                        ACSThinker **scr)
 {
    return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
                             line, side, scr, false);
@@ -1559,7 +1585,7 @@ boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
          acscript_t *script = &(vm->scripts[internalNum]);
-         CACSThinker *rover = script->threads;
+         ACSThinker *rover = script->threads;
 
          while(rover)
          {
@@ -1610,7 +1636,7 @@ boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
          acscript_t *script = &(vm->scripts[internalNum]);
-         CACSThinker *rover = script->threads;
+         ACSThinker *rover = script->threads;
 
          while(rover)
          {
@@ -1669,9 +1695,9 @@ void ACS_PrepareForLoad(void)
 //
 // ACS_RestartSavedScript
 //
-// Fixes up an CACSThinker loaded from a savegame.
+// Fixes up an ACSThinker loaded from a savegame.
 //
-void ACS_RestartSavedScript(CACSThinker *th)
+void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset)
 {
    // nullify list links for safety
    th->prevthread = NULL;
@@ -1688,7 +1714,7 @@ void ACS_RestartSavedScript(CACSThinker *th)
    // note: line and trigger pointers are restored in p_saveg.c
 
    // restore ip to be relative to new codebase (saved value is offset)
-   th->ip = (int *)(th->code + (size_t)th->ip);
+   th->ip = (int *)(th->code + ipOffset);
 
    // add the thread
    ACS_addThread(th, th->acscript);

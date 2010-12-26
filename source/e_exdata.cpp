@@ -1867,7 +1867,7 @@ void E_LoadExtraData(void)
 // calls P_SpawnMapThing with the new mapthing data from the 
 // corresponding ExtraData record.
 //
-mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
+Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 {
    unsigned int edThingIdx;
    mapthing_t *edthing;

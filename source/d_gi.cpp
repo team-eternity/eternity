@@ -615,7 +615,7 @@ char *gi_path_sosr;
 //
 // Default Override Objects
 //
-extern default_or_t HereticDefaultORs;
+extern default_or_t HereticDefaultORs[];
 
 //=============================================================================
 //
@@ -1271,7 +1271,7 @@ static gamemodeinfo_t giHereticSW =
    1,                // switchEpisode
    &HereticSkyData,  // skyData
 
-   &HereticDefaultORs, // defaultORs
+   HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
    NULL,             // exitSounds
@@ -1369,7 +1369,7 @@ static gamemodeinfo_t giHereticReg =
    2,                 // switchEpisode
    &HereticSkyData,   // skyData
    
-   &HereticDefaultORs, // defaultORs
+   HereticDefaultORs, // defaultORs
 
    "ENDTEXT",          // endTextName
    NULL,               // exitSounds

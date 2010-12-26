@@ -57,9 +57,9 @@
 //
 // Stay in state until a player is sighted.
 //
-void A_Look(mobj_t *actor)
+void A_Look(Mobj *actor)
 {
-   mobj_t *sndtarget = actor->subsector->sector->soundtarget;
+   Mobj *sndtarget = actor->subsector->sector->soundtarget;
    boolean allaround = false;
 
    // killough 7/18/98:
@@ -92,7 +92,7 @@ void A_Look(mobj_t *actor)
             return;
 
          // soundtarget is valid, acquire it.
-         P_SetTarget<mobj_t>(&actor->target, sndtarget);
+         P_SetTarget<Mobj>(&actor->target, sndtarget);
 
          // If an ambush monster, we must additionally be able to see it.
          if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
@@ -149,7 +149,7 @@ void A_Look(mobj_t *actor)
 // killough 10/98:
 // Allows monsters to continue movement while attacking
 //
-void A_KeepChasing(mobj_t *actor)
+void A_KeepChasing(Mobj *actor)
 {
    /*
    if(actor->movecount)
@@ -169,9 +169,9 @@ void A_KeepChasing(mobj_t *actor)
 // haleyjd 01/11/04: returns true if this thing is a "super friend"
 // and is going to attack a friend
 //
-static boolean P_SuperFriend(mobj_t *actor)
+static boolean P_SuperFriend(Mobj *actor)
 {
-   mobj_t *target = actor->target;
+   Mobj *target = actor->target;
 
    return ((actor->flags3 & MF3_SUPERFRIEND) && // thing is a super friend,
            target &&                            // target is valid, and
@@ -183,7 +183,7 @@ static boolean P_SuperFriend(mobj_t *actor)
 //
 // haleyjd 06/15/05: isolated from A_Chase.
 //
-static void P_MakeActiveSound(mobj_t *actor)
+static void P_MakeActiveSound(Mobj *actor)
 {
    if(actor->info->activesound && P_Random(pr_see) < 3)
    {
@@ -216,7 +216,7 @@ static void P_MakeActiveSound(mobj_t *actor)
 //
 // A_FaceTarget
 //
-void A_FaceTarget(mobj_t *actor)
+void A_FaceTarget(Mobj *actor)
 {
    if(!actor->target)
       return;
@@ -246,7 +246,7 @@ void A_FaceTarget(mobj_t *actor)
 // Actor has a melee attack,
 // so it tries to close as fast as possible
 //
-void A_Chase(mobj_t *actor)
+void A_Chase(Mobj *actor)
 {
    boolean superfriend = false;
 
@@ -447,7 +447,7 @@ void A_Chase(mobj_t *actor)
 // haleyjd 06/15/05: Makes an object walk in random directions without
 // following or attacking any target.
 //
-void A_RandomWalk(mobj_t *actor)
+void A_RandomWalk(Mobj *actor)
 {
    int i, checkdirs[NUMDIRS];
 
@@ -545,7 +545,7 @@ void A_RandomWalk(mobj_t *actor)
    P_MakeActiveSound(actor);
 }
 
-void A_Scream(mobj_t *actor)
+void A_Scream(Mobj *actor)
 {
    int sound;
    
@@ -578,7 +578,7 @@ void A_Scream(mobj_t *actor)
       S_StartSound(actor, sound);
 }
 
-void A_PlayerScream(mobj_t *mo)
+void A_PlayerScream(Mobj *mo)
 {
    int sound;
 
@@ -610,9 +610,9 @@ void A_PlayerScream(mobj_t *mo)
 // PCLASS_FIXME: skull height a playerclass property?
 #define SKULLHEIGHT (48 * FRACUNIT)
 
-void A_PlayerSkull(mobj_t *actor)
+void A_PlayerSkull(Mobj *actor)
 {
-   mobj_t *head;
+   Mobj *head;
    static int skullType = -1;
 
    // PCLASS_FIXME: skull type a playerclass property?
@@ -645,7 +645,7 @@ void A_PlayerSkull(mobj_t *actor)
    head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
 }
 
-void A_XScream(mobj_t *actor)
+void A_XScream(Mobj *actor)
 {
    int sound = GameModeInfo->playerSounds[sk_slop];
    
@@ -659,19 +659,19 @@ void A_XScream(mobj_t *actor)
    S_StartSound(actor, sound);
 }
 
-void A_Pain(mobj_t *actor)
+void A_Pain(Mobj *actor)
 {
    S_StartSound(actor, actor->info->painsound);
 }
 
-void A_Fall(mobj_t *actor)
+void A_Fall(Mobj *actor)
 {
    // actor is on ground, it can be walked over
    actor->flags &= ~MF_SOLID;
 }
 
 // killough 11/98: kill an object
-void A_Die(mobj_t *actor)
+void A_Die(Mobj *actor)
 {
    actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
    P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
@@ -680,7 +680,7 @@ void A_Die(mobj_t *actor)
 //
 // A_Explode
 //
-void A_Explode(mobj_t *thingy)
+void A_Explode(Mobj *thingy)
 {
    P_RadiusAttack(thingy, thingy->target, 128, thingy->info->mod);
 
@@ -688,7 +688,7 @@ void A_Explode(mobj_t *thingy)
       E_HitWater(thingy, thingy->subsector->sector);
 }
 
-void A_Nailbomb(mobj_t *thing)
+void A_Nailbomb(Mobj *thing)
 {
    int i;
    
@@ -708,7 +708,7 @@ void A_Nailbomb(mobj_t *thing)
 // killough 8/9/98: same as A_Explode, except that the damage is variable
 //
 
-void A_Detonate(mobj_t *mo)
+void A_Detonate(Mobj *mo)
 {
    P_RadiusAttack(mo, mo->target, mo->damage, mo->info->mod);
 

@@ -36,15 +36,15 @@
 
 // Earthquakes
 
-class CQuakeThinker : public CPointThinker
+class QuakeThinker : public PointThinker
 {
 protected:
    void Think();
 
 public:
    // Methods
-   virtual void serialize(CSaveArchive &arc);
-   virtual const char *getClassName() const { return "CQuakeThinker"; }
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "QuakeThinker"; }
 
    // Data Members
    int intensity;        // richter scale (hardly realistic)

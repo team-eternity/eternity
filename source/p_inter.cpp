@@ -321,7 +321,7 @@ boolean P_GivePower(player_t *player, int power)
 //
 // P_TouchSpecialThing
 //
-void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
+void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t   *player;
    int        i, sound;
@@ -834,10 +834,10 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 //
 // P_KillMobj
 //
-static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
+static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    mobjtype_t item;
-   mobj_t     *mo;
+   Mobj     *mo;
 
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
@@ -863,7 +863,7 @@ static void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       if(target->player)
       {
          source->player->frags[target->player-players]++;
-         HU_FragsupdateThinker();
+         HU_FragsUpdate();
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -995,7 +995,7 @@ static const char *P_GetDeathMessageString(emod_t *mod, boolean self)
 //
 // Implements obituaries based on the type of damage which killed a player.
 //
-static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor, 
+static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, 
                            emod_t *mod)
 {
    boolean friendly = false;
@@ -1077,8 +1077,8 @@ static void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor,
 
 typedef struct dmgspecdata_s
 {
-   mobj_t *source;
-   mobj_t *target;
+   Mobj *source;
+   Mobj *target;
    int     damage;
 } dmgspecdata_t;
 
@@ -1089,8 +1089,8 @@ typedef struct dmgspecdata_s
 //
 static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 {
-   mobj_t *source = dmgspec->source;
-   mobj_t *target = dmgspec->target;
+   Mobj *source = dmgspec->source;
+   Mobj *target = dmgspec->target;
 
    // only when charging
    if(source->flags & MF_SKULLFLY)
@@ -1125,7 +1125,7 @@ static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 //
 static boolean P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 {
-   mobj_t *target = dmgspec->target;
+   Mobj *target = dmgspec->target;
    
    // toss the target around
    
@@ -1180,7 +1180,7 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 //
 // haleyjd 10/12/09: Handles special cases for damage types.
 //
-static int P_AdjustDamageType(mobj_t *source, mobj_t *inflictor, int mod)
+static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
 {
    int newmod = mod;
 
@@ -1226,7 +1226,7 @@ static int P_AdjustDamageType(mobj_t *source, mobj_t *inflictor, int mod)
 //
 // haleyjd 07/13/03: added method of death flag
 //
-void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, 
+void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, 
                   int damage, int mod)
 {
    emod_t *emod;
@@ -1459,7 +1459,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
       // If target is a player, set player's target to source,
       // so that a friend can tell who's hurting a player
       if(player)
-         P_SetTarget<mobj_t>(&target->target, source);
+         P_SetTarget<Mobj>(&target->target, source);
       
       // killough 9/8/98:
       // If target's health is less than 50%, move it to the front of its list.
@@ -1468,7 +1468,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       if(target->health * 2 < target->info->spawnhealth)
       {
-         CThinker *cap = 
+         Thinker *cap = 
             &thinkerclasscap[target->flags & MF_FRIEND ? 
                              th_friends : th_enemies];
          (target->cprev->cnext = target->cnext)->cprev = target->cprev;
@@ -1548,10 +1548,10 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
           !((target->flags ^ target->lastenemy->flags) & MF_FRIEND) &&
              target->target != source)) // remember last enemy - killough
       {
-         P_SetTarget<mobj_t>(&target->lastenemy, target->target);
+         P_SetTarget<Mobj>(&target->lastenemy, target->target);
       }
 
-      P_SetTarget<mobj_t>(&target->target, source);       // killough 11/98
+      P_SetTarget<Mobj>(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
 
       if(target->state == states[target->info->spawnstate] && 
@@ -1579,17 +1579,17 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 // Inspired in part by Lee Killough's changelog, this allows the
 // a friend to be teleported to the player's location.
 //
-void P_Whistle(mobj_t *actor, int mobjtype)
+void P_Whistle(Mobj *actor, int mobjtype)
 {
-   mobj_t *mo;
-   CThinker *th;
+   Mobj *mo;
+   Thinker *th;
    fixed_t prevx, prevy, prevz, prestep, x, y, z;
    angle_t an;
 
    // look for a friend of the indicated type
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(!(mo = thinker_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<Mobj *>(th)))
          continue;
 
       // must be friendly, alive, and of the right type
@@ -1617,7 +1617,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
       // 06/06/05: use strict teleport now
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
-         mobj_t *fog = P_SpawnMobj(prevx, prevy, 
+         Mobj *fog = P_SpawnMobj(prevx, prevy, 
                                    prevz + GameModeInfo->teleFogHeight,
                                    GameModeInfo->teleFogType);
          S_StartSound(fog, GameModeInfo->teleSound);
@@ -1649,7 +1649,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
 static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   mobj_t *rover = NULL;
+   Mobj *rover = NULL;
 
    if(gamestate != GS_LEVEL)
    {
@@ -1686,9 +1686,9 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   mobj_t *rover = NULL;
-   mobj_t *inflictor = NULL;
-   mobj_t *source = NULL;
+   Mobj *rover = NULL;
+   Mobj *inflictor = NULL;
+   Mobj *source = NULL;
 
    if(gamestate != GS_LEVEL)
    {
@@ -1724,7 +1724,7 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   mobj_t *obj = NULL, *targ = NULL;
+   Mobj *obj = NULL, *targ = NULL;
 
    if(gamestate != GS_LEVEL)
    {
@@ -1737,7 +1737,7 @@ static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
 
    while((obj = P_FindMobjFromTID(params[1], obj, context->invocationData.trigger)))
    {
-      P_SetTarget<mobj_t>(&(obj->target), targ);
+      P_SetTarget<Mobj>(&(obj->target), targ);
    }
 
    return 0;

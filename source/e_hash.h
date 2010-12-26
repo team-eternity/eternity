@@ -34,7 +34,7 @@
 //
 // This class replaces the ehash_t structure to provide a generic,
 // high-performance hash table which utilizes the in-structure link capability
-// provided by CDLListItem<T>, meaning no cache-harmful separately allocated
+// provided by DLListItem<T>, meaning no cache-harmful separately allocated
 // links to traverse through.
 //
 // Provide the template the primary type of object to be stored in T, and the
@@ -46,7 +46,7 @@ template<typename T, typename K> class EHashTable
 public:
    typedef T              item_type;    // Type of item this hashtable can hold
    typedef K              key_type;     // Type of key marshalling object
-   typedef CDLListItem<T> link_type;    // Type of linked list item
+   typedef DLListItem<T> link_type;    // Type of linked list item
    typedef key_type  T::* keyptr_type;  // Type of pointer-to-member for key
    typedef link_type T::* linkptr_type; // Type of pointer-to-member for links
    
@@ -70,7 +70,7 @@ public:
    // Constructor
    //
    // Pass the pointer-to-member from the contained type for the key and the
-   // link (must be a CDLListItem<T>). The hash table uses these pointer-to-
+   // link (must be a DLListItem<T>). The hash table uses these pointer-to-
    // members on all the objects in the hash so that it can manipulate the
    // objects without knowing anything else about their type or layout.
    //

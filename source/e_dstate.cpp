@@ -72,7 +72,7 @@ enum
 //
 struct estatebuf_t
 {
-   CDLListItem<estatebuf_t> links; // linked list links
+   DLListItem<estatebuf_t> links; // linked list links
 
    int type;            // type of entry (label, state, etc.)
    int linenum;         // origin line number
@@ -103,8 +103,8 @@ typedef struct edecparser_s
 {
    // buffered states - accumulated in the principals pass and
    // iterated over during the main pass to drive generation
-   CDLListItem<estatebuf_t> *statebuffer; // temporary data cache
-   CDLListItem<estatebuf_t> *curbufstate; // current state during main pass
+   DLListItem<estatebuf_t> *statebuffer; // temporary data cache
+   DLListItem<estatebuf_t> *curbufstate; // current state during main pass
 
    estatebuf_t *neweststate; // newest buffered state generated
    
@@ -752,7 +752,7 @@ static void PSWrapStates(pstate_t *ps)
    {
       // Increment curbufstate and currentstate until end of list is reached,
       // a non-state object is encountered, or the line number changes
-      CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+      DLListItem<estatebuf_t> *link = DSP.curbufstate;
       int curlinenum = link->dllObject->linenum;
 
       while(link && link->dllObject->linenum == curlinenum && 
@@ -878,7 +878,7 @@ static void doGoto(pstate_t *ps)
       // main parsing pass
       if(DSP.curbufstate->dllObject->type == BUF_LABEL)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
 
          // last noticed state is a label; run down all labels and
          // create relocations that point to the current state.
@@ -974,7 +974,7 @@ static void doKeyword(pstate_t *ps)
       case KWD_STOP:
          if(DSP.curbufstate->dllObject->type == BUF_LABEL)
          {
-            CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+            DLListItem<estatebuf_t> *link = DSP.curbufstate;
 
             // if we're still on a label and this is a stop keyword, run 
             // forward through the labels and make kill states for each one
@@ -1034,7 +1034,7 @@ static void doText(pstate_t *ps)
    else
    {
       int sprnum = E_SpriteNumForName(ps->tokenbuffer->buffer);
-      CDLListItem<estatebuf_t> *link;
+      DLListItem<estatebuf_t> *link;
       int statenum;
 
       link = DSP.curbufstate;
@@ -1259,7 +1259,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
       {
          // Apply the frames to each state with the same line number.
          // We also set the nextstates here to be consecutive.
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
          unsigned int stridx = 0;
 
@@ -1310,7 +1310,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
       // Apply the tics to each state with the same line number.
       if(!ps->principals)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
          int tics = QStrAtoi(ps->tokenbuffer);
 
@@ -1342,7 +1342,7 @@ static void doAction(pstate_t *ps, const char *fn)
    // states in the current range.
    if(!ps->principals)
    {
-      CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+      DLListItem<estatebuf_t> *link = DSP.curbufstate;
       int statenum = DSP.currentstate;
       deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
 
@@ -1399,7 +1399,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       // Apply fullbright to all states in the current range
       if(!ps->principals)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
          while(link && link->dllObject->type == BUF_STATE && 
@@ -1466,7 +1466,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
       // Add argument object to all states
       if(!ps->principals)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
          while(link && link->dllObject->type == BUF_STATE && 
@@ -1504,7 +1504,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
       // Parse and populate argument in state range
       if(!ps->principals)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
          while(link && link->dllObject->type == BUF_STATE && 
@@ -1574,7 +1574,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
       // Parse and populate argument in state range
       if(!ps->principals)
       {
-         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+         DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
          while(link && link->dllObject->type == BUF_STATE && 
@@ -1754,7 +1754,7 @@ static boolean E_parseDecorateInternal(const char *input, boolean principals)
 //
 static boolean E_checkPrincipalSemantics(void)
 {
-   CDLListItem<estatebuf_t> *link = DSP.statebuffer; 
+   DLListItem<estatebuf_t> *link = DSP.statebuffer; 
    estatebuf_t *prev = NULL;
 
    // Empty? No way bub. Not gonna deal with it.
@@ -1989,7 +1989,7 @@ static boolean E_resolveGotos(edecstateout_t *dso)
 //
 static void E_freeDecorateData(void)
 {
-   CDLListItem<estatebuf_t> *obj = NULL;
+   DLListItem<estatebuf_t> *obj = NULL;
 
    // free the internalgotos list
    if(DSP.internalgotos)

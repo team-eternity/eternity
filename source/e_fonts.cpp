@@ -120,7 +120,7 @@ static const char *fontfmts[] =
 #define NUMFONTCHAINS 31
 
 static vfont_t              *e_font_namechains[NUMFONTCHAINS];
-static CDLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
+static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
 
 //=============================================================================
 //
@@ -859,7 +859,7 @@ vfont_t *E_FontForName(const char *name)
 vfont_t *E_FontForNum(int num)
 {
    unsigned int key = num % NUMFONTCHAINS;
-   CDLListItem<vfont_t> *link = e_font_numchains[key];
+   DLListItem<vfont_t> *link = e_font_numchains[key];
 
    while(link && link->dllObject->num != num)
       link = link->dllNext;

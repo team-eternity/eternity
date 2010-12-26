@@ -315,7 +315,7 @@ CONSOLE_CONST(rngseed, rngseed);
 
 CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
 {
-   mobj_t *mobj;
+   Mobj *mobj;
    int playernum;
    
    playernum = Console.cmdsrc;

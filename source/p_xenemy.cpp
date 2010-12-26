@@ -33,18 +33,19 @@
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_saveg.h"
 #include "p_tick.h"
 #include "e_sound.h"
 #include "s_sound.h"
 
-IMPLEMENT_THINKER_TYPE(CQuakeThinker)
+IMPLEMENT_THINKER_TYPE(QuakeThinker)
 
 //
 // T_QuakeThinker
 //
 // Earthquake effect thinker.
 //
-void CQuakeThinker::Think()
+void QuakeThinker::Think()
 {
    int i, tics;
    sfxinfo_t *quakesound;
@@ -71,7 +72,7 @@ void CQuakeThinker::Think()
       if(playeringame[i])
       {
          player_t *p  = &players[i];
-         mobj_t   *mo = p->mo;
+         Mobj   *mo = p->mo;
          fixed_t  dst = P_AproxDistance(this->x - mo->x, 
                                         this->y - mo->y);
 
@@ -103,13 +104,13 @@ void CQuakeThinker::Think()
 }
 
 //
-// CQuakeThinker::serialize
+// QuakeThinker::serialize
 //
-// Saves/loads a CQuakeThinker.
+// Saves/loads a QuakeThinker.
 //
-void CQuakeThinker::serialize(CSaveArchive &arc)
+void QuakeThinker::serialize(SaveArchive &arc)
 {
-   CPointThinker::serialize(arc);
+   PointThinker::serialize(arc);
 
    arc << intensity << duration << quakeRadius << damageRadius;
 }
@@ -121,15 +122,15 @@ void CQuakeThinker::serialize(CSaveArchive &arc)
 //
 boolean P_StartQuake(int *args)
 {
-   mobj_t *mo  = NULL;
+   Mobj *mo  = NULL;
    boolean ret = false;
 
    while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
    {
-      CQuakeThinker *qt;
+      QuakeThinker *qt;
       ret = true;
 
-      qt = new CQuakeThinker;
+      qt = new QuakeThinker;
       qt->addThinker();
 
       qt->intensity    = args[0];

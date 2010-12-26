@@ -70,7 +70,6 @@ int default_weapon_speed = 6;
 #define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
 
 extern void P_Thrust(player_t *, angle_t, fixed_t);
-int weapon_recoil;      // weapon recoil
 
 // The following array holds the recoil values         // phares
 // haleyjd 08/18/08: recoil moved into weaponinfo
@@ -78,7 +77,7 @@ int weapon_recoil;      // weapon recoil
 // haleyjd 05/21/08:
 // This global is only asserted while an action function is being dispatched
 // from inside P_SetPsprite. This allows codepointer functions to behave 
-// differently if called by mobj_t's or by player weapons.
+// differently if called by Mobj's or by player weapons.
 
 int action_from_pspr;
 
@@ -88,7 +87,7 @@ int action_from_pspr;
 //
 // This structure is used to support copying of args between gun and player
 // mobj states during execution of gun codepointer actions so that pointers
-// designed to work with mobj_t's can work seamlessly with guns as well.
+// designed to work with Mobj's can work seamlessly with guns as well.
 //
 
 typedef struct gunaction_s
@@ -145,7 +144,7 @@ static void P_SetupPlayerGunAction(player_t *player, pspdef_t *psp)
 {
    // create a new gunaction
    gunaction_t *ga;
-   mobj_t *mo = player->mo;
+   Mobj *mo = player->mo;
 
    ga = P_GetGunAction();
 
@@ -619,7 +618,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
 //
 // Plays a sound originating from the player's weapon by sfxinfo_t *
 //
-static void P_WeaponSoundInfo(mobj_t *mo, sfxinfo_t *sound)
+static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 {
    int volume = 127;
 
@@ -635,7 +634,7 @@ static void P_WeaponSoundInfo(mobj_t *mo, sfxinfo_t *sound)
 //
 // Plays a sound originating from the player's weapon
 //
-static void P_WeaponSound(mobj_t *mo, int sfx_id)
+static void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
@@ -660,7 +659,7 @@ static void P_WeaponSound(mobj_t *mo, int sfx_id)
 // Follows after getting weapon up,
 // or after previous attack/fire sequence.
 //
-void A_WeaponReady(mobj_t *mo)
+void A_WeaponReady(Mobj *mo)
 {
    player_t *player;
    pspdef_t *psp;
@@ -725,7 +724,7 @@ void A_WeaponReady(mobj_t *mo)
 // The player can re-fire the weapon
 // without lowering it entirely.
 //
-void A_ReFire(mobj_t *mo)
+void A_ReFire(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -757,7 +756,7 @@ void A_ReFire(mobj_t *mo)
 // don't need to complete the reload frames for the weapon here. 
 // G_BuildTiccmd will set ->pendingweapon for us later on.
 //
-void A_CheckReload(mobj_t *mo)
+void A_CheckReload(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -776,7 +775,7 @@ void A_CheckReload(mobj_t *mo)
 //
 // Lowers current weapon, and changes weapon at bottom.
 //
-void A_Lower(mobj_t *mo)
+void A_Lower(Mobj *mo)
 {
    player_t *player;
    pspdef_t *psp;
@@ -819,7 +818,7 @@ void A_Lower(mobj_t *mo)
 //
 // A_Raise
 //
-void A_Raise(mobj_t *mo)
+void A_Raise(Mobj *mo)
 {
    statenum_t newstate;
    player_t *player;
@@ -878,7 +877,7 @@ static void A_FireSomething(player_t* player, int adder)
 // A_GunFlash
 //
 
-void A_GunFlash(mobj_t *mo)
+void A_GunFlash(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -915,7 +914,7 @@ void A_GunFlash(mobj_t *mo)
 //
 // A_Punch
 //
-void A_Punch(mobj_t *mo)
+void A_Punch(Mobj *mo)
 {
    angle_t angle;
    int slope, damage = (P_Random(pr_punch) % 10 + 1) << 1;
@@ -955,7 +954,7 @@ void A_Punch(mobj_t *mo)
 //
 // A_Saw
 //
-void A_Saw(mobj_t *mo)
+void A_Saw(Mobj *mo)
 {
    int slope, damage = 2 * (P_Random(pr_saw) % 10 + 1);
    angle_t angle     = mo->angle;
@@ -1005,7 +1004,7 @@ void A_Saw(mobj_t *mo)
 //
 // A_FireMissile
 //
-void A_FireMissile(mobj_t *mo)
+void A_FireMissile(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -1023,9 +1022,9 @@ void A_FireMissile(mobj_t *mo)
 
 #define BFGBOUNCE 16
 
-void A_FireBFG(mobj_t *actor)
+void A_FireBFG(Mobj *actor)
 {
-   mobj_t *mo;
+   Mobj *mo;
    player_t *player = actor->player;
 
    if(!player)
@@ -1046,7 +1045,7 @@ void A_FireBFG(mobj_t *actor)
 // This code may not be used in other mods without appropriate credit given.
 // Code leeches will be telefragged.
 //
-void A_FireOldBFG(mobj_t *mo)
+void A_FireOldBFG(Mobj *mo)
 {
    static int type1 = -1;
    static int type2 = -1;
@@ -1090,7 +1089,7 @@ void A_FireOldBFG(mobj_t *mo)
 
    do
    {
-      mobj_t *th;
+      Mobj *th;
       angle_t an = mo->angle;
       angle_t an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
       angle_t an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
@@ -1137,7 +1136,7 @@ void A_FireOldBFG(mobj_t *mo)
                        mo->z + 62*FRACUNIT - player->psprites[ps_weapon].sy,
                        type);
 
-      P_SetTarget<mobj_t>(&th->target, mo);
+      P_SetTarget<Mobj>(&th->target, mo);
       th->angle = an1;
       th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
       th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
@@ -1150,7 +1149,7 @@ void A_FireOldBFG(mobj_t *mo)
 //
 // A_FirePlasma
 //
-void A_FirePlasma(mobj_t *mo)
+void A_FirePlasma(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -1173,7 +1172,7 @@ static fixed_t bulletslope;
 // Sets a slope so a near miss is at approximately
 // the height of the intended target
 //
-void P_BulletSlope(mobj_t *mo)
+void P_BulletSlope(Mobj *mo)
 {
    angle_t an = mo->angle;    // see which target is to be aimed at
    
@@ -1194,7 +1193,7 @@ void P_BulletSlope(mobj_t *mo)
 //
 // P_GunShot
 //
-void P_GunShot(mobj_t *mo, boolean accurate)
+void P_GunShot(Mobj *mo, boolean accurate)
 {
    int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
    angle_t angle = mo->angle;
@@ -1208,7 +1207,7 @@ void P_GunShot(mobj_t *mo, boolean accurate)
 //
 // A_FirePistol
 //
-void A_FirePistol(mobj_t *mo)
+void A_FirePistol(Mobj *mo)
 {
    player_t *player = mo->player;
 
@@ -1231,7 +1230,7 @@ void A_FirePistol(mobj_t *mo)
 //
 // A_FireShotgun
 //
-void A_FireShotgun(mobj_t *mo)
+void A_FireShotgun(Mobj *mo)
 {
    int i;
    player_t *player = mo->player;
@@ -1257,7 +1256,7 @@ void A_FireShotgun(mobj_t *mo)
 //
 // A_FireShotgun2
 //
-void A_FireShotgun2(mobj_t *mo)
+void A_FireShotgun2(Mobj *mo)
 {
    int i;
    player_t *player = mo->player;
@@ -1290,17 +1289,17 @@ void A_FireShotgun2(mobj_t *mo)
 
 // haleyjd 04/05/07: moved all SSG codepointers here
 
-void A_OpenShotgun2(mobj_t *mo)
+void A_OpenShotgun2(Mobj *mo)
 {
    P_WeaponSound(mo, sfx_dbopn);
 }
 
-void A_LoadShotgun2(mobj_t *mo)
+void A_LoadShotgun2(Mobj *mo)
 {
    P_WeaponSound(mo, sfx_dbload);
 }
 
-void A_CloseShotgun2(mobj_t *mo)
+void A_CloseShotgun2(Mobj *mo)
 {
    P_WeaponSound(mo, sfx_dbcls);
    A_ReFire(mo);
@@ -1309,7 +1308,7 @@ void A_CloseShotgun2(mobj_t *mo)
 //
 // A_FireCGun
 //
-void A_FireCGun(mobj_t *mo)
+void A_FireCGun(Mobj *mo)
 {
    player_t *player;
    pspdef_t *psp;
@@ -1348,7 +1347,7 @@ void A_FireCGun(mobj_t *mo)
    P_GunShot(mo, !player->refire);
 }
 
-void A_Light0(mobj_t *mo)
+void A_Light0(Mobj *mo)
 {
    if(!mo->player)
       return;
@@ -1356,7 +1355,7 @@ void A_Light0(mobj_t *mo)
    mo->player->extralight = 0;
 }
 
-void A_Light1(mobj_t *mo)
+void A_Light1(Mobj *mo)
 {
    if(!mo->player)
       return;
@@ -1365,7 +1364,7 @@ void A_Light1(mobj_t *mo)
       mo->player->extralight = 1;
 }
 
-void A_Light2(mobj_t *mo)
+void A_Light2(Mobj *mo)
 {
    if(!mo->player)
       return;
@@ -1374,16 +1373,16 @@ void A_Light2(mobj_t *mo)
       mo->player->extralight = 2;
 }
 
-void A_BouncingBFG(mobj_t *mo);
-void A_BFG11KHit(mobj_t *mo);
-void A_BFGBurst(mobj_t *mo); // haleyjd
+void A_BouncingBFG(Mobj *mo);
+void A_BFG11KHit(Mobj *mo);
+void A_BFGBurst(Mobj *mo); // haleyjd
 
 //
 // A_BFGSpray
 //
 // Spawn a BFG explosion on every monster in view
 //
-void A_BFGSpray(mobj_t *mo)
+void A_BFGSpray(Mobj *mo)
 {
    int i;
 
@@ -1436,10 +1435,10 @@ void A_BFGSpray(mobj_t *mo)
 //
 // haleyjd: The bouncing BFG from SMMU, but fixed to work better.
 //
-void A_BouncingBFG(mobj_t *mo)
+void A_BouncingBFG(Mobj *mo)
 {
    int i;
-   mobj_t *newmo;
+   Mobj *newmo;
    
    if(!mo->extradata.bfgcount)
       return;
@@ -1470,7 +1469,7 @@ void A_BouncingBFG(mobj_t *mo)
       // haleyjd: can't use P_SpawnMissile here
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
-      P_SetTarget<mobj_t>(&newmo->target, mo->target); // pass on the player
+      P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
       an2 = P_PointToAngle(newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y);
       newmo->angle = an2;
       
@@ -1489,7 +1488,7 @@ void A_BouncingBFG(mobj_t *mo)
          (clip.linetarget->z + (clip.linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget<mobj_t>(&newmo->tracer, clip.linetarget); // haleyjd: track target
+      P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target
 
       P_CheckMissileSpawn(newmo);
 
@@ -1504,7 +1503,7 @@ void A_BouncingBFG(mobj_t *mo)
 //
 // Explosion pointer for SMMU BFG11k.
 //
-void A_BFG11KHit(mobj_t *mo)
+void A_BFG11KHit(Mobj *mo)
 {
    int i = 0;
    int j, damage;
@@ -1569,11 +1568,11 @@ void A_BFG11KHit(mobj_t *mo)
 // when he stopped working on it. This is a tribute to his bold
 // spirit ^_^
 //
-void A_BFGBurst(mobj_t *mo)
+void A_BFGBurst(Mobj *mo)
 {
    int a;
    angle_t an = 0;
-   mobj_t *th;
+   Mobj *th;
    static int plasmaType = -1;
    
    if(plasmaType == -1)
@@ -1584,7 +1583,7 @@ void A_BFGBurst(mobj_t *mo)
       an += ANG90 / 10;
 
       th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
-      P_SetTarget<mobj_t>(&th->target, mo->target);
+      P_SetTarget<Mobj>(&th->target, mo->target);
 
       th->angle = an;
       th->momx = finecosine[an >> ANGLETOFINESHIFT] << 4;
@@ -1598,7 +1597,7 @@ void A_BFGBurst(mobj_t *mo)
 //
 // A_BFGsound
 //
-void A_BFGsound(mobj_t *mo)
+void A_BFGsound(Mobj *mo)
 {
    P_WeaponSound(mo, sfx_bfg);
 }
@@ -1652,7 +1651,7 @@ void P_MovePsprites(player_t *player)
 //===============================
 
 // FIXME/TODO: get rid of this?
-void A_FireGrenade(mobj_t *mo)
+void A_FireGrenade(Mobj *mo)
 {
 }
 
@@ -1683,7 +1682,7 @@ static argkeywd_t fcbkwds =
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
 //
-void A_FireCustomBullets(mobj_t *mo)
+void A_FireCustomBullets(Mobj *mo)
 {
    int i, accurate, numbullets, damage, dmgmod;
    sfxinfo_t *sfx;
@@ -1775,10 +1774,10 @@ static argkeywd_t seekkwds =
 // args[1] : whether or not to home at current autoaim target
 //           (missile requires homing maintenance pointers, however)
 //
-void A_FirePlayerMissile(mobj_t *actor)
+void A_FirePlayerMissile(Mobj *actor)
 {
    int thingnum;
-   mobj_t *mo;
+   Mobj *mo;
    boolean seek;
    player_t *player;
    pspdef_t *psp;
@@ -1810,7 +1809,7 @@ void A_FirePlayerMissile(mobj_t *actor)
       P_BulletSlope(actor);
 
       if(clip.linetarget)
-         P_SetTarget<mobj_t>(&mo->tracer, clip.linetarget);
+         P_SetTarget<Mobj>(&mo->tracer, clip.linetarget);
    }
 }
 
@@ -1839,7 +1838,7 @@ static argkeywd_t cpmkwds =
 // args[3] : angle deflection type (none, punch, chainsaw)
 // args[4] : sound to make (dehacked number)
 //
-void A_CustomPlayerMelee(mobj_t *mo)
+void A_CustomPlayerMelee(Mobj *mo)
 {
    angle_t angle;
    int slope, damage, dmgfactor, dmgmod, berzerkmul, deftype;
@@ -1967,14 +1966,14 @@ static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 // args[3] : boolean, 1 == set player's target to autoaim target
 // args[4] : boolean, 1 == use ammo on current weapon if attack succeeds
 //
-void A_PlayerThunk(mobj_t *mo)
+void A_PlayerThunk(Mobj *mo)
 {
    boolean face;
    boolean settarget;
    boolean useammo;
    int cptrnum, statenum;
    state_t *oldstate = 0;
-   mobj_t *oldtarget = NULL, *localtarget = NULL;
+   Mobj *oldtarget = NULL, *localtarget = NULL;
    player_t *player;
    pspdef_t *psp;
 
@@ -2002,7 +2001,7 @@ void A_PlayerThunk(mobj_t *mo)
       P_BulletSlope(mo);
       if(clip.linetarget)
       {
-         P_SetTarget<mobj_t>(&(mo->target), clip.linetarget);
+         P_SetTarget<Mobj>(&(mo->target), clip.linetarget);
          localtarget = clip.linetarget;
       }
       else
@@ -2040,7 +2039,7 @@ void A_PlayerThunk(mobj_t *mo)
    // restore player's old target if a new one was found & set
    if(settarget && localtarget)
    {
-      P_SetTarget<mobj_t>(&(mo->target), oldtarget);
+      P_SetTarget<Mobj>(&(mo->target), oldtarget);
    }
 
    // put player back into his normal state

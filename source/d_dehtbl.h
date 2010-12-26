@@ -27,7 +27,7 @@
 
 typedef struct deh_bexptr_s
 {
-   void (*cptr)(mobj_t *); // actual pointer to the subroutine
+   void (*cptr)(Mobj *); // actual pointer to the subroutine
    char *lookup;           // mnemonic lookup string to be specified in BEX
    int next;               // haleyjd: for bex hash chaining   
 } deh_bexptr;

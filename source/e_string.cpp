@@ -58,7 +58,7 @@ cfg_opt_t edf_string_opts[] =
 #define NUM_EDFSTR_CHAINS 257
 
 static edf_string_t              *edf_str_chains[NUM_EDFSTR_CHAINS];
-static CDLListItem<edf_string_t> *edf_str_numchains[NUM_EDFSTR_CHAINS];
+static DLListItem<edf_string_t> *edf_str_numchains[NUM_EDFSTR_CHAINS];
 
 //
 // haleyjd 08/05/05: To support editing the numeric keys of existing
@@ -202,7 +202,7 @@ edf_string_t *E_GetStringForName(const char *key)
 edf_string_t *E_StringForNum(int num)
 {
    int keyval = num % NUM_EDFSTR_CHAINS;
-   CDLListItem<edf_string_t> *cur = edf_str_numchains[keyval];
+   DLListItem<edf_string_t> *cur = edf_str_numchains[keyval];
 
    while(cur && cur->dllObject->numkey != num)
       cur = cur->dllNext;

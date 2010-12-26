@@ -92,12 +92,12 @@ struct ESoundSeq_t;
 //
 struct SndSeq_t
 {
-   CDLListItem<SndSeq_t> link;   // double-linked list node -- must be first
+   DLListItem<SndSeq_t> link;   // double-linked list node -- must be first
 
    ESoundSeq_t *sequence;        // pointer to EDF sound sequence
    seqcmd_t *cmdPtr;             // current position in command sequence
 
-   mobj_t *origin;               // the origin of the sequence
+   PointThinker *origin;         // the origin of the sequence
    sfxinfo_t *currentSound;      // current sound being played
    
    int delayCounter;             // delay time counter
@@ -112,16 +112,16 @@ struct SndSeq_t
 };
 
 // Sound sequence pointers, needed for savegame support
-extern CDLListItem<SndSeq_t> *SoundSequences;
+extern DLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
-void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
-                        int seqOriginIdx);
-void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
-                         int seqOriginIdx);
-void S_StopSequence(mobj_t *mo);
-void S_SquashSequence(mobj_t *mo);
-void S_KillSequence(mobj_t *mo);
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, 
+                        int seqOriginType, int seqOriginIdx);
+void S_StartSequenceName(PointThinker *mo, const char *seqname, 
+                         int seqOriginType, int seqOriginIdx);
+void S_StopSequence(PointThinker *mo);
+void S_SquashSequence(PointThinker *mo);
+void S_KillSequence(PointThinker *mo);
 
 void S_StartSectorSequence(sector_t *s, int seqtype);
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
@@ -139,7 +139,7 @@ void S_SetSequenceStatus(SndSeq_t *seq);
 void S_SequenceGameLoad(void);
 void S_InitEnviroSpots(void);
 
-boolean S_CheckSequenceLoop(mobj_t *mo);
+boolean S_CheckSequenceLoop(PointThinker *mo);
 boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling);
 
 // EnviroSeqMgr_t -- environment sequence manager data

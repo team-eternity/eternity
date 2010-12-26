@@ -344,7 +344,7 @@ extern  int        maketic;
 extern  ticcmd_t   netcmds[][BACKUPTICS];
 extern  int        ticdup;
 
-extern CThinker thinkercap;  // Both the head and tail of the thinker list
+extern Thinker thinkercap;  // Both the head and tail of the thinker list
 
 //-----------------------------------------------------------------------------
 

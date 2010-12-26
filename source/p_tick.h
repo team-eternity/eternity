@@ -25,31 +25,31 @@
 #include "doomtype.h"
 
 //
-// CZoneLevelItem
+// ZoneLevelItem
 //
 // haleyjd 11/22/10:
 // This class can be inherited from to obtain the ability to be allocated on the
 // zone heap with a PU_LEVEL allocation tag.
 //
-class CZoneLevelItem
+class ZoneLevelItem
 {
 public:
-   virtual ~CZoneLevelItem() {}
+   virtual ~ZoneLevelItem() {}
    void *operator new (size_t size);
    void  operator delete (void *p);
 };
 
-class CSaveArchive;
+class SaveArchive;
 
 // Doubly linked list of actors.
-class CThinker : public CZoneLevelItem
+class Thinker : public ZoneLevelItem
 {
 private:
    // Private implementation details
    void removeDelayed(); 
    
    // Current position in list during RunThinkers
-   static CThinker *currentthinker;
+   static Thinker *currentthinker;
 
 protected:
    // Virtual methods (overridables)
@@ -94,32 +94,32 @@ public:
 
    // Serialization
    // When using serialize, always call your parent implementation!
-   virtual void serialize(CSaveArchive &arc);
+   virtual void serialize(SaveArchive &arc);
    // De-swizzling should restore pointers to other thinkers.
    virtual void deswizzle() {}
    virtual boolean shouldSerialize()  const { return !removed;   }
-   virtual const char *getClassName() const { return "CThinker"; }
+   virtual const char *getClassName() const { return "Thinker"; }
 
    // Data Members
 
-   CThinker *prev, *next;
+   Thinker *prev, *next;
   
    // killough 8/29/98: we maintain thinkers in several equivalence classes,
    // according to various criteria, so as to allow quicker searches.
 
-   CThinker *cnext, *cprev; // Next, previous thinkers in same class
+   Thinker *cnext, *cprev; // Next, previous thinkers in same class
 };
 
 //
 // thinker_cast
 //
 // Use this dynamic_cast variant to automatically check if something is a valid
-// unremoved CThinker subclass instance. This is necessary because the old 
+// unremoved Thinker subclass instance. This is necessary because the old 
 // behavior of checking function pointer values effectively changed the type 
 // that a thinker was considered to be when it was set into a deferred removal
 // state.
 //
-template<typename T> inline T thinker_cast(CThinker *th)
+template<typename T> inline T thinker_cast(Thinker *th)
 {
    return (th && !th->isRemoved()) ? dynamic_cast<T>(th) : NULL;
 }
@@ -128,7 +128,7 @@ template<typename T> inline T thinker_cast(CThinker *th)
 // Carries out all thinking of monsters and players.
 void P_Ticker(void);
 
-extern CThinker thinkercap;  // Both the head and tail of the thinker list
+extern Thinker thinkercap;  // Both the head and tail of the thinker list
 
 //
 // P_SetTarget
@@ -160,7 +160,7 @@ typedef enum
   NUMTHCLASS
 } th_class;
 
-extern CThinker thinkerclasscap[];
+extern Thinker thinkerclasscap[];
 
 // sf: jumping-viewz-on-hyperlift bug
 extern boolean reset_viewz;
@@ -172,46 +172,46 @@ extern boolean reset_viewz;
 // of any class without resort to a gigantic switch statement. This calls for
 // a factory pattern.
 //
-class CThinkerType
+class ThinkerType
 {
 protected:
-   CThinkerType *next;
+   ThinkerType *next;
    const char   *name;
 
 public:
-   CThinkerType(const char *pName);
+   ThinkerType(const char *pName);
 
    // newThinker is a pure virtual method that must be overridden by a child 
    // class to construct a specific type of thinker
-   virtual CThinker *newThinker() const = 0;
+   virtual Thinker *newThinker() const = 0;
 
-   // FindType is a static method that will find the CThinkerType given the
-   // name of a CThinker-descendent class (ie., "CFireFlicker"). The returned
+   // FindType is a static method that will find the ThinkerType given the
+   // name of a Thinker-descendent class (ie., "FireFlickerThinker"). The returned
    // object can then be used to construct a new instance of that type by 
    // calling the newThinker method. The instance can then be fed to the
    // serialization mechanism.
-   static CThinkerType *FindType(const char *pName); // find a type in the list
+   static ThinkerType *FindType(const char *pName); // find a type in the list
 };
 
 //
 // IMPLEMENT_THINKER_TYPE
 //
-// Use this macro once per CThinker descendant. Best placed near the Think 
+// Use this macro once per Thinker descendant. Best placed near the Think 
 // routine.
 // Example:
-//   IMPLEMENT_THINKER_TYPE(CFireFlicker)
-//   This defines CFireFlickerType, which constructs a CThinkerType parent
-//   with "CFireFlicker" as its name member and which returns a new CFireFlicker
+//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
+//   This defines FireFlickerThinkerType, which constructs a ThinkerType parent
+//   with "FireFlickerThinker" as its name member and which returns a new FireFlickerThinker
 //   instance via its newThinker virtual method.
 // 
 #define IMPLEMENT_THINKER_TYPE(name) \
-class name ## Type : public CThinkerType \
+class name ## Type : public ThinkerType \
 { \
 protected: \
    static name ## Type global ## name ## Type ; \
 public: \
-   name ## Type() : CThinkerType(#name) {} \
-   virtual CThinker *newThinker() const { return new #name ; } \
+   name ## Type() : ThinkerType( #name ) {} \
+   virtual Thinker *newThinker() const { return new name ; } \
 }; \
 name ## Type name ## Type :: global ## name ## Type;
    

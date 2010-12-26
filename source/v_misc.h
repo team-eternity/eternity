@@ -41,9 +41,9 @@ void V_ResetMode(void);
 // Font
 //
 
-const char *small_font_name;
-const char *big_font_name;
-const char *big_num_font_name;
+extern const char *small_font_name;
+extern const char *big_font_name;
+extern const char *big_num_font_name;
 
 // haleyjd 10/30/06: enum for text control characters
 enum

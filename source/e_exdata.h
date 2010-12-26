@@ -130,7 +130,7 @@ typedef struct mapsectorext_s
 // Globals
 
 void    E_LoadExtraData(void);
-mobj_t *E_SpawnMapThingExt(mapthing_t *mt);
+Mobj *E_SpawnMapThingExt(mapthing_t *mt);
 void    E_LoadLineDefExt(line_t *line, boolean applySpecial);
 boolean E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);

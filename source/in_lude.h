@@ -46,7 +46,7 @@ extern int intertime;
 extern int acceleratestage;
 
 extern MobjCollection camerathings;
-extern mobj_t *wi_camera;
+extern Mobj *wi_camera;
 
 extern const char *in_fontname;
 extern const char *in_bigfontname;

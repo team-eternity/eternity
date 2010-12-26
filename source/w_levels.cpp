@@ -62,7 +62,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir
 //
 struct manageddir_t
 {
-   CDLListItem<manageddir_t> links; // links
+   DLListItem<manageddir_t> links; // links
    EStringHashKey            name;  // name
 
    waddir_t    waddir; // directory

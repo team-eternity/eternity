@@ -54,7 +54,7 @@ typedef struct dynaseg_s
 //
 struct rpolyobj_t
 {
-   CDLListItem<rpolyobj_t> link;  // for subsector links
+   DLListItem<rpolyobj_t> link;  // for subsector links
 
    dynaseg_t  *dynaSegs; // list of dynasegs
    polyobj_t  *polyobj;  // polyobject of which this rpolyobj_t is a fragment

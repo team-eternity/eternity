@@ -148,7 +148,7 @@ static boolean ignore_inerts = true;
 // telefragged. This simply will not do.
 static boolean stomp3d = false;
 
-static boolean PIT_StompThing3D(mobj_t *thing)
+static boolean PIT_StompThing3D(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -179,7 +179,7 @@ static boolean PIT_StompThing3D(mobj_t *thing)
 #endif
 
 
-static boolean PIT_StompThing(mobj_t *thing)
+static boolean PIT_StompThing(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -218,7 +218,7 @@ static boolean PIT_StompThing(mobj_t *thing)
 //
 // Returns the friction associated with a particular mobj.
 //
-int P_GetFriction(const mobj_t *mo, int *frictionfactor)
+int P_GetFriction(const Mobj *mo, int *frictionfactor)
 {
    int friction = ORIG_FRICTION;
    int movefactor = ORIG_FRICTION_FACTOR;
@@ -263,7 +263,7 @@ int P_GetFriction(const mobj_t *mo, int *frictionfactor)
 //
 // killough 8/28/98: rewritten
 //
-int P_GetMoveFactor(mobj_t *mo, int *frictionp)
+int P_GetMoveFactor(Mobj *mo, int *frictionp)
 {
    int movefactor, friction;
 
@@ -339,11 +339,11 @@ int P_GetMoveFactor(mobj_t *mo, int *frictionp)
 //
 
 // killough 8/9/98
-boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
+boolean P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   boolean (*func)(mobj_t *);
+   boolean (*func)(Mobj *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -450,7 +450,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 // inert objects that are at their destination. Rather, the teleport
 // is rejected.
 //
-boolean P_TeleportMoveStrict(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
+boolean P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
 {
    boolean res;
 
@@ -467,7 +467,7 @@ boolean P_TeleportMoveStrict(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 // P_PortalTeleportMove
 //
 // SoM: calls P_TeleportMove with the stomp3d flag set to true
-boolean P_PortalTeleportMove(mobj_t *thing, fixed_t x, fixed_t y)
+boolean P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 {
    boolean res;
 
@@ -725,7 +725,7 @@ boolean PIT_CheckLine(line_t *ld)
 // haleyjd: isolated code to test for and execute touchy thing death.
 // Required for proper 3D clipping support.
 //
-boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
+boolean P_Touched(Mobj *thing, Mobj *tmthing)
 {
    static int painType = -1, skullType;
 
@@ -763,7 +763,7 @@ boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
 // haleyjd: isolated code to test for and execute touching specials.
 // Required for proper 3D clipping support.
 //
-boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
+boolean P_CheckPickUp(Mobj *thing, Mobj *tmthing)
 {
    int solid = thing->flags & MF_SOLID;
 
@@ -779,7 +779,7 @@ boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
 // haleyjd: isolated code to test for and execute SKULLFLY objects hitting
 // things. Returns true if PIT_CheckThing should exit.
 //
-boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
+boolean P_SkullHit(Mobj *thing, Mobj *tmthing)
 {
    boolean ret = false;
 
@@ -827,7 +827,7 @@ boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
 // missiles, since this alters the playability of the game severely
 // in areas of many maps.
 //
-int P_MissileBlockHeight(mobj_t *mo)
+int P_MissileBlockHeight(Mobj *mo)
 {
    return (demo_version >= 333 && !comp[comp_theights] &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;
@@ -836,7 +836,7 @@ int P_MissileBlockHeight(mobj_t *mo)
 //
 // PIT_CheckThing
 // 
-static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
+static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
    int damage;
@@ -1037,7 +1037,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
 // sides of the blocking line. If so, return true, otherwise
 // false.
 //
-boolean Check_Sides(mobj_t *actor, int x, int y)
+boolean Check_Sides(Mobj *actor, int x, int y)
 {
    int bx,by,xl,xh,yl,yh;
    
@@ -1080,9 +1080,9 @@ boolean Check_Sides(mobj_t *actor, int x, int y)
 // (except things picked up).
 //
 // in:
-//  a mobj_t (can be valid or invalid)
+//  a Mobj (can be valid or invalid)
 //  a position to be checked
-//   (doesn't need to be related to the mobj_t->x,y)
+//   (doesn't need to be related to the Mobj->x,y)
 //
 // during:
 //  special things are touched if MF_PICKUP
@@ -1098,7 +1098,7 @@ boolean Check_Sides(mobj_t *actor, int x, int y)
 //  speciallines[]
 //  numspeciallines
 //
-boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y) 
+boolean P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y) 
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -1148,7 +1148,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 
    // Check things first, possibly picking things up.
    // The bounding box is extended by MAXRADIUS
-   // because mobj_ts are grouped into mapblocks
+   // because Mobjs are grouped into mapblocks
    // based on their origin point, and can overlap
    // into adjacent blocks by up to MAXRADIUS units.
 
@@ -1194,7 +1194,7 @@ boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y)
 //
 // haleyjd 04/15/2010: Dropoff check for vanilla DOOM compatibility
 //
-static boolean P_CheckDropOffVanilla(mobj_t *thing, int dropoff)
+static boolean P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
       clip.floorz - clip.dropoffz > 24 * FRACUNIT)
@@ -1208,7 +1208,7 @@ static boolean P_CheckDropOffVanilla(mobj_t *thing, int dropoff)
 //
 // haleyjd 04/15/2010: Dropoff check for BOOM compatibility
 //
-static boolean P_CheckDropOffBOOM(mobj_t *thing, int dropoff)
+static boolean P_CheckDropOffBOOM(Mobj *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    if(compatibility || !dropoff)
@@ -1229,7 +1229,7 @@ static boolean P_CheckDropOffBOOM(mobj_t *thing, int dropoff)
 // I am of the opinion that this is the single most-butchered segment of code
 // in the entire engine.
 //
-static boolean P_CheckDropOffMBF(mobj_t *thing, int dropoff)
+static boolean P_CheckDropOffMBF(Mobj *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    // killough 7/24/98, 8/1/98: 
@@ -1274,7 +1274,7 @@ static boolean on3dmidtex;
 //
 // haleyjd 04/15/2010: Dropoff checking code for Eternity.
 //
-static boolean P_CheckDropOffEE(mobj_t *thing, int dropoff)
+static boolean P_CheckDropOffEE(Mobj *thing, int dropoff)
 {
    fixed_t floorz = clip.floorz;
 
@@ -1343,7 +1343,7 @@ static boolean P_CheckDropOffEE(mobj_t *thing, int dropoff)
    return true;
 }
 
-typedef boolean (*dropoff_func_t)(mobj_t *, int);
+typedef boolean (*dropoff_func_t)(Mobj *, int);
 
 //
 // P_TryMove
@@ -1353,7 +1353,7 @@ typedef boolean (*dropoff_func_t)(mobj_t *, int);
 //
 // killough 3/15/98: allow dropoff as option
 //
-boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, int dropoff)
+boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
    dropoff_func_t dropofffunc;
@@ -1571,7 +1571,7 @@ static boolean PIT_ApplyTorque(line_t *ld)
       clip.bbox[BOXBOTTOM] < ld->bbox[BOXTOP] &&
       P_BoxOnLineSide(clip.bbox, ld) == -1)
    {
-      mobj_t *mo = clip.thing;
+      Mobj *mo = clip.thing;
 
       fixed_t dist =                               // lever arm
          + (ld->dx >> FRACBITS) * (mo->y >> FRACBITS)
@@ -1637,7 +1637,7 @@ static boolean PIT_ApplyTorque(line_t *ld)
 // killough 9/12/98
 // Applies "torque" to objects, based on all contacted linedefs
 //
-void P_ApplyTorque(mobj_t *mo)
+void P_ApplyTorque(Mobj *mo)
 {
    int xl = ((clip.bbox[BOXLEFT] = 
               mo->x - mo->radius) - bmaporgx) >> MAPBLOCKSHIFT;
@@ -1686,7 +1686,7 @@ void P_ApplyTorque(mobj_t *mo)
 // the z will be set to the lowest value
 // and false will be returned.
 //
-static boolean P_ThingHeightClip(mobj_t *thing)
+static boolean P_ThingHeightClip(Mobj *thing)
 {
    boolean onfloor = thing->z == thing->floorz;
    fixed_t oldfloorz = thing->floorz; // haleyjd
@@ -1739,7 +1739,7 @@ static fixed_t   bestslidefrac;
 static fixed_t   secondslidefrac;
 static line_t    *bestslideline;
 static line_t    *secondslideline;
-static mobj_t    *slidemo;
+static Mobj    *slidemo;
 static fixed_t   tmxmove;
 static fixed_t   tmymove;
 
@@ -1942,7 +1942,7 @@ isblocking:
 //
 // killough 11/98: reformatted
 //
-void P_SlideMove(mobj_t *mo)
+void P_SlideMove(Mobj *mo)
 {
    int hitcount = 3;
    
@@ -2059,8 +2059,8 @@ void P_SlideMove(mobj_t *mo)
 
 typedef struct bombdata_s
 {
-   mobj_t *bombsource;
-   mobj_t *bombspot;
+   Mobj *bombsource;
+   Mobj *bombspot;
    int     bombdamage;
    int     bombmod;    // haleyjd 07/13/03
 } bombdata_t;
@@ -2075,11 +2075,11 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static boolean PIT_RadiusAttack(mobj_t *thing)
+static boolean PIT_RadiusAttack(Mobj *thing)
 {
    fixed_t dx, dy, dist;
-   mobj_t *bombspot   = theBomb->bombspot;
-   mobj_t *bombsource = theBomb->bombsource;
+   Mobj *bombspot   = theBomb->bombspot;
+   Mobj *bombsource = theBomb->bombsource;
    
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
@@ -2141,7 +2141,7 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
 //   haleyjd 07/13/03: added method of death flag
 //   haleyjd 09/23/09: adjustments for reentrancy and recursion limit
 //
-void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
+void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
 {
    fixed_t  dist = (damage + MAXRADIUS) << FRACBITS;
    int yh = (spot->y + dist - bmaporgy) >> MAPBLOCKSHIFT;
@@ -2196,9 +2196,9 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
 //
 // PIT_ChangeSector
 //
-static boolean PIT_ChangeSector(mobj_t *thing)
+static boolean PIT_ChangeSector(Mobj *thing)
 {
-   mobj_t *mo;
+   Mobj *mo;
 
    if(P_ThingHeightClip(thing))
       return true; // keep checking
@@ -2370,7 +2370,7 @@ msecnode_t *headsecnode = NULL;
 // haleyjd 05/11/09: This in fact was never a problem. Clear the pointer
 // before or after Z_FreeTags; it doesn't matter as long as you clear it
 // at some point in or before P_SetupLevel and before we start attaching
-// mobj_t's to sectors. I don't know what the hubbub above is about, but
+// Mobj's to sectors. I don't know what the hubbub above is about, but
 // I almost copied this change into WinMBF unnecessarily. I will leave it
 // be here, because as I said, changing it has no effect whatsoever.
 
@@ -2421,7 +2421,7 @@ static void P_PutSecnode(msecnode_t *node)
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_AddSecnode(sector_t *s, mobj_t *thing, msecnode_t *nextnode)
+static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 {
    msecnode_t *node;
    
@@ -2476,7 +2476,7 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
       msecnode_t *sn;  // next node on sector thread
 
       // Unlink from the Thing thread. The Thing thread begins at
-      // sector_list and not from mobj_t->touching_sectorlist.
+      // sector_list and not from Mobj->touching_sectorlist.
 
       if(tp)
          tp->m_tnext = tn;
@@ -2543,7 +2543,7 @@ static boolean PIT_GetSectors(line_t *ld)
    // Collect the sector(s) from the line and add to the
    // sector_list you're examining. If the Thing ends up being
    // allowed to move to this position, then the sector_list
-   // will be attached to the Thing's mobj_t at touching_sectorlist.
+   // will be attached to the Thing's Mobj at touching_sectorlist.
 
    pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
 
@@ -2572,7 +2572,7 @@ static boolean PIT_GetSectors(line_t *ld)
 // haleyjd 04/16/2010: rewritten to use clip stack for saving global clipping
 // variables when required
 //
-msecnode_t *P_CreateSecNodeList(mobj_t *thing, fixed_t x, fixed_t y)
+msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 {
    int xl, xh, yl, yh, bx, by;
    msecnode_t *node, *list;

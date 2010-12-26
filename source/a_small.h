@@ -36,7 +36,7 @@
 #ifndef EE_NO_SMALL_SUPPORT
 
 #include "doomtype.h"
-class mobj_t;
+class Mobj;
 struct line_t;
 
 #include "amx.h"
@@ -94,7 +94,7 @@ typedef struct sc_invoke_s
    scriptinvoke_e invokeType; // invocation type for native functions
 
    // invocation data
-   mobj_t *trigger; // thing that started script -- get with TID_TRIGGER
+   Mobj *trigger; // thing that started script -- get with TID_TRIGGER
    int playernum;   // # of player that started script
    line_t *line;    // line that started script
    int spec_mode;   // line special mode; see sm_specialmode in p_genlin.c
@@ -194,7 +194,7 @@ extern SmallContext_t *curLSContext;
 #endif // EE_NO_SMALL_SUPPORT
 
 // haleyjd 07/06/04: FINE put it here!
-mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 #endif
 

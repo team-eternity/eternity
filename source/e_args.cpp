@@ -451,7 +451,7 @@ static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(mobj_t *mo, int index)
+state_t *E_ArgAsStateLabel(Mobj *mo, int index)
 {
    const char *arg;
    char       *end   = NULL;
@@ -488,7 +488,7 @@ state_t *E_ArgAsStateLabel(mobj_t *mo, int index)
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, mobj_t *mo)
+int E_ArgAsStateNum(arglist_t *al, int index, Mobj *mo)
 {
    evalcache_t *eval;
 
@@ -557,7 +557,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, mobj_t *mo)
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, mobj_t *mo)
+int E_ArgAsStateNumNI(arglist_t *al, int index, Mobj *mo)
 {
    evalcache_t *eval;
 
@@ -624,7 +624,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, mobj_t *mo)
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, mobj_t *mo)
+int E_ArgAsStateNumG0(arglist_t *al, int index, Mobj *mo)
 {
    evalcache_t *eval;
 

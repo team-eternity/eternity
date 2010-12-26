@@ -28,6 +28,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "m_random.h"
+#include "p_saveg.h"
 #include "r_main.h"
 #include "p_info.h"
 #include "p_spec.h"
@@ -55,7 +56,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
       S_StartSectorSequenceName(s, seqname, false);
 }
 
-IMPLEMENT_THINKER_TYPE(CPlat)
+IMPLEMENT_THINKER_TYPE(PlatThinker)
 
 //
 // T_PlatRaise()
@@ -68,7 +69,7 @@ IMPLEMENT_THINKER_TYPE(CPlat)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void CPlat::Think()
+void PlatThinker::Think()
 {
    result_e      res;
    
@@ -197,13 +198,13 @@ void CPlat::Think()
 }
 
 //
-// CPlat::serialize
+// PlatThinker::serialize
 //
-// Saves/loads CPlat thinkers.
+// Saves/loads PlatThinker thinkers.
 //
-void CPlat::serialize(CSaveArchive &arc)
+void PlatThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << sector << speed << low << high << wait << count << status << oldstatus
        << crush << tag << type;
@@ -228,7 +229,7 @@ void CPlat::serialize(CSaveArchive &arc)
 //
 int EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
-   CPlat   *plat;
+   PlatThinker   *plat;
    int       secnum;
    int       rtn;
    sector_t *sec;
@@ -263,7 +264,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      plat = new CPlat;
+      plat = new PlatThinker;
       plat->addThinker();
       
       plat->type = type;
@@ -384,7 +385,7 @@ void P_ActivateInStasis(int tag)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
-      CPlat *plat = pl->plat;              // for one in stasis with right tag
+      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -410,7 +411,7 @@ int EV_StopPlat(line_t *line)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
-      CPlat *plat = pl->plat;             // for one with the tag not in stasis
+      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -428,7 +429,7 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(CPlat *plat)
+void P_AddActivePlat(PlatThinker *plat)
 {
    platlist_t *list = (platlist_t *)(malloc(sizeof *list));
    list->plat = plat;
@@ -447,7 +448,7 @@ void P_AddActivePlat(CPlat *plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(CPlat *plat)
+void P_RemoveActivePlat(PlatThinker *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers

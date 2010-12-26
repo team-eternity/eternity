@@ -53,7 +53,7 @@ extern struct cheat_s {
 boolean M_FindCheats(int key);
 void M_DoCheat(char *cheatname);
 
-void M_AddNukeSpec(int mobjType, void (*func)(mobj_t *)); // haleyjd
+void M_AddNukeSpec(int mobjType, void (*func)(Mobj *)); // haleyjd
 void M_CopyNukeSpec(int destType, int srcType);
 
 extern int idmusnum;

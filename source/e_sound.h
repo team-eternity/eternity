@@ -83,7 +83,7 @@ enum
 // haleyjd 06/04/06: EDF sound sequences
 struct ESoundSeq_t
 {
-   CDLListItem<ESoundSeq_t> numlinks; // next, prev links for numeric hash chain
+   DLListItem<ESoundSeq_t> numlinks; // next, prev links for numeric hash chain
 
    int index;                    // numeric id
    int type;                     // type of sequence (see above enum)

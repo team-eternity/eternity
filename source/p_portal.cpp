@@ -89,7 +89,7 @@ void P_InitPortals(void)
 //
 void R_SetSectorGroupID(sector_t *sector, int groupid)
 {
-   mobj_t *mo;
+   Mobj *mo;
    int i;
 
    sector->groupid = groupid;
@@ -592,7 +592,7 @@ void P_LinkRejectTable(void)
 //
 // EV_PortalTeleport
 //
-boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
+boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 {
    fixed_t moz = mo->z;
    fixed_t momx = mo->momx;
@@ -787,12 +787,12 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 //
 
 #if 0
-void P_DummyMobjThinker(mobj_t *mobj)
+void P_DummyMobjThinker(Mobj *mobj)
 {
    
 }
 
-void P_CreateDummy(mobj_t *owner)
+void P_CreateDummy(Mobj *owner)
 {
    if(owner->portaldummy)
       return;

@@ -2273,9 +2273,9 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 //
 // E_GetStateForMobj
 //
-// Convenience routine to call the above give an mobj_t.
+// Convenience routine to call the above give an Mobj.
 //
-state_t *E_GetStateForMobj(mobj_t *mo, const char *label)
+state_t *E_GetStateForMobj(Mobj *mo, const char *label)
 {
    return E_GetStateForMobjInfo(mo->info, label);
 }

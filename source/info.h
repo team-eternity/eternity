@@ -152,21 +152,21 @@ enum
 
 typedef int statenum_t;
 
-class mobj_t;
+class Mobj;
 
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
 struct state_t
 {
-   CDLListItem<state_t> namelinks;     // haleyjd 03/30/10: new hashing: by name
-   CDLListItem<state_t> numlinks;      // haleyjd 03/30/10: new hashing: by dehnum
+   DLListItem<state_t> namelinks;     // haleyjd 03/30/10: new hashing: by name
+   DLListItem<state_t> numlinks;      // haleyjd 03/30/10: new hashing: by dehnum
 
    spritenum_t sprite;                 // sprite number to show
    int         frame;                  // which frame/subframe of the sprite is shown
    int         tics;                   // number of gametics this frame should last
-   void        (*action)(mobj_t *);    // code pointer to function for action if any
-   void        (*oldaction)(mobj_t *); // haleyjd: original action, for DeHackEd
+   void        (*action)(Mobj *);    // code pointer to function for action if any
+   void        (*oldaction)(Mobj *); // haleyjd: original action, for DeHackEd
    statenum_t  nextstate;              // index of next state, or -1
    int         misc1, misc2;           // used for psprite positioning
    int         particle_evt;           // haleyjd: determines an event to run
@@ -383,7 +383,7 @@ typedef struct mobjinfo_s
    float xscale;      // haleyjd 11/22/09: x scaling
    float yscale;      // haleyjd 11/22/09: y scaling
 
-   void (*nukespec)(mobj_t *); // haleyjd 08/18/09: nukespec made a native property
+   void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
    char name[41];     // name of this thing type (max 40 chars)

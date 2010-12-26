@@ -88,7 +88,7 @@ typedef struct intercept_s
   fixed_t     frac;           // along trace line
   boolean     isaline;
   union {
-    mobj_t* thing;
+    Mobj* thing;
     line_t* line;
   } d;
 } intercept_t;
@@ -103,13 +103,13 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
 int     P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (line_t *linedef, mobj_t *mo);
+void    P_LineOpening (line_t *linedef, Mobj *mo);
 
-void    P_UnsetThingPosition(mobj_t *thing);
-void    P_SetThingPosition(mobj_t *thing);
+void    P_UnsetThingPosition(Mobj *thing);
+void    P_SetThingPosition(Mobj *thing);
 boolean P_BlockLinesIterator (int x, int y, boolean func(line_t *));
-boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t *));
-boolean ThingIsOnLine(mobj_t *t, line_t *l);  // killough 3/15/98
+boolean P_BlockThingsIterator(int x, int y, boolean func(Mobj *));
+boolean ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
 boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                            int flags, boolean trav(intercept_t *));
 

@@ -93,20 +93,20 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
 //
 /////////////////////////////////////////////////////////////////
 
-IMPLEMENT_THINKER_TYPE(CCeiling)
+IMPLEMENT_THINKER_TYPE(CeilingThinker)
 
 //
 // T_MoveCeiling
 //
 // Action routine that moves ceilings. Called once per tick.
 //
-// Passed a CCeiling structure that contains all the info about the move.
+// Passed a CeilingThinker structure that contains all the info about the move.
 // see P_SPEC.H for fields. No return value.
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void CCeiling::Think()
+void CeilingThinker::Think()
 {
    result_e  res;
 
@@ -251,13 +251,13 @@ void CCeiling::Think()
 }
 
 //
-// CCeiling::serialize
+// CeilingThinker::serialize
 //
-// Saves and loads CCeiling thinkers.
+// Saves and loads CeilingThinker thinkers.
 //
-void CCeiling::serialize(CSaveArchive &arc)
+void CeilingThinker::serialize(SaveArchive &arc)
 {
-   CThinker::serialize(arc);
+   Thinker::serialize(arc);
 
    arc << type << sector << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
@@ -286,7 +286,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
    int       rtn = 0;
    int       noise = CNOISE_NORMAL; // haleyjd 09/28/06
    sector_t  *sec;
-   CCeiling *ceiling;
+   CeilingThinker *ceiling;
       
    // Reactivate in-stasis ceilings...for certain types.
    // This restarts a crusher after it has been stopped
@@ -312,7 +312,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
   
       // create a new ceiling thinker
       rtn = 1;
-      ceiling = new CCeiling;
+      ceiling = new CeilingThinker;
       ceiling->addThinker();
       sec->ceilingdata = ceiling;               //jff 2/22/98
       ceiling->sector = sec;
@@ -409,7 +409,7 @@ int P_ActivateInStasisCeiling(line_t *line)
    
    for(cl = activeceilings; cl; cl = cl->next)
    {
-      CCeiling *ceiling = cl->ceiling;
+      CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->tag == line->tag && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
@@ -452,7 +452,7 @@ int EV_CeilingCrushStop(line_t* line)
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
-      CCeiling *ceiling = cl->ceiling;
+      CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
       {
          ceiling->olddirection = ceiling->direction;
@@ -473,7 +473,7 @@ int EV_CeilingCrushStop(line_t* line)
 // Passed the ceiling motion structure
 // Returns nothing
 //
-void P_AddActiveCeiling(CCeiling *ceiling)
+void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
    ceilinglist_t *list = (ceilinglist_t *)(malloc(sizeof *list));
    list->ceiling = ceiling;
@@ -492,7 +492,7 @@ void P_AddActiveCeiling(CCeiling *ceiling)
 // Passed the ceiling motion structure
 // Returns nothing
 //
-void P_RemoveActiveCeiling(CCeiling* ceiling)
+void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98

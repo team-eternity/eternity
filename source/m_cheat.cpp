@@ -859,15 +859,15 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
       doom_printf("%s", DEH_String("STSTR_DQDOFF")); // Ty 03/27/98 - externalized
 }
 
-extern void A_Fall(mobj_t *);
-extern void A_PainDie(mobj_t *);
+extern void A_Fall(Mobj *);
+extern void A_PainDie(Mobj *);
 
 // haleyjd 07/13/03: special actions for killem cheat
 
 //
 // Pain Elemental -- spawn lost souls now so they get killed
 //
-void A_PainNukeSpec(mobj_t *actor)
+void A_PainNukeSpec(Mobj *actor)
 {
    A_PainDie(actor);  // killough 2/8/98
    P_SetMobjState(actor, E_SafeState(S_PAIN_DIE6));
@@ -876,7 +876,7 @@ void A_PainNukeSpec(mobj_t *actor)
 //
 // D'Sparil (first form) -- don't spawn second form
 //
-void A_SorcNukeSpec(mobj_t *actor)
+void A_SorcNukeSpec(Mobj *actor)
 {
    A_Fall(actor);
    P_SetMobjStateNF(actor, E_SafeState(S_SRCR1_DIE17));
@@ -896,17 +896,17 @@ void A_SorcNukeSpec(mobj_t *actor)
 static void M_NukeMonsters(void)
 {   
    int killcount = 0;
-   CThinker *th = &thinkercap;
+   Thinker *th = &thinkercap;
    int mask = MF_FRIEND;
       
    do
    {
       while((th = th->next) != &thinkercap)
       {
-         mobj_t *mo;     // haleyjd: use pointer to clean up code
+         Mobj *mo;     // haleyjd: use pointer to clean up code
          mobjinfo_t *mi;
 
-         if(!(mo = thinker_cast<mobj_t *>(th)))
+         if(!(mo = thinker_cast<Mobj *>(th)))
             continue;
 
          mi = &mobjinfo[mo->type];

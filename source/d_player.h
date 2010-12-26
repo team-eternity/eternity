@@ -87,7 +87,7 @@ typedef enum
 //
 struct player_t
 {
-   mobj_t        *mo;
+   Mobj        *mo;
    playerclass_t *pclass;      // haleyjd 09/27/07: player class
    skin_t        *skin;        // skin
    playerstate_t  playerstate; // live, dead, reborn, etc.
@@ -150,7 +150,7 @@ struct player_t
    int            bonuscount;
    int            fixedcolormap; // Current PLAYPAL, for pain etc.
 
-   mobj_t        *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj        *attacker;      // Who did damage (NULL for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 

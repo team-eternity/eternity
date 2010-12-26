@@ -161,7 +161,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
 {
    seg_t *seg;
    int count;
-   CDLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
+   DLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -315,7 +315,7 @@ static boolean P_CrossBSPNode(int bspnum, register los_t *los)
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
 
-boolean P_CheckSight(mobj_t *t1, mobj_t *t2)
+boolean P_CheckSight(Mobj *t1, Mobj *t2)
 {
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;
