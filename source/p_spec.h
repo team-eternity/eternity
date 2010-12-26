@@ -601,7 +601,7 @@ typedef struct button_s
 {
    int      line;
    int      side;
-   bwhere_e where;
+   int      where;
    int      btexture;
    int      btimer;
    boolean  dopopout;

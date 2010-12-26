@@ -259,6 +259,7 @@ SaveArchive &SaveArchive::operator << (double &x)
    return *this;
 }
 
+// Swizzle a serialized sector_t pointer.
 SaveArchive &SaveArchive::operator << (sector_t *&s)
 {
    int sectornum;
@@ -282,6 +283,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
    return *this;
 }
 
+// Serialize a swizzled line_t pointer.
 SaveArchive &SaveArchive::operator << (line_t *&ln)
 {
    int linenum = -1;
@@ -309,6 +311,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    return *this;
 }
 
+// Serialize a spectransfer_t structure (contained in many thinkers)
 SaveArchive &SaveArchive::operator << (spectransfer_t &st)
 {
    *this << st.damage << st.damageflags << st.damagemask << st.damagemod
@@ -317,6 +320,7 @@ SaveArchive &SaveArchive::operator << (spectransfer_t &st)
    return *this;
 }
 
+// Serialize a mapthing_t structure
 SaveArchive &SaveArchive::operator << (mapthing_t &mt)
 {
    *this << mt.angle << mt.height << mt.next << mt.options
@@ -374,7 +378,7 @@ static void P_DeNumberThinkers(void)
 }
 
 // 
-// P_ThinkerNum
+// P_NumForThinker
 //
 // Get the mobj number from the mobj.
 //
@@ -426,9 +430,7 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 //
 static void P_ArchivePlayers(SaveArchive &arc)
 {
-   int i;
-   
-   for(i = 0; i < MAXPLAYERS; i++)
+   for(int i = 0; i < MAXPLAYERS; i++)
    {
       // TODO: hub logic
       if(playeringame[i])
@@ -437,7 +439,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          player_t &p = players[i];
 
          arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
-             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove 
+             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
@@ -641,13 +643,13 @@ static void P_RemoveAllThinkers(void)
 //
 static void P_ArchiveThinkers(SaveArchive &arc)
 {
+   Thinker *th;
+
+   // first, save or load count of enumerated thinkers
+   arc << num_thinkers;
+
    if(arc.isSaving())
    {
-      Thinker *th;
-
-      // first, save count of enumerated thinkers
-      arc << num_thinkers;
-      
       // save off the current thinkers
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
@@ -664,10 +666,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       size_t len;
       unsigned int idx = 1; // Start at index 1, as 0 means NULL
       ThinkerType *thinkerType;
-      Thinker     *newThinker, *th;
-
-      // get number of thinkers
-      arc << num_thinkers;
+      Thinker     *newThinker;
 
       // allocate thinker table
       thinker_p = (Thinker **)(calloc(num_thinkers+1, sizeof(Thinker *)));
@@ -782,8 +781,8 @@ static void P_ArchiveMap(SaveArchive &arc)
 
 static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
 {
-   int id;
-   angle_t angle;
+   int id = 0;
+   angle_t angle = 0;
    PointThinker pt;
 
    // nullify all polyobject thinker pointers;
@@ -819,8 +818,6 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
 
 static void P_ArchivePolyObjects(SaveArchive &arc)
 {
-   int i;
-
    // save number of polyobjects
    if(arc.isSaving())
       arc << numPolyObjects;
@@ -837,7 +834,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
       }
    }
 
-   for(i = 0; i < numPolyObjects; ++i)
+   for(int i = 0; i < numPolyObjects; ++i)
       P_ArchivePolyObj(arc, &PolyObjects[i]);
 }
 
@@ -869,7 +866,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
 static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
 {
    uint32_t amx_size = 0, arch_amx_size;
-   long temp_size;
+   long temp_size = 0;
    byte *data;
 
    // get both size of and pointer to data segment
@@ -982,32 +979,32 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 void P_ArchiveScripts(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
-   boolean hadGameScript, hadLevelScript;
+   boolean haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
    {
-      hadGameScript  = gameScriptLoaded;
-      hadLevelScript = levelScriptLoaded;
+      haveGameScript  = gameScriptLoaded;
+      haveLevelScript = levelScriptLoaded;
    }
 
-   arc << hadGameScript;
-   arc << hadLevelScript;
+   arc << haveGameScript;
+   arc << haveLevelScript;
 
    // check for presence consistency
    if(arc.isLoading() &&
-      (hadGameScript && !gameScriptLoaded) ||
-      (hadLevelScript && !levelScriptLoaded))
+      ((haveGameScript  != gameScriptLoaded) ||
+       (haveLevelScript != levelScriptLoaded)))
    {
       I_FatalError(I_ERR_KILL,
          "P_UnArchiveScripts: vm presence inconsistency\n");
    }
 
    // save gamescript
-   if(hadGameScript)
+   if(haveGameScript)
       P_ArchiveSmallAMX(arc, &GameScript.smallAMX);
 
    // save levelscript
-   if(hadLevelScript)
+   if(haveLevelScript)
       P_ArchiveSmallAMX(arc, &LevelScript.smallAMX);
 
    // save callbacks
@@ -1064,8 +1061,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    SndSeq_t  *newSeq;
    sector_t  *s;
    polyobj_t *po;
-   Mobj    *mo;
-   int twizzle;
+   Mobj      *mo;
+   int twizzle = 0;
    char name[33];
 
    // allocate a new sound sequence
@@ -1127,7 +1124,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
          newSeq->originType);
    }
 
-   // restore delay counter
+   // restore delay counter, volume, attenuation, and flags
    arc << newSeq->delayCounter << newSeq->volume << newSeq->attenuation
        << newSeq->flags;
 
@@ -1173,7 +1170,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
 
 void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
-   int i, count;
+   int i, count = 0;
 
    // stop any sequences currently playing
    S_SequenceGameLoad();
@@ -1200,51 +1197,28 @@ void P_UnArchiveSoundSequences(SaveArchive &arc)
 
 void P_ArchiveButtons(SaveArchive &arc)
 {
-   // first, save number of buttons
-   arc << numbuttonsalloc;
+   int numsaved = 0;
 
-   // Save the button_t's directly. They no longer contain any pointers due to
-   // my recent rewrite of the button code.
-   if(numbuttonsalloc)
-   {
-      for(int i = 0; i < numbuttonsalloc; i++)
-      {
-         int where = (int)(buttonlist[i].where);
-
-         arc << buttonlist[i].btexture << buttonlist[i].btimer
-             << buttonlist[i].dopopout << buttonlist[i].line
-             << buttonlist[i].side     << where;
-      }
-   }
-}
-
-void P_UnArchiveButtons(SaveArchive &arc)
-{
-   int numsaved;
-
-   // get number allocated when the game was saved
+   // first, save or load the number of buttons
+   if(arc.isSaving())
+      numsaved = numbuttonsalloc;
+   
    arc << numsaved;
 
-   // if not equal, we need to realloc buttonlist
-   if(numsaved > 0 && numsaved != numbuttonsalloc)
+   // When loading, if not equal, we need to realloc buttonlist
+   if(arc.isLoading() && numsaved > 0 && numsaved != numbuttonsalloc)
    {
       buttonlist = (button_t *)(realloc(buttonlist, numsaved * sizeof(button_t)));
       numbuttonsalloc = numsaved;
    }
 
-   // copy the buttons from the save
-   if(numsaved)
+   // Save the button_t's directly. They no longer contain any pointers due to
+   // my recent rewrite of the button code.
+   for(int i = 0; i < numsaved; i++)
    {
-      for(int i = 0; i < numbuttonsalloc; i++)
-      {
-         int where;
-         
-         arc << buttonlist[i].btexture << buttonlist[i].btimer
-             << buttonlist[i].dopopout << buttonlist[i].line
-             << buttonlist[i].side     << where;
-
-         buttonlist[i].where = (bwhere_e)where;
-      }
+      arc << buttonlist[i].btexture << buttonlist[i].btimer
+          << buttonlist[i].dopopout << buttonlist[i].line
+          << buttonlist[i].side     << buttonlist[i].where;
    }
 }
 
@@ -1457,7 +1431,7 @@ void P_LoadGame(const char *filename)
       arc.ArchiveCString(vread, VERSIONSIZE);
    
       // killough 2/22/98: Friendly savegame version difference message
-      // FIXME/TODO: version verification
+      // FIXME/TODO: restore proper version verification
       if(strncmp(vread, vcheck, VERSIONSIZE))
          C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
 
@@ -1511,7 +1485,7 @@ void P_LoadGame(const char *filename)
       }
    
       // killough 3/16/98, 12/98: check lump name checksum
-      // FIXME/TODO: advanced savegame verification
+      // FIXME/TODO: advanced savegame verification is needed
       /*
       checksum = G_Signature(g_dir);
 
@@ -1571,18 +1545,6 @@ void P_LoadGame(const char *filename)
       // this too.
       G_ReadOptions(options);
 
-      /*
-      //killough 11/98: save entire word
-      arc << leveltime;
-   
-      // killough 11/98: save revenant tracer state
-      uint8_t tracerState = (uint8_t)((gametic-basetic) & 255);
-      arc << tracerState;
-
-      arc << dmflags;
-      */
-
-
       // get the times
       arc << leveltime;
 
@@ -1606,7 +1568,7 @@ void P_LoadGame(const char *filename)
       P_ArchiveMap(arc);            // killough 1/22/98: load automap information
       P_ArchiveScripts(arc);        // sf: scripting
       P_UnArchiveSoundSequences(arc);
-      P_UnArchiveButtons(arc);
+      P_ArchiveButtons(arc);
 
       P_FreeThinkerTable();
 
@@ -1645,7 +1607,7 @@ void P_LoadGame(const char *filename)
    }
    else       // Loading games from menu isn't allowed during demo recordings,
       if(demorecording) // So this can only possibly be a -recordfrom command.
-         G_BeginRecording();// Start the -recordfrom, since the game was loaded.
+         G_BeginRecording(); // Start the -recordfrom, since the game was loaded.
 
    // sf: if loading a hub level, restore position relative to sector
    //  for 'seamless' travel between levels
