@@ -1425,7 +1425,7 @@ static void P_ClearLevelVars(void)
    }
 }
 
-boolean default_weaponowned[NUMWEAPONS];
+int default_weaponowned[NUMWEAPONS];
 
 // haleyjd: note -- this is considered deprecated and is a
 // candidate for replacement/rewrite
