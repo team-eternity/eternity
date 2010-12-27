@@ -42,7 +42,6 @@
 
 #include "../z_zone.h"
 
-typedef enum cfg_type_t cfg_type_t;
 /** Fundamental option types */
 enum cfg_type_t
 {
@@ -57,6 +56,8 @@ enum cfg_type_t
    CFGT_MVPROP,  /**< multi-valued property */
    CFGT_FLAG     /**< flag property, no value is given */
 };
+
+typedef enum cfg_type_t cfg_type_t;
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
