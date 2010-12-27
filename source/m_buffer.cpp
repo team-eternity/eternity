@@ -403,7 +403,7 @@ boolean InBuffer::ReadFile()
 // Read 'size' amount of bytes from the file. Reads are done from the physical
 // medium in chunks of the buffer's length.
 //
-boolean InBuffer::Read(void *dest, unsigned int size)
+boolean InBuffer::Read(void *dest, size_t size)
 {
    byte *lDest = (byte *)dest;
    size_t lReadAmt;
