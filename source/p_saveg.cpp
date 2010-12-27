@@ -530,6 +530,19 @@ static void P_ArchiveWorld(SaveArchive &arc)
           << sec->floorpic << sec->ceilingpic
           << sec->lightlevel << sec->oldlightlevel 
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
+
+      if(arc.isLoading())
+      {
+         // jff 2/22/98 now three thinker fields, not two
+         sec->ceilingdata  = NULL;
+         sec->floordata    = NULL;
+         sec->lightingdata = NULL;
+         sec->soundtarget  = NULL;
+
+         // SoM: update the heights
+         P_SetFloorHeight(sec, sec->floorheight);
+         P_SetCeilingHeight(sec, sec->ceilingheight);
+      }
    }
 
    // do lines
