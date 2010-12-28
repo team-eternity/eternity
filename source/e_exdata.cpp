@@ -762,11 +762,11 @@ static unsigned int E_EDThingForRecordNum(int recnum)
 // Parses thing type fields in ExtraData. Allows resolving of
 // EDF thingtype mnemonics to their corresponding doomednums.
 //
-static int E_ParseTypeField(char *value)
+static int E_ParseTypeField(const char *value)
 {
    int i;
    char prefix[16];
-   char *colonloc, *strval;
+   const char *colonloc, *strval;
 
    memset(prefix, 0, 16);
 
@@ -850,7 +850,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
    for(i = 0; i < numEDMapThings; i++)
    {
       cfg_t *thingsec;
-      char *tempstr;
+      const char *tempstr;
       int tempint;
 
       thingsec = cfg_getnsec(cfg, SEC_MAPTHING, i);

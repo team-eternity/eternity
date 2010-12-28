@@ -353,7 +353,7 @@ menu_t *mn_episode_override = NULL;
 void MN_ProcessMenus(cfg_t *cfg)
 {
    unsigned int i, numMenus;
-   char *override_name;
+   const char *override_name;
 
    numMenus = cfg_size(cfg, EDF_SEC_MENU);
 

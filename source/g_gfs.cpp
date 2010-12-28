@@ -99,19 +99,19 @@ gfs_t *G_LoadGFS(const char *filename)
    // load wads, dehs, csc
    for(i = 0; i < gfs.numwads; i++)
    {
-      char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
+      const char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
 
       gfs.wadnames[i] = strdup(str);
    }
    for(i = 0; i < gfs.numdehs; i++)
    {
-      char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
+      const char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
       
       gfs.dehnames[i] = strdup(str);
    }
    for(i = 0; i < gfs.numcsc; i++)
    {
-      char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
+      const char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
 
       gfs.cscnames[i] = strdup(str);
    }
@@ -119,7 +119,7 @@ gfs_t *G_LoadGFS(const char *filename)
    // haleyjd 07/05/03: support root EDF specification
    if(cfg_size(cfg, SEC_EDFFILE) >= 1)
    {
-      char *str = cfg_getstr(cfg, SEC_EDFFILE);
+      const char *str = cfg_getstr(cfg, SEC_EDFFILE);
 
       gfs.edf = strdup(str);
 
@@ -131,7 +131,7 @@ gfs_t *G_LoadGFS(const char *filename)
    // to be an IWAD file ;)
    if(cfg_size(cfg, SEC_IWAD) >= 1)
    {
-      char *str = cfg_getstr(cfg, SEC_IWAD);
+      const char *str = cfg_getstr(cfg, SEC_IWAD);
 
       gfs.iwad = strdup(str);
 
@@ -141,7 +141,7 @@ gfs_t *G_LoadGFS(const char *filename)
    // haleyjd 04/16/03: basepath support
    if(cfg_size(cfg, SEC_BASEPATH) >= 1)
    {
-      char *str = cfg_getstr(cfg, SEC_BASEPATH);
+      const char *str = cfg_getstr(cfg, SEC_BASEPATH);
 
       gfs.filepath = strdup(str);
    }

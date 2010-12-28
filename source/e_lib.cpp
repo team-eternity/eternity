@@ -763,10 +763,10 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 // prefix written into prefixbuf. If the return value is NULL,
 // prefixbuf is unmodified.
 //
-char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
+const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 {
    int i;
-   char *colonloc, *rover, *strval;
+   const char *colonloc, *rover, *strval;
 
    // look for a colon ending a possible prefix
    colonloc = strchr(value, ':');
