@@ -833,7 +833,7 @@ static const char *MN_variableHelp(menuitem_t *item, char *msgbuffer)
       return "Press escape to cancel";
    else
    {
-      char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = G_FirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "Press %s to change", key);
       return msgbuffer;
    }
@@ -852,7 +852,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
    if(item->var->type == vt_toggle ||
       (item->var->type == vt_int && item->var->max - item->var->min == 1))
    {
-      char *key = G_FirstBoundKey("menu_confirm");
+      const char *key = G_FirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "press %s to change", key);
       return msgbuffer;
    }
@@ -867,7 +867,7 @@ static const char *MN_toggleHelp(menuitem_t *item, char *msgbuffer)
 //
 static const char *MN_runcmdHelp(menuitem_t *item, char *msgbuffer)
 {
-   char *key = G_FirstBoundKey("menu_confirm");
+   const char *key = G_FirstBoundKey("menu_confirm");
    psnprintf(msgbuffer, 64, "press %s to execute", key);
    return msgbuffer;
 }

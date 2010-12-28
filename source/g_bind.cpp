@@ -528,7 +528,7 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
 //
 // Get an ascii description of the keys bound to a particular action
 //
-char *G_BoundKeys(char *action)
+const char *G_BoundKeys(char *action)
 {
    int i;
    static char ret[1024];   // store list of keys bound to this   
@@ -562,7 +562,7 @@ char *G_BoundKeys(char *action)
 // Get an ascii description of the first key bound to a particular 
 // action.
 //
-char *G_FirstBoundKey(const char *action)
+const char *G_FirstBoundKey(const char *action)
 {
    int i;
    static char ret[1024];
