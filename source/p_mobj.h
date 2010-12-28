@@ -412,7 +412,7 @@ int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
 
 // extern data
-extern int FloatBobOffsets[];
+extern fixed_t FloatBobOffsets[64];
 
 // Thing Collections
 
