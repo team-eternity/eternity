@@ -262,7 +262,7 @@ public:
    //
    key_type &keyForObject(T *object) const
    {
-      return isInit ? object->*keyPtr : NULL;
+      return isInit ? object->*hashKey : NULL;
    }
 
    //
