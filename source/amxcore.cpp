@@ -20,6 +20,9 @@
  *
  *  Version: $Id: Amxcore.c,v 1.31 2004-07-27 18:30:43+02 thiadmer Exp thiadmer $
  */
+
+#ifndef EE_NO_SMALL_SUPPORT
+
 #if defined _UNICODE || defined __UNICODE__ || defined UNICODE
 # if !defined UNICODE   /* for Windows */
 #   define UNICODE
@@ -628,3 +631,6 @@ int AMXEXPORT amx_CoreCleanup(AMX *amx)
   #endif
   return AMX_ERR_NONE;
 }
+
+#endif // EE_NO_SMALL_SUPPORT
+
