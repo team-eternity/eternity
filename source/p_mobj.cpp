@@ -2435,6 +2435,22 @@ Mobj* P_SpawnMissile(Mobj* source, Mobj* dest, mobjtype_t type,
 }
 
 //
+// P_PlayerPitchSlope
+//
+// haleyjd 12/28/10: Don't use mlook calculations in old demos!
+//
+static fixed_t P_PlayerPitchSlope(player_t *player)
+{
+   // Support purely vanilla behavior, and also use in EE if pitch is 0.
+   // Avoids very small roundoff errors.
+   if(demo_version < 333 ||
+      (full_demo_version > make_full_version(339, 21) && player->pitch == 0))
+      return 0;
+   else
+      return finetangent[(ANG90 - player->pitch) >> ANGLETOFINESHIFT];
+}
+
+//
 // P_SpawnPlayerMissile
 //
 // Tries to aim at a nearby monster
@@ -2465,7 +2481,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
          {
             an = source->angle;
             // haleyjd: use true slope angle
-            slope = finetangent[(ANG90 - source->player->pitch)>>ANGLETOFINESHIFT];
+            slope = P_PlayerPitchSlope(source->player);
          }
       }
       while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
@@ -2473,7 +2489,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    else
    {
       // haleyjd: use true slope angle
-      slope = finetangent[(ANG90 - source->player->pitch)>>ANGLETOFINESHIFT];
+      slope = P_PlayerPitchSlope(source->player);
    }
 
    x = source->x;
