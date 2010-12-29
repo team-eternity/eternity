@@ -725,9 +725,11 @@ boolean PIT_CheckLine(line_t *ld)
 // haleyjd: isolated code to test for and execute touchy thing death.
 // Required for proper 3D clipping support.
 //
-boolean P_Touched(Mobj *thing, Mobj *tmthing)
+// haleyjd 12/28/10: must read from clip.thing in case of reentrant calls
+//
+boolean P_Touched(Mobj *thing)
 {
-   static int painType = -1, skullType;
+   static int painType = -1, skullType;   
 
    // EDF FIXME: temporary fix?
    if(painType == -1)
@@ -737,18 +739,18 @@ boolean P_Touched(Mobj *thing, Mobj *tmthing)
    }
 
    if(thing->flags & MF_TOUCHY &&                  // touchy object
-      tmthing->flags & MF_SOLID &&                 // solid object touches it
+      clip.thing->flags & MF_SOLID &&              // solid object touches it
       thing->health > 0 &&                         // touchy object is alive
       (thing->intflags & MIF_ARMED ||              // Thing is an armed mine
        sentient(thing)) &&                         // ... or a sentient thing
-      (thing->type != tmthing->type ||             // only different species
+      (thing->type != clip.thing->type ||          // only different species
        thing->player) &&                           // ... or different players
-      thing->z + thing->height >= tmthing->z &&    // touches vertically
-      tmthing->z + tmthing->height >= thing->z &&
+      thing->z + thing->height >= clip.thing->z && // touches vertically
+      clip.thing->z + clip.thing->height >= thing->z &&
       (thing->type ^ painType) |                   // PEs and lost souls
-      (tmthing->type ^ skullType) &&               // are considered same
+      (clip.thing->type ^ skullType) &&            // are considered same
       (thing->type ^ skullType) |                  // (but Barons & Knights
-      (tmthing->type ^ painType))                  // are intentionally not)
+      (clip.thing->type ^ painType))               // are intentionally not)
    {
       P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
       return true;
@@ -763,12 +765,14 @@ boolean P_Touched(Mobj *thing, Mobj *tmthing)
 // haleyjd: isolated code to test for and execute touching specials.
 // Required for proper 3D clipping support.
 //
-boolean P_CheckPickUp(Mobj *thing, Mobj *tmthing)
+// haleyjd 12/28/10: Must read from clip.thing in case of reentrant calls.
+//
+boolean P_CheckPickUp(Mobj *thing)
 {
    int solid = thing->flags & MF_SOLID;
 
    if(clip.thing->flags & MF_PICKUP)
-      P_TouchSpecialThing(thing, tmthing); // can remove thing
+      P_TouchSpecialThing(thing, clip.thing); // can remove thing
 
    return !solid;
 }
@@ -779,21 +783,24 @@ boolean P_CheckPickUp(Mobj *thing, Mobj *tmthing)
 // haleyjd: isolated code to test for and execute SKULLFLY objects hitting
 // things. Returns true if PIT_CheckThing should exit.
 //
-boolean P_SkullHit(Mobj *thing, Mobj *tmthing)
+// haleyjd 12/28/10: must read from clip.thing or a reentrant call to this
+// routine through P_DamageMobj can result in loss of demo compatibility.
+//
+boolean P_SkullHit(Mobj *thing)
 {
    boolean ret = false;
 
-   if(tmthing->flags & MF_SKULLFLY)
+   if(clip.thing->flags & MF_SKULLFLY)
    {
       // A flying skull is smacking something.
       // Determine damage amount, and the skull comes to a dead stop.
 
-      int damage = (P_Random(pr_skullfly) % 8 + 1) * tmthing->damage;
+      int damage = (P_Random(pr_skullfly) % 8 + 1) * clip.thing->damage;
       
-      P_DamageMobj(thing, tmthing, tmthing, damage, tmthing->info->mod);
+      P_DamageMobj(thing, clip.thing, clip.thing, damage, clip.thing->info->mod);
       
-      tmthing->flags &= ~MF_SKULLFLY;
-      tmthing->momx = tmthing->momy = tmthing->momz = 0;
+      clip.thing->flags &= ~MF_SKULLFLY;
+      clip.thing->momx = clip.thing->momy = clip.thing->momz = 0;
 
       // haleyjd: Note that this is where potential for a recursive clipping
       // operation occurs -- P_SetMobjState causes a call to A_Look, which
@@ -806,9 +813,9 @@ boolean P_SkullHit(Mobj *thing, Mobj *tmthing)
       // state's action function. This actually fixes a lot of problems.
 
       if(demo_version >= 335)
-         P_SetMobjStateNF(tmthing, tmthing->info->spawnstate);
+         P_SetMobjStateNF(clip.thing, clip.thing->info->spawnstate);
       else
-         P_SetMobjState(tmthing, tmthing->info->spawnstate);
+         P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
 
       clip.BlockingMobj = NULL; // haleyjd: from zdoom
 
@@ -882,12 +889,12 @@ static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
    // surroundings such as walls, then the touchy thing dies immediately.
 
    // haleyjd: functionalized
-   if(P_Touched(thing, clip.thing))
+   if(P_Touched(thing))
       return true;
 
    // check for skulls slamming into things
 
-   if(P_SkullHit(thing, clip.thing))
+   if(P_SkullHit(thing))
       return false;
    
    // missiles can hit other things
@@ -933,7 +940,7 @@ static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
          if(!(thing->flags&MF_NOBLOOD))
          { 
             // Ok to spawn some blood
-            P_RipperBlood(tmthing);
+            P_RipperBlood(clip.thing);
          }
          */
          
@@ -1003,7 +1010,7 @@ static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
    // check for special pickup
    
    if(thing->flags & MF_SPECIAL)
-      return P_CheckPickUp(thing, clip.thing);
+      return P_CheckPickUp(thing);
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (clip.thing) to move if it's non-solid,
