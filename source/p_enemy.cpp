@@ -1115,9 +1115,14 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
          {
             if(actor->lastenemy && actor->lastenemy->health > 0)
             {
-               // haleyjd: must use P_SetTarget...
-               P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
-               P_SetTarget<Mobj>(&actor->lastenemy, NULL);
+               // haleyjd: This SHOULD use P_SetTarget for both of the below
+               // assignments; however, doing so may adversely affect 202 demo
+               // sync according to 4mer. I am taking the chance of allowing 
+               // this to use direct assignment, as it appears the ref counts
+               // would ideally remain balanced (lastenemy already has a ref
+               // from actor, so it's only moving to target).
+               actor->target = actor->lastenemy;
+               actor->lastenemy = NULL;
                return true;
             }
          }
