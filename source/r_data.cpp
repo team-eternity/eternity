@@ -174,7 +174,7 @@ int tran_filter_pct = 66;       // filter percent
 
 // haleyjd 06/09/09: moved outside and added packing pragmas
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -183,9 +183,9 @@ struct trmapcache_s
    char signature[4];          // haleyjd 06/09/09: added
    byte pct;
    byte playpal[768]; // haleyjd 06/09/09: corrected 256->768
-} __attribute__((packed));
+};
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

@@ -72,7 +72,7 @@ typedef enum
 // haleyjd 04/05/05: this structure is read directly from memory
 // and so it should be packed
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -84,11 +84,11 @@ struct tagMUSheader
    UWORD       channels;         // count of primary channels
    UWORD       SecChannels;      // count of secondary channels
    UWORD       InstrCnt;         // number of instruments
-} __attribute__((packed));
+};
 
 typedef struct tagMUSheader MUSheader;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
