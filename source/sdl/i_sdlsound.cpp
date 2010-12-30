@@ -658,21 +658,6 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
          break;
    }
 
-   // haleyjd 10/30/10: if none found, look for channels to stop that are pending
-   // to be cleared - this is a much more efficient time to do this than in the
-   // I_UpdateSound handler.
-   if(handle == numChannels)
-   {
-      for(handle = 0; handle < numChannels; ++handle)
-      {
-         if(channelinfo[handle].stopChannel == true)
-         {
-            if(stopchan(handle))
-               break; // end loop if one is successfully cleared
-         }
-      }
-   }
-
    // all used? don't play the sound. It's preferable to miss a sound
    // than it is to cut off one already playing, which sounds weird.
    if(handle == numChannels)
