@@ -859,6 +859,21 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
       doom_printf("%s", DEH_String("STSTR_DQDOFF")); // Ty 03/27/98 - externalized
 }
 
+CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
+{
+   int value = 0;
+   if(Console.argc)
+      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+   else
+      value = !(players[consoleplayer].cheats & CF_IMMORTAL);
+
+   players[consoleplayer].cheats &= ~CF_IMMORTAL;
+   players[consoleplayer].cheats |= value ? CF_IMMORTAL : 0;
+
+   doom_printf(players[consoleplayer].cheats & CF_IMMORTAL ?
+               "Immortality on" : "Immortality off");
+}
+
 extern void A_Fall(Mobj *);
 extern void A_PainDie(Mobj *);
 
@@ -944,6 +959,7 @@ void Cheat_AddCommands()
    C_AddCommand(infammo);
    C_AddCommand(god);
    C_AddCommand(noclip);
+   C_AddCommand(buddha);
    C_AddCommand(nuke);
 }
 

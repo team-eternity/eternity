@@ -1440,7 +1440,22 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    {
       // death messages for players
       if(player)
-         P_DeathMessage(source, target, inflictor, emod);
+      {
+         // haleyjd 12/29/10: immortality cheat
+         if(player->cheats & CF_IMMORTAL)
+         {
+            player->mo->health = 1;
+            player->health = 1;
+            player->bonuscount = player->damagecount;
+            player->damagecount = 0;
+            if(target != player->mo)
+               target->health = 1;
+            doom_printf("Your god has saved you!");
+            return;
+         }
+         else
+            P_DeathMessage(source, target, inflictor, emod);
+      }
 
       // haleyjd 09/29/07: wimpy death?
       if(damage <= 10)
@@ -1451,7 +1466,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    }
 
    // haleyjd: special death hacks: if we got here, we didn't really die
-   target->intflags &= ~(MIF_DIEDFALLING|MIF_WIMPYDEATH);
+    target->intflags &= ~(MIF_DIEDFALLING|MIF_WIMPYDEATH);
 
    // killough 9/7/98: keep track of targets so that friends can help friends
    if(demo_version >= 203)

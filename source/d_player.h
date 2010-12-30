@@ -78,7 +78,8 @@ typedef enum
   CF_NOMOMENTUM       = 4,
   // haleyjd 03/18/03: infinite ammo
   CF_INFAMMO          = 8,
-  
+  // haleyjd 12/29/10: immortality cheat
+  CF_IMMORTAL         = 0x10
 } cheat_t;
 
 
