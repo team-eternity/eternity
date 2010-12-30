@@ -139,7 +139,7 @@ static void P_LightningFlash(void)
          if(LevelSky != -1 && LevelTempSky != -1)
             skytexture = LevelTempSky;
 
-         S_StartSoundAtVolume((Mobj *)&thunderSndOrigin, sfx_thundr,
+         S_StartSoundAtVolume(&thunderSndOrigin, sfx_thundr,
                               127, ATTN_NONE, CHAN_AUTO);
       }
 

@@ -1446,10 +1446,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          {
             player->mo->health = 1;
             player->health = 1;
-            player->bonuscount = player->damagecount;
-            player->damagecount = 0;
             if(target != player->mo)
                target->health = 1;
+            // some extra effects for fun :P
+            player->bonuscount = player->damagecount;
+            player->damagecount = 0;
             doom_printf("Your god has saved you!");
             return;
          }

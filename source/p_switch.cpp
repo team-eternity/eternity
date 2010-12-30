@@ -188,7 +188,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
    // 04/19/09: rewritten to use linedef sound origin
 
    // switch activation sound
-   S_StartSoundName((Mobj *)&(line->soundorg), startsound);
+   S_StartSoundName(&line->soundorg, startsound);
    
    // haleyjd 04/16/08: and thus dies one of the last static limits.
    // I_Error("P_StartButton: no button slots left!");
@@ -249,7 +249,7 @@ void P_RunButtons(void)
                   break;
                }
                
-               S_StartSoundName((Mobj *)&(line->soundorg), "EE_SwitchOn");
+               S_StartSoundName(&line->soundorg, "EE_SwitchOn");
             }
             
             // clear out the button

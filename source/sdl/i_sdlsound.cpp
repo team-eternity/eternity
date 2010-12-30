@@ -872,6 +872,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             {
                // flag the channel to be stopped by the main thread ASAP
                chan->stopChannel = true;
+               chan->data = NULL;
                break;
             }
          }

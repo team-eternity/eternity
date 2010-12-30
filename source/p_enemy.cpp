@@ -1219,6 +1219,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 
          for(th = cap->cnext; th != cap; th = th->cnext)
          {
+            Mobj *mo = dynamic_cast<Mobj *>(th);
             if(--n < 0)
             { 
                // Only a subset of the monsters were searched. Move all of
@@ -1229,7 +1230,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(!PIT_FindTarget((Mobj *) th))
+            else if(mo && !PIT_FindTarget(mo))
                // If target sighted
                return true;
          }
@@ -1272,17 +1273,21 @@ boolean P_HelpFriend(Mobj *actor)
 
    for (th = cap->cnext; th != cap; th = th->cnext)
    {
-      if(((Mobj *) th)->health*2 >=
-         ((Mobj *) th)->info->spawnhealth)
+      Mobj *mo;
+      
+      if(!(mo = dynamic_cast<Mobj *>(th)))
+         continue;
+
+      if(mo->health*2 >= mo->info->spawnhealth)
       {
          if(P_Random(pr_helpfriend) < 180)
             break;
       }
       else
-         if(((Mobj *) th)->flags & MF_JUSTHIT &&
-            ((Mobj *) th)->target && 
-            ((Mobj *) th)->target != actor->target &&
-            !PIT_FindTarget(((Mobj *) th)->target))
+         if(mo->flags & MF_JUSTHIT &&
+            mo->target && 
+            mo->target != actor->target &&
+            !PIT_FindTarget(mo->target))
          {
             // Ignore any attacking monsters, while searching for 
             // friend
