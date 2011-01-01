@@ -598,7 +598,6 @@ boolean P_BlockThingsIterator(int x, int y, boolean func(Mobj*))
    {
       Mobj *mobj = blocklinks[y * bmapwidth + x];
 
-      // haleyjd 08/14/10: use modification-safe traversal
       for(; mobj; mobj = mobj->bnext)
          if(!func(mobj))
             return false;

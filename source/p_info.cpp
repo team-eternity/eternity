@@ -1605,7 +1605,7 @@ static void TmplStateStart(tmplpstate_t *state)
       if(state->titleOrAuthor)
       {
          QStrPutc(state->tokenbuf, c);
-         state->state = TMPL_STATE_TITLE; // start reading out "Title"
+         state->state = TMPL_STATE_TITLE; // start reading out "Author"
       }
       break;
    default:

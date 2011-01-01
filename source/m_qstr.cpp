@@ -681,6 +681,22 @@ size_t QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
    return QStrReplaceInternal(qstr, repl);
 }
 
+//
+// QStrNormalizeSlashes
+//
+// Calls M_NormalizeSlashes on a qstring, which replaces \ characters with /
+// and eliminates any duplicate slashes. This isn't simply a convenience
+// method, as the qstring structure requires a fix-up after this function is
+// used on it, in order to keep the string length correct.
+//
+qstring_t *QStrNormalizeSlashes(qstring_t *qstr)
+{
+   M_NormalizeSlashes(qstr->buffer);
+   qstr->index = strlen(qstr->buffer);
+
+   return qstr;
+}
+
 //=============================================================================
 // 
 // Formatting
