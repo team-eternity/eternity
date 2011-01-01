@@ -248,7 +248,7 @@ qstring_t *QStrDelc(qstring_t *qstr)
 qstring_t *QStrCat(qstring_t *qstr, const char *str)
 {
    unsigned int cursize = qstr->size;
-   unsigned int newsize = qstr->index + strlen(str);
+   unsigned int newsize = qstr->index + strlen(str) + 1;
 
    if(newsize >= cursize)
       QStrGrow(qstr, newsize - cursize);
@@ -281,7 +281,7 @@ qstring_t *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize = dest->index + insertstrlen;
+   size_t totalsize = dest->index + insertstrlen + 1;
 
    // pos must be between 0 and dest->index - 1
    if(pos >= dest->index)
