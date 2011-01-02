@@ -4,7 +4,7 @@ transition Eternity from C to C++. cpp-branch spans SVN revisions from 1344 to
 ????.
 ===============================================================================
 -------------------------------------------------------------------------------
-01/02/10
+01/02/11
 
 QStrCat was *STILL* exhibiting broken behavior, this time as a consequence of
 using the sum of the lengths calculated at the beginning to reset the qstr's
@@ -17,7 +17,7 @@ be correct for the future.
 I've begun to understand why writing your own string library can be painful ;)
 
 -------------------------------------------------------------------------------
-01/01/10
+01/01/11
 
 Happy New Years!
 
