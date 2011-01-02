@@ -1,0 +1,187 @@
+================================================================================
+Changes since Eternity Engine v3.37.00
+================================================================================
+--------------------------------------------------------------------------------
+12/23/10
+
+Removed a bizarre and incorrect toggle-on of the comp_zombie variable for demo
+versions 200 through 202 which was either adapted blindly - or incorrectly -
+from an early PrBoom version many years ago, and prevented all suicide and death
+exits from functioning during -complevel 9 demo playback. 
+
+This allows 30sdx2556.lmp to sync up until MAP11, at which point the player 
+takes a sudden dive into a nukage river and then dies near some blue key bars 
+after hurting himself with a rocket. I am told an Arch-vile jump is supposed to 
+take place at the point where he falls into the river, so we probably have some
+enemy behavior or clipping engine differences yet to be accounted for.
+
+--------------------------------------------------------------------------------
+11/20/10
+
+Due to continuing and probably only worse-in-the-future issues with the C99
+standard's refusal to provide ANY mechanism for structured type punning, 
+something that Eternity had come to rely heavily upon to allow object-oriented
+techniques to be applied in C, we have made the decision to move to C++.
+
+This effort has begun with a new cpp-branch. Development on that branch will be
+logged to a separate changelog file on that branch, which will eventually be
+merged back into trunk once it is sufficiently stable.
+
+--------------------------------------------------------------------------------
+11/11/10
+
+Again by request I've added an alpha field and ADDITIVE extflag value for
+ExtraData linedefs, which enable use of flex translucency and additive blending
+with lines. This has been technologically possible for years but I never got
+around to adding a good way to access it, partly for lack of ideas.
+
+--------------------------------------------------------------------------------
+11/08/10
+
+We have merged portal-clip branch into EE prematurely in order to pull in 
+support for portaly overlays.
+
+--------------------------------------------------------------------------------
+11/06/10
+
+Invalid subsector references will now be cleansed from the BSP tree, in order to
+prevent access violations that will otherwise occur. This stops the long-noted
+segmentation violation/venetian blinds crash in DEEPCRE.WAD's E1M1, which has an
+invalid BSP tree in only one subsector, which consists of a single seg making
+up a door track (glitchy node builder I suppose, probably didn't properly handle
+degenerate subsectors).
+
+Fixed a control path not returning a value in stopchan, which I recently rewrote
+to help stop sound stuttering.
+
+--------------------------------------------------------------------------------
+11/05/10
+
+Essel also found Cardboard glitches with respect to splitting visplanes and
+drawing of segs across which the only differences were the angles of flats.
+Somehow these checks got left out.
+
+EE has hit r1337!
+
+Added support for an MF4_BRIGHT flag by request. This flag can turn an object
+fullbright on all of its frames without requiring the entire set of frames to
+be manually altered to use the "bright" flag.
+
+--------------------------------------------------------------------------------
+10/31/10
+
+Happy Halloween! Level-error-related console error messages have been improved
+to include the numbers/indices of offending structures in the map in most cases.
+
+I removed dependency on host ability to perform unaligned reads from the
+GetLevelWord/DWord routines for additional portability.
+
+I was getting severe stuttering in the sound engine and I suspected that it 
+might be related to the recent d_fastrefresh tweak - possibly the main thread 
+running in such a tight fast loop is pre-empting the sound update thread too 
+often.
+
+I moved reclamation of stopped sound channels, which can block the sound update
+loop explicitly, out of the main loop and into I_StartSound, so that sound
+channels are reclaimed when they are actually needed, and not constantly polled
+for having been stopped. It seems to have stopped the stuttering.
+
+esselfortium's ExtraData test map also uncovered a bug with skies and colormaps
+which caused the last sector drawn's colormap to apply to all skies.
+
+--------------------------------------------------------------------------------
+10/25/10
+
+An ugly bug surfaced today - when I rewrote cvars to support defaults properly,
+I forgot that ct_constant cvars have value pointers. This was causing an access
+violation if you tried to display the value of any constant, such as ver_name,
+ver_date, or creator.
+
+--------------------------------------------------------------------------------
+10/24/10
+
+Adjusted some ExtraData keywords for readability. Added proper support for 
+multiple-level PWADs to the Master Levels / managed wad directory system, so 
+that TEETH.WAD is now fully playable. Along with this tweak I added an optional
+parameter to the w_startlevel command that allows starting a specific map from
+a managed wad directory. So for example one can use the console command 
+
+$ "w_startlevel teeth.wad MAP31"
+
+and proceed directly to the secret level. The file named has to be in the 
+directory currently enumerated by the Master Levels directory setting, of
+course. Perhaps in the future Eternity can maintain additional enumerated
+directories?
+
+--------------------------------------------------------------------------------
+10/19/10
+
+Some problems with inputting blank values into the menu system that have existed
+since the SMMU rewrite of the mess in MBF were resolved by adding a 
+cf_allowblank console variable flag. Variables with that flag receive special
+treatment in the menu system.
+
+You can now escape or backspace out of the Master Levels menu after finishing a
+level, and you will return to the title screen.
+
+File paths are now displayed in the menu using "smart" truncation. While viewing
+the item, the right-hand side of the string will be truncated to a fixed margin
+and a ... will be appended. While editing the string, the input caret will not
+pass beyond the same margin, and instead, the displayed portion of the string is
+ran forward, and the left side is truncated with an ellipsis. This keeps your
+typing in view no matter how long the string is.
+
+--------------------------------------------------------------------------------
+10/17/10
+
+ExtraData sectors have now been completed with addition of support for 
+overriding the TerrainTypes of a sector on a per-surface basis. I also repaired
+a long-standing bug in the routine used to retrieve a terrain given an mobj_t
+which considered only the thing's subsector, and not the floor it was standing
+on. Because of the need for a demo comp check for this, I have bumped up the
+version to 3.39.21. I also created some new macros, maek_full_version and
+full_demo_version, that resolve long-standing problems with being able to 
+easily compare demo versions down to the subversion level (not to be confused
+with Subversion, as we do not track SVN revisions in the source currently).
+
+--------------------------------------------------------------------------------
+10/12/10
+
+I decided to break up the various p_?enemy modules into smaller a_ modules that
+contain various types of codepointers, some by game, and others by specific
+ranges of functionality. The breakdown is as follows:
+
+* a_counters.c - contains Eternity 'counter assembly' pointers
+* a_common.c   - contains basic pointers shared by all games like A_Chase
+* a_decorate.c - contains ZDoom-inspired, DECORATE-compatible pointers
+* a_doom.c     - DOOM gamecode
+* a_general.c  - Eternity generalized/parameterized pointers
+* a_heretic.c  - Heretic gamecode
+* a_hexen.c    - Hexen gamecode (very tenative; do not use!!!)
+
+Yagisan has completely revamped the CMake system so that it is operational with
+his automated compiler farm. This has extended support to some additional
+platforms and brought in some additional warning and error fixes.
+
+--------------------------------------------------------------------------------
+10/11/10
+
+Finally got back around to work on ExtraData sectors, possibly one of the most
+put-off-after-being-started features in Eternity's history. I can't even 
+remember when I started writing the code for these, but more and more things
+just kept getting in the way. esselfortium needs flat offsets and rotation for
+his uber-detailed slopes, though, and doesn't want to wait for UDMF to start
+using them, so I'm pushing it through.
+
+Started off by getting the parsing of sector flag fields functional, and loading
+up offsets and floor/ceiling angles into the mapsectorext_t structure, which is
+right where I left off before. I have also written a routine which will reverse
+the angles into a clockwise orientation, in order to match ZDoom, which for
+some reason I simply don't understand, considers flat rotation angles in the
+opposite direction of DOOM's natural 3D coordinate system... so don't blame me.
+I figured it would cause the least headaches in the future with UDMF 
+interoperability if I chose to do it the same way in ExtraData.
+
+================================================================================
+EOF
+================================================================================
