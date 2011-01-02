@@ -255,7 +255,7 @@ qstring_t *QStrCat(qstring_t *qstr, const char *str)
 
    strcat(qstr->buffer, str);
 
-   qstr->index = newsize;
+   qstr->index = strlen(qstr->buffer);
 
    return qstr;
 }
@@ -298,7 +298,7 @@ qstring_t *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos)
    memmove(insertpoint + insertstrlen, insertpoint, charstomove);
    memmove(insertpoint, insertstr, insertstrlen);
 
-   dest->index = totalsize;
+   dest->index = strlen(dest->buffer);
 
    return dest;
 }
