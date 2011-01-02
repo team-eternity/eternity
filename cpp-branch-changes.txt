@@ -1,0 +1,481 @@
+===============================================================================
+This log contains a summary  of changes performed in the cpp-branch to 
+transition Eternity from C to C++. cpp-branch spans SVN revisions from 1344 to 
+????.
+===============================================================================
+-------------------------------------------------------------------------------
+01/02/10
+
+QStrCat was *STILL* exhibiting broken behavior, this time as a consequence of
+using the sum of the lengths calculated at the beginning to reset the qstr's
+index. Instead, I have replaced all instances of this being done with calls to
+strlen(), which, while maybe slower, has its head on straight with respect to
+0-vs-1-based numbers in a way I cannot seem to reliably manage. It's far
+better to cut myself out of the loop with this and rely on something I know to
+be correct for the future.
+
+I've begun to understand why writing your own string library can be painful ;)
+
+-------------------------------------------------------------------------------
+01/01/10
+
+Happy New Years!
+
+While working on some features for the next upcoming 10th anniversary release,
+I ran headlong into a bizarre and hard-to-crack heap corruption issue.
+
+Turned out my strcat and insert methods in the qstring module were 
+miscalculating the amount of needed space by ONE character and this was 
+suddenly, after YEARS of proper functioning, causing a problem. Man I hate when
+that happens :P
+
+Took me 3 solid hours of heavy debugging to figure out precisely what was going
+on, but now I've learned some very handy techniques for debugging using the
+MSVC++ debug heap that will significantly shorten the time in the future if
+this should happen again.
+
+I made the S_ISDIR macro actually use the parameter it was being sent, and not
+assume that the stat structure it's being used on is named sbuf. This was only
+working because they WERE all named that, by virtue of copypasta.
+
+I also added a QStrNormalizeSlashes method, since M_NormalizeSlashes cannot
+be safely called directly on a qstring's buffer pointer - this would leave the
+strlen inconsistent with the insertion index, causing improper reallocation
+and concatenation behavior - in the event that duplicate slashes were 
+removed from the string.
+
+-game and -iwad may now be used with simple IWAD names (ex: doom.wad) and if
+the proper IWAD paths are configured in system.cfg, Eternity will select the
+best matching IWAD.
+
+For example, if I have configured IWAD paths for DOOM Registered and Ultimate
+DOOM, and start Eternity using only -iwad doom.wad with no doom.wad file in
+immediate visibility to the program (ie. in "." or in the exe directory), 
+Eternity will select the Ultimate DOOM configured IWAD automatically, because
+it is the "best" version for the game.
+
+In addition to this, Eternity also now supports the DOOMWADPATH environment
+variable, and will find IWADs on that path as well if no paths are 
+configured or available in system.cfg first.
+
+-------------------------------------------------------------------------------
+12/30/10
+
+Fixes galore:
+
+1. Sound engine fix for a problem inherited from trunk -- channel data pointers
+   can and should be cleared as soon as the audio update thread is finished
+   with them. This eliminates the extra loop in I_StartSound entirely and 
+   keeps sound channels freed up.
+   
+2. Some (Mobj *) casts in Lee's friendly monsters code in p_enemy were no 
+   longer technically correct or safe, and have been replaced with proper
+   dynamic_cast calls.
+   
+3. Unnecessary and dangerous casts of PointThinker pointers to Mobj * and then
+   immediately back to PointThinker * have been entirely eliminated - I
+   thought I got all of these previously but some slipped through the cracks
+   due to using slightly different idioms. They're probably actually safe since
+   the pointers are never dererenced between all that casting, but it's far
+   better not to tempt the hoary bearded gods of C++.
+   
+4. __attribute__((packed)) should not be used in C++, as it is allegedly
+   syntactically incompatible with C++, though GCC had yet to actually issue
+   a single complaint about its presence. All instances have been replaced by
+   changing the #ifdef _MSC_VER previously used to control all usage of the
+   #pragma pack(push, 1) and #pragma pack(pop) directives to use:
+   
+   #if defined(_MSC_VER) || defined(__GNUC___)
+   
+   - Since GCC has supported #pragma pack for quite a while now, this is by
+   far the most preferable solution.
+
+-------------------------------------------------------------------------------
+12/29/10
+
+Added a "Buddha," or immortality mode, similar to the one in ZDoom, since
+essel requested it a while back with the justification that it is beneficial to
+testing of maps for gameplay balance purposes, as one can tell at what point a
+player of equal skill might start to run low on health, without being in 
+jeopardy of actually dying and then having to return to full health via the
+resurrect command to continue playtesting.
+
+-------------------------------------------------------------------------------
+12/28/10
+
+Demo compatibility fixes courtesy of Doomworld Forums user 4mer:
+
+* All subroutines which were split out of PIT_CheckThing for reuse in the 3D
+  object clipping module MUST use clip.thing directly and not accept it as a
+  function parameter, due to the potential for (undefined) reentrant calls to
+  take place which overwrite members of the global clip struct.
+  
+  The non-reentrancy of DOOM's clipper is well-known to me, as I have struggled
+  with it before. However, the fact that just changing some lines of code into
+  a subroutine and passing a value to them through a parameter can break demo
+  sync is insideous and has serious implications. Further changes to this code
+  in the future MUST take note of this and be cautious to the point of
+  paranoia.
+  
+  This included the routines P_SkullHit, P_Touch, and others. P_SkullHit was
+  in fact the cause for the desync in the Speed of Doom TAS demo earlier 
+  mentioned, with the failed Arch-vile jump. Several Lost Souls (the greatest
+  nightmare for demo sync ever) were in the area, and one or more of them were
+  suffering reentrant clipping behavior.
+  
+* mlook math must not be applied during playback of non-Eternity demos. I am
+  entirely unsure of how I overlooked this, as a similar issue was repaired in
+  the renderer years ago which was causing the entire screen to be slightly off
+  the horizontal when at player->pitch == 0 (an extra pixel of sky at the top
+  was the only reliable indicator of this, and is how it was caught in the
+  first place). 
+  
+  This roundoff error was apparently so small that it somehow virtually never
+  caused demo desyncs. However, we're not going to tolerate such obvious
+  problems when we can avoid them quite easily ;)
+  
+* Some code earlier adapted from PrBoom-Plus while fixing Okuplok's SOD MAP33
+  demo had been deliberately changed to use rigorous, correct handling of
+  mobj reference counts via calls to P_SetTarget, but according to 4mer this
+  does disturb demo sync. Since this code is ONLY called during 200-202 demo
+  playback, and because it seems to maintain a reference count balance that is
+  in favor of an object NOT being freed even when it could be, it should be
+  reasonably safe to allow it to slide here.
+  
+  In NO OTHER code in the engine should mobj references be directly assigned!
+  Reference counting is an absolute necessity.
+  
+* The same-subsector short-circuiting optimization from MBF when checking lines
+  of sight, which has been a source of demo compatibility problems in the past 
+  already, should *NOT* be applied during 200 - 202 demo playback. cph's prior 
+  fix adapted from an early PrBoom revision only addressed not applying this 
+  code during v1.9 demo playback.
+  
+  I guess he failed to realize this change was from MBF and not BOOM, but the
+  "killough 11/98" comment above it is a dead giveaway, as Lee was quite busy
+  on MBF at the time, as I clearly remember from my own personal experiences
+  as a beta tester on MBF. I had just started college 2 and a half months
+  earlier, so that time is quite vivid in my mind.
+  
+  Eternity itself was still in diapers back then ;)  A barely-evolved-past-
+  DeHackEd hack of BOOM which contained an Imp that fired modified Arachnotron
+  plasma that left blur trails.
+  
+  Quite a way we've come since then, eh?
+
+-------------------------------------------------------------------------------
+12/27/10
+
+I accidentally lost the code to restore Cardboard floor and ceiling heights 
+when loading savegames which was causing a really weird infinite horizon
+glitch to appear on any sector which had been saved with an altered floor or
+ceiling height after reloading the save. Thinker and soundtarget pointers in
+sectors were also not being nullified, which although unlikely, probably 
+could have lead to some interesting problems.
+
+GCC fixes:
+
+* InBuffer::Read had a type conflict between its declaration and definition.
+
+* class Mobj needs declaration in a_small.h even if EE_NO_SMALL_SUPPORT is
+  defined.
+
+* void *'s need to be cast through size_t as an interim solution for the %p
+  formatting code in psnprintf, although a more ideal solution is of course
+  to add proper support for 64-bit pointers. That is a TODO, however.
+
+* All extern declarations of FloatBobOffsets need to be consistent.  
+
+* SMMU keybinding code needed proper constness constraints.
+
+* EE_NO_SMALL_SUPPORT has to be #ifndef'd in amx.cpp and amx_core.cpp.
+
+* A goto in f_finale.cpp crossed the declaration of a variable, which isn't
+  allowed in C++ (except if you're Microsoft).
+  
+* Netcode functions also have to cast offsets through size_t, as GCC assumes
+  through lack of information that these values could be 64-bit precision
+  (they never are in this case, however).
+  
+* libConfuse can longer "cram" defaults for all types of fields into its single
+  void *def field in cfg_opt_t -- instead I had to rewrite the library to use
+  a separate default field for each type of cfg_opt_t. Not ideal, and could
+  probably benefit from object orientation later on.
+  
+* DavidPH provided a CMakeLists patch which got this whole thing compiling
+  again. Super-special thanks to him for his help and patience.
+
+-------------------------------------------------------------------------------
+12/26/10
+
+With completion of thinker serialization and a rewrite of the rest of the
+savegame module, r1369 has become the first compiling revision of Eternity
+under C++!
+
+I have also decided to drop the C prefix from all Eternity class names, as I
+hadn't applied it universally and it was really starting to wear thin already.
+Leave that crap to Microsoft :P
+
+-------------------------------------------------------------------------------
+12/25/10
+
+Ho-ho-hoooo, Merrrrrry Christmas!
+
+Serialization methods have been finished for all CThinker descendants except
+for CACSThinker, which is quite complicated, and mobj_t, which is the MOST
+complicated of all.
+
+-------------------------------------------------------------------------------
+12/24/10
+
+Work continues on the process of thinker deserialization. I have, as discussed
+previously, moved the enumeration facility back into CThinker and up out of
+mobj_t, since other thinker types may need access to it in the future and I
+want to code this in as generic a manner as possible.
+
+The mobj_p table used to track mobj pointers for indices during savegame
+loading has been refactored into thinker_p so that it works on all descendants
+as necessary.
+
+A virtual deswizzle method has been added to CThinker so that pointer fixups
+can be done in a separate second pass, which is necessary since ALL thinkers
+must be instantiated before references to them can be restored (a lesson I
+learned quite well from the mess in Strife's savegame code ;)
+
+-------------------------------------------------------------------------------
+12/23/10
+
+Merged in a demo compatibility fix from trunk, at great inconvenience. It's 
+going to be necessary to avoid any further code changes to trunk, since SVN
+cannot properly merge renamed files.
+
+-------------------------------------------------------------------------------
+12/18/10
+
+The thinker factory system for manufacturing new thinker descendant instances
+during savegame loading is now complete.
+
+A CThinkerType base class maintains a static-global list head pointer to which
+all derived classes add a singleton instance at startup (order is unimportant).
+When the savegame code wants to unarchive a thinker, it will first read the
+archived class name (which is archived by CThinker::serialize when in write
+mode using the virtual getClassName() method), and it will then call the
+static FindType method of CThinkerType.
+
+This method will return a CThinkerType descendant object specialized to 
+construct the same type of Thinker descendant which it names. Because all
+thinker type classes are essentially the same except for the name and the
+constructor they call (which are equal except one being a compile-time type
+and the other being a string literal), CThinkerType specializations are all
+defined using a macro, IMPLEMENT_THINKER_TYPE.
+
+This macro should and must be used once per thinker descendant. I am planning
+to place these macro definitions near the classes' Think method.
+
+-------------------------------------------------------------------------------
+12/16/10
+
+Metatables are now zone allocatable, but a global solution for this which can
+be applied to any object is desperately needed before any widespread conversion
+of Eternity to C++ beyond the mere basics is undertaken.
+
+I restored the key and type parameters to the getNext* methods of MetaTable,
+as it turns out these were needed for something after all - they can in fact
+be NULL when starting a new search using these methods, in which case trying
+to get the key and type out of the object parameter itself would have caused
+quite the ugly access violation.
+
+I renamed copyTable to copyTableTo, and added a matching convenience method
+copyTableFrom, so that the directionality of MetaTable copy operations is both
+more optional, and bidirectional with minimal trouble.
+
+I am now refactoring all the MetaTable client code, which includes some
+significant portions of EDF. With this complete, we'll be back to only
+savegame-related errors.
+
+-------------------------------------------------------------------------------
+12/15/10
+
+Yet more unnecessary #includes inside headers have been removed. These weren't
+causing any problem other than cluttering up the source code and slowing down
+compiles, but this is still a good improvement.
+
+I have begun to resolve the nightmare of a situation that is r_defs.h, first
+by splitting off a new header r_lighting.h which contains all #defines,
+typedefs, and structures related to lighttable_t and light fading. These were
+a particular problem, one which had earlier been hacked at grotesquely by
+conditionally duplicating the definitions between multiple header files and
+disabling duplicates by surrounding them inside their own #ifndef guards.
+Terrible!
+
+I changed all the Emacs mode selects *back* to C++, so that automated language
+detectors on services like ohloh will detect Eternity's change to C++ properly
+even if they pay too much attention to such indicators.
+
+-------------------------------------------------------------------------------
+12/13/10
+
+Rewrote the critial MetaAPI. MetaObject is now the polymorphic base class for
+all descendant object types, and hashing and the management of MetaObject
+specializations for basic types such as int, double, and string have been
+retained in the MetaTable class.
+
+The MetaTable class's dual EHashTable structures have been moved into a 
+"pimpl," or private implementation object, in order to isolate the rest of the
+metatable-using code from EHashTable, which is a relatively expensive-to-
+include template.
+
+Metatypes no longer exist at all, their functionality having been usurped
+entirely by the built-in virtual function calls of C++. Metaobject RTTI *has*
+been retained however, since C++'s language RTTI mechanism is not portable
+with respect to class names, and these may prove critical later on when Aeon
+scripting is designed to interact with metatables.
+
+The CopyTable method of MetaTable has been reimplemented in terms of a rather
+standard C++ cloning idiom, whereby a virtual clone() method in MetaObject
+acts as a virtual constructor. All MetaObject instances are required to
+override clone() and return an instance of their own type by calling their
+own copy constructor on *this.
+
+Note that covariant return types have NOT been used, to avoid problems with
+compilers that don't support them properly.
+
+-------------------------------------------------------------------------------
+12/12/10
+
+Finished rewrite of the ehash_t structure into EHashTable, which is a template
+class which uses pointers to members so that it can hash types using any
+predetermined key field and set of CDLListItem list links, *without* imposing
+any sort of inheritance requirements onto the objects it supports, making it a
+pure container type.
+
+-------------------------------------------------------------------------------
+12/10/10
+
+As part of the continuing effort to replace all type punning with proper
+inheritance, and because I may or may not need this code for supporting
+thinker serialization, I have turned to work on the m_dllist, e_hash, and
+metaapi modules.
+
+mdllistitem_t has been converted into a POD template class called 
+CDLListItem<T>. remove and insert methods are supported on the link type, and
+list head pointers should now be of type CDLListItem<T> * rather than of the
+base type (this was a serious problem with the original design anyway, as it
+required weird punning of a pointer-to-pointer that always felt sinful).
+
+-------------------------------------------------------------------------------
+12/08/10
+
+I've continued with significant work on the buffered IO classes and the
+rewrite of the savegame code, which is the primary remaining obstacle to 
+compilation. Thinker serialization support is underway, but is unfinished.
+
+-------------------------------------------------------------------------------
+11/27/10
+
+I have added a virtual enumeration mechanism to CThinker and an implementation
+of it in mobj_t to support twizzling of mutual reference pointers in savegames
+in a more encapsulated manner. Needs refinement - I may end up moving it back
+up the hierarchy into the thinker class, but time will tell.
+
+I realized I needed to check against "removed" status for all thinkers when
+downcasting them to specific types in loops (such as loops that only run on all
+valid mobj_t's) because under the old system, a thinker was no longer 
+considered to be of the same type any longer once its thinker.function member
+had been changed to P_RemoveThinkerDeferred. Since Think is now a virtual
+method, it is unfortunately static at runtime and cannot be used for RTTI. To
+remedy this, I have created a thinker_cast<> template function which tests for
+removed status before performing a dynamic_cast. This removes any necessity to
+test for removed status all over the code, something definitely to be avoided
+at all costs, as forgetting to do it would be a costly mistake indeed.
+
+-------------------------------------------------------------------------------
+11/26/10
+
+More #include cleanup has become necessary, but it should hopefully be finished
+for the time being.
+
+The buffered output functionality in m_buffer.cpp has been converted to a C++
+class, which I hope to rederive from a generic class and then create a read
+version of the code to support buffered streaming of savegame data.
+
+(Later):
+Added CBufferedFileBase, rederived COutBuffer, and added CInBuffer. EE now
+has object-oriented buffered file IO facilities.
+
+-------------------------------------------------------------------------------
+11/22/10
+
+Attempting to make changes to degenmobj_t to change it into a PointThinker
+base class from which Mobj and QuakeThinker can inherit has caused the entire
+codebase to suffer a circular include dependency hell problem that I have 
+been predicting and fully expecting to occur for a couple of years now.
+
+The chief problem is that headers are including other headers, and then modules
+are relying on this in such a fashion that they're not properly including all
+of their dependencies independently. This was partially to blame on C's 
+somewhat lacking abilities for foward type declarations, but also upon
+conscious decisions made by both id and especially, later, the BOOM team.
+
+Chief amongst offenders, and key in fact to the current meltdown, is the 
+header r_defs.h - this massive conglomerate of unrelated structure types is an
+absolute nightmare which is either directly or indirectly included into 
+virtually every single source module in Eternity - and it itself includes
+several other headers which, if followed in a tree-like fashion, end up
+including most of the code in the engine. This means that any modification
+ends up recompiling the entire codebase, and any change - such as innocently
+moving degenmobj_t to p_mobj.h - causes a nuclear meltdown.
+
+I have spent significant time to resolve this, chiefly by removing inclusion of
+headers within other headers wherever C++ allows this to be avoided simply by
+including forward declarations of types that are referenced only by pointer,
+for example:
+
+  class  mobj_t;
+  struct line_t;
+  struct sector_t;
+  
+These three lines can take the place of 8000 lines of header-included code.
+
+With this resolved, work has continued on conversion of thinker_t's extended
+family of structs into a proper virtual class hierarchy. P_InitThinkers has
+become a static method of CThinker, and P_RemoveThinker has become a virtual
+Remove method.
+
+CPointThinkers contained in sectors, lines, and polyobjects will need to be
+temporarily constructed using placement-new, to guarantee that they contain
+valid vtable pointers and avoid possible undefined behavior with dynamic_cast
+which will be employed in the sound code when testing for sound origins that
+are really mobj_t's. If lines/sectors ever become non-POD types, then this
+will not be necessary any longer, as they could then call the CPointThinker
+constructor on their sound origin items directly.
+
+-------------------------------------------------------------------------------
+11/20/10
+
+As noted in trunk, cpp-branch has been split off from trunk at r1344 to begin
+work on conversion of Eternity's codebase into the C++ language, so that we
+can retain our object-oriented designs without resort to ridiculous constructs
+such as unions of multiple structures, which seem to be the best suggestion 
+from the neckbeards who wrote the C99 standard without regard to the Petabytes
+of perfectly valid C code they were backhandedly deprecating.
+
+The process is already well underway with the following series of changes:
+
+* All files have been renamed to .cpp, excepting fraggle's textlib code which
+  will remain C (with likely need to add extern "C" blocks to its headers).
+  
+* VC2008 project has been updated to link to the cpp files.
+
+* Elimination of all errors, including incorrect C++ usage of bool, pointer 
+  casts, and enum types, excepting error C2440, "no conversion from 
+  'void (__cdecl *)(mobj_t *)' to 'think_t'" -- it is obvious that the thinker
+  type punning system cannot be transitioned into C++, at least not in a clean
+  manner, and thus as I had previously planned, transitioning thinkers into a
+  virtual class hierarchy will be a fundamental part of the basic transition 
+  process.
+
+===============================================================================
+EOF
+===============================================================================
+
