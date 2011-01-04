@@ -475,9 +475,18 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 //
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((byte *) ptr - header_size);
+   memblock_t *block;
    
    DEBUG_CHECKHEAP();
+   
+   if(!ptr)
+   {
+      I_FatalError(I_ERR_KILL, 
+                   "Z_ChangeTag: can't change a NULL pointer at %s:%d\n",
+                   file, line);
+   }
+   
+   block = (memblock_t *)((byte *) ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_ChangeTag: Changed a tag without ZONEID", block, file, line);
