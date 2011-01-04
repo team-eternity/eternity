@@ -44,7 +44,6 @@ typedef enum
 } rportaltype_e;
 
 
-
 // These are flags used to represent configurable options for portals
 typedef enum
 {
@@ -92,8 +91,6 @@ typedef enum
 } portalflag_e;
 
 
-
-
 // Contains information representing a link from one portal group to another
 typedef struct linkdata_s
 {
@@ -111,7 +108,6 @@ typedef struct linkdata_s
 } linkdata_t;
 
 
-
 // Represents the information needed for an anchored portal
 typedef struct anchordata_s
 {
@@ -121,7 +117,6 @@ typedef struct anchordata_s
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
-
 
 
 // Represents the data needed for a horizon portal

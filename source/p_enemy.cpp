@@ -119,14 +119,17 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    
    if(sec->c_pflags & PS_PASSSOUND)
    {
-      // Ok, because the same portal can be used on many sectors and even lines, the portal
-      // structure won't tell you what sector is on the other side of the portal. SO
+      // Ok, because the same portal can be used on many sectors and even 
+      // lines, the portal structure won't tell you what sector is on the 
+      // other side of the portal. SO
       sector_t *other;
       line_t *check = sec->lines[0];
 
       other = 
-      R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - R_CPLink(sec)->deltax,
-                         ((check->v1->y + check->v2->y) / 2) - R_CPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
+                             - R_CPLink(sec)->deltax,
+                            ((check->v1->y + check->v2->y) / 2) 
+                             - R_CPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }

@@ -104,7 +104,7 @@ static boolean stopchan(int handle)
    int cnum;
    boolean freeSound = true;
    boolean stoppedSound = false;
-   sfxinfo_t *sfx;
+   sfxinfo_t *sfx = NULL;
    
 #ifdef RANGECHECK
    // haleyjd 02/18/05: bounds checking
@@ -121,7 +121,7 @@ static boolean stopchan(int handle)
 
       channelinfo[handle].stopChannel = false;
 
-      if(channelinfo[handle].data)
+      if(sfx)
       {
          // haleyjd 06/07/09: bug fix!
          // this channel isn't interested in the sound any more, 
@@ -152,7 +152,7 @@ static boolean stopchan(int handle)
          }
          
          // set sample to PU_CACHE level
-         if(freeSound)
+         if(freeSound && sfx->data)
             Z_ChangeTag(sfx->data, PU_CACHE);
       }
    }
