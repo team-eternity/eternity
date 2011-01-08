@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -53,13 +53,13 @@ typedef struct tcomponent_s
 
 // SoM: Columns are used inside the texture struct to reference the linear
 // buffer the textures are painted to.
-typedef struct texcol_s
+struct texcol_t
 {
    uint16_t yoff, len;
    uint32_t ptroff;
    
-   struct texcol_s *next;
-} texcol_t;
+   texcol_t *next;
+};
 
 
 // A maptexturedef_t describes a rectangular texture, which is composed
@@ -78,16 +78,16 @@ typedef enum
    TF_ANIMATED  = 0x8,
 } texflag_e;
 
-typedef struct texture_s
+struct texture_t
 {
    // SoM: New dog's in town
-   mdllistitem_t link;
+   DLListItem<texture_t> link;
    
    // Index within the texture array of this object.
    int           index;
 
    // For use with ehash stuff
-   char       *name;
+   ENCStringHashKey name;
    char       namebuf[9];       // Keep name for switch changing, etc.
    int16_t    width, height;
    
@@ -110,7 +110,7 @@ typedef struct texture_s
    // which can be either patch graphics or linear graphics.
    int16_t        ccount;
    tcomponent_t   components[1]; // back-to-front into the cached texture.
-} texture_t;
+};
 
 // Retrieve column data for span blitting.
 //byte *R_GetColumn(int tex, int32_t col);

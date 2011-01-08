@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -37,11 +37,10 @@ enum
    LEVEL_FORMAT_HEXEN
 };
 
-typedef struct waddir_s *pwaddirptr;
+struct waddir_t;
+int P_CheckLevel(waddir_t *dir, int lumpnum); // haleyjd: now used in d_main.c
 
-int P_CheckLevel(pwaddirptr dir, int lumpnum); // haleyjd: now used in d_main.c
-
-void P_SetupLevel(pwaddirptr dir, const char *mapname, int playermask, skill_t skill);
+void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init(void);               // Called by startup code.
 void P_InitThingLists(void);
 
@@ -54,7 +53,7 @@ extern int      bmapwidth;
 extern int      bmapheight;      // in mapblocks
 extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
-extern mobj_t   **blocklinks;    // for thing chains
+extern Mobj   **blocklinks;    // for thing chains
 
 extern boolean  newlevel;
 extern int      doom1level;
@@ -84,7 +83,7 @@ extern olo_t olo;
 extern int olo_loaded;
 #endif
 
-
+struct seg_t;
 void P_CalcSegLength(seg_t *seg);
 
 #endif

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -37,6 +37,8 @@
 #define E_EXDATA_H__
 
 #include "doomdata.h"
+#include "doomtype.h"
+#include "r_defs.h"
 
 // defines
 
@@ -114,6 +116,11 @@ typedef struct mapsectorext_s
    int    damageflagsadd;
    int    damageflagsrem;
 
+   unsigned int f_pflags;
+   unsigned int c_pflags;
+   unsigned int f_alpha;
+   unsigned int c_alpha;
+
    eterrainptr floorterrain;
    eterrainptr ceilingterrain;
 
@@ -128,7 +135,7 @@ typedef struct mapsectorext_s
 // Globals
 
 void    E_LoadExtraData(void);
-mobj_t *E_SpawnMapThingExt(mapthing_t *mt);
+Mobj *E_SpawnMapThingExt(mapthing_t *mt);
 void    E_LoadLineDefExt(line_t *line, boolean applySpecial);
 boolean E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);

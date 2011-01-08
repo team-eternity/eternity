@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -34,7 +34,7 @@
 #include "d_keywds.h"
 
 // haleyjd 10/03/05: all these structures should be byte aligned
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -65,7 +65,7 @@ enum {
 struct mapvertex_s
 {
    int16_t x, y;
-} __attribute__((packed));
+};
 
 typedef struct mapvertex_s mapvertex_t;
 
@@ -79,7 +79,7 @@ struct mapsidedef_s
   char  bottomtexture[8];
   char  midtexture[8];
   int16_t sector;  // Front sector, towards viewer.
-} __attribute__((packed));
+};
 
 typedef struct mapsidedef_s mapsidedef_t;
 
@@ -93,7 +93,7 @@ struct maplinedef_s
   int16_t special;
   int16_t tag;
   int16_t sidenum[2];  // sidenum[1] will be -1 if one sided
-} __attribute__((packed));
+};
 
 typedef struct maplinedef_s maplinedef_t;
 
@@ -107,7 +107,7 @@ struct maplinedefhexen_s
    byte    special;
    byte    args[NUMHXLINEARGS];
    int16_t sidenum[2];
-} __attribute__((packed));
+};
 
 typedef struct maplinedefhexen_s maplinedefhexen_t;
 
@@ -176,7 +176,7 @@ struct mapsector_s
   int16_t lightlevel;
   int16_t special;
   int16_t tag;
-} __attribute__((packed));
+};
 
 typedef struct mapsector_s mapsector_t;
 
@@ -185,7 +185,7 @@ struct mapsubsector_s
 {
   int16_t numsegs;
   int16_t firstseg;    // Index of first one; segs are stored sequentially.
-} __attribute__((packed));
+};
 
 typedef struct mapsubsector_s mapsubsector_t;
 
@@ -199,7 +199,7 @@ struct mapseg_s
   int16_t linedef;
   int16_t side;
   int16_t offset;
-} __attribute__((packed));
+};
 
 typedef struct mapseg_s mapseg_t;
 
@@ -218,7 +218,7 @@ struct mapnode_s
   int16_t bbox[2][4];
   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
   uint16_t children[2];
-} __attribute__((packed));
+};
 
 typedef struct mapnode_s mapnode_t;
 
@@ -231,7 +231,7 @@ struct mapthingdoom_s
   int16_t angle;
   int16_t type;
   int16_t options;
-} __attribute__((packed));
+};
 
 typedef struct mapthingdoom_s mapthingdoom_t;
 
@@ -248,7 +248,7 @@ struct mapthinghexen_s
    int16_t options;
    byte    special;
    byte    args[NUMHXTARGS];
-} __attribute__((packed));
+};
 
 typedef struct mapthinghexen_s mapthinghexen_t;
 
@@ -258,7 +258,7 @@ typedef struct mapthinghexen_s mapthinghexen_t;
 
 #define NUMMTARGS 5
 
-typedef struct mapthing_s
+struct mapthing_t
 {
    int16_t tid;       // scripting id
    int16_t x;         // x coord
@@ -273,9 +273,9 @@ typedef struct mapthing_s
 
    int     recordnum; // for ExtraData hashing
    int     next;
-} mapthing_t;
+};
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

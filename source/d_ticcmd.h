@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -51,7 +51,7 @@
 
 // haleyjd 10/16/07: ticcmd_t must be packed
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -69,11 +69,11 @@ struct ticcmd_s
    byte    chatchar;
    byte    buttons;
    byte    actions;
-} __attribute__((packed));
+};
 
 typedef struct ticcmd_s ticcmd_t;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

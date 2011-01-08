@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -34,11 +34,13 @@
 
 // We need globally shared data structures,
 //  for defining the global state variables.
-#include "doomdata.h"
+
 #include "d_net.h"
 
-// We need the playr data structure as well.
+// We need the player data structure as well.
 #include "d_player.h"
+#include "p_tick.h"
+#include "tables.h"
 
 typedef enum
 {
@@ -211,7 +213,7 @@ extern  boolean statusbaractive;
 
 extern  boolean automapactive; // In AutoMap mode?
 extern  boolean menuactive;    // Menu overlayed?
-extern  boolean paused;        // Game Pause?
+extern  int     paused;        // Game Pause?
 extern  int     hud_active;    //jff 2/17/98 toggles heads-up status display
 extern  boolean viewactive;
 extern  boolean nodrawers;
@@ -279,6 +281,8 @@ extern  player_t  players[MAXPLAYERS];
 // Alive? Disconnected?
 extern  boolean    playeringame[];
 
+struct mapthing_t;
+
 extern  mapthing_t *deathmatchstarts;     // killough
 extern  size_t     num_deathmatchstarts; // killough
 
@@ -340,7 +344,7 @@ extern  int        maketic;
 extern  ticcmd_t   netcmds[][BACKUPTICS];
 extern  int        ticdup;
 
-extern thinker_t thinkercap;  // Both the head and tail of the thinker list
+extern Thinker thinkercap;  // Both the head and tail of the thinker list
 
 //-----------------------------------------------------------------------------
 

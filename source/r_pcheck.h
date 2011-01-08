@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
@@ -29,9 +29,9 @@
 #define R_PORTALCHECK_H__
 
 #include "r_portal.h"
+#include "r_defs.h"
 
 extern int demo_version;
-
 
 //
 // R_FPCam

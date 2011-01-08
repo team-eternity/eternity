@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,8 +27,6 @@
 #ifndef __R_THINGS__
 #define __R_THINGS__
 
-#include "r_defs.h"
-
 // Constant arrays used for psprite clipping and initializing clipping.
 
 extern float zeroarray[MAX_SCREENWIDTH];
@@ -55,35 +53,27 @@ typedef struct maskedrange_s
    struct maskedrange_s *next;
 } maskedrange_t;
 
-
-
 typedef struct poststack_s
 {
    struct planehash_s  *overlay;
    maskedrange_t       *masked;
 } poststack_t;
 
-void R_SortVisSpriteRange (int first, int last);
-void R_DrawSpriteInDSRange (vissprite_t* spr, int firstds, int lastds);
 void R_PushPost(boolean pushmasked, struct planehash_s *overlay);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);
 
-void R_DrawMaskedColumn(column_t *tcolumn);
+struct texture_t;
+struct texcol_t;
+
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
-void R_SortVisSprites(void);
 void R_AddSprites(sector_t *sec,int); // killough 9/18/98
 void R_AddPSprites(void);
 void R_DrawSprites(void);
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
 void R_DrawPostBSP(void);
-
-void R_ClipVisSprite(vissprite_t *vis, int xl, int xh);
-
-void R_DrawParticle(vissprite_t *vis);
-void R_ProjectParticle(particle_t *particle);
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -30,16 +30,15 @@
 
 #include "m_dllist.h"
 
-typedef struct edf_string_s
+struct edf_string_t
 {
-   mdllistitem_t numlinks;    // next, prev links for numeric hash chain
-   struct edf_string_s *next; // next in mnemonic hash chain
+   DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
+   edf_string_t *next;                 // next in mnemonic hash chain
 
    char *string;       // string value
    char key[33];       // mnemonic for hashing
    int  numkey;        // number for hashing
-   
-} edf_string_t;
+};
 
 edf_string_t *E_CreateString(const char *, const char *, int);
 edf_string_t *E_StringForName(const char *key);

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -32,18 +32,27 @@
 #ifndef P_XENEMY_H__
 #define P_XENEMY_H__
 
+#include "p_mobj.h"
+
 // Earthquakes
 
-typedef struct quakethinker_s
+class QuakeThinker : public PointThinker
 {
-   degenmobj_t origin;   // serves as thinker and sound origin
+protected:
+   void Think();
+
+public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "QuakeThinker"; }
+
+   // Data Members
    int intensity;        // richter scale (hardly realistic)
    int duration;         // how long it lasts
    fixed_t quakeRadius;  // radius of shaking effects
    fixed_t damageRadius; // radius of damage effects (if any)
-} quakethinker_t;
+};
 
-void T_QuakeThinker(quakethinker_t *qt);
 boolean P_StartQuake(int *args);
 
 #endif

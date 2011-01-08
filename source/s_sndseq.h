@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -85,16 +85,19 @@ enum
    SEQ_FLAG_ENVIRO  = 0x02,
 };
 
+struct ESoundSeq_t;
+
+//
 // SndSeq_t -- a running sound sequence
-
-typedef struct SndSeq_s
+//
+struct SndSeq_t
 {
-   mdllistitem_t link;           // double-linked list node -- must be first
+   DLListItem<SndSeq_t> link;   // double-linked list node -- must be first
 
-   struct ESoundSeq_s *sequence; // pointer to EDF sound sequence
+   ESoundSeq_t *sequence;        // pointer to EDF sound sequence
    seqcmd_t *cmdPtr;             // current position in command sequence
 
-   mobj_t *origin;               // the origin of the sequence
+   PointThinker *origin;         // the origin of the sequence
    sfxinfo_t *currentSound;      // current sound being played
    
    int delayCounter;             // delay time counter
@@ -106,19 +109,19 @@ typedef struct SndSeq_s
    // 10/17/06: data needed for savegames
    int originType;               // type of origin (sector, polyobj, other)
    int originIdx;                // sector or polyobj number, (or -1)
-} SndSeq_t;
+};
 
 // Sound sequence pointers, needed for savegame support
-extern SndSeq_t *SoundSequences;
+extern DLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
-void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
-                        int seqOriginIdx);
-void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
-                         int seqOriginIdx);
-void S_StopSequence(mobj_t *mo);
-void S_SquashSequence(mobj_t *mo);
-void S_KillSequence(mobj_t *mo);
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, 
+                        int seqOriginType, int seqOriginIdx);
+void S_StartSequenceName(PointThinker *mo, const char *seqname, 
+                         int seqOriginType, int seqOriginIdx);
+void S_StopSequence(PointThinker *mo);
+void S_SquashSequence(PointThinker *mo);
+void S_KillSequence(PointThinker *mo);
 
 void S_StartSectorSequence(sector_t *s, int seqtype);
 void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
@@ -136,7 +139,7 @@ void S_SetSequenceStatus(SndSeq_t *seq);
 void S_SequenceGameLoad(void);
 void S_InitEnviroSpots(void);
 
-boolean S_CheckSequenceLoop(mobj_t *mo);
+boolean S_CheckSequenceLoop(PointThinker *mo);
 boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling);
 
 // EnviroSeqMgr_t -- environment sequence manager data

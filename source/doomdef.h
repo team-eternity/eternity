@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,21 +30,9 @@
 
 // killough 4/25/98: Make gcc extensions mean nothing on other compilers
 // haleyjd 05/22/02: moved to d_keywds.h
-#include "d_keywds.h"
 
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
-#include "z_zone.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
-
-#include "m_swap.h"
-#include "version.h"
-#include "d_mod.h"
-#include "m_fixed.h" // SoM 2-4-04: ANYRES
+// haleyjd: uhh, no. Include it in the files, not in another header.
 
 // Identify language to use, software localization.
 typedef enum {
@@ -76,33 +64,6 @@ typedef enum {
 #define MAX_SCREENWIDTH  2560
 #define MAX_SCREENHEIGHT 1600
 
-// SoM: replaced globals with a struct and a single global
-typedef struct cb_video_s
-{
-   // SoM: Not implemented (yet)
-   int         bitdepth, pixelsize;
-
-   int         width, height;
-   int         pitch;
-   fixed_t     widthfrac, heightfrac;
-   fixed_t     xscale, yscale;
-   fixed_t     xstep, ystep;
-
-   float       xscalef, yscalef;
-   float       xstepf, ystepf;
-   boolean     scaled; // SoM: should be set when the scale values are
-
-   byte        *screens[5];
-
-   // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
-   int x1lookup[321];
-   int y1lookup[201];
-   int x2lookup[321];
-   int y2lookup[201];
-} cb_video_t;
-
-extern cb_video_t video;
-
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200
 
@@ -110,7 +71,7 @@ extern cb_video_t video;
 #define MAXPLAYERS       4
 
 // phares 5/14/98:
-// DOOM Editor Numbers (aka doomednum in mobj_t)
+// DOOM Editor Numbers (aka doomednum in Mobj)
 
 #define DEN_PLAYER5 4001
 #define DEN_PLAYER6 4002
@@ -124,6 +85,7 @@ extern cb_video_t video;
 // at the intermission screen, the game final animation, or a demo.
 
 typedef enum {
+  GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
   GS_LEVEL,
   GS_INTERMISSION,
   GS_FINALE,
@@ -190,7 +152,8 @@ typedef enum {
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-typedef enum {
+enum 
+{
   wp_fist,
   wp_pistol,
   wp_shotgun,
@@ -203,10 +166,13 @@ typedef enum {
 
   NUMWEAPONS,
   wp_nochange              // No pending weapon change.
-} weapontype_t;
+};
+
+typedef int weapontype_t;
 
 // Ammunition types defined.
-typedef enum {
+enum 
+{
   am_clip,    // Pistol / chaingun ammo.
   am_shell,   // Shotgun / double barreled shotgun.
   am_cell,    // Plasma rifle, BFG.
@@ -214,7 +180,8 @@ typedef enum {
   
   NUMAMMO,
   am_noammo   // Unlimited for chainsaw / fist.
-} ammotype_t;
+};
+typedef int ammotype_t;
 
 // Power up artifacts.
 typedef enum {

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -45,6 +45,10 @@
 // Include system definitions so that prototypes become
 // active before macro replacements below are in effect.
 
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS 1
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -54,11 +58,14 @@
 #include <strings.h>
 #endif
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <float.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <time.h>
 
-// haleyjd: inttypes.h - on Windows, this comes from the source\Win32
-// directory.
+// haleyjd: inttypes.h - on Windows, this comes from the source\Win32 directory
 #include <inttypes.h>
 
 #include "psnprntf.h"
@@ -77,11 +84,9 @@ enum
    PU_MUSIC,    // currently unused
    PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
    PU_AUTO,     // haleyjd 07/08/10: automatic allocation
-   
-   // these must remain together:
-
    PU_LEVEL,    // allocation belongs to level (freed at next level load)
-   PU_LEVSPEC,  // used for thinker_t's (same as PU_LEVEL basically)
+
+   // cache levels
 
    PU_CACHE,    // block is cached (may be implicitly freed at any time!)
 

@@ -70,6 +70,10 @@ typedef enum
 // Initialise the screen
 // Returns 1 if successful, 0 if failed.
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int TXT_Init(void);
 
 // Shut down text mode emulation
@@ -114,6 +118,10 @@ void TXT_EnableKeyMapping(int enable);
 // Set the window title of the window containing the text mode screen
 
 void TXT_SetWindowTitle(char *title);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #ifndef TXT_MAIN_H */
 

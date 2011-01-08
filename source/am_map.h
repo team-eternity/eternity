@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,6 +28,7 @@
 #define __AMMAP_H__
 
 #include "d_event.h"
+#include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
 enum
@@ -66,7 +67,8 @@ void AM_Start(void);
 
 void AM_clearMarks(void);
 
-void AM_Coordinates(const mobj_t *, fixed_t *, fixed_t *, fixed_t *);
+class Mobj;
+void AM_Coordinates(const Mobj *, fixed_t *, fixed_t *, fixed_t *);
 
 typedef struct mpoint_s
 {

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -136,7 +136,7 @@ int I_CheckAbort();
 // haleyjd 04/15/02: SDL joystick stuff
 
 #ifdef _SDL_VER
-int i_SDLJoystickNum;
+extern int i_SDLJoystickNum;
 
 boolean I_SetJoystickDevice(int deviceNum);
 

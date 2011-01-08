@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -36,12 +36,12 @@
 #ifndef M_QSTR_H__
 #define M_QSTR_H__
 
-typedef struct qstring_s
+struct qstring_t
 {
    char   *buffer;
    size_t  index;
    size_t  size;
-} qstring_t;
+};
 
 #define qstring_npos ((size_t) -1)
 
@@ -112,6 +112,7 @@ qstring_t  *QStrUpr(qstring_t *qstr);
 qstring_t  *QStrLwr(qstring_t *qstr);
 size_t      QStrReplace(qstring_t *qstr, const char *filter, char repl);
 size_t      QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
+qstring_t  *QStrNormalizeSlashes(qstring_t *qstr);
 char       *QStrCDup(qstring_t *qstr, int tag);
 char       *QStrCDupAuto(qstring_t *qstr);
 int         QStrAtoi(qstring_t *qstr);

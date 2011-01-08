@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -28,6 +28,10 @@
 #ifndef R_PORTALS_H__
 #define R_PORTALS_H__
 
+#include "doomdef.h"
+
+class Mobj;
+
 typedef enum
 {
    R_NONE,
@@ -38,7 +42,6 @@ typedef enum
    R_TWOWAY, // SoM: two-way non-linked anchored portals
    R_LINKED, // SoM: interactive portals  
 } rportaltype_e;
-
 
 
 // These are flags used to represent configurable options for portals
@@ -61,9 +64,9 @@ typedef enum
    // Portal has a blended texture overlay (alpha is default)
    PS_OVERLAY            = 0x010,
    // Overlay uses additive blending (must be used with PS_OVERLAY)
-   PS_ADDOVERLAY         = 0x020,
+   PS_ADDITIVE           = 0x020,
    // Mask for overlay blending flags
-   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDOVERLAY,
+   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDITIVE,
    // Surface uses the global texture in the portal struct
    PS_USEGLOBALTEX       = 0x040,
    // Mask for all overlay flags
@@ -83,11 +86,9 @@ typedef enum
    
    // -- Opactiy -- 
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
-   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
 } portalflag_e;
-
-
 
 
 // Contains information representing a link from one portal group to another
@@ -107,7 +108,6 @@ typedef struct linkdata_s
 } linkdata_t;
 
 
-
 // Represents the information needed for an anchored portal
 typedef struct anchordata_s
 {
@@ -117,7 +117,6 @@ typedef struct anchordata_s
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
-
 
 
 // Represents the data needed for a horizon portal
@@ -146,7 +145,7 @@ typedef struct skyplanedata_s
 
 // The portal struct. This is what is assigned to sectors and can represent any
 // kind of portal.
-typedef struct portal_s
+struct portal_t
 {
    rportaltype_e type;
 
@@ -156,7 +155,7 @@ typedef struct portal_s
       horizondata_t  horizon;
       anchordata_t   anchor;
       linkdata_t     link;
-      mobj_t         *camera;
+      Mobj         *camera;
    } data;
 
    // See: portalflag_e
@@ -166,16 +165,13 @@ typedef struct portal_s
    int    globaltex;
    struct planehash_s *poverlay;
 
-   struct portal_s *next;
+   portal_t *next;
 
    // haleyjd: temporary debug
    int16_t tainted;
-} portal_t;
+};
 
-
-
-
-portal_t *R_GetSkyBoxPortal(mobj_t *camera);
+portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 
@@ -194,16 +190,17 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel,
 void R_ClearPortals(void);
 void R_RenderPortals(void);
 
-
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
 
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Portal windows
+//
 // A portal window represents the screen reigon through which the player is 
 // 'looking' at the portal.
+//
+
 typedef enum
 {
    pw_floor,
@@ -211,17 +208,18 @@ typedef enum
    pw_line
 } pwindowtype_e;
 
-struct pwindow_s;	//prototype to shut up gcc warnings
-typedef void (*R_WindowFunc)(struct pwindow_s *);
+struct line_t;
+struct pwindow_t;	// prototype to shut up gcc warnings
+typedef void (*R_WindowFunc)(pwindow_t *);
 typedef void (*R_ClipSegFunc)();
 
 extern R_ClipSegFunc segclipfuncs[];
 
 // SoM: TODO: Overlays go in here.
-typedef struct pwindow_s
+struct pwindow_t
 {
    portal_t *portal;
-   struct line_s *line;
+   line_t *line;
    pwindowtype_e type;
 
    fixed_t  vx, vy, vz;
@@ -234,20 +232,19 @@ typedef struct pwindow_s
    R_ClipSegFunc clipfunc;
 
    // Next window in the main chain
-   struct pwindow_s *next;
+   pwindow_t *next;
    
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
-   struct pwindow_s *head, *child;
-} pwindow_t;
+   pwindow_t *head, *child;
+};
 
 // SoM: Cardboard
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
 
-
 pwindow_t *R_GetFloorPortalWindow(portal_t *portal);
 pwindow_t *R_GetCeilingPortalWindow(portal_t *portal);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, struct line_s *line);
+pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 
 
 // SoM 3/14/2004: flag if we are rendering portals.

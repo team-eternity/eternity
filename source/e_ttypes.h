@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -91,11 +91,11 @@ typedef struct EFloor_s
 
 void E_InitTerrainTypes(void);
 ETerrain *E_TerrainForName(const char *name);
-ETerrain *E_GetThingFloorType(mobj_t *thing, boolean usefloorz);
+ETerrain *E_GetThingFloorType(Mobj *thing, boolean usefloorz);
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int pos);
 fixed_t E_SectorFloorClip(sector_t *sector);
-boolean E_HitWater(mobj_t *thing, sector_t *sector);
-boolean E_HitFloor(mobj_t *thing);
+boolean E_HitWater(Mobj *thing, sector_t *sector);
+boolean E_HitFloor(Mobj *thing);
 void E_PtclTerrainHit(particle_t *);
 
 #endif

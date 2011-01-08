@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -63,32 +63,32 @@ void S_Init(int sfxVolume, int musicVolume);
 void S_Start(void);
 
 // haleyjd 05/30/06: sound attenuation types
-typedef enum
+enum
 {
    ATTN_NORMAL, // normal: use the data stored in sfxinfo_t
    ATTN_IDLE,   // idle: use DOOM's old values all the time
    ATTN_STATIC, // static: fade out quickly
    ATTN_NONE,   // none: Moooo!
    ATTN_NUM     // number of types
-} soundattn_e;
+};
 
 //
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
 //
-void S_StartSound(mobj_t *origin, int sound_id);
-void S_StartSoundName(mobj_t *origin, const char *name);
-void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation,
-                    boolean loop, schannel_e subchannel);
-void S_StartSoundAtVolume(mobj_t *origin, int sfx_id, 
-                          int volume, soundattn_e attn, schannel_e subchannel);
-void S_StartSoundNameAtVolume(mobj_t *origin, const char *name, 
-                              int volume, soundattn_e attn,
-                              schannel_e subchannel);
+void S_StartSound(PointThinker *origin, int sound_id);
+void S_StartSoundName(PointThinker *origin, const char *name);
+void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
+                    int volumeScale, int attenuation,
+                    boolean loop, int subchannel);
+void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
+                          int volume, int attn, int subchannel);
+void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
+                              int volume, int attn,
+                              int subchannel);
 
 // Stop sound for thing at <origin>
-void S_StopSound(const mobj_t *origin, schannel_e subchannel);
+void S_StopSound(const PointThinker *origin, int subchannel);
 
 // Start music using <music_id> from sounds.h
 void S_StartMusic(int music_id);
@@ -119,12 +119,12 @@ void S_UpdateMusic(int lumpnum);
 //
 // Updates music & sounds
 //
-void S_UpdateSounds(const mobj_t *listener);
+void S_UpdateSounds(const Mobj *listener);
 void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
 // haleyjd: rudimentary sound checker
-boolean S_CheckSoundPlaying(mobj_t *, sfxinfo_t *sfx);
+boolean S_CheckSoundPlaying(PointThinker *, sfxinfo_t *sfx);
 
 // precache sound?
 extern int s_precache;

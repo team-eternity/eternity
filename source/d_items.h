@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,13 +28,14 @@
 #define __D_ITEMS__
 
 #include "doomdef.h"
+#include "doomtype.h"
 
 //
 // haleyjd 09/11/07: weapon flags
 //
 enum
 {
-   WPF_NOTHRUST     = 0x00000001, // doesn't thrust mobj_t's
+   WPF_NOTHRUST     = 0x00000001, // doesn't thrust Mobj's
    WPF_NOHITGHOSTS  = 0x00000002, // tracer-based weapon can't hit ghosts
    WPF_NOTSHAREWARE = 0x00000004, // not in shareware gamemodes
    WPF_UNUSED       = 0x00000008, // (was WPF_COMMERCIAL, free for use)

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -55,6 +55,7 @@ int E_Endif      (cfg_t *, cfg_opt_t *, int, const char **);
 int E_SpriteFrameCB(cfg_t *, cfg_opt_t *, const char *, void *);
 int E_IntOrFixedCB (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_TranslucCB   (cfg_t *, cfg_opt_t *, const char *, void *);
+int E_TranslucCB2  (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
 #endif
@@ -65,7 +66,7 @@ const char *E_BuildDefaultFn(const char *filename);
 int E_EnableNumForName(const char *name, E_Enable_t *enables);
 int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
 int E_ParseFlags(const char *str, dehflagset_t *flagset);
-char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen);
+const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
 
 #endif
 

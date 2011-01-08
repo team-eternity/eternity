@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -26,6 +26,8 @@
 
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
+
+struct sfxinfo_t;
 
 typedef struct i_sounddriver_s
 {

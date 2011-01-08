@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -27,32 +27,103 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
-// endianness values
-enum
+//
+// An exception class for buffered IO errors
+//
+class BufferedIOException
 {
-   OUTBUFFER_NENDIAN, // doesn't swap shorts or ints
-   OUTBUFFER_LENDIAN, // swaps shorts/ints to little endian
-   OUTBUFFER_BENDIAN  // swaps shorts/ints to big endian
+protected:
+   const char *message;
+
+public:
+   BufferedIOException(const char *pMsg) : message(pMsg) {}
+   const char *GetMessage() { return message; }
 };
 
-typedef struct outbuffer_s
+//
+// BufferedFileBase
+//
+// Base class for buffers. Eventually I hpe to add an extra layer of indirection
+// so that this can function on more than just raw physical files (for example a
+// compressed data source).
+//
+class BufferedFileBase
 {
-   FILE *f;            // destination file
-   byte *buffer;       // buffer
-   unsigned int len;   // total buffer length
-   unsigned int idx;   // current index
-   int endian;         // endianness indicator
-} outbuffer_t;
+protected:
+   FILE *f;          // destination or source file
+   byte *buffer;     // buffer
+   size_t len;       // total buffer length
+   size_t idx;       // current index
+   int endian;       // endianness indicator
+   boolean throwing; // throws exceptions on IO errors
+   
+   void InitBuffer(size_t pLen, int pEndian);
 
-boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len, int endian);
-boolean M_BufferFlush(outbuffer_t *ob);
-void    M_BufferClose(outbuffer_t *ob);
-long    M_BufferTell(outbuffer_t *ob);
-boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size);
-boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num);
-boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num);
-boolean M_BufferWriteUint8(outbuffer_t *ob, uint8_t num);
+public:
+   long Tell();
+   virtual void Close();
+
+   void SwapLong  (int32_t  &x);
+   void SwapShort (int16_t  &x);
+   void SwapULong (uint32_t &x);
+   void SwapUShort(uint16_t &x);
+
+   void setThrowing(boolean val) { throwing = val;  }
+   boolean getThrowing() const   { return throwing; }
+
+   // endianness values
+   enum
+   {
+      NENDIAN, // doesn't swap shorts or ints
+      LENDIAN, // swaps shorts/ints to little endian
+      BENDIAN  // swaps shorts/ints to big endian
+   };
+};
+
+//
+// OutBuffer
+//
+// Buffered binary file output.
+//
+class OutBuffer : public BufferedFileBase
+{
+public:
+   boolean CreateFile(const char *filename, size_t pLen, int pEndian);
+   boolean Flush();
+   void    Close();
+
+   boolean Write(const void *data, size_t size);
+   boolean WriteSint32(int32_t  num);
+   boolean WriteUint32(uint32_t num);
+   boolean WriteSint16(int16_t  num);
+   boolean WriteUint16(uint16_t num);
+   boolean WriteSint8 (int8_t   num);
+   boolean WriteUint8 (uint8_t  num);
+};
+
+//
+// InBuffer
+//
+// Buffered binary file input.
+//
+class InBuffer : public BufferedFileBase
+{
+protected:
+   size_t  readlen; // amount actually read (may be less than len)
+   boolean atEOF;
+   boolean ReadFile();
+
+public:
+   boolean OpenFile(const char *filename, size_t pLen, int pEndian);
+
+   boolean Read(void *dest, size_t size);
+   boolean ReadSint32(int32_t  &num);
+   boolean ReadUint32(uint32_t &num);
+   boolean ReadSint16(int16_t  &num);
+   boolean ReadUint16(uint16_t &num);
+   boolean ReadSint8 (int8_t   &num);
+   boolean ReadUint8 (uint8_t  &num);
+};
 
 #endif
 

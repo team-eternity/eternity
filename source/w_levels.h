@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -27,12 +27,14 @@
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__
 
-typedef struct wadlevel_s
+struct waddir_t;
+
+struct wadlevel_t
 {
    char header[9]; // header lump name
    int  lumpnum;   // lump number, relative to directory
    waddir_t *dir;  // parent directory
-} wadlevel_t;
+};
 
 extern char *w_masterlevelsdirname;
 extern boolean inmasterlevels;          // true if we are playing master levels

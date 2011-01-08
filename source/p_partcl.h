@@ -16,12 +16,12 @@
 #define PS_HITGROUND    0x0008
 #define PS_SPLASH       0x0010 
 
-typedef struct particle_s
+struct particle_t
 {
    // haleyjd 02/20/04: particles now need sector links
    // haleyjd 08/05/05: use generalized dbl-linked list code
-   mdllistitem_t seclinks;         // sector links
-   struct subsector_s *subsector;
+   DLListItem<particle_t> seclinks;         // sector links
+   subsector_t *subsector;
 
    fixed_t x, y, z;
    fixed_t velx, vely, velz;
@@ -33,9 +33,8 @@ typedef struct particle_s
    byte color;
    int  next;
    int  styleflags; // haleyjd 07/03/03
-} particle_t;
+};
 
-extern int numParticles;
 extern int activeParticles;
 extern int inactiveParticles;
 extern particle_t *Particles;
@@ -85,7 +84,7 @@ enum
 
 typedef struct particle_event_s
 {
-   void (*func)(mobj_t *);
+   void (*func)(Mobj *);
    char name[16];
    int  enabled;
 } particle_event_t;
@@ -101,13 +100,13 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int 
 void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int kind);
 void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int updown, 
                    int kind);
-void P_BloodSpray(mobj_t *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
+void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z, 
                   angle_t angle);
-void P_DisconnectEffect(mobj_t *actor);
+void P_DisconnectEffect(Mobj *actor);
 
 // event functions
 
-void P_RunEvent(mobj_t *actor);
+void P_RunEvent(Mobj *actor);
 void P_AddEventVars(void);
 
 #endif

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -51,26 +51,28 @@
 #define is_a_gap(it) \
    ((it)->type == it_gap  || (it)->type == it_title || (it)->type == it_info)
 
+// item types
+enum
+{
+   it_gap,              // empty line
+   it_runcmd,           // run console command
+   it_variable,         // variable
+                        // enter pressed to type in new value
+   it_variable_nd,      // variable, but doesn't set default value -- haleyjd
+   it_toggle,           // togglable variable
+                        // can use left/right to change value
+   it_title,            // the menu title
+   it_info,             // information / section header
+   it_slider,           // slider
+   it_bigslider,        // big slider -- haleyjd 08/30/06
+   it_automap,          // an automap colour
+   it_binding,		      // haleyjd: a key binding
+   it_end,              // last menuitem in the list
+};
+
 typedef struct menuitem_s
 {
-  // item types
-  enum itemtype_e
-  {
-    it_gap,              // empty line
-    it_runcmd,           // run console command
-    it_variable,         // variable
-                         // enter pressed to type in new value
-    it_variable_nd,      // variable, but doesn't set default value -- haleyjd
-    it_toggle,           // togglable variable
-                         // can use left/right to change value
-    it_title,            // the menu title
-    it_info,             // information / section header
-    it_slider,           // slider
-    it_bigslider,        // big slider -- haleyjd 08/30/06
-    it_automap,          // an automap colour
-    it_binding,		    // haleyjd: a key binding
-    it_end,              // last menuitem in the list
-  } type;
+  int type; // item types
   
   char *description;  // the describing name of this item
 
@@ -95,6 +97,16 @@ typedef struct menuitem_s
 //    options again, just like they did in BOOM.
 // 3. (10/15/05) table of contents support
 
+// menu flags
+enum
+{
+   mf_skullmenu     = 1,   // show skull rather than highlight
+   mf_background    = 2,   // show background
+   mf_leftaligned   = 4,   // left-aligned menu
+   mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
+   mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
+};
+
 typedef struct menu_s
 {
    // 10/07/05: pointer to item array
@@ -112,14 +124,7 @@ typedef struct menu_s
    int selected;
    
    // menu flags
-   enum
-   {
-      mf_skullmenu     = 1,   // show skull rather than highlight
-      mf_background    = 2,   // show background
-      mf_leftaligned   = 4,   // left-aligned menu
-      mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
-      mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
-   } flags;               
+   int flags;               
    
    void (*drawer)(void);              // separate drawer function 
 

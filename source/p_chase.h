@@ -22,12 +22,14 @@
 #ifndef __P_CHASE_H__
 #define __P_CHASE_H__
 
-#include "p_mobj.h"
+#include "m_fixed.h"
+#include "tables.h"
+class Mobj;
 
 // haleyjd 06/04/01: added heightsec field for use in R_FakeFlat
 // to fix SMMU camera deep water bugs
 
-typedef struct camera_s
+struct camera_t
 {
    fixed_t x;
    fixed_t y;
@@ -36,8 +38,7 @@ typedef struct camera_s
    fixed_t pitch;
    int heightsec;  // haleyjd: for deep water handling
    int groupid;
-} camera_t;
-
+};
 
 extern int chasex;
 extern int chasey;
@@ -64,7 +65,7 @@ void P_ResetChasecam();
 void P_WalkTicker();
 void P_ResetWalkcam();
 
-void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target);
+void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);
 void P_FollowCamOff(void);
 void P_FollowCamTicker(void);
 

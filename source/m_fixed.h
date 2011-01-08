@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,7 +28,7 @@
 #define __M_FIXED__
 
 #include "d_keywds.h" // haleyjd 05/22/02
-#include "i_system.h"
+#include "doomtype.h"
 
 //
 // Fixed point, 32bit as 16.16.

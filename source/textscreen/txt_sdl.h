@@ -32,6 +32,10 @@
 
 #include "SDL.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Event callback function type: a function of this type can be used
 // to intercept events in the textscreen event processing loop.  
 // Returning 1 will cause the event to be eaten; the textscreen code
@@ -45,6 +49,10 @@ typedef int (*TxtSDLEventCallbackFunc)(SDL_Event *event, void *user_data);
 // user_data is a void pointer to be passed to the callback function.
 
 void TXT_SDL_SetEventCallback(TxtSDLEventCallbackFunc callback, void *user_data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #ifndef TXT_SDL_H */
 

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -36,7 +36,7 @@ extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 //
 // playerclass_t structure
 //
-typedef struct playerclass_s
+struct playerclass_t
 {
    skin_t *defaultskin;  // pointer to default skin
    mobjtype_t type;      // index of mobj type used
@@ -54,8 +54,8 @@ typedef struct playerclass_s
 
    // hashing data
    char mnemonic[33];
-   struct playerclass_s *next;
-} playerclass_t;
+   playerclass_t *next;
+};
 
 playerclass_t *E_PlayerClassForName(const char *);
 

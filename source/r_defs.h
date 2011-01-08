@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,38 +27,19 @@
 #ifndef __R_DEFS__
 #define __R_DEFS__
 
-typedef struct patch_s patch_t;
-
-// sqrt, etc.-- killough
-#include <math.h>
-
-// Screenwidth.
-#include "doomdef.h"
-
-// Some more or less basic data types
-// we depend on.
-#include "m_fixed.h"
-
-// We rely on the thinker data struct
-// to handle sound origins in sectors.
-#include "d_think.h"
-
-// SECTORS do store MObjs anyway.
-#include "p_mobj.h"
+// haleyjd 12/15/10: lighting data is required here
+#include "r_lighting.h"
 
 // SoM: Slopes need vectors!
 #include "m_vector.h"
 
+// SECTORS do store MObjs anyway.
+#include "p_mobj.h"
 
-// SoM: I had to move this for linked portals.
-typedef struct sector_s sector_t;
-typedef struct line_s   line_t;
-
-// Portals
-#include "r_portal.h"
-#include "p_portal.h"
-
-#include "p_partcl.h"
+struct line_t;
+struct sector_t;
+struct particle_t;
+struct portal_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -68,10 +49,6 @@ typedef struct line_s   line_t;
 #define SIL_BOTH    3
 
 #define MAXDRAWSEGS   256
-
-        // sf: moved from r_main.h for coloured lighting
-#define MAXLIGHTZ        128
-#define MAXLIGHTSCALE     48
 
 extern int r_blockmap;
 
@@ -96,20 +73,6 @@ typedef struct vertex_s
    struct vertex_s *dynanext;
    boolean dynafree;          // if true, is on free list
 } vertex_t;
-
-// Each sector has a degenmobj_t in its center for sound origin purposes.
-typedef struct degenmobj_s
-{
-   thinker_t thinker;  // not used for anything (haleyjd: not true now,
-   fixed_t x, y, z;    //    earthquake code)
-
-   // SoM: yes Quasar, this is entirely necessary
-   int     groupid; // The group the sound originated in
-} degenmobj_t;
-
-// haleyjd: polyobj.h needs degenmobj_t, so it must be here
-
-#include "polyobj.h"
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
@@ -188,7 +151,7 @@ typedef struct ETerrain_s *secterrainptr;
 //
 // SoM: moved the definition of sector_t to by the r_portal.h include
 //
-struct sector_s
+struct sector_t
 {
    fixed_t floorheight;
    fixed_t ceilingheight;
@@ -197,24 +160,24 @@ struct sector_s
    int16_t lightlevel;
    int16_t special;
    int16_t tag;
-   int nexttag, firsttag; // killough 1/30/98: improves searches for tags.
-   int soundtraversed;    // 0 = untraversed, 1,2 = sndlines-1
-   mobj_t *soundtarget;   // thing that made a sound (or null)
-   int blockbox[4];       // mapblock bounding box for height changes
-   degenmobj_t soundorg;  // origin for any sounds played by the sector
-   degenmobj_t csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
-   int validcount;        // if == validcount, already checked
-   mobj_t *thinglist;     // list of mobjs in sector
+   int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
+   int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
+   Mobj *soundtarget;     // thing that made a sound (or null)
+   int blockbox[4];         // mapblock bounding box for height changes
+   PointThinker soundorg;  // origin for any sounds played by the sector
+   PointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
+   int validcount;          // if == validcount, already checked
+   Mobj *thinglist;       // list of mobjs in sector
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
-   // these fields used to be in mobj_t, but presented performance problems
+   // these fields used to be in Mobj, but presented performance problems
    // when processed as mobj properties. Fix is to make them sector properties.
    int friction, movefactor;
 
    // thinker_t for reversable actions
-   void *floordata;    // jff 2/22/98 make thinkers on
-   void *ceilingdata;  // floors, ceilings, lighting,
-   void *lightingdata; // independent of one another
+   Thinker *floordata;    // jff 2/22/98 make thinkers on
+   Thinker *ceilingdata;  // floors, ceilings, lighting,
+   Thinker *lightingdata; // independent of one another
 
    // jff 2/26/98 lockout machinery for stairbuilding
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally
@@ -247,7 +210,7 @@ struct sector_s
    struct msecnode_s *touching_thinglist;               // phares 3/14/98  
    
    int linecount;
-   struct line_s **lines;
+   line_t **lines;
 
    // SoM 9/19/02: Better way to move 3dsides with a sector.
    // SoM 11/09/04: Improved yet again!
@@ -270,7 +233,7 @@ struct sector_s
    attachedsurface_t *f_asurfaces;
 
    // Flags for portals
-   int c_pflags, f_pflags;
+   unsigned int c_pflags, f_pflags;
    
    // Portals
    portal_t *c_portal;
@@ -286,7 +249,7 @@ struct sector_s
    // haleyjd 09/24/06: sound sequence id
    int sndSeqID;
 
-   struct particle_s *ptcllist; // haleyjd 02/20/04: list of particles in sector
+   DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
    // haleyjd 07/04/07: Happy July 4th :P
    // Angles for flat rotation!
@@ -325,7 +288,7 @@ struct sector_s
 // The SideDef.
 //
 
-typedef struct side_s
+struct side_t
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
@@ -339,7 +302,7 @@ typedef struct side_s
   // for other functions.
 
   int special;
-} side_t;
+};
 
 //
 // Move clipping aid for LineDefs.
@@ -354,26 +317,28 @@ typedef enum
 
 #define NUMLINEARGS 5
 
-typedef struct line_s
+struct seg_t;
+
+struct line_t
 {
-   vertex_t *v1, *v2;     // Vertices, from v1 to v2.
-   fixed_t dx, dy;        // Precalculated v2 - v1 for side checking.
-   int16_t flags;           // Animation related.
+   vertex_t *v1, *v2;      // Vertices, from v1 to v2.
+   fixed_t dx, dy;         // Precalculated v2 - v1 for side checking.
+   int16_t flags;          // Animation related.
    int16_t special;         
-   int   tag;             // haleyjd 02/27/07: line id's
+   int   tag;              // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
-   int   sidenum[2];      // Visual appearance: SideDefs.
+   int   sidenum[2];       // Visual appearance: SideDefs.
 
-   fixed_t bbox[4];       // A bounding box, for the linedef's extent
-   slopetype_t slopetype; // To aid move clipping.
-   sector_t *frontsector; // Front and back sector.
+   fixed_t bbox[4];        // A bounding box, for the linedef's extent
+   slopetype_t slopetype;  // To aid move clipping.
+   sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
-   int validcount;        // if == validcount, already checked
-   void *specialdata;     // thinker_t for reversable actions
-   int tranlump;          // killough 4/11/98: translucency filter, -1 == none
-   int firsttag, nexttag; // killough 4/17/98: improves searches for tags.
-   degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
+   int validcount;         // if == validcount, already checked
+   void *specialdata;      // thinker_t for reversable actions
+   int tranlump;           // killough 4/11/98: translucency filter, -1 == none
+   int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
+   PointThinker soundorg; // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
    int      pflags;
@@ -387,8 +352,10 @@ typedef struct line_s
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
 
-   struct seg_s *segs;     // haleyjd: link to segs
+   seg_t *segs;             // haleyjd: link to segs
 };
+
+struct rpolyobj_t;
 
 //
 // A SubSector.
@@ -397,16 +364,15 @@ typedef struct line_s
 //  indicating the visible walls that define
 //  (all or some) sides of a convex BSP leaf.
 //
-
-typedef struct subsector_s
+struct subsector_t
 {
   sector_t *sector;
 
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   int    numlines, firstline;
 
-  struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
-} subsector_t;
+  DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+};
 
 // phares 3/14/98
 //
@@ -415,7 +381,7 @@ typedef struct subsector_s
 // There are two threads that flow through these nodes. The first thread
 // starts at touching_thinglist in a sector_t and flows through the m_snext
 // links to find all mobjs that are entirely or partially in the sector.
-// The second thread starts at touching_sectorlist in an mobj_t and flows
+// The second thread starts at touching_sectorlist in an Mobj and flows
 // through the m_tnext links to find all sectors a thing touches. This is
 // useful when applying friction or push effects to sectors. These effects
 // can be done as thinkers that act upon all objects touching their sectors.
@@ -427,7 +393,7 @@ typedef struct subsector_s
 typedef struct msecnode_s
 {
   sector_t          *m_sector; // a sector containing this object
-  struct mobj_s     *m_thing;  // this object
+  Mobj            *m_thing;  // this object
   struct msecnode_s *m_tprev;  // prev msecnode_t for this thing
   struct msecnode_s *m_tnext;  // next msecnode_t for this thing
   struct msecnode_s *m_sprev;  // prev msecnode_t for this sector
@@ -438,7 +404,7 @@ typedef struct msecnode_s
 //
 // The LineSeg.
 //
-typedef struct seg_s
+struct seg_t
 {
   vertex_t *v1, *v2;
   float offset;
@@ -453,18 +419,18 @@ typedef struct seg_s
 
   sector_t *frontsector, *backsector;
 
-  struct seg_s *linenext; // haleyjd: next seg by linedef
+  seg_t *linenext; // haleyjd: next seg by linedef
 
   // SoM: Precached seg length in float format
   float  len;
 
   boolean nodraw; // don't render this seg, ever
-} seg_t;
+};
 
 //
 // BSP node.
 //
-typedef struct node_s
+struct node_t
 {
   fixed_t  x,  y, dx, dy;        // Partition line.
   fixed_t  bbox[2][4];           // Bounding box for each child.
@@ -474,39 +440,11 @@ typedef struct node_s
   double a, b, c;                // haleyjd 05/20/08: coefficients for
                                  //  general form of partition line 
   double len;                    //  length of partition line, for normalization
-} node_t;
-
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
-
-// posts are runs of non masked source pixels
-struct post_s
-{
-  byte topdelta; // -1 is the last post in a column
-  byte length;   // length data bytes follows
-} __attribute__((packed));
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-
-typedef struct post_s post_t;
-
-// column_t is a list of 0 or more post_t, (byte)-1 terminated
-typedef post_t column_t;
+};
 
 //
 // OTHER TYPES
 //
-
-// This could be wider for >8 bit display.
-// Indeed, true color support is posibble
-// precalculating 24bpp lightmap/colormap LUT.
-// from darkening PLAYPAL to all black.
-// Could use even more than 32 levels.
-
-typedef byte  lighttable_t; 
 
 //
 // Masked 2s linedefs
@@ -534,68 +472,6 @@ typedef struct drawseg_s
 
    fixed_t viewx, viewy, viewz;
 } drawseg_t;
-
-//
-// Patches.
-// A patch holds one or more columns.
-// Patches are used for sprites and all masked pictures,
-// and we compose textures from the TEXTURE1/2 lists
-// of patches.
-//
-
-#ifdef _MSC_VER
-#pragma pack(push, 1)
-#endif
-
-struct patch_s
-{ 
-  int16_t width, height;  // bounding box size 
-  int16_t leftoffset;     // pixels to the left of origin 
-  int16_t topoffset;      // pixels below the origin 
-  int32_t columnofs[8];   // only [width] used
-} __attribute__((packed));
-
-#ifdef _MSC_VER
-#pragma pack(pop)
-#endif
-
-//
-// A vissprite_t is a thing that will be drawn during a refresh.
-// i.e. a sprite object that is partly visible.
-//
-
-typedef struct vissprite_s
-{
-  int x1, x2;
-  fixed_t gx, gy;              // for line side calculation
-  fixed_t gz, gzt;             // global bottom / top for silhouette clipping
-  fixed_t xiscale;             // negative if flipped
-  fixed_t texturemid;
-  int patch;
-  int mobjflags, mobjflags3;   // flags, flags3 from thing
-
-  float   startx;
-  float   dist, xstep, ystep;
-  float   ytop, ybottom;
-  float   scale;
-
-  // for color translation and shadow draw, maxbright frames as well
-        // sf: also coloured lighting
-  lighttable_t *colormap;
-  int colour;   //sf: translated colour
-
-  // killough 3/27/98: height sector for underwater/fake ceiling support
-  int heightsec;
-
-  int translucency; // haleyjd: zdoom-style translucency
-
-  fixed_t footclip; // haleyjd: foot clipping
-
-  int    sector; // SoM: sector the sprite is in.
-
-  int pcolor; // haleyjd 08/25/09: for particles
-
-} vissprite_t;
 
 //  
 // Sprites are patches with a special naming convention
@@ -661,9 +537,9 @@ typedef struct rslope_s
 // horizontal spans) in a rather quick single pass so they can be textured 
 // in a quick, constant-z texture mapping loop.
 
-typedef struct visplane
+struct visplane_t
 {
-   struct visplane *next;        // Next visplane in hash chain -- killough
+   visplane_t *next;        // Next visplane in hash chain -- killough
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
    lighttable_t *(*colormap)[MAXLIGHTZ];
@@ -701,14 +577,14 @@ typedef struct visplane
    int                    bflags; 
    // Opacity of the overlay (255 - opaque, 0 - translucent)
    byte                   opacity;
-} visplane_t;
-
+};
 
 typedef struct planehash_s
 {
    int          chaincount;
    visplane_t   **chains;
 } planehash_t;
+
 #endif
 
 //----------------------------------------------------------------------------

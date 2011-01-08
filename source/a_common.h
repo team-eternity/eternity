@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -30,13 +30,13 @@
 #ifndef A_COMMON_H__
 #define A_COMMON_H__
 
-void A_Chase(mobj_t *actor);
-void A_Die(mobj_t *actor);
-void A_Explode(mobj_t *thingy);
-void A_FaceTarget(mobj_t *actor);
-void A_Fall(mobj_t *actor);
-void A_Look(mobj_t *actor);
-void A_Pain(mobj_t *actor);
+void A_Chase(Mobj *actor);
+void A_Die(Mobj *actor);
+void A_Explode(Mobj *thingy);
+void A_FaceTarget(Mobj *actor);
+void A_Fall(Mobj *actor);
+void A_Look(Mobj *actor);
+void A_Pain(Mobj *actor);
 
 #endif
 

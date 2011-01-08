@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -54,7 +54,7 @@ typedef struct filelump_s
 // haleyjd 07/12/07: altered lumpinfo_t for separation of logical and physical
 // lump fields.
 
-typedef struct lumpinfo_s
+struct lumpinfo_t
 {
    // haleyjd: logical lump data
    char   name[9];
@@ -73,7 +73,8 @@ typedef struct lumpinfo_s
       ns_translations,
       ns_fonts,
       ns_demos
-   } li_namespace;
+   };
+   int li_namespace;
    
    void *cache;  //sf
 
@@ -83,7 +84,8 @@ typedef struct lumpinfo_s
       lump_direct,  // lump accessed via stdio (physical file)
       lump_memory,  // lump is a memory buffer
       lump_numtypes
-   } type;
+   }; 
+   int type;
 
    int source; // haleyjd: unique id # for source of this lump
    
@@ -93,7 +95,7 @@ typedef struct lumpinfo_s
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
 
-} lumpinfo_t;
+};
 
 // directory types
 enum
@@ -108,7 +110,7 @@ enum
 // Adding this allows a level of indirection to be added to the wad system,
 // letting us have wads that are not part of the master directory.
 //
-typedef struct waddir_s
+struct waddir_t
 {
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
    int        numlumps;   // number of lumps
@@ -118,7 +120,7 @@ typedef struct waddir_s
    int        numallocsa; // number of entries allocated for the infoptrs table   
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
-} waddir_t;
+};
 
 //
 // haleyjd 10/09/09: wfileadd_t
@@ -127,14 +129,14 @@ typedef struct waddir_s
 // certain files being added can be treated specially while being linked into
 // the global wad directory.
 //
-typedef struct wfileadd_s
+struct wfileadd_t
 {
    const char *filename; // name of file
    int li_namespace;     // if not 0, special namespace to add file under
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
    int privatedir;       // if not 0, has a private directory
-} wfileadd_t;
+};
 
 extern waddir_t w_GlobalDir; // the global wad directory
 

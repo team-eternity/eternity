@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -37,11 +37,6 @@
 // SoundFX struct.
 //
 
-struct sfxinfo_s;
-
-typedef struct sfxinfo_s sfxinfo_t;
-typedef struct musicinfo_s musicinfo_t;
-
 // haleyjd 06/12/08: origin subchannels
 typedef enum
 {
@@ -57,10 +52,10 @@ typedef enum
    NUMSCHANNELS
 } schannel_e;
 
-struct sfxinfo_s
+struct sfxinfo_t
 {
    // haleyjd 04/13/08: numeric hash links
-   mdllistitem_t numlinks;
+   DLListItem<sfxinfo_t> numlinks;
 
    // haleyjd: up to 8-character lump name
    char name[9];
@@ -77,8 +72,8 @@ struct sfxinfo_s
       sg_wpnup,
       sg_oof,
       sg_getpow
-   }
-   singularity;
+   };
+   int singularity;
 
    // Sfx priority
    int priority;
@@ -112,8 +107,8 @@ struct sfxinfo_s
       pitch_doomsaw, // variance for DOOM chainsaw
       pitch_heretic, // normal variance for Heretic
       pitch_hticamb, // variance for Heretic ambient sounds
-   }
-   pitch_type;
+   };
+   int pitch_type;
 
    // sound data
    void *data;
@@ -143,14 +138,14 @@ struct sfxinfo_s
    unsigned int alen;   // length of converted sound pointed to by data
 
    // haleyjd 06/12/08: origin subchannels - default = CHAN_AUTO.
-   schannel_e subchannel;
+   int subchannel;
 };
 
 //
 // MusicInfo struct.
 //
 
-struct musicinfo_s
+struct musicinfo_t
 {
    // up to 6-character name
    char *name;

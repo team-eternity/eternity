@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,6 +30,7 @@
 //
 // GAME
 //
+struct waddir_t;
 
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
@@ -57,11 +58,11 @@ void G_ForceFinale(void);
 void G_Ticker(void);
 void G_ScreenShot(void);
 void G_ReloadDefaults(void);     // killough 3/1/98: loads game defaults
-void G_SaveCurrentLevel(char *filename, char *description); // sf
 void G_SaveGameName(char *,size_t,int); // killough 3/22/98: sets savegame filename
 void G_SetFastParms(int);        // killough 4/10/98: sets -fast parameters
 void G_DoNewGame(void);
 void G_DoReborn(int playernum);
+void G_DoLoadLevel(void);
 byte *G_ReadOptions(byte *demoptr);         // killough 3/1/98
 byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
@@ -69,7 +70,10 @@ void G_InitNewNum(skill_t skill, int episode, int map);
 void G_InitNew(skill_t skill, char*);
 void G_DoVictory(void);
 void G_SetGameMapName(const char *s); // haleyjd
+void G_SetGameMap(void);
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
+uint64_t G_Signature(waddir_t *dir);
+void G_DoPlayDemo(void);
 
 void R_InitPortals();
 
@@ -96,9 +100,12 @@ extern int  bfglook;
 
 extern angle_t consoleangle;
 
-extern int  defaultskill;      //jff 3/24/98 default skill
-extern boolean haswolflevels;  //jff 4/18/98 wolf levels present
-extern boolean demorecording;  // killough 12/98
+extern int     defaultskill;     // jff 3/24/98 default skill
+extern boolean haswolflevels;    // jff 4/18/98 wolf levels present
+extern boolean demorecording;    // killough 12/98
+extern boolean forced_loadgame;
+extern boolean command_loadgame;
+extern char    gamemapname[9];
 
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
@@ -118,6 +125,21 @@ extern boolean scriptSecret;   // haleyjd
 extern boolean sendpause;
 
 extern int novert; // haleyjd
+
+#define VERSIONSIZE   16
+
+// killough 2/22/98: version id string format for savegames
+#define VERSIONID "MBF %d"
+
+extern waddir_t *g_dir;
+extern waddir_t *d_dir;
+
+// killough 2/28/98: A ridiculously large number
+// of players, the most you'll ever need in a demo
+// or savegame. This is used to prevent problems, in
+// case more players in a game are supported later.
+
+#define MIN_MAXPLAYERS 32
 
 #endif
 

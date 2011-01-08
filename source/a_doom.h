@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -30,7 +30,7 @@
 #ifndef A_DOOM_H__
 #define A_DOOM_H__
 
-void A_Fire(mobj_t *actor);
+void A_Fire(Mobj *actor);
 
 #endif
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -45,13 +45,10 @@ typedef struct v3float_s
    float x, y, z;
 } v3float_t;
 
-
-
 typedef struct v3double_s
 {
    double x, y, z;
 } v3double_t;
-
 
 typedef struct v2float_s
 {

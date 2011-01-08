@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -33,10 +33,12 @@
 #ifndef __A_SMALL_H__
 #define __A_SMALL_H__
 
-#include "p_mobj.h"
+class Mobj;
+struct line_t;
 
 #ifndef EE_NO_SMALL_SUPPORT
 
+#include "doomtype.h"
 #include "amx.h"
 
 // custom app-defined errors
@@ -92,7 +94,7 @@ typedef struct sc_invoke_s
    scriptinvoke_e invokeType; // invocation type for native functions
 
    // invocation data
-   mobj_t *trigger; // thing that started script -- get with TID_TRIGGER
+   Mobj *trigger; // thing that started script -- get with TID_TRIGGER
    int playernum;   // # of player that started script
    line_t *line;    // line that started script
    int spec_mode;   // line special mode; see sm_specialmode in p_genlin.c
@@ -119,7 +121,8 @@ typedef struct sc_callback_s
       wt_delay,         // wait for a set amount of time
       wt_tagwait,       // wait for sector to stop moving
       wt_numtypes,
-   } wait_type;
+   };
+   int wait_type;
 
    int wait_data;       // data used for waiting, varies by type
 
@@ -191,7 +194,7 @@ extern SmallContext_t *curLSContext;
 #endif // EE_NO_SMALL_SUPPORT
 
 // haleyjd 07/06/04: FINE put it here!
-mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger);
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger);
 
 #endif
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,7 +29,7 @@
 #ifndef __P_ENEMY__
 #define __P_ENEMY__
 
-typedef enum 
+enum 
 {
    DI_EAST,
    DI_NORTHEAST,
@@ -41,21 +41,22 @@ typedef enum
    DI_SOUTHEAST,
    DI_NODIR,
    NUMDIRS
-} dirtype_t;
+};
+typedef int dirtype_t;
 
 extern fixed_t xspeed[8];
 extern fixed_t yspeed[8];
 
-boolean P_CheckMissileRange(mobj_t *actor);
-boolean P_HelpFriend(mobj_t *actor);
-boolean P_HitFriend(mobj_t *actor);
-boolean P_LookForPlayers(mobj_t *actor, boolean allaround);
-boolean P_LookForTargets(mobj_t *actor, int allaround);
-boolean P_Move(mobj_t *actor, boolean dropoff); // killough 9/12/98
-void    P_NewChaseDir(mobj_t *actor);
-boolean P_SmartMove(mobj_t *actor);
+boolean P_CheckMissileRange(Mobj *actor);
+boolean P_HelpFriend(Mobj *actor);
+boolean P_HitFriend(Mobj *actor);
+boolean P_LookForPlayers(Mobj *actor, int allaround);
+boolean P_LookForTargets(Mobj *actor, int allaround);
+int     P_Move(Mobj *actor, int dropoff); // killough 9/12/98
+void    P_NewChaseDir(Mobj *actor);
+boolean P_SmartMove(Mobj *actor);
 
-void P_NoiseAlert (mobj_t *target, mobj_t *emmiter);
+void P_NoiseAlert (Mobj *target, Mobj *emmiter);
 void P_SpawnBrainTargets(void); // killough 3/26/98: spawn icon landings
 void P_SpawnSorcSpots(void);    // haleyjd 11/19/02: spawn dsparil spots
 
@@ -63,7 +64,7 @@ extern struct brain_s {         // killough 3/26/98: global state of boss brain
   int easy;
 } brain;
 
-boolean P_CheckMeleeRange(mobj_t *actor);
+boolean P_CheckMeleeRange(Mobj *actor);
 
 // haleyjd 07/13/03: editable boss brain spawn types
 // schepe: removed 11-type limit
@@ -79,6 +80,8 @@ enum
    BOSSTELE_DEST
 };
 
+struct MobjCollection;
+
 // haleyjd: bossteleport_t
 //
 // holds a ton of information to allow for the teleportation of
@@ -89,7 +92,7 @@ typedef struct bossteleport_s
    MobjCollection *mc;  // mobj collection to use
    pr_class_t rngNum;   // rng number to use for selecting spot
 
-   mobj_t *boss;        // boss to teleport
+   Mobj *boss;        // boss to teleport
    statenum_t state;    // number of state to put boss in (-1 to not)
 
    mobjtype_t fxtype;   // type of effect object to spawn
@@ -101,7 +104,7 @@ typedef struct bossteleport_s
 
 void P_BossTeleport(bossteleport_t *bt);
 
-void P_SkullFly(mobj_t *actor, fixed_t speed);
+void P_SkullFly(Mobj *actor, fixed_t speed);
 
 #endif // __P_ENEMY__
 

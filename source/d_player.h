@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -25,21 +25,18 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_PLAYER__
-#define __D_PLAYER__
-
-typedef struct player_s player_t;
+#ifndef D_PLAYER_H__
+#define D_PLAYER_H__
 
 // The player data structure depends on a number
 // of other structs: items (internal inventory),
 // animation states (closely tied to the sprites
 // used to represent them, unfortunately).
-#include "d_items.h"
+
 #include "p_pspr.h"
 
 // In addition, the player is just a special
 // case of the generic moving object/actor.
-#include "p_mobj.h"
 
 // Finally, for odd reasons, the player input
 // is buffered within the player data struct,
@@ -47,16 +44,15 @@ typedef struct player_s player_t;
 #include "d_ticcmd.h"
 
 // skins.
-#include "p_skin.h"
-
 // haleyjd: player classes
-#include "e_player.h"
 
+struct playerclass_t;
+struct skin_t;
 
 //
 // Player states.
 //
-typedef enum
+enum 
 {
   // Playing or camping.
   PST_LIVE,
@@ -65,8 +61,9 @@ typedef enum
   // Ready to restart/respawn???
   PST_REBORN            
 
-} playerstate_t;
+};
 
+typedef int playerstate_t;
 
 //
 // Player internal flags, for cheats and debug.
@@ -81,16 +78,17 @@ typedef enum
   CF_NOMOMENTUM       = 4,
   // haleyjd 03/18/03: infinite ammo
   CF_INFAMMO          = 8,
-  
+  // haleyjd 12/29/10: immortality cheat
+  CF_IMMORTAL         = 0x10
 } cheat_t;
 
 
 //
 // Extended player object info: player_t
 //
-struct player_s
+struct player_t
 {
-   mobj_t        *mo;
+   Mobj        *mo;
    playerclass_t *pclass;      // haleyjd 09/27/07: player class
    skin_t        *skin;        // skin
    playerstate_t  playerstate; // live, dead, reborn, etc.
@@ -128,7 +126,7 @@ struct player_s
    weapontype_t   readyweapon;
    weapontype_t   pendingweapon; // Is wp_nochange if not changing.
 
-   boolean        weaponowned[NUMWEAPONS];
+   int            weaponowned[NUMWEAPONS];
    int            ammo[NUMAMMO];
    int            maxammo[NUMAMMO];
    int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
@@ -153,7 +151,7 @@ struct player_s
    int            bonuscount;
    int            fixedcolormap; // Current PLAYPAL, for pain etc.
 
-   mobj_t        *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj        *attacker;      // Who did damage (NULL for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 

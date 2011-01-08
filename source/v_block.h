@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -26,6 +26,10 @@
 
 #ifndef V_BLOCK_H__
 #define V_BLOCK_H__
+
+#include "doomtype.h"
+
+struct VBuffer;
 
 // Scaled color block drawers.
 

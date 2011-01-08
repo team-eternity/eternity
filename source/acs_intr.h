@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -28,9 +28,12 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-#include "p_mobj.h"
 #include "m_dllist.h"
-#include "m_qstr.h"
+#include "p_tick.h"
+
+struct qstring_t;
+class  Mobj;
+struct line_t;
 
 //
 // Defines
@@ -57,6 +60,8 @@ enum
 // Structures
 //
 
+class ACSThinker;
+
 //
 // acscript
 //
@@ -70,7 +75,7 @@ typedef struct acscript_s
    int *code;      // bytecode entry point
    boolean isOpen; // if true, is an open script
 
-   struct acsthinker_s *threads;
+   ACSThinker *threads;
 } acscript_t;
 
 //
@@ -78,13 +83,25 @@ typedef struct acscript_s
 //
 // A thinker which runs a script.
 //
-typedef struct acsthinker_s
+class ACSThinker : public Thinker
 {
-   thinker_t thinker;         // must be first
+protected:
+   // Data Members
+   unsigned int triggerSwizzle; // Holds the swizzled target during loading
 
+   // Methods
+   void Think();
+
+public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual void deswizzle();
+   virtual const char *getClassName() const { return "ACSThinker"; }
+
+   // Data Members
    // thread links
-   struct acsthinker_s **prev;
-   struct acsthinker_s *next;
+   ACSThinker **prevthread;
+   ACSThinker  *nextthread;
 
    // script info
    int vmID;                  // vm id number
@@ -109,10 +126,10 @@ typedef struct acsthinker_s
 
    // misc
    int    delay;              // counter for script delays
-   mobj_t *trigger;           // thing that activated
+   Mobj *trigger;           // thing that activated
    line_t *line;              // line that activated
    int    lineSide;           // line side of activation
-} acsthinker_t;
+};
 
 // deferred action types
 enum
@@ -127,15 +144,16 @@ enum
 //
 // This struct keeps track of scripts to be executed on other maps.
 //
-typedef struct deferredacs_s
+struct deferredacs_t
 {
-   mdllistitem_t link;     // list links
+   DLListItem<deferredacs_t> link; // list links
+   
    int  scriptNum;         // ACS script number to execute
    int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
    int  type;              // type of action to perform...
    int  args[NUMLINEARGS]; // additional arguments from linedef
-} deferredacs_t;
+};
 
 //
 // acsvm
@@ -147,7 +165,7 @@ typedef struct acsvm_s
 {
    byte       *data;         // ACS lump; jumps are relative to this
    char       **stringtable; // self-explanatory, yes?
-   qstring_t  printBuffer;   // used for message printing
+   qstring_t  *printBuffer;  // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
    boolean    loaded;        // for static VMs, if it's valid or not
@@ -157,7 +175,6 @@ typedef struct acsvm_s
 
 // Global function prototypes
 
-void    T_ACSThinker(acsthinker_t *script);
 void    ACS_Init(void);
 void    ACS_NewGame(void);
 void    ACS_InitLevel(void);
@@ -165,14 +182,14 @@ void    ACS_LoadScript(acsvm_t *vm, int lump);
 void    ACS_LoadLevelScript(int lump);
 void    ACS_RunDeferredScripts(void);
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          mobj_t *mo, line_t *line, int side,
-                          acsthinker_t **scr, boolean always);
-boolean ACS_StartScript(int scrnum, int map, int *args, mobj_t *mo, 
-                        line_t *line, int side, acsthinker_t **scr);
+                          Mobj *mo, line_t *line, int side,
+                          ACSThinker **scr, boolean always);
+boolean ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
+                        line_t *line, int side, ACSThinker **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
 void    ACS_PrepareForLoad(void);
-void    ACS_RestartSavedScript(acsthinker_t *th);
+void    ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
 

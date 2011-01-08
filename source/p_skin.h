@@ -21,13 +21,10 @@
 #ifndef __P_SKIN_H__
 #define __P_SKIN_H__
 
-typedef struct skin_s skin_t;
-
-#include "d_player.h"
+#include "r_patch.h"
 #include "info.h"
-#include "sounds.h"
-#include "st_stuff.h"
-#include "r_defs.h"
+
+struct player_t;
 
 enum
 {
@@ -55,7 +52,7 @@ typedef enum
    SKIN_NUMTYPES
 } skintype_e;
 
-struct skin_s
+struct skin_t
 {
    skintype_e  type;          // haleyjd: type of skin
    char        *spritename;   // 4 chars
@@ -66,7 +63,7 @@ struct skin_s
    patch_t     **faces;
 
    // haleyjd 11/07/06: for EDF hashing
-   struct skin_s *ehashnext;
+   skin_t *ehashnext;
    boolean edfskin; // if true, is an EDF skin
 };
 

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -115,7 +115,7 @@ extern int default_colour;
 // use the entire ticcmd for transferring console commands when
 // in console mode ?
 
-#define CONSHUGE
+//#define CONSHUGE
 
 #endif
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,37 +29,83 @@
 
 // Persistent storage/archiving.
 // These are the load / save game routines.
-void P_ArchivePlayers(void);
-void P_UnArchivePlayers(void);
-void P_ArchiveWorld(void);
-void P_UnArchiveWorld(void);
-void P_ArchivePolyObjects(void);
-void P_UnArchivePolyObjects(void);
-void P_ArchiveThinkers(void);
-void P_UnArchiveThinkers(void);
-void P_ArchiveSpecials(void);
-void P_UnArchiveSpecials(void);
-void P_ArchiveScripts(void);
-void P_UnArchiveScripts(void);
-void P_ArchiveSoundSequences(void);
-void P_UnArchiveSoundSequences(void);
-void P_ArchiveButtons(void);
-void P_UnArchiveButtons(void);
 
-// 1/18/98 killough: add RNG info to savegame
-void P_ArchiveRNG(void);
-void P_UnArchiveRNG(void);
+class  OutBuffer;
+class  InBuffer;
+struct spectransfer_t;
+struct mapthing_t;
+struct sector_t;
+struct line_t;
 
-// 2/21/98 killough: add automap info to savegame
-void P_ArchiveMap(void);
-void P_UnArchiveMap(void);
+class SaveArchive
+{
+protected:
+   OutBuffer *savefile; // valid when saving
+   InBuffer  *loadfile; // valid when loading
 
-void P_FreeObjTable(void);
-void P_NumberObjects(void);
-void P_DeNumberObjects(void);
+public:
+   SaveArchive(OutBuffer *pSaveFile);
+   SaveArchive(InBuffer  *pLoadFile);
 
-extern byte *save_p;
-void CheckSaveGame(size_t);              // killough
+   // Accessors
+   boolean isSaving()  const { return (savefile != NULL); }
+   boolean isLoading() const { return (loadfile != NULL); }
+   OutBuffer *getSaveFile() { return savefile; }
+   InBuffer  *getLoadFile() { return loadfile; }
+
+   // Methods
+   void ArchiveCString(char *str,  size_t maxLen);
+   void ArchiveLString(char *&str, size_t &len);
+   
+   // WriteLString is valid during saving only. This is to accomodate const
+   // char *'s which must be saved, and are read into temporary buffers 
+   // during loading.
+   void WriteLString(const char *str, size_t len = 0);
+
+   // Operators
+   // Similar to ZDoom's FArchive class, these are symmetric - they are used
+   // both for reading and writing.
+   // Basic types:
+   SaveArchive &operator << (int32_t  &x);
+   SaveArchive &operator << (uint32_t &x);
+   SaveArchive &operator << (int16_t  &x);
+   SaveArchive &operator << (uint16_t &x);
+   SaveArchive &operator << (int8_t   &x);
+   SaveArchive &operator << (uint8_t  &x); 
+   SaveArchive &operator << (boolean  &x);
+   SaveArchive &operator << (float    &x);
+   SaveArchive &operator << (double   &x);
+   // Pointers:
+   SaveArchive &operator << (sector_t *&s);
+   SaveArchive &operator << (line_t   *&ln);
+   // Structures:
+   SaveArchive &operator << (spectransfer_t &st);
+   SaveArchive &operator << (mapthing_t     &mt);
+};
+
+// Global template functions for SaveArchive
+
+//
+// P_ArchiveArray
+//
+// Archives an array. The base element of the array must have an
+// operator << overload for SaveArchive.
+//
+template <typename T>
+void P_ArchiveArray(SaveArchive &arc, T *ptrArray, int numElements)
+{
+   for(int i = 0; i < numElements; i++)
+      arc << ptrArray[i];
+}
+
+// haleyjd: These utilities are now needed for external serialization support
+// in Thinker-derived classes.
+unsigned int P_NumForThinker(Thinker *th);
+Thinker *P_ThinkerForNum(unsigned int n);
+void P_SetNewTarget(Mobj **mop, Mobj *targ);
+
+void P_SaveCurrentLevel(char *filename, char *description);
+void P_LoadGame(const char *filename);
 
 #endif
 

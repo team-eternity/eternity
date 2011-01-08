@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -28,6 +28,8 @@
 #ifndef IN_LUDE_H__
 #define IN_LUDE_H__
 
+#include "p_mobj.h"
+
 // Intermission object struct
 typedef struct interfns_s
 {
@@ -44,7 +46,7 @@ extern int intertime;
 extern int acceleratestage;
 
 extern MobjCollection camerathings;
-extern mobj_t *wi_camera;
+extern Mobj *wi_camera;
 
 extern const char *in_fontname;
 extern const char *in_bigfontname;
