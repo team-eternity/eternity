@@ -1,8 +1,44 @@
 ===============================================================================
 This log contains a summary  of changes performed in the cpp-branch to 
 transition Eternity from C to C++. cpp-branch spans SVN revisions from 1344 to 
-????.
+1408.
 ===============================================================================
+-------------------------------------------------------------------------------
+01/08/11
+
+Changes in preparation for v3.40.00 release:
+
+I cleaned up the weird and unnecessary cast back to memblock_t when preparing
+allocated memory for return from Z_Malloc, as I don't like it referring to
+the block's memory as if though it were a memblock_t.
+
+With essel's assistance we have enabled portal overlay specification through
+ExtraData sector records; however, I guess SoM didn't test it enough and the
+portal overlay system malfunctions severely once there is more than one 
+distinct overlay in visibility - only the highest numbered sector's overlay
+seems to function correctly according to essel. This will be live in the new
+release, but nobody's going to get much use out of it until one of us can
+figure out what is really going on. Since I didn't write the code, I am at a
+disadvantage with figuring it out personally.
+
+I disabled the code that tries to adjust the upper clipping boundary for the
+renderer to the bottom of the console to avoid overdraw, because it isn't
+working in widescreen aspect ratios for some reason. This may not be worth
+fixing in the long run.
+
+CSonicGo found an old glitch dating all the way back to SMMU - if netdemos 
+were started with -playdemo or the playdemo console command, then EE would
+remain in netgame mode after the demo stopped and would crash at some point
+later, seemingly arbitrarily, by attempting to execute the netget function
+pointer in the low-level netcode with the pointer still set to NULL.
+
+This was fixed by refactoring G_CheckDemoStatus so that it always properly
+frees the demo buffer, unsets netgame, and calls G_ReloadDefaults, even if the
+game engine is in "singledemo" mode, as it is when using playdemo.
+
+Copyright dates and version info have been updated for the impending release.
+cpp-branch is ready for merger back into trunk.
+
 -------------------------------------------------------------------------------
 01/03/11
 
