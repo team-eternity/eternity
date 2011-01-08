@@ -262,7 +262,7 @@ SaveArchive &SaveArchive::operator << (double &x)
 // Swizzle a serialized sector_t pointer.
 SaveArchive &SaveArchive::operator << (sector_t *&s)
 {
-   int sectornum;
+   int32_t sectornum;
 
    if(savefile)
    {
@@ -286,7 +286,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
 // Serialize a swizzled line_t pointer.
 SaveArchive &SaveArchive::operator << (line_t *&ln)
 {
-   int linenum = -1;
+   int32_t linenum = -1;
 
    if(savefile)
    {

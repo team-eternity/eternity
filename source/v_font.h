@@ -88,15 +88,15 @@ struct vfont_t
    int patchnumoffset;       // used during font loading only
 };
 
-void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
-void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
-void  V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
-void  V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
-int   V_FontStringHeight(vfont_t *font, const char *s);
-int   V_FontStringWidth(vfont_t *font, const char *s);
-int   V_FontCharWidth(vfont_t *font, char pChar);
-void  V_FontSetAbsCentered(void);
-short V_FontMaxWidth(vfont_t *font);
+void    V_FontWriteText(vfont_t *font, const char *s, int x, int y);
+void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
+void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
+void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
+int     V_FontStringHeight(vfont_t *font, const char *s);
+int     V_FontStringWidth(vfont_t *font, const char *s);
+int     V_FontCharWidth(vfont_t *font, char pChar);
+void    V_FontSetAbsCentered(void);
+int16_t V_FontMaxWidth(vfont_t *font);
 
 #endif
 

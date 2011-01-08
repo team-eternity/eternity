@@ -856,7 +856,7 @@ void S_UpdateSounds(const Mobj *listener)
          // killing. We do that here now instead.
          if(listener && S_CheckSectorKill(&playercam, c->origin))
             S_StopChannel(cnum);
-         else if(c->origin && listener != c->origin) // killough 3/20/98
+         else if(c->origin && (PointThinker *)listener != c->origin) // killough 3/20/98
          {
             // haleyjd 05/29/06: allow per-channel volume scaling
             // and attenuation type selection

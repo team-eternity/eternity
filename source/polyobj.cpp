@@ -128,7 +128,7 @@ static polymaplink_t *bmap_freelist; // free list of blockmap links
 // Static Functions
 //
 
-d_inline static void Polyobj_bboxAdd(int *bbox, vertex_t *add)
+d_inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
 {
    bbox[BOXTOP]    += add->y;
    bbox[BOXBOTTOM] += add->y;
@@ -136,7 +136,7 @@ d_inline static void Polyobj_bboxAdd(int *bbox, vertex_t *add)
    bbox[BOXRIGHT]  += add->x;
 }
 
-d_inline static void Polyobj_bboxSub(int *bbox, vertex_t *sub)
+d_inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
 {
    bbox[BOXTOP]    -= sub->y;
    bbox[BOXBOTTOM] -= sub->y;

@@ -66,9 +66,9 @@ typedef struct channel_info_s
   unsigned int stepremainder;
   unsigned int samplerate;
   // The channel data pointers, start and end.
-  unsigned char *data;
-  unsigned char *startdata; // haleyjd
-  unsigned char *enddata;
+  byte *data;
+  byte *startdata; // haleyjd
+  byte *enddata;
   // Hardware left and right channel volume lookup.
   int *leftvol_lookup;
   int *rightvol_lookup;
@@ -283,7 +283,7 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
-      channelinfo[channel].data = (unsigned char *)(sfx->data);
+      channelinfo[channel].data = (byte *)(sfx->data);
       
       // Set pointer to end of raw data.
       channelinfo[channel].enddata = (byte *)sfx->data + sfx->alen - 1;

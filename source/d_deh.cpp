@@ -96,11 +96,11 @@ void deh_procBexSprites(DWFILE *, char *);
 // Structure deh_block is used to hold the block names that can
 // be encountered, and the routines to use to decipher them
 
-typedef struct deh_block_s
+struct deh_block
 {
   char *key;       // a mnemonic block code name
   void (*const fptr)(DWFILE *, char *); // handler
-} deh_block;
+};
 
 #define DEH_BUFFERMAX 1024 // input buffer area size, hardcodedfor now
 // killough 8/9/98: make DEH_BLOCKMAX self-adjusting
@@ -110,7 +110,8 @@ typedef struct deh_block_s
 
 // Put all the block header values, and the function to be called when that
 // one is encountered, in this array:
-deh_block deh_blocks[] = {
+deh_block deh_blocks[] = 
+{
    /* 0 */  {"Thing",   deh_procThing},
    /* 1 */  {"Frame",   deh_procFrame},
    /* 2 */  {"Pointer", deh_procPointer},

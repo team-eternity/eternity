@@ -162,12 +162,12 @@ struct sector_t
    int16_t tag;
    int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
    int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
-   Mobj *soundtarget;     // thing that made a sound (or null)
-   int blockbox[4];         // mapblock bounding box for height changes
-   PointThinker soundorg;  // origin for any sounds played by the sector
-   PointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
+   Mobj *soundtarget;       // thing that made a sound (or null)
+   fixed_t blockbox[4];     // mapblock bounding box for height changes
+   PointThinker soundorg;   // origin for any sounds played by the sector
+   PointThinker csoundorg;  // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
-   Mobj *thinglist;       // list of mobjs in sector
+   Mobj *thinglist;         // list of mobjs in sector
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in Mobj, but presented performance problems

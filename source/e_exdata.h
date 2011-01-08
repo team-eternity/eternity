@@ -135,12 +135,12 @@ typedef struct mapsectorext_s
 // Globals
 
 void    E_LoadExtraData(void);
-Mobj *E_SpawnMapThingExt(mapthing_t *mt);
+Mobj   *E_SpawnMapThingExt(mapthing_t *mt);
 void    E_LoadLineDefExt(line_t *line, boolean applySpecial);
 boolean E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
-short   E_LineSpecForName(const char *name);
+int16_t E_LineSpecForName(const char *name);
 void    E_LoadSectorExt(line_t *line);
 
 #endif

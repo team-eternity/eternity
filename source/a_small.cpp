@@ -444,7 +444,7 @@ byte *SM_GetAMXDataSegment(AMX *amx, long *size)
    if(size)
       amx_MemInfo(amx, NULL, size, NULL);
 
-   return (amx->data != NULL) ? amx->data : amx->base + (int)hdr->dat;
+   return (byte *)((amx->data != NULL) ? amx->data : amx->base + (int)hdr->dat);
 }
 
 //

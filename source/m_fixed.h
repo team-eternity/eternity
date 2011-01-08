@@ -51,6 +51,7 @@ typedef int32_t fixed_t;
 #if defined(__GNUC__)
   #define D_abs(x) ({fixed_t _t = (x), _s = _t >> (8*sizeof _t-1); (_t^_s)-_s;})
 #elif defined(_MSC_VER) && defined(_M_IX86)
+#pragma warning(disable: 4035) 
 d_inline static int D_abs(int x)
 {
    __asm

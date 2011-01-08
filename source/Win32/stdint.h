@@ -82,8 +82,10 @@ typedef uint32_t  uint_fast32_t;
 typedef uint64_t  uint_fast64_t;
 
 // 7.18.1.4 Integer types capable of holding object pointers
+#if !defined(_SDL_VER) || _MSC_VER >= 1400
 typedef INT_PTR   intptr_t;
 typedef UINT_PTR  uintptr_t;
+#endif
 
 // 7.18.1.5 Greatest-width integer types
 typedef int64_t   intmax_t;
