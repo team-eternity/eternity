@@ -64,9 +64,9 @@ typedef enum
    // Portal has a blended texture overlay (alpha is default)
    PS_OVERLAY            = 0x010,
    // Overlay uses additive blending (must be used with PS_OVERLAY)
-   PS_ADDOVERLAY         = 0x020,
+   PS_ADDITIVE           = 0x020,
    // Mask for overlay blending flags
-   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDOVERLAY,
+   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDITIVE,
    // Surface uses the global texture in the portal struct
    PS_USEGLOBALTEX       = 0x040,
    // Mask for all overlay flags

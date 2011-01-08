@@ -279,7 +279,7 @@ static dehflags_t sectorportalflags[] =
    { "NOPASS",       PF_NOPASS       },
    { "BLOCKSOUND",   PF_BLOCKSOUND   },
    { "OVERLAY",      PS_OVERLAY      },
-   { "ADDOVERLAY",   PS_ADDOVERLAY   },
+   { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
    { NULL,           0               }
 };

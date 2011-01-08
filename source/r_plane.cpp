@@ -1167,8 +1167,8 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      stylenum = pl->bflags & PS_ADDOVERLAY ? SPAN_STYLE_ADD : 
-                 pl->bflags & PS_OVERLAY    ? SPAN_STYLE_TL :
+      stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
+                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
