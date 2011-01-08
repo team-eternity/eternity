@@ -2074,6 +2074,9 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.f_portal)
    {
+      unsigned int fpalpha = (seg.frontsec->f_pflags >> PO_OPACITYSHIFT) & 0xff;
+      visible = (visible && (fpalpha > 0));
+
       seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->floorheight,
                     seg.frontsec->f_pflags & PS_USEGLOBALTEX ? 
@@ -2083,7 +2086,7 @@ static void R_Subsector(int num)
                     seg.frontsec->floor_yoffs,
                     floorangle, seg.frontsec->f_slope, 
                     seg.frontsec->f_pflags,
-                    (seg.frontsec->f_pflags >> PO_OPACITYSHIFT) & 0xFF,
+                    fpalpha,
                     seg.f_portal->poverlay) : NULL;
    }
    else
@@ -2118,6 +2121,9 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.c_portal)
    {
+      unsigned int cpalpha = (seg.frontsec->c_pflags >> PO_OPACITYSHIFT) & 0xff;
+      visible = (visible && (cpalpha > 0));
+
       seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->ceilingheight,
                     seg.frontsec->c_pflags & PS_USEGLOBALTEX ? 
@@ -2127,7 +2133,7 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 
                     seg.frontsec->c_pflags,
-                    (seg.frontsec->c_pflags >> PO_OPACITYSHIFT) & 0xFF,
+                    cpalpha,
                     seg.c_portal->poverlay) : NULL;
    }
    else
@@ -2146,7 +2152,6 @@ static void R_Subsector(int num)
                     seg.frontsec->ceiling_yoffs,
                     ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
-   
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

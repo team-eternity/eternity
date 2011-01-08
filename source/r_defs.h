@@ -233,7 +233,7 @@ struct sector_t
    attachedsurface_t *f_asurfaces;
 
    // Flags for portals
-   int c_pflags, f_pflags;
+   unsigned int c_pflags, f_pflags;
    
    // Portals
    portal_t *c_portal;

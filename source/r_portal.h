@@ -86,7 +86,7 @@ typedef enum
    
    // -- Opactiy -- 
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
-   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
 } portalflag_e;
 

@@ -55,6 +55,7 @@ int E_Endif      (cfg_t *, cfg_opt_t *, int, const char **);
 int E_SpriteFrameCB(cfg_t *, cfg_opt_t *, const char *, void *);
 int E_IntOrFixedCB (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_TranslucCB   (cfg_t *, cfg_opt_t *, const char *, void *);
+int E_TranslucCB2  (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
 #endif
