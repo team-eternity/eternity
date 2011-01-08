@@ -436,7 +436,7 @@ void MN_DrawCredits(void)
    }
 
    V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2010 Team Eternity et al.\n"
+                   FC_ABSCENTER "Copyright 2011 Team Eternity et al.\n"
                    "http://doomworld.com/eternity/", 0, y);
 }
 
