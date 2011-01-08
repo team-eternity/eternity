@@ -712,7 +712,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
-   if(opacity == 255)
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
       blendflags = 0;
       
    // killough 10/98: PL_SKYFLAT
