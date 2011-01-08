@@ -703,7 +703,7 @@ static void C_AddMessage(const char *s)
 // characters long. It'll succeed as long as the string in question 
 // doesn't contain that number of consecutive characters without a 
 // space, tab, or line-break, so like, don't print stupidness 
-// like that. Its a console, not a hex editor...
+// like that. It's a console, not a hex editor...
 //
 // CONSOLE_FIXME: See above, this is also a mess.
 //

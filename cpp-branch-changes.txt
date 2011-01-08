@@ -4,6 +4,18 @@ transition Eternity from C to C++. cpp-branch spans SVN revisions from 1344 to
 ????.
 ===============================================================================
 -------------------------------------------------------------------------------
+01/03/11
+
+My beta testers found a crash - if you used the addfile command, the program
+would segv the next time a sound tried to play. My recent changes to the sound
+engine made the code to stop channels in i_sdlsound.cpp capable of trying to
+free the channel more than once. This was ending up with a call to Z_ChangeTag
+with a NULL parameter.
+
+Besides fixing the sound engine flaw itself, I also added a NULL pointer check
+to Z_ChangeTag.
+
+-------------------------------------------------------------------------------
 01/02/11
 
 QStrCat was *STILL* exhibiting broken behavior, this time as a consequence of

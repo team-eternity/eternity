@@ -122,6 +122,8 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_TOPMAP         "colormaptop"
 #define FIELD_SECTOR_MIDMAP         "colormapmid"
 #define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
+#define FIELD_SECTOR_PORTALFLAGS_F  "portalflags.floor"
+#define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
 
 // mapthing options and related data structures
 
@@ -260,6 +262,20 @@ static dehflagset_t sectordamage_flagset =
    sectordamageflags, // flaglist
    0                  // mode
 };
+
+/*
+   PF_DISABLED           = 0x001,   // Portal is completely disabled
+   PF_NORENDER           = 0x002,   // Portal does not render
+   PF_NOPASS             = 0x004,   // Portal does not allow passage
+   PF_BLOCKSOUND         = 0x008,   // Portal does not allow recursive sound to pass through
+   PS_OVERLAY            = 0x010,   // Portal has a blended texture overlay (alpha is default)
+   PS_ADDOVERLAY         = 0x020,   // Overlay uses additive blending (must be used with PS_OVERLAY)
+   PS_USEGLOBALTEX       = 0x040,   // Surface uses the global texture in the portal struct
+   // -- Opactiy -- 
+   // The left-most 8 bits are reserved for the opacity value of the portal overlay
+   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYMASK        = 0xFF000000,
+*/
 
 //
 // Line Special Information
