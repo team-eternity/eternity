@@ -48,6 +48,7 @@
 #include "r_data.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "p_portal.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -2073,7 +2074,12 @@ void E_LoadSectorExt(line_t *line)
    // per-sector portal properties
    sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
    sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
-
+   
+   if(sector->f_portal)
+      P_CheckFPortalState(sector);
+   if(sector->c_portal)
+      P_CheckCPortalState(sector);
+   
    // TODO: more?
 
    // clear the line tag

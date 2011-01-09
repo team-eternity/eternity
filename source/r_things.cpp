@@ -1811,14 +1811,13 @@ void R_DrawPostBSP(void)
          masked = NULL;
       }
        
+      
       if(pstack[stacksize].overlay)
       {
          // haleyjd 09/04/06: handle through column engine
-         /*if(r_column_engine->ResetBuffer)
-            r_column_engine->ResetBuffer();*/
+         if(r_column_engine->ResetBuffer)
+            r_column_engine->ResetBuffer();
             
-         // SoM: TODO
-         // This is where rendering the overlay would be done
          R_DrawPlanes(pstack[stacksize].overlay);
       }
    }
