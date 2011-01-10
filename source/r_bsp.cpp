@@ -1321,17 +1321,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
-       seg.frontsec->c_portal != seg.backsec->c_portal ||
-       markblend)) // haleyjd
+       seg.frontsec->c_portal != seg.backsec->c_portal || markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKCEILING;
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
    }
    
    if(seg.c_portal && 
       (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-       seg.frontsec->c_portal != seg.backsec->c_portal ||
-       (seg.ceilingplane != NULL && seg.markflags & SEG_MARKCEILING && seg.ceilingplane->bflags & PS_OVERLAY) ||
-       markblend))
+       seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
@@ -1372,13 +1369,12 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->f_portal != seg.backsec->f_portal || 
        markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKFLOOR;
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
    }
    
    if(seg.f_portal &&
       (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-       seg.frontsec->f_portal != seg.backsec->f_portal ||
-       (seg.floorplane != NULL && seg.floorplane->bflags & PS_OVERLAY && seg.markflags & SEG_MARKFLOOR) || markblend))
+       seg.frontsec->f_portal != seg.backsec->f_portal))
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);

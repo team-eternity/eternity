@@ -168,7 +168,11 @@ enum
    SEG_MARKCEILING = 0x01,
    SEG_MARKCPORTAL = 0x02,
    SEG_MARKFLOOR   = 0x04,
-   SEG_MARKFPORTAL = 0x08
+   SEG_MARKFPORTAL = 0x08,
+   
+   // SoM
+   SEG_MARKCOVERLAY = 0x10,
+   SEG_MARKFOVERLAY = 0x20,
 };
 
 struct side_t;

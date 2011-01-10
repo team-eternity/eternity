@@ -40,11 +40,15 @@ extern float *lastopening;
 extern float *floorclip, *ceilingclip;
 extern float floorcliparray[], ceilingcliparray[];
 
+// SoM: We have to use secondary clipping arrays for portal overlays
+extern float overlayfclip[], overlaycclip[];
+
 extern fixed_t *yslope;
 extern fixed_t origyslope[], distscale[];
 
 void R_InitPlanes(void);
 void R_ClearPlanes(void);
+void R_ClearOverlayClips(void);
 void R_DrawPlanes(planehash_t *table);
 
 // Planehash stuff

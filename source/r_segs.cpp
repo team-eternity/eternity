@@ -213,6 +213,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 }
 
 
+
+
 //
 // R_RenderSegLoop
 //
@@ -258,7 +260,7 @@ static void R_RenderSegLoop(void)
       b = segclip.bottom > floorclip[i]   ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING))
+      if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING|SEG_MARKCOVERLAY))
       {
          line = t - 1;
          
@@ -267,21 +269,36 @@ static void R_RenderSegLoop(void)
          
          if(line >= cliptop)
          {
-            if(segclip.markflags & SEG_MARKCPORTAL)
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCOVERLAY)
+            {
+               int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
+               
+               if(line >= otop)
+               {
+                  segclip.ceilingplane->top[i]    = otop;
+                  segclip.ceilingplane->bottom[i] = line;
+               }
+
+               overlaycclip[i] = (float)t;
+            }
             
-            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
+            if(segclip.markflags & SEG_MARKCPORTAL)
+            {
+               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+               ceilingclip[i] = (float)t;
+            }
+            else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
             {
                segclip.ceilingplane->top[i]    = cliptop;
                segclip.ceilingplane->bottom[i] = line;
+               ceilingclip[i] = (float)t;
             }
          }
-
-         ceilingclip[i] = (float)t;
       }
-
+      
+  
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR))
+      if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR|SEG_MARKFOVERLAY))
       {
          line = b + 1;
 
@@ -290,19 +307,35 @@ static void R_RenderSegLoop(void)
 
          if(line <= clipbot)
          {
-            if(segclip.markflags & SEG_MARKFPORTAL)
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+            if(segclip.floorplane && segclip.markflags & SEG_MARKFOVERLAY)
+            {
+               int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
+               
+               if(line <= olow)
+               {
+                  segclip.floorplane->top[i]    = line;
+                  segclip.floorplane->bottom[i] = olow;
+               }
+
+               overlayfclip[i] = (float)b;
+            }
             
-            if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
+            if(segclip.markflags & SEG_MARKFPORTAL)
+            {
+               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+               floorclip[i] = (float)b;
+            }
+            else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
             {
                segclip.floorplane->top[i]    = line;
                segclip.floorplane->bottom[i] = clipbot;
+               floorclip[i] = (float)b;
             }
          }
 
-         floorclip[i] = (float)b;
       }
-
+      
+      
       if(segclip.segtextured)
       {
          int index;

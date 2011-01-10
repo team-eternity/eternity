@@ -91,6 +91,9 @@ float openings[MAXOPENINGS], *lastopening;
 float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
 float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
 
+// SoM: We have to use secondary clipping arrays for portal overlays
+float overlayfclip[MAX_SCREENWIDTH], overlaycclip[MAX_SCREENWIDTH];
+
 
 // spanstart holds the start of a plane span; initialized to 0 at start
 static int spanstart[MAX_SCREENHEIGHT];                // killough 2/8/98
@@ -609,6 +612,28 @@ void R_ClearPlaneHash(planehash_t *table)
          freehead = &(*freehead)->next;
 }
 
+
+
+//
+// R_ClearOverlayClips
+//
+// Clears the arrays used to clip portal overlays. This function is called before the start of 
+// each portal rendering.
+//
+void R_ClearOverlayClips(void)
+{
+   int i;
+   
+   // opening / clipping determination
+   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   {
+      overlayfclip[i] = view.height - 1.0f;
+      overlaycclip[i] = 0.0f;
+   }
+}
+
+
+
 //
 // R_ClearPlanes
 //
@@ -633,8 +658,8 @@ void R_ClearPlanes(void)
    // opening / clipping determination
    for(i = 0; i < MAX_SCREENWIDTH; ++i)
    {
-      floorclip[i] = view.height - 1.0f;
-      ceilingclip[i] = a;
+      floorclip[i] = overlayfclip[i] = view.height - 1.0f;
+      ceilingclip[i] = overlaycclip[i] = a;
    }
 
    R_ClearPlaneHash(&mainhash);
