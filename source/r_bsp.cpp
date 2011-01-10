@@ -1312,8 +1312,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->c_portal != NULL 
             && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
                
-   if(seg.ceilingplane && 
-      (mark || seg.clipsolid || frontc != backc || 
+   if(mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
@@ -1321,9 +1320,10 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
-       seg.frontsec->c_portal != seg.backsec->c_portal || markblend)) // haleyjd
+       seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
-      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : 
+                    seg.ceilingplane ? SEG_MARKCEILING : 0;
    }
    
    if(seg.c_portal && 
@@ -1356,8 +1356,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
             && seg.backsec->f_portal != NULL 
             && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
              
-   if(seg.floorplane && 
-      (mark || seg.clipsolid ||  
+   if(mark || seg.clipsolid ||  
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
@@ -1367,9 +1366,10 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
        seg.frontsec->f_portal != seg.backsec->f_portal || 
-       markblend)) // haleyjd
+       markblend) // haleyjd
    {
-      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : 
+                       seg.floorplane ? SEG_MARKFLOOR : 0;
    }
    
    if(seg.f_portal &&

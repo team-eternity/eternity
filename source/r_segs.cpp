@@ -269,11 +269,11 @@ static void R_RenderSegLoop(void)
          
          if(line >= cliptop)
          {
-            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCOVERLAY)
+            if(segclip.markflags & SEG_MARKCOVERLAY)
             {
                int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
                
-               if(line >= otop)
+               if(segclip.ceilingplane && line >= otop)
                {
                   segclip.ceilingplane->top[i]    = otop;
                   segclip.ceilingplane->bottom[i] = line;
@@ -307,11 +307,11 @@ static void R_RenderSegLoop(void)
 
          if(line <= clipbot)
          {
-            if(segclip.floorplane && segclip.markflags & SEG_MARKFOVERLAY)
+            if(segclip.markflags & SEG_MARKFOVERLAY)
             {
                int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
                
-               if(line <= olow)
+               if(segclip.floorplane && line <= olow)
                {
                   segclip.floorplane->top[i]    = line;
                   segclip.floorplane->bottom[i] = olow;
