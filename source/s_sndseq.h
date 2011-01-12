@@ -81,8 +81,9 @@ typedef union seqcmd_s
 // 10/18/06: sequence flags
 enum
 {
-   SEQ_FLAG_LOOPING = 0x01,
-   SEQ_FLAG_ENVIRO  = 0x02,
+   SEQ_FLAG_LOOPING  = 0x01, // currently looping a sound
+   SEQ_FLAG_ENVIRO   = 0x02, // is an environmental sequence
+   SEQ_FLAG_NORANDOM = 0x04  // 01/12/11: don't randomize next sound
 };
 
 struct ESoundSeq_t;
@@ -153,6 +154,9 @@ typedef struct EnviroSeqMgr_s
 } EnviroSeqMgr_t;
 
 extern EnviroSeqMgr_t EnviroSeqManager;
+
+// boost for environmental sequences that use randomplayvol
+extern int s_enviro_volume;
 
 #endif
 

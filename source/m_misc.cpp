@@ -1904,7 +1904,7 @@ int M_FileLength(FILE *f)
 
 //=============================================================================
 //
-// Portable non-standard libc functions
+// Portable non-standard libc functions and misc string operations
 //
 
 // haleyjd: portable strupr function
@@ -1988,6 +1988,32 @@ char *M_Itoa(int value, char *string, int radix)
 
    return string;
 #endif
+}
+
+//
+// M_CountNumLines
+//
+// Counts the number of lines in a string. If the string length is greater than
+// 0, we consider the string to have at least one line.
+//
+int M_CountNumLines(const char *str)
+{
+   const char *rover = str;
+   int numlines = 0;
+   char c;
+
+   if(strlen(str))
+   {
+      numlines = 1;
+
+      while((c = *rover++))
+      {
+         if(c == '\n')
+            ++numlines;
+      }
+   }
+
+   return numlines;
 }
 
 //=============================================================================

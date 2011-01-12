@@ -97,6 +97,7 @@ struct ESoundSeq_t
    int attenuation;              // starting attenuation
    sfxinfo_t *stopsound;         // stopsound, if any
    boolean nostopcutoff;         // if true, sounds aren't cut off at end
+   boolean randomplayvol;        // if true, volume is randomized on most play cmds
 
    ESoundSeq_t *doorseq;  // redirect for door sequence use
    ESoundSeq_t *platseq;  // redirect for platform sequence use

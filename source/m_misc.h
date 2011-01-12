@@ -24,8 +24,8 @@
 //    
 //-----------------------------------------------------------------------------
 
-#ifndef __M_MISC__
-#define __M_MISC__
+#ifndef M_MISC_H__
+#define M_MISC_H__
 
 #include "doomtype.h"
 #include "doomstat.h" // haleyjd: this was missing
@@ -39,13 +39,15 @@ int     M_ReadFile(const char *name, byte **buffer);
 int     M_DrawText(int x,int y,boolean direct, char *string);
 void    M_LoadOptions(void);                             // killough 11/98
 
-// haleyjd: Portable versions of common non-standard C functions.
-// Some of these default to the standard implementation if its
-// existence is verifiable (see d_keywds.h)
+// haleyjd: Portable versions of common non-standard C functions, as well as
+// some misc string routines that really don't fit anywhere else. Some of these
+// default to the standard implementation if its existence is verifiable 
+// (see d_keywds.h)
 
 char *M_Strupr(char *string);
 char *M_Strlwr(char *string);
 char *M_Itoa(int value, char *string, int radix);
+int   M_CountNumLines(const char *str);
 
 // Misc file routines
 // haleyjd: moved a number of these here from w_wad module.
@@ -188,20 +190,20 @@ default_t *M_FindDefaultForCVar(variableptr var);
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      7
-  #define SND_DESCR    "code used by Allegro to select sounds driver, -1 is autodetect"
+  #define SND_DESCR    "code used by Allegro to select sounds driver; -1 is autodetect"
   #define MUS_DEFAULT -1
   #define MUS_MIN     -1
   #define MUS_MAX      9
-  #define MUS_DESCR    "code used by Allegro to select music driver, -1 is autodetect"
+  #define MUS_DESCR    "code used by Allegro to select music driver; -1 is autodetect"
 #elif defined(_SDL_VER)
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      1
-  #define SND_DESCR    "code to select digital sound, -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
+  #define SND_DESCR    "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
   #define MUS_DEFAULT -1
   #define MUS_MIN     -1
   #define MUS_MAX      0
-  #define MUS_DESCR    "code to select music device, -1 is SDL_mixer, 0 is no music"
+  #define MUS_DESCR    "code to select music device; -1 is SDL_mixer, 0 is no music"
 #else
   #define SND_DEFAULT  0
   #define SND_MIN      0

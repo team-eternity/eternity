@@ -373,28 +373,29 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
 // command-adding functions in other modules
 
-extern void       AM_AddCommands(void);        // am_color.c
-extern void    Cheat_AddCommands(void);        // m_cheat.c
-extern void        D_AddCommands(void);        // d_main.c   -- haleyjd
-extern void        E_AddCommands(void);        // e_cmd.c    -- haleyjd
-extern void        G_AddCommands(void);        // g_cmd.c
-extern void   G_Bind_AddCommands(void);        // g_bind.c   -- haleyjd
-extern void      G_DMAddCommands(void);        // g_dmflag.c -- haleyjd
-extern void       HU_AddCommands(void);        // hu_stuff.c
-extern void        I_AddCommands(void);        // i_system.c
-extern void       MN_AddCommands(void);        // mn_menu.c
-extern void      net_AddCommands(void);        // d_net.c
-extern void        P_AddCommands(void);        // p_cmd.c
-extern void P_AddGenLineCommands(void);        // p_genlin.c -- haleyjd
-extern void       PE_AddCommands(void);        // p_enemy.c  -- haleyjd
-extern void        R_AddCommands(void);        // r_main.c
-extern void        S_AddCommands(void);        // s_sound.c
-extern void       ST_AddCommands(void);        // st_stuff.c
-extern void        V_AddCommands(void);        // v_misc.c
-extern void        W_AddCommands(void);        // w_levels.c -- haleyjd
+extern void       AM_AddCommands(void);        // am_color
+extern void    Cheat_AddCommands(void);        // m_cheat
+extern void        D_AddCommands(void);        // d_main   -- haleyjd
+extern void        E_AddCommands(void);        // e_cmd    -- haleyjd
+extern void        G_AddCommands(void);        // g_cmd
+extern void   G_Bind_AddCommands(void);        // g_bind   -- haleyjd
+extern void      G_DMAddCommands(void);        // g_dmflag -- haleyjd
+extern void       HU_AddCommands(void);        // hu_stuff
+extern void        I_AddCommands(void);        // i_system
+extern void       MN_AddCommands(void);        // mn_menu
+extern void      net_AddCommands(void);        // d_net
+extern void        P_AddCommands(void);        // p_cmd
+extern void P_AddGenLineCommands(void);        // p_genlin -- haleyjd
+extern void       PE_AddCommands(void);        // p_enemy  -- haleyjd
+extern void        R_AddCommands(void);        // r_main
+extern void        S_AddCommands(void);        // s_sound
+extern void     S_AddSeqCommands(void);        // s_sndseq -- haleyjd
+extern void       ST_AddCommands(void);        // st_stuff
+extern void        V_AddCommands(void);        // v_misc
+extern void        W_AddCommands(void);        // w_levels -- haleyjd
 
 #ifndef EE_NO_SMALL_SUPPORT
-extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
+extern void       SM_AddCommands(void);        // a_small  -- haleyjd
 #endif
 
 void C_AddCommands()
@@ -429,6 +430,7 @@ void C_AddCommands()
   P_AddCommands();
   R_AddCommands();
   S_AddCommands();
+  S_AddSeqCommands();
   ST_AddCommands();
   V_AddCommands();
   MN_AddCommands();

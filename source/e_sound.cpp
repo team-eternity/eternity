@@ -45,13 +45,14 @@
 
 #include "z_zone.h"
 #include "d_io.h"
-#include "i_system.h"
-#include "w_wad.h"
 #include "d_dehtbl.h"
-#include "sounds.h"
+#include "i_system.h"
 #include "i_sound.h"
+#include "m_misc.h"
 #include "p_mobj.h"
+#include "sounds.h"
 #include "s_sound.h"
+#include "w_wad.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -837,19 +838,20 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
 // haleyjd 05/28/06
 // 
 
-#define ITEM_SEQ_ID    "id"
-#define ITEM_SEQ_CMDS  "cmds"
-#define ITEM_SEQ_HCMDS "commands"
-#define ITEM_SEQ_TYPE  "type"
-#define ITEM_SEQ_STOP  "stopsound"
-#define ITEM_SEQ_ATTN  "attenuation"
-#define ITEM_SEQ_VOL   "volume"
-#define ITEM_SEQ_MNVOL "minvolume"
-#define ITEM_SEQ_NSCO  "nostopcutoff"
-#define ITEM_SEQ_DOOR  "doorsequence"
-#define ITEM_SEQ_PLAT  "platsequence"
-#define ITEM_SEQ_FLOOR "floorsequence"
-#define ITEM_SEQ_CEIL  "ceilingsequence"
+#define ITEM_SEQ_ID     "id"
+#define ITEM_SEQ_CMDS   "cmds"
+#define ITEM_SEQ_HCMDS  "commands"
+#define ITEM_SEQ_TYPE   "type"
+#define ITEM_SEQ_STOP   "stopsound"
+#define ITEM_SEQ_ATTN   "attenuation"
+#define ITEM_SEQ_VOL    "volume"
+#define ITEM_SEQ_MNVOL  "minvolume"
+#define ITEM_SEQ_NSCO   "nostopcutoff"
+#define ITEM_SEQ_RNDVOL "randomplayvol"
+#define ITEM_SEQ_DOOR   "doorsequence"
+#define ITEM_SEQ_PLAT   "platsequence"
+#define ITEM_SEQ_FLOOR  "floorsequence"
+#define ITEM_SEQ_CEIL   "ceilingsequence"
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -920,19 +922,20 @@ enum
 
 cfg_opt_t edf_sndseq_opts[] =
 {
-   CFG_INT(ITEM_SEQ_ID,    -1,        CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CMDS,  NULL,      CFGF_LIST|CFGF_STRSPACE),
-   CFG_STR(ITEM_SEQ_HCMDS, NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_TYPE,  "sector",  CFGF_NONE),
-   CFG_STR(ITEM_SEQ_STOP,  "none",    CFGF_NONE),
-   CFG_STR(ITEM_SEQ_ATTN,  "normal",  CFGF_NONE),
-   CFG_INT(ITEM_SEQ_VOL,   127,       CFGF_NONE),
-   CFG_INT(ITEM_SEQ_MNVOL, -1,        CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_NSCO, cfg_false, CFGF_NONE),
-   CFG_STR(ITEM_SEQ_DOOR,  NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_PLAT,  NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_FLOOR, NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CEIL,  NULL,      CFGF_NONE),
+   CFG_INT(ITEM_SEQ_ID,      -1,        CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CMDS,    NULL,      CFGF_LIST|CFGF_STRSPACE),
+   CFG_STR(ITEM_SEQ_HCMDS,   NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_TYPE,    "sector",  CFGF_NONE),
+   CFG_STR(ITEM_SEQ_STOP,    "none",    CFGF_NONE),
+   CFG_STR(ITEM_SEQ_ATTN,    "normal",  CFGF_NONE),
+   CFG_INT(ITEM_SEQ_VOL,     127,       CFGF_NONE),
+   CFG_INT(ITEM_SEQ_MNVOL,   -1,        CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_NSCO,   cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_RNDVOL, cfg_false, CFGF_NONE),
+   CFG_STR(ITEM_SEQ_DOOR,    NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_PLAT,    NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_FLOOR,   NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CEIL,    NULL,      CFGF_NONE),
    CFG_END()
 };
 
@@ -1388,12 +1391,103 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 }
 
 //
+// E_GetHeredocLine
+//
+// Finds the start of the next line in the string, and modifies the string with
+// a \0 to terminate the current line. Returns the start of the current line, or
+// NULL if input is exhausted. Based loosely on E_GetDSLine from the DECORATE 
+// state parser.
+//
+static char *E_GetHeredocLine(char **src)
+{
+   boolean isdone  = false;
+   char *srctxt    = *src;
+   char *linestart = srctxt;
+
+   if(!*srctxt) // at end?
+      linestart = NULL;
+   else
+   {
+      char c;
+
+      while((c = *srctxt))
+      {
+         if(c == '\n')
+         {
+            // modify with a \0 to terminate the line, and step to the next char
+            *srctxt = '\0';
+            ++srctxt;
+            break;
+         }
+         ++srctxt;
+      }
+
+      // parse out spaces at the start of the line
+      while(isspace(*linestart))
+         ++linestart;
+   }
+
+   *src = srctxt;
+
+   return linestart;
+}
+
+//
 // E_ParseSeqCmdsFromHereDoc
 //
 // haleyjd 01/10/11: Support for heredoc-embedded sequences.
 //
-static void E_ParseSeqCmdsFromHereDoc(cfg_t *cfg, ESoundSeq_t *newSeq)
+static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
 {
+   int numcmds;
+   unsigned int cmdalloc, allocused = 0; // space allocated, space actually used
+   seqcmd_t *tempcmdbuf;                 // temporary command buffer
+   char *str   = Z_Strdupa(heredoc);     // make a temp mutable copy of the string
+   char *rover = str;                    // position in buffer
+   char *line  = NULL;                   // start of current line in buffer
+
+   // The number of commands should be equal to the number of lines in the
+   // heredoc string, plus a possible one extra for an implicit end command.
+   numcmds = M_CountNumLines(str);
+
+   // allocate the upper bound of command space in the temp buffer:
+   // * add 1 to numcmds for possible missing end command
+   // * multiply by 4 because no txt command compiles to more than 4 ops
+   cmdalloc = ((unsigned int)numcmds + 1) * 4 * sizeof(seqcmd_t);
+
+   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+
+   while((line = E_GetHeredocLine(&rover)))
+   {
+      tempcmd_t tempcmd;
+
+      // ignore empty lines
+      if(!strlen(line))
+         continue;
+
+      tempcmd = E_ParseSeqCmdStr(line); // parse the command
+
+      // figure out the command (first token on the line)
+      if(!tempcmd.strs[0])
+         E_EDFLoggedWarning(2, "Warning: invalid command in sequence, ignored\n");
+      else
+         E_GenerateSeqOp(newSeq, tempcmd, tempcmdbuf, allocused);
+   }
+
+   // now, generate an end command -- doing it this way, we make sure the
+   // sequence is terminated whether or not the user provides an end command,
+   // which is good since it's really unnecessary in EDF due to syntax
+   tempcmdbuf[allocused++].data = SEQ_CMD_END;
+
+   // now, allocate the buffer in the ESoundSeq_t object at the size actually
+   // used by the compiled sound sequence commands
+   cmdalloc = allocused * sizeof(seqcmd_t);
+
+   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
+
+   // free the temp buffer
+   free(tempcmdbuf);
 }
 
 //
@@ -1503,13 +1597,24 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    // process nostopcutoff
    newSeq->nostopcutoff = (cfg_getbool(cfg, ITEM_SEQ_NSCO) == cfg_true);
 
+   // haleyjd 01/12/11: support for proper Heretic randomization behavior
+   newSeq->randomplayvol = (cfg_getbool(cfg, ITEM_SEQ_RNDVOL) == cfg_true);
+
    // process command list
 
    // if a command list already exists, destroy it first
    if(newSeq->commands)
       free(newSeq->commands);
 
-   E_ParseSeqCmds(cfg, newSeq);
+   // haleyjd 01/11/11: I have added support for heredoc-based sound sequences,
+   // which are exclusive of and preferred to the old syntax. This allows Hexen-
+   // compatible SNDSEQ data to be pasted directly into EDF. It should also come
+   // in handy later when supporting actual SNDSEQ lumps.
+
+   if(cfg_size(cfg, ITEM_SEQ_HCMDS) > 0)
+      E_ParseSeqCmdsFromHereDoc(cfg_getstr(cfg, ITEM_SEQ_HCMDS), newSeq);
+   else
+      E_ParseSeqCmds(cfg, newSeq);
 }
 
 //

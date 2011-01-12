@@ -30,6 +30,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "c_runcmd.h"
 #include "s_sndseq.h"
 #include "e_things.h"
 #include "r_state.h"
@@ -39,6 +40,8 @@
 DLListItem<SndSeq_t> *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
+
+int s_enviro_volume; // controls volume of sequences using randomplayvol, 0-16
 
 // Macros
 
@@ -388,6 +391,13 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
 {
    if(seq->currentSound)
    {
+      // haleyjd 01/12/11: randomplayvol supports proper Heretic randomization
+      if(seq->sequence->randomplayvol && !(seq->flags & SEQ_FLAG_NORANDOM))
+         seq->volume = M_Random() / 4 + 96 * s_enviro_volume / 16;
+
+      // clear the NORANDOM flag
+      seq->flags &= ~SEQ_FLAG_NORANDOM;
+
       S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
                      seq->attenuation, loop, CHAN_AUTO);
    }
@@ -477,6 +487,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->volume = 0;
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
+      curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
       break;
    case SEQ_CMD_SETVOLUMEREL: // set relative volume
       curSeq->volume += CMD_ARG1(data);
@@ -485,6 +496,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->volume = 0;
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
+      curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
       break;
    case SEQ_CMD_SETATTENUATION: // set attenuation
       curSeq->attenuation = CMD_ARG1(data);
@@ -748,6 +760,19 @@ void S_SequenceGameLoad(void)
 
    // reset the enviro sequence engine in a way that lets it start up again
    S_ResetEnviroSeqEngine();
+}
+
+//=============================================================================
+//
+// Console commands
+//
+
+VARIABLE_INT(s_enviro_volume, NULL, 0, 16, NULL);
+CONSOLE_VARIABLE(s_enviro_volume, s_enviro_volume, 0) {}
+
+void S_AddSeqCommands(void)
+{
+   C_AddCommand(s_enviro_volume);
 }
 
 // EOF

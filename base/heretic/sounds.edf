@@ -557,187 +557,198 @@ sound EE_FCMove     { alias = ht_dormov }
  
 soundsequence EEHticAmbScream
 {
-   type = environment
-   id = 0
-   cmds = { "playuntildone ht_amb1" }
+   type     environment
+   id       0
+   commands @" playuntildone ht_amb1 "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32
 }
 
 soundsequence EEHticAmbSquish
 {
-   type = environment
-   id = 1
-   cmds = { "playuntildone ht_amb2" }
+   type     environment
+   id       1
+   commands @" playuntildone ht_amb2 "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32
 }
 
 soundsequence EEHticAmbDrops
 {
-   type = environment
-   id = 2
-   cmds =
-   {
-      "play ht_amb3",
-      "delayrand 16 47",
-      "play ht_amb7",
-      "delayrand 16 47",
-      "play ht_amb3",
-      "delayrand 16 47",
-      "play ht_amb7",
-      "delayrand 16 47",
-      "play ht_amb3",
-      "delayrand 16 47",
-      "playuntildone ht_amb7"
-   }
+   type     environment
+   id       2
+   commands 
+   @"
+      play ht_amb3
+      delayrand 16 47
+      play ht_amb7
+      delayrand 16 47
+      play ht_amb3
+      delayrand 16 47
+      play ht_amb7
+      delayrand 16 47
+      play ht_amb3
+      delayrand 16 47
+      playuntildone ht_amb7
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32
 }
 
 soundsequence EEHticSlowFootSteps
 {
-   type = environment
-   id = 3
-   cmds =
-   {
-      "playtime ht_amb4 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "delay 15",
-      "playrelvol ht_amb4  -3",
-      "delay 15",
-      "playrelvol ht_amb11 -3",
-      "nostopcutoff"
-   }
+   type     environment
+   id       3
+   commands
+   @"
+      playtime ht_amb4 15
+      playrelvol ht_amb11 -3
+      delay 15
+      playrelvol ht_amb4  -3
+      delay 15
+      playrelvol ht_amb11 -3
+      delay 15
+      playrelvol ht_amb4  -3
+      delay 15
+      playrelvol ht_amb11 -3
+      delay 15
+      playrelvol ht_amb4  -3
+      delay 15
+      playrelvol ht_amb11 -3
+      nostopcutoff
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true   
+   attenuation   none
+   //volume      96
+   //minvolume   32
 }
 
 soundsequence EEHticHeartBeat
 {
-   type = environment
-   id = 4
-   cmds =
-   {
-      "playtime ht_amb5 35",
-      "playtime ht_amb5 35",
-      "playtime ht_amb5 35",
-      "playuntildone ht_amb5"
-   }
+   type     environment
+   id       4
+   commands
+   @"
+      playtime ht_amb5 35
+      playtime ht_amb5 35
+      playtime ht_amb5 35
+      playuntildone ht_amb5
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none   
+   //volume = 96
+   //minvolume = 32
 }
 
 soundsequence EEHticBells
 {
-   type = environment
-   id = 5
-   cmds =
-   {
-      "playtime ht_amb6 17",
-      "playrelvol ht_amb6 -8",
-      "delay 17",
-      "playrelvol ht_amb6 -8",
-      "delay 17",
-      "playrelvol ht_amb6 -8",
-      "nostopcutoff"
-   }
+   type     environment
+   id       5
+   commands
+   @"
+      playtime ht_amb6 17
+      playrelvol ht_amb6 -8
+      delay 17
+      playrelvol ht_amb6 -8
+      delay 17
+      playrelvol ht_amb6 -8
+      nostopcutoff
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32
+   
 }
 
 soundsequence EEHticGrowl
 {
-   type = environment
-   id = 6
-   cmds = { "playuntildone ht_bstsit" }
+   type     environment
+   id       6
+   commands @" playuntildone ht_bstsit "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32
 }
 
 soundsequence EEHticMagic
 {
-   type = environment
-   id = 7
-   cmds = { "playuntildone ht_amb8" }
+   type     environment
+   id       7
+   commands @" playuntildone ht_amb8 "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume      96
+   //minvolume   32   
 }
 
 soundsequence EEHticLaughter
 {
-   type = environment
-   id = 8
-   cmds =
-   {
-      "playtime ht_amb9 16",
-      "playrelvol ht_amb9  -4",
-      "delay 16",
-      "playrelvol ht_amb9  -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "delay 16",
-      "playrelvol ht_amb10 -4",
-      "nostopcutoff"
-   }
+   type     environment
+   id       8
+   commands
+   @"
+      playtime ht_amb9 16
+      playrelvol ht_amb9  -4
+      delay 16
+      playrelvol ht_amb9  -4
+      delay 16
+      playrelvol ht_amb10 -4
+      delay 16
+      playrelvol ht_amb10 -4
+      delay 16
+      playrelvol ht_amb10 -4
+      nostopcutoff
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none
+   //volume = 96
+   //minvolume = 32   
 }
 
 soundsequence EEHticFastFootSteps
 {
-   type = environment
-   id = 9
-   cmds =
-   {
-      "playtime ht_amb4 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "delay 8",
-      "playrelvol ht_amb4  -3",
-      "delay 8",
-      "playrelvol ht_amb11 -3",
-      "nostopcutoff"
-   }
+   type     environment
+   id       9
+   commands
+   @"
+      playtime ht_amb4 8
+      playrelvol ht_amb11 -3
+      delay 8
+      playrelvol ht_amb4  -3
+      delay 8
+      playrelvol ht_amb11 -3
+      delay 8
+      playrelvol ht_amb4  -3
+      delay 8
+      playrelvol ht_amb11 -3
+      delay 8
+      playrelvol ht_amb4  -3
+      delay 8
+      playrelvol ht_amb11 -3
+      nostopcutoff
+   "@
    
-   volume = 96
-   minvolume = 32
-   attenuation = none
+   randomplayvol true
+   attenuation   none   
+   //volume = 96
+   //minvolume = 32
 }
 
 endif()

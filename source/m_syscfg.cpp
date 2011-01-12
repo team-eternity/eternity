@@ -34,6 +34,7 @@
 #include "d_gi.h"
 #include "i_sound.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "w_wad.h"
 #include "w_levels.h"
 
@@ -163,7 +164,10 @@ static default_t sysdefaults[] =
                  "Midrange gain"),
 
    DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
-                 "High pass gain"),                 
+                 "High pass gain"),  
+
+   DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
+               "Volume of environmental sound sequences"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
