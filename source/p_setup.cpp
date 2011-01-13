@@ -2520,6 +2520,10 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
 
    R_SetViewSize(screenSize+3, c_detailshift); //sf
 
+   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
+   // 01/13/2011: Moved up a bit. The below actions want GS_LEVEL gamestate :>
+   gamestate = GS_LEVEL;
+
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
       P_ResetChasecam();
@@ -2535,8 +2539,6 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
    if(mapformat == LEVEL_FORMAT_HEXEN)
       ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
 
-   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
-   gamestate = GS_LEVEL;
 }
 
 //
