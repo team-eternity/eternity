@@ -1019,7 +1019,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                         float texbottom, vertex_t *v1, vertex_t *v2, 
                         float lclip1, float lclip2)
 {
-   boolean mark; // haleyjd
+   boolean mark, markblend; // haleyjd
    boolean heightchange;
    float texhigh, texlow;
    side_t *side = seg.side;
@@ -1127,6 +1127,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
    seg.markflags = 0;
+   
+   markblend = seg.frontsec->c_portal != NULL 
+         && seg.backsec->c_portal != NULL 
+         && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
 
    if(seg.c_portal &&
       (seg.clipsolid || heightchange || 
@@ -1148,9 +1152,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
-        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope))) // haleyjd
+        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKCEILING;
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
    }
 
    if(heightchange && side->toptexture)
@@ -1171,6 +1175,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ? (l != b || l2 != b2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
+   markblend = seg.frontsec->f_portal != NULL 
+         && seg.backsec->f_portal != NULL 
+         && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
+         
    if(seg.f_portal &&
       (seg.clipsolid || heightchange ||
        seg.frontsec->f_portal != seg.backsec->f_portal))
@@ -1191,9 +1199,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
        seg.frontsec->f_portal != seg.backsec->f_portal ||
-       !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope))) // haleyjd
+       !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope) || markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKFLOOR;
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
    }
 
    // SoM: some portal types should be rendered even if the player is above
@@ -1731,9 +1739,10 @@ static void R_AddLine(seg_t *line)
       }
 
       if(seg.ceilingplane != NULL)
-         seg.markflags |= SEG_MARKCEILING;
+         seg.markflags |= seg.frontsec->c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
       if(seg.floorplane != NULL)
-         seg.markflags |= SEG_MARKFLOOR;
+         seg.markflags |= seg.frontsec->f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
+         
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
       seg.l_window    = line->linedef->portal ?
