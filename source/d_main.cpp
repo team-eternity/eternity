@@ -2112,8 +2112,6 @@ char *FindIWADFile(void)
                return iwad;
          }
       }
-      // need to make sure iwad is set to a valid string for exit
-      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
    }
 
    for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
@@ -2163,6 +2161,10 @@ char *FindIWADFile(void)
          } // end if(WadFileStatus(...))
       } // end if((p = getenv(...)))
    } // end for
+
+   // haleyjd 01/17/11: be sure iwad return string is valid...
+   if(!iwad)
+      iwad = (char *)(malloc(1));
 
    *iwad = 0;
    return iwad;
