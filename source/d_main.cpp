@@ -3753,6 +3753,10 @@ static void D_DoomInit(void)
    {
       if(autostart || netgame)
       {
+         // haleyjd 01/16/11: old demo options must be set BEFORE G_InitNew
+         if(M_CheckParm("-vanilla") > 0)
+            G_SetOldDemoOptions();
+
          G_InitNewNum(startskill, startepisode, startmap);
          if(demorecording)
             G_BeginRecording();

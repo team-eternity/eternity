@@ -148,7 +148,7 @@ typedef struct backpack_s
    char    weapon;
 } backpack_t;
 
-// Each sector has a degenMobj in its center for sound origin purposes.
+// Each sector has a degenmobj in its center for sound origin purposes.
 // haleyjd 11/22/10: degenmobj, which has become PointThinker, is now the base
 // class for all thinkers that want to be located somewhere in the game world.
 class PointThinker : public Thinker

@@ -968,6 +968,8 @@ void G_DoPlayDemo(void)
    char basename[9];
    byte *option_p = NULL;      // killough 11/98
    int lumpnum;
+
+   memset(basename, 0, sizeof(basename));
   
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
       basetic = gametic;  // killough 9/29/98
@@ -3096,9 +3098,20 @@ byte *G_ReadOptions(byte *demoptr)
 //
 // haleyjd 02/21/10: Configure everything to run for an old demo.
 //
-static void G_SetOldDemoOptions(void)
+void G_SetOldDemoOptions(void)
 {
    int i;
+
+   // support -longtics when recording vanilla format demos
+   longtics_demo = (M_CheckParm("-longtics") != 0);
+
+   // set demo version appropriately
+   if(longtics_demo)
+      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
+   else
+      demo_version = 109;              // v1.9
+
+   demo_subversion = 0;
 
    compatibility = 1;
 
@@ -3135,17 +3148,7 @@ static void G_BeginRecordingOld(void)
 {
    int i;
 
-   // support -longtics when recording vanilla format demos
-   longtics_demo = (M_CheckParm("-longtics") != 0);
-
-   // set demo version appropriately
-   if(longtics_demo)
-      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
-   else
-      demo_version = 109;              // v1.9
-
-   demo_subversion = 0;
-
+   // haleyjd 01/16/11: set again to ensure consistency
    G_SetOldDemoOptions();
 
    demo_p = demobuffer;

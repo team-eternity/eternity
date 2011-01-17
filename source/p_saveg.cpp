@@ -689,7 +689,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
       while(1)
       {
-         if(className != "")
+         if(*className != '\0')
             free(className);
 
          // Get the next class name
