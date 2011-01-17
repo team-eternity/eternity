@@ -1399,6 +1399,13 @@ static void D_AddDoomWadPath(const char *path)
    ++numdoomwadpaths;
 }
 
+// haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
+#ifdef _WIN32
+#define DOOMWADPATHSEP ';'
+#else
+#define DOOMWADPATHSEP ':'
+#endif
+
 //
 // D_ParseDoomWadPath
 //
@@ -1422,9 +1429,9 @@ static void D_ParseDoomWadPath(void)
          // Found the end of a path?
          // Add the string from the prior one (or the beginning) to here as
          // a separate path.
-         if(*rover == ';')
+         if(*rover == DOOMWADPATHSEP)
          {
-            *rover = '\0'; // replace ; with a null terminator
+            *rover = '\0'; // replace ; or : with a null terminator
             if(dirlen)
                D_AddDoomWadPath(currdir);
             dirlen = 0;
