@@ -3327,7 +3327,10 @@ static void D_DoomInit(void)
       }
    }
 
-   if(!(p = M_CheckParm("-playdemo")) || p >= myargc-1)   // killough
+   // haleyjd 01/17/11: allow -play also
+   const char *playdemoparms[] = { "-playdemo", "-play", NULL };
+
+   if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
    {
       if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
          fastdemo = true;            // run at fastest speed possible
@@ -3719,8 +3722,12 @@ static void D_DoomInit(void)
       G_RecordDemo(myargv[p]);
    else
    {
+      // haleyjd 01/17/11: allow -recorddemo as well
+      const char *recordparms[] = { "-record", "-recorddemo", NULL };
+
       slot = M_CheckParm("-loadgame");
-      if((p = M_CheckParm("-record")) && ++p < myargc)
+ 
+      if((p = M_CheckMultiParm(recordparms, 1)) && ++p < myargc)
       {
          autostart = true;
          G_RecordDemo(myargv[p]);
