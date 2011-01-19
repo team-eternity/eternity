@@ -698,7 +698,7 @@ levelvar_t levelvars[]=
    LI_STRING("colormap",        COLORMAP,         colorMap),
    LI_STRING("creator",         CREATOR,          creator),
    LI_BOOLNF("doublesky",       DOUBLESKY,        doubleSky),
-   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  useEDFInterName),
+   LI_BOOLNF("edf-intername",   USEEDFINTERNAME,  useEDFInterName),
    LI_BOOLNF("endofgame",       ENDOFGAME,        endOfGame),
    LI_STRING("extradata",       EXTRADATA,        extraData),
    LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly), 
