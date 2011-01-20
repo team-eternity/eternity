@@ -943,6 +943,22 @@ static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    return P_CheckSight(actor, mo);
 }
 
+int p_lastenemyroar;
+
+//
+// P_LastEnemyRoar
+//
+// haleyjd 01/20/11: BOOM's change to AI made in order to keep monsters from
+// falling asleep had the unfortunate side effect of eliminating the wake-up
+// sound they would make when killing their current target and returning to
+// fighting the player or another monster. This is an optional routine that
+// re-enables this behavior.
+//
+static void P_LastEnemyRoar(Mobj *actor)
+{
+   if(demo_version >= 340 && p_lastenemyroar)
+      P_MakeSeeSound(actor, pr_misc); // don't affect the play sim.
+}
 
 static int current_allaround;
 
@@ -964,13 +980,13 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // If the monster is already engaged in a one-on-one attack
    // with a healthy friend, don't attack around 60% the time
+   const Mobj *targ = mo->target;
+   if(targ && targ->target == mo &&
+      P_Random(pr_skiptarget) > 100 &&
+      (targ->flags ^ mo->flags) & MF_FRIEND &&
+       targ->health*2 >= targ->info->spawnhealth)
    {
-      const Mobj *targ = mo->target;
-      if(targ && targ->target == mo &&
-         P_Random(pr_skiptarget) > 100 &&
-         (targ->flags ^ mo->flags) & MF_FRIEND &&
-         targ->health*2 >= targ->info->spawnhealth)
-         return true;
+      return true;
    }
 
    if(!P_IsVisible(actor, mo, current_allaround))
@@ -981,15 +997,10 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // Move the selected monster to the end of its associated
    // list, so that it gets searched last next time.
-
-   {
-      Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ?
-                                        th_friends : th_enemies];
-      (mo->cprev->cnext = mo->cnext)->cprev =
-         mo->cprev;
-      (mo->cprev = cap->cprev)->cnext = mo;
-      (mo->cnext = cap)->cprev = mo;
-   }
+   Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ? th_friends : th_enemies];
+   (mo->cprev->cnext = mo->cnext)->cprev = mo->cprev;
+   (mo->cprev = cap->cprev)->cnext = mo;
+   (mo->cnext = cap)->cprev = mo;
    
    return false;
 }
@@ -1171,6 +1182,8 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
    if(actor->lastenemy && actor->lastenemy->health > 0 && monsters_remember &&
       !(actor->lastenemy->flags & actor->flags & MF_FRIEND)) // not friends
    {
+      if(actor->target != actor->lastenemy)
+         P_LastEnemyRoar(actor);
       P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
       P_SetTarget<Mobj>(&actor->lastenemy, NULL);
       return true;
@@ -1978,6 +1991,9 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
+VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
@@ -1989,6 +2005,7 @@ void PE_AddCommands(void)
    C_AddCommand(banish);
    C_AddCommand(vilehit);
    C_AddCommand(resurrect);
+   C_AddCommand(p_lastenemyroar);
 }
 
 //----------------------------------------------------------------------------

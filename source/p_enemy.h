@@ -47,6 +47,8 @@ typedef int dirtype_t;
 extern fixed_t xspeed[8];
 extern fixed_t yspeed[8];
 
+extern int p_lastenemyroar;
+
 boolean P_CheckMissileRange(Mobj *actor);
 boolean P_HelpFriend(Mobj *actor);
 boolean P_HitFriend(Mobj *actor);

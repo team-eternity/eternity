@@ -53,6 +53,45 @@
 #include "e_ttypes.h"
 
 //
+// P_MakeSeeSound
+//
+// haleyjd 01/20/11: Isolated from A_Look
+//
+void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
+{
+   if(actor->info->seesound)
+   {
+      int sound;
+      Mobj *emitter = actor;
+
+      // EDF_FIXME: needs to be generalized like in zdoom
+      switch (actor->info->seesound)
+      {
+      case sfx_posit1:
+      case sfx_posit2:
+      case sfx_posit3:
+         sound = sfx_posit1 + P_Random(rngnum) % 3;
+         break;
+         
+      case sfx_bgsit1:
+      case sfx_bgsit2:
+         sound = sfx_bgsit1 + P_Random(rngnum) % 2;
+         break;
+                  
+      default:
+         sound = actor->info->seesound;
+         break;
+      }
+      
+      // haleyjd: generalize to all bosses
+      if(actor->flags2 & MF2_BOSS)
+         emitter = NULL;
+
+      S_StartSound(emitter, sound);
+   }
+}
+
+//
 // A_Look
 //
 // Stay in state until a player is sighted.
@@ -109,37 +148,7 @@ void A_Look(Mobj *actor)
    }
 
    // go into chase state
-   
-   if(actor->info->seesound)
-   {
-      int sound;
-
-      // EDF_FIXME: needs to be generalized like in zdoom
-      switch (actor->info->seesound)
-      {
-      case sfx_posit1:
-      case sfx_posit2:
-      case sfx_posit3:
-         sound = sfx_posit1 + P_Random(pr_see) % 3;
-         break;
-         
-      case sfx_bgsit1:
-      case sfx_bgsit2:
-         sound = sfx_bgsit1 + P_Random(pr_see) % 2;
-         break;
-                  
-      default:
-         sound = actor->info->seesound;
-         break;
-      }
-      
-      // haleyjd: generalize to all bosses
-      if(actor->flags2 & MF2_BOSS)
-         S_StartSound(NULL, sound);          // full volume
-      else
-         S_StartSound(actor, sound);
-   }
-
+   P_MakeSeeSound(actor, pr_see);
    P_SetMobjState(actor, actor->info->seestate);
 }
 

@@ -30,6 +30,8 @@
 #ifndef A_COMMON_H__
 #define A_COMMON_H__
 
+void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum);
+
 void A_Chase(Mobj *actor);
 void A_Die(Mobj *actor);
 void A_Explode(Mobj *thingy);

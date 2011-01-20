@@ -58,6 +58,7 @@
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_menus.h"
+#include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"
 #include "r_draw.h"
@@ -266,6 +267,9 @@ default_t defaults[] =
    // killough 10/98
    DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, default_t::wad_yes,
                "1 to enable dogs to jump"),
+
+   DEFAULT_INT("p_lastenemyroar", &p_lastenemyroar, NULL, 1, 0, 1, default_t::wad_yes,
+               "1 to enable monster roaring when last enemy is remembered"),
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
