@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="snes_spc"
 	ProjectGUID="{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}"
 	>
@@ -57,7 +57,7 @@
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -72,11 +72,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies=""
 				OutputFile=".\Debug/snes_spc.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\snes_spc.def"
+				ModuleDefinitionFile="..\snes_spc\snes_spc.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/snes_spc.pdb"
 				ImportLibrary=".\Debug/snes_spc.lib"
@@ -168,11 +168,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies=""
 				OutputFile=".\Release/snes_spc.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				ModuleDefinitionFile="..\snes_spc.def"
+				ModuleDefinitionFile="..\snes_spc\snes_spc.def"
 				ProgramDatabaseFile=".\Release/snes_spc.pdb"
 				ImportLibrary=".\Release/snes_spc.lib"
 				TargetMachine="1"

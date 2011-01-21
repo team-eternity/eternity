@@ -42,11 +42,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/D &quot;_CRT_SECURE_NO_DEPRECATE&quot; /D &quot;_CRT_NONSTDC_NO_DEPRECATE&quot;"
+				AdditionalOptions=""
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -70,7 +70,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib user32.lib advapi32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib user32.lib advapi32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -139,7 +139,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -164,7 +164,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -316,7 +316,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\ource\a_small.cpp"
+					RelativePath="..\source\a_small.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -4994,11 +4994,11 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="..\vc2008\Eternity.rc"
+				RelativePath="Eternity.rc"
 				>
 			</File>
 			<File
-				RelativePath="..\vc2008\resource.h"
+				RelativePath="resource.h"
 				>
 			</File>
 		</Filter>
