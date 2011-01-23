@@ -33,6 +33,7 @@
 #include "r_main.h"
 #include "r_bsp.h"
 #include "r_plane.h"
+#include "r_segs.h"
 #include "r_things.h"
 #include "r_draw.h"
 #include "w_wad.h"
@@ -141,13 +142,13 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
          ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
-      column.texmid = column.texmid + textures[texnum]->heightfrac - ds->viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
    }
    else
    {
       column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
          ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
-      column.texmid = column.texmid - ds->viewz;
+      column.texmid = column.texmid - viewz;
    }
 
    column.texmid += segclip.line->sidedef->rowoffset;
@@ -761,9 +762,6 @@ void R_StoreWallRange(const int start, const int stop)
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
-   ds_p->viewx    = viewx;
-   ds_p->viewy    = viewy;
-   ds_p->viewz    = viewz;
    ds_p->curline  = segclip.line;
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;

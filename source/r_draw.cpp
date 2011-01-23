@@ -980,7 +980,16 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL
+   NULL,
+
+   {
+      // Normal              Translated
+      { CB_DrawColumn_8,     CB_DrawTRColumn_8     }, // NORMAL
+      { CB_DrawFuzzColumn_8, CB_DrawFuzzColumn_8   }, // SHADOW
+      { CB_DrawFlexColumn_8, CB_DrawFlexTRColumn_8 }, // ALPHA
+      { CB_DrawAddColumn_8,  CB_DrawAddTRColumn_8  }, // ADD
+      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // TRANMAP
+   },
 };
 
 //

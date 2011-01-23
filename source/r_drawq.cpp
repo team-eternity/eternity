@@ -1555,7 +1555,16 @@ columndrawer_t r_quad_drawer =
    R_QDrawAddColumn,
    R_QDrawAddTRColumn,
 
-   R_QResetColumnBuffer
+   R_QResetColumnBuffer,
+
+   {
+      // Normal            Translated
+      { R_QDrawColumn,     R_QDrawTRColumn     }, // NORMAL
+      { R_QDrawFuzzColumn, R_QDrawFuzzColumn   }, // SHADOW
+      { R_QDrawFlexColumn, R_QDrawFlexTRColumn }, // ALPHA
+      { R_QDrawAddColumn,  R_QDrawAddTRColumn  }, // ADD
+      { R_QDrawTLColumn,   R_QDrawTLTRColumn   }, // TRANMAP
+   },
 };
 
 // EOF

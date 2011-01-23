@@ -33,6 +33,8 @@ extern line_t   *linedef;
 extern sector_t *frontsector;
 extern sector_t *backsector;
 
+struct drawseg_t;
+
 // old code -- killough:
 // extern drawseg_t drawsegs[MAXDRAWSEGS];
 // new code -- killough:

@@ -1444,7 +1444,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-static void R_AddLine(seg_t *line)
+static void R_AddLine(seg_t *line, boolean dynasegs)
 {
    static sector_t tempsec;
 
@@ -1476,7 +1476,7 @@ static void R_AddLine(seg_t *line)
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
       seg.backsec = NULL;
 
-   if(line->nodraw) // haleyjd
+   if(!dynasegs && (line->linedef->intflags & MLI_DYNASEGLINE)) // haleyjd
       return;
 
    // If the frontsector is closed, don't render the line!
@@ -2018,7 +2018,7 @@ static void R_AddDynaSegs(subsector_t *sub)
 
       while(ds)
       {
-         R_AddLine(&ds->seg);
+         R_AddLine(&ds->seg, true);
 
          ds = ds->subnext;
       }
@@ -2195,7 +2195,7 @@ static void R_Subsector(int num)
       R_AddDynaSegs(sub);
 
    while(count--)
-      R_AddLine(line++);
+      R_AddLine(line++, false);
 }
 
 //

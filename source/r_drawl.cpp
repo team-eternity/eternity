@@ -961,7 +961,16 @@ columndrawer_t r_lowdetail_drawer =
    R_LowDrawAddColumn,
    R_LowDrawAddTRColumn,
 
-   NULL
+   NULL,
+
+   {
+      // Normal              Translated
+      { R_LowDrawColumn,     R_LowDrawTRColumn     }, // NORMAL
+      { R_LowDrawFuzzColumn, R_LowDrawFuzzColumn   }, // SHADOW
+      { R_LowDrawFlexColumn, R_LowDrawFlexTRColumn }, // ALPHA
+      { R_LowDrawAddColumn,  R_LowDrawAddTRColumn  }, // ADD
+      { R_LowDrawTLColumn,   R_LowDrawTLTRColumn   }, // TRANMAP
+   },
 };
 
 // EOF

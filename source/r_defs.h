@@ -300,7 +300,6 @@ struct side_t
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
   // or lump number of special effect. Allows texture names to be overloaded
   // for other functions.
-
   int special;
 };
 
@@ -322,23 +321,23 @@ struct seg_t;
 struct line_t
 {
    vertex_t *v1, *v2;      // Vertices, from v1 to v2.
-   fixed_t dx, dy;         // Precalculated v2 - v1 for side checking.
-   int16_t flags;          // Animation related.
-   int16_t special;         
-   int   tag;              // haleyjd 02/27/07: line id's
+   fixed_t  dx, dy;        // Precalculated v2 - v1 for side checking.
+   int16_t  flags;         // Animation related.
+   int16_t  special;         
+   int      tag;           // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
-   int   sidenum[2];       // Visual appearance: SideDefs.
+   int      sidenum[2];    // Visual appearance: SideDefs.
 
    fixed_t bbox[4];        // A bounding box, for the linedef's extent
    slopetype_t slopetype;  // To aid move clipping.
    sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
    int validcount;         // if == validcount, already checked
-   void *specialdata;      // thinker_t for reversable actions
    int tranlump;           // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
-   PointThinker soundorg; // haleyjd 04/19/09: line sound origin
+   PointThinker soundorg;  // haleyjd 04/19/09: line sound origin
+   int intflags;           // haleyjd 01/22/11: internal flags
 
    // SoM 12/10/03: wall portals
    int      pflags;
@@ -351,8 +350,6 @@ struct line_t
    int   extflags;          // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
-
-   seg_t *segs;             // haleyjd: link to segs
 };
 
 struct rpolyobj_t;
@@ -407,10 +404,9 @@ typedef struct msecnode_s
 struct seg_t
 {
   vertex_t *v1, *v2;
-  float offset;
-  //angle_t angle;
-  side_t* sidedef;
-  line_t* linedef;
+  float     offset;
+  side_t   *sidedef;
+  line_t   *linedef;
   
   // Sector references.
   // Could be retrieved from linedef, too
@@ -419,12 +415,8 @@ struct seg_t
 
   sector_t *frontsector, *backsector;
 
-  seg_t *linenext; // haleyjd: next seg by linedef
-
   // SoM: Precached seg length in float format
   float  len;
-
-  boolean nodraw; // don't render this seg, ever
 };
 
 //
@@ -445,33 +437,6 @@ struct node_t
 //
 // OTHER TYPES
 //
-
-//
-// Masked 2s linedefs
-//
-
-typedef struct drawseg_s
-{
-   seg_t *curline;
-   int x1, x2;
-   float dist1, dist2, diststep;
-   int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
-   fixed_t bsilheight;                   // do not clip sprites above this
-   fixed_t tsilheight;                   // do not clip sprites below this
-
-   // sf: colormap to be used when drawing the drawseg
-   // for coloured lighting
-   lighttable_t *(*colormap)[MAXLIGHTSCALE];
-
-   // Pointers to lists for sprite clipping,
-   // all three adjusted so [x1] is first value.
-
-   float *sprtopclip, *sprbottomclip;
-   // SoM: this still needs to be int
-   float *maskedtexturecol;
-
-   fixed_t viewx, viewy, viewz;
-} drawseg_t;
 
 //  
 // Sprites are patches with a special naming convention

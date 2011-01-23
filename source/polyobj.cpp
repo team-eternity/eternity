@@ -225,7 +225,6 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
 static void Polyobj_addLine(polyobj_t *po, line_t *l)
 {
    int i;
-   seg_t *s;
 
    // First: search the existing line pointers for a match. If one is found,
    // do not add this line again.
@@ -249,14 +248,8 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    Polyobj_addVertex(po, l->v1);
    Polyobj_addVertex(po, l->v2);
 
-   // kill linedef's original segs
-   s = l->segs;
-
-   while(s)
-   {
-      s->nodraw = true;
-      s = s->linenext;
-   }
+   // haleyjd 01/22/11: mark linedef to render only through dynasegs
+   l->intflags |= MLI_DYNASEGLINE;
 }
 
 // Line-finding functions
