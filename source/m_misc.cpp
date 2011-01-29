@@ -1453,11 +1453,9 @@ static void M_populateDefaultMethods(defaultfile_t *df)
 //
 static void M_defaultFileWriteError(defaultfile_t *df, char *tmpfile)
 {
-   // haleyjd: I_FatalError should be called here, since this can be invoked
-   // via an I_Error action already.
-   I_FatalError(I_ERR_KILL,
-      "Could not write defaults to %s: %s\n%s left unchanged\n",
-      tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+   // haleyjd 01/29/11: Why was this fatal? just print the message.
+   printf("Warning: could not write defaults to %s: %s\n%s left unchanged\n",
+          tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
 }
 
 //
@@ -1577,9 +1575,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    if(rename(tmpfile, df->fileName))
    {
-      I_FatalError(I_ERR_KILL,
-                   "Could not write defaults to %s: %s\n", df->fileName,
-                   errno ? strerror(errno) : "(Unknown Error)");
+      // haleyjd 01/29/11: No error here, just print the message
+      printf("Warning: could not write defaults to %s: %s\n", df->fileName,
+              errno ? strerror(errno) : "(Unknown Error)");
    }
 }
 
