@@ -935,17 +935,20 @@ static void R_ProjectSprite(Mobj *thing)
       vis->colormap = spritelights[index];
    }
 
-   // haleyjd 01/22/11: determine drawstyle
+   vis->drawstyle = VS_DRAWSTYLE_NORMAL;
+
+   // haleyjd 01/22/11: determine special drawstyles
    if(thing->flags & MF_SHADOW)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;
-   else if(thing->flags3 & MF3_TLSTYLEADD)
-      vis->drawstyle = VS_DRAWSTYLE_ADD;
-   else if(vis->translucency < FRACUNIT)
-      vis->drawstyle = VS_DRAWSTYLE_ALPHA;
-   else if(thing->flags & MF_TRANSLUCENT)
-      vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-   else
-      vis->drawstyle = VS_DRAWSTYLE_NORMAL;
+   else if(general_translucency)
+   {   
+      if(thing->flags3 & MF3_TLSTYLEADD)
+         vis->drawstyle = VS_DRAWSTYLE_ADD;
+      else if(vis->translucency < FRACUNIT)
+         vis->drawstyle = VS_DRAWSTYLE_ALPHA;
+      else if(thing->flags & MF_TRANSLUCENT)
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+   }
 }
 
 //
@@ -1120,7 +1123,8 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->colormap  = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    }
    else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-           viewplayer->powers[pw_ghost] & 8)
+           viewplayer->powers[pw_ghost] & 8 &&
+           general_translucency)
    {
       vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
       vis->translucency = HTIC_GHOST_TRANS;
@@ -1133,7 +1137,7 @@ static void R_DrawPSprite(pspdef_t *psp)
    else
       vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
    
-   if(psp->trans) // translucent gunflash
+   if(psp->trans && general_translucency) // translucent gunflash
       vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
 
    oldycenter = view.ycenter;
