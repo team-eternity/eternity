@@ -30,6 +30,7 @@
 #include "d_dwfile.h"
 #include "m_hash.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "w_wad.h"
 #include "psnprntf.h"
 #include "d_main.h"
@@ -869,6 +870,395 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
    }
 
    return colonloc;
+}
+
+//=============================================================================
+//
+// Translation Parsing
+//
+// haleyjd 02/02/11: Support ZDoom-format translation strings (to a point)
+//
+
+// Translation token types
+enum
+{
+   TR_TOKEN_NUM,
+   TR_TOKEN_COLON,
+   TR_TOKEN_EQUALS,
+   TR_TOKEN_COMMA,
+   TR_TOKEN_END,
+   TR_TOKEN_ERROR
+};
+
+// Parser States:
+enum
+{
+   TR_PSTATE_SRCBEGIN,
+   TR_PSTATE_COLON,
+   TR_PSTATE_SRCEND,
+   TR_PSTATE_EQUALS,
+   TR_PSTATE_DSTBEGIN,
+   TR_PSTATE_DSTEND,
+   TR_PSTATE_COMMAOREND,
+   TR_PSTATE_NUMSTATES
+};
+
+struct tr_range_t
+{
+   int srcbegin;
+   int srcend;
+   int dstbegin;
+   int dstend;
+
+   tr_range_t *next;
+};
+
+struct tr_pstate_t
+{
+   int state;
+   int prevstate;
+   qstring_t *token;
+   const char *input;
+   int inputpos;
+   boolean error;
+   boolean done;
+   boolean singlecolor;
+   tr_range_t *ranges;
+   
+   // data
+   int srcbegin;
+   int srcend;
+   int dstbegin;
+   int dstend;
+};
+
+//
+// E_GetTranslationToken
+//
+// Get the next token from the translation string
+//
+static int E_GetTranslationToken(tr_pstate_t *pstate)
+{
+   const char *str = pstate->input;
+   int strpos = pstate->inputpos;
+
+   QStrClear(pstate->token);
+
+   // skip whitespace
+   while(str[strpos] == ' ' || str[strpos] == '\t')
+      ++strpos;
+
+   // On a number?
+   if(isnumchar(str[strpos]))
+   {
+      while(isnumchar(str[strpos]))
+      {
+         QStrPutc(pstate->token, str[strpos]);
+         ++strpos;
+      }
+      pstate->inputpos = strpos;
+      return TR_TOKEN_NUM;
+   }
+   else
+   {
+      // Misc character
+      switch(str[strpos])
+      {
+      case ':':
+         QStrPutc(pstate->token, str[strpos]);
+         ++pstate->inputpos;
+         return TR_TOKEN_COLON;
+      case '=':
+         QStrPutc(pstate->token, str[strpos]);
+         ++pstate->inputpos;
+         return TR_TOKEN_EQUALS;
+      case ',':
+         QStrPutc(pstate->token, str[strpos]);
+         ++pstate->inputpos;
+         return TR_TOKEN_COMMA;
+      case '\0':
+         return TR_TOKEN_END;
+      default:
+         return TR_TOKEN_ERROR; // woops?
+      }
+   }
+}
+
+#define COLOR_CLAMP(c) ((c) > 255 ? 255 : ((c) < 0 ? 0 : (c)))
+
+//
+// PushRange
+//
+// Pushes the current palette translation range into the parser state object's
+// list of ranges.
+//
+static void PushRange(tr_pstate_t *pstate)
+{
+   tr_range_t *newrange = (tr_range_t *)(calloc(1, sizeof(tr_range_t)));
+
+   newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
+   newrange->srcend   = COLOR_CLAMP(pstate->srcend);
+   newrange->dstbegin = COLOR_CLAMP(pstate->dstbegin);
+   newrange->dstend   = COLOR_CLAMP(pstate->dstend);
+
+   // normalize ranges
+   if(newrange->srcbegin > newrange->srcend)
+   {
+      int temp = newrange->srcbegin;
+      newrange->srcbegin = newrange->srcend;
+      newrange->srcend   = temp;
+   }
+
+   if(newrange->dstbegin > newrange->dstend)
+   {
+      int temp = newrange->dstbegin;
+      newrange->dstbegin = newrange->dstend;
+      newrange->dstend   = temp;
+   }
+
+   newrange->next = pstate->ranges;
+   pstate->ranges = newrange;
+};
+
+//
+// DoPStateSrcBegin
+//
+// Expecting the beginning number of a source range
+//
+static void DoPStateSrcBegin(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->srcbegin = QStrAtoi(pstate->token);
+      pstate->prevstate = pstate->state;
+      pstate->state = TR_PSTATE_COLON;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateColon
+//
+// Expecting a colon between range ends.
+// An =, comma, or end-of-string may also be acceptable when coming here
+// from different states, as they would then indicate a single-color range.
+//
+static void DoPStateColon(tr_pstate_t *pstate)
+{
+   int tokentype = E_GetTranslationToken(pstate);
+
+   if(tokentype == TR_TOKEN_COLON)
+   {
+      switch(pstate->prevstate)
+      {
+      case TR_PSTATE_SRCBEGIN:
+         pstate->state = TR_PSTATE_SRCEND;
+         break;
+      case TR_PSTATE_DSTBEGIN:
+         pstate->state = TR_PSTATE_DSTEND;
+         break;
+      default:
+         pstate->error = true;
+      }
+   }
+   else if(tokentype == TR_TOKEN_EQUALS && pstate->prevstate == TR_PSTATE_SRCBEGIN)
+   {
+      // An equals sign here forwards processing to the destination end state
+      pstate->srcend = pstate->srcbegin; // single color, begin = end
+      pstate->state = TR_PSTATE_DSTEND;
+      pstate->singlecolor = true;        // remember to duplicate end of range too...
+   }
+   else if((tokentype == TR_TOKEN_COMMA || tokentype == TR_TOKEN_END) &&
+           pstate->prevstate == TR_PSTATE_DSTBEGIN)
+   {
+      // , or end-of-string here means the destination range is a single color;
+      // duplicate the color, back up one character, and go to the end state.
+      pstate->dstend = pstate->dstbegin;
+      if(pstate->inputpos > 0)
+         --pstate->inputpos;
+      pstate->state = TR_PSTATE_COMMAOREND;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateSrcEnd
+//
+// Expecting the end number of a source range
+//
+static void DoPStateSrcEnd(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->srcend = QStrAtoi(pstate->token);
+      pstate->state = TR_PSTATE_EQUALS;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateEquals
+//
+// Expecting an = between src and dest ranges
+//
+static void DoPStateEquals(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_EQUALS)
+      pstate->state = TR_PSTATE_DSTBEGIN;
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateDestBegin
+//
+// Expecting the beginning number of a destination range
+//
+static void DoPStateDestBegin(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->dstbegin = QStrAtoi(pstate->token);
+      pstate->prevstate = pstate->state;
+      pstate->state = TR_PSTATE_COLON;
+   }
+   else
+      pstate->error = true;
+}
+
+// 
+// DoPStateDestEnd
+//
+// Expecting the ending number of a destination range
+//
+static void DoPStateDestEnd(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->dstend = QStrAtoi(pstate->token);
+      
+      if(pstate->singlecolor)
+      {
+         // If this was a single-color source range, duplicate the end color
+         // to the beginning color for the destination range.
+         pstate->dstbegin = pstate->dstend;
+         pstate->singlecolor = false;
+      }
+      
+      pstate->state = TR_PSTATE_COMMAOREND;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateCommaOrEnd
+//
+// Need either a comma, which will start a new range, or the end of the string.
+//
+static void DoPStateCommaOrEnd(tr_pstate_t *pstate)
+{
+   int tokentype = E_GetTranslationToken(pstate);
+   
+   // push range
+   PushRange(pstate);
+   
+   switch(tokentype)
+   {
+   case TR_TOKEN_END:
+      pstate->done = true;
+      break;
+   case TR_TOKEN_COMMA:
+      pstate->state = TR_PSTATE_SRCBEGIN;
+      break;
+   default:
+      pstate->error = true;
+      break;
+   }
+}
+
+// Parser callback type
+typedef void (*tr_pfunc)(tr_pstate_t *);
+
+// Parser state table
+static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] = 
+{
+   DoPStateSrcBegin,   // TR_PSTATE_SRCBEGIN
+   DoPStateColon,      // TR_PSTATE_COLON
+   DoPStateSrcEnd,     // TR_PSTATE_SRCEND
+   DoPStateEquals,     // TR_PSTATE_EQUALS
+   DoPStateDestBegin,  // TR_PSTATE_DSTBEGIN
+   DoPStateDestEnd,    // TR_PSTATE_DSTEND
+   DoPStateCommaOrEnd  // TR_PSTATE_COMMAOREND
+};
+
+#define RANGE_CLAMP(c, end) ((c) <= (end) ? (c) : (end))
+
+//
+// E_ParseTranslation
+//
+byte *E_ParseTranslation(const char *str)
+{
+   int i;
+   qstring_t tokenbuf;
+   byte *translation = (byte *)(calloc(1, 256));
+   tr_pstate_t parserstate;
+
+   QStrInitCreate(&tokenbuf);
+
+   // initialize to monotonically increasing sequence (identity translation)
+   for(i = 0; i < 256; i++)
+      translation[i] = i;
+
+   // setup the parser
+   parserstate.state       = TR_PSTATE_SRCBEGIN;
+   parserstate.prevstate   = TR_PSTATE_SRCBEGIN;
+   parserstate.token       = &tokenbuf;
+   parserstate.input       = str;
+   parserstate.inputpos    = 0;
+   parserstate.error       = false;
+   parserstate.done        = false;
+   parserstate.singlecolor = false;
+   parserstate.ranges      = NULL;
+
+   while(!(parserstate.done || parserstate.error))
+      trpfuncs[parserstate.state](&parserstate);
+
+   // If no error occurred, apply all translation ranges
+   if(!parserstate.error)
+   {
+      tr_range_t *range = parserstate.ranges;
+
+      while(range)
+      {
+         tr_range_t *next = range->next;
+         int numsrccolors = range->srcend - range->srcbegin + 1;
+         int numdstcolors = range->dstend - range->dstbegin + 1;
+         fixed_t dst      = range->dstbegin * FRACUNIT;
+         fixed_t deststep = (numdstcolors * FRACUNIT) / numsrccolors;
+
+         // populate source indices with destination colors
+         for(int src = range->srcbegin; src <= range->srcend; src++)
+         {
+            translation[src] = RANGE_CLAMP(dst / FRACUNIT, range->dstend);
+            dst += deststep;
+         }
+
+         // done with this range
+         free(range);
+
+         // step to next range
+         range = next;
+      }
+   }
+
+   // done with qstring
+   QStrFree(&tokenbuf);
+
+   return translation;
 }
 
 // EOF
