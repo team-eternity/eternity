@@ -172,7 +172,21 @@ static boolean PIT_StompThing3D(Mobj *thing)
       thing->z >= clip.thing->z + clip.thing->height)
       return true;
 
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+   // The object moving is a player?
+   if(clip.thing->player)
+   {
+      // "thing" dies, unconditionally
+      P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+
+      // if "thing" is also a player, both die, for fairness.
+      if(thing->player)
+         P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+   }
+   else if(thing->player)
+   {
+      // clip.thing dies
+      P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+   }
    
    return true;
 }

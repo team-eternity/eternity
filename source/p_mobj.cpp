@@ -2265,10 +2265,10 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 //
 // P_SpawnBlood
 //
-void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, Mobj *target)
+void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
 {
    // HTIC_TODO: Heretic support
-   Mobj* th;
+   Mobj *th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnblood) << 10;
