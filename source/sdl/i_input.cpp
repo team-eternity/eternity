@@ -596,7 +596,9 @@ static void I_GetEvent(void)
       case SDL_ACTIVEEVENT:
          // haleyjd 10/08/05: from Chocolate DOOM:
          // need to update our focus state
+         // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
          UpdateFocus();
+         UpdateGrab();
          break;
 
       default:
