@@ -32,10 +32,10 @@
 #include "../m_misc.h"
 #include "../w_wad.h"
 
-static SDL_Surface *pickscreen; // SDL screen surface
-static waddir_t pickwad;        // private directory for startup.wad
-static int currentiwad;         // currently selected IWAD
-static boolean *haveIWADArray;  // valid IWADs, passed here from d_main.c
+static SDL_Surface  *pickscreen;    // SDL screen surface
+static WadDirectory  pickwad;       // private directory for startup.wad
+static int           currentiwad;   // currently selected IWAD
+static boolean      *haveIWADArray; // valid IWADs, passed here from d_main.c
 
 // picker iwad enumeration
 enum
@@ -131,8 +131,8 @@ static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, "FRAME", lumpinfo_t::ns_global)) != -1)
-      bgframe = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+   if((lumpnum = pickwad.CheckNumForName("FRAME")) != -1)
+      bgframe = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
 }
 
 //
@@ -153,14 +153,14 @@ static void I_Pick_LoadIWAD(int num)
    palnum   = iwadPicPals[num];
    palname  = palNames[palnum];
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, lumpname, lumpinfo_t::ns_global)) != -1)
-      iwadpics[num] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+   if((lumpnum = pickwad.CheckNumForName(lumpname)) != -1)
+      iwadpics[num] = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
 
    // load palette if needed also
    if(!pals[palnum])
    {
-      if((lumpnum = W_CheckNumForNameInDir(&pickwad, palname, lumpinfo_t::ns_global)) != -1)
-         pals[palnum] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+      if((lumpnum = pickwad.CheckNumForName(palname)) != -1)
+         pals[palnum] = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
    }
 }
 
@@ -179,7 +179,7 @@ static boolean I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(W_AddNewFile(&pickwad, filename))
+   if(pickwad.AddNewFile(filename))
       return false;
 
    return true;
@@ -196,22 +196,7 @@ static boolean I_Pick_OpenWad(void)
 static void I_Pick_FreeWad(void)
 {
    // close the wad file if it is open
-   if(pickwad.lumpinfo)
-   {
-      // free all resources loaded from the wad
-      W_FreeDirectoryLumps(&pickwad);
-
-      if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
-         fclose(pickwad.lumpinfo[0]->file);
-
-      // free all lumpinfo_t's allocated for the wad
-      W_FreeDirectoryAllocs(&pickwad);
-
-      // free the private wad directory
-      Z_Free(pickwad.lumpinfo);
-
-      pickwad.lumpinfo = NULL;
-   }
+   pickwad.Close();
 }
 
 //=============================================================================

@@ -170,6 +170,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t *lump, *inclump;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    int includinglumpnum;
    int i;
 
@@ -178,7 +179,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
       return -1;
 
    // get a pointer to the including lump's lumpinfo
-   inclump = w_GlobalDir.lumpinfo[includinglumpnum];
+   inclump = lumpinfo[includinglumpnum];
 
    // get a pointer to the hash chain for this lump name
    lump = W_GetLumpNameChain(name);
@@ -186,7 +187,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    // walk down the hash chain
    for(i = lump->index; i >= 0; i = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[i];
+      lump = lumpinfo[i];
 
       if(!strncasecmp(lump->name, name, 8) &&           // name matches specified
          lump->li_namespace == lumpinfo_t::ns_global && // is in global namespace
@@ -321,6 +322,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    int i;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: include_prev is deprecated\n");
@@ -343,10 +345,10 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = w_GlobalDir.lumpinfo[i]->next) >= 0)
+   while((i = lumpinfo[i]->next) >= 0)
    {
-      if(w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
-         !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
+      if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
+         !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
       {
          return E_OpenAndCheckInclude(cfg, cfg->filename, i);
       }

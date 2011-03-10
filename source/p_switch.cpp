@@ -84,7 +84,7 @@ void P_InitSwitchList(void)
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[lumpnum];
+      lump = (wGlobalDir.GetLumpInfo())[lumpnum];
 
       // look for a lump which is of a possibly good size
       if(!strcasecmp(lump->name, "SWITCHES") && 

@@ -94,7 +94,7 @@ static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
 
-waddir_t *g_dir = &w_GlobalDir;
+WadDirectory *g_dir = &wGlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -977,7 +977,7 @@ void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
    
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = W_CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   if((lumpnum = wGlobalDir.CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -1748,19 +1748,19 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 //
-uint64_t G_Signature(waddir_t *dir)
+uint64_t G_Signature(WadDirectory *dir)
 {
    uint64_t s = 0;
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForNameInDir(dir, gamemapname, lumpinfo_t::ns_global);
+   lump = dir->CheckNumForName(gamemapname);
    
-   if(lump != -1 && (i = lump + 10) < dir->numlumps)
+   if(lump != -1 && (i = lump + 10) < dir->GetNumLumps())
    {
       do
       {
-         s = s * 2 + W_LumpLengthInDir(dir, i);
+         s = s * 2 + dir->LumpLength(i);
       }
       while(--i > lump);
    }
@@ -1784,7 +1784,7 @@ static void G_DoSaveGame(void)
    savedescription[0] = 0;
 }
 
-waddir_t *d_dir;
+WadDirectory *d_dir;
 
 static void G_DoLoadGame(void)
 {
@@ -2528,7 +2528,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 // haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
 // directory, for use when loading the level.
 //
-void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir)
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir)
 {
    G_DeferedInitNew(skill, levelname);
    d_dir = dir;
@@ -2841,7 +2841,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : &w_GlobalDir;
+   g_dir = d_dir ? d_dir : &wGlobalDir;
    d_dir = NULL;
    
    G_DoLoadLevel();
@@ -3283,7 +3283,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
+   if(wGlobalDir.CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;

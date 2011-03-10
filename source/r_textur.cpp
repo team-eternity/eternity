@@ -1173,7 +1173,7 @@ static void R_AddFlats(void)
    
    for(i = 0; i < numflats; ++i)
    {
-      lumpinfo_t *lump = w_GlobalDir.lumpinfo[i + firstflat];
+      lumpinfo_t *lump = (wGlobalDir.GetLumpInfo())[i + firstflat];
       texture_t  *tex;
       
       switch(lump->size)

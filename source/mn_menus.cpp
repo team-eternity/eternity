@@ -183,7 +183,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
 
    lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
    
-   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
+   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
    else
    {
@@ -231,7 +231,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // present -- this assumes the resource wad is loaded first.
       if(startMapLump < 0 || 
          (modifiedgame && 
-          w_GlobalDir.lumpinfo[startMapLump]->file == firstWadHandle))
+          (wGlobalDir.GetLumpInfo())[startMapLump]->file == firstWadHandle))
          mapPresent = false;
 
 

@@ -1470,7 +1470,7 @@ void P_LoadGame(const char *filename)
       G_SetGameMap(); // get gameepisode, map
 
       // start out g_dir pointing at w_GlobalDir again
-      g_dir = &w_GlobalDir;
+      g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
       // directory, we need to restore the managed directory to g_dir when loading
@@ -1480,7 +1480,7 @@ void P_LoadGame(const char *filename)
 
       if(len)
       {
-         waddir_t *dir;
+         WadDirectory *dir;
 
          // read a name of len bytes 
          char *fn = (char *)(calloc(1, len));

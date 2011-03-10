@@ -30,7 +30,7 @@
 //
 // GAME
 //
-struct waddir_t;
+class WadDirectory;
 
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
@@ -73,7 +73,7 @@ void G_DoVictory(void);
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SetGameMap(void);
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
-uint64_t G_Signature(waddir_t *dir);
+uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo(void);
 
 void R_InitPortals();
@@ -132,8 +132,8 @@ extern int novert; // haleyjd
 // killough 2/22/98: version id string format for savegames
 #define VERSIONID "MBF %d"
 
-extern waddir_t *g_dir;
-extern waddir_t *d_dir;
+extern WadDirectory *g_dir;
+extern WadDirectory *d_dir;
 
 // killough 2/28/98: A ridiculously large number
 // of players, the most you'll ever need in a demo

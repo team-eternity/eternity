@@ -114,7 +114,7 @@ LevelInfo_t LevelInfo;
 LevelInfoProto_t LevelInfoProto;
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
 
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel);
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel);
 
 static int  P_ParseInfoCmd(qstring_t *line, int cachelevel);
 static void P_ParseLevelVar(qstring_t *cmd, int cachelevel);
@@ -272,14 +272,14 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[glumpnum];
+      lump = (wGlobalDir.GetLumpInfo())[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == lumpinfo_t::ns_global)
       {
          // reset the parser state         
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&w_GlobalDir, glumpnum, PU_LEVEL); // FIXME
+         P_ParseLevelInfo(&wGlobalDir, glumpnum, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -291,7 +291,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(&w_GlobalDir, lumpnum, PU_LEVEL); // FIXME
+   P_ParseLevelInfo(&wGlobalDir, lumpnum, PU_LEVEL); // FIXME
 
    // copy modified fields from the parsing prototype into LevelInfo
    P_copyPrototypeToLevelInfo(&LevelInfoProto, &LevelInfo);
@@ -476,7 +476,7 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 // more than once (for example, for runtime wad loading), the hive will be
 // dumped and all EMAPINFO lumps will be parsed again.
 //
-void P_LoadGlobalLevelInfo(waddir_t *dir)
+void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
    lumpinfo_t *lump;
    int glumpnum;
@@ -487,11 +487,11 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   lump = W_GetLumpNameChain("EMAPINFO");
+   lump = dir->GetLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = dir->lumpinfo[glumpnum];
+      lump = (dir->GetLumpInfo())[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
          lump->li_namespace == lumpinfo_t::ns_global)
@@ -513,7 +513,7 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 {
    qstring_t line;
    char *lump, *rover;
@@ -523,13 +523,13 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
    // problem and to use qstring_t to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = dir->lumpinfo[lumpnum]->size))
+   if(!(size = dir->LumpLength(lumpnum)))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   W_ReadLumpInDir(dir, lumpnum, lump);
+   dir->ReadLump(lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier

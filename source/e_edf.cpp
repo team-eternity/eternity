@@ -1115,12 +1115,14 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 {
    if(ln >= 0) // terminal case - lumpnum is -1
    {
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+
       // recurse on next item
-      E_ParseLumpRecursive(cfg, name, w_GlobalDir.lumpinfo[ln]->next);
+      E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
 
       // handle this lump
-      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) &&         // name match
-         w_GlobalDir.lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
+      if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
+         lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
       {
          int err;
 

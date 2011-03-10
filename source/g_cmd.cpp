@@ -250,7 +250,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(W_CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), lumpinfo_t::ns_demos) < 0)
+   if(wGlobalDir.CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), lumpinfo_t::ns_demos) < 0)
    {
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
       return;
@@ -365,7 +365,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    // haleyjd 02/23/04: strict error checking
    lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
 
-   if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
+   if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
       G_DeferedInitNew(gameskill, QStrConstPtr(&Console.argv[0]));
    }

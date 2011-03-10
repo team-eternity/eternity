@@ -1728,9 +1728,9 @@ static boolean freedoom = false;
 // Added Final Doom support (thanks to Joel Murdoch)
 //
 static void CheckIWAD(const char *iwadname,
-		      GameMode_t *gmode,
-		      GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
-		      boolean *hassec)
+                      GameMode_t *gmode,
+                      GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
+                      boolean *hassec)
 {
    FILE *fp;
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
@@ -2741,9 +2741,10 @@ static void D_ProcessDehInWad(int i)
 {
    if(i >= 0)
    {
-      D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "DEHACKED", 8) &&
-         w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      D_ProcessDehInWad(lumpinfo[i]->next);
+      if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
+         lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
 }
@@ -3459,7 +3460,7 @@ static void D_DoomInit(void)
    D_GameAutoloadWads();
 
    startupmsg("W_Init", "Init WADfiles.");
-   W_InitMultipleFiles(&w_GlobalDir, wadfiles);
+   wGlobalDir.InitMultipleFiles(wadfiles);
    usermsg("");  // gap
 
    // Check for -file in shareware
@@ -3867,21 +3868,23 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
 {
    int i, format;
    char wad_firstlevel[9];
+   int numlumps = wGlobalDir.GetNumLumps();
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    memset(wad_firstlevel, 0, 9);
 
-   for(i = 0; i < w_GlobalDir.numlumps; ++i)
+   for(i = 0; i < numlumps; ++i)
    {
-      if(w_GlobalDir.lumpinfo[i]->file != handle)
+      if(lumpinfo[i]->file != handle)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown
       // P_CheckLevel call -- this should fix some problems with
       // some crappy wads that have partial levels sitting around
 
-      if((format = P_CheckLevel(&w_GlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
+      if((format = P_CheckLevel(&wGlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
       {
-         char *name = w_GlobalDir.lumpinfo[i]->name;
+         char *name = lumpinfo[i]->name;
 
          // ignore ones called 'start' as these are checked elsewhere
          if((!*wad_firstlevel && strcmp(name, "START")) ||
@@ -3894,13 +3897,13 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new sound
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
+      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
       {
          S_Chgun();
          continue;
       }
 
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DS", 2))
+      if(!strncmp(lumpinfo[i]->name, "DS", 2))
       {
          switch(sound_update_type)
          {
@@ -3915,7 +3918,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, GameModeInfo->musPrefix,
+      if(!strncasecmp(lumpinfo[i]->name, GameModeInfo->musPrefix,
                       strlen(GameModeInfo->musPrefix)))
       {
          S_UpdateMusic(i);
@@ -3923,7 +3926,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // skins
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "S_SKIN", 6))
+      if(!strncmp(lumpinfo[i]->name, "S_SKIN", 6))
       {
          P_ParseSkin(i);
          continue;
@@ -3961,7 +3964,7 @@ void usermsg(const char *s, ...)
 boolean D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
-   if(W_AddNewFile(&w_GlobalDir, s))
+   if(wGlobalDir.AddNewFile(s))
       return false;
    modifiedgame = true;
    D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
