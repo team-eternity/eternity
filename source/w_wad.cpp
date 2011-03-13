@@ -44,9 +44,9 @@
 // Location of each lump on disk.
 WadDirectory wGlobalDir;
 
-// haleyjd: WAD_TODO: put wad system globals into structure
-FILE *iwadhandle;     // sf: the handle of the main iwad
-FILE *firstWadHandle; // haleyjd: track handle of first wad added
+int WadDirectory::source;            // haleyjd 03/18/10: next source ID# to use
+int WadDirectory::IWADSource   = -1; // sf: the handle of the main iwad
+int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
 
 //
 // haleyjd 07/12/07: structure for transparently manipulating lumps of
@@ -103,8 +103,6 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
    infoptrs[numallocs] = infoptr;
    ++numallocs;
 }
-
-int WadDirectory::source; // haleyjd 03/18/10
 
 //
 // W_AddFile
@@ -215,12 +213,12 @@ int WadDirectory::AddFile(const char *name, int li_namespace)
    if(isWad && this->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
-      if(!firstWadHandle)
-         firstWadHandle = handle;
+      if(ResWADSource == -1)
+         ResWADSource = source;
 
       // haleyjd 07/13/09: only track the first IWAD found
-      if(!iwadhandle && !strncmp(header.identification, "IWAD", 4))
-         iwadhandle = handle;
+      if(IWADSource < 0 && !strncmp(header.identification, "IWAD", 4))
+         IWADSource = source;
    }
   
    for(i = startlump; i < (unsigned int)this->numlumps; i++, lump_p++, fileinfo++)
@@ -311,12 +309,12 @@ boolean WadDirectory::AddSubFile(const char *name, int li_namespace,
    if(this->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
-      if(!firstWadHandle)
-         firstWadHandle = handle;
+      if(ResWADSource == -1)
+         ResWADSource = source;
 
       // haleyjd 07/13/09: only track the first IWAD found
-      if(!iwadhandle && !strncmp(header.identification, "IWAD", 4))
-         iwadhandle = handle;
+      if(IWADSource < 0 && !strncmp(header.identification, "IWAD", 4))
+         IWADSource = source;
    }
   
    for(i = startlump; i < (unsigned int)this->numlumps; i++, lump_p++, fileinfo++)
@@ -754,7 +752,9 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
    // Basic initialization
    numlumps = 0;
    lumpinfo = NULL;
-   ispublic = true; // Is a public wad directory
+   ispublic = true;   // Is a public wad directory
+   type     = NORMAL; // Not a managed directory
+   data     = NULL;   // No special data
 
    // haleyjd 09/13/03: set new sound lump parsing to deferred
    w_sound_update_type = 0;

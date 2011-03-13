@@ -130,6 +130,9 @@ public:
       NORMAL,
       MANAGED
    };
+   
+   static int IWADSource;   // source # of the global IWAD file
+   static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
 protected:
    static int source;     // unique source ID for each wad file
@@ -144,18 +147,18 @@ protected:
    void       *data;      // user data (mainly for w_levels code)
 
    // Protected methods
-   void        InitLumpHash();
-   void        InitResources();
-   void        AddInfoPtr(lumpinfo_t *infoptr);
-   void        CoalesceMarkedResource(const char *start_marker, 
-                                      const char *end_marker, 
-                                      int li_namespace);
-   int         AddFile(const char *name, int li_namespace);
-   boolean     AddSubFile(const char *name, int li_namespace, FILE *handle,
-                          size_t baseoffset);
-   boolean     AddPrivateFile(const char *filename);
-   void        FreeDirectoryLumps();  // haleyjd 06/27/09
-   void        FreeDirectoryAllocs(); // haleyjd 06/06/10
+   void    InitLumpHash();
+   void    InitResources();
+   void    AddInfoPtr(lumpinfo_t *infoptr);
+   void    CoalesceMarkedResource(const char *start_marker, 
+                                  const char *end_marker, 
+                                  int li_namespace);
+   int     AddFile(const char *name, int li_namespace);
+   boolean AddSubFile(const char *name, int li_namespace, FILE *handle,
+                      size_t baseoffset);
+   boolean AddPrivateFile(const char *filename);
+   void    FreeDirectoryLumps();  // haleyjd 06/27/09
+   void    FreeDirectoryAllocs(); // haleyjd 06/06/10
 
    // Utilities
    static int          IsMarker(const char *marker, const char *name);
@@ -180,10 +183,10 @@ public:
    void        Close();               // haleyjd 03/09/11
 
    // Accessors
-   int  GetType() const  { return type; }
-   void SetType(int i)   { type = i;    }
-   void *GetData() const { return data; }
-   void SetData(void *d) { data = d;    }
+   int   GetType() const  { return type; }
+   void  SetType(int i)   { type = i;    }
+   void *GetData() const  { return data; }
+   void  SetData(void *d) { data = d;    }
    
    // Read-only properties
    int          GetNumLumps() const { return numlumps; }
@@ -207,9 +210,6 @@ int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
-
-extern FILE *iwadhandle;
-extern FILE *firstWadHandle; // haleyjd 06/21/04
 
 #endif
 

@@ -225,13 +225,14 @@ CONSOLE_COMMAND(mn_newgame, 0)
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
       boolean mapPresent = true;
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not
-      // present -- this assumes the resource wad is loaded first.
+      // present -- FIXME: this assumes the resource wad is loaded first.
       if(startMapLump < 0 || 
          (modifiedgame && 
-          (wGlobalDir.GetLumpInfo())[startMapLump]->file == firstWadHandle))
+          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
 
 

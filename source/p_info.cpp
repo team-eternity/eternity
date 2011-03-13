@@ -238,7 +238,8 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t *lump;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t  *lump;
    int glumpnum;
 
    // set all the level defaults
@@ -272,7 +273,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = (wGlobalDir.GetLumpInfo())[glumpnum];
+      lump = lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == lumpinfo_t::ns_global)
@@ -478,7 +479,8 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 //
 void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t *lump;
+   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   lumpinfo_t  *lump;
    int glumpnum;
 
    // if any prototypes exist, delete them
@@ -491,7 +493,7 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = (dir->GetLumpInfo())[glumpnum];
+      lump = lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
          lump->li_namespace == lumpinfo_t::ns_global)

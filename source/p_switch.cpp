@@ -72,8 +72,9 @@ void P_InitSwitchList(void)
    int i, index = 0;
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   lumpinfo_t *lump;
    int lumpnum;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t  *lump;
 
    episode = GameModeInfo->switchEpisode;
 
@@ -84,7 +85,7 @@ void P_InitSwitchList(void)
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
-      lump = (wGlobalDir.GetLumpInfo())[lumpnum];
+      lump = lumpinfo[lumpnum];
 
       // look for a lump which is of a possibly good size
       if(!strcasecmp(lump->name, "SWITCHES") && 

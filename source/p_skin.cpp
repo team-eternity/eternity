@@ -222,7 +222,7 @@ static void P_AddSpriteLumps(const char *named)
 {
    int i, n = strlen(named);
    int numlumps = wGlobalDir.GetNumLumps();
-   lumpinfo_t ** lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    
    for(i = 0; i < numlumps; i++)
    {
@@ -294,6 +294,7 @@ void P_ParseSkin(int lumpnum)
    char *rover;
    char inputline[256];
    boolean comment;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
@@ -302,7 +303,7 @@ void P_ParseSkin(int lumpnum)
    newskin = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
 
    newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
-   strncpy(newskin->spritename, (wGlobalDir.GetLumpInfo())[lumpnum+1]->name, 4);
+   strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
    newskin->facename = "STF";      // default status bar face
@@ -319,7 +320,7 @@ void P_ParseSkin(int lumpnum)
    rover = lump; 
    comment = false;
 
-   while(rover < lump + (wGlobalDir.GetLumpInfo())[lumpnum]->size)
+   while(rover < lump + lumpinfo[lumpnum]->size)
    {
       if((*rover=='/' && *(rover+1)=='/') ||        // '//'
          (*rover==';') || (*rover=='#') )           // ';', '#'

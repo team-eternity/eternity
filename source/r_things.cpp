@@ -281,6 +281,8 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
    }
 }
 
+// Empirically verified to have excellent hash
+// properties across standard Doom sprites:
 #define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
 
 //
@@ -304,15 +306,13 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 //
 // 1/25/98, 1/31/98 killough : Rewritten for performance
 //
-// Empirically verified to have excellent hash
-// properties across standard Doom sprites:
-//
 static void R_InitSpriteDefs(char **namelist)
 {
    size_t numentries = lastspritelump-firstspritelump+1;
    struct rsprhash_s { int index, next; } *hash;
    unsigned int i;
-      
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+
    if(!numentries || !*namelist)
       return;
    
@@ -332,7 +332,6 @@ static void R_InitSpriteDefs(char **namelist)
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
       hash[i].index = -1;
 
-   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    for(i = 0; i < numentries; ++i)  // Prepend each sprite to hash chain
    {                                // prepend so that later ones win
       int j = R_SpriteNameHash(lumpinfo[i+firstspritelump]->name) % numentries;

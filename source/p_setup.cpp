@@ -2369,6 +2369,7 @@ void P_InitThingLists(void)
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, 
                   skill_t skill)
 {
+   lumpinfo_t **lumpinfo;
    int lumpnum;
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
@@ -2377,6 +2378,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
+   lumpinfo = setupwad->GetLumpInfo();
    
    // get the map name lump number
    if((lumpnum = setupwad->CheckNumForName(mapname)) == -1)
@@ -2393,7 +2395,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel   = ((setupwad->GetLumpInfo())[lumpnum]->file != iwadhandle);
+   newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);

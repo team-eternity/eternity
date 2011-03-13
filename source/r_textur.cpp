@@ -1170,10 +1170,11 @@ static void R_AddFlats(void)
    int       i;
    byte      flatsize;
    uint16_t  width, height;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    
    for(i = 0; i < numflats; ++i)
    {
-      lumpinfo_t *lump = (wGlobalDir.GetLumpInfo())[i + firstflat];
+      lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;
       
       switch(lump->size)
