@@ -4,7 +4,7 @@ gamesdir = /usr/local/games
 
 games_PROGRAMS = eternity
 
-AM_CFLAGS = -I/usr/include/SDL -I/usr/local/include/SDL @SDL_CFLAGS@ -Wall\
+AM_CXXFLAGS = -I/usr/include/SDL -I/usr/local/include/SDL @SDL_CFLAGS@ -Wall\
 -D_SDL_VER -DNDEBUG -DAMX_NODYNALOAD -DR_LINKEDPORTALS -DZONE_NATIVE \
 -DHAVE_SCHED_SETAFFINITY -D_CONSOLE -DLINUX -fno-strict-aliasing
 
