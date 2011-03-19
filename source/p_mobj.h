@@ -377,17 +377,17 @@ public:
 extern int iquehead;
 extern int iquetail;
 
-void    P_RespawnSpecials(void);
-Mobj  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-boolean P_SetMobjState(Mobj *mobj, statenum_t state);
-void    P_MobjThinker(Mobj *mobj);
-void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
-void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj  *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj  *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
-Mobj  *P_SpawnMapThing(mapthing_t *);
-void    P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void    P_ExplodeMissile(Mobj *);     // killough
+void     P_RespawnSpecials(void);
+Mobj    *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+boolean  P_SetMobjState(Mobj *mobj, statenum_t state);
+void     P_MobjThinker(Mobj *mobj);
+void     P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
+void     P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
+Mobj    *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
+Mobj    *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj    *P_SpawnMapThing(mapthing_t *);
+boolean  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
+void     P_ExplodeMissile(Mobj *);     // killough
 
 // particles and lines: sf
 /*

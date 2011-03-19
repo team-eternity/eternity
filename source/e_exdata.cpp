@@ -731,6 +731,12 @@ static struct exlinespec
 
    // ExtraData sector control line
    { 401, "ExtraDataSector" },
+
+   // More misc Hexen specials
+   { 402, "Thing_Projectile" },
+   { 403, "Thing_ProjectileGravity" },
+   { 404, "Thing_Activate" },
+   { 405, "Thing_Deactivate" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -2170,6 +2176,10 @@ boolean E_IsParamSpecial(int16_t special)
    case 398: // Thing_Spawn
    case 399: // Thing_SpawnNoFog
    case 400: // Teleport_EndGame
+   case 402: // Thing_Projectile
+   case 403: // Thing_ProjectileGravity
+   case 404: // Thing_Activate
+   case 405: // Thing_Deactivate
       return true;
    default:
       return false;

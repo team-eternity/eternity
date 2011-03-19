@@ -1309,7 +1309,11 @@ extern Mobj *genDoorThing;
 
 // p_things
 
+int EV_ThingProjectile(int *args, boolean gravity);
 int EV_ThingSpawn(int *args, boolean fog);
+int EV_ThingActivate(int tid);
+int EV_ThingDeactivate(int tid);
+
 
 ////////////////////////////////////////////////////////////////
 //

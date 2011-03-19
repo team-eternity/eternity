@@ -2101,6 +2101,16 @@ boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
       G_ForceFinale();
       success = true;
       break;
+   case 402: // Thing_Projectile
+   case 403: // Thing_ProjectileGravity
+      success = !!EV_ThingProjectile(args, (special == 403));
+      break;
+   case 404: // Thing_Activate
+      success = !!EV_ThingActivate(args[0]);
+      break;
+   case 405: // Thing_Deactivate
+      success = !!EV_ThingDeactivate(args[0]);
+      break;
    default:
       break;
    }

@@ -2342,8 +2342,12 @@ void P_ParticleLine(Mobj *source, Mobj *dest)
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-void P_CheckMissileSpawn(Mobj* th)
+// haleyjd 03/19/11: added boolean return type for Hexen logic
+//
+boolean P_CheckMissileSpawn(Mobj* th)
 {
+   boolean ok = true;
+
    if(!(th->flags4 & MF4_NORANDOMIZE))
    {
       th->tics -= P_Random(pr_missile)&3;
@@ -2360,11 +2364,16 @@ void P_CheckMissileSpawn(Mobj* th)
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
-      return;
+      return ok;
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
+   {
       P_ExplodeMissile(th);
+      ok = false;
+   }
+
+   return ok;
 }
 
 //

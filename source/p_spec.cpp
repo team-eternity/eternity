@@ -4850,18 +4850,26 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
       break;
    // UNUSED: 122-128
    case 129: // use puzzle item
+      *special = 0; // TODO ^^^^
+      break;
    case 130: // thing activate
+      *special = 404;
+      break;
    case 131: // thing deactivate
+      *special = 405;
+      break;
    case 132: // thing remove
    case 133: // thing destroy
-   case 134: // thing projectile
       *special = 0; // TODO ^^^^
+      break;
+   case 134: // thing projectile
+      *special = 402;
       break;
    case 135: // thing spawn
       *special = 398;
       break;
    case 136: // thing projectile gravity
-      *special = 0; // TODO ^^^^
+      *special = 403;
       break;
    case 137: // thing spawn no fog
       *special = 399;
@@ -4870,7 +4878,7 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
       *special = 397;
       break;
    // UNUSED: 139
-   case 140: // sector sound change
+   case 140: // sector sound change (TODO)
    // UNUSED: 141-255
    default:
       *special = 0; // clear out anything that is currently not used
