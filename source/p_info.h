@@ -95,6 +95,7 @@ enum
    LI_FIELD_CREATOR,
    LI_FIELD_HASSCRIPT,
    LI_FIELD_SCRIPTLUMP,
+   LI_FIELD_ACSSCRIPTLUMP,
    LI_FIELD_EXTRADATA,
    LI_FIELD_SOUNDSWTCHN,
    LI_FIELD_SOUNDSWTCHX,
@@ -173,6 +174,7 @@ typedef struct LevelInfo_s
    // attached scripts
    boolean hasScripts;        // true if scriptLump is valid
    char *scriptLump;          // name of Levelscript lump
+   char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
    char *extraData;           // name of ExtraData lump
 
    // per-level sound replacements

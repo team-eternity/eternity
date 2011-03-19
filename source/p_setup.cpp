@@ -2370,7 +2370,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
                   skill_t skill)
 {
    lumpinfo_t **lumpinfo;
-   int lumpnum;
+   int lumpnum, acslumpnum = -1;
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
@@ -2390,7 +2390,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // determine map format; if invalid, abort
    if((mapformat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
    {
-      P_SetupLevelError("Not a level", mapname);
+      P_SetupLevelError("Not a valid level", mapname);
       return;
    }
 
@@ -2530,9 +2530,14 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 #endif
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
+   //         03/19/11: also allow for DOOM-format maps via MapInfo
    if(mapformat == LEVEL_FORMAT_HEXEN)
-      ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
+      acslumpnum = lumpnum + ML_BEHAVIOR;
+   else if(LevelInfo.acsScriptLump)
+      acslumpnum = setupwad->CheckNumForName(LevelInfo.acsScriptLump);
 
+   if(acslumpnum != -1)
+      ACS_LoadLevelScript(acslumpnum);
 }
 
 //

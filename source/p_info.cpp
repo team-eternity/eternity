@@ -409,6 +409,7 @@ static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
 //
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info)
 {
+   LI_COPY(ACSSCRIPTLUMP,    acsScriptLump);
    LI_COPY(ALTSKYNAME,       altSkyName);
    LI_COPY(BOSSSPECS,        bossSpecs);
    LI_COPY(COLORMAP,         colorMap);
@@ -695,6 +696,7 @@ typedef struct levelvar_s
 
 levelvar_t levelvars[]=
 {
+   LI_STRING("acsscript",       ACSSCRIPTLUMP,    acsScriptLump),
    LI_STRING("altskyname",      ALTSKYNAME,       altSkyName),
    LI_FLAGSF("boss-specials",   BOSSSPECS,        bossSpecs,        boss_flagset),
    LI_STRING("colormap",        COLORMAP,         colorMap),
@@ -1378,6 +1380,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.gravity         = DEFAULTGRAVITY;
    LevelInfo.hasScripts      = false;
    LevelInfo.scriptLump      = NULL;
+   LevelInfo.acsScriptLump   = NULL;
    LevelInfo.extraData       = NULL;
    
    // Hexen TODO: will be true for Hexen maps by default
