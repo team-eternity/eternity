@@ -1335,7 +1335,7 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt,
          cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues);
          break;
       case CFGT_BOOL:
-         cfg_opt_setnbool(cfg, opt, va_arg(ap, cfg_bool_t), opt->nvalues);
+         cfg_opt_setnbool(cfg, opt, (cfg_bool_t)va_arg(ap, int), opt->nvalues);
          break;
       case CFGT_STR:
          cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues);
