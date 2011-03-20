@@ -28,8 +28,8 @@
 typedef struct deh_bexptr_s
 {
    void (*cptr)(Mobj *); // actual pointer to the subroutine
-   char *lookup;           // mnemonic lookup string to be specified in BEX
-   int next;               // haleyjd: for bex hash chaining   
+   const char *lookup;   // mnemonic lookup string to be specified in BEX
+   int next;             // haleyjd: for bex hash chaining   
 } deh_bexptr;
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
@@ -37,11 +37,11 @@ extern int num_bexptrs;
 
 typedef struct dehstr_s
 {
-   char **ppstr;   // doubly indirect pointer to string   
-   char *lookup;   // pointer to lookup string name
-   char *original; // haleyjd 10/08/06: original string
-   int bnext;      // haleyjd: for bex hash chaining (by mnemonic)
-   int dnext;      // haleyjd: for deh hash chaining (by value)
+   const char **ppstr;   // doubly indirect pointer to string   
+   const char *lookup;   // pointer to lookup string name
+   const char *original; // haleyjd 10/08/06: original string
+   int bnext;            // haleyjd: for bex hash chaining (by mnemonic)
+   int dnext;            // haleyjd: for deh hash chaining (by value)
 } dehstr_t;
 
 extern char **deh_spritenames;
@@ -66,9 +66,9 @@ void D_BuildBEXTables(void);
 // ExtraData usage
 typedef struct dehflags_s
 {
-   char *name;
-   int  value;
-   int  index;
+   const char *name;
+   int value;
+   int index;
 } dehflags_t;
 
 #define MAXFLAGFIELDS 4

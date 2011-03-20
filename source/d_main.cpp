@@ -3216,8 +3216,9 @@ static void D_DoomInit(void)
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
-   savegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
-   psnprintf(savegamename, 16, "%.4ssav", D_DoomExeName());
+   char *tmpsavegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
+   psnprintf(tmpsavegamename, 16, "%.4ssav", D_DoomExeName());
+   savegamename = tmpsavegamename;
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 

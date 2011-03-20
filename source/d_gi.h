@@ -44,8 +44,8 @@
 // Menu cursor -- a 2 patch alternating graphic
 typedef struct gimenucursor_s
 {
-   char *patch1;
-   char *patch2;
+   const char *patch1;
+   const char *patch2;
 } gimenucursor_t;
 
 // Screen border used to fill backscreen for small screen sizes
@@ -53,14 +53,14 @@ typedef struct giborder_s
 {
    int offset;
    int size;
-   char *c_tl;
-   char *top;
-   char *c_tr;
-   char *left;
-   char *right;
-   char *c_bl;
-   char *bottom;
-   char *c_br;
+   const char *c_tl;
+   const char *top;
+   const char *c_tr;
+   const char *left;
+   const char *right;
+   const char *c_bl;
+   const char *bottom;
+   const char *c_br;
 } giborder_t;
 
 typedef struct giftextpos_s
@@ -89,7 +89,7 @@ typedef void (*dsfunc_t)(const char *);
 typedef struct demostate_s
 {
    dsfunc_t func;
-   char *name;
+   const char *name;
 } demostate_t;
 
 extern const demostate_t demostates_doom[];

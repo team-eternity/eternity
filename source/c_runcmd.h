@@ -222,7 +222,7 @@ struct variable_s
 
 struct command_s
 {
-  char *name;
+  const char *name;
   int type;              // ct_?? command type
   int flags;             // cf_??
   variable_t *variable;

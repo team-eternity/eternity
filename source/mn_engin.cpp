@@ -1163,8 +1163,8 @@ static void MN_SetBackground(void)
 //
 void MN_Init(void)
 {
-   char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
-   char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
+   const char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
+   const char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
    int i;
 
    skulls[0] = W_GetNumForName(cursorPatch1);

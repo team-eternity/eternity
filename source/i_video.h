@@ -71,7 +71,7 @@ typedef struct videomode_s
   boolean hires;
   boolean pageflip;
   boolean vesa;
-  char *description;
+  const char *description;
 } videomode_t;
 
 extern videomode_t videomodes[];

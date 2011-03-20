@@ -98,7 +98,7 @@ void deh_procBexSprites(DWFILE *, char *);
 
 struct deh_block
 {
-  char *key;       // a mnemonic block code name
+  const char *key;       // a mnemonic block code name
   void (*const fptr)(DWFILE *, char *); // handler
 };
 
@@ -145,7 +145,7 @@ static boolean includenotext = false;
 // array to offset by sizeof(int) into the mobjinfo_t array at [nn]
 // * things are base zero but dehacked considers them to start at #1. ***
 
-char *deh_mobjinfo[DEH_MOBJINFOMAX] =
+const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 {
   "ID #",                // .doomednum
   "Initial frame",       // .spawnstate
@@ -340,7 +340,7 @@ static dehflagset_t dehacked_flags =
 // that Dehacked uses and is useless to us.
 // * states are base zero and have a dummy #0 (TROO)
 
-char *deh_state[] =
+const char *deh_state[] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
   "Sprite subnumber", // .frame 
@@ -367,7 +367,7 @@ char *deh_state[] =
 
 // * sounds are base zero but have a dummy #0
 
-char *deh_sfxinfo[] =
+const char *deh_sfxinfo[] =
 {
   "Offset",     // pointer to a name string, changed in text
   "Zero/One",   // .singularity (int, one at a time flag)
@@ -388,7 +388,7 @@ char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-char *deh_sprite[] =
+const char *deh_sprite[] =
 {
   "Offset"      // supposed to be the offset into the text section
 };
@@ -397,7 +397,7 @@ char *deh_sprite[] =
 // usage = Ammo n (name)
 // Ammo information for the few types of ammo
 
-char *deh_ammo[] =
+const char *deh_ammo[] =
 {
   "Max ammo",   // maxammo[]
   "Per ammo"    // clipammo[]
@@ -407,7 +407,7 @@ char *deh_ammo[] =
 // Usage: Weapon nn (name)
 // Basically a list of frames and what kind of ammo (see above)it uses.
 
-char *deh_weapon[] =
+const char *deh_weapon[] =
 {
   "Ammo type",      // .ammo
   "Deselect frame", // .upstate
@@ -429,7 +429,7 @@ char *deh_weapon[] =
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
 
-char *deh_misc[] =
+const char *deh_misc[] =
 {
   "Initial Health",    // initial_health
   "Initial Bullets",   // initial_bullets
@@ -2017,20 +2017,20 @@ boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
       return false;
    }
 
-   *dehstr->ppstr = strdup(newstring); // orphan original string
+   char *copyNewStr = strdup(newstring); 
 
    // Handle embedded \n's in the incoming string, convert to 0x0a's
+   char *s, *t;
+   for(s=t=copyNewStr; *s; ++s, ++t)
    {
-      char *s, *t;
-      for(s=t=*dehstr->ppstr; *s; ++s, ++t)
-      {
-         if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
-            ++s, *t = '\n';  // skip one extra for second character
-         else
-            *t = *s;
-      }
-      *t = '\0';  // cap off the target string
+      if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
+         ++s, *t = '\n';  // skip one extra for second character
+      else
+         *t = *s;
    }
+   *t = '\0';  // cap off the target string
+   
+   *dehstr->ppstr = copyNewStr; // orphan original string
 
    if(key)
       deh_LogPrintf("Assigned key %s => '%s'\n", key, newstring);
