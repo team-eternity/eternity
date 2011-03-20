@@ -663,7 +663,7 @@ menuwidget_t colour_widget =
    true
 };
 
-void MN_SelectColour(char *variable_name)
+void MN_SelectColour(const char *variable_name)
 {
    current_menuwidget = &colour_widget;
    colour_command = C_GetCmdForName(variable_name);

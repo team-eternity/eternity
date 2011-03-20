@@ -286,12 +286,13 @@ static void MN_ClearDynamicMenu(menu_t *menu)
       
       while(item->type != it_end)
       {
+         // FIXME: stupid constness problems...
          if(item->description)
-            free(item->description);
+            free(const_cast<char *>(item->description));
          if(item->data)
-            free(item->data);
+            free(const_cast<char *>(item->data));
          if(item->patch)
-            free(item->patch);
+            free(const_cast<char *>(item->patch));
 
          ++item;
       }

@@ -528,7 +528,7 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
 //
 // Get an ascii description of the keys bound to a particular action
 //
-const char *G_BoundKeys(char *action)
+const char *G_BoundKeys(const char *action)
 {
    int i;
    static char ret[1024];   // store list of keys bound to this   
@@ -770,7 +770,7 @@ menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
 //
 // Main Function
 //
-void G_EditBinding(char *action)
+void G_EditBinding(const char *action)
 {
    current_menuwidget = &binding_widget;
    binding_action = action;

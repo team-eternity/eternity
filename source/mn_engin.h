@@ -74,14 +74,14 @@ typedef struct menuitem_s
 {
   int type; // item types
   
-  char *description;  // the describing name of this item
+  const char *description;  // the describing name of this item
 
   // useful data for the item:
   // console command if console
   // variable name if variable, etc
-  char *data;         
+  const char *data;         
 
-  char *patch; // patch to use or NULL
+  const char *patch; // patch to use or NULL
 
   int flags;   // haleyjd 03/29/05: menu item flags
 

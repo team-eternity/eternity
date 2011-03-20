@@ -32,8 +32,8 @@ void G_ClearKeyStates(void);
 
 typedef void (*binding_handler)(event_t *ev);
 
-void G_EditBinding(char *action);
-const char *G_BoundKeys(char *action);
+void G_EditBinding(const char *action);
+const char *G_BoundKeys(const char *action);
 const char *G_FirstBoundKey(const char *action);
 
 // default file loading

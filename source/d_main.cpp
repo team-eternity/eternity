@@ -717,7 +717,7 @@ char *D_DoomExeName(void)
 // D_ExpandTilde
 //     expand tilde in base path name for linux home dir
 //
-static char *D_ExpandTilde(char *basedir)
+static char *D_ExpandTilde(const char *basedir)
 {
    if(basedir[0] == '~')
    {
@@ -789,7 +789,7 @@ enum
 static void D_SetBasePath(void)
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
-   char *s;
+   const char *s;
    char *basedir = NULL;
 
    // Priority:
