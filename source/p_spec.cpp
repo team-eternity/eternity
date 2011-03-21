@@ -35,41 +35,44 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
-#include "d_mod.h"
-#include "p_spec.h"
-#include "p_tick.h"
-#include "p_setup.h"
-#include "m_random.h"
-#include "d_englsh.h"
-#include "m_argv.h"
-#include "w_wad.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "g_game.h"
-#include "p_inter.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "m_bbox.h"                                         // phares 3/20/98
-#include "m_swap.h"
-#include "d_deh.h"
-#include "r_plane.h"  // killough 10/98
-#include "p_info.h"
+#include "r_defs.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "hu_stuff.h"
-#include "r_ripple.h"
+#include "d_deh.h"
+#include "d_englsh.h"
 #include "d_gi.h"
-#include "p_user.h"
-#include "e_things.h"
-#include "e_states.h"
-#include "e_ttypes.h"
+#include "d_mod.h"
 #include "e_exdata.h"
-#include "a_small.h"
-#include "polyobj.h"
-#include "p_slopes.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "p_portal.h"
 #include "p_saveg.h"
+#include "p_setup.h"
+#include "p_slopes.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "p_user.h"
+#include "polyobj.h"
+#include "m_argv.h"
+#include "m_bbox.h"                                         // phares 3/20/98
+#include "m_random.h"
+#include "m_swap.h"
+#include "r_main.h"
+#include "r_plane.h"  // killough 10/98
+#include "r_ripple.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "w_wad.h"
 
 //
 // Animating textures and planes
@@ -1169,9 +1172,9 @@ void P_StartLineScript(line_t *line, Mobj *thing)
       // destroy any child context that might have been created
       SM_DestroyChildContext(useContext);         
    }
-   else
-      doom_printf(FC_ERROR "P_StartLineScript: No Levelscript.\n");
+   else // haleyjd 03/20/11: Defer to ACS if there is no Small level script
 #endif
+      ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL);
 }
 
 //////////////////////////////////////////////////////////////////////////
