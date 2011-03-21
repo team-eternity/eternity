@@ -185,7 +185,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
                           Mobj *mo, line_t *line, int side,
                           ACSThinker **scr, boolean always);
 boolean ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
-                        line_t *line, int side, ACSThinker **scr);
+                        line_t *line, int side, ACSThinker **scr, boolean always);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
 void    ACS_PrepareForLoad(void);

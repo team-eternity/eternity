@@ -1962,7 +1962,7 @@ static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
    script_args[1] = args[3];
    script_args[2] = args[4];
 
-   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL);
+   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL, false);
 }
 
 //

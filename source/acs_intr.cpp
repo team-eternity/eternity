@@ -1557,10 +1557,10 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 //
 boolean ACS_StartScript(int scrnum, int map, int *args, 
                         Mobj *mo, line_t *line, int side,
-                        ACSThinker **scr)
+                        ACSThinker **scr, boolean always)
 {
    return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
-                            line, side, scr, false);
+                            line, side, scr, always);
 }
 
 //

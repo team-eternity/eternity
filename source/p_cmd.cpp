@@ -351,7 +351,7 @@ CONSOLE_COMMAND(puke, cf_notnet)
       args[i - 1] = QStrAtoi(&Console.argv[i]);
 
    ACS_StartScript(QStrAtoi(&Console.argv[0]), gamemap, args,
-                   players[Console.cmdsrc].mo, NULL, 0, NULL);
+                   players[Console.cmdsrc].mo, NULL, 0, NULL, true);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)
