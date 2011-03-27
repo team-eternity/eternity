@@ -394,10 +394,10 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 //
 // Creates a sfxinfo_t structure for a new wad sound and hashes it.
 //
-void E_NewWadSound(const char *name)
+sfxinfo_t *E_NewWadSound(const char *name)
 {
    sfxinfo_t *sfx;
-   char mnemonic[9];
+   char mnemonic[16];
 
    memset(mnemonic, 0, sizeof(mnemonic));
    strncpy(mnemonic, name+2, 9);
@@ -426,9 +426,9 @@ void E_NewWadSound(const char *name)
       sfx->dehackednum = -1; // not accessible to DeHackEd
       
       E_AddSoundToHash(sfx);
-
-      return;
    }
+
+   return sfx;
 }
 
 //

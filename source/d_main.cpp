@@ -3504,9 +3504,6 @@ static void D_DoomInit(void)
    // Process the DeHackEd queue, then free it
    D_ProcessDEHQueue();
 
-   // Process the deferred wad sounds queue, after the above stuff.
-   S_ProcDeferredSounds();
-
    V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
 
    // haleyjd: moved down turbo to here for player class support
@@ -3904,19 +3901,7 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
          continue;
       }
 
-      if(!strncmp(lumpinfo[i]->name, "DS", 2))
-      {
-         switch(sound_update_type)
-         {
-         case 0: // called during startup, defer processing
-            S_UpdateSoundDeferred(i);
-            break;
-         case 1: // called during gameplay
-            S_UpdateSound(i);
-            break;
-         }
-         continue;
-      }
+      // haleyjd 03/26/11: sounds are not handled here any more
 
       // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
       if(!strncasecmp(lumpinfo[i]->name, GameModeInfo->musPrefix,

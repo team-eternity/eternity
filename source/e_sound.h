@@ -40,8 +40,8 @@ sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
 sfxinfo_t *E_SoundForDEHNum(int);
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
+sfxinfo_t *E_NewWadSound(const char *);
 
-void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
 void E_UpdateSoundCache(void);
 

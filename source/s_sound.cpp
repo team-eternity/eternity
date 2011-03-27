@@ -1237,7 +1237,22 @@ void S_Init(int sfxVolume, int musicVolume)
 sfxinfo_t *S_SfxInfoForName(const char *name)
 {   
    // haleyjd 09/03/03: now calls down to master EDF sound hash   
-   return E_SoundForName(name);
+   sfxinfo_t *sfx = E_SoundForName(name);
+
+   // haleyjd 03/26/11: if not found, check for an implicit wad sound
+   if(!sfx)
+   {
+      char lumpname[16];
+      if(strncasecmp(name, "DS", 2))
+         psnprintf(lumpname, sizeof(lumpname), "DS%s", name);
+      else
+         psnprintf(lumpname, sizeof(lumpname), "%s", name);
+
+      if(W_CheckNumForName(lumpname) > 0)
+         sfx = E_NewWadSound(lumpname);
+   }
+
+   return sfx;
 }
 
 //
@@ -1265,64 +1280,9 @@ void S_Chgun(void)
 // a new sfxinfo_t and hook it into the hashtable for use
 // by scripting and skins
 
-// NOTE: LUMPNUM NOT SOUNDNUM
-void S_UpdateSound(int lumpnum)
-{
-   // haleyjd 09/03/03: now calls down to master EDF sound hash
-   E_NewWadSound((wGlobalDir.GetLumpInfo())[lumpnum]->name);
-}
+// haleyjd 03/26/2011: this is now done on-demand rather than by scanning
+// through the wad directory.
 
-typedef struct squeueitem_s
-{
-   mqueueitem_t mqitem; // this must be first
-   char lumpname[9];
-} squeueitem_t;
-
-static mqueue_t defsndqueue;
-static boolean snd_queue_init = false;
-
-static void S_InitDefSndQueue(void)
-{
-   M_QueueInit(&defsndqueue);
-   snd_queue_init = true;
-}
-
-//
-// S_UpdateSoundDeferred
-//
-// haleyjd 09/13/03: We need to defer the updating of new wad sounds
-// found from W_InitMultipleFiles, otherwise EDF doesn't get a chance
-// at them first.
-//
-void S_UpdateSoundDeferred(int lumpnum)
-{
-   squeueitem_t *newsq;
-
-   if(!snd_queue_init)
-      S_InitDefSndQueue();
-
-   newsq = (squeueitem_t *)(calloc(1, sizeof(squeueitem_t)));
-
-   strncpy(newsq->lumpname, (wGlobalDir.GetLumpInfo())[lumpnum]->name, 9);
-
-   M_QueueInsert(&(newsq->mqitem), &defsndqueue);
-}
-
-void S_ProcDeferredSounds(void)
-{
-   mqueueitem_t *rover;
-
-   while((rover = M_QueueIterator(&defsndqueue)))
-   {
-      squeueitem_t *sqitem = (squeueitem_t *)rover;
-
-      E_NewWadSound(sqitem->lumpname);
-   }
-
-   // free the queue
-   M_QueueFree(&defsndqueue);
-   snd_queue_init = false;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 //

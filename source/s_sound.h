@@ -108,9 +108,6 @@ void S_PauseSound(void);
 void S_ResumeSound(void);
 
 sfxinfo_t *S_SfxInfoForName(const char *name);
-void S_UpdateSound(int lumpnum);
-void S_UpdateSoundDeferred(int lumpnum);
-void S_ProcDeferredSounds(void);
 void S_Chgun(void);
 
 musicinfo_t *S_MusicForName(const char *name);
