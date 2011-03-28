@@ -88,6 +88,7 @@
 #include "e_edf.h"
 #include "e_player.h"
 #include "e_fonts.h"
+#include "xl_scripts.h"
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -3498,6 +3499,9 @@ static void D_DoomInit(void)
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
 
+   // haleyjd 03/27/11: process Hexen scripts
+   XL_ParseHexenScripts();
+
    // Build BEX tables (some are EDF-dependent)
    D_BuildBEXTables();
 
@@ -3855,8 +3859,9 @@ void D_DoomMain(void)
 void D_ReInitWadfiles(void)
 {
    R_FreeData();
-   E_ProcessNewEDF();   // haleyjd 03/24/10: process any new EDF lumps
-   D_ProcessDEHQueue(); // haleyjd 09/12/03: run any queued DEHs
+   E_ProcessNewEDF();      // haleyjd 03/24/10: process any new EDF lumps
+   XL_ParseHexenScripts(); // haleyjd 03/27/11: process Hexen scripts
+   D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
    R_Init();
    P_Init();
 }

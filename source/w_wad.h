@@ -65,6 +65,10 @@ struct lumpinfo_t
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
    int index, next;
 
+   // haleyjd 03/27/11: array index into lumpinfo in the parent wad directory,
+   // for fast reverse lookup.
+   int selfindex;
+
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
    enum 
    {
@@ -96,7 +100,6 @@ struct lumpinfo_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
-
 };
 
 //

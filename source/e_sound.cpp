@@ -317,7 +317,7 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 //
 // haleyjd 04/13/08: There's a hackish little code segment in DeHackEd
 // that looks for a sound name match to a DeHackEd text string. Now that
-// the S_sfx table is gone, we need to do this search here,  using the
+// the S_sfx table is gone, we need to do this search here, using the
 // mnemonic hash table chains.
 //
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
@@ -411,22 +411,44 @@ sfxinfo_t *E_NewWadSound(const char *name)
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
-      sfx->prefix = false;  // do not add another DS prefix      
-      
-      sfx->singularity = sfxinfo_t::sg_none;
+
+      sfx->flags = SFXF_WAD; // born as implicit wad sound
       sfx->priority = 64;
-      sfx->link = NULL;
-      sfx->alias = NULL;
       sfx->pitch = sfx->volume = -1;
       sfx->clipping_dist = S_CLIPPING_DIST;
       sfx->close_dist = S_CLOSE_DIST;
-      sfx->subchannel = CHAN_AUTO;
-      sfx->skinsound = 0;
-      sfx->data = NULL;
       sfx->dehackednum = -1; // not accessible to DeHackEd
       
       E_AddSoundToHash(sfx);
    }
+
+   return sfx;
+}
+
+// 
+// E_NewSndInfoSound
+//
+// haleyjd 03/27/11: 
+// Creates a sfxinfo_t for a SNDINFO entry.
+//
+sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
+{
+   sfxinfo_t *sfx;
+
+   // create a new one and hook into hashchain
+   sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+
+   strncpy(sfx->name,     name,      9);
+   strncpy(sfx->mnemonic, mnemonic, 33);
+
+   sfx->flags = SFXF_SNDINFO; // born via SNDINFO
+   sfx->priority = 64;
+   sfx->pitch = sfx->volume = -1;
+   sfx->clipping_dist = S_CLIPPING_DIST;
+   sfx->close_dist = S_CLOSE_DIST;
+   sfx->dehackednum = -1; // not accessible to DeHackEd
+
+   E_AddSoundToHash(sfx);
 
    return sfx;
 }
@@ -544,9 +566,14 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       // "prefix = false" in every single unprefixed sound.
 
       if(def && explicitLumpName && cfg_size(section, ITEM_SND_PREFIX) == 0)
-         sfx->prefix = false;
+         sfx->flags &= ~SFXF_PREFIX;
       else
-         sfx->prefix = (cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true);
+      {
+         if(cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true)
+            sfx->flags |= SFXF_PREFIX;
+         else
+            sfx->flags &= ~SFXF_PREFIX;
+      }
    }
 
    // process the singularity
@@ -698,7 +725,10 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    {
       cfg_bool_t nopcsound = cfg_getbool(section, ITEM_SND_NOPCSOUND);
 
-      sfx->nopcsound = (nopcsound == cfg_true);
+      if(nopcsound == cfg_true)
+         sfx->flags |= SFXF_NOPCSOUND;
+      else
+         sfx->flags &= ~SFXF_NOPCSOUND;
    }
 }
 
@@ -762,6 +792,9 @@ void E_ProcessSounds(cfg_t *cfg)
 
          // set dehackednum
          sfx->dehackednum = idnum;
+
+         // sfxinfo was born via EDF
+         sfx->flags = SFXF_EDF;
 
          // possibly add to numeric hash
          if(sfx->dehackednum > 0)
@@ -1109,81 +1142,6 @@ ESoundSeq_t *E_EnvironmentSequence(int id)
 }
 
 //
-// This structure is returned by E_ParseSeqCmdStr and is used to hold pointers
-// to the tokens inside the command string. The pointers may be NULL if the
-// corresponding tokens do not exist.
-//
-typedef struct tempcmd_s
-{
-   const char *strs[3]; // command and up to 2 arguments
-} tempcmd_t;
-
-// states for command mini-parser below.
-enum
-{
-   STATE_LOOKFORCMD,
-   STATE_INCMD,
-};
-
-//
-// E_ParseSeqCmdStr
-//
-// Tokenizes a sound sequence command string. Basically, breaks it up into
-// 0 to 3 tokens. Anything beyond the 3rd token is totally ignored.
-//
-static tempcmd_t E_ParseSeqCmdStr(char *str)
-{
-   tempcmd_t retcmd;
-   char *tokenstart = NULL;
-   int state = STATE_LOOKFORCMD, strnum = 0;
-
-   retcmd.strs[0] = retcmd.strs[1] = retcmd.strs[2] = NULL;
-
-   while(1)
-   {
-      switch(state)
-      {
-      case STATE_LOOKFORCMD: // looking for a command -- skip whitespace
-         switch(*str)
-         {
-         case '\0': // end of string -- done
-            return retcmd;
-         case ' ':
-         case '\t':
-            break;
-         default:
-            tokenstart = str;
-            state = STATE_INCMD;
-            break;
-         }
-         break;
-      case STATE_INCMD: // inside a command -- whitespace ends
-         switch(*str)
-         {
-         case '\0': // end of string
-         case ' ':
-         case '\t':
-            retcmd.strs[strnum] = tokenstart;
-            ++strnum;
-            if(*str == '\0' || strnum >= 3) // are we done?
-               return retcmd;
-            tokenstart = NULL;
-            state = STATE_LOOKFORCMD;
-            *str = '\0'; // modify string to terminate tokens
-            break;
-         default:
-            break;
-         }
-         break;
-      }
-
-      ++str;
-   }
-
-   return retcmd; // should be unreachable
-}
-
-//
 // E_SeqGetSound
 //
 // A safe wrapper around E_SoundForName that returns NULL for the
@@ -1363,7 +1321,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
       tempcmd_t tempcmd;
       char *tempstr = strdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
 
-      tempcmd = E_ParseSeqCmdStr(tempstr); // parse the command
+      tempcmd = E_ParseTextLine(tempstr); // parse the command
 
       // figure out the command (first token on the line)
       if(!tempcmd.strs[0])
@@ -1388,48 +1346,6 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 
    // free the temp buffer
    free(tempcmdbuf);
-}
-
-//
-// E_GetHeredocLine
-//
-// Finds the start of the next line in the string, and modifies the string with
-// a \0 to terminate the current line. Returns the start of the current line, or
-// NULL if input is exhausted. Based loosely on E_GetDSLine from the DECORATE 
-// state parser.
-//
-static char *E_GetHeredocLine(char **src)
-{
-   boolean isdone  = false;
-   char *srctxt    = *src;
-   char *linestart = srctxt;
-
-   if(!*srctxt) // at end?
-      linestart = NULL;
-   else
-   {
-      char c;
-
-      while((c = *srctxt))
-      {
-         if(c == '\n')
-         {
-            // modify with a \0 to terminate the line, and step to the next char
-            *srctxt = '\0';
-            ++srctxt;
-            break;
-         }
-         ++srctxt;
-      }
-
-      // parse out spaces at the start of the line
-      while(isspace(*linestart))
-         ++linestart;
-   }
-
-   *src = srctxt;
-
-   return linestart;
 }
 
 //
@@ -1465,7 +1381,7 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
       if(!strlen(line))
          continue;
 
-      tempcmd = E_ParseSeqCmdStr(line); // parse the command
+      tempcmd = E_ParseTextLine(line); // parse the command
 
       // figure out the command (first token on the line)
       if(!tempcmd.strs[0])

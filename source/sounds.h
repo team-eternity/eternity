@@ -52,19 +52,19 @@ typedef enum
    NUMSCHANNELS
 } schannel_e;
 
+// haleyjd 03/27/11: sound flags
+enum
+{
+   SFXF_PREFIX    = 0x00000001, // lumpname should be prefixed with "DS"
+   SFXF_NOPCSOUND = 0x00000002, // sound won't play under PC speaker emulation
+   SFXF_EDF       = 0x00000004, // sfxinfo was born via EDF
+   SFXF_SNDINFO   = 0x00000008, // sfxinfo was born via SNDINFO lump
+   SFXF_WAD       = 0x00000010  // sfxinfo was born as an implicit wad sound
+};
+
 struct sfxinfo_t
 {
-   // haleyjd 04/13/08: numeric hash links
-   DLListItem<sfxinfo_t> numlinks;
-
-   // haleyjd: up to 8-character lump name
-   char name[9];
-
-   // haleyjd: true if this sound is to be prefixed with "DS"
-   boolean prefix;
-
    // Sfx singularity (only one at a time)
-   // killough 12/98: implement separate classes of singularity
    enum
    {
       sg_none,
@@ -73,31 +73,6 @@ struct sfxinfo_t
       sg_oof,
       sg_getpow
    };
-   int singularity;
-
-   // Sfx priority
-   int priority;
-
-   // referenced sound if a link
-   sfxinfo_t *link;
-
-   // haleyjd 09/24/06: referenced sound if an alias
-   sfxinfo_t *alias;
-
-   // haleyjd 05/12/09: random sounds
-   sfxinfo_t **randomsounds;
-   int numrandomsounds;
-   
-   // pitch if a link
-   int pitch;
-   
-   // volume if a link
-   int volume;
-
-   // haleyjd 07/13/05: sound attenuation properties now customizable
-   // on a per-sound basis to allow differing behaviors.
-   int clipping_dist;   // distance when sound is clipped entirely
-   int close_dist;      // distance when sound is at maximum volume
 
    // haleyjd 09/23/06: pitch variance types
    enum
@@ -108,37 +83,46 @@ struct sfxinfo_t
       pitch_heretic, // normal variance for Heretic
       pitch_hticamb, // variance for Heretic ambient sounds
    };
-   int pitch_type;
 
-   // sound data
-   void *data;
-   
-   // sf: skin sound number to use in place
-   int skinsound;
-   
-   // haleyjd: EDF mnemonic
-   char mnemonic[33];
+   char name[9];       // haleyjd: up to 8-character lump name
+   char pcslump[9];    // haleyjd: explicitly provided PC speaker effect lump
+   int  singularity;   // killough 12/98: implement separate classes of singularity
+   int  priority;      // Sfx priority
+   int  pitch;         // pitch if a link
+   int  volume;        // volume if a link
+   int  pitch_type;    // haleyjd 09/23/06: pitch variance type
+   int  skinsound;     // sf: skin sound number to use in place
+   int  subchannel;    // haleyjd 06/12/08: origin subchannels - default = CHAN_AUTO.
+   unsigned int flags; // haleyjd 03/27/11: sound effect flags
 
-   // haleyjd: explicitly provided PC speaker effect lump
-   char pcslump[9];
-   boolean nopcsound; // if true, does not play even if lump is present
+   // haleyjd 07/13/05: sound attenuation properties now customizable
+   // on a per-sound basis to allow differing behaviors.
+   int clipping_dist;   // distance when sound is clipped entirely
+   int close_dist;      // distance when sound is at maximum volume
+
+   // links to other sound definitions
+   sfxinfo_t  *link;         // referenced sound if a link
+   sfxinfo_t  *alias;        // haleyjd 09/24/06: referenced sound if an alias
+   sfxinfo_t **randomsounds; // haleyjd 05/12/09: random sounds
+   int numrandomsounds;
+
+   // haleyjd 04/23/08: additional caching data
+   void *data;        // sound data
+   int length;        // lump length
+   unsigned int alen; // length of converted sound pointed to by data
    
    // this is checked every second to see if sound
    // can be thrown out (if 0, then decrement, if -1,
    // then throw out, if > 0, then it is in use)
    int usefulness;
-   
-   int length;   // lump length
-   
+
+   // haleyjd: EDF mnemonic
+   char mnemonic[33];
+      
    // haleyjd 09/03/03: revised for dynamic EDF sounds
-   sfxinfo_t *next;     // next in mnemonic hash chain
-   int dehackednum;     // dehacked number
-
-   // haleyjd 04/23/08: additional caching data
-   unsigned int alen;   // length of converted sound pointed to by data
-
-   // haleyjd 06/12/08: origin subchannels - default = CHAN_AUTO.
-   int subchannel;
+   DLListItem<sfxinfo_t> numlinks; // haleyjd 04/13/08: numeric hash links
+   sfxinfo_t *next;                // next in mnemonic hash chain
+   int dehackednum;                // dehacked number
 };
 
 //

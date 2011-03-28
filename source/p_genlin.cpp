@@ -2217,7 +2217,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      if(l->sidenum[side] == -1)
+       if(l->sidenum[side] == -1)
          continue;
 
       switch(pos)

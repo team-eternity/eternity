@@ -71,6 +71,7 @@ v_misc.cpp     v_misc.h       v_patch.cpp    v_patch.h      v_video.cpp    v_vid
 version.cpp    version.h \
 wi_stuff.cpp   wi_stuff.h \
 w_levels.cpp   w_levels.h     w_wad.cpp      w_wad.h \
+xl_scripts.cpp xl_scripts.h \
 z_native.cpp   z_zone.h
 
 eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\

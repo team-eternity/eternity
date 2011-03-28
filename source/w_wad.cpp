@@ -582,8 +582,7 @@ int WadDirectory::CheckNumForName(const char *name, int li_namespace)
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
    
-   register int i = this->lumpinfo[LumpNameHash(name) % 
-                                  (unsigned)this->numlumps]->index;
+   register int i = lumpinfo[LumpNameHash(name) % (unsigned int)numlumps]->index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -591,9 +590,9 @@ int WadDirectory::CheckNumForName(const char *name, int li_namespace)
    // worth the overhead, considering namespace collisions are rare in
    // Doom wads.
 
-   while(i >= 0 && (strncasecmp(this->lumpinfo[i]->name, name, 8) ||
-         this->lumpinfo[i]->li_namespace != li_namespace))
-      i = this->lumpinfo[i]->next;
+   while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) ||
+         lumpinfo[i]->li_namespace != li_namespace))
+      i = lumpinfo[i]->next;
 
    // Return the matching lump, or -1 if none found.   
    return i;
@@ -690,7 +689,10 @@ void WadDirectory::InitLumpHash()
    int i;
    
    for(i = 0; i < numlumps; i++)
-      lumpinfo[i]->index = -1;                  // mark slots empty
+   {
+      lumpinfo[i]->index     = -1; // mark slots empty
+      lumpinfo[i]->selfindex =  i; // haleyjd: record position in array
+   }
 
    // Insert nodes to the beginning of each chain, in first-to-last
    // lump order, so that the last lump of a given name appears first

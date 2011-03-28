@@ -5001,6 +5001,18 @@
 					</File>
 				</Filter>
 			</Filter>
+			<Filter
+				Name="XL_"
+				>
+				<File
+					RelativePath="..\source\xl_scripts.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\xl_scripts.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

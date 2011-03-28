@@ -588,7 +588,7 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx)
 
    // haleyjd 09/03/03: determine whether to apply DS prefix to
    // name or not using new prefix flag
-   if(sfx->prefix)
+   if(sfx->flags & SFXF_PREFIX)
       psnprintf(namebuf, sizeof(namebuf), "ds%s", sfx->name);
    else
       strcpy(namebuf, sfx->name);

@@ -874,6 +874,125 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
    return colonloc;
 }
 
+//
+// Other String Utilities
+//
+
+//
+// E_GetHeredocLine
+//
+// Finds the start of the next line in the string, and modifies the string with
+// a \0 to terminate the current line. Returns the start of the current line, or
+// NULL if input is exhausted. Based loosely on E_GetDSLine from the DECORATE 
+// state parser.
+//
+char *E_GetHeredocLine(char **src)
+{
+   boolean isdone  = false;
+   char *srctxt    = *src;
+   char *linestart = srctxt;
+
+   if(!*srctxt) // at end?
+      linestart = NULL;
+   else
+   {
+      char c;
+
+      while((c = *srctxt))
+      {
+         if(c == '\n')
+         {
+            // modify with a \0 to terminate the line, and step to the next char
+            *srctxt = '\0';
+            ++srctxt;
+            break;
+         }
+         ++srctxt;
+      }
+
+      // parse out spaces at the start of the line
+      while(isspace(*linestart))
+         ++linestart;
+   }
+
+   *src = srctxt;
+
+   return linestart;
+}
+
+//============================================================================
+//
+// Basic simple text line tokenizer - abstracted out of SndSeq parser
+//
+
+// states for command mini-parser below.
+enum
+{
+   STATE_LOOKFORCMD,
+   STATE_INCMD,
+};
+
+//
+// E_ParseTextLine
+//
+// Tokenizes a script command string. Basically, breaks it up into
+// 0 to E_MAXCMDTOKENS tokens. Anything beyond the max token count is totally 
+// ignored.
+//
+tempcmd_t E_ParseTextLine(char *str)
+{
+   tempcmd_t retcmd;
+   char *tokenstart = NULL;
+   int state = STATE_LOOKFORCMD, strnum = 0;
+
+   memset(&retcmd, 0, sizeof(retcmd));
+
+   while(1)
+   {
+      switch(state)
+      {
+      case STATE_LOOKFORCMD: // looking for a command -- skip whitespace
+         switch(*str)
+         {
+         case '\0': // end of string -- done
+            return retcmd;
+         case ' ':
+         case '\t':
+         case '\r':
+            break;
+         default:
+            tokenstart = str;
+            state = STATE_INCMD;
+            break;
+         }
+         break;
+      case STATE_INCMD: // inside a command -- whitespace ends
+         switch(*str)
+         {
+         case '\0': // end of string
+         case ' ':
+         case '\t':
+         case '\r':
+            retcmd.strs[strnum] = tokenstart;
+            ++strnum;
+            if(*str == '\0' || strnum >= E_MAXCMDTOKENS) // are we done?
+               return retcmd;
+            tokenstart = NULL;
+            state = STATE_LOOKFORCMD;
+            *str = '\0'; // modify string to terminate tokens
+            break;
+         default:
+            break;
+         }
+         break;
+      }
+
+      ++str;
+   }
+
+   return retcmd; // should be unreachable
+}
+
 //=============================================================================
 //
 // Translation Parsing
