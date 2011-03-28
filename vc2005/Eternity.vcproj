@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="Eternity"
 	ProjectGUID="{4FA700E5-E09A-4387-AE0F-4AFAA19F384A}"
 	>
@@ -4987,6 +4987,18 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="XL_"
+				>
+				<File
+					RelativePath="..\source\xl_scripts.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\xl_scripts.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
