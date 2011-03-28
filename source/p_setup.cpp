@@ -1268,7 +1268,8 @@ void P_LoadHexenLineDefs(int lump)
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 
-      ld->tag = -1; // haleyjd 02/27/07
+      ld->tag   = -1;    // haleyjd 02/27/07
+      ld->alpha =  1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
 
       // haleyjd 06/19/06: convert indices to unsigned
       v1 = ld->v1 = &vertexes[(int)SwapShort(mld->v1) & 0xffff];
