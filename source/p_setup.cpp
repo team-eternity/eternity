@@ -1062,6 +1062,76 @@ void P_LoadHexenThings(int lump)
 }
 
 //
+// P_InitLineDef
+//
+// haleyjd 03/28/11: Shared code for DOOM- and Hexen-format linedef loading.
+//
+static void P_InitLineDef(line_t *ld)
+{
+   vertex_t *v1 = ld->v1, *v2 = ld->v2;
+
+   // Graphical properties
+   ld->tranlump = -1;    // killough 4/11/98: no translucency by default
+   ld->alpha    =  1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
+
+   // Slopes
+   ld->dx = v2->x - v1->x;
+   ld->dy = v2->y - v1->y;
+   ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
+      FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
+
+   // SoM: Calculate line normal
+   P_MakeLineNormal(ld);
+
+   // Bounding box
+   if(v1->x < v2->x)
+   {
+      ld->bbox[BOXLEFT]  = v1->x;
+      ld->bbox[BOXRIGHT] = v2->x;
+   }
+   else
+   {
+      ld->bbox[BOXLEFT]  = v2->x;
+      ld->bbox[BOXRIGHT] = v1->x;
+   }
+
+   if(v1->y < v2->y)
+   {
+      ld->bbox[BOXBOTTOM] = v1->y;
+      ld->bbox[BOXTOP]    = v2->y;
+   }
+   else
+   {
+      ld->bbox[BOXBOTTOM] = v2->y;
+      ld->bbox[BOXTOP]    = v1->y;
+   }
+
+   // haleyjd 12/04/08: rangechecking side numbers for safety
+   if(ld->sidenum[0] >= numsides)
+   {
+      C_Printf(FC_ERROR "Line error: bad side 0 #%d\a\n", ld->sidenum[0]);
+      ld->sidenum[0] = 0;
+   }
+   if(ld->sidenum[1] >= numsides)
+   {
+      C_Printf(FC_ERROR "Line error: bad side 1 #%d\a\n", ld->sidenum[1]);
+      ld->sidenum[1] = 0;
+   }
+
+   // killough 4/4/98: support special sidedef interpretation below
+   if(ld->sidenum[0] != -1 && ld->special)
+      sides[*ld->sidenum].special = ld->special;
+
+   // CPP_FIXME: temporary placement construction for sound origins
+   ::new (&ld->soundorg) PointThinker;
+
+   // haleyjd 04/19/09: position line sound origin
+   ld->soundorg.x = ld->v1->x + ld->dx / 2;
+   ld->soundorg.y = ld->v1->y + ld->dy / 2;
+   ld->soundorg.groupid = R_NOGROUP;
+}
+
+//
 // P_LoadLineDefs
 // Also counts secret lines for intermissions.
 //        ^^^
@@ -1085,80 +1155,21 @@ void P_LoadLineDefs(int lump)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
       line_t *ld = lines + i;
-      vertex_t *v1, *v2;
 
       ld->flags   = SwapShort(mld->flags);
       ld->special = SwapShort(mld->special);
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
-      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
-      ld->dx = v2->x - v1->x;
-      ld->dy = v2->y - v1->y;
-
-      // SoM: Calculate line normal
-      P_MakeLineNormal(ld);
-
-      ld->tranlump = -1;   // killough 4/11/98: no translucency by default
-      ld->alpha    = 1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
-
-      ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
-         FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
-
-      if(v1->x < v2->x)
-      {
-         ld->bbox[BOXLEFT]  = v1->x;
-         ld->bbox[BOXRIGHT] = v2->x;
-      }
-      else
-      {
-         ld->bbox[BOXLEFT]  = v2->x;
-         ld->bbox[BOXRIGHT] = v1->x;
-      }
-
-      if(v1->y < v2->y)
-      {
-         ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP]    = v2->y;
-      }
-      else
-      {
-         ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP]    = v1->y;
-      }
+      ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
       ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
       ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
-      // haleyjd 12/04/08: rangechecking for safety
-      if(ld->sidenum[0] >= numsides)
-      {
-         C_Printf(FC_ERROR "Line error: bad side 0 #%d\a\n", ld->sidenum[0]);
-         ld->sidenum[0] = 0;
-      }
-      if(ld->sidenum[1] >= numsides)
-      {
-         C_Printf(FC_ERROR "Line error: bad side 1 #%d\a\n", ld->sidenum[1]);
-         ld->sidenum[1] = 0;
-      }
-
-      // killough 4/4/98: support special sidedef interpretation below
-      if(ld->sidenum[0] != -1 && ld->special)
-         sides[*ld->sidenum].special = ld->special;
-
-      // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) PointThinker;
-
-      // haleyjd 04/19/09: position line sound origin
-      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
-      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
-      ld->soundorg.groupid = R_NOGROUP;
-      
-      // SoM: Line portals
-      ld->portal = NULL;
-      ld->pflags = 0;
+      // haleyjd 03/28/11: do shared loading logic in one place
+      P_InitLineDef(ld);
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
@@ -1251,84 +1262,31 @@ void P_LoadHexenLineDefs(int lump)
    {
       maplinedefhexen_t *mld = (maplinedefhexen_t *)data + i;
       line_t *ld = lines + i;
-      vertex_t *v1, *v2;
-      int argnum;
 
-      ld->flags = SwapShort(mld->flags);
-
+      ld->flags   = SwapShort(mld->flags);
       ld->special = mld->special;
       
-      for(argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
+      for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
-      // Do Hexen special translation, unconditionally
-      // TODO: support more than one mode (ie, strict Hexen, non-strict, etc)
+      // Do Hexen special translation
       P_ConvertHexenLineSpec(&(ld->special), ld->args);
 
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 
-      ld->tag   = -1;    // haleyjd 02/27/07
-      ld->alpha =  1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
+      ld->tag = -1;    // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[(int)SwapShort(mld->v1) & 0xffff];
-      v2 = ld->v2 = &vertexes[(int)SwapShort(mld->v2) & 0xffff];
-      ld->dx = v2->x - v1->x;
-      ld->dy = v2->y - v1->y;
-
-      // SoM: Calculate line normal
-      P_MakeLineNormal(ld);
-
-      ld->tranlump = -1;   // killough 4/11/98: no translucency by default
-
-      ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
-         FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
-
-      if(v1->x < v2->x)
-      {
-         ld->bbox[BOXLEFT] = v1->x;
-         ld->bbox[BOXRIGHT] = v2->x;
-      }
-      else
-      {
-         ld->bbox[BOXLEFT] = v2->x;
-         ld->bbox[BOXRIGHT] = v1->x;
-      }
-
-      if(v1->y < v2->y)
-      {
-         ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP] = v2->y;
-      }
-      else
-      {
-         ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP] = v1->y;
-      }
+      ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
       ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
       ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
-      // killough 4/4/98: support special sidedef interpretation below
-      if(ld->sidenum[0] != -1 && ld->special)
-         sides[*ld->sidenum].special = ld->special;
-
-      // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) PointThinker;
-
-      // haleyjd 04/19/09: position line sound origin
-      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
-      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
-      ld->soundorg.groupid = R_NOGROUP;
-
-      // haleyjd 02/26/05: ExtraData
-      // FIXME/TODO: how to support ExtraData via Hexen??
-#if 0
-      if(ld->special == ED_LINE_SPECIAL)
-         E_LoadLineDefExt(ld);
-#endif
+      // haleyjd 03/28/11: do shared loading logic in one place
+      P_InitLineDef(ld);
    }
    Z_Free(data);
 }
