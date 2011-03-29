@@ -1,4 +1,289 @@
 ================================================================================
+Changes since Eternity Engine v3.40.00
+================================================================================
+--------------------------------------------------------------------------------
+03/28/11
+
+Rudimentary support for SNDINFO lumps is now complete. The parser is ZDoom
+compatible via ignoring anything that isn't currently implemented, which means,
+for now, almost everything :P  Currently the $MAP command is recognized but
+doesn't do anything, and sounds can be successfully defined and then played back
+using e_playsound or ACS.
+
+Major milestone:
+Korax is now audible in Hexen!
+
+WORSHIP ME... and I may yet be merciful.
+
+Then again, maybe not.
+
+
+Linedefs in Hexen shouldn't have started out with their alpha set to 0, though.
+This caused all 2S midtextures to mysteriously vanish. The fault for this bug
+is the duplication of code between P_LoadLineDefs and P_LoadHexenLineDefs in
+p_setup, something that needs to be rectified ASAP...
+
+(Later)
+I have extracted all the duplicated code out of the two linedef loader functions
+and put it into a new shared routine, P_InitLineDef, which both call after 
+parsing their specific map-format-dependent information into the line_t
+structure. Yay!
+
+--------------------------------------------------------------------------------
+03/26/11
+
+The deferred sound queue, a legacy bit of awfulness created as a workaround to
+keep SMMU's implicit wad sounds feature working with EDF, has been removed and
+replaced with a vastly simpler system - if S_SfxInfoForName requests a sound
+from EDF which does not exist, and the mnemonic passed in matches an existing
+DS lump, then it will create the wad sound using E_NewWadSound right there on 
+the spot, in an on-demand system.
+
+--------------------------------------------------------------------------------
+03/21/11
+
+SDL video centering should not be conditioned on the _WIN32 symbol in i_main,
+since this functionality is supported just about everywhere SDL can run, even
+including primitive non-windowing "window managers" on Linux which run every
+application as a rect pasted to the screen without further adornment.
+
+--------------------------------------------------------------------------------
+03/20/11
+
+Started knocking out some of the newest GCC's deprecation warnings with respect
+to the assignment of string constants to variables or structure fields of type
+char * (vs const char *). Some of these are a real pain in the ass to properly
+fix however, as they cause const_cast to be necessitated in a couple of places
+where these fields can also point to heap-allocated runtime-defined values. I
+want to eliminate those eventually by introducing secondary fields which hold
+the runtime value in addition to the normal const char * fields, but this is
+very low priority.
+
+Russell Rice discovered the /MP setting of Visual Studio 2008, and it sped up
+Eternity compiles by over 50% via making proper use of my Intel Core 2 Quad's
+four logical CPUs to do builds in parallel.
+
+P_StartLineScript, which was previously only for Small scripts, can now defer
+to running an ACS level script if there is no Small levelscript defined, With
+the EE_NO_SMALL_SUPPORT symbol defined, the invocation of ACS through these
+line types becomes unconditional.
+
+In addition, the A_StartScript codepointer can now perform an ACS_ExecuteAlways
+action if it is passed the new keyword value "acs" for the target virtual 
+machine.
+
+--------------------------------------------------------------------------------
+03/19/11
+
+By request of essel, ACS can now be loaded for DOOM-format maps by specifying 
+the script lump to use for the map in MapInfo, with the new acsscript setting.
+
+I have also implemented four new ACS specials:
+* Thing_Projectile
+* Thing_ProjectileGravity
+* Thing_Activate
+* Thing_Deactivate
+
+Winnowing Hall now spews Imp fireballs if you walk up to the place where the
+polyobject spinning walls should be ;)
+
+Finally, I fixed an ominous warning from GCC concerning some undefined use of
+va_arg in libConfuse which it claimed would cause the program to abort. This
+was due to the odd promotion behavior which occurs in variadic functions in C
+and C++, and was triggered by C++'s different treatment of enumerations.
+
+--------------------------------------------------------------------------------
+03/17/11
+
+Catoptromancy once again comes to the rescue with a fix for EE's autoconf build
+system, so it can once again be used by those who prefer it to the newer CMake
+script.
+
+--------------------------------------------------------------------------------
+03/12/11
+
+I changed the IWAD and resource wad tracking variables into static members of
+the WadDirectory class and changed them to track the source IDs corresponding to
+those wads instead of exposing their internal FILE handles for no good purpose.
+
+--------------------------------------------------------------------------------
+03/09/11
+
+Continuing at last with EE's gradual conversion to a proper C++ architecture, I
+have converted the waddir_t structure into a full-blown WadDirectory class, and
+have refactored all the code in w_wad.cpp as a result into methods of this
+object (excepting the non-"InDir" functions from the original code, which, for
+now at least, persist as "convenience" functions for invoking methods of the
+wGlobalDir object).
+
+--------------------------------------------------------------------------------
+02/14/11
+
+Catoptromancy found a bug (or more of a "logic hole" really) in the low-level
+app state maintenance code whereby EE could keep the mouse grabbed while in a
+minimized state. Turned out the fix was as simple as adding a call to UpdateGrab
+when an SDL_APPACTIVE event is received.
+
+--------------------------------------------------------------------------------
+02/09/11
+
+Made an adjustment to the interim behavior of the PIT_StompThing3D function, by
+user request, which will stop the ability of non-player objects to telefrag the
+player if they occupy the same space during transition through a linked portal.
+Players now "win" and will telefrag monsters instead. If two players pass 
+through at the same time, *both* players will be telefragged. Hey, you gotta be
+fair with this kind of thing! :P
+
+--------------------------------------------------------------------------------
+02/02/11
+
+I added a parser for ZDoom-format translation strings to the EDF library module,
+although it isn't used anywhere yet.
+
+--------------------------------------------------------------------------------
+01/29/11
+
+Failure to write the configuration file should not be a reason to call 
+I_FatalError; instead a message is now output to the console and the function
+returns. This keeps Eternity from issuing an interesting error message about
+terminating in an "abnormal fashion" for something so mundane as not having
+write permissions to a directory.
+
+I also had to restore some translucency checks that I removed earlier when 
+adding linedef alpha support which were causing a crash for essel.
+
+--------------------------------------------------------------------------------
+01/22/11
+
+Undertook a couple rounds of attempted optimizations, aimed mostly at trying to
+improve cache performance, which is known to be the primary bottleneck inside
+the renderer, to the point that NO change made to R_DrawMasked can affect the
+framerate in any positive manner except by improving cache performance (or in
+other words, the engine is completely cache-bound):
+
+1. All redundant and unused fields were eliminated from core rendering structs
+   including vissprite_t, drawseg_t, and seg_t. This rendered an average 2 FPS
+   improvement in Sunder MAP12.
+   
+2. Tweaked all Visual Studio 2008 project settings toward maximum optimization,
+   including the following amongst others I am probably forgetting:
+   
+   * Inline wherever compiler judges best practice
+   * Prefer speed over accuracy for floating-point math
+   * Enable compiler intrinsic functions
+   * Whole program optimization / LTCG
+   * Omit frame pointers
+   * And most importantly, use SSE2 instructions.
+   
+   Altogether these optimizations render an average 10 FPS improvement in Sunder
+   MAP12 on top of the 2 already gained from the tweaks forslightly improved 
+   cache performance. Note that this means however that VC2008 builds of EE
+   will no longer run on CPUs prior to the Pentium IV, however. I have since
+   verified with IDA Pro that the SSE2 opcodes are used pervasively in the
+   binary code, and apparently to great effect.
+
+--------------------------------------------------------------------------------
+01/20/11
+
+I added a new P_LastEnemyRoar routine which gets called, outside old demo comp 
+and if the option is set, whenever a monster changes targets due to BOOM's
+lastenemy feature (the one controlled by option monsters_remember). It has 
+always bothered me that this change removed the roars you would get every time
+a monster finished off its current target and then became angry at something
+else. These were often useful for guaging the progress of infighting in distant
+areas of the map involving boss characters, such as the Cyberdemon - MOOOO!
+
+I also finally got around to adding a proper Visual Studio 2005 project for
+Eternity. Our main build is with 2008, but 2005 should be useful for maintaining
+Windows 9x support for as long as it remains practical.
+
+Started fixing the old automake script to work with the new C++ codebase as well
+but this is unfinished and untested.
+
+--------------------------------------------------------------------------------
+01/18/11
+
+essel noticed that I had inadvertently nerfed the edf-intername MapInfo option
+back while working on MapInfo prototypes and changed the name of the command to
+edf_intername.
+
+--------------------------------------------------------------------------------
+01/17/11
+
+Adjustments made to FindIWADFile for the previous release left a situation where
+a NULL pointer could be dereferenced. Really this function is a mess and should
+probably be rewritten to use a qstring or a PU_AUTO string buffer instead of
+malloc'ing and freeing strings over and over. But that's for later I guess.
+
+DOOMWADPATH should only use ';' as the path separator on Windows, because ';' is
+a valid filepath character on POSIX systems apparently. On those, ':' is the 
+expected delimiter.
+
+Additionally, upon user request, I coded a function called M_CheckMultiParm that
+can check for an aliased command line parameter, and then used it to allow
+-play and -recorddemo aliases to the -playdemo and -record commands, since their
+syntax has historically been inconsistent.
+
+--------------------------------------------------------------------------------
+01/16/11
+
+-vanilla was semi-broken due to the fact that G_SetOldDemoOptions needed to be
+invoked *before* the call to G_InitNewNum. Otherwise it would setup the level
+under current-version behavior, and the RNG would usually be totally off. I was
+probably just extremely lucky back when I tested -vanilla initially. I also
+noticed that the "basename" variable was starting out uninitialized in the
+G_DoPlayDemo function.
+
+--------------------------------------------------------------------------------
+01/15/11
+
+SoM fixed a bug which caused 1S linedefs to not generate portal overlay planes.
+This was bugging essel in one of his vapormaps.
+
+--------------------------------------------------------------------------------
+01/13/11
+
+Small scripting (deprecated though it may be) was entirely non-functional in the
+old startmap due to my having moved GS_LEVEL set below the call to 
+SM_LoadLevelScript.  Chasecam initialization should also not be done before
+GS_LEVEL set.
+
+--------------------------------------------------------------------------------
+01/12/11
+
+Finished support for heredoc-format sound sequences in EDF. This will also make
+it dead simple later to pass in Hexen SNDSEQ entries and have them parsed by the
+same code.
+
+I have also, while working on sound sequences, added the ability to set a 
+property on the sequence which will play ALL non-volume-specifying commands at
+a randomized volume, which properly matches the behavior of the vanilla Heretic
+executable with its built-in ambient sequences. Also followed up on a really
+old idea of mine to have a volume scaling ability for global ambient sound
+sequences, which is now controlled via the s_enviro_volume cvar. One reason this
+is needed badly is because the sequences seem too quiet if played at vanilla-
+compatible volume levels over the blaring Windows native MIDI synth instead of
+the demure serenity that was Heretic's music rendered in OPL.
+
+--------------------------------------------------------------------------------
+01/10/11
+
+I started work on a long-planned ability to specify EDF sound sequences in an
+alternate heredoc-based format which matches the way they're defined in Hexen
+exactly, aside from the "end" command still not being required since it can be
+implicitly added at the known end of the sequence.
+
+--------------------------------------------------------------------------------
+01/09/11
+
+SoM was able to figure out the problems that plagued portal overlays in the
+previous release version.
+
+I had to remove the I_FatalError calls from the default quad flush handler
+functions, as EE actually calls them for some reason now, without any apparent
+ill effects.
+
+================================================================================
 Changes since Eternity Engine v3.39.20
 ================================================================================
 --------------------------------------------------------------------------------
