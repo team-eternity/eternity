@@ -38,6 +38,154 @@
 #include "xl_scripts.h"
 
 //=============================================================================
+//
+// XLTokenizer
+//
+// This class does proper FSA tokenization for Hexen lump parsers.
+//
+
+class XLTokenizer
+{
+public:
+   // Tokenizer states
+   enum
+   {
+      STATE_SCAN,    // scanning for a string token
+      STATE_INTOKEN, // in a string token
+      STATE_COMMENT, // reading out a comment (eat rest of line)
+      STATE_DONE     // finished the current token
+   };
+
+   // Token types
+   enum
+   {
+      TOKEN_NONE,    // Nothing identified yet
+      TOKEN_KEYWORD, // Starts with a $; otherwise, same as a string
+      TOKEN_STRING,  // Generic string token; ex: 92 foobar
+      TOKEN_EOF,     // End of input
+      TOKEN_ERROR    // An unknown token
+   };
+
+protected:
+   int state;         // state of the scanner
+   const char *input; // input string
+   int idx;           // current position in input string
+   int tokentype;     // type of current token
+   qstring_t token;   // current token value
+
+   // Parser States
+
+   void DoStateScan() // looking for the start of a new token
+   {
+      switch(input[idx])
+      {
+      case ' ':
+      case '\t':
+      case '\r':
+      case '\n':
+         // remain in this state
+         break; 
+      case '\0': // end of input
+         tokentype = TOKEN_EOF;
+         state     = STATE_DONE;
+         break;
+      case ';': // start of a comment
+         state = STATE_COMMENT;
+         break;
+      default:
+         // anything else is the start of a new token
+         if(input[idx] == '$') // detect $ keywords
+            tokentype = TOKEN_KEYWORD;
+         else
+            tokentype = TOKEN_STRING;
+         state = STATE_INTOKEN;
+         QStrPutc(&token, input[idx]);
+         break;
+      }
+   }
+
+   void DoStateInToken() // scanning inside a token
+   {
+      switch(input[idx])
+      {
+      case ' ':  // whitespace
+      case '\t':
+      case '\r':
+      case '\n':
+         // end of token
+         state = STATE_DONE;
+         break;
+      case '\0':  // end of input -OR- start of a comment
+      case ';':   
+         --idx;   // backup, next call will handle it.
+         state = STATE_DONE;
+         break;
+      default: 
+         QStrPutc(&token, input[idx]);
+         break;
+      }
+   }
+
+   void DoStateComment() // reading out a single-line comment
+   {
+      // consume all input to the end of the line
+      if(input[idx] == '\n')
+         state = STATE_SCAN;
+      else if(input[idx] == '\0') // end of input
+      {
+         tokentype = TOKEN_EOF;
+         state     = STATE_DONE;
+      }
+   }
+
+   // State table declaration
+   static void (XLTokenizer::*states[])();
+
+public:
+   // Constructor / Destructor
+   // TODO: qstring needs to start supporting RAII :)
+   XLTokenizer(const char *str) 
+      : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
+   { 
+      QStrInitCreate(&token);
+   }
+   ~XLTokenizer() { QStrFree(&token); }
+
+   int GetNextToken()
+   {
+      QStrClear(&token);
+      state     = STATE_SCAN;
+      tokentype = TOKEN_NONE;
+
+      // already at end of input?
+      if(input[idx] != '\0')
+      {
+         while(state != STATE_DONE)
+         {
+            (this->*states[state])();
+            ++idx;
+         }
+      }
+      else
+         tokentype = TOKEN_EOF;
+
+      return tokentype;
+   }
+   
+   // Accessors
+   int GetTokenType() const { return tokentype; }
+   qstring_t &GetToken() { return token; }
+};
+
+// State table for the tokenizer
+void (XLTokenizer::* XLTokenizer::states[])() =
+{
+   &XLTokenizer::DoStateScan,
+   &XLTokenizer::DoStateInToken,
+   &XLTokenizer::DoStateComment
+};
+
+//=============================================================================
 // 
 // XLParser
 //
