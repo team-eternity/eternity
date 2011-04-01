@@ -1046,7 +1046,7 @@ static int16_t E_GenTypeForName(const char *name)
 //
 // A lexer function for generalized specials.
 //
-static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token)
+static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
 {
    char c;
    int state = 0;
@@ -1055,7 +1055,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    if(text[*index] == '\0')
       return NULL;
 
-   QStrClear(token);
+   token->clear();
 
    while((c = text[*index]) != '\0')
    {
@@ -1077,22 +1077,22 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
             continue;
          case '(':     // end of current token
          case ',':
-            return QStrConstPtr(token);
+            return token->constPtr();
          default:      // everything else == part of value
-            QStrPutc(token, c);
+            *token += c;
             continue;
          }
       case 1: // in quoted area (double quotes)
          if(c == '"') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       case 2: // in quoted area (single quotes)
          if(c == '\'') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       default:
          I_Error("E_GenTokenizer: internal error - undefined lexer state\n");
@@ -1100,7 +1100,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    }
 
    // return final token, next call will return NULL
-   return QStrConstPtr(token);
+   return token->constPtr();
 }
 
 //
@@ -1390,13 +1390,13 @@ static int16_t E_GenTrigger(const char *str)
 //
 static int16_t E_ProcessGenSpec(const char *value)
 {
-   qstring_t buffer;
+   qstring buffer;
    const char *curtoken = NULL;
    int t, forc = 0, tok_index = 0;
    int16_t trigger;
 
    // first things first, we have to initialize the qstring
-   QStrInitCreate(&buffer);
+   buffer.initCreate();
 
    // get special name (starts at beginning, ends at '[')
    // and convert to base trigger type
@@ -1485,9 +1485,6 @@ static int16_t E_ProcessGenSpec(const char *value)
    // for all: get trigger type
    NEXTTOKEN();
    trigger += (E_GenTrigger(curtoken) << TriggerTypeShift);
-
-   // free the qstring
-   QStrFree(&buffer);
 
    return trigger;
 }

@@ -1218,7 +1218,7 @@ static void D_LoadDiskFilePWAD(void)
 //
 // Gets a single line of input from the metadata.txt resource.
 //
-static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
+static boolean D_metaGetLine(qstring *qstr, const char *input, int *idx)
 {
    int i = *idx;
 
@@ -1226,7 +1226,7 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
    if(input[i] == '\0')
       return false;
 
-   QStrClear(qstr);
+   qstr->clear();
 
    while(input[i] != '\n' && input[i] != '\0')
    {
@@ -1234,10 +1234,10 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
       {
          // make \n sequence into a \n character
          ++i;
-         QStrPutc(qstr, '\n');
+         *qstr += '\n';
       }
       else if(input[i] != '\r')
-         QStrPutc(qstr, input[i]);
+         *qstr += input[i];
 
       ++i;
    }
@@ -1265,8 +1265,8 @@ static void D_DiskMetaData(void)
    int partime = 0, musicnum = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    diskwad_t wad;
-   qstring_t buffer;
-   qstring_t *qstr = &buffer;
+   qstring buffer;
+   qstring *qstr = &buffer;
 
    if(!diskpwad)
       return;
@@ -1296,29 +1296,29 @@ static void D_DiskMetaData(void)
    // parse it
 
    // setup qstring
-   QStrInitCreate(qstr);
+   qstr->initCreate();
 
    // get first line, which is an episode id
    D_metaGetLine(qstr, metatext, &index);
 
    // get episode name
    if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = QStrCDup(qstr, PU_STATIC);
+      GameModeInfo->versionName = qstr->duplicate(PU_STATIC);
 
    // get end text
    if(D_metaGetLine(qstr, metatext, &index))
-      endtext = QStrCDup(qstr, PU_STATIC);
+      endtext = qstr->duplicate(PU_STATIC);
 
    // get next level after secret
    if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = QStrAtoi(qstr);
+      exitreturn = qstr->toInt();
 
    // skip next line (wad name)
    D_metaGetLine(qstr, metatext, &index);
 
    // get secret level
    if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = QStrAtoi(qstr);
+      secretlevel = qstr->toInt();
 
    // get levels
    while(D_metaGetLine(qstr, metatext, &index))
@@ -1326,10 +1326,10 @@ static void D_DiskMetaData(void)
       switch(linenum)
       {
       case 0: // levelname
-         levelname = QStrCDup(qstr, PU_STATIC);
+         levelname = qstr->duplicate(PU_STATIC);
          break;
       case 1: // music number
-         musicnum = mus_runnin + QStrAtoi(qstr) - 1;
+         musicnum = mus_runnin + qstr->toInt() - 1;
 
          if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
             musicname = S_music[musicnum].name;
@@ -1337,7 +1337,7 @@ static void D_DiskMetaData(void)
             musicname = "";
          break;
       case 2: // partime (final field)
-         partime = QStrAtoi(qstr);
+         partime = qstr->toInt();
 
          // create a metainfo object for LevelInfo
          P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
@@ -1355,9 +1355,6 @@ static void D_DiskMetaData(void)
          linenum = 0;
       }
    }
-   
-   // done with qstring buffer
-   QStrFree(qstr);
 
    // done with metadata resource
    free(metatext);
@@ -1461,51 +1458,51 @@ static void D_ParseDoomWadPath(void)
 //
 char *D_FindInDoomWadPath(const char *filename, const char *extension)
 {
-   qstring_t qstr;
+   qstring qstr;
    char *concat  = NULL;
    char *currext = NULL;
 
-   QStrInitCreate(&qstr);
+   qstr.initCreate();
 
    for(int i = 0; i < numdoomwadpaths; ++i)
    {
       struct stat sbuf;
       
-      QStrClear(&qstr);
-      QStrCat(QStrPutc(QStrCopy(&qstr, doomwadpaths[i]), '/'), filename);
-      QStrNormalizeSlashes(&qstr);
+      qstr = doomwadpaths[i];
+      qstr += '/';
+      qstr += filename;
+      qstr.normalizeSlashes();
+      qstr.RStrip('/');
 
       // See if the file exists as-is
-      if(!stat(QStrConstPtr(&qstr), &sbuf)) // check for existence
+      if(!stat(qstr.constPtr(), &sbuf)) // check for existence
       {
          if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
          {
-            concat = QStrCDup(&qstr, PU_STATIC);
+            concat = qstr.duplicate(PU_STATIC);
             break; // done.
          }
       }
 
       // See if the file could benefit from having the default extension
       // added to it.
-      if(extension && (currext = QStrBufferAt(&qstr, QStrLen(&qstr) - 4))) 
+      if(extension && (currext = qstr.bufferAt(qstr.length() - 4))) 
       {
          if(strcasecmp(currext, extension)) // Doesn't already have it?
          {
-            QStrCat(&qstr, extension);
+            qstr += extension;
 
-            if(!stat(QStrConstPtr(&qstr), &sbuf)) // exists?
+            if(!stat(qstr.constPtr(), &sbuf)) // exists?
             {
                if(!S_ISDIR(sbuf.st_mode)) // not a dir?
                {
-                  concat = QStrCDup(&qstr, PU_STATIC); 
+                  concat = qstr.duplicate(PU_STATIC);
                   break; // done.
                }
             }
          }
       }
    }
-
-   QStrFree(&qstr);
 
    return concat;
 }

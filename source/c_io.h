@@ -46,9 +46,9 @@ void C_Popup(void);
 void C_InstaPopup(void);
 
 // haleyjd
-void C_OpenConsoleLog(qstring_t *filename);
+void C_OpenConsoleLog(qstring *filename);
 void C_CloseConsoleLog(void);
-void C_DumpMessages(qstring_t *filename);
+void C_DumpMessages(qstring *filename);
 
 // sf 9/99: made a #define
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)

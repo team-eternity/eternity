@@ -807,7 +807,7 @@ CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_INFAMMO);
 
@@ -823,7 +823,7 @@ CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
    int value=0;
 
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_NOCLIP);
 
@@ -840,7 +840,7 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
    int value = 0;        // sf: choose to set to 0 or 1 
 
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_GODMODE);
    
@@ -863,7 +863,7 @@ CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_IMMORTAL);
 

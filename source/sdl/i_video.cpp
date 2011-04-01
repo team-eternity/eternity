@@ -375,10 +375,10 @@ static void I_ParseGeom(const char *geom,
    const char *c = geom;
    int state = STATE_WIDTH;
    int tmpwidth = 320, tmpheight = 200;
-   qstring_t qstr;
+   qstring qstr;
    boolean errorflag = false;
 
-   QStrInitCreate(&qstr);
+   qstr.initCreate();
 
    while(*c)
    {
@@ -386,10 +386,10 @@ static void I_ParseGeom(const char *geom,
       {
       case STATE_WIDTH:
          if(*c >= '0' && *c <= '9')
-            QStrPutc(&qstr, *c);
+            qstr += *c;
          else
          {
-            int width = QStrAtoi(&qstr);
+            int width = qstr.toInt();
             if(width < 320 || width > MAX_SCREENWIDTH)
             {
                state = STATE_FLAGS;
@@ -398,17 +398,17 @@ static void I_ParseGeom(const char *geom,
             else
             {
                tmpwidth = width;
-               QStrClear(&qstr);
+               qstr.clear();
                state = STATE_HEIGHT;
             }
          }
          break;
       case STATE_HEIGHT:
          if(*c >= '0' && *c <= '9')
-            QStrPutc(&qstr, *c);
+            qstr += *c;
          else
          {
-            int height = QStrAtoi(&qstr);
+            int height = qstr.toInt();
             if(height < 200 || height > MAX_SCREENHEIGHT)
             {
                state = STATE_FLAGS;
@@ -457,7 +457,7 @@ static void I_ParseGeom(const char *geom,
    // handle termination of loop during STATE_HEIGHT (no flags)
    if(state == STATE_HEIGHT)
    {
-      int height = QStrAtoi(&qstr);
+      int height = qstr.toInt();
 
       if(height < 200 || height > MAX_SCREENHEIGHT)
          errorflag = true;
@@ -474,8 +474,6 @@ static void I_ParseGeom(const char *geom,
 
    *w = tmpwidth;
    *h = tmpheight;
-
-   QStrFree(&qstr);
 }
 
 //

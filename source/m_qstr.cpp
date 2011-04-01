@@ -21,12 +21,12 @@
 //
 // Reallocating string structure
 //
-// What this "class" guarantees:
+// What this class guarantees:
 // * The string will always be null-terminated
 // * Indexing functions always check array bounds
 // * Insertion functions always reallocate when needed
 //
-// Of course, using QStrBuffer can negate these, so avoid it
+// Of course, using getBuffer can negate these, so avoid it
 // except for passing a char * to read op functions.
 //
 // By James Haley
@@ -39,86 +39,87 @@
 #include "m_misc.h"   // for M_Strupr/M_Strlwr
 #include "d_io.h"     // for strcasecmp
 
+const size_t qstring::npos = ((size_t) -1);
+const size_t qstring::basesize = 32;
+
 //=============================================================================
 //
 // Constructors, Destructors, and Reinitializers
 //
 
-// 32 bytes is the minimum block size currently used by the zone 
-// allocator, so it makes sense to use it as the base default 
-// string size too.
-
-#define QSTR_BASESIZE 32
-
 //
-// QStrCreateSize
+// qstring::createSize
 //
 // Creates a qstring with a given initial size, which helps prevent
 // unnecessary initial reallocations. Resets insertion point to zero.
 // This is safe to call on an existing qstring to reinitialize it.
 //
-qstring_t *QStrCreateSize(qstring_t *qstr, size_t size)
+qstring &qstring::createSize(size_t pSize)
 {
-   qstr->buffer = (char *)(realloc(qstr->buffer, size));
-   qstr->size   = size;
-   qstr->index  = 0;
-   memset(qstr->buffer, 0, size);
+   buffer = (char *)(realloc(buffer, pSize));
+   size   = pSize;
+   index  = 0;
+   memset(buffer, 0, size);
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrCreate
+// qstring::create
 //
 // Gives the qstring a buffer of the default size and initializes
 // it to zero. Resets insertion point to zero. This is safe to call
 // on an existing qstring to reinitialize it.
 //
-qstring_t *QStrCreate(qstring_t *qstr)
+qstring &qstring::create()
 {
-   return QStrCreateSize(qstr, QSTR_BASESIZE);
+   return createSize(basesize);
 }
 
 //
-// QStrInitCreate
+// qstring::initCreate
 //
 // Initializes a qstring struct to all zeroes, then calls
-// QStrCreate. This is for safety the first time a qstring
-// is created (if qstr->buffer is uninitialized, realloc will
+// qstring::create. This is for safety the first time a qstring
+// is created (if qstr::buffer is uninitialized, realloc will
 // crash).
 //
-qstring_t *QStrInitCreate(qstring_t *qstr)
+qstring &qstring::initCreate()
 {
-   memset(qstr, 0, sizeof(*qstr));
+   buffer = NULL;
+   size   = 0;
+   index  = 0;
 
-   return QStrCreate(qstr);
+   return create();
 }
 
 //
-// QStrInitCreateSize
+// qstring::initCreateSize
 //
 // Initialization and creation with size specification.
 //
-qstring_t *QStrInitCreateSize(qstring_t *qstr, size_t size)
+qstring &qstring::initCreateSize(size_t pSize)
 {
-   memset(qstr, 0, sizeof(*qstr));
+   buffer = NULL;
+   size   = 0;
+   index  = 0;
 
-   return QStrCreateSize(qstr, size);
+   return createSize(pSize);
 }
 
 //
-// QStrFree
+// qstring::freeBuffer
 //
 // Frees the qstring object. It should not be used after this,
-// unless QStrCreate is called on it. You don't have to free
+// unless qstring::create is called on it. You don't have to free
 // a qstring before recreating it, however, since it uses realloc.
 //
-void QStrFree(qstring_t *qstr)
+void qstring::freeBuffer()
 {
-   if(qstr->buffer)
-      free(qstr->buffer);
-   qstr->buffer = NULL;
-   qstr->index = qstr->size = 0;
+   if(buffer)
+      free(buffer);
+   buffer = NULL;
+   index = size = 0;
 }
 
 //=============================================================================
@@ -127,28 +128,28 @@ void QStrFree(qstring_t *qstr)
 //
 
 //
-// QStrCharAt
+// qstring::charAt
 //
 // Indexing function to access a character in a qstring. This is slower but 
-// more secure than using QStrBuffer with array indexing.
+// more secure than using qstring::getBuffer with array indexing.
 //
-char QStrCharAt(qstring_t *qstr, size_t idx)
+char qstring::charAt(size_t idx) const
 {
-   if(idx >= qstr->size)
-      I_Error("QStrCharAt: index out of range\n");
+   if(idx >= size)
+      I_Error("qstring::charAt: index out of range\n");
 
-   return qstr->buffer[idx];
+   return buffer[idx];
 }
 
 //
-// QStrBufferAt
+// qstring::bufferAt
 //
 // Gets a pointer into the buffer at the given position, if that position would
-// be valid. Returns NULL otherwise. The same caveats apply as with QStrBuffer.
+// be valid. Returns NULL otherwise. The same caveats apply as with qstring::getBuffer.
 //
-char *QStrBufferAt(qstring_t *qstr, size_t idx)
+char *qstring::bufferAt(size_t idx) const
 {
-   return idx < qstr->size ? qstr->buffer + idx : NULL;
+   return idx < size ? buffer + idx : NULL;
 }
 
 //=============================================================================
@@ -157,50 +158,50 @@ char *QStrBufferAt(qstring_t *qstr, size_t idx)
 //
 
 //
-// QStrClear
+// qstring::clear
 //
 // Sets the entire qstring buffer to zero, and resets the insertion index. 
 // Does not reallocate the buffer.
 //
-qstring_t *QStrClear(qstring_t *qstr)
+qstring &qstring::clear()
 {
-   memset(qstr->buffer, 0, qstr->size);
-   qstr->index = 0;
+   memset(buffer, 0, size);
+   index = 0;
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrClearOrCreate
+// qstring::clearOrCreate
 //
 // Creates a qstring, or clears it if it is already valid.
 //
-qstring_t *QStrClearOrCreate(qstring_t *qstr, size_t size)
+qstring &qstring::clearOrCreate(size_t pSize)
 {
-   if(!qstr->buffer)
-      QStrCreateSize(qstr, size);
+   if(!buffer)
+      createSize(pSize);
    else
-      QStrClear(qstr);
+      clear();
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrGrow
+// qstring::grow
 //
 // Grows the qstring's buffer by the indicated amount. This is automatically
 // called by other qstring methods, so there is generally no need to call it 
 // yourself.
 //
-qstring_t *QStrGrow(qstring_t *qstr, size_t len)
+qstring& qstring::grow(size_t len)
 {   
-   size_t newsize = qstr->size + len;
+   size_t newsize = size + len;
 
-   qstr->buffer = (char *)(realloc(qstr->buffer, newsize));
-   memset(qstr->buffer + qstr->size, 0, len);
-   qstr->size += len;
+   buffer = (char *)(realloc(buffer, newsize));
+   memset(buffer + size, 0, len);
+   size += len;
    
-   return qstr;
+   return *this;
 }
 
 //=============================================================================
@@ -209,204 +210,275 @@ qstring_t *QStrGrow(qstring_t *qstr, size_t len)
 //
 
 //
-// QStrPutc
+// qstring::Putc
 //
 // Adds a character to the end of the qstring, reallocating via buffer doubling
 // if necessary.
 //
-qstring_t *QStrPutc(qstring_t *qstr, char ch)
+qstring &qstring::Putc(char ch)
 {
-   if(qstr->index >= qstr->size - 1) // leave room for \0
-      QStrGrow(qstr, qstr->size);    // double buffer size
+   if(index >= size - 1) // leave room for \0
+      grow(size);        // double buffer size
 
-   qstr->buffer[qstr->index++] = ch;
+   buffer[index++] = ch;
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrDelc
+// qstring::operator +=
+//
+// Overloaded += for characters
+//
+qstring &qstring::operator += (char ch)
+{
+   return Putc(ch);
+}
+
+//
+// qstring::Delc
 //
 // Deletes a character from the end of the qstring.
 //
-qstring_t *QStrDelc(qstring_t *qstr)
+qstring &qstring::Delc()
 {
-   if(qstr->index > 0)
-      qstr->index--;
+   if(index > 0)
+      index--;
 
-   qstr->buffer[qstr->index] = '\0';
+   buffer[index] = '\0';
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrCat
+// qstring::concat
 //
 // Concatenates a C string onto the end of a qstring, expanding the buffer if
 // necessary.
 //
-qstring_t *QStrCat(qstring_t *qstr, const char *str)
+qstring &qstring::concat(const char *str)
 {
-   unsigned int cursize = qstr->size;
-   unsigned int newsize = qstr->index + strlen(str) + 1;
+   unsigned int cursize = size;
+   unsigned int newsize = index + strlen(str) + 1;
 
    if(newsize >= cursize)
-      QStrGrow(qstr, newsize - cursize);
+      grow(newsize - cursize);
 
-   strcat(qstr->buffer, str);
+   strcat(buffer, str);
 
-   qstr->index = strlen(qstr->buffer);
+   index = strlen(buffer);
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrQCat
+// qstring::concat
 //
 // Concatenates a qstring to a qstring. Convenience routine.
 //
-qstring_t *QStrQCat(qstring_t *dest, qstring_t *src)
+qstring &qstring::concat(const qstring &src)
 {
-   return QStrCat(dest, src->buffer);
+   return concat(src.buffer);
 }
 
 //
-// QStrInsert
+// qstring::operator +=
+//
+// Overloaded += for const char *
+//
+qstring &qstring::operator += (const char *other)
+{
+   return concat(other);
+}
+
+//
+// qstring::operator +=
+//
+// Overloaded += for qstring &
+//
+qstring &qstring::operator += (const qstring &other)
+{
+   return concat(other);
+}
+
+//
+// qstring::insert
 //
 // Inserts a string at a given position in the qstring. If the
 // position is outside the range of the string, an error will occur.
 //
-qstring_t *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos)
+qstring &qstring::insert(const char *insertstr, size_t pos)
 {
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize = dest->index + insertstrlen + 1;
+   size_t totalsize = index + insertstrlen + 1;
 
    // pos must be between 0 and dest->index - 1
-   if(pos >= dest->index)
-      I_Error("QStrInsert: position out of range\n");
+   if(pos >= index)
+      I_Error("qstring::insert: position out of range\n");
 
    // grow the buffer to hold the resulting string if necessary
-   if(totalsize >= dest->size)
-      QStrGrow(dest, totalsize - dest->size);
+   if(totalsize >= size)
+      grow(totalsize - size);
 
-   insertpoint = dest->buffer + pos;
-   charstomove = dest->index  - pos;
+   insertpoint = buffer + pos;
+   charstomove = index  - pos;
 
    // use memmove for absolute safety
    memmove(insertpoint + insertstrlen, insertpoint, charstomove);
    memmove(insertpoint, insertstr, insertstrlen);
 
-   dest->index = strlen(dest->buffer);
+   index = strlen(buffer);
 
-   return dest;
+   return *this;
 }
 
 //
-// QStrCopy
+// qstring::copy
 //
 // Copies a C string into the qstring. The qstring is cleared first,
 // and then set to the contents of *str.
 //
-qstring_t *QStrCopy(qstring_t *qstr, const char *str)
+qstring &qstring::copy(const char *str)
 {
-   QStrClear(qstr);
+   clear();
    
-   return QStrCat(qstr, str);
+   return concat(str);
 }
 
 //
-// QStrCNCopy
+// qstring::copy
+//
+// Overloaded for qstring &
+//
+qstring &qstring::copy(const qstring &src)
+{
+   clear();
+
+   return concat(src);
+}
+
+//
+// qstring::operator =
+//
+// Assignment from a qstring &
+//
+qstring &qstring::operator = (const qstring &other)
+{
+   return copy(other);
+}
+
+//
+// qstring::operator =
+//
+// Assignment from a const char *
+qstring &qstring::operator = (const char *other)
+{
+   return copy(other);
+}
+
+
+//
+// qstring::copyInto
 //
 // Copies the qstring into a C string buffer.
 //
-char *QStrCNCopy(char *dest, const qstring_t *src, size_t size)
+char *qstring::copyInto(char *dest, size_t pSize) const
 {
-   return strncpy(dest, src->buffer, size);
+   return strncpy(dest, buffer, pSize);
 }
 
 //
-// QStrQCopy
+// qstring::copyInto
 //
 // Copies one qstring into another.
 //
-qstring_t *QStrQCopy(qstring_t *dest, const qstring_t *src)
+qstring &qstring::copyInto(qstring &dest) const
 {
-   QStrClear(dest);
+   dest.clear();
    
-   return QStrCat(dest, src->buffer);
+   return dest.concat(*this);
 }
 
 //
-// QStrSwap
+// qstring::swapWith
 //
 // Exchanges the contents of two qstrings.
 //
-void QStrSwap(qstring_t *str1, qstring_t *str2)
+void qstring::swapWith(qstring &str2)
 {
-   qstring_t temp = *str1; // make a shallow copy of string 1
+   qstring temp;
+   
+   temp.buffer = this->buffer; // make a shallow copy
+   temp.size   = this->size;
+   temp.index  = this->index;
 
-   *str1 = *str2;
-   *str2 = temp;
+   this->buffer = str2.buffer;
+   this->size   = str2.size;
+   this->index  = str2.index;
+
+   str2.buffer = temp.buffer;
+   str2.size   = temp.size;
+   str2.index  = temp.index;
 }
 
 //
-// QStrLStrip
+// qstring::LStrip
 //
 // Removes occurrences of a specified character at the beginning of a qstring.
 //
-qstring_t *QStrLStrip(qstring_t *qstr, char c)
+qstring &qstring::LStrip(char c)
 {
-   size_t i = 0;
-   size_t len = qstr->index;
+   size_t i   = 0;
+   size_t len = index;
 
-   while(qstr->buffer[i] != '\0' && qstr->buffer[i] == c)
+   while(buffer[i] != '\0' && buffer[i] == c)
       ++i;
 
    if(i)
    {
       if((len -= i) == 0)
-         QStrClear(qstr);
+         clear();
       else
       {
-         memmove(qstr->buffer, qstr->buffer + i, len);
-         memset(qstr->buffer + len, 0, qstr->size - len);
-         qstr->index -= i;
+         memmove(buffer, buffer + i, len);
+         memset(buffer + len, 0, size - len);
+         index -= i;
       }
    }
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrRStrip
+// qstring::RStrip
 //
 // Removes occurrences of a specified character at the end of a qstring.
 //
-qstring_t *QStrRStrip(qstring_t *qstr, char c)
+qstring &qstring::RStrip(char c)
 {
-   while(qstr->index && qstr->buffer[qstr->index - 1] == c)
-      QStrDelc(qstr);
+   while(index && buffer[index - 1] == c)
+      Delc();
 
-   return qstr;
+   return *this;
 }
 
 //
-// QStrTruncate
+// qstring::truncate
 //
 // Truncates the qstring to the indicated position.
 //
-qstring_t *QStrTruncate(qstring_t *qstr, size_t pos)
+qstring &qstring::truncate(size_t pos)
 {
    // pos must be between 0 and qstr->index - 1
-   if(pos >= qstr->index)
-      I_Error("QStrTruncate: position out of range\n");
+   if(pos >= index)
+      I_Error("qstring::truncate: position out of range\n");
 
-   memset(qstr->buffer + pos, 0, qstr->index - pos);
-   qstr->index = pos;
+   memset(buffer + pos, 0, index - pos);
+   index = pos;
 
-   return qstr;
+   return *this;
 }
 
 //=============================================================================
@@ -415,43 +487,103 @@ qstring_t *QStrTruncate(qstring_t *qstr, size_t pos)
 //
 
 //
-// QStrCmp
+// qstring::strCmp
 //
-// String compare.
+// C-style string comparison/collation ordering.
 //
-int QStrCmp(qstring_t *qstr, const char *str)
+int qstring::strCmp(const char *str) const
 {
-   return strcmp(qstr->buffer, str);
+   return strcmp(buffer, str);
 }
 
 //
-// QStrNCmp
+// qstring::strNCmp
 //
-// String compare with length limitation.
+// C-style string compare with length limitation.
 //
-int QStrNCmp(qstring_t *qstr, const char *str, size_t maxcount)
+int qstring::strNCmp(const char *str, size_t maxcount) const
 {
-   return strncmp(qstr->buffer, str, maxcount);
+   return strncmp(buffer, str, maxcount);
 }
 
 //
-// QStrCaseCmp
+// qstring::strCaseCmp
 //
-// Case-insensitive string compare.
+// Case-insensitive C-style string compare.
 //
-int QStrCaseCmp(qstring_t *qstr, const char *str)
+int qstring::strCaseCmp(const char *str) const
 {
-   return strcasecmp(qstr->buffer, str);
+   return strcasecmp(buffer, str);
 }
 
 //
-// QStrNCaseCmp
+// qstring::strNCaseCmp
 //
-// Case-insensitive compare with length limitation.
+// Case-insensitive C-style compare with length limitation.
 //
-int QStrNCaseCmp(qstring_t *qstr, const char *str, size_t maxcount)
+int qstring::strNCaseCmp(const char *str, size_t maxcount) const
 {
-   return strncasecmp(qstr->buffer, str, maxcount);
+   return strncasecmp(buffer, str, maxcount);
+}
+
+//
+// qstring::compare
+// 
+// C++ style comparison. True return value means it is equal to the argument.
+//
+boolean qstring::compare(const char *str) const
+{
+   return !strcmp(buffer, str);
+}
+
+//
+// qstring::compare
+// 
+// Overload for qstrings.
+//
+boolean qstring::compare(const qstring &other) const
+{
+   return !strcmp(buffer, other.buffer);
+}
+
+//
+// qstring::operator ==
+//
+// Overloaded comparison operator for const char *
+//
+boolean qstring::operator == (const char *other) const
+{
+   return !strcmp(buffer, other);
+}
+
+//
+// qstring::operator ==
+//
+// Overloaded comparison operator for qstring &
+//
+boolean qstring::operator == (const qstring &other) const
+{
+   return !strcmp(buffer, other.buffer);
+}
+
+//
+// qstring::operator !=
+//
+// Overloaded comparison operator for const char *
+//
+boolean qstring::operator != (const char *other) const
+{
+   return strcmp(buffer, other) != 0;
+}
+
+//
+// qstring::operator !=
+//
+// Overloaded comparison operator for qstring &
+//
+boolean qstring::operator != (const qstring &other) const
+{
+   return strcmp(buffer, other.buffer) != 0;
 }
 
 //=============================================================================
@@ -460,34 +592,34 @@ int QStrNCaseCmp(qstring_t *qstr, const char *str, size_t maxcount)
 //
 
 //
-// QStrChr
+// qstring::strChr
 //
 // Calls strchr on the qstring ("find first of", C-style).
 //
-const char *QStrChr(qstring_t *qstr, char c)
+const char *qstring::strChr(char c) const
 {
-   return strchr(qstr->buffer, c);
+   return strchr(buffer, c);
 }
 
 //
-// QStrRChr
+// qstring::strRChr
 //
 // Calls strrchr on the qstring ("find last of", C-style)
 //
-const char *QStrRChr(qstring_t *qstr, char c)
+const char *qstring::strRChr(char c) const
 {
-   return strrchr(qstr->buffer, c);
+   return strrchr(buffer, c);
 }
 
 //
-// QStrFindFirstOfChar
+// qstring::findFirstOf
 //
 // Finds the first occurance of a character in the qstring and returns its 
 // position. Returns qstring_npos if not found.
 //
-size_t QStrFindFirstOfChar(qstring_t *qstr, char c)
+size_t qstring::findFirstOf(char c) const
 {
-   const char *rover = qstr->buffer;
+   const char *rover = buffer;
    boolean found = false;
 
    while(*rover)
@@ -500,18 +632,18 @@ size_t QStrFindFirstOfChar(qstring_t *qstr, char c)
       ++rover;
    }
 
-   return found ? rover - qstr->buffer : qstring_npos;
+   return found ? rover - buffer : npos;
 }
 
 //
-// QStrFindFirstNotOfChar
+// qstring::findFirstNotOf
 //
 // Finds the first occurance of a character in the qstring which does not
 // match the provided character. Returns qstring_npos if not found.
 //
-size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
+size_t qstring::findFirstNotOf(char c) const
 {
-   const char *rover = qstr->buffer;
+   const char *rover = buffer;
    boolean found = false;
 
    while(*rover)
@@ -524,7 +656,7 @@ size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
       ++rover;
    }
 
-   return found ? rover - qstr->buffer : qstring_npos;
+   return found ? rover - buffer : npos;
 }
 
 //=============================================================================
@@ -537,13 +669,13 @@ size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
 //
 
 //
-// QStrAtoi
+// qstring::toInt
 //
 // Returns the qstring converted to an integer via atoi.
 //
-int QStrAtoi(qstring_t *qstr)
+int qstring::toInt() const
 {
-   return atoi(qstr->buffer);
+   return atoi(buffer);
 }
 
 //
@@ -551,13 +683,13 @@ int QStrAtoi(qstring_t *qstr)
 //
 
 //
-// QStrToDouble
+// qstring::toDouble
 //
 // Calls strtod on the qstring.
 
-double QStrToDouble(qstring_t *str, char **endptr)
+double qstring::toDouble(char **endptr) const
 {
-   return strtod(str->buffer, endptr);
+   return strtod(buffer, endptr);
 }
 
 //
@@ -565,24 +697,24 @@ double QStrToDouble(qstring_t *str, char **endptr)
 //
 
 //
-// QStrCDup
+// qstring::duplicate
 //
 // Creates a C string duplicate of a qstring's contents.
 //
-char *QStrCDup(qstring_t *qstr, int tag)
+char *qstring::duplicate(int tag) const
 {
-   return (char *)Z_Strdup(qstr->buffer, tag, NULL);
+   return (char *)Z_Strdup(buffer, tag, NULL);
 }
 
 //
-// QStrCDupAuto
+// qstring::duplicateAuto
 //
 // Creates an automatic allocation (disposable) copy of the qstring's
 // contents.
 //
-char *QStrCDupAuto(qstring_t *qstr)
+char *qstring::duplicateAuto() const
 {
-   return (char *)Z_Strdupa(qstr->buffer);
+   return (char *)Z_Strdupa(buffer);
 }
 
 //=============================================================================
@@ -591,25 +723,25 @@ char *QStrCDupAuto(qstring_t *qstr)
 //
 
 //
-// QStrLwr
+// qstring::toLower
 //
 // Converts the string to lowercase.
 //
-qstring_t *QStrLwr(qstring_t *qstr)
+qstring &qstring::toLower()
 {
-   M_Strlwr(qstr->buffer);
-   return qstr;
+   M_Strlwr(buffer);
+   return *this;
 }
 
 //
-// QStrUpr
+// qstring::toUpper
 //
 // Converts the string to uppercase.
 //
-qstring_t *QStrUpr(qstring_t *qstr)
+qstring &qstring::toUpper()
 {
-   M_Strupr(qstr->buffer);
-   return qstr;
+   M_Strupr(buffer);
+   return *this;
 }
 
 //=============================================================================
@@ -624,10 +756,10 @@ static byte qstr_repltable[256];
 //
 // Static routine for replacement functions.
 //
-static size_t QStrReplaceInternal(qstring_t *qstr, char repl)
+static size_t QStrReplaceInternal(qstring *qstr, char repl)
 {
    size_t repcount = 0;
-   unsigned char *rptr = (unsigned char *)(qstr->buffer);
+   unsigned char *rptr = (unsigned char *)(qstr->getBuffer());
 
    // now scan through the qstring buffer and replace any characters that
    // match characters in the filter table.
@@ -645,12 +777,12 @@ static size_t QStrReplaceInternal(qstring_t *qstr, char repl)
 }
 
 //
-// QStrReplace
+// qstring::replace
 //
 // Replaces characters in the qstring that match any character in the filter
 // string with the character specified by the final parameter.
 //
-size_t QStrReplace(qstring_t *qstr, const char *filter, char repl)
+size_t qstring::replace(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
 
@@ -660,15 +792,15 @@ size_t QStrReplace(qstring_t *qstr, const char *filter, char repl)
    while(*fptr)
       qstr_repltable[*fptr++] = 1;
 
-   return QStrReplaceInternal(qstr, repl);
+   return QStrReplaceInternal(this, repl);
 }
 
 //
-// QStrReplaceNotOf
+// qstring::replaceNotOf
 //
 // As above, but replaces all characters NOT in the filter string.
 //
-size_t QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
+size_t qstring::replaceNotOf(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
 
@@ -678,23 +810,23 @@ size_t QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
    while(*fptr)
       qstr_repltable[*fptr++] = 0;
 
-   return QStrReplaceInternal(qstr, repl);
+   return QStrReplaceInternal(this, repl);
 }
 
 //
-// QStrNormalizeSlashes
+// qstring::normalizeSlashes
 //
 // Calls M_NormalizeSlashes on a qstring, which replaces \ characters with /
 // and eliminates any duplicate slashes. This isn't simply a convenience
 // method, as the qstring structure requires a fix-up after this function is
 // used on it, in order to keep the string length correct.
 //
-qstring_t *QStrNormalizeSlashes(qstring_t *qstr)
+qstring &qstring::normalizeSlashes()
 {
-   M_NormalizeSlashes(qstr->buffer);
-   qstr->index = strlen(qstr->buffer);
+   M_NormalizeSlashes(buffer);
+   index = strlen(buffer);
 
-   return qstr;
+   return *this;
 }
 
 //=============================================================================
@@ -703,21 +835,24 @@ qstring_t *QStrNormalizeSlashes(qstring_t *qstr)
 //
 
 //
-// QStrMakeQuoted
+// qstring::makeQuoted
 // 
 // Adds quotation marks to the qstring.
 //
-qstring_t *QStrMakeQuoted(qstring_t *s)
+qstring &qstring::makeQuoted()
 {
    // if the string is empty, make it "", else add quotes around the contents
-   if(s->index == 0)
-      return QStrCat(s, "\"\"");
+   if(index == 0)
+      return concat("\"\"");
    else
-      return QStrPutc(QStrInsert(s, "\"", 0), '\"');
+   {
+      insert("\"", 0);
+      return Putc('\"');
+   }
 }
 
 //
-// QStrPrintf
+// qstring::Printf
 //
 // Performs formatted printing into a qstring. If maxlen is > 0, the qstring
 // will be reallocated to a minimum of that size for the formatted printing.
@@ -726,7 +861,7 @@ qstring_t *QStrMakeQuoted(qstring_t *s)
 // padding directives, as they will be ignored, and the resulting output may
 // then be truncated to qstr->size - 1.
 //
-int QStrPrintf(qstring_t *qstr, size_t maxlen, const char *fmt, ...)
+int qstring::Printf(size_t maxlen, const char *fmt, ...)
 {
    va_list va2;
    int returnval;
@@ -734,10 +869,10 @@ int QStrPrintf(qstring_t *qstr, size_t maxlen, const char *fmt, ...)
    if(maxlen)
    {
       // maxlen is specified. Check it against the qstring's current size.
-      if(maxlen > qstr->size)
-         QStrCreateSize(qstr, maxlen);
+      if(maxlen > size)
+         createSize(maxlen);
       else
-         QStrClear(qstr);
+         clear();
    }
    else
    {
@@ -813,17 +948,17 @@ int QStrPrintf(qstring_t *qstr, size_t maxlen, const char *fmt, ...)
       }
       va_end(va1);
 
-      if(charcount > qstr->size)
-         QStrCreateSize(qstr, charcount);
+      if(charcount > size)
+         createSize(charcount);
       else
-         QStrClear(qstr);
+         clear();
    }
 
    va_start(va2, fmt);
-   returnval = pvsnprintf(qstr->buffer, qstr->size, fmt, va2);
+   returnval = pvsnprintf(buffer, size, fmt, va2);
    va_end(va2);
 
-   qstr->index = strlen(qstr->buffer);
+   index = strlen(buffer);
 
    return returnval;
 }

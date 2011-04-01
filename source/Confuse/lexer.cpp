@@ -59,7 +59,7 @@ char *mytext; // haleyjd: equivalent to yytext
 // libConfuse v2.0; eliminates unsafe, overflowable array
 // 02/12/04: replaced with generalized solution in m_qstr.c
 
-static qstring_t qstring;
+static qstring qstr;
 
 //
 // lexer_error
@@ -140,7 +140,7 @@ int lexer_init(cfg_t *cfg, DWFILE *file)
 
    if(!code)
    {
-      QStrCreate(&qstring);
+      qstr.create();
       bufferpos = lexbuffer = buf;
    }
 
@@ -165,7 +165,7 @@ void lexer_reset(void)
    unquoted_spaces = cfg_false;
 
    // free qstring buffer
-   QStrFree(&qstring);
+   qstr.freeBuffer();
 
    // ensure that buffer state is reset
    lexer_free_buffer();
@@ -294,23 +294,23 @@ static int lexer_state_string(lexerstate_t *ls)
             --bufferpos;
             break;
          case 'n':
-            QStrPutc(&qstring, '\n');
+            qstr += '\n';
             break;
          case 't':
-            QStrPutc(&qstring, '\t');
+            qstr += '\t';
             break;
          case 'a':
-            QStrPutc(&qstring, '\a');
+            qstr += '\a';
             break;
          case 'b':
-            QStrPutc(&qstring, '\b');
+            qstr += '\b';
             break;                     
          case '0':
-            QStrPutc(&qstring, '\0');
+            qstr += '\0';
             break;
             // haleyjd 03/14/06: color codes
          case 'K':
-            QStrPutc(&qstring, (char)128);
+            qstr += (char)128;
             break;
          case '1':
          case '2':
@@ -321,29 +321,29 @@ static int lexer_state_string(lexerstate_t *ls)
          case '7':
          case '8':
          case '9':
-            QStrPutc(&qstring, (char)((s - '0') + 128));
+            qstr += (char)((s - '0') + 128);
             break;
             // haleyjd 03/14/06: special codes
          case 'T': // translucency
-            QStrPutc(&qstring, (char)138);
+            qstr += (char)138;
             break;
          case 'N': // normal
-            QStrPutc(&qstring, (char)139);
+            qstr += (char)139;
             break;
          case 'H': // hi
-            QStrPutc(&qstring, (char)140);
+            qstr += (char)140;
             break;
          case 'E': // error
-            QStrPutc(&qstring, (char)141);
+            qstr += (char)141;
             break;
          case 'S': // shadowed
-            QStrPutc(&qstring, (char)142);
+            qstr += (char)142;
             break;
          case 'C': // absCentered
-            QStrPutc(&qstring, (char)143);
+            qstr += (char)143;
             break;
          default:
-            QStrPutc(&qstring, s);
+            qstr += s;
             break;
          }
       }
@@ -351,23 +351,23 @@ static int lexer_state_string(lexerstate_t *ls)
    case '"':
       if(ls->stringtype == 1) // double-quoted string, end it
       {
-         mytext = QStrBuffer(&qstring);
+         mytext = qstr.getBuffer();
          ret = CFGT_STR;
       }
       else
-         QStrPutc(&qstring, ls->c);
+         qstr += ls->c;
       break;
    case '\'':
       if(ls->stringtype == 2) // single-quoted string, end it
       {               
-         mytext = QStrBuffer(&qstring);
+         mytext = qstr.getBuffer();
          ret = CFGT_STR;
       }
       else
-         QStrPutc(&qstring, ls->c);
+         qstr += ls->c;
       break;
    default:
-      QStrPutc(&qstring, ls->c);
+      qstr += ls->c;
       break;
    }
 
@@ -389,13 +389,13 @@ static int lexer_state_unquotedstring(lexerstate_t *ls)
    {
       // any special character ends an unquoted string
       --bufferpos; // put it back
-      mytext = QStrBuffer(&qstring);
+      mytext = qstr.getBuffer();
       
       return CFGT_STR; // return a string token
    }
    else // normal characters
    {
-      QStrPutc(&qstring, c);
+      qstr += c;
       
       return -1; // continue parsing
    }
@@ -424,7 +424,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
    if(ls->c == c && *bufferpos == '@')
    {
       ++bufferpos; // move forward past @
-      mytext = QStrBuffer(&qstring);
+      mytext = qstr.getBuffer();
 
       return CFGT_STR; // return a string token
    }
@@ -433,7 +433,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
       if(ls->c == '\n')
          ls->cfg->line++; // still need to track line numbers
       
-      QStrPutc(&qstring, ls->c);
+      qstr += ls->c;
 
       return -1; // continue parsing
    }
@@ -498,8 +498,8 @@ static int lexer_state_none(lexerstate_t *ls)
       if(*bufferpos != '=') // look ahead to next character
       {
          // if not '=', start an unquoted string
-         QStrClear(&qstring);
-         QStrPutc(&qstring, ls->c);
+         qstr.clear();
+         qstr += ls->c;
          ls->state = STATE_UNQUOTEDSTRING;
       }
       else
@@ -514,12 +514,12 @@ static int lexer_state_none(lexerstate_t *ls)
       ret = ',';
       break;
    case '"': // open double-quoted string
-      QStrClear(&qstring);
+      qstr.clear();
       ls->state = STATE_STRING;
       ls->stringtype = 1;
       break;
    case '\'': // open single-quoted string
-      QStrClear(&qstring);
+      qstr.clear();
       ls->state = STATE_STRING;
       ls->stringtype = 2;
       break;
@@ -537,14 +537,14 @@ static int lexer_state_none(lexerstate_t *ls)
             break;
          }
          ++bufferpos; // move past secondary delimiter character
-         QStrClear(&qstring);
+         qstr.clear();
          ls->state = STATE_HEREDOC;
          break;
       }
       // fall through, @ is not special unless followed by " or '
    default:  // anything else is part of an unquoted string
-      QStrClear(&qstring);
-      QStrPutc(&qstring, ls->c);
+      qstr.clear();
+      qstr += ls->c;
       ls->state = STATE_UNQUOTEDSTRING;
       break;
    }
@@ -600,7 +600,7 @@ include:
       // EOF after unquoted string -- return the string, next
       // call will return EOF
       --bufferpos;
-      mytext = QStrBuffer(&qstring);
+      mytext = qstr.getBuffer();
       return CFGT_STR;
 
    default:      

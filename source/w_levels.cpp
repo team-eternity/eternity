@@ -569,9 +569,9 @@ CONSOLE_COMMAND(w_startlevel, cf_notnet)
 
    // 10/24/10: support a level name as argument 2
    if(Console.argc >= 2)
-      levelname = QStrConstPtr(&Console.argv[1]);
+      levelname = Console.argv[1]->constPtr();
 
-   W_doMasterLevelsStart(QStrConstPtr(&Console.argv[0]), levelname);
+   W_doMasterLevelsStart(Console.argv[0]->constPtr(), levelname);
 }
 
 //

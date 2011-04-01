@@ -99,7 +99,7 @@ typedef struct memblock
   unsigned int id;
 #endif
 
-  struct memblock *next,*prev;
+  struct memblock *next,**prev;
   size_t size;
   void **user;
   unsigned char tag;
@@ -111,6 +111,12 @@ typedef struct memblock
 } memblock_t;
 
 static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
+
+// ZoneObject class statics
+ZoneObject *ZoneObject::objectbytag[PU_MAX];
+void       *ZoneObject::newalloc;
+
+static boolean zone_shutdown; // haleyjd 03/31/11: if true, we're shutting down
 
 //=============================================================================
 //
@@ -207,7 +213,7 @@ INSTRUMENT(int printstats = 0);            // killough 8/23/98
 void Z_PrintStats(void)           // Print allocation statistics
 {
 #ifdef INSTRUMENTED
-   if(printstats)
+   if(printstats && !zone_shutdown)
    {
       unsigned int total_memory = active_memory + purgable_memory;
       double s = 100.0 / total_memory;
@@ -289,6 +295,8 @@ static void Z_LogPuts(const char *msg)
 
 static void Z_Close(void)
 {
+   zone_shutdown = true;
+
    Z_CloseLogFile();
 
 #ifdef DUMPONEXIT
@@ -298,18 +306,27 @@ static void Z_Close(void)
 
 void Z_Init(void)
 {   
+   atexit(Z_Close);            // exit handler
+
+   Z_OpenLogFile();
+   Z_LogPrintf("Initialized zone heap (using native implementation)\n");
+}
+
+//
+// Z_initZoneHeap
+//
+// haleyjd 03/31/2011: Due to the fact that C++ objects might call Z_Malloc in
+// their constructors, we need to make sure the heap properties are completely
+// setup from *that* function and not from Z_Init above.
+//
+static void Z_initZoneHeap()
+{
    // haleyjd 03/08/10: dynamically calculate block header size;
    // round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
    // just about everywhere, and keeps the assumption of a 32-byte header on 
    // 32-bit. 64-bit will use a 64-byte header.
    header_size = (sizeof(memblock_t) + 15) & ~15;
-      
-   atexit(Z_Close);            // exit handler
-   
    INSTRUMENT(active_memory = purgable_memory = 0);
-
-   Z_OpenLogFile();
-   Z_LogPrintf("Initialized zone heap (using native implementation)\n");
 }
 
 //=============================================================================
@@ -324,10 +341,16 @@ void Z_Init(void)
 //
 void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
+   static boolean firsttime = true;
    register memblock_t *block;
    byte *ret;
-   
    INSTRUMENT(size_t size_orig = size);   
+   
+   if(firsttime)
+   {
+      Z_initZoneHeap();
+      firsttime = false;
+   }
 
    DEBUG_CHECKHEAP();
 
@@ -356,9 +379,9 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    block->size = size;
    
    if((block->next = blockbytag[tag]))
-      block->next->prev = (memblock_t *) &block->next;
+      block->next->prev = &block->next;
    blockbytag[tag] = block;
-   block->prev = (memblock_t *) &blockbytag[tag];
+   block->prev = &blockbytag[tag];
            
    INSTRUMENT_IF(tag >= PU_PURGELEVEL, 
                  purgable_memory += size_orig,
@@ -425,7 +448,7 @@ void (Z_Free)(void *p, const char *file, int line)
       if(block->user)            // Nullify user if one exists
          *block->user = NULL;
 
-      if((*(memblock_t **) block->prev = block->next))
+      if((*block->prev = block->next))
          block->next->prev = block->prev;
 
       INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
@@ -446,6 +469,9 @@ void (Z_Free)(void *p, const char *file, int line)
 void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 {
    memblock_t *block;
+
+   // haleyjd 03/30/2011: delete ZoneObjects of the same tags as well
+   ZoneObject::FreeTags(lowtag, hightag);
    
    if(lowtag <= PU_FREE)
       lowtag = PU_FREE+1;
@@ -497,11 +523,11 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
              "Z_ChangeTag: an owner is required for purgable blocks",
              block, file, line);
 
-   if((*(memblock_t **) block->prev = block->next))
+   if((*block->prev = block->next))
       block->next->prev = block->prev;
    if((block->next = blockbytag[tag]))
-      block->next->prev = (memblock_t *) &block->next;
-   block->prev = (memblock_t *) &blockbytag[tag];
+      block->next->prev = &block->next;
+   block->prev = &blockbytag[tag];
    blockbytag[tag] = block;
 
 #ifdef INSTRUMENTED
@@ -559,7 +585,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
       *(block->user) = NULL;
 
    // detach from list before reallocation
-   if((*(memblock_t **) block->prev = block->next))
+   if((*block->prev = block->next))
       block->next->prev = block->prev;
 
    block->next = NULL;
@@ -596,9 +622,9 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    // reattach to list at possibly new address, new tag
    if((block->next = blockbytag[tag]))
-      block->next->prev = (memblock_t *) &block->next;
+      block->next->prev = &block->next;
    blockbytag[tag] = block;
-   block->prev = (memblock_t *) &blockbytag[tag];
+   block->prev = &blockbytag[tag];
 
    INSTRUMENT(active_memory += block->size);
    INSTRUMENT(block->file = file);
@@ -926,6 +952,129 @@ void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
 char *(Z_Strdupa)(const char *s, const char *file, int line)
 {      
    return strcpy((char *)((Z_Alloca)(strlen(s)+1, file, line)), s);
+}
+
+//=============================================================================
+//
+// ZoneObject class methods
+//
+
+//
+// ZoneObject::operator new
+//
+// Heap allocation new for ZoneObject, which calls Z_Calloc.
+//
+void *ZoneObject::operator new (size_t size)
+{
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+}
+
+//
+// ZoneObject Constructor
+//
+// If the ZoneObject::newalloc static is set, it will be picked up by the 
+// subsequent constructor call and stored in the object that was allocated.
+//
+ZoneObject::ZoneObject() 
+   : zonealloc(NULL), zonetag(PU_FREE), zonenext(NULL), zoneprev(NULL)
+{
+   if(newalloc)
+   {
+      zonealloc = newalloc;
+      newalloc  = NULL;
+      ChangeTag(PU_STATIC);
+   }
+}
+
+//
+// ZoneObject::ChangeTag
+//
+// If the object was allocated on the zone heap, the allocation tag will be
+// changed.
+//
+void ZoneObject::ChangeTag(int tag)
+{
+   if(zonealloc) // If not a zone object, this is a no-op
+   {
+      if(zonetag != PU_FREE) // already in a list? remove it.
+      {
+         if(*zoneprev = zonenext)
+            zonenext->zoneprev = zoneprev;
+      }
+      zonenext = NULL;
+      zoneprev = NULL;
+
+      // unless freeing it, put it in the new list
+      if(tag != PU_FREE)
+      {
+         if((zonenext = objectbytag[tag]))
+            zonenext->zoneprev = &zonenext;
+         objectbytag[tag] = this;
+         zoneprev = &objectbytag[tag];
+      }
+
+      zonetag = tag;
+   }
+}
+
+//
+// ZoneObject Destructor
+//
+// If the object was allocated on the zone heap, it will be removed from its
+// block list.
+//
+ZoneObject::~ZoneObject()
+{
+   if(zonealloc)
+   {
+      ChangeTag(PU_FREE);
+      zonealloc = NULL;
+   }
+}
+
+//
+// ZoneObject::operator delete
+//
+// Calls Z_Free
+//
+void ZoneObject::operator delete (void *p)
+{
+   Z_Free(p);
+}
+
+//
+// ZoneObject::FreeTags
+//
+// Called from Z_FreeTags, this does the same thing it does except this runs
+// down the objectbytag chains instead of the blockbytag chains and invokes
+// operator delete on each object. By virtue of the virtual base class
+// destructor, this will fully delete descendent objects.
+//
+// Caveat, however! Objects that use volatile tags must NOT contain other
+// objects under a tag in the same equivalence class, unless you do not
+// try to explicitly free that object in the containing object's destructor!
+// You can do either explicit or implicit deallocation, but you must not mix
+// them. Otherwise, problems will arise with arbitrary order of destruction.
+//
+void ZoneObject::FreeTags(int lowtag, int hightag)
+{
+   ZoneObject *obj;
+
+   if(lowtag <= PU_FREE)
+      lowtag = PU_FREE+1;
+
+   if(hightag > PU_CACHE)
+      hightag = PU_CACHE;
+   
+   for(; lowtag <= hightag; ++lowtag)
+   {
+      for(obj = objectbytag[lowtag], objectbytag[lowtag] = NULL; obj;)
+      {
+         ZoneObject *next = obj->zonenext;
+         delete obj;
+         obj = next;               // Advance to next object
+      }
+   }
 }
 
 #endif // ZONE_NATIVE

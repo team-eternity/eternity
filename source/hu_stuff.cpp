@@ -1002,22 +1002,22 @@ static const char *centermsg_color;
 //
 void HU_CenterMessage(const char *s)
 {
-   static qstring_t qstr;
+   static qstring qstr;
    int st_height = GameModeInfo->StatusBar->height;
    hu_textwidget_t *tw = &centermessage_widget;
 
-   QStrClearOrCreate(&qstr, 128);
+   qstr.clearOrCreate(128);
 
    // haleyjd 02/28/06: colored center message
    if(centermsg_color)
    {
-      QStrCat(&qstr, centermsg_color);
+      qstr += centermsg_color;
       centermsg_color = NULL;
    }
    
-   QStrCat(&qstr, s);
+   qstr += s;
   
-   tw->message = QStrConstPtr(&qstr);
+   tw->message = qstr.constPtr();
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
@@ -1665,7 +1665,7 @@ CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
    S_StartSound(NULL, GameModeInfo->c_ChatSound);
    
-   doom_printf("%s: %s", players[Console.cmdsrc].name, QStrConstPtr(&Console.args));
+   doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args.constPtr());
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}

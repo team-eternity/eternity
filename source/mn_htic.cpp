@@ -190,7 +190,7 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {

@@ -1413,9 +1413,9 @@ CONSOLE_COMMAND(s_playmusic, 0)
    }
 
    // check to see if there's a music by this name
-   if(!(music = S_MusicForName(QStrConstPtr(&Console.argv[0]))))
+   if(!(music = S_MusicForName(Console.argv[0]->constPtr())))
    {
-      C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]);
+      C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]->constPtr());
       return;
    }
 
@@ -1427,7 +1427,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    if(W_CheckNumForName(namebuf) < 0)
    {
       C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
-               Console.argv[0]);
+               Console.argv[0]->constPtr());
       return;
    }
 

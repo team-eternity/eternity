@@ -96,19 +96,19 @@ CONSOLE_COMMAND(alias, 0)
   
    if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(&Console.argv[0]);
+      C_RemoveAlias(Console.argv[0]);
       return;
    }
    
    // find it or make a new one
    
-   temp = QStrBufferAt(&Console.args, QStrLen(&Console.argv[0]));
+   temp = Console.args.bufferAt(Console.argv[0]->length());
    
    // QSTR_FIXME: needs a routine
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(QStrConstPtr(&Console.argv[0]), temp);
+   C_NewAlias(Console.argv[0]->constPtr(), temp);
 }
 
 // %opt for aliases
@@ -132,14 +132,14 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      unsigned int len = QStrLen(&Console.argv[0]);
+      unsigned int len = Console.argv[0]->length();
 
       if(len == 1)
-         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
+         charnum = maxchar = Console.argv[0]->charAt(0);
       else
       {
-         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
-         mask    = QStrConstPtr(&Console.argv[0]);
+         charnum = maxchar = Console.argv[0]->charAt(0);
+         mask    = Console.argv[0]->constPtr();
          masklen = len;
       }
    }
@@ -181,14 +181,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(QStrConstPtr(&Console.args));
+   C_Puts(Console.args.constPtr());
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-   C_BufferDelay(Console.cmdtype, Console.argc ? QStrAtoi(&Console.argv[0]) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? Console.argv[0]->toInt() : 1);
 }
 
 // flood the console with crap
@@ -211,7 +211,7 @@ CONSOLE_COMMAND(dumplog, 0)
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(&Console.argv[0]);
+      C_DumpMessages(Console.argv[0]);
 }
 
 // haleyjd 09/07/03: true console logging commands
@@ -221,7 +221,7 @@ CONSOLE_COMMAND(openlog, 0)
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(&Console.argv[0]);
+      C_OpenConsoleLog(Console.argv[0]);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -246,7 +246,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       return;
    }
 
-   name = QStrConstPtr(&Console.argv[0]);
+   name = Console.argv[0]->constPtr();
 
    // haleyjd 07/05/10: use hashing!
    current = C_GetCmdForName(name);

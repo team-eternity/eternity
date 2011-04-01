@@ -257,8 +257,8 @@ typedef struct console_s
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
    int  argc;          // number of argv's
-   qstring_t  args;    // args as single string   
-   qstring_t *argv;    // argument values to current command
+   qstring   args;     // args as single string   
+   qstring **argv;     // argument values to current command
    int numargvsalloc;  // number of arguments available to command parsing
 } console_t;
 
@@ -283,8 +283,8 @@ void C_RunCmdLineScripts(void);
 /**** tab completion ****/
 
 void C_InitTab(void);
-qstring_t *C_NextTab(qstring_t *key);
-qstring_t *C_PrevTab(qstring_t *key);
+qstring &C_NextTab(qstring &key);
+qstring &C_PrevTab(qstring &key);
 
 /**** aliases ****/
 
@@ -292,7 +292,7 @@ extern alias_t aliases; // haleyjd 04/14/03: changed to linked list
 extern char *cmdoptions;
 
 alias_t *C_NewAlias(const char *aliasname, const char *command);
-void     C_RemoveAlias(qstring_t *aliasname);
+void     C_RemoveAlias(qstring *aliasname);
 alias_t *C_GetAlias(const char *name);
 
 /**** command buffers ****/

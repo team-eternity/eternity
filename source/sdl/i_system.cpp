@@ -576,7 +576,7 @@ CONSOLE_COMMAND(i_joystick, 0)
    if(Console.argc != 1)
       return;
 
-   i_SDLJoystickNum = QStrAtoi(&Console.argv[0]);
+   i_SDLJoystickNum = Console.argv[0]->toInt();
 
    if(i_SDLJoystickNum != -1)
    {

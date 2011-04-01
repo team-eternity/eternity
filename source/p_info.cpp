@@ -116,8 +116,8 @@ static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *inf
 
 static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel);
 
-static int  P_ParseInfoCmd(qstring_t *line, int cachelevel);
-static void P_ParseLevelVar(qstring_t *cmd, int cachelevel);
+static int  P_ParseInfoCmd(qstring *line, int cachelevel);
+static void P_ParseLevelVar(qstring *cmd, int cachelevel);
 
 static void P_ClearLevelVars(void);
 static void P_InitWeapons(void);
@@ -518,12 +518,12 @@ void P_LoadGlobalLevelInfo(WadDirectory *dir)
 //
 static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 {
-   qstring_t line;
+   qstring line;
    char *lump, *rover;
    int  size;
 
    // haleyjd 03/12/05: seriously restructured to eliminate last line
-   // problem and to use qstring_t to buffer lines
+   // problem and to use qstring to buffer lines
    
    // if lump is zero size, we are done
    if(!(size = dir->LumpLength(lumpnum)))
@@ -543,7 +543,7 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
    rover = lump;
 
    // create the line buffer
-   QStrInitCreate(&line);
+   line.initCreate();
    
    while(*rover)
    {
@@ -553,16 +553,13 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
          // we can break out of parsing early
          if(P_ParseInfoCmd(&line, cachelevel) == -1)
             break;
-         QStrClear(&line); // clear line buffer
+         line.clear(); // clear line buffer
       }
       else
-         QStrPutc(&line, *rover); // add char to line buffer
+         line += *rover; // add char to line buffer
 
       ++rover;
    }
-
-   // free the line buffer
-   QStrFree(&line);
 
    // free the lump
    Z_Free(lump);
@@ -573,26 +570,26 @@ static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 //
 // Parses a single line of a MapInfo lump.
 //
-static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
+static int P_ParseInfoCmd(qstring *line, int cachelevel)
 {
    unsigned int len;
    const char *label = NULL;
    LevelInfoProto_t *curproto = NULL;
 
-   QStrReplace(line, "\t\r\n", ' '); // erase any control characters
-   QStrLwr(line);                    // make everything lowercase
-   QStrLStrip(line, ' ');            // strip spaces at beginning
-   QStrRStrip(line, ' ');            // strip spaces at end
+   line->replace("\t\r\n", ' '); // erase any control characters
+   line->toLower();              // make everything lowercase
+   line->LStrip(' ');            // strip spaces at beginning
+   line->RStrip(' ');            // strip spaces at end
    
-   if(!(len = QStrLen(line)))        // ignore totally empty lines
+   if(!(len = line->length()))   // ignore totally empty lines
       return 0;
 
    // detect comments at beginning
-   if(line->buffer[0] == '#' || line->buffer[0] == ';' || 
-      (len > 1 && line->buffer[0] == '/' && line->buffer[1] == '/'))
+   if(line->charAt(0) == '#' || line->charAt(0) == ';' || 
+      (len > 1 && line->charAt(0) == '/' && line->charAt(1) == '/'))
       return 0;
      
-   if((label = QStrChr(line, '[')))  // a new section separator
+   if((label = line->strChr('[')))  // a new section separator
    {
       ++label;
 
@@ -764,21 +761,21 @@ enum
 // any appropriate matching MapInfo variable to the retrieved
 // value.
 //
-static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
+static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 {
    int state = 0;
-   qstring_t var, value;
+   qstring var, value;
    char c;
-   const char *rover = cmd->buffer;
+   const char *rover = cmd->constPtr();
    levelvar_t *current = levelvars;
 
    // haleyjd 03/12/05: seriously restructured to remove possible
    // overflow of static buffer and bad kludges used to separate
-   // the variable and value tokens -- now uses qstring_t.
+   // the variable and value tokens -- now uses qstring.
 
    // create qstrings to hold the tokens
-   QStrInitCreate(&var);
-   QStrInitCreate(&value);
+   var.initCreate();
+   value.initCreate();
 
    while((c = *rover++))
    {
@@ -788,17 +785,17 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
          if(c == ' ' || c == '=')
             state = STATE_BETWEEN;
          else
-            QStrPutc(&var, c);
+            var += c;
          continue;
       case STATE_BETWEEN: // between -- skip whitespace or =
          if(c != ' ' && c != '=')
          {
             state = STATE_VAL;
-            QStrPutc(&value, c);
+            value += c;
          }
          continue;
       case STATE_VAL: // value -- everything else goes here
-         QStrPutc(&value, c);
+         value += c;
          continue;
       default:
          I_Error("P_ParseLevelVar: undefined state in lexer\n");
@@ -806,29 +803,25 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
    }
 
    // detect some syntax errors
-   if(state != STATE_VAL || !QStrLen(&var) || !QStrLen(&value))
-   {
-      QStrFree(&var);
-      QStrFree(&value);
+   if(state != STATE_VAL || !var.length() || !value.length())
       return;
-   }
 
    // TODO: improve linear search? fixed small set, so may not matter
    while(current->type != IVT_END)
    {
-      if(!QStrCaseCmp(&var, current->name))
+      if(!var.strCaseCmp(current->name))
       {
          switch(current->type)
          {
          case IVT_STRING:
-            *(char**)current->variable = QStrCDup(&value, cachelevel);
+            *(char**)current->variable = value.duplicate(cachelevel);
             break;
 
             // haleyjd 10/05/05: named value support
          case IVT_STRNUM:
             {
                textvals_t *tv = (textvals_t *)current->extra;
-               int val = E_StrToNumLinear(tv->vals, tv->numvals, QStrConstPtr(&value));
+               int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
 
                if(val >= tv->numvals)
                   val = tv->defaultval;
@@ -838,13 +831,13 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             break;
             
          case IVT_INT:
-            *(int*)current->variable = QStrAtoi(&value);
+            *(int*)current->variable = value.toInt();
             break;
             
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
             *(boolean *)current->variable = 
-               !QStrCaseCmp(&value, "true") ? true : false;
+               !value.strCaseCmp("true") ? true : false;
             break;
 
             // haleyjd 03/14/05: flags support
@@ -852,7 +845,7 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(QStrConstPtr(&value), flagset);
+               *(int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
             }
             break;
          default:
@@ -864,10 +857,6 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
       }
       current++;
    }
-
-   // free the qstrings
-   QStrFree(&var);
-   QStrFree(&value);
 }
 
 //
@@ -1580,7 +1569,7 @@ typedef struct tmplpstate_s
    int i;
    int len;
    int state;
-   qstring_t *tokenbuf;
+   qstring *tokenbuf;
    int spacecount;
    int titleOrAuthor; // if non-zero, looking for Author, not title
 } tmplpstate_t;
@@ -1602,14 +1591,14 @@ static void TmplStateStart(tmplpstate_t *state)
    case 't':
       if(state->titleOrAuthor)
          break;
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       state->state = TMPL_STATE_TITLE; // start reading out "Title"
       break;
    case 'A':
    case 'a':
       if(state->titleOrAuthor)
       {
-         QStrPutc(state->tokenbuf, c);
+         *state->tokenbuf += c;
          state->state = TMPL_STATE_TITLE; // start reading out "Author"
       }
       break;
@@ -1627,7 +1616,7 @@ static void TmplStateQuote(tmplpstate_t *state)
    case ' ':
       if(++state->spacecount == 2)
       {
-         QStrPutc(state->tokenbuf, ' ');
+         *state->tokenbuf += ' ';
          state->spacecount = 0;
       }
       break;
@@ -1638,7 +1627,7 @@ static void TmplStateQuote(tmplpstate_t *state)
       break;
    default:
       state->spacecount = 0;
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1655,19 +1644,19 @@ static void TmplStateTitle(tmplpstate_t *state)
    case '\t':
    case ':':
       // whitespace - check to see if we have "Title" or "Author" in the token buffer
-      if(!QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
+      if(!state->tokenbuf->strCaseCmp(state->titleOrAuthor ? "Author" : "Title"))
       {
-         QStrClear(state->tokenbuf);
+         state->tokenbuf->clear();
          state->state = TMPL_STATE_SPACE;
       }
       else
       {
-         QStrClear(state->tokenbuf);
+         state->tokenbuf->clear();
          state->state = TMPL_STATE_START; // start over
       }
       break;
    default:
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1687,7 +1676,7 @@ static void TmplStateSpace(tmplpstate_t *state)
       break; // stay in same state
    default:
       // should be start of title
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       state->state = TMPL_STATE_INTITLE;
       break;
    }
@@ -1702,7 +1691,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
    case '"':
       if(state->titleOrAuthor) // for authors, quotes are allowed
       {
-         QStrPutc(state->tokenbuf, c);
+         *state->tokenbuf += c;
          break;
       }
       // intentional fall-through for titles (end of title)
@@ -1712,7 +1701,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
       state->state = TMPL_STATE_DONE;
       break;
    default:
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1737,10 +1726,10 @@ static tmplstatefunc_t statefuncs[] =
 static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 {
    tmplpstate_t state;
-   qstring_t tokenbuffer;
+   qstring tokenbuffer;
    char *ret = NULL;
 
-   QStrInitCreate(&tokenbuffer);
+   tokenbuffer.initCreate();
 
    state.text          = text;
    state.len           = len;
@@ -1758,9 +1747,7 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    // valid termination states are DONE or INTITLE (though it's pretty unlikely
    // that we would hit EOF in the title string, I'll allow for it)
    if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
-      ret = QStrCDup(&tokenbuffer, PU_LEVEL);
-
-   QStrFree(&tokenbuffer);
+      ret = tokenbuffer.duplicate(PU_LEVEL);
 
    return ret;
 }

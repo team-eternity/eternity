@@ -22,27 +22,13 @@
 #ifndef P_TICK_H__
 #define P_TICK_H__
 
+#include "z_zone.h"
 #include "doomtype.h"
-
-//
-// ZoneLevelItem
-//
-// haleyjd 11/22/10:
-// This class can be inherited from to obtain the ability to be allocated on the
-// zone heap with a PU_LEVEL allocation tag.
-//
-class ZoneLevelItem
-{
-public:
-   virtual ~ZoneLevelItem() {}
-   void *operator new (size_t size);
-   void  operator delete (void *p);
-};
 
 class SaveArchive;
 
 // Doubly linked list of actors.
-class Thinker : public ZoneLevelItem
+class Thinker : public ZoneObject
 {
 private:
    // Private implementation details
@@ -69,6 +55,14 @@ protected:
    unsigned int ordinal;
 
 public:
+   // Constructor
+   Thinker() 
+      : ZoneObject(), removed(false), references(0), ordinal(0), prev(NULL),
+        next(NULL), cprev(NULL), cnext(NULL)
+   {
+      ChangeTag(PU_LEVEL);
+   }
+
    // Static functions
    static void InitThinkers();
    static void RunThinkers();
@@ -97,7 +91,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    // De-swizzling should restore pointers to other thinkers.
    virtual void deswizzle() {}
-   virtual boolean shouldSerialize()  const { return !removed;   }
+   virtual boolean shouldSerialize()  const { return !removed;  }
    virtual const char *getClassName() const { return "Thinker"; }
 
    // Data Members
@@ -117,7 +111,7 @@ public:
 // unremoved Thinker subclass instance. This is necessary because the old 
 // behavior of checking function pointer values effectively changed the type 
 // that a thinker was considered to be when it was set into a deferred removal
-// state.
+// state, and C++ doesn't support that with virtual methods OR RTTI.
 //
 template<typename T> inline T thinker_cast(Thinker *th)
 {

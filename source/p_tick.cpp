@@ -45,21 +45,6 @@ boolean reset_viewz;
 
 //=============================================================================
 //
-// haleyjd 11/21/10: ZoneLevelItem base class for thinkers
-//
-
-void *ZoneLevelItem::operator new (size_t size)
-{
-   return Z_Calloc(1, size, PU_LEVEL, NULL);
-}
-
-void ZoneLevelItem::operator delete (void *p)
-{
-   Z_Free(p);
-}
-
-//=============================================================================
-//
 // THINKERS
 //
 // All thinkers should be allocated by Z_Malloc so they can be operated on 

@@ -21,12 +21,12 @@
 //
 // Reallocating string structure
 //
-// What this "class" guarantees:
+// What this class guarantees:
 // * The string will always be null-terminated
 // * Indexing functions always check array bounds
 // * Insertion functions always reallocate when needed
 //
-// Of course, using QStrBuffer can negate these, so avoid it
+// Of course, using getBuffer can negate these, so avoid it
 // except for passing a char * to read op functions.
 //
 // By James Haley
@@ -36,96 +36,124 @@
 #ifndef M_QSTR_H__
 #define M_QSTR_H__
 
-struct qstring_t
+#include "z_zone.h"
+#include "doomtype.h"
+
+class qstring : public ZoneObject
 {
+private:
    char   *buffer;
    size_t  index;
    size_t  size;
+
+public:
+   static const size_t npos;
+   static const size_t basesize;
+
+   // Constructor / Destructor
+   qstring(size_t startSize = 0, int tag = PU_STATIC) 
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      ChangeTag(tag);
+      if(startSize)
+         initCreateSize(startSize);
+   }
+   ~qstring() { freeBuffer(); }
+
+   // Basic Property Getters
+
+   //
+   // qstring::getBuffer
+   //
+   // Retrieves a pointer to the internal buffer. This pointer shouldn't be 
+   // cached, and is not meant for writing into (although it is safe to do so, it
+   // circumvents the encapsulation and security of this structure).
+   //
+   char *getBuffer() { return buffer; }
+
+   //
+   // qstring::constPtr
+   //
+   // Like qstring::getBuffer, but casts to const to enforce safety.
+   //
+   const char *constPtr() const { return buffer; }
+
+   //
+   // qstring::length
+   //
+   // Because the validity of "index" is maintained by all insertion and editing
+   // functions, we can bypass calling strlen.
+   //
+   size_t length() const { return index; }
+
+   //
+   // qstring::getSize
+   //
+   // Returns the amount of size allocated for this qstring (will be >= strlen).
+   // You are allowed to index into the qstring up to size - 1, although any bytes
+   // beyond the strlen will be zero.
+   //
+   size_t getSize() const { return size; }
+
+   qstring    &initCreate();
+   qstring    &initCreateSize(size_t size);
+   qstring    &createSize(size_t size);
+   qstring    &create();
+   qstring    &grow(size_t len);
+   qstring    &clear();
+   qstring    &clearOrCreate(size_t size);
+   void        freeBuffer();
+   char        charAt(size_t idx) const;
+   char       *bufferAt(size_t idx) const;
+   qstring    &Putc(char ch);
+   qstring    &Delc();
+   qstring    &concat(const char *str);
+   qstring    &concat(const qstring &src);
+   qstring    &insert(const char *insertstr, size_t pos);
+   int         strCmp(const char *str) const;
+   int         strNCmp(const char *str, size_t maxcount) const;
+   int         strCaseCmp(const char *str) const;
+   int         strNCaseCmp(const char *str, size_t maxcount) const;
+   boolean     compare(const char *str) const;
+   boolean     compare(const qstring &other) const;
+   qstring    &copy(const char *str);
+   qstring    &copy(const qstring &src);
+   char       *copyInto(char *dest, size_t size) const;
+   qstring    &copyInto(qstring &dest) const;
+   void        swapWith(qstring &str2);
+   qstring    &toUpper();
+   qstring    &toLower();
+   size_t      replace(const char *filter, char repl);
+   size_t      replaceNotOf(const char *filter, char repl);
+   qstring    &normalizeSlashes();
+   char       *duplicate(int tag) const;
+   char       *duplicateAuto() const;
+   int         toInt() const;
+   double      toDouble(char **endptr) const;
+   const char *strChr(char c) const;
+   const char *strRChr(char c) const;
+   size_t      findFirstOf(char c) const;
+   size_t      findFirstNotOf(char c) const;
+   qstring    &LStrip(char c);
+   qstring    &RStrip(char c);
+   qstring    &truncate(size_t pos);
+   qstring    &makeQuoted();
+   int         Printf(size_t maxlen, const char *fmt, ...);
+
+   // Operators
+   boolean  operator == (const qstring &other) const;
+   boolean  operator == (const char    *other) const;
+   boolean  operator != (const qstring &other) const;
+   boolean  operator != (const char    *other) const;
+   qstring &operator  = (const qstring &other);
+   qstring &operator  = (const char    *other);
+   qstring &operator += (const qstring &other);
+   qstring &operator += (const char    *other);
+   qstring &operator += (char  ch);
 };
 
-#define qstring_npos ((size_t) -1)
+//#define qstring_npos ((size_t) -1)
 
-//
-// Basic Property Getters
-//
-
-//
-// QStrBuffer
-//
-// Retrieves a pointer to the internal buffer. This pointer shouldn't be 
-// cached, and is not meant for writing into (although it is safe to do so, it
-// circumvents the encapsulation and security of this structure).
-//
-#define QStrBuffer(qstr) ((qstr)->buffer)
-
-//
-// QStrConstPtr
-//
-// Like QStrBuffer, but casts to const to enforce safety.
-//
-#define QStrConstPtr(qstr) ((const char *)((qstr)->buffer))
-
-//
-// QStrLen
-//
-// Because the validity of "index" is maintained by all insertion and editing
-// functions, we can bypass calling strlen.
-//
-#define QStrLen(qstr) ((qstr)->index)
-
-//
-// QStrSize
-//
-// Returns the amount of size allocated for this qstring (will be >= strlen).
-// You are allowed to index into the qstring up to size - 1, although any bytes
-// beyond the strlen will be zero.
-//
-#define QStrSize(qstr) ((qstr)->size)
-
-//
-// "Methods"
-//
-
-qstring_t  *QStrInitCreate(qstring_t *qstr);
-qstring_t  *QStrInitCreateSize(qstring_t *qstr, size_t size);
-qstring_t  *QStrCreateSize(qstring_t *qstr, size_t size);
-qstring_t  *QStrCreate(qstring_t *qstr);
-qstring_t  *QStrGrow(qstring_t *qstr, size_t len);
-qstring_t  *QStrClear(qstring_t *qstr);
-qstring_t  *QStrClearOrCreate(qstring_t *qstr, size_t size);
-void        QStrFree(qstring_t *qstr);
-char        QStrCharAt(qstring_t *qstr, size_t idx);
-char       *QStrBufferAt(qstring_t *qstr, size_t idx);
-qstring_t  *QStrPutc(qstring_t *qstr, char ch);
-qstring_t  *QStrDelc(qstring_t *qstr);
-qstring_t  *QStrCat(qstring_t *qstr, const char *str);
-qstring_t  *QStrQCat(qstring_t *dest, qstring_t *src);
-qstring_t  *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos);
-int         QStrCmp(qstring_t *qstr, const char *str);
-int         QStrNCmp(qstring_t *qstr, const char *str, size_t maxcount);
-int         QStrCaseCmp(qstring_t *qstr, const char *str);
-int         QStrNCaseCmp(qstring_t *qstr, const char *str, size_t maxcount);
-qstring_t  *QStrCopy(qstring_t *qstr, const char *str);
-char       *QStrCNCopy(char *dest, const qstring_t *src, size_t size);
-qstring_t  *QStrQCopy(qstring_t *dest, const qstring_t *src);
-qstring_t  *QStrUpr(qstring_t *qstr);
-qstring_t  *QStrLwr(qstring_t *qstr);
-size_t      QStrReplace(qstring_t *qstr, const char *filter, char repl);
-size_t      QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl);
-qstring_t  *QStrNormalizeSlashes(qstring_t *qstr);
-char       *QStrCDup(qstring_t *qstr, int tag);
-char       *QStrCDupAuto(qstring_t *qstr);
-int         QStrAtoi(qstring_t *qstr);
-double      QStrToDouble(qstring_t *str, char **endptr);
-const char *QStrChr(qstring_t *qstr, char c);
-const char *QStrRChr(qstring_t *qstr, char c);
-size_t      QStrFindFirstOfChar(qstring_t *qstr, char c);
-size_t      QStrFindFirstNotOfChar(qstring_t *qstr, char c);
-qstring_t  *QStrLStrip(qstring_t *qstr, char c);
-qstring_t  *QStrRStrip(qstring_t *qstr, char c);
-qstring_t  *QStrTruncate(qstring_t *qstr, size_t pos);
-qstring_t  *QStrMakeQuoted(qstring_t *s);
-int         QStrPrintf(qstring_t *qstr, size_t maxlen, const char *fmt, ...);
 
 #endif
 

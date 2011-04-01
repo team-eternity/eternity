@@ -49,7 +49,7 @@
 #include "m_qstr.h"
 
 int       incomingdest[MAXPLAYERS];
-qstring_t incomingmsg[MAXPLAYERS];
+qstring   incomingmsg[MAXPLAYERS];
 
 command_t *c_netcmds[NUMNETCMDS];
 
@@ -161,7 +161,7 @@ void C_NetInit(void)
   for(i = 0; i < MAXPLAYERS; ++i)
   {
      incomingdest[i] = -1;
-     QStrInitCreate(&incomingmsg[i]);
+     incomingmsg[i].initCreate();
   }  
 }
 
@@ -204,7 +204,7 @@ void C_DealWithChar(unsigned char c, int source)
       if(incomingdest[source] == -1)  // first char: the destination
          incomingdest[source] = c-1;
       else
-         QStrPutc(&incomingmsg[source], c); // append to string
+         incomingmsg[source] += c; // append to string
    }
    else
    {
@@ -217,7 +217,7 @@ void C_DealWithChar(unsigned char c, int source)
             Console.cmdtype = c_netcmd;
 
             // the first byte is the command num
-            netcmdnum = *(QStrConstPtr(&incomingmsg[source]));
+            netcmdnum = *(incomingmsg[source].constPtr());
             
             if(netcmdnum >= NUMNETCMDS || netcmdnum <= 0)
                C_Printf(FC_ERROR"unknown netcmd: %i\n", netcmdnum);
@@ -226,10 +226,10 @@ void C_DealWithChar(unsigned char c, int source)
                // C_Printf("%s, %s", c_netcmds[netcmdnum].name,
                //          incomingmsg[source]+1);
                C_RunCommand(c_netcmds[netcmdnum],
-                            QStrConstPtr(&incomingmsg[source]) + 1);
+                            incomingmsg[source].constPtr() + 1);
             }
          }
-         QStrClear(&incomingmsg[source]);
+         incomingmsg[source].clear();
          incomingdest[source] = -1;
       }
    }

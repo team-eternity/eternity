@@ -505,17 +505,17 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
 //
 // haleyjd 10/18/10: Avoid losing sight of the input caret when editing.
 //
-static void MN_truncateInput(qstring_t *qstr, int x)
+static void MN_truncateInput(qstring &qstr, int x)
 {
-   int width = MN_StringWidth(QStrConstPtr(qstr));
+   int width = MN_StringWidth(qstr.constPtr());
 
    if(x + width > SCREENWIDTH - 8) // too wide to fit?
    {
       int subbed_width = 0;
       int leftbound = SCREENWIDTH - 8;
       int dotwidth  = MN_StringWidth("...");
-      const char *start = QStrConstPtr(qstr);
-      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
       while(start != end && (x + dotwidth + width - subbed_width > leftbound))
       {
@@ -526,7 +526,8 @@ static void MN_truncateInput(qstring_t *qstr, int x)
       if(start != end)
       {
          const char *temp = Z_Strdupa(start); // make a temp copy
-         QStrCat(QStrCopy(qstr, "..."), temp);
+         qstr = "...";
+         qstr += temp;
       }
    }
 }
@@ -536,16 +537,16 @@ static void MN_truncateInput(qstring_t *qstr, int x)
 //
 // haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
 //
-static void MN_truncateValue(qstring_t *qstr, int x)
+static void MN_truncateValue(qstring &qstr, int x)
 {
-   int width = MN_StringWidth(QStrConstPtr(qstr));
+   int width = MN_StringWidth(qstr.constPtr());
    
    if(x + width > SCREENWIDTH - 8) // too wide to fit?
    {
       int subbed_width = 0;
       int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
-      const char *start = QStrConstPtr(qstr);
-      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
       while(end != start && (x + width - subbed_width > leftbound))
       {
@@ -555,7 +556,10 @@ static void MN_truncateValue(qstring_t *qstr, int x)
 
       // truncate the value at end position, and concatenate dots
       if(end != start)
-         QStrCat(QStrTruncate(qstr, end - start), "...");
+      {
+         qstr.truncate(end - start);
+         qstr += "...";
+      }
    }
 }
 
@@ -567,7 +571,7 @@ static void MN_truncateValue(qstring_t *qstr, int x)
 static void MN_drawItemToggleVar(menuitem_t *item, int color, 
                                  int alignment, int desc_width)
 {
-   static qstring_t varvalue; // temp buffer
+   static qstring varvalue; // temp buffer
    int x = item->x;
    int y = item->y;
          
@@ -590,23 +594,24 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    // create variable description:
    // Use console variable descriptions.
 
-   QStrClearOrCreate(&varvalue, 1024);
+   varvalue.clearOrCreate(1024);
    MN_GetItemVariable(item);
 
    // display input buffer if inputting new var value
    if(input_command && item->var == input_command->variable)
    {
-      QStrPutc(QStrCopy(&varvalue, (char *)input_buffer), '_');
-      MN_truncateInput(&varvalue, x);
+      varvalue  = (char *)input_buffer;
+      varvalue += '_';
+      MN_truncateInput(varvalue, x);
    }
    else
    {
-      QStrCopy(&varvalue, C_VariableStringValue(item->var));
-      MN_truncateValue(&varvalue, x);
+      varvalue = C_VariableStringValue(item->var);
+      MN_truncateValue(varvalue, x);
    }         
 
    // draw it
-   MN_WriteTextColored(QStrConstPtr(&varvalue), color, x, y);
+   MN_WriteTextColored(varvalue.constPtr(), color, x, y);
 }
 
 //

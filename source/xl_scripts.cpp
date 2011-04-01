@@ -71,7 +71,7 @@ protected:
    const char *input; // input string
    int idx;           // current position in input string
    int tokentype;     // type of current token
-   qstring_t token;   // current token value
+   qstring token;     // current token value
 
    // Parser States
 
@@ -99,7 +99,7 @@ protected:
          else
             tokentype = TOKEN_STRING;
          state = STATE_INTOKEN;
-         QStrPutc(&token, input[idx]);
+         token += input[idx];
          break;
       }
    }
@@ -117,11 +117,11 @@ protected:
          break;
       case '\0':  // end of input -OR- start of a comment
       case ';':   
-         --idx;   // backup, next call will handle it.
+         --idx;   // backup, next call will handle it in STATE_SCAN.
          state = STATE_DONE;
          break;
       default: 
-         QStrPutc(&token, input[idx]);
+         token += input[idx];
          break;
       }
    }
@@ -143,19 +143,23 @@ protected:
 
 public:
    // Constructor / Destructor
-   // TODO: qstring needs to start supporting RAII :)
    XLTokenizer(const char *str) 
-      : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
+      : token(), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
    { 
-      QStrInitCreate(&token);
    }
-   ~XLTokenizer() { QStrFree(&token); }
 
+   //
+   // XLTokenizer::GetNextToken
+   //
+   // Call this to retrieve the next token from the input string. The token
+   // type is returned for convenience. Get the text of the token using the
+   // GetToken() method.
+   //
    int GetNextToken()
    {
-      QStrClear(&token);
-      state     = STATE_SCAN;
-      tokentype = TOKEN_NONE;
+      token.clear();
+      state     = STATE_SCAN; // always start out scanning for a new token
+      tokentype = TOKEN_NONE; // nothing has been determined yet
 
       // already at end of input?
       if(input[idx] != '\0')
@@ -174,10 +178,10 @@ public:
    
    // Accessors
    int GetTokenType() const { return tokentype; }
-   qstring_t &GetToken() { return token; }
+   qstring &GetToken() { return token; }
 };
 
-// State table for the tokenizer
+// State table for the tokenizer - static array of method pointers :)
 void (XLTokenizer::* XLTokenizer::states[])() =
 {
    &XLTokenizer::DoStateScan,

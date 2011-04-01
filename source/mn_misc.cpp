@@ -86,41 +86,39 @@ extern vfont_t *menu_font_normal;
 //
 static void WriteCenteredText(char *message)
 {
-   static qstring_t qstring;
-   static qstring_t *pqstr = NULL;
+   static qstring qstr;
    char *rover;
    const char *buffer;
    int x, y;
 
-   if(!pqstr)
-      pqstr = QStrCreate(&qstring);
+   qstr.clearOrCreate(128);
    
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
 
    y = (SCREENHEIGHT - V_FontStringHeight(menu_font_normal, popup_message)) / 2;
-   QStrClear(pqstr);
+   qstr.clear();
    rover = message;
 
    while(*rover)
    {
       if(*rover == '\n')
       {
-         buffer = QStrConstPtr(pqstr);
+         buffer = qstr.constPtr();
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
          V_FontWriteText(menu_font_normal, buffer, x, y);         
-         QStrClear(pqstr); // clear buffer
+         qstr.clear(); // clear buffer
          y += menu_font_normal->absh; // next line
       }
       else      // add next char
-         QStrPutc(pqstr, *rover);
+         qstr += *rover;
 
       ++rover;
    }
 
    // dont forget the last line.. prob. not \n terminated
-   buffer = QStrConstPtr(pqstr);
+   buffer = qstr.constPtr();
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
    V_FontWriteText(menu_font_normal, buffer, x, y);   
 }

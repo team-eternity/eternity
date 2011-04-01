@@ -181,7 +181,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    if(!Console.argc)
       return;
 
-   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
+   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
    
    if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
@@ -189,7 +189,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    {
       if(mn_start_mapname)
          free(mn_start_mapname);
-      start_mapname = mn_start_mapname = QStrCDup(&Console.argv[0], PU_STATIC);
+      start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
    if(menuactive)
@@ -330,7 +330,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
@@ -417,7 +417,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    // skill level is argv 0
    
    if(Console.argc)
-      skill = QStrAtoi(&Console.argv[0]);
+      skill = Console.argv[0]->toInt();
 
    // haleyjd 07/27/05: restored nightmare behavior
    if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
@@ -788,7 +788,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    if(!Console.argc)
       return;
    
-   newvalue = QStrConstPtr(&Console.argv[0]);
+   newvalue = Console.argv[0]->constPtr();
    
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
@@ -1336,7 +1336,7 @@ CONSOLE_COMMAND(mn_load, 0)
    if(Console.argc < 1)
       return;
    
-   slot = QStrAtoi(&Console.argv[0]);
+   slot = Console.argv[0]->toInt();
    
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])

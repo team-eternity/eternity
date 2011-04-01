@@ -69,17 +69,17 @@ extern int keylookspeed;
 
 CONSOLE_COMMAND(i_exitwithmessage, 0)
 {
-   I_ExitWithMessage("%s\n", Console.args);
+   I_ExitWithMessage("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_fatalerror, 0)
 {
-   I_FatalError(I_ERR_KILL, "%s\n", QStrConstPtr(&Console.args));
+   I_FatalError(I_ERR_KILL, "%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s\n", QStrConstPtr(&Console.args));
+   I_Error("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
@@ -144,7 +144,7 @@ CONSOLE_COMMAND(animshot, 0)
          "usage: animshot <frames>\n");
       return;
    }
-   animscreenshot = QStrAtoi(&Console.argv[0]);
+   animscreenshot = Console.argv[0]->toInt();
    C_InstaPopup();    // turn off console
 }
 
@@ -250,13 +250,13 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(wGlobalDir.CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), lumpinfo_t::ns_demos) < 0)
+   if(wGlobalDir.CheckNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
    {
-      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
+      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
       return;
    }
    
-   G_DeferedPlayDemo(QStrConstPtr(&Console.argv[0]));
+   G_DeferedPlayDemo(Console.argv[0]->constPtr());
    singledemo = true;            // quit after one demo
 }
 
@@ -273,7 +273,7 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
       C_Printf("usage: timedemo demoname showmenu\n");
       return;
    }
-   G_TimeDemo(QStrConstPtr(&Console.argv[0]), !!QStrAtoi(&Console.argv[1]));
+   G_TimeDemo(Console.argv[0]->constPtr(), !!Console.argv[1]->toInt());
 }
 
 // 'cool' demo
@@ -296,7 +296,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
       C_Printf(FC_ERROR"command not available in shareware games\n");
       return;
    }
-   D_AddNewFile(QStrConstPtr(&Console.argv[0]));
+   D_AddNewFile(Console.argv[0]->constPtr());
 }
 
 // list loaded wads
@@ -348,13 +348,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(!netgame && QStrLen(&Console.argv[0]) > 4)
+   if(!netgame && Console.argv[0]->length() > 4)
    {
       const char *extension;
-      extension = QStrBufferAt(&Console.argv[0], QStrLen(&Console.argv[0]) - 4);
+      extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
       if(!strcmp(extension, ".wad"))
       {
-         if(D_AddNewFile(QStrConstPtr(&Console.argv[0])))
+         if(D_AddNewFile(Console.argv[0]->constPtr()))
          {
             G_DeferedInitNew(gameskill, firstlevel);
          }
@@ -363,14 +363,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    }
 
    // haleyjd 02/23/04: strict error checking
-   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
+   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
 
    if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
-      G_DeferedInitNew(gameskill, QStrConstPtr(&Console.argv[0]));
+      G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
    }
    else
-      C_Printf(FC_ERROR "%s not found or is not a valid map\n", QStrConstPtr(&Console.argv[0]));
+      C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
         // player name
@@ -384,12 +384,12 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
    
    playernum = Console.cmdsrc;
    
-   QStrCNCopy(players[playernum].name, &Console.argv[0], 20);
+   Console.argv[0]->copyInto(players[playernum].name, 20);
 
    if(playernum == consoleplayer)
    {
       free(default_name);
-      default_name = QStrCDup(&Console.argv[0], PU_STATIC);
+      default_name = Console.argv[0]->duplicate(PU_STATIC);
    }
 }
 
@@ -618,7 +618,7 @@ void G_WeapPrefHandler(void)
    {
       int prefnum = 
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
-      G_SetWeapPref(prefnum, QStrAtoi(&Console.argv[0]));
+      G_SetWeapPref(prefnum, Console.argv[0]->toInt());
    }
 }
 

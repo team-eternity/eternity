@@ -155,6 +155,37 @@ void Z_PrintZoneHeap(void);
 
 void Z_DumpCore(void);
 
+//
+// ZoneObject Class
+//
+// This class serves as a base class for C++ objects that want to support
+// allocation on the zone heap. The actual zone memory is always stored at
+// PU_STATIC allocation level, and the tag semantics are handled inside this
+// base class.
+//
+class ZoneObject
+{
+private:
+   // static data
+   static ZoneObject *objectbytag[PU_MAX];
+   static void *newalloc;
+
+   // instance data
+   void *zonealloc;       // If non-null, the object is living on the zone heap
+   int   zonetag;         // If zonealloc is valid, the object's zone tag
+   ZoneObject  *zonenext; // Next object on tag chain
+   ZoneObject **zoneprev; // Previous object on tag chain's next pointer
+
+public:
+   ZoneObject();
+   virtual ~ZoneObject();
+   void *operator new (size_t size);
+   void  operator delete (void *p);
+   void  ChangeTag(int tag);
+
+   static void FreeTags(int lowtag, int hightag);
+};
+
 #endif
 
 //----------------------------------------------------------------------------

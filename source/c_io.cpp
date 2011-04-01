@@ -79,7 +79,7 @@ static const char *inputprompt = FC_HI "$" FC_NORMAL;
 static const char *altprompt = FC_HI "#" FC_NORMAL;
 int c_height=100;     // the height of the console
 int c_speed=10;       // pixels/tic it moves
-static qstring_t inputtext;
+static qstring inputtext;
 static char *input_point;      // left-most point you see of the command line
 
 // for scrolling command line
@@ -182,7 +182,7 @@ static void C_initBackdrop(void)
 //
 static void C_updateInputPoint(void)
 {
-   for(input_point = inputtext.buffer;
+   for(input_point = inputtext.getBuffer();
        V_FontStringWidth(c_font, input_point) > SCREENWIDTH-20; input_point++);
 }
 
@@ -191,7 +191,7 @@ static void C_updateInputPoint(void)
 void C_Init(void)
 {
    // haleyjd: initialize console qstrings
-   QStrCreateSize(&inputtext, 100);
+   inputtext.createSize(100);
 
    Console.enabled = true;
 
@@ -263,32 +263,30 @@ void C_Ticker(void)
 // CONSOLE_FIXME: history needs to be more efficient. Use pointers 
 // instead of copying strings back and forth.
 //
-static void C_addToHistory(qstring_t *s)
+static void C_addToHistory(qstring *s)
 {
    const char *a_prompt;
    
    // display the command in console
    // hrmm wtf does this do? I dunno.
    if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
-   {
       a_prompt = altprompt;
-   }
    else
       a_prompt = inputprompt;
    
-   C_Printf("%s%s\n", a_prompt, QStrConstPtr(s));
+   C_Printf("%s%s\n", a_prompt, s->constPtr());
    
    // check for nothing typed or just spaces
-   if(QStrFindFirstNotOfChar(s, ' ') == qstring_npos)
+   if(s->findFirstNotOf(' ') == qstring::npos)
       return;
    
    // add it to the history
    // 6/8/99 maximum linelength to prevent segfaults
-   // QSTR_FIXME: change history -> qstring_t
-   QStrCNCopy(history[history_last], s, LINELENGTH);
+   // QSTR_FIXME: change history -> qstring
+   s->copyInto(history[history_last], LINELENGTH);
    history_last++;
    
-   // scroll the history if neccesary
+   // scroll the history if necessary
    while(history_last >= HISTORY)
    {
       int i;
@@ -378,8 +376,7 @@ boolean C_Responder(event_t *ev)
       // tab-completion list depending on whether
       // shift is being held down
       action_console_tab = false;
-      QStrQCopy(&inputtext, 
-                shiftdown ? C_NextTab(&inputtext) : C_PrevTab(&inputtext));
+      inputtext = (shiftdown ? C_NextTab(inputtext) : C_PrevTab(inputtext));
       C_updateInputPoint(); // reset scrolling
       return true;
     }
@@ -391,16 +388,16 @@ boolean C_Responder(event_t *ev)
 
       C_addToHistory(&inputtext); // add to history
       
-      if(!QStrCmp(&inputtext, "r0x0rz delux0rz"))
+      if(inputtext == "r0x0rz delux0rz")
          Egg(); // shh!
       
       // run the command
       Console.cmdtype = c_typed;
-      C_RunTextCmd(QStrConstPtr(&inputtext));
+      C_RunTextCmd(inputtext.constPtr());
       
       C_InitTab();            // reset tab completion
       
-      QStrClear(&inputtext); // clear inputtext now
+      inputtext.clear(); // clear inputtext now
       C_updateInputPoint();    // reset scrolling
       
       return true;
@@ -420,7 +417,7 @@ boolean C_Responder(event_t *ev)
          (history_current <= 0) ? 0 : history_current - 1;
       
       // read history from inputtext
-      QStrCopy(&inputtext, history[history_current]);
+      inputtext = history[history_current];
       
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
@@ -437,8 +434,8 @@ boolean C_Responder(event_t *ev)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
-      QStrCopy(&inputtext, (history_current == history_last) ?
-                "" : (char*)history[history_current]);
+      inputtext = ((history_current == history_last) ?
+                    "" : (char *)history[history_current]);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -455,7 +452,7 @@ boolean C_Responder(event_t *ev)
    {
       action_console_backspace = false;
 
-      QStrDelc(&inputtext);
+      inputtext.Delc();
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -474,7 +471,7 @@ boolean C_Responder(event_t *ev)
    
    if(ch > 31 && ch < 127)
    {
-      QStrPutc(&inputtext, ch);
+      inputtext += ch;
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -827,7 +824,7 @@ static void C_StripColorChars(const unsigned char *src,
 //
 // haleyjd 03/01/02: now you can dump the console to file :)
 //
-void C_DumpMessages(qstring_t *filename)
+void C_DumpMessages(qstring *filename)
 {
    int i, len;
    FILE *outfile;
@@ -835,10 +832,10 @@ void C_DumpMessages(qstring_t *filename)
 
    memset(tmpmessage, 0, LINELENGTH);
 
-   if(!(outfile = fopen(QStrConstPtr(filename), "a+")))
+   if(!(outfile = fopen(filename->constPtr(), "a+")))
    {
       C_Printf(FC_ERROR "Could not append console buffer to file %s\n", 
-               filename);
+               filename->constPtr());
       return;
    }
 
@@ -855,7 +852,7 @@ void C_DumpMessages(qstring_t *filename)
 
    fclose(outfile);
 
-   C_Printf("Console buffer appended to file %s\n", filename);
+   C_Printf("Console buffer appended to file %s\n", filename->constPtr());
 }
 
 //
@@ -863,17 +860,17 @@ void C_DumpMessages(qstring_t *filename)
 //
 // haleyjd 09/07/03: true console logging
 //
-void C_OpenConsoleLog(qstring_t *filename)
+void C_OpenConsoleLog(qstring *filename)
 {
    // don't do anything if a log is already open
    if(console_log)
       return;
 
    // open file in append mode
-   if(!(console_log = fopen(QStrConstPtr(filename), "a+")))
-      C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename);
+   if(!(console_log = fopen(filename->constPtr(), "a+")))
+      C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename->constPtr());
    else
-      C_Printf("Opened file %s for console logging\n", filename);
+      C_Printf("Opened file %s for console logging\n", filename->constPtr());
 }
 
 //

@@ -928,7 +928,7 @@ static boolean early_args_end;
 // A lexer function for the frame cmp field.
 // Used by E_ProcessCmpState below.
 //
-static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
+static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 {
    char c;
    int state = 0;
@@ -937,7 +937,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
    if(text[*index] == '\0')
       return NULL;
 
-   QStrClear(token);
+   token->clear();
 
    while((c = text[*index]) != '\0')
    {
@@ -958,14 +958,14 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
             continue;
          case '|':     // end of current token
          case ',':     // 03/01/05: added by user request
-            return QStrBuffer(token);
+            return token->getBuffer();
          case '(':
             if(in_action)
             {
                early_args_found = true;
-               return QStrBuffer(token);
+               return token->getBuffer();
             }
-            QStrPutc(token, c);
+            *token += c;
             continue;
          case ')':
             if(in_action && early_args_found)
@@ -975,20 +975,20 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
             }
             // fall through
          default:      // everything else == part of value
-            QStrPutc(token, c);
+            *token += c;
             continue;
          }
       case 1: // in quoted area (double quotes)
          if(c == '"') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       case 2: // in quoted area (single quotes)
          if(c == '\'') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       default:
          E_EDFLoggedErr(0, "E_CmpTokenizer: internal error - undefined lexer state\n");
@@ -996,7 +996,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
    }
 
    // return final token, next call will return NULL
-   return QStrBuffer(token);
+   return token->getBuffer();
 }
 
 // macros for E_ProcessCmpState:
@@ -1036,12 +1036,12 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring_t *token)
 //
 static void E_ProcessCmpState(const char *value, int i)
 {
-   qstring_t buffer;
+   qstring buffer;
    char *curtoken = NULL;
    int tok_index = 0, j;
 
    // first things first, we have to initialize the qstring
-   QStrInitCreate(&buffer);
+   buffer.initCreate();
 
    // initialize tokenizer variables
    in_action = false;
@@ -1168,9 +1168,6 @@ static void E_ProcessCmpState(const char *value, int i)
    }
 
    early_args_found = early_args_end = false;
-
-   // free the qstring
-   QStrFree(&buffer);
 }
 
 #undef NEXTTOKEN

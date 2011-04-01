@@ -888,12 +888,12 @@ CONSOLE_COMMAND(bind, 0)
 {
    if(Console.argc >= 2)
    {
-      G_BindKeyToAction(QStrConstPtr(&Console.argv[0]), 
-                        QStrConstPtr(&Console.argv[1]));
+      G_BindKeyToAction(Console.argv[0]->constPtr(),
+                        Console.argv[1]->constPtr());
    }
    else if(Console.argc == 1)
    {
-      int key = G_KeyForName(QStrConstPtr(&Console.argv[0]));
+      int key = G_KeyForName(Console.argv[0]->constPtr());
 
       if(key < 0)
          C_Printf(FC_ERROR "no such key!\n");
@@ -953,7 +953,7 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding class
    if(Console.argc == 2)
    {
-      bclass = QStrAtoi(&Console.argv[1]);
+      bclass = Console.argv[1]->toInt();
 
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
@@ -962,14 +962,14 @@ CONSOLE_COMMAND(unbind, 0)
       }
    }
    
-   if((key = G_KeyForName(QStrConstPtr(&Console.argv[0]))) != -1)
+   if((key = G_KeyForName(Console.argv[0]->constPtr())) != -1)
    {
       if(bclass == -1)
       {
          // unbind all actions
          int j;
 
-         C_Printf("unbound key %s from all actions\n", Console.argv[0]);
+         C_Printf("unbound key %s from all actions\n", Console.argv[0]->constPtr());
 
          if(keybindings[key].bindings[kac_menu] ||
             keybindings[key].bindings[kac_console])
@@ -990,15 +990,15 @@ CONSOLE_COMMAND(unbind, 0)
 
          if(ke)
          {
-            C_Printf("unbound key %s from action %s\n", Console.argv[0], ke->name);
+            C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
             keybindings[key].bindings[bclass] = NULL;
          }
          else
-            C_Printf("key %s has no binding in class %d\n", Console.argv[0], bclass);
+            C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);
       }
    }
    else
-     C_Printf("unknown key %s\n", Console.argv[0]);
+      C_Printf("unknown key %s\n", Console.argv[0]->constPtr());
 }
 
 CONSOLE_COMMAND(unbindall, 0)

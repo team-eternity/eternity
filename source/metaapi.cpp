@@ -134,11 +134,11 @@ MetaObject *MetaObject::clone() const
 //
 const char *MetaObject::toString() const
 {
-   static qstring_t qstr;
+   static qstring qstr;
    size_t bytestoprint = sizeof(*this);
    const byte *data = reinterpret_cast<const byte *>(this); // Not evil, I promise.
    
-   QStrClearOrCreate(&qstr, 128);
+   qstr.clearOrCreate(128);
 
    while(bytestoprint)
    {
@@ -152,12 +152,12 @@ const char *MetaObject::toString() const
 
          sprintf(bytes, "%02x ", val);
 
-         QStrCat(&qstr, bytes);
+         qstr += bytes;
       }
-      QStrPutc(&qstr, '\n');
+      qstr += '\n';
    }
 
-   return QStrConstPtr(&qstr);
+   return qstr.constPtr();
 }
 
 //

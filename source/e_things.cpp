@@ -876,15 +876,15 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 //
 const char *E_ModFieldName(const char *base, emod_t *mod)
 {
-   static qstring_t namebuffer;
+   static qstring namebuffer;
 
-   QStrClearOrCreate(&namebuffer, 64);
+   namebuffer.clearOrCreate(64);
 
-   QStrCat(&namebuffer, base);
-   QStrPutc(&namebuffer, '.');
-   QStrCat(&namebuffer, mod->name);
+   namebuffer  = base;
+   namebuffer += '.'; 
+   namebuffer += mod->name;
 
-   return namebuffer.buffer;
+   return namebuffer.constPtr();
 }
 
 //

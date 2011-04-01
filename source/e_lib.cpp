@@ -1038,7 +1038,7 @@ struct tr_pstate_t
 {
    int state;
    int prevstate;
-   qstring_t *token;
+   qstring *token;
    const char *input;
    int inputpos;
    boolean error;
@@ -1063,7 +1063,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
    const char *str = pstate->input;
    int strpos = pstate->inputpos;
 
-   QStrClear(pstate->token);
+   pstate->token->clear();
 
    // skip whitespace
    while(str[strpos] == ' ' || str[strpos] == '\t')
@@ -1074,7 +1074,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
    {
       while(isnumchar(str[strpos]))
       {
-         QStrPutc(pstate->token, str[strpos]);
+         *pstate->token += str[strpos];
          ++strpos;
       }
       pstate->inputpos = strpos;
@@ -1086,15 +1086,15 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
       switch(str[strpos])
       {
       case ':':
-         QStrPutc(pstate->token, str[strpos]);
+         *pstate->token += str[strpos];
          ++pstate->inputpos;
          return TR_TOKEN_COLON;
       case '=':
-         QStrPutc(pstate->token, str[strpos]);
+         *pstate->token += str[strpos];
          ++pstate->inputpos;
          return TR_TOKEN_EQUALS;
       case ',':
-         QStrPutc(pstate->token, str[strpos]);
+         *pstate->token += str[strpos];
          ++pstate->inputpos;
          return TR_TOKEN_COMMA;
       case '\0':
@@ -1150,7 +1150,7 @@ static void DoPStateSrcBegin(tr_pstate_t *pstate)
 {
    if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
    {
-      pstate->srcbegin = QStrAtoi(pstate->token);
+      pstate->srcbegin = pstate->token->toInt();
       pstate->prevstate = pstate->state;
       pstate->state = TR_PSTATE_COLON;
    }
@@ -1213,7 +1213,7 @@ static void DoPStateSrcEnd(tr_pstate_t *pstate)
 {
    if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
    {
-      pstate->srcend = QStrAtoi(pstate->token);
+      pstate->srcend = pstate->token->toInt();
       pstate->state = TR_PSTATE_EQUALS;
    }
    else
@@ -1242,7 +1242,7 @@ static void DoPStateDestBegin(tr_pstate_t *pstate)
 {
    if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
    {
-      pstate->dstbegin = QStrAtoi(pstate->token);
+      pstate->dstbegin = pstate->token->toInt();
       pstate->prevstate = pstate->state;
       pstate->state = TR_PSTATE_COLON;
    }
@@ -1259,7 +1259,7 @@ static void DoPStateDestEnd(tr_pstate_t *pstate)
 {
    if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
    {
-      pstate->dstend = QStrAtoi(pstate->token);
+      pstate->dstend = pstate->token->toInt();
       
       if(pstate->singlecolor)
       {
@@ -1324,11 +1324,11 @@ static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] =
 byte *E_ParseTranslation(const char *str)
 {
    int i;
-   qstring_t tokenbuf;
+   qstring tokenbuf;
    byte *translation = (byte *)(calloc(1, 256));
    tr_pstate_t parserstate;
 
-   QStrInitCreate(&tokenbuf);
+   tokenbuf.initCreate();
 
    // initialize to monotonically increasing sequence (identity translation)
    for(i = 0; i < 256; i++)
@@ -1375,9 +1375,6 @@ byte *E_ParseTranslation(const char *str)
          range = next;
       }
    }
-
-   // done with qstring
-   QStrFree(&tokenbuf);
 
    return translation;
 }

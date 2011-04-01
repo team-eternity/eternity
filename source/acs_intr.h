@@ -31,7 +31,7 @@
 #include "m_dllist.h"
 #include "p_tick.h"
 
-struct qstring_t;
+class  qstring;
 class  Mobj;
 struct line_t;
 
@@ -120,7 +120,7 @@ public:
    int  *code;                // entry point
    byte *data;                // base code pointer for jumps
    char **stringtable;        // strings
-   qstring_t *printBuffer;    // buffer for message printing
+   qstring *printBuffer;      // buffer for message printing
    acscript_t *acscript;      // for convenience of access
    struct acsvm_s *vm;        // for convenience of access
 
@@ -165,7 +165,7 @@ typedef struct acsvm_s
 {
    byte       *data;         // ACS lump; jumps are relative to this
    char       **stringtable; // self-explanatory, yes?
-   qstring_t  *printBuffer;  // used for message printing
+   qstring    *printBuffer;  // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
    boolean    loaded;        // for static VMs, if it's valid or not

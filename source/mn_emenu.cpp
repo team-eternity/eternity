@@ -423,9 +423,9 @@ CONSOLE_COMMAND(mn_dynamenu, 0)
       return;
    }
 
-   if(!(menu = MN_DynamicMenuForName(QStrConstPtr(&Console.argv[0]))))
+   if(!(menu = MN_DynamicMenuForName(Console.argv[0]->constPtr())))
    {
-      C_Printf(FC_ERROR "no such menu %s\a\n", Console.argv[0]);
+      C_Printf(FC_ERROR "no such menu %s\a\n", Console.argv[0]->constPtr());
       return;
    }
 

@@ -990,25 +990,25 @@ void ACSThinker::Think()
          }
          break;
       case OP_STARTPRINT:
-         QStrClear(this->printBuffer);
+         this->printBuffer->clear();
          break;
       case OP_ENDPRINT:
          if(this->trigger && this->trigger->player)
-            player_printf(this->trigger->player, this->printBuffer->buffer);
+            player_printf(this->trigger->player, this->printBuffer->constPtr());
          else
-            player_printf(&players[consoleplayer], this->printBuffer->buffer);
+            player_printf(&players[consoleplayer], this->printBuffer->constPtr());
          break;
       case OP_PRINTSTRING:
-         QStrCat(this->printBuffer, this->stringtable[POP()]);
+         this->printBuffer->concat(this->stringtable[POP()]);
          break;
       case OP_PRINTINT:
          {
             char buffer[33];
-            QStrCat(this->printBuffer, M_Itoa(POP(), buffer, 10));
+            this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
          }
          break;
       case OP_PRINTCHAR:
-         QStrPutc(this->printBuffer, (char)POP());
+         *this->printBuffer += (char)POP();
          break;
       case OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
@@ -1113,7 +1113,7 @@ void ACSThinker::Think()
          }
          break;
       case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(this->printBuffer->buffer, FC_GOLD, 20*35);
+         HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution
@@ -1206,8 +1206,7 @@ void ACSThinker::deswizzle()
 void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
-   acsLevelScriptVM.printBuffer = (qstring_t *)(calloc(1, sizeof(qstring_t)));
-   QStrInitCreate(acsLevelScriptVM.printBuffer);
+   acsLevelScriptVM.printBuffer = new qstring(qstring::basesize);
 
    // add levelscript vm as vm #0
    ACS_addVirtualMachine(&acsLevelScriptVM);
