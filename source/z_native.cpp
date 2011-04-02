@@ -80,9 +80,6 @@
 // Tunables
 //
 
-// haleyjd 03/08/10: dynamically calculated header size
-static size_t header_size;
-
 // signature for block header
 #define ZONEID  0x931d4a11
 
@@ -109,6 +106,12 @@ typedef struct memblock
   int line;
 #endif
 } memblock_t;
+
+// haleyjd 03/08/10: dynamically calculated header size;
+// round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
+// just about everywhere, and keeps the assumption of a 32-byte header on 
+// 32-bit. 64-bit will use a 64-byte header.
+static const size_t header_size = (sizeof(memblock_t) + 15) & ~15;
 
 static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
 
@@ -206,31 +209,8 @@ static void Z_IDCheck(boolean err, const char *errmsg,
 //
 
 // statistics for evaluating performance
-INSTRUMENT(static size_t active_memory);
-INSTRUMENT(static size_t purgable_memory);
+INSTRUMENT(size_t memorybytag[PU_MAX]);
 INSTRUMENT(int printstats = 0);            // killough 8/23/98
-
-void Z_PrintStats(void)           // Print allocation statistics
-{
-#ifdef INSTRUMENTED
-   if(printstats && !zone_shutdown)
-   {
-      unsigned int total_memory = active_memory + purgable_memory;
-      double s = 100.0 / total_memory;
-
-      doom_printf(
-         "%-5lu\t%6.01f%%\tstatic\n"
-         "%-5lu\t%6.01f%%\tpurgable\n"
-         "%-5lu\t\ttotal\n",
-         active_memory,
-         active_memory*s,
-         purgable_memory,
-         purgable_memory*s,
-         total_memory
-         );
-   }
-#endif
-}
 
 // haleyjd 06/20/09: removed unused, crashy, and non-useful Z_DumpHistory
 
@@ -312,23 +292,6 @@ void Z_Init(void)
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
 }
 
-//
-// Z_initZoneHeap
-//
-// haleyjd 03/31/2011: Due to the fact that C++ objects might call Z_Malloc in
-// their constructors, we need to make sure the heap properties are completely
-// setup from *that* function and not from Z_Init above.
-//
-static void Z_initZoneHeap()
-{
-   // haleyjd 03/08/10: dynamically calculate block header size;
-   // round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
-   // just about everywhere, and keeps the assumption of a 32-byte header on 
-   // 32-bit. 64-bit will use a 64-byte header.
-   header_size = (sizeof(memblock_t) + 15) & ~15;
-   INSTRUMENT(active_memory = purgable_memory = 0);
-}
-
 //=============================================================================
 //
 // Core Memory Management Routines
@@ -341,16 +304,12 @@ static void Z_initZoneHeap()
 //
 void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
-   static boolean firsttime = true;
    register memblock_t *block;
    byte *ret;
-   INSTRUMENT(size_t size_orig = size);   
    
-   if(firsttime)
-   {
-      Z_initZoneHeap();
-      firsttime = false;
-   }
+   // haleyjd 03/31/2011: Due to the fact that C++ objects might call Z_Malloc in
+   // their constructors, we need to make sure the heap properties are completely
+   // setup from here and not from Z_Init above.
 
    DEBUG_CHECKHEAP();
 
@@ -383,9 +342,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    blockbytag[tag] = block;
    block->prev = &blockbytag[tag];
            
-   INSTRUMENT_IF(tag >= PU_PURGELEVEL, 
-                 purgable_memory += size_orig,
-                 active_memory   += size_orig);
+   INSTRUMENT(memorybytag[tag] += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
          
@@ -397,9 +354,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    ret = ((byte *) block + header_size);
    if(user)                     // if there is a user
       *user = ret;              // set user to point to new block
-
-   Z_PrintStats();              // print memory allocation stats
-
+   
    // scramble memory -- weed out any bugs
    SCRAMBLER(ret, size);
 
@@ -440,6 +395,7 @@ void (Z_Free)(void *p, const char *file, int line)
 #endif
                      );
       }
+      INSTRUMENT(memorybytag[block->tag] -= block->size);
       block->tag = PU_FREE;       // Mark block freed
 
       // scramble memory -- weed out any bugs
@@ -450,15 +406,9 @@ void (Z_Free)(void *p, const char *file, int line)
 
       if((*block->prev = block->next))
          block->next->prev = block->prev;
-
-      INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
-                    purgable_memory -= block->size,
-                    active_memory   -= block->size);
          
       (free)(block);
          
-      Z_PrintStats();           // print memory allocation stats
-
       Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, file, line);
    }
 }
@@ -530,18 +480,8 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
    block->prev = &blockbytag[tag];
    blockbytag[tag] = block;
 
-#ifdef INSTRUMENTED
-   if(block->tag < PU_PURGELEVEL && tag >= PU_PURGELEVEL)
-   {
-      active_memory -= block->size;
-      purgable_memory += block->size;
-   }
-   else if(block->tag >= PU_PURGELEVEL && tag < PU_PURGELEVEL)
-   {
-      active_memory += block->size;
-      purgable_memory -= block->size;
-   }
-#endif
+   INSTRUMENT(memorybytag[block->tag] -= block->size);
+   INSTRUMENT(memorybytag[tag] += block->size);
 
    block->tag = tag;
 
@@ -591,7 +531,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    block->next = NULL;
    block->prev = NULL;
 
-   INSTRUMENT(active_memory -= block->size);
+   INSTRUMENT(memorybytag[block->tag] -= block->size);
 
    if(!(newblock = (memblock_t *)((realloc)(block, n + header_size))))
    {
@@ -626,11 +566,9 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    blockbytag[tag] = block;
    block->prev = &blockbytag[tag];
 
-   INSTRUMENT(active_memory += block->size);
+   INSTRUMENT(memorybytag[tag] += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
-
-   Z_PrintStats();           // print memory allocation stats
 
    Z_LogPrintf("* %p = Z_Realloc(ptr=%p, n=%lu, tag=%d, user=%p, source=%s:%d)\n", 
                p, ptr, n, tag, user, file, line);
@@ -966,7 +904,7 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 //
 void *ZoneObject::operator new (size_t size)
 {
-   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+   return (newalloc = Z_Calloc(1, size, PU_OBJECT, NULL));
 }
 
 //
@@ -1000,6 +938,7 @@ void ZoneObject::ChangeTag(int tag)
       {
          if(*zoneprev = zonenext)
             zonenext->zoneprev = zoneprev;
+         INSTRUMENT(memorybytag[zonetag] -= getZoneSize());
       }
       zonenext = NULL;
       zoneprev = NULL;
@@ -1011,6 +950,7 @@ void ZoneObject::ChangeTag(int tag)
             zonenext->zoneprev = &zonenext;
          objectbytag[tag] = this;
          zoneprev = &objectbytag[tag];
+         INSTRUMENT(memorybytag[tag] += getZoneSize());
       }
 
       zonetag = tag;
@@ -1075,6 +1015,19 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
          obj = next;               // Advance to next object
       }
    }
+}
+
+size_t ZoneObject::getZoneSize() const
+{
+   size_t retsize = 0;
+
+   if(zonealloc)
+   {
+      memblock_t *block = (memblock_t *)((byte *)zonealloc - header_size);
+      retsize = block->size;
+   }
+
+   return retsize;
 }
 
 #endif // ZONE_NATIVE

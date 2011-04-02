@@ -278,7 +278,8 @@ public:
    {
       lumpinfo_t **lumpinfo = dir.GetLumpInfo();
       lumpinfo_t  *root     = dir.GetLumpNameChain(lumpname);
-      ParseLumpRecursive(dir, lumpinfo[root->index]);
+      if(root->index >= 0)
+         ParseLumpRecursive(dir, lumpinfo[root->index]);
    }
 
    //

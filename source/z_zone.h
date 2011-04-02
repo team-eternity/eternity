@@ -85,6 +85,7 @@ enum
    PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
    PU_AUTO,     // haleyjd 07/08/10: automatic allocation
    PU_LEVEL,    // allocation belongs to level (freed at next level load)
+   PU_OBJECT,   // haleyjd 04/01/11: for ZoneObject
 
    // cache levels
 
@@ -147,8 +148,8 @@ void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 void Z_ZoneHistory(char *);
 
 #ifdef INSTRUMENTED
-extern int printstats;        // killough 8/23/98
-void Z_PrintStats(void);      // killough 8/23/98
+extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
+extern int printstats;             // killough 08/23/98
 #endif
 
 void Z_PrintZoneHeap(void);
@@ -160,7 +161,7 @@ void Z_DumpCore(void);
 //
 // This class serves as a base class for C++ objects that want to support
 // allocation on the zone heap. The actual zone memory is always stored at
-// PU_STATIC allocation level, and the tag semantics are handled inside this
+// PU_OBJECT allocation level, and the tag semantics are handled inside this
 // base class.
 //
 class ZoneObject
@@ -182,6 +183,10 @@ public:
    void *operator new (size_t size);
    void  operator delete (void *p);
    void  ChangeTag(int tag);
+
+   // zone memblock reflection
+   size_t getZoneSize() const;
+   const void *getBlockPtr() const { return zonealloc; }
 
    static void FreeTags(int lowtag, int hightag);
 };

@@ -247,6 +247,56 @@ static void D_showDrawnFPS(void)
    V_FontWriteText(font, msg, 5, 20);
 }
 
+#ifdef INSTRUMENTED
+struct cachelevelprint_t
+{
+   int cachelevel;
+   const char *name;
+};
+static cachelevelprint_t cachelevels[] =
+{
+   { PU_STATIC,   "static: " },
+   { PU_RENDERER, "render: " },
+   { PU_LEVEL,    " level: " },
+   { PU_CACHE,    " cache: " },
+   { PU_MAX,      " total: " }
+};
+#define NUMCACHELEVELSTOPRINT (sizeof(cachelevels) / sizeof(cachelevelprint_t))
+
+static void D_showMemStats(void)
+{
+   vfont_t *font;
+   size_t total_memory = 0;
+   double s;
+   char buffer[1024];
+   int i;
+
+   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+      total_memory += memorybytag[cachelevels[i].cachelevel];
+   s = 100.0 / total_memory;
+
+   font = E_FontForName("ee_consolefont");   
+   // draw the labels
+   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
+   {
+      int tag = cachelevels[i].cachelevel;
+      if(tag != PU_MAX)
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
+                   cachelevels[i].name,
+                   memorybytag[tag], memorybytag[tag] * s);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+      else
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
+                   cachelevels[i].name, total_memory, 100.0f);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+   }
+}
+#endif
+
 //
 // D_Display
 //  draw current display, possibly wiping it from the previous
@@ -396,6 +446,11 @@ void D_Display(void)
 
    if(d_drawfps)
       D_showDrawnFPS();
+
+#ifdef INSTRUMENTED
+   if(printstats)
+      D_showMemStats();
+#endif
    
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop

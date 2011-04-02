@@ -492,7 +492,7 @@ boolean P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
    fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
-   if(demo_version < 329)
+   if(GameModeInfo->type == Game_DOOM && demo_version < 329)
       I_Error("P_CheckPosition3D: called in an old demo!\n");
 #endif
 
