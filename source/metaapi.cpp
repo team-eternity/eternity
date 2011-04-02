@@ -68,7 +68,7 @@ int metaerrno = 0;
 // Constructor for MetaObject when type and/or key are known.
 //
 MetaObject::MetaObject(metatypename_t pType, const char *pKey) 
-   : links(), typelinks(), type(), key()
+   : ZoneObject(), links(), typelinks(), type(), key()
 {
    type_name = pType;   
    key_name  = strdup(pKey); // key_name is managed by the metaobject
@@ -83,7 +83,7 @@ MetaObject::MetaObject(metatypename_t pType, const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : links(), typelinks(), type(), key()
+   : ZoneObject(), links(), typelinks(), type(), key()
 {
    type_name = other.type_name;
 
@@ -170,26 +170,6 @@ const char *MetaObject::toString() const
 boolean MetaObject::isKindOf(metatypename_t type) const
 {
    return !strcmp(type_name, type);
-}
-
-//
-// MetaObject::operator new
-//
-// MetaObjects are zone allocated.
-// TODO: Inherit from a CZoneStaticItem class?
-// TODO: What about PU_LEVEL?
-//
-void *MetaObject::operator new (size_t size)
-{
-   return Z_Calloc(1, size, PU_STATIC, NULL);
-}
-
-//
-// MetaObject::operator delete
-//
-void MetaObject::operator delete (void *p)
-{
-   Z_Free(p);
 }
 
 //=============================================================================
@@ -401,14 +381,15 @@ void MetaString::setValue(const char *s, char **ret)
 //
 // A metatable is just a pair of hash tables, one on keys and one on types.
 //
-class metaTablePimpl
+class metaTablePimpl : public ZoneObject
 {
 public:
    EHashTable<MetaObject, ENCStringHashKey> keyhash;
    EHashTable<MetaObject, EStringHashKey>   typehash;
 
    metaTablePimpl() 
-      : keyhash (&MetaObject::key, &MetaObject::links),
+      : ZoneObject(),
+        keyhash (&MetaObject::key, &MetaObject::links),
         typehash(&MetaObject::type, &MetaObject::typelinks)
    {
       // the key hash is growable.
@@ -420,10 +401,6 @@ public:
       // types are case sensitive, because they are based on C types.
       typehash.Initialize(METANUMCHAINS);
    }
-
-   // Le Sigh. CPP_FIXME: We need a global way to deal with this.
-   void *operator new (size_t size) { return Z_Calloc(1, size, PU_STATIC, NULL); }
-   void  operator delete (void *p)  { Z_Free(p); }
 };
 
 //
@@ -431,7 +408,7 @@ public:
 //
 // Default Constructor
 //
-MetaTable::MetaTable()
+MetaTable::MetaTable() : ZoneObject()
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
@@ -533,11 +510,6 @@ int MetaTable::countOfKeyAndType(const char *key, metatypename_t type)
 
    return count;
 }
-
-// Le Sigh x 2. CPP_FIXME: We need a global way to deal with this.
-void *MetaTable::operator new (size_t size) { return Z_Calloc(1, size, PU_STATIC, NULL); }
-void  MetaTable::operator delete (void *p)  { Z_Free(p); }
-
 
 //=============================================================================
 //

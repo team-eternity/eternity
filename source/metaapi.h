@@ -29,7 +29,7 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
-//#include "z_zone.h"
+#include "z_zone.h"
 #include "e_hashkeys.h"
 
 // A metatypename is just a string constant.
@@ -54,7 +54,7 @@ class metaTablePimpl;
 //
 // MetaObject
 //
-class MetaObject
+class MetaObject : public ZoneObject
 {
 protected:
    DLListItem<MetaObject> links;     // links by key
@@ -84,10 +84,6 @@ public:
    // Virtual Methods
    virtual MetaObject *clone() const;
    virtual const char *toString() const;   
-
-   // Operators
-   void *operator new (size_t size);
-   void  operator delete (void *p);
 };
 
 // MetaObject specializations for basic types
@@ -155,7 +151,7 @@ public:
 
 // MetaTable
 
-class MetaTable
+class MetaTable : public ZoneObject
 {
 private:
    metaTablePimpl *pImpl;
@@ -217,10 +213,6 @@ public:
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest);
    void copyTableFrom(MetaTable *source);
-
-   // Operators
-   void *operator new (size_t size);
-   void  operator delete (void *p);
 };
 
 #endif
