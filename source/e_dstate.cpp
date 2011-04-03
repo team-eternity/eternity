@@ -522,7 +522,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // parser can sort this out if the wrong token type appears when it
       // is expecting TOKEN_LABEL.
       
-      strtol(token->constPtr(), &endpos, 10); // QSTR_TODO: toLong?
+      token->toLong(&endpos, 10);
       
       if(*endpos != '\0')
       {      

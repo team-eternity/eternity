@@ -1017,6 +1017,20 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
    }
 }
 
+//
+// ZoneObject::getZoneSize
+//
+// If the ZoneObject is actually allocated on the zone heap, this will return
+// the size of its block on the heap. This is interesting because it provides
+// a polymorphic sizeof that returns the actual allocated size of an object
+// and not a size only relative to the immediate type of the object through a
+// given pointer. Borland VCL has a similar method in its TObject::InstanceSize,
+// but it's implemented through black magic inline-asm hackery in Delphi. I
+// think I've won that one easily as far as elegance goes :P
+//
+// Returns 0 if the object is not a zone allocation. You'll need to use some
+// other method of getting an object's size in that case.
+//
 size_t ZoneObject::getZoneSize() const
 {
    size_t retsize = 0;

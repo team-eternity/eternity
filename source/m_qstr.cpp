@@ -679,6 +679,16 @@ int qstring::toInt() const
 }
 
 //
+// qstring::toLong
+//
+// Returns the qstring converted to a long integer via strtol.
+//
+long qstring::toLong(char **endptr, int radix) const
+{
+   return strtol(buffer, endptr, radix);
+}
+
+//
 // Floating Point
 //
 

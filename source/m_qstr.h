@@ -129,6 +129,7 @@ public:
    char       *duplicate(int tag) const;
    char       *duplicateAuto() const;
    int         toInt() const;
+   long        toLong(char **endptr, int radix) const;
    double      toDouble(char **endptr) const;
    const char *strChr(char c) const;
    const char *strRChr(char c) const;

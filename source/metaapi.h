@@ -59,8 +59,8 @@ class MetaObject : public ZoneObject
 protected:
    DLListItem<MetaObject> links;     // links by key
    DLListItem<MetaObject> typelinks; // links by type
-   EStringHashKey          type;      // type hash key
-   ENCStringHashKey        key;       // primary hash key
+   EStringHashKey         type;      // type hash key
+   ENCStringHashKey       key;       // primary hash key
    
    metatypename_t type_name; // storage pointer for type (static string)
    char *key_name;           // storage pointer for key  (alloc'd string)

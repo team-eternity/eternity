@@ -131,14 +131,22 @@ MetaObject *MetaObject::clone() const
 // C implementation, the returned string pointer is a static buffer and should
 // not be cached. The default toString method creates a hex dump representation
 // of the object. This should be pretty interesting in C++...
+// 04/03/11: Altered to use new ZoneObject functionality so that the entire
+// object, including all superclasses, are dumped properly. Really cool ;)
 //
 const char *MetaObject::toString() const
 {
    static qstring qstr;
-   size_t bytestoprint = sizeof(*this);
-   const byte *data = reinterpret_cast<const byte *>(this); // Not evil, I promise.
+   size_t bytestoprint = getZoneSize();
+   const byte *data    = reinterpret_cast<const byte *>(getBlockPtr());
    
    qstr.clearOrCreate(128);
+
+   if(!bytestoprint) // Not a zone object? Can only dump the base class.
+   {
+      bytestoprint = sizeof(*this);
+      data = reinterpret_cast<const byte *>(this); // Not evil, I swear :P
+   }
 
    while(bytestoprint)
    {
