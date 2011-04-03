@@ -37,8 +37,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef ZONE_NATIVE
-
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
@@ -211,6 +209,9 @@ static void Z_IDCheck(boolean err, const char *errmsg,
 // statistics for evaluating performance
 INSTRUMENT(size_t memorybytag[PU_MAX]);
 INSTRUMENT(int printstats = 0);            // killough 8/23/98
+
+// haleyjd 04/02/11: Instrumentation output has been moved to d_main.cpp and
+// is now drawn directly to the screen instead of passing through doom_printf.
 
 // haleyjd 06/20/09: removed unused, crashy, and non-useful Z_DumpHistory
 
@@ -1043,8 +1044,6 @@ size_t ZoneObject::getZoneSize() const
 
    return retsize;
 }
-
-#endif // ZONE_NATIVE
 
 //-----------------------------------------------------------------------------
 //
