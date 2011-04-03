@@ -681,7 +681,8 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    {
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, tex->width * tex->height);
 #endif
       AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
       srcoff += srcxstep;
@@ -770,7 +771,8 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + y2 - y1 > column->length)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, column->length);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, column->length);
 #endif
             
          if(y2 - y1 > 0)
