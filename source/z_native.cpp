@@ -17,23 +17,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //
 // Native implementation of the zone API. This doesn't have a lot of advantage
 // over the zone heap during normal play, but it shines when the game is
 // under stress, whereas the zone heap chokes doing an O(N) search over the
-// block list and wasting time dumping purgables, causing unnecessary disk IO.
+// block list and wasting time dumping purgables, causing unnecessary disk 
+// thrashing.
 //
-// This code must be enabled by globally defining ZONE_NATIVE. When running 
-// with this heap, there is no limitation to the amount of memory allocated
-// except what the system will provide.
+// When running with this heap, there is no limitation to the amount of memory
+// allocated except what the system will provide.
 //
 // Limitations:
-// Instrumentation is limited to tracking of static and purgable memory.
-// Heap check is limited to a zone ID check.
-// Core dump function is not supported.
+// * Purgables are never currently dumped unless the machine runs out of RAM.
+// * Instrumentation cannot track the amount of free memory.
+// * Heap check is limited to a zone ID check.
+// * Core dump function is not supported.
 //
 //-----------------------------------------------------------------------------
 
@@ -105,19 +106,22 @@ typedef struct memblock
 #endif
 } memblock_t;
 
+//=============================================================================
+//
+// Heap Globals
+//
+
 // haleyjd 03/08/10: dynamically calculated header size;
 // round sizeof(memblock_t) up to nearest 16-byte boundary. This should work
 // just about everywhere, and keeps the assumption of a 32-byte header on 
 // 32-bit. 64-bit will use a 64-byte header.
 static const size_t header_size = (sizeof(memblock_t) + 15) & ~15;
 
-static memblock_t *blockbytag[PU_MAX];   // used for tracking vm blocks
+static memblock_t *blockbytag[PU_MAX];   // used for tracking all zone blocks
 
 // ZoneObject class statics
-ZoneObject *ZoneObject::objectbytag[PU_MAX];
-void       *ZoneObject::newalloc;
-
-static boolean zone_shutdown; // haleyjd 03/31/11: if true, we're shutting down
+ZoneObject *ZoneObject::objectbytag[PU_MAX]; // like blockbytag but for objects
+void       *ZoneObject::newalloc;            // most recent ZoneObject alloc
 
 //=============================================================================
 //
@@ -207,8 +211,8 @@ static void Z_IDCheck(boolean err, const char *errmsg,
 //
 
 // statistics for evaluating performance
-INSTRUMENT(size_t memorybytag[PU_MAX]);
-INSTRUMENT(int printstats = 0);            // killough 8/23/98
+INSTRUMENT(size_t memorybytag[PU_MAX]); // haleyjd 04/02/11: track by tag
+INSTRUMENT(int printstats = 0);         // killough 8/23/98
 
 // haleyjd 04/02/11: Instrumentation output has been moved to d_main.cpp and
 // is now drawn directly to the screen instead of passing through doom_printf.
@@ -276,8 +280,6 @@ static void Z_LogPuts(const char *msg)
 
 static void Z_Close(void)
 {
-   zone_shutdown = true;
-
    Z_CloseLogFile();
 
 #ifdef DUMPONEXIT
@@ -307,10 +309,6 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
    register memblock_t *block;
    byte *ret;
-   
-   // haleyjd 03/31/2011: Due to the fact that C++ objects might call Z_Malloc in
-   // their constructors, we need to make sure the heap properties are completely
-   // setup from here and not from Z_Init above.
 
    DEBUG_CHECKHEAP();
 

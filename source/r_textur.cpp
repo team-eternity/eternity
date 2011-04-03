@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2011 Stephen McGranahan, James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -515,7 +515,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             // killough 8/8/98
             // sf: error_printf
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
-                         tp.patch, texture->name);
+                         tp.patch, (const char *)(texture->name));
             //++*errors;
             
             component->width = component->height = 0;
@@ -588,7 +588,8 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
    if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
       ptroff + len > tempmask.buffermax)
    {
-      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", tex->name, 
+      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", 
+              (const char *)(tex->name), 
               ptroff + len, tex->width * tex->height, tempmask.buffermax);
    }
 #endif
@@ -939,7 +940,7 @@ texture_t *R_CacheTexture(int num)
    if(tex->ccount == 0)
    {
       I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
-              tex->name);
+              (const char *)(tex->name));
    }
 
    // This function has two primary branches:
