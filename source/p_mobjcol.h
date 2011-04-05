@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2011 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,50 +17,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-// 
-// Shared intermission code
+//  Mobj Collections
+//  These are used by stuff like Boss Spawn Spots and D'Sparil landings, and
+//  evolved out of a generalization of the code Lee originally wrote to remove
+//  the boss spot limit in BOOM. The core logic is now based on the generic
+//  PODCollection class, however, and this just adds a bit of utility to it.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef IN_LUDE_H__
-#define IN_LUDE_H__
+#ifndef P_MOBJCOL_H__
+#define P_MOBJCOL_H__
 
+#include "m_collection.h"
 #include "p_mobj.h"
 
-// Intermission object struct
-typedef struct interfns_s
+class MobjCollection : public PODCollection<Mobj *>
 {
-   void (*Ticker)(void);         // called by IN_Ticker
-   void (*DrawBackground)(void); // called various places
-   void (*Drawer)(void);         // called by IN_Drawer
-   void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
-} interfns_t;
+protected:
+   int mobjType;
 
-// intercam
-#define MAXCAMERAS 128
+public:
+   MobjCollection() : PODCollection<Mobj *>(), mobjType(-1) {}
+   int  getMobjType() const { return mobjType; }
+   void setMobjType(int mt) { mobjType = mt;   }
 
-extern int intertime;
-extern int acceleratestage;
-
-class MobjCollection;
-extern MobjCollection camerathings;
-extern Mobj *wi_camera;
-
-extern const char *in_fontname;
-extern const char *in_bigfontname;
-extern const char *in_bignumfontname;
-
-void IN_AddCameras(void);
-void IN_slamBackground(void);
-void IN_checkForAccelerate(void);
-void IN_Ticker(void);
-void IN_Drawer(void);
-void IN_DrawBackground(void);
-void IN_Start(wbstartstruct_t *wbstartstruct);
+   void collectThings();
+};
 
 #endif
 
 // EOF
+

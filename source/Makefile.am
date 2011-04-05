@@ -37,7 +37,8 @@ hu_stuff.cpp   hu_stuff.h \
 i_net.h        info.cpp       info.h         in_lude.cpp    in_lude.h      i_sound.h \
 i_system.h     i_video.h \
 m_argv.cpp     m_argv.h       m_bbox.cpp     m_bbox.h       m_buffer.cpp   m_buffer.h \
-m_cheat.cpp    m_cheat.h      m_dllist.h     m_fcvt.cpp     m_fcvt.h       m_fixed.h \
+m_cheat.cpp    m_cheat.h      m_collection.h m_dllist.h     m_fcvt.cpp     m_fcvt.h \
+m_fixed.h \
 m_hash.cpp     m_hash.h       m_misc.cpp     m_misc.h       m_qstr.cpp     m_qstr.h \
 m_queue.cpp    m_queue.h      m_random.cpp   m_random.h     m_shots.cpp    m_shots.h \
 m_swap.h       m_syscfg.cpp   m_syscfg.h     m_vector.cpp   m_vector.h \
@@ -50,12 +51,12 @@ p_anim.cpp     p_anim.h       p_ceilng.cpp   p_chase.cpp    p_chase.h      p_cmd
 p_doors.cpp    p_enemy.cpp    p_enemy.h      p_floor.cpp    p_genlin.cpp   p_hubs.cpp \
 p_hubs.h       p_info.cpp     p_info.h       p_inter.cpp    p_inter.h      p_lights.cpp \
 p_map.cpp      p_map.h        p_map3d.cpp    p_map3d.h      p_maputl.cpp   p_maputl.h \
-p_mobj.cpp     p_mobj.h       p_partcl.cpp   p_partcl.h     p_plats.cpp    p_portal.cpp \
-p_portal.h     p_pspr.cpp     p_pspr.h       p_saveg.cpp    p_saveg.h      p_setup.cpp \
-p_setup.h      p_sight.cpp    p_skin.cpp     p_skin.h       p_slopes.cpp   p_slopes.h \
-p_spec.cpp     p_spec.h       p_switch.cpp   p_telept.cpp   p_things.cpp   p_tick.cpp \
-p_tick.h       p_trace.cpp    p_user.cpp     p_user.h       p_xenemy.cpp   p_xenemy.h \
-polyobj.cpp    polyobj.h      psnprntf.cpp   psnprntf.h \
+p_mobj.cpp     p_mobj.h       p_mobjcol.cpp  p_mobjcol.h    p_partcl.cpp   p_partcl.h \
+p_plats.cpp    p_portal.cpp   p_portal.h     p_pspr.cpp     p_pspr.h       p_saveg.cpp \
+p_saveg.h      p_setup.cpp    p_setup.h      p_sight.cpp    p_skin.cpp     p_skin.h \
+p_slopes.cpp   p_slopes.h     p_spec.cpp     p_spec.h       p_switch.cpp   p_telept.cpp \
+p_things.cpp   p_tick.cpp     p_tick.h       p_trace.cpp    p_user.cpp     p_user.h \
+p_xenemy.cpp   p_xenemy.h     polyobj.cpp    polyobj.h      psnprntf.cpp   psnprntf.h \
 r_bsp.cpp      r_bsp.h        r_data.cpp     r_data.h       r_defs.h       r_draw.cpp \
 r_draw.h       r_drawl.cpp    r_drawl.h      r_drawq.cpp    r_dynseg.h     r_main.cpp \
 r_main.h       r_plane.cpp    r_pcheck.h     r_drawq.h      r_dynseg.cpp   r_plane.h \

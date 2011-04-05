@@ -82,7 +82,7 @@ enum
    BOSSTELE_DEST
 };
 
-struct MobjCollection;
+class MobjCollection;
 
 // haleyjd: bossteleport_t
 //

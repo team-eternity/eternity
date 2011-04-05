@@ -34,6 +34,7 @@
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_mobjcol.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "s_sound.h"
@@ -1359,7 +1360,7 @@ void P_BossTeleport(bossteleport_t *bt)
    Mobj *boss, *mo, *targ;
    fixed_t prevx, prevy, prevz;
 
-   if(P_CollectionIsEmpty(bt->mc))
+   if(bt->mc->isEmpty())
       return;
 
    boss = bt->boss;
@@ -1367,14 +1368,14 @@ void P_BossTeleport(bossteleport_t *bt)
    // if minimum distance is specified, use a different point selection method
    if(bt->minDistance)
    {
-      int i = P_Random(bt->rngNum) % bt->mc->num;
+      int i = P_Random(bt->rngNum) % bt->mc->getLength();
       int starti = i;
       fixed_t x, y;
       boolean foundSpot = true;
 
       while(1)
       {
-         targ = P_CollectionGetAt(bt->mc, (unsigned int)i);
+         targ = (*bt->mc)[(unsigned int)i];
          x = targ->x;
          y = targ->y;
          if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
@@ -1384,7 +1385,7 @@ void P_BossTeleport(bossteleport_t *bt)
          }
 
          // wrapped around? abort loop
-         if((i = (i + 1) % bt->mc->num) == starti)
+         if((i = (i + 1) % bt->mc->getLength()) == starti)
             break;
       }
 
@@ -1393,7 +1394,7 @@ void P_BossTeleport(bossteleport_t *bt)
          return;
    }
    else
-      targ = P_CollectionGetRandom(bt->mc, bt->rngNum);
+      targ = bt->mc->getRandom(bt->rngNum);
 
    prevx = boss->x;
    prevy = boss->y;

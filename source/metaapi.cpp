@@ -132,7 +132,7 @@ MetaObject *MetaObject::clone() const
 // not be cached. The default toString method creates a hex dump representation
 // of the object. This should be pretty interesting in C++...
 // 04/03/11: Altered to use new ZoneObject functionality so that the entire
-// object, including all superclasses, are dumped properly. Really cool ;)
+// object, including all subclasses, are dumped properly. Really cool ;)
 //
 const char *MetaObject::toString() const
 {

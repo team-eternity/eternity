@@ -33,6 +33,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "m_random.h"
+#include "p_mobjcol.h"
 #include "p_tick.h"
 #include "in_lude.h"
 #include "v_video.h"
@@ -88,14 +89,15 @@ void IN_AddCameras(void)
 {
    int cameratype = E_ThingNumForDEHNum(MT_CAMERA);
 
-   P_ReInitMobjCollection(&camerathings, cameratype);
+   camerathings.setMobjType(cameratype);
+   camerathings.makeEmpty();
 
    // no camera view if camera type is undefined or we're in an
    // older demo.
    if(cameratype == NUMMOBJTYPES || demo_version < 331)
       return;
    
-   P_CollectThings(&camerathings);
+   camerathings.collectThings();
 }
 
 //
@@ -107,12 +109,12 @@ void IN_StartCamera(void)
 {
    int i;
    
-   if(!P_CollectionIsEmpty(&camerathings))
+   if(!camerathings.isEmpty())
    {
       realbackdrop = 1;
 
       // pick a camera at random
-      wi_camera = P_CollectionGetRandom(&camerathings, pr_misc);
+      wi_camera = camerathings.getRandom(pr_misc);
       
       // remove the player mobjs (look silly in camera view)
       for(i = 0; i < MAXPLAYERS; ++i)

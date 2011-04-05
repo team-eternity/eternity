@@ -33,6 +33,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_mobjcol.h"
 #include "p_inter.h"
 #include "p_partcl.h"
 #include "p_setup.h"
@@ -762,7 +763,7 @@ static boolean PIT_FindAboveIntersectors(Mobj *thing)
 
    // Thing intersects above the base?
    if(thing->z >= clip.thing->z && thing->z <= clip.thing->z + clip.thing->height)
-      P_AddToCollection(&intersectors, thing);
+      intersectors.add(thing);
 
    return true;
 }
@@ -786,7 +787,7 @@ boolean PIT_FindBelowIntersectors(Mobj *thing)
       thing->z + thing->height > clip.thing->z)
    { 
       // Thing intersects below the base
-      P_AddToCollection(&intersectors, thing);
+      intersectors.add(thing);
    }
 
    return true;
@@ -953,7 +954,7 @@ static boolean midtex_moving;
 //
 static int P_PushUp(Mobj *thing)
 {
-   unsigned int firstintersect = intersectors.num;
+   unsigned int firstintersect = intersectors.getLength();
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
@@ -961,10 +962,10 @@ static int P_PushUp(Mobj *thing)
       return 1;
 
    P_FindAboveIntersectors(thing);
-   lastintersect = intersectors.num;
+   lastintersect = intersectors.getLength();
    for(; firstintersect < lastintersect; ++firstintersect)
    {
-      Mobj *intersect = P_CollectionGetAt(&intersectors, firstintersect);
+      Mobj *intersect = intersectors[firstintersect];
       fixed_t oldz = intersect->z;
       
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) ||*/
@@ -997,7 +998,7 @@ static int P_PushUp(Mobj *thing)
 //
 static int P_PushDown(Mobj *thing)
 {
-   unsigned int firstintersect = intersectors.num;
+   unsigned int firstintersect = intersectors.getLength();
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
@@ -1005,10 +1006,10 @@ static int P_PushDown(Mobj *thing)
       return 1;
 
    P_FindBelowIntersectors(thing);
-   lastintersect = intersectors.num;
+   lastintersect = intersectors.getLength();
    for(; firstintersect < lastintersect; ++firstintersect)
    {
-      Mobj *intersect = P_CollectionGetAt(&intersectors, firstintersect);
+      Mobj *intersect = intersectors[firstintersect];
       fixed_t oldz = intersect->z;
 
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) || */
@@ -1085,7 +1086,7 @@ static void PIT_FloorRaise(Mobj *thing)
    {
       fixed_t oldz = thing->z;
 
-      P_ReInitMobjCollection(&intersectors, 0);
+      intersectors.makeEmpty();
 
       if(!(thing->flags2 & MF2_FLOATBOB))
          thing->z = thing->floorz;
@@ -1119,7 +1120,7 @@ static void PIT_CeilingLower(Mobj *thing)
 
    if(thing->z + thing->height > thing->ceilingz)
    {
-      P_ReInitMobjCollection(&intersectors, 0);
+      intersectors.makeEmpty();
 
       if(thing->ceilingz - thing->height >= thing->floorz)
          thing->z = thing->ceilingz - thing->height;

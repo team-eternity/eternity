@@ -38,6 +38,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_mobjcol.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -1258,14 +1259,15 @@ void P_SpawnBrainTargets(void)  // killough 3/26/98: renamed old function
    int BrainSpotType = E_ThingNumForDEHNum(MT_BOSSTARGET);
 
    // find all the target spots
-   P_ReInitMobjCollection(&braintargets, BrainSpotType);
+   braintargets.setMobjType(BrainSpotType);
+   braintargets.makeEmpty();
 
    brain.easy = 0;   // killough 3/26/98: always init easy to 0
 
    if(BrainSpotType == NUMMOBJTYPES)
       return;
 
-   P_CollectThings(&braintargets);
+   braintargets.collectThings();
 }
 
 // haleyjd 07/30/04: P_CollectThings moved to p_mobj.c
@@ -1368,7 +1370,7 @@ void A_BrainSpit(Mobj *mo)
       SpawnShotType = E_SafeThingType(MT_SPAWNSHOT);
    
     // killough 4/1/98: ignore if no targets
-   if(P_CollectionIsEmpty(&braintargets))
+   if(braintargets.isEmpty())
       return;
 
    brain.easy ^= 1;          // killough 3/26/98: use brain struct
@@ -1376,7 +1378,7 @@ void A_BrainSpit(Mobj *mo)
       return;
 
    // shoot a cube at current target
-   targ = P_CollectionWrapIterator(&braintargets);
+   targ = braintargets.wrapIterator();
 
    // spawn brain missile
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 

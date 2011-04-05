@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "c_runcmd.h"
+#include "p_mobjcol.h"
 #include "s_sndseq.h"
 #include "e_things.h"
 #include "r_state.h"
@@ -602,8 +603,8 @@ static void S_ResetEnviroSeqEngine(void)
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
 
-   if(!P_CollectionIsEmpty(&enviroSpots))
-      nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+   if(!enviroSpots.isEmpty())
+      nextEnviroSpot = enviroSpots.getRandom(pr_misc);
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
 
@@ -621,10 +622,11 @@ void S_InitEnviroSpots(void)
 {
    int enviroType = E_ThingNumForName("EEEnviroSequence");
 
-   P_ReInitMobjCollection(&enviroSpots, enviroType);
+   enviroSpots.setMobjType(enviroType);
+   enviroSpots.makeEmpty();
 
    if(enviroType != NUMMOBJTYPES)
-      P_CollectThings(&enviroSpots);
+      enviroSpots.collectThings();
 
    S_ResetEnviroSeqEngine();
 }
@@ -640,7 +642,7 @@ void S_InitEnviroSpots(void)
 static void S_RunEnviroSequence(void)
 {
    // nothing to do?
-   if(P_CollectionIsEmpty(&enviroSpots))
+   if(enviroSpots.isEmpty())
       return;
 
    // if waiting, count down the wait time
@@ -660,7 +662,7 @@ static void S_RunEnviroSequence(void)
          EnviroSequence = NULL;
          enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
                                            EnviroSeqManager.maxEnviroWait);
-         nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
       }
       else
          S_RunSequence(EnviroSequence);
@@ -672,7 +674,7 @@ static void S_RunEnviroSequence(void)
 
       if(!edfSeq) // woops, bad sequence, try another next time.
       {
-         nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
          return;
       }
 

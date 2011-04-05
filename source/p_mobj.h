@@ -414,29 +414,6 @@ void P_ChangeThingHeights(void);
 // extern data
 extern fixed_t FloatBobOffsets[64];
 
-// Thing Collections
-
-struct MobjCollection
-{
-   int type;          // internal mobj type #
-   int num;           // number of Mobj's in collection
-   int numalloc;      // number of Mobj* allocated
-   Mobj **ptrarray; // reallocating pointer array
-
-   int wrapiterator;  // persistent index for wrap iteration
-}; 
-
-void P_InitMobjCollection(MobjCollection *, int);
-void P_ReInitMobjCollection(MobjCollection *, int);
-void P_ClearMobjCollection(MobjCollection *);
-void P_CollectThings(MobjCollection *);
-boolean P_CollectionIsEmpty(MobjCollection *);
-Mobj *P_CollectionWrapIterator(MobjCollection *);
-Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at);
-Mobj *P_CollectionGetRandom(MobjCollection *, pr_class_t);
-void P_AddToCollection(MobjCollection *mc, Mobj *mo);
-void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *));
-
 // end new Eternity mobj functions
 
 #ifdef R_LINKEDPORTALS

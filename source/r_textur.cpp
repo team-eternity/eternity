@@ -422,8 +422,7 @@ static void R_TextureHacks(texture_t *t)
       t->name[1] == 'K' &&
       t->name[2] == 'Y' &&
       t->name[3] == '1' &&
-      t->name[4] == 0 &&
-      t->height == 128)
+      t->name[4] == 0)
    {
       t->components->originy = 0;
       return;

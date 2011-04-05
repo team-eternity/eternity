@@ -1976,6 +1976,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_collection.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_dllist.h"
 						>
 					</File>
@@ -2579,6 +2583,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_mobjcol.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_partcl.cpp"
 						>
 						<FileConfiguration
@@ -3022,6 +3030,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_mobj.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_mobjcol.h"
 						>
 					</File>
 					<File

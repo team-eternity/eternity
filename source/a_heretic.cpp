@@ -37,6 +37,7 @@
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_mobjcol.h"
 #include "p_pspr.h"
 #include "p_tick.h"
 #include "p_setup.h"
@@ -548,17 +549,15 @@ MobjCollection sorcspots;
 
 void P_SpawnSorcSpots(void)
 {
-   static int spotType = -1;
-   
-   if(spotType == -1)
-      spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
+   int spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
 
-   P_ReInitMobjCollection(&sorcspots, spotType);
+   sorcspots.setMobjType(spotType);
+   sorcspots.makeEmpty();
 
    if(spotType == NUMMOBJTYPES)
       return;
 
-   P_CollectThings(&sorcspots);
+   sorcspots.collectThings();
 }
 
 void A_Srcr2Decide(Mobj *actor)
@@ -567,7 +566,7 @@ void A_Srcr2Decide(Mobj *actor)
    int index    = actor->health / (actor->info->spawnhealth / 8);
    
    // if no spots, no teleportation
-   if(P_CollectionIsEmpty(&sorcspots))
+   if(sorcspots.isEmpty())
       return;
 
    if(P_Random(pr_sorctele1) < chance[index])
