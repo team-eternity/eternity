@@ -3919,7 +3919,7 @@ void D_ReInitWadfiles(void)
 }
 
 // FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(FILE *handle, int sound_update_type)
+void D_NewWadLumps(FILE *handle)
 {
    int i, format;
    char wad_firstlevel[9];

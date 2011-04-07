@@ -78,9 +78,7 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 // LUMP BASED ROUTINES.
 //
 
-static int w_sound_update_type;
-
-void D_NewWadLumps(FILE *handle, int sound_update_type);
+void D_NewWadLumps(FILE *handle);
 
 //
 // W_addInfoPtr
@@ -105,6 +103,68 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
 }
 
 //
+// WadDirectory::OpenFile
+//
+// haleyjd 04/06/11: For normal wad files, the file needs to be found and 
+// opened.
+//
+WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
+{
+   openwad_t openData;
+   char *filename = NULL;
+   memset(&openData, 0, sizeof(openData));
+
+   // haleyjd 03/18/10: filename fix
+   M_StringAlloca(&filename, 2, 1, name, ".wad");
+   strcpy(filename, name);
+
+   if(filetype == ADDWADFILE)
+      M_NormalizeSlashes(M_AddDefaultExtension(filename, ".wad"));  // killough 11/98
+   
+   // open the file and add to directory
+   if((openData.handle = fopen(filename, "rb")) == NULL)
+   {
+      if(filetype == ADDPRIVATE)
+      {
+         C_Printf(FC_ERROR "Couldn't open %s\n", filename);
+         openData.filename = filename;
+         openData.error    = true;
+         openData.errorRet = false;
+         return openData;
+      }
+
+      if(strlen(name) > 4 && !strcasecmp(name + strlen(name) - 4 , ".lmp" ))
+      {
+         openData.filename = filename;
+         openData.error    = true;
+         openData.errorRet = false;
+         return openData; // sf: no errors
+      }
+
+      // killough 11/98: allow .lmp extension if none existed before
+      M_NormalizeSlashes(M_AddDefaultExtension(strcpy(filename, name), ".lmp"));
+      
+      if((openData.handle = fopen(filename, "rb")) == NULL)
+      {
+         if(in_textmode)
+            I_Error("Error: couldn't open %s\n", name);  // killough
+         else
+         {
+            C_Printf(FC_ERROR "Couldn't open %s\n", name);
+            openData.filename = filename;
+            openData.error    = true;
+            openData.errorRet = true;
+            return openData; // error
+         }
+      }
+   }
+
+   openData.filename = filename;
+   openData.error = openData.errorRet = false;
+   return openData;
+}
+
+//
 // W_AddFile
 //
 // All files are optional, but at least one file must be found (PWAD, if all 
@@ -115,60 +175,53 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
 // Reload hack removed by Lee Killough
 // killough 1/31/98: static, const
 //
-int WadDirectory::AddFile(const char *name, int li_namespace)
+boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
+                              FILE *file, size_t baseoffset)
 {
    wadinfo_t   header;
+   openwad_t   openData;
    lumpinfo_t* lump_p;
    unsigned    i;
-   FILE        *handle;
    int         length;
    int         startlump;
    filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
    filelump_t  singleinfo;
-   char        *filename;
    lumpinfo_t  *newlumps;
    boolean     isWad;     // haleyjd 05/23/04
 
-   // haleyjd 03/18/10: filename fix
-   M_StringAlloca(&filename, 2, 1, name, ".wad");
-   strcpy(filename, name);
-
-   M_NormalizeSlashes(M_AddDefaultExtension(filename, ".wad"));  // killough 11/98
-
-   // open the file and add to directory
-   if((handle = fopen(filename, "rb")) == NULL)
+   switch(filetype)
    {
-      if(strlen(name) > 4 && !strcasecmp(name + strlen(name) - 4 , ".lmp" ))
-         return false; // sf: no errors
-
-      // killough 11/98: allow .lmp extension if none existed before
-      M_NormalizeSlashes(M_AddDefaultExtension(strcpy(filename, name), ".lmp"));
-      
-      if((handle = fopen(filename, "rb")) == NULL)
-      {
-         if(in_textmode)
-            I_Error("Error: couldn't open %s\n", name);  // killough
-         else
-         {
-            C_Printf(FC_ERROR "Couldn't open %s\n", name);
-            return true; // error
-         }
-      }
+   case ADDWADFILE:
+   case ADDPRIVATE:
+      openData = OpenFile(name, filetype);
+      if(openData.error)
+         return openData.errorRet; // return immediately if an error occurred
+      break;
+   case ADDSUBFILE:
+      openData.filename = name;
+      openData.handle   = file;
+      break;
    }
   
-   if(this->ispublic && in_textmode)
-      printf(" adding %s\n", filename);   // killough 8/8/98
+   if(filetype != ADDPRIVATE && this->ispublic && in_textmode)
+      printf(" adding %s\n", openData.filename);   // killough 8/8/98
    startlump = this->numlumps;
 
+   // haleyjd: seek to baseoffset first when loading a subfile
+   if(filetype == ADDSUBFILE)
+      fseek(openData.handle, baseoffset, SEEK_SET);
+
    // killough:
-   if(strlen(filename) <= 4 || strcasecmp(filename+strlen(filename)-4, ".wad" ))
+   if(filetype == ADDWADFILE && // only when adding normal wad files
+      (strlen(openData.filename) <= 4 || 
+       strcasecmp(openData.filename+strlen(openData.filename)-4, ".wad" )))
    {
       // single lump file
       isWad = false; // haleyjd 05/23/04
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
-      singleinfo.size = SwapLong(M_FileLength(handle));
-      M_ExtractFileBase(filename, singleinfo.name);
+      singleinfo.size = SwapLong(M_FileLength(openData.handle));
+      M_ExtractFileBase(openData.filename, singleinfo.name);
       this->numlumps++;
    }
    else
@@ -176,13 +229,29 @@ int WadDirectory::AddFile(const char *name, int li_namespace)
       // WAD file
       isWad = true; // haleyjd 05/23/04
       
-      if(fread(&header, sizeof(header), 1, handle) < 1)
-         I_Error("Failed reading header for wad file %s\n", filename);
+      if(fread(&header, sizeof(header), 1, openData.handle) < 1)
+      {
+         if(filetype == ADDPRIVATE)
+         {
+            fclose(openData.handle);
+            C_Printf(FC_ERROR "Failed reading header for wad file %s\n", openData.filename);
+            return false;
+         }
+         else
+            I_Error("Failed reading header for wad file %s\n", openData.filename);
+      }
       
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
       {
-         I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
+         if(filetype == ADDPRIVATE)
+         {
+            fclose(openData.handle);
+            C_Printf(FC_ERROR "Wad file %s doesn't have IWAD or PWAD id\n", openData.filename);
+            return false;
+         }
+         else
+            I_Error("Wad file %s doesn't have IWAD or PWAD id\n", openData.filename);
       }
       
       header.numlumps     = SwapLong(header.numlumps);
@@ -191,10 +260,24 @@ int WadDirectory::AddFile(const char *name, int li_namespace)
       length = header.numlumps * sizeof(filelump_t);
       fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
       
-      fseek(handle, header.infotableofs, SEEK_SET);
+      long info_offset = (long)(header.infotableofs);
+      // subfile wads may exist at a positive base offset
+      if(filetype == ADDSUBFILE) 
+         info_offset += (long)baseoffset;
+      fseek(openData.handle, info_offset, SEEK_SET);
 
-      if(fread(fileinfo, length, 1, handle) < 1)
-         I_Error("Failed reading directory for wad file %s\n", filename);
+      if(fread(fileinfo, length, 1, openData.handle) < 1)
+      {
+         if(filetype == ADDPRIVATE)
+         {
+            fclose(openData.handle);
+            free(fileinfo2free);
+            C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", openData.filename);
+            return false;
+         }
+         else
+            I_Error("Failed reading directory for wad file %s\n", openData.filename);
+      }
       
       this->numlumps += header.numlumps;
    }
@@ -210,103 +293,7 @@ int WadDirectory::AddFile(const char *name, int li_namespace)
    AddInfoPtr(newlumps);
    
    // update IWAD handle?   
-   if(isWad && this->ispublic)
-   {
-      // haleyjd 06/21/04: track handle of first wad added also
-      if(ResWADSource == -1)
-         ResWADSource = source;
-
-      // haleyjd 07/13/09: only track the first IWAD found
-      if(IWADSource < 0 && !strncmp(header.identification, "IWAD", 4))
-         IWADSource = source;
-   }
-  
-   for(i = startlump; i < (unsigned int)this->numlumps; i++, lump_p++, fileinfo++)
-   {
-      this->lumpinfo[i] = lump_p;
-      lump_p->type     = lumpinfo_t::lump_direct; // haleyjd
-      lump_p->file     = handle;
-      lump_p->position = (size_t)(SwapLong(fileinfo->filepos));
-      lump_p->size     = (size_t)(SwapLong(fileinfo->size));
-      lump_p->source   = source; // haleyjd
-      
-      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
-      lump_p->li_namespace = li_namespace;         // killough 4/17/98
-      
-      memset(lump_p->name, 0, 9);
-      strncpy(lump_p->name, fileinfo->name, 8);
-   }
-
-   // haleyjd: increment source
-   ++source;
-   
-   if(fileinfo2free)
-      free(fileinfo2free); // killough
-   
-   if(this->ispublic)
-      D_NewWadLumps(handle, w_sound_update_type);
-   
-   return false; // no error
-}
-
-//
-// W_AddSubFile
-//
-// haleyjd 05/28/10: Adds a wad file that is part of a bigger file.
-// FIXME: Shares most code with the function above
-//
-boolean WadDirectory::AddSubFile(const char *name, int li_namespace, 
-                                 FILE *handle, size_t baseoffset)
-{
-   wadinfo_t   header;
-   lumpinfo_t* lump_p;
-   unsigned    i;
-   int         length;
-   int         startlump;
-   filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
-   lumpinfo_t  *newlumps;
-       
-   if(this->ispublic && in_textmode)
-      printf(" adding %s\n", name);   // killough 8/8/98
-   startlump = this->numlumps;
-
-   // haleyjd: seek to baseoffset first
-   fseek(handle, baseoffset, SEEK_SET);
-      
-   if(fread(&header, sizeof(header), 1, handle) < 1)
-      I_Error("Failed reading header for wad file %s\n", name);
-      
-   if(strncmp(header.identification, "IWAD", 4) && 
-      strncmp(header.identification, "PWAD", 4))
-   {
-      I_Error("Wad file %s doesn't have IWAD or PWAD id\n", name);
-   }
-      
-   header.numlumps     = SwapLong(header.numlumps);
-   header.infotableofs = SwapLong(header.infotableofs);
-      
-   length = header.numlumps * sizeof(filelump_t);
-   fileinfo2free = fileinfo = (filelump_t *)(malloc(length));    // killough
-      
-   fseek(handle, baseoffset + (unsigned int)header.infotableofs, SEEK_SET);
-
-   if(fread(fileinfo, length, 1, handle) < 1)
-      I_Error("Failed reading directory for wad file %s\n", name);
-      
-   this->numlumps += header.numlumps;
-   
-   // Fill in lumpinfo
-   this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
-
-   // space for new lumps
-   newlumps = (lumpinfo_t *)(malloc((this->numlumps - startlump) * sizeof(lumpinfo_t)));
-   lump_p   = newlumps;
-
-   // haleyjd: keep track of this allocation of lumps
-   AddInfoPtr(newlumps);
-   
-   // update IWAD handle?   
-   if(this->ispublic)
+   if(filetype != ADDPRIVATE && isWad && this->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
       if(ResWADSource == -1)
@@ -321,110 +308,17 @@ boolean WadDirectory::AddSubFile(const char *name, int li_namespace,
    {
       this->lumpinfo[i] = lump_p;
       lump_p->type      = lumpinfo_t::lump_direct; // haleyjd
-      lump_p->file      = handle;
-      lump_p->position  = (size_t)(SwapLong(fileinfo->filepos)) + baseoffset;
-      lump_p->size      = (size_t)(SwapLong(fileinfo->size));
-      lump_p->source    = source;
-      
-      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
-      lump_p->li_namespace = li_namespace;         // killough 4/17/98
-      
-      memset(lump_p->name, 0, 9);
-      strncpy(lump_p->name, fileinfo->name, 8);
-   }
-
-   // haleyjd: increment source
-   ++source;
-   
-   if(fileinfo2free)
-      free(fileinfo2free); // killough
-   
-   if(this->ispublic)
-      D_NewWadLumps(handle, w_sound_update_type);
-   
-   return false; // no error
-}
-
-//
-// W_AddPrivateFile
-//
-// haleyjd 06/14/10: Adds a file to a strictly private wad directory.
-// FIXME: Shares a lot of code with the above.
-//
-boolean WadDirectory::AddPrivateFile(const char *filename)
-{
-   wadinfo_t   header;
-   lumpinfo_t* lump_p;
-   unsigned    i;
-   int         length;
-   int         startlump;
-   filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
-   lumpinfo_t  *newlumps;
-   FILE        *handle;
-   
-   // open the file and add to directory
-   if((handle = fopen(filename, "rb")) == NULL)
-   {
-      C_Printf(FC_ERROR "Couldn't open %s\n", filename);
-      return false;
-   }
-       
-   startlump = this->numlumps;
-      
-   if(fread(&header, sizeof(header), 1, handle) < 1)
-   {
-      fclose(handle);
-      C_Printf(FC_ERROR "Failed reading header for wad file %s\n", filename);
-      return false;
-   }
-      
-   if(strncmp(header.identification, "IWAD", 4) && 
-      strncmp(header.identification, "PWAD", 4))
-   {
-      fclose(handle);
-      C_Printf(FC_ERROR "Wad file %s doesn't have IWAD or PWAD id\n", filename);
-      return false;
-   }
-      
-   header.numlumps     = SwapLong(header.numlumps);
-   header.infotableofs = SwapLong(header.infotableofs);
-      
-   length = header.numlumps * sizeof(filelump_t);
-   fileinfo2free = fileinfo = (filelump_t *)(malloc(length));    // killough
-      
-   fseek(handle, (unsigned int)header.infotableofs, SEEK_SET);
-
-   if(fread(fileinfo, length, 1, handle) < 1)
-   {
-      fclose(handle);
-      free(fileinfo2free);
-      C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", filename);
-      return false;
-   }
-      
-   this->numlumps += header.numlumps;
-   
-   // Fill in lumpinfo
-   this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
-
-   // space for new lumps
-   newlumps = (lumpinfo_t *)(malloc((this->numlumps - startlump) * sizeof(lumpinfo_t)));
-   lump_p   = newlumps;
-
-   // haleyjd: keep track of this allocation of lumps
-   AddInfoPtr(newlumps);
-     
-   for(i = startlump; i < (unsigned int)this->numlumps; i++, lump_p++, fileinfo++)
-   {
-      this->lumpinfo[i] = lump_p;
-      lump_p->type      = lumpinfo_t::lump_direct; // haleyjd
-      lump_p->file      = handle;
+      lump_p->file      = openData.handle;
       lump_p->position  = (size_t)(SwapLong(fileinfo->filepos));
       lump_p->size      = (size_t)(SwapLong(fileinfo->size));
-      lump_p->source    = source;
+      lump_p->source    = source; // haleyjd
+
+      // for subfiles, add baseoffset to the lump offset
+      if(filetype == ADDSUBFILE)
+         lump_p->position += baseoffset;
       
-      lump_p->data = lump_p->cache = NULL;          // killough 1/31/98
-      lump_p->li_namespace = lumpinfo_t::ns_global; // killough 4/17/98
+      lump_p->data = lump_p->cache = NULL;         // killough 1/31/98
+      lump_p->li_namespace = li_namespace;         // killough 4/17/98
       
       memset(lump_p->name, 0, 9);
       strncpy(lump_p->name, fileinfo->name, 8);
@@ -435,8 +329,14 @@ boolean WadDirectory::AddPrivateFile(const char *filename)
    
    if(fileinfo2free)
       free(fileinfo2free); // killough
-      
-   return true; // no error
+   
+   if(filetype == ADDPRIVATE)
+      return true; // no error
+
+   if(this->ispublic)
+      D_NewWadLumps(openData.handle);
+   
+   return false; // no error
 }
 
 // jff 1/23/98 Create routines to reorder the master directory
@@ -758,9 +658,6 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
    type     = NORMAL; // Not a managed directory
    data     = NULL;   // No special data
 
-   // haleyjd 09/13/03: set new sound lump parsing to deferred
-   w_sound_update_type = 0;
-
    curfile = files;
    
    // open all the files, load headers, and count lumps
@@ -773,13 +670,11 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
          // subfile wad, or a wad contained within a larger file in other words.
          // Open them with a special routine; they can be treated uniformly with
          // other wad files afterward.
-         if(curfile->baseoffset)
-         {
-            AddSubFile(curfile->filename, curfile->li_namespace,
-                       curfile->f, curfile->baseoffset);
-         }
-         else
-            AddFile(curfile->filename, curfile->li_namespace);
+         // 04/07/11: Merged AddFile and AddSubFile
+         AddFile(curfile->filename, curfile->li_namespace,
+                 curfile->baseoffset ? ADDSUBFILE : ADDWADFILE, 
+                 curfile->baseoffset ? curfile->f : NULL,
+                 curfile->baseoffset);
       }
 
       ++curfile;
@@ -793,9 +688,7 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
 
 int WadDirectory::AddNewFile(const char *filename)
 {
-   // haleyjd 09/13/03: use S_UpdateSound here
-   w_sound_update_type = 1;
-   if(AddFile(filename, lumpinfo_t::ns_global)) 
+   if(AddFile(filename, lumpinfo_t::ns_global, ADDWADFILE))
       return true;
    InitResources();         // reinit lump lookups etc
    return false;
@@ -803,7 +696,7 @@ int WadDirectory::AddNewFile(const char *filename)
 
 int WadDirectory::AddNewPrivateFile(const char *filename)
 {
-   if(!AddPrivateFile(filename))
+   if(!AddFile(filename, lumpinfo_t::ns_global, ADDPRIVATE))
       return false;
 
    // there is no resource coalescence on this particular brand of private

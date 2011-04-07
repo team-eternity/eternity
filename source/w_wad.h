@@ -133,11 +133,28 @@ public:
       NORMAL,
       MANAGED
    };
+
+   // file add types
+   enum
+   {
+      ADDWADFILE, // Add as an ordinary wad
+      ADDSUBFILE, // Add as a subfile wad
+      ADDPRIVATE  // Add to a private directory
+   };
    
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
 protected:
+   // openwad structure -t his is for return from WadDirectory::OpenFile
+   struct openwad_t
+   {
+      const char *filename; // possibly altered filename
+      FILE *handle;         // FILE handle
+      boolean error;        // true if an error occured
+      boolean errorRet;     // code to return from AddFile
+   };
+
    static int source;     // unique source ID for each wad file
 
    lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
@@ -156,12 +173,11 @@ protected:
    void    CoalesceMarkedResource(const char *start_marker, 
                                   const char *end_marker, 
                                   int li_namespace);
-   int     AddFile(const char *name, int li_namespace);
-   boolean AddSubFile(const char *name, int li_namespace, FILE *handle,
-                      size_t baseoffset);
-   boolean AddPrivateFile(const char *filename);
-   void    FreeDirectoryLumps();  // haleyjd 06/27/09
-   void    FreeDirectoryAllocs(); // haleyjd 06/06/10
+   openwad_t OpenFile(const char *name, int filetype);
+   boolean   AddFile(const char *name, int li_namespace, int filetype,
+                     FILE *file = NULL, size_t baseoffset = 0);
+   void      FreeDirectoryLumps();  // haleyjd 06/27/09
+   void      FreeDirectoryAllocs(); // haleyjd 06/06/10
 
    // Utilities
    static int          IsMarker(const char *marker, const char *name);
