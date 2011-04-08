@@ -28,11 +28,13 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
-#include <fcntl.h>
+//#include <fcntl.h>
 
 #include "c_io.h"
 #include "s_sound.h"
 #include "p_skin.h"
+#include "m_argv.h"
+#include "m_hash.h"
 #include "m_misc.h"
 #include "m_swap.h"
 #include "w_wad.h"
@@ -191,6 +193,9 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    filelump_t  singleinfo;
    lumpinfo_t  *newlumps;
    boolean     isWad;     // haleyjd 05/23/04
+   HashData    wadHash;   // haleyjd 04/07/11
+   boolean     showHash = false;
+   boolean     doHacks  = true;
 
    switch(filetype)
    {
@@ -213,6 +218,19 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    // haleyjd: seek to baseoffset first when loading a subfile
    if(filetype == ADDSUBFILE)
       fseek(openData.handle, baseoffset, SEEK_SET);
+
+   // -nowadhacks disables all wad directory hacks, in case of unforeseen
+   // compatibility problems that would last until the next release
+   if(M_CheckParm("-nowadhacks"))
+      doHacks = false;
+
+   // -showhashes enables display of the computed SHA-1 hash used to apply
+   // wad directory hacks. Quite useful for when a new hack needs to be added.
+   if(M_CheckParm("-showhashes"))
+      showHash = true;
+   
+   if(doHacks || showHash)
+      wadHash.Initialize(HashData::SHA1);
 
    // killough:
    if(filetype == ADDWADFILE && // only when adding normal wad files
@@ -243,6 +261,10 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
          else
             I_Error("Failed reading header for wad file %s\n", openData.filename);
       }
+
+      // Feed the wad header data into the hash computation
+      if(doHacks || showHash)
+         wadHash.AddData((const uint8_t *)&header, (uint32_t)sizeof(header));
       
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
@@ -280,6 +302,16 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
          }
          else
             I_Error("Failed reading directory for wad file %s\n", openData.filename);
+      }
+
+      // Feed the wad directory into the hash computation, wrap it up, and if requested,
+      // output it to the console.
+      if(doHacks || showHash)
+      {
+         wadHash.AddData((const uint8_t *)fileinfo, (uint32_t)length);
+         wadHash.WrapUp();
+         if(showHash)
+            printf("\thash = %s\n", wadHash.DigestToString());
       }
       
       this->numlumps += header.numlumps;
