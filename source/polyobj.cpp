@@ -28,8 +28,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <new>
-
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"

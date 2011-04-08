@@ -37,19 +37,81 @@
 
 //=============================================================================
 //
+// Hash Algorithms
+//
+
+class HashAlgorithm
+{
+public:
+   virtual void Initialize(HashData *) = 0;
+   virtual void DigestData(HashData *, const uint8_t *, uint32_t) = 0;
+   virtual void WrapUp(HashData *) = 0;
+   virtual int  getNumDigest() const = 0;
+};
+
+class CRC32Hash : public HashAlgorithm
+{
+protected:
+   static uint32_t crc32_table[256];
+   void BuildTable();
+
+public:
+   virtual void Initialize(HashData *);
+   virtual void DigestData(HashData *, const uint8_t *, uint32_t);
+   virtual void WrapUp(HashData *);
+   virtual int  getNumDigest() const { return 1; }
+};
+
+class Adler32Hash : public HashAlgorithm
+{
+public:
+   virtual void Initialize(HashData *);
+   virtual void DigestData(HashData *, const uint8_t *, uint32_t);
+   virtual void WrapUp(HashData *);
+   virtual int  getNumDigest() const { return 1; }
+};
+
+class MD5Hash : public HashAlgorithm
+{
+protected:
+   static int MD5Hash::md5_r[64];
+   static uint32_t MD5Hash::md5_k[64];
+   void ProcessBlock(HashData *hash);
+
+public:
+   virtual void Initialize(HashData *);
+   virtual void DigestData(HashData *, const uint8_t *, uint32_t);
+   virtual void WrapUp(HashData *);
+   virtual int  getNumDigest() const { return 4; }
+};
+
+class SHA1Hash : public HashAlgorithm
+{
+protected:
+   void ProcessBlock(HashData *hash);
+
+public:
+   virtual void Initialize(HashData *);
+   virtual void DigestData(HashData *, const uint8_t *, uint32_t);
+   virtual void WrapUp(HashData *);
+   virtual int  getNumDigest() const { return 5; }
+};
+
+//=============================================================================
+//
 // CRC32 - For IEEE Types
 //
 
 #define CRC32_IEEE_POLY 0xEDB88320
 
-static uint32_t crc32_table[256];
+uint32_t CRC32Hash::crc32_table[256];
 
 //
 // M_CRC32BuildTable
 //
 // Builds the polynomial table for CRC32.
 //
-static void M_CRC32BuildTable(void)
+void CRC32Hash::BuildTable(void)
 {
    uint32_t i, j;
    
@@ -76,14 +138,14 @@ static void M_CRC32BuildTable(void)
 // else, since CRC32 starting value has already been set properly by
 // the main hash init routine.
 //
-static void M_CRC32Initialize(hashdata_t *hash)
+void CRC32Hash::Initialize(HashData *hash)
 {
    static boolean tablebuilt = false;
    
    // build the CRC32 table if it hasn't been built yet
    if(!tablebuilt)
    {
-      M_CRC32BuildTable();
+      BuildTable();
       tablebuilt = true;
    }
    
@@ -96,7 +158,7 @@ static void M_CRC32Initialize(hashdata_t *hash)
 //
 // Calculates a running CRC32 for the provided block of data.
 //
-static void M_CRC32HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
+void CRC32Hash::DigestData(HashData *hash, const uint8_t *data, uint32_t len)
 {
    uint32_t crc = hash->digest[0];
    
@@ -114,7 +176,7 @@ static void M_CRC32HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
    hash->digest[0] = crc ^ 0xFFFFFFFF;
 }
 
-static void M_CRC32WrapUp(hashdata_t *hash)
+void CRC32Hash::WrapUp(HashData *hash)
 {
    // Nothing required.
 }
@@ -131,7 +193,7 @@ static void M_CRC32WrapUp(hashdata_t *hash)
 //
 // Sets the digest to the starting value of 1.
 //
-static void M_Adler32Initialize(hashdata_t *hash)
+void Adler32Hash::Initialize(HashData *hash)
 {
    hash->digest[0] = 1;
 }
@@ -141,7 +203,7 @@ static void M_Adler32Initialize(hashdata_t *hash)
 //
 // Calculates a running Adler32 checksum for the provided block of data.
 //
-static void M_Adler32HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
+void Adler32Hash::DigestData(HashData *hash, const uint8_t *data, uint32_t len)
 {
    uint32_t a, b, idx;
 
@@ -157,7 +219,7 @@ static void M_Adler32HashData(hashdata_t *hash, const uint8_t *data, uint32_t le
    hash->digest[0] = (b << 16) | a;
 }
 
-static void M_Adler32WrapUp(hashdata_t *data)
+void Adler32Hash::WrapUp(HashData *data)
 {
    // Nothing required.
 }
@@ -168,7 +230,7 @@ static void M_Adler32WrapUp(hashdata_t *data)
 //
 
 // md5_r specifies per-round shift amounts
-static int md5_r[64] =
+int MD5Hash::md5_r[64] =
 {
    7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
    5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
@@ -177,7 +239,7 @@ static int md5_r[64] =
 };
 
 // md5_k specifies standard constants (precomputed)
-static uint32_t md5_k[64] =
+uint32_t MD5Hash::md5_k[64] =
 {
    0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 
    0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
@@ -202,7 +264,7 @@ static uint32_t md5_k[64] =
 // Called when the MD5 hash has accumulated 512 bits of input.
 // This is the main block "cipher" algorithm.
 //
-static void M_MD5ProcessBlock(hashdata_t *hash)
+void MD5Hash::ProcessBlock(HashData *hash)
 {
    int i;
    uint32_t temp;   
@@ -292,7 +354,7 @@ static void M_MD5ProcessBlock(hashdata_t *hash)
 //
 // Gets an MD5 hash operation ready to run
 //
-static void M_MD5Initialize(hashdata_t *hash)
+void MD5Hash::Initialize(HashData *hash)
 {
    // initialize the digest with the standard initialization vector
    hash->digest[0] = 0x67452301;
@@ -309,7 +371,7 @@ static void M_MD5Initialize(hashdata_t *hash)
 // hash for that block. If data is > 512 bits, it will be processed 512
 // bits at a time. Call this routine until your input is exhausted.
 //
-static void M_MD5HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
+void MD5Hash::DigestData(HashData *hash, const uint8_t *data, uint32_t len)
 {
    if(!len || hash->gonebad)
       return;
@@ -331,7 +393,7 @@ static void M_MD5HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
       
       // when 512 bits of message is accumulated, process it
       if(hash->messageidx == 64)
-         M_MD5ProcessBlock(hash);
+         ProcessBlock(hash);
       
       ++data;
    }   
@@ -343,7 +405,7 @@ static void M_MD5HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 // Finishes up the MD5 hash algorithm by padding the message as needed and
 // completing the hash computation on any data left in the message buffer.
 //
-static void M_MD5WrapUp(hashdata_t *hash)
+void MD5Hash::WrapUp(HashData *hash)
 {
    // The message must be padded out to an even multiple of 512 bits, and the
    // padding must include an initial "1" bit followed by zeroes, and then 
@@ -365,7 +427,7 @@ static void M_MD5WrapUp(hashdata_t *hash)
          hash->message[hash->messageidx++] = 0;
          
       // we filled the current block, so process it
-      M_MD5ProcessBlock(hash);
+      ProcessBlock(hash);
       
       // finish padding in the new block with zeroes
       while(hash->messageidx <= 64 - 5)
@@ -388,7 +450,7 @@ static void M_MD5WrapUp(hashdata_t *hash)
    hash->message[63] = (uint8_t)((hash->messagelen >> 24) & 0xFF);
    
    // process the final padded block.
-   M_MD5ProcessBlock(hash);
+   ProcessBlock(hash);
 }
 
 
@@ -403,7 +465,7 @@ static void M_MD5WrapUp(hashdata_t *hash)
 // Called when the SHA1 hash has accumulated 512 bits of input.
 // This is the main block "cipher" algorithm.
 //
-static void M_SHA1ProcessBlock(hashdata_t *hash)
+void SHA1Hash::ProcessBlock(HashData *hash)
 {
    int i;
    uint32_t temp;   
@@ -502,7 +564,7 @@ static void M_SHA1ProcessBlock(hashdata_t *hash)
 //
 // Gets a SHA1 hash operation ready to run
 //
-static void M_SHA1Initialize(hashdata_t *hash)
+void SHA1Hash::Initialize(HashData *hash)
 {
    // initialize the digest with the standard initialization vector
    hash->digest[0] = 0x67452301;
@@ -520,7 +582,7 @@ static void M_SHA1Initialize(hashdata_t *hash)
 // hash for that block. If data is > 512 bits, it will be processed 512
 // bits at a time. Call this routine until your input is exhausted.
 //
-static void M_SHA1HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
+void SHA1Hash::DigestData(HashData *hash, const uint8_t *data, uint32_t len)
 {
    if(!len || hash->gonebad)
       return;
@@ -542,7 +604,7 @@ static void M_SHA1HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
       
       // when 512 bits of message is accumulated, process it
       if(hash->messageidx == 64)
-         M_SHA1ProcessBlock(hash);
+         ProcessBlock(hash);
       
       ++data;
    }   
@@ -554,7 +616,7 @@ static void M_SHA1HashData(hashdata_t *hash, const uint8_t *data, uint32_t len)
 // Finishes up the SHA-1 hash algorithm by padding the message as needed and
 // completing the hash computation on any data left in the message buffer.
 //
-static void M_SHA1WrapUp(hashdata_t *hash)
+void SHA1Hash::WrapUp(HashData *hash)
 {
    // The message must be padded out to an even multiple of 512 bits, and the
    // padding must include an initial "1" bit followed by zeroes, and then 
@@ -576,7 +638,7 @@ static void M_SHA1WrapUp(hashdata_t *hash)
          hash->message[hash->messageidx++] = 0;
          
       // we filled the current block, so process it
-      M_SHA1ProcessBlock(hash);
+      ProcessBlock(hash);
       
       // finish padding in the new block with zeroes
       while(hash->messageidx <= 64 - 5)
@@ -599,7 +661,7 @@ static void M_SHA1WrapUp(hashdata_t *hash)
    hash->message[63] = (uint8_t)((hash->messagelen      ) & 0xFF);
    
    // process the final padded block.
-   M_SHA1ProcessBlock(hash);
+   ProcessBlock(hash);
 }
 
 //=============================================================================
@@ -607,22 +669,20 @@ static void M_SHA1WrapUp(hashdata_t *hash)
 // Generic Hashing Interface
 //
 
-typedef struct hashalgorithm_s
-{
-   void (*Initialize)(hashdata_t *);
-   void (*HashData)(hashdata_t *, const uint8_t *, uint32_t);
-   void (*WrapUp)(hashdata_t *);
-   int numdigest;
-} hashalgorithm_t;
-
+const int HashData::numdigest = 5;
 
 // Algorithms - They're Grrrreat!
-static hashalgorithm_t HashAlgorithms[HASH_NUMTYPES] =
+static CRC32Hash   crc32;
+static Adler32Hash adler32;
+static MD5Hash     md5;
+static SHA1Hash    sha1;
+
+static HashAlgorithm *HashAlgorithms[HashData::NUMHASHTYPES] =
 {
-   { M_CRC32Initialize,   M_CRC32HashData,   M_CRC32WrapUp,   1 }, // CRC32
-   { M_Adler32Initialize, M_Adler32HashData, M_Adler32WrapUp, 1 }, // Adler-32
-   { M_MD5Initialize,     M_MD5HashData,     M_MD5WrapUp,     4 }, // MD5
-   { M_SHA1Initialize,    M_SHA1HashData,    M_SHA1WrapUp,    5 }, // SHA-1
+   &crc32,   // CRC-32
+   &adler32, // Adler32
+   &md5,     // MD5
+   &sha1     // SHA-1
 };
 
 //
@@ -631,13 +691,17 @@ static hashalgorithm_t HashAlgorithms[HASH_NUMTYPES] =
 // Call this to start up the hash algorithm of your choice, indicated via
 // the "type" parameter.
 //
-void M_HashInitialize(hashdata_t *hash, hashtype_e type)
+void HashData::Initialize(hashtype_e pType)
 {
-   memset(hash, 0, sizeof(hashdata_t));
+   memset(digest,  0, sizeof(digest));
+   memset(message, 0, sizeof(message));
+   gonebad = false;
+   messageidx = 0;
+   messagelen = 0;
+      
+   type = pType;
    
-   hash->type = type;
-   
-   HashAlgorithms[type].Initialize(hash);
+   HashAlgorithms[type]->Initialize(this);
 }
 
 //
@@ -647,9 +711,9 @@ void M_HashInitialize(hashdata_t *hash, hashtype_e type)
 // digest. You can call this with all your data in one chunk, or call it
 // repeatedly until data provided in smaller chunks is exhausted.
 //
-void M_HashData(hashdata_t *hash, const uint8_t *data, uint32_t size)
+void HashData::AddData(const uint8_t *data, uint32_t size)
 {
-   HashAlgorithms[hash->type].HashData(hash, data, size);
+   HashAlgorithms[type]->DigestData(this, data, size);
 }
 
 //
@@ -658,9 +722,9 @@ void M_HashData(hashdata_t *hash, const uint8_t *data, uint32_t size)
 // Call this to end your digest calculation. Some algorithms don't
 // actually require you to call this: namely, CRC32 and Adler-32.
 //
-void M_HashWrapUp(hashdata_t *hash)
+void HashData::WrapUp()
 {
-   HashAlgorithms[hash->type].WrapUp(hash);
+   HashAlgorithms[type]->WrapUp(this);
 }
 
 //
@@ -669,16 +733,17 @@ void M_HashWrapUp(hashdata_t *hash)
 // This routine will compare two digests. The algorithms must be the same
 // or the comparison will evaluate as false.
 //
-boolean M_HashCompare(hashdata_t *h1, hashdata_t *h2)
+boolean HashData::compare(const HashData &other) const
 {
    boolean ret = false;
+   int l_numdigest = HashAlgorithms[type]->getNumDigest();
    
-   if(h1->type == h2->type)
+   if(type == other.type)
    {
       int i, nummatch = 0;
       
-      for(i = 0; i < HashAlgorithms[h1->type].numdigest; ++i)
-         if(h1->digest[i] == h2->digest[i])
+      for(i = 0; i < l_numdigest; ++i)
+         if(digest[i] == other.digest[i])
             ++nummatch;
             
       if(nummatch == i)
@@ -709,19 +774,19 @@ boolean M_HashCompare(hashdata_t *h1, hashdata_t *h2)
 // This routine will convert a given hex string into a hash digest, regardless
 // of the algorithm by which it was created.
 //
-void M_HashStrToDigest(hashdata_t *hash, const char *str)
+void HashData::StringToDigest(const char *str)
 {
    int digestidx = 0;
    int digestshift = 28;
    
-   memset(hash->digest, 0, NUMDIGEST * sizeof(*(hash->digest)));
+   memset(digest, 0, numdigest * sizeof(*digest));
    
    while(*str)
    {
-      if(digestidx >= NUMDIGEST)
+      if(digestidx >= numdigest)
          return;
          
-      hash->digest[digestidx] |= (HexCharToNum(*str) << digestshift);
+      digest[digestidx] |= (HexCharToNum(*str) << digestshift);
       digestshift -= 4;
 
       if(digestshift < 0) // step to next digest
@@ -740,24 +805,24 @@ void M_HashStrToDigest(hashdata_t *hash, const char *str)
 // This routine will allocate and return a string holding the message digest
 // from the hashdata object.
 //
-char *M_HashDigestToStr(hashdata_t *hash)
+char *HashData::DigestToString() const
 {
    char *buffer, *c;
    size_t size = 0;
-   int numdigest;
+   int l_numdigest;
    int i;
    
-   numdigest = HashAlgorithms[hash->type].numdigest;
-   size = (8 * numdigest + 1) * sizeof(char);
+   l_numdigest = HashAlgorithms[type]->getNumDigest();
+   size = (8 * l_numdigest + 1) * sizeof(char);
    
    c = buffer = (char *)(calloc(1, size));
    
-   for(i = 0; i < numdigest; ++i)
+   for(i = 0; i < l_numdigest; ++i)
    {
       int shift;
       
       for(shift = 28; shift >= 0; shift -= 4)
-         *c++ = "0123456789abcdef"[(hash->digest[i] >> shift) & 0x0F];
+         *c++ = "0123456789abcdef"[(digest[i] >> shift) & 0x0F];
    }
    
    return buffer;

@@ -118,12 +118,15 @@ WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
    M_StringAlloca(&filename, 2, 1, name, ".wad");
    strcpy(filename, name);
 
+   // Only normal wad files allow this
    if(filetype == ADDWADFILE)
       M_NormalizeSlashes(M_AddDefaultExtension(filename, ".wad"));  // killough 11/98
    
    // open the file and add to directory
    if((openData.handle = fopen(filename, "rb")) == NULL)
    {
+      // If a private file, issue an error message immediately; we do not consider
+      // .lmp files.
       if(filetype == ADDPRIVATE)
       {
          C_Printf(FC_ERROR "Couldn't open %s\n", filename);
@@ -191,13 +194,13 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
 
    switch(filetype)
    {
-   case ADDWADFILE:
-   case ADDPRIVATE:
+   case ADDWADFILE: // Normal file being added from the command line or a script
+   case ADDPRIVATE: // WAD being loaded into a private directory object
       openData = OpenFile(name, filetype);
       if(openData.error)
          return openData.errorRet; // return immediately if an error occurred
       break;
-   case ADDSUBFILE:
+   case ADDSUBFILE: // WAD file contained inside a larger disk file
       openData.filename = name;
       openData.handle   = file;
       break;
@@ -244,7 +247,7 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
       {
-         if(filetype == ADDPRIVATE)
+         if(filetype == ADDPRIVATE) // Error is tolerated for private files
          {
             fclose(openData.handle);
             C_Printf(FC_ERROR "Wad file %s doesn't have IWAD or PWAD id\n", openData.filename);
@@ -261,14 +264,14 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
       
       long info_offset = (long)(header.infotableofs);
-      // subfile wads may exist at a positive base offset
+      // subfile wads may exist at a positive base offset in the container file
       if(filetype == ADDSUBFILE) 
          info_offset += (long)baseoffset;
       fseek(openData.handle, info_offset, SEEK_SET);
 
       if(fread(fileinfo, length, 1, openData.handle) < 1)
       {
-         if(filetype == ADDPRIVATE)
+         if(filetype == ADDPRIVATE) // Error is tolerated for private files
          {
             fclose(openData.handle);
             free(fileinfo2free);
@@ -292,7 +295,8 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    // haleyjd: keep track of this allocation of lumps
    AddInfoPtr(newlumps);
    
-   // update IWAD handle?   
+   // update IWAD handle? 
+   // haleyjd: Must be a public wad file.
    if(filetype != ADDPRIVATE && isWad && this->ispublic)
    {
       // haleyjd 06/21/04: track handle of first wad added also
@@ -331,7 +335,7 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       free(fileinfo2free); // killough
    
    if(filetype == ADDPRIVATE)
-      return true; // no error
+      return true; // no error (note opposite return value semantics 9_9)
 
    if(this->ispublic)
       D_NewWadLumps(openData.handle);

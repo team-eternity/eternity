@@ -175,6 +175,151 @@ public:
    }
 };
 
+//
+// Collection
+//
+// This class can store any type of data, including objects that require 
+// constructor/destructor calls and contain virtual methods.
+//
+template<typename T> class Collection : public ZoneObject
+{
+protected:
+   T *ptrArray;
+   size_t length;
+   size_t numalloc;
+   size_t wrapiterator;
+
+public:
+   // Basic constructor
+   Collection() 
+      : ZoneObject(), ptrArray(NULL), length(0), numalloc(0), wrapiterator(0)
+   {
+   }
+   
+   // Parameterized constructor
+   Collection(size_t initSize, int zoneTag = PU_STATIC) 
+      : ZoneObject(), ptrArray(NULL), length(0), numalloc(0), wrapiterator(0)
+   {
+      ChangeTag(zoneTag);
+      resize(initSize);
+   }
+   
+   // Destructor
+   ~Collection() { clear(); }
+   
+   // getLength
+   size_t getLength() const { return length; }
+
+   //
+   // resize
+   //
+   // Resizes the internal array by the amount provided
+   //
+   void resize(size_t amtToAdd)
+   {
+      size_t newnumalloc = numalloc + amtToAdd;
+      if(newnumalloc > numalloc)
+      {
+         ptrArray = (T *)(realloc(ptrArray, newnumalloc * sizeof(T)));
+         memset(ptrArray + numalloc, 0, (newnumalloc - numalloc) * sizeof(T));
+         
+         // placement construct all the new objects
+         for(size_t i = numalloc; i < newnumalloc; i++)
+            ::new (&ptrArray[i]) T;
+
+         numalloc = newnumalloc;
+      }
+   }
+
+   //
+   // clear
+   //
+   // Empties the collection and frees its storage.
+   //
+   void clear()
+   {
+      if(ptrArray)
+      {
+         // manually call all destructors
+         for(size_t i = 0; i < length; i++)
+            ptrArray[i].~T();
+
+         free(ptrArray);
+      }
+      ptrArray = NULL;
+      length = 0;
+      numalloc = 0;
+      wrapiterator = 0;
+   }
+
+   // isEmpty: test if the collection is empty or not
+   boolean isEmpty() const { return length == 0; }
+
+   //
+   // wrapIterator
+   //
+   // Returns the next item in the collection, wrapping to the beginning
+   // once the end is reached. The iteration state is stored in the
+   // collection object, so you can only do one such iteration at a time.
+   //
+   T &wrapIterator()
+   {
+      T &ret = ptrArray[wrapiterator++];
+
+      wrapiterator %= length;
+
+      return ret;
+   }
+
+   //
+   // at
+   //
+   // Get the item at a given index. Index must be in range from 0 to length-1.
+   //
+   T &at(size_t index)
+   {
+      if(!ptrArray || index >= length)
+         I_Error("PODCollection::at: array index out of bounds\n");
+      return ptrArray[index];
+   }
+
+   // operator[] - Overloaded operator wrapper for above.
+   T &operator [] (size_t index) { return at(index); }
+
+   //
+   // getRandom
+   //
+   // Returns a random item from the collection.
+   //
+   T &getRandom(pr_class_t rng)
+   {
+      size_t index;
+
+      if(!ptrArray || !length)
+         I_Error("PODCollection::getRandom: called on empty collection\n");
+      
+      index = (size_t)P_Random(rng) % length;
+
+      return ptrArray[index];
+   }
+
+   //
+   // add
+   //
+   // Adds a new item to the end of the collection.
+   //
+   void add(const T &newItem)
+   {
+      if(length >= numalloc)
+         resize(length ? length : 32); // double array size
+      
+      // copy construct new item
+      ::new (&ptrArray[length]) T(newItem);
+      
+      ++length;
+   }
+};
+
 #endif
 
 // EOF

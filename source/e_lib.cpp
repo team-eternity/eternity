@@ -28,6 +28,7 @@
 #include "doomtype.h"
 #include "d_io.h"
 #include "d_dwfile.h"
+#include "m_collection.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_qstr.h"
@@ -69,9 +70,7 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
 // calculate the SHA-1 checksum of each EDF data source and record it here.
 //
 
-static hashdata_t *eincludes;
-static int numincludes;
-static int numincludesalloc;
+static Collection<HashData> eincludes;
 
 //
 // E_CheckInclude
@@ -83,27 +82,29 @@ static int numincludesalloc;
 //
 static boolean E_CheckInclude(const char *data, size_t size)
 {
-   int i;
-   hashdata_t newhash;
+   size_t i, numincludes;
+   HashData newhash;
    char *digest;
 
    // calculate the SHA-1 hash of the data
-   M_HashInitialize(&newhash, HASH_SHA1);
-   M_HashData(&newhash, (const uint8_t *)data, (uint32_t)size);
-   M_HashWrapUp(&newhash);
+   newhash.Initialize(HashData::SHA1);
+   newhash.AddData((const uint8_t *)data, (uint32_t)size);
+   newhash.WrapUp();
 
    // output digest string
-   digest = M_HashDigestToStr(&newhash);
+   digest = newhash.DigestToString();
 
    E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
 
    free(digest);
 
+   numincludes = eincludes.getLength();
+
    // compare against existing includes
    for(i = 0; i < numincludes; ++i)
    {
       // found a match?
-      if(M_HashCompare(&newhash, &eincludes[i]))
+      if(newhash.compare(eincludes[i]))
       {
          E_EDFLogPuts("\t\t\tDeclined, SHA-1 match detected.\n");
          return false;
@@ -111,12 +112,7 @@ static boolean E_CheckInclude(const char *data, size_t size)
    }
 
    // this source has not been processed before, so add its hash to the list
-   if(numincludes == numincludesalloc)
-   {
-      numincludesalloc = numincludesalloc ? 2 * numincludesalloc : 8;
-      eincludes = (hashdata_t *)(realloc(eincludes, numincludesalloc * sizeof(*eincludes)));
-   }
-   eincludes[numincludes++] = newhash;
+   eincludes.add(newhash);
 
    return true;
 }

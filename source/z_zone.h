@@ -68,6 +68,9 @@
 // haleyjd: inttypes.h - on Windows, this comes from the source\Win32 directory
 #include <inttypes.h>
 
+// haleyjd: C++ headers
+#include <new>
+
 #include "psnprntf.h"
 
 // ZONE MEMORY
