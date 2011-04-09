@@ -35,19 +35,19 @@
 // TYPES
 //
 
-typedef struct wadinfo_s
+struct wadinfo_t
 {
   char identification[4];                  // Should be "IWAD" or "PWAD".
   int  numlumps;
   int  infotableofs;
-} wadinfo_t;
+};
 
-typedef struct filelump_s
+struct filelump_t
 {
   int  filepos;
   int  size;
   char name[8];
-} filelump_t;
+};
 
 //
 // WADFILE I/O related stuff.

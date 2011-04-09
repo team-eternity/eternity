@@ -28,6 +28,8 @@
 #ifndef M_HASH_H__
 #define M_HASH_H__
 
+#include "doomtype.h"
+
 //#define NUMDIGEST 5
 
 class HashData

@@ -71,7 +71,7 @@ v_block.cpp    v_block.h      v_buffer.cpp   v_buffer.h     v_font.cpp     v_fon
 v_misc.cpp     v_misc.h       v_patch.cpp    v_patch.h      v_video.cpp    v_video.h \
 version.cpp    version.h \
 wi_stuff.cpp   wi_stuff.h \
-w_levels.cpp   w_levels.h     w_wad.cpp      w_wad.h \
+w_hacks.cpp    w_hacks.h      w_levels.cpp   w_levels.h     w_wad.cpp      w_wad.h \
 xl_scripts.cpp xl_scripts.h \
 z_native.cpp   z_zone.h
 

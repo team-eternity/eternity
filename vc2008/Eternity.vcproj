@@ -4257,40 +4257,56 @@
 			<Filter
 				Name="W_"
 				>
-				<File
-					RelativePath="..\source\w_levels.cpp"
+				<Filter
+					Name="W_ Headers"
 					>
-				</File>
-				<File
-					RelativePath="..\source\w_levels.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Source\w_wad.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
+					<File
+						RelativePath="..\source\w_hacks.h"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
+					</File>
+					<File
+						RelativePath="..\source\w_levels.h"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\w_wad.h"
+					</File>
+					<File
+						RelativePath="..\Source\w_wad.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="W_ Source"
 					>
-				</File>
+					<File
+						RelativePath="..\source\w_hacks.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\w_levels.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Source\w_wad.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Z_"

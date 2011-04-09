@@ -38,6 +38,7 @@
 #include "m_misc.h"
 #include "m_swap.h"
 #include "w_wad.h"
+#include "w_hacks.h"
 
 //
 // GLOBALS
@@ -195,17 +196,20 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    boolean     isWad;     // haleyjd 05/23/04
    HashData    wadHash;   // haleyjd 04/07/11
    boolean     showHash = false;
-   boolean     doHacks  = true;
+   boolean     doHacks  = false;
 
    switch(filetype)
    {
    case ADDWADFILE: // Normal file being added from the command line or a script
+      doHacks = true;
+      // fall through
    case ADDPRIVATE: // WAD being loaded into a private directory object
       openData = OpenFile(name, filetype);
       if(openData.error)
          return openData.errorRet; // return immediately if an error occurred
       break;
    case ADDSUBFILE: // WAD file contained inside a larger disk file
+      doHacks = false;
       openData.filename = name;
       openData.handle   = file;
       break;
@@ -238,6 +242,7 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
        strcasecmp(openData.filename+strlen(openData.filename)-4, ".wad" )))
    {
       // single lump file
+      doHacks = false;
       isWad = false; // haleyjd 05/23/04
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
@@ -310,8 +315,11 @@ boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       {
          wadHash.AddData((const uint8_t *)fileinfo, (uint32_t)length);
          wadHash.WrapUp();
-         if(showHash)
+         if(in_textmode && showHash)
             printf("\thash = %s\n", wadHash.DigestToString());
+         // haleyjd 04/08/11: apply wad directory hacks as needed
+         if(doHacks)
+            W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
       }
       
       this->numlumps += header.numlumps;
