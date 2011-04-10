@@ -1176,8 +1176,8 @@ extern const char *mapnamesp[];
 extern const char *mapnamest[];
 extern const char *mapnamesh[];
 
-extern boolean deh_pars;
-extern boolean deh_loaded; // sf
+extern bool deh_pars;
+extern bool deh_loaded; // sf
 
 #endif
 

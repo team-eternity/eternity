@@ -51,7 +51,7 @@ enum
 extern unsigned int dmflags;
 extern unsigned int default_dmflags;
 
-void G_SetDefaultDMFlags(int dmtype, boolean setdefault);
+void G_SetDefaultDMFlags(int dmtype, bool setdefault);
 
 #endif
 

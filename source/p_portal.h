@@ -28,7 +28,7 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-extern boolean useportalgroups;
+extern bool useportalgroups;
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -55,7 +55,7 @@ void P_GatherSectors(sector_t *from, int groupid);
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
 //
-boolean P_BuildLinkTable(void);
+bool P_BuildLinkTable(void);
 
 //
 // P_LinkRejectTable
@@ -65,7 +65,7 @@ void P_LinkRejectTable(void);
 
 void P_InitPortals(void);
 
-boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
+bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 

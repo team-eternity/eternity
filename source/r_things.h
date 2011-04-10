@@ -59,7 +59,7 @@ typedef struct poststack_s
    maskedrange_t       *masked;
 } poststack_t;
 
-void R_PushPost(boolean pushmasked, struct planehash_s *overlay);
+void R_PushPost(bool pushmasked, struct planehash_s *overlay);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);

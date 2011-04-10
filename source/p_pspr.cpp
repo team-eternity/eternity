@@ -479,7 +479,7 @@ int P_WeaponPreferred(int w1, int w2)
 // If not, selects the next weapon to use.
 // (only in demo_compatibility mode -- killough 3/22/98)
 //
-boolean P_CheckAmmo(player_t *player)
+bool P_CheckAmmo(player_t *player)
 {
    ammotype_t ammo = weaponinfo[player->readyweapon].ammo;
 
@@ -1193,7 +1193,7 @@ void P_BulletSlope(Mobj *mo)
 //
 // P_GunShot
 //
-void P_GunShot(Mobj *mo, boolean accurate)
+void P_GunShot(Mobj *mo, bool accurate)
 {
    int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
    angle_t angle = mo->angle;
@@ -1778,7 +1778,7 @@ void A_FirePlayerMissile(Mobj *actor)
 {
    int thingnum;
    Mobj *mo;
-   boolean seek;
+   bool seek;
    player_t *player;
    pspdef_t *psp;
 
@@ -1961,16 +1961,16 @@ static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 // flag in the deh_bexptrs array).
 // Parameters:
 // args[0] : index of codepointer to call (is validated)
-// args[1] : boolean, 0 disables the FaceTarget cp for the player
+// args[1] : bool, 0 disables the FaceTarget cp for the player
 // args[2] : dehacked num of a state to put the player in temporarily
-// args[3] : boolean, 1 == set player's target to autoaim target
-// args[4] : boolean, 1 == use ammo on current weapon if attack succeeds
+// args[3] : bool, 1 == set player's target to autoaim target
+// args[4] : bool, 1 == use ammo on current weapon if attack succeeds
 //
 void A_PlayerThunk(Mobj *mo)
 {
-   boolean face;
-   boolean settarget;
-   boolean useammo;
+   bool face;
+   bool settarget;
+   bool useammo;
    int cptrnum, statenum;
    state_t *oldstate = 0;
    Mobj *oldtarget = NULL, *localtarget = NULL;

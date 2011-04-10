@@ -59,15 +59,15 @@
 // or not
 
 // variables used in other routines
-boolean deh_pars = false; // in wi_stuff to allow pars in modified games
-boolean deh_loaded = false; // sf
+bool deh_pars = false; // in wi_stuff to allow pars in modified games
+bool deh_loaded = false; // sf
 
 // Function prototypes
-void    lfstrip(char *);     // strip the \r and/or \n off of a line
-void    rstrip(char *);      // strip trailing whitespace
-char *  ptr_lstrip(char *);  // point past leading whitespace
-boolean deh_GetData(char *, char *, int *, char **);
-boolean deh_procStringSub(char *, char *, char *);
+void  lfstrip(char *);     // strip the \r and/or \n off of a line
+void  rstrip(char *);      // strip trailing whitespace
+char *ptr_lstrip(char *);  // point past leading whitespace
+bool  deh_GetData(char *, char *, int *, char **);
+bool  deh_procStringSub(char *, char *, char *);
 static char *dehReformatStr(char *);
 
 // Prototypes for block processing functions
@@ -136,7 +136,7 @@ deh_block deh_blocks[] =
 };
 
 // flag to skip included deh-style text, used with INCLUDE NOTEXT directive
-static boolean includenotext = false;
+static bool includenotext = false;
 
 // MOBJINFO - Dehacked block name = "Thing"
 // Usage: Thing nn (name)
@@ -496,7 +496,7 @@ static void deh_LogPrintf(const char *fmt, ...)
 //
 static void deh_OpenLog(const char *fn)
 {
-   static boolean firstfile = true; // to allow append to output log
+   static bool firstfile = true; // to allow append to output log
 
    if(!strcmp(fn, "-"))
       fileout = stdout;
@@ -593,7 +593,7 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
          // killough 10/98: moved to here
          
          char *nextfile;
-         boolean oldnotext = includenotext;       // killough 10/98
+         bool oldnotext = includenotext;       // killough 10/98
          
          // killough 10/98: exclude if inside wads (only to discourage
          // the practice, since the code could otherwise handle it)
@@ -1757,7 +1757,7 @@ void deh_procText(DWFILE *fpin, char *line)
    int i;                          // loop variable
    unsigned int fromlen, tolen;    // as specified on the text block line
    int usedlen;                    // shorter of fromlen and tolen if not matched
-   boolean found = false;          // to allow early exit once found
+   bool found = false;             // to allow early exit once found
    char* line2 = NULL;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
@@ -1917,7 +1917,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
    static char *holdstring = NULL;
    static unsigned int maxstrlen = 128; // maximum string length, bumped 128 at
                                         // a time as needed
-   boolean found = false;  // looking for string continuation
+   bool found = false;  // looking for string continuation
 
    deh_LogPrintf("Processing extended string substitution\n");
 
@@ -1997,12 +1997,12 @@ void deh_procStrings(DWFILE *fpin, char *line)
 // Args:    key       -- place to put the mnemonic for the string if found
 //          lookfor   -- original value string to look for
 //          newstring -- string to put in its place if found
-// Returns: boolean: True if string found, false if not
+// Returns: bool: True if string found, false if not
 //
 // haleyjd 11/02/02: rewritten to replace linear search on string
 // table with in-table chained hashing -- table is now in d_dehtbl.c
 //
-boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
+bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 {
    dehstr_t *dehstr = NULL;
 
@@ -2352,12 +2352,12 @@ char *ptr_lstrip(char *p)  // point past leading whitespace
 //          optional space and a value, mostly an int. The passed 
 //          pointer to hold the key must be DEH_MAXKEYLEN in size.
 
-boolean deh_GetData(char *s, char *k, int *l, char **strval)
+bool deh_GetData(char *s, char *k, int *l, char **strval)
 {
    char *t;                    // current char
    int  val = 0;               // to hold value of pair
    char buffer[DEH_MAXKEYLEN]; // to hold key in progress
-   boolean okrc = true;        // assume good unless we have problems
+   bool okrc = true;           // assume good unless we have problems
    int i;                      // iterator
 
    memset(buffer, 0, sizeof(buffer));

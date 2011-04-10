@@ -34,10 +34,10 @@
 // MISC
 //
 
-boolean M_WriteFile(const char *name, void *source, unsigned int length);
-int     M_ReadFile(const char *name, byte **buffer);
-int     M_DrawText(int x,int y,boolean direct, char *string);
-void    M_LoadOptions(void);                             // killough 11/98
+bool M_WriteFile(const char *name, void *source, unsigned int length);
+int  M_ReadFile(const char *name, byte **buffer);
+int  M_DrawText(int x,int y,bool direct, char *string);
+void M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions, as well as
 // some misc string routines that really don't fit anywhere else. Some of these
@@ -86,13 +86,13 @@ typedef struct variable_s *variableptr;
 // haleyjd 07/03/10: interface object for defaults
 typedef struct default_i_s
 {
-   boolean (*writeHelp) (defaultptr, FILE *);          // write help message
-   boolean (*writeOpt)  (defaultptr, FILE *);          // write option key and value
-   void    (*setValue)  (defaultptr, void *, boolean); // set value
-   boolean (*readOpt)   (defaultptr, char *, boolean); // read option from string
-   void    (*setDefault)(defaultptr);                  // set to hardcoded default
-   boolean (*checkCVar) (defaultptr, variableptr);     // check against a cvar
-   void    (*getDefault)(defaultptr, void *);          // get the default externally
+   bool (*writeHelp) (defaultptr, FILE *);          // write help message
+   bool (*writeOpt)  (defaultptr, FILE *);          // write option key and value
+   void (*setValue)  (defaultptr, void *, bool); // set value
+   bool (*readOpt)   (defaultptr, char *, bool); // read option from string
+   void (*setDefault)(defaultptr);                  // set to hardcoded default
+   bool (*checkCVar) (defaultptr, variableptr);     // check against a cvar
+   void (*getDefault)(defaultptr, void *);          // get the default externally
 } default_i;
 
 typedef struct default_s
@@ -106,7 +106,7 @@ typedef struct default_s
    int         defaultvalue_i;               // built-in default value
    const char *defaultvalue_s;
    double      defaultvalue_f;
-   boolean     defaultvalue_b;
+   bool        defaultvalue_b;
 
    struct { int min, max; } const limit;       // numerical limits
       
@@ -121,7 +121,7 @@ typedef struct default_s
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
    double      orig_default_f;
-   boolean     orig_default_b;
+   bool        orig_default_b;
 
    default_i  *methods;
    
@@ -151,12 +151,12 @@ typedef struct default_s
 // haleyjd 03/14/09: defaultfile_t structure
 typedef struct defaultfile_s
 {
-   default_t   *defaults;   // array of defaults
-   size_t      numdefaults; // length of defaults array
-   boolean     hashInit;    // if true, this default file's hash table is setup
-   char        *fileName;   // name of corresponding file
-   boolean     loaded;      // if true, defaults are loaded
-   boolean     helpHeader;  // has help header?
+   default_t *defaults;    // array of defaults
+   size_t     numdefaults; // length of defaults array
+   bool       hashInit;    // if true, this default file's hash table is setup
+   char      *fileName;    // name of corresponding file
+   bool       loaded;      // if true, defaults are loaded
+   bool       helpHeader;  // has help header?
    struct comment_s
    { 
       char *text; 
@@ -174,7 +174,7 @@ typedef struct default_or_s
 } default_or_t;
 
 // killough 11/98:
-boolean    M_ParseOption(defaultfile_t *df, const char *name, boolean wad);
+bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
 void       M_ResetDefaultFileComments(defaultfile_t *df);

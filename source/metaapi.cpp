@@ -175,7 +175,7 @@ const char *MetaObject::toString() const
 // guarantee anything about the way typeid() works, and metaobject type names
 // may be very significant in the future in Aeon scripting.
 //
-boolean MetaObject::isKindOf(metatypename_t type) const
+bool MetaObject::isKindOf(metatypename_t type) const
 {
    return !strcmp(type_name, type);
 }
@@ -428,7 +428,7 @@ MetaTable::MetaTable() : ZoneObject()
 // Returns true or false if an object of the same key is in the metatable.
 // No type checking is done, so it will match any object with that key.
 //
-boolean MetaTable::hasKey(const char *key)
+bool MetaTable::hasKey(const char *key)
 {
    return (pImpl->keyhash.objectForKey(key) != NULL);
 }
@@ -438,7 +438,7 @@ boolean MetaTable::hasKey(const char *key)
 //
 // Returns true or false if an object of the same type is in the metatable.
 //
-boolean MetaTable::hasType(metatypename_t type)
+bool MetaTable::hasType(metatypename_t type)
 {
    return (pImpl->typehash.objectForKey(type) != NULL);
 }
@@ -450,10 +450,10 @@ boolean MetaTable::hasType(metatypename_t type)
 // and type, and it is the same object. This is naturally slower as it must
 // search down the key hash chain for a type match.
 //
-boolean MetaTable::hasKeyAndType(const char *key, metatypename_t type)
+bool MetaTable::hasKeyAndType(const char *key, metatypename_t type)
 {
    MetaObject *obj = NULL;
-   boolean found = false;
+   bool found = false;
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {

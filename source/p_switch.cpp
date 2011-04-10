@@ -164,7 +164,7 @@ button_t *P_FindFreeButton(void)
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
 static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
-                          bwhere_e w, int texture, int time, boolean dopopout,
+                          bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound)
 {
    int i;
@@ -356,10 +356,10 @@ extern void P_StartLineScript(line_t *line, Mobj *thing);
 // Passed the thing using the line, the line being used, and the side used
 // Returns true if a thinker was created
 //
-boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side)
+bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
-   boolean is_param = E_IsParamSpecial(line->special);
+   bool is_param = E_IsParamSpecial(line->special);
 
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;

@@ -223,7 +223,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
    return *this;
 }
 
-SaveArchive &SaveArchive::operator << (boolean &x)
+SaveArchive &SaveArchive::operator << (bool &x)
 {
    if(savefile)
       savefile->WriteUint8((uint8_t)x);
@@ -992,7 +992,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 void P_ArchiveScripts(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
-   boolean haveGameScript = false, haveLevelScript = false;
+   bool haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
    {
@@ -1342,7 +1342,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       for(; i < MIN_MAXPLAYERS; i++)         // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 
@@ -1523,7 +1523,7 @@ void P_LoadGame(const char *filename)
 
       for(; i < MIN_MAXPLAYERS; i++) // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 

@@ -40,16 +40,16 @@ extern int  usemouse;   // killough 10/98
 
 // Flag indicating whether the screen is currently visible:
 // when the screen isnt visible, don't render the screen
-boolean screenvisible;
-boolean window_focused;
-boolean fullscreen;
+bool screenvisible;
+bool window_focused;
+bool fullscreen;
 
 // haleyjd 10/25/09
-boolean unicodeinput;
+bool unicodeinput;
 
 void    I_InitKeyboard();      // i_system.c
 
-boolean MouseShouldBeGrabbed(void);
+bool MouseShouldBeGrabbed(void);
 
 // ----------------------------------------------------------------------------
 // WM
@@ -61,8 +61,8 @@ boolean MouseShouldBeGrabbed(void);
 //
 void UpdateGrab(void)
 {
-   static boolean currently_grabbed = false;
-   boolean grab;
+   static bool currently_grabbed = false;
+   bool grab;
    
    grab = MouseShouldBeGrabbed();
    
@@ -86,7 +86,7 @@ void UpdateGrab(void)
 //
 // haleyjd 10/08/05: From Chocolate DOOM, fairly self-explanatory.
 //
-boolean MouseShouldBeGrabbed(void)
+bool MouseShouldBeGrabbed(void)
 {
    // if the window doesnt have focus, never grab it
    if(!window_focused)

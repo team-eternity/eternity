@@ -97,7 +97,7 @@ int hud_hidestatus = 0;
 // haleyjd 02/25/09: hud font set by EDF:
 const char *hud_overfontname;
 vfont_t *hud_overfont;
-static boolean hu_fontloaded = false;
+static bool hu_fontloaded = false;
 
 //
 // HU_LoadFont

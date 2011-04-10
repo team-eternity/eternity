@@ -742,7 +742,7 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    angle_t an;
    int ttl;
    fixed_t accz;
-   boolean hitwater = false;
+   bool hitwater = false;
    byte color1, color2;
 
    // default: grey puff
@@ -992,7 +992,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
    int color1, color2;
    int zvel, zvelmod, zspread, zadd;
    // SoM: zvelocity should depend on particle effect type.
-   boolean smoke = false, consistant = false;
+   bool smoke = false, consistant = false;
    int mod = 31;
    byte ttl = 12;
    
@@ -1251,8 +1251,8 @@ static void P_BFGEffect(Mobj *actor)
 //
 static void P_DripEffect(Mobj *actor)
 {
-   boolean makesplash = !!actor->args[3];
-   boolean fullbright = !!actor->args[4];
+   bool makesplash = !!actor->args[3];
+   bool fullbright = !!actor->args[4];
    particle_t *p;
 
    // do not cause a division by zero crash or

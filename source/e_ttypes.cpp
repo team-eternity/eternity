@@ -215,7 +215,7 @@ static void E_ProcessSplash(cfg_t *cfg)
 {
    const char *tempstr;
    ETerrainSplash *newSplash;
-   boolean newsp = false;
+   bool newsp = false;
 
    // init name and add to hash table
    tempstr = cfg_title(cfg);
@@ -332,11 +332,11 @@ static void E_AddTerrainToHash(ETerrain *terrain)
 
 #define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
 
-static void E_ProcessTerrain(cfg_t *cfg, boolean def)
+static void E_ProcessTerrain(cfg_t *cfg, bool def)
 {
    const char *tempstr;
    ETerrain *newTerrain;
-   boolean newtr = false;
+   bool newtr = false;
 
    // init name and add to hash table
    if(def)
@@ -464,7 +464,7 @@ static ETerrain solid;
 //
 static void E_AddSolidTerrain(void)
 {
-   static boolean solidinit;
+   static bool solidinit;
 
    if(!solidinit)
    {
@@ -673,7 +673,7 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(Mobj *thing, boolean usefloorz)
+ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
 {
    ETerrain *terrain = NULL;
    
@@ -823,7 +823,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = NULL;
-   boolean lowmass = (thing->info->mass < 10);   
+   bool lowmass = (thing->info->mass < 10);   
 
    if(!splash)
       return;
@@ -872,7 +872,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
 //
 // Called when a thing hits a floor or passes a deep water plane.
 //
-boolean E_HitWater(Mobj *thing, sector_t *sector)
+bool E_HitWater(Mobj *thing, sector_t *sector)
 {
    fixed_t z;
    ETerrain *terrain;
@@ -903,7 +903,7 @@ boolean E_HitWater(Mobj *thing, sector_t *sector)
 //
 // Called when a thing hits a floor.
 //
-boolean E_HitFloor(Mobj *thing)
+bool E_HitFloor(Mobj *thing)
 {
    msecnode_t  *m = NULL;
 

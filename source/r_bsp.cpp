@@ -340,7 +340,7 @@ void R_ClearClipSegs(void)
 //
 // R_SetupPortalClipsegs
 //
-boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
+bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
@@ -447,7 +447,7 @@ extern camera_t *camera; // haleyjd
 
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      int *floorlightlevel, int *ceilinglightlevel,
-                     boolean back)
+                     bool back)
 {
    if(!sec)
       return NULL;
@@ -683,7 +683,7 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
    }
 }
 
-static boolean R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
+static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
@@ -1019,8 +1019,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                         float texbottom, vertex_t *v1, vertex_t *v2, 
                         float lclip1, float lclip2)
 {
-   boolean mark, markblend; // haleyjd
-   boolean heightchange;
+   bool mark, markblend; // haleyjd
+   bool heightchange;
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
@@ -1251,8 +1251,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
                         float texbottom)
 {
-   boolean mark, markblend; // haleyjd
-   boolean uppermissing, lowermissing;
+   bool mark, markblend; // haleyjd
+   bool uppermissing, lowermissing;
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
@@ -1444,7 +1444,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-static void R_AddLine(seg_t *line, boolean dynasegs)
+static void R_AddLine(seg_t *line, bool dynasegs)
 {
    static sector_t tempsec;
 
@@ -1844,7 +1844,7 @@ static const int checkcoord[12][4] = // killough -- static const
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
+static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
    fixed_t x1, x2, y1, y2;
@@ -2045,7 +2045,7 @@ static void R_Subsector(int num)
    float       floorangle;           // haleyjd 01/05/08: plane angles
    float       ceilingangle;
 
-   boolean     visible;
+   bool        visible;
    v3float_t   cam;
    
 #ifdef RANGECHECK

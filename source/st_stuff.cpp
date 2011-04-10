@@ -198,7 +198,7 @@ stbarfns_t DoomStatusBar =
 //              amazing that this code from the _betas_ was still here
 
 // ST_Start() has just been called
-static boolean st_firsttime;
+static bool st_firsttime;
 
 // lump number for PLAYPAL
 static int lu_palette;
@@ -210,19 +210,19 @@ static unsigned int st_clock;
 static st_stateenum_t st_gamestate;
 
 // whether left-side main status bar is active
-static boolean st_statusbaron;
+static bool st_statusbaron;
 
 // haleyjd: whether status bar background is on (for fullscreen hud)
-static boolean st_backgroundon;
+static bool st_backgroundon;
 
 // !deathmatch
-static boolean st_notdeathmatch;
+static bool st_notdeathmatch;
 
 // !deathmatch && st_statusbaron
-static boolean st_armson;
+static bool st_armson;
 
 // !deathmatch
-static boolean st_fragson;
+static bool st_fragson;
 
 // main bar left
 static patch_t *sbar;
@@ -381,7 +381,7 @@ void ST_AutomapEvent(int type)
 // Respond to keyboard input events, intercept cheats.
 // This code is shared by all status bars.
 //
-boolean ST_Responder(event_t *ev)
+bool ST_Responder(event_t *ev)
 {
    // TODO: allow cheat input to be disabled
    // if a user keypress...
@@ -430,12 +430,12 @@ enum
 //
 static void ST_updateFaceWidget(void)
 {
-   int         i;
-   angle_t     badguyangle;
-   angle_t     diffang;
-   static int  lastattackdown = -1;
-   static int  priority = ST_PRIORITY_NONE;
-   boolean     doevilgrin;
+   int        i;
+   angle_t    badguyangle;
+   angle_t    diffang;
+   static int lastattackdown = -1;
+   static int priority = ST_PRIORITY_NONE;
+   bool       doevilgrin;
    
    if(priority < ST_PRIORITY_MAX)
    {
@@ -727,7 +727,7 @@ static void ST_doPaletteStuff(void)
    }
 }
 
-static void ST_drawCommonWidgets(boolean refresh, int alpha)
+static void ST_drawCommonWidgets(bool refresh, int alpha)
 {
    int i;
 
@@ -766,7 +766,7 @@ static void ST_drawCommonWidgets(boolean refresh, int alpha)
       STlib_updateMultIcon(&w_keyboxes[i], refresh, alpha);
 }
 
-static void ST_drawWidgets(boolean refresh)
+static void ST_drawWidgets(bool refresh)
 {
    int i;
 
@@ -828,7 +828,7 @@ static void ST_diffDraw(void)
 // Moves widgets shared between the DOOM status bar and full-screen
 // graphical HUD between their two possible locations.
 //
-static void ST_moveWidgets(boolean fs)
+static void ST_moveWidgets(bool fs)
 {
    if(fs)
    {
@@ -929,12 +929,12 @@ static void ST_DoomFSDrawer(void)
 // Performs player palette flashes and draws the current gamemode's
 // status bar if appropriate.
 //
-void ST_Drawer(boolean fullscreen, boolean refresh)
+void ST_Drawer(bool fullscreen, bool refresh)
 {
    stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
-   boolean fshud = hud_enabled && hud_overlaystyle == 4;
+   bool fshud = hud_enabled && hud_overlaystyle == 4;
 
    st_statusbaron  = !fullscreen || automapactive || fshud;
    st_backgroundon = !fullscreen || automapactive;
@@ -1321,7 +1321,7 @@ VBuffer backscreen4;
 //
 static void ST_DoomStart(void)
 {
-   static boolean freebackscreen = false;
+   static bool freebackscreen = false;
 
    ST_initData();
    ST_createWidgets();
@@ -1336,7 +1336,7 @@ static void ST_DoomStart(void)
    V_SetScaling(&backscreen4, SCREENWIDTH, SCREENHEIGHT);
 }
 
-static boolean st_stopped = true;
+static bool st_stopped = true;
 
 //
 // ST_Stop

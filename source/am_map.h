@@ -38,7 +38,7 @@ enum
 };
 
 // Called by main loop.
-boolean AM_Responder(event_t *ev);
+bool AM_Responder(event_t *ev);
 
 // haleyjd 10/06/05: key binding handlers made global
 void AM_HandlerRight(event_t *ev);
@@ -117,7 +117,7 @@ extern int mapcolor_prtl;
 extern int mapportal_overlay; // julian: changed to int 
                               // (size problem, could lead to memory error)
 
-extern boolean map_draw_nodelines;
+extern bool map_draw_nodelines;
 
 #endif
 

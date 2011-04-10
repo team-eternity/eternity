@@ -78,7 +78,7 @@ extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 
-boolean  newlevel = false;
+bool     newlevel = false;
 int      doom1level = false;    // doom 1 level running under doom 2
 char     levelmapname[10];
 
@@ -653,10 +653,10 @@ void P_LoadNodes(int lump)
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
 //
-static boolean P_CheckForZDoomUncompressedNodes(int lumpnum)
+static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
 {
    const void *data;
-   boolean result = false;
+   bool result = false;
 
    // haleyjd: be sure something is actually there
    if(!setupwad->LumpLength(lumpnum + ML_NODES))
@@ -1648,9 +1648,9 @@ static const char *bmaperrormsg;
 //
 // haleyjd 03/04/10: do verification on validity of blockmap.
 //
-static boolean P_VerifyBlockMap(int count)
+static bool P_VerifyBlockMap(int count)
 {
-   boolean isvalid = true;
+   bool isvalid = true;
    int x, y;
    int *maxoffs = blockmaplump + count;
 

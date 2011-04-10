@@ -35,15 +35,15 @@ class WadDirectory;
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
 
-boolean G_Responder(event_t *ev);
-boolean G_CheckDemoStatus(void);
-boolean G_CheckDemoStatus(void);
+bool G_Responder(event_t *ev);
+bool G_CheckDemoStatus(void);
+bool G_CheckDemoStatus(void);
 void G_DeathMatchSpawnPlayer(int playernum);
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, const char *levelname);
 void G_DeferedPlayDemo(const char *demo);
-void G_TimeDemo(const char *name, boolean showmenu);
-void G_LoadGame(char *name, int slot, boolean is_command); // killough 5/15/98
+void G_TimeDemo(const char *name, bool showmenu);
+void G_LoadGame(char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame(void);           // killough 5/15/98: forced loadgames
 void G_SaveGame(int slot, char *description); // Called by M_Responder.
 void G_RecordDemo(char *name);              // Only called by startup code.
@@ -101,12 +101,12 @@ extern int  bfglook;
 
 extern angle_t consoleangle;
 
-extern int     defaultskill;     // jff 3/24/98 default skill
-extern boolean haswolflevels;    // jff 4/18/98 wolf levels present
-extern boolean demorecording;    // killough 12/98
-extern boolean forced_loadgame;
-extern boolean command_loadgame;
-extern char    gamemapname[9];
+extern int  defaultskill;     // jff 3/24/98 default skill
+extern bool haswolflevels;    // jff 4/18/98 wolf levels present
+extern bool demorecording;    // killough 12/98
+extern bool forced_loadgame;
+extern bool command_loadgame;
+extern char gamemapname[9];
 
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
@@ -119,11 +119,11 @@ extern int cpars[];     // hardcoded array size
 #define NUMKEYS   256
 
 extern int cooldemo;
-extern boolean hub_changelevel;
+extern bool hub_changelevel;
 
-extern boolean scriptSecret;   // haleyjd
+extern bool scriptSecret;   // haleyjd
 
-extern boolean sendpause;
+extern bool sendpause;
 
 extern int novert; // haleyjd
 

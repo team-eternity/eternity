@@ -90,7 +90,7 @@ static FILE *console_log = NULL;
 
 // SoM: Use the new VBuffer system
 static VBuffer cback;
-static boolean cbackneedfree = false;
+static bool cbackneedfree = false;
 
 vfont_t *c_font;
 const char *c_fontname;
@@ -107,7 +107,7 @@ static void C_initBackdrop(void)
    patch_t *patch;
    const char *lumpname;
    int lumpnum, cmapnum = 16;
-   boolean darken = true;
+   bool darken = true;
 
    lumpname = GameModeInfo->consoleBack;
 
@@ -308,7 +308,7 @@ static void C_addToHistory(qstring *s)
 
 // respond to keyboard input/events
 
-boolean C_Responder(event_t *ev)
+bool C_Responder(event_t *ev)
 {
    static int shiftdown;
    char ch = 0;
@@ -346,7 +346,7 @@ boolean C_Responder(event_t *ev)
    // activate console?
    if(action_console_toggle && Console.enabled)
    {
-      boolean goingup = Console.current_target == c_height;
+      bool goingup = Console.current_target == c_height;
 
       // set console
       action_console_toggle = false;
@@ -640,7 +640,7 @@ static void C_AddMessage(const char *s)
    const unsigned char *c;
    unsigned char *end;
    unsigned char linecolor = GameModeInfo->colorNormal + 128;
-   boolean lastend = false;
+   bool lastend = false;
 
    // haleyjd 09/04/02: set color to default at beginning
    if(V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH-9 ||

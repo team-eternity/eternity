@@ -77,7 +77,7 @@ public:
    virtual ~MetaObject();
 
    // RTTI Methods
-   boolean isKindOf(metatypename_t) const;
+   bool isKindOf(metatypename_t) const;
    metatypename_t getType() const { return type_name; }
    const char   * getKey()  const { return key_name;  }
 
@@ -160,9 +160,9 @@ public:
    MetaTable();
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
-   boolean hasKey(const char *key);
-   boolean hasType(metatypename_t type);
-   boolean hasKeyAndType(const char *key, metatypename_t type);
+   bool hasKey(const char *key);
+   bool hasType(metatypename_t type);
+   bool hasKeyAndType(const char *key, metatypename_t type);
 
    // Count functions.
    int countOfKey(const char *key);

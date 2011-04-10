@@ -647,7 +647,7 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype)
 //
 // haleyjd 11/02/08: converts a patch into a linear buffer
 //
-byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
+byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height)
 {
    int w = SwapShort(patch->width);

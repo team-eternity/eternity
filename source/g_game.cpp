@@ -88,7 +88,7 @@ static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
-static boolean  netdemo;
+static bool  netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
@@ -99,23 +99,23 @@ WadDirectory *g_dir = &wGlobalDir;
 gameaction_t    gameaction;
 gamestate_t     gamestate;
 skill_t         gameskill;
-boolean         respawnmonsters;
+bool            respawnmonsters;
 int             gameepisode;
 int             gamemap;
 // haleyjd: changed to an array
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
 int             paused;
-boolean         sendpause;     // send a pause event next tic
-boolean         sendsave;      // send a save event next tic
-boolean         usergame;      // ok to save / end game
-boolean         timingdemo;    // if true, exit with report on completion
-boolean         fastdemo;      // if true, run at full speed -- killough
-boolean         nodrawers;     // for comparative timing purposes
+bool            sendpause;     // send a pause event next tic
+bool            sendsave;      // send a save event next tic
+bool            usergame;      // ok to save / end game
+bool            timingdemo;    // if true, exit with report on completion
+bool            fastdemo;      // if true, run at full speed -- killough
+bool            nodrawers;     // for comparative timing purposes
 int             startgametic;
 int             starttime;     // for comparative timing purposes
-boolean         deathmatch;    // only if started as net death
-boolean         netgame;       // only true if packets are broadcast
-boolean         playeringame[MAXPLAYERS];
+bool            deathmatch;    // only if started as net death
+bool            netgame;       // only true if packets are broadcast
+bool            playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
 int             consoleplayer; // player taking events and displaying
 int             displayplayer; // view being displayed
@@ -123,13 +123,13 @@ int             gametic;
 int             levelstarttic; // gametic at level start
 int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
-boolean         demorecording;
-boolean         demoplayback;
-/*boolean         timedemo_menuscreen;*/
-boolean         singledemo;           // quit after playing a demo from cmdline
-boolean         precache = true;      // if true, load all graphics at start
+bool            demorecording;
+bool            demoplayback;
+/*bool           timedemo_menuscreen;*/
+bool            singledemo;           // quit after playing a demo from cmdline
+bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
-boolean         haswolflevels = false;// jff 4/18/98 wolf levels present
+bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
@@ -169,21 +169,21 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-boolean gamekeydown[NUMKEYS];
-int     turnheld;       // for accelerative turning
+bool gamekeydown[NUMKEYS];
+int  turnheld;       // for accelerative turning
 
-boolean mousearray[4];
-boolean *mousebuttons = &mousearray[1];    // allow [-1]
+bool mousearray[4];
+bool *mousebuttons = &mousearray[1];    // allow [-1]
 
 // mouse values are used once
-int mousex;
-int mousey;
-int dclicktime;
-boolean dclickstate;
-int dclicks;
-int dclicktime2;
-boolean dclickstate2;
-int dclicks2;
+int  mousex;
+int  mousey;
+int  dclicktime;
+bool dclickstate;
+int  dclicks;
+int  dclicktime2;
+bool dclickstate2;
+int  dclicks2;
 
 // joystick values are repeated
 int joyxmove;
@@ -220,9 +220,9 @@ void G_CoolViewPoint();
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   boolean strafe;
-   boolean bstrafe;
-   boolean sendcenterview = false;
+   bool strafe;
+   bool bstrafe;
+   bool sendcenterview = false;
    int speed;
    int tspeed;
    int forward;
@@ -703,7 +703,7 @@ void G_DoLoadLevel(void)
 //
 // Get info needed to make ticcmd_ts for the players.
 //
-boolean G_Responder(event_t* ev)
+bool G_Responder(event_t* ev)
 {
    // allow spy mode changes even during the demo
    // killough 2/22/98: even during DM demo
@@ -854,7 +854,7 @@ boolean G_Responder(event_t* ev)
 // version field of its demos (because it's one more than v1.10 I guess).
 #define DOOM_191_VERSION 111
 
-static boolean longtics_demo; // if true, demo playing is longtics format
+static bool longtics_demo; // if true, demo playing is longtics format
 
 static char *defdemoname;
 
@@ -1383,10 +1383,10 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
 
-static boolean secretexit;
+static bool secretexit;
 
 // haleyjd: true if a script called exitsecret()
-boolean scriptSecret = false; 
+bool scriptSecret = false; 
 
 void G_ExitLevel(void)
 {
@@ -1646,8 +1646,8 @@ static char *savename;
 // killough 5/15/98: add forced loadgames, which allow user to override checks
 //
 
-boolean forced_loadgame = false;
-boolean command_loadgame = false;
+bool forced_loadgame = false;
+bool command_loadgame = false;
 
 void G_ForcedLoadGame(void)
 {
@@ -1658,7 +1658,7 @@ void G_ForcedLoadGame(void)
 // killough 3/16/98: add slot info
 // killough 5/15/98: add command-line
 
-void G_LoadGame(char *name, int slot, boolean command)
+void G_LoadGame(char *name, int slot, bool command)
 {
    if(savename)
       free(savename);
@@ -2123,7 +2123,7 @@ void P_SpawnPlayer(mapthing_t *mthing);
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
+static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
    fixed_t     x, y;
    subsector_t *ss;
@@ -3275,7 +3275,7 @@ void G_DeferedPlayDemo(const char *name)
 //
 // G_TimeDemo - sf
 //
-void G_TimeDemo(const char *name, boolean showmenu)
+void G_TimeDemo(const char *name, bool showmenu)
 {
    // haleyjd 10/19/01: hoo boy this had problems
    // It was using a variable called "name" from who knows where --
@@ -3307,7 +3307,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
 // Called after a death or level completion to allow demos to be cleaned up
 // Returns true if a new demo loop action will take place
 //
-boolean G_CheckDemoStatus(void)
+bool G_CheckDemoStatus(void)
 {
    if(demorecording)
    {
@@ -3359,7 +3359,7 @@ boolean G_CheckDemoStatus(void)
 
 void G_StopDemo(void)
 {
-   extern boolean advancedemo;
+   extern bool advancedemo;
    
    if(!demorecording && !demoplayback)
       return;

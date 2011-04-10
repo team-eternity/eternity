@@ -45,7 +45,7 @@
 //
 // haleyjd 09/24/06: Plays the appropriate sound sequence for a door.
 //
-void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
+void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
 {
    const char *seqName;
 

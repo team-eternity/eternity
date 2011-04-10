@@ -111,7 +111,7 @@ public:
    }
 
    // isEmpty: test if the collection is empty or not
-   boolean isEmpty() const { return length == 0; }
+   bool isEmpty() const { return length == 0; }
 
    //
    // wrapIterator
@@ -253,7 +253,7 @@ public:
    }
 
    // isEmpty: test if the collection is empty or not
-   boolean isEmpty() const { return length == 0; }
+   bool isEmpty() const { return length == 0; }
 
    //
    // wrapIterator

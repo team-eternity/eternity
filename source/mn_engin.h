@@ -155,14 +155,14 @@ typedef struct menu_s
 typedef struct menuwidget_s
 {
   void (*drawer)();
-  boolean (*responder)(event_t *ev);
+  bool (*responder)(event_t *ev);
   void (*ticker)();   // haleyjd 05/29/06
-  boolean fullscreen; // haleyjd: optimization for fullscreen widgets
+  bool fullscreen; // haleyjd: optimization for fullscreen widgets
 } menuwidget_t;
 
 // responder for events
 
-boolean MN_Responder(event_t *ev);
+bool MN_Responder(event_t *ev);
 
 // Called by main loop,
 // only used for menu (skull cursor) animation.
@@ -175,7 +175,7 @@ void MN_Ticker(void);
 void MN_DrawMenu(menu_t *menu);
 void MN_Drawer(void);
 
-boolean MN_CheckFullScreen(void);
+bool MN_CheckFullScreen(void);
 
 // Called by D_DoomMain,
 // loads the config file.
@@ -226,7 +226,7 @@ extern int menutime;
 
 // haleyjd
 extern int quickSaveSlot;
-extern boolean menu_toggleisback;
+extern bool menu_toggleisback;
 extern const char *mn_fontname;
 extern const char *mn_bigfontname;
 extern const char *mn_normalfontname;

@@ -51,7 +51,7 @@ protected:
    uint32_t messagelen;  // total length of message processed so far
    uint8_t  message[64]; // current 512-bit message block
    int      messageidx;  // current index into message (accumulate until == 64)
-   boolean  gonebad;     // an error occurred in the computation
+   bool     gonebad;     // an error occurred in the computation
    hashtype_e type;      // algorithm being used for computation   
 
    friend class CRC32Hash;
@@ -60,12 +60,12 @@ protected:
    friend class SHA1Hash;
 
 public:
-   void    Initialize(hashtype_e type);
-   void    AddData(const uint8_t *data, uint32_t size);
-   void    WrapUp();
-   boolean compare(const HashData &other) const;
-   void    StringToDigest(const char *str);
-   char   *DigestToString() const;
+   void  Initialize(hashtype_e type);
+   void  AddData(const uint8_t *data, uint32_t size);
+   void  WrapUp();
+   bool  compare(const HashData &other) const;
+   void  StringToDigest(const char *str);
+   char *DigestToString() const;
 };
 
 #endif

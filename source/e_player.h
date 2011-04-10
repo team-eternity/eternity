@@ -59,10 +59,10 @@ struct playerclass_t
 
 playerclass_t *E_PlayerClassForName(const char *);
 
-void    E_VerifyDefaultPlayerClass(void);
-boolean E_IsPlayerClassThingType(mobjtype_t);
-boolean E_PlayerInWalkingState(player_t *);
-void    E_ApplyTurbo(int ts);
+void E_VerifyDefaultPlayerClass(void);
+bool E_IsPlayerClassThingType(mobjtype_t);
+bool E_PlayerInWalkingState(player_t *);
+void E_ApplyTurbo(int ts);
 
 // Inventory
 

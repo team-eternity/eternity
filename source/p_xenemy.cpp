@@ -120,10 +120,10 @@ void QuakeThinker::serialize(SaveArchive &arc)
 //
 // Starts an earthquake at each object with the tid in args[4]
 //
-boolean P_StartQuake(int *args)
+bool P_StartQuake(int *args)
 {
-   Mobj *mo  = NULL;
-   boolean ret = false;
+   Mobj *mo = NULL;
+   bool ret = false;
 
    while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
    {

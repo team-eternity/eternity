@@ -99,7 +99,7 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
 void A_Look(Mobj *actor)
 {
    Mobj *sndtarget = actor->subsector->sector->soundtarget;
-   boolean allaround = false;
+   bool allaround = false;
 
    // killough 7/18/98:
    // Friendly monsters go after other monsters first, but 
@@ -178,7 +178,7 @@ void A_KeepChasing(Mobj *actor)
 // haleyjd 01/11/04: returns true if this thing is a "super friend"
 // and is going to attack a friend
 //
-static boolean P_SuperFriend(Mobj *actor)
+static bool P_SuperFriend(Mobj *actor)
 {
    Mobj *target = actor->target;
 
@@ -257,7 +257,7 @@ void A_FaceTarget(Mobj *actor)
 //
 void A_Chase(Mobj *actor)
 {
-   boolean superfriend = false;
+   bool superfriend = false;
 
    if(actor->reactiontime)
       actor->reactiontime--;
@@ -293,7 +293,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 07/26/04: Detect and prevent infinite recursion if
       // Chase is called from a thing's spawnstate.
-      static boolean recursion = false;
+      static bool recursion = false;
 
       // if recursion is true at this point, P_SetMobjState sent
       // us back here -- print an error message and return
@@ -335,7 +335,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
       // Chase is called from a thing's attack state
-      static boolean recursion = false;
+      static bool recursion = false;
 
       if(recursion)
       {
@@ -361,7 +361,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
       // Chase is called from a thing's attack state
-      static boolean recursion = false;
+      static bool recursion = false;
 
       if(recursion)
       {
@@ -479,7 +479,7 @@ void A_RandomWalk(Mobj *actor)
    {
       dirtype_t tdir;
       dirtype_t turnaround = actor->movedir;
-      boolean dirfound = false;
+      bool      dirfound = false;
 
       if(P_Random(pr_rndwspawn) < 24)
       {

@@ -253,9 +253,9 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 // SoM 3/14/2004: flag if we are rendering portals.
 typedef struct portalrender_s
 {
-   boolean active;
-   int     minx, maxx;
-   float   miny, maxy;
+   bool  active;
+   int   minx, maxx;
+   float miny, maxy;
 
    pwindow_t *w;
 

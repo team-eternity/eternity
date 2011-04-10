@@ -41,7 +41,7 @@
 #include "a_small.h"
 #include "p_tick.h"
 
-boolean PTR_chasetraverse(intercept_t *in);
+bool PTR_chasetraverse(intercept_t *in);
 
 camera_t chasecam;
 int chaseviewz;
@@ -208,7 +208,7 @@ extern linetracer_t trace;
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-boolean PTR_chasetraverse(intercept_t *in)
+bool PTR_chasetraverse(intercept_t *in)
 {
    fixed_t dist, frac;
    subsector_t *ss;

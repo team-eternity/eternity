@@ -57,7 +57,7 @@ extern vfont_t *menu_font_big;
 // properly set the menuactive state based on whether or not menus 
 // were active at the time of the call, leading to weird menu 
 // behavior
-static boolean popupMenuActive;
+static bool popupMenuActive;
 
 static char  popup_message[1024];
 static char *popup_message_command; // console command to run
@@ -128,7 +128,7 @@ void MN_PopupDrawer(void)
    WriteCenteredText(popup_message);
 }
 
-boolean MN_PopupResponder(event_t *ev)
+bool MN_PopupResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
@@ -279,7 +279,7 @@ typedef struct helpscreen_s
 static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
 static int num_helpscreens;
 static int viewing_helpscreen;     // currently viewing help screen
-extern boolean inhelpscreens; // indicates we are in or just left a help screen
+extern bool inhelpscreens; // indicates we are in or just left a help screen
 
 static void AddHelpScreen(const char *screenname)
 {
@@ -456,9 +456,9 @@ void MN_HelpDrawer(void)
 }
 
 // haleyjd 05/29/06: record state of menu activation
-static boolean help_prev_menuactive;
+static bool help_prev_menuactive;
 
-boolean MN_HelpResponder(event_t *ev)
+bool MN_HelpResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    
@@ -597,7 +597,7 @@ void MN_MapColourDrawer(void)
       V_DrawPatch(x+1, y+1, &vbscreen, (patch_t *)W_CacheLumpName("M_PALNO", PU_CACHE));
 }
 
-boolean MN_MapColourResponder(event_t *ev)
+bool MN_MapColourResponder(event_t *ev)
 {
    if(action_menu_left)
    {

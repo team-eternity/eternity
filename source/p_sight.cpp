@@ -104,7 +104,7 @@ static fixed_t P_InterceptVector2(const divline_t *v2,
 // haleyjd:
 // Checks a line of sight against lines belonging to the given polyobject.
 //
-static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
+static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 {
    int i;
 
@@ -157,7 +157,7 @@ static boolean P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 //
 // killough 4/19/98: made static and cleaned up
 //
-static boolean P_CrossSubsector(int num, register los_t *los)
+static bool P_CrossSubsector(int num, register los_t *los)
 {
    seg_t *seg;
    int count;
@@ -287,7 +287,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
 //
 // killough 4/20/98: rewritten to remove tail recursion, clean up, and optimize
 
-static boolean P_CrossBSPNode(int bspnum, register los_t *los)
+static bool P_CrossBSPNode(int bspnum, register los_t *los)
 {
    while (!(bspnum & NF_SUBSECTOR))
    {
@@ -315,7 +315,7 @@ static boolean P_CrossBSPNode(int bspnum, register los_t *los)
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
 
-boolean P_CheckSight(Mobj *t1, Mobj *t2)
+bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;

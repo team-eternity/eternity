@@ -464,7 +464,7 @@ VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 
-static boolean G_TestIWADPath(char *path)
+static bool G_TestIWADPath(char *path)
 {
    M_NormalizeSlashes(path);
 

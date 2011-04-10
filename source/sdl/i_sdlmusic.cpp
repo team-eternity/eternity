@@ -223,7 +223,7 @@ static int I_SDLInitSoundForMusic(void)
    return 1;
 }
 
-extern boolean snd_init;
+extern bool snd_init;
 
 //
 // I_SDLInitMusic

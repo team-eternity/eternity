@@ -102,38 +102,38 @@ char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
 int use_startmap = -1;     // default to -1 for asking in menu
-boolean devparm;           // started game with -devparm
+bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line
-boolean clnomonsters;   // checkparm of -nomonsters
-boolean clrespawnparm;  // checkparm of -respawn
-boolean clfastparm;     // checkparm of -fast
+bool clnomonsters;   // checkparm of -nomonsters
+bool clrespawnparm;  // checkparm of -respawn
+bool clfastparm;     // checkparm of -fast
 // jff 1/24/98 end definition of command line version of play mode switches
 
 int r_blockmap = false;       // -blockmap command line
 
-boolean nomonsters;     // working -nomonsters
-boolean respawnparm;    // working -respawn
-boolean fastparm;       // working -fast
+bool nomonsters;     // working -nomonsters
+bool respawnparm;    // working -respawn
+bool fastparm;       // working -fast
 
-boolean singletics = false; // debug flag to cancel adaptiveness
+bool singletics = false; // debug flag to cancel adaptiveness
 
 //jff 1/22/98 parms for disabling music and sound
-boolean nosfxparm;
-boolean nomusicparm;
+bool nosfxparm;
+bool nomusicparm;
 
 //jff 4/18/98
-extern boolean inhelpscreens;
+extern bool inhelpscreens;
 
 skill_t startskill;
 int     startepisode;
 int     startmap;
 char    *startlevel;
-boolean autostart;
+bool autostart;
 
-boolean advancedemo;
+bool advancedemo;
 
-extern boolean timingdemo, singledemo, demoplayback, fastdemo; // killough
+extern bool timingdemo, singledemo, demoplayback, fastdemo; // killough
 
 char    *basedefault;             // default file
 char    *baseiwad;                // jff 3/23/98: iwad directory
@@ -209,16 +209,16 @@ void D_ProcessEvents(void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 
-gamestate_t    oldgamestate  = GS_NOSTATE;  // sf: globaled
-gamestate_t    wipegamestate = GS_DEMOSCREEN;
-void           R_ExecuteSetViewSize(void);
-camera_t       *camera;
-extern boolean setsizeneeded;
-boolean        redrawsbar;      // sf: globaled
-boolean        redrawborder;    // sf: cleaned up border redraw
-int            wipewait;        // haleyjd 10/09/07
+gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
+gamestate_t wipegamestate = GS_DEMOSCREEN;
+void        R_ExecuteSetViewSize(void);
+camera_t    *camera;
+extern bool setsizeneeded;
+bool        redrawsbar;      // sf: globaled
+bool        redrawborder;    // sf: cleaned up border redraw
+int         wipewait;        // haleyjd 10/09/07
 
-boolean        d_drawfps;       // haleyjd 09/07/10: show drawn fps
+bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
 
 //
 // D_showFPS
@@ -390,7 +390,7 @@ void D_Display(void)
 
       if(inwipe)
       {
-         boolean wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
+         bool wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
          
          // about to start wiping; if wipewait is enabled, save everything 
          // that was just drawn
@@ -926,7 +926,7 @@ static void D_SetBasePath(void)
 }
 
 // haleyjd 8/18/07: if true, the game path has been set
-static boolean gamepathset;
+static bool gamepathset;
 
 // haleyjd 8/19/07: index of the game name as specified on the command line
 static int gamepathparm;
@@ -1176,8 +1176,8 @@ enum
    DISK_DOOM2
 };
 
-static boolean havediskfile; // if true, -disk loaded a file
-static boolean havediskiwad; // if true, an IWAD was found in the disk file
+static bool havediskfile;    // if true, -disk loaded a file
+static bool havediskiwad;    // if true, an IWAD was found in the disk file
 static const char *diskpwad; // PWAD name (or substring) to look for
 static diskfile_t *diskfile; // diskfile object (see d_diskfile.c)
 static diskwad_t   diskiwad; // diskwad object for iwad
@@ -1273,7 +1273,7 @@ static void D_LoadDiskFilePWAD(void)
 //
 // Gets a single line of input from the metadata.txt resource.
 //
-static boolean D_metaGetLine(qstring *qstr, const char *input, int *idx)
+static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
 {
    int i = *idx;
 
@@ -1591,10 +1591,10 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(boolean haveIWADs[], int startchoice);
-   boolean haveIWADs[9];
+   extern int I_Pick_DoPicker(bool haveIWADs[], int startchoice);
+   bool haveIWADs[9];
    int i, choice = -1;
-   boolean foundone = false;
+   bool foundone = false;
 
    // populate haveIWADs array based on system.cfg variables
    for(i = 0; i < 9; ++i)
@@ -1761,7 +1761,7 @@ static char *D_IWADPathForIWADParam(const char *iwad)
    ((name)[0] == 'M' && (name)[1] == 'C' && !(name)[3])
 
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
-static boolean freedoom = false;
+static bool freedoom = false;
 
 //
 // CheckIWAD
@@ -1783,7 +1783,7 @@ static boolean freedoom = false;
 static void CheckIWAD(const char *iwadname,
                       GameMode_t *gmode,
                       GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
-                      boolean *hassec)
+                      bool *hassec)
 {
    FILE *fp;
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
@@ -1915,7 +1915,7 @@ static void CheckIWAD(const char *iwadname,
 // a file or directory. If neither append .wad and check if it
 // exists as a file then. Else return non-existent.
 //
-static boolean WadFileStatus(char *filename, boolean *isdir)
+static bool WadFileStatus(char *filename, bool *isdir)
 {
    struct stat sbuf;
    int i;
@@ -2017,7 +2017,7 @@ char *FindIWADFile(void)
    static char *iwad = NULL;
    char *customiwad = NULL;
    char *gameiwad = NULL;
-   boolean isdir = false;
+   bool isdir = false;
    int i, j;
    char *p;
    const char *basename = NULL;
@@ -2647,7 +2647,7 @@ static void D_ProcessDehCommandLine(void)
       // Ty 04/11/98 - Allow multiple -deh files in a row
       // killough 11/98: allow multiple -deh parameters
 
-      boolean deh = true;
+      bool deh = true;
       while(++p < myargc)
       {
          if(*myargv[p] == '-')
@@ -2934,7 +2934,7 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 // Looks for a loose EDF file on the command line, to support
 // drag-and-drop.
 //
-static boolean D_LooseEDF(char **buffer)
+static bool D_LooseEDF(char **buffer)
 {
    int i;
    const char *dot;
@@ -3183,7 +3183,7 @@ static void D_StartupMessage(void)
 }
 
 // haleyjd 11/12/05: in cdrom mode?
-boolean cdrom_mode = false;
+bool cdrom_mode = false;
 
 //
 // D_DoomInit
@@ -3195,7 +3195,7 @@ static void D_DoomInit(void)
 {
    int p, slot;
    int dmtype = 0;             // haleyjd 04/14/03
-   boolean haveGFS = false;    // haleyjd 03/10/03
+   bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
@@ -3281,7 +3281,7 @@ static void D_DoomInit(void)
    modifiedgame = false;
 
    // jff 1/24/98 set both working and command line value of play parms
-   // sf: make boolean for console
+   // sf: make bool for console
    nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");
    respawnparm = clrespawnparm = !!M_CheckParm("-respawn");
    fastparm    = clfastparm    = !!M_CheckParm("-fast");
@@ -3367,7 +3367,7 @@ static void D_DoomInit(void)
       // until end of parms or another - preceded parm
       // killough 11/98: allow multiple -file parameters
 
-      boolean file = modifiedgame = true; // homebrew levels
+      bool file = modifiedgame = true; // homebrew levels
       while(++p < myargc)
       {
          if(*myargv[p] == '-')
@@ -3475,9 +3475,9 @@ static void D_DoomInit(void)
 
    //jff 1/22/98 add command line parms to disable sound and music
    {
-      boolean nosound = !!M_CheckParm("-nosound");
-      nomusicparm = nosound || M_CheckParm("-nomusic");
-      nosfxparm   = nosound || M_CheckParm("-nosfx");
+      bool nosound = !!M_CheckParm("-nosound");
+      nomusicparm  = nosound || M_CheckParm("-nomusic");
+      nosfxparm    = nosound || M_CheckParm("-nosfx");
    }
    //jff end of sound/music command line parms
 
@@ -4004,7 +4004,7 @@ void usermsg(const char *s, ...)
 // add a new .wad file
 // returns true if successfully loaded
 
-boolean D_AddNewFile(const char *s)
+bool D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
    if(wGlobalDir.AddNewFile(s))

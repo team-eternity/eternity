@@ -68,9 +68,9 @@ extern int disk_icon;  // killough 10/98
 
 typedef struct videomode_s
 {
-  boolean hires;
-  boolean pageflip;
-  boolean vesa;
+  bool hires;
+  bool pageflip;
+  bool vesa;
   const char *description;
 } videomode_t;
 

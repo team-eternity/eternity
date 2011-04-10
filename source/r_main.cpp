@@ -78,7 +78,7 @@ angle_t  viewangle;
 fixed_t  viewcos, viewsin;
 player_t *viewplayer;
 extern lighttable_t **walllights;
-boolean  showpsprites = 1; //sf
+bool     showpsprites = 1; //sf
 camera_t *viewcamera;
 int detailshift; // haleyjd 09/10/06: low detail mode restoration
 int c_detailshift;
@@ -513,9 +513,9 @@ void R_InitLightTables (void)
    }
 }
 
-boolean setsizeneeded;
-int     setblocks;
-int     setdetail; // haleyjd 09/10/06: low detail mode restoration
+bool setsizeneeded;
+int  setblocks;
+int  setdetail; // haleyjd 09/10/06: low detail mode restoration
 
 //
 // R_SetViewSize
@@ -946,7 +946,7 @@ extern void R_UntaintPortals(void);
 //
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
-   boolean quake = false;
+   bool quake = false;
    unsigned int savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
@@ -1105,7 +1105,7 @@ int r_tlstyle;
 //
 void R_DoomTLStyle(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    int i;
 
    // If the first style set is to BOOM-style, then we don't actually need

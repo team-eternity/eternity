@@ -102,7 +102,7 @@ struct LevelInfoProto_t
    char        mapnamestr[9];                  // storage for name
    int         type;                           // type id via above enumeration   
    LevelInfo_t info;                           // the LevelInfo object
-   boolean     modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
+   bool        modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
 };
 
 // haleyjd: moved everything into the LevelInfo struct
@@ -141,7 +141,7 @@ typedef struct metainfo_s
    const char *musname;   // music name
    int nextlevel;         // next level #, only used if non-0
    int nextsecret;        // next secret #, only used if non-0
-   boolean finale;        // if true, sets LevelInfo.endOfGame
+   bool finale;           // if true, sets LevelInfo.endOfGame
    const char *intertext; // only used if finale is true
 } metainfo_t;
 
@@ -164,7 +164,7 @@ static enum limode_e
    LI_NUMMODES
 } limode;
 
-static boolean foundGlobalMap;
+static bool foundGlobalMap;
 
 // haleyjd: flag set for boss specials
 static dehflags_t boss_spec_flags[] =
@@ -836,7 +836,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
             
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
-            *(boolean *)current->variable = 
+            *(bool *)current->variable = 
                !value.strCaseCmp("true") ? true : false;
             break;
 
@@ -880,7 +880,7 @@ static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 // secret == true  -> Heretic hidden map
 // secret == false -> Just a plain new level
 //
-static void SynthLevelName(boolean secret)
+static void SynthLevelName(bool secret)
 {
    // haleyjd 12/14/01: halved size of this string, max length
    // is deterministic since gamemapname is 8 chars long
@@ -901,9 +901,9 @@ static void SynthLevelName(boolean secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   const char *bexname  = NULL;
-   boolean deh_modified = false;
-   boolean synth_type   = false;
+   const char *bexname = NULL;
+   bool deh_modified   = false;
+   bool synth_type     = false;
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    // if we have a current metainfo, use its level name
@@ -991,7 +991,7 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 //
 static void P_InfoDefaultSoundNames(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    int i;
 
    // if first time, save pointers to the sounds and their aliases
@@ -1491,7 +1491,7 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 // possible PWAD(s) that originate from certain console versions of DOOM.
 //
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, boolean finale, const char *intertext)
+                      int next, int secr, bool finale, const char *intertext)
 {
    metainfo_t *mi;
 

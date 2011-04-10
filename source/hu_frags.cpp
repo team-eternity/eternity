@@ -53,7 +53,7 @@
 
 #define FRAGNUMX 175
 
-extern boolean gamekeydown[NUMKEYS]; // g_game.c
+extern bool gamekeydown[NUMKEYS]; // g_game.c
 
 player_t *sortedplayers[MAXPLAYERS];
 
@@ -66,7 +66,7 @@ void HU_FragsInit(void)
 
 extern vfont_t *hud_font;
 
-static boolean fragsdrawn;
+static bool fragsdrawn;
 
 void HU_FragsDrawer(void)
 {

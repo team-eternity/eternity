@@ -45,7 +45,7 @@
 #include "../s_sound.h"
 #include "../mn_engin.h"
 
-extern boolean snd_init;
+extern bool snd_init;
 
 // Needed for calling the actual sound output.
 static int SAMPLECOUNT = 512;
@@ -73,7 +73,7 @@ typedef struct channel_info_s
   int *leftvol_lookup;
   int *rightvol_lookup;
   // haleyjd 10/02/08: channel is waiting to be stopped
-  boolean stopChannel;
+  bool stopChannel;
   // haleyjd 06/03/06: looping
   int loop;
   unsigned int idnum;
@@ -99,11 +99,11 @@ static int I_GetSfxLumpNum(sfxinfo_t *sfx);
 // cph 
 // Stops a sound, unlocks the data 
 //
-static boolean stopchan(int handle)
+static bool stopchan(int handle)
 {
    int cnum;
-   boolean freeSound = true;
-   boolean stoppedSound = false;
+   bool freeSound = true;
+   bool stoppedSound = false;
    sfxinfo_t *sfx = NULL;
    
 #ifdef RANGECHECK
@@ -174,7 +174,7 @@ static boolean stopchan(int handle)
 // haleyjd: needs to take a sfxinfo_t ptr, not a sound id num
 // haleyjd 06/03/06: changed to return boolean for failure or success
 //
-static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
+static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 {
    size_t lumplen;
    int lump;
@@ -754,7 +754,7 @@ static void I_SDLUpdateSound(void)
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   boolean wrotesound = false;
+   bool wrotesound = false;
 
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *rightout, *leftend;

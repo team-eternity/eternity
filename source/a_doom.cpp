@@ -525,10 +525,10 @@ static fixed_t viletryy;
 //
 // Detect a corpse that could be raised.
 //
-boolean PIT_VileCheck(Mobj *thing)
+bool PIT_VileCheck(Mobj *thing)
 {
    int maxdist;
-   boolean check;
+   bool check;
    static int vileType = -1;
    
    if(vileType == -1)

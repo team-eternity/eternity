@@ -57,12 +57,12 @@ extern int use_doom_config;
 // Command line parameters.
 //
 
-extern boolean in_textmode;
+extern bool in_textmode;
 
-extern  boolean nomonsters; // checkparm of -nomonsters
-extern  boolean respawnparm;  // checkparm of -respawn
-extern  boolean fastparm; // checkparm of -fast
-extern  boolean devparm;  // DEBUG: launched with -devparm
+extern bool nomonsters;  // checkparm of -nomonsters
+extern bool respawnparm; // checkparm of -respawn
+extern bool fastparm;    // checkparm of -fast
+extern bool devparm;     // DEBUG: launched with -devparm
 
                 // sf: screenblocks removed, replaced w/screenSize
 extern  int screenSize;     // killough 11/98
@@ -75,7 +75,7 @@ extern  int screenSize;     // killough 11/98
 //extern GameMission_t  gamemission;
 
 // Set if homebrew PWAD stuff has been added.
-extern  boolean modifiedgame;
+extern bool modifiedgame;
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 extern int compatibility, default_compatibility;          // killough 1/31/98
@@ -156,26 +156,26 @@ extern  Language_t   language;
 //
 
 // Defaults for menu, methinks.
-extern  skill_t   startskill;
-extern  int             startepisode;
-extern  int   startmap;
+extern  skill_t startskill;
+extern  int     startepisode;
+extern  int     startmap;
 
-extern  boolean   autostart;
+extern  bool    autostart;
 
 // Selected by user.
-extern  skill_t         gameskill;
-extern  int   gameepisode;
-extern  int   gamemap;
+extern  skill_t gameskill;
+extern  int     gameepisode;
+extern  int     gamemap;
 
 // Nightmare mode flag, single player.
-extern  boolean         respawnmonsters;
+extern  bool    respawnmonsters;
 
 // Netgame? Only true if >1 player.
-extern  boolean netgame;
+extern  bool netgame;
 
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
-extern  boolean deathmatch;
+extern  bool deathmatch;
 
 // ------------------------------------------
 // Internal parameters for sound rendering.
@@ -209,26 +209,26 @@ extern int snd_DesiredSfxDevice;
 // Depending on view size - no status bar?
 // Note that there is no way to disable the
 //  status bar explicitely.
-extern  boolean statusbaractive;
+extern  bool statusbaractive;
 
-extern  boolean automapactive; // In AutoMap mode?
-extern  boolean menuactive;    // Menu overlayed?
-extern  int     paused;        // Game Pause?
-extern  int     hud_active;    //jff 2/17/98 toggles heads-up status display
-extern  boolean viewactive;
-extern  boolean nodrawers;
-extern  boolean noblit;
-extern  int     viewwindowx;
-extern  int     viewwindowy;
+extern  bool automapactive; // In AutoMap mode?
+extern  bool menuactive;    // Menu overlayed?
+extern  int  paused;        // Game Pause?
+extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
+extern  bool viewactive;
+extern  bool nodrawers;
+extern  bool noblit;
+extern  int  viewwindowx;
+extern  int  viewwindowy;
 // SoM 2-4-04: ANYRES
-extern  int     scaledwindowx;
-extern  int     scaledwindowy;
+extern  int  scaledwindowx;
+extern  int  scaledwindowy;
 
-extern  int     viewheight;
-extern  int     viewwidth;
-extern  int     scaledviewwidth;
-extern  int     scaledviewheight;         // killough 11/98
-extern  int     lefthanded; //sf
+extern  int  viewheight;
+extern  int  viewwidth;
+extern  int  scaledviewwidth;
+extern  int  scaledviewheight;         // killough 11/98
+extern  int  lefthanded; //sf
 
 // This one is related to the 3-screen display mode.
 // ANG90 = left side, ANG270 = right
@@ -253,16 +253,16 @@ extern  int leveltime;  // tics in game play for par
 // --------------------------------------
 // DEMO playback/recording related stuff.
 
-extern  boolean usergame;
-extern  boolean demoplayback;
-extern  boolean demorecording;
+extern  bool usergame;
+extern  bool demoplayback;
+extern  bool demorecording;
 
 // Quit after playing a demo from cmdline.
-extern  boolean   singledemo;
+extern  bool singledemo;
 // Print timing information after quitting.  killough
-extern  boolean   timingdemo;
+extern  bool timingdemo;
 // Run tick clock at fastest speed possible while playing demo.  killough
-extern  boolean   fastdemo;
+extern  bool fastdemo;
 
 extern  gamestate_t  gamestate;
 
@@ -279,7 +279,7 @@ extern  int   gametic;
 extern  player_t  players[MAXPLAYERS];
 
 // Alive? Disconnected?
-extern  boolean    playeringame[];
+extern  bool playeringame[];
 
 struct mapthing_t;
 
@@ -311,7 +311,7 @@ extern  char   *basepath;
 extern  char   *basegamepath;
 
 // if true, load all graphics at level load
-extern  boolean precache;
+extern  bool precache;
 
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw
@@ -324,7 +324,7 @@ extern  int             mouseSensitivity_vert;
 extern  int             mouseAccel_type;
 
 // debug flag to cancel adaptiveness
-extern  boolean         singletics;
+extern  bool            singletics;
 
 extern  int             bodyqueslot;
 
@@ -407,7 +407,7 @@ extern int sky2flatnum;          // flat num of F_SKY2
 
 extern fixed_t Sky1ColumnOffset, Sky2ColumnOffset;
 
-extern boolean cinema_pause;
+extern bool cinema_pause;
 extern int drawparticles;
 extern int bloodsplat_particle;
 extern int bulletpuff_particle;

@@ -95,7 +95,7 @@ int clipammo[NUMAMMO] = { 10,  4,  20,  1};
 // not the individual count (0= 1/2 clip).
 // Returns false if the ammo can't be picked up at all
 //
-boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
+bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 {
    int oldammo;
    
@@ -177,9 +177,9 @@ boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-boolean P_GiveWeapon(player_t *player, weapontype_t weapon, boolean dropped)
+bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 {
-   boolean gaveammo;
+   bool gaveammo;
    
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
@@ -211,7 +211,7 @@ boolean P_GiveWeapon(player_t *player, weapontype_t weapon, boolean dropped)
 //
 // Returns false if the body isn't needed at all
 //
-boolean P_GiveBody(player_t *player, int num)
+bool P_GiveBody(player_t *player, int num)
 {
    int maxhealthtouse;
 
@@ -240,7 +240,7 @@ boolean P_GiveBody(player_t *player, int num)
 // Returns false if the armor is worse
 // than the current armor.
 //
-boolean P_GiveArmor(player_t *player, int armortype, boolean htic)
+bool P_GiveArmor(player_t *player, int armortype, bool htic)
 {
    int hits = armortype*100;
 
@@ -272,7 +272,7 @@ void P_GiveCard(player_t *player, card_t card)
 //
 // Rewritten by Lee Killough
 //
-boolean P_GivePower(player_t *player, int power)
+bool P_GivePower(player_t *player, int power)
 {
    static const int tics[NUMPOWERS] = 
    {
@@ -326,8 +326,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    player_t   *player;
    int        i, sound;
    const char *message = NULL;
-   boolean    removeobj = true;
-   boolean    pickup_fx = true; // haleyjd 04/14/03
+   bool       removeobj = true;
+   bool       pickup_fx = true; // haleyjd 04/14/03
    fixed_t    delta = special->z - toucher->z;
 
    if(delta > toucher->height || delta < -8*FRACUNIT)
@@ -965,10 +965,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 //
 // Retrieves the string to use for a given EDF damagetype.
 //
-static const char *P_GetDeathMessageString(emod_t *mod, boolean self)
+static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 {
    const char *str;
-   boolean isbex;
+   bool isbex;
    const char *ret;
 
    if(self)
@@ -998,7 +998,7 @@ static const char *P_GetDeathMessageString(emod_t *mod, boolean self)
 static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, 
                            emod_t *mod)
 {
-   boolean friendly = false;
+   bool friendly = false;
    const char *message = NULL;
 
    if(!target->player || !obituaries)
@@ -1087,7 +1087,7 @@ typedef struct dmgspecdata_s
 //
 // Special damage action for Maulotaurs slamming into things.
 //
-static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
+static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 {
    Mobj *source = dmgspec->source;
    Mobj *target = dmgspec->target;
@@ -1123,7 +1123,7 @@ static boolean P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 // Called when an Iron Lich whirlwind hits something. Does damage
 // and may toss the target around violently.
 //
-static boolean P_TouchWhirlwind(dmgspecdata_t *dmgspec)
+static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 {
    Mobj *target = dmgspec->target;
    
@@ -1166,7 +1166,7 @@ static boolean P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 // done.
 //
 
-typedef boolean (*dmgspecial_t)(dmgspecdata_t *);
+typedef bool (*dmgspecial_t)(dmgspecdata_t *);
 
 static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 {
@@ -1231,8 +1231,8 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 {
    emod_t *emod;
    player_t *player;
-   boolean justhit = false;  // killough 11/98
-   boolean bossignore;       // haleyjd
+   bool justhit = false;  // killough 11/98
+   bool bossignore;       // haleyjd
    
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))

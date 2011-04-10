@@ -222,7 +222,7 @@ static void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
+static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 {
    DLListItem<seenstate_t> *link = list;
 
@@ -242,14 +242,14 @@ static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 //
 // Returns true if the mobj is still present.
 //
-boolean P_SetMobjState(Mobj* mobj, statenum_t state)
+bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
    state_t *st;
 
    // haleyjd 03/27/10: new state cycle detection
-   static boolean firsttime = true; // for initialization
+   static bool firsttime = true; // for initialization
    DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
-   boolean ret = true;                           // return value
+   bool ret = true;                           // return value
 
    if(firsttime)
    {
@@ -317,7 +317,7 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
 // This function was originally added by Raven in Heretic for the Maulotaur,
 // but it has proven itself useful elsewhere.
 //
-boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
+bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 {
    state_t *st;
 
@@ -701,7 +701,7 @@ void P_XYMovement(Mobj* mo)
 //
 // haleyjd: OVER_UNDER: Isolated code for players hitting floors/objects
 //
-void P_PlayerHitFloor(Mobj *mo, boolean onthing)
+void P_PlayerHitFloor(Mobj *mo, bool onthing)
 {
    // Squat down.
    // Decrease viewheight for a moment
@@ -746,8 +746,8 @@ static void P_ZMovement(Mobj* mo)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
    //          scope
-   boolean correct_lost_soul_bounce;
-   boolean moving_down;
+   bool correct_lost_soul_bounce;
+   bool moving_down;
 
    // 10/13/05: fraggle says original DOOM has no bounce either,
    // so if gamemode != retail, no bounce.
@@ -1003,9 +1003,9 @@ void P_NightmareRespawn(Mobj* mobj)
    fixed_t      y;
    fixed_t      z;
    subsector_t* ss;
-   Mobj*      mo;
+   Mobj*        mo;
    mapthing_t*  mthing;
-   boolean      check; // haleyjd 11/11/04
+   bool         check; // haleyjd 11/11/04
 
    x = mobj->spawnpoint.x << FRACBITS;
    y = mobj->spawnpoint.y << FRACBITS;
@@ -1101,9 +1101,9 @@ void P_NightmareRespawn(Mobj* mobj)
 
 // PTODO
 #ifdef R_LINKEDPORTALS
-static boolean P_CheckPortalTeleport(Mobj *mobj)
+static bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   boolean ret = false;
+   bool ret = false;
 
    if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
    {
@@ -1370,7 +1370,7 @@ void Mobj::Think()
       // 1) counts for kill AND
       // 2) respawn is on OR
       // 3) thing always respawns or removes itself after death.
-      boolean can_respawn =
+      bool can_respawn =
          flags & MF_COUNTKILL &&
            (respawnmonsters ||
             (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
@@ -1712,7 +1712,7 @@ int iquehead, iquetail;
 void Mobj::removeThinker()
 {
    // haleyjd 04/14/03: restructured
-   boolean respawnitem = false;
+   bool respawnitem = false;
 
    if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
    {
@@ -2232,7 +2232,7 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, boolean ptcl)
+                 int updown, bool ptcl)
 {
    Mobj* th;
 
@@ -2343,11 +2343,11 @@ void P_ParticleLine(Mobj *source, Mobj *dest)
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-// haleyjd 03/19/11: added boolean return type for Hexen logic
+// haleyjd 03/19/11: added bool return type for Hexen logic
 //
-boolean P_CheckMissileSpawn(Mobj* th)
+bool P_CheckMissileSpawn(Mobj* th)
 {
-   boolean ok = true;
+   bool ok = true;
 
    if(!(th->flags4 & MF4_NORANDOMIZE))
    {
@@ -3261,7 +3261,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
-   boolean friendly = false;
+   bool friendly = false;
    Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 

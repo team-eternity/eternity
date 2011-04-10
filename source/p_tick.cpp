@@ -41,7 +41,7 @@
 #include "s_sndseq.h"
 
 int leveltime;
-boolean reset_viewz;
+bool reset_viewz;
 
 //=============================================================================
 //

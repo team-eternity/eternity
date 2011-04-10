@@ -471,7 +471,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
 }
 
 static int edf_warning_count;
-static boolean edf_warning_out;
+static bool edf_warning_out;
 
 //
 // E_EDFLoggedWarning
@@ -705,7 +705,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                          const char **argv)
 {
    int i, idx;
-   boolean enabled = true;
+   bool enabled = true;
 
    if(argc < 1)
    {
@@ -748,7 +748,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
                             const char **argv)
 {
    int i, idx;
-   boolean enabled = false;
+   bool enabled = false;
 
    if(argc < 1)
    {
@@ -793,7 +793,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                          const char **argv)
 {
    int i, idx;
-   boolean disabled = true;
+   bool disabled = true;
 
    if(argc < 1)
    {
@@ -834,7 +834,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
                              const char **argv)
 {
    int i, idx;
-   boolean disabled = false;
+   bool disabled = false;
 
    if(argc < 1)
    {
@@ -934,7 +934,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                                 const char **argv)
 {
    int i, idx;
-   boolean enabled = false;
+   bool enabled = false;
 
    if(argc < 2)
    {
@@ -990,7 +990,7 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv)
 {
    int i, type;
-   boolean type_match = false;
+   bool type_match = false;
 
    if(argc < 1)
    {
@@ -1028,7 +1028,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                            const char **argv)
 {
    int i, type;
-   boolean type_nomatch = true;
+   bool type_nomatch = true;
 
    if(argc < 1)
    {
@@ -1161,7 +1161,7 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 // first so that an error will not occur. Returns immediately if the 
 // lump wasn't found.
 //
-static boolean E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
+static bool E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
 {
    // check first and return without an error
    if(W_CheckNumForName(lumpname) == -1)
@@ -1528,7 +1528,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    int i, a = 0;
    int numTypes = cfg_size(cfg, SEC_BOSSTYPES);
    int numProbs = cfg_size(cfg, SEC_BOSSPROBS);
-   boolean useProbs = true;
+   bool useProbs = true;
 
    E_EDFLogPuts("\t* Processing boss spawn types\n");
 

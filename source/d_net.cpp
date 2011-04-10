@@ -66,13 +66,13 @@ doomdata_t *netbuffer; // points inside doomcom
 
 static ticcmd_t localcmds[BACKUPTICS];
 
-ticcmd_t       netcmds[MAXPLAYERS][BACKUPTICS];
-static int     nettics[MAXNETNODES];
-static boolean nodeingame[MAXNETNODES];      // set false as nodes leave game
-static boolean remoteresend[MAXNETNODES];    // set when local needs tics
-static int     resendto[MAXNETNODES];        // set when remote needs tics
-static int     resendcount[MAXNETNODES];
-static int     nodeforplayer[MAXPLAYERS];
+ticcmd_t    netcmds[MAXPLAYERS][BACKUPTICS];
+static int  nettics[MAXNETNODES];
+static bool nodeingame[MAXNETNODES];      // set false as nodes leave game
+static bool remoteresend[MAXNETNODES];    // set when local needs tics
+static int  resendto[MAXNETNODES];        // set when remote needs tics
+static int  resendcount[MAXNETNODES];
+static int  nodeforplayer[MAXPLAYERS];
 
 //int      isconsoletic;          // is the current tic a gametic
                                   // or a list of console commands?
@@ -87,7 +87,7 @@ void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t *cmd); 
 void D_DoAdvanceDemo(void);
 
-static boolean    reboundpacket;
+static bool       reboundpacket;
 static doomdata_t reboundstore;
 
 //
@@ -200,7 +200,7 @@ static void HSendPacket(int node, int flags)
 // HGetPacket
 // Returns false if no packet is waiting
 //
-static boolean HGetPacket(void)
+static bool HGetPacket(void)
 {       
    if(reboundpacket)
    {
@@ -512,7 +512,7 @@ static void D_InitPlayers(void)
 static void D_ArbitrateNetStart(void)
 {
    int     i;
-   boolean gotinfo[MAXNETNODES];
+   bool gotinfo[MAXNETNODES];
    
    autostart = true;
    memset(gotinfo, 0, sizeof(gotinfo));
@@ -527,7 +527,7 @@ static void D_ArbitrateNetStart(void)
             continue;
          if(netbuffer->checksum & NCMD_SETUP)
          {
-            boolean dm;
+            bool dm;
 
             usermsg("Received %d %d\n",
                     netbuffer->retransmitfrom, netbuffer->starttic);
@@ -713,21 +713,21 @@ void D_QuitNetGame(void)
 //
 
 // haleyjd 01/04/2010
-boolean d_fastrefresh;
+bool d_fastrefresh;
 
-int     frametics[4];
-int     frameon;
-int     frameskip[4];
-int     oldnettics;
-int     opensocket_count = 0;
-boolean opensocket;
+int  frametics[4];
+int  frameon;
+int  frameskip[4];
+int  oldnettics;
+int  opensocket_count = 0;
+bool opensocket;
 
-extern boolean advancedemo;
+extern bool advancedemo;
 
 // Run new game tics.  Returns true if at least one tic
 // was run.
 
-static boolean RunGameTics(void)
+static bool RunGameTics(void)
 {
    static int  oldentertic;
    int         i;
@@ -893,7 +893,7 @@ void TryRunTics(void)
    int i;
    static int oldentertic;
    int entertic, realtics;
-   boolean game_advanced;
+   bool game_advanced;
 
    // Loop until we have done some kind of useful work.  If no
    // game tics are run, RunGameTics() will send the game to

@@ -140,7 +140,7 @@ void CRC32Hash::BuildTable(void)
 //
 void CRC32Hash::Initialize(HashData *hash)
 {
-   static boolean tablebuilt = false;
+   static bool tablebuilt = false;
    
    // build the CRC32 table if it hasn't been built yet
    if(!tablebuilt)
@@ -733,9 +733,9 @@ void HashData::WrapUp()
 // This routine will compare two digests. The algorithms must be the same
 // or the comparison will evaluate as false.
 //
-boolean HashData::compare(const HashData &other) const
+bool HashData::compare(const HashData &other) const
 {
-   boolean ret = false;
+   bool ret = false;
    int l_numdigest = HashAlgorithms[type]->getNumDigest();
    
    if(type == other.type)

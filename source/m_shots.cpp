@@ -85,8 +85,8 @@ typedef struct pcx_s
 //
 // pcx_Writer
 //
-static boolean pcx_Writer(OutBuffer *ob, byte *data, 
-                          uint32_t width, uint32_t height, byte *palette)
+static bool pcx_Writer(OutBuffer *ob, byte *data, 
+                       uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i;
    pcx_t   pcx;
@@ -211,8 +211,8 @@ typedef struct tagBITMAPINFOHEADER
 //
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-static boolean bmp_Writer(OutBuffer *ob, byte *data, 
-                          uint32_t width, uint32_t height, byte *palette)
+static bool bmp_Writer(OutBuffer *ob, byte *data, 
+                       uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i, j, wid;
    BITMAPFILEHEADER bmfh;
@@ -323,8 +323,8 @@ typedef struct tgaheader_s
 //
 // haleyjd 12/28/09
 //
-static boolean tga_Writer(OutBuffer *ob, byte *data, 
-                          uint32_t width, uint32_t height, byte *palette)
+static bool tga_Writer(OutBuffer *ob, byte *data, 
+                       uint32_t width, uint32_t height, byte *palette)
 {
    tgaheader_t tga;
    unsigned int i;
@@ -390,7 +390,7 @@ static boolean tga_Writer(OutBuffer *ob, byte *data,
 // Shared Code
 //
 
-typedef boolean (*ShotWriter_t)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
+typedef bool (*ShotWriter_t)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
 
 typedef struct shotformat_s
 {
@@ -424,7 +424,7 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 //
 void M_ScreenShot(void)
 {
-   boolean success = false;
+   bool success = false;
    char   *path = NULL;
    size_t  len;
    OutBuffer ob;

@@ -95,7 +95,7 @@ char *savegamenames[SAVESLOTS];
 char *mn_start_mapname;
 
 // haleyjd: keep track of valid save slots
-boolean savegamepresent[SAVESLOTS];
+bool savegamepresent[SAVESLOTS];
 
 static void MN_PatchOldMainMenu(void);
 static void MN_InitCustomMenu(void);
@@ -224,7 +224,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
    {
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
-      boolean mapPresent = true;
+      bool mapPresent = true;
       lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
       // if lump not found or the game is modified and the
@@ -1640,7 +1640,7 @@ static const char **mn_vidmode_cmds;
 
 static void MN_BuildVidmodeTables(void)
 {
-   static boolean menu_built = false;
+   static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
@@ -2088,7 +2088,7 @@ extern int numJoysticks;
 
 static void MN_BuildJSTables(void)
 {
-   static boolean menu_built = false;
+   static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
@@ -3202,7 +3202,7 @@ CONSOLE_COMMAND(mn_search, 0)
 {
    int i = 0;
    menu_t *curMenu;
-   boolean pastLast;
+   bool pastLast;
 
    // if lastMatch is set, set pastLast to false so that we'll seek
    // forward until we pass the last item that was matched

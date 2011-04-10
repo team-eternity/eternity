@@ -212,7 +212,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 // Static Data
 //
 
-static boolean pcs_initialised = false;
+static bool pcs_initialised = false;
 
 static SDL_mutex *sound_lock;
 
@@ -289,7 +289,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
 {
    int lumpnum = -1;
    char soundName[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-   boolean nameToTry = false;
+   bool nameToTry = false;
 
    // 1. use explicit PC speaker sound name if provided
    // 2. if sound name is prefixed, use DP%s
@@ -318,7 +318,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
    return lumpnum;
 }
 
-static boolean CachePCSLump(sfxinfo_t *sfx)
+static bool CachePCSLump(sfxinfo_t *sfx)
 {
    int lumpnum;
    int lumplen;

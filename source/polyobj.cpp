@@ -698,7 +698,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 // argument instead of using tmthing. Returns true if the line isn't contacted
 // and false otherwise.
 //
-d_inline static boolean Polyobj_untouched(line_t *ld, Mobj *mo)
+d_inline static bool Polyobj_untouched(line_t *ld, Mobj *mo)
 {
    fixed_t x, y, tmbbox[4];
 
@@ -747,9 +747,9 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
 // Checks for things that are in the way of a polyobject line move.
 // Returns true if something was hit.
 //
-static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
+static bool Polyobj_clipThings(polyobj_t *po, line_t *line)
 {
-   boolean hitthing = false;
+   bool hitthing = false;
    fixed_t linebox[4];
    int x, y;
 
@@ -794,11 +794,11 @@ static boolean Polyobj_clipThings(polyobj_t *po, line_t *line)
 //
 // Moves a polyobject on the x-y plane.
 //
-static boolean Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
+static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 {
    int i;
    vertex_t vec;
-   boolean hitthing = false;
+   bool hitthing = false;
 
    vec.x = x;
    vec.y = y;
@@ -928,11 +928,11 @@ static void Polyobj_rotateLine(line_t *ld)
 //
 // Rotates a polyobject around its start point.
 //
-static boolean Polyobj_rotate(polyobj_t *po, angle_t delta)
+static bool Polyobj_rotate(polyobj_t *po, angle_t delta)
 {
    int i, angle;
    vertex_t origin;
-   boolean hitthing = false;
+   bool hitthing = false;
 
    // don't move bad polyobjects
    if(po->flags & POF_ISBAD)

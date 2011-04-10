@@ -41,8 +41,8 @@ int mus_card;   // jff 1/18/98
 
 // haleyjd: safety variables to keep changes to *_card from making
 // these routines think that sound has been initialized when it hasn't
-boolean snd_init = false;
-boolean mus_init = false;
+bool snd_init = false;
+bool mus_init = false;
 
 int detect_voices; //jff 3/4/98 enables voice detection prior to install_sound
 //jff 1/22/98 make these visible here to disable sound/music on install err

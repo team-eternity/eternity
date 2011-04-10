@@ -26,7 +26,7 @@
 #define G_BIND_H__
 
 void G_InitKeyBindings(void);
-boolean G_KeyResponder(event_t *ev, int bclass);
+bool G_KeyResponder(event_t *ev, int bclass);
 
 void G_ClearKeyStates(void);
 

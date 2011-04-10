@@ -104,11 +104,11 @@ extern const demostate_t demostates_hreg[];
 
 typedef struct exitrule_s
 {
-   int gameepisode;  // current episode (1 for games like DOOM 2, 
-                     //   -1 if doesn't matter, -2 to terminate array)
-   int gamemap;      // current map the game is on (1-based, -1 if doesn't matter)   
-   int destmap;      // destination map (0-based for wminfo)
-   boolean isSecret; // this rule applies for secret exits   
+   int gameepisode; // current episode (1 for games like DOOM 2, 
+                    //   -1 if doesn't matter, -2 to terminate array)
+   int gamemap;     // current map the game is on (1-based, -1 if doesn't matter)   
+   int destmap;     // destination map (0-based for wminfo)
+   bool isSecret;   // this rule applies for secret exits   
 } exitrule_t;
 
 //
@@ -124,15 +124,15 @@ typedef struct finalerule_s
    const char *backDrop;  // BEX mnemonic of background graphic string
    const char *interText; // BEX mnemonic of intertext string
    int finaleType;        // transferred to LevelInfo.finaleType
-   boolean endOfGame;     // if true, LevelInfo.endOfGame is set
-   boolean secretOnly;    // if true, LevelInfo.finaleSecretOnly is set
+   bool endOfGame;        // if true, LevelInfo.endOfGame is set
+   bool secretOnly;       // if true, LevelInfo.finaleSecretOnly is set
 } finalerule_t;
 
 typedef struct finaledata_s
 {
-   int musicnum;          // index into gamemodeinfo_t::s_music
-   boolean killStatsHack; // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
-   finalerule_t *rules;   // rules array
+   int musicnum;        // index into gamemodeinfo_t::s_music
+   bool killStatsHack;  // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
+   finalerule_t *rules; // rules array
 } finaledata_t;
 
 // Default sky data

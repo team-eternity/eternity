@@ -250,7 +250,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 // Local function for R_InitSprites.
 //
 static void R_InstallSpriteLump(int lump, unsigned frame,
-                                unsigned rotation, boolean flipped)
+                                unsigned rotation, bool flipped)
 {
    if(frame >= MAX_SPRITE_FRAMES || rotation > 8)
       I_Error("R_InstallSpriteLump: Bad frame characters in lump %i\n", lump);
@@ -468,7 +468,7 @@ void R_ClearSprites(void)
 //
 // Pushes a new element on the post-BSP stack. 
 //
-void R_PushPost(boolean pushmasked, planehash_t *overlay)
+void R_PushPost(bool pushmasked, planehash_t *overlay)
 {
    poststack_t *post;
    
@@ -621,12 +621,12 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
 static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 {
    column_t *tcolumn;
-   int      texturecolumn;
-   float    frac;
+   int       texturecolumn;
+   float     frac;
    patch_t  *patch;
-   boolean  footclipon = false;
-   float baseclip = 0;
-   int w;
+   bool      footclipon = false;
+   float     baseclip = 0;
+   int       w;
 
    if(vis->patch == -1)
    {
@@ -715,13 +715,13 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 static void R_ProjectSprite(Mobj *thing)
 {
-   fixed_t       gzt;            // killough 3/27/98
+   fixed_t        gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int           lump;
-   boolean       flip;
+   int            lump;
+   bool           flip;
    vissprite_t   *vis;
-   int           heightsec;      // killough 3/27/98
+   int            heightsec;      // killough 3/27/98
 
    float tempx, tempy;
    float rotx, roty;
@@ -1011,10 +1011,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int           lump;
-   boolean       flip;
+   int            lump;
+   bool           flip;
    vissprite_t   *vis;
-   vissprite_t   avis;
+   vissprite_t    avis;
    
    // haleyjd: total invis. psprite disable
    

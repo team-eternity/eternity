@@ -114,8 +114,8 @@ public:
    int         strNCmp(const char *str, size_t maxcount) const;
    int         strCaseCmp(const char *str) const;
    int         strNCaseCmp(const char *str, size_t maxcount) const;
-   boolean     compare(const char *str) const;
-   boolean     compare(const qstring &other) const;
+   bool        compare(const char *str) const;
+   bool        compare(const qstring &other) const;
    qstring    &copy(const char *str);
    qstring    &copy(const qstring &src);
    char       *copyInto(char *dest, size_t size) const;
@@ -142,10 +142,10 @@ public:
    int         Printf(size_t maxlen, const char *fmt, ...);
 
    // Operators
-   boolean  operator == (const qstring &other) const;
-   boolean  operator == (const char    *other) const;
-   boolean  operator != (const qstring &other) const;
-   boolean  operator != (const char    *other) const;
+   bool     operator == (const qstring &other) const;
+   bool     operator == (const char    *other) const;
+   bool     operator != (const qstring &other) const;
+   bool     operator != (const char    *other) const;
    qstring &operator  = (const qstring &other);
    qstring &operator  = (const char    *other);
    qstring &operator += (const qstring &other);

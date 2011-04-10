@@ -337,7 +337,7 @@ void R_InitTranMap(int progress)
 //
 void R_InitData(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    P_InitSkins();
    R_InitColormaps();                    // killough 3/20/98

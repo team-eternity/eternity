@@ -37,15 +37,15 @@ struct wadlevel_t
 };
 
 extern char *w_masterlevelsdirname;
-extern boolean inmasterlevels;          // true if we are playing master levels
+extern bool inmasterlevels;          // true if we are playing master levels
 
 WadDirectory *W_AddManagedWad(const char *filename);
 WadDirectory *W_GetManagedWad(const char *filename);
 const char   *W_GetManagedDirFN(WadDirectory *waddir);
 wadlevel_t   *W_FindAllMapsInLevelWad(WadDirectory *dir);
 wadlevel_t   *W_FindLevelInDir(WadDirectory *waddir, const char *name);
-void          W_DoMasterLevels(boolean allowexit);
-void          W_EnumerateMasterLevels(boolean forceRefresh);
+void          W_DoMasterLevels(bool allowexit);
+void          W_EnumerateMasterLevels(bool forceRefresh);
 
 #endif
 

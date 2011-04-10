@@ -251,8 +251,8 @@ typedef struct console_s
 {
    int current_height; // current height of console
    int current_target; // target height of console
-   boolean showprompt; // toggles input prompt on or off
-   boolean enabled;    // enabled state of console
+   bool showprompt;    // toggles input prompt on or off
+   bool enabled;       // enabled state of console
    int cmdsrc;         // player source of current command being run
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run

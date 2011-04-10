@@ -40,7 +40,7 @@
 #include "f_wipe.h"
 
 // common globals
-boolean inwipe = false;
+bool inwipe = false;
 int wipetype;
 
 // common statics
@@ -133,9 +133,9 @@ static void Wipe_meltDrawer(void)
    }
 }
 
-static boolean Wipe_meltTicker(void)
+static bool Wipe_meltTicker(void)
 {
-   boolean done;
+   bool done;
    int x;
   
    done = true;  // default to true
@@ -216,7 +216,7 @@ static void Wipe_fadeDrawer(void)
    }
 }
 
-static boolean Wipe_fadeTicker(void)
+static bool Wipe_fadeTicker(void)
 {
    fadelvl += 2;
 
@@ -231,9 +231,9 @@ static boolean Wipe_fadeTicker(void)
 
 typedef struct fwipe_s
 {
-   void    (*StartScreen)(void);
-   void    (*Drawer)(void);
-   boolean (*Ticker)(void);
+   void (*StartScreen)(void);
+   void (*Drawer)(void);
+   bool (*Ticker)(void);
 } fwipe_t;
 
 static fwipe_t wipers[] =
@@ -333,7 +333,7 @@ void Wipe_Drawer(void)
 
 void Wipe_Ticker(void)
 {
-   boolean done = wipers[current_wipetype].Ticker();
+   bool done = wipers[current_wipetype].Ticker();
 
    if(done)
    {

@@ -198,7 +198,7 @@ void I_EnumerateJoysticks(void)
 //
 // haleyjd 04/15/02
 //
-boolean I_SetJoystickDevice(int deviceNum)
+bool I_SetJoystickDevice(int deviceNum)
 {
    if(deviceNum >= SDL_NumJoysticks())
       return false;
@@ -219,7 +219,7 @@ boolean I_SetJoystickDevice(int deviceNum)
    }
 }
 
-extern boolean unicodeinput;
+extern bool unicodeinput;
 
 void I_InitKeyboard(void)
 {   
@@ -273,7 +273,7 @@ void I_Init(void)
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    { 
-      extern boolean nomusicparm, nosfxparm;
+      extern bool nomusicparm, nosfxparm;
       if(!(nomusicparm && nosfxparm))
          I_InitSound();
    }
@@ -487,7 +487,7 @@ void I_EndDoom(void)
    unsigned char *endoom_data;
    unsigned char *screendata;
    int start_ms;
-   boolean waiting;
+   bool waiting;
    
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,

@@ -37,7 +37,7 @@
 // haleyjd 11/28/08: bit of a hack - replace checks on gamemode == commercial
 // with tests on this flag to see if we want to be able to use the super 
 // shotgun. This may need to change a bit when dynamic weapons are finished.
-boolean enable_ssg = false;
+bool enable_ssg = false;
 
 //
 // PSPRITE ACTIONS for weapons.

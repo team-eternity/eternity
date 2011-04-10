@@ -69,7 +69,7 @@ extern weaponinfo_t weaponinfo[NUMWEAPONS];
 // haleyjd: temporary hack
 void D_InitWeaponInfo(void);
 
-extern boolean enable_ssg;
+extern bool enable_ssg;
 
 #endif
 

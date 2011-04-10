@@ -56,7 +56,7 @@ static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int  C_Sync(command_t *command);
 static void C_ArgvtoArgs(void);
-static boolean C_Strcmp(const char *pa, const char *pb);
+static bool C_Strcmp(const char *pa, const char *pb);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -108,7 +108,7 @@ static void C_nextCmdToken(void)
 //
 static void C_initCmdTokens(void)
 {
-   static boolean cmdtokensinit;
+   static bool cmdtokensinit;
 
    if(!cmdtokensinit)
    {
@@ -155,7 +155,7 @@ static void C_clearCmdTokens(void)
 static void C_GetTokens(const char *command)
 {
    const char *rover;
-   boolean quotemark = false;
+   bool quotemark = false;
    
    rover = command;
    
@@ -497,7 +497,7 @@ static int C_Sync(command_t *command)
 //
 void C_RunTextCmd(const char *command)
 {
-   boolean quotemark = false;  // for " quote marks
+   bool quotemark = false;  // for " quote marks
    char *sub_command = NULL;
    const char *rover;
 
@@ -567,7 +567,7 @@ const char *C_VariableValue(variable_t *variable)
 
    case vt_toggle:
       // haleyjd 07/05/10
-      value.Printf(0, "%d", (int)(*(boolean *)loc));
+      value.Printf(0, "%d", (int)(*(bool *)loc));
       break;
       
    case vt_string:
@@ -636,7 +636,7 @@ const char *C_VariableStringValue(variable_t *variable)
       if(variable->type == vt_int)
          varValue = *((int *)loc);
       else if(variable->type == vt_toggle)
-         varValue = (int)(*(boolean *)loc);
+         varValue = (int)(*(bool *)loc);
 
       valStrIndex = varValue - variable->min;
 
@@ -665,7 +665,7 @@ static void C_EchoValue(command_t *command)
 
 // is a string a number?
 
-static boolean isnum(const char *text)
+static bool isnum(const char *text)
 {
    // haleyjd 07/05/10: skip over signs here
    if(strlen(text) > 1 && (*text == '-' || *text == '+'))
@@ -726,7 +726,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          break;
       case vt_toggle:
          {
-            boolean b;
+            bool b;
             dp->methods->getDefault(dp, &b);
             returnstr.Printf(0, "%d", !!b);
          }
@@ -769,7 +769,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
       if(variable->type == vt_int)
          value = *(int *)loc;
       else
-         value = (int)(*(boolean *)loc);
+         value = (int)(*(bool *)loc);
 
       if(!strcmp(s, "+"))     // increase value
       {
@@ -936,9 +936,9 @@ static void C_SetVariable(command_t *command)
       case vt_toggle:
          // haleyjd 07/05/10
          if(setflags & CCF_CANSETVAR)
-            *(boolean *)variable->variable = !!size;
+            *(bool *)variable->variable = !!size;
          if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
-            *(boolean *)variable->v_default = !!size;
+            *(bool *)variable->v_default = !!size;
          break;
          
       case vt_string:
@@ -991,7 +991,7 @@ static void C_SetVariable(command_t *command)
 //
 
 static qstring origkey;
-static boolean gotkey;
+static bool gotkey;
 static command_t **tabs;
 static int numtabsalloc; // haleyjd 07/25/10
 static int numtabs = 0;
@@ -1394,7 +1394,7 @@ void C_ClearBuffer(int cmdtype)
 }
 
         // compare regardless of font colour
-static boolean C_Strcmp(const char *pa, const char *pb)
+static bool C_Strcmp(const char *pa, const char *pb)
 {
    const unsigned char *a = (const unsigned char *)pa;
    const unsigned char *b = (const unsigned char *)pb;
@@ -1630,7 +1630,7 @@ void C_RunCmdLineScripts(void)
       // the parms after p are console script names,
       // until end of parms or another - preceded parm
       
-      boolean file = true;
+      bool file = true;
       
       while(++p < myargc)
       {

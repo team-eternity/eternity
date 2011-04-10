@@ -103,7 +103,7 @@ static void E_AddDamageTypeToNumHash(emod_t *mod);
 // which was not given one by the author, to allow reference by name
 // anywhere without the chore of number allocation.
 //
-static boolean E_AutoAllocModNum(emod_t *mod)
+static bool E_AutoAllocModNum(emod_t *mod)
 {
    int num;
 
@@ -190,7 +190,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 {
    emod_t *mod;
    const char *title, *obituary;
-   boolean def = true;
+   bool def = true;
    int num;
 
    title = cfg_title(dtsec);
@@ -305,7 +305,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 //
 static void E_initUnknownMod(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    if(firsttime) // only needed once
    {

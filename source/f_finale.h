@@ -36,7 +36,7 @@ typedef struct castinfo_s
 {
    const char  *name;
    mobjtype_t  type;   
-   boolean     stopattack;
+   bool        stopattack;
    struct castsound_s { int frame; int sound; } sounds[4];
 } castinfo_t;
 
@@ -67,7 +67,7 @@ enum
 void F_Init(void);
 
 // Called by main loop.
-boolean F_Responder(event_t* ev);
+bool F_Responder(event_t* ev);
 
 // Called by main loop.
 void F_Ticker(void);

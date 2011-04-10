@@ -71,7 +71,7 @@ typedef struct vertex_s
    float   fx, fy;
 
    struct vertex_s *dynanext;
-   boolean dynafree;          // if true, is on free list
+   bool dynafree;          // if true, is on free list
 } vertex_t;
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
@@ -395,7 +395,7 @@ typedef struct msecnode_s
   struct msecnode_s *m_tnext;  // next msecnode_t for this thing
   struct msecnode_s *m_sprev;  // prev msecnode_t for this sector
   struct msecnode_s *m_snext;  // next msecnode_t for this sector
-  boolean visited; // killough 4/4/98, 4/7/98: used in search algorithms
+  bool visited; // killough 4/4/98, 4/7/98: used in search algorithms
 } msecnode_t;
 
 //
@@ -459,7 +459,7 @@ typedef struct spriteframe_s
   // If false use 0 for any position.
   // Note: as eight entries are available,
   //  we might as well insert the same name eight times.
-  boolean rotate;
+  bool rotate;
 
   // Lump to use for view angles 0-7.
   int16_t lump[8];

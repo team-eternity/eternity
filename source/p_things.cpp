@@ -41,7 +41,7 @@
 //
 // Implements Thing_Projectile(tid, type, angle, speed, vspeed)
 //
-int EV_ThingProjectile(int *args, boolean gravity)
+int EV_ThingProjectile(int *args, bool gravity)
 {
    int tid;
    angle_t angle;
@@ -51,7 +51,7 @@ int EV_ThingProjectile(int *args, boolean gravity)
    mobjtype_t moType;
    Mobj *mobj = NULL, *newMobj;
    mobjinfo_t *mi;
-   boolean success = false;
+   bool success = false;
 
    tid    = args[0];
    
@@ -100,14 +100,14 @@ int EV_ThingProjectile(int *args, boolean gravity)
 //
 // Implements Thing_Spawn(tid, type, angle, newtid)
 //
-int EV_ThingSpawn(int *args, boolean fog)
+int EV_ThingSpawn(int *args, bool fog)
 {
    int tid;
    angle_t angle;
    Mobj *mobj = NULL, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
-   boolean success = false;
+   bool success = false;
    fixed_t z;
    
    tid = args[0];

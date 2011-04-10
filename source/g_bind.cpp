@@ -263,7 +263,7 @@ static keyaction_t *cons_keyactions = NULL;
 typedef struct doomkey_s
 {
    char *name;
-   boolean keydown[NUMKEYACTIONCLASSES];
+   bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
 } doomkey_t;
 
@@ -592,10 +592,10 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-boolean G_KeyResponder(event_t *ev, int bclass)
+bool G_KeyResponder(event_t *ev, int bclass)
 {
-   static boolean ctrldown;
-   boolean ret = false;
+   static bool ctrldown;
+   bool ret = false;
 
    // do not index out of bounds
    if(ev->data1 >= NUM_KEYS)
@@ -721,7 +721,7 @@ void G_BindDrawer(void)
 //
 // Responder for widget
 //
-boolean G_BindResponder(event_t *ev)
+bool G_BindResponder(event_t *ev)
 {
    keyaction_t *action;
    
@@ -901,7 +901,7 @@ CONSOLE_COMMAND(bind, 0)
       {
          // haleyjd 07/03/04: multiple binding class support
          int j;
-         boolean foundBinding = false;
+         bool foundBinding = false;
          
          for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
          {

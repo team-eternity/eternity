@@ -57,10 +57,10 @@ int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void    F_StartCast (void);
-void    F_CastTicker (void);
-boolean F_CastResponder (event_t *ev);
-void    F_CastDrawer (void);
+void F_StartCast(void);
+void F_CastTicker(void);
+bool F_CastResponder(event_t *ev);
+void F_CastDrawer(void);
 
 void IN_checkForAccelerate(void);    // killough 3/28/98: used to
 extern int acceleratestage;          // accelerate intermission screens
@@ -106,7 +106,7 @@ void F_StartFinale(void)
 //
 // F_Responder
 //
-boolean F_Responder(event_t *event)
+bool F_Responder(event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -332,10 +332,10 @@ castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_
 int             castnum;
 int             casttics;
 state_t*        caststate;
-boolean         castdeath;
+bool            castdeath;
 int             castframes;
 int             castonmelee;
-boolean         castattacking;
+bool            castattacking;
 
 extern  gamestate_t     wipegamestate;
 
@@ -509,7 +509,7 @@ void F_CastTicker(void)
 //
 // F_CastResponder
 //
-boolean F_CastResponder(event_t* ev)
+bool F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -559,7 +559,7 @@ void F_CastDrawer(void)
    spritedef_t*        sprdef;
    spriteframe_t*      sprframe;
    int                 lump;
-   boolean             flip;
+   bool                flip;
    patch_t*            patch;
    
    // erase the entire screen to a background
@@ -769,7 +769,7 @@ void F_DemonScroll(void)
 static void F_FinaleEndDrawer(void)
 {
    // haleyjd 05/18/09: handle shareware once up here
-   boolean sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
+   bool sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
 
    switch(LevelInfo.finaleType)
    {

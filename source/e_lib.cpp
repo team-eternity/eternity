@@ -80,7 +80,7 @@ static Collection<HashData> eincludes;
 // data sources that have been sent into this function. Returns true if the
 // data should be included, and false otherwise (ie. there was a match).
 //
-static boolean E_CheckInclude(const char *data, size_t size)
+static bool E_CheckInclude(const char *data, size_t size)
 {
    size_t i, numincludes;
    HashData newhash;
@@ -884,7 +884,7 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 //
 char *E_GetHeredocLine(char **src)
 {
-   boolean isdone  = false;
+   bool isdone  = false;
    char *srctxt    = *src;
    char *linestart = srctxt;
 
@@ -1037,9 +1037,9 @@ struct tr_pstate_t
    qstring *token;
    const char *input;
    int inputpos;
-   boolean error;
-   boolean done;
-   boolean singlecolor;
+   bool error;
+   bool done;
+   bool singlecolor;
    tr_range_t *ranges;
    
    // data

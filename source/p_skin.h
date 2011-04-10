@@ -64,7 +64,7 @@ struct skin_t
 
    // haleyjd 11/07/06: for EDF hashing
    skin_t *ehashnext;
-   boolean edfskin; // if true, is an EDF skin
+   bool    edfskin; // if true, is an EDF skin
 };
 
 extern char **spritelist; // new spritelist, same format as sprnames

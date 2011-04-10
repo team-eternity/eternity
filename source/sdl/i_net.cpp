@@ -47,7 +47,7 @@
 #include "../i_net.h"
 
 void    NetSend(void);
-boolean NetListen(void);
+bool NetListen(void);
 
 //
 // NETWORKING

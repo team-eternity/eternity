@@ -55,7 +55,7 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;    // for thing chains
 
-extern boolean  newlevel;
+extern bool     newlevel;
 extern int      doom1level;
 extern char     levelmapname[10];
 

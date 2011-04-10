@@ -116,7 +116,7 @@ static int interstate;
 
 static int statetime;             // time until next state
 static int countdown;             // count down to end
-static boolean flashtime = false;
+static bool flashtime = false;
 
 static wbstartstruct_t hi_wbs;
 
@@ -230,7 +230,7 @@ static void HI_loadData(void)
 //
 // Returns true if the player is considered to be participating.
 //
-static boolean HI_playerInGame(int playernum)
+static bool HI_playerInGame(int playernum)
 {
 #ifdef HI_DEBUG_ALLPLAYERS
    return true;
@@ -410,7 +410,7 @@ static void HI_drawLeaving(void)
 {
    int i;
    int lastlevel, thislevel;
-   boolean drawsecret;
+   bool drawsecret;
 
    if(gameepisode > 3)
       return;

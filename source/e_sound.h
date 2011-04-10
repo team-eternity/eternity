@@ -92,13 +92,13 @@ struct ESoundSeq_t
 
    union seqcmd_s *commands;     // the compiled commands
 
-   boolean randvol;              // use random starting volume?
+   bool randvol;                 // use random starting volume?
    int volume;                   // starting volume (or max vol if randomized)
    int minvolume;                // minimum volume if randomized
    int attenuation;              // starting attenuation
    sfxinfo_t *stopsound;         // stopsound, if any
-   boolean nostopcutoff;         // if true, sounds aren't cut off at end
-   boolean randomplayvol;        // if true, volume is randomized on most play cmds
+   bool nostopcutoff;            // if true, sounds aren't cut off at end
+   bool randomplayvol;           // if true, volume is randomized on most play cmds
 
    ESoundSeq_t *doorseq;  // redirect for door sequence use
    ESoundSeq_t *platseq;  // redirect for platform sequence use
@@ -120,11 +120,11 @@ extern cfg_opt_t edf_ambience_opts[];
 extern cfg_opt_t edf_sndseq_opts[];
 extern cfg_opt_t edf_seqmgr_opts[];
 
-void    E_ProcessSounds(cfg_t *cfg);
-void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
-void    E_ProcessSndSeqs(cfg_t *cfg);
-void    E_ProcessAmbience(cfg_t *cfg);
-boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
+void E_ProcessSounds(cfg_t *cfg);
+void E_ProcessSoundDeltas(cfg_t *cfg, bool add);
+void E_ProcessSndSeqs(cfg_t *cfg);
+void E_ProcessAmbience(cfg_t *cfg);
+bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
 #define EDF_SEC_SOUND     "sound"
 #define EDF_SEC_SDELTA    "sounddelta"

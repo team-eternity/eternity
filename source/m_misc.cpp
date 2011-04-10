@@ -1026,13 +1026,13 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 //
 
 // Write help for a string option
-static boolean M_writeDefaultHelpString(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
 {
    return (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
 }
 
 // Write a string option key/value pair
-static boolean M_writeDefaultString(default_t *dp, FILE *f)
+static bool M_writeDefaultString(default_t *dp, FILE *f)
 {
    const char *value = 
       dp->modified ? dp->orig_default_s : *(const char **)dp->location;
@@ -1041,7 +1041,7 @@ static boolean M_writeDefaultString(default_t *dp, FILE *f)
 }
 
 // Set the value of a string option
-static void M_setDefaultValueString(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 {
    const char *strparm = (const char *)value;
 
@@ -1063,7 +1063,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, boolean wad)
 }
 
 // Read a string option and set it
-static boolean M_readDefaultString(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
    int len = strlen(src) - 1;
 
@@ -1094,7 +1094,7 @@ static void M_setDefaultString(default_t *dp)
 }
 
 // Test if a string default matches the given cvar
-static boolean M_checkCVarString(default_t *dp, variable_t *var)
+static bool M_checkCVarString(default_t *dp, variable_t *var)
 {
    // config strings only match string and chararray cvar types
    if(var->type != vt_string && var->type != vt_chararray)
@@ -1116,9 +1116,9 @@ static void M_getDefaultString(default_t *dp, void *dest)
 //
 
 // Write help for an integer option
-static boolean M_writeDefaultHelpInt(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpInt(default_t *dp, FILE *f)
 {
-   boolean written = false;
+   bool written = false;
 
    if(dp->limit.min == UL)
    {
@@ -1145,7 +1145,7 @@ static boolean M_writeDefaultHelpInt(default_t *dp, FILE *f)
 }
 
 // Write an integer key/value pair
-static boolean M_writeDefaultInt(default_t *dp, FILE *f)
+static bool M_writeDefaultInt(default_t *dp, FILE *f)
 {
    int value = dp->modified ? dp->orig_default_i : *(int *)dp->location;
 
@@ -1155,7 +1155,7 @@ static boolean M_writeDefaultInt(default_t *dp, FILE *f)
 }
 
 // Set the value of an integer option
-static void M_setDefaultValueInt(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
 {
    int parm = *(int *)value;
 
@@ -1177,7 +1177,7 @@ static void M_setDefaultValueInt(default_t *dp, void *value, boolean wad)
 }
 
 // Read the value of an integer option and set it to the default
-static boolean M_readDefaultInt(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
 {
    int parm = 0;
 
@@ -1201,7 +1201,7 @@ static void M_setDefaultInt(default_t *dp)
 }
 
 // Test if an integer default matches the given cvar
-static boolean M_checkCVarInt(default_t *dp, variable_t *var)
+static bool M_checkCVarInt(default_t *dp, variable_t *var)
 {
    if(var->type != vt_int)
       return false;
@@ -1219,9 +1219,9 @@ static void M_getDefaultInt(default_t *dp, void *dest)
 //
 
 // Write help for a float option
-static boolean M_writeDefaultHelpFloat(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpFloat(default_t *dp, FILE *f)
 {
-   boolean written = false;
+   bool written = false;
 
    if(dp->limit.min == UL)
    {
@@ -1250,7 +1250,7 @@ static boolean M_writeDefaultHelpFloat(default_t *dp, FILE *f)
 }
 
 // Write a key/value pair for a float option
-static boolean M_writeDefaultFloat(default_t *dp, FILE *f)
+static bool M_writeDefaultFloat(default_t *dp, FILE *f)
 {
    double value = dp->modified ? dp->orig_default_f : *(double *)dp->location;
 
@@ -1258,7 +1258,7 @@ static boolean M_writeDefaultFloat(default_t *dp, FILE *f)
 }
 
 // Set the value of a float option
-static void M_setDefaultValueFloat(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
 {
    double tmp = *(double *)value;
 
@@ -1281,7 +1281,7 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, boolean wad)
 }
 
 // Read the value of a float option from a string and set it
-static boolean M_readDefaultFloat(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultFloat(default_t *dp, char *src, bool wad)
 {
    double tmp;
 
@@ -1300,7 +1300,7 @@ static void M_setDefaultFloat(default_t *dp)
 }
 
 // Test if a float default matches the given cvar
-static boolean M_checkCVarFloat(default_t *dp, variable_t *var)
+static bool M_checkCVarFloat(default_t *dp, variable_t *var)
 {
    if(var->type != vt_float)
       return false;
@@ -1317,39 +1317,39 @@ static void M_getDefaultFloat(default_t *dp, void *dest)
 // Booleans
 //
 
-// Write help for a boolean option
-static boolean M_writeDefaultHelpBool(default_t *dp, FILE *f)
+// Write help for a bool option
+static bool M_writeDefaultHelpBool(default_t *dp, FILE *f)
 {
    return (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
 }
 
-// Write a key/value pair for a boolean option
-static boolean M_writeDefaultBool(default_t *dp, FILE *f)
+// Write a key/value pair for a bool option
+static bool M_writeDefaultBool(default_t *dp, FILE *f)
 {
-   boolean value = dp->modified ? dp->orig_default_b : *(boolean *)dp->location;
+   bool value = dp->modified ? dp->orig_default_b : *(bool *)dp->location;
 
    return (fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF);
 }
 
-// Sets the value of a boolean option
-static void M_setDefaultValueBool(default_t *dp, void *value, boolean wad)
+// Sets the value of a bool option
+static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
 {
-   boolean parm = *(boolean *)value;
+   bool parm = *(bool *)value;
    if(wad)
    {
       if(!dp->modified) // First time it's modified by wad
       {
          dp->modified = 1;                               // Mark it as modified
-         dp->orig_default_b = *(boolean *)dp->location;  // Save original default
+         dp->orig_default_b = *(bool *)dp->location;  // Save original default
       }
       if(dp->current)            // Change current value
-         *(boolean *)dp->current = !!parm;
+         *(bool *)dp->current = !!parm;
    }
-   *(boolean *)dp->location = !!parm;  // Change default
+   *(bool *)dp->location = !!parm;  // Change default
 }
 
-// Reads the value of a boolean option from a string and sets it
-static boolean M_readDefaultBool(default_t *dp, char *src, boolean wad)
+// Reads the value of a bool option from a string and sets it
+static bool M_readDefaultBool(default_t *dp, char *src, bool wad)
 {
    int parm;
 
@@ -1364,11 +1364,11 @@ static boolean M_readDefaultBool(default_t *dp, char *src, boolean wad)
 // Set to default value
 static void M_setDefaultBool(default_t *dp)
 {
-   *(boolean *)dp->location = dp->defaultvalue_b;
+   *(bool *)dp->location = dp->defaultvalue_b;
 }
 
-// Test if a boolean default matches the given cvar
-static boolean M_checkCVarBool(default_t *dp, variable_t *var)
+// Test if a bool default matches the given cvar
+static bool M_checkCVarBool(default_t *dp, variable_t *var)
 {
    if(var->type != vt_toggle)
       return false;
@@ -1378,7 +1378,7 @@ static boolean M_checkCVarBool(default_t *dp, variable_t *var)
 
 static void M_getDefaultBool(default_t *dp, void *dest)
 {
-   *(boolean *)dest = dp->defaultvalue_b;
+   *(bool *)dest = dp->defaultvalue_b;
 }
 
 //
@@ -1598,7 +1598,7 @@ void M_SaveDefaults(void)
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
+bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
 {
    char name[80], strparm[100];
    default_t *dp;
@@ -1826,10 +1826,10 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
 //
-boolean M_WriteFile(char const *name, void *source, unsigned int length)
+bool M_WriteFile(char const *name, void *source, unsigned int length)
 {
    FILE *fp;
-   boolean result;
+   bool result;
    
    errno = 0;
    
@@ -2030,7 +2030,7 @@ int M_CountNumLines(const char *str)
 //
 void M_GetFilePath(const char *fn, char *base, size_t len)
 {
-   boolean found_slash = false;
+   bool found_slash = false;
    char *p;
 
    memset(base, 0, len);

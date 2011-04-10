@@ -377,17 +377,17 @@ public:
 extern int iquehead;
 extern int iquetail;
 
-void     P_RespawnSpecials(void);
-Mobj    *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-boolean  P_SetMobjState(Mobj *mobj, statenum_t state);
-void     P_MobjThinker(Mobj *mobj);
-void     P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
-void     P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj    *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj    *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
-Mobj    *P_SpawnMapThing(mapthing_t *);
-boolean  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void     P_ExplodeMissile(Mobj *);     // killough
+void  P_RespawnSpecials(void);
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+bool  P_SetMobjState(Mobj *mobj, statenum_t state);
+void  P_MobjThinker(Mobj *mobj);
+void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+void  P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
+Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnMapThing(mapthing_t *);
+bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
+void  P_ExplodeMissile(Mobj *);     // killough
 
 // particles and lines: sf
 /*
@@ -397,8 +397,8 @@ void P_ParticleLine(Mobj *source, Mobj *dest);
 
 // new Eternity mobj function prototypes  haleyjd
 void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
-boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
-Mobj  *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
+bool    P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
+Mobj   *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
 void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
 

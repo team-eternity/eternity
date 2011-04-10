@@ -188,7 +188,7 @@ void TryRunTics(void);
 
 //extern int isconsoletic;        // is the current tic a gametic
                                   // or a list of console commands?
-extern boolean opensocket;
+extern bool opensocket;
 //extern doomcom_t singleplayer;
 //extern int newtics, ticnum;     //sf
 

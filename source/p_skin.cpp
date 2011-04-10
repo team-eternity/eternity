@@ -293,7 +293,7 @@ void P_ParseSkin(int lumpnum)
    char *lump;
    char *rover;
    char inputline[256];
-   boolean comment;
+   bool comment;
    lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    // FIXME: revise to use finite-state-automaton parser and qstring buffers

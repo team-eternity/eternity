@@ -152,9 +152,9 @@ static void W_delManagedDir(manageddir_t *dir)
 //
 // Tries to open a wad file. Returns true if successful, and false otherwise.
 //
-static boolean W_openWadFile(manageddir_t *dir)
+static bool W_openWadFile(manageddir_t *dir)
 {
-   boolean ret;
+   bool ret;
    
    if((ret = !!dir->waddir.AddNewPrivateFile(dir->name)))
       D_AddFile(dir->name, lumpinfo_t::ns_global, NULL, 0, 1);
@@ -206,10 +206,10 @@ WadDirectory *W_AddManagedWad(const char *filename)
 //
 // Closes a managed wad directory. Returns true if anything was actually done.
 //
-boolean W_CloseManagedWad(const char *filename)
+bool W_CloseManagedWad(const char *filename)
 {
    manageddir_t *dir = NULL;
-   boolean retcode = false;
+   bool retcode = false;
 
    if((dir = w_dirhash.objectForKey(filename)))
    {
@@ -262,7 +262,7 @@ const char *W_GetManagedDirFN(WadDirectory *waddir)
 // map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
 // with that possibility.
 //
-char *W_FindMapInLevelWad(WadDirectory *dir, boolean mapxy)
+char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
    int i;
    char *name = NULL;
@@ -391,11 +391,11 @@ wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
 
 // globals
 char *w_masterlevelsdirname;
-boolean inmasterlevels;          // true if we are playing master levels
+bool inmasterlevels;            // true if we are playing master levels
 
 // statics
-static mndir_t masterlevelsdir;  // menu file loader directory structure
-static boolean masterlevelsenum; // if true, the folder has been enumerated
+static mndir_t masterlevelsdir; // menu file loader directory structure
+static bool masterlevelsenum;   // if true, the folder has been enumerated
 
 //
 // W_loadMasterLevelWad
@@ -488,7 +488,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 // was previously cached. This is called from the console variable handler
 // for master_levels_dir when the value is successfully changed.
 //
-void W_EnumerateMasterLevels(boolean forceRefresh)
+void W_EnumerateMasterLevels(bool forceRefresh)
 {
    if(masterlevelsenum && !forceRefresh)
       return;
@@ -520,7 +520,7 @@ void W_EnumerateMasterLevels(boolean forceRefresh)
 // otherwise the player would get stuck (this is done in G_WorldDone
 // if "inmasterlevels" is true).
 //
-void W_DoMasterLevels(boolean allowexit)
+void W_DoMasterLevels(bool allowexit)
 {
    W_EnumerateMasterLevels(false);
 

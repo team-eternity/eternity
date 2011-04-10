@@ -31,11 +31,11 @@
 #define INPUTLENGTH 512
 #define LINELENGTH  128
 
-void    C_Init(void);
-void    C_Ticker(void);
-void    C_Drawer(void);
-boolean C_Responder(event_t* ev);
-void    C_Update(void);
+void C_Init(void);
+void C_Ticker(void);
+void C_Drawer(void);
+bool C_Responder(event_t* ev);
+void C_Update(void);
 
 void C_Printf(const char *s, ...);
 void C_Puts(const char *s);

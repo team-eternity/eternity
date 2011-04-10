@@ -64,9 +64,9 @@ static state_t *skview_state     = NULL;
 static int      skview_tics      = 0;
 static int      skview_action    = SKV_WALKING;
 static int      skview_rot       = 0;
-static boolean  skview_halfspeed = false;
+static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
-static boolean  skview_haswdth   = false;       // 03/29/08
+static bool     skview_haswdth   = false;       // 03/29/08
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -93,7 +93,7 @@ static void MN_SkinSetState(state_t *state)
 // The skin viewer widget responder function. Sorta long and
 // hackish, but cool.
 //
-static boolean MN_SkinResponder(event_t *ev)
+static bool MN_SkinResponder(event_t *ev)
 {
    // only interested in keydown events
    if(ev->type != ev_keydown)
@@ -279,7 +279,7 @@ static void MN_SkinDrawer(void)
    spritedef_t *sprdef;
    spriteframe_t *sprframe;
    int lump;
-   boolean flip;
+   bool flip;
    patch_t *patch;
    int pctype;
 

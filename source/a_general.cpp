@@ -605,11 +605,11 @@ void A_MissileAttack(Mobj *actor)
 {
    int type, a;
    fixed_t z, momz;
-   boolean homing;
+   bool homing;
    angle_t ang;
    Mobj *mo;
    int statenum;
-   boolean hastarget = true;
+   bool hastarget = true;
 
    if(!actor->target || actor->target->health <= 0)
       hastarget = false;
@@ -1085,7 +1085,7 @@ void A_ShowMessage(Mobj *actor)
 void A_AmbientThinker(Mobj *mo)
 {
    EAmbience_t *amb = E_AmbienceForNum(mo->args[0]);
-   boolean loop = false;
+   bool loop = false;
 
    // nothing to play?
    if(!amb || !amb->sound)

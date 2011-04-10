@@ -43,11 +43,11 @@
 #include "v_font.h"
 #include "w_wad.h"
 
-static boolean fixedColor = false;
+static bool fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
-static boolean shadowChar = false;
-static boolean absCentered = false; // 03/04/06: every line will be centered
+static bool shadowChar = false;
+static bool absCentered = false; // 03/04/06: every line will be centered
 
 //
 // V_FontLineWidth
@@ -112,9 +112,9 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    unsigned int c;          // current character
    int cx, cy, tx;          // current screen position
 
-   byte    *color = NULL;     // current color range translation tbl
-   boolean tl = false;        // current translucency state
-   boolean useAltMap = false; // using alternate colormap source?
+   byte *color = NULL;      // current color range translation tbl
+   bool tl = false;         // current translucency state
+   bool useAltMap = false;  // using alternate colormap source?
 
    if(font->color)
    {

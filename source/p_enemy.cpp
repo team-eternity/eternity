@@ -185,7 +185,7 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 //
 // P_CheckMeleeRange
 //
-boolean P_CheckMeleeRange(Mobj *actor)
+bool P_CheckMeleeRange(Mobj *actor)
 {
    Mobj *pl = actor->target;
    
@@ -214,9 +214,9 @@ boolean P_CheckMeleeRange(Mobj *actor)
 // haleyjd 09/22/09: rewrote to de-Killoughify ;)
 //                   also added ignoring of things with NOFRIENDDMG flag
 //
-boolean P_HitFriend(Mobj *actor)
+bool P_HitFriend(Mobj *actor)
 {
-   boolean hitfriend = false;
+   bool hitfriend = false;
 
    if(actor->target)
    {
@@ -250,7 +250,7 @@ boolean P_HitFriend(Mobj *actor)
 //
 // P_CheckMissileRange
 //
-boolean P_CheckMissileRange(Mobj *actor)
+bool P_CheckMissileRange(Mobj *actor)
 {
    fixed_t dist;
    
@@ -339,7 +339,7 @@ boolean P_CheckMissileRange(Mobj *actor)
 // or that a monster should stay on the lift for a while
 // while it goes up or down.
 //
-static boolean P_IsOnLift(const Mobj *actor)
+static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
    line_t line;
@@ -411,7 +411,7 @@ extern  int    numspechit;
 int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
-   boolean try_ok;
+   bool try_ok;
    int movefactor = ORIG_FRICTION_FACTOR;    // killough 10/98
    int friction = ORIG_FRICTION;
    int speed;
@@ -594,7 +594,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 //
 // killough 9/12/98: Same as P_Move, except smarter
 //
-boolean P_SmartMove(Mobj *actor)
+bool P_SmartMove(Mobj *actor)
 {
    Mobj *target = actor->target;
    int on_lift, dropoff = 0, under_damage;
@@ -660,7 +660,7 @@ boolean P_SmartMove(Mobj *actor)
 // If a door is in the way,
 // an OpenDoor call is made to start it opening.
 //
-static boolean P_TryWalk(Mobj *actor)
+static bool P_TryWalk(Mobj *actor)
 {
    if(!P_SmartMove(actor))
       return false;
@@ -754,7 +754,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static boolean PIT_AvoidDropoff(line_t *line)
+static bool PIT_AvoidDropoff(line_t *line)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -913,7 +913,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
+static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 {
    if(mo->flags2 & MF2_DONTDRAW)
       return 0;  // haleyjd: total invisibility!
@@ -970,7 +970,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static boolean PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo)
 {
    Mobj *actor = current_actor;
 
@@ -1013,7 +1013,7 @@ static boolean PIT_FindTarget(Mobj *mo)
 // battling like mad when the player dies in Heretic. Who knows why
 // Raven added that "feature," but it's fun ^_^
 //
-static boolean P_HereticMadMelee(Mobj *actor)
+static bool P_HereticMadMelee(Mobj *actor)
 {
    Mobj *mo;
    Thinker *th;
@@ -1058,7 +1058,7 @@ static boolean P_HereticMadMelee(Mobj *actor)
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-boolean P_LookForPlayers(Mobj *actor, int allaround)
+bool P_LookForPlayers(Mobj *actor, int allaround)
 {
    player_t *player;
    int stop, stopc, c;
@@ -1173,7 +1173,7 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-static boolean P_LookForMonsters(Mobj *actor, int allaround)
+static bool P_LookForMonsters(Mobj *actor, int allaround)
 {
    Thinker *cap, *th;
    
@@ -1262,7 +1262,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 //
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
-boolean P_LookForTargets(Mobj *actor, int allaround)
+bool P_LookForTargets(Mobj *actor, int allaround)
 {
    return actor->flags & MF_FRIEND ?
       P_LookForMonsters(actor, allaround) || P_LookForPlayers (actor, allaround):
@@ -1274,7 +1274,7 @@ boolean P_LookForTargets(Mobj *actor, int allaround)
 //
 // killough 9/8/98: Help friends in danger of dying
 //
-boolean P_HelpFriend(Mobj *actor)
+bool P_HelpFriend(Mobj *actor)
 {
    Thinker *cap, *th;
 
@@ -1371,7 +1371,7 @@ void P_BossTeleport(bossteleport_t *bt)
       int i = P_Random(bt->rngNum) % bt->mc->getLength();
       int starti = i;
       fixed_t x, y;
-      boolean foundSpot = true;
+      bool foundSpot = true;
 
       while(1)
       {

@@ -59,7 +59,7 @@ extern char gamemapname[9];
 
 // sf: set when we are changing to
 //  another level in the hub
-boolean hub_changelevel = false;  
+bool hub_changelevel = false;  
 
 hublevel_t hub_levels[MAXHUBLEVELS];
 int num_hub_levels;
@@ -100,7 +100,7 @@ void P_ClearHubs(void)
 
 void P_ClearHubsAtExit(void)
 {
-   static boolean atexit_set = false;
+   static bool atexit_set = false;
    
    if(atexit_set) return;   // already set
    

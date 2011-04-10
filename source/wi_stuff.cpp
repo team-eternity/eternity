@@ -386,7 +386,7 @@ static patch_t *wi_lname_next;
 static int cur_pause_time;
 
 // haleyjd: whether decision to fade bg graphics has been made yet
-static boolean fade_applied = false;
+static bool fade_applied = false;
 
 // haleyjd 03/27/05: EDF-defined intermission map names
 static edf_string_t *mapName;
@@ -467,7 +467,7 @@ static void WI_drawEL(void)
 {
    int y = WI_TITLEY;
    patch_t *patch = NULL;
-   boolean loadedInfoPatch = false;
+   bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
    if(inmasterlevels)
@@ -533,12 +533,12 @@ static void WI_drawEL(void)
 //
 static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
 {
-   int   i;
-   int   left;
-   int   top;
-   int   right;
-   int   bottom;
-   boolean fits = false;
+   int  i;
+   int  left;
+   int  top;
+   int  right;
+   int  bottom;
+   bool fits = false;
    
    i = 0;
    do
@@ -929,7 +929,7 @@ static void WI_updateNoState(void)
    }
 }
 
-static boolean snl_pointeron = false;
+static bool snl_pointeron = false;
 
 
 // ====================================================================
@@ -1096,8 +1096,8 @@ static void WI_initDeathmatchStats(void)
 //
 static void WI_updateDeathmatchStats(void)
 {
-   int     i, j;    
-   boolean stillticking;
+   int  i, j;    
+   bool stillticking;
    
    WI_updateAnimatedBack();
 
@@ -1352,7 +1352,7 @@ static void WI_initNetgameStats(void)
 static void WI_updateNetgameStats(void)
 {
    int i, fsum;    
-   boolean stillticking;
+   bool stillticking;
    
    WI_updateAnimatedBack();
 

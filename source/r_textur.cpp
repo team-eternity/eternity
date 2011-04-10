@@ -327,7 +327,7 @@ static texturehandler_t TextureHandlers[] =
 //
 // Sets up a texturelump structure.
 //
-static texturelump_t *R_InitTextureLump(const char *lname, boolean required)
+static texturelump_t *R_InitTextureLump(const char *lname, bool required)
 {
    texturelump_t *tlump = (texturelump_t *)(calloc(1, sizeof(texturelump_t)));
 
@@ -565,9 +565,9 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 struct tempmask_s
 {
    // This is the buffer used for masking
-   boolean   mask;       // If set to true, FinishTexture should create columns
-   int       buffermax;  // size of allocated buffer
-   byte      *buffer;    // mask buffer.
+   bool       mask;       // If set to true, FinishTexture should create columns
+   int        buffermax;  // size of allocated buffer
+   byte      *buffer;     // mask buffer.
    texture_t *tex;
    
    texcol_t  *tempcols;
@@ -788,7 +788,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 // Allocates the texture buffer, as well as managing the temporary structs and
 // the mask buffer.
 //
-static void StartTexture(texture_t *tex, boolean mask)
+static void StartTexture(texture_t *tex, bool mask)
 {
    int bufferlen = tex->width * tex->height;
    

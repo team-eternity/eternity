@@ -50,12 +50,12 @@ extern cfg_opt_t edf_tdelta_opts[];
 // For EDF Only:
 
 #ifdef NEED_EDF_DEFINITIONS
-void    E_CollectThings(cfg_t *tcfg);
-void    E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def);
-void    E_ProcessThings(cfg_t *cfg);
-void    E_ProcessThingDeltas(cfg_t *cfg);
-boolean E_AutoAllocThingDEHNum(int thingnum);
-void    E_SetThingDefaultSprites(void);
+void E_CollectThings(cfg_t *tcfg);
+void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
+void E_ProcessThings(cfg_t *cfg);
+void E_ProcessThingDeltas(cfg_t *cfg);
+bool E_AutoAllocThingDEHNum(int thingnum);
+void E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:

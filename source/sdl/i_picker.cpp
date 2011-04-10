@@ -35,7 +35,7 @@
 static SDL_Surface  *pickscreen;    // SDL screen surface
 static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
-static boolean      *haveIWADArray; // valid IWADs, passed here from d_main.c
+static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
 // picker iwad enumeration
 enum
@@ -171,7 +171,7 @@ static void I_Pick_LoadIWAD(int num)
 // startup.wad carries over into the main game; it is completely closed and
 // freed below.
 //
-static boolean I_Pick_OpenWad(void)
+static bool I_Pick_OpenWad(void)
 {
    char *filename;
    int size;
@@ -211,7 +211,7 @@ static void I_Pick_FreeWad(void)
 //
 static void I_Pick_ClearScreen(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    Uint32 color;
    SDL_Rect dstrect;
 
@@ -236,7 +236,7 @@ static void I_Pick_ClearScreen(void)
 //
 static void I_Pick_DrawBG(void)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    Uint32 *dest;
    int x, y;
@@ -286,7 +286,7 @@ static void I_Pick_DrawBG(void)
 //
 static void I_Pick_DrawIWADPic(int pic)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    byte   *pal;
    Uint32 *dest;
@@ -413,7 +413,7 @@ static void I_Pick_DoAbort(void)
 // Tests a mouse button down event for a location within the specified
 // rectangle.
 //
-static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
+static bool I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 {
    return (x >= rect->x && x <= rect->x + rect->w &&
            y >= rect->y && y <= rect->y + rect->h);
@@ -424,7 +424,7 @@ static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 //
 // Tests mouse button down events against all valid button rectangles.
 //
-static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
+static void I_Pick_MouseEvent(SDL_Event *ev, bool *doloop)
 {
    SDL_Rect r;
    Uint16 x, y;
@@ -496,7 +496,7 @@ static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
 //
 static void I_Pick_MainLoop(void)
 {
-   boolean doloop = true;
+   bool doloop = true;
    SDL_Event ev;
 
    while(doloop)
@@ -550,7 +550,7 @@ static void I_Pick_MainLoop(void)
 // Shutdown
 //
 
-static boolean pickvideoinit = false;
+static bool pickvideoinit = false;
 
 //
 // I_Pick_Shutdown
@@ -580,7 +580,7 @@ static void I_Pick_Shutdown(void)
 // in the system.cfg file under the Eternity base directory. The valid IWAD
 // paths are marked in the haveIWADs array as "true" values.
 //
-int I_Pick_DoPicker(boolean haveIWADs[], int startchoice)
+int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 {
    haveIWADArray = haveIWADs;
 

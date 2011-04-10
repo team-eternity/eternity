@@ -273,14 +273,14 @@ typedef struct pstate_s
    int state; // state of the parser, as defined by the above enumeration
    qstring *linebuffer;  // qstring to use as line buffer
    qstring *tokenbuffer; // qstring to use as token buffer
-   int index;              // current index into line buffer for tokenization
-   int linenum;            // line number (relative to start of state block)
-   boolean needline;       // if true, feed a line from the input
-   boolean principals;     // parsing for principals only
-   boolean error;          // if true, an error has occurred.
+   int index;            // current index into line buffer for tokenization
+   int linenum;          // line number (relative to start of state block)
+   bool needline;        // if true, feed a line from the input
+   bool principals;      // parsing for principals only
+   bool error;           // if true, an error has occurred.
 
-   int tokentype;    // current token type, once decided upon
-   int tokenerror;   // current token error code
+   int tokentype;        // current token type, once decided upon
+   int tokenerror;       // current token error code
 } pstate_t;
 
 // tokenization
@@ -490,7 +490,7 @@ enum
 // Returns true if the string matches a DECORATE state keyword, and false
 // otherwise.
 //
-static boolean isDecorateKeyword(const char *text)
+static bool isDecorateKeyword(const char *text)
 {
    return (E_StrToNumLinear(decorate_kwds, NUMDECKWDS, text) != NUMDECKWDS);
 }
@@ -1644,9 +1644,9 @@ static psfunc_t pstatefuncs[] =
 //
 // Gets the next line of DECORATE state input.
 //
-boolean E_GetDSLine(const char **src, pstate_t *ps)
+bool E_GetDSLine(const char **src, pstate_t *ps)
 {
-   boolean isdone = false;
+   bool isdone = false;
    const char *srctxt = *src;
 
    ps->linebuffer->clear();
@@ -1686,7 +1686,7 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
 // Can be called either to collect principals or to run the final collection
 // of data.
 //
-static boolean E_parseDecorateInternal(const char *input, boolean principals)
+static bool E_parseDecorateInternal(const char *input, bool principals)
 {
    pstate_t ps;
    qstring linebuffer;
@@ -1748,7 +1748,7 @@ static boolean E_parseDecorateInternal(const char *input, boolean principals)
 //
 // Looks for simple errors in the principals.
 //
-static boolean E_checkPrincipalSemantics(void)
+static bool E_checkPrincipalSemantics(void)
 {
    DLListItem<estatebuf_t> *link = DSP.statebuffer; 
    estatebuf_t *prev = NULL;
@@ -1903,7 +1903,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
 // Parses through the data again, using the generated principals to drive
 // population of the states and DSO object.
 //
-static boolean E_DecorateMainPass(const char *input, edecstateout_t *dso)
+static bool E_DecorateMainPass(const char *input, edecstateout_t *dso)
 {
    // Set the global DSO for parsing
    DSP.pDSO = dso;
@@ -1922,14 +1922,14 @@ static boolean E_DecorateMainPass(const char *input, edecstateout_t *dso)
 // Any goto which cannot be resolved in such a way must be added 
 // instead to the DSO goto set for external resolution.
 //
-static boolean E_resolveGotos(edecstateout_t *dso)
+static bool E_resolveGotos(edecstateout_t *dso)
 {
    int gi;
 
    // check each internal goto record
    for(gi = 0; gi < DSP.numinternalgotos; ++gi)
    {
-      boolean foundmatch = false;
+      bool foundmatch = false;
       internalgoto_t *igt = &(DSP.internalgotos[gi]);
       estatebuf_t *gotoInfo = igt->gotoInfo;
       int ri;
@@ -2032,7 +2032,7 @@ static void E_freeDecorateData(void)
 edecstateout_t *E_ParseDecorateStates(const char *input)
 {
    edecstateout_t *dso = NULL;
-   boolean isgood = false;
+   bool isgood = false;
 
    // init variables
    memset(&DSP, 0, sizeof(DSP));

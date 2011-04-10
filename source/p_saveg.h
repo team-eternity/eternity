@@ -48,8 +48,8 @@ public:
    SaveArchive(InBuffer  *pLoadFile);
 
    // Accessors
-   boolean isSaving()  const { return (savefile != NULL); }
-   boolean isLoading() const { return (loadfile != NULL); }
+   bool isSaving()  const   { return (savefile != NULL); }
+   bool isLoading() const   { return (loadfile != NULL); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
 
@@ -72,7 +72,7 @@ public:
    SaveArchive &operator << (uint16_t &x);
    SaveArchive &operator << (int8_t   &x);
    SaveArchive &operator << (uint8_t  &x); 
-   SaveArchive &operator << (boolean  &x);
+   SaveArchive &operator << (bool     &x);
    SaveArchive &operator << (float    &x);
    SaveArchive &operator << (double   &x);
    // Pointers:

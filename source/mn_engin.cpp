@@ -59,7 +59,7 @@
 // Global Variables
 //
 
-boolean inhelpscreens; // indicates we are in or just left a help screen
+bool inhelpscreens; // indicates we are in or just left a help screen
 
 // menu error message
 char menu_error_message[128];
@@ -67,7 +67,7 @@ int menu_error_time = 0;
 
 // haleyjd 02/12/06: option to allow the toggle menu action to back up 
 // through menus instead of exiting directly, to emulate ports like zdoom.
-boolean menu_toggleisback; 
+bool menu_toggleisback; 
 
         // input for typing in new value
 static command_t *input_command = NULL;       // NULL if not typing in
@@ -363,8 +363,8 @@ static void MN_CalcWidestWidth(menu_t *menu)
 // haleyjd 05/01/10: Draws an item's patch if appropriate. Returns true if
 // MN_DrawMenuItem should return. item_height may be modified on return.
 //
-static boolean MN_drawPatchForItem(menuitem_t *item, int *item_height, 
-                                   int color, int alignment)
+static bool MN_drawPatchForItem(menuitem_t *item, int *item_height, 
+                                int color, int alignment)
 {
    patch_t *patch;
    int lumpnum;
@@ -639,7 +639,7 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
          if(var->type == vt_int)
             posn = *(int *)var->variable - var->min;
          else
-            posn = (int)(*(boolean *)var->variable) - var->min;
+            posn = (int)(*(bool *)var->variable) - var->min;
 
          MN_DrawSlider(x + GAP, y, (posn*100) / range);
       }
@@ -955,7 +955,7 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 // multipage menus.
 // Pass false to draw a prev indicator, or true to draw a next indicator.
 //
-static void MN_drawPageIndicator(boolean next)
+static void MN_drawPageIndicator(bool next)
 {
    char msgbuffer[64];
    const char *actionname, *speckeyname, *replkeyname, *fmtstr, *key;
@@ -1109,7 +1109,7 @@ void MN_DrawMenu(menu_t *menu)
 // this allows the game to skip all other drawing, keeping the
 // framerate at 35 fps.
 //
-boolean MN_CheckFullScreen(void)
+bool MN_CheckFullScreen(void)
 {
    if(!menuactive || !current_menu)
       return false;
@@ -1130,7 +1130,7 @@ boolean MN_CheckFullScreen(void)
 
 #define MENU_HISTORY 128
 
-boolean menuactive = false;             // menu active?
+bool menuactive = false;             // menu active?
 menu_t *current_menu;   // the current menu_t being displayed
 static menu_t *menu_history[MENU_HISTORY];   // previously selected menus
 static int menu_history_num;                 // location in history
@@ -1262,15 +1262,15 @@ extern const char *shiftxform;
 //
 // haleyjd 07/03/04: rewritten to use enhanced key binding system
 //
-boolean MN_Responder(event_t *ev)
+bool MN_Responder(event_t *ev)
 {
    // haleyjd 04/29/02: these need to be unsigned
    unsigned char tempstr[128];
    unsigned char ch;
    int *menuSounds = GameModeInfo->menuSounds; // haleyjd
-   static boolean ctrldown = false;
-   static boolean shiftdown = false;
-   static boolean altdown = false;
+   static bool ctrldown = false;
+   static bool shiftdown = false;
+   static bool altdown = false;
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -1417,7 +1417,7 @@ boolean MN_Responder(event_t *ev)
 
    if(action_menu_up)
    {
-      boolean cancelsnd = false;
+      bool cancelsnd = false;
       action_menu_up = false;
       
       // skip gaps
@@ -1462,7 +1462,7 @@ boolean MN_Responder(event_t *ev)
   
    if(action_menu_down)
    {
-      boolean cancelsnd = false;
+      bool cancelsnd = false;
       action_menu_down = false;
       
       do
@@ -2148,7 +2148,7 @@ static void MN_BoxWidgetDrawer(void)
 //
 // Handle events to a menu box widget.
 //
-static boolean MN_BoxWidgetResponder(event_t *ev)
+static bool MN_BoxWidgetResponder(event_t *ev)
 {
    // get a pointer to the box widget
    box_widget_t *box = (box_widget_t *)current_menuwidget;

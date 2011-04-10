@@ -78,7 +78,7 @@ static d_inline int sound_hash(const char *s)
 
 //jff 1/22/98 make sound enabling variables readable here
 extern int snd_card, mus_card;
-extern boolean nosfxparm, nomusicparm;
+extern bool nosfxparm, nomusicparm;
 //jff end sound enabling variables readable here
 
 typedef struct channel_s
@@ -94,7 +94,7 @@ typedef struct channel_s
   int priority;            // current priority value
   int singularity;         // haleyjd 09/27/06: stored singularity value
   int idnum;               // haleyjd 09/30/06: unique id num for sound event
-  boolean looping;         // haleyjd 10/06/06: is this channel looping?
+  bool looping;            // haleyjd 10/06/06: is this channel looping?
 } channel_t;
 
 // the set of channels available
@@ -111,7 +111,7 @@ int snd_MusicVolume = 15;
 int s_precache = 1;
 
 // whether songs are mus_paused
-static boolean mus_paused;
+static bool mus_paused;
 
 // music currently being played
 static musicinfo_t *mus_playing;
@@ -165,7 +165,7 @@ static void S_StopChannel(int cnum)
 // haleyjd: isolated code to check for sector sound killing.
 // Returns true if the sound should be killed.
 //
-static boolean S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
+static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
@@ -326,7 +326,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    int cnum;
    int lowestpriority = D_MININT; // haleyjd
    int lpcnum = -1;
-   boolean origin_equivalent;
+   bool origin_equivalent;
 
    // haleyjd 09/28/06: moved this here. If we kill a sound already
    // being played, we can use that channel. There is no need to
@@ -421,12 +421,12 @@ static int S_countChannels(void)
 // haleyjd 06/03/06: added ability to loop sound samples
 //
 void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
-                    int volumeScale, int attenuation, boolean loop, int subchannel)
+                    int volumeScale, int attenuation, bool loop, int subchannel)
 {
    int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
-   boolean priority_boost = false;
+   bool priority_boost = false;
    int volume = snd_SfxVolume;
-   boolean extcamera = false;
+   bool extcamera = false;
    camera_t playercam;
    camera_t *listener = &playercam;
    Mobj *mo;
@@ -892,7 +892,7 @@ void S_UpdateSounds(const Mobj *listener)
 //
 // haleyjd: rudimentary sound checking function
 //
-boolean S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
+bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 {
    int cnum;
 
@@ -918,7 +918,7 @@ boolean S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 // on transitions between levels, when going into console gamestate, and when
 // resetting the state of EDF definitions.
 //
-void S_StopSounds(boolean killall)
+void S_StopSounds(bool killall)
 {
    int cnum;
    // kill all playing sounds at start of level
@@ -1301,7 +1301,7 @@ void S_Init(int sfxVolume, int musicVolume)
 // Music Hashing
 //
 
-static boolean mushash_created = false;
+static bool mushash_created = false;
 
 static void S_HookMusic(musicinfo_t *music)
 {

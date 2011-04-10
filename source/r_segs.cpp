@@ -655,7 +655,7 @@ void R_StoreWallRange(const int start, const int stop)
 
    float pstep;
 
-   boolean usesegloop;
+   bool usesegloop;
    
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));

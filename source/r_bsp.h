@@ -48,7 +48,7 @@ extern drawseg_t *ds_p;
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
 void R_MarkSolidSeg(int x1, int x2);
 
-boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
+bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
 
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);
@@ -62,7 +62,7 @@ void R_RenderBSPNode(int bspnum);
 int R_DoorClosed(void);   // killough 1/17/98
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, boolean);
+sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, bool);
 
 extern int detaillevel;
 

@@ -63,7 +63,7 @@ static int      grouplimit = 0;
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
-boolean useportalgroups = false;
+bool useportalgroups = false;
 
 //
 // P_InitPortals
@@ -304,7 +304,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 // P_CheckLinkedPortal
 //
 // This function performs various consistency and validation checks.
-static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
+static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
    linkoffset_t *link;
@@ -457,7 +457,7 @@ static void P_GlobalPortalStateCheck()
 //
 // P_BuildLinkTable
 //
-boolean P_BuildLinkTable(void)
+bool P_BuildLinkTable(void)
 {
    int i, p;
    sector_t *sec;
@@ -592,7 +592,7 @@ void P_LinkRejectTable(void)
 //
 // EV_PortalTeleport
 //
-boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
+bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 {
    fixed_t moz = mo->z;
    fixed_t momx = mo->momx;
@@ -636,9 +636,9 @@ boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 // Returns the combined state flags for the given portal based on various
 // behavior flags
 //
-static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
+static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
 {
-   boolean active;
+   bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
    
    if(!portal)
@@ -663,7 +663,7 @@ static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
 
 void P_CheckCPortalState(sector_t *sec)
 {
-   boolean     obscured;
+   bool     obscured;
    
    if(!sec->c_portal)
    {
@@ -679,7 +679,7 @@ void P_CheckCPortalState(sector_t *sec)
 
 void P_CheckFPortalState(sector_t *sec)
 {
-   boolean     obscured;
+   bool     obscured;
    
    if(!sec->f_portal)
    {

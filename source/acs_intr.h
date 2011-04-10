@@ -70,10 +70,10 @@ class ACSThinker;
 //
 typedef struct acscript_s
 {
-   int number;     // the number of this script in ACS itself
-   int numArgs;    // number of arguments this script wants
-   int *code;      // bytecode entry point
-   boolean isOpen; // if true, is an open script
+   int number;  // the number of this script in ACS itself
+   int numArgs; // number of arguments this script wants
+   int *code;   // bytecode entry point
+   bool isOpen; // if true, is an open script
 
    ACSThinker *threads;
 } acscript_t;
@@ -168,28 +168,28 @@ typedef struct acsvm_s
    qstring    *printBuffer;  // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
-   boolean    loaded;        // for static VMs, if it's valid or not
+   bool    loaded;        // for static VMs, if it's valid or not
    int        id;            // vm id number
 } acsvm_t;
 
 
 // Global function prototypes
 
-void    ACS_Init(void);
-void    ACS_NewGame(void);
-void    ACS_InitLevel(void);
-void    ACS_LoadScript(acsvm_t *vm, int lump);
-void    ACS_LoadLevelScript(int lump);
-void    ACS_RunDeferredScripts(void);
-boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          Mobj *mo, line_t *line, int side,
-                          ACSThinker **scr, boolean always);
-boolean ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
-                        line_t *line, int side, ACSThinker **scr, boolean always);
-boolean ACS_TerminateScript(int srcnum, int mapnum);
-boolean ACS_SuspendScript(int scrnum, int mapnum);
-void    ACS_PrepareForLoad(void);
-void    ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
+void ACS_Init(void);
+void ACS_NewGame(void);
+void ACS_InitLevel(void);
+void ACS_LoadScript(acsvm_t *vm, int lump);
+void ACS_LoadLevelScript(int lump);
+void ACS_RunDeferredScripts(void);
+bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
+                       Mobj *mo, line_t *line, int side,
+                       ACSThinker **scr, bool always);
+bool ACS_StartScript(int scrnum, int map, int *args, Mobj *mo, 
+                     line_t *line, int side, ACSThinker **scr, bool always);
+bool ACS_TerminateScript(int srcnum, int mapnum);
+bool ACS_SuspendScript(int scrnum, int mapnum);
+void ACS_PrepareForLoad(void);
+void ACS_RestartSavedScript(ACSThinker *th, unsigned int ipOffset);
 
 // extern vars.
 

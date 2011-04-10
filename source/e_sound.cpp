@@ -357,7 +357,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_sound_dehnum = D_MAXINT;
 
-boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
+bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 {
    int dehnum;
 
@@ -526,10 +526,10 @@ void E_UpdateSoundCache(void)
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
 {
-   boolean setLink = false;
-   boolean explicitLumpName = false;
+   bool setLink = false;
+   bool explicitLumpName = false;
    int tempint;
 
    // preconditions: 
@@ -826,7 +826,7 @@ void E_ProcessSounds(cfg_t *cfg)
 // editing of existing sounds. The sounddelta shares most of its
 // fields and processing code with the sound section.
 //
-void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
+void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 {
    int i, numdeltas;
 

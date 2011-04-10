@@ -153,7 +153,7 @@ static int edf_alloc_fontnum = D_MAXINT;
 // which was not given one by the author, to allow reference by name
 // anywhere without the chore of number allocation.
 //
-static boolean E_AutoAllocFontNum(vfont_t *font)
+static bool E_AutoAllocFontNum(vfont_t *font)
 {
    int num;
 
@@ -227,7 +227,7 @@ static void E_DelFontFromNumHash(vfont_t *font)
 // using the resource in question, before freeing it.
 // Returns true if the resource is used, and false otherwise.
 //
-static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
+static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 {
    int i;
 
@@ -255,7 +255,7 @@ static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
 // Returns true if some other font is using the patch in question,
 // to support proper disposal of shared resources.
 //
-static boolean E_IsPatchUsed(vfont_t *font, patch_t *p)
+static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 {
    int i;
 
@@ -322,7 +322,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 {
    byte *lump;
    int w, h, size, i, lumpnum;
-   boolean foundsize = false;
+   bool foundsize = false;
 
    // in case this font was changed from patch to block:
    E_DisposePatches(font);
@@ -396,8 +396,8 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 static void E_VerifyFilter(const char *str)
 {
    const char *rover = str;
-   boolean inpct = false;
-   boolean foundpct = false;
+   bool inpct = false;
+   bool foundpct = false;
 
    while(*rover != '\0')
    {
@@ -638,7 +638,7 @@ static void E_ProcessFont(cfg_t *sec)
 {
    vfont_t *font;
    const char *title, *tempstr;
-   boolean def = true;
+   bool def = true;
    int num, tempnum = 0;
 
    title = cfg_title(sec);

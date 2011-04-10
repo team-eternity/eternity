@@ -196,7 +196,7 @@ static skin_t *E_EDFSkinForName(const char *name)
 //
 // Sets an EDF skin sound name.
 //
-static void E_DoSkinSound(cfg_t *sndsec, boolean def, skin_t *skin, int idx,
+static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
    if(IS_SET(sndsec, itemname))
@@ -235,7 +235,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
 {
    skin_t *newSkin;
    const char *tempstr;
-   boolean def; // if defining true; if modifying, false
+   bool def; // if defining true; if modifying, false
 
    // skin name is section title
    tempstr = cfg_title(skinsec);
@@ -378,7 +378,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
 {
    const char *tempstr;
    playerclass_t *pc;
-   boolean def;
+   bool def;
 
    // get mnemonic from section title
    tempstr = cfg_title(pcsec);
@@ -555,7 +555,7 @@ void E_VerifyDefaultPlayerClass(void)
 // indicated thingtype. Linear search over a small set. This is the only
 // real, efficient way to see if a thingtype is a potential player.
 //
-boolean E_IsPlayerClassThingType(mobjtype_t motype)
+bool E_IsPlayerClassThingType(mobjtype_t motype)
 {
    int i;
 
@@ -594,7 +594,7 @@ boolean E_IsPlayerClassThingType(mobjtype_t motype)
 // (4 frames or so), so this isn't going to be a time-consuming operation.
 // The walking frame cycle had better be closed, or this may go haywire.
 //
-boolean E_PlayerInWalkingState(player_t *player)
+bool E_PlayerInWalkingState(player_t *player)
 {
    state_t *pstate, *curstate, *seestate;
    int count = 0;
@@ -993,7 +993,7 @@ static int   inv_pindex  = 0;
 // during the current inheritance chain. Returns false if the check fails, and 
 // true if it succeeds.
 //
-static boolean E_CheckInventoryInherit(int pnum)
+static bool E_CheckInventoryInherit(int pnum)
 {
    int i;
 

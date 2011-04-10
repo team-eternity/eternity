@@ -112,12 +112,12 @@ struct player_t
    int            health;       // This is only used between levels
    int            armorpoints;
    int            armortype;    // Armor type is 0-2.  
-   boolean        hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
+   bool           hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];
-   boolean        cards[NUMCARDS];
-   boolean        backpack;
+   bool           cards[NUMCARDS];
+   bool           backpack;
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
@@ -144,7 +144,7 @@ struct player_t
    int            killcount;
    int            itemcount;
    int            secretcount;
-   boolean        didsecret;    // True if secret level has been done.
+   bool           didsecret;    // True if secret level has been done.
   
    // For screen flashing (red or bright).
    int            damagecount;
@@ -174,7 +174,7 @@ struct player_t
 //
 typedef struct wbplayerstruct_s
 {
-  boolean     in;     // whether the player is in game
+  bool        in;     // whether the player is in game
     
   // Player stats, kills, collected items etc.
   int         skills;
@@ -191,10 +191,10 @@ typedef struct wbstartstruct_s
   int         epsd;   // episode # (0-2)
 
   // if true, splash the secret level
-  boolean     didsecret;
+  bool        didsecret;
 
   // haleyjd: if player is going to secret map
-  boolean     gotosecret;
+  bool        gotosecret;
     
   // previous and next levels, origin 0
   int         last;

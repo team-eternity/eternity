@@ -997,7 +997,7 @@ static void E_InitLineSpecHash(void)
 //
 int16_t E_LineSpecForName(const char *name)
 {
-   static boolean hash_init = false;
+   static bool hash_init = false;
    unsigned int key = D_HashTableKey(name) % NUMLSPECCHAINS;
    unsigned int i;
 
@@ -1108,7 +1108,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
 // 
 // Parses a yes/no generalized type argument.
 //
-static boolean E_BooleanArg(const char *str)
+static bool E_BooleanArg(const char *str)
 {
    return !strcasecmp(str, "yes");
 }
@@ -1603,7 +1603,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       cfg_t *linesec;
       const char *tempstr;
       int tempint;
-      boolean tagset = false;
+      bool tagset = false;
 
       linesec = cfg_getnsec(cfg, SEC_LINEDEF, i);
 
@@ -1963,7 +1963,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 // have been initialized normally. Normal fields will be altered and
 // extended fields will be set in the linedef.
 //
-void E_LoadLineDefExt(line_t *line, boolean applySpecial)
+void E_LoadLineDefExt(line_t *line, bool applySpecial)
 {
    unsigned int edLineIdx;
    maplinedefext_t *edline;
@@ -2094,7 +2094,7 @@ void E_LoadSectorExt(line_t *line)
 //
 // Tests if a given line special is parameterized.
 //
-boolean E_IsParamSpecial(int16_t special)
+bool E_IsParamSpecial(int16_t special)
 {
    // no param line specs in old demos
    if(demo_version < 333)

@@ -57,15 +57,15 @@
 // ----------------------------------------------------------------------------
 // WM-related stuff (see i_input.c)
 
-extern int     usejoystick;
-extern int     grabmouse;
-extern int     usemouse;   // killough 10/98
-extern boolean fullscreen;
+extern int  usejoystick;
+extern int  grabmouse;
+extern int  usemouse;   // killough 10/98
+extern bool fullscreen;
 
-void    UpdateGrab(void);
-boolean MouseShouldBeGrabbed(void);
-void    UpdateFocus(void);
-void    I_InitKeyboard();
+void UpdateGrab(void);
+bool MouseShouldBeGrabbed(void);
+void UpdateFocus(void);
+void I_InitKeyboard();
 
 
 SDL_Surface *sdlscreen;
@@ -74,16 +74,16 @@ SDL_Surface *sdlscreen;
 // ----------------------------------------------------------------------------
 // Graphics Code
 
-int      use_vsync;     // killough 2/8/98: controls whether vsync is called
-boolean  noblit;
+int  use_vsync;     // killough 2/8/98: controls whether vsync is called
+bool noblit;
 
-static boolean in_graphics_mode;
+static bool in_graphics_mode;
 
 static SDL_Color basepal[256], colors[256];
-static boolean   setpalette = false;
+static bool setpalette = false;
 
 // haleyjd 12/03/07: 8-on-32 graphics support
-static boolean crossbitdepth;
+static bool crossbitdepth;
 
 
 static SDL_Surface *primary_surface = NULL;
@@ -352,7 +352,7 @@ void I_ShutdownGraphics(void)
 
 #define BADVID "video mode not supported"
 
-extern boolean setsizeneeded;
+extern bool setsizeneeded;
 
 // states for geometry parser
 enum
@@ -369,14 +369,14 @@ enum
 // This is now the primary way in which Eternity stores its video mode setting.
 //
 static void I_ParseGeom(const char *geom, 
-                        int *w, int *h, boolean *fs, boolean *vs, boolean *hw,
-                        boolean *wf)
+                        int *w, int *h, bool *fs, bool *vs, bool *hw,
+                        bool *wf)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
    int tmpwidth = 320, tmpheight = 200;
    qstring qstr;
-   boolean errorflag = false;
+   bool errorflag = false;
 
    qstr.initCreate();
 
@@ -485,10 +485,10 @@ static void I_ParseGeom(const char *geom,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
-                             boolean *hw, boolean *wf)
+static void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, 
+                             bool *hw, bool *wf)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    int p;
 
    if(firsttime)
@@ -538,16 +538,16 @@ extern void I_DisableSysMenu(void);
 // killough 11/98: New routine, for setting hires and page flipping
 // sf: now returns true if an error occurred
 //
-static boolean I_InitGraphicsMode(void)
+static bool I_InitGraphicsMode(void)
 {
-   boolean  wantfullscreen = false;
-   boolean  wantvsync      = false;
-   boolean  wanthardware   = false;
-   boolean  wantframe      = true;
-   int      v_w            = 640;
-   int      v_h            = 480;
-   int      v_bd           = 8;
-   int      flags          = SDL_SWSURFACE;
+   bool wantfullscreen = false;
+   bool wantvsync      = false;
+   bool wanthardware   = false;
+   bool wantframe      = true;
+   int  v_w            = 640;
+   int  v_h            = 480;
+   int  v_bd           = 8;
+   int  flags          = SDL_SWSURFACE;
 
    if(!i_default_videomode)
       i_default_videomode = strdup("640x480w");

@@ -52,8 +52,8 @@ typedef struct gfs_s
    int numwads;
    int numdehs;
    int numcsc;
-   boolean hasIWAD;
-   boolean hasEDF;
+   bool hasIWAD;
+   bool hasEDF;
 } gfs_t;
 
 gfs_t *G_LoadGFS(const char *filename);

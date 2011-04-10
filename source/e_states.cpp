@@ -233,7 +233,7 @@ int E_SafeStateName(const char *name)
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_state_dehnum = D_MAXINT;
 
-boolean E_AutoAllocStateDEHNum(int statenum)
+bool E_AutoAllocStateDEHNum(int statenum)
 {
    int dehnum;
    state_t *st = states[statenum];
@@ -349,7 +349,7 @@ void E_CollectStates(cfg_t *cfg)
    unsigned int firstnewstate = 0; // index of first new state
    unsigned int curnewstate = 0;   // index of current new state being used
    state_t *statestructs = NULL;
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    // initialize hash tables if needed
    if(!state_namehash.isInitialized())
@@ -916,9 +916,9 @@ static void E_StatePtclEvt(const char *tempstr, int i)
 }
 
 // haleyjd 04/03/08: hack for function-style arguments to action function
-static boolean in_action;
-static boolean early_args_found;
-static boolean early_args_end;
+static bool in_action;
+static bool early_args_found;
+static bool early_args_end;
 
 
 //
@@ -1185,7 +1185,7 @@ static void E_ProcessCmpState(const char *value, int i)
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
 //
-static void E_ProcessState(int i, cfg_t *framesec, boolean def)
+static void E_ProcessState(int i, cfg_t *framesec, bool def)
 {
    int j;
    int tempint;

@@ -55,7 +55,7 @@ int s_enviro_volume; // controls volume of sequences using randomplayvol, 0-16
 // Returns true if the thing is playing a sequence and the sequence is looping,
 // and false in any other circumstance.
 //
-boolean S_CheckSequenceLoop(PointThinker *mo)
+bool S_CheckSequenceLoop(PointThinker *mo)
 {
    DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
@@ -77,7 +77,7 @@ boolean S_CheckSequenceLoop(PointThinker *mo)
 //
 // Convenience routine.
 //
-boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling)
+bool S_CheckSectorSequenceLoop(sector_t *s, bool floorOrCeiling)
 {
    return S_CheckSequenceLoop(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -180,7 +180,7 @@ void S_KillSequence(PointThinker *mo)
 //
 // Convenience routine.
 //
-void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
+void S_StopSectorSequence(sector_t *s, bool floorOrCeiling)
 {
    S_StopSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -190,7 +190,7 @@ void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
 //
 // Convenience routine.
 //
-void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling)
+void S_SquashSectorSequence(sector_t *s, bool floorOrCeiling)
 {
    S_SquashSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -278,7 +278,7 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOrigin
 //
 void S_StartSectorSequence(sector_t *s, int seqtype)
 {
-   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
    
    S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
                       ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
@@ -293,7 +293,7 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 //
 void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 {
-   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
 
    S_SquashSectorSequence(s, ceil);
    
@@ -361,7 +361,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
 //
 // Convenience routine for starting a sector sequence by name.
 //
-void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
 {
    S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
                        fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
@@ -374,7 +374,7 @@ void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 // Convenience routine for starting a sector sequence by name without playing
 // the stop sound of any currently playing sequence.
 //
-void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
 {
    S_SquashSectorSequence(s, fOrC);
 
@@ -388,7 +388,7 @@ void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 //
 // Starts a sound in the usual manner for a sound sequence.
 //
-static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
+static void S_StartSeqSound(SndSeq_t *seq, bool loop)
 {
    if(seq->currentSound)
    {
@@ -410,7 +410,7 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
 #define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> field )
 
 // when true, the current environmental sequence has ended
-static boolean enviroSeqFinished;
+static bool enviroSeqFinished;
 
 //
 // S_RunSequence
@@ -420,7 +420,7 @@ static boolean enviroSeqFinished;
 //
 static void S_RunSequence(SndSeq_t *curSeq)
 {
-   boolean isPlaying = false;
+   bool isPlaying = false;
    
    // if delaying, count down delay
    if(curSeq->delayCounter)

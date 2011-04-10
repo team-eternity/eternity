@@ -45,7 +45,7 @@ unsigned int default_dmflags;
 // for compatibility purposes. Propagates the value to
 // default_dmflags if "setdefault" is true.
 //
-void G_SetDefaultDMFlags(int dmtype, boolean setdefault)
+void G_SetDefaultDMFlags(int dmtype, bool setdefault)
 {
    if(GameType == gt_single)
       dmflags = DMD_SINGLE;

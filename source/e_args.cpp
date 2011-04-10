@@ -51,9 +51,9 @@ static char e_argemptystr[] = "";
 // Adds an argument to the end of an argument list, if possible.
 // Returns false if the operation fails.
 //
-boolean E_AddArgToList(arglist_t *al, const char *value)
+bool E_AddArgToList(arglist_t *al, const char *value)
 {
-   boolean added = false;
+   bool added = false;
    
    if(al->numargs < EMAXARGS)
    {
@@ -76,7 +76,7 @@ boolean E_AddArgToList(arglist_t *al, const char *value)
 // does not exist already, empty arguments will be added until that index 
 // is valid.
 //
-boolean E_SetArg(arglist_t *al, int index, const char *value)
+bool E_SetArg(arglist_t *al, int index, const char *value)
 {
    if(index >= EMAXARGS)
       return false;
@@ -109,7 +109,7 @@ boolean E_SetArg(arglist_t *al, int index, const char *value)
 // This is for convenience in DeHackEd, which is not very smart about 
 // setting arguments.
 //
-boolean E_SetArgFromNumber(arglist_t *al, int index, int value)
+bool E_SetArgFromNumber(arglist_t *al, int index, int value)
 {
    char numbuffer[33];
 

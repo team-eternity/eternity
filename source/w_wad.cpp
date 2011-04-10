@@ -181,22 +181,22 @@ WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
 // Reload hack removed by Lee Killough
 // killough 1/31/98: static, const
 //
-boolean WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
+bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
                               FILE *file, size_t baseoffset)
 {
-   wadinfo_t   header;
-   openwad_t   openData;
-   lumpinfo_t* lump_p;
-   unsigned    i;
-   int         length;
-   int         startlump;
+   wadinfo_t    header;
+   openwad_t    openData;
+   lumpinfo_t  *lump_p;
+   unsigned     i;
+   int          length;
+   int          startlump;
    filelump_t  *fileinfo, *fileinfo2free = NULL; //killough
-   filelump_t  singleinfo;
+   filelump_t   singleinfo;
    lumpinfo_t  *newlumps;
-   boolean     isWad;     // haleyjd 05/23/04
-   HashData    wadHash;   // haleyjd 04/07/11
-   boolean     showHash = false;
-   boolean     doHacks  = false;
+   bool         isWad;     // haleyjd 05/23/04
+   HashData     wadHash;   // haleyjd 04/07/11
+   bool         showHash = false;
+   bool         doHacks  = false;
 
    switch(filetype)
    {

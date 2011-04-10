@@ -390,7 +390,7 @@ VBuffer backscreen1; // backscreen1 is a temporary buffer for in_lude, border
 VBuffer backscreen2; // backscreen2 is a temporary buffer for screenshots
 VBuffer backscreen3; // backscreen3 is a temporary buffer for f_wipe
 
-static boolean vbscreenneedsfree = false;
+static bool vbscreenneedsfree = false;
 
 //
 // V_InitScreenVBuffer

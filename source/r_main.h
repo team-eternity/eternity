@@ -59,7 +59,7 @@ extern int      validcount;
 extern int      linecount;
 extern int      loopcount;
 
-extern boolean  showpsprites;
+extern bool     showpsprites;
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle
 enum
@@ -120,7 +120,7 @@ void R_SetViewSize(int blocks, int detail);  // Called by M_Responder.
 
 void R_InitLightTables(void);                // killough 8/9/98
 
-extern boolean setsizeneeded;
+extern bool setsizeneeded;
 // SoM
 void R_SetupViewScaling(void);
 void R_ExecuteSetViewSize(void);
@@ -193,19 +193,19 @@ typedef struct cb_seg_s
    float low, low2, lowstep;
    float bottom, bottom2, bottomstep;
 
-   boolean twosided, clipsolid, maskedtex;
+   bool twosided, clipsolid, maskedtex;
    int16_t toptex, midtex, bottomtex;
 
    unsigned int markflags; // haleyjd 03/11/10
 
-   boolean segtextured;
+   bool segtextured;
 
    int toptexmid, midtexmid, bottomtexmid;
    int toptexh, midtexh, bottomtexh;
 
    // The portal ignore flags. If a portal should be rendered even if the camera
    // is on the backface of it...
-   boolean f_portalignore, c_portalignore;
+   bool f_portalignore, c_portalignore;
 
    // 8 bit tables
    lighttable_t **walllights;

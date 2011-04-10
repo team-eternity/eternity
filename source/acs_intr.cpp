@@ -222,8 +222,8 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
    vm->id = numACSVMs++;
 }
 
-static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, int args[5]);
+static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                    int type, int args[5]);
 
 //
 // ACS_addThread
@@ -1344,8 +1344,8 @@ void ACS_LoadLevelScript(int lump)
 // Adds a deferred script that will be executed when the indicated
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
-static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, int args[NUMLINEARGS])
+static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                    int type, int args[NUMLINEARGS])
 {
    DLListItem<deferredacs_t> *cur = acsDeferred;
    deferredacs_t *newdacs;
@@ -1463,13 +1463,13 @@ void ACS_RunDeferredScripts(void)
 //
 // Standard method for starting an ACS script.
 //
-boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          Mobj *mo, line_t *line, int side,
-                          ACSThinker **scr, boolean always)
+bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
+                       Mobj *mo, line_t *line, int side,
+                       ACSThinker **scr, bool always)
 {
    acscript_t   *scrData;
    ACSThinker *newScript, *rover;
-   boolean foundScripts = false;
+   bool foundScripts = false;
    int i, internalNum;
 
    // ACS must be active on the current map or we do nothing
@@ -1554,9 +1554,9 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 //
 // Convenience routine; starts a script in the levelscript vm.
 //
-boolean ACS_StartScript(int scrnum, int map, int *args, 
-                        Mobj *mo, line_t *line, int side,
-                        ACSThinker **scr, boolean always)
+bool ACS_StartScript(int scrnum, int map, int *args, 
+                     Mobj *mo, line_t *line, int side,
+                     ACSThinker **scr, bool always)
 {
    return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
                             line, side, scr, always);
@@ -1568,9 +1568,9 @@ boolean ACS_StartScript(int scrnum, int map, int *args,
 // Attempts to terminate the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
+bool ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
-   boolean ret = false;
+   bool ret = false;
    int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
@@ -1608,7 +1608,7 @@ boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 //
 // Convenience routine; terminates a level script.
 //
-boolean ACS_TerminateScript(int scrnum, int mapnum)
+bool ACS_TerminateScript(int scrnum, int mapnum)
 {
    return ACS_TerminateScriptVM(&acsLevelScriptVM, scrnum, mapnum);
 }
@@ -1619,10 +1619,10 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
 // Attempts to suspend the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
+bool ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
    int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   boolean ret = false;
+   bool ret = false;
 
    // ACS must be active on the current map or we do nothing
    if(!vm->loaded)
@@ -1659,7 +1659,7 @@ boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 //
 // Convenience routine; suspends a level script.
 //
-boolean ACS_SuspendScript(int scrnum, int mapnum)
+bool ACS_SuspendScript(int scrnum, int mapnum)
 {
    return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
 }

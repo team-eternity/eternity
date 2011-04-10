@@ -42,14 +42,14 @@
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern boolean d_fastrefresh;  // haleyjd 01/04/10
+extern bool d_fastrefresh;     // haleyjd 01/04/10
 extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern boolean unicodeinput;
+extern bool unicodeinput;
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)

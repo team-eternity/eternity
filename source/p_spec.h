@@ -604,7 +604,7 @@ typedef struct button_s
    int      where;
    int      btexture;
    int      btimer;
-   boolean  dopopout;
+   bool     dopopout;
 } button_t;
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
@@ -797,7 +797,7 @@ typedef struct doordata_s
    fixed_t speed_value;
    int     delay_value;
    int     altlighttag;
-   boolean usealtlighttag;
+   bool    usealtlighttag;
    int     topcountdown;
 } doordata_t;
 
@@ -843,7 +843,7 @@ public:
    int direction;
 
    // haleyjd: stasis
-   boolean inStasis;
+   bool inStasis;
 
    // ID
    int tag;                   
@@ -1175,13 +1175,13 @@ sector_t *getNextSector(line_t *line, sector_t *sec);
 
 int P_CheckTag(line_t *line); // jff 2/27/98
 
-boolean P_CanUnlockGenDoor(line_t *line, player_t *player);
+bool P_CanUnlockGenDoor(line_t *line, player_t *player);
 
 int P_SectorActive(special_e t, sector_t *s);
 
-boolean P_IsSecret(sector_t *sec);
+bool P_IsSecret(sector_t *sec);
 
-boolean P_WasSecret(sector_t *sec);
+bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
@@ -1213,7 +1213,7 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(line_t *line, int side, 
-			  Mobj *thing, boolean reverse);
+			              Mobj *thing, bool reverse);
 
 // p_floor
 
@@ -1302,15 +1302,15 @@ int EV_DoGenDoor(line_t *line);
 
 int EV_DoGenLockedDoor(line_t *line);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
 
 // haleyjd 02/23/04
 extern Mobj *genDoorThing;
 
 // p_things
 
-int EV_ThingProjectile(int *args, boolean gravity);
-int EV_ThingSpawn(int *args, boolean fog);
+int EV_ThingProjectile(int *args, bool gravity);
+int EV_ThingSpawn(int *args, bool fog);
 int EV_ThingActivate(int tid);
 int EV_ThingDeactivate(int tid);
 
@@ -1340,7 +1340,7 @@ void P_SpawnDeferredSpecials(int mapformat);
 void P_UpdateSpecials(void);
 
 // when needed
-boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side);
+bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
@@ -1384,7 +1384,7 @@ void P_SpawnDoorCloseIn30(sector_t *sec);
 
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
-void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s); // haleyjd
+void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
 
 // p_floor
 void P_FloorSequence(sector_t *s);
@@ -1408,11 +1408,11 @@ void P_CeilingSequence(sector_t *s, int noiseLevel);
 Mobj *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachLines(line_t *cline, boolean ceiling);
-boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
+void P_AttachLines(line_t *cline, bool ceiling);
+bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 void P_AttachSectors(line_t *line);
 
-boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
+bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
@@ -1440,9 +1440,9 @@ enum
    SPAC_PUSH,
 };
 
-boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
-                            int *args, int side, int spac, boolean reuse);
+bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+                         int *args, int side, int spac, bool reuse);
 
 #endif
 

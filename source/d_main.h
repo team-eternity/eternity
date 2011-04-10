@@ -37,7 +37,7 @@ extern char *startlevel;
 void D_ListWads(void);
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle);
-boolean D_AddNewFile(const char *s);
+bool D_AddNewFile(const char *s);
 
 
 char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
@@ -45,18 +45,18 @@ char *D_DoomExeName(void);      // killough 10/98: executable's name
 extern char *basesavegame;      // killough 2/16/98: savegame path
 
 //jff 1/24/98 make command line copies of play modes available
-extern boolean clnomonsters; // checkparm of -nomonsters
-extern boolean clrespawnparm;  // checkparm of -respawn
-extern boolean clfastparm; // checkparm of -fast
+extern bool clnomonsters;  // checkparm of -nomonsters
+extern bool clrespawnparm; // checkparm of -respawn
+extern bool clfastparm;    // checkparm of -fast
 //jff end of external declaration of command line playmode
 
-extern boolean nosfxparm;
-extern boolean nomusicparm;
+extern bool nosfxparm;
+extern bool nomusicparm;
 
 extern int use_startmap;
-extern boolean redrawsbar, redrawborder;
+extern bool redrawsbar, redrawborder;
 
-extern boolean cdrom_mode;
+extern bool cdrom_mode;
 
 // Called by IO functions when input is detected.
 struct event_t;

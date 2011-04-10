@@ -556,7 +556,7 @@ int qstring::strNCaseCmp(const char *str, size_t maxcount) const
 // 
 // C++ style comparison. True return value means it is equal to the argument.
 //
-boolean qstring::compare(const char *str) const
+bool qstring::compare(const char *str) const
 {
    return !strcmp(buffer ? buffer : "", str);
 }
@@ -566,7 +566,7 @@ boolean qstring::compare(const char *str) const
 // 
 // Overload for qstrings.
 //
-boolean qstring::compare(const qstring &other) const
+bool qstring::compare(const qstring &other) const
 {
    return !strcmp(buffer ? buffer : "", other.buffer);
 }
@@ -576,7 +576,7 @@ boolean qstring::compare(const qstring &other) const
 //
 // Overloaded comparison operator for const char *
 //
-boolean qstring::operator == (const char *other) const
+bool qstring::operator == (const char *other) const
 {
    return !strcmp(buffer ? buffer : "", other);
 }
@@ -586,7 +586,7 @@ boolean qstring::operator == (const char *other) const
 //
 // Overloaded comparison operator for qstring &
 //
-boolean qstring::operator == (const qstring &other) const
+bool qstring::operator == (const qstring &other) const
 {
    return !strcmp(buffer ? buffer : "", other.buffer);
 }
@@ -596,7 +596,7 @@ boolean qstring::operator == (const qstring &other) const
 //
 // Overloaded comparison operator for const char *
 //
-boolean qstring::operator != (const char *other) const
+bool qstring::operator != (const char *other) const
 {
    return strcmp(buffer ? buffer : "", other) != 0;
 }
@@ -606,7 +606,7 @@ boolean qstring::operator != (const char *other) const
 //
 // Overloaded comparison operator for qstring &
 //
-boolean qstring::operator != (const qstring &other) const
+bool qstring::operator != (const qstring &other) const
 {
    return strcmp(buffer ? buffer : "", other.buffer) != 0;
 }
@@ -645,7 +645,7 @@ const char *qstring::strRChr(char c) const
 size_t qstring::findFirstOf(char c) const
 {
    const char *rover;
-   boolean found = false;
+   bool found = false;
    
    if(!buffer)
       return npos;
@@ -673,7 +673,7 @@ size_t qstring::findFirstOf(char c) const
 size_t qstring::findFirstNotOf(char c) const
 {
    const char *rover;
-   boolean found = false;
+   bool found = false;
 
    if(!buffer)
       return npos;
@@ -944,7 +944,7 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
       va_list va1;                     // args
       char c;                          // current character
       const char *s = fmt;             // pointer into format string
-      boolean pctstate = false;        // seen a percentage?
+      bool pctstate = false;           // seen a percentage?
       int dummyint;                    // dummy vars just to get args
       double dummydbl;
       const char *dummystr;

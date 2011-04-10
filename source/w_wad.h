@@ -151,8 +151,8 @@ protected:
    {
       const char *filename; // possibly altered filename
       FILE *handle;         // FILE handle
-      boolean error;        // true if an error occured
-      boolean errorRet;     // code to return from AddFile
+      bool error;           // true if an error occured
+      bool errorRet;        // code to return from AddFile
    };
 
    static int source;     // unique source ID for each wad file
@@ -174,7 +174,7 @@ protected:
                                   const char *end_marker, 
                                   int li_namespace);
    openwad_t OpenFile(const char *name, int filetype);
-   boolean   AddFile(const char *name, int li_namespace, int filetype,
+   bool      AddFile(const char *name, int li_namespace, int filetype,
                      FILE *file = NULL, size_t baseoffset = 0);
    void      FreeDirectoryLumps();  // haleyjd 06/27/09
    void      FreeDirectoryAllocs(); // haleyjd 06/06/10

@@ -180,7 +180,7 @@ static void R_PlaneLight(void)
 static uint32_t R_doubleToUint32(double d)
 {
    int32_t i;
-   boolean neg;
+   bool    neg;
    double  two32;
 
    // FIXME: should check for finiteness first, but we have no code for 
@@ -482,7 +482,7 @@ static void R_MapSlope(int y, int x1, int x2)
 // SoM: Returns true if the texture spaces of the give slope structs are the
 // same.
 //
-boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
+bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
    return 
       (s1 == s2) ||                 // both are equal, including both NULL; OR:
@@ -1167,9 +1167,9 @@ static void do_draw_plane(visplane_t *pl)
    }
    else      // regular flat
    {  
-      texture_t  *tex;
+      texture_t *tex;
       int        stop, light;
-      boolean    lptex64 = false; // haleyjd 06/09/10
+      bool       lptex64 = false; // haleyjd 06/09/10
       int        stylenum;
 
       int picnum = texturetranslation[pl->picnum];

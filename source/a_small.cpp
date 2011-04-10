@@ -54,8 +54,8 @@
 // for globally available scripts, such as those called from
 // mobj frames, etc.
 //
-void *gameScriptData = NULL;
-boolean gameScriptLoaded = false;
+void *gameScriptData   = NULL;
+bool  gameScriptLoaded = false;
 
 SmallContext_t GameScript;
 SmallContext_t *curGSContext;
@@ -68,8 +68,8 @@ SmallContext_t *curGSContext;
 // This is a per-level AMX. Used for level-local scripts provided
 // along with the map.
 //
-void *levelScriptData = NULL;
-boolean levelScriptLoaded = false;
+void *levelScriptData   = NULL;
+bool  levelScriptLoaded = false;
 
 SmallContext_t LevelScript;
 SmallContext_t *curLSContext;
@@ -855,7 +855,7 @@ void SM_RemoveCallbacks(int vm)
 // This code is actually the only thing that has made its
 // way here from FraggleScript :)
 //
-static boolean SM_WaitFinished(sc_callback_t *callback)
+static bool SM_WaitFinished(sc_callback_t *callback)
 {
    // check pause flags
 
@@ -1638,7 +1638,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
 
 static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
 {
-   static boolean first = true;
+   static bool first = true;
    int destination;
    cell *cstr;
    const char *msg;

@@ -64,14 +64,14 @@ char *chat_macros[10];
 extern const char* shiftxform;
 extern const char english_shiftxform[]; // haleyjd: forward declaration
 //boolean chat_on;
-boolean chat_active = false;
+bool chat_active = false;
 int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
 
 vfont_t *hud_font;
 const char *hud_fontname;
 
-static boolean HU_ChatRespond(event_t *ev);
+static bool HU_ChatRespond(event_t *ev);
 
 // haleyjd 06/04/05: Complete HUD rewrite.
 
@@ -108,7 +108,7 @@ static hu_widget_t *HU_WidgetForName(const char *name)
 // Adds a widget to the hash table, but only if one of the given
 // name doesn't exist. Returns true if successful.
 //
-static boolean HU_AddWidgetToHash(hu_widget_t *widget)
+static bool HU_AddWidgetToHash(hu_widget_t *widget)
 {
    int key;
 
@@ -136,7 +136,7 @@ static boolean HU_AddWidgetToHash(hu_widget_t *widget)
 // to the previous disable state member, so that widgets can still
 // erase properly.
 //
-d_inline static void HU_ToggleWidget(hu_widget_t *widget, boolean disable)
+d_inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
 {
    widget->prevdisabled = widget->disabled;
    widget->disabled = disable;
@@ -149,10 +149,10 @@ d_inline static void HU_ToggleWidget(hu_widget_t *widget, boolean disable)
 // erasing. Sets prevdisabled to disabled to end erasing after the
 // first frame this is called for disabled widgets.
 //
-d_inline static boolean HU_NeedsErase(hu_widget_t *widget)
+d_inline static bool HU_NeedsErase(hu_widget_t *widget)
 {
    // needs erase if enabled, or if WAS enabled on last frame
-   boolean ret = !widget->disabled || !widget->prevdisabled;
+   bool ret = !widget->disabled || !widget->prevdisabled;
 
    widget->prevdisabled = widget->disabled;
 
@@ -306,7 +306,7 @@ void HU_Ticker(void)
 }
 
 // I don't know what this is doing here, but it can stay for now.
-boolean altdown = false;
+bool altdown = false;
 
 //
 // HU_Responder
@@ -314,7 +314,7 @@ boolean altdown = false;
 // Called from G_Responder. Has priority over any other events
 // intercepted by that function.
 //
-boolean HU_Responder(event_t *ev)
+bool HU_Responder(event_t *ev)
 {
    if(ev->data1 == KEYD_LALT)
       altdown = (ev->type == ev_keydown);
@@ -1064,7 +1064,7 @@ static hu_patchwidget_t crosshair_widget;
 int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
-boolean crosshair_hilite; // haleyjd 06/07/05
+bool crosshair_hilite; // haleyjd 06/07/05
 char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 //
@@ -1195,7 +1195,7 @@ void HU_InitCrossHair(void)
 static hu_textwidget_t leveltime_widget;
 
 // haleyjd 02/12/06: configuration variables
-boolean hu_showtime;       // enable/disable flag for level time
+bool hu_showtime;       // enable/disable flag for level time
 int hu_timecolor;          // color of time text
 
 //
@@ -1404,10 +1404,10 @@ static void HU_InitChat(void)
 //
 // Responds to chat-related events.
 //
-static boolean HU_ChatRespond(event_t *ev)
+static bool HU_ChatRespond(event_t *ev)
 {
    char ch = 0;
-   static boolean shiftdown;
+   static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
    G_KeyResponder(ev, kac_hud);
@@ -1487,8 +1487,8 @@ static hu_textwidget_t coordy_widget;
 static hu_textwidget_t coordz_widget;
 
 // haleyjd 02/12/06: configuration variables
-boolean hu_showcoords;
-int hu_coordscolor;
+bool hu_showcoords;
+int  hu_coordscolor;
 
 //
 // HU_CoordTick

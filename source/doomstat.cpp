@@ -35,14 +35,14 @@
 Language_t   language = english;
 
 // Set if homebrew PWAD stuff has been added.
-boolean modifiedgame;
+bool modifiedgame;
 
 // haleyjd 03/05/09: support using same config for all DOOM game modes
 int use_doom_config = false;
 
 //-----------------------------------------------------------------------------
 
-boolean in_textmode = true;        // game in graphics mode yet?
+bool in_textmode = true;        // game in graphics mode yet?
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 int compatibility, default_compatibility;          // killough 1/31/98
@@ -115,7 +115,7 @@ int doom_weapon_toggles; // killough 10/98
 
 int monkeys, default_monkeys;
 
-boolean cinema_pause = false; // haleyjd 08/22/01
+bool cinema_pause = false; // haleyjd 08/22/01
 
 int drawparticles;  // haleyjd 09/28/01
 int bloodsplat_particle;

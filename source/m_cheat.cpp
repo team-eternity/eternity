@@ -557,7 +557,7 @@ static void cheat_massacre(const void *arg)
 static void cheat_ddt(const void *arg)
 {
    extern int ddt_cheating;
-   extern boolean automapactive;
+   extern bool automapactive;
    if(automapactive)
       ddt_cheating = (ddt_cheating + 1) % 3;
 }
@@ -701,13 +701,13 @@ void M_DoCheat(char *s)
    }
 }
 
-boolean M_FindCheats(int key)
+bool M_FindCheats(int key)
 {
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
    int i, matchedbefore; 
-   boolean ret;
+   bool ret;
 
    // If we are expecting arguments to a cheat
    // (e.g. idclev), put them in the arg buffer

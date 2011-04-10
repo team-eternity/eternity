@@ -55,7 +55,7 @@ dehstr_t *D_GetDEHStr(const char *string);
 
 // haleyjd 10/08/06: new string fetching functions
 const char *DEH_String(const char *mnemonic);
-boolean DEH_StringChanged(const char *mnemonic);
+bool DEH_StringChanged(const char *mnemonic);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 

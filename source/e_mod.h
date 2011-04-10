@@ -45,9 +45,9 @@ struct emod_t
 
    char *obituary;
    char *selfobituary;
-   boolean obitIsBexString;
-   boolean selfObitIsBexString;
-   boolean sourceless;
+   bool obitIsBexString;
+   bool selfObitIsBexString;
+   bool sourceless;
 };
 
 emod_t *E_DamageTypeForName(const char *name);

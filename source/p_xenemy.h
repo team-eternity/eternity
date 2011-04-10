@@ -53,7 +53,7 @@ public:
    fixed_t damageRadius; // radius of damage effects (if any)
 };
 
-boolean P_StartQuake(int *args);
+bool P_StartQuake(int *args);
 
 #endif
 

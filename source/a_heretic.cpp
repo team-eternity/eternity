@@ -263,8 +263,8 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
    angle_t exact, diff;
    fixed_t dist;
-   Mobj  *dest;
-   boolean dir;
+   Mobj   *dest;
+   bool    dir;
   
    // adjust direction
    dest = actor->tracer;
@@ -1243,7 +1243,7 @@ void A_MinotaurAtk1(Mobj *actor)
 // Returns true if the Maulotaur should do a charge attack.
 //
 d_inline static
-boolean P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
+bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 {
    return (target->z + target->height > actor->z &&      // check heights
            target->z + target->height < actor->z + actor->height &&
@@ -1256,7 +1256,7 @@ boolean P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 //
 // Returns true if the Maulotaur should use floor fire.
 //
-d_inline static boolean P_CheckFloorFire(fixed_t dist, Mobj *target)
+d_inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 {
    return (target->z == target->floorz && // target on floor?
            dist < 576*FRACUNIT &&         // target in range?

@@ -181,7 +181,7 @@ public:
    unsigned int revAngle;  // reversed angle to avoid roundoff error
    int momx;               // x component of speed along angle
    int momy;               // y component of speed along angle
-   boolean closing;        // if true, is closing
+   bool closing;           // if true, is closing
 };
 
 class PolySwingDoorThinker : public Thinker
@@ -202,7 +202,7 @@ public:
    int speed;         // speed of rotation
    int initDistance;  // initial distance to travel
    int distance;      // current distance to travel
-   boolean closing;   // if true, is closing
+   bool closing;      // if true, is closing
 };
 
 //
@@ -215,7 +215,7 @@ typedef struct polyrotdata_s
    int direction;    // direction of rotation
    int speed;        // angular speed
    int distance;     // distance to move
-   boolean overRide; // if true, will override any action on the object
+   bool overRide;    // if true, will override any action on the object
 } polyrotdata_t;
 
 typedef struct polymovedata_s
@@ -224,7 +224,7 @@ typedef struct polymovedata_s
    fixed_t distance;   // distance to move
    fixed_t speed;      // linear speed
    unsigned int angle; // angle of movement
-   boolean overRide;   // if true, will override any action on the object
+   bool overRide;      // if true, will override any action on the object
 } polymovedata_t;
 
 // polyobject door types

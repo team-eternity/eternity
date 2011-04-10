@@ -38,7 +38,7 @@ void Wipe_ScreenReset(void);
 void Wipe_SaveEndScreen(void);
 void Wipe_BlitEndScreen(void);
 
-extern boolean inwipe;
+extern bool inwipe;
 extern int wipetype;
 
 #endif

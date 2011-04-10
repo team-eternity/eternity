@@ -1927,7 +1927,7 @@ const char *DEH_String(const char *mnemonic)
 // haleyjd 10/08/06: Similar to the above, this function reports on whether or
 // not a string has been edited by DEH/BEX.
 //
-boolean DEH_StringChanged(const char *mnemonic)
+bool DEH_StringChanged(const char *mnemonic)
 {
    dehstr_t *dehstr;
 

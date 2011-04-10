@@ -608,7 +608,7 @@ int E_GetThingNumForName(const char *name)
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_thing_dehnum = D_MAXINT;
 
-boolean E_AutoAllocThingDEHNum(int thingnum)
+bool E_AutoAllocThingDEHNum(int thingnum)
 {
    unsigned int key;
    int dehnum;
@@ -1079,7 +1079,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // Returns true if the given mobjinfo inherits from the given type by name.
 // Returns false otherwise. Self-identity is *not* considered inheritance.
 //
-boolean E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+bool E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1372,7 +1372,7 @@ static int  thing_pindex   = 0;
 // been inherited during the current inheritance chain. Returns
 // false if the check fails, and true if it succeeds.
 //
-static boolean E_CheckThingInherit(int pnum)
+static bool E_CheckThingInherit(int pnum)
 {
    int i;
 
@@ -1495,14 +1495,14 @@ static void E_CopyThing(int num, int pnum)
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
-void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
+void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 {
    double tempfloat;
    int tempint;
    const char *tempstr;
-   boolean inherits = false;
-   boolean cflags   = false;
-   boolean hasbtype = false;
+   bool inherits = false;
+   bool cflags   = false;
+   bool hasbtype = false;
 
    // 01/27/04: added inheritance -- not in deltas
    if(def)

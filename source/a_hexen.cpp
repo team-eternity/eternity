@@ -95,7 +95,7 @@ void A_UnSetReflective(Mobj *actor)
 //
 // P_UpdateMorphedMonster
 //
-boolean P_UpdateMorphedMonster(Mobj *actor, int tics)
+bool P_UpdateMorphedMonster(Mobj *actor, int tics)
 {
    // HEXEN_TODO
    return false;
@@ -653,13 +653,13 @@ void A_Demon2Death(Mobj *actor)
 {
 }
 
-static boolean P_SinkMobj(Mobj *actor)
+static bool P_SinkMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;
 }
 
-static boolean P_RaiseMobj(Mobj *actor)
+static bool P_RaiseMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;

@@ -87,7 +87,7 @@ int map_secret_after;
 #define FB    0
 
 // haleyjd 05/17/08: ability to draw node lines on map
-boolean map_draw_nodelines;
+bool map_draw_nodelines;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -209,7 +209,7 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
 int automap_grid = 0;
 
-boolean automapactive = false;
+bool automapactive = false;
 
 // location of window on screen
 static int  f_x;
@@ -277,13 +277,13 @@ int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
 
-static boolean stopped = true;
+static bool stopped = true;
 
 // haleyjd 12/22/02: Heretic stuff
 
 // backdrop
 static byte *am_backdrop = NULL;
-static boolean am_usebackdrop = false;
+static bool am_usebackdrop = false;
 
 // haleyjd 08/01/09: this function is unused
 #if 0
@@ -789,7 +789,7 @@ static void AM_maxOutWindowScale(void)
    AM_activateNewScale();
 }
 
-static boolean am_key_handled;
+static bool am_key_handled;
 
 //
 // AM_Responder()
@@ -800,7 +800,7 @@ static boolean am_key_handled;
 //
 // haleyjd 07/07/04: rewritten to support new keybindings
 //
-boolean AM_Responder(event_t *ev)
+bool AM_Responder(event_t *ev)
 {
    static int cheatstate=0;
    static int bigstate=0;
@@ -1138,7 +1138,7 @@ static void AM_clearFB(int color)
 // clipping on them in the lines frame coordinates.
 // Returns true if any part of line was not clipped
 //
-static boolean AM_clipMline(mline_t *ml, fline_t *fl)
+static bool AM_clipMline(mline_t *ml, fline_t *fl)
 {
    enum
    {
@@ -1604,7 +1604,7 @@ static int AM_DoorColor(int type)
 // Returns true if line is an exit and the exit map color is
 // defined; returns false otherwise.
 //
-d_inline static boolean AM_drawAsExitLine(line_t *line)
+d_inline static bool AM_drawAsExitLine(line_t *line)
 {
    return (mapcolor_exit &&
            (line->special==11  ||
@@ -1621,7 +1621,7 @@ d_inline static boolean AM_drawAsExitLine(line_t *line)
 // Returns true if a 1S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-d_inline static boolean AM_drawAs1sSecret(line_t *line)
+d_inline static bool AM_drawAs1sSecret(line_t *line)
 {
    return (mapcolor_secr &&
            ((map_secret_after &&
@@ -1637,7 +1637,7 @@ d_inline static boolean AM_drawAs1sSecret(line_t *line)
 // Returns true if a 2S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-d_inline static boolean AM_drawAs2sSecret(line_t *line)
+d_inline static bool AM_drawAs2sSecret(line_t *line)
 {
    //jff 2/16/98 fixed bug: special was cleared after getting it
    
@@ -1663,7 +1663,7 @@ d_inline static boolean AM_drawAs2sSecret(line_t *line)
 // Returns true if a line is a teleporter and the teleporter map
 // color is defined; returns false otherwise.
 //
-d_inline static boolean AM_drawAsTeleporter(line_t *line)
+d_inline static bool AM_drawAsTeleporter(line_t *line)
 {
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
            (line->special == 39  || line->special == 97 ||
@@ -1678,7 +1678,7 @@ d_inline static boolean AM_drawAsTeleporter(line_t *line)
 //
 // FIXME / HTIC_TODO: Heretic support
 //
-d_inline static boolean AM_drawAsLockedDoor(line_t *line)
+d_inline static bool AM_drawAsLockedDoor(line_t *line)
 {
    return ((mapcolor_bdor || mapcolor_ydor || mapcolor_rdor) &&
            ((line->special >=  26 && line->special <=  28) ||
@@ -1694,7 +1694,7 @@ d_inline static boolean AM_drawAsLockedDoor(line_t *line)
 //
 // Returns true if a door is closed, false otherwise.
 //
-d_inline static boolean AM_isDoorClosed(line_t *line)
+d_inline static bool AM_isDoorClosed(line_t *line)
 {
    return ((line->backsector->floorheight  == line->backsector->ceilingheight) ||
            (line->frontsector->floorheight == line->frontsector->ceilingheight));
@@ -1706,7 +1706,7 @@ d_inline static boolean AM_isDoorClosed(line_t *line)
 // Returns true if a door is closed, not secret, and closed door
 // map color is defined; returns false otherwise.
 //
-d_inline static boolean AM_drawAsClosedDoor(line_t *line)
+d_inline static bool AM_drawAsClosedDoor(line_t *line)
 {
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door

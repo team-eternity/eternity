@@ -45,7 +45,7 @@ protected:
    void addToThreadedList(int tclass);
 
    // Data Members
-   boolean removed;
+   bool removed;
 
    // killough 11/98: count of how many other objects reference
    // this one using pointers. Used for garbage collection.
@@ -71,7 +71,7 @@ public:
    void addThinker();
    
    // Accessors
-   boolean isRemoved() const { return removed; }
+   bool isRemoved() const { return removed; }
    
    // Reference counting
    void addReference() { ++references; }
@@ -91,7 +91,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    // De-swizzling should restore pointers to other thinkers.
    virtual void deswizzle() {}
-   virtual boolean shouldSerialize()  const { return !removed;  }
+   virtual bool shouldSerialize()  const { return !removed;  }
    virtual const char *getClassName() const { return "Thinker"; }
 
    // Data Members
@@ -157,7 +157,7 @@ typedef enum
 extern Thinker thinkerclasscap[];
 
 // sf: jumping-viewz-on-hyperlift bug
-extern boolean reset_viewz;
+extern bool reset_viewz;
 
 //
 // Thinker Factory

@@ -152,7 +152,7 @@ void       *ZoneObject::newalloc;            // most recent ZoneObject alloc
 // Performs a fatal error condition check contingent on the definition
 // of ZONEIDCHECK, in any context where a memblock pointer is not available.
 //
-static void Z_IDCheckNB(boolean err, const char *errmsg,
+static void Z_IDCheckNB(bool err, const char *errmsg,
                         const char *file, int line)
 {
    if(err)
@@ -166,7 +166,7 @@ static void Z_IDCheckNB(boolean err, const char *errmsg,
 // of ZONEIDCHECK, and accepts a memblock pointer for provision of additional
 // malloc source information available when INSTRUMENTED is also defined.
 //
-static void Z_IDCheck(boolean err, const char *errmsg, 
+static void Z_IDCheck(bool err, const char *errmsg, 
                       memblock_t *block, const char *file, int line)
 {
    if(err)

@@ -65,11 +65,11 @@
 //
 // Compares a filename with a wildcard string.
 //
-static boolean filecmp(const char *filename, const char *wildcard)
+static bool filecmp(const char *filename, const char *wildcard)
 {
    char *filename_main, *wildcard_main; // filename
    char *filename_ext, *wildcard_ext;   // extension
-   boolean res = true;
+   bool res = true;
    int i = 0;
   
    // haleyjd: must be case insensitive
@@ -98,7 +98,7 @@ static boolean filecmp(const char *filename, const char *wildcard)
    // compare main part of filename with wildcard
    while(wildcard_main[i])
    {
-      boolean exitloop = false;
+      bool exitloop = false;
 
       switch(wildcard_main[i])
       {
@@ -130,7 +130,7 @@ static boolean filecmp(const char *filename, const char *wildcard)
       // compare extension
       while(wildcard_ext[i])
       {
-         boolean exitloop = false;
+         bool exitloop = false;
          
          switch(wildcard_ext[i])
          {
@@ -297,7 +297,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *read_wildca
 static mndir_t *mn_currentdir;
 
 static void MN_FileDrawer(void);
-static boolean MN_FileResponder(event_t *ev);
+static bool MN_FileResponder(event_t *ev);
 
 // file selector is handled using a menu widget
 
@@ -306,9 +306,9 @@ static int selected_item;
 static const char *variable_name;
 static const char *help_description;
 static int numfileboxlines;
-static boolean select_dismiss;
+static bool select_dismiss;
 extern vfont_t *menu_font;
-static boolean allow_exit = true;
+static bool allow_exit = true;
 
 //
 // MN_FileDrawer
@@ -420,7 +420,7 @@ static void MN_FileDrawer(void)
 // keybinding actions rather than key constants like in SMMU. Also
 // added sounds to give a more consistent UI feel.
 //
-static boolean MN_FileResponder(event_t *ev)
+static bool MN_FileResponder(event_t *ev)
 {
    unsigned char ch;
 
@@ -589,8 +589,8 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 // haleyjd 06/16/10: for external access to the file selector widget
 //
 void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
-                            const char *command, boolean dismissOnSelect,
-                            boolean allowExit)
+                            const char *command, bool dismissOnSelect,
+                            bool allowExit)
 {
    if(dir->numfiles < 1)
       return;

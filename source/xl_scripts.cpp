@@ -369,7 +369,7 @@ protected:
 
    int state;
    qstring soundname;
-   boolean edfOverRide; // if true, definitions can override EDF sounds
+   bool edfOverRide; // if true, definitions can override EDF sounds
 
    void DoStateExpectCmd(XLTokenizer &token);
    void DoStateExpectMapNum(XLTokenizer &token);

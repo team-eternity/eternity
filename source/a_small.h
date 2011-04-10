@@ -156,7 +156,7 @@ typedef struct SmallContext_s
    sc_invoke_t invocationData;    // invocation data for this context
    struct SmallContext_s *parent; // parent context, if any
    struct SmallContext_s *child;  // child context, if any
-   boolean isChild;               // true if created as a child
+   bool isChild;                  // true if created as a child
    sc_vm_e vm;                    // vm this context is or is a child of   
 } SmallContext_t;
 
@@ -184,8 +184,8 @@ cell SM_ExecScriptByNumV(AMX *amx, int number);
 
 void SM_OptScriptCallback(SmallContext_t *ctx, const char *cbname);
 
-extern boolean gameScriptLoaded;
-extern boolean levelScriptLoaded;
+extern bool gameScriptLoaded;
+extern bool levelScriptLoaded;
 extern SmallContext_t GameScript;
 extern SmallContext_t *curGSContext;
 extern SmallContext_t LevelScript;
