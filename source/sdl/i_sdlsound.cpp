@@ -348,12 +348,14 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    separation = separation - 257;
    rightvol= volume - ((volume*separation*separation) >> 16);  
 
+#ifdef RANGECHECK
    // Sanity check, clamp volume.
    if(rightvol < 0 || rightvol > 127)
       I_Error("rightvol out of bounds\n");
    
    if(leftvol < 0 || leftvol > 127)
       I_Error("leftvol out of bounds\n");
+#endif
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause

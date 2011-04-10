@@ -84,7 +84,7 @@ extern boolean nosfxparm, nomusicparm;
 typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  PointThinker *origin;   // origin of sound
+  PointThinker *origin;    // origin of sound
   int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   int attenuation;         // attenuation type -- haleyjd 05/29/06
@@ -127,7 +127,6 @@ int idmusnum;
 
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
-//sfxinfo_t *sfxinfos[SOUND_HASHSLOTS];
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 
 //
@@ -327,6 +326,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    int cnum;
    int lowestpriority = D_MININT; // haleyjd
    int lpcnum = -1;
+   boolean origin_equivalent;
 
    // haleyjd 09/28/06: moved this here. If we kill a sound already
    // being played, we can use that channel. There is no need to
@@ -337,9 +337,16 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    // haleyjd 06/12/08: only if subchannel matches
    for(cnum = 0; cnum < numChannels; ++cnum)
    {
+      // haleyjd 04/09/11: Allow different sounds played on NULL
+      // channel to not cut each other off
+      if(origin == NULL)
+         origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
+      else
+         origin_equivalent = (channels[cnum].origin == origin);
+
       if(channels[cnum].sfxinfo &&
          channels[cnum].singularity == singularity &&
-         channels[cnum].origin == origin &&
+         origin_equivalent &&
          channels[cnum].subchannel == schan)
       {
          S_StopChannel(cnum);

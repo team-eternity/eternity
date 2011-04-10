@@ -144,7 +144,7 @@ protected:
 public:
    // Constructor / Destructor
    XLTokenizer(const char *str) 
-      : token(), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
+      : token(32), state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE)
    { 
    }
 
@@ -200,12 +200,13 @@ class XLParser
 {
 protected:
    // Data
-   const char  *lumpname;    // Name of lump handled by this parser
-   char        *lumpdata;    // Cached lump data
+   const char   *lumpname; // Name of lump handled by this parser
+   char         *lumpdata; // Cached lump data
+   WadDirectory *waddir;   // Current directory
 
    // Override me!
-   virtual void ParseLine(char *line) {} // called for every line of data
-   virtual void StartLump() {}           // called at beginning of a new lump
+   virtual void StartLump() {} // called at beginning of a new lump
+   virtual void DoToken(XLTokenizer &token) {} // called for each token
 
    //
    // XLParser::ParseLump
@@ -214,8 +215,6 @@ protected:
    //
    void ParseLump(WadDirectory &dir, lumpinfo_t *lump) 
    {
-      char *rover, *line; 
-
       // free any previously loaded lump
       if(lumpdata)
       {
@@ -223,15 +222,17 @@ protected:
          lumpdata = NULL;
       }
 
+      waddir = &dir;
       StartLump();
 
       // allocate at lump->size + 1 for null termination
-      rover = lumpdata = (char *)(calloc(1, lump->size + 1));
+      lumpdata = (char *)(calloc(1, lump->size + 1));
       dir.ReadLump(lump->selfindex, lumpdata);
 
-      // parse each line of the lump independently
-      while((line = E_GetHeredocLine(&rover)))
-         ParseLine(line);
+      XLTokenizer tokenizer = XLTokenizer(lumpdata);
+
+      while(tokenizer.GetNextToken() != XLTokenizer::TOKEN_EOF)
+         DoToken(tokenizer);
    }
 
    //
@@ -256,9 +257,9 @@ protected:
 
 public:
    // Constructors
-   XLParser(const char *p_lumpname) : lumpname(p_lumpname), lumpdata(NULL) {}
+   XLParser(const char *pLumpname) : lumpname(pLumpname), lumpdata(NULL) {}
 
-   // Destructors
+   // Destructor
    virtual ~XLParser() 
    {
       // kill off any lump that might still be cached
@@ -340,76 +341,124 @@ protected:
      NUMKWDS
    };
 
+   // state enumeration
+   enum
+   {
+      STATE_EXPECTCMD,
+      STATE_EXPECTMAPNUM,
+      STATE_EXPECTMUSLUMP,
+      STATE_EXPECTSNDLUMP,
+   };
+
+   int state;
+   qstring soundname;
    boolean edfOverRide; // if true, definitions can override EDF sounds
 
    //
-   // XLSndInfoParser::HandleMusic
+   // State Handlers
    //
-   // Creates or edits a music definition
-   //
-   void HandleMusic(tempcmd_t &cmd)
+   
+   // Expecting the start of a SNDINFO command or sound definition
+   void DoStateExpectCmd(XLTokenizer &token)
    {
-      // need two argument tokens on the line
-      if(!cmd.strs[1] || !cmd.strs[2])
-         return;
-   }
+      int cmdnum;
+      qstring &tokenText = token.GetToken();
 
-   //
-   // XLSndInfoParser::HandleSound
-   //
-   // Creates or edits a sound definition
-   //
-   void HandleSound(tempcmd_t &cmd)
-   {
-      sfxinfo_t *sfx;
-
-      if(!cmd.strs[1]) // need one argument token
-         return;
-
-      if((sfx = E_SoundForName(cmd.strs[0]))) // defined already?
+      switch(token.GetTokenType())
       {
-         if(!(sfx->flags & SFXF_EDF) || edfOverRide)
+      case XLTokenizer::TOKEN_KEYWORD: // a $ keyword
+         cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
+         switch(cmdnum)
          {
-            sfx->flags &= ~SFXF_PREFIX;
-            strncpy(sfx->name, cmd.strs[1], 9);
+         case KWD_MAP:
+            state = STATE_EXPECTMAPNUM;
+            break;
+         default: // unknown command
+            break;
          }
+         break;
+      case XLTokenizer::TOKEN_STRING:  // a normal string
+         soundname = tokenText; // remember the sound name
+         state = STATE_EXPECTSNDLUMP;
+         break;
+      default: // unknown token
+         break;
       }
-      else // create a new sound
-         E_NewSndInfoSound(cmd.strs[0], cmd.strs[1]);
    }
 
-   //
-   // XLSndInfoParser::ParseLine
-   //
-   // Processes individual lines of SNDINFO data
-   //
-   virtual void ParseLine(char *line)
+   // Expecting the map number after a $map command
+   void DoStateExpectMapNum(XLTokenizer &token)
    {
-      tempcmd_t cmd = E_ParseTextLine(line);
+      // TODO
+      state = STATE_EXPECTMUSLUMP;
+   }
 
-      if(!cmd.strs[0] || cmd.strs[0][0] == ';') // empty line or comment
-         return;
+   // Expecting the music lump name after a map number
+   void DoStateExpectMusLump(XLTokenizer &token)
+   {
+      // TODO
+      state = STATE_EXPECTCMD;
+   }
 
-      if(cmd.strs[0][0] == '$') // keyword?
+   // Expecting the lump name after a sound definition
+   void DoStateExpectSndLump(XLTokenizer &token)
+   {
+      if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
       {
-         int kwd = E_StrToNumLinear(sndInfoKwds, NUMKWDS, cmd.strs[0]);
-         if(kwd == NUMKWDS) // unknown keyword?
+         // Not a string? We are probably in an error state.
+         // Get out with an immediate call to the expect command state
+         state = STATE_EXPECTCMD;
+         DoStateExpectCmd(token);
+      }
+      else
+      {
+         qstring &soundlump = token.GetToken();
+
+         // Lump must exist, otherwise we create erroneous sounds if there are
+         // unknown keywords in the lump. Thanks to ZDoom for defining such a 
+         // clean, context-free, grammar-based language with delimiters :>
+         if(soundlump.length() <= 8 &&
+            waddir->CheckNumForName(soundlump.constPtr()) != -1)
+         {
+            sfxinfo_t *sfx;
+
+            if((sfx = E_SoundForName(soundname.constPtr()))) // defined already?
+            {
+               if(!(sfx->flags & SFXF_EDF) || edfOverRide)
+               {
+                  sfx->flags &= ~SFXF_PREFIX;
+                  soundname.copyInto(sfx->name, 9);
+               }
+            } // create a new sound
+            else
+               E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
+         }
+         else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
+         {
+            state = STATE_EXPECTCMD;
+            DoStateExpectCmd(token);
             return;
-
-         switch(kwd)
-         {
-         case KWD_MAP: // music definition
-            HandleMusic(cmd);
-            break;
-         case KWD_EDFOVERRIDE:
-            edfOverRide = true; // enable overriding EDF sounds
-            break;
-         default: // a no-op, or something unhandled for the time being
-            break;
          }
+
+         // Return to expecting a command
+         state = STATE_EXPECTCMD;
       }
-      else // anything else is a sound definition
-         HandleSound(cmd);
+   }
+
+   // State table declaration
+   static void (XLSndInfoParser::*states[])(XLTokenizer &);
+
+   //
+   // XLSndInfoParser::DoToken
+   //
+   // Processes a token extracted from the SNDINFO input
+   //
+   virtual void DoToken(XLTokenizer &token)
+   {
+      // Call handler method for the current state. Why is this done from
+      // a virtual call-down? Because parent classes cannot call child
+      // class method pointers! :P
+      (this->*states[state])(token);
    }
 
    //
@@ -419,13 +468,27 @@ protected:
    //
    virtual void StartLump()
    {
+      state = STATE_EXPECTCMD; // starting state
       edfOverRide = false;
    }
 
 public:
    // Constructor
-   XLSndInfoParser() : XLParser("SNDINFO"), edfOverRide(false) {}
+   XLSndInfoParser() 
+      : XLParser("SNDINFO"), soundname(32), edfOverRide(false)
+   {
+   }
 };
+
+// State table for SNDINFO parser
+void (XLSndInfoParser::* XLSndInfoParser::states[])(XLTokenizer &) =
+{
+   &XLSndInfoParser::DoStateExpectCmd,
+   &XLSndInfoParser::DoStateExpectMapNum,
+   &XLSndInfoParser::DoStateExpectMusLump,
+   &XLSndInfoParser::DoStateExpectSndLump
+};
+
 
 // Keywords for SNDINFO
 // Note that all ZDoom extensions are included, even though they are not 
