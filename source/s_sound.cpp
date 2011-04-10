@@ -948,6 +948,79 @@ void S_StopLoopedSounds(void)
             S_StopChannel(cnum);
 }
 
+void S_SetSfxVolume(int volume)
+{
+   //jff 1/22/98 return if sound is not enabled
+   if (!snd_card || nosfxparm)
+      return;
+
+#ifdef RANGECHECK
+   if(volume < 0 || volume > 127)
+      I_Error("Attempt to set sfx volume at %d\n", volume);
+#endif
+
+   snd_SfxVolume = volume;
+}
+
+//=============================================================================
+//
+// Sound Hashing
+//
+
+sfxinfo_t *S_SfxInfoForName(const char *name)
+{   
+   // haleyjd 09/03/03: now calls down to master EDF sound hash   
+   sfxinfo_t *sfx = E_SoundForName(name);
+
+   // haleyjd 03/26/11: if not found, check for an implicit wad sound
+   if(!sfx)
+   {
+      char lumpname[16];
+      if(strncasecmp(name, "DS", 2))
+         psnprintf(lumpname, sizeof(lumpname), "DS%s", name);
+      else
+         psnprintf(lumpname, sizeof(lumpname), "%s", name);
+
+      if(W_CheckNumForName(lumpname) > 0)
+         sfx = E_NewWadSound(lumpname);
+   }
+
+   return sfx;
+}
+
+//
+// S_Chgun
+//
+// Delinks the chgun sound effect when a DSCHGUN lump has been
+// detected. This allows the sound to be used separately without 
+// use of EDF.
+//
+void S_Chgun(void)
+{
+   sfxinfo_t *s_chgun = E_SoundForName("chgun");
+
+   if(!s_chgun)
+      return;
+
+   s_chgun->link = NULL;
+   s_chgun->pitch = -1;
+   s_chgun->volume = -1;
+}
+
+// free sound and reload
+// also check to see if a new sound name has been found
+// (ie. not one in the original game). If so, we create
+// a new sfxinfo_t and hook it into the hashtable for use
+// by scripting and skins
+
+// haleyjd 03/26/2011: this is now done on-demand rather than by scanning
+// through the wad directory.
+
+//=============================================================================
+//
+// Music
+//
+
 void S_SetMusicVolume(int volume)
 {
    //jff 1/22/98 return if music is not enabled
@@ -963,19 +1036,6 @@ void S_SetMusicVolume(int volume)
    snd_MusicVolume = volume;
 }
 
-void S_SetSfxVolume(int volume)
-{
-   //jff 1/22/98 return if sound is not enabled
-   if (!snd_card || nosfxparm)
-      return;
-
-#ifdef RANGECHECK
-   if(volume < 0 || volume > 127)
-      I_Error("Attempt to set sfx volume at %d\n", volume);
-#endif
-
-   snd_SfxVolume = volume;
-}
 
 //
 // S_ChangeMusicNum
@@ -1238,61 +1298,6 @@ void S_Init(int sfxVolume, int musicVolume)
 
 //=============================================================================
 //
-// Sound Hashing
-//
-
-sfxinfo_t *S_SfxInfoForName(const char *name)
-{   
-   // haleyjd 09/03/03: now calls down to master EDF sound hash   
-   sfxinfo_t *sfx = E_SoundForName(name);
-
-   // haleyjd 03/26/11: if not found, check for an implicit wad sound
-   if(!sfx)
-   {
-      char lumpname[16];
-      if(strncasecmp(name, "DS", 2))
-         psnprintf(lumpname, sizeof(lumpname), "DS%s", name);
-      else
-         psnprintf(lumpname, sizeof(lumpname), "%s", name);
-
-      if(W_CheckNumForName(lumpname) > 0)
-         sfx = E_NewWadSound(lumpname);
-   }
-
-   return sfx;
-}
-
-//
-// S_Chgun
-//
-// Delinks the chgun sound effect when a DSCHGUN lump has been
-// detected. This allows the sound to be used separately without 
-// use of EDF.
-//
-void S_Chgun(void)
-{
-   sfxinfo_t *s_chgun = E_SoundForName("chgun");
-
-   if(!s_chgun)
-      return;
-
-   s_chgun->link = NULL;
-   s_chgun->pitch = -1;
-   s_chgun->volume = -1;
-}
-
-// free sound and reload
-// also check to see if a new sound name has been found
-// (ie. not one in the original game). If so, we create
-// a new sfxinfo_t and hook it into the hashtable for use
-// by scripting and skins
-
-// haleyjd 03/26/2011: this is now done on-demand rather than by scanning
-// through the wad directory.
-
-
-///////////////////////////////////////////////////////////////////////////
-//
 // Music Hashing
 //
 
@@ -1367,7 +1372,7 @@ void S_UpdateMusic(int lumpnum)
    
    music = S_MusicForName(sndname);
    
-   if(!music)         // not found in list
+   if(!music) // not found in list?
    {
       // build a new musicinfo_t
       music = (musicinfo_t *)(Z_Malloc(sizeof(*music), PU_STATIC, 0));
@@ -1378,7 +1383,7 @@ void S_UpdateMusic(int lumpnum)
    }
 }
 
-///////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Console Commands
 //

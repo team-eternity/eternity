@@ -2400,7 +2400,7 @@ static void IdentifyDisk(void)
 }
 
 //
-// IdentifyDisk
+// IdentifyIWAD
 //
 // haleyjd 05/31/10: IdentifyVersion subroutine for dealing with normal IWADs.
 //

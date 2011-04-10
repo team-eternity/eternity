@@ -747,7 +747,7 @@ static void I_SDLUpdateSound(void)
 #define STEP 2
 
 //
-// I_SDLUpdateSound
+// I_SDLUpdateSoundCB
 //
 // SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
 // We do our own mixing on up to 32 digital sound channels.
