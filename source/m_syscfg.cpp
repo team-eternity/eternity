@@ -50,6 +50,7 @@ extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
 extern bool unicodeinput;
+extern int audio_buffers;
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
@@ -183,11 +184,15 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
                 "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
 
-   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
-   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("grabmouse", &grabmouse, NULL, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
+
+   DEFAULT_INT("audio_buffers", &audio_buffers, NULL, 2048, 1024, 8192, default_t::wad_no,
+               "SDL_mixer audio buffer size"),
+
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)

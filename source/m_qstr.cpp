@@ -692,6 +692,17 @@ size_t qstring::findFirstNotOf(char c) const
    return found ? rover - buffer : npos;
 }
 
+//
+// qstring::findSubStr
+//
+// Calls strstr on the qstring. If the passed-in string is found, then the
+// return value points to the location of the first instance of that substring.
+//
+const char *qstring::findSubStr(const char * substr) const
+{
+   return strstr(buffer ? buffer : "", substr);
+}
+
 //=============================================================================
 //
 // Conversion Functions

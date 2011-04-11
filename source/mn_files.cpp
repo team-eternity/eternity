@@ -649,8 +649,13 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
       while(music)
       {
          // don't add music entries that don't actually exist
-         psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-                   GameModeInfo->musPrefix, music->name);
+         if(music->prefix)
+         {
+            psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                      GameModeInfo->musPrefix, music->name);
+         }
+         else
+            psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
          
          if(W_CheckNumForName(namebuf) >= 0)
             MN_addFile(&mn_diskdir, music->name);

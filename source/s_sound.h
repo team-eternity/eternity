@@ -111,7 +111,6 @@ sfxinfo_t *S_SfxInfoForName(const char *name);
 void S_Chgun(void);
 
 musicinfo_t *S_MusicForName(const char *name);
-void S_UpdateMusic(int lumpnum);
 
 //
 // Updates music & sounds

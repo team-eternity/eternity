@@ -886,7 +886,7 @@ static gamemodeinfo_t giDoomSW =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -980,7 +980,7 @@ static gamemodeinfo_t giDoomReg =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -1074,7 +1074,7 @@ static gamemodeinfo_t giDoomRetail =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -1168,7 +1168,7 @@ static gamemodeinfo_t giDoomCommercial =
    S_MusicForMapDoom2, // MusicForMap
    mus_None,           // musMin
    NUMMUSIC,           // numMusic
-   "d_",               // musPrefix
+   "D_",               // musPrefix
    "runnin",           // defMusName
    DOOMDEFSOUND,       // defSoundName
    doom_skindefs,      // skinSounds
@@ -1262,7 +1262,7 @@ static gamemodeinfo_t giHereticSW =
    S_MusicForMapHtic, // MusicForMap
    hmus_None,         // musMin
    NUMHTICMUSIC,      // numMusic
-   "mus_",            // musPrefix
+   "MUS_",            // musPrefix
    "e1m1",            // defMusName
    HTICDEFSOUND,      // defSoundName
    htic_skindefs,     // skinSounds
@@ -1360,7 +1360,7 @@ static gamemodeinfo_t giHereticReg =
    S_MusicForMapHtic, // MusicForMap
    hmus_None,         // musMin
    NUMHTICMUSIC,      // numMusic
-   "mus_",            // musPrefix
+   "MUS_",            // musPrefix
    "e1m1",            // defMusName
    HTICDEFSOUND,      // defSoundName
    htic_skindefs,     // skinSounds

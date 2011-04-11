@@ -365,6 +365,7 @@ protected:
       STATE_EXPECTMAPNUM,
       STATE_EXPECTMUSLUMP,
       STATE_EXPECTSNDLUMP,
+      STATE_EATTOKEN
    };
 
    int state;
@@ -375,6 +376,7 @@ protected:
    void DoStateExpectMapNum(XLTokenizer &token);
    void DoStateExpectMusLump(XLTokenizer &token);
    void DoStateExpectSndLump(XLTokenizer &token);
+   void DoStateEatToken(XLTokenizer &token);
 
    // State table declaration
    static void (XLSndInfoParser::*states[])(XLTokenizer &);
@@ -396,29 +398,29 @@ public:
 // the meanwhile.
 const char *XLSndInfoParser::sndInfoKwds[] =
 {
-   "$random",
    "$alias",
-   "$limit",
-   "$singular",
-   "$pitchshift",
-   "$volume",
-   "$rolloff",
-   "$playersound",
-   "$playersounddup",
-   "$playeralias",
-   "$playercompat",
    "$ambient",
+   "$archivepath",
+   "$edfoverride",
+   "$endif",
    "$ifdoom",
    "$ifheretic",
    "$ifhexen",
    "$ifstrife",
-   "$endif",
+   "$limit",
    "$map",
-   "$musicvolume",
-   "$registered",
-   "$archivepath",
    "$mididevice",
-   "$edfoverride"
+   "$musicvolume",
+   "$pitchshift",
+   "$playeralias",
+   "$playercompat",
+   "$playersound",
+   "$playersounddup",
+   "$random",   
+   "$registered",
+   "$rolloff",
+   "$singular",
+   "$volume"
 };
 
 //
@@ -437,10 +439,16 @@ void XLSndInfoParser::DoStateExpectCmd(XLTokenizer &token)
       cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
       switch(cmdnum)
       {
+      case KWD_ARCHIVEPATH:
+         state = STATE_EATTOKEN; // eat the path token
+         break;
+      case KWD_EDFOVERRIDE:
+         edfOverRide = true; // set EDF override flag
+         break;
       case KWD_MAP:
          state = STATE_EXPECTMAPNUM;
          break;
-      default: // unknown command
+      default: // unknown or inconsequential command (ie. $registered)
          break;
       }
       break;
@@ -512,13 +520,20 @@ void XLSndInfoParser::DoStateExpectSndLump(XLTokenizer &token)
    }
 }
 
+// Throw away a token unconditionally
+void XLSndInfoParser::DoStateEatToken(XLTokenizer &token)
+{
+   state = STATE_EXPECTCMD; // return to expecting a command
+}
+
 // State table for SNDINFO parser
 void (XLSndInfoParser::* XLSndInfoParser::states[])(XLTokenizer &) =
 {
    &XLSndInfoParser::DoStateExpectCmd,
    &XLSndInfoParser::DoStateExpectMapNum,
    &XLSndInfoParser::DoStateExpectMusLump,
-   &XLSndInfoParser::DoStateExpectSndLump
+   &XLSndInfoParser::DoStateExpectSndLump,
+   &XLSndInfoParser::DoStateEatToken
 };
 
 //

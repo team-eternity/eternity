@@ -128,6 +128,7 @@ int idmusnum;
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
+static void S_CreateMusicHashTable(void);
 
 //
 // Internals.
@@ -1036,6 +1037,51 @@ void S_SetMusicVolume(int volume)
    snd_MusicVolume = volume;
 }
 
+//
+// S_ChangeMusic
+//
+void S_ChangeMusic(musicinfo_t *music, int looping)
+{
+   int lumpnum;
+   char namebuf[16];
+
+   //jff 1/22/98 return if music is not enabled
+   if(!mus_card || nomusicparm)
+      return;
+
+   // same as the one playing ?
+   if(mus_playing == music)
+      return;  
+
+   // shutdown old music
+   S_StopMusic();
+
+   if(music->prefix)
+   {
+      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                GameModeInfo->musPrefix, music->name);
+   }
+   else
+      psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
+
+   if((lumpnum = W_CheckNumForName(namebuf)) == -1)
+   {
+      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
+      return;
+   }
+
+   // load & register it
+   // haleyjd: changed to PU_STATIC
+   // julian: added lump length
+
+   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
+   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+
+   // play it
+   I_PlaySong(music->handle, looping);
+   
+   mus_playing = music;
+}
 
 //
 // S_ChangeMusicNum
@@ -1060,6 +1106,14 @@ void S_ChangeMusicNum(int musnum, int looping)
 }
 
 //
+// Starts some music with the music id found in sounds.h.
+//
+void S_StartMusic(int m_id)
+{
+   S_ChangeMusicNum(m_id, false);
+}
+
+//
 // S_ChangeMusicName
 //
 // change by name
@@ -1080,54 +1134,8 @@ void S_ChangeMusicName(const char *name, int looping)
 }
 
 //
-// S_ChangeMusic
+// S_StopMusic
 //
-void S_ChangeMusic(musicinfo_t *music, int looping)
-{
-   int lumpnum;
-   char namebuf[16];
-
-   //jff 1/22/98 return if music is not enabled
-   if(!mus_card || nomusicparm)
-      return;
-
-   // same as the one playing ?
-   if(mus_playing == music)
-      return;  
-
-   // shutdown old music
-   S_StopMusic();
-
-   psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             GameModeInfo->musPrefix, music->name);
-
-   if((lumpnum = W_CheckNumForName(namebuf)) == -1)
-   {
-      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
-      return;
-   }
-
-   // load & register it
-   // haleyjd: changed to PU_STATIC
-   // julian: added lump length
-
-   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
-   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
-
-   // play it
-   I_PlaySong(music->handle, looping);
-   
-   mus_playing = music;
-}
-
-//
-// Starts some music with the music id found in sounds.h.
-//
-void S_StartMusic(int m_id)
-{
-   S_ChangeMusicNum(m_id, false);
-}
-
 void S_StopMusic(void)
 {
    if(!mus_playing)
@@ -1291,6 +1299,7 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
+   S_CreateMusicHashTable();
    
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
@@ -1334,55 +1343,102 @@ static void S_CreateMusicHashTable(void)
       S_HookMusic(&(GameModeInfo->s_music[i]));
 }
 
+//
+// S_MusicForName
+//
+// Returns a musicinfo_t structure given a music entry name.
+// Returns NULL if not found.
+//
 musicinfo_t *S_MusicForName(const char *name)
 {
-   int hashnum;
-   musicinfo_t *mus;
+   int hashnum, lumpnum;
+   musicinfo_t *mus = NULL;
+   bool nameHasPrefix, lumpHasPrefix;
+   const char *nameToUse;
+   qstring tempname;
+   size_t prefixlen = strlen(GameModeInfo->musPrefix);
+   size_t namelen   = strlen(name);
 
-   if(!name)
-      return NULL;
+   tempname = name;
+   tempname.toUpper(); // uppercase for insensitivity
 
-   hashnum = sound_hash(name);
-   
-   if(!mushash_created)
-      S_CreateMusicHashTable();
-   
+   // If the gamemode-dependent music prefix is present, skip past it
+   if(prefixlen > 0 && namelen > prefixlen && 
+      tempname.findSubStr(GameModeInfo->musPrefix) == tempname.constPtr())
+   {      
+      nameToUse = name + prefixlen;
+      nameHasPrefix = true;
+   }
+   else
+   {
+      nameToUse = name;
+      nameHasPrefix = false;
+   }
+
+   tempname = nameToUse;
+
+   hashnum = sound_hash(tempname.constPtr());
+  
    for(mus = musicinfos[hashnum]; mus; mus = mus->next)
    {
-      if(!strcasecmp(name, mus->name))
+      if(!tempname.strCaseCmp(mus->name))
          return mus;
    }
    
-   return NULL;
+   // Not found? Create a new musicinfo if the indicated lump is found.
+   lumpnum = W_CheckNumForName(name); // Try bare name first
+   lumpHasPrefix = nameHasPrefix;
+   if(lumpnum < 0 && !nameHasPrefix)  // Add prefix if that fails
+   {
+      tempname = GameModeInfo->musPrefix;
+      tempname.concat(name);
+      tempname.toUpper();
+      lumpnum = W_CheckNumForName(tempname.constPtr());
+      lumpHasPrefix = true;
+   }
+   if(lumpnum >= 0)
+   {
+      mus = (musicinfo_t *)(calloc(1, sizeof(musicinfo_t)));
+      mus->name = strdup(nameToUse);
+
+      // The music code should prefix the sound name to get the lump if:
+      // 1. The sound name does not have the prefix, AND
+      // 2. The lump does DOES have the prefix.
+      mus->prefix = (!nameHasPrefix && lumpHasPrefix);
+      S_HookMusic(mus);
+   }
+   
+   return mus;
 }
 
-void S_UpdateMusic(int lumpnum)
+/*
+void S_UpdateMusic(const char *lumpname)
 {
    musicinfo_t *music;
-   char sndname[16];
+   const char *musname;
    int prefixlen;
-
-   // haleyjd 11/03/06: enormous bug here for Heretic
+   
+   // haleyjd 04/10/11: rewritten completely
    prefixlen = strlen(GameModeInfo->musPrefix);
-
-   memset(sndname, 0, sizeof(sndname));
-   strncpy(sndname, (wGlobalDir.GetLumpInfo())[lumpnum]->name + prefixlen, 8 - prefixlen);
+   if(prefixlen && strlen(lumpname) > prefixlen)
+      musname = lumpname + prefixlen;
+   else
+      musname = lumpname;
    
    // check if one already in the table first
-   
-   music = S_MusicForName(sndname);
+   music = S_MusicForName(musname);
    
    if(!music) // not found in list?
    {
       // build a new musicinfo_t
-      music = (musicinfo_t *)(Z_Malloc(sizeof(*music), PU_STATIC, 0));
-      music->name = Z_Strdup(sndname, PU_STATIC, 0);
+      music = (musicinfo_t *)(calloc(1 ,sizeof(*music)));
+      music->name = strdup(musname);
       
       // hook into hash list
       S_HookMusic(music);
    }
 }
-
+*/
 //=============================================================================
 //
 // Console Commands
@@ -1433,8 +1489,13 @@ CONSOLE_COMMAND(s_playmusic, 0)
 
    // check to see if the lump exists to avoid stopping the current music if it
    // is missing
-   psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             GameModeInfo->musPrefix, music->name);
+   if(music->prefix)
+   {
+      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                GameModeInfo->musPrefix, music->name);
+   }
+   else
+      psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
 
    if(W_CheckNumForName(namebuf) < 0)
    {

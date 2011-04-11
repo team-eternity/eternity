@@ -48,8 +48,9 @@
 extern bool snd_init;
 
 // Needed for calling the actual sound output.
-static int SAMPLECOUNT = 512;
 #define MAX_CHANNELS 32
+
+int audio_buffers;
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -936,10 +937,6 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 static int I_SDLInitSound(void)
 {
    int success = 0;
-   int audio_buffers;
-
-   /* Initialize variables */
-   audio_buffers = SAMPLECOUNT * snd_samplerate / 11025;
    
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
@@ -961,9 +958,8 @@ static int I_SDLInitSound(void)
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   SAMPLECOUNT = audio_buffers;
    Mix_SetPostMix(I_SDLUpdateSoundCB, NULL);
-   printf("Configured audio device with %d samples/slice.\n", SAMPLECOUNT);
+   printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;
 }

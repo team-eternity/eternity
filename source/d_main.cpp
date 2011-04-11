@@ -3959,14 +3959,7 @@ void D_NewWadLumps(FILE *handle)
       }
 
       // haleyjd 03/26/11: sounds are not handled here any more
-
-      // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
-      if(!strncasecmp(lumpinfo[i]->name, GameModeInfo->musPrefix,
-                      strlen(GameModeInfo->musPrefix)))
-      {
-         S_UpdateMusic(i);
-         continue;
-      }
+      // haleyjd 04/10/11: music is not handled here now either
 
       // skins
       if(!strncmp(lumpinfo[i]->name, "S_SKIN", 6))
