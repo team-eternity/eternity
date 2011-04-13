@@ -995,7 +995,8 @@ static void D_CheckGamePathParam(void)
       size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, myargv[p + 1]);
 
       psnprintf(gamedir, len, "%s/%s", basepath, myargv[p + 1]);
-
+      M_NormalizeSlashes(gamedir);
+      
       gamepathparm = p + 1;
 
       if(!stat(gamedir, &sbuf)) // check for existence
@@ -1003,7 +1004,6 @@ static void D_CheckGamePathParam(void)
          if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
          {
             basegamepath = strdup(gamedir);
-            M_NormalizeSlashes(basegamepath);
             gamepathset = true;
          }
          else
@@ -1018,7 +1018,7 @@ static void D_CheckGamePathParam(void)
 // D_SetGamePath
 //
 // haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
-// been determined by the iwad in use.
+// been determined by the IWAD in use.
 //
 static void D_SetGamePath(void)
 {

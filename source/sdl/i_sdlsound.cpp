@@ -461,7 +461,7 @@ static double rational_tanh(double x)
 static double do_3band(EQSTATE *es, double sample)
 {
    // haleyjd: This "very small addend" is supposed to take care of P4
-   // renormalization problems. Do we actually need it?
+   // denormalization problems. Do we actually need it?
    static double vsa = (1.0 / 4294967295.0);
 
    // Locals
@@ -755,8 +755,6 @@ static void I_SDLUpdateSound(void)
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   bool wrotesound = false;
-
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *rightout, *leftend;
    
@@ -866,14 +864,12 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          }
       }
       
-      wrotesound = true;
-
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
    }
 
    // haleyjd 04/21/10: equalization pass
-   if(s_equalizer && wrotesound)
+   if(s_equalizer)
    {
       leftout  = (Sint16 *)stream;
       rightout = leftout + 1;
