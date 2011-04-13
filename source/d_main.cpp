@@ -800,6 +800,9 @@ enum
    BASE_ISGOOD,
    BASE_NOTEXIST,
    BASE_NOTDIR,
+   BASE_CANTOPEN,
+   BASE_NOTEEBASE,
+   BASE_NUMCODES
 };
 
 //
@@ -808,20 +811,56 @@ enum
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckBasePath(const char *path)
+static int D_CheckBasePath(const char *pPath)
 {
-   int ret;
+   int ret = -1;
    struct stat sbuf;
+   qstring str;
+   const char *path;
+
+   str = pPath;
+   
+   // Rub out any ending slashes; stat does not like them.
+   str.RStrip('\\');
+   str.RStrip('/');
+
+   path = str.constPtr();
 
    if(!stat(path, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-         ret = BASE_ISGOOD;
+      {
+         DIR *dir;
+         int score = 0;
+         
+         if((dir = opendir(path)))
+         {
+            // directory should contain at least startup.wad, root.edf, and /doom
+            dirent *ent;
+            while((ent = readdir(dir)))
+            {
+               if(!strncasecmp(ent->d_name, "startup.wad", ent->d_namlen))
+                  ++score;
+               else if(!strncasecmp(ent->d_name, "root.edf", ent->d_namlen))
+                  ++score;
+               else if(!strncasecmp(ent->d_name, "doom", ent->d_namlen))
+                  ++score;
+            }
+            closedir(dir);
+
+            if(score >= 3)
+               ret = BASE_ISGOOD;    // Got it.
+            else
+               ret = BASE_NOTEEBASE; // Doesn't look like EE's base folder.
+         }
+         else
+            ret = BASE_CANTOPEN; // opendir failed
+      }
       else
-         ret = BASE_NOTDIR;
+         ret = BASE_NOTDIR; // S_ISDIR failed
    }
    else
-      ret = BASE_NOTEXIST;
+      ret = BASE_NOTEXIST; // stat failed
    
    return ret;
 }
@@ -895,8 +934,16 @@ static void D_SetBasePath(void)
       else
       {
          // final straw.
-         I_Error("D_SetBasePath: base path %s.\n",
-                 res == BASE_NOTDIR ? "is not a directory" : "does not exist");
+         static const char *errmsgs[BASE_NUMCODES] =
+         {
+            "is FUBAR", // ???
+            "does not exist",
+            "is not a directory",
+            "cannot be opened",
+            "is not an Eternity base path"
+         };
+
+         I_Error("D_SetBasePath: base path %s.\n", errmsgs[res]);
       }
    }
 
