@@ -291,7 +291,7 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 // from the partition line. If the distance is too small, we may decide to
 // change our idea of sidedness.
 //
-d_inline static double R_PartitionDistance(double x, double y, node_t *node)
+inline static double R_PartitionDistance(double x, double y, node_t *node)
 {
    return fabs((node->a * x + node->b * y + node->c) / node->len);
 }

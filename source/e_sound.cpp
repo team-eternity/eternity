@@ -1147,7 +1147,7 @@ ESoundSeq_t *E_EnvironmentSequence(int id)
 // A safe wrapper around E_SoundForName that returns NULL for the
 // NULL pointer. This saves me a truckload of hassle below.
 //
-d_inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
+inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
 {
    return soundname ? E_SoundForName(soundname) : NULL;
 }
@@ -1157,7 +1157,7 @@ d_inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
 //
 // A safe wrapper around strtol that returns 0 for the NULL string.
 //
-d_inline static int E_SeqGetNumber(const char *numstr)
+inline static int E_SeqGetNumber(const char *numstr)
 {
    return numstr ? strtol(numstr, NULL, 0) : 0;
 }

@@ -136,7 +136,7 @@ static bool HU_AddWidgetToHash(hu_widget_t *widget)
 // to the previous disable state member, so that widgets can still
 // erase properly.
 //
-d_inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
+inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
 {
    widget->prevdisabled = widget->disabled;
    widget->disabled = disable;
@@ -149,7 +149,7 @@ d_inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
 // erasing. Sets prevdisabled to disabled to end erasing after the
 // first frame this is called for disabled widgets.
 //
-d_inline static bool HU_NeedsErase(hu_widget_t *widget)
+inline static bool HU_NeedsErase(hu_widget_t *widget)
 {
    // needs erase if enabled, or if WAS enabled on last frame
    bool ret = !widget->disabled || !widget->prevdisabled;
@@ -781,7 +781,7 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
 // so that the area does not continue to grow in size indefinitely and 
 // take up the entire screen.
 //
-d_inline static void HU_ClearEraseData(hu_textwidget_t *tw)
+inline static void HU_ClearEraseData(hu_textwidget_t *tw)
 {
    tw->erasedata.x1 = tw->erasedata.y1 =  D_MAXINT;
    tw->erasedata.x2 = tw->erasedata.y2 = -D_MAXINT;

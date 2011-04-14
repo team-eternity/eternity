@@ -1193,7 +1193,7 @@ void P_StartLineScript(line_t *line, Mobj *thing)
 // W1/S1/G1 line actions on action failure, because it makes some maps
 // unplayable if it is disabled unconditionally outside of demos.
 //
-d_inline static bool P_ClearSwitchOnFail(void)
+inline static bool P_ClearSwitchOnFail(void)
 {
    return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
 }

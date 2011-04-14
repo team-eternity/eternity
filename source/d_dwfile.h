@@ -59,17 +59,17 @@ void   D_Fclose(DWFILE *dwfile);
 size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);
 size_t D_FileLength(DWFILE *file);
 
-d_inline static bool D_IsOpen(DWFILE *dwfile)
+inline static bool D_IsOpen(DWFILE *dwfile)
 {
    return !!(dwfile->inp);
 }
 
-d_inline static bool D_IsLump(DWFILE *dwfile)
+inline static bool D_IsLump(DWFILE *dwfile)
 {
    return !!(dwfile->lump);
 }
 
-d_inline static bool D_IsData(DWFILE *dwfile)
+inline static bool D_IsData(DWFILE *dwfile)
 {
    return !!(dwfile->data);
 }

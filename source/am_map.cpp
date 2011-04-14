@@ -1604,7 +1604,7 @@ static int AM_DoorColor(int type)
 // Returns true if line is an exit and the exit map color is
 // defined; returns false otherwise.
 //
-d_inline static bool AM_drawAsExitLine(line_t *line)
+inline static bool AM_drawAsExitLine(line_t *line)
 {
    return (mapcolor_exit &&
            (line->special==11  ||
@@ -1621,7 +1621,7 @@ d_inline static bool AM_drawAsExitLine(line_t *line)
 // Returns true if a 1S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-d_inline static bool AM_drawAs1sSecret(line_t *line)
+inline static bool AM_drawAs1sSecret(line_t *line)
 {
    return (mapcolor_secr &&
            ((map_secret_after &&
@@ -1637,7 +1637,7 @@ d_inline static bool AM_drawAs1sSecret(line_t *line)
 // Returns true if a 2S line is or was secret and the secret line
 // map color is defined; returns false otherwise.
 //
-d_inline static bool AM_drawAs2sSecret(line_t *line)
+inline static bool AM_drawAs2sSecret(line_t *line)
 {
    //jff 2/16/98 fixed bug: special was cleared after getting it
    
@@ -1663,7 +1663,7 @@ d_inline static bool AM_drawAs2sSecret(line_t *line)
 // Returns true if a line is a teleporter and the teleporter map
 // color is defined; returns false otherwise.
 //
-d_inline static bool AM_drawAsTeleporter(line_t *line)
+inline static bool AM_drawAsTeleporter(line_t *line)
 {
    return (mapcolor_tele && !(line->flags & ML_SECRET) && 
            (line->special == 39  || line->special == 97 ||
@@ -1678,7 +1678,7 @@ d_inline static bool AM_drawAsTeleporter(line_t *line)
 //
 // FIXME / HTIC_TODO: Heretic support
 //
-d_inline static bool AM_drawAsLockedDoor(line_t *line)
+inline static bool AM_drawAsLockedDoor(line_t *line)
 {
    return ((mapcolor_bdor || mapcolor_ydor || mapcolor_rdor) &&
            ((line->special >=  26 && line->special <=  28) ||
@@ -1694,7 +1694,7 @@ d_inline static bool AM_drawAsLockedDoor(line_t *line)
 //
 // Returns true if a door is closed, false otherwise.
 //
-d_inline static bool AM_isDoorClosed(line_t *line)
+inline static bool AM_isDoorClosed(line_t *line)
 {
    return ((line->backsector->floorheight  == line->backsector->ceilingheight) ||
            (line->frontsector->floorheight == line->frontsector->ceilingheight));
@@ -1706,7 +1706,7 @@ d_inline static bool AM_isDoorClosed(line_t *line)
 // Returns true if a door is closed, not secret, and closed door
 // map color is defined; returns false otherwise.
 //
-d_inline static bool AM_drawAsClosedDoor(line_t *line)
+inline static bool AM_drawAsClosedDoor(line_t *line)
 {
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
@@ -2328,7 +2328,7 @@ static void AM_drawMarks(void)
 // Returns nothing
 // haleyjd: made inline static
 //
-d_inline static void AM_drawCrosshair(int color)
+inline static void AM_drawCrosshair(int color)
 {
    vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
       color; // single point for now

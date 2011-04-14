@@ -64,7 +64,7 @@ static UDPpacket *packet;
 
 static IPaddress sendaddress[MAXNETNODES];
 
-d_inline static void HostToNet16(Sint16 value, byte *area)
+inline static void HostToNet16(Sint16 value, byte *area)
 {
    // input is host endianness, output is big endian
 
@@ -72,13 +72,13 @@ d_inline static void HostToNet16(Sint16 value, byte *area)
    area[1] = (byte)( value       & 0xff);
 }
 
-d_inline static Sint16 NetToHost16(const byte *area)
+inline static Sint16 NetToHost16(const byte *area)
 {
    // input is big endian, output is host endianness
    return ((Sint16)area[0] << 8) | area[1];
 }
 
-d_inline static void HostToNet32(Uint32 value, byte *area)
+inline static void HostToNet32(Uint32 value, byte *area)
 {
    // input is host endianness, output is big endian
 
@@ -88,7 +88,7 @@ d_inline static void HostToNet32(Uint32 value, byte *area)
    area[3] = (byte)( value        & 0xff);
 }
 
-d_inline static Uint32 NetToHost32(const byte *area)
+inline static Uint32 NetToHost32(const byte *area)
 {
    // input is big endian, output is host endianness
 

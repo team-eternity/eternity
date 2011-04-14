@@ -1242,7 +1242,7 @@ void A_MinotaurAtk1(Mobj *actor)
 //
 // Returns true if the Maulotaur should do a charge attack.
 //
-d_inline static
+inline static
 bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 {
    return (target->z + target->height > actor->z &&      // check heights
@@ -1256,7 +1256,7 @@ bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 //
 // Returns true if the Maulotaur should use floor fire.
 //
-d_inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
+inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 {
    return (target->z == target->floorz && // target on floor?
            dist < 576*FRACUNIT &&         // target in range?

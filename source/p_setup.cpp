@@ -159,7 +159,7 @@ static WadDirectory *setupwad;
 // Inline routine to convert a short value to a long, preserving the value
 // -1 but treating any other negative value as unsigned.
 //
-d_inline static int ShortToLong(int16_t value)
+inline static int ShortToLong(int16_t value)
 {
    return (value == -1) ? -1l : (int)value & 0xffff;
 }
@@ -170,7 +170,7 @@ d_inline static int ShortToLong(int16_t value)
 // haleyjd 06/14/10: Inline routine to convert a short value to a node child
 // number. 0xFFFF and 0x8000 are special values.
 //
-d_inline static void ShortToNodeChild(int *loc, uint16_t value)
+inline static void ShortToNodeChild(int *loc, uint16_t value)
 {
    // e6y: support for extended nodes
    if(value == 0xffff)
@@ -202,8 +202,8 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(int16_t input, int limit, 
-                                  const char *func, int index, const char *item)
+inline static int SafeUintIndex(int16_t input, int limit, 
+                                const char *func, int index, const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
 
@@ -223,8 +223,8 @@ d_inline static int SafeUintIndex(int16_t input, int limit,
 // haleyjd 06/14/10: Matching routine for indices that are already in unsigned
 // short format.
 //
-d_inline static int SafeRealUintIndex(uint16_t input, int limit, 
-                                      const char *func, int index, const char *item)
+inline static int SafeRealUintIndex(uint16_t input, int limit, 
+                                    const char *func, int index, const char *item)
 {
    int ret = (int)(SwapUShort(input)) & 0xffff;
 

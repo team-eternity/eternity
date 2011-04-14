@@ -126,7 +126,7 @@ static polymaplink_t *bmap_freelist; // free list of blockmap links
 // Static Functions
 //
 
-d_inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
+inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
 {
    bbox[BOXTOP]    += add->y;
    bbox[BOXBOTTOM] += add->y;
@@ -134,7 +134,7 @@ d_inline static void Polyobj_bboxAdd(fixed_t *bbox, vertex_t *add)
    bbox[BOXRIGHT]  += add->x;
 }
 
-d_inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
+inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
 {
    bbox[BOXTOP]    -= sub->y;
    bbox[BOXBOTTOM] -= sub->y;
@@ -142,7 +142,7 @@ d_inline static void Polyobj_bboxSub(fixed_t *bbox, vertex_t *sub)
    bbox[BOXRIGHT]  -= sub->x;
 }
 
-d_inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
+inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
 {
    dst->x += add->x;
    dst->y += add->y;
@@ -150,7 +150,7 @@ d_inline static void Polyobj_vecAdd(vertex_t *dst, vertex_t *add)
    dst->fy = M_FixedToFloat(dst->y);
 }
 
-d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
+inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
 {
    dst->x -= sub->x;
    dst->y -= sub->y;
@@ -158,7 +158,7 @@ d_inline static void Polyobj_vecSub(vertex_t *dst, vertex_t *sub)
    dst->fy = M_FixedToFloat(dst->y);
 }
 
-d_inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
+inline static void Polyobj_vecSub2(vertex_t *dst, vertex_t *v1, vertex_t *v2)
 {
    dst->x = v1->x - v2->x;
    dst->y = v1->y - v2->y;
@@ -698,7 +698,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 // argument instead of using tmthing. Returns true if the line isn't contacted
 // and false otherwise.
 //
-d_inline static bool Polyobj_untouched(line_t *ld, Mobj *mo)
+inline static bool Polyobj_untouched(line_t *ld, Mobj *mo)
 {
    fixed_t x, y, tmbbox[4];
 
@@ -860,7 +860,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y)
 // http://www.inversereality.org/tutorials/graphics%20programming/2dtransformations.html
 // It is, of course, just a vector-matrix multiplication.
 //
-d_inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang)
+inline static void Polyobj_rotatePoint(vertex_t *v, const vertex_t *c, int ang)
 {
    vertex_t tmp = *v;
 
@@ -1225,8 +1225,8 @@ void PolyRotateThinker::serialize(SaveArchive &arc)
 //
 // Calculates the speed components from the desired resultant velocity.
 //
-d_inline static void Polyobj_componentSpeed(int resVel, int angle, 
-                                            int *xVel, int *yVel)
+inline static void Polyobj_componentSpeed(int resVel, int angle, 
+                                          int *xVel, int *yVel)
 {
    *xVel = FixedMul(resVel, finecosine[angle]);
    *yVel = FixedMul(resVel,   finesine[angle]);

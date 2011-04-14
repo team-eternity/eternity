@@ -419,7 +419,7 @@ extern fixed_t FloatBobOffsets[64];
 #ifdef R_LINKEDPORTALS
 #include "linkoffs.h"
 
-d_inline static fixed_t getTargetX(Mobj *mo)
+inline static fixed_t getTargetX(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -433,7 +433,7 @@ d_inline static fixed_t getTargetX(Mobj *mo)
    return mo->target->x + link->x;
 }
 
-d_inline static fixed_t getTargetY(Mobj *mo)
+inline static fixed_t getTargetY(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -449,7 +449,7 @@ d_inline static fixed_t getTargetY(Mobj *mo)
 
 // SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
 // x and y offset... Maybe I should phase out the z offset stuff?
-d_inline static fixed_t getTargetZ(Mobj *mo)
+inline static fixed_t getTargetZ(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -466,7 +466,7 @@ d_inline static fixed_t getTargetZ(Mobj *mo)
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
-d_inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 
@@ -480,7 +480,7 @@ d_inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
    return mo2->x + link->x;
 }
 
-d_inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 

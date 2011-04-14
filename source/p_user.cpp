@@ -383,7 +383,7 @@ static void P_HereticCurrent(player_t *player)
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
 //
-d_inline static bool P_SectorIsSpecial(sector_t *sector)
+inline static bool P_SectorIsSpecial(sector_t *sector)
 {
    return (sector->special || sector->flags || sector->damage);
 }
