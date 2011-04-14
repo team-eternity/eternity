@@ -39,14 +39,6 @@
 #include "../z_zone.h"
 #endif
 
-// haleyjd: handle packing for GCC
-#ifndef __GNUC__
-#ifndef __attribute__
-#define __attribute__(x)
-#endif
-#endif
-
-
 // some macros to decode mus event bit fields
 
 #define last(e)         ((UBYTE)((e) & 0x80))
@@ -511,8 +503,11 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
                goto err;
          }
          data = *musptr++;
+         // Gez: Fix TNT.WAD's D_STALKS, based on Ben Ryves's fix in MUS2MID
+         if(data & 0x80)
+            data = 0x7F;
          // proff: Added typecast to avoid warning
-         if(TWriteByte(mididata, MIDItrack, (unsigned char)(data & 0x7F)))
+         if(TWriteByte(mididata, MIDItrack, (unsigned char)data))
             goto err;
          break;
          
