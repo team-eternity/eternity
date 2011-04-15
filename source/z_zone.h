@@ -49,20 +49,24 @@
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#ifdef LINUX
-// Linux needs strings.h too, for strcasecmp etc.
-#include <strings.h>
-#endif
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef LINUX
+// Linux needs strings.h too, for strcasecmp etc.
+#include <strings.h>
+#endif
 #include <sys/stat.h>
+#ifndef LINUX
+// NON-Linux platforms need sys/types.h
+#include <sys/types.h>
+#endif
 #include <time.h>
 
 // haleyjd: inttypes.h - on Windows, this comes from the source\Win32 directory

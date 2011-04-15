@@ -28,15 +28,15 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
-//#include <fcntl.h>
 
 #include "c_io.h"
-#include "s_sound.h"
-#include "p_skin.h"
 #include "m_argv.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_swap.h"
+#include "p_skin.h"
+#include "s_sound.h"
+#include "v_misc.h"
 #include "w_wad.h"
 #include "w_hacks.h"
 

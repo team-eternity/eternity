@@ -28,16 +28,24 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __D_GI_H__
-#define __D_GI_H__
+#ifndef D_GI_H__
+#define D_GI_H__
 
-#include "mn_engin.h"
-#include "mn_menus.h"
-#include "mn_htic.h"
-#include "sounds.h"
-#include "v_video.h"
-#include "st_stuff.h"
-#include "in_lude.h"
+#include "m_fixed.h"
+
+//#include "mn_engin.h"
+//#include "mn_menus.h"
+//#include "mn_htic.h"
+//#include "sounds.h"
+//#include "v_video.h"
+//#include "st_stuff.h"
+//#include "in_lude.h"
+
+struct default_or_t;
+struct interfns_t;
+struct menu_t;
+struct musicinfo_t;
+struct stbarfns_t;
 
 // inspired by, but not taken from, zdoom
 

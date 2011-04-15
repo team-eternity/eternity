@@ -26,24 +26,26 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
+
+#include "am_map.h"
+#include "d_deh.h"    // Ty 03/27/98 - externalizations
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_main.h"
-#include "st_stuff.h"
-#include "r_main.h"
+#include "doomstat.h"
+#include "dstrings.h"
+#include "g_bind.h"
+#include "p_maputl.h"
 #include "p_portal.h"
 #include "p_setup.h"
-#include "p_maputl.h"
-#include "r_draw.h"
-#include "w_wad.h"
-#include "v_video.h"
 #include "p_spec.h"
-#include "am_map.h"
-#include "dstrings.h"
-#include "d_deh.h"    // Ty 03/27/98 - externalizations
-#include "d_gi.h"
-#include "g_bind.h"
+#include "st_stuff.h"
+#include "r_draw.h"
+#include "r_main.h"
 #include "r_portal.h"
 #include "v_block.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 
 //jff 1/7/98 default acolors added

@@ -26,9 +26,10 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
-#include "r_main.h"
+#include "doomstat.h"
+#include "m_argv.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
@@ -38,7 +39,8 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
-#include "m_argv.h"
+#include "r_main.h"
+#include "r_state.h"
 
 bool P_ChangeSector(sector_t *, int);
 

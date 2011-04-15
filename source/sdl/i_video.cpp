@@ -29,30 +29,28 @@
 #include "SDL.h"
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
-#include "../doomstat.h"
+
 #include "../am_map.h"
 #include "../c_io.h"
 #include "../c_runcmd.h"
+#include "../d_gi.h"
 #include "../d_main.h"
+#include "../doomstat.h"
 #include "../f_wipe.h"
+#include "../i_system.h"
 #include "../i_video.h"
+#include "../in_lude.h"
 #include "../m_argv.h"
 #include "../m_bbox.h"
+#include "../m_misc.h"
 #include "../m_qstr.h"
 #include "../mn_engin.h"
 #include "../r_draw.h"
+#include "../r_main.h"
 #include "../st_stuff.h"
 #include "../v_video.h"
-#include "../w_wad.h"
-#include "../z_zone.h"
 #include "../version.h"
-
-// haleyjd 04/15/02:
-#include "../i_system.h"
-#include "../in_lude.h"
-#include "../d_gi.h"
-
-#include "../r_main.h"
+#include "../w_wad.h"
 
 // ----------------------------------------------------------------------------
 // WM-related stuff (see i_input.c)

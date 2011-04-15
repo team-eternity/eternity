@@ -28,17 +28,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "a_common.h"
+#include "a_small.h"
+#include "acs_intr.h"
+#include "c_io.h"
 #include "d_gi.h"
 #include "d_mod.h"
-#include "c_io.h"
+#include "doomstat.h"
+#include "e_args.h"
+#include "e_sound.h"
+#include "e_states.h"
+#include "e_string.h"
+#include "e_things.h"
+#include "e_ttypes.h"
 #include "hu_stuff.h"
-#include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -46,16 +56,6 @@
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
-#include "a_small.h"
-#include "acs_intr.h"
-
-#include "e_args.h"
-#include "e_sound.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "e_ttypes.h"
-
-#include "a_common.h"
 
 //
 // killough 9/98: a mushroom explosion effect, sorta :)

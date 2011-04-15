@@ -172,7 +172,7 @@ struct player_t
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 //
-typedef struct wbplayerstruct_s
+struct wbplayerstruct_t
 {
   bool        in;     // whether the player is in game
     
@@ -184,9 +184,9 @@ typedef struct wbplayerstruct_s
   int         frags[4];
   int         score;  // current score on entry, modified on return
   
-} wbplayerstruct_t;
+};
 
-typedef struct wbstartstruct_s
+struct wbstartstruct_t
 {
   int         epsd;   // episode # (0-2)
 
@@ -213,7 +213,7 @@ typedef struct wbstartstruct_s
 
   wbplayerstruct_t    plyr[MAXPLAYERS];
 
-} wbstartstruct_t;
+};
 
 
 #endif

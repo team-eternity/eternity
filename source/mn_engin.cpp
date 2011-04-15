@@ -29,14 +29,16 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
-#include "d_gi.h"      // haleyjd: global game mode info
-#include "d_io.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"      // haleyjd: global game mode info
+#include "d_io.h"
 #include "d_main.h"
-#include "d_deh.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "g_game.h"
 #include "hu_over.h"
@@ -44,15 +46,14 @@
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
+#include "mn_htic.h"
 #include "mn_menus.h"
 #include "mn_misc.h"
-#include "psnprntf.h"
 #include "r_defs.h"
 #include "r_draw.h"
 #include "s_sound.h"
-#include "w_wad.h"
 #include "v_video.h"
-#include "e_fonts.h"
+#include "w_wad.h"
 
 //=============================================================================
 //

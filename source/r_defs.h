@@ -123,7 +123,7 @@ enum
 
 // SoM: Map-slope struct. Stores both floating point and fixed point versions
 // of the vectors.
-typedef struct pslope_s
+struct pslope_t
 {
    // --- Information used in clipping/projection ---
    // Origin vector for the plane
@@ -141,7 +141,7 @@ typedef struct pslope_s
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
-} pslope_t;
+};
 
 typedef struct ETerrain_s *secterrainptr;
 

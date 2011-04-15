@@ -18,11 +18,8 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __D_DEH__
-#define __D_DEH__
-
-#include "doomtype.h"
-#include "d_dehtbl.h"
+#ifndef D_DEH_H__
+#define D_DEH_H__
 
 //
 //      Ty 03/22/98 - note that we are keeping the english versions and

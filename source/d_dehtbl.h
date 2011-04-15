@@ -18,12 +18,10 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __D_DEHTBL_H__
-#define __D_DEHTBL_H__
+#ifndef D_DEHTBL_H__
+#define D_DEHTBL_H__
 
-#include "sounds.h"
-#include "info.h"
-#include "p_mobj.h"
+class Mobj;
 
 typedef struct deh_bexptr_s
 {

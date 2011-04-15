@@ -27,7 +27,6 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
-#include "d_event.h"
 #include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
@@ -36,6 +35,8 @@ enum
    AM_MSGENTERED,
    AM_MSGEXITED
 };
+
+struct event_t;
 
 // Called by main loop.
 bool AM_Responder(event_t *ev);

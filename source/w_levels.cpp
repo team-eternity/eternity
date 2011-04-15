@@ -25,19 +25,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomtype.h"
-#include "doomdef.h"
-#include "w_wad.h"
-#include "w_levels.h"
-#include "d_gi.h"
-#include "m_dllist.h"
-#include "e_hash.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
+#include "doomdef.h"
+#include "doomtype.h"
+#include "e_hash.h"
+#include "m_dllist.h"
 #include "m_misc.h"
-#include "mn_files.h"
 #include "mn_engin.h"
+#include "mn_files.h"
 #include "p_setup.h"
+#include "v_video.h"
+#include "w_levels.h"
+#include "w_wad.h"
 
 //=============================================================================
 // 

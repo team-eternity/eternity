@@ -32,12 +32,15 @@
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "doomstat.h"
 
+#include "acs_intr.h"
+#include "am_map.h"
 #include "d_main.h"
+#include "doomstat.h"
 #include "f_wipe.h"
 #include "g_game.h"
 #include "m_random.h"
+#include "mn_engin.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_map.h"
@@ -45,9 +48,8 @@
 #include "p_inter.h"
 #include "p_spec.h"
 #include "r_draw.h"
-#include "mn_engin.h"
-#include "am_map.h"
-#include "acs_intr.h"
+#include "v_misc.h"
+
 
 /***************************************************************************
                 'defines': string values for variables

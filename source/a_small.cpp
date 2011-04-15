@@ -35,17 +35,20 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomtype.h"
-#include "w_wad.h"
-#include "v_misc.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "p_spec.h"
-#include "p_info.h"
-#include "m_misc.h"
-#include "a_small.h"
 #include "hu_stuff.h"
+#include "m_misc.h"
 #include "m_qstr.h"
+#include "p_info.h"
+#include "p_spec.h"
+#include "r_state.h"
+#include "v_misc.h"
+#include "w_wad.h"
+
 
 //
 // The Game Script

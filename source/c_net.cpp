@@ -38,15 +38,17 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "c_net.h"
 #include "d_main.h"
-#include "g_game.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "g_game.h"
 #include "m_qstr.h"
+#include "v_misc.h"
 
 int       incomingdest[MAXPLAYERS];
 qstring   incomingmsg[MAXPLAYERS];

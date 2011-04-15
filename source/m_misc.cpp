@@ -66,6 +66,7 @@
 #include "r_sky.h"
 #include "r_things.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_video.h"
 
 //

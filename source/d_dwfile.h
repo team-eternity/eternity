@@ -29,7 +29,6 @@
 #define D_DWFILE_H__
 
 #include "doomtype.h"
-#include "d_keywds.h"
 
 // haleyjd 03/21/10
 enum

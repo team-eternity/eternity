@@ -26,8 +26,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_ENEMY__
-#define __P_ENEMY__
+#ifndef P_ENEMY_H__
+#define P_ENEMY_H__
+
+// Required for pr_class_t
+#include "m_random.h"
 
 enum 
 {

@@ -70,7 +70,7 @@ enum
    it_end,              // last menuitem in the list
 };
 
-typedef struct menuitem_s
+struct menuitem_t
 {
   int type; // item types
   
@@ -88,7 +88,7 @@ typedef struct menuitem_s
   /*** internal stuff used by menu code ***/
   int x, y;
   variable_t *var;        // ptr to console variable
-} menuitem_t;
+};
 
 // haleyjd 10/07/05: Menu engine changes:
 // 1. menuitems are no longer contained inside the menu_t structure,
@@ -107,15 +107,15 @@ enum
    mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
 };
 
-typedef struct menu_s
+struct menu_t
 {
    // 10/07/05: pointer to item array
    menuitem_t *menuitems;
 
    // 10/07/05: pointers to additional page menus
-   struct menu_s *prevpage;
-   struct menu_s *nextpage;
-   struct menu_s *rootpage;   // haleyjd 11/02/06: first page of a set
+   menu_t *prevpage;
+   menu_t *nextpage;
+   menu_t *rootpage;   // haleyjd 11/02/06: first page of a set
 
    // x,y offset of menu
    int x, y;
@@ -129,7 +129,7 @@ typedef struct menu_s
    void (*drawer)(void);              // separate drawer function 
 
    const char **content_names;    // table of contents stuff, optional
-   struct menu_s **content_pages;
+   menu_t     **content_pages;
    
    int gap_override;              // haleyjd 10/09/05: override gap size
 
@@ -137,11 +137,11 @@ typedef struct menu_s
 
    // internal fields
    char name[33];                 // haleyjd 03/14/06: for dynamic menus
-   struct menu_s *dynanext;
+   menu_t *dynanext;
 
-   struct menu_s *curpage;        // haleyjd 10/02/06: for multipage menus
+   menu_t *curpage;               // haleyjd 10/02/06: for multipage menus
    int widest_width;              // haleyjd 03/22/09: for LALIGNED flag
-} menu_t;
+};
 
 // menu 'widgets':
 // A structured way for the menu to display things

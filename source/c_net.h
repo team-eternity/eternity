@@ -19,10 +19,10 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __C_NET_H__
-#define __C_NET_H__
+#ifndef C_NET_H__
+#define C_NET_H__
 
-#include "c_runcmd.h"
+struct command_t;
 
 // net command numbers
 
@@ -106,6 +106,7 @@ void C_NetInit(void);
 void C_SendNetData(void);
 void C_UpdateVar(command_t *command);
 
+struct command_t;
 extern command_t *c_netcmds[NUMNETCMDS];
 extern char* default_name;
 extern int default_colour;

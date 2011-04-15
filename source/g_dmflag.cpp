@@ -26,6 +26,8 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "doomstat.h"
 #include "g_dmflag.h"
 #include "c_net.h"
 #include "c_runcmd.h"

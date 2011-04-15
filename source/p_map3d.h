@@ -27,6 +27,9 @@
 #ifndef P_MAP3D_H__
 #define P_MAP3D_H__
 
+class Mobj;
+struct sector_t;
+
 bool  P_TestMobjZ(Mobj *mo);
 bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y);
 bool  P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y);

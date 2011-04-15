@@ -31,25 +31,28 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
 
 #include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "d_main.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
 #include "d_dwfile.h"
 #include "d_gi.h"
+#include "d_io.h"        // SoM 3/14/2002: strncasecmp
+#include "d_main.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "m_argv.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
 #include "m_misc.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "g_bind.h"
-#include "e_fonts.h"
 
 // Action variables
 // These variables are asserted as positive values when the action

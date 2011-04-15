@@ -29,18 +29,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 
-#include "d_gi.h"
-#include "d_io.h"
-#include "doomdef.h"
-#include "doomstat.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
-#include "d_dialog.h" // haleyjd
+#include "d_dehtbl.h"
+#include "d_gi.h"
+#include "d_io.h"
 #include "d_main.h"
-#include "dstrings.h"
+#include "doomdef.h"
+#include "doomstat.h"
 #include "dhticstr.h" // haleyjd
+#include "dstrings.h"
 #include "e_fonts.h"
 #include "e_states.h"
 #include "g_dmflag.h"
@@ -62,11 +63,6 @@
 #include "s_sound.h"
 #include "v_video.h"
 #include "w_wad.h"
-
-// haleyjd 04/15/02: SDL joystick stuff
-#ifdef _SDL_VER
-#include "i_system.h"
-#endif
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;

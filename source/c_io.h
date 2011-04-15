@@ -22,14 +22,11 @@
 #ifndef C_IO_H__
 #define C_IO_H__
 
-#include "doomstat.h"
-#include "d_event.h"
-        // for text colours:
-#include "v_video.h"
-#include "m_qstr.h"
-
 #define INPUTLENGTH 512
 #define LINELENGTH  128
+
+struct event_t;
+class qstring;
 
 void C_Init(void);
 void C_Ticker(void);

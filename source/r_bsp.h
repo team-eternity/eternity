@@ -24,16 +24,20 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_BSP__
-#define __R_BSP__
+#ifndef R_BSP_H__
+#define R_BSP_H__
+
+struct drawseg_t;
+struct line_t;
+struct seg_t;
+struct sector_t;
+struct side_t;
 
 extern seg_t    *curline;
 extern side_t   *sidedef;
 extern line_t   *linedef;
 extern sector_t *frontsector;
 extern sector_t *backsector;
-
-struct drawseg_t;
 
 // old code -- killough:
 // extern drawseg_t drawsegs[MAXDRAWSEGS];
@@ -52,11 +56,6 @@ bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom);
 
 void R_ClearClipSegs(void);
 void R_ClearDrawSegs(void);
-
-// SoM: This is called by portal rendering functions to clear the array that marks 
-// the tops of slopes so the clipsegtoportal functions show all the slope that's 
-// in the window.
-void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
 
 void R_RenderBSPNode(int bspnum);
 int R_DoorClosed(void);   // killough 1/17/98

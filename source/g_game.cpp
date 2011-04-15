@@ -29,66 +29,66 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "p_info.h"
+#include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "d_net.h"
 #include "doomstat.h"
+#include "dstrings.h"
+#include "e_player.h"
+#include "e_states.h"
 #include "f_finale.h"
 #include "f_wipe.h"
+#include "g_bind.h"
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "in_lude.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "m_random.h"
 #include "m_shots.h"
+#include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
-#include "m_random.h"
-#include "p_setup.h"
+#include "p_chase.h"
+#include "p_hubs.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "p_saveg.h"
+#include "p_setup.h"
 #include "p_tick.h"
-#include "d_main.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
-#include "st_stuff.h"
-#include "am_map.h"
-#include "w_wad.h"
-#include "w_levels.h" // haleyjd
-#include "r_main.h"
-#include "r_draw.h"
-#include "r_things.h" // haleyjd
-#include "p_map.h"
-#include "s_sound.h"
-#include "dstrings.h"
-#include "sounds.h"
-#include "p_chase.h"
 #include "r_data.h"
+#include "r_draw.h"
+#include "r_main.h"
 #include "r_sky.h"
-#include "d_deh.h"              // Ty 3/27/98 deh declarations
-#include "p_inter.h"
-#include "g_game.h"
-#include "c_net.h"
-#include "d_net.h"
-#include "p_hubs.h"
-#include "g_bind.h"
-#include "d_dialog.h"
-#include "d_gi.h"
-#include "in_lude.h"
-#include "a_small.h"
-#include "g_dmflag.h"
-#include "e_states.h"
+#include "r_things.h" // haleyjd
 #include "s_sndseq.h"
-#include "acs_intr.h"
-#include "metaapi.h"
-#include "p_maputl.h"
-#include "e_player.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_misc.h"
 #include "version.h"
+#include "w_levels.h" // haleyjd
+#include "w_wad.h"
 
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
-static bool  netdemo;
+static bool      netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;

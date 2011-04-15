@@ -22,7 +22,6 @@
 #ifndef __C_RUNCMD_H__
 #define __C_RUNCMD_H__
 
-#include "m_misc.h"
 #include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
@@ -32,8 +31,9 @@
 // is the support of defaults for ALL archived console variables and
 // a way to set a variable's value without changing its default.
 
-typedef struct command_s  command_t;
-typedef struct variable_s variable_t;
+struct command_t;
+struct default_t;
+struct variable_t;
 
 /******************************** #defines ********************************/
 
@@ -204,7 +204,7 @@ enum    // variable type
 
 /******************************** STRUCTS ********************************/
 
-struct variable_s
+struct variable_t
 {  
   void *variable;  // NB: for strings, this is char ** not char *
   void *v_default; // the default 
@@ -215,11 +215,11 @@ struct variable_s
   double dmin;     // haleyjd 04/21/10: min for double vars
   double dmax;     //                   max for double vars
   
-  struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
-  struct command_s *command;    // haleyjd 08/15/10: parent command
+  default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
+  command_t *command;           // haleyjd 08/15/10: parent command
 };
 
-struct command_s
+struct command_t
 {
   const char *name;
   int type;              // ct_?? command type
@@ -246,7 +246,7 @@ typedef struct alias_s
 //
 // Console state is now stored in the console_t structure.
 // 
-typedef struct console_s
+struct console_t
 {
    int current_height; // current height of console
    int current_target; // target height of console
@@ -259,7 +259,7 @@ typedef struct console_s
    qstring   args;     // args as single string   
    qstring **argv;     // argument values to current command
    int numargvsalloc;  // number of arguments available to command parsing
-} console_t;
+};
 
 extern console_t Console; // the one and only Console object
 

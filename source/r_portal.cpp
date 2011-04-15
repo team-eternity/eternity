@@ -27,12 +27,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
-#include "r_bsp.h"
 #include "r_things.h"
+#include "v_misc.h"
 
 static portal_t *portals = NULL, *last = NULL;
 static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
@@ -627,6 +629,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.y = lastyf;
    view.z = lastzf;
 }
+
+extern void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
 
 //
 // R_RenderSkyboxPortal

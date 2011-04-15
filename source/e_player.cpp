@@ -35,14 +35,16 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_items.h"
-#include "p_skin.h"
-
+#include "d_player.h"
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_player.h"
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
-#include "e_player.h"
+#include "p_mobj.h"
+#include "p_skin.h"
+#include "v_video.h"
 
 //
 // Player Class and Skin Options

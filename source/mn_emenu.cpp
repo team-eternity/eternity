@@ -26,12 +26,14 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "mn_engin.h"
+#include "v_video.h"
 
 #define NEED_EDF_DEFINITIONS
 #include "Confuse/confuse.h"

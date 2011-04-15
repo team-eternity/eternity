@@ -27,6 +27,9 @@
 #ifndef __R_THINGS__
 #define __R_THINGS__
 
+struct sector_t;
+struct particle_t;
+
 // Constant arrays used for psprite clipping and initializing clipping.
 
 extern float zeroarray[MAX_SCREENWIDTH];
@@ -68,7 +71,7 @@ struct texture_t;
 struct texcol_t;
 
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
-void R_AddSprites(sector_t *sec,int); // killough 9/18/98
+void R_AddSprites(sector_t *sec, int); // killough 9/18/98
 void R_AddPSprites(void);
 void R_DrawSprites(void);
 void R_InitSprites(char **namelist);

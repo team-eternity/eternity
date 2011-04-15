@@ -26,13 +26,15 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "c_io.h"
 #include "doomdef.h"
+#include "m_bbox.h"
+#include "p_slopes.h"
+#include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
-#include "m_bbox.h"
-#include "p_spec.h"
-#include "p_slopes.h"
-#include "c_io.h"
+#include "v_misc.h"
 
 //
 // P_MakeSlope

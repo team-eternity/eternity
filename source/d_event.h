@@ -25,12 +25,8 @@
 //    
 //-----------------------------------------------------------------------------
 
-#ifndef __D_EVENT__
-#define __D_EVENT__
-
-
-#include "doomtype.h"
-
+#ifndef D_EVENT_H__
+#define D_EVENT_H__
 
 //
 // Event handling.

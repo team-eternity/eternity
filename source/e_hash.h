@@ -28,6 +28,7 @@
 #define E_HASH_H__
 
 #include "e_hashkeys.h"
+#include "m_dllist.h"
 
 //
 // EHashTable<T, K>

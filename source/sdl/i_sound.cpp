@@ -25,14 +25,16 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
+
 #include "../c_runcmd.h"
 #include "../c_io.h"
 #include "../d_main.h"
 #include "../doomstat.h"
+#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
 #include "../i_sound.h"
 #include "../i_system.h"
-#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
 #include "../m_argv.h"
+#include "../m_misc.h"
 #include "../mn_engin.h"
 #include "../s_sound.h"
 

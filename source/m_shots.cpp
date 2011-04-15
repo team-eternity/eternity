@@ -24,15 +24,16 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <sys/stat.h>
-
 #include "z_zone.h"
-#include "d_io.h"
+
 #include "d_gi.h"
-#include "s_sound.h"
-#include "w_wad.h"
+#include "d_io.h"
 #include "m_buffer.h"
 #include "m_misc.h"
+#include "s_sound.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 // jff 3/30/98: option to output screenshot as pcx or bmp
 // haleyjd 12/28/09: selects from any number of formats now.

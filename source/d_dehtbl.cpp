@@ -29,17 +29,20 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "m_argv.h"
-#include "m_fixed.h"
+
+#include "d_dehtbl.h"
 #include "d_io.h"
+#include "d_mod.h"
 #include "doomdef.h"
 #include "doomtype.h"
-#include "dstrings.h"  // to get initial text values
 #include "dhticstr.h"  // haleyjd
-#include "d_dehtbl.h"
-#include "m_queue.h"
-#include "d_mod.h"
+#include "dstrings.h"  // to get initial text values
 #include "e_lib.h"
+#include "info.h"
+#include "m_argv.h"
+#include "m_fixed.h"
+#include "m_queue.h"
+#include "sounds.h"
 
 //
 // Text Replacement

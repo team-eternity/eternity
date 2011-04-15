@@ -26,13 +26,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
+
 
 #include "a_small.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "doomdef.h"
+#include "doomstat.h"
 #include "e_exdata.h"
 #include "e_player.h"
 #include "e_states.h"
@@ -54,13 +55,15 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_tick.h"
-#include "p_spec.h" // haleyjd 04/05/99: TerrainTypes
+#include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
 #include "st_stuff.h"
+#include "v_video.h"
 
 void P_FallingDamage(player_t *);
 

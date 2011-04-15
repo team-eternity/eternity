@@ -38,18 +38,20 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
 #include "d_dwfile.h"
 #include "d_io.h"
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "c_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "g_game.h"
 #include "m_argv.h"
 #include "m_misc.h"
-#include "mn_engin.h"
-#include "g_game.h"
 #include "m_qstr.h" // haleyjd
+#include "mn_engin.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 static void C_EchoValue(command_t *command);

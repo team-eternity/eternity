@@ -30,6 +30,7 @@
 
 #include "m_dllist.h"
 #include "p_tick.h"
+#include "r_defs.h"
 
 class  qstring;
 class  Mobj;

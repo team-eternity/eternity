@@ -30,17 +30,22 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "w_wad.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
-#include "sounds.h"
-#include "hi_stuff.h"
-#include "wi_stuff.h"
-#include "d_gi.h"
-#include "p_info.h"
-#include "info.h"
 #include "e_things.h"
 #include "f_finale.h"
+#include "hi_stuff.h"
+#include "info.h"
+#include "mn_htic.h"
+#include "mn_menus.h"
+#include "p_info.h"
+#include "st_stuff.h"
+#include "sounds.h"
+#include "v_video.h"
+#include "w_wad.h"
+#include "wi_stuff.h"
 
 // definitions
 

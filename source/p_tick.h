@@ -23,7 +23,6 @@
 #define P_TICK_H__
 
 #include "z_zone.h"
-#include "doomtype.h"
 
 class SaveArchive;
 

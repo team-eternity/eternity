@@ -25,18 +25,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
+#include "e_things.h"
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_spec.h"
-#include "r_main.h"
 #include "p_tick.h"
+#include "p_user.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "p_user.h"
-#include "d_gi.h"
-#include "e_things.h"
 
 //
 // TELEPORTATION

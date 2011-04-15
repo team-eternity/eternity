@@ -22,15 +22,16 @@
 #ifndef __G_GAME__
 #define __G_GAME__
 
-#include "doomdef.h"
-#include "d_event.h"
-#include "d_ticcmd.h"
-#include "d_player.h"
+#include "doomdef.h" // HEADER_FIXME
+#include "tables.h"
+
+struct event_t;
+struct player_t;
+class WadDirectory;
 
 //
 // GAME
 //
-class WadDirectory;
 
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);

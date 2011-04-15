@@ -36,9 +36,8 @@
 #include <dirent.h>
 #endif
 
-#include <errno.h>
-
 #include "z_zone.h"
+
 #include "c_io.h"
 #include "d_main.h"
 #include "d_gi.h"
@@ -50,6 +49,8 @@
 #include "s_sound.h"
 #include "v_font.h"
 #include "v_block.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
 
 //=============================================================================

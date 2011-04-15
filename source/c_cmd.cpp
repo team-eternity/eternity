@@ -32,14 +32,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "d_io.h"  // SoM 3/12/2002: strncasecmp
+
+#include "a_small.h" // haleyjd
 #include "c_io.h"
-#include "c_runcmd.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_io.h"  // SoM 3/12/2002: strncasecmp
+#include "m_misc.h"
 #include "m_random.h"
+#include "v_misc.h"
 #include "version.h"
-#include "a_small.h" // haleyjd
 
 // version hack
 

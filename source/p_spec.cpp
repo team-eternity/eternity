@@ -42,6 +42,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
 #include "d_englsh.h"
 #include "d_gi.h"
 #include "d_mod.h"
@@ -72,6 +73,7 @@
 #include "r_ripple.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_video.h"
 #include "w_wad.h"
 
 //

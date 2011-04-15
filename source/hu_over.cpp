@@ -29,11 +29,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
+
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_event.h"
+#include "d_gi.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_over.h"
@@ -43,12 +46,10 @@
 #include "p_setup.h"
 #include "r_draw.h"
 #include "s_sound.h"
+#include "st_stuff.h"
+#include "v_font.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "d_gi.h"
-#include "v_font.h"
-#include "e_fonts.h"
-
 
 // internal for other defines:
 

@@ -29,32 +29,34 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_gi.h"     // haleyjd: gamemode pertinent info
 #include "d_io.h"
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "c_net.h"
+#include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_stuff.h"
-#include "mn_engin.h"
-#include "mn_misc.h"  // haleyjd
+#include "m_misc.h"
 #include "m_shots.h"
 #include "m_random.h"
 #include "m_syscfg.h"
+#include "mn_engin.h"
+#include "mn_misc.h"  // haleyjd
 #include "p_inter.h"
+#include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
-#include "w_wad.h"
-#include "w_levels.h"
-
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
-#include "p_partcl.h" // haleyjd: add particle event cmds
-#include "d_gi.h"     // haleyjd: gamemode pertinent info
-#include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
+#include "v_video.h"
+#include "w_levels.h"
+#include "w_wad.h"
 
 extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 

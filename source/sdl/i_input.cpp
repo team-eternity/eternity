@@ -27,11 +27,13 @@
 
 #include "SDL.h"
 
+#include "../c_io.h"
+#include "../c_runcmd.h"
+#include "../d_event.h"
+#include "../d_main.h"
 #include "../doomdef.h"
 #include "../doomstat.h"
-#include "../d_main.h"
-#include "../c_runcmd.h"
-#include "../c_io.h"
+#include "../v_video.h"
 
 
 // Grab the mouse? (int type for config code)

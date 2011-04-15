@@ -27,15 +27,18 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "doomstat.h"
+#include "p_map.h"
+#include "p_portal.h"
+#include "p_setup.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_bsp.h"
 #include "r_things.h"
-#include "p_setup.h"
-#include "p_map.h"
-#include "p_portal.h"
+#include "v_misc.h"
 
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 

@@ -63,7 +63,7 @@ void ST_CacheFaces(patch_t **faces, char *facename);
 
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 
-typedef struct stbarfns_s
+struct stbarfns_t
 {
    // data
    int  height;
@@ -74,7 +74,7 @@ typedef struct stbarfns_s
    void (*FSDrawer)(void); // fullscreen drawer
    void (*Start)(void);    // reinit
    void (*Init)(void);     // initialize at startup   
-} stbarfns_t;
+};
 
 extern stbarfns_t DoomStatusBar;
 extern stbarfns_t HticStatusBar;

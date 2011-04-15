@@ -30,7 +30,11 @@
 
 // needed for MAXFLAGFIELDS:
 #include "d_dehtbl.h"
-#include "e_string.h"
+#include "m_fixed.h"
+
+struct edf_string_t;
+struct sfxinfo_t;
+struct state_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16

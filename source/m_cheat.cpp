@@ -33,18 +33,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
-#include "m_cheat.h"
+
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized strings
+#include "d_deh.h"    // Ty 03/27/98 - externalized strings
+#include "d_dehtbl.h"
 #include "d_gi.h"
-#include "d_io.h"   // SoM 3/14/2002: strncasecmp
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_mod.h"
+#include "doomstat.h"
 #include "dstrings.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "m_argv.h"
+#include "m_cheat.h"
 #include "p_inter.h"
 #include "p_setup.h"
 #include "r_data.h"

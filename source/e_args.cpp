@@ -26,14 +26,16 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "info.h"
-#include "m_misc.h"
+
+#include "e_args.h"
 #include "e_lib.h"
 #include "e_mod.h"
-#include "e_states.h"
-#include "e_things.h"
 #include "e_sound.h"
-#include "e_args.h"
+#include "e_states.h"
+#include "e_string.h"
+#include "e_things.h"
+#include "info.h"
+#include "m_misc.h"
 
 // haleyjd 05/21/10: an empty string, to avoid allocating tons of memory for
 // single-byte strings.

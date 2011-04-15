@@ -22,7 +22,7 @@
 #ifndef P_INFO_H__
 #define P_INFO_H__
 
-#include "doomtype.h"
+#include "doomdef.h"
 
 void P_LoadLevelInfo(int lumpnum, const char *lvname);
 

@@ -25,20 +25,23 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "d_deh.h"    // Ty 03/27/98 - externalized
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "doomstat.h"
+#include "dstrings.h"
 #include "g_game.h"
+#include "hu_stuff.h"
 #include "p_info.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "s_sound.h"
-#include "s_sndseq.h"
-#include "sounds.h"
 #include "r_main.h"
-#include "dstrings.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized
-#include "hu_stuff.h"
-#include "d_gi.h"
+#include "r_state.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "sounds.h"
 
 //
 // P_DoorSequence

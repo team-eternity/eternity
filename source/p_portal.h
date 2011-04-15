@@ -37,6 +37,11 @@ extern bool useportalgroups;
 #define R_NOGROUP -1
 #endif
 
+struct line_t;
+struct portal_t;
+struct sector_t;
+
+
 //
 // P_CreatePortalGroup
 // This creates an portal group, and returns the id of that group

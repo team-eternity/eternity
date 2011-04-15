@@ -27,12 +27,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef LINUX
-#include <sys/types.h>
-#endif
-#include <sys/stat.h>
-#include <fcntl.h>
-
 // haleyjd 10/28/04: Win32-specific repair for D_DoomExeDir
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
 #ifdef _MSC_VER
@@ -44,50 +38,50 @@
 
 #include "z_zone.h"
 
-#include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_deh.h"      // Ty 04/08/98 - Externalizations
+#include "d_dehtbl.h"
+#include "d_diskfile.h"
+#include "d_gi.h"
+#include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
-#include "d_diskfile.h"
-#include "sounds.h"
-#include "c_runcmd.h"
-#include "c_io.h"
-#include "c_net.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "v_video.h"
+#include "e_edf.h"
+#include "e_fonts.h"
+#include "e_player.h"
 #include "f_finale.h"
 #include "f_wipe.h"
+#include "g_bind.h"     // haleyjd
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "g_gfs.h"
+#include "hu_stuff.h"
+#include "i_system.h"
+#include "i_sound.h"
+#include "i_video.h"
+#include "in_lude.h"
 #include "m_argv.h"
 #include "m_misc.h"
 #include "m_swap.h"
 #include "mn_engin.h"
-#include "i_system.h"
-#include "i_sound.h"
-#include "i_video.h"
-#include "g_game.h"
-#include "hu_stuff.h"
-#include "st_stuff.h"
-#include "am_map.h"
-#include "p_setup.h"
 #include "p_chase.h"
 #include "p_info.h"
+#include "p_setup.h"
 #include "r_draw.h"
 #include "r_main.h"
-#include "d_main.h"
-#include "d_deh.h"  // Ty 04/08/98 - Externalizations
-#include "g_bind.h" // haleyjd
-#include "d_dialog.h"
-#include "d_gi.h"
-#include "in_lude.h"
-#include "a_small.h"
-#include "acs_intr.h"
-#include "g_gfs.h"
-#include "g_dmflag.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_video.h"
 #include "version.h"
-#include "e_edf.h"
-#include "e_player.h"
-#include "e_fonts.h"
+#include "w_wad.h"
 #include "xl_scripts.h"
 
 // haleyjd 11/09/09: wadfiles made a structure.
@@ -839,11 +833,11 @@ static int D_CheckBasePath(const char *pPath)
             dirent *ent;
             while((ent = readdir(dir)))
             {
-               if(!strncasecmp(ent->d_name, "startup.wad", ent->d_namlen))
+               if(!strcasecmp(ent->d_name, "startup.wad"))
                   ++score;
-               else if(!strncasecmp(ent->d_name, "root.edf", ent->d_namlen))
+               else if(!strcasecmp(ent->d_name, "root.edf"))
                   ++score;
-               else if(!strncasecmp(ent->d_name, "doom", ent->d_namlen))
+               else if(!strcasecmp(ent->d_name, "doom"))
                   ++score;
             }
             closedir(dir);

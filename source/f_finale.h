@@ -28,8 +28,9 @@
 #ifndef __F_FINALE__
 #define __F_FINALE__
 
-#include "doomtype.h"
-#include "d_event.h"
+#include "info.h"
+
+struct event_t;
 
 // haleyjd: this stuff is now needed in e_edf.c
 typedef struct castinfo_s
@@ -67,7 +68,7 @@ enum
 void F_Init(void);
 
 // Called by main loop.
-bool F_Responder(event_t* ev);
+bool F_Responder(event_t *ev);
 
 // Called by main loop.
 void F_Ticker(void);

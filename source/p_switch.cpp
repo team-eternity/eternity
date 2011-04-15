@@ -26,6 +26,8 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
@@ -33,11 +35,12 @@
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_spec.h"
+#include "r_data.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
-#include "d_gi.h"
 
 // killough 2/8/98: Remove switch limit
 

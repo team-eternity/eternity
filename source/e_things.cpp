@@ -28,34 +28,35 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "i_system.h"
 
 #include "Confuse/confuse.h"
 
-#include "r_defs.h"
 #include "acs_intr.h"
-#include "i_system.h"
-#include "w_wad.h"
+
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
-#include "d_dehtbl.h"
 #include "d_mod.h"
+#include "e_dstate.h"
+#include "e_edf.h"
+#include "e_lib.h"
+#include "e_mod.h"
+#include "e_sound.h"
+#include "e_sprite.h"
+#include "e_states.h"
+#include "e_things.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_cheat.h"
+#include "m_qstr.h"
+#include "metaapi.h"
 #include "p_inter.h"
 #include "p_partcl.h"
+#include "r_defs.h"
 #include "r_draw.h"
+#include "w_wad.h"
 
-#include "e_lib.h"
-#include "e_edf.h"
-#include "e_sprite.h"
-#include "e_states.h"
-#include "e_dstate.h"
-#include "e_things.h"
-#include "e_sound.h"
-#include "e_mod.h"
-
-#include "metaapi.h"
 
 // 7/24/05: This is now global, for efficiency's sake
 

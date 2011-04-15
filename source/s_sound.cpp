@@ -28,24 +28,28 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
-#include "d_main.h"
-#include "s_sound.h"
-#include "i_sound.h"
-#include "r_main.h"
-#include "m_random.h"
-#include "w_wad.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
+#include "d_main.h"
+#include "doomstat.h"
+#include "e_sound.h"
+#include "i_sound.h"
+#include "m_random.h"
+#include "m_queue.h"
+#include "p_chase.h"
 #include "p_info.h"
 #include "p_portal.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "d_gi.h"
-#include "a_small.h"
-#include "e_sound.h"
-#include "m_queue.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_main.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 // haleyjd 07/13/05: redefined to use sound-specific attenuation params
 #define S_ATTENUATOR ((sfx->clipping_dist - sfx->close_dist) >> FRACBITS)

@@ -27,6 +27,9 @@
 //
 //----------------------------------------------------------------------------
 
+// Extinct code, left over from Eternity Total Conversion
+#if 0
+
 #ifndef __D_DIALOG_H__
 #define __D_DIALOG_H__
 
@@ -62,6 +65,8 @@ void DLG_SetTextColor(int);
 void DLG_SetBGColor(int);
 void DLG_Ticker(void);
 void DLG_Drawer(void);
+
+#endif
 
 #endif
 

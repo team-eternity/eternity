@@ -26,20 +26,22 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "g_game.h"
 #include "info.h"
-#include "d_main.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
-#include "r_main.h"
-#include "g_game.h"
-#include "a_small.h"
 #include "p_tick.h"
+#include "r_main.h"
+#include "r_state.h"
 
 bool PTR_chasetraverse(intercept_t *in);
 

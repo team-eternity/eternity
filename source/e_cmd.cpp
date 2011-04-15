@@ -26,14 +26,17 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "info.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "a_small.h"
-#include "e_things.h"
+#include "info.h"
+#include "metaapi.h"
+#include "v_misc.h"
+
 #include "e_exdata.h"
 #include "e_sound.h"
-#include "metaapi.h"
+#include "e_things.h"
 
 //
 // e_dumpthings

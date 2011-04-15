@@ -30,22 +30,27 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_event.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "m_random.h"
-#include "p_mobjcol.h"
-#include "p_tick.h"
+#include "e_fonts.h"
+#include "e_things.h" 
+#include "g_game.h"
 #include "in_lude.h"
-#include "v_video.h"
-#include "r_main.h"
-#include "s_sound.h"
-#include "s_sndseq.h"
-#include "d_gi.h"
+#include "m_random.h"
 #include "p_enemy.h"
 #include "p_info.h"
-#include "g_game.h"
-#include "e_things.h" 
-#include "e_fonts.h"
+#include "p_mobjcol.h"
+#include "p_tick.h"
+#include "r_main.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "v_video.h"
+
+
+
 
 // Globals
 

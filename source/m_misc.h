@@ -79,23 +79,23 @@ typedef enum
 //
 // killough 11/98: totally restructured
 
-// Forward declarations for interface (mainly for GCC)
-typedef struct default_s *defaultptr;
-typedef struct variable_s *variableptr;
+// Forward declarations for interface
+struct default_t;
+struct variable_t;
 
 // haleyjd 07/03/10: interface object for defaults
 typedef struct default_i_s
 {
-   bool (*writeHelp) (defaultptr, FILE *);          // write help message
-   bool (*writeOpt)  (defaultptr, FILE *);          // write option key and value
-   void (*setValue)  (defaultptr, void *, bool); // set value
-   bool (*readOpt)   (defaultptr, char *, bool); // read option from string
-   void (*setDefault)(defaultptr);                  // set to hardcoded default
-   bool (*checkCVar) (defaultptr, variableptr);     // check against a cvar
-   void (*getDefault)(defaultptr, void *);          // get the default externally
+   bool (*writeHelp) (default_t *, FILE *);       // write help message
+   bool (*writeOpt)  (default_t *, FILE *);       // write option key and value
+   void (*setValue)  (default_t *, void *, bool); // set value
+   bool (*readOpt)   (default_t *, char *, bool); // read option from string
+   void (*setDefault)(default_t *);               // set to hardcoded default
+   bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
+   void (*getDefault)(default_t *, void *);       // get the default externally
 } default_i;
 
-typedef struct default_s
+struct default_t
 {
    const char *const   name;                 // name
    const defaulttype_e type;                 // type
@@ -115,7 +115,7 @@ typedef struct default_s
    
    // internal fields (initialized implicitly to 0) follow
    
-   struct default_s *first, *next;           // hash table pointers
+   default_t *first, *next;                  // hash table pointers
    int modified;                             // Whether it's been modified
    
    int         orig_default_i;               // Original default, if modified
@@ -126,7 +126,7 @@ typedef struct default_s
    default_i  *methods;
    
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
-} default_t;
+};
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
@@ -167,11 +167,11 @@ typedef struct defaultfile_s
 } defaultfile_t;
 
 // haleyjd 06/29/09: default overrides
-typedef struct default_or_s
+struct default_or_t
 {
    const char *name;
    int defaultvalue;
-} default_or_t;
+};
 
 // killough 11/98:
 bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
@@ -181,7 +181,7 @@ void       M_ResetDefaultFileComments(defaultfile_t *df);
 void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
 void       M_ResetDefaultComments(void);
-default_t *M_FindDefaultForCVar(variableptr var);
+default_t *M_FindDefaultForCVar(variable_t *var);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
