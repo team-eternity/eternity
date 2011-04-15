@@ -39,6 +39,7 @@
 #include "c_runcmd.h"
 #include "d_main.h"
 #include "d_deh.h"
+#include "d_dwfile.h"
 #include "d_gi.h"
 #include "g_game.h"
 #include "m_argv.h"

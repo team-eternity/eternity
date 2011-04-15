@@ -22,7 +22,6 @@
 #ifndef __C_RUNCMD_H__
 #define __C_RUNCMD_H__
 
-#include "d_dwfile.h"
 #include "m_misc.h"
 #include "m_qstr.h"
 
@@ -275,6 +274,7 @@ const char *C_VariableStringValue(variable_t *command);
 // haleyjd: the SMMU v3.30 script-running functions
 // (with my fixes :P)
 
+struct DWFILE;
 void C_RunScript(DWFILE *);
 void C_RunScriptFromFile(const char *filename);
 

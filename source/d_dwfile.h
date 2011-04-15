@@ -40,20 +40,20 @@ enum
    DWF_NUMTYPES
 };
 
-typedef struct DWFILE_s
+struct DWFILE
 {
    int type;
    byte *inp, *lump, *data; // Pointer to lump, FILE, or data
    int size;
    int origsize;            // for ungetc
    int lumpnum;             // haleyjd 03/08/06: need to save this
-} DWFILE;
+};
 
 char  *D_Fgets(char *buf, size_t n, DWFILE *fp);
 int    D_Feof(DWFILE *fp);
 int    D_Fgetc(DWFILE *fp);
 int    D_Ungetc(int c, DWFILE *fp);
-void   D_OpenFile(DWFILE *infile, const char *filename, char *mode);
+void   D_OpenFile(DWFILE *infile, const char *filename, const char *mode);
 void   D_OpenLump(DWFILE *infile, int lumpnum);
 void   D_Fclose(DWFILE *dwfile);
 size_t D_Fread(void *dest, size_t size, size_t num, DWFILE *file);

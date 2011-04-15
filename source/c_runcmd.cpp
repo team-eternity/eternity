@@ -38,6 +38,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "d_dwfile.h"
 #include "d_io.h"
 #include "c_io.h"
 #include "c_runcmd.h"

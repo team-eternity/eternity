@@ -96,12 +96,14 @@ public:
 
    // Data Members
 
-   Thinker *prev, *next;
+   Thinker *prev;
+   Thinker *next;
   
    // killough 8/29/98: we maintain thinkers in several equivalence classes,
    // according to various criteria, so as to allow quicker searches.
 
-   Thinker *cnext, *cprev; // Next, previous thinkers in same class
+   Thinker *cprev; // Next, previous thinkers in same class
+   Thinker *cnext;
 };
 
 //
