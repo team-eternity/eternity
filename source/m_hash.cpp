@@ -74,8 +74,8 @@ public:
 class MD5Hash : public HashAlgorithm
 {
 protected:
-   static int MD5Hash::md5_r[64];
-   static uint32_t MD5Hash::md5_k[64];
+   static int md5_r[64];
+   static uint32_t md5_k[64];
    void ProcessBlock(HashData *hash);
 
 public:
