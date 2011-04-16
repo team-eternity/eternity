@@ -29,9 +29,7 @@
 #include "z_zone.h"
 
 #include "am_map.h"
-
 #include "c_runcmd.h"
-
 #include "d_gi.h"      // haleyjd
 #include "d_main.h"
 #include "doomdef.h"
@@ -45,9 +43,10 @@
 #include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "st_stuff.h"
 #include "st_lib.h"
+#include "st_stuff.h"
 #include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
 
 //

@@ -27,6 +27,9 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
+// Required for: byte
+#include "doomtype.h"
+
 //
 // An exception class for buffered IO errors
 //

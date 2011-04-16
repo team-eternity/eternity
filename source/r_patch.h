@@ -34,7 +34,7 @@
 #ifndef R_PATCH_H__
 #define R_PATCH_H__
 
-#include <stdint.h>
+// Required for: byte, stdint types
 #include "doomtype.h"
 
 #if defined(_MSC_VER) || defined(__GNUC__)

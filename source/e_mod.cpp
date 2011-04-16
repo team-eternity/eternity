@@ -38,6 +38,7 @@
 
 #include "d_dehtbl.h"
 #include "d_io.h"
+#include "doomtype.h"
 
 //
 // damagetype options

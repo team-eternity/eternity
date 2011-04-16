@@ -24,12 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __STLIB__
-#define __STLIB__
+#ifndef ST_LIB_H__
+#define ST_LIB_H__
 
-// We are referring to patches.
-#include "r_defs.h"
-#include "v_video.h"  // color ranges
+// Required for: VBuffer
+#include "v_buffer.h"
+
+struct patch_t;
 
 //
 // Background and foreground screen numbers
