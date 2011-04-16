@@ -59,6 +59,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"

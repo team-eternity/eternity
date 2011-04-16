@@ -37,7 +37,6 @@
 #define M_QSTR_H__
 
 #include "z_zone.h"
-#include "doomtype.h"
 
 class qstring : public ZoneObject
 {

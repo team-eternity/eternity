@@ -33,6 +33,7 @@
 #include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "d_net.h"
 #include "doomstat.h"
 #include "e_things.h"
 #include "g_game.h"

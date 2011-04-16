@@ -35,6 +35,7 @@
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_main.h"
+#include "d_net.h"
 #include "doomstat.h"
 #include "e_edf.h"
 #include "e_player.h"

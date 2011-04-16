@@ -26,12 +26,14 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __STSTUFF_H__
-#define __STSTUFF_H__
+#ifndef ST_STUFF_H__
+#define ST_STUFF_H__
 
 #include "doomtype.h"
 #include "d_event.h"
 #include "r_defs.h"
+
+struct patch_t;
 
 // Size of statusbar.
 // Now sensitive for scaling.

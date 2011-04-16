@@ -34,12 +34,15 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomtype.h"
+
 
 #include "a_small.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_event.h"
+#include "doomstat.h"
+#include "doomtype.h"
 #include "hu_stuff.h"
 #include "m_misc.h"
 #include "m_qstr.h"

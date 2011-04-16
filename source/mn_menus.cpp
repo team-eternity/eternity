@@ -58,9 +58,12 @@
 #include "mn_misc.h"
 #include "mn_files.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "s_sound.h"
+#include "v_font.h"
 #include "v_video.h"
 #include "w_wad.h"
 

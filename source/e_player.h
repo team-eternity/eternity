@@ -31,6 +31,8 @@
 // macros
 #define NUMEDFSKINCHAINS 17
 
+struct skin_t;
+
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 //

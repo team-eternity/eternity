@@ -30,8 +30,6 @@
 
 #include "doomtype.h"
 
-//#define NUMDIGEST 5
-
 class HashData
 {
 public:

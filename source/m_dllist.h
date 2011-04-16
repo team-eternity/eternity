@@ -39,8 +39,6 @@
 #ifndef M_DLLIST_H__
 #define M_DLLIST_H__
 
-#include "d_keywds.h"
-
 // 
 // DLListItem
 //
@@ -57,8 +55,8 @@ template<typename T> class DLListItem
 public:
    DLListItem<T>  *dllNext;
    DLListItem<T> **dllPrev;
-   T               *dllObject; // 08/02/09: pointer back to object
-   unsigned int     dllData;   // 02/07/10: arbitrary data cached at node
+   T              *dllObject; // 08/02/09: pointer back to object
+   unsigned int    dllData;   // 02/07/10: arbitrary data cached at node
 
    inline void insert(T *parentObject, DLListItem<T> **head)
    {

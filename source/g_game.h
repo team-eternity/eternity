@@ -19,11 +19,11 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __G_GAME__
-#define __G_GAME__
+#ifndef G_GAME_H__
+#define G_GAME_H__
 
-#include "doomdef.h" // HEADER_FIXME
-#include "tables.h"
+// Required for byte
+#include "doomtype.h"
 
 struct event_t;
 struct player_t;
@@ -100,7 +100,7 @@ extern int  automlook;
 extern int  invert_mouse;
 extern int  bfglook;
 
-extern angle_t consoleangle;
+//extern angle_t consoleangle;
 
 extern int  defaultskill;     // jff 3/24/98 default skill
 extern bool haswolflevels;    // jff 4/18/98 wolf levels present

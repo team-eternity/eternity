@@ -192,6 +192,8 @@ extern bool opensocket;
 //extern doomcom_t singleplayer;
 //extern int newtics, ticnum;     //sf
 
+extern  ticcmd_t   netcmds[][BACKUPTICS];
+
 // haleyjd 10/16/07
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)

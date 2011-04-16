@@ -45,6 +45,7 @@
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"

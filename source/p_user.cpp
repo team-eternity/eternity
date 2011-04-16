@@ -27,23 +27,23 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_small.h"
+#include "c_net.h"
 #include "doomstat.h"
 #include "d_event.h"
-#include "c_net.h"
-#include "g_game.h"
-#include "r_main.h"
-#include "p_map.h"
-#include "p_spec.h"
-#include "p_user.h"
-#include "p_maputl.h"
-
-// haleyjd
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
+#include "d_gi.h"
 #include "e_player.h"
 #include "e_states.h"
-#include "d_gi.h"
+#include "g_game.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_skin.h"
+#include "p_spec.h"
+#include "p_user.h"
+#include "r_main.h"
+#include "s_sound.h"
+#include "sounds.h"
 
 //
 // Movement.

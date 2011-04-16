@@ -30,6 +30,9 @@
 
 #include "doomtype.h"
 
+struct particle_t;
+struct sector_t;
+
 #ifdef NEED_EDF_DEFINITIONS
 
 #define EDF_SEC_SPLASH   "splash"

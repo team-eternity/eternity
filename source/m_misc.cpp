@@ -36,6 +36,8 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_runcmd.h"
 #include "d_gi.h"
 #include "m_misc.h"
 #include "m_syscfg.h"
@@ -49,6 +51,7 @@
 #include "d_englsh.h"
 #include "d_io.h"
 #include "d_main.h"
+#include "doomstat.h"
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_over.h"

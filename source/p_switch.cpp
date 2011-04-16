@@ -34,6 +34,7 @@
 #include "g_game.h"
 #include "m_swap.h"
 #include "p_info.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_main.h"

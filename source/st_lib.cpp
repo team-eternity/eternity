@@ -25,12 +25,14 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomdef.h"
 #include "doomstat.h"
 #include "m_swap.h"
-#include "st_stuff.h"
-#include "st_lib.h"
 #include "r_main.h"
+#include "r_patch.h"
+#include "st_lib.h"
+#include "st_stuff.h"
 #include "v_video.h"
 #include "w_wad.h"
 

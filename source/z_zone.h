@@ -75,6 +75,7 @@
 // haleyjd: C++ headers
 #include <new>
 
+// haleyjd: portable replacement function headers
 #include "psnprntf.h"
 
 // ZONE MEMORY

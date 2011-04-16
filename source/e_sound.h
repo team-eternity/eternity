@@ -28,10 +28,8 @@
 #ifndef E_SOUND_H
 #define E_SOUND_H
 
-#include "doomtype.h"
-#include "sounds.h"
 #include "m_dllist.h"
-#include "s_sndseq.h"
+#include "sounds.h"
 
 // haleyjd 04/13/08: this replaces S_sfx[0].
 extern sfxinfo_t NullSound;

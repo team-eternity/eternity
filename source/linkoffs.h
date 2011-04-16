@@ -35,10 +35,10 @@
 #define R_NOGROUP -1
 #endif
 
-typedef struct linkoffset_s
+struct linkoffset_t
 {
    fixed_t x, y, z;
-} linkoffset_t;
+};
 
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 

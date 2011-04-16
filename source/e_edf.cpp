@@ -84,6 +84,7 @@
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "doomdef.h"
+#include "doomstat.h"
 #include "info.h"
 #include "m_argv.h"
 #include "m_misc.h"

@@ -27,7 +27,6 @@
 #ifndef E_MOD_H__
 #define E_MOD_H__
 
-#include "doomtype.h"
 #include "m_dllist.h"
 #include "e_hashkeys.h"
 

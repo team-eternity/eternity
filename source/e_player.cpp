@@ -32,6 +32,7 @@
 
 #include "Confuse/confuse.h"
 
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_items.h"

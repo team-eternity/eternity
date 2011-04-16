@@ -39,9 +39,12 @@
 #include "z_zone.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
+#include "d_event.h"
 #include "d_main.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "g_bind.h"
 #include "m_misc.h"
 #include "mn_engin.h"
 #include "mn_files.h"

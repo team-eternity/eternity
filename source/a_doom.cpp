@@ -28,33 +28,33 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "a_common.h"
+#include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "doomstat.h"
+#include "e_args.h"
+#include "e_sound.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
 #include "g_game.h"
-#include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobjcol.h"
+#include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_state.h"
-#include "sounds.h"
 #include "s_sound.h"
-#include "a_small.h"
-
-#include "e_args.h"
-#include "e_sound.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "e_ttypes.h"
-
-#include "a_common.h"
+#include "sounds.h"
 
 //
 // A_PosAttack

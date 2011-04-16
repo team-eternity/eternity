@@ -30,9 +30,8 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
-#include "c_runcmd.h"
-#include "d_event.h"
-#include "g_bind.h"
+struct event_t;
+struct variable_t;
 
 //
 // menu_t

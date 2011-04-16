@@ -37,11 +37,13 @@
 //  tied to animation frames.
 // Needs precompiled tables/data structures.
 #include "info.h"
-// sf: skins
-#include "p_skin.h"
 #include "m_fixed.h"
 #include "m_random.h"
 #include "tables.h"
+
+struct msecnode_t;
+struct player_t;
+struct skin_t;
 
 // Defines
 
@@ -310,8 +312,8 @@ public:
    int movefactor;
 
    // a linked list of sectors where this object appears
-   struct msecnode_s *touching_sectorlist;                 // phares 3/14/98
-   struct msecnode_s *old_sectorlist;                      // haleyjd 04/16/10
+   msecnode_t *touching_sectorlist;                 // phares 3/14/98
+   msecnode_t *old_sectorlist;                      // haleyjd 04/16/10
 
    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
 

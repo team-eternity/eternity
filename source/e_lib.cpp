@@ -25,27 +25,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomtype.h"
-#include "d_io.h"
-#include "d_dwfile.h"
-#include "m_collection.h"
-#include "m_hash.h"
-#include "m_misc.h"
-#include "m_qstr.h"
-#include "w_wad.h"
-#include "psnprntf.h"
-#include "d_main.h"
 #include "i_system.h"
-#include "d_dehtbl.h"
-#include "v_video.h"
 
 #include "Confuse/confuse.h"
 #include "Confuse/lexer.h"
 
-#include <errno.h>
-
 #include "e_lib.h"
 #include "e_edf.h"
+
+#include "d_dehtbl.h"
+#include "d_dwfile.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "doomstat.h"
+#include "doomtype.h"
+#include "m_collection.h"
+#include "m_hash.h"
+#include "m_misc.h"
+#include "m_qstr.h"
+#include "psnprntf.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 //=============================================================================
 //

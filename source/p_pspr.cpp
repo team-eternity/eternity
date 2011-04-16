@@ -43,6 +43,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_pspr.h"
+#include "p_skin.h"
 #include "p_tick.h"
 #include "r_main.h"
 #include "r_segs.h"

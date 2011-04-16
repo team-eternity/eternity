@@ -29,7 +29,8 @@
 #ifndef P_ENEMY_H__
 #define P_ENEMY_H__
 
-// Required for pr_class_t
+// Required for pr_class_t, statenum_t
+#include "info.h"
 #include "m_random.h"
 
 enum 

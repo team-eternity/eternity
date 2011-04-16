@@ -20,12 +20,12 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//	System specific interface stuff.
+//   System specific interface stuff.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_TICCMD__
-#define __D_TICCMD__
+#ifndef D_TICCMD_H__
+#define D_TICCMD_H__
 
 #include "doomtype.h"
 

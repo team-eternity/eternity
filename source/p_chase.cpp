@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_main.h"
+#include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "g_game.h"

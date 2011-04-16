@@ -29,21 +29,25 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"      // haleyjd: gamemode info
 #include "d_main.h"
+#include "doomstat.h"
 #include "e_fonts.h"
+#include "g_bind.h"
 #include "m_qstr.h"
 #include "m_swap.h"
-#include "s_sound.h"
-#include "v_video.h"
-#include "v_misc.h"
-#include "w_wad.h"
-
 #include "mn_engin.h"
 #include "mn_misc.h"
-
-#include "d_gi.h" // haleyjd: gamemode info
+#include "r_patch.h"
+#include "s_sound.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 extern vfont_t *menu_font_big;
 

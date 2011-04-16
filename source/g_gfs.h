@@ -33,11 +33,8 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __G_GFS_H__
-#define __G_GFS_H__
-
-#include "doomtype.h"
-#include "d_io.h"
+#ifndef G_GFS_H__
+#define G_GFS_H__
 
 typedef struct gfs_s
 {

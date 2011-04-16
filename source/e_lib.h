@@ -27,7 +27,7 @@
 #ifndef E_LIB_H__
 #define E_LIB_H__
 
-#include "d_dehtbl.h"
+struct dehflagset_t;
 
 typedef struct E_Enable_s
 {

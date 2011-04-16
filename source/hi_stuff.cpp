@@ -25,17 +25,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "w_wad.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
+#include "e_fonts.h"
+#include "e_string.h"
 #include "g_game.h"
 #include "in_lude.h"
 #include "p_info.h"
-#include "v_block.h"
-#include "v_video.h"
 #include "s_sound.h"
-#include "d_gi.h"
-#include "e_string.h"
-#include "e_fonts.h"
+#include "v_block.h"
+#include "v_font.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 extern vfont_t *in_font;
 extern vfont_t *in_bigfont;

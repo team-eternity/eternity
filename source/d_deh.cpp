@@ -30,24 +30,26 @@
 
 // killough 5/2/98: fixed headers, removed rendunant external declarations:
 #include "z_zone.h"
+
+#include "d_dehtbl.h"
+#include "d_dwfile.h"
+#include "d_io.h"
+#include "d_main.h" // haleyjd
 #include "doomdef.h"
 #include "doomstat.h"
-#include "d_io.h"
-#include "d_dwfile.h"
-#include "sounds.h"
-#include "info.h"
-#include "m_cheat.h"
-#include "p_inter.h"
-#include "g_game.h"
-#include "d_main.h" // haleyjd
-#include "p_tick.h"
-#include "w_wad.h"
-#include "m_misc.h"
+#include "e_args.h"
+#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
-#include "e_sound.h"
-#include "e_args.h"
-#include "d_dehtbl.h"
+#include "g_game.h"
+#include "info.h"
+#include "m_cheat.h"
+#include "m_misc.h"
+#include "p_inter.h"
+#include "p_mobj.h"
+#include "p_tick.h"
+#include "sounds.h"
+#include "w_wad.h"
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation

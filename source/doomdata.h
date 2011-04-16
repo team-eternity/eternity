@@ -26,12 +26,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __DOOMDATA__
-#define __DOOMDATA__
+#ifndef DOOMDATA_H__
+#define DOOMDATA_H__
 
 // The most basic types we use, portability.
 #include "doomtype.h"
-#include "d_keywds.h"
 
 // haleyjd 10/03/05: all these structures should be byte aligned
 #if defined(_MSC_VER) || defined(__GNUC__)

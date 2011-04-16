@@ -62,12 +62,12 @@ void D_BuildBEXTables(void);
 
 // haleyjd: flag field parsing stuff is now global for EDF and
 // ExtraData usage
-typedef struct dehflags_s
+struct dehflags_t
 {
    const char *name;
    int value;
    int index;
-} dehflags_t;
+};
 
 #define MAXFLAGFIELDS 4
 
@@ -80,12 +80,12 @@ enum
    DEHFLAGS_MODE_ALL
 };
 
-typedef struct dehflagset_s
+struct dehflagset_t
 {
    dehflags_t *flaglist;
    int mode;
    int results[MAXFLAGFIELDS];
-} dehflagset_t;
+};
 
 void deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 int  deh_ParseFlagsSingle(const char *strval, int mode);

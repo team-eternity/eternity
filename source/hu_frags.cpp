@@ -30,20 +30,22 @@
 
 #include "z_zone.h"
 
-#include "hu_frags.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "d_player.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_fonts.h"
+#include "g_bind.h"
 #include "g_game.h"
+#include "hu_frags.h"
 #include "m_swap.h"
 #include "r_draw.h"
-#include "w_wad.h"
+#include "r_patch.h"
+#include "v_font.h"
 #include "v_video.h"
-#include "g_bind.h"
-#include "d_gi.h"
-#include "e_fonts.h"
+#include "w_wad.h"
 
 #define FRAGSX 125
 #define FRAGSY 10

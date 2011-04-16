@@ -43,6 +43,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_portal.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"

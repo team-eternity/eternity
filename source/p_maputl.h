@@ -24,10 +24,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_MAPUTL__
-#define __P_MAPUTL__
+#ifndef P_MAPUTL_H__
+#define P_MAPUTL_H__
 
-#include "r_defs.h"
+struct line_t;
+class  Mobj;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128

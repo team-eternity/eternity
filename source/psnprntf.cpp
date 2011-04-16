@@ -1,8 +1,18 @@
-#include "psnprntf.h"
+//=============================================================================
+// psnprintf
+//
+// Portable snprintf
+//
+// Amongst other things, tries to always guarantee the buffer will be null-
+// terminated, which some implementations do not do.
+//=============================================================================
 
 #include <string.h> /* for memset */
+#include <stdarg.h> /* for va_list */
 #include <stdlib.h> /* for fcvt */
 #include <inttypes.h> /* haleyjd */
+
+#include "psnprntf.h"
 
 /* Windows stdlib defines fcvt differently <sigh> */
 

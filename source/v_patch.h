@@ -30,6 +30,8 @@
 #include "r_data.h"
 #include "doomtype.h"
 
+struct patch_t;
+
 typedef struct PatchInfo_s
 {
    patch_t *patch;

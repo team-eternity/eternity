@@ -36,8 +36,10 @@
 #ifndef E_EXDATA_H__
 #define E_EXDATA_H__
 
+// Required for:
+// * maplinedef_t
+// * NUMLINEARGS, etc.
 #include "doomdata.h"
-#include "doomtype.h"
 #include "r_defs.h"
 
 // defines

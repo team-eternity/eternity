@@ -29,18 +29,20 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_STATE__
-#define __D_STATE__
+#ifndef D_STATE_H__
+#define D_STATE_H__
 
 // We need globally shared data structures,
 //  for defining the global state variables.
-
-#include "d_net.h"
 
 // We need the player data structure as well.
 #include "d_player.h"
 #include "p_tick.h"
 #include "tables.h"
+
+struct doomcom_t;
+struct doomdata_t;
+struct mapthing_t;
 
 typedef enum
 {
@@ -281,8 +283,6 @@ extern  player_t  players[MAXPLAYERS];
 // Alive? Disconnected?
 extern  bool playeringame[];
 
-struct mapthing_t;
-
 extern  mapthing_t *deathmatchstarts;     // killough
 extern  size_t     num_deathmatchstarts; // killough
 
@@ -299,7 +299,7 @@ extern wbstartstruct_t wminfo;
 // This doubles with BackPack powerup item.
 extern int maxammo[];
 
-extern angle_t consoleangle;
+//extern angle_t consoleangle;
 
 //-----------------------------------------
 // Internal parameters, used for engine.
@@ -341,7 +341,6 @@ extern  int        rndindex;
 
 extern  int        maketic;
 
-extern  ticcmd_t   netcmds[][BACKUPTICS];
 extern  int        ticdup;
 
 extern Thinker thinkercap;  // Both the head and tail of the thinker list

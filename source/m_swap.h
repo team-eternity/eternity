@@ -24,10 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __M_SWAP__
-#define __M_SWAP__
-
-#include "d_keywds.h" // haleyjd 05/22/02
+#ifndef M_SWAP_H__
+#define M_SWAP_H__
 
 // Endianess handling.
 // WAD files are stored little endian.

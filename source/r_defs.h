@@ -207,7 +207,7 @@ struct sector_t
    
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
-   struct msecnode_s *touching_thinglist;               // phares 3/14/98  
+   msecnode_t *touching_thinglist;               // phares 3/14/98  
    
    int linecount;
    line_t **lines;
@@ -387,16 +387,16 @@ struct subsector_t
 //
 // For the links, NULL means top or end of list.
 
-typedef struct msecnode_s
+struct msecnode_t
 {
-  sector_t          *m_sector; // a sector containing this object
-  Mobj            *m_thing;  // this object
-  struct msecnode_s *m_tprev;  // prev msecnode_t for this thing
-  struct msecnode_s *m_tnext;  // next msecnode_t for this thing
-  struct msecnode_s *m_sprev;  // prev msecnode_t for this sector
-  struct msecnode_s *m_snext;  // next msecnode_t for this sector
-  bool visited; // killough 4/4/98, 4/7/98: used in search algorithms
-} msecnode_t;
+  sector_t   *m_sector; // a sector containing this object
+  Mobj       *m_thing;  // this object
+  msecnode_t *m_tprev;  // prev msecnode_t for this thing
+  msecnode_t *m_tnext;  // next msecnode_t for this thing
+  msecnode_t *m_sprev;  // prev msecnode_t for this sector
+  msecnode_t *m_snext;  // next msecnode_t for this sector
+  bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+};
 
 //
 // The LineSeg.

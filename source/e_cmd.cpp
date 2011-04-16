@@ -30,13 +30,13 @@
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "info.h"
-#include "metaapi.h"
-#include "v_misc.h"
-
 #include "e_exdata.h"
 #include "e_sound.h"
 #include "e_things.h"
+#include "info.h"
+#include "metaapi.h"
+#include "s_sound.h"
+#include "v_misc.h"
 
 //
 // e_dumpthings

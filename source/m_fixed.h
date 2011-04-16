@@ -24,10 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __M_FIXED__
-#define __M_FIXED__
+#ifndef M_FIXED_H__
+#define M_FIXED_H__
 
-#include "d_keywds.h" // haleyjd 05/22/02
 #include "doomtype.h"
 
 //

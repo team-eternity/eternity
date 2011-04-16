@@ -28,7 +28,8 @@
 #ifndef E_THINGS_H__
 #define E_THINGS_H__
 
-#include "doomtype.h"
+struct emod_t;
+struct mobjinfo_t;
 
 // Global Data
 extern int UnknownThingType;
@@ -65,8 +66,6 @@ int E_SafeThingType(int dehnum);            //   fallback version
 int E_ThingNumForName(const char *name);    // mnemonic lookup
 int E_GetThingNumForName(const char *name); //   fatal error version
 int E_SafeThingName(const char *name);      //   fallback version
-
-struct emod_t;
 
 // thingtype custom-damagetype pain/death states
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);

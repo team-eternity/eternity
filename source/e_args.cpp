@@ -36,6 +36,7 @@
 #include "e_things.h"
 #include "info.h"
 #include "m_misc.h"
+#include "p_mobj.h"
 
 // haleyjd 05/21/10: an empty string, to avoid allocating tons of memory for
 // single-byte strings.

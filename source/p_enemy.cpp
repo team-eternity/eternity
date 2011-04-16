@@ -383,7 +383,7 @@ static bool P_IsOnLift(const Mobj *actor)
 //
 static int P_IsUnderDamage(Mobj *actor)
 { 
-   const struct msecnode_s *seclist;
+   const msecnode_t *seclist;
    const CeilingThinker *cl;             // Crushing ceiling
    int dir = 0;
 

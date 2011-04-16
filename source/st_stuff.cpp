@@ -27,23 +27,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "am_map.h"
+
+#include "c_runcmd.h"
+
+#include "d_gi.h"      // haleyjd
+#include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "c_runcmd.h"
-#include "d_main.h"
-#include "m_random.h"
+#include "dstrings.h"
+#include "hu_over.h"    // haleyjd
 #include "i_video.h"
-#include "w_wad.h"
-#include "st_stuff.h"
-#include "st_lib.h"
-#include "r_main.h"
-#include "am_map.h"
 #include "m_cheat.h"
+#include "m_random.h"
+#include "p_skin.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "dstrings.h"
-#include "d_gi.h" // haleyjd
-#include "hu_over.h" // haleyjd
+#include "st_stuff.h"
+#include "st_lib.h"
+#include "w_wad.h"
 
 //
 // STATUS BAR DATA

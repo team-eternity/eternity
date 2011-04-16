@@ -25,10 +25,8 @@
 //
 //---------------------------------------------------------------------------
 
-#ifndef __G_DMFLAG_H__
-#define __G_DMFLAG_H__
-
-#include "doomtype.h"
+#ifndef G_DMFLAG_H__
+#define G_DMFLAG_H__
 
 enum
 {

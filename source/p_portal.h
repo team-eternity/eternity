@@ -38,6 +38,7 @@ extern bool useportalgroups;
 #endif
 
 struct line_t;
+struct linkoffset_t;
 struct portal_t;
 struct sector_t;
 

@@ -24,11 +24,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_MAIN__
-#define __D_MAIN__
+#ifndef D_MAIN_H__
+#define D_MAIN_H__
 
 #include "doomdef.h"
-#include "doomtype.h"
 
 // jff make startskill globally visible
 extern skill_t startskill;

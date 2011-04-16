@@ -28,8 +28,10 @@
 
 #include "d_gi.h"
 #include "d_io.h"
+#include "doomstat.h"
 #include "m_buffer.h"
 #include "m_misc.h"
+#include "p_skin.h"
 #include "s_sound.h"
 #include "v_misc.h"
 #include "v_video.h"

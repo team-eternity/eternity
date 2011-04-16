@@ -28,7 +28,6 @@
 #define M_MISC_H__
 
 #include "doomtype.h"
-#include "doomstat.h" // haleyjd: this was missing
 
 //
 // MISC

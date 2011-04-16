@@ -18,9 +18,8 @@
 //
 //--------------------------------------------------------------------------
 
-
-#ifndef __P_CHASE_H__
-#define __P_CHASE_H__
+#ifndef P_CHASE_H__
+#define P_CHASE_H__
 
 #include "m_fixed.h"
 #include "tables.h"

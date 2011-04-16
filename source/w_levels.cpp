@@ -30,6 +30,7 @@
 #include "c_runcmd.h"
 #include "d_gi.h"
 #include "doomdef.h"
+#include "doomstat.h"
 #include "doomtype.h"
 #include "e_hash.h"
 #include "m_dllist.h"

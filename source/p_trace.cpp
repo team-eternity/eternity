@@ -26,6 +26,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "d_gi.h"
 #include "doomstat.h"
 #include "p_map.h"
@@ -33,6 +34,7 @@
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"

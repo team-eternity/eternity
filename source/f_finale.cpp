@@ -29,6 +29,7 @@
 #include "i_video.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "d_deh.h"     // Ty 03/22/98 - externalizations
 #include "d_dehtbl.h"
 #include "d_event.h"
@@ -42,8 +43,11 @@
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "p_info.h"
+#include "p_skin.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_font.h"
 #include "v_video.h"
 #include "w_wad.h"
 

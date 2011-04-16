@@ -44,22 +44,26 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "d_io.h"
-#include "d_dehtbl.h"
 #include "i_system.h"
-#include "i_sound.h"
-#include "m_misc.h"
-#include "p_mobj.h"
-#include "sounds.h"
-#include "s_sound.h"
-#include "w_wad.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
-#include "e_lib.h"
 #include "e_edf.h"
+#include "e_lib.h"
 #include "e_sound.h"
+
+#include "d_io.h"
+#include "d_dehtbl.h"
+#include "i_sound.h"
+#include "m_misc.h"
+#include "p_mobj.h"
+#include "p_skin.h"
+#include "sounds.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "w_wad.h"
+
 
 //
 // Sound keywords

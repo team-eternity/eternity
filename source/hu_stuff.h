@@ -19,10 +19,10 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __HU_STUFF_H__
-#define __HU_STUFF_H__
+#ifndef HU_STUFF_H__
+#define HU_STUFF_H__
 
-#include "d_event.h"
+struct event_t;
 
 enum
 {

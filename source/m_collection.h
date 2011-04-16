@@ -28,7 +28,6 @@
 #define M_COLLECTION_H__
 
 #include "z_zone.h"
-#include "doomtype.h"
 #include "i_system.h"
 #include "m_random.h"
 

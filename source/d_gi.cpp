@@ -41,6 +41,7 @@
 #include "mn_htic.h"
 #include "mn_menus.h"
 #include "p_info.h"
+#include "p_skin.h"
 #include "st_stuff.h"
 #include "sounds.h"
 #include "v_video.h"

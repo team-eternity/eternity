@@ -27,19 +27,23 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_fonts.h"
 #include "i_video.h"
 #include "m_swap.h"
-#include "v_block.h"
-#include "v_video.h"
-#include "v_misc.h"
-#include "w_wad.h"
-#include "d_gi.h"
 #include "r_main.h" // haleyjd
-#include "e_fonts.h"
+#include "r_patch.h"
+#include "v_block.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
+
 
 extern int gamma_correct;
 

@@ -24,11 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_MAP__
-#define __P_MAP__
+#ifndef P_MAP_H__
+#define P_MAP_H__
 
-#include "r_defs.h"
-#include "d_player.h"
+struct line_t;
+struct msecnode_t;
+struct player_t;
+struct sector_t;
 
 #define USERANGE        (64*FRACUNIT)
 #define MELEERANGE      (64*FRACUNIT)

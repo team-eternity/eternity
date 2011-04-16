@@ -311,7 +311,7 @@ typedef int mobjtype_t;
 // and not actual pointers.  Most can be set to zero if the action or
 // sound doesn't apply (like lamps generally don't attack or whistle).
 
-typedef struct mobjinfo_s
+struct mobjinfo_t
 {
    int doomednum;       // Thing number used in id's editor, and now
                         //  probably by every other editor too
@@ -400,9 +400,9 @@ typedef struct mobjinfo_s
    MetaTable *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
-   struct mobjinfo_s *parent;
+   mobjinfo_t *parent;
 
-} mobjinfo_t;
+};
 
 // See p_mobj_h for addition more technical info
 

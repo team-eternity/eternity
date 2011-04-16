@@ -33,6 +33,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_gi.h"      // haleyjd: global game mode info
 #include "d_io.h"
 #include "d_main.h"
@@ -51,7 +52,9 @@
 #include "mn_misc.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "s_sound.h"
+#include "v_font.h"
 #include "v_video.h"
 #include "w_wad.h"
 

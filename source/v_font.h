@@ -32,6 +32,8 @@
 #include "r_defs.h"
 #include "m_dllist.h"
 
+struct patch_t;
+
 enum
 {
    VFONT_SMALL,
