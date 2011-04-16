@@ -27,8 +27,6 @@
 #ifndef W_WAD_H__
 #define W_WAD_H__
 
-#include "doomtype.h"
-
 //
 // TYPES
 //

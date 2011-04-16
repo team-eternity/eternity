@@ -45,6 +45,7 @@
 #include "e_things.h"
 #include "p_mobj.h"
 #include "p_skin.h"
+#include "v_misc.h"
 #include "v_video.h"
 
 //

@@ -48,6 +48,7 @@
 #include "p_partcl.h"
 #include "p_skin.h"
 #include "r_draw.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "version.h"
 

@@ -26,11 +26,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "r_draw.h"
+
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "r_draw.h"
 #include "r_main.h"
+#include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT

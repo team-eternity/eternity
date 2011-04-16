@@ -54,6 +54,7 @@
 #include "p_setup.h"
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"

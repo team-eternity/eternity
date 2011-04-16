@@ -38,6 +38,7 @@
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "p_setup.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"

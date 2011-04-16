@@ -35,6 +35,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "st_stuff.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 

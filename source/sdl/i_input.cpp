@@ -33,6 +33,7 @@
 #include "../d_main.h"
 #include "../doomdef.h"
 #include "../doomstat.h"
+#include "../v_misc.h"
 #include "../v_video.h"
 
 

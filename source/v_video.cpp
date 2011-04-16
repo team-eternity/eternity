@@ -29,17 +29,20 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "r_main.h"
+#include "i_video.h"
 #include "m_bbox.h"
 #include "r_draw.h"
-#include "w_wad.h"   /* needed for color translation lump lookup */
-#include "v_video.h"
+#include "r_main.h"
 #include "v_patch.h" // haleyjd
-#include "i_video.h"
-#include "d_gi.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"   /* needed for color translation lump lookup */
+
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t

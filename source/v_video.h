@@ -195,9 +195,6 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b);
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest);
 
-
-#include "v_misc.h"
-
 extern VBuffer vbscreen;
 extern VBuffer backscreen1;
 extern VBuffer backscreen2;

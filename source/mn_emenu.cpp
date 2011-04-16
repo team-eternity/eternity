@@ -33,12 +33,14 @@
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "mn_engin.h"
+#include "v_misc.h"
 #include "v_video.h"
 
 #define NEED_EDF_DEFINITIONS
+
 #include "Confuse/confuse.h"
-#include "e_lib.h"
 #include "e_edf.h"
+#include "e_lib.h"
 #include "mn_emenu.h"
 
 // menu section keywords

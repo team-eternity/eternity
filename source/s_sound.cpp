@@ -50,6 +50,7 @@
 #include "r_main.h"
 #include "r_state.h"
 #include "s_sound.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 

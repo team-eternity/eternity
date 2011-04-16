@@ -31,13 +31,15 @@
 // original, while retaining the new 'engine'
 
 #include "z_zone.h"
+
 #include "c_runcmd.h"
 #include "doomdef.h"
 #include "d_main.h"
-#include "i_video.h"
-#include "v_video.h"
-#include "m_random.h"
 #include "f_wipe.h"
+#include "i_video.h"
+#include "m_random.h"
+#include "v_misc.h"
+#include "v_video.h"
 
 // common globals
 bool inwipe = false;

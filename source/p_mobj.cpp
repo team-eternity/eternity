@@ -65,6 +65,7 @@
 #include "sounds.h"
 #include "s_sound.h"
 #include "st_stuff.h"
+#include "v_misc.h"
 #include "v_video.h"
 
 void P_FallingDamage(player_t *);

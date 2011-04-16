@@ -55,6 +55,7 @@
 #include "r_segs.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_misc.h"
 #include "v_video.h"
 
 

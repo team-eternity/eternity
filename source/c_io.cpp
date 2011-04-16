@@ -56,6 +56,7 @@
 #include "e_fonts.h"
 #include "m_qstr.h"
 #include "v_block.h"
+#include "v_misc.h"
 
 #define MESSAGES 384
 // keep the last 32 typed commands

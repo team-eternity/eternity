@@ -45,6 +45,7 @@
 #include "r_draw.h"
 #include "r_patch.h"
 #include "v_font.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 

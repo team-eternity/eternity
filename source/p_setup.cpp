@@ -68,6 +68,7 @@
 #include "r_things.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"

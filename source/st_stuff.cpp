@@ -47,6 +47,7 @@
 #include "sounds.h"
 #include "st_stuff.h"
 #include "st_lib.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 //
