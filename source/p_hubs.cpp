@@ -45,9 +45,11 @@
 #include "d_io.h"       // SoM 3/14/2002: strncasecmp
 #include "g_game.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "r_defs.h"
 #include "r_state.h"
 
 #define MAXHUBLEVELS 128

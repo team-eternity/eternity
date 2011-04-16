@@ -24,8 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_DEFS__
-#define __R_DEFS__
+#ifndef R_DEFS_H__
+#define R_DEFS_H__
 
 // haleyjd 12/15/10: lighting data is required here
 #include "r_lighting.h"
@@ -37,9 +37,10 @@
 #include "p_mobj.h"
 
 struct line_t;
-struct sector_t;
 struct particle_t;
+struct planehash_t;
 struct portal_t;
+struct sector_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -62,7 +63,7 @@ extern int r_blockmap;
 // Note: transformed values not buffered locally,
 // like some DOOM-alikes ("wt", "WebView") do.
 //
-typedef struct vertex_s
+struct vertex_t
 {
    fixed_t x, y;
 
@@ -70,9 +71,9 @@ typedef struct vertex_s
    // These should always be kept current to x and y
    float   fx, fy;
 
-   struct vertex_s *dynanext;
+   struct vertex_t *dynanext;
    bool dynafree;          // if true, is on free list
-} vertex_t;
+};
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
@@ -454,7 +455,7 @@ struct node_t
 // for all views: NNNNF0
 //
 
-typedef struct spriteframe_s
+struct spriteframe_t
 {
   // If false use 0 for any position.
   // Note: as eight entries are available,
@@ -467,27 +468,27 @@ typedef struct spriteframe_s
   // Flip bit (1 = flip) to use for view angles 0-7.
   byte  flip[8];
 
-} spriteframe_t;
+};
 
 //
 // A sprite definition:
 //  a number of animation frames.
 //
 
-typedef struct spritedef_s
+struct spritedef_t
 {
   int numframes;
   spriteframe_t *spriteframes;
-} spritedef_t;
+};
 
 
 // SoM: Information used in texture mapping sloped planes
-typedef struct rslope_s
+struct rslope_t
 {
    v3double_t P, M, N;
    v3double_t A, B, C;
    double     zat, plight, shade;
-} rslope_t;
+};
 
 
 //
@@ -537,18 +538,18 @@ struct visplane_t
    
    // Needed for overlays
    // This is the table the visplane currently belongs to
-   struct planehash_s     *table;
+   planehash_t           *table;
    // This is the blending flags from the portal surface (flags & PS_OVERLAYFLAGS)
    int                    bflags; 
    // Opacity of the overlay (255 - opaque, 0 - translucent)
    byte                   opacity;
 };
 
-typedef struct planehash_s
+struct planehash_t
 {
    int          chaincount;
    visplane_t   **chains;
-} planehash_t;
+};
 
 #endif
 

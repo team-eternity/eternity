@@ -38,6 +38,7 @@
 #include "m_swap.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
+#include "r_state.h"
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"

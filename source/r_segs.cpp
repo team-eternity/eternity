@@ -28,17 +28,21 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "doomstat.h"
 #include "e_exdata.h"
-#include "r_main.h"
-#include "r_bsp.h"
-#include "r_plane.h"
-#include "r_segs.h"
-#include "r_things.h"
-#include "r_draw.h"
-#include "w_wad.h"
-#include "p_user.h"
 #include "p_info.h"
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_bsp.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_plane.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "r_things.h"
+#include "w_wad.h"
 
 // OPTIMIZE: closed two sided lines as single sided
 // SoM: Done.

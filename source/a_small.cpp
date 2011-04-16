@@ -48,6 +48,7 @@
 #include "m_qstr.h"
 #include "p_info.h"
 #include "p_spec.h"
+#include "r_defs.h"
 #include "r_state.h"
 #include "v_misc.h"
 #include "w_wad.h"

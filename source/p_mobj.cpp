@@ -27,7 +27,6 @@
 #include "z_zone.h"
 #include "i_system.h"
 
-
 #include "a_small.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -60,6 +59,8 @@
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"

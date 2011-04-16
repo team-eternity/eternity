@@ -232,7 +232,7 @@ void R_IncrementFrameid(void); // Needed by the portal functions...
 extern unsigned   frameid;
 
 // SoM: include these prototypes after the map data definitions:
-#include "r_pcheck.h"
+//#include "r_pcheck.h"
 #endif
 
 //----------------------------------------------------------------------------

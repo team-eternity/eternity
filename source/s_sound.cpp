@@ -46,6 +46,7 @@
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
 #include "s_sound.h"

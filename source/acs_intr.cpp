@@ -26,7 +26,6 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "r_defs.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -36,12 +35,15 @@
 #include "hu_stuff.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "m_random.h"
 #include "m_swap.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_state.h"
 #include "s_sndseq.h"
 #include "v_video.h"
 #include "w_wad.h"

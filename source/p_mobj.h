@@ -38,7 +38,6 @@
 // Needs precompiled tables/data structures.
 #include "info.h"
 #include "m_fixed.h"
-#include "m_random.h"
 #include "tables.h"
 
 struct msecnode_t;

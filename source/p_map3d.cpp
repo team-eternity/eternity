@@ -22,6 +22,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomdef.h"
@@ -37,7 +38,9 @@
 #include "p_inter.h"
 #include "p_partcl.h"
 #include "p_setup.h"
+#include "r_defs.h"
 #include "r_main.h"
+#include "r_pcheck.h"
 
 // I HATE GLOBALS!!!
 extern fixed_t   FloatBobOffsets[64];

@@ -25,16 +25,22 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
+
 #include "doomstat.h"
 #include "m_bbox.h"
-#include "i_system.h"
-#include "r_main.h"
-#include "r_segs.h"
-#include "r_plane.h"
-#include "r_things.h"
-#include "r_dynseg.h"
+#include "p_chase.h"
 #include "p_portal.h"
 #include "p_slopes.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_plane.h"
+#include "r_dynseg.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "r_things.h"
 
 drawseg_t *ds_p;
 

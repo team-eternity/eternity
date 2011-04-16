@@ -33,31 +33,31 @@
 //
 //----------------------------------------------------------------------------
 
-#include <errno.h>
-
 #include "z_zone.h"
-#include "m_qstr.h"
-#include "doomdef.h"
-#include "d_io.h"
-#include "p_info.h"
-#include "p_mobj.h"
-#include "p_spec.h"
-#include "w_wad.h"
 #include "i_system.h"
-#include "d_dehtbl.h" // for dehflags parsing
-#include "r_data.h"
-#include "r_main.h"
-#include "r_portal.h"
-#include "p_portal.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
+#include "e_exdata.h"
 #include "e_lib.h"
 #include "e_mod.h"
-#include "e_exdata.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+
+#include "d_dehtbl.h" // for dehflags parsing
+#include "d_io.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "m_qstr.h"
+#include "p_info.h"
+#include "p_mobj.h"
+#include "p_portal.h"
+#include "p_spec.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_portal.h"
+#include "w_wad.h"
 
 // statics
 

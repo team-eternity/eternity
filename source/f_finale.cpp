@@ -45,6 +45,7 @@
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_patch.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "v_font.h"

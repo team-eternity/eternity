@@ -30,6 +30,7 @@
 
 struct emod_t;
 struct mobjinfo_t;
+struct state_t;
 
 // Global Data
 extern int UnknownThingType;

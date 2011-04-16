@@ -5,8 +5,14 @@
 #ifndef P_PARTCL_H__
 #define P_PARTCL_H__
 
+// Required for: DLListItem, fixed_t, angle_t
 #include "m_dllist.h"
-#include "p_mobj.h"
+#include "m_fixed.h"
+#include "tables.h"
+
+class  Mobj;
+struct subsector_t;
+
 // haleyjd: particle variables and structures
 
 // particle style flags -- 07/03/03

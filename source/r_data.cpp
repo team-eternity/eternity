@@ -26,20 +26,24 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
-#include "w_wad.h"
+#include "doomstat.h"
+#include "e_hash.h"
+#include "m_misc.h"
 #include "m_swap.h"
+#include "p_info.h"   // haleyjd
 #include "p_skin.h"
 #include "p_setup.h"
+#include "r_defs.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "r_sky.h"
+#include "r_state.h"
 #include "v_video.h"
-#include "p_info.h" // haleyjd
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "m_misc.h"
-#include "e_hash.h"
+#include "w_wad.h"
 
 // SoM: This has moved to r_textur.c
 void R_LoadDoom1();

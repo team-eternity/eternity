@@ -62,6 +62,7 @@
 #include "r_defs.h"
 #include "r_draw.h"
 #include "r_patch.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "v_font.h"
 #include "v_video.h"

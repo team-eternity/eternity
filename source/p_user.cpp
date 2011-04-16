@@ -41,6 +41,7 @@
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
+#include "r_defs.h"
 #include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"

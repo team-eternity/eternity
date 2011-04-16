@@ -44,8 +44,10 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
+#include "r_data.h"
 #include "r_main.h"
 #include "r_state.h"
+
 
 //////////////////////////////////////////////////////////
 //

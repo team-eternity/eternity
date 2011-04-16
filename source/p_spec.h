@@ -26,10 +26,17 @@
 #ifndef P_SPEC_H__
 #define P_SPEC_H__
 
-#include "r_defs.h"
-#include "d_player.h"
+// HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
-class SaveArchive;
+// Required for: Thinker
+#include "p_tick.h"
+
+struct line_t;
+class  Mobj;
+struct player_t;
+class  SaveArchive;
+struct sector_t;
+struct side_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14

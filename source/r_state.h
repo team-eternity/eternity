@@ -24,13 +24,25 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_STATE__
-#define __R_STATE__
+#ifndef R_STATE_H__
+#define R_STATE_H__
 
-// Need data structure definitions.
-#include "d_player.h"
-#include "p_chase.h"
-#include "r_data.h"
+// Required for: lighttable_t (FIXME?), angle_t, MAX_SCREENWIDTH
+#include "doomdef.h"
+#include "r_lighting.h"
+#include "tables.h"
+
+struct camera_t;
+struct line_t;
+struct node_t;
+struct player_t;
+struct sector_t;
+struct seg_t;
+struct side_t;
+struct spritedef_t;
+struct subsector_t;
+struct vertex_t;
+struct visplane_t;
 
 //
 // Refresh internal data structures,
@@ -44,8 +56,8 @@ extern fixed_t *spritetopoffset;
 // SoM: Needed for cardboard
 extern float   *spriteheight;
 
-extern lighttable_t **colormaps;          // killough 3/20/98, 4/4/98
-extern lighttable_t *fullcolormap;        // killough 3/20/98
+extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
+extern lighttable_t  *fullcolormap;      // killough 3/20/98
 
 extern int viewwidth;
 extern int scaledviewwidth;

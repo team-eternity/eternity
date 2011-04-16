@@ -41,6 +41,7 @@
 #include "g_game.h"
 #include "hu_frags.h"
 #include "m_swap.h"
+#include "p_chase.h"
 #include "r_draw.h"
 #include "r_patch.h"
 #include "v_font.h"

@@ -40,6 +40,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_random.h"
+#include "p_chase.h"
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_mobjcol.h"

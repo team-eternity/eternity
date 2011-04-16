@@ -28,15 +28,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomstat.h"
 #include "m_bbox.h"
-#include "r_main.h"
-#include "r_state.h"
-#include "p_maputl.h"
 #include "p_map.h"
+#include "p_map3d.h"
+#include "p_maputl.h"
 #include "p_setup.h"
 #include "polyobj.h"
-#include "p_map3d.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_portal.h"
+#include "r_state.h"
+
 
 //
 // P_AproxDistance

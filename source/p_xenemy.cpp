@@ -26,16 +26,18 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "a_small.h"
-#include "doomstat.h"
 #include "d_mod.h"
-#include "p_xenemy.h"
+#include "doomstat.h"
+#include "e_sound.h"
+#include "m_random.h"
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_tick.h"
-#include "e_sound.h"
+#include "p_xenemy.h"
 #include "s_sound.h"
 
 IMPLEMENT_THINKER_TYPE(QuakeThinker)

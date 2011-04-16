@@ -46,6 +46,7 @@
 #include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "v_font.h"

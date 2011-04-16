@@ -34,8 +34,6 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
-#include "r_defs.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -46,6 +44,7 @@
 #include "d_englsh.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "doomstat.h"
 #include "e_exdata.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -69,9 +68,12 @@
 #include "m_bbox.h"                                         // phares 3/20/98
 #include "m_random.h"
 #include "m_swap.h"
+#include "r_defs.h"
 #include "r_main.h"
-#include "r_plane.h"  // killough 10/98
+#include "r_plane.h"    // killough 10/98
+#include "r_portal.h"
 #include "r_ripple.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "v_video.h"

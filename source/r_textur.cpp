@@ -38,6 +38,7 @@
 #include "p_skin.h"
 #include "r_data.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "r_ripple.h"
 #include "v_video.h"
 #include "w_wad.h"

@@ -43,6 +43,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 #include "v_block.h"
 #include "v_video.h"
 #include "w_wad.h"

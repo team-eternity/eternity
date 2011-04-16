@@ -27,14 +27,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h" //jff 5/18/98
+
 #include "doomdef.h"
+#include "doomstat.h" //jff 5/18/98
 #include "m_random.h"
-#include "r_main.h"
-#include "r_state.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_state.h"
 
 //////////////////////////////////////////////////////////
 //

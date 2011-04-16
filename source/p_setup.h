@@ -24,10 +24,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_SETUP__
-#define __P_SETUP__
+#ifndef P_SETUP_H__
+#define P_SETUP_H__
 
-#include "p_mobj.h"
+class  Mobj;
+struct seg_t;
 
 // haleyjd 10/03/05: let P_CheckLevel determine the map format
 enum

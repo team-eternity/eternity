@@ -50,6 +50,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_tick.h"
+#include "r_defs.h"
 #include "r_main.h"
 #include "r_segs.h"
 #include "s_sound.h"

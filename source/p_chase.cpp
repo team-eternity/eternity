@@ -41,6 +41,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_tick.h"
+#include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
 

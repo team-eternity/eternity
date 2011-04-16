@@ -35,6 +35,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"
+#include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
 #include "s_sound.h"

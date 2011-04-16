@@ -37,23 +37,26 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "z_zone.h"  /* memory allocation wrappers -- killough */
+#include "z_zone.h"    /* memory allocation wrappers -- killough */
 #include "i_system.h"
-#include "doomstat.h"
+
 #include "c_io.h"
 #include "d_gi.h"
-#include "w_wad.h"
-#include "r_main.h"
-#include "r_draw.h"
-#include "r_things.h"
-#include "r_sky.h"
-#include "r_ripple.h"
-#include "r_plane.h"
-#include "v_video.h"
-#include "p_info.h"
+#include "doomstat.h"
 #include "p_anim.h"
-#include "p_user.h"
+#include "p_info.h"
 #include "p_slopes.h"
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_main.h"
+#include "r_plane.h"
+#include "r_portal.h"
+#include "r_ripple.h"
+#include "r_sky.h"
+#include "r_state.h"
+#include "r_things.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 #define MAINHASHCHAINS 128    /* must be a power of 2 */
 

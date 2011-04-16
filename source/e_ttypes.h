@@ -28,8 +28,11 @@
 #ifndef E_TTYPES_H__
 #define E_TTYPES_H__
 
+// Required for: byte, fixed_t
 #include "doomtype.h"
+#include "m_fixed.h"
 
+class  Mobj;
 struct particle_t;
 struct sector_t;
 

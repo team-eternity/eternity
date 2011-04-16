@@ -26,6 +26,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#define NEED_EDF_DEFINITIONS
+
+#include "Confuse/confuse.h"
+#include "e_edf.h"
+#include "e_lib.h"
+#include "e_mod.h"
+#include "e_things.h"
+#include "e_ttypes.h"
+
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
@@ -38,18 +48,12 @@
 #include "p_partcl.h"
 #include "p_tick.h"
 #include "r_data.h"
+#include "r_defs.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "w_wad.h"
 
-#define NEED_EDF_DEFINITIONS
-
-#include "Confuse/confuse.h"
-#include "e_lib.h"
-#include "e_edf.h"
-#include "e_ttypes.h"
-#include "e_things.h"
-#include "e_mod.h"
 
 //
 // Static Variables

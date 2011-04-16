@@ -18,12 +18,13 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __P_SKIN_H__
-#define __P_SKIN_H__
+#ifndef P_SKIN_H__
+#define P_SKIN_H__
 
-#include "r_patch.h"
+// Required for: spritenum_t
 #include "info.h"
 
+struct patch_t;
 struct player_t;
 
 enum

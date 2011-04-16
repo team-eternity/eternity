@@ -61,6 +61,7 @@
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_menus.h"
+#include "p_chase.h"
 #include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"

@@ -32,7 +32,8 @@
 #define P_MOBJCOL_H__
 
 #include "m_collection.h"
-#include "p_mobj.h"
+
+class Mobj;
 
 class MobjCollection : public PODCollection<Mobj *>
 {

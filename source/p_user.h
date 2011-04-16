@@ -29,7 +29,7 @@
 #ifndef P_USER_H__
 #define P_USER_H__
 
-#include "d_player.h"
+struct player_t;
 
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
