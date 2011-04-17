@@ -2031,7 +2031,8 @@ int M_CountNumLines(const char *str)
 //
 // M_GetFilePath
 //
-// haleyjd: general file path name extraction
+// haleyjd: General file path extraction. Strips a path+filename down to only
+// the path component.
 //
 void M_GetFilePath(const char *fn, char *base, size_t len)
 {
@@ -2069,9 +2070,18 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
 //
 // M_ExtractFileBase
 //
+// Extract an up-to-eight-character filename out of a full file path
+// (relative or absolute), removing the path components and extensions.
+// This is not a general filename extraction routine and should only
+// be used for generating WAD lump names from files.
+//
+// haleyjd 04/17/11: Added support for truncation of LFNs courtesy of
+// Choco Doom. Thanks, fraggle ;)
+//
 void M_ExtractFileBase(const char *path, char *dest)
 {
    const char *src = path + strlen(path) - 1;
+   const char *filename;
    int length;
    
    // back up until a \ or the start
@@ -2082,19 +2092,23 @@ void M_ExtractFileBase(const char *path, char *dest)
       src--;
    }
 
+   filename = src;
+   
    // copy up to eight characters
+   // FIXME: insecure, does not ensure null termination of output string!
    memset(dest, 0, 8);
    length = 0;
 
    while(*src && *src != '.')
    {
-      if(++length == 9)
-         I_Error("M_ExtractFileBase: %s > 8 chars\n", path);
-      else
+      if(length >= 8)
       {
-         *dest++ = toupper(*src);
-         ++src;
+         usermsg("M_ExtractFileBase: warning - truncated '%s' to '%.8s'.",
+                 filename, dest);
+         break;
       }
+
+      dest[length++] = toupper(*src++);
    }
 }
 
@@ -2103,6 +2117,9 @@ void M_ExtractFileBase(const char *path, char *dest)
 //
 // 1/18/98 killough: adds a default extension to a path
 // Note: Backslashes are treated specially, for MS-DOS.
+//
+// Warning: the string passed here *MUST* have room for an
+// extension to be added to it! -haleyjd
 //
 char *M_AddDefaultExtension(char *path, const char *ext)
 {
