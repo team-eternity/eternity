@@ -47,7 +47,7 @@ template<typename T, typename K> class EHashTable
 public:
    typedef T              item_type;    // Type of item this hashtable can hold
    typedef K              key_type;     // Type of key marshalling object
-   typedef DLListItem<T> link_type;    // Type of linked list item
+   typedef DLListItem<T>  link_type;    // Type of linked list item
    typedef key_type  T::* keyptr_type;  // Type of pointer-to-member for key
    typedef link_type T::* linkptr_type; // Type of pointer-to-member for links
    
