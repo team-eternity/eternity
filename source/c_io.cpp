@@ -218,10 +218,7 @@ void C_Ticker(void)
    if(gamestate != GS_CONSOLE)
    {
       // specific to half-screen version only
-      
-      if(Console.current_height != Console.current_target)
-         redrawsbar = true;
-      
+
       // move the console toward its target
       if(D_abs(Console.current_height - Console.current_target) >= c_speed)
       {

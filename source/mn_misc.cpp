@@ -152,7 +152,7 @@ bool MN_PopupResponder(event_t *ev)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
       }
@@ -175,7 +175,7 @@ bool MN_PopupResponder(event_t *ev)
             C_RunTextCmd(popup_message_command);
          }
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL;  // kill message
       }
       if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
@@ -185,7 +185,7 @@ bool MN_PopupResponder(event_t *ev)
          action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL; // kill message
       }
       break;
@@ -505,7 +505,7 @@ bool MN_HelpResponder(event_t *ev)
 
       // cancel helpscreen
 cancel:
-      redrawsbar = redrawborder = true; // need redraw
+      redrawborder = true; // need redraw
       current_menuwidget = NULL;
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)

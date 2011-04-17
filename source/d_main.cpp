@@ -213,7 +213,7 @@ gamestate_t wipegamestate = GS_DEMOSCREEN;
 void        R_ExecuteSetViewSize(void);
 camera_t    *camera;
 extern bool setsizeneeded;
-bool        redrawsbar;      // sf: globaled
+//bool        redrawsbar;      // sf: globaled - haleyjd 04/16/11: no more caching
 bool        redrawborder;    // sf: cleaned up border redraw
 int         wipewait;        // haleyjd 10/09/07
 
@@ -318,7 +318,7 @@ void D_Display(void)
       Wipe_StartScreen();
 
    if(inwipe || c_moving || menuactive)
-      redrawsbar = redrawborder = true;   // redraw status bar and border
+      redrawborder = true;   // redraw status bar and border
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
@@ -344,7 +344,7 @@ void D_Display(void)
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
-         ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
+         ST_Drawer(scaledviewheight == 200);  // killough 11/98
          HU_Drawer();
          break;
       case GS_INTERMISSION:
@@ -362,7 +362,6 @@ void D_Display(void)
          break;
       }
          
-      redrawsbar = false; // reset this now
       redrawborder = false;
       
       // clean up border stuff

@@ -1237,7 +1237,8 @@ void MN_Ticker(void)
 void MN_Drawer(void)
 { 
    // redraw needed if menu hidden
-   if(hide_menu) redrawsbar = redrawborder = true;
+   if(hide_menu) 
+      redrawborder = true;
    
    // activate menu if displaying widget
    if(current_menuwidget && !menuactive)
@@ -1829,7 +1830,7 @@ void MN_StartMenu(menu_t *menu)
       current_menu = current_menu->curpage;
    
    menu_error_time = 0;      // clear error message
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
@@ -1854,7 +1855,7 @@ static void MN_PageMenu(menu_t *newpage)
       current_menu->rootpage->curpage = current_menu;
 
    menu_error_time = 0;
-   redrawsbar = redrawborder = true;
+   redrawborder = true;
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
@@ -1872,7 +1873,7 @@ void MN_PrevMenu(void)
       current_menu = menu_history[menu_history_num];
    
    menu_error_time = 0;          // clear errors
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
@@ -1885,7 +1886,7 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)

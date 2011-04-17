@@ -53,7 +53,7 @@ extern bool nosfxparm;
 extern bool nomusicparm;
 
 extern int use_startmap;
-extern bool redrawsbar, redrawborder;
+extern bool redrawborder;
 
 extern bool cdrom_mode;
 

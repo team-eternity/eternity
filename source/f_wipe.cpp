@@ -330,7 +330,7 @@ void Wipe_Drawer(void)
    wipers[current_wipetype].Drawer();
 
    // clean up cached crap
-   redrawborder = redrawsbar = true; 
+   redrawborder = true; 
 }
 
 void Wipe_Ticker(void)
@@ -343,7 +343,7 @@ void Wipe_Ticker(void)
       Z_ChangeTag(wipe_buffer, PU_CACHE); // haleyjd: make purgable
 
       // haleyjd: be sure these get set at the end
-      redrawborder = redrawsbar = true; 
+      redrawborder = true; 
    }
 }
 

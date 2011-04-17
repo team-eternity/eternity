@@ -63,16 +63,14 @@ void STlib_init(void)
 // Returns nothing
 //
 void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
-                   bool *on, bool *bg_on, int width)
+                   bool *on, int width)
 {
-   n->x      = x;
-   n->y      = y;
-   n->oldnum = 0;
-   n->width  = width;
-   n->num    = num;
-   n->on     = on;
-   n->bg_on  = bg_on; // haleyjd
-   n->p      = pl;
+   n->x     = x;
+   n->y     = y;
+   n->width = width;
+   n->num   = num;
+   n->on    = on;
+   n->p     = pl;
 }
 
 //
@@ -87,7 +85,7 @@ void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
 //
 // jff 2/16/98 add color translation to digit output
 //
-static void STlib_drawNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
+static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 {
    int   numdigits = n->width;
    int   num = *n->num;
@@ -97,8 +95,6 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
    int   x;
 
    int   neg;
-
-   n->oldnum = *n->num;
 
    neg = num < 0;
 
@@ -114,13 +110,6 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
 
    // clear the area
    x = n->x - numdigits*w;
-
-   if(*n->bg_on && n->y - ST_Y < 0)
-      return;
-   
-   // haleyjd: conditionalized background update
-   if(*n->bg_on)
-      V_CopyRect(x, n->y - ST_Y, BG, w*numdigits, h, x, n->y, FG);
 
    // if non-number, do not draw it
    if(num == 1994)
@@ -168,10 +157,10 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
 //
 // jff 2/16/98 add color translation to digit output
 //
-void STlib_updateNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
+void STlib_updateNum(st_number_t *n, byte *outrng, int alpha)
 {
    if(*n->on)
-      STlib_drawNum(n, outrng, refresh, alpha);
+      STlib_drawNum(n, outrng, alpha);
 }
 
 //
@@ -185,9 +174,9 @@ void STlib_updateNum(st_number_t *n, byte *outrng, bool refresh, int alpha)
 // Returns nothing.
 //
 void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
-                       bool *on, bool *bg_on, patch_t *percent)
+                       bool *on, patch_t *percent)
 {
-   STlib_initNum(&p->n, x, y, pl, num, on, bg_on, 3);
+   STlib_initNum(&p->n, x, y, pl, num, on, 3);
    p->p = percent;
 }
 
@@ -201,9 +190,9 @@ void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
 //
 // jff 2/16/98 add color translation to digit output
 //
-void STlib_updatePercent(st_percent_t *per, byte *outrng, bool refresh, int alpha)
+void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
 {
-   if(refresh || *per->n.on) // killough 2/21/98: fix percents not updated;
+   if(*per->n.on) // killough 2/21/98: fix percents not updated
    {
       byte *tlate = NULL;
 
@@ -215,7 +204,7 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, bool refresh, int alph
       V_DrawPatchTL(per->n.x, per->n.y, &vbscreen, per->p, tlate, alpha);
    }
    
-   STlib_updateNum(&per->n, outrng, refresh, alpha);
+   STlib_updateNum(&per->n, outrng, alpha);
 }
 
 //
@@ -229,14 +218,12 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, bool refresh, int alph
 // Returns nothing.
 //
 void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
-                        bool *on, bool *bg_on)
+                        bool *on)
 {
    i->x       = x;
    i->y       = y;
-   i->oldinum = -1;
    i->inum    = inum;
    i->on      = on;
-   i->bg_on   = bg_on;
    i->p       = il;
 }
 
@@ -250,30 +237,13 @@ void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
 // Passed a st_multicon_t widget, and a refresh flag
 // Returns nothing.
 //
-void STlib_updateMultIcon(st_multicon_t *mi, bool refresh, int alpha)
+void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
 {
-   int w, h, x, y;
-
-   if(*mi->on && (mi->oldinum != *mi->inum || refresh))
+   if(*mi->on)
    {
-      if(mi->oldinum != -1 && *mi->bg_on)
-      {
-         x = mi->x - SwapShort(mi->p[mi->oldinum]->leftoffset);
-         y = mi->y - SwapShort(mi->p[mi->oldinum]->topoffset);
-         w = SwapShort(mi->p[mi->oldinum]->width);
-         h = SwapShort(mi->p[mi->oldinum]->height);
-
-         if(y - ST_Y < 0)
-            return;
-	  
-         V_CopyRect(x, y-ST_Y, BG, w, h, x, y, FG);
-      }
-
       // killough 2/16/98: redraw only if != -1
       if(*mi->inum != -1)
          V_DrawPatchTL(mi->x, mi->y, &vbscreen, mi->p[*mi->inum], NULL, alpha);
-
-      mi->oldinum = *mi->inum;
    }
 }
 
@@ -290,12 +260,11 @@ void STlib_updateMultIcon(st_multicon_t *mi, bool refresh, int alpha)
 void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, 
                        bool *val, bool *on)
 {
-   b->x      = x;
-   b->y      = y;
-   b->oldval = false;
-   b->val    = val;
-   b->on     = on;
-   b->p      = i;
+   b->x   = x;
+   b->y   = y;
+   b->val = val;
+   b->on  = on;
+   b->p   = i;
 }
 
 //
@@ -308,26 +277,12 @@ void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i,
 // Passed a st_binicon_t widget, and a refresh flag
 // Returns nothing.
 //
-void STlib_updateBinIcon(st_binicon_t *bi, bool refresh)
+void STlib_updateBinIcon(st_binicon_t *bi)
 {
-   int x, y, w, h;
-
-   if(*bi->on && (bi->oldval != *bi->val || refresh))
+   if(*bi->on)
    {
-      x = bi->x - SwapShort(bi->p->leftoffset);
-      y = bi->y - SwapShort(bi->p->topoffset);
-      w = SwapShort(bi->p->width);
-      h = SwapShort(bi->p->height);
-      
-      if(y - ST_Y < 0)
-         return;
-	
       if(*bi->val)
          V_DrawPatch(bi->x, bi->y, &vbscreen, bi->p);
-      else
-         V_CopyRect(x, y-ST_Y, BG, w, h, x, y, FG);
-
-      bi->oldval = *bi->val;
    }
 }
 

@@ -558,8 +558,6 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
    }
 
    P_SetSkin(skin, Console.cmdsrc);
-   // wake up status bar for new face
-   redrawsbar = true;
 }
 
 void P_Skin_AddCommands(void)
