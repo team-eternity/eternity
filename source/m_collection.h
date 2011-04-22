@@ -180,7 +180,7 @@ public:
       this->wrapiterator = other.wrapiterator;
       
       if(this->length <= this->numalloc)
-         resize(this->length - oldlength);
+         this->resize(this->length - oldlength);
 
       memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
    }
@@ -206,7 +206,7 @@ public:
    //
    // Empties the collection and frees its storage.
    //
-   void clear() { baseClear(); }
+   void clear() { this->baseClear(); }
 
    //
    // makeEmpty
@@ -227,7 +227,7 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         resize(this->length ? this->length : 32); // double array size
+         this->resize(this->length ? this->length : 32); // double array size
       this->ptrArray[this->length] = newItem;
       ++this->length;
    }
@@ -255,7 +255,7 @@ public:
    }
    
    // Destructor
-   ~Collection() { clear(); }
+   ~Collection() { this->clear(); }
 
    //
    // clear
@@ -267,7 +267,7 @@ public:
       if(this->ptrArray)
       {
          // manually call all destructors
-         for(size_t i = 0; i < length; i++)
+         for(size_t i = 0; i < this->length; i++)
             this->ptrArray[i].~T();
       }
       this->baseClear();
@@ -283,7 +283,7 @@ public:
       if(this->ptrArray)
       {
          // manually call all destructors
-         for(size_t i = 0; i < length; i++)
+         for(size_t i = 0; i < this->length; i++)
             this->ptrArray[i].~T();
 
          memset(this->ptrArray, 0, this->numalloc * sizeof(T));
@@ -302,7 +302,7 @@ public:
          resize(this->length ? this->length : 32); // double array size
       
       // copy construct new item
-      ::new (&this->ptrArray[length]) T(newItem);
+      ::new (&this->ptrArray[this->length]) T(newItem);
       
       ++this->length;
    }
