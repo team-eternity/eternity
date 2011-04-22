@@ -165,30 +165,30 @@ public:
    PODCollection(size_t initSize, int zoneTag = PU_STATIC) 
       : BaseCollection<T>(zoneTag)
    {
-      BaseCollection<T>::resize(initSize);
+      this->resize(initSize);
    }
 
    // Assignment
    void assign(const PODCollection<T> &other)
    {
-      size_t oldlength = length;
+      size_t oldlength = this->length;
 
       if(this->ptrArray == other.ptrArray) // same object?
          return;
       
-      length = other.length;
-      wrapiterator = other.wrapiterator;
+      this->length = other.length;
+      this->wrapiterator = other.wrapiterator;
       
-      if(length <= numalloc)
-         resize(length - oldlength);
+      if(this->length <= this->numalloc)
+         resize(this->length - oldlength);
 
-      memcpy(ptrArray, other.ptrArray, length * sizeof(T));
+      memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
    }
 
    // Copy constructor
    PODCollection(const PODCollection<T> &other) : BaseCollection<T>()
    {
-      assign(other);
+      this->assign(other);
    }
    
    // Destructor
@@ -197,7 +197,7 @@ public:
    // operator = - Overloaded operator wrapper for assign method
    PODCollection<T> &operator = (const PODCollection<T> &other)
    {
-      assign(other);
+      this->assign(other);
       return *this;
    }
 
@@ -215,8 +215,8 @@ public:
    //
    void makeEmpty()
    {
-      length = wrapiterator = 0;
-      memset(ptrArray, 0, numalloc * sizeof(T));
+      this->length = this->wrapiterator = 0;
+      memset(this->ptrArray, 0, this->numalloc * sizeof(T));
    }
 
    //
@@ -226,10 +226,10 @@ public:
    //
    void add(const T &newItem)
    {
-      if(length >= numalloc)
-         resize(length ? length : 32); // double array size
-      ptrArray[length] = newItem;
-      ++length;
+      if(this->length >= this->numalloc)
+         resize(this->length ? this->length : 32); // double array size
+      this->ptrArray[this->length] = newItem;
+      ++this->length;
    }
 };
 
@@ -251,7 +251,7 @@ public:
    Collection(size_t initSize, int zoneTag = PU_STATIC) 
       : BaseCollection<T>(zoneTag)
    {
-      BaseCollection<T>::resize(initSize);
+      this->resize(initSize);
    }
    
    // Destructor
@@ -264,13 +264,13 @@ public:
    //
    void clear()
    {
-      if(ptrArray)
+      if(this->ptrArray)
       {
          // manually call all destructors
          for(size_t i = 0; i < length; i++)
-            ptrArray[i].~T();
+            this->ptrArray[i].~T();
       }
-      baseClear();
+      this->baseClear();
    }
    
    //
@@ -280,15 +280,15 @@ public:
    //
    void makeEmpty()
    {
-      if(ptrArray)
+      if(this->ptrArray)
       {
          // manually call all destructors
          for(size_t i = 0; i < length; i++)
-            ptrArray[i].~T();
+            this->ptrArray[i].~T();
 
-         memset(ptrArray, 0, numalloc * sizeof(T));
+         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
       }
-      length = wrapiterator = 0;
+      this->length = this->wrapiterator = 0;
    }
 
    //
@@ -298,13 +298,13 @@ public:
    //
    void add(const T &newItem)
    {
-      if(length >= numalloc)
-         resize(length ? length : 32); // double array size
+      if(this->length >= this->numalloc)
+         resize(this->length ? this->length : 32); // double array size
       
       // copy construct new item
-      ::new (&ptrArray[length]) T(newItem);
+      ::new (&this->ptrArray[length]) T(newItem);
       
-      ++length;
+      ++this->length;
    }
 };
 
