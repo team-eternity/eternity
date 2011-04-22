@@ -24,6 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
+// haleyjd 04/22/11: LOST TO THE SANDS OF TIME!
+#if 0
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -975,6 +978,8 @@ columndrawer_t r_lowdetail_drawer =
       { R_LowDrawTLColumn,   R_LowDrawTLTRColumn   }, // TRANMAP
    },
 };
+
+#endif
 
 // EOF
 

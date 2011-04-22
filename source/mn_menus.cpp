@@ -3469,7 +3469,7 @@ static menuitem_t mn_old_option_items[] =
 {
    { it_runcmd,    "end game",       "mn_endgame",    "M_ENDGAM" },
    { it_runcmd,    "messages",       "hu_messages /", "M_MESSG"  },
-   { it_runcmd,    "graphic detail", "r_detail /",    "M_DETAIL" },
+   { it_runcmd,    "graphic detail", "echo No.",      "M_DETAIL" },
    { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
    { it_bigslider, "mouse sens.",    "sens_combined", "M_MSENS"  },
@@ -3477,8 +3477,6 @@ static menuitem_t mn_old_option_items[] =
    { it_runcmd,    "sound volume",   "mn_old_sound",  "M_SVOL"   },
    { it_end }
 };
-
-extern int c_detailshift;
 
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
@@ -3492,7 +3490,7 @@ static void MN_OldOptionsDrawer(void)
                (patch_t *)W_CacheLumpName(msgNames[showMessages], PU_CACHE));
 
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
-               (patch_t *)W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
+               (patch_t *)W_CacheLumpName(detailNames[0], PU_CACHE));
 }
 
 menu_t menu_old_options =

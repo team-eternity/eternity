@@ -1881,10 +1881,6 @@ static void R_ProjectParticle(particle_t *particle)
    float idist, xscale, yscale;
    float y1, y2;
 
-   // FIXME: particles are bad in low detail...
-   if(detailshift)
-      return;
-
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(particle->x) - view.x;
    tempy = M_FixedToFloat(particle->y) - view.y;

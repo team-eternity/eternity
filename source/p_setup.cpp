@@ -2472,7 +2472,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    if(precache)
       R_PrecacheLevel();
 
-   R_SetViewSize(screenSize+3, c_detailshift); //sf
+   R_SetViewSize(screenSize+3); //sf
 
    // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
    // 01/13/2011: Moved up a bit. The below actions want GS_LEVEL gamestate :>

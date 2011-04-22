@@ -73,8 +73,6 @@ typedef struct channel_info_s
   // Hardware left and right channel volume lookup.
   int *leftvol_lookup;
   int *rightvol_lookup;
-  // haleyjd 10/02/08: channel is waiting to be stopped
-  bool stopChannel;
   // haleyjd 06/03/06: looping
   int loop;
   unsigned int idnum;
@@ -119,8 +117,6 @@ static bool stopchan(int handle)
       // haleyjd 06/07/09: store this here so that we can release the
       // semaphore as quickly as possible.
       sfx = channelinfo[handle].id;
-
-      channelinfo[handle].stopChannel = false;
 
       if(sfx)
       {
@@ -564,7 +560,6 @@ static void I_SetChannels(void)
    // haleyjd 04/21/10: initialize equalizers
 
    // Set Low/Mid/High gains 
-   // TODO: make configurable, add more parameters
    eqstate[0].lg = eqstate[1].lg = s_lowgain;
    eqstate[0].mg = eqstate[1].mg = s_midgain;
    eqstate[0].hg = eqstate[1].hg = s_highgain;
@@ -662,7 +657,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    }
 
    // all used? don't play the sound. It's preferable to miss a sound
-   // than it is to cut off one already playing, which sounds weird.
+   // than to cut off one already playing, which sounds weird.
    if(handle == numChannels)
       return -1;
  
@@ -771,7 +766,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
    {
       // fast rejection before semaphore lock
-      if(!chan->data || chan->stopChannel)
+      if(!chan->data)
          continue;
          
       // try to acquire semaphore, but do not block; if the main thread is using
@@ -857,7 +852,6 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             else
             {
                // flag the channel to be stopped by the main thread ASAP
-               chan->stopChannel = true;
                chan->data = NULL;
                break;
             }
