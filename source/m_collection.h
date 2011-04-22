@@ -165,17 +165,8 @@ public:
    PODCollection(size_t initSize, int zoneTag = PU_STATIC) 
       : BaseCollection<T>(zoneTag)
    {
-      resize(initSize);
+      BaseCollection<T>::resize(initSize);
    }
-
-   // Copy constructor
-   PODCollection(const PODCollection<T> &other) : BaseCollection<T>()
-   {
-      assign(other);
-   }
-   
-   // Destructor
-   ~PODCollection() { clear(); }
 
    // Assignment
    void assign(const PODCollection<T> &other)
@@ -193,6 +184,15 @@ public:
 
       memcpy(ptrArray, other.ptrArray, length * sizeof(T));
    }
+
+   // Copy constructor
+   PODCollection(const PODCollection<T> &other) : BaseCollection<T>()
+   {
+      assign(other);
+   }
+   
+   // Destructor
+   ~PODCollection() { clear(); }
 
    // operator = - Overloaded operator wrapper for assign method
    PODCollection<T> &operator = (const PODCollection<T> &other)
@@ -251,7 +251,7 @@ public:
    Collection(size_t initSize, int zoneTag = PU_STATIC) 
       : BaseCollection<T>(zoneTag)
    {
-      resize(initSize);
+      BaseCollection<T>::resize(initSize);
    }
    
    // Destructor
