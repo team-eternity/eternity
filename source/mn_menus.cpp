@@ -1919,7 +1919,6 @@ static menuitem_t mn_sound_items[] =
    {it_info,       FC_GOLD "Setup"},
    {it_toggle,     "Sound card",                   "snd_card"},
    {it_toggle,     "Music card",                   "mus_card"},
-   {it_toggle,     "Autodetect voices",            "detect_voices"},
    {it_toggle,     "Sound channels",               "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},

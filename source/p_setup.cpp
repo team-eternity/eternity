@@ -2036,7 +2036,7 @@ static void P_LoadReject(int lump)
 
    // warn on too-large rejects, but do nothing special.
    if(size > expectedsize)
-      C_Printf(FC_ERROR "P_LoadReject warning: reject is too large\a\n");
+      C_Printf(FC_ERROR "P_LoadReject: warning - reject is too large\a\n");
 }
 
 //

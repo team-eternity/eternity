@@ -299,7 +299,7 @@ public:
    void add(const T &newItem)
    {
       if(this->length >= this->numalloc)
-         resize(this->length ? this->length : 32); // double array size
+         this->resize(this->length ? this->length : 32); // double array size
       
       // copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);

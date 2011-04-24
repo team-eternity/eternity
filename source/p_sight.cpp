@@ -212,7 +212,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
          if(line->bbox[BOXLEFT  ] > los->bbox[BOXRIGHT ] ||
             line->bbox[BOXRIGHT ] < los->bbox[BOXLEFT  ] ||
             line->bbox[BOXBOTTOM] > los->bbox[BOXTOP   ] ||
-            line->bbox[BOXTOP]    < los->bbox[BOXBOTTOM])
+            line->bbox[BOXTOP   ] < los->bbox[BOXBOTTOM])
             continue;
       }
 
