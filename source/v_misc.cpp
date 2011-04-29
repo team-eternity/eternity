@@ -534,6 +534,7 @@ VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_modelist, 0)
 {
+   /*
    videomode_t* videomode = videomodes;
    
    C_Printf(FC_HI "video modes:\n");
@@ -544,6 +545,7 @@ CONSOLE_COMMAND(v_modelist, 0)
                videomode->description);
       ++videomode;
    }
+   */
 }
 
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}

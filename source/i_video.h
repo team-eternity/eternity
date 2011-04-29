@@ -74,8 +74,6 @@ typedef struct videomode_s
   const char *description;
 } videomode_t;
 
-extern videomode_t videomodes[];
-
 void I_CheckVESA();
 void I_SetMode(int i);
 

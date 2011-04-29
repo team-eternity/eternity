@@ -728,34 +728,6 @@ void I_InitGraphics(void)
    Z_CheckHeap();
 }
 
-
-
-
-// the list of video modes is stored here in i_video.c
-// the console commands to change them are in v_misc.c,
-// so that all the platform-specific stuff is in here.
-// v_misc.c does not care about the format of the videomode_t,
-// all it asks is that it contains a text value 'description'
-// which describes the mode
-        
-videomode_t videomodes[]=
-{
-  // [hires, pageflip, vesa (unused for SDL)], description
-  {0, 0, 0, "320x200 Windowed"},
-  {0, 0, 0, "320x200 Fullscreen"},
-  {0, 0, 0, "320x240 Windowed"},
-  {0, 0, 0, "320x240 Fullscreen"},
-  {0, 0, 0, "640x400 Windowed"},
-  {0, 0, 0, "640x400 Fullscreen"},
-  {0, 0, 0, "640x480 Windowed"},
-  {0, 0, 0, "640x480 Fullscreen"},
-  {0, 0, 0, "800x600 Windowed"},
-  {0, 0, 0, "800x600 Fullscreen"},
-  {0, 0, 0, "1024x768 Windowed"},
-  {0, 0, 0, "1024x768 Fullscreen"},
-  {0, 0, 0,  NULL}  // last one has NULL description
-};
-
 void I_SetMode(int i)
 {
    static int firsttime = true;    // the first time to set mode

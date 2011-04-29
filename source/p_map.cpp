@@ -189,10 +189,13 @@ static bool PIT_StompThing3D(Mobj *thing)
       if(thing->player)
          P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
    }
-   else if(thing->player)
+   else if(thing->player) // Thing moving into a player?
    {
       // clip.thing dies
       P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+   }
+   else // Neither thing is a player...
+   {
    }
    
    return true;
