@@ -32,6 +32,7 @@
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "m_argv.h"
@@ -1916,6 +1917,10 @@ static bool PTR_SlideTraverse(intercept_t *in)
          return true; // don't hit the back side
       goto isblocking;
    }
+
+   // haleyjd 04/30/11: 'Block everything' lines block sliding
+   if(li->extflags & EX_ML_BLOCKALL)
+      goto isblocking;
 
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line

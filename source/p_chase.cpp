@@ -250,7 +250,7 @@ bool PTR_chasetraverse(intercept_t *in)
          z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
-         if( (li->flags & ML_BLOCKING) ||
+         if( (li->flags & ML_BLOCKING) || 
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit

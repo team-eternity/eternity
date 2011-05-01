@@ -31,6 +31,7 @@
 #include "acs_intr.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_misc.h"
@@ -468,6 +469,16 @@ static int ACS_countPlayers(void)
    return count;
 }
 
+// ZDoom blocking types
+enum
+{
+   BLOCK_NOTHING,
+   BLOCK_CREATURES,
+   BLOCK_EVERYTHING,
+   BLOCK_RAILING,
+   BLOCK_PLAYERS
+};
+
 //
 // ACS_setLineBlocking
 //
@@ -480,12 +491,24 @@ static void ACS_setLineBlocking(int tag, int block)
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      // clear the flag
-      l->flags &= ~ML_BLOCKING;
-
-      // if specified, reset the flag
-      if(block)
+      switch(block)
+      {
+      case BLOCK_NOTHING:
+         // clear the flags
+         l->flags    &= ~ML_BLOCKING;
+         l->extflags &= ~EX_ML_BLOCKALL;
+         break;
+      case BLOCK_CREATURES:
+         l->extflags &= ~EX_ML_BLOCKALL;
          l->flags |= ML_BLOCKING;
+         break;
+      case BLOCK_EVERYTHING: // ZDoom extension - block everything
+         l->flags    |= ML_BLOCKING;
+         l->extflags |= EX_ML_BLOCKALL;
+         break;
+      default: // Others not implemented yet :P
+         break;
+      }
    }
 }
 

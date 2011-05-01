@@ -196,6 +196,7 @@ static dehflags_t extlineflags[] =
    { "REPEAT",   EX_ML_REPEAT   },
    { "1SONLY",   EX_ML_1SONLY   },
    { "ADDITIVE", EX_ML_ADDITIVE },
+   { "BLOCKALL", EX_ML_BLOCKALL },
    { NULL,       0              }
 };
 

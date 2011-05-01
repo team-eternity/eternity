@@ -71,6 +71,7 @@ enum
    EX_ML_REPEAT   = 0x00000080, // can be used multiple times
    EX_ML_1SONLY   = 0x00000100, // only activated from first side
    EX_ML_ADDITIVE = 0x00000200, // uses additive blending
+   EX_ML_BLOCKALL = 0x00000400  // line blocks everything
 };
 
 // ExtraData line structure

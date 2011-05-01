@@ -1133,6 +1133,18 @@ static void P_InitLineDef(line_t *ld)
 }
 
 //
+// P_PostProcessLineFlags
+//
+// haleyjd 04/30/11: Make some line flags consistent.
+//
+static void P_PostProcessLineFlags(line_t *ld)
+{
+   // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
+   if(ld->extflags & EX_ML_BLOCKALL)
+      ld->flags |= ML_BLOCKING;
+}
+
+//
 // P_LoadLineDefs
 // Also counts secret lines for intermissions.
 //        ^^^
@@ -1178,6 +1190,9 @@ void P_LoadLineDefs(int lump)
          E_LoadLineDefExt(ld, true);
       else if(E_IsParamSpecial(ld->special))
          E_LoadLineDefExt(ld, false);
+
+      // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
+      P_PostProcessLineFlags(ld);
    }
    Z_Free(data);
 }

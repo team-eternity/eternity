@@ -26,13 +26,15 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "doomstat.h"
-#include "r_main.h"
-#include "r_state.h"
+#include "e_exdata.h"
+#include "m_bbox.h"
 #include "p_maputl.h"
 #include "p_setup.h"
-#include "m_bbox.h"
 #include "r_dynseg.h"
+#include "r_main.h"
+#include "r_state.h"
 
 //
 // P_CheckSight
@@ -234,6 +236,10 @@ static bool P_CrossSubsector(int num, register los_t *los)
 
       // stop because it is not two sided anyway
       if(!(line->flags & ML_TWOSIDED))
+         return false;
+
+      // haleyjd 04/30/11: stop on BLOCKALL lines
+      if(line->extflags & EX_ML_BLOCKALL)
          return false;
 
       // crosses a two sided line

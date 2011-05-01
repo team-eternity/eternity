@@ -29,6 +29,7 @@
 
 #include "d_gi.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
@@ -129,7 +130,8 @@ static bool PTR_AimTraverse(intercept_t *in)
       // shoot a line
       line_t *li = in->d.line;
       
-      if(!(li->flags & ML_TWOSIDED))
+      // haleyjd 04/30/11: added 'block everything' lines
+      if(!(li->flags & ML_TWOSIDED) || (li->extflags & EX_ML_BLOCKALL))
          return false;   // stop
 
       // Crosses a two sided line.
@@ -643,13 +645,18 @@ static bool PTR_UseTraverse(intercept_t *in)
    }
    else
    {
-      P_LineOpening(in->d.line, NULL);
+      if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+         clip.openrange = 0;
+      else
+         P_LineOpening(in->d.line, NULL);
+
       if(clip.openrange <= 0)
       {
          // can't use through a wall
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
          return false;
       }
+
       // not a special line, but keep checking
       return true;
    }
