@@ -2,6 +2,284 @@
 Changes since Eternity Engine v3.40.00
 ================================================================================
 --------------------------------------------------------------------------------
+05/01/11
+
+Preparation for a new release is underway. Added a vapordemo utility to the
+tools directory which can launch EE using CreateProcess with a specific command
+line in order to give a professional interface to the "Blue Box" release.
+
+--------------------------------------------------------------------------------
+04/30/11
+
+Added a "hal" folder to hold Eternity's system-agnostic low-level modules, or
+what is otherwise known as a Hardware Abstraction Layer. We already use this
+approach in i_sound.cpp, and it will soon be extended to i_video.cpp so that
+Eternity can have an OpenGL-based 2D-in-3D video backend.
+
+Added EX_ML_BLOCKALL ExtraData flag for linedefs at esselfortium's much-repeated
+request. This is similar but not identical to ZDoom's BLOCKEVERYTHING flag, as 
+it is lacking several hacks the latter has which allow things to see through 
+block-everything linedefs under a set of haphazardly determined circumstances.
+No thanks to that, I say.
+
+--------------------------------------------------------------------------------
+04/28/11
+
+The videomodes list left over from before EE supported -geom has been removed.
+
+--------------------------------------------------------------------------------
+04/22/11
+
+CSonicGo reported that the removal of status bar caching somehow even further
+broke low detail mode, so effective as of now, Eternity no longer has support
+for this. I have torn out all of the code and salted the earth where it once
+stood so that it can never return :P This thing was unfortunately a thorn in my
+side almost from day one, as it just kept accumulating more and more weird and
+almost unexplainable problems.
+
+CSonicGo also pointed out that GCC's strict standards compliance means you 
+can't use unqualified names inherited from an unspecified template parent class.
+Use of this-> to access data and method members is required because of a gaping
+hole in the C++ standard that causes templates and inheritance to not work 
+together properly otherwise. Bleh.
+
+--------------------------------------------------------------------------------
+04/17/11
+
+M_ExtractFileBase will now truncate LFNs passed in, to allow the use of demo
+files with names > 8 characters in base filename length. This was done to match
+the logic earlier adapted in PrBoom+ and just recently in Chocolate Doom.
+
+The PODCollection and Collection classes have been refactored so that they
+derive from a common BaseCollection class which implements the portion of their
+logic which can be shared. I also repaired a bad double construction problem in
+Collection.
+
+--------------------------------------------------------------------------------
+04/16/11
+
+Yet another massive round of recursive dependency removal has been undertaken,
+but this is starting to seem like a never-ending chore.
+
+I have finally gotten around to removing all caching of the DOOM status bar.
+Impact on FPS determined to be infitesimal. In fact the game might even be 
+faster.
+
+--------------------------------------------------------------------------------
+04/15/11
+
+m_hash had a problem with a static array's declaration in MD5Hash which Visual
+C++ ignored but upon which GCC predictably choked.
+
+--------------------------------------------------------------------------------
+04/14/11
+
+Fixed some GCC warnings regarding the Thinker class, and fixed more instances of
+string constants being assigned to char * members of structures.
+
+Files are no longer mass-dependent on the d_dwfile.h header. This was a left-
+over from years ago, back when d_io and d_dwfile were one header.
+
+Also undertook another massive round of removing unnecessary inclusion of
+headers through other headers.
+
+Had to remove use of d_namlen in my adjustment to the base directory logic, as
+POSIX states this to be an optional field of the dirent structure, and it seems
+that GNU libc doesn't support it.
+
+--------------------------------------------------------------------------------
+04/13/11
+
+The "wrotesound" hack has been removed from the I_SDLUpdateSoundCB post-mix
+callback as it is unnecessary and incorrect to stop running the EQ when no
+samples were written during the current mixing pass - this is due to the fact
+that the EQ maintains a 3-sample buffer which needs to be pushed out to the
+audio stream even if there's no new samples coming in. The chewing of CPU 
+earlier observed was apparently due to Pentium IV denormalization problems,
+which are now addressed with a "very small addend" factor adapted from the
+original 3-band EQ code as found on musicdsp.org.
+
+The d_inline define has been eliminated, since C++ supports "inline" natively.
+
+Gez contributed a patch for mmus2mid.cpp which fixes a long-standing problem
+with a message in TNT - Evilution's D_STALKS.
+
+--------------------------------------------------------------------------------
+04/12/11
+
+Eternity will now no longer adopt a path as its valid base directory unless that
+folder is observed to contain at least the files startup.wad, root.edf, and
+a folder named "doom". Entryway apparently had problems in the past with EE
+seeing an unrelated directory called "base" in its current working directory
+and then refusing to run because it wasn't the real base dir.
+
+Trailing slashes are now stripped from paths in several places before they get
+passed to the C stat function, as that function seems incapable of finding a
+path if the provided path string ends in a slash of either type.
+
+--------------------------------------------------------------------------------
+04/10/11
+
+I moved all the XL parser class methods' code outside of their class definitions
+because it was giving me bad Java flashbacks :P
+
+Security improvements have been made to qstring so that if virtually any method
+of the class is called which requires the buffer to be allocated, but the buffer
+has not been allocated yet, it will go ahead and allocate its own buffer then at
+that point.
+
+This allows qstrings to now be used without an explicit intializer method 
+being called on them, which is extremely important for supporting their use as
+members of classes which only have a default constructor.
+
+I have eliminated the "boolean" typedef in preference for using the native C++
+bool type directly, as this allows a lot of #include statements to be eliminated
+and also ensures that the bool type gets proper syntax highlighting in IDEs.
+
+SMMU dynamic musicinfo addition has been refactored to match sounds, such that
+unknown musics being requested will be added to the hash table on demand if a
+corresponding lump can be found in a loaded wadfile. This is in preference to
+the old system of scanning for D_ lumps in WAD files when they were added.
+
+Added a findSubStr method to qstring.
+
+Added an audio_buffers setting to system.cfg, as setting this to a higher number
+seems to at least partially alleviate some of the sound skipping I am STILL
+experiencing.
+
+Support for the $edfoverride keyword has been restored to the new 
+XLSndInfoParser class.
+
+--------------------------------------------------------------------------------
+04/09/11
+
+I have completed the new state-based parser for Hexen SNDINFO lumps. Volume
+clamp checks in the low-level sound code should be RANGECHECK-only, since this
+is a condition which should never happen under ordinary circumstances.
+
+NULL-origin sounds will no longer cut each other off unless they are the same
+sound. So for instance you can only hear one Cyberdemon MOO at a time, but a
+Cyberdemon MOO will not cut off a Boss Brain's wake-up sound. I think this is a
+very good balance between compatibility and sanity.
+
+--------------------------------------------------------------------------------
+04/08/11
+
+SHA-1 hashes are now computed on the combined header and wad directory of all
+wad files that are loaded by Eternity.
+
+Two new command-line parameters have been added to support this:
+
+* -nowadhacks : Disables the application of all wad directory hacks, in case 
+  there is an astronomically unlikely SHA-1 hash collision that breaks an 
+  unrelated wad file. This would be repaired in the next release after being
+  found, of course, by finding an additional way to distinguish the colliding
+  WAD files.
+
+* -showhashes : Outputs the wad file's SHA-1 hash to the system console every
+  time a WAD file is added. This is for development purposes, since in order to
+  add a hack, I do have to be able to see the SHA-1 hash code for the WAD file 
+  :P
+  
+The one and only current wad hack is for Gothic DM 2, and it repairs the 
+incorrect position of the FF_START lump in that wad by exchanging it with one of
+the patch graphics (the lumpinfo_t's are swapped in the directory). Code for
+wad hacks lives in the new w_hacks.cpp module.
+
+--------------------------------------------------------------------------------
+04/07/11
+
+w_sound_update_type has been removed as it was no longer used, and I have merged
+the three different Add*File methods of the WadDirectory class into one single
+method, which reduces the code duplication that was going on there. The logic
+does get a bit messy however and could use some revisiting to clean up later.
+
+Added a Collection template class which is similar to PODCollection but can
+store non-PODs, as it does placement construction and explicit destructor calls.
+
+In preparation for adding the ability to have SHA-1-based hacks that can be
+applied to the directories of certain well-known broken WAD files such as Gothic
+DM 2, I rewrote the m_hash module into a series of HashAlgorithm and HashData
+classes.
+
+--------------------------------------------------------------------------------
+04/04/11
+
+I have added a PODCollection template class derived from ZoneObject which can
+store POD objects and intrinsic C++ data types. This acts as a generalized
+reallocating array, and efficiency is maximized as it does no unnecessary
+constructor or destructor logic on these objects which explicitly do not need
+it.
+
+The MobjCollection structure has been refactored into a class and made to 
+inherit from PODCollection<Mobj *>. It should be possible to replace almost all
+use of reallocating array logic with the PODCollection class eventually.
+
+--------------------------------------------------------------------------------
+04/03/11
+
+Added a toLong method to qstring which calls strtol.
+
+MetaObject::toString has been reimplemented, as mentioned earlier, to use the
+new getZoneSize and getBlockPtr methods that it inherits from ZoneObject. Used
+together, these allow the entire MetaObject to be output as a hex dump instead
+of only the parent class data, which isn't interesting at all - just a bunch of
+linked list pointers.
+
+The z_zone.cpp module has been permanently disabled with #if 0, and the 
+ZONE_NATIVE define is no longer required to compile Eternity.
+
+I eliminated all instances of ENCStringHashKey being accidentally passed into
+varargs functions under the incorrect idea that this would invoke their implicit
+conversion to const char * - obviously it does not.
+
+--------------------------------------------------------------------------------
+04/02/11
+
+All metatable-related classes are now based on ZoneObject instead of defining
+their own operator new and delete.
+
+--------------------------------------------------------------------------------
+04/01/11
+
+It is now possible to reflect properties of the zone heap memory block into the 
+object itself, and as a result there are methods to get the zone block pointer 
+(an alternative to using dynamic_cast<void *>), and to return the true allocated
+size of the object, which sizeof is not capable of doing (it returns the size of
+the immediate type when given a dereferenced pointer - it is not polymorphic).
+
+This latter facility can be used later in the MetaObject class to print out the
+full object when doing the default hex dump behavior - currently only the base
+class memory gets printed.
+
+I have also fully revamped zone instrumentation so that it does not call
+doom_printf but instead is drawn directly to the screen by code in d_main.cpp
+using V_FontWriteText and the console font, which gives better formatting.
+
+Bug fixes:
+* P_CheckPosition3D shouldn't error out if it gets called during an old Heretic
+  demo, which enable 3D object clipping even though the implementation is not
+  the same and therefore they're not going to sync anyway ;)
+  
+* XLParser must return if root->index is equal to -1. This caused an I_Error 
+  from W_CacheLumpNum if there were no SNDINFO lumps.
+
+--------------------------------------------------------------------------------
+03/31/11
+
+Finally concocted a solution which allows non-POD Eternity classes to utilize 
+zone allocation and tags and still have destructors called on them when 
+Z_FreeTags is called. The ZoneObject class acts as a polymorphic base class to 
+any class that wishes to be allocatable on the zone heap in this manner. 
+
+--------------------------------------------------------------------------------
+03/30/11
+
+Started work on a finite-state automaton tokenizer for the XLParser class to use
+after Randy Heit pointed out that treating the scripts as line-based wouldn't be
+fully compatible, which really, I knew already, but I was being lazy ;)
+
+--------------------------------------------------------------------------------
 03/28/11
 
 Rudimentary support for SNDINFO lumps is now complete. The parser is ZDoom
