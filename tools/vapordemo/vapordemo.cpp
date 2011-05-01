@@ -16,7 +16,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	si.cb = sizeof(si);
 
-	CreateProcess("eternity.exe", "eternity.exe -game vapordemo", NULL, NULL, 
+	CreateProcess("eternity.exe", "eternity.exe -iwad doom2.wad -game vapordemo", NULL, NULL, 
 		          FALSE, 0, NULL, NULL, &si, &pi);
 
 	CloseHandle(pi.hProcess);
