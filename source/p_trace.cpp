@@ -231,6 +231,10 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
    fixed_t dist;
    bool ret = false;
 
+   // haleyjd 04/30/11: block-everything lines stop bullets
+   if(li->extflags & EX_ML_BLOCKALL)
+      return false;
+
    if(li->flags & ML_TWOSIDED)
    {  
       // crosses a two sided (really 2s) line
