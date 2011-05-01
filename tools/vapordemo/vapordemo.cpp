@@ -1,5 +1,6 @@
 // vapordemo.cpp : Defines the entry point for the application.
 //
+// You can do whatever you want with this. Released to the public domain. - Quasar.
 
 #include "stdafx.h"
 
