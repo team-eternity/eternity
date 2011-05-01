@@ -659,7 +659,8 @@ bool PIT_CheckLine(line_t *ld)
    // could be crossed in either order.
 
    // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   if(!ld->backsector) // one sided line
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
    {
       clip.blockline = ld;
       return clip.unstuck && !untouched(ld) &&
