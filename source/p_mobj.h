@@ -155,6 +155,8 @@ typedef struct backpack_s
 class PointThinker : public Thinker
 {
 public:
+   PointThinker() : Thinker(), x(0), y(0), z(0), groupid(0) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PointThinker"; }

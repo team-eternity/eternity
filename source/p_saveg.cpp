@@ -822,6 +822,21 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
    }
    arc << id << angle;
 
+   // Thinker::serialize won't read its own name so we need to do that here.
+   if(arc.isLoading())
+   {
+      char *className = NULL;
+      size_t len = 0;
+      
+      arc.ArchiveLString(className, len);
+
+      if(!className || strncmp(className, "PointThinker", len))
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "P_ArchivePolyObj: no PointThinker for polyobject");
+      }
+   }
+
    pt.serialize(arc);
 
    // if the object is bad or isn't in the id hash, we can do nothing more

@@ -40,8 +40,8 @@ struct line_t;
 class SaveArchive
 {
 protected:
-   OutBuffer *savefile; // valid when saving
-   InBuffer  *loadfile; // valid when loading
+   OutBuffer *savefile;        // valid when saving
+   InBuffer  *loadfile;        // valid when loading
 
 public:
    SaveArchive(OutBuffer *pSaveFile);
