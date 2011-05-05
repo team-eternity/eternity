@@ -74,6 +74,8 @@ extern int r_tlstyle;
 
 void R_DoomTLStyle(void);
 
+void R_ResetTrans(void);
+
 //
 // Function pointer to switch refresh/drawing functions.
 //

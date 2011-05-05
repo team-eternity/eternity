@@ -1653,6 +1653,18 @@ void M_LoadOptions(void)
    }
 
    //  MN_ResetMenu();       // reset menu in case of change
+
+   // haleyjd 05/05/11: Believe it or not this was handled through the menu
+   // system in MBF, as the above commented-out line left over from SMMU
+   // hints. M_ResetMenu would execute action callbacks on any menu item
+   // that needed updating, and the action for general_translucency in MBF
+   // was altered so that it would refresh the tranmap.
+   //
+   // Without this here, the game will crash if an OPTIONS lump changes the
+   // value of general_translucency.
+   // FIXME: This is not extensible and should be considered a temporary hack!
+   // Instead there should be a generalized post-update action for options.
+   R_ResetTrans();
 }
 
 //
