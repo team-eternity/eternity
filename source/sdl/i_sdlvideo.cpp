@@ -21,8 +21,7 @@
 //
 // DESCRIPTION:
 //   
-//   System-specific graphics code, along with some ill-placed
-//   keyboard, mouse, and joystick code.
+//   SDL-specific graphics code.
 //
 //-----------------------------------------------------------------------------
 
@@ -30,31 +29,21 @@
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 
-#include "../am_map.h"
-#include "../c_io.h"
-#include "../c_runcmd.h"
-#include "../d_gi.h"
+#include "i_sdlvideo.h"
+
 #include "../d_main.h"
-#include "../doomstat.h"
-#include "../f_wipe.h"
 #include "../i_system.h"
-#include "../i_video.h"
-#include "../in_lude.h"
 #include "../m_argv.h"
-#include "../m_bbox.h"
-#include "../m_misc.h"
-#include "../m_qstr.h"
-#include "../mn_engin.h"
-#include "../r_draw.h"
 #include "../r_main.h"
-#include "../st_stuff.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
 #include "../w_wad.h"
 
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // WM-related stuff (see i_input.c)
+//
 
 extern int  usejoystick;
 extern int  grabmouse;
@@ -64,48 +53,33 @@ extern bool fullscreen;
 void UpdateGrab(void);
 bool MouseShouldBeGrabbed(void);
 void UpdateFocus(void);
-void I_InitKeyboard();
-
 
 SDL_Surface *sdlscreen;
-
-
-// ----------------------------------------------------------------------------
-// Graphics Code
-
-int  use_vsync;     // killough 2/8/98: controls whether vsync is called
-bool noblit;
-
-static bool in_graphics_mode;
-
-static SDL_Color basepal[256], colors[256];
-static bool setpalette = false;
-
-// haleyjd 12/03/07: 8-on-32 graphics support
-static bool crossbitdepth;
-
-
 static SDL_Surface *primary_surface = NULL;
 
+//=============================================================================
+//
+// Graphics Code
+//
+
+extern int  use_vsync;     // killough 2/8/98: controls whether vsync is called
+extern bool noblit;
+
+static SDL_Color basepal[256], colors[256];
+extern bool setpalette;
+
+// haleyjd 12/03/07: 8-on-32 graphics support
+extern bool crossbitdepth;
+
 // haleyjd 07/15/09
-char *i_default_videomode;
-char *i_videomode;
+extern char *i_default_videomode;
+extern char *i_videomode;
 
 //
-// I_UpdateNoBlit
+// SDLVideoDriver::FinishUpdate
 //
-void I_UpdateNoBlit(void)
+void SDLVideoDriver::FinishUpdate(void)
 {
-}
-
-//
-// I_FinishUpdate
-//
-void I_FinishUpdate(void)
-{
-   if(noblit || !in_graphics_mode)
-      return;
-
    // haleyjd 10/08/05: from Chocolate DOOM:
    UpdateGrab();
 
@@ -136,9 +110,9 @@ void I_FinishUpdate(void)
 }
 
 //
-// I_ReadScreen
+// SDLVideoDriver::ReadScreen
 //
-void I_ReadScreen(byte *scr)
+void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
@@ -148,22 +122,16 @@ void I_ReadScreen(byte *scr)
    V_FreeVBuffer(&temp);
 }
 
-
-int disk_icon;
 static SDL_Rect drect;
 static SDL_Surface *disk = NULL, *disk_bg = NULL;
 
 //
 // killough 10/98: init disk icon
 //
-static void I_InitDiskFlash(void)
+void SDLVideoDriver::InitDiskFlash()
 {
    SDL_Surface *disktmp = NULL;
    VBuffer diskvb;
-
-   // haleyjd 05/21/06: no disk in some game modes...
-   if(!(GameModeInfo->flags & GIF_HASDISK))
-      return;
 
    if(disk)
    {
@@ -214,9 +182,9 @@ static void I_InitDiskFlash(void)
 //
 // killough 10/98: draw disk icon
 //
-void I_BeginRead(void)
+void SDLVideoDriver::BeginRead()
 {
-   if(!disk_icon || !disk || !disk_bg || !in_graphics_mode)
+   if(!disk || !disk_bg)
       return;
 
    SDL_BlitSurface(sdlscreen, &drect, disk_bg, NULL);
@@ -227,21 +195,23 @@ void I_BeginRead(void)
 //
 // killough 10/98: erase disk icon
 //
-void I_EndRead(void)
+void SDLVideoDriver::EndRead(void)
 {
-   if(!disk_icon || !disk_bg || !in_graphics_mode)
+   if(!disk_bg)
       return;
    
    SDL_BlitSurface(disk_bg, NULL, sdlscreen, &drect);
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
+static bool setpalette = false;
+
 //
 // I_SetPaletteDirect
 //
 // haleyjd 11/12/09: make sure surface palettes are set at startup.
 //
-static void I_SetPaletteDirect(byte *palette)
+static void I_SDLSetPaletteDirect(byte *palette)
 {
    int i;
 
@@ -260,14 +230,11 @@ static void I_SetPaletteDirect(byte *palette)
 }
 
 //
-// I_SetPalette
+// SDLVideoDriver::SetPalette
 //
-void I_SetPalette(byte *palette)
+void SDLVideoDriver::SetPalette(byte *palette)
 {
    int i;
-   
-   if(!in_graphics_mode)             // killough 8/11/98
-      return;
 
    if(!palette)
    {
@@ -292,8 +259,7 @@ void I_SetPalette(byte *palette)
    setpalette = true;
 }
 
-
-void I_UnsetPrimaryBuffer(void)
+void SDLVideoDriver::UnsetPrimaryBuffer()
 {
    if(primary_surface)
    {
@@ -302,8 +268,7 @@ void I_UnsetPrimaryBuffer(void)
    }
 }
 
-
-void I_SetPrimaryBuffer(void)
+void SDLVideoDriver::SetPrimaryBuffer()
 {
    int bump = (video.width == 512 || video.width == 1024) ? 4 : 0;
 
@@ -318,226 +283,39 @@ void I_SetPrimaryBuffer(void)
 }
 
 //
-// I_ShutdownGraphicsPartway
+// SDLVideoDriver::ShutdownGraphicsPartway
 //
 // haleyjd: It was necessary to separate this code from I_ShutdownGraphics
 // so that the ENDOOM screen can be displayed during shutdown. Otherwise,
 // the SDL_QuitSubSystem call below would cause a nasty crash.
 //
-static void I_ShutdownGraphicsPartway(void)
+void SDLVideoDriver::ShutdownGraphicsPartway()
 {
-   if(in_graphics_mode)
-   {
-      // haleyjd 06/21/06: use UpdateGrab here, not release
-      UpdateGrab();
-      in_graphics_mode = false;
-      in_textmode = true;
-      sdlscreen = NULL;
-      I_UnsetPrimaryBuffer();
-   }
+   // haleyjd 06/21/06: use UpdateGrab here, not release
+   UpdateGrab();
+   sdlscreen = NULL;
+   UnsetPrimaryBuffer();
 }
 
-void I_ShutdownGraphics(void)
+void SDLVideoDriver::ShutdownGraphics()
 {
-   if(in_graphics_mode)  // killough 10/98
-   {
-      I_ShutdownGraphicsPartway();
+   ShutdownGraphicsPartway();
       
-      // haleyjd 10/09/05: shut down graphics earlier
-      SDL_QuitSubSystem(SDL_INIT_VIDEO);
-   }
+   // haleyjd 10/09/05: shut down graphics earlier
+   SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
-
 
 #define BADVID "video mode not supported"
 
 extern bool setsizeneeded;
 
-// states for geometry parser
-enum
-{
-   STATE_WIDTH,
-   STATE_HEIGHT,
-   STATE_FLAGS
-};
-
 //
-// I_ParseGeom
-//
-// Function to parse geometry description strings in the form [wwww]x[hhhh][f].
-// This is now the primary way in which Eternity stores its video mode setting.
-//
-static void I_ParseGeom(const char *geom, 
-                        int *w, int *h, bool *fs, bool *vs, bool *hw,
-                        bool *wf)
-{
-   const char *c = geom;
-   int state = STATE_WIDTH;
-   int tmpwidth = 320, tmpheight = 200;
-   qstring qstr;
-   bool errorflag = false;
-
-   qstr.initCreate();
-
-   while(*c)
-   {
-      switch(state)
-      {
-      case STATE_WIDTH:
-         if(*c >= '0' && *c <= '9')
-            qstr += *c;
-         else
-         {
-            int width = qstr.toInt();
-            if(width < 320 || width > MAX_SCREENWIDTH)
-            {
-               state = STATE_FLAGS;
-               errorflag = true;
-            }
-            else
-            {
-               tmpwidth = width;
-               qstr.clear();
-               state = STATE_HEIGHT;
-            }
-         }
-         break;
-      case STATE_HEIGHT:
-         if(*c >= '0' && *c <= '9')
-            qstr += *c;
-         else
-         {
-            int height = qstr.toInt();
-            if(height < 200 || height > MAX_SCREENHEIGHT)
-            {
-               state = STATE_FLAGS;
-               errorflag = true;
-            }
-            else
-            {
-               tmpheight = height;
-               state = STATE_FLAGS;
-               continue; // don't increment the pointer
-            }
-         }
-         break;
-      case STATE_FLAGS:
-         switch(tolower(*c))
-         {
-         case 'w': // window
-            *fs = false;
-            break;
-         case 'f': // fullscreen
-            *fs = true;
-            break;
-         case 'a': // async update
-            *vs = false;
-            break;
-         case 'v': // vsync update
-            *vs = true;
-            break;
-         case 's': // software
-            *hw = false;
-            break;
-         case 'h': // hardware 
-            *hw = true;
-            break;
-         case 'n': // noframe
-            *wf = false;
-            break;
-         default:
-            break;
-         }
-         break;
-      }
-      ++c;
-   }
-
-   // handle termination of loop during STATE_HEIGHT (no flags)
-   if(state == STATE_HEIGHT)
-   {
-      int height = qstr.toInt();
-
-      if(height < 200 || height > MAX_SCREENHEIGHT)
-         errorflag = true;
-      else
-         tmpheight = height;
-   }
-
-   // if an error occurs setting w/h, we default.
-   if(errorflag)
-   {
-      tmpwidth  = 640;
-      tmpheight = 480;
-   }
-
-   *w = tmpwidth;
-   *h = tmpheight;
-}
-
-//
-// I_CheckVideoCmds
-//
-// Checks for all video-mode-related command-line parameters in one
-// convenient location. Though called from I_InitGraphicsMode, this
-// function will only run once at startup. Resolution changes made at
-// runtime want to use the precise settings specified through the UI
-// instead.
-//
-static void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, 
-                             bool *hw, bool *wf)
-{
-   static bool firsttime = true;
-   int p;
-
-   if(firsttime)
-   {
-      firsttime = false;
-
-      if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf);
-
-      if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
-         (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
-         *w = p;
-      
-      if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
-         (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
-         *h = p;
-      
-      if(M_CheckParm("-fullscreen"))
-         *fs = true;
-      if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
-         *fs = false;
-      
-      if(M_CheckParm("-vsync"))
-         *vs = true;
-      if(M_CheckParm("-novsync"))
-         *vs = false;
-
-      if(M_CheckParm("-hardware"))
-         *hw = true;
-      if(M_CheckParm("-software"))
-         *hw = false;
-
-      if(M_CheckParm("-frame"))
-         *wf = true;
-      if(M_CheckParm("-noframe"))
-         *wf = false;
-   }
-}
-
-#ifdef _MSC_VER
-extern void I_DisableSysMenu(void);
-#endif
-
-//
-// I_InitGraphicsMode
+// SDLVideoDriver::InitGraphicsMode
 //
 // killough 11/98: New routine, for setting hires and page flipping
 // sf: now returns true if an error occurred
 //
-static bool I_InitGraphicsMode(void)
+bool SDLVideoDriver::InitGraphicsMode()
 {
    bool wantfullscreen = false;
    bool wantvsync      = false;
@@ -547,12 +325,6 @@ static bool I_InitGraphicsMode(void)
    int  v_h            = 480;
    int  v_bd           = 8;
    int  flags          = SDL_SWSURFACE;
-
-   if(!i_default_videomode)
-      i_default_videomode = strdup("640x480w");
-
-   if(!i_videomode)
-      i_videomode = strdup(i_default_videomode);
 
    // haleyjd 10/09/05: from Chocolate DOOM
    // mouse grabbing   
@@ -602,7 +374,7 @@ static bool I_InitGraphicsMode(void)
          !(sdlscreen = SDL_SetVideoMode(320, 200, 8, SDL_SWSURFACE)))
       {
          I_FatalError(I_ERR_KILL,
-                      "I_InitGraphicsMode: couldn't set mode %dx%dx%d;\n"
+                      "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
                       "   Also failed to set safety mode 320x200x8.\n"
                       "   Check your SDL video driver settings.\n",
                       v_w, v_h, v_bd);
@@ -629,11 +401,6 @@ static bool I_InitGraphicsMode(void)
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
 
-#ifdef _MSC_VER
-   // Win32 specific hack: disable system menu
-   I_DisableSysMenu();
-#endif
-
    UpdateFocus();
    UpdateGrab();
 
@@ -642,164 +409,20 @@ static bool I_InitGraphicsMode(void)
    video.bitdepth  = 8;
    video.pixelsize = 1;
    
-   V_Init();      
-   
-   in_graphics_mode = true;
-   in_textmode = false;
-   
-   setsizeneeded = true;
-   
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SetPaletteDirect((byte *)W_CacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect((byte *)W_CacheLumpName("PLAYPAL", PU_CACHE));
 
-   I_InitDiskFlash();        // Initialize disk icon
-    
    return false;
 }
 
-//
-// I_ResetScreen
-//
-// Changes the resolution by getting out of the old mode and into the new one,
-// and then waking up any interested game-code modules that need to know about
-// the screen resolution.
-//
-static void I_ResetScreen(void)
-{  
-   // Switch out of old graphics mode
-   // haleyjd 10/15/05: WOOPS!
-   I_ShutdownGraphicsPartway();
-   
-   // Switch to new graphics mode
-   // check for errors -- we may be setting to a different mode instead
-   if(I_InitGraphicsMode())
-      return;
-   
-   // reset other modules
-   
-   // Reset automap dimensions
-   if(automapactive)
-      AM_Start();
-   
-   // Reset palette
-   ST_Start();
-   
-   // Redraw cached intermission buffer if needed
-   if(gamestate == GS_INTERMISSION)
-   {
-      IN_DrawBackground();
-      V_CopyRect(0, 0, &backscreen1, SCREENWIDTH, SCREENHEIGHT, 0, 0, &vbscreen);
-   }
-
-   // haleyjd: reset wipe engine
-   Wipe_ScreenReset();
-   
-   // A LOT of heap activity just happened, so check it.
-   Z_CheckHeap();
-}
-
-void I_InitGraphics(void)
+void SDLVideoDriver::InitGraphics(void)
 {
-   static int firsttime = true;
-   
-   if(!firsttime)
-      return;
-   
-   firsttime = false;
-   
-   // haleyjd: not a good idea for SDL :(
-   // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
-   //    return;
-
-   // init keyboard
-   I_InitKeyboard();
-
    // enable key repeat
    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
-
-   //
-   // enter graphics mode
-   //
-   
-   atexit(I_ShutdownGraphics);
-   
-   V_ResetMode();
-   
-   Z_CheckHeap();
 }
 
-void I_SetMode(int i)
-{
-   static int firsttime = true;    // the first time to set mode
-   
-   if(firsttime)
-      I_InitGraphicsMode();
-   else
-      I_ResetScreen();
-   
-   firsttime = false;
-}        
-
-/************************
-        CONSOLE COMMANDS
- ************************/
-
-VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
-VARIABLE_BOOLEAN(disk_icon, NULL,  onoff);
-
-CONSOLE_VARIABLE(v_diskicon, disk_icon, 0) {}
-CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
-{
-   V_ResetMode();
-}
-
-VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
-VARIABLE_BOOLEAN(usejoystick, NULL, yesno);
-
-CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
-CONSOLE_VARIABLE(i_usejoystick, usejoystick, 0) {}
-
-// haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_INT(joystickSens_x, NULL, -32768, 32767, NULL);
-VARIABLE_INT(joystickSens_y, NULL, -32768, 32767, NULL);
-
-CONSOLE_VARIABLE(joySens_x, joystickSens_x, 0) {}
-CONSOLE_VARIABLE(joySens_y, joystickSens_y, 0) {}
-
-// haleyjd 03/27/06: mouse grabbing
-VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
-CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
-
-VARIABLE_STRING(i_videomode, NULL, UL);
-CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
-{
-   V_ResetMode();
-}
-
-CONSOLE_COMMAND(i_default_videomode, 0)
-{
-   if(i_default_videomode)
-      free(i_default_videomode);
-
-   i_default_videomode = strdup(i_videomode);
-}
-
-void I_Video_AddCommands(void)
-{
-   C_AddCommand(i_usemouse);
-   C_AddCommand(i_usejoystick);
-   
-   C_AddCommand(v_diskicon);
-   C_AddCommand(v_retrace);
-   
-   C_AddCommand(joySens_x);
-   C_AddCommand(joySens_y);
-
-   C_AddCommand(i_grabmouse);
-
-   C_AddCommand(i_videomode);
-   C_AddCommand(i_default_videomode);
-}
+// The one and only global instance of the SDL video driver.
+SDLVideoDriver i_sdlvideodriver;
 
 //----------------------------------------------------------------------------
 //

@@ -1,4 +1,4 @@
-SUBDIRS = Confuse sdl textscreen
+SUBDIRS = Confuse hal sdl textscreen
 
 gamesdir = /usr/local/games
 
@@ -76,4 +76,4 @@ xl_scripts.cpp xl_scripts.h \
 z_native.cpp   z_zone.h
 
 eternity_LDADD = @LDFLAGS@ @SDL_LIBS@ -lSDL_mixer -lSDL_net sdl/libsdlet.a\
-Confuse/libetconfuse.a textscreen/libtextscreen.a
+Confuse/libetconfuse.a textscreen/libtextscreen.a hal/libhalet.a

@@ -3843,6 +3843,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlvideo.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\sdl\i_sound.cpp"
 						>
 						<FileConfiguration
@@ -3866,28 +3870,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\sdl\i_system.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\Source\sdl\i_video.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -3991,15 +3973,15 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlvideo.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\i_sound.h"
 						>
 					</File>
 					<File
 						RelativePath="..\Source\i_system.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Source\i_video.h"
 						>
 					</File>
 					<File
@@ -5040,6 +5022,26 @@
 					RelativePath="..\source\xl_scripts.h"
 					>
 				</File>
+			</Filter>
+			<Filter
+				Name="HAL"
+				>
+				<Filter
+					Name="HAL Source"
+					>
+					<File
+						RelativePath="..\source\hal\i_video.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="HAL Headers"
+					>
+					<File
+						RelativePath="..\source\i_video.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
