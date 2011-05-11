@@ -32,7 +32,7 @@
 #include "../i_video.h" 
 
 //
-// SDL Video Driver
+// SDL GL "2D-in-3D" Video Driver
 //
 class SDLGL2DVideoDriver : public HALVideoDriver
 {
