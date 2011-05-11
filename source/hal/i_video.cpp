@@ -65,6 +65,7 @@ extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
 void I_InitKeyboard();
+void I_InitMouse();
 
 //=============================================================================
 //
@@ -445,6 +446,9 @@ void I_InitGraphics(void)
 
    // init keyboard
    I_InitKeyboard();
+
+   // haleyjd 05/10/11: init mouse
+   I_InitMouse();
 
    // Do system-specific initialization
    i_video_driver->InitGraphics();

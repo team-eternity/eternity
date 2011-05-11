@@ -355,13 +355,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_bd           = 8;
    int  flags          = SDL_SWSURFACE;
 
-   // haleyjd 10/09/05: from Chocolate DOOM
-   // mouse grabbing   
-   if(M_CheckParm("-grabmouse"))
-      grabmouse = 1;
-   else if(M_CheckParm("-nograbmouse"))
-      grabmouse = 0;
-
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
    {
@@ -451,8 +444,6 @@ bool SDLVideoDriver::InitGraphicsMode()
 //
 void SDLVideoDriver::InitGraphics(void)
 {
-   // enable key repeat
-   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 // The one and only global instance of the SDL video driver.

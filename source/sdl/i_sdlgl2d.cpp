@@ -153,12 +153,6 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   // mouse grabbing   
-   //if(M_CheckParm("-grabmouse"))
-   //   grabmouse = 1;
-   //else if(M_CheckParm("-nograbmouse"))
-   //   grabmouse = 0;
-
    // TODO:
    // * Set GL attributes
    // * Set GL video mode
@@ -183,8 +177,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 //
 void SDLGL2DVideoDriver::InitGraphics()
 {
-   // enable key repeat
-   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 // The one and only global instance of the SDL GL 2D-in-3D video driver.

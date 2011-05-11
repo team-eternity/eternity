@@ -227,6 +227,10 @@ void I_InitKeyboard(void)
 
    if(unicodeinput)
       SDL_EnableUNICODE(1);
+
+   // haleyjd 05/10/11: moved here from video module
+   // enable key repeat
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 void I_Init(void)

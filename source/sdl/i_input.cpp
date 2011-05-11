@@ -33,6 +33,7 @@
 #include "../d_main.h"
 #include "../doomdef.h"
 #include "../doomstat.h"
+#include "../m_argv.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 
@@ -50,12 +51,14 @@ bool fullscreen;
 // haleyjd 10/25/09
 bool unicodeinput;
 
-void    I_InitKeyboard();      // i_system.c
+void I_InitKeyboard();      // i_system.c
 
 bool MouseShouldBeGrabbed(void);
 
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // WM
+//
 
 // 
 // UpdateGrab
@@ -134,10 +137,10 @@ void UpdateFocus(void)
    screenvisible = (state & SDL_APPACTIVE) != 0;
 }
 
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Keyboard
+//
 
 //
 // I_TranslateKey
@@ -227,11 +230,10 @@ int I_DoomCode2ScanCode(int a)
    return a;
 }
 
-
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Joystick                                                    // phares 4/3/98
+//
 
 extern SDL_Joystick *sdlJoystick;
 extern int          usejoystick;
@@ -325,14 +327,16 @@ void I_StartFrame(void)
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
 }
 
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Mouse
+//
 
 extern void MN_QuitDoom(void);
 extern int mouseAccel_type;
 
 
+//
 // Mouse acceleration
 //
 // This emulates some of the behavior of DOS mouse drivers by increasing
@@ -344,7 +348,6 @@ extern int mouseAccel_type;
 
 float mouse_acceleration = 2.0;
 int   mouse_threshold = 10;
-
 
 //
 // AccelerateMouse
@@ -360,9 +363,6 @@ static int AccelerateMouse(int val)
              (int)((val - mouse_threshold) * mouse_acceleration + mouse_threshold) :
              val;
 }
-
-
-
 
 //
 // CenterMouse
@@ -414,9 +414,27 @@ static void I_ReadMouse(void)
       CenterMouse();
 }
 
+//
+// I_InitMouse
+//
+// Once upon a time this function existed in vanilla DOOM, and now here it is
+// again. 
+// haleyjd 05/10/11: Moved -grabmouse check here from the video subsystem.
+//
+void I_InitMouse()
+{
+   // haleyjd 10/09/05: from Chocolate DOOM
+   // mouse grabbing   
+   if(M_CheckParm("-grabmouse"))
+      grabmouse = 1;
+   else if(M_CheckParm("-nograbmouse"))
+      grabmouse = 0;
+}
 
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Events
+//
 
 extern int gametic;
 
