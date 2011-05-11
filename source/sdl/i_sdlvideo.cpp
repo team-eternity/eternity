@@ -78,6 +78,8 @@ extern char *i_videomode;
 //
 // SDLVideoDriver::FinishUpdate
 //
+// Push the newest frame to the display.
+//
 void SDLVideoDriver::FinishUpdate(void)
 {
    // haleyjd 10/08/05: from Chocolate DOOM:
@@ -112,6 +114,8 @@ void SDLVideoDriver::FinishUpdate(void)
 //
 // SDLVideoDriver::ReadScreen
 //
+// Get the current screen contents.
+//
 void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
@@ -126,6 +130,8 @@ static SDL_Rect drect;
 static SDL_Surface *disk = NULL, *disk_bg = NULL;
 
 //
+// SDLVideoDriver::InitDiskFlash
+// 
 // killough 10/98: init disk icon
 //
 void SDLVideoDriver::InitDiskFlash()
@@ -180,6 +186,8 @@ void SDLVideoDriver::InitDiskFlash()
 }
 
 //
+// SDLVideoDriver::BeginRead
+//
 // killough 10/98: draw disk icon
 //
 void SDLVideoDriver::BeginRead()
@@ -192,6 +200,8 @@ void SDLVideoDriver::BeginRead()
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
+//
+// SDLVideoDriver::EndRead
 //
 // killough 10/98: erase disk icon
 //
@@ -207,7 +217,7 @@ void SDLVideoDriver::EndRead(void)
 static bool setpalette = false;
 
 //
-// I_SetPaletteDirect
+// I_SDLSetPaletteDirect
 //
 // haleyjd 11/12/09: make sure surface palettes are set at startup.
 //
@@ -231,6 +241,9 @@ static void I_SDLSetPaletteDirect(byte *palette)
 
 //
 // SDLVideoDriver::SetPalette
+//
+// Set the palette, or, if palette is NULL, update the current palette to use 
+// the current gamma setting.
 //
 void SDLVideoDriver::SetPalette(byte *palette)
 {
@@ -259,6 +272,11 @@ void SDLVideoDriver::SetPalette(byte *palette)
    setpalette = true;
 }
 
+//
+// SDLVideoDriver::UnsetPrimaryBuffer
+//
+// Free the "primary_surface" SDL_Surface.
+//
 void SDLVideoDriver::UnsetPrimaryBuffer()
 {
    if(primary_surface)
@@ -268,6 +286,12 @@ void SDLVideoDriver::UnsetPrimaryBuffer()
    }
 }
 
+//
+// SDLVideoDriver::SetPrimaryBuffer
+//
+// Create a software surface for the game engine to render frames into and
+// set it to video.screens[0].
+//
 void SDLVideoDriver::SetPrimaryBuffer()
 {
    int bump = (video.width == 512 || video.width == 1024) ? 4 : 0;
@@ -297,6 +321,11 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
    UnsetPrimaryBuffer();
 }
 
+//
+// SDLVideoDriver::ShutdownGraphics
+//
+// Called from I_ShutdownGraphics, which is registered as an atexit callback.
+//
 void SDLVideoDriver::ShutdownGraphics()
 {
    ShutdownGraphicsPartway();
@@ -415,6 +444,11 @@ bool SDLVideoDriver::InitGraphicsMode()
    return false;
 }
 
+//
+// SDLVideoDriver::InitGraphics
+//
+// Called once at startup.
+//
 void SDLVideoDriver::InitGraphics(void)
 {
    // enable key repeat

@@ -3799,6 +3799,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgl2d.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_sdlmusic.cpp"
 						>
 						<FileConfiguration
@@ -3970,6 +3974,10 @@
 					</File>
 					<File
 						RelativePath="..\source\Win32\i_opndir.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sdl\i_sdlgl2d.h"
 						>
 					</File>
 					<File

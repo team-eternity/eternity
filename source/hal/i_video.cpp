@@ -49,13 +49,15 @@
 
 //=============================================================================
 //
-// Video Driver Objects
+// Video Driver Object Pointer
 //
 
 HALVideoDriver *i_video_driver = NULL;
 
 //=============================================================================
+//
 // WM-related stuff (see i_input.c)
+//
 
 extern int  usejoystick;
 extern int  grabmouse;
@@ -65,7 +67,9 @@ extern bool fullscreen;
 void I_InitKeyboard();
 
 //=============================================================================
+//
 // Graphics Code
+//
 
 int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 bool noblit;
