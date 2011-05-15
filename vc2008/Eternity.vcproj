@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -5047,6 +5047,30 @@
 					>
 					<File
 						RelativePath="..\source\i_video.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="GL"
+				>
+				<Filter
+					Name="GL Source"
+					>
+					<File
+						RelativePath="..\source\gl\gl_projection.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_texture.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="GL Headers"
+					>
+					<File
+						RelativePath="..\source\gl\gl_includes.h"
 						>
 					</File>
 				</Filter>
