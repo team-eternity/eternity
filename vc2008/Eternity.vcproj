@@ -5081,6 +5081,10 @@
 						RelativePath="..\source\gl\gl_init.h"
 						>
 					</File>
+					<File
+						RelativePath="..\source\gl\gl_projection.h"
+						>
+					</File>
 				</Filter>
 			</Filter>
 		</Filter>

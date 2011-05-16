@@ -454,9 +454,6 @@ void I_InitGraphics(void)
    // haleyjd 05/10/11: init mouse
    I_InitMouse();
 
-   // Do system-specific initialization
-   i_video_driver->InitGraphics();
-
    //
    // enter graphics mode
    //

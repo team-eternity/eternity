@@ -52,7 +52,6 @@ public:
    virtual void ShutdownGraphics();
    virtual void ShutdownGraphicsPartway();
    virtual bool InitGraphicsMode();
-   virtual void InitGraphics();
 
    // Accessors
    void SetColorDepth(int cd) { colordepth = cd; }

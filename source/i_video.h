@@ -48,7 +48,6 @@ public:
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
-   virtual void InitGraphics()            = 0;
 };
 
 

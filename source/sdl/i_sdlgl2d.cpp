@@ -31,9 +31,12 @@
 #include "../z_zone.h"
 #include "../i_system.h"
 #include "../v_misc.h"
+#include "../v_video.h"
 #include "../version.h"
 
 #include "i_sdlgl2d.h"
+
+#include "../gl/gl_projection.h"
 
 //=============================================================================
 //
@@ -54,6 +57,10 @@ static SDL_Surface *surface;
 
 // Temporary screen surface; this is what the game will draw itself into.
 static SDL_Surface *screen; 
+
+// 32-bit converted palette for translation of the screen to 32-bit pixel data.
+static Uint32  RGB8to32[256];
+static byte    cachedpal[768];
 
 //=============================================================================
 //
@@ -120,7 +127,26 @@ void SDLGL2DVideoDriver::EndRead()
 //
 void SDLGL2DVideoDriver::SetPalette(byte *pal)
 {
-   // TODO: Cache palette and create 32-bit translation lookup
+   byte *temppal;
+
+   // Cache palette if a new one is being set (otherwise the gamma setting is 
+   // being changed)
+   if(pal)
+      memcpy(cachedpal, pal, 768);
+
+   temppal = cachedpal;
+ 
+   // Create 32-bit translation lookup
+   for(int i = 0; i < 256; i++)
+   {
+      RGB8to32[i] = 
+         ((Uint32)0xff << 24) |
+         ((Uint32)(gammatable[usegamma][*(temppal + 0)]) << 16) |
+         ((Uint32)(gammatable[usegamma][*(temppal + 1)]) <<  8) |
+         ((Uint32)(gammatable[usegamma][*(temppal + 2)]) <<  0);
+
+      temppal += 3;
+   }
 }
 
 //
@@ -128,6 +154,9 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
 //
 void SDLGL2DVideoDriver::SetPrimaryBuffer()
 {
+   // TODO: can we do the "bump" here for power-of-two sized surfaces w/
+   // poor cache performance?
+
    // Create screen surface for the high-level code to render the game into
    screen = SDL_CreateRGBSurface(SDL_SWSURFACE, video.width, video.height, 
                                  8, 0, 0, 0, 0);
@@ -230,11 +259,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(flags & SDL_FULLSCREEN)
       I_Sleep(500);
 
-   // Enable two-dimensional texturing
+   // Enable two-dimensional texture mapping
    glEnable(GL_TEXTURE_2D);
 
+   // Set viewport
+   glViewport(0, 0, (GLsizei)v_w, (GLsizei)v_h);
+
+   // Set ortho projection
+   GL_SetOrthoMode(v_w, v_h);
+   
    // TODO:
-   // * Set ortho projection
    // * Create textures
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
@@ -248,13 +282,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    video.pixelsize = 1;
 
    return false;
-}
-
-//
-// SDLGL2DVideoDriver::InitGraphics
-//
-void SDLGL2DVideoDriver::InitGraphics()
-{
 }
 
 // The one and only global instance of the SDL GL 2D-in-3D video driver.

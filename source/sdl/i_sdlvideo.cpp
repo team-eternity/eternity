@@ -438,15 +438,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    return false;
 }
 
-//
-// SDLVideoDriver::InitGraphics
-//
-// Called once at startup.
-//
-void SDLVideoDriver::InitGraphics(void)
-{
-}
-
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
 
