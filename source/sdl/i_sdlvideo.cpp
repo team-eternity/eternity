@@ -34,7 +34,6 @@
 #include "../d_main.h"
 #include "../i_system.h"
 #include "../m_argv.h"
-#include "../r_main.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -284,6 +283,7 @@ void SDLVideoDriver::UnsetPrimaryBuffer()
       SDL_FreeSurface(primary_surface);
       primary_surface = NULL;
    }
+   video.screens[0] = NULL;
 }
 
 //
@@ -301,6 +301,9 @@ void SDLVideoDriver::SetPrimaryBuffer()
       primary_surface = 
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
                               8, 0, 0, 0, 0);
+      if(!primary_surface)
+         I_FatalError(I_ERR_KILL, "Failed to create screen temp buffer\n");
+
       video.screens[0] = (byte *)primary_surface->pixels;
       video.pitch = primary_surface->pitch;
    }
@@ -410,8 +413,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 10/14/09: wait for a bit so the screen can settle
    if(flags & SDL_FULLSCREEN)
       I_Sleep(500);
-
-   R_ResetFOV(v_w, v_h);
 
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;

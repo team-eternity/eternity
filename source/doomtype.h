@@ -43,8 +43,6 @@ typedef uint8_t byte;
 #define D_MININT INT_MIN
 #define D_MAXSHORT  SHRT_MAX
 
-#define MAXCHAR         ((char)0x7f)
-#define MINCHAR         ((char)0x80)
 #endif
 
 //----------------------------------------------------------------------------

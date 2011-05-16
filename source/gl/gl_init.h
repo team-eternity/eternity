@@ -17,47 +17,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   
-//   SDL-specific GL 2D-in-3D video code
+//  OpenGL Initialization/Setup Functions
+//  haleyjd 05/15/11
 //
 //-----------------------------------------------------------------------------
 
-#ifndef I_SDLGL2D_H__
-#define I_SDLGL2D_H__
-
-// Grab the HAL video definitions
-#include "../i_video.h" 
+#ifndef GL_INIT_H__
+#define GL_INIT_H__
 
 //
-// SDL GL "2D-in-3D" Video Driver
+// GL_versioninfo
 //
-class SDLGL2DVideoDriver : public HALVideoDriver
+// Structure holds OpenGL version information
+//
+struct GL_versioninfo
 {
-protected:
-   int colordepth;
+   int minorversion;
+   int majorversion;
 
-public:
-   // Overrides
-   virtual void FinishUpdate();
-   virtual void ReadScreen(byte *scr);
-   virtual void InitDiskFlash();
-   virtual void BeginRead();
-   virtual void EndRead();
-   virtual void SetPalette(byte *pal);
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
-   virtual void ShutdownGraphics();
-   virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
-   virtual void InitGraphics();
+   static int makeVersion(int major, int minor)
+   {
+      return major * 10 + minor;
+   }
 
-   // Accessors
-   void SetColorDepth(int cd) { colordepth = cd; }
+   int compareVersion(int version)
+   {
+      int compositeversion = makeVersion(majorversion, minorversion);
+
+      return version - compositeversion;
+   }  
 };
 
+extern GL_versioninfo GL_version;
 
 #endif
 

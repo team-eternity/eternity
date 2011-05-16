@@ -103,8 +103,6 @@ extern int show_scores;
 #ifdef _SDL_VER
 extern int  showendoom;
 extern int  endoomdelay;
-extern char *i_videomode;
-extern char *i_default_videomode;
 #endif
 
 #ifdef HAVE_SPCLIB

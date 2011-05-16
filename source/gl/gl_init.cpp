@@ -17,49 +17,55 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   
-//   SDL-specific GL 2D-in-3D video code
+//  OpenGL Initialization/Setup Functions
+//  haleyjd 05/15/11
 //
 //-----------------------------------------------------------------------------
 
-#ifndef I_SDLGL2D_H__
-#define I_SDLGL2D_H__
+#include <stdio.h>
 
-// Grab the HAL video definitions
-#include "../i_video.h" 
+#include "gl_includes.h"
+#include "gl_init.h"
+
+//=============================================================================
+//
+// Globals
+//
+
+// Active loaded version of OpenGL
+GL_versioninfo GL_version;
+
+//=============================================================================
+//
+// Routines
+//
 
 //
-// SDL GL "2D-in-3D" Video Driver
+// GL_GetVersion
 //
-class SDLGL2DVideoDriver : public HALVideoDriver
+// Retrieves the version of OpenGL that is active.
+//
+void GL_GetVersion()
 {
-protected:
-   int colordepth;
+   const char *versionStr;
+   int majversion = 0, minversion = 0;
 
-public:
-   // Overrides
-   virtual void FinishUpdate();
-   virtual void ReadScreen(byte *scr);
-   virtual void InitDiskFlash();
-   virtual void BeginRead();
-   virtual void EndRead();
-   virtual void SetPalette(byte *pal);
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
-   virtual void ShutdownGraphics();
-   virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
-   virtual void InitGraphics();
+   // Default to 1.0
+   GL_version.majorversion = 1;
+   GL_version.minorversion = 0;
 
-   // Accessors
-   void SetColorDepth(int cd) { colordepth = cd; }
-};
+   versionStr = (const char *)(glGetString(GL_VERSION));
 
-
-#endif
+   if(sscanf(versionStr, "%d.%d", &majversion, &minversion) == 2)
+   {
+      GL_version.majorversion = majversion;
+      GL_version.minorversion = minversion;
+   }
+}
 
 // EOF
 

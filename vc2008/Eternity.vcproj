@@ -5058,6 +5058,10 @@
 					Name="GL Source"
 					>
 					<File
+						RelativePath="..\source\gl\gl_init.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\gl\gl_projection.cpp"
 						>
 					</File>
@@ -5071,6 +5075,10 @@
 					>
 					<File
 						RelativePath="..\source\gl\gl_includes.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_init.h"
 						>
 					</File>
 				</Filter>

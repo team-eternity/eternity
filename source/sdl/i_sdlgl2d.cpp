@@ -26,8 +26,13 @@
 //-----------------------------------------------------------------------------
 
 #include "SDL.h"
+#include "SDL_opengl.h"
 
 #include "../z_zone.h"
+#include "../i_system.h"
+#include "../v_misc.h"
+#include "../version.h"
+
 #include "i_sdlgl2d.h"
 
 //=============================================================================
@@ -38,6 +43,17 @@
 void UpdateGrab(void);
 bool MouseShouldBeGrabbed(void);
 void UpdateFocus(void);
+
+//=============================================================================
+//
+// Static Data
+//
+
+// Surface returned from SDL_SetVideoMode; not really useful for anything.
+static SDL_Surface *surface;
+
+// Temporary screen surface; this is what the game will draw itself into.
+static SDL_Surface *screen; 
 
 //=============================================================================
 //
@@ -62,7 +78,9 @@ void SDLGL2DVideoDriver::FinishUpdate()
    // * bind framebuffer texture
    // * push screen quad w/tex coords
    // * draw disk if necessary?
-   // * glFinish
+
+   glFinish();
+   SDL_GL_SwapBuffers();
 }
 
 //
@@ -110,7 +128,16 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
 //
 void SDLGL2DVideoDriver::SetPrimaryBuffer()
 {
-   // TODO: Point screens[0] to 8-bit temp buffer
+   // Create screen surface for the high-level code to render the game into
+   screen = SDL_CreateRGBSurface(SDL_SWSURFACE, video.width, video.height, 
+                                 8, 0, 0, 0, 0);
+
+   if(!screen)
+      I_FatalError(I_ERR_KILL, "Failed to create screen temp buffer\n");
+
+   // Point screens[0] to 8-bit temp buffer
+   video.screens[0] = (byte *)(screen->pixels);
+   video.pitch      = screen->pitch;
 }
 
 //
@@ -118,7 +145,12 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
 //
 void SDLGL2DVideoDriver::UnsetPrimaryBuffer()
 {
-   // TODO: Clear screens[0]
+   if(screen)
+   {
+      SDL_FreeSurface(screen);
+      screen = NULL;
+   }
+   video.screens[0] = NULL;
 }
 
 //
@@ -153,21 +185,67 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
+   bool wantfullscreen = false;
+   bool wantvsync      = false;
+   bool wanthardware   = false; // Not used - this is always "hardware".
+   bool wantframe      = true;
+   int  v_w            = 640;
+   int  v_h            = 480;
+   int  flags          = SDL_OPENGL;
+
+   // Get video commands and geometry settings
+
+   // haleyjd 04/11/03: "vsync" or page-flipping support
+   if(use_vsync)
+      wantvsync = true;
+   
+   // set defaults using geom string from configuration file
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+               &wanthardware, &wantframe);
+   
+   // haleyjd 06/21/06: allow complete command line overrides but only
+   // on initial video mode set (setting from menu doesn't support this)
+   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
+                    &wantframe);
+
+   if(wantfullscreen)
+      flags |= SDL_FULLSCREEN;
+   
+   if(!wantframe)
+      flags |= SDL_NOFRAME;
+   
+   // Set GL attributes through SDL
+   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+   SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,  colordepth);
+   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, wantvsync ? 1 : 0); // OMG vsync!
+
+   // Set GL video mode
+   if(!(surface = SDL_SetVideoMode(v_w, v_h, colordepth, flags)))
+   {
+      I_FatalError(I_ERR_KILL, "Couldn't set OpenGL video mode %dx%dx%d\n", 
+                   v_w, v_h, colordepth);
+   }
+
+   // wait for a bit so the screen can settle
+   if(flags & SDL_FULLSCREEN)
+      I_Sleep(500);
+
+   // Enable two-dimensional texturing
+   glEnable(GL_TEXTURE_2D);
+
    // TODO:
-   // * Set GL attributes
-   // * Set GL video mode
    // * Set ortho projection
    // * Create textures
 
-   // wait for a bit so the screen can settle
-   //if(flags & SDL_FULLSCREEN)
-   //   I_Sleep(500);
+   SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
+   UpdateFocus();
+   UpdateGrab();
 
-   //R_ResetFOV(v_w, v_h);
-
-   //SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
-   //UpdateFocus();
-   //UpdateGrab();
+   // Init Cardboard video metrics
+   video.width     = v_w;
+   video.height    = v_h;
+   video.bitdepth  = 8;
+   video.pixelsize = 1;
 
    return false;
 }
