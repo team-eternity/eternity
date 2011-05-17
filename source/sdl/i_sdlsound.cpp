@@ -79,6 +79,7 @@ typedef struct channel_info_s
 
   // haleyjd 10/02/08: SDL semaphore to protect channel
   SDL_sem *semaphore;
+  bool shouldstop; // haleyjd 05/16/11
 
 } channel_info_t;
 
@@ -91,71 +92,6 @@ static int steptable[256];
 static int vol_lookup[128*256];
 
 static int I_GetSfxLumpNum(sfxinfo_t *sfx);
-
-//
-// stopchan
-//
-// cph 
-// Stops a sound, unlocks the data 
-//
-static bool stopchan(int handle)
-{
-   int cnum;
-   bool freeSound = true;
-   bool stoppedSound = false;
-   sfxinfo_t *sfx = NULL;
-   
-#ifdef RANGECHECK
-   // haleyjd 02/18/05: bounds checking
-   if(handle < 0 || handle >= MAX_CHANNELS)
-      return false;
-#endif
-   
-   // haleyjd 10/02/08: critical section
-   if(SDL_SemWait(channelinfo[handle].semaphore) == 0)
-   {
-      // haleyjd 06/07/09: store this here so that we can release the
-      // semaphore as quickly as possible.
-      sfx = channelinfo[handle].id;
-
-      if(sfx)
-      {
-         // haleyjd 06/07/09: bug fix!
-         // this channel isn't interested in the sound any more, 
-         // even if we didn't free it. This prevented some sounds from
-         // getting freed unnecessarily.
-         channelinfo[handle].id    = NULL;
-         channelinfo[handle].data  = NULL;
-         channelinfo[handle].idnum = 0;
-         stoppedSound = true;
-      }
-
-      // haleyjd 06/07/09: release the semaphore now. The faster the better.
-      SDL_SemPost(channelinfo[handle].semaphore);
-         
-      if(sfx)
-      {
-         // haleyjd 06/03/06: see if we can free the sound
-         for(cnum = 0; cnum < MAX_CHANNELS; ++cnum)
-         {
-            if(cnum == handle)
-               continue;
-            if(channelinfo[cnum].id &&
-               channelinfo[cnum].id->data == sfx->data)
-            {
-               freeSound = false; // still being used by some channel
-               break;
-            }
-         }
-         
-         // set sample to PU_CACHE level
-         if(freeSound && sfx->data)
-            Z_ChangeTag(sfx->data, PU_CACHE);
-      }
-   }
-
-   return stoppedSound; // haleyjd 10/30/10: return true if stopped
-}
 
 #define SOUNDHDRSIZE 8
 
@@ -185,8 +121,6 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    if(!snd_init || !sfx)
       return false;
 
-   stopchan(channel);
-   
    // We will handle the new SFX.
    // Set pointer to raw data.
 
@@ -299,6 +233,9 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       // Set instance ID
       channelinfo[channel].idnum = id;
 
+      // Shouldn't be stopped - haleyjd 05/16/11
+      channelinfo[channel].shouldstop = false;
+
       SDL_SemPost(channelinfo[channel].semaphore);
 
       return true;
@@ -380,7 +317,9 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
 // Three-Band Equalization
 //
 
-typedef struct EQSTATE_s
+static double preampmul;
+
+struct EQSTATE
 {
   // Filter #1 (Low band)
 
@@ -410,7 +349,7 @@ typedef struct EQSTATE_s
   double  mg;       // mid  gain
   double  hg;       // high gain
   
-} EQSTATE;  
+};  
 
 // haleyjd 04/21/10: equalizers for each stereo channel
 static EQSTATE eqstate[2];
@@ -498,16 +437,174 @@ static double do_3band(EQSTATE *es, double sample)
    return rational_tanh(l + m + h);
 }
 
-
-
 //
 // End Equalizer Code
 //
 //============================================================================
 
-#define SND_PI 3.14159265
+//============================================================================
+//
+// MAIN ROUTINE - AUDIOSPEC CALLBACK ROUTINE
+//
 
-static double preampmul;
+// size of a single sample
+#define SAMPLESIZE sizeof(Sint16) 
+
+// step to next stereo sample pair (2 samples)
+#define STEP 2
+
+//
+// I_SDLUpdateSoundCB
+//
+// SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
+// We do our own mixing on up to 32 digital sound channels.
+//
+static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
+{
+   // Pointers in audio stream, left, right, end.
+   Sint16 *leftout, *rightout, *leftend;
+   
+   // haleyjd: channel pointer for speed++
+   channel_info_t *chan;
+         
+   // Determine end, for left channel only
+   //  (right channel is implicit).
+   leftend = (Sint16 *)(stream + len);
+
+   // Love thy L2 cache - made this a loop.
+   // Now more channels could be set at compile time
+   //  as well. Thus loop those channels.
+   for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
+   {
+      if(chan->shouldstop) // Channels are only stopped here.
+         chan->data = NULL;
+         
+      // fast rejection before semaphore lock
+      if(!chan->data)
+         continue;
+         
+      // try to acquire semaphore, but do not block; if the main thread is using
+      // this channel we'll just skip it for now - safer and faster.
+      if(SDL_SemTryWait(chan->semaphore) != 0)
+         continue;
+      
+      // Left and right channel
+      //  are in audio stream, alternating.
+      leftout  = (Sint16 *)stream;
+      rightout = leftout + 1;
+      
+      // Lost before semaphore acquired? (very unlikely, but must check for 
+      // safety). BTW, don't move this up or you'll chew major CPU whenever this
+      // does happen.
+      if(!chan->data)
+      {
+         SDL_SemPost(chan->semaphore);
+         continue;
+      }
+      
+      // Mix sounds into the mixing buffer.
+      // Loop over step*SAMPLECOUNT,
+      //  that is 512 values for two channels.
+      while(leftout != leftend)
+      {
+         // Mix current sound data.
+         // Data, from raw sound, for right and left.
+         Uint8  sample;
+         Sint32 dl, dr;
+
+         // Get the raw data from the channel. 
+         // Sounds are now prefiltered.
+         sample = *(chan->data);
+
+         // Reset left/right value. 
+         // Add left and right part
+         //  for this channel (sound)
+         //  to the current data.
+         // Adjust volume accordingly.
+         dl = (Sint32)(*leftout)  + chan->leftvol_lookup[sample];
+         dr = (Sint32)(*rightout) + chan->rightvol_lookup[sample];
+                  
+         // Clamp to range. Left hardware channel.
+         if(dl > SHRT_MAX)
+            *leftout = SHRT_MAX;
+         else if(dl < SHRT_MIN)
+            *leftout = SHRT_MIN;
+         else
+            *leftout = (Sint16)dl;
+            
+         // Same for right hardware channel.
+         if(dr > SHRT_MAX)
+            *rightout = SHRT_MAX;
+         else if(dr < SHRT_MIN)
+            *rightout = SHRT_MIN;
+         else
+            *rightout = (Sint16)dr;
+         
+         // Increment current pointers in stream
+         leftout  += STEP;
+         rightout += STEP;
+         
+         // Increment index
+         chan->stepremainder += chan->step;
+         
+         // MSB is next sample
+         chan->data += chan->stepremainder >> 16;
+         
+         // Limit to LSB
+         chan->stepremainder &= 0xffff;
+         
+         // Check whether we are done
+         if(chan->data >= chan->enddata)
+         {
+            if(chan->loop && !paused && 
+               ((!menuactive && !consoleactive) || demoplayback || netgame))
+            {
+               // haleyjd 06/03/06: restart a looping sample if not paused
+               chan->data = chan->startdata;
+               chan->stepremainder = 0;
+            }
+            else
+            {
+               // flag the channel to be stopped by the main thread ASAP
+               chan->data = NULL;
+               break;
+            }
+         }
+      }
+      
+      // release semaphore and move on to the next channel
+      SDL_SemPost(chan->semaphore);
+   }
+
+   // haleyjd 04/21/10: equalization pass
+   if(s_equalizer)
+   {
+      leftout  = (Sint16 *)stream;
+      rightout = leftout + 1;
+
+      while(leftout != leftend)
+      {
+         double sl = (double)*leftout  * preampmul;
+         double sr = (double)*rightout * preampmul;
+
+         sl = do_3band(&eqstate[0], sl);
+         sr = do_3band(&eqstate[1], sr);
+
+         *leftout  = (Sint16)(sl * 32767.0);
+         *rightout = (Sint16)(sr * 32767.0);
+
+         leftout  += STEP;
+         rightout += STEP;
+      }
+   }
+}
+
+//
+// End Audiospec Callback
+//
+//============================================================================
+
+#define SND_PI 3.14159265
 
 //
 // I_SetChannels
@@ -685,7 +782,7 @@ static void I_SDLStopSound(int handle)
       I_Error("I_SDLStopSound: handle out of range\n");
 #endif
    
-   stopchan(handle);
+   channelinfo[handle].shouldstop = true;
 }
 
 //
@@ -734,155 +831,6 @@ static void I_SDLUpdateSound(void)
    // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
    // with thread contention when running with d_fastrefresh enabled. Calling
    // this from the main loop too often caused the sound to stutter.
-}
-
-// size of a single sample
-#define SAMPLESIZE sizeof(Sint16) 
-
-// step to next stereo sample pair (2 samples)
-#define STEP 2
-
-//
-// I_SDLUpdateSoundCB
-//
-// SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
-// We do our own mixing on up to 32 digital sound channels.
-//
-static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
-{
-   // Pointers in audio stream, left, right, end.
-   Sint16 *leftout, *rightout, *leftend;
-   
-   // haleyjd: channel pointer for speed++
-   channel_info_t *chan;
-         
-   // Determine end, for left channel only
-   //  (right channel is implicit).
-   leftend = (Sint16 *)(stream + len);
-
-   // Love thy L2 cache - made this a loop.
-   // Now more channels could be set at compile time
-   //  as well. Thus loop those channels.
-   for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
-   {
-      // fast rejection before semaphore lock
-      if(!chan->data)
-         continue;
-         
-      // try to acquire semaphore, but do not block; if the main thread is using
-      // this channel we'll just skip it for now - safer and faster.
-      if(SDL_SemTryWait(chan->semaphore) != 0)
-         continue;
-      
-      // Left and right channel
-      //  are in audio stream, alternating.
-      leftout  = (Sint16 *)stream;
-      rightout = leftout + 1;
-      
-      // Lost before semaphore acquired? (very unlikely, but must check for 
-      // safety). BTW, don't move this up or you'll chew major CPU whenever this
-      // does happen.
-      if(!chan->data)
-      {
-         SDL_SemPost(chan->semaphore);
-         continue;
-      }
-      
-      // Mix sounds into the mixing buffer.
-      // Loop over step*SAMPLECOUNT,
-      //  that is 512 values for two channels.
-      while(leftout != leftend)
-      {
-         // Mix current sound data.
-         // Data, from raw sound, for right and left.
-         Uint8  sample;
-         Sint32 dl, dr;
-
-         // Get the raw data from the channel. 
-         // Sounds are now prefiltered.
-         sample = *(chan->data);
-
-         // Reset left/right value. 
-         // Add left and right part
-         //  for this channel (sound)
-         //  to the current data.
-         // Adjust volume accordingly.
-         dl = (Sint32)(*leftout)  + chan->leftvol_lookup[sample];
-         dr = (Sint32)(*rightout) + chan->rightvol_lookup[sample];
-                  
-         // Clamp to range. Left hardware channel.
-         if(dl > SHRT_MAX)
-            *leftout = SHRT_MAX;
-         else if(dl < SHRT_MIN)
-            *leftout = SHRT_MIN;
-         else
-            *leftout = (Sint16)dl;
-            
-         // Same for right hardware channel.
-         if(dr > SHRT_MAX)
-            *rightout = SHRT_MAX;
-         else if(dr < SHRT_MIN)
-            *rightout = SHRT_MIN;
-         else
-            *rightout = (Sint16)dr;
-         
-         // Increment current pointers in stream
-         leftout  += STEP;
-         rightout += STEP;
-         
-         // Increment index
-         chan->stepremainder += chan->step;
-         
-         // MSB is next sample
-         chan->data += chan->stepremainder >> 16;
-         
-         // Limit to LSB
-         chan->stepremainder &= 0xffff;
-         
-         // Check whether we are done
-         if(chan->data >= chan->enddata)
-         {
-            if(chan->loop && !paused && 
-               ((!menuactive && !consoleactive) || demoplayback || netgame))
-            {
-               // haleyjd 06/03/06: restart a looping sample if not paused
-               chan->data = chan->startdata;
-               chan->stepremainder = 0;
-            }
-            else
-            {
-               // flag the channel to be stopped by the main thread ASAP
-               chan->data = NULL;
-               break;
-            }
-         }
-      }
-      
-      // release semaphore and move on to the next channel
-      SDL_SemPost(chan->semaphore);
-   }
-
-   // haleyjd 04/21/10: equalization pass
-   if(s_equalizer)
-   {
-      leftout  = (Sint16 *)stream;
-      rightout = leftout + 1;
-
-      while(leftout != leftend)
-      {
-         double sl = (double)*leftout  * preampmul;
-         double sr = (double)*rightout * preampmul;
-
-         sl = do_3band(&eqstate[0], sl);
-         sr = do_3band(&eqstate[1], sr);
-
-         *leftout  = (Sint16)(sl * 32767.0);
-         *rightout = (Sint16)(sr * 32767.0);
-
-         leftout  += STEP;
-         rightout += STEP;
-      }
-   }
 }
 
 //

@@ -25,17 +25,21 @@
 //
 //-----------------------------------------------------------------------------
 
+// SDL headers
 #include "SDL.h"
 #include "SDL_opengl.h"
 
+// DOOM headers
 #include "../z_zone.h"
 #include "../i_system.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
 
+// Local driver header
 #include "i_sdlgl2d.h"
 
+// GL module headers
 #include "../gl/gl_projection.h"
 
 //=============================================================================
