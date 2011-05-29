@@ -5062,6 +5062,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\gl\gl_primitives.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\gl\gl_projection.cpp"
 						>
 					</File>
@@ -5079,6 +5083,10 @@
 					</File>
 					<File
 						RelativePath="..\source\gl\gl_init.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_primitives.h"
 						>
 					</File>
 					<File

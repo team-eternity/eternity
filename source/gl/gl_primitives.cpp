@@ -21,19 +21,32 @@
 //
 // DESCRIPTION:
 //   
-//  OpenGL Texture Mapping Functions
+//  OpenGL Primitives
 //  haleyjd 05/15/11
 //
 //-----------------------------------------------------------------------------
 
-#ifndef GL_TEXTURE_H__
-#define GL_TEXTURE_H__
+#include "gl_includes.h"
+#include "gl_primitives.h"
 
-unsigned int GL_MakeTextureDimension(unsigned int i);
-void GL_BindTextureAndRemember(GLuint texture);
-void GL_BindTextureIfNeeded(GLuint texture);
-
-#endif
+//
+// GL_OrthQuadTextured
+//
+// Push a textured quad of size (w, h) at upper-left-hand coordinate (x, y) with
+// texture coordinates starting from the (x, y) corner. Intended for use in an
+// ortho projection. Bind texture beforehand and call glBegin(GL_QUADS).
+// 
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+{
+   glTexCoord2f(0.0f, 0.0f);
+   glVertex2f(x, y);
+   glTexCoord2f(0.0f, 1.0f);     
+   glVertex2f(x, y + h);
+   glTexCoord2f(1.0f, 1.0f);
+   glVertex2f(x + w, y + h);
+   glTexCoord2f(1.0f, 0.0f);
+   glVertex2f(x + w, y);
+}
 
 // EOF
 

@@ -53,5 +53,31 @@ unsigned int GL_MakeTextureDimension(unsigned int i)
    return i;
 }
 
+static GLuint boundtexture;
+
+//
+// GL_BindTextureAndRemember
+//
+// Binds the texture unconditionally and remembers the fact that this texture
+// is the currently bound texture.
+//
+void GL_BindTextureAndRemember(GLuint texture)
+{
+   glBindTexture(GL_TEXTURE_2D, texture);
+   boundtexture = texture;
+}
+
+//
+// GL_BindTextureIfNeeded
+//
+// Binds the texture only if it isn't already remembered as the currently bound
+// texture.
+//
+void GL_BindTextureIfNeeded(GLuint texture)
+{
+   if(boundtexture != texture)
+      glBindTexture(GL_TEXTURE_2D, texture);
+}
+
 // EOF
 

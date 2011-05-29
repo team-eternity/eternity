@@ -21,17 +21,15 @@
 //
 // DESCRIPTION:
 //   
-//  OpenGL Texture Mapping Functions
+//  OpenGL Primitives
 //  haleyjd 05/15/11
 //
 //-----------------------------------------------------------------------------
 
-#ifndef GL_TEXTURE_H__
-#define GL_TEXTURE_H__
+#ifndef GL_PRIMITIVES_H__
+#define GL_PRIMITIVES_H__
 
-unsigned int GL_MakeTextureDimension(unsigned int i);
-void GL_BindTextureAndRemember(GLuint texture);
-void GL_BindTextureIfNeeded(GLuint texture);
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
 
 #endif
 
