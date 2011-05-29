@@ -41,6 +41,7 @@
 
 // GL module headers
 #include "../gl/gl_projection.h"
+#include "../gl/gl_texture.h"
 
 //=============================================================================
 //
@@ -65,6 +66,13 @@ static SDL_Surface *screen;
 // 32-bit converted palette for translation of the screen to 32-bit pixel data.
 static Uint32  RGB8to32[256];
 static byte    cachedpal[768];
+
+// GL texture sizes sufficient to hold the screen buffer as a texture
+static unsigned int framebuffer_umax;
+static unsigned int framebuffer_vmax;
+
+// GL texture names
+static GLuint texturenames[2];
 
 //=============================================================================
 //
@@ -272,8 +280,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Set ortho projection
    GL_SetOrthoMode(v_w, v_h);
    
-   // TODO:
-   // * Create textures
+   // Calculate framebuffer texture sizes
+   framebuffer_umax = GL_MakeTextureDimension((unsigned int)v_w);
+   framebuffer_vmax = GL_MakeTextureDimension((unsigned int)v_h);
+
+   // Create textures
+   glGenTextures(2, texturenames);
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
    UpdateFocus();
