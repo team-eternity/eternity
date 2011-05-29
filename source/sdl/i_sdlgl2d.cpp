@@ -144,7 +144,22 @@ void SDLGL2DVideoDriver::FinishUpdate()
 //
 void SDLGL2DVideoDriver::ReadScreen(byte *scr)
 {
-   // TODO: glReadPixels
+   if(bump == 0 && screen->pitch == screen->w)
+   {
+      // full block blit
+      memcpy(scr, (byte *)screen->pixels, video.width * video.height);
+   }
+   else
+   {
+      // must copy one row at a time
+      for(int y = 0; y < screen->h; y++)
+      {
+         byte *src  = (byte *)screen->pixels + y * screen->pitch;
+         byte *dest = scr + y * video.width;
+
+         memcpy(dest, src, screen->w - bump);
+      }
+   }
 }
 
 //
