@@ -29,7 +29,8 @@
 #ifndef GL_PRIMITIVES_H__
 #define GL_PRIMITIVES_H__
 
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h);
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
+                          GLfloat smax, GLfloat tmax);
 
 #endif
 

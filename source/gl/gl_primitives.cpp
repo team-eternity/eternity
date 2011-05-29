@@ -30,21 +30,22 @@
 #include "gl_primitives.h"
 
 //
-// GL_OrthQuadTextured
+// GL_OrthoQuadTextured
 //
 // Push a textured quad of size (w, h) at upper-left-hand coordinate (x, y) with
 // texture coordinates starting from the (x, y) corner. Intended for use in an
 // ortho projection. Bind texture beforehand and call glBegin(GL_QUADS).
 // 
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
+                          GLfloat smax, GLfloat tmax)
 {
    glTexCoord2f(0.0f, 0.0f);
    glVertex2f(x, y);
-   glTexCoord2f(0.0f, 1.0f);     
+   glTexCoord2f(0.0f, tmax);     
    glVertex2f(x, y + h);
-   glTexCoord2f(1.0f, 1.0f);
+   glTexCoord2f(smax, tmax);
    glVertex2f(x + w, y + h);
-   glTexCoord2f(1.0f, 0.0f);
+   glTexCoord2f(smax, 0.0f);
    glVertex2f(x + w, y);
 }
 

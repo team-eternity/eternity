@@ -125,7 +125,9 @@ void SDLGL2DVideoDriver::FinishUpdate()
    // push screen quad w/tex coords
    glBegin(GL_QUADS);
    
-   GL_OrthoQuadTextured(0.0f, 0.0f, (GLfloat)video.width, (GLfloat)video.height);
+   GL_OrthoQuadTextured(0.0f, 0.0f, (GLfloat)video.width, (GLfloat)video.height,
+                        (GLfloat)video.width  / framebuffer_umax, 
+                        (GLfloat)video.height / framebuffer_vmax);
 
    // TODO:
    // * draw disk?
@@ -332,8 +334,14 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Configure framebuffer texture
    tempbuffer = (GLvoid *)calloc(framebuffer_umax * 4, framebuffer_vmax);
    GL_BindTextureAndRemember(texturenames[0]);
+   
+   // villsa 05/29/11: set filtering otherwise texture won't render
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
+   
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+   
    // TODO: allow user selection of internal texture format
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)framebuffer_umax, 
                 (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 
