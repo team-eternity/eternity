@@ -186,12 +186,12 @@ void SDLGL2DVideoDriver::SetPalette(byte *pal)
    // Create 32-bit translation lookup
    for(int i = 0; i < 256; i++)
    {
-      RGB8to32[i] = 
+      RGB8to32[i] =
          ((Uint32)0xff << 24) |
          ((Uint32)(gammatable[usegamma][*(temppal + 0)]) << 16) |
          ((Uint32)(gammatable[usegamma][*(temppal + 1)]) <<  8) |
          ((Uint32)(gammatable[usegamma][*(temppal + 2)]) <<  0);
-
+      
       temppal += 3;
    }
 }
@@ -341,7 +341,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    free(tempbuffer);
 
    // Allocate framebuffer data
-   framebuffer = (Uint32 *)malloc(v_w * v_h * 4);
+   framebuffer = (Uint32 *)calloc(v_w * 4, v_h);
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
    UpdateFocus();

@@ -46,6 +46,7 @@
 // Platform-Specific Video Drivers:
 #ifdef _SDL_VER
 #include "../sdl/i_sdlvideo.h"
+#include "../sdl/i_sdlgl2d.h"
 #endif
 
 //=============================================================================
@@ -441,7 +442,9 @@ void I_InitGraphics(void)
    /* TODO: Selectable video driver based on configuration (out of those
       available in the current compile) */
 #ifdef _SDL_VER
-   i_video_driver = &i_sdlvideodriver;
+   //i_video_driver = &i_sdlvideodriver;
+   // TEST:
+   i_video_driver = &i_sdlgl2dvideodriver;
 #endif
    
    // haleyjd: not a good idea for SDL :(

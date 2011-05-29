@@ -57,6 +57,7 @@ public:
    void SetColorDepth(int cd) { colordepth = cd; }
 };
 
+extern SDLGL2DVideoDriver i_sdlgl2dvideodriver;
 
 #endif
 
