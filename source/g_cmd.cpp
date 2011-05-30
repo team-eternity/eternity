@@ -163,7 +163,7 @@ CONSOLE_COMMAND(screenshot, 0)
 // haleyjd 05/18/02: changed particle vars
 // to INT variables with choice of sprite, particle, or both
 
-char *particle_choices[] = { "sprites", "particles", "both" };
+const char *particle_choices[] = { "sprites", "particles", "both" };
 
 VARIABLE_BOOLEAN(drawparticles, NULL, onoff);
 CONSOLE_VARIABLE(draw_particles, drawparticles, 0) {}
@@ -398,7 +398,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
 // screenshot type
 
-char *str_pcx[] = { "bmp", "pcx", "tga" };
+const char *str_pcx[] = { "bmp", "pcx", "tga" };
 VARIABLE_INT(screenshot_pcx, NULL, 0, 2, str_pcx);
 CONSOLE_VARIABLE(shot_type, screenshot_pcx, 0) {}
 
@@ -414,7 +414,7 @@ CONSOLE_VARIABLE(textmode_startup, textmode_startup, 0) {}
 // demo insurance
 
 extern int demo_insurance;
-char *insure_str[]={"off", "on", "when recording"};
+const char *insure_str[]={"off", "on", "when recording"};
 VARIABLE_INT(demo_insurance, &default_demo_insurance, 0, 2, insure_str);
 CONSOLE_VARIABLE(demo_insurance, demo_insurance, cf_notnet) {}
 
@@ -424,7 +424,7 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 
 // SoM: mouse accel
-char *accel_options[]={ "off", "linear", "choco" };
+const char *accel_options[]={ "off", "linear", "choco" };
 VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
 CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
 
@@ -611,7 +611,7 @@ void G_SetWeapPref(int prefnum, int newvalue)
    weapon_preferences[0][prefnum] = newvalue;
 }
 
-char *weapon_str[NUMWEAPONS] =
+const char *weapon_str[NUMWEAPONS] =
 {"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
  "bfg", "chainsaw", "double shotgun"};
 

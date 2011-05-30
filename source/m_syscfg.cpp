@@ -33,6 +33,7 @@
 #include "m_shots.h"
 #include "d_gi.h"
 #include "i_sound.h"
+#include "i_video.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "w_wad.h"
@@ -176,6 +177,9 @@ static default_t sysdefaults[] =
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
+
+   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
+               default_t::wad_no, i_videohelpstr),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),

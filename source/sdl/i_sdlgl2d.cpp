@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_OPENGL
+
 // SDL headers
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -35,6 +37,7 @@
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
+#include "../w_wad.h"
 
 // Local driver header
 #include "i_sdlgl2d.h"
@@ -376,11 +379,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
+   // Set initial palette
+   SetPalette((byte *)W_CacheLumpName("PLAYPAL", PU_CACHE));
+
    return false;
 }
 
 // The one and only global instance of the SDL GL 2D-in-3D video driver.
 SDLGL2DVideoDriver i_sdlgl2dvideodriver;
+
+#endif
 
 // EOF
 

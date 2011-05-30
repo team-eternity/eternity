@@ -114,7 +114,7 @@ struct variable_t;
 
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings};
+                        vt_int, min, max, strings, 0, 0, NULL, NULL };
 
 // Simplified to create strings: 'max' is the maximum string length
 
@@ -206,14 +206,14 @@ enum    // variable type
 
 struct variable_t
 {  
-  void *variable;  // NB: for strings, this is char ** not char *
-  void *v_default; // the default 
-  int type;        // vt_?? variable type: int, string
-  int min;         // minimum value or string length
-  int max;         // maximum value/length
-  char **defines;  // strings representing the value: eg "on" not "1"
-  double dmin;     // haleyjd 04/21/10: min for double vars
-  double dmax;     //                   max for double vars
+  void *variable;        // NB: for strings, this is char ** not char *
+  void *v_default;       // the default 
+  int type;              // vt_?? variable type: int, string
+  int min;               // minimum value or string length
+  int max;               // maximum value/length
+  const char **defines;  // strings representing the value: eg "on" not "1"
+  double dmin;           // haleyjd 04/21/10: min for double vars
+  double dmax;           //                   max for double vars
   
   default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
   command_t *command;           // haleyjd 08/15/10: parent command
@@ -315,11 +315,11 @@ command_t *C_GetCmdForName(const char *cmdname);
 
 /***** define strings for variables *****/
 
-extern char *yesno[];
-extern char *onoff[];
-extern char *colournames[];
-extern char *textcolours[];
-extern char *skills[];
+extern const char *yesno[];
+extern const char *onoff[];
+extern const char *colournames[];
+extern const char *textcolours[];
+extern const char *skills[];
 
 #endif
 

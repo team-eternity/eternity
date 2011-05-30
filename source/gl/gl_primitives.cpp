@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_OPENGL
+
 #include "gl_includes.h"
 #include "gl_primitives.h"
 
@@ -48,6 +50,8 @@ void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
    glTexCoord2f(smax, 0.0f);
    glVertex2f(x + w, y);
 }
+
+#endif
 
 // EOF
 

@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_OPENGL
+
 #include <stdio.h>
 
 #include "gl_includes.h"
@@ -66,6 +68,8 @@ void GL_GetVersion()
       GL_version.minorversion = minversion;
    }
 }
+
+#endif
 
 // EOF
 

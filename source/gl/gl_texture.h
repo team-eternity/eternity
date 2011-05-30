@@ -29,9 +29,13 @@
 #ifndef GL_TEXTURE_H__
 #define GL_TEXTURE_H__
 
+#ifdef EE_FEATURE_OPENGL
+
 unsigned int GL_MakeTextureDimension(unsigned int i);
 void GL_BindTextureAndRemember(GLuint texture);
 void GL_BindTextureIfNeeded(GLuint texture);
+
+#endif
 
 #endif
 

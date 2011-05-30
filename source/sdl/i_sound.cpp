@@ -387,8 +387,8 @@ int I_QrySongPlaying(int handle)
 
 // system specific sound console commands
 
-static char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
-static char *muscardstr[] = { "SDL mixer", "none" };
+static const char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
+static const char *muscardstr[] = { "SDL mixer", "none" };
 
 VARIABLE_INT(snd_card,       NULL,      -1,  1, sndcardstr);
 VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);

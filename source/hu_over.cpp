@@ -524,7 +524,7 @@ void HU_OverlayDraw(void)
    }
 }
 
-char *str_style[] =
+const char *str_style[] =
 {
    "off",
    "boom style",

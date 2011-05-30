@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_OPENGL
+
 #include "gl_includes.h"
 
 //
@@ -47,6 +49,8 @@ void GL_SetOrthoMode(int w, int h)
    // Disable depth buffer test
    glDisable(GL_DEPTH_TEST);
 }
+
+#endif
 
 // EOF
 

@@ -29,6 +29,8 @@
 #ifndef GL_INIT_H__
 #define GL_INIT_H__
 
+#ifdef EE_FEATURE_OPENGL
+
 //
 // GL_versioninfo
 //
@@ -53,6 +55,8 @@ struct GL_versioninfo
 };
 
 extern GL_versioninfo GL_version;
+
+#endif
 
 #endif
 

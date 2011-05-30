@@ -29,8 +29,12 @@
 #ifndef GL_PROJECTION_H__
 #define GL_PROJECTION_H__
 
+#ifdef EE_FEATURE_OPENGL
+
 // Set an ortho 2D projection mode
 void GL_SetOrthoMode(int w, int h);
+
+#endif
 
 #endif
 

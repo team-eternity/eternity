@@ -29,8 +29,12 @@
 #ifndef GL_PRIMITIVES_H__
 #define GL_PRIMITIVES_H__
 
+#ifdef EE_FEATURE_OPENGL
+
 void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
                           GLfloat smax, GLfloat tmax);
+
+#endif
 
 #endif
 

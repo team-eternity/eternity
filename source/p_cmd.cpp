@@ -55,13 +55,13 @@
                 'defines': string values for variables
 ***************************************************************************/
 
-char *yesno[] = { "no",  "yes" };
-char *onoff[] = { "off", "on"  };
+const char *yesno[] = { "no",  "yes" };
+const char *onoff[] = { "off", "on"  };
 
-char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
-                      "gold","sea","black","purple","vomit", "pink", "cream","white"};
+const char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
+                            "gold","sea","black","purple","vomit", "pink", "cream","white"};
 
-char *textcolours[]=
+const char *textcolours[]=
 {
    FC_BRICK  "brick" FC_NORMAL,
    FC_TAN    "tan"   FC_NORMAL,
@@ -75,7 +75,7 @@ char *textcolours[]=
    FC_YELLOW "yellow"FC_NORMAL
 };
 
-char *skills[]=
+const char *skills[]=
 {
    "im too young to die",
    "hey not too rough",
@@ -84,8 +84,8 @@ char *skills[]=
    "nightmare"
 };
 
-char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
-char *dmstr[] = { "single", "coop", "deathmatch" };
+const char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
+const char *dmstr[] = { "single", "coop", "deathmatch" };
 
 /*************************************************************************
         Constants
@@ -219,7 +219,7 @@ CONSOLE_NETVAR(weapspeed, weapon_speed, cf_server, netcmd_weapspeed) {}
 // NETCODE_FIXME: bfglook is currently a dead option.
 //
 
-char *str_bfglook[] = { "off", "on", "fixedgun" };
+const char *str_bfglook[] = { "off", "on", "fixedgun" };
 VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
 CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
@@ -304,7 +304,7 @@ CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) 
 VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, NULL);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
-static char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
+static const char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
 
 // haleyjd 09/20/06: spechits overflow emulation
 VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
@@ -320,8 +320,8 @@ CONSOLE_VARIABLE(p_markunknowns, markUnknowns, 0) {}
 // haleyjd 10/09/07
 extern int wipewait;
 
-static char *wipewait_strs[] = { "never", "always", "demos" };
-static char *wipetype_strs[] = { "none", "melt", "fade" };
+static const char *wipewait_strs[] = { "never", "always", "demos" };
+static const char *wipetype_strs[] = { "none", "melt", "fade" };
 
 VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
 CONSOLE_VARIABLE(wipewait, wipewait, 0) {}

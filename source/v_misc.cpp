@@ -529,7 +529,7 @@ void V_InitMisc(void)
 // Console Commands
 //
 
-char *str_ticker[] = { "off", "chart", "classic", "text" };
+const char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_modelist, 0)

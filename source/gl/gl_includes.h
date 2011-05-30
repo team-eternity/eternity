@@ -29,6 +29,8 @@
 #ifndef GL_HEADERS_H__
 #define GL_HEADERS_H__
 
+#ifdef EE_FEATURE_OPENGL
+
 // haleyjd: Borrowed from SDL for cross-platform support
 #ifdef _WIN32
  #define WIN32_LEAN_AND_MEAN
@@ -43,6 +45,8 @@
  #include <gl.h>         /* Header File For The OpenGL Library */
 #else
  #include <GL/gl.h>      /* Header File For The OpenGL Library */
+#endif
+
 #endif
 
 #endif

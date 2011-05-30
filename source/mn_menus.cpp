@@ -478,7 +478,7 @@ menu_t menu_startmap =
    mf_leftaligned | mf_background, 
 };
 
-char *str_startmap[] = {"ask", "no", "yes"};
+const char *str_startmap[] = {"ask", "no", "yes"};
 VARIABLE_INT(use_startmap, NULL, -1, 1, str_startmap);
 CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 

@@ -26,6 +26,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef EE_FEATURE_OPENGL
+
 #include "gl_includes.h"
 
 //
@@ -78,6 +80,8 @@ void GL_BindTextureIfNeeded(GLuint texture)
    if(boundtexture != texture)
       glBindTexture(GL_TEXTURE_2D, texture);
 }
+
+#endif
 
 // EOF
 

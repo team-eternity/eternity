@@ -26,11 +26,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "../z_zone.h"  /* memory allocation wrappers -- killough */
+#include "../z_zone.h"   /* memory allocation wrappers -- killough */
+#include "../i_system.h"
 
 #include "../am_map.h"
 #include "../c_runcmd.h"
 #include "../d_gi.h"
+#include "../d_main.h"
 #include "../doomstat.h"
 #include "../f_wipe.h"
 #include "../i_video.h"
@@ -46,7 +48,9 @@
 // Platform-Specific Video Drivers:
 #ifdef _SDL_VER
 #include "../sdl/i_sdlvideo.h"
+#ifdef EE_FEATURE_OPENGL
 #include "../sdl/i_sdlgl2d.h"
+#endif
 #endif
 
 //=============================================================================
@@ -55,6 +59,95 @@
 //
 
 HALVideoDriver *i_video_driver = NULL;
+
+//=============================================================================
+//
+// Video Driver Table
+//
+
+// Config variable to select backend video driver module
+int i_videodriverid = -1;
+
+struct haldriveritem_t
+{
+   int id;                 // unique ID # assigned here by the HAL
+   const char *name;       // descriptive name of this driver
+   HALVideoDriver *driver; // driver object
+};
+
+// Help string for system.cfg:
+const char *const i_videohelpstr = 
+  "Select video backend (-1 = default"
+#ifdef _SDL_VER
+  ", 0 = SDL Software"
+#ifdef EE_FEATURE_OPENGL
+  ", 1 = SDL GL2D"
+#endif
+#endif
+  ")";
+
+// Driver table
+static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
+{
+   // SDL Software Driver
+   {
+      VDR_SDLSOFT,
+      "SDL Software",
+#ifdef _SDL_VER
+      &i_sdlvideodriver
+#else
+      NULL
+#endif
+   },
+
+   // SDL GL2D Driver
+   {
+      VDR_SDLGL2D,
+      "SDL GL2D",
+#if defined(_SDL_VER) && defined(EE_FEATURE_OPENGL)
+      &i_sdlgl2dvideodriver
+#else
+      NULL
+#endif
+   }
+};
+
+//
+// I_DefaultVideoDriver
+//
+// Chooses the default video driver based on user specifications, or on preset
+// platform-specific defaults when there is no user specification.
+//
+static haldriveritem_t *I_DefaultVideoDriver()
+{
+   haldriveritem_t *item = NULL;
+
+   if(i_videodriverid < 0 || i_videodriverid >= VDR_MAXDRIVERS ||
+      halVideoDriverTable[i_videodriverid].driver == NULL)
+   {
+      // Default or plain invalid setting, or unsupported driver on current
+      // compile. Find the lowest-numbered valid driver and use it.
+      for(int i = 0; i < VDR_MAXDRIVERS; i++)
+      {
+         if(halVideoDriverTable[i].driver)
+         {
+            item = &halVideoDriverTable[i];
+            break;
+         }
+      }
+
+      // Nothing?! Somebody borked up their configure/makefile.
+      if(!item)
+      {
+        I_FatalError(I_ERR_KILL,
+           "I_DefaultVideoDriver: no valid drivers for this platform!\n");
+      }
+   }
+   else
+      item = &halVideoDriverTable[i_videodriverid];
+
+   return item;
+}
 
 //=============================================================================
 //
@@ -433,19 +526,26 @@ static void I_ResetScreen(void)
 void I_InitGraphics(void)
 {
    static int firsttime = true;
+   haldriveritem_t *driveritem = NULL;
    
    if(!firsttime)
       return;
    
    firsttime = false;
    
-   /* TODO: Selectable video driver based on configuration (out of those
-      available in the current compile) */
-#ifdef _SDL_VER
-   //i_video_driver = &i_sdlvideodriver;
-   // TEST:
-   i_video_driver = &i_sdlgl2dvideodriver;
-#endif
+   // Select video driver based on configuration (out of those available in 
+   // the current compile), or get the default driver if unspecified
+   if(!(driveritem = I_DefaultVideoDriver()))
+   {
+      I_FatalError(I_ERR_KILL, "I_InitGraphics: invalid video driver %d\n",
+                   i_videodriverid);
+   }
+   else
+   {
+      i_video_driver  = driveritem->driver;
+      i_videodriverid = driveritem->id;
+      usermsg(" (using video driver '%s')", driveritem->name);
+   }
    
    // haleyjd: not a good idea for SDL :(
    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
@@ -524,6 +624,16 @@ CONSOLE_COMMAND(i_default_videomode, 0)
    i_default_videomode = strdup(i_videomode);
 }
 
+static const char *i_videodrivernames[] = 
+{
+   "default",
+   "SDL Software",
+   "SDL GL2D"
+};
+
+VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
+CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
+
 void I_Video_AddCommands(void)
 {
    C_AddCommand(i_usemouse);
@@ -539,6 +649,8 @@ void I_Video_AddCommands(void)
 
    C_AddCommand(i_videomode);
    C_AddCommand(i_default_videomode);
+
+   C_AddCommand(i_videodriverid);
 }
 
 // EOF

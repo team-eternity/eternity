@@ -1175,11 +1175,11 @@ void R_DoomTLStyle(void)
 //  Console Commands
 //
 
-static char *handedstr[]  = { "right", "left" };
-static char *ptranstr[]   = { "none", "smooth", "general" };
-static char *coleng[]     = { "normal", "quad" };
-static char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
-static char *tlstylestr[] = { "none", "boom", "new" };
+static const char *handedstr[]  = { "right", "left" };
+static const char *ptranstr[]   = { "none", "smooth", "general" };
+static const char *coleng[]     = { "normal", "quad" };
+static const char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
+static const char *tlstylestr[] = { "none", "boom", "new" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
