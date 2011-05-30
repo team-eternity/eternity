@@ -259,8 +259,6 @@ void SDLGL2DVideoDriver::ShutdownGraphics()
 {
    ShutdownGraphicsPartway();
 
-   // TODO: proper GL shutdown needed?
-
    // quit SDL video
    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
@@ -273,10 +271,25 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    // haleyjd 06/21/06: use UpdateGrab here, not release
    UpdateGrab();
 
-   // TODO: code to allow changing resolutions in OpenGL...
+   // Code to allow changing resolutions in OpenGL.
    // Must shutdown everything.
+   
+   // Delete textures and clear names 
+   glDeleteTextures(2, texturenames);
+   memset(texturenames, 0, sizeof(texturenames));
 
+   // Destroy the allocated temporary framebuffer
+   if(framebuffer)
+   {
+      free(framebuffer);
+      framebuffer = NULL;
+   }
+
+   // Destroy the "primary buffer" screen surface
    UnsetPrimaryBuffer();
+
+   // Clear the remembered texture binding
+   GL_ClearBoundTexture();
 }
 
 //

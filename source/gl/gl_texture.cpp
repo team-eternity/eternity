@@ -81,6 +81,16 @@ void GL_BindTextureIfNeeded(GLuint texture)
       glBindTexture(GL_TEXTURE_2D, texture);
 }
 
+//
+// GL_ClearBoundTexture
+//
+// Zeroes out the remembered bound texture name.
+//
+void GL_ClearBoundTexture()
+{
+   boundtexture = 0;
+}
+
 #endif
 
 // EOF
