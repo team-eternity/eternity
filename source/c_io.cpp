@@ -58,7 +58,7 @@
 #include "v_block.h"
 #include "v_misc.h"
 
-#define MESSAGES 384
+#define MESSAGES 512
 // keep the last 32 typed commands
 #define HISTORY 32
 
@@ -66,9 +66,10 @@ extern const char *shiftxform;
 static void Egg();
 
 // the messages (what you see in the console window)
-static char messages[MESSAGES][LINELENGTH];
-static int message_pos = 0;   // position in the history (last line in window)
-static int message_last = 0;  // the last message
+static char  msgtext[MESSAGES*LINELENGTH];
+static char *messages[MESSAGES];
+static int   message_pos = 0;   // position in the history (last line in window)
+static int   message_last = 0;  // the last message
 
 // the command history(what you type in)
 static char history[HISTORY][LINELENGTH];
@@ -189,10 +190,25 @@ static void C_updateInputPoint(void)
 
 // initialise the console
 
+//
+// C_initMessageBuffer
+//
+// haleyjd 05/30/11: long overdue rewrite of the console message buffer.
+// Sets messages[] to point into the msgtext buffer.
+//
+static void C_initMessageBuffer()
+{
+   for(int i = 0; i < MESSAGES; i++)
+      messages[i] = &msgtext[i * LINELENGTH];
+}
+
 void C_Init(void)
 {
    // haleyjd: initialize console qstrings
    inputtext.createSize(100);
+
+   // haleyjd: initialize console message buffer
+   C_initMessageBuffer();
 
    Console.enabled = true;
 
@@ -587,17 +603,22 @@ void C_Update(void)
    }
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // I/O Functions
 //
 
-// scroll console up
+// haleyjd 05/30/11: Number of messages to cut from the history buffer when
+// the buffer is full.
+#define MESSAGECUT 64
 
 //
-// CONSOLE_FIXME: message buffer can be made more efficient.
+// C_ScrollUp
 //
-
+// Add a message to the console message history.
+//
+// haleyjd 05/30/11: message buffer made more efficient.
+//
 static void C_ScrollUp(void)
 {
    if(message_last == message_pos)
@@ -606,21 +627,27 @@ static void C_ScrollUp(void)
 
    if(message_last >= MESSAGES) // past the end of the string
    {
-      // cut off the oldest 128 messages
-      int i;
+      // cut off the oldest messages
+      int i, j;
+      char *tempptrs[MESSAGECUT];
+
+      for(i = 0; i < MESSAGECUT; i++) // save off the first MESSAGECUT pointers
+         tempptrs[i] = messages[i];
+
+      for(i = MESSAGECUT; i < MESSAGES; i++) // shift down the message buffer
+         messages[i - MESSAGECUT] = messages[i];
+
+      for(i = MESSAGES - MESSAGECUT, j = 0; i < MESSAGES; i++, j++) // fill end
+         messages[i] = tempptrs[j];
       
-      // haleyjd 03/02/02: fixed code that assumed MESSAGES == 256
-      for(i = 128; i < MESSAGES; i++)
-         strcpy(messages[i - 128], messages[i]);
-      
-      message_last -= 128;      // move the message boundary
+      message_last -= MESSAGECUT; // move the message boundary
 
       // haleyjd 09/04/02: set message_pos to message_last
       // to avoid problems with console flooding
       message_pos = message_last;
    }
    
-   messages[message_last][0] = '\0';  // new line is empty
+   memset(messages[message_last], 0, LINELENGTH); // new line is empty
 }
 
 // 
