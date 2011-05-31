@@ -1278,6 +1278,8 @@ bool MN_Responder(event_t *ev)
    static bool shiftdown = false;
    static bool altdown = false;
 
+   memset(tempstr, 0, sizeof(tempstr));
+
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
    G_KeyResponder(ev, kac_menu);
@@ -1637,6 +1639,9 @@ bool MN_Responder(event_t *ev)
             psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
                       menuitem->data, value);
          }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
+
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1699,6 +1704,9 @@ bool MN_Responder(event_t *ev)
             psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
                       menuitem->data, value);
          }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
+
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;

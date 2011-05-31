@@ -548,7 +548,7 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
 
    if(*Console.argv[0] == "+")
       skin = P_NextSkin(Console.cmdsrc);
-   else if(!Console.argv[0]->strCmp("-"))
+   else if(*Console.argv[0] == "-")
       skin = P_PrevSkin(Console.cmdsrc);
    else if(!(skin = P_SkinForName(Console.argv[0]->constPtr())))
    {

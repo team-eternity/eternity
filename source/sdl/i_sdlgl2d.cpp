@@ -76,7 +76,7 @@ static unsigned int framebuffer_umax;
 static unsigned int framebuffer_vmax;
 
 // GL texture names
-static GLuint texturenames[2];
+static GLuint textureid;
 
 // Framebuffer texture data
 static Uint32 *framebuffer;
@@ -88,6 +88,29 @@ static int bump;
 //
 // Graphics Code
 //
+
+//
+// SDLGL2DVideoDriver::DrawPixels
+//
+// Protected method.
+//
+void SDLGL2DVideoDriver::DrawPixels(void *buffer)
+{
+   Uint32 *fb = (Uint32 *)buffer;
+
+   for(int y = 0; y < screen->h; y++)
+   {
+      byte   *src  = (byte *)screen->pixels + y * screen->pitch;
+      Uint32 *dest = fb + y * video.width;
+
+      for(int x = 0; x < screen->w - bump; x++)
+      {
+         *dest = RGB8to32[*src];
+         ++src;
+         ++dest;
+      }
+   }
+}
 
 //
 // SDLGL2DVideoDriver::FinishUpdate
@@ -104,21 +127,10 @@ void SDLGL2DVideoDriver::FinishUpdate()
       return;
 
    // Convert the game's 8-bit output to the 32-bit texture buffer
-   for(int y = 0; y < screen->h; y++)
-   {
-      byte   *src  = (byte *)screen->pixels + y * screen->pitch;
-      Uint32 *dest = framebuffer + y * video.width;
-
-      for(int x = 0; x < screen->w - bump; x++)
-      {
-         *dest = RGB8to32[*src];
-         ++src;
-         ++dest;
-      }
-   }
+   DrawPixels(framebuffer);
 
    // bind the framebuffer texture if necessary
-   GL_BindTextureIfNeeded(texturenames[0]);
+   GL_BindTextureIfNeeded(textureid);
 
    // update the texture data
    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
@@ -127,14 +139,9 @@ void SDLGL2DVideoDriver::FinishUpdate()
 
    // push screen quad w/tex coords
    glBegin(GL_QUADS);
-   
    GL_OrthoQuadTextured(0.0f, 0.0f, (GLfloat)video.width, (GLfloat)video.height,
                         (GLfloat)video.width  / framebuffer_umax, 
                         (GLfloat)video.height / framebuffer_vmax);
-
-   // TODO:
-   // * draw disk?
-
    glEnd();
 
    // push the frame
@@ -170,7 +177,7 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
 //
 void SDLGL2DVideoDriver::InitDiskFlash()
 {
-   // TODO: load disk texture
+   // Not implemented.
 }
 
 //
@@ -178,7 +185,7 @@ void SDLGL2DVideoDriver::InitDiskFlash()
 //
 void SDLGL2DVideoDriver::BeginRead()
 {
-   // TODO
+   // Not implemented.
 }
 
 //
@@ -186,7 +193,7 @@ void SDLGL2DVideoDriver::BeginRead()
 //
 void SDLGL2DVideoDriver::EndRead()
 {
-   // TODO
+   // Not implemented.
 }
 
 //
@@ -275,8 +282,11 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    // Must shutdown everything.
    
    // Delete textures and clear names 
-   glDeleteTextures(2, texturenames);
-   memset(texturenames, 0, sizeof(texturenames));
+   if(textureid)
+   {
+      glDeleteTextures(1, &textureid);
+      textureid = 0;
+   }
 
    // Destroy the allocated temporary framebuffer
    if(framebuffer)
@@ -359,12 +369,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    framebuffer_umax = GL_MakeTextureDimension((unsigned int)v_w);
    framebuffer_vmax = GL_MakeTextureDimension((unsigned int)v_h);
 
-   // Create textures
-   glGenTextures(2, texturenames);
+   // Create texture
+   glGenTextures(1, &textureid);
 
    // Configure framebuffer texture
    tempbuffer = (GLvoid *)calloc(framebuffer_umax * 4, framebuffer_vmax);
-   GL_BindTextureAndRemember(texturenames[0]);
+   GL_BindTextureAndRemember(textureid);
    
    // villsa 05/29/11: set filtering otherwise texture won't render
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 

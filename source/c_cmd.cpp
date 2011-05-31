@@ -33,11 +33,12 @@
 
 #include "z_zone.h"
 
-#include "a_small.h" // haleyjd
+#include "a_small.h"    // haleyjd
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "d_io.h"  // SoM 3/12/2002: strncasecmp
+#include "d_io.h"       // SoM 3/12/2002: strncasecmp
+#include "gl/gl_vars.h"
 #include "m_misc.h"
 #include "m_random.h"
 #include "v_misc.h"
@@ -424,31 +425,31 @@ void C_AddCommands()
   C_AddCommand(cvarhelp);
   
   // add commands in other modules
+  AM_AddCommands();
   Cheat_AddCommands();
+  D_AddCommands();
+  E_AddCommands();
   G_AddCommands();
+  G_Bind_AddCommands();
+  G_DMAddCommands();
+  GL_AddCommands();  // haleyjd
   HU_AddCommands();
   I_AddCommands();
+  MN_AddCommands();
   net_AddCommands();
   P_AddCommands();
+  P_AddGenLineCommands();
+  PE_AddCommands();  // haleyjd
   R_AddCommands();
   S_AddCommands();
   S_AddSeqCommands();
   ST_AddCommands();
   V_AddCommands();
-  MN_AddCommands();
-  AM_AddCommands();
-  PE_AddCommands();  // haleyjd
-  G_Bind_AddCommands();
+  W_AddCommands();
   
 #ifndef EE_NO_SMALL_SUPPORT
   SM_AddCommands();
 #endif
-  
-  G_DMAddCommands();
-  E_AddCommands();
-  P_AddGenLineCommands();
-  W_AddCommands();
-  D_AddCommands();
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

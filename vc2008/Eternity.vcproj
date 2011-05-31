@@ -5051,6 +5051,10 @@
 						RelativePath="..\source\gl\gl_texture.cpp"
 						>
 					</File>
+					<File
+						RelativePath="..\source\gl\gl_vars.cpp"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="GL Headers"
@@ -5073,6 +5077,10 @@
 					</File>
 					<File
 						RelativePath="..\source\gl\gl_texture.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_vars.h"
 						>
 					</File>
 				</Filter>

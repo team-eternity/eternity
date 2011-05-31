@@ -17,49 +17,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //   
-//   SDL-specific GL 2D-in-3D video code
+//  OpenGL Configuration Variables
+//  haleyjd 05/30/11
 //
 //-----------------------------------------------------------------------------
 
-#ifndef I_SDLGL2D_H__
-#define I_SDLGL2D_H__
+#ifndef GL_VARS_H__
+#define GL_VARS_H__
 
-// Grab the HAL video definitions
-#include "../i_video.h" 
+extern int   cfg_gl_colordepth;
+extern char *cfg_gl_filter_type;
+extern char *cfg_gl_texture_format;
+extern bool  cfg_gl_use_extensions;
+extern bool  cfg_gl_arb_pixelbuffer;
 
-//
-// SDL GL "2D-in-3D" Video Driver
-//
-class SDLGL2DVideoDriver : public HALVideoDriver
-{
-protected:
-   int colordepth;
-
-   void DrawPixels(void *buffer);
-
-public:
-   // Overrides
-   virtual void FinishUpdate();
-   virtual void ReadScreen(byte *scr);
-   virtual void InitDiskFlash();
-   virtual void BeginRead();
-   virtual void EndRead();
-   virtual void SetPalette(byte *pal);
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
-   virtual void ShutdownGraphics();
-   virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
-
-   // Accessors
-   void SetColorDepth(int cd) { colordepth = cd; }
-};
-
-extern SDLGL2DVideoDriver i_sdlgl2dvideodriver;
+void GL_AddCommands();
 
 #endif
 

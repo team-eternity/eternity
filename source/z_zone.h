@@ -153,8 +153,6 @@ void  Z_SysFree(void *p);
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 
-void Z_ZoneHistory(char *);
-
 #ifdef INSTRUMENTED
 extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
 extern int printstats;             // killough 08/23/98
