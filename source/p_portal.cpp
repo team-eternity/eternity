@@ -34,6 +34,7 @@
 #include "p_map.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_user.h"
 #include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -617,13 +618,24 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
    mo->momy = momy;
    mo->momz = momz;
 
+   // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player)
+   if (mo->player)
    {
-      if(mo->player == players + displayplayer)
-          P_ResetChasecam();
+      // Save the current deltaviewheight, used in stepping
+      fixed_t deltaviewheight = mo->player->deltaviewheight;
 
-      mo->player->viewz = mo->z + vh;
+      // Clear deltaviewheight, since we don't want any changes now
+      mo->player->deltaviewheight = 0;
+
+      // Set player's view according to the newly set parameters
+      P_CalcHeight(mo->player);
+
+      // Reset the delta to have the same dynamics as before
+      mo->player->deltaviewheight = deltaviewheight;
+
+      if(mo->player == players+displayplayer)
+          P_ResetChasecam();
    }
 
    P_AdjustFloorClip(mo);
