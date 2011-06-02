@@ -689,6 +689,15 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
    }
 }
 
+
+
+//
+// R_ClipInitialSegRange
+//
+// Performs initial clipping based on the opening of the portal. This can 
+// quickly reject segs that are all the way off the left or right edges 
+// of the portal window.
+// 
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
@@ -1011,6 +1020,8 @@ void R_ClipSegToLPortal(void)
    }
 }
 
+
+
 R_ClipSegFunc segclipfuncs[] = 
 {
    R_ClipSegToFPortal,
@@ -1248,10 +1259,14 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   seg.l_window = line->linedef->portal &&
-                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                  line->linedef->sidenum[0] == line->sidedef - sides ?
-                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+      line->linedef->sidenum[0] == line->sidedef - sides)
+   {
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.clipsolid = true;
+   }
+   else
+      seg.l_window = NULL;
 }
 
 static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
@@ -1438,10 +1453,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   seg.l_window = line->linedef->portal &&
-                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                  line->linedef->sidenum[0] == line->sidedef - sides ?
-                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+      line->linedef->sidenum[0] == line->sidedef - sides)
+   {
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.clipsolid = true;
+   }
+   else
+      seg.l_window = NULL;
 }
 
 //
