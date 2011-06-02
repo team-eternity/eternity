@@ -81,8 +81,9 @@ typedef union seqcmd_s
 // 10/18/06: sequence flags
 enum
 {
-   SEQ_FLAG_LOOPING = 0x01,
-   SEQ_FLAG_ENVIRO  = 0x02,
+   SEQ_FLAG_LOOPING  = 0x01, // currently looping a sound
+   SEQ_FLAG_ENVIRO   = 0x02, // is an environmental sequence
+   SEQ_FLAG_NORANDOM = 0x04  // 01/12/11: don't randomize next sound
 };
 
 struct ESoundSeq_t;
@@ -124,11 +125,11 @@ void S_SquashSequence(PointThinker *mo);
 void S_KillSequence(PointThinker *mo);
 
 void S_StartSectorSequence(sector_t *s, int seqtype);
-void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC);
 void S_ReplaceSectorSequence(sector_t *s, int seqtype);
-void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC);
-void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling);
-void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling);
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, bool fOrC);
+void S_StopSectorSequence(sector_t *s, bool floorOrCeiling);
+void S_SquashSectorSequence(sector_t *s, bool floorOrCeiling);
 
 void S_StartPolySequence(polyobj_t *po);
 void S_StopPolySequence(polyobj_t *po);
@@ -139,8 +140,8 @@ void S_SetSequenceStatus(SndSeq_t *seq);
 void S_SequenceGameLoad(void);
 void S_InitEnviroSpots(void);
 
-boolean S_CheckSequenceLoop(PointThinker *mo);
-boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling);
+bool S_CheckSequenceLoop(PointThinker *mo);
+bool S_CheckSectorSequenceLoop(sector_t *s, bool floorOrCeiling);
 
 // EnviroSeqMgr_t -- environment sequence manager data
 
@@ -153,6 +154,9 @@ typedef struct EnviroSeqMgr_s
 } EnviroSeqMgr_t;
 
 extern EnviroSeqMgr_t EnviroSeqManager;
+
+// boost for environmental sequences that use randomplayvol
+extern int s_enviro_volume;
 
 #endif
 

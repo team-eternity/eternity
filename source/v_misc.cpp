@@ -27,19 +27,24 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_fonts.h"
 #include "i_video.h"
 #include "m_swap.h"
-#include "v_block.h"
-#include "v_video.h"
-#include "v_misc.h"
-#include "w_wad.h"
-#include "d_gi.h"
 #include "r_main.h" // haleyjd
-#include "e_fonts.h"
+#include "r_patch.h"
+#include "r_state.h"
+#include "v_block.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
+
 
 extern int gamma_correct;
 
@@ -390,7 +395,7 @@ VBuffer backscreen1; // backscreen1 is a temporary buffer for in_lude, border
 VBuffer backscreen2; // backscreen2 is a temporary buffer for screenshots
 VBuffer backscreen3; // backscreen3 is a temporary buffer for f_wipe
 
-static boolean vbscreenneedsfree = false;
+static bool vbscreenneedsfree = false;
 
 //
 // V_InitScreenVBuffer
@@ -524,11 +529,12 @@ void V_InitMisc(void)
 // Console Commands
 //
 
-char *str_ticker[] = { "off", "chart", "classic", "text" };
+const char *str_ticker[] = { "off", "chart", "classic", "text" };
 VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_modelist, 0)
 {
+   /*
    videomode_t* videomode = videomodes;
    
    C_Printf(FC_HI "video modes:\n");
@@ -539,6 +545,7 @@ CONSOLE_COMMAND(v_modelist, 0)
                videomode->description);
       ++videomode;
    }
+   */
 }
 
 CONSOLE_VARIABLE(v_ticker, v_ticker, 0) {}

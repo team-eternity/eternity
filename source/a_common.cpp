@@ -28,29 +28,70 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
-#include "p_mobj.h"
-#include "p_enemy.h"
-#include "p_info.h"
-#include "p_inter.h"
-#include "p_map.h"
-#include "p_maputl.h"
-#include "p_pspr.h"
-#include "p_setup.h"
-#include "p_spec.h"
-#include "p_tick.h"
-#include "r_state.h"
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
-
+#include "doomstat.h"
 #include "e_args.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "p_enemy.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
+#include "p_pspr.h"
+#include "p_setup.h"
+#include "p_skin.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_defs.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+
+//
+// P_MakeSeeSound
+//
+// haleyjd 01/20/11: Isolated from A_Look
+//
+void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
+{
+   if(actor->info->seesound)
+   {
+      int sound;
+      Mobj *emitter = actor;
+
+      // EDF_FIXME: needs to be generalized like in zdoom
+      switch (actor->info->seesound)
+      {
+      case sfx_posit1:
+      case sfx_posit2:
+      case sfx_posit3:
+         sound = sfx_posit1 + P_Random(rngnum) % 3;
+         break;
+         
+      case sfx_bgsit1:
+      case sfx_bgsit2:
+         sound = sfx_bgsit1 + P_Random(rngnum) % 2;
+         break;
+                  
+      default:
+         sound = actor->info->seesound;
+         break;
+      }
+      
+      // haleyjd: generalize to all bosses
+      if(actor->flags2 & MF2_BOSS)
+         emitter = NULL;
+
+      S_StartSound(emitter, sound);
+   }
+}
 
 //
 // A_Look
@@ -60,7 +101,7 @@
 void A_Look(Mobj *actor)
 {
    Mobj *sndtarget = actor->subsector->sector->soundtarget;
-   boolean allaround = false;
+   bool allaround = false;
 
    // killough 7/18/98:
    // Friendly monsters go after other monsters first, but 
@@ -109,37 +150,7 @@ void A_Look(Mobj *actor)
    }
 
    // go into chase state
-   
-   if(actor->info->seesound)
-   {
-      int sound;
-
-      // EDF_FIXME: needs to be generalized like in zdoom
-      switch (actor->info->seesound)
-      {
-      case sfx_posit1:
-      case sfx_posit2:
-      case sfx_posit3:
-         sound = sfx_posit1 + P_Random(pr_see) % 3;
-         break;
-         
-      case sfx_bgsit1:
-      case sfx_bgsit2:
-         sound = sfx_bgsit1 + P_Random(pr_see) % 2;
-         break;
-                  
-      default:
-         sound = actor->info->seesound;
-         break;
-      }
-      
-      // haleyjd: generalize to all bosses
-      if(actor->flags2 & MF2_BOSS)
-         S_StartSound(NULL, sound);          // full volume
-      else
-         S_StartSound(actor, sound);
-   }
-
+   P_MakeSeeSound(actor, pr_see);
    P_SetMobjState(actor, actor->info->seestate);
 }
 
@@ -169,7 +180,7 @@ void A_KeepChasing(Mobj *actor)
 // haleyjd 01/11/04: returns true if this thing is a "super friend"
 // and is going to attack a friend
 //
-static boolean P_SuperFriend(Mobj *actor)
+static bool P_SuperFriend(Mobj *actor)
 {
    Mobj *target = actor->target;
 
@@ -248,7 +259,7 @@ void A_FaceTarget(Mobj *actor)
 //
 void A_Chase(Mobj *actor)
 {
-   boolean superfriend = false;
+   bool superfriend = false;
 
    if(actor->reactiontime)
       actor->reactiontime--;
@@ -284,7 +295,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 07/26/04: Detect and prevent infinite recursion if
       // Chase is called from a thing's spawnstate.
-      static boolean recursion = false;
+      static bool recursion = false;
 
       // if recursion is true at this point, P_SetMobjState sent
       // us back here -- print an error message and return
@@ -326,7 +337,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
       // Chase is called from a thing's attack state
-      static boolean recursion = false;
+      static bool recursion = false;
 
       if(recursion)
       {
@@ -352,7 +363,7 @@ void A_Chase(Mobj *actor)
    {
       // haleyjd 05/01/05: Detect and prevent infinite recursion if
       // Chase is called from a thing's attack state
-      static boolean recursion = false;
+      static bool recursion = false;
 
       if(recursion)
       {
@@ -470,7 +481,7 @@ void A_RandomWalk(Mobj *actor)
    {
       dirtype_t tdir;
       dirtype_t turnaround = actor->movedir;
-      boolean dirfound = false;
+      bool      dirfound = false;
 
       if(P_Random(pr_rndwspawn) < 24)
       {

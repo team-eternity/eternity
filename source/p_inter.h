@@ -25,11 +25,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_INTER__
-#define __P_INTER__
+#ifndef P_INTER_H__
+#define P_INTER_H__
 
-#include "d_player.h"
-#include "p_mobj.h"
+struct player_t;
+class  Mobj;
 
 // Ty 03/09/98 Moved to an int in p_inter.c for deh and externalization 
 #define MAXHEALTH maxhealth
@@ -37,7 +37,7 @@
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
-boolean P_GivePower(player_t *, int);
+bool P_GivePower(player_t *, int);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 

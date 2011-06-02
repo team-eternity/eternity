@@ -29,6 +29,17 @@
 
 #include "r_defs.h"
 
+// haleyjd 01/22/11: vissprite drawstyles
+enum
+{
+   VS_DRAWSTYLE_NORMAL,  // Normal
+   VS_DRAWSTYLE_SHADOW,  // Spectre draw
+   VS_DRAWSTYLE_ALPHA,   // Flex translucent
+   VS_DRAWSTYLE_ADD,     // Additive flex translucent
+   VS_DRAWSTYLE_TRANMAP, // Static TRANMAP translucent
+   VS_NUMSTYLES
+};
+
 //
 // columndrawer_t
 //
@@ -50,6 +61,7 @@ struct columndrawer_t
 
    void (*ResetBuffer)(void);      // reset function (may be null)
    
+   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])(void);
 };
 
 extern columndrawer_t r_normal_drawer;
@@ -92,10 +104,10 @@ enum
 //
 struct spandrawer_t
 {
-   void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
+   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
    void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(void);
 
-   boolean haslp64; // haleyjd: if true, 64x64 flat drawer is low-precision
+   bool haslp64; // haleyjd: if true, 64x64 flat drawer is low-precision
 };
 
 extern spandrawer_t r_lpspandrawer;  // low-precision

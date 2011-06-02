@@ -198,7 +198,7 @@ void I_EnumerateJoysticks(void)
 //
 // haleyjd 04/15/02
 //
-boolean I_SetJoystickDevice(int deviceNum)
+bool I_SetJoystickDevice(int deviceNum)
 {
    if(deviceNum >= SDL_NumJoysticks())
       return false;
@@ -219,7 +219,7 @@ boolean I_SetJoystickDevice(int deviceNum)
    }
 }
 
-extern boolean unicodeinput;
+extern bool unicodeinput;
 
 void I_InitKeyboard(void)
 {   
@@ -227,6 +227,10 @@ void I_InitKeyboard(void)
 
    if(unicodeinput)
       SDL_EnableUNICODE(1);
+
+   // haleyjd 05/10/11: moved here from video module
+   // enable key repeat
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 void I_Init(void)
@@ -273,7 +277,7 @@ void I_Init(void)
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    { 
-      extern boolean nomusicparm, nosfxparm;
+      extern bool nomusicparm, nosfxparm;
       if(!(nomusicparm && nosfxparm))
          I_InitSound();
    }
@@ -487,7 +491,7 @@ void I_EndDoom(void)
    unsigned char *endoom_data;
    unsigned char *screendata;
    int start_ms;
-   boolean waiting;
+   bool waiting;
    
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
@@ -576,7 +580,7 @@ CONSOLE_COMMAND(i_joystick, 0)
    if(Console.argc != 1)
       return;
 
-   i_SDLJoystickNum = QStrAtoi(&Console.argv[0]);
+   i_SDLJoystickNum = Console.argv[0]->toInt();
 
    if(i_SDLJoystickNum != -1)
    {

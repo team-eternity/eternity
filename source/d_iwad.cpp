@@ -38,7 +38,7 @@
 // Check if a file exists
 // haleyjd TODO: move to m_misc.c
 //
-boolean M_FileExists(const char *filename)
+bool M_FileExists(const char *filename)
 {
    FILE *fstream;
    
@@ -65,7 +65,7 @@ boolean M_FileExists(const char *filename)
 
 #define MAX_IWAD_DIRS 128
 
-static boolean iwad_dirs_built = false;
+static bool iwad_dirs_built = false;
 static char *iwad_dirs[MAX_IWAD_DIRS];
 static int num_iwad_dirs = 0;
 
@@ -227,7 +227,7 @@ char *D_FindWADByName(char *name)
 {
    char *buf;
    int i;
-   boolean exists;
+   bool exists;
    
    // Absolute path?
    

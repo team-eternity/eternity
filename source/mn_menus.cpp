@@ -29,18 +29,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 
-#include "d_gi.h"
-#include "d_io.h"
-#include "doomdef.h"
-#include "doomstat.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
-#include "d_dialog.h" // haleyjd
+#include "d_dehtbl.h"
+#include "d_gi.h"
+#include "d_io.h"
 #include "d_main.h"
-#include "dstrings.h"
+#include "doomdef.h"
+#include "doomstat.h"
 #include "dhticstr.h" // haleyjd
+#include "dstrings.h"
 #include "e_fonts.h"
 #include "e_states.h"
 #include "g_dmflag.h"
@@ -57,16 +58,16 @@
 #include "mn_misc.h"
 #include "mn_files.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_patch.h"
+#include "r_state.h"
 #include "s_sound.h"
+#include "v_font.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-
-// haleyjd 04/15/02: SDL joystick stuff
-#ifdef _SDL_VER
-#include "i_system.h"
-#endif
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
@@ -95,7 +96,7 @@ char *savegamenames[SAVESLOTS];
 char *mn_start_mapname;
 
 // haleyjd: keep track of valid save slots
-boolean savegamepresent[SAVESLOTS];
+bool savegamepresent[SAVESLOTS];
 
 static void MN_PatchOldMainMenu(void);
 static void MN_InitCustomMenu(void);
@@ -181,15 +182,15 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    if(!Console.argc)
       return;
 
-   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
+   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
    
-   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
+   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
    else
    {
       if(mn_start_mapname)
          free(mn_start_mapname);
-      start_mapname = mn_start_mapname = QStrCDup(&Console.argv[0], PU_STATIC);
+      start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
    if(menuactive)
@@ -224,14 +225,15 @@ CONSOLE_COMMAND(mn_newgame, 0)
    {
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
-      boolean mapPresent = true;
+      bool mapPresent = true;
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not
-      // present -- this assumes the resource wad is loaded first.
+      // present -- FIXME: this assumes the resource wad is loaded first.
       if(startMapLump < 0 || 
          (modifiedgame && 
-          w_GlobalDir.lumpinfo[startMapLump]->file == firstWadHandle))
+          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
 
 
@@ -329,7 +331,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
@@ -416,7 +418,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    // skill level is argv 0
    
    if(Console.argc)
-      skill = QStrAtoi(&Console.argv[0]);
+      skill = Console.argv[0]->toInt();
 
    // haleyjd 07/27/05: restored nightmare behavior
    if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
@@ -476,7 +478,7 @@ menu_t menu_startmap =
    mf_leftaligned | mf_background, 
 };
 
-char *str_startmap[] = {"ask", "no", "yes"};
+const char *str_startmap[] = {"ask", "no", "yes"};
 VARIABLE_INT(use_startmap, NULL, -1, 1, str_startmap);
 CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 
@@ -787,7 +789,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    if(!Console.argc)
       return;
    
-   newvalue = QStrConstPtr(&Console.argv[0]);
+   newvalue = Console.argv[0]->constPtr();
    
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
@@ -1335,7 +1337,7 @@ CONSOLE_COMMAND(mn_load, 0)
    if(Console.argc < 1)
       return;
    
-   slot = QStrAtoi(&Console.argv[0]);
+   slot = Console.argv[0]->toInt();
    
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])
@@ -1639,7 +1641,7 @@ static const char **mn_vidmode_cmds;
 
 static void MN_BuildVidmodeTables(void)
 {
-   static boolean menu_built = false;
+   static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
@@ -1917,7 +1919,6 @@ static menuitem_t mn_sound_items[] =
    {it_info,       FC_GOLD "Setup"},
    {it_toggle,     "Sound card",                   "snd_card"},
    {it_toggle,     "Music card",                   "mus_card"},
-   {it_toggle,     "Autodetect voices",            "detect_voices"},
    {it_toggle,     "Sound channels",               "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},
@@ -2087,7 +2088,7 @@ extern int numJoysticks;
 
 static void MN_BuildJSTables(void)
 {
-   static boolean menu_built = false;
+   static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
@@ -3201,7 +3202,7 @@ CONSOLE_COMMAND(mn_search, 0)
 {
    int i = 0;
    menu_t *curMenu;
-   boolean pastLast;
+   bool pastLast;
 
    // if lastMatch is set, set pastLast to false so that we'll seek
    // forward until we pass the last item that was matched
@@ -3467,7 +3468,7 @@ static menuitem_t mn_old_option_items[] =
 {
    { it_runcmd,    "end game",       "mn_endgame",    "M_ENDGAM" },
    { it_runcmd,    "messages",       "hu_messages /", "M_MESSG"  },
-   { it_runcmd,    "graphic detail", "r_detail /",    "M_DETAIL" },
+   { it_runcmd,    "graphic detail", "echo No.",      "M_DETAIL" },
    { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
    { it_bigslider, "mouse sens.",    "sens_combined", "M_MSENS"  },
@@ -3475,8 +3476,6 @@ static menuitem_t mn_old_option_items[] =
    { it_runcmd,    "sound volume",   "mn_old_sound",  "M_SVOL"   },
    { it_end }
 };
-
-extern int c_detailshift;
 
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
@@ -3490,7 +3489,7 @@ static void MN_OldOptionsDrawer(void)
                (patch_t *)W_CacheLumpName(msgNames[showMessages], PU_CACHE));
 
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
-               (patch_t *)W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
+               (patch_t *)W_CacheLumpName(detailNames[0], PU_CACHE));
 }
 
 menu_t menu_old_options =

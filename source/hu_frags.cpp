@@ -30,20 +30,24 @@
 
 #include "z_zone.h"
 
-#include "hu_frags.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "d_player.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "g_game.h"
-#include "m_swap.h"
-#include "r_draw.h"
-#include "w_wad.h"
-#include "v_video.h"
-#include "g_bind.h"
-#include "d_gi.h"
 #include "e_fonts.h"
+#include "g_bind.h"
+#include "g_game.h"
+#include "hu_frags.h"
+#include "m_swap.h"
+#include "p_chase.h"
+#include "r_draw.h"
+#include "r_patch.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 #define FRAGSX 125
 #define FRAGSY 10
@@ -53,7 +57,7 @@
 
 #define FRAGNUMX 175
 
-extern boolean gamekeydown[NUMKEYS]; // g_game.c
+extern bool gamekeydown[NUMKEYS]; // g_game.c
 
 player_t *sortedplayers[MAXPLAYERS];
 
@@ -66,7 +70,7 @@ void HU_FragsInit(void)
 
 extern vfont_t *hud_font;
 
-static boolean fragsdrawn;
+static bool fragsdrawn;
 
 void HU_FragsDrawer(void)
 {

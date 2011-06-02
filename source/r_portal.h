@@ -30,7 +30,8 @@
 
 #include "doomdef.h"
 
-class Mobj;
+class  Mobj;
+struct planehash_t;
 
 typedef enum
 {
@@ -165,8 +166,8 @@ struct portal_t
    int    flags;
    
    // Planes that makeup a blended overlay
-   int    globaltex;
-   struct planehash_s *poverlay;
+   int          globaltex;
+   planehash_t *poverlay;
 
    portal_t *next;
 
@@ -253,15 +254,15 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 // SoM 3/14/2004: flag if we are rendering portals.
 typedef struct portalrender_s
 {
-   boolean active;
-   int     minx, maxx;
-   float   miny, maxy;
+   bool  active;
+   int   minx, maxx;
+   float miny, maxy;
 
    pwindow_t *w;
 
    void (*segClipFunc)();
    
-   struct planehash_s   *overlay;
+   planehash_t *overlay;
 } portalrender_t;
 
 extern portalrender_t  portalrender;

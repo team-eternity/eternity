@@ -26,6 +26,8 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "doomstat.h"
 #include "g_dmflag.h"
 #include "c_net.h"
 #include "c_runcmd.h"
@@ -45,7 +47,7 @@ unsigned int default_dmflags;
 // for compatibility purposes. Propagates the value to
 // default_dmflags if "setdefault" is true.
 //
-void G_SetDefaultDMFlags(int dmtype, boolean setdefault)
+void G_SetDefaultDMFlags(int dmtype, bool setdefault)
 {
    if(GameType == gt_single)
       dmflags = DMD_SINGLE;
@@ -103,7 +105,7 @@ CONSOLE_COMMAND(defdmflags, cf_server)
       }
    }
    else
-      mode = QStrAtoi(&Console.argv[0]);
+      mode = Console.argv[0]->toInt();
 
    switch(mode)
    {

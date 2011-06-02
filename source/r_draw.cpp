@@ -28,13 +28,16 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "d_gi.h"
+#include "mn_engin.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "st_stuff.h"
+#include "v_misc.h"
 #include "v_video.h"
-#include "mn_engin.h"
-#include "d_gi.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -980,7 +983,16 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL
+   NULL,
+
+   {
+      // Normal              Translated
+      { CB_DrawColumn_8,     CB_DrawTRColumn_8     }, // NORMAL
+      { CB_DrawFuzzColumn_8, CB_DrawFuzzColumn_8   }, // SHADOW
+      { CB_DrawFlexColumn_8, CB_DrawFlexTRColumn_8 }, // ALPHA
+      { CB_DrawAddColumn_8,  CB_DrawAddTRColumn_8  }, // ADD
+      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // TRANMAP
+   },
 };
 
 //
@@ -1101,7 +1113,7 @@ void R_InitBuffer(int width, int height)
 { 
    int i; 
    int st_height;
-   int tviewwidth = viewwidth << detailshift;
+   int tviewwidth = viewwidth;
    
    // SoM: use pitch damn you!
    linesize = video.pitch;    // killough 11/98

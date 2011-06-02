@@ -24,10 +24,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_PLANE__
-#define __R_PLANE__
+#ifndef R_PLANE_H__
+#define R_PLANE_H__
 
-#include "r_data.h"
+struct planehash_t;
+struct rslope_t;
+struct texture_t;
 
 // killough 10/98: special mask indicates sky flat comes from sidedef
 #define PL_SKYFLAT (0x80000000)
@@ -69,7 +71,7 @@ visplane_t *R_FindPlane(fixed_t height,
 
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
-boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
+bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
 extern int visplane_view;
 

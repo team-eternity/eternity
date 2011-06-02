@@ -55,7 +55,7 @@ typedef struct diskfileint_s
 //
 // Reads the disk file directory structure.
 //
-static boolean D_readDiskFileDirectory(diskfileint_t *dfi)
+static bool D_readDiskFileDirectory(diskfileint_t *dfi)
 {
    size_t i;
    uint32_t temp;
@@ -170,7 +170,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 // does not exist. If "text" is set to true, the buffer will be allocated
 // at size+1 and null-terminated, so that it can be treated as a C string.
 //
-void *D_CacheDiskFileResource(diskfile_t *df, const char *path, boolean text)
+void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 {
    size_t i, len;
    diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
@@ -216,7 +216,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, boolean text)
 // unless "closefile" is true, since it may be in use by one or more
 // wad subfiles created on top of the physical file.
 //
-void D_CloseDiskFile(diskfile_t *df, boolean closefile)
+void D_CloseDiskFile(diskfile_t *df, bool closefile)
 {
    diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
 

@@ -32,6 +32,8 @@
 #include "r_defs.h"
 #include "m_dllist.h"
 
+struct patch_t;
+
 enum
 {
    VFONT_SMALL,
@@ -68,15 +70,15 @@ struct vfont_t
    int dw;    // width delta (can move characters together)
    int absh;  // absolute maximum height of any character
 
-   boolean color;    // supports color translations?
-   boolean upper;    // uses uppercase only?
-   boolean centered; // characters are centered in position?
+   bool color;    // supports color translations?
+   bool upper;    // uses uppercase only?
+   bool centered; // characters are centered in position?
 
    patch_t **fontgfx; // graphics patches for font (not owned)
 
    int cw;  // constant width, used only when centering is on
    
-   boolean linear;  // linear graphic lump?
+   bool linear;  // linear graphic lump?
    byte    *data;   // data for linear graphic
    int     lsize;   // character size in linear graphic
 

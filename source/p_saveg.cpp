@@ -26,19 +26,27 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
+#include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"
 #include "d_main.h"
+#include "d_net.h"
+#include "doomstat.h"
+#include "e_edf.h"
+#include "e_player.h"
 #include "g_dmflag.h"
 #include "g_game.h"
-#include "r_main.h"
+#include "m_buffer.h"
+#include "m_random.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_saveg.h"
-#include "m_buffer.h"
-#include "m_random.h"
-#include "am_map.h"
 #include "p_enemy.h"
 #include "p_xenemy.h"
 #include "p_portal.h"
@@ -46,16 +54,15 @@
 #include "p_skin.h"
 #include "p_setup.h"
 #include "r_draw.h"
-#include "e_edf.h"
-#include "a_small.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sndseq.h"
-#include "d_gi.h"
-#include "acs_intr.h"
-#include "e_player.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "version.h"
-#include "w_wad.h"
 #include "w_levels.h"
-#include "c_io.h"
+#include "w_wad.h"
 
 // Pads save_p to a 4-byte boundary
 //  so that the load/save works on SGI&Gecko.
@@ -223,7 +230,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
    return *this;
 }
 
-SaveArchive &SaveArchive::operator << (boolean &x)
+SaveArchive &SaveArchive::operator << (bool &x)
 {
    if(savefile)
       savefile->WriteUint8((uint8_t)x);
@@ -689,7 +696,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
       while(1)
       {
-         if(className != "")
+         if(*className != '\0')
             free(className);
 
          // Get the next class name
@@ -814,6 +821,21 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
       pt.groupid = po->spawnSpot.groupid;
    }
    arc << id << angle;
+
+   // Thinker::serialize won't read its own name so we need to do that here.
+   if(arc.isLoading())
+   {
+      char *className = NULL;
+      size_t len = 0;
+      
+      arc.ArchiveLString(className, len);
+
+      if(!className || strncmp(className, "PointThinker", len))
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "P_ArchivePolyObj: no PointThinker for polyobject");
+      }
+   }
 
    pt.serialize(arc);
 
@@ -992,7 +1014,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 void P_ArchiveScripts(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
-   boolean haveGameScript = false, haveLevelScript = false;
+   bool haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
    {
@@ -1342,7 +1364,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       for(; i < MIN_MAXPLAYERS; i++)         // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 
@@ -1470,7 +1492,7 @@ void P_LoadGame(const char *filename)
       G_SetGameMap(); // get gameepisode, map
 
       // start out g_dir pointing at w_GlobalDir again
-      g_dir = &w_GlobalDir;
+      g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
       // directory, we need to restore the managed directory to g_dir when loading
@@ -1480,7 +1502,7 @@ void P_LoadGame(const char *filename)
 
       if(len)
       {
-         waddir_t *dir;
+         WadDirectory *dir;
 
          // read a name of len bytes 
          char *fn = (char *)(calloc(1, len));
@@ -1523,7 +1545,7 @@ void P_LoadGame(const char *filename)
 
       for(; i < MIN_MAXPLAYERS; i++) // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 

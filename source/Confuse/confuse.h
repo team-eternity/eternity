@@ -156,9 +156,10 @@ typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
 struct cfg_t 
 {
    cfg_flag_t flags;       /**< Any flags passed to cfg_init() */
-   char *name;             /**< The name of this section, the root
+   const char *name;       /**< The name of this section, the root
                                 * section returned from cfg_init() is
                                 * always named "root" */
+   char *namealloc;        /**< Pointer to name if allocated on heap */
    cfg_opt_t *opts;        /**< Array of options */
    char *title;            /**< Optional title for this section, only
                                 * set if CFGF_TITLE flag is set */
@@ -189,7 +190,7 @@ union cfg_value_t
  */
 struct cfg_opt_t
 {
-   char *name;             /**< The name of the option */
+   const char *name;       /**< The name of the option */
    cfg_type_t type;        /**< Type of option */
    unsigned int nvalues;   /**< Number of values parsed */
    cfg_value_t **values;   /**< Array of found values */

@@ -29,93 +29,93 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "p_info.h"
+#include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "d_net.h"
 #include "doomstat.h"
+#include "dstrings.h"
+#include "e_player.h"
+#include "e_states.h"
 #include "f_finale.h"
 #include "f_wipe.h"
+#include "g_bind.h"
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "in_lude.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "m_random.h"
 #include "m_shots.h"
+#include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
-#include "m_random.h"
-#include "p_setup.h"
+#include "p_chase.h"
+#include "p_hubs.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "p_saveg.h"
+#include "p_setup.h"
 #include "p_tick.h"
-#include "d_main.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
-#include "st_stuff.h"
-#include "am_map.h"
-#include "w_wad.h"
-#include "w_levels.h" // haleyjd
-#include "r_main.h"
-#include "r_draw.h"
-#include "r_things.h" // haleyjd
-#include "p_map.h"
-#include "s_sound.h"
-#include "dstrings.h"
-#include "sounds.h"
-#include "p_chase.h"
 #include "r_data.h"
+#include "r_draw.h"
+#include "r_main.h"
 #include "r_sky.h"
-#include "d_deh.h"              // Ty 3/27/98 deh declarations
-#include "p_inter.h"
-#include "g_game.h"
-#include "c_net.h"
-#include "d_net.h"
-#include "p_hubs.h"
-#include "g_bind.h"
-#include "d_dialog.h"
-#include "d_gi.h"
-#include "in_lude.h"
-#include "a_small.h"
-#include "g_dmflag.h"
-#include "e_states.h"
+#include "r_things.h" // haleyjd
 #include "s_sndseq.h"
-#include "acs_intr.h"
-#include "metaapi.h"
-#include "p_maputl.h"
-#include "e_player.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_misc.h"
 #include "version.h"
+#include "w_levels.h" // haleyjd
+#include "w_wad.h"
 
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
-static boolean  netdemo;
+static bool      netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
 static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
 
-waddir_t *g_dir = &w_GlobalDir;
+WadDirectory *g_dir = &wGlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
 skill_t         gameskill;
-boolean         respawnmonsters;
+bool            respawnmonsters;
 int             gameepisode;
 int             gamemap;
 // haleyjd: changed to an array
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
 int             paused;
-boolean         sendpause;     // send a pause event next tic
-boolean         sendsave;      // send a save event next tic
-boolean         usergame;      // ok to save / end game
-boolean         timingdemo;    // if true, exit with report on completion
-boolean         fastdemo;      // if true, run at full speed -- killough
-boolean         nodrawers;     // for comparative timing purposes
+bool            sendpause;     // send a pause event next tic
+bool            sendsave;      // send a save event next tic
+bool            usergame;      // ok to save / end game
+bool            timingdemo;    // if true, exit with report on completion
+bool            fastdemo;      // if true, run at full speed -- killough
+bool            nodrawers;     // for comparative timing purposes
 int             startgametic;
 int             starttime;     // for comparative timing purposes
-boolean         deathmatch;    // only if started as net death
-boolean         netgame;       // only true if packets are broadcast
-boolean         playeringame[MAXPLAYERS];
+bool            deathmatch;    // only if started as net death
+bool            netgame;       // only true if packets are broadcast
+bool            playeringame[MAXPLAYERS];
 player_t        players[MAXPLAYERS];
 int             consoleplayer; // player taking events and displaying
 int             displayplayer; // view being displayed
@@ -123,13 +123,13 @@ int             gametic;
 int             levelstarttic; // gametic at level start
 int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
-boolean         demorecording;
-boolean         demoplayback;
-/*boolean         timedemo_menuscreen;*/
-boolean         singledemo;           // quit after playing a demo from cmdline
-boolean         precache = true;      // if true, load all graphics at start
+bool            demorecording;
+bool            demoplayback;
+/*bool           timedemo_menuscreen;*/
+bool            singledemo;           // quit after playing a demo from cmdline
+bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
-boolean         haswolflevels = false;// jff 4/18/98 wolf levels present
+bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
@@ -169,21 +169,21 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-boolean gamekeydown[NUMKEYS];
-int     turnheld;       // for accelerative turning
+bool gamekeydown[NUMKEYS];
+int  turnheld;       // for accelerative turning
 
-boolean mousearray[4];
-boolean *mousebuttons = &mousearray[1];    // allow [-1]
+bool mousearray[4];
+bool *mousebuttons = &mousearray[1];    // allow [-1]
 
 // mouse values are used once
-int mousex;
-int mousey;
-int dclicktime;
-boolean dclickstate;
-int dclicks;
-int dclicktime2;
-boolean dclickstate2;
-int dclicks2;
+int  mousex;
+int  mousey;
+int  dclicktime;
+bool dclickstate;
+int  dclicks;
+int  dclicktime2;
+bool dclickstate2;
+int  dclicks2;
 
 // joystick values are repeated
 int joyxmove;
@@ -220,9 +220,9 @@ void G_CoolViewPoint();
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   boolean strafe;
-   boolean bstrafe;
-   boolean sendcenterview = false;
+   bool strafe;
+   bool bstrafe;
+   bool sendcenterview = false;
    int speed;
    int tspeed;
    int forward;
@@ -703,7 +703,7 @@ void G_DoLoadLevel(void)
 //
 // Get info needed to make ticcmd_ts for the players.
 //
-boolean G_Responder(event_t* ev)
+bool G_Responder(event_t* ev)
 {
    // allow spy mode changes even during the demo
    // killough 2/22/98: even during DM demo
@@ -854,7 +854,7 @@ boolean G_Responder(event_t* ev)
 // version field of its demos (because it's one more than v1.10 I guess).
 #define DOOM_191_VERSION 111
 
-static boolean longtics_demo; // if true, demo playing is longtics format
+static bool longtics_demo; // if true, demo playing is longtics format
 
 static char *defdemoname;
 
@@ -968,6 +968,8 @@ void G_DoPlayDemo(void)
    char basename[9];
    byte *option_p = NULL;      // killough 11/98
    int lumpnum;
+
+   memset(basename, 0, sizeof(basename));
   
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
       basetic = gametic;  // killough 9/29/98
@@ -975,7 +977,7 @@ void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
    
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = W_CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   if((lumpnum = wGlobalDir.CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -1381,10 +1383,10 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
 
-static boolean secretexit;
+static bool secretexit;
 
 // haleyjd: true if a script called exitsecret()
-boolean scriptSecret = false; 
+bool scriptSecret = false; 
 
 void G_ExitLevel(void)
 {
@@ -1644,8 +1646,8 @@ static char *savename;
 // killough 5/15/98: add forced loadgames, which allow user to override checks
 //
 
-boolean forced_loadgame = false;
-boolean command_loadgame = false;
+bool forced_loadgame = false;
+bool command_loadgame = false;
 
 void G_ForcedLoadGame(void)
 {
@@ -1656,7 +1658,7 @@ void G_ForcedLoadGame(void)
 // killough 3/16/98: add slot info
 // killough 5/15/98: add command-line
 
-void G_LoadGame(char *name, int slot, boolean command)
+void G_LoadGame(char *name, int slot, bool command)
 {
    if(savename)
       free(savename);
@@ -1746,19 +1748,19 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 //
-uint64_t G_Signature(waddir_t *dir)
+uint64_t G_Signature(WadDirectory *dir)
 {
    uint64_t s = 0;
    int lump, i;
    
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForNameInDir(dir, gamemapname, lumpinfo_t::ns_global);
+   lump = dir->CheckNumForName(gamemapname);
    
-   if(lump != -1 && (i = lump + 10) < dir->numlumps)
+   if(lump != -1 && (i = lump + 10) < dir->GetNumLumps())
    {
       do
       {
-         s = s * 2 + W_LumpLengthInDir(dir, i);
+         s = s * 2 + dir->LumpLength(i);
       }
       while(--i > lump);
    }
@@ -1782,7 +1784,7 @@ static void G_DoSaveGame(void)
    savedescription[0] = 0;
 }
 
-waddir_t *d_dir;
+WadDirectory *d_dir;
 
 static void G_DoLoadGame(void)
 {
@@ -2121,7 +2123,7 @@ void P_SpawnPlayer(mapthing_t *mthing);
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
+static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
    fixed_t     x, y;
    subsector_t *ss;
@@ -2526,7 +2528,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 // haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
 // directory, for use when loading the level.
 //
-void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir)
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir)
 {
    G_DeferedInitNew(skill, levelname);
    d_dir = dir;
@@ -2839,7 +2841,7 @@ void G_InitNew(skill_t skill, char *name)
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : &w_GlobalDir;
+   g_dir = d_dir ? d_dir : &wGlobalDir;
    d_dir = NULL;
    
    G_DoLoadLevel();
@@ -3096,9 +3098,20 @@ byte *G_ReadOptions(byte *demoptr)
 //
 // haleyjd 02/21/10: Configure everything to run for an old demo.
 //
-static void G_SetOldDemoOptions(void)
+void G_SetOldDemoOptions(void)
 {
    int i;
+
+   // support -longtics when recording vanilla format demos
+   longtics_demo = (M_CheckParm("-longtics") != 0);
+
+   // set demo version appropriately
+   if(longtics_demo)
+      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
+   else
+      demo_version = 109;              // v1.9
+
+   demo_subversion = 0;
 
    compatibility = 1;
 
@@ -3135,17 +3148,7 @@ static void G_BeginRecordingOld(void)
 {
    int i;
 
-   // support -longtics when recording vanilla format demos
-   longtics_demo = (M_CheckParm("-longtics") != 0);
-
-   // set demo version appropriately
-   if(longtics_demo)
-      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
-   else
-      demo_version = 109;              // v1.9
-
-   demo_subversion = 0;
-
+   // haleyjd 01/16/11: set again to ensure consistency
    G_SetOldDemoOptions();
 
    demo_p = demobuffer;
@@ -3272,7 +3275,7 @@ void G_DeferedPlayDemo(const char *name)
 //
 // G_TimeDemo - sf
 //
-void G_TimeDemo(const char *name, boolean showmenu)
+void G_TimeDemo(const char *name, bool showmenu)
 {
    // haleyjd 10/19/01: hoo boy this had problems
    // It was using a variable called "name" from who knows where --
@@ -3280,7 +3283,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
+   if(wGlobalDir.CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
@@ -3304,7 +3307,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
 // Called after a death or level completion to allow demos to be cleaned up
 // Returns true if a new demo loop action will take place
 //
-boolean G_CheckDemoStatus(void)
+bool G_CheckDemoStatus(void)
 {
    if(demorecording)
    {
@@ -3356,7 +3359,7 @@ boolean G_CheckDemoStatus(void)
 
 void G_StopDemo(void)
 {
-   extern boolean advancedemo;
+   extern bool advancedemo;
    
    if(!demorecording && !demoplayback)
       return;

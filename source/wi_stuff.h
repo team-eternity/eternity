@@ -27,7 +27,6 @@
 #ifndef WI_STUFF_H__
 #define WI_STUFF_H__
 
-#include "doomdef.h"
 #include "in_lude.h"
 
 // States for the intermission

@@ -28,7 +28,9 @@
 #ifndef E_THINGS_H__
 #define E_THINGS_H__
 
-#include "doomtype.h"
+struct emod_t;
+struct mobjinfo_t;
+struct state_t;
 
 // Global Data
 extern int UnknownThingType;
@@ -50,12 +52,12 @@ extern cfg_opt_t edf_tdelta_opts[];
 // For EDF Only:
 
 #ifdef NEED_EDF_DEFINITIONS
-void    E_CollectThings(cfg_t *tcfg);
-void    E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def);
-void    E_ProcessThings(cfg_t *cfg);
-void    E_ProcessThingDeltas(cfg_t *cfg);
-boolean E_AutoAllocThingDEHNum(int thingnum);
-void    E_SetThingDefaultSprites(void);
+void E_CollectThings(cfg_t *tcfg);
+void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
+void E_ProcessThings(cfg_t *cfg);
+void E_ProcessThingDeltas(cfg_t *cfg);
+bool E_AutoAllocThingDEHNum(int thingnum);
+void E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:
@@ -65,8 +67,6 @@ int E_SafeThingType(int dehnum);            //   fallback version
 int E_ThingNumForName(const char *name);    // mnemonic lookup
 int E_GetThingNumForName(const char *name); //   fatal error version
 int E_SafeThingName(const char *name);      //   fallback version
-
-struct emod_t;
 
 // thingtype custom-damagetype pain/death states
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);

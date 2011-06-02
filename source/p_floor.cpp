@@ -26,9 +26,10 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
-#include "r_main.h"
+#include "doomstat.h"
+#include "m_argv.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
@@ -38,9 +39,12 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
-#include "m_argv.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_state.h"
 
-boolean P_ChangeSector(sector_t *, int);
+
+bool P_ChangeSector(sector_t *, int);
 
 //
 // P_FloorSequence
@@ -88,12 +92,12 @@ result_e T_MovePlane
   int           floorOrCeiling,
   int           direction )
 {
-   boolean     flag;
-   fixed_t     lastpos;     
-   fixed_t     destheight;  //jff 02/04/98 used to keep floors/ceilings
-                            // from moving thru each other
-   boolean     move3dsides; // SoM: If set, check for and move 3d sides.
-   boolean     moveattached; // SoM: if set, check for and move attached sector surfaces.
+   bool     flag;
+   fixed_t  lastpos;     
+   fixed_t  destheight;   //jff 02/04/98 used to keep floors/ceilings
+                          // from moving thru each other
+   bool     move3dsides;  // SoM: If set, check for and move 3d sides.
+   bool     moveattached; // SoM: if set, check for and move attached sector surfaces.
 
 
    switch(floorOrCeiling)
@@ -721,7 +725,7 @@ IMPLEMENT_THINKER_TYPE(PillarThinker)
 //
 void PillarThinker::Think()
 {
-   boolean result;
+   bool result;
    
    // Move floor
    result  = (T_MovePlane(sector, floorSpeed, floordest, crush, 0, direction) == pastdest);
@@ -1251,7 +1255,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
    return rtn;
 }
 
-boolean donut_emulation;
+bool donut_emulation;
 
 //
 // DonutOverflow
@@ -1262,12 +1266,12 @@ boolean donut_emulation;
 //
 // Thanks to entryway for discovering and coding a fix to this.
 //
-static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
+static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 {
-   static boolean firsttime = true;
-   static boolean donutparm = false;
-   static int floorpic      = 0x16;
-   static int floorheight   = 0;
+   static bool firsttime  = true;
+   static bool donutparm  = false;
+   static int floorpic    = 0x16;
+   static int floorheight = 0;
 
    if(firsttime)
    {
@@ -1506,7 +1510,7 @@ int EV_PillarBuild(line_t *line, pillardata_t *pd)
    int returnval = 0;
    int sectornum = -1;
    int destheight;
-   boolean manual = false;
+   bool manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(pd->tag == 0)
@@ -1595,7 +1599,7 @@ int EV_PillarOpen(line_t *line, pillardata_t *pd)
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
-   boolean manual = false;
+   bool manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(pd->tag == 0)
@@ -1773,10 +1777,10 @@ void FloorWaggleThinker::serialize(SaveArchive &arc)
 int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
                         int offset, int timer)
 {
-   int           sectorIndex = -1;
-   int           retCode = 0;
-   boolean       manual = false;
-   sector_t     *sector;
+   int       sectorIndex = -1;
+   int       retCode = 0;
+   bool      manual = false;
+   sector_t *sector;
    FloorWaggleThinker *waggle;
 
    if(tag == 0)

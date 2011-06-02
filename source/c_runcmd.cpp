@@ -31,24 +31,27 @@
 // Mainly, the buffering issue. Commands need to work without being
 // delayed an arbitrary amount of time, that won't work with netgames
 // properly. Also, command parsing is extremely messy and needs to
-// be rewritten. It should be possible to use qstring_t to clean this
+// be rewritten. It should be possible to use qstring to clean this
 // up significantly.
 //
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
+
 #include "c_io.h"
-#include "c_runcmd.h"
 #include "c_net.h"
+#include "c_runcmd.h"
+#include "d_dwfile.h"
+#include "d_io.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "g_game.h"
 #include "m_argv.h"
 #include "m_misc.h"
-#include "mn_engin.h"
-#include "g_game.h"
 #include "m_qstr.h" // haleyjd
+#include "mn_engin.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 static void C_EchoValue(command_t *command);
@@ -56,7 +59,7 @@ static void C_SetVariable(command_t *command);
 static void C_RunAlias(alias_t *alias);
 static int  C_Sync(command_t *command);
 static void C_ArgvtoArgs(void);
-static boolean C_Strcmp(const char *pa, const char *pb);
+static bool C_Strcmp(const char *pa, const char *pb);
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -70,7 +73,7 @@ console_t Console;
 // Parsing/Running Commands
 //
 
-static qstring_t *cmdtokens;
+static qstring **cmdtokens;
 static int numtokens;
 static int numtokensalloc;
 
@@ -87,16 +90,16 @@ static void C_nextCmdToken(void)
 
       // grow by MAXTOKENS at a time (doubling is likely to waste memory)
       numtokensalloc += MAXTOKENS;
-      cmdtokens = (qstring_t *)(realloc(cmdtokens, numtokensalloc * sizeof(qstring_t)));
+      cmdtokens = (qstring **)(realloc(cmdtokens, numtokensalloc * sizeof(qstring *)));
 
       for(i = numtokens; i < numtokensalloc; i++)
-         QStrInitCreateSize(&cmdtokens[i], 128);
+         cmdtokens[i] = new qstring(128);
 
       Console.numargvsalloc += MAXTOKENS;
-      Console.argv = (qstring_t *)(realloc(Console.argv, Console.numargvsalloc * sizeof(qstring_t)));
+      Console.argv = (qstring **)(realloc(Console.argv, Console.numargvsalloc * sizeof(qstring *)));
 
       for(i = numtokens; i < Console.numargvsalloc; i++)
-         QStrInitCreateSize(&Console.argv[i], 128);
+         Console.argv[i] = new qstring(128);
    }
    numtokens++;
 }
@@ -108,26 +111,26 @@ static void C_nextCmdToken(void)
 //
 static void C_initCmdTokens(void)
 {
-   static boolean cmdtokensinit;
+   static bool cmdtokensinit;
 
    if(!cmdtokensinit)
    {
       int i;
 
       // haleyjd: MAXTOKENS is now just the starting size of the array
-      cmdtokens = (qstring_t *)(calloc(MAXTOKENS, sizeof(qstring_t)));
+      cmdtokens = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
       numtokensalloc = MAXTOKENS;
 
-      Console.argv = (qstring_t *)(calloc(MAXTOKENS, sizeof(qstring_t)));
+      Console.argv = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
       Console.numargvsalloc = MAXTOKENS;
 
       for(i = 0; i < numtokensalloc; i++)
       {
-         QStrCreateSize(&cmdtokens[i],    128); // local tokens
-         QStrCreateSize(&Console.argv[i], 128); // console argvs
+         cmdtokens[i]    = new qstring(128); // local tokens
+         Console.argv[i] = new qstring(128); // console argvs
       }
 
-      QStrCreateSize(&Console.args, 1024); // congealed args
+      Console.args.createSize(1024); // congealed args
       
       cmdtokensinit = true;
    }
@@ -143,7 +146,7 @@ static void C_clearCmdTokens(void)
    int i;
 
    for(i = 0; i < numtokensalloc; i++)
-      QStrClear(&cmdtokens[i]);
+      cmdtokens[i]->clear();
 }
 
 //
@@ -155,7 +158,7 @@ static void C_clearCmdTokens(void)
 static void C_GetTokens(const char *command)
 {
    const char *rover;
-   boolean quotemark = false;
+   bool quotemark = false;
    
    rover = command;
    
@@ -182,14 +185,14 @@ static void C_GetTokens(const char *command)
       else if(*rover == ' ' && !quotemark)   // end of token
       {
          // only if the current one actually contains something
-         if(*(QStrConstPtr(&cmdtokens[numtokens - 1])))
+         if (*(cmdtokens[numtokens - 1]->constPtr()))
             C_nextCmdToken();
       }
       else // add char to line
       {
          // 01/12/09: repaired by fraggle to fix mystery sprintf issue on linux
          // 07/05/10: rewritten to use qstrings
-         QStrPutc(&cmdtokens[numtokens - 1], *rover);
+         *cmdtokens[numtokens - 1] += *rover;
       }
 
       rover++;
@@ -216,7 +219,7 @@ static void C_RunIndivTextCmd(const char *cmdname)
    C_GetTokens(cmdname);
    
    // find the command being run from the first token.
-   command = C_GetCmdForName(QStrConstPtr(&cmdtokens[0]));
+   command = C_GetCmdForName(cmdtokens[0]->constPtr());
    
    if(!numtokens) 
       return; // no command
@@ -224,20 +227,20 @@ static void C_RunIndivTextCmd(const char *cmdname)
    if(!command) // no _command_ called that
    {
       // alias?
-      if((alias = C_GetAlias(QStrConstPtr(&cmdtokens[0]))))
+      if((alias = C_GetAlias(cmdtokens[0]->constPtr())))
       {
          // save the options into cmdoptions
          // QSTR_FIXME: wtf is this doin' anyway? o_O
-         cmdoptions = (char *)cmdname + QStrLen(&cmdtokens[0]);
+         cmdoptions = (char *)cmdname + cmdtokens[0]->length();
          C_RunAlias(alias);
       }
       else         // no alias either
-         C_Printf("unknown command: '%s'\n", QStrConstPtr(&cmdtokens[0]));
+         C_Printf("unknown command: '%s'\n", cmdtokens[0]->constPtr());
    }
    else
    {
       // run the command (buffer it)
-      C_RunCommand(command, cmdname + QStrLen(&cmdtokens[0]));
+      C_RunCommand(command, cmdname + cmdtokens[0]->length());
    }
 }
 
@@ -340,7 +343,7 @@ static void C_DoRunCommand(command_t *command, const char *options)
    C_GetTokens(options);
    
    for(i = 0; i < numtokensalloc; ++i)
-      QStrQCopy(&Console.argv[i], &cmdtokens[i]);
+      *(Console.argv[i]) = *cmdtokens[i];
 
    Console.argc = numtokens;
    Console.command = command;
@@ -350,26 +353,25 @@ static void C_DoRunCommand(command_t *command, const char *options)
    // check through the tokens for variable names
    for(i = 0; i < Console.argc; i++)
    {
-      char c = *(QStrConstPtr(&Console.argv[i]));
+      char c = *(Console.argv[i]->constPtr());
 
       if(c == '%' || c == '$') // variable
       {
          command_t *variable;
          
-         variable = C_GetCmdForName(QStrConstPtr(&Console.argv[i]) + 1);
+         variable = C_GetCmdForName(Console.argv[i]->constPtr() + 1);
 
          if(!variable || !variable->variable)
          {
-            C_Printf("unknown variable '%s'\n", QStrConstPtr(&Console.argv[i]) + 1);
+            C_Printf("unknown variable '%s'\n", Console.argv[i]->constPtr() + 1);
             // clear for next time
             Console.cmdtype = c_typed; 
             Console.cmdsrc  = consoleplayer;
             return;
          }
          
-         QStrCopy(&Console.argv[i], 
-                   c == '%' ? C_VariableValue(variable->variable) :
-                              C_VariableStringValue(variable->variable));
+         *Console.argv[i] = (c == '%' ? C_VariableValue(variable->variable) :
+                                        C_VariableStringValue(variable->variable));
       }
    }
    
@@ -425,23 +427,23 @@ static void C_ArgvtoArgs(void)
  
    for(i = 0; i < Console.argc; i++)
    {
-      if(!QStrLen(&Console.argv[i]))       // empty string
+      if(!Console.argv[i]->length())       // empty string
       {
          for(n = i; n < Console.argc - 1; n++)
-            QStrQCopy(&(Console.argv[n]), &(Console.argv[n+1]));
+            Console.argv[n+1]->copyInto(*(Console.argv[n]));
 
          Console.argc--; 
          i--;
       }
    }
    
-   QStrClear(&Console.args);
+   Console.args.clear();
 
    for(i = 0; i < Console.argc; ++i)
    {
-      // haleyjd: use qstring_t to avoid sprintf problems and to be secure
-      QStrQCat(&Console.args, &Console.argv[i]);
-      QStrPutc(&Console.args, ' ');
+      // haleyjd: use qstring to avoid sprintf problems and to be secure
+      Console.args += *Console.argv[i];
+      Console.args += ' ';
    }
 }
 
@@ -454,15 +456,19 @@ static void C_ArgvtoArgs(void)
 static const char *C_QuotedArgvToArgs(void)
 {
    int i;
-   static qstring_t returnbuf;
+   static qstring returnbuf;
 
-   QStrClearOrCreate(&returnbuf, 1024);
+   returnbuf.clearOrCreate(1024);
    
    // haleyjd: use qstring to eliminate undefined sprintf behavior
    for(i = 0; i < Console.argc; ++i)
-      QStrPutc(QStrMakeQuoted(QStrQCat(&returnbuf, &Console.argv[i])), ' ');
+   {
+      returnbuf += *Console.argv[i];
+      returnbuf.makeQuoted();
+      returnbuf += ' ';
+   }
    
-   return QStrConstPtr(&returnbuf);
+   return returnbuf.constPtr();
 }
 
 //
@@ -494,7 +500,7 @@ static int C_Sync(command_t *command)
 //
 void C_RunTextCmd(const char *command)
 {
-   boolean quotemark = false;  // for " quote marks
+   bool quotemark = false;  // for " quote marks
    char *sub_command = NULL;
    const char *rover;
 
@@ -540,11 +546,11 @@ void C_RunTextCmd(const char *command)
 //
 const char *C_VariableValue(variable_t *variable)
 {
-   static qstring_t value;
+   static qstring value;
    void *loc;
    const char *dummymsg = NULL;
    
-   QStrClearOrCreate(&value, 1024);
+   value.clearOrCreate(1024);
    
    if(!variable)
       return "";
@@ -559,37 +565,37 @@ const char *C_VariableValue(variable_t *variable)
    switch(variable->type)
    {
    case vt_int:
-      QStrPrintf(&value, 0, "%d", *(int *)loc);
+      value.Printf(0, "%d", *(int *)loc);
       break;
 
    case vt_toggle:
       // haleyjd 07/05/10
-      QStrPrintf(&value, 0, "%d", (int)(*(boolean *)loc));
+      value.Printf(0, "%d", (int)(*(bool *)loc));
       break;
       
    case vt_string:
       // haleyjd 01/24/03: added null check from prboom
       if(*(char **)variable->variable)
-         QStrCopy(&value, *(char **)loc);
+         value = *(char **)loc;
       else
          return "null";
       break;
 
    case vt_chararray:
       // haleyjd 03/13/06: static string support
-      QStrCopy(&value, (const char *)loc);
+      value = (const char *)loc;
       break;
 
    case vt_float:
       // haleyjd 04/21/10: implemented vt_float
-      QStrPrintf(&value, 0, "%+.5f", *(double *)loc);
+      value.Printf(0, "%+.5f", *(double *)loc);
       break;
       
    default:
       I_Error("C_VariableValue: unknown variable type %d\n", variable->type);
    }
    
-   return QStrConstPtr(&value);
+   return value.constPtr();
 }
 
 //
@@ -599,11 +605,11 @@ const char *C_VariableValue(variable_t *variable)
 //
 const char *C_VariableStringValue(variable_t *variable)
 {
-   static qstring_t value;
+   static qstring value;
    int stateflags;
    const char *dummymsg = NULL;
    
-   QStrClearOrCreate(&value, 1024);
+   value.clearOrCreate(1024);
    
    if(!variable) 
       return "";
@@ -633,22 +639,22 @@ const char *C_VariableStringValue(variable_t *variable)
       if(variable->type == vt_int)
          varValue = *((int *)loc);
       else if(variable->type == vt_toggle)
-         varValue = (int)(*(boolean *)loc);
+         varValue = (int)(*(bool *)loc);
 
       valStrIndex = varValue - variable->min;
 
       if(valStrIndex < 0 || valStrIndex > variable->max - variable->min)
          return "";
       else
-         QStrCopy(&value, variable->defines[valStrIndex]);
+         value = variable->defines[valStrIndex];
    }
    else
    {
       // print literal value
-      QStrCopy(&value, C_VariableValue(variable));
+      value = C_VariableValue(variable);
    }
    
-   return QStrConstPtr(&value);
+   return value.constPtr();
 }
 
 
@@ -662,7 +668,7 @@ static void C_EchoValue(command_t *command)
 
 // is a string a number?
 
-static boolean isnum(const char *text)
+static bool isnum(const char *text)
 {
    // haleyjd 07/05/10: skip over signs here
    if(strlen(text) > 1 && (*text == '-' || *text == '+'))
@@ -685,14 +691,13 @@ static boolean isnum(const char *text)
 static const char *C_ValueForDefine(variable_t *variable, const char *s, int setflags)
 {
    int count;
-   static qstring_t returnstr;
+   static qstring returnstr;
 
-   if(!returnstr.buffer)
-      QStrInitCreate(&returnstr);
+   returnstr.clearOrCreate(1024);
 
    // haleyjd 07/05/10: ALWAYS copy param to returnstr, or else strcpy will have
    // undefined behavior in C_SetVariable.
-   QStrCopy(&returnstr, s);
+   returnstr = s;
 
    if(variable->defines)
    {
@@ -700,8 +705,8 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
       {
          if(!C_Strcmp(s, variable->defines[count-variable->min]))
          {
-            QStrPrintf(&returnstr, 0, "%d", count);
-            return returnstr.buffer;
+            returnstr.Printf(0, "%d", count);
+            return returnstr.constPtr();
          }
       }
    }
@@ -719,28 +724,28 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          {
             int i;
             dp->methods->getDefault(dp, &i);
-            QStrPrintf(&returnstr, 0, "%d", i);
+            returnstr.Printf(0, "%d", i);
          }
          break;
       case vt_toggle:
          {
-            boolean b;
+            bool b;
             dp->methods->getDefault(dp, &b);
-            QStrPrintf(&returnstr, 0, "%d", !!b);
+            returnstr.Printf(0, "%d", !!b);
          }
          break;
       case vt_float:
          {
             double f;
             dp->methods->getDefault(dp, &f);
-            QStrPrintf(&returnstr, 0, "%f", f);
+            returnstr.Printf(0, "%f", f);
          }
          break;
       case vt_string:
          {
             char *def;
             dp->methods->getDefault(dp, &def);
-            QStrCopy(&returnstr, def);
+            returnstr = def;
          }
          break;
       case vt_chararray:
@@ -750,7 +755,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          break;
       }
 
-      return returnstr.buffer;
+      return returnstr.constPtr();
    }
    
    if(variable->type == vt_int || variable->type == vt_toggle)    // int values only
@@ -767,7 +772,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
       if(variable->type == vt_int)
          value = *(int *)loc;
       else
-         value = (int)(*(boolean *)loc);
+         value = (int)(*(bool *)loc);
 
       if(!strcmp(s, "+"))     // increase value
       {
@@ -776,8 +781,8 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          if(variable->max != UL && value > variable->max) 
             value = variable->max;
          
-         QStrPrintf(&returnstr, 0, "%d", value);
-         return returnstr.buffer;
+         returnstr.Printf(0, "%d", value);
+         return returnstr.constPtr();
       }
       if(!strcmp(s, "-"))     // decrease value
       {
@@ -786,8 +791,8 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          if(variable->min != UL && value < variable->min)
             value = variable->min;
          
-         QStrPrintf(&returnstr, 0, "%d", value);
-         return returnstr.buffer;
+         returnstr.Printf(0, "%d", value);
+         return returnstr.constPtr();
       }
       if(!strcmp(s, "/"))     // toggle value
       {
@@ -799,15 +804,15 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
          if(variable->max != UL && value > variable->max)
             value = variable->min; // wrap around
 
-         QStrPrintf(&returnstr, 0, "%d", value);
-         return returnstr.buffer;
+         returnstr.Printf(0, "%d", value);
+         return returnstr.constPtr();
       }
       
       if(!isnum(s))
          return NULL;
    }
    
-   return returnstr.buffer;
+   return returnstr.constPtr();
 }
 
 // haleyjd 08/30/09: local-origin netcmds need love too
@@ -848,10 +853,10 @@ static void C_SetVariable(command_t *command)
    // ok, set the value
    variable = command->variable;
    
-   temp = C_ValueForDefine(variable, QStrConstPtr(&Console.argv[0]), setflags);
+   temp = C_ValueForDefine(variable, Console.argv[0]->constPtr(), setflags);
    
    if(temp)
-      QStrCopy(&Console.argv[0], temp);
+      *Console.argv[0] = temp;
    else
    {
       C_Printf("not a possible value for '%s'\n", command->name);
@@ -862,17 +867,17 @@ static void C_SetVariable(command_t *command)
    {
    case vt_int:
    case vt_toggle:
-      size = QStrAtoi(&Console.argv[0]);
+      size = Console.argv[0]->toInt();
       break;
       
    case vt_string:
    case vt_chararray:
-      size = QStrLen(&Console.argv[0]);
+      size = Console.argv[0]->length();
       break;
 
    case vt_float:
       // haleyjd 04/21/10: vt_float
-      fs = QStrToDouble(&Console.argv[0], NULL);
+      fs = Console.argv[0]->toDouble(NULL);
       break;
       
    default:
@@ -934,21 +939,21 @@ static void C_SetVariable(command_t *command)
       case vt_toggle:
          // haleyjd 07/05/10
          if(setflags & CCF_CANSETVAR)
-            *(boolean *)variable->variable = !!size;
+            *(bool *)variable->variable = !!size;
          if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
-            *(boolean *)variable->v_default = !!size;
+            *(bool *)variable->v_default = !!size;
          break;
          
       case vt_string:
          if(setflags & CCF_CANSETVAR)
          {
             free(*(char**)variable->variable);
-            *(char**)variable->variable = QStrCDup(&Console.argv[0], PU_STATIC);
+            *(char**)variable->variable = Console.argv[0]->duplicate(PU_STATIC);
          }
          if((setflags & CCF_CANSETDEF) && cmd_setdefault)  // default
          {
             free(*(char**)variable->v_default);
-            *(char**)variable->v_default = QStrCDup(&Console.argv[0], PU_STATIC);
+            *(char**)variable->v_default = Console.argv[0]->duplicate(PU_STATIC);
          }
          break;
 
@@ -957,12 +962,12 @@ static void C_SetVariable(command_t *command)
          if(setflags & CCF_CANSETVAR)
          {
             memset(variable->variable, 0, variable->max + 1);
-            QStrCNCopy((char *)variable->variable, &Console.argv[0], variable->max + 1);
+            Console.argv[0]->copyInto((char *)variable->variable, variable->max + 1);
          }
          if((setflags & CCF_CANSETDEF) && cmd_setdefault)
          {
             memset(variable->v_default, 0, variable->max+1);
-            strcpy((char *)variable->v_default, Console.argv[0].buffer);
+            strcpy((char *)variable->v_default, Console.argv[0]->constPtr());
          }
          break;
 
@@ -988,8 +993,8 @@ static void C_SetVariable(command_t *command)
 // Tab Completion
 //
 
-static qstring_t origkey;
-static boolean gotkey;
+static qstring origkey;
+static bool gotkey;
 static command_t **tabs;
 static int numtabsalloc; // haleyjd 07/25/10
 static int numtabs = 0;
@@ -1015,29 +1020,29 @@ static void CheckTabs(void)
 // given a key (eg. "r_sw"), will look through all the commands in the hash
 // chains and gather all the commands which begin with this into a list 'tabs'
 //
-static void GetTabs(qstring_t *qkey)
+static void GetTabs(qstring &qkey)
 {
    int i;
    size_t pos, keylen;
    
    numtabs = 0;
 
-   if(!origkey.buffer)
-      QStrCreateSize(&origkey, 128);
+   origkey.clearOrCreate(128);
 
    // remember input
-   QStrQCopy(&origkey, qkey);
+   origkey = qkey;
 
    // find the first non-space character; if none, we can't do this
-   if((pos = QStrFindFirstNotOfChar(qkey, ' ')) == qstring_npos)
+   if((pos = qkey.findFirstNotOf(' ')) == qstring::npos)
       return;
    
    // save the input from the first non-space character, and lowercase it
-   QStrLwr(QStrCopy(&origkey, QStrBufferAt(qkey, pos)));
+   origkey = qkey.bufferAt(pos);
+   origkey.toLower();
 
    gotkey = true;
       
-   keylen = QStrLen(&origkey);
+   keylen = origkey.length();
 
    // check each hash chain in turn
    
@@ -1049,7 +1054,7 @@ static void GetTabs(qstring_t *qkey)
       for(; browser; browser = browser->next)
       {
          if(!(browser->flags & cf_hidden) && // ignore hidden ones
-            !QStrNCmp(&origkey, browser->name, keylen))
+            !origkey.strNCmp(browser->name, keylen))
          {
             // found a new tab
             CheckTabs();
@@ -1069,7 +1074,7 @@ void C_InitTab(void)
 {
    numtabs = 0;
 
-   QStrClearOrCreate(&origkey, 100);
+   origkey.clearOrCreate(100);
 
    gotkey = false;
    thistab = -1;
@@ -1080,12 +1085,11 @@ void C_InitTab(void)
 //
 // Called when tab pressed. Get the next tab from the list.
 //
-qstring_t *C_NextTab(qstring_t *key)
+qstring &C_NextTab(qstring &key)
 {
-   static qstring_t returnstr;
-   qstring_t *ret = NULL;
+   static qstring returnstr;
  
-   QStrClearOrCreate(&returnstr, 128);
+   returnstr.clearOrCreate(128);
    
    // get tabs if not done already
     if(!gotkey)
@@ -1097,16 +1101,14 @@ qstring_t *C_NextTab(qstring_t *key)
    if(thistab >= numtabs)
    {
       thistab = -1;
-      ret = &origkey;
+       return origkey;
    }
    else
    {   
-      QStrCopy(&returnstr, tabs[thistab]->name);
-      QStrPutc(&returnstr, ' ');
-      ret = &returnstr;
+      returnstr = tabs[thistab]->name;
+      returnstr += ' ';
+      return returnstr;
    }
-
-   return ret;
 }
 
 //
@@ -1114,12 +1116,11 @@ qstring_t *C_NextTab(qstring_t *key)
 //
 // Called when shift-tab pressed. Get the previous tab from the list.
 //
-qstring_t *C_PrevTab(qstring_t *key)
+qstring &C_PrevTab(qstring &key)
 {
-   static qstring_t returnstr;
-   qstring_t *ret = NULL;
+   static qstring returnstr;
 
-   QStrClearOrCreate(&returnstr, 128);
+   returnstr.clearOrCreate(128);
    
    // get tabs if neccesary
    if(!gotkey)
@@ -1132,16 +1133,14 @@ qstring_t *C_PrevTab(qstring_t *key)
    if(thistab < 0)
    {
       thistab = -1;
-      ret = &origkey;
+      return origkey;
    }
    else
    {
-      QStrCopy(&returnstr, tabs[thistab]->name);
-      QStrPutc(&returnstr, ' ');
-      ret = &returnstr;
+      returnstr = tabs[thistab]->name;
+      returnstr += ' ';
+      return returnstr;
    }
-   
-   return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1205,7 +1204,7 @@ alias_t *C_NewAlias(const char *aliasname, const char *command)
 //
 // Remove an alias
 //
-void C_RemoveAlias(qstring_t *aliasname)
+void C_RemoveAlias(qstring *aliasname)
 {
    alias_t *prev  = &aliases;
    alias_t *rover = aliases.next;
@@ -1213,7 +1212,7 @@ void C_RemoveAlias(qstring_t *aliasname)
 
    while(rover)
    {
-      if(!QStrCmp(aliasname, rover->name))
+      if(*aliasname == rover->name)
       {
          alias = rover;
          break;
@@ -1225,11 +1224,11 @@ void C_RemoveAlias(qstring_t *aliasname)
 
    if(!alias)
    {
-      C_Printf("unknown alias \"%s\"\n", QStrConstPtr(aliasname));
+      C_Printf("unknown alias \"%s\"\n", aliasname->constPtr());
       return;
    }
    
-   C_Printf("removing alias \"%s\"\n", QStrConstPtr(aliasname));
+   C_Printf("removing alias \"%s\"\n", aliasname->constPtr());
    
    // free alias data
    free(alias->name);
@@ -1398,7 +1397,7 @@ void C_ClearBuffer(int cmdtype)
 }
 
         // compare regardless of font colour
-static boolean C_Strcmp(const char *pa, const char *pb)
+static bool C_Strcmp(const char *pa, const char *pb)
 {
    const unsigned char *a = (const unsigned char *)pa;
    const unsigned char *b = (const unsigned char *)pb;
@@ -1518,12 +1517,12 @@ enum
 //
 void C_RunScript(DWFILE *dwfile)
 {
-   qstring_t qstring;
+   qstring qstr;
    int state = CSC_NONE;
    char c;
 
    // initialize and allocate the qstring
-   QStrInitCreate(&qstring);
+   qstr.initCreate();
 
    // parse script
    while((c = D_Fgetc(dwfile)) != EOF)
@@ -1552,12 +1551,12 @@ void C_RunScript(DWFILE *dwfile)
          if(c == '\n' || c == '\f') // end of line - run command
          {
             Console.cmdtype = c_script;
-            C_RunTextCmd(QStrConstPtr(&qstring));
+            C_RunTextCmd(qstr.constPtr());
             C_RunBuffer(c_script);  // force to run now
             state = CSC_NONE;
          }
          else
-            QStrPutc(&qstring, c);
+            qstr += c;
          continue;
       }
 
@@ -1579,8 +1578,8 @@ void C_RunScript(DWFILE *dwfile)
          continue;
 #endif
       default:                // anything else starts a command
-         QStrClear(&qstring);
-         QStrPutc(&qstring, c);
+         qstr.clear();
+         qstr += c;
          state = CSC_COMMAND;
          continue;
       }
@@ -1589,12 +1588,9 @@ void C_RunScript(DWFILE *dwfile)
    if(state == CSC_COMMAND) // EOF on command line - run final command
    {
       Console.cmdtype = c_script;
-      C_RunTextCmd(QStrConstPtr(&qstring));
+      C_RunTextCmd(qstr.constPtr());
       C_RunBuffer(c_script);  // force to run now
    }
-
-   // free the qstring
-   QStrFree(&qstring);
 }
 
 //
@@ -1637,7 +1633,7 @@ void C_RunCmdLineScripts(void)
       // the parms after p are console script names,
       // until end of parms or another - preceded parm
       
-      boolean file = true;
+      bool file = true;
       
       while(++p < myargc)
       {

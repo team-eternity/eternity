@@ -27,33 +27,42 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
-#include "i_video.h"
+
+#include "c_io.h"
 #include "c_runcmd.h"
+#include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
+#include "d_net.h"
+#include "doomstat.h"
+#include "e_things.h"
 #include "g_game.h"
 #include "hu_over.h"
-#include "mn_engin.h" 
+#include "i_video.h"
+#include "m_bbox.h"
+#include "m_random.h"
+#include "mn_engin.h"
+#include "p_chase.h"
 #include "p_partcl.h"
 #include "p_xenemy.h"
-#include "r_main.h"
-#include "r_things.h"
-#include "r_plane.h"
-#include "r_ripple.h"
 #include "r_bsp.h"
 #include "r_draw.h"
-#include "r_drawq.h"
 #include "r_drawl.h"
+#include "r_drawq.h"
 #include "r_dynseg.h"
-#include "m_bbox.h"
+#include "r_main.h"
+#include "r_plane.h"
+#include "r_portal.h"
+#include "r_ripple.h"
+#include "r_things.h"
 #include "r_sky.h"
+#include "r_state.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_block.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "d_deh.h"
-#include "d_gi.h"
-#include "c_io.h"
-#include "e_things.h"
 
 // SoM: Cardboard
 const float PI = 3.14159265f;
@@ -78,10 +87,8 @@ angle_t  viewangle;
 fixed_t  viewcos, viewsin;
 player_t *viewplayer;
 extern lighttable_t **walllights;
-boolean  showpsprites = 1; //sf
+bool     showpsprites = 1; //sf
 camera_t *viewcamera;
-int detailshift; // haleyjd 09/10/06: low detail mode restoration
-int c_detailshift;
 // SoM: removed the old zoom code infavor of actual field of view!
 int fov = 90;
 
@@ -150,10 +157,7 @@ static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 //
 void R_SetColumnEngine(void)
 {
-   if(detailshift == 0)
-      r_column_engine = r_column_engines[r_column_engine_num];
-   else
-      r_column_engine = &r_lowdetail_drawer;
+   r_column_engine = r_column_engines[r_column_engine_num];
 }
 
 // haleyjd 09/10/06: span drawing engines
@@ -173,10 +177,7 @@ static spandrawer_t *r_span_engines[NUMSPANENGINES] =
 //
 void R_SetSpanEngine(void)
 {
-   if(detailshift == 0)
-      r_span_engine = r_span_engines[r_span_engine_num];
-   else
-      r_span_engine = &r_lowspandrawer;
+   r_span_engine = r_span_engines[r_span_engine_num];
 }
 
 //
@@ -413,7 +414,7 @@ static void R_InitTextureMapping (void)
    view.fov = (float)fov * PI / 180.0f;
    view.tan = vtan = (float)tan(view.fov / 2);
    view.xfoc = view.xcenter / vtan;
-   view.yfoc = detailshift ? (view.xfoc * ratio) * 2.0f : (view.xfoc * ratio);
+   view.yfoc = view.xfoc * ratio;
    view.focratio = view.yfoc / view.xfoc;
 
    // Unfortunately, cardboard still has to co-exist with the old fixed point
@@ -513,9 +514,8 @@ void R_InitLightTables (void)
    }
 }
 
-boolean setsizeneeded;
-int     setblocks;
-int     setdetail; // haleyjd 09/10/06: low detail mode restoration
+bool setsizeneeded;
+int  setblocks;
 
 //
 // R_SetViewSize
@@ -524,11 +524,10 @@ int     setdetail; // haleyjd 09/10/06: low detail mode restoration
 //  because it might be in the middle of a refresh.
 // The change will take effect next refresh.
 //
-void R_SetViewSize(int blocks, int detail)
+void R_SetViewSize(int blocks)
 {
    setsizeneeded = true;
    setblocks = blocks;
-   setdetail = detail; // haleyjd 09/10/06
 }
 
 //
@@ -599,7 +598,7 @@ void R_SetupViewScaling(void)
    {
       scaledviewwidth  = SCREENWIDTH;
       scaledviewheight = SCREENHEIGHT;                    // killough 11/98
-      viewwidth  = video.width >> detailshift;                // haleyjd 09/10/06
+      viewwidth  = video.width;
       viewheight = video.height;
    }
    else
@@ -621,7 +620,7 @@ void R_SetupViewScaling(void)
 
       y2 = y1 + scaledviewheight - 1;
 
-      viewwidth  = (video.x2lookup[x2] - video.x1lookup[x1] + 1) >> detailshift; // haleyjd 09/10/06
+      viewwidth  = video.x2lookup[x2] - video.x1lookup[x1] + 1;
       viewheight = video.y2lookup[y2] - video.y1lookup[y1] + 1;
    }
 
@@ -645,9 +644,6 @@ void R_ExecuteSetViewSize(void)
    int i;
 
    setsizeneeded = false;
-
-   // haleyjd 09/10/06: low detail mode restoration
-   detailshift = setdetail;
    
    R_SetupViewScaling();
    
@@ -701,7 +697,7 @@ void R_ExecuteSetViewSize(void)
 void R_Init(void)
 {
    R_InitData();
-   R_SetViewSize(screenSize+3, c_detailshift);
+   R_SetViewSize(screenSize+3);
    R_InitPlanes();
    R_InitLightTables();
    R_InitTranslationTables();
@@ -946,7 +942,7 @@ extern void R_UntaintPortals(void);
 //
 void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 {
-   boolean quake = false;
+   bool quake = false;
    unsigned int savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
@@ -1105,7 +1101,7 @@ int r_tlstyle;
 //
 void R_DoomTLStyle(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    int i;
 
    // If the first style set is to BOOM-style, then we don't actually need
@@ -1179,12 +1175,11 @@ void R_DoomTLStyle(void)
 //  Console Commands
 //
 
-static char *handedstr[]  = { "right", "left" };
-static char *ptranstr[]   = { "none", "smooth", "general" };
-static char *coleng[]     = { "normal", "quad" };
-static char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
-static char *detailstr[]  = { "high", "low" };
-static char *tlstylestr[] = { "none", "boom", "new" };
+static const char *handedstr[]  = { "right", "left" };
+static const char *ptranstr[]   = { "none", "smooth", "general" };
+static const char *coleng[]     = { "normal", "quad" };
+static const char *spaneng[]    = { "highprecision", "lowprecision" }; // SoM: Removed old.
+static const char *tlstylestr[] = { "none", "boom", "new" };
 
 VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
 VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
@@ -1196,7 +1191,6 @@ VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
 VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
 VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
 VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
-VARIABLE_BOOLEAN(c_detailshift,       NULL,         detailstr);
 
 // SoM: Variable FOV
 VARIABLE_INT(fov, NULL, 20, 179, NULL);
@@ -1286,7 +1280,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
    {
       hide_menu = 20;             // hide the menu for a few tics
       
-      R_SetViewSize(screenSize + 3, c_detailshift);
+      R_SetViewSize(screenSize + 3);
 
       // haleyjd 10/19/03: reimplement proper hud behavior
       switch(screenSize)
@@ -1306,13 +1300,6 @@ CONSOLE_VARIABLE(r_ptcltrans, particle_trans, 0) {}
 
 CONSOLE_VARIABLE(r_columnengine, r_column_engine_num, 0) {}
 CONSOLE_VARIABLE(r_spanengine,   r_span_engine_num,   0) {}
-
-CONSOLE_VARIABLE(r_detail, c_detailshift, 0)
-{
-   R_SetViewSize(screenSize + 3, c_detailshift);
-   player_printf(&players[consoleplayer], 
-                 "%s detail", detailstr[c_detailshift]);
-}
 
 VARIABLE_INT(r_vissprite_limit, NULL, -1, D_MAXINT, NULL);
 CONSOLE_VARIABLE(r_vissprite_limit, r_vissprite_limit, 0) {}
@@ -1347,7 +1334,6 @@ void R_AddCommands(void)
    C_AddCommand(r_ptcltrans);
    C_AddCommand(r_columnengine);
    C_AddCommand(r_spanengine);
-   C_AddCommand(r_detail);
    C_AddCommand(r_vissprite_limit);
    C_AddCommand(r_showrefused);
    C_AddCommand(r_tlstyle);

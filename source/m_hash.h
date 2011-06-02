@@ -28,34 +28,43 @@
 #ifndef M_HASH_H__
 #define M_HASH_H__
 
-typedef enum
+#include "doomtype.h"
+
+class HashData
 {
-   HASH_CRC32,
-   HASH_ADLER32,
-   HASH_MD5,
-   HASH_SHA1,
-   HASH_NUMTYPES
-} hashtype_e;
+public:
+   enum hashtype_e
+   {
+      CRC32,
+      ADLER32,
+      MD5,
+      SHA1,
+      NUMHASHTYPES
+   };
 
-#define NUMDIGEST 5
+   static const int numdigest;
 
-typedef struct hashdata_s
-{
-   uint32_t digest[NUMDIGEST]; // the hash of the message (not all are always used)
-   uint32_t messagelen;        // total length of message processed so far
-   uint8_t  message[64];       // current 512-bit message block
-   int      messageidx;        // current index into message (accumulate until == 64)
-   boolean  gonebad;           // an error occurred in the computation
-   
-   hashtype_e type;            // algorithm being used for computation   
-} hashdata_t;
+protected:
+   uint32_t digest[5];   // the hash of the message (not all are always used)
+   uint32_t messagelen;  // total length of message processed so far
+   uint8_t  message[64]; // current 512-bit message block
+   int      messageidx;  // current index into message (accumulate until == 64)
+   bool     gonebad;     // an error occurred in the computation
+   hashtype_e type;      // algorithm being used for computation   
 
-void    M_HashInitialize(hashdata_t *hash, hashtype_e type);
-void    M_HashData(hashdata_t *hash, const uint8_t *data, uint32_t size);
-void    M_HashWrapUp(hashdata_t *hash);
-boolean M_HashCompare(hashdata_t *h1, hashdata_t *h2);
-void    M_HashStrToDigest(hashdata_t *hash, const char *str);
-char   *M_HashDigestToStr(hashdata_t *hash);
+   friend class CRC32Hash;
+   friend class Adler32Hash;
+   friend class MD5Hash;
+   friend class SHA1Hash;
+
+public:
+   void  Initialize(hashtype_e type);
+   void  AddData(const uint8_t *data, uint32_t size);
+   void  WrapUp();
+   bool  compare(const HashData &other) const;
+   void  StringToDigest(const char *str);
+   char *DigestToString() const;
+};
 
 #endif
 

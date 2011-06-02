@@ -30,6 +30,8 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "c_runcmd.h"
+#include "p_mobjcol.h"
 #include "s_sndseq.h"
 #include "e_things.h"
 #include "r_state.h"
@@ -39,6 +41,8 @@
 DLListItem<SndSeq_t> *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
+
+int s_enviro_volume; // controls volume of sequences using randomplayvol, 0-16
 
 // Macros
 
@@ -51,7 +55,7 @@ SndSeq_t *EnviroSequence; // currently playing environmental sequence
 // Returns true if the thing is playing a sequence and the sequence is looping,
 // and false in any other circumstance.
 //
-boolean S_CheckSequenceLoop(PointThinker *mo)
+bool S_CheckSequenceLoop(PointThinker *mo)
 {
    DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
@@ -73,7 +77,7 @@ boolean S_CheckSequenceLoop(PointThinker *mo)
 //
 // Convenience routine.
 //
-boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling)
+bool S_CheckSectorSequenceLoop(sector_t *s, bool floorOrCeiling)
 {
    return S_CheckSequenceLoop(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -176,7 +180,7 @@ void S_KillSequence(PointThinker *mo)
 //
 // Convenience routine.
 //
-void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
+void S_StopSectorSequence(sector_t *s, bool floorOrCeiling)
 {
    S_StopSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -186,7 +190,7 @@ void S_StopSectorSequence(sector_t *s, boolean floorOrCeiling)
 //
 // Convenience routine.
 //
-void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling)
+void S_SquashSectorSequence(sector_t *s, bool floorOrCeiling)
 {
    S_SquashSequence(SECTOR_ORIGIN(s, floorOrCeiling));
 }
@@ -274,7 +278,7 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOrigin
 //
 void S_StartSectorSequence(sector_t *s, int seqtype)
 {
-   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
    
    S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
                       ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
@@ -289,7 +293,7 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 //
 void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 {
-   boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
 
    S_SquashSectorSequence(s, ceil);
    
@@ -357,7 +361,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
 //
 // Convenience routine for starting a sector sequence by name.
 //
-void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
 {
    S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
                        fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
@@ -370,7 +374,7 @@ void S_StartSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 // Convenience routine for starting a sector sequence by name without playing
 // the stop sound of any currently playing sequence.
 //
-void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
 {
    S_SquashSectorSequence(s, fOrC);
 
@@ -384,10 +388,17 @@ void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, boolean fOrC)
 //
 // Starts a sound in the usual manner for a sound sequence.
 //
-static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
+static void S_StartSeqSound(SndSeq_t *seq, bool loop)
 {
    if(seq->currentSound)
    {
+      // haleyjd 01/12/11: randomplayvol supports proper Heretic randomization
+      if(seq->sequence->randomplayvol && !(seq->flags & SEQ_FLAG_NORANDOM))
+         seq->volume = M_Random() / 4 + 96 * s_enviro_volume / 16;
+
+      // clear the NORANDOM flag
+      seq->flags &= ~SEQ_FLAG_NORANDOM;
+
       S_StartSfxInfo(seq->origin, seq->currentSound, seq->volume, 
                      seq->attenuation, loop, CHAN_AUTO);
    }
@@ -399,7 +410,7 @@ static void S_StartSeqSound(SndSeq_t *seq, boolean loop)
 #define CMD_ARG2(field) ((curSeq->cmdPtr + 2)-> field )
 
 // when true, the current environmental sequence has ended
-static boolean enviroSeqFinished;
+static bool enviroSeqFinished;
 
 //
 // S_RunSequence
@@ -409,7 +420,7 @@ static boolean enviroSeqFinished;
 //
 static void S_RunSequence(SndSeq_t *curSeq)
 {
-   boolean isPlaying = false;
+   bool isPlaying = false;
    
    // if delaying, count down delay
    if(curSeq->delayCounter)
@@ -477,6 +488,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->volume = 0;
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
+      curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
       break;
    case SEQ_CMD_SETVOLUMEREL: // set relative volume
       curSeq->volume += CMD_ARG1(data);
@@ -485,6 +497,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->volume = 0;
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
+      curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
       break;
    case SEQ_CMD_SETATTENUATION: // set attenuation
       curSeq->attenuation = CMD_ARG1(data);
@@ -590,8 +603,8 @@ static void S_ResetEnviroSeqEngine(void)
    EnviroSequence    = NULL;
    enviroSeqFinished = true;
 
-   if(!P_CollectionIsEmpty(&enviroSpots))
-      nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+   if(!enviroSpots.isEmpty())
+      nextEnviroSpot = enviroSpots.getRandom(pr_misc);
    else
       nextEnviroSpot = NULL; // broken, but shouldn't matter
 
@@ -609,10 +622,11 @@ void S_InitEnviroSpots(void)
 {
    int enviroType = E_ThingNumForName("EEEnviroSequence");
 
-   P_ReInitMobjCollection(&enviroSpots, enviroType);
+   enviroSpots.setMobjType(enviroType);
+   enviroSpots.makeEmpty();
 
    if(enviroType != NUMMOBJTYPES)
-      P_CollectThings(&enviroSpots);
+      enviroSpots.collectThings();
 
    S_ResetEnviroSeqEngine();
 }
@@ -628,7 +642,7 @@ void S_InitEnviroSpots(void)
 static void S_RunEnviroSequence(void)
 {
    // nothing to do?
-   if(P_CollectionIsEmpty(&enviroSpots))
+   if(enviroSpots.isEmpty())
       return;
 
    // if waiting, count down the wait time
@@ -648,7 +662,7 @@ static void S_RunEnviroSequence(void)
          EnviroSequence = NULL;
          enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
                                            EnviroSeqManager.maxEnviroWait);
-         nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
       }
       else
          S_RunSequence(EnviroSequence);
@@ -660,7 +674,7 @@ static void S_RunEnviroSequence(void)
 
       if(!edfSeq) // woops, bad sequence, try another next time.
       {
-         nextEnviroSpot = P_CollectionGetRandom(&enviroSpots, pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
          return;
       }
 
@@ -748,6 +762,19 @@ void S_SequenceGameLoad(void)
 
    // reset the enviro sequence engine in a way that lets it start up again
    S_ResetEnviroSeqEngine();
+}
+
+//=============================================================================
+//
+// Console commands
+//
+
+VARIABLE_INT(s_enviro_volume, NULL, 0, 16, NULL);
+CONSOLE_VARIABLE(s_enviro_volume, s_enviro_volume, 0) {}
+
+void S_AddSeqCommands(void)
+{
+   C_AddCommand(s_enviro_volume);
 }
 
 // EOF

@@ -27,23 +27,33 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "i_video.h"
-#include "doomstat.h"
-#include "d_event.h"
-#include "v_video.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "dstrings.h"
-#include "m_swap.h"
-#include "mn_engin.h"
-#include "d_deh.h"  // Ty 03/22/98 - externalizations
-#include "p_info.h"
-#include "d_gi.h"
+
 #include "c_io.h"
-#include "f_finale.h"
-#include "e_states.h"
+#include "c_runcmd.h"
+#include "d_deh.h"     // Ty 03/22/98 - externalizations
+#include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"
+#include "doomstat.h"
+#include "dstrings.h"
 #include "e_fonts.h"
 #include "e_player.h"
+#include "e_states.h"
+#include "f_finale.h"
+#include "m_swap.h"
+#include "mn_engin.h"
+#include "p_info.h"
+#include "p_skin.h"
+#include "r_patch.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
+
+
 
 // Stage of animation:
 //  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
@@ -57,10 +67,10 @@ int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void    F_StartCast (void);
-void    F_CastTicker (void);
-boolean F_CastResponder (event_t *ev);
-void    F_CastDrawer (void);
+void F_StartCast(void);
+void F_CastTicker(void);
+bool F_CastResponder(event_t *ev);
+void F_CastDrawer(void);
 
 void IN_checkForAccelerate(void);    // killough 3/28/98: used to
 extern int acceleratestage;          // accelerate intermission screens
@@ -106,7 +116,7 @@ void F_StartFinale(void)
 //
 // F_Responder
 //
-boolean F_Responder(event_t *event)
+bool F_Responder(event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -332,10 +342,10 @@ castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_
 int             castnum;
 int             casttics;
 state_t*        caststate;
-boolean         castdeath;
+bool            castdeath;
 int             castframes;
 int             castonmelee;
-boolean         castattacking;
+bool            castattacking;
 
 extern  gamestate_t     wipegamestate;
 
@@ -509,7 +519,7 @@ void F_CastTicker(void)
 //
 // F_CastResponder
 //
-boolean F_CastResponder(event_t* ev)
+bool F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -559,7 +569,7 @@ void F_CastDrawer(void)
    spritedef_t*        sprdef;
    spriteframe_t*      sprframe;
    int                 lump;
-   boolean             flip;
+   bool                flip;
    patch_t*            patch;
    
    // erase the entire screen to a background
@@ -769,7 +779,7 @@ void F_DemonScroll(void)
 static void F_FinaleEndDrawer(void)
 {
    // haleyjd 05/18/09: handle shareware once up here
-   boolean sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
+   bool sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
 
    switch(LevelInfo.finaleType)
    {

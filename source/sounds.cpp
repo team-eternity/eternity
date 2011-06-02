@@ -36,102 +36,103 @@
 // Information about all the music
 //
 
-musicinfo_t S_music[] = {
+musicinfo_t S_music[] = 
+{
   { 0 },
-  { "e1m1" },
-  { "e1m2" },
-  { "e1m3" },
-  { "e1m4" },
-  { "e1m5" },
-  { "e1m6" },
-  { "e1m7" },
-  { "e1m8" },
-  { "e1m9" },
-  { "e2m1" },
-  { "e2m2" },
-  { "e2m3" },
-  { "e2m4" },
-  { "e2m5" },
-  { "e2m6" },
-  { "e2m7" },
-  { "e2m8" },
-  { "e2m9" },
-  { "e3m1" },
-  { "e3m2" },
-  { "e3m3" },
-  { "e3m4" },
-  { "e3m5" },
-  { "e3m6" },
-  { "e3m7" },
-  { "e3m8" },
-  { "e3m9" },
-  { "inter" },
-  { "intro" },
-  { "bunny" },
-  { "victor" },
-  { "introa" },
-  { "runnin" },
-  { "stalks" },
-  { "countd" },
-  { "betwee" },
-  { "doom" },
-  { "the_da" },
-  { "shawn" },
-  { "ddtblu" },
-  { "in_cit" },
-  { "dead" },
-  { "stlks2" },
-  { "theda2" },
-  { "doom2" },
-  { "ddtbl2" },
-  { "runni2" },
-  { "dead2" },
-  { "stlks3" },
-  { "romero" },
-  { "shawn2" },
-  { "messag" },
-  { "count2" },
-  { "ddtbl3" },
-  { "ampie" },
-  { "theda3" },
-  { "adrian" },
-  { "messg2" },
-  { "romer2" },
-  { "tense" },
-  { "shawn3" },
-  { "openin" },
-  { "evil" },
-  { "ultima" },
-  { "read_m" },
-  { "dm2ttl" },
-  { "dm2int" },
+  { "e1m1", true },
+  { "e1m2", true },
+  { "e1m3", true },
+  { "e1m4", true },
+  { "e1m5", true },
+  { "e1m6", true },
+  { "e1m7", true },
+  { "e1m8", true },
+  { "e1m9", true },
+  { "e2m1", true },
+  { "e2m2", true },
+  { "e2m3", true },
+  { "e2m4", true },
+  { "e2m5", true },
+  { "e2m6", true },
+  { "e2m7", true },
+  { "e2m8", true },
+  { "e2m9", true },
+  { "e3m1", true },
+  { "e3m2", true },
+  { "e3m3", true },
+  { "e3m4", true },
+  { "e3m5", true },
+  { "e3m6", true },
+  { "e3m7", true },
+  { "e3m8", true },
+  { "e3m9", true },
+  { "inter", true },
+  { "intro", true },
+  { "bunny", true },
+  { "victor", true },
+  { "introa", true },
+  { "runnin", true },
+  { "stalks", true },
+  { "countd", true },
+  { "betwee", true },
+  { "doom", true },
+  { "the_da", true },
+  { "shawn", true },
+  { "ddtblu", true },
+  { "in_cit", true },
+  { "dead", true },
+  { "stlks2", true },
+  { "theda2", true },
+  { "doom2", true },
+  { "ddtbl2", true },
+  { "runni2", true },
+  { "dead2", true },
+  { "stlks3", true },
+  { "romero", true },
+  { "shawn2", true },
+  { "messag", true },
+  { "count2", true },
+  { "ddtbl3", true },
+  { "ampie", true },
+  { "theda3", true },
+  { "adrian", true },
+  { "messg2", true },
+  { "romer2", true },
+  { "tense", true },
+  { "shawn3", true },
+  { "openin", true },
+  { "evil", true },
+  { "ultima", true },
+  { "read_m", true },
+  { "dm2ttl", true },
+  { "dm2int", true },
 };
 
 musicinfo_t H_music[] =
 {
    { 0 },
-   { "e1m1" }, // 1
-   { "e1m2" }, // 2
-   { "e1m3" }, // 3
-   { "e1m4" }, // 4
-   { "e1m5" }, // 5
-   { "e1m6" }, // 6
-   { "e1m7" }, // 7
-   { "e1m8" }, // 8
-   { "e1m9" }, // 9
-   { "e2m1" }, // 10
-   { "e2m2" }, // 11
-   { "e2m3" }, // 12
-   { "e2m4" }, // 13
-   { "e2m6" }, // 14
-   { "e2m7" }, // 15
-   { "e2m8" }, // 16
-   { "e2m9" }, // 17
-   { "e3m2" }, // 18
-   { "e3m3" }, // 19
-   { "titl" }, // 20
-   { "intr" }, // 21
-   { "cptd" }, // 22
+   { "e1m1", true }, // 1
+   { "e1m2", true }, // 2
+   { "e1m3", true }, // 3
+   { "e1m4", true }, // 4
+   { "e1m5", true }, // 5
+   { "e1m6", true }, // 6
+   { "e1m7", true }, // 7
+   { "e1m8", true }, // 8
+   { "e1m9", true }, // 9
+   { "e2m1", true }, // 10
+   { "e2m2", true }, // 11
+   { "e2m3", true }, // 12
+   { "e2m4", true }, // 13
+   { "e2m6", true }, // 14
+   { "e2m7", true }, // 15
+   { "e2m8", true }, // 16
+   { "e2m9", true }, // 17
+   { "e3m2", true }, // 18
+   { "e3m3", true }, // 19
+   { "titl", true }, // 20
+   { "intr", true }, // 21
+   { "cptd", true }, // 22
 };
 
 // haleyjd: a much more clever way of getting an index to the music

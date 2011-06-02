@@ -28,14 +28,16 @@
 
 #include "../z_zone.h"
 #include "../i_system.h"
+
+#include "../doomstat.h"
 #include "../doomtype.h"
 #include "../m_misc.h"
 #include "../w_wad.h"
 
-static SDL_Surface *pickscreen; // SDL screen surface
-static waddir_t pickwad;        // private directory for startup.wad
-static int currentiwad;         // currently selected IWAD
-static boolean *haveIWADArray;  // valid IWADs, passed here from d_main.c
+static SDL_Surface  *pickscreen;    // SDL screen surface
+static WadDirectory  pickwad;       // private directory for startup.wad
+static int           currentiwad;   // currently selected IWAD
+static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
 // picker iwad enumeration
 enum
@@ -131,8 +133,8 @@ static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, "FRAME", lumpinfo_t::ns_global)) != -1)
-      bgframe = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+   if((lumpnum = pickwad.CheckNumForName("FRAME")) != -1)
+      bgframe = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
 }
 
 //
@@ -153,14 +155,14 @@ static void I_Pick_LoadIWAD(int num)
    palnum   = iwadPicPals[num];
    palname  = palNames[palnum];
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, lumpname, lumpinfo_t::ns_global)) != -1)
-      iwadpics[num] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+   if((lumpnum = pickwad.CheckNumForName(lumpname)) != -1)
+      iwadpics[num] = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
 
    // load palette if needed also
    if(!pals[palnum])
    {
-      if((lumpnum = W_CheckNumForNameInDir(&pickwad, palname, lumpinfo_t::ns_global)) != -1)
-         pals[palnum] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+      if((lumpnum = pickwad.CheckNumForName(palname)) != -1)
+         pals[palnum] = (byte *)(pickwad.CacheLumpNum(lumpnum, PU_STATIC));
    }
 }
 
@@ -171,7 +173,7 @@ static void I_Pick_LoadIWAD(int num)
 // startup.wad carries over into the main game; it is completely closed and
 // freed below.
 //
-static boolean I_Pick_OpenWad(void)
+static bool I_Pick_OpenWad(void)
 {
    char *filename;
    int size;
@@ -179,7 +181,7 @@ static boolean I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(W_AddNewFile(&pickwad, filename))
+   if(pickwad.AddNewFile(filename))
       return false;
 
    return true;
@@ -196,22 +198,7 @@ static boolean I_Pick_OpenWad(void)
 static void I_Pick_FreeWad(void)
 {
    // close the wad file if it is open
-   if(pickwad.lumpinfo)
-   {
-      // free all resources loaded from the wad
-      W_FreeDirectoryLumps(&pickwad);
-
-      if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
-         fclose(pickwad.lumpinfo[0]->file);
-
-      // free all lumpinfo_t's allocated for the wad
-      W_FreeDirectoryAllocs(&pickwad);
-
-      // free the private wad directory
-      Z_Free(pickwad.lumpinfo);
-
-      pickwad.lumpinfo = NULL;
-   }
+   pickwad.Close();
 }
 
 //=============================================================================
@@ -226,7 +213,7 @@ static void I_Pick_FreeWad(void)
 //
 static void I_Pick_ClearScreen(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    Uint32 color;
    SDL_Rect dstrect;
 
@@ -251,7 +238,7 @@ static void I_Pick_ClearScreen(void)
 //
 static void I_Pick_DrawBG(void)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    Uint32 *dest;
    int x, y;
@@ -301,7 +288,7 @@ static void I_Pick_DrawBG(void)
 //
 static void I_Pick_DrawIWADPic(int pic)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    byte   *pal;
    Uint32 *dest;
@@ -428,7 +415,7 @@ static void I_Pick_DoAbort(void)
 // Tests a mouse button down event for a location within the specified
 // rectangle.
 //
-static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
+static bool I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 {
    return (x >= rect->x && x <= rect->x + rect->w &&
            y >= rect->y && y <= rect->y + rect->h);
@@ -439,7 +426,7 @@ static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 //
 // Tests mouse button down events against all valid button rectangles.
 //
-static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
+static void I_Pick_MouseEvent(SDL_Event *ev, bool *doloop)
 {
    SDL_Rect r;
    Uint16 x, y;
@@ -511,7 +498,7 @@ static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
 //
 static void I_Pick_MainLoop(void)
 {
-   boolean doloop = true;
+   bool doloop = true;
    SDL_Event ev;
 
    while(doloop)
@@ -565,7 +552,7 @@ static void I_Pick_MainLoop(void)
 // Shutdown
 //
 
-static boolean pickvideoinit = false;
+static bool pickvideoinit = false;
 
 //
 // I_Pick_Shutdown
@@ -595,7 +582,7 @@ static void I_Pick_Shutdown(void)
 // in the system.cfg file under the Eternity base directory. The valid IWAD
 // paths are marked in the haveIWADs array as "true" values.
 //
-int I_Pick_DoPicker(boolean haveIWADs[], int startchoice)
+int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 {
    haveIWADArray = haveIWADs;
 

@@ -28,6 +28,9 @@
 #ifndef E_DSTATE_H__
 #define E_DSTATE_H__
 
+// Required for statenum_t:
+#include "info.h"
+
 //
 // DECORATE state output structure 1:
 //

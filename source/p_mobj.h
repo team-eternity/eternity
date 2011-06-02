@@ -37,11 +37,12 @@
 //  tied to animation frames.
 // Needs precompiled tables/data structures.
 #include "info.h"
-// sf: skins
-#include "p_skin.h"
 #include "m_fixed.h"
-#include "m_random.h"
 #include "tables.h"
+
+struct msecnode_t;
+struct player_t;
+struct skin_t;
 
 // Defines
 
@@ -148,12 +149,14 @@ typedef struct backpack_s
    char    weapon;
 } backpack_t;
 
-// Each sector has a degenMobj in its center for sound origin purposes.
+// Each sector has a degenmobj in its center for sound origin purposes.
 // haleyjd 11/22/10: degenmobj, which has become PointThinker, is now the base
 // class for all thinkers that want to be located somewhere in the game world.
 class PointThinker : public Thinker
 {
 public:
+   PointThinker() : Thinker(), x(0), y(0), z(0), groupid(0) {}
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PointThinker"; }
@@ -310,8 +313,8 @@ public:
    int movefactor;
 
    // a linked list of sectors where this object appears
-   struct msecnode_s *touching_sectorlist;                 // phares 3/14/98
-   struct msecnode_s *old_sectorlist;                      // haleyjd 04/16/10
+   msecnode_t *touching_sectorlist;                 // phares 3/14/98
+   msecnode_t *old_sectorlist;                      // haleyjd 04/16/10
 
    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
 
@@ -377,17 +380,17 @@ public:
 extern int iquehead;
 extern int iquetail;
 
-void    P_RespawnSpecials(void);
-Mobj  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
-boolean P_SetMobjState(Mobj *mobj, statenum_t state);
-void    P_MobjThinker(Mobj *mobj);
-void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
-void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj  *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj  *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
-Mobj  *P_SpawnMapThing(mapthing_t *);
-void    P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void    P_ExplodeMissile(Mobj *);     // killough
+void  P_RespawnSpecials(void);
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+bool  P_SetMobjState(Mobj *mobj, statenum_t state);
+void  P_MobjThinker(Mobj *mobj);
+void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+void  P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
+Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnMapThing(mapthing_t *);
+bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
+void  P_ExplodeMissile(Mobj *);     // killough
 
 // particles and lines: sf
 /*
@@ -397,8 +400,8 @@ void P_ParticleLine(Mobj *source, Mobj *dest);
 
 // new Eternity mobj function prototypes  haleyjd
 void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
-boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
-Mobj  *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
+bool    P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
+Mobj   *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
 void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
 
@@ -414,35 +417,12 @@ void P_ChangeThingHeights(void);
 // extern data
 extern fixed_t FloatBobOffsets[64];
 
-// Thing Collections
-
-struct MobjCollection
-{
-   int type;          // internal mobj type #
-   int num;           // number of Mobj's in collection
-   int numalloc;      // number of Mobj* allocated
-   Mobj **ptrarray; // reallocating pointer array
-
-   int wrapiterator;  // persistent index for wrap iteration
-}; 
-
-void P_InitMobjCollection(MobjCollection *, int);
-void P_ReInitMobjCollection(MobjCollection *, int);
-void P_ClearMobjCollection(MobjCollection *);
-void P_CollectThings(MobjCollection *);
-boolean P_CollectionIsEmpty(MobjCollection *);
-Mobj *P_CollectionWrapIterator(MobjCollection *);
-Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at);
-Mobj *P_CollectionGetRandom(MobjCollection *, pr_class_t);
-void P_AddToCollection(MobjCollection *mc, Mobj *mo);
-void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *));
-
 // end new Eternity mobj functions
 
 #ifdef R_LINKEDPORTALS
 #include "linkoffs.h"
 
-d_inline static fixed_t getTargetX(Mobj *mo)
+inline static fixed_t getTargetX(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -456,7 +436,7 @@ d_inline static fixed_t getTargetX(Mobj *mo)
    return mo->target->x + link->x;
 }
 
-d_inline static fixed_t getTargetY(Mobj *mo)
+inline static fixed_t getTargetY(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -472,7 +452,7 @@ d_inline static fixed_t getTargetY(Mobj *mo)
 
 // SoM: if I am not mistaken (which I shouldn't be) linked portals only ever make an
 // x and y offset... Maybe I should phase out the z offset stuff?
-d_inline static fixed_t getTargetZ(Mobj *mo)
+inline static fixed_t getTargetZ(Mobj *mo)
 {
    linkoffset_t *link;
 
@@ -489,7 +469,7 @@ d_inline static fixed_t getTargetZ(Mobj *mo)
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
-d_inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 
@@ -503,7 +483,7 @@ d_inline static fixed_t getThingX(Mobj *mo1, Mobj *mo2)
    return mo2->x + link->x;
 }
 
-d_inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
+inline static fixed_t getThingY(Mobj *mo1, Mobj *mo2)
 {
    linkoffset_t *link;
 

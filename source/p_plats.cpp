@@ -26,17 +26,19 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
 #include "m_random.h"
-#include "p_saveg.h"
-#include "r_main.h"
 #include "p_info.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "s_sound.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sndseq.h"
+#include "s_sound.h"
 #include "sounds.h"
-#include "d_gi.h"
 
 platlist_t *activeplats;       // killough 2/14/98: made global again
 

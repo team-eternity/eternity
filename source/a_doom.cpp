@@ -28,32 +28,34 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "a_common.h"
+#include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
-#include "g_game.h"
-#include "p_mobj.h"
-#include "p_enemy.h"
-#include "p_info.h"
-#include "p_inter.h"
-#include "p_map.h"
-#include "p_maputl.h"
-#include "p_pspr.h"
-#include "p_setup.h"
-#include "p_spec.h"
-#include "p_tick.h"
-#include "r_state.h"
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
-
+#include "doomstat.h"
 #include "e_args.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
-
-#include "a_common.h"
+#include "g_game.h"
+#include "p_enemy.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobjcol.h"
+#include "p_mobj.h"
+#include "p_pspr.h"
+#include "p_setup.h"
+#include "p_skin.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_defs.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
 
 //
 // A_PosAttack
@@ -524,10 +526,10 @@ static fixed_t viletryy;
 //
 // Detect a corpse that could be raised.
 //
-boolean PIT_VileCheck(Mobj *thing)
+bool PIT_VileCheck(Mobj *thing)
 {
    int maxdist;
-   boolean check;
+   bool check;
    static int vileType = -1;
    
    if(vileType == -1)
@@ -1258,14 +1260,15 @@ void P_SpawnBrainTargets(void)  // killough 3/26/98: renamed old function
    int BrainSpotType = E_ThingNumForDEHNum(MT_BOSSTARGET);
 
    // find all the target spots
-   P_ReInitMobjCollection(&braintargets, BrainSpotType);
+   braintargets.setMobjType(BrainSpotType);
+   braintargets.makeEmpty();
 
    brain.easy = 0;   // killough 3/26/98: always init easy to 0
 
    if(BrainSpotType == NUMMOBJTYPES)
       return;
 
-   P_CollectThings(&braintargets);
+   braintargets.collectThings();
 }
 
 // haleyjd 07/30/04: P_CollectThings moved to p_mobj.c
@@ -1368,7 +1371,7 @@ void A_BrainSpit(Mobj *mo)
       SpawnShotType = E_SafeThingType(MT_SPAWNSHOT);
    
     // killough 4/1/98: ignore if no targets
-   if(P_CollectionIsEmpty(&braintargets))
+   if(braintargets.isEmpty())
       return;
 
    brain.easy ^= 1;          // killough 3/26/98: use brain struct
@@ -1376,7 +1379,7 @@ void A_BrainSpit(Mobj *mo)
       return;
 
    // shoot a cube at current target
-   targ = P_CollectionWrapIterator(&braintargets);
+   targ = braintargets.wrapIterator();
 
    // spawn brain missile
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 

@@ -67,7 +67,7 @@ static cfg_opt_t gfs_opts[] =
 
 gfs_t *G_LoadGFS(const char *filename)
 {
-   static boolean loaded = false;
+   static bool loaded = false;
    int i;
    cfg_t *cfg;
 

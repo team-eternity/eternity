@@ -30,24 +30,26 @@
 
 // killough 5/2/98: fixed headers, removed rendunant external declarations:
 #include "z_zone.h"
+
+#include "d_dehtbl.h"
+#include "d_dwfile.h"
+#include "d_io.h"
+#include "d_main.h" // haleyjd
 #include "doomdef.h"
 #include "doomstat.h"
-#include "d_io.h"
-#include "d_dwfile.h"
-#include "sounds.h"
-#include "info.h"
-#include "m_cheat.h"
-#include "p_inter.h"
-#include "g_game.h"
-#include "d_main.h" // haleyjd
-#include "p_tick.h"
-#include "w_wad.h"
-#include "m_misc.h"
+#include "e_args.h"
+#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
-#include "e_sound.h"
-#include "e_args.h"
-#include "d_dehtbl.h"
+#include "g_game.h"
+#include "info.h"
+#include "m_cheat.h"
+#include "m_misc.h"
+#include "p_inter.h"
+#include "p_mobj.h"
+#include "p_tick.h"
+#include "sounds.h"
+#include "w_wad.h"
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
@@ -59,15 +61,15 @@
 // or not
 
 // variables used in other routines
-boolean deh_pars = false; // in wi_stuff to allow pars in modified games
-boolean deh_loaded = false; // sf
+bool deh_pars = false; // in wi_stuff to allow pars in modified games
+bool deh_loaded = false; // sf
 
 // Function prototypes
-void    lfstrip(char *);     // strip the \r and/or \n off of a line
-void    rstrip(char *);      // strip trailing whitespace
-char *  ptr_lstrip(char *);  // point past leading whitespace
-boolean deh_GetData(char *, char *, int *, char **);
-boolean deh_procStringSub(char *, char *, char *);
+void  lfstrip(char *);     // strip the \r and/or \n off of a line
+void  rstrip(char *);      // strip trailing whitespace
+char *ptr_lstrip(char *);  // point past leading whitespace
+bool  deh_GetData(char *, char *, int *, char **);
+bool  deh_procStringSub(char *, char *, char *);
 static char *dehReformatStr(char *);
 
 // Prototypes for block processing functions
@@ -98,7 +100,7 @@ void deh_procBexSprites(DWFILE *, char *);
 
 struct deh_block
 {
-  char *key;       // a mnemonic block code name
+  const char *key;       // a mnemonic block code name
   void (*const fptr)(DWFILE *, char *); // handler
 };
 
@@ -136,7 +138,7 @@ deh_block deh_blocks[] =
 };
 
 // flag to skip included deh-style text, used with INCLUDE NOTEXT directive
-static boolean includenotext = false;
+static bool includenotext = false;
 
 // MOBJINFO - Dehacked block name = "Thing"
 // Usage: Thing nn (name)
@@ -145,7 +147,7 @@ static boolean includenotext = false;
 // array to offset by sizeof(int) into the mobjinfo_t array at [nn]
 // * things are base zero but dehacked considers them to start at #1. ***
 
-char *deh_mobjinfo[DEH_MOBJINFOMAX] =
+const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 {
   "ID #",                // .doomednum
   "Initial frame",       // .spawnstate
@@ -340,7 +342,7 @@ static dehflagset_t dehacked_flags =
 // that Dehacked uses and is useless to us.
 // * states are base zero and have a dummy #0 (TROO)
 
-char *deh_state[] =
+const char *deh_state[] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
   "Sprite subnumber", // .frame 
@@ -367,7 +369,7 @@ char *deh_state[] =
 
 // * sounds are base zero but have a dummy #0
 
-char *deh_sfxinfo[] =
+const char *deh_sfxinfo[] =
 {
   "Offset",     // pointer to a name string, changed in text
   "Zero/One",   // .singularity (int, one at a time flag)
@@ -388,7 +390,7 @@ char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-char *deh_sprite[] =
+const char *deh_sprite[] =
 {
   "Offset"      // supposed to be the offset into the text section
 };
@@ -397,7 +399,7 @@ char *deh_sprite[] =
 // usage = Ammo n (name)
 // Ammo information for the few types of ammo
 
-char *deh_ammo[] =
+const char *deh_ammo[] =
 {
   "Max ammo",   // maxammo[]
   "Per ammo"    // clipammo[]
@@ -407,7 +409,7 @@ char *deh_ammo[] =
 // Usage: Weapon nn (name)
 // Basically a list of frames and what kind of ammo (see above)it uses.
 
-char *deh_weapon[] =
+const char *deh_weapon[] =
 {
   "Ammo type",      // .ammo
   "Deselect frame", // .upstate
@@ -429,7 +431,7 @@ char *deh_weapon[] =
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
 
-char *deh_misc[] =
+const char *deh_misc[] =
 {
   "Initial Health",    // initial_health
   "Initial Bullets",   // initial_bullets
@@ -496,7 +498,7 @@ static void deh_LogPrintf(const char *fmt, ...)
 //
 static void deh_OpenLog(const char *fn)
 {
-   static boolean firstfile = true; // to allow append to output log
+   static bool firstfile = true; // to allow append to output log
 
    if(!strcmp(fn, "-"))
       fileout = stdout;
@@ -593,7 +595,7 @@ void ProcessDehFile(char *filename, const char *outfilename, int lumpnum)
          // killough 10/98: moved to here
          
          char *nextfile;
-         boolean oldnotext = includenotext;       // killough 10/98
+         bool oldnotext = includenotext;       // killough 10/98
          
          // killough 10/98: exclude if inside wads (only to discourage
          // the practice, since the code could otherwise handle it)
@@ -1757,7 +1759,7 @@ void deh_procText(DWFILE *fpin, char *line)
    int i;                          // loop variable
    unsigned int fromlen, tolen;    // as specified on the text block line
    int usedlen;                    // shorter of fromlen and tolen if not matched
-   boolean found = false;          // to allow early exit once found
+   bool found = false;             // to allow early exit once found
    char* line2 = NULL;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
@@ -1917,7 +1919,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
    static char *holdstring = NULL;
    static unsigned int maxstrlen = 128; // maximum string length, bumped 128 at
                                         // a time as needed
-   boolean found = false;  // looking for string continuation
+   bool found = false;  // looking for string continuation
 
    deh_LogPrintf("Processing extended string substitution\n");
 
@@ -1997,12 +1999,12 @@ void deh_procStrings(DWFILE *fpin, char *line)
 // Args:    key       -- place to put the mnemonic for the string if found
 //          lookfor   -- original value string to look for
 //          newstring -- string to put in its place if found
-// Returns: boolean: True if string found, false if not
+// Returns: bool: True if string found, false if not
 //
 // haleyjd 11/02/02: rewritten to replace linear search on string
 // table with in-table chained hashing -- table is now in d_dehtbl.c
 //
-boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
+bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 {
    dehstr_t *dehstr = NULL;
 
@@ -2017,20 +2019,20 @@ boolean deh_procStringSub(char *key, char *lookfor, char *newstring)
       return false;
    }
 
-   *dehstr->ppstr = strdup(newstring); // orphan original string
+   char *copyNewStr = strdup(newstring); 
 
    // Handle embedded \n's in the incoming string, convert to 0x0a's
+   char *s, *t;
+   for(s=t=copyNewStr; *s; ++s, ++t)
    {
-      char *s, *t;
-      for(s=t=*dehstr->ppstr; *s; ++s, ++t)
-      {
-         if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
-            ++s, *t = '\n';  // skip one extra for second character
-         else
-            *t = *s;
-      }
-      *t = '\0';  // cap off the target string
+      if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
+         ++s, *t = '\n';  // skip one extra for second character
+      else
+         *t = *s;
    }
+   *t = '\0';  // cap off the target string
+   
+   *dehstr->ppstr = copyNewStr; // orphan original string
 
    if(key)
       deh_LogPrintf("Assigned key %s => '%s'\n", key, newstring);
@@ -2352,12 +2354,12 @@ char *ptr_lstrip(char *p)  // point past leading whitespace
 //          optional space and a value, mostly an int. The passed 
 //          pointer to hold the key must be DEH_MAXKEYLEN in size.
 
-boolean deh_GetData(char *s, char *k, int *l, char **strval)
+bool deh_GetData(char *s, char *k, int *l, char **strval)
 {
    char *t;                    // current char
    int  val = 0;               // to hold value of pair
    char buffer[DEH_MAXKEYLEN]; // to hold key in progress
-   boolean okrc = true;        // assume good unless we have problems
+   bool okrc = true;           // assume good unless we have problems
    int i;                      // iterator
 
    memset(buffer, 0, sizeof(buffer));

@@ -27,23 +27,24 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_small.h"
+#include "c_net.h"
 #include "doomstat.h"
 #include "d_event.h"
-#include "c_net.h"
-#include "g_game.h"
-#include "r_main.h"
-#include "p_map.h"
-#include "p_spec.h"
-#include "p_user.h"
-#include "p_maputl.h"
-
-// haleyjd
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
+#include "d_gi.h"
 #include "e_player.h"
 #include "e_states.h"
-#include "d_gi.h"
+#include "g_game.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_skin.h"
+#include "p_spec.h"
+#include "p_user.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "s_sound.h"
+#include "sounds.h"
 
 //
 // Movement.
@@ -53,7 +54,7 @@
 
 #define MAXBOB  0x100000
 
-boolean onground; // whether player is on ground or in air
+bool onground; // whether player is on ground or in air
 
 //
 // P_Thrust
@@ -383,7 +384,7 @@ static void P_HereticCurrent(player_t *player)
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
 //
-d_inline static boolean P_SectorIsSpecial(sector_t *sector)
+inline static bool P_SectorIsSpecial(sector_t *sector)
 {
    return (sector->special || sector->flags || sector->damage);
 }

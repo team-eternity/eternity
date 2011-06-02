@@ -27,7 +27,7 @@
 #ifndef E_FONTS_H__
 #define E_FONTS_H__
 
-#include "v_font.h"
+struct vfont_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 

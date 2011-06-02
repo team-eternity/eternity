@@ -1,9 +1,6 @@
 #ifndef PSNPRINTF_H
 #define PSNPRINTF_H
 
-#include <stdlib.h>
-#include <stdarg.h>
-
 int psnprintf(char *str, size_t n, const char *format, ...);
 int pvsnprintf(char *str, size_t n, const char *format, va_list ap);
 

@@ -26,13 +26,15 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "c_io.h"
 #include "doomdef.h"
+#include "m_bbox.h"
+#include "p_slopes.h"
+#include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
-#include "m_bbox.h"
-#include "p_spec.h"
-#include "p_slopes.h"
-#include "c_io.h"
+#include "v_misc.h"
 
 //
 // P_MakeSlope
@@ -40,7 +42,7 @@
 // Alocates and fill the contents of a slope structure.
 //
 static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
-                             const float zdelta, boolean isceiling)
+                             const float zdelta, bool isceiling)
 {
    pslope_t *ret = (pslope_t *)(Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL));
    memset(ret, 0, sizeof(*ret));
@@ -173,10 +175,10 @@ void P_SpawnSlope_Line(int linenum)
    v2float_t direction;
    float dz, extent;
 
-   boolean frontfloor = (special == 386 || special == 388 || special == 393);
-   boolean backfloor  = (special == 389 || special == 391 || special == 392);
-   boolean frontceil  = (special == 387 || special == 388 || special == 392);
-   boolean backceil   = (special == 390 || special == 391 || special == 393);
+   bool frontfloor = (special == 386 || special == 388 || special == 393);
+   bool backfloor  = (special == 389 || special == 391 || special == 392);
+   bool frontceil  = (special == 387 || special == 388 || special == 392);
+   bool backceil   = (special == 390 || special == 391 || special == 393);
 
    // SoM: We don't need the line to retain its special type
    line->special = 0;

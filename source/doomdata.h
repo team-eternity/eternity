@@ -26,12 +26,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __DOOMDATA__
-#define __DOOMDATA__
+#ifndef DOOMDATA_H__
+#define DOOMDATA_H__
 
 // The most basic types we use, portability.
 #include "doomtype.h"
-#include "d_keywds.h"
 
 // haleyjd 10/03/05: all these structures should be byte aligned
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -165,6 +164,12 @@ typedef struct maplinedefhexen_s maplinedefhexen_t;
 // flags will preserve compatibility for such maps. I have been told this map
 // is one of the first ever created, so it may have something to do with that.
 #define ML_RESERVED             2048
+
+// haleyjd 01/22/11: internal line flags
+enum
+{
+   MLI_DYNASEGLINE = 0x01 // Consider only via dynasegs for rendering, etc.
+};
 
 // Sector definition, from editing.
 struct mapsector_s

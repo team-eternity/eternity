@@ -25,52 +25,53 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <new>
-
 #include "z_zone.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
+#include "d_io.h" // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
-#include "hu_stuff.h"
 #include "d_mod.h"
 #include "doomstat.h"
-#include "hu_frags.h"
-#include "m_bbox.h"
-#include "m_argv.h"
-#include "m_swap.h"
+#include "e_exdata.h" // haleyjd: ExtraData!
+#include "e_ttypes.h"
 #include "g_game.h"
-#include "w_wad.h"
-#include "w_levels.h"
-#include "p_hubs.h"
-#include "r_main.h"
-#include "r_things.h"
-#include "r_sky.h"
+#include "hu_frags.h"
+#include "hu_stuff.h"
+#include "in_lude.h"
+#include "m_argv.h"
+#include "m_bbox.h"
+#include "m_swap.h"
+#include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
+#include "p_enemy.h"
+#include "p_hubs.h"
+#include "p_info.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "p_enemy.h"
-#include "p_info.h"
-#include "r_defs.h"
-#include "s_sound.h"
-#include "p_anim.h"  // haleyjd: lightning
-#include "p_partcl.h"
-#include "d_dialog.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "in_lude.h"
-#include "a_small.h"
-#include "acs_intr.h"
-#include "e_exdata.h" // haleyjd: ExtraData!
-#include "e_ttypes.h"
 #include "polyobj.h"
-#include "s_sndseq.h"
+#include "r_data.h"
+#include "r_defs.h"
 #include "r_dynseg.h"
-#include "p_slopes.h"
+#include "r_main.h"
+#include "r_sky.h"
+#include "r_things.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_levels.h"
+#include "w_wad.h"
 
 extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
@@ -80,7 +81,7 @@ extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 
-boolean  newlevel = false;
+bool     newlevel = false;
 int      doom1level = false;    // doom 1 level running under doom 2
 char     levelmapname[10];
 
@@ -152,7 +153,7 @@ mapthing_t playerstarts[MAXPLAYERS];
 static int mapformat;
 
 // haleyjd 06/14/10: level wad directory
-static waddir_t *setupwad;
+static WadDirectory *setupwad;
 
 //
 // ShortToLong
@@ -161,7 +162,7 @@ static waddir_t *setupwad;
 // Inline routine to convert a short value to a long, preserving the value
 // -1 but treating any other negative value as unsigned.
 //
-d_inline static int ShortToLong(int16_t value)
+inline static int ShortToLong(int16_t value)
 {
    return (value == -1) ? -1l : (int)value & 0xffff;
 }
@@ -172,7 +173,7 @@ d_inline static int ShortToLong(int16_t value)
 // haleyjd 06/14/10: Inline routine to convert a short value to a node child
 // number. 0xFFFF and 0x8000 are special values.
 //
-d_inline static void ShortToNodeChild(int *loc, uint16_t value)
+inline static void ShortToNodeChild(int *loc, uint16_t value)
 {
    // e6y: support for extended nodes
    if(value == 0xffff)
@@ -204,8 +205,8 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(int16_t input, int limit, 
-                                  const char *func, int index, const char *item)
+inline static int SafeUintIndex(int16_t input, int limit, 
+                                const char *func, int index, const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
 
@@ -225,8 +226,8 @@ d_inline static int SafeUintIndex(int16_t input, int limit,
 // haleyjd 06/14/10: Matching routine for indices that are already in unsigned
 // short format.
 //
-d_inline static int SafeRealUintIndex(uint16_t input, int limit, 
-                                      const char *func, int index, const char *item)
+inline static int SafeRealUintIndex(uint16_t input, int limit, 
+                                    const char *func, int index, const char *item)
 {
    int ret = (int)(SwapUShort(input)) & 0xffff;
 
@@ -343,13 +344,13 @@ void P_LoadVertexes(int lump)
    
    // Determine number of vertexes:
    //  total lump length / vertex record length.
-   numvertexes = W_LumpLengthInDir(setupwad, lump) / sizeof(mapvertex_t);
+   numvertexes = setupwad->LumpLength(lump) / sizeof(mapvertex_t);
 
    // Allocate zone memory for buffer.
    vertexes = (vertex_t *)(Z_Calloc(numvertexes, sizeof(vertex_t), PU_LEVEL, 0));
    
    // Load data into cache.
-   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(i = 0; i < numvertexes; ++i)
@@ -376,9 +377,9 @@ void P_LoadSegs(int lump)
    int  i;
    byte *data;
    
-   numsegs = W_LumpLengthInDir(setupwad, lump) / sizeof(mapseg_t);
+   numsegs = setupwad->LumpLength(lump) / sizeof(mapseg_t);
    segs = (seg_t *)(Z_Calloc(numsegs, sizeof(seg_t), PU_LEVEL, NULL));
-   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsegs; ++i)
    {
@@ -401,11 +402,6 @@ void P_LoadSegs(int lump)
       side = SwapShort(ml->side);
       li->sidedef = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
-
-      // haleyjd 05/24/08: link segs into parent linedef;
-      // allows fast reverse searches
-      li->linenext = ldef->segs;
-      ldef->segs   = li;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
@@ -441,9 +437,9 @@ void P_LoadSubsectors(int lump)
    byte *data;
    int  i;
    
-   numsubsectors = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsubsector_t);
+   numsubsectors = setupwad->LumpLength(lump) / sizeof(mapsubsector_t);
    subsectors = (subsector_t *)(Z_Calloc(numsubsectors, sizeof(subsector_t), PU_LEVEL, 0));
-   data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    
    for(i = 0; i < numsubsectors; ++i)
    {
@@ -469,9 +465,9 @@ void P_LoadSectors(int lumpnum)
    int  defaultSndSeq;
    char namebuf[9];
    
-   numsectors  = W_LumpLengthInDir(setupwad, lumpnum) / sizeof(mapsector_t);
+   numsectors  = setupwad->LumpLength(lumpnum) / sizeof(mapsector_t);
    sectors     = (sector_t *)(Z_Calloc(numsectors, sizeof(sector_t), PU_LEVEL, 0));
-   lump = data = (byte *)(W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC));
+   lump = data = (byte *)(setupwad->CacheLumpNum(lumpnum, PU_STATIC));
 
    // haleyjd 09/24/06: determine what the default sound sequence is
    defaultSndSeq = LevelInfo.noAutoSequences ? 0 : -1;
@@ -605,7 +601,7 @@ void P_LoadNodes(int lump)
    byte *data;
    int  i;
    
-   numnodes = W_LumpLengthInDir(setupwad, lump) / sizeof(mapnode_t);
+   numnodes = setupwad->LumpLength(lump) / sizeof(mapnode_t);
 
    // haleyjd 09/01/02:
    // Long-needed fix: bomb out on zero-length nodes
@@ -616,7 +612,7 @@ void P_LoadNodes(int lump)
    }
 
    nodes = (node_t *)(Z_Malloc(numnodes * sizeof(node_t), PU_LEVEL, 0));
-   data  = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data  = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numnodes; ++i)
    {
@@ -660,17 +656,17 @@ void P_LoadNodes(int lump)
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
 //
-static boolean P_CheckForZDoomUncompressedNodes(int lumpnum)
+static bool P_CheckForZDoomUncompressedNodes(int lumpnum)
 {
    const void *data;
-   boolean result = false;
+   bool result = false;
 
    // haleyjd: be sure something is actually there
-   if(!W_LumpLengthInDir(setupwad, lumpnum + ML_NODES))
+   if(!setupwad->LumpLength(lumpnum + ML_NODES))
       return result;
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
-   data = W_CacheLumpNumInDir(setupwad, lumpnum + ML_NODES, PU_CACHE);
+   data = setupwad->CacheLumpNum(lumpnum + ML_NODES, PU_CACHE);
 
    if(!memcmp(data, "XNOD", 4))
    {
@@ -750,11 +746,6 @@ static void P_LoadZSegs(byte *data)
       li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector =  sides[ldef->sidenum[side]].sector;
 
-      // haleyjd 05/24/08: link segs into parent linedef;
-      // allows fast reverse searches
-      li->linenext = ldef->segs;
-      ldef->segs   = li;
-
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1] != -1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
@@ -794,8 +785,8 @@ static void P_LoadZNodes(int lump)
    uint32_t numNodes;
    vertex_t *newvertarray = NULL;
 
-   data = lumpptr = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
-   len  = W_LumpLengthInDir(setupwad, lump);
+   data = lumpptr = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
+   len  = setupwad->LumpLength(lump);
 
    // skip header
    CheckZNodesOverflow(len, 4);
@@ -954,10 +945,10 @@ static void P_ConvertHereticThing(mapthing_t *mthing);
 void P_LoadThings(int lump)
 {
    int  i;
-   byte *data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   byte *data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
    
-   numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthingdoom_t); //sf: use global
+   numthings = setupwad->LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
@@ -1026,10 +1017,10 @@ void P_LoadThings(int lump)
 void P_LoadHexenThings(int lump)
 {
    int  i;
-   byte *data = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   byte *data = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
    mapthing_t *mapthings;
    
-   numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthinghexen_t);
+   numthings = setupwad->LumpLength(lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
    mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
@@ -1072,6 +1063,88 @@ void P_LoadHexenThings(int lump)
 }
 
 //
+// P_InitLineDef
+//
+// haleyjd 03/28/11: Shared code for DOOM- and Hexen-format linedef loading.
+//
+static void P_InitLineDef(line_t *ld)
+{
+   vertex_t *v1 = ld->v1, *v2 = ld->v2;
+
+   // Graphical properties
+   ld->tranlump = -1;    // killough 4/11/98: no translucency by default
+   ld->alpha    =  1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
+
+   // Slopes
+   ld->dx = v2->x - v1->x;
+   ld->dy = v2->y - v1->y;
+   ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
+      FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
+
+   // SoM: Calculate line normal
+   P_MakeLineNormal(ld);
+
+   // Bounding box
+   if(v1->x < v2->x)
+   {
+      ld->bbox[BOXLEFT]  = v1->x;
+      ld->bbox[BOXRIGHT] = v2->x;
+   }
+   else
+   {
+      ld->bbox[BOXLEFT]  = v2->x;
+      ld->bbox[BOXRIGHT] = v1->x;
+   }
+
+   if(v1->y < v2->y)
+   {
+      ld->bbox[BOXBOTTOM] = v1->y;
+      ld->bbox[BOXTOP]    = v2->y;
+   }
+   else
+   {
+      ld->bbox[BOXBOTTOM] = v2->y;
+      ld->bbox[BOXTOP]    = v1->y;
+   }
+
+   // haleyjd 12/04/08: rangechecking side numbers for safety
+   if(ld->sidenum[0] >= numsides)
+   {
+      C_Printf(FC_ERROR "Line error: bad side 0 #%d\a\n", ld->sidenum[0]);
+      ld->sidenum[0] = 0;
+   }
+   if(ld->sidenum[1] >= numsides)
+   {
+      C_Printf(FC_ERROR "Line error: bad side 1 #%d\a\n", ld->sidenum[1]);
+      ld->sidenum[1] = 0;
+   }
+
+   // killough 4/4/98: support special sidedef interpretation below
+   if(ld->sidenum[0] != -1 && ld->special)
+      sides[*ld->sidenum].special = ld->special;
+
+   // CPP_FIXME: temporary placement construction for sound origins
+   ::new (&ld->soundorg) PointThinker;
+
+   // haleyjd 04/19/09: position line sound origin
+   ld->soundorg.x = ld->v1->x + ld->dx / 2;
+   ld->soundorg.y = ld->v1->y + ld->dy / 2;
+   ld->soundorg.groupid = R_NOGROUP;
+}
+
+//
+// P_PostProcessLineFlags
+//
+// haleyjd 04/30/11: Make some line flags consistent.
+//
+static void P_PostProcessLineFlags(line_t *ld)
+{
+   // EX_ML_BLOCKALL implies that ML_BLOCKING should be set.
+   if(ld->extflags & EX_ML_BLOCKALL)
+      ld->flags |= ML_BLOCKING;
+}
+
+//
 // P_LoadLineDefs
 // Also counts secret lines for intermissions.
 //        ^^^
@@ -1087,88 +1160,29 @@ void P_LoadLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedef_t);
+   numlines = setupwad->LumpLength(lump) / sizeof(maplinedef_t);
    lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
-   data     = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
       maplinedef_t *mld = (maplinedef_t *)data + i;
       line_t *ld = lines + i;
-      vertex_t *v1, *v2;
 
       ld->flags   = SwapShort(mld->flags);
       ld->special = SwapShort(mld->special);
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
-      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
-      ld->dx = v2->x - v1->x;
-      ld->dy = v2->y - v1->y;
-
-      // SoM: Calculate line normal
-      P_MakeLineNormal(ld);
-
-      ld->tranlump = -1;   // killough 4/11/98: no translucency by default
-      ld->alpha    = 1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
-
-      ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
-         FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
-
-      if(v1->x < v2->x)
-      {
-         ld->bbox[BOXLEFT]  = v1->x;
-         ld->bbox[BOXRIGHT] = v2->x;
-      }
-      else
-      {
-         ld->bbox[BOXLEFT]  = v2->x;
-         ld->bbox[BOXRIGHT] = v1->x;
-      }
-
-      if(v1->y < v2->y)
-      {
-         ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP]    = v2->y;
-      }
-      else
-      {
-         ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP]    = v1->y;
-      }
+      ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
       ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
       ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
-      // haleyjd 12/04/08: rangechecking for safety
-      if(ld->sidenum[0] >= numsides)
-      {
-         C_Printf(FC_ERROR "Line error: bad side 0 #%d\a\n", ld->sidenum[0]);
-         ld->sidenum[0] = 0;
-      }
-      if(ld->sidenum[1] >= numsides)
-      {
-         C_Printf(FC_ERROR "Line error: bad side 1 #%d\a\n", ld->sidenum[1]);
-         ld->sidenum[1] = 0;
-      }
-
-      // killough 4/4/98: support special sidedef interpretation below
-      if(ld->sidenum[0] != -1 && ld->special)
-         sides[*ld->sidenum].special = ld->special;
-
-      // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) PointThinker;
-
-      // haleyjd 04/19/09: position line sound origin
-      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
-      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
-      ld->soundorg.groupid = R_NOGROUP;
-      
-      // SoM: Line portals
-      ld->portal = NULL;
-      ld->pflags = 0;
+      // haleyjd 03/28/11: do shared loading logic in one place
+      P_InitLineDef(ld);
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
@@ -1176,6 +1190,9 @@ void P_LoadLineDefs(int lump)
          E_LoadLineDefExt(ld, true);
       else if(E_IsParamSpecial(ld->special))
          E_LoadLineDefExt(ld, false);
+
+      // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
+      P_PostProcessLineFlags(ld);
    }
    Z_Free(data);
 }
@@ -1253,91 +1270,39 @@ void P_LoadHexenLineDefs(int lump)
    byte *data;
    int  i;
 
-   numlines = W_LumpLengthInDir(setupwad, lump) / sizeof(maplinedefhexen_t);
+   numlines = setupwad->LumpLength(lump) / sizeof(maplinedefhexen_t);
    lines    = (line_t *)(Z_Calloc(numlines, sizeof(line_t), PU_LEVEL, 0));
-   data     = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_STATIC));
+   data     = (byte *)(setupwad->CacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
    {
       maplinedefhexen_t *mld = (maplinedefhexen_t *)data + i;
       line_t *ld = lines + i;
-      vertex_t *v1, *v2;
-      int argnum;
 
-      ld->flags = SwapShort(mld->flags);
-
+      ld->flags   = SwapShort(mld->flags);
       ld->special = mld->special;
       
-      for(argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
+      for(int argnum = 0; argnum < NUMHXLINEARGS; ++argnum)
          ld->args[argnum] = mld->args[argnum];
 
-      // Do Hexen special translation, unconditionally
-      // TODO: support more than one mode (ie, strict Hexen, non-strict, etc)
+      // Do Hexen special translation
       P_ConvertHexenLineSpec(&(ld->special), ld->args);
 
       // Convert line flags after setting special?
       P_ConvertHexenLineFlags(ld);
 
-      ld->tag = -1; // haleyjd 02/27/07
+      ld->tag = -1;    // haleyjd 02/27/07
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[(int)SwapShort(mld->v1) & 0xffff];
-      v2 = ld->v2 = &vertexes[(int)SwapShort(mld->v2) & 0xffff];
-      ld->dx = v2->x - v1->x;
-      ld->dy = v2->y - v1->y;
-
-      // SoM: Calculate line normal
-      P_MakeLineNormal(ld);
-
-      ld->tranlump = -1;   // killough 4/11/98: no translucency by default
-
-      ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
-         FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
-
-      if(v1->x < v2->x)
-      {
-         ld->bbox[BOXLEFT] = v1->x;
-         ld->bbox[BOXRIGHT] = v2->x;
-      }
-      else
-      {
-         ld->bbox[BOXLEFT] = v2->x;
-         ld->bbox[BOXRIGHT] = v1->x;
-      }
-
-      if(v1->y < v2->y)
-      {
-         ld->bbox[BOXBOTTOM] = v1->y;
-         ld->bbox[BOXTOP] = v2->y;
-      }
-      else
-      {
-         ld->bbox[BOXBOTTOM] = v2->y;
-         ld->bbox[BOXTOP] = v1->y;
-      }
+      ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
 
       // haleyjd 06/19/06: convert indices, except -1, to unsigned
       ld->sidenum[0] = ShortToLong(SwapShort(mld->sidenum[0]));
       ld->sidenum[1] = ShortToLong(SwapShort(mld->sidenum[1]));
 
-      // killough 4/4/98: support special sidedef interpretation below
-      if(ld->sidenum[0] != -1 && ld->special)
-         sides[*ld->sidenum].special = ld->special;
-
-      // CPP_FIXME: temporary placement construction for sound origins
-      ::new (&ld->soundorg) PointThinker;
-
-      // haleyjd 04/19/09: position line sound origin
-      ld->soundorg.x       = ld->v1->x + ld->dx / 2;
-      ld->soundorg.y       = ld->v1->y + ld->dy / 2;
-      ld->soundorg.groupid = R_NOGROUP;
-
-      // haleyjd 02/26/05: ExtraData
-      // FIXME/TODO: how to support ExtraData via Hexen??
-#if 0
-      if(ld->special == ED_LINE_SPECIAL)
-         E_LoadLineDefExt(ld);
-#endif
+      // haleyjd 03/28/11: do shared loading logic in one place
+      P_InitLineDef(ld);
    }
    Z_Free(data);
 }
@@ -1404,7 +1369,7 @@ void P_LoadLineDefs2(void)
 //
 void P_LoadSideDefs(int lump)
 {
-   numsides = W_LumpLengthInDir(setupwad, lump) / sizeof(mapsidedef_t);
+   numsides = setupwad->LumpLength(lump) / sizeof(mapsidedef_t);
    sides    = (side_t *)(Z_Calloc(numsides, sizeof(side_t), PU_LEVEL, 0));
 }
 
@@ -1414,7 +1379,7 @@ void P_LoadSideDefs(int lump)
 
 void P_LoadSideDefs2(int lumpnum)
 {
-   byte *lump = (byte *)(W_CacheLumpNumInDir(setupwad, lumpnum, PU_STATIC));
+   byte *lump = (byte *)(setupwad->CacheLumpNum(lumpnum, PU_STATIC));
    byte *data = lump;
    int  i;
    char toptexture[9], bottomtexture[9], midtexture[9];
@@ -1701,9 +1666,9 @@ static const char *bmaperrormsg;
 //
 // haleyjd 03/04/10: do verification on validity of blockmap.
 //
-static boolean P_VerifyBlockMap(int count)
+static bool P_VerifyBlockMap(int count)
 {
-   boolean isvalid = true;
+   bool isvalid = true;
    int x, y;
    int *maxoffs = blockmaplump + count;
 
@@ -1779,7 +1744,7 @@ static boolean P_VerifyBlockMap(int count)
 //
 void P_LoadBlockMap(int lump)
 {
-   int len   = W_LumpLengthInDir(setupwad, lump);
+   int len   = setupwad->LumpLength(lump);
    int count = len / 2;
    
    // sf: -blockmap checkparm made into variable
@@ -1792,7 +1757,7 @@ void P_LoadBlockMap(int lump)
    else
    {
       int i;
-      int16_t *wadblockmaplump = (int16_t *)(W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL));
+      int16_t *wadblockmaplump = (int16_t *)(setupwad->CacheLumpNum(lump, PU_LEVEL));
       blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
                                       PU_LEVEL, NULL));
 
@@ -2060,7 +2025,7 @@ static void P_LoadReject(int lump)
    int size;
    int expectedsize;
 
-   size = W_LumpLengthInDir(setupwad, lump);
+   size = setupwad->LumpLength(lump);
 
    // haleyjd: round numsectors^2 to next higher multiple of 8, then divide by
    // 8 to get the expected reject size for this level
@@ -2071,7 +2036,7 @@ static void P_LoadReject(int lump)
    // 2. if size <  expectedsize, allocate a zero-filled buffer and copy
    //    in whatever exists from the actual lump.
    if(size >= expectedsize)
-      rejectmatrix = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_LEVEL));
+      rejectmatrix = (byte *)(setupwad->CacheLumpNum(lump, PU_LEVEL));
    else
    {
       // set to all zeroes so that the reject has no effect
@@ -2079,14 +2044,14 @@ static void P_LoadReject(int lump)
 
       if(size > 0)
       {
-         byte *temp = (byte *)(W_CacheLumpNumInDir(setupwad, lump, PU_CACHE));
+         byte *temp = (byte *)(setupwad->CacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
       }
    }
 
    // warn on too-large rejects, but do nothing special.
    if(size > expectedsize)
-      C_Printf(FC_ERROR "P_LoadReject warning: reject is too large\a\n");
+      C_Printf(FC_ERROR "P_LoadReject: warning - reject is too large\a\n");
 }
 
 //
@@ -2116,15 +2081,17 @@ static const char *levellumps[] =
 // sf 11/9/99: We need to do this now because we no longer have to conform to
 // the MAPxy or ExMy standard previously imposed.
 //
-int P_CheckLevel(waddir_t *dir, int lumpnum)
+int P_CheckLevel(WadDirectory *dir, int lumpnum)
 {
    int i, ln;
+   int          numlumps = dir->GetNumLumps();
+   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
    
    for(i = ML_THINGS; i <= ML_BEHAVIOR; ++i)
    {
       ln = lumpnum + i;
-      if(ln >= dir->numlumps ||     // past the last lump?
-         strncmp(dir->lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= numlumps ||     // past the last lump?
+         strncmp(lumpinfo[ln]->name, levellumps[i], 8))
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -2264,7 +2231,7 @@ static void P_PreZoneFreeLevel(void)
 //
 // Performs (re)initialization of subsystems after Z_FreeTags.
 //
-static void P_InitNewLevel(int lumpnum, waddir_t *waddir)
+static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 {
    //==============================================
    // Playsim
@@ -2374,10 +2341,11 @@ void P_InitThingLists(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask, 
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, 
                   skill_t skill)
 {
-   int lumpnum;
+   lumpinfo_t **lumpinfo;
+   int lumpnum, acslumpnum = -1;
 
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
@@ -2385,9 +2353,10 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
 
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
+   lumpinfo = setupwad->GetLumpInfo();
    
    // get the map name lump number
-   if((lumpnum = W_CheckNumForNameInDir(setupwad, mapname, lumpinfo_t::ns_global)) == -1)
+   if((lumpnum = setupwad->CheckNumForName(mapname)) == -1)
    {
       P_SetupLevelError("Map not found", mapname);
       return;
@@ -2396,12 +2365,12 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
    // determine map format; if invalid, abort
    if((mapformat = P_CheckLevel(setupwad, lumpnum)) == LEVEL_FORMAT_INVALID)
    {
-      P_SetupLevelError("Not a level", mapname);
+      P_SetupLevelError("Not a valid level", mapname);
       return;
    }
 
    // haleyjd 07/22/04: moved up
-   newlevel   = (setupwad->lumpinfo[lumpnum]->file != iwadhandle);
+   newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
    doom1level = false;
 
    strncpy(levelmapname, mapname, 8);
@@ -2518,7 +2487,11 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
    if(precache)
       R_PrecacheLevel();
 
-   R_SetViewSize(screenSize+3, c_detailshift); //sf
+   R_SetViewSize(screenSize+3); //sf
+
+   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
+   // 01/13/2011: Moved up a bit. The below actions want GS_LEVEL gamestate :>
+   gamestate = GS_LEVEL;
 
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
@@ -2532,11 +2505,14 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
 #endif
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
+   //         03/19/11: also allow for DOOM-format maps via MapInfo
    if(mapformat == LEVEL_FORMAT_HEXEN)
-      ACS_LoadLevelScript(lumpnum + ML_BEHAVIOR);
+      acslumpnum = lumpnum + ML_BEHAVIOR;
+   else if(LevelInfo.acsScriptLump)
+      acslumpnum = setupwad->CheckNumForName(LevelInfo.acsScriptLump);
 
-   // haleyjd 07/28/2010: NOW we are in GS_LEVEL. Not before.
-   gamestate = GS_LEVEL;
+   if(acslumpnum != -1)
+      ACS_LoadLevelScript(acslumpnum);
 }
 
 //

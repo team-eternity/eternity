@@ -27,7 +27,9 @@
 #ifndef R_DRAWL_H__
 #define R_DRAWL_H__
 
+#if 0
 extern columndrawer_t r_lowdetail_drawer;
+#endif
 
 #endif
 

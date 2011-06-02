@@ -27,11 +27,37 @@
 #ifndef __R_SEGS__
 #define __R_SEGS__
 
+struct drawseg_t;
+
 void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(const int start, const int stop);
 
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
+//
+// Masked 2s linedefs
+//
+
+struct drawseg_t
+{
+   seg_t *curline;
+   int x1, x2;
+   float dist1, dist2, diststep;
+   int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
+   fixed_t bsilheight;                   // do not clip sprites above this
+   fixed_t tsilheight;                   // do not clip sprites below this
+
+   // sf: colormap to be used when drawing the drawseg
+   // for coloured lighting
+   lighttable_t *(*colormap)[MAXLIGHTSCALE];
+
+   // Pointers to lists for sprite clipping,
+   // all three adjusted so [x1] is first value.
+
+   float *sprtopclip, *sprbottomclip;
+   
+   float *maskedtexturecol;
+};
 
 #endif
 

@@ -30,21 +30,28 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_event.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "m_random.h"
-#include "p_tick.h"
+#include "e_fonts.h"
+#include "e_things.h" 
+#include "g_game.h"
 #include "in_lude.h"
-#include "v_video.h"
-#include "r_main.h"
-#include "s_sound.h"
-#include "s_sndseq.h"
-#include "d_gi.h"
+#include "m_random.h"
+#include "p_chase.h"
 #include "p_enemy.h"
 #include "p_info.h"
-#include "g_game.h"
-#include "e_things.h" 
-#include "e_fonts.h"
+#include "p_mobjcol.h"
+#include "p_tick.h"
+#include "r_main.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "v_video.h"
+
+
+
 
 // Globals
 
@@ -88,14 +95,15 @@ void IN_AddCameras(void)
 {
    int cameratype = E_ThingNumForDEHNum(MT_CAMERA);
 
-   P_ReInitMobjCollection(&camerathings, cameratype);
+   camerathings.setMobjType(cameratype);
+   camerathings.makeEmpty();
 
    // no camera view if camera type is undefined or we're in an
    // older demo.
    if(cameratype == NUMMOBJTYPES || demo_version < 331)
       return;
    
-   P_CollectThings(&camerathings);
+   camerathings.collectThings();
 }
 
 //
@@ -107,12 +115,12 @@ void IN_StartCamera(void)
 {
    int i;
    
-   if(!P_CollectionIsEmpty(&camerathings))
+   if(!camerathings.isEmpty())
    {
       realbackdrop = 1;
 
       // pick a camera at random
-      wi_camera = P_CollectionGetRandom(&camerathings, pr_misc);
+      wi_camera = camerathings.getRandom(pr_misc);
       
       // remove the player mobjs (look silly in camera view)
       for(i = 0; i < MAXPLAYERS; ++i)
@@ -140,7 +148,7 @@ void IN_StartCamera(void)
          intercam.heightsec = subsec->sector->heightsec;
       }
       // FIXME: does this bite the player's setting for the next map?
-      R_SetViewSize(11, c_detailshift);     // force fullscreen
+      R_SetViewSize(11);     // force fullscreen
    }
    else            // no camera, boring interpic
    {

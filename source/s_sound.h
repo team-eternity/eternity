@@ -80,7 +80,7 @@ void S_StartSound(PointThinker *origin, int sound_id);
 void S_StartSoundName(PointThinker *origin, const char *name);
 void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
                     int volumeScale, int attenuation,
-                    boolean loop, int subchannel);
+                    bool loop, int subchannel);
 void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
                           int volume, int attn, int subchannel);
 void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
@@ -100,7 +100,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping);
 
 // Stops the music fer sure.
 void S_StopMusic(void);
-void S_StopSounds(boolean killall);
+void S_StopSounds(bool killall);
 void S_StopLoopedSounds(void); // haleyjd
 
 // Stop and resume music, during game PAUSE.
@@ -108,13 +108,9 @@ void S_PauseSound(void);
 void S_ResumeSound(void);
 
 sfxinfo_t *S_SfxInfoForName(const char *name);
-void S_UpdateSound(int lumpnum);
-void S_UpdateSoundDeferred(int lumpnum);
-void S_ProcDeferredSounds(void);
 void S_Chgun(void);
 
 musicinfo_t *S_MusicForName(const char *name);
-void S_UpdateMusic(int lumpnum);
 
 //
 // Updates music & sounds
@@ -124,7 +120,7 @@ void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
 // haleyjd: rudimentary sound checker
-boolean S_CheckSoundPlaying(PointThinker *, sfxinfo_t *sfx);
+bool S_CheckSoundPlaying(PointThinker *, sfxinfo_t *sfx);
 
 // precache sound?
 extern int s_precache;

@@ -39,7 +39,7 @@ void P_RestorePlayerPosition();
 
 void P_HubReborn();
 
-extern boolean hub_changelevel;
+extern bool hub_changelevel;
 
 #endif
 

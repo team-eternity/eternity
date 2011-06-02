@@ -214,6 +214,7 @@ static exceptiondata_t ExceptionData[] =
 {
    { 0x40010005, _T("a Ctrl+C")                     },
    { 0x40010008, _T("a Ctrl+Brk")                   },
+   { 0x80000001, _T("a Guard Page Violation")       },
    { 0x80000002, _T("a Data Type Misalignment")     },
    { 0x80000003, _T("a Breakpoint")                 }, 
    { 0xC0000005, _T("an Access Violation")          },

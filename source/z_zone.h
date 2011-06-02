@@ -49,25 +49,33 @@
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#ifdef LINUX
-// Linux needs strings.h too, for strcasecmp etc.
-#include <strings.h>
-#endif
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef LINUX
+// Linux needs strings.h too, for strcasecmp etc.
+#include <strings.h>
+#endif
 #include <sys/stat.h>
+#ifndef LINUX
+// NON-Linux platforms need sys/types.h
+#include <sys/types.h>
+#endif
 #include <time.h>
 
 // haleyjd: inttypes.h - on Windows, this comes from the source\Win32 directory
 #include <inttypes.h>
 
+// haleyjd: C++ headers
+#include <new>
+
+// haleyjd: portable replacement function headers
 #include "psnprntf.h"
 
 // ZONE MEMORY
@@ -85,6 +93,7 @@ enum
    PU_RENDERER, // haleyjd 06/29/08: for data allocated via R_Init
    PU_AUTO,     // haleyjd 07/08/10: automatic allocation
    PU_LEVEL,    // allocation belongs to level (freed at next level load)
+   PU_OBJECT,   // haleyjd 04/01/11: for ZoneObject
 
    // cache levels
 
@@ -144,16 +153,49 @@ void  Z_SysFree(void *p);
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 
-void Z_ZoneHistory(char *);
-
 #ifdef INSTRUMENTED
-extern int printstats;        // killough 8/23/98
-void Z_PrintStats(void);      // killough 8/23/98
+extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
+extern int printstats;             // killough 08/23/98
 #endif
 
 void Z_PrintZoneHeap(void);
 
 void Z_DumpCore(void);
+
+//
+// ZoneObject Class
+//
+// This class serves as a base class for C++ objects that want to support
+// allocation on the zone heap. The actual zone memory is always stored at
+// PU_OBJECT allocation level, and the tag semantics are handled inside this
+// base class.
+//
+class ZoneObject
+{
+private:
+   // static data
+   static ZoneObject *objectbytag[PU_MAX];
+   static void *newalloc;
+
+   // instance data
+   void *zonealloc;       // If non-null, the object is living on the zone heap
+   int   zonetag;         // If zonealloc is valid, the object's zone tag
+   ZoneObject  *zonenext; // Next object on tag chain
+   ZoneObject **zoneprev; // Previous object on tag chain's next pointer
+
+public:
+   ZoneObject();
+   virtual ~ZoneObject();
+   void *operator new (size_t size);
+   void  operator delete (void *p);
+   void  ChangeTag(int tag);
+
+   // zone memblock reflection
+   size_t getZoneSize() const;
+   const void *getBlockPtr() const { return zonealloc; }
+
+   static void FreeTags(int lowtag, int hightag);
+};
 
 #endif
 

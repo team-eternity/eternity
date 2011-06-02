@@ -55,6 +55,45 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ICON1               ICON                    ".\\res\\ee.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,40,11,1511
+ PRODUCTVERSION 3,40,11,1511
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Team Eternity"
+            VALUE "FileDescription", "The Eternity Engine"
+            VALUE "FileVersion", "3, 40, 11, 1511"
+            VALUE "InternalName", "Eternity"
+            VALUE "LegalCopyright", "Copyright (C) 2011 Team Eternity"
+            VALUE "OriginalFilename", "Eternity.exe"
+            VALUE "ProductName", "The Eternity Engine"
+            VALUE "ProductVersion", "3, 40, 11, 1511"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

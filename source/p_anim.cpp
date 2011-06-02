@@ -76,7 +76,7 @@ static void P_LightningFlash(void)
 {
    int i;
    sector_t *tempSec;
-   boolean foundSec;
+   bool foundSec;
    int flashLight;
    static PointThinker thunderSndOrigin;
 

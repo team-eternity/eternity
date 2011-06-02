@@ -28,31 +28,32 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "a_common.h"
+#include "a_small.h"
 #include "d_gi.h"
 #include "d_mod.h"
-#include "p_mobj.h"
-#include "p_enemy.h"
-#include "p_info.h"
-#include "p_inter.h"
-#include "p_map.h"
-#include "p_maputl.h"
-#include "p_pspr.h"
-#include "p_tick.h"
-#include "p_setup.h"
-#include "p_spec.h"
-#include "r_state.h"
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
-
+#include "doomstat.h"
 #include "e_args.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
-
-#include "a_common.h"
+#include "p_enemy.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_mobjcol.h"
+#include "p_mobj.h"
+#include "p_pspr.h"
+#include "p_setup.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_defs.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
 
 //
 // A_SpawnGlitter
@@ -262,8 +263,8 @@ void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
    angle_t exact, diff;
    fixed_t dist;
-   Mobj  *dest;
-   boolean dir;
+   Mobj   *dest;
+   bool    dir;
   
    // adjust direction
    dest = actor->tracer;
@@ -548,17 +549,15 @@ MobjCollection sorcspots;
 
 void P_SpawnSorcSpots(void)
 {
-   static int spotType = -1;
-   
-   if(spotType == -1)
-      spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
+   int spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
 
-   P_ReInitMobjCollection(&sorcspots, spotType);
+   sorcspots.setMobjType(spotType);
+   sorcspots.makeEmpty();
 
    if(spotType == NUMMOBJTYPES)
       return;
 
-   P_CollectThings(&sorcspots);
+   sorcspots.collectThings();
 }
 
 void A_Srcr2Decide(Mobj *actor)
@@ -567,7 +566,7 @@ void A_Srcr2Decide(Mobj *actor)
    int index    = actor->health / (actor->info->spawnhealth / 8);
    
    // if no spots, no teleportation
-   if(P_CollectionIsEmpty(&sorcspots))
+   if(sorcspots.isEmpty())
       return;
 
    if(P_Random(pr_sorctele1) < chance[index])
@@ -1243,8 +1242,8 @@ void A_MinotaurAtk1(Mobj *actor)
 //
 // Returns true if the Maulotaur should do a charge attack.
 //
-d_inline static
-boolean P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
+inline static
+bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 {
    return (target->z + target->height > actor->z &&      // check heights
            target->z + target->height < actor->z + actor->height &&
@@ -1257,7 +1256,7 @@ boolean P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 //
 // Returns true if the Maulotaur should use floor fire.
 //
-d_inline static boolean P_CheckFloorFire(fixed_t dist, Mobj *target)
+inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 {
    return (target->z == target->floorz && // target on floor?
            dist < 576*FRACUNIT &&         // target in range?

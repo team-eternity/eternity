@@ -33,18 +33,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
-#include "m_cheat.h"
+
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized strings
+#include "d_deh.h"    // Ty 03/27/98 - externalized strings
+#include "d_dehtbl.h"
 #include "d_gi.h"
-#include "d_io.h"   // SoM 3/14/2002: strncasecmp
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_mod.h"
+#include "doomstat.h"
 #include "dstrings.h"
 #include "e_states.h"
 #include "g_game.h"
 #include "m_argv.h"
+#include "m_cheat.h"
 #include "p_inter.h"
 #include "p_setup.h"
 #include "r_data.h"
@@ -480,7 +482,7 @@ static void cheat_clev(const void *arg)
    // haleyjd: check mapname for existence and validity as a map
    lumpnum = W_CheckNumForName(mapname);
 
-   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
+   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)
    {
       doom_printf("%s not found or is not a valid map", mapname);
       return;
@@ -557,7 +559,7 @@ static void cheat_massacre(const void *arg)
 static void cheat_ddt(const void *arg)
 {
    extern int ddt_cheating;
-   extern boolean automapactive;
+   extern bool automapactive;
    if(automapactive)
       ddt_cheating = (ddt_cheating + 1) % 3;
 }
@@ -701,13 +703,13 @@ void M_DoCheat(char *s)
    }
 }
 
-boolean M_FindCheats(int key)
+bool M_FindCheats(int key)
 {
    static uint64_t sr;
    static char argbuf[CHEAT_ARGS_MAX+1], *arg;
    static int init, argsleft, cht;
    int i, matchedbefore; 
-   boolean ret;
+   bool ret;
 
    // If we are expecting arguments to a cheat
    // (e.g. idclev), put them in the arg buffer
@@ -807,7 +809,7 @@ CONSOLE_COMMAND(infammo, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_INFAMMO);
 
@@ -823,7 +825,7 @@ CONSOLE_COMMAND(noclip, cf_notnet|cf_level)
    int value=0;
 
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_NOCLIP);
 
@@ -840,7 +842,7 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
    int value = 0;        // sf: choose to set to 0 or 1 
 
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_GODMODE);
    
@@ -863,7 +865,7 @@ CONSOLE_COMMAND(buddha, cf_notnet|cf_level)
 {
    int value = 0;
    if(Console.argc)
-      sscanf(QStrConstPtr(&Console.argv[0]), "%i", &value);
+      sscanf(Console.argv[0]->constPtr(), "%i", &value);
    else
       value = !(players[consoleplayer].cheats & CF_IMMORTAL);
 

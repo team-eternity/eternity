@@ -27,23 +27,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "am_map.h"
+#include "c_runcmd.h"
+#include "d_gi.h"       // haleyjd
+#include "d_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "c_runcmd.h"
-#include "d_main.h"
-#include "m_random.h"
+#include "dstrings.h"
+#include "hu_over.h"    // haleyjd
 #include "i_video.h"
-#include "w_wad.h"
-#include "st_stuff.h"
-#include "st_lib.h"
-#include "r_main.h"
-#include "am_map.h"
 #include "m_cheat.h"
+#include "m_random.h"
+#include "p_skin.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "dstrings.h"
-#include "d_gi.h" // haleyjd
-#include "hu_over.h" // haleyjd
+#include "st_lib.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 //
 // STATUS BAR DATA
@@ -63,7 +67,7 @@
 #define ST_X2                   104
 
 #define ST_FX                   143
-#define ST_FY                   169
+#define ST_FY                   168
 
 // Should be set to patch width
 //  for tall numbers later on
@@ -198,7 +202,8 @@ stbarfns_t DoomStatusBar =
 //              amazing that this code from the _betas_ was still here
 
 // ST_Start() has just been called
-static boolean st_firsttime;
+// haleyjd 04/16/11: no more status bar caching
+//static bool st_firsttime;
 
 // lump number for PLAYPAL
 static int lu_palette;
@@ -210,19 +215,19 @@ static unsigned int st_clock;
 static st_stateenum_t st_gamestate;
 
 // whether left-side main status bar is active
-static boolean st_statusbaron;
+static bool st_statusbaron;
 
 // haleyjd: whether status bar background is on (for fullscreen hud)
-static boolean st_backgroundon;
+static bool st_backgroundon;
 
 // !deathmatch
-static boolean st_notdeathmatch;
+static bool st_notdeathmatch;
 
 // !deathmatch && st_statusbaron
-static boolean st_armson;
+static bool st_armson;
 
 // !deathmatch
-static boolean st_fragson;
+static bool st_fragson;
 
 // main bar left
 static patch_t *sbar;
@@ -325,31 +330,27 @@ extern byte     **translationtables;
 // STATUS BAR CODE
 //
 
-extern VBuffer backscreen4;
-
 static void ST_refreshBackground(void)
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, 0, BG, sbar);
+      V_DrawPatch(ST_X, ST_FY, &vbscreen, sbar);
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, 0, BG, faceback,
+         V_DrawPatchTranslated(ST_FX, ST_FY, &vbscreen, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
                NULL, 
             false);
       }
 
-      V_CopyRect(ST_X, 0, BG, ST_WIDTH, ST_HEIGHT, ST_X, ST_Y, FG);
-      
       // faces
       STlib_initMultIcon(&w_faces,  ST_FACESX, ST_FACESY,
                          players[displayplayer].skin->faces, 
-                         &st_faceindex, &st_statusbaron, &st_backgroundon);
+                         &st_faceindex, &st_statusbaron);
    }
 }
 
@@ -367,7 +368,6 @@ void ST_AutomapEvent(int type)
    {
    case AM_MSGENTERED:
       st_gamestate = AutomapState;
-      st_firsttime = true;
       break;
    case AM_MSGEXITED:
       st_gamestate = FirstPersonState;
@@ -381,7 +381,7 @@ void ST_AutomapEvent(int type)
 // Respond to keyboard input events, intercept cheats.
 // This code is shared by all status bars.
 //
-boolean ST_Responder(event_t *ev)
+bool ST_Responder(event_t *ev)
 {
    // TODO: allow cheat input to be disabled
    // if a user keypress...
@@ -430,12 +430,12 @@ enum
 //
 static void ST_updateFaceWidget(void)
 {
-   int         i;
-   angle_t     badguyangle;
-   angle_t     diffang;
-   static int  lastattackdown = -1;
-   static int  priority = ST_PRIORITY_NONE;
-   boolean     doevilgrin;
+   int        i;
+   angle_t    badguyangle;
+   angle_t    diffang;
+   static int lastattackdown = -1;
+   static int priority = ST_PRIORITY_NONE;
+   bool       doevilgrin;
    
    if(priority < ST_PRIORITY_MAX)
    {
@@ -727,46 +727,46 @@ static void ST_doPaletteStuff(void)
    }
 }
 
-static void ST_drawCommonWidgets(boolean refresh, int alpha)
+static void ST_drawCommonWidgets(int alpha)
 {
    int i;
 
    //jff 2/16/98 make color of ammo depend on amount
    if(*w_ready.num*100 < ammo_red*plyr->maxammo[weaponinfo[w_ready.data].ammo])
-      STlib_updateNum(&w_ready, cr_red, refresh, alpha);
+      STlib_updateNum(&w_ready, cr_red, alpha);
    else
     if(*w_ready.num*100 <
        ammo_yellow*plyr->maxammo[weaponinfo[w_ready.data].ammo])
-      STlib_updateNum(&w_ready, cr_gold, refresh, alpha);
+      STlib_updateNum(&w_ready, cr_gold, alpha);
     else
-      STlib_updateNum(&w_ready, cr_green, refresh, alpha);
+      STlib_updateNum(&w_ready, cr_green, alpha);
 
    //jff 2/16/98 make color of health depend on amount
    if(*w_health.n.num < health_red)
-      STlib_updatePercent(&w_health, cr_red, refresh, alpha);
+      STlib_updatePercent(&w_health, cr_red, alpha);
    else if(*w_health.n.num < health_yellow)
-      STlib_updatePercent(&w_health, cr_gold, refresh, alpha);
+      STlib_updatePercent(&w_health, cr_gold, alpha);
    else if(*w_health.n.num <= health_green)
-      STlib_updatePercent(&w_health, cr_green, refresh, alpha);
+      STlib_updatePercent(&w_health, cr_green, alpha);
    else
-      STlib_updatePercent(&w_health, cr_blue_status, refresh, alpha); //killough 2/28/98
+      STlib_updatePercent(&w_health, cr_blue_status, alpha); //killough 2/28/98
 
    //jff 2/16/98 make color of armor depend on amount
    if(*w_armor.n.num < armor_red)
-      STlib_updatePercent(&w_armor, cr_red, refresh, alpha);
+      STlib_updatePercent(&w_armor, cr_red, alpha);
    else if (*w_armor.n.num < armor_yellow)
-      STlib_updatePercent(&w_armor, cr_gold, refresh, alpha);
+      STlib_updatePercent(&w_armor, cr_gold, alpha);
    else if (*w_armor.n.num <= armor_green)
-      STlib_updatePercent(&w_armor, cr_green, refresh, alpha);
+      STlib_updatePercent(&w_armor, cr_green, alpha);
    else
-      STlib_updatePercent(&w_armor, cr_blue_status, refresh, alpha); //killough 2/28/98
+      STlib_updatePercent(&w_armor, cr_blue_status, alpha); //killough 2/28/98
 
    // test
    for(i = 0; i < 3; i++)
-      STlib_updateMultIcon(&w_keyboxes[i], refresh, alpha);
+      STlib_updateMultIcon(&w_keyboxes[i], alpha);
 }
 
-static void ST_drawWidgets(boolean refresh)
+static void ST_drawWidgets()
 {
    int i;
 
@@ -777,40 +777,41 @@ static void ST_drawWidgets(boolean refresh)
    st_fragson = st_statusbaron && GameType == gt_dm;
 
    // haleyjd: draw widgets common to status bar and fullscreen 
-   ST_drawCommonWidgets(refresh, FRACUNIT);
+   ST_drawCommonWidgets(FRACUNIT);
 
    for(i = 0; i < 4; i++)
    {
-      STlib_updateNum(&w_ammo[i], NULL, refresh, FRACUNIT);   //jff 2/16/98 no xlation
-      STlib_updateNum(&w_maxammo[i], NULL, refresh, FRACUNIT);
+      STlib_updateNum(&w_ammo[i],    NULL, FRACUNIT);   //jff 2/16/98 no xlation
+      STlib_updateNum(&w_maxammo[i], NULL, FRACUNIT);
    }
 
-   STlib_updateBinIcon(&w_armsbg, refresh);
+   STlib_updateBinIcon(&w_armsbg);
 
    for(i = 0; i < 6; i++)
-      STlib_updateMultIcon(&w_arms[i], refresh, FRACUNIT);
+      STlib_updateMultIcon(&w_arms[i], FRACUNIT);
 
-   STlib_updateMultIcon(&w_faces, refresh, FRACUNIT);
+   STlib_updateMultIcon(&w_faces, FRACUNIT);
 
-   STlib_updateNum(&w_frags, NULL, refresh, FRACUNIT);
+   STlib_updateNum(&w_frags, NULL, FRACUNIT);
 }
 
 static void ST_doRefresh(void)
 {
-   st_firsttime = false;
-   
    // draw status bar background to off-screen buffer
    ST_refreshBackground();
    
    // and refresh all widgets
-   ST_drawWidgets(true);
+   ST_drawWidgets();
 }
 
+/*
+// haleyjd 04/16/11: no more status bar caching
 static void ST_diffDraw(void)
 {
    // update all widgets
    ST_drawWidgets(false);
 }
+*/
 
 // Locations for graphical HUD elements
 
@@ -828,7 +829,7 @@ static void ST_diffDraw(void)
 // Moves widgets shared between the DOOM status bar and full-screen
 // graphical HUD between their two possible locations.
 //
-static void ST_moveWidgets(boolean fs)
+static void ST_moveWidgets(bool fs)
 {
    if(fs)
    {
@@ -845,9 +846,6 @@ static void ST_moveWidgets(boolean fs)
          w_keyboxes[0].x = ST_FS_KEYX;
          w_keyboxes[1].x = ST_FS_KEYX;
          w_keyboxes[2].x = ST_FS_KEYX;
-         
-         // must refresh all widgets when moving them
-         st_firsttime = true;
       }
    }
    else
@@ -865,10 +863,6 @@ static void ST_moveWidgets(boolean fs)
          w_keyboxes[0].x = ST_KEY0X;
          w_keyboxes[1].x = ST_KEY1X;
          w_keyboxes[2].x = ST_KEY2X;
-
-         
-         // must refresh all widgets when moving them
-         st_firsttime = true;
       }
    }
 }
@@ -883,10 +877,7 @@ static void ST_DoomDrawer(void)
    // possibly update widget positions
    ST_moveWidgets(false);
 
-   if(st_firsttime)
-      ST_doRefresh();     // If just after ST_Start(), refresh all
-   else
-      ST_diffDraw();      // Otherwise, update as little as possible
+   ST_doRefresh();     // If just after ST_Start(), refresh all
 }
 
 #define ST_ALPHA (st_fsalpha * FRACUNIT / 100)
@@ -920,7 +911,7 @@ static void ST_DoomFSDrawer(void)
 
 
    // draw common number widgets (always refresh since no background)
-   ST_drawCommonWidgets(true, ST_ALPHA);
+   ST_drawCommonWidgets(ST_ALPHA);
 }
 
 //
@@ -929,16 +920,15 @@ static void ST_DoomFSDrawer(void)
 // Performs player palette flashes and draws the current gamemode's
 // status bar if appropriate.
 //
-void ST_Drawer(boolean fullscreen, boolean refresh)
+void ST_Drawer(bool fullscreen)
 {
    stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
-   boolean fshud = hud_enabled && hud_overlaystyle == 4;
+   bool fshud = hud_enabled && hud_overlaystyle == 4;
 
    st_statusbaron  = !fullscreen || automapactive || fshud;
    st_backgroundon = !fullscreen || automapactive;
-   st_firsttime    = st_firsttime || refresh;
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
@@ -1117,8 +1107,6 @@ static void ST_initData(void)
 {
    int i;
 
-   st_firsttime = true;
-
    st_clock = 0;
    st_gamestate = FirstPersonState;
 
@@ -1149,7 +1137,6 @@ static void ST_createWidgets(void)
                  tallnum,
                  &plyr->ammo[weaponinfo[plyr->readyweapon].ammo],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_AMMOWIDTH );
 
    // the last weapon type
@@ -1162,7 +1149,6 @@ static void ST_createWidgets(void)
                      tallnum,
                      &plyr->health,
                      &st_statusbaron,
-                     &st_backgroundon,
                      tallpercent);
 
    // arms background
@@ -1180,7 +1166,7 @@ static void ST_createWidgets(void)
                          ST_ARMSX+(i%3)*ST_ARMSXSPACE,
                          ST_ARMSY+(i/3)*ST_ARMSYSPACE,
                          arms[i], &plyr->weaponowned[i+1],
-                         &st_armson, &st_backgroundon);
+                         &st_armson);
    }
 
    // frags sum
@@ -1190,7 +1176,6 @@ static void ST_createWidgets(void)
                  tallnum,
                  &st_fragscount,
                  &st_fragson,
-                 &st_backgroundon,
                  ST_FRAGSWIDTH);
 
    // faces
@@ -1199,8 +1184,7 @@ static void ST_createWidgets(void)
                       ST_FACESY,
                       default_faces,
                       &st_faceindex,
-                      &st_statusbaron,
-                      &st_backgroundon);
+                      &st_statusbaron);
 
    // armor percentage - should be colored later
    STlib_initPercent(&w_armor,
@@ -1209,7 +1193,6 @@ static void ST_createWidgets(void)
                      tallnum,
                      &plyr->armorpoints,
                      &st_statusbaron,
-                     &st_backgroundon,
                      tallpercent);
 
    // keyboxes 0-2
@@ -1218,24 +1201,21 @@ static void ST_createWidgets(void)
                       ST_KEY0Y,
                       keys,
                       &keyboxes[0],
-                      &st_statusbaron,
-                      &st_backgroundon);
+                      &st_statusbaron);
 
    STlib_initMultIcon(&w_keyboxes[1],
                       ST_KEY1X,
                       ST_KEY1Y,
                       keys,
                       &keyboxes[1],
-                      &st_statusbaron,
-                      &st_backgroundon);
+                      &st_statusbaron);
 
    STlib_initMultIcon(&w_keyboxes[2],
                       ST_KEY2X,
                       ST_KEY2Y,
                       keys,
                       &keyboxes[2],
-                      &st_statusbaron,
-                      &st_backgroundon);
+                      &st_statusbaron);
 
    // ammo count (all four kinds)
    STlib_initNum(&w_ammo[0],
@@ -1244,7 +1224,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->ammo[0],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_AMMO0WIDTH);
 
    STlib_initNum(&w_ammo[1],
@@ -1253,7 +1232,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->ammo[1],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_AMMO1WIDTH);
 
    STlib_initNum(&w_ammo[2],
@@ -1262,7 +1240,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->ammo[2],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_AMMO2WIDTH);
 
    STlib_initNum(&w_ammo[3],
@@ -1271,7 +1248,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->ammo[3],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_AMMO3WIDTH);
 
    // max ammo count (all four kinds)
@@ -1281,7 +1257,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->maxammo[0],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_MAXAMMO0WIDTH);
 
    STlib_initNum(&w_maxammo[1],
@@ -1290,7 +1265,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->maxammo[1],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_MAXAMMO1WIDTH);
 
    STlib_initNum(&w_maxammo[2],
@@ -1299,7 +1273,6 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->maxammo[2],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_MAXAMMO2WIDTH);
 
    STlib_initNum(&w_maxammo[3],
@@ -1308,11 +1281,8 @@ static void ST_createWidgets(void)
                  shortnum,
                  &plyr->maxammo[3],
                  &st_statusbaron,
-                 &st_backgroundon,
                  ST_MAXAMMO3WIDTH);
 }
-
-VBuffer backscreen4;
 
 //
 // ST_DoomStart
@@ -1321,22 +1291,11 @@ VBuffer backscreen4;
 //
 static void ST_DoomStart(void)
 {
-   static boolean freebackscreen = false;
-
    ST_initData();
    ST_createWidgets();
-
-   if(freebackscreen)
-      V_FreeVBuffer(&backscreen4);
-   else
-      freebackscreen = true;
-
-   V_InitVBufferFrom(&backscreen4, video.width, video.height, video.width, 
-                     video.bitdepth, video.screens[4]);
-   V_SetScaling(&backscreen4, SCREENWIDTH, SCREENHEIGHT);
 }
 
-static boolean st_stopped = true;
+static bool st_stopped = true;
 
 //
 // ST_Stop
@@ -1375,8 +1334,6 @@ void ST_Start(void)
 static void ST_DoomInit(void)
 {
    ST_loadData();
-   
-   // haleyjd: video.screens[4] is now allocated with the others.
 }
 
 //

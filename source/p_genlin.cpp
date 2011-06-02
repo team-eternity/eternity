@@ -27,23 +27,27 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
 #include "doomstat.h"
-#include "r_main.h"
+#include "e_exdata.h"
+#include "g_game.h"
+#include "m_random.h"
 #include "p_info.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_xenemy.h"
-#include "m_random.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
-#include "a_small.h"
-#include "e_exdata.h"
-#include "acs_intr.h"
-#include "c_runcmd.h"
-#include "c_io.h"
-#include "c_net.h"
-#include "g_game.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_state.h"
+
 
 //////////////////////////////////////////////////////////
 //
@@ -53,10 +57,10 @@
 
 int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
 {
-   int         secnum;
-   int         rtn = 0;
-   boolean     manual = false;
-   sector_t    *sec;
+   int       secnum;
+   int       rtn = 0;
+   bool      manual = false;
+   sector_t *sec;
    FloorMoveThinker *floor;
 
    // check if a manual trigger, if so do just the sector on the backside
@@ -298,9 +302,9 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
 {
    int       secnum;
    int       rtn = 0;
-   boolean   manual = false;
+   bool      manual = false;
    fixed_t   targheight;
-   sector_t  *sec;
+   sector_t *sec;
    CeilingThinker *ceiling;
 
    // check if a manual trigger, if so do just the sector on the backside
@@ -547,12 +551,12 @@ int EV_DoGenCeiling(line_t *line)
 //
 int EV_DoGenLift(line_t *line)
 {
-   PlatThinker   *plat;
-   int      secnum;
-   int      rtn;
-   boolean  manual;
+   PlatThinker *plat;
+   int       secnum;
+   int       rtn;
+   bool      manual;
    sector_t *sec;
-   unsigned value = (unsigned int)line->special - GenLiftBase;
+   unsigned int value = (unsigned int)line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
@@ -693,15 +697,15 @@ manual_lift:
 //
 int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
 {
-   int      secnum;
-   int      osecnum; //jff 3/4/98 preserve loop index
-   int      height;
-   int      i;
-   int      newsecnum;
-   int      texture;
-   int      ok;
-   int      rtn = 0;
-   boolean  manual = false;
+   int  secnum;
+   int  osecnum; //jff 3/4/98 preserve loop index
+   int  height;
+   int  i;
+   int  newsecnum;
+   int  texture;
+   int  ok;
+   int  rtn = 0;
+   bool manual = false;
     
    sector_t *sec;
    sector_t *tsec;
@@ -957,10 +961,10 @@ int EV_DoGenCrusher(line_t *line)
 {
    int       secnum;
    int       rtn;
-   boolean   manual;
-   sector_t  *sec;
+   bool      manual;
+   sector_t *sec;
    CeilingThinker *ceiling;
-   unsigned  value = (unsigned int)line->special - GenCrusherBase;
+   unsigned int value = (unsigned int)line->special - GenCrusherBase;
    
    // parse the bit fields in the line's special type
    
@@ -1112,8 +1116,8 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    int secnum, rtn = 0;
    sector_t *sec;
    VerticalDoorThinker *door;
-   boolean manual = false;
-   boolean turbo;
+   bool manual = false;
+   bool turbo;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
@@ -1382,7 +1386,7 @@ int EV_DoGenDoor(line_t* line)
 // Routine to get a generalized line trigger type for a given
 // parameterized special activation.
 //
-static int pspec_TriggerType(int spac, int tag, boolean reuse)
+static int pspec_TriggerType(int spac, int tag, bool reuse)
 {
    int trig = 0;
 
@@ -1421,7 +1425,7 @@ static int param_door_kinds[6] =
 //
 // Parses arguments for parameterized Door specials.
 //
-static boolean pspec_Door(line_t *line, Mobj *thing, int *args, 
+static bool pspec_Door(line_t *line, Mobj *thing, int *args, 
                           int16_t special, int trigger_type)
 {
    int kind;
@@ -1527,7 +1531,7 @@ static int fchgdata[7][2] =
 //
 // Parses arguments for parameterized Floor specials.
 //
-static boolean pspec_Floor(line_t *line, int *args, int16_t special, 
+static bool pspec_Floor(line_t *line, int *args, int16_t special, 
                            int trigger_type)
 {
    floordata_t fd = { 0 };
@@ -1678,7 +1682,7 @@ static int cchgdata[7][2] =
 //
 // Parses arguments for parameterized Ceiling specials.
 //
-static boolean pspec_Ceiling(line_t *line, int *args, int16_t special, 
+static bool pspec_Ceiling(line_t *line, int *args, int16_t special, 
                              int trigger_type)
 {
    ceilingdata_t cd = { 0 };
@@ -1792,7 +1796,7 @@ static boolean pspec_Ceiling(line_t *line, int *args, int16_t special,
 //
 // Parses arguments for parameterized Stair specials.
 //
-static boolean pspec_Stairs(line_t *line, int *args, int16_t special, 
+static bool pspec_Stairs(line_t *line, int *args, int16_t special, 
                             int trigger_type)
 {
    stairdata_t sd = { 0 };
@@ -1839,7 +1843,7 @@ static boolean pspec_Stairs(line_t *line, int *args, int16_t special,
 //
 // Parses arguments for parameterized polyobject door types
 //
-static boolean pspec_PolyDoor(int *args, int16_t special)
+static bool pspec_PolyDoor(int *args, int16_t special)
 {
    polydoordata_t pdd = { 0 };
 
@@ -1872,7 +1876,7 @@ static boolean pspec_PolyDoor(int *args, int16_t special)
 //
 // Parses arguments for parameterized polyobject move specials
 //
-static boolean pspec_PolyMove(int *args, int16_t special)
+static bool pspec_PolyMove(int *args, int16_t special)
 {
    polymovedata_t pmd;
 
@@ -1891,7 +1895,7 @@ static boolean pspec_PolyMove(int *args, int16_t special)
 //
 // Parses arguments for parameterized polyobject rotate specials
 //
-static boolean pspec_PolyRotate(int *args, int16_t special)
+static bool pspec_PolyRotate(int *args, int16_t special)
 {
    polyrotdata_t prd;
 
@@ -1916,7 +1920,7 @@ static boolean pspec_PolyRotate(int *args, int16_t special)
 //
 // haleyjd: rewritten to use pillardata_t struct
 //
-static boolean pspec_Pillar(line_t *line, int *args, int16_t special)
+static bool pspec_Pillar(line_t *line, int *args, int16_t special)
 {
    pillardata_t pd;
    
@@ -1949,7 +1953,7 @@ static boolean pspec_Pillar(line_t *line, int *args, int16_t special)
 //
 // haleyjd 01/07/07: Runs an ACS script.
 //
-static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
+static bool pspec_ACSExecute(line_t *line, int *args, int16_t special,
                                 int side, Mobj *thing)
 {
    int snum, mnum;
@@ -1962,7 +1966,7 @@ static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
    script_args[1] = args[3];
    script_args[2] = args[4];
 
-   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL);
+   return ACS_StartScript(snum, mnum, script_args, thing, line, side, NULL, false);
 }
 
 //
@@ -1977,10 +1981,10 @@ static boolean pspec_ACSExecute(line_t *line, int *args, int16_t special,
 // side:    Side of line activated. May be ignored.
 // reuse:   if action is repeatable
 //
-boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
-                            int *args, int side, int spac, boolean reuse)
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+                         int *args, int side, int spac, bool reuse)
 {
-   boolean success = false;
+   bool success = false;
 
    int trigger_type = pspec_TriggerType(spac, args[0], reuse);
 
@@ -2101,6 +2105,16 @@ boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
       G_ForceFinale();
       success = true;
       break;
+   case 402: // Thing_Projectile
+   case 403: // Thing_ProjectileGravity
+      success = !!EV_ThingProjectile(args, (special == 403));
+      break;
+   case 404: // Thing_Activate
+      success = !!EV_ThingActivate(args[0]);
+      break;
+   case 405: // Thing_Deactivate
+      success = !!EV_ThingDeactivate(args[0]);
+      break;
    default:
       break;
    }
@@ -2120,9 +2134,9 @@ boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
 // spac:  Type of activation. This is de-wed from the special with
 //        parameterized lines using the ExtraData extflags line field.
 //
-boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac)
+bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac)
 {
-   boolean success = false, reuse = false;
+   bool success = false, reuse = false;
    int flags = 0;
 
    // check player / monster / missile enable flags
@@ -2197,7 +2211,7 @@ enum
 // Sets the indicated texture on all lines of lineid tag (if usetag false) or of
 // the given tag (if usetag true)
 //
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag)
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
 {
    line_t *l = NULL;
    int linenum = -1, texnum;
@@ -2207,7 +2221,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean us
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      if(l->sidenum[side] == -1)
+       if(l->sidenum[side] == -1)
          continue;
 
       switch(pos)
@@ -2430,12 +2444,12 @@ CONSOLE_COMMAND(p_linespec, cf_notnet|cf_level)
       return;
    }
 
-   spec = E_LineSpecForName(QStrConstPtr(&Console.argv[0]));
+   spec = E_LineSpecForName(Console.argv[0]->constPtr());
 
    numargs = Console.argc - 1;
 
    for(i = 0; i < numargs; ++i)
-      args[i] = QStrAtoi(&Console.argv[i + 1]);
+      args[i] = Console.argv[i + 1]->toInt();
 
    P_ExecParamLineSpec(NULL, players[Console.cmdsrc].mo, spec, args, 0, 
                        SPAC_CROSS, true);

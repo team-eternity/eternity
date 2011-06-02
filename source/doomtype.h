@@ -32,12 +32,7 @@
 
 #ifndef BYTEBOOL__
 #define BYTEBOOL__
-// Fixed to use builtin bool type with C++.
-#ifdef __cplusplus
-typedef bool boolean;
-#else
-typedef enum {false, true} boolean;
-#endif
+// haleyjd 04/10/11: boolean typedef eliminated in pref. of direct use of bool
 typedef uint8_t byte;
 #endif
 
@@ -48,8 +43,6 @@ typedef uint8_t byte;
 #define D_MININT INT_MIN
 #define D_MAXSHORT  SHRT_MAX
 
-#define MAXCHAR         ((char)0x7f)
-#define MINCHAR         ((char)0x80)
 #endif
 
 //----------------------------------------------------------------------------

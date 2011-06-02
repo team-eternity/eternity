@@ -25,25 +25,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomtype.h"
-#include "d_io.h"
-#include "d_dwfile.h"
-#include "m_hash.h"
-#include "m_misc.h"
-#include "w_wad.h"
-#include "psnprntf.h"
-#include "d_main.h"
 #include "i_system.h"
-#include "d_dehtbl.h"
-#include "v_video.h"
 
 #include "Confuse/confuse.h"
 #include "Confuse/lexer.h"
 
-#include <errno.h>
-
 #include "e_lib.h"
 #include "e_edf.h"
+
+#include "d_dehtbl.h"
+#include "d_dwfile.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "doomstat.h"
+#include "doomtype.h"
+#include "m_collection.h"
+#include "m_hash.h"
+#include "m_misc.h"
+#include "m_qstr.h"
+#include "psnprntf.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 //=============================================================================
 //
@@ -68,9 +70,7 @@ void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
 // calculate the SHA-1 checksum of each EDF data source and record it here.
 //
 
-static hashdata_t *eincludes;
-static int numincludes;
-static int numincludesalloc;
+static Collection<HashData> eincludes;
 
 //
 // E_CheckInclude
@@ -80,29 +80,31 @@ static int numincludesalloc;
 // data sources that have been sent into this function. Returns true if the
 // data should be included, and false otherwise (ie. there was a match).
 //
-static boolean E_CheckInclude(const char *data, size_t size)
+static bool E_CheckInclude(const char *data, size_t size)
 {
-   int i;
-   hashdata_t newhash;
+   size_t i, numincludes;
+   HashData newhash;
    char *digest;
 
    // calculate the SHA-1 hash of the data
-   M_HashInitialize(&newhash, HASH_SHA1);
-   M_HashData(&newhash, (const uint8_t *)data, (uint32_t)size);
-   M_HashWrapUp(&newhash);
+   newhash.Initialize(HashData::SHA1);
+   newhash.AddData((const uint8_t *)data, (uint32_t)size);
+   newhash.WrapUp();
 
    // output digest string
-   digest = M_HashDigestToStr(&newhash);
+   digest = newhash.DigestToString();
 
    E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
 
    free(digest);
 
+   numincludes = eincludes.getLength();
+
    // compare against existing includes
    for(i = 0; i < numincludes; ++i)
    {
       // found a match?
-      if(M_HashCompare(&newhash, &eincludes[i]))
+      if(newhash.compare(eincludes[i]))
       {
          E_EDFLogPuts("\t\t\tDeclined, SHA-1 match detected.\n");
          return false;
@@ -110,12 +112,7 @@ static boolean E_CheckInclude(const char *data, size_t size)
    }
 
    // this source has not been processed before, so add its hash to the list
-   if(numincludes == numincludesalloc)
-   {
-      numincludesalloc = numincludesalloc ? 2 * numincludesalloc : 8;
-      eincludes = (hashdata_t *)(realloc(eincludes, numincludesalloc * sizeof(*eincludes)));
-   }
-   eincludes[numincludes++] = newhash;
+   eincludes.add(newhash);
 
    return true;
 }
@@ -169,6 +166,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t *lump, *inclump;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    int includinglumpnum;
    int i;
 
@@ -177,7 +175,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
       return -1;
 
    // get a pointer to the including lump's lumpinfo
-   inclump = w_GlobalDir.lumpinfo[includinglumpnum];
+   inclump = lumpinfo[includinglumpnum];
 
    // get a pointer to the hash chain for this lump name
    lump = W_GetLumpNameChain(name);
@@ -185,7 +183,7 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    // walk down the hash chain
    for(i = lump->index; i >= 0; i = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[i];
+      lump = lumpinfo[i];
 
       if(!strncasecmp(lump->name, name, 8) &&           // name matches specified
          lump->li_namespace == lumpinfo_t::ns_global && // is in global namespace
@@ -320,6 +318,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    int i;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: include_prev is deprecated\n");
@@ -342,10 +341,10 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = w_GlobalDir.lumpinfo[i]->next) >= 0)
+   while((i = lumpinfo[i]->next) >= 0)
    {
-      if(w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
-         !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
+      if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
+         !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
       {
          return E_OpenAndCheckInclude(cfg, cfg->filename, i);
       }
@@ -869,6 +868,511 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
    }
 
    return colonloc;
+}
+
+//
+// Other String Utilities
+//
+
+//
+// E_GetHeredocLine
+//
+// Finds the start of the next line in the string, and modifies the string with
+// a \0 to terminate the current line. Returns the start of the current line, or
+// NULL if input is exhausted. Based loosely on E_GetDSLine from the DECORATE 
+// state parser.
+//
+char *E_GetHeredocLine(char **src)
+{
+   bool isdone  = false;
+   char *srctxt    = *src;
+   char *linestart = srctxt;
+
+   if(!*srctxt) // at end?
+      linestart = NULL;
+   else
+   {
+      char c;
+
+      while((c = *srctxt))
+      {
+         if(c == '\n')
+         {
+            // modify with a \0 to terminate the line, and step to the next char
+            *srctxt = '\0';
+            ++srctxt;
+            break;
+         }
+         ++srctxt;
+      }
+
+      // parse out spaces at the start of the line
+      while(isspace(*linestart))
+         ++linestart;
+   }
+
+   *src = srctxt;
+
+   return linestart;
+}
+
+//============================================================================
+//
+// Basic simple text line tokenizer - abstracted out of SndSeq parser
+//
+
+// states for command mini-parser below.
+enum
+{
+   STATE_LOOKFORCMD,
+   STATE_INCMD,
+};
+
+//
+// E_ParseTextLine
+//
+// Tokenizes a script command string. Basically, breaks it up into
+// 0 to E_MAXCMDTOKENS tokens. Anything beyond the max token count is totally 
+// ignored.
+//
+tempcmd_t E_ParseTextLine(char *str)
+{
+   tempcmd_t retcmd;
+   char *tokenstart = NULL;
+   int state = STATE_LOOKFORCMD, strnum = 0;
+
+   memset(&retcmd, 0, sizeof(retcmd));
+
+   while(1)
+   {
+      switch(state)
+      {
+      case STATE_LOOKFORCMD: // looking for a command -- skip whitespace
+         switch(*str)
+         {
+         case '\0': // end of string -- done
+            return retcmd;
+         case ' ':
+         case '\t':
+         case '\r':
+            break;
+         default:
+            tokenstart = str;
+            state = STATE_INCMD;
+            break;
+         }
+         break;
+      case STATE_INCMD: // inside a command -- whitespace ends
+         switch(*str)
+         {
+         case '\0': // end of string
+         case ' ':
+         case '\t':
+         case '\r':
+            retcmd.strs[strnum] = tokenstart;
+            ++strnum;
+            if(*str == '\0' || strnum >= E_MAXCMDTOKENS) // are we done?
+               return retcmd;
+            tokenstart = NULL;
+            state = STATE_LOOKFORCMD;
+            *str = '\0'; // modify string to terminate tokens
+            break;
+         default:
+            break;
+         }
+         break;
+      }
+
+      ++str;
+   }
+
+   return retcmd; // should be unreachable
+}
+
+//=============================================================================
+//
+// Translation Parsing
+//
+// haleyjd 02/02/11: Support ZDoom-format translation strings (to a point)
+//
+
+// Translation token types
+enum
+{
+   TR_TOKEN_NUM,
+   TR_TOKEN_COLON,
+   TR_TOKEN_EQUALS,
+   TR_TOKEN_COMMA,
+   TR_TOKEN_END,
+   TR_TOKEN_ERROR
+};
+
+// Parser States:
+enum
+{
+   TR_PSTATE_SRCBEGIN,
+   TR_PSTATE_COLON,
+   TR_PSTATE_SRCEND,
+   TR_PSTATE_EQUALS,
+   TR_PSTATE_DSTBEGIN,
+   TR_PSTATE_DSTEND,
+   TR_PSTATE_COMMAOREND,
+   TR_PSTATE_NUMSTATES
+};
+
+struct tr_range_t
+{
+   int srcbegin;
+   int srcend;
+   int dstbegin;
+   int dstend;
+
+   tr_range_t *next;
+};
+
+struct tr_pstate_t
+{
+   int state;
+   int prevstate;
+   qstring *token;
+   const char *input;
+   int inputpos;
+   bool error;
+   bool done;
+   bool singlecolor;
+   tr_range_t *ranges;
+   
+   // data
+   int srcbegin;
+   int srcend;
+   int dstbegin;
+   int dstend;
+};
+
+//
+// E_GetTranslationToken
+//
+// Get the next token from the translation string
+//
+static int E_GetTranslationToken(tr_pstate_t *pstate)
+{
+   const char *str = pstate->input;
+   int strpos = pstate->inputpos;
+
+   pstate->token->clear();
+
+   // skip whitespace
+   while(str[strpos] == ' ' || str[strpos] == '\t')
+      ++strpos;
+
+   // On a number?
+   if(isnumchar(str[strpos]))
+   {
+      while(isnumchar(str[strpos]))
+      {
+         *pstate->token += str[strpos];
+         ++strpos;
+      }
+      pstate->inputpos = strpos;
+      return TR_TOKEN_NUM;
+   }
+   else
+   {
+      // Misc character
+      switch(str[strpos])
+      {
+      case ':':
+         *pstate->token += str[strpos];
+         ++pstate->inputpos;
+         return TR_TOKEN_COLON;
+      case '=':
+         *pstate->token += str[strpos];
+         ++pstate->inputpos;
+         return TR_TOKEN_EQUALS;
+      case ',':
+         *pstate->token += str[strpos];
+         ++pstate->inputpos;
+         return TR_TOKEN_COMMA;
+      case '\0':
+         return TR_TOKEN_END;
+      default:
+         return TR_TOKEN_ERROR; // woops?
+      }
+   }
+}
+
+#define COLOR_CLAMP(c) ((c) > 255 ? 255 : ((c) < 0 ? 0 : (c)))
+
+//
+// PushRange
+//
+// Pushes the current palette translation range into the parser state object's
+// list of ranges.
+//
+static void PushRange(tr_pstate_t *pstate)
+{
+   tr_range_t *newrange = (tr_range_t *)(calloc(1, sizeof(tr_range_t)));
+
+   newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
+   newrange->srcend   = COLOR_CLAMP(pstate->srcend);
+   newrange->dstbegin = COLOR_CLAMP(pstate->dstbegin);
+   newrange->dstend   = COLOR_CLAMP(pstate->dstend);
+
+   // normalize ranges
+   if(newrange->srcbegin > newrange->srcend)
+   {
+      int temp = newrange->srcbegin;
+      newrange->srcbegin = newrange->srcend;
+      newrange->srcend   = temp;
+   }
+
+   if(newrange->dstbegin > newrange->dstend)
+   {
+      int temp = newrange->dstbegin;
+      newrange->dstbegin = newrange->dstend;
+      newrange->dstend   = temp;
+   }
+
+   newrange->next = pstate->ranges;
+   pstate->ranges = newrange;
+};
+
+//
+// DoPStateSrcBegin
+//
+// Expecting the beginning number of a source range
+//
+static void DoPStateSrcBegin(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->srcbegin = pstate->token->toInt();
+      pstate->prevstate = pstate->state;
+      pstate->state = TR_PSTATE_COLON;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateColon
+//
+// Expecting a colon between range ends.
+// An =, comma, or end-of-string may also be acceptable when coming here
+// from different states, as they would then indicate a single-color range.
+//
+static void DoPStateColon(tr_pstate_t *pstate)
+{
+   int tokentype = E_GetTranslationToken(pstate);
+
+   if(tokentype == TR_TOKEN_COLON)
+   {
+      switch(pstate->prevstate)
+      {
+      case TR_PSTATE_SRCBEGIN:
+         pstate->state = TR_PSTATE_SRCEND;
+         break;
+      case TR_PSTATE_DSTBEGIN:
+         pstate->state = TR_PSTATE_DSTEND;
+         break;
+      default:
+         pstate->error = true;
+      }
+   }
+   else if(tokentype == TR_TOKEN_EQUALS && pstate->prevstate == TR_PSTATE_SRCBEGIN)
+   {
+      // An equals sign here forwards processing to the destination end state
+      pstate->srcend = pstate->srcbegin; // single color, begin = end
+      pstate->state = TR_PSTATE_DSTEND;
+      pstate->singlecolor = true;        // remember to duplicate end of range too...
+   }
+   else if((tokentype == TR_TOKEN_COMMA || tokentype == TR_TOKEN_END) &&
+           pstate->prevstate == TR_PSTATE_DSTBEGIN)
+   {
+      // , or end-of-string here means the destination range is a single color;
+      // duplicate the color, back up one character, and go to the end state.
+      pstate->dstend = pstate->dstbegin;
+      if(pstate->inputpos > 0)
+         --pstate->inputpos;
+      pstate->state = TR_PSTATE_COMMAOREND;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateSrcEnd
+//
+// Expecting the end number of a source range
+//
+static void DoPStateSrcEnd(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->srcend = pstate->token->toInt();
+      pstate->state = TR_PSTATE_EQUALS;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateEquals
+//
+// Expecting an = between src and dest ranges
+//
+static void DoPStateEquals(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_EQUALS)
+      pstate->state = TR_PSTATE_DSTBEGIN;
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateDestBegin
+//
+// Expecting the beginning number of a destination range
+//
+static void DoPStateDestBegin(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->dstbegin = pstate->token->toInt();
+      pstate->prevstate = pstate->state;
+      pstate->state = TR_PSTATE_COLON;
+   }
+   else
+      pstate->error = true;
+}
+
+// 
+// DoPStateDestEnd
+//
+// Expecting the ending number of a destination range
+//
+static void DoPStateDestEnd(tr_pstate_t *pstate)
+{
+   if(E_GetTranslationToken(pstate) == TR_TOKEN_NUM)
+   {
+      pstate->dstend = pstate->token->toInt();
+      
+      if(pstate->singlecolor)
+      {
+         // If this was a single-color source range, duplicate the end color
+         // to the beginning color for the destination range.
+         pstate->dstbegin = pstate->dstend;
+         pstate->singlecolor = false;
+      }
+      
+      pstate->state = TR_PSTATE_COMMAOREND;
+   }
+   else
+      pstate->error = true;
+}
+
+//
+// DoPStateCommaOrEnd
+//
+// Need either a comma, which will start a new range, or the end of the string.
+//
+static void DoPStateCommaOrEnd(tr_pstate_t *pstate)
+{
+   int tokentype = E_GetTranslationToken(pstate);
+   
+   // push range
+   PushRange(pstate);
+   
+   switch(tokentype)
+   {
+   case TR_TOKEN_END:
+      pstate->done = true;
+      break;
+   case TR_TOKEN_COMMA:
+      pstate->state = TR_PSTATE_SRCBEGIN;
+      break;
+   default:
+      pstate->error = true;
+      break;
+   }
+}
+
+// Parser callback type
+typedef void (*tr_pfunc)(tr_pstate_t *);
+
+// Parser state table
+static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] = 
+{
+   DoPStateSrcBegin,   // TR_PSTATE_SRCBEGIN
+   DoPStateColon,      // TR_PSTATE_COLON
+   DoPStateSrcEnd,     // TR_PSTATE_SRCEND
+   DoPStateEquals,     // TR_PSTATE_EQUALS
+   DoPStateDestBegin,  // TR_PSTATE_DSTBEGIN
+   DoPStateDestEnd,    // TR_PSTATE_DSTEND
+   DoPStateCommaOrEnd  // TR_PSTATE_COMMAOREND
+};
+
+#define RANGE_CLAMP(c, end) ((c) <= (end) ? (c) : (end))
+
+//
+// E_ParseTranslation
+//
+byte *E_ParseTranslation(const char *str)
+{
+   int i;
+   qstring tokenbuf;
+   byte *translation = (byte *)(calloc(1, 256));
+   tr_pstate_t parserstate;
+
+   tokenbuf.initCreate();
+
+   // initialize to monotonically increasing sequence (identity translation)
+   for(i = 0; i < 256; i++)
+      translation[i] = i;
+
+   // setup the parser
+   parserstate.state       = TR_PSTATE_SRCBEGIN;
+   parserstate.prevstate   = TR_PSTATE_SRCBEGIN;
+   parserstate.token       = &tokenbuf;
+   parserstate.input       = str;
+   parserstate.inputpos    = 0;
+   parserstate.error       = false;
+   parserstate.done        = false;
+   parserstate.singlecolor = false;
+   parserstate.ranges      = NULL;
+
+   while(!(parserstate.done || parserstate.error))
+      trpfuncs[parserstate.state](&parserstate);
+
+   // If no error occurred, apply all translation ranges
+   if(!parserstate.error)
+   {
+      tr_range_t *range = parserstate.ranges;
+
+      while(range)
+      {
+         tr_range_t *next = range->next;
+         int numsrccolors = range->srcend - range->srcbegin + 1;
+         int numdstcolors = range->dstend - range->dstbegin + 1;
+         fixed_t dst      = range->dstbegin * FRACUNIT;
+         fixed_t deststep = (numdstcolors * FRACUNIT) / numsrccolors;
+
+         // populate source indices with destination colors
+         for(int src = range->srcbegin; src <= range->srcend; src++)
+         {
+            translation[src] = RANGE_CLAMP(dst / FRACUNIT, range->dstend);
+            dst += deststep;
+         }
+
+         // done with this range
+         free(range);
+
+         // step to next range
+         range = next;
+      }
+   }
+
+   return translation;
 }
 
 // EOF

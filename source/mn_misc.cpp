@@ -29,21 +29,25 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
+#include "c_runcmd.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"      // haleyjd: gamemode info
 #include "d_main.h"
+#include "doomstat.h"
 #include "e_fonts.h"
+#include "g_bind.h"
 #include "m_qstr.h"
 #include "m_swap.h"
-#include "s_sound.h"
-#include "v_video.h"
-#include "v_misc.h"
-#include "w_wad.h"
-
 #include "mn_engin.h"
 #include "mn_misc.h"
-
-#include "d_gi.h" // haleyjd: gamemode info
+#include "r_patch.h"
+#include "s_sound.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 extern vfont_t *menu_font_big;
 
@@ -57,7 +61,7 @@ extern vfont_t *menu_font_big;
 // properly set the menuactive state based on whether or not menus 
 // were active at the time of the call, leading to weird menu 
 // behavior
-static boolean popupMenuActive;
+static bool popupMenuActive;
 
 static char  popup_message[1024];
 static char *popup_message_command; // console command to run
@@ -86,41 +90,39 @@ extern vfont_t *menu_font_normal;
 //
 static void WriteCenteredText(char *message)
 {
-   static qstring_t qstring;
-   static qstring_t *pqstr = NULL;
+   static qstring qstr;
    char *rover;
    const char *buffer;
    int x, y;
 
-   if(!pqstr)
-      pqstr = QStrCreate(&qstring);
+   qstr.clearOrCreate(128);
    
    // rather than reallocate memory every time we draw it,
    // use one buffer and increase the size as neccesary
    // haleyjd 02/22/04: qstring handles this for us now
 
    y = (SCREENHEIGHT - V_FontStringHeight(menu_font_normal, popup_message)) / 2;
-   QStrClear(pqstr);
+   qstr.clear();
    rover = message;
 
    while(*rover)
    {
       if(*rover == '\n')
       {
-         buffer = QStrConstPtr(pqstr);
+         buffer = qstr.constPtr();
          x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
          V_FontWriteText(menu_font_normal, buffer, x, y);         
-         QStrClear(pqstr); // clear buffer
+         qstr.clear(); // clear buffer
          y += menu_font_normal->absh; // next line
       }
       else      // add next char
-         QStrPutc(pqstr, *rover);
+         qstr += *rover;
 
       ++rover;
    }
 
    // dont forget the last line.. prob. not \n terminated
-   buffer = QStrConstPtr(pqstr);
+   buffer = qstr.constPtr();
    x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
    V_FontWriteText(menu_font_normal, buffer, x, y);   
 }
@@ -130,7 +132,7 @@ void MN_PopupDrawer(void)
    WriteCenteredText(popup_message);
 }
 
-boolean MN_PopupResponder(event_t *ev)
+bool MN_PopupResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
@@ -150,7 +152,7 @@ boolean MN_PopupResponder(event_t *ev)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
       }
@@ -173,7 +175,7 @@ boolean MN_PopupResponder(event_t *ev)
             C_RunTextCmd(popup_message_command);
          }
          S_StartSound(NULL, menuSounds[MN_SND_COMMAND]);
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL;  // kill message
       }
       if(ch == 'n' || action_menu_toggle || action_menu_previous) // no!
@@ -183,7 +185,7 @@ boolean MN_PopupResponder(event_t *ev)
          action_menu_toggle = action_menu_previous = false;
          menuactive = popupMenuActive;
          S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
-         redrawsbar = redrawborder = true; // need redraw
+         redrawborder = true; // need redraw
          current_menuwidget = NULL; // kill message
       }
       break;
@@ -281,7 +283,7 @@ typedef struct helpscreen_s
 static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
 static int num_helpscreens;
 static int viewing_helpscreen;     // currently viewing help screen
-extern boolean inhelpscreens; // indicates we are in or just left a help screen
+extern bool inhelpscreens; // indicates we are in or just left a help screen
 
 static void AddHelpScreen(const char *screenname)
 {
@@ -458,9 +460,9 @@ void MN_HelpDrawer(void)
 }
 
 // haleyjd 05/29/06: record state of menu activation
-static boolean help_prev_menuactive;
+static bool help_prev_menuactive;
 
-boolean MN_HelpResponder(event_t *ev)
+bool MN_HelpResponder(event_t *ev)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    
@@ -503,7 +505,7 @@ boolean MN_HelpResponder(event_t *ev)
 
       // cancel helpscreen
 cancel:
-      redrawsbar = redrawborder = true; // need redraw
+      redrawborder = true; // need redraw
       current_menuwidget = NULL;
       // haleyjd 05/29/06: maintain previous menu activation state
       if(!help_prev_menuactive)
@@ -599,7 +601,7 @@ void MN_MapColourDrawer(void)
       V_DrawPatch(x+1, y+1, &vbscreen, (patch_t *)W_CacheLumpName("M_PALNO", PU_CACHE));
 }
 
-boolean MN_MapColourResponder(event_t *ev)
+bool MN_MapColourResponder(event_t *ev)
 {
    if(action_menu_left)
    {
@@ -663,7 +665,7 @@ menuwidget_t colour_widget =
    true
 };
 
-void MN_SelectColour(char *variable_name)
+void MN_SelectColour(const char *variable_name)
 {
    current_menuwidget = &colour_widget;
    colour_command = C_GetCmdForName(variable_name);

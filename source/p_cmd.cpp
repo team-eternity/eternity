@@ -32,12 +32,15 @@
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "doomstat.h"
 
+#include "acs_intr.h"
+#include "am_map.h"
 #include "d_main.h"
+#include "doomstat.h"
 #include "f_wipe.h"
 #include "g_game.h"
 #include "m_random.h"
+#include "mn_engin.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_map.h"
@@ -45,21 +48,20 @@
 #include "p_inter.h"
 #include "p_spec.h"
 #include "r_draw.h"
-#include "mn_engin.h"
-#include "am_map.h"
-#include "acs_intr.h"
+#include "v_misc.h"
+
 
 /***************************************************************************
                 'defines': string values for variables
 ***************************************************************************/
 
-char *yesno[] = { "no",  "yes" };
-char *onoff[] = { "off", "on"  };
+const char *yesno[] = { "no",  "yes" };
+const char *onoff[] = { "off", "on"  };
 
-char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
-                      "gold","sea","black","purple","vomit", "pink", "cream","white"};
+const char *colournames[]= {"green","indigo","brown","red","tomato","dirt","blue",
+                            "gold","sea","black","purple","vomit", "pink", "cream","white"};
 
-char *textcolours[]=
+const char *textcolours[]=
 {
    FC_BRICK  "brick" FC_NORMAL,
    FC_TAN    "tan"   FC_NORMAL,
@@ -73,7 +75,7 @@ char *textcolours[]=
    FC_YELLOW "yellow"FC_NORMAL
 };
 
-char *skills[]=
+const char *skills[]=
 {
    "im too young to die",
    "hey not too rough",
@@ -82,8 +84,8 @@ char *skills[]=
    "nightmare"
 };
 
-char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
-char *dmstr[] = { "single", "coop", "deathmatch" };
+const char *bfgtypestr[5]= { "bfg9000", "classic", "bfg11k", "bouncing", "plasma burst"};
+const char *dmstr[] = { "single", "coop", "deathmatch" };
 
 /*************************************************************************
         Constants
@@ -119,7 +121,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       return;
    
    playernum = Console.cmdsrc;
-   colour = QStrAtoi(&Console.argv[0]) % TRANSLATIONCOLOURS;
+   colour = Console.argv[0]->toInt() % TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
@@ -153,7 +155,7 @@ CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
    if(!Console.argc)
       return;
 
-   startskill = gameskill = (skill_t)(QStrAtoi(&Console.argv[0]));
+   startskill = gameskill = (skill_t)(Console.argv[0]->toInt());
    if(Console.cmdsrc == consoleplayer)
       defaultskill = gameskill + 1;
 }
@@ -217,7 +219,7 @@ CONSOLE_NETVAR(weapspeed, weapon_speed, cf_server, netcmd_weapspeed) {}
 // NETCODE_FIXME: bfglook is currently a dead option.
 //
 
-char *str_bfglook[] = { "off", "on", "fixedgun" };
+const char *str_bfglook[] = { "off", "on", "fixedgun" };
 VARIABLE_INT(bfglook,   NULL,                   0, 2, str_bfglook);
 CONSOLE_NETVAR(bfglook, bfglook, cf_server, netcmd_bfglook) {}
 
@@ -302,7 +304,7 @@ CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) 
 VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, NULL);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
-static char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
+static const char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
 
 // haleyjd 09/20/06: spechits overflow emulation
 VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
@@ -318,8 +320,8 @@ CONSOLE_VARIABLE(p_markunknowns, markUnknowns, 0) {}
 // haleyjd 10/09/07
 extern int wipewait;
 
-static char *wipewait_strs[] = { "never", "always", "demos" };
-static char *wipetype_strs[] = { "none", "melt", "fade" };
+static const char *wipewait_strs[] = { "never", "always", "demos" };
+static const char *wipetype_strs[] = { "none", "melt", "fade" };
 
 VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
 CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
@@ -348,10 +350,10 @@ CONSOLE_COMMAND(puke, cf_notnet)
       return;
 
    for(i = 1; i < Console.argc; ++i)
-      args[i - 1] = QStrAtoi(&Console.argv[i]);
+      args[i - 1] = Console.argv[i]->toInt();
 
-   ACS_StartScript(QStrAtoi(&Console.argv[0]), gamemap, args,
-                   players[Console.cmdsrc].mo, NULL, 0, NULL);
+   ACS_StartScript(Console.argv[0]->toInt(), gamemap, args,
+                   players[Console.cmdsrc].mo, NULL, 0, NULL, true);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)

@@ -27,7 +27,6 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
-#include "d_event.h"
 #include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
@@ -37,8 +36,10 @@ enum
    AM_MSGEXITED
 };
 
+struct event_t;
+
 // Called by main loop.
-boolean AM_Responder(event_t *ev);
+bool AM_Responder(event_t *ev);
 
 // haleyjd 10/06/05: key binding handlers made global
 void AM_HandlerRight(event_t *ev);
@@ -117,7 +118,7 @@ extern int mapcolor_prtl;
 extern int mapportal_overlay; // julian: changed to int 
                               // (size problem, could lead to memory error)
 
-extern boolean map_draw_nodelines;
+extern bool map_draw_nodelines;
 
 #endif
 

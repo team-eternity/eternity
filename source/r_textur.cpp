@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2011 Stephen McGranahan, James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
 #include "doomstat.h"
 #include "d_gi.h"
@@ -34,9 +35,12 @@
 #include "e_hash.h"
 #include "m_swap.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "r_data.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "r_ripple.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -327,7 +331,7 @@ static texturehandler_t TextureHandlers[] =
 //
 // Sets up a texturelump structure.
 //
-static texturelump_t *R_InitTextureLump(const char *lname, boolean required)
+static texturelump_t *R_InitTextureLump(const char *lname, bool required)
 {
    texturelump_t *tlump = (texturelump_t *)(calloc(1, sizeof(texturelump_t)));
 
@@ -422,8 +426,7 @@ static void R_TextureHacks(texture_t *t)
       t->name[1] == 'K' &&
       t->name[2] == 'Y' &&
       t->name[3] == '1' &&
-      t->name[4] == 0 &&
-      t->height == 128)
+      t->name[4] == 0)
    {
       t->components->originy = 0;
       return;
@@ -515,7 +518,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             // killough 8/8/98
             // sf: error_printf
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
-                         tp.patch, texture->name);
+                         tp.patch, (const char *)(texture->name));
             //++*errors;
             
             component->width = component->height = 0;
@@ -566,9 +569,9 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 struct tempmask_s
 {
    // This is the buffer used for masking
-   boolean   mask;       // If set to true, FinishTexture should create columns
-   int       buffermax;  // size of allocated buffer
-   byte      *buffer;    // mask buffer.
+   bool       mask;       // If set to true, FinishTexture should create columns
+   int        buffermax;  // size of allocated buffer
+   byte      *buffer;     // mask buffer.
    texture_t *tex;
    
    texcol_t  *tempcols;
@@ -588,7 +591,8 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
    if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
       ptroff + len > tempmask.buffermax)
    {
-      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", tex->name, 
+      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", 
+              (const char *)(tex->name), 
               ptroff + len, tex->width * tex->height, tempmask.buffermax);
    }
 #endif
@@ -680,7 +684,8 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    {
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, tex->width * tex->height);
 #endif
       AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
       srcoff += srcxstep;
@@ -769,7 +774,8 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + y2 - y1 > column->length)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, column->length);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, column->length);
 #endif
             
          if(y2 - y1 > 0)
@@ -786,7 +792,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 // Allocates the texture buffer, as well as managing the temporary structs and
 // the mask buffer.
 //
-static void StartTexture(texture_t *tex, boolean mask)
+static void StartTexture(texture_t *tex, bool mask)
 {
    int bufferlen = tex->width * tex->height;
    
@@ -939,7 +945,7 @@ texture_t *R_CacheTexture(int num)
    if(tex->ccount == 0)
    {
       I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
-              tex->name);
+              (const char *)(tex->name));
    }
 
    // This function has two primary branches:
@@ -1170,10 +1176,11 @@ static void R_AddFlats(void)
    int       i;
    byte      flatsize;
    uint16_t  width, height;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    
    for(i = 0; i < numflats; ++i)
    {
-      lumpinfo_t *lump = w_GlobalDir.lumpinfo[i + firstflat];
+      lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;
       
       switch(lump->size)

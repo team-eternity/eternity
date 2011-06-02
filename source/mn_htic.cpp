@@ -26,19 +26,22 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
-#include "c_io.h"
-#include "d_gi.h"
-#include "c_runcmd.h"
+#include "e_fonts.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
-#include "v_video.h"
+#include "v_font.h"
 #include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
-#include "e_fonts.h"
 
 extern vfont_t *menu_font_big;
 
@@ -190,7 +193,7 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {

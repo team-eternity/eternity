@@ -26,40 +26,47 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "a_small.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "m_random.h"
-#include "r_draw.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "p_map3d.h"
-#include "p_portal.h"
-#include "p_saveg.h"
-#include "p_tick.h"
-#include "sounds.h"
-#include "st_stuff.h"
-#include "hu_stuff.h"
-#include "s_sound.h"
-#include "info.h"
-#include "g_game.h"
-#include "p_chase.h"
-#include "p_inter.h"
-#include "p_spec.h" // haleyjd 04/05/99: TerrainTypes
-#include "p_partcl.h"
-#include "in_lude.h"
-#include "d_gi.h"
-#include "p_user.h"
-#include "g_dmflag.h"
+#include "e_exdata.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
-#include "e_exdata.h"
-#include "a_small.h"
-#include "d_dehtbl.h"
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "info.h"
+#include "in_lude.h"
+#include "m_random.h"
+#include "p_chase.h"
 #include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_map3d.h"
+#include "p_partcl.h"
+#include "p_portal.h"
+#include "p_saveg.h"
+#include "p_skin.h"
+#include "p_tick.h"
+#include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
+#include "r_state.h"
+#include "sounds.h"
+#include "s_sound.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_video.h"
 
 void P_FallingDamage(player_t *);
 
@@ -221,7 +228,7 @@ static void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
+static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 {
    DLListItem<seenstate_t> *link = list;
 
@@ -241,14 +248,14 @@ static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 //
 // Returns true if the mobj is still present.
 //
-boolean P_SetMobjState(Mobj* mobj, statenum_t state)
+bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
    state_t *st;
 
    // haleyjd 03/27/10: new state cycle detection
-   static boolean firsttime = true; // for initialization
+   static bool firsttime = true; // for initialization
    DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
-   boolean ret = true;                           // return value
+   bool ret = true;                           // return value
 
    if(firsttime)
    {
@@ -316,7 +323,7 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
 // This function was originally added by Raven in Heretic for the Maulotaur,
 // but it has proven itself useful elsewhere.
 //
-boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
+bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 {
    state_t *st;
 
@@ -700,7 +707,7 @@ void P_XYMovement(Mobj* mo)
 //
 // haleyjd: OVER_UNDER: Isolated code for players hitting floors/objects
 //
-void P_PlayerHitFloor(Mobj *mo, boolean onthing)
+void P_PlayerHitFloor(Mobj *mo, bool onthing)
 {
    // Squat down.
    // Decrease viewheight for a moment
@@ -745,8 +752,8 @@ static void P_ZMovement(Mobj* mo)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
    //          scope
-   boolean correct_lost_soul_bounce;
-   boolean moving_down;
+   bool correct_lost_soul_bounce;
+   bool moving_down;
 
    // 10/13/05: fraggle says original DOOM has no bounce either,
    // so if gamemode != retail, no bounce.
@@ -1002,9 +1009,9 @@ void P_NightmareRespawn(Mobj* mobj)
    fixed_t      y;
    fixed_t      z;
    subsector_t* ss;
-   Mobj*      mo;
+   Mobj*        mo;
    mapthing_t*  mthing;
-   boolean      check; // haleyjd 11/11/04
+   bool         check; // haleyjd 11/11/04
 
    x = mobj->spawnpoint.x << FRACBITS;
    y = mobj->spawnpoint.y << FRACBITS;
@@ -1100,9 +1107,9 @@ void P_NightmareRespawn(Mobj* mobj)
 
 // PTODO
 #ifdef R_LINKEDPORTALS
-static boolean P_CheckPortalTeleport(Mobj *mobj)
+static bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   boolean ret = false;
+   bool ret = false;
 
    if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
    {
@@ -1369,7 +1376,7 @@ void Mobj::Think()
       // 1) counts for kill AND
       // 2) respawn is on OR
       // 3) thing always respawns or removes itself after death.
-      boolean can_respawn =
+      bool can_respawn =
          flags & MF_COUNTKILL &&
            (respawnmonsters ||
             (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
@@ -1711,7 +1718,7 @@ int iquehead, iquetail;
 void Mobj::removeThinker()
 {
    // haleyjd 04/14/03: restructured
-   boolean respawnitem = false;
+   bool respawnitem = false;
 
    if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
    {
@@ -2231,7 +2238,7 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, boolean ptcl)
+                 int updown, bool ptcl)
 {
    Mobj* th;
 
@@ -2265,10 +2272,10 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 //
 // P_SpawnBlood
 //
-void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, Mobj *target)
+void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
 {
    // HTIC_TODO: Heretic support
-   Mobj* th;
+   Mobj *th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnblood) << 10;
@@ -2342,8 +2349,12 @@ void P_ParticleLine(Mobj *source, Mobj *dest)
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-void P_CheckMissileSpawn(Mobj* th)
+// haleyjd 03/19/11: added bool return type for Hexen logic
+//
+bool P_CheckMissileSpawn(Mobj* th)
 {
+   bool ok = true;
+
    if(!(th->flags4 & MF4_NORANDOMIZE))
    {
       th->tics -= P_Random(pr_missile)&3;
@@ -2360,11 +2371,16 @@ void P_CheckMissileSpawn(Mobj* th)
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
-      return;
+      return ok;
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
+   {
       P_ExplodeMissile(th);
+      ok = false;
+   }
+
+   return ok;
 }
 
 //
@@ -2817,167 +2833,6 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
    }
 }
 
-//
-// Thing Collections
-//
-// haleyjd: This pseudo-class is the ultimate generalization of the
-// boss spawner spots code, allowing arbitrary reallocating arrays
-// of Mobj pointers to be maintained and manipulated. This is currently
-// used by boss spawn spots, D'Sparil spots, and intermission cameras.
-// I wish it was used by deathmatch spots, but that would present a
-// compatibility problem (spawning Mobj's at their locations would
-// most likely result in demo desyncs).
-//
-
-//
-// P_InitMobjCollection
-//
-// Sets up an MobjCollection object. This is for objects kept on the
-// stack.
-//
-void P_InitMobjCollection(MobjCollection *mc, int type)
-{
-   memset(mc, 0, sizeof(MobjCollection));
-
-   mc->type = type;
-}
-
-//
-// P_ReInitMobjCollection
-//
-// Call this to set the number of mobjs in the collection to zero.
-// Should be done for each global collection after a level ends and
-// before beginning a new one. Doesn't molest the array pointer or
-// numalloc fields. Resets the wrap iterator by necessity.
-//
-void P_ReInitMobjCollection(MobjCollection *mc, int type)
-{
-   mc->num = mc->wrapiterator = 0;
-   mc->type = type;
-}
-
-//
-// P_ClearMobjCollection
-//
-// Frees an mobj collection's pointer array and sets all the
-// fields to zero.
-//
-void P_ClearMobjCollection(MobjCollection *mc)
-{
-   free(mc->ptrarray);
-
-   memset(mc, 0, sizeof(MobjCollection));
-}
-
-//
-// P_CollectThings
-//
-// Generalized from the boss brain spot code; builds a collection
-// of mapthings of a certain type. The type must be set within the
-// collection object before calling this.
-//
-void P_CollectThings(MobjCollection *mc)
-{
-   Thinker *th;
-
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if(mo->type == mc->type)
-         {
-            if(mc->num >= mc->numalloc)
-            {
-               mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
-                  (mc->numalloc = mc->numalloc ?
-                   mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
-            }
-            (mc->ptrarray)[mc->num] = mo;
-            mc->num++;
-         }
-      }
-   }
-}
-
-//
-// P_AddToCollection
-//
-// Adds a single object into an MobjCollection.
-//
-void P_AddToCollection(MobjCollection *mc, Mobj *mo)
-{
-   if(mc->num >= mc->numalloc)
-   {
-      mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
-         (mc->numalloc = mc->numalloc ?
-         mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
-   }
-   (mc->ptrarray)[mc->num] = mo;
-   mc->num++;
-}
-
-//
-// P_CollectionSort
-//
-// Sorts the pointers in an MobjCollection using the supplied callback function
-// for determining collation order.
-//
-void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
-{
-   if(mc->num > 1)
-      qsort(mc->ptrarray, mc->num, sizeof(Mobj *), cb);
-}
-
-//
-// P_CollectionIsEmpty
-//
-// Returns true if there are no objects in the collection, and
-// false otherwise.
-//
-boolean P_CollectionIsEmpty(MobjCollection *mc)
-{
-   return !mc->num;
-}
-
-//
-// P_CollectionWrapIterator
-//
-// Returns each object in a collection in the order they were added
-// at each consecutive call, wrapping to the beginning when the end
-// is reached.
-//
-Mobj *P_CollectionWrapIterator(MobjCollection *mc)
-{
-   Mobj *ret = (mc->ptrarray)[mc->wrapiterator++];
-
-   mc->wrapiterator %= mc->num;
-
-   return ret;
-}
-
-//
-// P_CollectionGetAt
-//
-// Gets the object at the specified index in the collection.
-// Returns NULL if the index is out of bounds.
-//
-Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
-{
-   return at < (unsigned int)mc->num ? (mc->ptrarray)[at] : NULL;
-}
-
-//
-// P_CollectionGetRandom
-//
-// Returns a random object from the collection using the specified
-// random number generator for full compatibility.
-//
-Mobj *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
-{
-   return (mc->ptrarray)[P_Random(rngnum) % mc->num];
-}
-
 #ifndef EE_NO_SMALL_SUPPORT
 //
 // Small natives
@@ -3412,7 +3267,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
-   boolean friendly = false;
+   bool friendly = false;
    Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 

@@ -24,10 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __M_FIXED__
-#define __M_FIXED__
+#ifndef M_FIXED_H__
+#define M_FIXED_H__
 
-#include "d_keywds.h" // haleyjd 05/22/02
 #include "doomtype.h"
 
 //
@@ -52,7 +51,7 @@ typedef int32_t fixed_t;
   #define D_abs(x) ({fixed_t _t = (x), _s = _t >> (8*sizeof _t-1); (_t^_s)-_s;})
 #elif defined(_MSC_VER) && defined(_M_IX86)
 #pragma warning(disable: 4035) 
-d_inline static int D_abs(int x)
+inline static int D_abs(int x)
 {
    __asm
    {
@@ -63,7 +62,7 @@ d_inline static int D_abs(int x)
    }
 }
 #else
-d_inline static int D_abs(int x)
+inline static int D_abs(int x)
 {
    fixed_t _t = x, _s;
    _s = _t >> (8*sizeof _t-1);
@@ -77,7 +76,7 @@ d_inline static int D_abs(int x)
 //
 // Fixed Point Multiplication
 //
-d_inline static fixed_t FixedMul(fixed_t a, fixed_t b)
+inline static fixed_t FixedMul(fixed_t a, fixed_t b)
 {
   return (fixed_t)((int64_t) a*b >> FRACBITS);
 }
@@ -85,7 +84,7 @@ d_inline static fixed_t FixedMul(fixed_t a, fixed_t b)
 //
 // Fixed Point Division
 //
-d_inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
+inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 {
   return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ D_MAXINT :
     (fixed_t)(((int64_t) a << FRACBITS) / b);

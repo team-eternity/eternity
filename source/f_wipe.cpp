@@ -31,16 +31,18 @@
 // original, while retaining the new 'engine'
 
 #include "z_zone.h"
+
 #include "c_runcmd.h"
 #include "doomdef.h"
 #include "d_main.h"
-#include "i_video.h"
-#include "v_video.h"
-#include "m_random.h"
 #include "f_wipe.h"
+#include "i_video.h"
+#include "m_random.h"
+#include "v_misc.h"
+#include "v_video.h"
 
 // common globals
-boolean inwipe = false;
+bool inwipe = false;
 int wipetype;
 
 // common statics
@@ -133,9 +135,9 @@ static void Wipe_meltDrawer(void)
    }
 }
 
-static boolean Wipe_meltTicker(void)
+static bool Wipe_meltTicker(void)
 {
-   boolean done;
+   bool done;
    int x;
   
    done = true;  // default to true
@@ -216,7 +218,7 @@ static void Wipe_fadeDrawer(void)
    }
 }
 
-static boolean Wipe_fadeTicker(void)
+static bool Wipe_fadeTicker(void)
 {
    fadelvl += 2;
 
@@ -231,9 +233,9 @@ static boolean Wipe_fadeTicker(void)
 
 typedef struct fwipe_s
 {
-   void    (*StartScreen)(void);
-   void    (*Drawer)(void);
-   boolean (*Ticker)(void);
+   void (*StartScreen)(void);
+   void (*Drawer)(void);
+   bool (*Ticker)(void);
 } fwipe_t;
 
 static fwipe_t wipers[] =
@@ -328,12 +330,12 @@ void Wipe_Drawer(void)
    wipers[current_wipetype].Drawer();
 
    // clean up cached crap
-   redrawborder = redrawsbar = true; 
+   redrawborder = true; 
 }
 
 void Wipe_Ticker(void)
 {
-   boolean done = wipers[current_wipetype].Ticker();
+   bool done = wipers[current_wipetype].Ticker();
 
    if(done)
    {
@@ -341,7 +343,7 @@ void Wipe_Ticker(void)
       Z_ChangeTag(wipe_buffer, PU_CACHE); // haleyjd: make purgable
 
       // haleyjd: be sure these get set at the end
-      redrawborder = redrawsbar = true; 
+      redrawborder = true; 
    }
 }
 

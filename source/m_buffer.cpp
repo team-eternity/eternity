@@ -177,7 +177,7 @@ void BufferedFileBase::SwapShort(int16_t &x)
 // Opens a file for buffered binary output with the given filename. The buffer
 // size is determined by the len parameter.
 //
-boolean OutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
+bool OutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 {
    if(!(f = fopen(filename, "wb")))
       return false;
@@ -194,7 +194,7 @@ boolean OutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 // called automatically before the file is closed, but must be called explicitly
 // if a current file offset is needed. Returns false if an IO error occurs.
 //
-boolean OutBuffer::Flush()
+bool OutBuffer::Flush()
 {
    if(idx)
    {
@@ -243,7 +243,7 @@ void OutBuffer::Close()
 //
 // Buffered writing function.
 //
-boolean OutBuffer::Write(const void *data, size_t size)
+bool OutBuffer::Write(const void *data, size_t size)
 {
    const byte *lSrc = (const byte *)data;
    size_t lWriteAmt;
@@ -278,7 +278,7 @@ boolean OutBuffer::Write(const void *data, size_t size)
 //
 // Convenience routine to write an unsigned integer into the buffer.
 //
-boolean OutBuffer::WriteUint32(uint32_t num)
+bool OutBuffer::WriteUint32(uint32_t num)
 {
    SwapULong(num);
    return Write(&num, sizeof(uint32_t));
@@ -289,7 +289,7 @@ boolean OutBuffer::WriteUint32(uint32_t num)
 //
 // Convenience routine to write an integer into the buffer.
 //
-boolean OutBuffer::WriteSint32(int32_t num)
+bool OutBuffer::WriteSint32(int32_t num)
 {
    SwapLong(num);
    return Write(&num, sizeof(int32_t));
@@ -300,7 +300,7 @@ boolean OutBuffer::WriteSint32(int32_t num)
 //
 // Convenience routine to write an unsigned short int into the buffer.
 //
-boolean OutBuffer::WriteUint16(uint16_t num)
+bool OutBuffer::WriteUint16(uint16_t num)
 {
    SwapUShort(num);
    return Write(&num, sizeof(uint16_t));
@@ -311,7 +311,7 @@ boolean OutBuffer::WriteUint16(uint16_t num)
 //
 // Convenience routine to write a short int into the buffer.
 //
-boolean OutBuffer::WriteSint16(int16_t num)
+bool OutBuffer::WriteSint16(int16_t num)
 {
    SwapShort(num);
    return Write(&num, sizeof(int16_t));
@@ -323,7 +323,7 @@ boolean OutBuffer::WriteSint16(int16_t num)
 // Routine to write an unsigned byte into the buffer.
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
-boolean OutBuffer::WriteUint8(uint8_t num)
+bool OutBuffer::WriteUint8(uint8_t num)
 {     
    if(idx == len)
    {
@@ -343,7 +343,7 @@ boolean OutBuffer::WriteUint8(uint8_t num)
 // Routine to write a byte into the buffer.
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
-boolean OutBuffer::WriteSint8(int8_t num)
+bool OutBuffer::WriteSint8(int8_t num)
 {     
    return WriteUint8((uint8_t)num);
 }
@@ -360,7 +360,7 @@ boolean OutBuffer::WriteSint8(int8_t num)
 //
 // Opens a file for binary input.
 //
-boolean InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
+bool InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
 {
    if(!(f = fopen(filename, "rb")))
       return false;
@@ -377,7 +377,7 @@ boolean InBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
 // Read the buffer's amount of data from the file or as much as is left.
 // If has hit EOF, no further reads are made.
 //
-boolean InBuffer::ReadFile()
+bool InBuffer::ReadFile()
 {
    if(!atEOF)
    {
@@ -403,7 +403,7 @@ boolean InBuffer::ReadFile()
 // Read 'size' amount of bytes from the file. Reads are done from the physical
 // medium in chunks of the buffer's length.
 //
-boolean InBuffer::Read(void *dest, size_t size)
+bool InBuffer::Read(void *dest, size_t size)
 {
    byte *lDest = (byte *)dest;
    size_t lReadAmt;
@@ -441,7 +441,7 @@ boolean InBuffer::Read(void *dest, size_t size)
 //
 // Read a uint32 value from the input file.
 //
-boolean InBuffer::ReadUint32(uint32_t &num)
+bool InBuffer::ReadUint32(uint32_t &num)
 {
    uint32_t lNum;
 
@@ -458,7 +458,7 @@ boolean InBuffer::ReadUint32(uint32_t &num)
 //
 // Read an int32 value from the input file.
 //
-boolean InBuffer::ReadSint32(int32_t &num)
+bool InBuffer::ReadSint32(int32_t &num)
 {
    int32_t lNum;
 
@@ -475,7 +475,7 @@ boolean InBuffer::ReadSint32(int32_t &num)
 //
 // Read a uint16 value from the input file.
 //
-boolean InBuffer::ReadUint16(uint16_t &num)
+bool InBuffer::ReadUint16(uint16_t &num)
 {
    uint16_t lNum;
 
@@ -492,7 +492,7 @@ boolean InBuffer::ReadUint16(uint16_t &num)
 //
 // Read an int16 value from the input file.
 //
-boolean InBuffer::ReadSint16(int16_t &num)
+bool InBuffer::ReadSint16(int16_t &num)
 {
    int16_t lNum;
 
@@ -509,7 +509,7 @@ boolean InBuffer::ReadSint16(int16_t &num)
 //
 // Read a uint8 value from input file.
 //
-boolean InBuffer::ReadUint8(uint8_t &num)
+bool InBuffer::ReadUint8(uint8_t &num)
 {
    if(idx == readlen) // nothing left in the buffer?
    {
@@ -530,7 +530,7 @@ boolean InBuffer::ReadUint8(uint8_t &num)
 //
 // Read an int8 value from input file.
 //
-boolean InBuffer::ReadSint8(int8_t &num)
+bool InBuffer::ReadSint8(int8_t &num)
 {
    if(idx == readlen) // nothing left in the buffer?
    {

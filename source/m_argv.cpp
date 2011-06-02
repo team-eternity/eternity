@@ -53,6 +53,29 @@ int M_CheckParm(const char *check)
    return 0;
 }
 
+//
+// M_CheckMultiParm
+//
+// haleyjd 01/17/11: Allows several aliases for a command line parameter to be
+// checked in turn.
+//
+int M_CheckMultiParm(const char **parms, int numargs)
+{
+   int i = 0;
+   const char *parm;
+
+   while((parm = parms[i++]))
+   {
+      int p = M_CheckParm(parm);
+
+      // it is only found if the expected number of arguments are available
+      if(p && p < myargc - numargs)
+         return p;
+   }
+
+   return 0; // none were found
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: m_argv.c,v $

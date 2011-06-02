@@ -148,7 +148,7 @@ static argkeywd_t cpckwds =
 //
 void A_HealthJump(Mobj *mo)
 {
-   boolean branch  = false;   
+   bool branch = false;   
    int statenum, checktype, checkhealth;
 
    statenum    = E_ArgAsStateNumNI(mo->state->args, 0, mo);
@@ -212,7 +212,7 @@ void A_HealthJump(Mobj *mo)
 //
 void A_CounterJump(Mobj *mo)
 {
-   boolean branch = false;
+   bool branch = false;
    int statenum, checktype, value, cnum;
    int *counter;
 
@@ -598,7 +598,7 @@ static argkeywd_t psprkwds =
 //
 void A_WeaponCtrJump(Mobj *mo)
 {
-   boolean branch = false;
+   bool branch = false;
    int statenum, checktype, cnum, psprnum;
    int value, *counter;
    player_t *player;
@@ -1044,7 +1044,7 @@ void A_WeaponCopyCtr(Mobj *mo)
 //
 void A_CheckReloadEx(Mobj *mo)
 {
-   boolean branch = false;
+   bool branch = false;
    int statenum, checktype, psprnum;
    int value;
    player_t *player;

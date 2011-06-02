@@ -142,7 +142,7 @@ static void ST_HticTicker(void)
 static void ST_drawInvNum(int num, int x, int y)
 {
    int numdigits = 3;
-   boolean neg;
+   bool neg;
 
    neg = (num < 0);
 

@@ -28,24 +28,24 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __D_GI_H__
-#define __D_GI_H__
+#ifndef D_GI_H__
+#define D_GI_H__
 
-#include "mn_engin.h"
-#include "mn_menus.h"
-#include "mn_htic.h"
-#include "sounds.h"
-#include "v_video.h"
-#include "st_stuff.h"
-#include "in_lude.h"
+#include "m_fixed.h"
+
+struct default_or_t;
+struct interfns_t;
+struct menu_t;
+struct musicinfo_t;
+struct stbarfns_t;
 
 // inspired by, but not taken from, zdoom
 
 // Menu cursor -- a 2 patch alternating graphic
 typedef struct gimenucursor_s
 {
-   char *patch1;
-   char *patch2;
+   const char *patch1;
+   const char *patch2;
 } gimenucursor_t;
 
 // Screen border used to fill backscreen for small screen sizes
@@ -53,14 +53,14 @@ typedef struct giborder_s
 {
    int offset;
    int size;
-   char *c_tl;
-   char *top;
-   char *c_tr;
-   char *left;
-   char *right;
-   char *c_bl;
-   char *bottom;
-   char *c_br;
+   const char *c_tl;
+   const char *top;
+   const char *c_tr;
+   const char *left;
+   const char *right;
+   const char *c_bl;
+   const char *bottom;
+   const char *c_br;
 } giborder_t;
 
 typedef struct giftextpos_s
@@ -89,7 +89,7 @@ typedef void (*dsfunc_t)(const char *);
 typedef struct demostate_s
 {
    dsfunc_t func;
-   char *name;
+   const char *name;
 } demostate_t;
 
 extern const demostate_t demostates_doom[];
@@ -104,11 +104,11 @@ extern const demostate_t demostates_hreg[];
 
 typedef struct exitrule_s
 {
-   int gameepisode;  // current episode (1 for games like DOOM 2, 
-                     //   -1 if doesn't matter, -2 to terminate array)
-   int gamemap;      // current map the game is on (1-based, -1 if doesn't matter)   
-   int destmap;      // destination map (0-based for wminfo)
-   boolean isSecret; // this rule applies for secret exits   
+   int gameepisode; // current episode (1 for games like DOOM 2, 
+                    //   -1 if doesn't matter, -2 to terminate array)
+   int gamemap;     // current map the game is on (1-based, -1 if doesn't matter)   
+   int destmap;     // destination map (0-based for wminfo)
+   bool isSecret;   // this rule applies for secret exits   
 } exitrule_t;
 
 //
@@ -124,15 +124,15 @@ typedef struct finalerule_s
    const char *backDrop;  // BEX mnemonic of background graphic string
    const char *interText; // BEX mnemonic of intertext string
    int finaleType;        // transferred to LevelInfo.finaleType
-   boolean endOfGame;     // if true, LevelInfo.endOfGame is set
-   boolean secretOnly;    // if true, LevelInfo.finaleSecretOnly is set
+   bool endOfGame;        // if true, LevelInfo.endOfGame is set
+   bool secretOnly;       // if true, LevelInfo.finaleSecretOnly is set
 } finalerule_t;
 
 typedef struct finaledata_s
 {
-   int musicnum;          // index into gamemodeinfo_t::s_music
-   boolean killStatsHack; // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
-   finalerule_t *rules;   // rules array
+   int musicnum;        // index into gamemodeinfo_t::s_music
+   bool killStatsHack;  // kill stats if !GIF_SHAREWARE && episode >= numEpisodes
+   finalerule_t *rules; // rules array
 } finaledata_t;
 
 // Default sky data

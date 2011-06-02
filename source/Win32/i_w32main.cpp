@@ -27,7 +27,7 @@
 //-----------------------------------------------------------------------------
 
 #ifndef _WIN32
-#error i_w32main.c is for Windows only
+#error i_w32main.cpp is for Windows only
 #endif
 
 #include <windows.h>

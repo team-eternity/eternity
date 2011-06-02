@@ -20,12 +20,12 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//	System specific interface stuff.
+//   System specific interface stuff.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_TICCMD__
-#define __D_TICCMD__
+#ifndef D_TICCMD_H__
+#define D_TICCMD_H__
 
 #include "doomtype.h"
 
@@ -59,7 +59,7 @@
 // and transmitted to other peers (multiplayer).
 // Mainly movements/button commands per game tick,
 // plus a checksum for internal state consistency.
-struct ticcmd_s
+struct ticcmd_t
 {
    int8_t  forwardmove; // *2048 for move
    int8_t  sidemove;    // *2048 for move
@@ -70,8 +70,6 @@ struct ticcmd_s
    byte    buttons;
    byte    actions;
 };
-
-typedef struct ticcmd_s ticcmd_t;
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)

@@ -22,12 +22,12 @@
 #ifndef P_INFO_H__
 #define P_INFO_H__
 
-#include "doomtype.h"
+#include "doomdef.h"
 
 void P_LoadLevelInfo(int lumpnum, const char *lvname);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, boolean finale, const char *intertext);
+                      int next, int secr, bool finale, const char *intertext);
 
 // boss special flags
 enum
@@ -95,6 +95,7 @@ enum
    LI_FIELD_CREATOR,
    LI_FIELD_HASSCRIPT,
    LI_FIELD_SCRIPTLUMP,
+   LI_FIELD_ACSSCRIPTLUMP,
    LI_FIELD_EXTRADATA,
    LI_FIELD_SOUNDSWTCHN,
    LI_FIELD_SOUNDSWTCHX,
@@ -137,11 +138,11 @@ typedef struct LevelInfo_s
    const char *nextLevelPic;  // level name lump for NEXT level 06/17/06
    const char *nextSecretPic; // level name lump for SECRET level 06/17/06
    int  finaleType;           // type of finale sequence -- haleyjd 05/26/06
-   boolean killStats;         // level has no statistics intermission
-   boolean killFinale;        // level has no finale even if text is given
-   boolean finaleSecretOnly;  // level only has finale if secret exit
-   boolean endOfGame;         // DOOM II: last map, trigger cast call
-   boolean useEDFInterName;   // use an intermission map name from EDF
+   bool killStats;            // level has no statistics intermission
+   bool killFinale;           // level has no finale even if text is given
+   bool finaleSecretOnly;     // level only has finale if secret exit
+   bool endOfGame;            // DOOM II: last map, trigger cast call
+   bool useEDFInterName;      // use an intermission map name from EDF
 
    // level transfer stuff
    const char *nextLevel;     // name of next map for normal exit
@@ -154,15 +155,15 @@ typedef struct LevelInfo_s
    // color map stuff
    const char *colorMap;      // global colormap replacement
    const char *outdoorFog;    // outdoor fogmap -- 03/04/07
-   boolean useFullBright;     // use fullbright on this map?
-   boolean unevenLight;       // use uneven wall lighting?
+   bool useFullBright;        // use fullbright on this map?
+   bool unevenLight;          // use uneven wall lighting?
 
    // sky stuff
    const char *skyName;       // normal sky name (F_SKY1 or top of double)
    const char *altSkyName;    // alt sky - replaces skyName during lightning
    const char *sky2Name;      // secondary sky (F_SKY2 or bottom of double)
-   boolean doubleSky;         // use hexen-style double skies?
-   boolean hasLightning;      // map has lightning flashes?
+   bool doubleSky;            // use hexen-style double skies?
+   bool hasLightning;         // map has lightning flashes?
    int  skyDelta;             // double-sky scroll speeds (units/tic)
    int  sky2Delta;
 
@@ -171,8 +172,9 @@ typedef struct LevelInfo_s
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   boolean hasScripts;        // true if scriptLump is valid
+   bool hasScripts;           // true if scriptLump is valid
    char *scriptLump;          // name of Levelscript lump
+   char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
    char *extraData;           // name of ExtraData lump
 
    // per-level sound replacements
@@ -188,7 +190,7 @@ typedef struct LevelInfo_s
    const char *sound_fcmove;  // floor/ceiling move
 
    // sound sequences
-   boolean noAutoSequences;   // auto sequence behavior
+   bool noAutoSequences;      // auto sequence behavior
 
 } LevelInfo_t;
 

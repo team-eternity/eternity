@@ -24,10 +24,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_SETUP__
-#define __P_SETUP__
+#ifndef P_SETUP_H__
+#define P_SETUP_H__
 
-#include "p_mobj.h"
+class  Mobj;
+struct seg_t;
 
 // haleyjd 10/03/05: let P_CheckLevel determine the map format
 enum
@@ -37,10 +38,10 @@ enum
    LEVEL_FORMAT_HEXEN
 };
 
-struct waddir_t;
-int P_CheckLevel(waddir_t *dir, int lumpnum); // haleyjd: now used in d_main.c
+class WadDirectory;
+int P_CheckLevel(WadDirectory *dir, int lumpnum); // haleyjd: now used in d_main.c
 
-void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask, skill_t skill);
+void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init(void);               // Called by startup code.
 void P_InitThingLists(void);
 
@@ -55,7 +56,7 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;    // for thing chains
 
-extern boolean  newlevel;
+extern bool     newlevel;
 extern int      doom1level;
 extern char     levelmapname[10];
 

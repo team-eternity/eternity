@@ -26,23 +26,27 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "r_defs.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
 #include "c_io.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "m_random.h"
 #include "m_swap.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_state.h"
 #include "s_sndseq.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -222,8 +226,8 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
    vm->id = numACSVMs++;
 }
 
-static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, int args[5]);
+static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                    int type, int args[5]);
 
 //
 // ACS_addThread
@@ -465,6 +469,16 @@ static int ACS_countPlayers(void)
    return count;
 }
 
+// ZDoom blocking types
+enum
+{
+   BLOCK_NOTHING,
+   BLOCK_CREATURES,
+   BLOCK_EVERYTHING,
+   BLOCK_RAILING,
+   BLOCK_PLAYERS
+};
+
 //
 // ACS_setLineBlocking
 //
@@ -477,12 +491,24 @@ static void ACS_setLineBlocking(int tag, int block)
 
    while((l = P_FindLine(tag, &linenum)) != NULL)
    {
-      // clear the flag
-      l->flags &= ~ML_BLOCKING;
-
-      // if specified, reset the flag
-      if(block)
+      switch(block)
+      {
+      case BLOCK_NOTHING:
+         // clear the flags
+         l->flags    &= ~ML_BLOCKING;
+         l->extflags &= ~EX_ML_BLOCKALL;
+         break;
+      case BLOCK_CREATURES:
+         l->extflags &= ~EX_ML_BLOCKALL;
          l->flags |= ML_BLOCKING;
+         break;
+      case BLOCK_EVERYTHING: // ZDoom extension - block everything
+         l->flags    |= ML_BLOCKING;
+         l->extflags |= EX_ML_BLOCKALL;
+         break;
+      default: // Others not implemented yet :P
+         break;
+      }
    }
 }
 
@@ -990,25 +1016,25 @@ void ACSThinker::Think()
          }
          break;
       case OP_STARTPRINT:
-         QStrClear(this->printBuffer);
+         this->printBuffer->clear();
          break;
       case OP_ENDPRINT:
          if(this->trigger && this->trigger->player)
-            player_printf(this->trigger->player, this->printBuffer->buffer);
+            player_printf(this->trigger->player, this->printBuffer->constPtr());
          else
-            player_printf(&players[consoleplayer], this->printBuffer->buffer);
+            player_printf(&players[consoleplayer], this->printBuffer->constPtr());
          break;
       case OP_PRINTSTRING:
-         QStrCat(this->printBuffer, this->stringtable[POP()]);
+         this->printBuffer->concat(this->stringtable[POP()]);
          break;
       case OP_PRINTINT:
          {
             char buffer[33];
-            QStrCat(this->printBuffer, M_Itoa(POP(), buffer, 10));
+            this->printBuffer->concat(M_Itoa(POP(), buffer, 10));
          }
          break;
       case OP_PRINTCHAR:
-         QStrPutc(this->printBuffer, (char)POP());
+         *this->printBuffer += (char)POP();
          break;
       case OP_PLAYERCOUNT:
          PUSH(ACS_countPlayers());
@@ -1113,7 +1139,7 @@ void ACSThinker::Think()
          }
          break;
       case OP_ENDPRINTBOLD:
-         HU_CenterMsgTimedColor(this->printBuffer->buffer, FC_GOLD, 20*35);
+         HU_CenterMsgTimedColor(this->printBuffer->constPtr(), FC_GOLD, 20*35);
          break;
       default:
          // unknown opcode, must stop execution
@@ -1206,8 +1232,7 @@ void ACSThinker::deswizzle()
 void ACS_Init(void)
 {
    // initialize the qstring used to construct player messages
-   acsLevelScriptVM.printBuffer = (qstring_t *)(calloc(1, sizeof(qstring_t)));
-   QStrInitCreate(acsLevelScriptVM.printBuffer);
+   acsLevelScriptVM.printBuffer = new qstring(qstring::basesize);
 
    // add levelscript vm as vm #0
    ACS_addVirtualMachine(&acsLevelScriptVM);
@@ -1345,8 +1370,8 @@ void ACS_LoadLevelScript(int lump)
 // Adds a deferred script that will be executed when the indicated
 // gamemap is reached. Currently supports maps of MAPxy name structure.
 //
-static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
-                                       int type, int args[NUMLINEARGS])
+static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum, 
+                                    int type, int args[NUMLINEARGS])
 {
    DLListItem<deferredacs_t> *cur = acsDeferred;
    deferredacs_t *newdacs;
@@ -1464,13 +1489,13 @@ void ACS_RunDeferredScripts(void)
 //
 // Standard method for starting an ACS script.
 //
-boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
-                          Mobj *mo, line_t *line, int side,
-                          ACSThinker **scr, boolean always)
+bool ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
+                       Mobj *mo, line_t *line, int side,
+                       ACSThinker **scr, bool always)
 {
    acscript_t   *scrData;
    ACSThinker *newScript, *rover;
-   boolean foundScripts = false;
+   bool foundScripts = false;
    int i, internalNum;
 
    // ACS must be active on the current map or we do nothing
@@ -1555,12 +1580,12 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 //
 // Convenience routine; starts a script in the levelscript vm.
 //
-boolean ACS_StartScript(int scrnum, int map, int *args, 
-                        Mobj *mo, line_t *line, int side,
-                        ACSThinker **scr)
+bool ACS_StartScript(int scrnum, int map, int *args, 
+                     Mobj *mo, line_t *line, int side,
+                     ACSThinker **scr, bool always)
 {
    return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
-                            line, side, scr, false);
+                            line, side, scr, always);
 }
 
 //
@@ -1569,9 +1594,9 @@ boolean ACS_StartScript(int scrnum, int map, int *args,
 // Attempts to terminate the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
+bool ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
-   boolean ret = false;
+   bool ret = false;
    int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
 
    // ACS must be active on the current map or we do nothing
@@ -1609,7 +1634,7 @@ boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 //
 // Convenience routine; terminates a level script.
 //
-boolean ACS_TerminateScript(int scrnum, int mapnum)
+bool ACS_TerminateScript(int scrnum, int mapnum)
 {
    return ACS_TerminateScriptVM(&acsLevelScriptVM, scrnum, mapnum);
 }
@@ -1620,10 +1645,10 @@ boolean ACS_TerminateScript(int scrnum, int mapnum)
 // Attempts to suspend the given script. If the mapnum doesn't match the
 // current gamemap, the action will be deferred.
 //
-boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
+bool ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 {
    int foo[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   boolean ret = false;
+   bool ret = false;
 
    // ACS must be active on the current map or we do nothing
    if(!vm->loaded)
@@ -1660,7 +1685,7 @@ boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
 //
 // Convenience routine; suspends a level script.
 //
-boolean ACS_SuspendScript(int scrnum, int mapnum)
+bool ACS_SuspendScript(int scrnum, int mapnum)
 {
    return ACS_SuspendScriptVM(&acsLevelScriptVM, scrnum, mapnum);
 }

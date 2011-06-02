@@ -30,7 +30,11 @@
 
 // needed for MAXFLAGFIELDS:
 #include "d_dehtbl.h"
-#include "e_string.h"
+#include "m_fixed.h"
+
+struct edf_string_t;
+struct sfxinfo_t;
+struct state_t;
 
 // 16 arguments ought to be enough for anybody.
 #define EMAXARGS 16
@@ -78,9 +82,9 @@ typedef struct argkeywd_s
    int        numkeywords;
 } argkeywd_t;
 
-boolean       E_AddArgToList(arglist_t *al, const char *value);
-boolean       E_SetArg(arglist_t *al, int index, const char *value);
-boolean       E_SetArgFromNumber(arglist_t *al, int index, int value);
+bool          E_AddArgToList(arglist_t *al, const char *value);
+bool          E_SetArg(arglist_t *al, int index, const char *value);
+bool          E_SetArgFromNumber(arglist_t *al, int index, int value);
 void          E_DisposeArgs(arglist_t *al);
 void          E_ResetArgEval(arglist_t *al, int index);
 void          E_ResetAllArgEvals(void);

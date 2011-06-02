@@ -25,11 +25,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_DATA__
-#define __R_DATA__
+#ifndef R_DATA_H__
+#define R_DATA_H__
 
-#include "r_defs.h"
-#include "r_state.h"
+// Required for: DLListItem, ENCStrHashKey
+#include "e_hashkeys.h"
+#include "m_dllist.h"
 
 // haleyjd 08/30/02: externalized these structures
 
@@ -118,7 +119,7 @@ struct texture_t
 // SoM: This is replaced with two functions. For solid walls/skies, we only 
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
-byte *R_GetRawColumn(int tex, int32_t col);
+byte     *R_GetRawColumn(int tex, int32_t col);
 texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
 // SoM: This function returns the linear texture buffer (recache if needed)
@@ -144,11 +145,11 @@ extern int         numwadtex;
 extern int         badtex;
 
 extern int         texturecount;
-extern texture_t   **textures;
+extern texture_t **textures;
 
 // SoM: Because all textures and flats are stored in the same array, the 
 // translation tables are now combined.
-extern int         *texturetranslation;
+extern int        *texturetranslation;
 
 // I/O, setting up the stuff.
 void R_InitData(void);
@@ -167,7 +168,7 @@ int R_FindWall(const char *name);       // killough -- const added
 int R_CheckForWall(const char *name); 
 
 void R_InitTranMap(int);      // killough 3/6/98: translucency initialization
-int R_ColormapNumForName(const char *name);      // killough 4/4/98
+int  R_ColormapNumForName(const char *name);      // killough 4/4/98
 
 void R_InitColormaps(void);   // killough 8/9/98
 

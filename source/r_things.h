@@ -24,8 +24,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_THINGS__
-#define __R_THINGS__
+#ifndef R_THINGS_H__
+#define R_THINGS_H__
+
+struct sector_t;
+struct particle_t;
+struct planehash_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -40,7 +44,7 @@ extern float *mfloorclip, *mceilingclip;
 extern int r_vissprite_limit;
 
 // SoM 12/13/03: the stack for use with portals
-typedef struct maskedrange_s
+struct maskedrange_t
 {
    int firstds, lastds;
    int firstsprite, lastsprite;
@@ -50,16 +54,16 @@ typedef struct maskedrange_s
    float ceilingclip[MAX_SCREENWIDTH];
    
    // for unused head
-   struct maskedrange_s *next;
-} maskedrange_t;
+   struct maskedrange_t *next;
+};
 
-typedef struct poststack_s
+struct poststack_t
 {
-   struct planehash_s  *overlay;
-   maskedrange_t       *masked;
-} poststack_t;
+   planehash_t   *overlay;
+   maskedrange_t *masked;
+};
 
-void R_PushPost(boolean pushmasked, struct planehash_s *overlay);
+void R_PushPost(bool pushmasked, planehash_t *overlay);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(float *top, float *bottom);
@@ -68,7 +72,7 @@ struct texture_t;
 struct texcol_t;
 
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
-void R_AddSprites(sector_t *sec,int); // killough 9/18/98
+void R_AddSprites(sector_t *sec, int); // killough 9/18/98
 void R_AddPSprites(void);
 void R_DrawSprites(void);
 void R_InitSprites(char **namelist);

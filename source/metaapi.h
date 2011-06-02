@@ -29,7 +29,7 @@
 #ifndef METAAPI_H__
 #define METAAPI_H__
 
-//#include "z_zone.h"
+#include "z_zone.h"
 #include "e_hashkeys.h"
 
 // A metatypename is just a string constant.
@@ -54,13 +54,13 @@ class metaTablePimpl;
 //
 // MetaObject
 //
-class MetaObject
+class MetaObject : public ZoneObject
 {
 protected:
    DLListItem<MetaObject> links;     // links by key
    DLListItem<MetaObject> typelinks; // links by type
-   EStringHashKey          type;      // type hash key
-   ENCStringHashKey        key;       // primary hash key
+   EStringHashKey         type;      // type hash key
+   ENCStringHashKey       key;       // primary hash key
    
    metatypename_t type_name; // storage pointer for type (static string)
    char *key_name;           // storage pointer for key  (alloc'd string)
@@ -77,17 +77,13 @@ public:
    virtual ~MetaObject();
 
    // RTTI Methods
-   boolean isKindOf(metatypename_t) const;
+   bool isKindOf(metatypename_t) const;
    metatypename_t getType() const { return type_name; }
    const char   * getKey()  const { return key_name;  }
 
    // Virtual Methods
    virtual MetaObject *clone() const;
    virtual const char *toString() const;   
-
-   // Operators
-   void *operator new (size_t size);
-   void  operator delete (void *p);
 };
 
 // MetaObject specializations for basic types
@@ -155,7 +151,7 @@ public:
 
 // MetaTable
 
-class MetaTable
+class MetaTable : public ZoneObject
 {
 private:
    metaTablePimpl *pImpl;
@@ -164,9 +160,9 @@ public:
    MetaTable();
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
-   boolean hasKey(const char *key);
-   boolean hasType(metatypename_t type);
-   boolean hasKeyAndType(const char *key, metatypename_t type);
+   bool hasKey(const char *key);
+   bool hasType(metatypename_t type);
+   bool hasKeyAndType(const char *key, metatypename_t type);
 
    // Count functions.
    int countOfKey(const char *key);
@@ -217,10 +213,6 @@ public:
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest);
    void copyTableFrom(MetaTable *source);
-
-   // Operators
-   void *operator new (size_t size);
-   void  operator delete (void *p);
 };
 
 #endif

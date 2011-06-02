@@ -24,12 +24,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __I_SYSTEM__
-#define __I_SYSTEM__
+#ifndef I_SYSTEM_H__
+#define I_SYSTEM_H__
 
-#include <stdarg.h>
-
-#include "d_ticcmd.h"
+struct ticcmd_t;
 
 // Called by DoomMain.
 void I_Init(void);
@@ -138,7 +136,7 @@ int I_CheckAbort();
 #ifdef _SDL_VER
 extern int i_SDLJoystickNum;
 
-boolean I_SetJoystickDevice(int deviceNum);
+bool I_SetJoystickDevice(int deviceNum);
 
 typedef struct jsdata_s
 {

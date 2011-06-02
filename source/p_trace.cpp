@@ -26,13 +26,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "d_gi.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -61,7 +64,7 @@ static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 // Code to handle aiming tracers at things.
 // haleyjd 03/21/08
 //
-static boolean P_AimAtThing(intercept_t *in)
+static bool P_AimAtThing(intercept_t *in)
 {
    Mobj *th = in->d.thing;
    fixed_t thingtopslope, thingbottomslope, dist;
@@ -118,7 +121,7 @@ static boolean P_AimAtThing(intercept_t *in)
 //
 // Sets linetarget and aimslope when a target is aimed at.
 //
-static boolean PTR_AimTraverse(intercept_t *in)
+static bool PTR_AimTraverse(intercept_t *in)
 {
    fixed_t slope, dist;
    
@@ -127,7 +130,8 @@ static boolean PTR_AimTraverse(intercept_t *in)
       // shoot a line
       line_t *li = in->d.line;
       
-      if(!(li->flags & ML_TWOSIDED))
+      // haleyjd 04/30/11: added 'block everything' lines
+      if(!(li->flags & ML_TWOSIDED) || (li->extflags & EX_ML_BLOCKALL))
          return false;   // stop
 
       // Crosses a two sided line.
@@ -190,17 +194,17 @@ static boolean PTR_AimTraverse(intercept_t *in)
 //
 // Returns true if PTR_ShootTraverse should exit, and false otherwise.
 //
-static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
+static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
 {
    // haleyjd: when allowing planes to be shot, we do not care if
    // the sector heights are the same; we must check against the
    // line opening, otherwise lines behind the plane will be activated.
    
-   boolean floorsame = 
+   bool floorsame = 
       (li->frontsector->floorheight == li->backsector->floorheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
-   boolean ceilingsame =
+   bool ceilingsame =
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
@@ -222,10 +226,14 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
 // Routine to handle the crossing of a 2S line by a shot tracer.
 // Returns true if PTR_ShootTraverse should return.
 //
-static boolean P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
+static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 {
    fixed_t dist;
-   boolean ret = false;
+   bool ret = false;
+
+   // haleyjd 04/30/11: block-everything lines stop bullets
+   if(li->extflags & EX_ML_BLOCKALL)
+      return false;
 
    if(li->flags & ML_TWOSIDED)
    {  
@@ -264,7 +272,7 @@ static void P_PuffPosition(intercept_t *in, fixed_t *frac,
 //
 // Returns true if PTR_ShootTraverse should return (ie, shot hits sky).
 //
-static boolean P_ShootSky(line_t *li, fixed_t z)
+static bool P_ShootSky(line_t *li, fixed_t z)
 {
    sector_t *fs = li->frontsector, *bs = li->backsector;
 
@@ -294,7 +302,7 @@ static boolean P_ShootSky(line_t *li, fixed_t z)
 // Routine to handle shooting a thing.
 // haleyjd 03/21/08
 //
-static boolean P_ShootThing(intercept_t *in)
+static bool P_ShootThing(intercept_t *in)
 {
    fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
    Mobj *th = in->d.thing;
@@ -366,7 +374,7 @@ static boolean P_ShootThing(intercept_t *in)
 //
 // haleyjd 03/21/08
 //
-static boolean PTR_ShootTraverseComp(intercept_t *in)
+static bool PTR_ShootTraverseComp(intercept_t *in)
 {
    fixed_t x, y, z, frac;
    
@@ -415,10 +423,10 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static boolean PTR_ShootTraverse(intercept_t *in)
+static bool PTR_ShootTraverse(intercept_t *in)
 {
    fixed_t x, y, z, frac, zdiff;
-   boolean hitplane = false; // SoM: Remember if the bullet hit a plane.
+   bool hitplane = false; // SoM: Remember if the bullet hit a plane.
    int updown = 2; // haleyjd 05/02: particle puff z dist correction
    sector_t *sidesector;
    
@@ -628,7 +636,7 @@ static Mobj *usething;
 // killough 11/98: reformatted
 // haleyjd  09/02: reformatted again.
 
-static boolean PTR_UseTraverse(intercept_t *in)
+static bool PTR_UseTraverse(intercept_t *in)
 {
    if(in->d.line->special)
    {
@@ -641,13 +649,18 @@ static boolean PTR_UseTraverse(intercept_t *in)
    }
    else
    {
-      P_LineOpening(in->d.line, NULL);
+      if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
+         clip.openrange = 0;
+      else
+         P_LineOpening(in->d.line, NULL);
+
       if(clip.openrange <= 0)
       {
          // can't use through a wall
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
          return false;
       }
+
       // not a special line, but keep checking
       return true;
    }
@@ -665,7 +678,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
 //
 // by Lee Killough
 //
-static boolean PTR_NoWayTraverse(intercept_t *in)
+static bool PTR_NoWayTraverse(intercept_t *in)
 {
    line_t *ld = in->d.line;                       // This linedef
 
@@ -744,7 +757,7 @@ linetracer_t trace;
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean PIT_AddLineIntercepts(line_t *ld)
+bool PIT_AddLineIntercepts(line_t *ld)
 {
    int       s1;
    int       s2;
@@ -789,7 +802,7 @@ boolean PIT_AddLineIntercepts(line_t *ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean PIT_AddThingIntercepts(Mobj *thing)
+bool PIT_AddThingIntercepts(Mobj *thing)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;
@@ -847,7 +860,7 @@ boolean PIT_AddThingIntercepts(Mobj *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
+bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 {
    intercept_t *in = NULL;
    int count = intercept_p - intercepts;
@@ -881,8 +894,8 @@ boolean P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                       int flags, boolean trav(intercept_t *))
+bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                    int flags, bool trav(intercept_t *))
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
@@ -893,7 +906,7 @@ boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    int     mapxstep, mapystep;
    int     count;
    // SoM: just a little bit-o-change...
-   boolean result;
+   bool    result;
 
    // Only PTR_s that use TPTs need to worry about this value.
    trace.finished = false;

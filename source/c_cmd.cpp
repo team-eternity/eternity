@@ -32,14 +32,17 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "d_io.h"  // SoM 3/12/2002: strncasecmp
+
+#include "a_small.h"    // haleyjd
 #include "c_io.h"
-#include "c_runcmd.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_io.h"       // SoM 3/12/2002: strncasecmp
+#include "gl/gl_vars.h"
+#include "m_misc.h"
 #include "m_random.h"
+#include "v_misc.h"
 #include "version.h"
-#include "a_small.h" // haleyjd
 
 // version hack
 
@@ -96,19 +99,19 @@ CONSOLE_COMMAND(alias, 0)
   
    if(Console.argc == 1)  // only one, remove alias
    {
-      C_RemoveAlias(&Console.argv[0]);
+      C_RemoveAlias(Console.argv[0]);
       return;
    }
    
    // find it or make a new one
    
-   temp = QStrBufferAt(&Console.args, QStrLen(&Console.argv[0]));
+   temp = Console.args.bufferAt(Console.argv[0]->length());
    
    // QSTR_FIXME: needs a routine
    while(*temp == ' ')
       temp++;
    
-   C_NewAlias(QStrConstPtr(&Console.argv[0]), temp);
+   C_NewAlias(Console.argv[0]->constPtr(), temp);
 }
 
 // %opt for aliases
@@ -132,14 +135,14 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      unsigned int len = QStrLen(&Console.argv[0]);
+      unsigned int len = Console.argv[0]->length();
 
       if(len == 1)
-         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
+         charnum = maxchar = Console.argv[0]->charAt(0);
       else
       {
-         charnum = maxchar = QStrCharAt(&Console.argv[0], 0);
-         mask    = QStrConstPtr(&Console.argv[0]);
+         charnum = maxchar = Console.argv[0]->charAt(0);
+         mask    = Console.argv[0]->constPtr();
          masklen = len;
       }
    }
@@ -181,14 +184,14 @@ CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 CONSOLE_COMMAND(echo, 0)
 {
-   C_Puts(QStrConstPtr(&Console.args));
+   C_Puts(Console.args.constPtr());
 }
 
 // delay in console
 
 CONSOLE_COMMAND(delay, 0)
 {
-   C_BufferDelay(Console.cmdtype, Console.argc ? QStrAtoi(&Console.argv[0]) : 1);
+   C_BufferDelay(Console.cmdtype, Console.argc ? Console.argv[0]->toInt() : 1);
 }
 
 // flood the console with crap
@@ -211,7 +214,7 @@ CONSOLE_COMMAND(dumplog, 0)
    if(!Console.argc)
       C_Printf("usage: dumplog filename\n");
    else
-      C_DumpMessages(&Console.argv[0]);
+      C_DumpMessages(Console.argv[0]);
 }
 
 // haleyjd 09/07/03: true console logging commands
@@ -221,7 +224,7 @@ CONSOLE_COMMAND(openlog, 0)
    if(!Console.argc)
       C_Printf("usage: openlog filename\n");
    else
-      C_OpenConsoleLog(&Console.argv[0]);
+      C_OpenConsoleLog(Console.argv[0]);
 }
 
 CONSOLE_COMMAND(closelog, 0)
@@ -246,7 +249,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
       return;
    }
 
-   name = QStrConstPtr(&Console.argv[0]);
+   name = Console.argv[0]->constPtr();
 
    // haleyjd 07/05/10: use hashing!
    current = C_GetCmdForName(name);
@@ -373,28 +376,29 @@ CONSOLE_COMMAND(cvarhelp, 0)
 
 // command-adding functions in other modules
 
-extern void       AM_AddCommands(void);        // am_color.c
-extern void    Cheat_AddCommands(void);        // m_cheat.c
-extern void        D_AddCommands(void);        // d_main.c   -- haleyjd
-extern void        E_AddCommands(void);        // e_cmd.c    -- haleyjd
-extern void        G_AddCommands(void);        // g_cmd.c
-extern void   G_Bind_AddCommands(void);        // g_bind.c   -- haleyjd
-extern void      G_DMAddCommands(void);        // g_dmflag.c -- haleyjd
-extern void       HU_AddCommands(void);        // hu_stuff.c
-extern void        I_AddCommands(void);        // i_system.c
-extern void       MN_AddCommands(void);        // mn_menu.c
-extern void      net_AddCommands(void);        // d_net.c
-extern void        P_AddCommands(void);        // p_cmd.c
-extern void P_AddGenLineCommands(void);        // p_genlin.c -- haleyjd
-extern void       PE_AddCommands(void);        // p_enemy.c  -- haleyjd
-extern void        R_AddCommands(void);        // r_main.c
-extern void        S_AddCommands(void);        // s_sound.c
-extern void       ST_AddCommands(void);        // st_stuff.c
-extern void        V_AddCommands(void);        // v_misc.c
-extern void        W_AddCommands(void);        // w_levels.c -- haleyjd
+extern void       AM_AddCommands(void);        // am_color
+extern void    Cheat_AddCommands(void);        // m_cheat
+extern void        D_AddCommands(void);        // d_main   -- haleyjd
+extern void        E_AddCommands(void);        // e_cmd    -- haleyjd
+extern void        G_AddCommands(void);        // g_cmd
+extern void   G_Bind_AddCommands(void);        // g_bind   -- haleyjd
+extern void      G_DMAddCommands(void);        // g_dmflag -- haleyjd
+extern void       HU_AddCommands(void);        // hu_stuff
+extern void        I_AddCommands(void);        // i_system
+extern void       MN_AddCommands(void);        // mn_menu
+extern void      net_AddCommands(void);        // d_net
+extern void        P_AddCommands(void);        // p_cmd
+extern void P_AddGenLineCommands(void);        // p_genlin -- haleyjd
+extern void       PE_AddCommands(void);        // p_enemy  -- haleyjd
+extern void        R_AddCommands(void);        // r_main
+extern void        S_AddCommands(void);        // s_sound
+extern void     S_AddSeqCommands(void);        // s_sndseq -- haleyjd
+extern void       ST_AddCommands(void);        // st_stuff
+extern void        V_AddCommands(void);        // v_misc
+extern void        W_AddCommands(void);        // w_levels -- haleyjd
 
 #ifndef EE_NO_SMALL_SUPPORT
-extern void       SM_AddCommands(void);        // a_small.c  -- haleyjd
+extern void       SM_AddCommands(void);        // a_small  -- haleyjd
 #endif
 
 void C_AddCommands()
@@ -421,30 +425,31 @@ void C_AddCommands()
   C_AddCommand(cvarhelp);
   
   // add commands in other modules
+  AM_AddCommands();
   Cheat_AddCommands();
+  D_AddCommands();
+  E_AddCommands();
   G_AddCommands();
+  G_Bind_AddCommands();
+  G_DMAddCommands();
+  GL_AddCommands();  // haleyjd
   HU_AddCommands();
   I_AddCommands();
+  MN_AddCommands();
   net_AddCommands();
   P_AddCommands();
+  P_AddGenLineCommands();
+  PE_AddCommands();  // haleyjd
   R_AddCommands();
   S_AddCommands();
+  S_AddSeqCommands();
   ST_AddCommands();
   V_AddCommands();
-  MN_AddCommands();
-  AM_AddCommands();
-  PE_AddCommands();  // haleyjd
-  G_Bind_AddCommands();
+  W_AddCommands();
   
 #ifndef EE_NO_SMALL_SUPPORT
   SM_AddCommands();
 #endif
-  
-  G_DMAddCommands();
-  E_AddCommands();
-  P_AddGenLineCommands();
-  W_AddCommands();
-  D_AddCommands();
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

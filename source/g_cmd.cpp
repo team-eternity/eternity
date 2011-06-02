@@ -29,32 +29,35 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_gi.h"     // haleyjd: gamemode pertinent info
 #include "d_io.h"
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "c_net.h"
+#include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_stuff.h"
-#include "mn_engin.h"
-#include "mn_misc.h"  // haleyjd
+#include "m_misc.h"
 #include "m_shots.h"
 #include "m_random.h"
 #include "m_syscfg.h"
+#include "mn_engin.h"
+#include "mn_misc.h"  // haleyjd
 #include "p_inter.h"
+#include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
-#include "w_wad.h"
-#include "w_levels.h"
-
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
-#include "p_partcl.h" // haleyjd: add particle event cmds
-#include "d_gi.h"     // haleyjd: gamemode pertinent info
-#include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_levels.h"
+#include "w_wad.h"
 
 extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
@@ -69,17 +72,17 @@ extern int keylookspeed;
 
 CONSOLE_COMMAND(i_exitwithmessage, 0)
 {
-   I_ExitWithMessage("%s\n", Console.args);
+   I_ExitWithMessage("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_fatalerror, 0)
 {
-   I_FatalError(I_ERR_KILL, "%s\n", QStrConstPtr(&Console.args));
+   I_FatalError(I_ERR_KILL, "%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s\n", QStrConstPtr(&Console.args));
+   I_Error("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
@@ -144,7 +147,7 @@ CONSOLE_COMMAND(animshot, 0)
          "usage: animshot <frames>\n");
       return;
    }
-   animscreenshot = QStrAtoi(&Console.argv[0]);
+   animscreenshot = Console.argv[0]->toInt();
    C_InstaPopup();    // turn off console
 }
 
@@ -160,7 +163,7 @@ CONSOLE_COMMAND(screenshot, 0)
 // haleyjd 05/18/02: changed particle vars
 // to INT variables with choice of sprite, particle, or both
 
-char *particle_choices[] = { "sprites", "particles", "both" };
+const char *particle_choices[] = { "sprites", "particles", "both" };
 
 VARIABLE_BOOLEAN(drawparticles, NULL, onoff);
 CONSOLE_VARIABLE(draw_particles, drawparticles, 0) {}
@@ -250,13 +253,13 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(W_CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), lumpinfo_t::ns_demos) < 0)
+   if(wGlobalDir.CheckNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
    {
-      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
+      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
       return;
    }
    
-   G_DeferedPlayDemo(QStrConstPtr(&Console.argv[0]));
+   G_DeferedPlayDemo(Console.argv[0]->constPtr());
    singledemo = true;            // quit after one demo
 }
 
@@ -273,7 +276,7 @@ CONSOLE_COMMAND(timedemo, cf_notnet)
       C_Printf("usage: timedemo demoname showmenu\n");
       return;
    }
-   G_TimeDemo(QStrConstPtr(&Console.argv[0]), !!QStrAtoi(&Console.argv[1]));
+   G_TimeDemo(Console.argv[0]->constPtr(), !!Console.argv[1]->toInt());
 }
 
 // 'cool' demo
@@ -296,7 +299,7 @@ CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
       C_Printf(FC_ERROR"command not available in shareware games\n");
       return;
    }
-   D_AddNewFile(QStrConstPtr(&Console.argv[0]));
+   D_AddNewFile(Console.argv[0]->constPtr());
 }
 
 // list loaded wads
@@ -348,13 +351,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 03/12/06: no .wad loading in netgames
    
-   if(!netgame && QStrLen(&Console.argv[0]) > 4)
+   if(!netgame && Console.argv[0]->length() > 4)
    {
       const char *extension;
-      extension = QStrBufferAt(&Console.argv[0], QStrLen(&Console.argv[0]) - 4);
+      extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
       if(!strcmp(extension, ".wad"))
       {
-         if(D_AddNewFile(QStrConstPtr(&Console.argv[0])))
+         if(D_AddNewFile(Console.argv[0]->constPtr()))
          {
             G_DeferedInitNew(gameskill, firstlevel);
          }
@@ -363,14 +366,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    }
 
    // haleyjd 02/23/04: strict error checking
-   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
+   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
 
-   if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
+   if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
-      G_DeferedInitNew(gameskill, QStrConstPtr(&Console.argv[0]));
+      G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
    }
    else
-      C_Printf(FC_ERROR "%s not found or is not a valid map\n", QStrConstPtr(&Console.argv[0]));
+      C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
         // player name
@@ -384,18 +387,18 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
    
    playernum = Console.cmdsrc;
    
-   QStrCNCopy(players[playernum].name, &Console.argv[0], 20);
+   Console.argv[0]->copyInto(players[playernum].name, 20);
 
    if(playernum == consoleplayer)
    {
       free(default_name);
-      default_name = QStrCDup(&Console.argv[0], PU_STATIC);
+      default_name = Console.argv[0]->duplicate(PU_STATIC);
    }
 }
 
 // screenshot type
 
-char *str_pcx[] = { "bmp", "pcx", "tga" };
+const char *str_pcx[] = { "bmp", "pcx", "tga" };
 VARIABLE_INT(screenshot_pcx, NULL, 0, 2, str_pcx);
 CONSOLE_VARIABLE(shot_type, screenshot_pcx, 0) {}
 
@@ -411,7 +414,7 @@ CONSOLE_VARIABLE(textmode_startup, textmode_startup, 0) {}
 // demo insurance
 
 extern int demo_insurance;
-char *insure_str[]={"off", "on", "when recording"};
+const char *insure_str[]={"off", "on", "when recording"};
 VARIABLE_INT(demo_insurance, &default_demo_insurance, 0, 2, insure_str);
 CONSOLE_VARIABLE(demo_insurance, demo_insurance, cf_notnet) {}
 
@@ -421,7 +424,7 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 
 // SoM: mouse accel
-char *accel_options[]={ "off", "linear", "choco" };
+const char *accel_options[]={ "off", "linear", "choco" };
 VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
 CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
 
@@ -464,7 +467,7 @@ VARIABLE_STRING(gi_path_sosr,    NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 
-static boolean G_TestIWADPath(char *path)
+static bool G_TestIWADPath(char *path)
 {
    M_NormalizeSlashes(path);
 
@@ -608,7 +611,7 @@ void G_SetWeapPref(int prefnum, int newvalue)
    weapon_preferences[0][prefnum] = newvalue;
 }
 
-char *weapon_str[NUMWEAPONS] =
+const char *weapon_str[NUMWEAPONS] =
 {"fist", "pistol", "shotgun", "chaingun", "rocket launcher", "plasma gun",
  "bfg", "chainsaw", "double shotgun"};
 
@@ -618,7 +621,7 @@ void G_WeapPrefHandler(void)
    {
       int prefnum = 
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
-      G_SetWeapPref(prefnum, QStrAtoi(&Console.argv[0]));
+      G_SetWeapPref(prefnum, Console.argv[0]->toInt());
    }
 }
 

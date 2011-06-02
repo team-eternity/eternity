@@ -27,11 +27,15 @@
 
 #include "SDL.h"
 
+#include "../c_io.h"
+#include "../c_runcmd.h"
+#include "../d_event.h"
+#include "../d_main.h"
 #include "../doomdef.h"
 #include "../doomstat.h"
-#include "../d_main.h"
-#include "../c_runcmd.h"
-#include "../c_io.h"
+#include "../m_argv.h"
+#include "../v_misc.h"
+#include "../v_video.h"
 
 
 // Grab the mouse? (int type for config code)
@@ -40,19 +44,21 @@ extern int  usemouse;   // killough 10/98
 
 // Flag indicating whether the screen is currently visible:
 // when the screen isnt visible, don't render the screen
-boolean screenvisible;
-boolean window_focused;
-boolean fullscreen;
+bool screenvisible;
+bool window_focused;
+bool fullscreen;
 
 // haleyjd 10/25/09
-boolean unicodeinput;
+bool unicodeinput;
 
-void    I_InitKeyboard();      // i_system.c
+void I_InitKeyboard();      // i_system.c
 
-boolean MouseShouldBeGrabbed(void);
+bool MouseShouldBeGrabbed(void);
 
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // WM
+//
 
 // 
 // UpdateGrab
@@ -61,8 +67,8 @@ boolean MouseShouldBeGrabbed(void);
 //
 void UpdateGrab(void)
 {
-   static boolean currently_grabbed = false;
-   boolean grab;
+   static bool currently_grabbed = false;
+   bool grab;
    
    grab = MouseShouldBeGrabbed();
    
@@ -86,7 +92,7 @@ void UpdateGrab(void)
 //
 // haleyjd 10/08/05: From Chocolate DOOM, fairly self-explanatory.
 //
-boolean MouseShouldBeGrabbed(void)
+bool MouseShouldBeGrabbed(void)
 {
    // if the window doesnt have focus, never grab it
    if(!window_focused)
@@ -131,10 +137,10 @@ void UpdateFocus(void)
    screenvisible = (state & SDL_APPACTIVE) != 0;
 }
 
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Keyboard
+//
 
 //
 // I_TranslateKey
@@ -224,11 +230,10 @@ int I_DoomCode2ScanCode(int a)
    return a;
 }
 
-
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Joystick                                                    // phares 4/3/98
+//
 
 extern SDL_Joystick *sdlJoystick;
 extern int          usejoystick;
@@ -322,14 +327,16 @@ void I_StartFrame(void)
    I_JoystickEvents(); // Obtain joystick data                 phares 4/3/98
 }
 
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Mouse
+//
 
 extern void MN_QuitDoom(void);
 extern int mouseAccel_type;
 
 
+//
 // Mouse acceleration
 //
 // This emulates some of the behavior of DOS mouse drivers by increasing
@@ -341,7 +348,6 @@ extern int mouseAccel_type;
 
 float mouse_acceleration = 2.0;
 int   mouse_threshold = 10;
-
 
 //
 // AccelerateMouse
@@ -357,9 +363,6 @@ static int AccelerateMouse(int val)
              (int)((val - mouse_threshold) * mouse_acceleration + mouse_threshold) :
              val;
 }
-
-
-
 
 //
 // CenterMouse
@@ -411,9 +414,27 @@ static void I_ReadMouse(void)
       CenterMouse();
 }
 
+//
+// I_InitMouse
+//
+// Once upon a time this function existed in vanilla DOOM, and now here it is
+// again. 
+// haleyjd 05/10/11: Moved -grabmouse check here from the video subsystem.
+//
+void I_InitMouse()
+{
+   // haleyjd 10/09/05: from Chocolate DOOM
+   // mouse grabbing   
+   if(M_CheckParm("-grabmouse"))
+      grabmouse = 1;
+   else if(M_CheckParm("-nograbmouse"))
+      grabmouse = 0;
+}
 
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // Events
+//
 
 extern int gametic;
 
@@ -596,7 +617,9 @@ static void I_GetEvent(void)
       case SDL_ACTIVEEVENT:
          // haleyjd 10/08/05: from Chocolate DOOM:
          // need to update our focus state
+         // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
          UpdateFocus();
+         UpdateGrab();
          break;
 
       default:

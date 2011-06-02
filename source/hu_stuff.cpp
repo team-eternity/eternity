@@ -32,46 +32,55 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "psnprntf.h"
-#include "doomdef.h"
-#include "doomstat.h"
-#include "c_net.h"
+
+#include "a_small.h"
+#include "am_map.h"
 #include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_event.h"
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_net.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
+#include "m_qstr.h"
+#include "m_random.h"
+#include "m_swap.h"
+#include "p_chase.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_draw.h"
+#include "r_patch.h"
+#include "r_state.h"
 #include "s_sound.h"
-#include "v_video.h"
+#include "st_stuff.h"
 #include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
-#include "am_map.h"
-#include "d_gi.h"
-#include "d_io.h"
-#include "m_qstr.h"
-#include "m_swap.h"
-#include "a_small.h"
-#include "e_fonts.h"
 
 char *chat_macros[10];
 extern const char* shiftxform;
 extern const char english_shiftxform[]; // haleyjd: forward declaration
 //boolean chat_on;
-boolean chat_active = false;
+bool chat_active = false;
 int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
 
 vfont_t *hud_font;
 const char *hud_fontname;
 
-static boolean HU_ChatRespond(event_t *ev);
+static bool HU_ChatRespond(event_t *ev);
 
 // haleyjd 06/04/05: Complete HUD rewrite.
 
@@ -108,7 +117,7 @@ static hu_widget_t *HU_WidgetForName(const char *name)
 // Adds a widget to the hash table, but only if one of the given
 // name doesn't exist. Returns true if successful.
 //
-static boolean HU_AddWidgetToHash(hu_widget_t *widget)
+static bool HU_AddWidgetToHash(hu_widget_t *widget)
 {
    int key;
 
@@ -136,7 +145,7 @@ static boolean HU_AddWidgetToHash(hu_widget_t *widget)
 // to the previous disable state member, so that widgets can still
 // erase properly.
 //
-d_inline static void HU_ToggleWidget(hu_widget_t *widget, boolean disable)
+inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
 {
    widget->prevdisabled = widget->disabled;
    widget->disabled = disable;
@@ -149,10 +158,10 @@ d_inline static void HU_ToggleWidget(hu_widget_t *widget, boolean disable)
 // erasing. Sets prevdisabled to disabled to end erasing after the
 // first frame this is called for disabled widgets.
 //
-d_inline static boolean HU_NeedsErase(hu_widget_t *widget)
+inline static bool HU_NeedsErase(hu_widget_t *widget)
 {
    // needs erase if enabled, or if WAS enabled on last frame
-   boolean ret = !widget->disabled || !widget->prevdisabled;
+   bool ret = !widget->disabled || !widget->prevdisabled;
 
    widget->prevdisabled = widget->disabled;
 
@@ -306,7 +315,7 @@ void HU_Ticker(void)
 }
 
 // I don't know what this is doing here, but it can stay for now.
-boolean altdown = false;
+bool altdown = false;
 
 //
 // HU_Responder
@@ -314,7 +323,7 @@ boolean altdown = false;
 // Called from G_Responder. Has priority over any other events
 // intercepted by that function.
 //
-boolean HU_Responder(event_t *ev)
+bool HU_Responder(event_t *ev)
 {
    if(ev->data1 == KEYD_LALT)
       altdown = (ev->type == ev_keydown);
@@ -781,7 +790,7 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
 // so that the area does not continue to grow in size indefinitely and 
 // take up the entire screen.
 //
-d_inline static void HU_ClearEraseData(hu_textwidget_t *tw)
+inline static void HU_ClearEraseData(hu_textwidget_t *tw)
 {
    tw->erasedata.x1 = tw->erasedata.y1 =  D_MAXINT;
    tw->erasedata.x2 = tw->erasedata.y2 = -D_MAXINT;
@@ -1002,22 +1011,22 @@ static const char *centermsg_color;
 //
 void HU_CenterMessage(const char *s)
 {
-   static qstring_t qstr;
+   static qstring qstr;
    int st_height = GameModeInfo->StatusBar->height;
    hu_textwidget_t *tw = &centermessage_widget;
 
-   QStrClearOrCreate(&qstr, 128);
+   qstr.clearOrCreate(128);
 
    // haleyjd 02/28/06: colored center message
    if(centermsg_color)
    {
-      QStrCat(&qstr, centermsg_color);
+      qstr += centermsg_color;
       centermsg_color = NULL;
    }
    
-   QStrCat(&qstr, s);
+   qstr += s;
   
-   tw->message = QStrConstPtr(&qstr);
+   tw->message = qstr.constPtr();
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
@@ -1064,8 +1073,8 @@ static hu_patchwidget_t crosshair_widget;
 int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
-boolean crosshair_hilite; // haleyjd 06/07/05
-char *cross_str[]= { "none", "cross", "angle" }; // for console
+bool crosshair_hilite; // haleyjd 06/07/05
+const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 //
 // HU_CrossHairTick
@@ -1195,7 +1204,7 @@ void HU_InitCrossHair(void)
 static hu_textwidget_t leveltime_widget;
 
 // haleyjd 02/12/06: configuration variables
-boolean hu_showtime;       // enable/disable flag for level time
+bool hu_showtime;       // enable/disable flag for level time
 int hu_timecolor;          // color of time text
 
 //
@@ -1404,10 +1413,10 @@ static void HU_InitChat(void)
 //
 // Responds to chat-related events.
 //
-static boolean HU_ChatRespond(event_t *ev)
+static bool HU_ChatRespond(event_t *ev)
 {
    char ch = 0;
-   static boolean shiftdown;
+   static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
    G_KeyResponder(ev, kac_hud);
@@ -1487,8 +1496,8 @@ static hu_textwidget_t coordy_widget;
 static hu_textwidget_t coordz_widget;
 
 // haleyjd 02/12/06: configuration variables
-boolean hu_showcoords;
-int hu_coordscolor;
+bool hu_showcoords;
+int  hu_coordscolor;
 
 //
 // HU_CoordTick
@@ -1665,7 +1674,7 @@ CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
    S_StartSound(NULL, GameModeInfo->c_ChatSound);
    
-   doom_printf("%s: %s", players[Console.cmdsrc].name, QStrConstPtr(&Console.args));
+   doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args.constPtr());
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}

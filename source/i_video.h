@@ -20,18 +20,36 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      System specific interface stuff.
+//      Hardware Abstraction Layer Video Interface
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __I_VIDEO__
-#define __I_VIDEO__
-
-#ifdef DJGPP
-  #include "allegro.h"
-#endif
+#ifndef I_VIDEO_H__
+#define I_VIDEO_H__
 
 #include "doomtype.h"
+
+//
+// Video Driver Base Class
+//
+// All video drivers should inherit this interface.
+//
+class HALVideoDriver
+{
+public:
+   virtual void FinishUpdate()            = 0;
+   virtual void ReadScreen(byte *scr)     = 0;
+   virtual void InitDiskFlash()           = 0;
+   virtual void BeginRead()               = 0;
+   virtual void EndRead()                 = 0;
+   virtual void SetPalette(byte *pal)     = 0;
+   virtual void SetPrimaryBuffer()        = 0;
+   virtual void UnsetPrimaryBuffer()      = 0;
+   virtual void ShutdownGraphics()        = 0;
+   virtual void ShutdownGraphicsPartway() = 0;
+   virtual bool InitGraphicsMode()        = 0;
+};
+
 
 // Called by D_DoomMain,
 // determines the hardware configuration
@@ -43,7 +61,6 @@ void I_ShutdownGraphics(void);
 // Takes full 8 bit values.
 void I_SetPalette (byte* palette);
 
-void I_UpdateNoBlit (void);
 void I_FinishUpdate (void);
 
 // Wait for vertical retrace or pause a bit.
@@ -51,33 +68,38 @@ void I_WaitVBL(int count);
 
 void I_ReadScreen (byte* scr);
 
-
-void I_ResetVidMode();
+void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf);
+void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
+                 bool *wf);
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 extern int disk_icon;  // killough 10/98
-
-#ifdef DJGPP
- extern int page_flip;  // killough 8/15/98: enables page flipping (320x200)
- extern int vesamode;
- // soM: removed hires HACK ANYRES
- extern BITMAP *screens0_bitmap;   // killough 12/98
-#endif
 
 // video modes
 
 typedef struct videomode_s
 {
-  boolean hires;
-  boolean pageflip;
-  boolean vesa;
-  char *description;
+  bool hires;
+  bool pageflip;
+  bool vesa;
+  const char *description;
 } videomode_t;
 
-extern videomode_t videomodes[];
-
-void I_CheckVESA();
 void I_SetMode(int i);
+
+extern char *i_videomode;
+extern char *i_default_videomode;
+extern int   i_videodriverid;
+
+// Driver enumeration
+enum
+{
+   VDR_SDLSOFT,
+   VDR_SDLGL2D,
+   VDR_MAXDRIVERS
+};
+
+extern const char *const i_videohelpstr;
 
 // Below here has been moved to i_input.c
 // haleyjd

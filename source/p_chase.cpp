@@ -26,22 +26,26 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_main.h"
+#include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "g_game.h"
 #include "info.h"
-#include "d_main.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
-#include "r_main.h"
-#include "g_game.h"
-#include "a_small.h"
 #include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_state.h"
 
-boolean PTR_chasetraverse(intercept_t *in);
+bool PTR_chasetraverse(intercept_t *in);
 
 camera_t chasecam;
 int chaseviewz;
@@ -154,7 +158,7 @@ CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
    if(!Console.argc)
       return;
 
-   if(QStrAtoi(&Console.argv[0]))
+   if(Console.argv[0]->toInt())
       P_ChaseStart();
    else
       P_ChaseEnd();
@@ -208,7 +212,7 @@ extern linetracer_t trace;
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-boolean PTR_chasetraverse(intercept_t *in)
+bool PTR_chasetraverse(intercept_t *in)
 {
    fixed_t dist, frac;
    subsector_t *ss;
@@ -246,7 +250,7 @@ boolean PTR_chasetraverse(intercept_t *in)
          z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
-         if( (li->flags & ML_BLOCKING) ||
+         if( (li->flags & ML_BLOCKING) || 
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit
@@ -372,7 +376,7 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
    if(!Console.argc)
       walkcam_active = !walkcam_active;
    else
-      walkcam_active = QStrAtoi(&Console.argv[0]);
+      walkcam_active = Console.argv[0]->toInt();
 
    if(walkcam_active)
    {

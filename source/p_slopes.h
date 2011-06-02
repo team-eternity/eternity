@@ -28,6 +28,9 @@
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__
 
+struct line_t;
+struct pslope_t;
+struct v3float_t;
 
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line

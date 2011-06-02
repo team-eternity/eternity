@@ -28,11 +28,13 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "r_draw.h"
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "r_draw.h"
 #include "r_main.h"
+#include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -1555,7 +1557,16 @@ columndrawer_t r_quad_drawer =
    R_QDrawAddColumn,
    R_QDrawAddTRColumn,
 
-   R_QResetColumnBuffer
+   R_QResetColumnBuffer,
+
+   {
+      // Normal            Translated
+      { R_QDrawColumn,     R_QDrawTRColumn     }, // NORMAL
+      { R_QDrawFuzzColumn, R_QDrawFuzzColumn   }, // SHADOW
+      { R_QDrawFlexColumn, R_QDrawFlexTRColumn }, // ALPHA
+      { R_QDrawAddColumn,  R_QDrawAddTRColumn  }, // ADD
+      { R_QDrawTLColumn,   R_QDrawTLTRColumn   }, // TRANMAP
+   },
 };
 
 // EOF

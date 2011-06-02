@@ -26,43 +26,48 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
-#include "d_mod.h"
-#include "doomstat.h"
-#include "m_random.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "p_map3d.h"
-#include "p_setup.h"
-#include "p_spec.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "p_inter.h"
-#include "g_game.h"
-#include "p_enemy.h"
-#include "p_tick.h"
-#include "m_bbox.h"
-#include "p_anim.h" // haleyjd
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "w_wad.h"
-#include "p_partcl.h"
-#include "p_info.h"
-#include "a_small.h"
-#include "e_player.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "e_ttypes.h"
-#include "d_gi.h"
-#include "r_main.h"
-#include "e_lib.h"
-#include "e_sound.h"
-#include "e_args.h"
 
 // Some action functions are still needed here.
 #include "a_common.h"
 #include "a_doom.h"
+
+#include "a_small.h"
+#include "c_io.h"
+#include "c_runcmd.h"
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_mod.h"
+#include "doomstat.h"
+#include "e_args.h"
+#include "e_lib.h"
+#include "e_player.h"
+#include "e_sound.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
+#include "g_game.h"
+#include "m_bbox.h"
+#include "m_random.h"
+#include "p_anim.h"      // haleyjd
+#include "p_enemy.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_map3d.h"
+#include "p_maputl.h"
+#include "p_mobjcol.h"
+#include "p_partcl.h"
+#include "p_setup.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "w_wad.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -184,7 +189,7 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 //
 // P_CheckMeleeRange
 //
-boolean P_CheckMeleeRange(Mobj *actor)
+bool P_CheckMeleeRange(Mobj *actor)
 {
    Mobj *pl = actor->target;
    
@@ -213,9 +218,9 @@ boolean P_CheckMeleeRange(Mobj *actor)
 // haleyjd 09/22/09: rewrote to de-Killoughify ;)
 //                   also added ignoring of things with NOFRIENDDMG flag
 //
-boolean P_HitFriend(Mobj *actor)
+bool P_HitFriend(Mobj *actor)
 {
-   boolean hitfriend = false;
+   bool hitfriend = false;
 
    if(actor->target)
    {
@@ -249,7 +254,7 @@ boolean P_HitFriend(Mobj *actor)
 //
 // P_CheckMissileRange
 //
-boolean P_CheckMissileRange(Mobj *actor)
+bool P_CheckMissileRange(Mobj *actor)
 {
    fixed_t dist;
    
@@ -338,7 +343,7 @@ boolean P_CheckMissileRange(Mobj *actor)
 // or that a monster should stay on the lift for a while
 // while it goes up or down.
 //
-static boolean P_IsOnLift(const Mobj *actor)
+static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
    line_t line;
@@ -381,7 +386,7 @@ static boolean P_IsOnLift(const Mobj *actor)
 //
 static int P_IsUnderDamage(Mobj *actor)
 { 
-   const struct msecnode_s *seclist;
+   const msecnode_t *seclist;
    const CeilingThinker *cl;             // Crushing ceiling
    int dir = 0;
 
@@ -410,7 +415,7 @@ extern  int    numspechit;
 int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
-   boolean try_ok;
+   bool try_ok;
    int movefactor = ORIG_FRICTION_FACTOR;    // killough 10/98
    int friction = ORIG_FRICTION;
    int speed;
@@ -593,7 +598,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 //
 // killough 9/12/98: Same as P_Move, except smarter
 //
-boolean P_SmartMove(Mobj *actor)
+bool P_SmartMove(Mobj *actor)
 {
    Mobj *target = actor->target;
    int on_lift, dropoff = 0, under_damage;
@@ -659,7 +664,7 @@ boolean P_SmartMove(Mobj *actor)
 // If a door is in the way,
 // an OpenDoor call is made to start it opening.
 //
-static boolean P_TryWalk(Mobj *actor)
+static bool P_TryWalk(Mobj *actor)
 {
    if(!P_SmartMove(actor))
       return false;
@@ -753,7 +758,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static boolean PIT_AvoidDropoff(line_t *line)
+static bool PIT_AvoidDropoff(line_t *line)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -912,7 +917,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
+static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 {
    if(mo->flags2 & MF2_DONTDRAW)
       return 0;  // haleyjd: total invisibility!
@@ -943,6 +948,22 @@ static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    return P_CheckSight(actor, mo);
 }
 
+int p_lastenemyroar;
+
+//
+// P_LastEnemyRoar
+//
+// haleyjd 01/20/11: BOOM's change to AI made in order to keep monsters from
+// falling asleep had the unfortunate side effect of eliminating the wake-up
+// sound they would make when killing their current target and returning to
+// fighting the player or another monster. This is an optional routine that
+// re-enables this behavior.
+//
+static void P_LastEnemyRoar(Mobj *actor)
+{
+   if(demo_version >= 340 && p_lastenemyroar)
+      P_MakeSeeSound(actor, pr_misc); // don't affect the play sim.
+}
 
 static int current_allaround;
 
@@ -953,7 +974,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static boolean PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo)
 {
    Mobj *actor = current_actor;
 
@@ -964,13 +985,13 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // If the monster is already engaged in a one-on-one attack
    // with a healthy friend, don't attack around 60% the time
+   const Mobj *targ = mo->target;
+   if(targ && targ->target == mo &&
+      P_Random(pr_skiptarget) > 100 &&
+      (targ->flags ^ mo->flags) & MF_FRIEND &&
+       targ->health*2 >= targ->info->spawnhealth)
    {
-      const Mobj *targ = mo->target;
-      if(targ && targ->target == mo &&
-         P_Random(pr_skiptarget) > 100 &&
-         (targ->flags ^ mo->flags) & MF_FRIEND &&
-         targ->health*2 >= targ->info->spawnhealth)
-         return true;
+      return true;
    }
 
    if(!P_IsVisible(actor, mo, current_allaround))
@@ -981,15 +1002,10 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // Move the selected monster to the end of its associated
    // list, so that it gets searched last next time.
-
-   {
-      Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ?
-                                        th_friends : th_enemies];
-      (mo->cprev->cnext = mo->cnext)->cprev =
-         mo->cprev;
-      (mo->cprev = cap->cprev)->cnext = mo;
-      (mo->cnext = cap)->cprev = mo;
-   }
+   Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ? th_friends : th_enemies];
+   (mo->cprev->cnext = mo->cnext)->cprev = mo->cprev;
+   (mo->cprev = cap->cprev)->cnext = mo;
+   (mo->cnext = cap)->cprev = mo;
    
    return false;
 }
@@ -1001,7 +1017,7 @@ static boolean PIT_FindTarget(Mobj *mo)
 // battling like mad when the player dies in Heretic. Who knows why
 // Raven added that "feature," but it's fun ^_^
 //
-static boolean P_HereticMadMelee(Mobj *actor)
+static bool P_HereticMadMelee(Mobj *actor)
 {
    Mobj *mo;
    Thinker *th;
@@ -1046,7 +1062,7 @@ static boolean P_HereticMadMelee(Mobj *actor)
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-boolean P_LookForPlayers(Mobj *actor, int allaround)
+bool P_LookForPlayers(Mobj *actor, int allaround)
 {
    player_t *player;
    int stop, stopc, c;
@@ -1161,7 +1177,7 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-static boolean P_LookForMonsters(Mobj *actor, int allaround)
+static bool P_LookForMonsters(Mobj *actor, int allaround)
 {
    Thinker *cap, *th;
    
@@ -1171,6 +1187,8 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
    if(actor->lastenemy && actor->lastenemy->health > 0 && monsters_remember &&
       !(actor->lastenemy->flags & actor->flags & MF_FRIEND)) // not friends
    {
+      if(actor->target != actor->lastenemy)
+         P_LastEnemyRoar(actor);
       P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
       P_SetTarget<Mobj>(&actor->lastenemy, NULL);
       return true;
@@ -1248,7 +1266,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 //
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
-boolean P_LookForTargets(Mobj *actor, int allaround)
+bool P_LookForTargets(Mobj *actor, int allaround)
 {
    return actor->flags & MF_FRIEND ?
       P_LookForMonsters(actor, allaround) || P_LookForPlayers (actor, allaround):
@@ -1260,7 +1278,7 @@ boolean P_LookForTargets(Mobj *actor, int allaround)
 //
 // killough 9/8/98: Help friends in danger of dying
 //
-boolean P_HelpFriend(Mobj *actor)
+bool P_HelpFriend(Mobj *actor)
 {
    Thinker *cap, *th;
 
@@ -1346,7 +1364,7 @@ void P_BossTeleport(bossteleport_t *bt)
    Mobj *boss, *mo, *targ;
    fixed_t prevx, prevy, prevz;
 
-   if(P_CollectionIsEmpty(bt->mc))
+   if(bt->mc->isEmpty())
       return;
 
    boss = bt->boss;
@@ -1354,14 +1372,14 @@ void P_BossTeleport(bossteleport_t *bt)
    // if minimum distance is specified, use a different point selection method
    if(bt->minDistance)
    {
-      int i = P_Random(bt->rngNum) % bt->mc->num;
+      int i = P_Random(bt->rngNum) % bt->mc->getLength();
       int starti = i;
       fixed_t x, y;
-      boolean foundSpot = true;
+      bool foundSpot = true;
 
       while(1)
       {
-         targ = P_CollectionGetAt(bt->mc, (unsigned int)i);
+         targ = (*bt->mc)[(unsigned int)i];
          x = targ->x;
          y = targ->y;
          if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
@@ -1371,7 +1389,7 @@ void P_BossTeleport(bossteleport_t *bt)
          }
 
          // wrapped around? abort loop
-         if((i = (i + 1) % bt->mc->num) == starti)
+         if((i = (i + 1) % bt->mc->getLength()) == starti)
             break;
       }
 
@@ -1380,7 +1398,7 @@ void P_BossTeleport(bossteleport_t *bt)
          return;
    }
    else
-      targ = P_CollectionGetRandom(bt->mc, bt->rngNum);
+      targ = bt->mc->getRandom(bt->rngNum);
 
    prevx = boss->x;
    prevy = boss->y;
@@ -1791,18 +1809,18 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    if(Console.argc >= 2)
    {
       flagsmode = 1;
-      flags = QStrConstPtr(&Console.argv[1]);
+      flags = Console.argv[1]->constPtr();
    }
 
    if(Console.argc >= 3)
    {
-      if(!QStrCaseCmp(&Console.argv[2], "set"))
+      if(!Console.argv[2]->strCaseCmp("set"))
          flagsmode = 0; // set
-      else if(!QStrCaseCmp(&Console.argv[2], "remove"))
+      else if(!Console.argv[2]->strCaseCmp("remove"))
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(QStrConstPtr(&Console.argv[0]))) == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1836,7 +1854,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
    if(!Console.argc)
       return;
    
-   thingnum = E_ThingNumForName(QStrConstPtr(&Console.argv[0]));
+   thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
@@ -1847,7 +1865,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       C_Printf("thing type is not a special\n");
       return;
    }
-   itemnum = (Console.argc >= 2) ? QStrAtoi(&Console.argv[1]) : 1;
+   itemnum = (Console.argc >= 2) ? Console.argv[1]->toInt() : 1;
 
    for(i = 0; i < itemnum; i++)
    {
@@ -1877,7 +1895,7 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
    if(!Console.argc)
       return;
    
-   thingnum = E_ThingNumForName(QStrConstPtr(&Console.argv[0]));
+   thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
@@ -1978,6 +1996,9 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
+VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
@@ -1989,6 +2010,7 @@ void PE_AddCommands(void)
    C_AddCommand(banish);
    C_AddCommand(vilehit);
    C_AddCommand(resurrect);
+   C_AddCommand(p_lastenemyroar);
 }
 
 //----------------------------------------------------------------------------

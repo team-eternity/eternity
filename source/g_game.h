@@ -19,34 +19,36 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __G_GAME__
-#define __G_GAME__
+#ifndef G_GAME_H__
+#define G_GAME_H__
 
-#include "doomdef.h"
-#include "d_event.h"
-#include "d_ticcmd.h"
-#include "d_player.h"
+// Required for byte
+#include "doomtype.h"
+
+struct event_t;
+struct player_t;
+class WadDirectory;
 
 //
 // GAME
 //
-struct waddir_t;
 
 char *G_GetNameForMap(int episode, int map);
 int G_GetMapForName(const char *name);
 
-boolean G_Responder(event_t *ev);
-boolean G_CheckDemoStatus(void);
-boolean G_CheckDemoStatus(void);
+bool G_Responder(event_t *ev);
+bool G_CheckDemoStatus(void);
+bool G_CheckDemoStatus(void);
 void G_DeathMatchSpawnPlayer(int playernum);
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, const char *levelname);
 void G_DeferedPlayDemo(const char *demo);
-void G_TimeDemo(const char *name, boolean showmenu);
-void G_LoadGame(char *name, int slot, boolean is_command); // killough 5/15/98
+void G_TimeDemo(const char *name, bool showmenu);
+void G_LoadGame(char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame(void);           // killough 5/15/98: forced loadgames
 void G_SaveGame(int slot, char *description); // Called by M_Responder.
 void G_RecordDemo(char *name);              // Only called by startup code.
+void G_SetOldDemoOptions(void);
 void G_BeginRecording(void);
 void G_PlayDemo(char *name);
 void G_StopDemo();
@@ -72,7 +74,7 @@ void G_DoVictory(void);
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SetGameMap(void);
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
-uint64_t G_Signature(waddir_t *dir);
+uint64_t G_Signature(WadDirectory *dir);
 void G_DoPlayDemo(void);
 
 void R_InitPortals();
@@ -98,14 +100,14 @@ extern int  automlook;
 extern int  invert_mouse;
 extern int  bfglook;
 
-extern angle_t consoleangle;
+//extern angle_t consoleangle;
 
-extern int     defaultskill;     // jff 3/24/98 default skill
-extern boolean haswolflevels;    // jff 4/18/98 wolf levels present
-extern boolean demorecording;    // killough 12/98
-extern boolean forced_loadgame;
-extern boolean command_loadgame;
-extern char    gamemapname[9];
+extern int  defaultskill;     // jff 3/24/98 default skill
+extern bool haswolflevels;    // jff 4/18/98 wolf levels present
+extern bool demorecording;    // killough 12/98
+extern bool forced_loadgame;
+extern bool command_loadgame;
+extern char gamemapname[9];
 
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
@@ -118,11 +120,11 @@ extern int cpars[];     // hardcoded array size
 #define NUMKEYS   256
 
 extern int cooldemo;
-extern boolean hub_changelevel;
+extern bool hub_changelevel;
 
-extern boolean scriptSecret;   // haleyjd
+extern bool scriptSecret;   // haleyjd
 
-extern boolean sendpause;
+extern bool sendpause;
 
 extern int novert; // haleyjd
 
@@ -131,8 +133,8 @@ extern int novert; // haleyjd
 // killough 2/22/98: version id string format for savegames
 #define VERSIONID "MBF %d"
 
-extern waddir_t *g_dir;
-extern waddir_t *d_dir;
+extern WadDirectory *g_dir;
+extern WadDirectory *d_dir;
 
 // killough 2/28/98: A ridiculously large number
 // of players, the most you'll ever need in a demo

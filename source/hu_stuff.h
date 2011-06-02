@@ -19,10 +19,10 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __HU_STUFF_H__
-#define __HU_STUFF_H__
+#ifndef HU_STUFF_H__
+#define HU_STUFF_H__
 
-#include "d_event.h"
+struct event_t;
 
 enum
 {
@@ -46,11 +46,11 @@ typedef struct hu_widget_s
    int type;                 // widget type
    char name[33];            // name of this widget
    struct hu_widget_s *next; // next in hash chain
-   boolean disabled;         // disable flag
-   boolean prevdisabled;     // previous state of disable flag
+   bool disabled;            // disable flag
+   bool prevdisabled;        // previous state of disable flag
 } hu_widget_t;
 
-extern boolean chat_on;
+extern bool chat_on;
 extern int obituaries;
 extern int obcolour;       // the colour of death messages
 extern int showMessages;   // Show messages has default, 0 = off, 1 = on
@@ -60,7 +60,7 @@ extern char *chat_macros[10];
 void HU_Init(void);
 void HU_Drawer(void);
 void HU_Ticker(void);
-boolean HU_Responder(event_t *ev);
+bool HU_Responder(event_t *ev);
 
 void HU_Start(void);
 
@@ -72,14 +72,14 @@ void HU_Erase(void);
 
 #define CROSSHAIRS 3
 extern int crosshairnum;       // 0= none
-extern boolean crosshair_hilite;
+extern bool crosshair_hilite;
 
 // haleyjd 02/12/06: lost and new options
-extern boolean hu_showtime;
-extern boolean hu_showcoords;
-extern int hu_timecolor;
-extern int hu_levelnamecolor;
-extern int hu_coordscolor;
+extern bool hu_showtime;
+extern bool hu_showcoords;
+extern int  hu_timecolor;
+extern int  hu_levelnamecolor;
+extern int  hu_coordscolor;
 
 extern const char *hud_fontname;
 

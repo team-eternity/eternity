@@ -45,11 +45,12 @@
 #include "../s_sound.h"
 #include "../mn_engin.h"
 
-extern boolean snd_init;
+extern bool snd_init;
 
 // Needed for calling the actual sound output.
-static int SAMPLECOUNT = 512;
 #define MAX_CHANNELS 32
+
+int audio_buffers;
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -72,14 +73,13 @@ typedef struct channel_info_s
   // Hardware left and right channel volume lookup.
   int *leftvol_lookup;
   int *rightvol_lookup;
-  // haleyjd 10/02/08: channel is waiting to be stopped
-  boolean stopChannel;
   // haleyjd 06/03/06: looping
   int loop;
   unsigned int idnum;
 
   // haleyjd 10/02/08: SDL semaphore to protect channel
   SDL_sem *semaphore;
+  bool shouldstop; // haleyjd 05/16/11
 
 } channel_info_t;
 
@@ -92,73 +92,6 @@ static int steptable[256];
 static int vol_lookup[128*256];
 
 static int I_GetSfxLumpNum(sfxinfo_t *sfx);
-
-//
-// stopchan
-//
-// cph 
-// Stops a sound, unlocks the data 
-//
-static boolean stopchan(int handle)
-{
-   int cnum;
-   boolean freeSound = true;
-   boolean stoppedSound = false;
-   sfxinfo_t *sfx = NULL;
-   
-#ifdef RANGECHECK
-   // haleyjd 02/18/05: bounds checking
-   if(handle < 0 || handle >= MAX_CHANNELS)
-      return false;
-#endif
-   
-   // haleyjd 10/02/08: critical section
-   if(SDL_SemWait(channelinfo[handle].semaphore) == 0)
-   {
-      // haleyjd 06/07/09: store this here so that we can release the
-      // semaphore as quickly as possible.
-      sfx = channelinfo[handle].id;
-
-      channelinfo[handle].stopChannel = false;
-
-      if(sfx)
-      {
-         // haleyjd 06/07/09: bug fix!
-         // this channel isn't interested in the sound any more, 
-         // even if we didn't free it. This prevented some sounds from
-         // getting freed unnecessarily.
-         channelinfo[handle].id    = NULL;
-         channelinfo[handle].data  = NULL;
-         channelinfo[handle].idnum = 0;
-         stoppedSound = true;
-      }
-
-      // haleyjd 06/07/09: release the semaphore now. The faster the better.
-      SDL_SemPost(channelinfo[handle].semaphore);
-         
-      if(sfx)
-      {
-         // haleyjd 06/03/06: see if we can free the sound
-         for(cnum = 0; cnum < MAX_CHANNELS; ++cnum)
-         {
-            if(cnum == handle)
-               continue;
-            if(channelinfo[cnum].id &&
-               channelinfo[cnum].id->data == sfx->data)
-            {
-               freeSound = false; // still being used by some channel
-               break;
-            }
-         }
-         
-         // set sample to PU_CACHE level
-         if(freeSound && sfx->data)
-            Z_ChangeTag(sfx->data, PU_CACHE);
-      }
-   }
-
-   return stoppedSound; // haleyjd 10/30/10: return true if stopped
-}
 
 #define SOUNDHDRSIZE 8
 
@@ -174,7 +107,7 @@ static boolean stopchan(int handle)
 // haleyjd: needs to take a sfxinfo_t ptr, not a sound id num
 // haleyjd 06/03/06: changed to return boolean for failure or success
 //
-static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
+static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
 {
    size_t lumplen;
    int lump;
@@ -188,8 +121,6 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
    if(!snd_init || !sfx)
       return false;
 
-   stopchan(channel);
-   
    // We will handle the new SFX.
    // Set pointer to raw data.
 
@@ -302,6 +233,9 @@ static boolean addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id)
       // Set instance ID
       channelinfo[channel].idnum = id;
 
+      // Shouldn't be stopped - haleyjd 05/16/11
+      channelinfo[channel].shouldstop = false;
+
       SDL_SemPost(channelinfo[channel].semaphore);
 
       return true;
@@ -348,12 +282,14 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    separation = separation - 257;
    rightvol= volume - ((volume*separation*separation) >> 16);  
 
+#ifdef RANGECHECK
    // Sanity check, clamp volume.
    if(rightvol < 0 || rightvol > 127)
       I_Error("rightvol out of bounds\n");
    
    if(leftvol < 0 || leftvol > 127)
       I_Error("leftvol out of bounds\n");
+#endif
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause
@@ -381,7 +317,9 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
 // Three-Band Equalization
 //
 
-typedef struct EQSTATE_s
+static double preampmul;
+
+struct EQSTATE
 {
   // Filter #1 (Low band)
 
@@ -411,7 +349,7 @@ typedef struct EQSTATE_s
   double  mg;       // mid  gain
   double  hg;       // high gain
   
-} EQSTATE;  
+};  
 
 // haleyjd 04/21/10: equalizers for each stereo channel
 static EQSTATE eqstate[2];
@@ -458,7 +396,7 @@ static double rational_tanh(double x)
 static double do_3band(EQSTATE *es, double sample)
 {
    // haleyjd: This "very small addend" is supposed to take care of P4
-   // renormalization problems. Do we actually need it?
+   // denormalization problems. Do we actually need it?
    static double vsa = (1.0 / 4294967295.0);
 
    // Locals
@@ -499,244 +437,15 @@ static double do_3band(EQSTATE *es, double sample)
    return rational_tanh(l + m + h);
 }
 
-
-
 //
 // End Equalizer Code
 //
 //============================================================================
 
-#define SND_PI 3.14159265
-
-static double preampmul;
-
+//============================================================================
 //
-// I_SetChannels
+// MAIN ROUTINE - AUDIOSPEC CALLBACK ROUTINE
 //
-// Init internal lookups (raw data, mixing buffer, channels).
-// This function sets up internal lookups used during
-//  the mixing process. 
-//
-static void I_SetChannels(void)
-{
-   int i;
-   int j;
-   
-   int *steptablemid = steptable + 128;
-   
-   // Okay, reset internal mixing channels to zero.
-   for(i = 0; i < MAX_CHANNELS; ++i)
-      memset(&channelinfo[i], 0, sizeof(channel_info_t));
-   
-   // This table provides step widths for pitch parameters.
-   for(i=-128 ; i<128 ; i++)
-      steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
-   
-   // Generates volume lookup tables
-   //  which also turn the unsigned samples
-   //  into signed samples.
-   for(i = 0; i < 128; i++)
-   {
-      for(j = 0; j < 256; j++)
-      {
-         // proff - made this a little bit softer, because with
-         // full volume the sound clipped badly (191 was 127)
-         vol_lookup[i*256+j] = (i*(j-128)*256)/191;
-      }
-   }
-
-   // haleyjd 10/02/08: create semaphores
-   for(i = 0; i < MAX_CHANNELS; ++i)
-   {
-      channelinfo[i].semaphore = SDL_CreateSemaphore(1);
-
-      if(!channelinfo[i].semaphore)
-      {
-         I_FatalError(I_ERR_KILL, 
-                      "I_SetChannels: failed to create semaphore for channel %d\n",
-                      i);
-      }
-   }
-
-   // haleyjd 04/21/10: initialize equalizers
-
-   // Set Low/Mid/High gains 
-   // TODO: make configurable, add more parameters
-   eqstate[0].lg = eqstate[1].lg = s_lowgain;
-   eqstate[0].mg = eqstate[1].mg = s_midgain;
-   eqstate[0].hg = eqstate[1].hg = s_highgain;
-
-   // Calculate filter cutoff frequencies
-   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
-   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
-
-   // Calculate preamplification factor
-   preampmul = s_eqpreamp / 32767.0;
-}
-
-//
-// I_GetSfxLumpNum
-//
-// Retrieve the raw data lump index
-//  for a given SFX name.
-//
-static int I_GetSfxLumpNum(sfxinfo_t *sfx)
-{
-   char namebuf[16];
-
-   memset(namebuf, 0, sizeof(namebuf));
-
-   // haleyjd 09/03/03: determine whether to apply DS prefix to
-   // name or not using new prefix flag
-   if(sfx->prefix)
-      psnprintf(namebuf, sizeof(namebuf), "ds%s", sfx->name);
-   else
-      strcpy(namebuf, sfx->name);
-
-   return W_CheckNumForName(namebuf);
-}
-
-//=============================================================================
-// 
-// Driver Routines
-//
-
-//
-// I_SDLUpdateEQParams
-//
-// haleyjd 04/21/10
-//
-static void I_SDLUpdateEQParams(void)
-{
-   // flush out state of equalizers
-   memset(eqstate, 0, sizeof(eqstate));
-
-   // Set Low/Mid/High gains 
-   eqstate[0].lg = eqstate[1].lg = s_lowgain;
-   eqstate[0].mg = eqstate[1].mg = s_midgain;
-   eqstate[0].hg = eqstate[1].hg = s_highgain;
-
-   // Calculate filter cutoff frequencies
-   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
-   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
-
-   // Calculate preamp factor
-   preampmul = s_eqpreamp / 32767.0;
-}
-
-//
-// I_SDLUpdateSoundParams
-//
-// Update the sound parameters. Used to control volume,
-// pan, and pitch changes such as when a player turns.
-//
-static void I_SDLUpdateSoundParams(int handle, int vol, int sep, int pitch)
-{
-   updateSoundParams(handle, vol, sep, pitch);
-}
-
-//
-// I_SDLStartSound
-//
-static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep, 
-                           int pitch, int pri, int loop)
-{
-   static unsigned int id = 1;
-   int handle;
-
-   // haleyjd: turns out this is too simplistic. see below.
-   /*
-   // SoM: reimplement hardware channel wrap-around
-   if(++handle >= MAX_CHANNELS)
-      handle = 0;
-   */
-
-   // haleyjd 06/03/06: look for an unused hardware channel
-   for(handle = 0; handle < numChannels; ++handle)
-   {
-      if(channelinfo[handle].data == NULL)
-         break;
-   }
-
-   // all used? don't play the sound. It's preferable to miss a sound
-   // than it is to cut off one already playing, which sounds weird.
-   if(handle == numChannels)
-      return -1;
- 
-   if(addsfx(sound, handle, loop, id))
-   {
-      updateSoundParams(handle, vol, sep, pitch);
-      ++id; // increment id to keep each sound instance unique
-   }
-   else
-      handle = -1;
-   
-   return handle;
-}
-
-//
-// I_SDLStopSound
-//
-// Stop the sound. Necessary to prevent runaway chainsaw,
-// and to stop rocket launches when an explosion occurs.
-//
-static void I_SDLStopSound(int handle)
-{
-#ifdef RANGECHECK
-   if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SDLStopSound: handle out of range\n");
-#endif
-   
-   stopchan(handle);
-}
-
-//
-// I_SDLSoundIsPlaying
-//
-// haleyjd: wow, this can actually do something in the Windows version :P
-//
-static int I_SDLSoundIsPlaying(int handle)
-{
-#ifdef RANGECHECK
-   if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SDLSoundIsPlaying: handle out of range\n");
-#endif
- 
-   return (channelinfo[handle].data != NULL);
-}
-
-//
-// I_SDLSoundID
-//
-// haleyjd: returns the unique id number assigned to a specific instance
-// of a sound playing on a given channel. This is required to make sure
-// that the higher-level sound code doesn't start updating sounds that have
-// been displaced without it noticing.
-//
-static int I_SDLSoundID(int handle)
-{
-#ifdef RANGECHECK
-   if(handle < 0 || handle >= MAX_CHANNELS)
-      I_Error("I_SDLSoundID: handle out of range\n");
-#endif
-
-   return channelinfo[handle].idnum;
-}
-
-//
-// I_SDLUpdateSound
-//
-// haleyjd 10/02/08: This function is now responsible for stopping channels
-// that have expired. The I_SDLUpdateSound function does sound updating, but
-// cannot be allowed to modify the zone heap due to being dispatched from a
-// separate thread.
-// 
-static void I_SDLUpdateSound(void)
-{
-   // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
-   // with thread contention when running with d_fastrefresh enabled. Calling
-   // this from the main loop too often caused the sound to stutter.
-}
 
 // size of a single sample
 #define SAMPLESIZE sizeof(Sint16) 
@@ -745,15 +454,13 @@ static void I_SDLUpdateSound(void)
 #define STEP 2
 
 //
-// I_SDLUpdateSound
+// I_SDLUpdateSoundCB
 //
 // SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
 // We do our own mixing on up to 32 digital sound channels.
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   boolean wrotesound = false;
-
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *rightout, *leftend;
    
@@ -769,8 +476,11 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    //  as well. Thus loop those channels.
    for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
    {
+      if(chan->shouldstop) // Channels are only stopped here.
+         chan->data = NULL;
+         
       // fast rejection before semaphore lock
-      if(!chan->data || chan->stopChannel)
+      if(!chan->data)
          continue;
          
       // try to acquire semaphore, but do not block; if the main thread is using
@@ -856,21 +566,18 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             else
             {
                // flag the channel to be stopped by the main thread ASAP
-               chan->stopChannel = true;
                chan->data = NULL;
                break;
             }
          }
       }
       
-      wrotesound = true;
-
       // release semaphore and move on to the next channel
       SDL_SemPost(chan->semaphore);
    }
 
    // haleyjd 04/21/10: equalization pass
-   if(s_equalizer && wrotesound)
+   if(s_equalizer)
    {
       leftout  = (Sint16 *)stream;
       rightout = leftout + 1;
@@ -890,6 +597,240 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          rightout += STEP;
       }
    }
+}
+
+//
+// End Audiospec Callback
+//
+//============================================================================
+
+#define SND_PI 3.14159265
+
+//
+// I_SetChannels
+//
+// Init internal lookups (raw data, mixing buffer, channels).
+// This function sets up internal lookups used during
+//  the mixing process. 
+//
+static void I_SetChannels(void)
+{
+   int i;
+   int j;
+   
+   int *steptablemid = steptable + 128;
+   
+   // Okay, reset internal mixing channels to zero.
+   for(i = 0; i < MAX_CHANNELS; ++i)
+      memset(&channelinfo[i], 0, sizeof(channel_info_t));
+   
+   // This table provides step widths for pitch parameters.
+   for(i=-128 ; i<128 ; i++)
+      steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
+   
+   // Generates volume lookup tables
+   //  which also turn the unsigned samples
+   //  into signed samples.
+   for(i = 0; i < 128; i++)
+   {
+      for(j = 0; j < 256; j++)
+      {
+         // proff - made this a little bit softer, because with
+         // full volume the sound clipped badly (191 was 127)
+         vol_lookup[i*256+j] = (i*(j-128)*256)/191;
+      }
+   }
+
+   // haleyjd 10/02/08: create semaphores
+   for(i = 0; i < MAX_CHANNELS; ++i)
+   {
+      channelinfo[i].semaphore = SDL_CreateSemaphore(1);
+
+      if(!channelinfo[i].semaphore)
+      {
+         I_FatalError(I_ERR_KILL, 
+                      "I_SetChannels: failed to create semaphore for channel %d\n",
+                      i);
+      }
+   }
+
+   // haleyjd 04/21/10: initialize equalizers
+
+   // Set Low/Mid/High gains 
+   eqstate[0].lg = eqstate[1].lg = s_lowgain;
+   eqstate[0].mg = eqstate[1].mg = s_midgain;
+   eqstate[0].hg = eqstate[1].hg = s_highgain;
+
+   // Calculate filter cutoff frequencies
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
+
+   // Calculate preamplification factor
+   preampmul = s_eqpreamp / 32767.0;
+}
+
+//
+// I_GetSfxLumpNum
+//
+// Retrieve the raw data lump index
+//  for a given SFX name.
+//
+static int I_GetSfxLumpNum(sfxinfo_t *sfx)
+{
+   char namebuf[16];
+
+   memset(namebuf, 0, sizeof(namebuf));
+
+   // haleyjd 09/03/03: determine whether to apply DS prefix to
+   // name or not using new prefix flag
+   if(sfx->flags & SFXF_PREFIX)
+      psnprintf(namebuf, sizeof(namebuf), "ds%s", sfx->name);
+   else
+      strcpy(namebuf, sfx->name);
+
+   return W_CheckNumForName(namebuf);
+}
+
+//=============================================================================
+// 
+// Driver Routines
+//
+
+//
+// I_SDLUpdateEQParams
+//
+// haleyjd 04/21/10
+//
+static void I_SDLUpdateEQParams(void)
+{
+   // flush out state of equalizers
+   memset(eqstate, 0, sizeof(eqstate));
+
+   // Set Low/Mid/High gains 
+   eqstate[0].lg = eqstate[1].lg = s_lowgain;
+   eqstate[0].mg = eqstate[1].mg = s_midgain;
+   eqstate[0].hg = eqstate[1].hg = s_highgain;
+
+   // Calculate filter cutoff frequencies
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
+
+   // Calculate preamp factor
+   preampmul = s_eqpreamp / 32767.0;
+}
+
+//
+// I_SDLUpdateSoundParams
+//
+// Update the sound parameters. Used to control volume,
+// pan, and pitch changes such as when a player turns.
+//
+static void I_SDLUpdateSoundParams(int handle, int vol, int sep, int pitch)
+{
+   updateSoundParams(handle, vol, sep, pitch);
+}
+
+//
+// I_SDLStartSound
+//
+static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep, 
+                           int pitch, int pri, int loop)
+{
+   static unsigned int id = 1;
+   int handle;
+
+   // haleyjd: turns out this is too simplistic. see below.
+   /*
+   // SoM: reimplement hardware channel wrap-around
+   if(++handle >= MAX_CHANNELS)
+      handle = 0;
+   */
+
+   // haleyjd 06/03/06: look for an unused hardware channel
+   for(handle = 0; handle < numChannels; ++handle)
+   {
+      if(channelinfo[handle].data == NULL)
+         break;
+   }
+
+   // all used? don't play the sound. It's preferable to miss a sound
+   // than to cut off one already playing, which sounds weird.
+   if(handle == numChannels)
+      return -1;
+ 
+   if(addsfx(sound, handle, loop, id))
+   {
+      updateSoundParams(handle, vol, sep, pitch);
+      ++id; // increment id to keep each sound instance unique
+   }
+   else
+      handle = -1;
+   
+   return handle;
+}
+
+//
+// I_SDLStopSound
+//
+// Stop the sound. Necessary to prevent runaway chainsaw,
+// and to stop rocket launches when an explosion occurs.
+//
+static void I_SDLStopSound(int handle)
+{
+#ifdef RANGECHECK
+   if(handle < 0 || handle >= MAX_CHANNELS)
+      I_Error("I_SDLStopSound: handle out of range\n");
+#endif
+   
+   channelinfo[handle].shouldstop = true;
+}
+
+//
+// I_SDLSoundIsPlaying
+//
+// haleyjd: wow, this can actually do something in the Windows version :P
+//
+static int I_SDLSoundIsPlaying(int handle)
+{
+#ifdef RANGECHECK
+   if(handle < 0 || handle >= MAX_CHANNELS)
+      I_Error("I_SDLSoundIsPlaying: handle out of range\n");
+#endif
+ 
+   return (channelinfo[handle].data != NULL);
+}
+
+//
+// I_SDLSoundID
+//
+// haleyjd: returns the unique id number assigned to a specific instance
+// of a sound playing on a given channel. This is required to make sure
+// that the higher-level sound code doesn't start updating sounds that have
+// been displaced without it noticing.
+//
+static int I_SDLSoundID(int handle)
+{
+#ifdef RANGECHECK
+   if(handle < 0 || handle >= MAX_CHANNELS)
+      I_Error("I_SDLSoundID: handle out of range\n");
+#endif
+
+   return channelinfo[handle].idnum;
+}
+
+//
+// I_SDLUpdateSound
+//
+// haleyjd 10/02/08: This function is now responsible for stopping channels
+// that have expired. The I_SDLUpdateSound function does sound updating, but
+// cannot be allowed to modify the zone heap due to being dispatched from a
+// separate thread.
+// 
+static void I_SDLUpdateSound(void)
+{
+   // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
+   // with thread contention when running with d_fastrefresh enabled. Calling
+   // this from the main loop too often caused the sound to stutter.
 }
 
 //
@@ -934,10 +875,6 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 static int I_SDLInitSound(void)
 {
    int success = 0;
-   int audio_buffers;
-
-   /* Initialize variables */
-   audio_buffers = SAMPLECOUNT * snd_samplerate / 11025;
    
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
@@ -959,9 +896,8 @@ static int I_SDLInitSound(void)
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   SAMPLECOUNT = audio_buffers;
    Mix_SetPostMix(I_SDLUpdateSoundCB, NULL);
-   printf("Configured audio device with %d samples/slice.\n", SAMPLECOUNT);
+   printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;
 }

@@ -33,7 +33,9 @@
 #include "m_shots.h"
 #include "d_gi.h"
 #include "i_sound.h"
+#include "i_video.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "w_wad.h"
 #include "w_levels.h"
 
@@ -41,14 +43,15 @@
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern boolean d_fastrefresh;  // haleyjd 01/04/10
+extern bool d_fastrefresh;     // haleyjd 01/04/10
 extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern boolean unicodeinput;
+extern bool unicodeinput;
+extern int audio_buffers;
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
@@ -163,7 +166,10 @@ static default_t sysdefaults[] =
                  "Midrange gain"),
 
    DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
-                 "High pass gain"),                 
+                 "High pass gain"),  
+
+   DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
+               "Volume of environmental sound sequences"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
@@ -172,6 +178,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
 
+   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
+               default_t::wad_no, i_videohelpstr),
+
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
@@ -179,11 +188,15 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
                 "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
 
-   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
-   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("grabmouse", &grabmouse, NULL, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
+
+   DEFAULT_INT("audio_buffers", &audio_buffers, NULL, 2048, 1024, 8192, default_t::wad_no,
+               "SDL_mixer audio buffer size"),
+
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)

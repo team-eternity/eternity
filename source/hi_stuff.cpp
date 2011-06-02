@@ -25,17 +25,20 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "w_wad.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
+#include "e_fonts.h"
+#include "e_string.h"
 #include "g_game.h"
 #include "in_lude.h"
 #include "p_info.h"
-#include "v_block.h"
-#include "v_video.h"
 #include "s_sound.h"
-#include "d_gi.h"
-#include "e_string.h"
-#include "e_fonts.h"
+#include "v_block.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 extern vfont_t *in_font;
 extern vfont_t *in_bigfont;
@@ -116,7 +119,7 @@ static int interstate;
 
 static int statetime;             // time until next state
 static int countdown;             // count down to end
-static boolean flashtime = false;
+static bool flashtime = false;
 
 static wbstartstruct_t hi_wbs;
 
@@ -230,7 +233,7 @@ static void HI_loadData(void)
 //
 // Returns true if the player is considered to be participating.
 //
-static boolean HI_playerInGame(int playernum)
+static bool HI_playerInGame(int playernum)
 {
 #ifdef HI_DEBUG_ALLPLAYERS
    return true;
@@ -410,7 +413,7 @@ static void HI_drawLeaving(void)
 {
    int i;
    int lastlevel, thislevel;
-   boolean drawsecret;
+   bool drawsecret;
 
    if(gameepisode > 3)
       return;

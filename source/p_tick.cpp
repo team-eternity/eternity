@@ -41,22 +41,7 @@
 #include "s_sndseq.h"
 
 int leveltime;
-boolean reset_viewz;
-
-//=============================================================================
-//
-// haleyjd 11/21/10: ZoneLevelItem base class for thinkers
-//
-
-void *ZoneLevelItem::operator new (size_t size)
-{
-   return Z_Calloc(1, size, PU_LEVEL, NULL);
-}
-
-void ZoneLevelItem::operator delete (void *p)
-{
-   Z_Free(p);
-}
+bool reset_viewz;
 
 //=============================================================================
 //

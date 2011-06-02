@@ -31,24 +31,31 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
 
 #include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "d_main.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_dwfile.h"
+#include "d_event.h"
 #include "d_gi.h"
+#include "d_io.h"        // SoM 3/14/2002: strncasecmp
+#include "d_main.h"
+#include "d_net.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "m_argv.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
 #include "m_misc.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "g_bind.h"
-#include "e_fonts.h"
 
 // Action variables
 // These variables are asserted as positive values when the action
@@ -263,7 +270,7 @@ static keyaction_t *cons_keyactions = NULL;
 typedef struct doomkey_s
 {
    char *name;
-   boolean keydown[NUMKEYACTIONCLASSES];
+   bool keydown[NUMKEYACTIONCLASSES];
    keyaction_t *bindings[NUMKEYACTIONCLASSES];
 } doomkey_t;
 
@@ -528,7 +535,7 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
 //
 // Get an ascii description of the keys bound to a particular action
 //
-const char *G_BoundKeys(char *action)
+const char *G_BoundKeys(const char *action)
 {
    int i;
    static char ret[1024];   // store list of keys bound to this   
@@ -592,10 +599,10 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-boolean G_KeyResponder(event_t *ev, int bclass)
+bool G_KeyResponder(event_t *ev, int bclass)
 {
-   static boolean ctrldown;
-   boolean ret = false;
+   static bool ctrldown;
+   bool ret = false;
 
    // do not index out of bounds
    if(ev->data1 >= NUM_KEYS)
@@ -721,7 +728,7 @@ void G_BindDrawer(void)
 //
 // Responder for widget
 //
-boolean G_BindResponder(event_t *ev)
+bool G_BindResponder(event_t *ev)
 {
    keyaction_t *action;
    
@@ -770,7 +777,7 @@ menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
 //
 // Main Function
 //
-void G_EditBinding(char *action)
+void G_EditBinding(const char *action)
 {
    current_menuwidget = &binding_widget;
    binding_action = action;
@@ -888,12 +895,12 @@ CONSOLE_COMMAND(bind, 0)
 {
    if(Console.argc >= 2)
    {
-      G_BindKeyToAction(QStrConstPtr(&Console.argv[0]), 
-                        QStrConstPtr(&Console.argv[1]));
+      G_BindKeyToAction(Console.argv[0]->constPtr(),
+                        Console.argv[1]->constPtr());
    }
    else if(Console.argc == 1)
    {
-      int key = G_KeyForName(QStrConstPtr(&Console.argv[0]));
+      int key = G_KeyForName(Console.argv[0]->constPtr());
 
       if(key < 0)
          C_Printf(FC_ERROR "no such key!\n");
@@ -901,7 +908,7 @@ CONSOLE_COMMAND(bind, 0)
       {
          // haleyjd 07/03/04: multiple binding class support
          int j;
-         boolean foundBinding = false;
+         bool foundBinding = false;
          
          for(j = 0; j < NUMKEYACTIONCLASSES; ++j)
          {
@@ -953,7 +960,7 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding class
    if(Console.argc == 2)
    {
-      bclass = QStrAtoi(&Console.argv[1]);
+      bclass = Console.argv[1]->toInt();
 
       if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
       {
@@ -962,14 +969,14 @@ CONSOLE_COMMAND(unbind, 0)
       }
    }
    
-   if((key = G_KeyForName(QStrConstPtr(&Console.argv[0]))) != -1)
+   if((key = G_KeyForName(Console.argv[0]->constPtr())) != -1)
    {
       if(bclass == -1)
       {
          // unbind all actions
          int j;
 
-         C_Printf("unbound key %s from all actions\n", Console.argv[0]);
+         C_Printf("unbound key %s from all actions\n", Console.argv[0]->constPtr());
 
          if(keybindings[key].bindings[kac_menu] ||
             keybindings[key].bindings[kac_console])
@@ -990,15 +997,15 @@ CONSOLE_COMMAND(unbind, 0)
 
          if(ke)
          {
-            C_Printf("unbound key %s from action %s\n", Console.argv[0], ke->name);
+            C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
             keybindings[key].bindings[bclass] = NULL;
          }
          else
-            C_Printf("key %s has no binding in class %d\n", Console.argv[0], bclass);
+            C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);
       }
    }
    else
-     C_Printf("unknown key %s\n", Console.argv[0]);
+      C_Printf("unknown key %s\n", Console.argv[0]->constPtr());
 }
 
 CONSOLE_COMMAND(unbindall, 0)

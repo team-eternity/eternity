@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //  Light tables and related constants
-//  Split out of r_defs.h for dependency-hell resolution.   
+//  Split out of r_defs.h for dependency-hell resolution.
 //
 //-----------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ typedef byte  lighttable_t;
 // SoM: I am really speechless at this... just... why?
 // Lighting in doom was originally clamped off to just 16 brightness levels
 // for sector lighting. Simply changing the constants is enough to change this
-// it seriously bottles the mind why this wasn't done in doom from the start 
+// it seriously boggles the mind why this wasn't done in doom from the start 
 // except for maybe memory usage savings. 
 //#define OLDMAPS
 #ifdef OLDMAPS
@@ -83,7 +83,7 @@ extern int numcolormaps;    // killough 4/4/98: dynamic number of maps
 extern lighttable_t **colormaps;
 // killough 3/20/98, 4/4/98: end dynamic colormaps
 
-extern int          extralight;
+extern int           extralight;
 extern lighttable_t *fixedcolormap;
 
 #endif

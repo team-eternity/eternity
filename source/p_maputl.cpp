@@ -28,15 +28,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomstat.h"
 #include "m_bbox.h"
-#include "r_main.h"
-#include "r_state.h"
-#include "p_maputl.h"
 #include "p_map.h"
+#include "p_map3d.h"
+#include "p_maputl.h"
 #include "p_setup.h"
 #include "polyobj.h"
-#include "p_map3d.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_portal.h"
+#include "r_state.h"
+
 
 //
 // P_AproxDistance
@@ -472,7 +476,7 @@ void P_SetThingPosition(Mobj *thing)
 // SoM, VERY inaccurate. I don't really know what its for or why
 // its here, but I'm leaving it be.
 //
-boolean ThingIsOnLine(Mobj *t, line_t *l)
+bool ThingIsOnLine(Mobj *t, line_t *l)
 {
    int dx = l->dx >> FRACBITS;                           // Linedef vector
    int dy = l->dy >> FRACBITS;
@@ -522,7 +526,7 @@ boolean ThingIsOnLine(Mobj *t, line_t *l)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -592,7 +596,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 //
 // killough 5/3/98: reformatted, cleaned up
 
-boolean P_BlockThingsIterator(int x, int y, boolean func(Mobj*))
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {

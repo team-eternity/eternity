@@ -22,20 +22,17 @@
 #ifndef C_IO_H__
 #define C_IO_H__
 
-#include "doomstat.h"
-#include "d_event.h"
-        // for text colours:
-#include "v_video.h"
-#include "m_qstr.h"
-
 #define INPUTLENGTH 512
 #define LINELENGTH  128
 
-void    C_Init(void);
-void    C_Ticker(void);
-void    C_Drawer(void);
-boolean C_Responder(event_t* ev);
-void    C_Update(void);
+struct event_t;
+class qstring;
+
+void C_Init(void);
+void C_Ticker(void);
+void C_Drawer(void);
+bool C_Responder(event_t* ev);
+void C_Update(void);
 
 void C_Printf(const char *s, ...);
 void C_Puts(const char *s);
@@ -46,9 +43,9 @@ void C_Popup(void);
 void C_InstaPopup(void);
 
 // haleyjd
-void C_OpenConsoleLog(qstring_t *filename);
+void C_OpenConsoleLog(qstring *filename);
 void C_CloseConsoleLog(void);
-void C_DumpMessages(qstring_t *filename);
+void C_DumpMessages(qstring *filename);
 
 // sf 9/99: made a #define
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)

@@ -519,14 +519,15 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       cfg_free(val->section);
       val->section = (cfg_t *)calloc(1, sizeof(cfg_t));
       cfg_assert(val->section);
-      val->section->name     = strdup(opt->name);
-      val->section->opts     = cfg_dupopts(opt->subopts);
-      val->section->flags    = cfg->flags;
-      val->section->flags   |= CFGF_ALLOCATED;
-      val->section->filename = cfg->filename;
-      val->section->line     = cfg->line;
-      val->section->errfunc  = cfg->errfunc;
-      val->section->title    = value;
+      val->section->namealloc = strdup(opt->name); // haleyjd 04/14/11
+      val->section->name      = val->section->namealloc;
+      val->section->opts      = cfg_dupopts(opt->subopts);
+      val->section->flags     = cfg->flags;
+      val->section->flags    |= CFGF_ALLOCATED;
+      val->section->filename  = cfg->filename;
+      val->section->line      = cfg->line;
+      val->section->errfunc   = cfg->errfunc;
+      val->section->title     = value;
       break;
    case CFGT_BOOL:
       if(opt->cb)
@@ -1163,7 +1164,7 @@ void cfg_free(cfg_t *cfg)
 
    if(is_set(CFGF_ALLOCATED, cfg->flags))
    {
-      free(cfg->name);
+      free(cfg->namealloc);
       free(cfg->opts);
       free(cfg->title);
    }
@@ -1335,7 +1336,7 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt,
          cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues);
          break;
       case CFGT_BOOL:
-         cfg_opt_setnbool(cfg, opt, va_arg(ap, cfg_bool_t), opt->nvalues);
+         cfg_opt_setnbool(cfg, opt, (cfg_bool_t)va_arg(ap, int), opt->nvalues);
          break;
       case CFGT_STR:
          cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues);

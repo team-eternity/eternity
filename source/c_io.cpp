@@ -56,8 +56,9 @@
 #include "e_fonts.h"
 #include "m_qstr.h"
 #include "v_block.h"
+#include "v_misc.h"
 
-#define MESSAGES 384
+#define MESSAGES 512
 // keep the last 32 typed commands
 #define HISTORY 32
 
@@ -65,9 +66,10 @@ extern const char *shiftxform;
 static void Egg();
 
 // the messages (what you see in the console window)
-static char messages[MESSAGES][LINELENGTH];
-static int message_pos = 0;   // position in the history (last line in window)
-static int message_last = 0;  // the last message
+static char  msgtext[MESSAGES*LINELENGTH];
+static char *messages[MESSAGES];
+static int   message_pos = 0;   // position in the history (last line in window)
+static int   message_last = 0;  // the last message
 
 // the command history(what you type in)
 static char history[HISTORY][LINELENGTH];
@@ -79,7 +81,7 @@ static const char *inputprompt = FC_HI "$" FC_NORMAL;
 static const char *altprompt = FC_HI "#" FC_NORMAL;
 int c_height=100;     // the height of the console
 int c_speed=10;       // pixels/tic it moves
-static qstring_t inputtext;
+static qstring inputtext;
 static char *input_point;      // left-most point you see of the command line
 
 // for scrolling command line
@@ -90,7 +92,7 @@ static FILE *console_log = NULL;
 
 // SoM: Use the new VBuffer system
 static VBuffer cback;
-static boolean cbackneedfree = false;
+static bool cbackneedfree = false;
 
 vfont_t *c_font;
 const char *c_fontname;
@@ -107,7 +109,7 @@ static void C_initBackdrop(void)
    patch_t *patch;
    const char *lumpname;
    int lumpnum, cmapnum = 16;
-   boolean darken = true;
+   bool darken = true;
 
    lumpname = GameModeInfo->consoleBack;
 
@@ -182,16 +184,31 @@ static void C_initBackdrop(void)
 //
 static void C_updateInputPoint(void)
 {
-   for(input_point = inputtext.buffer;
+   for(input_point = inputtext.getBuffer();
        V_FontStringWidth(c_font, input_point) > SCREENWIDTH-20; input_point++);
 }
 
 // initialise the console
 
+//
+// C_initMessageBuffer
+//
+// haleyjd 05/30/11: long overdue rewrite of the console message buffer.
+// Sets messages[] to point into the msgtext buffer.
+//
+static void C_initMessageBuffer()
+{
+   for(int i = 0; i < MESSAGES; i++)
+      messages[i] = &msgtext[i * LINELENGTH];
+}
+
 void C_Init(void)
 {
    // haleyjd: initialize console qstrings
-   QStrCreateSize(&inputtext, 100);
+   inputtext.createSize(100);
+
+   // haleyjd: initialize console message buffer
+   C_initMessageBuffer();
 
    Console.enabled = true;
 
@@ -217,10 +234,7 @@ void C_Ticker(void)
    if(gamestate != GS_CONSOLE)
    {
       // specific to half-screen version only
-      
-      if(Console.current_height != Console.current_target)
-         redrawsbar = true;
-      
+
       // move the console toward its target
       if(D_abs(Console.current_height - Console.current_target) >= c_speed)
       {
@@ -263,32 +277,30 @@ void C_Ticker(void)
 // CONSOLE_FIXME: history needs to be more efficient. Use pointers 
 // instead of copying strings back and forth.
 //
-static void C_addToHistory(qstring_t *s)
+static void C_addToHistory(qstring *s)
 {
    const char *a_prompt;
    
    // display the command in console
    // hrmm wtf does this do? I dunno.
    if(gamestate == GS_LEVEL && !strcasecmp(players[0].name, "quasar"))
-   {
       a_prompt = altprompt;
-   }
    else
       a_prompt = inputprompt;
    
-   C_Printf("%s%s\n", a_prompt, QStrConstPtr(s));
+   C_Printf("%s%s\n", a_prompt, s->constPtr());
    
    // check for nothing typed or just spaces
-   if(QStrFindFirstNotOfChar(s, ' ') == qstring_npos)
+   if(s->findFirstNotOf(' ') == qstring::npos)
       return;
    
    // add it to the history
    // 6/8/99 maximum linelength to prevent segfaults
-   // QSTR_FIXME: change history -> qstring_t
-   QStrCNCopy(history[history_last], s, LINELENGTH);
+   // QSTR_FIXME: change history -> qstring
+   s->copyInto(history[history_last], LINELENGTH);
    history_last++;
    
-   // scroll the history if neccesary
+   // scroll the history if necessary
    while(history_last >= HISTORY)
    {
       int i;
@@ -310,7 +322,7 @@ static void C_addToHistory(qstring_t *s)
 
 // respond to keyboard input/events
 
-boolean C_Responder(event_t *ev)
+bool C_Responder(event_t *ev)
 {
    static int shiftdown;
    char ch = 0;
@@ -348,7 +360,7 @@ boolean C_Responder(event_t *ev)
    // activate console?
    if(action_console_toggle && Console.enabled)
    {
-      boolean goingup = Console.current_target == c_height;
+      bool goingup = Console.current_target == c_height;
 
       // set console
       action_console_toggle = false;
@@ -378,8 +390,7 @@ boolean C_Responder(event_t *ev)
       // tab-completion list depending on whether
       // shift is being held down
       action_console_tab = false;
-      QStrQCopy(&inputtext, 
-                shiftdown ? C_NextTab(&inputtext) : C_PrevTab(&inputtext));
+      inputtext = (shiftdown ? C_NextTab(inputtext) : C_PrevTab(inputtext));
       C_updateInputPoint(); // reset scrolling
       return true;
     }
@@ -391,16 +402,16 @@ boolean C_Responder(event_t *ev)
 
       C_addToHistory(&inputtext); // add to history
       
-      if(!QStrCmp(&inputtext, "r0x0rz delux0rz"))
+      if(inputtext == "r0x0rz delux0rz")
          Egg(); // shh!
       
       // run the command
       Console.cmdtype = c_typed;
-      C_RunTextCmd(QStrConstPtr(&inputtext));
+      C_RunTextCmd(inputtext.constPtr());
       
       C_InitTab();            // reset tab completion
       
-      QStrClear(&inputtext); // clear inputtext now
+      inputtext.clear(); // clear inputtext now
       C_updateInputPoint();    // reset scrolling
       
       return true;
@@ -420,7 +431,7 @@ boolean C_Responder(event_t *ev)
          (history_current <= 0) ? 0 : history_current - 1;
       
       // read history from inputtext
-      QStrCopy(&inputtext, history[history_current]);
+      inputtext = history[history_current];
       
       C_InitTab();            // reset tab completion
       C_updateInputPoint();   // reset scrolling
@@ -437,8 +448,8 @@ boolean C_Responder(event_t *ev)
          ? history_last : history_current + 1;
 
       // the last history is an empty string
-      QStrCopy(&inputtext, (history_current == history_last) ?
-                "" : (char*)history[history_current]);
+      inputtext = ((history_current == history_last) ?
+                    "" : (char *)history[history_current]);
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -455,7 +466,7 @@ boolean C_Responder(event_t *ev)
    {
       action_console_backspace = false;
 
-      QStrDelc(&inputtext);
+      inputtext.Delc();
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -474,7 +485,7 @@ boolean C_Responder(event_t *ev)
    
    if(ch > 31 && ch < 127)
    {
-      QStrPutc(&inputtext, ch);
+      inputtext += ch;
       
       C_InitTab();            // reset tab-completion
       C_updateInputPoint();   // reset scrolling
@@ -592,17 +603,22 @@ void C_Update(void)
    }
 }
 
-/////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // I/O Functions
 //
 
-// scroll console up
+// haleyjd 05/30/11: Number of messages to cut from the history buffer when
+// the buffer is full.
+#define MESSAGECUT 64
 
 //
-// CONSOLE_FIXME: message buffer can be made more efficient.
+// C_ScrollUp
 //
-
+// Add a message to the console message history.
+//
+// haleyjd 05/30/11: message buffer made more efficient.
+//
 static void C_ScrollUp(void)
 {
    if(message_last == message_pos)
@@ -611,21 +627,27 @@ static void C_ScrollUp(void)
 
    if(message_last >= MESSAGES) // past the end of the string
    {
-      // cut off the oldest 128 messages
-      int i;
+      // cut off the oldest messages
+      int i, j;
+      char *tempptrs[MESSAGECUT];
+
+      for(i = 0; i < MESSAGECUT; i++) // save off the first MESSAGECUT pointers
+         tempptrs[i] = messages[i];
+
+      for(i = MESSAGECUT; i < MESSAGES; i++) // shift down the message buffer
+         messages[i - MESSAGECUT] = messages[i];
+
+      for(i = MESSAGES - MESSAGECUT, j = 0; i < MESSAGES; i++, j++) // fill end
+         messages[i] = tempptrs[j];
       
-      // haleyjd 03/02/02: fixed code that assumed MESSAGES == 256
-      for(i = 128; i < MESSAGES; i++)
-         strcpy(messages[i - 128], messages[i]);
-      
-      message_last -= 128;      // move the message boundary
+      message_last -= MESSAGECUT; // move the message boundary
 
       // haleyjd 09/04/02: set message_pos to message_last
       // to avoid problems with console flooding
       message_pos = message_last;
    }
    
-   messages[message_last][0] = '\0';  // new line is empty
+   memset(messages[message_last], 0, LINELENGTH); // new line is empty
 }
 
 // 
@@ -643,7 +665,7 @@ static void C_AddMessage(const char *s)
    const unsigned char *c;
    unsigned char *end;
    unsigned char linecolor = GameModeInfo->colorNormal + 128;
-   boolean lastend = false;
+   bool lastend = false;
 
    // haleyjd 09/04/02: set color to default at beginning
    if(V_FontStringWidth(c_font, messages[message_last]) > SCREENWIDTH-9 ||
@@ -827,7 +849,7 @@ static void C_StripColorChars(const unsigned char *src,
 //
 // haleyjd 03/01/02: now you can dump the console to file :)
 //
-void C_DumpMessages(qstring_t *filename)
+void C_DumpMessages(qstring *filename)
 {
    int i, len;
    FILE *outfile;
@@ -835,10 +857,10 @@ void C_DumpMessages(qstring_t *filename)
 
    memset(tmpmessage, 0, LINELENGTH);
 
-   if(!(outfile = fopen(QStrConstPtr(filename), "a+")))
+   if(!(outfile = fopen(filename->constPtr(), "a+")))
    {
       C_Printf(FC_ERROR "Could not append console buffer to file %s\n", 
-               filename);
+               filename->constPtr());
       return;
    }
 
@@ -855,7 +877,7 @@ void C_DumpMessages(qstring_t *filename)
 
    fclose(outfile);
 
-   C_Printf("Console buffer appended to file %s\n", filename);
+   C_Printf("Console buffer appended to file %s\n", filename->constPtr());
 }
 
 //
@@ -863,17 +885,17 @@ void C_DumpMessages(qstring_t *filename)
 //
 // haleyjd 09/07/03: true console logging
 //
-void C_OpenConsoleLog(qstring_t *filename)
+void C_OpenConsoleLog(qstring *filename)
 {
    // don't do anything if a log is already open
    if(console_log)
       return;
 
    // open file in append mode
-   if(!(console_log = fopen(QStrConstPtr(filename), "a+")))
-      C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename);
+   if(!(console_log = fopen(filename->constPtr(), "a+")))
+      C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename->constPtr());
    else
-      C_Printf("Opened file %s for console logging\n", filename);
+      C_Printf("Opened file %s for console logging\n", filename->constPtr());
 }
 
 //

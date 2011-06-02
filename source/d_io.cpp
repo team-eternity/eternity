@@ -101,7 +101,7 @@ int D_Ungetc(int c, DWFILE *fp)
 // Open a file into the DWFILE structure. Uses standard
 // fopen.
 //
-void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
+void D_OpenFile(DWFILE *infile, const char *filename, const char *mode)
 {
    memset(infile, 0, sizeof(*infile));
    infile->inp = (byte *)fopen(filename, mode);

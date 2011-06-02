@@ -29,17 +29,20 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "r_main.h"
+#include "i_video.h"
 #include "m_bbox.h"
 #include "r_draw.h"
-#include "w_wad.h"   /* needed for color translation lump lookup */
-#include "v_video.h"
+#include "r_main.h"
 #include "v_patch.h" // haleyjd
-#include "i_video.h"
-#include "d_gi.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"   /* needed for color translation lump lookup */
+
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t
@@ -399,7 +402,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 // haleyjd  04/04: rewritten to use new ANYRES patch system
 //
 void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
-			               boolean flipped)
+			            bool flipped)
 {
    PatchInfo pi;
 
@@ -428,7 +431,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 04/03/04: rewritten for ANYRES patch system
 //
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
-                           byte *outr, boolean flipped)
+                           byte *outr, bool flipped)
 {
    PatchInfo pi;
    
@@ -570,7 +573,7 @@ static void V_BuildBlackMap(void)
 void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
                          byte *outr, int tl)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    if(firsttime)
    {
@@ -754,7 +757,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // so it can be considered GPL as used here, rather than BSD. But,
 // I don't care either way. It is effectively dual-licensed I suppose.
 
-boolean flexTranInit = false;
+bool flexTranInit = false;
 unsigned int  Col2RGB8[65][256];
 unsigned int *Col2RGB8_LessPrecision[65];
 byte RGB32k[32][32][32];

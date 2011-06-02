@@ -21,8 +21,6 @@
 #ifndef VERSION_H__
 #define VERSION_H__
 
-#include "z_zone.h"  /* memory allocation wrappers -- killough */
-
 // DOOM version
 // enum { VERSION =  203 };
 extern int version;              // sf: made version an int

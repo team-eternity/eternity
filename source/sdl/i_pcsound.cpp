@@ -212,7 +212,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 // Static Data
 //
 
-static boolean pcs_initialised = false;
+static bool pcs_initialised = false;
 
 static SDL_mutex *sound_lock;
 
@@ -289,7 +289,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
 {
    int lumpnum = -1;
    char soundName[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-   boolean nameToTry = false;
+   bool nameToTry = false;
 
    // 1. use explicit PC speaker sound name if provided
    // 2. if sound name is prefixed, use DP%s
@@ -301,7 +301,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
       nameToTry = true;
       psnprintf(soundName, 9, "%s", sfx->pcslump);
    }
-   else if(sfx->prefix)
+   else if(sfx->flags & SFXF_PREFIX)
    {
       nameToTry = true;
       psnprintf(soundName, 9, "DP%s", sfx->name);
@@ -318,7 +318,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
    return lumpnum;
 }
 
-static boolean CachePCSLump(sfxinfo_t *sfx)
+static bool CachePCSLump(sfxinfo_t *sfx)
 {
    int lumpnum;
    int lumplen;
@@ -413,7 +413,7 @@ static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep,
       return -1;
 
    // haleyjd: check for "nopcsound" flag
-   if(sfx->nopcsound)
+   if(sfx->flags & SFXF_NOPCSOUND)
       return -1;
 
    if(SDL_LockMutex(sound_lock) < 0)

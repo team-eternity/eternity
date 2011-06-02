@@ -29,14 +29,17 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
-#include "d_gi.h"      // haleyjd: global game mode info
-#include "d_io.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"      // haleyjd: global game mode info
+#include "d_io.h"
 #include "d_main.h"
-#include "d_deh.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "g_game.h"
 #include "hu_over.h"
@@ -44,22 +47,24 @@
 #include "m_swap.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
+#include "mn_htic.h"
 #include "mn_menus.h"
 #include "mn_misc.h"
-#include "psnprntf.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "s_sound.h"
-#include "w_wad.h"
+#include "v_font.h"
+#include "v_misc.h"
 #include "v_video.h"
-#include "e_fonts.h"
+#include "w_wad.h"
 
 //=============================================================================
 //
 // Global Variables
 //
 
-boolean inhelpscreens; // indicates we are in or just left a help screen
+bool inhelpscreens; // indicates we are in or just left a help screen
 
 // menu error message
 char menu_error_message[128];
@@ -67,7 +72,7 @@ int menu_error_time = 0;
 
 // haleyjd 02/12/06: option to allow the toggle menu action to back up 
 // through menus instead of exiting directly, to emulate ports like zdoom.
-boolean menu_toggleisback; 
+bool menu_toggleisback; 
 
         // input for typing in new value
 static command_t *input_command = NULL;       // NULL if not typing in
@@ -363,8 +368,8 @@ static void MN_CalcWidestWidth(menu_t *menu)
 // haleyjd 05/01/10: Draws an item's patch if appropriate. Returns true if
 // MN_DrawMenuItem should return. item_height may be modified on return.
 //
-static boolean MN_drawPatchForItem(menuitem_t *item, int *item_height, 
-                                   int color, int alignment)
+static bool MN_drawPatchForItem(menuitem_t *item, int *item_height, 
+                                int color, int alignment)
 {
    patch_t *patch;
    int lumpnum;
@@ -505,17 +510,17 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
 //
 // haleyjd 10/18/10: Avoid losing sight of the input caret when editing.
 //
-static void MN_truncateInput(qstring_t *qstr, int x)
+static void MN_truncateInput(qstring &qstr, int x)
 {
-   int width = MN_StringWidth(QStrConstPtr(qstr));
+   int width = MN_StringWidth(qstr.constPtr());
 
    if(x + width > SCREENWIDTH - 8) // too wide to fit?
    {
       int subbed_width = 0;
       int leftbound = SCREENWIDTH - 8;
       int dotwidth  = MN_StringWidth("...");
-      const char *start = QStrConstPtr(qstr);
-      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
       while(start != end && (x + dotwidth + width - subbed_width > leftbound))
       {
@@ -526,7 +531,8 @@ static void MN_truncateInput(qstring_t *qstr, int x)
       if(start != end)
       {
          const char *temp = Z_Strdupa(start); // make a temp copy
-         QStrCat(QStrCopy(qstr, "..."), temp);
+         qstr = "...";
+         qstr += temp;
       }
    }
 }
@@ -536,16 +542,16 @@ static void MN_truncateInput(qstring_t *qstr, int x)
 //
 // haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
 //
-static void MN_truncateValue(qstring_t *qstr, int x)
+static void MN_truncateValue(qstring &qstr, int x)
 {
-   int width = MN_StringWidth(QStrConstPtr(qstr));
+   int width = MN_StringWidth(qstr.constPtr());
    
    if(x + width > SCREENWIDTH - 8) // too wide to fit?
    {
       int subbed_width = 0;
       int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
-      const char *start = QStrConstPtr(qstr);
-      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
       while(end != start && (x + width - subbed_width > leftbound))
       {
@@ -555,7 +561,10 @@ static void MN_truncateValue(qstring_t *qstr, int x)
 
       // truncate the value at end position, and concatenate dots
       if(end != start)
-         QStrCat(QStrTruncate(qstr, end - start), "...");
+      {
+         qstr.truncate(end - start);
+         qstr += "...";
+      }
    }
 }
 
@@ -567,7 +576,7 @@ static void MN_truncateValue(qstring_t *qstr, int x)
 static void MN_drawItemToggleVar(menuitem_t *item, int color, 
                                  int alignment, int desc_width)
 {
-   static qstring_t varvalue; // temp buffer
+   static qstring varvalue; // temp buffer
    int x = item->x;
    int y = item->y;
          
@@ -590,23 +599,24 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
    // create variable description:
    // Use console variable descriptions.
 
-   QStrClearOrCreate(&varvalue, 1024);
+   varvalue.clearOrCreate(1024);
    MN_GetItemVariable(item);
 
    // display input buffer if inputting new var value
    if(input_command && item->var == input_command->variable)
    {
-      QStrPutc(QStrCopy(&varvalue, (char *)input_buffer), '_');
-      MN_truncateInput(&varvalue, x);
+      varvalue  = (char *)input_buffer;
+      varvalue += '_';
+      MN_truncateInput(varvalue, x);
    }
    else
    {
-      QStrCopy(&varvalue, C_VariableStringValue(item->var));
-      MN_truncateValue(&varvalue, x);
+      varvalue = C_VariableStringValue(item->var);
+      MN_truncateValue(varvalue, x);
    }         
 
    // draw it
-   MN_WriteTextColored(QStrConstPtr(&varvalue), color, x, y);
+   MN_WriteTextColored(varvalue.constPtr(), color, x, y);
 }
 
 //
@@ -634,7 +644,7 @@ static void MN_drawItemSlider(menuitem_t *item, int color, int alignment,
          if(var->type == vt_int)
             posn = *(int *)var->variable - var->min;
          else
-            posn = (int)(*(boolean *)var->variable) - var->min;
+            posn = (int)(*(bool *)var->variable) - var->min;
 
          MN_DrawSlider(x + GAP, y, (posn*100) / range);
       }
@@ -950,7 +960,7 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 // multipage menus.
 // Pass false to draw a prev indicator, or true to draw a next indicator.
 //
-static void MN_drawPageIndicator(boolean next)
+static void MN_drawPageIndicator(bool next)
 {
    char msgbuffer[64];
    const char *actionname, *speckeyname, *replkeyname, *fmtstr, *key;
@@ -1104,7 +1114,7 @@ void MN_DrawMenu(menu_t *menu)
 // this allows the game to skip all other drawing, keeping the
 // framerate at 35 fps.
 //
-boolean MN_CheckFullScreen(void)
+bool MN_CheckFullScreen(void)
 {
    if(!menuactive || !current_menu)
       return false;
@@ -1125,7 +1135,7 @@ boolean MN_CheckFullScreen(void)
 
 #define MENU_HISTORY 128
 
-boolean menuactive = false;             // menu active?
+bool menuactive = false;             // menu active?
 menu_t *current_menu;   // the current menu_t being displayed
 static menu_t *menu_history[MENU_HISTORY];   // previously selected menus
 static int menu_history_num;                 // location in history
@@ -1163,8 +1173,8 @@ static void MN_SetBackground(void)
 //
 void MN_Init(void)
 {
-   char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
-   char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
+   const char *cursorPatch1 = GameModeInfo->menuCursor->patch1;
+   const char *cursorPatch2 = GameModeInfo->menuCursor->patch2;
    int i;
 
    skulls[0] = W_GetNumForName(cursorPatch1);
@@ -1227,7 +1237,8 @@ void MN_Ticker(void)
 void MN_Drawer(void)
 { 
    // redraw needed if menu hidden
-   if(hide_menu) redrawsbar = redrawborder = true;
+   if(hide_menu) 
+      redrawborder = true;
    
    // activate menu if displaying widget
    if(current_menuwidget && !menuactive)
@@ -1257,15 +1268,17 @@ extern const char *shiftxform;
 //
 // haleyjd 07/03/04: rewritten to use enhanced key binding system
 //
-boolean MN_Responder(event_t *ev)
+bool MN_Responder(event_t *ev)
 {
    // haleyjd 04/29/02: these need to be unsigned
    unsigned char tempstr[128];
    unsigned char ch;
    int *menuSounds = GameModeInfo->menuSounds; // haleyjd
-   static boolean ctrldown = false;
-   static boolean shiftdown = false;
-   static boolean altdown = false;
+   static bool ctrldown = false;
+   static bool shiftdown = false;
+   static bool altdown = false;
+
+   memset(tempstr, 0, sizeof(tempstr));
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -1412,7 +1425,7 @@ boolean MN_Responder(event_t *ev)
 
    if(action_menu_up)
    {
-      boolean cancelsnd = false;
+      bool cancelsnd = false;
       action_menu_up = false;
       
       // skip gaps
@@ -1457,7 +1470,7 @@ boolean MN_Responder(event_t *ev)
   
    if(action_menu_down)
    {
-      boolean cancelsnd = false;
+      bool cancelsnd = false;
       action_menu_down = false;
       
       do
@@ -1626,6 +1639,9 @@ boolean MN_Responder(event_t *ev)
             psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
                       menuitem->data, value);
          }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s -", menuitem->data);
+
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1688,6 +1704,9 @@ boolean MN_Responder(event_t *ev)
             psnprintf((char *)tempstr, sizeof(tempstr), "%s \"%.2f\"", 
                       menuitem->data, value);
          }
+         else // haleyjd 05/30/11: for anything else, have to assume it's specially coded
+            psnprintf((char *)tempstr, sizeof(tempstr), "%s +", menuitem->data);
+
          C_RunTextCmd((char *)tempstr);
          S_StartSound(NULL, menuSounds[MN_SND_KEYLEFTRIGHT]);
          break;
@@ -1819,7 +1838,7 @@ void MN_StartMenu(menu_t *menu)
       current_menu = current_menu->curpage;
    
    menu_error_time = 0;      // clear error message
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
@@ -1844,7 +1863,7 @@ static void MN_PageMenu(menu_t *newpage)
       current_menu->rootpage->curpage = current_menu;
 
    menu_error_time = 0;
-   redrawsbar = redrawborder = true;
+   redrawborder = true;
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
@@ -1862,7 +1881,7 @@ void MN_PrevMenu(void)
       current_menu = menu_history[menu_history_num];
    
    menu_error_time = 0;          // clear errors
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
@@ -1875,7 +1894,7 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
-   redrawsbar = redrawborder = true;  // need redraw
+   redrawborder = true;  // need redraw
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)
@@ -2143,7 +2162,7 @@ static void MN_BoxWidgetDrawer(void)
 //
 // Handle events to a menu box widget.
 //
-static boolean MN_BoxWidgetResponder(event_t *ev)
+static bool MN_BoxWidgetResponder(event_t *ev)
 {
    // get a pointer to the box widget
    box_widget_t *box = (box_widget_t *)current_menuwidget;

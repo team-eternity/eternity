@@ -26,18 +26,22 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "g_game.h"
 #include "m_swap.h"
 #include "p_info.h"
+#include "p_skin.h"
 #include "p_spec.h"
+#include "r_data.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
-#include "d_gi.h"
 
 // killough 2/8/98: Remove switch limit
 
@@ -72,8 +76,9 @@ void P_InitSwitchList(void)
    int i, index = 0;
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   lumpinfo_t *lump;
    int lumpnum;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t  *lump;
 
    episode = GameModeInfo->switchEpisode;
 
@@ -84,7 +89,7 @@ void P_InitSwitchList(void)
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[lumpnum];
+      lump = lumpinfo[lumpnum];
 
       // look for a lump which is of a possibly good size
       if(!strcasecmp(lump->name, "SWITCHES") && 
@@ -163,7 +168,7 @@ button_t *P_FindFreeButton(void)
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
 static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
-                          bwhere_e w, int texture, int time, boolean dopopout,
+                          bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound)
 {
    int i;
@@ -355,10 +360,10 @@ extern void P_StartLineScript(line_t *line, Mobj *thing);
 // Passed the thing using the line, the line being used, and the side used
 // Returns true if a thinker was created
 //
-boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side)
+bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
-   boolean is_param = E_IsParamSpecial(line->special);
+   bool is_param = E_IsParamSpecial(line->special);
 
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;

@@ -84,6 +84,7 @@
 #include "d_dehtbl.h"
 #include "d_gi.h"
 #include "doomdef.h"
+#include "doomstat.h"
 #include "info.h"
 #include "m_argv.h"
 #include "m_misc.h"
@@ -446,7 +447,7 @@ void E_EDFLogPrintf(const char *msg, ...)
 //
 void E_EDFLoggedErr(int lv, const char *msg, ...)
 {
-   qstring_t msg_no_tabs;
+   qstring msg_no_tabs;
    va_list va;
 
    if(edf_output)
@@ -461,19 +462,17 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
       va_end(va2);
    }
 
-   QStrInitCreate(&msg_no_tabs);
-   QStrCopy(&msg_no_tabs, msg);
-   QStrReplace(&msg_no_tabs, "\t", ' ');
+   msg_no_tabs.initCreate();
+   msg_no_tabs = msg;
+   msg_no_tabs.replace("\t", ' ');
 
    va_start(va, msg);
-   I_ErrorVA(QStrConstPtr(&msg_no_tabs), va);
+   I_ErrorVA(msg_no_tabs.constPtr(), va);
    va_end(va);
-
-   QStrFree(&msg_no_tabs);
 }
 
 static int edf_warning_count;
-static boolean edf_warning_out;
+static bool edf_warning_out;
 
 //
 // E_EDFLoggedWarning
@@ -501,18 +500,16 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
    // allow display of warning messages on the system console too
    if(edf_warning_out)
    {
-      qstring_t msg_no_tabs;
+      qstring msg_no_tabs;
       va_list va;
 
-      QStrInitCreate(&msg_no_tabs);
-      QStrCopy(&msg_no_tabs, msg);
-      QStrReplace(&msg_no_tabs, "\t", ' ');
+      msg_no_tabs.initCreate();
+      msg_no_tabs = msg;
+      msg_no_tabs.replace("\t", ' ');
 
       va_start(va, msg);
-      vfprintf(stderr, QStrConstPtr(&msg_no_tabs), va);
+      vfprintf(stderr, msg_no_tabs.constPtr(), va);
       va_end(va);
-
-      QStrFree(&msg_no_tabs);
    }
 }
 
@@ -709,7 +706,7 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                          const char **argv)
 {
    int i, idx;
-   boolean enabled = true;
+   bool enabled = true;
 
    if(argc < 1)
    {
@@ -752,7 +749,7 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
                             const char **argv)
 {
    int i, idx;
-   boolean enabled = false;
+   bool enabled = false;
 
    if(argc < 1)
    {
@@ -797,7 +794,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                          const char **argv)
 {
    int i, idx;
-   boolean disabled = true;
+   bool disabled = true;
 
    if(argc < 1)
    {
@@ -838,7 +835,7 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc,
                              const char **argv)
 {
    int i, idx;
-   boolean disabled = false;
+   bool disabled = false;
 
    if(argc < 1)
    {
@@ -938,7 +935,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
                                 const char **argv)
 {
    int i, idx;
-   boolean enabled = false;
+   bool enabled = false;
 
    if(argc < 2)
    {
@@ -994,7 +991,7 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                           const char **argv)
 {
    int i, type;
-   boolean type_match = false;
+   bool type_match = false;
 
    if(argc < 1)
    {
@@ -1032,7 +1029,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
                            const char **argv)
 {
    int i, type;
-   boolean type_nomatch = true;
+   bool type_nomatch = true;
 
    if(argc < 1)
    {
@@ -1115,12 +1112,14 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 {
    if(ln >= 0) // terminal case - lumpnum is -1
    {
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+
       // recurse on next item
-      E_ParseLumpRecursive(cfg, name, w_GlobalDir.lumpinfo[ln]->next);
+      E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
 
       // handle this lump
-      if(!strncasecmp(w_GlobalDir.lumpinfo[ln]->name, name, 8) &&         // name match
-         w_GlobalDir.lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
+      if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
+         lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
       {
          int err;
 
@@ -1163,7 +1162,7 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 // first so that an error will not occur. Returns immediately if the 
 // lump wasn't found.
 //
-static boolean E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
+static bool E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
 {
    // check first and return without an error
    if(W_CheckNumForName(lumpname) == -1)
@@ -1530,7 +1529,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    int i, a = 0;
    int numTypes = cfg_size(cfg, SEC_BOSSTYPES);
    int numProbs = cfg_size(cfg, SEC_BOSSPROBS);
-   boolean useProbs = true;
+   bool useProbs = true;
 
    E_EDFLogPuts("\t* Processing boss spawn types\n");
 

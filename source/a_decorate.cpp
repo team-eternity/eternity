@@ -401,7 +401,7 @@ void A_PlaySoundEx(Mobj *mo)
 {
    sfxinfo_t *sfx = NULL;
    int channel, attn, volume;
-   boolean loop;
+   bool loop;
 
    sfx = E_ArgAsSound(mo->state->args, 0);
    

@@ -27,14 +27,16 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h" //jff 5/18/98
+
 #include "doomdef.h"
+#include "doomstat.h" //jff 5/18/98
 #include "m_random.h"
-#include "r_main.h"
-#include "r_state.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_state.h"
 
 //////////////////////////////////////////////////////////
 //
@@ -223,7 +225,7 @@ IMPLEMENT_THINKER_TYPE(LightFadeThinker)
 //
 void LightFadeThinker::Think()
 {
-   boolean done = false;
+   bool done = false;
 
    // fade light by one step
    this->lightlevel += this->step;
@@ -565,7 +567,7 @@ int EV_SetLight(line_t *line, int tag, setlight_e type, int lvl)
 {
    int i, rtn = 0;
    sector_t *s;
-   boolean backside = false;
+   bool backside = false;
 
    if(line && tag == 0)
    {
@@ -620,7 +622,7 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 {
    int i, rtn = 0;
    LightFadeThinker *lf;
-   boolean backside = false;
+   bool backside = false;
 
    // speed <= 0? hell no.
    if(speed <= 0)
@@ -672,7 +674,7 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
    LightFadeThinker *lf;
-   boolean backside = false;
+   bool backside = false;
 
    // speed <= 0? hell no.
    if(speed <= 0 || maxval == minval)
@@ -737,7 +739,7 @@ int EV_StrobeLight(line_t *line, int tag,
 {
    StrobeThinker *flash;
    int i, rtn = 0;
-   boolean backside = false;
+   bool backside = false;
 
    if(line && tag == 0)
    {
@@ -783,7 +785,7 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
 {
    LightFlashThinker *flash;
    int i, rtn = 0;
-   boolean backside = false;
+   bool backside = false;
 
    if(line && tag == 0)
    {

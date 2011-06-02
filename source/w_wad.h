@@ -24,28 +24,26 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __W_WAD__
-#define __W_WAD__
-
-#include <stdio.h>
+#ifndef W_WAD_H__
+#define W_WAD_H__
 
 //
 // TYPES
 //
 
-typedef struct wadinfo_s
+struct wadinfo_t
 {
   char identification[4];                  // Should be "IWAD" or "PWAD".
   int  numlumps;
   int  infotableofs;
-} wadinfo_t;
+};
 
-typedef struct filelump_s
+struct filelump_t
 {
   int  filepos;
   int  size;
   char name[8];
-} filelump_t;
+};
 
 //
 // WADFILE I/O related stuff.
@@ -62,6 +60,10 @@ struct lumpinfo_t
    
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
    int index, next;
+
+   // haleyjd 03/27/11: array index into lumpinfo in the parent wad directory,
+   // for fast reverse lookup.
+   int selfindex;
 
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
    enum 
@@ -94,32 +96,6 @@ struct lumpinfo_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
-
-};
-
-// directory types
-enum
-{
-   WADDIR_NORMAL,
-   WADDIR_MANAGED
-};
-
-//
-// haleyjd 03/01/09: Wad Directory structure
-//
-// Adding this allows a level of indirection to be added to the wad system,
-// letting us have wads that are not part of the master directory.
-//
-struct waddir_t
-{
-   lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
-   int        numlumps;   // number of lumps
-   int        ispublic;   // if false, don't call D_NewWadLumps
-   lumpinfo_t **infoptrs; // 06/06/10: track all allocations
-   int        numallocs;  // number of entries in the infoptrs table
-   int        numallocsa; // number of entries allocated for the infoptrs table   
-   int        type;       // directory type
-   void       *data;      // user data (mainly for w_levels code)
 };
 
 //
@@ -138,43 +114,117 @@ struct wfileadd_t
    int privatedir;       // if not 0, has a private directory
 };
 
-extern waddir_t w_GlobalDir; // the global wad directory
+//
+// haleyjd 03/01/09: Wad Directory structure
+//
+// Adding this allows a level of indirection to be added to the wad system,
+// letting us have wads that are not part of the master directory.
+//
+class WadDirectory
+{
+public:
+   // directory types
+   enum
+   {
+      NORMAL,
+      MANAGED
+   };
 
-void        W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
-int         W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
+   // file add types
+   enum
+   {
+      ADDWADFILE, // Add as an ordinary wad
+      ADDSUBFILE, // Add as a subfile wad
+      ADDPRIVATE  // Add to a private directory
+   };
+   
+   static int IWADSource;   // source # of the global IWAD file
+   static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
+
+protected:
+   // openwad structure -t his is for return from WadDirectory::OpenFile
+   struct openwad_t
+   {
+      const char *filename; // possibly altered filename
+      FILE *handle;         // FILE handle
+      bool error;           // true if an error occured
+      bool errorRet;        // code to return from AddFile
+   };
+
+   static int source;     // unique source ID for each wad file
+
+   lumpinfo_t **lumpinfo; // array of pointers to lumpinfo structures
+   int        numlumps;   // number of lumps
+   int        ispublic;   // if false, don't call D_NewWadLumps
+   lumpinfo_t **infoptrs; // 06/06/10: track all allocations
+   int        numallocs;  // number of entries in the infoptrs table
+   int        numallocsa; // number of entries allocated for the infoptrs table   
+   int        type;       // directory type
+   void       *data;      // user data (mainly for w_levels code)
+
+   // Protected methods
+   void    InitLumpHash();
+   void    InitResources();
+   void    AddInfoPtr(lumpinfo_t *infoptr);
+   void    CoalesceMarkedResource(const char *start_marker, 
+                                  const char *end_marker, 
+                                  int li_namespace);
+   openwad_t OpenFile(const char *name, int filetype);
+   bool      AddFile(const char *name, int li_namespace, int filetype,
+                     FILE *file = NULL, size_t baseoffset = 0);
+   void      FreeDirectoryLumps();  // haleyjd 06/27/09
+   void      FreeDirectoryAllocs(); // haleyjd 06/06/10
+
+   // Utilities
+   static int          IsMarker(const char *marker, const char *name);
+   static unsigned int LumpNameHash(const char *s);
+
+public:
+   // Public methods
+   void        InitMultipleFiles(wfileadd_t *files);
+   int         CheckNumForName(const char *name, 
+                               int li_namespace = lumpinfo_t::ns_global);
+   int         CheckNumForNameNSG(const char *name, int li_namespace);
+   int         GetNumForName(const char *name);
+   lumpinfo_t *GetLumpNameChain(const char *name);
+   // sf: add a new wad file after the game has already begun
+   int         AddNewFile(const char *filename);
+   // haleyjd 06/15/10: special private wad file support
+   int         AddNewPrivateFile(const char *filename);
+   int         LumpLength(int lump);
+   void        ReadLump(int lump, void *dest);
+   int         ReadLumpHeader(int lump, void *dest, size_t size);
+   void       *CacheLumpNum(int lump, int tag);
+   void        Close();               // haleyjd 03/09/11
+
+   // Accessors
+   int   GetType() const  { return type; }
+   void  SetType(int i)   { type = i;    }
+   void *GetData() const  { return data; }
+   void  SetData(void *d) { data = d;    }
+   
+   // Read-only properties
+   int          GetNumLumps() const { return numlumps; }
+   lumpinfo_t **GetLumpInfo() const { return lumpinfo; }
+};
+
+extern WadDirectory wGlobalDir; // the global wad directory
+
 int         W_CheckNumForName(const char *name);   // killough 4/17/98
 int         W_CheckNumForNameNS(const char *name, int li_namespace);
-int         W_CheckNumForNameNSG(const char *name, int ns);
 int         W_GetNumForName(const char* name);
-lumpinfo_t *W_GetLumpNameChainInDir(waddir_t *dir, const char *name);
+
 lumpinfo_t *W_GetLumpNameChain(const char *name);
-int         W_LumpLengthInDir(waddir_t *dir, int lump);
+
 int         W_LumpLength(int lump);
-void        W_ReadLumpInDir(waddir_t *dir, int lump, void *dest);
 void        W_ReadLump(int lump, void *dest);
-void       *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag);
 void       *W_CacheLumpNum(int lump, int tag);
 int         W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
-void        W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
-
-// sf: add a new wad file after the game has already begun
-int W_AddNewFile(waddir_t *dir, const char *filename);
-
-// haleyjd 06/15/10: special private wad file support
-int W_AddNewPrivateFile(waddir_t *dir, const char *filename);
 
 #define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
-unsigned int W_LumpNameHash(const char *s);           // killough 1/31/98
-
-void W_FreeDirectoryLumps(waddir_t *waddir); // haleyjd 06/27/09
-void W_FreeDirectoryAllocs(waddir_t *dir);   // haleyjd 06/06/10
-
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
-
-extern FILE *iwadhandle;
-extern FILE *firstWadHandle; // haleyjd 06/21/04
 
 #endif
 
