@@ -40,6 +40,7 @@ protected:
    int colordepth;
 
    void DrawPixels(void *buffer);
+   void LoadPBOExtension();
 
 public:
    // Overrides

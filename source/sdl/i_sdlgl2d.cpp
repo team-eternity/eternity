@@ -46,6 +46,7 @@
 #include "../gl/gl_primitives.h"
 #include "../gl/gl_projection.h"
 #include "../gl/gl_texture.h"
+#include "../gl/gl_vars.h"
 
 //=============================================================================
 //
@@ -83,6 +84,17 @@ static Uint32 *framebuffer;
 
 // Bump amount used to avoid cache misses on power-of-two-sized screens
 static int bump;
+
+// Options
+static bool use_arb_pbo; // If true, use ARB pixel buffer object extension
+
+// PBO extension function pointers
+static PFNGLGENBUFFERSARBPROC    pglGenBuffersARB    = NULL;
+static PFNGLDELETEBUFFERSARBPROC pglDeleteBuffersARB = NULL;
+static PFNGLBINDBUFFERARBPROC    pglBindBufferARB    = NULL;
+static PFNGLBUFFERDATAARBPROC    pglBufferDataARB    = NULL;
+static PFNGLMAPBUFFERARBPROC     pglMapBufferARB     = NULL;
+static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = NULL;
 
 //=============================================================================
 //
@@ -302,6 +314,44 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    GL_ClearBoundTexture();
 }
 
+// WARNING: SDL_GL_GetProcAddress is non-portable!
+// Returns function pointers through a void * return type, which is in violation
+// of the C and C++ standards. Probably works everywhere SDL works, though...
+
+#define GETPROC(ptr, name, type) \
+   ptr = (type)SDL_GL_GetProcAddress(name); \
+   extension_ok = (extension_ok && ptr != NULL)
+
+//
+// SDLGL2DVideoDriver::LoadPBOExtension
+//
+// Load the ARB pixel buffer object extension if so specified and supported.
+//
+void SDLGL2DVideoDriver::LoadPBOExtension()
+{
+   bool extension_ok = true;
+   const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+   bool have_arb_pbo = (strstr(extensions, "GL_ARB_pixel_buffer_object") != NULL);
+
+   // * Extensions must be enabled in general
+   // * GL ARB PBO extension must be specifically enabled
+   // * GL ARB PBO extension must be supported locally
+   if(cfg_gl_use_extensions && cfg_gl_arb_pixelbuffer && have_arb_pbo)
+   {
+      GETPROC(pglGenBuffersARB,    "glGenBuffersARB",    PFNGLGENBUFFERSARBPROC);
+      GETPROC(pglDeleteBuffersARB, "glDeleteBuffersARB", PFNGLDELETEBUFFERSARBPROC);
+      GETPROC(pglBindBufferARB,    "glBindBufferARB",    PFNGLBINDBUFFERARBPROC);
+      GETPROC(pglBufferDataARB,    "glBufferDataARB",    PFNGLBUFFERDATAARBPROC);
+      GETPROC(pglMapBufferARB,     "glMapBufferARB",     PFNGLMAPBUFFERARBPROC);
+      GETPROC(pglUnmapBufferARB,   "glUnmapBufferARB",   PFNGLUNMAPBUFFERARBPROC);
+
+      // Use the extension if all procedures were found
+      use_arb_pbo = extension_ok;
+   }
+   else
+      use_arb_pbo = false;
+}
+
 //
 // SDLGL2DVideoDriver::InitGraphicsMode
 //
@@ -355,6 +405,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // wait for a bit so the screen can settle
    if(flags & SDL_FULLSCREEN)
       I_Sleep(500);
+
+   // Try loading the ARB PBO extension
+   LoadPBOExtension();
 
    // Enable two-dimensional texture mapping
    glEnable(GL_TEXTURE_2D);
