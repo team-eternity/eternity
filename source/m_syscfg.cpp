@@ -29,11 +29,12 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "m_misc.h"
-#include "m_shots.h"
 #include "d_gi.h"
+#include "gl/gl_vars.h"
 #include "i_sound.h"
 #include "i_video.h"
+#include "m_misc.h"
+#include "m_shots.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "w_wad.h"
@@ -180,6 +181,12 @@ static default_t sysdefaults[] =
 
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
+
+   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
+                "1 to enable use of GL extensions in general"),
+
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
+                "1 to enable use of GL ARB pixelbuffer object extension"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),

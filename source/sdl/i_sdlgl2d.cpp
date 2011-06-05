@@ -33,6 +33,7 @@
 
 // DOOM headers
 #include "../z_zone.h"
+#include "../d_main.h"
 #include "../i_system.h"
 #include "../v_misc.h"
 #include "../v_video.h"
@@ -75,6 +76,11 @@ static byte   cachedpal[768];
 // GL texture sizes sufficient to hold the screen buffer as a texture
 static unsigned int framebuffer_umax;
 static unsigned int framebuffer_vmax;
+static unsigned int texturesize;
+
+// maximum texture coordinates to put on right- and bottom-side vertices
+static GLfloat texcoord_smax;
+static GLfloat texcoord_tmax;
 
 // GL texture names
 static GLuint textureid;
@@ -86,7 +92,8 @@ static Uint32 *framebuffer;
 static int bump;
 
 // Options
-static bool use_arb_pbo; // If true, use ARB pixel buffer object extension
+static bool   use_arb_pbo; // If true, use ARB pixel buffer object extension
+static GLuint pboIDs[2];   // IDs of pixel buffer objects
 
 // PBO extension function pointers
 static PFNGLGENBUFFERSARBPROC    pglGenBuffersARB    = NULL;
@@ -106,14 +113,14 @@ static PFNGLUNMAPBUFFERARBPROC   pglUnmapBufferARB   = NULL;
 //
 // Protected method.
 //
-void SDLGL2DVideoDriver::DrawPixels(void *buffer)
+void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 {
    Uint32 *fb = (Uint32 *)buffer;
 
    for(int y = 0; y < screen->h; y++)
    {
       byte   *src  = (byte *)screen->pixels + y * screen->pitch;
-      Uint32 *dest = fb + y * video.width;
+      Uint32 *dest = fb + y * destwidth;
 
       for(int x = 0; x < screen->w - bump; x++)
       {
@@ -138,22 +145,62 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
-   // Convert the game's 8-bit output to the 32-bit texture buffer
-   DrawPixels(framebuffer);
+   if(!use_arb_pbo)
+   {
+      // Convert the game's 8-bit output to the 32-bit texture buffer
+      DrawPixels(framebuffer, (unsigned int)video.width);
 
-   // bind the framebuffer texture if necessary
-   GL_BindTextureIfNeeded(textureid);
+      // bind the framebuffer texture if necessary
+      GL_BindTextureIfNeeded(textureid);
 
-   // update the texture data
-   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                   (GLsizei)video.width, (GLsizei)video.height, 
-                   GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)framebuffer);
+      // update the texture data
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
+                      (GLsizei)video.width, (GLsizei)video.height, 
+                      GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)framebuffer);
+   }
+   else
+   {
+      static int pboindex  = 0;
+      int        nextindex = 0;
+      GLvoid    *ptr       = NULL;
+
+      // use the two pixel buffers in a rotation
+      pboindex  = (pboindex + 1) % 2;
+      nextindex = (pboindex + 1) % 2;
+
+      // bind the framebuffer texture if necessary
+      GL_BindTextureIfNeeded(textureid);
+
+      // bind the primary PBO
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[pboindex]);
+
+      // copy primary PBO to texture, using offset
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)framebuffer_umax,
+                   (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+
+      // bind the secondary PBO
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[nextindex]);
+
+      // map the PBO into client memory in such a way as to avoid stalls
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+
+      if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
+      {
+         // draw directly into video memory
+         DrawPixels(ptr, framebuffer_umax);
+
+         // release pointer
+         pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+      }
+
+      // Unbind all PBOs
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+   }
 
    // push screen quad w/tex coords
    glBegin(GL_QUADS);
    GL_OrthoQuadTextured(0.0f, 0.0f, (GLfloat)video.width, (GLfloat)video.height,
-                        (GLfloat)video.width  / framebuffer_umax, 
-                        (GLfloat)video.height / framebuffer_vmax);
+                        texcoord_smax, texcoord_tmax);
    glEnd();
 
    // push the frame
@@ -300,6 +347,13 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
       textureid = 0;
    }
 
+   // Destroy any PBOs
+   if(pboIDs[0])
+   {
+      pglDeleteBuffersARB(2, pboIDs);
+      memset(pboIDs, 0, sizeof(pboIDs));
+   }
+
    // Destroy the allocated temporary framebuffer
    if(framebuffer)
    {
@@ -347,6 +401,9 @@ void SDLGL2DVideoDriver::LoadPBOExtension()
 
       // Use the extension if all procedures were found
       use_arb_pbo = extension_ok;
+
+      if(use_arb_pbo)
+         usermsg(" Loaded extension GL_ARB_pixel_buffer_object");
    }
    else
       use_arb_pbo = false;
@@ -357,14 +414,14 @@ void SDLGL2DVideoDriver::LoadPBOExtension()
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   bool wantfullscreen = false;
-   bool wantvsync      = false;
-   bool wanthardware   = false; // Not used - this is always "hardware".
-   bool wantframe      = true;
-   int  v_w            = 640;
-   int  v_h            = 480;
-   int  flags          = SDL_OPENGL;
-   GLvoid *tempbuffer  = NULL;
+   bool    wantfullscreen = false;
+   bool    wantvsync      = false;
+   bool    wanthardware   = false; // Not used - this is always "hardware".
+   bool    wantframe      = true;
+   int     v_w            = 640;
+   int     v_h            = 480;
+   int     flags          = SDL_OPENGL;
+   GLvoid *tempbuffer     = NULL;
 
    // Get video commands and geometry settings
 
@@ -422,10 +479,15 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    framebuffer_umax = GL_MakeTextureDimension((unsigned int)v_w);
    framebuffer_vmax = GL_MakeTextureDimension((unsigned int)v_h);
 
+   // calculate right- and bottom-side texture coordinates
+   texcoord_smax = (GLfloat)v_w / framebuffer_umax;
+   texcoord_tmax = (GLfloat)v_h / framebuffer_vmax;
+
    // Create texture
    glGenTextures(1, &textureid);
 
    // Configure framebuffer texture
+   texturesize = framebuffer_umax * framebuffer_vmax * 4;
    tempbuffer = (GLvoid *)calloc(framebuffer_umax * 4, framebuffer_vmax);
    GL_BindTextureAndRemember(textureid);
    
@@ -442,8 +504,18 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                 tempbuffer);
    free(tempbuffer);
 
-   // Allocate framebuffer data
-   framebuffer = (Uint32 *)calloc(v_w * 4, v_h);
+   // Allocate framebuffer data, or PBOs
+   if(!use_arb_pbo)
+      framebuffer = (Uint32 *)calloc(v_w * 4, v_h);
+   else
+   {
+      pglGenBuffersARB(2, pboIDs);
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[0]);
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[1]);
+      pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+      pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+   }
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
    UpdateFocus();

@@ -39,7 +39,7 @@ class SDLGL2DVideoDriver : public HALVideoDriver
 protected:
    int colordepth;
 
-   void DrawPixels(void *buffer);
+   void DrawPixels(void *buffer, unsigned int width);
    void LoadPBOExtension();
 
 public:
