@@ -1,4 +1,209 @@
 ================================================================================
+Changes since Eternity Engine v3.40.11
+================================================================================
+--------------------------------------------------------------------------------
+06/05/11
+
+I have completed and tested the ability to use the ARB pixel buffer object
+extension, which entryway states is 1.5x to 2x faster than uploading to the
+texture object directly.
+
+I am now preparing for 3.40.15 release, which will be entitled "Wodanaz" for
+one of the chief gods of the Germanic pantheon, better known as Odin, the 
+Wanderer, ruler of Asgard and master of Valhalla.
+
+--------------------------------------------------------------------------------
+06/02/11
+
+SoM fixed two problems with portals:
+
+* Fourty Two found an issue in one of his maps where sprites all over the level
+  would seem to appear through walls on the other side of a linked portal line.
+  SoM discovered this was a bug in solidsegs generation and was able to fix it
+  in a couple of minutes.
+  
+* SoM also determined that the "jerk" felt when crossing line-to-line linked
+  portals was lack of the same fix used in BOOM to smooth out line-to-line
+  teleporters by fooling with the player's viewheight/viewz/bobbing properties.
+
+I have added the ability to load the GL_ARB_pixel_buffer_object extension,
+adapted from code in PrBoom-Plus, though it is not functional yet.
+
+--------------------------------------------------------------------------------
+05/31/11
+
+I finally got around to rewriting the console message history buffer by remaking
+it into an array of pointers instead of an array of fixed-size strings that had
+to be memcpy'd around when the buffer was shrunk.
+
+Now instead, the messages are all allocated in one block, and the messages[]
+array points to each 128-byte segment of that single long string. When the 
+buffer has filled up, the pointers are shifted down and the bottom 64 (no longer
+128) are moved to the top of the array. This is vastly more efficient, and 
+allows both for a smaller cut when shrinking the buffer, as well as a larger
+buffer size - up to 512 messages are now kept in history, allowing the entire
+cmdlist to appear again without being truncated even if the buffer shrinks.
+
+--------------------------------------------------------------------------------
+05/30/11
+
+GL configuration variables have been added in a gl_vars.cpp module, and these
+always exist even if EE_FEATURE_OPENGL is disabled for the sake of simplicity.
+
+Fixed a crash found by Kaiser (not hobbs as accidentally indicated in the SVN
+commit message for r1532) which involved attempting to manipulate the value of
+the player skin variable in the menus - when I added support for vt_float
+variables, I lost some code from mn_engin.cpp which was implicitly handling the
+case of hacky vt_string variables which handle the '+' and '-' characters
+explicitly in their console command handler callback and specify the 
+vt_handlerset flag on themselves to enable it.
+
+Removed any indication that the SDL GL2D backend intends to support the IO disk
+flasher, as I'm really not seeing it as being practical at this point. I might
+be able to implement it to draw into the screen buffer, however, but this is
+low priority at the moment.
+
+Removed the dead prototype for Z_ZoneHistory which was still hanging around in
+z_zone.h.
+
+--------------------------------------------------------------------------------
+05/29/11
+
+The SDL OpenGL 2D-in-3D video backend has been largely completed with the 
+following changes:
+
+* Finished up all code to bind textures and display the fullscreen quad.
+
+* Kaiser noted that scaling properties are mandatory on GL textures (which seems
+  to contradict the official documentation website), which made stuff start 
+  appearing on screen.
+
+* ReadScreen was implemented to get the private screen buffer, which allows
+  screenshots and screenwipes to work.
+
+* Code to select and instantiate the configured video driver object, or the
+  highest-priority supported driver if there is no configuration setting, has
+  been added to the HAL.
+  
+* All use of OpenGL in Eternity is now conditional on the EE_FEATURE_OPENGL
+  preprocessor definition.
+  
+* Code has been added to fully release all resources both in GL and SDL when
+  changing resolutions / video modes.
+  
+Other changes:
+
+* Killed off the ZONE_NATIVE define as it is no longer referenced in the source.
+
+* Removed z_zone.cpp from the VC2008 project.
+
+--------------------------------------------------------------------------------
+05/28/11
+
+GL power-of-two texture dimensions are now calculated from the requested screen
+mode's width and height, and texture objects are now generated.
+
+--------------------------------------------------------------------------------
+05/16/11
+
+I have eliminated all of the code in the low-level SDL sound implementation
+which attempts to change sounds to PU_CACHE when they are no longer being used
+by any channels, since EE never purges cachables any more anyway unless the
+system runs out of memory.
+
+Doing this has allowed me to eliminate one of the critical sections in 
+i_sdlsound.cpp by letting the audiospec callback assume responsibility for 
+nullifying the data pointer of channels and therefore being the one to make the
+decision when it itself has finished using that channel.
+
+This change has finally seemed to alleviate all sound skipping on my machine.
+-.-
+
+--------------------------------------------------------------------------------
+05/15/11
+
+Began work on fundamental GL utilities such as calculation of proper power-of-2
+texture sizes from arbitrary dimensions, drawing of quads, etc. Eliminted the
+HALVideoDriver::InitGraphics method, since all it was previously doing was 
+input initialization, which is now handled somewhere more appropriate.
+
+The SDL GL2D backend can now cache palettes and built an 8-to-32 lookup table
+(using code taken from an earlier implementation of -8in32), sets up the GL
+viewport, and initializes an orthogonal projection.
+
+--------------------------------------------------------------------------------
+05/10/11
+
+Began implementation of an alternate video backend capable of rendering the game
+onto a GL texture and pasting it to the screen on a quad. The SDLGL2DVideoDriver
+class also inherits from HALVideoDriver, like SDLVideoDriver before it.
+
+Moved the last remnants of input initialization code from the video module.
+
+--------------------------------------------------------------------------------
+05/08/11
+
+Started the process of creating a proper Hardware Abstraction Layer for Eternity
+by creating a system-agnostic video driver layer in i_video.cpp and moving SDL-
+specific drawing code to a subclass in i_sdlvideo.cpp.
+
+--------------------------------------------------------------------------------
+05/05/11
+
+Yet another crashing bug was discovered via the vapordemo launch, and this time
+it was a very old bug - dating all the way back to SMMU. fraggle fortunately
+replaced the horrible mess that was the BOOM menu system, but when he did so he
+inadvertently lost the (sloppy) mechanism which MBF was relying on to make sure
+that translucency parameters would be reinitialized when an OPTIONS lump was 
+loaded from a WAD.
+
+Here's how it would work:
+
+* The OPTIONS lump would be parsed by the code in m_misc.c.
+
+* If an option was marked as being part of a particular menu page, the config 
+  code would call a function from m_menu.c which caused the options on that page
+  to do a refresh operation.
+
+* The handler for the page with the translucency options would invoke code in
+  r_data.c to recalculate and load the TRANMAP in MBF.
+  
+O_O
+
+Yeah, this doesn't count in any way as a "fraggle blaming" because the flow of
+control in that design was so obtuse that nobody would have noticed they were
+breaking something.
+
+Anyway vapordemo caused this 10-year-old-plus bug to suddenly surface simply by
+specifying that translucency be enabled by default. Any Eternity users who had
+previously disabled translucency would then be operating under an inconsistent
+program state which made the game believe that the TRANMAP was loaded when it
+was not, resulting in a crash in the renderer in the current column drawer
+object's *DrawColumnTR method as soon as anything translucent came into view.
+
+================================================================================
+Changes since Eternity Engine v3.40.10
+================================================================================
+--------------------------------------------------------------------------------
+5/02/11
+
+A critical error was caught in the Blue Box 3.40.10 release which necessitated
+the immediate release of a patch version to fix it. I had forgotten that the
+class name of the PointThinker object representing the center-point of a 
+PolyObject that is archived using its serialize method when saving the game 
+needed to be manually read out from the save archive when loading it.
+
+When thinkers go through ordinary serialization, they write their own names. But
+when they are deserialized, the savegame code reads the name out first so that
+it can instantiate an object of the proper type using the ThinkerType factory
+idiom. This won't happen automatically anywhere else, and could be considered a
+minor design problem with the thinker serialization system.
+
+Of course the savegame code is still scheduled for yet another rewrite so that
+it stores a lot of info as text and is more secure, so I may have a chance to
+address the problem more fully at that point.
+
+================================================================================
 Changes since Eternity Engine v3.40.00
 ================================================================================
 --------------------------------------------------------------------------------
