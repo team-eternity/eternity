@@ -2503,28 +2503,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\Source\p_map.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\source\p_map3d.cpp"
 						>
 						<FileConfiguration
@@ -3030,10 +3008,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_inter.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Source\p_map.h"
 						>
 					</File>
 					<File
