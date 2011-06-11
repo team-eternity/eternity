@@ -27,7 +27,7 @@
 
 #include "p_mobj.h"
 #include "p_clipen.h"
-#include "p_doomen.h"
+#include "p_doomclip.h"
 
 #include "m_bbox.h"
 #include "r_defs.h"
