@@ -94,6 +94,25 @@ typedef struct intercept_s
   } d;
 } intercept_t;
 
+
+struct open_t
+{
+   // P_LineOpening
+   fixed_t    top;      // top of line opening
+   fixed_t    bottom;   // bottom of line opening
+   fixed_t    range;    // height of opening: top - bottom
+   fixed_t    lowfloor;     // lowest floorheight involved   
+   fixed_t    secfloor; // SoM 11/3/02: considering only sector floor
+   fixed_t    secceil;  // SoM 11/3/02: considering only sector ceiling
+
+   // moved front and back outside P_LineOpening and changed -- phares 3/7/98
+   // them to these so we can pick up the new friction value
+   // in PIT_CheckLine()
+   sector_t   *frontsector; // made global
+   sector_t   *backsector;  // made global
+};
+
+
 typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
