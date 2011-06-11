@@ -31,7 +31,7 @@
 #include "c_io.h"
 #include "doomstat.h"
 #include "p_chase.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_user.h"

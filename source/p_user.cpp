@@ -36,7 +36,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_maputl.h"
 #include "p_skin.h"
 #include "p_spec.h"

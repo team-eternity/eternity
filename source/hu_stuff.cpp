@@ -56,7 +56,7 @@
 #include "m_swap.h"
 #include "p_chase.h"
 #include "p_info.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_draw.h"

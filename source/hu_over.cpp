@@ -42,7 +42,7 @@
 #include "hu_over.h"
 #include "hu_stuff.h"
 #include "p_info.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_setup.h"
 #include "r_draw.h"
 #include "s_sound.h"

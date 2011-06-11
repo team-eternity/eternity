@@ -31,7 +31,7 @@
 #include "doomstat.h"
 #include "m_argv.h"
 #include "p_info.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_spec.h"

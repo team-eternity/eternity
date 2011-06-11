@@ -43,7 +43,7 @@
 #include "mn_engin.h"
 #include "p_anim.h"
 #include "p_info.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_spec.h"

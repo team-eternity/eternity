@@ -63,7 +63,7 @@
 #include "mn_menus.h"
 #include "p_chase.h"
 #include "p_enemy.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_partcl.h"
 #include "r_draw.h"
 #include "r_main.h"

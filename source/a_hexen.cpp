@@ -36,7 +36,7 @@
 #include "p_enemy.h"
 #include "p_info.h"
 #include "p_inter.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_maputl.h"
 #include "p_pspr.h"
 #include "p_setup.h"
