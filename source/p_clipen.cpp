@@ -27,10 +27,24 @@
 
 #include "p_mobj.h"
 #include "p_clipen.h"
+#include "p_doomen.h"
 
 #include "m_bbox.h"
 #include "r_defs.h"
 
+
+
+// ----------------------------------------------------------------------------
+// ClipContext
+ClipContext::ClipContext() : spechit()
+{
+}
+
+
+
+
+// ----------------------------------------------------------------------------
+// ClipEngine
 
 msecnode_t* ClipEngine::headsecnode = NULL;
 
@@ -135,3 +149,24 @@ msecnode_t* ClipEngine::delSecnode(msecnode_t *node)
    return node;
 }
 
+
+
+// ----------------------------------------------------------------------------
+// Clipping engine selection
+
+static DoomClipEngine doomen = new DoomClipEngine();
+
+
+ClipEngine *clip = &doomen;
+
+void P_SetClippingEngine(DoomClipper_e engine)
+{
+   switch(engine)
+   {
+      case Doom:
+      case Doom3D:
+      case Portal:
+         clip = &doomen;
+         break;
+   };
+}

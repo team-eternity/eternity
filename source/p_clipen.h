@@ -50,8 +50,10 @@ struct sector_t;
 // SoM: This functions as a clipping 'context' now.
 class ClipContext
 {
-   ClipContect();
+   ClipContext();
    virtual ~ClipContext();
+   
+   void init();
    
    // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
    // haleyjd: values for tmtouch3dside:
@@ -176,11 +178,6 @@ class ClipEngine
 
 
 
-// This is the reference to the clipping engine currently being used by EE
-extern ClipEngine *clip;
-
-
-
 class TracerEngine
 {
    public:
@@ -200,5 +197,22 @@ class TracerEngine
       Mobj       *linetarget;  // who got hit (or NULL)
 
 };
+
+
+enum DoomClipper_e
+{
+   Doom,
+   Doom3D,
+   Portal,
+};
+
+
+// Global function to set the clipping engine
+void P_SetClippingEngine(DoomClipper_e engine);
+
+
+// This is the reference to the clipping engine currently being used by EE
+extern ClipEngine *clip;
+
 
 #endif //P_CLIP_H__
