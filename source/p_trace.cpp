@@ -30,13 +30,15 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
-#include "p_map.h"
+#include "p_clipen.h"
+#include "p_mapcontext.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_inter.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
+#include "p_traceengine.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -47,8 +49,6 @@
 //
 // Line Attacks
 //
-
-static Mobj *shootthing;
 
 static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 
@@ -64,12 +64,12 @@ static int aim_flags_mask; // killough 8/2/98: for more intelligent autoaiming
 // Code to handle aiming tracers at things.
 // haleyjd 03/21/08
 //
-static bool P_AimAtThing(intercept_t *in)
+static bool P_AimAtThing(intercept_t *in, TracerContext *tc)
 {
    Mobj *th = in->d.thing;
    fixed_t thingtopslope, thingbottomslope, dist;
    
-   if(th == shootthing)
+   if(th == tc->shootthing)
       return true;    // can't shoot self
    
    if(!(th->flags & MF_SHOOTABLE))
@@ -77,7 +77,7 @@ static bool P_AimAtThing(intercept_t *in)
    
    // killough 7/19/98, 8/2/98:
    // friends don't aim at friends (except players), at least not first
-   if(th->flags & shootthing->flags & aim_flags_mask && !th->player)
+   if(th->flags & tc->shootthing->flags & aim_flags_mask && !th->player)
       return true;
    
    // check angles to see if the thing can be aimed at
@@ -85,34 +85,31 @@ static bool P_AimAtThing(intercept_t *in)
    // SoM: added distance so the slopes are calculated from the origin of the 
    // aiming tracer to keep the slopes consistent.
    if(demo_version >= 333)
-      dist = FixedMul(trace.attackrange, in->frac) + trace.movefrac;
+      dist = FixedMul(tc->attackrange, in->frac) + tc->movefrac;
    else
-      dist = FixedMul(trace.attackrange, in->frac);   
+      dist = FixedMul(tc->attackrange, in->frac);   
 
-   thingtopslope = FixedDiv(th->z + th->height - trace.originz , dist);
+   thingtopslope = FixedDiv(th->z + th->height - tc->originz , dist);
    
-   if(thingtopslope < trace.bottomslope)
+   if(thingtopslope < tc->bottomslope)
       return true;    // shot over the thing
    
-   thingbottomslope = FixedDiv(th->z - trace.originz, dist);
+   thingbottomslope = FixedDiv(th->z - tc->originz, dist);
    
-   if(thingbottomslope > trace.topslope)
+   if(thingbottomslope > tc->topslope)
       return true;    // shot under the thing
    
    // this thing can be hit!
    
-   if(thingtopslope > trace.topslope)
-      thingtopslope = trace.topslope;
+   if(thingtopslope > tc->topslope)
+      thingtopslope = tc->topslope;
    
-   if(thingbottomslope < trace.bottomslope)
-      thingbottomslope = trace.bottomslope;
+   if(thingbottomslope < tc->bottomslope)
+      thingbottomslope = tc->bottomslope;
    
-   trace.aimslope = (thingtopslope + thingbottomslope) / 2;
-   clip.linetarget = th;
+   tc->aimslope = (thingtopslope + thingbottomslope) / 2;
+   tc->linetarget = th;
 
-   // We hit a thing so stop any furthur TPTs
-   trace.finished = true;
-   
    return false;   // don't go any farther
 }
    
@@ -121,7 +118,7 @@ static bool P_AimAtThing(intercept_t *in)
 //
 // Sets linetarget and aimslope when a target is aimed at.
 //
-static bool PTR_AimTraverse(intercept_t *in)
+static bool PTR_AimTraverse(intercept_t *in, TracerContext *tc)
 {
    fixed_t slope, dist;
    
@@ -138,28 +135,30 @@ static bool PTR_AimTraverse(intercept_t *in)
       // A two sided line will restrict
       // the possible target ranges.
       
-      P_LineOpening(li, NULL);
+      ClipContext *cc = clip->getContext();
+      P_LineOpening(li, NULL, cc);
+      clip->freeContext(cc);
       
-      if(clip.openbottom >= clip.opentop)
+      if(open.bottom >= open.top)
          return false;   // stop
 
-      dist = FixedMul(trace.attackrange, in->frac);
+      dist = FixedMul(tc->attackrange, in->frac);
       
       if(li->frontsector->floorheight != li->backsector->floorheight)
       {
-         slope = FixedDiv(clip.openbottom - trace.z , dist);
-         if(slope > trace.bottomslope)
-            trace.bottomslope = slope;
+         slope = FixedDiv(open.bottom - tc->z , dist);
+         if(slope > tc->bottomslope)
+            tc->bottomslope = slope;
       }
 
       if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
       {
-         slope = FixedDiv(clip.opentop - trace.z , dist);
-         if(slope < trace.topslope)
-            trace.topslope = slope;
+         slope = FixedDiv(open.top - tc->z , dist);
+         if(slope < tc->topslope)
+            tc->topslope = slope;
       }
 
-      if(trace.topslope <= trace.bottomslope)
+      if(tc->topslope <= tc->bottomslope)
          return false;   // stop
       
       return true;    // shot continues
@@ -167,7 +166,7 @@ static bool PTR_AimTraverse(intercept_t *in)
    else
    {  
       // shoot a thing
-      return P_AimAtThing(in);
+      return P_AimAtThing(in, tc);
    }
 }
 
@@ -194,7 +193,7 @@ static bool PTR_AimTraverse(intercept_t *in)
 //
 // Returns true if PTR_ShootTraverse should exit, and false otherwise.
 //
-static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
+static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist, TracerContext *tc)
 {
    // haleyjd: when allowing planes to be shot, we do not care if
    // the sector heights are the same; we must check against the
@@ -208,11 +207,11 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
-   if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
-      (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
+   if((floorsame   || FixedDiv(open.bottom - tc->z , dist) <= tc->aimslope) &&
+      (ceilingsame || FixedDiv(open.top - tc->z , dist) >= tc->aimslope))
    {
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
-         P_ShootSpecialLine(shootthing, li, side);
+         P_ShootSpecialLine(tc->shootthing, li, side);
       
       return true;      // shot continues
    }
@@ -226,7 +225,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
 // Routine to handle the crossing of a 2S line by a shot tracer.
 // Returns true if PTR_ShootTraverse should return.
 //
-static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
+static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, TracerContext *tc)
 {
    fixed_t dist;
    bool ret = false;
@@ -238,13 +237,16 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
    if(li->flags & ML_TWOSIDED)
    {  
       // crosses a two sided (really 2s) line
-      P_LineOpening(li, NULL);
-      dist = FixedMul(trace.attackrange, in->frac);
+      ClipContext *cc = clip->getContext();
+      P_LineOpening(li, NULL, cc);
+      clip->freeContext(cc);
+      
+      dist = FixedMul(tc->attackrange, in->frac);
       
       // killough 11/98: simplify
       // haleyjd 03/13/05: fixed bug that activates 2S line specials
       // when shots hit the floor
-      if(P_Shoot2SLine(li, lineside, dist))
+      if(P_Shoot2SLine(li, lineside, dist, tc))
          ret = true;
    }
 
@@ -259,12 +261,12 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
 //
 static void P_PuffPosition(intercept_t *in, fixed_t *frac, 
                            fixed_t *x, fixed_t *y, fixed_t *z,
-                           fixed_t dist)
+                           fixed_t dist, TracerContext *tc)
 {
-   *frac = in->frac - FixedDiv(dist, trace.attackrange);
-   *x = trace.x + FixedMul(trace.dx, *frac);
-   *y = trace.y + FixedMul(trace.dy, *frac);
-   *z = trace.z + FixedMul(trace.aimslope, FixedMul(*frac, trace.attackrange));
+   *frac = in->frac - FixedDiv(dist, tc->attackrange);
+   *x = tc->divline.x + FixedMul(tc->divline.dx, *frac);
+   *y = tc->divline.y + FixedMul(tc->divline.dy, *frac);
+   *z = tc->z + FixedMul(tc->aimslope, FixedMul(*frac, tc->attackrange));
 }
 
 //
@@ -302,12 +304,12 @@ static bool P_ShootSky(line_t *li, fixed_t z)
 // Routine to handle shooting a thing.
 // haleyjd 03/21/08
 //
-static bool P_ShootThing(intercept_t *in)
+static bool P_ShootThing(intercept_t *in, TracerContext *tc)
 {
    fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
    Mobj *th = in->d.thing;
    
-   if(th == shootthing)
+   if(th == tc->shootthing)
       return true;  // can't shoot self
    
    if(!(th->flags & MF_SHOOTABLE))
@@ -315,27 +317,27 @@ static bool P_ShootThing(intercept_t *in)
    
    // haleyjd: don't let players use melee attacks on ghosts
    if((th->flags3 & MF3_GHOST) && 
-      shootthing->player &&
-      P_GetReadyWeapon(shootthing->player)->flags & WPF_NOHITGHOSTS)
+      tc->shootthing->player &&
+      P_GetReadyWeapon(tc->shootthing->player)->flags & WPF_NOHITGHOSTS)
       return true;
    
    // check angles to see if the thing can be aimed at
    
-   dist = FixedMul(trace.attackrange, in->frac);
-   thingtopslope = FixedDiv(th->z + th->height - trace.z, dist);
+   dist = FixedMul(tc->attackrange, in->frac);
+   thingtopslope = FixedDiv(th->z + th->height - tc->z, dist);
    
-   if(thingtopslope < trace.aimslope)
+   if(thingtopslope < tc->aimslope)
       return true;  // shot over the thing
    
-   thingbottomslope = FixedDiv(th->z - trace.z, dist);
+   thingbottomslope = FixedDiv(th->z - tc->z, dist);
    
-   if(thingbottomslope > trace.aimslope)
+   if(thingbottomslope > tc->aimslope)
       return true;  // shot under the thing
    
    // hit thing
    // position a bit closer
    
-   P_PuffPosition(in, &frac, &x, &y, &z, 10*FRACUNIT);
+   P_PuffPosition(in, &frac, &x, &y, &z, 10*FRACUNIT, tc);
    
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
@@ -343,25 +345,22 @@ static bool P_ShootThing(intercept_t *in)
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
       P_SpawnPuff(x, y, z, 
-         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
+         P_PointToAngle(0, 0, tc->divline.dx, tc->divline.dy) - ANG180,
          2, true);
    }
    else
    {
       P_SpawnBlood(x, y, z,
-         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
-         trace.la_damage, th);
+         P_PointToAngle(0, 0, tc->divline.dx, tc->divline.dy) - ANG180,
+         tc->la_damage, th);
    }
    
-   if(trace.la_damage)
+   if(tc->la_damage)
    {
-      P_DamageMobj(th, shootthing, shootthing, trace.la_damage, 
-                   shootthing->info->mod);
+      P_DamageMobj(th, tc->shootthing, tc->shootthing, tc->la_damage, 
+                   tc->shootthing->info->mod);
    }
 
-   // SoM: we hit a thing!
-   trace.finished = true;
-   
    // don't go any further
    return false;
 }
@@ -374,7 +373,7 @@ static bool P_ShootThing(intercept_t *in)
 //
 // haleyjd 03/21/08
 //
-static bool PTR_ShootTraverseComp(intercept_t *in)
+static bool PTR_ShootTraverseComp(intercept_t *in, TracerContext *tc)
 {
    fixed_t x, y, z, frac;
    
@@ -383,19 +382,23 @@ static bool PTR_ShootTraverseComp(intercept_t *in)
       line_t *li = in->d.line;
 
       // haleyjd 03/13/05: move up point on line side check to here
-      int lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
+      int lineside = P_PointOnLineSide(tc->shootthing->x, tc->shootthing->y, li);
       
       if(li->special)
-         P_ShootSpecialLine(shootthing, li, lineside);
+         P_ShootSpecialLine(tc->shootthing, li, lineside);
 
       // shot crosses a 2S line?
-      if(P_ShotCheck2SLine(in, li, lineside))
+      ClipContext *cc = clip->getContext();
+      bool shootcheck = P_ShotCheck2SLine(in, li, lineside, tc);
+      clip->freeContext(cc);
+      
+      if(shootcheck)
          return true;
       
       // hit line
       // position a bit closer
 
-      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT, tc);
 
       // don't hit the sky
       if(P_ShootSky(li, z))
@@ -412,7 +415,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in)
    else
    {
       // shoot a thing
-      return P_ShootThing(in);
+      return P_ShootThing(in, tc);
    }
 }
 
@@ -423,7 +426,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in)
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static bool PTR_ShootTraverse(intercept_t *in)
+static bool PTR_ShootTraverse(intercept_t *in, TracerContext *tc)
 {
    fixed_t x, y, z, frac, zdiff;
    bool hitplane = false; // SoM: Remember if the bullet hit a plane.
@@ -441,21 +444,21 @@ static bool PTR_ShootTraverse(intercept_t *in)
       // shootthing->y are NOT. Demo comped just in case.
       int lineside =
          (demo_version >= 333) ?
-            P_PointOnLineSide(trace.x, trace.y, li) :
-            P_PointOnLineSide(shootthing->x, shootthing->y, li);
+            P_PointOnLineSide(tc->divline.x, tc->divline.y, li) :
+            P_PointOnLineSide(tc->shootthing->x, tc->shootthing->y, li);
       
       // SoM: Shouldn't be called until A: we know the bullet passed or
       // B: We know it didn't hit a plane first
       //if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
       //   P_ShootSpecialLine(shootthing, li, lineside);
      
-      if(P_ShotCheck2SLine(in, li, lineside))
+      if(P_ShotCheck2SLine(in, li, lineside, tc))
          return true;
 
       // hit line
       // position a bit closer
 
-      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT, tc);
       
       // SoM: Check for colision with a plane.
       sidesector = lineside ? li->backsector : li->frontsector;
@@ -466,8 +469,8 @@ static bool PTR_ShootTraverse(intercept_t *in)
       {
          if(z < sidesector->floorheight)
          {
-            fixed_t pfrac = FixedDiv(sidesector->floorheight - trace.z, 
-                                     trace.aimslope);
+            fixed_t pfrac = FixedDiv(sidesector->floorheight - tc->z, 
+                                     tc->aimslope);
             
             // SoM: don't check for portals here anymore
             if(sidesector->floorpic == skyflatnum ||
@@ -477,14 +480,14 @@ static bool PTR_ShootTraverse(intercept_t *in)
             if(demo_version < 333)
             {
                zdiff = FixedDiv(D_abs(z - sidesector->floorheight),
-                                D_abs(z - trace.originz));
-               x += FixedMul(trace.x - x, zdiff);
-               y += FixedMul(trace.y - y, zdiff);
+                                D_abs(z - tc->originz));
+               x += FixedMul(tc->divline.x - x, zdiff);
+               y += FixedMul(tc->divline.y - y, zdiff);
             }
             else
             {
-               x = trace.x + FixedMul(trace.cos, pfrac);
-               y = trace.y + FixedMul(trace.sin, pfrac);
+               x = tc->divline.x + FixedMul(tc->cos, pfrac);
+               y = tc->divline.y + FixedMul(tc->sin, pfrac);
             }
 
             z = sidesector->floorheight;
@@ -493,21 +496,21 @@ static bool PTR_ShootTraverse(intercept_t *in)
          }
          else if(z > sidesector->ceilingheight)
          {
-            fixed_t pfrac = FixedDiv(sidesector->ceilingheight - trace.z, trace.aimslope);
+            fixed_t pfrac = FixedDiv(sidesector->ceilingheight - tc->z, tc->aimslope);
             if(sidesector->intflags & SIF_SKY) // SoM
                return false;
             
             if(demo_version < 333)
             {
                zdiff = FixedDiv(D_abs(z - sidesector->ceilingheight),
-                  D_abs(z - trace.originz));
-               x += FixedMul(trace.x - x, zdiff);
-               y += FixedMul(trace.y - y, zdiff);
+                  D_abs(z - tc->originz));
+               x += FixedMul(tc->divline.x - x, zdiff);
+               y += FixedMul(tc->divline.y - y, zdiff);
             }
             else
             {
-               x = trace.x + FixedMul(trace.cos, pfrac);
-               y = trace.y + FixedMul(trace.sin, pfrac);
+               x = tc->divline.x + FixedMul(tc->cos, pfrac);
+               y = tc->divline.y + FixedMul(tc->sin, pfrac);
             }
             
             z = sidesector->ceilingheight;
@@ -517,7 +520,7 @@ static bool PTR_ShootTraverse(intercept_t *in)
       }
       
       if(!hitplane && li->special)
-         P_ShootSpecialLine(shootthing, li, lineside);
+         P_ShootSpecialLine(tc->shootthing, li, lineside);
 
       // don't hit the sky
       if(P_ShootSky(li, z))
@@ -539,7 +542,7 @@ static bool PTR_ShootTraverse(intercept_t *in)
    else
    {
       // shoot a thing
-      return P_ShootThing(in);
+      return P_ShootThing(in, tc);
    }
 }
 
@@ -549,19 +552,19 @@ static bool PTR_ShootTraverse(intercept_t *in)
 // killough 8/2/98: add mask parameter, which, if set to MF_FRIEND,
 // makes autoaiming skip past friends.
 //
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
+fixed_t DoomTraceEngine::aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask, TracerContext *tc)
 {
    fixed_t x2, y2;
    fixed_t lookslope = 0;
    fixed_t pitch = 0;
    
    angle >>= ANGLETOFINESHIFT;
-   shootthing = t1;
+   tc->shootthing = t1;
    
-   x2 = t1->x + (distance>>FRACBITS)*(trace.cos = finecosine[angle]);
-   y2 = t1->y + (distance>>FRACBITS)*(trace.sin = finesine[angle]);
-   trace.originz = trace.z = t1->z + (t1->height>>1) + 8*FRACUNIT;
-   trace.movefrac = 0;
+   x2 = t1->x + (distance>>FRACBITS)*(tc->cos = finecosine[angle]);
+   y2 = t1->y + (distance>>FRACBITS)*(tc->sin = finesine[angle]);
+   tc->originz = tc->z = t1->z + (t1->height>>1) + 8*FRACUNIT;
+   tc->movefrac = 0;
 
    // haleyjd 10/08/06: this should be gotten from t1->player, not 
    // players[displayplayer]. Also, if it's zero, use the old
@@ -573,8 +576,8 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 
    if(pitch == 0 || demo_version < 333)
    {
-      trace.topslope    =  100*FRACUNIT/160;
-      trace.bottomslope = -100*FRACUNIT/160;
+      tc->topslope    =  100*FRACUNIT/160;
+      tc->bottomslope = -100*FRACUNIT/160;
    }
    else
    {
@@ -586,19 +589,19 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
       topangle    = pitch - ANGLE_1*32;
       bottomangle = pitch + ANGLE_1*32;
 
-      trace.topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
-      trace.bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
+      tc->topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
+      tc->bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
    }
    
-   trace.attackrange = distance;
-   clip.linetarget = NULL;
+   tc->attackrange = distance;
+   tc->linetarget = NULL;
 
    // killough 8/2/98: prevent friends from aiming at friends
    aim_flags_mask = mask;
    
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
-   
-   return clip.linetarget ? trace.aimslope : lookslope;
+   pathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse, tc);
+  
+   return tc->linetarget ? tc->aimslope : lookslope;
 }
 
 //
@@ -606,25 +609,30 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
 //
 // If damage == 0, it is just a test trace that will leave linetarget set.
 //
-void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                  fixed_t slope, int damage)
+void DoomTraceEngine::lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
+                                 fixed_t slope, int damage)
 {
    fixed_t x2, y2;
    
-   angle >>= ANGLETOFINESHIFT;
-   shootthing = t1;
-   trace.la_damage = damage;
-   x2 = t1->x + (distance >> FRACBITS) * (trace.cos = finecosine[angle]);
-   y2 = t1->y + (distance >> FRACBITS) * (trace.sin = finesine[angle]);
+   TracerContext *tc = getContext();
    
-   trace.originz = trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
-   trace.attackrange = distance;
-   trace.aimslope = slope;
-   trace.movefrac = 0;
+   angle >>= ANGLETOFINESHIFT;
+   
+   tc->shootthing = t1;
+   tc->la_damage = damage;
+   x2 = t1->x + (distance >> FRACBITS) * (tc->cos = finecosine[angle]);
+   y2 = t1->y + (distance >> FRACBITS) * (tc->sin = finesine[angle]);
+   
+   tc->originz = tc->z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
+   tc->attackrange = distance;
+   tc->aimslope = slope;
+   tc->movefrac = 0;
 
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
+   pathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
                   (demo_version < 329 || comp[comp_planeshoot]) ?
-                      PTR_ShootTraverseComp : PTR_ShootTraverse);
+                      PTR_ShootTraverseComp : PTR_ShootTraverse, tc);
+                      
+   freeContext(tc);
 }
 
 //
@@ -636,12 +644,12 @@ static Mobj *usething;
 // killough 11/98: reformatted
 // haleyjd  09/02: reformatted again.
 
-static bool PTR_UseTraverse(intercept_t *in)
+static bool PTR_UseTraverse(intercept_t *in, TracerContext *tc)
 {
    if(in->d.line->special)
    {
       P_UseSpecialLine(usething, in->d.line,
-         P_PointOnLineSide(trace.originx, trace.originy,in->d.line)==1);
+         P_PointOnLineSide(tc->originx, tc->originy, in->d.line)==1);
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -650,11 +658,15 @@ static bool PTR_UseTraverse(intercept_t *in)
    else
    {
       if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
-         clip.openrange = 0;
+         open.range = 0;
       else
-         P_LineOpening(in->d.line, NULL);
+      {
+         ClipContext *cc = clip->getContext();
+         P_LineOpening(in->d.line, NULL, cc);
+         clip->freeContext(cc);
+      }
 
-      if(clip.openrange <= 0)
+      if(open.range <= 0)
       {
          // can't use through a wall
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
@@ -678,16 +690,19 @@ static bool PTR_UseTraverse(intercept_t *in)
 //
 // by Lee Killough
 //
-static bool PTR_NoWayTraverse(intercept_t *in)
+static bool PTR_NoWayTraverse(intercept_t *in, TracerContext *tc)
 {
    line_t *ld = in->d.line;                       // This linedef
 
-   return ld->special ||                          // Ignore specials
+   ClipContext *cc = clip->getContext();
+   bool res = ld->special ||                          // Ignore specials
      !(ld->flags & ML_BLOCKING ||                 // Always blocking
-       (P_LineOpening(ld, NULL),                  // Find openings
-        clip.openrange <= 0 ||                         // No opening
-        clip.openbottom > usething->z+24*FRACUNIT ||   // Too high it blocks
-        clip.opentop < usething->z+usething->height)); // Too low it blocks
+       (P_LineOpening(ld, NULL, cc),               // Find openings
+        open.range <= 0 ||                         // No opening
+        open.bottom > usething->z+24*FRACUNIT ||   // Too high it blocks
+        open.top < usething->z+usething->height)); // Too low it blocks
+   clip->freeContext(cc);
+   return res;
 }
 
 //
@@ -695,10 +710,12 @@ static bool PTR_NoWayTraverse(intercept_t *in)
 //
 // Looks for special lines in front of the player to activate.
 //
-void P_UseLines(player_t *player)
+void DoomTraceEngine::useLines(player_t *player)
 {
    fixed_t x1, y1, x2, y2;
    int angle;
+   
+   TracerContext *tc = getContext();
    
    usething = player->mo;
    
@@ -706,11 +723,11 @@ void P_UseLines(player_t *player)
    
    x1 = player->mo->x;
    y1 = player->mo->y;
-   x2 = x1 + (USERANGE>>FRACBITS)*(trace.cos = finecosine[angle]);
-   y2 = y1 + (USERANGE>>FRACBITS)*(trace.sin = finesine[angle]);
+   x2 = x1 + (USERANGE>>FRACBITS)*(tc->cos = finecosine[angle]);
+   y2 = y1 + (USERANGE>>FRACBITS)*(tc->sin = finesine[angle]);
 
-   trace.attackrange = USERANGE;
-   trace.movefrac = 0;
+   tc->attackrange = USERANGE;
+   tc->movefrac = 0;
 
    // old code:
    //
@@ -718,9 +735,11 @@ void P_UseLines(player_t *player)
    //
    // This added test makes the "oof" sound work on 2s lines -- killough:
    
-   if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
-      if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
+   if(pathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse, tc))
+      if(!pathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse, tc))
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
+         
+   freeContext(tc);
 }
 
 //
@@ -756,24 +775,25 @@ static void check_intercept(void)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddLineIntercepts(line_t *ld)
+bool PIT_AddLineIntercepts(line_t *ld, MapContext *mc)
 {
+   TracerContext *tc = dynamic_cast<TracerContext *>(mc);
    int       s1;
    int       s2;
    fixed_t   frac;
    divline_t dl;
 
    // avoid precision problems with two routines
-   if(trace.dx >  FRACUNIT*16 || trace.dy >  FRACUNIT*16 ||
-      trace.dx < -FRACUNIT*16 || trace.dy < -FRACUNIT*16)
+   if(tc->divline.dx >  FRACUNIT*16 || tc->divline.dy >  FRACUNIT*16 ||
+      tc->divline.dx < -FRACUNIT*16 || tc->divline.dy < -FRACUNIT*16)
    {
-      s1 = P_PointOnDivlineSide (ld->v1->x, ld->v1->y, (divline_t *)&trace);
-      s2 = P_PointOnDivlineSide (ld->v2->x, ld->v2->y, (divline_t *)&trace);
+      s1 = P_PointOnDivlineSide (ld->v1->x, ld->v1->y, &tc->divline);
+      s2 = P_PointOnDivlineSide (ld->v2->x, ld->v2->y, &tc->divline);
    }
    else
    {
-      s1 = P_PointOnLineSide (trace.x, trace.y, ld);
-      s2 = P_PointOnLineSide (trace.x+trace.dx, trace.y+trace.dy, ld);
+      s1 = P_PointOnLineSide (tc->divline.x, tc->divline.y, ld);
+      s2 = P_PointOnLineSide (tc->divline.x+tc->divline.dx, tc->divline.y+tc->divline.dy, ld);
    }
 
    if(s1 == s2)
@@ -781,7 +801,7 @@ bool PIT_AddLineIntercepts(line_t *ld)
    
    // hit the line
    P_MakeDivline(ld, &dl);
-   frac = P_InterceptVector((divline_t *)&trace, &dl);
+   frac = P_InterceptVector(&tc->divline, &dl);
    
    if(frac < 0)
       return true;        // behind source
@@ -801,8 +821,10 @@ bool PIT_AddLineIntercepts(line_t *ld)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddThingIntercepts(Mobj *thing)
+bool PIT_AddThingIntercepts(Mobj *thing, MapContext *mc)
 {
+   TracerContext *tc = dynamic_cast<TracerContext *>(mc);
+   
    fixed_t   x1, y1;
    fixed_t   x2, y2;
    int       s1, s2;
@@ -810,7 +832,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
    fixed_t   frac;
 
    // check a corner to corner crossection for hit
-   if((trace.dx ^ trace.dy) > 0)
+   if((tc->divline.dx ^ tc->divline.dy) > 0)
    {
       x1 = thing->x - thing->radius;
       y1 = thing->y + thing->radius;
@@ -825,8 +847,8 @@ bool PIT_AddThingIntercepts(Mobj *thing)
       y2 = thing->y + thing->radius;
    }
 
-   s1 = P_PointOnDivlineSide (x1, y1, (divline_t *)&trace);
-   s2 = P_PointOnDivlineSide (x2, y2, (divline_t *)&trace);
+   s1 = P_PointOnDivlineSide (x1, y1, &tc->divline);
+   s2 = P_PointOnDivlineSide (x2, y2, &tc->divline);
    
    if(s1 == s2)
       return true;                // line isn't crossed
@@ -836,7 +858,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
    dl.dx = x2-x1;
    dl.dy = y2-y1;
    
-   frac = P_InterceptVector ((divline_t *)&trace, &dl);
+   frac = P_InterceptVector (&tc->divline, &dl);
    
    if (frac < 0)
       return true;                // behind source
@@ -859,7 +881,7 @@ bool PIT_AddThingIntercepts(Mobj *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
+bool P_TraverseIntercepts(pathfunc_t func, fixed_t maxfrac, TracerContext *tc)
 {
    intercept_t *in = NULL;
    int count = intercept_p - intercepts;
@@ -875,7 +897,7 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 
       if(in) // haleyjd: for safety
       {
-         if(!func(in))
+         if(!func(in, tc))
             return false;           // don't bother going farther
          in->frac = D_MAXINT;
       }
@@ -893,8 +915,8 @@ bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, bool trav(intercept_t *))
+bool DoomTraceEngine::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                                   int flags, pathfunc_t trav, TracerContext *tc)
 {
    fixed_t xt1, yt1;
    fixed_t xt2, yt2;
@@ -907,9 +929,6 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    // SoM: just a little bit-o-change...
    bool    result;
 
-   // Only PTR_s that use TPTs need to worry about this value.
-   trace.finished = false;
-
    validcount++;
    intercept_p = intercepts;
    
@@ -919,10 +938,10 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    if(!((y1-bmaporgy)&(MAPBLOCKSIZE-1)))
       y1 += FRACUNIT;     // don't side exactly on a line
 
-   trace.x = trace.originx = x1;
-   trace.y = trace.originy = y1;
-   trace.dx = x2 - x1;
-   trace.dy = y2 - y1;
+   tc->divline.x = tc->originx = x1;
+   tc->divline.y = tc->originy = y1;
+   tc->divline.dx = x2 - x1;
+   tc->divline.dy = y2 - y1;
    
    x1 -= bmaporgx;
    y1 -= bmaporgy;
@@ -987,13 +1006,13 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    {
       if(flags & PT_ADDLINES)
       {
-         if(!P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts))
+         if(!P_BlockLinesIterator(mapx, mapy, PIT_AddLineIntercepts, tc))
             return false; // early out
       }
       
       if(flags & PT_ADDTHINGS)
       {
-         if(!P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts))
+         if(!P_BlockThingsIterator(mapx, mapy, PIT_AddThingIntercepts, tc))
             return false; // early out
       }
       
@@ -1014,10 +1033,28 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
    // go through the sorted list
    // SoM: just store this for a sec
-   result = P_TraverseIntercepts(trav, FRACUNIT);
+   result = P_TraverseIntercepts(trav, FRACUNIT, tc);
 
    return result;
 }
+
+
+
+//
+// pathTraverse
+//
+// This gets/disposes of the clipping context to allow outside code that 
+// doesn't need to use it to avoid doing so.
+//
+bool DoomTraceEngine::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                                   int flags, pathfunc_t trav)
+{
+   TracerContext *tc = getContext();
+   bool res = pathTraverse(x1, y1, x2, y2, flags, trav, tc);
+   freeContext(tc);
+   return res;
+}
+
 
 // EOF
 

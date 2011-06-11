@@ -33,6 +33,7 @@ struct msecnode_t;
 struct player_t;
 struct sector_t;
 
+class  ClipContext;
 
 #include "m_collection.h"
 
@@ -45,60 +46,6 @@ struct sector_t;
 // is larger, but we do not have any moving sectors nearby
 #define MAXRADIUS       (32*FRACUNIT)
 
-
-
-// SoM: This functions as a clipping 'context' now.
-class ClipContext
-{
-   public:
-      ClipContext();
-      virtual ~ClipContext();
-      
-      
-      // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
-      // haleyjd: values for tmtouch3dside:
-      // 0 == no 3DMidTex involved in clipping
-      // 1 == 3DMidTex involved but not responsible for floorz
-      // 2 == 3DMidTex responsible for floorz
-      int        touch3dside;
-
-      Mobj       *thing;    // current thing being clipped
-      fixed_t    x;         // x position, usually where we want to move
-      fixed_t    y;         // y position, usually where we want to move
-
-      fixed_t    bbox[4];   // bounding box for thing/line intersection checks
-      fixed_t    floorz;    // floor you'd hit if free to fall
-      fixed_t    ceilingz;  // ceiling of sector you're in
-      fixed_t    dropoffz;  // dropoff on other side of line you're crossing
-
-      fixed_t    secfloorz; // SoM: floorz considering only sector heights
-      fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
-      
-      fixed_t    passfloorz; // SoM 11/6/02: UGHAH
-      fixed_t    passceilz;
-
-      int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
-
-      int        unstuck;   // killough 8/1/98: whether to allow unsticking
-
-      bool       floatok;   // If "floatok" true, move ok if within floorz - ceilingz   
-      bool       felldown;  // killough 11/98: if "felldown" true, object was pushed down ledge
-
-      // keep track of the line that lowers the ceiling,
-      // so missiles don't explode against sky hack walls
-      line_t     *ceilingline;
-      line_t     *blockline;   // killough 8/11/98: blocking linedef
-      line_t     *floorline;   // killough 8/1/98: Highest touched floor
-
-      // Temporary holder for thing_sectorlist threads
-      // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
-      msecnode_t *sector_list;     // phares 3/16/98
-      
-      Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
-
-      // Spechit stuff
-      PODCollection<line_t *> spechit;
-};
 
 
 
@@ -173,27 +120,6 @@ class ClipEngine
 
 
 
-class TracerEngine
-{
-   public:
-      virtual fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask) = 0;
-      
-      virtual void    lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                                 fixed_t slope, int damage) = 0;
-                                 
-      virtual bool    checkSight(Mobj *t1, Mobj *t2) = 0;
-
-      virtual void    useLines(player_t *player) = 0;
-   
-      // Accessors
-      Mobj*      getLinetarget() const {return linetarget;} 
-        
-   private:
-      Mobj       *linetarget;  // who got hit (or NULL)
-};
-
-
-
 // ----------------------------------------------------------------------------
 // Clipping engine selection
 
@@ -210,12 +136,5 @@ void P_SetClippingEngine(DoomClipper_e engine);
 // This is the reference to the clipping engine currently being used by EE
 extern ClipEngine *clip;
 
-
-// ----------------------------------------------------------------------------
-// Tracer engine selection
-
-// This is actually selected along side the clipping engine in 
-// P_SetClippingEngine
-extern TracerEngine *trace;
 
 #endif //P_CLIP_H__

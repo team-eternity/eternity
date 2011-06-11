@@ -31,8 +31,9 @@
 
 #include "doomstat.h"
 #include "m_bbox.h"
-#include "p_map.h"
+#include "p_clipen.h"
 #include "p_map3d.h"
+#include "p_mapcontext.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "polyobj.h"
@@ -152,7 +153,7 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-void P_LineOpening(line_t *linedef, Mobj *mo)
+void P_LineOpening(line_t *linedef, Mobj *mo, ClipContext *cc)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -160,75 +161,75 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
-      clip.openrange = 0;
+      open.range = 0;
       return;
    }
    
-   clip.openfrontsector = linedef->frontsector;
-   clip.openbacksector  = linedef->backsector;
+   open.frontsector = linedef->frontsector;
+   open.backsector  = linedef->backsector;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         clip.openfrontsector->c_pflags & PS_PASSABLE &&
-         clip.openbacksector->c_pflags & PS_PASSABLE && 
-         clip.openfrontsector->c_portal == clip.openbacksector->c_portal)
+         open.frontsector->c_pflags & PS_PASSABLE &&
+         open.backsector->c_pflags & PS_PASSABLE && 
+         open.frontsector->c_portal == open.backsector->c_portal)
       {
-         frontceilz = backceilz = clip.openfrontsector->ceilingheight + (1024 * FRACUNIT);
+         frontceilz = backceilz = open.frontsector->ceilingheight + (1024 * FRACUNIT);
       }
       else
 #endif
       {
-         frontceilz = clip.openfrontsector->ceilingheight;
-         backceilz  = clip.openbacksector->ceilingheight;
+         frontceilz = open.frontsector->ceilingheight;
+         backceilz  = open.backsector->ceilingheight;
       }
       
-      frontcz = clip.openfrontsector->ceilingheight;
-      backcz  = clip.openbacksector->ceilingheight;
+      frontcz = open.frontsector->ceilingheight;
+      backcz  = open.backsector->ceilingheight;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         clip.openfrontsector->f_pflags & PS_PASSABLE &&
-         clip.openbacksector->f_pflags & PS_PASSABLE && 
-         clip.openfrontsector->f_portal == clip.openbacksector->f_portal)
+         open.frontsector->f_pflags & PS_PASSABLE &&
+         open.backsector->f_pflags & PS_PASSABLE && 
+         open.frontsector->f_portal == open.backsector->f_portal)
       {
-         frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         frontfloorz = backfloorz = open.frontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       }
       else 
 #endif
       {
-         frontfloorz = clip.openfrontsector->floorheight;
-         backfloorz  = clip.openbacksector->floorheight;
+         frontfloorz = open.frontsector->floorheight;
+         backfloorz  = open.backsector->floorheight;
       }
 
-      frontfz = clip.openfrontsector->floorheight;
-      backfz = clip.openbacksector->floorheight;
+      frontfz = open.frontsector->floorheight;
+      backfz = open.backsector->floorheight;
    }
    
    if(frontceilz < backceilz)
-      clip.opentop = frontceilz;
+      open.top = frontceilz;
    else
-      clip.opentop = backceilz;
+      open.top = backceilz;
 
    
    if(frontfloorz > backfloorz)
    {
-      clip.openbottom = frontfloorz;
-      clip.lowfloor = backfloorz;
+      open.bottom = frontfloorz;
+      open.lowfloor = backfloorz;
       // haleyjd
-      clip.floorpic = clip.openfrontsector->floorpic;
+      cc->floorpic = open.frontsector->floorpic;
    }
    else
    {
-      clip.openbottom = backfloorz;
-      clip.lowfloor = frontfloorz;
+      open.bottom = backfloorz;
+      open.lowfloor = frontfloorz;
       // haleyjd
-      clip.floorpic = clip.openbacksector->floorpic;
+      cc->floorpic = open.backsector->floorpic;
    }
 
    if(frontcz < backcz)
@@ -241,8 +242,8 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
    else
       obot = backfz;
 
-   clip.opensecfloor = clip.openbottom;
-   clip.opensecceil  = clip.opentop;
+   open.secfloor = open.bottom;
+   open.secceil  = open.top;
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -270,29 +271,29 @@ void P_LineOpening(line_t *linedef, Mobj *mo)
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
-         clip.opentop = clip.openbottom;
-         clip.openrange = 0;
+         open.top = open.bottom;
+         open.range = 0;
          return;
       }
       
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
-         if(texbot < clip.opentop)
-            clip.opentop = texbot;
+         if(texbot < open.top)
+            open.top = texbot;
       }
       else
       {
-         if(textop > clip.openbottom)
-            clip.openbottom = textop;
+         if(textop > open.bottom)
+            open.bottom = textop;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
          if(abs(mo->z - textop) <= 24*FRACUNIT)
-            clip.touch3dside = 1;
+            cc->touch3dside = 1;
       }
    }
 
-   clip.openrange = clip.opentop - clip.openbottom;
+   open.range = open.top - open.bottom;
 }
 
 //
@@ -440,7 +441,7 @@ void P_SetThingPosition(Mobj *thing)
       // at sector_t->touching_thinglist) are broken. When a node is
       // added, new sector links are created.
 
-      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
+      thing->touching_sectorlist = clip->createSecNodeList(thing, thing->x, thing->y);
       thing->old_sectorlist = NULL;
    }
 
@@ -526,7 +527,7 @@ bool ThingIsOnLine(Mobj *t, line_t *l)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*, ClipContext *), ClipContext *cc)
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, MapContext *), MapContext *c)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -553,7 +554,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, ClipContext *), ClipC
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i], cc))
+            if(!func(po->lines[i], c))
                return false;
          }
       }
@@ -585,7 +586,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, ClipContext *), ClipC
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;
-      if(!func(ld))
+      if(!func(ld, c))
          return false;
    }
    return true;  // everything was checked
@@ -596,14 +597,14 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, ClipContext *), ClipC
 //
 // killough 5/3/98: reformatted, cleaned up
 
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj*, ClipContext *), ClipContext *cc)
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj*, MapContext *), MapContext *c)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
       Mobj *mobj = blocklinks[y * bmapwidth + x];
 
       for(; mobj; mobj = mobj->bnext)
-         if(!func(mobj, cc))
+         if(!func(mobj, c))
             return false;
    }
    return true;

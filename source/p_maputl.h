@@ -29,6 +29,7 @@
 
 struct line_t;
 class  Mobj;
+class  MapContext;
 class  ClipContext;
 
 // mapblocks are used to check movement against lines and things
@@ -42,47 +43,7 @@ class  ClipContext;
 #define PT_ADDTHINGS    2
 #define PT_EARLYOUT     4
 
-typedef struct divline_s
-{
-   fixed_t     x;
-   fixed_t     y;
-   fixed_t     dx;
-   fixed_t     dy;
-} divline_t;
-
-
-// SoM: linetracer_t can be cast to divline_t for the appropriate functions but holds much more
-// data which is needed for making tracers correctly travel through portals
-/*typedef struct linetracer_s
-{
-   fixed_t     x;
-   fixed_t     y;
-   fixed_t     dx;
-   fixed_t     dy;
-
-   // Moved crappy globals here
-   fixed_t     z; // replaces shootz
-   int         la_damage;
-   fixed_t     attackrange;
-   fixed_t     aimslope;
-   fixed_t     topslope, bottomslope;
-
-   // SoM: used by aiming TPT
-   fixed_t     originx;
-   fixed_t     originy;
-   fixed_t     originz;
-
-   fixed_t     sin;
-   fixed_t     cos;
-
-   // Accumulated travel along the line. Should be the XY distance between (x,y) 
-   // and (originx, originy) 
-   fixed_t movefrac;
-
-
-   bool finished;
-} linetracer_t;*/
-
+struct divline_t;
 
 
 typedef struct intercept_s
@@ -126,17 +87,20 @@ fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
 int     P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (line_t *linedef, Mobj *mo);
+void    P_LineOpening (line_t *linedef, Mobj *mo, ClipContext *cc);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
-bool P_BlockLinesIterator (int x, int y, bool func(line_t *, ClipContext *), ClipContext *cc);
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, ClipContext *), ClipContext *cc);
 bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
-bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, bool trav(intercept_t *));
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
+
+
+
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *, MapContext *), MapContext *c);
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj   *, MapContext *), MapContext *c);
+
+
 
 #endif  // __P_MAPUTL__
 

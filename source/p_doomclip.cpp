@@ -42,6 +42,7 @@
 #include "p_mobj.h"
 #include "p_maputl.h"
 #include "p_map3d.h"
+#include "p_mapcontext.h"
 #include "p_doomclip.h"
 #include "p_partcl.h"
 #include "p_portal.h"
@@ -49,6 +50,7 @@
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "p_traceengine.h"
 #include "p_user.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -112,8 +114,9 @@ static bool ignore_inerts = true;
 // telefragged. This simply will not do.
 static bool stomp3d = false;
 
-static bool PIT_StompThing3D(Mobj *thing, ClipContext *cc)
+static bool PIT_StompThing3D(Mobj *thing, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    fixed_t blockdist;
    
    if(!(thing->flags & MF_SHOOTABLE)) // Can't shoot it? Can't stomp it!
@@ -160,8 +163,9 @@ static bool PIT_StompThing3D(Mobj *thing, ClipContext *cc)
 #endif
 
 
-static bool PIT_StompThing(Mobj *thing, ClipContext *cc)
+static bool PIT_StompThing(Mobj *thing, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    fixed_t blockdist;
    
    if(!(thing->flags & MF_SHOOTABLE)) // Can't shoot it? Can't stomp it!
@@ -200,7 +204,7 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   bool (*func)(Mobj *, ClipContext *);
+   bool (*func)(Mobj *, MapContext *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -493,8 +497,9 @@ int DoomClipEngine::getMoveFactor(Mobj *mo, int *frictionp)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld, ClipContext *cc)
+static bool PIT_CrossLine(line_t *ld, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
 
@@ -604,8 +609,9 @@ static void SpechitOverrun(line_t *ld, ClipContext *cc)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld, ClipContext *cc)
+bool PIT_CheckLine(line_t *ld, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    if(cc->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       cc->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
       cc->bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
@@ -651,7 +657,7 @@ bool PIT_CheckLine(line_t *ld, ClipContext *cc)
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
    
-   P_LineOpening(ld, cc->thing);
+   P_LineOpening(ld, cc->thing, cc);
 
    // adjust floor & ceiling heights
    
@@ -831,8 +837,10 @@ int P_MissileBlockHeight(Mobj *mo)
 //
 // PIT_CheckThing
 // 
-static bool PIT_CheckThing(Mobj *thing, ClipContext *cc) // killough 3/26/98: make static
+// killough 3/26/98: make static
+static bool PIT_CheckThing(Mobj *thing, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    fixed_t blockdist;
    int damage;
 
@@ -1558,8 +1566,10 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld, ClipContext *cc)
+static bool PIT_ApplyTorque(line_t *ld, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
       cc->bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
       cc->bbox[BOXLEFT]   < ld->bbox[BOXRIGHT] &&
@@ -1866,7 +1876,7 @@ static void P_HitSlideLine(line_t *ld)
 //
 // PTR_SlideTraverse
 //
-static bool PTR_SlideTraverse(intercept_t *in)
+static bool PTR_SlideTraverse(intercept_t *in, TracerContext *tc)
 {
    line_t *li;
    
@@ -1891,7 +1901,9 @@ static bool PTR_SlideTraverse(intercept_t *in)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
-   P_LineOpening(li, slidemo);
+   ClipContext *cc = clip->getContext();
+   P_LineOpening(li, slidemo, cc);
+   clip->freeContext(cc);
    
    if(open.range < slidemo->height)
       goto isblocking;  // doesn't fit
@@ -1972,12 +1984,12 @@ void DoomClipEngine::slideMove(Mobj *mo)
 
       bestslidefrac = FRACUNIT+1;
       
-      P_PathTraverse(leadx, leady, leadx+mo->momx, leady+mo->momy,
-                     PT_ADDLINES, PTR_SlideTraverse);
-      P_PathTraverse(trailx, leady, trailx+mo->momx, leady+mo->momy,
-                     PT_ADDLINES, PTR_SlideTraverse);
-      P_PathTraverse(leadx, traily, leadx+mo->momx, traily+mo->momy,
-                     PT_ADDLINES, PTR_SlideTraverse);
+      trace->pathTraverse(leadx, leady, leadx+mo->momx, leady+mo->momy,
+                          PT_ADDLINES, PTR_SlideTraverse);
+      trace->pathTraverse(trailx, leady, trailx+mo->momx, leady+mo->momy,
+                          PT_ADDLINES, PTR_SlideTraverse);
+      trace->pathTraverse(leadx, traily, leadx+mo->momx, traily+mo->momy,
+                          PT_ADDLINES, PTR_SlideTraverse);
 
       // move up to the wall
 
@@ -2080,8 +2092,10 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static bool PIT_RadiusAttack(Mobj *thing, ClipContext *cc)
+static bool PIT_RadiusAttack(Mobj *thing, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   
    fixed_t dx, dy, dist;
    Mobj *bombspot   = theBomb->bombspot;
    Mobj *bombsource = theBomb->bombsource;
@@ -2178,7 +2192,7 @@ void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod,
    
    for(y = yl; y <= yh; ++y)
       for(x = xl; x <= xh; ++x)
-         P_BlockThingsIterator(x, y, PIT_RadiusAttack,cc);
+         P_BlockThingsIterator(x, y, PIT_RadiusAttack, cc);
 
    if(demo_version >= 335 && bombindex > 0)
       theBomb = &bombs[--bombindex];
@@ -2201,8 +2215,9 @@ void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod,
 //
 // PIT_ChangeSector
 //
-static bool PIT_ChangeSector(Mobj *thing, ClipContext *cc)
+static bool PIT_ChangeSector(Mobj *thing, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
    Mobj *mo;
 
    if(P_ThingHeightClip(thing, cc))
@@ -2373,8 +2388,10 @@ void DoomClipEngine::delSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, ClipContext *cc)
+static bool PIT_GetSectors(line_t *ld, MapContext *mc)
 {
+   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   
    if(cc->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       cc->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
       cc->bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||

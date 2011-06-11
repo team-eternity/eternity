@@ -3041,6 +3041,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\p_mapcontext.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_maputl.h"
 						>
 					</File>
@@ -3086,6 +3090,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_tick.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_traceengine.h"
 						>
 					</File>
 					<File
