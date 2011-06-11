@@ -743,7 +743,6 @@ static void check_intercept(void)
    }
 }
 
-linetracer_t trace;
 
 //
 // PIT_AddLineIntercepts

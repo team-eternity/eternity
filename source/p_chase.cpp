@@ -202,9 +202,6 @@ int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
    return (int)thezi;
 }
 
-// SoM: moved globals into linetracer_t see p_maputil.h
-extern linetracer_t trace;
-
 //
 // PTR_chasetraverse
 //

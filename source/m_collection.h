@@ -239,8 +239,8 @@ public:
    T removeLast(void) 
    {
       --this->length;
-      if(this->wrapIterator == this->length)
-         this->wrapIterator = 0;
+      if(this->wrapiterator == this->length)
+         this->wrapiterator = 0;
       return this->ptrArray[this->length];
    }
 };

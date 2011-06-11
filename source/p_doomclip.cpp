@@ -41,6 +41,7 @@
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_maputl.h"
+#include "p_map3d.h"
 #include "p_doomclip.h"
 #include "p_partcl.h"
 #include "p_portal.h"
@@ -1773,7 +1774,7 @@ static void P_HitSlideLine(line_t *ld)
          P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT &&
          variable_friction &&  // killough 8/28/98: calc friction on demand
          slidemo->z <= slidemo->floorz &&
-         getFriction(slidemo, NULL) > ORIG_FRICTION;
+         clip->getFriction(slidemo, NULL) > ORIG_FRICTION;
    }
    else
    {
@@ -1945,7 +1946,7 @@ isblocking:
 //
 void DoomClipEngine::slideMove(Mobj *mo)
 {
-   ClipContext *cc      = getContext;
+   ClipContext *cc      = getContext();
    int         hitcount = 3;
    
    slidemo = mo; // the object that's sliding
@@ -2129,7 +2130,7 @@ static bool PIT_RadiusAttack(Mobj *thing, ClipContext *cc)
    if(dist >= theBomb->bombdamage)
       return true;  // out of range
 
-   if(P_CheckSight(thing, bombspot))      // must be in direct path
+   if(trace->checkSight(thing, bombspot))      // must be in direct path
    {
       P_DamageMobj(thing, bombspot, bombsource, theBomb->bombdamage - dist, 
                    theBomb->bombmod);
@@ -2291,7 +2292,7 @@ bool P_ChangeSector(sector_t *sector, int crunch, ClipContext *cc)
 
    for(x=sector->blockbox[BOXLEFT] ; x<= sector->blockbox[BOXRIGHT] ; x++)
       for(y=sector->blockbox[BOXBOTTOM];y<= sector->blockbox[BOXTOP] ; y++)
-         P_BlockThingsIterator(x, y, PIT_ChangeSector,cc);
+         P_BlockThingsIterator(x, y, PIT_ChangeSector, cc);
       
    return !!nofit;
 }

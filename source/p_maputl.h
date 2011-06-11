@@ -53,7 +53,7 @@ typedef struct divline_s
 
 // SoM: linetracer_t can be cast to divline_t for the appropriate functions but holds much more
 // data which is needed for making tracers correctly travel through portals
-typedef struct linetracer_s
+/*typedef struct linetracer_s
 {
    fixed_t     x;
    fixed_t     y;
@@ -81,7 +81,7 @@ typedef struct linetracer_s
 
 
    bool finished;
-} linetracer_t;
+} linetracer_t;*/
 
 
 
@@ -137,8 +137,6 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, bool trav(intercept_t *));
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
-
-extern linetracer_t trace;
 
 #endif  // __P_MAPUTL__
 

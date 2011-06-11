@@ -190,9 +190,12 @@ class TracerEngine
         
    private:
       Mobj       *linetarget;  // who got hit (or NULL)
-
 };
 
+
+
+// ----------------------------------------------------------------------------
+// Clipping engine selection
 
 enum DoomClipper_e
 {
@@ -201,13 +204,18 @@ enum DoomClipper_e
    Portal,
 };
 
-
 // Global function to set the clipping engine
 void P_SetClippingEngine(DoomClipper_e engine);
-
 
 // This is the reference to the clipping engine currently being used by EE
 extern ClipEngine *clip;
 
+
+// ----------------------------------------------------------------------------
+// Tracer engine selection
+
+// This is actually selected along side the clipping engine in 
+// P_SetClippingEngine
+extern TracerEngine *trace;
 
 #endif //P_CLIP_H__

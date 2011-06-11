@@ -180,6 +180,14 @@ void ClipEngine::freeSecNodeList(void)
 }
 
 
+// ----------------------------------------------------------------------------
+// Tracer engine selection
+
+static DoomTraceEngine doomte = new DoomTraceEngine();
+
+TracerEngine *trace = &doomte;
+
+
 
 // ----------------------------------------------------------------------------
 // Clipping engine selection
@@ -197,6 +205,9 @@ void P_SetClippingEngine(DoomClipper_e engine)
       case Doom3D:
       case Portal:
          clip = &doomen;
+         trace = &doomte;
          break;
    };
 }
+
+

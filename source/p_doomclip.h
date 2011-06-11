@@ -74,6 +74,27 @@ class DoomClipEngine : public ClipEngine
       ClipContext    clipc;
 };
 
+
+class DoomTraceEngine : public TracerEngine
+{
+   public:
+      virtual fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask) = 0;
+      
+      virtual void    lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
+                                 fixed_t slope, int damage) = 0;
+                                 
+      virtual bool    checkSight(Mobj *t1, Mobj *t2) = 0;
+
+      virtual void    useLines(player_t *player) = 0;
+   
+      // Accessors
+      Mobj*      getLinetarget() const {return linetarget;} 
+        
+   private:
+      Mobj       *linetarget;  // who got hit (or NULL)
+};
+
+
 extern int  spechits_emulation;  // haleyjd 09/20/06
 extern bool donut_emulation; // haleyjd 10/16/09
 
