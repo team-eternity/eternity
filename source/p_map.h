@@ -92,7 +92,7 @@ typedef struct doom_mapinter_s
    // 2 == 3DMidTex responsible for floorz
    int        touch3dside;
 
-   Mobj     *thing;    // current thing being clipped
+   Mobj       *thing;    // current thing being clipped
    fixed_t    x;         // x position, usually where we want to move
    fixed_t    y;         // y position, usually where we want to move
 

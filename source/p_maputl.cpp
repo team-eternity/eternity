@@ -526,7 +526,7 @@ bool ThingIsOnLine(Mobj *t, line_t *l)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, ClipContext *), ClipContext *cc)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -553,7 +553,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i]))
+            if(!func(po->lines[i], cc))
                return false;
          }
       }
@@ -596,14 +596,14 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*))
 //
 // killough 5/3/98: reformatted, cleaned up
 
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj*))
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj*, ClipContext *), ClipContext *cc)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
       Mobj *mobj = blocklinks[y * bmapwidth + x];
 
       for(; mobj; mobj = mobj->bnext)
-         if(!func(mobj))
+         if(!func(mobj, cc))
             return false;
    }
    return true;

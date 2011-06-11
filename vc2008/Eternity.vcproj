@@ -2323,6 +2323,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_doomclip.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_doors.cpp"
 						>
 						<FileConfiguration
@@ -3006,6 +3010,10 @@
 					</File>
 					<File
 						RelativePath="..\source\p_clipen.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_doomclip.h"
 						>
 					</File>
 					<File

@@ -231,6 +231,18 @@ public:
       this->ptrArray[this->length] = newItem;
       ++this->length;
    }
+   
+   //
+   // removeLast
+   //
+   // Removes the last item from the end of the list and returns it.
+   T removeLast(void) 
+   {
+      --this->length;
+      if(this->wrapIterator == this->length)
+         this->wrapIterator = 0;
+      return this->ptrArray[this->length];
+   }
 };
 
 //

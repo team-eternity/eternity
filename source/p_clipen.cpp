@@ -150,6 +150,36 @@ msecnode_t* ClipEngine::delSecnode(msecnode_t *node)
 }
 
 
+// sf: fix annoying crash on restarting levels
+//
+//      This crash occurred because the msecnode_t's are allocated as
+//      PU_LEVEL. This meant that these were freed whenever a new level
+//      was loaded or the level restarted. However, the actual list was
+//      not emptied. As a result, msecnode_t's were being used that had
+//      been freed back to the zone memory. I really do not understand
+//      why boom or MBF never got this bug- or am I missing something?
+//
+//      additional comment 5/7/99
+//      There _is_ code to free the list in g_game.c. But this is called
+//      too late: some msecnode_t's are used during the loading of the
+//      level. 
+//
+// haleyjd 05/11/09: This in fact was never a problem. Clear the pointer
+// before or after Z_FreeTags; it doesn't matter as long as you clear it
+// at some point in or before P_SetupLevel and before we start attaching
+// Mobj's to sectors. I don't know what the hubbub above is about, but
+// I almost copied this change into WinMBF unnecessarily. I will leave it
+// be here, because as I said, changing it has no effect whatsoever.
+
+//
+// freeSecNodeList
+//
+void ClipEngine::freeSecNodeList(void)
+{
+   headsecnode = NULL; // this is all thats needed to fix the bug
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Clipping engine selection

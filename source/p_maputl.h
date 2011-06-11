@@ -29,6 +29,7 @@
 
 struct line_t;
 class  Mobj;
+class  ClipContext;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -112,6 +113,8 @@ struct open_t
    sector_t   *backsector;  // made global
 };
 
+extern open_t open;
+
 
 typedef bool (*traverser_t)(intercept_t *in);
 
@@ -127,8 +130,8 @@ void    P_LineOpening (line_t *linedef, Mobj *mo);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
-bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
-bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *, ClipContext *), ClipContext *cc);
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, ClipContext *), ClipContext *cc);
 bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, bool trav(intercept_t *));

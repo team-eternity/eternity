@@ -50,54 +50,54 @@ struct sector_t;
 // SoM: This functions as a clipping 'context' now.
 class ClipContext
 {
-   ClipContext();
-   virtual ~ClipContext();
-   
-   void init();
-   
-   // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
-   // haleyjd: values for tmtouch3dside:
-   // 0 == no 3DMidTex involved in clipping
-   // 1 == 3DMidTex involved but not responsible for floorz
-   // 2 == 3DMidTex responsible for floorz
-   int        touch3dside;
+   public:
+      ClipContext();
+      virtual ~ClipContext();
+      
+      
+      // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
+      // haleyjd: values for tmtouch3dside:
+      // 0 == no 3DMidTex involved in clipping
+      // 1 == 3DMidTex involved but not responsible for floorz
+      // 2 == 3DMidTex responsible for floorz
+      int        touch3dside;
 
-   Mobj       *thing;    // current thing being clipped
-   fixed_t    x;         // x position, usually where we want to move
-   fixed_t    y;         // y position, usually where we want to move
+      Mobj       *thing;    // current thing being clipped
+      fixed_t    x;         // x position, usually where we want to move
+      fixed_t    y;         // y position, usually where we want to move
 
-   fixed_t    bbox[4];   // bounding box for thing/line intersection checks
-   fixed_t    floorz;    // floor you'd hit if free to fall
-   fixed_t    ceilingz;  // ceiling of sector you're in
-   fixed_t    dropoffz;  // dropoff on other side of line you're crossing
+      fixed_t    bbox[4];   // bounding box for thing/line intersection checks
+      fixed_t    floorz;    // floor you'd hit if free to fall
+      fixed_t    ceilingz;  // ceiling of sector you're in
+      fixed_t    dropoffz;  // dropoff on other side of line you're crossing
 
-   fixed_t    secfloorz; // SoM: floorz considering only sector heights
-   fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
-   
-   fixed_t    passfloorz; // SoM 11/6/02: UGHAH
-   fixed_t    passceilz;
+      fixed_t    secfloorz; // SoM: floorz considering only sector heights
+      fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
+      
+      fixed_t    passfloorz; // SoM 11/6/02: UGHAH
+      fixed_t    passceilz;
 
-   int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
+      int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
 
-   int        unstuck;   // killough 8/1/98: whether to allow unsticking
+      int        unstuck;   // killough 8/1/98: whether to allow unsticking
 
-   bool       floatok;   // If "floatok" true, move ok if within floorz - ceilingz   
-   bool       felldown;  // killough 11/98: if "felldown" true, object was pushed down ledge
+      bool       floatok;   // If "floatok" true, move ok if within floorz - ceilingz   
+      bool       felldown;  // killough 11/98: if "felldown" true, object was pushed down ledge
 
-   // keep track of the line that lowers the ceiling,
-   // so missiles don't explode against sky hack walls
-   line_t     *ceilingline;
-   line_t     *blockline;   // killough 8/11/98: blocking linedef
-   line_t     *floorline;   // killough 8/1/98: Highest touched floor
+      // keep track of the line that lowers the ceiling,
+      // so missiles don't explode against sky hack walls
+      line_t     *ceilingline;
+      line_t     *blockline;   // killough 8/11/98: blocking linedef
+      line_t     *floorline;   // killough 8/1/98: Highest touched floor
 
-   // Temporary holder for thing_sectorlist threads
-   // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
-   msecnode_t *sector_list;     // phares 3/16/98
-   
-   Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
+      // Temporary holder for thing_sectorlist threads
+      // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
+      msecnode_t *sector_list;     // phares 3/16/98
+      
+      Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
 
-   // Spechit stuff
-   PODCollection<line_t *> spechit;
+      // Spechit stuff
+      PODCollection<line_t *> spechit;
 };
 
 
@@ -107,25 +107,20 @@ class ClipEngine
    public:
       virtual ~ClipEngine() {}
       
-      // killough 3/15/98: add fourth argument to P_TryMove
-      virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff) = 0;
+      virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
 
-      // killough 8/9/98: extra argument for telefragging
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss) = 0;
 
-      // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
       virtual bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss) = 0;
 
-      // SoM: new function that won't telefrag things which the transporting mobj isn't
-      // touching on the z axis.
       virtual bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y) = 0;
 
       virtual void slideMove(Mobj *mo) = 0;
 
-      virtual bool checkPosition(Mobj *thing, fixed_t x, fixed_t y) = 0;
+      virtual bool checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc) = 0;
 
-      virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil) = 0;
-      virtual bool checkSides(Mobj *, int, int) = 0;
+      virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc) = 0;
+      virtual bool checkSides(Mobj *, int, int, ClipContext *) = 0;
 
       virtual void        delSeclist(msecnode_t *) = 0;
       virtual void        freeSecNodeList(void) = 0;
@@ -133,9 +128,9 @@ class ClipEngine
       
       virtual int  getMoveFactor(Mobj *mo, int *friction) = 0;
       virtual int  getFriction(const Mobj *mo, int *factor) = 0;
-      virtual void applyTorque(Mobj *mo) = 0;
+      virtual void applyTorque(Mobj *mo, ClipContext *cc) = 0;
       
-      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod) = 0;
+      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc) = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;
