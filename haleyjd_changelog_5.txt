@@ -17,7 +17,7 @@ Wanderer, ruler of Asgard and master of Valhalla.
 
 SoM fixed two problems with portals:
 
-* Fourty Two found an issue in one of his maps where sprites all over the level
+* Forty Two found an issue in one of his maps where sprites all over the level
   would seem to appear through walls on the other side of a linked portal line.
   SoM discovered this was a bug in solidsegs generation and was able to fix it
   in a couple of minutes.

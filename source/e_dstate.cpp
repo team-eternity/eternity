@@ -1394,7 +1394,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       return;
    }
 
-   if(*ps->tokenbuffer == "bright")
+   if(!ps->tokenbuffer->strCaseCmp("bright"))
    {
       // Apply fullbright to all states in the current range
       if(!ps->principals)
