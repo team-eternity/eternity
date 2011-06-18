@@ -67,12 +67,12 @@ extern bool noblit;
 static SDL_Color basepal[256], colors[256];
 extern bool setpalette;
 
-// haleyjd 12/03/07: 8-on-32 graphics support
-extern bool crossbitdepth;
-
 // haleyjd 07/15/09
 extern char *i_default_videomode;
 extern char *i_videomode;
+
+// haleyjd 12/03/07: 8-on-32 graphics support
+static bool crossbitdepth;
 
 //
 // SDLVideoDriver::FinishUpdate
@@ -360,10 +360,23 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
+     v_bd = 32;
+   else if(i_softbitdepth > 8)
    {
-      v_bd = 32;
-      crossbitdepth = true;
+      switch(i_softbitdepth)
+      {
+      case 16: // Valid screen bitdepth settings
+      case 24:
+      case 32:
+         v_bd = i_softbitdepth;
+         break;
+      default:
+         break;
+      }
    }
+
+   if(v_bd != 8)
+      crossbitdepth = true;
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -417,9 +430,9 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
 
-   // haleyjd 12/03/07: if the video surface is not actually 32-bit, we
-   // must disable cross-bit-depth drawing
-   if(sdlscreen->format->BitsPerPixel != 32)
+   // haleyjd 12/03/07: if the video surface is not high-color, we
+   // disable cross-bit-depth drawing for efficiency
+   if(sdlscreen->format->BitsPerPixel == 8)
       crossbitdepth = false;
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);

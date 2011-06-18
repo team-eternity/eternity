@@ -90,6 +90,7 @@ void I_SetMode(int i);
 extern char *i_videomode;
 extern char *i_default_videomode;
 extern int   i_videodriverid;
+extern int   i_softbitdepth;
 
 // Driver enumeration
 enum

@@ -182,6 +182,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
+   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
+               "Software backend screen bitdepth (8, 16, 24, or 32)"),
+
    DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
