@@ -31,55 +31,44 @@
 #include "../c_runcmd.h"
 #include "../m_misc.h"
 
+#include "gl_vars.h"
+
 // NB: These variables exist even if EE_FEATURE_OPENGL is disabled.
 
 int   cfg_gl_colordepth;      // colordepth of GL video mode
-char *cfg_gl_filter_type;     // texture filtering type
-char *cfg_gl_texture_format;  // texture internal format
+int   cfg_gl_filter_type;     // texture filtering type
+int   cfg_gl_texture_format;  // texture internal format
 bool  cfg_gl_use_extensions;  // must be true for extensions to be used
 bool  cfg_gl_arb_pixelbuffer; // enable ARB PBO extension
 
 VARIABLE_INT(cfg_gl_colordepth, NULL, 16, 32, NULL);
-CONSOLE_VARIABLE(gl_colordepth, cfg_gl_colordepth, cf_handlerset)
+CONSOLE_VARIABLE(gl_colordepth, cfg_gl_colordepth, 0) {}
+
+const char *gl_filter_names[] = { "GL_LINEAR", "GL_NEAREST" };
+
+VARIABLE_INT(cfg_gl_filter_type, NULL, CFG_GL_LINEAR, CFG_GL_NEAREST, gl_filter_names);
+CONSOLE_VARIABLE(gl_filter_type, cfg_gl_filter_type, 0) {}
+
+const char *gl_int_texture_names[] =
 {
-   int bpp;
+   "R3_G3_B2",
+   "RGB4",
+   "RGB5",
+   "RGB8",
+   "RGB10",
+   "RGB12",
+   "RGB16",
+   "RGBA2",
+   "RGBA4",
+   "RGB5_A1",
+   "RGBA8",
+   "RGB10_A2",
+   "RGBA12",
+   "RGBA16"
+};
 
-   if(Console.argc < 1)
-      return;
-
-   bpp = Console.argv[0]->toInt();
-
-   switch(cfg_gl_colordepth)
-   {
-   case 16: // these values are fine
-   case 32:
-      cfg_gl_colordepth = bpp;
-      break;
-   default:
-      C_Printf("Not a valid colordepth value (16, 32)");
-   }
-}
-
-VARIABLE_STRING(cfg_gl_filter_type, NULL, UL);
-CONSOLE_VARIABLE(gl_filter_type, cfg_gl_filter_type, cf_handlerset)
-{
-   if(Console.argc < 1)
-      return;
-
-   if(*Console.argv[0] != "GL_LINEAR" &&
-      *Console.argv[0] != "GL_NEAREST")
-   {
-      C_Printf("Not a valid filter type (GL_LINEAR, GL_NEAREST)");
-      return;
-   }
-
-   if(cfg_gl_filter_type)
-      free(cfg_gl_filter_type);
-
-   cfg_gl_filter_type = Console.argv[0]->duplicate(PU_STATIC);
-}
-
-// TODO: cfg_gl_texture_format
+VARIABLE_INT(cfg_gl_texture_format, NULL, CFG_GL_R3_G3_B2, CFG_GL_RGBA16, gl_int_texture_names);
+CONSOLE_VARIABLE(gl_texture_format, cfg_gl_texture_format, 0) {}
 
 VARIABLE_TOGGLE(cfg_gl_use_extensions, NULL, yesno);
 CONSOLE_VARIABLE(gl_use_extensions, cfg_gl_use_extensions, 0) {}
@@ -91,6 +80,7 @@ void GL_AddCommands()
 {
    C_AddCommand(gl_colordepth);
    C_AddCommand(gl_filter_type);
+   C_AddCommand(gl_texture_format);
    C_AddCommand(gl_use_extensions);
    C_AddCommand(gl_arb_pixelbuffer);
 }
