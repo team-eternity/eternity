@@ -35,21 +35,21 @@
 
 // NB: These variables exist even if EE_FEATURE_OPENGL is disabled.
 
-int   cfg_gl_colordepth;      // colordepth of GL video mode
-int   cfg_gl_filter_type;     // texture filtering type
-int   cfg_gl_texture_format;  // texture internal format
-bool  cfg_gl_use_extensions;  // must be true for extensions to be used
-bool  cfg_gl_arb_pixelbuffer; // enable ARB PBO extension
+int  cfg_gl_colordepth;      // colordepth of GL video mode
+int  cfg_gl_filter_type;     // texture filtering type
+int  cfg_gl_texture_format;  // texture internal format
+bool cfg_gl_use_extensions;  // must be true for extensions to be used
+bool cfg_gl_arb_pixelbuffer; // enable ARB PBO extension
 
 VARIABLE_INT(cfg_gl_colordepth, NULL, 16, 32, NULL);
 CONSOLE_VARIABLE(gl_colordepth, cfg_gl_colordepth, 0) {}
 
-const char *gl_filter_names[] = { "GL_LINEAR", "GL_NEAREST" };
+static const char *gl_filter_names[] = { "GL_LINEAR", "GL_NEAREST" };
 
 VARIABLE_INT(cfg_gl_filter_type, NULL, CFG_GL_LINEAR, CFG_GL_NEAREST, gl_filter_names);
 CONSOLE_VARIABLE(gl_filter_type, cfg_gl_filter_type, 0) {}
 
-const char *gl_int_texture_names[] =
+static const char *gl_int_texture_names[] =
 {
    "R3_G3_B2",
    "RGB4",
@@ -76,6 +76,11 @@ CONSOLE_VARIABLE(gl_use_extensions, cfg_gl_use_extensions, 0) {}
 VARIABLE_TOGGLE(cfg_gl_arb_pixelbuffer, NULL, yesno);
 CONSOLE_VARIABLE(gl_arb_pixelbuffer, cfg_gl_arb_pixelbuffer, 0) {}
 
+//
+// GL_AddCommands
+//
+// Add all GL-related console variables.
+//
 void GL_AddCommands()
 {
    C_AddCommand(gl_colordepth);

@@ -614,14 +614,21 @@ VARIABLE_STRING(i_videomode, NULL, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
    V_ResetMode();
-}
 
-CONSOLE_COMMAND(i_default_videomode, 0)
-{
    if(i_default_videomode)
       free(i_default_videomode);
 
    i_default_videomode = strdup(i_videomode);
+}
+
+CONSOLE_COMMAND(i_default_videomode, 0)
+{
+   /*
+   if(i_default_videomode)
+      free(i_default_videomode);
+
+   i_default_videomode = strdup(i_videomode);
+   */
 }
 
 static const char *i_videodrivernames[] = 
