@@ -349,6 +349,12 @@ extern bool setsizeneeded;
 //
 bool SDLVideoDriver::InitGraphicsMode()
 {
+   // haleyjd 06/19/11: remember characteristics of last successful modeset
+   static int fallback_w     = 640;
+   static int fallback_h     = 480;
+   static int fallback_bd    =   8;
+   static int fallback_flags = SDL_SWSURFACE;
+
    bool wantfullscreen = false;
    bool wantvsync      = false;
    bool wanthardware   = false;
@@ -408,20 +414,29 @@ bool SDLVideoDriver::InitGraphicsMode()
       !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
    {
       // try 320x200w safety mode
-      if(!SDL_VideoModeOK(320, 200, 8, SDL_SWSURFACE) ||
-         !(sdlscreen = SDL_SetVideoMode(320, 200, 8, SDL_SWSURFACE)))
+      if(!SDL_VideoModeOK(fallback_w, fallback_h, fallback_bd, fallback_flags) ||
+         !(sdlscreen = SDL_SetVideoMode(fallback_w, fallback_h, fallback_bd, fallback_flags)))
       {
          I_FatalError(I_ERR_KILL,
                       "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
-                      "   Also failed to set safety mode 320x200x8.\n"
+                      "   Also failed to restore fallback mode %dx%dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, v_bd);
+                      v_w, v_h, v_bd,
+                      fallback_w, fallback_h, fallback_bd);
       }
 
       // reset these for below population of video struct
-      v_w = 320;
-      v_h = 200;
+      v_w   = fallback_w;
+      v_h   = fallback_h;
+      v_bd  = fallback_bd;
+      flags = fallback_flags;
    }
+
+   // Record successful mode set for use as a fallback mode
+   fallback_w     = v_w;
+   fallback_h     = v_h;
+   fallback_bd    = v_bd;
+   fallback_flags = flags;
 
    // haleyjd 10/14/09: wait for a bit so the screen can settle
    if(flags & SDL_FULLSCREEN)
