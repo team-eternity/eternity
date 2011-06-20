@@ -298,7 +298,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
                                  8, 0, 0, 0, 0);
 
    if(!screen)
-      I_FatalError(I_ERR_KILL, "Failed to create screen temp buffer\n");
+      I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
    video.screens[0] = (byte *)(screen->pixels);

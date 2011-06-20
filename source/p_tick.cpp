@@ -336,10 +336,7 @@ ThinkerType::ThinkerType(const char *pName) : name(pName)
 {
    // ThinkerTypes must be singletons with unique names.
    if(FindType(pName))
-   {
-      I_FatalError(I_ERR_KILL,
-         "ThinkerType: duplicate class registered with name %s\n", pName);
-   }
+      I_Error("ThinkerType: duplicate class registered with name %s\n", pName);
 
    // Add it to the global list; order is unimportant.
    this->next = thinkerTypes;

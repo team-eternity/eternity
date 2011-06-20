@@ -138,10 +138,7 @@ static haldriveritem_t *I_DefaultVideoDriver()
 
       // Nothing?! Somebody borked up their configure/makefile.
       if(!item)
-      {
-        I_FatalError(I_ERR_KILL,
-           "I_DefaultVideoDriver: no valid drivers for this platform!\n");
-      }
+        I_Error("I_DefaultVideoDriver: no valid drivers for this platform!\n");
    }
    else
       item = &halVideoDriverTable[i_videodriverid];
@@ -537,8 +534,7 @@ void I_InitGraphics(void)
    // the current compile), or get the default driver if unspecified
    if(!(driveritem = I_DefaultVideoDriver()))
    {
-      I_FatalError(I_ERR_KILL, "I_InitGraphics: invalid video driver %d\n",
-                   i_videodriverid);
+      I_Error("I_InitGraphics: invalid video driver %d\n", i_videodriverid);
    }
    else
    {

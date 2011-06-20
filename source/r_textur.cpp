@@ -264,7 +264,7 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
 
 static byte *R_ReadUnknownPatch(byte *rawpatch)
 {
-   I_FatalError(I_ERR_KILL, "R_ReadUnknownPatch called\n");
+   I_Error("R_ReadUnknownPatch called\n");
 
    return NULL;
 }
@@ -308,7 +308,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
 
 static byte *R_ReadUnknownTexture(byte *rawtexture)
 {
-   I_FatalError(I_ERR_KILL, "R_ReadUnknownTexture called\n");
+   I_Error("R_ReadUnknownTexture called\n");
 
    return NULL;
 }

@@ -50,7 +50,7 @@ portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
 static void R_RenderPortalNOP(pwindow_t *window)
 {
-   I_FatalError(I_ERR_KILL, "R_RenderPortalNOP called\n");
+   I_Error("R_RenderPortalNOP called\n");
 }
 
 
