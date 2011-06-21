@@ -2,6 +2,64 @@
 Changes since Eternity Engine v3.40.11
 ================================================================================
 --------------------------------------------------------------------------------
+06/21/11
+
+I eliminated multiple output of the "Loading extension" message emitted from
+SDLGL2DVideoDriver::LoadPBOExtension. For safety, I reload the function pointers
+after the GL context has been recreated, but it isn't necessary to output the
+acknowledgement message when this happens. Instead it is only printed the first
+time during startup.
+
+--------------------------------------------------------------------------------
+06/19/11
+
+Happy birthday to me! ^__^
+
+I have finally reintroduced the resolution choosing box, but it is now used to
+construct a "geom" string for the user based on their "favorite aspect ratio"
+and "favorite screen type" settings (fullscreen or windowed). This keeps the
+lists of resolutions reasonably sized.
+
+i_videomode has been moved from the game cfg to system.cfg, so all Eternity
+games will now share the same configured resolution.
+
+Separation of the default video mode setting from the setting shown in the menu
+has been removed because of the confusion it was causing to end-users.
+
+SDLVideoDriver::InitGraphicsMode will now fall back to the last successfully set
+video mode recorded if the new mode set fails. If no mode was set previously,
+Eternity will try to set the default mode of 640x480x8 windowed.
+
+I_FatalError has been trimmed back down to ONLY being called where it is needed,
+since this function cancels the execution of many of Eternity's shutdown
+routines - in particular, configuration file saving. This leaves I_FatalError
+calls in z_zone.cpp, where they are required to prevent reentrancy; m_misc.cpp,
+due to the fact the config is saved during shutdown and an error there would
+either cause a recursive exit or a fall-through from a noreturn function; and
+a few other misc places.
+
+--------------------------------------------------------------------------------
+06/18/11
+
+Added an i_softbitdepth variable that allows the bit-depth of the SDL software
+backend's screen surface to be controlled by the end-user without the use of a
+command-line parameter like -8in32. As a consequence, EE can now render to 16-
+and 24-bit surfaces as well (note that 16-bit will incur color drift as the 
+values in DOOM's palette don't fit into 16-bit's RGB565 precision - this is
+particularly noticeable with grays, which seem to turn slightly pink or green).
+
+All of the gl_ options defined earlier are now available in system.cfg for
+tweaking the behavior of the SDL GL2D video backend.
+
+--------------------------------------------------------------------------------
+06/11/11
+
+printz found a problem in DECORATE state support wherein the comparison with the
+"bright" keyword was being done in a case-sensitive manner, making it 
+unrecognized as a keyword unless it was in lower-case. This happened by accident
+while I was refactoring qstring into a C++ class with operator overloads.
+
+--------------------------------------------------------------------------------
 06/05/11
 
 I have completed and tested the ability to use the ARB pixel buffer object
