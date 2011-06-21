@@ -383,6 +383,7 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 //
 void SDLGL2DVideoDriver::LoadPBOExtension()
 {
+   static bool firsttime = true;
    bool extension_ok = true;
    const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
    bool want_arb_pbo = (cfg_gl_use_extensions && cfg_gl_arb_pixelbuffer);
@@ -403,15 +404,18 @@ void SDLGL2DVideoDriver::LoadPBOExtension()
       // Use the extension if all procedures were found
       use_arb_pbo = extension_ok;
 
-      if(use_arb_pbo)
+      if(firsttime && use_arb_pbo)
          usermsg(" Loaded extension GL_ARB_pixel_buffer_object");
    }
    else
       use_arb_pbo = false;
 
    // If wanted, but not enabled, warn
-   if(want_arb_pbo && !use_arb_pbo)
+   if(firsttime && want_arb_pbo && !use_arb_pbo)
       usermsg(" Could not enable extension GL_ARB_pixel_buffer_object");
+
+   // Don't print messages in this routine more than once
+   firsttime = false;
 }
 
 // Config-to-GL enumeration lookups
