@@ -73,7 +73,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.15 \"Wodanaz\"";
 // 3.40.00 'Rebirth'   -- 01/08/11
 // 3.40.10 'Aasgard'   -- 05/01/11
 // 3.40.11 'Aasgard'   -- 05/02/11
-// 3.40.15 'Wodanaz'   -- ??/??/??
+// 3.40.15 'Wodanaz'   -- 06/21/11
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
