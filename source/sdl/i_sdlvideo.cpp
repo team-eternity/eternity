@@ -65,7 +65,7 @@ extern int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 extern bool noblit;
 
 static SDL_Color basepal[256], colors[256];
-extern bool setpalette;
+static bool setpalette = false;
 
 // haleyjd 07/15/09
 extern char *i_default_videomode;
@@ -212,8 +212,6 @@ void SDLVideoDriver::EndRead(void)
    SDL_BlitSurface(disk_bg, NULL, sdlscreen, &drect);
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
-
-static bool setpalette = false;
 
 //
 // I_SDLSetPaletteDirect
