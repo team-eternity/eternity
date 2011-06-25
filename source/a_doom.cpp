@@ -44,11 +44,13 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_clipen.h"
+#include "p_mapcontext.h"
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
+#include "p_traceengine.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -71,14 +73,18 @@ void A_PosAttack(Mobj *actor)
 
    A_FaceTarget(actor);
    angle = actor->angle;
-   slope = P_AimLineAttack(actor, angle, MISSILERANGE, 0); // killough 8/2/98
+   
+   TracerContext *tc = trace->getContext();
+   slope = trace->aimLineAttack(actor, angle, MISSILERANGE, 0, tc); // killough 8/2/98
+   tc->done();
+   
    S_StartSound(actor, sfx_pistol);
    
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_posattack) << 20;
 
    damage = (P_Random(pr_posattack) % 5 + 1) * 3;
-   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   trace->lineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -97,14 +103,15 @@ void A_SPosAttack(Mobj* actor)
    A_FaceTarget(actor);
    
    bangle = actor->angle;
-   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
+   
+   slope = trace->aimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
    
    for(i = 0; i < 3; ++i)
    {  
       // haleyjd 08/05/04: use new function
       int angle = bangle + (P_SubRandom(pr_sposattack) << 20);
       int damage = ((P_Random(pr_sposattack) % 5) + 1) * 3;
-      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+      trace->lineAttack(actor, angle, MISSILERANGE, slope, damage);
    }
 }
 
@@ -130,12 +137,12 @@ void A_CPosAttack(Mobj *actor)
    A_FaceTarget(actor);
    
    bangle = actor->angle;
-   slope = P_AimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
+   slope = trace->aimLineAttack(actor, bangle, MISSILERANGE, 0); // killough 8/2/98
    
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
    damage = ((P_Random(pr_cposattack) % 5) + 1) * 3;
-   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   trace->lineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -164,7 +171,7 @@ void A_CPosRefire(Mobj *actor)
    }
 
    if(!actor->target || actor->target->health <= 0 ||
-      !P_CheckSight(actor, actor->target))
+      !trace->checkSight(actor, actor->target))
    {
       P_SetMobjState(actor, actor->info->seestate);
    }
@@ -285,7 +292,7 @@ void A_SpidRefire(Mobj* actor)
    // killough 11/98: prevent refiring on friends continuously
    if(!actor->target || actor->target->health <= 0    ||
       actor->flags & actor->target->flags & MF_FRIEND ||
-      !P_CheckSight(actor, actor->target))
+      !trace->checkSight(actor, actor->target))
    {
       P_SetMobjState(actor, actor->info->seestate);
    }
@@ -424,7 +431,7 @@ void A_Tracer(Mobj *actor)
       return;
 
    // spawn a puff of smoke behind the rocket
-   P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
+   P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false, trace->tracerPuffAttackRange());
    
    th = P_SpawnMobj(actor->x - actor->momx,
                     actor->y - actor->momy,
@@ -526,7 +533,7 @@ static fixed_t viletryy;
 //
 // Detect a corpse that could be raised.
 //
-bool PIT_VileCheck(Mobj *thing)
+bool PIT_VileCheck(Mobj *thing, MapContext *mc)
 {
    int maxdist;
    bool check;
@@ -573,7 +580,7 @@ bool PIT_VileCheck(Mobj *thing)
       if(demo_version >= 331)
          corpsehit->flags |= MF_SOLID;
 
-      check = P_CheckPosition(corpsehit, corpsehit->x, corpsehit->y);
+      check = clip->checkPosition(corpsehit, corpsehit->x, corpsehit->y);
 
       if(demo_version >= 331)
          corpsehit->flags &= ~MF_SOLID;
@@ -589,7 +596,7 @@ bool PIT_VileCheck(Mobj *thing)
       corpsehit->height = P_ThingInfoHeight(corpsehit->info);
       corpsehit->radius = corpsehit->info->radius;
       corpsehit->flags |= MF_SOLID;
-      check = P_CheckPosition(corpsehit,corpsehit->x,corpsehit->y);
+      check = clip->checkPosition(corpsehit,corpsehit->x,corpsehit->y);
       corpsehit->height = height; // restore
       corpsehit->radius = radius; // restore                      //   ^
       corpsehit->flags &= ~MF_SOLID;
@@ -632,7 +639,7 @@ void A_VileChase(Mobj *actor)
             // Call PIT_VileCheck to check
             // whether object is a corpse
             // that can be raised.
-            if(!P_BlockThingsIterator(bx, by, PIT_VileCheck))
+            if(!P_BlockThingsIterator(bx, by, PIT_VileCheck, NULL))
             {
                mobjinfo_t *info;
                
@@ -711,7 +718,7 @@ void A_Fire(Mobj *actor)
       return;
    
    // don't move it if the vile lost sight
-   if(!P_CheckSight(actor->target, dest) )
+   if(!trace->checkSight(actor->target, dest) )
       return;
    
    an = dest->angle >> ANGLETOFINESHIFT;
@@ -788,7 +795,7 @@ void A_VileAttack(Mobj *actor)
 
    A_FaceTarget(actor);
    
-   if(!P_CheckSight(actor, actor->target))
+   if(!trace->checkSight(actor, actor->target))
       return;
 
    S_StartSound(actor, sfx_barexp);
@@ -805,7 +812,7 @@ void A_VileAttack(Mobj *actor)
    // move the fire between the vile and the player
    fire->x = actor->target->x - FixedMul (24*FRACUNIT, finecosine[an]);
    fire->y = actor->target->y - FixedMul (24*FRACUNIT, finesine[an]);
-   P_RadiusAttack(fire, actor, 70, actor->info->mod);
+   clip->radiusAttack(fire, actor, 70, actor->info->mod);
 }
 
 //=============================================================================
@@ -1043,7 +1050,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // but it should be considered an enhancement, since it may 
       // disturb existing demos, so don't do it in compatibility mode.
       
-      if (Check_Sides(actor,x,y))
+      if (clip->checkSides(actor,x,y))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);
@@ -1070,7 +1077,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
 
-   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
+   if(!clip->tryMove(newmobj, newmobj->x, newmobj->y, false))
    {
       // kill it immediately
       P_DamageMobj(newmobj, actor, actor, 10000, MOD_UNKNOWN);
@@ -1476,7 +1483,7 @@ void A_SpawnFly(Mobj *mo)
       P_SetMobjState(newmobj, newmobj->info->seestate);
    
    // telefrag anything in this spot
-   P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
+   clip->teleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
    
    // remove self (i.e., cube).
    mo->removeThinker();

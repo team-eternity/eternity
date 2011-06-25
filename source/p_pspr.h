@@ -42,6 +42,7 @@
 #include "m_fixed.h"
 
 struct player_t;
+class  TracerContext;
 
 //
 // Frame flags:
@@ -92,7 +93,7 @@ void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);
 
-extern void P_BulletSlope(Mobj *mo);
+extern void P_BulletSlope(Mobj *mo, TracerContext *tc);
 
 weaponinfo_t *P_GetReadyWeapon(player_t *player);
 weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index);

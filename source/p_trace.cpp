@@ -45,6 +45,39 @@
 #include "r_pcheck.h"
 #include "s_sound.h"
 
+// ----------------------------------------------------------------------------
+// TracerContext
+
+TracerContext::TracerContext() 
+{
+   from = NULL;
+}
+
+
+TracerContext::~TracerContext()
+{
+   done();
+}
+
+
+void TracerContext::setEngine(TracerEngine *te)
+{
+   from = te;
+}
+
+
+void TracerContext::done()
+{
+   if(from != NULL)
+   {
+      TracerEngine *te = from;
+      
+      from = NULL;
+      te->freeContext(this);
+   }
+}
+
+
 //=============================================================================
 //
 // Line Attacks
@@ -137,23 +170,23 @@ static bool PTR_AimTraverse(intercept_t *in, TracerContext *tc)
       
       ClipContext *cc = clip->getContext();
       P_LineOpening(li, NULL, cc);
-      clip->freeContext(cc);
+      cc->done();
       
-      if(open.bottom >= open.top)
+      if(opening.bottom >= opening.top)
          return false;   // stop
 
       dist = FixedMul(tc->attackrange, in->frac);
       
       if(li->frontsector->floorheight != li->backsector->floorheight)
       {
-         slope = FixedDiv(open.bottom - tc->z , dist);
+         slope = FixedDiv(opening.bottom - tc->z , dist);
          if(slope > tc->bottomslope)
             tc->bottomslope = slope;
       }
 
       if(li->frontsector->ceilingheight != li->backsector->ceilingheight)
       {
-         slope = FixedDiv(open.top - tc->z , dist);
+         slope = FixedDiv(opening.top - tc->z , dist);
          if(slope < tc->topslope)
             tc->topslope = slope;
       }
@@ -207,8 +240,8 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist, TracerContext *tc)
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
-   if((floorsame   || FixedDiv(open.bottom - tc->z , dist) <= tc->aimslope) &&
-      (ceilingsame || FixedDiv(open.top - tc->z , dist) >= tc->aimslope))
+   if((floorsame   || FixedDiv(opening.bottom - tc->z , dist) <= tc->aimslope) &&
+      (ceilingsame || FixedDiv(opening.top - tc->z , dist) >= tc->aimslope))
    {
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
          P_ShootSpecialLine(tc->shootthing, li, side);
@@ -239,7 +272,7 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, TracerC
       // crosses a two sided (really 2s) line
       ClipContext *cc = clip->getContext();
       P_LineOpening(li, NULL, cc);
-      clip->freeContext(cc);
+      cc->done();
       
       dist = FixedMul(tc->attackrange, in->frac);
       
@@ -346,7 +379,7 @@ static bool P_ShootThing(intercept_t *in, TracerContext *tc)
    {
       P_SpawnPuff(x, y, z, 
          P_PointToAngle(0, 0, tc->divline.dx, tc->divline.dy) - ANG180,
-         2, true);
+         2, true, tc->attackrange);
    }
    else
    {
@@ -390,7 +423,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in, TracerContext *tc)
       // shot crosses a 2S line?
       ClipContext *cc = clip->getContext();
       bool shootcheck = P_ShotCheck2SLine(in, li, lineside, tc);
-      clip->freeContext(cc);
+      cc->done();
       
       if(shootcheck)
          return true;
@@ -407,7 +440,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in, TracerContext *tc)
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, 
                   P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  2, true);
+                  2, true, tc->attackrange);
       
       // don't go any farther
       return false;
@@ -533,7 +566,7 @@ static bool PTR_ShootTraverse(intercept_t *in, TracerContext *tc)
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, 
                   P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true);
+                  updown, true, tc->attackrange);
       
       // don't go any farther
       
@@ -544,6 +577,15 @@ static bool PTR_ShootTraverse(intercept_t *in, TracerContext *tc)
       // shoot a thing
       return P_ShootThing(in, tc);
    }
+}
+
+
+// ----------------------------------------------------------------------------
+// DoomTraceEngine
+
+DoomTraceEngine::DoomTraceEngine() 
+{
+   this->tracec.setEngine(this);
 }
 
 //
@@ -658,15 +700,15 @@ static bool PTR_UseTraverse(intercept_t *in, TracerContext *tc)
    else
    {
       if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
-         open.range = 0;
+         opening.range = 0;
       else
       {
          ClipContext *cc = clip->getContext();
          P_LineOpening(in->d.line, NULL, cc);
-         clip->freeContext(cc);
+         cc->done();
       }
 
-      if(open.range <= 0)
+      if(opening.range <= 0)
       {
          // can't use through a wall
          S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
@@ -698,10 +740,10 @@ static bool PTR_NoWayTraverse(intercept_t *in, TracerContext *tc)
    bool res = ld->special ||                          // Ignore specials
      !(ld->flags & ML_BLOCKING ||                 // Always blocking
        (P_LineOpening(ld, NULL, cc),               // Find openings
-        open.range <= 0 ||                         // No opening
-        open.bottom > usething->z+24*FRACUNIT ||   // Too high it blocks
-        open.top < usething->z+usething->height)); // Too low it blocks
-   clip->freeContext(cc);
+        opening.range <= 0 ||                         // No opening
+        opening.bottom > usething->z+24*FRACUNIT ||   // Too high it blocks
+        opening.top < usething->z+usething->height)); // Too low it blocks
+   cc->done();
    return res;
 }
 
@@ -1055,6 +1097,12 @@ bool DoomTraceEngine::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y
    return res;
 }
 
+
+// HAX
+fixed_t DoomTraceEngine::tracerPuffAttackRange()
+{
+   return tracec.attackrange;
+}
 
 // EOF
 

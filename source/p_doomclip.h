@@ -28,6 +28,7 @@
 #define P_DOOMCLIP_H
 
 #include "p_clipen.h"
+#include "p_mapcontext.h"
 
 class   ClipContext;
 
@@ -50,15 +51,15 @@ class DoomClipEngine : public ClipEngine
       // touching on the z axis.
       virtual bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
 
-      virtual void slideMove(Mobj *mo) = 0;
+      virtual void slideMove(Mobj *mo);
 
       virtual bool checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc);
 
+      virtual bool changeSector(sector_t *sector, int crunch, ClipContext *cc);
       virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc);
       virtual bool checkSides(Mobj *actor, int x, int y, ClipContext *cc);
 
       virtual void        delSeclist(msecnode_t *);
-      virtual void        freeSecNodeList(void);
       virtual msecnode_t *createSecNodeList(Mobj *,fixed_t, fixed_t);
       
       virtual int  getMoveFactor(Mobj *mo, int *friction);

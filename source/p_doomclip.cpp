@@ -93,6 +93,7 @@ void DoomClipEngine::freeContext(ClipContext *cc)
 }
 
 
+
 //
 // TELEPORT MOVE
 //
@@ -116,7 +117,7 @@ static bool stomp3d = false;
 
 static bool PIT_StompThing3D(Mobj *thing, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    fixed_t blockdist;
    
    if(!(thing->flags & MF_SHOOTABLE)) // Can't shoot it? Can't stomp it!
@@ -165,7 +166,7 @@ static bool PIT_StompThing3D(Mobj *thing, MapContext *mc)
 
 static bool PIT_StompThing(Mobj *thing, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    fixed_t blockdist;
    
    if(!(thing->flags & MF_SHOOTABLE)) // Can't shoot it? Can't stomp it!
@@ -499,7 +500,7 @@ int DoomClipEngine::getMoveFactor(Mobj *mo, int *frictionp)
 
 static bool PIT_CrossLine(line_t *ld, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
 
@@ -611,7 +612,7 @@ static void SpechitOverrun(line_t *ld, ClipContext *cc)
 //
 bool PIT_CheckLine(line_t *ld, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    if(cc->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       cc->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
       cc->bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
@@ -661,33 +662,33 @@ bool PIT_CheckLine(line_t *ld, MapContext *mc)
 
    // adjust floor & ceiling heights
    
-   if(open.top < cc->ceilingz)
+   if(opening.top < cc->ceilingz)
    {
-      cc->ceilingz = open.top;
+      cc->ceilingz = opening.top;
       cc->ceilingline = ld;
       cc->blockline = ld;
    }
 
-   if(open.bottom > cc->floorz)
+   if(opening.bottom > cc->floorz)
    {
-      cc->floorz = open.bottom;
+      cc->floorz = opening.bottom;
 
       cc->floorline = ld;          // killough 8/1/98: remember floor linedef
       cc->blockline = ld;
    }
 
-   if(open.lowfloor < cc->dropoffz)
-      cc->dropoffz = open.lowfloor;
+   if(opening.lowfloor < cc->dropoffz)
+      cc->dropoffz = opening.lowfloor;
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
    if(demo_version >= 331 && cc->touch3dside)
       cc->dropoffz = cc->floorz;
 
-   if(open.secfloor > cc->secfloorz)
-      cc->secfloorz = open.secfloor;
-   if(open.secceil < cc->secceilz)
-      cc->secceilz = open.secceil;
+   if(opening.secfloor > cc->secfloorz)
+      cc->secfloorz = opening.secfloor;
+   if(opening.secceil < cc->secceilz)
+      cc->secceilz = opening.secceil;
 
    // SoM 11/6/02: AGHAH
    if(cc->floorz > cc->passfloorz)
@@ -840,7 +841,7 @@ int P_MissileBlockHeight(Mobj *mo)
 // killough 3/26/98: make static
 static bool PIT_CheckThing(Mobj *thing, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    fixed_t blockdist;
    int damage;
 
@@ -1101,14 +1102,14 @@ bool DoomClipEngine::checkSides(Mobj *actor, int x, int y, ClipContext *cc)
 //  speciallines[]
 //  numspeciallines
 //
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc) 
+bool DoomClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc) 
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(!comp[comp_overunder])
-      return P_CheckPosition3D(thing, x, y);
+      return P_CheckPosition3D(thing, x, y, cc);
    
    cc->thing = thing;
    
@@ -1381,7 +1382,7 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
    {
       oldz = thing->z;
 
-      if(!P_CheckPosition3D(thing, x, y))
+      if(!P_CheckPosition3D(thing, x, y, cc))
       {
          // Solid wall or thing
          if(!cc->BlockingMobj || cc->BlockingMobj->player || !thing->player)
@@ -1568,7 +1569,7 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
 //
 static bool PIT_ApplyTorque(line_t *ld, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
       cc->bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
@@ -1699,7 +1700,7 @@ static bool P_ThingHeightClip(Mobj *thing, ClipContext *cc)
    bool onfloor = thing->z == thing->floorz;
    fixed_t oldfloorz = thing->floorz; // haleyjd
 
-   P_CheckPosition(thing, thing->x, thing->y, cc);
+   clip->checkPosition(thing, thing->x, thing->y, cc);
   
    // what about stranding a monster partially off an edge?
    // killough 11/98: Answer: see below (upset balance if hanging off ledge)
@@ -1905,21 +1906,21 @@ static bool PTR_SlideTraverse(intercept_t *in, TracerContext *tc)
    P_LineOpening(li, slidemo, cc);
    clip->freeContext(cc);
    
-   if(open.range < slidemo->height)
+   if(opening.range < slidemo->height)
       goto isblocking;  // doesn't fit
    
-   if(open.top - slidemo->z < slidemo->height)
+   if(opening.top - slidemo->z < slidemo->height)
       goto isblocking;  // mobj is too high
    
-   if(open.bottom - slidemo->z > 24*FRACUNIT )
+   if(opening.bottom - slidemo->z > 24*FRACUNIT )
       goto isblocking;  // too big a step up
    else if(!comp[comp_overunder] &&
-           slidemo->z < open.bottom) // haleyjd: OVER_UNDER
+           slidemo->z < opening.bottom) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
       bool good;
       fixed_t savedz = slidemo->z;
-      slidemo->z = open.bottom;
+      slidemo->z = opening.bottom;
       good = P_TestMobjZ(slidemo);
       slidemo->z = savedz;
       if(!good)
@@ -2094,7 +2095,7 @@ static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion
 //
 static bool PIT_RadiusAttack(Mobj *thing, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    
    fixed_t dx, dy, dist;
    Mobj *bombspot   = theBomb->bombspot;
@@ -2217,7 +2218,7 @@ void DoomClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod,
 //
 static bool PIT_ChangeSector(Mobj *thing, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    Mobj *mo;
 
    if(P_ThingHeightClip(thing, cc))
@@ -2292,7 +2293,7 @@ static bool PIT_ChangeSector(Mobj *thing, MapContext *mc)
 //
 // haleyjd: removed static; needed in p_floor.c
 //
-bool P_ChangeSector(sector_t *sector, int crunch, ClipContext *cc)
+bool DoomClipEngine::changeSector(sector_t *sector, int crunch, ClipContext *cc)
 {
    int x, y;
    
@@ -2328,7 +2329,7 @@ bool DoomClipEngine::checkSector(sector_t *sector, int crunch, int amt, int floo
    
    // killough 10/98: sometimes use Doom's method
    if(comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
-      return P_ChangeSector(sector, crunch, cc);
+      return changeSector(sector, crunch, cc);
 
    // haleyjd: call down to P_ChangeSector3D instead.
    if(!comp[comp_overunder])
@@ -2390,7 +2391,7 @@ void DoomClipEngine::delSeclist(msecnode_t *node)
 //
 static bool PIT_GetSectors(line_t *ld, MapContext *mc)
 {
-   ClipContext *cc = dynamic_cast<ClipContext *>(mc);
+   ClipContext *cc = mc->clipContext();
    
    if(cc->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       cc->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
@@ -2508,6 +2509,8 @@ msecnode_t *DoomClipEngine::createSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 
    return list;
 }
+
+
 
 //----------------------------------------------------------------------------
 //

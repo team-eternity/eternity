@@ -33,6 +33,10 @@ struct line_t;
 struct msecnode_t;
 struct player_t;
 struct sector_t;
+class  ClipEngine;
+class  TracerEngine;
+class  ClipContext;
+class  TracerContext;
 
 
 #include "m_collection.h"
@@ -40,7 +44,11 @@ struct sector_t;
 class MapContext
 {
    public:
-      virtual ~MapContext();
+      virtual ~MapContext() {}
+      
+      virtual ClipContext *clipContext(void) { I_Error("Internal error: MapContext::clipContext called on non ClipContext object."); return NULL; }
+      virtual TracerContext *tracerContext(void) { I_Error("Internal error: MapContext::tracerContext called on non TracerContext object."); return NULL; }
+      virtual void done() = 0;
 };
 
 
@@ -50,6 +58,11 @@ class ClipContext : public MapContext
    public:
       ClipContext();
       virtual ~ClipContext();
+      
+      void setEngine(ClipEngine *ce);
+      virtual void done();
+      
+      virtual ClipContext *clipContext(void) { return this; }
       
       
       // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
@@ -95,6 +108,9 @@ class ClipContext : public MapContext
 
       // Spechit stuff
       PODCollection<line_t *> spechit;
+      
+   private:
+      ClipEngine *from;
 };
 
 
@@ -114,6 +130,11 @@ class TracerContext : public MapContext
       TracerContext();
       virtual ~TracerContext();
       
+      void setEngine(TracerEngine *te);
+      virtual void done();
+      
+      virtual TracerContext *tracerContext() { return this; }
+      
       divline_t   divline;
 
       // Moved crappy globals here
@@ -132,9 +153,14 @@ class TracerContext : public MapContext
 
       // Accumulated travel along the line. Should be the XY distance between (x,y) 
       // and (originx, originy) 
-      fixed_t movefrac;      
+      fixed_t     movefrac;      
 
       Mobj        *shootthing;
       Mobj        *linetarget;  // who got hit (or NULL)
+      
+      // From p_pspr.cpp
+      fixed_t     bulletslope;      
+   private:
+      TracerEngine *from;
 };
 #endif

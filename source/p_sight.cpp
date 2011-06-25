@@ -31,6 +31,8 @@
 #include "e_exdata.h"
 #include "m_bbox.h"
 #include "p_maputl.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_setup.h"
 #include "r_dynseg.h"
 #include "r_main.h"
@@ -313,6 +315,17 @@ static bool P_CrossBSPNode(int bspnum, register los_t *los)
       P_CrossSubsector((bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR), los);
 }
 
+
+
+fixed_t TracerEngine::aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask)
+{
+   TracerContext *tc = getContext();
+   fixed_t res = aimLineAttack(t1, angle, distance, mask, tc);
+   tc->done();
+   return res;
+}
+
+
 //
 // P_CheckSight
 // Returns true
@@ -321,7 +334,7 @@ static bool P_CrossBSPNode(int bspnum, register los_t *los)
 //
 // killough 4/20/98: cleaned up, made to use new LOS struct
 
-bool P_CheckSight(Mobj *t1, Mobj *t2)
+bool DoomTraceEngine::checkSight(Mobj *t1, Mobj *t2)
 {
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;

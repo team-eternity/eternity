@@ -675,7 +675,7 @@ void A_GenWizard(Mobj *actor)
                     actor->z-mobjinfo[wizType].height/2, 
                     wizType);
 
-   if(!P_CheckPosition(mo, mo->x, mo->y) ||
+   if(!clip->checkPosition(mo, mo->x, mo->y) ||
       (mo->z >
       (mo->subsector->sector->ceilingheight - mo->height)) ||
       (mo->z < mo->subsector->sector->floorheight))
@@ -692,7 +692,7 @@ void A_GenWizard(Mobj *actor)
    mo->updateThinker();
 
    // Check for movements.
-   if(!P_TryMove(mo, mo->x, mo->y, false))
+   if(!clip->tryMove(mo, mo->x, mo->y, false))
    {
       // can't move, remove it immediately
       mo->removeThinker();
@@ -769,7 +769,7 @@ void A_HticExplode(Mobj *actor)
       break;
    }
 
-   P_RadiusAttack(actor, actor->target, damage, actor->info->mod);
+   clip->radiusAttack(actor, actor->target, damage, actor->info->mod);
 
    if(actor->z <= actor->secfloorz + damage * FRACUNIT)
       E_HitWater(actor, actor->subsector->sector);
@@ -921,7 +921,7 @@ void A_MakePod(Mobj *actor)
    y = actor->y;
 
    mo = P_SpawnMobj(x, y, ONFLOORZ, E_SafeThingType(MT_POD));
-   if(!P_CheckPosition(mo, x, y))
+   if(!clip->checkPosition(mo, x, y))
    {
       mo->removeThinker();
       return;
@@ -1011,7 +1011,7 @@ void A_VolcBallImpact(Mobj *actor)
    }
 
    // do some radius damage
-   P_RadiusAttack(actor, actor->target, 25, actor->info->mod);
+   clip->radiusAttack(actor, actor->target, 25, actor->info->mod);
 
    // spawn 4 little volcano balls
    for(i = 0; i < 4; ++i)

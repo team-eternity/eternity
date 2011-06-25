@@ -64,6 +64,7 @@
 #include "p_chase.h"
 #include "p_enemy.h"
 #include "p_clipen.h"
+#include "p_doomclip.h"
 #include "p_partcl.h"
 #include "r_draw.h"
 #include "r_main.h"

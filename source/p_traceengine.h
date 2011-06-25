@@ -29,40 +29,9 @@
 #define P_TRACEENGINE_H
 
 
-// SoM: linetracer_t can be cast to divline_t for the appropriate functions but holds much more
-// data which is needed for making tracers correctly travel through portals
-/*typedef struct linetracer_s
-{
-   fixed_t     x;
-   fixed_t     y;
-   fixed_t     dx;
-   fixed_t     dy;
+#include "p_mapcontext.h"
 
-   // Moved crappy globals here
-   fixed_t     z; // replaces shootz
-   int         la_damage;
-   fixed_t     attackrange;
-   fixed_t     aimslope;
-   fixed_t     topslope, bottomslope;
-
-   // SoM: used by aiming TPT
-   fixed_t     originx;
-   fixed_t     originy;
-   fixed_t     originz;
-
-   fixed_t     sin;
-   fixed_t     cos;
-
-   // Accumulated travel along the line. Should be the XY distance between (x,y) 
-   // and (originx, originy) 
-   fixed_t movefrac;
-
-
-   bool finished;
-} linetracer_t;*/
-
-class TracerContext;
-class ClipContext;
+struct intercept_t;
 
 typedef bool (*pathfunc_t)(intercept_t *, TracerContext *);
 
@@ -70,6 +39,7 @@ class TracerEngine
 {
    public:
       virtual fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask, TracerContext *tc) = 0;
+      virtual fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask);
       
       virtual void    lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                                  fixed_t slope, int damage) = 0;
@@ -79,14 +49,16 @@ class TracerEngine
       virtual void    useLines(player_t *player) = 0;
       
       virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int,
-                                   pathfunc_t trav, TracerContext *, 
-                                   ClipContext *cc = NULL) = 0;
+                                   pathfunc_t trav, TracerContext *) = 0;
                              
       virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int, 
-                                   pathfunc_t trav, ClipContext *cc = NULL) = 0;
+                                   pathfunc_t trav) = 0;
                              
       virtual TracerContext   *getContext() = 0;
       virtual void            freeContext(TracerContext *) = 0;
+      
+      // HAX
+      virtual fixed_t         tracerPuffAttackRange() = 0;
 };
 
 
@@ -94,23 +66,29 @@ class TracerEngine
 class DoomTraceEngine : public TracerEngine
 {
    public:
+      DoomTraceEngine();
+      virtual ~DoomTraceEngine() {}
+      
       virtual fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int mask, TracerContext *tc);
       
-      virtual void    lineAttack(Mobj *t1, angle_t angle, fixed_t distance,
-                                 fixed_t slope, int damage) = 0;
+      virtual void    lineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, int damage);
                                  
-      virtual bool    checkSight(Mobj *t1, Mobj *t2) = 0;
+      virtual bool    checkSight(Mobj *t1, Mobj *t2);
 
       virtual void    useLines(player_t *player);
       
-      virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int,
-                                   pathfunc_t trav, TracerContext *);
+      virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int, pathfunc_t trav, TracerContext *);
                              
-      virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int, 
-                                   pathfunc_t trav);      
+      virtual bool    pathTraverse(fixed_t, fixed_t, fixed_t, fixed_t, int, pathfunc_t trav);      
       
-      virtual TracerContext   *getContext() = 0;
-      virtual void            freeContext(TracerContext *) = 0;
+      virtual TracerContext   *getContext() {return &tracec;}
+      virtual void            freeContext(TracerContext *) {}
+      
+      // HAX
+      virtual fixed_t         tracerPuffAttackRange();
+      
+   private:
+      TracerContext tracec;
 };
 
 

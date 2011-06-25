@@ -2155,7 +2155,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    //    return false;
 
    players[playernum].mo->flags |=  MF_SOLID;
-   i = P_CheckPosition(players[playernum].mo, x, y);
+   i = clip->checkPosition(players[playernum].mo, x, y);
    players[playernum].mo->flags &= ~MF_SOLID;
    if(!i)
       return false;

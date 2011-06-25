@@ -37,15 +37,17 @@
 #include "g_game.h"
 #include "info.h"
 #include "p_chase.h"
-#include "p_clipen.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_clipen.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
 
-bool PTR_chasetraverse(intercept_t *in);
+bool PTR_chasetraverse(intercept_t *in, TracerContext *tc);
 
 camera_t chasecam;
 int chaseviewz;
@@ -83,11 +85,13 @@ void P_GetChasecamTarget(void)
    aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
                + FixedDiv(players[displayplayer].pitch, ANGLE_1);
       
-   trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
-   trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
+   TracerContext *tc = trace->getContext();
    
-   targetx = playermobj->x - chasecam_dist * trace.cos;
-   targety = playermobj->y - chasecam_dist * trace.sin;
+   tc->sin = finesine[playerangle>>ANGLETOFINESHIFT];
+   tc->cos = finecosine[playerangle>>ANGLETOFINESHIFT];
+   
+   targetx = playermobj->x - chasecam_dist * tc->cos;
+   targety = playermobj->y - chasecam_dist * tc->sin;
    targetz = playermobj->z + aimfor;
 
 #ifdef R_LINKEDPORTALS
@@ -96,11 +100,11 @@ void P_GetChasecamTarget(void)
 
    // the intersections test mucks up the first time, but
    // aiming at something seems to cure it
-   P_AimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0);
+   trace->aimLineAttack(players[consoleplayer].mo, 0, MELEERANGE, 0, tc);
 
    // check for intersections
-   P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
-                  PT_ADDLINES, PTR_chasetraverse);
+   trace->pathTraverse(playermobj->x, playermobj->y, targetx, targety,
+                       PT_ADDLINES, PTR_chasetraverse, tc);
 
    ss = R_PointInSubsector(targetx, targety);
    
@@ -209,7 +213,7 @@ int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-bool PTR_chasetraverse(intercept_t *in)
+bool PTR_chasetraverse(intercept_t *in, TracerContext *tc)
 {
    fixed_t dist, frac;
    subsector_t *ss;
@@ -221,14 +225,14 @@ bool PTR_chasetraverse(intercept_t *in)
    {
       line_t *li = in->d.line;
       
-      dist = FixedMul(trace.attackrange, in->frac);
-      frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
+      dist = FixedMul(tc->attackrange, in->frac);
+      frac = in->frac - FixedDiv(12*FRACUNIT, tc->attackrange);
       
       // hit line
       // position a bit closer
       
-      x = trace.x + FixedMul(trace.dx, frac);
-      y = trace.y + FixedMul(trace.dy, frac);
+      x = tc->divline.x + FixedMul(tc->divline.dx, frac);
+      y = tc->divline.y + FixedMul(tc->divline.dy, frac);
 
       if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
@@ -244,7 +248,7 @@ bool PTR_chasetraverse(intercept_t *in)
 
          // interpolate, find z at the point of intersection
          
-         z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+         z = zi(dist, tc->attackrange, targetz, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
          if( (li->flags & ML_BLOCKING) || 
@@ -259,7 +263,7 @@ bool PTR_chasetraverse(intercept_t *in)
 
       targetx = x;        // point the new chasecam target at the intersection
       targety = y;
-      targetz = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+      targetz = zi(dist, tc->attackrange, targetz, playermobj->z+28*FRACUNIT);
       
       // don't go any farther
       

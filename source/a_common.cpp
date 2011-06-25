@@ -43,6 +43,8 @@
 #include "p_inter.h"
 #include "p_clipen.h"
 #include "p_maputl.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
@@ -136,7 +138,7 @@ void A_Look(Mobj *actor)
          P_SetTarget<Mobj>(&actor->target, sndtarget);
 
          // If an ambush monster, we must additionally be able to see it.
-         if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
+         if(actor->flags & MF_AMBUSH && !trace->checkSight(actor, sndtarget))
          {
             // We couldn't see the soundtarget.
             // If a friend, return.
@@ -391,7 +393,7 @@ void A_Chase(Mobj *actor)
       if(demo_version < 203)
       {
          // killough 9/9/98: for backward demo compatibility
-         if(netgame && !P_CheckSight(actor, actor->target) &&
+         if(netgame && !trace->checkSight(actor, actor->target) &&
             P_LookForPlayers(actor, true))
             return;  
       }
@@ -415,7 +417,7 @@ void A_Chase(Mobj *actor)
                    ((comp[comp_pursuit] && !netgame) || 
                     (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
                       (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
-                    P_CheckSight(actor, actor->target)))) &&
+                    trace->checkSight(actor, actor->target)))) &&
                     P_LookForTargets(actor, true))
                {
                   return;
@@ -693,7 +695,7 @@ void A_Die(Mobj *actor)
 //
 void A_Explode(Mobj *thingy)
 {
-   P_RadiusAttack(thingy, thingy->target, 128, thingy->info->mod);
+   clip->radiusAttack(thingy, thingy->target, 128, thingy->info->mod);
 
    if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
       E_HitWater(thingy, thingy->subsector->sector);
@@ -703,14 +705,14 @@ void A_Nailbomb(Mobj *thing)
 {
    int i;
    
-   P_RadiusAttack(thing, thing->target, 128, thing->info->mod);
+   clip->radiusAttack(thing, thing->target, 128, thing->info->mod);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
       E_HitWater(thing, thing->subsector->sector);
 
    for(i = 0; i < 30; ++i)
-      P_LineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
+      trace->lineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
 }
 
 
@@ -721,7 +723,7 @@ void A_Nailbomb(Mobj *thing)
 
 void A_Detonate(Mobj *mo)
 {
-   P_RadiusAttack(mo, mo->target, mo->damage, mo->info->mod);
+   clip->radiusAttack(mo, mo->target, mo->damage, mo->info->mod);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)

@@ -44,8 +44,6 @@
 #include "r_state.h"
 
 
-bool P_ChangeSector(sector_t *, int);
-
 //
 // P_FloorSequence
 //
@@ -135,11 +133,11 @@ result_e T_MovePlane
             }            
 
             P_SetFloorHeight(sector, dest);
-            flag = P_CheckSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
             if(flag == true)                   
             {
                P_SetFloorHeight(sector, lastpos);
-               P_CheckSector(sector,crush,lastpos-dest,0); //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,lastpos-dest,0); //jff 3/19/98 use faster chk
                // SoM: if the move in the master sector was bad,
                // keep the 3d sides consistant.
                if(move3dsides)
@@ -175,7 +173,7 @@ result_e T_MovePlane
             
             lastpos = sector->floorheight;
             P_SetFloorHeight(sector, sector->floorheight - speed);
-            flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
 
             // haleyjd 02/15/01: last of cph's current demo fixes:
             // cph - make more compatible with original Doom, by
@@ -184,7 +182,7 @@ result_e T_MovePlane
             if((flag == true) && demo_compatibility)
             {
                P_SetFloorHeight(sector, lastpos);
-               P_ChangeSector(sector, crush);
+               clip->changeSector(sector, crush);
 
                if(move3dsides)
                   P_Scroll3DSides(sector, false, speed, crush);
@@ -227,12 +225,12 @@ result_e T_MovePlane
             }            
 
             P_SetFloorHeight(sector, destheight);
-            flag = P_CheckSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
 
             if(flag == true)
             {
                P_SetFloorHeight(sector, lastpos);
-               P_CheckSector(sector,crush,lastpos-destheight,0); //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,lastpos-destheight,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, lastpos-destheight, crush);
                if(moveattached)
@@ -264,7 +262,7 @@ result_e T_MovePlane
             // crushing is possible
             lastpos = sector->floorheight;
             P_SetFloorHeight(sector, sector->floorheight + speed);
-            flag = P_CheckSector(sector,crush,speed,0); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,speed,0); //jff 3/19/98 use faster chk
             if(flag == true)
             {
                // haleyjd 07/23/05: crush no longer boolean
@@ -276,7 +274,7 @@ result_e T_MovePlane
                      return crushed;
                }
                P_SetFloorHeight(sector, lastpos);
-               P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, -speed, crush);
                if(moveattached)
@@ -326,12 +324,12 @@ result_e T_MovePlane
             }            
             
             P_SetCeilingHeight(sector, destheight);
-            flag = P_CheckSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
             
             if(flag == true)
             {
                P_SetCeilingHeight(sector, lastpos);
-               P_CheckSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, lastpos-destheight, crush);
@@ -364,7 +362,7 @@ result_e T_MovePlane
             // crushing is possible
             lastpos = sector->ceilingheight;
             P_SetCeilingHeight(sector, sector->ceilingheight - speed);
-            flag = P_CheckSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
             
             if(flag == true)
             {
@@ -375,7 +373,7 @@ result_e T_MovePlane
                   return crushed;
 
                P_SetCeilingHeight(sector, lastpos);
-               P_CheckSector(sector,crush,speed,1);      //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,speed,1);      //jff 3/19/98 use faster chk
                
                if(move3dsides)
                   P_Scroll3DSides(sector, true, speed, crush);
@@ -413,12 +411,12 @@ result_e T_MovePlane
             }            
 
             P_SetCeilingHeight(sector, dest);
-            flag = P_CheckSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
+            flag = clip->checkSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
 
             if(flag == true)
             {
                P_SetCeilingHeight(sector, lastpos);
-               P_CheckSector(sector,crush,lastpos-dest,1); //jff 3/19/98 use faster chk
+               clip->checkSector(sector,crush,lastpos-dest,1); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, true, lastpos-dest, crush);
                if(moveattached)
@@ -449,7 +447,7 @@ result_e T_MovePlane
 
             //lastpos = sector->ceilingheight;
             P_SetCeilingHeight(sector, sector->ceilingheight + speed);
-            P_CheckSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
+            clip->checkSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
          }
          break;
       }
@@ -1720,7 +1718,7 @@ void FloorWaggleThinker::Think()
          // Remove
          /*
          waggle->sector->floorheight = waggle->originalHeight;
-         P_ChangeSector(waggle->sector, 8);
+         clip->changeSector(waggle->sector, 8);
          */
          destheight = this->originalHeight;
          dist       = this->originalHeight - this->sector->floorheight;

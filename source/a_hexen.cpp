@@ -453,7 +453,7 @@ void A_BishopMissileWeave(Mobj *actor)
    newX    += FixedMul(finecosine[angle], FloatBobOffsets[weaveXY] << 1);
    newY    += FixedMul(finesine[angle],   FloatBobOffsets[weaveXY] << 1);
    
-   P_TryMove(actor, newX, newY, false);
+   clip->tryMove(actor, newX, newY, false);
    
    actor->z -= FloatBobOffsets[weaveZ];
    weaveZ    = (weaveZ + 2) & 63;   

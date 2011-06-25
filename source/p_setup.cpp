@@ -2223,7 +2223,7 @@ static void P_PreZoneFreeLevel(void)
    P_FollowCamOff();
 
    // sf: free the psecnode_t linked list in p_map.c
-   P_FreeSecNodeList(); 
+   clip->freeSecNodeList(); 
 }
 
 //

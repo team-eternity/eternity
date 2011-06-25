@@ -609,7 +609,7 @@ bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 
    if(!mo || !link)
       return 0;
-   if(!P_PortalTeleportMove(mo, mo->x - link->x, mo->y - link->y))
+   if(!clip->portalTeleportMove(mo, mo->x - link->x, mo->y - link->y))
       return 0;
 
    mo->z = moz - link->z;

@@ -1630,14 +1630,14 @@ void P_Whistle(Mobj *actor, int mobjtype)
       x = actor->x + FixedMul(prestep, finecosine[an]);
       y = actor->y + FixedMul(prestep, finesine[an]);
       z = actor->z;
-
+      
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(clip->checkSides(actor, x, y))
          return;
 
       // try the teleport
       // 06/06/05: use strict teleport now
-      if(P_TeleportMoveStrict(mo, x, y, false))
+      if(clip->teleportMoveStrict(mo, x, y, false))
       {
          Mobj *fog = P_SpawnMobj(prevx, prevy, 
                                    prevz + GameModeInfo->teleFogHeight,

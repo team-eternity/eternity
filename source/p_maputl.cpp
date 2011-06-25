@@ -146,6 +146,9 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
                           FixedMul((v2->y-v1->y)>>8, v1->dx)), den) : 0;
 }
 
+
+
+open_t opening;
 //
 // P_LineOpening
 //
@@ -161,75 +164,75 @@ void P_LineOpening(line_t *linedef, Mobj *mo, ClipContext *cc)
 
    if(linedef->sidenum[1] == -1)      // single sided line
    {
-      open.range = 0;
+      opening.range = 0;
       return;
    }
    
-   open.frontsector = linedef->frontsector;
-   open.backsector  = linedef->backsector;
+   opening.frontsector = linedef->frontsector;
+   opening.backsector  = linedef->backsector;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         open.frontsector->c_pflags & PS_PASSABLE &&
-         open.backsector->c_pflags & PS_PASSABLE && 
-         open.frontsector->c_portal == open.backsector->c_portal)
+         opening.frontsector->c_pflags & PS_PASSABLE &&
+         opening.backsector->c_pflags & PS_PASSABLE && 
+         opening.frontsector->c_portal == opening.backsector->c_portal)
       {
-         frontceilz = backceilz = open.frontsector->ceilingheight + (1024 * FRACUNIT);
+         frontceilz = backceilz = opening.frontsector->ceilingheight + (1024 * FRACUNIT);
       }
       else
 #endif
       {
-         frontceilz = open.frontsector->ceilingheight;
-         backceilz  = open.backsector->ceilingheight;
+         frontceilz = opening.frontsector->ceilingheight;
+         backceilz  = opening.backsector->ceilingheight;
       }
       
-      frontcz = open.frontsector->ceilingheight;
-      backcz  = open.backsector->ceilingheight;
+      frontcz = opening.frontsector->ceilingheight;
+      backcz  = opening.backsector->ceilingheight;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 && 
-         open.frontsector->f_pflags & PS_PASSABLE &&
-         open.backsector->f_pflags & PS_PASSABLE && 
-         open.frontsector->f_portal == open.backsector->f_portal)
+         opening.frontsector->f_pflags & PS_PASSABLE &&
+         opening.backsector->f_pflags & PS_PASSABLE && 
+         opening.frontsector->f_portal == opening.backsector->f_portal)
       {
-         frontfloorz = backfloorz = open.frontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+         frontfloorz = backfloorz = opening.frontsector->floorheight - (1024 * FRACUNIT); //mo->height;
       }
       else 
 #endif
       {
-         frontfloorz = open.frontsector->floorheight;
-         backfloorz  = open.backsector->floorheight;
+         frontfloorz = opening.frontsector->floorheight;
+         backfloorz  = opening.backsector->floorheight;
       }
 
-      frontfz = open.frontsector->floorheight;
-      backfz = open.backsector->floorheight;
+      frontfz = opening.frontsector->floorheight;
+      backfz = opening.backsector->floorheight;
    }
    
    if(frontceilz < backceilz)
-      open.top = frontceilz;
+      opening.top = frontceilz;
    else
-      open.top = backceilz;
+      opening.top = backceilz;
 
    
    if(frontfloorz > backfloorz)
    {
-      open.bottom = frontfloorz;
-      open.lowfloor = backfloorz;
+      opening.bottom = frontfloorz;
+      opening.lowfloor = backfloorz;
       // haleyjd
-      cc->floorpic = open.frontsector->floorpic;
+      cc->floorpic = opening.frontsector->floorpic;
    }
    else
    {
-      open.bottom = backfloorz;
-      open.lowfloor = frontfloorz;
+      opening.bottom = backfloorz;
+      opening.lowfloor = frontfloorz;
       // haleyjd
-      cc->floorpic = open.backsector->floorpic;
+      cc->floorpic = opening.backsector->floorpic;
    }
 
    if(frontcz < backcz)
@@ -242,8 +245,8 @@ void P_LineOpening(line_t *linedef, Mobj *mo, ClipContext *cc)
    else
       obot = backfz;
 
-   open.secfloor = open.bottom;
-   open.secceil  = open.top;
+   opening.secfloor = opening.bottom;
+   opening.secceil  = opening.top;
 
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
@@ -271,20 +274,20 @@ void P_LineOpening(line_t *linedef, Mobj *mo, ClipContext *cc)
          !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
          D_abs(mo->z - textop) <= 24*FRACUNIT)
       {
-         open.top = open.bottom;
-         open.range = 0;
+         opening.top = opening.bottom;
+         opening.range = 0;
          return;
       }
       
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
-         if(texbot < open.top)
-            open.top = texbot;
+         if(texbot < opening.top)
+            opening.top = texbot;
       }
       else
       {
-         if(textop > open.bottom)
-            open.bottom = textop;
+         if(textop > opening.bottom)
+            opening.bottom = textop;
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
@@ -293,7 +296,7 @@ void P_LineOpening(line_t *linedef, Mobj *mo, ClipContext *cc)
       }
    }
 
-   open.range = open.top - open.bottom;
+   opening.range = opening.top - opening.bottom;
 }
 
 //

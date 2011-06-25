@@ -48,6 +48,8 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_clipen.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_maputl.h"
 #include "p_map3d.h"
 #include "p_partcl.h"
@@ -452,6 +454,8 @@ void P_XYMovement(Mobj* mo)
    oldy = mo->y; // when on ice & up against wall. These will be compared
                  // to your x,y values later to see if you were able to move
 
+   ClipContext *cc = clip->getContext();
+   
    do
    {
       fixed_t ptryx, ptryy;
@@ -477,8 +481,7 @@ void P_XYMovement(Mobj* mo)
       }
 
       // killough 3/15/98: Allow objects to drop off
-
-      if(!P_TryMove(mo, ptryx, ptryy, true))
+      if(!clip->tryMove(mo, ptryx, ptryy, true, cc))
       {
          // blocked move
 
@@ -488,18 +491,18 @@ void P_XYMovement(Mobj* mo)
 
          if(!(mo->flags & MF_MISSILE) && demo_version >= 203 &&
             (mo->flags & MF_BOUNCES ||
-             (!player && clip.blockline &&
+             (!player && cc->blockline &&
               variable_friction && mo->z <= mo->floorz &&
-              P_GetFriction(mo, NULL) > ORIG_FRICTION)))
+              clip->getFriction(mo, NULL) > ORIG_FRICTION)))
          {
-            if (clip.blockline)
+            if (cc->blockline)
             {
-               fixed_t r = ((clip.blockline->dx >> FRACBITS) * mo->momx +
-                            (clip.blockline->dy >> FRACBITS) * mo->momy) /
-                    ((clip.blockline->dx >> FRACBITS)*(clip.blockline->dx >> FRACBITS)+
-                     (clip.blockline->dy >> FRACBITS)*(clip.blockline->dy >> FRACBITS));
-               fixed_t x = FixedMul(r, clip.blockline->dx);
-               fixed_t y = FixedMul(r, clip.blockline->dy);
+               fixed_t r = ((cc->blockline->dx >> FRACBITS) * mo->momx +
+                            (cc->blockline->dy >> FRACBITS) * mo->momy) /
+                    ((cc->blockline->dx >> FRACBITS)*(cc->blockline->dx >> FRACBITS)+
+                     (cc->blockline->dy >> FRACBITS)*(cc->blockline->dy >> FRACBITS));
+               fixed_t x = FixedMul(r, cc->blockline->dx);
+               fixed_t y = FixedMul(r, cc->blockline->dy);
 
                // reflect momentum away from wall
 
@@ -522,19 +525,19 @@ void P_XYMovement(Mobj* mo)
          }
          else if(mo->flags3 & MF3_SLIDE) // haleyjd: SLIDE flag
          {
-            P_SlideMove(mo); // try to slide along it
+            clip->slideMove(mo); // try to slide along it
          }
          else if(mo->flags & MF_MISSILE)
          {
             // haleyjd 1/17/00: feel the might of reflection!
-            if(clip.BlockingMobj &&
-               clip.BlockingMobj->flags2 & MF2_REFLECTIVE)
+            if(cc->BlockingMobj &&
+               cc->BlockingMobj->flags2 & MF2_REFLECTIVE)
             {
                angle_t refangle =
-                  P_PointToAngle(clip.BlockingMobj->x, clip.BlockingMobj->y, mo->x, mo->y);
+                  P_PointToAngle(cc->BlockingMobj->x, cc->BlockingMobj->y, mo->x, mo->y);
 
                // Change angle for reflection
-               if(clip.BlockingMobj->flags2 & MF2_DEFLECTIVE)
+               if(cc->BlockingMobj->flags2 & MF2_DEFLECTIVE)
                {
                   // deflect it fully
                   if(P_Random(pr_reflect) < 128)
@@ -558,16 +561,17 @@ void P_XYMovement(Mobj* mo)
                      P_SetTarget<Mobj>(&mo->tracer, mo->target);
                }
 
-               P_SetTarget<Mobj>(&mo->target, clip.BlockingMobj);
+               P_SetTarget<Mobj>(&mo->target, cc->BlockingMobj);
+               cc->done();
                return;
             }
             // explode a missile
 
-            if(clip.ceilingline && clip.ceilingline->backsector &&
-               clip.ceilingline->backsector->intflags & SIF_SKY)
+            if(cc->ceilingline && cc->ceilingline->backsector &&
+               cc->ceilingline->backsector->intflags & SIF_SKY)
             {
                if (demo_compatibility ||  // killough
-                  mo->z > clip.ceilingline->backsector->ceilingheight)
+                  mo->z > cc->ceilingline->backsector->ceilingheight)
                {
                   // Hack to prevent missiles exploding
                   // against the sky.
@@ -578,6 +582,7 @@ void P_XYMovement(Mobj* mo)
                   // see P_ExplodeMissile for my real sky fix
 
                   mo->removeThinker();
+                  cc->done();
                   return;
                }
             }
@@ -591,6 +596,8 @@ void P_XYMovement(Mobj* mo)
       }
    }
    while(xmove | ymove);
+   
+   cc->done();
 
    // slow down
 
@@ -684,7 +691,7 @@ void P_XYMovement(Mobj* mo)
       }
       else
       {
-         fixed_t friction = P_GetFriction(mo, NULL);
+         fixed_t friction = clip->getFriction(mo, NULL);
 
          mo->momx = FixedMul(mo->momx, friction);
          mo->momy = FixedMul(mo->momy, friction);
@@ -748,7 +755,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
 //
 // Attempt vertical movement.
 
-static void P_ZMovement(Mobj* mo)
+static void P_ZMovement(Mobj* mo, ClipContext *cc)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
    //          scope
@@ -855,10 +862,10 @@ static void P_ZMovement(Mobj* mo)
 
       if (mo->flags & MF_MISSILE)
       {
-         if(clip.ceilingline &&
-            clip.ceilingline->backsector &&
-            (mo->z > clip.ceilingline->backsector->ceilingheight) &&
-            clip.ceilingline->backsector->intflags & SIF_SKY)
+         if(cc->ceilingline &&
+            cc->ceilingline->backsector &&
+            (mo->z > cc->ceilingline->backsector->ceilingheight) &&
+            cc->ceilingline->backsector->intflags & SIF_SKY)
          {
             mo->removeThinker();  // don't explode on skies
          }
@@ -1050,7 +1057,7 @@ void P_NightmareRespawn(Mobj* mobj)
       mobj->height = sheight;
    }
    else
-      check = P_CheckPosition(mobj, x, y);
+      check = clip->checkPosition(mobj, x, y);
 
    if(demo_version >= 331)
       mobj->flags &= ~MF_SOLID;
@@ -1174,6 +1181,8 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 //
 void Mobj::Think()
 {
+   ClipContext *cc = clip->getContext();
+   
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -1199,7 +1208,7 @@ void Mobj::Think()
       }
    }
 
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   cc->BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(subsector->sector->heightsec != -1)
@@ -1220,16 +1229,19 @@ void Mobj::Think()
    }
 
    // momentum movement
-   clip.BlockingMobj = NULL;
+   cc->BlockingMobj = NULL;
    if(momx | momy || flags & MF_SKULLFLY)
    {
       P_XYMovement(this);
       if(removed) // killough
+      {
+         cc->done();
          return;       // mobj was removed
+      }
    }
 
    if(comp[comp_overunder])
-      clip.BlockingMobj = NULL;
+      cc->BlockingMobj = NULL;
 
    lz = z;
 
@@ -1242,7 +1254,7 @@ void Mobj::Think()
    }
 
    // haleyjd: OVER_UNDER: major changes
-   if(momz || clip.BlockingMobj || lz != floorz)
+   if(momz || cc->BlockingMobj || lz != floorz)
    {
       if(!comp[comp_overunder]  &&
          ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
@@ -1251,7 +1263,7 @@ void Mobj::Think()
 
          if(!(onmo = P_GetThingUnder(this)))
          {
-            P_ZMovement(this);
+            P_ZMovement(this, cc);
             intflags &= ~MIF_ONMOBJ;
          }
          else
@@ -1301,10 +1313,13 @@ void Mobj::Think()
          }
       }
       else
-         P_ZMovement(this);
+         P_ZMovement(this, cc);
 
       if(removed) // killough
+      {
+         cc->done();
          return;       // mobj was removed
+      }
    }
    else if(!(momx | momy) && !sentient(this))
    {                                  // non-sentient objects at rest
@@ -1317,10 +1332,12 @@ void Mobj::Think()
          !(flags & MF_NOGRAVITY)  &&  // Only objects which fall
          !(flags2 & MF2_FLOATBOB) &&  // haleyjd: not floatbobbers
          !comp[comp_falloff] && demo_version >= 203) // Not in old demos
-         P_ApplyTorque(this);               // Apply torque
+         clip->applyTorque(this, cc);               // Apply torque
       else
          intflags &= ~MIF_FALLING, gear = 0;  // Reset torque
    }
+   
+   cc->done();
 
 #ifdef R_LINKEDPORTALS
    P_CheckPortalTeleport(this);
@@ -1754,7 +1771,7 @@ void Mobj::removeThinker()
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
-      P_DelSeclist(this->old_sectorlist);
+      clip->delSeclist(this->old_sectorlist);
 
    // haleyjd 08/13/10: ensure that the object cannot be relinked, and
    // nullify old_sectorlist to avoid multiple release of msecnodes.
@@ -2238,9 +2255,9 @@ spawnit:
 // P_SpawnPuff
 //
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl)
+                 int updown, bool ptcl, fixed_t attackrange)
 {
-   Mobj* th;
+   Mobj*     th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
@@ -2254,13 +2271,13 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 
    // don't make punches spark on the wall
 
-   if(trace.attackrange == MELEERANGE)
+   if(attackrange == MELEERANGE)
       P_SetMobjState(th, E_SafeState(S_PUFF3));
 
    // haleyjd: for demo sync etc we still need to do the above, so
    // here we'll make the puff invisible and draw particles instead
    if(ptcl && drawparticles && bulletpuff_particle &&
-      trace.attackrange != MELEERANGE)
+      attackrange != MELEERANGE)
    {
       if(bulletpuff_particle != 2)
          th->translucency = 0;
@@ -2374,7 +2391,7 @@ bool P_CheckMissileSpawn(Mobj* th)
       return ok;
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
-   if(!P_TryMove(th, th->x, th->y, false))
+   if(!clip->tryMove(th, th->x, th->y, false))
    {
       P_ExplodeMissile(th);
       ok = false;
@@ -2485,22 +2502,27 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
+      TracerContext *tc = trace->getContext();
+      
       int mask = demo_version < 203 ? 0 : MF_FRIEND;
       do
       {
-         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
+         slope = trace->aimLineAttack(source, an, 16*64*FRACUNIT, mask, tc);
+         if(!tc->linetarget)
+            slope = trace->aimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask, tc);
+         if(!tc->linetarget)
+            slope = trace->aimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask, tc);
+         if(!tc->linetarget)
          {
             an = source->angle;
             // haleyjd: use true slope angle
             slope = P_PlayerPitchSlope(source->player);
          }
+ 
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=0, !tc->linetarget));  // killough 8/2/98
+         
+      tc->done();
    }
    else
    {
@@ -3470,7 +3492,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
       oldy = mo->y;
       oldz = mo->z;
 
-      P_TeleportMove(mo, x, y, false);
+      clip->teleportMove(mo, x, y, false);
       mo->z = z;
 
       // some crap from EV_Teleport i thought might be useful :P

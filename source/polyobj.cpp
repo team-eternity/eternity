@@ -734,7 +734,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
       if((po->flags & POF_DAMAGING) || 
-         !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
+         !clip->checkPosition(mo, mo->x + momx, mo->y + momy))
       {
          P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
       }

@@ -41,6 +41,8 @@
 #include "p_enemy.h"
 #include "p_inter.h"
 #include "p_clipen.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_maputl.h"
 #include "p_pspr.h"
 #include "p_skin.h"
@@ -935,21 +937,24 @@ void A_Punch(Mobj *mo)
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_punchangle) << 18;
 
+   TracerContext *tc = trace->getContext();
+   
   // killough 8/2/98: make autoaiming prefer enemies
    if(demo_version<203 ||
-      (slope = P_AimLineAttack(mo, angle, MELEERANGE, MF_FRIEND),
-       !clip.linetarget))
-      slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
+      (slope = trace->aimLineAttack(mo, angle, MELEERANGE, MF_FRIEND, tc),
+       !tc->linetarget))
+      slope = trace->aimLineAttack(mo, angle, MELEERANGE, 0, tc);
 
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
+   trace->lineAttack(mo, angle, MELEERANGE, slope, damage);
 
-   if(!clip.linetarget)
+   if(!tc->linetarget)
       return;
 
    P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
    // turn to face target
-   mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+   mo->angle = P_PointToAngle(mo->x, mo->y, tc->linetarget->x, tc->linetarget->y);
+   tc->done();
 }
 
 //
@@ -965,15 +970,17 @@ void A_Saw(Mobj *mo)
 
    // Use meleerange + 1 so that the puff doesn't skip the flash
    
+   TracerContext *tc = trace->getContext();
+   
    // killough 8/2/98: make autoaiming prefer enemies
    if(demo_version<203 ||
-      (slope = P_AimLineAttack(mo, angle, MELEERANGE+1, MF_FRIEND),
-       !clip.linetarget))
-      slope = P_AimLineAttack(mo, angle, MELEERANGE+1, 0);
+      (slope = trace->aimLineAttack(mo, angle, MELEERANGE+1, MF_FRIEND, tc),
+       !tc->linetarget))
+      slope = trace->aimLineAttack(mo, angle, MELEERANGE+1, 0, tc);
 
-   P_LineAttack(mo, angle, MELEERANGE+1, slope, damage);
+   trace->lineAttack(mo, angle, MELEERANGE+1, slope, damage);
    
-   if(!clip.linetarget)
+   if(!tc->linetarget)
    {
       P_WeaponSound(mo, sfx_sawful);
       return;
@@ -982,7 +989,7 @@ void A_Saw(Mobj *mo)
    P_WeaponSound(mo, sfx_sawhit);
    
    // turn to face target
-   angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+   angle = P_PointToAngle(mo->x, mo->y, tc->linetarget->x, tc->linetarget->y);
 
    if(angle - mo->angle > ANG180)
    {
@@ -1000,6 +1007,8 @@ void A_Saw(Mobj *mo)
    }
 
    mo->flags |= MF_JUSTATTACKED;
+   
+   tc->done();
 }
 
 //
@@ -1099,22 +1108,26 @@ void A_FireOldBFG(Mobj *mo)
 
       if(autoaim)
       {
+         TracerContext *tc = trace->getContext();
+         
          // killough 8/2/98: make autoaiming prefer enemies
          int mask = MF_FRIEND;
          do
          {
-            slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget) // sf: looking up/down
+            slope = trace->aimLineAttack(mo, an, 16*64*FRACUNIT, mask, tc);
+            if(!tc->linetarget)
+               slope = trace->aimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask, tc);
+            if(!tc->linetarget)
+               slope = trace->aimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask, tc);
+            if(!tc->linetarget) // sf: looking up/down
             {
                slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
                an = mo->angle;
             }
          }
-         while(mask && (mask=0, !clip.linetarget));     // killough 8/2/98
+         while(mask && (mask=0, !tc->linetarget));     // killough 8/2/98
+         tc->done();
+         
          an1 += an - mo->angle;
          // sf: despite killough's infinite wisdom.. even
          // he is prone to mistakes. seems negative numbers
@@ -1165,7 +1178,6 @@ void A_FirePlasma(Mobj *mo)
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
 
-static fixed_t bulletslope;
 
 //
 // P_BulletSlope
@@ -1173,7 +1185,7 @@ static fixed_t bulletslope;
 // Sets a slope so a near miss is at approximately
 // the height of the intended target
 //
-void P_BulletSlope(Mobj *mo)
+void P_BulletSlope(Mobj *mo, TracerContext *tc)
 {
    angle_t an = mo->angle;    // see which target is to be aimed at
    
@@ -1182,19 +1194,19 @@ void P_BulletSlope(Mobj *mo)
    
    do
    {
-      bulletslope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-      if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-      if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
+      tc->bulletslope = trace->aimLineAttack(mo, an, 16*64*FRACUNIT, mask, tc);
+      if(!tc->linetarget)
+         tc->bulletslope = trace->aimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask, tc);
+      if(!tc->linetarget)
+         tc->bulletslope = trace->aimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask, tc);
    }
-   while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+   while (mask && (mask=0, !tc->linetarget));  // killough 8/2/98
 }
 
 //
 // P_GunShot
 //
-void P_GunShot(Mobj *mo, bool accurate)
+void P_GunShot(Mobj *mo, fixed_t slope, bool accurate)
 {
    int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
    angle_t angle = mo->angle;
@@ -1202,7 +1214,7 @@ void P_GunShot(Mobj *mo, bool accurate)
    if(!accurate)
       angle += P_SubRandom(pr_misfire) << 18;
    
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage);
+   trace->lineAttack(mo, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -1224,8 +1236,12 @@ void A_FirePistol(Mobj *mo)
    P_SubtractAmmo(player, 1);
    
    A_FireSomething(player, 0); // phares
-   P_BulletSlope(mo);
-   P_GunShot(mo, !player->refire);
+   
+   TracerContext *tc = trace->getContext();
+   P_BulletSlope(mo, tc);
+   
+   P_GunShot(mo, tc->bulletslope, !player->refire);
+   tc->done();
 }
 
 //
@@ -1248,10 +1264,13 @@ void A_FireShotgun(Mobj *mo)
    
    A_FireSomething(player, 0); // phares
    
-   P_BulletSlope(mo);
+   TracerContext *tc = trace->getContext();
+   P_BulletSlope(mo, tc);
    
    for(i = 0; i < 7; ++i)
-      P_GunShot(mo, false);
+      P_GunShot(mo, tc->bulletslope, false);
+
+   tc->done();
 }
 
 //
@@ -1274,7 +1293,8 @@ void A_FireShotgun2(Mobj *mo)
    
    A_FireSomething(player, 0); // phares
    
-   P_BulletSlope(mo);
+   TracerContext *tc = trace->getContext();
+   P_BulletSlope(mo, tc);
    
    for(i = 0; i < 20; ++i)
    {
@@ -1283,9 +1303,10 @@ void A_FireShotgun2(Mobj *mo)
 
       angle += P_SubRandom(pr_shotgun) << 19;
       
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope +
-                   (P_SubRandom(pr_shotgun) << 5), damage);
+      trace->lineAttack(mo, angle, MISSILERANGE, tc->bulletslope +
+                        (P_SubRandom(pr_shotgun) << 5), damage);
    }
+   tc->done();
 }
 
 // haleyjd 04/05/07: moved all SSG codepointers here
@@ -1343,9 +1364,11 @@ void A_FireCGun(Mobj *mo)
    else
       A_FireSomething(player, 0); // new default behavior
    
-   P_BulletSlope(mo);
-   
-   P_GunShot(mo, !player->refire);
+   TracerContext *tc = trace->getContext();
+   P_BulletSlope(mo, tc);
+  
+   P_GunShot(mo, tc->bulletslope, !player->refire);
+   tc->done();
 }
 
 void A_Light0(Mobj *mo)
@@ -1403,6 +1426,7 @@ void A_BFGSpray(Mobj *mo)
       break;
    }
    
+   TracerContext *tc = trace->getContext();
    for(i = 0; i < 40; i++)  // offset angles from its attack angle
    {
       int j, damage;
@@ -1412,23 +1436,24 @@ void A_BFGSpray(Mobj *mo)
       
       // killough 8/2/98: make autoaiming prefer enemies
       if(demo_version < 203 || 
-         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, MF_FRIEND), 
-         !clip.linetarget))
-         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, 0);
+         (trace->aimLineAttack(mo->target, an, 16*64*FRACUNIT, MF_FRIEND, tc), 
+         !tc->linetarget))
+         trace->aimLineAttack(mo->target, an, 16*64*FRACUNIT, 0, tc);
       
-      if(!clip.linetarget)
+      if(!tc->linetarget)
          continue;
       
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
+      P_SpawnMobj(tc->linetarget->x, tc->linetarget->y,
+                  tc->linetarget->z + (tc->linetarget->height>>2), 
                   E_SafeThingType(MT_EXTRABFG));
       
       for(damage = j = 0; j < 15; j++)
          damage += (P_Random(pr_bfg)&7) + 1;
       
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
+      P_DamageMobj(tc->linetarget, mo->target, mo->target, damage,
                    MOD_BFG_SPLASH);
    }
+   tc->done();
 }
 
 //
@@ -1444,26 +1469,28 @@ void A_BouncingBFG(Mobj *mo)
    if(!mo->extradata.bfgcount)
       return;
    
+   TracerContext *tc = trace->getContext();
+   
    for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
    {
       angle_t an2, an = (ANG360/40)*i;
       int dist;
       
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      trace->aimLineAttack(mo, an, 16*64*FRACUNIT,0, tc);
       
       // haleyjd: track last target with mo->tracer, don't fire
       // at same target more than one time in a row
-      if(!clip.linetarget || (mo->tracer && mo->tracer == clip.linetarget))
+      if(!tc->linetarget || (mo->tracer && mo->tracer == tc->linetarget))
          continue;
       if(an/6 == mo->angle/6) continue;
       
       // don't aim for shooter, or for friends of shooter
-      if(clip.linetarget == mo->target ||
-         (clip.linetarget->flags & mo->target->flags & MF_FRIEND))
+      if(tc->linetarget == mo->target ||
+         (tc->linetarget->flags & mo->target->flags & MF_FRIEND))
          continue; 
       
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2),
+      P_SpawnMobj(tc->linetarget->x, tc->linetarget->y,
+                  tc->linetarget->z + (tc->linetarget->height>>2),
                   E_SafeThingType(MT_EXTRABFG));
 
       // spawn new bfg      
@@ -1471,25 +1498,25 @@ void A_BouncingBFG(Mobj *mo)
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
       S_StartSound(newmo, newmo->info->seesound);
       P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
-      an2 = P_PointToAngle(newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y);
+      an2 = P_PointToAngle(newmo->x, newmo->y, tc->linetarget->x, tc->linetarget->y);
       newmo->angle = an2;
       
       an2 >>= ANGLETOFINESHIFT;
       newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
       newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
 
-      dist = P_AproxDistance(clip.linetarget->x - newmo->x, 
-                             clip.linetarget->y - newmo->y);
+      dist = P_AproxDistance(tc->linetarget->x - newmo->x, 
+                             tc->linetarget->y - newmo->y);
       dist = dist / newmo->info->speed;
       
       if(dist < 1)
          dist = 1;
       
       newmo->momz = 
-         (clip.linetarget->z + (clip.linetarget->height>>1) - newmo->z) / dist;
+         (tc->linetarget->z + (tc->linetarget->height>>1) - newmo->z) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target
+      P_SetTarget<Mobj>(&newmo->tracer, tc->linetarget); // haleyjd: track target
 
       P_CheckMissileSpawn(newmo);
 
@@ -1497,6 +1524,8 @@ void A_BouncingBFG(Mobj *mo)
 
       break; //only spawn 1
    }
+   
+   tc->done();
 }
 
 //
@@ -1533,6 +1562,7 @@ void A_BFG11KHit(Mobj *mo)
    }
    
    // now check everyone else
+   TracerContext *tc = trace->getContext();
    
    for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
    {
@@ -1540,10 +1570,10 @@ void A_BFG11KHit(Mobj *mo)
       
       // mo->target is the originator (player) of the missile
       
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      trace->aimLineAttack(mo, an, 16*64*FRACUNIT, 0, tc);
       
-      if(!clip.linetarget) continue;
-      if(clip.linetarget == mo->target)
+      if(!tc->linetarget) continue;
+      if(tc->linetarget == mo->target)
          continue;
       
       // decide on damage
@@ -1551,13 +1581,15 @@ void A_BFG11KHit(Mobj *mo)
          damage += (P_Random(pr_bfg)&7) + 1;
       
       // dumbass flash
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
+      P_SpawnMobj(tc->linetarget->x, tc->linetarget->y,
+                  tc->linetarget->z + (tc->linetarget->height>>2), 
                   E_SafeThingType(MT_EXTRABFG));
       
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
+      P_DamageMobj(tc->linetarget, mo->target, mo->target, damage,
                    MOD_BFG_SPLASH);
    }
+   
+   tc->done();
 }
 
 //
@@ -1722,14 +1754,16 @@ void A_FireCustomBullets(Mobj *mo)
    }
 
    A_FireSomething(player, 0);
-   P_BulletSlope(mo);
+   
+   TracerContext *tc = trace->getContext();
+   P_BulletSlope(mo, tc);
 
    // loop on numbullets
    for(i = 0; i < numbullets; ++i)
    {
       int dmg = damage * (P_Random(pr_custombullets)%dmgmod + 1);
       angle_t angle = mo->angle;
-      fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
+      fixed_t slope = tc->bulletslope; // haleyjd 01/03/07: bug fix
       
       if(accurate <= 3 || accurate == 5)
       {
@@ -1742,16 +1776,17 @@ void A_FireCustomBullets(Mobj *mo)
             angle += P_SubRandom(pr_custommisfire) << aimshift;
          }
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         trace->lineAttack(mo, angle, MISSILERANGE, slope, dmg);
       }
       else if(accurate == 4) // ssg spread
       {
          angle += P_SubRandom(pr_custommisfire) << 19;
          slope += P_SubRandom(pr_custommisfire) << 5;
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         trace->lineAttack(mo, angle, MISSILERANGE, slope, dmg);
       }
    }
+   tc->done();
 }
 
 static const char *kwds_A_FirePlayerMissile[] =
@@ -1807,10 +1842,13 @@ void A_FirePlayerMissile(Mobj *actor)
 
    if(mo && seek)
    {
-      P_BulletSlope(actor);
+      TracerContext *tc = trace->getContext();
+      P_BulletSlope(actor, tc);
 
-      if(clip.linetarget)
-         P_SetTarget<Mobj>(&mo->tracer, clip.linetarget);
+      if(tc->linetarget)
+         P_SetTarget<Mobj>(&mo->tracer, tc->linetarget);
+         
+      tc->done();
    }
 }
 
@@ -1884,16 +1922,18 @@ void A_CustomPlayerMelee(Mobj *mo)
    if(deftype == 2 || deftype == 3)
       angle += P_SubRandom(pr_custompunch) << 18;
    
-   if((slope = P_AimLineAttack(mo, angle, MELEERANGE, MF_FRIEND),
-      !clip.linetarget))
-      slope = P_AimLineAttack(mo, angle, MELEERANGE, 0);
+   TracerContext *tc = trace->getContext();
+   
+   if((slope = trace->aimLineAttack(mo, angle, MELEERANGE, MF_FRIEND, tc),
+      !tc->linetarget))
+      slope = trace->aimLineAttack(mo, angle, MELEERANGE, 0, tc);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
    
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
+   trace->lineAttack(mo, angle, MELEERANGE, slope, damage);
    
-   if(!clip.linetarget)
+   if(!tc->linetarget)
    {
       // assume they want sawful on miss if sawhit specified
       if(sfx && sfx->dehackednum == sfx_sawhit)
@@ -1906,7 +1946,7 @@ void A_CustomPlayerMelee(Mobj *mo)
    
    // turn to face target   
    player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                       clip.linetarget->x, clip.linetarget->y);
+                                       tc->linetarget->x, tc->linetarget->y);
 
    // apply chainsaw deflection if selected
    if(deftype == 3)
@@ -1928,6 +1968,8 @@ void A_CustomPlayerMelee(Mobj *mo)
       
       mo->flags |= MF_JUSTATTACKED;
    }
+   
+   tc->done();
 }
 
 static const char *kwds_A_PlayerThunk1[] =
@@ -1999,14 +2041,21 @@ void A_PlayerThunk(Mobj *mo)
    {
       // record old target
       oldtarget = mo->target;
-      P_BulletSlope(mo);
-      if(clip.linetarget)
+      
+      TracerContext *tc = trace->getContext();
+      P_BulletSlope(mo, tc);
+      
+      if(tc->linetarget)
       {
-         P_SetTarget<Mobj>(&(mo->target), clip.linetarget);
-         localtarget = clip.linetarget;
+         P_SetTarget<Mobj>(&(mo->target), tc->linetarget);
+         localtarget = tc->linetarget;
+         tc->done();
       }
       else
+      {
+         tc->done();
          return;
+      }
    }
 
    // possibly disable the FaceTarget pointer using MIF_NOFACE

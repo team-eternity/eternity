@@ -54,7 +54,8 @@ class ClipEngine
    public:
       virtual ~ClipEngine() {}
       
-      virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
+      virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
+      virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc) = 0;
 
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss) = 0;
 
@@ -64,25 +65,34 @@ class ClipEngine
 
       virtual void slideMove(Mobj *mo) = 0;
 
+      virtual bool checkPosition(Mobj *thing, fixed_t x, fixed_t y);
       virtual bool checkPosition(Mobj *thing, fixed_t x, fixed_t y, ClipContext *cc) = 0;
 
+      virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
       virtual bool checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil, ClipContext *cc) = 0;
-      virtual bool checkSides(Mobj *, int, int, ClipContext *) = 0;
+      virtual bool changeSector(sector_t *sector, int crunch);
+      virtual bool changeSector(sector_t *sector, int crunch, ClipContext *cc) = 0;
+      virtual bool checkSides(Mobj *actor, int x, int y);
+      virtual bool checkSides(Mobj *actor, int x, int y, ClipContext *cc) = 0;
 
       virtual void        delSeclist(msecnode_t *) = 0;
-      virtual void        freeSecNodeList(void) = 0;
+      virtual void        freeSecNodeList(void);
       virtual msecnode_t *createSecNodeList(Mobj *,fixed_t, fixed_t) = 0;
       
       virtual int  getMoveFactor(Mobj *mo, int *friction) = 0;
       virtual int  getFriction(const Mobj *mo, int *factor) = 0;
+      
+      virtual void applyTorque(Mobj *mo);
       virtual void applyTorque(Mobj *mo, ClipContext *cc) = 0;
       
+      virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod);
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc) = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;
       virtual void          freeContext(ClipContext *) = 0;
       
+     
       // Secnodes
       
       // Retrieves a node from the freelist. The calling routine should make sure it

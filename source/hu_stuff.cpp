@@ -58,6 +58,8 @@
 #include "p_info.h"
 #include "p_clipen.h"
 #include "p_setup.h"
+#include "p_traceengine.h"
+#include "p_mapcontext.h"
 #include "p_spec.h"
 #include "r_draw.h"
 #include "r_patch.h"
@@ -1094,27 +1096,29 @@ static void HU_CrossHairTick(hu_widget_t *widget)
       return;
 
    // search for targets
-   
-   P_AimLineAttack(players[displayplayer].mo,
-                   players[displayplayer].mo->angle, 
-                   16*64*FRACUNIT, 0);
+   TracerContext *tc = trace->getContext();
+   trace->aimLineAttack(players[displayplayer].mo,
+                        players[displayplayer].mo->angle, 
+                        16*64*FRACUNIT, 0, tc);
 
-   if(clip.linetarget)
+   if(tc->linetarget)
    {
       // target found
       crosshair->color = targetcolour; // default
       
       // haleyjd 06/06/09: some special behaviors
-      if(clip.linetarget->flags & MF_FRIEND)
+      if(tc->linetarget->flags & MF_FRIEND)
          crosshair->color = friendcolour;
 
-      if(((clip.linetarget->flags  & MF_SHADOW || 
-           clip.linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
-         clip.linetarget->flags2 & MF2_DONTDRAW)
+      if(((tc->linetarget->flags  & MF_SHADOW || 
+           tc->linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
+         tc->linetarget->flags2 & MF2_DONTDRAW)
       {
          crosshair->color = notargetcolour;
       }
    }
+   
+   tc->done();
 }
 
 //

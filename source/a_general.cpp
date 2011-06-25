@@ -48,6 +48,8 @@
 #include "p_inter.h"
 #include "p_clipen.h"
 #include "p_maputl.h"
+#include "p_traceengine.h"
+#include "p_mapcontext.h"
 #include "p_mobj.h"
 #include "p_pspr.h"
 #include "p_setup.h"
@@ -476,7 +478,7 @@ void A_GenRefire(Mobj *actor)
 
    if(!actor->target || actor->target->health <= 0 ||
       (actor->flags & actor->target->flags & MF_FRIEND) ||
-      !P_CheckSight(actor, actor->target))
+      !trace->checkSight(actor, actor->target))
    {
       P_SetMobjState(actor, statenum);
    }
@@ -824,7 +826,9 @@ void A_BulletAttack(Mobj *actor)
    A_FaceTarget(actor);
    S_StartSfxInfo(actor, sfx, 127, ATTN_NORMAL, false, CHAN_AUTO);
 
-   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
+   TracerContext *tc = trace->getContext();
+   slope = trace->aimLineAttack(actor, actor->angle, MISSILERANGE, 0, tc);
+   tc->done();
 
    // loop on numbullets
    for(i = 0; i < numbullets; i++)
@@ -842,14 +846,14 @@ void A_BulletAttack(Mobj *actor)
             angle += P_SubRandom(pr_monmisfire) << aimshift;
          }
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         trace->lineAttack(actor, angle, MISSILERANGE, slope, dmg);
       }
       else if(accurate == 3) // ssg spread
       {
          angle += P_SubRandom(pr_monmisfire) << 19;         
          slope += P_SubRandom(pr_monmisfire) << 5;
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         trace->lineAttack(actor, angle, MISSILERANGE, slope, dmg);
       }
    }
 }
@@ -906,7 +910,7 @@ void A_ThingSummon(Mobj *actor)
    // wall or an impassible line, or a "monsters can't cross" line.
    // If it is, then we don't allow the spawn.
    
-   if(Check_Sides(actor, x, y))
+   if(clip->checkSides(actor, x, y))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);
@@ -940,7 +944,7 @@ void A_ThingSummon(Mobj *actor)
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
 
-   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
+   if(!clip->tryMove(newmobj, newmobj->x, newmobj->y, false))
    {
       // kill it immediately
       switch(kill_or_remove)

@@ -26,8 +26,8 @@
 
 
 #include "p_mobj.h"
-#include "p_clipen.h"
 #include "p_doomclip.h"
+#include "p_traceengine.h"
 
 #include "m_bbox.h"
 #include "r_defs.h"
@@ -38,6 +38,30 @@
 // ClipContext
 ClipContext::ClipContext() : spechit()
 {
+   this->from = NULL;
+}
+
+
+ClipContext::~ClipContext()
+{
+   done();
+}
+
+
+void ClipContext::setEngine(ClipEngine *ce)
+{
+   from = ce;
+}
+
+void ClipContext::done()
+{
+   if(from != NULL)
+   {
+      ClipEngine *c = from;
+      
+      from = NULL;
+      c->freeContext(this);
+   }
 }
 
 
@@ -45,6 +69,72 @@ ClipContext::ClipContext() : spechit()
 
 // ----------------------------------------------------------------------------
 // ClipEngine
+
+
+bool ClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
+{
+   ClipContext *cc = getContext();
+   bool ret = tryMove(thing, x, y, dropoff, cc);
+   freeContext(cc);
+   return ret;
+}
+
+
+
+bool ClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y)
+{
+   ClipContext *cc = getContext();
+   bool ret = checkPosition(thing, x, y, cc);
+   freeContext(cc);
+   return ret;
+}
+
+
+
+bool ClipEngine::checkSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
+{
+   ClipContext *cc = getContext();
+   bool ret = checkSector(sector, crunch, amt, floorOrCeil, cc);
+   freeContext(cc);
+   return ret;
+}
+
+
+bool ClipEngine::checkSides(Mobj *actor, int x, int y)
+{
+   ClipContext *cc = getContext();
+   bool ret = checkSides(actor, x, y, cc);
+   freeContext(cc);
+   return ret;
+} 
+
+
+bool ClipEngine::changeSector(sector_t *sector, int crunch)
+{
+   ClipContext *cc = getContext();
+   bool res = changeSector(sector, crunch, cc);
+   freeContext(cc);
+   return res;
+}
+
+
+void ClipEngine::applyTorque(Mobj *mo)
+{
+   ClipContext *cc = getContext();
+   applyTorque(mo, cc);
+   freeContext(cc);
+}
+
+
+
+void ClipEngine::radiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
+{
+   ClipContext *cc = getContext();
+   radiusAttack(spot, source, damage, mod, cc);
+   freeContext(cc);
+}
+
+
 
 msecnode_t* ClipEngine::headsecnode = NULL;
 
@@ -183,16 +273,16 @@ void ClipEngine::freeSecNodeList(void)
 // ----------------------------------------------------------------------------
 // Tracer engine selection
 
-static DoomTraceEngine doomte = new DoomTraceEngine();
+static DoomTraceEngine *doomte = new DoomTraceEngine();
 
-TracerEngine *trace = &doomte;
+TracerEngine *trace = doomte;
 
 
 
 // ----------------------------------------------------------------------------
 // Clipping engine selection
 
-static DoomClipEngine doomen = new DoomClipEngine();
+DoomClipEngine doomen = DoomClipEngine();
 
 
 ClipEngine *clip = &doomen;
@@ -205,7 +295,7 @@ void P_SetClippingEngine(DoomClipper_e engine)
       case Doom3D:
       case Portal:
          clip = &doomen;
-         trace = &doomte;
+         trace = doomte;
          break;
    };
 }

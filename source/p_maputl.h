@@ -27,6 +27,7 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+struct sector_t;
 struct line_t;
 class  Mobj;
 class  MapContext;
@@ -46,7 +47,7 @@ class  ClipContext;
 struct divline_t;
 
 
-typedef struct intercept_s
+struct intercept_t
 {
   fixed_t     frac;           // along trace line
   bool        isaline;
@@ -54,7 +55,7 @@ typedef struct intercept_s
     Mobj* thing;
     line_t* line;
   } d;
-} intercept_t;
+};
 
 
 struct open_t
@@ -74,7 +75,7 @@ struct open_t
    sector_t   *backsector;  // made global
 };
 
-extern open_t open;
+extern open_t opening;
 
 
 typedef bool (*traverser_t)(intercept_t *in);

@@ -37,9 +37,11 @@
 #include "e_states.h"
 #include "g_game.h"
 #include "p_clipen.h"
+#include "p_mapcontext.h"
 #include "p_maputl.h"
 #include "p_skin.h"
 #include "p_spec.h"
+#include "p_traceengine.h"
 #include "p_user.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -236,7 +238,7 @@ void P_MovePlayer(player_t* player)
    {
       if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
       {
-         int friction, movefactor = P_GetMoveFactor(mo, &friction);
+         int friction, movefactor = clip->getMoveFactor(mo, &friction);
 
          // killough 11/98:
          // On sludge, make bobbing depend on efficiency.
@@ -572,7 +574,7 @@ void P_PlayerThink(player_t *player)
    {
       if(!player->usedown)
       {
-         P_UseLines(player);
+         trace->useLines(player);
          player->usedown = true;
       }
    }

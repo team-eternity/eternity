@@ -36,6 +36,8 @@
 #include "p_inter.h"
 #include "p_clipen.h"
 #include "p_maputl.h"
+#include "p_traceengine.h"
+#include "p_mapcontext.h"
 #include "p_pspr.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -221,9 +223,15 @@ void A_JumpIfTargetInLOS(Mobj *mo)
       pspdef_t *pspr   = &(player->psprites[player->curpsprite]);
 
       // see if the player has an autoaim target
-      P_BulletSlope(mo);
-      if(!clip.linetarget)
+      TracerContext *tc = trace->getContext();
+      P_BulletSlope(mo, tc);
+      if(!tc->linetarget)
+      {
+         tc->done();
          return;
+      }
+      
+      tc->done();
 
       // prepare to jump!
       if((statenum = E_ArgAsStateNumNI(pspr->state->args, 0, NULL)) < 0)
@@ -278,7 +286,7 @@ void A_JumpIfTargetInLOS(Mobj *mo)
       }
 
       // check line of sight 
-      if(!P_CheckSight(mo, target))
+      if(!trace->checkSight(mo, target))
          return;
 
       // prepare to jump!

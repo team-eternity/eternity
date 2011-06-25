@@ -53,6 +53,8 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_clipen.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_mobjcol.h"
@@ -140,6 +142,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    }
 #endif
 
+   ClipContext *cc = clip->getContext();
+   
    for(i=0; i<sec->linecount; i++)
    {
       sector_t *other;
@@ -160,9 +164,9 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
-      P_LineOpening(check, NULL);
+      P_LineOpening(check, NULL, cc);
       
-      if(clip.openrange <= 0)
+      if(opening.range <= 0)
          continue;       // closed door
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
@@ -172,6 +176,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       else if(!soundblocks)
          P_RecursiveSound(other, 1, soundtarget);
    }
+   
+   cc->done();
 }
 
 //
@@ -205,7 +211,7 @@ bool P_CheckMeleeRange(Mobj *actor)
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
       (P_AproxDistance(pl->x-actor->x, pl->y-actor->y) <
        MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
-      P_CheckSight(actor, actor->target);
+      trace->checkSight(actor, actor->target);
 }
 
 //
@@ -237,15 +243,19 @@ bool P_HitFriend(Mobj *actor)
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
-      P_AimLineAttack(actor, angle, dist, 0);
+      TracerContext *tc = trace->getContext();
+      
+      trace->aimLineAttack(actor, angle, dist, 0, tc);
 
-      if(clip.linetarget 
-         && clip.linetarget != actor->target 
-         && !((clip.linetarget->flags ^ actor->flags) & MF_FRIEND) 
-         && !(clip.linetarget->flags3 & MF3_NOFRIENDDMG))
+      if(tc->linetarget 
+         && tc->linetarget != actor->target 
+         && !((tc->linetarget->flags ^ actor->flags) & MF_FRIEND) 
+         && !(tc->linetarget->flags3 & MF3_NOFRIENDDMG))
       {
          hitfriend = true;
       }
+      
+      tc->done();
    }
 
    return hitfriend;
@@ -258,7 +268,7 @@ bool P_CheckMissileRange(Mobj *actor)
 {
    fixed_t dist;
    
-   if(!P_CheckSight(actor, actor->target))
+   if(!trace->checkSight(actor, actor->target))
       return false;
    
    if (actor->flags & MF_JUSTHIT)
@@ -446,7 +456,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // killough 10/98: make monsters get affected by ice and sludge too:
 
    if(monster_friction)
-      movefactor = P_GetMoveFactor(actor, &friction);
+      movefactor = clip->getMoveFactor(actor, &friction);
 
    speed = actor->info->speed;
 
@@ -461,9 +471,10 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    tryy = actor->y + (deltay = speed * yspeed[actor->movedir]);
 
    // killough 12/98: rearrange, fix potential for stickiness on ice
+   ClipContext *cc = clip->getContext();
 
    if(friction <= ORIG_FRICTION)
-      try_ok = P_TryMove(actor, tryx, tryy, dropoff);
+      try_ok = clip->tryMove(actor, tryx, tryy, dropoff, cc);
    else
    {
       fixed_t x = actor->x;
@@ -472,7 +483,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t ceilingz = actor->ceilingz;
       fixed_t dropoffz = actor->dropoffz;
       
-      try_ok = P_TryMove(actor, tryx, tryy, dropoff);
+      try_ok = clip->tryMove(actor, tryx, tryy, dropoff, cc);
       
       // killough 10/98:
       // Let normal momentum carry them, instead of steptoeing them across ice.
@@ -496,11 +507,11 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    {      // open any specials
       int good;
       
-      if(actor->flags & MF_FLOAT && clip.floatok)
+      if(actor->flags & MF_FLOAT && cc->floatok)
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < clip.floorz)          // must adjust height
+         if(actor->z < cc->floorz)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -512,24 +523,29 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
             if(P_TestMobjZ(actor))
             {
                actor->flags |= MF_INFLOAT;
+               cc->done();
                return true;
             }
             actor->z = savedz;
          }
          else
          {
-            actor->flags |= MF_INFLOAT;            
+            actor->flags |= MF_INFLOAT; 
+            cc->done();        
             return true;
          }
       }
 
-      if(!clip.numspechit)
+      if(!cc->spechit.getLength())
+      {
+         cc->done();
          return false;
+      }
 
 #ifdef RANGECHECK
       // haleyjd 01/09/07: SPECHIT_DEBUG
-      if(clip.numspechit < 0)
-         I_Error("P_Move: numspechit == %d\n", clip.numspechit);
+      if(cc->spechit.getLength() < 0)
+         I_Error("P_Move: numspechit == %d\n", cc->spechit.getLength());
 #endif
 
       actor->movedir = DI_NODIR;
@@ -550,15 +566,16 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       // Do NOT simply return false 1/4th of the time (causes monsters to
       // back out when they shouldn't, and creates secondary stickiness).
 
-      for(good = false; clip.numspechit--; )
+      for(good = false; cc->spechit.getLength();)
       {
-         if(P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0))
-            good |= (clip.spechit[clip.numspechit] == clip.blockline ? 1 : 2);
+         if(P_UseSpecialLine(actor, cc->spechit[cc->spechit.getLength() - 1], 0))
+            good |= (cc->spechit.removeLast() == cc->blockline ? 1 : 2);
+         else
+            cc->spechit.removeLast();
       }
 
-      // haleyjd 01/09/07: do not leave numspechit == -1
-      clip.numspechit = 0;
-
+      cc->done();
+      
       // haleyjd 04/11/10: wider compatibility range
       if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
          return good;
@@ -581,7 +598,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
    if(comp[comp_overunder])
    {
-      if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
+      if(!(actor->flags & MF_FLOAT) && (!cc->felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
          actor->z = actor->floorz;
@@ -590,6 +607,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
             E_HitFloor(actor);
       }
    }
+   
+   cc->done();
    return true;
 }
 
@@ -758,14 +777,16 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line)
+static bool PIT_AvoidDropoff(line_t *line, MapContext *mc)
 {
+   ClipContext *cc = mc->clipContext();
+   
    if(line->backsector                          && // Ignore one-sided linedefs
-      clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
-      clip.bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
-      clip.bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
-      clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
-      P_BoxOnLineSide(clip.bbox, line) == -1)
+      cc->bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
+      cc->bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
+      cc->bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
+      cc->bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
+      P_BoxOnLineSide(cc->bbox, line) == -1)
    {
       fixed_t front = line->frontsector->floorheight;
       fixed_t back  = line->backsector->floorheight;
@@ -802,12 +823,12 @@ static bool PIT_AvoidDropoff(line_t *line)
 //
 // Driver for above
 //
-static fixed_t P_AvoidDropoff(Mobj *actor)
+static fixed_t P_AvoidDropoff(Mobj *actor, ClipContext *cc)
 {
-   int yh=((clip.bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int yl=((clip.bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
-   int xh=((clip.bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
-   int xl=((clip.bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int yh=((cc->bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int yl=((cc->bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int xh=((cc->bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int xl=((cc->bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
    floorz = actor->z;            // remember floor height
@@ -821,7 +842,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    {
       // all contacted lines
       for(by = yl; by <= yh; ++by)
-         P_BlockLinesIterator(bx, by, PIT_AvoidDropoff);
+         P_BlockLinesIterator(bx, by, PIT_AvoidDropoff, cc);
    }
    
    // Non-zero if movement prescribed
@@ -853,17 +874,21 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
+      ClipContext *cc = clip->getContext();
+      
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (comp[comp_overunder] || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !comp[comp_dropoff] && P_AvoidDropoff(actor, cc)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
          
          // If moving away from dropoff, set movecount to 1 so that 
          // small steps are taken to get monster away from dropoff.
+         
+         cc->done();
          
          actor->movecount = 1;
          return;
@@ -901,6 +926,7 @@ void P_NewChaseDir(Mobj *actor)
             }
          }
       }
+      cc->done();
    }
 
    P_DoNewChaseDir(actor, deltax, deltay);
@@ -945,7 +971,7 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
          return 0;
    }
 
-   return P_CheckSight(actor, mo);
+   return trace->checkSight(actor, mo);
 }
 
 int p_lastenemyroar;
@@ -974,8 +1000,9 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static bool PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo, MapContext *mc)
 {
+   //ClipContext *cc = mc->clipContext();
    Mobj *actor = current_actor;
 
    if(!((mo->flags ^ actor->flags) & MF_FRIEND && // Invalid target
@@ -1023,7 +1050,7 @@ static bool P_HereticMadMelee(Mobj *actor)
    Thinker *th;
 
    // only monsters within sight of the player will go crazy
-   if(!P_CheckSight(players[0].mo, actor))
+   if(!trace->checkSight(players[0].mo, actor))
       return false;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
@@ -1045,7 +1072,7 @@ static bool P_HereticMadMelee(Mobj *actor)
          continue;
 
       // must be within sight
-      if(!P_CheckSight(actor, mo))
+      if(!trace->checkSight(actor, mo))
          continue;
 
       // got one
@@ -1213,7 +1240,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
       
       // Search first in the immediate vicinity.
       
-      if(!P_BlockThingsIterator(x, y, PIT_FindTarget))
+      if(!P_BlockThingsIterator(x, y, PIT_FindTarget, NULL))
          return true;
 
       for(d = 1; d < 5; ++d)
@@ -1221,15 +1248,15 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
          int i = 1 - d;
          do
          {
-            if(!P_BlockThingsIterator(x+i, y-d, PIT_FindTarget) ||
-               !P_BlockThingsIterator(x+i, y+d, PIT_FindTarget))
+            if(!P_BlockThingsIterator(x+i, y-d, PIT_FindTarget, NULL) ||
+               !P_BlockThingsIterator(x+i, y+d, PIT_FindTarget, NULL))
                return true;
          }
          while(++i < d);
          do
          {
-            if(!P_BlockThingsIterator(x-d, y+i, PIT_FindTarget) ||
-               !P_BlockThingsIterator(x+d, y+i, PIT_FindTarget))
+            if(!P_BlockThingsIterator(x-d, y+i, PIT_FindTarget, NULL) ||
+               !P_BlockThingsIterator(x+d, y+i, PIT_FindTarget, NULL))
                return true;
          }
          while(--i + d >= 0);
@@ -1251,7 +1278,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(mo && !PIT_FindTarget(mo))
+            else if(mo && !PIT_FindTarget(mo, NULL))
                // If target sighted
                return true;
          }
@@ -1308,7 +1335,7 @@ bool P_HelpFriend(Mobj *actor)
          if(mo->flags & MF_JUSTHIT &&
             mo->target && 
             mo->target != actor->target &&
-            !PIT_FindTarget(mo->target))
+            !PIT_FindTarget(mo->target, NULL))
          {
             // Ignore any attacking monsters, while searching for 
             // friend
@@ -1404,7 +1431,7 @@ void P_BossTeleport(bossteleport_t *bt)
    prevy = boss->y;
    prevz = boss->z;
 
-   if(P_TeleportMove(boss, targ->x, targ->y, false))
+   if(clip->teleportMove(boss, targ->x, targ->y, false))
    {
       if(bt->hereThere <= BOSSTELE_BOTH &&
          bt->hereThere != BOSSTELE_NONE)
@@ -1666,10 +1693,14 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       newmobj = P_SpawnPlayerMissile(plyr->mo, type);
 
+      TracerContext *tc = trace->getContext();
+      
       // set the tracer target in case it is a homing missile
-      P_BulletSlope(plyr->mo);
-      if(clip.linetarget)
-         P_SetTarget<Mobj>(&newmobj->tracer, clip.linetarget);
+      P_BulletSlope(plyr->mo, tc);
+      if(tc->linetarget)
+         P_SetTarget<Mobj>(&newmobj->tracer, tc->linetarget);
+      
+      tc->done();
    }
    else
    {
@@ -1682,7 +1713,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       
       z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
-      if(Check_Sides(plyr->mo, x, y))
+      if(clip->checkSides(plyr->mo, x, y))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, type);
@@ -1723,13 +1754,17 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // code to tweak interesting objects
    if(type == vileFireType)
    {
-      P_BulletSlope(plyr->mo);
-      if(clip.linetarget)
+      TracerContext *tc = trace->getContext();
+      
+      P_BulletSlope(plyr->mo, tc);
+      if(tc->linetarget)
       {
          P_SetTarget<Mobj>(&newmobj->target, plyr->mo);
-         P_SetTarget<Mobj>(&newmobj->tracer, clip.linetarget);
+         P_SetTarget<Mobj>(&newmobj->tracer, tc->linetarget);
          A_Fire(newmobj);
       }
+      
+      tc->done();
    }
 
    // code to make spawning parameterized objects more useful
@@ -1911,14 +1946,17 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
    fixed_t slope;
    int damage = 10000;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   TracerContext *tc = trace->getContext();
+   
+   slope = trace->aimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0, tc);
 
-   if(clip.linetarget
-      && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
-      && !(clip.linetarget->flags4 & MF4_NODAMAGE))    // defeat special flags
-      damage = clip.linetarget->health;
+   if(tc->linetarget
+      && !(tc->linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
+      && !(tc->linetarget->flags4 & MF4_NODAMAGE))    // defeat special flags
+      damage = tc->linetarget->health;
 
-   P_LineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
+   trace->lineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, slope, damage);
+   tc->done();
 }
 
 CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
@@ -1932,12 +1970,16 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    {
       angle_t an = (ANG360/60)*i;
       
-      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+      TracerContext *tc = trace->getContext();
+      
+      slope = trace->aimLineAttack(plyr->mo, an, MISSILERANGE,0, tc);
 
-      if(clip.linetarget)
-         damage = clip.linetarget->health;
+      if(tc->linetarget)
+         damage = tc->linetarget->health;
 
-      P_LineAttack(plyr->mo, an, MISSILERANGE, slope, damage);
+      tc->done();
+
+      trace->lineAttack(plyr->mo, an, MISSILERANGE, slope, damage);
    }
 }
 
@@ -1945,25 +1987,32 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   TracerContext *tc = trace->getContext();
+   trace->aimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0, tc);
 
-   if(clip.linetarget)
-      clip.linetarget->removeThinker();
+   if(tc->linetarget)
+      tc->linetarget->removeThinker();
+      
+   tc->done();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_BulletSlope(plyr->mo);
-   if(!clip.linetarget)
+   TracerContext *tc = trace->getContext();
+   
+   P_BulletSlope(plyr->mo, tc);
+   if(!tc->linetarget)
       return;
    
    S_StartSound(plyr->mo, sfx_barexp);
-   P_DamageMobj(clip.linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
-   clip.linetarget->momz = 1000*FRACUNIT/clip.linetarget->info->mass;
+   P_DamageMobj(tc->linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
+   tc->linetarget->momz = 1000*FRACUNIT/tc->linetarget->info->mass;
 
-   P_RadiusAttack(clip.linetarget, plyr->mo, 70, MOD_UNKNOWN);
+   clip->radiusAttack(tc->linetarget, plyr->mo, 70, MOD_UNKNOWN);
+   
+   tc->done();
 }
 
 void P_SpawnPlayer(mapthing_t* mthing);
@@ -1987,7 +2036,7 @@ static void P_ResurrectPlayer(void)
       p->health = 100;
       P_SpawnPlayer(&mthing);
       oldmo->player = NULL;
-      P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
+      clip->teleportMove(p->mo, p->mo->x, p->mo->y, true);
    }
 }
 

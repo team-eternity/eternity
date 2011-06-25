@@ -78,7 +78,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             if(player && player->mo != thing)
                player = NULL;
 
-            if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
+            if(!clip->teleportMove(thing, m->x, m->y, false)) // killough 8/9/98
                return 0;
 
             // haleyjd 12/15/02: cph found out this was removed
@@ -195,7 +195,7 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
             player_t *player = thing->player;
             
             // Attempt to teleport, aborting if blocked
-            if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
+            if(!clip->teleportMove(thing, m->x, m->y, false)) // killough 8/9/98
                return 0;
 
             // Rotate thing according to difference in angles
@@ -330,7 +330,7 @@ int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
          }
 
          // Attempt to teleport, aborting if blocked
-         if(!P_TeleportMove(thing, x, y, false)) // killough 8/9/98
+         if(!clip->teleportMove(thing, x, y, false)) // killough 8/9/98
             return 0;
 
          // Adjust z position to be same height above ground as before.

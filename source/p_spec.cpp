@@ -55,6 +55,8 @@
 #include "p_inter.h"
 #include "p_clipen.h"
 #include "p_maputl.h"
+#include "p_mapcontext.h"
+#include "p_traceengine.h"
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_setup.h"
@@ -3445,8 +3447,10 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 
 PushThinker *tmpusher; // pusher structure for blockmap searches
 
-bool PIT_PushThing(Mobj* thing)
+bool PIT_PushThing(Mobj* thing, MapContext *mc)
 {
+   ClipContext *cc = mc->clipContext();
+   
    if(demo_version < 203  ?     // killough 10/98: made more general
       thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
       (sentient(thing) || thing->flags & MF_SHOOTABLE) &&
@@ -3480,7 +3484,7 @@ bool PIT_PushThing(Mobj* thing)
       // If speed <= 0, you're outside the effective radius. You also have
       // to be able to see the push/pull source point.
 
-      if(speed > 0 && P_CheckSight(thing, tmpusher->source))
+      if(speed > 0 && trace->checkSight(thing, tmpusher->source))
       {
          pushangle = P_PointToAngle(thing->x, thing->y, sx, sy);
          
@@ -3546,24 +3550,28 @@ void PushThinker::Think()
    {
       // Seek out all pushable things within the force radius of this
       // point pusher. Crosses sectors, so use blockmap.
-
+      
+      ClipContext *cc = clip->getContext();
+      
       tmpusher = this; // PUSH/PULL point source
       radius = this->radius; // where force goes to zero
-      clip.bbox[BOXTOP]    = this->y + radius;
-      clip.bbox[BOXBOTTOM] = this->y - radius;
-      clip.bbox[BOXRIGHT]  = this->x + radius;
-      clip.bbox[BOXLEFT]   = this->x - radius;
+      cc->bbox[BOXTOP]    = this->y + radius;
+      cc->bbox[BOXBOTTOM] = this->y - radius;
+      cc->bbox[BOXRIGHT]  = this->x + radius;
+      cc->bbox[BOXLEFT]   = this->x - radius;
       
-      xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-      xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-      yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-      yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+      xl = (cc->bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+      xh = (cc->bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+      yl = (cc->bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+      yh = (cc->bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
       for (bx = xl; bx <= xh; bx++)
       {
          for(by = yl; by <= yh; by++)
-            P_BlockThingsIterator(bx, by, PIT_PushThing);
+            P_BlockThingsIterator(bx, by, PIT_PushThing, cc);
       }
+      
+      cc->done();
       return;
    }
 
@@ -3995,7 +4003,7 @@ bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 
    for(i = 0; i < numattsectors; ++i)
    {
-      if(P_CheckSector(sectors + attsectors[i], crush, delta, 2))
+      if(clip->checkSector(sectors + attsectors[i], crush, delta, 2))
          ok = false;
    }
 
@@ -4211,26 +4219,26 @@ bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
       if(list[i].type & AS_CEILING)
       {
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 1))
+         if(clip->checkSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 1))
+         if(clip->checkSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }
 
       if(list[i].type & AS_FLOOR)
       {
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 0))
+         if(clip->checkSector(list[i].sector, crush, delta, 0))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 0))
+         if(clip->checkSector(list[i].sector, crush, -delta, 0))
             ok = false;
       }
    }
