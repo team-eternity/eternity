@@ -26,6 +26,9 @@ ENDIF (COMMAND cmake_policy)
 ######################### Set Project Source  ##################################
 ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
 ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
+IF (GL_LIBRARY)
+        ADD_DEFINITIONS (-DEE_FEATURE_OPENGL)
+ENDIF (GL_LIBRARY)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really mean any *nix ?
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -63,12 +66,18 @@ FILE (GLOB TEXTSCREEN_SOURCES textscreen/*.c)
 INCLUDE_DIRECTORIES (./)
 FILE (GLOB ETERNITY_SOURCES *.cpp)
 
+INCLUDE_DIRECTORIES (hal/)
+FILE (GLOB HAL_SOURCES hal/*.cpp)
+
+INCLUDE_DIRECTORIES (gl/)
+FILE (GLOB GL_SOURCES gl/*.cpp)
+
 ## FIXME: It would be better to pull i_cpu_posix.c out into a
 ## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES (sdl/)
 SET (SDL_SOURCES sdl/i_input.cpp sdl/i_main.cpp sdl/i_net.cpp sdl/i_pcsound.cpp
-sdl/i_picker.cpp sdl/i_sdlmusic.cpp sdl/i_sdlsound.cpp sdl/i_sound.cpp
-sdl/i_system.cpp sdl/i_video.cpp sdl/mmus2mid.cpp sdl/ser_main.cpp)
+sdl/i_picker.cpp sdl/i_sdlgl2d.cpp sdl/i_sdlmusic.cpp sdl/i_sdlsound.cpp sdl/i_sound.cpp
+sdl/i_system.cpp sdl/i_sdlvideo.cpp sdl/mmus2mid.cpp sdl/ser_main.cpp)
 IF (NOT WIN32)
         SET ($SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
 ENDIF (NOT WIN32)
@@ -78,7 +87,10 @@ ENDIF (NOT WIN32)
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
-                ${TEXTSCREEN_SOURCES} ${SDL_SOURCES})
+                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+IF (GL_LIBRARY)
+        TARGET_LINK_LIBRARIES (eternity ${GL_LIBRARY})
+ENDIF (GL_LIBRARY)
 TARGET_LINK_LIBRARIES (eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} snes_spc)
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}

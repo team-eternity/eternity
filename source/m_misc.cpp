@@ -163,11 +163,6 @@ default_t defaults[] =
    DEFAULT_INT("detect_voices", &detect_voices, NULL, 1, 0, 1, default_t::wad_no,
                "1 enables voice detection prior to calling install sound"),
 #endif
-
-#ifdef _SDL_VER
-   DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
-               "description of video mode parameters (WWWWxHHHH[flags])"),
-#endif
   
    // killough 10/98
    DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
@@ -1474,9 +1469,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, D_DoomExeDir(), D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 14, basepath, D_DoomExeName());
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", D_DoomExeDir(), D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", basepath, D_DoomExeName());
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;

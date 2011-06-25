@@ -397,7 +397,7 @@ public:
 
    metaTablePimpl() 
       : ZoneObject(),
-        keyhash (&MetaObject::key, &MetaObject::links),
+        keyhash (&MetaObject::key,  &MetaObject::links),
         typehash(&MetaObject::type, &MetaObject::typelinks)
    {
       // the key hash is growable.
@@ -409,6 +409,12 @@ public:
       // types are case sensitive, because they are based on C types.
       typehash.Initialize(METANUMCHAINS);
    }
+
+   virtual ~metaTablePimpl()
+   {
+      keyhash.Destroy();
+      typehash.Destroy();
+   }
 };
 
 //
@@ -416,10 +422,53 @@ public:
 //
 // Default Constructor
 //
-MetaTable::MetaTable() : ZoneObject()
+MetaTable::MetaTable(const char *name) : MetaObject("MetaTable", name)
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
+}
+
+//
+// MetaTable(const MetaTable &)
+//
+// Copy constructor
+//
+MetaTable::MetaTable(const MetaTable &other) 
+  : MetaObject("MetaTable", other.key_name)
+{
+   pImpl = new metaTablePimpl();
+   copyTableFrom(&other);
+}
+
+//
+// MetaTable Destructor
+//
+MetaTable::~MetaTable()
+{
+   clearTable();
+
+   delete pImpl;
+   pImpl = NULL;
+}
+
+//
+// MetaTable::clone
+//
+// Virtual method inherited from MetaObject. Create a copy of this table.
+//
+MetaObject *MetaTable::clone() const
+{
+   return new MetaTable(*this);
+}
+
+//
+// MetaTable::toString
+//
+// Virtual method inherited from MetaObject.
+//
+const char *MetaTable::toString() const
+{
+   return key_name;
 }
 
 //
@@ -691,7 +740,7 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, me
 //
 // Iterates on all objects in the metatable, regardless of key or type.
 //
-MetaObject *MetaTable::tableIterator(MetaObject *object)
+MetaObject *MetaTable::tableIterator(MetaObject *object) const
 {
    return pImpl->keyhash.tableIterator(object);
 }
@@ -1004,7 +1053,7 @@ void MetaTable::removeStringNR(const char *key)
 //
 // Adds copies of all objects in the source table to the destination table.
 //
-void MetaTable::copyTableTo(MetaTable *dest)
+void MetaTable::copyTableTo(MetaTable *dest) const
 {
    MetaObject *srcobj = NULL;
 
@@ -1025,9 +1074,27 @@ void MetaTable::copyTableTo(MetaTable *dest)
 // Convenience method
 // Adds copies of all objects in the source table to *this* table.
 //
-void MetaTable::copyTableFrom(MetaTable *source)
+void MetaTable::copyTableFrom(const MetaTable *source)
 {
    source->copyTableTo(this);
+}
+
+//
+// MetaTable::clearTable
+//
+// Removes all objects from a metatable.
+//
+void MetaTable::clearTable()
+{
+   MetaObject *obj = NULL;
+
+   // iterate on the source table
+   while((obj = tableIterator(NULL)))
+   {
+      removeObject(obj);
+
+      delete obj;
+   }
 }
 
 // EOF

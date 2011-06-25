@@ -55,6 +55,7 @@
 #include "mn_htic.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
+#include "mn_menus.h"
 #include "mn_misc.h"
 #include "mn_files.h"
 #include "p_setup.h"
@@ -1630,63 +1631,237 @@ CONSOLE_COMMAND(mn_endgame, 0)
    MN_Question(DEH_String("ENDGAME"), "starttitle");
 }
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Set video mode
 //
 
-#if 0
-static const char **mn_vidmode_desc;
-static const char **mn_vidmode_cmds;
+// haleyjd 06/19/11: user's favorite aspect ratio
+int mn_favaspectratio;
 
+static const char *aspect_ratio_desc[] =
+{
+   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9"
+};
+
+VARIABLE_INT(mn_favaspectratio, NULL, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
+CONSOLE_VARIABLE(mn_favaspectratio, mn_favaspectratio, 0) {}
+
+// haleyjd 06/19/11: user's favored fullscreen/window setting
+int mn_favscreentype;
+
+static const char *screen_type_desc[] = { "windowed", "fullscreen" };
+
+VARIABLE_INT(mn_favscreentype, NULL, 0, MN_NUMSCREENTYPES-1, screen_type_desc);
+CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
+
+// Video mode lists, per aspect ratio
+
+// Legacy settings, w/aspect-corrected variants
+static const char *legacyModes[] =
+{
+   "320x200",  // Mode 13h (16:10 logical, 4:3 physical)
+   "320x240",  // QVGA
+   "640x400",  // VESA Extension (same as 320x200)
+   "640x480",  // VGA
+   "960x600",  // x3
+   "960x720",  // x3 with aspect ratio correction
+   "1280x960", // x4 with aspect ratio correction  
+   NULL
+};
+
+// 5:4 modes (1.25 / 0.8)
+static const char *fiveFourModes[] =
+{
+   "320x256",   // NES resolution, IIRC
+   "640x512",
+   "800x640",
+   "960x768",
+   "1280x1024", // Most common 5:4 mode (name?)
+   "1400x1120",
+   "1600x1280",
+   NULL
+};
+
+// 4:3 modes (1.333... / 0.75)
+static const char *fourThreeModes[] =
+{
+   "768x576",   // PAL
+   "800x600",   // SVGA
+   "1024x768",  // XGA
+   "1152x864",  // XGA+
+   "1400x1050", // SXGA+
+   "1600x1200", // UGA
+   "2048x1536", // QXGA
+   NULL
+};
+
+// 3:2 modes (1.5 / 0.666...)
+static const char *threeTwoModes[] =
+{
+   "720x480",  // NTSC
+   "768x512",
+   "960x640",
+   "1152x768",
+   "1280x854",
+   "1440x960",
+   "1680x1120",
+   NULL
+};
+
+// 16:10 modes (1.6 / 0.625)
+static const char *sixteenTenModes[] =
+{
+   "1280x800",  // WXGA
+   "1440x900",
+   "1680x1050", // WSXGA+
+   "1920x1200", // WUXGA
+   "2560x1600", // WQXGA (This is the current max resolution)
+   NULL
+};
+
+// 5:3 modes (1.666... / 0.6)
+static const char *fiveThreeModes[] =
+{
+   "640x384",
+   "800x480",  // WVGA
+   "960x576",
+   "1280x768", // WXGA
+   "1400x840",
+   "1600x960",
+   "2560x1536",
+   NULL
+};
+
+// "WSVGA" modes (128:75 or 16:9.375: 1.70666... / 0.5859375)
+static const char *wsvgaModes[] =
+{
+   "1024x600", // WSVGA (common netbook resolution)
+   NULL
+};
+
+// 16:9 modes (1.777... / 0.5625)
+static const char *sixteenNineModes[] =
+{
+   "854x480",   // WVGA
+   "1280x720",  // HD720
+   "1360x768",  
+   "1440x810",
+   "1600x900",  // HD+
+   "1920x1080", // HD1080
+   "2048x1152",
+   NULL
+};
+
+// FIXME/TODO: Not supported as menu choices yet:
+// 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
+// 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
+// These are not choices here because EE doesn't support them properly yet.
+// Weapons will float above the status bar in these aspect ratios.
+
+static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
+{
+   legacyModes,      // Low-res 16:10, 4:3 modes and their multiples
+   fiveFourModes,    // 5:4 - very square
+   fourThreeModes,   // 4:3 (standard CRT)
+   threeTwoModes,    // 3:2 (similar to European TV)
+   sixteenTenModes,  // 16:10, common LCD widescreen monitors
+   fiveThreeModes,   // 5:3 
+   wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
+   sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
+};
+
+static int mn_vidmode_num;
+static char **mn_vidmode_desc;
+static char **mn_vidmode_cmds;
+
+//
+// MN_BuildVidmodeTables
+//
+// haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
+// from the precomposited lists above based on the user's favorite aspect
+// ratio and fullscreen/windowed settings.
+//
 static void MN_BuildVidmodeTables(void)
 {
-   static bool menu_built = false;
-   
-   // don't build multiple times
-   if(!menu_built)
+   int useraspect = mn_favaspectratio;
+   int userfs     = mn_favscreentype;
+   const char **reslist = NULL;
+   int i = 0;
+   int nummodes;
+   qstring description;
+   qstring cmd;
+
+   if(mn_vidmode_desc)
    {
-      int nummodes, vidmode;
-      char tempstr[20];
-
-      nummodes = V_NumModes();
-
-      // allocate arrays
-      mn_vidmode_desc = Z_Malloc((nummodes + 1) * sizeof(char *), 
-                                 PU_STATIC, NULL);
-      mn_vidmode_cmds = Z_Malloc((nummodes + 1) * sizeof(char *),
-                                 PU_STATIC, NULL);
-            
-      for(vidmode = 0; vidmode < nummodes; ++vidmode)
-      {
-         mn_vidmode_desc[vidmode] = videomodes[vidmode].description;
-         sprintf(tempstr, "v_mode %i", vidmode);
-         mn_vidmode_cmds[vidmode] = strdup(tempstr);
-      }
-      mn_vidmode_desc[nummodes] = NULL;
-      mn_vidmode_cmds[nummodes] = NULL;
-          
-      menu_built = true;
+      for(i = 0; i < mn_vidmode_num; i++)
+         free(mn_vidmode_desc[i]);
+      free(mn_vidmode_desc);
+      mn_vidmode_desc = NULL;
    }
+   if(mn_vidmode_cmds)
+   {
+      for(i = 0; i < mn_vidmode_num; i++)
+         free(mn_vidmode_cmds[i]);
+      free(mn_vidmode_cmds);
+      mn_vidmode_cmds = NULL;
+   }
+
+   // pick the list of resolutions to use
+   if(useraspect >= 0 && useraspect < AR_NUMASPECTRATIOS)
+      reslist = resListForAspectRatio[useraspect];
+   else
+      reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
+
+   // count the modes on that list
+   while(reslist[i])
+      ++i;
+
+   nummodes = i;
+
+   // allocate arrays
+   mn_vidmode_desc = (char **)calloc(i+1, sizeof(const char *));
+   mn_vidmode_cmds = (char **)calloc(i+1, sizeof(const char *));
+
+   for(i = 0; i < nummodes; i++)
+   {
+      description = reslist[i];
+      switch(userfs)
+      {
+      case MN_FULLSCREEN:
+         description += 'f';
+         break;
+      case MN_WINDOWED:
+      default:
+         description += 'w';
+         break;
+      }
+
+      // set the mode description
+      mn_vidmode_desc[i] = description.duplicate(PU_STATIC);
+      
+      cmd  = "i_videomode ";
+      cmd += description;
+      
+      mn_vidmode_cmds[i] = cmd.duplicate(PU_STATIC);
+   }
+
+   // null-terminate the lists
+   mn_vidmode_desc[nummodes] = NULL;
+   mn_vidmode_cmds[nummodes] = NULL;
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   static char title[128];
-
    MN_BuildVidmodeTables();
 
-   psnprintf(title, sizeof(title), 
-             "choose a video mode\n\n  current mode:\n  %s",
-             videomodes[v_mode].description);
-
-   MN_SetupBoxWidget(title, mn_vidmode_desc, 1,
-                     NULL, mn_vidmode_cmds);
+   MN_SetupBoxWidget("Choose a Video Mode", 
+                     (const char **)mn_vidmode_desc, 1, NULL, 
+                     (const char **)mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
-#endif
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Video Options
 //
@@ -1721,9 +1896,12 @@ static menuitem_t mn_video_items[] =
    {it_title,        FC_GOLD "Video Options",           NULL, "m_video"},
    {it_gap},
    {it_info,         FC_GOLD "Mode"                                    },
-   {it_variable_nd,  "video mode",              "i_videomode"          },
-   {it_runcmd,       "make default video mode", "i_default_videomode"  },
-   {it_toggle,       "wait for retrace",        "v_retrace"            },
+   {it_runcmd,       "choose a mode...",        "mn_vidmode"           },
+   {it_variable,     "video mode",              "i_videomode"          },
+   {it_toggle,       "favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_toggle,       "favorite screen mode",    "mn_favscreentype"     },
+   //{it_runcmd,       "make default video mode", "i_default_videomode"  },
+   {it_toggle,       "vertical sync",           "v_retrace"            },
    {it_slider,       "gamma correction",        "gamma"                },   
    {it_gap},
    {it_info,         FC_GOLD "Rendering"                               },
@@ -1759,7 +1937,7 @@ void MN_VideoModeDrawer(void)
    // draw an imp fireball
 
    // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[10].flags & MENUITEM_POSINIT))
+   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
       return;
    
    sprdef = &sprites[states[frame]->sprite];
@@ -1772,7 +1950,7 @@ void MN_VideoModeDrawer(void)
    patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[11].y - 5;
+   y = menu_video.menuitems[13].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &vbscreen, patch, NULL, FTRANLEVEL);
 }
@@ -1790,7 +1968,6 @@ static menuitem_t mn_sysvideo_items[] =
    {it_toggle,   "textmode startup",        "textmode_startup"},
 #ifdef _SDL_VER
    {it_toggle,   "wait at exit",            "i_waitatexit"},
-   {it_toggle,   "window grabs mouse",      "i_grabmouse"},
    {it_toggle,   "show endoom",             "i_showendoom"},
    {it_variable, "endoom delay",            "i_endoomdelay"},
 #endif
@@ -2020,8 +2197,8 @@ static menuitem_t mn_mouse_items[] =
    {it_toggle,     "smooth turning",               "smooth_turning"},
    {it_toggle,     "mouse acceleration",           "mouse_accel"},
    {it_toggle,     "novert emulation",             "mouse_novert"},
-#ifndef _SDL_VER
-   {it_toggle,     "enable joystick",              "i_usejoystick"},
+#ifdef _SDL_VER
+   {it_toggle,     "window grabs mouse",           "i_grabmouse"},
 #endif
    {it_end}
 };
@@ -3588,9 +3765,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_mouse);
    C_AddCommand(mn_video);
    C_AddCommand(mn_particle);  // haleyjd: particle options menu
-#if 0
    C_AddCommand(mn_vidmode);
-#endif
+   C_AddCommand(mn_favaspectratio);
+   C_AddCommand(mn_favscreentype);
    C_AddCommand(mn_sound);
    C_AddCommand(mn_weapons);
    C_AddCommand(mn_compat);

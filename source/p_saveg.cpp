@@ -281,8 +281,8 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
       loadfile->ReadSint32(sectornum);
       if(sectornum < 0 || sectornum >= numsectors)
       {
-         I_FatalError(I_ERR_KILL, "SaveArchive: sector num %d out of range\n",
-                      sectornum);
+         I_Error("SaveArchive: sector num %d out of range\n",
+                 sectornum);
       }
       s = &sectors[sectornum];
    }
@@ -308,8 +308,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
          ln = NULL;
       else if(linenum < 0 || linenum >= numlines)
       {
-         I_FatalError(I_ERR_KILL, "SaveArchive: line num %d out of range\n",
-                      linenum);
+         I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
       else
          ln = &lines[linenum];
@@ -708,7 +707,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
             else 
-               I_FatalError(I_ERR_KILL, "Unknown tclass %s in savegame\n", className);
+               I_Error("Unknown tclass %s in savegame\n", className);
          }
 
          // Create a thinker of the appropriate type and load it
@@ -831,10 +830,7 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
       arc.ArchiveLString(className, len);
 
       if(!className || strncmp(className, "PointThinker", len))
-      {
-         I_FatalError(I_ERR_KILL, 
-                      "P_ArchivePolyObj: no PointThinker for polyobject");
-      }
+         I_Error("P_ArchivePolyObj: no PointThinker for polyobject");
    }
 
    pt.serialize(arc);
@@ -863,10 +859,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
       arc << numSavedPolys;
 
       if(numSavedPolys != numPolyObjects)
-      {
-         I_FatalError(I_ERR_KILL,
-            "P_UnArchivePolyObjects: polyobj count inconsistency\n");
-      }
+         I_Error("P_UnArchivePolyObjects: polyobj count inconsistency\n");
    }
 
    for(int i = 0; i < numPolyObjects; ++i)
@@ -921,10 +914,7 @@ static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
    {
       arc << arch_amx_size;
       if(arch_amx_size != amx_size)
-      {
-         I_FatalError(I_ERR_KILL,
-                      "P_ArchiveSmallAMX: data segment consistency error\n");
-      }
+         I_Error("P_ArchiveSmallAMX: data segment consistency error\n");
 
       arc.getLoadFile()->Read(data, arch_amx_size);
    }
@@ -1030,8 +1020,7 @@ void P_ArchiveScripts(SaveArchive &arc)
       ((haveGameScript  != gameScriptLoaded) ||
        (haveLevelScript != levelScriptLoaded)))
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveScripts: vm presence inconsistency\n");
+      I_Error("P_UnArchiveScripts: vm presence inconsistency\n");
    }
 
    // save gamescript
@@ -1108,9 +1097,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
-         name);
+      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
+              name);
    }
 
    newSeq->currentSound = NULL; // not currently playing a sound
@@ -1141,9 +1129,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    case SEQ_ORIGIN_POLYOBJ:
       if(!(po = Polyobj_GetForNum(twizzle)))
       {
-         I_FatalError(I_ERR_KILL,
-            "P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
-            twizzle);
+         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
+                 twizzle);
       }
       newSeq->originIdx = po->id;
       newSeq->origin = &po->spawnSpot;
@@ -1154,9 +1141,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
       newSeq->origin = mo;
       break;
    default:
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
-         newSeq->originType);
+      I_Error("P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
+              newSeq->originType);
    }
 
    // restore delay counter, volume, attenuation, and flags

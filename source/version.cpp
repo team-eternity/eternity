@@ -31,17 +31,17 @@
 int version = 340;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 11;
+unsigned char subversion = 15;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Aasgard";
+const char version_name[] = "Wodanaz";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.40.11 \"Aasgard\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.15 \"Wodanaz\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -73,6 +73,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.11 \"Aasgard\"";
 // 3.40.00 'Rebirth'   -- 01/08/11
 // 3.40.10 'Aasgard'   -- 05/01/11
 // 3.40.11 'Aasgard'   -- 05/02/11
+// 3.40.15 'Wodanaz'   -- 06/21/11
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

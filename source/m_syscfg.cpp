@@ -35,6 +35,7 @@
 #include "i_video.h"
 #include "m_misc.h"
 #include "m_shots.h"
+#include "mn_menus.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "w_wad.h"
@@ -133,9 +134,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, default_t::wad_no,
                "Start up ETERNITY in text mode"),
 
-   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to enable wait for vsync to avoid display tearing"),
-
    DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, default_t::wad_no,
                "Percentage of normal speed (35 fps) realtic clock runs at"),
 
@@ -182,11 +180,37 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
+   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
+               "Software backend screen bitdepth (8, 16, 24, or 32)"),
+
+   DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
+               "Description of video mode parameters (WWWWxHHHH[flags])"),
+
+   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
+               "1 to enable wait for vsync to avoid display tearing"),
+
+   DEFAULT_INT("mn_favaspectratio", &mn_favaspectratio, NULL, 0, 0, AR_NUMASPECTRATIOS-1,
+               default_t::wad_no, "Favorite aspect ratio for selection in menus"),
+
+   DEFAULT_INT("mn_favscreentype", &mn_favscreentype, NULL, 0, 0, MN_NUMSCREENTYPES-1,
+               default_t::wad_no, "Favorite screen type for selection in menus"),
+
    DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
    DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
                 "1 to enable use of GL ARB pixelbuffer object extension"),
+
+   DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
+               "GL backend screen bitdepth (16, 24, or 32)"),
+
+   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8, 
+               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no, 
+               "GL2D internal texture format"),
+
+   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
+               0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
+               "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),

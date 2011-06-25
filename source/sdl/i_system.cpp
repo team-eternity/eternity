@@ -120,7 +120,7 @@ static int I_GetTime_FastDemo(void)
 
 static int I_GetTime_Error(void)
 {
-   I_FatalError(I_ERR_KILL, "Error: GetTime() used before initialization\n");
+   I_Error("Error: GetTime() used before initialization\n");
    return 0;
 }
 

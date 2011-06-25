@@ -647,11 +647,7 @@ static void I_SetChannels(void)
       channelinfo[i].semaphore = SDL_CreateSemaphore(1);
 
       if(!channelinfo[i].semaphore)
-      {
-         I_FatalError(I_ERR_KILL, 
-                      "I_SetChannels: failed to create semaphore for channel %d\n",
-                      i);
-      }
+         I_Error("I_SetChannels: failed to create semaphore for channel %d\n", i);
    }
 
    // haleyjd 04/21/10: initialize equalizers

@@ -65,14 +65,14 @@ extern int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 extern bool noblit;
 
 static SDL_Color basepal[256], colors[256];
-extern bool setpalette;
-
-// haleyjd 12/03/07: 8-on-32 graphics support
-extern bool crossbitdepth;
+static bool setpalette = false;
 
 // haleyjd 07/15/09
 extern char *i_default_videomode;
 extern char *i_videomode;
+
+// haleyjd 12/03/07: 8-on-32 graphics support
+static bool crossbitdepth;
 
 //
 // SDLVideoDriver::FinishUpdate
@@ -213,8 +213,6 @@ void SDLVideoDriver::EndRead(void)
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
 
-static bool setpalette = false;
-
 //
 // I_SDLSetPaletteDirect
 //
@@ -302,7 +300,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
                               8, 0, 0, 0, 0);
       if(!primary_surface)
-         I_FatalError(I_ERR_KILL, "Failed to create screen temp buffer\n");
+         I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
       video.screens[0] = (byte *)primary_surface->pixels;
       video.pitch = primary_surface->pitch;
@@ -349,6 +347,12 @@ extern bool setsizeneeded;
 //
 bool SDLVideoDriver::InitGraphicsMode()
 {
+   // haleyjd 06/19/11: remember characteristics of last successful modeset
+   static int fallback_w     = 640;
+   static int fallback_h     = 480;
+   static int fallback_bd    =   8;
+   static int fallback_flags = SDL_SWSURFACE;
+
    bool wantfullscreen = false;
    bool wantvsync      = false;
    bool wanthardware   = false;
@@ -360,10 +364,23 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))
+     v_bd = 32;
+   else if(i_softbitdepth > 8)
    {
-      v_bd = 32;
-      crossbitdepth = true;
+      switch(i_softbitdepth)
+      {
+      case 16: // Valid screen bitdepth settings
+      case 24:
+      case 32:
+         v_bd = i_softbitdepth;
+         break;
+      default:
+         break;
+      }
    }
+
+   if(v_bd != 8)
+      crossbitdepth = true;
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -395,20 +412,29 @@ bool SDLVideoDriver::InitGraphicsMode()
       !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
    {
       // try 320x200w safety mode
-      if(!SDL_VideoModeOK(320, 200, 8, SDL_SWSURFACE) ||
-         !(sdlscreen = SDL_SetVideoMode(320, 200, 8, SDL_SWSURFACE)))
+      if(!SDL_VideoModeOK(fallback_w, fallback_h, fallback_bd, fallback_flags) ||
+         !(sdlscreen = SDL_SetVideoMode(fallback_w, fallback_h, fallback_bd, fallback_flags)))
       {
          I_FatalError(I_ERR_KILL,
                       "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
-                      "   Also failed to set safety mode 320x200x8.\n"
+                      "   Also failed to restore fallback mode %dx%dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, v_bd);
+                      v_w, v_h, v_bd,
+                      fallback_w, fallback_h, fallback_bd);
       }
 
       // reset these for below population of video struct
-      v_w = 320;
-      v_h = 200;
+      v_w   = fallback_w;
+      v_h   = fallback_h;
+      v_bd  = fallback_bd;
+      flags = fallback_flags;
    }
+
+   // Record successful mode set for use as a fallback mode
+   fallback_w     = v_w;
+   fallback_h     = v_h;
+   fallback_bd    = v_bd;
+   fallback_flags = flags;
 
    // haleyjd 10/14/09: wait for a bit so the screen can settle
    if(flags & SDL_FULLSCREEN)
@@ -417,9 +443,9 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 10/09/05: keep track of fullscreen state
    fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
 
-   // haleyjd 12/03/07: if the video surface is not actually 32-bit, we
-   // must disable cross-bit-depth drawing
-   if(sdlscreen->format->BitsPerPixel != 32)
+   // haleyjd 12/03/07: if the video surface is not high-color, we
+   // disable cross-bit-depth drawing for efficiency
+   if(sdlscreen->format->BitsPerPixel == 8)
       crossbitdepth = false;
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);

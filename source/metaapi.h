@@ -151,13 +151,19 @@ public:
 
 // MetaTable
 
-class MetaTable : public ZoneObject
+class MetaTable : public MetaObject
 {
 private:
    metaTablePimpl *pImpl;
 
 public:
-   MetaTable();
+   MetaTable(const char *name);
+   MetaTable(const MetaTable &other);
+   virtual ~MetaTable();
+
+   // MetaObject overrides
+   virtual MetaObject *clone() const;
+   virtual const char *toString() const;
 
    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
    bool hasKey(const char *key);
@@ -187,7 +193,7 @@ public:
    MetaObject *getNextObject(MetaObject *object, const char *key);
    MetaObject *getNextType(MetaObject *object, metatypename_t type);
    MetaObject *getNextKeyAndType(MetaObject *object, const char *key, metatypename_t type);
-   MetaObject *tableIterator(MetaObject *object);
+   MetaObject *tableIterator(MetaObject *object) const;
 
    // Add/Get/Set Convenience Methods for Basic MetaObjects
    
@@ -211,8 +217,11 @@ public:
    void        removeStringNR(const char *key);
 
    // Copy routine - clones the entire MetaTable
-   void copyTableTo(MetaTable *dest);
-   void copyTableFrom(MetaTable *source);
+   void copyTableTo(MetaTable *dest) const;
+   void copyTableFrom(const MetaTable *source);
+
+   // Clearing
+   void clearTable();
 };
 
 #endif

@@ -298,7 +298,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
                                  8, 0, 0, 0, 0);
 
    if(!screen)
-      I_FatalError(I_ERR_KILL, "Failed to create screen temp buffer\n");
+      I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
    video.screens[0] = (byte *)(screen->pixels);
@@ -383,14 +383,16 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
 //
 void SDLGL2DVideoDriver::LoadPBOExtension()
 {
+   static bool firsttime = true;
    bool extension_ok = true;
    const char *extensions = (const char *)glGetString(GL_EXTENSIONS);
+   bool want_arb_pbo = (cfg_gl_use_extensions && cfg_gl_arb_pixelbuffer);
    bool have_arb_pbo = (strstr(extensions, "GL_ARB_pixel_buffer_object") != NULL);
 
    // * Extensions must be enabled in general
    // * GL ARB PBO extension must be specifically enabled
    // * GL ARB PBO extension must be supported locally
-   if(cfg_gl_use_extensions && cfg_gl_arb_pixelbuffer && have_arb_pbo)
+   if(want_arb_pbo && have_arb_pbo)
    {
       GETPROC(pglGenBuffersARB,    "glGenBuffersARB",    PFNGLGENBUFFERSARBPROC);
       GETPROC(pglDeleteBuffersARB, "glDeleteBuffersARB", PFNGLDELETEBUFFERSARBPROC);
@@ -402,12 +404,48 @@ void SDLGL2DVideoDriver::LoadPBOExtension()
       // Use the extension if all procedures were found
       use_arb_pbo = extension_ok;
 
-      if(use_arb_pbo)
+      if(firsttime && use_arb_pbo)
          usermsg(" Loaded extension GL_ARB_pixel_buffer_object");
    }
    else
       use_arb_pbo = false;
+
+   // If wanted, but not enabled, warn
+   if(firsttime && want_arb_pbo && !use_arb_pbo)
+      usermsg(" Could not enable extension GL_ARB_pixel_buffer_object");
+
+   // Don't print messages in this routine more than once
+   firsttime = false;
 }
+
+// Config-to-GL enumeration lookups
+
+// Configurable internal texture formats
+static GLint internalTextureFormats[CFG_GL_NUMTEXFORMATS] =
+{
+   GL_R3_G3_B2,
+   GL_RGB4,
+   GL_RGB5,
+   GL_RGB8,
+   GL_RGB10,
+   GL_RGB12,
+   GL_RGB16,
+   GL_RGBA2,
+   GL_RGBA4,
+   GL_RGB5_A1,
+   GL_RGBA8,
+   GL_RGB10_A2,
+   GL_RGBA12,
+   GL_RGBA16
+   
+};
+
+// Configurable texture filtering parameters
+static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
+{
+   GL_LINEAR,
+   GL_NEAREST
+};
 
 //
 // SDLGL2DVideoDriver::InitGraphicsMode
@@ -422,11 +460,31 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int     v_h            = 480;
    int     flags          = SDL_OPENGL;
    GLvoid *tempbuffer     = NULL;
+   GLint   texformat      = GL_RGBA8;
+   GLint   texfiltertype  = GL_LINEAR;
 
    // Get video commands and geometry settings
 
-   // TODO: allow end-user GL colordepth setting?
-   colordepth = 32;
+   // Allow end-user GL colordepth setting
+   switch(cfg_gl_colordepth)
+   {
+   case 16: // Valid supported values
+   case 24:
+   case 32:
+      colordepth = cfg_gl_colordepth;
+      break;
+   default:
+      colordepth = 32;
+      break;
+   }
+
+   // Allow end-user GL internal texture format specification
+   if(cfg_gl_texture_format >= 0 && cfg_gl_texture_format < CFG_GL_NUMTEXFORMATS)
+      texformat = internalTextureFormats[cfg_gl_texture_format];
+
+   // Allow end-user GL texture filtering specification
+   if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
+      texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -492,14 +550,14 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    GL_BindTextureAndRemember(textureid);
    
    // villsa 05/29/11: set filtering otherwise texture won't render
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texfiltertype); 
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texfiltertype);   
    
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
    
    // TODO: allow user selection of internal texture format
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)framebuffer_umax, 
+   glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
                 (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    free(tempbuffer);

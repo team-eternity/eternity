@@ -138,10 +138,7 @@ static haldriveritem_t *I_DefaultVideoDriver()
 
       // Nothing?! Somebody borked up their configure/makefile.
       if(!item)
-      {
-        I_FatalError(I_ERR_KILL,
-           "I_DefaultVideoDriver: no valid drivers for this platform!\n");
-      }
+        I_Error("I_DefaultVideoDriver: no valid drivers for this platform!\n");
    }
    else
       item = &halVideoDriverTable[i_videodriverid];
@@ -172,12 +169,12 @@ bool noblit;
 
 bool in_graphics_mode;
 
-// haleyjd 12/03/07: 8-on-32 graphics support
-bool crossbitdepth;
-
 // haleyjd 07/15/09
 char *i_default_videomode;
 char *i_videomode;
+
+// haleyjd 06/17/11: software-mode bitdepth setting (for better -8in32)
+int i_softbitdepth;
 
 //
 // I_FinishUpdate
@@ -537,8 +534,7 @@ void I_InitGraphics(void)
    // the current compile), or get the default driver if unspecified
    if(!(driveritem = I_DefaultVideoDriver()))
    {
-      I_FatalError(I_ERR_KILL, "I_InitGraphics: invalid video driver %d\n",
-                   i_videodriverid);
+      I_Error("I_InitGraphics: invalid video driver %d\n", i_videodriverid);
    }
    else
    {
@@ -614,14 +610,21 @@ VARIABLE_STRING(i_videomode, NULL, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
    V_ResetMode();
-}
 
-CONSOLE_COMMAND(i_default_videomode, 0)
-{
    if(i_default_videomode)
       free(i_default_videomode);
 
    i_default_videomode = strdup(i_videomode);
+}
+
+CONSOLE_COMMAND(i_default_videomode, 0)
+{
+   /*
+   if(i_default_videomode)
+      free(i_default_videomode);
+
+   i_default_videomode = strdup(i_videomode);
+   */
 }
 
 static const char *i_videodrivernames[] = 
@@ -633,6 +636,9 @@ static const char *i_videodrivernames[] =
 
 VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
+
+VARIABLE_INT(i_softbitdepth, NULL, 8, 32, NULL);
+CONSOLE_VARIABLE(i_softbitdepth, i_softbitdepth, 0) {}
 
 void I_Video_AddCommands(void)
 {
@@ -651,6 +657,8 @@ void I_Video_AddCommands(void)
    C_AddCommand(i_default_videomode);
 
    C_AddCommand(i_videodriverid);
+
+   C_AddCommand(i_softbitdepth);
 }
 
 // EOF

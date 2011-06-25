@@ -397,6 +397,14 @@ IF (NOT HAVE_STDINT_H)
 ENDIF (NOT HAVE_STDINT_H)
 ################################################################################
 ######################### Find Needed Libs #####################################
+MESSAGE (STATUS "Looking for OpenGL")
+FIND_LIBRARY (GL_LIBRARY GL)
+IF (GL_LIBRARY)
+        MESSAGE (STATUS "Looking for OpenGL - found")
+ELSE (GL_LIBRARY)
+        MESSAGE (STATUS "Looking for OpenGL - not found")
+ENDIF (GL_LIBRARY)
+
 FIND_PACKAGE (SDL REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
 
