@@ -488,7 +488,6 @@ void D_PageTicker(void)
 void D_PageDrawer(void)
 {
    int l;
-   byte *t;
 
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
@@ -497,8 +496,7 @@ void D_PageDrawer(void)
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         l = W_GetNumForName("ADVISOR");
-         patch_t *p = PatchLoader::CacheNum(wGlobalDir, l, PU_CACHE);
+         patch_t *p = PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE);
          V_DrawPatch(4, 160, &vbscreen, p);
       }
    }

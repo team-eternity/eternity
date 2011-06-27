@@ -30,7 +30,7 @@
 #include "v_patchfmt.h"
 
 // A global instance of PatchLoader for passing to WadDirectory methods
-PatchLoader patchFmt;
+PatchLoader PatchLoader::patchFmt;
 
 //
 // PatchLoader::verifyData
