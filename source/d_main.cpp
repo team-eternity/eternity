@@ -496,8 +496,8 @@ void D_PageDrawer(void)
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         patch_t *p = PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE);
-         V_DrawPatch(4, 160, &vbscreen, p);
+         V_DrawPatch(4, 160, &vbscreen, 
+                     PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
       }
    }
    else

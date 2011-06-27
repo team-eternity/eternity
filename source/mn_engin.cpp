@@ -395,7 +395,11 @@ static bool MN_drawPatchForItem(menuitem_t *item, int *item_height,
       if(item->type == it_title)
          x = (SCREENWIDTH - width)/2;
 
-      V_DrawPatchTranslated(x, y, &vbscreen, patch, colrngs[color], 0);
+      // haleyjd 06/27/11: No can do, due to weird CR lumps from BOOM :/
+      //V_DrawPatchTranslated(x, y, &vbscreen, patch, colrngs[color], 0);
+
+      V_DrawPatch(x, y, &vbscreen, patch);
+
 
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
