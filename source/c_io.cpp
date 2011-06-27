@@ -57,6 +57,7 @@
 #include "m_qstr.h"
 #include "v_block.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 
 #define MESSAGES 512
 // keep the last 32 typed commands
@@ -135,7 +136,7 @@ static void C_initBackdrop(void)
    V_SetScaling(&cback, SCREENWIDTH, SCREENHEIGHT);
    
    lumpnum = W_GetNumForName(lumpname);
-   patch   = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+   patch   = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
 
    // haleyjd 03/30/08: support linear fullscreen graphics
    if(W_LumpLength(lumpnum) == 64000)
@@ -163,7 +164,7 @@ static void C_initBackdrop(void)
          csize    = W_LumpLength(clumpnum);
 
          colormap = (byte *)(malloc(csize));
-         W_ReadLump(clumpnum, colormap);
+         wGlobalDir.ReadLump(clumpnum, colormap);
          
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
          free(colormap);

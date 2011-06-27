@@ -662,7 +662,7 @@ void E_CollectThings(cfg_t *tcfg)
 
    // 08/17/09: allocate metatables
    for(i = 0; i < NUMMOBJTYPES; ++i)
-      mobjinfo[i].meta = new MetaTable("info");
+      mobjinfo[i].meta = new MetaTable("mobjinfo");
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)

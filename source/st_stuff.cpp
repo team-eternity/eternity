@@ -46,6 +46,7 @@
 #include "st_lib.h"
 #include "st_stuff.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -722,7 +723,7 @@ static void ST_doPaletteStuff(void)
    if(palette != st_palette)
    {
       st_palette = palette;
-      pal = (byte *)W_CacheLumpNum(lu_palette, PU_CACHE) + palette*768;
+      pal = (byte *)wGlobalDir.CacheLumpNum(lu_palette, PU_CACHE) + palette*768;
       I_SetPalette(pal);
    }
 }
@@ -955,24 +956,24 @@ static void ST_loadGraphics(void)
    for(i = 0; i < 10; i++)
    {
       sprintf(namebuf, "STTNUM%d", i);
-      tallnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      tallnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       sprintf(namebuf, "STYSNUM%d", i);
-      shortnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      shortnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
    // Load percent key.
    //Note: why not load STMINUS here, too?
-   tallpercent = (patch_t *) W_CacheLumpName("STTPRCNT", PU_STATIC);
+   tallpercent = PatchLoader::CacheName(wGlobalDir, "STTPRCNT", PU_STATIC);
 
    // key cards
    for(i = 0; i < NUMCARDS+3; i++)  //jff 2/23/98 show both keys too
    {
       sprintf(namebuf, "STKEYS%d", i);
-      keys[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
    // arms background
-   armsbg = (patch_t *) W_CacheLumpName("STARMS", PU_STATIC);
+   armsbg = PatchLoader::CacheName(wGlobalDir, "STARMS", PU_STATIC);
 
    // arms ownership widgets
    for(i = 0; i < 6; i++)
@@ -980,7 +981,7 @@ static void ST_loadGraphics(void)
       sprintf(namebuf, "STGNUM%d", i+2);
 
       // gray #
-      arms[i][0] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      arms[i][0] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 
       // yellow #
       arms[i][1] = shortnum[i+2];
@@ -989,19 +990,19 @@ static void ST_loadGraphics(void)
    // face backgrounds for different color players
    // killough 3/7/98: add better support for spy mode by loading all
    // player face backgrounds and using displayplayer to choose them:
-   faceback = (patch_t *) W_CacheLumpName("STFB0", PU_STATIC);
+   faceback = PatchLoader::CacheName(wGlobalDir, "STFB0", PU_STATIC);
 
    // status bar background bits
-   sbar = (patch_t *) W_CacheLumpName("STBAR", PU_STATIC);
+   sbar = PatchLoader::CacheName(wGlobalDir, "STBAR", PU_STATIC);
 
    // haleyjd: fullscreen graphics
-   fs_health = (patch_t *)W_CacheLumpName("HU_FHLTH", PU_STATIC);
-   fs_armorg = (patch_t *)W_CacheLumpName("HU_FARMR", PU_STATIC);
-   fs_armorb = (patch_t *)W_CacheLumpName("HU_FARM2", PU_STATIC);
+   fs_health = PatchLoader::CacheName(wGlobalDir, "HU_FHLTH", PU_STATIC);
+   fs_armorg = PatchLoader::CacheName(wGlobalDir, "HU_FARMR", PU_STATIC);
+   fs_armorb = PatchLoader::CacheName(wGlobalDir, "HU_FARM2", PU_STATIC);
    for(i = 0; i < 4; ++i)
    {
       sprintf(namebuf, "HU_FAMM%d", i);
-      fs_ammo[i] = (patch_t *)W_CacheLumpName(namebuf, PU_STATIC);
+      fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
    ST_CacheFaces(default_faces, "STF");
@@ -1030,23 +1031,23 @@ void ST_CacheFaces(patch_t **faces, char *facename)
       for(j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
          sprintf(namebuf, "%sST%d%d", facename, i, j);
-         faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+         faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       }
       sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
-      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
-      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
-      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
-      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
-      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
    sprintf(namebuf, "%sGOD0",facename);
-   faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+   faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    sprintf(namebuf, "%sDEAD0",facename);
-   faces[facenum]   = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+   faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
 static void ST_loadData(void)
@@ -1308,7 +1309,7 @@ static void ST_Stop(void)
 {
    if(st_stopped)
       return;
-   I_SetPalette((byte *)(W_CacheLumpNum(lu_palette, PU_CACHE)));   
+   I_SetPalette((byte *)(wGlobalDir.CacheLumpNum(lu_palette, PU_CACHE)));   
    st_stopped = true;
 }
 

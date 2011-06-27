@@ -40,6 +40,7 @@
 #include "mn_misc.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -105,16 +106,17 @@ static void MN_HMainMenuDrawer(void)
    int skullIndex;
 
    // draw M_HTIC
-   V_DrawPatch(88, 0, &vbscreen, (patch_t *)W_CacheLumpName("M_HTIC", PU_CACHE));
+   V_DrawPatch(88, 0, &vbscreen, 
+      PatchLoader::CacheName(wGlobalDir, "M_HTIC", PU_CACHE));
 
    // draw spinning skulls
    skullIndex = (menutime / 3) % NUM_HSKULL;
 
    V_DrawPatch(40, 10, &vbscreen,
-      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[17-skullIndex], PU_CACHE)));
+      PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[17-skullIndex], PU_CACHE));
 
    V_DrawPatch(232, 10, &vbscreen,
-      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[skullIndex], PU_CACHE)));
+      PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[skullIndex], PU_CACHE));
 }
 
 static menuitem_t mn_hepisode_items[] =
@@ -256,7 +258,8 @@ static void MN_HSaveDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, 
+                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
 }
@@ -321,7 +324,8 @@ static void MN_HLoadDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, 
+                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
 

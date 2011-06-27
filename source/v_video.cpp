@@ -40,6 +40,7 @@
 #include "r_main.h"
 #include "v_patch.h" // haleyjd
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"   /* needed for color translation lump lookup */
 
@@ -195,7 +196,7 @@ void V_InitColorTranslation(void)
 {
   register const crdef_t *p;
   for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = (byte *)(W_CacheLumpName(p->name, PU_STATIC));
+    *p->map1 = *p->map2 = (byte *)(wGlobalDir.CacheLumpName(p->name, PU_STATIC));
 }
 
 //
@@ -643,18 +644,25 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 // haleyjd 05/18/09: A single smart function which will determine the
 // format of a fullscreen graphic resource and draw it properly.
 //
-void V_DrawFSBackground(VBuffer *dest, void *source, int len)
+void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
+   void *source;
+   patch_t *patch;
+   int len = wGlobalDir.LumpLength(lumpnum);
+
    switch(len)
    {
    case 4096:  // 64x64 flat
+      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBackgroundCached((byte *)source, dest);
       break;
    case 64000: // 320x200 linear
+      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBlockFS(dest, (byte *)source);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
-      V_DrawPatchFS(dest, (patch_t *)source);
+      patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
+      V_DrawPatchFS(dest, patch);
       break;
    }
 }

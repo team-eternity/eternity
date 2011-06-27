@@ -36,6 +36,7 @@
 #include "r_main.h"
 #include "st_stuff.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -1077,7 +1078,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = (byte *)(W_CacheLumpNum(lumpnum, PU_RENDERER));
+      translationtables[i] = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_RENDERER));
    }
 }
 
@@ -1169,22 +1170,22 @@ void R_FillBackScreen(void)
    // killough 11/98: use the function in m_menu.c
    V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
 
-   patch = (patch_t *)W_CacheLumpName(border->top, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->top, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)
       V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->bottom, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->bottom, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
       V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->left, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->left, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->right, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->right, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
@@ -1193,22 +1194,22 @@ void R_FillBackScreen(void)
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy-offset,
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_tl, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_tl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy-offset,
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_tr, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_tr, PU_CACHE));
 
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy+scaledviewheight,    // killough 11/98
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_bl, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_bl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy+scaledviewheight,     // killough 11/98
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_br, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_br, PU_CACHE));
 } 
 
 //

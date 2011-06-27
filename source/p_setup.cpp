@@ -2550,7 +2550,7 @@ void P_LoadOlo(void)
    if((lumpnum = W_CheckNumForName("OLO")) == -1)
       return;
    
-   lump = (char *)(W_CacheLumpNum(lumpnum, PU_CACHE));
+   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
    
    if(strncmp(lump, "OLO", 3))
       return;

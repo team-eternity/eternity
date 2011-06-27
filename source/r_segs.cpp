@@ -86,7 +86,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            tranmap = (byte *)(W_CacheLumpNum(linedef->tranlump-1, PU_STATIC));
+            tranmap = (byte *)(wGlobalDir.CacheLumpNum(linedef->tranlump-1, PU_STATIC));
          else
             tranmap = main_tranmap;
       }

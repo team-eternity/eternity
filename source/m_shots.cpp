@@ -464,7 +464,7 @@ void M_ScreenShot(void)
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
-         byte *pal = (byte *)W_CacheLumpName("PLAYPAL", PU_STATIC);
+         byte *pal = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
 
          // get screen graphics
          V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 

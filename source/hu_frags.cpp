@@ -46,6 +46,7 @@
 #include "r_patch.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -88,9 +89,9 @@ void HU_FragsDrawer(void)
    // "frags"
 
    // haleyjd 04/08/10: draw more intelligently
-   fragtitle = (patch_t *)(W_CacheLumpName("HU_FRAGS", PU_CACHE));
-   x = (SCREENWIDTH - SwapShort(fragtitle->width)) / 2;
-   y = (NAMEY - SwapShort(fragtitle->height)) / 2;
+   fragtitle = PatchLoader::CacheName(wGlobalDir, "HU_FRAGS", PU_CACHE);
+   x = (SCREENWIDTH - fragtitle->width ) / 2;
+   y = (NAMEY       - fragtitle->height) / 2;
 
    V_DrawPatch(x, y, &vbscreen, fragtitle);
 
@@ -110,7 +111,7 @@ void HU_FragsDrawer(void)
       // haleyjd 01/12/04: changed translation handling
 
       V_DrawPatchTranslated(FRAGNUMX, y, &vbscreen,
-                            (patch_t *)W_CacheLumpName("HU_FRGBX", PU_CACHE),
+                            PatchLoader::CacheName(wGlobalDir, "HU_FRGBX", PU_CACHE),
                             sortedplayers[i]->colormap ?
                             translationtables[(sortedplayers[i]->colormap - 1)] :
                             NULL, false);

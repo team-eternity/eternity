@@ -66,6 +66,7 @@
 #include "st_stuff.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -552,7 +553,7 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
       return;
 
    // be sure the patch is loaded
-   pw->patch = (patch_t *)W_CacheLumpName(pw->patchname, PU_CACHE);
+   pw->patch = PatchLoader::CacheName(wGlobalDir, pw->patchname, PU_CACHE);
 
    V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
 }
@@ -571,10 +572,10 @@ static void HU_PatchWidgetErase(hu_widget_t *widget)
    if(patch && pw->tl_level != 0)
    {
       // haleyjd 06/08/05: must adjust for patch offsets
-      x = pw->x - SwapShort(patch->leftoffset);
-      y = pw->y - SwapShort(patch->topoffset);
-      w = SwapShort(patch->width);
-      h = SwapShort(patch->height);
+      x = pw->x - patch->leftoffset;
+      y = pw->y - patch->topoffset;
+      w = patch->width;
+      h = patch->height;
       
       x2 = x + w - 1;
       y2 = y + h - 1;
@@ -655,7 +656,7 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
    strncpy(newpw->patchname, patch, 9);
 
    // pre-cache patch -- haleyjd 06/15/06: use PU_CACHE
-   newpw->patch = (patch_t *)W_CacheLumpName(patch, PU_CACHE);
+   newpw->patch = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE);
 }
 
 //
@@ -709,7 +710,7 @@ static void HU_InitWarnings(void)
    HU_AddWidgetToHash((hu_widget_t *)&opensocket_widget);
    
    strncpy(opensocket_widget.patchname, "OPENSOCK", 9);
-   opensocket_widget.patch = (patch_t *)W_CacheLumpName("OPENSOCK", PU_CACHE);
+   opensocket_widget.patch = PatchLoader::CacheName(wGlobalDir, "OPENSOCK", PU_CACHE);
    opensocket_widget.color = NULL;
    opensocket_widget.tl_level = FRACUNIT;
    opensocket_widget.x = 20;
@@ -1134,12 +1135,12 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
       viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
       return;
 
-   patch = (patch_t *)(W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
 
    // where to draw??
 
-   w = SwapShort(patch->width);
-   h = SwapShort(patch->height);
+   w = patch->width;
+   h = patch->height;
    
    drawx = (SCREENWIDTH - w) / 2;
 
@@ -1821,7 +1822,7 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
       strncpy(pw->patchname, patch, 9);
 
       // pre-cache the patch graphic
-      pw->patch = (patch_t *)W_CacheLumpName(patch, PU_CACHE);
+      pw->patch = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE);
    }
 
    free(name);

@@ -84,6 +84,7 @@
 #include "st_stuff.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "version.h"
 #include "w_wad.h"
@@ -366,7 +367,7 @@ void D_Display(void)
       
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette((byte *)(W_CacheLumpName("PLAYPAL", PU_CACHE)));
+         I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
       
       oldgamestate = wipegamestate = gamestate;
          
@@ -377,8 +378,8 @@ void D_Display(void)
          
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
-         patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
-         int width = SwapShort(patch->width);
+         patch_t *patch = PatchLoader::CacheName(wGlobalDir, lumpname, PU_CACHE);
+         int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
@@ -491,16 +492,14 @@ void D_PageDrawer(void)
 
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
-      t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
-
       // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&vbscreen, t, W_LumpLength(l));
+      V_DrawFSBackground(&vbscreen, l);
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
          l = W_GetNumForName("ADVISOR");
-         t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
-         V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
+         patch_t *p = PatchLoader::CacheNum(wGlobalDir, l, PU_CACHE);
+         V_DrawPatch(4, 160, &vbscreen, p);
       }
    }
    else

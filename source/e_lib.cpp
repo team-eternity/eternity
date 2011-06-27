@@ -803,7 +803,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      palette = (byte *)(W_CacheLumpName("PLAYPAL", PU_STATIC));
+      palette = (byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC));
 
       *(int *)result = V_FindBestColor(palette, r, g, b);
 

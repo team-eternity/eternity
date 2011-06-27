@@ -35,6 +35,7 @@
 #include "../i_system.h"
 #include "../m_argv.h"
 #include "../v_misc.h"
+#include "../v_patchfmt.h"
 #include "../v_video.h"
 #include "../version.h"
 #include "../w_wad.h"
@@ -170,7 +171,7 @@ void SDLVideoDriver::InitDiskFlash()
 
    // draw the disk graphic into the VBuffer
    V_DrawPatch(0, -1, &diskvb,
-               (patch_t *)W_CacheLumpName(cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
+      PatchLoader::CacheName(wGlobalDir, cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
 
    // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
@@ -459,7 +460,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    video.pixelsize = 1;
    
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect((byte *)W_CacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect((byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE));
 
    return false;
 }

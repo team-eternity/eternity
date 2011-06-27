@@ -67,6 +67,7 @@
 #include "s_sound.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -165,7 +166,8 @@ menu_t menu_main =
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, (patch_t *)W_CacheLumpName("M_DOOM", PU_CACHE));
+   V_DrawPatch(94, 2, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
 }
 
 // haleyjd 05/14/06: moved these up here
@@ -1066,12 +1068,12 @@ void MN_PlayerDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[1];
    
-   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
 
-   w    = SwapShort(patch->width);
-   h    = SwapShort(patch->height);
-   toff = SwapShort(patch->topoffset);
-   loff = SwapShort(patch->leftoffset);
+   w    = patch->width;
+   h    = patch->height;
+   toff = patch->topoffset;
+   loff = patch->leftoffset;
    
    V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, w + 16, h + 16);
 
@@ -1230,17 +1232,17 @@ void MN_DrawLoadBox(int x, int y)
 {
    int i;
    
-   patch_left  = (patch_t *)W_CacheLumpName("M_LSLEFT", PU_STATIC);
-   patch_mid   = (patch_t *)W_CacheLumpName("M_LSCNTR", PU_STATIC);
-   patch_right = (patch_t *)W_CacheLumpName("M_LSRGHT", PU_STATIC);
+   patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
+   patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
+   patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
-   x += SwapShort(patch_left->width);
+   x += patch_left->width;
    
    for(i=0; i<24; i++)
    {
       V_DrawPatch(x, y, &vbscreen, patch_mid);
-      x += SwapShort(patch_mid->width);
+      x += patch_mid->width;
    }
    
    V_DrawPatch(x, y, &vbscreen, patch_right);
@@ -1947,7 +1949,7 @@ void MN_VideoModeDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[0];
    
-   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[13].y - 5;
@@ -2456,7 +2458,7 @@ static void MN_HUDPg2Drawer(void)
       return;
 
    if(xhairnum >= 0 && crosshairs[xhairnum] != -1)
-      patch = (patch_t *)(W_CacheLumpNum(crosshairs[xhairnum], PU_CACHE));
+      patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[xhairnum], PU_CACHE);
   
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;
@@ -2464,10 +2466,10 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = SwapShort(patch->width);
-      int16_t h  = SwapShort(patch->height);
-      int16_t to = SwapShort(patch->topoffset);
-      int16_t lo = SwapShort(patch->leftoffset);
+      int16_t w  = patch->width;
+      int16_t h  = patch->height;
+      int16_t to = patch->topoffset;
+      int16_t lo = patch->leftoffset;
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 
@@ -3660,13 +3662,13 @@ static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 static void MN_OldOptionsDrawer(void)
 {
    V_DrawPatch(108, 15, &vbscreen,
-               (patch_t *)W_CacheLumpName("M_OPTTTL", PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
 
    V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
-               (patch_t *)W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, msgNames[showMessages], PU_CACHE));
 
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
-               (patch_t *)W_CacheLumpName(detailNames[0], PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, detailNames[0], PU_CACHE));
 }
 
 menu_t menu_old_options =
@@ -3705,7 +3707,8 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, (patch_t *)W_CacheLumpName("M_SVOL", PU_CACHE));
+   V_DrawPatch(60, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
 }
 
 menu_t menu_old_sound =

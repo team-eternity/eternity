@@ -46,6 +46,7 @@
 #include "r_state.h"
 #include "v_block.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -608,14 +609,14 @@ static void AM_loadPics(void)
    for(i = 0; i < 10; ++i)
    {
       sprintf(namebuf, GameModeInfo->markNumFmt, i);
-      marknums[i] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      marknums[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
    // haleyjd 12/22/02: automap background support (raw format)
    if((lumpnum = W_CheckNumForName("AUTOPAGE")) != -1)
    {
       int size = W_LumpLength(lumpnum);
-      byte *autopage = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+      byte *autopage = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
       int height = size / SCREENWIDTH;
 
       // allocate backdrop

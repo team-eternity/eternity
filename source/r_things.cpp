@@ -53,6 +53,7 @@
 #include "r_state.h"
 #include "r_things.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -642,7 +643,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       return;
    }
   
-   patch = (patch_t *)(W_CacheLumpNum(vis->patch+firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, vis->patch+firstspritelump, PU_CACHE);
    
    column.colormap = vis->colormap;
    
@@ -672,7 +673,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * maskedcolumn.scale;
    }
 
-   w = SwapShort(patch->width);
+   w = patch->width;
 
    // haleyjd: use a separate loop for footclip things, to minimize
    // overhead for regular sprites and to require no separate loop
@@ -692,8 +693,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
          
-         tcolumn = (column_t *)((byte *) patch +
-            SwapLong(patch->columnofs[texturecolumn]));
+         tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
    }
@@ -707,8 +707,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
          
-         tcolumn = (column_t *)((byte *) patch +
-            SwapLong(patch->columnofs[texturecolumn]));
+         tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
    }

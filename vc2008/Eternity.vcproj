@@ -4193,6 +4193,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\v_patchfmt.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_video.cpp"
 						>
 						<FileConfiguration
@@ -4236,6 +4240,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\v_patch.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_patchfmt.h"
 						>
 					</File>
 					<File

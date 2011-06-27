@@ -42,6 +42,7 @@
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -93,8 +94,8 @@ static patch_t *bgp[9];        // background for boxes
 
 void V_DrawBox(int x, int y, int w, int h)
 {
-   int xs = SwapShort(bgp[0]->width);
-   int ys = SwapShort(bgp[0]->height);
+   int xs = bgp[0]->width;
+   int ys = bgp[0]->height;
    int i, j;
    
    // top rows
@@ -121,15 +122,15 @@ void V_DrawBox(int x, int y, int w, int h)
 
 void V_InitBox(void)
 {
-   bgp[0] = (patch_t *) W_CacheLumpName("BOXUL", PU_STATIC);
-   bgp[1] = (patch_t *) W_CacheLumpName("BOXUC", PU_STATIC);
-   bgp[2] = (patch_t *) W_CacheLumpName("BOXUR", PU_STATIC);
-   bgp[3] = (patch_t *) W_CacheLumpName("BOXCL", PU_STATIC);
-   bgp[4] = (patch_t *) W_CacheLumpName("BOXCC", PU_STATIC);
-   bgp[5] = (patch_t *) W_CacheLumpName("BOXCR", PU_STATIC);
-   bgp[6] = (patch_t *) W_CacheLumpName("BOXLL", PU_STATIC);
-   bgp[7] = (patch_t *) W_CacheLumpName("BOXLC", PU_STATIC);
-   bgp[8] = (patch_t *) W_CacheLumpName("BOXLR", PU_STATIC);
+   bgp[0] = PatchLoader::CacheName(wGlobalDir, "BOXUL", PU_STATIC);
+   bgp[1] = PatchLoader::CacheName(wGlobalDir, "BOXUC", PU_STATIC);
+   bgp[2] = PatchLoader::CacheName(wGlobalDir, "BOXUR", PU_STATIC);
+   bgp[3] = PatchLoader::CacheName(wGlobalDir, "BOXCL", PU_STATIC);
+   bgp[4] = PatchLoader::CacheName(wGlobalDir, "BOXCC", PU_STATIC);
+   bgp[5] = PatchLoader::CacheName(wGlobalDir, "BOXCR", PU_STATIC);
+   bgp[6] = PatchLoader::CacheName(wGlobalDir, "BOXLL", PU_STATIC);
+   bgp[7] = PatchLoader::CacheName(wGlobalDir, "BOXLC", PU_STATIC);
+   bgp[8] = PatchLoader::CacheName(wGlobalDir, "BOXLR", PU_STATIC);
 }
 
 //=============================================================================
@@ -486,7 +487,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    if(tnum < 0 || tnum >= numflats)   
       src = R_GetLinearBuffer(badtex);
    else
-      src = (byte *)(W_CacheLumpNum(firstflat + tnum, PU_CACHE));
+      src = (byte *)(wGlobalDir.CacheLumpNum(firstflat + tnum, PU_CACHE));
 
    back_dest->TileBlock64(back_dest, src);
 }
@@ -518,7 +519,7 @@ void V_InitMisc(void)
    // this only ever needs to be done once
    if(!flexTranInit)
    {
-      byte *palette = (byte *)(W_CacheLumpName("PLAYPAL", PU_STATIC));
+      byte *palette = (byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC));
       V_InitFlexTranTable(palette);
       Z_ChangeTag(palette, PU_CACHE);
    }
