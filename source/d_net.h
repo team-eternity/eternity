@@ -74,18 +74,18 @@ enum
 struct doomdata_t
 {
     // High bit is retransmit request.
-    unsigned int        checksum;
+    unsigned int checksum;
     // Only valid if NCMD_RETRANSMIT.
-    byte                retransmitfrom;
+    byte         retransmitfrom;
     
-    byte                starttic;
-    byte                player;
-    byte                numtics;
+    byte         starttic;
+    byte         player;
+    byte         numtics;
 
     union packetdata_u
     {
-       byte                data[GAME_OPTION_SIZE];
-       ticcmd_t            cmds[BACKUPTICS];
+       byte      data[GAME_OPTION_SIZE];
+       ticcmd_t  cmds[BACKUPTICS];
     } d;
 };
 

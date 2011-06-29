@@ -46,23 +46,37 @@
 
 #include "../i_net.h"
 
-void    NetSend(void);
+void NetSend(void);
 bool NetListen(void);
 
 //
 // NETWORKING
 //
 
-void (*netget)(void);
-void (*netsend)(void);
-
-// haleyjd: new functions for anarkavre's WinMBF netcode
 static Uint16 DOOMPORT = 8626;
 
 static UDPsocket udpsocket;
 static UDPpacket *packet;
 
 static IPaddress sendaddress[MAXNETNODES];
+
+// haleyjd: new functions for anarkavre's WinMBF netcode
+
+// haleyjd 06/29/11: Default error-out funcs in case of high-level goofups, as
+// happened with the netdemo problem.
+
+static void I_NetGetError()
+{
+   I_Error("I_NetGetError: Tried to get a packet without net init!\n");
+}
+
+static void I_NetSendError()
+{
+   I_Error("I_NetSendError: Tried to send a packet without net init!\n");
+}
+
+void (*netget )() = I_NetGetError;
+void (*netsend)() = I_NetSendError;
 
 inline static void HostToNet16(Sint16 value, byte *area)
 {
@@ -259,7 +273,7 @@ void I_InitNetwork(void)
          doomcom->ticdup = 9;
    }
    else
-      doomcom-> ticdup = 1;
+      doomcom->ticdup = 1;
 	
    if(M_CheckParm("-extratic"))
       doomcom->extratics = 1;
@@ -324,8 +338,8 @@ void I_InitNetwork(void)
    doomcom->numplayers = doomcom->numnodes;
    
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
-   
-   packet = SDLNet_AllocPacket(5000);
+
+   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 4) & ~4));
 }
 
 void I_NetCmd(void)
