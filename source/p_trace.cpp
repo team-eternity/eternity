@@ -421,9 +421,7 @@ static bool PTR_ShootTraverseComp(intercept_t *in, TracerContext *tc)
          P_ShootSpecialLine(tc->shootthing, li, lineside);
 
       // shot crosses a 2S line?
-      ClipContext *cc = clip->getContext();
       bool shootcheck = P_ShotCheck2SLine(in, li, lineside, tc);
-      cc->done();
       
       if(shootcheck)
          return true;

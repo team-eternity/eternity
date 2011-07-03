@@ -105,6 +105,8 @@ void P_GetChasecamTarget(void)
    // check for intersections
    trace->pathTraverse(playermobj->x, playermobj->y, targetx, targety,
                        PT_ADDLINES, PTR_chasetraverse, tc);
+                       
+   tc->done();
 
    ss = R_PointInSubsector(targetx, targety);
    

@@ -1904,7 +1904,7 @@ static bool PTR_SlideTraverse(intercept_t *in, TracerContext *tc)
    
    ClipContext *cc = clip->getContext();
    P_LineOpening(li, slidemo, cc);
-   clip->freeContext(cc);
+   cc->done();
    
    if(opening.range < slidemo->height)
       goto isblocking;  // doesn't fit

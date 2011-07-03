@@ -111,6 +111,9 @@ class ClipContext : public MapContext
       
    private:
       ClipEngine *from;
+      
+      ClipContext *next;
+      friend class ClipEngine;
 };
 
 
@@ -160,7 +163,11 @@ class TracerContext : public MapContext
       
       // From p_pspr.cpp
       fixed_t     bulletslope;      
+      
    private:
       TracerEngine *from;
+      
+      TracerContext *next;
+      friend class TracerEngine;
 };
 #endif

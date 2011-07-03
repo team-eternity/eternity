@@ -948,7 +948,10 @@ void A_Punch(Mobj *mo)
    trace->lineAttack(mo, angle, MELEERANGE, slope, damage);
 
    if(!tc->linetarget)
+   {
+      tc->done();
       return;
+   }
 
    P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
@@ -983,6 +986,7 @@ void A_Saw(Mobj *mo)
    if(!tc->linetarget)
    {
       P_WeaponSound(mo, sfx_sawful);
+      tc->done();
       return;
    }
 
@@ -1938,6 +1942,7 @@ void A_CustomPlayerMelee(Mobj *mo)
       // assume they want sawful on miss if sawhit specified
       if(sfx && sfx->dehackednum == sfx_sawhit)
          P_WeaponSound(mo, sfx_sawful);
+      tc->done();
       return;
    }
 
