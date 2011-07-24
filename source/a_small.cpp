@@ -276,7 +276,7 @@ static int SM_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
    amx_Align32((uint32_t *)(&hdr.size));
 
-   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_CACHE));
+   lump = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
    memcpy(memblock, lump, (size_t)(hdr.size));
 
    return amx_Init(amx, memblock);

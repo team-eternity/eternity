@@ -87,7 +87,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
          if(!(patch = font->fontgfx[c]))
             length += font->space;
          else
-            length += SwapShort(patch->width) - font->dw;
+            length += patch->width - font->dw;
       }
    }   
    
@@ -229,7 +229,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          continue;
       }
 
-      w = font->linear ? font->lsize : SwapShort(patch->width);
+      w = font->linear ? font->lsize : patch->width;
 
       // possibly adjust x coordinate for centering
       tx = (font->centered ? cx + (font->cw >> 1) - (w >> 1) : cx);
@@ -393,7 +393,7 @@ int V_FontStringWidth(vfont_t *font, const char *s)
          if(!(patch = font->fontgfx[c]))
             length += font->space;
          else
-            length += (SwapShort(patch->width) - font->dw);
+            length += (patch->width - font->dw);
       }
    }
    
@@ -437,7 +437,7 @@ int V_FontCharWidth(vfont_t *font, char pChar)
       if(!(patch = font->fontgfx[c]))
          width = font->space;
       else
-         width = (SwapShort(patch->width) - font->dw);
+         width = (patch->width - font->dw);
    }
    
    return width;
@@ -460,7 +460,7 @@ int16_t V_FontMaxWidth(vfont_t *font)
    {
       if(font->fontgfx[i])
       {
-         pw = SwapShort(font->fontgfx[i]->width);
+         pw = font->fontgfx[i]->width;
 
          if(pw > w)
             w = pw;

@@ -990,7 +990,7 @@ void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC)); // killough
+   demobuffer = demo_p = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC)); // killough
    
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load

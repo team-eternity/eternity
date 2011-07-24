@@ -41,6 +41,7 @@
 #include "r_patch.h"
 #include "r_ripple.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -345,7 +346,7 @@ static texturelump_t *R_InitTextureLump(const char *lname, bool required)
       byte *temp;
 
       tlump->maxoff      = W_LumpLength(tlump->lumpnum);
-      tlump->data = temp = (byte *)(W_CacheLumpNum(tlump->lumpnum, PU_STATIC));
+      tlump->data = temp = (byte *)(wGlobalDir.CacheLumpNum(tlump->lumpnum, PU_STATIC));
       tlump->numtextures = TEXINT(temp);
       tlump->directory   = temp;
    }
@@ -504,8 +505,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 
       for(j = 0; j < texture->ccount; ++j, ++component)
       {
-         patch_t   pheader;
-         
          rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
          component->originx = tp.originx;
@@ -525,9 +524,9 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
          }
          else
          {
-            W_ReadLumpHeader(component->lump, &pheader, sizeof(patch_t));
-            component->width = SwapShort(pheader.width);
-            component->height = SwapShort(pheader.height);
+            patch_t *p = PatchLoader::CacheNum(wGlobalDir, component->lump, PU_CACHE);
+            component->width  = p->width;
+            component->height = p->height;
          }
       }
       
@@ -627,7 +626,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
 //
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
-   byte      *src = (byte *)(W_CacheLumpNum(component->lump, PU_CACHE));
+   byte      *src = (byte *)(wGlobalDir.CacheLumpNum(component->lump, PU_CACHE));
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
@@ -701,11 +700,11 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 //
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
-   patch_t    *patch = (patch_t *)(W_CacheLumpNum(component->lump, PU_CACHE));
-   int        destoff;
-   int        xstart, ystart, xstop;
-   int        colindex, colstep;
-   int        x, xstep;
+   patch_t *patch = PatchLoader::CacheNum(wGlobalDir, component->lump, PU_CACHE);
+   int      destoff;
+   int      xstart, ystart, xstop;
+   int      colindex, colstep;
+   int      x, xstep;
    
    // Make sure component is not entirely off of the texture (should this count
    // as a texture error?)
@@ -733,7 +732,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    {
       int top, y1, y2, destbase;
       const column_t *column = 
-         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[colindex]));
+         (const column_t *)((byte *)patch + patch->columnofs[colindex]);
          
       destbase = x * tex->height;
       top = 0;
@@ -1066,7 +1065,7 @@ static int *R_LoadPNames(void)
 
    // Load the patch names from pnames.lmp.
    name[8] = 0;
-   names = (char *)W_CacheLumpName("PNAMES", PU_STATIC);
+   names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
    patchlookup = (int *)(malloc(nummappatches * sizeof(*patchlookup))); // killough
@@ -1514,7 +1513,7 @@ void R_LoadDoom1(void)
    lumplen = W_LumpLength(lumpnum);
    lump    = (char *)(calloc(1, lumplen + 1));
    
-   W_ReadLump(lumpnum, lump);
+   wGlobalDir.ReadLump(lumpnum, lump);
    
    rover = lump;
    numconvs = 0;

@@ -51,6 +51,7 @@
 #include "sounds.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -324,7 +325,7 @@ static void MN_SkinDrawer(void)
    }
 
    // cache the sprite patch -- watch out for "firstspritelump"!
-   patch = (patch_t *)(W_CacheLumpNum(lump+firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump+firstspritelump, PU_CACHE);
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling

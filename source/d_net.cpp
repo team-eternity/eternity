@@ -230,7 +230,7 @@ static bool HGetPacket(void)
    if(doomcom->datalength != NetbufferSize())
       return false;
    
-   if(NetbufferChecksum () != (netbuffer->checksum & NCMD_CHECKSUM))
+   if(NetbufferChecksum() != (netbuffer->checksum & NCMD_CHECKSUM))
       return false;
    
    return true;

@@ -40,6 +40,7 @@
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patch.h"
+#include "v_patchfmt.h"
 #include "w_wad.h"
 
 #include "e_lib.h"
@@ -320,7 +321,6 @@ static void E_DisposePatches(vfont_t *font)
 //
 static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 {
-   byte *lump;
    int w, h, size, i, lumpnum;
    bool foundsize = false;
 
@@ -336,21 +336,21 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 
    lumpnum = W_GetNumForName(name);
 
-   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
    size = W_LumpLength(lumpnum);
 
    if(fmt == FONT_FMT_PATCH)
    {
       // convert patch to linear
-      font->data = V_PatchToLinear((patch_t *)lump, false, 0, &w, &h);
+      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+      font->data = V_PatchToLinear(p, false, 0, &w, &h);
 
       // done with lump
-      Z_ChangeTag(lump, PU_CACHE);
+      Z_ChangeTag(p, PU_CACHE);
 
       size = w * h;
    }
    else
-      font->data = lump;
+      font->data = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
 
    // check for proper dimensions
    for(i = 5; i <= 32; ++i)
@@ -617,7 +617,7 @@ void E_LoadPatchFont(vfont_t *font)
                    filtertouse->mask, j - font->patchnumoffset);
 
          if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
-            font->fontgfx[i] = (patch_t *)(W_CacheLumpNum(lnum, PU_STATIC));
+            font->fontgfx[i] = PatchLoader::CacheNum(wGlobalDir, lnum, PU_STATIC);
       }
    }
 }

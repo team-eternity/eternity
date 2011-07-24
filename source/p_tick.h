@@ -171,7 +171,7 @@ class ThinkerType
 {
 protected:
    ThinkerType *next;
-   const char   *name;
+   const char  *name;
 
 public:
    ThinkerType(const char *pName);

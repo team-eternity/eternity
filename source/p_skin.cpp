@@ -315,7 +315,7 @@ void P_ParseSkin(int lumpnum)
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
-   lump = (char *)(W_CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
+   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
    
    rover = lump; 
    comment = false;

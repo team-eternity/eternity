@@ -499,7 +499,7 @@ void I_EndDoom(void)
    if(!GameModeInfo || !showendoom)
       return;
    
-   endoom_data = (unsigned char *)W_CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
+   endoom_data = (unsigned char *)wGlobalDir.CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
    
    // Set up text mode screen   
    if(!TXT_Init())

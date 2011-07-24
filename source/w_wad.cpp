@@ -772,7 +772,7 @@ int W_LumpLength(int lump)
 //
 // Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
-void WadDirectory::ReadLump(int lump, void *dest)
+void WadDirectory::ReadLump(int lump, void *dest, WadLumpLoader *lfmt)
 {
    size_t c;
    lumpinfo_t *l;
@@ -790,11 +790,20 @@ void WadDirectory::ReadLump(int lump, void *dest)
       I_Error("WadDirectory::ReadLump: only read %d of %d on lump %d\n", 
               (int)c, (int)l->size, lump);
    }
-}
 
-void W_ReadLump(int lump, void *dest)
-{
-   wGlobalDir.ReadLump(lump, dest);
+   // haleyjd 06/26/11: Apply lump formatting/preprocessing if provided
+   if(lfmt)
+   {
+      bool success   = false;
+      int  errorMode = lfmt->getErrorMode();
+
+      if(lfmt->verifyData(dest, l->size) && lfmt->formatData(dest, l->size))
+         success = true;
+
+      // Lump formatter wants us to handle errors by bombing out?
+      if(!success && errorMode == WadLumpLoader::EM_FATAL)
+         I_Error("WadDirectory::ReadLump: lump %d is malformed\n", lump);
+   }
 }
 
 //
@@ -810,7 +819,7 @@ int WadDirectory::ReadLumpHeader(int lump, void *dest, size_t size)
    void *data;
    
    if(lump < 0 || lump >= numlumps)
-      I_Error("W_ReadLumpHeader: %d >= numlumps\n", lump);
+      I_Error("WadDirectory::ReadLumpHeader: %d >= numlumps\n", lump);
 
    l = lumpinfo[lump];
 
@@ -834,7 +843,7 @@ int W_ReadLumpHeader(int lump, void *dest, size_t size)
 //
 // killough 4/25/98: simplified
 //
-void *WadDirectory::CacheLumpNum(int lump, int tag)
+void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
 {
    // haleyjd 08/14/02: again, should not be RANGECHECK only
    if(lump < 0 || lump >= numlumps)
@@ -842,7 +851,8 @@ void *WadDirectory::CacheLumpNum(int lump, int tag)
    
    if(!(lumpinfo[lump]->cache))      // read the lump in
    {
-      ReadLump(lump, Z_Malloc(LumpLength(lump), tag, &(lumpinfo[lump]->cache)));
+      ReadLump(lump, Z_Malloc(LumpLength(lump), tag, 
+               &(lumpinfo[lump]->cache)), lfmt);
    }
    else
    {
@@ -859,12 +869,16 @@ void *WadDirectory::CacheLumpNum(int lump, int tag)
    return lumpinfo[lump]->cache;
 }
 
-void *W_CacheLumpNum(int lump, int tag)
+//
+// W_CacheLumpName
+//
+// haleyjd 06/26/11: Restored to status as a method of WadDirectory instead of
+// being a macro, as it needs to take an optional parameter now.
+//
+void *WadDirectory::CacheLumpName(const char *name, int tag, WadLumpLoader *lfmt)
 {
-   return wGlobalDir.CacheLumpNum(lump, tag);
+   return CacheLumpNum(GetNumForName(name), tag, lfmt);
 }
-
-// W_CacheLumpName macroized in w_wad.h -- killough
 
 // Predefined lumps removed -- sf
 
@@ -879,7 +893,7 @@ int W_LumpCheckSum(int lumpnum)
    char *lump;
    int   checksum = 0;
    
-   lump = (char *)(W_CacheLumpNum(lumpnum, PU_CACHE));
+   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
    lumplength = W_LumpLength(lumpnum);
    
    for(i = 0; i < lumplength; i++)

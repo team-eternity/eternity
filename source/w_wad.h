@@ -115,6 +115,44 @@ struct wfileadd_t
 };
 
 //
+// haleyjd 06/26/11: Wad lump preprocessing and formatting
+//
+// Inherit from this interface class to provide verification and preprocessing 
+// code to W_CacheLump* routines.
+//
+class WadLumpLoader
+{
+public:
+   // verifyData should do format checking and return true if the data is valid,
+   // and false otherwise. If verifyData returns false, formatData is not called
+   // under any circumstance.
+   virtual bool verifyData(const void *data, size_t size) const
+   { 
+      return true; 
+   }
+
+   // formatData should do preprocessing work on the lump. This work will be
+   // retained until the wad lump is freed from cache, so it allows such work to
+   // be done once only and not every time the lump is retrieved from the wad
+   // file. Return false if an error occurs, and true otherwise.
+   virtual bool formatData(void *data, size_t size) const
+   { 
+      return true; 
+   }
+
+   // Error modes enumeration
+   enum
+   {
+      EM_IGNORE, // Ignore any error
+      EM_FATAL   // Fatal error on failure
+   };
+
+   // getErrorMode tells the wad file code how to respond to a failure in the
+   // verification or formatting routines. Return one of the codes above.
+   virtual int getErrorMode() const { return EM_IGNORE; }
+};
+
+//
 // haleyjd 03/01/09: Wad Directory structure
 //
 // Adding this allows a level of indirection to be added to the wad system,
@@ -192,10 +230,12 @@ public:
    // haleyjd 06/15/10: special private wad file support
    int         AddNewPrivateFile(const char *filename);
    int         LumpLength(int lump);
-   void        ReadLump(int lump, void *dest);
+   void        ReadLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
    int         ReadLumpHeader(int lump, void *dest, size_t size);
-   void       *CacheLumpNum(int lump, int tag);
-   void        Close();               // haleyjd 03/09/11
+   void       *CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = NULL);
+   void       *CacheLumpName(const char *name, int tag, 
+                             WadLumpLoader *lfmt = NULL);
+   void        Close(); // haleyjd 03/09/11
 
    // Accessors
    int   GetType() const  { return type; }
@@ -217,12 +257,8 @@ int         W_GetNumForName(const char* name);
 lumpinfo_t *W_GetLumpNameChain(const char *name);
 
 int         W_LumpLength(int lump);
-void        W_ReadLump(int lump, void *dest);
-void       *W_CacheLumpNum(int lump, int tag);
 int         W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
-
-#define W_CacheLumpName(name,tag) W_CacheLumpNum (W_GetNumForName(name),(tag))
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98
 

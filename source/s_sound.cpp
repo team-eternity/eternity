@@ -1081,7 +1081,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data   = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
    music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
 
    // play it

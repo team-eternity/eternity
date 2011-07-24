@@ -46,6 +46,7 @@
 #include "s_sound.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -452,10 +453,9 @@ void MN_HelpDrawer(void)
    {
       // haleyjd: support raw lumps
       int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
-      byte *raw   = (byte *)(W_CacheLumpNum(lumpnum, PU_CACHE));
 
       // haleyjd 05/18/09: use smart background drawer
-      V_DrawFSBackground(&vbscreen, raw, W_LumpLength(lumpnum));      
+      V_DrawFSBackground(&vbscreen, lumpnum);
    }
 }
 
@@ -574,10 +574,10 @@ void MN_MapColourDrawer(void)
 
    // draw colours table
    
-   patch = (patch_t *)W_CacheLumpName("M_COLORS", PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, "M_COLORS", PU_CACHE);
    
-   x = (SCREENWIDTH  - SwapShort(patch->width )) / 2;
-   y = (SCREENHEIGHT - SwapShort(patch->height)) / 2;
+   x = (SCREENWIDTH  - patch->width ) / 2;
+   y = (SCREENHEIGHT - patch->height) / 2;
    
    V_DrawPatch(x, y, &vbscreen, patch);
    
@@ -598,7 +598,10 @@ void MN_MapColourDrawer(void)
    V_DrawBlock(x, y, &vbscreen, BLOCK_SIZE, BLOCK_SIZE, block);
 
    if(!selected_colour)
-      V_DrawPatch(x+1, y+1, &vbscreen, (patch_t *)W_CacheLumpName("M_PALNO", PU_CACHE));
+   {
+      V_DrawPatch(x+1, y+1, &vbscreen, 
+                  PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
+   }
 }
 
 bool MN_MapColourResponder(event_t *ev)

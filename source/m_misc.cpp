@@ -1630,7 +1630,7 @@ void M_LoadOptions(void)
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
       int size = W_LumpLength(lump), buflen = 0;
-      char *buf = NULL, *p, *options = p = (char *)(W_CacheLumpNum(lump, PU_STATIC));
+      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.CacheLumpNum(lump, PU_STATIC));
       while (size > 0)
       {
          int len = 0;

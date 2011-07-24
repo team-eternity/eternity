@@ -100,7 +100,7 @@ void P_InitSwitchList(void)
    if(lumpnum < 0)
       I_Error("P_InitSwitchList: missing SWITCHES lump\n");
 
-   alphSwitchList = (switchlist_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+   alphSwitchList = (switchlist_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
 
    for(i = 0; ; i++)
    {

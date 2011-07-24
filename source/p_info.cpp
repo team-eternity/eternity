@@ -1071,7 +1071,7 @@ static void P_LoadInterTextLump(void)
       
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
-      W_ReadLump(lumpNum, str);
+      wGlobalDir.ReadLump(lumpNum, str);
       
       // null-terminate the string
       str[lumpLen] = '\0';

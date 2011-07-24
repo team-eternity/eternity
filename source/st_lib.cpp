@@ -33,6 +33,7 @@
 #include "r_patch.h"
 #include "st_lib.h"
 #include "st_stuff.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -50,7 +51,7 @@ patch_t*    sttminus;
 //
 void STlib_init(void)
 {
-   sttminus = (patch_t *)W_CacheLumpName("STTMINUS", PU_STATIC);
+   sttminus = PatchLoader::CacheName(wGlobalDir, "STTMINUS", PU_STATIC);
 }
 
 //
@@ -90,8 +91,8 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    int   numdigits = n->width;
    int   num = *n->num;
 
-   int   w = SwapShort(n->p[0]->width);
-   int   h = SwapShort(n->p[0]->height);
+   int   w = n->p[0]->width;
+   int   h = n->p[0]->height;
    int   x;
 
    int   neg;
