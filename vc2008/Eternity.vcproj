@@ -2639,6 +2639,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_portalclip.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_pspr.cpp"
 						>
 						<FileConfiguration
@@ -3036,6 +3040,10 @@
 					</File>
 					<File
 						RelativePath="..\source\p_portal.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_portalclip.h"
 						>
 					</File>
 					<File

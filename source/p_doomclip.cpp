@@ -2511,6 +2511,93 @@ msecnode_t *DoomClipEngine::createSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 }
 
 
+//
+// killough 11/98:
+//
+// Monsters try to move away from tall dropoffs.
+//
+// In Doom, they were never allowed to hang over dropoffs,
+// and would remain stuck if involuntarily forced over one.
+// This logic, combined with p_map.c (P_TryMove), allows
+// monsters to free themselves without making them tend to
+// hang over dropoffs.
+
+static fixed_t dropoff_deltax, dropoff_deltay, floorz;
+
+static bool PIT_AvoidDropoff(line_t *line, MapContext *mc)
+{
+   ClipContext *cc = mc->clipContext();
+   
+   if(line->backsector                          && // Ignore one-sided linedefs
+      cc->bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
+      cc->bbox[BOXLEFT]   < line->bbox[BOXRIGHT]  &&
+      cc->bbox[BOXTOP]    > line->bbox[BOXBOTTOM] && // Linedef must be contacted
+      cc->bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
+      P_BoxOnLineSide(cc->bbox, line) == -1)
+   {
+      fixed_t front = line->frontsector->floorheight;
+      fixed_t back  = line->backsector->floorheight;
+      angle_t angle;
+
+      // The monster must contact one of the two floors,
+      // and the other must be a tall dropoff (more than 24).
+
+      if(back == cc->dropoff_floorz && front < cc->dropoff_floorz - FRACUNIT*24)
+      {
+         // front side dropoff
+         angle = P_PointToAngle(0,0,line->dx,line->dy);
+      }
+      else
+      {
+         // back side dropoff
+         if(front == cc->dropoff_floorz && back < cc->dropoff_floorz - FRACUNIT*24)
+            angle = P_PointToAngle(line->dx,line->dy,0,0);
+         else
+            return true;
+      }
+
+      // Move away from dropoff at a standard speed.
+      // Multiple contacted linedefs are cumulative (e.g. hanging over corner)
+      cc->dropoff_deltax -= finesine[angle >> ANGLETOFINESHIFT]*32;
+      cc->dropoff_deltay += finecosine[angle >> ANGLETOFINESHIFT]*32;
+   }
+
+   return true;
+}
+
+
+//
+// P_AvoidDropoff
+//
+// Driver for above
+//
+// SoM: Moved this here as part of the clipping engine.
+fixed_t DoomClipEngine::avoidDropoff(Mobj *actor, ClipContext *cc)
+{
+   int yh=((cc->bbox[BOXTOP]   = actor->y+actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int yl=((cc->bbox[BOXBOTTOM]= actor->y-actor->radius)-bmaporgy)>>MAPBLOCKSHIFT;
+   int xh=((cc->bbox[BOXRIGHT] = actor->x+actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int xl=((cc->bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
+   int bx, by;
+
+   cc->dropoff_floorz = actor->z;            // remember floor height
+
+   dropoff_deltax = dropoff_deltay = 0;
+
+   // check lines
+
+   validcount++;
+   for(bx = xl; bx <= xh; ++bx)
+   {
+      // all contacted lines
+      for(by = yl; by <= yh; ++by)
+         P_BlockLinesIterator(bx, by, PIT_AvoidDropoff, cc);
+   }
+   
+   // Non-zero if movement prescribed
+   return dropoff_deltax | dropoff_deltay;
+}
+
 
 //----------------------------------------------------------------------------
 //

@@ -20,35 +20,28 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      Map functions
+//      Portal clipping engine
 //
 //-----------------------------------------------------------------------------
 
-#ifndef P_DOOMCLIP_H
-#define P_DOOMCLIP_H
+#ifndef P_PORTALCLIP_H
+#define P_PORTALCLIP_H
 
 #include "p_clipen.h"
 #include "p_mapcontext.h"
 
 class   ClipContext;
 
-class DoomClipEngine : public ClipEngine
+class PortalClipEngine : public ClipEngine
 {
    public:
-      DoomClipEngine() : clipc() {}
-      virtual ~DoomClipEngine() {}
+      PortalClipEngine() : unused(NULL) {}
+      virtual ~PortalClipEngine() {}
       
-      // killough 3/15/98: add fourth argument to P_TryMove
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
 
-      // killough 8/9/98: extra argument for telefragging
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss);
-
-      // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
       virtual bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
-
-      // SoM: new function that won't telefrag things which the transporting mobj isn't
-      // touching on the z axis.
       virtual bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
 
       virtual void slideMove(Mobj *mo);
@@ -67,7 +60,7 @@ class DoomClipEngine : public ClipEngine
       virtual void applyTorque(Mobj *mo, ClipContext *cc);
       
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc);
-
+      
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc);
       
       // Clipping contexts
@@ -75,8 +68,7 @@ class DoomClipEngine : public ClipEngine
       virtual void          freeContext(ClipContext *);
       
    private:
-      // The one single clipping context the old engine gets
-      ClipContext    clipc;
+      ClipContext    *unused;
 };
 
 
@@ -86,16 +78,4 @@ extern bool donut_emulation; // haleyjd 10/16/09
 
 
 
-#endif // P_DOOMCLIP_H
-
-//----------------------------------------------------------------------------
-//
-// $Log: p_map.h,v $
-// Revision 1.2  1998/05/07  00:53:07  killough
-// Add more external declarations
-//
-// Revision 1.1  1998/05/03  22:19:23  killough
-// External declarations formerly in p_local.h
-//
-//
-//----------------------------------------------------------------------------
+#endif // P_PORTALCLIP_H

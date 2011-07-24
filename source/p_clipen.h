@@ -87,6 +87,8 @@ class ClipEngine
       
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod);
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc) = 0;
+
+      virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc) = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;

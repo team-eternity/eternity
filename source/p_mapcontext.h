@@ -105,6 +105,10 @@ class ClipContext : public MapContext
       msecnode_t *sector_list;     // phares 3/16/98
       
       Mobj       *BlockingMobj;    // haleyjd 1/17/00: global hit reference
+      
+      fixed_t    dropoff_deltax;
+      fixed_t    dropoff_deltay;
+      fixed_t    dropoff_floorz;
 
       // Spechit stuff
       PODCollection<line_t *> spechit;
@@ -114,6 +118,7 @@ class ClipContext : public MapContext
       
       ClipContext *next;
       friend class ClipEngine;
+      friend class PortalClipEngine;
 };
 
 
