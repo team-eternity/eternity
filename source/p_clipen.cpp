@@ -273,7 +273,7 @@ void ClipEngine::freeSecNodeList(void)
 // ----------------------------------------------------------------------------
 // Tracer engine selection
 
-static DoomTraceEngine *doomte = new DoomTraceEngine();
+static DoomTraceEngine doomte = DoomTraceEngine();
 
 TracerEngine *trace = doomte;
 
