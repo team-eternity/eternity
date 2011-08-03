@@ -40,6 +40,9 @@
 // We need the playr data structure as well.
 #include "d_player.h"
 
+// [CG] Teams too
+#include "cs_team.h"
+
 typedef enum
 {
   bfg_normal,
@@ -135,6 +138,8 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+  comp_mouselook,   // [CG]    06/30/11: vertically extend mouselook range
+  comp_2dradatk,    // [CG]    06/30/11: radius attacks thrust actors in 3D
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 
@@ -169,6 +174,37 @@ extern  boolean netgame;
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
 extern  boolean deathmatch;
+
+// [CG] Added some booleans for c/s.
+extern boolean clientserver;
+extern boolean cs_demo_playback;
+extern boolean cs_demo_recording;
+extern boolean clientside;
+extern boolean serverside;
+
+// [CG] Although this is defined as a boolean, I've kept the CS_XXXXXXXX
+//      convention.  This is to avoid defining a common name such as "headless"
+//      in the global scope.
+extern boolean CS_HEADLESS;
+
+// [CG] These #define's should be used more often then just plain clientside
+//      and serverside, so singleplayer isn't messed up.
+#define CS_DEMO       ((clientserver && cs_demo_playback))
+#define CS_CLIENT     ((clientserver && clientside))
+#define CS_SERVER     ((clientserver && serverside))
+#define CS_CLIENTDEMO ((CS_DEMO && clientside))
+#define CS_SERVERDEMO ((CS_DEMO && serverside))
+
+// [CG] Some c/s configuration options.
+enum
+{
+    DEATH_LIMIT_SPECTATE,
+    DEATH_LIMIT_RESPAWN
+};
+extern unsigned int respawn_protection_time;
+extern unsigned int death_time_limit;
+extern unsigned int death_time_expired_action;
+extern unsigned int friendly_damage_percentage;
 
 // ------------------------------------------
 // Internal parameters for sound rendering.
@@ -268,11 +304,23 @@ extern  gamestate_t  gamestate;
 extern  int   gametic;
 
 
+/*
+ * [CG] Dynamically allocating these now.
 // Bookkeeping on players - state.
 extern  player_t  players[MAXPLAYERS];
 
 // Alive? Disconnected?
 extern  boolean    playeringame[];
+ *
+ */
+
+extern player_t    *players;
+extern boolean     *playeringame;
+
+// [CG] Some other player-related things
+// extern teamcolor_t *playerteam;
+// extern boolean     *playerspectating;
+// extern int         *playerid; // [CG] A player's ENet peer connection ID
 
 extern  mapthing_t *deathmatchstarts;     // killough
 extern  size_t     num_deathmatchstarts; // killough

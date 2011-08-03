@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -44,6 +44,9 @@
 #include "m_queue.h"
 #include "p_spec.h"
 #include "p_tick.h"
+
+// [CG] Added
+#include "g_dmflag.h"
 
 // haleyjd 07/13/05: redefined to use sound-specific attenuation params
 #define S_ATTENUATOR ((sfx->clipping_dist - sfx->close_dist) >> FRACBITS)
@@ -600,6 +603,16 @@ void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx,
       
       if(pitch > 255)
          pitch = 255;
+   }
+
+   // [CG] Silent BFG support.  This probably affects more than just the BFG,
+   //      but that (should be) OK, it's an oldschool flag anyway.
+   if(origin &&
+      origin->thinker.function == P_MobjThinker &&
+      origin->player &&
+      dmflags2 & dmf_use_oldschool_sound_cutoff)
+   {
+      S_StopSound(origin, CHAN_ALL);
    }
 
    // haleyjd 06/12/08: determine subchannel. If auto, try using the sound's

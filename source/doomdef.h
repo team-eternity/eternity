@@ -46,6 +46,10 @@
 #include "d_mod.h"
 #include "m_fixed.h" // SoM 2-4-04: ANYRES
 
+// [CG] So we can set some other defines if this is a client/server version of
+//      Eternity.
+#define CLIENTSERVER
+
 // Identify language to use, software localization.
 typedef enum {
   english,
@@ -106,8 +110,20 @@ extern cb_video_t video;
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200
 
+// [CG] TODO: Client/Server versions of Eternity are not compatible with non-
+//            client/server save games or demos.  However, it's possible to
+//            change some things to make them backwards compatible.
+
+#ifdef CLIENTSERVER
+#define MAXPLAYERS       256
+#else
 // The maximum number of players, multiplayer/networking.
 #define MAXPLAYERS       4
+#endif
+
+// [CG] Some things refer to the original maximum amount of players (which was
+//      four), so I've defined that as VANILLA_MAXPLAYERS here.
+#define VANILLA_MAXPLAYERS 4
 
 // phares 5/14/98:
 // DOOM Editor Numbers (aka doomednum in mobj_t)

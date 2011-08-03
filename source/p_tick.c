@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -36,6 +36,13 @@
 #include "p_partcl.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
+
+// [CG] Added.
+#include "e_things.h"
+#include "cs_main.h"
+#include "cs_position.h"
+#include "cl_main.h"
+#include "sv_main.h"
 
 int leveltime;
 boolean reset_viewz;
@@ -244,8 +251,31 @@ static void P_RunThinkers(void)
    for(currentthinker = thinkercap.next;
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
-      if(currentthinker->function)
+   {
+      if(!currentthinker->function)
+      {
+         continue;
+      }
+
+      if(!clientserver)
+      {
          currentthinker->function(currentthinker);
+         continue;
+      }
+
+      if(currentthinker->function != P_MobjThinker)
+      {
+         currentthinker->function(currentthinker);
+         continue;
+      }
+
+      // [CG] In c/s, a player's thinker is called separately from this, so
+      //      only run the thinker if the actor isn't a player.
+      if(((mobj_t *)currentthinker)->player == NULL)
+      {
+         currentthinker->function(currentthinker);
+      }
+   }
 }
 
 //
@@ -262,9 +292,13 @@ void P_Ticker(void)
    // playback, and compensates by incrementing basetic.
    // 
    // All of this complicated mess is used to preserve demo sync.
-   
-   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
-                 players[consoleplayer].viewz != 1))
+   // [CG] Never pause in c/s.
+   if(!clientserver && (
+         paused || (
+            (menuactive || consoleactive) &&
+            !demoplayback &&
+            !netgame &&
+            players[consoleplayer].viewz != 1)))
       return;
    
    P_ParticleThinker(); // haleyjd: think for particles
@@ -274,9 +308,42 @@ void P_Ticker(void)
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
    if(gamestate == GS_LEVEL && !cinema_pause)
-      for(i = 0; i < MAXPLAYERS; i++)
-         if(playeringame[i])
-            P_PlayerThink(&players[i]);
+   {
+      if(!clientserver)
+      {
+         for(i = 0; i < VANILLA_MAXPLAYERS; i++)
+         {
+            if(playeringame[i])
+            {
+               P_PlayerThink(&players[i]);
+            }
+         }
+      }
+      else
+      {
+         for(i = 0; i < MAXPLAYERS; i++)
+         {
+            if(!playeringame[i])
+            {
+               continue;
+            }
+
+            if(clientserver)
+            {
+               if(i != 0 || CS_SERVER)
+               {
+                  // [CG] Don't tick on the server's spectator actor unless
+                  //      we're serverside.
+                  CS_PlayerTicker(i);
+               }
+            }
+            else
+            {
+               P_PlayerThink(&players[i]);
+            }
+         }
+      }
+   }
 
    reset_viewz = false;  // sf
 
@@ -284,7 +351,9 @@ void P_Ticker(void)
    P_UpdateSpecials();
    P_RespawnSpecials();
    if(demo_version >= 329)
+   {
       P_AnimateSurfaces(); // haleyjd 04/14/99
+   }
    
    leveltime++;                       // for par times
 
@@ -294,7 +363,10 @@ void P_Ticker(void)
    // activated and viewz is reset appropriately here.
    
    if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
-      P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
+   {
+      // Determines view height and bobbing
+      P_CalcHeight(&players[displayplayer]);
+   }
    
    P_RunEffects(); // haleyjd: run particle effects
 }

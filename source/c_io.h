@@ -31,6 +31,8 @@
 #define INPUTLENGTH 512
 #define LINELENGTH  128
 
+void    C_ReloadFont(void); // [CG] Added.
+void    C_InitBackdrop(void); // [CG] Added.
 void    C_Init(void);
 void    C_Ticker(void);
 void    C_Drawer(void);

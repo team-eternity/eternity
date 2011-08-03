@@ -21,12 +21,14 @@
 #ifndef VERSION_H__
 #define VERSION_H__
 
+#include "doomtype.h"
 #include "z_zone.h"  /* memory allocation wrappers -- killough */
 
 // DOOM version
 // enum { VERSION =  203 };
 extern int version;     // sf: made version an int
 extern unsigned char SUBVERSION; // haleyjd
+extern const uint32_t CS_PROTOCOL_VERSION;
 
 extern const char version_date[];
 extern const char version_time[];

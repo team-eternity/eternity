@@ -52,6 +52,9 @@
 #include "d_io.h"
 #include "e_fonts.h"
 
+// [CG] Added.
+#include "cs_hud.h"
+
 //=============================================================================
 //
 // Global Variables
@@ -1309,8 +1312,15 @@ boolean MN_Responder(event_t *ev)
             S_StartSound(NULL, menuSounds[MN_SND_DEACTIVATE]);
          }
       }
-      else 
+      else if(cs_chat_active)
+      {
+          return false;
+      }
+      else
+      {
+         // [CG] Don't bring up the menu if chat is currently active.
          MN_StartControlPanel();      
+      }
       
       return true;
    }

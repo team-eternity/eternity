@@ -33,8 +33,12 @@
 // jff make startskill globally visible
 extern skill_t startskill;
 extern char *startlevel;
+// [CG] We need startepisode and startmap too.
+extern int startepisode;
+extern int startmap;
 
 void D_ListWads(void);
+void D_ClearFiles(void); // [CG] Added for c/s.
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle, int sound_update_type);
 boolean D_AddNewFile(const char *s);
@@ -72,6 +76,18 @@ void D_PageTicker(void);
 void D_PageDrawer(void);
 void D_AdvanceDemo(void);
 void D_StartTitle(void);
+
+// [CG] Added so that the main c/s loop can display things while waiting on the
+//      server.
+void D_Display(void);
+
+// [CG] Added so that the main client/server loop can process events.
+void D_ProcessEvents(void);
+
+// [CG] Added so that client/server configurations can add files.
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
+               int privatedir);
+
 void D_DoomMain(void);
 
 // sf: display a message to the player: either in text mode or graphics

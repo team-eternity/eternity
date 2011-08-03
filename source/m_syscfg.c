@@ -37,6 +37,13 @@
 #include "w_wad.h"
 #include "w_levels.h"
 
+// [CG] Added
+#include "cs_config.h"
+#include "cs_main.h"
+#include "cs_hud.h"
+#include "cs_demo.h"
+#include "cl_cmd.h"
+
 // External variables configured here:
 
 extern int textmode_startup;
@@ -195,6 +202,51 @@ static default_t sysdefaults[] =
    DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 0, 0, 1, wad_no,
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
+
+   // [CG] These are c/s defaults.
+
+   DEFAULT_BOOL(
+      "prediction",
+      &cl_enable_prediction,
+      NULL,
+      true, wad_no,
+      "predict local movement without waiting for the server"
+   ),
+   
+   DEFAULT_BOOL("predict_shots", &cl_predict_shots, NULL, true, wad_no,
+                "predict shot results"),
+
+   DEFAULT_INT(
+      "packet_buffer_size",
+      &cl_packet_buffer_size,
+      NULL,
+      0, 0, MAX_POSITIONS, wad_no,
+      "how large to allow the packet buffer to grow before it's flushed "
+      "automatically, 0 - unlimited"
+   ),
+
+   DEFAULT_BOOL(
+      "buffer_packets_while_spectating",
+      &cl_buffer_packets_while_spectating,
+      NULL,
+      true, wad_no,
+      "disables automatic packet buffer flushing while spectating"
+   ),
+
+   DEFAULT_BOOL(
+      "flush_packet_buffer_on_respawn",
+      &cl_flush_packet_buffer_on_respawn,
+      NULL,
+      true, wad_no,
+      "automatically flushes the packet buffer when the player respawns"
+   ),
+
+   DEFAULT_STR(
+      "clientserver_demo_folder", &cs_demo_folder_path, NULL, "", wad_no,
+      "folder in which to save client/server demos, defaults to base/demos"
+   ),
+
+   // [CG] End c/s defaults.
 
    { NULL }
 };

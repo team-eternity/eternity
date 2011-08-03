@@ -38,6 +38,9 @@ void A_Fall(mobj_t *actor);
 void A_Look(mobj_t *actor);
 void A_Pain(mobj_t *actor);
 
+// [CG] Was once static.
+void P_MakeActiveSound(mobj_t *actor);
+
 #endif
 
 // EOF

@@ -99,13 +99,19 @@ extern int action_console_up;
 extern int action_console_down;
 extern int action_console_backspace;
 
+extern int action_message_all;
+extern int action_message_team;
+extern int action_message_player;
+extern int action_message_server;
+extern int action_rcon;
+
 // haleyjd 07/03/04: key binding classes
 enum keyactionclass
 {
    kac_game,            // game bindings -- handled by G_BuildTiccmd
    kac_menu,            // menu bindings -- handled by MN_Responder
    kac_map,             // map  bindings -- handled by AM_Responder
-   kac_console,         // con. bindings -- handled by C_Repsonder
+   kac_console,         // con. bindings -- handled by C_Responder
    kac_hud,             // hud  bindings -- handled by HU_Responder
    kac_cmd,             // command
    NUMKEYACTIONCLASSES
@@ -175,6 +181,17 @@ enum keyaction_e
    ka_console_up,
    ka_console_down,
    ka_console_backspace,
+   // [CG] Added for c/s.
+   ka_message_all,
+   ka_message_team,
+   ka_message_player,
+   ka_message_server,
+   ka_message_rcon,
+   ka_spectate,
+   ka_spectate_prev,
+   ka_spectate_next,
+   ka_flush_packet_buffer,
+   ka_multibind,
    NUMKEYACTIONS
 };
 

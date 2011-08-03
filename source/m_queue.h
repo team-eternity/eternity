@@ -28,6 +28,8 @@
 #ifndef M_QUEUE_H
 #define M_QUEUE_H
 
+#include "doomtype.h"
+
 typedef struct mqueueitem_s
 {
    struct mqueueitem_s *next;
@@ -38,13 +40,16 @@ typedef struct mqueue_s
    mqueueitem_t head;
    mqueueitem_t *tail;
    mqueueitem_t *rover;
+   unsigned int size;
 } mqueue_t;
 
-void M_QueueInit(mqueue_t *queue);
-void M_QueueInsert(mqueueitem_t *item, mqueue_t *queue);
-mqueueitem_t *M_QueueIterator(mqueue_t *queue);
-void M_QueueResetIterator(mqueue_t *queue);
-void M_QueueFree(mqueue_t *queue);
+void          M_QueueInit(mqueue_t *queue);
+void          M_QueueInsert(mqueueitem_t *item, mqueue_t *queue);
+boolean       M_QueueIsEmpty(mqueue_t *queue);
+mqueueitem_t* M_QueuePop(mqueue_t *queue);
+mqueueitem_t* M_QueueIterator(mqueue_t *queue);
+void          M_QueueResetIterator(mqueue_t *queue);
+void          M_QueueFree(mqueue_t *queue);
 
 #endif
 

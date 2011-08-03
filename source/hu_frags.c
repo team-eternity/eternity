@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -44,6 +44,10 @@
 #include "d_gi.h"
 #include "e_fonts.h"
 
+// [CG] Added.
+#include "cs_main.h"
+#include "cs_team.h"
+
 #define FRAGSX 125
 #define FRAGSY 10
 
@@ -52,7 +56,11 @@
 
 #define FRAGNUMX 175
 
-extern boolean gamekeydown[NUMKEYS]; // g_game.c
+// extern boolean gamekeydown[NUMKEYS]; // g_game.c
+
+extern int levelFragLimit;  // g_game.c
+extern int levelTimeLimit;  // d_main.c
+extern int levelScoreLimit; // g_game.c
 
 player_t *sortedplayers[MAXPLAYERS];
 
@@ -65,7 +73,9 @@ void HU_FragsInit(void)
 
 extern vfont_t *hud_font;
 
-static boolean fragsdrawn;
+// [CG] Un-static'd.
+// static boolean fragsdrawn;
+boolean fragsdrawn;
 
 void HU_FragsDrawer(void)
 {
@@ -121,15 +131,18 @@ void HU_FragsDrawer(void)
 
 void HU_FragsUpdate(void)
 {
-   int i,j;
+   int i, j;
    int change;
    player_t *temp;
 
    num_players = 0;
 
-   for(i=0; i<MAXPLAYERS; i++)
+   for(i = 0; i < MAXPLAYERS; i++)
    {
-      if(!playeringame[i]) continue;
+      if(!playeringame[i])
+      {
+         continue;
+      }
 
       // found a real player
       // add to list
@@ -139,38 +152,49 @@ void HU_FragsUpdate(void)
 
       players[i].totalfrags = 0; // reset frag count
 
-      for(j=0; j<MAXPLAYERS; j++)  // add all frags for this player
+      for(j = 0; j < MAXPLAYERS; j++)  // add all frags for this player
       {
-         if(!playeringame[j]) continue;
-         if(i==j) players[i].totalfrags-=players[i].frags[j];
-         else players[i].totalfrags+=players[i].frags[j];
+         if(!playeringame[j])
+         {
+            continue;
+         }
+
+         if(i == j)
+         {
+            players[i].totalfrags -= players[i].frags[j];
+         }
+         else
+         {
+            players[i].totalfrags += players[i].frags[j];
+         }
       }
    }
 
    // use the bubble sort algorithm to sort the players
 
-   change = true;
-   while(change)
+   do
    {
       change = false;
-      for(i=0; i<num_players-1; i++)
+      for(i = 0; i < num_players - 1; i++)
       {
-         if(sortedplayers[i]->totalfrags <
-            sortedplayers[i+1]->totalfrags)
+         if(sortedplayers[i]->totalfrags < sortedplayers[i + 1]->totalfrags)
          {
             temp = sortedplayers[i];
-            sortedplayers[i] = sortedplayers[i+1];
-            sortedplayers[i+1] = temp;
+            sortedplayers[i] = sortedplayers[i + 1];
+            sortedplayers[i + 1] = temp;
             change = true;
          }
       }
-   }
+   } while(change);
 }
 
 void HU_FragsErase(void)
 {
-   if(GameType != gt_dm)
+   // [CG] Added !clientserver check.
+   if(!clientserver && GameType != gt_dm)
+   {
       return;
+   }
 
    if(fragsdrawn)
    {

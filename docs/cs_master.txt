@@ -1,0 +1,306 @@
+### Master Server
+
+#### Foreword
+
+EE's master server is still in flux, and almost all of this is subject to
+change.  However, the basic principles will remain the same: the server will
+always be an HTTP server, the data format will always be jSON, and so on, but
+details may change.  Current candidates include:
+
+  - Adding a configurable limit on how many server groups an admin can have on
+    the master at any one time; this would probably default to 4 or 5.  Admins
+    can still create as many servers as they want, so this isn't as limiting as
+    it seems.  It's certainly much better than the arbitrary limit on servers
+    themselves used by ZDaemon's master.
+
+#### Requirements
+
+EE's master server is fundamentally a web application.  It requires:
+
+  - A web server (tested with Apache 2.2.17 and `mod_wsgi` 3.3)
+  - A database (tested with PostgreSQL 8.4)
+  - Python (tested with 2.6, 2.5 and 2.7 probably work, 3.x does not)
+  - web.py (tested with 0.34)
+  - SQLAlchemy (tested with 0.6.5)
+    - A driver for your database (tested with Psycopg2 2.0.14)
+
+#### Web Server Issues
+
+Below are some issues with the most popular web servers and their solutions.
+
+##### Lighttpd
+
+Version 1.4.20 and earlier of Lighttpd incorrectly handle HTTP 1.1 PUT requests.
+The issue is that Lighttpd will respond to PUT requests containing the
+"Expect: 100-continue" header with HTTP status code "417 Expectation failed".
+The fix is to disable "server.reject-expect-100-with-417", which is only
+available in versions 1.4.21 and later.  Add the following line to your
+lighttpd.conf file:
+
+    server.reject-expect-100-with-417 = "disable"
+
+##### Apache
+
+Apache will strip the "Authorization:" header from requests before the master
+can handle it, thus causing all authentication attempts to fail.  Using
+`mod_rewrite`, however, it is possible to replace the header.  Add the
+following lines to your httpd.conf file:
+
+    RewriteEngine on
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%1,L]
+
+If you are using a VirtualHost, this should go in that section.  Otherwise
+place it in the main body of the config.
+
+#### Design and Benefits
+
+The master tries to improve on the traditional multiplayer Doom master/launcher
+design in a number of ways.
+
+##### Requires no separate launcher program
+
+Perhaps the most significant benefit is that a separate launcher program is not
+required to show all active servers.  The master includes a JavaScript
+"launcher" interface accessible at its root URL - this is described in more
+detail in the **Player Usage** section.  Not requiring a launcher means less
+code to write and maintain, and it's one less application the user has to
+install and periodically update.  Of course, contemporary launchers are quite
+full-featured, and the master's launcher is nowhere near a full replacement,
+but there's nothing preventing those projects from adding support for EE;
+indeed the hope is that doing so is easier than for other c/s Doom ports due to
+the simplicity of the protocols & format.
+
+##### Built on proven, robust technology
+
+HTTP servers and SQL databases are technologies that have been used to handle
+heavy load situations, and they both provide administrators great tools like
+access controls and throttling to handle malicious users.
+
+##### Unlimited servers
+
+Other master server implementations limit the number of servers that
+administrators can advertise to mitigate DoS attacks and spam, but EE's master
+has other methods.
+
+###### Defense against DoS attacks
+
+All modern HTTP servers provide the ability to throttle their connections on a
+number of different levels (per-connection, per IP address, etc.), making a DoS
+attack difficult to execute successfully.
+
+###### Defense against spam attacks
+
+EE's master requires admins to register accounts before they advertise their
+servers, and when they do advertise their servers, they're placed in their own
+namespace.  For example, if a TotalTrash admin wants to advertise their
+servers on a hypothetical master at `http://master.eternity.xxx`, they would
+create the account `totaltrash`, and their servers would be located at
+`http://master.eternity.xxx/servers/totaltrash`, which prevents namespace
+collisions.  It is still possible for that admin to advertise a large amount of
+bogus servers.  The master has a low timeout threshold, so such an attack has
+to continually update the master with valid information for each bogus server.
+Admittedly this isn't difficult to do, and handling spam attacks generally
+requires intervention from the master's admin - usually account deletion.
+
+##### Open protocols and format
+
+The protocols/format used by EE's master are HTTP and JSON, both of which
+are open and plain-text and consequently very easy to understand, troubleshoot,
+and implement in a cross-platform, language-agnostic way.  Indeed libraries for
+both HTTP and JSON exist for all mainstream programming languages.  The use of
+URLs is also quite powerful, and described in more detail in the
+**Player Usage** section.
+
+##### Insulated servers
+
+The launcher never contacts servers directly, and there is no way (other than
+connecting with a client normally) for users to contact a server.  Servers send
+state updates (how many players are playing, current frags/scores, etc.) to the
+master periodically, which the master stores in the database and serves to the
+launcher on request.
+
+This is much easier on both the client and the game servers from a networking
+perspective; the client doesn't open a large amount of socket connections and
+servers aren't continuously bombarded by configuration requests.  Clients are
+particularly susceptible to this as most launchers include an "auto-update"
+feature that can query hundreds of servers while a player is connected to a
+server and lag the player in the process.  Refreshing servers should also be
+very fast - even if the information is somewhat out of date.
+
+##### Accounts and authentication
+
+Passwords are sent over the wire and stored using their SHA-1 hashes.  While
+this adds nothing to the security of the master (sniffing the SHA-1 hash and
+forging it is trivial), it does protect the user in case they are using this
+password for other services, such as their e-mail account, bank account, et
+cetera.  The JavaScript launcher holds the SHA-1 hash of the user's password
+in memory; no cookies of any kind are used.
+
+SSL is currently unsupported in both the client and server, but if there is a
+strong desire for it I will add it.
+
+#### Player Usage
+
+Players interact with the master largely through the JavaScript launcher
+interface.
+
+##### Launcher
+
+The master comes with a JavaScript "launcher" interface accessible at its root
+URL (i.e. `http://master.eternity.xxx/`).  This interface lists the server's
+configuration (address, port, PWADs, etc.) and current state (players, frags,
+etc.), and most importantly links pointing to JSON configuratin data used to
+join servers.  The client is registered to handle mime-type
+`application/eternity` launches a command-line like:
+
+    eternity.exe -csjoin http://master.eternity.xxx/servers/totaltrash/ZDDL1
+
+##### Downloading WADs
+
+If a server has configured a URL at which to download PWADs (not IWADs), its
+PWADs will be displayed as links in the interface for the user to download.
+This removes the need for a separate application or library like GetWAD; users
+can simply click on the links to download the WADs to their machines.
+
+##### URLs
+
+The master/launcher design is built around the URL.  Each server must belong to
+a group, and its name is then listed beneath that group.  For example,
+  TotalTrash's Private CTF server might have the following URL:
+
+    http://master.eternity.xxx/servers/totaltrash/Private CTF
+
+Pointing an HTTP client at this URL will return the server's configuration,
+which is a short JSON document.  This document contains everything the client
+needs to know in order to connect to the server.
+
+Using URLs in this way has numerous benefits:
+
+###### Storage is simple
+
+Storing URLs is easy, and launching the client can be done in any number of
+ways (apart from simply using the master's launcher):
+
+  - Create a shortcut
+    (`eternity.exe -csjoin "file://e:/Users/Kyte/eternity/servers/PCTF.json"`)
+  - Create a bookmark in the browser
+  - Create a script
+
+Hopefully this puts the days of trying to remember IP addresses and ports in
+the past for good.
+
+###### Master servers are not required
+
+Because clients only need a URL that points to JSON configuration data, a
+master server is not required.  Admins can:
+
+  - Paste the JSON configuration files into pastebin and post the URL
+    (something like `http://pastebin.com/raw.php?i=Hf8Y37zc`)
+  - Host their own webserver and configure their game servers to write the
+    configuration files into a folder served by the webserver.
+
+This means that server admins aren't at the mercy of master server admins, and
+in the event of an outage can still "advertise" their servers.
+
+#### Admin Usage
+
+Server admins will also largely use the JavaScript launcher interface to
+interact with the master.
+
+##### Registration
+
+Registration involves choosing a username & password, as well as supplying an
+e-mail address (this reference implementation does not currently save or store
+the e-mail address).  When the user supplies this information, the master will
+send an e-mail containing a unique validation token ID URL; clicking this URL
+validates the registration and the user can now create groups and advertise
+servers.  Validation tokens are only valid for a short (configurable) period of
+time.
+
+This system is in place to prevent programmatic creation of accounts and avoid
+a potential DoS attack (using up all the random validation tokens, using up all
+the reasonable usernames, etc.).  In fact, the master server itself implements
+a configurable delay on account creation so that the process is deliberately
+slow - minimizing the amount of bogus accounts a malicious user could create in
+a given period of time.
+
+##### Advertising
+
+Once registered, admins must specify their information in their server config
+files (username, password, group and name).  Again, this is not necessary,
+admins need only post their JSON configuration data for users to download.
+However, the master provides a more full-featured interface than a simple list
+of links, so it's thought that admins will prefer to advertise on a master.
+
+Once advertised, servers send status updates every 2 seconds).  When a server
+shuts down, it tells the master to remove it from the list.  The master will
+not hang on to servers forever; it keeps track of updates and omits servers
+that have gone without an update for a configurable period of time, which
+should be at least 2 seconds... but generally should be around 3 or 4 seconds.
+
+##### Server groups
+
+Server groups determine what base URL their server URLs will use.  For example,
+creating the group "idl" on "master.totaltrash.org" might yield a URL like:
+
+    http://master.totaltrash.org/servers/idl/server 1
+
+This prevents namespace collisions; "server 1" is a potentially common name,
+and this allows server admins to be free in how they name their servers.
+
+It's worth mentioning that "server 1" is not what's displayed on the master.
+Servers have a "hostname" configuration attribute where a more descriptive name
+can be specified, like "International Doom League - Server A - Fortress
+Collision (MAP01)".  "server 1" would be specified in the "masters"
+configuration section for that master.
+
+See [config.txt](config.txt) for more information.
+
+#### URL API
+
+The master is built using the REST ideology, so it makes liberal use of lesser-
+known HTTP verbs like PUT and DELETE that augment the well-known GET and POST.
+
+  - GET /
+    - Serves the JavaScript launcher application.
+  - GET /registration/{id}
+    - Validates a user's registration using the ID sent in the validation
+      e-mail.
+  - HEAD /users (requires parameter authentication)
+    - A special URL & method provided so that JavaScript clients can
+      authenticate using HTTP params instead of HTTP Basic Authentication;
+      this avoids browser problems like attempting invalid authentication
+      methods or popping up the ugly auth box.  The parameters are "username"
+      and "password"; "username" expects the Base64-encoded username, and
+      "password" expects the Base64-encoded SHA1 hash of the password.
+  - GET /users/{name} (requires authentication)
+    - Returns a list of the user's groups as JSON data.
+  - PUT /users/{name}
+    - Creates a user (see documentation on the registration process above).
+  - POST /users/{name} (requires authentication)
+    - Changes a user's password.
+  - DELETE /users/{name} (requires authentication)
+    - Deletes a user, including all of their server groups and their servers.
+  - GET /servers
+    - Returns server information as JSON data.
+  - GET /servers/{group}
+    - Returns server information as JSON data for the specified group.
+  - PUT /servers/{group} (requires authentication)
+    - Creates a group.
+  - DELETE /servers/{group} (requires group owner authentication)
+    - Deletes a group and all servers contained therein.
+  - GET /servers/{group}/{name}
+    - Returns a server's configuration information as JSON data.
+  - PUT /servers/{group}/{name} (requires group owner authentication)
+    - Creates a server ("advertises" it).
+  - POST /servers/{group}/{name} (requires group owner authentication)
+    - Updates a server's state information.
+  - DELETE /servers/{group}/{name} (requires group owner authentication)
+    - Deletes a server.
+
+The API was developed to be simple in the hope that programmers find it easy to
+use or re-implement themselves.
+
+vim:tw=79 sw=4 ts=4 syntax=mkd et:
+

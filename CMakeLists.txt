@@ -39,6 +39,11 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckCXXCompilerFlag)
+## [CG] pkg-config is now necessary.
+INCLUDE(FindPkgConfig)
+IF (NOT PKG_CONFIG_FOUND)
+    MESSAGE (FATAL_ERROR "pkg-config was not found.")
+ENDIF (NOT PKG_CONFIG_FOUND)
 ################################################################################
 ######################### Set Package Details  #################################
 SET (CMAKE_MFC_FLAG 2)
@@ -46,15 +51,29 @@ SET (CMAKE_INSTALL_MFC_LIBRARIES 1)
 INCLUDE(InstallRequiredSystemLibraries)
 SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP")
 SET (CPACK_PACKAGE_VENDOR "Team Eternity")
-SET (CPACK_PACKAGE_CONTACT "Team Eternity <haelyjd@hotmail.com>")
+SET (CPACK_PACKAGE_CONTACT "Team Eternity <haleyjd@hotmail.com>")
 SET (CPACK_PACKAGE_VERSION_MAJOR "3")
-SET (CPACK_PACKAGE_VERSION_MINOR "37")
-SET (CPACK_PACKAGE_VERSION_PATCH "00")
+SET (CPACK_PACKAGE_VERSION_MINOR "39")
+SET (CPACK_PACKAGE_VERSION_PATCH "50")
 SET (CPACK_PACKAGE_NAME "Eternity Engine")
 SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine is Team Eternity's flagship product.")
 SET (CPACK_DEBIAN_PACKAGE_SECTION "games")
-SET (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.11.0), libgcc1 (>= 1:4.4.3), libsdl1.2debian (>=1.2.14), libsdl-mixer1.2 (>=1.2.8), libsdl-net1.2 (>=1.2.7), bash")
+SET (CPACK_DEBIAN_PACKAGE_DEPENDS
+    "libc6 (>= 2.11.0),
+     libgcc1 (>= 1:4.4.3),
+     libsdl1.2debian (>=1.2.14),
+     libsdl-mixer1.2 (>=1.2.8),
+     libsdl-net1.2 (>=1.2.7),
+     libbz2-1.0 (>=1.0.4),
+     zlib1g (>=1:1.2.3.4)
+     libarchive1 (>=2.8.4),
+     libc-ares2 (>=1.1.1-5.1),
+     libcurl3-gnutls (>=7.21.0),
+     libjson0 (>=0.9-1),
+     libenet1a (>=1.3.0),
+     bash"
+)
 SET (CPACK_DEBIAN_PACKAGE_RECOMMENDS "freedoom, game-data-packager")
 SET (BUILD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
 IF (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686")
@@ -397,14 +416,75 @@ IF (NOT HAVE_STDINT_H)
 ENDIF (NOT HAVE_STDINT_H)
 ################################################################################
 ######################### Find Needed Libs #####################################
-FIND_PACKAGE (SDL REQUIRED)
+FIND_PACKAGE (SDL 1.2.14 REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_mixer REQUIRED)
+FIND_PACKAGE (SDL_mixer 1.2.8 REQUIRED)
 INCLUDE_DIRECTORIES (${SDLMIXER_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_net REQUIRED)
+FIND_PACKAGE (SDL_net 1.2.7 REQUIRED)
 INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
+
+FIND_PACKAGE (libarchive 2.8.0 QUIET)
+IF (libarchive_FOUND)
+    INCLUDE_DIRECTORIES (${LIBARCHIVE_INCLUDE_DIR})
+    CHECK_LIBRARY_EXISTS (
+        ${LIBARCHIVE_LIBRARY}
+        archive_write_set_compression_bzip2
+        ""
+        HAVE_LIBARCHIVE_BZIP2_SUPPORT
+    )
+ELSE (libarchive_FOUND)
+    ## [CG] Not every platform will have Findlibarchive.cmake installed, so try
+    ##      and use pkg-config here.
+    PKG_SEARCH_MODULE(libarchive REQUIRED libarchive>=2.8.0)
+    INCLUDE_DIRECTORIES(${libarchive_INCLUDE_DIR})
+    CHECK_LIBRARY_EXISTS (
+        ${libarchive_LIBRARIES}
+        archive_write_set_compression_bzip2
+        ""
+        HAVE_LIBARCHIVE_BZIP2_SUPPORT
+    )
+    SET (LIBARCHIVE_LIBRARIES ${libarchive_LIBRARIES})
+ENDIF (libarchive_FOUND)
+
+IF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
+    MESSAGE (FATAL_ERROR "No BZip2 support found in libarchive.")
+ENDIF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
+
+FIND_PACKAGE (CURL 7.21.0 REQUIRED)
+INCLUDE_DIRECTORIES (${CURL_INCLUDE_DIR})
+
+## [CG] Check that libcurl has non-blocking DNS support.
+FIND_PROGRAM (
+    CURL_CONFIG_EXECUTABLE NAMES curl-config DOC "curl-config executable"
+)
+IF (NOT CURL_CONFIG_EXECUTABLE)
+    MESSAGE (FATAL_ERROR "curl-config not found.")
+ENDIF (NOT CURL_CONFIG_EXECUTABLE)
+EXECUTE_PROCESS (COMMAND ${CURL_CONFIG_EXECUTABLE} "--features"
+    RESULT_VARIABLE CURL_CONFIG_FAILED
+    OUTPUT_VARIABLE CURL_CONFIG_OUTPUT
+    ERROR_VARIABLE CURL_CONFIG_ERROR
+)
+IF (CURL_CONFIG_FAILED)
+    MESSAGE (FATAL_ERROR CURL_CONFIG_ERROR)
+ENDIF (CURL_CONFIG_FAILED)
+STRING (REGEX MATCH AsynchDNS CURL_ASYNC ${CURL_CONFIG_OUTPUT})
+IF (NOT CURL_ASYNC)
+    MESSAGE (
+        FATAL_ERROR "libcurl was not built with asynchronous DNS support."
+    )
+ENDIF (NOT CURL_ASYNC)
+
+PKG_SEARCH_MODULE(PC_CARES REQUIRED libcares>=1.7.3)
+INCLUDE_DIRECTORIES(${PC_CARES_INCLUDE_DIR})
+
+PKG_SEARCH_MODULE(PC_ENET REQUIRED libenet>=1.3.0)
+INCLUDE_DIRECTORIES(${PC_ENET_INCLUDE_DIR})
+
+PKG_SEARCH_MODULE(PC_JSON REQUIRED json>=0.9)
+INCLUDE_DIRECTORIES(${PC_JSON_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL.dll
@@ -412,12 +492,12 @@ INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
 ## This ensures you get sdl and all of it's needed .dll files, but may
 ## also grab unneeded .dll files.
 IF (WIN32)
-       FIND_PATH (SDL_SUPPORT_LIBS_DIR SDL.dll
-               HINTS
-               $ENV{SDLDIR}
-               PATH_SUFFIXES lib64 lib
-               PATHS)
-       FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
+   FIND_PATH (SDL_SUPPORT_LIBS_DIR SDL.dll
+       HINTS
+       $ENV{SDLDIR}
+       PATH_SUFFIXES lib64 lib
+       PATHS)
+   FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
 ENDIF (WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################

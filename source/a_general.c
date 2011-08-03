@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -55,6 +55,9 @@
 
 #include "a_common.h"
 
+// [CG] Added.
+#include "sv_main.h"
+
 //
 // killough 9/98: a mushroom explosion effect, sorta :)
 // Original idea: Linguica
@@ -63,13 +66,17 @@ void A_Mushroom(mobj_t *actor)
 {
    int i, j, n = actor->damage;
    int ShotType;
-   
+
    // Mushroom parameters are part of code pointer's state
    fixed_t misc1 = 
       actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
    fixed_t misc2 = 
       actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
 
+   // [CG] Clients can't handle this at all.
+   if(!serverside)
+      return;
+   
    // haleyjd: extended parameter support requested by Mordeth:
    // allow specification of thing type in args[0]
 
@@ -80,20 +87,28 @@ void A_Mushroom(mobj_t *actor)
    
    A_Explode(actor);               // make normal explosion
 
-   for(i = -n; i <= n; i += 8)    // launch mushroom cloud
+   // [CG] TODO: This needs its own network message, straight up.
+   if(serverside)
    {
-      for(j = -n; j <= n; j += 8)
+      for(i = -n; i <= n; i += 8)    // launch mushroom cloud
       {
-         mobj_t target = *actor, *mo;
-         target.x += i << FRACBITS;    // Aim in many directions from source
-         target.y += j << FRACBITS;
-         target.z += P_AproxDistance(i,j) * misc1;         // Aim fairly high
-         mo = P_SpawnMissile(actor, &target, ShotType,
-                             actor->z + DEFAULTMISSILEZ);  // Launch fireball
-         mo->momx = FixedMul(mo->momx, misc2);
-         mo->momy = FixedMul(mo->momy, misc2);             // Slow down a bit
-         mo->momz = FixedMul(mo->momz, misc2);
-         mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
+         for(j = -n; j <= n; j += 8)
+         {
+            mobj_t target = *actor, *mo;
+            target.x += i << FRACBITS;    // Aim in many directions from source
+            target.y += j << FRACBITS;
+            target.z += P_AproxDistance(i,j) * misc1;         // Aim fairly high
+            mo = P_SpawnMissile(actor, &target, ShotType,
+                                actor->z + DEFAULTMISSILEZ);  // Launch fireball
+            mo->momx = FixedMul(mo->momx, misc2);
+            mo->momy = FixedMul(mo->momy, misc2);             // Slow down a bit
+            mo->momz = FixedMul(mo->momz, misc2);
+            mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
+            if(CS_SERVER)
+            {
+               SV_BroadcastActorAttribute(mo, aat_flags);
+            }
+         }
       }
    }
 }
@@ -234,6 +249,7 @@ void A_RandomJump(mobj_t *mo)
 //
 // This allows linedef effects to be activated inside deh frames.
 //
+// [CG] TODO: Figure out how to handle this function in c/s.
 void A_LineEffect(mobj_t *mo)
 {
    // haleyjd 05/02/04: bug fix:
@@ -250,7 +266,7 @@ void A_LineEffect(mobj_t *mo)
          player_t player, *oldplayer = mo->player;   // Remember player status
          mo->player = &player;                       // Fake player
          player.health = 100;                        // Alive player
-         junk.tag = (int16_t)mo->state->misc2;         // Sector tag for linedef
+         junk.tag = (int16_t)mo->state->misc2;       // Sector tag for linedef
          if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
             P_CrossSpecialLine(&junk, 0, mo);        // Try crossing it
          if(!junk.special)                           // If type cleared,
@@ -597,6 +613,10 @@ void A_MissileAttack(mobj_t *actor)
    int statenum;
    boolean hastarget = true;
 
+   // [CG] Only servers do this.
+   if(!serverside)
+      return;
+
    if(!actor->target || actor->target->health <= 0)
       hastarget = false;
 
@@ -638,7 +658,18 @@ void A_MissileAttack(mobj_t *actor)
    }
    
    if(!a)
+   {
       mo = P_SpawnMissile(actor, actor->target, type, z);
+
+      if(homing)
+      {
+         P_SetTarget(&mo->tracer, actor->target);
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorTracer(mo);
+         }
+      }
+   }
    else
    {
       // calculate z momentum
@@ -651,9 +682,6 @@ void A_MissileAttack(mobj_t *actor)
 
       mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
    }
-
-   if(homing)
-      P_SetTarget(&mo->tracer, actor->target);
 }
 
 //
@@ -673,6 +701,10 @@ void A_MissileSpread(mobj_t *actor)
    fixed_t z, momz;
    angle_t angsweep, ang, astep;
    int statenum;
+
+   // [CG] Only servers can do this.
+   if(!serverside)
+      return;
 
    if(!actor->target)
       return;
@@ -828,14 +860,22 @@ void A_BulletAttack(mobj_t *actor)
             angle += P_SubRandom(pr_monmisfire) << aimshift;
          }
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         // [CG] Only servers run P_LineAttack.
+         if(serverside)
+         {
+            P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         }
       }
       else if(accurate == 3) // ssg spread
       {
          angle += P_SubRandom(pr_monmisfire) << 19;         
          slope += P_SubRandom(pr_monmisfire) << 5;
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         // [CG] Only servers run P_LineAttack.
+         if(serverside)
+         {
+            P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         }
       }
    }
 }
@@ -974,7 +1014,15 @@ void A_KillChildren(mobj_t *actor)
             A_Die(mo);
             break;
          case 1:
-            P_RemoveMobj(mo);
+            // [CG] Only servers remove actors.
+            if(serverside)
+            {
+               if(CS_SERVER)
+               {
+                  SV_BroadcastActorRemoved(mo);
+               }
+               P_RemoveMobj(mo);
+            }
             break;
          }
       }

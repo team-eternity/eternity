@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -38,6 +38,7 @@
 #include "c_io.h"
 #include "d_deh.h"
 #include "d_event.h"
+#include "e_hash.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -57,6 +58,14 @@
 #include "m_qstr.h"
 #include "a_small.h"
 #include "e_fonts.h"
+#include "g_dmflag.h" // [CG] Added.
+
+// [CG] Added.
+#include "cs_hud.h"
+#include "cs_main.h"
+#include "cs_score.h"
+#include "cl_main.h"
+#include "sv_main.h"
 
 char *chat_macros[10];
 const char* shiftxform;
@@ -67,7 +76,8 @@ int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
 
 vfont_t *hud_font;
-const char *hud_fontname;
+vfont_t *hud_overfont; // [CG] Added for target names.
+const char *hud_fontname = NULL;
 
 static boolean HU_ChatRespond(event_t *ev);
 
@@ -77,7 +87,9 @@ static boolean HU_ChatRespond(event_t *ev);
 
 #define NUMWIDGETCHAINS 17
 
-static hu_widget_t *hu_chains[NUMWIDGETCHAINS];
+// static hu_widget_t *hu_chains[NUMWIDGETCHAINS];
+static ehash_t *widget_hash = NULL;
+E_KEYFUNC(hu_widget_t, name);
 
 //
 // Widget Superclass Functionality
@@ -89,8 +101,12 @@ static hu_widget_t *hu_chains[NUMWIDGETCHAINS];
 // Retrieves a widget given its name, using hashing.
 // Returns NULL if no such widget exists.
 //
-static hu_widget_t *HU_WidgetForName(const char *name)
+// [CG] Un-static'd.
+// static hu_widget_t *HU_WidgetForName(const char *name)
+hu_widget_t *HU_WidgetForName(const char *name)
 {
+   return E_HashObjectForKey(widget_hash, &name);
+   /*
    int key = D_HashTableKey(name) % NUMWIDGETCHAINS;
    hu_widget_t *cur = hu_chains[key];
 
@@ -98,6 +114,7 @@ static hu_widget_t *HU_WidgetForName(const char *name)
       cur = cur->next;
 
    return cur;
+   */
 }
 
 //
@@ -106,9 +123,9 @@ static hu_widget_t *HU_WidgetForName(const char *name)
 // Adds a widget to the hash table, but only if one of the given
 // name doesn't exist. Returns true if successful.
 //
-static boolean HU_AddWidgetToHash(hu_widget_t *widget)
+boolean HU_AddWidgetToHash(hu_widget_t *widget)
 {
-   int key;
+   // int key;
 
    // make sure one doesn't already exist by this name
    if(HU_WidgetForName(widget->name))
@@ -120,9 +137,12 @@ static boolean HU_AddWidgetToHash(hu_widget_t *widget)
       return false;
    }
 
+   /*
    key = D_HashTableKey(widget->name) % NUMWIDGETCHAINS;
    widget->next = hu_chains[key];
    hu_chains[key] = widget;
+   */
+   E_HashAddObject(widget_hash, widget);
 
    return true;
 }
@@ -188,6 +208,22 @@ static void HU_InitNativeWidgets(void)
 
    // HUD_FIXME: generalize?
    HU_FragsInit();
+
+   // [CG] Added.
+   CS_InitNetWidget();
+   CS_InitTimerWidget();
+   CS_InitChatWidget();
+   CS_InitQueueWidget();
+}
+
+void HU_ClearWidgetHash(void)
+{
+   hu_widget_t *w = NULL;
+
+   while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
+   {
+      E_HashRemoveObject(widget_hash, w);
+   }
 }
 
 //
@@ -203,6 +239,20 @@ void HU_Init(void)
       I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
 
    HU_LoadFont(); // overlay font
+
+   // [CG] Use ehash_t instead of old hashing mechanism.
+   if(widget_hash == NULL)
+   {
+      widget_hash = calloc(1, sizeof(ehash_t));
+      E_StrHashInit(
+         widget_hash, NUMWIDGETCHAINS, E_KEYFUNCNAME(hu_widget_t, name), NULL
+      );
+   }
+   else
+   {
+      HU_ClearWidgetHash();
+   }
+
    HU_InitNativeWidgets();
 }
 
@@ -214,9 +264,10 @@ void HU_Init(void)
 //
 void HU_Start(void)
 {
-   int i;
-   hu_widget_t *widget;
+   // int i;
+   hu_widget_t *w = NULL;
 
+   /*
    // call all widget clear functions
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
    {
@@ -227,6 +278,15 @@ void HU_Start(void)
          if(widget->clear)
             widget->clear(widget);
          widget = widget->next;
+      }
+   }
+   */
+
+   while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
+   {
+      if(w->clear)
+      {
+         w->clear(w);
       }
    }
 
@@ -247,8 +307,8 @@ void HU_Start(void)
 //
 void HU_Drawer(void)
 {
-   int i;
-   hu_widget_t *widget;
+   // int i;
+   hu_widget_t *w = NULL;
 
 #ifndef EE_NO_SMALL_SUPPORT
    // execute script event handlers
@@ -260,6 +320,7 @@ void HU_Drawer(void)
 #endif
 
    // call all widget drawer functions
+   /*
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
    {
       widget = hu_chains[i];
@@ -271,10 +332,27 @@ void HU_Drawer(void)
          widget = widget->next;
       }
    }
+   */
+
+   while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
+   {
+      if(w->drawer && !w->disabled)
+      {
+         w->drawer(w);
+      }
+   }
 
    // HUD_FIXME: generalize?
    // draw different modules
-   HU_FragsDrawer();
+   // [CG] C/S has its own scoreboard.
+   if(clientserver)
+   {
+      CS_ShowScores();
+   }
+   else
+   {
+      HU_FragsDrawer();
+   }
    HU_OverlayDraw();
 }
 
@@ -286,10 +364,11 @@ void HU_Drawer(void)
 //
 void HU_Ticker(void)
 {
-   int i;
-   hu_widget_t *widget;
+   // int i;
+   hu_widget_t *w = NULL;
 
    // call all widget ticker functions
+   /*
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
    {
       widget = hu_chains[i];
@@ -299,6 +378,15 @@ void HU_Ticker(void)
          if(widget->ticker)
             widget->ticker(widget);
          widget = widget->next;
+      }
+   }
+   */
+
+   while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
+   {
+      if(w->ticker)
+      {
+         w->ticker(w);
       }
    }
 }
@@ -329,13 +417,14 @@ boolean HU_Responder(event_t *ev)
 //
 void HU_Erase(void)
 {
-   int i;
-   hu_widget_t *widget;
+   // int i;
+   hu_widget_t *w = NULL;
 
    if(!viewwindowx || automapactive)
       return;
 
    // call all widget erase functions
+   /*
    for(i = 0; i < NUMWIDGETCHAINS; ++i)
    {
       widget = hu_chains[i];
@@ -345,6 +434,15 @@ void HU_Erase(void)
          if(widget->eraser && HU_NeedsErase(widget))
             widget->eraser(widget);
          widget = widget->next;
+      }
+   }
+   */
+
+   while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
+   {
+      if(w->eraser && HU_NeedsErase(w))
+      {
+         w->eraser(w);
       }
    }
 
@@ -420,6 +518,13 @@ static void HU_MessageDraw(hu_widget_t *widget)
    
    // go down a bit if chat active
    y = chat_active ? 8 : 0;
+
+   // [CG] Go down even more if chat is active AND a queue message is
+   //      displayed.
+   if(QUEUE_MESSAGE_DISPLAYED)
+   {
+      y += 8;
+   }
    
    for(i = 0; i < mw->current_messages; i++, y += 8)
    {
@@ -466,7 +571,10 @@ static void HU_MessageClear(hu_widget_t *widget)
 static void HU_InitMsgWidget(void)
 {
    // set up the object id
-   strcpy(msg_widget.widget.name, "_HU_MsgWidget");
+   if(!msg_widget.widget.name)
+   {
+      msg_widget.widget.name = strdup("_HU_MsgWidget");
+   }
 
    msg_widget.widget.type = WIDGET_MISC;
 
@@ -524,6 +632,20 @@ typedef struct hu_patchwidget_s
    char patchname[9];  // patch name -- haleyjd 06/15/06
    patch_t *patch;     // screen patch
 } hu_patchwidget_t;
+
+// [CG] Added for c/s so the target's name (if any) can be stored in the
+//      crosshair itself.
+typedef struct hu_crosshairwidget_s
+{
+   hu_widget_t widget; // parent widget
+
+   int x, y;           // screen location
+   byte *color;        // color range translation to use
+   int tl_level;       // translucency level
+   char patchname[9];  // patch name -- haleyjd 06/15/06
+   patch_t *patch;     // screen patch
+   char *target_name;
+} hu_crosshairwidget_t;
 
 //
 // HU_PatchWidgetDraw
@@ -620,7 +742,10 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
    hu_patchwidget_t *newpw = calloc(1, sizeof(hu_patchwidget_t));
 
    // set id
-   strncpy(newpw->widget.name, name, 33);
+   if(!newpw->widget.name)
+   {
+      newpw->widget.name = strdup(name);
+   }
 
    // add to hash
    if(!HU_AddWidgetToHash((hu_widget_t *)newpw))
@@ -687,7 +812,10 @@ static void HU_WarningsDrawer(hu_widget_t *widget)
 static void HU_InitWarnings(void)
 {   
    // set up socket
-   strcpy(opensocket_widget.widget.name, "_HU_OpenSocketWidget");
+   if(!opensocket_widget.widget.name)
+   {
+      opensocket_widget.widget.name = strdup("_HU_OpenSocketWidget");
+   }
 
    opensocket_widget.widget.type = WIDGET_PATCH;
 
@@ -708,34 +836,6 @@ static void HU_InitWarnings(void)
 //
 // Text Widgets
 //
-
-// erase data rect
-typedef struct tw_erase_s
-{
-   int x1, y1, x2, y2;
-} tw_erase_t;
-
-// text widget flag values
-enum
-{
-   TW_AUTOMAP_ONLY = 0x00000001, // appears in automap only
-   TW_NOCLEAR      = 0x00000002, // dynamic widget with no clear func
-   TW_BOXED        = 0x00000004, // 10/08/05: optional box around text
-};
-
-typedef struct hu_textwidget_s
-{
-   hu_widget_t widget;   // parent widget
-   
-   int x, y;             // coords on screen
-   vfont_t *font;        // font object
-   const char *message;  // text to draw
-   char *alloc;          // if non-NULL, widget owns the message
-   int cleartic;         // gametic in which to clear the widget (0=never)
-   tw_erase_t erasedata; // rect area to erase
-   int flags;            // special flags
-   int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
-} hu_textwidget_t;
 
 //
 // HU_TextWidgetDraw
@@ -792,7 +892,9 @@ d_inline static void HU_ClearEraseData(hu_textwidget_t *tw)
 // by expanding the rect to include the boundaries of a new message. The
 // erase area must expand until an erasure actually occurs.
 //
-static void HU_UpdateEraseData(hu_textwidget_t *tw)
+// [CG] Un-static'd
+// static void HU_UpdateEraseData(hu_textwidget_t *tw)
+void HU_UpdateEraseData(hu_textwidget_t *tw)
 {
    int x, y, w, h;
 
@@ -921,13 +1023,19 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 // Adds a dynamically allocated text widget to the hash table.
 // For scripting.
 // 
-static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
-                                 char *message, int cleartic, int flags)
+// [CG] Un-static'd
+// static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
+//                                  char *message, int cleartic, int flags)
+void HU_DynamicTextWidget(const char *name, int x, int y, int font,
+                          char *message, int cleartic, int flags)
 {
    hu_textwidget_t *newtw = calloc(1, sizeof(hu_textwidget_t));
 
    // set id
-   strncpy(newtw->widget.name, name, 33);
+   if(!newtw->widget.name)
+   {
+      newtw->widget.name = strdup(name);
+   }
 
    // add to hash
    if(!HU_AddWidgetToHash((hu_widget_t *)newtw))
@@ -976,7 +1084,11 @@ static hu_textwidget_t centermessage_widget;
 static void HU_InitCenterMessage(void)
 {
    // set id
-   strcpy(centermessage_widget.widget.name, "_HU_CenterMsgWidget");
+   if(!centermessage_widget.widget.name ||
+      !strlen(centermessage_widget.widget.name))
+   {
+      centermessage_widget.widget.name = strdup("_HU_CenterMsgWidget");
+   }
 
    // set virtuals
    HU_TextWidgetDefaults(&centermessage_widget);
@@ -1015,7 +1127,9 @@ void HU_CenterMessage(const char *s)
    
    QStrCat(&qstr, s);
   
-   tw->message = QStrConstPtr(&qstr);
+   // [CG] This is no longer const.
+   // tw->message = QStrConstPtr(&qstr);
+   tw->message = QStrBuffer(&qstr);
    tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
    tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
@@ -1056,7 +1170,7 @@ void HU_CenterMsgTimedColor(const char *s, const char *color, int tics)
 // Crosshair Widget
 //
 
-static hu_patchwidget_t crosshair_widget;
+static hu_crosshairwidget_t crosshair_widget;
 
 // globals related to the crosshair
 int crosshairs[CROSSHAIRS];
@@ -1072,15 +1186,24 @@ char *cross_str[]= { "none", "cross", "angle" }; // for console
 //
 static void HU_CrossHairTick(hu_widget_t *widget)
 {
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
+   hu_crosshairwidget_t *crosshair = (hu_crosshairwidget_t *)widget;
 
    // default to no target
    crosshair->color = notargetcolour;
 
+   // [CG] default to no target name as well.
+   crosshair->target_name = NULL;
+
    // fast as possible: don't bother with this crap if the crosshair 
-   // isn't going to be displayed anyway   
-   if(!crosshairnum || !crosshair_hilite || crosshairs[crosshairnum-1] == -1)
+   // isn't going to be displayed anyway
+   // [CG] There's a DMFLAG for this now as well.
+   if((clientserver && (dmflags2 & dmf_allow_crosshair) == 0) ||
+      !crosshairnum ||
+      !crosshair_hilite ||
+      crosshairs[crosshairnum-1] == -1)
+   {
       return;
+   }
 
    // search for targets
    
@@ -1092,6 +1215,13 @@ static void HU_CrossHairTick(hu_widget_t *widget)
    {
       // target found
       crosshair->color = targetcolour; // default
+
+      // [CG] Set the crosshair's target name to the target's name if the
+      //      target is a player.
+      if(clip.linetarget->player)
+      {
+         crosshair->target_name = &clip.linetarget->player->name[0];
+      }
       
       // haleyjd 06/06/09: some special behaviors
       if(clip.linetarget->flags & MF_FRIEND)
@@ -1102,6 +1232,7 @@ static void HU_CrossHairTick(hu_widget_t *widget)
          clip.linetarget->flags2 & MF2_DONTDRAW)
       {
          crosshair->color = notargetcolour;
+         crosshair->target_name = NULL;
       }
    }
 }
@@ -1114,7 +1245,7 @@ static void HU_CrossHairTick(hu_widget_t *widget)
 static void HU_CrossHairDraw(hu_widget_t *widget)
 {
    int drawx, drawy, h, w;
-   hu_patchwidget_t *crosshair = (hu_patchwidget_t *)widget;
+   hu_crosshairwidget_t *crosshair = (hu_crosshairwidget_t *)widget;
    byte *pal = crosshair->color;
    patch_t *patch;
    
@@ -1122,6 +1253,12 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
       viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
       return;
+
+   // [CG] There's a DMFLAGS for this now as well.
+   if(clientserver && (dmflags2 & dmf_allow_crosshair) == 0)
+   {
+      return;
+   }
 
    patch = W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE);
 
@@ -1145,9 +1282,28 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
       drawy = scaledwindowy + (scaledviewheight - h) / 2;
   
    if(pal == notargetcolour)
+   {
       V_DrawPatchTL(drawx, drawy, &vbscreen, patch, pal, FTRANLEVEL);
+   }
    else
+   {
       V_DrawPatchTranslated(drawx, drawy, &vbscreen, patch, pal, false);
+
+      // [CG] Crosshair is resting on a target, so if the server allows it and
+      //      the client's so configured, draw the target's name.
+      if(crosshair->target_name &&
+         display_target_names &&
+         (!clientserver || dmflags2 & dmf_allow_target_names))
+      {
+         V_FontWriteTextColored(
+            hud_overfont, crosshair->target_name, CR_GOLD,
+            (SCREENWIDTH >> 1) -
+               (V_FontStringWidth(hud_overfont, crosshair->target_name) >> 1),
+            ST_Y -
+               (V_FontStringHeight(hud_overfont, crosshair->target_name + 3))
+         );
+      }
+   }
 }
 
 //
@@ -1170,7 +1326,10 @@ void HU_InitCrossHair(void)
    crosshair_widget.patch = NULL; // determined dynamically
 
    // set up the object id
-   strcpy(crosshair_widget.widget.name, "_HU_CrosshairWidget");
+   if(!crosshair_widget.widget.name)
+   {
+      crosshair_widget.widget.name = strdup("_HU_CrosshairWidget");
+   }
 
    // set type
    crosshair_widget.widget.type = WIDGET_PATCH;
@@ -1252,7 +1411,10 @@ static void HU_LevelTimeClear(hu_widget_t *widget)
 static void HU_InitLevelTime(void)
 {
    // set id
-   strcpy(leveltime_widget.widget.name, "_HU_LevelTimeWidget");
+   if(!leveltime_widget.widget.name)
+   {
+      leveltime_widget.widget.name = strdup("_HU_LevelTimeWidget");
+   }
 
    leveltime_widget.widget.type = WIDGET_TEXT;
 
@@ -1300,7 +1462,9 @@ static void HU_LevelNameTick(hu_widget_t *widget)
 {
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
-   tw->message = automapactive ? LevelInfo.levelName : NULL;
+   // [CG] This is no longer const.
+   // tw->message = automapactive ? LevelInfo.levelName : NULL;
+   tw->message = automapactive ? (char *)LevelInfo.levelName : NULL;
    tw->color   = hu_levelnamecolor + 1;
 }
 
@@ -1312,7 +1476,10 @@ static void HU_LevelNameTick(hu_widget_t *widget)
 static void HU_InitLevelName(void)
 {
    // set id
-   strcpy(levelname_widget.widget.name, "_HU_LevelNameWidget");
+   if(!levelname_widget.widget.name)
+   {
+      levelname_widget.widget.name = strdup("_HU_LevelNameWidget");
+   }
 
    levelname_widget.widget.type = WIDGET_TEXT;
 
@@ -1366,7 +1533,9 @@ static void HU_ChatTick(hu_widget_t *widget)
       HU_UpdateEraseData(tw);
    }
    else
+   {
       tw->message = NULL;
+   }
 }
 
 //
@@ -1377,7 +1546,10 @@ static void HU_ChatTick(hu_widget_t *widget)
 static void HU_InitChat(void)
 {
    // set id
-   strcpy(chat_widget.widget.name, "_HU_ChatWidget");
+   if(!chat_widget.widget.name)
+   {
+      chat_widget.widget.name = strdup("_HU_ChatWidget");
+   }
 
    // set virtuals
    HU_TextWidgetDefaults(&chat_widget);
@@ -1539,9 +1711,18 @@ static void HU_CoordTick(hu_widget_t *widget)
 static void HU_InitCoords(void)
 {
    // set ids
-   strcpy(coordx_widget.widget.name, "_HU_CoordXWidget");
-   strcpy(coordy_widget.widget.name, "_HU_CoordYWidget");
-   strcpy(coordz_widget.widget.name, "_HU_CoordZWidget");
+   if(!coordx_widget.widget.name)
+   {
+      coordx_widget.widget.name = strdup("_HU_CoordXWidget");
+   }
+   if(!coordy_widget.widget.name)
+   {
+      coordy_widget.widget.name = strdup("_HU_CoordYWidget");
+   }
+   if(!coordz_widget.widget.name)
+   {
+      coordz_widget.widget.name = strdup("_HU_CoordZWidget");
+   }
 
    coordx_widget.widget.type =
       coordy_widget.widget.type =
@@ -1659,11 +1840,94 @@ CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
+
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
-   S_StartSound(NULL, GameModeInfo->c_ChatSound);
-   
-   doom_printf("%s: %s", players[Console.cmdsrc].name, QStrConstPtr(&Console.args));
+   if(!clientserver)
+   {
+      S_StartSound(NULL, GameModeInfo->c_ChatSound);
+      doom_printf(
+         "%s: %s",
+         players[Console.cmdsrc].name,
+         QStrConstPtr(&Console.args)
+      );
+   }
+   else if(strlen(QStrConstPtr(&Console.args)) > MAX_STRING_SIZE)
+   {
+      doom_printf("Message too long.");
+   }
+   else if(CS_CLIENT)
+   {
+      CL_BroadcastMessage(QStrConstPtr(&Console.args));
+   }
+   else if(CS_SERVER)
+   {
+      SV_Say(QStrConstPtr(&Console.args));
+   }
+}
+
+CONSOLE_COMMAND(rcon, cf_netonly)
+{
+   if(CS_CLIENT)
+   {
+      CL_RCONMessage(QStrConstPtr(&Console.args));
+   }
+   else
+   {
+      doom_printf("Servers don't need RCON.");
+   }
+}
+
+CONSOLE_NETCMD(to_server, cf_netvar, netcmd_chat)
+{
+   if(CS_CLIENT)
+   {
+      CL_ServerMessage(QStrConstPtr(&Console.args));
+   }
+   else
+   {
+      doom_printf("Can't send messages to yourself.");
+   }
+}
+
+CONSOLE_NETCMD(to_player, cf_netvar, netcmd_chat)
+{
+   if(CS_CLIENT)
+   {
+      if(QStrAtoi(&Console.argv[0]) == consoleplayer)
+      {
+         doom_printf("Can't send messages to yourself.");
+      }
+      else
+      {
+         CL_PlayerMessage(
+            QStrAtoi(&Console.argv[0]),
+            QStrConstPtr(&Console.argv[1])
+         );
+      }
+   }
+   else if(CS_SERVER)
+   {
+      SV_SayToPlayer(
+         QStrAtoi(&Console.argv[0]),
+         QStrConstPtr(&Console.argv[1])
+      );
+   }
+}
+
+CONSOLE_NETCMD(to_team, cf_netvar, netcmd_chat)
+{
+   printf("Sending message to team.\n");
+   if(CS_CLIENT)
+   {
+      CL_TeamMessage(QStrConstPtr(&Console.args));
+   }
+   else if(CS_SERVER)
+   {
+      // [CG] I can't see any use for server => team communication, so this
+      //      just broadcasts.
+      SV_Say(QStrConstPtr(&Console.args));
+   }
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}
@@ -1689,6 +1953,10 @@ void HU_AddCommands(void)
    C_AddCommand(hu_crosshair_hilite);
    C_AddCommand(hu_messages);
    C_AddCommand(hu_messagecolor);
+   C_AddCommand(rcon);
+   C_AddCommand(to_server);
+   C_AddCommand(to_player);
+   C_AddCommand(to_team);
    C_AddCommand(say);   
    C_AddCommand(hu_messagelines);
    C_AddCommand(hu_messagescroll);
@@ -1870,7 +2138,9 @@ static cell AMX_NATIVE_CALL sm_newtextwidget(AMX *amx, cell *params)
                         params[6] != 0 ? leveltime + params[6] : 0, params[7]);
 
    free(name);
-   free(msg);
+   // [CG] The text widget will take ownership of the message pointer, no need
+   //      to free it here.
+   // free(msg);
 
    return 0;
 }

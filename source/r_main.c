@@ -480,8 +480,14 @@ void R_InitLightTables (void)
    int i;
    
    // killough 4/4/98: dynamic colormaps
-   c_zlight = malloc(sizeof(*c_zlight) * numcolormaps);
-   c_scalelight = malloc(sizeof(*c_scalelight) * numcolormaps);
+   // [CG] Try using PU_RENDERER for these.
+   // c_zlight = malloc(sizeof(*c_zlight) * numcolormaps);
+   // c_scalelight = malloc(sizeof(*c_scalelight) * numcolormaps);
+   c_zlight = Z_Malloc(sizeof(*c_zlight) * numcolormaps, PU_RENDERER, NULL);
+   c_scalelight = Z_Malloc(
+       sizeof(*c_scalelight) * numcolormaps, PU_RENDERER, NULL
+   );
+
    
    // Calculate the light levels to use
    //  for each level / distance combination.
@@ -830,11 +836,18 @@ void R_SetupFrame(player_t *player, camera_t *camera)
       dy = FixedMul(focallen_y, 
                     finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT]);
             
+      // [CG] Commented this code out.  Not sure what it actually does,
+      //      but it has the effect of limiting mouselook degree.  However,
+      //      looking down more than 32 degrees (which was extended to 56
+      //      degrees) is certainly very ugly.
+
+      /*
       // haleyjd: must bound after zooming
       if(dy < -viewheightfrac)
          dy = -viewheightfrac;
       else if(dy > viewheightfrac)
          dy = viewheightfrac;
+      */
       
       centeryfrac = viewheightfrac + dy;
    }

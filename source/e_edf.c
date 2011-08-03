@@ -209,6 +209,10 @@ const char *pickupnames[PFX_NUMFX] =
    "PFX_SKRDWIMPY",
    "PFX_SKRDHEFTY",
    "PFX_TOTALINVIS",
+   "PFX_BLUEFLAG",
+   "PFX_REDFLAG",
+   "PFX_DROPPEDBLUEFLAG",
+   "PFX_DROPPEDREDFLAG",
 };
 
 // pickupfx lookup table used in P_TouchSpecialThing (is allocated

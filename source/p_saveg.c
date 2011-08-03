@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -42,6 +42,9 @@
 #include "s_sndseq.h"
 #include "d_gi.h"
 #include "acs_intr.h"
+
+// [CG] Added.
+#include "cs_netid.h"
 
 byte *save_p;
 
@@ -198,6 +201,8 @@ extern int LightningFlash;
 extern int LevelSky;
 extern int LevelTempSky;
 
+extern byte *savebuffer;
+
 //
 // P_ArchiveWorld
 //
@@ -298,6 +303,7 @@ void P_ArchiveWorld(void)
       *put++ = sec->oldlightlevel; // haleyjd
       *put++ = sec->special;       // needed?   yes -- transfer types
       *put++ = sec->tag;           // needed?   need them -- killough
+
    }
 
    // do lines
@@ -593,6 +599,7 @@ void P_UnArchiveThinkers(void)
    size_t    idx;         // haleyjd 11/03/06: separate index var
    
    // killough 3/26/98: Load boss brain state
+   // [CG] BRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAINS!!!!!
    memcpy(&brain, save_p, sizeof brain);
    save_p += sizeof brain;
 
@@ -607,6 +614,7 @@ void P_UnArchiveThinkers(void)
          Z_Free(th);
       th = next;
    }
+
    P_InitThinkers();
 
    // killough 2/14/98: count number of thinkers by skipping through them
@@ -680,6 +688,12 @@ void P_UnArchiveThinkers(void)
 
       // haleyjd 02/02/04: possibly add thing to tid hash table
       P_AddThingTID(mobj, mobj->tid);
+
+      // [CG] Register the actor's Net ID.
+      if(mobj->net_id != 0)
+      {
+         CS_RegisterActorNetID(mobj);
+      }
    }
 
    // killough 2/14/98: adjust target and tracer fields, plus
@@ -793,8 +807,16 @@ void P_ArchiveSpecials(void)
    {
       if(!th->function)
       {
-         platlist_t *pl;
-         ceilinglist_t *cl;     //jff 2/22/98 need this for ceilings too now
+         // [CG] These map specials now use hashes instead of linked lists, so
+         //      the lookup logic has to change.
+         // platlist_t *pl;
+         // ceilinglist_t *cl;     //jff 2/22/98 need this for ceilings too now
+         platform_netid_t *platform_netid = NULL;
+         ceiling_netid_t *ceiling_netid = NULL;
+         plat_t *platform = NULL;
+         ceiling_t *ceiling = NULL;
+
+         /*
          for(pl = activeplats; pl; pl = pl->next)
          {
             if(pl->plat == (plat_t *)th)   // killough 2/14/98
@@ -803,11 +825,41 @@ void P_ArchiveSpecials(void)
                goto end;
             }
          }
+         */
+
+         /*
          for(cl = activeceilings; cl; cl = cl->next) // search for activeceiling
          {
             if(cl->ceiling == (ceiling_t *)th)   //jff 2/22/98
             {
                size += 4+sizeof(ceiling_t);
+               goto end;
+            }
+         }
+         */
+
+         // [CG] It seems silly to iterate through the whole hash table, but
+         //      because this uses pointer comparisons (because the thinker
+         //      might not be either a platform or a ceiling) there's no way to
+         //      just use the Net ID.
+         while((platform_netid =
+                E_HashTableIterator(platform_by_netid, platform_netid)))
+         {
+            platform = platform_netid->platform;
+            if(platform == (plat_t *)th)
+            {
+               size += 4 + sizeof(plat_t);
+               goto end;
+            }
+         }
+
+         while((ceiling_netid =
+                E_HashTableIterator(ceiling_by_netid, ceiling_netid)))
+         {
+            ceiling = ceiling_netid->ceiling;
+            if(ceiling == (ceiling_t *)th)
+            {
+               size += 4 + sizeof(ceiling_t);
                goto end;
             }
          }
@@ -847,14 +899,16 @@ void P_ArchiveSpecials(void)
    {
       if(!th->function)
       {
-         platlist_t *pl;
-         ceilinglist_t *cl;    //jff 2/22/98 add iter variable for ceilings
+         // [CG] Same deal as above.
+         // platlist_t *pl;
+         // ceilinglist_t *cl;    //jff 2/22/98 add iter variable for ceilings
 
          // killough 2/8/98: fix plat original height bug.
          // Since acv==NULL, this could be a plat in stasis.
          // so check the active plats list, and save this
          // plat (jff: or ceiling) even if it is in stasis.
 
+         /*
          for(pl = activeplats; pl; pl = pl->next)
          {
             if(pl->plat == (plat_t *)th)      // killough 2/14/98
@@ -866,7 +920,33 @@ void P_ArchiveSpecials(void)
             if(cl->ceiling == (ceiling_t *)th)      //jff 2/22/98
                goto ceiling;
          }
-         
+         */
+
+         platform_netid_t *platform_netid = NULL;
+         ceiling_netid_t *ceiling_netid = NULL;
+         plat_t *platform = NULL;
+         ceiling_t *ceiling = NULL;
+
+         while((platform_netid =
+                E_HashTableIterator(platform_by_netid, platform_netid)))
+         {
+            platform = platform_netid->platform;
+            if(platform == (plat_t *)th)
+            {
+               goto plat;
+            }
+         }
+
+         while((ceiling_netid =
+                E_HashTableIterator(ceiling_by_netid, ceiling_netid)))
+         {
+            ceiling = ceiling_netid->ceiling;
+            if(ceiling == (ceiling_t *)th)
+            {
+               goto ceiling;
+            }
+         }
+
          continue;
       }
 
@@ -1122,7 +1202,9 @@ void P_UnArchiveSpecials(void)
                ceiling->thinker.function = T_MoveCeiling;
             
             P_AddThinker(&ceiling->thinker);
-            P_AddActiveCeiling(ceiling);
+            // [CG] Use the new ceiling hash.
+            // P_AddActiveCeiling(ceiling);
+            CS_RegisterCeilingNetID(ceiling);
             break;
          }
 
@@ -1140,6 +1222,8 @@ void P_UnArchiveSpecials(void)
             door->sector->ceilingdata = door;       //jff 2/22/98
             door->thinker.function = T_VerticalDoor;
             P_AddThinker(&door->thinker);
+            // [CG] Register the door's Net ID.
+            CS_RegisterDoorNetID(door);
             break;
          }
 
@@ -1154,6 +1238,7 @@ void P_UnArchiveSpecials(void)
             floor->sector->floordata = floor; //jff 2/22/98
             floor->thinker.function = T_MoveFloor;
             P_AddThinker(&floor->thinker);
+            CS_RegisterFloorNetID(floor);
             break;
          }
 
@@ -1170,7 +1255,14 @@ void P_UnArchiveSpecials(void)
                plat->thinker.function = T_PlatRaise;
             
             P_AddThinker(&plat->thinker);
-            P_AddActivePlat(plat);
+            if(CS_CLIENT)
+            {
+               CS_RegisterPlatformNetID(plat);
+            }
+            else
+            {
+               P_AddActivePlat(plat);
+            }
             break;
          }
 
@@ -1238,6 +1330,7 @@ void P_UnArchiveSpecials(void)
             elevator->sector->ceilingdata = elevator; //jff 2/22/98
             elevator->thinker.function = T_MoveElevator;
             P_AddThinker(&elevator->thinker);
+            CS_RegisterElevatorNetID(elevator);
             break;
          }
 
@@ -1320,6 +1413,7 @@ void P_UnArchiveSpecials(void)
             pillar->sector->ceilingdata = pillar;
             pillar->thinker.function = T_MovePillar;
             P_AddThinker(&pillar->thinker);
+            CS_RegisterPillarNetID(pillar);
             break;
          }
 
@@ -1352,6 +1446,7 @@ void P_UnArchiveSpecials(void)
             waggle->thinker.function = T_FloorWaggle;
             waggle->sector = &sectors[(int)waggle->sector];
             P_AddThinker(&waggle->thinker);
+            CS_RegisterFloorWaggleNetID(waggle);
             break;
          }
 

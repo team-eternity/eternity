@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -765,11 +765,12 @@ boolean M_FindCheats(int key)
     "cHe"/*"eze"**/"aT"),i/*+--*/++/*;&^*/));}
 #endif
 
+   // [CG] Modified to include clientserver as netgame.
    for(matchedbefore = ret = i = 0; cheat[i].cheat; i++)
    {
       if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-         !(cheat[i].when & not_dm   && netgame && GameType == gt_dm && !demoplayback) &&
-         !(cheat[i].when & not_coop && netgame && GameType == gt_coop) &&
+         !(cheat[i].when & not_dm   && (netgame || clientserver) && GameType == gt_dm && !demoplayback) &&
+         !(cheat[i].when & not_coop && (netgame || clientserver) && GameType == gt_coop) &&
          !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
          !(cheat[i].when & not_menu && menuactive) &&
          !(cheat[i].when & not_deh  && cheat[i].deh_modified))

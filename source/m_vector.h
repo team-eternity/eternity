@@ -77,6 +77,15 @@ void M_TranslateVec3 (v3double_t *vec);
 void M_SubVec3f(v3float_t *dest,  const v3float_t *v1,  const v3float_t *v2);
 void M_SubVec3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2);
 
+//
+// M_LengthVec3f
+//
+// Returns the length of a given vector (relative to the origin).  Taken from
+// Quake 2, added by CG.
+//
+float M_LengthVec3f(v3float_t *v);
+double M_LengthVec3(v3double_t *v);
+
 // 
 // M_DotVec3
 //

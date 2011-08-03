@@ -1,0 +1,55 @@
+### Client/Server Features
+
+Here are some features added in EE's client/server version, all of which really
+are relative to the other c/s ports.
+
+  - Extremely smooth, high fidelity netcode; other players and moving sectors
+    (like platforms, elevators, doors, etc.) neither skip, jerk, nor warp, and
+    network quality issues (latency, packet loss, packet ordering) are well-
+    compensated for.
+  - Highly accurate backwards reconciliation (unlagged) for hitscan weapons.
+    - Handles moving sectors.
+    - Handles changing player states like invulnerability.
+  - Master server with built-in web launcher (no separate launcher application
+    is necessary).
+  - On-the-fly WAD loading.
+  - Per-map configuration overrides.
+  - Spectators.
+  - 32 players.
+  - 2 teams.
+  - Player queue system.
+  - 4 separate authorization levels: spectator, player, moderator &
+    administrator.
+    - Clients save valid passwords and authenticate automatically if possible.
+  - ZDoom Bridge things.
+  - 3D radius attacks, used mainly for rocket jumping.
+  - New multiplayer scoreboards.
+  - Extended mouselook from 32 to 56 degrees.
+  - Efficient handling of maps with large numbers of monsters, status is only
+    broadcast upon a change.
+  - TeamDM and CTF game modes (in addition to staples like Duel, FFA and
+    Cooperative).
+  - RCON.
+  - Network demos, split by map and including JSON metadata.
+  - Multibinds - multiple keys can be bound together to one key.
+  - No weapon switch on pickup.
+  - Preferred weapon order.
+    - Can also switch when picking up ammo of a preferred weapon.
+
+### Planned multiplayer features
+
+  - Advanced network demos
+    - Serverside demos.
+    - Screenshots
+    - Event logs
+    - "Chapter" system, allows skipping to different parts of the demo.
+  - Banlist/Whitelist (server-specific, no master banlist or whitelist).
+  - VOX support.
+  - SITREP/SECTINFO support.
+  - JSON event log.
+  - Voting system.
+  - "mute" and "ignore" chat commands.
+  - UPnP (serverside).
+
+vim:tw=79 sw=4 ts=4 syntax=mkd et:
+

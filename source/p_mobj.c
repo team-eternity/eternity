@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -54,6 +54,17 @@
 #include "a_small.h"
 #include "d_dehtbl.h"
 #include "p_info.h"
+#include "c_io.h"
+
+// [CG] Added
+#include "cs_main.h"
+#include "cs_netid.h"
+#include "cs_position.h"
+#include "cs_team.h"
+#include "cs_ctf.h"
+#include "cl_main.h"
+#include "cl_pred.h"
+#include "sv_main.h"
 
 void P_FallingDamage(player_t *);
 
@@ -97,12 +108,7 @@ fixed_t FloatBobDiffs[64] =
    48444, 49909, 50895
 };
 
-// haleyjd 03/27/10: new solution for state cycle detection
-typedef struct seenstate_s
-{
-   mdllistitem_t link;
-   int statenum;
-} seenstate_t;
+// [CG] Moved definition of seenstate_t to p_mobj.h.
 
 // haleyjd 03/27/10: freelist of seenstate objects
 static mdllistitem_t *seenstate_freelist;
@@ -128,7 +134,9 @@ static void P_InitSeenStates(void)
 //
 // haleyjd 03/27/10: puts a set of seenstates back onto the freelist
 //
-static void P_FreeSeenStates(seenstate_t *list)
+// [CG] Un-static'd.
+// static void P_FreeSeenStates(seenstate_t *list)
+void P_FreeSeenStates(seenstate_t *list)
 {
    mdllistitem_t *oldhead = seenstate_freelist;
    mdllistitem_t *newtail = &list->link;
@@ -178,7 +186,9 @@ static seenstate_t *P_GetSeenState(void)
 //
 // Marks a new state as having been seen.
 //
-static void P_AddSeenState(int statenum, seenstate_t **list)
+// [CG] Un-static'd.
+// static void P_AddSeenState(int statenum, seenstate_t **list)
+void P_AddSeenState(int statenum, seenstate_t **list)
 {
    seenstate_t *newss = P_GetSeenState();
 
@@ -192,7 +202,9 @@ static void P_AddSeenState(int statenum, seenstate_t **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, seenstate_t *list)
+// [CG] Un-static'd.
+// static boolean P_CheckSeenState(int statenum, seenstate_t *list)
+boolean P_CheckSeenState(int statenum, seenstate_t *list)
 {
    seenstate_t *curstate = list;
 
@@ -215,6 +227,10 @@ static boolean P_CheckSeenState(int statenum, seenstate_t *list)
 boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 {
    state_t *st;
+   boolean client_should_handle = false;
+   int blood_type = E_SafeThingType(MT_BLOOD);
+   int puff_type = E_SafeThingType(MT_PUFF);
+   int fog_type = E_SafeThingType(GameModeInfo->teleFogType);
 
    // haleyjd 03/27/10: new state cycle detection
    static boolean firsttime = true; // for initialization
@@ -227,11 +243,33 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       firsttime = false;
    }
 
+   if(mobj->type == blood_type ||
+      mobj->type == puff_type  ||
+      mobj->type == fog_type   ||
+      mobj == players[consoleplayer].mo)
+   {
+      client_should_handle = true;
+   }
+   else if(CS_CLIENT)
+   {
+      // [CG] Clients only set state for the local player (because they're
+      //      predicting), blood, puffs and telefog.  Otherwise, they'll get a
+      //      message from the server.
+      return true;
+   }
+
    do
    {
       if(state == NullStateNum)
       {
          mobj->state = NULL;
+
+         if(CS_SERVER && !client_should_handle)
+         {
+            SV_BroadcastActorState(mobj, NullStateNum);
+            SV_BroadcastActorRemoved(mobj);
+         }
+
          P_RemoveMobj(mobj);
          ret = false;
          break;                 // killough 4/9/98
@@ -240,6 +278,11 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       st = states[state];
       mobj->state = st;
       mobj->tics = st->tics;
+
+      if(CS_SERVER && !client_should_handle)
+      {
+         SV_BroadcastActorState(mobj, state);
+      }
 
       // sf: skins
       // haleyjd 06/11/08: only replace if st->sprite == default sprite
@@ -321,11 +364,17 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
 //
 void P_ExplodeMissile(mobj_t *mo)
 {
+   // [CG] Only servers explode missiles.
+   if(!serverside)
+      return;
+
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
    {
       if(++mo->counters[1] < mo->counters[2])
+      {
          return;
+      }
    }
 
    mo->momx = mo->momy = mo->momz = 0;
@@ -336,9 +385,19 @@ void P_ExplodeMissile(mobj_t *mo)
       if(mo->subsector->sector->intflags & SIF_SKY &&
          mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
+         if(CS_SERVER)
+         {
+            // SV_BroadcastMissileExploded(mo, true);
+            SV_BroadcastActorRemoved(mo);
+         }
          P_RemoveMobj(mo); // don't explode on the actual sky itself
          return;
       }
+   }
+
+   if(CS_SERVER)
+   {
+      SV_BroadcastMissileExploded(mo);
    }
 
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
@@ -425,19 +484,42 @@ void P_XYMovement(mobj_t* mo)
       // This explains the tendency for Mancubus fireballs
       // to pass through walls.
 
-      if(xmove > MAXMOVE/2 || ymove > MAXMOVE/2 ||  // killough 8/9/98:
-         ((xmove < -MAXMOVE/2 || ymove < -MAXMOVE/2) && demo_version >= 203))
+      // [CG] This allows 2-way wallrun, which did not exist in Vanilla Doom.
+      //      So c/s mode only allows this if the appropriate DMFLAG is set.
+      //      In fact, I can't believe this doesn't cause demo desyncs...?
+      if(!clientserver || (dmflags2 & dmf_allow_two_way_wallrun))
       {
-         ptryx = mo->x + xmove/2;
-         ptryy = mo->y + ymove/2;
-         xmove >>= 1;
-         ymove >>= 1;
+         if(xmove > MAXMOVE/2 || ymove > MAXMOVE/2 ||  // killough 8/9/98:
+            ((xmove < -MAXMOVE/2 || ymove < -MAXMOVE/2)
+            && demo_version >= 203))
+         {
+            ptryx = mo->x + xmove/2;
+            ptryy = mo->y + ymove/2;
+            xmove >>= 1;
+            ymove >>= 1;
+         }
+         else
+         {
+            ptryx = mo->x + xmove;
+            ptryy = mo->y + ymove;
+            xmove = ymove = 0;
+         }
       }
       else
       {
-         ptryx = mo->x + xmove;
-         ptryy = mo->y + ymove;
-         xmove = ymove = 0;
+         if (xmove > MAXMOVE/2 || ymove > MAXMOVE/2)
+         {
+            ptryx = mo->x + xmove/2;
+            ptryy = mo->y + ymove/2;
+            xmove >>= 1;
+            ymove >>= 1;
+         }
+         else
+         {
+            ptryx = mo->x + xmove;
+            ptryy = mo->y + ymove;
+            xmove = ymove = 0;
+         }
       }
 
       // killough 3/15/98: Allow objects to drop off
@@ -541,11 +623,21 @@ void P_XYMovement(mobj_t* mo)
                   // this fix is for "sky hack walls" only apparently --
                   // see P_ExplodeMissile for my real sky fix
 
-                  P_RemoveMobj(mo);
+                  // [CG] Only servers remove actors.
+                  if(serverside)
+                  {
+                     if(CS_SERVER)
+                     {
+                        // [CG] I think SV_BroadcastActorRemoved is the right
+                        //      call here, but I'm not sure.
+                        // SV_BroadcastMissileExploded(mo, false);
+                        SV_BroadcastActorRemoved(mo);
+                     }
+                     P_RemoveMobj(mo);
+                  }
                   return;
                }
             }
-
             P_ExplodeMissile(mo);
          }
          else // whatever else it is, it is now standing still in (x,y)
@@ -678,11 +770,15 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
    // after hitting the ground (hard),
    // and utter appropriate sound.
 
+   client_t *client = &clients[mo->player - players];
+
    mo->player->deltaviewheight = mo->momz >> 3;
    mo->player->jumptime = 10;
 
    // haleyjd 05/09/99 no oof when dead :)
-   if(demo_version < 329 || mo->health > 0)
+   // [CG] Spectators don't oof either.  Also various sounds here are disabled
+   //      while predicting.
+   if((demo_version < 329 || mo->health > 0) && !client->spectating)
    {
       if(!comp[comp_fallingdmg] && demo_version >= 329)
       {
@@ -693,17 +789,39 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
          {
             if(!mo->player->powers[pw_invulnerability] &&
                !(mo->player->cheats & CF_GODMODE))
+            {
                P_FallingDamage(mo->player);
+            }
             else
-               S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+            {
+               if(!cl_predicting)
+               {
+                  S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+               }
+            }
          }
          else if(mo->momz < -12*FRACUNIT)
-            S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+         {
+            if(!cl_predicting)
+            {
+               S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+            }
+         }
          else if(onthing || !E_GetThingFloorType(mo)->liquid)
-            S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
+         {
+            if(!cl_predicting)
+            {
+               S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
+            }
+         }
       }
       else if(onthing || !E_GetThingFloorType(mo)->liquid)
-         S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+      {
+         if(!cl_predicting)
+         {
+            S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+         }
+      }
    }
 }
 
@@ -712,6 +830,7 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
 //
 // Attempt vertical movement.
 
+// [CG] Un-static'd
 static void P_ZMovement(mobj_t* mo)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
@@ -763,11 +882,15 @@ static void P_ZMovement(mobj_t* mo)
             }
 
             // killough 11/98: touchy objects explode on impact
-            if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
+            if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
                mo->health > 0)
-               P_DamageMobj(mo, NULL, NULL, mo->health,MOD_UNKNOWN);
+            {
+               P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
+            }
             else if (mo->flags & MF_FLOAT && sentient(mo))
+            {
                goto floater;
+            }
             return;
          }
       }
@@ -782,7 +905,15 @@ static void P_ZMovement(mobj_t* mo)
             {
                if(mo->flags & MF_MISSILE)
                {
-                  P_RemoveMobj(mo);      // missiles don't bounce off skies
+                  // [CG] Only servers remove actors.
+                  if(serverside)
+                  {
+                     if(CS_SERVER)
+                     {
+                        SV_BroadcastActorRemoved(mo);
+                     }
+                     P_RemoveMobj(mo);      // missiles don't bounce off skies
+                  }
                   if(demo_version >= 331)
                      return; // haleyjd: return here for below fix
                }
@@ -824,7 +955,15 @@ static void P_ZMovement(mobj_t* mo)
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
             clip.ceilingline->backsector->intflags & SIF_SKY)
          {
-            P_RemoveMobj(mo);  // don't explode on skies
+            // [CG] Only servers remove actors.
+            if(serverside)
+            {
+               if(CS_SERVER)
+               {
+                  SV_BroadcastActorRemoved(mo);
+               }
+               P_RemoveMobj(mo);  // don't explode on skies
+            }
          }
          else
          {
@@ -872,7 +1011,6 @@ floater:
    }
 
    // clip movement
-
    if (mo->z <= mo->floorz)
    {
       // hit the floor
@@ -889,14 +1027,20 @@ floater:
 
       if((moving_down = (mo->momz < 0)))
       {
-         // killough 11/98: touchy objects explode on impact
+            // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
+         {
             P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
+         }
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
                  mo->momz < -LevelInfo.gravity*8)
          {
+            if(CS_SERVER)
+            {
+               clients[mo->player - players].floor_status = cs_fs_hit;
+            }
             P_PlayerHitFloor(mo, false);
          }
          mo->momz = 0;
@@ -916,12 +1060,12 @@ floater:
       if(!correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz;
 
-
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
             P_ExplodeMissile(mo);
-         return;
+         }
       }
    }
    else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
@@ -958,7 +1102,7 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile (mo);
+         P_ExplodeMissile(mo);
          return;
       }
    }
@@ -1226,8 +1370,7 @@ void P_MobjThinker(mobj_t *mobj)
                if(!(leveltime & onmo->info->topdamagemask) &&
                   (!mobj->player || !mobj->player->powers[pw_ironfeet]))
                {
-                  P_DamageMobj(mobj, onmo, onmo,
-                               onmo->info->topdamage, 
+                  P_DamageMobj(mobj, onmo, onmo, onmo->info->topdamage, 
                                onmo->info->mod);
                }
             }
@@ -1235,8 +1378,14 @@ void P_MobjThinker(mobj_t *mobj)
             if(mobj->player && mobj == mobj->player->mo &&
                mobj->momz < -LevelInfo.gravity*8)
             {
+               if(CS_SERVER)
+               {
+                  clients[mobj->player - players].floor_status =
+                     cs_fs_hit_on_thing;
+               }
                P_PlayerHitFloor(mobj, true);
             }
+
             if(onmo->z + onmo->height - mobj->z <= 24*FRACUNIT)
             {
                player_t *player = mobj->player;
@@ -1266,7 +1415,9 @@ void P_MobjThinker(mobj_t *mobj)
          }
       }
       else
+      {
          P_ZMovement(mobj);
+      }
 
       if(mobj->thinker.function == P_RemoveThinkerDelayed) // killough
          return;       // mobj was removed
@@ -1300,6 +1451,8 @@ void P_MobjThinker(mobj_t *mobj)
       mobj->intflags |= MIF_CRASHED;
       P_SetMobjState(mobj, mobj->info->crashstate);
    }
+
+   // [CG] Should water stuff be serverside only?
 
    // haleyjd 08/07/04: handle deep water plane hits
    oldwaterstate = waterstate;
@@ -1395,6 +1548,18 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 #ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
 #endif
+
+   /*
+   if(type == E_SafeThingName("RedFlag")         ||
+      type == E_SafeThingName("BlueFlag")        ||
+      type == E_SafeThingName("DroppedRedFlag")  ||
+      type == E_SafeThingName("DroppedBlueFlag") ||
+      type == E_SafeThingName("CarriedRedFlag")  ||
+      type == E_SafeThingName("CarriedBlueFlag"))
+   {
+      printf("Spawning a flag of some kind.\n");
+   }
+   */
 
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != -1)
@@ -1508,6 +1673,10 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
+   // [CG] Some stuff for c/s.
+   CS_ObtainActorNetID(mobj);
+   CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
+
    return mobj;
 }
 
@@ -1538,15 +1707,21 @@ void P_RemoveMobj(mobj_t *mobj)
          !(mobj->flags3 & MF3_NOITEMRESP);
    }
 
-   if(respawnitem)
+   // [CG] Only servers place items in the respawn queue
+   if(serverside)
    {
-      // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
-      itemrespawnque[iquehead] = mobj->spawnpoint;
-      itemrespawntime[iquehead++] = leveltime;
-      if((iquehead &= ITEMQUESIZE-1) == iquetail)
-         // lose one off the end?
-         iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+      if(respawnitem)
+      {
+         // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
+         itemrespawnque[iquehead] = mobj->spawnpoint;
+         itemrespawntime[iquehead++] = leveltime;
+         if((iquehead &= ITEMQUESIZE-1) == iquetail)
+            // lose one off the end?
+            iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+      }
    }
+
+   CS_ReleaseActorNetID(mobj);
 
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(mobj);
@@ -1589,6 +1764,7 @@ void P_RemoveMobj(mobj_t *mobj)
    // free block
 
    P_RemoveThinker(&mobj->thinker);
+
 }
 
 //
@@ -1636,6 +1812,12 @@ void P_RespawnSpecials(void)
    mapthing_t*   mthing;
    int           i;
 
+   // [CG] Only servers respawn specials.
+   if(!serverside)
+   {
+      return;
+   }
+
    if(!(dmflags & DM_ITEMRESPAWN) ||  // only respawn items in deathmatch
       iquehead == iquetail ||  // nothing left to respawn?
       leveltime - itemrespawntime[iquetail] < 30*35) // wait 30 seconds
@@ -1653,6 +1835,10 @@ void P_RespawnSpecials(void)
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
+   if(CS_SERVER)
+   {
+      SV_BroadcastActorSpawned(mo);
+   }
 
    // find which type to spawn
 
@@ -1669,6 +1855,12 @@ void P_RespawnSpecials(void)
 
    // pull it from the queue
    iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+
+   if(CS_SERVER)
+   {
+      // [CG] Broadcast the item respawn.
+      SV_BroadcastActorSpawned(mo);
+   }
 }
 
 //
@@ -1849,9 +2041,39 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
 
       // save spots for respawning in network games
       playerstarts[mthing->type-1] = *mthing;
+      /*
       if(GameType != gt_dm)
          P_SpawnPlayer(mthing);
-
+       */
+      // [CG] Made some changes for c/s here.  The first thing to remember is
+      //      that nearly all the code expects that a valid player resides at
+      //      player[0], with a valid actor if gamestate is GS_LEVEL.  This
+      //      means that c/s clients & servers will always start with
+      //      consoleplayer set to 0, and that player will always be a
+      //      spectator.  Servers cannot join a game per se, but they spawn
+      //      themselves at playerstart 0 as a spectator.  Clients do the same
+      //      when they connect to a server, but when they join they wait for
+      //      the server to tell them where to spawn.
+      if(!clientserver)
+      {
+         if(GameType != gt_dm)
+         {
+            P_SpawnPlayer(mthing);
+         }
+      }
+      else if(mthing->type == 1)
+      {
+         // [CG] Only do this if this is the first time we're loading a map.
+         //      Otherwise CS_DoWorldDone will do this for us.
+         CS_SpawnPlayer(
+            consoleplayer,
+            mthing->x << FRACBITS,
+            mthing->y << FRACBITS,
+            ONFLOORZ,
+            mthing->angle,
+            true
+         );
+      }
       return NULL; //sf
    }
 
@@ -1885,13 +2107,28 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
    // below must be caught here
 
    if(mthing->type >= 9027 && mthing->type <= 9033) // particle fountains
+   {
       i = E_SafeThingName("EEParticleFountain");
+      // [CG] Particle fountains are also team starts (I know, I know...).
+      // CS_AddTeamStart(mthing);
+   }
    else if(mthing->type >= 1200 && mthing->type < 1300) // enviro sequences
+   {
       i = E_SafeThingName("EEEnviroSequence");
+   }
    else if(mthing->type >= 1400 && mthing->type < 1500) // sector sequence
+   {
       i = E_SafeThingName("EESectorSequence");
+   }
+   else if(mthing->type == 5080 || mthing->type == 5081)
+   {
+      CS_AddTeamStart(mthing);
+      return NULL;
+   }
    else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
+   {
       i = E_SafeThingName("EEAmbience");
+   }
    else
    {
       // killough 8/23/98: use table for faster lookup
@@ -2027,6 +2264,35 @@ spawnit:
       subsec->sector->sndSeqID = mobj->args[0];
    }
 
+   if(mthing->type == RED_FLAG_ID)
+   {
+      if(cs_flag_stands[team_color_red].exists)
+      {
+         I_Error(
+            "Multiple %s flag stands, exiting.\n",
+            team_color_names[team_color_red]
+         );
+      }
+      cs_flag_stands[team_color_red].exists = true;
+      cs_flag_stands[team_color_red].x = mobj->x;
+      cs_flag_stands[team_color_red].y = mobj->y;
+      cs_flag_stands[team_color_red].z = mobj->z;
+   }
+   else if(mthing->type == BLUE_FLAG_ID)
+   {
+      if(cs_flag_stands[team_color_blue].exists)
+      {
+         I_Error(
+            "Multiple %s flag stands, exiting.\n",
+            team_color_names[team_color_blue]
+         );
+      }
+      cs_flag_stands[team_color_blue].exists = true;
+      cs_flag_stands[team_color_blue].x = mobj->x;
+      cs_flag_stands[team_color_blue].y = mobj->y;
+      cs_flag_stands[team_color_blue].z = mobj->z;
+   }
+
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)
       mobj->args[0] = mthing->type - 14000;
@@ -2041,8 +2307,9 @@ spawnit:
 //
 // P_SpawnPuff
 //
-void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, boolean ptcl)
+// [CG] Now returns the spawned puff instead of void.
+mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+                    int updown, boolean ptcl)
 {
    mobj_t* th;
 
@@ -2070,13 +2337,16 @@ void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
          th->translucency = 0;
       P_SmokePuff(32, x, y, z, dir, updown);
    }
-}
 
+   return th;
+}
 
 //
 // P_SpawnBlood
 //
-void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, mobj_t *target)
+// [CG] Now returns the spawned blood instead of void.
+mobj_t* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
+                     mobj_t *target)
 {
    // HTIC_TODO: Heretic support
    mobj_t* th;
@@ -2109,6 +2379,8 @@ void P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, mobj_t
          th->translucency = 0;
       P_BloodSpray(target, 32, x, y, z, dir);
    }
+
+   return th;
 }
 
 // FIXME: These two functions are left over from an mobj-based
@@ -2155,6 +2427,10 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 //
 void P_CheckMissileSpawn(mobj_t* th)
 {
+   // [CG] Only servers check missile spawns.
+   if(!serverside)
+      return;
+
    if(!(th->flags4 & MF4_NORANDOMIZE))
    {
       th->tics -= P_Random(pr_missile)&3;
@@ -2175,7 +2451,9 @@ void P_CheckMissileSpawn(mobj_t* th)
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
+   {
       P_ExplodeMissile(th);
+   }
 }
 
 //
@@ -2239,6 +2517,12 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
                             dest->y - source->y,
                             dest->z - source->z,
                             th->info->speed);
+
+   // [CG] Broadcast the missile spawned message.
+   if(CS_SERVER)
+   {
+      SV_BroadcastMissileSpawned(source, th);
+   }
 
    P_CheckMissileSpawn(th);
 
@@ -2308,6 +2592,11 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    th->momy = FixedMul(th->info->speed,finesine[an>>ANGLETOFINESHIFT]);
    th->momz = FixedMul(th->info->speed,slope);
 
+   if(CS_SERVER)
+   {
+      SV_BroadcastMissileSpawned(source, th);
+   }
+
    P_CheckMissileSpawn(th);
 
    return th;    //sf
@@ -2337,6 +2626,11 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
    mo->momx = FixedMul(mo->info->speed, finecosine[angle]);
    mo->momy = FixedMul(mo->info->speed, finesine[angle]);
    mo->momz = momz;
+
+   if(CS_SERVER)
+   {
+      SV_BroadcastMissileSpawned(source, mo);
+   }
 
    P_CheckMissileSpawn(mo);
 
@@ -2400,8 +2694,13 @@ void P_FallingDamage(player_t *player)
       damage = player->mo->health - 1;
    }
 
-   if(damage >= player->mo->health)
-      player->mo->intflags |= MIF_DIEDFALLING;
+   // [CG] Only servers will deal falling damage, so only set this flag if
+   //      we're serverside.
+   if(serverside)
+   {
+      if(damage >= player->mo->health)
+         player->mo->intflags |= MIF_DIEDFALLING;
+   }
 
    P_DamageMobj(player->mo, NULL, NULL, damage, MOD_FALLING);
 }
@@ -2419,7 +2718,8 @@ void P_AdjustFloorClip(mobj_t *thing)
    const msecnode_t *m;
 
    // absorb test for FOOTCLIP flag here
-   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
+   // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
+   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP) || clientserver)
    {
       thing->floorclip = 0;
       return;

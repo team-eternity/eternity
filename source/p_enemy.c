@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -59,6 +59,9 @@
 // Some action functions are still needed here.
 #include "a_common.h"
 #include "a_doom.h"
+
+// [CG] Added.
+#include "sv_main.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -404,7 +407,7 @@ extern  int    numspechit;
 boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
-   boolean try_ok;
+   boolean try_ok, line_used; // [CG] Added line_used for P_UseSpecialLine.
    int movefactor = ORIG_FRICTION_FACTOR;    // killough 10/98
    int friction = ORIG_FRICTION;
    int speed;
@@ -541,8 +544,15 @@ boolean P_Move(mobj_t *actor, boolean dropoff) // killough 9/12/98
 
       for(good = false; clip.numspechit--; )
       {
-         if(P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0))
+         line_used = P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0);
+         if(CS_SERVER)
+         {
+            SV_BroadcastLineUsed(actor, clip.spechit[clip.numspechit], 0);
+         }
+         if(line_used)
+         {
             good |= (clip.spechit[clip.numspechit] == clip.blockline ? 1 : 2);
+         }
       }
 
       // haleyjd 01/09/07: do not leave numspechit == -1
@@ -970,8 +980,22 @@ static boolean PIT_FindTarget(mobj_t *mo)
    if(!P_IsVisible(actor, mo, current_allaround))
       return true;
 
-   P_SetTarget(&actor->lastenemy, actor->target);  // Remember previous target
-   P_SetTarget(&actor->target, mo);                // Found target
+   // [CG] Only servers do this.
+   if(serverside)
+   {
+      // Remember previous target
+      P_SetTarget(&actor->lastenemy, actor->target);
+
+      // Found target
+      P_SetTarget(&actor->target, mo);
+
+      // [CG] Broadcast the target updates.
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorTarget(actor->lastenemy);
+         SV_BroadcastActorTarget(actor->target);
+      }
+   }
 
    // Move the selected monster to the end of its associated
    // list, so that it gets searched last next time.
@@ -1065,15 +1089,33 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
                && players[c].playerstate == PST_LIVE 
                && (anyone || P_IsVisible(actor, players[c].mo, allaround)))
             {
-               P_SetTarget(&actor->target, players[c].mo);
-
-               // killough 12/98:
-               // get out of refiring loop, to avoid hitting player accidentally
-
-               if(actor->info->missilestate != NullStateNum)
+               // [CG] Only servers do this.
+               if(serverside)
                {
-                  P_SetMobjState(actor, actor->info->seestate);
-                  actor->flags &= ~MF_JUSTHIT;
+                  P_SetTarget(&actor->target, players[c].mo);
+
+                  // killough 12/98:
+                  // get out of refiring loop, to avoid hitting player
+                  // accidentally
+
+                  // [CG] Broadcast the target update.
+                  if(CS_SERVER)
+                  {
+                     SV_BroadcastActorTarget(actor);
+                  }
+
+                  if(actor->info->missilestate != NullStateNum)
+                  {
+                     P_SetMobjState(actor, actor->info->seestate);
+                     actor->flags &= ~MF_JUSTHIT;
+
+                     // [CG] Broadcast the flags update.
+                     if(CS_SERVER)
+                     {
+                        SV_BroadcastActorAttribute(actor, aat_flags);
+                     }
+
+                  }
                }
                
                return true;
@@ -1095,9 +1137,17 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
    stop = (actor->lastlook - 1) & (MAXPLAYERS - 1);
 
    c = 0;
-
-   stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
+   // [CG] C/S always uses MAXPLAYERS here
+   if(clientserver)
+   {
+	   stopc = MAXPLAYERS;
+   }
+   else
+   {
+	   stopc =
+		   demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
+   }
 
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
@@ -1114,9 +1164,21 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
          {
             if(actor->lastenemy && actor->lastenemy->health > 0)
             {
-               // haleyjd: must use P_SetTarget...
-               P_SetTarget(&actor->target, actor->lastenemy);
-               P_SetTarget(&actor->lastenemy, NULL);
+               // [CG] Only servers do this.
+               if(serverside)
+               {
+                  // haleyjd: must use P_SetTarget...
+                  P_SetTarget(&actor->target, actor->lastenemy);
+                  P_SetTarget(&actor->lastenemy, NULL);
+
+                  // [CG] Broadcast the target updates.
+                  if(CS_SERVER)
+                  {
+                     SV_BroadcastActorTarget(actor);
+                     SV_BroadcastActorTarget(actor->lastenemy);
+                  }
+               }
+
                return true;
             }
          }
@@ -1132,7 +1194,17 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
       if(!P_IsVisible(actor, player->mo, allaround))
          continue;
       
-      P_SetTarget(&actor->target, player->mo);
+      // [CG] Only servers do this.
+      if(serverside)
+      {
+         P_SetTarget(&actor->target, player->mo);
+
+         // [CG] Broadcast the target update.
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorTarget(actor);
+         }
+      }
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
@@ -1152,6 +1224,8 @@ boolean P_LookForPlayers(mobj_t *actor, boolean allaround)
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
+// [CG] All I have to say is that these are some tenacious motherfucking
+//      bloodhounds Lee.  Goddamn.  It's like dobermans in a high school.
 static boolean P_LookForMonsters(mobj_t *actor, boolean allaround)
 {
    thinker_t *cap, *th;
@@ -1162,8 +1236,20 @@ static boolean P_LookForMonsters(mobj_t *actor, boolean allaround)
    if(actor->lastenemy && actor->lastenemy->health > 0 && monsters_remember &&
       !(actor->lastenemy->flags & actor->flags & MF_FRIEND)) // not friends
    {
-      P_SetTarget(&actor->target, actor->lastenemy);
-      P_SetTarget(&actor->lastenemy, NULL);
+      // [CG] Only servers do this.
+      if(serverside)
+      {
+         P_SetTarget(&actor->target, actor->lastenemy);
+         P_SetTarget(&actor->lastenemy, NULL);
+
+         // [CG] Broadcast the target updates.
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorTarget(actor->target);
+            SV_BroadcastActorTarget(actor->lastenemy);
+         }
+      }
+
       return true;
    }
 
@@ -1299,6 +1385,10 @@ void P_SkullFly(mobj_t *actor, fixed_t speed)
    mobj_t *dest;
    angle_t an;
    int     dist;
+
+   // [CG] Only servers do this.
+   if(!serverside)
+      return;
 
    dest = actor->target;
    actor->flags |= MF_SKULLFLY;

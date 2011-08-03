@@ -118,6 +118,7 @@ typedef struct waddir_s
    int        numallocsa; // number of entries allocated for the infoptrs table   
    int        type;       // directory type
    void       *data;      // user data (mainly for w_levels code)
+   int        numlumps_before_coalescing; // [CG] Used when freeing.
 } waddir_t;
 
 //
@@ -138,6 +139,7 @@ typedef struct wfileadd_s
 
 extern waddir_t w_GlobalDir; // the global wad directory
 
+void        W_ClearWadDir(waddir_t *dir); // [CG] Added.
 void        W_InitMultipleFiles(waddir_t *dir, wfileadd_t *files);
 int         W_CheckNumForNameInDir(waddir_t *dir, const char *name, int);
 int         W_CheckNumForName(const char *name);   // killough 4/17/98

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -66,6 +66,13 @@
 #include "r_things.h"
 #include "s_sound.h"
 #include "v_video.h"
+
+// [CG] Added
+#include "cs_config.h"
+#include "cs_main.h"
+#include "cs_hud.h"
+#include "cs_demo.h"
+#include "cl_cmd.h"
 
 //
 // DEFAULTS
@@ -209,6 +216,12 @@ default_t defaults[] =
    // haleyjd 06/07/05
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, NULL, false, wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
+
+   // [CG] Target names
+   DEFAULT_BOOL(
+      "display_target_names", &display_target_names, NULL, false, wad_no,
+      "1 - display target player names below crosshair, 0 - disabled"
+   ),
 
    // sf
    DEFAULT_INT("show_scores", &show_scores, NULL, 0, 0, 1, wad_yes,
@@ -464,15 +477,17 @@ default_t defaults[] =
 
    // TODO/FIXME: make ALL keys dynamically rebindable
 
+   /* [CG] key_spy is subsumed by spectate_next and spectate_prev.
    DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, wad_no,
                "key to view from another player's vantage"),
+   */
    
    DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, wad_no,
                "key to pause the game"),
    
    DEFAULT_INT("key_chat", &key_chat, NULL, 't', 0, 255, wad_no,
                "key to enter a chat message"),
-   
+
    DEFAULT_INT("key_chatplayer1", &destination_keys[0], NULL, 'g', 0, 255, wad_no,
                "key to chat with player 1"),
    
@@ -492,7 +507,12 @@ default_t defaults[] =
    
    DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, wad_no,
                "set to 1 to invert mouse during mouselooking"),
-      
+
+   // [CG] Apparently smooth_turning was forgotten :), adding it here.
+
+   DEFAULT_INT("smooth_turning", &smooth_turning, NULL, 0, 0, 1, wad_no,
+               "1 to smooth out mouse turning"),
+
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, wad_no,
                "1 to enable use of mouse"),
    
@@ -880,6 +900,39 @@ default_t defaults[] =
                "bass boost for SPC music (logarithmic scale, 8 = normal)"),
    
 #endif
+
+   // [CG] These are new defaults.
+   DEFAULT_BOOL("show_netstats", &show_netstats, NULL, false, wad_no,
+                "display netstats on the HUD"),
+
+   DEFAULT_BOOL("show_timer", &show_timer, NULL, false, wad_no,
+                "display a timer on the HUD"),
+
+   DEFAULT_INT(
+      "weapon_switch_on_pickup",
+      &weapon_switch_on_pickup,
+      NULL,
+      WEAPON_SWITCH_ALWAYS,
+      WEAPON_SWITCH_ALWAYS,
+      WEAPON_SWITCH_NEVER,
+      wad_no,
+      "how to switch weapons when one is picked up, 0 - always, 1 - use PWO, "
+      "2 - never"
+   ),
+   
+   DEFAULT_INT(
+      "ammo_switch_on_pickup",
+      &ammo_switch_on_pickup,
+      NULL,
+      AMMO_SWITCH_VANILLA,
+      AMMO_SWITCH_VANILLA,
+      AMMO_SWITCH_DISABLED,
+      wad_no,
+      "how to switch weapons when ammo is picked up, 0 - use vanilla order, "
+      "1 - use PWO, 2 - never"
+   ),
+
+   // [CG] End new defaults.
 
    { NULL }         // last entry
 };
@@ -1750,6 +1803,22 @@ void M_LoadDefaults(void)
    M_ApplyGameModeDefaults(df);
 
    M_LoadDefaultFile(df);
+
+   if(clientserver)
+   {
+      CS_AddCommands();
+      if(CS_CLIENT)
+      {
+         // [CG] Once defaults are read, the client can add its commands.
+         CL_AddCommands();
+      }
+      else if(CS_SERVER)
+      {
+         // [CG] Make sure c/s server settings aren't overwritten by EE
+         //      defaults.
+         CS_ReloadDefaults();
+      }
+   }
 }
 
 //

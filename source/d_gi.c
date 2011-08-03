@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -142,6 +142,10 @@
 // holds the address of the gamemodeinfo_t for the current gamemode,
 // determined at startup
 gamemodeinfo_t *GameModeInfo;
+
+// [CG] The game mode & mission.
+GameMode_t game_mode;
+GameMission_t game_mission;
 
 // data
 
@@ -1455,6 +1459,11 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(exitRules,        NULL);
    
    // Note: demostates are not overridden here, see below.
+
+   // [CG] If in c/s server mode, export the game mode and mission so that c/s
+   //      clients can check if they've loaded the correct IWAD.
+   game_mode = mode;
+   game_mission = mission;
 }
 
 //

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -50,6 +50,9 @@
 #include "e_states.h"
 #include "e_things.h"
 
+// [CG] Added.
+#include "m_vector.h"
+#include "sv_main.h"
 
 // SoM: This should be ok left out of the globals struct.
 static int pe_x; // Pain Elemental position for Lost Soul checks // phares
@@ -170,8 +173,9 @@ static boolean PIT_StompThing3D(mobj_t *thing)
       thing->z >= clip.thing->z + clip.thing->height)
       return true;
 
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
-   
+   // Stomp!
+   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG);
+
    return true;
 }
 #endif
@@ -203,9 +207,10 @@ static boolean PIT_StompThing(mobj_t *thing)
    // killough 8/9/98: make consistent across all levels
    if(!telefrag)
       return false;
-   
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
-   
+
+   // Stomp!
+   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG);
+
    return true;
 }
 
@@ -748,7 +753,8 @@ boolean P_Touched(mobj_t *thing, mobj_t *tmthing)
       (thing->type ^ skullType) |                  // (but Barons & Knights
       (tmthing->type ^ painType))                  // are intentionally not)
    {
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
+      // kill object
+      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN);
       return true;
    }
 
@@ -765,7 +771,10 @@ boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
 {
    int solid = thing->flags & MF_SOLID;
 
-   if(clip.thing->flags & MF_PICKUP)
+   // [CG] Clients wait for server messages, so don't run any of this
+   //      clientside.
+   // if(clip.thing->flags & MF_PICKUP)
+   if(serverside && (clip.thing->flags & MF_PICKUP))
       P_TouchSpecialThing(thing, tmthing); // can remove thing
 
    return !solid;
@@ -789,7 +798,7 @@ boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing)
       int damage = (P_Random(pr_skullfly) % 8 + 1) * tmthing->damage;
       
       P_DamageMobj(thing, tmthing, tmthing, damage, tmthing->info->mod);
-      
+
       tmthing->flags &= ~MF_SKULLFLY;
       tmthing->momx = tmthing->momy = tmthing->momz = 0;
 
@@ -981,6 +990,7 @@ static boolean PIT_CheckThing(mobj_t *thing) // killough 3/26/98: make static
       // damage / explode
       
       damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
+
       P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
                    clip.thing->info->mod);
 
@@ -1534,7 +1544,20 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             int oldside;
             if((oldside = P_PointOnLineSide(oldx, oldy, clip.spechit[clip.numspechit])) !=
                P_PointOnLineSide(thing->x, thing->y, clip.spechit[clip.numspechit]))
-               P_CrossSpecialLine(clip.spechit[clip.numspechit], oldside, thing);
+            {
+               if(serverside)
+               {
+                  if(CS_SERVER)
+                  {
+                     SV_BroadcastLineCrossed(
+                        thing, clip.spechit[clip.numspechit], oldside
+                     );
+                  }
+                  P_CrossSpecialLine(
+                     clip.spechit[clip.numspechit], oldside, thing
+                  );
+               }
+            }
          }
       }
 
@@ -2067,17 +2090,10 @@ static int bombindex;              // current index into bombs array
 static bombdata_t bombs[MAXBOMBS]; // bombs away!
 static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
-//
-// PIT_RadiusAttack
-//
-// "bombsource" is the creature that caused the explosion at "bombspot".
-//
-static boolean PIT_RadiusAttack(mobj_t *thing)
+// [CG] Broke out of PIT_RadiusAttack for use by both it and
+//      PIT_3DRadiusAttack.
+static boolean PIT_CheckRadiusAttack(mobj_t *thing)
 {
-   fixed_t dx, dy, dist;
-   mobj_t *bombspot   = theBomb->bombspot;
-   mobj_t *bombsource = theBomb->bombsource;
-   
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
    
@@ -2092,18 +2108,18 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
    // haleyjd 09/21/09: do this only in old demos because it really
    // doesn't make sense with our newer features.
 
-   if(demo_version < 335 && bombspot->flags & MF_BOUNCES)
+   if(demo_version < 335 && theBomb->bombspot->flags & MF_BOUNCES)
    {
       static int cyberType = -1;
       
       if(cyberType == -1)
          cyberType = E_ThingNumForDEHNum(MT_CYBORG);
 
-      if(thing->type == cyberType && bombsource->type == cyberType)
+      if(thing->type == cyberType && theBomb->bombsource->type == cyberType)
          return true;
    }
    else if((thing->flags2 & MF2_BOSS || thing->flags4 & MF4_NORADIUSDMG) &&
-           !(bombspot->flags4 && MF4_FORCERADIUSDMG))
+           !(theBomb->bombspot->flags4 && MF4_FORCERADIUSDMG))
    {      
       // haleyjd 05/22/99: exclude all bosses
       // haleyjd 09/21/09: support separate MF4_NORADIUSDMG flag and
@@ -2111,9 +2127,204 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
       return true;
    }
 
+   return false;
+}
+
+//
+// PIT_3DRadiusAttack
+//
+// [CG] Used to support rocket jumping in c/s.  Exactly how this works
+//      (there is a lot of magic in here) is explained in ideas.txt under "3D
+//      radius attacks".  It's probably slow as hell.
+//
+static boolean PIT_3DRadiusAttack(mobj_t *thing)
+{
+   fixed_t pred_thrust;
+   unsigned ang;
+   // [CG] Don't worry about this for now.
+   // linkoffset_t *link;
+   v3double_t thing_v, bomb_v;
+   double thing_bottom, thing_top, thing_height, thing_middle, thing_radius,
+          dist, damage, thrust, z_delta;
+
+   if(PIT_CheckRadiusAttack(thing))
+   {
+      return true;
+   }
+
+   thing_radius = M_FixedToDouble(thing->radius);
+   thing_v.x    = M_FixedToDouble(thing->x);
+   thing_v.y    = M_FixedToDouble(thing->y);
+   thing_bottom = M_FixedToDouble(thing->z);
+   thing_height = M_FixedToDouble(thing->height);
+   thing_top    = thing_bottom + thing_height;
+   thing_middle = thing_bottom + (thing_height * .5);
+
+   bomb_v.x = M_FixedToDouble(theBomb->bombspot->x);
+   bomb_v.y = M_FixedToDouble(theBomb->bombspot->y);
+   bomb_v.z = M_FixedToDouble(theBomb->bombspot->z);
+   z_delta = thing_middle - bomb_v.z;
+
+   if(bomb_v.z < thing_bottom)
+   {
+      // [CG] Applies upward Z velocity.
+      thing_v.z = thing_bottom;
+   }
+   else if(bomb_v.z >= thing_top)
+   {
+      // [CG] Applies downward Z velocity.
+      thing_v.z = thing_top;
+   }
+   else
+   {
+      // [CG] Applies no Z velocity.
+      thing_v.z = bomb_v.z;
+   }
+
+   // [CG] Make sure fuzzy math doesn't mess this up.
+   if(thing_v.z == bomb_v.z)
+   {
+      M_SubVec3(&bomb_v, &thing_v, &bomb_v);
+      bomb_v.z = 0.;
+   }
+   else
+   {
+      M_SubVec3(&bomb_v, &thing_v, &bomb_v);
+   }
+
+   if(sqrt((bomb_v.x * bomb_v.x) + (bomb_v.y * bomb_v.y)) <= thing_radius)
+   {
+      // [CG] If the explosion occurred inside the hitbox, only Z velocity is
+      //      applied.  Of course, if the explosion was neither above nor below
+      //      the hitbox, then no velocity will be applied at all.
+      dist = bomb_v.z;
+   }
+   else
+   {
+      // [CG] Otherwise, the explosion acts on the hitbox, so calculate the
+      //      vector length and move it the magnitude of the radius closer to
+      //      the target's origin.
+      dist = M_LengthVec3(&bomb_v) - thing_radius;
+   }
+
+   damage = ((double)theBomb->bombdamage) - dist;
+
+   if(damage <= 0)
+   {
+      return true;
+   }
+
+   P_DamageMobj(
+      thing,
+      theBomb->bombspot,
+      theBomb->bombsource,
+      (int)damage,
+      theBomb->bombmod
+   );
+
+   // [CG] P_DamageMobj moves the actor based on damage, but it won't run
+   //      clientside.  So just predict the movement here.  This code was
+   //      copypasta'd from P_DamageMobj.
+
+   if(CS_CLIENT)
+   {
+      pred_thrust =
+         (int)damage * (FRACUNIT >> 3) * GameModeInfo->thrustFactor /
+         thing->info->mass;
+// [CG] Don't worry about this for now.
+#if 0
+#ifdef R_LINKEDPORTALS
+      link = P_GetLinkOffset(theBomb->bombspot->groupid, thing->groupid);
+      if(theBomb->bombspot->groupid == thing->groupid || !link)
+      {
+         ang = P_PointToAngle(
+            theBomb->bombspot->x,
+            theBomb->bombspot->y, 
+            thing->x,
+            thing->y
+         );
+      }
+      else
+      {
+         ang = P_PointToAngle(
+            theBomb->bombspot->x,
+            theBomb->bombspot->y, 
+            thing->x + link->x,
+            thing->y + link->y
+         );
+      }
+#else
+      ang = P_PointToAngle(
+         theBomb->bombspot->x, theBomb->bombspot->y, thing->x, thing->y
+      );
+#endif
+#endif
+      ang = P_PointToAngle(
+         theBomb->bombspot->x, theBomb->bombspot->y, thing->x, thing->y
+      );
+      P_ThrustMobj(thing, ang, pred_thrust);
+   }
+
+   thrust = (damage / 2.) / (double)(thing->info->mass);
+
+   /*
+   printf("z_delta: %.4f.\n", z_delta);
+
+   printf(
+      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
+      M_FixedToDouble(thing->momx),
+      M_FixedToDouble(thing->momy),
+      M_FixedToDouble(thing->momz)
+   );
+   */
+
+   thing->momx += M_DoubleToFixed(bomb_v.x * thrust);
+   thing->momy += M_DoubleToFixed(bomb_v.y * thrust);
+
+   // [CG] TODO: Ask Randy about BSD-ing the 0.8, it's in ZDoom-1.23 but not
+   //            ZDoom-1.22.
+   if(theBomb->bombsource == thing)
+   {
+      // thing->momz += M_DoubleToFixed(z_delta * thrust * 0.8);
+      thing->momz += M_DoubleToFixed(z_delta * thrust);
+   }
+   else
+   {
+      thing->momz += M_DoubleToFixed(z_delta * thrust * 0.5);
+   }
+
+   /*
+   printf(
+      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
+      M_FixedToDouble(thing->momx),
+      M_FixedToDouble(thing->momy),
+      M_FixedToDouble(thing->momz)
+   );
+   */
+
+   return true;
+}
+
+//
+// PIT_RadiusAttack
+//
+// "bombsource" is the creature that caused the explosion at "bombspot".
+//
+static boolean PIT_RadiusAttack(mobj_t *thing)
+{
+   fixed_t dx, dy, dist;
+   mobj_t *bombspot   = theBomb->bombspot;
+   mobj_t *bombsource = theBomb->bombsource;
+
+   if(PIT_CheckRadiusAttack(thing))
+   {
+      return true;
+   }
+
    dx   = D_abs(thing->x - bombspot->x);
    dy   = D_abs(thing->y - bombspot->y);
    dist = dx > dy ? dx : dy;
+
    dist = (dist - thing->radius) >> FRACBITS;
 
    if(dist < 0)
@@ -2169,8 +2380,22 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
    theBomb->bombmod    = mod;
    
    for(y = yl; y <= yh; ++y)
+   {
       for(x = xl; x <= xh; ++x)
-         P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+      {
+         if(comp[comp_2dradatk])
+         {
+            P_BlockThingsIterator(x, y, PIT_RadiusAttack);
+         }
+         else
+         {
+            // [CG] Rocket jumping requires that rocket splash damage occurs
+            //      in 3D, but this function only handles damage in 2D.
+            //      Because this causes demo desyncs, it's comp flagged.
+            P_BlockThingsIterator(x, y, PIT_3DRadiusAttack);
+         }
+      }
+   }
 
    if(demo_version >= 335 && bombindex > 0)
       theBomb = &bombs[--bombindex];
@@ -2218,7 +2443,15 @@ static boolean PIT_ChangeSector(mobj_t *thing)
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
-      P_RemoveMobj(thing);
+      // [CG] Only servers remove actors.
+      if(serverside)
+      {
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorRemoved(thing);
+         }
+         P_RemoveMobj(thing);
+      }
       return true;      // keep checking
    }
 
@@ -2245,7 +2478,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
          return true;
 
       P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
-      
+
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
       if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))

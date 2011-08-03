@@ -46,6 +46,7 @@
 
 extern cfg_opt_t edf_font_opts[];
 void    E_ProcessFonts(cfg_t *);
+void    E_UpdateFonts(void); // [CG] Added.
 
 #endif
 

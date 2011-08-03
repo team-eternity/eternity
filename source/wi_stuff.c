@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select -*- C -*- vim:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -46,6 +46,9 @@
 #include "d_deh.h"
 #include "e_string.h"
 #include "e_fonts.h"
+
+// [CG] Added.
+#include "cs_score.h"
 
 extern vfont_t *in_bigfont;
 
@@ -906,7 +909,7 @@ static void WI_initNoState(void)
 static void WI_updateNoState(void) 
 {
    WI_updateAnimatedBack();
-   
+
    if(!--cnt)
    {
       WI_End();
@@ -1089,9 +1092,15 @@ static void WI_initDeathmatchStats(void)
 //
 static void WI_updateDeathmatchStats(void)
 {
-   int     i, j;    
+   static int clientserver_tics = 0;
+   int     i, j = 0;
    boolean stillticking;
    
+   if (clientserver_tics == 0)
+   {
+      clientserver_tics = gametic + (10 * TICRATE);
+   }
+
    WI_updateAnimatedBack();
 
    if(cur_pause_time > 0)
@@ -1177,8 +1186,9 @@ static void WI_updateDeathmatchStats(void)
    }
    else if(dm_state == 4)
    {
-      if(acceleratestage)
-      {   
+      if(acceleratestage || (clientserver && gametic == clientserver_tics))
+      {
+         clientserver_tics = 0;
          S_StartSound(NULL, sfx_slop);
 
          if(GameModeInfo->id == commercial)
@@ -1290,6 +1300,33 @@ static void WI_drawDeathmatchStats(void)
       }
       y += WI_SPACINGY;
    }
+}
+
+// ====================================================================
+// WI_drawClientServerStats
+// Purpose: Draw the stats on the screen in a matrix
+// Args:    none
+// Returns: void
+//
+static void WI_drawClientServerStats(void)
+{
+   if(!(fade_applied || cur_pause_time))
+   {
+      if(wi_fade_color != -1)
+         WI_OverlayBackground();
+      fade_applied = true;
+   }
+   
+   IN_slamBackground();
+  
+   // draw animated background
+   WI_drawAnimatedBack();
+
+   if(cur_pause_time > 0)
+      return;
+
+   WI_drawLF();
+   CS_DrawScoreboard(30);
 }
 
 
@@ -1806,6 +1843,7 @@ static void WI_Ticker(void)
 {
    switch(state)
    {
+
    case StatCount:
       if(GameType == gt_dm) 
          WI_updateDeathmatchStats();
@@ -2036,14 +2074,15 @@ static void WI_loadData(void)
    // dead face
    bstar = W_CacheLumpName("STFDEAD0", PU_STATIC);    
 
+   // [CG] Capped at 3 due to changes made by c/s to MAXPLAYERS.
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       // "1,2,3,4"
-      sprintf(name, "STPB%d", i);      
+      sprintf(name, "STPB%d", i % VANILLA_MAXPLAYERS);
       p[i] = W_CacheLumpName(name, PU_STATIC);
       
       // "1,2,3,4"
-      sprintf(name, "WIBP%d", i+1);     
+      sprintf(name, "WIBP%d", (i % VANILLA_MAXPLAYERS) + 1);
       bp[i] = W_CacheLumpName(name, PU_STATIC);
    }
 }
@@ -2060,7 +2099,9 @@ static void WI_Drawer(void)
    switch(state)
    {
    case StatCount:
-      if(GameType == gt_dm)
+      if(clientserver)
+         WI_drawClientServerStats();
+      else if(GameType == gt_dm)
          WI_drawDeathmatchStats();
       else if(GameType == gt_coop)
          WI_drawNetgameStats();

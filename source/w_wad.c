@@ -93,7 +93,8 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
    {
       dir->numallocsa = dir->numallocsa ? dir->numallocsa * 2 : 32;
 
-      dir->infoptrs = realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *));
+      dir->infoptrs =
+         realloc(dir->infoptrs, dir->numallocsa * sizeof(lumpinfo_t *));
    }
    
    // add it
@@ -102,6 +103,100 @@ static void W_addInfoPtr(waddir_t *dir, lumpinfo_t *infoptr)
 }
 
 static int source; // haleyjd 03/18/10
+
+// [CG] Clears a WAD directory of its data.
+void W_ClearWadDir(waddir_t *dir)
+{
+   unsigned int i, j;
+   unsigned int handle_count = 0;
+   FILE **handles = NULL;
+   static int crash_int = 0;
+
+   if(dir->lumpinfo)
+   {
+      for(i = 0; i < dir->numlumps_before_coalescing; i++)
+      {
+         // [CG] Clear the lump's cache.
+         if(dir->lumpinfo[i]->cache)
+         {
+            /*
+            printf(
+               "W_ClearWadDir: Freeing lump [%s].\n", dir->lumpinfo[i]->name
+            );
+            */
+            Z_Free(dir->lumpinfo[i]->cache);
+            dir->lumpinfo[i]->cache = NULL;
+         }
+
+         // [CG] If this is an in-memory lump, free its in-memory data.
+         if(dir->lumpinfo[i]->data)
+         {
+            Z_Free((void *)dir->lumpinfo[i]->data);
+            dir->lumpinfo[i]->data = NULL;
+         }
+
+         // [CG] Add the file handle to the list of open file handles if it
+         //      isn't in there already.
+         if(dir->lumpinfo[i]->file)
+         {
+            if(handle_count == 0)
+            {
+               handle_count++;
+               handles = realloc(handles, handle_count * sizeof(FILE *));
+               handles[handle_count - 1] = dir->lumpinfo[i]->file;
+            }
+            else
+            {
+               for(j = 0; j < handle_count; j++)
+               {
+                  if(handles[j] == dir->lumpinfo[i]->file)
+                  {
+                     break;
+                  }
+               }
+               if(j == handle_count)
+               {
+                  handle_count++;
+                  handles = realloc(handles, handle_count * sizeof(FILE *));
+                  handles[handle_count - 1] = dir->lumpinfo[i]->file;
+               }
+            }
+         }
+      }
+
+      // [CG] Close all the open file handles that were found in the directory.
+      for(i = 0; i < handle_count; i++)
+      {
+         fclose(handles[i]);
+      }
+
+      // [CG] Done with the file handle list.
+      free(handles);
+   }
+
+   // [CG] Reset numlumps.
+   dir->numlumps = dir->numlumps_before_coalescing = 0;
+
+   // [CG] This actually frees the lumps themselves as they're allocated in
+   //      large chunks, not individually for each lump.
+   if(dir->infoptrs)
+   {
+      for(i = 0; i < dir->numallocs; i++)
+      {
+         free(dir->infoptrs[i]);
+      }
+   }
+
+   dir->numallocs = 0;
+
+   /*
+   if(crash_int++ == 2)
+   {
+      I_Error("Exiting.\n");
+   }
+   */
+
+}
 
 //
 // W_AddFile
@@ -462,6 +557,8 @@ static void W_CoalesceMarkedResource(waddir_t *dir, const char *start_marker,
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
   
+   dir->numlumps_before_coalescing = dir->numlumps;
+
    for(i = 0; i < (unsigned)dir->numlumps; i++)
    {
       lump = dir->lumpinfo[i];
@@ -889,10 +986,23 @@ void *W_CacheLumpNumInDir(waddir_t *dir, int lump, int tag)
    
    if(!(dir->lumpinfo[lump]->cache))      // read the lump in
    {
-      W_ReadLumpInDir(dir, lump, 
-                      Z_Malloc(W_LumpLengthInDir(dir, lump), 
-                               tag, 
-                               &(dir->lumpinfo[lump]->cache)));
+      W_ReadLumpInDir(dir, lump, Z_Calloc(
+         1, W_LumpLengthInDir(dir, lump), tag, &(dir->lumpinfo[lump]->cache)
+      ));
+      /*
+      if(tag == PU_STATIC)
+      {
+         printf(
+            "W_CacheLumpNumInDir: Caching [%s] statically.\n",
+            dir->lumpinfo[lump]->name
+         );
+      }
+      Z_LogPrintf(
+          "* Cached lump (0x%x) %s.\n",
+          dir->lumpinfo[lump]->cache,
+          dir->lumpinfo[lump]->name
+      );
+      */
    }
    else
    {

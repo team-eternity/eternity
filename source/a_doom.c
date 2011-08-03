@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -54,6 +54,9 @@
 
 #include "a_common.h"
 
+// [CG] Added.
+#include "sv_main.h"
+
 //
 // A_PosAttack
 //
@@ -75,7 +78,11 @@ void A_PosAttack(mobj_t *actor)
    angle += P_SubRandom(pr_posattack) << 20;
 
    damage = (P_Random(pr_posattack) % 5 + 1) * 3;
-   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   // [CG] Only servers run P_LineAttack.
+   if(serverside)
+   {
+      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   }
 }
 
 //
@@ -101,7 +108,11 @@ void A_SPosAttack(mobj_t* actor)
       // haleyjd 08/05/04: use new function
       int angle = bangle + (P_SubRandom(pr_sposattack) << 20);
       int damage = ((P_Random(pr_sposattack) % 5) + 1) * 3;
-      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+      // [CG] Only servers run P_LineAttack.
+      if(serverside)
+      {
+         P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+      }
    }
 }
 
@@ -132,7 +143,11 @@ void A_CPosAttack(mobj_t *actor)
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
    damage = ((P_Random(pr_cposattack) % 5) + 1) * 3;
-   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   // [CG] Only servers run P_LineAttack.
+   if(serverside)
+   {
+      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   }
 }
 
 //
@@ -181,18 +196,30 @@ void A_TroopAttack(mobj_t *actor)
 {
    if(!actor->target)
       return;
+
    A_FaceTarget(actor);
+
    if(P_CheckMeleeRange(actor))
    {
       int damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random(pr_troopattack)%8+1)*3;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      // [CG] Only servers deal damage.
+      if(serverside)
+      {
+         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      }
       return;
    }
+
    // launch a missile
-   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_TROOPSHOT),
-                  actor->z + DEFAULTMISSILEZ);
+   if(serverside)
+      P_SpawnMissile(
+         actor,
+         actor->target,
+         E_SafeThingType(MT_TROOPSHOT),
+         actor->z + DEFAULTMISSILEZ
+      );
 }
 
 //
@@ -208,7 +235,11 @@ void A_SargAttack(mobj_t *actor)
    if(P_CheckMeleeRange(actor))
    {
       int damage = ((P_Random(pr_sargattack)%10)+1)*4;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      // [CG] Only servers deal damage.
+      if(serverside)
+      {
+         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      }
    }
 }
 
@@ -221,16 +252,28 @@ void A_HeadAttack(mobj_t *actor)
 {
    if(!actor->target)
       return;
+
    A_FaceTarget (actor);
+
    if(P_CheckMeleeRange(actor))
    {
       int damage = (P_Random(pr_headattack)%6+1)*10;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      // [CG] Only servers deal damage.
+      if(serverside)
+      {
+         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      }
       return;
    }
+
    // launch a missile
-   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_HEADSHOT),
-                  actor->z + DEFAULTMISSILEZ);
+   if(serverside)
+      P_SpawnMissile(
+         actor,
+         actor->target,
+         E_SafeThingType(MT_HEADSHOT),
+         actor->z + DEFAULTMISSILEZ
+      );
 }
 
 //
@@ -242,16 +285,27 @@ void A_BruisAttack(mobj_t *actor)
 {
    if(!actor->target)
       return;
+
    if(P_CheckMeleeRange(actor))
    {
       int damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random(pr_bruisattack)%8+1)*10;
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      // [CG] Only servers deal damage.
+      if(serverside)
+      {
+         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      }
       return;
    }
-   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_BRUISERSHOT),
-                  actor->z + DEFAULTMISSILEZ);  // launch a missile
+
+   if(serverside)
+      P_SpawnMissile(
+         actor,
+         actor->target,
+         E_SafeThingType(MT_BRUISERSHOT),
+         actor->z + DEFAULTMISSILEZ
+      );  // launch a missile
 }
 
 //=============================================================================
@@ -297,10 +351,17 @@ void A_BspiAttack(mobj_t *actor)
 {
    if(!actor->target)
       return;
+
    A_FaceTarget(actor);
+
    // launch a missile
-   P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_ARACHPLAZ), 
-                  actor->z + DEFAULTMISSILEZ);
+   if(serverside)
+      P_SpawnMissile(
+         actor,
+         actor->target,
+         E_SafeThingType(MT_ARACHPLAZ), 
+         actor->z + DEFAULTMISSILEZ
+      );
 }
 
 //
@@ -351,10 +412,16 @@ void A_CyberAttack(mobj_t *actor)
 {
    if(!actor->target)
       return;
+
    A_FaceTarget(actor);
-   P_SpawnMissile(actor, actor->target, 
-                  E_SafeThingType(MT_ROCKET),
-                  actor->z + DEFAULTMISSILEZ);   
+
+   if(serverside)
+      P_SpawnMissile(
+         actor,
+         actor->target, 
+         E_SafeThingType(MT_ROCKET),
+         actor->z + DEFAULTMISSILEZ
+      );   
 }
 
 //=============================================================================
@@ -369,20 +436,36 @@ void A_CyberAttack(mobj_t *actor)
 //
 void A_SkelMissile(mobj_t *actor)
 {
-   mobj_t *mo;
+   mobj_t *missile;
    
    if(!actor->target)
       return;
    
-   A_FaceTarget (actor);
-   actor->z += 16*FRACUNIT;      // so missile spawns higher
-   mo = P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_TRACER),
-                       actor->z + DEFAULTMISSILEZ);
-   actor->z -= 16*FRACUNIT;      // back to normal
-   
-   mo->x += mo->momx;
-   mo->y += mo->momy;
-   P_SetTarget(&mo->tracer, actor->target);  // killough 11/98
+   A_FaceTarget(actor);
+
+   actor->z += 16 * FRACUNIT;      // so missile spawns higher
+
+   if(serverside)
+   {
+      missile = P_SpawnMissile(
+         actor,
+         actor->target,
+         E_SafeThingType(MT_TRACER),
+         actor->z + DEFAULTMISSILEZ
+      );
+
+      actor->z -= 16 * FRACUNIT;      // back to normal
+
+      missile->x += missile->momx;
+      missile->y += missile->momy;
+
+      P_SetTarget(&missile->tracer, actor->target);  // killough 11/98
+
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorTracer(missile);
+      }
+   }
 }
 
 #define TRACEANGLE 0xc000000   /* killough 9/9/98: change to #define */
@@ -504,7 +587,11 @@ void A_SkelFist(mobj_t *actor)
    {
       int damage = ((P_Random(pr_skelfist) % 10) + 1) * 6;
       S_StartSound(actor, sfx_skepch);
-      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      // [CG] Only servers deal damage.
+      if(serverside)
+      {
+         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
+      }
    }
 }
 
@@ -758,15 +845,26 @@ void A_VileTarget(mobj_t *actor)
       return;
 
    A_FaceTarget(actor);
+
+   if(!serverside)
+      return;
    
    // killough 12/98: fix Vile fog coordinates
    fog = P_SpawnMobj(actor->target->x,
                      demo_version < 203 ? actor->target->x : actor->target->y,
                      actor->target->z,E_SafeThingType(MT_FIRE));
-   
    P_SetTarget(&actor->tracer, fog);   // killough 11/98
    P_SetTarget(&fog->target, actor);
    P_SetTarget(&fog->tracer, actor->target);
+
+   if(CS_SERVER)
+   {
+      SV_BroadcastActorSpawned(fog);
+      SV_BroadcastActorTarget(actor->tracer);
+      SV_BroadcastActorTarget(fog->target);
+      SV_BroadcastActorTarget(fog->tracer);
+   }
+   
    A_Fire(fog);
 }
 
@@ -837,7 +935,7 @@ static int FatShotType = -1;
 //
 void A_FatAttack1(mobj_t *actor)
 {
-   mobj_t *mo;
+   mobj_t *missile;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
    
@@ -853,13 +951,18 @@ void A_FatAttack1(mobj_t *actor)
    // Change direction  to ...
    actor->angle += FATSPREAD;
    
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
-   mo->angle += FATSPREAD;
-   an = mo->angle >> ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+   if(serverside)
+   {
+      P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+      missile = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+      missile->angle += FATSPREAD;
+      an = missile->angle >> ANGLETOFINESHIFT;
+
+      missile->momx = FixedMul(missile->info->speed, finecosine[an]);
+      missile->momy = FixedMul(missile->info->speed, finesine[an]);
+   }
 }
 
 //
@@ -869,7 +972,7 @@ void A_FatAttack1(mobj_t *actor)
 //
 void A_FatAttack2(mobj_t *actor)
 {
-   mobj_t *mo;
+   mobj_t *missile;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
 
@@ -883,13 +986,19 @@ void A_FatAttack2(mobj_t *actor)
    A_FaceTarget(actor);
    // Now here choose opposite deviation.
    actor->angle -= FATSPREAD;
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
-   mo->angle -= FATSPREAD*2;
-   an = mo->angle >> ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+
+   if(serverside)
+   {
+      P_SpawnMissile(actor, actor->target, FatShotType, z);
+      
+      missile = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+      missile->angle -= FATSPREAD*2;
+      an = missile->angle >> ANGLETOFINESHIFT;
+
+      missile->momx = FixedMul(missile->info->speed, finecosine[an]);
+      missile->momy = FixedMul(missile->info->speed, finesine[an]);
+   }
 }
 
 //
@@ -899,7 +1008,7 @@ void A_FatAttack2(mobj_t *actor)
 //
 void A_FatAttack3(mobj_t *actor)
 {
-   mobj_t *mo;
+   mobj_t *missile;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
 
@@ -912,17 +1021,22 @@ void A_FatAttack3(mobj_t *actor)
    
    A_FaceTarget(actor);
    
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
-   mo->angle -= FATSPREAD/2;
-   an = mo->angle >> ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
-   mo->angle += FATSPREAD/2;
-   an = mo->angle >> ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+   if(serverside)
+   {
+      missile = P_SpawnMissile(actor, actor->target, FatShotType, z);
+      missile->angle -= FATSPREAD/2;
+      an = missile->angle >> ANGLETOFINESHIFT;
+
+      missile->momx = FixedMul(missile->info->speed, finecosine[an]);
+      missile->momy = FixedMul(missile->info->speed, finesine[an]);
+
+      missile = P_SpawnMissile(actor, actor->target, FatShotType, z);
+      missile->angle += FATSPREAD/2;
+      an = missile->angle >> ANGLETOFINESHIFT;
+
+      missile->momx = FixedMul(missile->info->speed, finecosine[an]);
+      missile->momy = FixedMul(missile->info->speed, finesine[an]);
+   }
 }
 
 //=============================================================================
@@ -970,7 +1084,11 @@ void A_BetaSkullAttack(mobj_t *actor)
    
    A_FaceTarget(actor);
    damage = (P_Random(pr_skullfly)%8+1)*actor->damage;
-   P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
+   // [CG] Only servers deal damage.
+   if(serverside)
+   {
+      P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
+   }
 }
 
 //
@@ -996,6 +1114,10 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    angle_t       an;
    int           prestep;
    static int    skullType = -1;
+
+   // [CG] Only servers shoot Lost Souls out of Pain Elementals.
+   if(!serverside)
+      return;
       
    if(skullType == -1)
       skullType = E_SafeThingType(MT_SKULL);
@@ -1034,6 +1156,11 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
+      // [CG] Broadcast the spawn.                                       |
+      if(CS_SERVER)                                                 //   |
+      {                                                             //   |
+         SV_BroadcastActorSpawned(newmobj);                         //   |
+      }                                                             //   |
    else                                                             //   V
    {
       // Check whether the Lost Soul is being fired through a 1-sided
@@ -1046,6 +1173,11 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
          return;
       
       newmobj = P_SpawnMobj(x, y, z, skullType);
+      // [CG] Broadcast the spawn.
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorSpawned(newmobj);
+      }
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
@@ -1055,7 +1187,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
          (newmobj->z < newmobj->subsector->sector->floorheight))
       {
          // kill it immediately
-         P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);
+         P_DamageMobj(newmobj, actor, actor, 10000, MOD_UNKNOWN);
          return;                                                    //   ^
       }                                                             //   |
    }                                                                // phares
@@ -1077,6 +1209,10 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    }
    
    P_SetTarget(&newmobj->target, actor->target);
+   if(CS_SERVER)
+   {
+      SV_BroadcastActorTarget(newmobj);
+   }
    A_SkullAttack(newmobj);
 }
 
@@ -1380,17 +1516,29 @@ void A_BrainSpit(mobj_t *mo)
    targ = P_CollectionWrapIterator(&braintargets);
 
    // spawn brain missile
-   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 
-                            mo->z + DEFAULTMISSILEZ);
-   P_SetTarget(&newmobj->target, targ);
-   newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
+   // [CG] TODO: The problem with the way this is currently implemented is
+   //            the nm_cubespawned message might take a while to get to the
+   //            client, in fact it might take way too long.  Perhaps
+   //            replacing the P_SpawnMissile call with a P_SpawnCube call
+   //            (which I would have to implement myself) is the the best
+   //            option here.
+   if(serverside)
+   {
+      newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 
+                               mo->z + DEFAULTMISSILEZ);
+      P_SetTarget(&newmobj->target, targ);
+      newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
-   // killough 7/18/98: brain friendliness is transferred
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
-   
-   // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
-   
+      // killough 7/18/98: brain friendliness is transferred
+      newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+      
+      // killough 8/29/98: add to appropriate thread
+      P_UpdateThinker(&newmobj->thinker);
+      if(CS_SERVER)
+      {
+         SV_BroadcastCubeSpawned(newmobj);
+      }
+   }
    S_StartSound(NULL, sfx_bospit);
 }
 
@@ -1403,6 +1551,9 @@ void A_SpawnFly(mobj_t *mo);
 //
 void A_SpawnSound(mobj_t *mo)
 {
+   // [CG] Only servers spawn cubes.
+   if(!serverside)
+      return;
    S_StartSound(mo,sfx_boscub);
    A_SpawnFly(mo);
 }

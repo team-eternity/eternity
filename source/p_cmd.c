@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //---------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -48,6 +48,9 @@
 #include "mn_engin.h"
 #include "am_map.h"
 #include "acs_intr.h"
+
+// [CG] Added.
+#include "cl_main.h"
 
 /***************************************************************************
                 'defines': string values for variables
@@ -183,7 +186,13 @@ CONSOLE_NETVAR(bfgtype, bfgtype, cf_server, netcmd_bfgtype) {}
 //
 
 VARIABLE_BOOLEAN(autoaim, &default_autoaim,         onoff);
-CONSOLE_NETVAR(autoaim, autoaim, cf_server, netcmd_autoaim) {}
+CONSOLE_NETVAR(autoaim, autoaim, cf_server, netcmd_autoaim)
+{
+    if(CS_CLIENT)
+    {
+        CL_SendPlayerScalarInfo(ci_autoaim);
+    }
+}
 
 // weapons recoil 
 
@@ -209,7 +218,13 @@ CONSOLE_NETVAR(nukage, enable_nuke, cf_server, netcmd_nukage) {}
 // weapon changing speed
 
 VARIABLE_INT(weapon_speed, &default_weapon_speed, 1, 200, NULL);
-CONSOLE_NETVAR(weapspeed, weapon_speed, cf_server, netcmd_weapspeed) {}
+CONSOLE_NETVAR(weapspeed, weapon_speed, cf_server, netcmd_weapspeed)
+{
+    if(CS_CLIENT)
+    {
+        CL_SendPlayerScalarInfo(ci_weapon_speed);
+    }
+}
 
 // allow mlook with bfg
 
@@ -322,7 +337,14 @@ static char *wipewait_strs[] = { "never", "always", "demos" };
 static char *wipetype_strs[] = { "none", "melt", "fade" };
 
 VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
-CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
+CONSOLE_VARIABLE(wipewait, wipewait, 0)
+{
+    // [CG] C/S server can never wait for screen wiping.
+    if(CS_SERVER)
+    {
+        wipewait = 0;
+    }
+}
 
 VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
 CONSOLE_VARIABLE(wipetype, wipetype, 0) {}

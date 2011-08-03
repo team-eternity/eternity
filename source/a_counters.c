@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -73,7 +73,7 @@ enum
    CPC_EQUAL,
    CPC_NOTEQUAL,
    CPC_BITWISEAND,
-   
+
    CPC_CNTR_LESS,           // alternate counter versions
    CPC_CNTR_LESSOREQUAL,
    CPC_CNTR_GREATER,
@@ -148,7 +148,7 @@ static argkeywd_t cpckwds =
 //
 void A_HealthJump(mobj_t *mo)
 {
-   boolean branch  = false;   
+   boolean branch  = false;
    int statenum, checktype, checkhealth;
 
    statenum    = E_ArgAsStateNumNI(mo->state->args, 0, mo);
@@ -158,7 +158,7 @@ void A_HealthJump(mobj_t *mo)
    // validate state
    if(statenum < 0)
       return;
-   
+
    // 08/02/04:
    // support getting check value from a counter
    // if checktype is greater than the last immediate operator,
@@ -220,7 +220,7 @@ void A_CounterJump(mobj_t *mo)
    checktype = E_ArgAsKwd(mo->state->args, 1, &cpckwds, 0);
    value     = E_ArgAsInt(mo->state->args, 2, 0);
    cnum      = E_ArgAsInt(mo->state->args, 3, 0);
-   
+
    // validate state
    if(statenum < 0)
       return;
@@ -449,7 +449,7 @@ void A_CounterOp(mobj_t *mo)
 
    c_oper1_num = E_ArgAsInt(mo->state->args, 0, 0);
    c_oper2_num = E_ArgAsInt(mo->state->args, 1, 0);
-   c_dest_num  = E_ArgAsInt(mo->state->args, 2, 0);   
+   c_dest_num  = E_ArgAsInt(mo->state->args, 2, 0);
    specialop   = E_ArgAsKwd(mo->state->args, 3, &cpopkwds, 0);
 
    if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
@@ -614,7 +614,7 @@ void A_WeaponCtrJump(mobj_t *mo)
    value     = E_ArgAsInt(pspr->state->args, 2, 0);
    cnum      = E_ArgAsInt(pspr->state->args, 3, 0);
    psprnum   = E_ArgAsKwd(pspr->state->args, 4, &psprkwds, 0);
-   
+
    // validate state
    if(statenum < 0)
       return;
@@ -677,7 +677,7 @@ void A_WeaponCtrJump(mobj_t *mo)
 
    if(branch)
       P_SetPsprite(player, psprnum, statenum);
-      
+
 }
 
 //
@@ -720,7 +720,7 @@ void A_WeaponCtrSwitch(mobj_t *mo)
    case 0:
    case 1:
    case 2:
-      counter = &(player->weaponctrs[player->readyweapon][cnum]); 
+      counter = &(player->weaponctrs[player->readyweapon][cnum]);
       break;
    default:
       return;
@@ -1068,7 +1068,7 @@ void A_CheckReloadEx(mobj_t *mo)
    checktype = E_ArgAsKwd(pspr->state->args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(pspr->state->args, 2, 0);
    psprnum   = E_ArgAsKwd(pspr->state->args, 3, &psprkwds, 0);
-   
+
 
    // validate state number
    if(statenum < 0)
@@ -1121,7 +1121,7 @@ void A_CheckReloadEx(mobj_t *mo)
    }
 
    if(branch)
-      P_SetPsprite(player, psprnum, statenum);      
+      P_SetPsprite(player, psprnum, statenum);
 }
 
 // EOF

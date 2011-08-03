@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -64,6 +64,11 @@
 #include "a_small.h"
 #include "polyobj.h"
 #include "p_slopes.h"
+#include "g_dmflag.h" // [CG] Added.
+
+// [CG] Added.
+#include "cs_main.h"
+#include "cs_team.h"
 
 //
 // Animating textures and planes
@@ -2372,7 +2377,12 @@ void P_PlayerInSpecialSector(player_t *player)
    // Has hit ground
 
    // haleyjd 12/31/08: generalized sector damage engine
-   if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
+   // killough 12/98: nukage disabling cheat
+   // [CG] Added a c/s dmflag for this as well.
+   //      TODO: Replace enable_nuke console stuff with the dmflag stuff.
+   if((sector->damage > 0) &&
+      ((clientserver && (dmflags2 & dmf_enable_nukage)) ||
+       (!clientserver && enable_nuke)))
    {
       if(!player->powers[pw_ironfeet]          ||  // no rad suit?
          sector->damageflags & SDMG_IGNORESUIT ||  // ignores suit?
@@ -2457,6 +2467,7 @@ void P_PlayerOnSpecialFlat(player_t *player)
 
 int             levelTimeLimit;
 int             levelFragLimit; // Ty 03/18/98 Added -frags support
+int             levelScoreLimit; // [CG] Added score limit support
 
 void P_UpdateSpecials(void)
 {
@@ -2473,7 +2484,6 @@ void P_UpdateSpecials(void)
    //  array somewhere, but until they are...
    if(levelFragLimit)  // we used -frags so compare count
    {
-      int i;
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(!playeringame[i])
@@ -2486,6 +2496,24 @@ void P_UpdateSpecials(void)
          G_ExitLevel();
    }
 
+   if(levelScoreLimit)
+   {
+      for(i = 1; i <= cs_settings->number_of_teams; i++)
+      {
+         /*
+         printf(
+            "P_UpdateSpecials: Checking team score %d: %d/%d.\n",
+            i,
+            team_scores[i],
+            levelScoreLimit
+         );
+         */
+         if(team_scores[i] >= levelScoreLimit)
+         {
+            G_ExitLevel();
+         }
+      }
+   }
    // Animate flats and textures globally
    for(anim = anims; anim < lastanim; ++anim)
    {
@@ -4128,7 +4156,7 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    attachedsurface_t *list;
 
    boolean ok = true;
-   
+
    if(ceiling)
    {
       count = sector->c_asurfacecount;
@@ -4144,13 +4172,17 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
+         P_SetCeilingHeight(
+            list[i].sector, list[i].sector->ceilingheight + delta
+         );
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
+         P_SetCeilingHeight(
+            list[i].sector, list[i].sector->ceilingheight - delta
+         );
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }

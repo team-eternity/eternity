@@ -190,7 +190,11 @@ void V_InitColorTranslation(void)
 {
   register const crdef_t *p;
   for (p=crdefs; p->name; p++)
-    *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_STATIC);
+  {
+    // [CG] Try PU_RENDERER here.
+    // *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_STATIC);
+    *p->map1 = *p->map2 = W_CacheLumpName(p->name, PU_RENDERER);
+  }
 }
 
 //
@@ -844,9 +848,6 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
       dest += SCREENWIDTH;
    }
 }
-
-
-
 
 //----------------------------------------------------------------------------
 //

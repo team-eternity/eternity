@@ -91,6 +91,39 @@ sound Earthquake
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
+// [CG] CTF sounds from Odamex
+
+sound FlagDropped
+{
+    lump = "dsffd"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound FlagTaken
+{
+    lump = "dsffg"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound FlagReturned
+{
+    lump = "dsffr"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound FlagCaptured
+{
+    lump = "dsffs"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
 
 // Default Sector Sound Sequences ----------------------------------------------
 

@@ -36,6 +36,10 @@
 
 #define INVERSECOLORMAP 32
 
+// [CG] Exported the following functions.
+boolean P_SectorIsSpecial(sector_t *sector);
+void P_HereticCurrent(player_t *player);
+
 void P_PlayerThink(player_t *player);
 void P_CalcHeight(player_t *player);
 void P_DeathThink(player_t *player);

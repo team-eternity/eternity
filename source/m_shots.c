@@ -182,6 +182,8 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data,
 
 // SoM 6/5/02: Chu-Chu-Chu-Chu-Chu-Changes... heh
 
+#ifndef WIN32
+
 typedef struct tagBITMAPFILEHEADER
 {
   uint16_t bfType;
@@ -205,6 +207,8 @@ typedef struct tagBITMAPINFOHEADER
   uint32_t biClrUsed;
   uint32_t biClrImportant;
 } BITMAPINFOHEADER;
+
+#endif
 
 //
 // bmp_Writer

@@ -960,28 +960,35 @@ static void ST_loadGraphics(void)
    int  i;
    char namebuf[9];
 
+   // [CG] Try PU_RENDERER here.
+
    // Load the numbers, tall and short
    for(i = 0; i < 10; i++)
    {
       sprintf(namebuf, "STTNUM%d", i);
-      tallnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      // tallnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      tallnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_RENDERER);
       sprintf(namebuf, "STYSNUM%d", i);
-      shortnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      // shortnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      shortnum[i] = (patch_t *) W_CacheLumpName(namebuf, PU_RENDERER);
    }
 
    // Load percent key.
    //Note: why not load STMINUS here, too?
-   tallpercent = (patch_t *) W_CacheLumpName("STTPRCNT", PU_STATIC);
+   // tallpercent = (patch_t *) W_CacheLumpName("STTPRCNT", PU_STATIC);
+   tallpercent = (patch_t *) W_CacheLumpName("STTPRCNT", PU_RENDERER);
 
    // key cards
    for(i = 0; i < NUMCARDS+3; i++)  //jff 2/23/98 show both keys too
    {
       sprintf(namebuf, "STKEYS%d", i);
-      keys[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      // keys[i] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      keys[i] = (patch_t *) W_CacheLumpName(namebuf, PU_RENDERER);
    }
 
    // arms background
-   armsbg = (patch_t *) W_CacheLumpName("STARMS", PU_STATIC);
+   // armsbg = (patch_t *) W_CacheLumpName("STARMS", PU_STATIC);
+   armsbg = (patch_t *) W_CacheLumpName("STARMS", PU_RENDERER);
 
    // arms ownership widgets
    for(i = 0; i < 6; i++)
@@ -989,7 +996,8 @@ static void ST_loadGraphics(void)
       sprintf(namebuf, "STGNUM%d", i+2);
 
       // gray #
-      arms[i][0] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      // arms[i][0] = (patch_t *) W_CacheLumpName(namebuf, PU_STATIC);
+      arms[i][0] = (patch_t *) W_CacheLumpName(namebuf, PU_RENDERER);
 
       // yellow #
       arms[i][1] = shortnum[i+2];
@@ -998,19 +1006,25 @@ static void ST_loadGraphics(void)
    // face backgrounds for different color players
    // killough 3/7/98: add better support for spy mode by loading all
    // player face backgrounds and using displayplayer to choose them:
-   faceback = (patch_t *) W_CacheLumpName("STFB0", PU_STATIC);
+   // faceback = (patch_t *) W_CacheLumpName("STFB0", PU_STATIC);
+   faceback = (patch_t *) W_CacheLumpName("STFB0", PU_RENDERER);
 
    // status bar background bits
-   sbar = (patch_t *) W_CacheLumpName("STBAR", PU_STATIC);
+   // sbar = (patch_t *) W_CacheLumpName("STBAR", PU_STATIC);
+   sbar = (patch_t *) W_CacheLumpName("STBAR", PU_RENDERER);
 
    // haleyjd: fullscreen graphics
-   fs_health = (patch_t *)W_CacheLumpName("HU_FHLTH", PU_STATIC);
-   fs_armorg = (patch_t *)W_CacheLumpName("HU_FARMR", PU_STATIC);
-   fs_armorb = (patch_t *)W_CacheLumpName("HU_FARM2", PU_STATIC);
+   // fs_health = (patch_t *)W_CacheLumpName("HU_FHLTH", PU_STATIC);
+   fs_health = (patch_t *)W_CacheLumpName("HU_FHLTH", PU_RENDERER);
+   // fs_armorg = (patch_t *)W_CacheLumpName("HU_FARMR", PU_STATIC);
+   fs_armorg = (patch_t *)W_CacheLumpName("HU_FARMR", PU_RENDERER);
+   // fs_armorb = (patch_t *)W_CacheLumpName("HU_FARM2", PU_STATIC);
+   fs_armorb = (patch_t *)W_CacheLumpName("HU_FARM2", PU_RENDERER);
    for(i = 0; i < 4; ++i)
    {
       sprintf(namebuf, "HU_FAMM%d", i);
-      fs_ammo[i] = (patch_t *)W_CacheLumpName(namebuf, PU_STATIC);
+      // fs_ammo[i] = (patch_t *)W_CacheLumpName(namebuf, PU_STATIC);
+      fs_ammo[i] = (patch_t *)W_CacheLumpName(namebuf, PU_RENDERER);
    }
 
    ST_CacheFaces(default_faces, "STF");
@@ -1031,6 +1045,8 @@ void ST_CacheFaces(patch_t **faces, char *facename)
    if(GameModeInfo->type != Game_DOOM)
       return;
 
+   // [CG] Try PU_RENDERER for all this.
+
    // face states
    facenum = 0;
    for(i = 0; i < ST_NUMPAINFACES; i++)
@@ -1039,23 +1055,31 @@ void ST_CacheFaces(patch_t **faces, char *facename)
       for(j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
          sprintf(namebuf, "%sST%d%d", facename, i, j);
-         faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+         // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+         faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
       }
       sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
       sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
       sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
       sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
       sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
    }
    sprintf(namebuf, "%sGOD0",facename);
-   faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+   // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
+   faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
    sprintf(namebuf, "%sDEAD0",facename);
-   faces[facenum]   = W_CacheLumpName(namebuf, PU_STATIC);
+   // faces[facenum]   = W_CacheLumpName(namebuf, PU_STATIC);
+   faces[facenum]   = W_CacheLumpName(namebuf, PU_RENDERER);
 }
 
 static void ST_loadData(void)

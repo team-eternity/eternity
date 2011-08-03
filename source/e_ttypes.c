@@ -675,7 +675,8 @@ ETerrain *E_GetThingFloorType(mobj_t *thing)
 {
    ETerrain *terrain = TerrainTypes[thing->subsector->sector->floorpic];
    
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
+   if(demo_version < terrain->minversion || comp[comp_terrain] || clientserver)
       terrain = &solid;
 
    return terrain;
@@ -729,7 +730,8 @@ void E_PtclTerrainHit(particle_t *p)
    fixed_t x, y, z;
 
    // particles could never hit terrain before v3.33
-   if(demo_version < 333 || comp[comp_terrain])
+   // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
+   if(demo_version < 333 || comp[comp_terrain] || clientserver)
       return;
 
    // no particle hits during netgames or demos;
@@ -833,7 +835,8 @@ boolean E_HitWater(mobj_t *thing, sector_t *sector)
    terrain = TerrainTypes[sector->floorpic];
 
    // no TerrainTypes in old demos or if comp enabled
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
+   if(demo_version < terrain->minversion || comp[comp_terrain] || clientserver)
       terrain = &solid;
 
    // some things don't cause splashes

@@ -115,6 +115,12 @@ pickupitem PLAS { effect = PFX_PLASMA }
 pickupitem SHOT { effect = PFX_SHOTGUN }
 pickupitem SGN2 { effect = PFX_SSG }
 
+// [CG] CTF pickup items
+pickupitem BFLG { effect = PFX_BLUEFLAG }
+pickupitem RFLG { effect = PFX_REDFLAG }
+pickupitem BDWN { effect = PFX_DROPPEDBLUEFLAG }
+pickupitem RDWN { effect = PFX_DROPPEDREDFLAG }
+
 endif()
 
 ifenabled(HERETIC)
@@ -144,4 +150,9 @@ endif()
 
 pickupitem PNS2 { effect = PFX_TOTALINVIS }
 
+// [CG] ZDoom Bridge Sprites
+spritenames += {TLGL}
+
+// [CG] Odamex CTF Sprites
+spritenames += {BSOK, RSOK, BFLG, RFLG, BDWN, RDWN, BCAR, RCAR}
 

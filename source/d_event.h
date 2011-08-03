@@ -67,7 +67,9 @@ typedef enum
   ga_completed,
   ga_victory,
   ga_worlddone,
-  ga_screenshot
+  ga_screenshot,
+  ga_disconnect, // [CG] Added for client/server.
+  ga_stopdemo,   // [CG] Added for client/server.
 } gameaction_t;
 
 
@@ -121,7 +123,9 @@ typedef enum
 //
 // GLOBAL VARIABLES
 //
-#define MAXEVENTS               64
+// [CG] Increase this to avoid mouse deceleration.
+// #define MAXEVENTS               64
+#define MAXEVENTS 4096
 
 extern event_t   events[MAXEVENTS];
 extern int       eventhead;

@@ -257,7 +257,8 @@ static void Z_CloseLogFile(void)
 #endif
 }
 
-static void Z_LogPrintf(const char *msg, ...)
+// static void Z_LogPrintf(const char *msg, ...)
+void Z_LogPrintf(const char *msg, ...)
 {
 #ifdef ZONEFILE
    if(zonelog)
@@ -388,6 +389,10 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 //
 void (Z_Free)(void *p, const char *file, int line)
 {
+#ifdef INSTRUMENTED
+    int old_tag; // [CG] Added so the debugger can see the tag after its set to
+                 //      PU_FREE.
+#endif
    DEBUG_CHECKHEAP();
 
    if(p)
@@ -414,6 +419,9 @@ void (Z_Free)(void *p, const char *file, int line)
 #endif
                      );
       }
+#ifdef INSTRUMENTED
+      old_tag = block->tag;
+#endif
       block->tag = PU_FREE;       // Mark block freed
 
       // scramble memory -- weed out any bugs
@@ -449,6 +457,8 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 
    if(hightag > PU_CACHE)
       hightag = PU_CACHE;
+
+   printf("Z_FreeTags (%d): Freeing from %d to %d.\n", line, lowtag, hightag);
    
    for(; lowtag <= hightag; ++lowtag)
    {

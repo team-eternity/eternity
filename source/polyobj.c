@@ -46,6 +46,9 @@
 #include "s_sndseq.h"
 #include "v_misc.h"
 
+// [CG] Added.
+#include "sv_main.h"
+
 /*
    Theory behind Polyobjects:
 
@@ -746,7 +749,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, mobj_t *mo)
       if((po->flags & POF_DAMAGING) || 
          !P_CheckPosition(mo, mo->x + momx, mo->y + momy))
       {
-         P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+        P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
       }
    }
 }

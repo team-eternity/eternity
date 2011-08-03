@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Stephen McGranahan
@@ -34,6 +34,9 @@
 #include "r_things.h"
 #include "p_setup.h"
 #include "p_map.h"
+
+// [CG] Added.
+#include "cl_spec.h"
 
 #ifdef R_LINKEDPORTALS
 
@@ -561,9 +564,15 @@ boolean EV_PortalTeleport(mobj_t *mo, linkoffset_t *link)
 //
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
-   // TODO: Support for diabling a linked portal on a surface
-   sec->floorheight = h;
-   sec->floorheightf = M_FixedToFloat(sec->floorheight);
+   // [CG] Clients don't move sectors during normal thinking, either they
+   //      deliberately run the sector thinkers (prediction) or they set sector
+   //      positions to whatever was received from the server.
+   if(serverside || cl_predicting_sectors || cl_setting_sector_positions)
+   {
+      // TODO: Support for diabling a linked portal on a surface
+      sec->floorheight = h;
+      sec->floorheightf = M_FixedToFloat(sec->floorheight);
+   }
 }
 
 //
@@ -574,9 +583,15 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 //
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
-   // TODO: Support for diabling a linked portal on a surface
-   sec->ceilingheight = h;
-   sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
+   // [CG] Clients don't move sectors during normal thinking, either they
+   //      deliberately run the sector thinkers (prediction) or they set sector
+   //      positions to whatever was received from the server.
+   if(serverside || cl_predicting_sectors || cl_setting_sector_positions)
+   {
+      // TODO: Support for diabling a linked portal on a surface
+      sec->ceilingheight = h;
+      sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
+   }
 }
 
 

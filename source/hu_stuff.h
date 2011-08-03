@@ -23,6 +23,8 @@
 #define __HU_STUFF_H__
 
 #include "d_event.h"
+#include "v_font.h"
+#include "m_dllist.h"
 
 enum
 {
@@ -35,6 +37,8 @@ enum
 
 typedef struct hu_widget_s
 {
+   // [CG] HUD widgets are now hashable
+   mdllistitem_t link;
    // overridable functions (virtuals in a sense)
 
    void (*ticker)(struct hu_widget_s *); // ticker: called each gametic
@@ -44,11 +48,41 @@ typedef struct hu_widget_s
 
    // id data
    int type;                 // widget type
-   char name[33];            // name of this widget
+   char *name;               // name of this widget
    struct hu_widget_s *next; // next in hash chain
    boolean disabled;         // disable flag
    boolean prevdisabled;     // previous state of disable flag
 } hu_widget_t;
+
+// [CG] Moved from hu_stuff.c.
+
+// erase data rect
+typedef struct tw_erase_s
+{
+   int x1, y1, x2, y2;
+} tw_erase_t;
+
+// text widget flag values
+enum
+{
+   TW_AUTOMAP_ONLY = 0x00000001, // appears in automap only
+   TW_NOCLEAR      = 0x00000002, // dynamic widget with no clear func
+   TW_BOXED        = 0x00000004, // 10/08/05: optional box around text
+};
+
+typedef struct hu_textwidget_s
+{
+   hu_widget_t widget;   // parent widget
+   
+   int x, y;             // coords on screen
+   vfont_t *font;        // font object
+   char *message;        // text to draw
+   char *alloc;          // if non-NULL, widget owns the message
+   int cleartic;         // gametic in which to clear the widget (0=never)
+   tw_erase_t erasedata; // rect area to erase
+   int flags;            // special flags
+   int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
+} hu_textwidget_t;
 
 extern boolean chat_on;
 extern int obituaries;
@@ -56,6 +90,17 @@ extern int obcolour;       // the colour of death messages
 extern int showMessages;   // Show messages has default, 0 = off, 1 = on
 extern int mess_colour;    // the colour of normal messages
 extern char *chat_macros[10];
+
+// [CG] Externalized shiftxform.
+extern const char *shiftxform;
+
+// [CG] Externalized a few functions.
+void HU_ClearWidgetHash(void);
+boolean HU_AddWidgetToHash(hu_widget_t *widget);
+hu_widget_t* HU_WidgetForName(const char *name);
+void HU_UpdateEraseData(hu_textwidget_t *tw);
+void HU_DynamicTextWidget(const char *name, int x, int y, int font,
+                          char *message, int cleartic, int flags);
 
 void HU_Init(void);
 void HU_Drawer(void);

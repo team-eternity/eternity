@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -53,6 +53,13 @@
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "d_gi.h"     // haleyjd: gamemode pertinent info
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
+
+// [CG] Added.
+#include "cs_main.h"
+#include "cs_demo.h"
+#include "cs_wad.h"
+#include "cl_main.h"
+#include "sv_main.h"
 
 extern void I_WaitVBL(int); // haleyjd: restored exit sounds
 
@@ -130,6 +137,10 @@ void G_QuitDoom(void)
 
 CONSOLE_COMMAND(quit, 0)
 {
+   if(CS_CLIENT)
+   {
+      CL_Disconnect();
+   }
    G_QuitDoom();
 }
 
@@ -210,10 +221,76 @@ CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
 // player bobbing -- haleyjd: altered to read default, use netcmd
 
 VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
-CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
+CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing)
+{
+   if(CS_CLIENT)
+   {
+      CL_SendPlayerScalarInfo(ci_bobbing);
+   }
+}
 
 VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
-CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0) {}
+CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0)
+{
+   if(CS_CLIENT)
+   {
+      CL_SendPlayerScalarInfo(ci_weapon_toggle);
+   }
+}
+
+boolean display_target_names = false;
+boolean default_display_target_names = false;
+
+// [CG] Display target names (if target is a player) beneath crosshair.
+VARIABLE_BOOLEAN(display_target_names, &default_display_target_names, onoff);
+CONSOLE_VARIABLE(display_target_names, display_target_names, 0) {}
+
+// [CG] Weapon switching.
+
+char *weapon_switch_choices[] = { "vanilla", "pwo", "never" };
+char *ammo_switch_choices[] = { "vanilla", "pwo", "never" };
+
+// [CG] Weapon switch on weapon pickup.
+
+unsigned int weapon_switch_on_pickup = WEAPON_SWITCH_ALWAYS;
+unsigned int default_weapon_switch_on_pickup = WEAPON_SWITCH_ALWAYS;
+
+VARIABLE_INT(
+   weapon_switch_on_pickup,
+   &default_weapon_switch_on_pickup,
+   WEAPON_SWITCH_ALWAYS,
+   WEAPON_SWITCH_NEVER,
+   weapon_switch_choices
+);
+
+CONSOLE_VARIABLE(weapon_switch_on_pickup, weapon_switch_on_pickup, 0)
+{
+   if(CS_CLIENT && net_peer != NULL)
+   {
+      CL_SendPlayerScalarInfo(ci_wsop);
+   }
+}
+
+// [CG] Weapon switch on ammo pickup.
+
+unsigned int ammo_switch_on_pickup = AMMO_SWITCH_VANILLA;
+unsigned int default_ammo_switch_on_pickup = AMMO_SWITCH_VANILLA;
+
+VARIABLE_INT(
+   ammo_switch_on_pickup,
+   &default_ammo_switch_on_pickup,
+   AMMO_SWITCH_VANILLA,
+   AMMO_SWITCH_DISABLED,
+   ammo_switch_choices
+);
+
+CONSOLE_VARIABLE(ammo_switch_on_pickup, ammo_switch_on_pickup, 0)
+{
+   if(CS_CLIENT && net_peer != NULL)
+   {
+      CL_SendPlayerScalarInfo(ci_asop);
+   }
+}
 
 // turbo scale
 
@@ -232,6 +309,171 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 
    if((player->health > 0) || comp[comp_zombie])
       G_ExitLevel();
+}
+
+//////////////////////////////////////
+//
+// C/S Demo Stuff
+//
+
+CONSOLE_COMMAND(playcsdemo, 0)
+{
+   if(!clientserver)
+   {
+      C_Printf("C/S mode only.\n");
+      return;
+   }
+
+   if(Console.argc < 1)
+   {
+      C_Printf("Usage: playcsdemo demoname\n");
+   }
+
+   if(!CS_CLIENT)
+   {
+      C_Printf("Client-only for now.\n");
+      return;
+   }
+
+   if(net_peer)
+   {
+      CL_Disconnect();
+   }
+   else if(cs_demo_playback || cs_demo_recording)
+   {
+      if(!CS_StopDemo())
+      {
+         C_Printf("Error stopping demo: %s.\n", CS_GetDemoErrorMessage());
+      }
+   }
+
+   if(!CS_PlayDemo((char *)QStrConstPtr(&Console.argv[0])))
+   {
+      C_Printf("Error playing demo: %s.\n", CS_GetDemoErrorMessage());
+   }
+   else
+   {
+      C_Printf("Playing demo %s.\n", QStrConstPtr(&Console.argv[0]));
+   }
+}
+
+CONSOLE_COMMAND(recordcsdemo, 0)
+{
+   nm_sync_t sync_packet;
+   byte *buffer = NULL;
+   size_t buffer_size;
+
+   if(!clientserver)
+   {
+      C_Printf("C/S mode only.\n");
+      return;
+   }
+
+   if(!CS_CLIENT)
+   {
+      C_Printf("Client-only for now.\n");
+      return;
+   }
+
+   if(!net_peer)
+   {
+      C_Printf("Must be connected.\n");
+      return;
+   }
+
+   if(cs_demo_recording)
+   {
+      C_Printf("Already recording.\n");
+      return;
+   }
+
+   if(!CS_RecordDemo())
+   {
+      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
+      CS_StopDemo();
+      return;
+   }
+
+   if(!CS_AddNewMapToDemo())
+   {
+      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
+      CS_StopDemo();
+      return;
+   }
+
+   buffer_size = CS_BuildGameState(consoleplayer, &buffer);
+
+   if(!CS_WriteNetworkMessageToDemo(buffer, buffer_size, 0))
+   {
+      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
+      free(buffer);
+      CS_StopDemo();
+      return;
+   }
+
+   free(buffer);
+
+   sync_packet.message_type = nm_sync;
+   if(CS_CLIENT)
+   {
+      sync_packet.world_index = cl_current_world_index;
+   }
+   else if(CS_SERVER)
+   {
+      sync_packet.world_index = sv_world_index;
+   }
+   sync_packet.gametic = gametic;
+   sync_packet.levelstarttic = levelstarttic;
+   sync_packet.basetic = basetic;
+   sync_packet.leveltime = leveltime;
+
+   if(!CS_WriteNetworkMessageToDemo(&sync_packet, sizeof(nm_sync_t), 0))
+   {
+      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
+      CS_StopDemo();
+      return;
+   }
+
+   C_Printf("Recording new demo %s.ecd.\n", cs_demo_path);
+}
+
+CONSOLE_COMMAND(stopcsdemo, 0)
+{
+   if(!clientserver)
+   {
+      C_Printf("C/S mode only.\n");
+      return;
+   }
+
+   if(!CS_CLIENT)
+   {
+      C_Printf("Client-only for now.\n");
+      return;
+   }
+
+   if(cs_demo_playback || cs_demo_recording)
+   {
+      if(!CS_StopDemo())
+      {
+         C_Printf("Error stopping demo: %s.\n", CS_GetDemoErrorMessage());
+      }
+      else if(cs_demo_playback)
+      {
+         C_Printf("Demo playback stopped.\n");
+      }
+      else if(cs_demo_recording)
+      {
+         C_Printf("Demo recording stopped.\n");
+      }
+      else
+      {
+         C_Printf("Demo stopped.\n");
+      }
+   }
+   else
+   {
+      C_Printf("No current demo.\n");
+   }
 }
 
 //////////////////////////////////////
@@ -326,21 +568,103 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
    players[playernum].momx = players[playernum].momy = 0;
 }
 
-// change level
+// [CG] Display map list
+CONSOLE_COMMAND(maplist, 0)
+{
+   cs_map_t *map;
+   unsigned int i, j;
 
+   if(!clientserver)
+   {
+      C_Printf("Maplists are not supported outside of c/s mode.\n");
+      return;
+   }
+
+   for(i = 0; i < cs_map_count; i++)
+   {
+      map = &cs_maps[i];
+      if(map->resource_count == 0)
+      {
+         C_Printf("%d. %s\n", i, map->name);
+         continue;
+      }
+
+      C_Printf("%d. %s: ", i, map->name);
+      for(j = 0; j < map->resource_count; j++)
+      {
+         C_Printf("%s", cs_resources[map->resource_indices[j]].name);
+         if(j != (map->resource_count - 1))
+         {
+            C_Printf(", ");
+         }
+      }
+      C_Printf("\n");
+   }
+}
+
+// change level
 CONSOLE_NETCMD(map, cf_server, netcmd_map)
 {
    int lumpnum;
 
-   if(!Console.argc)
+   if(clientserver)
    {
-      C_Printf("usage: map <mapname>\n"
-               "   or map <wadfile.wad>\n");
+      int map_number;
+
+      if(CS_DEMO)
+      {
+         // [CG] Clients may issue the map command while recording a demo, but
+         //      we don't want to honor that command while playing the demo
+         //      back.  To avoid an error message, silently quit without doing
+         //      anything here.
+         return;
+      }
+
+      if(!CS_SERVER)
+      {
+         C_Printf("C/S server mode only.\n");
+         return;
+      }
+
+      if(!Console.argc || !QStrIsNum(&Console.argv[0]))
+      {
+         C_Printf("usage: map <map number>\n");
+         return;
+      }
+      map_number = QStrAtoi(&Console.argv[0]) - 1;
+      if(map_number < 0 || map_number >= cs_map_count)
+      {
+         C_Printf("Invalid map number '%d'.\n", map_number + 1);
+         return;
+      }
+
+      if(CS_DEMO)
+      {
+         if(!CS_LoadDemoMap(map_number + 1))
+         {
+            C_Printf(
+               "Error during demo playback: %s.\n", CS_GetDemoErrorMessage()
+            );
+            CS_StopDemo();
+         }
+      }
+      else if(CS_SERVER)
+      {
+         cs_current_map_number = map_number;
+         SV_BroadcastMapCompleted(false);
+         G_DoCompleted(false);
+         CS_DoWorldDone();
+      }
       return;
    }
-   
-   G_StopDemo();
-   
+
+   if(!Console.argc)
+   {
+      C_Printf("usage: map <mapname>\n");
+      C_Printf("    or map <wadfile.wad>\n");
+      return;
+   }
+
    // check for .wad files
    // i'm not particularly a fan of this myself, but..
 
@@ -348,8 +672,9 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    
    if(!netgame && QStrLen(&Console.argv[0]) > 4)
    {
-      const char *extension;
-      extension = QStrBufferAt(&Console.argv[0], QStrLen(&Console.argv[0]) - 4);
+      const char *extension = QStrBufferAt(
+         &Console.argv[0], QStrLen(&Console.argv[0]) - 4
+      );
       if(!strcmp(extension, ".wad"))
       {
          if(D_AddNewFile(QStrConstPtr(&Console.argv[0])))
@@ -362,13 +687,18 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    // haleyjd 02/23/04: strict error checking
    lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
-
-   if(lumpnum != -1 && P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
+   if(lumpnum != -1 &&
+      P_CheckLevel(&w_GlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
    {   
       G_DeferedInitNew(gameskill, QStrConstPtr(&Console.argv[0]));
    }
    else
-      C_Printf(FC_ERROR "%s not found or is not a valid map\n", QStrConstPtr(&Console.argv[0]));
+   {
+      C_Printf(
+          FC_ERROR "%s not found or is not a valid map\n",
+          QStrConstPtr(&Console.argv[0])
+      );
+   }
 }
 
         // player name
@@ -379,6 +709,18 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(Console.argc < 1)
       return;
+
+   if(CS_SERVER)
+   {
+       // [CG] Servers can't change their names.
+       return;
+   }
+
+   if(Console.argv[0].size <= 0)
+   {
+      C_Printf("Cannot blank your name.\n");
+      return;
+   }
    
    playernum = Console.cmdsrc;
    
@@ -388,6 +730,11 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
    {
       free(default_name);
       default_name = QStrCDup(&Console.argv[0], PU_STATIC);
+   }
+
+   if(CS_CLIENT)
+   {
+      CL_SendPlayerStringInfo(ci_name);
    }
 }
 
@@ -612,11 +959,27 @@ char *weapon_str[NUMWEAPONS] =
 
 void G_WeapPrefHandler(void)
 {
+   int newvalue;
+
    if(Console.argc)
    {
       int prefnum = 
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
       G_SetWeapPref(prefnum, QStrAtoi(&Console.argv[0]));
+
+      if(CS_CLIENT && net_peer != NULL)
+      {
+         // [CG] C/S clients have to inform the server of their new weapon
+         //      preferences so the server can assign the proper weapon when
+         //      they pick up weapons and ammo, and when they exhaust
+         //      ammunition.
+         printf(
+            "G_WeapPrefHandler: prefnum/weapon: %d/%d.\n",
+            prefnum,
+            QStrAtoi(&Console.argv[0])
+         );
+         CL_SendPlayerArrayInfo(ci_pwo, prefnum);
+      }
    }
 }
 
@@ -874,11 +1237,20 @@ void G_AddCommands(void)
    C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 
+   // [CG] More new stuff.
+   C_AddCommand(weapon_switch_on_pickup);
+   C_AddCommand(ammo_switch_on_pickup);
+   C_AddCommand(display_target_names);
+   C_AddCommand(playcsdemo);
+   C_AddCommand(recordcsdemo);
+   C_AddCommand(stopcsdemo);
+
    G_AddChatMacros();
    G_AddWeapPrefs();
    G_AddCompat();
    G_AddAutoloadFiles(); // haleyjd
    P_AddEventVars(); // haleyjd
+
 }
 
 // EOF

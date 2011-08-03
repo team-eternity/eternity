@@ -86,6 +86,8 @@ typedef struct vfont_s
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
    int patchnumoffset;       // used during font loading only
+   char lumpname[9];         // [CG] Used to reload linear fonts.
+   int linear_font_format;   // [CG] Used to reload linear fonts.
 } vfont_t;
 
 void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);

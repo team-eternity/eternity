@@ -266,6 +266,8 @@ extern console_t Console; // the one and only Console object
 /***** command running ****/
 
 void C_RunCommand(command_t *command, const char *options);
+// [CG] Added RCON for c/s.
+void C_RunRCONTextCmd(const char *cmdname, int clientnum);
 void C_RunTextCmd(const char *cmdname);
 
 const char *C_VariableValue(variable_t *command);

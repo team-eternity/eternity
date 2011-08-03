@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -330,7 +330,10 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    // handle disposal of previous font graphics 
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
-      free(font->data);
+      if(font->linear_font_format != FONT_FMT_LINEAR)
+      {
+         free(font->data);
+      }
       font->data = NULL;
    }
 
@@ -350,7 +353,14 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
       size = w * h;
    }
    else
+   {
       font->data = lump;
+   }
+   font->linear_font_format = fmt;
+   if(font->lumpname != name)
+   {
+      strncpy(font->lumpname, name, 9);
+   }
 
    // check for proper dimensions
    for(i = 5; i <= 32; ++i)
@@ -585,7 +595,11 @@ void E_LoadPatchFont(vfont_t *font)
       E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
 
    // init all to NULL at beginning
-   font->fontgfx = calloc(font->size, sizeof(patch_t *));
+   // [CG] Try PU_RENDERER here.
+   // font->fontgfx = calloc(font->size, sizeof(patch_t *));
+   font->fontgfx = Z_Calloc(
+      font->size, sizeof(patch_t *), PU_RENDERER, &font->fontgfx
+   );
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -618,6 +632,45 @@ void E_LoadPatchFont(vfont_t *font)
 
          if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
             font->fontgfx[i] = W_CacheLumpNum(lnum, PU_STATIC);
+      }
+   }
+}
+
+//
+// E_UpdateFonts
+//
+// [CG] Updates all fonts, used after a WAD reload.
+//
+void E_UpdateFonts(void)
+{
+   vfont_t *font = NULL;
+   unsigned int i, j;
+
+   for(i = 0; i < NUMFONTCHAINS; i++)
+   {
+      font = e_font_namechains[i];
+
+      while(font)
+      {
+         /*
+         for(i = 0; i < font->size; ++i)
+         {
+            if(font->fontgfx[i])
+            {
+               Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
+            }
+         }
+         */
+
+         if(font->linear)
+         {
+            E_LoadLinearFont(font, font->lumpname, font->linear_font_format);
+         }
+         else
+         {
+            E_LoadPatchFont(font);
+         }
+         font = font->namenext;
       }
    }
 }
@@ -796,6 +849,49 @@ static void E_ProcessFont(cfg_t *sec)
 //
 static void E_ProcessFontVars(cfg_t *cfg)
 {
+   // [CG] These need to be free'd first if applicable, otherwise WAD reloads
+   //      will leak memory.
+   if(hud_fontname)
+   {
+      free(hud_fontname);
+   }
+   if(hud_overfontname)
+   {
+      free(hud_overfontname);
+   }
+   if(mn_fontname)
+   {
+      free(mn_fontname);
+   }
+   if(mn_bigfontname)
+   {
+      free(mn_bigfontname);
+   }
+   if(mn_normalfontname)
+   {
+      free(mn_normalfontname);
+   }
+   if(f_fontname)
+   {
+      free(f_fontname);
+   }
+   if(in_fontname)
+   {
+      free(in_fontname);
+   }
+   if(in_bigfontname)
+   {
+      free(in_bigfontname);
+   }
+   if(in_bignumfontname)
+   {
+      free(in_bignumfontname);
+   }
+   if(c_fontname)
+   {
+      free(c_fontname);
+   }
+
    // 02/25/09: set native module font names
    hud_fontname      = strdup(cfg_getstr(cfg, ITEM_FONT_HUD));
    hud_overfontname  = strdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
@@ -828,7 +924,9 @@ void E_ProcessFonts(cfg_t *cfg)
                   "\t\t%d fonts(s) defined\n", numfonts);
 
    for(i = 0; i < numfonts; ++i)
+   {
       E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
+   }
 
    E_ProcessFontVars(cfg);
 }

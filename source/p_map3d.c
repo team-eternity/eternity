@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // This module, except for code marked otherwise, is covered by the 
@@ -35,6 +35,9 @@
 #include "p_partcl.h"
 #include "p_setup.h"
 #include "r_main.h"
+
+// [CG] Added.
+#include "sv_main.h"
 
 // I HATE GLOBALS!!!
 extern fixed_t   FloatBobOffsets[64];
@@ -399,7 +402,8 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage, 
                       clip.thing->info->mod);
          
-         if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
+         if(thing->flags2 & MF2_PUSHABLE &&
+            !(clip.thing->flags3 & MF3_CANNOTPUSH))
          { 
             // Push thing
             thing->momx += clip.thing->momx >> 2;
@@ -566,7 +570,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // [RH] Fake taller height to catch stepping up into things.
    if(thing->player)   
       thing->height = realheight + 24*FRACUNIT;
-   
+
    for(bx = xl; bx <= xh; ++bx)
    {
       for(by = yl; by <= yh; ++by)
@@ -897,7 +901,15 @@ static void P_DoCrunch(mobj_t *thing)
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
-      P_RemoveMobj(thing);
+      // [CG] Only servers remove actors.
+      if(serverside)
+      {
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorRemoved(thing);
+         }
+         P_RemoveMobj(thing);
+      }
       return;
    }
 
@@ -914,7 +926,7 @@ static void P_DoCrunch(mobj_t *thing)
       return;
 
    nofit = true;
-   
+
    // haleyjd 06/19/00: fix for invulnerable things -- no crusher effects
    // haleyjd 05/20/05: allow custom crushing damage
 
@@ -924,7 +936,7 @@ static void P_DoCrunch(mobj_t *thing)
          return;
 
       P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
-      
+
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // FIXME: needs comp flag!
       if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
@@ -1224,8 +1236,10 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    
    // Mark all things invalid
 
-   for (n = sector->touching_thinglist; n; n = n->m_snext)
+   for(n = sector->touching_thinglist; n; n = n->m_snext)
+   {
       n->visited = false;
+   }
 
    do
    {
@@ -1238,7 +1252,9 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
             {
                iterator(n->m_thing);                 // process it
                if(iterator2)
+               {
                   iterator2(n->m_thing);
+               }
             }
             break;                                   // exit and start over
          }

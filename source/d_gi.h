@@ -390,6 +390,11 @@ extern gamemodeinfo_t *GameModeInfoObjects[NumGameModes];
 
 extern gamemodeinfo_t *GameModeInfo;
 
+// [CG] Export the game mode and mission so that c/s clients can verify that
+//      they've loaded the correct IWAD.
+extern GameMode_t game_mode;
+extern GameMission_t game_mission;
+
 // set by system config:
 extern char *gi_path_doomsw;
 extern char *gi_path_doomreg;

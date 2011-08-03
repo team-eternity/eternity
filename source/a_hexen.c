@@ -54,6 +54,9 @@
 
 #include "a_common.h"
 
+// [CG] Added.
+#include "sv_main.h"
+
 // HEXEN_TODO: When resweeping this module, dispense with a lot of the
 // parameterized bullcrap, since Aeon will probably remove the need for a bunch
 // of still-mostly-hardcoded action functions. Taking a thingtype to shoot as
@@ -322,13 +325,15 @@ void A_SerpentHeadCheck(mobj_t *actor)
 //
 void A_CentaurAttack(mobj_t *actor)
 {
+   int dmg;
+
    if(!actor->target)
       return;
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   P_Random(pr_centauratk) % 7 + 3, MOD_HIT);
+      dmg = P_Random(pr_centauratk) % 7 + 3;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
 }
 
@@ -412,6 +417,8 @@ void A_CentaurDefend(mobj_t *actor)
 //
 void A_BishopAttack(mobj_t *actor)
 {
+   int dmg;
+
    if(!actor->target)
       return;
 
@@ -419,8 +426,8 @@ void A_BishopAttack(mobj_t *actor)
    
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_bishop1) & 7) + 1) * 4, MOD_HIT);
+      dmg = ((P_Random(pr_bishop1) & 7) + 1) * 4;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
    else
       actor->counters[0] = (P_Random(pr_bishop1) & 3) + 5;
@@ -619,13 +626,15 @@ void A_PainCounterBEQ(mobj_t *actor)
 //
 void A_DemonAttack1(mobj_t *actor)
 {
+   int dmg;
+
    if(!actor->target)
       return;
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_chaosbite) & 7) + 1) * 2, MOD_HIT);
+      dmg = ((P_Random(pr_chaosbite) & 7) + 1) * 2;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
 }
 
@@ -698,7 +707,7 @@ void A_WraithRaise(mobj_t *actor)
 //
 void A_WraithMelee(mobj_t *actor)
 {
-   int amount;
+   int dmg;
 
    if(!actor->target)
       return;
@@ -706,11 +715,10 @@ void A_WraithMelee(mobj_t *actor)
    // Steal health from target and give to actor
    if(P_CheckMeleeRange(actor) && (P_Random(pr_wraithm) < 220))
    {
-      amount = ((P_Random(pr_wraithd) & 7) + 1) * 2;
-      
-      P_DamageMobj(actor->target, actor, actor, amount, MOD_HIT);
-      
-      actor->health += amount;
+      dmg = ((P_Random(pr_wraithd) & 7) + 1) * 2;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
+
+      actor->health += dmg;
    }
 }
 
@@ -856,10 +864,12 @@ void A_WraithChase(mobj_t *actor)
 //
 void A_EttinAttack(mobj_t *actor)
 {
+   int dmg;
+
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_ettin) & 7) + 1) * 2, MOD_HIT);
+      dmg = ((P_Random(pr_ettin) & 7) + 1) * 2;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
 }
 

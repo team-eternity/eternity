@@ -36,6 +36,8 @@
 #ifndef M_QSTR_H__
 #define M_QSTR_H__
 
+#include "doomtype.h"
+
 typedef struct qstring_s
 {
    char   *buffer;
@@ -120,6 +122,12 @@ const char *QStrChr(qstring_t *qstr, char c);
 const char *QStrRChr(qstring_t *qstr, char c);
 size_t      QStrFindFirstOfChar(qstring_t *qstr, char c);
 size_t      QStrFindFirstNotOfChar(qstring_t *qstr, char c);
+boolean     QStrIsAlNum(qstring_t *qstr);
+boolean     QStrIsAlpha(qstring_t *qstr);
+boolean     QStrIsNum(qstring_t *qstr);
+boolean     QStrIsLower(qstring_t *qstr);
+boolean     QStrIsSpace(qstring_t *qstr);
+boolean     QStrIsUpper(qstring_t *qstr);
 qstring_t  *QStrLStrip(qstring_t *qstr, char c);
 qstring_t  *QStrRStrip(qstring_t *qstr, char c);
 qstring_t  *QStrMakeQuoted(qstring_t *s);

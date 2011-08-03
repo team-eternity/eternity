@@ -33,10 +33,12 @@
 
 // The Deathmatch Flags variable
 unsigned int dmflags;
+unsigned int dmflags2;
 
 // Defaults with which the game was started
 // (Needed to preserve through demos et al.)
 unsigned int default_dmflags;
+unsigned int default_dmflags2;
 
 //
 // G_SetDefaultDMFlags

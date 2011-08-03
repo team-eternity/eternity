@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -101,7 +101,9 @@ const char *c_fontname;
 // ticker, responder, drawer, init etc.
 //
 
-static void C_initBackdrop(void)
+// [CG] Un-static'd.
+// static void C_InitBackdrop(void)
+void C_InitBackdrop(void)
 {
    patch_t *patch;
    const char *lumpname;
@@ -187,6 +189,13 @@ static void C_updateInputPoint(void)
 
 // initialise the console
 
+// [CG] Used after WAD reloading.
+void C_ReloadFont(void)
+{
+   if(!(c_font = E_FontForName(c_fontname)))
+      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
+}
+
 void C_Init(void)
 {
    // haleyjd: initialize console qstrings
@@ -194,15 +203,14 @@ void C_Init(void)
 
    Console.enabled = true;
 
-   if(!(c_font = E_FontForName(c_fontname)))
-      I_Error("C_Init: bad EDF font name %s\n", c_fontname);
-   
+   C_ReloadFont();
+
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
-   
+
    C_AddCommands();
    C_updateInputPoint();
-   
+
    // haleyjd
    G_InitKeyBindings();   
 }
@@ -212,7 +220,7 @@ void C_Init(void)
 void C_Ticker(void)
 {
    Console.showprompt = true;
-   
+
    if(gamestate != GS_CONSOLE)
    {
       // specific to half-screen version only
@@ -507,7 +515,7 @@ void C_Drawer(void)
    // SoM: Check width too.
    if(oldscreenheight != video.height || oldscreenwidth != video.width)
    {
-      C_initBackdrop();       // re-init to the new screen size
+      C_InitBackdrop();       // re-init to the new screen size
       oldscreenheight = video.height;
       oldscreenwidth = video.width;
    }
@@ -776,10 +784,13 @@ void C_Printf(const char *s, ...)
 
    // haleyjd: write this message to the log if one is open
    C_AppendToLog(tempstr); 
-   
-   C_AdjustLineBreaks(tempstr); // haleyjd
-   
-   C_AddMessage(tempstr);
+
+   // [CG] Only do this if we're not a headless server.
+   if(!CS_HEADLESS)
+   {
+       C_AdjustLineBreaks(tempstr); // haleyjd
+       C_AddMessage(tempstr);
+   }
 }
 
 // haleyjd 01/24/03: got rid of C_WriteText, added real C_Puts from
@@ -896,7 +907,9 @@ void C_CloseConsoleLog(void)
 static void C_AppendToLog(const char *text)
 {
    // only if console logging is enabled
-   if(console_log)
+   // [CG] Or we're a headless server!
+   // if(console_log)
+   if(console_log || CS_HEADLESS)
    {
       int len;
       unsigned char tmpmessage[1024];
@@ -907,8 +920,17 @@ static void C_AppendToLog(const char *text)
 
       C_StripColorChars(src, tmpmessage, len);
 
-      fprintf(console_log, "%s", tmpmessage);
-      fflush(console_log);
+      if(console_log)
+      {
+          fprintf(console_log, "%s", tmpmessage);
+          fflush(console_log);
+      }
+      if(CS_HEADLESS)
+      {
+         // [CG] This cast is probably safe because C_StripColorChars is called
+         //      before it.
+         fputs((const char*)tmpmessage, stdout);
+      }
    }
 }
 

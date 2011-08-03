@@ -2033,7 +2033,9 @@ void D_BuildBEXTables(void)
    // 10/17/03: allocate all the names through a single pointer
    spritestr = Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL);
 
-   deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0);
+   // [CG] Try PU_RENDERER here.
+   // deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0);
+   deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_RENDERER,0);
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
@@ -2045,7 +2047,9 @@ void D_BuildBEXTables(void)
    // 09/07/05: allocate all music names through one pointer
    musicstr = Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0);
 
-   deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0);
+   // [CG] Try PU_RENDERER here.
+   // deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0);
+   deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_RENDERER, 0);
 
    for(i = 1; i < NUMMUSIC; ++i)
    {

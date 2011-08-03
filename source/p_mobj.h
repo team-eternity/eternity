@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,6 +48,9 @@ typedef struct mobj_s mobj_t;   //sf: move up here
 
 // sf: skins
 #include "p_skin.h"
+
+// [CG] Positions
+#include "cs_position.h"
 
 //
 // NOTES: mobj_t
@@ -98,7 +101,7 @@ typedef struct mobj_s mobj_t;   //sf: move up here
 // things, but nothing can run into a missile).
 // Each block in the grid is 128*128 units, and knows about
 // every line_t that it contains a piece of, and every
-// interactable mobj_t that has its origin contained.  
+// interactable mobj_t that has its origin contained.
 //
 // A valid mobj_t is a mobj_t that has the proper subsector_t
 // filled in for its xy coordinates and is linked into the
@@ -127,7 +130,7 @@ typedef enum
     // Don't use the sector links (invisible but touchable).
     MF_NOSECTOR         = 8,
     // Don't use the blocklinks (inert but displayable)
-    MF_NOBLOCKMAP       = 16,                    
+    MF_NOBLOCKMAP       = 16,
 
     // Not to be activated by sound, deaf monster.
     MF_AMBUSH           = 32,
@@ -160,7 +163,7 @@ typedef enum
     MF_TELEPORT         = 0x8000,
     // Don't hit same species, explode on block.
     // Player missiles as well as fireballs of various kinds.
-    MF_MISSILE          = 0x10000,      
+    MF_MISSILE          = 0x10000,
     // Dropped by a demon, not level spawned.
     // E.g. ammo clips dropped by dying former humans.
     MF_DROPPED          = 0x20000,
@@ -181,7 +184,7 @@ typedef enum
     //  towards intermission kill total.
     // Happy gathering.
     MF_COUNTKILL        = 0x400000,
-    
+
     // On picking up, count this item object
     //  towards intermission item total.
     MF_COUNTITEM        = 0x800000,
@@ -226,7 +229,7 @@ typedef enum
   MF2_PUSHABLE      = 0x00000200,  // can be pushed by moving things
   MF2_MAP07BOSS1    = 0x00000400,  // is a MAP07 boss type 1
   MF2_MAP07BOSS2    = 0x00000800,  // is a MAP07 boss type 2
-  MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss 
+  MF2_E1M8BOSS      = 0x00001000,  // is an E1M8 boss
   MF2_E2M8BOSS      = 0x00002000,  // is an E2M8 boss
   MF2_E3M8BOSS      = 0x00004000,  // is an E3M8 boss
   MF2_BOSS          = 0x00008000,  // is a boss
@@ -319,7 +322,7 @@ enum
 
 #define NUMMOBJCOUNTERS 8
 
-// ammo + weapon in a dropped backpack 
+// ammo + weapon in a dropped backpack
 
 typedef struct backpack_s
 {
@@ -338,7 +341,7 @@ typedef struct backpack_s
 // reason behind monsters going to sleep when loading savegames (the "target"
 // pointer was simply nullified after loading, to prevent Doom from crashing),
 // and the whole reason behind loadgames crashing on savegames of AV attacks.
-// 
+//
 //
 // killough 9/8/98: changed some fields to shorts,
 // for better memory usage (if only for cache).
@@ -383,7 +386,7 @@ struct mobj_s
 
    // For movement checking.
    fixed_t             radius;
-   fixed_t             height; 
+   fixed_t             height;
 
    // Momentums, used to update position.
    fixed_t             momx;
@@ -424,7 +427,7 @@ struct mobj_s
 
    // Reaction time: if non 0, don't attack yet.
    // Used by player to freeze a bit after teleporting.
-   int16_t             reactiontime;   
+   int16_t             reactiontime;
 
    // If >0, the current target will be chased no
    // matter what (even if shot by another object)
@@ -441,13 +444,13 @@ struct mobj_s
    skin_t *            skin;   //sf: skin
 
    // Player number last looked for.
-   int16_t             lastlook;       
+   int16_t             lastlook;
 
    // For nightmare respawn.
-   mapthing_t          spawnpoint;     
+   mapthing_t          spawnpoint;
 
    // Thing being chased/attacked for tracers.
-   struct mobj_s*      tracer; 
+   struct mobj_s*      tracer;
 
    // new field: last known enemy -- killough 2/15/98
    struct mobj_s*      lastenemy;
@@ -500,8 +503,8 @@ struct mobj_s
    mobj_t **tid_prevn; // ptr to last thing's next pointer
 
 #ifdef R_LINKEDPORTALS
-   // SoM: When a mobj partially passes through a floor/ceiling portal, it 
-   // needs to clip against two sets of map structures and map objects, the 
+   // SoM: When a mobj partially passes through a floor/ceiling portal, it
+   // needs to clip against two sets of map structures and map objects, the
    // one it's currently in and then one it's passing into. The current plane
    // (haha) is to spawn a dummy mobj on the other side of the portal and use
    // that to occupy space for the mobj / send feedback to the main mobj as to
@@ -509,13 +512,32 @@ struct mobj_s
    // special clipping code...
    mobj_t *portaldummy;
 
-   // This should only be set if the mobj is a portaldummy. This is the link 
+   // This should only be set if the mobj is a portaldummy. This is the link
    // back to the object that this is a dummy for. This link will be used for
-   // such things as the dummy taking damage (intersecting bullets and rockets, 
+   // such things as the dummy taking damage (intersecting bullets and rockets,
    // anyone?)
    mobj_t *dummyto;
 #endif
+
+   // [CG] An actor's Net ID.
+   uint32_t net_id;
+
+   // [CG] Even though this makes an actor much bigger, it's necessary so that
+   //      the server can avoid sending an actor's position every TIC, which
+   //      can be a serious amount of bandwidth with either a high amount of
+   //      clients or actors.
+   position_t old_position;
+
 };
+
+// [CG] Moved from p_mobj.c.
+
+// haleyjd 03/27/10: new solution for state cycle detection
+typedef struct seenstate_s
+{
+   mdllistitem_t link;
+   int statenum;
+} seenstate_t;
 
         // put it here, it works, ok?
 #include "d_player.h"
@@ -530,7 +552,7 @@ struct mobj_s
 
 #define ONFLOORZ        D_MININT
 #define ONCEILINGZ      D_MAXINT
-// haleyjd 10/13/02: floatrand 
+// haleyjd 10/13/02: floatrand
 #define FLOATRANDZ     (D_MAXINT - 1)
 #define MINFLTRNDZ     (40*FRACUNIT)
 
@@ -560,10 +582,17 @@ void    P_RespawnSpecials(void);
 mobj_t  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 void    P_RemoveMobj(mobj_t *th);
 boolean P_SetMobjState(mobj_t *mobj, statenum_t state);
+// [CG] Added declaration.
+void    P_PlayerHitFloor(mobj_t *mo, boolean onthing);
 void    P_MobjThinker(mobj_t *mobj);
-void    P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, boolean ptcl);
-void    P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, mobj_t *target);
-mobj_t  *P_SpawnMissile(mobj_t *source, mobj_t *dest, mobjtype_t type, fixed_t z);
+// [CG] Now returns the spawned puff instead of void.
+mobj_t *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
+                    boolean ptcl);
+// [CG] Now returns the spawned blood instead of void.
+mobj_t *P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
+                     mobj_t *target);
+mobj_t  *P_SpawnMissile(mobj_t *source, mobj_t *dest, mobjtype_t type,
+                        fixed_t z);
 mobj_t  *P_SpawnPlayerMissile(mobj_t *source, mobjtype_t type);
 mobj_t  *P_SpawnMapThing(mapthing_t *);
 void    P_CheckMissileSpawn(mobj_t *);  // killough 8/2/98
@@ -590,6 +619,11 @@ void P_AdjustFloorClip(mobj_t *thing);
 
 int P_ThingInfoHeight(mobjinfo_t *mi);
 void P_ChangeThingHeights(void);
+
+// [CG] Some state management stuff that once was static, but now is not.
+void P_FreeSeenStates(seenstate_t *list);
+void P_AddSeenState(int statenum, seenstate_t **list);
+boolean P_CheckSeenState(int statenum, seenstate_t *list);
 
 // extern data
 extern int FloatBobOffsets[];

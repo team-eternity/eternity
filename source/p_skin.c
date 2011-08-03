@@ -83,7 +83,9 @@ static void P_AddSkin(skin_t *newskin);
 static void P_AddEDFSkins(void);
 static void P_CacheFaces(skin_t *skin);
 static void P_InitMonsterSkins(void);
-static skin_t *P_SkinForName(const char *s);
+// [CG] Un-static'd
+// static skin_t *P_SkinForName(const char *s);
+skin_t *P_SkinForName(const char *s);
 
 //
 // P_ResolveSkinSounds
@@ -363,7 +365,9 @@ static void P_CacheFaces(skin_t *skin)
 // i cant be bothered tho, its not something likely to be
 // being done constantly, only now and again
 
-static skin_t *P_SkinForName(const char *s)
+// [CG] Un-static'd
+// static skin_t *P_SkinForName(const char *s)
+skin_t *P_SkinForName(const char *s)
 {
    int i;
 

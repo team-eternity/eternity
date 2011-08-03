@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -45,6 +45,9 @@
 #include "d_gi.h"
 #include "g_dmflag.h"
 #include "e_player.h"
+
+// [CG] Added.
+#include "cs_main.h"
 
 doomcom_t  *doomcom;        
 doomdata_t *netbuffer; // points inside doomcom
@@ -243,21 +246,25 @@ static void GetPackets(void)
    while(HGetPacket())
    {
       if(netbuffer->checksum & NCMD_SETUP)
+      {
          continue;           // extra setup packet
+      }
       
       netconsole = netbuffer->player & ~PL_DRONE;
       netnode = doomcom->remotenode;
-      
+
       // to save bytes, only the low byte of tic numbers are sent
       // Figure out what the rest of the bytes are
       realstart = ExpandTics(netbuffer->starttic);           
       realend   = realstart + netbuffer->numtics;
-      
+
       // check for exiting the game
       if(netbuffer->checksum & NCMD_EXIT)
       {
          if(!nodeingame[netnode])
+         {
             continue;
+         }
          nodeingame[netnode] = false;
          playeringame[netconsole] = false;
          doom_printf("%s left the game", players[netconsole].name);
@@ -269,12 +276,13 @@ static void GetPackets(void)
          {
             mobj_t *tflash;
 
-            tflash = P_SpawnMobj(players[netconsole].mo->x,
-                                 players[netconsole].mo->y,
-                                 players[netconsole].mo->z + 
-                                    GameModeInfo->teleFogHeight,
-                                 GameModeInfo->teleFogType);
-	      
+            tflash = P_SpawnMobj(
+               players[netconsole].mo->x,
+               players[netconsole].mo->y,
+               players[netconsole].mo->z + GameModeInfo->teleFogHeight,
+               GameModeInfo->teleFogType
+            );
+
             tflash->momx = players[netconsole].mo->momx;
             tflash->momy = players[netconsole].mo->momy;
             if(drawparticles)
@@ -285,7 +293,9 @@ static void GetPackets(void)
             P_RemoveMobj(players[netconsole].mo);
          }
          if(demorecording)
+         {
             G_CheckDemoStatus();
+         }
 
          continue;
       }
@@ -304,9 +314,9 @@ static void GetPackets(void)
       // check for a remote game kill
       if(netbuffer->checksum & NCMD_KILL)
          I_Error("Killed by network driver\n");
-      
+
       nodeforplayer[netconsole] = netnode;
-      
+
       // check for retransmit request
       if(resendcount[netnode] <= 0  && (netbuffer->checksum & NCMD_RETRANSMIT))
       {
@@ -315,14 +325,14 @@ static void GetPackets(void)
       }
       else
          resendcount[netnode]--;
-      
+
       // check for out of order / duplicated packet           
       if(realend == nettics[netnode])
          continue;
-      
+
       if(realend < nettics[netnode])
          continue;
-      
+
       // check for a missed packet
       if(realstart > nettics[netnode])
       {
@@ -330,16 +340,16 @@ static void GetPackets(void)
          remoteresend[netnode] = true;
          continue;
       }
-      
+
       // update command store from the packet
       {
          int start;
-         
+
          remoteresend[netnode] = false;
-         
+
          start = nettics[netnode] - realstart;               
          src = &netbuffer->d.cmds[start];
-         
+
          while (nettics[netnode] < realend)
          {
             dest = &netcmds[netconsole][nettics[netnode]%BACKUPTICS];
@@ -370,6 +380,12 @@ void NetUpdate(void)
    int i,j;
    int realstart;
    int gameticdiv;
+
+   // [CG] This is kind of a hack, but we can really never run this in c/s.
+   if(clientserver)
+   {
+      return ;
+   }
    
    // check time
    nowtime = I_GetTime() / ticdup;
@@ -483,6 +499,13 @@ static void CheckAbort(void)
 static void D_InitPlayers(void)
 {
    int i;
+
+   // [CG] C/S has its own way of doing things here.
+   if (clientserver)
+   {
+      CS_InitPlayers();
+      return;
+   }
 
    // haleyjd 04/10/10: brougt up out of defunct console net init for now
    players[consoleplayer].colormap = default_colour;
@@ -649,8 +672,18 @@ void D_InitNetGame(void)
    if(maxsend<1)
       maxsend = 1;
   
-   for(i = 0; i < doomcom->numplayers; ++i)
-      playeringame[i] = true;
+   // [CG] Players aren't automatically in the game in c/s.
+   if(CS_SERVER)
+   {
+      playeringame[0] = true;
+   }
+   else if (!clientserver)
+   {
+      for(i = 0; i < doomcom->numplayers; ++i)
+      {
+         playeringame[i] = true;
+      }
+   }
    for(i = 0; i < doomcom->numnodes; ++i)
       nodeingame[i] = true;
   
@@ -861,7 +894,7 @@ static boolean RunGameTics(void)
          //isconsoletic =  gamestate == GS_CONSOLE;
          G_Ticker();
          gametic++;
-         
+
          // modify command for duplicated tics
 
          if(i != ticdup-1)

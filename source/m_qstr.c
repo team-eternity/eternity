@@ -33,6 +33,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <ctype.h>
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_qstr.h"
@@ -508,6 +510,101 @@ size_t QStrFindFirstNotOfChar(qstring_t *qstr, char c)
    }
 
    return found ? rover - qstr->buffer : qstring_npos;
+}
+
+//=============================================================================
+//
+// Composition Test Functions
+//
+
+boolean QStrIsAlNum(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!isalnum(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
+}
+
+boolean QStrIsAlpha(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!isalpha(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
+}
+
+boolean QStrIsNum(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!isdigit(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
+}
+
+boolean QStrIsLower(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!islower(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
+}
+
+boolean QStrIsSpace(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!isspace(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
+}
+
+boolean QStrIsUpper(qstring_t *qstr)
+{
+    const char *rover = qstr->buffer;
+
+    while(*rover)
+    {
+        if(!isupper(*rover))
+        {
+            return false;
+        }
+        rover++;
+    }
+    return true;
 }
 
 //=============================================================================

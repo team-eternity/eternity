@@ -27,6 +27,13 @@
 #include "d_ticcmd.h"
 #include "d_player.h"
 
+// [CG] Moved from g_game.c
+#define SAVEGAMESIZE  0x20000
+
+// [CG] Exported.
+extern byte *savebuffer;
+extern size_t savegamesize; // killough
+
 //
 // GAME
 //
@@ -52,6 +59,8 @@ void G_StopDemo();
 void G_ScrambleRand();
 void G_ExitLevel(void);
 void G_SecretExitLevel(void);
+// [CG] Un-static'd.
+void G_PlayerFinishLevel(int player);
 void G_WorldDone(void);
 void G_ForceFinale(void);
 void G_Ticker(void);
@@ -67,7 +76,21 @@ byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
 void G_InitNew(skill_t skill, char*);
-void G_DoVictory(void);
+
+
+// [CG] Added so that main c/s loop can build commands.
+void G_BuildTiccmd(ticcmd_t *cmd);
+
+// [CG] Exported.
+void G_SetGameMap(void);
+// [CG] Added the enter_intermission argument for c/s map changes.
+void G_DoCompleted(boolean enter_intermission);
+void G_DoWorldDone(void);
+void G_DoLoadLevel(void);
+
+// [CG] Broke out of G_CheckSpot.
+mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle);
+
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
 
@@ -78,6 +101,9 @@ void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 
         // sf: player_printf
 void player_printf(player_t *player, const char *s, ...);
+
+// [CG] Externalized
+extern boolean netdemo;
 
 // killough 5/2/98: moved from m_misc.c:
 
@@ -92,6 +118,7 @@ extern int  autorun;           // always running?                   // phares
 extern int  runiswalk;
 extern int  automlook;
 extern int  invert_mouse;
+extern int  smooth_turning; // [CG] Added.
 extern int  bfglook;
 
 extern angle_t consoleangle;
@@ -109,6 +136,8 @@ extern int pars[][10];  // hardcoded array size
 extern int cpars[];     // hardcoded array size
 
 #define NUMKEYS   256
+
+extern boolean gamekeydown[NUMKEYS]; // [CG] Exported.
 
 extern int cooldemo;
 extern boolean hub_changelevel;

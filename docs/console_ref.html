@@ -37,9 +37,14 @@ the Eternity console, as well as pointers on console command syntax.
            quickload, quicksave, mn_joymenu, mn_hnewgame, mn_hepis,
            skinviewer, mn_dynamenu, mn_selectwad, mn_search, mn_menus
       <li><a href="#cmdkeybindings">Keybindings</a><br>
-      	  listactions, bind, unbindall, unbind, listkeys, bindings
+      	  listactions, bind, unbindall, unbind, listkeys, bindings, multibind
+      <li><a href="#cmdmessaging">Messaging</a><br>
+          say, to_team, to_server, to_player, rcon
       <li><a href="#cmdnetworking">Networking</a><br>
-          disconnect, playerinfo, frags, kick, say
+          disconnect, playerinfo, frags, kick
+      <li><a href="#cmdclientserver">Client/Server</a><br>
+          team, flush_packet_buffer, packet_buffer_size, password, spectate,
+          spectate_prev, spectate_next
       <li><a href="#cmdcheats">Cheats</a><br>
           god, noclip, nuke, infammo, mdk, mdkbomb, spacejump, viles, vilehit, banish
       <li><a href="#cmdvideo">Video Options</a><br>
@@ -65,6 +70,9 @@ the Eternity console, as well as pointers on console command syntax.
           c_speed, c_height, textmode_startup
       <li><a href="#varnetworking">Networking variables</a><br>
           com
+      <li><a href="#varclientserver">Client/Server variables</a><br>
+          prediction, predict_shots, show_netstats, show_timer,
+          buffer_packets_while_spectating, flush_packet_buffer_on_respawn
       <li><a href="#vargametype">Gametype / Deathmatch</a><br>
           skill, nomonsters, respawn, fraglimit, bfgtype, gametype,
           weapspeed, timelimit, fast, turbo, startlevel, dmflags
@@ -196,6 +204,15 @@ affected by the following operators:
     $ hu_overlay /
     </pre>
 </ul>
+
+Like running multiple commands, multibinds require semicolons. Ending
+semicolons are optional and have no effect.
+
+<pre>
+  ex:
+  $ multibind sr50 strafe;left;moveleft
+</pre>
+
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
@@ -598,10 +615,54 @@ Synopsis of Commands:
 <li> bindings<br><br>
 
   Dumps a list of all active keybindings to the console.
+  <br><br>
+  <li>multibind actionname key1;key2;keyN<br><br>
+
+  Binds multiple keys to a single action.
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
 <p>
+<a name="cmdmessaging">
+<hr width="75%" align="left">
+<b>Networking</b>
+<hr width="75%" align="left">
+</a>
+<p>
+Synopsis of Commands:
+<pre>
+	* say
+	* to_team
+	* to_server
+	* to_player
+	* rcon
+</pre>
+<ul>	
+<li> say ...<br><br>
+
+  Sends all arguments as a single message to all players in a network or
+  client/server game.<br><br>
+<li> to_team ...<br><br>
+
+  Sends all arguments as a single message to all players on the same team as
+  the sender.
+  <br><br>
+<li> to_player ...<br><br>
+
+  Sends all arguments as a single message to a single player.
+  <br><br>
+<li> to_server ...<br><br>
+
+  Sends all arguments as a single message to the server.
+  <br><br>
+<li> rcon ...<br><br>
+
+  Sends all arguments as a single command to the server.  Requires appropriate
+  authorization level.
+  <br><br>
+</ul>
+<a href="#contents">Return to Table of Contents</a>
+
 <a name="cmdnetworking">
 <hr width="75%" align="left">
 <b>Networking</b>
@@ -614,7 +675,6 @@ Synopsis of Commands:
 	* playerinfo
 	* frags
 	* kick
-	* say
 </pre>
 <ul>	
 <li> disconnect<br><br>
@@ -637,11 +697,6 @@ Synopsis of Commands:
   Player numbers can be retrieved with playerinfo.<br>
   Flags: server-only
   <br><br>
-<li> say ...<br><br>
-
-  Sends all arguments as a single message to all players in a network
-  game.<br>
-  Flags: net command
 </ul>
 <a href="#contents">Return to Table of Contents</a>
 
@@ -1146,7 +1201,56 @@ Synopsis:
 	value = com port to use for serial connections<br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
-		
+
+<a name="varclientserver">
+<hr width="75%" align="left">
+<b>Client/Server</b>
+<hr width="75%" align="left">
+</a>
+<p>
+Synopsis:
+<pre>
+    * prediction
+    * predict_shots
+    * show_netstats
+    * show_timer
+    * buffer_packets_while_spectating
+    * flush_packet_buffer_on_respawn
+</pre>
+<ul>	
+<li> prediction<br>
+	type: on / off<br>
+    on  = predict local client movement instead of waiting for the server<br>
+    off = wait for the server before moving<br>
+	<br>
+<li> predict_shots<br>
+	type: yes / no<br>
+    on  = predict the results of shots (bullet puffs/blood spots)<br>
+    off = do not predict the results of shots (bullet puffs/blood spots)<br>
+	<br>
+<li> flush_packet_buffer_on_respawn<br>
+	type: on / off<br>
+	on  = flush packet buffer on respawn<br>
+	off = do not flush packet buffer on respawn<br>
+    <br>
+<li> buffer_packets_while_spectating<br>
+	type: on / off<br>
+	on  = buffer packets while spectating<br>
+	off = do not buffer packets while spectating<br>
+    <br>
+<li> show_netstats<br>
+	type: on / off<br>
+	on  = show network statistics on the HUD<br>
+	off = do not show network statistics on the HUD<br>
+    <br>
+<li> show_timer<br>
+	type: on / off<br>
+	on  = show timer on the HUD<br>
+	off = do not show timer on the HUD<br>
+    <br>
+</ul>
+<a href="#contents">Return to Table of Contents</a>
+
 <p>
 <a name="vargametype">
 <hr width="75%" align="left">

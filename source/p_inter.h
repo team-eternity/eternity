@@ -37,11 +37,18 @@
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+void P_DeathMessage(mobj_t *source, mobj_t *target, mobj_t *inflictor,
+                    emod_t *mod);
+void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod);
 boolean P_GivePower(player_t *, int);
 void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher);
-void P_DamageMobj(mobj_t *target,mobj_t *inflictor,mobj_t *source,int damage,int mod);
-
+void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
+                  int damage, int mod);
 void P_Whistle(mobj_t *actor, int mobjtype);
+
+// [CG] Broke out of P_DamageMobj.
+boolean P_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage,
+                            int mod, emod_t *emod);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 

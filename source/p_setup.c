@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -65,6 +65,9 @@
 #include "s_sndseq.h"
 #include "r_dynseg.h"
 #include "p_slopes.h"
+
+// [CG] Added
+#include "cs_team.h"
 
 extern const char *level_error;
 extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
@@ -140,7 +143,7 @@ mapthing_t *deathmatchstarts;      // killough
 size_t     num_deathmatchstarts;   // killough
 
 mapthing_t *deathmatch_p;
-mapthing_t playerstarts[MAXPLAYERS];
+mapthing_t playerstarts[VANILLA_MAXPLAYERS];
 
 // haleyjd 12/28/08: made module-global
 static int mapformat;
@@ -942,7 +945,7 @@ void P_LoadThings(int lump)
    int  i;
    byte *data = W_CacheLumpNumInDir(setupwad, lump, PU_STATIC);
    mapthing_t *mapthings;
-   
+
    numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
@@ -991,9 +994,11 @@ void P_LoadThings(int lump)
    }
    
    // haleyjd: all player things for players in this game should now be valid
-   if(GameType != gt_dm)
+   // [CG] Disabled check in c/s mode.
+   // if(GameType != gt_dm)
+   if(!clientserver && GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < VANILLA_MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
             level_error = "Missing required player start";
@@ -1044,9 +1049,11 @@ void P_LoadHexenThings(int lump)
    
    // haleyjd: all player things for players in this game
    //          should now be valid in SP or co-op
-   if(GameType != gt_dm)
+   // [CG] Disabled check in c/s mode.
+   // if(GameType != gt_dm)
+   if(!clientserver && GameType != gt_dm)
    {
-      for(i = 0; i < MAXPLAYERS; ++i)
+      for(i = 0; i < VANILLA_MAXPLAYERS; ++i)
       {
          if(playeringame[i] && !players[i].mo)
             level_error = "Missing required player start";
@@ -2365,7 +2372,7 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
 
    // haleyjd 06/14/10: support loading levels from private wad directories
    setupwad = dir;
-   
+
    // get the map name lump number
    if((lumpnum = W_CheckNumForNameInDir(setupwad, mapname, ns_global)) == -1)
    {
@@ -2386,6 +2393,9 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
+
+   // [CG] Initialize team starts.
+   CS_InitTeams();
 
    // clear player data
    P_ClearPlayerVars();
@@ -2470,7 +2480,11 @@ void P_SetupLevel(struct waddir_s *dir, const char *mapname, int playermask,
    }
 
    // spawn players randomly in deathmatch
-   P_DeathMatchSpawnPlayers();
+   // [CG] Not in c/s.
+   if(!clientserver)
+   {
+       P_DeathMatchSpawnPlayers();
+   }
 
    // possible error: missing player or deathmatch spots
    CHECK_ERROR();

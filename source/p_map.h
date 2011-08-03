@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -101,7 +101,7 @@ typedef struct doom_mapinter_s
 
    fixed_t    secfloorz; // SoM: floorz considering only sector heights
    fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
-   
+
    fixed_t    passfloorz; // SoM 11/6/02: UGHAH
    fixed_t    passceilz;
 
@@ -111,8 +111,8 @@ typedef struct doom_mapinter_s
 
    // SoM: End of tm* list
    //==========================================================================
-   
-   boolean    floatok;   // If "floatok" true, move ok if within floorz - ceilingz   
+
+   boolean    floatok;   // If "floatok" true, move ok if within floorz - ceilingz
    boolean    felldown;  // killough 11/98: if "felldown" true, object was pushed down ledge
 
    // keep track of the line that lowers the ceiling,
@@ -134,7 +134,7 @@ typedef struct doom_mapinter_s
    fixed_t    opentop;      // top of line opening
    fixed_t    openbottom;   // bottom of line opening
    fixed_t    openrange;    // height of opening: top - bottom
-   fixed_t    lowfloor;     // lowest floorheight involved   
+   fixed_t    lowfloor;     // lowest floorheight involved
    fixed_t    opensecfloor; // SoM 11/3/02: considering only sector floor
    fixed_t    opensecceil;  // SoM 11/3/02: considering only sector ceiling
 
@@ -147,7 +147,7 @@ typedef struct doom_mapinter_s
    // Temporary holder for thing_sectorlist threads
    // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
    msecnode_t *sector_list;     // phares 3/16/98
-   
+
    mobj_t     *BlockingMobj;    // haleyjd 1/17/00: global hit reference
 
 } doom_mapinter_t;

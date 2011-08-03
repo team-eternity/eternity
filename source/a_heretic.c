@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -52,6 +52,9 @@
 #include "e_ttypes.h"
 
 #include "a_common.h"
+
+// [CG] Added.
+#include "sv_main.h"
 
 //
 // A_SpawnGlitter
@@ -165,11 +168,19 @@ void A_MummyAttack2(mobj_t *actor)
       return;
    }
    
-   mo = P_SpawnMissile(actor, actor->target, 
-                       E_SafeThingType(MT_MUMMYFX1),
-                       actor->z + DEFAULTMISSILEZ);
+   // [CG] Only servers do this.
+   if(serverside)
+   {
+      mo = P_SpawnMissile(actor, actor->target, 
+                          E_SafeThingType(MT_MUMMYFX1),
+                          actor->z + DEFAULTMISSILEZ);
 
-   P_SetTarget(&mo->tracer, actor->target);
+      P_SetTarget(&mo->tracer, actor->target);
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorTracer(mo);
+      }
+   }
 }
 
 void A_MummySoul(mobj_t *actor)
@@ -180,31 +191,48 @@ void A_MummySoul(mobj_t *actor)
    if(soulType == -1)
       soulType = E_SafeThingType(MT_MUMMYSOUL);
    
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z+10*FRACUNIT, soulType);
-   mo->momz = FRACUNIT;
+   // [CG] Only servers do this.
+   if(serverside)
+   {
+      mo = P_SpawnMobj(actor->x, actor->y, actor->z+10*FRACUNIT, soulType);
+      mo->momz = FRACUNIT;
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorSpawned(mo);
+      }
+   }
 }
 
 void P_HticDrop(mobj_t *actor, int special, mobjtype_t type)
 {
    mobj_t *item;
 
-   item = P_SpawnMobj(actor->x, actor->y, 
-                      actor->z + (actor->height >> 1),
-                      type);
-   
-   item->momx = P_SubRandom(pr_hdropmom) << 8;
-   item->momy = P_SubRandom(pr_hdropmom) << 8;
-   item->momz = (P_Random(pr_hdropmom) << 10) + 5*FRACUNIT;
-
-   /*
-   // GROSS! We are not doing this in EE.
-   if(special)
+   if(serverside)
    {
-      item->health = special;
-   }
-   */
 
-   item->flags |= MF_DROPPED;
+      item = P_SpawnMobj(actor->x, actor->y, 
+                         actor->z + (actor->height >> 1),
+                         type);
+      
+      item->momx = P_SubRandom(pr_hdropmom) << 8;
+      item->momy = P_SubRandom(pr_hdropmom) << 8;
+      item->momz = (P_Random(pr_hdropmom) << 10) + 5*FRACUNIT;
+
+      /*
+      // GROSS! We are not doing this in EE.
+      if(special)
+      {
+         item->health = special;
+      }
+      */
+
+      item->flags |= MF_DROPPED;
+
+      if(CS_SERVER)
+      {
+         SV_BroadcastActorSpawned(item);
+      }
+   }
 }
 
 //
@@ -413,11 +441,15 @@ void A_WizardAtk3(mobj_t *actor)
       return;
    }
 
-   mo = P_SpawnMissile(actor, actor->target, wizfxType, z);
-   momz = mo->momz;
-   angle = mo->angle;
-   P_SpawnMissileAngle(actor, wizfxType, angle-(ANG45/8), momz, z);
-   P_SpawnMissileAngle(actor, wizfxType, angle+(ANG45/8), momz, z);
+   // [CG] Only servers do this.
+   if(serverside)
+   {
+      mo = P_SpawnMissile(actor, actor->target, wizfxType, z);
+      momz = mo->momz;
+      angle = mo->angle;
+      P_SpawnMissileAngle(actor, wizfxType, angle-(ANG45/8), momz, z);
+      P_SpawnMissileAngle(actor, wizfxType, angle+(ANG45/8), momz, z);
+   }
 }
 
 //=============================================================================
@@ -452,6 +484,7 @@ void A_Srcr1Attack(mobj_t *actor)
    fixed_t momz;
    angle_t angle;
    fixed_t mheight = actor->z + 48*FRACUNIT;
+   int dmg;
    static int srcrfxType = -1;
    
    if(srcrfxType == -1)
@@ -465,26 +498,35 @@ void A_Srcr1Attack(mobj_t *actor)
    // bite attack
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_sorc1atk)&7)+1)*8, MOD_HIT);
+      dmg = ((P_Random(pr_sorc1atk) & 7) + 1) * 8;
+      // [CG] Only servers deal damage.
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
       return;
    }
 
    if(actor->health > (actor->info->spawnhealth * 2) / 3)
    {
       // regular attack, one fire ball
-      P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
+      // [CG] Only servers do this.
+      if(serverside)
+      {
+         P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
+      }
    }
    else
    {
       // "limit break": 3 fire balls
-      mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
-      momz = mo->momz;
-      angle = mo->angle;
-      P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
-                          momz, mheight);
-      P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
-                          momz, mheight);
+      // [CG] Only servers do this.
+      if(serverside)
+      {
+         mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
+         momz = mo->momz;
+         angle = mo->angle;
+         P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
+                             momz, mheight);
+         P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
+                             momz, mheight);
+      }
       
       // desperation -- attack twice
       if(actor->health * 3 < actor->info->spawnhealth)
@@ -496,6 +538,7 @@ void A_Srcr1Attack(mobj_t *actor)
          else
          { 
             actor->counters[1] = 1;
+            // [CG] I think this will be OK to leave clientside.
             P_SetMobjState(actor, E_SafeState(S_SRCR1_ATK4));
          }
       }
@@ -1219,6 +1262,7 @@ void A_SnakeAttack2(mobj_t *actor)
 //
 void A_MinotaurAtk1(mobj_t *actor)
 {
+   int dmg;
    player_t *player;
 
    if(!actor->target)
@@ -1228,8 +1272,8 @@ void A_MinotaurAtk1(mobj_t *actor)
    
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_minatk1) & 7) + 1) * 4, MOD_HIT);
+      dmg = ((P_Random(pr_minatk1) & 7) + 1) * 4;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    
       // if target is player, make the viewheight go down
       if((player = actor->target->player) != NULL)
@@ -1349,6 +1393,7 @@ void A_MinotaurCharge(mobj_t *actor)
 //
 void A_MinotaurAtk2(mobj_t *actor)
 {
+   int dmg;
    static int mntrfxType = -1;
    mobj_t *mo;
    angle_t angle;
@@ -1364,8 +1409,8 @@ void A_MinotaurAtk2(mobj_t *actor)
 
    if(P_CheckMeleeRange(actor)) // hit directly
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_minatk2) & 7) + 1) * 5, MOD_HIT);
+      dmg = ((P_Random(pr_minatk2) & 7) + 1) * 5;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
    else // missile spread attack
    {
@@ -1392,6 +1437,7 @@ void A_MinotaurAtk2(mobj_t *actor)
 //
 void A_MinotaurAtk3(mobj_t *actor)
 {
+   int dmg;
    static int mntrfxType = -1;
    mobj_t *mo;
    player_t *player;
@@ -1404,8 +1450,8 @@ void A_MinotaurAtk3(mobj_t *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   ((P_Random(pr_minatk3) & 7) + 1) * 5, MOD_HIT);
+      dmg = ((P_Random(pr_minatk3) & 7) + 1) * 5;
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
 
       // if target is player, decrease viewheight
       if((player = actor->target->player) != NULL)
@@ -1549,6 +1595,7 @@ void A_LichWhirlwind(mobj_t *actor)
 //
 void A_LichAttack(mobj_t *actor)
 {
+   int dmg;
    static int fxType = -1;
    mobj_t *target;
    int randAttack, dist;
@@ -1572,9 +1619,8 @@ void A_LichAttack(mobj_t *actor)
    // hit directly when in melee range
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(target, actor, actor, 
-                   ((P_Random(pr_lichmelee) & 7) + 1) * 6, 
-                   MOD_HIT);
+      dmg = ((P_Random(pr_lichmelee) & 7) + 1) * 6; 
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
       return;
    }
    
@@ -1731,6 +1777,7 @@ void A_ImpChargeAtk(mobj_t *actor)
 //
 void A_ImpMeleeAtk(mobj_t *actor)
 {
+   int dmg;
    if(!actor->target)
       return;
 
@@ -1738,8 +1785,8 @@ void A_ImpMeleeAtk(mobj_t *actor)
    
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   5 + (P_Random(pr_impmelee) & 7), MOD_HIT);
+      dmg = 5 + (P_Random(pr_impmelee) & 7);
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
 }
 
@@ -1750,6 +1797,7 @@ void A_ImpMeleeAtk(mobj_t *actor)
 //
 void A_ImpMissileAtk(mobj_t *actor)
 {
+   int dmg;
    static int fxType = -1;
 
    if(!actor->target)
@@ -1762,8 +1810,8 @@ void A_ImpMissileAtk(mobj_t *actor)
 
    if(P_CheckMeleeRange(actor))
    {
-      P_DamageMobj(actor->target, actor, actor, 
-                   5 + (P_Random(pr_impmelee2) & 7), MOD_HIT);
+      dmg = 5 + (P_Random(pr_impmelee2) & 7);
+      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
    }
    else
       P_SpawnMissile(actor, actor->target, fxType, actor->z + DEFAULTMISSILEZ);

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -51,6 +51,11 @@
 #include "g_game.h"
 #include "m_qstr.h" // haleyjd
 #include "w_wad.h"
+
+// [CG] Added.
+#include "cs_main.h"
+#include "cs_demo.h"
+#include "sv_main.h"
 
 static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
@@ -242,6 +247,66 @@ static void C_RunIndivTextCmd(const char *cmdname)
    }
 }
 
+// [CG] Runs an individual RCON command, checking that the specified client has
+//      sufficient authorization.
+static void C_RunIndivRCONTextCmd(const char *cmdname, int clientnum)
+{
+   command_t *command;
+   alias_t *alias;
+   
+   // cut off leading spaces
+   while(*cmdname == ' ')
+      cmdname++;
+   
+   // break into tokens
+   C_GetTokens(cmdname);
+   
+   // find the command being run from the first token.
+   command = C_GetCmdForName(QStrConstPtr(&cmdtokens[0]));
+   
+   if(!numtokens) 
+      return; // no command
+   
+   if(!command) // no _command_ called that
+   {
+      // alias?
+      if((alias = C_GetAlias(QStrConstPtr(&cmdtokens[0]))))
+      {
+         // [CG] Check that the specified client has sufficient authorization.
+         if(server_clients[clientnum].auth_level == cs_auth_administrator || (
+            server_clients[clientnum].auth_level == cs_auth_moderator && (
+               (strncmp(alias->command, "map",  3) == 0) ||
+               (strncmp(alias->command, "ban",  3) == 0) ||
+               (strncmp(alias->command, "kick", 4) == 0))))
+         {
+            // save the options into cmdoptions
+            // QSTR_FIXME: wtf is this doin' anyway? o_O
+            cmdoptions = (char *)cmdname + QStrLen(&cmdtokens[0]);
+            C_RunAlias(alias);
+         }
+         else
+         {
+            SV_SendMessage(clientnum, "Insufficient RCON authorization.\n");
+         }
+      }
+      else         // no alias either
+         C_Printf("unknown command: '%s'\n", QStrConstPtr(&cmdtokens[0]));
+   }
+   else if(server_clients[clientnum].auth_level == cs_auth_administrator || (
+           server_clients[clientnum].auth_level == cs_auth_moderator && (
+              (strncmp(command->name, "map",  3) == 0) ||
+              (strncmp(command->name, "ban",  3) == 0) ||
+              (strncmp(command->name, "kick", 4) == 0))))
+   {
+      // run the command (buffer it)
+      C_RunCommand(command, cmdname + QStrLen(&cmdtokens[0]));
+   }
+   else
+   {
+      SV_SendMessage(clientnum, "Insufficient RCON authorization.\n");
+   }
+}
+
 typedef enum flagcheckval
 {
    CCF_CANNOTSET = 0,    // cannot set anything.
@@ -260,6 +325,8 @@ static flagcheckval_e C_CheckFlags(command_t *command, const char **errormsg)
 {
    flagcheckval_e returnval = CCF_CANSETALL;
    
+   // [CG] Modified this function to include clientserver and serverside.
+
    if(!command->variable || !command->variable->v_default || 
       (command->flags & cf_handlerset))
    {
@@ -270,12 +337,14 @@ static flagcheckval_e C_CheckFlags(command_t *command, const char **errormsg)
    // check the flags
    *errormsg = NULL;
    
-   if((command->flags & cf_notnet) && (netgame && !demoplayback))
+   if((command->flags & cf_notnet) &&
+      ((netgame || clientserver) && !demoplayback))
       *errormsg = "not available in netgame";
-   if((command->flags & cf_netonly) && !netgame && !demoplayback)
+   if((command->flags & cf_netonly) &&
+      !(netgame || clientserver) && !demoplayback)
       *errormsg = "only available in netgame";
    if((command->flags & cf_server) && consoleplayer && !demoplayback
-      && Console.cmdtype != c_netcmd)
+      && !serverside && Console.cmdtype != c_netcmd)
       *errormsg = "for server only";
    if((command->flags & cf_level) && gamestate != GS_LEVEL)
       *errormsg = "can be run in levels only";
@@ -324,7 +393,19 @@ void C_RunCommand(command_t *command, const char *options)
 {
    // do not run straight away, we might be in the middle of rendering
    C_BufferCommand(Console.cmdtype, command, options, Console.cmdsrc);
-   
+
+   if(cs_demo_recording)
+   {
+      if(!CS_WriteConsoleCommandToDemo(
+            Console.cmdtype, command, options, Console.cmdsrc))
+      {
+         doom_printf(
+            "Demo error, recording aborted: %s\n", CS_GetDemoErrorMessage()
+         );
+         CS_StopDemo();
+      }
+   }
+
    Console.cmdtype = c_typed;  // reset to typed command as default
 }
 
@@ -533,6 +614,50 @@ void C_RunTextCmd(const char *command)
    
    C_RunIndivTextCmd(command);
 }
+
+// [CG] Runs a (potentially) compound RCON command, for each command it checks
+//      that the running user has sufficient authorization to run it.
+void C_RunRCONTextCmd(const char *command, int clientnum)
+{
+   boolean quotemark = false;  // for " quote marks
+   char *sub_command = NULL;
+   const char *rover;
+
+   for(rover = command; *rover; rover++)
+   {
+      if(*rover == '\"')    // quotemark
+      {
+         quotemark = !quotemark;
+         continue;
+      }
+      if(*rover == ';' && !quotemark)  // command seperator and not in string 
+      {
+         // found sub-command
+         // use recursion to run the subcommands
+         
+         // left
+         // copy sub command, alloc slightly more than needed
+         sub_command = calloc(1, rover-command+3); 
+         strncpy(sub_command, command, rover-command);
+         sub_command[rover-command] = '\0';   // end string
+         
+         C_RunRCONTextCmd(sub_command, clientnum);
+         
+         // right
+         C_RunRCONTextCmd(rover+1, clientnum);
+         
+         // leave to the other function calls (above) to run commands
+         free(sub_command);
+         return;
+      }
+   }
+   
+   // no sub-commands: just one
+   // so run it
+   
+   C_RunIndivRCONTextCmd(command, clientnum);
+}
+
 
 //
 // C_VariableValue
@@ -1306,6 +1431,13 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
 {
    bufferedcmd *bufcmd;
    bufferedcmd *newbuf;
+
+   Z_LogPrintf(
+      "C_BufferCommand: Buffering %s, %s (%d).\n",
+      command->name,
+      options,
+      cmtype
+   );
    
    // create bufferedcmd
    newbuf = malloc(sizeof(bufferedcmd));
@@ -1455,7 +1587,6 @@ void (C_AddCommand)(command_t *command)
    {
       // haleyjd 07/04/10: find default in config for cvars that have one
       command->variable->cfgDefault = M_FindDefaultForCVar(command->variable);
-
       // haleyjd 08/15/10: set variable's pointer to command
       command->variable->command = command;
    }

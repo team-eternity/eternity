@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
@@ -39,6 +39,13 @@
 #include "r_state.h"
 #include "r_pcheck.h"
 #include "s_sound.h"
+
+// [CG] Added
+#include "cs_main.h"
+#include "cs_netid.h"
+#include "cl_cmd.h"
+#include "cl_pred.h"
+#include "sv_main.h"
 
 //=============================================================================
 //
@@ -208,8 +215,14 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
       (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
    {
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
+      {
+         if(CS_SERVER)
+         {
+            SV_BroadcastLineShot(shootthing, li, side);
+         }
          P_ShootSpecialLine(shootthing, li, side);
-      
+      }
+
       return true;      // shot continues
    }
 
@@ -296,8 +309,10 @@ static boolean P_ShootSky(line_t *li, fixed_t z)
 //
 static boolean P_ShootThing(intercept_t *in)
 {
+   angle_t angle;
    fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
    mobj_t *th = in->d.thing;
+   mobj_t *puff, *blood;
    
    if(th == shootthing)
       return true;  // can't shoot self
@@ -331,24 +346,35 @@ static boolean P_ShootThing(intercept_t *in)
    
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
+   angle = P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180;
    if(th->flags & MF_NOBLOOD || 
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      P_SpawnPuff(x, y, z, 
-         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
-         2, true);
+      if(CS_SHOULD_SHOW_SHOT)
+      {
+         puff = P_SpawnPuff(x, y, z, angle, 2, true);
+         CS_ReleaseActorNetID(puff);
+         if(CS_SERVER)
+         {
+            SV_BroadcastPuffSpawned(puff, 2, true);
+         }
+      }
    }
-   else
+   else if(CS_SHOULD_SHOW_SHOT)
    {
-      P_SpawnBlood(x, y, z,
-         P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180,
-         trace.la_damage, th);
+      blood = P_SpawnBlood(x, y, z, angle, trace.la_damage, th);
+      CS_ReleaseActorNetID(blood);
+      if(CS_SERVER)
+      {
+         SV_BroadcastBloodSpawned(blood, trace.la_damage, th);
+      }
    }
    
-   if(trace.la_damage)
+   if(serverside && trace.la_damage)
    {
-      P_DamageMobj(th, shootthing, shootthing, trace.la_damage, 
-                   shootthing->info->mod);
+      P_DamageMobj(
+         th, shootthing, shootthing, trace.la_damage, shootthing->info->mod
+      );
    }
 
    // SoM: we hit a thing!
@@ -368,7 +394,10 @@ static boolean P_ShootThing(intercept_t *in)
 //
 static boolean PTR_ShootTraverseComp(intercept_t *in)
 {
+   angle_t angle;
    fixed_t x, y, z, frac;
+   mobj_t *puff;
+
    
    if(in->isaline)
    {
@@ -377,13 +406,19 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
       // haleyjd 03/13/05: move up point on line side check to here
       int lineside = P_PointOnLineSide(shootthing->x, shootthing->y, li);
       
-      if(li->special)
+      if(li->special && serverside)
+      {
          P_ShootSpecialLine(shootthing, li, lineside);
+         if(CS_SERVER)
+         {
+            SV_BroadcastLineShot(shootthing, li, lineside);
+         }
+      }
 
       // shot crosses a 2S line?
       if(P_ShotCheck2SLine(in, li, lineside))
          return true;
-      
+
       // hit line
       // position a bit closer
 
@@ -392,12 +427,19 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
       // don't hit the sky
       if(P_ShootSky(li, z))
          return false;
-            
+
+      angle = P_PointToAngle(0, 0, li->dx, li->dy) - ANG90;
+
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, 
-                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  2, true);
-      
+      if(CS_SHOULD_SHOW_SHOT)
+      {
+         puff = P_SpawnPuff(x, y, z, angle, 2, true);
+         CS_ReleaseActorNetID(puff);
+         if(CS_SERVER)
+         {
+            SV_BroadcastPuffSpawned(puff, 2, true);
+         }
+      }
       // don't go any farther
       return false;
    }
@@ -417,10 +459,12 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
 //
 static boolean PTR_ShootTraverse(intercept_t *in)
 {
+   angle_t angle;
    fixed_t x, y, z, frac, zdiff;
    boolean hitplane = false; // SoM: Remember if the bullet hit a plane.
    int updown = 2; // haleyjd 05/02: particle puff z dist correction
    sector_t *sidesector;
+   mobj_t *puff;
    
    if(in->isaline)
    {
@@ -508,22 +552,40 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          }
       }
       
-      if(!hitplane && li->special)
-         P_ShootSpecialLine(shootthing, li, lineside);
+      if(serverside)
+      {
+         if(!hitplane && li->special)
+         {
+            if(CS_SERVER)
+            {
+               SV_BroadcastLineShot(shootthing, li, lineside);
+            }
+            P_ShootSpecialLine(shootthing, li, lineside);
+         }
+      }
 
       // don't hit the sky
       if(P_ShootSky(li, z))
          return false;
-      
+
       // don't shoot portal lines
       if(!hitplane && li->portal)
          return false;
-      
+
       // Spawn bullet puffs.
-      P_SpawnPuff(x, y, z, 
-                  P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true);
-      
+      angle = P_PointToAngle(0, 0, li->dx, li->dy) - ANG90;
+      if(CS_SHOULD_SHOW_SHOT)
+      {
+         puff = P_SpawnPuff(x, y, z, angle, updown, true);
+         // [CG] The server will never send anything about this puff again, so
+         //      there's no need for it to have a Net ID.
+         CS_ReleaseActorNetID(puff);
+         if(CS_SERVER)
+         {
+            SV_BroadcastPuffSpawned(puff, updown, true);
+         }
+      }
+
       // don't go any farther
       
       return false;
@@ -602,14 +664,20 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
                   fixed_t slope, int damage)
 {
    fixed_t x2, y2;
-   
+
+   if(clientserver && t1->player)
+   {
+      cs_shooting_player = t1->player - players;
+   }
+
    angle >>= ANGLETOFINESHIFT;
    shootthing = t1;
    trace.la_damage = damage;
    x2 = t1->x + (distance >> FRACBITS) * (trace.cos = finecosine[angle]);
    y2 = t1->y + (distance >> FRACBITS) * (trace.sin = finesine[angle]);
    
-   trace.originz = trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
+   trace.originz = trace.z =
+      t1->z - t1->floorclip + (t1->height >> 1) + 8 * FRACUNIT;
    trace.attackrange = distance;
    trace.aimslope = slope;
    trace.movefrac = 0;
@@ -617,6 +685,10 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
                   (demo_version < 329 || comp[comp_planeshoot]) ?
                       PTR_ShootTraverseComp : PTR_ShootTraverse);
+   if(clientserver)
+   {
+      cs_shooting_player = 0;
+   }
 }
 
 //
@@ -630,10 +702,19 @@ static mobj_t *usething;
 
 static boolean PTR_UseTraverse(intercept_t *in)
 {
+   int side = P_PointOnLineSide(trace.originx, trace.originy,in->d.line) == 1;
+
    if(in->d.line->special)
    {
-      P_UseSpecialLine(usething, in->d.line,
-         P_PointOnLineSide(trace.originx, trace.originy,in->d.line)==1);
+      // [CG] Only servers use lines.
+      if(serverside)
+      {
+         if(CS_SERVER)
+         {
+            SV_BroadcastLineUsed(usething, in->d.line, side);
+         }
+         P_UseSpecialLine(usething, in->d.line, side);
+      }
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -645,7 +726,11 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(clip.openrange <= 0)
       {
          // can't use through a wall
-         S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
+         // [CG] Only make this sound if not predicting.
+         if(!cl_predicting)
+         {
+            S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
+         }
          return false;
       }
       // not a special line, but keep checking
@@ -706,8 +791,16 @@ void P_UseLines(player_t *player)
    // This added test makes the "oof" sound work on 2s lines -- killough:
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
+   {
       if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
-         S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
+      {
+         // [CG] Only make this sound if not predicting.
+         if(!cl_predicting)
+         {
+            S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
+         }
+      }
+   }
 }
 
 //

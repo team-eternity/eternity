@@ -70,6 +70,8 @@ struct skin_s
    boolean edfskin; // if true, is an EDF skin
 };
 
+extern char *default_skin;
+
 extern char **spritelist; // new spritelist, same format as sprnames
                           // in info.c, but includes skins sprites.
 
@@ -78,6 +80,7 @@ void P_InitSkins(void);
 void P_ListSkins(void);
 void P_ChangeSkin(void);
 void P_ParseSkin(int lumpnum);
+skin_t *P_SkinForName(const char *s);
 void P_SetSkin(skin_t *skin, int playernum);
 
 skin_t *P_GetDefaultSkin(player_t *player);

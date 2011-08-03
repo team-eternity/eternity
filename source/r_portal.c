@@ -124,7 +124,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ytop, ybottom);
    }
 #endif
 
@@ -136,7 +136,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
+              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
    }
 #endif
 
@@ -616,7 +616,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
          {
             I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
                     "information:\n"
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
+                    "   x:%i, ytop:%f, ybottom:%f\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }
@@ -763,7 +763,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
+                    "   x:%i, ytop:%f, ybottom:%f\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }
@@ -857,7 +857,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
-                    "   x:%i, ytop:%i, ybottom:%i\n", 
+                    "   x:%i, ytop:%f, ybottom:%f\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }

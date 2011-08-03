@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -679,8 +679,21 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    while(wcount > 0)
    {
 #ifdef RANGECHECK
-      if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
+      if(srcoff < 0 ||
+         srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
+         // [CG] This I_Error() call is missing the %s arg, so I've replaced it
+         //      with one that doesn't have that format specifier.
+         //
+         // I_Error(
+         //    "AddTexFlat(%s): Invalid srcoff %i / %i\n",
+         //    srcoff,
+         //    tex->width * tex->height
+         // );
+         I_Error(
+            "AddTexFlat: Invalid srcoff %i / %i\n",
+            srcoff,
+            tex->width * tex->height
+         );
 #endif
       AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
       srcoff += srcxstep;
@@ -768,8 +781,18 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
             y2 = tex->height;
 
 #ifdef RANGECHECK
+      // [CG] Same thing with this I_Error() call.
       if(srcoff < 0 || srcoff + y2 - y1 > column->length)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, column->length);
+      {
+         // I_Error(
+         //    "AddTexFlat(%s): Invalid srcoff %i / %i\n",
+         //    srcoff,
+         //    column->length
+         // );
+         I_Error(
+            "AddTexFlat: Invalid srcoff %i / %i\n", srcoff, column->length
+         );
+      }
 #endif
             
          if(y2 - y1 > 0)
@@ -791,14 +814,16 @@ static void StartTexture(texture_t *tex, boolean mask)
    int bufferlen = tex->width * tex->height;
    
    // Static for now
-   tex->buffer = Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer);
+   // [CG] Try PU_RENDERER here.
+   // tex->buffer = Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer);
+   tex->buffer = Z_Malloc(bufferlen, PU_RENDERER, (void **)&tex->buffer);
    memset(tex->buffer, 0, sizeof(byte) * bufferlen);
    
    if((tempmask.mask = mask))
    {
       tempmask.tex = tex;
       
-      // Setup the temprary mask
+      // Setup the temporary mask
       if(bufferlen > tempmask.buffermax || !tempmask.buffer)
       {
          tempmask.buffermax = bufferlen;
@@ -826,7 +851,12 @@ static texcol_t *NextTempCol(texcol_t *current)
    }
    
    if(!current->next)
-      return current->next = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+   {
+      // [CG] Try PU_RENDERER here.
+      // return current->next = Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0);
+      Z_Calloc(sizeof(texcol_t), 1, PU_RENDERER, &current->next);
+      return current->next;
+   }
    
    return current->next;
 }

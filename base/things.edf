@@ -460,3 +460,118 @@ damagetype PlayerMisc { num = 24 }
 
 damagetype Fire { num = 27 }
 
+// [CG] These are some Bridge things from ZDoom
+
+thingtype Bridge
+{
+  doomednum = 118
+  spawnstate = S_BRIDGE1
+  flags = SOLID|NOGRAVITY
+}
+
+thingtype InvisibleBridge
+{
+  doomednum = 9990
+  radius = 32
+  height = 4
+  flags = SOLID|NOGRAVITY
+  flags2 = DONTDRAW
+}
+
+thingtype InvisibleBridge32
+{
+  doomednum = 5061
+  radius = 32
+  height = 8
+  flags = SOLID|NOGRAVITY
+  flags2 = DONTDRAW
+}
+
+thingtype InvisibleBridge16
+{
+  doomednum = 5064
+  radius = 32
+  height = 8
+  flags = SOLID|NOGRAVITY
+  flags2 = DONTDRAW
+}
+
+thingtype InvisibleBridge8
+{
+  doomednum = 5065
+  radius = 8
+  height = 8
+  flags = SOLID|NOGRAVITY
+  flags2 = DONTDRAW
+}
+
+// [CG] These are CTF flags from Odamex
+
+thingtype BlueFlagSocket
+{
+    doomednum = 5130
+    spawnstate = S_BSOK
+    radius = 20
+    height = 14
+}
+
+thingtype RedFlagSocket
+{
+    doomednum = 5131
+    spawnstate = S_RSOK
+    radius = 20
+    height = 14
+}
+
+thingtype BlueFlag
+{
+    spawnstate = S_BFLG
+    radius = 20
+    height = 16
+    flags = SPECIAL
+    flags3 = NOITEMRESP
+}
+
+thingtype RedFlag
+{
+    spawnstate = S_RFLG
+    radius = 20
+    height = 16
+    flags = SPECIAL
+    flags3 = NOITEMRESP
+}
+
+thingtype DroppedBlueFlag
+{
+    spawnstate = S_BDWN
+    radius = 20
+    height = 16
+    flags = SPECIAL
+    flags3 = NOITEMRESP
+}
+
+thingtype DroppedRedFlag
+{
+    spawnstate = S_RDWN
+    radius = 20
+    height = 16
+    flags = SPECIAL
+    flags3 = NOITEMRESP
+}
+
+thingtype CarriedBlueFlag
+{
+    spawnstate = S_BCAR
+    radius = 20
+    height = 16
+    flags = NOGRAVITY
+}
+
+thingtype CarriedRedFlag
+{
+    spawnstate = S_RCAR
+    radius = 20
+    height = 16
+    flags = NOGRAVITY
+}
+

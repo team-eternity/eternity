@@ -101,6 +101,30 @@ void M_SubVec3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2)
    dest->z = v1->z - v2->z;
 }
 
+//
+// M_LengthVec3f
+//
+// Returns the length of a given vector (relative to the origin).  Taken from
+// Quake 2, added by CG.
+//
+float M_LengthVec3f(v3float_t *v)
+{
+    return sqrtf(
+        (v->x * v->x) +
+        (v->y * v->y) +
+        (v->z * v->z)
+    );
+}
+
+double M_LengthVec3(v3double_t *v)
+{
+    return sqrt(
+        (v->x * v->x) +
+        (v->y * v->y) +
+        (v->z * v->z)
+    );
+}
+
 // 
 // M_DotVec3f
 //

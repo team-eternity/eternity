@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -35,6 +35,12 @@
 #include "sounds.h"
 #include "w_wad.h"
 #include "d_gi.h"
+#include "g_dmflag.h" // [CG] Added.
+
+// [CG] Added.
+#include "p_inter.h"
+#include "cs_main.h"
+#include "sv_main.h"
 
 // killough 2/8/98: Remove switch limit
 
@@ -186,6 +192,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
    // 04/19/09: rewritten to use linedef sound origin
 
    // switch activation sound
+
    S_StartSoundName((mobj_t *)&(line->soundorg), startsound);
    
    // haleyjd 04/16/08: and thus dies one of the last static limits.
@@ -586,8 +593,30 @@ boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
          S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
          return false;
       }
-      P_ChangeSwitchTexture(line,0,0);
-      G_ExitLevel ();
+      // [CG] Only servers exit levels.
+      if(serverside)
+      {
+         if(CS_SERVER)
+         {
+            if(dmflags & dmf_allow_exit)
+            {
+               if(dmflags & dmf_kill_on_exit)
+               {
+                  P_DamageMobj(thing, thing, thing, 10000, MOD_UNKNOWN);
+               }
+               else
+               {
+                  P_ChangeSwitchTexture(line,0,0);
+                  G_ExitLevel();
+               }
+            }
+         }
+         else
+         {
+            P_ChangeSwitchTexture(line,0,0);
+            G_ExitLevel();
+         }
+      }
       break;
         
    case 14:

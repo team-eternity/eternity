@@ -420,7 +420,7 @@ void C_AddCommands()
 
   // SoM: I can never remember the values for a console variable
   C_AddCommand(cvarhelp);
-  
+
   // add commands in other modules
   Cheat_AddCommands();
   G_AddCommands();
@@ -429,6 +429,7 @@ void C_AddCommands()
   net_AddCommands();
   P_AddCommands();
   R_AddCommands();
+
   S_AddCommands();
   ST_AddCommands();
   V_AddCommands();

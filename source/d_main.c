@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -87,6 +87,19 @@
 #include "e_player.h"
 #include "e_fonts.h"
 
+// [CG] Added.
+
+#include "cs_config.h"
+#include "cs_hud.h"
+#include "cs_netid.h"
+#include "cs_main.h"
+#include "cs_master.h"
+#include "cs_team.h"
+#include "cs_demo.h"
+#include "cs_wad.h"
+#include "cl_main.h"
+#include "sv_main.h"
+
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
 wfileadd_t *wadfiles;
@@ -132,12 +145,12 @@ boolean advancedemo;
 
 extern boolean timingdemo, singledemo, demoplayback, fastdemo; // killough
 
-char    *basedefault;             // default file
-char    *baseiwad;                // jff 3/23/98: iwad directory
-char    *basesavegame;            // killough 2/16/98: savegame directory
+char    *basedefault = NULL;      // default file
+char    *baseiwad = NULL;         // jff 3/23/98: iwad directory
+char    *basesavegame = NULL;     // killough 2/16/98: savegame directory
 
 char    *basepath;                // haleyjd 11/23/06: path of "base" directory
-char    *basegamepath;            // haleyjd 11/23/06: path of game directory
+char    *basegamepath = NULL;     // haleyjd 11/23/06: path of game directory
 
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
@@ -191,9 +204,18 @@ void D_ProcessEvents(void)
    {
       event_t *evt = events + eventtail;
 
-      if(!MN_Responder(evt))
-         if(!C_Responder(evt))
-            G_Responder(evt);
+      // [CG] Headless servers don't use either the menu or graphical console,
+      //      so just skip right to G_Responder in this case.
+      if(CS_HEADLESS)
+      {
+         G_Responder(evt);
+      }
+      else
+      {
+         if(!MN_Responder(evt))
+            if(!C_Responder(evt))
+               G_Responder(evt);
+      }
    }
 }
 
@@ -227,7 +249,7 @@ static void D_showDrawnFPS(void)
    static int lastfps;
    vfont_t *font;
    char msg[64];
-   
+
    accms += (curms = I_GetTicks()) - lastms;
    lastms = curms;
    ++frames;
@@ -279,7 +301,7 @@ void D_Display(void)
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
          HU_Erase();
-         
+
          if(automapactive)
          {
             AM_Drawer();
@@ -291,12 +313,16 @@ void D_Display(void)
                R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
-         
+
          ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
          HU_Drawer();
          break;
       case GS_INTERMISSION:
          IN_Drawer();
+         if(clientserver)
+         {
+            CS_DrawChatWidget();
+         }
          break;
       case GS_FINALE:
          F_Drawer();
@@ -309,21 +335,21 @@ void D_Display(void)
       default:
          break;
       }
-         
+
       redrawsbar = false; // reset this now
       redrawborder = false;
-      
+
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
          I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
-      
+
       oldgamestate = wipegamestate = gamestate;
-         
+
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
       {                             // frads taking screenshots
-         const char *lumpname = GameModeInfo->pausePatch; 
-         
+         const char *lumpname = GameModeInfo->pausePatch;
+
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
          patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
@@ -331,27 +357,27 @@ void D_Display(void)
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
-         
+
          V_DrawPatch(x, y, &vbscreen, patch);
       }
 
       if(inwipe)
       {
          boolean wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
-         
-         // about to start wiping; if wipewait is enabled, save everything 
+
+         // about to start wiping; if wipewait is enabled, save everything
          // that was just drawn
          if(wait)
          {
             Wipe_SaveEndScreen();
-            
+
             do
             {
                int starttime = I_GetTime();
                int tics = 0;
-               
+
                Wipe_Drawer();
-               
+
                do
                {
                   tics = I_GetTime() - starttime;
@@ -360,16 +386,16 @@ void D_Display(void)
                   I_Sleep(1);
                }
                while(!tics);
-               
+
                Wipe_Ticker();
-               
+
                C_Drawer();
                MN_Drawer();
                NetUpdate();
                if(v_ticker)
                   V_FPSDrawer();
                I_FinishUpdate();
-               
+
                if(inwipe)
                   Wipe_BlitEndScreen();
             }
@@ -386,17 +412,17 @@ void D_Display(void)
    // menus go directly to the screen
    MN_Drawer();         // menu is drawn even on top of everything
    NetUpdate();         // send out any new accumulation
-   
+
    //sf : now system independent
    if(v_ticker)
       V_FPSDrawer();
 
    if(d_drawfps)
       D_showDrawnFPS();
-   
+
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop
-   
+
    I_FinishUpdate();              // page flip or blit buffer
 }
 
@@ -721,12 +747,12 @@ static char *D_ExpandTilde(char *basedir)
    {
       char *home = strdup(getenv("HOME"));
       char *newalloc = NULL;
-      
+
       M_StringAlloca(&newalloc, 2, 0, home, basedir);
 
       strcpy(newalloc, home);
       strcpy(newalloc + strlen(home), basedir + 1);
-            
+
       if(home)
          free(home);
 
@@ -764,7 +790,7 @@ static int D_CheckBasePath(const char *path)
    }
    else
       ret = BASE_NOTEXIST;
-   
+
    return ret;
 }
 
@@ -827,7 +853,7 @@ static void D_SetBasePath(void)
    if(res != BASE_ISGOOD)
    {
       const char *exedir = D_DoomExeDir();
-      
+
       size_t len = M_StringAlloca(&basedir, 1, 6, exedir);
 
       psnprintf(basedir, len, "%s/base", D_DoomExeDir());
@@ -930,6 +956,10 @@ static void D_SetGamePath(void)
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
       {
+         if(basegamepath != NULL)
+         {
+            free(basegamepath);
+         }
          basegamepath = strdup(gamedir);
          M_NormalizeSlashes(basegamepath);
       }
@@ -986,7 +1016,7 @@ static void D_EnumerateAutoloadDir(void)
       autoload_dirname = malloc(len);
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
-      
+
       autoloads = opendir(autoload_dirname);
    }
 }
@@ -1011,20 +1041,20 @@ static void D_GameAutoloadWads(void)
    if(autoloads)
    {
       struct dirent *direntry;
-      
+
       while((direntry = readdir(autoloads)))
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname, 
+            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
                                         direntry->d_name);
-               
+
             psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
             D_AddFile(fn, ns_global, NULL, 0, 0);
          }
       }
-      
+
       rewinddir(autoloads);
    }
 }
@@ -1044,7 +1074,7 @@ static void D_GameAutoloadDEH(void)
 
       while((direntry = readdir(autoloads)))
       {
-         if(strstr(direntry->d_name, ".deh") || 
+         if(strstr(direntry->d_name, ".deh") ||
             strstr(direntry->d_name, ".bex"))
          {
             size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
@@ -1277,7 +1307,7 @@ static void D_DiskMetaData(void)
 
    // construct the metadata filename
    M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-   
+
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
@@ -1337,10 +1367,10 @@ static void D_DiskMetaData(void)
          partime = QStrAtoi(qstr);
 
          // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname,
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1, 
+                          levelnum == secretlevel - 1,
                           (levelnum == secretlevel - 1) ? endtext : NULL);
          break;
       }
@@ -1352,7 +1382,7 @@ static void D_DiskMetaData(void)
          linenum = 0;
       }
    }
-   
+
    // done with qstring buffer
    QStrFree(qstr);
 
@@ -1372,7 +1402,7 @@ static char **iwadVarForNum[] =
 {
    &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
    &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
-   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg, 
+   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg,
    &gi_path_sosr,
 };
 
@@ -1472,7 +1502,7 @@ static void CheckIWAD(const char *iwadname,
       strncmp(header.identification, "IWAD", 4))
    {
       // haleyjd 06/06/09: do not error out here, due to some bad tools
-      // resetting peoples' IWADs to PWADs. Only error if it is also 
+      // resetting peoples' IWADs to PWADs. Only error if it is also
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
          I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
@@ -1511,8 +1541,8 @@ static void CheckIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) || 
-              !strncmp(n, "TINTTAB",  7) || 
+      else if(!strncmp(n, "ADVISOR",  7) ||
+              !strncmp(n, "TINTTAB",  7) ||
               !strncmp(n, "SNDCURVE", 8))
       {
          ++raven;
@@ -1695,16 +1725,26 @@ char *FindIWADFile(void)
    const char *basename = NULL;
 
    //jff 3/24/98 get -iwad parm if specified else use .
-   if((i = M_CheckParm("-iwad")) && i < myargc - 1)
+   // [CG] C/S clients and servers either have this configured in the
+   //      configuration file, or sent over the wire.
+   if(clientserver)
+   {
+      basename = cs_iwad;
+   }
+   else if((i = M_CheckParm("-iwad")) && i < myargc - 1)
+   {
       basename = myargv[i + 1];
+   }
    else
+   {
       basename = G_GFSCheckIWAD(); // haleyjd 04/16/03: GFS support
+   }
 
    // haleyjd 08/19/07: if -game was used and neither -iwad nor a GFS iwad
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, 
+      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath,
                                   myargv[gamepathparm]);
 
       psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, myargv[gamepathparm]);
@@ -1712,16 +1752,20 @@ char *FindIWADFile(void)
       if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
          basename = gameiwad;
    }
-      
+
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
+      if(baseiwad != NULL)
+      {
+         free(baseiwad);
+      }
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
 
       iwad = calloc(1, strlen(baseiwad) + 1024);
       strcpy(iwad, baseiwad);
-      
+
       if(WadFileStatus(iwad, &isdir))
       {
          if(!isdir)
@@ -1749,6 +1793,10 @@ char *FindIWADFile(void)
       const char *name = D_DoIWADMenu();
       if(name && *name)
       {
+         if(baseiwad != NULL)
+         {
+            free(baseiwad);
+         }
          baseiwad = strdup(name);
          M_NormalizeSlashes(baseiwad);
          return baseiwad;
@@ -1762,14 +1810,20 @@ char *FindIWADFile(void)
       case 0:
       case 1:
          if(iwad)
+         {
             free(iwad);
+            iwad = NULL;
+         }
          iwad = calloc(1, strlen(D_DoomExeDir()) + 1024);
          strcpy(iwad, j ? D_DoomExeDir() : ".");
          break;
       case 2:
          // haleyjd: try basegamepath too when -game was used
          if(iwad)
+         {
             free(iwad);
+            iwad = NULL;
+         }
          iwad = calloc(1, strlen(basegamepath) + 1024);
          strcpy(iwad, basegamepath);
          break;
@@ -1805,7 +1859,10 @@ char *FindIWADFile(void)
       if((p = getenv(envvars[i])))
       {
          if(iwad)
+         {
             free(iwad);
+            iwad = NULL;
+         }
          iwad = calloc(1, sizeof(p) + 1024);
          M_NormalizeSlashes(strcpy(iwad, p));
          if(WadFileStatus(iwad, &isdir))
@@ -1935,6 +1992,10 @@ static void D_InitPaths(void)
       // hack for DOOM modes: optional use of /doom config
       size_t len = strlen(basepath) + strlen("/doom") +
                    strlen(D_DoomExeName()) + 8;
+      if(basedefault != NULL)
+      {
+         free(basedefault);
+      }
       basedefault = malloc(len);
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
@@ -1944,6 +2005,10 @@ static void D_InitPaths(void)
    {
       size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
 
+      if(basedefault != NULL)
+      {
+         free(basedefault);
+      }
       basedefault = malloc(len);
 
       psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
@@ -1951,6 +2016,10 @@ static void D_InitPaths(void)
 
    // haleyjd 11/23/06: set basesavegame here, and use basegamepath
    // set save path to -save parm or current dir
+   if(basesavegame != NULL)
+   {
+      free(basesavegame);
+   }
    basesavegame = strdup(basegamepath);
 
    if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
@@ -2060,6 +2129,7 @@ static void IdentifyIWAD(void)
 
       // done with iwad string
       free(iwad);
+      iwad = NULL;
    }
    else
    {
@@ -2074,6 +2144,17 @@ static void IdentifyIWAD(void)
               "  game folder of the base directory and use\n"
               "  the -game parameter.");
    }
+}
+
+// [CG] Added for c/s.
+void D_ClearFiles(void)
+{
+   wfileadd_t *curfile = NULL;
+   for(curfile = wadfiles; curfile->filename != NULL; curfile++)
+   {
+      free((void *)curfile->filename);
+   }
+   numwadfiles = 0;
 }
 
 //
@@ -2145,7 +2226,7 @@ void FindResponseFile(void)
          char **moreargs = malloc(myargc * sizeof(char *));
          char **newargv;
          char *fname = NULL;
-         
+
          size_t len = M_StringAlloca(&fname, 1, 6, myargv[i]);
 
          strncpy(fname, &myargv[i][1], len);
@@ -2224,7 +2305,7 @@ void FindResponseFile(void)
                   *p = 0;
                   newargv[indexinfile++] = realloc(s,strlen(s)+1);
                }
-            } 
+            }
             while(size > 0);
          }
          free(file);
@@ -2282,7 +2363,7 @@ static void D_ProcessDehCommandLine(void)
             {
                char *file; // killough
                M_StringAlloca(&file, 1, 6, myargv[p]);
-                  
+
                M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
                if(access(file, F_OK))  // nope
                {
@@ -2388,7 +2469,7 @@ static void D_AutoExecScripts(void)
             {
                char *file = NULL;
                M_StringAlloca(&file, 1, 6, s);
-                  
+
                M_AddDefaultExtension(strcpy(file, s), ".csc");
                if(!access(file, R_OK))
                   C_RunScriptFromFile(file);
@@ -2445,7 +2526,7 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
-      size_t len;  
+      size_t len;
 
       if(gfs->filepath)
       {
@@ -2621,7 +2702,7 @@ static void D_LoadEDF(gfs_t *gfs)
          else
          {
             size_t len = M_StringAlloca(&edfname, 1, 10, basepath);
-               
+
             psnprintf(edfname, len, "%s/root.edf",  basepath);
          }
 
@@ -2839,40 +2920,157 @@ static void D_DoomInit(void)
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();
 
+   // [CG] Check for c/s command-line args.
+   if(M_CheckParm("-solo-net") && M_CheckParm("-csjoin"))
+   {
+      I_Error("Cannot specify both -solo-net and -csjoin.\n");
+   }
+   if(M_CheckParm("-solo-net") && M_CheckParm("-csserve"))
+   {
+      I_Error("Cannot specify both -solo-net and -csserve.\n");
+   }
+   if(M_CheckParm("-solo-net") && M_CheckParm("-csplaydemo"))
+   {
+      I_Error("Cannot specify both -solo-net and -csplaydemo.\n");
+   }
+   if(M_CheckParm("-csjoin") && M_CheckParm("-csserve"))
+   {
+      I_Error("Cannot specify both -csjoin and -csserve.\n");
+   }
+   if(M_CheckParm("-csjoin") && M_CheckParm("-csplaydemo"))
+   {
+      I_Error("Cannot specify both -csjoin and -csplaydemo");
+   }
+   if(M_CheckParm("-csserve") && M_CheckParm("-csplaydemo"))
+   {
+      I_Error("Cannot specify both -csserve and -csplaydemo");
+   }
+
+   if((p = M_CheckParm("-csjoin")) && p < myargc - 1)
+   {
+      printf("CS_Init: Initializing as c/s client.\n");
+      clientside  = true;
+      serverside  = false;
+      clientserver = true;
+      // [CG] We can afford to be pretty dumb about things in CS_CLIENT mode
+      dmflags = 0;
+      dmflags2 = 0;
+      memset(comp, 0, sizeof(comp));
+      GameType = DefaultGameType = gt_coop;
+   }
+   else if(M_CheckParm("-csserve"))
+   {
+      if(!M_CheckParm("-showserverwindow"))
+      {
+         printf("CS_Init: Initializing as headless c/s server.\n");
+         CS_HEADLESS = true;
+      }
+      else
+      {
+         printf(
+            "CS_Init: Initializing as c/s server with server window.\n"
+         );
+         CS_HEADLESS = false;
+      }
+      clientside  = false;
+      serverside  = true;
+      clientserver = true;
+   }
+   else if(M_CheckParm("-csplaydemo"))
+   {
+      printf("CS_Init: Initializing as c/s demo viewer.\n");
+      clientserver = true;
+      cs_demo_playback = true;
+      clientside = serverside = false; // [CG] This will be changed later.
+   }
+   else
+   {
+      printf("CS_Init: Initializing as singleplayer client.\n");
+      clientside  = true;
+      serverside  = true;
+      clientserver = false;
+   }
+
+   // [CG] Allocate various players-related arrays.
+   players = calloc(MAXPLAYERS, sizeof(player_t));
+   playeringame = calloc(MAXPLAYERS, sizeof(boolean));
+   clients = malloc(MAXPLAYERS * sizeof(client_t));
+
+   playeringame[0] = true;
+
+   if(clientserver)
+   {
+      consoleplayer = displayplayer = 0;
+      clients[consoleplayer].spectating = true;
+
+      // [CG] Initialize libcurl.
+      CS_InitCurl();
+   }
+
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
 
-   // haleyjd 03/10/03: GFS support
-   // haleyjd 11/22/03: support loose GFS on the command line too
-   if((p = M_CheckParm("-gfs")) && p < myargc - 1)
+   // [CG] Load c/s configurations and networking.
+   if(CS_DEMO)
    {
-      char *fn = NULL;
-      M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
-         
-      // haleyjd 01/19/05: corrected use of AddDefaultExtension
-      M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
-      if(access(fn, F_OK))
-         I_Error("GFS file %s not found\n", fn);
-
-      printf("Parsing GFS file %s\n", fn);
-
-      gfs = G_LoadGFS(fn);
-      haveGFS = true;
-   }
-   else if((gfs = D_LooseGFS())) // look for a loose GFS for drag-and-drop support
-   {
-      haveGFS = true;
-   }
-   else if(gamepathset) // haleyjd 08/19/07: look for default.gfs in specified game path
-   {
-      char *fn = NULL;
-      size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
-         
-      psnprintf(fn, len, "%s/default.gfs", basegamepath);
-      if(!access(fn, R_OK))
+      if(!CS_PlayDemo(myargv[M_CheckParm("-csplaydemo") + 1]))
       {
+         I_Error("Error playing demo: %s\n", CS_GetDemoErrorMessage());
+      }
+      CL_InitPlayDemoMode();
+      atexit(CS_StopDemo); // [CG] Ensure we clean up after ourselves.
+   }
+   else if(CS_CLIENT)
+   {
+      CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
+   }
+   else if(CS_SERVER)
+   {
+      SV_LoadConfig();
+      SV_Init();
+   }
+
+   // [CG] Initialize NetID stacks.
+   CS_InitNetIDs();
+
+   // [CG] Can't use GFS in c/s.
+   if(!clientserver)
+   {
+      // haleyjd 03/10/03: GFS support
+      // haleyjd 11/22/03: support loose GFS on the command line too
+      if((p = M_CheckParm("-gfs")) && p < myargc - 1)
+      {
+         char *fn = NULL;
+         M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
+
+         // haleyjd 01/19/05: corrected use of AddDefaultExtension
+         M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
+         if(access(fn, F_OK))
+            I_Error("GFS file %s not found\n", fn);
+
+         printf("Parsing GFS file %s\n", fn);
+
          gfs = G_LoadGFS(fn);
          haveGFS = true;
+      }
+      else if((gfs = D_LooseGFS()))
+      {
+         // ^^ look for a loose GFS for drag-and-drop support (comment moved by
+         //    [CG])
+         haveGFS = true;
+      }
+      else if(gamepathset)
+      {
+         // haleyjd 08/19/07: look for default.gfs in specified game path
+         char *fn = NULL;
+         size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
+
+         psnprintf(fn, len, "%s/default.gfs", basegamepath);
+         if(!access(fn, R_OK))
+         {
+            gfs = G_LoadGFS(fn);
+            haveGFS = true;
+         }
       }
    }
 
@@ -2897,38 +3095,50 @@ static void D_DoomInit(void)
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
-   IdentifyVersion();
+   if(!CS_DEMO)
+   {
+      IdentifyVersion();
+   }
    printf("\n"); // gap
 
    modifiedgame = false;
 
    // jff 1/24/98 set both working and command line value of play parms
    // sf: make boolean for console
-   nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");
-   respawnparm = clrespawnparm = !!M_CheckParm("-respawn");
-   fastparm    = clfastparm    = !!M_CheckParm("-fast");
+   // [CG] This is already done by this point in c/s (we've already processed
+   //      the configuration file).
+   if(!clientserver)
+   {
+      nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");
+      respawnparm = clrespawnparm = !!M_CheckParm("-respawn");
+      fastparm    = clfastparm    = !!M_CheckParm("-fast");
+   }
    // jff 1/24/98 end of set to both working and command line value
 
    DefaultGameType = gt_single;
 
-   if(M_CheckParm("-deathmatch"))
+   // [CG] Game type is set before this (and elsewhere) in c/s.
+   if(!clientserver)
    {
-      DefaultGameType = gt_dm;
-      dmtype = 1;
-   }
-   if(M_CheckParm("-altdeath"))
-   {
-      DefaultGameType = gt_dm;
-      dmtype = 2;
-   }
-   if(M_CheckParm("-trideath"))  // deathmatch 3.0!
-   {
-      DefaultGameType = gt_dm;
-      dmtype = 3;
-   }
+      if(M_CheckParm("-deathmatch"))
+      {
+         DefaultGameType = gt_dm;
+         dmtype = 1;
+      }
+      if(M_CheckParm("-altdeath"))
+      {
+         DefaultGameType = gt_dm;
+         dmtype = 2;
+      }
+      if(M_CheckParm("-trideath"))  // deathmatch 3.0!
+      {
+         DefaultGameType = gt_dm;
+         dmtype = 3;
+      }
 
-   GameType = DefaultGameType;
-   G_SetDefaultDMFlags(dmtype, true);
+      GameType = DefaultGameType;
+      G_SetDefaultDMFlags(dmtype, true);
+   }
 
 #ifdef GAMEBAR
    psnprintf(title, sizeof(title), "%s", GameModeInfo->startupBanner);
@@ -2961,7 +3171,7 @@ static void D_DoomInit(void)
       // killough 10/98:
       if(basedefault)
          free(basedefault);
-      
+
       len = strlen(D_DoomExeName()) + 18;
 
       basedefault = malloc(len);
@@ -2970,139 +3180,164 @@ static void D_DoomInit(void)
    }
 #endif
 
-   // haleyjd 03/10/03: Load GFS Wads
-   // 08/08/03: moved first, so that command line overrides
-   if(haveGFS)
-      D_ProcessGFSWads(gfs);
-
-   // haleyjd 11/22/03: look for loose wads (drag and drop)
-   D_LooseWads();
-
-   // add any files specified on the command line with -file wadfile
-   // to the wad list
-
-   // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
-
-   if((p = M_CheckParm("-file")))
+   // [CG] Don't load any WADs (other than the IWAD) that aren't explicitly
+   //      listed by the server or in the server's configuration file.
+   if(clientserver && !CS_DEMO)
    {
-      // the parms after p are wadfile/lump names,
-      // until end of parms or another - preceded parm
-      // killough 11/98: allow multiple -file parameters
+      CS_LoadWADs();
+   }
+   else
+   {
+      // haleyjd 03/10/03: Load GFS Wads
+      // 08/08/03: moved first, so that command line overrides
+      if(haveGFS)
+         D_ProcessGFSWads(gfs);
 
-      boolean file = modifiedgame = true; // homebrew levels
-      while(++p < myargc)
+      // haleyjd 11/22/03: look for loose wads (drag and drop)
+      D_LooseWads();
+
+      // add any files specified on the command line with -file wadfile
+      // to the wad list
+
+      // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
+
+      if((p = M_CheckParm("-file")))
       {
-         if(*myargv[p] == '-')
+         // the parms after p are wadfile/lump names,
+         // until end of parms or another - preceded parm
+         // killough 11/98: allow multiple -file parameters
+
+         boolean file = modifiedgame = true; // homebrew levels
+         while(++p < myargc)
          {
-            file = !strcasecmp(myargv[p], "-file");
+            if(*myargv[p] == '-')
+            {
+               file = !strcasecmp(myargv[p], "-file");
+            }
+            else
+            {
+               if(file)
+                  D_AddFile(myargv[p], ns_global, NULL, 0, 0);
+            }
          }
+      }
+   }
+
+   if(!clientserver)
+   {
+      if(!(p = M_CheckParm("-playdemo")) || p >= myargc-1)   // killough
+      {
+         if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
+            fastdemo = true;            // run at fastest speed possible
          else
+            p = M_CheckParm("-timedemo");
+      }
+
+      if(p && p < myargc - 1)
+      {
+         char *file = NULL;
+         size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+
+         strncpy(file, myargv[p + 1], len);
+
+         M_AddDefaultExtension(file, ".lmp");     // killough
+         D_AddFile(file, ns_demos, NULL, 0, 0);
+         usermsg("Playing demo %s\n",file);
+      }
+
+      // get skill / episode / map from parms
+
+      // jff 3/24/98 was sk_medium, just note not picked
+      startskill = sk_none;
+      startepisode = 1;
+      startmap = 1;
+      autostart = false;
+
+      if((p = M_CheckParm("-skill")) && p < myargc - 1)
+      {
+         startskill = myargv[p+1][0]-'1';
+         autostart = true;
+      }
+
+      if((p = M_CheckParm("-episode")) && p < myargc - 1)
+      {
+         startepisode = myargv[p+1][0]-'0';
+         startmap = 1;
+         autostart = true;
+      }
+
+      // haleyjd: deatchmatch-only options
+      if(GameType == gt_dm)
+      {
+         if((p = M_CheckParm("-timer")) && p < myargc-1)
          {
-            if(file)
-               D_AddFile(myargv[p], ns_global, NULL, 0, 0);
+            int time = atoi(myargv[p+1]);
+
+            usermsg("Levels will end after %d minute%s.\n",
+               time, time > 1 ? "s" : "");
+            levelTimeLimit = time;
+         }
+
+         // sf: moved from p_spec.c
+         // See if -frags has been used
+         if((p = M_CheckParm("-frags")) && p < myargc-1)
+         {
+            int frags = atoi(myargv[p+1]);
+
+            if(frags <= 0)
+               frags = 10;  // default 10 if no count provided
+            levelFragLimit = frags;
+         }
+
+         if((p = M_CheckParm("-avg")) && p < myargc-1)
+         {
+            levelTimeLimit = 20 * 60 * TICRATE;
+            usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
+         }
+      }
+
+      if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
+          (p = M_CheckParm("-wart"))) && p < myargc - 1)
+      {
+         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+         if(GameModeInfo->flags & GIF_MAPXY)
+         {
+            startmap = atoi(myargv[p + 1]);
+            autostart = true;
+         }
+         else if(p < myargc - 2)
+         {
+            startepisode = atoi(myargv[++p]);
+            startmap = atoi(myargv[p + 1]);
+            autostart = true;
          }
       }
    }
 
-   if(!(p = M_CheckParm("-playdemo")) || p >= myargc-1)   // killough
+   // [CG] C/S servers default to -nosound, -nodraw and -noblit unless
+   //      explicitly overridden with -showserverwindow, in which case
+   //      arguments are applied as normal.
+   if(CS_HEADLESS)
    {
-      if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
-         fastdemo = true;            // run at fastest speed possible
-      else
-         p = M_CheckParm("-timedemo");
+      nomusicparm = true;
+      nosfxparm = true;
+      nodrawers = true;
+      noblit = true;
    }
-
-   if(p && p < myargc - 1)
+   else
    {
-      char *file = NULL;
-      size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
-         
-      strncpy(file, myargv[p + 1], len);
-
-      M_AddDefaultExtension(file, ".lmp");     // killough
-      D_AddFile(file, ns_demos, NULL, 0, 0);
-      usermsg("Playing demo %s\n",file);
-   }
-
-   // get skill / episode / map from parms
-
-   // jff 3/24/98 was sk_medium, just note not picked
-   startskill = sk_none;
-   startepisode = 1;
-   startmap = 1;
-   autostart = false;
-
-   if((p = M_CheckParm("-skill")) && p < myargc - 1)
-   {
-      startskill = myargv[p+1][0]-'1';
-      autostart = true;
-   }
-
-   if((p = M_CheckParm("-episode")) && p < myargc - 1)
-   {
-      startepisode = myargv[p+1][0]-'0';
-      startmap = 1;
-      autostart = true;
-   }
-
-   // haleyjd: deatchmatch-only options
-   if(GameType == gt_dm)
-   {
-      if((p = M_CheckParm("-timer")) && p < myargc-1)
+      //jff 1/22/98 add command line parms to disable sound and music
       {
-         int time = atoi(myargv[p+1]);
-
-         usermsg("Levels will end after %d minute%s.\n",
-            time, time > 1 ? "s" : "");
-         levelTimeLimit = time;
+         boolean nosound = !!M_CheckParm("-nosound");
+         nomusicparm = nosound || M_CheckParm("-nomusic");
+         nosfxparm   = nosound || M_CheckParm("-nosfx");
       }
+      //jff end of sound/music command line parms
 
-      // sf: moved from p_spec.c
-      // See if -frags has been used
-      if((p = M_CheckParm("-frags")) && p < myargc-1)
-      {
-         int frags = atoi(myargv[p+1]);
-
-         if(frags <= 0)
-            frags = 10;  // default 10 if no count provided
-         levelFragLimit = frags;
-      }
-
-      if((p = M_CheckParm("-avg")) && p < myargc-1)
-      {
-         levelTimeLimit = 20 * 60 * TICRATE;
-         usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
-      }
+      // killough 3/2/98: allow -nodraw -noblit generally
+      nodrawers = !!M_CheckParm("-nodraw");
+      noblit    = !!M_CheckParm("-noblit");
    }
-
-   if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
-       (p = M_CheckParm("-wart"))) && p < myargc - 1)
-   {
-      // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(GameModeInfo->flags & GIF_MAPXY)
-      {
-         startmap = atoi(myargv[p + 1]);
-         autostart = true;
-      }
-      else if(p < myargc - 2)
-      {
-         startepisode = atoi(myargv[++p]);
-         startmap = atoi(myargv[p + 1]);
-         autostart = true;
-      }
-   }
-
-   //jff 1/22/98 add command line parms to disable sound and music
-   {
-      boolean nosound = !!M_CheckParm("-nosound");
-      nomusicparm = nosound || M_CheckParm("-nomusic");
-      nosfxparm   = nosound || M_CheckParm("-nosfx");
-   }
-   //jff end of sound/music command line parms
-
-   // killough 3/2/98: allow -nodraw -noblit generally
-   nodrawers = !!M_CheckParm("-nodraw");
-   noblit    = !!M_CheckParm("-noblit");
 
    // haleyjd: need to do this before M_LoadDefaults
    C_InitPlayerName();
@@ -3126,11 +3361,16 @@ static void D_DoomInit(void)
 
    // 1/18/98 killough: Z_Init call moved to i_main.c
 
-   D_ProcessWadPreincludes(); // killough 10/98: add preincluded wads at the end
+   if(!clientserver)
+   {
+      // killough 10/98: add preincluded wads at the end
+      D_ProcessWadPreincludes();
 
-   // haleyjd 08/20/07: also, enumerate and load wads from base/game/autoload
-   D_EnumerateAutoloadDir();
-   D_GameAutoloadWads();
+      // haleyjd 08/20/07: also, enumerate and load wads from
+      //                   base/game/autoload
+      D_EnumerateAutoloadDir();
+      D_GameAutoloadWads();
+   }
 
    startupmsg("W_Init", "Init WADfiles.");
    W_InitMultipleFiles(&w_GlobalDir, wadfiles);
@@ -3181,19 +3421,22 @@ static void D_DoomInit(void)
 
    V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
 
-   // haleyjd: moved down turbo to here for player class support
-   if((p = M_CheckParm("-turbo")))
+   if(!clientserver)
    {
-      extern int turbo_scale;
+      // haleyjd: moved down turbo to here for player class support
+      if((p = M_CheckParm("-turbo")))
+      {
+         extern int turbo_scale;
 
-      if(p < myargc - 1)
-         turbo_scale = atoi(myargv[p + 1]);
-      if(turbo_scale < 10)
-         turbo_scale = 10;
-      if(turbo_scale > 400)
-         turbo_scale = 400;
-      printf("turbo scale: %i%%\n",turbo_scale);
-      E_ApplyTurbo(turbo_scale);
+         if(p < myargc - 1)
+            turbo_scale = atoi(myargv[p + 1]);
+         if(turbo_scale < 10)
+            turbo_scale = 10;
+         if(turbo_scale > 400)
+            turbo_scale = 400;
+         printf("turbo scale: %i%%\n",turbo_scale);
+         E_ApplyTurbo(turbo_scale);
+      }
    }
 
    // killough 2/22/98: copyright / "modified game" / SPA banners removed
@@ -3273,10 +3516,13 @@ static void D_DoomInit(void)
       G_SetDefaultDMFlags(0, true);
    }
 
-   // check for command-line override of dmflags
-   if((p = M_CheckParm("-dmflags")) && p < myargc-1)
+   if(!clientserver)
    {
-      dmflags = default_dmflags = (unsigned int)atoi(myargv[p+1]);
+      // check for command-line override of dmflags
+      if((p = M_CheckParm("-dmflags")) && p < myargc-1)
+      {
+         dmflags = default_dmflags = (unsigned int)atoi(myargv[p+1]);
+      }
    }
 
    // haleyjd: this SHOULD be late enough...
@@ -3385,66 +3631,129 @@ static void D_DoomInit(void)
    }
 #endif
 
-   // sf: -blockmap option as a variable now
-   if(M_CheckParm("-blockmap")) r_blockmap = true;
+   if(clientserver)
+   {
+      if(M_CheckParm("-csplaydemo") || M_CheckParm("-record"))
+      {
+         if(M_CheckParm("-csplaydemo") && M_CheckParm("-record"))
+         {
+            I_Error("Cannot specify both -csplaydemo and -record.\n");
+         }
 
-   // start the appropriate game based on parms
+         if(CS_SERVER)
+         {
+            I_Error(
+               "Cannot record or playback demos from the command-line in c/s "
+               "server mode.\n"
+            );
+         }
 
-   // killough 12/98:
-   // Support -loadgame with -record and reimplement -recordfrom.
-   if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
-      G_RecordDemo(myargv[p]);
+         if(M_CheckParm("-record"))
+         {
+            printf("CL_Init: Recording new c/s demo.\n");
+            if(!CS_RecordDemo())
+            {
+               I_Error("Error recording demo: %s\n", CS_GetDemoErrorMessage());
+            }
+         }
+         else if(p < myargc - 2)
+         {
+            cs_demo_archive_path = strdup(myargv[p + 1]);
+            cs_demo_playback = true;
+         }
+         else
+         {
+            I_Error("CL_Init: No demo file specified.\n");
+         }
+      }
+   }
    else
    {
-      slot = M_CheckParm("-loadgame");
-      if((p = M_CheckParm("-record")) && ++p < myargc)
+      // sf: -blockmap option as a variable now
+      if(M_CheckParm("-blockmap"))
       {
-         autostart = true;
+         r_blockmap = true;
+      }
+
+      // start the appropriate game based on parms
+
+      // killough 12/98:
+      // Support -loadgame with -record and reimplement -recordfrom.
+      if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
+      {
          G_RecordDemo(myargv[p]);
       }
-   }
-
-   if((p = M_CheckParm ("-fastdemo")) && ++p < myargc)
-   {                                 // killough
-      fastdemo = true;                // run at fastest speed possible
-      timingdemo = true;              // show stats after quit
-      G_DeferedPlayDemo(myargv[p]);
-      singledemo = true;              // quit after one demo
-   }
-   else if((p = M_CheckParm("-timedemo")) && ++p < myargc)
-   {
-      // haleyjd 10/16/08: restored to MBF status
-      singletics = true;
-      timingdemo = true;            // show stats after quit
-      G_DeferedPlayDemo(myargv[p]);
-      singledemo = true;            // quit after one demo
-   }
-   else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
-   {
-      G_DeferedPlayDemo(myargv[p]);
-      singledemo = true;          // quit after one demo
-   }
-
-   startlevel = strdup(G_GetNameForMap(startepisode, startmap));
-
-   if(slot && ++slot < myargc)
-   {
-      char *file = NULL;
-      size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
-      slot = atoi(myargv[slot]);        // killough 3/16/98: add slot info
-      G_SaveGameName(file, len, slot); // killough 3/22/98
-      G_LoadGame(file, slot, true);     // killough 5/15/98: add command flag
-   }
-   else if(!singledemo)                    // killough 12/98
-   {
-      if(autostart || netgame)
-      {
-         G_InitNewNum(startskill, startepisode, startmap);
-         if(demorecording)
-            G_BeginRecording();
-      }
       else
-         D_StartTitle();                 // start up intro loop
+      {
+         slot = M_CheckParm("-loadgame");
+         if((p = M_CheckParm("-record")) && ++p < myargc)
+         {
+            autostart = true;
+            G_RecordDemo(myargv[p]);
+         }
+      }
+
+      if((p = M_CheckParm ("-fastdemo")) && ++p < myargc)
+      {                                 // killough
+         fastdemo = true;                // run at fastest speed possible
+         timingdemo = true;              // show stats after quit
+         G_DeferedPlayDemo(myargv[p]);
+         singledemo = true;              // quit after one demo
+      }
+      else if((p = M_CheckParm("-timedemo")) && ++p < myargc)
+      {
+         // haleyjd 10/16/08: restored to MBF status
+         singletics = true;
+         timingdemo = true;            // show stats after quit
+         G_DeferedPlayDemo(myargv[p]);
+         singledemo = true;            // quit after one demo
+      }
+      else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
+      {
+         G_DeferedPlayDemo(myargv[p]);
+         singledemo = true;          // quit after one demo
+      }
+   }
+
+   if(CS_DEMO)
+   {
+   }
+   else if(CS_SERVER)
+   {
+      CS_InitNew();
+   }
+   else if(CS_CLIENT)
+   {
+      D_StartTitle();
+      C_SetConsole();
+      CL_Connect();
+   }
+   else
+   {
+      startlevel = strdup(G_GetNameForMap(startepisode, startmap));
+      if(slot && ++slot < myargc)
+      {
+         char *file = NULL;
+         size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
+         slot = atoi(myargv[slot]);       // killough 3/16/98: add slot info
+         G_SaveGameName(file, len, slot); // killough 3/22/98
+         G_LoadGame(file, slot, true);    // killough 5/15/98: add command flag
+      }
+      else if(!singledemo) // killough 12/98
+      {
+         if(autostart || netgame)
+         {
+            G_InitNewNum(startskill, startepisode, startmap);
+            if(demorecording)
+            {
+               G_BeginRecording();
+            }
+         }
+         else
+         {
+            D_StartTitle(); // start up intro loop
+         }
+   }
 
       /*
       if(netgame)
@@ -3474,6 +3783,8 @@ static void D_DoomInit(void)
 //
 void D_DoomMain(void)
 {
+   int i;
+
    D_DoomInit();
 
    oldgamestate = wipegamestate = gamestate;
@@ -3485,6 +3796,21 @@ void D_DoomMain(void)
       redrawborder = true;
    }
 
+   // [CG] Servers should advertise and send a state update themselves at this
+   //      point.
+   if(CS_SERVER)
+   {
+      SV_MasterAdvertise();
+      // [CG] Add update requests for each master.
+      for(i = 0; i < master_server_count; i++)
+      {
+         SV_AddUpdateRequest(&master_servers[i]);
+      }
+      SV_MasterUpdate();
+      // [CG] C/S server can never wait for screen wiping.
+      wipewait = 0;
+   }
+
    // killough 12/98: inlined D_DoomLoop
 
    while(1)
@@ -3492,7 +3818,25 @@ void D_DoomMain(void)
       // frame synchronous IO operations
       I_StartFrame();
 
-      TryRunTics(); // will run at least one tic
+      // [CG] TryRunTics has the vanilla netgame model woven into it pretty
+      //      tightly, so rather than mess with it I've just created a c/s
+      //      version of the function.
+      if(clientserver)
+      {
+         // [CG] CL_TryRunTics (which is called by CS_TryRunTics if clientside)
+         //      will *wait* at least one TIC, but it won't actually run one
+         //      until it gets the go-ahead from the server.  So it's possible
+         //      for this function to return without having built a ticcmd,
+         //      without having ran G_Ticker, and without having incremented
+         //      gametic.  This is intended, as other things like the console
+         //      and menu need to continue ticking whether or not the server
+         //      sends any messages.
+         CS_TryRunTics();
+      }
+      else
+      {
+         TryRunTics(); // will run at least one tic
+      }
 
       // killough 3/16/98: change consoleplayer to displayplayer
       S_UpdateSounds(players[displayplayer].mo); // move positional sounds
@@ -3524,8 +3868,23 @@ void D_ReInitWadfiles(void)
    R_FreeData();
    E_ProcessNewEDF();   // haleyjd 03/24/10: process any new EDF lumps
    D_ProcessDEHQueue(); // haleyjd 09/12/03: run any queued DEHs
+   if(clientserver)
+   {
+      C_InitBackdrop();
+      V_InitColorTranslation();
+      V_InitBox();
+      I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+      E_UpdateFonts();
+   }
    R_Init();
    P_Init();
+   if(clientserver)
+   {
+      HU_Init();
+      C_ReloadFont();
+      ST_Init();
+      MN_Init();
+   }
 }
 
 // FIXME: various parts of this routine need tightening up
@@ -3605,11 +3964,11 @@ void usermsg(const char *s, ...)
 {
    static char msg[1024];
    va_list v;
-   
+
    va_start(v,s);
    pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
    va_end(v);
-   
+
    if(in_textmode)
    {
       puts(msg);
@@ -3637,7 +3996,7 @@ boolean D_AddNewFile(const char *s)
 }
 
 //============================================================================
-// 
+//
 // Console Commands
 //
 

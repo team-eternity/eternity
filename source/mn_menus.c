@@ -103,16 +103,20 @@ static void MN_InitSearchStr(void);
 void MN_InitMenus(void)
 {
    int i; // haleyjd
+   // [CG] Try PU_RENDERER here.
+   // int tag = PU_STATIC;
+   int tag = PU_RENDERER;
+
    
-   mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
-   mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
-   mn_wadname  = Z_Strdup("", PU_STATIC, 0);
-   mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
+   mn_phonenum = Z_Strdup("555-1212", tag, 0);
+   mn_demoname = Z_Strdup("demo1", tag, 0);
+   mn_wadname  = Z_Strdup("", tag, 0);
+   mn_start_mapname = Z_Strdup("", tag, 0); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
    {
-      savegamenames[i] = Z_Strdup("", PU_STATIC, 0);
+      savegamenames[i] = Z_Strdup("", tag, 0);
       savegamepresent[i] = false;
    }
 
@@ -1023,20 +1027,21 @@ static menuitem_t mn_player_items[] =
    {it_gap},
    {it_variable,       "player name",          "name"},
    {it_toggle,         "player colour",        "colour"},
+   {it_toggle,         "handedness",           "lefthanded"},
+   {it_variable, "packet buffer size", "packet_buffer_size"},
    {it_toggle,         "player skin",          "skin"},
    {it_runcmd,         "skin viewer...",       "skinviewer"},
    {it_gap},
-   {it_toggle,         "handedness",           "lefthanded"},
    {it_end}
 };
 
 menu_t menu_player =
 {
    mn_player_items,
-   NULL, NULL, NULL,                     // pages
-   180, 5,                               // x, y offset
-   2,                                    // chatmacro0 at start
-   mf_background,                        // full-screen
+   NULL, NULL, NULL, // pages
+   150, 5,            // x, y offset
+   2,                // player name at start
+   mf_background,    // full-screen and left-aligned
    MN_PlayerDrawer
 };
 
@@ -1089,7 +1094,6 @@ CONSOLE_COMMAND(mn_player, 0)
 {
    MN_StartMenu(&menu_player);
 }
-
 
 /////////////////////////////////////////////////////////////////
 //
@@ -2220,6 +2224,7 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_info,       FC_GOLD "crosshair options"},
    {it_toggle,     "crosshair type",               "hu_crosshair"},
    {it_toggle,     "monster highlighting",         "hu_crosshair_hilite"},
+   {it_toggle,     "display target names",         "display_target_names"},
    {it_gap},
    {it_info,       FC_GOLD "automap options"},
    {it_toggle,     "show coords widget",           "hu_showcoords"},
@@ -2231,6 +2236,8 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_gap},
    {it_info,       FC_GOLD "miscellaneous"},
    {it_toggle,     "show frags in deathmatch",     "show_scores"},
+   {it_toggle,     "show timer",                   "show_timer"},
+   {it_toggle,     "show netstats",                "show_netstats"},
    {it_end}
 };
 
@@ -2544,6 +2551,11 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "autoaiming",                     "autoaim"},
    {it_variable,   "change time",                    "weapspeed"},
    {it_gap},
+   {it_info, FC_GOLD "weapon switch on pickup", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_toggle, "switch on weapon pickup", "weapon_switch_on_pickup"},
+   {it_toggle, "switch on ammo pickup", "ammo_switch_on_pickup"},
+   {it_gap},
    {it_end},
 };
 
@@ -2563,19 +2575,19 @@ menu_t menu_weapons =
 
 static menuitem_t mn_weapons_pref_items[] =
 {
-   {it_title,      FC_GOLD "weapons",       NULL, "M_WEAP"},
+   {it_title, FC_GOLD "weapons", NULL, "M_WEAP"},
    {it_gap},
-   {it_info,       FC_GOLD "preferences", NULL, NULL, MENUITEM_CENTERED},
+   {it_info, FC_GOLD "preferred weapon order", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_variable,   "1",                     "weappref_1"},
-   {it_variable,   "2",                     "weappref_2"},
-   {it_variable,   "3",                     "weappref_3"},
-   {it_variable,   "4",                     "weappref_4"},
-   {it_variable,   "5",                     "weappref_5"},
-   {it_variable,   "6",                     "weappref_6"},
-   {it_variable,   "7",                     "weappref_7"},
-   {it_variable,   "8",                     "weappref_8"},
-   {it_variable,   "9",                     "weappref_9"},
+   {it_variable, "1", "weappref_1"},
+   {it_variable, "2", "weappref_2"},
+   {it_variable, "3", "weappref_3"},
+   {it_variable, "4", "weappref_4"},
+   {it_variable, "5", "weappref_5"},
+   {it_variable, "6", "weappref_6"},
+   {it_variable, "7", "weappref_7"},
+   {it_variable, "8", "weappref_8"},
+   {it_variable, "9", "weappref_9"},
    {it_end},
 };
 
@@ -2780,6 +2792,7 @@ static const char *mn_binding_contentnames[] =
    "menu keys",
    "automap keys",
    "console keys",
+   "client/server keys",
    NULL
 };
 
@@ -2792,6 +2805,7 @@ extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
 extern menu_t menu_consolekeys;
+extern menu_t menu_clientserverkeys;
 
 static menu_t *mn_binding_contentpages[] =
 {
@@ -2803,6 +2817,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_menukeys,
    &menu_automapkeys,
    &menu_consolekeys,
+   &menu_clientserverkeys,
    NULL
 };
 
@@ -3127,7 +3142,7 @@ menu_t menu_consolekeys =
 {
    mn_consolekeys_items,
    &menu_automapkeys,       // previous page
-   NULL,                    // next page
+   &menu_clientserverkeys,  // next page
    &menu_movekeys,          // rootpage
    150, 15,                 // x,y offsets
    4,
@@ -3140,6 +3155,49 @@ menu_t menu_consolekeys =
 CONSOLE_COMMAND(mn_consolekeys, 0)
 {
    MN_StartMenu(&menu_consolekeys);
+}
+
+//------------------------------------------------------------------------
+//
+// Key Bindings: Client/Server Keys
+//
+
+static menuitem_t mn_clientserverkeys_items[] =
+{
+   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_gap},
+   {it_info,    FC_GOLD "client/server", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_binding, "message all",          "message_all"},
+   {it_binding, "message team",         "message_team"},
+   {it_binding, "message player",       "message_player"},
+   {it_binding, "message server",       "message_server"},
+   {it_binding, "rcon",                 "rcon"},
+   {it_binding, "show scoreboard",      "frags"},
+   {it_binding, "spectate",             "spectate"},
+   {it_binding, "spectate_prev",        "spectate_prev"},
+   {it_binding, "spectate_next",        "spectate_next"},
+   {it_binding, "flush_packet_buffer",  "flush_packet_buffer"},
+   {it_end}
+};
+
+menu_t menu_clientserverkeys =
+{
+   mn_clientserverkeys_items,
+   &menu_consolekeys,       // previous page
+   NULL,                    // next page
+   &menu_movekeys,          // rootpage
+   150, 15,                 // x,y offsets
+   4,
+   mf_background,           // draw background: not a skull menu
+   NULL,                    // no drawer
+   mn_binding_contentnames, // table of contents arrays
+   mn_binding_contentpages,
+};
+
+CONSOLE_COMMAND(mn_clientserverkeys, 0)
+{
+    MN_StartMenu(&menu_clientserverkeys);
 }
 
 //----------------------------------------------------------------------------
@@ -3162,6 +3220,10 @@ CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
 
 static void MN_InitSearchStr(void)
 {
+   if(mn_searchstr)
+   {
+       free(mn_searchstr);
+   }
    mn_searchstr = strdup("");
 }
 
@@ -3611,6 +3673,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_menukeys);
    C_AddCommand(mn_automapkeys);
    C_AddCommand(mn_consolekeys);
+   C_AddCommand(mn_clientserverkeys);
    C_AddCommand(newgame);
    
    // prompt messages

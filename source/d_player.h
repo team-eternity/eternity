@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*-  vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -52,7 +52,6 @@ typedef struct player_s player_t;
 // haleyjd: player classes
 #include "e_player.h"
 
-
 //
 // Player states.
 //
@@ -98,7 +97,6 @@ struct player_s
 
    // Determine POV,
    //  including viewpoint bobbing during movement.
-  
    fixed_t        viewz;           // Focal origin above r.z  
    fixed_t        viewheight;      // Base height above floor for viewz.  
    fixed_t        deltaviewheight; // Bob/squat speed.
@@ -183,7 +181,7 @@ typedef struct wbplayerstruct_s
   int         sitems;
   int         ssecret;
   int         stime; 
-  int         frags[4];
+  int         frags[MAXPLAYERS];
   int         score;  // current score on entry, modified on return
   
 } wbplayerstruct_t;

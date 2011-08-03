@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -2175,8 +2175,8 @@ boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac)
       // clear special if line is not repeatable
       if(!reuse)
          line->special = 0;
-      
-      // change switch textures where appropriate
+       
+       // change switch textures where appropriate
       if(spac == SPAC_USE || spac == SPAC_IMPACT)
          P_ChangeSwitchTexture(line, reuse, side);
    }

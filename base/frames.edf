@@ -339,3 +339,36 @@ frame S_PNS2_2      { cmp = "PNS2|1|T|6|*|@next";    }
 frame S_PNS2_3      { cmp = "PNS2|2|T|6|*|@next";    }
 frame S_PNS2_4      { cmp = "PNS2|3|T|6|*|S_PNS2_1"; }
 
+// [CG] These are some Bridge frames from ZDoom.
+
+frame S_BRIDGE1 { cmp = "TLGL|32768|*|4|*|S_BRIDGE2" }
+frame S_BRIDGE2 { cmp = "TLGL|32769|*|4|*|S_BRIDGE3" }
+frame S_BRIDGE3 { cmp = "TLGL|32770|*|4|*|S_BRIDGE4" }
+frame S_BRIDGE4 { cmp = "TLGL|32771|*|4|*|S_BRIDGE5" }
+frame S_BRIDGE5 { cmp = "TLGL|32772|*|4|*|S_BRIDGE1" }
+
+// [CG] These are some CTF frames from Odamex.
+
+frame S_BSOK  { cmp = "BSOK|0|*|-1|*|S_NULL" }
+frame S_RSOK  { cmp = "RSOK|0|*|-1|*|S_NULL" }
+frame S_BFLG  { cmp = "BFLG|32768|*|4|*|S_BFLG2" }
+frame S_BFLG2 { cmp = "BFLG|32769|*|4|*|S_BFLG3" }
+frame S_BFLG3 { cmp = "BFLG|32770|*|4|*|S_BFLG4" }
+frame S_BFLG4 { cmp = "BFLG|32771|*|4|*|S_BFLG5" }
+frame S_BFLG5 { cmp = "BFLG|32772|*|4|*|S_BFLG6" }
+frame S_BFLG6 { cmp = "BFLG|32773|*|4|*|S_BFLG7" }
+frame S_BFLG7 { cmp = "BFLG|32774|*|4|*|S_BFLG8" }
+frame S_BFLG8 { cmp = "BFLG|32775|*|4|*|S_BFLG" }
+frame S_RFLG  { cmp = "RFLG|32768|*|4|*|S_RFLG2" }
+frame S_RFLG2 { cmp = "RFLG|32769|*|4|*|S_RFLG3" }
+frame S_RFLG3 { cmp = "RFLG|32770|*|4|*|S_RFLG4" }
+frame S_RFLG4 { cmp = "RFLG|32771|*|4|*|S_RFLG5" }
+frame S_RFLG5 { cmp = "RFLG|32772|*|4|*|S_RFLG6" }
+frame S_RFLG6 { cmp = "RFLG|32773|*|4|*|S_RFLG7" }
+frame S_RFLG7 { cmp = "RFLG|32774|*|4|*|S_RFLG8" }
+frame S_RFLG8 { cmp = "RFLG|32775|*|4|*|S_RFLG" }
+frame S_BDWN  { cmp = "BDWN|0|*|-1|*|S_NULL" }
+frame S_RDWN  { cmp = "RDWN|0|*|-1|*|S_NULL" }
+frame S_BCAR  { cmp = "BCAR|0|*|-1|*|S_NULL" }
+frame S_RCAR  { cmp = "RCAR|0|*|-1|*|S_NULL" }
+

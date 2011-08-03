@@ -222,7 +222,9 @@ void R_InitSpriteDefs(char **namelist)
    
    numsprites = (signed int)i;
 
-   sprites = Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL);
+   // [CG] Try using PU_RENDERER here.
+   // sprites = Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL);
+   sprites = Z_Malloc(numsprites * sizeof(*sprites), PU_RENDERER, NULL);
    
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
@@ -312,8 +314,11 @@ void R_InitSpriteDefs(char **namelist)
                }
             }
             // allocate space for the frames present and copy sprtemp to it
+            // [CG] Try using PU_RENDERER here.
+            // sprites[i].spriteframes =
+            //    Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
             sprites[i].spriteframes =
-               Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL);
+               Z_Malloc(maxframe * sizeof(spriteframe_t), PU_RENDERER, NULL);
             memcpy(sprites[i].spriteframes, sprtemp,
                    maxframe*sizeof(spriteframe_t));
          }
@@ -1727,8 +1732,10 @@ void R_InitParticles(void)
       numParticles = 4000;
    else if(numParticles < 100)
       numParticles = 100;
-   
-   Particles = Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL);
+
+   // [CG] Try using PU_RENDERER here.
+   // Particles = Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL);
+   Particles = Z_Malloc(numParticles*sizeof(particle_t), PU_RENDERER, NULL);
    R_ClearParticles();
 }
 

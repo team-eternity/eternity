@@ -25,6 +25,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "doomtype.h" // [CG] Added.
 #include "version.h"
 
 // sf: made int from define
@@ -32,6 +33,11 @@ int version = 339;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char SUBVERSION = 20;
+
+// [CG] EE has pretty good versioning already, so all that's needed for c/s is
+//      a c/s protocol version.  A simple single number is sufficient because
+//      it's only incremented for incompatible protocol changes.
+const uint32_t CS_PROTOCOL_VERSION = 0;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd

@@ -1201,9 +1201,9 @@ void R_FillBackScreen(void)
 //
 // Copy a screen buffer.
 //
-// SoM: why the hell was this written to only take an offset and size parameter?
-// this is a much nicer solution which fixes scaling issues in highres modes that 
-// aren't perfectly 4/3
+// SoM: why the hell was this written to only take an offset and size
+// parameter?  this is a much nicer solution which fixes scaling issues in
+// highres modes that aren't perfectly 4/3
 //
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 
