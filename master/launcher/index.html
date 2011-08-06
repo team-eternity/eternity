@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<css path='jquery.jscrollpane.css'/>
+<css path='master.css'/>
+<script
+ type="text/javascript"
+ src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js">
+</script>
+<js path='jquery.tablesorter.min.js'/>
+<js path='jquery.mousewheel.js'/>
+<js path='jquery.jscrollpane.min.js'/>
+<js path='base64-min.js'/>
+<js path='sha1-min.js'/>
+<js path='master.js'/>
+<title><servername/></title>
+</head>
+<body>
+<div id="content">
+    <div id="top_panel">
+        <div id="header" class="shade">
+            <h1 id="master_name"><servername/></h1>
+        </div>
+        <div id="account" class="shade" onclick="switchMainWindow();">
+            <h1 id="section_label">Account &gt;</h1>
+        </div>
+    </div>
+    <div id="main_panel">
+        <div id="main_window" class="shade">
+            <div id="no_servers">No Servers</div>
+            <table id="servers_table">
+                <thead id="servers_table_head">
+                    <tr>
+                        <th>Server</th>
+                        <th>Clients</th>
+                        <th>Type</th>
+                        <th>WADs</th>
+                        <th>Map</th>
+                    </tr>
+                </thead>
+                <tbody id="servers_table_body"></tbody>
+            </table>
+            <div id="account_forms">
+                <div id="login_form">
+                    <h3 class="account_heading">Login</h3>
+                    <label for="name">Username:</label><br/>
+                    <input type="text" name="name" id="login_name"/><br/>
+                    <label for="password">Password:</label><br/>
+                    <input type="password" name="password" id="login_password"
+                           value=""/><br/>
+                </div>
+                <div id="registration_form">
+                    <h3 class="account_heading">Register</h3>
+                    <label for="name">Username:</label><br/>
+                    <input type="text" name="name" id="reg_name"/><br/>
+                    <label for="password">Password:</label><br/>
+                    <input type="password" name="password" id="reg_password"
+                           value=""/><br/>
+                    <label for="email">E-mail:</label><br/>
+                    <input type="text" name="email" id="reg_email"/><br/>
+                </div>
+                <div id="change_password_form">
+                    <h3 class="account_heading">Change Password</h3>
+                    <label for="old_password">Current Password:</label><br/>
+                    <input type="password" name="current_password"
+                           id="current_password" value=""/><br/>
+                    <label for="new_password_1">New Password:</label><br/>
+                    <input type="password" name="new_password_1"
+                           id="new_password_1" value=""/><br/>
+                    <label for="new_password_2">New Password (again):</label>
+                    <br/>
+                    <input type="password" name="new_password_2"
+                           id="new_password_2" value=""/><br/>
+                </div>
+                <div id="server_groups_form">
+                    <h3 class="account_heading">Server Groups</h3>
+                    <div id="server_groups"></div>
+                    <label for="new_group_name">New Group:</label><br/>
+                    <input type="text" name="new_group_name"
+                           id="new_group_name"/><br/>
+                </div>
+                <div id="account_form_switch"></div>
+            </div>
+        </div>
+        <div id="sidebar" class="shade"></div>
+    </div>
+</div>
+</body>
+</html>
+

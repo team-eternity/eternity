@@ -403,6 +403,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel" OR CMAKE_BUILD_TYPE STREQUAL "Release
                 ENDIF (INTEL_CXX_IPO)
         ENDIF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 ENDIF (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel" OR CMAKE_BUILD_TYPE STREQUAL "Release")
+
 ################################################################################
 ######################### Find Headers #########################################
 CHECK_INCLUDE_FILES (stdint.h HAVE_STDINT_H)
@@ -416,6 +417,11 @@ IF (NOT HAVE_STDINT_H)
 ENDIF (NOT HAVE_STDINT_H)
 ################################################################################
 ######################### Find Needed Libs #####################################
+IF (EE_CROSS_MINGW)
+INCLUDE_DIRECTORIES(${EE_MINGW_PATH}/include)
+INCLUDE_DIRECTORIES(${EE_CROSS_DEPS}/build/include)
+ENDIF (EE_CROSS_MINGW)
+
 FIND_PACKAGE (SDL 1.2.14 REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
 
@@ -425,6 +431,9 @@ INCLUDE_DIRECTORIES (${SDLMIXER_INCLUDE_DIR})
 FIND_PACKAGE (SDL_net 1.2.7 REQUIRED)
 INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
 
+## [CG] Further checks are necessary if cross-compiling, it's assumed that the
+##      user has set up the dependencies properly.
+IF (NOT EE_CROSS_MINGW)
 FIND_PACKAGE (libarchive 2.8.0 QUIET)
 IF (libarchive_FOUND)
     INCLUDE_DIRECTORIES (${LIBARCHIVE_INCLUDE_DIR})
@@ -448,9 +457,9 @@ ELSE (libarchive_FOUND)
     SET (LIBARCHIVE_LIBRARIES ${libarchive_LIBRARIES})
 ENDIF (libarchive_FOUND)
 
-IF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
-    MESSAGE (FATAL_ERROR "No BZip2 support found in libarchive.")
-ENDIF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
+## IF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
+##     MESSAGE (FATAL_ERROR "No BZip2 support found in libarchive.")
+## ENDIF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
 
 FIND_PACKAGE (CURL 7.21.0 REQUIRED)
 INCLUDE_DIRECTORIES (${CURL_INCLUDE_DIR})
@@ -472,9 +481,7 @@ IF (CURL_CONFIG_FAILED)
 ENDIF (CURL_CONFIG_FAILED)
 STRING (REGEX MATCH AsynchDNS CURL_ASYNC ${CURL_CONFIG_OUTPUT})
 IF (NOT CURL_ASYNC)
-    MESSAGE (
-        FATAL_ERROR "libcurl was not built with asynchronous DNS support."
-    )
+    MESSAGE ("WARNING: libcurl was not built with asynchronous DNS support.")
 ENDIF (NOT CURL_ASYNC)
 
 PKG_SEARCH_MODULE(PC_CARES REQUIRED libcares>=1.7.3)
@@ -499,11 +506,14 @@ IF (WIN32)
        PATHS)
    FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
 ENDIF (WIN32)
+ENDIF (NOT EE_CROSS_MINGW)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
 ADD_SUBDIRECTORY(snes_spc)
 ADD_SUBDIRECTORY(source)
+
+IF (NOT EE_CROSS_MINGW)
 IF (WIN32)
         ADD_SUBDIRECTORY(eecrashreport)
 ENDIF (WIN32)
@@ -514,4 +524,5 @@ IF (WIN32)
         INSTALL (PROGRAMS ${SDL_SUPPORT_LIBS}
                 DESTINATION ${LIB_DIR})
 ENDIF (WIN32)
+ENDIF (NOT EE_CROSS_MINGW)
 

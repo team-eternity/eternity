@@ -551,6 +551,12 @@ static boolean I_InitGraphicsMode(void)
    int      v_bd           = 8;
    int      flags          = SDL_SWSURFACE;
 
+   // [CG] Don't initialize graphics if we're headless.
+   if(CS_HEADLESS)
+   {
+       return false;
+   }
+
    if(!i_default_videomode)
       i_default_videomode = strdup("640x480w");
 
@@ -596,7 +602,7 @@ static boolean I_InitGraphicsMode(void)
    // haleyjd 10/27/09
    if(!wantframe)
       flags |= SDL_NOFRAME;
-     
+
    if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
       !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
    {

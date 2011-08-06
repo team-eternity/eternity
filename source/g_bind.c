@@ -285,12 +285,11 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"message_player",      kac_hud,  at_variable, {&action_message_player}},
    {"message_server",      kac_hud,  at_variable, {&action_message_server}},
    {"rcon",                kac_hud,  at_variable, {&action_rcon}},
-   {"spectate",            kac_cmd,  at_function, {CS_HandleSpectateKey}},
-   {"spectate_prev",       kac_cmd,  at_function, {CS_HandleSpectatePrevKey}},
-   {"spectate_next",       kac_cmd,  at_function, {CS_HandleSpectateNextKey}},
-   {"flush_packet_buffer", kac_cmd,  at_function,
-       {CS_HandleFlushPacketBufferKey}},
-   {"multibind",           kac_game, at_function, {G_HandleMultibind}}
+   {"spectate",            kac_cmd,  at_function, {NULL}},
+   {"spectate_prev",       kac_cmd,  at_function, {NULL}},
+   {"spectate_next",       kac_cmd,  at_function, {NULL}},
+   {"flush_packet_buffer", kac_cmd,  at_function, {NULL}},
+   {"multibind",           kac_game, at_function, {NULL}}
 };
 
 const int num_keyactions = sizeof(keyactions) / sizeof(*keyactions);
@@ -552,6 +551,14 @@ void G_InitKeyBindings(void)
    keyactions[ka_map_down].value.Handler    = AM_HandlerDown;
    keyactions[ka_map_zoomin].value.Handler  = AM_HandlerZoomin;
    keyactions[ka_map_zoomout].value.Handler = AM_HandlerZoomout;
+
+   // [CG] Same init stuff for c/s keyactions.
+   keyactions[ka_spectate].value.Handler = CS_HandleSpectateKey;
+   keyactions[ka_spectate_prev].value.Handler = CS_HandleSpectatePrevKey;
+   keyactions[ka_spectate_next].value.Handler = CS_HandleSpectateNextKey;
+   keyactions[ka_flush_packet_buffer].value.Handler = \
+                                                CS_HandleFlushPacketBufferKey;
+   keyactions[ka_multibind].value.Handler = G_HandleMultibind;
 
    // [CG] Initialize multibind hash tables.
    multibind_hash = calloc(1, sizeof(ehash_t));

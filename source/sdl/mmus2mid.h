@@ -26,7 +26,9 @@ typedef enum
 typedef uint8_t  UBYTE;  // a one-byte int 
 typedef uint16_t UWORD; // a two-byte int 
 // proff: changed from unsigned int to unsigned long to avoid warning
+#ifndef __MINGW32__
 typedef uint32_t ULONG;   // a four-byte int (assumes int 4 bytes) 
+#endif
 
 #ifndef DJGPP // proff: This is from allegro.h
 #define MIDI_TRACKS           32       

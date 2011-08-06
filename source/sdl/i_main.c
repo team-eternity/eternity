@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 {
    myargc = argc;
    myargv = argv;
-   
+
    // SoM: From CHOCODOOM Thank you fraggle!!
 #ifdef _WIN32
    putenv("SDL_VIDEO_WINDOW_POS=center") ;
@@ -93,6 +93,12 @@ int main(int argc, char **argv)
    else if(M_CheckParm("-gdi") || getenv("SDL_VIDEODRIVER") == NULL)
       putenv("SDL_VIDEODRIVER=windib");
 #endif
+
+   if(M_CheckParm("-csserve") && !M_CheckParm("-showserverwindow"))
+   {
+       putenv("SDL_VIDEODRIVER=dummy");
+       putenv("SDL_AUDIODRIVER=dummy");
+   }
 
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)

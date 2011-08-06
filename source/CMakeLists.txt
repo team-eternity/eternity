@@ -25,17 +25,27 @@ ENDIF (COMMAND cmake_policy)
 ################################################################################
 ######################### Set Project Source  ##################################
 ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
-ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB)
+ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
+
+IF (EE_CROSS_MINGW)
+    ADD_DEFINITIONS (-DCURL_STATICLIB -DHAVE_SCHED_SETAFFINITY -DHAVE_STDINT_H)
+    ADD_DEFINITIONS (-DLIBARCHIVE_STATIC)
+ENDIF (EE_CROSS_MINGW)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    ADD_DEFINITIONS (-DLINUX)
+    ADD_DEFINITIONS (-DLINUX -DHAVE_SCHED_SETAFFINITY)
 ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
-IF (WIN32)
+IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    ## [CG] Ensure that _GNU_SOURCE is defined when using GCC.
+    ADD_DEFINITIONS (-D_GNU_SOURCE)
+ENDIF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+
+IF (WIN32 OR MINGW OR EE_CROSS_MINGW)
     ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
-ENDIF (WIN32)
+ENDIF (WIN32 OR MINGW OR EE_CROSS_MINGW)
 
 ## Small does not work on 64bit systems. The most reliable way
 ## to determine if we are building on a 64bit system is to
@@ -45,10 +55,12 @@ IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
     ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
 ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
 
-IF (WIN32)
-    INCLUDE_DIRECTORIES (win32/)
-    FILE (GLOB ARCH_SPECIFIC_SOURCES win32/*.c)
-ENDIF (WIN32)
+IF (WIN32 OR MINGW OR EE_CROSS_MINGW)
+    IF (NOT EE_CROSS_MINGW)
+        INCLUDE_DIRECTORIES (Win32/)
+    ENDIF (NOT EE_CROSS_MINGW)
+    FILE (GLOB ARCH_SPECIFIC_SOURCES Win32/*.c)
+ENDIF (WIN32 OR MINGW OR EE_CROSS_MINGW)
 
 IF (APPLE)
     INCLUDE_DIRECTORIES (sdl/macosx/)
@@ -81,9 +93,9 @@ SET (SDL_SOURCES
     sdl/mmus2mid.c
     sdl/ser_main.c
 )
-IF (NOT WIN32)
-    SET ($SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
-ENDIF (NOT WIN32)
+IF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
+    SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
+ENDIF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -96,6 +108,36 @@ ADD_EXECUTABLE (eternity
     ${TEXTSCREEN_SOURCES}
     ${SDL_SOURCES}
 )
+IF (EE_CROSS_MINGW)
+FILE (GLOB EE_CROSS_DIRECTX_LIBRARIES ${EE_CROSS_DEPS}/source/DirectX/lib/*.a)
+TARGET_LINK_LIBRARIES (eternity
+    ${EE_CROSS_DIRECTX_LIBRARIES}
+    ${EE_CROSS_DEPS}/build/lib/libseh.a
+    ${EE_CROSS_DEPS}/build/lib/libenet.a
+    ${EE_CROSS_DEPS}/build/lib/libjson.a
+    ${EE_CROSS_DEPS}/build/lib/libcurl.a
+    ${EE_CROSS_DEPS}/build/lib/libarchive.a
+    ${EE_CROSS_DEPS}/build/lib/libz.a
+    ${EE_CROSS_DEPS}/build/lib/libbz2.a
+    ${EE_CROSS_DEPS}/build/lib/liblzma.a
+    ${EE_CROSS_DEPS}/build/lib/libgnutls-extra.a
+    ${EE_CROSS_DEPS}/build/lib/libgnutls-openssl.a
+    ${EE_CROSS_DEPS}/build/lib/libgnutls.a
+    ${EE_CROSS_DEPS}/build/lib/libgcrypt.a
+    ${EE_CROSS_DEPS}/build/lib/libgpg-error.a
+    ${EE_CROSS_DEPS}/build/lib/libidn.a
+    ${EE_CROSS_DEPS}/build/lib/libSDL_mixer.a
+    ${EE_CROSS_DEPS}/build/lib/libSDL_net.a
+    ${EE_CROSS_DEPS}/build/lib/libSDL.a
+    ${EE_CROSS_DEPS}/build/lib/libSDLmain.a
+    ${EE_CROSS_DEPS}/build/lib/libmad.a
+    # ${EE_CROSS_DEPS}/build/lib/libmikmod.a
+    ${EE_CROSS_DEPS}/build/lib/libogg.a
+    ${EE_CROSS_DEPS}/build/lib/libvorbis.a
+    ${EE_CROSS_DEPS}/build/lib/libFLAC.a
+    mingw32 m user32 gdi32 dxguid snes_spc ws2_32 wldap32 winmm
+)
+ELSE (EE_CROSS_MINGW)
 TARGET_LINK_LIBRARIES (eternity
     ${SDL_LIBRARY}
     ${SDLMIXER_LIBRARY}
@@ -107,6 +149,8 @@ TARGET_LINK_LIBRARIES (eternity
     ${CURL_LIBRARIES}
     snes_spc
 )
+ENDIF (EE_CROSS_MINGW)
+
 INSTALL (TARGETS eternity
     RUNTIME DESTINATION ${BIN_DIR}
     LIBRARY DESTINATION ${LIB_DIR}

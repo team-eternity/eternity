@@ -255,7 +255,7 @@ can be specified, like "International Doom League - Server A - Fortress
 Collision (MAP01)".  "server 1" would be specified in the "masters"
 configuration section for that master.
 
-See [config.txt](config.txt) for more information.
+See [cs_server_config.txt](cs_server_config.txt) for more information.
 
 #### URL API
 

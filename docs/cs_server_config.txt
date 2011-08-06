@@ -194,11 +194,9 @@
         "player_password": "monster",
         "moderator_password": "omnomnom",
         "administrator_password": "cookiecookiecookiestartswithc",
-        "wad_folders": [
-            "C:\\Users\\TuMadre\\Documents\\WADs" 
-        ],
+        "wad_folders": [ "/home/tumadre/Documents/WADs" ],
         "wad_repository": "http://static.totaltrash.org/wads",
-        "write_config_to": "C:\\emp_configs\\ZDDL1.json"
+        "write_config_to": "/home/tumadre/Documents/configs/duel1.json"
     },
 
 /**** "options"

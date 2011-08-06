@@ -1,0 +1,6 @@
+Eternity has various dependencies, some of which require their licenses to be
+distributed even with compiled binaries.  In order to ensure compliance, I've
+created this repository of licenses.  This repository is not meant to apply to
+Eternity's source; Eternity's licensing is well documented in its COPYING file
+and various source files.
+

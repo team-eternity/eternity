@@ -29,6 +29,11 @@
 #include <sys/stat.h>
 #include <inttypes.h> // haleyjd
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #ifdef DJGPP // proff: I don't use allegro in windows
 #include <allegro.h>
 #endif // DJGPP
