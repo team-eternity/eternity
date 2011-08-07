@@ -86,12 +86,20 @@ void A_Mushroom(Mobj *actor)
    {
       for(j = -n; j <= n; j += 8)
       {
-         Mobj target = *actor, *mo;
-         target.x += i << FRACBITS;    // Aim in many directions from source
-         target.y += j << FRACBITS;
-         target.z += P_AproxDistance(i,j) * misc1;         // Aim fairly high
-         mo = P_SpawnMissile(actor, &target, ShotType,
-                             actor->z + DEFAULTMISSILEZ);  // Launch fireball
+         // haleyjd 08/07/11: This is bad. Very bad.
+         // Rewritten to use P_SpawnMissileWithPos function.
+         //Mobj target = *actor, *mo;
+         Mobj *mo;
+         fixed_t x, y, z;
+
+         x = actor->x + (i << FRACBITS); // Aim in many directions from source
+         y = actor->y + (j << FRACBITS);
+         z = actor->z + P_AproxDistance(i, j) * misc1; // Aim fairly high
+       
+         mo = P_SpawnMissileWithPos(actor, actor, ShotType,  // Launch fireball
+                                    actor->z + DEFAULTMISSILEZ,
+                                    x, y, z);
+         
          mo->momx = FixedMul(mo->momx, misc2);
          mo->momy = FixedMul(mo->momy, misc2);             // Slow down a bit
          mo->momz = FixedMul(mo->momz, misc2);

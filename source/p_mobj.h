@@ -402,6 +402,8 @@ void P_ParticleLine(Mobj *source, Mobj *dest);
 void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
 bool    P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
 Mobj   *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
+Mobj   *P_SpawnMissileWithPos(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
+                              fixed_t destx, fixed_t desty, fixed_t destz);
 void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
 

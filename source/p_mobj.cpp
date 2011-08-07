@@ -2564,6 +2564,52 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
    return mo;
 }
 
+//
+// P_SpawnMissileWithPos
+//
+// haleyjd 08/07/11: Ugly hack to solve a problem Lee created in A_Mushroom.
+//
+Mobj* P_SpawnMissileWithPos(Mobj* source, Mobj* dest, mobjtype_t type,
+                            fixed_t srcz, 
+                            fixed_t destx, fixed_t desty, fixed_t destz)
+{
+   angle_t an;
+   Mobj *th;  // haleyjd: restructured
+
+   if(srcz != ONFLOORZ)
+      srcz -= source->floorclip;
+
+   th = P_SpawnMobj(source->x, source->y, srcz, type);
+
+   S_StartSound(th, th->info->seesound);
+
+   P_SetTarget<Mobj>(&th->target, source); // where it came from // killough 11/98
+   an = P_PointToAngle(source->x, source->y, destx, desty);
+
+   // fuzzy player --  haleyjd: add total invisibility, ghost
+   if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
+      dest->flags3 & MF3_GHOST)
+   {
+      int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
+
+      an += P_SubRandom(pr_shadow) << shamt;
+   }
+
+   th->angle = an;
+   an >>= ANGLETOFINESHIFT;
+   th->momx = FixedMul(th->info->speed, finecosine[an]);
+   th->momy = FixedMul(th->info->speed, finesine[an]);
+   th->momz = P_MissileMomz(destx - source->x,
+                            desty - source->y,
+                            destz - source->z,
+                            th->info->speed);
+
+   P_CheckMissileSpawn(th);
+
+   return th;
+}
+
+
 void P_Massacre(int friends)
 {
    Mobj *mo;
