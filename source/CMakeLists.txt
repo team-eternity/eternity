@@ -97,6 +97,8 @@ IF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
     SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
 ENDIF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
 
+MESSAGE ("Linker: " ${CMAKE_LINKER})
+
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
@@ -143,11 +145,11 @@ TARGET_LINK_LIBRARIES (eternity
     ${SDLMIXER_LIBRARY}
     ${SDLNET_LIBRARY}
     ${LIBARCHIVE_LIBRARIES}
-    ${PC_CARES_LDFLAGS}
+    ${PC_GNUTLS_LDFLAGS}
     ${PC_ENET_LDFLAGS}
     ${PC_JSON_LDFLAGS}
-    ${CURL_LIBRARIES}
-    snes_spc
+    ${PC_CURL_LDFLAGS}
+    ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
 )
 ENDIF (EE_CROSS_MINGW)
 

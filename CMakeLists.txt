@@ -214,10 +214,12 @@ IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
                 IF (GCC_C_FPIC)
                         SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
                 ENDIF (GCC_C_FPIC)
-	        CHECK_C_COMPILER_FLAG (-pie GCC_C_PIE)
-	        IF (GCC_C_PIE)
-	                SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pie")
-	        ENDIF (GCC_C_PIE)
+            ## [CG] This will actually break linking with SDL_mixer on Debian
+            ##      6.0, so disable it here.
+	        ## CHECK_C_COMPILER_FLAG (-pie GCC_C_PIE)
+	        ## IF (GCC_C_PIE)
+	        ##         SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pie")
+	        ## ENDIF (GCC_C_PIE)
 	        CHECK_C_COMPILER_FLAG (-Wl,-z,relro GCC_C_WLZRELRO)
 	        IF (GCC_C_WLZRELRO)
 	                SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-z,relro")
@@ -461,8 +463,8 @@ ENDIF (libarchive_FOUND)
 ##     MESSAGE (FATAL_ERROR "No BZip2 support found in libarchive.")
 ## ENDIF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
 
-FIND_PACKAGE (CURL 7.21.0 REQUIRED)
-INCLUDE_DIRECTORIES (${CURL_INCLUDE_DIR})
+PKG_SEARCH_MODULE(PC_CURL REQUIRED libcurl>=7.21.0)
+INCLUDE_DIRECTORIES (${PC_CURL_INCLUDE_DIR})
 
 ## [CG] Check that libcurl has non-blocking DNS support.
 FIND_PROGRAM (
@@ -484,8 +486,8 @@ IF (NOT CURL_ASYNC)
     MESSAGE ("WARNING: libcurl was not built with asynchronous DNS support.")
 ENDIF (NOT CURL_ASYNC)
 
-PKG_SEARCH_MODULE(PC_CARES REQUIRED libcares>=1.7.3)
-INCLUDE_DIRECTORIES(${PC_CARES_INCLUDE_DIR})
+PKG_SEARCH_MODULE(PC_GNUTLS REQUIRED gnutls>=2.8.0)
+INCLUDE_DIRECTORIES(${PC_GNUTLS_INCLUDE_DIR})
 
 PKG_SEARCH_MODULE(PC_ENET REQUIRED libenet>=1.3.0)
 INCLUDE_DIRECTORIES(${PC_ENET_INCLUDE_DIR})
