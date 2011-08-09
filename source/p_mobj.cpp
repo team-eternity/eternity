@@ -2343,6 +2343,11 @@ void P_ParticleLine(Mobj *source, Mobj *dest)
 }
 */
 
+//=============================================================================
+//
+// Missiles
+//
+
 //
 // P_CheckMissileSpawn
 //
@@ -2409,45 +2414,82 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 }
 
 //
-// P_SpawnMissile
+// P_SpawnMissileEx
 //
-Mobj* P_SpawnMissile(Mobj* source, Mobj* dest, mobjtype_t type,
-                       fixed_t z)
+// haleyjd 08/08/11: Core shared missile firing logic, taking a structure as a 
+// parameter to hold all possible information relevant to firing the missile.
+//
+Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
 {
-   angle_t an;
-   Mobj *th;  // haleyjd: restructured
+   Mobj    *source = missileinfo.source;
+   Mobj    *dest   = missileinfo.dest;
+   fixed_t  z      = missileinfo.z;
+   Mobj    *mo;
+   angle_t  an;
 
    if(z != ONFLOORZ)
       z -= source->floorclip;
 
-   th = P_SpawnMobj(source->x, source->y, z, type);
+   mo = P_SpawnMobj(source->x, source->y, z, missileinfo.type);
 
-   S_StartSound(th, th->info->seesound);
+   S_StartSound(mo, mo->info->seesound);
 
-   P_SetTarget<Mobj>(&th->target, source); // where it came from // killough 11/98
-   an = P_PointToAngle(source->x, source->y, dest->x, dest->y);
+   P_SetTarget<Mobj>(&mo->target, source); // where it came from -- killough 11/98
 
-   // fuzzy player --  haleyjd: add total invisibility, ghost
-   if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
-      dest->flags3 & MF3_GHOST)
+   if(missileinfo.flags & missileinfo_t::USEANGLE)
+      an = missileinfo.angle;
+   else
+      an = P_PointToAngle(source->x, source->y, missileinfo.destx, missileinfo.desty);
+
+   // fuzzy player -- haleyjd: add total invisibility, ghost
+   if(dest && !(missileinfo.flags & missileinfo_t::NOFUZZ))
    {
-      int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
-
-      an += P_SubRandom(pr_shadow) << shamt;
+      if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
+         dest->flags3 & MF3_GHOST)
+      {
+         int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
+         an += P_SubRandom(pr_shadow) << shamt;
+      }
+   }
+   
+   mo->angle = an;
+   an >>= ANGLETOFINESHIFT;
+   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
+   mo->momy = FixedMul(mo->info->speed, finesine[an]);   
+   
+   if(missileinfo.flags & missileinfo_t::USEANGLE)
+      mo->momz = missileinfo.momz;
+   else
+   {
+      mo->momz = P_MissileMomz(missileinfo.destx - source->x,
+                               missileinfo.desty - source->y,
+                               missileinfo.destz - source->z,
+                               mo->info->speed);
    }
 
-   th->angle = an;
-   an >>= ANGLETOFINESHIFT;
-   th->momx = FixedMul(th->info->speed, finecosine[an]);
-   th->momy = FixedMul(th->info->speed, finesine[an]);
-   th->momz = P_MissileMomz(dest->x - source->x,
-                            dest->y - source->y,
-                            dest->z - source->z,
-                            th->info->speed);
+   P_CheckMissileSpawn(mo);
 
-   P_CheckMissileSpawn(th);
+   return mo;
+}
 
-   return th;
+//
+// P_SpawnMissile
+//
+Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
+{
+   missileinfo_t missileinfo;
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.dest   = dest;
+   missileinfo.destx  = dest->x;
+   missileinfo.desty  = dest->y;
+   missileinfo.destz  = dest->z;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+
+   return P_SpawnMissileEx(missileinfo);
 }
 
 //
@@ -2525,90 +2567,60 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
 
    P_SetTarget<Mobj>(&th->target, source);   // killough 11/98
    th->angle = an;
-   th->momx = FixedMul(th->info->speed,finecosine[an>>ANGLETOFINESHIFT]);
-   th->momy = FixedMul(th->info->speed,finesine[an>>ANGLETOFINESHIFT]);
-   th->momz = FixedMul(th->info->speed,slope);
+   th->momx = FixedMul(th->info->speed, finecosine[an>>ANGLETOFINESHIFT]);
+   th->momy = FixedMul(th->info->speed, finesine[an>>ANGLETOFINESHIFT]);
+   th->momz = FixedMul(th->info->speed, slope);
 
    P_CheckMissileSpawn(th);
 
    return th;    //sf
 }
 
-//
-// Start new Eternity mobj functions
-//
-
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
-                            angle_t angle, fixed_t momz, fixed_t z)
+                          angle_t angle, fixed_t momz, fixed_t z)
 {
-   Mobj *mo;
+   missileinfo_t missileinfo;
 
-   if(z != ONFLOORZ)
-      z -= source->floorclip;
+   memset(&missileinfo, 0, sizeof(missileinfo));
 
-   mo = P_SpawnMobj(source->x, source->y, z, type);
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = angle;
+   missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
-   S_StartSound(mo, mo->info->seesound);
-
-   // haleyjd 09/21/03: don't set this directly!
-   P_SetTarget<Mobj>(&mo->target, source);
-
-   mo->angle = angle;
-   angle >>= ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[angle]);
-   mo->momy = FixedMul(mo->info->speed, finesine[angle]);
-   mo->momz = momz;
-
-   P_CheckMissileSpawn(mo);
-
-   return mo;
+   return P_SpawnMissileEx(missileinfo);
 }
 
 //
-// P_SpawnMissileWithPos
+// P_SpawnMissileWithDest
 //
 // haleyjd 08/07/11: Ugly hack to solve a problem Lee created in A_Mushroom.
 //
-Mobj* P_SpawnMissileWithPos(Mobj* source, Mobj* dest, mobjtype_t type,
-                            fixed_t srcz, 
-                            fixed_t destx, fixed_t desty, fixed_t destz)
+Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
+                             fixed_t srcz, 
+                             fixed_t destx, fixed_t desty, fixed_t destz)
 {
-   angle_t an;
-   Mobj *th;  // haleyjd: restructured
+   missileinfo_t missileinfo;
 
-   if(srcz != ONFLOORZ)
-      srcz -= source->floorclip;
+   memset(&missileinfo, 0, sizeof(missileinfo));
 
-   th = P_SpawnMobj(source->x, source->y, srcz, type);
+   missileinfo.source = source;
+   missileinfo.dest   = dest;
+   missileinfo.destx  = destx; // Use provided destination coordinates
+   missileinfo.desty  = desty;
+   missileinfo.destz  = destz;
+   missileinfo.type   = type;
+   missileinfo.z      = srcz;
 
-   S_StartSound(th, th->info->seesound);
-
-   P_SetTarget<Mobj>(&th->target, source); // where it came from // killough 11/98
-   an = P_PointToAngle(source->x, source->y, destx, desty);
-
-   // fuzzy player --  haleyjd: add total invisibility, ghost
-   if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
-      dest->flags3 & MF3_GHOST)
-   {
-      int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
-
-      an += P_SubRandom(pr_shadow) << shamt;
-   }
-
-   th->angle = an;
-   an >>= ANGLETOFINESHIFT;
-   th->momx = FixedMul(th->info->speed, finecosine[an]);
-   th->momy = FixedMul(th->info->speed, finesine[an]);
-   th->momz = P_MissileMomz(destx - source->x,
-                            desty - source->y,
-                            destz - source->z,
-                            th->info->speed);
-
-   P_CheckMissileSpawn(th);
-
-   return th;
+   return P_SpawnMissileEx(missileinfo);
 }
 
+//=============================================================================
+//
+// New Eternity mobj functions
+//
 
 void P_Massacre(int friends)
 {

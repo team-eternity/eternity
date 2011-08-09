@@ -96,12 +96,13 @@ void A_Mushroom(Mobj *actor)
          y = actor->y + (j << FRACBITS);
          z = actor->z + P_AproxDistance(i, j) * misc1; // Aim fairly high
        
-         mo = P_SpawnMissileWithPos(actor, actor, ShotType,  // Launch fireball
-                                    actor->z + DEFAULTMISSILEZ,
-                                    x, y, z);
+         mo = P_SpawnMissileWithDest(actor, actor, 
+                                     ShotType,          // Launch fireball
+                                     actor->z + DEFAULTMISSILEZ,
+                                     x, y, z);
          
          mo->momx = FixedMul(mo->momx, misc2);
-         mo->momy = FixedMul(mo->momy, misc2);             // Slow down a bit
+         mo->momy = FixedMul(mo->momy, misc2);         // Slow down a bit
          mo->momz = FixedMul(mo->momz, misc2);
          mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
       }
