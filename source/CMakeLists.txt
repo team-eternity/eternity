@@ -27,25 +27,31 @@ ENDIF (COMMAND cmake_policy)
 ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
 ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
 
-IF (EE_CROSS_MINGW)
-    ADD_DEFINITIONS (-DCURL_STATICLIB -DHAVE_SCHED_SETAFFINITY -DHAVE_STDINT_H)
-    ADD_DEFINITIONS (-DLIBARCHIVE_STATIC)
-ENDIF (EE_CROSS_MINGW)
+IF (EE_STATIC_COMPILE)
+    ADD_DEFINITIONS (
+        -DCURL_STATICLIB
+        -DLIBARCHIVE_STATIC
+    )
+ENDIF (EE_STATIC_COMPILE)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
 IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    ADD_DEFINITIONS (-DLINUX -DHAVE_SCHED_SETAFFINITY)
+    ADD_DEFINITIONS (-DLINUX)
 ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
+    ADD_DEFINITIONS (-DHAVE_SCHED_SETAFFINITY)
+ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
 
 IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     ## [CG] Ensure that _GNU_SOURCE is defined when using GCC.
     ADD_DEFINITIONS (-D_GNU_SOURCE)
 ENDIF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
-IF (WIN32 OR MINGW OR EE_CROSS_MINGW)
+IF (WIN32 OR MINGW)
     ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
-ENDIF (WIN32 OR MINGW OR EE_CROSS_MINGW)
+ENDIF (WIN32 OR MINGW)
 
 ## Small does not work on 64bit systems. The most reliable way
 ## to determine if we are building on a 64bit system is to
@@ -55,12 +61,12 @@ IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
     ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
 ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
 
-IF (WIN32 OR MINGW OR EE_CROSS_MINGW)
-    IF (NOT EE_CROSS_MINGW)
+IF (WIN32 OR MINGW)
+    IF (NOT MINGW)
         INCLUDE_DIRECTORIES (Win32/)
-    ENDIF (NOT EE_CROSS_MINGW)
+    ENDIF (NOT MINGW)
     FILE (GLOB ARCH_SPECIFIC_SOURCES Win32/*.c)
-ENDIF (WIN32 OR MINGW OR EE_CROSS_MINGW)
+ENDIF (WIN32 OR MINGW)
 
 IF (APPLE)
     INCLUDE_DIRECTORIES (sdl/macosx/)
@@ -93,11 +99,9 @@ SET (SDL_SOURCES
     sdl/mmus2mid.c
     sdl/ser_main.c
 )
-IF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
+IF (NOT WIN32 AND NOT MINGW)
     SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
-ENDIF (NOT WIN32 AND NOT MINGW AND NOT EE_CROSS_MINGW)
-
-MESSAGE ("Linker: " ${CMAKE_LINKER})
+ENDIF (NOT WIN32 AND NOT MINGW)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -110,48 +114,83 @@ ADD_EXECUTABLE (eternity
     ${TEXTSCREEN_SOURCES}
     ${SDL_SOURCES}
 )
-IF (EE_CROSS_MINGW)
-FILE (GLOB EE_CROSS_DIRECTX_LIBRARIES ${EE_CROSS_DEPS}/source/DirectX/lib/*.a)
-TARGET_LINK_LIBRARIES (eternity
-    ${EE_CROSS_DIRECTX_LIBRARIES}
-    ${EE_CROSS_DEPS}/build/lib/libseh.a
-    ${EE_CROSS_DEPS}/build/lib/libenet.a
-    ${EE_CROSS_DEPS}/build/lib/libjson.a
-    ${EE_CROSS_DEPS}/build/lib/libcurl.a
-    ${EE_CROSS_DEPS}/build/lib/libarchive.a
-    ${EE_CROSS_DEPS}/build/lib/libz.a
-    ${EE_CROSS_DEPS}/build/lib/libbz2.a
-    ${EE_CROSS_DEPS}/build/lib/liblzma.a
-    ${EE_CROSS_DEPS}/build/lib/libgnutls-extra.a
-    ${EE_CROSS_DEPS}/build/lib/libgnutls-openssl.a
-    ${EE_CROSS_DEPS}/build/lib/libgnutls.a
-    ${EE_CROSS_DEPS}/build/lib/libgcrypt.a
-    ${EE_CROSS_DEPS}/build/lib/libgpg-error.a
-    ${EE_CROSS_DEPS}/build/lib/libidn.a
-    ${EE_CROSS_DEPS}/build/lib/libSDL_mixer.a
-    ${EE_CROSS_DEPS}/build/lib/libSDL_net.a
-    ${EE_CROSS_DEPS}/build/lib/libSDL.a
-    ${EE_CROSS_DEPS}/build/lib/libSDLmain.a
-    ${EE_CROSS_DEPS}/build/lib/libmad.a
-    # ${EE_CROSS_DEPS}/build/lib/libmikmod.a
-    ${EE_CROSS_DEPS}/build/lib/libogg.a
-    ${EE_CROSS_DEPS}/build/lib/libvorbis.a
-    ${EE_CROSS_DEPS}/build/lib/libFLAC.a
-    mingw32 m user32 gdi32 dxguid snes_spc ws2_32 wldap32 winmm
-)
-ELSE (EE_CROSS_MINGW)
-TARGET_LINK_LIBRARIES (eternity
-    ${SDL_LIBRARY}
-    ${SDLMIXER_LIBRARY}
-    ${SDLNET_LIBRARY}
-    ${LIBARCHIVE_LIBRARIES}
-    ${PC_GNUTLS_LDFLAGS}
-    ${PC_ENET_LDFLAGS}
-    ${PC_JSON_LDFLAGS}
-    ${PC_CURL_LDFLAGS}
-    ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-)
-ENDIF (EE_CROSS_MINGW)
+IF (EE_STATIC_COMPILE)
+    IF(MINGW)
+        FILE (
+            GLOB EE_CROSS_DIRECTX_LIBRARIES
+            ${EE_STATIC_DEPS}/source/DirectX/lib/*.a
+        )
+        TARGET_LINK_LIBRARIES (eternity
+            ${EE_CROSS_DIRECTX_LIBRARIES}
+            ${EE_STATIC_DEPS}/lib/libseh.a
+            ${EE_STATIC_DEPS}/lib/libenet.a
+            ${EE_STATIC_DEPS}/lib/libjson.a
+            ${EE_STATIC_DEPS}/lib/libcurl.a
+            ${EE_STATIC_DEPS}/lib/libarchive.a
+            ${EE_STATIC_DEPS}/lib/libz.a
+            ${EE_STATIC_DEPS}/lib/libbz2.a
+            ${EE_STATIC_DEPS}/lib/liblzma.a
+            ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
+            ${EE_STATIC_DEPS}/lib/libgnutls-openssl.a
+            ${EE_STATIC_DEPS}/lib/libgnutls.a
+            ${EE_STATIC_DEPS}/lib/libgcrypt.a
+            ${EE_STATIC_DEPS}/lib/libgpg-error.a
+            ${EE_STATIC_DEPS}/lib/libidn.a
+            ${EE_STATIC_DEPS}/lib/libcares.a
+            ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
+            ${EE_STATIC_DEPS}/lib/libSDL_net.a
+            ${EE_STATIC_DEPS}/lib/libSDL.a
+            ${EE_STATIC_DEPS}/lib/libSDLmain.a
+            ${EE_STATIC_DEPS}/lib/libmad.a
+            # ${EE_STATIC_DEPS}/lib/libmikmod.a
+            ${EE_STATIC_DEPS}/lib/libogg.a
+            ${EE_STATIC_DEPS}/lib/libvorbis.a
+            ${EE_STATIC_DEPS}/lib/libFLAC.a
+            ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+            mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
+        )
+    ELSE(MINGW)
+        TARGET_LINK_LIBRARIES (eternity
+            ${EE_STATIC_DEPS}/lib/libenet.a
+            ${EE_STATIC_DEPS}/lib/libjson.a
+            ${EE_STATIC_DEPS}/lib/libcurl.a
+            ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
+            ${EE_STATIC_DEPS}/lib/libgnutls-openssl.a
+            ${EE_STATIC_DEPS}/lib/libgnutls.a
+            ${EE_STATIC_DEPS}/lib/libgcrypt.a
+            ${EE_STATIC_DEPS}/lib/libgpg-error.a
+            ${EE_STATIC_DEPS}/lib/libidn.a
+            ${EE_STATIC_DEPS}/lib/libcares.a
+            ${EE_STATIC_DEPS}/lib/libarchive.a
+            ${EE_STATIC_DEPS}/lib/libz.a
+            ${EE_STATIC_DEPS}/lib/libbz2.a
+            ${EE_STATIC_DEPS}/lib/liblzma.a
+            ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
+            ${EE_STATIC_DEPS}/lib/libSDL_net.a
+            ${EE_STATIC_DEPS}/lib/libSDL.a
+            ${EE_STATIC_DEPS}/lib/libSDLmain.a
+            ${EE_STATIC_DEPS}/lib/libmad.a
+            # ${EE_STATIC_DEPS}/lib/libmikmod.a
+            ${EE_STATIC_DEPS}/lib/libogg.a
+            ${EE_STATIC_DEPS}/lib/libvorbis.a
+            ${EE_STATIC_DEPS}/lib/libFLAC.a
+            ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+            pthread m rt stdc++
+        )
+    ENDIF(MINGW)
+ELSE (EE_STATIC_COMPILE)
+    TARGET_LINK_LIBRARIES (eternity
+        ${SDL_LIBRARY}
+        ${SDLMIXER_LIBRARY}
+        ${SDLNET_LIBRARY}
+        ${PC_LIBARCHIVE_LDFLAGS}
+        ${PC_GNUTLS_LDFLAGS}
+        ${PC_ENET_LDFLAGS}
+        ${PC_JSON_LDFLAGS}
+        ${PC_CURL_LDFLAGS}
+        ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+    )
+ENDIF (EE_STATIC_COMPILE)
 
 INSTALL (TARGETS eternity
     RUNTIME DESTINATION ${BIN_DIR}

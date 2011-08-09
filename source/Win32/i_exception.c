@@ -37,6 +37,7 @@
 #ifdef __MINGW32__
 // [CG] MinGW doesn't support __try or __except, so I've included the LibSEH
 //      library that does.
+#define WIN32_LEAN_AND_MEAN
 #include <seh/seh.h>
 #endif
 

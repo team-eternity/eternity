@@ -30,14 +30,18 @@ INCLUDE_DIRECTORIES (.)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
-ADD_LIBRARY (snes_spc SHARED ${SNES_SPC_SOURCES} snes_spc.def)
 ADD_LIBRARY (snes_spc-static STATIC ${SNES_SPC_SOURCES})
+IF (NOT EE_STATIC)
+    ADD_LIBRARY (snes_spc SHARED ${SNES_SPC_SOURCES} snes_spc.def)
+ENDIF (NOT EE_STATIC)
+
 SET_TARGET_PROPERTIES(snes_spc-static PROPERTIES OUTPUT_NAME "snes_spc")
 SET_TARGET_PROPERTIES(snes_spc-static PROPERTIES PREFIX "lib")
-SET_TARGET_PROPERTIES(snes_spc PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 SET_TARGET_PROPERTIES(snes_spc-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-## TARGET_LINK_LIBRARIES (snes_spc)
-INSTALL (TARGETS snes_spc DESTINATION ${LIB_DIR})
+IF (NOT EE_STATIC)
+    SET_TARGET_PROPERTIES(snes_spc PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+    INSTALL (TARGETS snes_spc DESTINATION ${LIB_DIR})
+ENDIF (NOT EE_STATIC)
 ## INSTALL (TARGETS snes_spc
 ##     RUNTIME DESTINATION ${BIN_DIR}
 ##     LIBRARY DESTINATION ${LIB_DIR}

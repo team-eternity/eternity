@@ -419,10 +419,10 @@ IF (NOT HAVE_STDINT_H)
 ENDIF (NOT HAVE_STDINT_H)
 ################################################################################
 ######################### Find Needed Libs #####################################
-IF (EE_CROSS_MINGW)
-INCLUDE_DIRECTORIES(${EE_MINGW_PATH}/include)
-INCLUDE_DIRECTORIES(${EE_CROSS_DEPS}/build/include)
-ENDIF (EE_CROSS_MINGW)
+IF (EE_STATIC_COMPILE)
+    INCLUDE_DIRECTORIES(${EE_STATIC_ROOT_PREFIX}/include)
+    INCLUDE_DIRECTORIES(${EE_STATIC_DEPS}/include)
+ENDIF (EE_STATIC_COMPILE)
 
 FIND_PACKAGE (SDL 1.2.14 REQUIRED)
 INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
@@ -433,31 +433,17 @@ INCLUDE_DIRECTORIES (${SDLMIXER_INCLUDE_DIR})
 FIND_PACKAGE (SDL_net 1.2.7 REQUIRED)
 INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
 
-## [CG] Further checks are necessary if cross-compiling, it's assumed that the
-##      user has set up the dependencies properly.
-IF (NOT EE_CROSS_MINGW)
-FIND_PACKAGE (libarchive 2.8.0 QUIET)
-IF (libarchive_FOUND)
-    INCLUDE_DIRECTORIES (${LIBARCHIVE_INCLUDE_DIR})
-    CHECK_LIBRARY_EXISTS (
-        ${LIBARCHIVE_LIBRARY}
-        archive_write_set_compression_bzip2
-        ""
-        HAVE_LIBARCHIVE_BZIP2_SUPPORT
-    )
-ELSE (libarchive_FOUND)
-    ## [CG] Not every platform will have Findlibarchive.cmake installed, so try
-    ##      and use pkg-config here.
-    PKG_SEARCH_MODULE(libarchive REQUIRED libarchive>=2.8.0)
-    INCLUDE_DIRECTORIES(${libarchive_INCLUDE_DIR})
-    CHECK_LIBRARY_EXISTS (
-        ${libarchive_LIBRARIES}
-        archive_write_set_compression_bzip2
-        ""
-        HAVE_LIBARCHIVE_BZIP2_SUPPORT
-    )
-    SET (LIBARCHIVE_LIBRARIES ${libarchive_LIBRARIES})
-ENDIF (libarchive_FOUND)
+## [CG] Further checks are unnecessary if building statically; it's assumed
+##      that the user has set up the dependencies properly.
+IF (NOT EE_STATIC_COMPILE)
+PKG_SEARCH_MODULE(PC_LIBARCHIVE REQUIRED libarchive>=2.8.0)
+INCLUDE_DIRECTORIES(${PC_LIBARCHIVE_INCLUDE_DIR})
+CHECK_LIBRARY_EXISTS (
+    ${PC_LIBARCHIVE_LIBRARIES}
+    archive_write_set_compression_bzip2
+    ""
+    HAVE_LIBARCHIVE_BZIP2_SUPPORT
+)
 
 ## IF (NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
 ##     MESSAGE (FATAL_ERROR "No BZip2 support found in libarchive.")
@@ -508,23 +494,22 @@ IF (WIN32)
        PATHS)
    FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
 ENDIF (WIN32)
-ENDIF (NOT EE_CROSS_MINGW)
+ENDIF (NOT EE_STATIC_COMPILE)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
 ADD_SUBDIRECTORY(snes_spc)
 ADD_SUBDIRECTORY(source)
 
-IF (NOT EE_CROSS_MINGW)
+IF (NOT EE_STATIC_COMPILE)
 IF (WIN32)
-        ADD_SUBDIRECTORY(eecrashreport)
+    ADD_SUBDIRECTORY(eecrashreport)
 ENDIF (WIN32)
 
 ## FIXME: This is a continuation of the Windows SDL inelegant hack. This does
 ## the actual installation of those support libraries.
 IF (WIN32)
-        INSTALL (PROGRAMS ${SDL_SUPPORT_LIBS}
-                DESTINATION ${LIB_DIR})
+    INSTALL (PROGRAMS ${SDL_SUPPORT_LIBS} DESTINATION ${LIB_DIR})
 ENDIF (WIN32)
-ENDIF (NOT EE_CROSS_MINGW)
+ENDIF (NOT EE_STATIC_COMPILE)
 
