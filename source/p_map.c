@@ -2283,6 +2283,11 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
 
    // [CG] TODO: Ask Randy about BSD-ing the 0.8, it's in ZDoom-1.23 but not
    //            ZDoom-1.22.
+   // [CG] TODO: Really, all this should be configurable, like
+   //            "rocket_thrust_percentage_for_self" and
+   //            "rocket_thrust_percentage_for_others".  Additionally damage
+   //            needs to be separated out from thrust so it too can be
+   //            configured"
    if(theBomb->bombsource == thing)
    {
       // thing->momz += M_DoubleToFixed(z_delta * thrust * 0.8);

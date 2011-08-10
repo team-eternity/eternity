@@ -203,7 +203,14 @@ void CL_Init(char *url)
 
    url_length = strlen(url);
    cs_server_url = calloc(url_length + 1, sizeof(char));
-   memcpy(cs_server_url, url, url_length);
+   if(strncmp(url, "eternity://", 11) == 0)
+   {
+      sprintf(cs_server_url, "http://%s", url + 11);
+   }
+   else
+   {
+      memcpy(cs_server_url, url, url_length);
+   }
 
    // [CG] cURL supports millions of protocols, nonetheless, make sure that
    //      the passed URI is supported (and actually a URI).

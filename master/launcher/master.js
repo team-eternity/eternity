@@ -63,19 +63,21 @@ function formatList(l, length) {
     return ellipsize(l.join(', '), length);
 }
 
-function setProtocolToEMP(uri) {
+function setProtocolToEternity(uri) {
     var x = new String(uri);
     var colon_index = x.indexOf(":");
     if (colon_index == -1) {
         return x; // [CG] URI is probably invalid, so screw it.
     }
-    return 'emp' + x.substr(colon_index);
+    return 'eternity' + x.substr(colon_index);
 };
 
 function toURI(group_name, server_name) {
-    // var base_emp_uri = setProtocolToEMP(window.location);
-    return window.location + 'servers/' + encodeURIComponent(group_name) +
-           '/' + encodeURIComponent(server_name);
+    return setProtocolToEternity(window.location) +
+           'servers/' +
+           encodeURIComponent(group_name) +
+           '/' +
+           encodeURIComponent(server_name);
 }
 
 function toLink(group_name, server_name, hostname) {

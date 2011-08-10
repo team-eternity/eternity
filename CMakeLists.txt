@@ -49,7 +49,7 @@ ENDIF (NOT PKG_CONFIG_FOUND)
 SET (CMAKE_MFC_FLAG 2)
 SET (CMAKE_INSTALL_MFC_LIBRARIES 1)
 INCLUDE(InstallRequiredSystemLibraries)
-SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP")
+SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP;NSIS")
 SET (CPACK_PACKAGE_VENDOR "Team Eternity")
 SET (CPACK_PACKAGE_CONTACT "Team Eternity <haleyjd@hotmail.com>")
 SET (CPACK_PACKAGE_VERSION_MAJOR "3")
@@ -57,7 +57,12 @@ SET (CPACK_PACKAGE_VERSION_MINOR "39")
 SET (CPACK_PACKAGE_VERSION_PATCH "50")
 SET (CPACK_PACKAGE_NAME "Eternity Engine")
 SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
-SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine is Team Eternity's flagship product.")
+SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY
+     "The Eternity Engine is Team Eternity's flagship product.")
+SET (CPACK_PACKAGE_EXECUTABLES "eternity;Eternity Engine")
+SET (CPACK_PACKAGE_INSTALL_DIRECTORY "Eternity Engine")
+SET (CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Eternity Engine")
+SET (CPACK_STRIP_FILES TRUE)
 SET (CPACK_DEBIAN_PACKAGE_SECTION "games")
 SET (CPACK_DEBIAN_PACKAGE_DEPENDS
     "libc6 (>= 2.11.0),
@@ -104,6 +109,23 @@ IF (WIN32)
 ELSE (WIN32)
         SET (LIB_DIR lib)
 ENDIF (WIN32)
+
+## [CG] NSIS Options
+SET(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+SET(CPACK_NSIS_MODIFY_PATH ON)
+SET(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+    WriteRegStr HKCR \\\"eternity\\\" \\\"\\\" \\\"Eternity Engine Link\\\"
+    WriteRegStr HKCR \\\"eternity\\\" \\\"URL Protocol\\\" \\\"\\\"
+    WriteRegStr HKCR \\\"eternity\\\\shell\\\\open\\\\command\\\" \\\"\\\" '\\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" \\\"%1\\\"'
+    FileOpen $9 \\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" w
+    FileWrite $9 'cd \\\"$INSTDIR\\\\bin\\\"'
+    FileWrite $9 \\\"$\\\\r$\\\\n\\\"
+    FileWrite $9 'eternity -directx -8in32 -nosound -csjoin \\\"%1\\\"'
+    FileClose $9
+")
+SET(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+    DeleteRegValue HKCR \\\"eternity\\\" \\\"\\\"
+")
 INCLUDE(CPack)
 ################################################################################
 ######################### Compiler: Warnings  ##################################

@@ -4,7 +4,7 @@
 
 EE's master server is still in flux, and almost all of this is subject to
 change.  However, the basic principles will remain the same: the server will
-always be an HTTP server, the data format will always be jSON, and so on, but
+always be an HTTP server, the data format will always be JSON, and so on, but
 details may change.  Current candidates include:
 
   - Adding a configurable limit on how many server groups an admin can have on
@@ -137,9 +137,6 @@ password for other services, such as their e-mail account, bank account, et
 cetera.  The JavaScript launcher holds the SHA-1 hash of the user's password
 in memory; no cookies of any kind are used.
 
-SSL is currently unsupported in both the client and server, but if there is a
-strong desire for it I will add it.
-
 #### Player Usage
 
 Players interact with the master largely through the JavaScript launcher
@@ -150,11 +147,11 @@ interface.
 The master comes with a JavaScript "launcher" interface accessible at its root
 URL (i.e. `http://master.eternity.xxx/`).  This interface lists the server's
 configuration (address, port, PWADs, etc.) and current state (players, frags,
-etc.), and most importantly links pointing to JSON configuratin data used to
-join servers.  The client is registered to handle mime-type
-`application/eternity` launches a command-line like:
+etc.), and most importantly links pointing to JSON configuration data used to
+join servers.  The client is registered to handle the `eternity:` protocol, and
+launches a command-line like:
 
-    eternity.exe -csjoin http://master.eternity.xxx/servers/totaltrash/ZDDL1
+    eternity.exe -csjoin eternity://master.eecs.xxx/servers/totaltrash/ZDDL1
 
 ##### Downloading WADs
 
@@ -169,13 +166,15 @@ The master/launcher design is built around the URL.  Each server must belong to
 a group, and its name is then listed beneath that group.  For example,
   TotalTrash's Private CTF server might have the following URL:
 
-    http://master.eternity.xxx/servers/totaltrash/Private CTF
+    eternity://master.eternity.xxx/servers/totaltrash/Private CTF
 
 Pointing an HTTP client at this URL will return the server's configuration,
 which is a short JSON document.  This document contains everything the client
 needs to know in order to connect to the server.
 
-Using URLs in this way has numerous benefits:
+Additionally, EE supports a wide range of protocols, including (but not limited
+to) HTTP(S), FTP, and FILE.  This gives admins and users extreme flexibility,
+indeed using URLs in this way has numerous benefits:
 
 ###### Storage is simple
 
@@ -244,7 +243,7 @@ should be at least 2 seconds... but generally should be around 3 or 4 seconds.
 Server groups determine what base URL their server URLs will use.  For example,
 creating the group "idl" on "master.totaltrash.org" might yield a URL like:
 
-    http://master.totaltrash.org/servers/idl/server 1
+    eternity://master.totaltrash.org/servers/idl/server 1
 
 This prevents namespace collisions; "server 1" is a potentially common name,
 and this allows server admins to be free in how they name their servers.

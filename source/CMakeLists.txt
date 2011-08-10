@@ -189,6 +189,7 @@ ELSE (EE_STATIC_COMPILE)
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+        stdc++
     )
 ENDIF (EE_STATIC_COMPILE)
 
