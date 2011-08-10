@@ -397,7 +397,9 @@ void P_ParticleLine(Mobj *source, Mobj *dest);
 */
 
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
+fixed_t P_PlayerPitchSlope(player_t *player);
 
+// haleyjd 08/08/11: structure for use with P_SpawnMissileEx
 struct missileinfo_t
 {
    enum
@@ -420,18 +422,19 @@ struct missileinfo_t
 
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
+// Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
 Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
-
 // new Eternity mobj function prototypes  haleyjd
-void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
-bool    P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
-void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
+void P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
+bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
+void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 
+// TIDs
 void P_InitTIDHash(void);
 void P_AddThingTID(Mobj *mo, int tid);
 void P_RemoveThingTID(Mobj *mo);

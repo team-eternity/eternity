@@ -2497,7 +2497,7 @@ Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
 //
 // haleyjd 12/28/10: Don't use mlook calculations in old demos!
 //
-static fixed_t P_PlayerPitchSlope(player_t *player)
+fixed_t P_PlayerPitchSlope(player_t *player)
 {
    // Support purely vanilla behavior, and also use in EE if pitch is 0.
    // Avoids very small roundoff errors.
