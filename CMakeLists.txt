@@ -118,6 +118,8 @@ SET(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
     WriteRegStr HKCR \\\"eternity\\\" \\\"URL Protocol\\\" \\\"\\\"
     WriteRegStr HKCR \\\"eternity\\\\shell\\\\open\\\\command\\\" \\\"\\\" '\\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" \\\"%1\\\"'
     FileOpen $9 \\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" w
+    FileWrite $9 'SET DOOMWADPATH=%DOOMWADPATH%;$INSTDIR;$INSTDIR\\\\bin'
+    FileWrite $9 \\\"$\\\\r$\\\\n\\\"
     FileWrite $9 'cd \\\"$INSTDIR\\\\bin\\\"'
     FileWrite $9 \\\"$\\\\r$\\\\n\\\"
     FileWrite $9 'eternity -directx -8in32 -nosound -csjoin \\\"%1\\\"'

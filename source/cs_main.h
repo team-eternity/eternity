@@ -370,6 +370,8 @@ typedef struct server_client_s
    unsigned int last_command_received_index;
    // [CG] This is so that unlagged knows which positions to load.
    unsigned int command_world_index;
+   // [CG] So the server knows that a client's loaded the map.
+   boolean received_command_for_current_map;
    // [CG] The serverside command buffer.
    mqueue_t commands;
    // [CG] The server stores player positions here for unlagged.

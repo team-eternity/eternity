@@ -520,7 +520,7 @@ static boolean retrieve_demo(char *url)
    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fwrite);
    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fobj);
 
-   if((res = curl_easy_perform(curl_handle)) != 0);
+   if((res = curl_easy_perform(curl_handle)) != 0)
    {
       fclose(fobj);
       demo_error_message = curl_easy_strerror(res);

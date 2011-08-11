@@ -458,8 +458,6 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
    if(hightag > PU_CACHE)
       hightag = PU_CACHE;
 
-   printf("Z_FreeTags (%d): Freeing from %d to %d.\n", line, lowtag, hightag);
-   
    for(; lowtag <= hightag; ++lowtag)
    {
       for(block = blockbytag[lowtag], blockbytag[lowtag] = NULL; block;)

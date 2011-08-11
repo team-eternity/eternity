@@ -55,6 +55,7 @@
 #include "c_net.h"
 #include "w_wad.h"
 #include "s_sound.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "f_finale.h"
 #include "f_wipe.h"
@@ -3182,11 +3183,7 @@ static void D_DoomInit(void)
 
    // [CG] Don't load any WADs (other than the IWAD) that aren't explicitly
    //      listed by the server or in the server's configuration file.
-   if(clientserver && !CS_DEMO)
-   {
-      CS_LoadWADs();
-   }
-   else
+   if(!clientserver)
    {
       // haleyjd 03/10/03: Load GFS Wads
       // 08/08/03: moved first, so that command line overrides
@@ -3221,10 +3218,7 @@ static void D_DoomInit(void)
             }
          }
       }
-   }
 
-   if(!clientserver)
-   {
       if(!(p = M_CheckParm("-playdemo")) || p >= myargc-1)   // killough
       {
          if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
@@ -3375,6 +3369,17 @@ static void D_DoomInit(void)
    startupmsg("W_Init", "Init WADfiles.");
    W_InitMultipleFiles(&w_GlobalDir, wadfiles);
    usermsg("");  // gap
+
+   // [CG] I feel like it's fair that to play c/s Doom you need to either buy
+   //      Doom/Doom II from id Software or use Freedoom.  Shareware IWAD won't
+   //      cut it.
+   if(clientserver && (GameModeInfo->flags & GIF_SHAREWARE))
+   {
+      I_Error(
+         "\nYou cannot -csjoin/-csserve with the shareware version.  "
+         "Register!\n"
+      );
+   }
 
    // Check for -file in shareware
    //
@@ -3633,6 +3638,8 @@ static void D_DoomInit(void)
 
    if(clientserver)
    {
+      if(!CS_DEMO)
+         CS_LoadWADs();
       if(M_CheckParm("-csplaydemo") || M_CheckParm("-record"))
       {
          if(M_CheckParm("-csplaydemo") && M_CheckParm("-record"))

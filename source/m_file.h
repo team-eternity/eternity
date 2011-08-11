@@ -38,7 +38,9 @@
 #else
 #include <errno.h>
 #include <unistd.h>
+#ifndef __USE_XOPEN_EXTENDED
 #define __USE_XOPEN_EXTENDED
+#endif
 #include <ftw.h> // [CG] Quite possibly the best header.
 #endif
 
@@ -68,6 +70,7 @@ extern int fs_error_code;
 #endif
 
 char* M_GetFileSystemErrorMessage(void);
+boolean M_PathExists(char *path);
 boolean M_IsFile(char *path);
 boolean M_IsFolder(char *path);
 boolean M_IsAbsolutePath(char *path);

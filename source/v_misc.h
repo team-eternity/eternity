@@ -25,6 +25,7 @@
 #include "v_patch.h"
 #include "v_block.h"
 
+void V_InitBox(void);
 void V_InitMisc(void);
 
 /////////////////////////////////////////////////////////////////////////////

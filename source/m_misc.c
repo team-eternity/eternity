@@ -224,7 +224,9 @@ default_t defaults[] =
    ),
 
    // sf
-   DEFAULT_INT("show_scores", &show_scores, NULL, 0, 0, 1, wad_yes,
+   // [CG] show_scores now defaults to on, because it's confusing otherwise ("I
+   //      bound a key to "frags" but it doesn't show the scoreboard... help!")
+   DEFAULT_INT("show_scores", &show_scores, NULL, 1, 0, 1, wad_yes,
                "show scores in deathmatch"),
 
    DEFAULT_INT("lefthanded", &lefthanded, NULL, 0, 0, 1, wad_yes,

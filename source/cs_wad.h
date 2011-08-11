@@ -54,6 +54,7 @@ typedef struct cs_map_s
 } cs_map_t;
 
 extern const char *cs_iwad;
+extern char *cs_wad_repository;
 extern cs_map_t *cs_maps;
 extern unsigned int cs_map_count;
 extern cs_resource_t *cs_resources;
@@ -62,6 +63,7 @@ extern unsigned int cs_current_map_index;
 extern unsigned int cs_current_map_number;
 
 void CS_ClearMaps(void);
+char* CS_DownloadWAD(const char *wad_name);
 boolean CS_AddIWAD(const char *resource_name);
 boolean CS_AddWAD(const char *resource_name);
 boolean CS_AddDeHackEdFile(const char *resource_name);

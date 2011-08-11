@@ -816,7 +816,7 @@ void SV_LoadConfig(void)
    json_object_object_del(section, "administrator_password");
    json_object_object_del(section, "write_config_to");
 
-   if(json_object_object_get(section, "wad_folders") != NULL);
+   if(json_object_object_get(section, "wad_folders") != NULL)
    {
       json_object_object_del(section, "wad_folders");
    }
@@ -1024,8 +1024,8 @@ void CS_HandleServerSection(json_object *server)
    int int_value;
    unsigned long public_address = 0;
    char *public_address_string;
-#ifdef WIN32
    unsigned int i = 0;
+#ifdef WIN32
    char hostname[256];
    struct hostent *host;
    struct in_addr interface_address;
@@ -1285,6 +1285,29 @@ void CS_HandleServerSection(json_object *server)
             cs_original_settings->ctf = true;
          }
       }
+   }
+
+   setting = json_object_object_get(server, "wad_folders");
+   if(setting != NULL)
+   {
+      for(i = 0; i < json_object_array_length(setting); i++)
+      {
+         AddIWADDir((char *)json_object_get_string(json_object_array_get_idx(
+            setting, i
+         )));
+      }
+   }
+
+   setting = json_object_object_get(server, "wad_repository");
+   if(setting == NULL ||
+      strlen(json_object_get_string(setting)) == 0 ||
+      !CS_CheckURI((char *)json_object_get_string(setting)))
+   {
+      cs_wad_repository = NULL;
+   }
+   else
+   {
+      cs_wad_repository = strdup(json_object_get_string(setting));
    }
 }
 

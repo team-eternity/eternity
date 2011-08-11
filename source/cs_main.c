@@ -551,6 +551,7 @@ void CS_ZeroClient(int clientnum)
       sc->last_auth_attempt = 0;
       sc->commands_dropped = 0;
       sc->last_command_run_index = 0;
+      sc->received_command_for_current_map = 0;
       M_QueueFree(&sc->commands);
       memset(sc->positions, 0, MAX_POSITIONS * sizeof(position_t));
       memcpy(

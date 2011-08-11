@@ -318,7 +318,7 @@ void CL_Reset(void)
 void CL_Connect(void)
 {
    ENetEvent event;
-   json_object *password_entry;
+   json_object *password_entry, *server_section, *spectator_password;
    char *address = CS_IPToString(server_address->host);
 
    printf("Connecting to %s:%d\n", address, server_address->port);
@@ -336,23 +336,33 @@ void CL_Connect(void)
    if(enet_host_service(net_host, &event, CONNECTION_TIMEOUT) > 0 &&
       event.type == ENET_EVENT_TYPE_CONNECT)
    {
-      password_entry = json_object_object_get(
-         cs_client_password_json,
-         cs_server_url
-      );
-      if(password_entry == NULL)
+      CS_ResetNetIDs(); // [CG] Clear the Net ID hashes.
+
+      server_section = json_object_object_get(cs_json, "server");
+      spectator_password =
+         json_object_object_get(server_section, "requires_spectator_password");
+      if(json_object_get_boolean(spectator_password))
       {
-         doom_printf(
-            "This server requires a password in order to connect.  Use the "
-            "'password' command to gain authorization.\n"
+         password_entry = json_object_object_get(
+            cs_client_password_json,
+            cs_server_url
          );
+         if(password_entry == NULL)
+         {
+            doom_printf(
+               "This server requires a password in order to connect.  Use the "
+               "'password' command to gain authorization.\n"
+            );
+         }
+         else
+         {
+            CL_AuthMessage(json_object_get_string(password_entry));
+         }
       }
       else
       {
-         CL_AuthMessage(json_object_get_string(password_entry));
+         doom_printf("Connected!");
       }
-      CS_ResetNetIDs(); // [CG] Clear the Net ID hashes.
-      doom_printf("Connected!");
       if(cs_demo_recording)
       {
          CS_AddNewMapToDemo();

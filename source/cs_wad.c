@@ -28,13 +28,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "c_io.h"
 #include "doomtype.h"
 #include "d_dehtbl.h"
 #include "d_iwad.h"
 #include "d_main.h"
 #include "g_game.h"
+#include "m_file.h"
 #include "r_data.h"
+#include "s_sound.h"
 #include "w_wad.h"
+
+#include <curl/curl.h>
 
 #include "cs_main.h"
 #include "cs_demo.h"
@@ -44,8 +49,8 @@
 extern wfileadd_t *wadfiles;
 extern int texturecount;
 
-
 const char *cs_iwad = NULL;
+char *cs_wad_repository = NULL;
 cs_map_t *cs_maps = NULL;
 unsigned int cs_map_count = 0;
 cs_resource_t *cs_resources = NULL;
@@ -65,6 +70,22 @@ static cs_map_t* get_current_map(void)
    return &cs_maps[cs_current_map_number];
 }
 
+static int console_progress(void *clientp, double dltotal, double dlnow,
+                                           double ultotal, double ulnow)
+{
+   const char *wad_name = (const char *)clientp;
+   double fraction_downloaded = (dlnow / dltotal) * 100.0;
+
+   if(dlnow < 1.0 || dltotal < 1.0)
+   {
+      fraction_downloaded = 0.0;
+   }
+
+   C_Printf("Downloading %s: %f%%\n", wad_name, fraction_downloaded);
+   C_Update();
+   return 0;
+}
+
 void CS_ClearMaps(void)
 {
    unsigned int i;
@@ -76,6 +97,61 @@ void CS_ClearMaps(void)
    }
    free(cs_maps);
    cs_maps = NULL;
+}
+
+char* CS_DownloadWAD(const char *wad_name)
+{
+   size_t wad_name_size = strlen(wad_name);
+   size_t wad_repository_size = strlen(cs_wad_repository);
+   char *url = calloc(wad_name_size + wad_repository_size + 2, sizeof(char));
+   char *wad_path = calloc(strlen(basepath) + wad_name_size + 7, sizeof(char));
+   CURL *curl_handle;
+   CURLcode res;
+   FILE *fobj;
+
+   sprintf(url, "%s/%s", cs_wad_repository, wad_name);
+   sprintf(wad_path, "%s/wads/%s", basepath, wad_name);
+
+   if(!M_CreateFile(wad_path))
+   {
+      C_Printf("Error creating PWAD file on disk.\n");
+      return NULL;
+   }
+
+   if((fobj = fopen(wad_path, "wb")) == NULL)
+   {
+      C_Printf("Error opening PWAD file for writing.\n");
+      return NULL;
+   }
+
+   curl_handle = curl_easy_init();
+   if(!curl_handle)
+   {
+      fclose(fobj);
+      C_Printf("Error initializing curl.\n");
+      return NULL;
+   }
+
+   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fwrite);
+   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fobj);
+   curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 0);
+   curl_easy_setopt(curl_handle, CURLOPT_PROGRESSDATA, (void *)wad_name);
+   curl_easy_setopt(curl_handle, CURLOPT_PROGRESSFUNCTION, console_progress);
+
+   C_Printf("Downloading %s: 0%%\n", wad_name);
+   C_Update();
+
+   if((res = curl_easy_perform(curl_handle)) != 0)
+   {
+      fclose(fobj);
+      C_Printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
+      return NULL;
+   }
+
+   fclose(fobj);
+   curl_easy_cleanup(curl_handle);
+   return wad_path;
 }
 
 boolean CS_AddIWAD(const char *resource_name)
@@ -106,18 +182,25 @@ boolean CS_AddIWAD(const char *resource_name)
 
 boolean CS_AddWAD(const char *resource_name)
 {
+   boolean do_strdup = true;
    char *resource_path = D_FindWADByName((char *)resource_name);
-   
+
    if(resource_path == NULL)
    {
-      return false;
+      resource_path = CS_DownloadWAD(resource_name);
+      if(resource_path == NULL)
+         return false;
+      do_strdup = false;
    }
 
    cs_resources = realloc(
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
    );
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
-   cs_resources[cs_resource_count - 1].path = strdup(resource_path);
+   if(do_strdup)
+      cs_resources[cs_resource_count - 1].path = strdup(resource_path);
+   else
+      cs_resources[cs_resource_count - 1].path = resource_path;
    cs_resources[cs_resource_count - 1].type = rt_pwad;
    strncpy(
       cs_resources[cs_resource_count - 1].sha1_hash,

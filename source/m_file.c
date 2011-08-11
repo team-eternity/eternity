@@ -139,6 +139,17 @@ char* M_GetFileSystemErrorMessage(void)
 #endif
 }
 
+boolean M_PathExists(char *path)
+{
+   struct stat stat_result;
+
+   if(stat(path, &stat_result) != -1)
+   {
+      return true;
+   }
+   return false;
+}
+
 boolean M_IsFile(char *path)
 {
    struct stat stat_result;

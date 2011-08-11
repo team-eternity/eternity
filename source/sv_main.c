@@ -468,7 +468,6 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
 mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
 {
    int i, j;
-   fixed_t x, y;
    boolean remove_solid = false;
    int deathmatch_start_count = deathmatch_p - deathmatchstarts;
 
@@ -487,22 +486,15 @@ mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
    // [CG] Try 20 times to find an unoccupied spawn point for the player.
    for(i = 0; i < 20; i++)
    {
-      do
-      {
-         j = P_Random(pr_dmspawn) % deathmatch_start_count;
-      } while(j > (deathmatch_start_count - 1) || j < 0);
-      x = deathmatchstarts[j].x << FRACBITS;
-      y = deathmatchstarts[j].y << FRACBITS;
-      if(P_CheckPosition(players[playernum].mo, x, y))
-      {
+      j = P_Random(pr_dmspawn) % deathmatch_start_count;
+      if(P_CheckPosition(players[playernum].mo,
+                         deathmatchstarts[j].x << FRACBITS,
+                         deathmatchstarts[j].y << FRACBITS))
          break;
-      }
    }
 
    if(remove_solid)
-   {
       players[playernum].mo->flags &= ~MF_SOLID;
-   }
 
    // [CG] Even if there was no good deathmatch spawn, we still use the 20th
    //      one tried... even if it means the player will probably be stuck.
@@ -1317,15 +1309,12 @@ boolean SV_AuthorizeClient(int playernum, const char *password)
       server_client->auth_level = auth_level;
       return true;
    }
-   else
-   {
 #if _AUTH_DEBUG
-      printf(
-         "Leaving client authorization at %d.\n", server_client->auth_level
-      );
+   printf(
+      "Leaving client authorization at %d.\n", server_client->auth_level
+   );
 #endif
-      return false;
-   }
+   return false;
 }
 
 static void run_player_command(int playernum, cs_buffered_command_t *bufcmd)
@@ -1364,10 +1353,9 @@ boolean SV_RunPlayerCommands(int playernum)
       );
 #endif
       sc->commands_dropped++;
-      if(sc->commands_dropped > MAX_POSITIONS)
-      {
-         SV_DisconnectPlayer(playernum, dr_excessive_latency);
-      }
+      if(sc->received_command_for_current_map)
+         if(sc->commands_dropped > MAX_POSITIONS)
+            SV_DisconnectPlayer(playernum, dr_excessive_latency);
       return false;
    }
 
@@ -1501,11 +1489,7 @@ boolean SV_HandleJoinRequest(int playernum)
    if(server_client->auth_level < cs_auth_player)
    {
       // [CG] Client has insufficient authorization.
-      SV_SendHUDMessage(
-         playernum,
-         "Insufficient authorization, please use the 'password' console "
-         "command to gain authorization.\n"
-      );
+      SV_SendHUDMessage(playernum, "Insufficient authorization.\n");
       return false;
    }
 
@@ -1554,7 +1538,7 @@ boolean SV_HandleJoinRequest(int playernum)
       {
          // [CG] Joining the team is a go.
          SV_BroadcastMessage(
-            "%s has entered the game on the %s team.",
+            "%s has entered the game on the %s team!",
             player->name,
             team_color_names[client->team]
          );
@@ -1563,7 +1547,7 @@ boolean SV_HandleJoinRequest(int playernum)
    else
    {
       // [CG] Joining the game is a go.
-      SV_BroadcastMessage("%s has entered the game.", player->name);
+      SV_BroadcastMessage("%s has entered the game!", player->name);
    }
    return true;
 }
@@ -1800,6 +1784,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    CS_PrintCommand(received_command);
 #endif
 
+   server_client->received_command_for_current_map = true;
    cs_buffered_command_t *bufcmd = malloc(sizeof(cs_buffered_command_t));
    memcpy(&bufcmd->command, received_command, sizeof(cs_cmd_t));
    M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
@@ -2572,6 +2557,7 @@ void SV_RunDemoTics(void)
 
 void SV_TryRunTics(void)
 {
+   unsigned int i;
    int realtics, current_tic;
    static int last_tic = 0;
    cs_cmd_t command;
@@ -2657,6 +2643,11 @@ void SV_TryRunTics(void)
          SV_AddNewClients();
          if(sv_should_send_new_map)
          {
+            for(i = 1; i < MAXPLAYERS; i++)
+            {
+               if(playeringame[i])
+                  server_clients[i].received_command_for_current_map = false;
+            }
             SV_BroadcastMapStarted();
             sv_should_send_new_map = false;
          }

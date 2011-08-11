@@ -510,6 +510,8 @@ void V_InitMisc(void)
    // this only ever needs to be done once
    if(!flexTranInit)
    {
+       // [CG] XXX XXX XXX Is this the source of the (small) on-the-fly WAD
+       //      XXX XXX XXX loading leak??????
       byte *palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
       V_InitFlexTranTable(palette);
       Z_ChangeTag(palette, PU_CACHE);

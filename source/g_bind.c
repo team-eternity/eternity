@@ -1096,7 +1096,7 @@ void G_SaveDefaults(void)
 
             if(strncmp("multibind", keybindings[i].bindings[j]->name, 9) == 0)
             {
-               if((mbk = E_HashObjectForKey(multibind_key_hash, &i)));
+               if((mbk = E_HashObjectForKey(multibind_key_hash, &i)))
                {
                   fprintf(f, "bind %s \"%s\"\n", keyname, mbk->multibind_name);
                }
