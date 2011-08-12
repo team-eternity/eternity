@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //   System-specific graphics code, along with some ill-placed
 //   keyboard, mouse, and joystick code.
 //
@@ -111,8 +111,8 @@ void I_FinishUpdate(void)
    UpdateGrab();
 
    // Don't update the screen if the window isn't visible.
-   // Not doing this breaks under Windows when we alt-tab away 
-   // while fullscreen.   
+   // Not doing this breaks under Windows when we alt-tab away
+   // while fullscreen.
    if(!(SDL_GetAppState() & SDL_APPACTIVE))
       return;
 
@@ -143,7 +143,7 @@ void I_ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
                      vbscreen.width, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
@@ -192,7 +192,7 @@ static void I_InitDiskFlash(void)
    SDL_SetPalette(disktmp, SDL_LOGPAL, colors, 0, 256);
 
    // setup VBuffer and point it into the SDL_Surface
-   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8, 
+   V_InitVBufferFrom(&diskvb, drect.w, drect.h, disktmp->pitch, 8,
                      disktmp->pixels);
    V_SetScaling(&diskvb, 16, 15);
 
@@ -203,7 +203,7 @@ static void I_InitDiskFlash(void)
    // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
 
-   // Convert 8-bit disk into a surface-format surface - let SDL handle the 
+   // Convert 8-bit disk into a surface-format surface - let SDL handle the
    // specifics of the process, as it's designed for it.
    disk    = SDL_DisplayFormat(disktmp);
    disk_bg = SDL_DisplayFormat(disktmp);
@@ -232,7 +232,7 @@ void I_EndRead(void)
 {
    if(!disk_icon || !disk_bg || !in_graphics_mode)
       return;
-   
+
    SDL_BlitSurface(disk_bg, NULL, sdlscreen, &drect);
    SDL_UpdateRect(sdlscreen, drect.x, drect.y, drect.w, drect.h);
 }
@@ -266,7 +266,7 @@ static void I_SetPaletteDirect(byte *palette)
 void I_SetPalette(byte *palette)
 {
    int i;
-   
+
    if(!in_graphics_mode)             // killough 8/11/98
       return;
 
@@ -310,7 +310,7 @@ void I_SetPrimaryBuffer(void)
 
    if(sdlscreen)
    {
-      primary_surface = 
+      primary_surface =
          SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
                               8, 0, 0, 0, 0);
       video.screens[0] = (byte *)primary_surface->pixels;
@@ -343,7 +343,7 @@ void I_ShutdownGraphics(void)
    if(in_graphics_mode)  // killough 10/98
    {
       I_ShutdownGraphicsPartway();
-      
+
       // haleyjd 10/09/05: shut down graphics earlier
       SDL_QuitSubSystem(SDL_INIT_VIDEO);
    }
@@ -368,7 +368,7 @@ enum
 // Function to parse geometry description strings in the form [wwww]x[hhhh][f].
 // This is now the primary way in which Eternity stores its video mode setting.
 //
-static void I_ParseGeom(const char *geom, 
+static void I_ParseGeom(const char *geom,
                         int *w, int *h, boolean *fs, boolean *vs, boolean *hw,
                         boolean *wf)
 {
@@ -440,7 +440,7 @@ static void I_ParseGeom(const char *geom,
          case 's': // software
             *hw = false;
             break;
-         case 'h': // hardware 
+         case 'h': // hardware
             *hw = true;
             break;
          case 'n': // noframe
@@ -487,7 +487,7 @@ static void I_ParseGeom(const char *geom,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs, 
+static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
                              boolean *hw, boolean *wf)
 {
    static boolean firsttime = true;
@@ -503,16 +503,16 @@ static void I_CheckVideoCmds(int *w, int *h, boolean *fs, boolean *vs,
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
          *w = p;
-      
+
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
          *h = p;
-      
+
       if(M_CheckParm("-fullscreen"))
          *fs = true;
       if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
          *fs = false;
-      
+
       if(M_CheckParm("-vsync"))
          *vs = true;
       if(M_CheckParm("-novsync"))
@@ -564,7 +564,7 @@ static boolean I_InitGraphicsMode(void)
       i_videomode = strdup(i_default_videomode);
 
    // haleyjd 10/09/05: from Chocolate DOOM
-   // mouse grabbing   
+   // mouse grabbing
    if(M_CheckParm("-grabmouse"))
       grabmouse = 1;
    else if(M_CheckParm("-nograbmouse"))
@@ -582,9 +582,9 @@ static boolean I_InitGraphicsMode(void)
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
+   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
                &wanthardware, &wantframe);
-   
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
@@ -650,19 +650,19 @@ static boolean I_InitGraphicsMode(void)
    video.height    = v_h;
    video.bitdepth  = 8;
    video.pixelsize = 1;
-   
-   V_Init();      
-   
+
+   V_Init();
+
    in_graphics_mode = true;
    in_textmode = false;
-   
+
    setsizeneeded = true;
-   
+
    // haleyjd 11/12/09: set surface palettes immediately
    I_SetPaletteDirect(W_CacheLumpName("PLAYPAL", PU_CACHE));
 
    I_InitDiskFlash();        // Initialize disk icon
-    
+
    return false;
 }
 
@@ -674,25 +674,31 @@ static boolean I_InitGraphicsMode(void)
 // the screen resolution.
 //
 static void I_ResetScreen(void)
-{  
+{
+   int old_disk_icon = disk_icon;
+
+   // [CG] Set disk_icon to 0, so disk reads don't try to flash the disk when
+   //      there is no surface.
+   disk_icon = 0;
+
    // Switch out of old graphics mode
    // haleyjd 10/15/05: WOOPS!
    I_ShutdownGraphicsPartway();
-   
+
    // Switch to new graphics mode
    // check for errors -- we may be setting to a different mode instead
    if(I_InitGraphicsMode())
       return;
-   
+
    // reset other modules
-   
+
    // Reset automap dimensions
    if(automapactive)
       AM_Start();
-   
+
    // Reset palette
    ST_Start();
-   
+
    // Redraw cached intermission buffer if needed
    if(gamestate == GS_INTERMISSION)
    {
@@ -702,20 +708,22 @@ static void I_ResetScreen(void)
 
    // haleyjd: reset wipe engine
    Wipe_ScreenReset();
-   
+
    // A LOT of heap activity just happened, so check it.
    Z_CheckHeap();
+
+   disk_icon = old_disk_icon;
 }
 
 void I_InitGraphics(void)
 {
    static int firsttime = true;
-   
+
    if(!firsttime)
       return;
-   
+
    firsttime = false;
-   
+
    // haleyjd: not a good idea for SDL :(
    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
    //    return;
@@ -729,11 +737,11 @@ void I_InitGraphics(void)
    //
    // enter graphics mode
    //
-   
+
    atexit(I_ShutdownGraphics);
-   
+
    V_ResetMode();
-   
+
    Z_CheckHeap();
 }
 
@@ -746,7 +754,7 @@ void I_InitGraphics(void)
 // v_misc.c does not care about the format of the videomode_t,
 // all it asks is that it contains a text value 'description'
 // which describes the mode
-        
+
 videomode_t videomodes[]=
 {
   // [hires, pageflip, vesa (unused for SDL)], description
@@ -768,14 +776,14 @@ videomode_t videomodes[]=
 void I_SetMode(int i)
 {
    static int firsttime = true;    // the first time to set mode
-   
+
    if(firsttime)
       I_InitGraphicsMode();
    else
       I_ResetScreen();
-   
+
    firsttime = false;
-}        
+}
 
 /************************
         CONSOLE COMMANDS
@@ -825,10 +833,10 @@ void I_Video_AddCommands(void)
 {
    C_AddCommand(i_usemouse);
    C_AddCommand(i_usejoystick);
-   
+
    C_AddCommand(v_diskicon);
    C_AddCommand(v_retrace);
-   
+
    C_AddCommand(joySens_x);
    C_AddCommand(joySens_y);
 
