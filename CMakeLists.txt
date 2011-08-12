@@ -49,7 +49,7 @@ ENDIF (NOT PKG_CONFIG_FOUND)
 SET (CMAKE_MFC_FLAG 2)
 SET (CMAKE_INSTALL_MFC_LIBRARIES 1)
 INCLUDE(InstallRequiredSystemLibraries)
-SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP;NSIS")
+## SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP;NSIS")
 SET (CPACK_PACKAGE_VENDOR "Team Eternity")
 SET (CPACK_PACKAGE_CONTACT "Team Eternity <haleyjd@hotmail.com>")
 SET (CPACK_PACKAGE_VERSION_MAJOR "3")
@@ -118,11 +118,16 @@ SET(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
     WriteRegStr HKCR \\\"eternity\\\" \\\"URL Protocol\\\" \\\"\\\"
     WriteRegStr HKCR \\\"eternity\\\\shell\\\\open\\\\command\\\" \\\"\\\" '\\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" \\\"%1\\\"'
     FileOpen $9 \\\"$INSTDIR\\\\bin\\\\eternity.bat\\\" w
+    FileWrite $9 '@echo off'
+    FileWrite $9 \\\"$\\\\r$\\\\n\\\"
     FileWrite $9 'SET DOOMWADPATH=%DOOMWADPATH%;$INSTDIR;$INSTDIR\\\\bin'
     FileWrite $9 \\\"$\\\\r$\\\\n\\\"
-    FileWrite $9 'cd \\\"$INSTDIR\\\\bin\\\"'
+    FileWrite $9 '@echo on'
     FileWrite $9 \\\"$\\\\r$\\\\n\\\"
-    FileWrite $9 'eternity -directx -8in32 -nosound -csjoin \\\"%1\\\"'
+    FileWrite $9 '\\\"$INSTDIR\\\\bin\\\\eternity.exe\\\" -base \\\"$INSTDIR\\\\bin\\\\base\\\" -directx -8in32 -nomusic -csjoin \\\"%1\\\"'
+    FileWrite $9 \\\"$\\\\r$\\\\n\\\"
+    FileWrite $9 'pause'
+    FileWrite $9 \\\"$\\\\r$\\\\n\\\"
     FileClose $9
 ")
 SET(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
