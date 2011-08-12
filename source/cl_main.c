@@ -1105,14 +1105,6 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
       playeringame[i] = message->playeringame[i];
    }
 
-   for(i = 2; i < MAXPLAYERS; i++)
-   {
-      if(playeringame[i])
-      {
-         I_Error("Junk player %d is in the game, exiting.\n", i);
-      }
-   }
-
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
 
    /*
@@ -2299,13 +2291,21 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    if((cl_latest_world_index > cl_current_world_index) &&
       ((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE))
    {
-      // [CG] TODO: Process network messages instead of rudely disconnecting.
+      /* [CG] Used to disconnect here, now we flush the buffer, even if
+       *      flushing all these TICs is extremely disorienting.
       doom_printf(
          "Network message buffer overflowed (%d/%d), disconnecting.",
          cl_current_world_index, cl_latest_world_index
       );
       CL_Disconnect();
       C_Printf("5.\n");
+      */
+      unsigned int old_world_index = cl_current_world_index;
+      while(cl_current_world_index < (cl_latest_world_index - 2))
+      {
+         run_world();
+      }
+      CL_Predict(old_world_index, cl_latest_world_index - 2, false);
    }
 }
 
@@ -3113,7 +3113,7 @@ void CL_TryRunTics(void)
       {
          run_world();
       }
-      CL_Predict(old_world_index, cl_latest_world_index, false);
+      CL_Predict(old_world_index, cl_latest_world_index - 2, false);
       cl_flush_packet_buffer = false;
    }
    else if((cl_packet_buffer_size == 0))
