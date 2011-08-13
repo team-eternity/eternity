@@ -935,7 +935,7 @@ void ZoneObject::ChangeTag(int tag)
    {
       if(zonetag != PU_FREE) // already in a list? remove it.
       {
-         if(*zoneprev = zonenext)
+         if((*zoneprev = zonenext))
             zonenext->zoneprev = zoneprev;
          INSTRUMENT(memorybytag[zonetag] -= getZoneSize());
       }

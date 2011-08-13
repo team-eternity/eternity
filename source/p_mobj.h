@@ -207,7 +207,7 @@ public:
    virtual void updateThinker();
    virtual void removeThinker();
    virtual void serialize(SaveArchive &arc);
-   virtual void deswizzle();
+   virtual void deSwizzle();
    virtual const char *getClassName() const { return "Mobj"; }
 
    // Data members

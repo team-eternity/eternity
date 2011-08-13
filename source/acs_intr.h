@@ -96,7 +96,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual void deswizzle();
+   virtual void deSwizzle();
    virtual const char *getClassName() const { return "ACSThinker"; }
 
    // Data Members

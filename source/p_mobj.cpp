@@ -1515,12 +1515,12 @@ void Mobj::serialize(SaveArchive &arc)
 }
 
 //
-// Mobj::deswizzle
+// Mobj::deSwizzle
 //
 // Handles resolving swizzled references to other mobjs immediately after
 // deserialization. All saved mobj pointers MUST be restored here.
 //
-void Mobj::deswizzle()
+void Mobj::deSwizzle()
 {
    Mobj *lTarget, *lTracer, *lLEnemy;
 
@@ -1543,9 +1543,9 @@ void Mobj::deswizzle()
 }
 
 //
-// Update
+// Mobj::updateThinker
 //
-// haleyjd 11/22/10: Overrides Thinker::Update.
+// haleyjd 11/22/10: Overrides Thinker::updateThinker.
 // Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
 // 
 void Mobj::updateThinker()

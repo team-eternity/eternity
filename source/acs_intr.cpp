@@ -1212,11 +1212,11 @@ void ACSThinker::serialize(SaveArchive &arc)
 }
 
 //
-// ACSThinker::deswizzle
+// ACSThinker::deSwizzle
 //
 // Fixes up the trigger reference in a ACSThinker.
 //
-void ACSThinker::deswizzle()
+void ACSThinker::deSwizzle()
 {
    Mobj *mo = dynamic_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
    P_SetNewTarget(&trigger, mo);

@@ -724,7 +724,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       // Now, call deswizzle to fix up mutual references between thinkers, such
       // as mobj targets/tracers and ACS triggers.
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
-         th->deswizzle();
+         th->deSwizzle();
 
       // killough 3/26/98: Spawn icon landings:
       // haleyjd  3/30/03: call P_InitThingLists

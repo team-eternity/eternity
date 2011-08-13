@@ -30,9 +30,15 @@ class SaveArchive;
 class Thinker : public ZoneObject
 {
 private:
-   // Private implementation details
+   // Private implementation details - Methods
    void removeDelayed(); 
+
+   // Data members
+   // killough 11/98: count of how many other objects reference
+   // this one using pointers. Used for garbage collection.
+   unsigned int references;
    
+   // Statics
    // Current position in list during RunThinkers
    static Thinker *currentthinker;
 
@@ -45,10 +51,6 @@ protected:
 
    // Data Members
    bool removed;
-
-   // killough 11/98: count of how many other objects reference
-   // this one using pointers. Used for garbage collection.
-   unsigned int references;
 
    // haleyjd 12/22/2010: for savegame enumeration
    unsigned int ordinal;
@@ -89,8 +91,8 @@ public:
    // When using serialize, always call your parent implementation!
    virtual void serialize(SaveArchive &arc);
    // De-swizzling should restore pointers to other thinkers.
-   virtual void deswizzle() {}
-   virtual bool shouldSerialize()  const { return !removed;  }
+   virtual void deSwizzle() {}
+   virtual bool shouldSerialize() const { return !removed;  }
    virtual const char *getClassName() const { return "Thinker"; }
 
    // Data Members
