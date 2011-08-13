@@ -111,6 +111,9 @@ int snd_MusicVolume = 15;
 // precache sounds ?
 int s_precache = 1;
 
+// [CG] Announcer
+int s_use_announcer = 0;
+
 // whether songs are mus_paused
 static boolean mus_paused;
 
@@ -1436,6 +1439,7 @@ void S_UpdateMusic(int lumpnum)
 //
 
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
+VARIABLE_BOOLEAN(s_use_announcer, NULL, yesno);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
 VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
@@ -1444,6 +1448,7 @@ VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
 VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
+CONSOLE_VARIABLE(use_announcer, s_use_announcer, 0) {}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
 CONSOLE_VARIABLE(snd_channels, default_numChannels, 0) {}
 
@@ -1497,6 +1502,7 @@ void S_AddCommands(void)
 {
   C_AddCommand(s_pitched);
   C_AddCommand(s_precache);
+  C_AddCommand(use_announcer);
   C_AddCommand(snd_channels);
   C_AddCommand(sfx_volume);
   C_AddCommand(music_volume);

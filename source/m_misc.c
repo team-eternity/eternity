@@ -904,6 +904,10 @@ default_t defaults[] =
 #endif
 
    // [CG] These are new defaults.
+
+   DEFAULT_INT("use_announcer", &s_use_announcer, NULL, 0, 0, 1, wad_no,
+               "use announcer if available"),
+
    DEFAULT_BOOL("show_netstats", &show_netstats, NULL, false, wad_no,
                 "display netstats on the HUD"),
 

@@ -29,6 +29,7 @@
 //      implementation varies significantly from this one, it's still the same
 //      fundamental design.  Thanks :) .
 
+#include "c_io.h"
 #include "doomtype.h"
 #include "doomstat.h"
 #include "d_player.h"
@@ -170,7 +171,17 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s returned the %s flag", player->name, team_color_names[color]
          );
-         start_flag_sound(flag, "FlagReturned");
+         if(s_use_announcer)
+         {
+            if(color == team_color_red)
+               start_flag_sound(flag, "RedFlagReturned");
+            else if(color == team_color_blue)
+               start_flag_sound(flag, "BlueFlagReturned");
+            else
+               start_flag_sound(flag, "FlagReturned");
+         }
+         else
+            start_flag_sound(flag, "FlagReturned");
       }
       else
       {
@@ -178,7 +189,17 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s picked up the %s flag", player->name, team_color_names[color]
          );
-         start_flag_sound(flag, "FlagTaken");
+         if(s_use_announcer)
+         {
+            if(color == team_color_red)
+               start_flag_sound(flag, "RedFlagTaken");
+            else if(color == team_color_blue)
+               start_flag_sound(flag, "BlueFlagTaken");
+            else
+               start_flag_sound(flag, "FlagTaken");
+         }
+         else
+            start_flag_sound(flag, "FlagTaken");
       }
    }
    else
@@ -194,7 +215,17 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                player->name,
                team_color_names[other_color]
             );
-            start_flag_sound(flag, "FlagCaptured");
+            if(s_use_announcer)
+            {
+               if(client->team == team_color_red)
+                  start_flag_sound(flag, "RedTeamScores");
+               else if(client->team == team_color_blue)
+                  start_flag_sound(flag, "BlueTeamScores");
+               else
+                  start_flag_sound(flag, "FlagCaptured");
+            }
+            else
+               start_flag_sound(flag, "FlagCaptured");
          }
       }
       else
@@ -203,7 +234,17 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s has taken the %s flag", player->name, team_color_names[color]
          );
-         start_flag_sound(flag, "FlagTaken");
+         if(s_use_announcer)
+         {
+            if(color == team_color_red)
+               start_flag_sound(flag, "RedFlagTaken");
+            else if(color == team_color_blue)
+               start_flag_sound(flag, "BlueFlagTaken");
+            else
+               start_flag_sound(flag, "FlagTaken");
+         }
+         else
+            start_flag_sound(flag, "FlagTaken");
       }
    }
 }
@@ -248,7 +289,17 @@ void CS_DropFlag(int playernum)
       players[playernum].name,
       team_color_names[color]
    );
-   start_flag_sound(flag, "FlagDropped");
+   if(s_use_announcer)
+   {
+      if(color == team_color_red)
+         start_flag_sound(flag, "RedFlagDropped");
+      else if(color == team_color_blue)
+         start_flag_sound(flag, "BlueFlagDropped");
+      else
+         start_flag_sound(flag, "FlagDropped");
+   }
+   else
+      start_flag_sound(flag, "FlagDropped");
 
    if(color == team_color_red)
    {
@@ -282,7 +333,17 @@ void CS_CTFTicker(void)
          {
             CS_ReturnFlag(flag);
             doom_printf("%s flag returned", team_color_names[color]);
-            start_flag_sound(flag, "FlagReturned");
+            if(s_use_announcer)
+            {
+               if(color == team_color_red)
+                  start_flag_sound(flag, "RedFlagReturned");
+               else if(color == team_color_blue)
+                  start_flag_sound(flag, "BlueFlagReturned");
+               else
+                  start_flag_sound(flag, "FlagReturned");
+            }
+            else
+               start_flag_sound(flag, "FlagReturned");
          }
       }
       else if(flag->state == flag_carried)

@@ -1927,6 +1927,7 @@ static menuitem_t mn_sound_items[] =
    {it_info,       FC_GOLD "Misc"},
    {it_toggle,     "Precache sounds",              "s_precache"},
    {it_toggle,     "Pitched sounds",               "s_pitched"},
+   {it_toggle,     "Use announcer",                "use_announcer"},
    {it_end}
 };
 

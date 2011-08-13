@@ -129,6 +129,9 @@ boolean S_CheckSoundPlaying(mobj_t *, sfxinfo_t *sfx);
 // precache sound?
 extern int s_precache;
 
+// [CG] Announcer
+extern int s_use_announcer;
+
 // machine-independent sound params
 extern int numChannels;
 extern int default_numChannels;  // killough 10/98
