@@ -64,7 +64,7 @@
 //      exceeds half of this it will be disconnected, even if none of the other
 //      connected peers have latencies <= (MAX_LATENCY / 2).  This is in
 //      seconds.
-#define MAX_LATENCY 2
+#define MAX_LATENCY 10
 
 // [CG] The default port the server listens on if none is given.
 #define DEFAULT_PORT 10666
