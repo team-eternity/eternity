@@ -125,6 +125,72 @@ sound FlagCaptured
     priority = 0
 }
 
+// [CG] Announcer Support
+
+sound BlueFlagDropped
+{
+    lump = "AC_BLUED"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RedFlagDropped
+{
+    lump = "AC_REDD"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound BlueFlagReturned
+{
+    lump = "AC_BLUER"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RedFlagReturned
+{
+    lump = "AC_REDR"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound BlueFlagTaken
+{
+    lump = "AC_BLUET"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RedFlagTaken
+{
+    lump = "AC_REDT"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound BlueTeamScores
+{
+    lump = "AC_BLUES"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RedTeamScores
+{
+    lump = "AC_REDS"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
 // Default Sector Sound Sequences ----------------------------------------------
 
 // Door Opening Sequences

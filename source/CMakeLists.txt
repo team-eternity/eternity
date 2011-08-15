@@ -17,75 +17,75 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
-IF (COMMAND cmake_policy)
-    CMAKE_POLICY (SET CMP0003 NEW)
-ENDIF (COMMAND cmake_policy)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+IF(COMMAND cmake_policy)
+    CMAKE_POLICY(SET CMP0003 NEW)
+ENDIF(COMMAND cmake_policy)
 
 ################################################################################
 ######################### Set Project Source  ##################################
-ADD_DEFINITIONS (-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
-ADD_DEFINITIONS (-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
+ADD_DEFINITIONS(-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
+ADD_DEFINITIONS(-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
 
-IF (EE_STATIC_COMPILE)
-    ADD_DEFINITIONS (
+IF(EE_STATIC_COMPILE)
+    ADD_DEFINITIONS(
         -DCURL_STATICLIB
         -DLIBARCHIVE_STATIC
     )
-ENDIF (EE_STATIC_COMPILE)
+ENDIF(EE_STATIC_COMPILE)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
-IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    ADD_DEFINITIONS (-DLINUX)
-ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    ADD_DEFINITIONS(-DLINUX)
+ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
-IF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
-    ADD_DEFINITIONS (-DHAVE_SCHED_SETAFFINITY)
-ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
+    ADD_DEFINITIONS(-DHAVE_SCHED_SETAFFINITY)
+ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
 
-IF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     ## [CG] Ensure that _GNU_SOURCE is defined when using GCC.
-    ADD_DEFINITIONS (-D_GNU_SOURCE)
-ENDIF (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    ADD_DEFINITIONS(-D_GNU_SOURCE)
+ENDIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
-IF (WIN32 OR MINGW)
-    ADD_DEFINITIONS (-DEE_CDROM_SUPPORT)
-ENDIF (WIN32 OR MINGW)
+IF(WIN32 OR MINGW)
+    ADD_DEFINITIONS(-DEE_CDROM_SUPPORT)
+ENDIF(WIN32 OR MINGW)
 
 ## Small does not work on 64bit systems. The most reliable way
 ## to determine if we are building on a 64bit system is to
 ## check the size of a pointer - it is 8 bytes under
 ## 64bit *NIX and 64bit Windows.
-IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
-    ADD_DEFINITIONS (-DEE_NO_SMALL_SUPPORT)
-ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
+IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
+    ADD_DEFINITIONS(-DEE_NO_SMALL_SUPPORT)
+ENDIF(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
-IF (WIN32 OR MINGW)
-    IF (NOT MINGW)
-        INCLUDE_DIRECTORIES (Win32/)
-    ENDIF (NOT MINGW)
-    FILE (GLOB ARCH_SPECIFIC_SOURCES Win32/*.c)
-ENDIF (WIN32 OR MINGW)
+IF(WIN32 OR MINGW)
+    IF(NOT MINGW)
+        INCLUDE_DIRECTORIES(Win32/)
+    ENDIF(NOT MINGW)
+    FILE(GLOB ARCH_SPECIFIC_SOURCES Win32/*.c)
+ENDIF(WIN32 OR MINGW)
 
-IF (APPLE)
-    INCLUDE_DIRECTORIES (sdl/macosx/)
-    FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
-ENDIF (APPLE)
+IF(APPLE)
+    INCLUDE_DIRECTORIES(sdl/macosx/)
+    FILE(GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
+ENDIF(APPLE)
 
-INCLUDE_DIRECTORIES (Confuse/)
-FILE (GLOB CONFUSE_SOURCES Confuse/*.c)
+INCLUDE_DIRECTORIES(Confuse/)
+FILE(GLOB CONFUSE_SOURCES Confuse/*.c)
 
-INCLUDE_DIRECTORIES (textscreen/)
-FILE (GLOB TEXTSCREEN_SOURCES textscreen/*.c)
+INCLUDE_DIRECTORIES(textscreen/)
+FILE(GLOB TEXTSCREEN_SOURCES textscreen/*.c)
 
-INCLUDE_DIRECTORIES (./)
-FILE (GLOB ETERNITY_SOURCES *.c)
+INCLUDE_DIRECTORIES(./)
+FILE(GLOB ETERNITY_SOURCES *.c)
 
 ## FIXME: It would be better to pull i_cpu_posix.c out into a
 ## *NIX specfic folder to turn this into a glob to catch new files.
-INCLUDE_DIRECTORIES (sdl/)
-SET (SDL_SOURCES
+INCLUDE_DIRECTORIES(sdl/)
+SET(SDL_SOURCES
     sdl/i_input.c
     sdl/i_main.c
     sdl/i_net.c
@@ -99,28 +99,27 @@ SET (SDL_SOURCES
     sdl/mmus2mid.c
     sdl/ser_main.c
 )
-IF (NOT WIN32 AND NOT MINGW)
-    SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
-ENDIF (NOT WIN32 AND NOT MINGW)
+IF(NOT WIN32 AND NOT MINGW)
+    SET(SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
+ENDIF(NOT WIN32 AND NOT MINGW)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
-ADD_EXECUTABLE (eternity
+ADD_EXECUTABLE(eternity
     ${ARCH_SPECIFIC_SOURCES}
     ${ETERNITY_SOURCES}
     ${CONFUSE_SOURCES}
     ${TEXTSCREEN_SOURCES}
     ${SDL_SOURCES}
 )
-IF (EE_STATIC_COMPILE)
+IF(EE_STATIC_COMPILE)
     IF(MINGW)
-        FILE (
-            GLOB EE_CROSS_DIRECTX_LIBRARIES
+        FILE(GLOB EE_CROSS_DIRECTX_LIBRARIES
             ${EE_STATIC_DEPS}/source/DirectX/lib/*.a
         )
-        TARGET_LINK_LIBRARIES (eternity
+        TARGET_LINK_LIBRARIES(eternity
             ${EE_CROSS_DIRECTX_LIBRARIES}
             ${EE_STATIC_DEPS}/lib/libseh.a
             ${EE_STATIC_DEPS}/lib/libenet.a
@@ -150,7 +149,7 @@ IF (EE_STATIC_COMPILE)
             mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
         )
     ELSE(MINGW)
-        TARGET_LINK_LIBRARIES (eternity
+        TARGET_LINK_LIBRARIES(eternity
             ${EE_STATIC_DEPS}/lib/libenet.a
             ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
@@ -178,8 +177,8 @@ IF (EE_STATIC_COMPILE)
             pthread m rt stdc++
         )
     ENDIF(MINGW)
-ELSE (EE_STATIC_COMPILE)
-    TARGET_LINK_LIBRARIES (eternity
+ELSE(EE_STATIC_COMPILE)
+    TARGET_LINK_LIBRARIES(eternity
         ${SDL_LIBRARY}
         ${SDLMIXER_LIBRARY}
         ${SDLNET_LIBRARY}
@@ -191,18 +190,18 @@ ELSE (EE_STATIC_COMPILE)
         ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
         stdc++
     )
-ENDIF (EE_STATIC_COMPILE)
+ENDIF(EE_STATIC_COMPILE)
 
-INSTALL (TARGETS eternity
+INSTALL(TARGETS eternity
     RUNTIME DESTINATION ${BIN_DIR}
     LIBRARY DESTINATION ${LIB_DIR}
     ARCHIVE DESTINATION ${LIB_DIR}
 )
-IF (UNIX)
-    IF (NOT APPLE OR NOT MINGW)
-        SET_TARGET_PROPERTIES (eternity PROPERTIES OUTPUT_NAME eternity.real)
-    ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
+IF(UNIX)
+    IF(NOT APPLE OR NOT MINGW)
+        SET_TARGET_PROPERTIES(eternity PROPERTIES OUTPUT_NAME eternity.real)
+    ENDIF(NOT APPLE OR NOT MINGW)
+ENDIF(UNIX)
 ## FIXME: base really needs to be refactored into read only and writeable
 ## data to conform to *NIX and Windows file system standards.
 ## On *NIX we use a wrapper script that set's up a per user
@@ -210,12 +209,12 @@ ENDIF (UNIX)
 ## ETERNITYBASE to point to that directory, before executing
 ## eternity. It's a hack,but it will work for now. A solution for
 ## Windows would be welcome.
-INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/base
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/base
     DESTINATION ${SHARE_DIR}
     PATTERN ".svn" EXCLUDE)
-IF (UNIX)
-    IF (NOT APPLE OR NOT MINGW)
-        INSTALL (PROGRAMS ../eternity.sh DESTINATION ${BIN_DIR} RENAME eternity)
-    ENDIF (NOT APPLE OR NOT MINGW)
-ENDIF (UNIX)
+IF(UNIX)
+    IF(NOT APPLE OR NOT MINGW)
+        INSTALL(PROGRAMS ../eternity.sh DESTINATION ${BIN_DIR} RENAME eternity)
+    ENDIF(NOT APPLE OR NOT MINGW)
+ENDIF(UNIX)
 

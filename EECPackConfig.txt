@@ -1,0 +1,65 @@
+## [CG] NSIS Options
+IF(CPACK_GENERATOR MATCHES "NSIS")
+    CONFIGURE_FILE(
+        "${CPACK_SOURCE_DIR}/nsis/wads.ini"
+        "${CPACK_BINARY_DIR}/_CPack_Packages/win32/NSIS/wads.ini"
+    )
+    SET(WADS_SRC "${CPACK_SOURCE_DIR}/nsis/wads.ini")
+    SET(WADS_DST "${CPACK_BINARY_DIR}/_CPack_Packages/win32/NSIS/wads.ini")
+    SET(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+    SET(CPACK_NSIS_MODIFY_PATH ON)
+    SET(CPACK_NSIS_DEFINES "
+  !system 'cp \"${WADS_SRC}\" \"${WADS_DST}\"'
+  ReserveFile \"wads.ini\"
+    ")
+    SET(CPACK_NSIS_PAGE_COMPONENTS "
+  Page custom ShowWADsPage LeaveWADsPage \"Configure WAD Folder\"
+  Function ShowWADsPage
+    !insertmacro MUI_HEADER_TEXT_PAGE \"Configure WAD Folders\" \"Add an additional WAD search path and download Freedoom\"
+    !insertmacro MUI_INSTALLOPTIONS_EXTRACT \"wads.ini\"
+    !insertmacro MUI_INSTALLOPTIONS_DISPLAY \"wads.ini\"
+  FunctionEnd
+
+  Function LeaveWADsPage
+  FunctionEnd
+    ")
+    SET(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+  Var /GLOBAL ADDITIONAL_WAD_FOLDER
+  Var /GLOBAL DOWNLOAD_FREEDOOM
+
+  !insertmacro MUI_INSTALLOPTIONS_READ $ADDITIONAL_WAD_FOLDER \"wads.ini\" \"Field 2\" \"State\"
+  !insertmacro MUI_INSTALLOPTIONS_READ $DOWNLOAD_FREEDOOM \"wads.ini\" \"Field 3\" \"State\"
+
+  WriteRegStr HKCR \"eternity\" \"\" \"Eternity Engine Link\"
+  WriteRegStr HKCR \"eternity\" \"URL Protocol\" \"\"
+  WriteRegStr HKCR \"eternity\\shell\\open\\command\" \"\" '\"$INSTDIR\\bin\\eternity.bat\" \"%1\"'
+  FileOpen $9 \"$INSTDIR\\bin\\eternity.bat\" w
+  FileWrite $9 '@echo off'
+  FileWrite $9 \"$\\r$\\n\"
+  FileWrite $9 'SET DOOMWADPATH=%DOOMWADPATH%;$INSTDIR;$INSTDIR\\bin'
+  StrCmp $ADDITIONAL_WAD_FOLDER \"\" +2 0
+    FileWrite $9 ';$ADDITIONAL_WAD_FOLDER'
+  FileWrite $9 \"$\\r$\\n\"
+  FileWrite $9 '@echo on'
+  FileWrite $9 \"$\\r$\\n\"
+  FileWrite $9 '\"$INSTDIR\\bin\\eternity.exe\" -base \"$INSTDIR\\bin\\base\" -directx -8in32 -nomusic -csjoin \"%1\"'
+  FileWrite $9 \"$\\r$\\n\"
+  FileWrite $9 'pause'
+  FileWrite $9 \"$\\r$\\n\"
+  FileClose $9
+
+  IntCmp $DOWNLOAD_FREEDOOM 1 0 doNotDownload doNotDownload
+    NSISdl::download http://savannah.nongnu.org/download/freedoom/freedoom-iwad/freedoom-iwad-latest.zip $TEMP\\freedoom-iwad-latest.zip
+    Pop $R0
+    StrCmp $R0 \"success\" +3
+      MessageBox MB_OK \"Download failed: $R0\"
+      GOTO doNotExtract
+      nsisunz::UnzipToLog /noextractpath \"$TEMP\\freedoom-iwad-latest.zip\" \"$INSTDIR\\bin\\base\\wads\"
+      Delete $TEMP\\freedoom-iwad-latest.zip
+    doNotExtract:
+  doNotDownload:
+")
+    SET(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+  DeleteRegValue HKCR \"eternity\" \"\"
+    ")
+ENDIF(CPACK_GENERATOR MATCHES "NSIS")
