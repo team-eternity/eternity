@@ -76,13 +76,18 @@
 #define __set_int(options, option_name, default_value)\
    option = json_object_object_get(options, #option_name);\
    if(option == NULL)\
-   {\
       cs_original_settings->option_name = default_value;\
-   }\
    else\
-   {\
-      cs_original_settings->option_name = json_object_get_int(option);\
-   }
+      cs_original_settings->option_name = json_object_get_int(option);
+
+#define __set_bool(options, option_name, default_value)\
+   option = json_object_object_get(options, #option_name);\
+   if(option == NULL)\
+      cs_original_settings->option_name = default_value;\
+   else if(json_object_get_boolean(option))\
+      cs_original_settings->option_name = true;\
+   else\
+      cs_original_settings->option_name = false;
 
 #define __set_flags(options, option_name, flags, default_value)\
    option = json_object_object_get(options, #option_name);\
@@ -165,9 +170,7 @@
 #define __override_int(options, option_name)\
    option = json_object_object_get(options, #option_name);\
    if(option != NULL)\
-   {\
-      cs_settings->option_name = json_object_get_int(option);\
-   }
+      cs_settings->option_name = json_object_get_int(option);
 
 #define __override_flags(options, option_name, flags)\
    option = json_object_object_get(options, #option_name);\
@@ -1330,10 +1333,13 @@ void CS_HandleOptionsSection(json_object *options)
    __set_int(options, respawn_protection_time, 0);
    __set_int(options, friend_distance, 128);
 
+   // [CG] Boolean options
+   __set_bool(options, build_blockmap, false);
+
    // [CG] Internal skill is 0-4, configured skill is 1-5, translate here.
    cs_original_settings->skill--;
 
-   // [CG] General Features
+   // [CG] General features
    __set_flags(options, spawn_armor, dmflags, true);
    __set_flags(options, spawn_super_items, dmflags, true);
    __set_flags(options, respawn_health, dmflags, false);
@@ -1357,7 +1363,7 @@ void CS_HandleOptionsSection(json_object *options)
    __set_flags(options, keep_items_on_exit, dmflags, false);
    __set_flags(options, keep_keys_on_exit, dmflags, false);
 
-   // [CG] Newschool Features
+   // [CG] Newschool features
    __set_flags(options, allow_jump, dmflags2, false);
    __set_flags(options, allow_freelook, dmflags2, true);
    __set_flags(options, allow_crosshair, dmflags2, true);
@@ -1687,6 +1693,7 @@ void CS_ApplyConfigSettings(void)
    levelTimeLimit             = cs_settings->time_limit;
    levelFragLimit             = cs_settings->frag_limit;
    levelScoreLimit            = cs_settings->score_limit;
+   r_blockmap                 = cs_settings->build_blockmap;
    dmflags                    = cs_settings->dmflags;
    dmflags2                   = cs_settings->dmflags2;
 
@@ -2078,6 +2085,15 @@ void CS_LoadMapOverrides(unsigned int map_index)
       // [CG] Didn't find any overrides, nothing to do.
       CS_ApplyConfigSettings();
       return;
+   }
+
+   option = json_object_object_get(overrides, "build_blockmap");
+   if(option != NULL)
+   {
+      if(json_object_get_boolean(option))
+         cs_settings->build_blockmap = true;
+      else
+         cs_settings->build_blockmap = false;
    }
 
    // [CG] DMFLAGS

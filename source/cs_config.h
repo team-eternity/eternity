@@ -88,31 +88,32 @@ typedef enum
 
 typedef struct clientserver_settings_s
 {
-   skill_t skill;
-   gametype_t game_type;
-   boolean ctf;
-   unsigned int max_admin_clients;
-   unsigned int max_player_clients;
-   unsigned int max_players;
-   unsigned int max_players_per_team;
-   unsigned int number_of_teams;
-   unsigned int frag_limit;
-   unsigned int time_limit;
-   unsigned int score_limit;
-   unsigned int dogs;
-   unsigned int friend_distance;
-   bfg_t bfg_type;
-   unsigned int friendly_damage_percentage;
-   unsigned int spectator_time_limit;
-   unsigned int death_time_limit;
-   unsigned int death_time_expired_action;
-   unsigned int respawn_protection_time;
-   unsigned int dmflags;
-   unsigned int dmflags2;
-   unsigned int compatflags;
-   unsigned int compatflags2;
-   boolean requires_spectator_password;
-   boolean requires_player_password;
+   int32_t skill;
+   int32_t game_type;
+   int8_t ctf;
+   uint32_t max_admin_clients;
+   uint32_t max_player_clients;
+   uint32_t max_players;
+   uint32_t max_players_per_team;
+   uint32_t number_of_teams;
+   uint32_t frag_limit;
+   uint32_t time_limit;
+   uint32_t score_limit;
+   uint32_t dogs;
+   uint32_t friend_distance;
+   int32_t bfg_type;
+   uint32_t friendly_damage_percentage;
+   uint32_t spectator_time_limit;
+   uint32_t death_time_limit;
+   uint32_t death_time_expired_action;
+   uint32_t respawn_protection_time;
+   uint8_t build_blockmap;
+   uint32_t dmflags;
+   uint32_t dmflags2;
+   uint32_t compatflags;
+   uint32_t compatflags2;
+   uint8_t requires_spectator_password;
+   uint8_t requires_player_password;
 } clientserver_settings_t;
 
 #pragma pack(pop)

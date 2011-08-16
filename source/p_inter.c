@@ -1571,9 +1571,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
    // [CG] This function is only run serverside.
    if(!serverside)
-   {
       return;
-   }
 
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
@@ -1706,7 +1704,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
          damage = 10000;
 
       // [CG] Handle friendly damage.
-      if(source && source->player)
+      if(source && source->player && source->player != player)
       {
          if(friendly_damage_percentage < 100 && (GameType == gt_coop || (
             CS_TEAMS_ENABLED &&
@@ -1808,9 +1806,7 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
 
       P_KillMobj(source, target, emod);
       if(CS_SERVER)
-      {
          SV_BroadcastActorKilled(target, inflictor, source, damage, mod);
-      }
    }
    else
    {

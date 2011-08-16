@@ -298,6 +298,11 @@ int turbo_scale = 100;
 VARIABLE_INT(turbo_scale, NULL,         10, 400, NULL);
 CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 {
+   if(clientserver)
+   {
+      C_Printf("Cannot enable turbo in c/s mode.\n");
+      return;
+   }
    C_Printf("turbo scale: %i%%\n",turbo_scale);
    E_ApplyTurbo(turbo_scale);
 }
@@ -573,6 +578,9 @@ CONSOLE_COMMAND(maplist, 0)
 {
    cs_map_t *map;
    unsigned int i, j;
+   size_t line_length;
+   char *buf = NULL;
+   char *buf_index = NULL;
 
    if(!clientserver)
    {
@@ -585,21 +593,40 @@ CONSOLE_COMMAND(maplist, 0)
       map = &cs_maps[i];
       if(map->resource_count == 0)
       {
-         C_Printf("%d. %s\n", i, map->name);
+         C_Printf("%d. %s\n", i + 1, map->name);
          continue;
       }
 
-      C_Printf("%d. %s: ", i, map->name);
+      // [CG] Calculate the length of the line and allocate a buffer.  Be
+      //      cautious and over-allocate (probably, unless there's 100,000 maps
+      //      or something...).
+      line_length = 10 + strlen(map->name);
       for(j = 0; j < map->resource_count; j++)
       {
-         C_Printf("%s", cs_resources[map->resource_indices[j]].name);
+         line_length += strlen(cs_resources[map->resource_indices[j]].name);
          if(j != (map->resource_count - 1))
-         {
-            C_Printf(", ");
-         }
+            line_length += 2;
       }
-      C_Printf("\n");
+
+      buf = buf_index = realloc(buf, line_length * sizeof(char));
+
+      buf_index += sprintf(buf, "%d. %s: ", i + 1, map->name);
+      for(j = 0; j < map->resource_count; j++)
+      {
+         buf_index += sprintf(buf_index, "%s",
+            cs_resources[map->resource_indices[j]].name
+         );
+         if(j < (map->resource_count - 1))
+            buf_index += sprintf(buf_index, ", ");
+      }
+      if(CS_HEADLESS)
+         C_Printf("%s\n", buf);
+      else
+         C_Printf("%s", buf);
    }
+
+   if(buf)
+      free(buf);
 }
 
 // change level
@@ -1238,6 +1265,7 @@ void G_AddCommands(void)
    C_AddCommand(use_doom_config);
 
    // [CG] More new stuff.
+   C_AddCommand(maplist);
    C_AddCommand(weapon_switch_on_pickup);
    C_AddCommand(ammo_switch_on_pickup);
    C_AddCommand(display_target_names);

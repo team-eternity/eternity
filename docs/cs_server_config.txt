@@ -306,7 +306,8 @@
         "monsters_affected_by_friction": false,
         "monsters_climb_tall_stairs": false,
         "rescue_dying_friends": false,
-        "dogs_can_jump_down": false
+        "dogs_can_jump_down": false,
+        "build_blockmap": false
     },
 
 /**** "maps"
