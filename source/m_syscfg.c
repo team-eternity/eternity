@@ -216,6 +216,14 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("predict_shots", &cl_predict_shots, NULL, true, wad_no,
                 "predict shot results"),
 
+   DEFAULT_BOOL(
+       "constant_prediction",
+       &cl_constant_prediction,
+       NULL,
+       true, wad_no,
+       "always predict local movement"
+   ),
+
    DEFAULT_INT(
       "packet_buffer_size",
       &cl_packet_buffer_size,

@@ -2485,7 +2485,6 @@ void CL_HandleMessage(char *data, size_t data_length)
          message_index = ((nm_cubespawned_t *)data)->world_index;
          break;
       case nm_specialspawned:
-         // printf("Received [special spawned message].\n");
          message_index = ((nm_specialspawned_t *)data)->world_index;
          switch(((nm_specialspawned_t *)data)->special_type)
          {
@@ -2528,14 +2527,12 @@ void CL_HandleMessage(char *data, size_t data_length)
          // [CG] TODO: Validate line_number and sector_number.
          break;
       case nm_specialstatus:
-         // printf("Received [special status message].\n");
          CL_BufferMapSpecialStatus(
             (nm_specialstatus_t *)data,
             (void *)(data + sizeof(nm_specialstatus_t))
          );
          return;
       case nm_specialremoved:
-         // printf("Received [special removed message].\n");
          message_index = ((nm_specialremoved_t *)data)->world_index;
          message_size = sizeof(nm_specialremoved_t);
          switch(((nm_specialremoved_t *)data)->special_type)
@@ -2581,7 +2578,7 @@ void CL_HandleMessage(char *data, size_t data_length)
          break;
    }
 
-   // [CG] The weird style here is so it's easy to omit messages receipts that
+   // [CG] The weird style here is so it's easy to omit message receipts that
    //      you don't want printed out.
    if(
          message_type == nm_mapcompleted
@@ -2740,7 +2737,7 @@ void CL_HandleMessage(char *data, size_t data_length)
       return;
    }
 
-   if(message_index <= cl_current_world_index)
+   if(!cl_constant_prediction && message_index <= cl_current_world_index)
    {
       CL_Disconnect();
       I_Error(
@@ -2752,7 +2749,7 @@ void CL_HandleMessage(char *data, size_t data_length)
       );
    }
 
-   // [CG] Really, a check for maximum message_size here would be good.
+   // [CG] TODO: Really, a check for maximum message_size here would be good.
 
    node = calloc(1, sizeof(nm_buffer_node_t));
    node->world_index = message_index;
@@ -2776,7 +2773,6 @@ void CL_ProcessNetworkMessages(void)
    //      index are processed in reverse.  To fix this, all messages for the
    //      current index are are pulled out of the buffer and stored in a
    //      normal mdllist, then they're just popped off normally.
-   // [CG] Use m_queue instead of m_dllist here.
    while((node = (nm_buffer_node_t *)E_HashObjectIterator(
             network_message_hash, node, &cl_current_world_index
          )) != NULL)
@@ -3049,21 +3045,16 @@ void CL_TryRunTics(void)
    //      it's necessary to pull damagecount and bonuscount decrementing out
    //      from the normal game loop.
    if(consoleplayer && players[consoleplayer].damagecount)
-   {
       players[consoleplayer].damagecount--;
-   }
+
    if(consoleplayer && players[consoleplayer].bonuscount)
-   {
       players[consoleplayer].bonuscount--;
-   }
 
    buffer_size = cl_latest_world_index - cl_current_world_index;
    if(buffer_size < 0)
-   {
       buffer_size = 0;
-   }
 
-   // [CG] There are a few cases in which we flush the packet buffer, and some
+   // [CG] There are a few cases in which we flush the packet buffer and some
    //      precedents.  Hopefully these if statements are clear enough.
    if(clients[consoleplayer].spectating && cl_buffer_packets_while_spectating)
    {
@@ -3073,13 +3064,15 @@ void CL_TryRunTics(void)
    }
    else if(cl_packet_buffer_size < 2)
    {
+      // [CG] pbs == 1 disables the buffer, and pbs == 0 is handled specially
+      //      below.
       flush_buffer = false;
    }
 
    if(cl_flush_packet_buffer)
    {
-      // [CG] If we're directed to flush the buffer we must, even if spectating
-      //      with cl_buffer_packets_while_spectating enabled.
+      // [CG] If we're directed to flush the buffer we must, in all but 1
+      //      circumstance (haven't received sync yet).
       flush_buffer = true;
    }
 
@@ -3090,33 +3083,15 @@ void CL_TryRunTics(void)
       flush_buffer = false;
    }
 
-   // if(flush_buffer)
-   /*
-   if(flush_buffer && cl_packet_buffer_size != 1)
-   {
-      while(cl_current_world_index < (cl_latest_world_index - 1))
-      {
-         cl_current_world_index++;
-         CL_ProcessNetworkMessages();
-      }
-      I_StartTic();
-      D_ProcessEvents();
-      CL_SendCommand();
-      cl_flush_packet_buffer = false;
-   }
-   */
-
    if(flush_buffer)
    {
       unsigned int old_world_index = cl_current_world_index;
       while(cl_current_world_index < (cl_latest_world_index - 2))
-      {
          run_world();
-      }
       CL_Predict(old_world_index, cl_latest_world_index - 2, false);
       cl_flush_packet_buffer = false;
    }
-   else if((cl_packet_buffer_size == 0))
+   else if(cl_packet_buffer_size == 0)
    {
       if(buffer_size > (((float)client->transit_lag / TICRATE) + 3))
       {
@@ -3125,14 +3100,15 @@ void CL_TryRunTics(void)
          run_world();
       }
    }
-   else if(buffer_size > cl_packet_buffer_size)
+   else if(!cl_constant_prediction && buffer_size > cl_packet_buffer_size)
    {
       // [CG] Manual buffer flushing.  Load a single extra world in an attempt
       //      to catch up.
       run_world();
    }
 
-   if(cl_current_world_index < (cl_latest_world_index - 1))
+   if(cl_constant_prediction ||
+      (cl_current_world_index < (cl_latest_world_index - 1)))
    {
       // [CG] The server finished an index, so process network messages, send a
       //      command, and run G_Ticker.
@@ -3166,17 +3142,11 @@ void CL_TryRunTics(void)
       {
          CL_Disconnect();
          if(received_sync)
-         {
             doom_printf("Synced the whole loop.");
-         }
          else if(cl_received_sync)
-         {
             doom_printf("Received sync just this last loop.");
-         }
          else
-         {
             doom_printf("Never synchronized.");
-         }
       }
    }
 }

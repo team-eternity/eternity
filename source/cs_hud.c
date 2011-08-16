@@ -397,13 +397,14 @@ void CS_UpdateQueueMessage(void)
 
 static void CS_NetWidgetTick(hu_widget_t *widget)
 {
+   int client_buffer_size = cl_latest_world_index - cl_current_world_index;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
    if(show_netstats)
    {
       snprintf(tw->message, 14, "%2u/%2u/%2u/%3u%%",
          clients[consoleplayer].client_lag,
-         cl_latest_world_index - cl_current_world_index,
+         client_buffer_size > 0 ? client_buffer_size : 0,
          clients[consoleplayer].server_lag,
          100 - clients[consoleplayer].packet_loss
       );

@@ -57,6 +57,9 @@ boolean default_cl_buffer_packets_while_spectating = true;
 boolean cl_flush_packet_buffer_on_respawn;
 boolean default_cl_flush_packet_buffer_on_respawn = true;
 
+boolean cl_constant_prediction;
+boolean default_cl_constant_prediction = true;
+
 // [CG] Clientside prediction.
 VARIABLE_TOGGLE(cl_enable_prediction, &default_cl_enable_prediction, onoff);
 CONSOLE_VARIABLE(prediction, cl_enable_prediction, cf_netonly) {}
@@ -64,6 +67,14 @@ CONSOLE_VARIABLE(prediction, cl_enable_prediction, cf_netonly) {}
 // [CG] Shot result prediction.
 VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
 CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
+
+// [CG] Constant prediction.
+VARIABLE_TOGGLE(
+   cl_constant_prediction,
+   &default_cl_constant_prediction,
+   onoff
+);
+CONSOLE_VARIABLE(constant_prediction, cl_constant_prediction, cf_netonly) {}
 
 // [CG] Team.
 CONSOLE_COMMAND(team, cf_netonly)
@@ -83,23 +94,14 @@ CONSOLE_COMMAND(team, cf_netonly)
    }
 
    team_buffer = QStrBuffer(&Console.argv[0]);
-   if(strncasecmp(team_buffer, team_color_names[team_color_none], 4) == 0)
-   {
-      doom_printf("Cannot switch off all teams in team games.\n");
-      return;
-   }
-   else if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
-   {
+   if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
       CL_SendTeamRequest(team_color_red);
-   }
    else if(strncasecmp(team_buffer, team_color_names[team_color_blue], 4) == 0)
-   {
       CL_SendTeamRequest(team_color_blue);
-   }
+   else if(strncasecmp(team_buffer, team_color_names[team_color_none], 4) == 0)
+      doom_printf("Cannot switch off all teams in team games.\n");
    else
-   {
       doom_printf("Invalid team '%s'.\n", team_buffer);
-   }
 }
 
 // [CG] Netstats.
@@ -212,15 +214,13 @@ CONSOLE_COMMAND(spectate_prev, cf_netonly)
    do
    {
       i--;
+
       if(i == -1)
-      {
          i = (MAXPLAYERS - 1);
-      }
+
       if(i == displayplayer)
-      {
-         // [CG] Came back around, no other players can be spectated.
          return;
-      }
+
    } while(!playeringame[i] || clients[i].spectating ||
            (CS_TEAMS_ENABLED && clients[i].team != client->team));
 
@@ -241,34 +241,24 @@ CONSOLE_COMMAND(spectate_next, cf_netonly)
    do
    {
       i++;
+
       if(i == MAXPLAYERS - 1)
-      {
          i = 0;
-      }
+
       if(i == displayplayer)
-      {
-         // [CG] Came back around, no other players can be spectated.
          return;
-      }
+
    } while(!playeringame[i] || clients[i].spectating ||
            (CS_TEAMS_ENABLED && clients[i].team != client->team));
 
    CS_SetDisplayPlayer(i);
 }
 
-/*
-// killough 7/19/98
-DEFAULT_INT("player_helpers", &default_dogs, &dogs, 0, 0, 3, wad_yes,
-            "number of single-player helpers"),
-VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
-CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
-   C_AddCommand(numhelpers);   
-*/
-
 void CL_AddCommands(void)
 {
    C_AddCommand(prediction);
    C_AddCommand(predict_shots);
+   C_AddCommand(constant_prediction);
    C_AddCommand(team);
    C_AddCommand(show_netstats);
    C_AddCommand(show_timer);

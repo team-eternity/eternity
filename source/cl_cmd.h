@@ -40,6 +40,8 @@ extern boolean cl_buffer_packets_while_spectating;
 extern boolean default_cl_buffer_packets_while_spectating;
 extern boolean cl_flush_packet_buffer_on_respawn;
 extern boolean default_cl_flush_packet_buffer_on_respawn;
+extern boolean cl_constant_prediction;
+extern boolean default_cl_constant_prediction;
 
 void CL_AddCommands(void);
 
