@@ -34,8 +34,6 @@
 #include "cs_main.h"
 #include "cs_position.h"
 
-extern client_t *clients;
-
 // [CG] For debugging, really.
 void CS_PrintPosition(position_t *position)
 {
@@ -81,17 +79,18 @@ void CS_PrintPosition(position_t *position)
 
    // [CG] Bobbing and viewheight; this is below miscellaneous because most of
    //      it is related to the player, and because player-only members in the
-   //      position come last.  Also pitch and jumptime are tacked onto the
-   //      end.
+   //      position come last.  Also pitch, jumptime and playerstate are tacked
+   //      onto the end.
    printf(
-      "%d/%d/%d/%d/%d %5d %d\n",
+      "%d/%d/%d/%d/%d %5d %d %d\n",
       position->floatbob,
       position->bob,
       position->viewz,
       position->viewheight,
       position->deltaviewheight,
       position->pitch >> FRACBITS,
-      position->jumptime
+      position->jumptime,
+      position->playerstate
    );
 }
 
@@ -176,7 +175,8 @@ boolean CS_ActorPositionEquals(mobj_t *actor, position_t *position)
       actor->player->viewheight      == position->viewheight      &&
       actor->player->deltaviewheight == position->deltaviewheight &&
       actor->player->pitch           == position->pitch           &&
-      actor->player->jumptime        == position->jumptime)))
+      actor->player->jumptime        == position->jumptime        &&
+      actor->player->playerstate     == position->playerstate)))
    {
       return true;
    }
@@ -214,19 +214,15 @@ void CS_SaveActorPosition(position_t *position, mobj_t *actor, int index)
       position->deltaviewheight = actor->player->deltaviewheight;
       position->pitch           = actor->player->pitch;
       position->jumptime        = actor->player->jumptime;
+      position->playerstate     = actor->player->playerstate;
    }
 }
 
 boolean CS_ActorPositionChanged(mobj_t *actor)
 {
    if(CS_ActorPositionEquals(actor, &actor->old_position))
-   {
       return false;
-   }
-   else
-   {
-      return true;
-   }
+   return true;
 }
 
 boolean CS_PositionsEqual(position_t *position_one, position_t *position_two)
@@ -256,7 +252,8 @@ boolean CS_PositionsEqual(position_t *position_one, position_t *position_two)
       position_one->viewheight      == position_two->viewheight      &&
       position_one->deltaviewheight == position_two->deltaviewheight &&
       position_one->pitch           == position_two->pitch           &&
-      position_one->jumptime        == position_two->jumptime)
+      position_one->jumptime        == position_two->jumptime        &&
+      position_one->playerstate     == position_two->playerstate)
    {
       return true;
    }
@@ -291,5 +288,6 @@ void CS_CopyPosition(position_t *dest, position_t *src)
    dest->deltaviewheight = src->deltaviewheight;
    dest->pitch           = src->pitch;
    dest->jumptime        = src->jumptime;
+   dest->playerstate     = src->playerstate;
 }
 

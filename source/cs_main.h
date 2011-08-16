@@ -50,7 +50,7 @@
 #define _PRED_DEBUG 0
 #define _PLAYER_DEBUG 0
 #define _AUTH_DEBUG 0
-#define _UNLAG_DEBUG 0
+#define _UNLAG_DEBUG 1
 #define _SPECIAL_DEBUG 0
 #define _SECTOR_PRED_DEBUG 0
 

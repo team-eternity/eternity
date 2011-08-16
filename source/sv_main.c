@@ -717,8 +717,6 @@ void SV_SpawnGhost(int playernum)
    ghost->flags |= MF_NOCLIP;
    ghost->flags |= MF_TRANSLUCENT;
    ghost->flags &= ~MF_SHOOTABLE;
-   // ghost->flags |= MF_NOBLOCKMAP;
-   // ghost->flags &= ~MF_SOLID;
 
    if(sc->ghost)
    {
@@ -797,9 +795,15 @@ void SV_StartUnlag(int playernum)
          CS_PrintPlayerPosition(i, sv_world_index - 1);
 #endif
          SV_LoadPlayerPositionAt(i, index);
+         // [CG] If the target player was dead during this index, don't let
+         //      let them take damage for the old actor at the old position.
+         if(server_clients[i].positions[index % MAX_POSITIONS].playerstate !=
+            PST_LIVE)
+            target->mo->flags4 |= MF4_NODAMAGE;
 #if _UNLAG_DEBUG
          printf("  ");
          CS_PrintPlayerPosition(i, index);
+         /*
          printf(
             "Spawning ghost for %d at %u: %d/%d/%d.\n",
             playernum,
@@ -809,6 +813,7 @@ void SV_StartUnlag(int playernum)
             target->mo->z >> FRACBITS
          );
          SV_SpawnGhost(i);
+         */
          // SV_LoadPlayerPositionAt(i, sv_world_index - 1);
 #endif
       }
@@ -835,6 +840,7 @@ void SV_StartUnlag(int playernum)
 void SV_EndUnlag(int playernum)
 {
    unsigned int i;
+   unsigned int index = server_clients[playernum].command_world_index;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {

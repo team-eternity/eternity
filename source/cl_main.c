@@ -1055,7 +1055,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
 {
-   if(message->new_map_number < 0 || message->new_map_number > cs_map_count)
+   if(message->new_map_number > cs_map_count)
    {
       doom_printf(
          "Received map completed message containing invalid new map lump "
@@ -1300,41 +1300,34 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    client_t *client;
    unsigned int playernum = message->client_number;
 
-#if _PRED_DEBUG || _CMD_DEBUG
+#if _PRED_DEBUG || _CMD_DEBUG || _UNLAG_DEBUG
    printf(
       "CL_HandleClientStatusMessage (%3u/%3u): %3u/%3u/%3u.\n",
       cl_current_world_index,
       cl_latest_world_index,
       message->world_index,
       message->last_command_run,
-      message->position.index
+      message->position.world_index
    );
+   printf("  ");
+   CS_PrintPlayerPosition(playernum, cl_current_world_index);
+   printf("  ");
+   CS_PrintPosition(&message->position);
 #endif
 
    if(playernum > MAX_CLIENTS || !playeringame[playernum])
-   {
-      /*
-      printf(
-         "Received player status message for invalid player %d.\n", playernum
-      );
-      */
       return;
-   }
 
    client = &clients[playernum];
+
    if(playernum == consoleplayer && !cl_enable_prediction)
-   {
       client->client_lag = cl_current_world_index - message->world_index;
-   }
+
    if(message->world_index > message->last_command_run)
-   {
-      client->client_lag =
-         message->world_index - message->last_command_run;
-   }
+      client->client_lag = message->world_index - message->last_command_run;
    else
-   {
       client->client_lag = 0;
-   }
+
    client->server_lag = message->server_lag;
    client->transit_lag = message->transit_lag;
    if(playernum == consoleplayer)
@@ -1343,13 +1336,10 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
          (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
    }
    else
-   {
       client->packet_loss = message->packet_loss;
-   }
+
    if(client->packet_loss > 100)
-   {
       client->packet_loss = 100;
-   }
 
    if(!client->spectating)
    {

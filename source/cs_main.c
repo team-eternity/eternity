@@ -422,7 +422,7 @@ char* CS_GetSHA1HashFile(char *path)
    M_HashInitialize(&newhash, HASH_SHA1);
    while(1)
    {
-      if((bytes_read = fread((void *)chunk, sizeof(char), chunk_size, f)));
+      if((bytes_read = fread((void *)chunk, sizeof(char), chunk_size, f)))
       {
          M_HashData(&newhash, (const uint8_t *)chunk, (uint32_t)bytes_read);
       }

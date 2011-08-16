@@ -69,6 +69,7 @@ typedef struct position_s
    int32_t deltaviewheight; // [CG] Players only, 0 otherwise.
    fixed_t pitch;           // [CG] Players only, 0 otherwise.
    int32_t jumptime;        // [CG] Players only, 0 otherwise.
+   int32_t playerstate;     // [CG] Players only, 0 otherwise.
 } position_t;
 
 #pragma pack(pop)
