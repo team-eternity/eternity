@@ -1425,6 +1425,9 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          message->int_value = team_color_red;
       }
 
+      // [CG] If the player is holding a flag, they must drop it.
+      CS_DropFlag(playernum);
+
       client->team = message->int_value;
       if(client->queue_level == ql_none)
       {
@@ -1510,6 +1513,10 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       }
 
       // [CG] At this point, the player is attempting to spectate.
+
+      // [CG] If the player is holding a flag, they must drop it.
+      CS_DropFlag(playernum);
+
       if(CS_SERVER)
       {
          client->spectating = true;
