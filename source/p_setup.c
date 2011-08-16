@@ -67,6 +67,7 @@
 #include "p_slopes.h"
 
 // [CG] Added
+#include "cs_main.h"
 #include "cs_team.h"
 
 extern const char *level_error;
