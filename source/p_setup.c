@@ -2179,6 +2179,7 @@ static void P_ClearPlayerVars(void)
          players[i].playerstate = PST_REBORN;
 
       players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
+      clients[i].death_count = 0;
 
       memset(players[i].frags, 0, sizeof(players[i].frags));
 
