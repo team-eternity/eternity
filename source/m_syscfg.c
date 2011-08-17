@@ -225,6 +225,15 @@ static default_t sysdefaults[] =
    ),
 
    DEFAULT_INT(
+      "damage_screen_cap",
+      &damage_screen_factor,
+      NULL,
+      100, 0, 100, wad_no,
+      "cap the damage screen intensity, 0 - no damage screen, 100 - full, "
+      "original damage screen"
+   ),
+
+   DEFAULT_INT(
       "packet_buffer_size",
       &cl_packet_buffer_size,
       NULL,

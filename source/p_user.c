@@ -207,9 +207,7 @@ void P_CalcHeight(player_t *player)
    // haleyjd 08/07/04: new floorclip system
    if(player->mo->floorclip && player->playerstate != PST_DEAD && 
       player->mo->z <= player->mo->floorz)
-   {
       player->viewz -= player->mo->floorclip;
-   }
    
    if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
       player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
@@ -332,29 +330,25 @@ void P_DeathThink(player_t *player)
             
             player->mo->angle = angle;
             
-            if(player->damagecount)
+            if(!clientserver && player->damagecount)
                player->damagecount--;
          }
          else 
+         {
             if(delta < ANG180)
                player->mo->angle += ANG5;
             else
                player->mo->angle -= ANG5;
+         }
       }
-      else if(player->damagecount)
-      {
+      else if(!clientserver && player->damagecount)
          player->damagecount--;
-      }
    }
-   else if(player->damagecount)
-   {
+   else if(!clientserver && player->damagecount)
       player->damagecount--;
-   }
 
    if(clientserver && !CS_HEADLESS)
-   {
       action_frags = 1;
-   }
 
    // haleyjd 10/05/08:
    // handle looking slightly up when the player is attached to a non-player
@@ -370,9 +364,7 @@ void P_DeathThink(player_t *player)
    //      remain dead for so long before they're either forcibly respawned or
    //      removed from the game.
    if(player->cmd.buttons & BT_USE)
-   {
       player->playerstate = PST_REBORN;
-   }
    else if(CS_SERVER && death_time_limit && GameType != gt_coop)
    {
       int playernum = player - players;

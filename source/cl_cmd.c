@@ -60,6 +60,9 @@ boolean default_cl_flush_packet_buffer_on_respawn = true;
 boolean cl_constant_prediction;
 boolean default_cl_constant_prediction = true;
 
+unsigned int damage_screen_factor;
+unsigned int default_damage_screen_factor = 100;
+
 // [CG] Clientside prediction.
 VARIABLE_TOGGLE(cl_enable_prediction, &default_cl_enable_prediction, onoff);
 CONSOLE_VARIABLE(prediction, cl_enable_prediction, cf_netonly) {}
@@ -149,6 +152,14 @@ CONSOLE_VARIABLE(
    cl_flush_packet_buffer_on_respawn,
    cf_netonly
 ) {}
+
+// [CG] Damage screen ("red screen") factor.
+VARIABLE_INT(
+   damage_screen_factor,
+   &default_damage_screen_factor,
+   0, 100, NULL
+);
+CONSOLE_VARIABLE(damage_screen_factor, damage_screen_factor, 0) {}
 
 CONSOLE_COMMAND(disconnect, cf_netonly)
 {
@@ -266,6 +277,7 @@ void CL_AddCommands(void)
    C_AddCommand(packet_buffer_size);
    C_AddCommand(buffer_packets_while_spectating);
    C_AddCommand(flush_packet_buffer_on_respawn);
+   C_AddCommand(damage_screen_factor);
    C_AddCommand(disconnect);
    C_AddCommand(reconnect);
    C_AddCommand(password);

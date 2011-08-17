@@ -85,6 +85,7 @@ typedef enum {
     dmf_enable_variable_friction         = 2 << 17,
     dmf_enable_boom_push_effects         = 2 << 18,
     dmf_enable_nukage                    = 2 << 19,
+    dmf_allow_damage_screen_change       = 2 << 20,
 } dmflags2_t;
 
 #define DM_ITEMRESPAWN   dmf_respawn_items

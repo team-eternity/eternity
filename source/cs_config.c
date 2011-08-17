@@ -1384,6 +1384,7 @@ void CS_HandleOptionsSection(json_object *options)
    __set_flags(options, enable_variable_friction, dmflags2, false);
    __set_flags(options, enable_boom_push_effects, dmflags2, false);
    __set_flags(options, enable_nukage, dmflags2, true);
+   __set_flags(options, allow_damage_screen_change, dmflags2, false);
 
    // [CG] Compatibility options
    __set_compat(options, imperfect_god_mode, god, false);
@@ -2141,6 +2142,7 @@ void CS_LoadMapOverrides(unsigned int map_index)
    __override_flags(overrides, enable_variable_friction, dmflags2)
    __override_flags(overrides, enable_boom_push_effects, dmflags2)
    __override_flags(overrides, enable_nukage, dmflags2)
+   __override_flags(overrides, allow_damage_screen_change, dmflags2)
 
    // [CG] Compatibility options
    __override_compat(overrides, imperfect_god_mode, god);

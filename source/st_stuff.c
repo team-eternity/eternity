@@ -43,6 +43,10 @@
 #include "dstrings.h"
 #include "d_gi.h" // haleyjd
 #include "hu_over.h" // haleyjd
+#include "g_dmflag.h" // [CG] Added.
+
+// [CG] Added.
+#include "cl_cmd.h"
 
 //
 // STATUS BAR DATA
@@ -692,6 +696,10 @@ static void ST_doPaletteStuff(void)
       if(bzc > cnt)
          cnt = bzc;
    }
+   else if(cnt > damage_screen_factor &&
+           damage_screen_factor < 100 &&
+           (dmflags2 & dmf_allow_damage_screen_change))
+      cnt = damage_screen_factor;
 
    if(cnt)
    {

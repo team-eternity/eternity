@@ -90,6 +90,7 @@
         "enable_variable_friction": false,
         "enable_boom_push_effects": false,
         "enable_nukage": true,
+        "allow_damage_screen_change": true,
         "imperfect_god_mode": false,
         "time_limit_powerups": false,
         "normal_sky_when_invulnerable": false,

@@ -42,6 +42,8 @@ extern boolean cl_flush_packet_buffer_on_respawn;
 extern boolean default_cl_flush_packet_buffer_on_respawn;
 extern boolean cl_constant_prediction;
 extern boolean default_cl_constant_prediction;
+extern unsigned int damage_screen_factor;
+extern unsigned int default_damage_screen_factor;
 
 void CL_AddCommands(void);
 

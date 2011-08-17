@@ -79,6 +79,7 @@
 #include "cs_ctf.h"
 #include "cs_demo.h"
 #include "cs_wad.h"
+#include "cs_netid.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "cl_pred.h"
@@ -1006,21 +1007,15 @@ void CS_PlayerThink(int playernum)
    }
 
    if(player->powers[pw_infrared] > 0) // killough
-   {
       player->powers[pw_infrared]--;
-   }
 
    if(player->powers[pw_ironfeet] > 0) // killough
-   {
       player->powers[pw_ironfeet]--;
-   }
 
    if(player->powers[pw_ghost] > 0) // haleyjd
    {
       if(!--player->powers[pw_ghost])
-      {
          player->mo->flags3 &= ~MF3_GHOST;
-      }
    }
 
    if(player->powers[pw_totalinvis] > 0) // haleyjd
@@ -1035,14 +1030,10 @@ void CS_PlayerThink(int playernum)
    }
 
    if(player->damagecount)
-   {
       player->damagecount--;
-   }
 
    if(player->bonuscount)
-   {
       player->bonuscount--;
-   }
 
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax
@@ -1100,13 +1091,10 @@ void CS_PlayerTicker(int playernum)
          // [CG] These shouldn't wait on server messages because they're
          //      annoying when they linger.
          if(player->damagecount)
-         {
             player->damagecount--;
-         }
+
          if(player->bonuscount)
-         {
             player->bonuscount--;
-         }
 
          // [CG] Make sounds when a player hits the floor.
          if(client->floor_status)

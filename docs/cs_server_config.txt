@@ -267,6 +267,7 @@
         "enable_variable_friction": false,
         "enable_boom_push_effects": false,
         "enable_nukage": true,
+        "allow_damage_screen_change": true,
 
         // Compatibility options
         "imperfect_god_mode": false,

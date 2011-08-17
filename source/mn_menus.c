@@ -1830,6 +1830,7 @@ static menuitem_t mn_video_page2_items[] =
    {it_gap},
    {it_info,    FC_GOLD "Misc."},
    {it_toggle,  "loading disk icon",       "v_diskicon"},
+   {it_slider,  "damage screen intensity", "damage_screen_factor"},
    {it_end}
 };
 
