@@ -794,6 +794,9 @@ void SV_StartUnlag(int playernum)
          printf("Moved player %d:\n  ", i);
          CS_PrintPlayerPosition(i, sv_world_index - 1);
 #endif
+         CS_SaveActorPosition(
+            &server_clients[i].saved_position, target->mo, sv_world_index - 1
+         );
          SV_LoadPlayerPositionAt(i, index);
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
@@ -840,7 +843,10 @@ void SV_StartUnlag(int playernum)
 void SV_EndUnlag(int playernum)
 {
    unsigned int i;
-   unsigned int index = server_clients[playernum].command_world_index;
+   unsigned int world_index = sv_world_index - 1;
+   position_t *position;
+   fixed_t added_momx, added_momy;
+   unsigned int player_index = server_clients[playernum].command_world_index;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -852,24 +858,38 @@ void SV_EndUnlag(int playernum)
             i, server_clients[playernum].command_world_index
          );
 #endif
-         SV_LoadPlayerPositionAt(i, sv_world_index - 1);
+         // [CG] Check to see if thrust due to damage was applied to the player
+         //      during unlagged.  If it was, apply that thrust to the ultimate
+         //      position.
+         position = &server_clients[i].positions[player_index % MAX_POSITIONS];
+         added_momx = added_momy = 0;
+
+         if(players[i].mo->momx != position->momx)
+            added_momx = players[i].mo->momx - position->momx;
+
+         if(players[i].mo->momy != position->momy)
+            added_momy = players[i].mo->momy - position->momy;
+
+         CS_SetPlayerPosition(i, &server_clients[i].saved_position);
+         players[i].mo->momx += added_momx;
+         players[i].mo->momy += added_momy;
 #if _UNLAG_DEBUG
          printf("  ");
-         CS_PrintPlayerPosition(i, sv_world_index - 1);
+         CS_PrintPlayerPosition(i, world_index);
 #endif
       }
    }
 
    for(i = 0; i < numsectors; i++)
    {
-      SV_LoadSectorPositionAt(i, sv_world_index - 1);
+      SV_LoadSectorPositionAt(i, world_index);
 #if _SECTOR_PRED_DEBUG
       if(i == _DEBUG_SECTOR)
       {
          printf(
             "SV_EndUnlag: Position for sector %u at %u: %3u/%3u.\n",
             i,
-            sv_world_index - 1,
+            world_index,
             sectors[i].ceilingheight >> FRACBITS,
             sectors[i].floorheight >> FRACBITS
          );
@@ -1797,7 +1817,12 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    if(server_client->commands.size > MAX_POSITIONS)
    {
-      SV_DisconnectPlayer(playernum, dr_command_flood);
+      printf(
+         "Warning, Queue Overflowing: player %d has %u commands queued.\n",
+         playernum,
+         server_client->commands.size
+      );
+      // SV_DisconnectPlayer(playernum, dr_command_flood);
    }
 
    // [CG] Some additional checks to prevent tomfoolery.

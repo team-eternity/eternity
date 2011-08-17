@@ -50,7 +50,7 @@
 #define _PRED_DEBUG 0
 #define _PLAYER_DEBUG 0
 #define _AUTH_DEBUG 0
-#define _UNLAG_DEBUG 1
+#define _UNLAG_DEBUG 0
 #define _SPECIAL_DEBUG 0
 #define _SECTOR_PRED_DEBUG 0
 
@@ -384,6 +384,8 @@ typedef struct server_client_s
    unsigned int ammo_switch_on_pickup;
    // [CG] Sync-critical configuration options.
    client_options_t options;
+   // [CG] Last position, used for unlagged.
+   position_t saved_position;
 #if _UNLAG_DEBUG
    // [CG] For unlagged debugging.
    mobj_t *ghost;
