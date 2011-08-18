@@ -378,9 +378,7 @@ ceiling_t* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
    {
       P_AddActiveCeiling(ceiling);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(ceiling, line, ms_ceiling);
-      }
+         SV_BroadcastMapSpecialSpawned(ceiling, NULL, line, ms_ceiling);
    }
 
    return ceiling;

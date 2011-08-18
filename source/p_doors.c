@@ -352,12 +352,11 @@ void T_VerticalDoor(vldoor_t *door)
 
 void P_RemoveDoor(vldoor_t *door)
 {
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(door->net_id, ms_door_tagged);
+
    door->sector->ceilingdata = NULL;  //jff 2/22/98
    P_RemoveThinker (&door->thinker);  // unlink and free
-   if(CS_SERVER)
-   {
-      SV_BroadcastMapSpecialRemoved(door->net_id, ms_door_tagged);
-   }
    CS_ReleaseDoorNetID(door);
 }
 
@@ -376,17 +375,11 @@ void P_PrintDoor(vldoor_t *door)
    unsigned int index;
 
    if(CS_SERVER && playeringame[1])
-   {
       index = server_clients[1].last_command_run_index;
-   }
    else if(CS_CLIENT)
-   {
       index = cl_current_world_index;
-   }
    else if(CS_SERVER)
-   {
       index = sv_world_index;
-   }
 
    printf(
       "Door %2u (%3u): %5u %5u %3d %3d %3d | ",
@@ -409,9 +402,7 @@ void P_PrintDoor(vldoor_t *door)
       );
    }
    else
-   {
       printf("Sector XX (%5u): XXXXX XXXXX.\n", index);
-   }
 }
 
 ///////////////////////////////////////////////////////////////
@@ -486,9 +477,7 @@ vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
    {
       CS_ObtainDoorNetID(door);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(door, line, ms_door_tagged);
-      }
+         SV_BroadcastMapSpecialSpawned(door, NULL, line, ms_door_tagged);
    }
 
    return door;
@@ -552,9 +541,7 @@ vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec)
    {
       CS_ObtainDoorNetID(door);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(door, line, ms_door_manual);
-      }
+         SV_BroadcastMapSpecialSpawned(door, NULL, line, ms_door_manual);
    }
 
    return door;
@@ -596,9 +583,7 @@ vldoor_t* P_SpawnDoorCloseIn30(sector_t* sec)
    {
       CS_ObtainDoorNetID(door);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(door, NULL, ms_door_closein30);
-      }
+         SV_BroadcastMapSpecialSpawned(door, NULL, NULL, ms_door_closein30);
    }
 
    return door;
@@ -638,9 +623,7 @@ vldoor_t* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
    {
       CS_ObtainDoorNetID(door);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(door, NULL, ms_door_raisein300);
-      }
+         SV_BroadcastMapSpecialSpawned(door, NULL, NULL, ms_door_raisein300);
    }
 
    return door;

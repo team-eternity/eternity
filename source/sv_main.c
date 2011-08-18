@@ -1988,8 +1988,8 @@ void SV_BroadcastSectorPosition(size_t sector_number)
    broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
 }
 
-void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
-                                   map_special_t special_type)
+void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
+                                   line_t *line, map_special_t special_type)
 {
    size_t msg_size = sizeof(nm_specialspawned_t);
    size_t special_size, total_size, sector_number;
@@ -1999,6 +1999,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    switch(special_type)
    {
    case ms_ceiling:
+   case ms_ceiling_param:
       special_size = sizeof(ceiling_status_t);
       sector_number = ((ceiling_t *)(special))->sector - sectors;
       break;
@@ -2006,6 +2007,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
+   case ms_door_param:
       special_size = sizeof(door_status_t);
       sector_number = ((vldoor_t *)(special))->sector - sectors;
       break;
@@ -2013,6 +2015,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
+   case ms_floor_param:
       special_size = sizeof(floor_status_t);
       sector_number = ((floormove_t *)(special))->sector - sectors;
       break;
@@ -2030,6 +2033,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
       sector_number = ((floorwaggle_t *)(special))->sector - sectors;
       break;
    case ms_platform:
+   case ms_platform_gen:
       special_size = sizeof(platform_status_t);
       sector_number = ((plat_t *)(special))->sector - sectors;
       break;
@@ -2042,8 +2046,22 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    }
 
    total_size = msg_size + special_size;
-   buffer = malloc(total_size);
+   switch(special_type)
+   {
+   case ms_ceiling_param:
+      total_size += sizeof(cs_ceilingdata_t);
+      break;
+   case ms_door_param:
+      total_size += sizeof(cs_doordata_t);
+      break;
+   case ms_floor_param:
+      total_size += sizeof(cs_floordata_t);
+      break;
+   default:
+      break;
+   }
 
+   buffer = malloc(total_size);
    spawn_message = (nm_specialspawned_t *)buffer;
    spawn_message->message_type = nm_specialspawned;
    spawn_message->world_index = sv_world_index;
@@ -2062,6 +2080,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    switch(special_type)
    {
    case ms_ceiling:
+   case ms_ceiling_param:
       CS_SaveCeilingStatus(
          (ceiling_status_t *)(buffer + sizeof(nm_specialspawned_t)),
          (ceiling_t *)special
@@ -2071,6 +2090,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
+   case ms_door_param:
       CS_SaveDoorStatus(
          (door_status_t *)(buffer + sizeof(nm_specialspawned_t)),
          (vldoor_t *)special
@@ -2080,6 +2100,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
+   case ms_floor_param:
       CS_SaveFloorStatus(
          (floor_status_t *)(buffer + sizeof(nm_specialspawned_t)),
          (floormove_t *)special
@@ -2105,6 +2126,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
       );
       break;
    case ms_platform:
+   case ms_platform_gen:
       CS_SavePlatformStatus(
          (platform_status_t *)(buffer + sizeof(nm_specialspawned_t)),
          (plat_t *)special
@@ -2112,6 +2134,33 @@ void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
       break;
    default:
       return;
+   }
+
+   switch(special_type)
+   {
+   case ms_ceiling_param:
+      CS_SaveCeilingData(
+         (cs_ceilingdata_t *)(buffer + sizeof(nm_specialspawned_t) +
+                                       sizeof(ceiling_status_t)),
+         (ceilingdata_t *)special_data
+      );
+      break;
+   case ms_door_param:
+      CS_SaveDoorData(
+         (cs_doordata_t *)(buffer + sizeof(nm_specialspawned_t) +
+                                    sizeof(door_status_t)),
+         (doordata_t *)special_data
+      );
+      break;
+   case ms_floor_param:
+      CS_SaveFloorData(
+         (cs_floordata_t *)(buffer + sizeof(nm_specialspawned_t) +
+                                     sizeof(floor_status_t)),
+         (floordata_t *)special_data
+      );
+      break;
+   default:
+      break;
    }
 
    broadcast_packet(buffer, total_size);
@@ -2129,18 +2178,21 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    switch(special_type)
    {
    case ms_ceiling:
+   case ms_ceiling_param:
       special_size = sizeof(ceiling_status_t);
       break;
    case ms_door_tagged:
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
+   case ms_door_param:
       special_size = sizeof(door_status_t);
       break;
    case ms_floor:
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
+   case ms_floor_param:
       special_size = sizeof(floor_status_t);
       break;
    case ms_elevator:
@@ -2154,6 +2206,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
       special_size = sizeof(floorwaggle_status_t);
       break;
    case ms_platform:
+   case ms_platform_gen:
       special_size = sizeof(platform_status_t);
       break;
    default:
@@ -2175,6 +2228,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    switch(special_type)
    {
    case ms_ceiling:
+   case ms_ceiling_param:
       CS_SaveCeilingStatus(
          (ceiling_status_t *)(buffer + sizeof(nm_specialstatus_t)),
          (ceiling_t *)special
@@ -2184,6 +2238,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
+   case ms_door_param:
       CS_SaveDoorStatus(
          (door_status_t *)(buffer + sizeof(nm_specialstatus_t)),
          (vldoor_t *)special
@@ -2193,6 +2248,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
+   case ms_floor_param:
       CS_SaveFloorStatus(
          (floor_status_t *)(buffer + sizeof(nm_specialstatus_t)),
          (floormove_t *)special
@@ -2218,6 +2274,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
       );
       break;
    case ms_platform:
+   case ms_platform_gen:
       CS_SavePlatformStatus(
          (platform_status_t *)(buffer + sizeof(nm_specialstatus_t)),
          (plat_t *)special
@@ -2226,7 +2283,6 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    default:
       return;
    }
-
 
    broadcast_packet(buffer, total_size);
    free(buffer);

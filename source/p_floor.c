@@ -652,13 +652,9 @@ void T_MoveFloor(floormove_t* floor)
 
       // [CG] Just set the floor as inactive if we're a client.
       if(CS_CLIENT)
-      {
          floor->inactive = cl_current_world_index;
-      }
       else
-      {
          P_RemoveFloor(floor);
-      }
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
@@ -696,12 +692,13 @@ void T_MoveFloor(floormove_t* floor)
 
 void P_RemoveFloor(floormove_t *floor)
 {
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(floor->net_id, ms_floor);
+   else if(CS_CLIENT)
+      S_StopSectorSequence(floor->sector, false);
+
    floor->sector->floordata = NULL;  //jff 2/22/98
    P_RemoveThinker(&floor->thinker); //remove this floor from list of movers
-   if(CS_SERVER)
-   {
-      SV_BroadcastMapSpecialRemoved(floor->net_id, ms_floor);
-   }
    CS_ReleaseFloorNetID(floor);
 }
 
@@ -774,13 +771,9 @@ void T_MoveElevator(elevator_t* elevator)
       S_StopSectorSequence(elevator->sector, false);
       // [CG] Just set the elevator as inactive if we're a client.
       if(CS_CLIENT)
-      {
          elevator->inactive = cl_current_world_index;
-      }
       else
-      {
          P_RemoveElevator(elevator);
-      }
 
       // make floor stop sound
       // haleyjd: handled through sound sequences
@@ -789,13 +782,12 @@ void T_MoveElevator(elevator_t* elevator)
 
 void P_RemoveElevator(elevator_t *elevator)
 {
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(elevator->net_id, ms_elevator);
+
    elevator->sector->floordata = NULL;     //jff 2/22/98
    elevator->sector->ceilingdata = NULL;   //jff 2/22/98
    P_RemoveThinker(&elevator->thinker);    // remove elevator from actives
-   if(CS_SERVER)
-   {
-      SV_BroadcastMapSpecialRemoved(elevator->net_id, ms_elevator);
-   }
    CS_ReleaseElevatorNetID(elevator);
 }
 
@@ -826,27 +818,22 @@ void T_MovePillar(pillar_t *pillar)
       S_StopSectorSequence(pillar->sector, false);
       // [CG] Just set the pillar as inactive if we're a client.
       if(CS_CLIENT)
-      {
          pillar->inactive = cl_current_world_index;
-      }
       else
-      {
          P_RemovePillar(pillar);
-      }
    }
 }
 
 void P_RemovePillar(pillar_t *pillar)
 {
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(pillar->net_id, ms_pillar_build);
+
    pillar->sector->floordata = NULL;
    pillar->sector->ceilingdata = NULL;
    // TODO: notify scripts
    //P_TagFinished(pillar->sector->tag);
    P_RemoveThinker(&pillar->thinker);
-   if(CS_SERVER)
-   {
-      SV_BroadcastMapSpecialRemoved(pillar->net_id, ms_pillar_build);
-   }
    CS_ReleasePillarNetID(pillar);
 }
 
@@ -1060,9 +1047,7 @@ floormove_t* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
    {
       CS_ObtainFloorNetID(floor);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(floor, line, ms_floor);
-      }
+         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_floor);
    }
 
    return floor;
@@ -1563,9 +1548,7 @@ floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
    {
       CS_ObtainFloorNetID(floor);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(floor, line, ms_donut);
-      }
+         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_donut);
    }
 
    return floor;
@@ -1594,9 +1577,7 @@ floormove_t* P_SpawnDonutHole(line_t *line, sector_t *sec,
    {
       CS_ObtainFloorNetID(floor);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(floor, line, ms_donut_hole);
-      }
+         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_donut_hole);
    }
 
    return floor;
@@ -1699,9 +1680,7 @@ elevator_t* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
    {
       CS_ObtainElevatorNetID(elevator);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(elevator, line, ms_elevator);
-      }
+         SV_BroadcastMapSpecialSpawned(elevator, NULL, line, ms_elevator);
    }
 
    return elevator;
@@ -1815,9 +1794,7 @@ pillar_t* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
    {
       CS_ObtainPillarNetID(pillar);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(pillar, line, ms_pillar_build);
-      }
+         SV_BroadcastMapSpecialSpawned(pillar, NULL, line, ms_pillar_build);
    }
    return pillar;
 }
@@ -1923,9 +1900,7 @@ pillar_t* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
    {
       CS_ObtainPillarNetID(pillar);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(pillar, line, ms_pillar_open);
-      }
+         SV_BroadcastMapSpecialSpawned(pillar, NULL, line, ms_pillar_open);
    }
 
    return pillar;
@@ -1955,14 +1930,13 @@ void P_ChangeFloorTex(const char *name, int tag)
 
 void P_RemoveFloorWaggle(floorwaggle_t *floorwaggle)
 {
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(floorwaggle->net_id, ms_floorwaggle);
+
    floorwaggle->sector->floordata = NULL;
    // HEXEN_TODO: P_TagFinished
    // P_TagFinished(floorwaggle->sector->tag);
    P_RemoveThinker(&floorwaggle->thinker);
-   if(CS_SERVER)
-   {
-      SV_BroadcastMapSpecialRemoved(floorwaggle->net_id, ms_floorwaggle);
-   }
    CS_ReleaseFloorWaggleNetID(floorwaggle);
 }
 
@@ -2001,13 +1975,9 @@ void T_FloorWaggle(floorwaggle_t *waggle)
 
          // [CG] Just set the floor waggle as inactive if we're a client.
          if(CS_CLIENT)
-         {
             waggle->inactive = cl_current_world_index;
-         }
          else
-         {
             P_RemoveFloorWaggle(waggle);
-         }
          return;
       }
       break;
@@ -2103,9 +2073,7 @@ floorwaggle_t* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
    {
       CS_ObtainFloorWaggleNetID(waggle);
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(waggle, line, ms_floorwaggle);
-      }
+         SV_BroadcastMapSpecialSpawned(waggle, NULL, line, ms_floorwaggle);
    }
 
    return waggle;

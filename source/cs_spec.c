@@ -140,6 +140,19 @@ void CS_SaveCeilingStatus(ceiling_status_t *status, ceiling_t *ceiling)
    status->old_direction = ceiling->olddirection;
 }
 
+void CS_SaveCeilingData(cs_ceilingdata_t *cscd, ceilingdata_t *cd)
+{
+   cscd->trigger_type = cd->trigger_type;
+   cscd->crush = cd->crush;
+   cscd->direction = cd->direction;
+   cscd->speed_type = cd->speed_type;
+   cscd->change_type = cd->change_type;
+   cscd->change_model = cd->change_model;
+   cscd->target_type = cd->target_type;
+   cscd->height_value = cd->height_value;
+   cscd->speed_value = cd->speed_value;
+}
+
 void CS_SaveDoorStatus(door_status_t *status, vldoor_t *door)
 {
    status->net_id = door->net_id;
@@ -149,6 +162,19 @@ void CS_SaveDoorStatus(door_status_t *status, vldoor_t *door)
    status->direction = door->direction;
    status->top_wait = door->topwait;
    status->top_countdown = door->topcountdown;
+}
+
+void CS_SaveDoorData(cs_doordata_t *csdd, doordata_t *dd)
+{
+   csdd->delay_type     = dd->delay_type;
+   csdd->kind           = dd->kind;
+   csdd->speed_type     = dd->speed_type;
+   csdd->trigger_type   = dd->trigger_type;
+   csdd->speed_value    = dd->speed_value;
+   csdd->delay_value    = dd->delay_value;
+   csdd->altlighttag    = dd->altlighttag;
+   csdd->usealtlighttag = dd->usealtlighttag;
+   csdd->topcountdown   = dd->topcountdown;
 }
 
 void CS_SaveFloorStatus(floor_status_t *status, floormove_t *floor)
@@ -171,6 +197,19 @@ void CS_SaveFloorStatus(floor_status_t *status, floormove_t *floor)
    status->step_raise_time = floor->stepRaiseTime;
    status->delay_time = floor->delayTime;
    status->delay_timer = floor->delayTimer;
+}
+
+void CS_SaveFloorData(cs_floordata_t *csfd, floordata_t *fd)
+{
+   csfd->trigger_type = fd->trigger_type;
+   csfd->crush        = fd->crush;
+   csfd->direction    = fd->direction;
+   csfd->speed_type   = fd->speed_type;
+   csfd->change_type  = fd->change_type;
+   csfd->change_model = fd->change_model;
+   csfd->target_type  = fd->target_type;
+   csfd->height_value = fd->height_value;
+   csfd->speed_value  = fd->speed_value;
 }
 
 void CS_SaveElevatorStatus(elevator_status_t *status, elevator_t *elevator)
@@ -318,213 +357,5 @@ void CS_SetPlatformStatus(plat_t *platform, platform_status_t *status)
    platform->oldstatus = status->old_status;
    platform->crush = status->crush;
    platform->tag = status->tag;
-}
-
-void CS_ApplyCeilingStatus(ceiling_status_t *status)
-{
-   ceiling_t *ceiling = CS_GetCeilingFromNetID(status->net_id);
-
-   if(!ceiling)
-   {
-      I_Error("No ceiling for Net ID %u.\n", status->net_id);
-   }
-   CS_SetCeilingStatus(ceiling, status);
-}
-
-void CS_ApplyDoorStatus(door_status_t *status)
-{
-   vldoor_t *door = CS_GetDoorFromNetID(status->net_id);
-
-   if(!door)
-   {
-      I_Error("No door for Net ID %u.\n", status->net_id);
-   }
-   CS_SetDoorStatus(door, status);
-}
-
-void CS_ApplyFloorStatus(floor_status_t *status)
-{
-   floormove_t *floor = CS_GetFloorFromNetID(status->net_id);
-
-   if(!floor)
-   {
-      I_Error("No floor for Net ID %u.\n", status->net_id);
-   }
-   CS_SetFloorStatus(floor, status);
-}
-
-void CS_ApplyElevatorStatus(elevator_status_t *status)
-{
-   elevator_t *elevator = CS_GetElevatorFromNetID(status->net_id);
-
-   if(!elevator)
-   {
-      I_Error("No elevator for Net ID %u.\n", status->net_id);
-   }
-   CS_SetElevatorStatus(elevator, status);
-}
-
-void CS_ApplyPillarStatus(pillar_status_t *status)
-{
-   pillar_t *pillar = CS_GetPillarFromNetID(status->net_id);
-
-   if(!pillar)
-   {
-      I_Error("No pillar for Net ID %u.\n", status->net_id);
-   }
-   CS_SetPillarStatus(pillar, status);
-}
-
-void CS_ApplyFloorWaggleStatus(floorwaggle_status_t *status)
-{
-   floorwaggle_t *floorwaggle = CS_GetFloorWaggleFromNetID(status->net_id);
-
-   if(!floorwaggle)
-   {
-      I_Error("No floorwaggle for Net ID %u.\n", status->net_id);
-   }
-   CS_SetFloorWaggleStatus(floorwaggle, status);
-}
-
-void CS_ApplyPlatformStatus(platform_status_t *status)
-{
-   plat_t *platform = CS_GetPlatformFromNetID(status->net_id);
-
-   if(!platform)
-   {
-      I_Error("No platform for Net ID %u.\n", status->net_id);
-   }
-   CS_SetPlatformStatus(platform, status);
-}
-
-void CS_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
-                               ceiling_status_t *status)
-{
-   ceiling_t *ceiling = P_SpawnCeiling(line, sector, status->type);
-
-   CS_SetCeilingStatus(ceiling, status);
-   printf("CS_SpawnCeilingFromStatus: Registering ceiling Net ID.\n");
-   CS_RegisterCeilingNetID(ceiling);
-}
-
-void CS_SpawnDoorFromStatus(line_t *line, sector_t *sector,
-                            door_status_t *status, map_special_t type)
-{
-   vldoor_t *door;
-
-   switch(type)
-   {
-   case ms_door_tagged:
-      door = P_SpawnTaggedDoor(line, sector, status->type);
-      break;
-   case ms_door_manual:
-      door = P_SpawnManualDoor(line, sector);
-      break;
-   case ms_door_closein30:
-      door = P_SpawnDoorCloseIn30(sector);
-      break;
-   case ms_door_raisein300:
-      door = P_SpawnDoorRaiseIn5Mins(sector, sector - sectors);
-      break;
-   default:
-      I_Error("Unknown door type %d.\n", type);
-      break;
-   }
-   CS_SetDoorStatus(door, status);
-   CS_RegisterDoorNetID(door);
-}
-
-void CS_SpawnFloorFromStatus(line_t *line, sector_t *sector,
-                             floor_status_t *status, map_special_t type)
-{
-   floormove_t *floor;
-
-   switch(type)
-   {
-   case ms_floor:
-      floor = P_SpawnFloor(line, sector, status->type);
-      break;
-   case ms_stairs:
-      // [CG] TODO.
-#if 0
-      saved_floor = (floormove_t *)special;
-      floor = P_SpawnStairs(line, sector, saved_floor->type);
-      P_CopyFloor(floor, saved_floor);
-      CS_RegisterFloorNetID(floor);
-      // floor->thinker.function(floor);
-#if _SPECIAL_DEBUG
-      printf("Created new stairs, Net ID %d.\n", floor->net_id);
-#endif
-#endif
-      break;
-   case ms_donut:
-      floor = P_SpawnDonut(
-         line, sector, status->texture, status->floor_dest_height
-      );
-      break;
-   case ms_donut_hole:
-      floor = P_SpawnDonutHole(line, sector, status->floor_dest_height);
-      break;
-   default:
-      I_Error("Unknown floor type %d.\n", type);
-      break;
-   }
-
-   CS_SetFloorStatus(floor, status);
-   CS_RegisterFloorNetID(floor);
-}
-
-void CS_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
-                                elevator_status_t *status)
-{
-   elevator_t *elevator = P_SpawnElevator(line, sector, status->type);
-
-   CS_SetElevatorStatus(elevator, status);
-   CS_RegisterElevatorNetID(elevator);
-}
-
-void CS_SpawnPillarFromStatus(line_t *line, sector_t *sector,
-                              pillar_status_t *status, map_special_t type)
-{
-   pillar_t *pillar;
-
-   switch(type)
-   {
-   case ms_pillar_build:
-      pillar = P_SpawnBuildPillar(line, sector, 0, 0, 0);
-      break;
-   case ms_pillar_open:
-      pillar = P_SpawnOpenPillar(line, sector, 0, 1, 1);
-      break;
-   default:
-      I_Error("Unknown pillar type %d.\n", type);
-      break;
-   }
-
-   CS_SetPillarStatus(pillar, status);
-   CS_RegisterPillarNetID(pillar);
-}
-
-void CS_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
-                                   floorwaggle_status_t *status)
-{
-   floorwaggle_t *floorwaggle = P_SpawnFloorWaggle(line, sector, 0, 0, 0, 0);
-
-   CS_SetFloorWaggleStatus(floorwaggle, status);
-   CS_RegisterFloorWaggleNetID(floorwaggle);
-}
-
-void CS_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
-                                platform_status_t *status)
-{
-   plat_t *platform = P_SpawnPlatform(line, sector, 0, status->type);
-
-   CS_SetPlatformStatus(platform, status);
-   printf(
-      "CS_SpawnPlatformFromStatus: Spawned platform at %u: %u.\n",
-      cl_current_world_index,
-      platform->net_id
-   );
-   CS_RegisterPlatformNetID(platform);
 }
 

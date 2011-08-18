@@ -104,6 +104,28 @@ void CL_LoadSectorPositions(unsigned int index);
 void CL_LoadCurrentSectorPositions(void);
 void CL_LoadCurrentSectorState(void);
 
+void CL_ApplyCeilingStatus(ceiling_status_t *status);
+void CL_ApplyDoorStatus(door_status_t *status);
+void CL_ApplyFloorStatus(floor_status_t *status);
+void CL_ApplyElevatorStatus(elevator_status_t *status);
+void CL_ApplyPillarStatus(pillar_status_t *status);
+void CL_ApplyFloorWaggleStatus(floorwaggle_status_t *status);
+void CL_ApplyPlatformStatus(platform_status_t *status);
+void CL_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
+                               ceiling_status_t *status);
+void CL_SpawnDoorFromStatus(line_t *line, sector_t *sector,
+                            door_status_t *status, map_special_t type);
+void CL_SpawnFloorFromStatus(line_t *line, sector_t *sector,
+                             floor_status_t *status, map_special_t type);
+void CL_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
+                                elevator_status_t *status);
+void CL_SpawnPillarFromStatus(line_t *line, sector_t *sector,
+                              pillar_status_t *status, map_special_t type);
+void CL_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
+                                   floorwaggle_status_t *status);
+void CL_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
+                                platform_status_t *status);
+
 void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message);
 void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message);
 void CL_ProcessSectorPositions(unsigned int index);

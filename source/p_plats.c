@@ -405,9 +405,7 @@ plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
    {
       P_AddActivePlat(plat);  // add plat to list of active plats
       if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(plat, line, ms_platform);
-      }
+         SV_BroadcastMapSpecialSpawned(plat, NULL, line, ms_platform);
    }
    return plat;
 }

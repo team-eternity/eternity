@@ -2479,32 +2479,54 @@ void CL_HandleMessage(char *data, size_t data_length)
          switch(((nm_specialspawned_t *)data)->special_type)
          {
          case ms_ceiling:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(ceiling_t);
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(ceiling_status_t);
+            break;
+         case ms_ceiling_param:
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(ceiling_status_t) +
+                           sizeof(cs_ceilingdata_t);
             break;
          case ms_door_tagged:
          case ms_door_manual:
          case ms_door_closein30:
          case ms_door_raisein300:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(vldoor_t);
+            message_size = sizeof(nm_specialspawned_t) + sizeof(door_status_t);
+            break;
+         case ms_door_param:
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(door_status_t) +
+                           sizeof(cs_doordata_t);
             break;
          case ms_floor:
          case ms_stairs:
          case ms_donut:
          case ms_donut_hole:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(floormove_t);
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(floor_status_t);
+            break;
+         case ms_floor_param:
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(floor_status_t) +
+                           sizeof(cs_floordata_t);
             break;
          case ms_elevator:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(elevator_t);
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(elevator_status_t);
             break;
          case ms_pillar_build:
          case ms_pillar_open:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(pillar_t);
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(pillar_status_t);
             break;
          case ms_floorwaggle:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(floorwaggle_t);
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(floorwaggle_status_t);
             break;
          case ms_platform:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(plat_t);
+         case ms_platform_gen:
+            message_size = sizeof(nm_specialspawned_t) +
+                           sizeof(platform_status_t);
             break;
          default:
             doom_printf(
@@ -2600,7 +2622,7 @@ void CL_HandleMessage(char *data, size_t data_length)
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
-      // || message_type == nm_specialspawned
+      || message_type == nm_specialspawned
       // || message_type == nm_specialstatus
       || message_type == nm_specialremoved
       || message_type == nm_sectorposition

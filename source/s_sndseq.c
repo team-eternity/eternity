@@ -272,7 +272,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
 void S_StartSectorSequence(sector_t *s, int seqtype)
 {
    boolean ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
-   
+
    S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
                       ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
                       s - sectors);

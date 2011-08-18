@@ -1305,6 +1305,8 @@ void P_PrintPlatform(plat_t *platform);
 plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                         plattype_e type);
 
+plat_t* P_SpawnGenPlatform(line_t *line, sector_t *sec);
+
 void P_AddActivePlat(plat_t *plat);
 
 void P_RemoveActivePlat(plat_t *plat);
@@ -1330,6 +1332,8 @@ vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec);
 vldoor_t* P_SpawnDoorCloseIn30(sector_t *sec);
 
 vldoor_t* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
+
+vldoor_t* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd);
 
 // haleyjd
 void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s);
@@ -1373,6 +1377,9 @@ pillar_t* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
 floorwaggle_t* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
                                   int speed, int offset, int timer);
 
+floormove_t* P_SpawnParamFloor(line_t *line, sector_t *sector,
+                               floordata_t *fd);
+
 void P_FloorSequence(sector_t *s);
 
 // p_ceilng
@@ -1380,6 +1387,9 @@ void P_FloorSequence(sector_t *s);
 void P_CopyCeiling(ceiling_t *dest, ceiling_t *src);
 
 ceiling_t* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
+
+ceiling_t* P_SpawnParamCeiling(line_t *line, sector_t *sector,
+                               ceilingdata_t *cd);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 

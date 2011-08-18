@@ -149,8 +149,8 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile);
 void SV_BroadcastMissileExploded(mobj_t *missile);
 void SV_BroadcastCubeSpawned(mobj_t *cube);
 void SV_BroadcastSectorPosition(size_t sector_number);
-void SV_BroadcastMapSpecialSpawned(void *special, line_t *line,
-                                   map_special_t special_type);
+void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
+                                   line_t *line, map_special_t special_type);
 void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type);
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
                                    map_special_t special_type);

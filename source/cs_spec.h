@@ -33,11 +33,14 @@
 typedef enum
 {
    ms_ceiling,
+   ms_ceiling_param,
    ms_door_tagged,
    ms_door_manual,
    ms_door_closein30,
    ms_door_raisein300,
+   ms_door_param,
    ms_floor,
+   ms_floor_param,
    ms_stairs,
    ms_donut,
    ms_donut_hole,
@@ -46,6 +49,10 @@ typedef enum
    ms_pillar_open,
    ms_floorwaggle,
    ms_platform,
+   ms_platform_gen,
+   // [CG] These are parameterized/general specials that I've yet to add.
+   ms_paramstairs,
+   ms_gencrusher,
 } map_special_t;
 
 // [CG] Everything below is either sent over the network or saved in demos, and
@@ -75,6 +82,19 @@ typedef struct ceiling_status_s
    int32_t old_direction;
 } ceiling_status_t;
 
+typedef struct cs_ceilingdata_s
+{
+   int32_t trigger_type;
+   int32_t crush;
+   int32_t direction;
+   int32_t speed_type;
+   int32_t change_type;
+   int32_t change_model;
+   int32_t target_type;
+   fixed_t height_value;
+   fixed_t speed_value;
+} cs_ceilingdata_t;
+
 typedef struct door_status_s
 {
    uint32_t net_id;
@@ -85,6 +105,20 @@ typedef struct door_status_s
    int32_t top_wait;
    int32_t top_countdown;
 } door_status_t;
+
+typedef struct cs_doordata_s
+{
+   int32_t delay_type;
+   int32_t kind;
+   int32_t speed_type;
+   int32_t trigger_type;
+   fixed_t speed_value;
+   int32_t delay_value;
+   int32_t altlighttag;
+   int8_t  usealtlighttag;
+   int32_t topcountdown;
+} cs_doordata_t;
+
 
 typedef struct floor_status_s
 {
@@ -107,6 +141,19 @@ typedef struct floor_status_s
    int32_t delay_time;
    int32_t delay_timer;
 } floor_status_t;
+
+typedef struct cs_floordata_s
+{
+   int32_t trigger_type;
+   int32_t crush;
+   int32_t direction;
+   int32_t speed_type;
+   int32_t change_type;
+   int32_t change_model;
+   int32_t target_type;
+   fixed_t height_value;
+   fixed_t speed_value;
+} cs_floordata_t;
 
 typedef struct elevator_status_s
 {
@@ -159,7 +206,6 @@ typedef struct platform_status_s
 
 #pragma pack(pop)
 
-// extern unsigned int *cs_sector_position_indices;
 extern sector_position_t **cs_sector_positions;
 
 void CS_SpecInit(void);
@@ -175,8 +221,11 @@ void CS_InitSectorPositions(void);
 void CS_LoadSectorPositions(unsigned int index);
 void CS_LoadCurrentSectorPositions(void);
 void CS_SaveCeilingStatus(ceiling_status_t *status, ceiling_t *ceiling);
+void CS_SaveCeilingData(cs_ceilingdata_t *cscd, ceilingdata_t *cd);
 void CS_SaveDoorStatus(door_status_t *status, vldoor_t *door);
+void CS_SaveDoorData(cs_doordata_t *csdd, doordata_t *dd);
 void CS_SaveFloorStatus(floor_status_t *status, floormove_t *floor);
+void CS_SaveFloorData(cs_floordata_t *csfd, floordata_t *fd);
 void CS_SaveElevatorStatus(elevator_status_t *status, elevator_t *elevator);
 void CS_SavePillarStatus(pillar_status_t *status, pillar_t *pillar);
 void CS_SaveFloorWaggleStatus(floorwaggle_status_t *status,
@@ -190,27 +239,6 @@ void CS_SetPillarStatus(pillar_t *pillar, pillar_status_t *status);
 void CS_SetFloorWaggleStatus(floorwaggle_t *floorwaggle,
                              floorwaggle_status_t *status);
 void CS_SetPlatformStatus(plat_t *platform, platform_status_t *status);
-void CS_ApplyCeilingStatus(ceiling_status_t *status);
-void CS_ApplyDoorStatus(door_status_t *status);
-void CS_ApplyFloorStatus(floor_status_t *status);
-void CS_ApplyElevatorStatus(elevator_status_t *status);
-void CS_ApplyPillarStatus(pillar_status_t *status);
-void CS_ApplyFloorWaggleStatus(floorwaggle_status_t *status);
-void CS_ApplyPlatformStatus(platform_status_t *status);
-void CS_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
-                               ceiling_status_t *status);
-void CS_SpawnDoorFromStatus(line_t *line, sector_t *sector,
-                            door_status_t *status, map_special_t type);
-void CS_SpawnFloorFromStatus(line_t *line, sector_t *sector,
-                             floor_status_t *status, map_special_t type);
-void CS_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
-                                elevator_status_t *status);
-void CS_SpawnPillarFromStatus(line_t *line, sector_t *sector,
-                              pillar_status_t *status, map_special_t type);
-void CS_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
-                                   floorwaggle_status_t *status);
-void CS_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
-                                platform_status_t *status);
 
 #endif
 
