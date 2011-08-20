@@ -36,6 +36,7 @@
 #include "c_runcmd.h"
 #include "c_net.h"
 #include "f_wipe.h"
+#include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "mn_engin.h"
@@ -221,21 +222,27 @@ CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
 // player bobbing -- haleyjd: altered to read default, use netcmd
 
 VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
-CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing)
+CONSOLE_NETVAR(bobbing, player_bobbing, 0, netcmd_bobbing)
 {
-   if(CS_CLIENT)
+   if(clientserver)
    {
-      CL_SendPlayerScalarInfo(ci_bobbing);
+      if(CS_CLIENT)
+      {
+         if(dmflags2 & dmf_allow_movebob_change)
+            CL_SendPlayerScalarInfo(ci_bobbing);
+         else
+            doom_printf("for server only");
+      }
    }
+   else if(consoleplayer > 0)
+      doom_printf("for server only");
 }
 
 VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
 CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0)
 {
    if(CS_CLIENT)
-   {
       CL_SendPlayerScalarInfo(ci_weapon_toggle);
-   }
 }
 
 boolean display_target_names = false;

@@ -1225,6 +1225,10 @@ void CL_HandleClientInitMessage(nm_clientinit_t *message)
 
 void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 {
+   fixed_t oldbob;
+   fixed_t oldviewz;
+   fixed_t oldviewheight;
+   fixed_t olddeltaviewheight;
    client_t *client;
    unsigned int playernum = message->client_number;
 
@@ -1271,8 +1275,18 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    if(!client->spectating)
    {
+      if(players[playernum].playerstate == PST_LIVE)
+      {
+         oldbob = players[playernum].bob;
+         oldviewz = players[playernum].viewz;
+         oldviewheight = players[playernum].viewheight;
+         olddeltaviewheight = players[playernum].deltaviewheight;
+      }
+
       CS_SetPlayerPosition(playernum, &message->position);
       clients[playernum].floor_status = message->floor_status;
+
+      // [CG] Re-predicts from the position just received from the server on.
       if(playernum == consoleplayer && cl_enable_prediction)
       {
          if(message->last_command_run > 0)
@@ -1281,6 +1295,14 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
                message->last_command_run + 1, cl_current_world_index, true
             );
          }
+      }
+
+      if(players[playernum].playerstate == PST_LIVE)
+      {
+         players[playernum].bob = oldbob;
+         players[playernum].viewz = oldviewz;
+         players[playernum].viewheight = oldviewheight;
+         players[playernum].deltaviewheight = olddeltaviewheight;
       }
    }
 

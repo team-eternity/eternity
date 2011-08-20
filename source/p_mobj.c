@@ -1706,13 +1706,9 @@ void P_RemoveMobj(mobj_t *mobj)
    boolean respawnitem = false;
 
    if((mobj->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
-   {
       respawnitem = true; // respawning super powerups
-   }
    else if((dmflags & DM_BARRELRESPAWN) && mobj->type == E_ThingNumForDEHNum(MT_BARREL))
-   {
       respawnitem = true; // respawning barrels
-   }
    else
    {
       respawnitem =
@@ -1728,8 +1724,8 @@ void P_RemoveMobj(mobj_t *mobj)
          // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
          itemrespawnque[iquehead] = mobj->spawnpoint;
          itemrespawntime[iquehead++] = leveltime;
+         // lose one off the end?
          if((iquehead &= ITEMQUESIZE-1) == iquetail)
-            // lose one off the end?
             iquetail = (iquetail+1)&(ITEMQUESIZE-1);
       }
    }
