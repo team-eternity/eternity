@@ -1688,6 +1688,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // [CG] Some stuff for c/s.
    CS_ObtainActorNetID(mobj);
+   printf("Assigned Net ID %u to actor type %d.\n", mobj->net_id, mobj->type);
    CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
 
    return mobj;
@@ -1846,6 +1847,7 @@ void P_RespawnSpecials(void)
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
+   // [CG] Broadcast the item spawn fog.
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
 
@@ -1865,11 +1867,9 @@ void P_RespawnSpecials(void)
    // pull it from the queue
    iquetail = (iquetail+1)&(ITEMQUESIZE-1);
 
+   // [CG] Broadcast the item respawn.
    if(CS_SERVER)
-   {
-      // [CG] Broadcast the item respawn.
       SV_BroadcastActorSpawned(mo);
-   }
 }
 
 //
@@ -2602,9 +2602,7 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    th->momz = FixedMul(th->info->speed,slope);
 
    if(CS_SERVER)
-   {
       SV_BroadcastMissileSpawned(source, th);
-   }
 
    P_CheckMissileSpawn(th);
 

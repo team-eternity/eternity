@@ -714,11 +714,13 @@ void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
       //      the actor who owns that ID to release it, register it for this
       //      actor, and then give the old actor a new Net ID.
       printf("Net ID desync, resetting (%u/%u).\n", actor->net_id, net_id);
+      printf("New actor's type: %d.\n", actor->type);
 
       actor_for_id = CS_GetActorFromNetID(net_id);
 
       if(actor_for_id)
       {
+         printf("Actor for %d's type: %d.\n", net_id, actor_for_id->type);
          CS_ReleaseActorNetID(actor_for_id);
       }
 
@@ -726,9 +728,7 @@ void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
       CS_RegisterActorNetID(actor);
 
       if(actor_for_id)
-      {
          CS_ObtainActorNetID(actor_for_id);
-      }
    }
 }
 

@@ -318,9 +318,7 @@ boolean P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    }
 
    if(CS_SERVER && player->pendingweapon != old_pending_weapon)
-   {
       SV_BroadcastPlayerScalarInfo(playernum, ci_pending_weapon);
-   }
 
    return true;
 }
@@ -544,9 +542,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
 
    // [CG] Broadcast the touch.
    if(CS_SERVER)
-   {
       SV_BroadcastPlayerTouchedSpecial(player - players, special->net_id);
-   }
 
    // Identify by sprite.
    switch(pickupfx[special->sprite])
@@ -612,13 +608,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_bluecard);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    case PFX_YELLOWKEY:
@@ -626,13 +618,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_yellowcard);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    case PFX_REDKEY:
@@ -640,13 +628,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_redcard);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    case PFX_BLUESKULL:
@@ -654,13 +638,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_blueskull);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    case PFX_YELLOWSKULL:
@@ -668,13 +648,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_yellowskull);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    case PFX_REDSKULL:
@@ -682,13 +658,9 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
          message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
       P_GiveCard(player, it_redskull);
       if(clientserver)
-      {
          removeobj = pickup_fx = ((dmflags & dmf_leave_keys) == 0);
-      }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       break;
 
    // medikits, heals
@@ -930,9 +902,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
             !clientserver || ((dmflags & dmf_leave_keys) == 0);
       }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       sound = sfx_keyup;
       break;
 
@@ -947,9 +917,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
             !clientserver || ((dmflags & dmf_leave_keys) == 0);
       }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       sound = sfx_keyup;
       break;
 
@@ -964,9 +932,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
             !clientserver || ((dmflags & dmf_leave_keys) == 0);
       }
       else
-      {
          removeobj = pickup_fx = (GameType == gt_single);
-      }
       sound = sfx_keyup;
       break;
 

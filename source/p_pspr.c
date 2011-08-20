@@ -1212,18 +1212,14 @@ void A_FirePlasma(mobj_t *mo)
 
    // [CG] Only servers subtract ammo.
    if(serverside)
-   {
       P_SubtractAmmo(player, 1);
-   }
 
    A_FireSomething(player, P_Random(pr_plasma) & 1);
 
    // [CG] Only servers fire plasma
    // sf: removed beta
    if(serverside)
-   {
       P_SpawnPlayerMissile(mo, type);
-   }
 }
 
 static fixed_t bulletslope;
@@ -2059,9 +2055,7 @@ void A_FirePlayerMissile(mobj_t *actor)
    }
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(actor->player - players);
-   }
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
@@ -2074,9 +2068,7 @@ void A_FirePlayerMissile(mobj_t *actor)
    }
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(actor->player - players);
-   }
 }
 
 const char *kwds_A_CustomPlayerMelee[] =

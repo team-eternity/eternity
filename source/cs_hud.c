@@ -413,7 +413,7 @@ void CS_InitNetWidget(void)
    HU_DynamicTextWidget(
       "_HU_CSNetWidget",
       SCREENWIDTH - (V_FontStringWidth(hud_font, "00/00/00/000%") + 5),
-      ST_Y - (16 + V_FontStringHeight(hud_font, "999999:99")),
+      ST_Y - (16 + V_FontStringHeight(hud_font, "00/00/00/000%")),
       hud_font->num,
       "00/00/00/000%",
       0,
