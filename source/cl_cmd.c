@@ -108,12 +108,16 @@ CONSOLE_COMMAND(team, cf_netonly)
 }
 
 // [CG] Netstats.
-VARIABLE_TOGGLE(show_netstats, &default_show_netstats, onoff);
+VARIABLE_TOGGLE(show_netstats, &default_show_netstats, yesno);
 CONSOLE_VARIABLE(show_netstats, show_netstats, 0) {}
 
 // [CG] HUD timer.
-VARIABLE_TOGGLE(show_timer, &default_show_timer, onoff);
+VARIABLE_TOGGLE(show_timer, &default_show_timer, yesno);
 CONSOLE_VARIABLE(show_timer, show_timer, 0) {}
+
+// [CG] Team widget.
+VARIABLE_TOGGLE(show_team_widget, &default_show_team_widget, yesno);
+CONSOLE_VARIABLE(show_team, show_team_widget, 0) {}
 
 // [CG] Packet buffer flushing.
 CONSOLE_COMMAND(flush_packet_buffer, cf_netonly)
@@ -273,6 +277,7 @@ void CL_AddCommands(void)
    C_AddCommand(team);
    C_AddCommand(show_netstats);
    C_AddCommand(show_timer);
+   C_AddCommand(show_team);
    C_AddCommand(flush_packet_buffer);
    C_AddCommand(packet_buffer_size);
    C_AddCommand(buffer_packets_while_spectating);

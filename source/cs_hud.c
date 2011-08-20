@@ -26,6 +26,7 @@
 
 #include "c_runcmd.h"
 #include "d_event.h"
+#include "d_gi.h"
 #include "g_bind.h"
 #include "hu_stuff.h"
 #include "r_draw.h"
@@ -42,6 +43,8 @@ boolean show_timer = false;
 boolean default_show_timer = false;
 boolean show_netstats = false;
 boolean default_show_netstats = false;
+boolean show_team_widget = false;
+boolean default_show_team_widget = false;
 boolean cs_chat_active = false;
 
 extern vfont_t *hud_font;
@@ -55,6 +58,7 @@ static hu_widget_t *queue_widget = NULL;
 static hu_widget_t *chat_widget = NULL;
 static hu_widget_t *timer_widget = NULL;
 static hu_widget_t *net_widget = NULL;
+static hu_widget_t *team_widget = NULL;
 
 boolean CS_ChatResponder(event_t *ev)
 {
@@ -66,14 +70,10 @@ boolean CS_ChatResponder(event_t *ev)
    G_KeyResponder(ev, kac_hud);
 
    if(ev->type != ev_keydown)
-   {
       return false;
-   }
 
    if(ev->data1 == KEYD_RSHIFT)
-   {
       shiftdown = true;
-   }
 
    // [CG] TODO: Figure out player-to-player messaging, as in, how to choose
    //            the receiving player.
@@ -159,13 +159,9 @@ boolean CS_ChatResponder(event_t *ev)
    }
 
    if(ev->character)
-   {
       ch = ev->character;
-   }
    else if(ev->data1 > 31 && ev->data1 < 127)
-   {
       ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
-   }
 
    if(ch > 31 && ch < 127)
    {
@@ -190,9 +186,7 @@ static void CS_TimerWidgetTick(hu_widget_t *widget)
       HU_UpdateEraseData(tw);
    }
    else
-   {
       tw->message[0] = 0;
-   }
 }
 
 static void CS_ChatTick(hu_widget_t *widget)
@@ -233,9 +227,7 @@ static void CS_ChatTick(hu_widget_t *widget)
       HU_UpdateEraseData(cw);
    }
    else
-   {
       cw->message[0] = 0;
-   }
 }
 
 void CS_DrawChatWidget(void)
@@ -342,15 +334,13 @@ void CS_InitQueueWidget(void)
 
    queue_widget = HU_WidgetForName("_HU_CSQueueWidget");
    queue_widget->prevdisabled = queue_widget->disabled;
-   if(clientserver)
-   {
-      queue_widget->disabled = false;
-   }
-   else
+   if(!clientserver)
    {
       // [CG] So the queue message doesn't display during single player.
       queue_widget->disabled = true;
    }
+   else
+      queue_widget->disabled = false;
 }
 
 void CS_UpdateQueueMessage(void)
@@ -361,11 +351,7 @@ void CS_UpdateQueueMessage(void)
 
    tw->prevdisabled = tw->disabled;
 
-   if(!QUEUE_MESSAGE_DISPLAYED)
-   {
-      tw->disabled = true;
-   }
-   else
+   if(QUEUE_MESSAGE_DISPLAYED)
    {
       if(cw->alloc)
       {
@@ -385,14 +371,12 @@ void CS_UpdateQueueMessage(void)
          );
       }
       else if(client->queue_level == ql_none || client->spectating)
-      {
          cw->message = cw->alloc = strdup(FC_ABSCENTER "Press [USE] to join");
-      }
       else
-      {
          cw->message = cw->alloc = strdup(FC_ABSCENTER);
-      }
    }
+   else
+      tw->disabled = true;
 }
 
 static void CS_NetWidgetTick(hu_widget_t *widget)
@@ -411,9 +395,7 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
       HU_UpdateEraseData(tw);
    }
    else
-   {
       tw->message[0] = 0;
-   }
 }
 
 void CS_InitNetWidget(void)
@@ -445,5 +427,56 @@ void CS_InitNetWidget(void)
 
    tw = (hu_textwidget_t *)net_widget;
    tw->color = CR_GREEN + 1;
+}
+
+static void CS_TeamWidgetTick(hu_widget_t *widget)
+{
+   teamcolor_t team = clients[displayplayer].team;
+   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+
+   if(team == team_color_none || !(CS_TEAMS_ENABLED && show_team_widget))
+   {
+      tw->message[0] = 0;
+      return;
+   }
+
+   sprintf(tw->message, "%d", team_scores[team]);
+   HU_UpdateEraseData(tw);
+
+   if(team == team_color_red)
+      tw->color = CR_RED + 1;
+   else if(team == team_color_blue)
+      tw->color = CR_BLUE + 1;
+   else
+      tw->color = CR_GRAY + 1;
+}
+
+void CS_InitTeamWidget(void)
+{
+   hu_textwidget_t *tw;
+
+   if(team_widget != NULL)
+   {
+      free(((hu_textwidget_t *)team_widget)->message);
+      free(team_widget->name);
+      free(team_widget);
+      team_widget = NULL;
+   }
+
+   HU_DynamicTextWidget(
+      "_HU_CSTeamWidget",
+      SCREENWIDTH - V_FontStringWidth(hud_font, "9999"),
+      0, hud_font->num, "0", 0, TW_NOCLEAR
+   );
+
+   team_widget = HU_WidgetForName("_HU_CSTeamWidget");
+   team_widget->prevdisabled = team_widget->disabled;
+   team_widget->disabled = false;
+   team_widget->ticker = CS_TeamWidgetTick;
+
+   tw = (hu_textwidget_t *)team_widget;
+   tw->color = CR_GRAY + 1;
+   tw->flags |= TW_TRANS;
+   tw->bg_opacity = FRACUNIT >> 1;
 }
 

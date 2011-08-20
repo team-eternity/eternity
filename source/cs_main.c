@@ -1688,6 +1688,7 @@ void CS_RemovePlayer(int playernum)
          player->mo->z + GameModeInfo->teleFogHeight,
          GameModeInfo->teleFogType
       );
+      CS_ReleaseActorNetID(flash);
       flash->momx = player->mo->momx;
       flash->momy = player->mo->momy;
 
@@ -2037,9 +2038,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    // [CG] Stop perpetually displaying the scoreboard in c/s mode once we
    //      respawn.
    if(!CS_HEADLESS)
-   {
       action_frags = 0;
-   }
 
    if(!as_spectator)
    {
@@ -2050,16 +2049,12 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
       // [CG] Only set the player's colormap if they're not spectating,
       //      otherwise we don't care.
       if(CS_TEAMS_ENABLED && client->team != team_color_none)
-      {
          player->colormap = team_colormaps[client->team];
-      }
    }
 
    player->mo = P_SpawnMobj(x, y, z, player->pclass->type);
    if(as_spectator)
-   {
       CS_ReleaseActorNetID(player->mo);
-   }
 
    player->mo->colour = player->colormap;
    player->mo->angle = R_WadToAngle(angle);
@@ -2067,9 +2062,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    player->mo->health = player->health;
 
    if(!player->skin)
-   {
       I_Error("CS_SpawnPlayer: player skin undefined!\n");
-   }
 
    player->mo->skin = player->skin;
    player->mo->sprite = player->skin->sprite;
@@ -2090,22 +2083,13 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    if(GameType == gt_dm)
    {
       for(i = 0; i < NUMCARDS; i++)
-      {
          player->cards[i] = true;
-      }
    }
    if(clientside && playernum == consoleplayer)
-   {
-      ST_Start(); // wake up the status bar
-      // [CG] I commented this out because it causes server messages sent right
-      //      before a respawn to not be displayed on the HUD.  It tested OK,
-      //      so I think this doesn't cause problems.
-      // HU_Start(); // wake up the HUD
-   }
+      ST_Start();
+
    if(clientside && playernum == displayplayer)
-   {
       P_ResetChasecam();
-   }
 
    CS_SetSpectator(playernum, as_spectator);
 }
@@ -2114,11 +2098,7 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
 {
    mapthing_t *spawn_point;
 
-   if(as_spectator)
-   {
-      spawn_point = &playerstarts[0];
-   }
-   else
+   if(!as_spectator)
    {
       // [CG] In order for clipping routines to work properly, the player can't
       //      be a spectator when we search for a spawn point.
@@ -2126,20 +2106,17 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
       if(GameType == gt_dm)
       {
          if(CS_TEAMS_ENABLED)
-         {
             spawn_point = SV_GetTeamSpawnPoint(playernum);
-         }
          else
-         {
             spawn_point = SV_GetDeathMatchSpawnPoint(playernum);
-         }
       }
       else
-      {
          spawn_point = SV_GetCoopSpawnPoint(playernum);
-      }
       CS_SetSpectator(playernum, true);
    }
+   else
+      spawn_point = &playerstarts[0];
+
    CS_SpawnPlayer(
       playernum,
       spawn_point->x << FRACBITS,
@@ -2148,6 +2125,7 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
       spawn_point->angle,
       as_spectator
    );
+
    return spawn_point;
 }
 

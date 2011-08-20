@@ -914,6 +914,9 @@ default_t defaults[] =
    DEFAULT_BOOL("show_timer", &show_timer, NULL, false, wad_no,
                 "display a timer on the HUD"),
 
+   DEFAULT_BOOL("show_team_widget", &show_team_widget, NULL, true, wad_no,
+                "display team score indicator on the HUD"),
+
    DEFAULT_INT(
       "weapon_switch_on_pickup",
       &weapon_switch_on_pickup,

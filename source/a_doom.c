@@ -78,11 +78,7 @@ void A_PosAttack(mobj_t *actor)
    angle += P_SubRandom(pr_posattack) << 20;
 
    damage = (P_Random(pr_posattack) % 5 + 1) * 3;
-   // [CG] Only servers run P_LineAttack.
-   if(serverside)
-   {
-      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
-   }
+   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -108,11 +104,7 @@ void A_SPosAttack(mobj_t* actor)
       // haleyjd 08/05/04: use new function
       int angle = bangle + (P_SubRandom(pr_sposattack) << 20);
       int damage = ((P_Random(pr_sposattack) % 5) + 1) * 3;
-      // [CG] Only servers run P_LineAttack.
-      if(serverside)
-      {
-         P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
-      }
+      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
    }
 }
 
@@ -143,11 +135,7 @@ void A_CPosAttack(mobj_t *actor)
    // haleyjd 08/05/04: use new function
    angle = bangle + (P_SubRandom(pr_cposattack) << 20);
    damage = ((P_Random(pr_cposattack) % 5) + 1) * 3;
-   // [CG] Only servers run P_LineAttack.
-   if(serverside)
-   {
-      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
-   }
+   P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
 }
 
 //
@@ -204,22 +192,20 @@ void A_TroopAttack(mobj_t *actor)
       int damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random(pr_troopattack)%8+1)*3;
-      // [CG] Only servers deal damage.
-      if(serverside)
-      {
-         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      }
+      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
       return;
    }
 
    // launch a missile
    if(serverside)
+   {
       P_SpawnMissile(
          actor,
          actor->target,
          E_SafeThingType(MT_TROOPSHOT),
          actor->z + DEFAULTMISSILEZ
       );
+   }
 }
 
 //
@@ -235,11 +221,7 @@ void A_SargAttack(mobj_t *actor)
    if(P_CheckMeleeRange(actor))
    {
       int damage = ((P_Random(pr_sargattack)%10)+1)*4;
-      // [CG] Only servers deal damage.
-      if(serverside)
-      {
-         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      }
+      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
    }
 }
 
@@ -258,22 +240,20 @@ void A_HeadAttack(mobj_t *actor)
    if(P_CheckMeleeRange(actor))
    {
       int damage = (P_Random(pr_headattack)%6+1)*10;
-      // [CG] Only servers deal damage.
-      if(serverside)
-      {
-         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      }
+      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
       return;
    }
 
    // launch a missile
    if(serverside)
+   {
       P_SpawnMissile(
          actor,
          actor->target,
          E_SafeThingType(MT_HEADSHOT),
          actor->z + DEFAULTMISSILEZ
       );
+   }
 }
 
 //
@@ -291,21 +271,19 @@ void A_BruisAttack(mobj_t *actor)
       int damage;
       S_StartSound(actor, sfx_claw);
       damage = (P_Random(pr_bruisattack)%8+1)*10;
-      // [CG] Only servers deal damage.
-      if(serverside)
-      {
-         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      }
+      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
       return;
    }
 
    if(serverside)
+   {
       P_SpawnMissile(
          actor,
          actor->target,
          E_SafeThingType(MT_BRUISERSHOT),
          actor->z + DEFAULTMISSILEZ
       );  // launch a missile
+   }
 }
 
 //=============================================================================
@@ -356,12 +334,14 @@ void A_BspiAttack(mobj_t *actor)
 
    // launch a missile
    if(serverside)
+   {
       P_SpawnMissile(
          actor,
          actor->target,
          E_SafeThingType(MT_ARACHPLAZ), 
          actor->z + DEFAULTMISSILEZ
       );
+   }
 }
 
 //
@@ -416,12 +396,14 @@ void A_CyberAttack(mobj_t *actor)
    A_FaceTarget(actor);
 
    if(serverside)
+   {
       P_SpawnMissile(
          actor,
          actor->target, 
          E_SafeThingType(MT_ROCKET),
          actor->z + DEFAULTMISSILEZ
       );   
+   }
 }
 
 //=============================================================================
@@ -462,9 +444,7 @@ void A_SkelMissile(mobj_t *actor)
       P_SetTarget(&missile->tracer, actor->target);  // killough 11/98
 
       if(CS_SERVER)
-      {
          SV_BroadcastActorTracer(missile);
-      }
    }
 }
 
@@ -587,11 +567,7 @@ void A_SkelFist(mobj_t *actor)
    {
       int damage = ((P_Random(pr_skelfist) % 10) + 1) * 6;
       S_StartSound(actor, sfx_skepch);
-      // [CG] Only servers deal damage.
-      if(serverside)
-      {
-         P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
-      }
+      P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
    }
 }
 
@@ -1084,11 +1060,7 @@ void A_BetaSkullAttack(mobj_t *actor)
    
    A_FaceTarget(actor);
    damage = (P_Random(pr_skullfly)%8+1)*actor->damage;
-   // [CG] Only servers deal damage.
-   if(serverside)
-   {
-      P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
-   }
+   P_DamageMobj(actor->target, actor, actor, damage, actor->info->mod);
 }
 
 //
@@ -1155,12 +1127,12 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    z = actor->z + 8*FRACUNIT;
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
+   {
       newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
-      // [CG] Broadcast the spawn.                                       |
+      // [CG] Broadcast the spawn.                                  //   |
       if(CS_SERVER)                                                 //   |
-      {                                                             //   |
          SV_BroadcastActorSpawned(newmobj);                         //   |
-      }                                                             //   |
+   }                                                                //   |
    else                                                             //   V
    {
       // Check whether the Lost Soul is being fired through a 1-sided
@@ -1175,9 +1147,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
       newmobj = P_SpawnMobj(x, y, z, skullType);
       // [CG] Broadcast the spawn.
       if(CS_SERVER)
-      {
          SV_BroadcastActorSpawned(newmobj);
-      }
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
@@ -1210,9 +1180,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
    
    P_SetTarget(&newmobj->target, actor->target);
    if(CS_SERVER)
-   {
       SV_BroadcastActorTarget(newmobj);
-   }
    A_SkullAttack(newmobj);
 }
 
@@ -1440,7 +1408,9 @@ void A_BrainScream(mobj_t *mo)
    if(rocketType == -1)
       rocketType = E_SafeThingType(MT_ROCKET);
 
-   for(x=mo->x - 196*FRACUNIT ; x< mo->x + 320*FRACUNIT ; x+= FRACUNIT*8)
+   for(x = mo->x - 196 * FRACUNIT;
+       x < mo->x + 320 * FRACUNIT;
+       x += FRACUNIT * 8)
    {
       int y = mo->y - 320*FRACUNIT;
       int z = 128 + P_Random(pr_brainscream)*2*FRACUNIT;
@@ -1535,9 +1505,7 @@ void A_BrainSpit(mobj_t *mo)
       // killough 8/29/98: add to appropriate thread
       P_UpdateThinker(&newmobj->thinker);
       if(CS_SERVER)
-      {
          SV_BroadcastCubeSpawned(newmobj);
-      }
    }
    S_StartSound(NULL, sfx_bospit);
 }

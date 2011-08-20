@@ -52,9 +52,7 @@ void CS_InitTeams(void)
    number_of_team_starts = 0;
 
    if(team_starts_by_team == NULL)
-   {
       team_starts_by_team = calloc(team_color_max, sizeof(mapthing_t *));
-   }
 
    for(color = team_color_none; color < team_color_max; color++)
    {
@@ -106,9 +104,7 @@ void CS_AddTeamStart(mapthing_t *team_start)
     }
 
    if(team_start_counts_by_team[team_color] == MAX_TEAM_STARTS)
-   {
       I_Error("Maximum number of team starts already reached.\n");
-   }
 
    thing_index = team_start_counts_by_team[team_color];
    team_starts_by_team[team_color] = realloc(

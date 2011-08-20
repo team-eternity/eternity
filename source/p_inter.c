@@ -1214,9 +1214,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
 
       // [CG] Only drop the player's weapon if their actor still exists.
       if(target->player->mo)
-      {
          P_DropWeapon(target->player);
-      }
 
       if(target->player == &players[consoleplayer] && automapactive)
       {
@@ -2005,10 +2003,12 @@ void P_Whistle(mobj_t *actor, int mobjtype)
          mobj_t *fog = P_SpawnMobj(prevx, prevy,
                                    prevz + GameModeInfo->teleFogHeight,
                                    GameModeInfo->teleFogType);
+         CS_ReleaseActorNetID(fog);
          S_StartSound(fog, GameModeInfo->teleSound);
 
          fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
                            GameModeInfo->teleFogType);
+         CS_ReleaseActorNetID(fog);
          S_StartSound(fog, GameModeInfo->teleSound);
 
          // put the thing into its spawnstate and keep it still

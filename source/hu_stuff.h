@@ -68,6 +68,7 @@ enum
    TW_AUTOMAP_ONLY = 0x00000001, // appears in automap only
    TW_NOCLEAR      = 0x00000002, // dynamic widget with no clear func
    TW_BOXED        = 0x00000004, // 10/08/05: optional box around text
+   TW_TRANS        = 0x00000008, // [CG] Alpha-blended background
 };
 
 typedef struct hu_textwidget_s
@@ -82,6 +83,7 @@ typedef struct hu_textwidget_s
    tw_erase_t erasedata; // rect area to erase
    int flags;            // special flags
    int color;            // 02/12/06: needed to allow colored text drawing (col # + 1)
+   int bg_opacity;       // [CG] Optional transparent background.
 } hu_textwidget_t;
 
 extern boolean chat_on;

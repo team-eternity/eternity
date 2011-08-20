@@ -1622,13 +1622,14 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *blood_message)
       blood_message->damage,
       target
    );
-   // CL_SetActorNetID(blood, blood_message->net_id);
    CS_ReleaseActorNetID(blood);
 }
 
 void CL_HandleActorSpawnedMessage(nm_actorspawned_t *spawn_message)
 {
    mobj_t *actor;
+   int safe_fog_type = E_SafeThingType(MT_IFOG);
+   int safe_bfg_type = E_SafeThingType(MT_BFG);
 
    actor = P_SpawnMobj(
       spawn_message->x, spawn_message->y, spawn_message->z, spawn_message->type
@@ -1639,17 +1640,15 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *spawn_message)
    actor->angle = spawn_message->angle;
    actor->flags = spawn_message->flags;
 
+   if(spawn_message->net_id == 0)
+      doom_printf("XXX Spawned actor with Net ID 0.");
+
    CL_SetActorNetID(actor, spawn_message->net_id);
 
-   if(spawn_message->type == E_SafeThingType(MT_IFOG))
-   {
+   if(spawn_message->type == safe_fog_type)
       S_StartSound(actor, sfx_itmbk);
-   }
-   else if(spawn_message->type == E_SafeThingType(MT_BFG) &&
-           bfgtype == bfg_bouncing)
-   {
+   else if(spawn_message->type == safe_bfg_type && bfgtype == bfg_bouncing)
       S_StartSound(actor, actor->info->seesound);
-   }
 }
 
 void CL_HandleActorPositionMessage(nm_actorposition_t *message)

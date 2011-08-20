@@ -217,9 +217,7 @@ static boolean P_Shoot2SLine(line_t *li, int side, fixed_t dist)
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
       {
          if(CS_SERVER)
-         {
             SV_BroadcastLineShot(shootthing, li, side);
-         }
          P_ShootSpecialLine(shootthing, li, side);
       }
 
@@ -342,7 +340,7 @@ static boolean P_ShootThing(intercept_t *in)
    // hit thing
    // position a bit closer
    
-   P_PuffPosition(in, &frac, &x, &y, &z, 10*FRACUNIT);
+   P_PuffPosition(in, &frac, &x, &y, &z, 10 * FRACUNIT);
    
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
@@ -355,9 +353,7 @@ static boolean P_ShootThing(intercept_t *in)
          puff = P_SpawnPuff(x, y, z, angle, 2, true);
          CS_ReleaseActorNetID(puff);
          if(CS_SERVER)
-         {
             SV_BroadcastPuffSpawned(puff, 2, true);
-         }
       }
    }
    else if(CS_SHOULD_SHOW_SHOT)
@@ -365,9 +361,7 @@ static boolean P_ShootThing(intercept_t *in)
       blood = P_SpawnBlood(x, y, z, angle, trace.la_damage, th);
       CS_ReleaseActorNetID(blood);
       if(CS_SERVER)
-      {
          SV_BroadcastBloodSpawned(blood, trace.la_damage, th);
-      }
    }
    
    if(serverside && trace.la_damage)
@@ -410,9 +404,7 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
       {
          P_ShootSpecialLine(shootthing, li, lineside);
          if(CS_SERVER)
-         {
             SV_BroadcastLineShot(shootthing, li, lineside);
-         }
       }
 
       // shot crosses a 2S line?
@@ -436,9 +428,7 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
          puff = P_SpawnPuff(x, y, z, angle, 2, true);
          CS_ReleaseActorNetID(puff);
          if(CS_SERVER)
-         {
             SV_BroadcastPuffSpawned(puff, 2, true);
-         }
       }
       // don't go any farther
       return false;
@@ -557,9 +547,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          if(!hitplane && li->special)
          {
             if(CS_SERVER)
-            {
                SV_BroadcastLineShot(shootthing, li, lineside);
-            }
             P_ShootSpecialLine(shootthing, li, lineside);
          }
       }
@@ -581,9 +569,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
          //      there's no need for it to have a Net ID.
          CS_ReleaseActorNetID(puff);
          if(CS_SERVER)
-         {
             SV_BroadcastPuffSpawned(puff, updown, true);
-         }
       }
 
       // don't go any farther
@@ -666,9 +652,7 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
    fixed_t x2, y2;
 
    if(clientserver && t1->player)
-   {
       cs_shooting_player = t1->player - players;
-   }
 
    angle >>= ANGLETOFINESHIFT;
    shootthing = t1;
@@ -686,9 +670,7 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
                   (demo_version < 329 || comp[comp_planeshoot]) ?
                       PTR_ShootTraverseComp : PTR_ShootTraverse);
    if(clientserver)
-   {
       cs_shooting_player = 0;
-   }
 }
 
 //
@@ -710,9 +692,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
       if(serverside)
       {
          if(CS_SERVER)
-         {
             SV_BroadcastLineUsed(usething, in->d.line, side);
-         }
          P_UseSpecialLine(usething, in->d.line, side);
       }
 
@@ -728,9 +708,7 @@ static boolean PTR_UseTraverse(intercept_t *in)
          // can't use through a wall
          // [CG] Only make this sound if not predicting.
          if(!cl_predicting)
-         {
             S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
-         }
          return false;
       }
       // not a special line, but keep checking
@@ -796,9 +774,7 @@ void P_UseLines(player_t *player)
       {
          // [CG] Only make this sound if not predicting.
          if(!cl_predicting)
-         {
             S_StartSound(usething, GameModeInfo->playerSounds[sk_noway]);
-         }
       }
    }
 }

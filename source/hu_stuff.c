@@ -214,6 +214,7 @@ static void HU_InitNativeWidgets(void)
    CS_InitTimerWidget();
    CS_InitChatWidget();
    CS_InitQueueWidget();
+   CS_InitTeamWidget();
 }
 
 void HU_ClearWidgetHash(void)
@@ -221,9 +222,7 @@ void HU_ClearWidgetHash(void)
    hu_widget_t *w = NULL;
 
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
-   {
       E_HashRemoveObject(widget_hash, w);
-   }
 }
 
 //
@@ -249,9 +248,7 @@ void HU_Init(void)
       );
    }
    else
-   {
       HU_ClearWidgetHash();
-   }
 
    HU_InitNativeWidgets();
 }
@@ -285,9 +282,7 @@ void HU_Start(void)
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->clear)
-      {
          w->clear(w);
-      }
    }
 
 #ifndef EE_NO_SMALL_SUPPORT
@@ -337,22 +332,16 @@ void HU_Drawer(void)
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->drawer && !w->disabled)
-      {
          w->drawer(w);
-      }
    }
 
    // HUD_FIXME: generalize?
    // draw different modules
    // [CG] C/S has its own scoreboard.
    if(clientserver)
-   {
       CS_ShowScores();
-   }
    else
-   {
       HU_FragsDrawer();
-   }
    HU_OverlayDraw();
 }
 
@@ -385,9 +374,7 @@ void HU_Ticker(void)
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->ticker)
-      {
          w->ticker(w);
-      }
    }
 }
 
@@ -441,9 +428,7 @@ void HU_Erase(void)
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->eraser && HU_NeedsErase(w))
-      {
          w->eraser(w);
-      }
    }
 
    // HUD_FIXME: generalize?
@@ -522,9 +507,7 @@ static void HU_MessageDraw(hu_widget_t *widget)
    // [CG] Go down even more if chat is active AND a queue message is
    //      displayed.
    if(QUEUE_MESSAGE_DISPLAYED)
-   {
       y += 8;
-   }
    
    for(i = 0; i < mw->current_messages; i++, y += 8)
    {
@@ -852,6 +835,7 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
       return;
 
    // 10/08/05: boxed message support
+   // [CG] Alpha-blended background support.
    if(tw->flags & TW_BOXED)
    {
       int width, height;
@@ -860,6 +844,17 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
       height = V_FontStringHeight(tw->font, tw->message);
 
       V_DrawBox(tw->x - 4, tw->y - 4, width + 8, height + 8);
+   }
+   else if(tw->flags & TW_TRANS)
+   {
+      int x = tw->x - 4;
+      int y = tw->y - 4;
+      int w = V_FontStringWidth (tw->font, tw->message) + 8;
+      int h = V_FontStringHeight(tw->font, tw->message) + 8;
+      int bg_color = GameModeInfo->blackIndex;
+      int bg_opacity = tw->bg_opacity;
+
+      V_ColorBlockTLScaled(&vbscreen, bg_color, x, y, w, h, bg_opacity);
    }
 
    if(tw->message && (!tw->cleartic || leveltime < tw->cleartic))
@@ -1003,6 +998,9 @@ static void HU_TextWidgetDefaults(hu_textwidget_t *tw)
 
    // all widgets default to normal hud font
    tw->font = hud_font;
+
+   // [CG] All widgets start with 100% background opacity.
+   tw->bg_opacity = FRACUNIT;
 }
 
 //
@@ -1033,9 +1031,7 @@ void HU_DynamicTextWidget(const char *name, int x, int y, int font,
 
    // set id
    if(!newtw->widget.name)
-   {
       newtw->widget.name = strdup(name);
-   }
 
    // add to hash
    if(!HU_AddWidgetToHash((hu_widget_t *)newtw))
@@ -1853,41 +1849,27 @@ CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
       );
    }
    else if(strlen(QStrConstPtr(&Console.args)) > MAX_STRING_SIZE)
-   {
       doom_printf("Message too long.");
-   }
    else if(CS_CLIENT)
-   {
       CL_BroadcastMessage(QStrConstPtr(&Console.args));
-   }
    else if(CS_SERVER)
-   {
       SV_Say(QStrConstPtr(&Console.args));
-   }
 }
 
 CONSOLE_COMMAND(rcon, cf_netonly)
 {
    if(CS_CLIENT)
-   {
       CL_RCONMessage(QStrConstPtr(&Console.args));
-   }
    else
-   {
       doom_printf("Servers don't need RCON.");
-   }
 }
 
 CONSOLE_NETCMD(to_server, cf_netvar, netcmd_chat)
 {
    if(CS_CLIENT)
-   {
       CL_ServerMessage(QStrConstPtr(&Console.args));
-   }
    else
-   {
       doom_printf("Can't send messages to yourself.");
-   }
 }
 
 CONSOLE_NETCMD(to_player, cf_netvar, netcmd_chat)
@@ -1895,9 +1877,7 @@ CONSOLE_NETCMD(to_player, cf_netvar, netcmd_chat)
    if(CS_CLIENT)
    {
       if(QStrAtoi(&Console.argv[0]) == consoleplayer)
-      {
          doom_printf("Can't send messages to yourself.");
-      }
       else
       {
          CL_PlayerMessage(
@@ -1917,17 +1897,13 @@ CONSOLE_NETCMD(to_player, cf_netvar, netcmd_chat)
 
 CONSOLE_NETCMD(to_team, cf_netvar, netcmd_chat)
 {
+   // [CG] I can't see any use for server => team communication, so this
+   //      just broadcasts in that case.
    printf("Sending message to team.\n");
    if(CS_CLIENT)
-   {
       CL_TeamMessage(QStrConstPtr(&Console.args));
-   }
    else if(CS_SERVER)
-   {
-      // [CG] I can't see any use for server => team communication, so this
-      //      just broadcasts.
       SV_Say(QStrConstPtr(&Console.args));
-   }
 }
 
 CONSOLE_VARIABLE(hu_messagelines, hud_msg_lines, 0) {}

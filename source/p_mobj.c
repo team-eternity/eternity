@@ -228,9 +228,9 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 {
    state_t *st;
    boolean client_should_handle = false;
-   int blood_type = E_SafeThingType(MT_BLOOD);
    int puff_type = E_SafeThingType(MT_PUFF);
-   int fog_type = E_SafeThingType(GameModeInfo->teleFogType);
+   int blood_type = E_SafeThingType(MT_BLOOD);
+   int fog_type = GameModeInfo->teleFogType;
 
    // haleyjd 03/27/10: new state cycle detection
    static boolean firsttime = true; // for initialization
@@ -280,9 +280,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       mobj->tics = st->tics;
 
       if(CS_SERVER && !client_should_handle)
-      {
          SV_BroadcastActorState(mobj, state);
-      }
 
       // sf: skins
       // haleyjd 06/11/08: only replace if st->sprite == default sprite
@@ -334,10 +332,15 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
 {
    state_t *st;
 
+   if(!serverside)
+      return true;
+
    if(state == NullStateNum)
    {
       // remove mobj
       mobj->state = NULL;
+      if(CS_SERVER)
+         SV_BroadcastActorRemoved(mobj);
       P_RemoveMobj(mobj);
       return false;
    }
@@ -354,6 +357,9 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
       mobj->sprite = st->sprite;
 
    mobj->frame = st->frame;
+
+   if(CS_SERVER)
+      SV_BroadcastActorState(mobj, state);
 
    return true;
 }
@@ -372,9 +378,7 @@ void P_ExplodeMissile(mobj_t *mo)
    if(mo->flags3 & MF3_EXPLOCOUNT)
    {
       if(++mo->counters[1] < mo->counters[2])
-      {
          return;
-      }
    }
 
    mo->momx = mo->momy = mo->momz = 0;
@@ -386,10 +390,7 @@ void P_ExplodeMissile(mobj_t *mo)
          mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
          if(CS_SERVER)
-         {
-            // SV_BroadcastMissileExploded(mo, true);
             SV_BroadcastActorRemoved(mo);
-         }
          P_RemoveMobj(mo); // don't explode on the actual sky itself
          return;
       }
@@ -1122,6 +1123,10 @@ void P_NightmareRespawn(mobj_t* mobj)
    mapthing_t*  mthing;
    boolean      check; // haleyjd 11/11/04
 
+   // [CG] Only servers do this.
+   if(!serverside)
+      return;
+
    x = mobj->spawnpoint.x << FRACBITS;
    y = mobj->spawnpoint.y << FRACBITS;
 
@@ -1174,6 +1179,7 @@ void P_NightmareRespawn(mobj_t* mobj)
                     mobj->subsector->sector->floorheight +
                        GameModeInfo->teleFogHeight,
                     GameModeInfo->teleFogType);
+   CS_ReleaseActorNetID(mo);
 
    // initiate teleport sound
 
@@ -1186,6 +1192,7 @@ void P_NightmareRespawn(mobj_t* mobj)
    mo = P_SpawnMobj(x, y,
                     ss->sector->floorheight + GameModeInfo->teleFogHeight,
                     GameModeInfo->teleFogType);
+   CS_ReleaseActorNetID(mo);
 
    S_StartSound(mo, GameModeInfo->teleSound);
 
@@ -1201,6 +1208,9 @@ void P_NightmareRespawn(mobj_t* mobj)
    // sf: use R_WadToAngle
    mo->angle = R_WadToAngle(mthing->angle);
 
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
+
    if(mthing->options & MTF_AMBUSH)
       mo->flags |= MF_AMBUSH;
 
@@ -1210,6 +1220,9 @@ void P_NightmareRespawn(mobj_t* mobj)
    mo->reactiontime = 18;
 
    // remove the old monster,
+
+   if(CS_SERVER)
+      SV_BroadcastActorRemoved(mobj);
 
    P_RemoveMobj(mobj);
 }
@@ -1814,9 +1827,7 @@ void P_RespawnSpecials(void)
 
    // [CG] Only servers respawn specials.
    if(!serverside)
-   {
       return;
-   }
 
    if(!(dmflags & DM_ITEMRESPAWN) ||  // only respawn items in deathmatch
       iquehead == iquetail ||  // nothing left to respawn?
@@ -1836,9 +1847,7 @@ void P_RespawnSpecials(void)
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
    if(CS_SERVER)
-   {
       SV_BroadcastActorSpawned(mo);
-   }
 
    // find which type to spawn
 

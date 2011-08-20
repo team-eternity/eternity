@@ -41,6 +41,8 @@ extern boolean show_timer;
 extern boolean default_show_timer;
 extern boolean show_netstats;
 extern boolean default_show_netstats;
+extern boolean show_team_widget;
+extern boolean default_show_team_widget;
 
 extern boolean cs_chat_active;
 
@@ -52,6 +54,7 @@ void CS_InitTimerWidget(void);
 void CS_InitChatWidget(void);
 void CS_InitQueueWidget(void);
 void CS_InitNetWidget(void);
+void CS_InitTeamWidget(void);
 
 #endif
 

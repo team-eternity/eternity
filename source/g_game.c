@@ -2765,6 +2765,7 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
    subsector_t *ss;
    unsigned an;
    angle_t mtangle;
+   mobj_t *fog;
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
@@ -2820,12 +2821,13 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
       }
    }
 
-   return P_SpawnMobj(
+   fog = P_SpawnMobj(
       x + 20 * mtcos,
       y + 20 * mtsin,
       ss->sector->floorheight + GameModeInfo->teleFogHeight,
       GameModeInfo->teleFogType
    );
+   CS_ReleaseActorNetID(fog);
 }
 
 //
