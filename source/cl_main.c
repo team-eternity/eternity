@@ -144,13 +144,9 @@ static void send_message(message_recipient_t recipient_type,
    );
 
    if(recipient_type == mr_auth)
-   {
       doom_printf("Authorizing...");
-   }
    else if(recipient_type == mr_rcon)
-   {
       doom_printf("RCON: %s", message);
-   }
    else
    {
       S_StartSound(NULL, GameModeInfo->c_ChatSound);
@@ -165,15 +161,14 @@ static void run_world(void)
 {
    cl_current_world_index++;
    CL_ProcessNetworkMessages();
+
+   // [CG] If a player we're spectating spectates, reset our display.
    if(displayplayer != consoleplayer && clients[displayplayer].spectating)
-   {
-      // [CG] If a player we're spectating spectates, reset our display.
       CS_SetDisplayPlayer(consoleplayer);
-   }
+
    if(gamestate == GS_LEVEL && cl_received_sync && !cs_demo_playback)
-   {
       CL_SendCommand();
-   }
+
    G_Ticker();
    gametic++;
 }
@@ -186,17 +181,13 @@ void CL_Init(char *url)
    ENetCallbacks callbacks = { Z_SysMalloc, Z_SysFree, abort };
 
    if(enet_initialize_with_callbacks(ENET_VERSION, &callbacks) != 0)
-   {
      I_Error("Could not initialize networking.\n");
-   }
 
    atexit(enet_deinitialize);
 
    net_host = enet_host_create(NULL, 1, MAX_CHANNELS, 0, 0);
    if(net_host == NULL)
-   {
      I_Error("Could not initialize client.\n");
-   }
 
    enet_socket_set_option(net_host->socket, ENET_SOCKOPT_NONBLOCK, 1);
    enet_host_compress_with_range_coder(net_host);
@@ -204,13 +195,9 @@ void CL_Init(char *url)
    url_length = strlen(url);
    cs_server_url = calloc(url_length + 1, sizeof(char));
    if(strncmp(url, "eternity://", 11) == 0)
-   {
       sprintf(cs_server_url, "http://%s", url + 11);
-   }
    else
-   {
       memcpy(cs_server_url, url, url_length);
-   }
 
    // [CG] cURL supports millions of protocols, nonetheless, make sure that
    //      the passed URI is supported (and actually a URI).
@@ -327,9 +314,7 @@ void CL_Connect(void)
 
    net_peer = enet_host_connect(net_host, server_address, MAX_CHANNELS, 0);
    if(net_peer == NULL)
-   {
       doom_printf("Unknown error creating a new connection.\n");
-   }
 
    start_time = enet_time_get();
 
@@ -360,9 +345,8 @@ void CL_Connect(void)
          }
       }
       else
-      {
          doom_printf("Connected!");
-      }
+
       if(cs_demo_recording)
       {
          CS_AddNewMapToDemo();
@@ -372,9 +356,8 @@ void CL_Connect(void)
    else
    {
       if(net_peer)
-      {
          enet_peer_reset(net_peer);
-      }
+
       doom_printf("Could not connect to server.\nConnection failed!\n");
       net_peer = NULL;
    }
@@ -392,13 +375,8 @@ void CL_Disconnect(void)
    CS_DisconnectPeer(net_peer, dr_no_reason);
    net_peer = NULL;
 
-   if(cs_demo_recording)
-   {
-      if(!CS_StopDemo())
-      {
-         printf("Error saving demo: %s\n", CS_GetDemoErrorMessage());
-      }
-   }
+   if(cs_demo_recording && !CS_StopDemo())
+      printf("Error saving demo: %s\n", CS_GetDemoErrorMessage());
 
    CL_Reset();
    C_SetConsole();
@@ -425,21 +403,15 @@ void CL_SendCommand(void)
    // static unsigned int commands_sent = 0;
 
    if(CS_DEMO)
-   {
       I_Error("Error: made a command during demo playback.\n");
-   }
 
    command_message.message_type = nm_playercommand;
    command->world_index = cl_current_world_index;
 
    if(consoleactive)
-   {
       memset(&command->ticcmd, 0, sizeof(ticcmd_t));
-   }
    else
-   {
       G_BuildTiccmd(&command->ticcmd);
-   }
 
    CS_CopyCommand(&command_message.command, command);
 
@@ -464,9 +436,7 @@ void CL_SendCommand(void)
             "Demo error, recording aborted: %s", CS_GetDemoErrorMessage()
          );
          if(!CS_StopDemo())
-         {
             doom_printf("Error stopping demo: %s.", CS_GetDemoErrorMessage());
-         }
       }
    }
 
@@ -519,9 +489,7 @@ void CL_SendPlayerArrayInfo(client_info_t info_type, int array_index)
 void CL_SendPlayerScalarInfo(client_info_t info_type)
 {
    nm_playerinfoupdated_t update_message;
-
    CS_BuildPlayerScalarInfoPacket(&update_message, consoleplayer, info_type);
-
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
@@ -568,9 +536,7 @@ void CL_AuthMessage(const char *password)
    //      for this server's URL as valid.
 
    if(cs_server_password != NULL)
-   {
       free(cs_server_password);
-   }
 
    cs_server_password = calloc(password_length + 1, sizeof(char));
    memcpy(cs_server_password, password, password_length);
@@ -586,9 +552,7 @@ void CL_RCONMessage(const char *command)
 void CL_SaveServerPassword(void)
 {
    if (json_object_object_get(cs_client_password_json, cs_server_url))
-   {
       json_object_object_del(cs_client_password_json, cs_server_url);
-   }
 
    json_object_object_add(
       cs_client_password_json,
@@ -610,53 +574,40 @@ boolean CL_SetMobjState(mobj_t* mobj, statenum_t state)
 
    do
    {
-     if(state == NullStateNum)
-     {
-       mobj->state = NULL;
-       // P_RemoveMobj(mobj);
-       ret = false;
-       break;
-     }
+      if(state == NullStateNum)
+      {
+         mobj->state = NULL;
+         // P_RemoveMobj(mobj);
+         ret = false;
+         break;
+      }
 
-     st = states[state];
-     mobj->state = st;
-     mobj->tics = st->tics;
+      st = states[state];
+      mobj->state = st;
+      mobj->tics = st->tics;
 
-     if(mobj->skin && st->sprite == mobj->info->defsprite)
-     {
-       mobj->sprite = mobj->skin->sprite;
-     }
-     else
-     {
-       mobj->sprite = st->sprite;
-     }
+      if(mobj->skin && st->sprite == mobj->info->defsprite)
+         mobj->sprite = mobj->skin->sprite;
+      else
+         mobj->sprite = st->sprite;
 
-     mobj->frame = st->frame;
+      mobj->frame = st->frame;
 
-     if(st->action)
-     {
-       st->action(mobj);
-     }
+      if(st->action)
+         st->action(mobj);
 
-     if(st->particle_evt)
-     {
-       P_RunEvent(mobj);
-     }
+      if(st->particle_evt)
+         P_RunEvent(mobj);
 
-     P_AddSeenState(state, &seenstates);
-     state = st->nextstate;
-   }
-   while(!mobj->tics && !P_CheckSeenState(state, seenstates));
+      P_AddSeenState(state, &seenstates);
+      state = st->nextstate;
+   } while(!mobj->tics && !P_CheckSeenState(state, seenstates));
 
    if(ret && !mobj->tics)
-   {
-     printf("Warning: State Cycle Detected");
-   }
+      printf("Warning: State Cycle Detected");
 
    if(seenstates)
-   {
-     P_FreeSeenStates(seenstates);
-   }
+      P_FreeSeenStates(seenstates);
 
    return ret;
 }
@@ -666,9 +617,7 @@ char* CL_ExtractServerMessage(nm_servermessage_t *message)
    char *server_message = ((char *)message) + sizeof(nm_servermessage_t);
 
    if(strlen(server_message) != (message->length - 1))
-   {
       return NULL;
-   }
 
    return server_message;
 }
@@ -679,14 +628,10 @@ char* CL_ExtractPlayerMessage(nm_playermessage_t *message)
 
    if(message->sender_number > MAXPLAYERS ||
       !playeringame[message->sender_number])
-   {
       return NULL;
-   }
 
    if(strlen(player_message) != (message->length - 1))
-   {
       return NULL;
-   }
 
    return player_message;
 }
@@ -695,11 +640,9 @@ void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
 {
    mobj_t *actor_for_id;
 
+   // [CG] Net ID 0 is a special ID that isn't handled here.
    if(net_id == 0)
-   {
-      // [CG] Net ID 0 is a special ID that isn't handled here.
       return;
-   }
 
    // [CG] For some spawns, it's possible that the client will spawn something
    //      in a different order than the server will, and network IDs will be
@@ -786,8 +729,7 @@ void CL_SetPsprite(player_t *player, int position, statenum_t stnum)
             break;
       }
       stnum = psp->state->nextstate;
-   }
-   while(!psp->tics);   // an initial state of 0 could cycle through
+   } while(!psp->tics);   // an initial state of 0 could cycle through
 }
 
 void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
@@ -834,9 +776,7 @@ void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
 
          // haleyjd  06/05/08: check for special damagetype painstate
          if(mod > 0 && (state = E_StateForMod(target->info, "Pain", emod)))
-         {
             st = state->index;
-         }
 
          P_SetMobjState(target, st);
       }
@@ -858,9 +798,7 @@ void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
       bossignore = !((source->flags ^ target->flags) & MF_FRIEND);
    }
    else
-   {
       bossignore = false;
-   }
 
    // Set target based on the following criteria:
    // * Damage is sourced and source is not self.
@@ -969,9 +907,7 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
       CL_SendPlayerStringInfo(ci_name);
       CL_SendPlayerScalarInfo(ci_team);
       for(i = 0; i < NUMWEAPONS; i++)
-      {
          CL_SendPlayerArrayInfo(ci_pwo, i);
-      }
       CL_SendPlayerScalarInfo(ci_wsop);
       CL_SendPlayerScalarInfo(ci_asop);
       CL_SendPlayerScalarInfo(ci_bobbing);
@@ -983,9 +919,7 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
    cs_current_map_number = message->map_number;
 
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       playeringame[i] = message->playeringame[i];
-   }
 
    // [CG] Have to be "in-game" at this point.  This should be sent over
    //      in the game state message, so error out if not.
@@ -1089,9 +1023,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
          return;
       }
       else if(gamestate == GS_LEVEL)
-      {
          G_DoCompleted(false);
-      }
    }
 
    demo_map_number = cs_current_demo_map;
@@ -1101,9 +1033,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    basetic = message->gametic;
    leveltime = message->gametic;
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       playeringame[i] = message->playeringame[i];
-   }
 
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
 
@@ -1140,9 +1070,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i])
-      {
          CL_SetActorNetID(players[i].mo, message->net_ids[i]);
-      }
    }
 
    cl_flush_packet_buffer = true;
@@ -1367,6 +1295,8 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 {
    player_t *player = &players[message->player_number];
 
+   printf("Handling player spawned message.\n");
+
    if(message->player_number > MAX_CLIENTS)
    {
       printf("Received invalid player spawned message, ignoring.");
@@ -1387,13 +1317,9 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
    );
 
    if(!message->as_spectator)
-   {
       CL_SetActorNetID(player->mo, message->net_id);
-   }
    if(message->player_number == consoleplayer)
-   {
       CS_UpdateQueueMessage();
-   }
 }
 
 void CL_HandlePlayerWeaponStateMessage(nm_playerweaponstate_t *message)
@@ -1489,40 +1415,40 @@ void CL_HandlePlayerTouchedSpecialMessage(nm_playertouchedspecial_t *message)
 
 void CL_HandleAuthResultMessage(nm_authresult_t *message)
 {
-   if(message->authorization_successful)
-   {
-      if(!cs_demo_playback)
-      {
-         CL_SaveServerPassword();
-      }
-      doom_printf("Authorization succeeded.");
-      switch(message->authorization_level)
-      {
-      case cs_auth_spectator:
-         doom_printf("Authorization level: spectator.");
-         break;
-      case cs_auth_player:
-         doom_printf("Authorization level: player.");
-         break;
-      case cs_auth_moderator:
-         doom_printf("Authorization level: moderator.");
-         break;
-      case cs_auth_administrator:
-         doom_printf("Authorization level: administrator.");
-         break;
-      case cs_auth_none:
-      default:
-         I_Error(
-            "Received invalid authorization level %d from server, exiting.\n",
-            message->authorization_level
-         );
-         break;
-      }
-   }
-   else
+   if(!message->authorization_successful)
    {
       doom_printf("Authorization failed.");
+      return;
    }
+
+   if(!cs_demo_playback)
+      CL_SaveServerPassword();
+
+   doom_printf("Authorization succeeded.");
+
+   switch(message->authorization_level)
+   {
+   case cs_auth_spectator:
+      doom_printf("Authorization level: spectator.");
+      break;
+   case cs_auth_player:
+      doom_printf("Authorization level: player.");
+      break;
+   case cs_auth_moderator:
+      doom_printf("Authorization level: moderator.");
+      break;
+   case cs_auth_administrator:
+      doom_printf("Authorization level: administrator.");
+      break;
+   case cs_auth_none:
+   default:
+      I_Error(
+         "Received invalid authorization level %d from server, exiting.\n",
+         message->authorization_level
+      );
+      break;
+   }
+
 }
 
 void CL_HandleServerMessage(nm_servermessage_t *message)
@@ -1535,19 +1461,15 @@ void CL_HandleServerMessage(nm_servermessage_t *message)
       return;
    }
 
-   if(message->is_hud_message)
-   {
-      HU_CenterMessage(server_message);
-   }
-   else if(message->prepend_name)
+   if(message->prepend_name)
    {
       S_StartSound(NULL, GameModeInfo->c_ChatSound);
       doom_printf("%s: %s", SERVER_NAME, server_message);
    }
+   else if(message->is_hud_message)
+      HU_CenterMessage(server_message);
    else
-   {
       doom_printf("%s", server_message);
-   }
 }
 
 void CL_HandlePlayerMessage(nm_playermessage_t *message)
@@ -1579,9 +1501,7 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
    mobj_t *puff;
 
    if(cl_enable_prediction && cl_predict_shots)
-   {
       return;
-   }
 
    puff = P_SpawnPuff(
       message->x,
@@ -1600,9 +1520,7 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *blood_message)
    mobj_t *target, *blood;
 
    if(cl_enable_prediction && cl_predict_shots)
-   {
       return;
-   }
 
    target = CS_GetActorFromNetID(blood_message->target_net_id);
    if(target == NULL)
@@ -1697,9 +1615,7 @@ void CL_HandleActorTargetMessage(nm_actortarget_t *message)
       }
    }
    else
-   {
       target = NULL;
-   }
 
    P_SetTarget(&actor->target, target);
 }
@@ -1732,9 +1648,7 @@ void CL_HandleActorTracerMessage(nm_actortracer_t *message)
       }
    }
    else
-   {
       tracer = NULL;
-   }
 
    P_SetTarget(&actor->tracer, tracer);
 }
@@ -1757,11 +1671,9 @@ void CL_HandleActorStateMessage(nm_actorstate_t *message)
       return;
    }
 
+   // [CG] Don't accept state messages for ourselves if we're predicting.
    if(!cl_enable_prediction || actor != players[consoleplayer].mo)
-   {
-      // [CG] Don't accept state messages for ourselves.
       CL_SetMobjState(actor, message->state_number);
-   }
 }
 
 void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message)
@@ -1796,13 +1708,9 @@ void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message)
    }
    // haleyjd: generalize to all bosses
    if(monster->flags2 & MF2_BOSS)
-   {
       S_StartSound(NULL, sound);        // full volume
-   }
    else
-   {
       S_StartSound(monster, sound);
-   }
 }
 
 void CL_HandleActorAttributeMessage(nm_actorattribute_t *message)
@@ -1863,9 +1771,7 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       }
    }
    else
-   {
       source = NULL;
-   }
 
    if(message->inflictor_net_id != 0)
    {
@@ -1880,9 +1786,7 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       }
    }
    else
-   {
       inflictor = NULL;
-   }
 
    /*
    printf("Received actor damaged message for type %d.\n", target->type);
@@ -1896,40 +1800,37 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
    }
 
    if(target->flags & MF_SKULLFLY)
-   {
       target->momx = target->momy = target->momz = 0;
-   }
 
    if(target->player)
    {
       player = target->player;
       player->armorpoints -= message->armor_damage;
+
       if(player->armorpoints <= 0)
       {
          player->armortype = 0;
          player->hereticarmor = false;
       }
+
       player->health -= message->health_damage;
+
       if(player->health < 0)
-      {
          player->health = 0;
-      }
+
       player->attacker = source;
       player->damagecount += message->health_damage;
+
       if(player->damagecount > 100)
-      {
          player->damagecount = 100; // teleport stomp does 10k points...
-      }
+
       // haleyjd 10/14/09: we do not allow negative damagecount
       if(player->damagecount < 0)
-      {
          player->damagecount = 0;
-      }
+
    }
    else
-   {
       player = NULL;
-   }
 
    target->health -= message->health_damage;
 
@@ -1961,11 +1862,7 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
       return;
    }
 
-   if(message->inflictor_net_id == 0)
-   {
-      inflictor = NULL;
-   }
-   else
+   if(message->inflictor_net_id != 0)
    {
       inflictor = CS_GetActorFromNetID(message->inflictor_net_id);
       if(inflictor == NULL)
@@ -1977,12 +1874,10 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
          return;
       }
    }
-
-   if(message->source_net_id == 0)
-   {
-      source = NULL;
-   }
    else
+      inflictor = NULL;
+
+   if(message->source_net_id != 0)
    {
       source = CS_GetActorFromNetID(message->source_net_id);
       if(source == NULL)
@@ -1994,6 +1889,8 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
          return;
       }
    }
+   else
+      source = NULL;
 
    // printf("Received actor killed message\n");
 
@@ -2001,13 +1898,11 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
    emod = E_DamageTypeForNum(message->mod);
 
    if(target->player)
-   {
       P_DeathMessage(source, target, inflictor, emod);
-   }
+
    if(message->damage <= 10)
-   {
       target->intflags |= MIF_WIMPYDEATH;
-   }
+
    P_KillMobj(source, target, emod);
 }
 
@@ -2085,17 +1980,12 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    //            line activation message (why didn't I add this earlier...?).
 
    if(message->activation_type == at_used)
-   {
       P_UseSpecialLine(actor, line, message->side);
-   }
    else if(message->activation_type == at_crossed)
-   {
       P_CrossSpecialLine(line, message->side, actor);
-   }
    else if(message->activation_type == at_shot)
-   {
       P_ShootSpecialLine(actor, line, message->side);
-   }
+
    CS_SetActorPosition(actor, &position);
 }
 
@@ -2181,16 +2071,12 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
       );
    }
    else
-   {
       S_StartSound(missile, missile->info->seesound);
-   }
 
+   // [CG] This normally uses #define BFGBOUNCE 16, but that's in p_pspr.c and
+   //      consequently inaccessible.
    if(message->type == MT_BFG)
-   {
-      // [CG] This normally uses #define BFGBOUNCE 16, but that's in p_pspr.c
-      //      and consequently inaccessible.
       missile->extradata.bfgcount = 16;
-   }
 
    CL_SetActorNetID(missile, message->net_id);
 }
@@ -2621,9 +2507,9 @@ void CL_HandleMessage(char *data, size_t data_length)
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
-      || message_type == nm_specialspawned
+      // || message_type == nm_specialspawned
       // || message_type == nm_specialstatus
-      || message_type == nm_specialremoved
+      // || message_type == nm_specialremoved
       || message_type == nm_sectorposition
       || message_type == nm_ticfinished
       )
@@ -2636,7 +2522,8 @@ void CL_HandleMessage(char *data, size_t data_length)
       );
    }
 
-   if(cl_packet_buffer_size == 1)
+   if((cl_constant_prediction && message_index <= cl_current_world_index) ||
+      cl_packet_buffer_size == 1)
    {
       switch(message_type)
       {
@@ -2748,7 +2635,7 @@ void CL_HandleMessage(char *data, size_t data_length)
       return;
    }
 
-   if(!cl_constant_prediction && message_index <= cl_current_world_index)
+   if(message_index <= cl_current_world_index && !cl_constant_prediction)
    {
       CL_Disconnect();
       I_Error(
@@ -2760,7 +2647,10 @@ void CL_HandleMessage(char *data, size_t data_length)
       );
    }
 
-   // [CG] TODO: Really, a check for maximum message_size here would be good.
+   //
+   // [CG] TODO: Really, a check for maximum message_size right here would be
+   //            good.
+   //
 
    node = calloc(1, sizeof(nm_buffer_node_t));
    node->world_index = message_index;

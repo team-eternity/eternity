@@ -1934,23 +1934,18 @@ void SV_BroadcastActorSpawned(mobj_t *actor)
 
 void SV_BroadcastActorPosition(mobj_t *actor, int tic)
 {
+   int blood = E_SafeThingType(MT_BLOOD);
+   int puff  = E_SafeThingType(MT_PUFF);
+   int fog   = GameModeInfo->teleFogType;
    nm_actorposition_t position_message;
-   int blood_type = E_SafeThingType(MT_BLOOD);
-   int puff_type = E_SafeThingType(MT_PUFF);
-   int fog_type = E_SafeThingType(GameModeInfo->teleFogType);
 
+   // [CG] Information about actors with NET ID 0 never gets sent to clients.
    if(actor->net_id == 0)
-   {
-      // [CG] Information about actors with NET ID 0 never get sent to clients.
       return;
-   }
 
-   if(actor->type == blood_type || actor->type == puff_type ||
-      actor->type == fog_type)
-   {
-      // [CG] Clients control this stuff after it's spawned.
+   // [CG] Clients control this stuff after it's spawned.
+   if(actor->type == blood || actor->type == puff || actor->type == fog)
       return;
-   }
 
    position_message.message_type = nm_actorposition;
    position_message.world_index = sv_world_index;
