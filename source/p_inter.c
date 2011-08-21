@@ -1127,18 +1127,14 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
          source->player->frags[target->player-players]++;
          if(CS_TEAMDM)
          {
+            // [CG] Subtract 1 from the team's score for suicides and team
+            //      kills.
             if(source->player == target->player ||
                clients[source->player - players].team ==
                clients[target->player - players].team)
-            {
-               // [CG] Subtract 1 from the team's score for suicides and team
-               //      kills.
                team_scores[clients[source->player - players].team]--;
-            }
             else
-            {
                team_scores[clients[source->player - players].team]++;
-            }
          }
          HU_FragsUpdate();
       }
@@ -1161,19 +1157,17 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       if(!source)
       {
          target->player->frags[target->player-players]++;
+
+         // [CG] Subtract 1 from the team's score for environment kills.
          if(CS_TEAMDM)
-         {
-            // [CG] Subtract 1 from the team's score for environment kills.
             team_scores[clients[target->player - players].team]--;
-         }
+
          HU_FragsUpdate();
       }
 
+      // [CG] Drop the flag if the target was holding it.
       if(CS_CTF)
-      {
-         // [CG] Drop the flag if the target was holding it.
          CS_DropFlag(target->player - players);
-      }
 
       target->flags &= ~MF_SOLID;
       target->player->playerstate = PST_DEAD;

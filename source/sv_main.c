@@ -1433,6 +1433,7 @@ void SV_SaveActorPositions(void)
    server_client_t *server_client;
    position_t *p;
    int playernum;
+   teamcolor_t color;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
@@ -1468,8 +1469,18 @@ void SV_SaveActorPositions(void)
       }
       else if(CS_ActorPositionChanged(actor))
       {
-         SV_BroadcastActorPosition(actor, sv_world_index);
          CS_SaveActorPosition(&actor->old_position, actor, sv_world_index);
+         for(color = team_color_none; color < team_color_max; color++)
+         {
+            // [CG] Don't send positions of flags if they're carried, because
+            //      they're locked to their carrier and it's redundant, and if
+            //      a client has constant prediction on and they're carrying
+            //      the flag, the flag position will seem to lag behind them.
+            if(cs_flags[color].net_id == actor->net_id &&
+               cs_flags[color].state == flag_carried)
+               return;
+         }
+         SV_BroadcastActorPosition(actor, sv_world_index);
       }
    }
 }

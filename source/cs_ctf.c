@@ -118,6 +118,7 @@ void CS_GiveFlag(int playernum, flag_t *flag)
    teamcolor_t color = flag - cs_flags;
    player_t *player = &players[playernum];
    position_t position;
+   mobj_t *flag_actor = NULL;
 
    CS_SaveActorPosition(&position, player->mo, 0);
 
@@ -135,16 +136,22 @@ void CS_GiveFlag(int playernum, flag_t *flag)
    }
 
    flag->carrier = playernum;
+
    if(CS_CLIENT)
-   {
       flag->pickup_time = cl_current_world_index;
-   }
    else if(CS_SERVER)
-   {
       flag->pickup_time = sv_world_index;
-   }
+
    flag->timeout = 0;
    flag->state = flag_carried;
+
+   if(CS_CLIENT && playernum == consoleplayer)
+   {
+      flag_actor = CS_GetActorFromNetID(flag->net_id);
+      if(flag_actor == NULL)
+         I_Error("No actor for %s flag, exiting.\n", team_color_names[color]);
+      flag_actor->flags2 |= MF2_DONTDRAW;
+   }
 }
 
 void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
@@ -155,13 +162,9 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
    teamcolor_t other_color;
 
    if(color == team_color_red)
-   {
       other_color = team_color_blue;
-   }
    else
-   {
       other_color = team_color_red;
-   }
 
    if(flag->state == flag_dropped)
    {
@@ -256,20 +259,15 @@ flag_t* CS_GetFlagCarriedByPlayer(int playernum)
    client_t *client = &clients[playernum];
 
    if(client->team == team_color_red)
-   {
       other_color = team_color_blue;
-   }
    else
-   {
       other_color = team_color_red;
-   }
 
    flag = &cs_flags[other_color];
 
    if(flag->carrier == playernum)
-   {
       return flag;
-   }
+
    return NULL;
 }
 
@@ -280,9 +278,7 @@ void CS_DropFlag(int playernum)
    mobj_t *corpse = players[playernum].mo;
 
    if(!flag || flag->carrier != playernum)
-   {
       return;
-   }
 
    doom_printf(
       "%s dropped the %s flag",
@@ -302,13 +298,9 @@ void CS_DropFlag(int playernum)
       start_flag_sound(flag, "FlagDropped");
 
    if(color == team_color_red)
-   {
       respawn_flag(flag, corpse->x, corpse->y, corpse->z, "RedFlag");
-   }
    else if(color == team_color_blue)
-   {
       respawn_flag(flag, corpse->x, corpse->y, corpse->z, "BlueFlag");
-   }
 
    flag->carrier = 0;
    flag->pickup_time = 0;
