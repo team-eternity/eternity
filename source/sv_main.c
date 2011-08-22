@@ -1837,8 +1837,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    }
 
    // [CG] Some additional checks to prevent tomfoolery.
-   if(received_command->world_index > sv_world_index ||
-      received_command->world_index <=
+   if(received_command->world_index <=
          server_client->last_command_received_index)
    {
       printf(

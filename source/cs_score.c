@@ -93,23 +93,20 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
 
    // [CG] Format the time properly.
    CS_FormatTicsAsTime(level_time_s, leveltime);
+
    if(levelTimeLimit)
    {
       // [CG] levelTimeLimit is in minutes... I guess.
       CS_FormatTime(level_timelimit_s, levelTimeLimit * 60);
    }
 
+   // [CG] If we've moved the top down at all, then we can't just stop at where
+   //      the status bar would normally be.  Use as much of the screen as
+   //      possible in this case.
    if(extra_top_margin > 0)
-   {
-      // [CG] If we've moved the top down at all, then we can't just stop at
-      //      where the status bar would normally be.  Use as much of the
-      //      screen as possible in this case.
       window_height = SCREENHEIGHT - (WINDOW_MARGIN + extra_top_margin);
-   }
-   else
-   {
-      window_height = WINDOW_HEIGHT;
-   }
+   else if(CS_TEAMS_ENABLED)
+      window_height = ST_Y - WINDOW_MARGIN;
 
    psnprintf(s, sizeof(s), "[TKV]RussianDumbass  -9999  9999  9999ms");
    window_width = V_FontStringWidth(hud_overfont, s) + (SCORES_MARGIN * 2);
@@ -118,9 +115,9 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
 
    // window_x = window_y = WINDOW_MARGIN;
    window_x = left_border;
-   window_y = 0 + extra_top_margin; // WINDOW_MARGIN + 2;
+   window_y = extra_top_margin;
    scores_x = window_x + SCORES_MARGIN;
-   y = window_y + 4 + extra_top_margin;
+   y = window_y + 4;
 
    // [CG] TODO: Add option to set the scoreboard's background opacity.
    V_ColorBlockTLScaled(
@@ -135,13 +132,10 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
 
    // [CG] Draw gamemode header
    if(cs_settings->max_players == 2)
-   {
       psnprintf(s, sizeof(s), "%s", "DUEL");
-   }
    else
-   {
       psnprintf(s, sizeof(s), "%s", "DEATHMATCH");
-   }
+
    x = SCREEN_MIDDLE - (V_FontStringWidth(hud_font, s) >> 1);
    V_FontWriteTextColored(hud_font, s, CR_GOLD, x, y);
    y += (V_FontStringHeight(hud_font, s) + 2);
@@ -384,23 +378,18 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
 
    // [CG] Setup the initial dimensions and the y position.
    size_of_space = (V_FontStringWidth(hud_overfont, " ") * 2);
-   window_x = WINDOW_MARGIN + extra_top_margin;
-   window_y = 0;
+   window_x = WINDOW_MARGIN;
+   window_y = extra_top_margin;
    scores_x = window_x + SCORES_MARGIN;
-   y = window_y + 4 + extra_top_margin;
+   y = window_y + 4;
 
-   // [CG] TODO: Add option to set the scoreboard's background opacity.
+   // [CG] If we've moved the top down at all, then we can't just stop at where
+   //      the status bar would normally be.  Use as much of the screen as
+   //      possible in this case.
    if(extra_top_margin > 0)
-   {
-      // [CG] If we've moved the top down at all, then we can't just stop at
-      //      where the status bar would normally be.  Use as much of the
-      //      screen as possible in this case.
       window_height = SCREENHEIGHT - (WINDOW_MARGIN + extra_top_margin);
-   }
    else if(CS_TEAMS_ENABLED)
-   {
       window_height = ST_Y - WINDOW_MARGIN;
-   }
 
    // [CG] TODO: Add option to set the scoreboard's background opacity.
    V_ColorBlockTLScaled(
@@ -423,17 +412,12 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
 
    // [CG] Draw gamemode header
    if(CS_TEAMDM)
-   {
       psnprintf(s, sizeof(s), "%s", "TEAM DEATHMATCH");
-   }
    else if(CS_CTF)
-   {
       psnprintf(s, sizeof(s), "%s", "CAPTURE THE FLAG");
-   }
    else
-   {
       psnprintf(s, sizeof(s), "%s", "TEAM GAME");
-   }
+
    x = SCREEN_MIDDLE - (V_FontStringWidth(hud_font, s) >> 1);
    V_FontWriteTextColored(hud_font, s, CR_GOLD, x, y);
    y += (V_FontStringHeight(hud_font, s) + 2);
