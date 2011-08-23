@@ -1574,7 +1574,7 @@ extern fixed_t tmsecceilz;
 //
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   Mobj     *mobj = new Mobj;
+   Mobj       *mobj = new Mobj;
    mobjinfo_t *info = &mobjinfo[type];
    state_t    *st;
 

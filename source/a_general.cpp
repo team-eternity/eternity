@@ -87,7 +87,7 @@ void A_Mushroom(Mobj *actor)
       for(j = -n; j <= n; j += 8)
       {
          // haleyjd 08/07/11: This is bad. Very bad.
-         // Rewritten to use P_SpawnMissileWithPos function.
+         // Rewritten to use P_SpawnMissileWithDest function.
          //Mobj target = *actor, *mo;
          Mobj *mo;
          fixed_t x, y, z;
@@ -150,7 +150,8 @@ static const char *kwds_A_Scratch[] =
 {
    "usemisc1",
    "usedamage",
-   "usecounter"
+   "usecounter",
+   "useconstant"
 };
 
 static argkeywd_t scratchkwds =
@@ -171,7 +172,8 @@ static argkeywd_t scratchkwds =
 //              * 0 == compatibility (use misc1 like normal)
 //              * 1 == use mo->damage
 //              * 2 == use counter specified in args[1]
-// * args[1] == counter number for mode 2
+//              * 3 == use constant value in args[1]
+// * args[1] == counter number for mode 2; constant for mode 3
 // * args[2] == EDF sound name
 //
 void A_Scratch(Mobj *mo)
@@ -202,6 +204,9 @@ void A_Scratch(Mobj *mo)
          return; // invalid
 
       damage = mo->counters[cnum];
+      break;
+   case 3: // use constant ("immediate operand" mode)
+      damage = E_ArgAsInt(mo->state->args, 1, 0);
       break;
    }
 

@@ -655,14 +655,10 @@ bool P_SmartMove(Mobj *actor)
 //
 // P_TryWalk
 //
-// Attempts to move actor on
-// in its current (ob->moveangle) direction.
-// If blocked by either a wall or an actor
-// returns FALSE
-// If move is either clear or blocked only by a door,
-// returns TRUE and sets...
-// If a door is in the way,
-// an OpenDoor call is made to start it opening.
+// Attempts to move actor on in its current (ob->moveangle) direction.
+// If blocked by either a wall or an actor returns FALSE
+// If move is either clear or blocked only by a door, returns TRUE and sets...
+// If a door is in the way, an OpenDoor call is made to start it opening.
 //
 static bool P_TryWalk(Mobj *actor)
 {
@@ -1354,9 +1350,9 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 //
 // haleyjd 11/19/02
 //
-// Generalized function for teleporting a boss (or any other thing)
-// around at random between a provided set of map spots, along
-// with special effects on demand.
+// Generalized function for teleporting a boss (or any other thing) around at 
+// random between a provided set of map spots, along with special effects on 
+// demand.
 // Currently used by D'Sparil.
 //
 void P_BossTeleport(bossteleport_t *bt)

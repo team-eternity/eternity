@@ -710,6 +710,10 @@ static void P_ArchiveThinkers(SaveArchive &arc)
                I_Error("Unknown tclass %s in savegame\n", className);
          }
 
+         // Too many thinkers?!
+         if(idx > num_thinkers) 
+            I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
+
          // Create a thinker of the appropriate type and load it
          newThinker = thinkerType->newThinker();
          newThinker->serialize(arc);
