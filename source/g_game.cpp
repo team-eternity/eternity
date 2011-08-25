@@ -92,7 +92,7 @@ static bool      netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
-static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
+static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 
 WadDirectory *g_dir = &wGlobalDir;
 
@@ -255,7 +255,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 #endif
 
-   cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
+   cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
    strafe = !!action_strafe;
    //speed = autorun || action_speed;
@@ -1911,7 +1911,7 @@ void G_Ticker(void)
    }
    else
    {
-      // get commands, check consistancy, and build new consistancy check
+      // get commands, check consistency, and build new consistancy check
       int buf = (gametic / ticdup) % BACKUPTICS;
       
       for(i=0; i<MAXPLAYERS; i++)
@@ -1948,19 +1948,19 @@ void G_Ticker(void)
                !(gametic % ticdup))
             {
                if(gametic > BACKUPTICS && 
-                  consistancy[i][buf] != cmd->consistancy)
+                  consistency[i][buf] != cmd->consistency)
                {
                   D_QuitNetGame();
                   C_Printf(FC_ERROR "consistency failure");
                   C_Printf(FC_ERROR "(%i should be %i)",
-                              cmd->consistancy, consistancy[i][buf]);
+                              cmd->consistency, consistency[i][buf]);
                }
                
                // sf: include y as well as x
                if(players[i].mo)
-                  consistancy[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
+                  consistency[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
                else
-                  consistancy[i][buf] = 0; // killough 2/14/98
+                  consistency[i][buf] = 0; // killough 2/14/98
             }
          }
       }

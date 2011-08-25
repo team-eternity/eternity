@@ -445,7 +445,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          player_t &p = players[i];
 
          arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
-             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove
+             << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
@@ -1392,7 +1392,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_DeNumberThinkers();
 
-      uint8_t cmarker = 0xE6; // consistancy marker
+      uint8_t cmarker = 0xE6; // consistency marker
       arc << cmarker; 
    }
    catch(BufferedIOException)

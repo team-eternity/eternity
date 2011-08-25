@@ -139,8 +139,8 @@ void PacketSend(void)
          *rover++ = netbuffer->d.cmds[c].sidemove;
          HostToNet16(netbuffer->d.cmds[c].angleturn, rover);
          rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         HostToNet16(netbuffer->d.cmds[c].consistancy, rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
+         HostToNet16(netbuffer->d.cmds[c].consistency, rover);
+         rover += sizeof(netbuffer->d.cmds[c].consistency);
          *rover++ = netbuffer->d.cmds[c].chatchar;
          *rover++ = netbuffer->d.cmds[c].buttons;
          *rover++ = netbuffer->d.cmds[c].actions;
@@ -215,8 +215,8 @@ void PacketGet(void)
          netbuffer->d.cmds[c].sidemove    = *rover++;
          netbuffer->d.cmds[c].angleturn   = NetToHost16(rover);
          rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         netbuffer->d.cmds[c].consistancy = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
+         netbuffer->d.cmds[c].consistency = NetToHost16(rover);
+         rover += sizeof(netbuffer->d.cmds[c].consistency);
          netbuffer->d.cmds[c].chatchar    = *rover++;
          netbuffer->d.cmds[c].buttons     = *rover++;
          netbuffer->d.cmds[c].actions     = *rover++;

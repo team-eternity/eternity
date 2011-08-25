@@ -65,7 +65,7 @@ struct ticcmd_t
    int8_t  sidemove;    // *2048 for move
    int16_t look;        // haleyjd: <<16 for look delta
    int16_t angleturn;   // <<16 for angle delta
-   int16_t consistancy; // checks for net game
+   int16_t consistency; // checks for net game
    byte    chatchar;
    byte    buttons;
    byte    actions;
