@@ -180,16 +180,7 @@ void C_NetTicker(void)
       {
          if(!playeringame[i]) 
             continue;
-#ifdef CONSHUGE
-         if(gamestate == GS_CONSOLE)  // use the whole ticcmd in console mode
-         {
-            int a;
-            for(a=0; a<sizeof(ticcmd_t); a++)
-               C_DealWithChar( ((unsigned char*)&players[i].cmd)[a], i);
-         }
-         else
-#endif
-            C_DealWithChar(players[i].cmd.chatchar,i);
+         C_DealWithChar(players[i].cmd.chatchar,i);
       }
    }
 

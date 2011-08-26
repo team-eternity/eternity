@@ -238,23 +238,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
 
-#ifdef CONSHUGE
-   // in console mode the whole ticcmd is used
-   // to transfer console command chars
-   
-   if(gamestate == GS_CONSOLE)
-   {                         
-      int i;
-      
-      // fill ticcmd with console chars
-      for(i = 0; i < sizeof(ticcmd_t); i++)
-      {
-         ((unsigned char*)cmd)[i] = C_dequeueChatChar();
-      }
-      return;
-   }
-#endif
-
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
    strafe = !!action_strafe;

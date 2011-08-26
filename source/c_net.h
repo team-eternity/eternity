@@ -113,11 +113,6 @@ extern int default_colour;
 
 #define CN_BROADCAST 128
 
-// use the entire ticcmd for transferring console commands when
-// in console mode ?
-
-//#define CONSHUGE
-
 #endif
 
 // EOF
