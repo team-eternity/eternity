@@ -121,15 +121,15 @@ inline static Uint32 NetToHost32(const byte *area)
 //
 // NetChecksum 
 //
-static unsigned int NetChecksum(byte *packet, int len)
+static uint32_t NetChecksum(byte *packet, int len)
 {
-   unsigned int c = 0x1234567;
+   uint32_t c = 0x1234567;
    int i;
    
-   len /= sizeof(unsigned int);
+   len /= sizeof(uint32_t);
 
    for(i = 0; i < len; ++i)
-      c += ((unsigned int *)packet)[i] * (i + 1);
+      c += ((uint32_t *)packet)[i] * (i + 1);
    
    return c & NCMD_CHECKSUM;
 }
@@ -192,7 +192,7 @@ bool PacketSend(void)
 
    // Go back and write the checksum at the beginning
    rover = (byte *)packet->data;
-   netbuffer->checksum |= NetChecksum((byte *)packet->data, packetsize);
+   netbuffer->checksum |= NetChecksum((byte *)packet->data + 4, packetsize);
    NETWRITELONG(netbuffer->checksum);
    
    packet->len     = packetsize;
@@ -249,7 +249,7 @@ bool PacketGet(void)
    netbuffer->checksum = NetToHost32(rover);
    
    // haleyjd: verify checksum first; if fails, don't even read the rest
-   if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data, packet->len - 4))
+   if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
       return false;
    
    rover += sizeof(netbuffer->checksum);

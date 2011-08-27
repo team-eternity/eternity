@@ -152,7 +152,7 @@ void ResetNet(void)
 //
 static void HSendPacket(int node, int flags)
 {
-   netbuffer->checksum = flags;
+   netbuffer->checksum = (uint32_t)flags;
    
    if(!node)
    {

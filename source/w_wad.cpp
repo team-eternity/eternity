@@ -194,7 +194,9 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    filelump_t   singleinfo;
    lumpinfo_t  *newlumps;
    bool         isWad;     // haleyjd 05/23/04
-   HashData     wadHash;   // haleyjd 04/07/11
+   
+   // haleyjd 04/07/11
+   HashData     wadHash  = HashData(HashData::SHA1);
    bool         showHash = false;
    bool         doHacks  = false;
 
@@ -232,9 +234,6 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    // wad directory hacks. Quite useful for when a new hack needs to be added.
    if(M_CheckParm("-showhashes"))
       showHash = true;
-   
-   if(doHacks || showHash)
-      wadHash.Initialize(HashData::SHA1);
 
    // killough:
    if(filetype == ADDWADFILE && // only when adding normal wad files
@@ -269,7 +268,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
 
       // Feed the wad header data into the hash computation
       if(doHacks || showHash)
-         wadHash.AddData((const uint8_t *)&header, (uint32_t)sizeof(header));
+         wadHash.addData((const uint8_t *)&header, (uint32_t)sizeof(header));
       
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
@@ -313,10 +312,10 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       // output it to the console.
       if(doHacks || showHash)
       {
-         wadHash.AddData((const uint8_t *)fileinfo, (uint32_t)length);
-         wadHash.WrapUp();
+         wadHash.addData((const uint8_t *)fileinfo, (uint32_t)length);
+         wadHash.wrapUp();
          if(in_textmode && showHash)
-            printf("\thash = %s\n", wadHash.DigestToString());
+            printf("\thash = %s\n", wadHash.digestToString());
          // haleyjd 04/08/11: apply wad directory hacks as needed
          if(doHacks)
             W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
@@ -886,20 +885,17 @@ void *WadDirectory::CacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 // W_LumpCheckSum
 //
 // sf
+// haleyjd 08/27/11: Rewritten to use CRC32 hash algorithm
 //
-int W_LumpCheckSum(int lumpnum)
+uint32_t W_LumpCheckSum(int lumpnum)
 {
-   int   i, lumplength;
-   char *lump;
-   int   checksum = 0;
-   
-   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   lumplength = W_LumpLength(lumpnum);
-   
-   for(i = 0; i < lumplength; i++)
-      checksum += lump[i] * i;
-   
-   return checksum;
+   uint8_t  *lump    = (uint8_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
+   uint32_t  lumplen = (uint32_t )(W_LumpLength(lumpnum));
+   HashData  lumpCRC = HashData(HashData::CRC32);
+
+   lumpCRC.addData(lump, lumplen);
+
+   return lumpCRC.getDigestPart(0);  
 }
 
 //

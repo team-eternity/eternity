@@ -257,7 +257,7 @@ int         W_GetNumForName(const char* name);
 lumpinfo_t *W_GetLumpNameChain(const char *name);
 
 int         W_LumpLength(int lump);
-int         W_LumpCheckSum(int lumpnum);
+uint32_t    W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98

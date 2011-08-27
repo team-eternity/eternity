@@ -83,16 +83,15 @@ static Collection<HashData> eincludes;
 static bool E_CheckInclude(const char *data, size_t size)
 {
    size_t i, numincludes;
-   HashData newhash;
+   HashData newHash = HashData(HashData::SHA1);
    char *digest;
 
    // calculate the SHA-1 hash of the data
-   newhash.Initialize(HashData::SHA1);
-   newhash.AddData((const uint8_t *)data, (uint32_t)size);
-   newhash.WrapUp();
+   newHash.addData((const uint8_t *)data, (uint32_t)size);
+   newHash.wrapUp();
 
    // output digest string
-   digest = newhash.DigestToString();
+   digest = newHash.digestToString();
 
    E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
 
@@ -104,7 +103,7 @@ static bool E_CheckInclude(const char *data, size_t size)
    for(i = 0; i < numincludes; ++i)
    {
       // found a match?
-      if(newhash.compare(eincludes[i]))
+      if(newHash == eincludes[i])
       {
          E_EDFLogPuts("\t\t\tDeclined, SHA-1 match detected.\n");
          return false;
@@ -112,7 +111,7 @@ static bool E_CheckInclude(const char *data, size_t size)
    }
 
    // this source has not been processed before, so add its hash to the list
-   eincludes.add(newhash);
+   eincludes.add(newHash);
 
    return true;
 }

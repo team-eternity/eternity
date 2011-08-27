@@ -102,16 +102,14 @@ static w_dirhack_t w_dirhacks[] =
 //
 void W_CheckDirectoryHacks(const HashData &hash, filelump_t *fileinfo, int numlumps)
 {
-   HashData localHash;
+   HashData localHash = HashData(HashData::SHA1);
    w_dirhack_t *curhack = w_dirhacks;
-
-   localHash.Initialize(HashData::SHA1);
 
    while(curhack->sha1)
    {
-      localHash.StringToDigest(curhack->sha1);
+      localHash.stringToDigest(curhack->sha1);
 
-      if(localHash.compare(hash)) 
+      if(localHash == hash) 
       {
          // found a match
          curhack->handler(fileinfo, numlumps);
