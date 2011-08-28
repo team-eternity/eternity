@@ -83,12 +83,10 @@ static Collection<HashData> eincludes;
 static bool E_CheckInclude(const char *data, size_t size)
 {
    size_t i, numincludes;
-   HashData newHash = HashData(HashData::SHA1);
    char *digest;
-
-   // calculate the SHA-1 hash of the data
-   newHash.addData((const uint8_t *)data, (uint32_t)size);
-   newHash.wrapUp();
+   
+   // calculate the SHA-1 hash of the data   
+   HashData newHash = HashData(HashData::SHA1, (const uint8_t *)data, (uint32_t)size);
 
    // output digest string
    digest = newHash.digestToString();

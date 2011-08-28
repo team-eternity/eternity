@@ -891,11 +891,8 @@ uint32_t W_LumpCheckSum(int lumpnum)
 {
    uint8_t  *lump    = (uint8_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
    uint32_t  lumplen = (uint32_t )(W_LumpLength(lumpnum));
-   HashData  lumpCRC = HashData(HashData::CRC32);
 
-   lumpCRC.addData(lump, lumplen);
-
-   return lumpCRC.getDigestPart(0);  
+   return HashData(HashData::CRC32, lump, lumplen).getDigestPart(0);
 }
 
 //

@@ -59,7 +59,9 @@ protected:
 
 public:
    HashData();
-   HashData(hashtype_e type);
+   HashData(hashtype_e pType);
+   HashData(hashtype_e pType, const uint8_t *data, uint32_t size, 
+            bool doWrapUp = true);
 
    void      initialize(hashtype_e type);
    void      addData(const uint8_t *data, uint32_t size);

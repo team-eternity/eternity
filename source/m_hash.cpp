@@ -717,9 +717,25 @@ HashData::HashData()
 //
 // Alternate constructor that initializes the indicated hash algorithm
 //
-HashData::HashData(hashtype_e type)
+HashData::HashData(hashtype_e pType)
 {
-   initialize(type);
+   initialize(pType);
+}
+
+//
+// HashData(hashtype_e, const uint8_t *, uint32_t, bool)
+//
+// Alternate constructor that accepts data to automatically add to the hash.
+// If doWrapUp is unspecified, or is explicitly set to true, wrapUp() will
+// be invoked after addData.
+//
+HashData::HashData(hashtype_e pType, const uint8_t *data, uint32_t size, 
+                   bool doWrapUp)
+{
+   initialize(pType);
+   addData(data, size);
+   if(doWrapUp)
+      wrapUp();
 }
 
 //
