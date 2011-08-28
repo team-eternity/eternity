@@ -850,8 +850,9 @@ void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
    
    if(!(lumpinfo[lump]->cache))      // read the lump in
    {
-      ReadLump(lump, Z_Malloc(LumpLength(lump), tag, 
-               &(lumpinfo[lump]->cache)), lfmt);
+      ReadLump(lump, 
+               Z_Malloc(LumpLength(lump), tag, &(lumpinfo[lump]->cache)), 
+               lfmt);
    }
    else
    {

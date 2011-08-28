@@ -71,6 +71,7 @@
 #include "m_argv.h"
 #include "m_misc.h"
 #include "m_swap.h"
+#include "m_syscfg.h"
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_info.h"
@@ -2012,6 +2013,7 @@ static const char *const standard_iwads[]=
    "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
    "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
    "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
 };
 
@@ -3163,9 +3165,6 @@ static gfs_t *D_LooseGFS(void)
 //
 // Primary Initialization Routines
 //
-
-// I am not going to make an entire header just for this :P
-extern void M_LoadSysConfig(const char *filename);
 
 //
 // D_LoadSysConfig
