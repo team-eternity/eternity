@@ -533,7 +533,7 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
    MN_StartMenu(&menu_demos);
 }
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Load new pwad menu
 //
@@ -544,6 +544,7 @@ extern menu_t menu_loadwad;
 extern menu_t menu_wadmisc;
 extern menu_t menu_wadiwads1;
 extern menu_t menu_wadiwads2;
+extern menu_t menu_wadiwads3;
 
 static const char *mn_wad_names[] =
 {
@@ -551,6 +552,7 @@ static const char *mn_wad_names[] =
    "Misc Settings",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
+   "IWAD Paths - Freedoom",
    NULL
 };
 
@@ -560,6 +562,7 @@ static menu_t *mn_wad_pages[] =
    &menu_wadmisc,
    &menu_wadiwads1,
    &menu_wadiwads2,
+   &menu_wadiwads3,
    NULL
 };
 
@@ -625,6 +628,18 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_end}
 };
 
+static menuitem_t mn_wadiwad3_items[] =
+{
+   {it_title,    FC_GOLD "Wad Options", NULL,           "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "IWAD Paths - Freedoom", NULL,  NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "Freedoom:",          "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate Freedoom:", "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",            "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_end}
+};
+
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
@@ -671,8 +686,22 @@ menu_t menu_wadiwads2 =
 {
    mn_wadiwad2_items,
    &menu_wadiwads1,
-   NULL,
+   &menu_wadiwads3,
    &menu_loadwad, // rootpage
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadiwads3 =
+{
+   mn_wadiwad3_items,
+   &menu_wadiwads2,
+   NULL,
+   &menu_loadwad,
    200, 15,
    4,
    mf_background,

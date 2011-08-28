@@ -401,6 +401,9 @@ extern char *gi_path_hacx;
 extern char *gi_path_hticsw;
 extern char *gi_path_hticreg;
 extern char *gi_path_sosr;
+extern char *gi_path_fdoom;
+extern char *gi_path_fdoomu;
+extern char *gi_path_freedm;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);

@@ -1614,11 +1614,14 @@ int iwad_choice; // haleyjd 03/19/10: remember choice
 // variable-for-index lookup for D_DoIWADMenu
 static char **iwadVarForNum[] =
 {
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
-   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg, 
-   &gi_path_sosr
+   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
+   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
+   &gi_path_hacx,                                      // HACX
+   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
+   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
 };
+
+#define NUMPICKERIWADS (sizeof(iwadVarForNum) / sizeof(char **))
 
 //
 // D_DoIWADMenu
@@ -1634,12 +1637,12 @@ static const char *D_DoIWADMenu(void)
 
 #ifdef _SDL_VER
    extern int I_Pick_DoPicker(bool haveIWADs[], int startchoice);
-   bool haveIWADs[9];
+   bool haveIWADs[NUMPICKERIWADS];
    int i, choice = -1;
    bool foundone = false;
 
    // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < 9; ++i)
+   for(i = 0; i < NUMPICKERIWADS; ++i)
    {
       if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
          foundone = true;
@@ -1693,27 +1696,30 @@ struct iwadpathmatch_t
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
-   { MATCH_GAME, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_GAME, "doom",     { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
 
-   // -iwad matches
-   { MATCH_IWAD, "doom2f",   { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doomu",    { &gi_path_doomu,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom1",    { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",     { &gi_path_doomu,  &gi_path_doomreg, NULL            } },
-   { MATCH_IWAD, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1", { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   // -iwad matches 
+   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
+   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
+   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
    
    // Terminating entry
-   { MATCH_NONE, NULL,       { NULL,            NULL,             NULL            } }
+   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
 };
 
 //

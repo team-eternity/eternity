@@ -464,6 +464,9 @@ VARIABLE_STRING(gi_path_hacx,    NULL, UL);
 VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
+VARIABLE_STRING(gi_path_fdoom,   NULL, UL);
+VARIABLE_STRING(gi_path_fdoomu,  NULL, UL);
+VARIABLE_STRING(gi_path_freedm,  NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 
@@ -533,6 +536,21 @@ CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, cf_allowblank)
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank) 
 {
    G_TestIWADPath(gi_path_sosr);
+}
+
+CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,   cf_allowblank)
+{
+   G_TestIWADPath(gi_path_fdoom);
+}
+
+CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,  cf_allowblank)
+{
+   G_TestIWADPath(gi_path_fdoomu);
+}
+
+CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,  cf_allowblank)
+{
+   G_TestIWADPath(gi_path_freedm);
 }
 
 CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
@@ -876,6 +894,9 @@ void G_AddCommands(void)
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
+   C_AddCommand(iwad_freedoom);
+   C_AddCommand(iwad_freedoomu);
+   C_AddCommand(iwad_freedm);
    C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 

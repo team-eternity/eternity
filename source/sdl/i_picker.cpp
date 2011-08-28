@@ -52,6 +52,9 @@ enum
    IWAD_HTICSW,
    IWAD_HTICREG,
    IWAD_HTICSOSR,
+   IWAD_FREEDOOM,
+   IWAD_FREEDOOMU,
+   IWAD_FREEDM,
    NUMPICKIWADS
 };
 
@@ -65,9 +68,12 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "TNT",
    "PLUTONIA",
    "HACX",
-   "HERETIC",
+   "HTICSW",
    "HERETIC",
    "HTICSOSR",
+   "FREEDOOM",
+   "ULTFD",
+   "FREEDM",
 };
 
 // palette enumeration
@@ -98,6 +104,9 @@ static int iwadPicPals[NUMPICKIWADS] =
    PAL_HTIC,
    PAL_HTIC,
    PAL_HTIC,
+   PAL_DOOM,
+   PAL_DOOM,
+   PAL_DOOM,
 };
 
 // IWAD game names
@@ -113,6 +122,9 @@ static const char *titles[NUMPICKIWADS] =
    "Heretic Shareware Version",
    "Heretic Registered Version",
    "Heretic: Shadow of the Serpent Riders",
+   "Freedoom",
+   "Ultimate Freedoom",
+   "FreeDM",
 };
 
 static byte *bgframe;                // background graphics
