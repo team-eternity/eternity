@@ -399,8 +399,6 @@ static bool tga_Writer(OutBuffer *ob, byte *data,
 // haleyjd 08/28/11: At long last, the most demanded screenshot format!
 //
 
-static char pngErrMsg[1024];
-
 struct pngiodata_t
 {
    OutBuffer *ob;      // OutBuffer to call Write on.
@@ -436,7 +434,7 @@ static void PNG_dataFlush(png_structp png_ptr)
 //
 static void PNG_handleError(png_structp png_ptr, png_const_charp error_msg)
 {
-   psnprintf(pngErrMsg, sizeof(pngErrMsg), "%s", error_msg);
+   C_Printf(FC_ERROR "libpng error: %s\a", error_msg);
 
    throw 0;
 }
@@ -539,7 +537,6 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    }
    catch(...)
    {
-      C_Printf(FC_ERROR "libpng error: %s\a", pngErrMsg);
       pngIoData.writeOK = false;
    }
    
