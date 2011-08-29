@@ -183,8 +183,8 @@ static default_t sysdefaults[] =
                "Volume of environmental sound sequences"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
-               "screenshot format (0=BMP,1=PCX,2=TGA)"),
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 3, default_t::wad_no,
+               "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
