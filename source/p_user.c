@@ -448,13 +448,9 @@ void P_PlayerThink(player_t *player)
    // (this code is necessary despite questions raised elsewhere in a comment)
 
    if(player->cheats & CF_NOCLIP)
-   {
       player->mo->flags |= MF_NOCLIP;
-   }
    else
-   {
       player->mo->flags &= ~MF_NOCLIP;
-   }
 
    cmd = &player->cmd;
 
@@ -565,9 +561,7 @@ void P_PlayerThink(player_t *player)
       if(!comp[comp_fallingdmg] && demo_version >= 329)
       {  
          if(player->mo->momz >= 0)
-         {
             player->mo->intflags &= ~MIF_SCREAMED;
-         }
 
          if(player->mo->momz <= -35*FRACUNIT && 
             player->mo->momz >= -40*FRACUNIT &&

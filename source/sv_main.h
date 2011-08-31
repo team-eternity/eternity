@@ -31,6 +31,7 @@
 #include "doomdata.h"
 #include "doomdef.h"
 #include "p_spec.h"
+#include "s_sound.h"
 
 #include "cs_main.h"
 
@@ -77,7 +78,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum);
 boolean SV_AuthorizeClient(int playernum, const char *password);
 void SV_SendAuthorizationResult(int playernum,
                                 boolean authorization_successful,
-                                cs_auth_level_t authorization_level);
+                                cs_auth_level_e authorization_level);
 
 // [CG] Game loop functions.
 void SV_SaveActorPositions(void);
@@ -88,7 +89,7 @@ boolean SV_RunPlayerCommands(int playernum);
 void SV_AddClient(int playernum);
 void SV_AddNewClients(void);
 void SV_SetPlayerTeam(int playernum, teamcolor_t team);
-void SV_DisconnectPlayer(int playernum, disconnection_reason_t reason);
+void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason);
 void SV_SetWeaponPreference(int playernum, int slot, weapontype_t weapon);
 void SV_AdvanceMapList(void);
 void SV_LoadClientOptions(int playernum);
@@ -117,26 +118,26 @@ void SV_BroadcastSettings(void);
 void SV_BroadcastCurrentMap(void);
 void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum);
 void SV_BroadcastClientStatus(int playernum);
-void SV_BroadcastPlayerStringInfo(int playernum, client_info_t info_type);
-void SV_BroadcastPlayerArrayInfo(int playernum, client_info_t info_type,
+void SV_BroadcastPlayerStringInfo(int playernum, client_info_e info_type);
+void SV_BroadcastPlayerArrayInfo(int playernum, client_info_e info_type,
                                  int array_index);
-void SV_BroadcastPlayerScalarInfo(int playernum, client_info_t info_type);
+void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type);
 void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id);
 void SV_BroadcastPlayerWeaponState(int playernum, int position,
                                    statenum_t stnum);
-void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_t reason);
-void SV_BroadcastPuffSpawned(mobj_t *puff, int updown, boolean ptcl);
-void SV_BroadcastBloodSpawned(mobj_t *blood, int damage, mobj_t *target);
+void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_e reason);
+void SV_BroadcastPuffSpawned(mobj_t *puff, mobj_t *shooter, int updown,
+                             boolean ptcl);
+void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
+                              mobj_t *target);
 void SV_BroadcastActorSpawned(mobj_t *actor);
 void SV_BroadcastActorPosition(mobj_t *actor, int tic);
-void SV_BroadcastActorTarget(mobj_t *actor);
-void SV_BroadcastActorTracer(mobj_t *actor);
+void SV_BroadcastActorTarget(mobj_t *actor, actor_target_e target_type);
 void SV_BroadcastActorState(mobj_t *actor, statenum_t state_number);
 void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
                               mobj_t *source, int health_damage,
                               int armor_damage, int mod,
                               boolean damage_was_fatal, boolean just_hit);
-void SV_BroadcastActorAttribute(mobj_t *actor, actor_attribute_type_t type);
 void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
                              int damage, int mod);
 void SV_BroadcastActorRemoved(mobj_t *mo);
@@ -154,6 +155,9 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
 void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type);
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
                                    map_special_t special_type);
+void SV_BroadcastSoundPlayed(mobj_t *source, const char *name, int volume,
+                             soundattn_e attenuation, boolean loop,
+                             schannel_e channel);
 void SV_BroadcastTICFinished(void);
 
 // [CG] Handler functions.

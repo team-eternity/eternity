@@ -2452,9 +2452,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
       if(serverside)
       {
          if(CS_SERVER)
-         {
             SV_BroadcastActorRemoved(thing);
-         }
          P_RemoveMobj(thing);
       }
       return true;      // keep checking
@@ -2486,15 +2484,23 @@ static boolean PIT_ChangeSector(mobj_t *thing)
 
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
-      if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
+      // [CG] Serverside only.
+      if(serverside && (demo_version < 333 || !(thing->flags & MF_NOBLOOD)))
       {
          // spray blood in a random direction
-         mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2,
-                          E_SafeThingType(MT_BLOOD));
+         mo = P_SpawnMobj(
+            thing->x,
+            thing->y,
+            thing->z + thing->height / 2,
+            E_SafeThingType(MT_BLOOD)
+         );
          
          // haleyjd 08/05/04: use new function
          mo->momx = P_SubRandom(pr_crush) << 12;
          mo->momy = P_SubRandom(pr_crush) << 12;         
+
+         if(CS_SERVER)
+            SV_BroadcastActorSpawned(mo);
       }
    }
 

@@ -44,9 +44,7 @@ unsigned int SV_GetNewQueuePosition(void)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(playeringame[i] && clients[i].queue_level == ql_playing)
-      {
          playing_players++;
-      }
    }
 
    if(playing_players < cs_settings->max_players)
@@ -60,9 +58,7 @@ unsigned int SV_GetNewQueuePosition(void)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(playeringame[i] && clients[i].queue_position >= max_queue_position)
-      {
          max_queue_position = clients[i].queue_position + 1;
-      }
    }
 
    printf(
@@ -76,14 +72,11 @@ void SV_AssignQueuePosition(int playernum, unsigned int queue_position)
 {
    clients[playernum].queue_position = queue_position;
    SV_BroadcastPlayerScalarInfo(playernum, ci_queue_position);
+
    if(clients[playernum].queue_level > 0)
-   {
       clients[playernum].queue_level = ql_waiting;
-   }
    else
-   {
       clients[playernum].queue_level = ql_playing;
-   }
 
    printf(
       "SV_AssignQueuePosition: Assigned position %u to %d.\n",
@@ -102,15 +95,13 @@ void SV_AdvanceQueue(unsigned int queue_position)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(!playeringame[i])
-      {
          continue;
-      }
+
       client = &clients[i];
+
+      // [CG] Advance all clients behind this player in the queue.
       if(client->queue_position > queue_position)
-      {
-         // [CG] Advance all clients behind this player in the queue.
          SV_AssignQueuePosition(i, client->queue_position - 1);
-      }
    }
 }
 
@@ -123,9 +114,8 @@ void SV_PutPlayerInQueue(int playernum)
 void SV_PutPlayerAtQueueEnd(int playernum)
 {
    if(clients[playernum].queue_level != ql_none)
-   {
       SV_AdvanceQueue(clients[playernum].queue_position);
-   }
+
    SV_AssignQueuePosition(playernum, SV_GetNewQueuePosition());
    SV_UpdateQueueLevels();
 }
@@ -134,25 +124,19 @@ void SV_UpdateQueueLevels(void)
 {
    unsigned int i;
    client_t *client;
-   cs_queue_level_t new_queue_level;
+   cs_queue_level_e new_queue_level;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(!playeringame[i] || clients[i].queue_level == ql_none)
-      {
          continue;
-      }
 
       client = &clients[i];
 
       if(client->queue_position > 0)
-      {
          new_queue_level = ql_waiting;
-      }
       else
-      {
          new_queue_level = ql_playing;
-      }
 
       if(client->queue_level != new_queue_level)
       {

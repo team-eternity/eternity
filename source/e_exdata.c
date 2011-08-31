@@ -54,6 +54,10 @@
 #include "e_exdata.h"
 #include "e_things.h"
 
+// [CG] Added.
+#include "cs_main.h"
+#include "sv_main.h"
+
 // statics
 
 static mapthing_t *EDThings;
@@ -1841,6 +1845,7 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
 {
    unsigned int edThingIdx;
    mapthing_t *edthing;
+   mobj_t *actor;
 
    // The record number is stored in the control thing's options field.
    // Check to see if the record exists, and that ExtraData is loaded.
@@ -1848,8 +1853,17 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
-                         UnknownThingType);
+      actor = P_SpawnMobj(
+         mt->x << FRACBITS,
+         mt->y << FRACBITS,
+         ONFLOORZ, 
+         UnknownThingType
+      );
+
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(actor);
+
+      return actor;
    }
 
    // get a pointer to the proper ExtraData mapthing record
@@ -1863,7 +1877,12 @@ mobj_t *E_SpawnMapThingExt(mapthing_t *mt)
    // spawn the thing normally; 
    // return the spawned object back through P_SpawnMapThing
 
-   return P_SpawnMapThing(edthing);
+   actor = P_SpawnMapThing(edthing);
+
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(actor);
+
+   return actor;
 }
 
 //

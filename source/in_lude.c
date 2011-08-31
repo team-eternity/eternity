@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-// 
+//
 // Shared intermission code
 //
 // haleyjd: This code has been moved here from wi_stuff.c to provide a
@@ -41,7 +41,7 @@
 #include "p_enemy.h"
 #include "p_info.h"
 #include "g_game.h"
-#include "e_things.h" 
+#include "e_things.h"
 #include "e_fonts.h"
 
 // Globals
@@ -92,7 +92,7 @@ void IN_AddCameras(void)
    // older demo.
    if(cameratype == NUMMOBJTYPES || demo_version < 331)
       return;
-   
+
    P_CollectThings(&camerathings);
 }
 
@@ -104,26 +104,31 @@ void IN_AddCameras(void)
 void IN_StartCamera(void)
 {
    int i;
-   
+
    if(!P_CollectionIsEmpty(&camerathings))
    {
       realbackdrop = 1;
 
       // pick a camera at random
       wi_camera = P_CollectionGetRandom(&camerathings, pr_misc);
-      
-      // remove the player mobjs (look silly in camera view)
-      for(i = 0; i < MAXPLAYERS; ++i)
+
+      if(serverside)
       {
-         if(!playeringame[i])
-            continue;
-         // this is strange. the monsters can still see the player Mobj, (and
-         // even kill it!) even tho it has been removed from the level. I make
-         // it unshootable first so they lose interest.
-         players[i].mo->flags &= ~MF_SHOOTABLE;
-         P_RemoveMobj(players[i].mo);
+         // remove the player mobjs (look silly in camera view)
+         for(i = 0; i < MAXPLAYERS; ++i)
+         {
+            if(!playeringame[i])
+               continue;
+            // this is strange. the monsters can still see the player Mobj,
+            // (and even kill it!) even tho it has been removed from the
+            // level. I make it unshootable first so they lose interest.
+            players[i].mo->flags &= ~MF_SHOOTABLE;
+            if(CS_SERVER)
+               SV_BroadcastActorRemoved(players[i].mo);
+            P_RemoveMobj(players[i].mo);
+         }
       }
-            
+
       intercam.x = wi_camera->x;
       intercam.y = wi_camera->y;
       intercam.angle = wi_camera->angle;
@@ -133,7 +138,7 @@ void IN_StartCamera(void)
          // haleyjd: camera deep water HOM bug fix
          subsector_t *subsec =
             R_PointInSubsector(intercam.x, intercam.y);
-         
+
          intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
          intercam.heightsec = subsec->sector->heightsec;
       }
@@ -175,7 +180,7 @@ void IN_checkForAccelerate(void)
 {
    int   i;
    player_t  *player;
-   
+
    // check for button presses to skip delays
    for(i = 0, player = players ; i < MAXPLAYERS ; i++, player++)
    {
@@ -189,7 +194,7 @@ void IN_checkForAccelerate(void)
          }
          else
             player->attackdown = false;
-         
+
          if (player->cmd.buttons & BT_USE)
          {
             if(!player->usedown)
@@ -212,8 +217,8 @@ void IN_checkForAccelerate(void)
 void IN_Ticker(void)
 {
    // counter for general background animation
-   intertime++;  
-   
+   intertime++;
+
    // intermission music
    if(intertime == 1)
       S_ChangeMusicNum(GameModeInfo->interMusNum, true);
@@ -241,8 +246,8 @@ void IN_Drawer(void)
 // IN_DrawBackground
 //
 // Calls the gamemode-specific background drawer. This doesn't
-// use the static global InterFuncs on the off chance that the video 
-// mode could change while the game is in intermission mode, but the 
+// use the static global InterFuncs on the off chance that the video
+// mode could change while the game is in intermission mode, but the
 // InterFuncs variable hasn't been initialized yet.
 // Called from system-specific code when the video mode changes.
 //

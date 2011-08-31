@@ -136,9 +136,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_actorspawned:
    case nm_actorposition:
    case nm_actortarget:
-   case nm_actortracer:
    case nm_actorstate:
-   case nm_actorattribute:
    case nm_actordamaged:
    case nm_actorkilled:
    case nm_actorremoved:
@@ -152,6 +150,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_specialstatus:
    case nm_specialremoved:
    case nm_sectorposition:
+   case nm_soundplayed:
    case nm_ticfinished:
       break;
    case nm_playercommand:
@@ -169,28 +168,26 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       || message_type == nm_sync
       || message_type == nm_mapstarted
       || message_type == nm_mapcompleted
-      || message_type == nm_clientinit
       || message_type == nm_authresult
+      || message_type == nm_clientinit
       // || message_type == nm_clientstatus
       || message_type == nm_playerspawned
-      // || message_type == nm_playerinfoupdated
+      || message_type == nm_playerinfoupdated
       // || message_type == nm_playerweaponstate
       || message_type == nm_playerremoved
-      // || message_type == nm_playertouchedspecial
+      || message_type == nm_playertouchedspecial
       || message_type == nm_servermessage
       || message_type == nm_playermessage
-      // || message_type == nm_puffspawned
-      // || message_type == nm_bloodspawned
-      // || message_type == nm_actorspawned
+      || message_type == nm_puffspawned
+      || message_type == nm_bloodspawned
+      || message_type == nm_actorspawned
       // || message_type == nm_actorposition
       || message_type == nm_actortarget
-      || message_type == nm_actortracer
       // || message_type == nm_actorstate
-      || message_type == nm_actorattribute
-      // || message_type == nm_actordamaged
+      || message_type == nm_actordamaged
       || message_type == nm_actorkilled
-      // || message_type == nm_actorremoved
-      // || message_type == nm_lineactivated
+      || message_type == nm_actorremoved
+      || message_type == nm_lineactivated
       // || message_type == nm_monsteractive
       || message_type == nm_monsterawakened
       || message_type == nm_missilespawned
@@ -200,6 +197,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       // || message_type == nm_specialstatus
       || message_type == nm_specialremoved
       // || message_type == nm_sectorposition
+      || message_type == nm_soundplayed
       // || message_type == nm_ticfinished
       )
    {
@@ -240,9 +238,7 @@ static void broadcast_packet(void *buffer, size_t buffer_size)
       // [CG] We never want to broadcast packets to disconnected or
       //      unauthorized peers.
       if(playeringame[i] && server_clients[i].auth_level > cs_auth_none)
-      {
          send_packet(i, buffer, buffer_size);
-      }
    }
 }
 
@@ -256,9 +252,7 @@ static void broadcast_packet_excluding(int playernum, void *buffer,
       // [CG] Same as above, except a certain player is excluded.
       if(playeringame[i] && server_clients[i].auth_level > cs_auth_none &&
          i != playernum)
-      {
          send_packet(i, buffer, buffer_size);
-      }
    }
 }
 
@@ -703,27 +697,26 @@ void SV_LoadCurrentPlayerPosition(int playernum)
 #if _UNLAG_DEBUG
 void SV_SpawnGhost(int playernum)
 {
-   server_client_t *sc = &server_clients[playernum];
    mobj_t *actor = players[playernum].mo;
-   mobj_t *ghost = P_SpawnMobj(
-      actor->x,
-      actor->y,
-      actor->z,
-      players[playernum].pclass->type
-   );
-
-   ghost->angle = actor->angle;
-
-   ghost->flags |= MF_NOCLIP;
-   ghost->flags |= MF_TRANSLUCENT;
-   ghost->flags &= ~MF_SHOOTABLE;
+   server_client_t *sc = &server_clients[playernum];
 
    if(sc->ghost)
    {
       SV_BroadcastActorRemoved(sc->ghost);
       P_RemoveMobj(sc->ghost);
    }
-   sc->ghost = ghost;
+
+   sc->ghost = P_SpawnMobj(
+      actor->x,
+      actor->y,
+      actor->z,
+      players[playernum].pclass->type
+   );
+
+   sc->ghost->angle = actor->angle;
+   sc->ghost->flags |= MF_NOCLIP;
+   sc->ghost->flags |= MF_TRANSLUCENT;
+   sc->ghost->flags &= ~MF_SHOOTABLE;
 
    SV_BroadcastActorSpawned(sc->ghost);
 }
@@ -1022,9 +1015,7 @@ void SV_AddClient(int playernum)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(playeringame[i] && i != playernum)
-      {
          SV_SendClientInfo(playernum, i);
-      }
    }
 
    // [CG] Sync the client up.
@@ -1033,9 +1024,7 @@ void SV_AddClient(int playernum)
    server_clients[playernum].synchronized = true;
 
    if(CS_TEAMS_ENABLED)
-   {
       clients[playernum].team = team_color_red;
-   }
 
    // [CG] Send info on the new client to all the other clients.
    SV_BroadcastNewClient(playernum);
@@ -1055,21 +1044,19 @@ void SV_AddNewClients(void)
    }
 }
 
-void SV_DisconnectPlayer(int playernum, disconnection_reason_t reason)
+void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
 {
+   mobj_t *flash;
+   player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
-   cs_queue_level_t queue_level = client->queue_level;
+   cs_queue_level_e queue_level = client->queue_level;
    unsigned int queue_position = client->queue_position;
 
    if(reason > dr_max_reasons)
-   {
       I_Error("Invalid disconnection reason index %d.\n", reason);
-   }
    else if(reason == dr_no_reason)
-   {
       doom_printf("Player %d disconnected.", playernum);
-   }
    else
    {
       doom_printf(
@@ -1079,14 +1066,46 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_t reason)
       );
    }
 
-   CS_RemovePlayer(playernum);
-   CS_DisconnectPeer(peer, reason);
    SV_BroadcastPlayerRemoved(playernum, reason);
 
-   if(queue_level != ql_none)
+   CS_DropFlag(playernum);
+
+   if(gamestate == GS_LEVEL && player->mo != NULL)
    {
-      SV_AdvanceQueue(queue_position);
+      if(!clients[playernum].spectating)
+      {
+         flash = P_SpawnMobj(
+            player->mo->x,
+            player->mo->y,
+            player->mo->z + GameModeInfo->teleFogHeight,
+            GameModeInfo->teleFogType
+         );
+
+         flash->momx = player->mo->momx;
+         flash->momy = player->mo->momy;
+
+         SV_BroadcastActorSpawned(flash);
+
+         if(drawparticles)
+         {
+            flash->flags2 |= MF2_DONTDRAW;
+            P_DisconnectEffect(player->mo);
+         }
+      }
+
+      SV_BroadcastActorRemoved(player->mo);
+      P_RemoveMobj(player->mo);
+      player->mo = NULL;
    }
+
+   CS_ZeroClient(playernum);
+   playeringame[playernum] = false;
+   CS_InitPlayer(playernum);
+   CS_DisconnectPeer(peer, reason);
+
+   if(queue_level != ql_none)
+      SV_AdvanceQueue(queue_position);
+
    SV_UpdateQueueLevels();
 }
 
@@ -1203,7 +1222,7 @@ void SV_BroadcastMapCompleted(boolean enter_intermission)
 
 void SV_SendAuthorizationResult(int playernum,
                                 boolean authorization_successful,
-                                cs_auth_level_t authorization_level)
+                                cs_auth_level_e authorization_level)
 {
    nm_authresult_t auth_result;
 
@@ -1219,7 +1238,7 @@ boolean SV_AuthorizeClient(int playernum, const char *password)
 {
    size_t length;
    server_client_t *server_client = &server_clients[playernum];
-   cs_auth_level_t auth_level = cs_auth_none;
+   cs_auth_level_e auth_level = cs_auth_none;
 
    if(server_client->last_auth_attempt + TICRATE > gametic)
    {
@@ -1371,7 +1390,7 @@ boolean SV_RunPlayerCommands(int playernum)
    {
       // [CG] The client's dropped this command, so increment the number of
       //      commands dropped.
-#if _CMD_DEBUG || 1
+#if _CMD_DEBUG
       printf(
          "SV_RunPlayerCommands (%u): Player %d dropped a command.\n",
          sv_world_index,
@@ -1438,9 +1457,7 @@ void SV_SaveActorPositions(void)
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
       if(think->function != P_MobjThinker)
-      {
          continue;
-      }
 
       actor = (mobj_t *)think;
 
@@ -1507,9 +1524,7 @@ void SV_SetWeaponPreference(int playernum, int slot, weapontype_t weapon)
    for(i = 0; i < NUMWEAPONS; i++)
    {
       if(server_client->weapon_preferences[i] == weapon)
-      {
          break;
-      }
    }
    server_client->weapon_preferences[i] =
       server_client->weapon_preferences[slot];
@@ -1744,6 +1759,11 @@ void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum)
 {
    nm_playerspawned_t spawn_message;
 
+   printf(
+      "SV_BroadcastPlayerSpawned: Spawning new player, Net ID %u.\n",
+      players[playernum].mo->net_id
+   );
+
    spawn_message.message_type = nm_playerspawned;
    spawn_message.world_index = sv_world_index;
    spawn_message.player_number = playernum;
@@ -1757,7 +1777,7 @@ void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum)
    broadcast_packet(&spawn_message, sizeof(nm_playerspawned_t));
 }
 
-void SV_BroadcastPlayerStringInfo(int playernum, client_info_t info_type)
+void SV_BroadcastPlayerStringInfo(int playernum, client_info_e info_type)
 {
    nm_playerinfoupdated_t *update_message;
    size_t buffer_size = CS_BuildPlayerStringInfoPacket(
@@ -1770,7 +1790,7 @@ void SV_BroadcastPlayerStringInfo(int playernum, client_info_t info_type)
    free(update_message);
 }
 
-void SV_BroadcastPlayerArrayInfo(int playernum, client_info_t info_type,
+void SV_BroadcastPlayerArrayInfo(int playernum, client_info_e info_type,
                                  int array_index)
 {
    nm_playerinfoupdated_t update_message;
@@ -1784,7 +1804,7 @@ void SV_BroadcastPlayerArrayInfo(int playernum, client_info_t info_type,
    broadcast_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
-void SV_BroadcastPlayerScalarInfo(int playernum, client_info_t info_type)
+void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type)
 {
    nm_playerinfoupdated_t update_message;
 
@@ -1828,12 +1848,16 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    if(server_client->commands.size > MAX_POSITIONS)
    {
+      if(server_client->commands.size > (TICRATE * 10))
+      {
+         SV_DisconnectPlayer(playernum, dr_command_flood);
+         return;
+      }
       printf(
          "Warning, Queue Overflowing: player %d has %u commands queued.\n",
          playernum,
          server_client->commands.size
       );
-      // SV_DisconnectPlayer(playernum, dr_command_flood);
    }
 
    // [CG] Some additional checks to prevent tomfoolery.
@@ -1878,7 +1902,7 @@ void SV_BroadcastPlayerWeaponState(int playernum, int position,
    broadcast_packet(&state_message, sizeof(nm_playerweaponstate_t));
 }
 
-void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_t reason)
+void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_e reason)
 {
    nm_playerremoved_t remove_player_message;
 
@@ -1890,12 +1914,14 @@ void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_t reason)
    broadcast_packet(&remove_player_message, sizeof(nm_playerremoved_t));
 }
 
-void SV_BroadcastPuffSpawned(mobj_t *puff, int updown, boolean ptcl)
+void SV_BroadcastPuffSpawned(mobj_t *puff, mobj_t *shooter, int updown,
+                             boolean ptcl)
 {
    nm_puffspawned_t puff_message;
 
    puff_message.message_type = nm_puffspawned;
    puff_message.world_index = sv_world_index;
+   puff_message.shooter_net_id = shooter->net_id;
    puff_message.x = puff->x;
    puff_message.y = puff->y;
    puff_message.z = puff->z;
@@ -1906,12 +1932,14 @@ void SV_BroadcastPuffSpawned(mobj_t *puff, int updown, boolean ptcl)
    broadcast_packet(&puff_message, sizeof(nm_puffspawned_t));
 }
 
-void SV_BroadcastBloodSpawned(mobj_t *blood, int damage, mobj_t *target)
+void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
+                              mobj_t *target)
 {
    nm_bloodspawned_t blood_message;
 
    blood_message.message_type = nm_bloodspawned;
    blood_message.world_index = sv_world_index;
+   blood_message.shooter_net_id = shooter->net_id;
    blood_message.target_net_id = target->net_id;
    blood_message.x = blood->x;
    blood_message.y = blood->y;
@@ -1925,6 +1953,11 @@ void SV_BroadcastBloodSpawned(mobj_t *blood, int damage, mobj_t *target)
 void SV_BroadcastActorSpawned(mobj_t *actor)
 {
    nm_actorspawned_t spawn_message;
+
+   printf(
+      "SV_BroadcastActorSpawned: Spawning new actor, Net ID %u.\n",
+      actor->net_id
+   );
 
    spawn_message.message_type = nm_actorspawned;
    spawn_message.world_index = sv_world_index;
@@ -2306,6 +2339,42 @@ void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
    broadcast_packet(&removal_message, sizeof(nm_specialremoved_t));
 }
 
+void SV_BroadcastSoundPlayed(mobj_t *source, const char *name, int volume,
+                             soundattn_e attenuation, boolean loop,
+                             schannel_e channel)
+{
+   char *buffer = NULL;
+   nm_soundplayed_t *sound_message;
+   uint32_t sound_name_size = strlen(name);
+   // [CG] Over-allocate slightly for safety.
+   size_t buffer_size = sizeof(nm_soundplayed_t) + sound_name_size + 2;
+
+   // [CG] Allocate buffer.
+   buffer = calloc(buffer_size, sizeof(char));
+
+   // [CG] Type-pun buffer into sound message.
+   sound_message = (nm_soundplayed_t *)buffer;
+
+   // [CG] Build sound message.
+   sound_message->message_type = nm_soundplayed;
+   sound_message->world_index = sv_world_index;
+   sound_message->source_net_id = source->net_id;
+   sound_message->sound_name_size = sound_name_size;
+   sound_message->volume = volume;
+   sound_message->attenuation = attenuation;
+   sound_message->loop = loop;
+   sound_message->channel = channel;
+
+   // [CG] Copy sound name into the end of the buffer.
+   memcpy(buffer + sizeof(nm_soundplayed_t), name, sound_name_size);
+
+   // [CG] Broadcast the packet.
+   broadcast_packet(buffer, buffer_size);
+
+   // [CG] Free the buffer.
+   free(buffer);
+}
+
 void SV_BroadcastTICFinished(void)
 {
    nm_ticfinished_t tic_message;
@@ -2316,73 +2385,59 @@ void SV_BroadcastTICFinished(void)
    broadcast_packet(&tic_message, sizeof(nm_ticfinished_t));
 }
 
-void SV_BroadcastActorTarget(mobj_t *actor)
+void SV_BroadcastActorTarget(mobj_t *actor, actor_target_e target_type)
 {
+   mobj_t *target;
    nm_actortarget_t target_message;
 
    target_message.message_type = nm_actortarget;
    target_message.world_index = sv_world_index;
+   target_message.target_type = target_type;
    target_message.actor_net_id = actor->net_id;
+
+   switch(target_type)
+   {
+   case CS_AT_TARGET:
+      target = actor->target;
+      break;
+   case CS_AT_TRACER:
+      target = actor->tracer;
+      break;
+   case CS_AT_LASTENEMY:
+      target = actor->lastenemy;
+      break;
+   default:
+      I_Error(
+         "SV_BroadcastActorTarget: Invalid target type %d.\n", target_type
+      );
+      break;
+   }
+
    if(actor->target == NULL)
-   {
       target_message.target_net_id = 0;
-   }
    else
-   {
-      target_message.target_net_id = actor->target->net_id;
-   }
+      target_message.target_net_id = target->net_id;
 
    broadcast_packet(&target_message, sizeof(nm_actortarget_t));
-}
-
-void SV_BroadcastActorTracer(mobj_t *actor)
-{
-   nm_actortracer_t tracer_message;
-
-   tracer_message.message_type = nm_actortracer;
-   tracer_message.world_index = sv_world_index;
-   tracer_message.actor_net_id = actor->net_id;
-   if(actor->tracer == NULL)
-   {
-      tracer_message.tracer_net_id = 0;
-   }
-   else
-   {
-      tracer_message.tracer_net_id = actor->tracer->net_id;
-   }
-
-   broadcast_packet(&tracer_message, sizeof(nm_actortracer_t));
 }
 
 void SV_BroadcastActorState(mobj_t *actor, statenum_t state_number)
 {
    nm_actorstate_t state_message;
 
+   // [CG] Don't send state for spectating players.
    if(actor->player && clients[actor->player - players].spectating)
-   {
-      // [CG] Don't send state for spectating players.
       return;
-   }
+
+   // [CG] Don't send state for actors with no Net ID.
+   if(actor->net_id == 0)
+      return;
 
    state_message.message_type = nm_actorstate;
    state_message.world_index = sv_world_index;
    state_message.actor_net_id = actor->net_id;
    state_message.state_number = state_number;
    state_message.actor_type = actor->type;
-
-   /*
-   if(actor->type != 0  && actor->type != 1  &&
-      actor->type != 11 && actor->type != 42 &&
-      actor->type != 44 && actor->type != 45)
-   {
-      printf(
-         "Sending state %d for %d, type %d.\n",
-         state_number,
-         actor->net_id,
-         actor->type
-      );
-   }
-   */
 
    broadcast_packet(&state_message, sizeof(nm_actorstate_t));
 }
@@ -2400,22 +2455,15 @@ void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
    damage_message.just_hit = just_hit;
 
    if(inflictor == NULL)
-   {
       damage_message.inflictor_net_id = 0;
-   }
    else
-   {
       damage_message.inflictor_net_id = inflictor->net_id;
-   }
 
    if(source == NULL)
-   {
       damage_message.source_net_id = 0;
-   }
    else
-   {
       damage_message.source_net_id = source->net_id;
-   }
+
    damage_message.health_damage = health_damage;
    damage_message.armor_damage = armor_damage;
    damage_message.mod = mod;
@@ -2424,29 +2472,8 @@ void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
    broadcast_packet(&damage_message, sizeof(nm_actordamaged_t));
 }
 
-void SV_BroadcastActorAttribute(mobj_t *actor, actor_attribute_type_t type)
-{
-   nm_actorattribute_t attribute_message;
-
-   attribute_message.message_type = nm_actorattribute;
-   attribute_message.world_index = sv_world_index;
-   attribute_message.actor_net_id = actor->net_id;
-   attribute_message.attribute_type = type;
-   if(type == aat_flags)
-   {
-      attribute_message.int_value = actor->flags;
-   }
-   else
-   {
-      doom_printf("Unknown actor attribute type %d.\n", type);
-      return;
-   }
-
-   broadcast_packet(&attribute_message, sizeof(nm_actorattribute_t));
-}
-
 void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
-                      int damage, int mod)
+                             int damage, int mod)
 {
    nm_actorkilled_t kill_message;
 
@@ -2455,21 +2482,15 @@ void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    kill_message.target_net_id = target->net_id;
 
    if(inflictor == NULL)
-   {
       kill_message.inflictor_net_id = 0;
-   }
    else
-   {
       kill_message.inflictor_net_id = inflictor->net_id;
-   }
+
    if(source == NULL)
-   {
       kill_message.source_net_id = 0;
-   }
    else
-   {
       kill_message.source_net_id = source->net_id;
-   }
+
    kill_message.damage = damage;
    kill_message.mod = mod;
 
@@ -2480,6 +2501,11 @@ void SV_BroadcastActorRemoved(mobj_t *mo)
 {
    nm_actorremoved_t remove_message;
 
+   printf(
+      "SV_BroadcastActorRemoved: Removing actor, Net ID %u.\n",
+      mo->net_id
+   );
+
    remove_message.message_type = nm_actorremoved;
    remove_message.world_index = sv_world_index;
    remove_message.actor_net_id = mo->net_id;
@@ -2489,7 +2515,7 @@ void SV_BroadcastActorRemoved(mobj_t *mo)
 
 static void build_line_packet(nm_lineactivated_t *line_message, mobj_t *actor,
                               line_t *line, int side,
-                              activation_type_t activation_type)
+                              activation_type_e activation_type)
 {
    line_message->message_type = nm_lineactivated;
    line_message->world_index = sv_world_index;
@@ -2591,8 +2617,7 @@ void SV_BroadcastCubeSpawned(mobj_t *cube)
    cube_message.message_type = nm_cubespawned;
    cube_message.world_index = sv_world_index;
    cube_message.net_id = cube->net_id;
-   cube_message.reaction_time = cube->reactiontime;
-   cube_message.flags = cube->flags;
+   cube_message.target_net_id = cube->target->net_id;
 
    broadcast_packet(&cube_message, sizeof(nm_cubespawned_t));
 }
@@ -2792,9 +2817,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_actorspawned:
    case nm_actorposition:
    case nm_actortarget:
-   case nm_actortracer:
    case nm_actorstate:
-   case nm_actorattribute:
    case nm_actordamaged:
    case nm_actorkilled:
    case nm_actorremoved:
@@ -2808,6 +2831,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_specialstatus:
    case nm_specialremoved:
    case nm_sectorposition:
+   case nm_soundplayed:
    case nm_ticfinished:
       doom_printf(
          "Received invalid client message %s (%u)\n",

@@ -359,9 +359,7 @@ boolean P_GiveWeapon(player_t *player, weapontype_t weapon, boolean dropped)
          {
             player->pendingweapon = weapon;
             if(CS_SERVER)
-            {
                SV_BroadcastPlayerScalarInfo(playernum, ci_pending_weapon);
-            }
          }
       }
 
@@ -379,13 +377,9 @@ boolean P_GiveWeapon(player_t *player, weapontype_t weapon, boolean dropped)
       //      printed.  This is not the way c/s Deathmatch works, however, so
       //      we must return true here if in c/s mode..
       if(clientserver)
-      {
          return true;
-      }
       else
-      {
          return false;
-      }
    }
 
    // give one clip with a dropped weapon, two clips with a found weapon
@@ -1075,8 +1069,12 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    if(special->flags & MF_COUNTITEM)
       player->itemcount++;
 
-   if(removeobj)
+   if(serverside && removeobj)
+   {
+      if(CS_SERVER)
+         SV_BroadcastActorRemoved(special);
       P_RemoveMobj(special);
+   }
 
    // haleyjd 07/08/05: inverted condition
    if(pickup_fx)
@@ -1105,10 +1103,8 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
    target->flags |= MF_CORPSE|MF_DROPOFF;
    target->height >>= 2;
 
-   if (target->player && target->player->health > 0)
-   {
+   if(target->player && target->player->health > 0)
       target->player->health = 0;
-   }
 
    // killough 8/29/98: remove from threaded list
    P_UpdateThinker(&target->thinker);
@@ -1179,7 +1175,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       if(target->player == &players[consoleplayer] && automapactive)
       {
          if(!demoplayback) // killough 11/98: don't switch out in demos, though
-            AM_Stop();    // don't die in auto map; switch view prior to dying
+            AM_Stop();     // don't die in auto map; switch view prior to dying
       }
    }
 
@@ -1224,6 +1220,9 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
 
    mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
    mo->flags |= MF_DROPPED;    // special versions of items
+
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    // EDF FIXME: problematic, needed work to begin with
 #if 0
@@ -1960,16 +1959,31 @@ void P_Whistle(mobj_t *actor, int mobjtype)
       // 06/06/05: use strict teleport now
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
-         mobj_t *fog = P_SpawnMobj(prevx, prevy,
-                                   prevz + GameModeInfo->teleFogHeight,
-                                   GameModeInfo->teleFogType);
-         CS_ReleaseActorNetID(fog);
-         S_StartSound(fog, GameModeInfo->teleSound);
+         mobj_t *fog;
 
-         fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
-                           GameModeInfo->teleFogType);
-         CS_ReleaseActorNetID(fog);
-         S_StartSound(fog, GameModeInfo->teleSound);
+         if(serverside)
+         {
+            fog = P_SpawnMobj(
+               prevx,
+               prevy,
+               prevz + GameModeInfo->teleFogHeight,
+               GameModeInfo->teleFogType
+            );
+
+            if(CS_SERVER)
+               SV_BroadcastActorSpawned(fog);
+
+            S_StartSound(fog, GameModeInfo->teleSound);
+
+            fog = P_SpawnMobj(
+               x, y, z + GameModeInfo->teleFogHeight, GameModeInfo->teleFogType
+            );
+
+            if(CS_SERVER)
+               SV_BroadcastActorSpawned(fog);
+
+            S_StartSound(fog, GameModeInfo->teleSound);
+         }
 
          // put the thing into its spawnstate and keep it still
          P_SetMobjState(mo, mo->info->spawnstate);

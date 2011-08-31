@@ -1,8 +1,8 @@
 // Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
-// This module, except for code marked otherwise, is covered by the 
-// ZDoom source distribution license, which is included in the 
+// This module, except for code marked otherwise, is covered by the
+// ZDoom source distribution license, which is included in the
 // Eternity source distribution, and is compatible with the terms of
 // the GNU General Public License.
 //
@@ -61,7 +61,7 @@ static void P_ZMovementTest(mobj_t *mo)
    if(mo->flags & MF_BOUNCES && mo->momz)
    {
       mo->z += mo->momz;
-            
+
       if(mo->z <= mo->floorz)                  // bounce off floors
       {
          mo->z = mo->floorz;
@@ -87,7 +87,7 @@ static void P_ZMovementTest(mobj_t *mo)
 
             if(mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
-            
+
             return;
          }
       }
@@ -98,15 +98,15 @@ static void P_ZMovementTest(mobj_t *mo)
          return;
       }
    }
-   
+
    // adjust altitude
    mo->z += mo->momz;
-   
+
 floater:
 
    // float down towards target if too close
-   
-   if(!((mo->flags ^ MF_FLOAT) & (MF_FLOAT | MF_SKULLFLY | MF_INFLOAT)) && 
+
+   if(!((mo->flags ^ MF_FLOAT) & (MF_FLOAT | MF_SKULLFLY | MF_INFLOAT)) &&
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
@@ -116,7 +116,7 @@ floater:
    }
 
    // clip movement
-   
+
    if(mo->z <= mo->floorz)
       mo->z = mo->floorz;
 
@@ -146,7 +146,7 @@ static boolean PIT_TestMobjZ(mobj_t *thing)
    }
 
    // test against collision - from PIT_CheckThing:
-   if(D_abs(thing->x - clip.x) >= blockdist || 
+   if(D_abs(thing->x - clip.x) >= blockdist ||
       D_abs(thing->y - clip.y) >= blockdist)
       return true;
 
@@ -163,7 +163,7 @@ static boolean PIT_TestMobjZ(mobj_t *thing)
 boolean P_TestMobjZ(mobj_t *mo)
 {
    int xl, xh, yl, yh, x, y;
-   
+
    // a no-clipping thing is always good
    if(mo->flags & MF_NOCLIP)
       return true;
@@ -171,13 +171,13 @@ boolean P_TestMobjZ(mobj_t *mo)
    clip.x = mo->x;
    clip.y = mo->y;
    clip.thing = mo;
-   
+
    // standard blockmap bounding box extension
    clip.bbox[BOXLEFT]   = clip.x - mo->radius;
    clip.bbox[BOXRIGHT]  = clip.x + mo->radius;
    clip.bbox[BOXBOTTOM] = clip.y - mo->radius;
    clip.bbox[BOXTOP]    = clip.y + mo->radius;
-   
+
    xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -218,17 +218,17 @@ mobj_t *P_GetThingUnder(mobj_t *mo)
 // P_SBlockThingsIterator
 //
 // Special version of P_BlockThingsIterator: takes an actor from which to start
-// a search, which is an extension borrowed from zdoom and is needed for 3D 
+// a search, which is an extension borrowed from zdoom and is needed for 3D
 // object clipping.
 //
-boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *), 
+boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
                                mobj_t *actor)
 {
    mobj_t *mobj;
 
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
-   
+
    if(actor == NULL)
       mobj = blocklinks[y * bmapwidth + x];
    else
@@ -237,7 +237,7 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
    for(; mobj; mobj = mobj->bnext)
       if(!func(mobj))
          return false;
-   
+
    return true;
 }
 
@@ -252,7 +252,7 @@ extern boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing);
 
 //
 // PIT_CheckThing3D
-// 
+//
 static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 {
    fixed_t topz;      // haleyjd: from zdoom
@@ -283,9 +283,9 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    //
    // This test has less information content (it's almost always false), so it
    // should not be moved up to first, as it adds more overhead than it removes.
-   
+
    // don't clip against self
-  
+
    if(thing == clip.thing)
       return true;
 
@@ -310,7 +310,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
    if(clip.thing->flags3 & MF3_PASSMOBJ)
    {
       // check if a mobj passed over/under another object
-      
+
       // Some things prefer not to overlap each other, if possible
       if(clip.thing->flags3 & thing->flags3 & MF3_DONTOVERLAP)
          return false;
@@ -322,7 +322,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          {
             P_Touched(thing, clip.thing);
             // haleyjd: make the thing fly up a bit so it can run across
-            clip.thing->momz += FRACUNIT; 
+            clip.thing->momz += FRACUNIT;
             return true;
          }
       }
@@ -343,14 +343,14 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          return true;
 
    // check for skulls slamming into things
-   
+
    if(P_SkullHit(thing, clip.thing))
       return false;
 
    // missiles can hit other things
    // killough 8/10/98: bouncing non-solid things can hit other things too
-   
-   if(clip.thing->flags & MF_MISSILE || 
+
+   if(clip.thing->flags & MF_MISSILE ||
       (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
    {
       // haleyjd 07/06/05: some objects may use info->height instead
@@ -364,7 +364,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          return true;
 
       // see if it went over / under
-      
+
       if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
          return true;    // overhead
 
@@ -388,28 +388,28 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          // TODO: P_RipperBlood
          /*
          if(!(thing->flags&MF_NOBLOOD))
-         { 
+         {
             // Ok to spawn some blood
             P_RipperBlood(tmthing);
          }
          */
-         
+
          // TODO: ripper sound - gamemode dependent? thing dependent?
          //S_StartSound(clip.thing, sfx_ripslop);
-         
+
          damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
-         
-         P_DamageMobj(thing, clip.thing, clip.thing->target, damage, 
+
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
                       clip.thing->info->mod);
-         
+
          if(thing->flags2 & MF2_PUSHABLE &&
             !(clip.thing->flags3 & MF3_CANNOTPUSH))
-         { 
+         {
             // Push thing
             thing->momx += clip.thing->momx >> 2;
             thing->momy += clip.thing->momy >> 2;
          }
-         
+
          // TODO: huh?
          //numspechit = 0;
          return true;
@@ -440,7 +440,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
          return !(thing->flags & MF_SOLID); // didn't do any damage
 
       // damage / explode
-      
+
       damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
       P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
                    clip.thing->info->mod);
@@ -451,7 +451,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 
    // haleyjd 1/16/00: Pushable objects -- at last!
    //   This is remarkably simpler than I had anticipated!
-   
+
    if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
@@ -482,7 +482,7 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 //
 // A 3D version of P_CheckPosition.
 //
-boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y) 
+boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -499,15 +499,15 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 #endif
 
    clip.thing = thing;
-   
+
    clip.x = x;
    clip.y = y;
-   
+
    clip.bbox[BOXTOP]    = y + clip.thing->radius;
    clip.bbox[BOXBOTTOM] = y - clip.thing->radius;
    clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
-   
+
    newsubsec = R_PointInSubsector(x,y);
    clip.floorline = clip.blockline = clip.ceilingline = NULL; // killough 8/1/98
 
@@ -521,7 +521,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // will adjust them.
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) && 
+   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) &&
       !(clip.thing->flags & MF_NOCLIP))
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
@@ -544,7 +544,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // SoM: 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
    validcount++;
-   
+
    clip.numspechit = 0;
 
    // haleyjd 06/28/06: skullfly check from zdoom
@@ -568,7 +568,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    stepthing    = NULL;
 
    // [RH] Fake taller height to catch stepping up into things.
-   if(thing->player)   
+   if(thing->player)
       thing->height = realheight + 24*FRACUNIT;
 
    for(bx = xl; bx <= xh; ++bx)
@@ -581,19 +581,19 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
          do
          {
             if(!P_SBlockThingsIterator(bx, by, PIT_CheckThing3D, robin))
-            { 
+            {
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
                // definitely blocking. Otherwise, we need to check the lines, or we
                // could end up stuck inside a wall.
                if(clip.BlockingMobj == NULL)
-               { 
+               {
                   // Thing slammed into something; don't let it move now.
                   thing->height = realheight;
 
                   return false;
                }
-               else if(!clip.BlockingMobj->player && 
+               else if(!clip.BlockingMobj->player &&
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
                        clip.BlockingMobj->z + clip.BlockingMobj->height-thing->z <= 24*FRACUNIT)
                {
@@ -606,7 +606,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
                        thing->z + thing->height - clip.BlockingMobj->z <= 24*FRACUNIT)
                {
                   if(thingblocker)
-                  { 
+                  {
                      // There is something to step up on. Return this thing as
                      // the blocker so that we don't step up.
                      thing->height = realheight;
@@ -628,18 +628,18 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
             }
             else
                robin = NULL;
-         } 
+         }
          while(robin);
       }
    }
 
    // check lines
-   
+
    clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
       return (clip.BlockingMobj = thingblocker) == NULL;
-   
+
    xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
@@ -655,10 +655,10 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    if(clip.ceilingz - clip.floorz < thing->height)
       return false;
-         
+
    if(stepthing != NULL)
       clip.dropoffz = thingdropoffz;
-   
+
    return (clip.BlockingMobj = thingblocker) == NULL;
 }
 
@@ -673,7 +673,7 @@ boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
 {
    int flags;
    boolean xygood;
-   
+
    // save the thing's flags, some flags must be removed to avoid side effects
    flags = mo->flags;
    mo->flags &= ~MF_PICKUP;
@@ -684,16 +684,16 @@ boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
    mo->intflags &= ~MIF_NOTOUCH;
 
    if(xygood)
-   { 
+   {
       fixed_t z = mo->z;
-      
+
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
       if(z < mo->floorz || z + mo->height > mo->ceilingz)
          return false;
    }
-   
+
    return xygood;
 }
 
@@ -717,7 +717,7 @@ static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
 {
    boolean isgood;
    unsigned int oldfl3 = thing->flags3;
-   
+
    // haleyjd: ALL things must be treated as PASSMOBJ when moving
    // 3DMidTex lines, otherwise you get stuck in them.
    if(midtex)
@@ -732,7 +732,7 @@ static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
    thing->secceilz   = clip.secceilz;
    thing->passceilz  = clip.passceilz;
    thing->dropoffz   = clip.dropoffz; // killough 11/98: remember dropoffs
-   
+
    thing->flags3 = oldfl3;
 
    return isgood;
@@ -754,11 +754,11 @@ static boolean PIT_FindAboveIntersectors(mobj_t *thing)
       (thing->flags & (MF_CORPSE|MF_SPECIAL)) ||  // Corpse or special?
       thing == clip.thing)                         // clipping against self?
       return true;
-   
+
    blockdist = thing->radius + clip.thing->radius;
-   
+
    // Didn't hit thing?
-   if(D_abs(thing->x - clip.x) >= blockdist || 
+   if(D_abs(thing->x - clip.x) >= blockdist ||
       D_abs(thing->y - clip.y) >= blockdist)
       return true;
 
@@ -778,15 +778,15 @@ boolean PIT_FindBelowIntersectors(mobj_t *thing)
       return true;
 
    blockdist = thing->radius + clip.thing->radius;
-   
+
    // Didn't hit thing?
-   if(D_abs(thing->x - clip.x) >= blockdist || 
+   if(D_abs(thing->x - clip.x) >= blockdist ||
       D_abs(thing->y - clip.y) >= blockdist)
       return true;
 
    if(thing->z + thing->height <= clip.thing->z + clip.thing->height &&
       thing->z + thing->height > clip.thing->z)
-   { 
+   {
       // Thing intersects below the base
       P_AddToCollection(&intersectors, thing);
    }
@@ -807,7 +807,7 @@ static void P_FindAboveIntersectors(mobj_t *actor)
 
    if(actor->flags & MF_NOCLIP)
       return;
-   
+
    if(!(actor->flags & MF_SOLID))
       return;
 
@@ -842,17 +842,17 @@ static void P_FindBelowIntersectors(mobj_t *actor)
 {
    int	xl,xh,yl,yh,bx,by;
    fixed_t x, y;
-   
+
    if(actor->flags & MF_NOCLIP)
       return;
-   
+
    if(!(actor->flags & MF_SOLID))
       return;
 
    clip.x = x = actor->x;
    clip.y = y = actor->y;
    clip.thing = actor;
-   
+
    clip.bbox[BOXTOP]    = y + actor->radius;
    clip.bbox[BOXBOTTOM] = y - actor->radius;
    clip.bbox[BOXRIGHT]  = x + actor->radius;
@@ -880,7 +880,7 @@ static void P_FindBelowIntersectors(mobj_t *actor)
 static void P_DoCrunch(mobj_t *thing)
 {
    mobj_t *mo;
-   
+
    // crunch bodies to giblets
    // TODO: support DONTGIB flag like zdoom?
    // TODO: support custom gib state for actors?
@@ -905,9 +905,7 @@ static void P_DoCrunch(mobj_t *thing)
       if(serverside)
       {
          if(CS_SERVER)
-         {
             SV_BroadcastActorRemoved(thing);
-         }
          P_RemoveMobj(thing);
       }
       return;
@@ -939,15 +937,23 @@ static void P_DoCrunch(mobj_t *thing)
 
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // FIXME: needs comp flag!
-      if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
+      // [CG] Serverside only.
+      if(serverside && (demo_version < 333 || !(thing->flags & MF_NOBLOOD)))
       {
          // spray blood in a random direction
-         mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2,
-                          E_SafeThingType(MT_BLOOD));
-         
+         mo = P_SpawnMobj(
+            thing->x,
+            thing->y,
+            thing->z + thing->height / 2,
+            E_SafeThingType(MT_BLOOD)
+         );
+
          // haleyjd 08/05/04: use new function
          mo->momx = P_SubRandom(pr_crush) << 12;
-         mo->momy = P_SubRandom(pr_crush) << 12;         
+         mo->momy = P_SubRandom(pr_crush) << 12;
+
+         if(CS_SERVER)
+            SV_BroadcastActorSpawned(mo);
       }
    } // end if
 }
@@ -976,20 +982,20 @@ static int P_PushUp(mobj_t *thing)
    {
       mobj_t *intersect = P_CollectionGetAt(&intersectors, firstintersect);
       fixed_t oldz = intersect->z;
-      
+
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) ||*/
          (!((intersect->flags & MF_COUNTKILL) ||
-            (intersect->flags3 & MF3_KILLABLE)) && 
+            (intersect->flags3 & MF3_KILLABLE)) &&
           intersect->info->mass > mymass))
-      { 
+      {
          // Can't push things more massive than ourself
          return 2;
       }
-      
+
       P_AdjustFloorCeil(intersect, midtex_moving);
       intersect->z = thing->z + thing->height + 1;
       if(P_PushUp(intersect))
-      { 
+      {
          // Move blocked
          P_DoCrunch(intersect);
          intersect->z = oldz;
@@ -1023,7 +1029,7 @@ static int P_PushDown(mobj_t *thing)
 
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) || */
          (!((intersect->flags & MF_COUNTKILL) ||
-            (intersect->flags3 & MF3_KILLABLE)) && 
+            (intersect->flags3 & MF3_KILLABLE)) &&
           intersect->info->mass > mymass))
       { // Can't push things more massive than ourself
          return 2;
@@ -1031,11 +1037,11 @@ static int P_PushDown(mobj_t *thing)
 
       P_AdjustFloorCeil(intersect, midtex_moving);
       if(oldz > thing->z - intersect->height)
-      { 
+      {
          // Only push things down, not up.
          intersect->z = thing->z - intersect->height;
          if(P_PushDown(intersect))
-         { 
+         {
             // Move blocked
             P_DoCrunch(intersect);
             intersect->z = oldz;
@@ -1057,9 +1063,9 @@ static int P_PushDown(mobj_t *thing)
 static void PIT_FloorDrop(mobj_t *thing)
 {
    fixed_t oldfloorz = thing->floorz;
-   
+
    P_AdjustFloorCeil(thing, midtex_moving);
-   
+
    if(thing->momz == 0 &&
       (!(thing->flags & MF_NOGRAVITY) || thing->z == oldfloorz))
    {
@@ -1070,7 +1076,7 @@ static void PIT_FloorDrop(mobj_t *thing)
       {
          thing->z = thing->z - oldfloorz + thing->floorz;
       }
-      else if((thing->flags & MF_NOGRAVITY) || 
+      else if((thing->flags & MF_NOGRAVITY) ||
               thing->z - thing->floorz <= moveamt)
       {
          thing->z = thing->floorz;
@@ -1086,7 +1092,7 @@ static void PIT_FloorDrop(mobj_t *thing)
 static void PIT_FloorRaise(mobj_t *thing)
 {
    fixed_t oldfloorz = thing->floorz;
-   
+
    P_AdjustFloorCeil(thing, midtex_moving);
 
    // Move things intersecting the floor up
@@ -1123,7 +1129,7 @@ static void PIT_FloorRaise(mobj_t *thing)
 static void PIT_CeilingLower(mobj_t *thing)
 {
    boolean onfloor;
-   
+
    onfloor = thing->z <= thing->floorz;
    P_AdjustFloorCeil(thing, midtex_moving);
 
@@ -1157,7 +1163,7 @@ static void PIT_CeilingLower(mobj_t *thing)
 static void PIT_CeilingRaise(mobj_t *thing)
 {
    boolean isgood = P_AdjustFloorCeil(thing, midtex_moving);
-   
+
    // For DOOM compatibility, only move things that are inside the floor.
    // (or something else?) Things marked as hanging from the ceiling will
    // stay where they are.
@@ -1169,14 +1175,14 @@ static void PIT_CeilingRaise(mobj_t *thing)
       if(thing->z + thing->height > thing->ceilingz)
          thing->z = thing->ceilingz - thing->height;
    }
-   else if(/*(thing->flags3 & MF3_PASSMOBJ) &&*/ !isgood && 
+   else if(/*(thing->flags3 & MF3_PASSMOBJ) &&*/ !isgood &&
            thing->z + thing->height < thing->ceilingz)
    {
       if(!P_TestMobjZ(thing) && testz_mobj->z <= thing->z)
       {
          fixed_t ceildiff = thing->ceilingz - thing->height;
          fixed_t thingtop = testz_mobj->z + testz_mobj->height;
-         
+
          thing->z = ceildiff < thingtop ? ceildiff : thingtop;
       }
    }
@@ -1233,7 +1239,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    // Things can arbitrarily be inserted and removed and it won't mess up.
    //
    // killough 4/7/98: simplified to avoid using complicated counter
-   
+
    // Mark all things invalid
 
    for(n = sector->touching_thinglist; n; n = n->m_snext)
@@ -1260,7 +1266,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
          }
       }
    } while(n); // repeat from scratch until all things left are marked valid
-   
+
    return nofit;
 }
 

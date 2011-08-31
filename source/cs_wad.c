@@ -64,9 +64,8 @@ void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir);
 static cs_map_t* get_current_map(void)
 {
    if(cs_demo_playback)
-   {
       return &cs_maps[cs_current_demo_map];
-   }
+
    return &cs_maps[cs_current_map_number];
 }
 
@@ -77,12 +76,11 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
    double fraction_downloaded = (dlnow / dltotal) * 100.0;
 
    if(dlnow < 1.0 || dltotal < 1.0)
-   {
       fraction_downloaded = 0.0;
-   }
 
    C_Printf("Downloading %s: %f%%\n", wad_name, fraction_downloaded);
    C_Update();
+   C_Ticker();
    return 0;
 }
 
@@ -159,9 +157,7 @@ boolean CS_AddIWAD(const char *resource_name)
    char *resource_path = D_FindWADByName((char *)resource_name);
    
    if(resource_path == NULL)
-   {
       return false;
-   }
 
    cs_iwad = resource_path;
 
@@ -169,8 +165,8 @@ boolean CS_AddIWAD(const char *resource_name)
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
    );
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
-   cs_resources[cs_resource_count - 1].path = strdup(resource_path);
    cs_resources[cs_resource_count - 1].type = rt_iwad;
+   cs_resources[cs_resource_count - 1].path = strdup(resource_path);
    strncpy(
       cs_resources[cs_resource_count - 1].sha1_hash,
       CS_GetSHA1HashFile((char *)cs_iwad),
@@ -197,11 +193,14 @@ boolean CS_AddWAD(const char *resource_name)
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
    );
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
+
+   cs_resources[cs_resource_count - 1].type = rt_pwad;
+
    if(do_strdup)
       cs_resources[cs_resource_count - 1].path = strdup(resource_path);
    else
       cs_resources[cs_resource_count - 1].path = resource_path;
-   cs_resources[cs_resource_count - 1].type = rt_pwad;
+
    strncpy(
       cs_resources[cs_resource_count - 1].sha1_hash,
       CS_GetSHA1HashFile(resource_path),
@@ -216,9 +215,7 @@ boolean CS_AddDeHackEdFile(const char *resource_name)
    char *resource_path = D_FindWADByName((char *)resource_name);
 
    if(resource_path == NULL)
-   {
       return false;
-   }
 
    D_QueueDEH(resource_path, 0);
    cs_resources = realloc(
@@ -244,9 +241,7 @@ cs_resource_t* CS_GetResource(const char *resource_name)
    for(res = cs_resources; (res - cs_resources) < cs_resource_count; res++)
    {
       if(strncmp(resource_name, res->name, name_length) == 0)
-      {
          return res;
-      }
    }
    return NULL;
 }
@@ -256,18 +251,12 @@ boolean CS_CheckResourceHash(const char *resource_name, const char *sha1_hash)
    cs_resource_t *res = CS_GetResource(resource_name);
 
    if(res == NULL)
-   {
       I_Error("Error: resource %s not found, exiting.\n", resource_name);
-   }
 
    if(strncmp(sha1_hash, res->sha1_hash, 41) == 0)
-   {
       return true;
-   }
    else
-   {
       return false;
-   }
 }
 
 void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
@@ -338,13 +327,10 @@ void CS_InitNew(void)
    printf("CS_InitNew: Loading map %d.\n", cs_current_map_number);
 
    CS_LoadMap();
+
    if(cs_demo_playback)
-   {
       G_InitNew(cs_settings->skill, cs_maps[cs_current_demo_map].name);
-   }
    else
-   {
       G_InitNew(cs_settings->skill, cs_maps[cs_current_map_number].name);
-   }
 }
 

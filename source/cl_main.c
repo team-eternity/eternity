@@ -40,6 +40,7 @@
 #include "d_ticcmd.h"
 #include "doomdata.h"
 #include "e_edf.h"
+#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "g_game.h"
@@ -79,6 +80,15 @@
 
 #include <json/json.h>
 
+#define SHOULD_BUFFER_MESSAGES \
+   ((cl_received_sync) && (cl_packet_buffer_size != 1))
+#define SHOULD_HANDLE_OLD_MESSAGES (cl_constant_prediction == 1)
+#define MESSAGE_IS_OLD(i) ((i) <= (cl_current_world_index))
+#define SHOULD_HANDLE_MESSAGE_NOW(i) (\
+   (!(SHOULD_BUFFER_MESSAGES)) && \
+   ((!(MESSAGE_IS_OLD((i)))) || (SHOULD_HANDLE_OLD_MESSAGES))\
+)
+
 char *cs_server_url = NULL;
 char *cs_server_password = NULL;
 char *cs_client_password_file = NULL;
@@ -89,6 +99,8 @@ unsigned int cl_latest_world_index  = 0;
 
 boolean cl_received_sync = false;
 boolean cl_initial_spawn = true;
+boolean cl_spawning_actor_from_message = false;
+boolean cl_removing_actor_from_message = false;
 
 extern int levelTimeLimit;
 extern int levelFragLimit;
@@ -111,15 +123,13 @@ static void send_packet(void *data, size_t data_size)
    ENetPacket *packet;
 
    if(!net_peer)
-   {
       return;
-   }
    
    packet = enet_packet_create(data, data_size, ENET_PACKET_FLAG_RELIABLE);
    enet_peer_send(net_peer, SEQUENCED_CHANNEL, packet);
 }
 
-static void send_message(message_recipient_t recipient_type,
+static void send_message(message_recipient_e recipient_type,
                          unsigned int recipient_number, const char *message)
 {
    nm_playermessage_t player_message;
@@ -464,7 +474,7 @@ void CL_SendCommand(void)
 #endif
 }
 
-void CL_SendPlayerStringInfo(client_info_t info_type)
+void CL_SendPlayerStringInfo(client_info_e info_type)
 {
    nm_playerinfoupdated_t *update_message;
    size_t buffer_size = CS_BuildPlayerStringInfoPacket(
@@ -475,7 +485,7 @@ void CL_SendPlayerStringInfo(client_info_t info_type)
    free(update_message);
 }
 
-void CL_SendPlayerArrayInfo(client_info_t info_type, int array_index)
+void CL_SendPlayerArrayInfo(client_info_e info_type, int array_index)
 {
    nm_playerinfoupdated_t update_message;
 
@@ -486,7 +496,7 @@ void CL_SendPlayerArrayInfo(client_info_t info_type, int array_index)
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
-void CL_SendPlayerScalarInfo(client_info_t info_type)
+void CL_SendPlayerScalarInfo(client_info_e info_type)
 {
    nm_playerinfoupdated_t update_message;
    CS_BuildPlayerScalarInfoPacket(&update_message, consoleplayer, info_type);
@@ -551,7 +561,7 @@ void CL_RCONMessage(const char *command)
 
 void CL_SaveServerPassword(void)
 {
-   if (json_object_object_get(cs_client_password_json, cs_server_url))
+   if(json_object_object_get(cs_client_password_json, cs_server_url))
       json_object_object_del(cs_client_password_json, cs_server_url);
 
    json_object_object_add(
@@ -566,6 +576,83 @@ void CL_SaveServerPassword(void)
    );
 }
 
+mobj_t* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                     mobjtype_t type)
+{
+   mobj_t *actor;
+
+   cl_spawning_actor_from_message = true;
+   actor = P_SpawnMobj(x, y, z, type);
+   cl_spawning_actor_from_message = false;
+
+   if(actor->net_id != 0)
+      CS_ReleaseActorNetID(actor);
+
+   actor->net_id = net_id;
+   CS_RegisterActorNetID(actor);
+
+   return actor;
+}
+
+void CL_RemoveMobj(mobj_t *actor)
+{
+   cl_removing_actor_from_message = true;
+   P_RemoveMobj(actor);
+   cl_removing_actor_from_message = false;
+}
+
+void CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,
+                    fixed_t z, angle_t angle, boolean as_spectator)
+{
+   if(players[playernum].mo != NULL)
+      CL_RemoveMobj(players[(playernum)].mo);
+
+   cl_spawning_actor_from_message = true;
+   CS_SpawnPlayer(playernum, x, y, z, angle, as_spectator);
+   cl_spawning_actor_from_message = false;
+
+   CS_ReleaseActorNetID(players[playernum].mo);
+   players[playernum].mo->net_id = net_id;
+   CS_RegisterActorNetID(players[playernum].mo);
+}
+
+void CL_RemovePlayer(int playernum)
+{
+   player_t *player = &players[playernum];
+
+   if((!clients[playernum].spectating) && drawparticles)
+      P_DisconnectEffect(player->mo);
+
+   player->mo = NULL;
+   CS_ZeroClient(playernum);
+   playeringame[playernum] = false;
+   CS_InitPlayer(playernum);
+}
+
+mobj_t* CL_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
+                     int updown, boolean ptcl)
+{
+   mobj_t *puff;
+
+   cl_spawning_actor_from_message = true;
+   puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+   cl_spawning_actor_from_message = false;
+
+   return puff;
+}
+
+mobj_t* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
+                      int damage, mobj_t *target)
+{
+   mobj_t *blood;
+
+   cl_spawning_actor_from_message = true;
+   blood = P_SpawnBlood(x, y, z, angle, damage, target);
+   cl_spawning_actor_from_message = false;
+
+   return blood;
+}
+
 boolean CL_SetMobjState(mobj_t* mobj, statenum_t state)
 {
    state_t *st;
@@ -577,7 +664,6 @@ boolean CL_SetMobjState(mobj_t* mobj, statenum_t state)
       if(state == NullStateNum)
       {
          mobj->state = NULL;
-         // P_RemoveMobj(mobj);
          ret = false;
          break;
       }
@@ -663,7 +749,7 @@ void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
 
       if(actor_for_id)
       {
-         printf("Actor for %d's type: %d.\n", net_id, actor_for_id->type);
+         printf("Actor for %u's type: %d.\n", net_id, actor_for_id->type);
          CS_ReleaseActorNetID(actor_for_id);
       }
 
@@ -672,6 +758,7 @@ void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
 
       if(actor_for_id)
          CS_ObtainActorNetID(actor_for_id);
+      I_Error("Quitting on Net ID desync.\n");
    }
 }
 
@@ -853,35 +940,10 @@ void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
    }
 }
 
-// [CG] For debugging.
-void CL_PrintClientStatus(char *prefix, int playernum, client_status_t *status)
-{
-#if 0
-   printf(
-      "[%s] Status for client (%4u) %d - %d:\n",
-      prefix,
-      client_statuses_received[playernum],
-      playernum,
-      status->command.index
-   );
-   printf("  TIC:           %d\n", status->tic);
-   printf("  CTP:           Unknown\n");
-   if(status->has_command)
-   {
-      printf("  Command:       ");
-      CS_PrintCommand(&status->command);
-   }
-   else
-   {
-      printf("  No Command.\n");
-   }
-   printf("  Position:      ");
-   CS_PrintPosition(&status->position);
-#endif
-}
-
 void CL_HandleGameStateMessage(nm_gamestate_t *message)
 {
+   mobj_t *actor;
+   thinker_t *think;
    unsigned int i;
    unsigned int new_num = message->player_number;
 
@@ -891,6 +953,15 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
          "CL_HandleGameStateMessage: Invalid map number %d.\n",
          message->map_number
       );
+   }
+
+   for(think = thinkercap.next; think != &thinkercap; think = think->next)
+   {
+      if(!think)
+         break;
+
+      if(think->function == P_MobjThinker)
+         CL_RemoveMobj((mobj_t *)think);
    }
 
    // [CG] consoleplayer and displayplayer will both be zero at this point, so
@@ -993,7 +1064,7 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
    {
       doom_printf(
          "Received map completed message containing invalid new map lump "
-         "number %d, ignoring.\n",
+         "number %u, ignoring.\n",
          message->new_map_number
       );
    }
@@ -1037,22 +1108,10 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
 
-   /*
-   memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
-   memcpy(team_scores, message->team_scores, sizeof(int) * team_color_max);
-   message_size = sizeof(nm_sync_t);
-   ingame_size = MAXPLAYERS * sizeof(boolean);
-   in_game = (boolean *)(((char *)message) + message_size);
-   net_ids = (unsigned int *) (((char *)message) + message_size + ingame_size);
-   */
+   CS_ResetNetIDs();
 
    if(cs_demo_recording)
    {
-      /*
-      full_size = sizeof(nm_sync_t) + (sizeof(boolean) * MAXPLAYERS) +
-                                      (sizeof(unsigned int) * MAXPLAYERS);
-      */
-
       // [CG] Add a demo for the new map, then write the map started message to
       //      it.
       if(!CS_AddNewMapToDemo() ||
@@ -1069,144 +1128,31 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 
    for(i = 0; i < MAXPLAYERS; i++)
    {
-      if(playeringame[i])
-         CL_SetActorNetID(players[i].mo, message->net_ids[i]);
+      if(!playeringame[i])
+         continue;
+
+      if(!players[i].mo)
+         continue;
+
+      if(players[i].mo->net_id != 0 &&
+         players[i].mo->net_id != message->net_ids[i])
+      {
+         I_Error(
+            "Net ID for %d did not match (%u/%u), exiting.\n",
+            i, players[i].mo->net_id, message->net_ids[i]
+         );
+      }
+
+      players[i].mo->net_id = message->net_ids[i];
+
+      if(players[i].mo->net_id != 0)
+         CS_RegisterActorNetID(players[i].mo);
    }
 
    cl_flush_packet_buffer = true;
    cl_received_sync = true;
    CS_UpdateQueueMessage();
 }
-
-#if 0
-void CL_oldHandleSyncMessage(nm_sync_t *message)
-{
-   teamcolor_t color;
-   size_t message_size, ingame_size;
-   boolean *in_game;
-   unsigned int *net_ids;
-   unsigned int i, net_id;
-   unsigned int transit_lag;
-   static unsigned int demo_map_number = 0;
-
-   if(message->load_new_map && cs_demo_playback)
-   {
-      // [CG] If playing a demo, load the new map from the demo.
-      if(demo_map_number == cs_current_demo_map)
-      {
-         if(!CS_LoadNextDemoMap())
-         {
-            doom_printf(
-               "Error during demo playback: %s.\n", CS_GetDemoErrorMessage()
-            );
-            CS_StopDemo();
-         }
-         return;
-      }
-      else
-      {
-         if(gamestate == GS_LEVEL)
-         {
-            G_DoCompleted(false);
-         }
-      }
-   }
-
-   demo_map_number = cs_current_demo_map;
-
-   if(net_peer)
-   {
-      transit_lag = ((net_peer->roundTripTime / 1000) / TICRATE) / 2;
-   }
-   else
-   {
-      transit_lag = 0;
-   }
-
-   memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
-   memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
-   memcpy(team_scores, message->team_scores, sizeof(int) * team_color_max);
-
-   if(message->load_new_map)
-   {
-      message_size = sizeof(nm_sync_t);
-      ingame_size = MAXPLAYERS * sizeof(boolean);
-      in_game = (boolean *)(((char *)message) + message_size);
-      net_ids = (unsigned int *)
-                   (((char *)message) + message_size + ingame_size);
-
-      if(cs_demo_recording)
-      {
-         size_t full_size = sizeof(nm_sync_t) +
-                           (sizeof(boolean) * MAXPLAYERS) +
-                           (sizeof(unsigned int) * MAXPLAYERS);
-
-         if(!CS_AddNewMapToDemo() ||
-            !CS_WriteNetworkMessageToDemo(message, full_size, 0))
-         {
-            doom_printf(
-               "Demo error, recording aborted: %s\n", CS_GetDemoErrorMessage()
-            );
-            CS_StopDemo();
-         }
-      }
-
-      memcpy(playeringame, in_game, ingame_size);
-
-      CS_DoWorldDone();
-
-      for(i = 0; i < MAXPLAYERS; i++)
-      {
-         if(playeringame[i])
-         {
-            CL_SetActorNetID(players[i].mo, net_ids[i]);
-         }
-      }
-   }
-   else
-   {
-      cl_current_world_index = message->world_index;
-      cl_latest_world_index = message->world_index;
-
-      /*
-      for(color = team_color_none; color < team_color_max; color++)
-      {
-         if(cs_flags[color].net_id)
-         {
-            if(!CS_GetActorFromNetID((unsigned int)cs_flags[color].net_id))
-            {
-               doom_printf(
-                  "Received a sync message containing an invalid Net ID for "
-                  "the %s flag's actor.\n",
-                  team_color_names[color]
-               );
-            }
-         }
-      }
-      */
-   }
-
-   // [CG] Add transit lag (in TICs) onto the TIC values sent in the sync
-   //      message so that level-ending doesn't sneak up on us in time limit
-   //      games.  This isn't exact, but it's as well as we can do (I think
-   //      anyway...).
-
-   // [CG] Maybe try not doing this for now.
-   // gametic       = message->gametic   + transit_lag;
-   // basetic       = message->basetic   + transit_lag;
-   // leveltime     = message->leveltime + transit_lag;
-
-   gametic       = message->gametic;
-   basetic       = message->basetic;
-   leveltime     = message->leveltime;
-
-   levelstarttic = message->levelstarttic;
-
-   cl_flush_packet_buffer = true;
-   cl_received_sync = true;
-   CS_UpdateQueueMessage();
-}
-#endif
 
 void CL_HandleClientInitMessage(nm_clientinit_t *message)
 {
@@ -1214,7 +1160,7 @@ void CL_HandleClientInitMessage(nm_clientinit_t *message)
 
    if(i >= MAX_CLIENTS || i >= MAXPLAYERS)
    {
-     doom_printf("Received a client init message for invalid client %d.\n", i);
+     doom_printf("Received a client init message for invalid client %u.\n", i);
      return;
    }
 
@@ -1326,11 +1272,11 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
    }
 
    playeringame[message->player_number] = true;
-   // client->spectating = message->as_spectator;
    player->playerstate = PST_REBORN;
 
-   CS_SpawnPlayer(
+   CL_SpawnPlayer(
       message->player_number,
+      message->net_id,
       message->x << FRACBITS,
       message->y << FRACBITS,
       message->z,
@@ -1338,8 +1284,6 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
       message->as_spectator
    );
 
-   if(!message->as_spectator)
-      CL_SetActorNetID(player->mo, message->net_id);
    if(message->player_number == consoleplayer)
       CS_UpdateQueueMessage();
 }
@@ -1402,7 +1346,7 @@ void CL_HandlePlayerRemovedMessage(nm_playerremoved_t *message)
          disconnection_strings[message->reason]
       );
    }
-   CS_RemovePlayer(message->player_number);
+   CL_RemovePlayer(message->player_number);
 }
 
 void CL_HandlePlayerTouchedSpecialMessage(nm_playertouchedspecial_t *message)
@@ -1414,7 +1358,7 @@ void CL_HandlePlayerTouchedSpecialMessage(nm_playertouchedspecial_t *message)
    if(mo == NULL)
    {
      doom_printf(
-       "Received touch special message for non-existent thing %d, ignoring.\n",
+       "Received touch special message for non-existent thing %u, ignoring.\n",
        message->thing_net_id
      );
      return;
@@ -1520,12 +1464,14 @@ void CL_HandlePlayerMessage(nm_playermessage_t *message)
 
 void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
 {
-   mobj_t *puff;
-
-   if(cl_enable_prediction && cl_predict_shots)
+   if(cl_predict_shots &&
+      cl_enable_prediction &&
+      message->shooter_net_id == players[consoleplayer].mo->net_id)
+   {
       return;
+   }
 
-   puff = P_SpawnPuff(
+   CL_SpawnPuff(
       message->x,
       message->y,
       message->z,
@@ -1533,62 +1479,112 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
       message->updown,
       message->ptcl
    );
-   // CL_SetActorNetID(puff, message->net_id);
-   CS_ReleaseActorNetID(puff);
 }
 
-void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *blood_message)
+void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
 {
-   mobj_t *target, *blood;
+   mobj_t *target;
 
-   if(cl_enable_prediction && cl_predict_shots)
+   if(cl_predict_shots &&
+      cl_enable_prediction &&
+      message->shooter_net_id == players[consoleplayer].mo->net_id)
+   {
       return;
+   }
 
-   target = CS_GetActorFromNetID(blood_message->target_net_id);
-   if(target == NULL)
+   if((target = CS_GetActorFromNetID(message->target_net_id)) == NULL)
    {
       doom_printf(
-         "Received spawn blood message for invalid target %d, ignoring.\n",
-         blood_message->target_net_id
+         "Received spawn blood message for invalid target %u, ignoring.\n",
+         message->target_net_id
       );
       return;
    }
 
-   blood = P_SpawnBlood(
-      blood_message->x,
-      blood_message->y,
-      blood_message->z,
-      blood_message->angle,
-      blood_message->damage,
+   CL_SpawnBlood(
+      message->x,
+      message->y,
+      message->z,
+      message->angle,
+      message->damage,
       target
    );
-   CS_ReleaseActorNetID(blood);
 }
 
-void CL_HandleActorSpawnedMessage(nm_actorspawned_t *spawn_message)
+void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
 {
    mobj_t *actor;
-   int safe_fog_type = E_SafeThingType(MT_IFOG);
-   int safe_bfg_type = E_SafeThingType(MT_BFG);
+   int safe_item_fog_type          = E_SafeThingType(MT_IFOG);
+   int safe_tele_fog_type          = GameModeInfo->teleFogType;
+   int safe_bfg_type               = E_SafeThingType(MT_BFG);
+   int safe_spawn_fire_type        = E_SafeThingType(MT_SPAWNFIRE);
+   int safe_red_flag_type          = E_SafeThingName("RedFlag");
+   int safe_blue_flag_type         = E_SafeThingName("BlueFlag");
+   int safe_dropped_red_flag_type  = E_SafeThingName("DroppedRedFlag");
+   int safe_dropped_blue_flag_type = E_SafeThingName("DroppedBlueFlag");
+   int safe_carried_red_flag_type  = E_SafeThingName("CarriedRedFlag");
+   int safe_carried_blue_flag_type = E_SafeThingName("CarriedBlueFlag");
 
-   actor = P_SpawnMobj(
-      spawn_message->x, spawn_message->y, spawn_message->z, spawn_message->type
+   actor = CL_SpawnMobj(
+      message->net_id, message->x, message->y, message->z, message->type
    );
-   actor->momx = spawn_message->momx;
-   actor->momy = spawn_message->momy;
-   actor->momz = spawn_message->momz;
-   actor->angle = spawn_message->angle;
-   actor->flags = spawn_message->flags;
 
-   if(spawn_message->net_id == 0)
-      doom_printf("XXX Spawned actor with Net ID 0.");
+   actor->momx = message->momx;
+   actor->momy = message->momy;
+   actor->momz = message->momz;
+   actor->angle = message->angle;
+   actor->flags = message->flags;
 
-   CL_SetActorNetID(actor, spawn_message->net_id);
+   // [CG] Some actors only make sounds when they spawn, but because spawning
+   //      is handled serverside and therefore clients don't get the initial
+   //      opportunity, it must be done here.  Probably this will grow large
+   //      enough to require a hash.
 
-   if(spawn_message->type == safe_fog_type)
+   if(message->type == safe_item_fog_type)
       S_StartSound(actor, sfx_itmbk);
-   else if(spawn_message->type == safe_bfg_type && bfgtype == bfg_bouncing)
+   else if(message->type == safe_tele_fog_type)
+      S_StartSound(actor, GameModeInfo->teleSound);
+   else if(message->type == safe_bfg_type && bfgtype == bfg_bouncing)
       S_StartSound(actor, actor->info->seesound);
+   else if(message->type == safe_spawn_fire_type)
+      S_StartSound(actor, sfx_telept);
+   else if(message->type == safe_red_flag_type          ||
+           message->type == safe_blue_flag_type         ||
+           message->type == safe_dropped_red_flag_type  ||
+           message->type == safe_dropped_blue_flag_type ||
+           message->type == safe_carried_red_flag_type  ||
+           message->type == safe_carried_blue_flag_type)
+   {
+      teamcolor_t color;
+
+      if(message->type == safe_red_flag_type           ||
+           message->type == safe_dropped_red_flag_type ||
+           message->type == safe_carried_red_flag_type)
+      {
+         color = team_color_red;
+      }
+      else if(message->type == safe_blue_flag_type         ||
+              message->type == safe_dropped_blue_flag_type ||
+              message->type == safe_carried_blue_flag_type)
+      {
+         color = team_color_blue;
+      }
+
+      cs_flags[color].net_id = actor->net_id;
+
+      // [CG] Don't draw the flag if we're carrying it.  Prevents the flag from
+      //      ever blocking the local player's view.
+      if(cs_flags[color].carrier == consoleplayer)
+         actor->flags2 |= MF2_DONTDRAW;
+   }
+   else
+   {
+      printf(
+         "Spawned new actor type %d, Net ID %u.\n",
+         message->type,
+         message->net_id
+      );
+   }
 }
 
 void CL_HandleActorPositionMessage(nm_actorposition_t *message)
@@ -1599,8 +1595,8 @@ void CL_HandleActorPositionMessage(nm_actorposition_t *message)
 
    if(actor == NULL)
    {
-      doom_printf(
-         "Received position update for invalid actor %d, ignoring.\n",
+      printf(
+         "Received position update for invalid actor %u, ignoring.\n",
          message->actor_net_id
       );
       return;
@@ -1611,14 +1607,15 @@ void CL_HandleActorPositionMessage(nm_actorposition_t *message)
 
 void CL_HandleActorTargetMessage(nm_actortarget_t *message)
 {
-   mobj_t *actor, *target;
+   mobj_t *actor;
+   mobj_t *target = NULL;
 
    actor = CS_GetActorFromNetID(message->actor_net_id);
 
    if(actor == NULL)
    {
       doom_printf(
-         "Received actor target message for invalid actor %d, ignoring.\n",
+         "Received actor target message for invalid actor %u, ignoring.\n",
          message->actor_net_id
       );
       return;
@@ -1630,49 +1627,31 @@ void CL_HandleActorTargetMessage(nm_actortarget_t *message)
       if(target == NULL)
       {
          doom_printf(
-            "Received actor target message for invalid target %d, ignoring.\n",
+            "Received actor target message for invalid target %u, ignoring.\n",
             message->target_net_id
          );
          return;
       }
    }
-   else
-      target = NULL;
 
-   P_SetTarget(&actor->target, target);
-}
-
-void CL_HandleActorTracerMessage(nm_actortracer_t *message)
-{
-   mobj_t *actor, *tracer;
-
-   actor = CS_GetActorFromNetID(message->actor_net_id);
-
-   if(actor == NULL)
+   switch(message->target_type)
    {
-      doom_printf(
-         "Received actor tracer message for invalid actor %d, ignoring.\n",
-         message->actor_net_id
+   case CS_AT_TARGET:
+      P_SetTarget(&actor->target, target);
+      break;
+   case CS_AT_TRACER:
+      P_SetTarget(&actor->tracer, target);
+      break;
+   case CS_AT_LASTENEMY:
+      P_SetTarget(&actor->lastenemy, target);
+      break;
+   default:
+      I_Error(
+         "SV_BroadcastActorTarget: Invalid target type %d.\n",
+         message->target_type
       );
-      return;
+      break;
    }
-
-   if(message->tracer_net_id != 0)
-   {
-      tracer = CS_GetActorFromNetID(message->tracer_net_id);
-      if(tracer == NULL)
-      {
-         doom_printf(
-            "Received actor tracer message for invalid tracer %d, ignoring.\n",
-            message->tracer_net_id
-         );
-         return;
-      }
-   }
-   else
-      tracer = NULL;
-
-   P_SetTarget(&actor->tracer, tracer);
 }
 
 void CL_HandleActorStateMessage(nm_actorstate_t *message)
@@ -1683,9 +1662,9 @@ void CL_HandleActorStateMessage(nm_actorstate_t *message)
 
    if(actor == NULL)
    {
-      doom_printf(
+      printf(
          "Received actor state message for invalid "
-         "actor %d, type %d, state %d, ignoring.\n",
+         "actor %u, type %d, state %d, ignoring.\n",
          message->actor_net_id,
          message->actor_type,
          message->state_number
@@ -1706,7 +1685,7 @@ void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message)
    if(monster == NULL)
    {
       printf(
-         "Received monster awakened message for invalid actor %d, ignoring.\n",
+         "Received monster awakened message for invalid actor %u, ignoring.\n",
          message->monster_net_id
       );
       return;
@@ -1735,38 +1714,13 @@ void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message)
       S_StartSound(monster, sound);
 }
 
-void CL_HandleActorAttributeMessage(nm_actorattribute_t *message)
-{
-   mobj_t *actor;
-
-   actor = CS_GetActorFromNetID(message->actor_net_id);
-   if(actor == NULL)
-   {
-      printf(
-         "Received actor attribute message for invalid actor %d.\n",
-         message->actor_net_id
-      );
-      return;
-   }
-   if(message->attribute_type == aat_flags)
-   {
-      actor->flags = message->int_value;
-   }
-   else
-   {
-      printf(
-         "Received actor attribute message of unknown type %d.\n",
-         message->attribute_type
-      );
-      return;
-   }
-}
-
 void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
 {
    emod_t *emod;
    player_t *player;
-   mobj_t *target, *inflictor, *source;
+   mobj_t *target;
+   mobj_t *inflictor = NULL;
+   mobj_t *source = NULL;
 
    emod = E_DamageTypeForNum(message->mod);
    target = CS_GetActorFromNetID(message->target_net_id);
@@ -1774,7 +1728,7 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
    if(target == NULL)
    {
       printf(
-         "Received actor damaged message for invalid target %d.\n",
+         "Received actor damaged message for invalid target %u.\n",
          message->target_net_id
       );
       return;
@@ -1786,14 +1740,12 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       if(source == NULL)
       {
          printf(
-            "Received actor damaged message for invalid target %d.\n",
+            "Received actor damaged message for invalid target %u.\n",
             message->target_net_id
          );
          return;
       }
    }
-   else
-      source = NULL;
 
    if(message->inflictor_net_id != 0)
    {
@@ -1801,18 +1753,12 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       if(inflictor == NULL)
       {
          printf(
-            "Received actor damaged message for invalid inflictor %d.\n",
+            "Received actor damaged message for invalid inflictor %u.\n",
             message->inflictor_net_id
          );
          return;
       }
    }
-   else
-      inflictor = NULL;
-
-   /*
-   printf("Received actor damaged message for type %d.\n", target->type);
-   */
 
    // a dormant thing being destroyed gets restored to normal first
    if(target->flags2 & MF2_DORMANT)
@@ -1878,7 +1824,7 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
    if(target == NULL)
    {
       printf(
-         "Received actor killed message for invalid target %d.\n",
+         "Received actor killed message for invalid target %u.\n",
          message->target_net_id
       );
       return;
@@ -1890,7 +1836,7 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
       if(inflictor == NULL)
       {
          printf(
-            "Received actor killed message for invalid inflictor %d.\n",
+            "Received actor killed message for invalid inflictor %u.\n",
             message->inflictor_net_id
          );
          return;
@@ -1905,7 +1851,7 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
       if(source == NULL)
       {
          printf(
-            "Received actor killed message for invalid source %d.\n",
+            "Received actor killed message for invalid source %u.\n",
             message->source_net_id
          );
          return;
@@ -1932,20 +1878,16 @@ void CL_HandleActorRemovedMessage(nm_actorremoved_t *message)
 {
    mobj_t *actor;
 
-   actor = CS_GetActorFromNetID(message->actor_net_id);
-   if(actor == NULL)
+   if((actor = CS_GetActorFromNetID(message->actor_net_id)) == NULL)
    {
       printf(
-         "Received an actor removed message for an invalid actor %d.\n",
-         message->actor_net_id
-      );
-      printf(
-         "Received an actor removed message for an invalid actor %d.\n",
+         "Received an actor removed message for an invalid actor %u.\n",
          message->actor_net_id
       );
       return;
    }
-   P_RemoveMobj(actor);
+
+   CL_RemoveMobj(actor);
 }
 
 void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
@@ -1958,27 +1900,26 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    if(actor == NULL)
    {
       printf(
-         "Received an activate line message for an invalid actor %d.\n",
+         "Received an activate line message for an invalid actor %u.\n",
          message->actor_net_id
       );
       return;
    }
 
-   if(message->line_number < 0 ||
-      message->line_number > (numlines - 1))
+   if(message->line_number > (numlines - 1))
    {
       printf(
-         "Received an activate line message for an invalid line %d.\n",
+         "Received an activate line message for an invalid line %u.\n",
          message->line_number
       );
       return;
    }
    line = lines + message->line_number;
 
-   if(message->side < 0 || message->side > 1)
+   if(message->side > 1)
    {
       printf(
-         "Received an activate line message for an invalid side %d.\n",
+         "Received an activate line message for an invalid side %u.\n",
          message->side
       );
       return;
@@ -2019,7 +1960,7 @@ void CL_HandleMonsterActiveMessage(nm_monsteractive_t *message)
    if(monster == NULL)
    {
       printf(
-         "Received a monster active message for an invalid monster %d.\n",
+         "Received a monster active message for an invalid monster %u.\n",
          message->monster_net_id
       );
       return;
@@ -2038,7 +1979,7 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
    if(source == NULL)
    {
       printf(
-         "Received a missile spawned message for an invalid actor %d.\n",
+         "Received a missile spawned message for an invalid actor %u.\n",
          message->source_net_id
       );
       return;
@@ -2058,22 +1999,10 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
       }
    }
 
-   missile = P_SpawnMobj(
-      message->x,
-      message->y,
-      message->z,
-      message->type
+   missile = CL_SpawnMobj(
+      message->net_id, message->x, message->y, message->z, message->type
    );
 
-   /*
-   printf(
-      "Spawned missile, sent type/spawned type: %d/%d.\n",
-      type,
-      missile->type
-   );
-   */
-
-   // killough 11/98
    P_SetTarget(&missile->target, source);
 
    missile->momx = message->momx;
@@ -2099,8 +2028,8 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
    //      consequently inaccessible.
    if(message->type == MT_BFG)
       missile->extradata.bfgcount = 16;
-
-   CL_SetActorNetID(missile, message->net_id);
+   else if(message->type == E_SafeThingType(MT_MNTRFX2))
+      S_StartSound(missile, sfx_minat1);
 }
 
 void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message)
@@ -2111,19 +2040,11 @@ void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message)
    if(missile == NULL)
    {
       printf(
-         "Received an explode missile message for an invalid missile %d.\n",
+         "Received an explode missile message for an invalid missile %u.\n",
          message->missile_net_id
       );
       return;
    }
-
-   /*
-   printf(
-      "Received explode message for id %d at tic %d\n",
-      message->missile_net_id,
-      gametic
-   );
-   */
 
    missile->momx = missile->momy = missile->momz = 0;
 
@@ -2134,26 +2055,79 @@ void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message)
    // haleyjd: disable any particle effects
    missile->effects = 0;
    missile->tics = message->tics;
-   // CS_ReleaseActorNetID(missile);
 }
 
 void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message)
 {
-   mobj_t *cube;
+   mobj_t *cube, *target;
 
    cube = CS_GetActorFromNetID(message->net_id);
    if(cube == NULL)
    {
-      printf(
-         "Received a cube spawned message for an invalid cube %d.\n",
+      doom_printf(
+         "Received a cube spawned message for an invalid cube %u.\n",
          message->net_id
       );
       return;
    }
 
-   cube->reactiontime = message->reaction_time;
-   cube->flags = message->flags;
+   target = CS_GetActorFromNetID(message->target_net_id);
+   if(target == NULL)
+   {
+      doom_printf(
+         "Received a cube spawned message with invalid target %u.\n",
+         message->target_net_id
+      );
+      return;
+   }
+
+   P_SetTarget(&cube->target, target);
    P_UpdateThinker(&cube->thinker);
+}
+
+void CL_HandleSoundPlayedMessage(nm_soundplayed_t *message)
+{
+   mobj_t *source;
+   sfxinfo_t *sfx;
+   char *sound_name = calloc(message->sound_name_size + 2, sizeof(char));
+         
+   strncpy(
+      sound_name,
+      (const char *)message + sizeof(nm_soundplayed_t),
+      message->sound_name_size
+   );
+
+   // [CG] Ignore server-generated sounds if we haven't received sync yet, or
+   //      if a game isn't currently running.
+   if(!cl_received_sync || gamestate != GS_LEVEL)
+      return;
+
+   if((source = CS_GetActorFromNetID(message->source_net_id)) == NULL)
+   {
+      doom_printf(
+         "Received a sound played message for an invalid source %u.\n",
+         message->source_net_id
+      );
+      return;
+   }
+
+   if(!(sfx = E_SoundForName(sound_name)))
+   {
+      printf(
+         "Received a sound played message for an invalid sound %s.\n",
+         sound_name
+      );
+      return;
+   }
+
+   S_StartSfxInfo(
+      source,
+      sfx,
+      message->volume,
+      message->attenuation,
+      message->loop,
+      message->channel
+   );
 }
 
 void CL_SetLatestFinishedIndices(unsigned int index)
@@ -2178,12 +2152,10 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    // );
 #endif
 
+   // [CG] This means we haven't even completed a single TIC yet, so ignore the
+   //      piled up messages we're receiving.
    if(cl_current_world_index == 0)
-   {
-      // [CG] This means we haven't even completed a single TIC yet, so ignore
-      //      the piled up messages we're receiving.
       return;
-   }
 
    if((cl_latest_world_index > cl_current_world_index) &&
       ((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE))
@@ -2191,7 +2163,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
       /* [CG] Used to disconnect here, now we flush the buffer, even if
        *      flushing all these TICs is extremely disorienting.
       doom_printf(
-         "Network message buffer overflowed (%d/%d), disconnecting.",
+         "Network message buffer overflowed (%u/%u), disconnecting.",
          cl_current_world_index, cl_latest_world_index
       );
       CL_Disconnect();
@@ -2199,9 +2171,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
       */
       unsigned int old_world_index = cl_current_world_index;
       while(cl_current_world_index < (cl_latest_world_index - 2))
-      {
          run_world();
-      }
       CL_Predict(old_world_index, cl_latest_world_index - 2, false);
    }
 }
@@ -2212,13 +2182,65 @@ void CL_HandleMessage(char *data, size_t data_length)
    size_t message_size = 0;
    unsigned int message_index = 0;
    nm_buffer_node_t *node = NULL;
+   boolean handled_a_message = false;
 
-   // [CG] Not all messages should be buffered; nm_gamestate and nm_sync are
-   //      processed immediately because they're crucial to the initial
-   //      connection process.  The sector and map special messages are
-   //      buffered, but separately from the generic network message buffer.
-   //      There's no need to buffer the nm_ticfinished message either, it just
-   //      lets the client know that a given command index can be processed.
+   if(message_type < 0 || message_type >= nm_max_messages)
+   {
+      doom_printf(
+         "Received invalid network message %d, ignoring.\n", message_type
+      );
+   }
+
+   // [CG] The weird style here is so it's easy to omit message receipts that
+   //      you don't want printed out.
+   if(
+      message_type == nm_gamestate
+      || message_type == nm_sync
+      || message_type == nm_mapstarted
+      || message_type == nm_mapcompleted
+      || message_type == nm_authresult
+      || message_type == nm_clientinit
+      // || message_type == nm_clientstatus
+      || message_type == nm_playerspawned
+      || message_type == nm_playerinfoupdated
+      // || message_type == nm_playerweaponstate
+      || message_type == nm_playerremoved
+      || message_type == nm_playertouchedspecial
+      || message_type == nm_servermessage
+      || message_type == nm_playermessage
+      || message_type == nm_puffspawned
+      || message_type == nm_bloodspawned
+      || message_type == nm_actorspawned
+      // || message_type == nm_actorposition
+      || message_type == nm_actortarget
+      // || message_type == nm_actorstate
+      || message_type == nm_actordamaged
+      || message_type == nm_actorkilled
+      || message_type == nm_actorremoved
+      || message_type == nm_lineactivated
+      // || message_type == nm_monsteractive
+      || message_type == nm_monsterawakened
+      || message_type == nm_missilespawned
+      || message_type == nm_missileexploded
+      || message_type == nm_cubespawned
+      || message_type == nm_specialspawned
+      // || message_type == nm_specialstatus
+      || message_type == nm_specialremoved
+      // || message_type == nm_sectorposition
+      || message_type == nm_soundplayed
+      // || message_type == nm_ticfinished
+      )
+   {
+      printf(
+         "Received [%s message], %d.\n",
+         network_message_names[message_type],
+         cl_received_sync
+      );
+   }
+
+   // [CG] This is the main message handler.  It handles various cases
+   //      including before and after the client's received sync, and the
+   //      buffer being enabled or disabled.
 
    // [CG] nm_servermessage and nm_playermessage add an extra byte to
    //      message_size to ensure that the appended message is NULL-terminated.
@@ -2228,445 +2250,559 @@ void CL_HandleMessage(char *data, size_t data_length)
 
    switch(message_type)
    {
-      case nm_gamestate:
-         printf("Received [game state message], size: %u.\n", data_length);
-         CL_HandleGameStateMessage((nm_gamestate_t *)data);
-         return;
-      case nm_sync:
-         printf("Received [sync message].\n");
-         CL_HandleSyncMessage((nm_sync_t *)data);
-         return;
-      case nm_mapstarted:
-         CL_HandleMapStartedMessage((nm_mapstarted_t *)data);
-         return;
-      case nm_mapcompleted:
-         CL_HandleMapCompletedMessage((nm_mapcompleted_t *)data);
-         return;
-      case nm_clientinit:
-         if(cl_received_sync)
-         {
-            message_size = sizeof(nm_clientinit_t);
-            message_index = ((nm_clientinit_t *)data)->world_index;
-         }
-         else
-         {
-            // [CG] When we first join a game, we receive info about all the
-            //      other clients during the initial connection process, and
-            //      the message gets buffered for an index that we'll never
-            //      process because of this.  To avoid it, process these
-            //      messages immediately if we've yet to receive sync.
-            CL_HandleClientInitMessage((nm_clientinit_t *)data);
-            return;
-         }
-         break;
-      case nm_authresult:
-         // printf("Received [auth result message].\n");
-         CL_HandleAuthResultMessage((nm_authresult_t *)data);
-         return;
-      case nm_clientstatus:
-         message_size = sizeof(nm_clientstatus_t);
-         message_index = ((nm_clientstatus_t *)data)->world_index;
-         break;
-      case nm_playerspawned:
-         message_size = sizeof(nm_playerspawned_t);
-         message_index = ((nm_playerspawned_t *)data)->world_index;
-         break;
-      case nm_playerinfoupdated:
-         message_size = data_length;
-         message_index = ((nm_playerinfoupdated_t *)data)->world_index;
-         break;
-      case nm_playerweaponstate:
-         message_size = sizeof(nm_playerweaponstate_t);
-         message_index = ((nm_playerweaponstate_t *)data)->world_index;
-         break;
-      case nm_playerremoved:
-         message_size = sizeof(nm_playerremoved_t);
-         message_index = ((nm_playerremoved_t *)data)->world_index;
-         break;
-      case nm_playertouchedspecial:
-         message_size = sizeof(nm_playertouchedspecial_t);
-         message_index = ((nm_playertouchedspecial_t *)data)->world_index;
-         break;
-      case nm_servermessage:
-         if(((nm_servermessage_t *)data)->length > (MAX_STRING_SIZE + 1) ||
-            data_length > (sizeof(nm_servermessage_t) + MAX_STRING_SIZE + 1))
-         {
-            doom_printf(
-               "Received server message with excessive length, ignoring.\n"
-            );
-            return;
-         }
-         message_size = sizeof(nm_servermessage_t) +
-                        ((nm_servermessage_t *)data)->length + 1;
-         message_index = ((nm_servermessage_t *)data)->world_index;
-         break;
-      case nm_playermessage:
-         if(((nm_playermessage_t *)data)->length > (MAX_STRING_SIZE + 1) ||
-            data_length > (sizeof(nm_playermessage_t) + MAX_STRING_SIZE + 1))
-         {
-            doom_printf(
-               "Received player message with excessive length, ignoring.\n"
-            );
-            return;
-         }
-         message_size = sizeof(nm_playermessage_t) +
-                        ((nm_playermessage_t *)data)->length + 1;
-         message_index = ((nm_playermessage_t *)data)->world_index;
-         break;
-      case nm_puffspawned:
-         message_size = sizeof(nm_puffspawned_t);
-         message_index = ((nm_puffspawned_t *)data)->world_index;
-         break;
-      case nm_bloodspawned:
-         message_size = sizeof(nm_bloodspawned_t);
-         message_index = ((nm_bloodspawned_t *)data)->world_index;
-         break;
-      case nm_actorspawned:
-         message_size = sizeof(nm_actorspawned_t);
-         message_index = ((nm_actorspawned_t *)data)->world_index;
-         break;
-      case nm_actorposition:
-         message_size = sizeof(nm_actorposition_t);
-         message_index = ((nm_actorposition_t *)data)->world_index;
-         break;
-      case nm_actortarget:
-         message_size = sizeof(nm_actortarget_t);
-         message_index = ((nm_actortarget_t *)data)->world_index;
-         break;
-      case nm_actortracer:
-         message_size = sizeof(nm_actortracer_t);
-         message_index = ((nm_actortracer_t *)data)->world_index;
-         break;
-      case nm_actorstate:
-         message_size = sizeof(nm_actorstate_t);
-         message_index = ((nm_actorstate_t *)data)->world_index;
-         break;
-      case nm_actorattribute:
-         message_size = sizeof(nm_actorattribute_t);
-         message_index = ((nm_actorattribute_t *)data)->world_index;
-         break;
-      case nm_actordamaged:
-         message_size = sizeof(nm_actordamaged_t);
-         message_index = ((nm_actordamaged_t *)data)->world_index;
-         break;
-      case nm_actorkilled:
-         message_size = sizeof(nm_actorkilled_t);
-         message_index = ((nm_actorkilled_t *)data)->world_index;
-         break;
-      case nm_actorremoved:
-         message_size = sizeof(nm_actorremoved_t);
-         message_index = ((nm_actorremoved_t *)data)->world_index;
-         break;
-      case nm_lineactivated:
-         message_size = sizeof(nm_lineactivated_t);
-         message_index = ((nm_lineactivated_t *)data)->world_index;
-         break;
-      case nm_monsteractive:
-         message_size = sizeof(nm_monsteractive_t);
-         message_index = ((nm_monsteractive_t *)data)->world_index;
-         break;
-      case nm_monsterawakened:
-         message_size = sizeof(nm_monsterawakened_t);
-         message_index = ((nm_monsterawakened_t *)data)->world_index;
-         break;
-      case nm_missilespawned:
-         message_size = sizeof(nm_missilespawned_t);
-         message_index = ((nm_missilespawned_t *)data)->world_index;
-         break;
-      case nm_missileexploded:
-         message_size = sizeof(nm_missileexploded_t);
-         message_index = ((nm_missileexploded_t *)data)->world_index;
-         break;
-      case nm_cubespawned:
-         message_size = sizeof(nm_cubespawned_t);
-         message_index = ((nm_cubespawned_t *)data)->world_index;
-         break;
-      case nm_specialspawned:
-         message_index = ((nm_specialspawned_t *)data)->world_index;
-         switch(((nm_specialspawned_t *)data)->special_type)
-         {
-         case ms_ceiling:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(ceiling_status_t);
-            break;
-         case ms_ceiling_param:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(ceiling_status_t) +
-                           sizeof(cs_ceilingdata_t);
-            break;
-         case ms_door_tagged:
-         case ms_door_manual:
-         case ms_door_closein30:
-         case ms_door_raisein300:
-            message_size = sizeof(nm_specialspawned_t) + sizeof(door_status_t);
-            break;
-         case ms_door_param:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(door_status_t) +
-                           sizeof(cs_doordata_t);
-            break;
-         case ms_floor:
-         case ms_stairs:
-         case ms_donut:
-         case ms_donut_hole:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(floor_status_t);
-            break;
-         case ms_floor_param:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(floor_status_t) +
-                           sizeof(cs_floordata_t);
-            break;
-         case ms_elevator:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(elevator_status_t);
-            break;
-         case ms_pillar_build:
-         case ms_pillar_open:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(pillar_status_t);
-            break;
-         case ms_floorwaggle:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(floorwaggle_status_t);
-            break;
-         case ms_platform:
-         case ms_platform_gen:
-            message_size = sizeof(nm_specialspawned_t) +
-                           sizeof(platform_status_t);
-            break;
-         default:
-            doom_printf(
-               "Received map special spawned message with invalid type %d, "
-               "ignoring.",
-               ((nm_specialspawned_t *)data)->special_type
-            );
-            return;
-         }
-         // [CG] TODO: Validate line_number and sector_number.
-         break;
-      case nm_specialstatus:
-         CL_BufferMapSpecialStatus(
-            (nm_specialstatus_t *)data,
-            (void *)(data + sizeof(nm_specialstatus_t))
-         );
-         return;
-      case nm_specialremoved:
-         message_index = ((nm_specialremoved_t *)data)->world_index;
-         message_size = sizeof(nm_specialremoved_t);
-         switch(((nm_specialremoved_t *)data)->special_type)
-         {
-         case ms_ceiling:
-         case ms_door_tagged:
-         case ms_door_manual:
-         case ms_door_closein30:
-         case ms_door_raisein300:
-         case ms_floor:
-         case ms_stairs:
-         case ms_donut:
-         case ms_donut_hole:
-         case ms_elevator:
-         case ms_pillar_build:
-         case ms_pillar_open:
-         case ms_floorwaggle:
-         case ms_platform:
-            break;
-         default:
-            doom_printf(
-               "Received a map special removed message with invalid type %d, "
-               "ignoring.",
-               ((nm_specialremoved_t *)data)->special_type
-            );
-            return;
-         }
-         break;
-      case nm_sectorposition:
-         CL_BufferSectorPosition((nm_sectorposition_t *)data);
-         return;
-      case nm_ticfinished:
-         CL_SetLatestFinishedIndices(
-            ((nm_ticfinished_t *)data)->world_index
-         );
-         return;
-      case nm_playercommand:
-      case nm_max_messages:
-      default:
-         doom_printf(
-            "Received unknown network message %d, ignoring.\n", message_type
-         );
-         break;
-   }
-
-   // [CG] The weird style here is so it's easy to omit message receipts that
-   //      you don't want printed out.
-   if(
-         message_type == nm_mapcompleted
-      || message_type == nm_gamestate
-      || message_type == nm_sync
-      || message_type == nm_clientinit
-      // || message_type == nm_clientstatus
-      // || message_type == nm_playerspawned
-      // || message_type == nm_playerinfoupdated
-      // || message_type == nm_playerweaponstate
-      || message_type == nm_playerremoved
-      // || message_type == nm_playertouchedspecial
-      || message_type == nm_servermessage
-      || message_type == nm_playermessage
-      // || message_type == nm_puffspawned
-      // || message_type == nm_bloodspawned
-      // || message_type == nm_actorspawned
-      // || message_type == nm_actorposition
-      || message_type == nm_actortarget
-      || message_type == nm_actortracer
-      // || message_type == nm_actorstate
-      || message_type == nm_actorattribute
-      // || message_type == nm_actordamaged
-      // || message_type == nm_actorkilled
-      // || message_type == nm_actorremoved
-      || message_type == nm_lineactivated
-      // || message_type == nm_monsteractive
-      || message_type == nm_monsterawakened
-      || message_type == nm_missilespawned
-      || message_type == nm_missileexploded
-      || message_type == nm_cubespawned
-      // || message_type == nm_specialspawned
-      // || message_type == nm_specialstatus
-      // || message_type == nm_specialremoved
-      || message_type == nm_sectorposition
-      || message_type == nm_ticfinished
-      )
-   {
-      printf(
-         "Received [%s message] (%d) at %d.\n",
-         network_message_names[message_type],
-         message_type,
-         message_index
-      );
-   }
-
-   if((cl_constant_prediction && message_index <= cl_current_world_index) ||
-      cl_packet_buffer_size == 1)
-   {
-      switch(message_type)
+   case nm_gamestate:
+      message_index = 0; // [CG] Game state messages have no world index.
+      message_size  = ((nm_gamestate_t *)data)->state_size +
+                      sizeof(nm_gamestate_t);
+      CL_HandleGameStateMessage((nm_gamestate_t *)data);
+      handled_a_message = true;
+      break;
+   case nm_sync:
+      message_index = ((nm_sync_t *)data)->world_index;
+      message_size  = sizeof(nm_sync_t);
+      CL_HandleSyncMessage((nm_sync_t *)data);
+      handled_a_message = true;
+      break;
+   case nm_mapstarted:
+      message_index = ((nm_mapstarted_t *)data)->world_index;
+      message_size  = sizeof(nm_mapstarted_t);
+      CL_HandleMapStartedMessage((nm_mapstarted_t *)data);
+      handled_a_message = true;
+      break;
+   case nm_mapcompleted:
+      message_index = ((nm_mapcompleted_t *)data)->world_index;
+      message_size  = sizeof(nm_mapcompleted_t);
+      CL_HandleMapCompletedMessage((nm_mapcompleted_t *)data);
+      handled_a_message = true;
+      break;
+   case nm_clientinit:
+      message_index = ((nm_clientinit_t *)data)->world_index;
+      message_size  = sizeof(nm_clientinit_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
       {
-      case nm_gamestate:
-      case nm_sync:
-      case nm_mapstarted:
-      case nm_mapcompleted:
-      case nm_authresult:
-      case nm_specialstatus:
-      case nm_sectorposition:
-      case nm_ticfinished:
-         // [CG] These are all handled immediately regardless of packet buffer
-         //      size.
-         break;
-      case nm_clientinit:
          CL_HandleClientInitMessage((nm_clientinit_t *)data);
-         break;
-      case nm_clientstatus:
+         handled_a_message = true;
+      }
+      break;
+   case nm_authresult:
+      message_index = ((nm_authresult_t *)data)->world_index;
+      message_size  = sizeof(nm_authresult_t);
+      CL_HandleAuthResultMessage((nm_authresult_t *)data);
+      handled_a_message = true;
+      break;
+   case nm_clientstatus:
+      message_index = ((nm_clientstatus_t *)data)->world_index;
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleClientStatusMessage((nm_clientstatus_t *)data);
-         break;
-      case nm_playerspawned:
+         handled_a_message = true;
+      }
+      message_size = sizeof(nm_clientstatus_t);
+      break;
+   case nm_playerspawned:
+      message_index = ((nm_playerspawned_t *)data)->world_index;
+      message_size = sizeof(nm_playerspawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePlayerSpawnedMessage((nm_playerspawned_t *)data);
-         break;
-      case nm_playerinfoupdated:
+         handled_a_message = true;
+      }
+      break;
+   case nm_playerinfoupdated:
+      message_index = ((nm_playerinfoupdated_t *)data)->world_index;
+      message_size = data_length;
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CS_HandleUpdatePlayerInfoMessage((nm_playerinfoupdated_t *)data);
-         break;
-      case nm_playerweaponstate:
+         handled_a_message = true;
+      }
+      break;
+   case nm_playerweaponstate:
+      message_index = ((nm_playerweaponstate_t *)data)->world_index;
+      message_size = sizeof(nm_playerweaponstate_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePlayerWeaponStateMessage((nm_playerweaponstate_t *)data);
-         break;
-      case nm_playerremoved:
+         handled_a_message = true;
+      }
+      break;
+   case nm_playerremoved:
+      message_index = ((nm_playerremoved_t *)data)->world_index;
+      message_size = sizeof(nm_playerremoved_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePlayerRemovedMessage((nm_playerremoved_t *)data);
-         break;
-      case nm_playertouchedspecial:
+         handled_a_message = true;
+      }
+      break;
+   case nm_playertouchedspecial:
+      message_index = ((nm_playertouchedspecial_t *)data)->world_index;
+      message_size = sizeof(nm_playertouchedspecial_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePlayerTouchedSpecialMessage(
             (nm_playertouchedspecial_t *)data
          );
-         break;
-      case nm_servermessage:
+         handled_a_message = true;
+      }
+      break;
+   case nm_servermessage:
+      if(((nm_servermessage_t *)data)->length > (MAX_STRING_SIZE + 1) ||
+         data_length > (sizeof(nm_servermessage_t) + MAX_STRING_SIZE + 1))
+      {
+         doom_printf(
+            "Received server message with excessive length, ignoring.\n"
+         );
+         return;
+      }
+      message_index = ((nm_servermessage_t *)data)->world_index;
+      message_size = sizeof(nm_servermessage_t) +
+                     ((nm_servermessage_t *)data)->length + 1;
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleServerMessage((nm_servermessage_t *)data);
-         break;
-      case nm_playermessage:
+         handled_a_message = true;
+      }
+      break;
+   case nm_playermessage:
+      if(((nm_playermessage_t *)data)->length > (MAX_STRING_SIZE + 1) ||
+         data_length > (sizeof(nm_playermessage_t) + MAX_STRING_SIZE + 1))
+      {
+         doom_printf(
+            "Received player message with excessive length, ignoring.\n"
+         );
+         return;
+      }
+      message_index = ((nm_playermessage_t *)data)->world_index;
+      message_size = sizeof(nm_playermessage_t) +
+                     ((nm_playermessage_t *)data)->length + 1;
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePlayerMessage((nm_playermessage_t *)data);
-         break;
-      case nm_puffspawned:
+         handled_a_message = true;
+      }
+      break;
+   case nm_puffspawned:
+      message_index = ((nm_puffspawned_t *)data)->world_index;
+      message_size = sizeof(nm_puffspawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandlePuffSpawnedMessage((nm_puffspawned_t *)data);
-         break;
-      case nm_bloodspawned:
+         handled_a_message = true;
+      }
+      break;
+   case nm_bloodspawned:
+      message_index = ((nm_bloodspawned_t *)data)->world_index;
+      message_size = sizeof(nm_bloodspawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleBloodSpawnedMessage((nm_bloodspawned_t *)data);
-         break;
-      case nm_actorspawned:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actorspawned:
+      message_index = ((nm_actorspawned_t *)data)->world_index;
+      message_size = sizeof(nm_actorspawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorSpawnedMessage((nm_actorspawned_t *)data);
-         break;
-      case nm_actorposition:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actorposition:
+      message_index = ((nm_actorposition_t *)data)->world_index;
+      message_size = sizeof(nm_actorposition_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorPositionMessage((nm_actorposition_t *)data);
-         break;
-      case nm_actortarget:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actortarget:
+      message_index = ((nm_actortarget_t *)data)->world_index;
+      message_size = sizeof(nm_actortarget_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorTargetMessage((nm_actortarget_t *)data);
-         break;
-      case nm_actortracer:
-         CL_HandleActorTracerMessage((nm_actortracer_t *)data);
-         break;
-      case nm_actorstate:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actorstate:
+      message_index = ((nm_actorstate_t *)data)->world_index;
+      message_size = sizeof(nm_actorstate_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorStateMessage((nm_actorstate_t *)data);
-         break;
-      case nm_actordamaged:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actordamaged:
+      message_index = ((nm_actordamaged_t *)data)->world_index;
+      message_size = sizeof(nm_actordamaged_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorDamagedMessage((nm_actordamaged_t *)data);
-         break;
-      case nm_actorattribute:
-         CL_HandleActorAttributeMessage((nm_actorattribute_t *)data);
-         break;
-      case nm_actorkilled:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actorkilled:
+      message_index = ((nm_actorkilled_t *)data)->world_index;
+      message_size = sizeof(nm_actorkilled_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorKilledMessage((nm_actorkilled_t *)data);
-         break;
-      case nm_actorremoved:
+         handled_a_message = true;
+      }
+      break;
+   case nm_actorremoved:
+      message_index = ((nm_actorremoved_t *)data)->world_index;
+      message_size = sizeof(nm_actorremoved_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleActorRemovedMessage((nm_actorremoved_t *)data);
-         break;
-      case nm_lineactivated:
+         handled_a_message = true;
+      }
+      break;
+   case nm_lineactivated:
+      message_index = ((nm_lineactivated_t *)data)->world_index;
+      message_size = sizeof(nm_lineactivated_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleLineActivatedMessage((nm_lineactivated_t *)data);
-         break;
-      case nm_monsteractive:
+         handled_a_message = true;
+      }
+      break;
+   case nm_monsteractive:
+      message_index = ((nm_monsteractive_t *)data)->world_index;
+      message_size = sizeof(nm_monsteractive_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleMonsterActiveMessage((nm_monsteractive_t *)data);
-         break;
-      case nm_monsterawakened:
+         handled_a_message = true;
+      }
+      break;
+   case nm_monsterawakened:
+      message_index = ((nm_monsterawakened_t *)data)->world_index;
+      message_size = sizeof(nm_monsterawakened_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleMonsterAwakenedMessage((nm_monsterawakened_t *)data);
-         break;
-      case nm_missilespawned:
+         handled_a_message = true;
+      }
+      break;
+   case nm_missilespawned:
+      message_index = ((nm_missilespawned_t *)data)->world_index;
+      message_size = sizeof(nm_missilespawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleMissileSpawnedMessage((nm_missilespawned_t *)data);
-         break;
-      case nm_missileexploded:
+         handled_a_message = true;
+      }
+      break;
+   case nm_missileexploded:
+      message_index = ((nm_missileexploded_t *)data)->world_index;
+      message_size = sizeof(nm_missileexploded_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleMissileExplodedMessage((nm_missileexploded_t *)data);
-         break;
-      case nm_cubespawned:
+         handled_a_message = true;
+      }
+      break;
+   case nm_cubespawned:
+      message_index = ((nm_cubespawned_t *)data)->world_index;
+      message_size = sizeof(nm_cubespawned_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
          CL_HandleCubeSpawnedMessage((nm_cubespawned_t *)data);
+         handled_a_message = true;
+      }
+      break;
+   case nm_specialspawned:
+   {
+      nm_specialspawned_t *message = (nm_specialspawned_t *)data;
+
+      message_index = message->world_index;
+
+      switch(message->special_type)
+      {
+      case ms_ceiling:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(ceiling_status_t);
          break;
-      case nm_specialspawned:
-         CL_HandleMapSpecialSpawnedMessage((nm_specialspawned_t *)data);
+      case ms_ceiling_param:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(ceiling_status_t) +
+                        sizeof(cs_ceilingdata_t);
          break;
-      case nm_specialremoved:
-         CL_HandleMapSpecialRemovedMessage((nm_specialremoved_t *)data);
+      case ms_door_tagged:
+      case ms_door_manual:
+      case ms_door_closein30:
+      case ms_door_raisein300:
+         message_size = sizeof(nm_specialspawned_t) + sizeof(door_status_t);
          break;
-      case nm_playercommand:
-      case nm_max_messages:
+      case ms_door_param:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(door_status_t) +
+                        sizeof(cs_doordata_t);
+         break;
+      case ms_floor:
+      case ms_stairs:
+      case ms_donut:
+      case ms_donut_hole:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(floor_status_t);
+         break;
+      case ms_floor_param:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(floor_status_t) +
+                        sizeof(cs_floordata_t);
+         break;
+      case ms_elevator:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(elevator_status_t);
+         break;
+      case ms_pillar_build:
+      case ms_pillar_open:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(pillar_status_t);
+         break;
+      case ms_floorwaggle:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(floorwaggle_status_t);
+         break;
+      case ms_platform:
+      case ms_platform_gen:
+         message_size = sizeof(nm_specialspawned_t) +
+                        sizeof(platform_status_t);
+         break;
       default:
          doom_printf(
-            "Received unknown server message %d, ignoring.\n", message_type
+            "Received map special spawned message with invalid type %d, "
+            "ignoring.",
+            message->special_type
          );
-         break;
+         return;
       }
-      return;
+
+      if(message->line_number >= numlines)
+      {
+         printf(
+            "Received a map special spawned message containing invalid line "
+            "%d, ignoring.\n",
+            message->line_number
+         );
+         return;
+      }
+
+      if(message->sector_number >= numsectors)
+      {
+         printf(
+            "Received a map special spawned message containing invalid sector "
+            "%d, ignoring.\n",
+            message->sector_number
+         );
+         return;
+      }
+
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
+         CL_HandleMapSpecialSpawnedMessage(message);
+         handled_a_message = true;
+      }
+      break;
+   }
+   case nm_specialstatus:
+      message_index = ((nm_specialstatus_t *)data)->world_index;
+      message_size = data_length;
+
+      CL_BufferMapSpecialStatus(
+         (nm_specialstatus_t *)data,
+         (void *)(data + sizeof(nm_specialstatus_t))
+      );
+
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
+         switch(((nm_specialremoved_t *)data)->special_type)
+         {
+         case ms_ceiling:
+         case ms_ceiling_param:
+            CL_ApplyCeilingStatus(
+               (ceiling_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_door_tagged:
+         case ms_door_manual:
+         case ms_door_closein30:
+         case ms_door_raisein300:
+         case ms_door_param:
+            CL_ApplyDoorStatus(
+               (door_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_floor:
+         case ms_stairs:
+         case ms_donut:
+         case ms_donut_hole:
+         case ms_floor_param:
+            CL_ApplyFloorStatus(
+               (floor_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_elevator:
+            CL_ApplyElevatorStatus(
+               (elevator_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_pillar_build:
+         case ms_pillar_open:
+            CL_ApplyPillarStatus(
+               (pillar_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_floorwaggle:
+            CL_ApplyFloorWaggleStatus(
+               (floorwaggle_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         case ms_platform:
+         case ms_platform_gen:
+            CL_ApplyPlatformStatus(
+               (platform_status_t *)(data + sizeof(nm_specialstatus_t))
+            );
+            break;
+         default:
+            doom_printf(
+               "CL_HandleMessage: Received a map special status message "
+               "with invalid type %d, ignoring.",
+               ((nm_specialremoved_t *)data)->special_type
+            );
+         }
+      }
+      handled_a_message = true;
+      break;
+   case nm_specialremoved:
+      switch(((nm_specialremoved_t *)data)->special_type)
+      {
+      case ms_ceiling:
+      case ms_door_tagged:
+      case ms_door_manual:
+      case ms_door_closein30:
+      case ms_door_raisein300:
+      case ms_floor:
+      case ms_stairs:
+      case ms_donut:
+      case ms_donut_hole:
+      case ms_elevator:
+      case ms_pillar_build:
+      case ms_pillar_open:
+      case ms_floorwaggle:
+      case ms_platform:
+         break;
+      default:
+         doom_printf(
+            "Received a map special removed message with invalid type %d, "
+            "ignoring.",
+            ((nm_specialremoved_t *)data)->special_type
+         );
+         return;
+      }
+      message_index = ((nm_specialremoved_t *)data)->world_index;
+      message_size = sizeof(nm_specialremoved_t);
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
+         CL_HandleMapSpecialRemovedMessage((nm_specialremoved_t *)data);
+         handled_a_message = true;
+      }
+      break;
+   case nm_sectorposition:
+   {
+      nm_sectorposition_t *message = (nm_sectorposition_t *)data;
+
+      message_index = message->world_index;
+      message_size = sizeof(nm_sectorposition_t);
+
+      if(message->sector_number >= numsectors)
+      {
+         printf(
+            "Received a sector position message containing invalid sector "
+            "%d, ignoring.\n",
+            message->sector_number
+         );
+         return;
+      }
+
+      CL_BufferSectorPosition(message);
+
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
+         nm_sectorposition_t *message = (nm_sectorposition_t *)data;
+
+         cl_setting_sector_positions = true;
+         CS_SetSectorPosition(
+            &sectors[message->sector_number], &message->sector_position
+         );
+         CS_CopySectorPosition(
+            &cs_sector_positions[message->sector_number]
+                                [message->world_index % MAX_POSITIONS],
+            &message->sector_position
+         );
+         cl_setting_sector_positions = false;
+      }
+      handled_a_message = true;
+      break;
+   }
+   case nm_soundplayed:
+      message_index = ((nm_soundplayed_t *)data)->world_index;
+      message_size = data_length;
+      if(SHOULD_HANDLE_MESSAGE_NOW(message_index))
+      {
+         CL_HandleSoundPlayedMessage((nm_soundplayed_t *)data);
+         handled_a_message = true;
+      }
+      break;
+   case nm_ticfinished:
+      CL_SetLatestFinishedIndices(
+         ((nm_ticfinished_t *)data)->world_index
+      );
+      handled_a_message = true;
+      break;
+   case nm_playercommand:
+   case nm_max_messages:
+   default:
+      doom_printf(
+         "Received unknown network message %d, ignoring.\n", message_type
+      );
+      break;
    }
 
-   if(message_index <= cl_current_world_index && !cl_constant_prediction)
+   if(handled_a_message)
+      return;
+
+   if(!SHOULD_BUFFER_MESSAGES)
+      return;
+
+   if(SHOULD_HANDLE_OLD_MESSAGES && MESSAGE_IS_OLD(message_index))
+      return;
+
+   if(message_index <= cl_current_world_index)
    {
-      CL_Disconnect();
-      I_Error(
-         "Received a message (%s, %u, %u) that will never be processed, "
-         "exiting.\n",
+      printf(
+         "Received a message that will never be processed, exiting.\n"
+         "  Message Type: %s\n"
+         "  Received Sync: %d\n"
+         "  Buffer Size:   %u\n"
+         "  Constant Pred: %d\n"
+         "  Message Index: %u\n"
+         "  Current Index: %u",
          network_message_names[message_type],
+         cl_received_sync,
+         cl_packet_buffer_size,
+         cl_constant_prediction,
          message_index,
          cl_current_world_index
       );
+      CL_Disconnect();
+      I_Error("\n");
    }
 
    //
@@ -2690,6 +2826,13 @@ void CL_ProcessNetworkMessages(void)
    boolean processed_a_message = false;
 
    CL_ProcessSectorPositions(cl_current_world_index);
+
+   if(cl_received_sync && cl_packet_buffer_size == 1)
+   {
+      CL_ClearMapSpecialStatuses();
+      CL_ClearSectorPositions();
+      return;
+   }
 
    // [CG] mdllist stores its nodes in LIFO order like a stack.  This causes
    //      problems because it means network messages received during the same
@@ -2787,22 +2930,12 @@ void CL_ProcessNetworkMessages(void)
          CL_HandleActorTargetMessage((nm_actortarget_t *)node->message);
          processed_a_message = true;
          break;
-      case nm_actortracer:
-         CL_HandleActorTracerMessage((nm_actortracer_t *)node->message);
-         processed_a_message = true;
-         break;
       case nm_actorstate:
          CL_HandleActorStateMessage((nm_actorstate_t *)node->message);
          processed_a_message = true;
          break;
       case nm_actordamaged:
          CL_HandleActorDamagedMessage((nm_actordamaged_t *)node->message);
-         processed_a_message = true;
-         break;
-      case nm_actorattribute:
-         CL_HandleActorAttributeMessage(
-            (nm_actorattribute_t *)node->message
-         );
          processed_a_message = true;
          break;
       case nm_actorkilled:
@@ -2858,6 +2991,9 @@ void CL_ProcessNetworkMessages(void)
          CL_HandleMapSpecialRemovedMessage(
             (nm_specialremoved_t *)node->message
          );
+         break;
+      case nm_soundplayed:
+         CL_HandleSoundPlayedMessage((nm_soundplayed_t *)node->message);
          break;
       case nm_ticfinished:
          break;
@@ -2919,11 +3055,12 @@ void CL_RunDemoTics(void)
          if(!CS_ReadDemoPacket())
          {
             boolean is_finished = CS_DemoFinished();
+
             if(is_finished)
-            {
                break;
-            }
+
             doom_printf("Error reading demo: %s.\n", CS_GetDemoErrorMessage());
+
             if(!CS_StopDemo())
             {
                doom_printf(
@@ -2935,9 +3072,7 @@ void CL_RunDemoTics(void)
       }
 
       while(cl_latest_world_index > cl_current_world_index)
-      {
          run_world();
-      }
    }
 
    do
@@ -2992,19 +3127,15 @@ void CL_TryRunTics(void)
       flush_buffer = false;
    }
 
+   // [CG] If we're directed to flush the buffer we must... unless we haven't
+   //      yet received sync.
    if(cl_flush_packet_buffer)
-   {
-      // [CG] If we're directed to flush the buffer we must, in all but 1
-      //      circumstance (haven't received sync yet).
       flush_buffer = true;
-   }
 
+   // [CG] The buffer absolutely cannot be flushed if we've not yet received
+   //      sync; this is a fail-safe here.
    if(!cl_received_sync)
-   {
-      // [CG] The buffer absolutely cannot be flushed if we've not yet received
-      //      sync; this is a fail-safe here.
       flush_buffer = false;
-   }
 
    if(flush_buffer)
    {

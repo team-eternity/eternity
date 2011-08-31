@@ -197,19 +197,9 @@ void CL_Predict(unsigned int start_index, unsigned int end_index,
    cl_predicting = repredicting;
    for(i = start_index; i < end_index; i++)
    {
-      // [CG] Sector positions must be predicted in order for clientside
-      //      prediction to be accurate here.  So predict sectors, then
-      //      predict the local client.
-      // CL_LoadSectorState(i - 1);
-      // CL_LoadSectorPositions(i - 1);
-      // CL_PredictSectorPositions(i);
-
-      // CL_LoadSectorPositions(i);
-
       if(!repredicting)
-      {
          CL_LoadSectorPositions(i);
-      }
+
       CL_PredictPlayerPosition(i);
    }
    cl_predicting = !repredicting;

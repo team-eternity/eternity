@@ -683,28 +683,23 @@ void G_DoLoadLevel(void)
 
    if(clientserver)
    {
-
       // [CG] Load map-specific configuration overrides if in c/s mode.
       if(CS_SERVER)
-      {
          CS_LoadMapOverrides(cs_current_map_number);
-      }
 
       if(CS_TEAMS_ENABLED)
-      {
          memset(team_scores, 0, sizeof(int) * team_color_max);
-      }
 
       for(i = team_color_none; i < team_color_max; i++)
-      {
          CS_RemoveFlagActor(&cs_flags[i]);
-      }
+
       memset(cs_flags, 0, sizeof(flag_t) * team_color_max);
       memset(cs_flag_stands, 0, sizeof(flag_stand_t) * team_color_max);
    }
 
    // [CG] Clear the Net ID stacks.
-   CS_ResetNetIDs();
+   if(!CS_CLIENT)
+      CS_ResetNetIDs();
 
    // haleyjd 07/28/10: Waaaay too early for this.
    //gamestate = GS_LEVEL;
@@ -716,21 +711,15 @@ void G_DoLoadLevel(void)
       for(i = team_color_none; i < team_color_max; i++)
       {
          if(cs_flag_stands[i].exists)
-         {
             CS_ReturnFlag(&cs_flags[i]);
-         }
       }
    }
 
    // [CG] Initialize sector positions.
    if(CS_CLIENT)
-   {
       CL_SpecInit();
-   }
    else if(CS_SERVER)
-   {
       CS_SpecInit();
-   }
 
    if(gamestate != GS_LEVEL)       // level load error
    {
@@ -743,9 +732,7 @@ void G_DoLoadLevel(void)
 
    // [CG] In c/s, consoleplayer is set before this.
    if(!clientserver && (!netgame || demoplayback))
-   {
       consoleplayer = 0;
-   }
 
    gameaction = ga_nothing;
    displayplayer = consoleplayer;    // view the guy you are playing
@@ -772,9 +759,7 @@ void G_DoLoadLevel(void)
    // sf: if loading a hub level, restore position relative to sector
    //  for 'seamless' travel between levels
    if(hub_changelevel)
-   {
       P_RestorePlayerPosition();
-   }
    else
    {  // sf: no screen wipe while changing hub level
       if(wipegamestate == GS_LEVEL)
@@ -2747,6 +2732,8 @@ void G_FlushCorpse(int playernum)
 
       if(bodyqueslot >= bodyquesize)
       {
+         if(CS_SERVER)
+            SV_BroadcastActorRemoved(bodyque[bodyqueslot % bodyquesize]);
          P_RemoveMobj(bodyque[bodyqueslot % bodyquesize]);
       }
 
@@ -2754,6 +2741,8 @@ void G_FlushCorpse(int playernum)
    }
    else if(!bodyquesize)
    {
+      if(CS_SERVER)
+         SV_BroadcastActorRemoved(players[playernum].mo);
       P_RemoveMobj(players[playernum].mo);
    }
 }
@@ -2765,7 +2754,6 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
    subsector_t *ss;
    unsigned an;
    angle_t mtangle;
-   mobj_t *fog;
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);
@@ -2821,13 +2809,12 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
       }
    }
 
-   fog = P_SpawnMobj(
+   return P_SpawnMobj(
       x + 20 * mtcos,
       y + 20 * mtsin,
       ss->sector->floorheight + GameModeInfo->teleFogHeight,
       GameModeInfo->teleFogType
    );
-   CS_ReleaseActorNetID(fog);
 }
 
 //
@@ -2982,23 +2969,21 @@ void G_DoReborn(int playernum)
       mobj_t *fog = NULL;
 
       // first dissasociate the corpse
-      if (players[playernum].mo != NULL)
-      {
+      if(players[playernum].mo != NULL)
          players[playernum].mo->player = NULL;
-      }
 
       // [CG] If we're a c/s client, don't do anything.  On the other
       //      hand, c/s servers need to use slightly different logic
       //      when determining where to spawn a player.
-      if (CS_CLIENT)
-      {
+      if(CS_CLIENT)
          return;
-      }
-      else if (CS_SERVER)
+
+      if(CS_SERVER)
       {
          mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(
             playernum, clients[playernum].spectating
          );
+
          SV_BroadcastPlayerSpawned(spawn_point, playernum);
          return;
       }

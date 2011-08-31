@@ -45,7 +45,7 @@
 int EV_Teleport(line_t *line, int side, mobj_t *thing)
 {
    thinker_t *thinker;
-   mobj_t    *m;
+   mobj_t    *m, *source_fog, *destination_fog;
    int       i;
 
    // don't teleport missiles
@@ -106,18 +106,34 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
             if(thing->player == players + displayplayer)
                P_ResetChasecam();
 
-            // spawn teleport fog and emit sound at source
-            S_StartSound(P_SpawnMobj(oldx, oldy, 
-                                     oldz + GameModeInfo->teleFogHeight, 
-                                     GameModeInfo->teleFogType), 
-                         GameModeInfo->teleSound);
+            if(serverside)
+            {
+                // spawn teleport fog and emit sound at source
+                source_fog = P_SpawnMobj(
+                   oldx,
+                   oldy,
+                   oldz + GameModeInfo->teleFogHeight, 
+                   GameModeInfo->teleFogType
+                ); 
 
-            // spawn teleport fog and emit sound at destination
-            S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
-                                     m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
-                                     thing->z + GameModeInfo->teleFogHeight, 
-                                     GameModeInfo->teleFogType),
-                         GameModeInfo->teleSound);
+                if(CS_SERVER)
+                    SV_BroadcastActorSpawned(source_fog);
+
+                S_StartSound(source_fog, GameModeInfo->teleSound);
+
+                // spawn teleport fog and emit sound at destination
+                destination_fog = P_SpawnMobj(
+                   m->x + 20 * finecosine[m->angle >> ANGLETOFINESHIFT],
+                   m->y + 20 * finesine[m->angle >> ANGLETOFINESHIFT],
+                   thing->z + GameModeInfo->teleFogHeight, 
+                   GameModeInfo->teleFogType
+                );
+
+                if(CS_SERVER)
+                    SV_BroadcastActorSpawned(destination_fog);
+
+                S_StartSound(destination_fog, GameModeInfo->teleSound);
+            }
 
             P_AdjustFloorClip(thing);
 

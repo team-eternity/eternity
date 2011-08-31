@@ -100,6 +100,9 @@ void A_Look(mobj_t *actor)
          // soundtarget is valid, acquire it.
          P_SetTarget(&actor->target, sndtarget);
 
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(actor, CS_AT_TARGET);
+
          // If an ambush monster, we must additionally be able to see it.
          if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
          {
@@ -109,13 +112,6 @@ void A_Look(mobj_t *actor)
             if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
                return;
          }
-
-         // [CG] Broadcast the target update.
-         if(CS_SERVER)
-         {
-            SV_BroadcastActorTarget(actor);
-         }
-
       }
 
       // Target is now valid, so the monster will awaken.
@@ -154,10 +150,9 @@ void A_Look(mobj_t *actor)
    }
 
    P_SetMobjState(actor, actor->info->seestate);
+
    if(CS_SERVER)
-   {
       SV_BroadcastMonsterAwakened(actor);
-   }
 }
 
 //
@@ -250,12 +245,17 @@ void A_FaceTarget(mobj_t *actor)
       return;
 
    actor->flags &= ~MF_AMBUSH;
-   actor->angle = P_PointToAngle(actor->x, actor->y,
+   actor->angle = P_PointToAngle(
+      actor->x,
+      actor->y,
 #ifdef R_LINKEDPORTALS
-                                  getTargetX(actor), getTargetY(actor));
+      getTargetX(actor),
+      getTargetY(actor)
 #else
-                                  actor->target->x, actor->target->y);
+      actor->target->x,
+      actor->target->y
 #endif
+   );
    if(actor->target->flags & MF_SHADOW ||
       actor->target->flags2 & MF2_DONTDRAW || // haleyjd
       actor->target->flags3 & MF3_GHOST)      // haleyjd
@@ -299,12 +299,12 @@ void A_Chase(mobj_t *actor)
    {
       if(actor->movedir < 8)
       {
-         int delta = (actor->angle &= (7<<29)) - (actor->movedir << 29);
+         int delta = (actor->angle &= (7 << 29)) - (actor->movedir << 29);
 
          if(delta > 0)
-            actor->angle -= ANG90/2;
+            actor->angle -= ANG90 / 2;
          else if (delta < 0)
-            actor->angle += ANG90/2;
+            actor->angle += ANG90 / 2;
       }
    }
 
@@ -457,15 +457,11 @@ void A_Chase(mobj_t *actor)
                   actor->flags & MF_FRIEND)
                {
                   if(actor->flags & MF_JUSTHIT)        // if recent action,
-                  {
                      actor->flags &= ~MF_JUSTHIT;      // keep fighting
-                  }
                   else
                   {
                      if(P_LookForPlayers(actor, true)) // else return to player
-                     {
                         return;
-                     }
                   }
                }
             }
@@ -482,9 +478,8 @@ void A_Chase(mobj_t *actor)
 
    // [CG] Broadcast the monster updates.
    if(CS_SERVER)
-   {
       SV_BroadcastMonsterActive(actor);
-   }
+
    // make active sound
    P_MakeActiveSound(actor);
 }
@@ -595,9 +590,8 @@ void A_RandomWalk(mobj_t *actor)
 
    // [CG] Broadcast the position change if necessary.
    if(CS_SERVER)
-   {
       SV_BroadcastMonsterActive(actor);
-   }
+
    // make active sound
    P_MakeActiveSound(actor);
 }
@@ -614,12 +608,12 @@ void A_Scream(mobj_t *actor)
    case sfx_podth1:
    case sfx_podth2:
    case sfx_podth3:
-      sound = sfx_podth1 + P_Random(pr_scream)%3;
+      sound = sfx_podth1 + P_Random(pr_scream) % 3;
       break;
 
    case sfx_bgdth1:
    case sfx_bgdth2:
-      sound = sfx_bgdth1 + P_Random(pr_scream)%2;
+      sound = sfx_bgdth1 + P_Random(pr_scream) % 2;
       break;
 
    default:
@@ -667,6 +661,7 @@ void A_PlayerScream(mobj_t *mo)
 // PCLASS_FIXME: skull height a playerclass property?
 #define SKULLHEIGHT (48 * FRACUNIT)
 
+// [CG] TODO: This needs its own network message.
 void A_PlayerSkull(mobj_t *actor)
 {
    mobj_t *head;
@@ -731,11 +726,7 @@ void A_Fall(mobj_t *actor)
 void A_Die(mobj_t *actor)
 {
    actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
-   // [CG] Only servers deal damage.
-   if(serverside)
-   {
-      P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
-   }
+   P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
 }
 
 //
@@ -745,7 +736,7 @@ void A_Explode(mobj_t *thingy)
 {
    P_RadiusAttack(thingy, thingy->target, 128, thingy->info->mod);
 
-   if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
+   if(thingy->z <= thingy->secfloorz + 128 * FRACUNIT)
       E_HitWater(thingy, thingy->subsector->sector);
 }
 
@@ -756,15 +747,11 @@ void A_Nailbomb(mobj_t *thing)
    P_RadiusAttack(thing, thing->target, 128, thing->info->mod);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
-   if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
+   if(demo_version >= 331 && thing->z <= thing->secfloorz + 128 * FRACUNIT)
       E_HitWater(thing, thing->subsector->sector);
 
-   // [CG] Only servers run P_LineAttack.
-   if(serverside)
-   {
-      for(i = 0; i < 30; ++i)
-         P_LineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
-   }
+   for(i = 0; i < 30; ++i)
+      P_LineAttack(thing, i * (ANG180 / 15), MISSILERANGE, 0, 10);
 }
 
 

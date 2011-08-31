@@ -1125,8 +1125,7 @@ void A_FireOldBFG(mobj_t *mo)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle,
-               512*weaponinfo[wp_plasma].recoil);
+      P_Thrust(player, ANG180 + mo->angle, 512 * weaponinfo[wp_plasma].recoil);
 
    // WEAPON_FIXME: ammopershot for classic BFG
 
@@ -1155,18 +1154,27 @@ void A_FireOldBFG(mobj_t *mo)
          int mask = MF_FRIEND;
          do
          {
-            slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
+            slope = P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, mask);
             if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
+            {
+               slope =
+                  P_AimLineAttack(mo, an += 1 << 26, 16 * 64 * FRACUNIT, mask);
+            }
+
             if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
+            {
+               slope =
+                  P_AimLineAttack(mo, an -= 2 << 26, 16 * 64 * FRACUNIT, mask);
+            }
+
             if(!clip.linetarget) // sf: looking up/down
             {
-               slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
+               slope =
+                  finetangent[(ANG90 - player->pitch) >> ANGLETOFINESHIFT];
                an = mo->angle;
             }
-         }
-         while(mask && (mask=0, !clip.linetarget));     // killough 8/2/98
+         } while(mask && (mask=0, !clip.linetarget));     // killough 8/2/98
+
          an1 += an - mo->angle;
          // sf: despite killough's infinite wisdom.. even
          // he is prone to mistakes. seems negative numbers
@@ -1178,25 +1186,36 @@ void A_FireOldBFG(mobj_t *mo)
       }
       else
       {
-         slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
+         slope = finetangent[(ANG90-player->pitch) >> ANGLETOFINESHIFT];
          if(slope < 0 && demo_version >= 303)
             an2 -= tantoangle[-slope >> DBITS];
          else
             an2 += tantoangle[slope >> DBITS];
       }
 
-      th = P_SpawnMobj(mo->x, mo->y,
-                       mo->z + 62*FRACUNIT - player->psprites[ps_weapon].sy,
-                       type);
+      if(serverside)
+      {
+         th = P_SpawnMobj(
+            mo->x,
+            mo->y,
+            mo->z + 62 * FRACUNIT - player->psprites[ps_weapon].sy,
+            type
+         );
 
-      P_SetTarget(&th->target, mo);
-      th->angle = an1;
-      th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momz = finetangent[an2>>ANGLETOFINESHIFT] * 25;
-      P_CheckMissileSpawn(th);
-   }
-   while((type != type2) && (type = type2)); //killough: obfuscated!
+         if(CS_SERVER)
+            SV_BroadcastActorSpawned(th);
+
+         P_SetTarget(&th->target, mo);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(th, CS_AT_TARGET);
+
+         th->angle = an1;
+         th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
+         th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
+         th->momz = finetangent[an2>>ANGLETOFINESHIFT] * 25;
+         P_CheckMissileSpawn(th);
+      }
+   } while((type != type2) && (type = type2)); //killough: obfuscated!
 }
 
 //
@@ -1239,13 +1258,19 @@ void P_BulletSlope(mobj_t *mo)
 
    do
    {
-      bulletslope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
+      bulletslope = P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, mask);
       if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
+      {
+         bulletslope =
+            P_AimLineAttack(mo, an += 1 << 26, 16 * 64 * FRACUNIT, mask);
+      }
+
       if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-   }
-   while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      {
+         bulletslope =
+            P_AimLineAttack(mo, an -= 2 << 26, 16 * 64 * FRACUNIT, mask);
+      }
+   } while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
 }
 
 //
@@ -1285,17 +1310,13 @@ void A_FirePistol(mobj_t *mo)
    A_FireSomething(player, 0); // phares
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    P_BulletSlope(mo);
    P_GunShot(mo, !player->refire);
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 //
@@ -1321,9 +1342,7 @@ void A_FireShotgun(mobj_t *mo)
    A_FireSomething(player, 0); // phares
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    P_BulletSlope(mo);
 
@@ -1331,9 +1350,7 @@ void A_FireShotgun(mobj_t *mo)
       P_GunShot(mo, false);
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 //
@@ -1360,9 +1377,7 @@ void A_FireShotgun2(mobj_t *mo)
    A_FireSomething(player, 0); // phares
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    P_BulletSlope(mo);
 
@@ -1378,9 +1393,7 @@ void A_FireShotgun2(mobj_t *mo)
    }
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 // haleyjd 04/05/07: moved all SSG codepointers here
@@ -1443,18 +1456,13 @@ void A_FireCGun(mobj_t *mo)
    }
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    P_BulletSlope(mo);
-
    P_GunShot(mo, !player->refire);
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 void A_Light0(mobj_t *mo)
@@ -1502,11 +1510,8 @@ void A_BFGSpray(mobj_t *mo)
    //      should spawn these things.  Consequently it's not really useful to
    //      do any of this stuff clientside.
    if(!serverside)
-   {
       return;
-   }
 
-   // [CG] TODO: Handle alternate BFGs.
    // WEAPON_FIXME: BFG type stuff
    switch(bfgtype)
    {
@@ -1524,9 +1529,7 @@ void A_BFGSpray(mobj_t *mo)
    }
 
    if(CS_SERVER && mo->player)
-   {
       SV_StartUnlag(mo->player - players);
-   }
 
    for(i = 0; i < 40; i++)  // offset angles from its attack angle
    {
@@ -1544,9 +1547,7 @@ void A_BFGSpray(mobj_t *mo)
       }
 
       if(!clip.linetarget)
-      {
          continue;
-      }
 
       explosion = P_SpawnMobj(
          clip.linetarget->x,
@@ -1556,14 +1557,10 @@ void A_BFGSpray(mobj_t *mo)
       );
 
       if(CS_SERVER)
-      {
          SV_BroadcastActorSpawned(explosion);
-      }
 
       for(damage = j = 0; j < 15; j++)
-      {
          damage += (P_Random(pr_bfg) & 7) + 1;
-      }
 
       P_DamageMobj(
          clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH
@@ -1571,9 +1568,7 @@ void A_BFGSpray(mobj_t *mo)
    }
 
    if(CS_SERVER && mo->player)
-   {
       SV_EndUnlag(mo->player - players);
-   }
 }
 
 //
@@ -1593,38 +1588,39 @@ void A_BouncingBFG(mobj_t *mo)
       return;
 
    if(CS_SERVER && mo->player)
-   {
       SV_StartUnlag(mo->player - players);
-   }
 
-   for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
+   for(i = 0; i < 40; i++)  // offset angles from its attack angle
    {
-      angle_t an2, an = (ANG360/40)*i;
+      angle_t an2, an = (ANG360 / 40) * i;
       int dist;
 
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, 0);
 
       // haleyjd: track last target with mo->tracer, don't fire
       // at same target more than one time in a row
       if(!clip.linetarget || (mo->tracer && mo->tracer == clip.linetarget))
          continue;
-      if(an/6 == mo->angle/6) continue;
+
+      if(an / 6 == mo->angle / 6)
+         continue;
 
       // don't aim for shooter, or for friends of shooter
       if(clip.linetarget == mo->target ||
          (clip.linetarget->flags & mo->target->flags & MF_FRIEND))
+      {
          continue;
+      }
 
       explosion = P_SpawnMobj(
-         clip.linetarget->x, clip.linetarget->y,
+         clip.linetarget->x,
+         clip.linetarget->y,
          clip.linetarget->z + (clip.linetarget->height>>2),
          E_SafeThingType(MT_EXTRABFG)
       );
 
       if(CS_SERVER)
-      {
          SV_BroadcastActorSpawned(explosion);
-      }
 
       // spawn new bfg
       // haleyjd: can't use P_SpawnMissile here
@@ -1633,22 +1629,24 @@ void A_BouncingBFG(mobj_t *mo)
       S_StartSound(newmo, newmo->info->seesound);
       P_SetTarget(&newmo->target, mo->target); // pass on the player
 
-      an2 = P_PointToAngle(newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y);
-      newmo->angle = an2;
+      newmo->angle = an2 = P_PointToAngle(
+         newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y
+      );
 
       an2 >>= ANGLETOFINESHIFT;
       newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
       newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
 
-      dist = P_AproxDistance(clip.linetarget->x - newmo->x,
-                             clip.linetarget->y - newmo->y);
-      dist = dist / newmo->info->speed;
+      dist = P_AproxDistance(
+         clip.linetarget->x - newmo->x, clip.linetarget->y - newmo->y
+      ) / newmo->info->speed;
 
       if(dist < 1)
          dist = 1;
 
-      newmo->momz =
-         (clip.linetarget->z + (clip.linetarget->height>>1) - newmo->z) / dist;
+      newmo->momz = (
+         clip.linetarget->z + (clip.linetarget->height >> 1) - newmo->z
+      ) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
 
@@ -1656,23 +1654,21 @@ void A_BouncingBFG(mobj_t *mo)
 
       P_CheckMissileSpawn(newmo);
 
-      P_RemoveMobj(mo); // remove the old one
-
       if(CS_SERVER)
       {
          SV_BroadcastActorSpawned(newmo);
-         SV_BroadcastActorTarget(newmo);
-         SV_BroadcastActorTarget(newmo->tracer);
+         SV_BroadcastActorTarget(newmo, CS_AT_TARGET);
+         SV_BroadcastActorTarget(newmo, CS_AT_TRACER);
          SV_BroadcastActorRemoved(mo);
       }
+
+      P_RemoveMobj(mo); // remove the old one
 
       break; //only spawn 1
    }
 
    if(CS_SERVER && mo->player)
-   {
       SV_EndUnlag(mo->player - players);
-   }
 }
 
 //
@@ -1694,68 +1690,70 @@ void A_BFG11KHit(mobj_t *mo)
       return;
 
    if(CS_SERVER && mo->player)
-   {
       SV_StartUnlag(mo->player - players);
-   }
 
    // check the originator and hurt them if too close
    origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
 
-   if(origdist < 96*FRACUNIT)
+   if(origdist < 96 * FRACUNIT)
    {
       // decide on damage
       // damage decreases with distance
-      for(damage = j = 0; j < 48 - (origdist/(FRACUNIT*2)); j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
+      for(damage = j = 0; j < 48 - (origdist / (FRACUNIT * 2)); j++)
+         damage += (P_Random(pr_bfg) & 7) + 1;
 
       // flash
-      flash = P_SpawnMobj(mo->target->x, mo->target->y,
-                          mo->target->z + (mo->target->height>>2),
-                          E_SafeThingType(MT_EXTRABFG));
+      flash = P_SpawnMobj(
+         mo->target->x,
+         mo->target->y,
+         mo->target->z + (mo->target->height >> 2),
+         E_SafeThingType(MT_EXTRABFG)
+      );
+
       if(CS_SERVER)
-      {
          SV_BroadcastActorSpawned(flash);
-      }
 
       P_DamageMobj(mo->target, mo, mo->target, damage, MOD_BFG11K_SPLASH);
    }
 
    // now check everyone else
 
-   for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
+   for(i = 0; i < 40; i++)  // offset angles from its attack angle
    {
-      angle_t an = (ANG360/40)*i;
+      angle_t an = (ANG360 / 40) * i;
 
       // mo->target is the originator (player) of the missile
 
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
+      P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, 0);
 
-      if(!clip.linetarget) continue;
+      if(!clip.linetarget)
+         continue;
+
       if(clip.linetarget == mo->target)
          continue;
 
       // decide on damage
       for(damage = j = 0; j < 20; j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
+         damage += (P_Random(pr_bfg) & 7) + 1;
 
       // dumbass flash
-      flash = P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                          clip.linetarget->z + (clip.linetarget->height>>2),
-                          E_SafeThingType(MT_EXTRABFG));
+      flash = P_SpawnMobj(
+         clip.linetarget->x,
+         clip.linetarget->y,
+         clip.linetarget->z + (clip.linetarget->height>>2),
+         E_SafeThingType(MT_EXTRABFG)
+      );
 
       if(CS_SERVER)
-      {
          SV_BroadcastActorSpawned(flash);
-      }
 
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
+      P_DamageMobj(
+         clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH
+      );
    }
 
    if(CS_SERVER && mo->player)
-   {
       SV_EndUnlag(mo->player - players);
-   }
 }
 
 //
@@ -1781,9 +1779,7 @@ void A_BFGBurst(mobj_t *mo)
       plasmaType = E_SafeThingType(MT_PLASMA3);
 
    if(CS_SERVER && mo->player)
-   {
       SV_StartUnlag(mo->player - players);
-   }
 
    for(a = 0; a < 40; a++)
    {
@@ -1800,16 +1796,14 @@ void A_BFGBurst(mobj_t *mo)
       if(CS_SERVER)
       {
          SV_BroadcastActorSpawned(th);
-         SV_BroadcastActorTarget(th);
+         SV_BroadcastActorTarget(th, CS_AT_TARGET);
       }
 
       P_CheckMissileSpawn(th);
    }
 
    if(CS_SERVER && mo->player)
-   {
       SV_EndUnlag(mo->player - players);
-   }
 }
 
 //
@@ -1960,9 +1954,7 @@ void A_FireCustomBullets(mobj_t *mo)
    A_FireSomething(player, 0);
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    P_BulletSlope(mo);
 
@@ -1996,9 +1988,7 @@ void A_FireCustomBullets(mobj_t *mo)
    }
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 static const char *kwds_A_FirePlayerMissile[] =
@@ -2064,7 +2054,11 @@ void A_FirePlayerMissile(mobj_t *actor)
       P_BulletSlope(actor);
 
       if(clip.linetarget)
+      {
          P_SetTarget(&mo->tracer, clip.linetarget);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(mo, CS_AT_TRACER);
+      }
    }
 
    if(CS_SERVER)
@@ -2167,8 +2161,8 @@ void A_CustomPlayerMelee(mobj_t *mo)
    P_WeaponSoundInfo(mo, sfx);
 
    // turn to face target
-   player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                       clip.linetarget->x, clip.linetarget->y);
+   player->mo->angle =
+      P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 
    // apply chainsaw deflection if selected
    if(deftype == 3)
@@ -2256,24 +2250,26 @@ void A_PlayerThunk(mobj_t *mo)
       return;
 
    if(CS_SERVER)
-   {
       SV_StartUnlag(player - players);
-   }
 
    // set player's target to thing being autoaimed at if this
    // behavior is requested.
-   if(settarget)
+   if(serverside)
    {
-      // record old target
-      oldtarget = mo->target;
-      P_BulletSlope(mo);
-      if(clip.linetarget)
+      if(settarget)
       {
+         // record old target
+         oldtarget = mo->target;
+         P_BulletSlope(mo);
+         if(!clip.linetarget)
+            return;
+
          P_SetTarget(&(mo->target), clip.linetarget);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(mo, CS_AT_TARGET);
+
          localtarget = clip.linetarget;
       }
-      else
-         return;
    }
 
    // possibly disable the FaceTarget pointer using MIF_NOFACE
@@ -2306,22 +2302,23 @@ void A_PlayerThunk(mobj_t *mo)
    // remove MIF_NOFACE
    mo->intflags &= ~MIF_NOFACE;
 
-   // restore player's old target if a new one was found & set
-   if(settarget && localtarget)
+   if(serverside)
    {
-      P_SetTarget(&(mo->target), oldtarget);
+      // restore player's old target if a new one was found & set
+      if(settarget && localtarget)
+      {
+         P_SetTarget(&(mo->target), oldtarget);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(mo, CS_AT_TARGET);
+      }
    }
 
    // put player back into his normal state
    if(statenum >= 0 && statenum < NUMSTATES)
-   {
       mo->state = oldstate;
-   }
 
    if(CS_SERVER)
-   {
       SV_EndUnlag(player - players);
-   }
 }
 
 //----------------------------------------------------------------------------

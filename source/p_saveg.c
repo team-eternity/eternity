@@ -106,7 +106,7 @@ static unsigned int P_MobjNum(mobj_t *mo)
    unsigned int n = mo ? mo->thinker.ordinal : 0;   // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
-   if(n < 0 || n > num_thinkers) 
+   if(n > num_thinkers) 
       n = 0;
    
    return n;
@@ -609,7 +609,7 @@ void P_UnArchiveThinkers(void)
       thinker_t *next;
       next = th->next;
       if(th->function == P_MobjThinker)
-         P_RemoveMobj((mobj_t *) th);
+         P_RemoveMobj((mobj_t *)th);
       else
          Z_Free(th);
       th = next;
@@ -692,6 +692,7 @@ void P_UnArchiveThinkers(void)
       // [CG] Register the actor's Net ID.
       if(mobj->net_id != 0)
       {
+         printf("Registering Net ID %u.\n", mobj->net_id);
          CS_RegisterActorNetID(mobj);
       }
    }

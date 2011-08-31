@@ -91,9 +91,9 @@ sound Earthquake
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
-// [CG] CTF sounds from Odamex
+// [CG] Odamex CTF Announcer.
 
-sound FlagDropped
+sound FriendlyFlagDropped
 {
     lump = "dsffd"
     clipping_dist = 1
@@ -101,7 +101,7 @@ sound FlagDropped
     priority = 0
 }
 
-sound FlagTaken
+sound FriendlyFlagTaken
 {
     lump = "dsffg"
     clipping_dist = 1
@@ -109,7 +109,7 @@ sound FlagTaken
     priority = 0
 }
 
-sound FlagReturned
+sound FriendlyFlagReturned
 {
     lump = "dsffr"
     clipping_dist = 1
@@ -117,7 +117,7 @@ sound FlagReturned
     priority = 0
 }
 
-sound FlagCaptured
+sound FriendlyFlagCaptured
 {
     lump = "dsffs"
     clipping_dist = 1
@@ -125,7 +125,39 @@ sound FlagCaptured
     priority = 0
 }
 
-// [CG] Announcer Support
+sound EnemyFlagDropped
+{
+    lump = "dsefd"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound EnemyFlagTaken
+{
+    lump = "dsefg"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound EnemyFlagReturned
+{
+    lump = "dsefr"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound EnemyFlagCaptured
+{
+    lump = "dsefs"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+// [CG] Normal (ZVOX style) CTF Announcer.
 
 sound BlueFlagDropped
 {

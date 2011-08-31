@@ -124,9 +124,7 @@ char *network_message_names[nm_max_messages] = {
    "actor spawned",
    "actor position",
    "actor target",
-   "actor tracer",
    "actor state",
-   "actor attribute",
    "actor damaged",
    "actor killed",
    "actor removed",
@@ -763,9 +761,7 @@ void CS_ProcessPlayerCommand(int playernum)
             {
                player->pendingweapon = newweapon;
                if(CS_SERVER)
-               {
                   SV_BroadcastPlayerScalarInfo(playernum, ci_pending_weapon);
-               }
             }
          }
       }
@@ -1652,7 +1648,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    if(CS_SERVER)
    {
       CS_PrintTime();
-      printf(".\n");
       SV_BroadcastPlayerScalarInfo(playernum, message->info_type);
       if(respawn_player)
       {
@@ -1664,46 +1659,12 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 
 void CS_DisconnectPeer(ENetPeer *peer, enet_uint32 reason)
 {
+   // [CG] The peer's already disconnected, so don't worry about this stuff.
    if(peer == NULL)
-   {
-      // [CG] Peer's already disconnected, so don't worry about this stuff.
       return;
-   }
+
    enet_peer_disconnect(peer, reason);
    enet_peer_reset(peer);
-}
-
-void CS_RemovePlayer(int playernum)
-{
-   mobj_t *flash;
-   player_t *player = &players[playernum];
-
-   CS_DropFlag(playernum);
-
-   if(gamestate == GS_LEVEL && player->mo != NULL)
-   {
-      flash = P_SpawnMobj(
-         player->mo->x,
-         player->mo->y,
-         player->mo->z + GameModeInfo->teleFogHeight,
-         GameModeInfo->teleFogType
-      );
-      CS_ReleaseActorNetID(flash);
-      flash->momx = player->mo->momx;
-      flash->momy = player->mo->momy;
-
-      if((!clients[playernum].spectating) && drawparticles)
-      {
-         flash->flags2 |= MF2_DONTDRAW;
-         P_DisconnectEffect(player->mo);
-      }
-      P_RemoveMobj(player->mo);
-      player->mo = NULL;
-   }
-
-   CS_ZeroClient(playernum);
-   playeringame[playernum] = false;
-   CS_InitPlayer(playernum);
 }
 
 // [CG] A c/s version of P_SetSkin from p_skin.c.
@@ -1713,16 +1674,13 @@ void CS_SetSkin(const char *skin_name, int playernum)
    player_t *player = &players[playernum];
 
    if(!playeringame[playernum])
-   {
       return;
-   }
 
    skin = P_SkinForName(skin_name);
+   // [CG] FIXME: this should be better all around
    if(skin == NULL)
-   {
-      // [CG] FIXME: this should be better all around
       return;
-   }
+
    player->skin = skin;
 
    if(gamestate == GS_LEVEL)
@@ -1736,13 +1694,11 @@ void CS_SetSkin(const char *skin_name, int playernum)
    }
 
    if(CS_CLIENT && playernum == consoleplayer)
-   {
       default_skin = skin->skinname;
-   }
 }
 
 size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
-                                      int playernum, client_info_t info_type)
+                                      int playernum, client_info_e info_type)
 {
    char *buffer;
    char *player_info;
@@ -1750,17 +1706,11 @@ size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
    player_t *player = &players[playernum];
 
    if(info_type == ci_name)
-   {
       player_info = player->name;
-   }
    else if(info_type == ci_skin)
-   {
       player_info = player->skin->skinname;
-   }
    else if(info_type == ci_class)
-   {
       player_info = player->pclass->mnemonic;
-   }
    else
    {
       I_Error(
@@ -1786,7 +1736,7 @@ size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
 }
 
 void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
-                                   int playernum, client_info_t info_type,
+                                   int playernum, client_info_e info_type,
                                    int array_index)
 {
    player_t *player = &players[playernum];
@@ -1797,33 +1747,19 @@ void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
    update_message->array_index = array_index;
 
    if(info_type == ci_frags)
-   {
       update_message->int_value =  player->frags[array_index];
-   }
    else if(info_type == ci_owns_card)
-   {
       update_message->boolean_value = player->cards[array_index];
-   }
    else if(info_type == ci_owns_weapon)
-   {
       update_message->boolean_value = player->killcount;
-   }
    else if(info_type == ci_power_enabled)
-   {
       update_message->int_value = player->powers[array_index];
-   }
    else if(info_type == ci_ammo_amount)
-   {
       update_message->int_value = player->ammo[array_index];
-   }
    else if(info_type == ci_max_ammo)
-   {
       update_message->int_value = player->maxammo[array_index];
-   }
    else if(info_type == ci_pwo)
-   {
       update_message->int_value = weapon_preferences[0][array_index];
-   }
    else
    {
       I_Error(
@@ -1834,16 +1770,14 @@ void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
 }
 
 void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
-                                    int playernum, client_info_t info_type)
+                                    int playernum, client_info_e info_type)
 {
    client_t *client = &clients[playernum];
    player_t *player = &players[playernum];
    server_client_t *server_client;
 
    if(CS_SERVER)
-   {
       server_client = &server_clients[playernum];
-   }
 
    update_message->message_type = nm_playerinfoupdated;
    update_message->player_number = playernum;
@@ -1851,87 +1785,47 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
    update_message->array_index = 0;
 
    if(info_type == ci_team)
-   {
       update_message->int_value = client->team;
-   }
    else if(info_type == ci_spectating)
-   {
       update_message->boolean_value = client->spectating;
-   }
    else if(info_type == ci_kill_count)
-   {
       update_message->int_value = player->killcount;
-   }
    else if(info_type == ci_item_count)
-   {
       update_message->int_value = player->itemcount;
-   }
    else if(info_type == ci_secret_count)
-   {
       update_message->int_value = player->secretcount;
-   }
    else if(info_type == ci_colormap)
-   {
       update_message->int_value = player->colormap;
-   }
    else if(info_type == ci_cheats)
-   {
       update_message->int_value = player->cheats;
-   }
    else if(info_type == ci_health)
-   {
       update_message->int_value = player->health;
-   }
    else if(info_type == ci_armor_points)
-   {
       update_message->int_value = player->armorpoints;
-   }
    else if(info_type == ci_armor_type)
-   {
       update_message->int_value = player->armortype;
-   }
    else if(info_type == ci_ready_weapon)
-   {
       update_message->int_value = player->readyweapon;
-   }
    else if(info_type == ci_pending_weapon)
-   {
       update_message->int_value = player->pendingweapon;
-   }
    else if(info_type == ci_owns_backpack)  // backpack
-   {
       update_message->boolean_value = player->backpack;
-   }
    else if(info_type == ci_did_secret)    // didsecret
-   {
       update_message->boolean_value = player->didsecret;
-   }
    else if(info_type == ci_queue_level)
-   {
       update_message->int_value = client->queue_level;
-   }
    else if(info_type == ci_queue_position)
-   {
       update_message->int_value = client->queue_position;
-   }
    else if(info_type == ci_wsop)
-   {
       update_message->int_value = GET_WSOP(playernum);
-   }
    else if(info_type == ci_asop)
-   {
       update_message->int_value = GET_ASOP(playernum);
-   }
    else if(info_type == ci_bobbing)
    {
       if(CS_CLIENT)
-      {
          update_message->boolean_value = player_bobbing;
-      }
       else if(CS_SERVER)
-      {
          update_message->boolean_value = server_client->options.player_bobbing;
-      }
    }
    else if(info_type == ci_weapon_toggle)
    {
@@ -1948,24 +1842,16 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
    else if(info_type == ci_autoaim)
    {
       if(CS_CLIENT)
-      {
          update_message->boolean_value = autoaim;
-      }
       else if(CS_SERVER)
-      {
          update_message->boolean_value = server_client->options.autoaim;
-      }
    }
    else if(info_type == ci_weapon_speed)
    {
       if(CS_CLIENT)
-      {
          update_message->int_value = weapon_speed;
-      }
       else if(CS_SERVER)
-      {
          update_message->int_value = server_client->options.weapon_speed;
-      }
    }
    else
    {
@@ -2027,34 +1913,47 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
 
    playeringame[playernum] = true;
 
-   if(player->mo != NULL)
+   if(serverside)
    {
-      P_RemoveMobj(player->mo);
-      player->mo = NULL;
+      if(player->mo != NULL)
+      {
+         if(CS_SERVER)
+            SV_BroadcastActorRemoved(player->mo);
+         P_RemoveMobj(player->mo);
+         player->mo = NULL;
+      }
    }
 
    G_PlayerReborn(playernum);
 
    // [CG] Stop perpetually displaying the scoreboard in c/s mode once we
    //      respawn.
-   if(!CS_HEADLESS)
+   if(!CS_HEADLESS || playernum == consoleplayer)
       action_frags = 0;
 
+   // [CG] Spectators create no telefog and make no sounds when they spawn.
+   //      Additionally we don't muck with their colormap.
    if(!as_spectator)
    {
-      // [CG] Spectators create no telefog and make no sounds when they spawn.
-      fog = G_SpawnFog(x, y, angle);
-      S_StartSound(fog, GameModeInfo->teleSound);
+      if(serverside)
+      {
+         fog = G_SpawnFog(x, y, angle);
+         if(CS_SERVER)
+            SV_BroadcastActorSpawned(fog);
+         S_StartSound(fog, GameModeInfo->teleSound);
+      }
 
-      // [CG] Only set the player's colormap if they're not spectating,
-      //      otherwise we don't care.
       if(CS_TEAMS_ENABLED && client->team != team_color_none)
          player->colormap = team_colormaps[client->team];
    }
 
    player->mo = P_SpawnMobj(x, y, z, player->pclass->type);
+
+   /*
+   // [CG] Spectator actors don't have Net IDs.
    if(as_spectator)
       CS_ReleaseActorNetID(player->mo);
+   */
 
    player->mo->colour = player->colormap;
    player->mo->angle = R_WadToAngle(angle);
@@ -2127,6 +2026,46 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
    );
 
    return spawn_point;
+}
+
+mobj_t* CS_SpawnPuff(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
+                     angle_t angle, int updown, boolean ptcl)
+{
+   mobj_t *puff;
+
+   if(CS_SHOULD_SHOW_SHOT(shooter))
+   {
+      if(serverside)
+      {
+         puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+         if(CS_SERVER)
+            SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
+      }
+      else if(CL_SHOULD_PREDICT_SHOT(shooter))
+         puff = CL_SpawnPuff(x, y, z, angle, updown, ptcl);
+   }
+
+   return puff;
+}
+
+mobj_t* CS_SpawnBlood(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
+                      angle_t angle, int damage, mobj_t *target)
+{
+   mobj_t *blood;
+
+   if(CS_SHOULD_SHOW_SHOT(shooter))
+   {
+      if(serverside)
+      {
+         blood = P_SpawnBlood(x, y, z, angle, damage, target);
+         if(CS_SERVER)
+            SV_BroadcastBloodSpawned(blood, shooter, damage, target);
+      }
+      else if(CL_SHOULD_PREDICT_SHOT(shooter))
+         blood = CL_SpawnBlood(x, y, z, angle, damage, target);
+   }
+
+   return blood;
 }
 
 char* CS_ExtractMessage(char *data, size_t data_length)

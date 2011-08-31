@@ -53,7 +53,7 @@ extern vfont_t *hud_font;
 #define CHAT_BUFFER_SIZE (MAX_STRING_SIZE + 15)
 
 static char cs_chat_input[MAX_STRING_SIZE];
-static message_recipient_t current_recipient;
+static message_recipient_e current_recipient;
 static hu_widget_t *queue_widget = NULL;
 static hu_widget_t *chat_widget = NULL;
 static hu_widget_t *timer_widget = NULL;

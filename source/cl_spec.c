@@ -165,17 +165,6 @@ void CL_BufferSectorPosition(nm_sectorposition_t *message)
 {
    sector_position_buffer_node_t *node;
 
-   if(((message->sector_number) < 0) ||
-      ((message->sector_number) >= numsectors))
-   {
-      printf(
-         "Received a sector position message containing invalid sector "
-         "%d, ignoring.\n",
-         message->sector_number
-      );
-      return;
-   }
-
    node = calloc(1, sizeof(sector_position_buffer_node_t));
 
    CS_CopySectorPosition(&node->position, &message->sector_position);

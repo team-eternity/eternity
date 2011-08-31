@@ -230,7 +230,6 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
    boolean client_should_handle = false;
    int puff_type = E_SafeThingType(MT_PUFF);
    int blood_type = E_SafeThingType(MT_BLOOD);
-   int fog_type = GameModeInfo->teleFogType;
 
    // haleyjd 03/27/10: new state cycle detection
    static boolean firsttime = true; // for initialization
@@ -245,7 +244,6 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    if(mobj->type == blood_type ||
       mobj->type == puff_type  ||
-      mobj->type == fog_type   ||
       mobj == players[consoleplayer].mo)
    {
       client_should_handle = true;
@@ -268,9 +266,13 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
          {
             SV_BroadcastActorState(mobj, NullStateNum);
             SV_BroadcastActorRemoved(mobj);
+            P_RemoveMobj(mobj);
          }
+         else if(CS_CLIENT)
+            CL_RemoveMobj(mobj);
+         else
+            P_RemoveMobj(mobj);
 
-         P_RemoveMobj(mobj);
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -304,9 +306,8 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
       P_AddSeenState(state, &seenstates);
 
       state = st->nextstate;
-   }
-   while(!mobj->tics && !P_CheckSeenState(state, seenstates));
-   
+   } while(!mobj->tics && !P_CheckSeenState(state, seenstates));
+
    if(ret && !mobj->tics)  // killough 4/9/98: detect state cycles
       doom_printf(FC_ERROR "Warning: State Cycle Detected");
 
@@ -350,7 +351,7 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
 
    // haleyjd 09/29/09: don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
-   
+
    if(mobj->skin && st->sprite == mobj->info->defsprite)
       mobj->sprite = mobj->skin->sprite;
    else
@@ -397,9 +398,7 @@ void P_ExplodeMissile(mobj_t *mo)
    }
 
    if(CS_SERVER)
-   {
       SV_BroadcastMissileExploded(mo);
-   }
 
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
 
@@ -508,7 +507,7 @@ void P_XYMovement(mobj_t* mo)
       }
       else
       {
-         if (xmove > MAXMOVE/2 || ymove > MAXMOVE/2)
+         if(xmove > MAXMOVE/2 || ymove > MAXMOVE/2)
          {
             ptryx = mo->x + xmove/2;
             ptryy = mo->y + ymove/2;
@@ -539,7 +538,7 @@ void P_XYMovement(mobj_t* mo)
               variable_friction && mo->z <= mo->floorz &&
               P_GetFriction(mo, NULL) > ORIG_FRICTION)))
          {
-            if (clip.blockline)
+            if(clip.blockline)
             {
                fixed_t r = ((clip.blockline->dx >> FRACBITS) * mo->momx +
                             (clip.blockline->dy >> FRACBITS) * mo->momy) /
@@ -613,7 +612,7 @@ void P_XYMovement(mobj_t* mo)
             if(clip.ceilingline && clip.ceilingline->backsector &&
                clip.ceilingline->backsector->intflags & SIF_SKY)
             {
-               if (demo_compatibility ||  // killough
+               if(demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
                {
                   // Hack to prevent missiles exploding
@@ -628,12 +627,7 @@ void P_XYMovement(mobj_t* mo)
                   if(serverside)
                   {
                      if(CS_SERVER)
-                     {
-                        // [CG] I think SV_BroadcastActorRemoved is the right
-                        //      call here, but I'm not sure.
-                        // SV_BroadcastMissileExploded(mo, false);
                         SV_BroadcastActorRemoved(mo);
-                     }
                      P_RemoveMobj(mo);
                   }
                   return;
@@ -664,10 +658,10 @@ void P_XYMovement(mobj_t* mo)
    // no friction for missiles or skulls ever
    if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
       return;
-   
+
    // no friction when airborne
    // haleyjd: OVER_UNDER
-   if(mo->z > mo->floorz && 
+   if(mo->z > mo->floorz &&
       (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
@@ -696,19 +690,19 @@ void P_XYMovement(mobj_t* mo)
       // killough 10/98:
       // Don't affect main player when voodoo dolls stop, except in old demos:
 
-      if(player && E_PlayerInWalkingState(player) && 
+      if(player && E_PlayerInWalkingState(player) &&
          (player->mo == mo || demo_version < 203))
          P_SetMobjState(player->mo, player->mo->info->spawnstate);
 
       mo->momx = mo->momy = 0;
 
       // killough 10/98: kill any bobbing momentum too (except in voodoo dolls)
-      if (player && player->mo == mo)
+      if(player && player->mo == mo)
          player->momx = player->momy = 0;
    }
    else
    {
-      // haleyjd 04/11/10: BOOM friction compatibility 
+      // haleyjd 04/11/10: BOOM friction compatibility
       if(demo_version <= 201)
       {
          // phares 3/17/98
@@ -723,8 +717,8 @@ void P_XYMovement(mobj_t* mo)
       {
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
-         if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
-         { 
+         if((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
+         {
             // No. Use original friction. This allows you to not bob so much
             // if you're on ice, but keeps enough momentum around to break free
             // when you're mildly stuck in a wall.
@@ -732,7 +726,7 @@ void P_XYMovement(mobj_t* mo)
             mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
          }
          else
-         { 
+         {
             // Yes. Use stored friction.
             mo->momx = FixedMul(mo->momx,mo->friction);
             mo->momy = FixedMul(mo->momy,mo->friction);
@@ -796,32 +790,24 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
             else
             {
                if(!cl_predicting)
-               {
                   S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-               }
             }
          }
-         else if(mo->momz < -12*FRACUNIT)
+         else if(mo->momz < -12 * FRACUNIT)
          {
             if(!cl_predicting)
-            {
                S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-            }
          }
          else if(onthing || !E_GetThingFloorType(mo)->liquid)
          {
             if(!cl_predicting)
-            {
                S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
-            }
          }
       }
       else if(onthing || !E_GetThingFloorType(mo)->liquid)
       {
          if(!cl_predicting)
-         {
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         }
       }
    }
 }
@@ -862,14 +848,14 @@ static void P_ZMovement(mobj_t* mo)
    {
       mo->z += mo->momz;
 
-      if (mo->z <= mo->floorz)                  // bounce off floors
+      if(mo->z <= mo->floorz)                  // bounce off floors
       {
          mo->z = mo->floorz;
          E_HitFloor(mo); // haleyjd
-         if (mo->momz < 0)
+         if(mo->momz < 0)
          {
             mo->momz = -mo->momz;
-            if (!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
+            if(!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
             {
                mo->momz = mo->flags & MF_FLOAT ?   // floaters fall slowly
                   mo->flags & MF_DROPOFF ?          // DROPOFF indicates rate
@@ -888,7 +874,7 @@ static void P_ZMovement(mobj_t* mo)
             {
                P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
             }
-            else if (mo->flags & MF_FLOAT && sentient(mo))
+            else if(mo->flags & MF_FLOAT && sentient(mo))
             {
                goto floater;
             }
@@ -910,9 +896,7 @@ static void P_ZMovement(mobj_t* mo)
                   if(serverside)
                   {
                      if(CS_SERVER)
-                     {
                         SV_BroadcastActorRemoved(mo);
-                     }
                      P_RemoveMobj(mo);      // missiles don't bounce off skies
                   }
                   if(demo_version >= 331)
@@ -922,7 +906,7 @@ static void P_ZMovement(mobj_t* mo)
                   mo->momz = -mo->momz; // bounce unless under gravity
             }
 
-            if (mo->flags & MF_FLOAT && sentient(mo))
+            if(mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
 
             // haleyjd 05/22/03: kludge for bouncers sticking to sky --
@@ -949,7 +933,7 @@ static void P_ZMovement(mobj_t* mo)
       // came to a stop
       mo->momz = 0;
 
-      if (mo->flags & MF_MISSILE)
+      if(mo->flags & MF_MISSILE)
       {
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
@@ -960,9 +944,7 @@ static void P_ZMovement(mobj_t* mo)
             if(serverside)
             {
                if(CS_SERVER)
-               {
                   SV_BroadcastActorRemoved(mo);
-               }
                P_RemoveMobj(mo);  // don't explode on skies
             }
          }
@@ -972,7 +954,7 @@ static void P_ZMovement(mobj_t* mo)
          }
       }
 
-      if (mo->flags & MF_FLOAT && sentient(mo))
+      if(mo->flags & MF_FLOAT && sentient(mo))
          goto floater;
       return;
    }
@@ -1012,7 +994,7 @@ floater:
    }
 
    // clip movement
-   if (mo->z <= mo->floorz)
+   if(mo->z <= mo->floorz)
    {
       // hit the floor
 
@@ -1174,35 +1156,38 @@ void P_NightmareRespawn(mobj_t* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
+   mo = P_SpawnMobj(
+      mobj->x,
+      mobj->y,
+      mobj->subsector->sector->floorheight + GameModeInfo->teleFogHeight,
+      GameModeInfo->teleFogType
+   );
 
-   mo = P_SpawnMobj(mobj->x, mobj->y,
-                    mobj->subsector->sector->floorheight +
-                       GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
-   CS_ReleaseActorNetID(mo);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    // initiate teleport sound
-
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn a teleport fog at the new spot
-
    ss = R_PointInSubsector(x,y);
+   mo = P_SpawnMobj(
+      x,
+      y,
+      ss->sector->floorheight + GameModeInfo->teleFogHeight,
+      GameModeInfo->teleFogType
+   );
 
-   mo = P_SpawnMobj(x, y,
-                    ss->sector->floorheight + GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
-   CS_ReleaseActorNetID(mo);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn the new monster
-
    mthing = &mobj->spawnpoint;
    z = mobj->info->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // inherit attributes from deceased one
-
    mo = P_SpawnMobj(x, y, z, mobj->type);
    mo->spawnpoint = mobj->spawnpoint;
    // sf: use R_WadToAngle
@@ -1218,6 +1203,9 @@ void P_NightmareRespawn(mobj_t* mobj)
    mo->flags = (mo->flags & ~MF_FRIEND) | (mobj->flags & MF_FRIEND);
 
    mo->reactiontime = 18;
+
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    // remove the old monster,
 
@@ -1257,7 +1245,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
          }
       }
    }
-   
+
    if(!ret && R_LinkedCeilingActive(mobj->subsector->sector))
    {
       // Calculate the height at which the mobj should pass through the portal
@@ -1383,7 +1371,7 @@ void P_MobjThinker(mobj_t *mobj)
                if(!(leveltime & onmo->info->topdamagemask) &&
                   (!mobj->player || !mobj->player->powers[pw_ironfeet]))
                {
-                  P_DamageMobj(mobj, onmo, onmo, onmo->info->topdamage, 
+                  P_DamageMobj(mobj, onmo, onmo, onmo->info->topdamage,
                                onmo->info->mod);
                }
             }
@@ -1465,8 +1453,6 @@ void P_MobjThinker(mobj_t *mobj)
       P_SetMobjState(mobj, mobj->info->crashstate);
    }
 
-   // [CG] Should water stuff be serverside only?
-
    // haleyjd 08/07/04: handle deep water plane hits
    oldwaterstate = waterstate;
 
@@ -1512,6 +1498,10 @@ void P_MobjThinker(mobj_t *mobj)
            (respawnmonsters ||
             (mobj->flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
 
+      // [CG] Only servers should run the rest of this function.
+      if(!serverside)
+         return;
+
       // haleyjd 07/13/05: increment mobj->movecount earlier
       if(can_respawn || mobj->effects & FX_FLIESONDEATH)
          ++mobj->movecount;
@@ -1523,10 +1513,14 @@ void P_MobjThinker(mobj_t *mobj)
 
       if(can_respawn && mobj->movecount >= mobj->info->respawntime &&
          !(leveltime & 31) && P_Random(pr_respawn) <= mobj->info->respawnchance)
-      { 
+      {
          // check for nightmare respawn
          if(mobj->flags2 & MF2_REMOVEDEAD)
+         {
+            if(CS_SERVER)
+               SV_BroadcastActorRemoved(mobj);
             P_RemoveMobj(mobj);
+         }
          else
             P_NightmareRespawn(mobj);
       }
@@ -1541,9 +1535,15 @@ extern fixed_t tmsecceilz;
 //
 mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   mobj_t     *mobj = Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL);
-   mobjinfo_t *info = &mobjinfo[type];
+   mobj_t     *mobj;
+   mobjinfo_t *info;
    state_t    *st;
+
+   if(!CS_SPAWN_ACTOR_OK)
+      I_Error("C/S clients cannot spawn actors themselves, exiting.\n");
+
+   mobj = Z_Calloc(1, sizeof *mobj, PU_LEVEL, NULL);
+   info = &mobjinfo[type];
 
    mobj->type    = type;
    mobj->info    = info;
@@ -1643,11 +1643,11 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    if(z == FLOATRANDZ)
    {
       fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
-      if(space > 48*FRACUNIT)
+      if(space > 48 * FRACUNIT)
       {
-         space -= 40*FRACUNIT;
+         space -= 40 * FRACUNIT;
          mobj->z = ((space * P_Random(pr_spawnfloat)) >> 8)
-                     + mobj->floorz + 40*FRACUNIT;
+                     + mobj->floorz + 40 * FRACUNIT;
       }
       else
          mobj->z = mobj->floorz;
@@ -1687,7 +1687,16 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    }
 
    // [CG] Some stuff for c/s.
-   CS_ObtainActorNetID(mobj);
+   if(serverside || gamestate == GS_LOADING)
+   {
+      CS_ObtainActorNetID(mobj);
+      printf(
+         "P_SpawnMobj: Assigned Net ID %u to actor type %d.\n",
+         mobj->net_id,
+         mobj->type
+      );
+   }
+
    CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
 
    return mobj;
@@ -1704,6 +1713,9 @@ void P_RemoveMobj(mobj_t *mobj)
 {
    // haleyjd 04/14/03: restructured
    boolean respawnitem = false;
+
+   if(!CS_REMOVE_ACTOR_OK)
+      I_Error("C/S clients cannot remove actors themselves, exiting.\n");
 
    if((mobj->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
       respawnitem = true; // respawning super powerups
@@ -1725,10 +1737,12 @@ void P_RemoveMobj(mobj_t *mobj)
          itemrespawnque[iquehead] = mobj->spawnpoint;
          itemrespawntime[iquehead++] = leveltime;
          // lose one off the end?
-         if((iquehead &= ITEMQUESIZE-1) == iquetail)
-            iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+         if((iquehead &= ITEMQUESIZE - 1) == iquetail)
+            iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
       }
    }
+
+   printf("P_RemoveMobj: Released Net ID %u.\n", mobj->net_id);
 
    CS_ReleaseActorNetID(mobj);
 
@@ -1736,7 +1750,6 @@ void P_RemoveMobj(mobj_t *mobj)
    P_RemoveThingTID(mobj);
 
    // unlink from sector and block lists
-
    P_UnsetThingPosition(mobj);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
@@ -1748,11 +1761,10 @@ void P_RemoveMobj(mobj_t *mobj)
    if(demo_version > 337)
    {
       mobj->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      mobj->old_sectorlist = NULL; 
+      mobj->old_sectorlist = NULL;
    }
 
    // stop any playing sound
-
    S_StopSound(mobj, CHAN_ALL);
 
    // killough 11/98:
@@ -1771,9 +1783,7 @@ void P_RemoveMobj(mobj_t *mobj)
    }
 
    // free block
-
    P_RemoveThinker(&mobj->thinker);
-
 }
 
 //
@@ -1842,6 +1852,7 @@ void P_RespawnSpecials(void)
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
+
    // [CG] Broadcast the item spawn fog.
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
@@ -1854,7 +1865,7 @@ void P_RespawnSpecials(void)
    // spawn it
    z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
-   mo = P_SpawnMobj(x,y,z, i);
+   mo = P_SpawnMobj(x, y, z, i);
    mo->spawnpoint = *mthing;
    // sf
    mo->angle = R_WadToAngle(mthing->angle);
@@ -1864,8 +1875,7 @@ void P_RespawnSpecials(void)
       SV_BroadcastActorSpawned(mo);
 
    // pull it from the queue
-   iquetail = (iquetail+1)&(ITEMQUESIZE-1);
-
+   iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
 }
 
 //
@@ -1887,7 +1897,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(!playeringame[mthing->type - 1])
       return;
 
-   p = &players[mthing->type-1];
+   p = &players[mthing->type - 1];
 
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
@@ -1931,7 +1941,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    if(GameType == gt_dm)
    {
-      for(i = 0 ; i < NUMCARDS ; i++)
+      for(i = 0; i < NUMCARDS; i++)
          p->cards[i] = true;
    }
 
@@ -2062,9 +2072,7 @@ mobj_t *P_SpawnMapThing(mapthing_t *mthing)
       if(!clientserver)
       {
          if(GameType != gt_dm)
-         {
             P_SpawnPlayer(mthing);
-         }
       }
       else if(mthing->type == 1)
       {
@@ -2194,7 +2202,7 @@ spawnit:
    mobj = P_SpawnMobj(x, y, z, i);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
-   
+
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
@@ -2322,6 +2330,8 @@ mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    z += P_SubRandom(pr_spawnpuff) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+   CS_ReleaseActorNetID(th);
+
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
 
@@ -2359,21 +2369,19 @@ mobj_t* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnblood) << 10;
 
-   th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
-   th->momz = FRACUNIT*2;
-   th->tics -= P_Random(pr_spawnblood)&3;
+   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_BLOOD));
+   CS_ReleaseActorNetID(th);
+
+   th->momz = FRACUNIT * 2;
+   th->tics -= P_Random(pr_spawnblood) & 3;
 
    if(th->tics < 1)
       th->tics = 1;
 
    if(damage <= 12 && damage >= 9)
-   {
       P_SetMobjState(th, E_SafeState(S_BLOOD2));
-   }
-   else if (damage < 9)
-   {
+   else if(damage < 9)
       P_SetMobjState(th, E_SafeState(S_BLOOD3));
-   }
 
    // for demo sync, etc, we still need to do the above, so
    // we'll make the sprites above invisible and draw particles
@@ -2525,9 +2533,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 
    // [CG] Broadcast the missile spawned message.
    if(CS_SERVER)
-   {
       SV_BroadcastMissileSpawned(source, th);
-   }
 
    P_CheckMissileSpawn(th);
 
@@ -2585,8 +2591,9 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    if(source->player && source->player->powers[pw_silencer] &&
       P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
    {
-      S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
-                           ATTN_NORMAL, CHAN_AUTO);
+      S_StartSoundAtVolume(
+         th, th->info->seesound, WEAPON_VOLUME_SILENCED, ATTN_NORMAL, CHAN_AUTO
+      );
    }
    else
       S_StartSound(th, th->info->seesound);
@@ -2631,9 +2638,7 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
    mo->momz = momz;
 
    if(CS_SERVER)
-   {
       SV_BroadcastMissileSpawned(source, mo);
-   }
 
    P_CheckMissileSpawn(mo);
 

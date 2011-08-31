@@ -310,7 +310,6 @@ static boolean P_ShootThing(intercept_t *in)
    angle_t angle;
    fixed_t x, y, z, frac, dist, thingtopslope, thingbottomslope;
    mobj_t *th = in->d.thing;
-   mobj_t *puff, *blood;
    
    if(th == shootthing)
       return true;  // can't shoot self
@@ -345,24 +344,11 @@ static boolean P_ShootThing(intercept_t *in)
    // Spawn bullet puffs or blood spots,
    // depending on target type. -- haleyjd: and status flags!
    angle = P_PointToAngle(0, 0, trace.dx, trace.dy) - ANG180;
-   if(th->flags & MF_NOBLOOD || 
-      th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
-   {
-      if(CS_SHOULD_SHOW_SHOT)
-      {
-         puff = P_SpawnPuff(x, y, z, angle, 2, true);
-         CS_ReleaseActorNetID(puff);
-         if(CS_SERVER)
-            SV_BroadcastPuffSpawned(puff, 2, true);
-      }
-   }
-   else if(CS_SHOULD_SHOW_SHOT)
-   {
-      blood = P_SpawnBlood(x, y, z, angle, trace.la_damage, th);
-      CS_ReleaseActorNetID(blood);
-      if(CS_SERVER)
-         SV_BroadcastBloodSpawned(blood, trace.la_damage, th);
-   }
+
+   if(th->flags & MF_NOBLOOD || th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
+      CS_SpawnPuff(shootthing, x, y, z, angle, 2, true);
+   else
+      CS_SpawnBlood(shootthing, x, y, z, angle, trace.la_damage, th);
    
    if(serverside && trace.la_damage)
    {
@@ -414,7 +400,7 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
       // hit line
       // position a bit closer
 
-      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+      P_PuffPosition(in, &frac, &x, &y, &z, 4 * FRACUNIT);
 
       // don't hit the sky
       if(P_ShootSky(li, z))
@@ -423,13 +409,8 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
       angle = P_PointToAngle(0, 0, li->dx, li->dy) - ANG90;
 
       // Spawn bullet puffs.
-      if(CS_SHOULD_SHOW_SHOT)
-      {
-         puff = P_SpawnPuff(x, y, z, angle, 2, true);
-         CS_ReleaseActorNetID(puff);
-         if(CS_SERVER)
-            SV_BroadcastPuffSpawned(puff, 2, true);
-      }
+      CS_SpawnPuff(shootthing, x, y, z, angle, 2, true);
+
       // don't go any farther
       return false;
    }
@@ -481,7 +462,7 @@ static boolean PTR_ShootTraverse(intercept_t *in)
       // hit line
       // position a bit closer
 
-      P_PuffPosition(in, &frac, &x, &y, &z, 4*FRACUNIT);
+      P_PuffPosition(in, &frac, &x, &y, &z, 4 * FRACUNIT);
       
       // SoM: Check for colision with a plane.
       sidesector = lineside ? li->backsector : li->frontsector;
@@ -562,18 +543,9 @@ static boolean PTR_ShootTraverse(intercept_t *in)
 
       // Spawn bullet puffs.
       angle = P_PointToAngle(0, 0, li->dx, li->dy) - ANG90;
-      if(CS_SHOULD_SHOW_SHOT)
-      {
-         puff = P_SpawnPuff(x, y, z, angle, updown, true);
-         // [CG] The server will never send anything about this puff again, so
-         //      there's no need for it to have a Net ID.
-         CS_ReleaseActorNetID(puff);
-         if(CS_SERVER)
-            SV_BroadcastPuffSpawned(puff, updown, true);
-      }
+      CS_SpawnPuff(shootthing, x, y, z, angle, updown, true);
 
       // don't go any farther
-      
       return false;
    }
    else

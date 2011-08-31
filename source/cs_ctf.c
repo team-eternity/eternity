@@ -51,39 +51,113 @@
 flag_stand_t cs_flag_stands[team_color_max];
 flag_t cs_flags[team_color_max];
 
-static void start_flag_sound(flag_t *flag, const char *sound_name)
-{
-   mobj_t *actor = CS_GetActorFromNetID(flag->net_id);
-
-   if(actor)
-   {
-      S_StartSfxInfo(
-         actor, E_SoundForName(sound_name), 127, ATTN_NONE, false, CHAN_AUTO
-      );
-   }
-}
-
 static void respawn_flag(flag_t *flag, fixed_t x, fixed_t y, fixed_t z,
                          const char *type_name)
 {
-   mobj_t *actor;
+   mobj_t *flag_actor;
 
    CS_RemoveFlagActor(flag);
-   actor = P_SpawnMobj(x, y, z, E_SafeThingName(type_name));
-   flag->net_id = actor->net_id;
+
+   if(serverside)
+   {
+      flag_actor = P_SpawnMobj(x, y, z, E_SafeThingName(type_name));
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(flag_actor);
+      flag->net_id = flag_actor->net_id;
+   }
+}
+
+static void start_flag_sound(mobj_t *actor, const char *sound)
+{
+   sfxinfo_t *sfx = E_SoundForName(sound);
+
+   S_StartSfxInfo(actor, sfx, 127, ATTN_NONE, false, CHAN_AUTO);
+   if(CS_SERVER)
+      SV_BroadcastSoundPlayed(actor, sound, 127, ATTN_NONE, false, CHAN_AUTO);
+}
+
+void CS_AnnounceFlagTaken(teamcolor_t flag_color)
+{
+   mobj_t *flag_actor = CS_GetActorFromNetID(cs_flags[flag_color].net_id);
+
+   if(!flag_actor)
+      return;
+
+   if(s_use_announcer && flag_color == team_color_red)
+      start_flag_sound(flag_actor, "RedFlagTaken");
+   else if(s_use_announcer && flag_color == team_color_blue)
+      start_flag_sound(flag_actor, "BlueFlagTaken");
+   else if(flag_color == clients[consoleplayer].team)
+      start_flag_sound(flag_actor, "FriendlyFlagTaken");
+   else
+      start_flag_sound(flag_actor, "EnemyFlagTaken");
+}
+
+void CS_AnnounceFlagDropped(teamcolor_t flag_color)
+{
+   mobj_t *flag_actor = CS_GetActorFromNetID(cs_flags[flag_color].net_id);
+
+   if(!flag_actor)
+      return;
+
+   if(s_use_announcer && flag_color == team_color_red)
+      start_flag_sound(flag_actor, "RedFlagDropped");
+   else if(s_use_announcer && flag_color == team_color_blue)
+      start_flag_sound(flag_actor, "BlueFlagDropped");
+   else if(flag_color == clients[consoleplayer].team)
+      start_flag_sound(flag_actor, "FriendlyFlagDropped");
+   else
+      start_flag_sound(flag_actor, "EnemyFlagDropped");
+}
+
+void CS_AnnounceFlagReturned(teamcolor_t flag_color)
+{
+   mobj_t *flag_actor = CS_GetActorFromNetID(cs_flags[flag_color].net_id);
+
+   if(!flag_actor)
+      return;
+
+   if(s_use_announcer && flag_color == team_color_red)
+      start_flag_sound(flag_actor, "RedFlagReturned");
+   else if(s_use_announcer && flag_color == team_color_blue)
+      start_flag_sound(flag_actor, "BlueFlagReturned");
+   else if(flag_color == clients[consoleplayer].team)
+      start_flag_sound(flag_actor, "FriendlyFlagReturned");
+   else
+      start_flag_sound(flag_actor, "EnemyFlagReturned");
+}
+
+void CS_AnnounceFlagCaptured(teamcolor_t flag_color)
+{
+   mobj_t *flag_actor = CS_GetActorFromNetID(cs_flags[flag_color].net_id);
+
+   if(!flag_actor)
+      return;
+
+   if(s_use_announcer && flag_color == team_color_red)
+      start_flag_sound(flag_actor, "BlueTeamScores");
+   else if(s_use_announcer && flag_color == team_color_blue)
+      start_flag_sound(flag_actor, "RedTeamScores");
+   else if(flag_color == clients[consoleplayer].team)
+      start_flag_sound(flag_actor, "FriendlyFlagCaptured");
+   else
+      start_flag_sound(flag_actor, "EnemyFlagCaptured");
 }
 
 void CS_RemoveFlagActor(flag_t *flag)
 {
-   mobj_t *actor;
+   mobj_t *flag_actor;
 
    if(flag->net_id)
    {
-      actor = CS_GetActorFromNetID(flag->net_id);
-      if(actor != NULL)
+      if((flag_actor = CS_GetActorFromNetID(flag->net_id)) != NULL)
       {
-         P_RemoveMobj(actor);
-         actor = NULL;
+         if(serverside)
+         {
+            if(CS_SERVER)
+               SV_BroadcastActorRemoved(flag_actor);
+            P_RemoveMobj(flag_actor);
+         }
       }
       flag->net_id = 0;
    }
@@ -118,7 +192,6 @@ void CS_GiveFlag(int playernum, flag_t *flag)
    teamcolor_t color = flag - cs_flags;
    player_t *player = &players[playernum];
    position_t position;
-   mobj_t *flag_actor = NULL;
 
    CS_SaveActorPosition(&position, player->mo, 0);
 
@@ -141,17 +214,13 @@ void CS_GiveFlag(int playernum, flag_t *flag)
       flag->pickup_time = cl_current_world_index;
    else if(CS_SERVER)
       flag->pickup_time = sv_world_index;
+   else
+      flag->pickup_time = gametic;
+
+   printf("Gave %s flag to player %d.\n", team_color_names[color], playernum);
 
    flag->timeout = 0;
    flag->state = flag_carried;
-
-   if(CS_CLIENT && playernum == consoleplayer)
-   {
-      flag_actor = CS_GetActorFromNetID(flag->net_id);
-      if(flag_actor == NULL)
-         I_Error("No actor for %s flag, exiting.\n", team_color_names[color]);
-      flag_actor->flags2 |= MF2_DONTDRAW;
-   }
 }
 
 void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
@@ -174,17 +243,8 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s returned the %s flag", player->name, team_color_names[color]
          );
-         if(s_use_announcer)
-         {
-            if(color == team_color_red)
-               start_flag_sound(flag, "RedFlagReturned");
-            else if(color == team_color_blue)
-               start_flag_sound(flag, "BlueFlagReturned");
-            else
-               start_flag_sound(flag, "FlagReturned");
-         }
-         else
-            start_flag_sound(flag, "FlagReturned");
+         if(serverside)
+            CS_AnnounceFlagReturned(color);
       }
       else
       {
@@ -192,17 +252,8 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s picked up the %s flag", player->name, team_color_names[color]
          );
-         if(s_use_announcer)
-         {
-            if(color == team_color_red)
-               start_flag_sound(flag, "RedFlagTaken");
-            else if(color == team_color_blue)
-               start_flag_sound(flag, "BlueFlagTaken");
-            else
-               start_flag_sound(flag, "FlagTaken");
-         }
-         else
-            start_flag_sound(flag, "FlagTaken");
+         if(serverside)
+            CS_AnnounceFlagTaken(color);
       }
    }
    else
@@ -218,17 +269,8 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                player->name,
                team_color_names[other_color]
             );
-            if(s_use_announcer)
-            {
-               if(client->team == team_color_red)
-                  start_flag_sound(flag, "RedTeamScores");
-               else if(client->team == team_color_blue)
-                  start_flag_sound(flag, "BlueTeamScores");
-               else
-                  start_flag_sound(flag, "FlagCaptured");
-            }
-            else
-               start_flag_sound(flag, "FlagCaptured");
+            if(serverside)
+               CS_AnnounceFlagCaptured(other_color);
          }
       }
       else
@@ -237,17 +279,8 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          doom_printf(
             "%s has taken the %s flag", player->name, team_color_names[color]
          );
-         if(s_use_announcer)
-         {
-            if(color == team_color_red)
-               start_flag_sound(flag, "RedFlagTaken");
-            else if(color == team_color_blue)
-               start_flag_sound(flag, "BlueFlagTaken");
-            else
-               start_flag_sound(flag, "FlagTaken");
-         }
-         else
-            start_flag_sound(flag, "FlagTaken");
+         if(serverside)
+            CS_AnnounceFlagTaken(color);
       }
    }
 }
@@ -285,27 +318,19 @@ void CS_DropFlag(int playernum)
       players[playernum].name,
       team_color_names[color]
    );
-   if(s_use_announcer)
-   {
-      if(color == team_color_red)
-         start_flag_sound(flag, "RedFlagDropped");
-      else if(color == team_color_blue)
-         start_flag_sound(flag, "BlueFlagDropped");
-      else
-         start_flag_sound(flag, "FlagDropped");
-   }
-   else
-      start_flag_sound(flag, "FlagDropped");
 
    if(color == team_color_red)
       respawn_flag(flag, corpse->x, corpse->y, corpse->z, "RedFlag");
    else if(color == team_color_blue)
       respawn_flag(flag, corpse->x, corpse->y, corpse->z, "BlueFlag");
 
+   if(serverside)
+      CS_AnnounceFlagDropped(color);
+
+   flag->state = flag_dropped;
    flag->carrier = 0;
    flag->pickup_time = 0;
    flag->timeout = 0;
-   flag->state = flag_dropped;
 }
 
 void CS_CTFTicker(void)
@@ -313,7 +338,7 @@ void CS_CTFTicker(void)
    teamcolor_t color;
    flag_t *flag;
    position_t position;
-   mobj_t *actor;
+   mobj_t *flag_actor;
 
    for(color = team_color_none; color < team_color_max; color++)
    {
@@ -325,35 +350,21 @@ void CS_CTFTicker(void)
          {
             CS_ReturnFlag(flag);
             doom_printf("%s flag returned", team_color_names[color]);
-            if(s_use_announcer)
-            {
-               if(color == team_color_red)
-                  start_flag_sound(flag, "RedFlagReturned");
-               else if(color == team_color_blue)
-                  start_flag_sound(flag, "BlueFlagReturned");
-               else
-                  start_flag_sound(flag, "FlagReturned");
-            }
-            else
-               start_flag_sound(flag, "FlagReturned");
+            if(serverside)
+               CS_AnnounceFlagReturned(color);
          }
       }
       else if(flag->state == flag_carried)
       {
-         actor = CS_GetActorFromNetID(flag->net_id);
-         if(actor == NULL)
+         if((flag_actor = CS_GetActorFromNetID(flag->net_id)) != NULL)
          {
-            I_Error(
-               "CS_CTFTicker: No actor for %s flag, exiting.\n",
-               team_color_names[color]
-            );
+            CS_SaveActorPosition(&position, players[flag->carrier].mo, 0);
+            P_UnsetThingPosition(flag_actor);
+            flag_actor->x = position.x;
+            flag_actor->y = position.y;
+            flag_actor->z = position.z;
+            P_SetThingPosition(flag_actor);
          }
-         CS_SaveActorPosition(&position, players[flag->carrier].mo, 0);
-         P_UnsetThingPosition(actor);
-         actor->x = position.x;
-         actor->y = position.y;
-         actor->z = position.z;
-         P_SetThingPosition(actor);
       }
    }
 }

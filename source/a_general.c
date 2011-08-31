@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -68,15 +68,15 @@ void A_Mushroom(mobj_t *actor)
    int ShotType;
 
    // Mushroom parameters are part of code pointer's state
-   fixed_t misc1 = 
+   fixed_t misc1 =
       actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
-   fixed_t misc2 = 
+   fixed_t misc2 =
       actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
 
    // [CG] Clients can't handle this at all.
    if(!serverside)
       return;
-   
+
    // haleyjd: extended parameter support requested by Mordeth:
    // allow specification of thing type in args[0]
 
@@ -84,7 +84,7 @@ void A_Mushroom(mobj_t *actor)
 
    if(ShotType < 0 || ShotType == NUMMOBJTYPES)
       ShotType = E_SafeThingType(MT_FATSHOT);
-   
+
    A_Explode(actor);               // make normal explosion
 
    // [CG] TODO: This needs its own network message, straight up.
@@ -104,10 +104,6 @@ void A_Mushroom(mobj_t *actor)
             mo->momy = FixedMul(mo->momy, misc2);             // Slow down a bit
             mo->momz = FixedMul(mo->momz, misc2);
             mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
-            if(CS_SERVER)
-            {
-               SV_BroadcastActorAttribute(mo, aat_flags);
-            }
          }
       }
    }
@@ -123,6 +119,9 @@ void A_Mushroom(mobj_t *actor)
 
 void A_Spawn(mobj_t *mo)
 {
+   if(!serverside)
+      return;
+
    if(mo->state->misc1)
    {
       mobj_t *newmobj;
@@ -130,13 +129,19 @@ void A_Spawn(mobj_t *mo)
       // haleyjd 03/06/03 -- added error check
       //         07/05/03 -- adjusted for EDF
       int thingtype = E_SafeThingType((int)(mo->state->misc1));
-      
-      newmobj = 
-         P_SpawnMobj(mo->x, mo->y, 
-                     (mo->state->misc2 << FRACBITS) + mo->z,
-                     thingtype);
+
+      newmobj = P_SpawnMobj(
+         mo->x, mo->y, (mo->state->misc2 << FRACBITS) + mo->z, thingtype
+      );
+
       if(newmobj)
-         newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+      {
+         newmobj->flags = (newmobj->flags & ~MF_FRIEND) |
+                          (mo->flags & MF_FRIEND);
+      }
+
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(newmobj);
    }
 }
 
@@ -297,7 +302,7 @@ void A_SetFlags(mobj_t *actor)
 
    if(!(flags = E_ArgAsThingFlags(actor->state->args, 1)))
       return;
-   
+
    switch(flagfield)
    {
    case 0:
@@ -497,10 +502,10 @@ void A_GenTracer(mobj_t *actor)
    fixed_t       dist;
    fixed_t       slope;
    mobj_t        *dest;
-  
+
    // adjust direction
    dest = actor->tracer;
-   
+
    if(!dest || dest->health <= 0)
       return;
 
@@ -529,14 +534,14 @@ void A_GenTracer(mobj_t *actor)
 
    // change slope
    dist = P_AproxDistance(dest->x - actor->x, dest->y - actor->y);
-   
+
    dist = dist / actor->info->speed;
 
    if(dist < 1)
       dist = 1;
 
    slope = (dest->z + 40*FRACUNIT - actor->z) / dist;
-   
+
    if(slope < actor->momz)
       actor->momz -= FRACUNIT/8;
    else
@@ -613,15 +618,14 @@ void A_MissileAttack(mobj_t *actor)
    int statenum;
    boolean hastarget = true;
 
-   // [CG] Only servers do this.
    if(!serverside)
       return;
 
    if(!actor->target || actor->target->health <= 0)
       hastarget = false;
 
-   type     = E_ArgAsThingNum(actor->state->args,      0);   
-   homing   = E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);   
+   type     = E_ArgAsThingNum(actor->state->args,      0);
+   homing   = E_ArgAsKwd(actor->state->args,  1, &missileatkkwds, 0);
    z        = (fixed_t)(E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(actor->state->args,           3, 0);
    statenum = E_ArgAsStateNumG0(actor->state->args,    4, actor);
@@ -643,6 +647,7 @@ void A_MissileAttack(mobj_t *actor)
    // adjust angle -> BAM (must adjust negative angles too)
    while(a >= 360)
       a -= 360;
+
    while(a < 0)
       a += 360;
 
@@ -656,7 +661,7 @@ void A_MissileAttack(mobj_t *actor)
       P_SpawnMissileAngle(actor, type, actor->angle + ang, 0, z);
       return;
    }
-   
+
    if(!a)
    {
       mo = P_SpawnMissile(actor, actor->target, type, z);
@@ -665,9 +670,7 @@ void A_MissileAttack(mobj_t *actor)
       {
          P_SetTarget(&mo->tracer, actor->target);
          if(CS_SERVER)
-         {
-            SV_BroadcastActorTracer(mo);
-         }
+            SV_BroadcastActorTarget(mo, CS_AT_TRACER);
       }
    }
    else
@@ -675,10 +678,12 @@ void A_MissileAttack(mobj_t *actor)
       // calculate z momentum
       mobj_t *target = actor->target;
 
-      momz = P_MissileMomz(target->x - actor->x,
-                           target->y - actor->y,
-                           target->z - actor->z,
-                           mobjinfo[type].speed);
+      momz = P_MissileMomz(
+         target->x - actor->x,
+         target->y - actor->y,
+         target->z - actor->z,
+         mobjinfo[type].speed
+      );
 
       mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
    }
@@ -746,16 +751,18 @@ void A_MissileSpread(mobj_t *actor)
    for(i = 0; i < num; ++i)
    {
       // calculate z momentum
+      momz = P_MissileMomz(
 #ifdef R_LINKEDPORTALS
-      momz = P_MissileMomz(getTargetX(actor) - actor->x,
-                           getTargetY(actor) - actor->y,
-                           getTargetZ(actor) - actor->z,
+         getTargetX(actor) - actor->x,
+         getTargetY(actor) - actor->y,
+         getTargetZ(actor) - actor->z,
 #else
-      momz = P_MissileMomz(actor->target->x - actor->x,
-                           actor->target->y - actor->y,
-                           actor->target->z - actor->z,
+         actor->target->x - actor->x,
+         actor->target->y - actor->y,
+         actor->target->z - actor->z,
 #endif
-                           mobjinfo[type].speed);
+         mobjinfo[type].speed
+      );
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
 
@@ -849,7 +856,7 @@ void A_BulletAttack(mobj_t *actor)
    {
       int dmg = damage * (P_Random(pr_monbullets)%dmgmod + 1);
       angle_t angle = actor->angle;
-      
+
       if(accurate <= 2 || accurate == 4)
       {
          // if never accurate or monster accurate,
@@ -868,14 +875,10 @@ void A_BulletAttack(mobj_t *actor)
       }
       else if(accurate == 3) // ssg spread
       {
-         angle += P_SubRandom(pr_monmisfire) << 19;         
+         angle += P_SubRandom(pr_monmisfire) << 19;
          slope += P_SubRandom(pr_monmisfire) << 5;
 
-         // [CG] Only servers run P_LineAttack.
-         if(serverside)
-         {
-            P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
-         }
+         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
       }
    }
 }
@@ -911,19 +914,22 @@ void A_ThingSummon(mobj_t *actor)
    angle_t an;
    int     type, prestep, deltaz, kill_or_remove, make_child;
 
+   if(!serverside)
+      return;
+
    type    = E_ArgAsThingNum(actor->state->args, 0);
    prestep = E_ArgAsInt(actor->state->args,      1, 0) << FRACBITS;
    deltaz  = E_ArgAsInt(actor->state->args,      2, 0) << FRACBITS;
 
    kill_or_remove = !!E_ArgAsKwd(actor->state->args, 3, &killremovekwds, 0);
    make_child     = !!E_ArgAsKwd(actor->state->args, 4, &makechildkwds, 0);
-   
+
    // good old-fashioned pain elemental style spawning
-   
+
    an = actor->angle >> ANGLETOFINESHIFT;
-   
-   prestep = prestep + 3*(actor->info->radius + mobjinfo[type].radius)/2;
-   
+
+   prestep = prestep + 3 * (actor->info->radius + mobjinfo[type].radius) / 2;
+
    x = actor->x + FixedMul(prestep, finecosine[an]);
    y = actor->y + FixedMul(prestep, finesine[an]);
    z = actor->z + deltaz;
@@ -931,12 +937,12 @@ void A_ThingSummon(mobj_t *actor)
    // Check whether the thing is being spawned through a 1-sided
    // wall or an impassible line, or a "monsters can't cross" line.
    // If it is, then we don't allow the spawn.
-   
+
    if(Check_Sides(actor, x, y))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);
-   
+
    // Check to see if the new thing's z value is above the
    // ceiling of its new sector, or below the floor. If so, kill it.
 
@@ -951,18 +957,20 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
+         if(CS_SERVER)
+            SV_BroadcastActorRemoved(newmobj);
          P_RemoveMobj(newmobj);
          break;
       }
       return;
-   }                                                         
-   
+   }
+
    // spawn thing with same friendliness
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
    P_UpdateThinker(&newmobj->thinker);
-   
+
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
 
@@ -975,19 +983,28 @@ void A_ThingSummon(mobj_t *actor)
          A_Die(newmobj);
          break;
       case 1:
+         if(CS_SERVER)
+            SV_BroadcastActorRemoved(newmobj);
          P_RemoveMobj(newmobj);
          break;
       }
       return;
    }
 
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(newmobj);
+
    // give same target
    P_SetTarget(&newmobj->target, actor->target);
+   if(CS_SERVER)
+      SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
 
    // set child properties
    if(make_child)
    {
       P_SetTarget(&newmobj->tracer, actor);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
       newmobj->intflags |= MIF_ISCHILD;
    }
 }
@@ -1014,13 +1031,10 @@ void A_KillChildren(mobj_t *actor)
             A_Die(mo);
             break;
          case 1:
-            // [CG] Only servers remove actors.
             if(serverside)
             {
                if(CS_SERVER)
-               {
                   SV_BroadcastActorRemoved(mo);
-               }
                P_RemoveMobj(mo);
             }
             break;
@@ -1054,12 +1068,12 @@ void A_AproxDistance(mobj_t *actor)
       *dest = -1;
       return;
    }
-   
+
 #ifdef R_LINKEDPORTALS
-   distance = P_AproxDistance(actor->x - getTargetX(actor), 
+   distance = P_AproxDistance(actor->x - getTargetX(actor),
                               actor->y - getTargetY(actor));
-#else   
-   distance = P_AproxDistance(actor->x - actor->target->x, 
+#else
+   distance = P_AproxDistance(actor->x - actor->target->x,
                               actor->y - actor->target->y);
 #endif
 
@@ -1150,7 +1164,9 @@ void A_AmbientThinker(mobj_t *mo)
    }
 
    // time to play the sound
-   S_StartSfxInfo(mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO);
+   S_StartSfxInfo(
+      mo, amb->sound, amb->volume, amb->attenuation, loop, CHAN_AUTO
+   );
 }
 
 void A_SteamSpawn(mobj_t *mo)
@@ -1161,10 +1177,13 @@ void A_SteamSpawn(mobj_t *mo)
    int tvangle, thangle;
    angle_t vangle, hangle;
    fixed_t speed, angularspeed;
-   
+
+   if(!serverside)
+      return;
+
    // Get the thingtype of the thing we're spewing (a steam cloud for example)
    thingtype = E_ArgAsThingNum(mo->state->args, 0);
-   
+
    // And the speed to fire it out at
    speed = (fixed_t)(E_ArgAsInt(mo->state->args, 4, 0) << FRACBITS);
 
@@ -1175,35 +1194,40 @@ void A_SteamSpawn(mobj_t *mo)
    // As well as the spread ranges
    hrange = (E_ArgAsInt(mo->state->args, 1, 0) * 256) / 360;
    vrange = (E_ArgAsInt(mo->state->args, 3, 0) * 256) / 360;
-   
-   // Get the angles we'll be firing the things in, factoring in 
+
+   // Get the angles we'll be firing the things in, factoring in
    // where within the range it will lie
    thangle += (hrange >> 1) - (P_Random(pr_steamspawn) * hrange / 255);
    tvangle += (vrange >> 1) - (P_Random(pr_steamspawn) * vrange / 255);
-   
+
    while(thangle >= 256)
       thangle -= 256;
    while(thangle < 0)
       thangle += 256;
-         
+
    while(tvangle >= 256)
       tvangle -= 256;
    while(tvangle < 0)
       tvangle += 256;
-   
+
    // Make angles angle_t
-   hangle = ((unsigned int)thangle * (ANG90/64));
-   vangle = ((unsigned int)tvangle * (ANG90/64));
+   hangle = ((unsigned int)thangle * (ANG90 / 64));
+   vangle = ((unsigned int)tvangle * (ANG90 / 64));
 
    // Spawn thing
    steamthing = P_SpawnMobj(mo->x, mo->y, mo->z, thingtype);
-   
+
    // Give it some momentum
    // angular speed is the hypotenuse of the x and y speeds
    angularspeed = FixedMul(speed, finecosine[vangle >> ANGLETOFINESHIFT]);
-   steamthing->momx = FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
-   steamthing->momy = FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
+   steamthing->momx =
+      FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
+   steamthing->momy =
+      FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
    steamthing->momz = FixedMul(speed, finesine[vangle >> ANGLETOFINESHIFT]);
+
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(steamthing);
 }
 
 //
@@ -1217,17 +1241,19 @@ void A_SteamSpawn(mobj_t *mo)
 void A_TargetJump(mobj_t *mo)
 {
    int statenum;
-   
+
    if((statenum = E_ArgAsStateNumNI(mo->state->args, 0, mo)) < 0)
       return;
-   
+
    // 1) must be valid
    // 2) must be alive
    // 3) if a super friend, target cannot be a friend
    if(mo->target && mo->target->health > 0 &&
-      !((mo->flags & mo->target->flags & MF_FRIEND) && 
+      !((mo->flags & mo->target->flags & MF_FRIEND) &&
         mo->flags3 & MF3_SUPERFRIEND))
+   {
       P_SetMobjState(mo, statenum);
+   }
 }
 
 //
@@ -1251,8 +1277,12 @@ void A_EjectCasing(mobj_t *actor)
    int     thingtype;
    mobj_t *mo;
 
+   // [CG] TODO: Casings should be clientside along with puffs/blood/fog.
+   if(!serverside)
+      return;
+
    frontdisti = E_ArgAsInt(actor->state->args, 0, 0);
-   
+
    frontdist  = frontdisti * FRACUNIT / 16;
    sidedist   = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
    zheight    = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT / 16;
@@ -1261,29 +1291,32 @@ void A_EjectCasing(mobj_t *actor)
    if(actor->player)
    {
       int pitch = actor->player->pitch;
-            
+
       z = actor->z + actor->player->viewheight + zheight;
-      
+
       // modify height according to pitch - hack warning.
       z -= (pitch / ANGLE_1) * ((10 * frontdisti / 256) * FRACUNIT / 32);
    }
    else
       z = actor->z + zheight;
 
-   x = actor->x + FixedMul(frontdist, finecosine[angle>>ANGLETOFINESHIFT]);
-   y = actor->y + FixedMul(frontdist, finesine[angle>>ANGLETOFINESHIFT]);
+   x = actor->x + FixedMul(frontdist, finecosine[angle >> ANGLETOFINESHIFT]);
+   y = actor->y + FixedMul(frontdist, finesine[angle >> ANGLETOFINESHIFT]);
 
    // adjust x/y along a vector orthogonal to the source object's angle
    angle = angle - ANG90;
 
-   x += FixedMul(sidedist, finecosine[angle>>ANGLETOFINESHIFT]);
-   y += FixedMul(sidedist, finesine[angle>>ANGLETOFINESHIFT]);
+   x += FixedMul(sidedist, finecosine[angle >> ANGLETOFINESHIFT]);
+   y += FixedMul(sidedist, finesine[angle >> ANGLETOFINESHIFT]);
 
    thingtype = E_ArgAsThingNum(actor->state->args, 3);
 
    mo = P_SpawnMobj(x, y, z, thingtype);
 
    mo->angle = sidedist >= 0 ? angle : angle + ANG180;
+
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 }
 
 //
@@ -1299,10 +1332,10 @@ void A_CasingThrust(mobj_t *actor)
 
    moml = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 16;
    momz = E_ArgAsInt(actor->state->args, 1, 0) * FRACUNIT / 16;
-   
-   actor->momx = FixedMul(moml, finecosine[actor->angle>>ANGLETOFINESHIFT]);
-   actor->momy = FixedMul(moml, finesine[actor->angle>>ANGLETOFINESHIFT]);
-   
+
+   actor->momx = FixedMul(moml, finecosine[actor->angle >> ANGLETOFINESHIFT]);
+   actor->momy = FixedMul(moml, finesine[actor->angle >> ANGLETOFINESHIFT]);
+
    // randomize
    actor->momx += P_SubRandom(pr_casing) << 8;
    actor->momy += P_SubRandom(pr_casing) << 8;

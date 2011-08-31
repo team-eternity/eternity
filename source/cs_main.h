@@ -97,14 +97,41 @@
 #define MAX_CLIENTS (cs_original_settings->max_player_clients + \
                      cs_original_settings->max_admin_clients)
 
-enum
+// [CG] Used in p_trace to determine whether or not puffs/blood should be
+//      spawned.
+
+#define CL_SHOULD_PREDICT_SHOT(shooter) (clientside && ( \
+   cl_enable_prediction && \
+   cl_predict_shots     && \
+   ((shooter)->player - players == consoleplayer)) \
+)
+
+#define CS_SHOULD_SHOW_SHOT(shooter) ( \
+   serverside || (!(shooter)->player) || (CL_SHOULD_PREDICT_SHOT((shooter))) \
+)
+
+#define CS_SPAWN_ACTOR_OK (\
+   serverside || \
+   cl_spawning_actor_from_message || \
+   gamestate != GS_LEVEL || \
+   !cl_received_sync \
+)
+
+#define CS_REMOVE_ACTOR_OK (\
+   serverside || \
+   cl_removing_actor_from_message || \
+   gamestate != GS_LEVEL || \
+   !cl_received_sync \
+)
+
+typedef enum
 {
    WEAPON_SWITCH_ALWAYS,
    WEAPON_SWITCH_USE_PWO,
    WEAPON_SWITCH_NEVER
 } weapon_switch_value_e;
 
-enum
+typedef enum
 {
    AMMO_SWITCH_VANILLA,
    AMMO_SWITCH_USE_PWO,
@@ -117,6 +144,13 @@ enum
     UNSEQUENCED_CHANNEL,
     MAX_CHANNELS
 };
+
+typedef enum
+{
+   CS_AT_TARGET,
+   CS_AT_TRACER,
+   CS_AT_LASTENEMY
+} actor_target_e;
 
 typedef enum
 {
@@ -140,25 +174,24 @@ typedef enum
    nm_actorspawned,            // (s => c) 17, Actor spawned
    nm_actorposition,           // (s => c) 18, Actor position
    nm_actortarget,             // (s => c) 19, Actor target
-   nm_actortracer,             // (s => c) 20, Actor tracer
-   nm_actorstate,              // (s => c) 21, Actor state
-   nm_actorattribute,          // (s => c) 22, Actor attribute
-   nm_actordamaged,            // (s => c) 23, Actor damaged
-   nm_actorkilled,             // (s => c) 24, Actor killed
-   nm_actorremoved,            // (s => c) 25, Actor removed
-   nm_lineactivated,           // (s => c) 26, Line activated
-   nm_monsteractive,           // (s => c) 27, Monster active
-   nm_monsterawakened,         // (s => c) 28, Monster awakened
-   nm_missilespawned,          // (s => c) 29, Missile spawned
-   nm_missileexploded,         // (s => c) 30, Missile exploded
-   nm_cubespawned,             // (s => c) 31, Boss brain cube spawned
-   nm_specialspawned,          // (s => c) 32, Map special spawned
-   nm_specialstatus,           // (s => c) 33, Map special's status
-   nm_specialremoved,          // (s => c) 34, Map special removed
-   nm_sectorposition,          // (s => c) 35, Sector position
-   nm_ticfinished,             // (s => c) 36, TIC is finished
+   nm_actorstate,              // (s => c) 20, Actor state
+   nm_actordamaged,            // (s => c) 21, Actor damaged
+   nm_actorkilled,             // (s => c) 22, Actor killed
+   nm_actorremoved,            // (s => c) 23, Actor removed
+   nm_lineactivated,           // (s => c) 24, Line activated
+   nm_monsteractive,           // (s => c) 25, Monster active
+   nm_monsterawakened,         // (s => c) 26, Monster awakened
+   nm_missilespawned,          // (s => c) 27, Missile spawned
+   nm_missileexploded,         // (s => c) 28, Missile exploded
+   nm_cubespawned,             // (s => c) 29, Boss brain cube spawned
+   nm_specialspawned,          // (s => c) 30, Map special spawned
+   nm_specialstatus,           // (s => c) 31, Map special's status
+   nm_specialremoved,          // (s => c) 32, Map special removed
+   nm_sectorposition,          // (s => c) 33, Sector position
+   nm_soundplayed,             // (s => c) 34, Sound played
+   nm_ticfinished,             // (s => c) 35, TIC is finished
    nm_max_messages
-} network_message_t;
+} network_message_e;
 
 typedef enum
 {
@@ -168,14 +201,14 @@ typedef enum
    dr_excessive_latency,
    dr_command_flood,
    dr_max_reasons
-} disconnection_reason_t;
+} disconnection_reason_e;
 
 typedef enum
 {
    cs_fs_none,
    cs_fs_hit,
    cs_fs_hit_on_thing
-} cs_floor_status_t;
+} cs_floor_status_e;
 
 // [CG] TODO: Some of this stuff should only be sent to spectators, like
 //            health, armor_points, etc., because it can be used strategically.
@@ -214,7 +247,7 @@ typedef enum
    ci_weapon_toggle,  // doom_weapon_toggles
    ci_autoaim,        // autoaim
    ci_weapon_speed,   // weapon_speed
-} client_info_t;
+} client_info_e;
 
 typedef enum
 {
@@ -224,19 +257,7 @@ typedef enum
    mr_player,
    mr_team,
    mr_all,
-} message_recipient_t;
-
-typedef enum
-{
-   aat_flags,
-   aat_flags2,
-   aat_flags3,
-   aat_flags4,
-   aat_intflags,
-   aat_reactiontime,
-   aat_threshold,
-   aat_jumptime, // [CG] Players only.
-} actor_attribute_type_t;
+} message_recipient_e;
 
 typedef enum
 {
@@ -244,7 +265,7 @@ typedef enum
    at_crossed,
    at_shot,
    at_max,
-} activation_type_t;
+} activation_type_e;
 
 typedef enum
 {
@@ -253,38 +274,14 @@ typedef enum
    cs_auth_player,
    cs_auth_moderator,
    cs_auth_administrator,
-} cs_auth_level_t;
+} cs_auth_level_e;
 
 typedef enum
 {
    ql_none,
    ql_waiting,
    ql_playing
-} cs_queue_level_t;
-
-// [CG] Some justification for the field duplication between nm_gamestate and
-//      nm_mapstarted:
-//
-//      Because the game state message is a larger message, several TICs may
-//      elapse before the server even finishes sending the message (this is
-//      asynchronous, the server is not lagged during this time).
-//      Additionally, it will take time for the message to arrive, and yet more
-//      time for the client to load the game state itself.
-//
-//      As a result, clients loading the map directly after the game state
-//      message will already be behind.  So if things like gametic, leveltime,
-//      etc. are in that message, they will be out of date.  To avoid this,
-//      nm_gamestate contains only things for which this makes no difference.
-//      nm_sync contains the information to bring the client back up to speed,
-//      and is sent directly after nm_gamestate.
-//
-//      Loading the game state requires that a map is loaded.  So nm_gamestate
-//      must contain the map's number (an index into cs_maps), settings for
-//      that map, and the playeringame[] array (which is accessed during map
-//      load).
-//
-//      Because handling game state involves loading a map, nm_gamestate must
-//      share several fields with nm_mapstarted.
+} cs_queue_level_e;
 
 // [CG] These structs are sent over the wire, so they must be packed & use
 //      exact-width integer types.
@@ -335,7 +332,7 @@ typedef struct client_s
    //      ql_waiting.
    uint32_t queue_position;
    // [CG] The client's current floor status, whether or not they hit the floor
-   //      and if they're now standing on a special surface, cs_floor_status_t.
+   //      and if they're now standing on a special surface, cs_floor_status_e.
    int32_t floor_status;
    // [CG] The number of TICs the client's been dead; used for death time
    //      limit.
@@ -360,7 +357,7 @@ typedef struct server_client_s
    enet_uint32 connect_id;
    ENetAddress address;
    boolean synchronized;
-   cs_auth_level_t auth_level;
+   cs_auth_level_e auth_level;
    int last_auth_attempt;
    unsigned int commands_dropped;
    // [CG] This is used to keep track of the player's most recently run
@@ -460,7 +457,7 @@ typedef struct nm_authresult_s
    int32_t message_type;
    uint32_t world_index;
    uint8_t authorization_successful;
-   int32_t authorization_level; // [CG] cs_auth_level_t.
+   int32_t authorization_level; // [CG] cs_auth_level_e.
 } nm_authresult_t;
 
 // [CG] The contents of the message are at the end of this message.
@@ -478,7 +475,7 @@ typedef struct nm_playermessage_s
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t recipient_type; // [CG] message_recipient_t.
+   int32_t recipient_type; // [CG] message_recipient_e.
    uint32_t sender_number;
    // [CG] If recipient is a player, this is that player's number.  Otherwise
    //      this is garbage.
@@ -490,8 +487,8 @@ typedef struct nm_playerspawned_s
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
    uint32_t net_id;
+   uint32_t player_number;
    uint8_t as_spectator;
    fixed_t x;
    fixed_t y;
@@ -506,7 +503,7 @@ typedef struct nm_playerinfoupdated_s
    int32_t message_type;
    uint32_t world_index;
    uint32_t player_number;
-   int32_t info_type; // [CG] client_info_t.
+   int32_t info_type; // [CG] client_info_e.
    int32_t array_index;
    union {
       int32_t int_value;
@@ -541,7 +538,7 @@ typedef struct nm_clientstatus_s
    position_t position;
    // [CG] This is the index of the last client command run by the server.
    uint32_t last_command_run;
-   int32_t floor_status; // [CG] cs_floor_status_t.
+   int32_t floor_status; // [CG] cs_floor_status_e.
 } nm_clientstatus_t;
 
 typedef struct nm_playertouchedspecial_s
@@ -564,6 +561,7 @@ typedef struct nm_puffspawned_s
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t shooter_net_id;
    fixed_t x;
    fixed_t y;
    fixed_t z;
@@ -576,6 +574,7 @@ typedef struct nm_bloodspawned_s
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t shooter_net_id;
    uint32_t target_net_id;
    fixed_t x;
    fixed_t y;
@@ -612,17 +611,10 @@ typedef struct nm_actortarget_s
 {
    int32_t message_type;
    uint32_t world_index;
+   int32_t target_type;
    uint32_t actor_net_id;
    uint32_t target_net_id;
 } nm_actortarget_t;
-
-typedef struct nm_actortracer_s
-{
-   int32_t message_type;
-   uint32_t world_index;
-   uint32_t actor_net_id;
-   uint32_t tracer_net_id;
-} nm_actortracer_t;
 
 typedef struct nm_actorstate_s
 {
@@ -632,17 +624,6 @@ typedef struct nm_actorstate_s
    int32_t state_number; // [CG] statenum_t.
    int32_t actor_type;   // [CG] mobjtype_t.
 } nm_actorstate_t;
-
-typedef struct nm_actorattribute_s
-{
-   int32_t message_type;
-   uint32_t world_index;
-   uint32_t actor_net_id;
-   int32_t attribute_type; // [CG] actor_attribute_type_t.
-   union {
-      int32_t int_value;
-   };
-} nm_actorattribute_t;
 
 typedef struct nm_actordamaged_s
 {
@@ -733,7 +714,7 @@ typedef struct nm_cubespawned_s
    int32_t message_type;
    uint32_t world_index;
    uint32_t net_id;
-   int32_t reaction_time;
+   uint32_t target_net_id;
    int32_t flags;
 } nm_cubespawned_t;
 
@@ -773,6 +754,19 @@ typedef struct nm_specialremoved_s
    uint32_t net_id;
 } nm_specialremoved_t;
 
+// [CG] The name of the sound is appended to the end of this message.
+typedef struct nm_soundplayed_s
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint32_t source_net_id;
+   uint32_t sound_name_size;
+   int32_t volume;
+   int32_t attenuation; // [CG] soundattn_e.
+   int8_t loop;
+   int32_t channel;     // [CG] schannel_e.
+} nm_soundplayed_t;
+
 typedef struct nm_ticfinished_s
 {
    int32_t message_type;
@@ -799,14 +793,7 @@ extern char *network_message_names[nm_max_messages];
 extern unsigned int world_index;
 extern unsigned int cs_shooting_player;
 
-#define CS_SHOULD_SHOW_SHOT (serverside || (\
-   cs_shooting_player == consoleplayer &&\
-   cl_enable_prediction                &&\
-   cl_predict_shots\
-))
-
 void CS_DoWorldDone(void);
-void CS_PrintClientStatus(char *prefix, nm_clientstatus_t *status);
 void CS_PrintTime(void);
 char* CS_IPToString(int ip_address);
 void CS_PrintJSONToFile(const char *filename, const char *json_data);
@@ -820,7 +807,6 @@ void CS_SetPlayerName(player_t *player, char *name);
 void CS_SetSkin(const char *skin_name, int playernum);
 void CS_InitPlayers(void);
 void CS_DisconnectPeer(ENetPeer *peer, enet_uint32 reason);
-void CS_RemovePlayer(int playernum);
 void CS_ZeroClient(int clientnum);
 void CS_ZeroClients(void);
 void CS_InitPlayer(int playernum);
@@ -841,18 +827,22 @@ void CS_HandleFlushPacketBufferKey(event_t *ev);
 void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message);
 void CS_HandlePlayerCommand(nm_playercommand_t *command_message);
 size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
-                                      int playernum, client_info_t info_type);
+                                      int playernum, client_info_e info_type);
 void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
-                                   int playernum, client_info_t info_type,
+                                   int playernum, client_info_e info_type,
                                    int array_index);
 void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
-                                    int playernum, client_info_t info_type);
+                                    int playernum, client_info_e info_type);
 
 void CS_SetSpectator(int playernum, boolean spectating);
 void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
                     angle_t angle, boolean as_spectator);
 mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator);
 
+mobj_t* CS_SpawnPuff(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
+                     angle_t angle, int updown, boolean ptcl);
+mobj_t* CS_SpawnBlood(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
+                      angle_t angle, int damage, mobj_t *target);
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
 void CS_ReadFromNetwork(void);
