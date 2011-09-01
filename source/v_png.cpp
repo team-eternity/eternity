@@ -33,9 +33,9 @@
 
 #include "c_io.h"
 #include "doomtype.h"
-#include "v_buffer.h"
 #include "v_misc.h"
 #include "v_png.h"
+#include "v_video.h"
 
 // Need libpng
 #include "png.h"
@@ -57,19 +57,14 @@ public:
    png_uint_32 pitch;
    int         color_type;
    int         bit_depth;
-   int         interlace_method;
    int         color_key;
    png_byte    channels;
    byte       *surface;
-   png_uint_32 rmask;
-   png_uint_32 gmask;
-   png_uint_32 bmask;
-   png_uint_32 amask;
 
    struct palette_t
    {
-      png_colorp colors;
-      int        numColors;
+      byte *colors;
+      int   numColors;
    };
 
    palette_t palette;
@@ -80,7 +75,11 @@ public:
    png_bytepp  row_pointers;
 
    // Methods
-   bool readImage(byte *data);
+   bool  readImage(void *data);
+   void  freeImage();
+   byte *getAs8Bit(byte *outpal);
+   byte *getAs24Bit();
+   byte *buildTranslation(byte *outpal);
 };
 
 //=============================================================================
@@ -134,20 +133,20 @@ static void V_pngReadFunc(png_structp png_ptr, png_bytep area, png_size_t size)
 // VPNGImagePimpl Methods
 //
 
-static inline bool is_big_endian()
-{
-   uint32_t i = 0xAABBCCDD;
-
-   return (((byte *)&i)[0] == 0xAA);
-}
-
-bool VPNGImagePimpl::readImage(byte *data)
+//
+// VPNGImagePimpl::readImage
+//
+// Does the full process of using libpng to read a PNG file from memory.
+// Most of the unusual PNG formats are handled here by having libpng normalize
+// them into what is effectively either 8- or 32-bit output.
+//
+bool VPNGImagePimpl::readImage(void *data)
 {
    bool readSuccess = true;
    vpngiostruct_t ioStruct;
    png_color_16 *transv;
 
-   ioStruct.data = data;
+   ioStruct.data = (byte *)data;
 
    if(!VPNGImage::CheckPNGFormat(data))
       return false;
@@ -175,7 +174,7 @@ bool VPNGImagePimpl::readImage(byte *data)
       // read header info
       png_read_info(png_ptr, info_ptr);
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-                   &interlace_method, NULL, NULL);
+                   NULL, NULL, NULL);
 
       // Strip 16-bit color elements to 8-bit precision
       png_set_strip_16(png_ptr);
@@ -227,34 +226,13 @@ bool VPNGImagePimpl::readImage(byte *data)
       // Update info
       png_read_update_info(png_ptr, info_ptr);
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, 
-                   &interlace_method, NULL, NULL);
+                   NULL, NULL, NULL);
 
       channels = png_get_channels(png_ptr, info_ptr);
       
       // Allocate surface
-      pitch   = width * bit_depth * channels;
+      pitch   = width * bit_depth * channels / 8;
       surface = (byte *)(calloc(pitch, height));
-
-      // Determine color masks
-      rmask = gmask = bmask = amask = 0;
-      if(color_type != PNG_COLOR_TYPE_PALETTE)
-      {
-         if(is_big_endian())
-         {
-            int s = (channels == 4 ? 0 : 8);
-            rmask = 0xFF000000 >> s;
-            gmask = 0x00FF0000 >> s;
-            bmask = 0x0000FF00 >> s;
-            amask = 0x000000FF >> s;
-         }
-         else
-         {
-            rmask = 0x000000FF;
-            gmask = 0x0000FF00;
-            bmask = 0x00FF0000;
-            amask = (channels == 4 ? 0xFF000000 : 0);
-         }
-      }
 
       // TODO: colorkey?
 
@@ -270,16 +248,35 @@ bool VPNGImagePimpl::readImage(byte *data)
       png_read_end(png_ptr, info_ptr);
 
       // Load palette, if any
-      if(color_type == PNG_COLOR_TYPE_PALETTE ||
-         color_type == PNG_COLOR_MASK_PALETTE)
+      if(color_type == PNG_COLOR_TYPE_PALETTE)
       {
          png_colorp png_palette;
          png_get_PLTE(png_ptr, info_ptr, &png_palette, &palette.numColors);
 
          if(palette.numColors > 0)
          {
-            palette.colors = (png_colorp)(calloc(palette.numColors, sizeof(png_color)));
-            memcpy(palette.colors, png_palette, palette.numColors * sizeof(png_color));
+            palette.colors = (byte *)(calloc(3, palette.numColors));
+
+            for(int i = 0; i < palette.numColors; i++)
+            {
+               palette.colors[i*3+0] = (byte)(png_palette[i].red);
+               palette.colors[i*3+1] = (byte)(png_palette[i].green);
+               palette.colors[i*3+2] = (byte)(png_palette[i].blue);
+            }
+         }
+      } // end if for palette reading
+
+      // Build a dummy palette for grayscale images
+      if(color_type == PNG_COLOR_TYPE_GRAY && !palette.colors)
+      {
+         palette.numColors = 256;
+         palette.colors = (byte *)(calloc(3, 256));
+
+         for(int i = 0; i < palette.numColors; i++)
+         {
+            palette.colors[i*3+0] = (byte)i;
+            palette.colors[i*3+1] = (byte)i;
+            palette.colors[i*3+2] = (byte)i;
          }
       }
    }
@@ -293,8 +290,154 @@ bool VPNGImagePimpl::readImage(byte *data)
 
    if(row_pointers)
       free(row_pointers);
+   row_pointers = NULL;
 
    return readSuccess;
+}
+
+//
+// VPNGImagePimpl::freeImage
+//
+// Free everything allocated for the PNG
+//
+void VPNGImagePimpl::freeImage()
+{
+   if(palette.colors)
+      free(palette.colors);
+   palette.colors = NULL;
+
+   if(surface)
+      free(surface);
+   surface = NULL;
+}
+
+//
+// VPNGImagePimpl::buildTranslation
+//
+// The input is the "output" or target palette, which must be 768 bytes.
+// The output is always a 256-byte table for re-indexing the image.
+//
+byte *VPNGImagePimpl::buildTranslation(byte *outpal)
+{
+   int numcolors = 
+      palette.numColors > 256 ? palette.numColors : 256;
+   byte *newpal = (byte *)(calloc(1, numcolors));
+
+   for(int i = 0; i < palette.numColors; i++)
+   {
+      newpal[i] = V_FindBestColor(outpal, 
+                                  palette.colors[i*3+0],
+                                  palette.colors[i*3+1],
+                                  palette.colors[i*3+2]);
+   }
+
+   return newpal;
+}
+
+//
+// VPNGImagePimpl::getAs8Bit
+//
+// Implements conversion of any source PNG to an 8-bit linear buffer.
+//
+byte *VPNGImagePimpl::getAs8Bit(byte *outpal)
+{
+   if(color_type == PNG_COLOR_TYPE_GRAY || 
+      color_type == PNG_COLOR_TYPE_PALETTE)
+   {
+      if(!outpal)
+      {
+         // Pure copy, no requantization
+         return (byte *)(memcpy(calloc(height, pitch), 
+                                surface,
+                                height * pitch));
+      }
+      else
+      {
+         byte *trtbl  = buildTranslation(outpal);
+         byte *output = (byte *)(calloc(height, pitch));
+
+         for(png_uint_32 y = 0; y < height; y++)
+         {
+            for(png_uint_32 x = 0; x < width; x++)
+            {
+               byte px = surface[y * width + x];
+
+               output[y * width + x] = trtbl[px];
+            }
+         }
+
+         // free the translation table
+         free(trtbl);
+
+         return output;
+      }
+   }
+   else
+   {
+      byte *src  = surface;
+      byte *dest = (byte *)(calloc(width, height));
+
+      for(png_uint_32 y = 0; y < height; y++)
+      {
+         for(png_uint_32 x = 0; x < width; x++)
+         {
+            dest[y * width + x] =
+               V_FindBestColor(outpal, *dest, *(dest+1), *(dest+2));
+            src += channels;
+         }
+      }
+
+      return dest;
+   }
+}
+
+//
+// VPNGImagePimpl::getAs24Bit
+//
+// Implements conversion of any source PNG to a 24-bit linear buffer.
+//
+byte *VPNGImagePimpl::getAs24Bit()
+{
+   if(color_type == PNG_COLOR_TYPE_GRAY || 
+      color_type == PNG_COLOR_TYPE_PALETTE)
+   {
+      byte *src    = surface;
+      byte *buffer = (byte *)(calloc(width*3, height));
+      byte *dest   = buffer;
+
+      for(png_uint_32 y = 0; y < height; y++)
+      {
+         for(png_uint_32 x = 0; x < width; x++)
+         {
+            *dest++ = palette.colors[*src * 3 + 0];
+            *dest++ = palette.colors[*src * 3 + 1];
+            *dest++ = palette.colors[*src * 3 + 2];
+            ++src;
+         }
+      }
+
+      return buffer;
+   }
+   else
+   {
+      byte *src    = surface;
+      byte *buffer = (byte *)(calloc(width*3, height));
+      byte *dest   = buffer;
+
+      for(png_uint_32 y = 0; y < height; y++)
+      {
+         for(png_uint_32 x = 0; x < width; x++)
+         {
+            *dest++ = *(src + 0);
+            *dest++ = *(src + 1);
+            *dest++ = *(src + 2);
+
+            src += channels;
+         }
+      }
+
+      return buffer;
+   }
 }
 
 //=============================================================================
@@ -304,9 +447,153 @@ bool VPNGImagePimpl::readImage(byte *data)
 
 // Publics
 
-bool VPNGImage::readImage(byte *data)
+//
+// VPNGImage
+//
+// Default constructor
+//
+VPNGImage::VPNGImage() : ZoneObject()
+{
+   // pImpl object is a POD, so use calloc to create it and
+   // initialize all fields to zero
+   pImpl = (VPNGImagePimpl *)(calloc(1, sizeof(VPNGImagePimpl)));
+}
+
+//
+// Destructor
+//
+VPNGImage::~VPNGImage()
+{
+   if(pImpl)
+   {
+      // Destroy the pImpl's internal resources
+      pImpl->freeImage();
+
+      // Free the pImpl
+      free(pImpl);
+      pImpl = NULL;
+   }
+}
+
+//
+// VPNGImage::readImage
+//
+// Pass in data that you suspect is a PNG and the VPNGImage object will be
+// setup to contain that image and all the data necessary to use it. Returns
+// true on success or false on failure.
+//
+bool VPNGImage::readImage(void *data)
 {
    return pImpl->readImage(data);
+}
+
+//
+// Accessors
+//
+// These are implemented in here, rather than as inlines, so that the pImpl
+// object can remain hidden.
+//
+
+uint32_t VPNGImage::getWidth()
+{
+   return (uint32_t)(pImpl->width);
+}
+
+uint32_t VPNGImage::getHeight()
+{
+   return (uint32_t)(pImpl->height);
+}
+
+uint32_t VPNGImage::getPitch()
+{
+   return (uint32_t)(pImpl->pitch);
+}
+
+int VPNGImage::getBitDepth()
+{
+   return pImpl->bit_depth;
+}
+
+int VPNGImage::getChannels()
+{
+   return (int)(pImpl->channels);
+}
+
+byte *VPNGImage::getRawSurface()
+{
+   return pImpl->surface;
+}
+
+int VPNGImage::getNumColors()
+{
+   return pImpl->palette.numColors;
+}
+
+//
+// VPNGImage::getPalette
+//
+// If the PNG image is paletted (numColors > 0), this will return the palette.
+// Otherwise NULL is returned.
+//
+byte *VPNGImage::getPalette()
+{
+   return pImpl->palette.colors;
+}
+
+#define PNGMAX(a, b) ((a) > (b) ? (a) : (b))
+
+//
+// VPNGImage::expandPalette
+//
+// Returns a copy of the PNG's palette (if it has one) which is expanded to
+// 256 (or more) colors. The unused indices are all black.
+// 
+byte *VPNGImage::expandPalette()
+{
+   byte *newPalette = NULL;
+   
+   if(pImpl->palette.colors)
+   {
+      int numcolorsalloc = PNGMAX(pImpl->palette.numColors, 256);
+      
+      newPalette = (byte *)(calloc(3, numcolorsalloc));
+      memcpy(newPalette, pImpl->palette.colors, 3*pImpl->palette.numColors);
+   }
+
+   return newPalette;
+}
+
+//
+// Conversion Routines
+//
+
+//
+// VPNGImage::getAs8Bit
+//
+// Returns an 8-bit linear version of the PNG graphics. 
+// If it is grayscale or 8-bit color:
+//  * If outpal is provided, the colors will be requantized to that palette
+//  * If outpal is NULL, the colors are left alone
+// If it is true color:
+//  * outpal must be valid; the colors will be requantized to that palette
+//
+byte *VPNGImage::getAs8Bit(byte *outpal)
+{
+   return pImpl->getAs8Bit(outpal);
+}
+
+//
+// VPNGImage::getAs24Bit
+//
+// Returns a 24-bit linear version of the PNG graphics. 
+// If it is grayscale or 8-bit color:
+//  * Output is converted to 24-bit
+// If it is true color:
+//  * Output is directly translated, omitting any alpha bytes
+//
+byte *VPNGImage::getAs24Bit()
+{
+   return pImpl->getAs24Bit();
 }
 
 //=============================================================================
@@ -320,12 +607,10 @@ bool VPNGImage::readImage(byte *data)
 // Static method.
 // Returns true if the block appears to be a PNG based on the magic signature.
 //
-bool VPNGImage::CheckPNGFormat(byte *data)
+bool VPNGImage::CheckPNGFormat(void *data)
 {
    return !png_sig_cmp((png_const_bytep)data, 0, 8);
 }
-
-
 
 // EOF
 

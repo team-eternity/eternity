@@ -28,23 +28,39 @@
 #ifndef V_PNG_H__
 #define V_PNG_H__
 
+#include "z_zone.h"
+
 // Forward declare private implementation class
 class VPNGImagePimpl;
 
-class VPNGImage
+class VPNGImage : public ZoneObject
 {
 private:
    VPNGImagePimpl *pImpl; // Private implementation object to hide libpng
-
-   friend class VPNGImagePimpl;
-
+   
 public:
+   VPNGImage();
+   ~VPNGImage();
 
    // Methods
-   bool readImage(byte *data);
+   bool readImage(void *data);
+ 
+   uint32_t  getWidth();
+   uint32_t  getHeight();
+   uint32_t  getPitch();
+   int       getBitDepth();
+   int       getChannels();
+   byte     *getRawSurface();
+   int       getNumColors();
+   byte     *getPalette();
+   byte     *expandPalette();
+
+   // conversions
+   byte     *getAs8Bit(byte *outpal);
+   byte     *getAs24Bit();
 
    // Static routines
-   static bool CheckPNGFormat(byte *data);
+   static bool CheckPNGFormat(void *data);
 };
 
 #endif
