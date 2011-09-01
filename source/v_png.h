@@ -43,24 +43,25 @@ public:
    ~VPNGImage();
 
    // Methods
-   bool readImage(void *data);
+   bool readImage(const void *data);
  
-   uint32_t  getWidth();
-   uint32_t  getHeight();
-   uint32_t  getPitch();
-   int       getBitDepth();
-   int       getChannels();
-   byte     *getRawSurface();
-   int       getNumColors();
-   byte     *getPalette();
-   byte     *expandPalette();
+   // accessors
+   uint32_t  getWidth()      const;
+   uint32_t  getHeight()     const;
+   uint32_t  getPitch()      const;
+   int       getBitDepth()   const;
+   int       getChannels()   const;
+   byte     *getRawSurface() const;
+   int       getNumColors()  const;
+   byte     *getPalette()    const;
+   byte     *expandPalette() const;
 
    // conversions
-   byte     *getAs8Bit(byte *outpal);
-   byte     *getAs24Bit();
+   byte     *getAs8Bit(const byte *outpal) const;
+   byte     *getAs24Bit() const;
 
    // Static routines
-   static bool CheckPNGFormat(void *data);
+   static bool CheckPNGFormat(const void *data);
 };
 
 #endif
