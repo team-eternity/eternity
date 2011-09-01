@@ -433,6 +433,7 @@ extern int allowmlook, default_allowmlook; // haleyjd
 extern int flashing_hom; // killough 10/98
 
 extern int doom_weapon_toggles;   // killough 10/98
+extern int default_doom_weapon_toggles; // [CG] Added.
 
 //=======================================================
 //

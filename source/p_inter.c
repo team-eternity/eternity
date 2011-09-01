@@ -1969,19 +1969,18 @@ void P_Whistle(mobj_t *actor, int mobjtype)
                prevz + GameModeInfo->teleFogHeight,
                GameModeInfo->teleFogType
             );
-
             if(CS_SERVER)
                SV_BroadcastActorSpawned(fog);
-
             S_StartSound(fog, GameModeInfo->teleSound);
 
             fog = P_SpawnMobj(
-               x, y, z + GameModeInfo->teleFogHeight, GameModeInfo->teleFogType
+               x,
+               y,
+               z + GameModeInfo->teleFogHeight,
+               GameModeInfo->teleFogType
             );
-
             if(CS_SERVER)
                SV_BroadcastActorSpawned(fog);
-
             S_StartSound(fog, GameModeInfo->teleSound);
          }
 

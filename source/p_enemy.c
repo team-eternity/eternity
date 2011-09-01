@@ -1785,6 +1785,11 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       {
          P_SetTarget(&newmobj->target, plyr->mo);
          P_SetTarget(&newmobj->tracer, clip.linetarget);
+         if(CS_SERVER)
+         {
+            SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
+            SV_BroadcastActorTarget(newmobj, CS_AT_TRACER);
+         }
          A_Fire(newmobj);
       }
    }

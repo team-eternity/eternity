@@ -233,7 +233,8 @@ default_t defaults[] =
                "0 - right handed, 1 - left handed"),
 
    // killough 10/98
-   DEFAULT_INT("doom_weapon_toggles", &doom_weapon_toggles, NULL, 1, 0, 1, wad_no,
+   DEFAULT_INT("doom_weapon_toggles", &doom_weapon_toggles,
+               &default_doom_weapon_toggles, 1, 0, 1, wad_no,
                "1 to toggle between SG/SSG and Fist/Chainsaw"),
 
    // phares 2/25/98

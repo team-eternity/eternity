@@ -589,6 +589,11 @@ mobj_t* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
       CS_ReleaseActorNetID(actor);
 
    actor->net_id = net_id;
+   printf(
+      "CL_SpawnMobj: Registered Net ID %u to actor type %d.\n",
+      actor->net_id,
+      actor->type
+   );
    CS_RegisterActorNetID(actor);
 
    return actor;
@@ -942,7 +947,6 @@ void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
 
 void CL_HandleGameStateMessage(nm_gamestate_t *message)
 {
-   mobj_t *actor;
    thinker_t *think;
    unsigned int i;
    unsigned int new_num = message->player_number;
@@ -1656,9 +1660,7 @@ void CL_HandleActorTargetMessage(nm_actortarget_t *message)
 
 void CL_HandleActorStateMessage(nm_actorstate_t *message)
 {
-   mobj_t *actor;
-
-   actor = CS_GetActorFromNetID(message->actor_net_id);
+   mobj_t *actor = CS_GetActorFromNetID(message->actor_net_id);
 
    if(actor == NULL)
    {
@@ -1878,6 +1880,10 @@ void CL_HandleActorRemovedMessage(nm_actorremoved_t *message)
 {
    mobj_t *actor;
 
+   printf(
+      "CL_HandleActorRemovedMessage: Net ID: %u.\n", message->actor_net_id
+   );
+
    if((actor = CS_GetActorFromNetID(message->actor_net_id)) == NULL)
    {
       printf(
@@ -1998,6 +2004,8 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
          return;
       }
    }
+
+   printf("CL_HandleMissileSpawnedMessage: Net ID %u.\n", message->net_id);
 
    missile = CL_SpawnMobj(
       message->net_id, message->x, message->y, message->z, message->type
@@ -2212,14 +2220,14 @@ void CL_HandleMessage(char *data, size_t data_length)
       || message_type == nm_bloodspawned
       || message_type == nm_actorspawned
       // || message_type == nm_actorposition
-      || message_type == nm_actortarget
+      // || message_type == nm_actortarget
       // || message_type == nm_actorstate
       || message_type == nm_actordamaged
       || message_type == nm_actorkilled
       || message_type == nm_actorremoved
-      || message_type == nm_lineactivated
+      // || message_type == nm_lineactivated
       // || message_type == nm_monsteractive
-      || message_type == nm_monsterawakened
+      // || message_type == nm_monsterawakened
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned

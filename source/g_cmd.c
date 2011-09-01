@@ -238,7 +238,7 @@ CONSOLE_NETVAR(bobbing, player_bobbing, 0, netcmd_bobbing)
       doom_printf("for server only");
 }
 
-VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
+VARIABLE_BOOLEAN(doom_weapon_toggles, &default_doom_weapon_toggles, onoff);
 CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0)
 {
    if(CS_CLIENT)

@@ -138,10 +138,9 @@ void A_Spawn(mobj_t *mo)
       {
          newmobj->flags = (newmobj->flags & ~MF_FRIEND) |
                           (mo->flags & MF_FRIEND);
+         if(CS_SERVER)
+            SV_BroadcastActorSpawned(newmobj);
       }
-
-      if(CS_SERVER)
-         SV_BroadcastActorSpawned(newmobj);
    }
 }
 
@@ -943,6 +942,9 @@ void A_ThingSummon(mobj_t *actor)
 
    newmobj = P_SpawnMobj(x, y, z, type);
 
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(newmobj);
+
    // Check to see if the new thing's z value is above the
    // ceiling of its new sector, or below the floor. If so, kill it.
 
@@ -990,9 +992,6 @@ void A_ThingSummon(mobj_t *actor)
       }
       return;
    }
-
-   if(CS_SERVER)
-      SV_BroadcastActorSpawned(newmobj);
 
    // give same target
    P_SetTarget(&newmobj->target, actor->target);

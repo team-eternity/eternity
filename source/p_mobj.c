@@ -397,9 +397,6 @@ void P_ExplodeMissile(mobj_t *mo)
       }
    }
 
-   if(CS_SERVER)
-      SV_BroadcastMissileExploded(mo);
-
    P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
 
    if(!(mo->flags4 & MF4_NORANDOMIZE))
@@ -409,6 +406,9 @@ void P_ExplodeMissile(mobj_t *mo)
       if(mo->tics < 1)
          mo->tics = 1;
    }
+
+   if(CS_SERVER)
+      SV_BroadcastMissileExploded(mo);
 
    mo->flags &= ~MF_MISSILE;
 
@@ -1189,12 +1189,12 @@ void P_NightmareRespawn(mobj_t* mobj)
 
    // inherit attributes from deceased one
    mo = P_SpawnMobj(x, y, z, mobj->type);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
+
    mo->spawnpoint = mobj->spawnpoint;
    // sf: use R_WadToAngle
    mo->angle = R_WadToAngle(mthing->angle);
-
-   if(CS_SERVER)
-      SV_BroadcastActorSpawned(mo);
 
    if(mthing->options & MTF_AMBUSH)
       mo->flags |= MF_AMBUSH;
@@ -1204,14 +1204,9 @@ void P_NightmareRespawn(mobj_t* mobj)
 
    mo->reactiontime = 18;
 
-   if(CS_SERVER)
-      SV_BroadcastActorSpawned(mo);
-
    // remove the old monster,
-
    if(CS_SERVER)
       SV_BroadcastActorRemoved(mobj);
-
    P_RemoveMobj(mobj);
 }
 
@@ -1691,9 +1686,9 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    {
       CS_ObtainActorNetID(mobj);
       printf(
-         "P_SpawnMobj: Assigned Net ID %u to actor type %d.\n",
+         "P_SpawnMobj: Assigned Net ID %u to actor type %s.\n",
          mobj->net_id,
-         mobj->type
+         mobjinfo[mobj->type].name
       );
    }
 
@@ -1742,7 +1737,11 @@ void P_RemoveMobj(mobj_t *mobj)
       }
    }
 
-   printf("P_RemoveMobj: Released Net ID %u.\n", mobj->net_id);
+   printf(
+      "P_RemoveMobj: Released Net ID %u from actor type %s.\n",
+      mobj->net_id,
+      mobjinfo[mobj->type].name
+   );
 
    CS_ReleaseActorNetID(mobj);
 
@@ -2330,6 +2329,7 @@ mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    z += P_SubRandom(pr_spawnpuff) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
+   printf("P_SpawnBlood: Released Net ID %u.\n", th->net_id);
    CS_ReleaseActorNetID(th);
 
    th->momz = FRACUNIT;
@@ -2370,6 +2370,7 @@ mobj_t* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
    z += P_SubRandom(pr_spawnblood) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_BLOOD));
+   printf("P_SpawnBlood: Released Net ID %u.\n", th->net_id);
    CS_ReleaseActorNetID(th);
 
    th->momz = FRACUNIT * 2;
@@ -2464,9 +2465,7 @@ void P_CheckMissileSpawn(mobj_t* th)
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
-   {
       P_ExplodeMissile(th);
-   }
 }
 
 //

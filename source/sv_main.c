@@ -182,14 +182,14 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       || message_type == nm_bloodspawned
       || message_type == nm_actorspawned
       // || message_type == nm_actorposition
-      || message_type == nm_actortarget
+      // || message_type == nm_actortarget
       // || message_type == nm_actorstate
       || message_type == nm_actordamaged
       || message_type == nm_actorkilled
       || message_type == nm_actorremoved
-      || message_type == nm_lineactivated
+      // || message_type == nm_lineactivated
       // || message_type == nm_monsteractive
-      || message_type == nm_monsterawakened
+      // || message_type == nm_monsterawakened
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
@@ -2582,6 +2582,8 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
 {
    nm_missilespawned_t missile_message;
 
+   printf("SV_BroadcastMissileSpawned: Net ID %u.\n", missile->net_id);
+
    missile_message.message_type = nm_missilespawned;
    missile_message.world_index = sv_world_index;
    missile_message.net_id = missile->net_id;
@@ -2601,6 +2603,8 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
 void SV_BroadcastMissileExploded(mobj_t *missile)
 {
    nm_missileexploded_t explode_message;
+
+   printf("SV_BroadcastMissileExploded: Net ID %u.\n", missile->net_id);
 
    explode_message.message_type = nm_missileexploded;
    explode_message.world_index = sv_world_index;
