@@ -84,8 +84,13 @@
    ((cl_received_sync) && (cl_packet_buffer_size != 1))
 #define SHOULD_HANDLE_OLD_MESSAGES (cl_constant_prediction == 1)
 #define MESSAGE_IS_OLD(i) ((i) <= (cl_current_world_index))
+/*
 #define SHOULD_HANDLE_MESSAGE_NOW(i) (\
    (!(SHOULD_BUFFER_MESSAGES)) && \
+   ((!(MESSAGE_IS_OLD((i)))) || (SHOULD_HANDLE_OLD_MESSAGES))\
+)
+*/
+#define SHOULD_HANDLE_MESSAGE_NOW(i) (\
    ((!(MESSAGE_IS_OLD((i)))) || (SHOULD_HANDLE_OLD_MESSAGES))\
 )
 
@@ -2722,6 +2727,16 @@ void CL_HandleMessage(char *data, size_t data_length)
          "Received unknown network message %d, ignoring.\n", message_type
       );
       break;
+   }
+
+   if(SHOULD_HANDLE_OLD_MESSAGES && MESSAGE_IS_OLD(message_index))
+   {
+      if(!handled_a_message)
+      {
+         printf(
+            "Dropping [%s] message.\n", network_message_names[message_type]
+         );
+      }
    }
 
    if(handled_a_message)

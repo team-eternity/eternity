@@ -131,7 +131,10 @@ VARIABLE_INT(
    &default_cl_packet_buffer_size,
    0, MAX_POSITIONS, NULL
 );
-CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly) {}
+CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
+{
+   cl_flush_packet_buffer = true;
+}
 
 // [CG] Packet buffer flushing when the player's spectating.
 VARIABLE_TOGGLE(
