@@ -150,6 +150,13 @@ void  Z_SysFree(void *p);
 #define calloc(n1,n2)      (Z_Calloc) (n1,n2,PU_STATIC,0,__FILE__,__LINE__)
 #define strdup(s)          (Z_Strdup) (s,    PU_STATIC,0,__FILE__,__LINE__)
 
+template<typename T> inline T ecalloc_impl(size_t n1, size_t n2, const char *file, int line)
+{
+   return static_cast<T>((Z_Calloc)(n1, n2, PU_STATIC, 0, file, line));
+}
+
+#define ecalloc(type, n1, n2) ecalloc_impl<type>(n1, n2, __FILE__, __LINE__)
+
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
 

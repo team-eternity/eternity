@@ -146,7 +146,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    vpngiostruct_t ioStruct;
    png_color_16 *transv;
 
-   ioStruct.data = (const byte *)data;
+   ioStruct.data = static_cast<const byte *>(data);
 
    if(!VPNGImage::CheckPNGFormat(data))
       return false;
@@ -232,12 +232,12 @@ bool VPNGImagePimpl::readImage(const void *data)
       
       // Allocate surface
       pitch   = width * bit_depth * channels / 8;
-      surface = (byte *)(calloc(pitch, height));
+      surface = ecalloc(byte *, pitch, height);
 
       // TODO: colorkey?
 
       // Create row pointers for dest buffer
-      row_pointers = (png_bytepp)(calloc(height, sizeof(png_bytep)));
+      row_pointers = ecalloc(png_bytepp, height, sizeof(png_bytep));
       for(int row = 0; row < (int)height; row++)
          row_pointers[row] = (png_bytep)surface + row * pitch;
 
@@ -255,7 +255,7 @@ bool VPNGImagePimpl::readImage(const void *data)
 
          if(palette.numColors > 0)
          {
-            palette.colors = (byte *)(calloc(3, palette.numColors));
+            palette.colors = ecalloc(byte *, 3, palette.numColors);
 
             for(int i = 0; i < palette.numColors; i++)
             {
@@ -270,7 +270,7 @@ bool VPNGImagePimpl::readImage(const void *data)
       if(color_type == PNG_COLOR_TYPE_GRAY && !palette.colors)
       {
          palette.numColors = 256;
-         palette.colors = (byte *)(calloc(3, 256));
+         palette.colors = ecalloc(byte *, 3, 256);
 
          for(int i = 0; i < palette.numColors; i++)
          {
@@ -321,7 +321,8 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
 {
    int numcolors = 
       palette.numColors > 256 ? palette.numColors : 256;
-   byte *newpal = (byte *)(calloc(1, numcolors));
+
+   byte *newpal = ecalloc(byte *, 1, numcolors);
 
    for(int i = 0; i < palette.numColors; i++)
    {
@@ -354,7 +355,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
       else
       {
          byte *trtbl  = buildTranslation(outpal);
-         byte *output = (byte *)(calloc(height, pitch));
+         byte *output = ecalloc(byte *, height, pitch);
 
          for(png_uint_32 y = 0; y < height; y++)
          {
@@ -378,12 +379,13 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
          return NULL;
 
       byte *src  = surface;
-      byte *dest = (byte *)(calloc(width, height));
+      byte *dest = ecalloc(byte *, width, height);
 
       for(png_uint_32 y = 0; y < height; y++)
       {
          for(png_uint_32 x = 0; x < width; x++)
          {
+            // TODO: extremely inefficient
             dest[y * width + x] =
                V_FindBestColor(outpal, *dest, *(dest+1), *(dest+2));
             src += channels;
@@ -408,7 +410,7 @@ byte *VPNGImagePimpl::getAs24Bit() const
          return NULL;
 
       byte *src    = surface;
-      byte *buffer = (byte *)(calloc(width*3, height));
+      byte *buffer = ecalloc(byte *, width*3, height);
       byte *dest   = buffer;
 
       for(png_uint_32 y = 0; y < height; y++)
@@ -427,7 +429,7 @@ byte *VPNGImagePimpl::getAs24Bit() const
    else
    {
       byte *src    = surface;
-      byte *buffer = (byte *)(calloc(width*3, height));
+      byte *buffer = ecalloc(byte *, width*3, height);
       byte *dest   = buffer;
 
       for(png_uint_32 y = 0; y < height; y++)
@@ -462,7 +464,7 @@ VPNGImage::VPNGImage() : ZoneObject()
 {
    // pImpl object is a POD, so use calloc to create it and
    // initialize all fields to zero
-   pImpl = (VPNGImagePimpl *)(calloc(1, sizeof(VPNGImagePimpl)));
+   pImpl = ecalloc(VPNGImagePimpl *, 1, sizeof(VPNGImagePimpl));
 }
 
 //
@@ -562,7 +564,7 @@ byte *VPNGImage::expandPalette() const
    {
       int numcolorsalloc = PNGMAX(pImpl->palette.numColors, 256);
       
-      newPalette = (byte *)(calloc(3, numcolorsalloc));
+      newPalette = ecalloc(byte *, 3, numcolorsalloc);
       memcpy(newPalette, pImpl->palette.colors, 3*pImpl->palette.numColors);
    }
 
