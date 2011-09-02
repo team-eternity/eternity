@@ -56,8 +56,6 @@
 
 #define _DEBUG_SECTOR 350
 
-#define CLIENTSIDE_PREDICTION_ENABLED 1
-
 // [CG] The maximum amount of latency we can tolerate in any situation.  For
 //      the sake of unlagged, this is the maximum amount of latency between any
 //      given pair of peers.  Note that this isn't fluid; if a peer's latency

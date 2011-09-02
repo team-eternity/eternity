@@ -691,10 +691,7 @@ void P_UnArchiveThinkers(void)
 
       // [CG] Register the actor's Net ID.
       if(mobj->net_id != 0)
-      {
-         printf("Registering Net ID %u.\n", mobj->net_id);
          CS_RegisterActorNetID(mobj);
-      }
    }
 
    // killough 2/14/98: adjust target and tracer fields, plus

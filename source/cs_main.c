@@ -2241,7 +2241,7 @@ void CS_ReadFromNetwork(void)
          case ENET_EVENT_TYPE_DISCONNECT:
             if(CS_CLIENT)
             {
-               printf("Server Disconnected.\n");
+               printf("Lost connection.\n");
                CL_Disconnect();
             }
             else if(CS_SERVER)

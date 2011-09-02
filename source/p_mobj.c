@@ -1683,14 +1683,7 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // [CG] Some stuff for c/s.
    if(serverside || gamestate == GS_LOADING)
-   {
       CS_ObtainActorNetID(mobj);
-      printf(
-         "P_SpawnMobj: Assigned Net ID %u to actor type %s.\n",
-         mobj->net_id,
-         mobjinfo[mobj->type].name
-      );
-   }
 
    CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
 
@@ -1736,12 +1729,6 @@ void P_RemoveMobj(mobj_t *mobj)
             iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
       }
    }
-
-   printf(
-      "P_RemoveMobj: Released Net ID %u from actor type %s.\n",
-      mobj->net_id,
-      mobjinfo[mobj->type].name
-   );
 
    CS_ReleaseActorNetID(mobj);
 
@@ -2329,7 +2316,6 @@ mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    z += P_SubRandom(pr_spawnpuff) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   printf("P_SpawnBlood: Released Net ID %u.\n", th->net_id);
    CS_ReleaseActorNetID(th);
 
    th->momz = FRACUNIT;
@@ -2370,7 +2356,6 @@ mobj_t* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
    z += P_SubRandom(pr_spawnblood) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_BLOOD));
-   printf("P_SpawnBlood: Released Net ID %u.\n", th->net_id);
    CS_ReleaseActorNetID(th);
 
    th->momz = FRACUNIT * 2;

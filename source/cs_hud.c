@@ -386,7 +386,7 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
 
    if(show_netstats)
    {
-      snprintf(tw->message, 14, "%2u/%2u/%2u/%3u%%",
+      snprintf(tw->message, 20, "%5u/%3u/%3u/%3u%%",
          clients[consoleplayer].client_lag,
          client_buffer_size > 0 ? client_buffer_size : 0,
          clients[consoleplayer].server_lag,
@@ -412,10 +412,10 @@ void CS_InitNetWidget(void)
 
    HU_DynamicTextWidget(
       "_HU_CSNetWidget",
-      SCREENWIDTH - (V_FontStringWidth(hud_font, "00/00/00/000%") + 5),
-      ST_Y - (16 + V_FontStringHeight(hud_font, "00/00/00/000%")),
+      SCREENWIDTH - (V_FontStringWidth(hud_font, "00000/000/000/000%") + 5),
+      ST_Y - (16 + V_FontStringHeight(hud_font, "00000/000/000/000%")),
       hud_font->num,
-      "00/00/00/000%",
+      "00000/000/000/000%",
       0,
       TW_NOCLEAR
    );

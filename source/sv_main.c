@@ -175,7 +175,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       || message_type == nm_playerinfoupdated
       // || message_type == nm_playerweaponstate
       || message_type == nm_playerremoved
-      || message_type == nm_playertouchedspecial
+      // || message_type == nm_playertouchedspecial
       || message_type == nm_servermessage
       || message_type == nm_playermessage
       || message_type == nm_puffspawned
@@ -1382,25 +1382,26 @@ boolean SV_RunPlayerCommands(int playernum)
    server_client_t *sc = &server_clients[playernum];
 
    if(!playeringame[playernum])
-   {
       return false;
-   }
 
    if(M_QueueIsEmpty(&sc->commands))
    {
       // [CG] The client's dropped this command, so increment the number of
       //      commands dropped.
+      if(!client->spectating && sc->received_command_for_current_map)
+      {
 #if _CMD_DEBUG
-      printf(
-         "SV_RunPlayerCommands (%u): Player %d dropped a command.\n",
-         sv_world_index,
-         playernum
-      );
+         printf(
+            "SV_RunPlayerCommands (%u): Player %d dropped a command (%u).\n",
+            sv_world_index,
+            playernum,
+            sc->commands_dropped
+         );
 #endif
-      sc->commands_dropped++;
-      if(sc->received_command_for_current_map)
+         sc->commands_dropped++;
          if(sc->commands_dropped > MAX_POSITIONS)
             SV_DisconnectPlayer(playernum, dr_excessive_latency);
+      }
       return false;
    }
 
@@ -1415,10 +1416,13 @@ boolean SV_RunPlayerCommands(int playernum)
    // [CG] If the player is spectating, run all the commands in the buffer.
    if(clients[playernum].spectating)
    {
+      printf(
+         "SV_RunPlayerCommands: Running %u commands for %d.\n",
+         sc->commands.size,
+         playernum
+      );
       while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)))
-      {
          run_player_command(playernum, bufcmd);
-      }
    }
    else if(players[playernum].playerstate == PST_DEAD &&
            bufcmd->command.ticcmd.actions == 0 &&
@@ -1759,11 +1763,6 @@ void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum)
 {
    nm_playerspawned_t spawn_message;
 
-   printf(
-      "SV_BroadcastPlayerSpawned: Spawning new player, Net ID %u.\n",
-      players[playernum].mo->net_id
-   );
-
    spawn_message.message_type = nm_playerspawned;
    spawn_message.world_index = sv_world_index;
    spawn_message.player_number = playernum;
@@ -1818,6 +1817,7 @@ void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type)
 void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
                                    int playernum)
 {
+   client_t *client = &clients[playernum];
    server_client_t *server_client = &server_clients[playernum];
    nm_playercommand_t *message = (nm_playercommand_t *)data;
    cs_cmd_t *received_command = &message->command;
@@ -1828,7 +1828,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
       return;
    }
 
-#if _CMD_DEBUG
+#if _CMD_DEBUG || 1
    printf(
       "SV_HandlePlayerCommandMessage (%3u): Received command %3u - "
       "(%3u/%3u/%3u): ",
@@ -1848,16 +1848,11 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    if(server_client->commands.size > MAX_POSITIONS)
    {
-      if(server_client->commands.size > (TICRATE * 10))
-      {
+      if(client->spectating)
+         M_QueueFree(&server_client->commands);
+      else if(server_client->commands.size > (TICRATE * 10))
          SV_DisconnectPlayer(playernum, dr_command_flood);
-         return;
-      }
-      printf(
-         "Warning, Queue Overflowing: player %d has %u commands queued.\n",
-         playernum,
-         server_client->commands.size
-      );
+      return;
    }
 
    // [CG] Some additional checks to prevent tomfoolery.
@@ -1953,11 +1948,6 @@ void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
 void SV_BroadcastActorSpawned(mobj_t *actor)
 {
    nm_actorspawned_t spawn_message;
-
-   printf(
-      "SV_BroadcastActorSpawned: Spawning new actor, Net ID %u.\n",
-      actor->net_id
-   );
 
    spawn_message.message_type = nm_actorspawned;
    spawn_message.world_index = sv_world_index;
@@ -2501,11 +2491,6 @@ void SV_BroadcastActorRemoved(mobj_t *mo)
 {
    nm_actorremoved_t remove_message;
 
-   printf(
-      "SV_BroadcastActorRemoved: Removing actor, Net ID %u.\n",
-      mo->net_id
-   );
-
    remove_message.message_type = nm_actorremoved;
    remove_message.world_index = sv_world_index;
    remove_message.actor_net_id = mo->net_id;
@@ -2634,28 +2619,23 @@ void SV_BroadcastClientStatus(int playernum)
    server_client_t *server_client = &server_clients[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
 
+   // [CG] The player probably disconnected between when we received a command
+   //      from them and now; no need to send their client's status in this
+   //      case, so return early.
    if(peer == NULL)
-   {
-      // [CG] The player probably disconnected between when we received a
-      //      command from them and now; no need to send their client's status
-      //      in this case, so return early.
       return;
-   }
 
+   // [CG] Don't broadcast status for the server's spectator actor.
    if(playernum == 0)
-   {
-      // [CG] Don't broadcast status for the server's spectator actor.
       return;
-   }
 
    // [CG] Update some client variables.
    client->transit_lag = peer->roundTripTime;
    client->packet_loss =
       (peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+
    if(client->packet_loss > 100)
-   {
       client->packet_loss = 100;
-   }
 
    // [CG] Build most of the status message.
    status_message.message_type = nm_clientstatus;

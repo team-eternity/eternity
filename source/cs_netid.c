@@ -54,7 +54,6 @@
       netid = Z_Calloc(1, sizeof(name##_netid_t), PU_LEVEL, NULL);\
       netid->name = name;\
       E_HashAddObject(name##_by_netid, netid);\
-      printf("CS_Obtain" #funcname "NetID: assigned Network ID %u.\n", id);\
    }\
    void CS_Release##funcname##NetID(type *name) {\
       name##_netid_t *netid;\
@@ -63,10 +62,6 @@
       netid = E_HashObjectForKey(name##_by_netid, &name->net_id);\
       if(netid == NULL)\
          return;\
-      printf(\
-         "CS_Release" #funcname "NetID: released Network ID %u.\n",\
-         name->net_id\
-      );\
       E_HashRemoveObject(name##_by_netid, netid);\
       free(netid);\
       name->net_id = 0;\
@@ -89,10 +84,6 @@
          netid->name = name;\
          E_HashAddObject(name##_by_netid, netid);\
       }\
-      printf(\
-         "CS_Register" #funcname "NetID: registered Network ID %u.\n",\
-         name->net_id\
-      );\
    }\
    type* CS_Get##funcname##FromNetID(unsigned int net_id) {\
       name##_netid_t *netid = E_HashObjectForKey(name##_by_netid, &net_id);\

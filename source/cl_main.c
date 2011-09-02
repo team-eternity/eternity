@@ -589,11 +589,6 @@ mobj_t* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
       CS_ReleaseActorNetID(actor);
 
    actor->net_id = net_id;
-   printf(
-      "CL_SpawnMobj: Registered Net ID %u to actor type %d.\n",
-      actor->net_id,
-      actor->type
-   );
    CS_RegisterActorNetID(actor);
 
    return actor;
@@ -725,46 +720,6 @@ char* CL_ExtractPlayerMessage(nm_playermessage_t *message)
       return NULL;
 
    return player_message;
-}
-
-void CL_SetActorNetID(mobj_t *actor, unsigned int net_id)
-{
-   mobj_t *actor_for_id;
-
-   // [CG] Net ID 0 is a special ID that isn't handled here.
-   if(net_id == 0)
-      return;
-
-   // [CG] For some spawns, it's possible that the client will spawn something
-   //      in a different order than the server will, and network IDs will be
-   //      assigned differently.  To avoid requiring that the server be
-   //      completely in charge of all spawning, we allow the client to
-   //      re-assign network IDs based on some server messages, which is what
-   //      this function implements.
-
-   if(actor->net_id != net_id)
-   {
-      // [CG] If this actor's network ID is not net_id, then we have to force
-      //      the actor who owns that ID to release it, register it for this
-      //      actor, and then give the old actor a new Net ID.
-      printf("Net ID desync, resetting (%u/%u).\n", actor->net_id, net_id);
-      printf("New actor's type: %d.\n", actor->type);
-
-      actor_for_id = CS_GetActorFromNetID(net_id);
-
-      if(actor_for_id)
-      {
-         printf("Actor for %u's type: %d.\n", net_id, actor_for_id->type);
-         CS_ReleaseActorNetID(actor_for_id);
-      }
-
-      actor->net_id = net_id;
-      CS_RegisterActorNetID(actor);
-
-      if(actor_for_id)
-         CS_ObtainActorNetID(actor_for_id);
-      I_Error("Quitting on Net ID desync.\n");
-   }
 }
 
 // [CG] Copied & pasted from p_pspr.c, this is just without the initial check
@@ -1581,14 +1536,6 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
       if(cs_flags[color].carrier == consoleplayer)
          actor->flags2 |= MF2_DONTDRAW;
    }
-   else
-   {
-      printf(
-         "Spawned new actor type %d, Net ID %u.\n",
-         message->type,
-         message->net_id
-      );
-   }
 }
 
 void CL_HandleActorPositionMessage(nm_actorposition_t *message)
@@ -1880,10 +1827,6 @@ void CL_HandleActorRemovedMessage(nm_actorremoved_t *message)
 {
    mobj_t *actor;
 
-   printf(
-      "CL_HandleActorRemovedMessage: Net ID: %u.\n", message->actor_net_id
-   );
-
    if((actor = CS_GetActorFromNetID(message->actor_net_id)) == NULL)
    {
       printf(
@@ -2004,8 +1947,6 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
          return;
       }
    }
-
-   printf("CL_HandleMissileSpawnedMessage: Net ID %u.\n", message->net_id);
 
    missile = CL_SpawnMobj(
       message->net_id, message->x, message->y, message->z, message->type
@@ -2213,7 +2154,7 @@ void CL_HandleMessage(char *data, size_t data_length)
       || message_type == nm_playerinfoupdated
       // || message_type == nm_playerweaponstate
       || message_type == nm_playerremoved
-      || message_type == nm_playertouchedspecial
+      // || message_type == nm_playertouchedspecial
       || message_type == nm_servermessage
       || message_type == nm_playermessage
       || message_type == nm_puffspawned
@@ -3148,6 +3089,7 @@ void CL_TryRunTics(void)
    if(flush_buffer)
    {
       unsigned int old_world_index = cl_current_world_index;
+      printf("Flushing buffer.\n");
       while(cl_current_world_index < (cl_latest_world_index - 2))
          run_world();
       CL_Predict(old_world_index, cl_latest_world_index - 2, false);
@@ -3155,12 +3097,10 @@ void CL_TryRunTics(void)
    }
    else if(cl_packet_buffer_size == 0)
    {
+      // [CG] Adaptive buffer flushing.  Load a single extra world in an
+      //      attempt to catch up.
       if(buffer_size > (((float)client->transit_lag / TICRATE) + 3))
-      {
-         // [CG] Adaptive buffer flushing.  Load a single extra world in an
-         //      attempt to catch up.
          run_world();
-      }
    }
    else if(!cl_constant_prediction && buffer_size > cl_packet_buffer_size)
    {
