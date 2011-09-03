@@ -433,3 +433,17 @@ boolean M_SetCurrentFolder(char *path)
    return true;
 }
 
+char* M_Basename(char *path)
+{
+   char *basename;
+#ifdef WIN32
+   char path_sep = '\\';
+#else
+   char path_sep = '/';
+#endif
+
+   if((basename = (char *)strrchr((const char *)path, path_sep)) == NULL)
+      return path;
+   return basename + 1;
+}
+

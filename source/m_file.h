@@ -81,6 +81,7 @@ boolean M_DeleteFile(char *path);
 boolean M_DeleteFolderAndContents(char *path);
 char* M_GetCurrentFolder(void);
 boolean M_SetCurrentFolder(char *path);
+char* M_Basename(char *path);
 
 #endif
 

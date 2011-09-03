@@ -304,18 +304,14 @@ void SV_Init(void)
    ENetCallbacks callbacks = { Z_SysMalloc, Z_SysFree, abort };
 
    if(enet_initialize_with_callbacks(ENET_VERSION, &callbacks) != 0)
-   {
       I_Error("Could not initialize networking.\n");
-   }
 
    net_host = enet_host_create(
       server_address, MAX_CLIENTS, MAX_CHANNELS, 0, 0
    );
 
    if(net_host == NULL)
-   {
       I_Error("Could not initialize server.\n");
-   }
 
    start_time = enet_time_get();
 
@@ -329,9 +325,7 @@ void SV_Init(void)
    enet_host_compress_with_range_coder(net_host);
 
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       M_QueueInit(&server_clients[i].commands);
-   }
 
    CS_ZeroClients();
 
@@ -2567,8 +2561,6 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
 {
    nm_missilespawned_t missile_message;
 
-   printf("SV_BroadcastMissileSpawned: Net ID %u.\n", missile->net_id);
-
    missile_message.message_type = nm_missilespawned;
    missile_message.world_index = sv_world_index;
    missile_message.net_id = missile->net_id;
@@ -2588,8 +2580,6 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
 void SV_BroadcastMissileExploded(mobj_t *missile)
 {
    nm_missileexploded_t explode_message;
-
-   printf("SV_BroadcastMissileExploded: Net ID %u.\n", missile->net_id);
 
    explode_message.message_type = nm_missileexploded;
    explode_message.world_index = sv_world_index;

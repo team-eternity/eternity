@@ -856,6 +856,7 @@ mobj_t* CS_SpawnBlood(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
                       angle_t angle, int damage, mobj_t *target);
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
+void CS_ServiceNetwork(void);
 void CS_ReadFromNetwork(void);
 void CS_TryRunTics(void);
 void CS_AddCommands(void);

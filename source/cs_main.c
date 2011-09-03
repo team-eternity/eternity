@@ -1950,9 +1950,13 @@ char* CS_ExtractMessage(char *data, size_t data_length)
 void CS_FlushConnection(void)
 {
    if(net_host != NULL)
-   {
       enet_host_flush(net_host);
-   }
+}
+
+void CS_ServiceNetwork(void)
+{
+   if(net_host && net_peer)
+      enet_host_service(net_host, NULL, 1);
 }
 
 void CS_ReadFromNetwork(void)
@@ -1964,124 +1968,113 @@ void CS_ReadFromNetwork(void)
    while(enet_host_service(net_host, &event, 1) > 0)
    {
       if(CS_SERVER)
-      {
          playernum = SV_GetPlayerNumberFromPeer(event.peer);
-      }
+
       switch(event.type)
       {
-         case ENET_EVENT_TYPE_CONNECT:
-            if(CS_CLIENT)
+      case ENET_EVENT_TYPE_CONNECT:
+         if(CS_CLIENT)
+         {
+            // [CG] Clients should already have received their connect event
+            //      from the server before this loop is ever run, so ignore
+            //      further events of this type.
+            doom_printf(
+               "Somehow received a connection from server %d:%d\n",
+               event.peer->address.host,
+               event.peer->address.port
+            );
+         }
+         else if(CS_SERVER)
+         {
+            address = CS_IPToString(event.peer->address.host);
+            if(playernum == 0)
             {
-               // [CG] Clients should already have received their connect event
-               //      from the server before this loop is ever run, so ignore
-               //      further events of this type.
                doom_printf(
-                  "Somehow received a connection from server %d:%d\n",
-                  event.peer->address.host,
+                  "Adding a new client: %s:%d\n",
+                  address,
+                  event.peer->address.port
+               );
+               // [CG] The server couldn't find a slot for the new client, so
+               //      disconnect it.
+               if(SV_HandleClientConnection(event.peer) == 0)
+                  enet_peer_disconnect(event.peer, 1);
+            }
+            else
+            {
+               doom_printf(
+                  "Received a spurious connection from: %s:%d\n",
+                  address,
                   event.peer->address.port
                );
             }
-            else if(CS_SERVER)
+            free(address);
+         }
+         break;
+      case ENET_EVENT_TYPE_RECEIVE:
+         // [CG] Save all received network messages in the demo if recording.
+         if(cs_demo_recording)
+         {
+            if(!CS_WriteNetworkMessageToDemo(
+                  event.packet->data, event.packet->dataLength, playernum))
+            {
+               doom_printf(
+                  "Demo error, recording aborted: %s\n",
+                  CS_GetDemoErrorMessage()
+               );
+               CS_StopDemo();
+            }
+         }
+
+         if(CS_CLIENT)
+         {
+            CL_HandleMessage(
+               (char *)event.packet->data, event.packet->dataLength
+            );
+         }
+         else if(CS_SERVER)
+         {
+            if(playernum == 0)
+            {
+               doom_printf(
+                  "Received a message from an unknown client, ignoring.\n"
+               );
+               return;
+            }
+            SV_HandleMessage(
+               (char *)event.packet->data, event.packet->dataLength, playernum
+            );
+         }
+         event.peer->data = NULL;
+         enet_packet_destroy(event.packet);
+         break;
+      case ENET_EVENT_TYPE_DISCONNECT:
+         if(CS_CLIENT)
+         {
+            printf("Lost connection.\n");
+            CL_Disconnect();
+         }
+         else if(CS_SERVER)
+         {
+            playernum = SV_GetClientNumberFromAddress(&event.peer->address);
+            if(playernum && playernum < MAX_CLIENTS && playeringame[playernum])
+               SV_DisconnectPlayer(playernum, dr_no_reason);
+            else
             {
                address = CS_IPToString(event.peer->address.host);
-               if(playernum == 0)
-               {
-                  doom_printf(
-                     "Adding a new client: %s:%d\n",
-                     address,
-                     event.peer->address.port
-                  );
-                  if(SV_HandleClientConnection(event.peer) == 0)
-                  {
-                     // [CG] The server couldn't find a slot for the new
-                     //      client, so disconnect it.
-                     enet_peer_disconnect(event.peer, 1);
-                  }
-               }
-               else
-               {
-                  doom_printf(
-                     "Received a spurious connection from: %s:%d\n",
-                     address,
-                     event.peer->address.port
-                  );
-               }
+               doom_printf(
+                  "Received disconnect from unknown player %s:%d.\n",
+                  address,
+                  event.peer->address.port
+               );
                free(address);
             }
-            break;
-         case ENET_EVENT_TYPE_RECEIVE:
-            // [CG] Save all received network messages in the demo if
-            //      recording.
-            if(cs_demo_recording)
-            {
-               if(!CS_WriteNetworkMessageToDemo(
-                     event.packet->data, event.packet->dataLength, playernum))
-               {
-                  doom_printf(
-                     "Demo error, recording aborted: %s\n",
-                     CS_GetDemoErrorMessage()
-                  );
-                  CS_StopDemo();
-               }
-            }
-
-            if(CS_CLIENT)
-            {
-               CL_HandleMessage(
-                  (char *)event.packet->data,
-                  event.packet->dataLength
-               );
-            }
-            else if(CS_SERVER)
-            {
-               if(playernum == 0)
-               {
-                  doom_printf(
-                     "Received a message from an unknown client, ignoring.\n"
-                  );
-                  return;
-               }
-               SV_HandleMessage(
-                  (char *)event.packet->data,
-                  event.packet->dataLength,
-                  playernum
-               );
-            }
-            event.peer->data = NULL;
-            enet_packet_destroy(event.packet);
-            break;
-         case ENET_EVENT_TYPE_DISCONNECT:
-            if(CS_CLIENT)
-            {
-               printf("Lost connection.\n");
-               CL_Disconnect();
-            }
-            else if(CS_SERVER)
-            {
-               playernum = SV_GetClientNumberFromAddress(&event.peer->address);
-               if(playernum &&
-                  playernum < MAX_CLIENTS &&
-                  playeringame[playernum])
-               {
-                  SV_DisconnectPlayer(playernum, dr_no_reason);
-               }
-               else
-               {
-                  address = CS_IPToString(event.peer->address.host);
-                  doom_printf(
-                     "Received disconnect from unknown player %s:%d.\n",
-                     address,
-                     event.peer->address.port
-                  );
-                  free(address);
-               }
-            }
-            event.peer->data = NULL;
-            break;
-         case ENET_EVENT_TYPE_NONE:
-         default:
-            doom_printf("Received unknown event type: %d\n", event.type);
-            break;
+         }
+         event.peer->data = NULL;
+         break;
+      case ENET_EVENT_TYPE_NONE:
+      default:
+         doom_printf("Received unknown event type: %d\n", event.type);
+         break;
       }
    }
 }

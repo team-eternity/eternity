@@ -84,6 +84,33 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
    return 0;
 }
 
+static boolean need_new_wad_dir(void)
+{
+   cs_map_t *map = get_current_map();
+   cs_resource_t *resource = NULL;
+   boolean found_mismatch = false;
+   unsigned int wads_loaded = 0;
+   unsigned int i, j;
+
+   while(wadfiles[wads_loaded].filename != NULL)
+      wads_loaded++;
+
+   if(map->resource_count != (wads_loaded - 2))
+      return true;
+
+   for(i = 0, j = 2; i < map->resource_count; i++, j++)
+   {
+      resource = &cs_resources[map->resource_indices[i]];
+      if(strcmp(M_Basename(wadfiles[j].filename), resource->name))
+      {
+         found_mismatch = true;
+         break;
+      }
+   }
+
+   return found_mismatch;
+}
+
 void CS_ClearMaps(void)
 {
    unsigned int i;
@@ -290,6 +317,11 @@ boolean CS_LoadMap(void)
    cs_map_t *map = get_current_map();
    static unsigned int map_change_count = 0;
 
+   // [CG] Check first that we actually need to reload everything, if not, we
+   //      don't need to do any of this.
+   if(!need_new_wad_dir())
+      return false;
+
    Z_LogPrintf("=== Start Logging (%u) ===\n", ++map_change_count);
 
    S_StopMusic();
@@ -308,7 +340,6 @@ boolean CS_LoadMap(void)
    }
    W_InitMultipleFiles(&w_GlobalDir, wadfiles);
    D_ReInitWadfiles();
-
    return true;
 }
 

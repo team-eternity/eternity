@@ -1729,17 +1729,11 @@ char *FindIWADFile(void)
    // [CG] C/S clients and servers either have this configured in the
    //      configuration file, or sent over the wire.
    if(clientserver)
-   {
       basename = cs_iwad;
-   }
    else if((i = M_CheckParm("-iwad")) && i < myargc - 1)
-   {
       basename = myargv[i + 1];
-   }
    else
-   {
       basename = G_GFSCheckIWAD(); // haleyjd 04/16/03: GFS support
-   }
 
    // haleyjd 08/19/07: if -game was used and neither -iwad nor a GFS iwad
    // specification was used, start off by trying base/game/game.wad
@@ -1758,9 +1752,7 @@ char *FindIWADFile(void)
    if(basename)
    {
       if(baseiwad != NULL)
-      {
          free(baseiwad);
-      }
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
 
@@ -1795,9 +1787,7 @@ char *FindIWADFile(void)
       if(name && *name)
       {
          if(baseiwad != NULL)
-         {
             free(baseiwad);
-         }
          baseiwad = strdup(name);
          M_NormalizeSlashes(baseiwad);
          return baseiwad;

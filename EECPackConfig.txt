@@ -40,6 +40,9 @@ IF(CPACK_GENERATOR MATCHES "NSIS")
   StrCmp $ADDITIONAL_WAD_FOLDER \"\" +2 0
     FileWrite $9 ';$ADDITIONAL_WAD_FOLDER'
   FileWrite $9 \"$\\r$\\n\"
+  StrCmp $ADDITIONAL_WAD_FOLDER \"\" +3 0
+    FileWrite $9 'SET DOOMWADDIR=$ADDITIONAL_WAD_FOLDER'
+    FileWrite $9 \"$\\r$\\n\"
   FileWrite $9 '@echo on'
   FileWrite $9 \"$\\r$\\n\"
   FileWrite $9 '\"$INSTDIR\\bin\\eternity.exe\" -base \"$INSTDIR\\bin\\base\" -directx -8in32 -nomusic -csjoin \"%1\"'

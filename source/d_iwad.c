@@ -234,7 +234,9 @@ static void BuildIWADDirList(void)
    }
    else if(!M_IsFolder(base_wads))
    {
-       I_Error("Base WAD folder %s/wads not a folder.\n", basepath);
+       I_Error(
+           "Base WAD folder %s/wads exists, but is not a folder.\n", basepath
+       );
    }
    AddIWADDir(base_wads);
 
