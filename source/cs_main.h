@@ -153,41 +153,43 @@ typedef enum
 typedef enum
 {
    nm_gamestate,               // (s => c) 0,  Game state
-   nm_sync,                    // (s => c) 1,  Sync's a client
-   nm_mapstarted,              // (s => c) 2,  Map started
-   nm_mapcompleted,            // (s => c) 3,  Map completed
-   nm_authresult,              // (s => c) 4,  Authorization result
-   nm_clientinit,              // (s => c) 5,  New client initialization info
-   nm_playercommand,           // (c => s) 6,  Player command
-   nm_clientstatus,            // (s => c) 7,  Client's status
-   nm_playerspawned,           // (s => c) 8,  Player's actor spawned
-   nm_playerinfoupdated,       // ( both ) 9,  Player info
-   nm_playerweaponstate,       // (s => c) 10, Player weapon state
-   nm_playerremoved,           // (s => c) 11, Player removed
-   nm_playertouchedspecial,    // (s => c) 12, Player touched something special
-   nm_servermessage,           // (s => c) 13, Server message
-   nm_playermessage,           // ( both ) 14, Player message
-   nm_puffspawned,             // (s => c) 15, Puff spawned
-   nm_bloodspawned,            // (s => c) 16, Blood spawned
-   nm_actorspawned,            // (s => c) 17, Actor spawned
-   nm_actorposition,           // (s => c) 18, Actor position
-   nm_actortarget,             // (s => c) 19, Actor target
-   nm_actorstate,              // (s => c) 20, Actor state
-   nm_actordamaged,            // (s => c) 21, Actor damaged
-   nm_actorkilled,             // (s => c) 22, Actor killed
-   nm_actorremoved,            // (s => c) 23, Actor removed
-   nm_lineactivated,           // (s => c) 24, Line activated
-   nm_monsteractive,           // (s => c) 25, Monster active
-   nm_monsterawakened,         // (s => c) 26, Monster awakened
-   nm_missilespawned,          // (s => c) 27, Missile spawned
-   nm_missileexploded,         // (s => c) 28, Missile exploded
-   nm_cubespawned,             // (s => c) 29, Boss brain cube spawned
-   nm_specialspawned,          // (s => c) 30, Map special spawned
-   nm_specialstatus,           // (s => c) 31, Map special's status
-   nm_specialremoved,          // (s => c) 32, Map special removed
-   nm_sectorposition,          // (s => c) 33, Sector position
-   nm_soundplayed,             // (s => c) 34, Sound played
-   nm_ticfinished,             // (s => c) 35, TIC is finished
+   nm_syncrequest,             // (c => s) 1,  Request sync
+   nm_sync,                    // (s => c) 2,  Game sync
+   nm_syncreceived,            // (c => s) 3,  Sync received
+   nm_mapstarted,              // (s => c) 4,  Map started
+   nm_mapcompleted,            // (s => c) 5,  Map completed
+   nm_authresult,              // (s => c) 6,  Authorization result
+   nm_clientinit,              // (s => c) 7,  New client initialization info
+   nm_playercommand,           // (c => s) 8,  Player command
+   nm_clientstatus,            // (s => c) 9,  Client's status
+   nm_playerspawned,           // (s => c) 10, Player's actor spawned
+   nm_playerinfoupdated,       // ( both ) 11, Player info
+   nm_playerweaponstate,       // (s => c) 12, Player weapon state
+   nm_playerremoved,           // (s => c) 13, Player removed
+   nm_playertouchedspecial,    // (s => c) 14, Player touched something special
+   nm_servermessage,           // (s => c) 15, Server message
+   nm_playermessage,           // ( both ) 16, Player message
+   nm_puffspawned,             // (s => c) 17, Puff spawned
+   nm_bloodspawned,            // (s => c) 18, Blood spawned
+   nm_actorspawned,            // (s => c) 19, Actor spawned
+   nm_actorposition,           // (s => c) 20, Actor position
+   nm_actortarget,             // (s => c) 21, Actor target
+   nm_actorstate,              // (s => c) 22, Actor state
+   nm_actordamaged,            // (s => c) 23, Actor damaged
+   nm_actorkilled,             // (s => c) 24, Actor killed
+   nm_actorremoved,            // (s => c) 25, Actor removed
+   nm_lineactivated,           // (s => c) 26, Line activated
+   nm_monsteractive,           // (s => c) 27, Monster active
+   nm_monsterawakened,         // (s => c) 28, Monster awakened
+   nm_missilespawned,          // (s => c) 29, Missile spawned
+   nm_missileexploded,         // (s => c) 30, Missile exploded
+   nm_cubespawned,             // (s => c) 31, Boss brain cube spawned
+   nm_specialspawned,          // (s => c) 32, Map special spawned
+   nm_specialstatus,           // (s => c) 33, Map special's status
+   nm_specialremoved,          // (s => c) 34, Map special removed
+   nm_sectorposition,          // (s => c) 35, Sector position
+   nm_soundplayed,             // (s => c) 36, Sound played
+   nm_ticfinished,             // (s => c) 37, TIC is finished
    nm_max_messages
 } network_message_e;
 
@@ -354,6 +356,7 @@ typedef struct server_client_s
 {
    enet_uint32 connect_id;
    ENetAddress address;
+   boolean added;
    boolean synchronized;
    cs_auth_level_e auth_level;
    int last_auth_attempt;
@@ -411,6 +414,11 @@ typedef struct nm_gamestate_s
    clientserver_settings_t settings;
 } nm_gamestate_t;
 
+typedef struct nm_syncrequest_s
+{
+   int32_t message_type;
+} nm_syncrequest_t;
+
 typedef struct nm_sync_s
 {
    int32_t message_type;
@@ -420,6 +428,11 @@ typedef struct nm_sync_s
    int32_t basetic;
    int32_t leveltime;
 } nm_sync_t;
+
+typedef struct nm_syncreceived_s
+{
+   int32_t message_type;
+} nm_syncreceived_t;
 
 typedef struct nm_mapstarted_s
 {

@@ -105,7 +105,9 @@ char *disconnection_strings[dr_max_reasons] = {
 
 char *network_message_names[nm_max_messages] = {
    "game state",
+   "sync request",
    "sync",
+   "sync received",
    "map started",
    "map completed",
    "auth result",
@@ -138,6 +140,7 @@ char *network_message_names[nm_max_messages] = {
    "special status",
    "special removed",
    "sector position",
+   "sound played",
    "tic finished",
 };
 
@@ -201,9 +204,7 @@ static void indent_next_line(FILE *file, unsigned int indent_level)
 
    fputc('\n', file);
    for(i = 0; i < indent_level; i++)
-   {
       fputs("  ", file);
-   }
 }
 
 // [CG] JSON-C has a to_file function (whatever it's called) but it does no
@@ -220,9 +221,7 @@ void CS_PrintJSONToFile(const char *filename, const char *json_data)
    FILE *file = fopen(filename, "wb");
 
    if(file == NULL)
-   {
       I_Error("CS_LoadConfig: Error writing configuration out to file.\n");
-   }
 
    for(i = 0; i < strlen(json_data); i++)
    {
@@ -244,9 +243,7 @@ void CS_PrintJSONToFile(const char *filename, const char *json_data)
          indent_next_line(file, indent_level);
       }
       else
-      {
          fputc(c, file);
-      }
    }
 
    fclose(file);
@@ -304,16 +301,7 @@ void CS_DoWorldDone(void)
    }
 
    if(CS_SERVER)
-   {
       sv_should_send_new_map = true;
-   }
-}
-
-// [CG] For debugging.
-void CS_PrintTime(void)
-{
-   return;
-   printf("%d/%d", 0, enet_time_get());
 }
 
 void CS_FormatTime(char *formatted_time, unsigned int seconds)
@@ -326,13 +314,9 @@ void CS_FormatTime(char *formatted_time, unsigned int seconds)
    seconds = seconds % 60;
 
    if(hours > 0)
-   {
       sprintf(formatted_time, "%d:%.2d:%.2d", hours, minutes, seconds);
-   }
    else
-   {
       sprintf(formatted_time, "%.2d:%.2d", minutes, seconds);
-   }
 }
 
 void CS_FormatTicsAsTime(char *formatted_time, unsigned int tics)
@@ -355,20 +339,15 @@ void CS_SetDisplayPlayer(int playernum)
    }
 
    P_FollowCamOff();
-   if(camera == &followcam)
-   {
-     camera = NULL;
-   }
 
+   if(camera == &followcam)
+     camera = NULL;
+
+  // use chasecam when player is dead.
    if(players[displayplayer].health <= 0)
-   {
-     // use chasecam when player is dead.
      P_ChaseStart();
-   }
    else
-   {
       P_ChaseEnd();
-   }
 }
 
 char* CS_IPToString(int ip_address)
@@ -422,15 +401,12 @@ char* CS_GetSHA1HashFile(char *path)
    while(1)
    {
       if((bytes_read = fread((void *)chunk, sizeof(char), chunk_size, f)))
-      {
          M_HashData(&newhash, (const uint8_t *)chunk, (uint32_t)bytes_read);
-      }
+
       total_bytes_read += bytes_read;
 
       if(feof(f))
-      {
          break;
-      }
 
       if(ferror(f))
       {
@@ -463,9 +439,7 @@ char* CS_GetSHA1Hash(const char *input, size_t input_size)
    M_HashWrapUp(&newhash);
 
    if(newhash.gonebad)
-   {
       I_Error("Error computing SHA-1 hash.\n");
-   }
 
    return M_HashDigestToStr(&newhash);
 }
@@ -475,21 +449,15 @@ void CS_SetPlayerName(player_t *player, char *name)
    boolean initializing_name = false;
 
    if(strlen(player->name) == 0)
-   {
       initializing_name = true;
-   }
 
    if(strlen(name) >= MAX_NAME_SIZE)
    {
       if(initializing_name)
-      {
          I_Error("Name size exceeds limit (%d).\n", MAX_NAME_SIZE);
-      }
-      else
-      {
-         doom_printf("Name size exceeds limit (%d).\n", MAX_NAME_SIZE);
-         return;
-      }
+
+      doom_printf("Name size exceeds limit (%d).\n", MAX_NAME_SIZE);
+      return;
    }
 
    strncpy(player->name, name, MAX_NAME_SIZE);
@@ -507,18 +475,12 @@ void CS_InitPlayer(int playernum)
    if(playernum == consoleplayer)
    {
       if(CS_SERVER)
-      {
          CS_SetPlayerName(&players[playernum], SERVER_NAME);
-      }
       else
-      {
          CS_SetPlayerName(&players[playernum], default_name);
-      }
    }
    else
-   {
       CS_SetPlayerName(&players[playernum], "");
-   }
 }
 
 void CS_InitPlayers(void)
@@ -526,9 +488,7 @@ void CS_InitPlayers(void)
    int i;
 
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       CS_InitPlayer(i);
-   }
 }
 
 void CS_ZeroClient(int clientnum)
@@ -545,6 +505,7 @@ void CS_ZeroClient(int clientnum)
       sc = &server_clients[clientnum];
       sc->connect_id = 0;
       memset(&sc->address, 0, sizeof(ENetAddress));
+      sc->added = false;
       sc->synchronized = false;
       sc->auth_level = cs_auth_none;
       sc->last_auth_attempt = 0;
@@ -570,9 +531,7 @@ void CS_ZeroClients(void)
    server_client_t *server_client;
 
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       CS_ZeroClient(i);
-   }
 
    if(CS_SERVER)
    {
@@ -623,22 +582,16 @@ void CS_ProcessPlayerCommand(int playernum)
    mapthing_t *spawn_point;
 
    if(player->playerstate == PST_DEAD)
-   {
       return;
-   }
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook || ((dmflags2 & dmf_allow_freelook) == 0))
-   {
       player->pitch = 0;
-   }
    else if(player->cmd.look)
    {
       // test for special centerview value
       if(player->cmd.look == -32768)
-      {
          player->pitch = 0;
-      }
       else
       {
          player->pitch -= player->cmd.look << 16;
@@ -646,42 +599,30 @@ void CS_ProcessPlayerCommand(int playernum)
          if(comp[comp_mouselook])
          {
             if(player->pitch < -ANGLE_1 * 32)
-            {
                player->pitch = -ANGLE_1 * 32;
-            }
             else if(player->pitch > ANGLE_1 * 32)
-            {
                player->pitch = ANGLE_1 * 32;
-            }
          }
          else
          {
             if(player->pitch < -ANGLE_1 * 32)
-            {
                player->pitch = -ANGLE_1 * 32;
-            }
             else if(player->pitch > ANGLE_1 * 56)
-            {
                player->pitch = ANGLE_1 * 56;
-            }
          }
       }
    }
 
    // haleyjd: count down jump timer
    if(player->jumptime)
-   {
       player->jumptime--;
-   }
 
    // Move around.
    // Reactiontime is used to prevent movement
    //  for a bit after a teleport.
 
    if(player->mo->reactiontime)
-   {
       player->mo->reactiontime--;
-   }
    else
    {
       P_MovePlayer(player);
@@ -711,9 +652,7 @@ void CS_ProcessPlayerCommand(int playernum)
    // A special event has no other buttons.
 
    if(player->cmd.buttons & BT_SPECIAL)
-   {
       player->cmd.buttons = 0;
-   }
 
    if(!cl_predicting)
    {
@@ -772,10 +711,9 @@ void CS_ProcessPlayerCommand(int playernum)
       if(!player->usedown)
       {
          player->usedown = true;
+
          if(!client->spectating)
-         {
             P_UseLines(player);
-         }
          else if(CS_SERVER && SV_HandleJoinRequest(playernum))
          {
             spawn_point = CS_SpawnPlayerCorrectly(playernum, false);
@@ -784,15 +722,11 @@ void CS_ProcessPlayerCommand(int playernum)
       }
    }
    else
-   {
       player->usedown = false;
-   }
 
+   // cycle psprites
    if(!cl_predicting)
-   {
-      // cycle psprites
       P_MovePsprites(player);
-   }
 }
 
 void CS_ApplyCommandButtons(ticcmd_t *cmd)
@@ -881,20 +815,14 @@ void CS_PlayerThink(int playernum)
    client_t *client = &clients[playernum];
 
    if(!playeringame[playernum])
-   {
       return;
-   }
 
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
    if(player->cheats & CF_NOCLIP)
-   {
       player->mo->flags |= MF_NOCLIP;
-   }
    else
-   {
       player->mo->flags &= ~MF_NOCLIP;
-   }
 
    // chain saw run forward
    if(player->mo->flags & MF_JUSTATTACKED)
@@ -920,32 +848,19 @@ void CS_PlayerThink(int playernum)
          player->cmd.look = 0;
          player->cmd.angleturn = 0;
          if(player->cmd.buttons & BT_USE)
-         {
             player->cmd.buttons = BT_USE;
-         }
          else
-         {
             player->cmd.buttons = 0;
-         }
          player->cmd.actions = 0;
          P_MobjThinker(player->mo);
       }
       return;
    }
 
-   // [CG] Begin command processing.  See the netcode discussion in notes for
-   //      more information.
-
    if(playernum == consoleplayer)
-   {
       CS_ProcessPlayerCommand(playernum);
-   }
    else if(CS_SERVER && !SV_RunPlayerCommands(playernum))
-   {
-      // [CG] The client was disconnected for some reason, so quit thinking
-      //      on it.
       return;
-   }
 
    // haleyjd: are we falling? might need to scream :->
    // [CG] Spectators don't scream.
@@ -954,9 +869,7 @@ void CS_PlayerThink(int playernum)
       if(!comp[comp_fallingdmg] && demo_version >= 329)
       {  
          if(player->mo->momz >= 0)
-         {
             player->mo->intflags &= ~MIF_SCREAMED;
-         }
 
          if(player->mo->momz <= -35*FRACUNIT && 
             player->mo->momz >= -40*FRACUNIT &&
@@ -970,11 +883,8 @@ void CS_PlayerThink(int playernum)
 
    // Determine if there's anything about the sector you're in that's
    // going to affect you, like painful floors.
-
    if(P_SectorIsSpecial(player->mo->subsector->sector))
-   {
       P_PlayerInSpecialSector(player);
-   }
 
    // haleyjd 08/23/05: terrain-based effects
    P_PlayerOnSpecialFlat(player);
@@ -984,22 +894,16 @@ void CS_PlayerThink(int playernum)
 
    // Strength counts up to diminish fade.
    if(player->powers[pw_strength])
-   {
       player->powers[pw_strength]++;
-   }
 
    // killough 1/98: Make idbeholdx toggle:
    if(player->powers[pw_invulnerability] > 0) // killough
-   {
       player->powers[pw_invulnerability]--;
-   }
 
    if(player->powers[pw_invisibility] > 0)
    {
       if(!--player->powers[pw_invisibility] )
-      {
          player->mo->flags &= ~MF_SHADOW;
-      }
    }
 
    if(player->powers[pw_infrared] > 0) // killough
@@ -1157,17 +1061,13 @@ boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
       {
          if(server_client->weapon_preferences[p1] == weapon_one)
-         {
             break;
-         }
       }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
       {
          if(server_client->weapon_preferences[p2] == weapon_two)
-         {
             break;
-         }
       }
    }
    else
@@ -1175,24 +1075,19 @@ boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
       {
          if(weapon_preferences[0][p1] == weapon_one)
-         {
             break;
-         }
       }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
       {
          if(weapon_preferences[0][p2] == weapon_two)
-         {
             break;
-         }
       }
    }
 
    if(p1 < p2)
-   {
       return true;
-   }
+
    return false;
 }
 
@@ -1201,9 +1096,7 @@ void CS_HandleSpectateKey(event_t *ev)
    boolean spectating = clients[consoleplayer].spectating;
 
    if(CS_CLIENT && !spectating && ev->type == ev_keydown)
-   {
       Handler_spectate();
-   }
 }
 
 void CS_HandleSpectatePrevKey(event_t *ev)
@@ -1217,17 +1110,13 @@ void CS_HandleSpectatePrevKey(event_t *ev)
 void CS_HandleSpectateNextKey(event_t *ev)
 {
    if(clients[consoleplayer].spectating && ev->type == ev_keydown)
-   {
       Handler_spectate_next();
-   }
 }
 
 void CS_HandleFlushPacketBufferKey(event_t *ev)
 {
    if(CS_CLIENT && net_peer != NULL && ev->type == ev_keydown)
-   {
       cl_flush_packet_buffer = true;
-   }
 }
 
 void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
@@ -1241,9 +1130,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    client_t *client = &clients[playernum];
 
    if(CS_SERVER)
-   {
       server_client = &server_clients[playernum];
-   }
 
    playeringame[playernum] = true;
 
@@ -1288,38 +1175,28 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          {
             // [CG] Only print out a notice if the original name wasn't blank.
             if(playernum == consoleplayer)
-            {
                doom_printf("You are now known as %s.", buffer);
-            }
             else
-            {
                doom_printf("%s is now known as %s.", player->name, buffer);
-            }
          }
          else if(playernum == consoleplayer)
-         {
             doom_printf("Connected as %s.", buffer);
-         }
          else
-         {
             doom_printf("%s connected.", buffer);
-         }
          CS_SetPlayerName(player, buffer);
       }
       else if(message->info_type == ci_skin)
-      {
          CS_SetSkin(buffer, playernum);
-      }
       else if(message->info_type == ci_class)
       {
          // [CG] I'm not even sure you're supposed to be able to do this,
          //      but let's give it a try.
          player->pclass = E_PlayerClassForName(buffer);
       }
+
       if(CS_SERVER)
-      {
          SV_BroadcastPlayerStringInfo(playernum, message->info_type);
-      }
+
       return;
    }
 
@@ -1338,25 +1215,15 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          HU_FragsUpdate();
       }
       else if(CS_CLIENT && message->info_type == ci_power_enabled)
-      {
          player->powers[message->array_index] = message->int_value;
-      }
       else if(CS_CLIENT && message->info_type == ci_owns_card)
-      {
          player->cards[message->array_index] = message->boolean_value;
-      }
       else if(CS_CLIENT && message->info_type == ci_owns_weapon)
-      {
          player->weaponowned[message->array_index] = message->boolean_value;
-      }
       else if(CS_CLIENT && message->info_type == ci_ammo_amount)
-      {
          player->ammo[message->array_index] = message->int_value;
-      }
       else if(CS_CLIENT && message->info_type == ci_max_ammo)
-      {
          player->maxammo[message->array_index] = message->int_value;
-      }
       else if(CS_SERVER && message->info_type == ci_pwo)
       {
          SV_SetWeaponPreference(
@@ -1369,18 +1236,13 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    // [CG] Now dealing with scalars.
    if(message->info_type == ci_team)
    {
+      // [CG] Don't do anything if the value hasn't actually changed.
       if(client->team == message->int_value)
-      {
-         // [CG] Don't do anything if the value hasn't actually changed.
          return;
-      }
 
+      // [CG] If this isn't a team game, then we don't care about client teams.
       if(!CS_TEAMS_ENABLED)
-      {
-         // [CG] If this isn't a team game, then we don't care about client
-         //      teams.
          return;
-      }
 
       if(message->int_value < team_color_none ||
          message->int_value > team_color_max)
@@ -1402,12 +1264,10 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          return;
       }
 
+      // [CG] In a team game, you can't switch to "no team at all", so default
+      //      to the red team here.
       if(CS_SERVER && message->int_value == team_color_none)
-      {
-         // [CG] In a team game, you can't switch to "no team at all", so
-         //      default to the red team here.
          message->int_value = team_color_red;
-      }
 
       // [CG] If the player is holding a flag, they must drop it.
       CS_DropFlag(playernum);
@@ -1466,19 +1326,16 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
                team_color_names[client->team]
             );
          }
+
          if(CS_SERVER)
-         {
             respawn_player = true;
-         }
       }
    }
    else if(message->info_type == ci_spectating)
    {
+      // [CG] Don't do anything if the value hasn't actually changed.
       if(client->spectating == message->boolean_value)
-      {
-         // [CG] Don't do anything if the value hasn't actually changed.
          return;
-      }
 
       if(!message->boolean_value)
       {
@@ -1487,9 +1344,8 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          //      CL_HandlePlayerSpawned clientside.  Receiving a false update
          //      for ci_spectating means the sending client is bugged somehow.
          if(CS_SERVER)
-         {
             SV_SendMessage(playernum, "Invalid join request.\n");
-         }
+
          doom_printf(
             "Received invalid spectating value from %d.\n", playernum
          );
@@ -1519,124 +1375,82 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
             CS_UpdateQueueMessage();
          }
          else
-         {
             doom_printf("%s is now spectating.\n", player->name);
-         }
       }
-   }
-   else if(message->info_type == ci_colormap)
-   {
-      player->colormap = message->int_value;
    }
    else if(CS_CLIENT && message->info_type == ci_ready_weapon)
    {
+      // [CG] We always know what our own ready and pending weapons are.
       if(playernum != consoleplayer)
-      {
-         // [CG] We always know what our own ready and pending weapons are.
          player->readyweapon = message->int_value;
-      }
    }
    else if(CS_CLIENT && message->info_type == ci_pending_weapon)
    {
+      // [CG] We always know what our own ready and pending weapons are.
       if(playernum != consoleplayer)
-      {
-         // [CG] We always know what our own ready and pending weapons are.
          player->pendingweapon = message->int_value;
-      }
    }
+   else if(message->info_type == ci_colormap)
+      player->colormap = message->int_value;
    else if(CS_CLIENT && message->info_type == ci_kill_count)
-   {
       player->killcount = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_item_count)
-   {
       player->itemcount = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_secret_count)
-   {
       player->secretcount = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_cheats)
-   {
       player->cheats = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_health)
-   {
       player->health = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_armor_points)
-   {
       player->armorpoints = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_armor_type)
-   {
       player->armortype = message->int_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_owns_backpack)
-   {
       player->backpack = message->boolean_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_did_secret)
-   {
       player->didsecret = message->boolean_value;
-   }
    else if(CS_CLIENT && message->info_type == ci_queue_level)
    {
       client->queue_level = message->int_value;
       if(playernum == consoleplayer)
-      {
          CS_UpdateQueueMessage();
-      }
    }
    else if(CS_CLIENT && message->info_type == ci_queue_position)
    {
       client->queue_position = message->int_value;
       if(playernum == consoleplayer)
-      {
          CS_UpdateQueueMessage();
-      }
    }
    else if(message->info_type == ci_wsop)
    {
       if(CS_SERVER)
-      {
          server_client->weapon_switch_on_pickup = message->int_value;
-      }
    }
    else if(message->info_type == ci_asop)
    {
       if(CS_SERVER)
-      {
          server_client->ammo_switch_on_pickup = message->int_value;
-      }
    }
    else if(message->info_type == ci_bobbing)
    {
       if(CS_SERVER)
-      {
          server_client->options.player_bobbing = message->boolean_value;
-      }
    }
    else if(message->info_type == ci_weapon_toggle)
    {
       if(CS_SERVER)
-      {
          server_client->options.doom_weapon_toggles = message->boolean_value;
-      }
    }
    else if(message->info_type == ci_autoaim)
    {
       if(CS_SERVER)
-      {
          server_client->options.autoaim = message->boolean_value;
-      }
    }
    else if(message->info_type == ci_weapon_speed)
    {
       if(CS_SERVER)
-      {
          server_client->options.weapon_speed = message->int_value;
-      }
    }
    else
    {
@@ -1647,8 +1461,8 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    }
    if(CS_SERVER)
    {
-      CS_PrintTime();
       SV_BroadcastPlayerScalarInfo(playernum, message->info_type);
+
       if(respawn_player)
       {
          spawn_point = CS_SpawnPlayerCorrectly(playernum, true);
@@ -1830,9 +1644,7 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
    else if(info_type == ci_weapon_toggle)
    {
       if(CS_CLIENT)
-      {
          update_message->boolean_value = doom_weapon_toggles;
-      }
       else if(CS_SERVER)
       {
          update_message->boolean_value =
@@ -2285,21 +2097,13 @@ void CS_TryRunTics(void)
    }
 
    if(CS_CLIENTDEMO)
-   {
       CL_RunDemoTics();
-   }
    else if(CS_SERVERDEMO)
-   {
       SV_RunDemoTics();
-   }
    else if(CS_CLIENT)
-   {
       CL_TryRunTics();
-   }
    else
-   {
       SV_TryRunTics();
-   }
 }
 
 VARIABLE_STRING(cs_demo_folder_path, NULL, 1024);

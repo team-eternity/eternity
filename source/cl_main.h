@@ -85,11 +85,15 @@ void CL_Connect(void);
 void CL_Reconnect(void);
 void CL_Disconnect(void);
 void CL_Spectate(void);
+
 void CL_SendPlayerStringInfo(client_info_e info_type);
 void CL_SendPlayerArrayInfo(client_info_e info_type, int array_index);
 void CL_SendPlayerScalarInfo(client_info_e info_type);
 void CL_SendCommand(void);
 void CL_SendTeamRequest(teamcolor_t team);
+void CL_SendSyncRequest(void);
+void CL_SendSyncReceived(void);
+
 void CL_ServerMessage(const char *message);
 void CL_PlayerMessage(int playernum, const char *message);
 void CL_TeamMessage(const char *message);

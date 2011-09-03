@@ -522,6 +522,28 @@ void CL_SendTeamRequest(teamcolor_t team)
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
+void CL_SendSyncRequest(void)
+{
+   nm_syncrequest_t message;
+
+   message.message_type = nm_syncrequest;
+
+   printf("Sending sync request.\n");
+
+   send_packet(&message, sizeof(nm_syncrequest_t));
+}
+
+void CL_SendSyncReceived(void)
+{
+   nm_syncreceived_t message;
+
+   message.message_type = nm_syncreceived;
+
+   printf("Sending sync acknowledgement.\n");
+
+   send_packet(&message, sizeof(nm_syncreceived_t));
+}
+
 void CL_ServerMessage(const char *message)
 {
    send_message(mr_server, 0, message);
@@ -1007,6 +1029,8 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
    R_FillBackScreen();
    ST_Start();
    ACS_RunDeferredScripts();
+
+   CL_SendSyncRequest();
 }
 
 void CL_HandleSyncMessage(nm_sync_t *message)
@@ -1020,6 +1044,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
    cl_flush_packet_buffer = true;
    cl_received_sync = true;
    CS_UpdateQueueMessage();
+   CL_SendSyncReceived();
 }
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
@@ -1067,6 +1092,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    levelstarttic = message->gametic;
    basetic = message->gametic;
    leveltime = message->gametic;
+
    for(i = 0; i < MAXPLAYERS; i++)
       playeringame[i] = message->playeringame[i];
 
@@ -1185,7 +1211,8 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    if(!client->spectating)
    {
-      if(players[playernum].playerstate == PST_LIVE)
+      if(playernum == consoleplayer &&
+         players[playernum].playerstate == PST_LIVE)
       {
          oldbob = players[playernum].bob;
          oldviewz = players[playernum].viewz;
@@ -1207,7 +1234,8 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
          }
       }
 
-      if(players[playernum].playerstate == PST_LIVE)
+      if(playernum == consoleplayer &&
+         players[playernum].playerstate == PST_LIVE)
       {
          players[playernum].bob = oldbob;
          players[playernum].viewz = oldviewz;

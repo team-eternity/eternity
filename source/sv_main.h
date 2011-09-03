@@ -171,6 +171,10 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
                                       int playernum);
 void SV_HandleMessage(char *data, size_t data_length, int playernum);
+void SV_HandleSyncRequestMessage(char *data, size_t data_length,
+                                 int playernum);
+void SV_HandleSyncReceivedMessage(char *data, size_t data_length,
+                                  int playernum);
 
 #endif
 

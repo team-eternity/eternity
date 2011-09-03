@@ -900,16 +900,12 @@ int SV_HandleClientConnection(ENetPeer *peer)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(!playeringame[i])
-      {
          break;
-      }
    }
 
+   // [CG] No more client spots.
    if(i == MAX_CLIENTS)
-   {
-      // [CG] No more client spots.
       return 0;
-   }
 
    CS_ZeroClient(i);
 
@@ -924,13 +920,9 @@ int SV_HandleClientConnection(ENetPeer *peer)
    if(sv_spectator_password == NULL)
    {
       if(sv_player_password == NULL)
-      {
          server_client->auth_level = cs_auth_player;
-      }
       else
-      {
          server_client->auth_level = cs_auth_spectator;
-      }
    }
 
    // doom_printf("Player %d has connected.", i);
@@ -1019,9 +1011,9 @@ void SV_AddClient(int playernum)
    }
 
    // [CG] Sync the client up.
-   SV_SendSync(playernum);
+   // SV_SendSync(playernum);
 
-   server_clients[playernum].synchronized = true;
+   server_clients[playernum].added = true;
 
    if(CS_TEAMS_ENABLED)
       clients[playernum].team = team_color_red;
@@ -1036,7 +1028,7 @@ void SV_AddNewClients(void)
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
-      if(!server_clients[i].synchronized &&
+      if(!server_clients[i].added &&
          server_clients[i].auth_level >= cs_auth_spectator)
       {
          SV_AddClient(i);
@@ -1198,11 +1190,13 @@ void SV_BroadcastMapStarted(void)
    message.levelstarttic = levelstarttic;
    message.basetic = basetic;
    message.leveltime = leveltime;
+
    for(i = 0; i < MAXPLAYERS; i++)
    {
       message.net_ids[i] = 0;
       message.playeringame[i] = playeringame[i];
    }
+
    memcpy(&message.settings, cs_settings, sizeof(clientserver_settings_t));
 
    broadcast_packet(&message, sizeof(nm_mapstarted_t));
@@ -1416,11 +1410,6 @@ boolean SV_RunPlayerCommands(int playernum)
    // [CG] If the player is spectating, run all the commands in the buffer.
    if(clients[playernum].spectating)
    {
-      printf(
-         "SV_RunPlayerCommands: Running %u commands for %d.\n",
-         sc->commands.size,
-         playernum
-      );
       while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)))
          run_player_command(playernum, bufcmd);
    }
@@ -1828,7 +1817,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
       return;
    }
 
-#if _CMD_DEBUG || 1
+#if _CMD_DEBUG
    printf(
       "SV_HandlePlayerCommandMessage (%3u): Received command %3u - "
       "(%3u/%3u/%3u): ",
@@ -1869,6 +1858,17 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    }
 
    server_client->last_command_received_index = received_command->world_index;
+}
+
+void SV_HandleSyncRequestMessage(char *data, size_t data_length, int playernum)
+{
+   SV_SendSync(playernum);
+}
+
+void SV_HandleSyncReceivedMessage(char *data, size_t data_length,
+                                  int playernum)
+{
+   server_clients[playernum].synchronized = true;
 }
 
 void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id)
@@ -2744,12 +2744,25 @@ void SV_TryRunTics(void)
          SV_AddNewClients();
          if(sv_should_send_new_map)
          {
+            teamcolor_t color;
+            mobj_t *flag_actor;
+
             for(i = 1; i < MAXPLAYERS; i++)
             {
                if(playeringame[i])
                   server_clients[i].received_command_for_current_map = false;
             }
+
             SV_BroadcastMapStarted();
+
+            for(color = team_color_red; color < team_color_max; color++)
+            {
+               if(!cs_flag_stands[color].exists)
+                  continue;
+
+               if((flag_actor = CS_GetActorFromNetID(cs_flags[color].net_id)))
+                  SV_BroadcastActorSpawned(flag_actor);
+            }
             sv_should_send_new_map = false;
          }
       }
@@ -2775,6 +2788,12 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
 
    switch(message_type)
    {
+   case nm_syncrequest:
+      SV_HandleSyncRequestMessage(data, data_length, playernum);
+      break;
+   case nm_syncreceived:
+      SV_HandleSyncReceivedMessage(data, data_length, playernum);
+      break;
    case nm_playermessage:
       SV_HandlePlayerMessage(data, data_length, playernum);
       break;

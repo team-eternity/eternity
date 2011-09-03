@@ -30,6 +30,32 @@
 #include "sv_main.h"
 #include "sv_queue.h"
 
+void SV_UpdateQueueLevels(void)
+{
+   unsigned int i;
+   client_t *client;
+   cs_queue_level_e new_queue_level;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(!playeringame[i] || clients[i].queue_level == ql_none)
+         continue;
+
+      client = &clients[i];
+
+      if(client->queue_position > 0)
+         new_queue_level = ql_waiting;
+      else
+         new_queue_level = ql_playing;
+
+      if(client->queue_level != new_queue_level)
+      {
+         client->queue_level = new_queue_level;
+         SV_BroadcastPlayerScalarInfo(i, ci_queue_level);
+      }
+   }
+}
+
 unsigned int SV_GetNewQueuePosition(void)
 {
    unsigned int i;
@@ -48,10 +74,7 @@ unsigned int SV_GetNewQueuePosition(void)
    }
 
    if(playing_players < cs_settings->max_players)
-   {
-      printf("SV_GetNewQueuePosition: Open slots, returning 0.\n");
       return 0;
-   }
 
    // [CG] At this point there are no more opening slots, so the player must
    //      enter the queue.  Find the queue position at which they'll enter.
@@ -61,10 +84,6 @@ unsigned int SV_GetNewQueuePosition(void)
          max_queue_position = clients[i].queue_position + 1;
    }
 
-   printf(
-      "SV_GetNewQueuePosition: No open slots, returning %d.\n",
-      max_queue_position
-   );
    return max_queue_position;
 }
 
@@ -77,12 +96,6 @@ void SV_AssignQueuePosition(int playernum, unsigned int queue_position)
       clients[playernum].queue_level = ql_waiting;
    else
       clients[playernum].queue_level = ql_playing;
-
-   printf(
-      "SV_AssignQueuePosition: Assigned position %u to %d.\n",
-      queue_position,
-      playernum
-   );
 
    SV_BroadcastPlayerScalarInfo(playernum, ci_queue_level);
 }
@@ -116,33 +129,12 @@ void SV_PutPlayerAtQueueEnd(int playernum)
    if(clients[playernum].queue_level != ql_none)
       SV_AdvanceQueue(clients[playernum].queue_position);
 
-   SV_AssignQueuePosition(playernum, SV_GetNewQueuePosition());
-   SV_UpdateQueueLevels();
+   SV_PutPlayerInQueue(playernum);
 }
 
-void SV_UpdateQueueLevels(void)
+void SV_RemovePlayerFromQueue(int playernum)
 {
-   unsigned int i;
-   client_t *client;
-   cs_queue_level_e new_queue_level;
-
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(!playeringame[i] || clients[i].queue_level == ql_none)
-         continue;
-
-      client = &clients[i];
-
-      if(client->queue_position > 0)
-         new_queue_level = ql_waiting;
-      else
-         new_queue_level = ql_playing;
-
-      if(client->queue_level != new_queue_level)
-      {
-         client->queue_level = new_queue_level;
-         SV_BroadcastPlayerScalarInfo(i, ci_queue_level);
-      }
-   }
+   clients[playernum].queue_level = ql_none;
+   SV_BroadcastPlayerScalarInfo(playernum, ci_queue_level);
 }
 

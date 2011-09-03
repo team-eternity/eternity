@@ -1557,18 +1557,6 @@ mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    mobj->groupid = R_NOGROUP;
 #endif
 
-   /*
-   if(type == E_SafeThingName("RedFlag")         ||
-      type == E_SafeThingName("BlueFlag")        ||
-      type == E_SafeThingName("DroppedRedFlag")  ||
-      type == E_SafeThingName("DroppedBlueFlag") ||
-      type == E_SafeThingName("CarriedRedFlag")  ||
-      type == E_SafeThingName("CarriedBlueFlag"))
-   {
-      printf("Spawning a flag of some kind.\n");
-   }
-   */
-
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != -1)
       mobj->skin = P_GetMonsterSkin(info->altsprite);
