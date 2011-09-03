@@ -28,6 +28,7 @@
 
 #include "../z_zone.h"
 #include "../i_system.h"
+#include "../hal/i_picker.h"
 
 #include "../doomstat.h"
 #include "../doomtype.h"
@@ -39,25 +40,6 @@ static SDL_Surface  *pickscreen;    // SDL screen surface
 static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
 static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
-
-// picker iwad enumeration
-enum
-{
-   IWAD_DOOMSW,
-   IWAD_DOOMREG,
-   IWAD_DOOMU,
-   IWAD_DOOM2,
-   IWAD_TNT,
-   IWAD_PLUT,
-   IWAD_HACX,
-   IWAD_HTICSW,
-   IWAD_HTICREG,
-   IWAD_HTICSOSR,
-   IWAD_FREEDOOM,
-   IWAD_FREEDOOMU,
-   IWAD_FREEDM,
-   NUMPICKIWADS
-};
 
 // name of title screen lumps in startup.wad
 static const char *iwadPicNames[NUMPICKIWADS] =
@@ -76,41 +58,6 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "ULTFD",
    "FREEDM",
 };
-
-// palette enumeration
-/*
-enum
-{
-   PAL_DOOM,
-   PAL_HTIC,
-   NUMPICKPALS,
-};
-
-// name of palette lumps in startup.wad
-static const char *palNames[NUMPICKPALS] =
-{
-   "DOOMPAL",
-   "HTICPAL",
-};
-
-// palette-for-pic lookup table
-static int iwadPicPals[NUMPICKIWADS] =
-{
-   PAL_DOOM, 
-   PAL_DOOM, 
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_HTIC,
-   PAL_HTIC,
-   PAL_HTIC,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-};
-*/
 
 // IWAD game names
 static const char *titles[NUMPICKIWADS] =
@@ -132,7 +79,6 @@ static const char *titles[NUMPICKIWADS] =
 
 static byte *bgframe;                // background graphics
 static byte *iwadpics[NUMPICKIWADS]; // iwad title pics
-//static byte *pals[NUMPICKPALS];      // palettes
 static byte *pals[NUMPICKIWADS];     // palettes
 
 //=============================================================================

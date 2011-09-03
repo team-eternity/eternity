@@ -38,6 +38,8 @@
 
 #include "z_zone.h"
 
+#include "hal/i_picker.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
@@ -1613,7 +1615,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
 int iwad_choice; // haleyjd 03/19/10: remember choice
 
 // variable-for-index lookup for D_DoIWADMenu
-static char **iwadVarForNum[] =
+static char **iwadVarForNum[NUMPICKIWADS] =
 {
    &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
    &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
@@ -1621,8 +1623,6 @@ static char **iwadVarForNum[] =
    &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
    &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
 };
-
-#define NUMPICKERIWADS (sizeof(iwadVarForNum) / sizeof(char **))
 
 //
 // D_DoIWADMenu
@@ -1637,13 +1637,12 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(bool haveIWADs[], int startchoice);
-   bool haveIWADs[NUMPICKERIWADS];
+   bool haveIWADs[NUMPICKIWADS];
    int i, choice = -1;
    bool foundone = false;
 
    // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < NUMPICKERIWADS; ++i)
+   for(i = 0; i < NUMPICKIWADS; ++i)
    {
       if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
          foundone = true;

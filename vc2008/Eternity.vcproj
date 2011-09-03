@@ -5040,6 +5040,10 @@
 					Name="HAL Headers"
 					>
 					<File
+						RelativePath="..\source\hal\i_picker.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\i_video.h"
 						>
 					</File>

@@ -31,6 +31,7 @@
 #include "d_main.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
+#include "hal/i_picker.h"
 #include "i_sound.h"
 #include "i_video.h"
 #include "m_misc.h"
@@ -135,7 +136,7 @@ static default_t sysdefaults[] =
    DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
                "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
 
-   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, default_t::wad_no,
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
    DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", default_t::wad_no,
