@@ -127,6 +127,7 @@ void SV_LoadConfig(void);
 boolean CS_AddIWAD(const char *resource_name);
 boolean CS_AddWAD(const char *resource_name);
 boolean CS_AddDeHackEdFile(const char *resource_name);
+void CS_HandleMastersSection(json_object *masters);
 void CS_HandleResourcesSection(json_object *resources);
 void CS_HandleServerSection(json_object *server);
 void CS_HandleOptionsSection(json_object *options);

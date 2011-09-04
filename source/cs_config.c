@@ -520,6 +520,79 @@ void CL_LoadConfig(void)
    CS_ApplyConfigSettings();
 }
 
+void SV_HandleMastersSection(json_object *masters)
+{
+   cs_master_t *master;
+   json_object *master_section, *master_option;
+   unsigned int i;
+   unsigned int master_server_count;
+
+   master_server_count = json_object_array_length(masters);
+   master_servers = calloc(master_server_count, sizeof(cs_master_t));
+
+   for(i = 0; i < master_server_count; i++)
+   {
+      master = &master_servers[i];
+      master_section = json_object_array_get_idx(masters, i);
+
+      master_option = json_object_object_get(master_section, "address");
+      if(master_option == NULL)
+      {
+         I_Error(
+            "CS_LoadConfig: master entry missing required option "
+            "'address'.\n"
+         );
+      }
+      master->address = strdup(json_object_get_string(master_option));
+
+      master_option = json_object_object_get(master_section, "username");
+      if(master_option == NULL)
+      {
+         I_Error(
+            "CS_LoadConfig: master entry missing required option "
+            "'username'.\n"
+         );
+      }
+      master->username = strdup(json_object_get_string(master_option));
+
+      master_option = json_object_object_get(master_section, "password");
+      if(master_option == NULL)
+      {
+         I_Error(
+            "CS_LoadConfig: master entry missing required option "
+            "'password'.\n"
+         );
+      }
+      master->password_hash = CS_GetSHA1Hash(
+         json_object_get_string(master_option),
+         strlen(json_object_get_string(master_option))
+      );
+
+      master_option = json_object_object_get(master_section, "group");
+      if(master_option == NULL)
+      {
+         I_Error(
+            "CS_LoadConfig: master entry missing required option "
+            "'group'.\n"
+         );
+      }
+      master->group = strdup(json_object_get_string(master_option));
+
+      master_option = json_object_object_get(master_section, "name");
+      if(master_option == NULL)
+      {
+         I_Error(
+            "CS_LoadConfig: master entry missing required option "
+            "'name'.\n"
+         );
+      }
+      master->name = strdup(json_object_get_string(master_option));
+
+      master_servers[i].disabled = false;
+      master_servers[i].updating = false;
+   }
+}
+
 void SV_LoadConfig(void)
 {
    cs_master_t *master;
@@ -614,78 +687,9 @@ void SV_LoadConfig(void)
     *             ]
     */
    section = json_object_object_get(cs_json, "masters");
-   master_server_count = json_object_array_length(section);
-   master_servers = calloc(master_server_count, sizeof(cs_master_t));
 
-   for(i = 0; i < master_server_count; i++)
-   {
-      master_section = json_object_array_get_idx(section, i);
-
-      master_option = json_object_object_get(master_section, "address");
-      if(master_option == NULL)
-      {
-         I_Error(
-            "CS_LoadConfig: master entry missing required option "
-            "'address'.\n"
-         );
-      }
-
-      master = &master_servers[i];
-
-      master->address = strdup(json_object_get_string(master_option));
-
-      master_option = json_object_object_get(master_section, "username");
-      if(master_option == NULL)
-      {
-         I_Error(
-            "CS_LoadConfig: master entry missing required option "
-            "'username'.\n"
-         );
-      }
-
-      master->username = strdup(json_object_get_string(master_option));
-
-      master_option = json_object_object_get(master_section, "password");
-      if(master_option == NULL)
-      {
-         I_Error(
-            "CS_LoadConfig: master entry missing required option "
-            "'password'.\n"
-         );
-      }
-
-      master->password_hash = CS_GetSHA1Hash(
-         json_object_get_string(master_option),
-         strlen(json_object_get_string(master_option))
-      );
-
-      master_option = json_object_object_get(master_section, "group");
-      if(master_option == NULL)
-      {
-         I_Error(
-            "CS_LoadConfig: master entry missing required option "
-            "'group'.\n"
-         );
-      }
-
-      master->group = strdup(json_object_get_string(master_option));
-
-      master_option = json_object_object_get(master_section, "name");
-      if(master_option == NULL)
-      {
-         I_Error(
-            "CS_LoadConfig: master entry missing required option "
-            "'name'.\n"
-         );
-      }
-
-      master->name = strdup(json_object_get_string(master_option));
-
-      master_servers[i].disabled = false;
-      master_servers[i].updating = false;
-   }
-
-
+   if(section != NULL)
+      SV_HandleMastersSection(section);
 
    section = json_object_object_get(cs_json, "server");
 
