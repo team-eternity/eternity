@@ -49,7 +49,7 @@ typedef struct hu_widget_s
    // id data
    int type;                 // widget type
    char *name;               // name of this widget
-   struct hu_widget_s *next; // next in hash chain
+   // struct hu_widget_s *next; // next in hash chain
    boolean disabled;         // disable flag
    boolean prevdisabled;     // previous state of disable flag
 } hu_widget_t;
@@ -68,7 +68,7 @@ enum
    TW_AUTOMAP_ONLY = 0x00000001, // appears in automap only
    TW_NOCLEAR      = 0x00000002, // dynamic widget with no clear func
    TW_BOXED        = 0x00000004, // 10/08/05: optional box around text
-   TW_TRANS        = 0x00000008, // [CG] Alpha-blended background
+   TW_TRANS        = 0x00000008, // [CG] Alpha-blended background.
 };
 
 typedef struct hu_textwidget_s

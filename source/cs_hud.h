@@ -37,6 +37,18 @@
                   clients[consoleplayer].queue_level == ql_none || \
                   clients[consoleplayer].spectating))
 
+typedef struct hu_customwidget_s
+{
+   hu_widget_t widget;
+   unsigned int x;
+   unsigned int y;
+   unsigned int width;
+   unsigned int height;
+   vfont_t *font;
+   int bg_color;
+   int bg_opacity;
+} hu_customwidget_t;
+
 extern boolean show_timer;
 extern boolean default_show_timer;
 extern boolean show_netstats;

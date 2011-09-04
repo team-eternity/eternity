@@ -106,15 +106,6 @@ E_KEYFUNC(hu_widget_t, name);
 hu_widget_t *HU_WidgetForName(const char *name)
 {
    return E_HashObjectForKey(widget_hash, &name);
-   /*
-   int key = D_HashTableKey(name) % NUMWIDGETCHAINS;
-   hu_widget_t *cur = hu_chains[key];
-
-   while(cur && strncasecmp(name, cur->name, 33))
-      cur = cur->next;
-
-   return cur;
-   */
 }
 
 //
@@ -137,11 +128,6 @@ boolean HU_AddWidgetToHash(hu_widget_t *widget)
       return false;
    }
 
-   /*
-   key = D_HashTableKey(widget->name) % NUMWIDGETCHAINS;
-   widget->next = hu_chains[key];
-   hu_chains[key] = widget;
-   */
    E_HashAddObject(widget_hash, widget);
 
    return true;
@@ -264,21 +250,6 @@ void HU_Start(void)
    // int i;
    hu_widget_t *w = NULL;
 
-   /*
-   // call all widget clear functions
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget)
-      {
-         if(widget->clear)
-            widget->clear(widget);
-         widget = widget->next;
-      }
-   }
-   */
-
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->clear)
@@ -315,20 +286,6 @@ void HU_Drawer(void)
 #endif
 
    // call all widget drawer functions
-   /*
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget && !widget->disabled) // haleyjd 06/15/06: oops!
-      {
-         if(widget->drawer)
-            widget->drawer(widget);
-         widget = widget->next;
-      }
-   }
-   */
-
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->drawer && !w->disabled)
@@ -357,20 +314,6 @@ void HU_Ticker(void)
    hu_widget_t *w = NULL;
 
    // call all widget ticker functions
-   /*
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget)
-      {
-         if(widget->ticker)
-            widget->ticker(widget);
-         widget = widget->next;
-      }
-   }
-   */
-
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->ticker)
@@ -411,20 +354,6 @@ void HU_Erase(void)
       return;
 
    // call all widget erase functions
-   /*
-   for(i = 0; i < NUMWIDGETCHAINS; ++i)
-   {
-      widget = hu_chains[i];
-
-      while(widget)
-      {
-         if(widget->eraser && HU_NeedsErase(widget))
-            widget->eraser(widget);
-         widget = widget->next;
-      }
-   }
-   */
-
    while((w = (hu_widget_t *)E_HashTableIterator(widget_hash, w)) != NULL)
    {
       if(w->eraser && HU_NeedsErase(w))

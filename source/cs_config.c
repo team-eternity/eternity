@@ -595,9 +595,8 @@ void SV_HandleMastersSection(json_object *masters)
 
 void SV_LoadConfig(void)
 {
-   cs_master_t *master;
-   json_object *section, *master_section, *master_option, *password, *option,
-               *json_write_out, *minimum_buffer_size;
+   json_object *section, *password, *option, *json_write_out,
+               *minimum_buffer_size;
    char *config_path = NULL;
    const char *wad_folder;
    char *write_config_to = NULL;
@@ -691,79 +690,75 @@ void SV_LoadConfig(void)
    if(section != NULL)
       SV_HandleMastersSection(section);
 
+   sv_minimum_buffer_size = 2;
+   sv_spectator_password = NULL;
+   sv_player_password = NULL;
+   sv_moderator_password = NULL;
+   sv_administrator_password = NULL;
+
    section = json_object_object_get(cs_json, "server");
 
    // [CG] Set the minimum size of the serverside command buffer.
    minimum_buffer_size = json_object_object_get(
       section, "minimum_buffer_size"
    );
-   if(minimum_buffer_size == NULL)
-   {
-      sv_minimum_buffer_size = 2;
-   }
-   else
-   {
+   if(minimum_buffer_size != NULL)
       sv_minimum_buffer_size = json_object_get_int(minimum_buffer_size);
-   }
 
    // [CG] Load password information (serverside-only).
    password = json_object_object_get(section, "spectator_password");
    if(password != NULL)
    {
-      sv_spectator_password = strdup(json_object_get_string(password));
-      requires_spectator_password = true;
-   }
-   else
-   {
-      sv_spectator_password = NULL;
+      if(strlen(json_object_get_string(password)))
+      {
+         sv_spectator_password = strdup(json_object_get_string(password));
+         requires_spectator_password = true;
+      }
    }
 
    password = json_object_object_get(section, "player_password");
    if(password != NULL)
    {
-      sv_player_password = strdup(json_object_get_string(password));
-      requires_player_password = true;
-   }
-   else
-   {
-      sv_player_password = NULL;
+      if(strlen(json_object_get_string(password)))
+      {
+         sv_player_password = strdup(json_object_get_string(password));
+         requires_player_password = true;
+      }
    }
 
    password = json_object_object_get(section, "moderator_password");
    if(password != NULL)
    {
-      sv_moderator_password = strdup(json_object_get_string(password));
-      requires_moderator_password = true;
-   }
-   else
-   {
-      sv_moderator_password = NULL;
+      if(strlen(json_object_get_string(password)))
+      {
+         sv_moderator_password = strdup(json_object_get_string(password));
+         requires_moderator_password = true;
+      }
    }
 
    password = json_object_object_get(section, "administrator_password");
    if(password != NULL)
    {
-      sv_administrator_password = strdup(json_object_get_string(password));
-      requires_administrator_password = true;
-   }
-   else
-   {
-      sv_administrator_password = NULL;
+      if(strlen(json_object_get_string(password)))
+      {
+         sv_administrator_password = strdup(json_object_get_string(password));
+         requires_administrator_password = true;
+      }
    }
 
    if(!requires_moderator_password)
    {
       I_Error(
-         "SV_LoadConfig: Option 'moderator_password' not found in 'server' "
-         "section.\n"
+         "SV_LoadConfig: Option 'moderator_password' blank or not found in "
+         "'server' section.\n"
       );
    }
 
    if(!requires_administrator_password)
    {
       I_Error(
-         "SV_LoadConfig: Option 'administrator_password' not found in "
-         "'server' section.\n"
+         "SV_LoadConfig: Option 'administrator_password' blank or not found "
+         "in 'server' section.\n"
       );
    }
 
@@ -771,9 +766,8 @@ void SV_LoadConfig(void)
    if(option != NULL)
    {
       if(json_object_get_type(option) != json_type_array)
-      {
          I_Error("CS_LoadConfig: 'wad_folders' is not an array.\n");
-      }
+
       for(i = 0; i < json_object_array_length(option); i++)
       {
          wad_folder = json_object_get_string(json_object_array_get_idx(
@@ -787,9 +781,7 @@ void SV_LoadConfig(void)
    if(option != NULL)
    {
       if(json_object_get_type(option) != json_type_string)
-      {
          I_Error("CS_LoadConfig: 'write_config_to' is not a string.\n");
-      }
       write_config_to = strdup(json_object_get_string(option));
    }
 
@@ -876,21 +868,18 @@ void CS_HandleResourcesSection(json_object *resources)
          }
          resource_name = json_object_get_string(name);
          json_alternates = json_object_object_get(resource, "alternates");
+
          if(json_alternates == NULL)
-         {
             alternates_count = 0;
-         }
          else
-         {
             alternates_count = json_object_array_length(json_alternates);
-         }
+
          type = json_object_object_get(resource, "type");
          if(type && strncmp(json_object_get_string(type), "iwad", 4) == 0)
          {
             if(cs_iwad != NULL)
-            {
                I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
-            }
+
             if(!CS_AddIWAD(resource_name))
             {
                for(j = 0; j < alternates_count; j++)
@@ -898,10 +887,9 @@ void CS_HandleResourcesSection(json_object *resources)
                   alternate_resource_name = json_object_get_string(
                      json_object_array_get_idx(json_alternates, j)
                   );
+
                   if(CS_AddIWAD(alternate_resource_name))
-                  {
                      break;
-                  }
                }
             }
          }
@@ -918,9 +906,7 @@ void CS_HandleResourcesSection(json_object *resources)
    }
 
    if(cs_iwad == NULL)
-   {
       I_Error("CS_LoadConfig: No IWAD specified.\n");
-   }
 
    for(i = 0; i < json_object_array_length(resources); i++)
    {
@@ -930,10 +916,10 @@ void CS_HandleResourcesSection(json_object *resources)
       {
       case json_type_string:
          resource_name = json_object_get_string(resource);
+
          if(!CS_AddWAD(json_object_get_string(resource)))
-         {
             I_Error("Could not find PWAD '%s'.\n", resource_name);
-         }
+
          modifiedgame = true;
          break;
       case json_type_object:
@@ -945,23 +931,19 @@ void CS_HandleResourcesSection(json_object *resources)
          }
          resource_name = json_object_get_string(name);
          type = json_object_object_get(resource, "type");
+
          if(type)
-         {
             resource_type = json_object_get_string(type);
-         }
          else
-         {
             resource_type = "wad";
-         }
+
          json_alternates = json_object_object_get(resource, "alternates");
+
          if(json_alternates == NULL)
-         {
             alternates_count = 0;
-         }
          else
-         {
             alternates_count = json_object_array_length(json_alternates);
-         }
+
          if(strncmp(resource_type, "wad", 3) == 0)
          {
             if(!CS_AddWAD(resource_name))
@@ -971,10 +953,9 @@ void CS_HandleResourcesSection(json_object *resources)
                   alternate_resource_name = json_object_get_string(
                      json_object_array_get_idx(json_alternates, j)
                   );
+
                   if(CS_AddWAD(alternate_resource_name))
-                  {
                      break;
-                  }
                }
                if(j == alternates_count)
                {
@@ -1045,20 +1026,14 @@ void CS_HandleServerSection(json_object *server)
 
    setting = json_object_object_get(server, "address");
    if(setting == NULL)
-   {
       server_address->host = ENET_HOST_ANY;
-   }
    else
    {
       str_value = json_object_get_string(setting);
       if(strncmp(str_value, "public", 6) == 0)
-      {
          server_address->host = ENET_HOST_ANY;
-      }
       else
-      {
          enet_address_set_host(server_address, str_value);
-      }
    }
 
    if(CS_SERVER)
@@ -1067,17 +1042,11 @@ void CS_HandleServerSection(json_object *server)
       {
 #ifdef WIN32
          if(gethostname(hostname, 256) == SOCKET_ERROR)
-         {
             I_Error("Error getting hostname: %s.\n", WSAGetLastError());
-         }
          if((host = gethostbyname(hostname)) == 0)
-         {
             I_Error("Error looking up local hostname, exiting.\n");
-         }
          if(host->h_addrtype != AF_INET)
-         {
             I_Error("Local host is not an IPv4 host, exiting.\n");
-         }
 
          for(i = 0; (host->h_addr_list[i] != 0) && !found_address; i++)
          {
@@ -1086,9 +1055,7 @@ void CS_HandleServerSection(json_object *server)
          }
 
          if(!found_address)
-         {
             I_Error("No suitable IP address found, exiting.\n");
-         }
 #else
          // [CG] Figure out the first public address (if any) to report to the
          //      master.
@@ -1105,19 +1072,17 @@ void CS_HandleServerSection(json_object *server)
              interface_address != NULL;
              interface_address = interface_address->ifa_next)
          {
+            // [CG] Don't list interfaces that aren't actually up.
             if((interface_address->ifa_flags & IFF_UP) == 0)
-            {
-               // [CG] Don't list interfaces that aren't actually up.
                continue;
-            }
+
+            // [CG] getifaddrs will set ifa_addr of PPP links to NULL, but
+            //      later on in the interface list it will have a second entry
+            //      for that PPP link with a proper address.  To avoid
+            //      segfaults we skip the interfaces without addresses here.
             if(interface_address->ifa_addr == NULL)
-            {
-               // [CG] getifaddrs will set ifa_addr of PPP links to NULL, but
-               //      later on in the interface list it will have a second
-               //      entry for that PPP link with a proper address.  To avoid
-               //      segfaults we skip the interfaces without addresses here.
                continue;
-            }
+
             if(interface_address->ifa_addr->sa_family == AF_INET)
             {
                socket = (struct sockaddr_in *)interface_address->ifa_addr;
@@ -1127,50 +1092,46 @@ void CS_HandleServerSection(json_object *server)
          freeifaddrs(interface_addresses);
 #endif
          if(public_address == 0)
-         {
             I_Error("Could not find an IP address to use, exiting.\n");
-         }
       }
       else
-      {
          public_address = server_address->host;
-      }
+
       public_address_string = CS_IPToString(public_address);
       json_object_object_del(server, "address");
       json_object_object_add(
          server, "address", json_object_new_string(public_address_string)
       );
       free(public_address_string);
+
+      if((setting = json_object_object_get(server, "game")) != NULL)
+      {
+         D_CheckGamePath((char *)json_object_get_string(setting));
+         gamepathset = true;
+      }
    }
 
+   server_address->port = DEFAULT_PORT;
    setting = json_object_object_get(server, "port");
-   if(setting == NULL)
-   {
-      server_address->port = DEFAULT_PORT;
-   }
-   else
+   if(setting != NULL)
    {
       int_value = json_object_get_int(setting);
+
       if(int_value < 1 || int_value > 65535)
-      {
          I_Error("CS_LoadConfig: Invalid port.\n");
-      }
+
       server_address->port = int_value;
    }
 
    setting = json_object_object_get(server, "max_player_clients");
-   if(setting == NULL)
-   {
-      cs_original_settings->max_player_clients = (MAXPLAYERS - 2);
-   }
-   else
+   cs_original_settings->max_player_clients = (MAXPLAYERS - 2);
+   if(setting != NULL)
    {
       int_value = json_object_get_int(setting);
+      // [CG] 2 for the server's spectator and a given client.
       if(int_value < 2)
-      {
-         // [CG] 2 for the server's spectator and a given client.
          I_Error("CS_LoadConfig: 'max_player_clients' must be at least 2.");
-      }
+
       if(int_value > (MAXPLAYERS - 2))
       {
          I_Error(
@@ -1181,12 +1142,9 @@ void CS_HandleServerSection(json_object *server)
       cs_original_settings->max_player_clients = int_value;
    }
 
+   cs_original_settings->max_admin_clients = 2;
    setting = json_object_object_get(server, "max_admin_clients");
-   if(setting == NULL)
-   {
-      cs_original_settings->max_admin_clients = 2;
-   }
-   else
+   if(setting != NULL)
    {
       int_value = json_object_get_int(setting);
       if(int_value < 2)
@@ -1213,18 +1171,13 @@ void CS_HandleServerSection(json_object *server)
       );
    }
 
+   cs_original_settings->number_of_teams = 0;
    setting = json_object_object_get(server, "number_of_teams");
-   if(setting == NULL)
-   {
-      cs_original_settings->number_of_teams = 0;
-   }
-   else
+   if(setting != NULL)
    {
       int_value = json_object_get_int(setting);
       if(int_value < 0)
-      {
          I_Error("CS_LoadConfig: Invalid value for 'number_of_teams'.\n");
-      }
 
       if(int_value > 2)
       {

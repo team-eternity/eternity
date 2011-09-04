@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Simon Howard
@@ -256,10 +256,14 @@ char *D_FindWADByName(char *name)
    int i;
    boolean exists;
 
-   // Absolute path?
+   printf("D_FindWADByName: Looking for %s.\n", name);
 
+   // Absolute path?
    if(M_FileExists(name))
+   {
+      printf("D_FindWADByName: Found %s.\n", name);
       return name;
+   }
 
    BuildIWADDirList();
 
@@ -275,10 +279,29 @@ char *D_FindWADByName(char *name)
       // haleyjd
       M_NormalizeSlashes(buf);
 
+      if(strlen(iwad_dirs[i]) < 50)
+      {
+         printf(
+            "D_FindWADByName: Checking for %s in %s (%s) [%d].\n",
+            name,
+            iwad_dirs[i],
+            buf,
+            strlen(iwad_dirs[i])
+         );
+      }
+
       exists = M_FileExists(buf);
 
       if(exists)
+      {
+         printf("D_FindWADByName: Found %s.\n", buf);
          return buf;
+      }
+      else
+      {
+         if(strlen(iwad_dirs[i]) < 50)
+            printf("D_FindWADByName: %s does not exist.\n", buf);
+      }
 
       free(buf);
    }

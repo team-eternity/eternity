@@ -895,10 +895,46 @@ static void D_SetBasePath(void)
 }
 
 // haleyjd 8/18/07: if true, the game path has been set
-static boolean gamepathset;
+boolean gamepathset;
 
 // haleyjd 8/19/07: index of the game name as specified on the command line
-static int gamepathparm;
+// static int gamepathparm;
+
+// [CG] Game name as specified either on the command line or the server's
+//      configuration file.
+static char *gamename = NULL;
+
+//
+// D_CheckGamePath
+//
+// [CG] Ensures the specified game is valid.
+//
+void D_CheckGamePath(char *game)
+{
+   struct stat sbuf;
+   char *gamedir = NULL;
+   size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, game);
+
+   psnprintf(gamedir, len, "%s/%s", basepath, game);
+
+   gamename = strdup(game);
+
+   if(!stat(gamedir, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      {
+         if(basegamepath != NULL)
+            free(basegamepath);
+
+         basegamepath = strdup(gamedir);
+         M_NormalizeSlashes(basegamepath);
+      }
+      else
+         I_Error("Game path %s is not a directory.\n", gamedir);
+   }
+   else
+      I_Error("Game path %s does not exist.\n", gamedir);
+}
 
 //
 // D_CheckGamePathParam
@@ -909,66 +945,23 @@ static int gamepathparm;
 static void D_CheckGamePathParam(void)
 {
    int p;
-   struct stat sbuf;
-   char *gamedir = NULL;
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, myargv[p + 1]);
-
-      psnprintf(gamedir, len, "%s/%s", basepath, myargv[p + 1]);
-
-      gamepathparm = p + 1;
-
-      if(!stat(gamedir, &sbuf)) // check for existence
-      {
-         if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-         {
-            basegamepath = strdup(gamedir);
-            M_NormalizeSlashes(basegamepath);
-            gamepathset = true;
-         }
-         else
-            I_Error("Game path %s is not a directory.\n", gamedir);
-      }
-      else
-         I_Error("Game path %s does not exist.\n", gamedir);
+      D_CheckGamePath(myargv[p + 1]);
+      gamepathset = true;
    }
 }
 
 //
 // D_SetGamePath
 //
-// haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
-// been determined by the iwad in use.
+// haleyjd 11/23/06: Sets the game path under the base path when the gamemode
+// has been determined by the iwad in use.
 //
 static void D_SetGamePath(void)
 {
-   struct stat sbuf;
-   char *gamedir = NULL;
-   size_t len;
-   const char *mstr = GameModeInfo->missionInfo->gamePathName;
-
-   len = M_StringAlloca(&gamedir, 2, 2, basepath, mstr);
-
-   psnprintf(gamedir, len, "%s/%s", basepath, mstr);
-
-   if(!stat(gamedir, &sbuf)) // check for existence
-   {
-      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-      {
-         if(basegamepath != NULL)
-         {
-            free(basegamepath);
-         }
-         basegamepath = strdup(gamedir);
-         M_NormalizeSlashes(basegamepath);
-      }
-      else
-         I_Error("Game path %s is not a directory.\n", gamedir);
-   }
-   else
-      I_Error("Game path %s does not exist.\n", gamedir);
+   D_CheckGamePath((char *)GameModeInfo->missionInfo->gamePathName);
 }
 
 //
@@ -1739,12 +1732,12 @@ char *FindIWADFile(void)
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath,
-                                  myargv[gamepathparm]);
+      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, gamename);
 
-      psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, myargv[gamepathparm]);
+      psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, gamename);
 
-      if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
+      // only if the file exists do we try to use it.
+      if(!access(gameiwad, R_OK))
          basename = gameiwad;
    }
 

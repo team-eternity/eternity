@@ -36,7 +36,9 @@ extern char *startlevel;
 // [CG] We need startepisode and startmap too.
 extern int startepisode;
 extern int startmap;
+extern boolean gamepathset; // [CG] Externalized.
 
+void D_CheckGamePath(char *game);
 void D_ListWads(void);
 void D_ClearFiles(void); // [CG] Added for c/s.
 void D_ReInitWadfiles(void);
