@@ -376,8 +376,6 @@ static boolean PTR_ShootTraverseComp(intercept_t *in)
 {
    angle_t angle;
    fixed_t x, y, z, frac;
-   mobj_t *puff;
-
    
    if(in->isaline)
    {
@@ -435,7 +433,6 @@ static boolean PTR_ShootTraverse(intercept_t *in)
    boolean hitplane = false; // SoM: Remember if the bullet hit a plane.
    int updown = 2; // haleyjd 05/02: particle puff z dist correction
    sector_t *sidesector;
-   mobj_t *puff;
    
    if(in->isaline)
    {
@@ -623,9 +620,6 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
 {
    fixed_t x2, y2;
 
-   if(clientserver && t1->player)
-      cs_shooting_player = t1->player - players;
-
    angle >>= ANGLETOFINESHIFT;
    shootthing = t1;
    trace.la_damage = damage;
@@ -641,8 +635,6 @@ void P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
    P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, 
                   (demo_version < 329 || comp[comp_planeshoot]) ?
                       PTR_ShootTraverseComp : PTR_ShootTraverse);
-   if(clientserver)
-      cs_shooting_player = 0;
 }
 
 //

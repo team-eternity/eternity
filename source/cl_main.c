@@ -175,6 +175,7 @@ static void send_message(message_recipient_e recipient_type,
 static void run_world(void)
 {
    cl_current_world_index++;
+
    CL_ProcessNetworkMessages();
 
    // [CG] If a player we're spectating spectates, reset our display.
@@ -341,13 +342,16 @@ void CL_Connect(void)
       server_section = json_object_object_get(cs_json, "server");
       spectator_password =
          json_object_object_get(server_section, "requires_spectator_password");
-      if(json_object_get_boolean(spectator_password))
+      password_entry = json_object_object_get(
+         cs_client_password_json, cs_server_url
+      );
+
+      // [CG] Automatically authenticate if possible.  If this server requires
+      //      a password in order to connect as a spectator and we don't have a
+      //      password stored for it, inform the client they need to enter one.
+      if(password_entry == NULL)
       {
-         password_entry = json_object_object_get(
-            cs_client_password_json,
-            cs_server_url
-         );
-         if(password_entry == NULL)
+         if(json_object_get_boolean(spectator_password))
          {
             doom_printf(
                "This server requires a password in order to connect.  Use the "
@@ -355,12 +359,13 @@ void CL_Connect(void)
             );
          }
          else
-         {
-            CL_AuthMessage(json_object_get_string(password_entry));
-         }
+            doom_printf("Connected!");
       }
       else
+      {
          doom_printf("Connected!");
+         CL_AuthMessage(json_object_get_string(password_entry));
+      }
 
       if(cs_demo_recording)
       {
@@ -528,7 +533,7 @@ void CL_SendSyncRequest(void)
 
    message.message_type = nm_syncrequest;
 
-   printf("Sending sync request.\n");
+   printf("CL_SendSyncRequest: Sending sync request.\n");
 
    send_packet(&message, sizeof(nm_syncrequest_t));
 }
@@ -539,7 +544,7 @@ void CL_SendSyncReceived(void)
 
    message.message_type = nm_syncreceived;
 
-   printf("Sending sync acknowledgement.\n");
+   printf("CL_SendSyncReceived: Sending sync received.\n");
 
    send_packet(&message, sizeof(nm_syncreceived_t));
 }
@@ -574,6 +579,8 @@ void CL_AuthMessage(const char *password)
 
    if(cs_server_password != NULL)
       free(cs_server_password);
+
+   printf("CL_AuthMessage: Sending authorization request..\n");
 
    cs_server_password = calloc(password_length + 1, sizeof(char));
    memcpy(cs_server_password, password, password_length);

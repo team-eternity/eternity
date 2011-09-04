@@ -98,18 +98,14 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
    unsigned int server_index = sv_world_index;
 
+   // [CG] Can't send packets to non-existent peers.
    if(peer == NULL)
-   {
-      // [CG] Can't send packets to non-existent peers.
       return;
-   }
 
+   // [CG] Can't send non-auth result packets to players who aren't in the
+   //      game.
    if(!playeringame[playernum] && message_type != nm_authresult)
-   {
-      // [CG] Can't send non-auth result packets to players who aren't in the
-      //      game.
       return;
-   }
 
    // client_index = clients[playernum].index;
 
