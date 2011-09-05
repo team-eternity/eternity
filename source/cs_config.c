@@ -512,11 +512,13 @@ void CL_LoadConfig(void)
    {
       cs_original_settings->requires_spectator_password = true;
    }
+
    if(json_object_get_boolean(json_object_object_get(
       section, "requires_player_password")))
    {
       cs_original_settings->requires_player_password = true;
    }
+
    CS_ApplyConfigSettings();
 }
 
@@ -1104,11 +1106,12 @@ void CS_HandleServerSection(json_object *server)
       );
       free(public_address_string);
 
-      if((setting = json_object_object_get(server, "game")) != NULL)
-      {
-         D_CheckGamePath((char *)json_object_get_string(setting));
-         gamepathset = true;
-      }
+   }
+
+   if((setting = json_object_object_get(server, "game")) != NULL)
+   {
+      D_CheckGamePath((char *)json_object_get_string(setting));
+      gamepathset = true;
    }
 
    server_address->port = DEFAULT_PORT;
@@ -1196,18 +1199,12 @@ void CS_HandleServerSection(json_object *server)
 
       cs_original_settings->number_of_teams = int_value;
    }
-   printf(
-      "CS_LoadConfig: Number of teams: %u.\n",
-      cs_original_settings->number_of_teams
-   );
 
    setting = json_object_object_get(server, "game_type");
    if(setting == NULL)
    {
       if(cs_original_settings->number_of_teams > 0)
-      {
          I_Error("CS_LoadConfig: Cannot enable teams in coop.\n");
-      }
       cs_original_settings->game_type = DefaultGameType = GameType = gt_coop;
    }
    else
@@ -1217,9 +1214,7 @@ void CS_HandleServerSection(json_object *server)
       if(strncmp(str_value, "coop", 4) == 0)
       {
          if(cs_original_settings->number_of_teams > 0)
-         {
             I_Error("CS_LoadConfig: Cannot enable teams in coop.\n");
-         }
          cs_original_settings->game_type = DefaultGameType = GameType = gt_coop;
       }
       else
@@ -1228,9 +1223,7 @@ void CS_HandleServerSection(json_object *server)
          if((strncmp(str_value, "duel", 4) == 0))
          {
             if(cs_original_settings->number_of_teams > 0)
-            {
                I_Error("CS_LoadConfig: Cannot enable teams in a duel.\n");
-            }
             // [CG] TODO: Put this override into CS_LoadOverrides as well.
             cs_original_settings->max_players = 2;
          }
@@ -1536,83 +1529,52 @@ void CS_LoadConfig(void)
 {
    json_object *section;
 
-   if(server_address == NULL)
-   {
-      server_address = calloc(1, sizeof(ENetAddress));
-   }
-   else
-   {
-      memset(server_address, 0, sizeof(ENetAddress));
-   }
-   if(cs_settings == NULL)
-   {
-      cs_settings = calloc(1, sizeof(clientserver_settings_t));
-   }
-   else
-   {
-      memset(cs_settings, 0, sizeof(clientserver_settings_t));
-   }
-   if(cs_original_settings == NULL)
-   {
-      cs_original_settings = calloc(1, sizeof(clientserver_settings_t));
-   }
-   else
-   {
-      memset(cs_original_settings, 0, sizeof(clientserver_settings_t));
-   }
+   server_address = realloc(server_address, sizeof(ENetAddress));
+   memset(server_address, 0, sizeof(ENetAddress));
+
+   cs_settings = realloc(cs_settings, sizeof(clientserver_settings_t));
+   memset(cs_settings, 0, sizeof(clientserver_settings_t));
+
+   cs_original_settings = realloc(
+      cs_original_settings, sizeof(clientserver_settings_t)
+   );
+   memset(cs_original_settings, 0, sizeof(clientserver_settings_t));
 
    section = json_object_object_get(cs_json, "resources");
    if(section == NULL)
-   {
       I_Error("Required config section 'resources' missing.\n");
-   }
 
    // CS_HandleResourcesSection(section);
 
    section = json_object_object_get(cs_json, "server");
-
    if(section == NULL)
-   {
       I_Error("Required config section 'server' missing.\n");
-   }
-
    CS_HandleServerSection(section);
 
    section = json_object_object_get(cs_json, "options");
-
    if(section == NULL)
-   {
       I_Error("Required config section 'options' missing.\n");
-   }
-
    CS_HandleOptionsSection(section);
 
    section = json_object_object_get(cs_json, "maps");
-
    if(section == NULL)
-   {
       I_Error("Required config section 'maps' missing.\n");
-   }
-
-   // CS_HandleMapsSection(section);
 }
 
 void CS_LoadWADs(void)
 {
    json_object *section;
+
+   printf("CS_LoadWADs: Loading WADs.\n");
    
    section = json_object_object_get(cs_json, "resources");
    if(section == NULL)
-   {
       I_Error("Required config section 'resources' missing.\n");
-   }
    CS_HandleResourcesSection(section);
 
    section = json_object_object_get(cs_json, "maps");
    if(section == NULL)
-   {
       I_Error("Required config section 'maps' missing.\n");
-   }
    CS_HandleMapsSection(section);
 }
 

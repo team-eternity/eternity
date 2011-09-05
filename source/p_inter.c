@@ -1218,11 +1218,14 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
    else
       return;
 
-   mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
-   mo->flags |= MF_DROPPED;    // special versions of items
+   if(serverside)
+   {
+      mo = P_SpawnMobj(target->x, target->y, ONFLOORZ, item);
+      mo->flags |= MF_DROPPED;    // special versions of items
 
-   if(CS_SERVER)
-      SV_BroadcastActorSpawned(mo);
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
+   }
 
    // EDF FIXME: problematic, needed work to begin with
 #if 0

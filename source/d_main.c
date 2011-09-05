@@ -2906,29 +2906,17 @@ static void D_DoomInit(void)
 
    // [CG] Check for c/s command-line args.
    if(M_CheckParm("-solo-net") && M_CheckParm("-csjoin"))
-   {
       I_Error("Cannot specify both -solo-net and -csjoin.\n");
-   }
    if(M_CheckParm("-solo-net") && M_CheckParm("-csserve"))
-   {
       I_Error("Cannot specify both -solo-net and -csserve.\n");
-   }
    if(M_CheckParm("-solo-net") && M_CheckParm("-csplaydemo"))
-   {
       I_Error("Cannot specify both -solo-net and -csplaydemo.\n");
-   }
    if(M_CheckParm("-csjoin") && M_CheckParm("-csserve"))
-   {
       I_Error("Cannot specify both -csjoin and -csserve.\n");
-   }
    if(M_CheckParm("-csjoin") && M_CheckParm("-csplaydemo"))
-   {
       I_Error("Cannot specify both -csjoin and -csplaydemo");
-   }
    if(M_CheckParm("-csserve") && M_CheckParm("-csplaydemo"))
-   {
       I_Error("Cannot specify both -csserve and -csplaydemo");
-   }
 
    if((p = M_CheckParm("-csjoin")) && p < myargc - 1)
    {
@@ -3080,9 +3068,8 @@ static void D_DoomInit(void)
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
    if(!CS_DEMO)
-   {
       IdentifyVersion();
-   }
+
    printf("\n"); // gap
 
    modifiedgame = false;
@@ -3623,12 +3610,11 @@ static void D_DoomInit(void)
    {
       if(!CS_DEMO)
          CS_LoadWADs();
+
       if(M_CheckParm("-csplaydemo") || M_CheckParm("-record"))
       {
          if(M_CheckParm("-csplaydemo") && M_CheckParm("-record"))
-         {
             I_Error("Cannot specify both -csplaydemo and -record.\n");
-         }
 
          if(CS_SERVER)
          {
@@ -3641,10 +3627,9 @@ static void D_DoomInit(void)
          if(M_CheckParm("-record"))
          {
             printf("CL_Init: Recording new c/s demo.\n");
+
             if(!CS_RecordDemo())
-            {
                I_Error("Error recording demo: %s\n", CS_GetDemoErrorMessage());
-            }
          }
          else if(p < myargc - 2)
          {
@@ -3652,24 +3637,20 @@ static void D_DoomInit(void)
             cs_demo_playback = true;
          }
          else
-         {
             I_Error("CL_Init: No demo file specified.\n");
-         }
       }
    }
    else
    {
       // sf: -blockmap option as a variable now
       if(M_CheckParm("-blockmap"))
-      {
          r_blockmap = true;
-      }
 
       // start the appropriate game based on parms
 
       // killough 12/98:
       // Support -loadgame with -record and reimplement -recordfrom.
-      if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
+      if((slot = M_CheckParm("-recordfrom")) && (p = slot + 2) < myargc)
       {
          G_RecordDemo(myargv[p]);
       }

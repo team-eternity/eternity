@@ -177,6 +177,9 @@
 **     This time limit is configurable using "spectator_time_limit".  This does
 **     not affect spectators who are not yet eligible to play.
 **
+** The value for the "game" configuration option corresponds to a game folder
+** found in the "base" folder, i.e. "plutonia", "heretic", "doom2", etc.
+**
 ** Example:
 */
 
@@ -187,6 +190,7 @@
         "max_admin_clients": 2,
         "max_player_clients": 30,
         "spectator_time_limit": 30,
+        "game": "doom2",
         "game_type": "duel",
         "number_of_teams": 0,
         "minimum_buffer_size": 2,

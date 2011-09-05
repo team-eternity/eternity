@@ -218,9 +218,7 @@ void CL_Init(char *url)
    // [CG] cURL supports millions of protocols, nonetheless, make sure that
    //      the passed URI is supported (and actually a URI).
    if(!CS_CheckURI(cs_server_url))
-   {
       I_Error("Invalid URI [%s], exiting.\n", cs_server_url);
-   }
 
    cs_client_password_file = calloc(
       strlen(basepath) + strlen(PASSWORD_FILENAME) + 2, sizeof(char)
@@ -261,7 +259,6 @@ void CL_Init(char *url)
    CL_LoadConfig();
    CL_SpecInit();
    CL_InitNetworkMessageHash();
-
 }
 
 void CL_InitPlayDemoMode(void)
