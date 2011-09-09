@@ -2638,15 +2638,12 @@ void SV_BroadcastClientStatus(int playernum)
    broadcast_packet(&status_message, sizeof(nm_clientstatus_t));
 }
 
-void SV_RunDemoTics(void)
-{
-}
+void SV_RunDemoTics(void) {}
 
 void SV_TryRunTics(void)
 {
-   unsigned int i;
-   int realtics, current_tic;
-   static int last_tic = 0;
+   uint32_t i, realtics, current_tic;
+   static uint32_t last_tic = 0;
    cs_cmd_t command;
 
    current_tic = I_GetTime();
@@ -2658,40 +2655,33 @@ void SV_TryRunTics(void)
    C_RunBuffers();
    V_FPSTicker();
 
+   // [CG] Nothing to do.
    if(realtics < 1)
-   {
-      // [CG] Nothing to do.
       return;
-   }
 
    while(realtics--)
    {
       if(CS_HEADLESS)
-      {
          SV_ConsoleTicker();
-      }
-      else
+
+      if(!CS_HEADLESS)
       {
          MN_Ticker();
          C_Ticker();
       }
 
+      // [CG] If a player we're spectating becomes a spectator, be sure to
+      //      switch displayplayer back.
       if(displayplayer != consoleplayer && clients[displayplayer].spectating)
-      {
-         // [CG] If a player we're spectating becomes a spectator, be sure to
-         //      switch displayplayer back.
          CS_SetDisplayPlayer(consoleplayer);
-      }
 
       SV_MasterUpdate();
 
+      // [CG] If the console is active, then store/use/send a blank command.
       if(consoleactive)
-      {
-         // [CG] If the console is active, then store/use/send a blank
-         //      command.
          memset(&players[consoleplayer].cmd, 0, sizeof(ticcmd_t));
-      }
-      else
+
+      if(!consoleactive)
       {
          G_BuildTiccmd(&players[consoleplayer].cmd);
          if(cs_demo_recording)
@@ -2752,12 +2742,13 @@ void SV_TryRunTics(void)
             sv_should_send_new_map = false;
          }
       }
+
       SV_BroadcastTICFinished();
       sv_world_index++;
       gametic++;
    }
 
-   do
+   while(true)
    {
       if(!CS_HEADLESS)
       {
@@ -2765,7 +2756,17 @@ void SV_TryRunTics(void)
          D_ProcessEvents();
       }
       CS_ReadFromNetwork();
-   } while(I_GetTime() <= current_tic);
+
+      // [CG] Check if we should break out of this busy loop.
+      current_tic = I_GetTime();
+      if(current_tic != last_tic)
+      {
+         // [CG] Handle SDL's ticker wrapping here.
+         if(current_tic < last_tic)
+            last_tic = current_tic;
+         break;
+      }
+   }
 }
 
 void SV_HandleMessage(char *data, size_t data_length, int playernum)

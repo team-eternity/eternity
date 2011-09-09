@@ -43,8 +43,6 @@ static void set_error_code(void)
    fs_error_code = GetLastError();
 #else
    fs_error_code = errno;
-   // [CG] strerror() doesn't allocate a string, so there's no need to free
-   //      error_message.
 #endif
 }
 
@@ -53,23 +51,17 @@ static int remover(const char *path, const struct stat *stat_result,
                    int flags, struct FTW *walker)
 {
    if(flags == FTW_DNR || flags == FTW_NS)
-   {
       errno = EACCES;
-   }
 
    if(flags == FTW_D || flags == FTW_DP)
    {
       if(rmdir((char *)path) == -1)
-      {
          return -1;
-      }
    }
    else if(flags == FTW_F || flags == FTW_SL)
    {
       if(unlink((char *)path) == -1)
-      {
          return -1;
-      }
    }
 
    return 0;
@@ -86,13 +78,9 @@ char* M_GetFileSystemErrorMessage(void)
    if(should_free)
    {
       if(error_message_buffer != 0)
-      {
          LocalFree(error_message_buffer);
-      }
       if(error_message != 0)
-      {
          LocalFree(error_message);
-      }
       should_free = false;
    }
 #endif
@@ -123,15 +111,6 @@ char* M_GetFileSystemErrorMessage(void)
       fs_error_code,
       error_message_buffer
    );
-   /*
-   StringCchPrintf(
-      (LPTSTR)error_message,
-      LocalSize(error_message) / sizeof(TCHAR),
-      TEXT("error %d: %s"),
-      fs_error_code,
-      error_message_buffer
-   );
-   */
    should_free = true;
    return (char *)error_message;
 #else
@@ -144,9 +123,7 @@ boolean M_PathExists(char *path)
    struct stat stat_result;
 
    if(stat(path, &stat_result) != -1)
-   {
       return true;
-   }
    return false;
 }
 
@@ -155,14 +132,11 @@ boolean M_IsFile(char *path)
    struct stat stat_result;
 
    if(stat(path, &stat_result) == -1)
-   {
       return false;
-   }
 
    if(stat_result.st_mode & S_IFREG)
-   {
       return true;
-   }
+
    return false;
 }
 
@@ -171,14 +145,10 @@ boolean M_IsFolder(char *path)
    struct stat stat_result;
 
    if(stat(path, &stat_result) == -1)
-   {
       return false;
-   }
 
    if(stat_result.st_mode & S_IFDIR)
-   {
       return true;
-   }
 
    return false;
 }
@@ -192,27 +162,19 @@ boolean M_IsAbsolutePath(char *path)
    {
       // [CG] Normal C: type path.
       if(strncmp(path + 1, ":\\", 2) == 0)
-      {
          return true;
-      }
 
       // [CG] UNC path.
       if(strncmp(path, "\\\\", 2) == 0)
-      {
          return true;
-      }
 
       // [CG] Long UNC path.
       if(strncmp(path, "\\\\?\\", 4) == 0)
-      {
          return true;
-      }
    }
 #else
    if(path_size && strncmp(path, "/", 1) == 0)
-   {
       return true;
-   }
 #endif
    return false;
 }
@@ -333,11 +295,10 @@ boolean M_DeleteFolderAndContents(char *path)
 
    while(FindNextFile(folder_handle, &fdata))
    {
+      // [CG] Skip the "previous folder" entry.
       if(strncmp(fdata.cFileName, "..", 2))
-      {
-         // [CG] Skip the "previous folder" entry.
          continue;
-      }
+
       entry_length = strlen(fdata.cFileName);
       entry_path = realloc(entry_path, path_length + entry_length + 1);
       memset(entry_path, 0, path_length + entry_length + 1);
@@ -345,11 +306,9 @@ boolean M_DeleteFolderAndContents(char *path)
       strncat(entry_path, fdata.cFileName, entry_length);
       if(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
+         // [CG] M_DeleteFolderAndContents set an error, so quit.
          if(!M_DeleteFolderAndContents(path))
-         {
-            // [CG] M_DeleteFolderAndContents set an error, so quit.
             return false;
-         };
       }
       else if(!DeleteFile(entry_path))
       {
@@ -364,9 +323,7 @@ boolean M_DeleteFolderAndContents(char *path)
    if(GetLastError() == ERROR_NO_MORE_FILES)
    {
       if(!M_DeleteFolder(path))
-      {
          return false;
-      }
    }
    else
    {
@@ -392,16 +349,13 @@ char* M_GetCurrentFolder(void)
    buf_size = GetCurrentDirectory(0, buf);
 
    if(buf_size == 0)
-   {
       return NULL;
-   }
 
    buf = (LPTSTR)calloc(buf_size, sizeof(TCHAR));
    buf_size = GetCurrentDirectory(buf_size, buf);
    if(buf_size == 0)
-   {
       return NULL;
-   }
+
    return buf;
 #else
    long size;
@@ -410,9 +364,8 @@ char* M_GetCurrentFolder(void)
    size = pathconf(".", _PC_PATH_MAX);
 
    if((buf = (char *)malloc((size_t)size)) == NULL)
-   {
       return NULL;
-   }
+
    return getcwd(buf, (size_t)size);
 #endif
 }
@@ -421,14 +374,10 @@ boolean M_SetCurrentFolder(char *path)
 {
 #ifdef WIN32
    if(!SetCurrentDirectory(path))
-   {
       return false;
-   }
 #else
    if(chdir((const char*)path) == -1)
-   {
       return false;
-   }
 #endif
    return true;
 }

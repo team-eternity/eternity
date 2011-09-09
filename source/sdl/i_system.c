@@ -62,7 +62,7 @@ ticcmd_t *I_BaseTiccmd(void)
 // SoM 3/13/2002: SDL time. 1000 ticks per second.
 void I_WaitVBL(int count)
 {
-   SDL_Delay((count*500)/TICRATE);
+   SDL_Delay((count * 500) / TICRATE);
 }
 
 
@@ -71,16 +71,18 @@ void I_WaitVBL(int count)
 //
 // I_GetTime
 //
-static Uint32 basetime=0;
+static uint32_t basetime = 0;
 
-int  I_GetTime_RealTime (void)
+int I_GetTime_RealTime(void)
 {
-   Uint32        ticks;
+   uint32_t ticks = SDL_GetTicks(); // milliseconds since SDL initialization
+
+   // [CG] If this wraps (and it will) the math will be all messed up, so
+   //      reset basetime in that case.
+   if(ticks < basetime)
+      basetime = ticks;
    
-   // milliseconds since SDL initialization
-   ticks = SDL_GetTicks();
-   
-   return ((ticks - basetime)*TICRATE)/1000;
+   return ((ticks - basetime) * TICRATE) / 1000;
 }
 
 //
