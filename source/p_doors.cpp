@@ -401,7 +401,7 @@ void P_PrintDoor(vldoor_t *door)
 
 vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
 {
-   vldoor_t *door = Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0);
+   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
 
    P_AddThinker(&door->thinker);
    sec->ceilingdata = door; //jff 2/22/98
@@ -473,7 +473,7 @@ vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
 
 vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec)
 {
-   vldoor_t *door = Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0);
+   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
 
    P_AddThinker (&door->thinker);
    sec->ceilingdata = door; //jff 2/22/98
@@ -551,7 +551,7 @@ vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec)
 
 vldoor_t* P_SpawnDoorCloseIn30(sector_t* sec)
 {
-   vldoor_t *door = Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0);
+   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
 
    P_AddThinker(&door->thinker);
 
@@ -588,7 +588,7 @@ vldoor_t* P_SpawnDoorCloseIn30(sector_t* sec)
 
 vldoor_t* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   vldoor_t* door = Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0);
+   vldoor_t* door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
 
    P_AddThinker(&door->thinker);
 

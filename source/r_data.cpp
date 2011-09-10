@@ -85,13 +85,13 @@ void R_InitSpriteLumps(void)
    // clean up malloc-ing to use sizeof
    
    spritewidth = 
-      Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0);
+      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0));
    spriteoffset = 
-      Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0);
+      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0));
    spritetopoffset =
-      Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0);
+      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0));
    spriteheight = 
-      Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0);
+      (float *)(Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0));
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -99,7 +99,7 @@ void R_InitSpriteLumps(void)
       if(!(i&127))            // killough
          V_LoadingIncrease();
       
-      patch = W_CacheLumpNum(firstspritelump + i, PU_CACHE);
+      patch = (patch_t *)(W_CacheLumpNum(firstspritelump + i, PU_CACHE));
 
       spritewidth[i]     = SwapShort(patch->width) << FRACBITS;
       spriteoffset[i]    = SwapShort(patch->leftoffset) << FRACBITS;
@@ -123,12 +123,12 @@ void R_InitColormaps(void)
    firstcolormaplump = W_GetNumForName("C_START");
    lastcolormaplump  = W_GetNumForName("C_END");
    numcolormaps      = lastcolormaplump - firstcolormaplump;
-   colormaps = Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0);
+   colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
    
-   colormaps[0] = W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER);
+   colormaps[0] = (lighttable_t *)(W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
    
    for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = W_CacheLumpNum(i + firstcolormaplump, PU_RENDERER);
+      colormaps[i] = (lighttable_t *)(W_CacheLumpNum(i + firstcolormaplump, PU_RENDERER));
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -205,11 +205,11 @@ void R_InitTranMap(int progress)
    // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
-      main_tranmap = W_CacheLumpNum(lump, PU_RENDERER);   // killough 4/11/98
+      main_tranmap = (byte *)(W_CacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
    else
    {
       // Compose a default transparent filter map based on PLAYPAL.
-      unsigned char *playpal = W_CacheLumpName("PLAYPAL", PU_STATIC);
+      unsigned char *playpal = (unsigned char *)W_CacheLumpName("PLAYPAL", PU_STATIC);
       
       char *fname = NULL;
       unsigned int fnamesize;
@@ -226,7 +226,7 @@ void R_InitTranMap(int progress)
       
       cachefp = fopen(fname, "r+b");
 
-      main_tranmap = Z_Malloc(256*256, PU_RENDERER, 0);  // killough 4/11/98
+      main_tranmap = (byte *)(Z_Malloc(256*256, PU_RENDERER, 0));  // killough 4/11/98
       
       // Use cached translucency filter if it's available
 
@@ -400,7 +400,7 @@ void R_PrecacheLevel(void)
       return;
 
    // SoM: Hey, you never know, it could happen....
-   hitlist = malloc(texturecount > numsprites ? texturecount : numsprites);
+   hitlist = (byte *)(malloc(texturecount > numsprites ? texturecount : numsprites));
 
    // Precache textures.
    memset(hitlist, 0, texturecount);

@@ -401,9 +401,9 @@ static void AM_addMark(void)
    // remove limit on automap marks
    
    if(markpointnum >= markpointnum_max)
-      markpoints = realloc(markpoints,
-                           (markpointnum_max = markpointnum_max ? 
-                            markpointnum_max*2 : 16) * sizeof(*markpoints));
+      markpoints = (mpoint_t *)(realloc(markpoints,
+                                 (markpointnum_max = markpointnum_max ? 
+                                  markpointnum_max*2 : 16) * sizeof(*markpoints)));
 
    markpoints[markpointnum].x = m_x + m_w/2;
    markpoints[markpointnum].y = m_y + m_h/2;
@@ -600,19 +600,19 @@ static void AM_loadPics(void)
    for(i = 0; i < 10; ++i)
    {
       sprintf(namebuf, GameModeInfo->markNumFmt, i);
-      marknums[i] = W_CacheLumpName(namebuf, PU_STATIC);
+      marknums[i] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
    }
 
    // haleyjd 12/22/02: automap background support (raw format)
    if((lumpnum = W_CheckNumForName("AUTOPAGE")) != -1)
    {
       int size = W_LumpLength(lumpnum);
-      byte *autopage = W_CacheLumpNum(lumpnum, PU_STATIC);
+      byte *autopage = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
       int height = size / SCREENWIDTH;
 
       // allocate backdrop
       if(!am_backdrop)
-         am_backdrop = Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, NULL);
+         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, NULL));
 
       // must be at least 100 tall
       if(height < 100 || height > SCREENHEIGHT)

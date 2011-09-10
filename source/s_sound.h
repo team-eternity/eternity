@@ -63,14 +63,14 @@ void S_Init(int sfxVolume, int musicVolume);
 void S_Start(void);
 
 // haleyjd 05/30/06: sound attenuation types
-typedef enum
+enum
 {
    ATTN_NORMAL, // normal: use the data stored in sfxinfo_t
    ATTN_IDLE,   // idle: use DOOM's old values all the time
    ATTN_STATIC, // static: fade out quickly
    ATTN_NONE,   // none: Moooo!
    ATTN_NUM     // number of types
-} soundattn_e;
+};
 
 //
 // Start sound for thing at <origin>
@@ -79,16 +79,16 @@ typedef enum
 void S_StartSound(mobj_t *origin, int sound_id);
 void S_StartSoundName(mobj_t *origin, const char *name);
 void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation,
-                    boolean loop, schannel_e subchannel);
+                    int volumeScale, int attenuation,
+                    boolean loop, int subchannel);
 void S_StartSoundAtVolume(mobj_t *origin, int sfx_id, 
-                          int volume, soundattn_e attn, schannel_e subchannel);
+                          int volume, int attn, int subchannel);
 void S_StartSoundNameAtVolume(mobj_t *origin, const char *name, 
-                              int volume, soundattn_e attn,
-                              schannel_e subchannel);
+                              int volume, int attn,
+                              int subchannel);
 
 // Stop sound for thing at <origin>
-void S_StopSound(const mobj_t *origin, schannel_e subchannel);
+void S_StopSound(const mobj_t *origin, int subchannel);
 
 // Start music using <music_id> from sounds.h
 void S_StartMusic(int music_id);

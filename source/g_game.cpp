@@ -103,10 +103,9 @@
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
 
-// [CG] Un-static'd.
-size_t   savegamesize = SAVEGAMESIZE; // killough
+size_t          savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
-boolean  netdemo;
+boolean         netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
@@ -715,10 +714,8 @@ void G_DoLoadLevel(void)
    }
 
    // [CG] Initialize sector positions.
-   if(CS_CLIENT)
+   if(clientserver)
       CL_SpecInit();
-   else if(CS_SERVER)
-      CS_SpecInit();
 
    if(gamestate != GS_LEVEL)       // level load error
    {
@@ -811,12 +808,8 @@ boolean G_Responder(event_t* ev)
    {
       if(clientserver)
       {
-         if(CS_ChatResponder(ev) ||
-            ST_Responder(ev)     ||
-            AM_Responder(ev))
-         {
+         if(CS_ChatResponder(ev) || ST_Responder(ev) || AM_Responder(ev))
             return true;
-         }
       }
       else
       {
@@ -831,9 +824,7 @@ boolean G_Responder(event_t* ev)
    else if(clientserver && gamestate == GS_INTERMISSION)
    {
       if(CS_ChatResponder(ev))
-      {
          return true;
-      }
    }
 
    if(G_KeyResponder(ev, kac_cmd))
@@ -947,6 +938,8 @@ boolean G_Responder(event_t* ev)
 // of players, the most you'll ever need in a demo
 // or savegame. This is used to prevent problems, in
 // case more players in a game are supported later.
+
+// [CG] FIXME: This is bunk.
 
 #ifdef CLIENTSERVER
 #define MIN_MAXPLAYERS 256
@@ -1080,7 +1073,7 @@ static void G_DoPlayDemo(void)
    M_ExtractFileBase(defdemoname, basename);         // killough
 
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = W_CheckNumForNameNSG(basename, ns_demos)) < 0)
+   if((lumpnum = W_CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -1093,7 +1086,7 @@ static void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = W_CacheLumpNum(lumpnum, PU_STATIC); // killough
+   demobuffer = demo_p = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC)); // killough
 
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1287,6 +1280,7 @@ static void G_DoPlayDemo(void)
       for(i = 0; i < MAXPLAYERS; ++i)
          playeringame[i] = *demo_p++;
 
+      // [CG] FIXME: This is bunk.
       // [CG] Make sure this is a positive number.
       if (MIN_MAXPLAYERS > MAXPLAYERS)
          demo_p += MIN_MAXPLAYERS - MAXPLAYERS;
@@ -1484,7 +1478,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = realloc(demobuffer, maxdemosize);
+      demobuffer = (byte *)(realloc(demobuffer, maxdemosize));
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
@@ -1585,18 +1579,14 @@ void G_DoCompleted(boolean enter_intermission)
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i])
-      {
          G_PlayerFinishLevel(i);        // take away cards and stuff
-      }
    }
 
    // clear hubs now
    P_ClearHubs();
 
    if(automapactive)
-   {
       AM_Stop();
-   }
 
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
@@ -1856,7 +1846,7 @@ void CheckSaveGame(size_t size)
    {
       // haleyjd: deobfuscated
       savegamesize += (size + 1023) & ~1023;
-      savebuffer = realloc(savebuffer, savegamesize);
+      savebuffer = (byte *)(realloc(savebuffer, savegamesize));
       save_p = savebuffer + pos;
    }
 }
@@ -1895,7 +1885,7 @@ static uint64_t G_Signature(waddir_t *dir)
    int lump, i;
 
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForNameInDir(dir, gamemapname, ns_global);
+   lump = W_CheckNumForNameInDir(dir, gamemapname, lumpinfo_t::ns_global);
 
    if(lump != -1 && (i = lump + 10) < dir->numlumps)
    {
@@ -1919,7 +1909,7 @@ void G_SaveCurrentLevel(char *filename, char *description)
    char name2[VERSIONSIZE];
    const char *fn;
 
-   save_p = savebuffer = malloc(savegamesize);
+   save_p = savebuffer = (byte *)(malloc(savegamesize));
 
    // haleyjd: somebody got really lax with checking the savegame
    // buffer size on these first few writes -- granted that the
@@ -2194,6 +2184,7 @@ static void G_DoLoadGame(void)
    for(i = 0; i < MAXPLAYERS; ++i)
       playeringame[i] = *save_p++;
 
+   // [CG] FIXME: This is bunk.
    // [CG] This is supposed to ensure a minimum amount of space for players in
    //      savegames, but if MIN_MAXPLAYERS is less than MAXPLAYERS (and for
    //      c/s it is), this will move save_p back and destroy the buffer.  In
@@ -2394,9 +2385,7 @@ void G_Ticker(void)
             G_DoCompleted(true);
          }
          else
-         {
             gameaction = ga_nothing;
-         }
          break;
       case ga_victory:
          F_StartFinale();
@@ -2412,13 +2401,9 @@ void G_Ticker(void)
          break;
       case ga_disconnect:
          if(CS_CLIENT)
-         {
             CL_Disconnect();
-         }
          else if(CS_SERVER)
-         {
             I_Error("Disconnected.\n");
-         }
          break;
       case ga_screenshot:
          M_ScreenShot();
@@ -2563,13 +2548,9 @@ void G_Ticker(void)
          {
             // [CG] Spectators can only press the USE button.
             if((cmd->buttons & BT_USE) == BT_USE)
-            {
                cmd->buttons = BT_USE;
-            }
             else
-            {
                cmd->buttons = 0;
-            }
          }
       }
    }
@@ -2712,7 +2693,9 @@ void G_FlushCorpse(int playernum)
 
       if(queuesize < (unsigned int)bodyquesize)
       {
-         bodyque = realloc(bodyque, bodyquesize * sizeof(*bodyque));
+         bodyque = (mobj_t **)(realloc(
+            bodyque, bodyquesize * sizeof(*bodyque)
+         ));
          memset(
             bodyque + queuesize,
             0,
@@ -3501,7 +3484,7 @@ void G_RecordDemo(char *name)
 
    if(demoname)
       free(demoname);
-   demoname = malloc(strlen(name) + 8);
+   demoname = (char *)(malloc(strlen(name) + 8));
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
 
@@ -3513,7 +3496,7 @@ void G_RecordDemo(char *name)
    if(maxdemosize < 0x20000)  // killough
       maxdemosize = 0x20000;
 
-   demobuffer = malloc(maxdemosize); // killough
+   demobuffer = (byte *)(malloc(maxdemosize)); // killough
 
    demorecording = true;
 }

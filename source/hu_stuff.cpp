@@ -568,7 +568,7 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
       return;
 
    // be sure the patch is loaded
-   pw->patch = W_CacheLumpName(pw->patchname, PU_CACHE);
+   pw->patch = (patch_t *)W_CacheLumpName(pw->patchname, PU_CACHE);
 
    V_DrawPatchTL(pw->x, pw->y, &vbscreen, pw->patch, pw->color, pw->tl_level);
 }
@@ -672,7 +672,7 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
    strncpy(newpw->patchname, patch, 9);
 
    // pre-cache patch -- haleyjd 06/15/06: use PU_CACHE
-   newpw->patch = W_CacheLumpName(patch, PU_CACHE);
+   newpw->patch = (patch_t *)W_CacheLumpName(patch, PU_CACHE);
 }
 
 //
@@ -727,7 +727,7 @@ static void HU_InitWarnings(void)
    HU_AddWidgetToHash((hu_widget_t *)&opensocket_widget);
    
    strncpy(opensocket_widget.patchname, "OPENSOCK", 9);
-   opensocket_widget.patch = W_CacheLumpName("OPENSOCK", PU_CACHE);
+   opensocket_widget.patch = (patch_t *)W_CacheLumpName("OPENSOCK", PU_CACHE);
    opensocket_widget.color = NULL;
    opensocket_widget.tl_level = FRACUNIT;
    opensocket_widget.x = 20;
@@ -1163,7 +1163,7 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    if(clientserver && (dmflags2 & dmf_allow_crosshair) == 0)
       return;
 
-   patch = W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE);
+   patch = (patch_t *)(W_CacheLumpNum(crosshairs[crosshairnum - 1], PU_CACHE));
 
    // where to draw??
 
@@ -1945,7 +1945,7 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
       strncpy(pw->patchname, patch, 9);
 
       // pre-cache the patch graphic
-      pw->patch = W_CacheLumpName(patch, PU_CACHE);
+      pw->patch = (patch_t *)W_CacheLumpName(patch, PU_CACHE);
    }
 
    free(name);
@@ -2039,7 +2039,7 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
 
    if((widget = HU_WidgetForName(name)) && widget->type == WIDGET_TEXT)
    {
-      char *tempbuf = malloc(size+1);
+      char *tempbuf = (char *)(malloc(size+1));
       
       tw = (hu_textwidget_t *)widget;
 

@@ -407,13 +407,13 @@ void E_NewWadSound(const char *name)
    if(!sfx)
    {
       // create a new one and hook into hashchain
-      sfx = calloc(1, sizeof(sfxinfo_t));
+      sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
       sfx->prefix = false;  // do not add another DS prefix      
       
-      sfx->singularity = sg_none;
+      sfx->singularity = sfxinfo_t::sg_none;
       sfx->priority = 64;
       sfx->link = NULL;
       sfx->alias = NULL;
@@ -546,7 +546,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       if(def && explicitLumpName && cfg_size(section, ITEM_SND_PREFIX) == 0)
          sfx->prefix = false;
       else
-         sfx->prefix = cfg_getbool(section, ITEM_SND_PREFIX);
+         sfx->prefix = (cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true);
    }
 
    // process the singularity
@@ -604,7 +604,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       sfx->numrandomsounds = tempint;
 
       sfx->randomsounds = 
-         (sfxinfo_t **)malloc(sfx->numrandomsounds * sizeof(sfxinfo_t *));
+         (sfxinfo_t **)(malloc(sfx->numrandomsounds * sizeof(sfxinfo_t *)));
 
       for(i = 0; i < sfx->numrandomsounds; ++i)
          sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
@@ -670,7 +670,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       sfx->pitch_type = E_StrToNumLinear(pitchvars, NUM_PITCHVARS, s);
 
       if(sfx->pitch_type == NUM_PITCHVARS)
-         sfx->pitch_type = pitch_none;
+         sfx->pitch_type = sfxinfo_t::pitch_none;
    }
 
    // haleyjd 06/12/08: process subchannel
@@ -1371,7 +1371,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // used by the compiled sound sequence commands
    cmdalloc = allocused * sizeof(seqcmd_t);
 
-   newSeq->commands = malloc(cmdalloc);
+   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
@@ -1718,7 +1718,7 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    // if one already exists, use it, else create a new one
    if(!(newAmb = E_AmbienceForNum(index)))
    {
-      newAmb = malloc(sizeof(EAmbience_t));
+      newAmb = (EAmbience_t *)(malloc(sizeof(EAmbience_t)));
 
       // add to hash table
       newAmb->index = index;

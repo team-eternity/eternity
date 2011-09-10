@@ -139,7 +139,7 @@ SmallContext_t *SM_CreateChildContext(SmallContext_t *parent,
 
    totalSize = dataSize + sthpSize;
 
-   data = malloc(totalSize);
+   data = (byte *)(malloc(totalSize));
 
    if(amx_Clone(&child->smallAMX, &parent->smallAMX, data) != AMX_ERR_NONE)
       I_Error("SM_CreateChildContext: internal Small error\n");
@@ -268,7 +268,7 @@ static int SM_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
    amx_Align32((uint32_t *)(&hdr.size));
 
-   lump = W_CacheLumpNum(lumpnum, PU_CACHE);
+   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_CACHE));
    memcpy(memblock, lump, (size_t)(hdr.size));
 
    return amx_Init(amx, memblock);
@@ -422,7 +422,7 @@ int SM_GetSmallString(AMX *amx, char **dest, cell addr)
       return err;
 
    amx_StrLen(cellstr, &len);
-   *dest = Z_Malloc(len + 1, PU_STATIC, NULL);
+   *dest = (char *)(Z_Malloc(len + 1, PU_STATIC, NULL));
    amx_GetString(*dest, cellstr, 0);
 
    return AMX_ERR_NONE;
@@ -773,7 +773,7 @@ int SM_AddCallback(char *scrname, sc_vm_e vm, int waittype,
    int err, scnum;
 
    // check wait type for validity
-   if(waittype < 0 || waittype >= wt_numtypes)
+   if(waittype < 0 || waittype >= sc_callback_t::wt_numtypes)
    {
       return (SC_ERR_BADWAIT | SC_ERR_MASK);
    }
@@ -797,7 +797,7 @@ int SM_AddCallback(char *scrname, sc_vm_e vm, int waittype,
       return err;
    }
    
-   newCallback = Z_Malloc(sizeof(sc_callback_t), PU_STATIC, 0);
+   newCallback = (sc_callback_t *)(Z_Malloc(sizeof(sc_callback_t), PU_STATIC, 0));
 
    newCallback->vm = vm;
    newCallback->scriptNum = scnum;
@@ -864,11 +864,11 @@ static boolean SM_WaitFinished(sc_callback_t *callback)
    switch(callback->wait_type)
    {
    default:
-   case wt_none:
+   case sc_callback_t::wt_none:
       return true;
-   case wt_delay:
+   case sc_callback_t::wt_delay:
       return (--callback->wait_data <= 0);
-   case wt_tagwait:
+   case sc_callback_t::wt_tagwait:
       {
          int secnum = -1;
          
@@ -977,7 +977,7 @@ CONSOLE_COMMAND(sm_running, 0)
 CONSOLE_COMMAND(sm_execv, cf_notnet)
 {
    SmallContext_t *context;
-   sc_vm_e vmNum;
+   int vmNum;
    AMX *vm;
 
    if(Console.argc < 2)
@@ -1032,7 +1032,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    SmallContext_t *context;
    AMX *vm;
    cell *params;
-   sc_vm_e vmNum;
+   int vmNum;
    int i, argcount;
 
    if(Console.argc < 3)
@@ -1068,7 +1068,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    argcount = Console.argc - 2;
 
-   params = Z_Malloc(argcount * sizeof(cell), PU_STATIC, NULL);
+   params = (cell *)(Z_Malloc(argcount * sizeof(cell), PU_STATIC, NULL));
 
    for(i = 2; i < Console.argc; i++)
    {
@@ -1278,7 +1278,7 @@ static cell exec_across(AMX *origAMX, cell *params, SmallContext_t *execContext)
    
    if(numparams > 0)
    {
-      scrparams = Z_Malloc(numparams * sizeof(cell), PU_STATIC, NULL);
+      scrparams = (cell *)(Z_Malloc(numparams * sizeof(cell), PU_STATIC, NULL));
       memcpy(scrparams, params + 1, numparams * sizeof(cell));
 
       retval = SM_ExecScriptNameI(&execContext->smallAMX, scrname, 

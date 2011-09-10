@@ -273,7 +273,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
       lump = w_GlobalDir.lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
-         lump->li_namespace == ns_global)
+         lump->li_namespace == lumpinfo_t::ns_global)
       {
          // reset the parser state         
          readtype = RT_OTHER;
@@ -337,9 +337,9 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
    if(numPrototypes >= numPrototypesAlloc)
    {
       numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
-
-      levelInfoPrototypes = realloc(levelInfoPrototypes,
-                                    numPrototypesAlloc * sizeof(LevelInfoProto_t *));
+      levelInfoPrototypes = 
+         (LevelInfoProto_t **)(realloc(levelInfoPrototypes,
+                                       numPrototypesAlloc * sizeof(LevelInfoProto_t *)));
    }
 
    // add it to the pointer array
@@ -494,7 +494,7 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
       lump = dir->lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
-         lump->li_namespace == ns_global)
+         lump->li_namespace == lumpinfo_t::ns_global)
       {
          // reset parser state
          readtype = RT_OTHER;
@@ -528,7 +528,7 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
-   lump = Z_Malloc(size, PU_STATIC, NULL);
+   lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
    W_ReadLumpInDir(dir, lumpnum, lump);
 
    // terminate lump data with a line break and null character;
@@ -1074,7 +1074,7 @@ static void P_LoadInterTextLump(void)
       lumpNum = W_GetNumForName(LevelInfo.interTextLump);
       lumpLen = W_LumpLength(lumpNum);
       
-      str = Z_Malloc(lumpLen + 1, PU_LEVEL, 0);
+      str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
       W_ReadLump(lumpNum, str);
       
@@ -1504,7 +1504,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    if(nummetainfo >= nummetainfoalloc)
    {
       nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-      metainfo = realloc(metainfo, nummetainfoalloc * sizeof(metainfo_t));
+      metainfo = (metainfo_t *)(realloc(metainfo, nummetainfoalloc * sizeof(metainfo_t)));
    }
 
    mi = &metainfo[nummetainfo];

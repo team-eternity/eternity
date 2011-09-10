@@ -480,7 +480,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
    }
 
    // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(W_CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), ns_demos) < 0)
+   if(W_CheckNumForNameNSG(QStrConstPtr(&Console.argv[0]), lumpinfo_t::ns_demos) < 0)
    {
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]);
       return;
@@ -914,7 +914,7 @@ void G_AddChatMacros(void)
       memset(tempstr, 0, 32);
       
       // create the variable first
-      variable = malloc(sizeof(*variable));
+      variable = (variable_t *)(malloc(sizeof(*variable)));
       variable->variable = &chat_macros[i];
       variable->v_default = NULL;
       variable->type = vt_string;      // string value
@@ -923,7 +923,7 @@ void G_AddChatMacros(void)
       variable->defines = NULL;
       
       // now the command
-      command = malloc(sizeof(*command));
+      command = (command_t *)(malloc(sizeof(*command)));
       
       sprintf(tempstr, "chatmacro%i", i);
       command->name = strdup(tempstr);
@@ -1000,7 +1000,7 @@ void G_AddWeapPrefs(void)
       memset(tempstr, 0, 16);
       
       // create the variable first
-      variable = malloc(sizeof(*variable));
+      variable = (variable_t *)(malloc(sizeof(*variable)));
       variable->variable = &weapon_preferences[0][i];
       variable->v_default = NULL;
       variable->type = vt_int;
@@ -1009,7 +1009,7 @@ void G_AddWeapPrefs(void)
       variable->defines = weapon_str;  // use weapon string defines
 
       // now the command
-      command = malloc(sizeof(*command));
+      command = (command_t *)(malloc(sizeof(*command)));
 
       sprintf(tempstr, "weappref_%i", i+1);
       command->name = strdup(tempstr);
@@ -1063,7 +1063,7 @@ void G_AddAutoloadFiles(void)
    for(i = 0; i < 6; ++i)
    {
       // create the variable first
-      variable = malloc(sizeof(*variable));
+      variable = (variable_t *)(malloc(sizeof(*variable)));
       variable->variable = autoload_ptrs[i];
       variable->v_default = NULL;
       variable->type = vt_string;
@@ -1072,7 +1072,7 @@ void G_AddAutoloadFiles(void)
       variable->defines = NULL;
       
       // now the command
-      command = malloc(sizeof(*command));
+      command = (command_t *)(malloc(sizeof(*command)));
       command->name = autoload_names[i];
       command->type = ct_variable;
       command->flags = cf_allowblank;
@@ -1138,7 +1138,7 @@ void G_AddCompat(void)
       char tempstr[32];
 
       // create the variable first
-      variable = malloc(sizeof(*variable));
+      variable = (variable_t *)(malloc(sizeof(*variable)));
       variable->variable = &comp[i];
       variable->v_default = &default_comp[i];
       variable->type = vt_int;      // string value
@@ -1147,7 +1147,7 @@ void G_AddCompat(void)
       variable->defines = yesno;
       
       // now the command
-      command = malloc(sizeof(*command));
+      command = (command_t *)(malloc(sizeof(*command)));
       
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
       command->name = strdup(tempstr);

@@ -167,7 +167,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = W_CacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = (animdef_t *)W_CacheLumpName("ANIMATED", PU_STATIC);
 
    lastanim = anims;
    for(i=0 ; animdefs[i].istexture != -1 ; i++)
@@ -178,7 +178,7 @@ void P_InitPicAnims(void)
       if(lastanim >= anims + maxanims)
       {
          size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
-         anims = realloc(anims, newmax*sizeof(*anims));   // killough
+         anims = (anim_t *)(realloc(anims, newmax*sizeof(*anims))); // killough
          lastanim = anims + maxanims;
          maxanims = newmax;
       }
@@ -3013,7 +3013,7 @@ void T_Scroll(scroll_t *s)
 static void Add_Scroller(int type, fixed_t dx, fixed_t dy,
                          int control, int affectee, int accel)
 {
-   scroll_t *s = Z_Calloc(1, sizeof *s, PU_LEVSPEC, 0);
+   scroll_t *s = (scroll_t *)(Z_Calloc(1, sizeof *s, PU_LEVSPEC, 0));
    s->thinker.function = T_Scroll;
    s->type = type;
    s->dx = dx;
@@ -3156,7 +3156,7 @@ void T_Friction(friction_t *f);
 //
 static void Add_Friction(int friction, int movefactor, int affectee)
 {
-   friction_t *f = Z_Malloc(sizeof *f, PU_LEVSPEC, 0);
+   friction_t *f = (friction_t *)(Z_Malloc(sizeof *f, PU_LEVSPEC, 0));
 
    f->thinker.function = T_Friction;
    f->friction = friction;
@@ -3391,7 +3391,7 @@ static void P_SpawnFriction(void)
 static void Add_Pusher(int type, int x_mag, int y_mag,
                        mobj_t *source, int affectee)
 {
-   pusher_t *p = Z_Calloc(1, sizeof *p, PU_LEVSPEC, 0);
+   pusher_t *p = (pusher_t *)(Z_Calloc(1, sizeof *p, PU_LEVSPEC, 0));
    
    p->thinker.function = T_Pusher;
    p->source = source;
@@ -3987,7 +3987,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)realloc(attached, sizeof(int) * maxattach);
+         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
       }
 
       memcpy(attached, cline->frontsector->f_attached, sizeof(int) * numattach);
@@ -4003,7 +4003,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)realloc(attached, sizeof(int) * maxattach);
+         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
       }
 
       // haleyjd: check for safety
@@ -4042,7 +4042,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
             {
               maxattach += 5;
 
-              attached = (int *)realloc(attached, sizeof(int) * maxattach);
+              attached = (int *)(realloc(attached, sizeof(int) * maxattach));
             }
 
             attached[numattach++] = line - lines;
@@ -4061,7 +4061,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
    if(ceiling)
    {
       cline->frontsector->c_numattached = numattach;
-      cline->frontsector->c_attached = Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0);
+      cline->frontsector->c_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
       memcpy(cline->frontsector->c_attached, attached, sizeof(int) * numattach);
 
       alist = cline->frontsector->c_attached;
@@ -4070,7 +4070,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
    else
    {
       cline->frontsector->f_numattached = numattach;
-      cline->frontsector->f_attached = Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0);
+      cline->frontsector->f_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
       memcpy(cline->frontsector->f_attached, attached, sizeof(int) * numattach);
 
       alist = cline->frontsector->f_attached;
@@ -4096,7 +4096,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)realloc(attached, sizeof(int) * maxattach);
+            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
          }
          attached[numattach++] = front;
       }
@@ -4113,7 +4113,7 @@ void P_AttachLines(line_t *cline, boolean ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)realloc(attached, sizeof(int) * maxattach);
+            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
          }
          attached[numattach++] = back;
       }
@@ -4123,13 +4123,13 @@ void P_AttachLines(line_t *cline, boolean ceiling)
    if(ceiling)
    {
       cline->frontsector->c_numsectors = numattach;
-      cline->frontsector->c_attsectors = Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0);
+      cline->frontsector->c_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
       memcpy(cline->frontsector->c_attsectors, attached, sizeof(int) * numattach);
    }
    else
    {
       cline->frontsector->f_numsectors = numattach;
-      cline->frontsector->f_attsectors = Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0);
+      cline->frontsector->f_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
       memcpy(cline->frontsector->f_attsectors, attached, sizeof(int) * numattach);
    }
 }
@@ -4226,7 +4226,7 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
       }
 
       // haleyjd: check for safety
@@ -4245,7 +4245,7 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
       }
 
       memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
@@ -4366,7 +4366,7 @@ void P_AttachSectors(line_t *line)
          if(numattached == maxattached)
          {
             maxattached += 5;
-            attached = (attachedsurface_t *)realloc(attached, sizeof(attachedsurface_t) * maxattached);
+            attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
          }
 
          attached[numattached].sector = slaveline->frontsector;
@@ -4379,13 +4379,15 @@ void P_AttachSectors(line_t *line)
    if(ceiling)
    {
       sector->c_asurfacecount = numattached;
-      sector->c_asurfaces = Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0);
+      sector->c_asurfaces = 
+         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
       memcpy(sector->c_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
    else
    {
       sector->f_asurfacecount = numattached;
-      sector->f_asurfaces = Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0);
+      sector->f_asurfaces = 
+         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
       memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
 }

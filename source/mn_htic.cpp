@@ -102,16 +102,16 @@ static void MN_HMainMenuDrawer(void)
    int skullIndex;
 
    // draw M_HTIC
-   V_DrawPatch(88, 0, &vbscreen, W_CacheLumpName("M_HTIC", PU_CACHE));
+   V_DrawPatch(88, 0, &vbscreen, (patch_t *)W_CacheLumpName("M_HTIC", PU_CACHE));
 
    // draw spinning skulls
    skullIndex = (menutime / 3) % NUM_HSKULL;
 
    V_DrawPatch(40, 10, &vbscreen,
-      W_CacheLumpNum(HSkullLumpNums[17-skullIndex], PU_CACHE));
+      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[17-skullIndex], PU_CACHE)));
 
    V_DrawPatch(232, 10, &vbscreen,
-      W_CacheLumpNum(HSkullLumpNums[skullIndex], PU_CACHE));
+      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[skullIndex], PU_CACHE)));
 }
 
 static menuitem_t mn_hepisode_items[] =
@@ -253,7 +253,7 @@ static void MN_HSaveDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
       y += 20;
    }
 }
@@ -318,7 +318,7 @@ static void MN_HLoadDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
       y += 20;
    }
 

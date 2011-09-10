@@ -39,7 +39,6 @@
 
 struct sfxinfo_s;
 
-typedef struct sfxinfo_s sfxinfo_t;
 typedef struct musicinfo_s musicinfo_t;
 
 // haleyjd 06/12/08: origin subchannels
@@ -57,7 +56,7 @@ typedef enum
    NUMSCHANNELS
 } schannel_e;
 
-struct sfxinfo_s
+struct sfxinfo_t
 {
    // haleyjd 04/13/08: numeric hash links
    mdllistitem_t numlinks;
@@ -77,8 +76,8 @@ struct sfxinfo_s
       sg_wpnup,
       sg_oof,
       sg_getpow
-   }
-   singularity;
+   };
+   int singularity;
 
    // Sfx priority
    int priority;
@@ -112,8 +111,8 @@ struct sfxinfo_s
       pitch_doomsaw, // variance for DOOM chainsaw
       pitch_heretic, // normal variance for Heretic
       pitch_hticamb, // variance for Heretic ambient sounds
-   }
-   pitch_type;
+   };
+   int pitch_type;
 
    // sound data
    void *data;
@@ -143,7 +142,7 @@ struct sfxinfo_s
    unsigned int alen;   // length of converted sound pointed to by data
 
    // haleyjd 06/12/08: origin subchannels - default = CHAN_AUTO.
-   schannel_e subchannel;
+   int subchannel;
 };
 
 //

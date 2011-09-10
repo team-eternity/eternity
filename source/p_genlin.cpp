@@ -102,7 +102,9 @@ manual_floor:
 floormove_t* P_SpawnParamFloor(line_t *line, sector_t *sector, floordata_t *fd)
 {
    size_t secnum = sector - sectors;
-   floormove_t *floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+   floormove_t *floor = (floormove_t *)(Z_Calloc(
+      1, sizeof(*floor), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker(&floor->thinker);
    sector->floordata = floor;
@@ -318,7 +320,9 @@ ceiling_t* P_SpawnParamCeiling(line_t *line, sector_t *sector,
 {
    fixed_t targheight = sector->ceilingheight;
    size_t secnum = sector - sectors;
-   ceiling_t *ceiling = Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0);
+   ceiling_t *ceiling = (ceiling_t *)(Z_Calloc(
+      1, sizeof(*ceiling), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker(&ceiling->thinker);
    sector->ceilingdata = ceiling; //jff 2/22/98
@@ -657,7 +661,7 @@ plat_t* P_SpawnGenPlatform(line_t *line, sector_t *sector)
    int Sped = (value & LiftSpeed) >> LiftSpeedShift;
    int Trig = (value & TriggerType) >> TriggerTypeShift;
 
-   plat_t *plat = Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0);
+   plat_t *plat = (plat_t *)(Z_Calloc(1, sizeof(*plat), PU_LEVSPEC, 0));
 
    P_AddThinker(&plat->thinker);
    
@@ -806,7 +810,7 @@ manual_stair:
       
       // new floor thinker
       rtn = 1;
-      floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL);
+      floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL));
       P_AddThinker(&floor->thinker);
       sec->floordata = floor;
 
@@ -930,7 +934,7 @@ manual_stair:
             
             sec = tsec;
             secnum = newsecnum;
-            floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL);
+            floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, NULL));
             
             P_AddThinker(&floor->thinker);
             
@@ -1068,7 +1072,7 @@ manual_crusher:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0);
+      ceiling = (ceiling_t *)(Z_Calloc(1, sizeof(*ceiling), PU_LEVSPEC, 0));
       P_AddThinker (&ceiling->thinker);
       sec->ceilingdata = ceiling; //jff 2/22/98
       ceiling->thinker.function = T_MoveCeiling;
@@ -1224,7 +1228,7 @@ manual_door:
 vldoor_t* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd)
 {
    boolean turbo;
-   vldoor_t *door = Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0);
+   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
 
    P_AddThinker(&door->thinker);
    sector->ceilingdata = door; //jff 2/22/98

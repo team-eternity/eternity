@@ -113,7 +113,7 @@ boolean F_Responder(event_t *event)
    {
       // restore normal palette and kick out to title screen
       finalestage = 4;
-      I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+      I_SetPalette((byte *)(W_CacheLumpName("PLAYPAL", PU_CACHE)));
       return true;
    }
    
@@ -258,7 +258,7 @@ void F_TextWrite(void)
    {                     // normal picture
       patch_t *pic;
       
-      pic = W_CacheLumpNum(lumpnum, PU_CACHE);
+      pic = (patch_t *)(W_CacheLumpNum(lumpnum, PU_CACHE));
       V_DrawPatch(0, 0, &vbscreen, pic);
    }
 
@@ -554,7 +554,7 @@ void F_CastDrawer(void)
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch(0, 0, &vbscreen, W_CacheLumpName(bgcastcall, PU_CACHE));
+   V_DrawPatch(0, 0, &vbscreen, (patch_t *)(W_CacheLumpName(bgcastcall, PU_CACHE)));
    
    F_CastPrint(castorder[castnum].name);
    
@@ -577,7 +577,7 @@ void F_CastDrawer(void)
    lump = sprframe->lump[0];
    flip = (boolean)sprframe->flip[0];
    
-   patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
+   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
    if(flip)
       V_DrawPatchFlipped(160, 170, &vbscreen, patch);
    else
@@ -596,8 +596,8 @@ void F_BunnyScroll(void)
    int         stage;
    static int  laststage;
    
-   p1 = W_CacheLumpName ("PFUB2", PU_LEVEL);
-   p2 = W_CacheLumpName ("PFUB1", PU_LEVEL);
+   p1 = (patch_t *)(W_CacheLumpName ("PFUB2", PU_LEVEL));
+   p2 = (patch_t *)(W_CacheLumpName ("PFUB1", PU_LEVEL));
    
    scrolled = 320 - (finalecount-230)/2;
    if(scrolled > 320)
@@ -617,7 +617,7 @@ void F_BunnyScroll(void)
    {
       V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
                   (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
-                  W_CacheLumpName("END0", PU_CACHE));
+                  (patch_t *)W_CacheLumpName("END0", PU_CACHE));
       laststage = 0;
       return;
    }
@@ -634,7 +634,7 @@ void F_BunnyScroll(void)
    sprintf(name,"END%i", stage);
    V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
                (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
-               W_CacheLumpName(name, PU_CACHE));
+               (patch_t *)W_CacheLumpName(name, PU_CACHE));
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
@@ -648,11 +648,11 @@ void F_DrawUnderwater(void)
       {
          byte *palette;
 
-         palette = W_CacheLumpName("E2PAL", PU_CACHE);
+         palette = (byte *)W_CacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
 
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                     W_CacheLumpName("E2END", PU_CACHE));
+                     (byte *)W_CacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
       // fall through
@@ -665,7 +665,7 @@ void F_DrawUnderwater(void)
    case 4:
       Console.enabled = true;
       V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                  W_CacheLumpName("TITLE", PU_CACHE));
+                  (byte *)W_CacheLumpName("TITLE", PU_CACHE));
       break;
    }
 }
@@ -681,7 +681,7 @@ static void F_InitDemonScroller(void)
    int lsize1, lsize2;
    VBuffer vbuf;
 
-   DemonBuffer = Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer));
+   DemonBuffer = (byte *)(Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer)));
 
    // get screens
    lnum1  = W_GetNumForName("FINAL1");
@@ -696,7 +696,7 @@ static void F_InitDemonScroller(void)
       W_ReadLump(lnum2, DemonBuffer);
    else
    {
-      patch_t *p = (patch_t *)W_CacheLumpNum(lnum2, PU_CACHE);
+      patch_t *p = (patch_t *)(W_CacheLumpNum(lnum2, PU_CACHE));
       V_DrawPatchGeneral(0, 0, &vbuf, p, false);
    }
 
@@ -704,7 +704,7 @@ static void F_InitDemonScroller(void)
       W_ReadLump(lnum1, DemonBuffer + 64000);
    else
    {
-      patch_t *p = (patch_t *)W_CacheLumpNum(lnum1, PU_CACHE);
+      patch_t *p = (patch_t *)(W_CacheLumpNum(lnum1, PU_CACHE));
       V_DrawPatchGeneral(0, 200, &vbuf, p, false);
    }
 
@@ -765,20 +765,20 @@ static void F_FinaleEndDrawer(void)
    {
    case FINALE_DOOM_CREDITS:
       V_DrawPatch(0, 0, &vbscreen, 
-                  W_CacheLumpName(sw ? "HELP2" : "CREDIT", PU_CACHE));
+                  (patch_t *)W_CacheLumpName(sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
-      V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("VICTORY2",PU_CACHE));
+      V_DrawPatch(0,0,&vbscreen,(patch_t *)W_CacheLumpName("VICTORY2",PU_CACHE));
       break;
    case FINALE_DOOM_BUNNY:
       F_BunnyScroll();
       break;
    case FINALE_DOOM_MARINE:
-      V_DrawPatch(0,0,&vbscreen,W_CacheLumpName("ENDPIC",PU_CACHE));
+      V_DrawPatch(0,0,&vbscreen,(patch_t *)W_CacheLumpName("ENDPIC",PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
       V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT,
-                  W_CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+                  (byte *)W_CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();

@@ -337,7 +337,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 
    lumpnum = W_GetNumForName(name);
 
-   lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
    size = W_LumpLength(lumpnum);
 
    if(fmt == FONT_FMT_PATCH)
@@ -511,7 +511,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    // is it a list?
    if((numchars = cfg_size(sec, ITEM_FILTER_CHARS)) > 0)
    {
-      f->chars    = calloc(numchars, sizeof(unsigned int));
+      f->chars    = (unsigned int *)(calloc(numchars, sizeof(unsigned int)));
       f->numchars = numchars;
 
       for(i = 0; i < numchars; ++i)
@@ -591,10 +591,8 @@ void E_LoadPatchFont(vfont_t *font)
 
    // init all to NULL at beginning
    // [CG] Try PU_RENDERER here.
-   // font->fontgfx = calloc(font->size, sizeof(patch_t *));
-   font->fontgfx = Z_Calloc(
-      font->size, sizeof(patch_t *), PU_RENDERER, &font->fontgfx
-   );
+   // font->fontgfx = (patch_t **)(calloc(font->size, sizeof(patch_t *)));
+   Z_Calloc(font->size, sizeof(patch_t *), PU_RENDERER, &font->fontgfx));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -626,7 +624,7 @@ void E_LoadPatchFont(vfont_t *font)
                    filtertouse->mask, j - font->patchnumoffset);
 
          if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
-            font->fontgfx[i] = W_CacheLumpNum(lnum, PU_STATIC);
+            font->fontgfx[i] = (patch_t *)(W_CacheLumpNum(lnum, PU_STATIC));
       }
    }
 }
@@ -710,7 +708,7 @@ static void E_ProcessFont(cfg_t *sec)
    }
    else
    {
-      font = calloc(1, sizeof(vfont_t));
+      font = (vfont_t *)(calloc(1, sizeof(vfont_t)));
 
       if(strlen(title) > 32)
          E_EDFLoggedErr(2, "E_ProcessFont: mnemonic '%s' is too long\n", title);
@@ -815,7 +813,7 @@ static void E_ProcessFont(cfg_t *sec)
          E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
 
       // allocate the font filters
-      font->filters    = calloc(numfilters, sizeof(vfontfilter_t));
+      font->filters    = (vfontfilter_t *)(calloc(numfilters, sizeof(vfontfilter_t)));
       font->numfilters = numfilters;
       
       for(i = 0; i < numfilters; ++i)

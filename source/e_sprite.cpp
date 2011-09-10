@@ -98,7 +98,7 @@ static boolean E_AddSprite(const char *name, esprite_t *sprite)
    if(NUMSPRITES + 1 >= numspritesalloc)
    {
       numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
-      sprnames = realloc(sprnames, numspritesalloc * sizeof(char *));
+      sprnames = (char **)(realloc(sprnames, numspritesalloc * sizeof(char *)));
    }
 
    // set the new sprnames entry, and make the next one NULL

@@ -86,9 +86,9 @@ typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
   mobj_t *origin;          // origin of sound
-  schannel_e subchannel;   // haleyjd 06/12/08: origin subchannel
+  int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
-  soundattn_e attenuation; // attenuation type -- haleyjd 05/29/06
+  int attenuation;         // attenuation type -- haleyjd 05/29/06
   int pitch;               // pitch modifier -- haleyjd 06/03/06
   int handle;              // handle of the sound being played
   int o_priority;          // haleyjd 09/27/06: stored priority value
@@ -325,7 +325,7 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
 //   Note that a higher priority number means lower priority!
 //
 static int S_getChannel(const mobj_t *origin, sfxinfo_t *sfxinfo,
-                        int priority, int singularity, schannel_e schan)
+                        int priority, int singularity, int schan)
 {
    // channel number to use
    int cnum;
@@ -418,8 +418,7 @@ static int S_countChannels(void)
 // haleyjd 06/03/06: added ability to loop sound samples
 //
 void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx, 
-                    int volumeScale, soundattn_e attenuation, boolean loop,
-                    schannel_e subchannel)
+                    int volumeScale, int attenuation, boolean loop, int subchannel)
 {
    int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
    boolean priority_boost = false;
@@ -578,21 +577,21 @@ void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx,
    {
       switch(sfx->pitch_type)
       {
-      case pitch_doom:
+      case sfxinfo_t::pitch_doom:
          pitch += 16 - (M_Random() & 31);
          break;
-      case pitch_doomsaw:
+      case sfxinfo_t::pitch_doomsaw:
          pitch += 8 - (M_Random() & 15);
          break;
-      case pitch_heretic:
+      case sfxinfo_t::pitch_heretic:
          pitch += M_Random() & 31;
          pitch -= M_Random() & 31;
          break;
-      case pitch_hticamb:
+      case sfxinfo_t::pitch_hticamb:
          pitch += M_Random() & 15;
          pitch -= M_Random() & 15;
          break;
-      case pitch_none:
+      case sfxinfo_t::pitch_none:
       default:
          break;
       }
@@ -675,7 +674,7 @@ void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx,
 // anything useful (it was always called with snd_SfxVolume...).
 //
 void S_StartSoundAtVolume(mobj_t *origin, int sfx_id, 
-                          int volume, soundattn_e attn, schannel_e subchannel)
+                          int volume, int attn, int subchannel)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
    // to enable full use of dynamically defined sounds ^_^
@@ -707,8 +706,7 @@ void S_StartSound(mobj_t *origin, int sfx_id)
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
 void S_StartSoundNameAtVolume(mobj_t *origin, const char *name, 
-                              int volume, soundattn_e attn, 
-                              schannel_e subchannel)
+                              int volume, int attn, int subchannel)
 {
    sfxinfo_t *sfx;
    
@@ -739,7 +737,7 @@ void S_StartSoundName(mobj_t *origin, const char *name)
 // haleyjd 06/03/06: support playing looped sounds.
 //
 void S_StartSoundLooped(mobj_t *origin, char *name, int volume, 
-                        soundattn_e attn, schannel_e subchannel)
+                        int attn, int subchannel)
 {
    sfxinfo_t *sfx;
    
@@ -753,7 +751,7 @@ void S_StartSoundLooped(mobj_t *origin, char *name, int volume,
 //
 // S_StopSound
 //
-void S_StopSound(const mobj_t *origin, schannel_e subchannel)
+void S_StopSound(const mobj_t *origin, int subchannel)
 {
    int cnum;
    
@@ -1225,7 +1223,7 @@ void S_Init(int sfxVolume, int musicVolume)
       // simultaneously) within zone memory.
 
       // killough 10/98:
-      channels = calloc(numChannels = default_numChannels, sizeof(channel_t));
+      channels = (channel_t *)(calloc(numChannels = default_numChannels, sizeof(channel_t)));
    }
 
    if(s_precache)        // sf: option to precache sounds
@@ -1317,7 +1315,7 @@ void S_UpdateSoundDeferred(int lumpnum)
    if(!snd_queue_init)
       S_InitDefSndQueue();
 
-   newsq = calloc(1, sizeof(squeueitem_t));
+   newsq = (squeueitem_t *)(calloc(1, sizeof(squeueitem_t)));
 
    strncpy(newsq->lumpname, w_GlobalDir.lumpinfo[lumpnum]->name, 9);
 
@@ -1419,7 +1417,7 @@ void S_UpdateMusic(int lumpnum)
    if(!music)         // not found in list
    {
       // build a new musicinfo_t
-      music = Z_Malloc(sizeof(*music), PU_STATIC, 0);
+      music = (musicinfo_t *)(Z_Malloc(sizeof(*music), PU_STATIC, 0));
       music->name = Z_Strdup(sndname, PU_STATIC, 0);
       
       // hook into hash list

@@ -41,7 +41,7 @@ extern int NUMSPRITES;
 // ********************************************************************
 // haleyjd 09/14/04: only enum values actually used remain here now.
 
-typedef enum
+enum
 {
   S_NULL,
   
@@ -145,7 +145,9 @@ typedef enum
   // haleyjd: NUMSTATES is now a variable
   //NUMSTATES  // Counter of how many there are
 
-} statenum_t;
+};
+
+typedef int statenum_t;
 
 typedef struct mobj_s * mptr;
 
@@ -188,8 +190,8 @@ extern char **sprnames;
 // Note that many of these are generically named for the ornamentals
 // haleyjd 08/02/04: only enum values actually used remain here now.
 //
-typedef enum {
-
+enum
+{
   MT_VILE = 4,
   MT_FIRE,
   
@@ -295,8 +297,9 @@ typedef enum {
 
   // haleyjd: NUMMOBJTYPES is a variable now
   //NUMMOBJTYPES  // Counter of how many there are
-} mobjtype_t;
+}; 
 
+typedef int mobjtype_t;
 
 // ********************************************************************
 // Definition of the Thing structure

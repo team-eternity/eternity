@@ -337,7 +337,7 @@ static boolean CachePCSLump(sfxinfo_t *sfx)
    if((lumpnum = I_PCSGetSfxLumpNum(sfx)) == -1)
       return false;
 
-   current_sound_lump = W_CacheLumpNum(lumpnum, PU_STATIC);
+   current_sound_lump = (Uint8 *)(W_CacheLumpNum(lumpnum, PU_STATIC));
    lumplen            = W_LumpLength(lumpnum);
    
    // Read header   
@@ -370,7 +370,7 @@ static int I_PCSInitSound(void)
    
    // Initialise the PC speaker subsystem.
    
-   pcs_initialised = PCSound_SDL_Init(PCSCallbackFunc);
+   pcs_initialised = !!PCSound_SDL_Init(PCSCallbackFunc);
    
    if(pcs_initialised)
    {

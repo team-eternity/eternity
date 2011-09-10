@@ -113,7 +113,7 @@ static boolean E_CheckInclude(const char *data, size_t size)
    if(numincludes == numincludesalloc)
    {
       numincludesalloc = numincludesalloc ? 2 * numincludesalloc : 8;
-      eincludes = realloc(eincludes, numincludesalloc * sizeof(*eincludes));
+      eincludes = (hashdata_t *)(realloc(eincludes, numincludesalloc * sizeof(*eincludes)));
    }
    eincludes[numincludes++] = newhash;
 
@@ -187,9 +187,9 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    {
       lump = w_GlobalDir.lumpinfo[i];
 
-      if(!strncasecmp(lump->name, name, 8) && // name matches specified
-         lump->li_namespace == ns_global &&   // is in global namespace
-         lump->source == inclump->source)     // is from same source
+      if(!strncasecmp(lump->name, name, 8) &&           // name matches specified
+         lump->li_namespace == lumpinfo_t::ns_global && // is in global namespace
+         lump->source == inclump->source)               // is from same source
       {
          return i; // haleyjd 07/26/10: i, not lump->index!!!
       }
@@ -344,7 +344,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    // name within the global namespace.
    while((i = w_GlobalDir.lumpinfo[i]->next) >= 0)
    {
-      if(w_GlobalDir.lumpinfo[i]->li_namespace == ns_global &&
+      if(w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(w_GlobalDir.lumpinfo[i]->name, cfg->filename, 8))
       {
          return E_OpenAndCheckInclude(cfg, cfg->filename, i);
@@ -640,7 +640,7 @@ int E_IntOrFixedCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
                  void *result)
 {
-   char *endptr, *pctloc;
+   const char *endptr, *pctloc;
 
    // test for a percent sign (start looking at end)
    pctloc = strrchr(value, '%');
@@ -730,7 +730,7 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
          return -1;
       }
 
-      palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
+      palette = (byte *)(W_CacheLumpName("PLAYPAL", PU_STATIC));
 
       *(int *)result = V_FindBestColor(palette, r, g, b);
 

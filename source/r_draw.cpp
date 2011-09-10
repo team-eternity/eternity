@@ -1040,14 +1040,15 @@ void R_InitTranslationTables(void)
    numtranslations = TRANSLATIONCOLOURS + numtlumps;
 
    // allocate the array of pointers
-   translationtables = Z_Malloc(sizeof(byte *) * numtranslations, PU_RENDERER, 0);
+   translationtables = 
+      (byte **)(Z_Malloc(sizeof(byte *) * numtranslations, PU_RENDERER, 0));
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; ++i)
    {
       byte *transtbl;
 
-      transtbl = translationtables[i] = Z_Malloc(256, PU_RENDERER, 0);
+      transtbl = translationtables[i] = (byte *)(Z_Malloc(256, PU_RENDERER, 0));
 
       for(c = 0; c < 256; ++c)
       {
@@ -1062,7 +1063,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = W_CacheLumpNum(lumpnum, PU_RENDERER);
+      translationtables[i] = (byte *)(W_CacheLumpNum(lumpnum, PU_RENDERER));
    }
 }
 
@@ -1154,22 +1155,22 @@ void R_FillBackScreen(void)
    // killough 11/98: use the function in m_menu.c
    V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
 
-   patch = W_CacheLumpName(border->top, PU_CACHE);
+   patch = (patch_t *)W_CacheLumpName(border->top, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)
       V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
 
-   patch = W_CacheLumpName(border->bottom, PU_CACHE);
+   patch = (patch_t *)W_CacheLumpName(border->bottom, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
       V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
 
-   patch = W_CacheLumpName(border->left, PU_CACHE);
+   patch = (patch_t *)W_CacheLumpName(border->left, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
 
-   patch = W_CacheLumpName(border->right, PU_CACHE);
+   patch = (patch_t *)W_CacheLumpName(border->right, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
@@ -1178,22 +1179,22 @@ void R_FillBackScreen(void)
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy-offset,
                &backscreen1,
-               W_CacheLumpName(border->c_tl, PU_CACHE));
+               (patch_t *)W_CacheLumpName(border->c_tl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy-offset,
                &backscreen1,
-               W_CacheLumpName(border->c_tr, PU_CACHE));
+               (patch_t *)W_CacheLumpName(border->c_tr, PU_CACHE));
 
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy+scaledviewheight,    // killough 11/98
                &backscreen1,
-               W_CacheLumpName(border->c_bl, PU_CACHE));
+               (patch_t *)W_CacheLumpName(border->c_bl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy+scaledviewheight,     // killough 11/98
                &backscreen1,
-               W_CacheLumpName(border->c_br, PU_CACHE));
+               (patch_t *)W_CacheLumpName(border->c_br, PU_CACHE));
 } 
 
 //

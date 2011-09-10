@@ -841,7 +841,9 @@ floormove_t* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 {
    int i;
    int secnum = sec - sectors;
-   floormove_t *floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+   floormove_t *floor = (floormove_t *)(Z_Calloc(
+      1, sizeof(*floor), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker (&floor->thinker);
    sec->floordata = floor; //jff 2/22/98
@@ -1248,21 +1250,17 @@ int EV_BuildStairs(line_t *line, stair_e type)
             speed = FLOORSPEED/4;
             stairsize = 8*FRACUNIT;
             if(!demo_compatibility)
-            {
                crush = -1; //jff 2/27/98 fix uninitialized crush field
-            }
             break;
          case turbo16:
             speed = FLOORSPEED*4;
             stairsize = 16*FRACUNIT;
             if(!demo_compatibility)
-            {
                crush = 10;  //jff 2/27/98 fix uninitialized crush field
-            }
             break;
          }
 
-         floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+         floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0));
          P_AddThinker(&floor->thinker);
 
          sec->floordata = floor;
@@ -1328,7 +1326,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
                secnum = newsecnum;
 
                // create and initialize a thinker for the next step
-               floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+               floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0));
                P_AddThinker(&floor->thinker);
 
                sec->floordata = floor; //jff 2/22/98
@@ -1488,9 +1486,7 @@ int EV_DoDonut(line_t *line)
 
          // [CG] Clients don't spawn donuts, so this is far enough.
          if(CS_CLIENT)
-         {
             return rtn;
-         }
 
          // s3 is model sector for changes
          s3 = s2->lines[i]->backsector;
@@ -1515,6 +1511,7 @@ int EV_DoDonut(line_t *line)
             //  Spawn lowering donut-hole pillar
             P_SpawnDonutHole(line, s1, s3_floorheight);
          }
+
          break;
       }
    }
@@ -1524,7 +1521,9 @@ int EV_DoDonut(line_t *line)
 floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
                           fixed_t floordestheight)
 {
-   floormove_t *floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+   floormove_t *floor = (floormove_t *)(Z_Calloc(
+      1, sizeof(*floor), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker (&floor->thinker);
 
@@ -1557,7 +1556,9 @@ floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
 floormove_t* P_SpawnDonutHole(line_t *line, sector_t *sec,
                               fixed_t floordestheight)
 {
-   floormove_t *floor = Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0);
+   floormove_t *floor = (floormove_t *)(Z_Calloc(
+      1, sizeof(*floor), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker (&floor->thinker);
 
@@ -1614,9 +1615,7 @@ int EV_DoElevator(line_t *line, elevator_e elevtype)
       //      activated, but we have to inform the caller whether or not a
       //      thinker would have been created regardless.
       if(CS_CLIENT)
-      {
          return rtn;
-      }
       P_SpawnElevator(line, sec, elevtype);
    }
    return rtn;
@@ -1624,7 +1623,9 @@ int EV_DoElevator(line_t *line, elevator_e elevtype)
 
 elevator_t* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
 {
-   elevator_t *elevator = Z_Calloc(1, sizeof(*elevator), PU_LEVSPEC, 0);
+   elevator_t *elevator = (elevator_t *)(Z_Calloc(
+      1, sizeof(*elevator), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker (&elevator->thinker);
 
@@ -1741,7 +1742,9 @@ manual_pillar:
 pillar_t* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
                              fixed_t speed, int crush)
 {
-   pillar_t *pillar = Z_Calloc(1, sizeof(pillar_t), PU_LEVSPEC, 0);
+   pillar_t *pillar = (pillar_t *)(Z_Calloc(
+      1, sizeof(pillar_t), PU_LEVSPEC, 0
+   ));
    int destheight;
 
    P_AddThinker(&pillar->thinker);
@@ -1840,9 +1843,7 @@ manual_pillar:
       P_SpawnOpenPillar(line, sector, pd->speed, pd->fdist, pd->cdist);
 
       if(manual)
-      {
          return returnval;
-      }
    }
    return returnval;
 }
@@ -1850,7 +1851,9 @@ manual_pillar:
 pillar_t* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
                             fixed_t fdist, fixed_t cdist)
 {
-   pillar_t *pillar = Z_Calloc(1, sizeof(pillar_t), PU_LEVSPEC, 0);
+   pillar_t *pillar = (pillar_t *)(Z_Calloc(
+      1, sizeof(pillar_t), PU_LEVSPEC, 0
+   ));
 
    P_AddThinker(&pillar->thinker);
 
@@ -2043,9 +2046,7 @@ manual_waggle:
       waggle = P_SpawnFloorWaggle(line, sector, height, speed, offset, timer);
 
       if(manual)
-      {
          return retCode;
-      }
    }
    return retCode;
 }
@@ -2053,7 +2054,9 @@ manual_waggle:
 floorwaggle_t* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
                                   int speed, int offset, int timer)
 {
-   floorwaggle_t *waggle = Z_Calloc(1, sizeof(*waggle), PU_LEVSPEC, 0);
+   floorwaggle_t *waggle = (floorwaggle_t *)(Z_Calloc(
+      1, sizeof(*waggle), PU_LEVSPEC, 0
+   ));
 
    sector->floordata = waggle;
    waggle->thinker.function = T_FloorWaggle;

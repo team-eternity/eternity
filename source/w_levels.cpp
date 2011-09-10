@@ -101,7 +101,7 @@ static manageddir_t *W_addManagedDir(const char *filename)
    if(E_HashObjectForKey(&w_dirhash, &filename))
       return NULL;
 
-   newdir = calloc(1, sizeof(manageddir_t));
+   newdir = (manageddir_t *)(calloc(1, sizeof(manageddir_t)));
 
    newdir->name = strdup(filename);
 
@@ -172,8 +172,8 @@ static boolean W_openWadFile(manageddir_t *dir)
 {
    boolean ret;
    
-   if((ret = W_AddNewPrivateFile(&dir->waddir, dir->name)))
-      D_AddFile(dir->name, ns_global, NULL, 0, 1);
+   if((ret = !!W_AddNewPrivateFile(&dir->waddir, dir->name)))
+      D_AddFile(dir->name, lumpinfo_t::ns_global, NULL, 0, 1);
 
    return ret;
 }
@@ -327,7 +327,7 @@ wadlevel_t *W_FindAllMapsInLevelWad(waddir_t *dir)
    // start out with a small set of levels
    numlevels = 0;
    numlevelsalloc = 8;
-   levels = calloc(numlevelsalloc, sizeof(wadlevel_t));
+   levels = (wadlevel_t *)(calloc(numlevelsalloc, sizeof(wadlevel_t)));
 
    // find all the lumps
    for(i = 0; i < dir->numlumps; i++)
@@ -338,7 +338,7 @@ wadlevel_t *W_FindAllMapsInLevelWad(waddir_t *dir)
          if(numlevels + 1 >= numlevelsalloc)
          {
             numlevelsalloc *= 2;
-            levels = realloc(levels, numlevelsalloc * sizeof(wadlevel_t));
+            levels = (wadlevel_t *)(realloc(levels, numlevelsalloc * sizeof(wadlevel_t)));
          }
          memset(&levels[numlevels], 0, sizeof(wadlevel_t));
          levels[numlevels].dir = dir;
@@ -479,7 +479,7 @@ static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 
    // Got one. Start playing it!
    MN_ClearMenus();
-   G_DeferedInitNewFromDir(defaultskill - 1, mapname, dir);
+   G_DeferedInitNewFromDir((skill_t)(defaultskill - 1), mapname, dir);
 
    // set inmasterlevels - this is even saved in savegames :)
    inmasterlevels = true;

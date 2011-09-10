@@ -157,12 +157,12 @@ static void HI_loadData(void)
    if(gameepisode <= 3)
    {
       sprintf(mapname, "MAPE%d", gameepisode);
-      hi_interpic = W_CacheLumpName(mapname, PU_STATIC);
+      hi_interpic = (patch_t *)W_CacheLumpName(mapname, PU_STATIC);
    }
 
    // load positional indicators
-   hi_in_x   = W_CacheLumpName("IN_X", PU_STATIC);
-   hi_in_yah = W_CacheLumpName("IN_YAH", PU_STATIC);
+   hi_in_x   = (patch_t *)W_CacheLumpName("IN_X", PU_STATIC);
+   hi_in_yah = (patch_t *)W_CacheLumpName("IN_YAH", PU_STATIC);
 
    // get lump numbers for faces
    for(i = 0; i < 4; i++)
@@ -655,7 +655,7 @@ static void HI_drawCoopStats(void)
       if(HI_playerInGame(i))
       {
          V_DrawPatchShadowed(25, ypos, &vbscreen, 
-                             W_CacheLumpNum(hi_faces[i], PU_CACHE), 
+                             (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)), 
                              NULL, FRACUNIT);
          if(statstage == 1)
          {
@@ -731,11 +731,11 @@ static void HI_drawDMStats(void)
          {
             V_DrawPatchGeneral(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
                                &vbscreen,
-                               W_CacheLumpNum(hi_faces[i], PU_CACHE), 
+                               (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)), 
                                false);
             V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS, 18,
                                &vbscreen,
-                               W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
+                               (patch_t *)(W_CacheLumpNum(hi_dead_faces[i], PU_CACHE)),
                                false);
          }
       }
@@ -773,10 +773,10 @@ static void HI_drawDMStats(void)
             }
 
             V_DrawPatchTL(40, ypos, &vbscreen,
-                          W_CacheLumpNum(hi_faces[i], PU_CACHE),
+                          (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)),
                           NULL, tllevel);
             V_DrawPatchTL(xpos, 18, &vbscreen,
-                          W_CacheLumpNum(hi_dead_faces[i], PU_CACHE),
+                          (patch_t *)(W_CacheLumpNum(hi_dead_faces[i], PU_CACHE)),
                           NULL, tllevel);
             kpos = 86;
 

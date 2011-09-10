@@ -651,7 +651,7 @@ byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
    int col = w - 1, colstop = -1, colstep = -1;
 
    byte *desttop;
-   byte *buffer = malloc(w * h);
+   byte *buffer = (byte *)(malloc(w * h));
 
    memset(buffer, fillcolor, w * h);
   
@@ -745,7 +745,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
    size_t total_size = 
       4 * sizeof(int16_t) + w * (h + sizeof(int32_t) + sizeof(column_t) + 3);
    
-   byte *out = malloc(total_size);
+   byte *out = (byte *)(malloc(total_size));
 
    p = (patch_t *)out;
 

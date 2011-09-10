@@ -451,7 +451,7 @@ static void PrintMemInfo(void)
 //
 // For access violations, this prints additional information.
 //
-static PrintSegVInfo(void)
+static void PrintSegVInfo(void)
 {
    TCHAR msg[1024];
    const TCHAR* readOrWrite = _T("read");

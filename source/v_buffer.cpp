@@ -37,9 +37,9 @@ static void VB_MakeXYLUT(VBuffer *vb)
    int i;
 
    if(!vb->ylut)
-      vb->ylut = Z_SysCalloc(sizeof(byte*), vb->height);
+      vb->ylut = (byte **)(Z_SysCalloc(sizeof(byte*), vb->height));
    if(!vb->xlut)
-      vb->xlut = Z_SysCalloc(sizeof(int), vb->width);
+      vb->xlut = (int *)(Z_SysCalloc(sizeof(int), vb->width));
 
    for(i = 0; i < vb->height; i++)
       vb->ylut[i] = vb->data + vb->pitch * i;
@@ -56,7 +56,7 @@ static void VB_AllocateData(VBuffer *buffer)
    if(buffer->data && buffer->owndata)
       Z_SysFree(buffer->data);
 
-   buffer->data = Z_SysCalloc(buffer->width * buffer->height, buffer->pixelsize);
+   buffer->data = (byte *)(Z_SysCalloc(buffer->width * buffer->height, buffer->pixelsize));
    buffer->owndata = true;
 
    VB_MakeXYLUT(buffer);
@@ -128,7 +128,7 @@ VBuffer *V_CreateVBuffer(int width, int height, int bitdepth)
    if(bitdepth != 8)
       I_Error("V_CreateVBuffer: Invalid bitdepth %d\n", bitdepth);
 
-   ret = Z_SysCalloc(1, sizeof(VBuffer));
+   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
 
    V_InitVBuffer(ret, width, height, bitdepth);
    ret->needfree = true;
@@ -193,7 +193,7 @@ VBuffer *V_CreateVBufferFrom(int width, int height, int pitch,
    if(bitdepth != 8)
       I_Error("V_CreateVBufferFrom: Invalid bitdepth %d\n", bitdepth);
 
-   ret = Z_SysCalloc(1, sizeof(VBuffer));
+   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
 
    V_InitVBufferFrom(ret, width, height, pitch, bitdepth, data);
    ret->needfree = true;
@@ -254,7 +254,7 @@ VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height)
 {
    VBuffer *ret;
 
-   ret = Z_SysCalloc(1, sizeof(VBuffer));
+   ret = (VBuffer *)(Z_SysCalloc(1, sizeof(VBuffer)));
    V_InitSubVBuffer(ret, parent, x, y, width, height);
    ret->needfree = true;
 
@@ -360,10 +360,10 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
    {
       int size = sizeof(int) * (unscaledw + 1);
 
-      buffer->x1lookup = Z_SysCalloc(size, 1);
-      buffer->x2lookup = Z_SysCalloc(size, 1);
-      buffer->y1lookup = Z_SysCalloc(size, 1);
-      buffer->y2lookup = Z_SysCalloc(size, 1);
+      buffer->x1lookup = (int *)Z_SysCalloc(size, 1);
+      buffer->x2lookup = (int *)Z_SysCalloc(size, 1);
+      buffer->y1lookup = (int *)Z_SysCalloc(size, 1);
+      buffer->y2lookup = (int *)Z_SysCalloc(size, 1);
       buffer->freelookups = true;
    }
 

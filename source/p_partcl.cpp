@@ -291,7 +291,7 @@ void P_InitParticleEffects(void)
    byte *palette;
    struct particleColorList *pc = particleColors;
 
-   palette = W_CacheLumpName("PLAYPAL", PU_STATIC);
+   palette = (byte *)W_CacheLumpName("PLAYPAL", PU_STATIC);
 
    // match particle colors to best fit and write back to
    // static variables
@@ -1411,7 +1411,7 @@ void P_AddEventVars(void)
       variable_t *variable;
       command_t  *command;
 
-      variable = Z_Malloc(sizeof(variable_t), PU_STATIC, NULL);
+      variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, NULL));
       variable->variable = &(particleEvents[i].enabled);
       variable->v_default = NULL;
       variable->type = vt_int;
@@ -1419,7 +1419,7 @@ void P_AddEventVars(void)
       variable->max = 1;
       variable->defines = onoff;
 
-      command = Z_Malloc(sizeof(command_t), PU_STATIC, NULL);
+      command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, NULL));
       command->name = particleEvents[i].name;
       command->type = ct_variable;
       command->flags = 0;

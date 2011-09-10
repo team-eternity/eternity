@@ -166,7 +166,7 @@ menu_t menu_main =
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, W_CacheLumpName("M_DOOM", PU_CACHE));
+   V_DrawPatch(94, 2, &vbscreen, (patch_t *)W_CacheLumpName("M_DOOM", PU_CACHE));
 }
 
 // haleyjd 05/14/06: moved these up here
@@ -1067,7 +1067,7 @@ void MN_PlayerDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[1];
    
-   patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
+   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
 
    w    = SwapShort(patch->width);
    h    = SwapShort(patch->height);
@@ -1156,7 +1156,7 @@ void MN_CreateSaveCmds(void)
       char tempstr[16];
 
       // create the variable first
-      save_variable = Z_Malloc(sizeof(*save_variable), PU_STATIC, 0); // haleyjd
+      save_variable = (variable_t *)(Z_Malloc(sizeof(*save_variable), PU_STATIC, 0)); // haleyjd
       save_variable->variable = &savegamenames[i];
       save_variable->v_default = NULL;
       save_variable->type = vt_string;      // string value
@@ -1165,7 +1165,7 @@ void MN_CreateSaveCmds(void)
       save_variable->defines = NULL;
       
       // now the command
-      save_command = Z_Malloc(sizeof(*save_command), PU_STATIC, 0); // haleyjd
+      save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
       
       sprintf(tempstr, "savegame_%i", i);
       save_command->name = strdup(tempstr);
@@ -1230,9 +1230,9 @@ void MN_DrawLoadBox(int x, int y)
 {
    int i;
    
-   patch_left  = W_CacheLumpName("M_LSLEFT", PU_STATIC);
-   patch_mid   = W_CacheLumpName("M_LSCNTR", PU_STATIC);
-   patch_right = W_CacheLumpName("M_LSRGHT", PU_STATIC);
+   patch_left  = (patch_t *)W_CacheLumpName("M_LSLEFT", PU_STATIC);
+   patch_mid   = (patch_t *)W_CacheLumpName("M_LSCNTR", PU_STATIC);
+   patch_right = (patch_t *)W_CacheLumpName("M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
    x += SwapShort(patch_left->width);
@@ -1770,7 +1770,7 @@ void MN_VideoModeDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[0];
    
-   patch = W_CacheLumpNum(lump + firstspritelump, PU_CACHE);
+   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
    
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[11].y - 5;
@@ -2101,10 +2101,10 @@ static void MN_BuildJSTables(void)
       char tempstr[20];
 
       // allocate arrays
-      mn_js_desc = Z_Malloc((numJoysticks + 2) * sizeof(char *), 
-                            PU_STATIC, NULL);
-      mn_js_cmds = Z_Malloc((numJoysticks + 2) * sizeof(char *),
-                            PU_STATIC, NULL);
+      mn_js_desc = (char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *), 
+                                      PU_STATIC, NULL));
+      mn_js_cmds = (char **)(Z_Malloc((numJoysticks + 2) * sizeof(char *),
+                                      PU_STATIC, NULL));
       
       mn_js_desc[0] = "none";
       mn_js_cmds[0] = "i_joystick -1";
@@ -2286,7 +2286,7 @@ static void MN_HUDPg2Drawer(void)
       return;
 
    if(xhairnum >= 0 && crosshairs[xhairnum] != -1)
-      patch = W_CacheLumpNum(crosshairs[xhairnum], PU_CACHE);
+      patch = (patch_t *)(W_CacheLumpNum(crosshairs[xhairnum], PU_CACHE));
   
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;
@@ -3545,13 +3545,13 @@ static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 static void MN_OldOptionsDrawer(void)
 {
    V_DrawPatch(108, 15, &vbscreen,
-                     W_CacheLumpName("M_OPTTTL", PU_CACHE));
+               (patch_t *)W_CacheLumpName("M_OPTTTL", PU_CACHE));
 
    V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
-                     W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+               (patch_t *)W_CacheLumpName(msgNames[showMessages], PU_CACHE));
 
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
-                     W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
+               (patch_t *)W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
 }
 
 menu_t menu_old_options =
@@ -3590,7 +3590,7 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, W_CacheLumpName("M_SVOL", PU_CACHE));
+   V_DrawPatch(60, 38, &vbscreen, (patch_t *)W_CacheLumpName("M_SVOL", PU_CACHE));
 }
 
 menu_t menu_old_sound =

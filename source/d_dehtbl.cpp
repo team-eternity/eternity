@@ -2031,11 +2031,15 @@ void D_BuildBEXTables(void)
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL);
+   spritestr = (char *)(Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL));
 
    // [CG] Try PU_RENDERER here.
-   // deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0);
-   deh_spritenames = Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_RENDERER,0);
+   // deh_spritenames = (char **)(Z_Malloc(
+   //     (NUMSPRITES + 1) * sizeof(char *), PU_STATIC, 0
+   // ));
+   deh_spritenames = (char **)(Z_Malloc(
+       (NUMSPRITES + 1) * sizeof(char *), PU_RENDERER, 0
+   ));
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
@@ -2045,11 +2049,15 @@ void D_BuildBEXTables(void)
    deh_spritenames[NUMSPRITES] = NULL;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0);
+   musicstr = (char *)(Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0));
 
    // [CG] Try PU_RENDERER here.
-   // deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0);
-   deh_musicnames = Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_RENDERER, 0);
+   // deh_musicnames = (char **)(Z_Malloc(
+   //     (NUMMUSIC + 1) * sizeof(char *), PU_STATIC, 0
+   // ));
+   deh_musicnames = (char **)(Z_Malloc(
+       (NUMMUSIC + 1) * sizeof(char *), PU_RENDERER, 0
+   ));
 
    for(i = 1; i < NUMMUSIC; ++i)
    {
@@ -2092,7 +2100,7 @@ void D_DEHQueueInit(void)
 void D_QueueDEH(const char *filename, int lumpnum)
 {
    // allocate a new dehqueue_t
-   dehqueueitem_t *newdq = calloc(1, sizeof(dehqueueitem_t));
+   dehqueueitem_t *newdq = (dehqueueitem_t *)(calloc(1, sizeof(dehqueueitem_t)));
 
    // if filename is valid, this is a file DEH
    if(filename)

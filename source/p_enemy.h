@@ -29,7 +29,7 @@
 #ifndef __P_ENEMY__
 #define __P_ENEMY__
 
-typedef enum 
+enum 
 {
    DI_EAST,
    DI_NORTHEAST,
@@ -41,7 +41,8 @@ typedef enum
    DI_SOUTHEAST,
    DI_NODIR,
    NUMDIRS
-} dirtype_t;
+};
+typedef int dirtype_t;
 
 extern fixed_t xspeed[8];
 extern fixed_t yspeed[8];

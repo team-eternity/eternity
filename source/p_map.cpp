@@ -710,7 +710,7 @@ boolean PIT_CheckLine(line_t *ld)
       if(clip.numspechit >= clip.spechit_max)
       {
          clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
+         clip.spechit = (line_t **)(realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max));
       }
       clip.spechit[clip.numspechit++] = ld;
 
@@ -2178,9 +2178,7 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
       bomb_v.z = 0.;
    }
    else
-   {
       M_SubVec3(&bomb_v, &thing_v, &bomb_v);
-   }
 
    // [CG] If the explosion occurred inside the hitbox, only Z velocity is
    //      applied.  Of course, if the explosion was neither above nor below
@@ -2609,7 +2607,7 @@ static msecnode_t *P_GetSecnode(void)
    
    return headsecnode ?
       node = headsecnode, headsecnode = node->m_snext, node :
-      Z_Malloc(sizeof *node, PU_LEVEL, NULL); 
+      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
 }
 
 //

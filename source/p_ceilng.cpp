@@ -587,18 +587,12 @@ int oldEV_CeilingCrushStop(line_t* line)
 //
 void P_AddActiveCeiling(ceiling_t *ceiling)
 {
-#if _SPECIAL_DEBUG
-   printf("Adding active ceiling...");
-#endif
    CS_ObtainCeilingNetID(ceiling);
-#if _SPECIAL_DEBUG
-   printf(" got Net ID %d.\n", ceiling->net_id);
-#endif
 }
 
 void oldP_AddActiveCeiling(ceiling_t *ceiling)
 {
-   ceilinglist_t *list = malloc(sizeof *list);
+   ceilinglist_t *list = (ceilinglist_t *)(malloc(sizeof *list));
    list->ceiling = ceiling;
    ceiling->list = list;
    if((list->next = activeceilings))

@@ -72,7 +72,7 @@ char *temp_hubfile(void)
    static int tmpfilenum = 0;
    char *new_tmpfilename;
    
-   new_tmpfilename = malloc(10);
+   new_tmpfilename = (char *)(malloc(10));
    
    sprintf(new_tmpfilename, "smmu%i.tmp", tmpfilenum++);
    

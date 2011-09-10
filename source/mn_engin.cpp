@@ -147,7 +147,7 @@ enum
 void MN_DrawSmallPtr(int x, int y)
 {
    V_DrawPatch(x, y, &vbscreen, 
-               W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
+               (patch_t *)(W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE)));
 }
 
 //
@@ -239,10 +239,10 @@ static int MN_DrawSlider(int x, int y, int pct)
    int16_t wl, wm, ws, hs;
 
    // load slider gfx
-   slider_gfx[slider_left]   = W_CacheLumpName("M_SLIDEL", PU_STATIC);
-   slider_gfx[slider_right]  = W_CacheLumpName("M_SLIDER", PU_STATIC);
-   slider_gfx[slider_mid]    = W_CacheLumpName("M_SLIDEM", PU_STATIC);
-   slider_gfx[slider_slider] = W_CacheLumpName("M_SLIDEO", PU_STATIC);
+   slider_gfx[slider_left]   = (patch_t *)W_CacheLumpName("M_SLIDEL", PU_STATIC);
+   slider_gfx[slider_right]  = (patch_t *)W_CacheLumpName("M_SLIDER", PU_STATIC);
+   slider_gfx[slider_mid]    = (patch_t *)W_CacheLumpName("M_SLIDEM", PU_STATIC);
+   slider_gfx[slider_slider] = (patch_t *)W_CacheLumpName("M_SLIDEO", PU_STATIC);
 
    wl = SwapShort(slider_gfx[slider_left]->width);
    wm = SwapShort(slider_gfx[slider_mid]->width);
@@ -302,22 +302,22 @@ static void MN_DrawThermo(int x, int y, int thermWidth, int thermDot)
 
    xx = x;
    V_DrawPatch(xx, y, &vbscreen,
-               W_CacheLumpName("M_THERML", PU_CACHE));
+               (patch_t *)W_CacheLumpName("M_THERML", PU_CACHE));
    
    xx += 8;
    
    for(i = 0; i < thermWidth; ++i)
    {
       V_DrawPatch(xx, y, &vbscreen,
-                  W_CacheLumpName("M_THERMM", PU_CACHE));
+                  (patch_t *)W_CacheLumpName("M_THERMM", PU_CACHE));
       xx += 8;
    }
    
    V_DrawPatch(xx, y, &vbscreen,
-               W_CacheLumpName("M_THERMR", PU_CACHE));
+               (patch_t *)W_CacheLumpName("M_THERMR", PU_CACHE));
    
    V_DrawPatch((x + 8) + thermDot*8, y, &vbscreen,
-               W_CacheLumpName("M_THERMO", PU_CACHE));
+               (patch_t *)W_CacheLumpName("M_THERMO", PU_CACHE));
 }
 
 //
@@ -378,7 +378,7 @@ static boolean MN_drawPatchForItem(menuitem_t *item, int *item_height,
    if(lumpnum >= 0)
    {
       int16_t width;
-      patch = W_CacheLumpNum(lumpnum, PU_CACHE);
+      patch = (patch_t *)(W_CacheLumpNum(lumpnum, PU_CACHE));
       *item_height = SwapShort(patch->height) + 1;
       width  = SwapShort(patch->width);
 
@@ -735,7 +735,7 @@ static void MN_drawItemAutomap(menuitem_t *item, int color, int alignment,
 
    // draw patch w/cross         
    if(!amcolor)
-      V_DrawPatch(ix + GAP + 1, iy, &vbscreen, W_CacheLumpName("M_PALNO", PU_CACHE));
+      V_DrawPatch(ix + GAP + 1, iy, &vbscreen, (patch_t *)W_CacheLumpName("M_PALNO", PU_CACHE));
 }
 
 typedef void (*mn_itemdrawerfunc_t)(menuitem_t *item, int color, int alignment,
@@ -927,7 +927,7 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
       }
 
       V_DrawPatch(item_x, item_y, &vbscreen,
-         W_CacheLumpNum(skulls[(menutime / BLINK_TIME) % 2], PU_CACHE));
+         (patch_t *)(W_CacheLumpNum(skulls[(menutime / BLINK_TIME) % 2], PU_CACHE)));
    }
    else
    {
@@ -935,12 +935,12 @@ static void MN_drawPointer(menu_t *menu, int y, int itemnum, int item_height)
 
       // draw left pointer
       V_DrawPatch(smallptr_coords[0][0], smallptr_coords[0][1], &vbscreen,
-         W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE));
+         (patch_t *)(W_CacheLumpNum(smallptrs[smallptr_idx], PU_CACHE)));
 
       // draw right pointer
       V_DrawPatch(smallptr_coords[1][0], smallptr_coords[1][1], &vbscreen, 
-         W_CacheLumpNum(smallptrs[(NUMSMALLPTRS - smallptr_idx) % NUMSMALLPTRS],
-                        PU_CACHE));
+         (patch_t *)(W_CacheLumpNum(smallptrs[(NUMSMALLPTRS - smallptr_idx) % NUMSMALLPTRS],
+                                    PU_CACHE)));
    }
 }
 
@@ -1183,7 +1183,7 @@ void MN_Init(void)
 
    // get width and height from first patch
    {
-      patch_t *ptr0 = W_CacheLumpNum(smallptrs[0], PU_CACHE);
+      patch_t *ptr0 = (patch_t *)(W_CacheLumpNum(smallptrs[0], PU_CACHE));
       smallptr_dims[0] = SwapShort(ptr0->width);
       smallptr_dims[1] = SwapShort(ptr0->height);
    }

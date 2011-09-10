@@ -192,7 +192,7 @@ void D_InitWeaponInfo(void)
 
    // haleyjd 11/28/08: SSG enable
    if(GameModeInfo->type == Game_DOOM && 
-      W_CheckNumForNameNS("SHT2A0", ns_sprites) > 0)
+      W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
       enable_ssg = true;
 }
 

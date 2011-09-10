@@ -169,7 +169,7 @@ static char *GetRegistryString(registry_value_t *reg_val)
 
    // Allocate a buffer for the value and read the value
    
-   result = malloc(len);
+   result = (char *)(malloc(len));
    
    if(RegQueryValueEx(key, reg_val->value, NULL, &valtype, (unsigned char *) result, &len) 
       != ERROR_SUCCESS)
@@ -236,9 +236,9 @@ void CheckCollectorsEdition(void)
    
    for(i = 0; i < num_collectors_edition_subdirs; ++i)
    {
-      subpath = malloc(strlen(install_path)
-                       + strlen(collectors_edition_subdirs[i])
-                       + 5);
+      subpath = (char *)(malloc(strlen(install_path)
+                         + strlen(collectors_edition_subdirs[i])
+                         + 5));
 
       sprintf(subpath, "%s\\%s", install_path, collectors_edition_subdirs[i]);
       
@@ -266,8 +266,8 @@ void CheckSteamEdition(void)
 
    for(i = 0; i < num_steam_install_subdirs; ++i)
    {
-      subpath = malloc(strlen(install_path) 
-                       + strlen(steam_install_subdirs[i]) + 5);
+      subpath = (char *)(malloc(strlen(install_path) 
+                         + strlen(steam_install_subdirs[i]) + 5));
 
       sprintf(subpath, "%s\\%s", install_path, steam_install_subdirs[i]);
       

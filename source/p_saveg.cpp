@@ -630,7 +630,7 @@ void P_UnArchiveThinkers(void)
          I_FatalError(I_ERR_KILL, "Unknown tclass %i in savegame", *save_p);
 
       // first table entry special: 0 maps to NULL
-      *(mobj_p = malloc(size * sizeof *mobj_p)) = 0;   // table of pointers
+      *(mobj_p = (mobj_t **)(malloc(size * sizeof *mobj_p))) = 0;   // table of pointers
       save_p = sp;           // restore save pointer
    }
 
@@ -638,7 +638,7 @@ void P_UnArchiveThinkers(void)
    // haleyjd 11/03/06: use idx to save "size" for rangechecking
    for(idx = 1; *save_p++ == tc_mobj; ++idx)    // killough 2/14/98
    {
-      mobj_t *mobj = Z_Malloc(sizeof(mobj_t), PU_LEVEL, NULL);
+      mobj_t *mobj = (mobj_t *)(Z_Malloc(sizeof(mobj_t), PU_LEVEL, NULL));
       
       // killough 2/14/98 -- insert pointers to thinkers into table, in order:
       mobj_p[idx] = mobj;
@@ -1146,7 +1146,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             ceiling_t *ceiling = 
-               Z_Malloc(sizeof(*ceiling), PU_LEVEL, NULL);
+               (ceiling_t *)(Z_Malloc(sizeof(*ceiling), PU_LEVEL, NULL));
             memcpy(ceiling, save_p, sizeof(*ceiling));
             save_p += sizeof(*ceiling);
             ceiling->sector = &sectors[(int)ceiling->sector];
@@ -1163,7 +1163,7 @@ void P_UnArchiveSpecials(void)
       case tc_door:
          PADSAVEP();
          {
-            vldoor_t *door = Z_Malloc(sizeof(*door), PU_LEVEL, NULL);
+            vldoor_t *door = (vldoor_t *)(Z_Malloc(sizeof(*door), PU_LEVEL, NULL));
             memcpy(door, save_p, sizeof(*door));
             save_p += sizeof(*door);
             door->sector = &sectors[(int)door->sector];
@@ -1183,7 +1183,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             floormove_t *floor = 
-               Z_Malloc(sizeof(*floor), PU_LEVEL, NULL);
+               (floormove_t *)(Z_Malloc(sizeof(*floor), PU_LEVEL, NULL));
             memcpy(floor, save_p, sizeof(*floor));
             save_p += sizeof(*floor);
             floor->sector = &sectors[(int)floor->sector];
@@ -1197,7 +1197,7 @@ void P_UnArchiveSpecials(void)
       case tc_plat:
          PADSAVEP();
          {
-            plat_t *plat = Z_Malloc(sizeof(*plat), PU_LEVEL, NULL);
+            plat_t *plat = (plat_t *)(Z_Malloc(sizeof(*plat), PU_LEVEL, NULL));
             memcpy(plat, save_p, sizeof(*plat));
             save_p += sizeof(*plat);
             plat->sector = &sectors[(int)plat->sector];
@@ -1218,7 +1218,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             lightflash_t *flash = 
-               Z_Malloc(sizeof(*flash), PU_LEVEL, NULL);
+               (lightflash_t *)(Z_Malloc(sizeof(*flash), PU_LEVEL, NULL));
             memcpy(flash, save_p, sizeof(*flash));
             save_p += sizeof(*flash);
             flash->sector = &sectors[(int)flash->sector];
@@ -1231,7 +1231,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             strobe_t *strobe = 
-               Z_Malloc(sizeof(*strobe), PU_LEVEL, NULL);
+               (strobe_t *)(Z_Malloc(sizeof(*strobe), PU_LEVEL, NULL));
             memcpy(strobe, save_p, sizeof(*strobe));
             save_p += sizeof(*strobe);
             strobe->sector = &sectors[(int)strobe->sector];
@@ -1243,7 +1243,7 @@ void P_UnArchiveSpecials(void)
       case tc_glow:
          PADSAVEP();
          {
-            glow_t *glow = Z_Malloc(sizeof(*glow), PU_LEVEL, NULL);
+            glow_t *glow = (glow_t *)(Z_Malloc(sizeof(*glow), PU_LEVEL, NULL));
             memcpy(glow, save_p, sizeof(*glow));
             save_p += sizeof(*glow);
             glow->sector = &sectors[(int)glow->sector];
@@ -1256,7 +1256,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             fireflicker_t *flicker = 
-               Z_Malloc(sizeof(*flicker), PU_LEVEL, NULL);
+               (fireflicker_t *)(Z_Malloc(sizeof(*flicker), PU_LEVEL, NULL));
             memcpy(flicker, save_p, sizeof(*flicker));
             save_p += sizeof(*flicker);
             flicker->sector = &sectors[(int)flicker->sector];
@@ -1270,7 +1270,7 @@ void P_UnArchiveSpecials(void)
          PADSAVEP();
          {
             elevator_t *elevator = 
-               Z_Malloc(sizeof(*elevator), PU_LEVEL, NULL);
+               (elevator_t *)(Z_Malloc(sizeof(*elevator), PU_LEVEL, NULL));
             memcpy(elevator, save_p, sizeof(*elevator));
             save_p += sizeof(*elevator);
             elevator->sector = &sectors[(int)elevator->sector];
@@ -1285,7 +1285,7 @@ void P_UnArchiveSpecials(void)
       case tc_scroll:       // killough 3/7/98: scroll effect thinkers
          {
             scroll_t *scroll = 
-               Z_Malloc(sizeof(scroll_t), PU_LEVEL, NULL);
+               (scroll_t *)(Z_Malloc(sizeof(scroll_t), PU_LEVEL, NULL));
             memcpy(scroll, save_p, sizeof(scroll_t));
             save_p += sizeof(scroll_t);
             scroll->thinker.function = T_Scroll;
@@ -1296,7 +1296,7 @@ void P_UnArchiveSpecials(void)
       case tc_pusher:   // phares 3/22/98: new Push/Pull effect thinkers
          {
             pusher_t *pusher = 
-               Z_Malloc(sizeof(pusher_t), PU_LEVEL, NULL);
+               (pusher_t *)(Z_Malloc(sizeof(pusher_t), PU_LEVEL, NULL));
             memcpy(pusher, save_p, sizeof(pusher_t));
             save_p += sizeof(pusher_t);
             pusher->thinker.function = T_Pusher;
@@ -1310,7 +1310,7 @@ void P_UnArchiveSpecials(void)
       case tc_polyrotate: 
          {
             polyrotate_t *polyrot =
-               Z_Malloc(sizeof(polyrotate_t), PU_LEVEL, NULL);
+               (polyrotate_t *)(Z_Malloc(sizeof(polyrotate_t), PU_LEVEL, NULL));
             memcpy(polyrot, save_p, sizeof(polyrotate_t));
             save_p += sizeof(polyrotate_t);
             polyrot->thinker.function = T_PolyObjRotate;
@@ -1321,7 +1321,7 @@ void P_UnArchiveSpecials(void)
       case tc_polymove:
          {
             polymove_t *polymove =
-               Z_Malloc(sizeof(polymove_t), PU_LEVEL, NULL);
+               (polymove_t *)(Z_Malloc(sizeof(polymove_t), PU_LEVEL, NULL));
             memcpy(polymove, save_p, sizeof(polymove_t));
             save_p += sizeof(polymove_t);
             polymove->thinker.function = T_PolyObjMove;
@@ -1332,7 +1332,7 @@ void P_UnArchiveSpecials(void)
       case tc_polyslidedoor:
          {
             polyslidedoor_t *psldoor =
-               Z_Malloc(sizeof(polyslidedoor_t), PU_LEVEL, NULL);
+               (polyslidedoor_t *)(Z_Malloc(sizeof(polyslidedoor_t), PU_LEVEL, NULL));
             memcpy(psldoor, save_p, sizeof(polyslidedoor_t));
             save_p += sizeof(polyslidedoor_t);
             psldoor->thinker.function = T_PolyDoorSlide;
@@ -1343,7 +1343,7 @@ void P_UnArchiveSpecials(void)
       case tc_polyswingdoor:
          {
             polyswingdoor_t *pswdoor =
-               Z_Malloc(sizeof(polyswingdoor_t), PU_LEVEL, NULL);
+               (polyswingdoor_t *)(Z_Malloc(sizeof(polyswingdoor_t), PU_LEVEL, NULL));
             memcpy(pswdoor, save_p, sizeof(polyswingdoor_t));
             save_p += sizeof(polyswingdoor_t);
             pswdoor->thinker.function = T_PolyDoorSwing;
@@ -1353,7 +1353,7 @@ void P_UnArchiveSpecials(void)
       
       case tc_pillar:
          {
-            pillar_t *pillar = Z_Malloc(sizeof(pillar_t), PU_LEVEL, NULL);
+            pillar_t *pillar = (pillar_t *)(Z_Malloc(sizeof(pillar_t), PU_LEVEL, NULL));
             memcpy(pillar, save_p, sizeof(pillar_t));
             save_p += sizeof(pillar_t);
             pillar->sector = &sectors[(int)pillar->sector];
@@ -1367,7 +1367,8 @@ void P_UnArchiveSpecials(void)
 
       case tc_quake:
          {
-            quakethinker_t *quake = Z_Malloc(sizeof(quakethinker_t), PU_LEVEL, NULL);
+            quakethinker_t *quake = 
+               (quakethinker_t *)(Z_Malloc(sizeof(quakethinker_t), PU_LEVEL, NULL));
             memcpy(quake, save_p, sizeof(quakethinker_t));
             save_p += sizeof(quakethinker_t);
             quake->origin.thinker.function = T_QuakeThinker;
@@ -1377,7 +1378,8 @@ void P_UnArchiveSpecials(void)
 
       case tc_lightfade:
          {
-            lightfade_t *fade = Z_Malloc(sizeof(lightfade_t), PU_LEVEL, NULL);
+            lightfade_t *fade = 
+               (lightfade_t *)(Z_Malloc(sizeof(lightfade_t), PU_LEVEL, NULL));
             memcpy(fade, save_p, sizeof(lightfade_t));
             save_p += sizeof(lightfade_t);
             fade->thinker.function = T_LightFade;
@@ -1388,7 +1390,8 @@ void P_UnArchiveSpecials(void)
       
       case tc_floorwaggle:
          {
-            floorwaggle_t *waggle = Z_Malloc(sizeof(floorwaggle_t), PU_LEVEL, NULL);
+            floorwaggle_t *waggle = 
+               (floorwaggle_t *)(Z_Malloc(sizeof(floorwaggle_t), PU_LEVEL, NULL));
             memcpy(waggle, save_p, sizeof(floorwaggle_t));
             save_p += sizeof(floorwaggle_t);
             waggle->thinker.function = T_FloorWaggle;
@@ -1401,7 +1404,8 @@ void P_UnArchiveSpecials(void)
       case tc_acs:
          {
             mobj_t *mo;
-            acsthinker_t *acs = Z_Malloc(sizeof(acsthinker_t), PU_LEVEL, NULL);
+            acsthinker_t *acs = 
+               (acsthinker_t *)(Z_Malloc(sizeof(acsthinker_t), PU_LEVEL, NULL));
             memcpy(acs, save_p, sizeof(acsthinker_t));
             save_p += sizeof(acsthinker_t);
             acs->thinker.function = T_ACSThinker;
@@ -1483,8 +1487,8 @@ void P_UnArchiveMap(void)
    {
       while(markpointnum >= markpointnum_max)
       {
-         markpoints = realloc(markpoints, sizeof *markpoints *
-            (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16));
+         markpoints = (mpoint_t *)(realloc(markpoints, sizeof *markpoints *
+            (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16)));
       }
       memcpy(markpoints, save_p, markpointnum * sizeof *markpoints);
       save_p += markpointnum * sizeof *markpoints;
@@ -1709,7 +1713,7 @@ static void P_UnArchiveCallbacks(void)
    // read until the end marker is hit
    while(*save_p != SC_VM_END)
    {
-      sc_callback_t *newCallback = malloc(sizeof(sc_callback_t));
+      sc_callback_t *newCallback = (sc_callback_t *)(malloc(sizeof(sc_callback_t)));
 
       memcpy(newCallback, save_p, sizeof(sc_callback_t));
 
@@ -1873,7 +1877,7 @@ static void P_UnArchiveSndSeq(void)
    char name[33];
 
    // allocate a new sound sequence
-   newSeq = Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL);
+   newSeq = (SndSeq_t *)(Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL));
 
    // get corresponding EDF sequence
    memcpy(name, save_p, 33);
@@ -2049,7 +2053,7 @@ void P_UnArchiveButtons(void)
    // if not equal, we need to realloc buttonlist
    if(numsaved != numbuttonsalloc)
    {
-      buttonlist = realloc(buttonlist, numsaved * sizeof(button_t));
+      buttonlist = (button_t *)(realloc(buttonlist, numsaved * sizeof(button_t)));
       numbuttonsalloc = numsaved;
    }
 

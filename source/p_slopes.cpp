@@ -41,7 +41,7 @@
 static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
                              const float zdelta, boolean isceiling)
 {
-   pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
+   pslope_t *ret = (pslope_t *)(Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL));
    memset(ret, 0, sizeof(*ret));
 
    ret->o.x = M_FloatToFixed(ret->of.x = o->x);
@@ -101,7 +101,7 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d,
 //
 static pslope_t *P_CopySlope(const pslope_t *src)
 {
-   pslope_t *ret = Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL);
+   pslope_t *ret = (pslope_t *)(Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL));
    memcpy(ret, src, sizeof(*ret));
 
    return ret;

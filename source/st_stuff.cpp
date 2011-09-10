@@ -1063,31 +1063,33 @@ void ST_CacheFaces(patch_t **faces, char *facename)
       for(j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
          sprintf(namebuf, "%sST%d%d", facename, i, j);
-         // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-         faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+         /*
+         faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+         */
+         faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
       }
       sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
-      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+      // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
       sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
-      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+      // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
       sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
-      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+      // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
       sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
-      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+      // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
       sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
-      // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-      faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+      // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+      faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
    }
    sprintf(namebuf, "%sGOD0",facename);
-   // faces[facenum++] = W_CacheLumpName(namebuf, PU_STATIC);
-   faces[facenum++] = W_CacheLumpName(namebuf, PU_RENDERER);
+   // faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+   faces[facenum++] = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
    sprintf(namebuf, "%sDEAD0",facename);
-   // faces[facenum]   = W_CacheLumpName(namebuf, PU_STATIC);
-   faces[facenum]   = W_CacheLumpName(namebuf, PU_RENDERER);
+   // faces[facenum]   = (patch_t *)(W_CacheLumpName(namebuf, PU_STATIC));
+   faces[facenum]   = (patch_t *)(W_CacheLumpName(namebuf, PU_RENDERER));
 }
 
 static void ST_loadData(void)
@@ -1380,7 +1382,7 @@ static void ST_Stop(void)
 {
    if(st_stopped)
       return;
-   I_SetPalette(W_CacheLumpNum(lu_palette, PU_CACHE));   
+   I_SetPalette((byte *)(W_CacheLumpNum(lu_palette, PU_CACHE)));   
    st_stopped = true;
 }
 

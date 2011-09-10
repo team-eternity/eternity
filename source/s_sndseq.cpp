@@ -244,7 +244,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
    S_StopSequence(mo);
 
    // allocate a new SndSeq object and link it
-   newSeq = Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL);
+   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
 
    M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
 
@@ -329,7 +329,7 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
    S_StopSequence(mo);
 
    // allocate a new SndSeq object and link it
-   newSeq = Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL);
+   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
 
    M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
 

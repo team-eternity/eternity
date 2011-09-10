@@ -80,7 +80,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            tranmap = W_CacheLumpNum(linedef->tranlump-1, PU_STATIC);
+            tranmap = (byte *)(W_CacheLumpNum(linedef->tranlump-1, PU_STATIC));
          else
             tranmap = main_tranmap;
       }
@@ -448,7 +448,7 @@ static void R_CheckDSAlloc(void)
    if(ds_p == drawsegs + maxdrawsegs)
    {
       unsigned int newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-      drawsegs    = realloc(drawsegs, sizeof(drawseg_t) * newmax);
+      drawsegs    = (drawseg_t *)(realloc(drawsegs, sizeof(drawseg_t) * newmax));
       ds_p        = drawsegs + maxdrawsegs;
       maxdrawsegs = newmax;
    }

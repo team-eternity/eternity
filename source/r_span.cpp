@@ -355,7 +355,7 @@ static void R_DrawSpan_OLD(void)
    position = ((span.yfrac<<10)&0xffff0000) | ((span.xfrac>>6)&0xffff);
    step     = ((span.ystep<<10)&0xffff0000) | ((span.xstep>>6)&0xffff);
    
-   source   = span.source;
+   source   = (byte *)(span.source);
    colormap = span.colormap;
    dest     = ylookup[span.y] + columnofs[span.x1];       
    count    = span.x2 - span.x1 + 1; 

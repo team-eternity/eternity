@@ -96,7 +96,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    char   *buffer;
    
    size   = D_FileLength(dwfile);
-   buffer = malloc(size + 1);
+   buffer = (char *)(malloc(size + 1));
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {
@@ -162,7 +162,7 @@ void lexer_reset(void)
 
    // reset lexer variables
    mytext = NULL;
-   unquoted_spaces = false;
+   unquoted_spaces = cfg_false;
 
    // free qstring buffer
    QStrFree(&qstring);

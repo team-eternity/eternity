@@ -229,7 +229,7 @@ void D_ProcessEvents(void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 
-gamestate_t    oldgamestate = -1;  // sf: globaled
+gamestate_t    oldgamestate  = -1;  // sf: globaled
 gamestate_t    wipegamestate = GS_DEMOSCREEN;
 void           R_ExecuteSetViewSize(void);
 camera_t       *camera;
@@ -340,7 +340,7 @@ void D_Display(void)
 
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+         I_SetPalette((byte *)(W_CacheLumpName("PLAYPAL", PU_CACHE)));
 
       oldgamestate = wipegamestate = gamestate;
 
@@ -460,7 +460,7 @@ void D_PageDrawer(void)
 
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
-      t = W_CacheLumpNum(l, PU_CACHE);
+      t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
 
       // haleyjd 08/15/02: handle Heretic pages
       V_DrawFSBackground(&vbscreen, t, W_LumpLength(l));
@@ -468,7 +468,7 @@ void D_PageDrawer(void)
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
          l = W_GetNumForName("ADVISOR");
-         t = W_CacheLumpNum(l, PU_CACHE);
+         t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
          V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
       }
    }
@@ -642,7 +642,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    {
       numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
 
-      wadfiles = realloc(wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
+      wadfiles = (wfileadd_t *)(realloc(wadfiles, numwadfiles_alloc * sizeof(*wadfiles)));
    }
 
    wadfiles[numwadfiles].filename     = strdup(file);
@@ -688,7 +688,7 @@ char *D_DoomExeDir(void)
 
       size_t len = strlen(myargv[0]) + 1;
 
-      base = malloc(len);
+      base = (char *)(malloc(len));
 
       // haleyjd 03/09/03: generalized
       M_GetFilePath(myargv[0], base, len);
@@ -696,7 +696,7 @@ char *D_DoomExeDir(void)
       // haleyjd 10/28/04: the above is not sufficient for all versions
       // of Windows. There is an API function which takes care of this,
       // however.  See i_fnames.c in the Win32 subdirectory.
-      base = malloc(PATH_MAX + 1);
+      base = (char *)(malloc(PATH_MAX + 1));
 
       WIN_GetExeDir(base, PATH_MAX + 1);
 #endif
@@ -724,7 +724,7 @@ char *D_DoomExeName(void)
       while(p[i] && p[i] != '.')
          i++;
 
-      name = calloc(1, i + 1);
+      name = (char *)(calloc(1, i + 1));
 
       strncpy(name, p, i);
    }
@@ -973,7 +973,7 @@ static char *D_CheckGameEDF(void)
    static char *game_edf;
    size_t len = strlen(basegamepath) + 10;
 
-   game_edf = malloc(len);
+   game_edf = (char *)(malloc(len));
 
    psnprintf(game_edf, len, "%s/root.edf", basegamepath);
 
@@ -1005,7 +1005,7 @@ static void D_EnumerateAutoloadDir(void)
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {
       size_t len = strlen(basegamepath) + 10;
-      autoload_dirname = malloc(len);
+      autoload_dirname = (char *)(malloc(len));
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
 
@@ -1043,7 +1043,7 @@ static void D_GameAutoloadWads(void)
 
             psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
             M_NormalizeSlashes(fn);
-            D_AddFile(fn, ns_global, NULL, 0, 0);
+            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
 
@@ -1211,7 +1211,7 @@ static void D_FindDiskFileIWAD(void)
 static void D_LoadDiskFileIWAD(void)
 {
    if(diskiwad.f)
-      D_AddFile(diskiwad.name, ns_global, diskiwad.f, diskiwad.offset, 0);
+      D_AddFile(diskiwad.name, lumpinfo_t::ns_global, diskiwad.f, diskiwad.offset, 0);
    else
       I_Error("D_LoadDiskFileIWAD: invalid file pointer\n");
 }
@@ -1228,7 +1228,7 @@ static void D_LoadDiskFilePWAD(void)
    if(wad.f)
    {
       if(!strstr(wad.name, "doom")) // do not add doom[2].wad twice
-         D_AddFile(wad.name, ns_global, wad.f, wad.offset, 0);
+         D_AddFile(wad.name, lumpinfo_t::ns_global, wad.f, wad.offset, 0);
    }
 }
 
@@ -1309,7 +1309,7 @@ static void D_DiskMetaData(void)
    strcpy(name + slen, "metadata.txt");
 
    // load it up
-   if(!(metatext = D_CacheDiskFileResource(diskfile, name, true)))
+   if(!(metatext = (char *)(D_CacheDiskFileResource(diskfile, name, true))))
       return;
 
    // parse it
@@ -1747,7 +1747,7 @@ char *FindIWADFile(void)
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
 
-      iwad = calloc(1, strlen(baseiwad) + 1024);
+      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
       strcpy(iwad, baseiwad);
 
       if(WadFileStatus(iwad, &isdir))
@@ -1796,7 +1796,7 @@ char *FindIWADFile(void)
             free(iwad);
             iwad = NULL;
          }
-         iwad = calloc(1, strlen(D_DoomExeDir()) + 1024);
+         iwad = (char *)(calloc(1, strlen(D_DoomExeDir()) + 1024));
          strcpy(iwad, j ? D_DoomExeDir() : ".");
          break;
       case 2:
@@ -1806,7 +1806,7 @@ char *FindIWADFile(void)
             free(iwad);
             iwad = NULL;
          }
-         iwad = calloc(1, strlen(basegamepath) + 1024);
+         iwad = (char *)(calloc(1, strlen(basegamepath) + 1024));
          strcpy(iwad, basegamepath);
          break;
       }
@@ -1845,7 +1845,7 @@ char *FindIWADFile(void)
             free(iwad);
             iwad = NULL;
          }
-         iwad = calloc(1, sizeof(p) + 1024);
+         iwad = (char *)(calloc(1, sizeof(p) + 1024));
          M_NormalizeSlashes(strcpy(iwad, p));
          if(WadFileStatus(iwad, &isdir))
          {
@@ -1908,7 +1908,7 @@ static void D_LoadResourceWad(void)
       psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, ns_global, NULL, 0, 0);
+   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, 0);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1976,7 +1976,7 @@ static void D_InitPaths(void)
                    strlen(D_DoomExeName()) + 8;
       if(basedefault != NULL)
          free(basedefault);
-      basedefault = malloc(len);
+      basedefault = (char *)(malloc(len));
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
                 basepath, D_DoomExeName());
@@ -1987,7 +1987,7 @@ static void D_InitPaths(void)
 
       if(basedefault != NULL)
          free(basedefault);
-      basedefault = malloc(len);
+      basedefault = (char *)(malloc(len));
 
       psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
    }
@@ -2101,7 +2101,7 @@ static void IdentifyIWAD(void)
       // fraggle -- this allows better compatibility with new IWADs
       D_LoadResourceWad();
 
-      D_AddFile(iwad, ns_global, NULL, 0, 0);
+      D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
 
       // done with iwad string
       free(iwad);
@@ -2196,7 +2196,7 @@ void FindResponseFile(void)
          int size, index, indexinfile;
          byte *f;
          char *file = NULL, *firstargv;
-         char **moreargs = malloc(myargc * sizeof(char *));
+         char **moreargs = (char **)(malloc(myargc * sizeof(char *)));
          char **newargv;
          char *fname = NULL;
 
@@ -2219,7 +2219,7 @@ void FindResponseFile(void)
             int k;
             printf("\nResponse file empty!\n");
 
-            newargv = calloc(sizeof(char *), MAXARGVS);
+            newargv = (char **)(calloc(sizeof(char *), MAXARGVS));
             newargv[0] = myargv[0];
             for(k = 1, index = 1; k < myargc; k++)
             {
@@ -2235,7 +2235,7 @@ void FindResponseFile(void)
                 (index = myargc - i - 1) * sizeof(myargv[0]));
 
          firstargv = myargv[0];
-         newargv = calloc(sizeof(char *),MAXARGVS);
+         newargv = (char **)(calloc(sizeof(char *),MAXARGVS));
          newargv[0] = firstargv;
 
          {
@@ -2252,7 +2252,7 @@ void FindResponseFile(void)
 
                if(size > 0)
                {
-                  char *s = malloc(size+1);
+                  char *s = (char *)(malloc(size+1));
                   char *p = s;
                   int quoted = 0;
 
@@ -2276,7 +2276,7 @@ void FindResponseFile(void)
 
                   // Terminate string, realloc and add to argv
                   *p = 0;
-                  newargv[indexinfile++] = realloc(s,strlen(s)+1);
+                  newargv[indexinfile++] = (char *)(realloc(s,strlen(s)+1));
                }
             }
             while(size > 0);
@@ -2378,7 +2378,7 @@ static void D_ProcessWadPreincludes(void)
 
                M_AddDefaultExtension(strcpy(file, s), ".wad");
                if(!access(file, R_OK))
-                  D_AddFile(file, ns_global, NULL, 0, 0);
+                  D_AddFile(file, lumpinfo_t::ns_global, NULL, 0, 0);
                else
                   printf("\nWarning: could not open %s\n", file);
             }
@@ -2474,7 +2474,7 @@ static void D_ProcessDehInWad(int i)
    {
       D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
       if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "DEHACKED", 8) &&
-         w_GlobalDir.lumpinfo[i]->li_namespace == ns_global)
+         w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
 }
@@ -2562,7 +2562,7 @@ static void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
    }
 }
 
@@ -2730,7 +2730,7 @@ static void D_LooseWads(void)
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, ns_global, NULL, 0, 0);
+      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, 0);
    }
 }
 
@@ -3047,7 +3047,7 @@ static void D_DoomInit(void)
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
-   savegamename = Z_Malloc(16, PU_STATIC, NULL);
+   savegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
    psnprintf(savegamename, 16, "%.4ssav", D_DoomExeName());
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
@@ -3130,7 +3130,7 @@ static void D_DoomInit(void)
 
       len = strlen(D_DoomExeName()) + 18;
 
-      basedefault = malloc(len);
+      basedefault = (char *)(malloc(len));
 
       psnprintf(basedefault, len, "c:/doomdata/%s.cfg", D_DoomExeName());
    }
@@ -3163,14 +3163,9 @@ static void D_DoomInit(void)
          while(++p < myargc)
          {
             if(*myargv[p] == '-')
-            {
                file = !strcasecmp(myargv[p], "-file");
-            }
-            else
-            {
-               if(file)
-                  D_AddFile(myargv[p], ns_global, NULL, 0, 0);
-            }
+            else if(file)
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
 
@@ -3190,7 +3185,7 @@ static void D_DoomInit(void)
          strncpy(file, myargv[p + 1], len);
 
          M_AddDefaultExtension(file, ".lmp");     // killough
-         D_AddFile(file, ns_demos, NULL, 0, 0);
+         D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
          usermsg("Playing demo %s\n",file);
       }
 
@@ -3204,7 +3199,7 @@ static void D_DoomInit(void)
 
       if((p = M_CheckParm("-skill")) && p < myargc - 1)
       {
-         startskill = myargv[p+1][0]-'1';
+         startskill = (skill_t)(myargv[p+1][0]-'1');
          autostart = true;
       }
 
@@ -3927,7 +3922,7 @@ boolean D_AddNewFile(const char *s)
    if(W_AddNewFile(&w_GlobalDir, s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, ns_global, NULL, 0, 0);   // add to the list of wads
+   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
    C_SetConsole();
    D_ReInitWadfiles();
    return true;

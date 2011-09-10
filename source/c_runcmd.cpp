@@ -93,13 +93,13 @@ static void C_nextCmdToken(void)
 
       // grow by MAXTOKENS at a time (doubling is likely to waste memory)
       numtokensalloc += MAXTOKENS;
-      cmdtokens = realloc(cmdtokens, numtokensalloc * sizeof(qstring_t));
+      cmdtokens = (qstring_t *)(realloc(cmdtokens, numtokensalloc * sizeof(qstring_t)));
 
       for(i = numtokens; i < numtokensalloc; i++)
          QStrInitCreateSize(&cmdtokens[i], 128);
 
       Console.numargvsalloc += MAXTOKENS;
-      Console.argv = realloc(Console.argv, Console.numargvsalloc * sizeof(qstring_t));
+      Console.argv = (qstring_t *)(realloc(Console.argv, Console.numargvsalloc * sizeof(qstring_t)));
 
       for(i = numtokens; i < Console.numargvsalloc; i++)
          QStrInitCreateSize(&Console.argv[i], 128);
@@ -121,10 +121,10 @@ static void C_initCmdTokens(void)
       int i;
 
       // haleyjd: MAXTOKENS is now just the starting size of the array
-      cmdtokens = calloc(MAXTOKENS, sizeof(qstring_t));
+      cmdtokens = (qstring_t *)(calloc(MAXTOKENS, sizeof(qstring_t)));
       numtokensalloc = MAXTOKENS;
 
-      Console.argv = calloc(MAXTOKENS, sizeof(qstring_t));
+      Console.argv = (qstring_t *)(calloc(MAXTOKENS, sizeof(qstring_t)));
       Console.numargvsalloc = MAXTOKENS;
 
       for(i = 0; i < numtokensalloc; i++)
@@ -302,28 +302,26 @@ static void C_RunIndivRCONTextCmd(const char *cmdname, int clientnum)
       C_RunCommand(command, cmdname + QStrLen(&cmdtokens[0]));
    }
    else
-   {
       SV_SendMessage(clientnum, "Insufficient RCON authorization.\n");
-   }
 }
 
-typedef enum flagcheckval
+enum
 {
    CCF_CANNOTSET = 0,    // cannot set anything.
    CCF_CANSETVAR = 0x01, // can set the variable's normal value
    CCF_CANSETDEF = 0x02, // can set the variable's default
 
    CCF_CANSETALL = CCF_CANSETVAR | CCF_CANSETDEF
-} flagcheckval_e;
+};
 
 //
 // C_CheckFlags
 //
 // Check the flags of a command to see if it should be run or not.
 //
-static flagcheckval_e C_CheckFlags(command_t *command, const char **errormsg)
+static int C_CheckFlags(command_t *command, const char **errormsg)
 {
-   flagcheckval_e returnval = CCF_CANSETALL;
+   int returnval = CCF_CANSETALL;
 
    // [CG] Modified this function to include clientserver and serverside.
 
@@ -594,7 +592,7 @@ void C_RunTextCmd(const char *command)
 
          // left
          // copy sub command, alloc slightly more than needed
-         sub_command = calloc(1, rover-command+3);
+         sub_command = (char *)(calloc(1, rover - command + 3)); 
          strncpy(sub_command, command, rover-command);
          sub_command[rover-command] = '\0';   // end string
 
@@ -726,7 +724,7 @@ const char *C_VariableValue(variable_t *variable)
 const char *C_VariableStringValue(variable_t *variable)
 {
    static qstring_t value;
-   flagcheckval_e stateflags;
+   int stateflags;
    const char *dummymsg = NULL;
 
    QStrClearOrCreate(&value, 1024);
@@ -808,7 +806,7 @@ static boolean isnum(const char *text)
 // Take a string and see if it matches a define for a variable. Replace with the
 // literal value if so.
 //
-static const char *C_ValueForDefine(variable_t *variable, const char *s, flagcheckval_e setflags)
+static const char *C_ValueForDefine(variable_t *variable, const char *s, int setflags)
 {
    int count;
    static qstring_t returnstr;
@@ -953,7 +951,7 @@ static void C_SetVariable(command_t *command)
    double fs = 0.0;
    char *errormsg;
    const char *temp;
-   flagcheckval_e setflags;
+   int setflags;
    const char *varerror = NULL;
 
    // cut off the leading spaces
@@ -1131,7 +1129,7 @@ static void CheckTabs(void)
    if(numtabs >= numtabsalloc)
    {
       numtabsalloc = numtabsalloc ? 2 * numtabsalloc : 128;
-      tabs = realloc(tabs, numtabsalloc * sizeof(command_t *));
+      tabs = (command_t **)(realloc(tabs, numtabsalloc * sizeof(command_t *)));
    }
 }
 
@@ -1316,7 +1314,7 @@ alias_t *C_NewAlias(const char *aliasname, const char *command)
    else
    {
       // create a new alias
-      alias = malloc(sizeof(alias_t));
+      alias = (alias_t *)(malloc(sizeof(alias_t)));
       alias->name = strdup(aliasname);
       alias->command = strdup(command);
       alias->next = aliases.next;
@@ -1433,7 +1431,7 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
    bufferedcmd *newbuf;
 
    // create bufferedcmd
-   newbuf = malloc(sizeof(bufferedcmd));
+   newbuf = (bufferedcmd *)(malloc(sizeof(bufferedcmd)));
 
    // add to new bufferedcmd
    newbuf->command = command;

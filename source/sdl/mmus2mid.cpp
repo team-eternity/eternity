@@ -184,7 +184,7 @@ static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
         TRACKBUFFERSIZE;
 
       if(!(mididata->track[MIDItrack].data =     // attempt to reallocate
-         realloc(mididata->track[MIDItrack].data, track[MIDItrack].alloced)))
+         (unsigned char *)(realloc(mididata->track[MIDItrack].data, track[MIDItrack].alloced))))
 
       return MEMALLOC;
    }
@@ -395,7 +395,7 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
    
    // allocat for midi tempo/key track, allow for end of track 
    if(!(mididata->track[0].data =
-      realloc(mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4)))  
+      (unsigned char *)(realloc(mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4))))  
       return MEMALLOC;
 
    // key C major
@@ -561,7 +561,7 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
          // jff 1/23/98 fix failure to set data NULL, len 0 for unused tracks
          // shorten allocation to proper length (important for Allegro)
          if(!(mididata->track[i].data =
-            realloc(mididata->track[i].data,mididata->track[i].len)))
+            (unsigned char *)(realloc(mididata->track[i].data,mididata->track[i].len))))
             return MEMALLOC;
       }
       else
@@ -640,7 +640,7 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
       mididata->track[i].len = ReadLength(&mid);  // get length, move mid past it
       
       // read a track
-      mididata->track[i].data = realloc(mididata->track[i].data,mididata->track[i].len);
+      mididata->track[i].data = (unsigned char *)(realloc(mididata->track[i].data,mididata->track[i].len));
       memcpy(mididata->track[i].data,mid,mididata->track[i].len);
       mid += mididata->track[i].len;
    }
@@ -731,7 +731,7 @@ int MIDIToMidi(MIDI *mididata,UBYTE **mid,int *midlen)
          ntrks++;
       }
    }
-   if((*mid = malloc(total)) == NULL)
+   if((*mid = (UBYTE *)(malloc(total))) == NULL)
       return MEMALLOC;
    
 
@@ -815,7 +815,7 @@ int main(int argc,char **argv)
       if(musst)
       {
          fread(&MUSh,sizeof(MUSheader),1,musst);
-         mus = malloc(MUSh.ScoreLength+MUSh.ScoreStart);
+         mus = (UBYTE *)(malloc(MUSh.ScoreLength+MUSh.ScoreStart));
          if(mus)
          {
             fseek(musst,0,SEEK_SET);

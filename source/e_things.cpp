@@ -2103,8 +2103,8 @@ void E_ProcessThings(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing thing data\n");
 
    // allocate inheritance stack and hitlist
-   thing_hitlist = calloc(NUMMOBJTYPES, sizeof(byte));
-   thing_pstack  = malloc(NUMMOBJTYPES * sizeof(int));
+   thing_hitlist = (byte *)(calloc(NUMMOBJTYPES, sizeof(byte)));
+   thing_pstack  = (int *) (malloc(NUMMOBJTYPES * sizeof(int)));
 
    // 01/17/07: initialize ACS thingtypes array
    for(i = 0; i < ACS_NUM_THINGTYPES; ++i)

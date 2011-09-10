@@ -211,7 +211,7 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
    if(numACSVMs >= numACSVMsAlloc)
    {
       numACSVMsAlloc = numACSVMsAlloc ? numACSVMsAlloc * 2 : 4;
-      acsVMs = (acsvm_t **)realloc(acsVMs, numACSVMsAlloc * sizeof(acsvm_t *));
+      acsVMs = (acsvm_t **)(realloc(acsVMs, numACSVMsAlloc * sizeof(acsvm_t *)));
    }
 
    acsVMs[numACSVMs] = vm;
@@ -314,7 +314,7 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
 {
    acsthinker_t *newScript;
 
-   newScript = Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL);
+   newScript = (acsthinker_t *)(Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL));
 	
    newScript->vmID        = vmID;
    newScript->scriptNum   = acs->number;
@@ -1205,7 +1205,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    }
 
    // load the lump
-   vm->data = W_CacheLumpNum(lump, PU_LEVEL);
+   vm->data = (byte *)(W_CacheLumpNum(lump, PU_LEVEL));
 
    rover = (int32_t *)vm->data;
 
@@ -1223,7 +1223,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       return;
 
    // allocate scripts array
-   vm->scripts = Z_Calloc(1, vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL);
+   vm->scripts = (acscript_t *)(Z_Calloc(1, vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL));
 
    vm->loaded = true;
 
@@ -1249,8 +1249,8 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
    // allocate string table
    if(numstrings > 0)
    {
-      vm->stringtable = (char **)Z_Malloc(numstrings * sizeof(char *), 
-                                          PU_LEVEL, NULL);
+      vm->stringtable = (char **)(Z_Malloc(numstrings * sizeof(char *), 
+                                          PU_LEVEL, NULL));
       
       // set string pointers
       for(i = 0; i < numstrings; ++i)
@@ -1300,7 +1300,7 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
    }
 
    // allocate a new deferredacs_t
-   newdacs = malloc(sizeof(deferredacs_t));
+   newdacs = (deferredacs_t *)(malloc(sizeof(deferredacs_t)));
 
    // set script number
    newdacs->scriptNum = scrnum; 
@@ -1448,7 +1448,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       return foundScripts;
 
    // setup the new script thinker
-   newScript = Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL);
+   newScript = (acsthinker_t *)(Z_Calloc(1, sizeof(acsthinker_t), PU_LEVSPEC, NULL));
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;

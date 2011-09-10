@@ -190,7 +190,7 @@ void A_HealthJump(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (mo->health != checkhealth); break;
    case CPC_BITWISEAND:
-      branch = (mo->health & checkhealth);  break;
+      branch = !!(mo->health & checkhealth);  break;
    default:
       break;
    }
@@ -261,7 +261,7 @@ void A_CounterJump(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (*counter != value); break;
    case CPC_BITWISEAND:
-      branch = (*counter & value);  break;
+      branch = !!(*counter & value);  break;
    default:
       break;
    }
@@ -670,7 +670,7 @@ void A_WeaponCtrJump(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (*counter != value); break;
    case CPC_BITWISEAND:
-      branch = (*counter & value); break;
+      branch = !!(*counter & value); break;
    default:
       break;
    }
@@ -1115,7 +1115,7 @@ void A_CheckReloadEx(mobj_t *mo)
    case CPC_NOTEQUAL:
       branch = (ammo != value); break;
    case CPC_BITWISEAND:
-      branch = (ammo & value); break;
+      branch = !!(ammo & value); break;
    default:
       break;
    }

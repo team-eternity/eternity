@@ -944,7 +944,7 @@ static void R_QDrawColumn(void)
    // killough 2/1/98: more performance tuning
 
    {
-      register const byte *source = column.source;
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1016,7 +1016,7 @@ static void R_QDrawTLColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
      
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1092,7 +1092,7 @@ static void R_QDrawTLTRColumn(void)
 
   
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
       if(column.texheight & heightmask)   // not a power of 2 -- killough
@@ -1198,7 +1198,7 @@ static void R_QDrawTRColumn(void)
 
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1272,7 +1272,7 @@ static void R_QDrawFlexColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1350,7 +1350,7 @@ static void R_QDrawFlexTRColumn(void)
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1424,7 +1424,7 @@ static void R_QDrawAddColumn(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 
@@ -1501,7 +1501,7 @@ static void R_QDrawAddTRColumn(void)
    
    // Here we do an additional index re-mapping.
    {
-      register const byte *source = column.source;            
+      register const byte *source = (const byte *)(column.source);
       register const lighttable_t *colormap = column.colormap; 
       register int heightmask = column.texheight-1;
 

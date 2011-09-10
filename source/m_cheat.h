@@ -27,21 +27,23 @@
 #ifndef __M_CHEAT__
 #define __M_CHEAT__
 
-// killough 4/16/98: Cheat table structure
+enum 
+{ 
+   always   = 0,
+   not_dm   = 1,
+   not_coop = 2,
+   not_demo = 4, 
+   not_menu = 8,
+   not_deh  = 16,
+   beta_only = 32,                  // killough 7/24/98
+   not_net = not_dm | not_coop
+}; 
 
+// killough 4/16/98: Cheat table structure
 extern struct cheat_s {
   const char *cheat;
   const char *const deh_cheat;
-  enum { 
-    always   = 0,
-    not_dm   = 1,
-    not_coop = 2,
-    not_demo = 4, 
-    not_menu = 8,
-    not_deh  = 16,
-    beta_only = 32,                  // killough 7/24/98
-    not_net = not_dm | not_coop
-  } const when;
+  const int when;
   void (*const func)(const void *);
   const int arg;
   uint64_t code, mask;
