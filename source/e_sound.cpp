@@ -752,7 +752,7 @@ void E_ProcessSounds(cfg_t *cfg)
       else
       {
          // create a new sound
-         sfx = calloc(1, sizeof(sfxinfo_t));
+         sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
 
          // copy mnemonic
          strncpy(sfx->mnemonic, mnemonic, 33);
@@ -1257,7 +1257,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = (numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = calloc(1, cmdalloc);
+   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
 
    for(i = 0; i < numcmds; ++i)
    {
@@ -1429,7 +1429,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    else
    {
       // Create a new sound sequence object
-      newSeq = calloc(1, sizeof(ESoundSeq_t));
+      newSeq = (ESoundSeq_t *)(calloc(1, sizeof(ESoundSeq_t)));
       
       // copy keys into sequence object
       strncpy(newSeq->name, name, 33);

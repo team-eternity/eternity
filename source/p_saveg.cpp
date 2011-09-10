@@ -258,46 +258,46 @@ void P_ArchiveWorld(void)
    {
       // killough 10/98: save full floor & ceiling heights, including fraction
       memcpy(put, &sec->floorheight, sizeof(sec->floorheight));
-      put = (void *)((char *) put + sizeof(sec->floorheight));
+      put = (int16_t *)((char *) put + sizeof(sec->floorheight));
       memcpy(put, &sec->ceilingheight, sizeof(sec->ceilingheight));
-      put = (void *)((char *) put + sizeof(sec->ceilingheight));
+      put = (int16_t *)((char *) put + sizeof(sec->ceilingheight));
 
       // haleyjd: save the friction information too
       memcpy(put, &sec->friction, sizeof(sec->friction));
-      put = (void *)((char *) put + sizeof(sec->friction));
+      put = (int16_t *)((char *) put + sizeof(sec->friction));
       memcpy(put, &sec->movefactor, sizeof(sec->movefactor));
-      put = (void *)((char *) put + sizeof(sec->movefactor));
+      put = (int16_t *)((char *) put + sizeof(sec->movefactor));
 
       // haleyjd 03/04/07: save colormap indices
       memcpy(put, &sec->topmap, sizeof(sec->topmap));
-      put = (void *)((char *) put + sizeof(sec->topmap));
+      put = (int16_t *)((char *) put + sizeof(sec->topmap));
       memcpy(put, &sec->midmap, sizeof(sec->midmap));
-      put = (void *)((char *) put + sizeof(sec->midmap));
+      put = (int16_t *)((char *) put + sizeof(sec->midmap));
       memcpy(put, &sec->bottommap, sizeof(sec->bottommap));
-      put = (void *)((char *) put + sizeof(sec->bottommap));
+      put = (int16_t *)((char *) put + sizeof(sec->bottommap));
 
       // haleyjd 12/28/08: save sector flags
       // haleyjd 08/30/09: intflags
       memcpy(put, &sec->flags, sizeof(sec->flags));
-      put = (void *)((char *) put + sizeof(sec->flags));
+      put = (int16_t *)((char *) put + sizeof(sec->flags));
       memcpy(put, &sec->intflags, sizeof(sec->intflags));
-      put = (void *)((char *) put + sizeof(sec->intflags));
+      put = (int16_t *)((char *) put + sizeof(sec->intflags));
 
       // haleyjd 03/02/09: save sector damage properties
       memcpy(put, &sec->damage, sizeof(sec->damage));
-      put = (void *)((char *) put + sizeof(sec->damage));
+      put = (int16_t *)((char *) put + sizeof(sec->damage));
       memcpy(put, &sec->damageflags, sizeof(sec->damageflags));
-      put = (void *)((char *) put + sizeof(sec->damageflags));
+      put = (int16_t *)((char *) put + sizeof(sec->damageflags));
       memcpy(put, &sec->damagemask, sizeof(sec->damagemask));
-      put = (void *)((char *) put + sizeof(sec->damagemask));
+      put = (int16_t *)((char *) put + sizeof(sec->damagemask));
       memcpy(put, &sec->damagemod, sizeof(sec->damagemod));
-      put = (void *)((char *) put + sizeof(sec->damagemod));
+      put = (int16_t *)((char *) put + sizeof(sec->damagemod));
 
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
       memcpy(put, &sec->floorpic, sizeof(sec->floorpic));
-      put = (void *)((char *)put + sizeof(sec->floorpic));
+      put = (int16_t *)((char *)put + sizeof(sec->floorpic));
       memcpy(put, &sec->ceilingpic, sizeof(sec->ceilingpic));
-      put = (void *)((char *)put + sizeof(sec->ceilingpic));
+      put = (int16_t *)((char *)put + sizeof(sec->ceilingpic));
 
       *put++ = sec->lightlevel;
       *put++ = sec->oldlightlevel; // haleyjd
@@ -325,9 +325,9 @@ void P_ArchiveWorld(void)
             // preserving fractional scroll offsets
             
             memcpy(put, &si->textureoffset, sizeof(si->textureoffset));
-            put = (void *)((char *) put + sizeof(si->textureoffset));
+            put = (int16_t *)((char *) put + sizeof(si->textureoffset));
             memcpy(put, &si->rowoffset, sizeof(si->rowoffset));
-            put = (void *)((char *) put + sizeof(si->rowoffset));
+            put = (int16_t *)((char *) put + sizeof(si->rowoffset));
             
             *put++ = si->toptexture;
             *put++ = si->bottomtexture;
@@ -338,13 +338,13 @@ void P_ArchiveWorld(void)
 
    // haleyjd 08/30/09: save state of lightning engine
    memcpy(put, &NextLightningFlash, sizeof(NextLightningFlash));
-   put = (void *)((char *)put + sizeof(NextLightningFlash));
+   put = (int16_t *)((char *)put + sizeof(NextLightningFlash));
    memcpy(put, &LightningFlash, sizeof(LightningFlash));
-   put = (void *)((char *)put + sizeof(LightningFlash));
+   put = (int16_t *)((char *)put + sizeof(LightningFlash));
    memcpy(put, &LevelSky, sizeof(LevelSky));
-   put = (void *)((char *)put + sizeof(LevelSky));
+   put = (int16_t *)((char *)put + sizeof(LevelSky));
    memcpy(put, &LevelTempSky, sizeof(LevelTempSky));
-   put = (void *)((char *)put + sizeof(LevelTempSky));
+   put = (int16_t *)((char *)put + sizeof(LevelTempSky));
 
    save_p = (byte *)put;
 }
@@ -372,45 +372,45 @@ void P_UnArchiveWorld(void)
    {
       // killough 10/98: load full floor & ceiling heights, including fractions      
       memcpy(&sec->floorheight, get, sizeof(sec->floorheight));
-      get = (void *)((char *) get + sizeof(sec->floorheight));
+      get = (int16_t *)((char *) get + sizeof(sec->floorheight));
       memcpy(&sec->ceilingheight, get, sizeof(sec->ceilingheight));
-      get = (void *)((char *) get + sizeof(sec->ceilingheight));
+      get = (int16_t *)((char *) get + sizeof(sec->ceilingheight));
 
       // haleyjd: retrieve the friction information we now save
       memcpy(&sec->friction, get, sizeof(sec->friction));
-      get = (void *)((char *) get + sizeof(sec->friction));
+      get = (int16_t *)((char *) get + sizeof(sec->friction));
       memcpy(&sec->movefactor, get, sizeof(sec->movefactor));
-      get = (void *)((char *) get + sizeof(sec->movefactor));
+      get = (int16_t *)((char *) get + sizeof(sec->movefactor));
 
       // haleyjd 03/04/07: retrieve colormap indices
       memcpy(&sec->topmap, get, sizeof(sec->topmap));
-      get = (void *)((char *) get + sizeof(sec->topmap));
+      get = (int16_t *)((char *) get + sizeof(sec->topmap));
       memcpy(&sec->midmap, get, sizeof(sec->midmap));
-      get = (void *)((char *) get + sizeof(sec->midmap));
+      get = (int16_t *)((char *) get + sizeof(sec->midmap));
       memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
-      get = (void *)((char *) get + sizeof(sec->bottommap));
+      get = (int16_t *)((char *) get + sizeof(sec->bottommap));
 
       // haleyjd 12/28/08: retrieve sector flags
       // haleyjd 08/30/09: intflags
       memcpy(&sec->flags, get, sizeof(sec->flags));
-      get = (void *)((char *) get + sizeof(sec->flags));
+      get = (int16_t *)((char *) get + sizeof(sec->flags));
       memcpy(&sec->intflags, get, sizeof(sec->intflags));
-      get = (void *)((char *) get + sizeof(sec->intflags));
+      get = (int16_t *)((char *) get + sizeof(sec->intflags));
 
       // haleyjd 03/02/09: retrieve sector damage info
       memcpy(&sec->damage, get, sizeof(sec->damage));
-      get = (void *)((char *) get + sizeof(sec->damage));
+      get = (int16_t *)((char *) get + sizeof(sec->damage));
       memcpy(&sec->damageflags, get, sizeof(sec->damageflags));
-      get = (void *)((char *) get + sizeof(sec->damageflags));
+      get = (int16_t *)((char *) get + sizeof(sec->damageflags));
       memcpy(&sec->damagemask, get, sizeof(sec->damagemask));
-      get = (void *)((char *) get + sizeof(sec->damagemask));
+      get = (int16_t *)((char *) get + sizeof(sec->damagemask));
       memcpy(&sec->damagemod, get, sizeof(sec->damagemod));
-      get = (void *)((char *) get + sizeof(sec->damagemod));
+      get = (int16_t *)((char *) get + sizeof(sec->damagemod));
 
       memcpy(&sec->floorpic, get, sizeof(sec->floorpic));
-      get = (void *)((char *) get + sizeof(sec->floorpic));
+      get = (int16_t *)((char *) get + sizeof(sec->floorpic));
       memcpy(&sec->ceilingpic, get, sizeof(sec->ceilingpic));
-      get = (void *)((char *) get + sizeof(sec->ceilingpic));
+      get = (int16_t *)((char *) get + sizeof(sec->ceilingpic));
 
       sec->lightlevel    = *get++;
       sec->oldlightlevel = *get++; // haleyjd
@@ -445,9 +445,9 @@ void P_UnArchiveWorld(void)
             // killough 10/98: load full sidedef offsets, including fractions
             
             memcpy(&si->textureoffset, get, sizeof(si->textureoffset));
-            get = (void *)((char *) get + sizeof(si->textureoffset));
+            get = (int16_t *)((char *) get + sizeof(si->textureoffset));
             memcpy(&si->rowoffset, get, sizeof(si->rowoffset));
-            get = (void *)((char *) get + sizeof(si->rowoffset));
+            get = (int16_t *)((char *) get + sizeof(si->rowoffset));
             
             si->toptexture    = *get++;
             si->bottomtexture = *get++;
@@ -458,13 +458,13 @@ void P_UnArchiveWorld(void)
 
    // haleyjd 08/30/09: save state of lightning engine
    memcpy(&NextLightningFlash, get, sizeof(NextLightningFlash));
-   get = (void *)((char *) get + sizeof(NextLightningFlash));
+   get = (int16_t *)((char *) get + sizeof(NextLightningFlash));
    memcpy(&LightningFlash, get, sizeof(LightningFlash));
-   get = (void *)((char *) get + sizeof(LightningFlash));
+   get = (int16_t *)((char *) get + sizeof(LightningFlash));
    memcpy(&LevelSky, get, sizeof(LevelSky));
-   get = (void *)((char *) get + sizeof(LevelSky));
+   get = (int16_t *)((char *) get + sizeof(LevelSky));
    memcpy(&LevelTempSky, get, sizeof(LevelTempSky));
-   get = (void *)((char *) get + sizeof(LevelTempSky));
+   get = (int16_t *)((char *) get + sizeof(LevelTempSky));
 
    save_p = (byte *)get;
 }

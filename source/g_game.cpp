@@ -120,7 +120,7 @@ int             gameepisode;
 int             gamemap;
 // haleyjd: changed to an array
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 };
-boolean         paused;
+int             paused;
 boolean         sendpause;     // send a pause event next tic
 boolean         sendsave;      // send a save event next tic
 boolean         usergame;      // ok to save / end game
@@ -211,10 +211,10 @@ boolean *mousebuttons = &mousearray[1];    // allow [-1]
 int mousex;
 int mousey;
 int dclicktime;
-int dclickstate;
+boolean dclickstate;
 int dclicks;
 int dclicktime2;
-int dclickstate2;
+boolean dclickstate2;
 int dclicks2;
 
 // joystick values are repeated
@@ -289,7 +289,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
 
-   strafe = action_strafe;
+   strafe = !!action_strafe;
    //speed = autorun || action_speed;
    speed = (autorun ? !(runiswalk && action_speed) : action_speed);
 
@@ -490,7 +490,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else if((dclicktime += ticdup) > 20)
    {
       dclicks = 0;
-      dclickstate = 0;
+      dclickstate = false;
    }
 
    // strafe double click
@@ -514,7 +514,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else if((dclicktime2 += ticdup) > 20)
    {
       dclicks2 = 0;
-      dclickstate2 = 0;
+      dclickstate2 = false;
    }
 
    // sf: smooth out the mouse movement
@@ -739,7 +739,8 @@ void G_DoLoadLevel(void)
    memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0;
-   sendpause = sendsave = paused = false;
+   sendpause = sendsave = false;
+   paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
    G_ClearKeyStates(); // haleyjd 05/20/05: all bindings off
 
@@ -759,7 +760,7 @@ void G_DoLoadLevel(void)
    else
    {  // sf: no screen wipe while changing hub level
       if(wipegamestate == GS_LEVEL)
-         wipegamestate = -1;             // force a wipe
+         wipegamestate = GS_NOSTATE;             // force a wipe
    }
 }
 
@@ -908,9 +909,9 @@ boolean G_Responder(event_t* ev)
       return false;   // always let key up events filter down
 
    case ev_mouse:
-      mousebuttons[0] = ev->data1 & 1;
-      mousebuttons[1] = ev->data1 & 2;
-      mousebuttons[2] = ev->data1 & 4;
+      mousebuttons[0] = !!(ev->data1 & 1);
+      mousebuttons[1] = !!(ev->data1 & 2);
+      mousebuttons[2] = !!(ev->data1 & 4);
 
       // SoM: this mimics the doom2 behavior better.
       mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
@@ -1180,23 +1181,23 @@ static void G_DoPlayDemo(void)
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
 
-      if((skill = demover) >= 100)         // For demos from versions >= 1.4
+      if((skill = (skill_t)demover) >= 100)         // For demos from versions >= 1.4
       {
-         skill = *demo_p++;
+         skill = (skill_t)(*demo_p++);
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = *demo_p++;
-         respawnparm = *demo_p++;
-         fastparm = *demo_p++;
-         nomonsters = *demo_p++;
+         deathmatch = !!(*demo_p++);
+         respawnparm = !!(*demo_p++);
+         fastparm = !!(*demo_p++);
+         nomonsters = !!(*demo_p++);
          consoleplayer = *demo_p++;
       }
       else
       {
          episode = *demo_p++;
          map = *demo_p++;
-         deathmatch = respawnparm = fastparm =
-            nomonsters = consoleplayer = 0;
+         deathmatch = respawnparm = fastparm = nomonsters = false;
+         consoleplayer = 0;
       }
    }
    else    // new versions of demos
@@ -1228,10 +1229,10 @@ static void G_DoPlayDemo(void)
       }
 
       compatibility = *demo_p++;       // load old compatibility flag
-      skill = *demo_p++;
+      skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
       map = *demo_p++;
-      deathmatch = *demo_p++;
+      deathmatch = !!(*demo_p++);
       consoleplayer = *demo_p++;
 
       // haleyjd 10/08/06: determine longtics support in new demos
@@ -1271,14 +1272,14 @@ static void G_DoPlayDemo(void)
    if(demo_compatibility)  // only 4 players can exist in old demos
    {
       for(i=0; i<4; i++)  // intentionally hard-coded 4 -- killough
-         playeringame[i] = *demo_p++;
+         playeringame[i] = !!(*demo_p++);
       for(;i < MAXPLAYERS; i++)
          playeringame[i] = 0;
    }
    else
    {
       for(i = 0; i < MAXPLAYERS; ++i)
-         playeringame[i] = *demo_p++;
+         playeringame[i] = !!(*demo_p++);
 
       // [CG] FIXME: This is bunk.
       // [CG] Make sure this is a positive number.
@@ -1308,7 +1309,7 @@ static void G_DoPlayDemo(void)
    {
       // dmflags was already set above,
       // "deathmatch" now holds the game type
-      GameType = deathmatch;
+      GameType = (gametype_t)deathmatch;
    }
 
    // don't spend a lot of time in loadlevel
@@ -2112,10 +2113,10 @@ static void G_DoLoadGame(void)
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01   
    
-   gameskill = *save_p++;
+   gameskill = (skill_t)(*save_p++);
 
    // haleyjd 06/16/10: reload "inmasterlevels" state
-   inmasterlevels = *save_p++;
+   inmasterlevels = !!(*save_p++);
 
    // sf: use string rather than episode, map
 
@@ -2144,7 +2145,7 @@ static void G_DoLoadGame(void)
       waddir_t *dir;
 
       // read a name of len bytes
-      char *fn = calloc(1, len);
+      char *fn = (char *)(calloc(1, len));
       memcpy(fn, save_p, len);
       save_p += len;
 
@@ -2166,7 +2167,7 @@ static void G_DoLoadGame(void)
 
       if(memcmp(&checksum, save_p, sizeof checksum))
       {
-         char *msg = calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128);
+         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
             strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
@@ -2182,7 +2183,7 @@ static void G_DoLoadGame(void)
    while(*save_p++);
 
    for(i = 0; i < MAXPLAYERS; ++i)
-      playeringame[i] = *save_p++;
+      playeringame[i] = !!(*save_p++);
 
    // [CG] FIXME: This is bunk.
    // [CG] This is supposed to ensure a minimum amount of space for players in
@@ -2200,7 +2201,7 @@ static void G_DoLoadGame(void)
 
    // haleyjd 04/14/03: game type
    // note: don't set DefaultGameType from save games
-   GameType = *save_p++;
+   GameType = (gametype_t)(*save_p++);
 
    /* cph 2001/05/23 - Must read options before we set up the level */
    G_ReadOptions(save_p);
@@ -2445,7 +2446,7 @@ void G_Ticker(void)
    // [CG] Added !clientserver, because you can't pause a c/s game even
    //      by activating the menu or console.
 
-   if(paused & 2 || (
+   if((paused & 2) || (
       !demoplayback &&
       (menuactive || consoleactive) &&
       !netgame &&
@@ -3314,13 +3315,13 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 
    if((o = MetaGetObjectKeyAndType(mi->meta, "speedset", METATYPE(speedset_t))))
    {
-      speedset_t *ss  = o->object;
+      speedset_t *ss  = (speedset_t *)(o->object);
       ss->normalSpeed = nspeed;
       ss->fastSpeed   = fspeed;
    }
    else
    {
-      speedset_t *newSpeedSet = calloc(1, sizeof(speedset_t));
+      speedset_t *newSpeedSet = (speedset_t *)(calloc(1, sizeof(speedset_t)));
 
       newSpeedSet->mobjType    = thingtype;
       newSpeedSet->normalSpeed = nspeed;
@@ -3406,7 +3407,7 @@ void G_InitNew(skill_t skill, char *name)
 
    if(paused)
    {
-      paused = false;
+      paused = 0;
       S_ResumeSound();
    }
 
@@ -3432,7 +3433,7 @@ void G_InitNew(skill_t skill, char *name)
    }
 
    usergame = true;                // will be set false if a demo
-   paused = false;
+   paused = 0;
 
    if(demoplayback)
    {
@@ -3619,9 +3620,9 @@ byte *G_ReadOptions(byte *demoptr)
    demoptr++;
 
    // killough 3/6/98: add parameters to savegame, move from demo
-   respawnparm = *demoptr++;
-   fastparm    = *demoptr++;
-   nomonsters  = *demoptr++;
+   respawnparm = !!(*demoptr++);
+   fastparm    = !!(*demoptr++);
+   nomonsters  = !!(*demoptr++);
 
    demo_insurance = *demoptr++;              // killough 3/31/98
 
@@ -3642,7 +3643,7 @@ byte *G_ReadOptions(byte *demoptr)
 
       dogs = *demoptr++;                 // killough 7/19/98
 
-      bfgtype = *demoptr++;              // killough 7/19/98
+      bfgtype = (bfg_t)(*demoptr++);     // killough 7/19/98
       demoptr++;                         // sf: where beta was
 
       distfriend = *demoptr++ << 8;      // killough 8/8/98
@@ -3904,7 +3905,7 @@ void G_TimeDemo(const char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForNameNSG(name, ns_demos) == -1)
+   if(W_CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
@@ -4143,11 +4144,11 @@ static cell AMX_NATIVE_CALL sm_exitsecret(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_startgame(AMX *amx, cell *params)
 {
    int err;
-   int skill;
+   skill_t skill;
    char *levelname;
 
    // note: user view of skill is 1 - 5, internal view is 0 - 4
-   skill = (int)(params[1]) - 1;
+   skill = (skill_t)(params[1] - 1);
 
    // get level name
    if((err = SM_GetSmallString(amx, &levelname, params[2])) != AMX_ERR_NONE)

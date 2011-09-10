@@ -808,7 +808,7 @@ static void P_LoadZNodes(int lump)
    }
    else
    {
-      newvertarray = calloc(orgVerts + newVerts, sizeof(vertex_t));
+      newvertarray = (vertex_t *)(calloc(orgVerts + newVerts, sizeof(vertex_t)));
       memcpy(newvertarray, vertexes, orgVerts * sizeof(vertex_t));
    }
 
@@ -849,7 +849,7 @@ static void P_LoadZNodes(int lump)
       Z_Free(lumpptr);
       return;
    }
-   subsectors = calloc(numsubsectors, sizeof(subsector_t));
+   subsectors = (subsector_t *)(calloc(numsubsectors, sizeof(subsector_t)));
 
    CheckZNodesOverflow(len, numSubs * sizeof(uint32_t));
    for(i = currSeg = 0; i < numSubs; i++)
@@ -873,7 +873,7 @@ static void P_LoadZNodes(int lump)
    }
 
    numsegs = (int)numSegs;
-   segs = calloc(numsegs, sizeof(seg_t));
+   segs = (seg_t *)(calloc(numsegs, sizeof(seg_t)));
 
    CheckZNodesOverflow(len, numsegs * 11);
    P_LoadZSegs(data);
@@ -884,7 +884,7 @@ static void P_LoadZNodes(int lump)
    numNodes = GetLevelDWordU(&data);
 
    numnodes = numNodes;
-   nodes = calloc(numNodes, sizeof(node_t));
+   nodes = (node_t *)(calloc(numNodes, sizeof(node_t)));
 
    CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
@@ -954,7 +954,7 @@ void P_LoadThings(int lump)
    numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = calloc(numthings, sizeof(mapthing_t));
+   mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
 
    for(i = 0; i < numthings; ++i)
    {
@@ -1027,7 +1027,7 @@ void P_LoadHexenThings(int lump)
    numthings = W_LumpLengthInDir(setupwad, lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = calloc(numthings, sizeof(mapthing_t));
+   mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
 
    for(i = 0; i < numthings; ++i)
    {
@@ -1570,9 +1570,9 @@ static void P_CreateBlockMap(void)
    //     the linedef.
 
    {
-      typedef struct { int n, nalloc, *list; } bmap_t;  // blocklist structure
-      unsigned tot = bmapwidth * bmapheight;            // size of blockmap
-      bmap_t *bmap = calloc(sizeof *bmap, tot);         // array of blocklists
+      typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+      unsigned tot = bmapwidth * bmapheight;                  // size of blockmap
+      bmap_t *bmap = (bmap_t *)(calloc(sizeof *bmap, tot));   // array of blocklists
 
       for(i = 0; i < (unsigned int)numlines; ++i)
       {
@@ -1998,7 +1998,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
    if(demo_version < 203)
       return;
 
-   hit = calloc(1, numvertexes);           // Hitlist for vertices
+   hit = (byte *)(calloc(1, numvertexes)); // Hitlist for vertices
 
    for(i = 0; i < numsegs; ++i)            // Go through each seg
    {

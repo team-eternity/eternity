@@ -209,26 +209,30 @@ static default_t sysdefaults[] =
       "prediction",
       &cl_enable_prediction,
       NULL,
-      true, wad_no,
+      true, default_t::wad_no,
       "predict local movement without waiting for the server"
    ),
    
-   DEFAULT_BOOL("predict_shots", &cl_predict_shots, NULL, true, wad_no,
-                "predict shot results"),
+   DEFAULT_BOOL(
+      "predict_shots",
+      &cl_predict_shots,
+      NULL, true, default_t::wad_no,
+      "predict shot results"
+   ),
 
    DEFAULT_BOOL(
-       "constant_prediction",
-       &cl_constant_prediction,
-       NULL,
-       true, wad_no,
-       "always predict local movement"
+      "constant_prediction",
+      &cl_constant_prediction,
+      NULL,
+      true, default_t::wad_no,
+      "always predict local movement"
    ),
 
    DEFAULT_INT(
       "damage_screen_cap",
       &damage_screen_factor,
       NULL,
-      100, 0, 100, wad_no,
+      100, 0, 100, default_t::wad_no,
       "cap the damage screen intensity, 0 - no damage screen, 100 - full, "
       "original damage screen"
    ),
@@ -237,7 +241,7 @@ static default_t sysdefaults[] =
       "packet_buffer_size",
       &cl_packet_buffer_size,
       NULL,
-      0, 0, MAX_POSITIONS, wad_no,
+      0, 0, MAX_POSITIONS, default_t::wad_no,
       "how large to allow the packet buffer to grow before it's flushed "
       "automatically, 0 - unlimited"
    ),
@@ -246,7 +250,7 @@ static default_t sysdefaults[] =
       "buffer_packets_while_spectating",
       &cl_buffer_packets_while_spectating,
       NULL,
-      true, wad_no,
+      true, default_t::wad_no,
       "disables automatic packet buffer flushing while spectating"
    ),
 
@@ -254,18 +258,22 @@ static default_t sysdefaults[] =
       "flush_packet_buffer_on_respawn",
       &cl_flush_packet_buffer_on_respawn,
       NULL,
-      true, wad_no,
+      true, default_t::wad_no,
       "automatically flushes the packet buffer when the player respawns"
    ),
 
    DEFAULT_STR(
-      "clientserver_demo_folder", &cs_demo_folder_path, NULL, "", wad_no,
+      "clientserver_demo_folder",
+      &cs_demo_folder_path,
+      NULL, "", default_t::wad_no,
       "folder in which to save client/server demos, defaults to base/demos"
    ),
 
    // [CG] End c/s defaults.
 
-   { NULL }
+   // last entry
+   { NULL, dt_integer, NULL, NULL, NULL, NULL, 0.0f, false, { 0, 0 }, default_t::wad_no,
+     NULL, M_ZEROFIELDS }
 };
 
 //

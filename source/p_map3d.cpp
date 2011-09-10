@@ -705,7 +705,7 @@ boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
 static int moveamt;
 static int crushchange;
 static sector_t *movesec;
-static boolean nofit;
+static int nofit;
 static MobjCollection intersectors; // haleyjd: use MobjCollection
 
 //
@@ -923,7 +923,7 @@ static void P_DoCrunch(mobj_t *thing)
    if(!(thing->flags & MF_SHOOTABLE))
       return;
 
-   nofit = true;
+   nofit = 1;
 
    // haleyjd 06/19/00: fix for invulnerable things -- no crusher effects
    // haleyjd 05/20/05: allow custom crushing damage
@@ -1207,7 +1207,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    msecnode_t *n;
 
    midtex_moving = false;
-   nofit         = false;
+   nofit         = 0;
    crushchange   = crunch;
    moveamt       = D_abs(amt);
    movesec       = sector;
@@ -1263,7 +1263,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
       }
    } while(n); // repeat from scratch until all things left are marked valid
 
-   return nofit;
+   return !!nofit;
 }
 
 // EOF

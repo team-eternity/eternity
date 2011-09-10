@@ -102,16 +102,16 @@ static hipoint_t hipoints[3][9] =
    }
 };
 
-typedef enum
+enum
 {
    INTR_NONE = -1,
    INTR_STATS,
    INTR_LEAVING,
    INTR_GOING,
    INTR_WAITING,
-} interstate_e;
+};
 
-static interstate_e interstate;
+static int interstate;
 
 static int statetime;             // time until next state
 static int countdown;             // count down to end
@@ -912,7 +912,7 @@ static void HI_DrawBackground(void)
 
 static void HI_Drawer(void)
 {
-   static interstate_e oldinterstate;
+   static int oldinterstate;
 
    if(interstate == INTR_WAITING)
       return;

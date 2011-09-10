@@ -480,13 +480,17 @@ void R_InitLightTables (void)
    int i;
    
    // killough 4/4/98: dynamic colormaps
+   // haleyjd: FIXME - wtf kind of types ARE these anyway??
    // [CG] Try using PU_RENDERER for these.
-   // c_zlight = malloc(sizeof(*c_zlight) * numcolormaps);
-   // c_scalelight = malloc(sizeof(*c_scalelight) * numcolormaps);
-   c_zlight = Z_Malloc(sizeof(*c_zlight) * numcolormaps, PU_RENDERER, NULL);
-   c_scalelight = Z_Malloc(
+   // c_zlight     = (lighttable_t *(*)[32][128])(malloc(sizeof(*c_zlight) * numcolormaps));
+   // c_scalelight = (lighttable_t *(*)[32][48]) (malloc(sizeof(*c_scalelight) * numcolormaps));
+   c_zlight = (lighttable_t *(*)[32][128])(Z_Malloc(
+       sizeof(*c_zlight) * numcolormaps, PU_RENDERER, NULL
+   ));
+   c_scalelight = (lighttable_t *(*)[32][48])(Z_Malloc(
        sizeof(*c_scalelight) * numcolormaps, PU_RENDERER, NULL
-   );
+   ));
+
    
    // Calculate the light levels to use
    //  for each level / distance combination.

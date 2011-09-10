@@ -809,12 +809,12 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    if(sec->ceilingdata ||
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
-      door = sec->ceilingdata; //jff 2/22/98
+      door = (vldoor_t *)(sec->ceilingdata); //jff 2/22/98
 
       if(demo_compatibility) // haleyjd
       {
-         if(!door) door = sec->floordata;
-         if(!door) door = sec->lightingdata;
+         if(!door) door = (vldoor_t *)(sec->floordata);
+         if(!door) door = (vldoor_t *)(sec->lightingdata);
       }
 
       switch(line->special)

@@ -247,7 +247,7 @@ extern  boolean statusbaractive;
 
 extern  boolean automapactive; // In AutoMap mode?
 extern  boolean menuactive;    // Menu overlayed?
-extern  boolean paused;        // Game Pause?
+extern  int     paused;        // Game Pause?
 extern  int     hud_active;    //jff 2/17/98 toggles heads-up status display
 extern  boolean viewactive;
 extern  boolean nodrawers;

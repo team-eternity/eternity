@@ -228,7 +228,7 @@ static void E_ProcessSplash(cfg_t *cfg)
    // splash and add it to the splash hash table.
    if(!(newSplash = E_SplashForName(tempstr)))
    {
-      newSplash = calloc(1, sizeof(ETerrainSplash));
+      newSplash = (ETerrainSplash *)(calloc(1, sizeof(ETerrainSplash)));
       strncpy(newSplash->name, tempstr, 33);
       E_AddSplashToHash(newSplash);
       newsp = true;
@@ -352,7 +352,7 @@ static void E_ProcessTerrain(cfg_t *cfg, boolean def)
       // terrain and add it to the terrain hash table.
       if(!(newTerrain = E_TerrainForName(tempstr)))
       {
-         newTerrain = calloc(1, sizeof(ETerrain));
+         newTerrain = (ETerrain *)(calloc(1, sizeof(ETerrain)));
          strncpy(newTerrain->name, tempstr, 33);
          E_AddTerrainToHash(newTerrain);
          newtr = true;
@@ -562,7 +562,7 @@ static void E_ProcessFloor(cfg_t *cfg)
    // terrain and add it to the terrain hash table.
    if(!(newFloor = E_FloorForName(tempstr)))
    {
-      newFloor = calloc(1, sizeof(EFloor));
+      newFloor = (EFloor *)(calloc(1, sizeof(EFloor)));
       strncpy(newFloor->name, tempstr, 9);
       E_AddFloorToHash(newFloor);
    }

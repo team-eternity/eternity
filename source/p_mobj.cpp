@@ -130,7 +130,7 @@ static void P_InitSeenStates(void)
    seenstate_t *newss;
    int i;
 
-   newss = calloc(32, sizeof(seenstate_t));
+   newss = (seenstate_t *)(calloc(32, sizeof(seenstate_t)));
 
    for(i = 0; i < 32; ++i)
       M_DLListInsert(&(newss[i].link), &seenstate_freelist);
@@ -181,7 +181,7 @@ static seenstate_t *P_GetSeenState(void)
       memset(ret, 0, sizeof(seenstate_t));
    }
    else
-      ret = calloc(1, sizeof(seenstate_t));
+      ret = (seenstate_t *)(calloc(1, sizeof(seenstate_t)));
 
    return ret;
 }

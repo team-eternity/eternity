@@ -593,7 +593,7 @@ static polymaplink_t *Polyobj_getLink(void)
       bmap_freelist = link->po_next;
    }
    else
-      link = (polymaplink_t *)(Z_Calloc(1, sizeof(*l), PU_LEVEL, NULL));
+      link = (polymaplink_t *)(Z_Calloc(1, sizeof(*link), PU_LEVEL, NULL));
 
    return link;
 }
@@ -1079,7 +1079,7 @@ void Polyobj_InitLevel(void)
          {
             ++numPolyObjects;
             
-            qitem = calloc(1, sizeof(mobjqitem_t));
+            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &spawnqueue);
          }
@@ -1087,7 +1087,7 @@ void Polyobj_InitLevel(void)
          {
             ++numAnchors;
 
-            qitem = calloc(1, sizeof(mobjqitem_t));
+            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &anchorqueue);
          }

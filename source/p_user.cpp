@@ -608,7 +608,7 @@ void P_PlayerThink(player_t *player)
       //  when the weapon psprite can do it
       //  (read: not in the middle of an attack).
 
-      newweapon = (cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
+      newweapon = (weapontype_t)((cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT);
       
       // killough 3/22/98: For demo compatibility we must perform the fist
       // and SSG weapons switches here, rather than in G_BuildTiccmd(). For

@@ -1209,7 +1209,7 @@ manual_door:
             // haleyjd 02/23/04: allow repushing of certain generalized
             // doors
             if(demo_version >= 331)
-               rtn = GenDoorRetrigger(sec->ceilingdata, dd->trigger_type);
+               rtn = GenDoorRetrigger((vldoor_t *)(sec->ceilingdata), dd->trigger_type);
 
             return rtn;
          }
@@ -1565,7 +1565,7 @@ static boolean pspec_Door(line_t *line, mobj_t *thing, int *args,
    // set genDoorThing in case of manual retrigger
    genDoorThing = thing;
 
-   return EV_DoParamDoor(line, args[0], &dd);
+   return !!EV_DoParamDoor(line, args[0], &dd);
 }
 
 //
@@ -1716,7 +1716,7 @@ static boolean pspec_Floor(line_t *line, int *args, int16_t special,
       break;
    }
 
-   return EV_DoParamFloor(line, args[0], &fd);
+   return !!EV_DoParamFloor(line, args[0], &fd);
 }
 
 //
@@ -1868,7 +1868,7 @@ static boolean pspec_Ceiling(line_t *line, int *args, int16_t special,
       break;
    }
 
-   return EV_DoParamCeiling(line, args[0], &cd);
+   return !!EV_DoParamCeiling(line, args[0], &cd);
 }
 
 //
@@ -1915,7 +1915,7 @@ static boolean pspec_Stairs(line_t *line, int *args, int16_t special,
    sd.speed_value    = args[1] * FRACUNIT / 8;
    sd.stepsize_value = args[2] * FRACUNIT;
 
-   return EV_DoParamStairs(line, args[0], &sd);
+   return !!EV_DoParamStairs(line, args[0], &sd);
 }
 
 //
@@ -1948,7 +1948,7 @@ static boolean pspec_PolyDoor(int *args, int16_t special)
       return 0; // ???
    }
 
-   return EV_DoPolyDoor(&pdd);
+   return !!EV_DoPolyDoor(&pdd);
 }
 
 //
@@ -1967,7 +1967,7 @@ static boolean pspec_PolyMove(int *args, int16_t special)
 
    pmd.overRide = (special == 353); // Polyobj_OR_Move
 
-   return EV_DoPolyObjMove(&pmd);
+   return !!EV_DoPolyObjMove(&pmd);
 }
 
 //
@@ -1989,7 +1989,7 @@ static boolean pspec_PolyRotate(int *args, int16_t special)
    // Polyobj_OR types have override set to true
    prd.overRide  = (special == 355 || special == 357);
 
-   return EV_DoPolyObjRotate(&prd);
+   return !!EV_DoPolyObjRotate(&prd);
 }
 
 //
@@ -2015,13 +2015,13 @@ static boolean pspec_Pillar(line_t *line, int *args, int16_t special)
    case 362:
       pd.speed  = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT; // no 0 speed!
       pd.height = args[2] * FRACUNIT;
-      return EV_PillarBuild(line, &pd);
+      return !!EV_PillarBuild(line, &pd);
 
    case 364:
       pd.speed = args[1] ? args[1] * FRACUNIT / 8 : FRACUNIT;
       pd.fdist = args[2] * FRACUNIT;
       pd.cdist = args[3] * FRACUNIT;
-      return EV_PillarOpen(line, &pd);
+      return !!EV_PillarOpen(line, &pd);
 
    default:
       return false;
@@ -2151,35 +2151,35 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special,
       success = ACS_TerminateScript(args[0], args[1]);
       break;
    case 368: // Light_RaiseByValue
-      success = EV_SetLight(line, args[0], setlight_add, args[1]);
+      success = !!EV_SetLight(line, args[0], setlight_add, args[1]);
       break;
    case 369: // Light_LowerByValue
-      success = EV_SetLight(line, args[0], setlight_sub, args[1]);
+      success = !!EV_SetLight(line, args[0], setlight_sub, args[1]);
       break;
    case 370: // Light_ChangeToValue
-      success = EV_SetLight(line, args[0], setlight_set, args[1]);
+      success = !!EV_SetLight(line, args[0], setlight_set, args[1]);
       break;
    case 371: // Light_Fade
-      success = EV_FadeLight(line, args[0], args[1], args[2]);
+      success = !!EV_FadeLight(line, args[0], args[1], args[2]);
       break;
    case 372: // Light_Glow
-      success = EV_GlowLight(line, args[0], args[1], args[2], args[3]);
+      success = !!EV_GlowLight(line, args[0], args[1], args[2], args[3]);
       break;
    case 373: // Light_Flicker
-      success = EV_FlickerLight(line, args[0], args[1], args[2]);
+      success = !!EV_FlickerLight(line, args[0], args[1], args[2]);
       break;
    case 374: // Light_Strobe
-      success = EV_StrobeLight(line, args[0], args[1], args[2], args[3], args[4]);
+      success = !!EV_StrobeLight(line, args[0], args[1], args[2], args[3], args[4]);
       break;
    case 375: // Radius_Quake
       success = P_StartQuake(args);
       break;
    case 397: // Floor_Waggle
-      success = EV_StartFloorWaggle(line, args[0], args[1], args[2], args[3], args[4]);
+      success = !!EV_StartFloorWaggle(line, args[0], args[1], args[2], args[3], args[4]);
       break;
    case 398: // Thing_Spawn
    case 399: // Thing_SpawnNoFog
-      success = EV_ThingSpawn(args, (special == 398));
+      success = !!EV_ThingSpawn(args, (special == 398));
       break;
    case 400: // Teleport_EndGame
       G_ForceFinale();
@@ -2464,7 +2464,7 @@ static cell AMX_NATIVE_CALL sm_changelinetextag(AMX *amx, cell *params)
 // the indicated special. All functions using this must take the
 // same arguments in the same order as the line special.
 //
-static boolean P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
+static int P_ScriptSpec(int16_t spec, AMX *amx, cell *params)
 {
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int i, numparams = params[0] / sizeof(cell);

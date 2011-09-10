@@ -68,8 +68,8 @@
 #include "sv_main.h"
 
 char *chat_macros[10];
-const char* shiftxform;
-const char english_shiftxform[];
+extern const char* shiftxform;
+extern const char english_shiftxform[]; // haleyjd: forward declaration
 //boolean chat_on;
 boolean chat_active = false;
 int obituaries = 0;
@@ -644,7 +644,7 @@ static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
 static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
                                   int tl_level, char *patch)
 {
-   hu_patchwidget_t *newpw = calloc(1, sizeof(hu_patchwidget_t));
+   hu_patchwidget_t *newpw = (hu_patchwidget_t *)(calloc(1, sizeof(hu_patchwidget_t)));
 
    // set id
    if(!newpw->widget.name)
@@ -940,7 +940,7 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                           char *message, int cleartic, int flags)
 {
-   hu_textwidget_t *newtw = calloc(1, sizeof(hu_textwidget_t));
+   hu_textwidget_t *newtw = (hu_textwidget_t *)(calloc(1, sizeof(hu_textwidget_t)));
 
    // set id
    if(!newtw->widget.name)
@@ -2113,7 +2113,7 @@ static cell AMX_NATIVE_CALL sm_togglewidget(AMX *amx, cell *params)
    }
 
    if((widget = HU_WidgetForName(name)))
-      HU_ToggleWidget(widget, params[2]);
+      HU_ToggleWidget(widget, !!params[2]);
 
    free(name);
 

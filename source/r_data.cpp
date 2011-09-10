@@ -161,7 +161,7 @@ int R_ColormapNumForName(const char *name)
 {
    register int i = 0;
    if(strncasecmp(name, "COLORMAP", 8))     // COLORMAP predefined to return 0
-      if((i = W_CheckNumForNameNS(name, ns_colormaps)) != -1)
+      if((i = W_CheckNumForNameNS(name, lumpinfo_t::ns_colormaps)) != -1)
          i -= firstcolormaplump;
    return i;
 }

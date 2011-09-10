@@ -829,7 +829,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_chaingun, !!(special->flags & MF_DROPPED)))
          return;
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);
@@ -865,7 +865,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_shotgun, !!(special->flags & MF_DROPPED)))
          return;
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);
@@ -874,7 +874,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, special->flags & MF_DROPPED))
+      if(!P_GiveWeapon(player, wp_supershotgun, !!(special->flags & MF_DROPPED)))
          return;
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);

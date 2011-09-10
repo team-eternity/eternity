@@ -127,7 +127,7 @@ void CB_DrawColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -213,7 +213,7 @@ void CB_DrawTLColumn_8(void)
 
    // killough 2/1/98, 2/21/98: more performance tuning
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -292,7 +292,7 @@ void CB_DrawTLTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -448,7 +448,7 @@ void CB_DrawTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -528,7 +528,7 @@ void CB_DrawFlexColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -638,7 +638,7 @@ void CB_DrawFlexTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -749,7 +749,7 @@ void CB_DrawAddColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -877,7 +877,7 @@ void CB_DrawAddTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      register byte *source = column.source;
+      register byte *source = (byte *)(column.source);
       register lighttable_t *colormap = column.colormap;
       register int heightmask = column.texheight - 1;
       
@@ -1076,7 +1076,7 @@ int R_TranslationNumForName(const char *name)
 {
    int result    = -1;
    int markernum = W_GetNumForName("T_START");
-   int lumpnum   = W_CheckNumForNameNS(name, ns_translations);
+   int lumpnum   = W_CheckNumForNameNS(name, lumpinfo_t::ns_translations);
 
    if(lumpnum != -1)
       result = lumpnum - markernum + TRANSLATIONCOLOURS;
@@ -1291,7 +1291,7 @@ void R_DrawNewSkyColumn(void)
   // killough 2/1/98: more performance tuning
 
   {
-    register const byte *source = column.source;            
+    register const byte *source = (byte *)(column.source);
     register const lighttable_t *colormap = column.colormap; 
     register int heightmask = column.texheight-1;
     if (column.texheight & heightmask)   // not a power of 2 -- killough

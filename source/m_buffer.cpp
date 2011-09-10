@@ -41,7 +41,7 @@ boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename,
    if(!(ob->f = fopen(filename, "wb")))
       return false;
 
-   ob->buffer = calloc(len, sizeof(byte));
+   ob->buffer = (byte *)(calloc(len, sizeof(byte)));
 
    ob->len = len;
    ob->idx = 0;
@@ -105,7 +105,7 @@ long M_BufferTell(outbuffer_t *ob)
 //
 boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
 {
-   const byte *src = data;
+   const byte *src = (const byte *)data;
    unsigned int writeAmt;
    unsigned int bytesToWrite = size;
 
