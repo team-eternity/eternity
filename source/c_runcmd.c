@@ -1576,7 +1576,7 @@ void (C_AddCommand)(command_t *command)
 
    c_netcmds[command->netcmd] = command;
 
-   if(command->type == ct_variable)
+   if(command->type == ct_variable || command->type == ct_constant)
    {
       // haleyjd 07/04/10: find default in config for cvars that have one
       command->variable->cfgDefault = M_FindDefaultForCVar(command->variable);

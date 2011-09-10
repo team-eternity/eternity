@@ -375,7 +375,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
    
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector))
+   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 << FRACBITS);
    else
 #endif
@@ -383,7 +383,7 @@ boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y, boolean boss)
 
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector))
+   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
       clip.ceilingz = newsubsec->sector->ceilingheight + (1024 << FRACBITS);
    else
 #endif
@@ -773,7 +773,6 @@ boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing)
 
    // [CG] Clients wait for server messages, so don't run any of this
    //      clientside.
-   // if(clip.thing->flags & MF_PICKUP)
    if(serverside && (clip.thing->flags & MF_PICKUP))
       P_TouchSpecialThing(thing, tmthing); // can remove thing
 
@@ -1524,8 +1523,9 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
    {
       while(clip.numspechit--)
       {
+// PTODO
 #ifdef R_LINKEDPORTALS
-         if(R_LinkedLineActive(clip.spechit[clip.numspechit]))
+         if(clip.spechit[clip.numspechit]->pflags & PS_PASSABLE)
          {
             // SoM: if the mobj is touching a portal line, and the line is behind
             // the mobj no matter what the previous lineside was, we missed the 
@@ -1534,7 +1534,7 @@ boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, boolean dropoff)
             {
                linkoffset_t *link = 
                   P_GetLinkOffset(clip.spechit[clip.numspechit]->frontsector->groupid, 
-                                  clip.spechit[clip.numspechit]->portal->data.link.groupid);
+                                  clip.spechit[clip.numspechit]->portal->data.link.toid);
                EV_PortalTeleport(thing, link);
             }
          }
@@ -2134,8 +2134,9 @@ static boolean PIT_CheckRadiusAttack(mobj_t *thing)
 // PIT_3DRadiusAttack
 //
 // [CG] Used to support rocket jumping in c/s.  Exactly how this works
-//      (there is a lot of magic in here) is explained in ideas.txt under "3D
-//      radius attacks".  It's probably slow as hell.
+//      (there is a lot of magic in here) is explained in
+//      docs/cs_3d_radius_attacks.txt.  Additionally, this is probably slow
+//      as hell.
 //
 static boolean PIT_3DRadiusAttack(mobj_t *thing)
 {
@@ -2148,9 +2149,7 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
           dist, damage, thrust, z_delta;
 
    if(PIT_CheckRadiusAttack(thing))
-   {
       return true;
-   }
 
    thing_radius = M_FixedToDouble(thing->radius);
    thing_v.x    = M_FixedToDouble(thing->x);
@@ -2165,21 +2164,12 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
    bomb_v.z = M_FixedToDouble(theBomb->bombspot->z);
    z_delta = thing_middle - bomb_v.z;
 
-   if(bomb_v.z < thing_bottom)
-   {
-      // [CG] Applies upward Z velocity.
+   if(bomb_v.z < thing_bottom)    // [CG] Applies upward Z velocity.
       thing_v.z = thing_bottom;
-   }
-   else if(bomb_v.z >= thing_top)
-   {
-      // [CG] Applies downward Z velocity.
+   else if(bomb_v.z >= thing_top) // [CG] Applies downward Z velocity.
       thing_v.z = thing_top;
-   }
-   else
-   {
-      // [CG] Applies no Z velocity.
+   else                           // [CG] Applies no Z velocity.
       thing_v.z = bomb_v.z;
-   }
 
    // [CG] Make sure fuzzy math doesn't mess this up.
    if(thing_v.z == bomb_v.z)
@@ -2192,27 +2182,21 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
       M_SubVec3(&bomb_v, &thing_v, &bomb_v);
    }
 
+   // [CG] If the explosion occurred inside the hitbox, only Z velocity is
+   //      applied.  Of course, if the explosion was neither above nor below
+   //      the hitbox, then no velocity will be applied at all.  Otherwise,
+   //      the explosion acts on the hitbox, so calculate the vector length
+   //      and move it the magnitude of the radius closer to the target's
+   //      origin.
    if(sqrt((bomb_v.x * bomb_v.x) + (bomb_v.y * bomb_v.y)) <= thing_radius)
-   {
-      // [CG] If the explosion occurred inside the hitbox, only Z velocity is
-      //      applied.  Of course, if the explosion was neither above nor below
-      //      the hitbox, then no velocity will be applied at all.
       dist = bomb_v.z;
-   }
    else
-   {
-      // [CG] Otherwise, the explosion acts on the hitbox, so calculate the
-      //      vector length and move it the magnitude of the radius closer to
-      //      the target's origin.
       dist = M_LengthVec3(&bomb_v) - thing_radius;
-   }
 
    damage = ((double)theBomb->bombdamage) - dist;
 
    if(damage <= 0)
-   {
       return true;
-   }
 
    P_DamageMobj(
       thing,
@@ -2228,9 +2212,10 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
 
    if(CS_CLIENT)
    {
-      pred_thrust =
-         (int)damage * (FRACUNIT >> 3) * GameModeInfo->thrustFactor /
-         thing->info->mass;
+      pred_thrust = (int)damage *
+                    (FRACUNIT >> 3) *
+                    GameModeInfo->thrustFactor /
+                    thing->info->mass;
 // [CG] Don't worry about this for now.
 #if 0
 #ifdef R_LINKEDPORTALS
@@ -2281,22 +2266,15 @@ static boolean PIT_3DRadiusAttack(mobj_t *thing)
    thing->momx += M_DoubleToFixed(bomb_v.x * thrust);
    thing->momy += M_DoubleToFixed(bomb_v.y * thrust);
 
-   // [CG] TODO: Ask Randy about BSD-ing the 0.8, it's in ZDoom-1.23 but not
-   //            ZDoom-1.22.
    // [CG] TODO: Really, all this should be configurable, like
    //            "rocket_thrust_percentage_for_self" and
    //            "rocket_thrust_percentage_for_others".  Additionally damage
    //            needs to be separated out from thrust so it too can be
    //            configured"
    if(theBomb->bombsource == thing)
-   {
-      // thing->momz += M_DoubleToFixed(z_delta * thrust * 0.8);
       thing->momz += M_DoubleToFixed(z_delta * thrust);
-   }
    else
-   {
       thing->momz += M_DoubleToFixed(z_delta * thrust * 0.5);
-   }
 
    /*
    printf(
@@ -2322,9 +2300,7 @@ static boolean PIT_RadiusAttack(mobj_t *thing)
    mobj_t *bombsource = theBomb->bombsource;
 
    if(PIT_CheckRadiusAttack(thing))
-   {
       return true;
-   }
 
    dx   = D_abs(thing->x - bombspot->x);
    dy   = D_abs(thing->y - bombspot->y);
@@ -2388,17 +2364,13 @@ void P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod)
    {
       for(x = xl; x <= xh; ++x)
       {
+         // [CG] Rocket jumping requires that rocket splash damage occurs
+         //      in 3D, but this function only handles damage in 2D.
+         //      Because this causes demo desyncs, it's comp flagged.
          if(comp[comp_2dradatk])
-         {
             P_BlockThingsIterator(x, y, PIT_RadiusAttack);
-         }
          else
-         {
-            // [CG] Rocket jumping requires that rocket splash damage occurs
-            //      in 3D, but this function only handles damage in 2D.
-            //      Because this causes demo desyncs, it's comp flagged.
             P_BlockThingsIterator(x, y, PIT_3DRadiusAttack);
-         }
       }
    }
 

@@ -125,9 +125,7 @@ typedef enum
    portal_skybox,
    portal_anchored,
    portal_twoway,
-#ifdef R_LINKEDPORTALS
    portal_linked
-#endif
 } portal_type;
 
 typedef enum
@@ -2429,16 +2427,22 @@ void P_PlayerInSpecialSector(player_t *player)
 //
 void P_PlayerOnSpecialFlat(player_t *player)
 {
-   sector_t *sector = player->mo->subsector->sector;
+   //sector_t *sector = player->mo->subsector->sector;
    ETerrain *terrain;
+   fixed_t floorz;
+
+   if(full_demo_version < make_full_version(339, 21))
+      floorz = player->mo->subsector->sector->floorheight;
+   else
+      floorz = player->mo->floorz; // use more correct floorz
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != floorz)
       return;
 
-   terrain = E_GetThingFloorType(player->mo);
+   terrain = E_GetThingFloorType(player->mo, true);
 
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
@@ -2816,7 +2820,6 @@ void P_SpawnSpecials(int mapformat)
       case 345:
          P_SpawnPortal(&lines[i], portal_twoway, lines[i].special - 344);
          break;
-#ifdef R_LINKEDPORTALS
       case 358:
       case 359:
          P_SpawnPortal(&lines[i], portal_linked, lines[i].special - 358);
@@ -2824,7 +2827,6 @@ void P_SpawnSpecials(int mapformat)
       case 376:
          P_SpawnPortal(&lines[i], portal_linked, portal_lineonly);
          break;
-#endif
       case 378: // haleyjd 02/28/07: Line_SetIdentification
          // TODO: allow upper byte in args[2] for Hexen-format maps
          P_SetLineID(&lines[i], lines[i].args[0]);
@@ -2834,9 +2836,8 @@ void P_SpawnSpecials(int mapformat)
       // SoM 10/14/07: Surface/Surface attachments
       case 379:
       case 380:
-         P_AttachSectors(lines + i);
+         P_AttachSectors(&lines[i]);
          break;
-
 
       // SoM 05/10/09: Slopes
       case 386:
@@ -2848,10 +2849,15 @@ void P_SpawnSpecials(int mapformat)
       case 392:
       case 393:
          P_SpawnSlope_Line(i);
+         break;
+
+      case 401:
+         // haleyjd 10/16/10: ExtraData sector
+         E_LoadSectorExt(&lines[i]);
+         break;
       }
    }
 
-#ifdef R_LINKEDPORTALS
    // SoM: This seems like the place to put this.
    if(!P_BuildLinkTable())
    {
@@ -2859,20 +2865,16 @@ void P_SpawnSpecials(int mapformat)
       for(i = 0; i < numsectors; i++)
          R_SetSectorGroupID(sectors + i, R_NOGROUP);
    }
-#endif
 
    // haleyjd 02/20/06: spawn polyobjects
    Polyobj_InitLevel();
 }
 
-
-
-
 // 
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate 
-// pass
+// SoM: Specials that copy slopes, ect., need to be collected in a separate pass
+//
 void P_SpawnDeferredSpecials(int mapformat)
 {
    int      i;
@@ -2893,8 +2895,6 @@ void P_SpawnDeferredSpecials(int mapformat)
       }
    }
 }
-
-
 
 
 // killough 2/28/98:
@@ -4856,6 +4856,45 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
 // Portals
 //
 
+
+//
+// P_SetPortal
+//
+static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
+{
+   if(portal->type == R_LINKED && sec->groupid == R_NOGROUP)
+   {
+      // Add the sector and all adjacent sectors to the from group
+      P_GatherSectors(sec, portal->data.link.fromid);
+   }
+   
+   switch(effects)
+   {
+   case portal_ceiling:
+      sec->c_portal = portal;
+      P_CheckCPortalState(sec);
+      break;
+   case portal_floor:
+      sec->f_portal = portal;
+      P_CheckFPortalState(sec);
+      break;
+   case portal_both:
+      sec->c_portal = sec->f_portal = portal;
+      P_CheckCPortalState(sec);
+      P_CheckFPortalState(sec);
+      break;
+   case portal_lineonly:
+      line->portal = portal;
+      P_CheckLPortalState(line);
+      break;
+   default:
+      I_Error("P_SpawnPortal: unknown portal effect\n");
+   }
+}
+
+
+
+
 //
 // P_SpawnPortal
 //
@@ -4865,13 +4904,15 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
 //
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
-   sector_t  *sector, *frontsector;
-   portal_t  *portal = NULL;
-   mobj_t    *skycam;
-   static int CamType = -1;
-   int s;
-   fixed_t planez = 0;
-   int anchortype = 0; // SoM 3-10-04: new plan.
+   static int  CamType = -1;
+
+   sector_t    *sector;
+   portal_t    *portal = NULL;
+   mobj_t      *skycam;
+   fixed_t     planez = 0;
+   int         anchortype = 0; // SoM 3-10-04: new plan.
+   int         s;
+   int         fromid, toid;
 
    if(!(sector = line->frontsector))
       return;
@@ -4966,25 +5007,20 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
       portal = R_GetTwoWayPortal(line - lines, s);
       break;
-#ifdef R_LINKEDPORTALS
    case portal_linked:
       if(demo_version < 333)
          return;
-
-      frontsector = line->frontsector;
-      if(!frontsector) 
-         frontsector = line->backsector;
 
       // linked portals can only be applied to either the floor or ceiling.
       if(line->special == 358)
       {
          anchortype = 360;
-         planez = frontsector->floorheight;
+         planez = sector->floorheight;
       }
       else if(line->special == 359)
       {
          anchortype = 361;
-         planez = frontsector->ceilingheight;
+         planez = sector->ceilingheight;
       }
       else if(line->special == 376)
       {
@@ -4998,7 +5034,8 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
       {
          // SoM 3-10-04: Two different anchor linedef codes so I can tag 
          // two anchored portals to the same sector.
-         if(lines[s].special != anchortype || line == &lines[s])
+         if(lines[s].special != anchortype || line == &lines[s] 
+           || lines[s].frontsector == NULL)
             continue;
 
          break;
@@ -5009,21 +5046,30 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
          return;
       }
 
-      portal = R_GetLinkedPortal(line - lines, s, planez, P_CreatePortalGroup(frontsector));
+      // Setup main groups. Keep in mind, the linedef that actually creates the 
+      // portal will be on the 'other side' of that portal, so it is actually the 
+      // 'to group' and the anchor line is in the 'from group'
+      if(sector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(sector);
+         
+      if(lines[s].frontsector->groupid == R_NOGROUP)
+         P_CreatePortalGroup(lines[s].frontsector);
+      
+      toid = sector->groupid;
+      fromid = lines[s].frontsector->groupid;
+            
+      portal = R_GetLinkedPortal(line - lines, s, planez, fromid, toid);
 
+      // Special case where the portal was created with the line-to-line portal type
       if(line->special == 376)
       {
-         int group;
-
-         group = P_CreatePortalGroup(lines[s].frontsector ? lines[s].frontsector :
-                                                            lines[s].backsector);
-
-         line->portal = R_GetLinkedPortal(s, line - lines, planez, group);
-         lines[s].portal = portal;
+         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+         
+         portal = R_GetLinkedPortal(s, line - lines, planez, toid, fromid);
+         P_SetPortal(sector, line, portal, portal_lineonly);
          return;
       }
       break;
-#endif
    default:
       I_Error("P_SpawnPortal: unknown portal type\n");
    }
@@ -5032,56 +5078,23 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
    // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineTag(line, s)) >= 0; )
    {
-      switch(effects)
-      {
-      case portal_ceiling:
-         sectors[s].c_portal = portal;
-         break;
-      case portal_floor:
-         sectors[s].f_portal = portal;
-         break;
-      case portal_both:
-         sectors[s].c_portal = sectors[s].f_portal = portal;
-         break;
-      default:
-         I_Error("P_SpawnPortal: unknown portal effect\n");
-      }
-
+      P_SetPortal(sectors + s, NULL, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
    for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
    {
-      if(line == &lines[s] || lines[s].special != 289)
+      if(line == &lines[s] || !lines[s].frontsector)
+         continue;
+      
+      if(lines[s].special == 289)
+         P_SetPortal(lines[s].frontsector, lines + s, portal, portal_lineonly);
+      else if(lines[s].special == 385)
+         P_SetPortal(lines[s].frontsector, lines + s, portal, effects);
+      else
          continue;
 
       lines[s].special = 0;
-      lines[s].portal = portal;
-   }
-
-   // Attach portal to front-sectors of 
-   // attach portal to like-tagged 385 lines
-   for(s = -1; (s = P_FindLineFromLineTag(line, s)) >= 0; )
-   {
-      if(line == &lines[s] || lines[s].special != 385 || !lines[s].frontsector)
-         continue;
-
-      lines[s].special = 0;
-
-      switch(effects)
-      {
-      case portal_ceiling:
-         lines[s].frontsector->c_portal = portal;
-         break;
-      case portal_floor:
-         lines[s].frontsector->f_portal = portal;
-         break;
-      case portal_both:
-         lines[s].frontsector->c_portal = lines[s].frontsector->f_portal = portal;
-         break;
-      default:
-         I_Error("P_SpawnPortal: unknown portal effect\n");
-      }
    }
 }
 

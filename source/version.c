@@ -32,7 +32,7 @@
 int version = 339;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char SUBVERSION = 20;
+unsigned char subversion = 21;
 
 // [CG] EE has pretty good versioning already, so all that's needed for c/s is
 //      a c/s protocol version.  A simple single number is sufficient because
@@ -47,7 +47,7 @@ const char version_name[] = "Resheph";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.39.20 \"Resheph\"";
+const char ee_wmCaption[] = "Eternity Engine v3.39.21 \"Resheph\"";
 #endif
             
 // haleyjd: Eternity release history

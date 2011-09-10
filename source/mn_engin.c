@@ -498,7 +498,66 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
          
    // write variable value text
    MN_WriteTextColored(boundkeys, color, 
-                       x + (alignment == ALIGNMENT_LEFT ? desc_width: 0), y);
+                       x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
+}
+
+//
+// MN_truncateInput
+//
+// haleyjd 10/18/10: Avoid losing sight of the input caret when editing.
+//
+static void MN_truncateInput(qstring_t *qstr, int x)
+{
+   int width = MN_StringWidth(QStrConstPtr(qstr));
+
+   if(x + width > SCREENWIDTH - 8) // too wide to fit?
+   {
+      int subbed_width = 0;
+      int leftbound = SCREENWIDTH - 8;
+      int dotwidth  = MN_StringWidth("...");
+      const char *start = QStrConstPtr(qstr);
+      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+
+      while(start != end && (x + dotwidth + width - subbed_width > leftbound))
+      {
+         subbed_width += V_FontCharWidth(menu_font, *start);
+         ++start;
+      }
+      
+      if(start != end)
+      {
+         const char *temp = Z_Strdupa(start); // make a temp copy
+         QStrCat(QStrCopy(qstr, "..."), temp);
+      }
+   }
+}
+
+//
+// MN_truncateValue
+//
+// haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
+//
+static void MN_truncateValue(qstring_t *qstr, int x)
+{
+   int width = MN_StringWidth(QStrConstPtr(qstr));
+   
+   if(x + width > SCREENWIDTH - 8) // too wide to fit?
+   {
+      int subbed_width = 0;
+      int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
+      const char *start = QStrConstPtr(qstr);
+      const char *end   = QStrBufferAt(qstr, QStrLen(qstr) - 1);
+
+      while(end != start && (x + width - subbed_width > leftbound))
+      {
+         subbed_width += V_FontCharWidth(menu_font, *end);
+         --end;
+      }
+
+      // truncate the value at end position, and concatenate dots
+      if(end != start)
+         QStrCat(QStrTruncate(qstr, end - start), "...");
+   }
 }
 
 //
@@ -509,20 +568,9 @@ static void MN_drawItemBinding(menuitem_t *item, int color, int alignment,
 static void MN_drawItemToggleVar(menuitem_t *item, int color, 
                                  int alignment, int desc_width)
 {
-   char varvalue[1024]; // temp buffer
+   static qstring_t varvalue; // temp buffer
    int x = item->x;
    int y = item->y;
-
-   MN_GetItemVariable(item);
-         
-   // create variable description:
-   // Use console variable descriptions.
-
-   // display input buffer if inputting new var value
-   if(input_command && item->var == input_command->variable)
-      psnprintf(varvalue, sizeof(varvalue), "%s_", input_buffer);
-   else
-      strncpy(varvalue, C_VariableStringValue(item->var), sizeof(varvalue));
          
    if(drawing_menu->flags & mf_background)
    {
@@ -537,9 +585,29 @@ static void MN_drawItemToggleVar(menuitem_t *item, int color,
          color = GameModeInfo->variableColor;
    }
 
+   if(alignment == ALIGNMENT_LEFT)
+      x += desc_width;
+
+   // create variable description:
+   // Use console variable descriptions.
+
+   QStrClearOrCreate(&varvalue, 1024);
+   MN_GetItemVariable(item);
+
+   // display input buffer if inputting new var value
+   if(input_command && item->var == input_command->variable)
+   {
+      QStrPutc(QStrCopy(&varvalue, input_buffer), '_');
+      MN_truncateInput(&varvalue, x);
+   }
+   else
+   {
+      QStrCopy(&varvalue, C_VariableStringValue(item->var));
+      MN_truncateValue(&varvalue, x);
+   }         
+
    // draw it
-   MN_WriteTextColored(varvalue, color,
-                       x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
+   MN_WriteTextColored(QStrConstPtr(&varvalue), color, x, y);
 }
 
 //
@@ -1240,27 +1308,34 @@ boolean MN_Responder(event_t *ev)
       variable_t *var = input_command->variable;
       
       if(ev->data1 == KEYD_ESCAPE)        // cancel input
-         input_command = NULL;
-      
-      if(ev->data1 == KEYD_ENTER && input_buffer[0])
+         input_command = NULL;      
+      else if(ev->data1 == KEYD_ENTER)
       {
-         unsigned char *temp;
-         
-         // place " marks round the new value
-         temp = (unsigned char *)strdup((const char *)input_buffer);
-         psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
-         free(temp);
-         
-         // set the command
-         Console.cmdtype = input_cmdtype;
-         C_RunCommand(input_command, (const char *)input_buffer);
-         input_command = NULL;
-         input_cmdtype = c_typed;
-         return true; // eat key
-      }
+         if(input_buffer[0] || (input_command->flags & cf_allowblank))
+         {
+            if(input_buffer[0])
+            {
+               // place " marks round the new value
+               // FIXME/TODO: use qstring for input_buffer
+               char *temp = Z_Strdupa((const char *)input_buffer);
+               psnprintf((char *)input_buffer, sizeof(input_buffer), "\"%s\"", temp);
+            }
+            else
+            {
+               input_buffer[0] = '*';
+               input_buffer[1] = '\0';
+            }
 
+            // set the command
+            Console.cmdtype = input_cmdtype;
+            C_RunCommand(input_command, (const char *)input_buffer);
+            input_command = NULL;
+            input_cmdtype = c_typed;
+            return true; // eat key
+         }
+      }
       // check for backspace
-      if(ev->data1 == KEYD_BACKSPACE && input_buffer[0])
+      else if(ev->data1 == KEYD_BACKSPACE && input_buffer[0])
       {
          input_buffer[strlen((char *)input_buffer)-1] = '\0';
          return true; // eatkey

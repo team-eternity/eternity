@@ -798,13 +798,13 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
             if(!cl_predicting)
                S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
          }
-         else if(onthing || !E_GetThingFloorType(mo)->liquid)
+         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
          {
             if(!cl_predicting)
                S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
          }
       }
-      else if(onthing || !E_GetThingFloorType(mo)->liquid)
+      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
       {
          if(!cl_predicting)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
@@ -1210,12 +1210,13 @@ void P_NightmareRespawn(mobj_t* mobj)
    P_RemoveMobj(mobj);
 }
 
+// PTODO
 #ifdef R_LINKEDPORTALS
 static boolean P_CheckPortalTeleport(mobj_t *mobj)
 {
    boolean ret = false;
 
-   if(R_LinkedFloorActive(mobj->subsector->sector))
+   if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
    {
       fixed_t passheight;
       linkdata_t *ldata = R_FPLink(mobj->subsector->sector);
@@ -1232,7 +1233,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       if(passheight < ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->groupid);
+                                              ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);
@@ -1241,7 +1242,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       }
    }
 
-   if(!ret && R_LinkedCeilingActive(mobj->subsector->sector))
+   if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
       fixed_t passheight;
@@ -1258,7 +1259,7 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
       if(passheight >= ldata->planez)
       {
          linkoffset_t *link = P_GetLinkOffset(mobj->subsector->sector->groupid,
-                                              ldata->groupid);
+                                              ldata->toid);
          if(link)
          {
             EV_PortalTeleport(mobj, link);

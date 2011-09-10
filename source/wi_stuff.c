@@ -27,6 +27,7 @@
 #include "doomstat.h"
 #include "m_random.h"
 #include "w_wad.h"
+#include "w_levels.h"
 #include "g_game.h"
 #include "r_main.h"
 #include "p_info.h"
@@ -468,6 +469,10 @@ static void WI_drawEL(void)
    int y = WI_TITLEY;
    patch_t *patch = NULL;
    boolean loadedInfoPatch = false;
+
+   // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
+   if(inmasterlevels)
+      return;
 
    // haleyjd 06/17/06: support spec. of next map/next secret map pics
    if(wbs->gotosecret)

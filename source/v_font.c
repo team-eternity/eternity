@@ -400,6 +400,46 @@ int V_FontStringWidth(vfont_t *font, const char *s)
 }
 
 //
+// V_FontCharWidth
+//
+// haleyjd 10/18/10: return the width of a single character
+//
+int V_FontCharWidth(vfont_t *font, char pChar)
+{
+   unsigned char c;
+   int width;
+   patch_t *patch = NULL;
+   
+   c = (unsigned char)pChar;
+
+   if(c >= 128) // color or control code
+      return 0;
+      
+   if(c == '\n') // newline
+      return 0;
+
+   // normalize character
+   if(font->upper)
+      c = toupper(c) - font->start;
+   else
+      c = c - font->start;
+
+   if(c >= font->size)
+      width = font->space;
+   else if(font->linear)
+      width = font->lsize - font->dw;
+   else
+   {
+      if(!(patch = font->fontgfx[c]))
+         width = font->space;
+      else
+         width = (SwapShort(patch->width) - font->dw);
+   }
+   
+   return width;
+}
+
+//
 // V_FontMaxWidth
 //
 // haleyjd 05/25/06: finds the widest character in the font.

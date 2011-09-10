@@ -2435,12 +2435,8 @@ static menuitem_t mn_automapportal_items[] =
    {it_gap},
    {it_info,     FC_GOLD "portals", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-#ifdef R_LINKEDPORTALS
    {it_toggle,   "overlay linked portals", "mapportal_overlay"},
    {it_automap,  "overlay line color",     "mapcolor_prtl"},
-#else
-   {it_info,     FC_BRICK "linked portals disabled" },
-#endif
    {it_end},
 };
 

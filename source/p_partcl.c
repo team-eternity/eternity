@@ -406,8 +406,7 @@ void P_ParticleThinker(void)
          particle->z = floorheight;
 
       // floor clipping
-#ifdef R_LINKEDPORTALS
-      if(particle->z < floorheight && R_LinkedFloorActive(psec))
+      if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
       {
          linkdata_t *ldata = R_FPLink(psec);
 
@@ -417,9 +416,7 @@ void P_ParticleThinker(void)
          particle->z -= ldata->deltaz;
          P_SetParticlePosition(particle);
       }
-      else
-#endif
-      if(particle->z < floorheight)
+      else if(particle->z < floorheight)
       {
          // particles with fall to ground style start ticking now
          if(particle->styleflags & PS_FALLTOGROUND)

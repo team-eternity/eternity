@@ -40,43 +40,87 @@ typedef enum
 } rportaltype_e;
 
 
+
 // These are flags used to represent configurable options for portals
 typedef enum
 {
-   // If set the portal will be turned off
-   R_HIDDEN = 0x01,
+   // -- Portal behavior flags --
+   // Portal is completely disabled
+   PF_DISABLED           = 0x001,
+   // Portal does not render
+   PF_NORENDER           = 0x002,
+   // Portal does not allow passage
+   PF_NOPASS             = 0x004,
+   // Portal does not allow recursive sound to pass through
+   PF_BLOCKSOUND         = 0x008,
+   // Mask for the flags portion
+   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND,
+   
+   // -- Overlay flags --
+   // Only used per-surface and indicate various overlay options for the portal
+   // Portal has a blended texture overlay (alpha is default)
+   PS_OVERLAY            = 0x010,
+   // Overlay uses additive blending (must be used with PS_OVERLAY)
+   PS_ADDOVERLAY         = 0x020,
+   // Mask for overlay blending flags
+   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDOVERLAY,
+   // Surface uses the global texture in the portal struct
+   PS_USEGLOBALTEX       = 0x040,
+   // Mask for all overlay flags
+   PS_OVERLAYFLAGS       = PS_OBLENDFLAGS | PS_USEGLOBALTEX,
+   
+   // -- State flags --
+   // These are only used per-surface and indicate the current state of the portal
+  
+   // Portal can be rendered
+   PS_VISIBLE            = 0x080,
+   // Portal can be passed through
+   PS_PASSABLE           = 0x100,
+   // Portal allows recursive sound
+   PS_PASSSOUND          = 0x200,
+   // Mask for state flags
+   PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
+   
+   // -- Opactiy -- 
+   // The left-most 8 bits are reserved for the opacity value of the portal overlay
+   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYMASK        = 0xFF000000,
+} portalflag_e;
 
-#ifdef R_LINKEDPORTALS
-   // Linked portal options:
-   // If set, the linked portal will not allow travel between 
-   R_BLOCKING = 0x02
-#endif
-} rportalflag_e;
 
 
-#ifdef R_LINKEDPORTALS
-#define R_NOTRAVEL  (R_HIDDEN|R_BLOCKING)
 
+// Contains information representing a link from one portal group to another
 typedef struct linkdata_s
 {
    // SoM: linked portals are similar to anchored portals
    fixed_t   deltax, deltay, deltaz;
-   int       groupid;
    fixed_t   planez;
+   
+   // gromid is the group where the portal actually is, toid is the group on 
+   // the 'other side' of the portal.
+   int       fromid, toid;
+      
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
 } linkdata_t;
-#endif
 
+
+
+// Represents the information needed for an anchored portal
 typedef struct anchordata_s
 {
    fixed_t   deltax, deltay, deltaz;
+   
    // These are for debug purposes (so mappers can find the portats 
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
 
+
+
+// Represents the data needed for a horizon portal
 typedef struct horizondata_s
 {
    int     *floorpic, *ceilingpic;
@@ -88,6 +132,8 @@ typedef struct horizondata_s
    float   *ceilingbaseangle, *ceilingangle;
 } horizondata_t;
 
+
+// The data needed for a skyplane portal
 typedef struct skyplanedata_s
 {
    int     *pic;
@@ -97,6 +143,9 @@ typedef struct skyplanedata_s
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
 } skyplanedata_t;
 
+
+// The portal struct. This is what is assigned to sectors and can represent any
+// kind of portal.
 typedef struct portal_s
 {
    rportaltype_e type;
@@ -110,7 +159,12 @@ typedef struct portal_s
       mobj_t         *camera;
    } data;
 
+   // See: portalflag_e
    int    flags;
+   
+   // Planes that makeup a blended overlay
+   int    globaltex;
+   struct planehash_s *poverlay;
 
    struct portal_s *next;
 
@@ -141,12 +195,15 @@ void R_ClearPortals(void);
 void R_RenderPortals(void);
 
 
-#ifdef R_LINKEDPORTALS
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
-                            fixed_t planez, int groupid);
-#endif
+                            fixed_t planez, int fromid, int toid);
 
 
+
+// ----------------------------------------------------------------------------
+// Portal windows
+// A portal window represents the screen reigon through which the player is 
+// 'looking' at the portal.
 typedef enum
 {
    pw_floor,
@@ -160,6 +217,7 @@ typedef void (*R_ClipSegFunc)();
 
 extern R_ClipSegFunc segclipfuncs[];
 
+// SoM: TODO: Overlays go in here.
 typedef struct pwindow_s
 {
    portal_t *portal;
@@ -175,7 +233,12 @@ typedef struct pwindow_s
    R_WindowFunc func;
    R_ClipSegFunc clipfunc;
 
-   struct pwindow_s *next, *child;
+   // Next window in the main chain
+   struct pwindow_s *next;
+   
+   // Families of windows. Head is the main window, and child is the next
+   // child down the chain.
+   struct pwindow_s *head, *child;
 } pwindow_t;
 
 // SoM: Cardboard
@@ -197,6 +260,8 @@ typedef struct portalrender_s
    pwindow_t *w;
 
    void (*segClipFunc)();
+   
+   struct planehash_s   *overlay;
 } portalrender_t;
 
 extern portalrender_t  portalrender;

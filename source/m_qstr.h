@@ -130,6 +130,7 @@ boolean     QStrIsSpace(qstring_t *qstr);
 boolean     QStrIsUpper(qstring_t *qstr);
 qstring_t  *QStrLStrip(qstring_t *qstr, char c);
 qstring_t  *QStrRStrip(qstring_t *qstr, char c);
+qstring_t  *QStrTruncate(qstring_t *qstr, size_t pos);
 qstring_t  *QStrMakeQuoted(qstring_t *s);
 int         QStrPrintf(qstring_t *qstr, size_t maxlen, const char *fmt, ...);
 

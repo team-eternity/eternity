@@ -28,6 +28,7 @@
 
 
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "r_main.h"
 #include "r_bsp.h"
 #include "r_plane.h"
@@ -60,6 +61,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    float    dist, diststep;
    float    scale, scalestep;
    float    texmidf;
+   line_t  *linedef;
    lighttable_t **wlight;
 
    // Calculate light table.
@@ -67,17 +69,37 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    //   for horizontal / vertical / diagonal. Diagonal?
 
    segclip.line = ds->curline;
-   
+   linedef      = segclip.line->linedef;
+
    colfunc = r_column_engine->DrawColumn;
 
    // killough 4/11/98: draw translucent 2s normal textures
-   if(segclip.line->linedef->tranlump >= 0 && general_translucency)
+   if(general_translucency)
    {
-      colfunc = r_column_engine->DrawTLColumn;
-      if(segclip.line->linedef->tranlump > 0)
-         tranmap = W_CacheLumpNum(segclip.line->linedef->tranlump-1, PU_STATIC);
-      else
-         tranmap = main_tranmap;
+      if(linedef->tranlump >= 0)
+      {
+         colfunc = r_column_engine->DrawTLColumn;
+         if(linedef->tranlump > 0)
+            tranmap = W_CacheLumpNum(linedef->tranlump-1, PU_STATIC);
+         else
+            tranmap = main_tranmap;
+      }
+      else // haleyjd 11/11/10: flex/additive translucency for linedefs
+      {
+         if(linedef->alpha == 0.0f)
+            return;
+
+         if(linedef->extflags & EX_ML_ADDITIVE) 
+         {
+            colfunc = r_column_engine->DrawAddColumn;
+            column.translevel = M_FloatToFixed(linedef->alpha);
+         }
+         else if(linedef->alpha < 1.0f)
+         {
+            colfunc = r_column_engine->DrawFlexColumn;
+            column.translevel = M_FloatToFixed(linedef->alpha);
+         }
+      }
    }
    // killough 4/11/98: end translucent 2s normal code
 
@@ -93,9 +115,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
    {  
-      if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
+      if(linedef->v1->y == linedef->v2->y)
          lightnum -= LIGHTBRIGHT;
-      else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
+      else if(linedef->v1->x == linedef->v2->x)
          lightnum += LIGHTBRIGHT;
    }
 
@@ -114,7 +136,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    dist = ds->dist1 + (x1 - ds->x1) * diststep;
 
    // find positioning
-   if(segclip.line->linedef->flags & ML_DONTPEGBOTTOM)
+   if(linedef->flags & ML_DONTPEGBOTTOM)
    {
       column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
          ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
@@ -185,7 +207,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    }
 
    // Except for main_tranmap, mark others purgable at this point
-   if(segclip.line->linedef->tranlump > 0 && general_translucency)
+   if(linedef->tranlump > 0 && general_translucency)
       Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98
 }
 
@@ -246,7 +268,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKCPORTAL)
                R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
-            else
+            
+            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
             {
                segclip.ceilingplane->top[i]    = cliptop;
                segclip.ceilingplane->bottom[i] = line;
@@ -268,7 +291,8 @@ static void R_RenderSegLoop(void)
          {
             if(segclip.markflags & SEG_MARKFPORTAL)
                R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
-            else
+            
+            if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
             {
                segclip.floorplane->top[i]    = line;
                segclip.floorplane->bottom[i] = clipbot;
@@ -558,7 +582,7 @@ static void R_StoreTextureColumns(void)
       if(ds_p->maskedtexturecol)
          ds_p->maskedtexturecol[i] = texx;
 
-      segclip.len += segclip.lenstep;
+      segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
    }
 }

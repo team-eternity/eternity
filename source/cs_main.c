@@ -375,7 +375,7 @@ char* CS_VersionString(void)
       "%d.%d.%d",
       version / 100,
       version % 100,
-      SUBVERSION
+      subversion
    );
 
    return version_string;
@@ -1026,7 +1026,7 @@ void CS_PlayerTicker(int playernum)
                      S_StartSound(actor, GameModeInfo->playerSounds[sk_oof]);
                   }
                   else if((client->floor_status == cs_fs_hit_on_thing) ||
-                          !E_GetThingFloorType(actor)->liquid)
+                          !E_GetThingFloorType(actor, true)->liquid)
                   {
                      S_StartSound(
                         actor, GameModeInfo->playerSounds[sk_plfeet]
@@ -1034,7 +1034,7 @@ void CS_PlayerTicker(int playernum)
                   }
                }
                else if((client->floor_status == cs_fs_hit_on_thing) ||
-                       !E_GetThingFloorType(actor)->liquid)
+                       !E_GetThingFloorType(actor, true)->liquid)
                {
                   S_StartSound(actor, GameModeInfo->playerSounds[sk_oof]);
                }

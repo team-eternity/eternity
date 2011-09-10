@@ -52,12 +52,11 @@ typedef struct patch_s patch_t;
 
 // SoM: I had to move this for linked portals.
 typedef struct sector_s sector_t;
+typedef struct line_s   line_t;
 
 // Portals
 #include "r_portal.h"
-#ifdef R_LINKEDPORTALS
 #include "p_portal.h"
-#endif
 
 #include "p_partcl.h"
 
@@ -104,10 +103,8 @@ typedef struct degenmobj_s
    thinker_t thinker;  // not used for anything (haleyjd: not true now,
    fixed_t x, y, z;    //    earthquake code)
 
-#ifdef R_LINKEDPORTALS
    // SoM: yes Quasar, this is entirely necessary
    int     groupid; // The group the sound originated in
-#endif
 } degenmobj_t;
 
 // haleyjd: polyobj.h needs degenmobj_t, so it must be here
@@ -183,7 +180,7 @@ typedef struct pslope_s
    float   zdeltaf;
 } pslope_t;
 
-
+typedef struct ETerrain_s *secterrainptr;
 
 //
 // The SECTORS record, at runtime.
@@ -272,11 +269,14 @@ struct sector_s
    int f_asurfacecount;
    attachedsurface_t *f_asurfaces;
 
+   // Flags for portals
+   int c_pflags, f_pflags;
+   
+   // Portals
    portal_t *c_portal;
    portal_t *f_portal;
-#ifdef R_LINKEDPORTALS
+   
    int groupid;
-#endif
 
    // haleyjd 03/12/03: Heretic wind specials
    int     hticPushType;
@@ -315,6 +315,10 @@ struct sector_s
 
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
+
+   // haleyjd 10/17/10: terrain type overrides
+   secterrainptr floorterrain;
+   secterrainptr ceilingterrain;
 };
 
 //
@@ -372,17 +376,19 @@ typedef struct line_s
    degenmobj_t soundorg;  // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
+   int      pflags;
    portal_t *portal;
 
    // SoM 05/11/09: Pre-calculated 2D normal for the line
    float nx, ny;
 
    // haleyjd 02/26/05: ExtraData fields
-   int  extflags;          // activation flags for param specials
-   int  args[NUMLINEARGS]; // argument values for param specials
+   int   extflags;          // activation flags for param specials
+   int   args[NUMLINEARGS]; // argument values for param specials
+   float alpha;             // alpha
 
    struct seg_s *segs;     // haleyjd: link to segs
-} line_t;
+};
 
 //
 // A SubSector.
@@ -585,9 +591,7 @@ typedef struct vissprite_s
 
   fixed_t footclip; // haleyjd: foot clipping
 
-  #ifdef R_LINKEDPORTALS
   int    sector; // SoM: sector the sprite is in.
-  #endif
 
   int pcolor; // haleyjd 08/25/09: for particles
 
@@ -689,8 +693,22 @@ typedef struct visplane
    // Slopes!
    pslope_t *pslope;
    rslope_t rslope;
+   
+   // Needed for overlays
+   // This is the table the visplane currently belongs to
+   struct planehash_s     *table;
+   // This is the blending flags from the portal surface (flags & PS_OVERLAYFLAGS)
+   int                    bflags; 
+   // Opacity of the overlay (255 - opaque, 0 - translucent)
+   byte                   opacity;
 } visplane_t;
 
+
+typedef struct planehash_s
+{
+   int          chaincount;
+   visplane_t   **chains;
+} planehash_t;
 #endif
 
 //----------------------------------------------------------------------------

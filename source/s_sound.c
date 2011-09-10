@@ -229,7 +229,6 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
    sx = source->x;
    sy = source->y;
       
-#ifdef R_LINKEDPORTALS
    if(useportalgroups && listener->groupid != R_NOGROUP && 
       source->groupid != R_NOGROUP && listener->groupid != source->groupid)
    {
@@ -242,7 +241,6 @@ static int S_AdjustSoundParams(camera_t *listener, const mobj_t *source,
          sy += link->y;
       }
    }
-#endif
 
    adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
    ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
@@ -539,9 +537,7 @@ void S_StartSfxInfo(mobj_t *origin, sfxinfo_t *sfx,
             playercam.y = mo->y; 
             playercam.z = mo->z;
             playercam.angle = mo->angle;
-#ifdef R_LINKEDPORTALS
             playercam.groupid = mo->groupid;
-#endif
          }
          else
          {
@@ -834,9 +830,7 @@ void S_UpdateSounds(const mobj_t *listener)
          playercam.y = listener->y;
          playercam.z = listener->z;
          playercam.angle = listener->angle;
-#ifdef R_LINKEDPORTALS
          playercam.groupid = listener->groupid;
-#endif
       }      
    }
 

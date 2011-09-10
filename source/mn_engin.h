@@ -27,8 +27,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __MN_MENU__
-#define __MN_MENU__
+#ifndef MN_ENGIN_H__
+#define MN_ENGIN_H__
 
 #include "c_runcmd.h"
 #include "d_event.h"
@@ -68,7 +68,7 @@ typedef struct menuitem_s
     it_slider,           // slider
     it_bigslider,        // big slider -- haleyjd 08/30/06
     it_automap,          // an automap colour
-    it_binding,		 // haleyjd: a key binding
+    it_binding,		    // haleyjd: a key binding
     it_end,              // last menuitem in the list
   } type;
   

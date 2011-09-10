@@ -177,6 +177,7 @@ static boolean Wipe_meltTicker(void)
 // default, which to me is odd).
 //
 
+// SoM: Wait, why is this not defined in the header where Col2RGB8 is defined?!
 #define MAXFADE 64 // there are 64 levels in the Col2RGB8 table
 static int fadelvl;
 

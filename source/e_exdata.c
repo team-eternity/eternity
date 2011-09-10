@@ -53,6 +53,7 @@
 #include "e_lib.h"
 #include "e_exdata.h"
 #include "e_things.h"
+#include "e_ttypes.h"
 
 // [CG] Added.
 #include "cs_main.h"
@@ -99,18 +100,19 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_LINE_EXTFLAGS  "extflags"
 #define FIELD_LINE_ARGS      "args"
 #define FIELD_LINE_ID        "id"
+#define FIELD_LINE_ALPHA     "alpha"
 
 // sector fields:
 #define FIELD_SECTOR_NUM            "recordnum"
 #define FIELD_SECTOR_FLAGS          "flags"
-#define FIELD_SECTOR_FLAGSADD       "flagsadd"
-#define FIELD_SECTOR_FLAGSREM       "flagsremove"
+#define FIELD_SECTOR_FLAGSADD       "flags.add"
+#define FIELD_SECTOR_FLAGSREM       "flags.remove"
 #define FIELD_SECTOR_DAMAGE         "damage"
 #define FIELD_SECTOR_DAMAGEMASK     "damagemask"
 #define FIELD_SECTOR_DAMAGEMOD      "damagemod"
 #define FIELD_SECTOR_DAMAGEFLAGS    "damageflags"
-#define FIELD_SECTOR_DMGFLAGSADD    "damageflagsadd"
-#define FIELD_SECTOR_DMGFLAGSREM    "damageflagsremove"
+#define FIELD_SECTOR_DMGFLAGSADD    "damageflags.add"
+#define FIELD_SECTOR_DMGFLAGSREM    "damageflags.remove"
 #define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
 #define FIELD_SECTOR_FLOORANGLE     "floorangle"
 #define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
@@ -166,12 +168,13 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
 static cfg_opt_t linedef_opts[] =
 {
-   CFG_INT(FIELD_LINE_NUM,        0,  CFGF_NONE),
-   CFG_INT_CB(FIELD_LINE_SPECIAL, 0,  CFGF_NONE, E_LineSpecCB),
-   CFG_INT(FIELD_LINE_TAG,        0,  CFGF_NONE),
+   CFG_INT(FIELD_LINE_NUM,         0, CFGF_NONE),
+   CFG_INT_CB(FIELD_LINE_SPECIAL,  0, CFGF_NONE, E_LineSpecCB),
+   CFG_INT(FIELD_LINE_TAG,         0, CFGF_NONE),
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
-   CFG_STR(FIELD_LINE_ARGS,       0,  CFGF_LIST),
-   CFG_INT(FIELD_LINE_ID,        -1,  CFGF_NONE),
+   CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
+   CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
+   CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
    CFG_END()
 };
 
@@ -179,16 +182,17 @@ static cfg_opt_t linedef_opts[] =
 
 static dehflags_t extlineflags[] =
 {
-   { "CROSS",   EX_ML_CROSS   },
-   { "USE",     EX_ML_USE     },
-   { "IMPACT",  EX_ML_IMPACT  },
-   { "PUSH",    EX_ML_PUSH    },
-   { "PLAYER",  EX_ML_PLAYER  },
-   { "MONSTER", EX_ML_MONSTER },
-   { "MISSILE", EX_ML_MISSILE },
-   { "REPEAT",  EX_ML_REPEAT  },
-   { "1SONLY",  EX_ML_1SONLY  },
-   { NULL,      0             }
+   { "CROSS",    EX_ML_CROSS    },
+   { "USE",      EX_ML_USE      },
+   { "IMPACT",   EX_ML_IMPACT   },
+   { "PUSH",     EX_ML_PUSH     },
+   { "PLAYER",   EX_ML_PLAYER   },
+   { "MONSTER",  EX_ML_MONSTER  },
+   { "MISSILE",  EX_ML_MISSILE  },
+   { "REPEAT",   EX_ML_REPEAT   },
+   { "1SONLY",   EX_ML_1SONLY   },
+   { "ADDITIVE", EX_ML_ADDITIVE },
+   { NULL,       0              }
 };
 
 static dehflagset_t ld_flagset =
@@ -621,11 +625,14 @@ static struct exlinespec
    { 341, "Stairs_BuildDownDoom" },
    { 342, "Stairs_BuildUpDoomSync" },
    { 343, "Stairs_BuildDownDoomSync" },
+   
    // SoM: two-way portals
    { 344, "Portal_TwowayCeiling" },
    { 345, "Portal_TwowayFloor" },
    { 346, "Portal_TwowayAnchorLine" },
    { 347, "Portal_TwowayAnchorLineFloor" },
+
+   // Polyobjects
    { 348, "Polyobj_StartLine" },
    { 349, "Polyobj_ExplicitLine" },
    { 350, "Polyobj_DoorSlide" },
@@ -638,12 +645,10 @@ static struct exlinespec
    { 357, "Polyobj_OR_RotateLeft" },
 
    // SoM: linked portal types
-#ifdef R_LINKEDPORTALS
    { 358, "Portal_LinkedCeiling" },
    { 359, "Portal_LinkedFloor" },
    { 360, "Portal_LinkedAnchorLine" },
    { 361, "Portal_LinkedAnchorLineFloor" },
-#endif
 
    { 362, "Pillar_Build" },
    { 363, "Pillar_BuildAndCrush" },
@@ -660,10 +665,8 @@ static struct exlinespec
    { 374, "Light_Strobe" },
    { 375, "Radius_Quake" },
 
-#ifdef R_LINKEDPORTALS
    { 376, "Portal_LinkedLineToLine" },
    { 377, "Portal_LinkedLineToLineAnchor" },
-#endif
 
    { 378, "Line_SetIdentification" },
 
@@ -676,7 +679,7 @@ static struct exlinespec
    { 384, "Attach_MirrorCeilingToControl" },
 
    // Apply tagged portals to frontsector
-   { 385, "Apply_PortalToFrontsector" },
+   { 385, "Portal_ApplyToFrontsector" },
 
    // Slopes
    { 386, "Slope_FrontsectorFloor" },
@@ -697,6 +700,9 @@ static struct exlinespec
    { 398, "Thing_Spawn"  }, 
    { 399, "Thing_SpawnNoFog" },
    { 400, "Teleport_EndGame" },
+
+   // ExtraData sector control line
+   { 401, "ExtraDataSector" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -1608,6 +1614,13 @@ static void E_ProcessEDLines(cfg_t *cfg)
       else
          EDLines[i].id = -1;
 
+      // 11/11/10: alpha
+      EDLines[i].alpha = (float)(cfg_getfloat(linesec, FIELD_LINE_ALPHA));
+      if(EDLines[i].alpha < 0.0f)
+         EDLines[i].alpha = 0.0f;
+      else if(EDLines[i].alpha > 1.0f)
+         EDLines[i].alpha = 1.0f;
+
       // TODO: any other new fields
    }
 }
@@ -1711,14 +1724,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sector_chains[tempint] = i;
 
       // extended fields
-      /*
-      TODO:
-      CFG_STR(FIELD_SECTOR_FLOORTERRAIN,     "@flat",    CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_CEILINGTERRAIN,   "@flat",    CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_TOPMAP,           "@default", CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_MIDMAP,           "@default", CFGF_NONE),
-      CFG_STR(FIELD_SECTOR_BOTTOMMAP,        "@default", CFGF_NONE),
-      */
+
       // flags
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLAGS); // flags to set
       if(*tempstr != '\0')
@@ -1776,6 +1782,27 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempdouble = cfg_getfloat(section, FIELD_SECTOR_CEILINGANGLE);
       sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
 
+      // sector colormaps
+      tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->topmap = R_ColormapNumForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_MIDMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->midmap = R_ColormapNumForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
+      if(strcasecmp(tempstr, "@default"))
+         sec->bottommap = R_ColormapNumForName(tempstr);
+
+      // terrain type overrides
+      tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);
+      if(strcasecmp(tempstr, "@flat"))
+         sec->floorterrain = E_TerrainForName(tempstr);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
+      if(strcasecmp(tempstr, "@flat"))
+         sec->ceilingterrain = E_TerrainForName(tempstr);
    }
 }
 
@@ -1827,7 +1854,8 @@ void E_LoadExtraData(void)
    // load lines
    E_ProcessEDLines(cfg);
 
-   // TODO: more processing
+   // load sectors
+   E_ProcessEDSectors(cfg);
 
    // free the cfg
    cfg_free(cfg);
@@ -1929,6 +1957,9 @@ void E_LoadLineDefExt(line_t *line, boolean applySpecial)
    // 03/03/07: id
    if(edline->id != -1) // haleyjd: only use this field when it is specified
       line->tag = edline->id;
+
+   // 11/11/10: alpha
+   line->alpha = edline->alpha;
 }
 
 //
@@ -1996,7 +2027,11 @@ void E_LoadSectorExt(line_t *line)
    sector->midmap    = edsector->midmap;
    sector->bottommap = edsector->bottommap;
 
-   // TODO: more
+   // terrain overrides
+   sector->floorterrain   = edsector->floorterrain;
+   sector->ceilingterrain = edsector->ceilingterrain;
+
+   // TODO: more?
 
    // clear the line tag
    line->tag = 0;

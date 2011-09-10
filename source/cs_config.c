@@ -1589,7 +1589,7 @@ void CS_ReloadDefaults(void)
    // consoleplayer = displayplayer = 0;
    compatibility = false;
    demo_version = version;
-   demo_subversion = SUBVERSION;
+   demo_subversion = subversion;
    demo_insurance = default_demo_insurance == 1;
    G_ScrambleRand();
 

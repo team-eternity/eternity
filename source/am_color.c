@@ -52,14 +52,12 @@ extern int mapcolor_hair;    // crosshair color
 extern int mapcolor_sngl;    // single player arrow color
 extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 extern int mapcolor_frnd;    // colors for friends of player
-#ifdef R_LINKEDPORTALS
 extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 
 // SoM: map mode. True means the portal groups are overlayed (the group the 
 // player is in being displayed in color and the other groups being grayed out 
 // and underneath) and false means the map is not modified.
 extern int mapportal_overlay;
-#endif
 
 VARIABLE_INT(mapcolor_back, NULL, 0, 255, NULL);
 VARIABLE_INT(mapcolor_grid, NULL, 0, 255, NULL);
@@ -82,10 +80,8 @@ VARIABLE_INT(mapcolor_sprt, NULL, 0, 255, NULL);
 VARIABLE_INT(mapcolor_hair, NULL, 0, 255, NULL);
 VARIABLE_INT(mapcolor_sngl, NULL, 0, 255, NULL);
 VARIABLE_INT(mapcolor_frnd, NULL, 0, 255, NULL);
-#ifdef R_LINKEDPORTALS
 VARIABLE_INT(mapcolor_prtl, NULL, 0, 255, NULL);
 VARIABLE_BOOLEAN(mapportal_overlay, NULL, yesno);
-#endif
 
 CONSOLE_VARIABLE(mapcolor_back, mapcolor_back, 0) {}
 CONSOLE_VARIABLE(mapcolor_grid, mapcolor_grid, 0) {}
@@ -108,10 +104,8 @@ CONSOLE_VARIABLE(mapcolor_sprt, mapcolor_sprt, 0) {}
 CONSOLE_VARIABLE(mapcolor_hair, mapcolor_hair, 0) {}
 CONSOLE_VARIABLE(mapcolor_sngl, mapcolor_sngl, 0) {}
 CONSOLE_VARIABLE(mapcolor_frnd, mapcolor_frnd, 0) {}
-#ifdef R_LINKEDPORTALS
 CONSOLE_VARIABLE(mapcolor_prtl, mapcolor_prtl, 0) {}
 CONSOLE_VARIABLE(mapportal_overlay, mapportal_overlay, 0) {}
-#endif
 
 void AM_AddCommands(void)
 {
@@ -136,10 +130,8 @@ void AM_AddCommands(void)
   C_AddCommand(mapcolor_hair);
   C_AddCommand(mapcolor_sngl);
   C_AddCommand(mapcolor_frnd);
-#ifdef R_LINKEDPORTALS
   C_AddCommand(mapcolor_prtl);
   C_AddCommand(mapportal_overlay);
-#endif
 }
 
 // EOF

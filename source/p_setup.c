@@ -181,6 +181,14 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
    {
       // Convert to extended type
       *loc  = value & ~0x8000;
+
+      // haleyjd 11/06/10: check for invalid subsector reference
+      if(*loc >= numsubsectors)
+      {
+         C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a", *loc);
+         *loc = 0;
+      }
+
       *loc |= NF_SUBSECTOR;
    }
    else
@@ -194,14 +202,15 @@ d_inline static void ShortToNodeChild(int *loc, uint16_t value)
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
 //
-d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
-                                  const char *item)
+d_inline static int SafeUintIndex(int16_t input, int limit, 
+                                  const char *func, int index, const char *item)
 {
    int ret = (int)(SwapShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "%s error: %s #%d out of range\a\n", func, item, ret);
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+               func, index, item, ret);
       ret = 0;
    }
 
@@ -215,13 +224,14 @@ d_inline static int SafeUintIndex(int16_t input, int limit, const char *func,
 // short format.
 //
 d_inline static int SafeRealUintIndex(uint16_t input, int limit,
-                                      const char *func, const char *item)
+                                      const char *func, int index, const char *item)
 {
    int ret = (int)(SwapUShort(input)) & 0xffff;
 
    if(ret >= limit)
    {
-      C_Printf(FC_ERROR "%s error: %s #%d out of range\a\n", func, item, ret);
+      C_Printf(FC_ERROR "Error: %s #%d - bad %s #%d\a\n", 
+               func, index, item, ret);
       ret = 0;
    }
 
@@ -237,6 +247,16 @@ d_inline static int SafeRealUintIndex(uint16_t input, int limit,
 // such direct mapping.
 //
 
+// haleyjd 10/30/10: Read a little-endian short without alignment assumptions
+#define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
+
+// haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
+#define read32_le(b, t) \
+   ((b)[0] | \
+    ((t)((b)[1]) <<  8) | \
+    ((t)((b)[2]) << 16) | \
+    ((t)((b)[3]) << 24))
+
 //
 // GetLevelWord
 //
@@ -244,9 +264,7 @@ d_inline static int SafeRealUintIndex(uint16_t input, int limit,
 //
 static int16_t GetLevelWord(byte **data)
 {
-   int16_t *loc = (int16_t *)(*data);
-   int16_t  val = SwapShort(*loc);
-
+   int16_t val = SwapShort(read16_le(*data, int16_t));
    *data += 2;
 
    return val;
@@ -259,9 +277,7 @@ static int16_t GetLevelWord(byte **data)
 //
 static uint16_t GetLevelWordU(byte **data)
 {
-   uint16_t *loc = (uint16_t *)(*data);
-   uint16_t  val = SwapUShort(*loc);
-
+   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
    *data += 2;
 
    return val;
@@ -274,9 +290,7 @@ static uint16_t GetLevelWordU(byte **data)
 //
 static int32_t GetLevelDWord(byte **data)
 {
-   int32_t *loc = (int32_t *)(*data);
-   int32_t  val = SwapLong(*loc);
-
+   int32_t val = SwapLong(read32_le(*data, int32_t));
    *data += 4;
 
    return val;
@@ -289,9 +303,7 @@ static int32_t GetLevelDWord(byte **data)
 //
 static uint32_t GetLevelDWordU(byte **data)
 {
-   uint32_t *loc = (uint32_t *)(*data);
-   uint32_t  val = SwapULong(*loc);
-
+   uint32_t val = SwapULong(read32_le(*data, uint32_t));
    *data += 4;
 
    return val;
@@ -375,13 +387,13 @@ void P_LoadSegs(int lump)
       line_t *ldef;
 
       // haleyjd 06/19/06: convert indices to unsigned
-      li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "seg", "vertex")];
-      li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "seg", "vertex")];
+      li->v1 = &vertexes[SafeUintIndex(ml->v1, numvertexes, "seg", i, "vertex")];
+      li->v2 = &vertexes[SafeUintIndex(ml->v2, numvertexes, "seg", i, "vertex")];
 
       li->offset = (float)(SwapShort(ml->offset));
 
       // haleyjd 06/19/06: convert indices to unsigned
-      linedef = SafeUintIndex(ml->linedef, numlines, "seg", "line");
+      linedef = SafeUintIndex(ml->linedef, numlines, "seg", i, "line");
       ldef = &lines[linedef];
       li->linedef = ldef;
       side = SwapShort(ml->side);
@@ -479,8 +491,6 @@ void P_LoadSectors(int lumpnum)
       ss->lightlevel         = GetLevelWord(&data);
       ss->special            = GetLevelWord(&data);
       ss->tag                = GetLevelWord(&data);
-      ss->thinglist          = NULL;
-      ss->touching_thinglist = NULL; // phares 3/14/98
 
       ss->nextsec = -1; //jff 2/26/98 add fields to support locking out
       ss->prevsec = -1; // stair retriggering until build completes
@@ -500,26 +510,20 @@ void P_LoadSectors(int lumpnum)
 
       // SoM 9/19/02: Initialize the attached sector list for 3dsides
       ss->c_attached = ss->f_attached = NULL;
-      // SoM 11/9/04:
+      // SoM 11/9/04: 
       ss->c_attsectors = ss->f_attsectors = NULL;
 
       // SoM 10/14/07:
       ss->c_asurfaces = ss->f_asurfaces = NULL;
 
       // SoM: init portals
+      ss->c_pflags = ss->f_pflags = 0;
       ss->c_portal = ss->f_portal = NULL;
-#ifdef R_LINKEDPORTALS
       ss->groupid = R_NOGROUP;
-#endif
-
-      // SoM: Slopes!
-      ss->c_slope = ss->f_slope = NULL;
 
       // SoM: These are kept current with floorheight and ceilingheight now
       ss->floorheightf   = M_FixedToFloat(ss->floorheight);
       ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
-
-      ss->ptcllist = NULL; // haleyjd 02/20/04: particle list
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
@@ -727,7 +731,7 @@ static void P_LoadZSegs(byte *data)
       ml.linedef = GetLevelWordU(&data);
       ml.side    = *data++;
 
-      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", "line");
+      linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", i, "line");
 
       ldef = &lines[linedef];
       li->linedef = ldef;
@@ -1096,8 +1100,8 @@ void P_LoadLineDefs(int lump)
       ld->tag     = SwapShort(mld->tag);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", "vertex")];
-      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", "vertex")];
+      v1 = ld->v1 = &vertexes[SafeUintIndex(mld->v1, numvertexes, "line", i, "vertex")];
+      v2 = ld->v2 = &vertexes[SafeUintIndex(mld->v2, numvertexes, "line", i, "vertex")];
       ld->dx = v2->x - v1->x;
       ld->dy = v2->y - v1->y;
 
@@ -1105,6 +1109,7 @@ void P_LoadLineDefs(int lump)
       P_MakeLineNormal(ld);
 
       ld->tranlump = -1;   // killough 4/11/98: no translucency by default
+      ld->alpha    = 1.0f; // haleyjd 11/11/10: flex/additive; default to opaque
 
       ld->slopetype = !ld->dx ? ST_VERTICAL : !ld->dy ? ST_HORIZONTAL :
          FixedDiv(ld->dy, ld->dx) > 0 ? ST_POSITIVE : ST_NEGATIVE;
@@ -1155,6 +1160,10 @@ void P_LoadLineDefs(int lump)
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
       ld->soundorg.y       = ld->v1->y + ld->dy / 2;
       ld->soundorg.groupid = R_NOGROUP;
+      
+      // SoM: Line portals
+      ld->portal = NULL;
+      ld->pflags = 0;
 
       // haleyjd 02/26/05: ExtraData
       // haleyjd 04/20/08: Implicit ExtraData lines
@@ -1426,7 +1435,7 @@ void P_LoadSideDefs2(int lumpnum)
       GetLevelString(&data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", "sector");
+      secnum = SafeUintIndex(GetLevelWord(&data), numsectors, "side", i, "sector");
       sd->sector = sec = &sectors[secnum];
 
       // killough 4/4/98: allow sidedef texture names to be overloaded
@@ -1908,12 +1917,10 @@ void P_GroupLines(void)
                            sector->blockbox[BOXLEFT] / 2;
       sector->soundorg.y = sector->blockbox[BOXTOP] / 2 +
                            sector->blockbox[BOXBOTTOM] / 2;
-#ifdef R_LINKEDPORTALS
       // SoM: same for group id.
       // haleyjd: note - groups have not been built yet, so this is just for
       // initialization.
       sector->soundorg.groupid = sector->groupid;
-#endif
 
       // haleyjd 10/16/06: copy all properties to ceiling origin
       sector->csoundorg = sector->soundorg;
@@ -2123,13 +2130,10 @@ int P_CheckLevel(struct waddir_s *dir, int lumpnum)
    }
 
    // if we got here, we're dealing with a Hexen-format map
-
    return LEVEL_FORMAT_HEXEN;
 }
 
 void P_ConvertHereticSpecials(void); // haleyjd
-
-void P_LoadOlo(void);
 
 void P_InitThingLists(void); // haleyjd
 
@@ -2593,7 +2597,7 @@ static void P_ConvertHereticThing(mapthing_t *mthing)
    if(mthing->type <= 4 || mthing->type == 11 || mthing->type == 14)
       return;
 
-   // handle ordinary heretic things -- all are less than 100
+   // handle ordinary Heretic things -- all are less than 100
    if(mthing->type < 100)
    {
       // add 7000 to normal doomednum

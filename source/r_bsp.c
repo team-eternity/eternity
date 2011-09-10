@@ -499,23 +499,29 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->c_portal = NULL;
 
          // head-below-floor hack
-         tempsec->floorpic    = s->floorpic;
-         tempsec->floor_xoffs = s->floor_xoffs;
-         tempsec->floor_yoffs = s->floor_yoffs;
+         tempsec->floorpic       = s->floorpic;
+         tempsec->floor_xoffs    = s->floor_xoffs;
+         tempsec->floor_yoffs    = s->floor_yoffs;
+         tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
+         tempsec->floorangle     = s->floorangle;
 
          // haleyjd 03/13/05: removed redundant if(underwater) check
          if(s->intflags & SIF_SKY)
          {
-            tempsec->floorheight   = tempsec->ceilingheight+1;
-            tempsec->ceilingpic    = tempsec->floorpic;
-            tempsec->ceiling_xoffs = tempsec->floor_xoffs;
-            tempsec->ceiling_yoffs = tempsec->floor_yoffs;
+            tempsec->floorheight      = tempsec->ceilingheight+1;
+            tempsec->ceilingpic       = tempsec->floorpic;
+            tempsec->ceiling_xoffs    = tempsec->floor_xoffs;
+            tempsec->ceiling_yoffs    = tempsec->floor_yoffs;
+            tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
+            tempsec->ceilingangle     = tempsec->floorangle;
          }
          else
          {
-            tempsec->ceilingpic    = s->ceilingpic;
-            tempsec->ceiling_xoffs = s->ceiling_xoffs;
-            tempsec->ceiling_yoffs = s->ceiling_yoffs;
+            tempsec->ceilingpic       = s->ceilingpic;
+            tempsec->ceiling_xoffs    = s->ceiling_xoffs;
+            tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+            tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
+            tempsec->ceilingangle     = s->ceilingangle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
@@ -546,16 +552,20 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
          tempsec->ceilingheight = s->ceilingheight;
          tempsec->floorheight   = s->ceilingheight + 1;
 
-         tempsec->floorpic    = tempsec->ceilingpic    = s->ceilingpic;
-         tempsec->floor_xoffs = tempsec->ceiling_xoffs = s->ceiling_xoffs;
-         tempsec->floor_yoffs = tempsec->ceiling_yoffs = s->ceiling_yoffs;
+         tempsec->floorpic       = tempsec->ceilingpic       = s->ceilingpic;
+         tempsec->floor_xoffs    = tempsec->ceiling_xoffs    = s->ceiling_xoffs;
+         tempsec->floor_yoffs    = tempsec->ceiling_yoffs    = s->ceiling_yoffs;
+         tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
+         tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
          if(s->floorpic != skyflatnum && s->floorpic != sky2flatnum)
          {
-            tempsec->ceilingheight = sec->ceilingheight;
-            tempsec->floorpic      = s->floorpic;
-            tempsec->floor_xoffs   = s->floor_xoffs;
-            tempsec->floor_yoffs   = s->floor_yoffs;
+            tempsec->ceilingheight  = sec->ceilingheight;
+            tempsec->floorpic       = s->floorpic;
+            tempsec->floor_xoffs    = s->floor_xoffs;
+            tempsec->floor_yoffs    = s->floor_yoffs;
+            tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
+            tempsec->floorangle     = s->floorangle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
@@ -583,46 +593,49 @@ sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
             tempsec->f_portal = NULL;
       }
       
-      tempsec->ceilingheightf= M_FixedToFloat(tempsec->ceilingheight);
-      tempsec->floorheightf  = M_FixedToFloat(tempsec->floorheight);
-      sec = tempsec;               // Use other sector
+      tempsec->ceilingheightf = M_FixedToFloat(tempsec->ceilingheight);
+      tempsec->floorheightf   = M_FixedToFloat(tempsec->floorheight);
+      sec = tempsec;            // Use other sector
    }
 
    if(sec->c_portal)
    {
-#ifdef R_LINKEDPORTALS
       if(sec->c_portal->type == R_LINKED)
       {
          if(sec->ceilingheight < R_CPLink(sec)->planez)
+         {
             tempsec->c_portal = NULL;
+            tempsec->c_pflags = 0;
+         }
          else
             P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
-      else
-#endif
-      if(sec->c_portal->flags & R_HIDDEN)
+      else if(!sec->c_pflags & PS_VISIBLE)
       {
          tempsec->c_portal = NULL;
+         tempsec->c_pflags = 0;
          sec = tempsec;
       }
    }
    if(sec->f_portal)
    {
-#ifdef R_LINKEDPORTALS
       if(sec->f_portal->type == R_LINKED)
       {
          if(sec->floorheight > R_FPLink(sec)->planez)
+         {
             tempsec->f_portal = NULL;
+            tempsec->f_pflags = 0;
+         }
          else
             P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
+            
          sec = tempsec;
       }
-      else
-#endif
-      if(sec->f_portal->flags & R_HIDDEN)
+      else if(!sec->f_pflags & PS_VISIBLE)
       {
          tempsec->f_portal = NULL;
+         tempsec->f_pflags = 0;
          sec = tempsec;
       }
    }
@@ -1127,6 +1140,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        (mark || seg.clipsolid || heightchange ||
         seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
         seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
+         seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
@@ -1168,6 +1183,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       (mark || seg.clipsolid || heightchange ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle != 
+        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
@@ -1177,7 +1194,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.markflags |= SEG_MARKFLOOR;
    }
 
-#ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
    // or below the ceiling or floor plane.
    // haleyjd 03/12/06: inverted predicates to simplify
@@ -1196,7 +1212,6 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
    }
-#endif
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texlow = seg.line->backsector->floorheightf - view.z;
@@ -1291,20 +1306,12 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    seg.markflags = 0;
    
-   if(seg.c_portal && 
-      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-       seg.frontsec->c_portal != seg.backsec->c_portal))
-   {
-      seg.markflags |= SEG_MARKCPORTAL;
-      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
-   }
-   else
-      seg.c_window = NULL;
-
    if(seg.ceilingplane && 
       (mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
+       (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
+        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
@@ -1312,6 +1319,17 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    {
       seg.markflags |= SEG_MARKCEILING;
    }
+   
+   if(seg.c_portal && 
+      (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
+       seg.frontsec->c_portal != seg.backsec->c_portal ||
+       (seg.markflags & SEG_MARKCEILING && seg.floorplane->bflags & PS_OVERLAY)))
+   {
+      seg.markflags |= SEG_MARKCPORTAL;
+      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
+   }
+   else
+      seg.c_window = NULL;
 
    if(seg.frontsec->ceilingheight > seg.backsec->ceilingheight &&
      !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
@@ -1328,21 +1346,13 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
-   if(seg.f_portal &&
-      (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-       seg.frontsec->f_portal != seg.backsec->f_portal))
-   {
-      seg.markflags |= SEG_MARKFPORTAL;
-      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
-   }
-   else
-      seg.f_window = NULL;
-
    if(seg.floorplane && 
       (mark || seg.clipsolid ||  
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
+       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
+        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
@@ -1350,8 +1360,18 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    {
       seg.markflags |= SEG_MARKFLOOR;
    }
+   
+   if(seg.f_portal &&
+      (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
+       seg.frontsec->f_portal != seg.backsec->f_portal ||
+       (seg.markflags & SEG_MARKFLOOR && seg.floorplane->bflags & PS_OVERLAY)))
+   {
+      seg.markflags |= SEG_MARKFPORTAL;
+      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
+   }
+   else
+      seg.f_window = NULL;
 
-#ifdef R_LINKEDPORTALS
    // SoM: some portal types should be rendered even if the player is above
    // or below the ceiling or floor plane.
    // haleyjd 03/12/06: inverted predicates to simplify
@@ -1370,7 +1390,6 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
    }
-#endif
 
    seg.low  = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
@@ -1449,9 +1468,9 @@ static void R_AddLine(seg_t *line)
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->ceilingheight <= seg.frontsec->floorheight &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((R_LinkedCeilingActive(seg.frontsec) && 
+      !((seg.frontsec->c_pflags & PS_PASSABLE && 
         viewz > R_CPLink(seg.frontsec)->planez) || 
-        (R_LinkedFloorActive(seg.frontsec) && 
+        (seg.frontsec->f_pflags & PS_PASSABLE && 
         viewz < R_FPLink(seg.frontsec)->planez)))
       return;
 
@@ -1467,6 +1486,12 @@ static void R_AddLine(seg_t *line)
       && seg.backsec->floor_yoffs   == seg.frontsec->floor_yoffs
       && seg.backsec->ceiling_xoffs == seg.frontsec->ceiling_xoffs
       && seg.backsec->ceiling_yoffs == seg.frontsec->ceiling_yoffs
+
+      // haleyjd 11/04/10: angles
+      && (seg.backsec->floorbaseangle + seg.backsec->floorangle ==
+          seg.frontsec->floorbaseangle + seg.frontsec->floorangle)
+      && (seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle ==
+          seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle)
       
       // killough 4/16/98: consider altered lighting
       && seg.backsec->floorlightsec   == seg.frontsec->floorlightsec
@@ -1678,13 +1703,15 @@ static void R_AddLine(seg_t *line)
       seg.c_window = seg.f_window = NULL;
 
       // SoM: these should be treated differently! 
-      if(R_RenderCeilingPortal(seg.frontsec))
+      if(seg.frontsec->c_portal && (seg.frontsec->c_portal->type < R_TWOWAY ||
+         (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->ceilingheight > viewz)))
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
       }
 
-      if(R_RenderFloorPortal(seg.frontsec))
+      if(seg.frontsec->f_portal && (seg.frontsec->f_portal->type < R_TWOWAY ||
+        (seg.frontsec->f_pflags & PS_VISIBLE && seg.frontsec->floorheight <= viewz)))
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
@@ -1699,7 +1726,6 @@ static void R_AddLine(seg_t *line)
       seg.l_window    = line->linedef->portal ?
                         R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 
-#ifdef R_LINKEDPORTALS
       // haleyjd 03/12/06: inverted predicates to simplify
       if(seg.frontsec->f_portal && seg.frontsec->f_portal->type != R_LINKED && 
          seg.frontsec->f_portal->type != R_TWOWAY)
@@ -1707,7 +1733,6 @@ static void R_AddLine(seg_t *line)
       if(seg.frontsec->c_portal && seg.frontsec->c_portal->type != R_LINKED && 
          seg.frontsec->c_portal->type != R_TWOWAY)
          seg.c_portalignore = true;
-#endif
    }
    else
    {
@@ -2033,55 +2058,93 @@ static void R_Subsector(int num)
    cam.y = view.y;
    cam.z = view.z;
 
+   // -- Floor plane and portal --
    visible  = (!seg.frontsec->f_slope && seg.frontsec->floorheight < viewz)
            || (seg.frontsec->f_slope 
            &&  P_DistFromPlanef(&cam, &seg.frontsec->f_slope->of, 
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
-   seg.f_portal = R_FloorPortalActive(seg.frontsec) 
+   seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
                && (visible || seg.frontsec->f_portal->type < R_TWOWAY)
                ? seg.frontsec->f_portal : NULL;
 
-   // SoM: If there is an active portal, forget about the floorplane.
-   seg.floorplane = !seg.f_portal && 
-     (visible || // killough 3/7/98
-      (seg.frontsec->heightsec != -1 &&
-       sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
-     R_FindPlane(seg.frontsec->floorheight, 
-                 (seg.frontsec->floorpic == skyflatnum ||
-                  seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
-                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                 seg.frontsec->floorpic,
-                 floorlightlevel,                // killough 3/16/98
-                 seg.frontsec->floor_xoffs,       // killough 3/7/98
-                 seg.frontsec->floor_yoffs,
-                 floorangle, seg.frontsec->f_slope) : NULL;
+   // This gets a little convoluted if you try to do it on one inequality
+   if(seg.f_portal)
+   {
+      seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
+        R_FindPlane(seg.frontsec->floorheight,
+                    seg.frontsec->f_pflags & PS_USEGLOBALTEX ? 
+                    seg.f_portal->globaltex : seg.frontsec->floorpic,
+                    floorlightlevel,                // killough 3/16/98
+                    seg.frontsec->floor_xoffs,       // killough 3/7/98
+                    seg.frontsec->floor_yoffs,
+                    floorangle, seg.frontsec->f_slope, 
+                    seg.frontsec->f_pflags,
+                    (seg.frontsec->f_pflags >> PO_OPACITYSHIFT) & 0xFF,
+                    seg.f_portal->poverlay) : NULL;
+   }
+   else
+   {
+      // SoM: If there is an active portal, forget about the floorplane.
+      seg.floorplane = (visible || // killough 3/7/98
+         (seg.frontsec->heightsec != -1 &&
+          sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
+        R_FindPlane(seg.frontsec->floorheight, 
+                    (seg.frontsec->floorpic == skyflatnum ||
+                     seg.frontsec->floorpic == sky2flatnum) &&  // kilough 10/98
+                    seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                    seg.frontsec->floorpic,
+                    floorlightlevel,                // killough 3/16/98
+                    seg.frontsec->floor_xoffs,       // killough 3/7/98
+                    seg.frontsec->floor_yoffs,
+                    floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
+   }
+   
 
+   // -- Ceiling plane and portal --
    visible  = (!seg.frontsec->c_slope && seg.frontsec->ceilingheight > viewz)
            || (seg.frontsec->c_slope 
            &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of, 
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
-   seg.c_portal = R_CeilingPortalActive(seg.frontsec) 
+   seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE 
                && (!portalrender.active || portalrender.w->type != pw_floor)
                && (visible || seg.frontsec->c_portal->type < R_TWOWAY) 
                ? seg.frontsec->c_portal : NULL;
 
-   seg.ceilingplane = !seg.c_portal &&
-     (visible ||
-      (seg.frontsec->intflags & SIF_SKY) ||
-     (seg.frontsec->heightsec != -1 &&
-      (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
-       sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
-     R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
-                 (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
-                 seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                 seg.frontsec->ceilingpic,
-                 ceilinglightlevel,              // killough 4/11/98
-                 seg.frontsec->ceiling_xoffs,     // killough 3/7/98
-                 seg.frontsec->ceiling_yoffs,
-                 ceilingangle, seg.frontsec->c_slope) : NULL;
+   // This gets a little convoluted if you try to do it on one inequality
+   if(seg.c_portal)
+   {
+      seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
+        R_FindPlane(seg.frontsec->ceilingheight,
+                    seg.frontsec->c_pflags & PS_USEGLOBALTEX ? 
+                    seg.c_portal->globaltex : seg.frontsec->ceilingpic,
+                    ceilinglightlevel,                // killough 3/16/98
+                    seg.frontsec->ceiling_xoffs,       // killough 3/7/98
+                    seg.frontsec->ceiling_yoffs,
+                    ceilingangle, seg.frontsec->c_slope, 
+                    seg.frontsec->c_pflags,
+                    (seg.frontsec->c_pflags >> PO_OPACITYSHIFT) & 0xFF,
+                    seg.c_portal->poverlay) : NULL;
+   }
+   else
+   {
+      seg.ceilingplane = (visible ||
+         (seg.frontsec->intflags & SIF_SKY) ||
+        (seg.frontsec->heightsec != -1 &&
+         (sectors[seg.frontsec->heightsec].floorpic == skyflatnum ||
+          sectors[seg.frontsec->heightsec].floorpic == sky2flatnum))) ?
+        R_FindPlane(seg.frontsec->ceilingheight,     // killough 3/8/98
+                    (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
+                    seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
+                    seg.frontsec->ceilingpic,
+                    ceilinglightlevel,              // killough 4/11/98
+                    seg.frontsec->ceiling_xoffs,     // killough 3/7/98
+                    seg.frontsec->ceiling_yoffs,
+                    ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
+   }
+   
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 
    // instead of fake one. Improve sprite lighting by basing sprite

@@ -111,11 +111,9 @@ extern int map_secret_after;  // secrets do not appear til after bagged
 
 extern int map_point_coordinates;  // killough 10/98
 
-#ifdef R_LINKEDPORTALS
 extern int mapcolor_prtl;
 extern int mapportal_overlay; // julian: changed to int 
                               // (size problem, could lead to memory error)
-#endif
 
 extern boolean map_draw_nodelines;
 

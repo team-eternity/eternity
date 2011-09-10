@@ -181,16 +181,17 @@ enum    // command type
 
 enum    // command flag
 {
-  cf_notnet       =1,     // not in netgames
-  cf_netonly      =2,     // only in netgames
-  cf_server       =4,     // server only 
-  cf_handlerset   =8,     // if set, the handler sets the variable,
-                          // not c_runcmd.c itself
-  cf_netvar       =16,    // sync with other pcs
-  cf_level        =32,    // only works in levels
-  cf_hidden       =64,    // hidden in cmdlist
-  cf_buffered     =128,   // buffer command: wait til all screen
-                          // rendered before running command
+  cf_notnet       = 0x001, // not in netgames
+  cf_netonly      = 0x002, // only in netgames
+  cf_server       = 0x004, // server only 
+  cf_handlerset   = 0x008, // if set, the handler sets the variable,
+                           // not c_runcmd.c itself
+  cf_netvar       = 0x010, // sync with other pcs
+  cf_level        = 0x020, // only works in levels
+  cf_hidden       = 0x040, // hidden in cmdlist
+  cf_buffered     = 0x080, // buffer command: wait til all screen
+                           // rendered before running command
+  cf_allowblank   = 0x100, // string variable allows empty value
 };
 
 enum    // variable type

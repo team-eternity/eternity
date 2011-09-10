@@ -529,13 +529,11 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
 
       Polyobj_bboxSub(po->lines[i]->bbox, &dist);
 
-#ifdef R_LINKEDPORTALS
       // 05/25/08: must change lines' sector groupids for correct portal
       // automap overlay behavior.
       mo = po->spawnSpotMobj;
       po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
       po->lines[i]->soundorg.groupid     = mo->subsector->sector->groupid;
-#endif
    }
 
    // translate vertices and record original coordinates relative to spawn spot
@@ -574,10 +572,8 @@ static void Polyobj_setCenterPt(polyobj_t *po)
 
    ss = R_PointInSubsector(po->centerPt.x, po->centerPt.y);
 
-#ifdef R_LINKEDPORTALS
    // set spawnSpot's groupid for correct portal sound behavior
    po->spawnSpot.groupid = ss->sector->groupid;
-#endif
 }
 
 // Blockmap Functions

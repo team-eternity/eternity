@@ -2188,7 +2188,6 @@ void IdentifyVersion(void)
 #define MAXARGVS 100
 
 //
-//
 // FindResponseFile
 //
 // Find a Response File, identified by an "@" argument.
@@ -3562,7 +3561,7 @@ static void D_DoomInit(void)
             FC_NORMAL "By James Haley and Stephen McGranahan\n"
             "http://doomworld.com/eternity/ \n"
             "Version %i.%02i.%02i '%s' \n\n",
-            version/100, version%100, SUBVERSION, version_name);
+            version/100, version%100, subversion, version_name);
 
 #if defined(TOKE_MEMORIAL)
    // haleyjd 08/30/06: for v3.33.50 Phoenix: RIP Toke

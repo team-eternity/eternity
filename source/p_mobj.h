@@ -297,6 +297,7 @@ typedef enum
    MF4_NODAMAGE       = 0x00000010, // Takes no damage but still reacts normally
    MF4_SYNCHRONIZED   = 0x00000020, // Spawn state tics are not randomized
    MF4_NORANDOMIZE    = 0x00000040, // Missiles' spawn/death state tics non-random
+   MF4_BRIGHT         = 0x00000080, // Actor is always fullbright
 } mobjflag4_t;
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

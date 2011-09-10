@@ -193,9 +193,8 @@ static int copy_data(struct archive *ar, struct archive *aw)
       if((r = archive_read_data_block(ar, &buf, &size, &offset)) != ARCHIVE_OK)
       {
          if(r == ARCHIVE_EOF)
-         {
             return ARCHIVE_OK;
-         }
+
          demo_error_message = archive_error_string(ar);
          return r;
       }
@@ -231,9 +230,7 @@ static boolean close_current_demo_data_file(void)
    printf("close_current_demo_data_file: Closing.\n");
 
    if(current_demo_data_file == NULL)
-   {
       I_Error("Error: closed a demo when none are open, exiting.\n");
-   }
 
    if(current_demo_data_file != NULL)
    {
@@ -257,15 +254,11 @@ static boolean close_current_map_demo(void)
    if(cs_demo_recording)
    {
       if(!CS_UpdateDemoLength())
-      {
          return false;
-      }
    }
 
    if(!close_current_demo_data_file())
-   {
       return false;
-   }
 
    if(current_demo_map_folder)
    {
@@ -291,30 +284,25 @@ static boolean close_current_map_demo(void)
 static void set_current_map_demo_paths(void)
 {
    if(current_demo_map_folder == NULL)
-   {
       current_demo_map_folder = calloc(strlen(cs_demo_path) + 6, sizeof(char));
-   }
    else
-   {
       memset(current_demo_map_folder, 0, strlen(cs_demo_path) + 6);
-   }
+
    sprintf(
       current_demo_map_folder, "%s/%d", cs_demo_path, cs_current_demo_map
    );
 
    if(current_demo_info_path != NULL)
-   {
       free(current_demo_info_path);
-   }
+
    current_demo_info_path = calloc(
       strlen(current_demo_map_folder) + 10, sizeof(char)
    );
    sprintf(current_demo_info_path, "%s/info.txt", current_demo_map_folder);
 
    if(current_demo_data_path != NULL)
-   {
       free(current_demo_data_path);
-   }
+
    current_demo_data_path = calloc(
       strlen(current_demo_map_folder) + 14, sizeof(char)
    );
@@ -361,14 +349,10 @@ static boolean add_entry_to_archive(struct archive *a,
    while(len > 0)
    {
       if((r = archive_write_data(a, buf, len)) < 0)
-      {
          return false;
-      }
 
       if((len = read(fd, buf, AR_BLOCK_SIZE)) < 0)
-      {
          return false;
-      }
    }
 
    close(fd);
@@ -391,9 +375,7 @@ static boolean close_current_demo(void)
    sprintf(archive_file_path, "%s.ecd", cs_demo_path);
 
    if(!close_current_map_demo())
-   {
       return false;
-   }
    
    if((a = archive_write_new()) == NULL)
    {
@@ -579,9 +561,7 @@ static boolean open_demo(char *path)
       if((r = archive_read_next_header(a, &entry)) != ARCHIVE_OK)
       {
          if(r == ARCHIVE_EOF)
-         {
             break;
-         }
          demo_error_message = archive_error_string(a);
          return false;
       }
@@ -593,9 +573,7 @@ static boolean open_demo(char *path)
       if(archive_entry_size(entry) > 0)
       {
          if((r = copy_data(a, ext)) != ARCHIVE_OK)
-         {
             return false;
-         }
       }
       if((r = archive_write_finish_entry(ext)) != ARCHIVE_OK)
       {
@@ -704,14 +682,10 @@ static boolean load_current_map_demo(void)
    set_current_map_demo_paths();
 
    if(!open_current_demo_data_file("rb"))
-   {
       return false;
-   }
 
    if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    if(demo_header.demo_type == CLIENTSIDE_DEMO)
    {
@@ -744,22 +718,18 @@ static boolean load_current_map_demo(void)
       while(resource_index++ < demo_header.resource_count)
       {
          if(!read_from_demo(&resource_name_size, sizeof(size_t), 1))
-         {
             return false;
-         }
+
          resource.name = realloc(resource.name, resource_name_size);
+
          if(!read_from_demo(resource.name, sizeof(char), resource_name_size))
-         {
             return false;
-         }
+
          if(!read_from_demo(&resource.type, sizeof(resource_type_t), 1))
-         {
             return false;
-         }
+
          if(!read_from_demo(&resource.sha1_hash, sizeof(char), 41))
-         {
             return false;
-         }
 
          printf("load_current_map_demo: Loading resources.\n");
          switch(resource.type)
@@ -792,6 +762,7 @@ static boolean load_current_map_demo(void)
             {
                printf("load_current_map_demo: Skipping IWAD.\n");
             }
+
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
                I_Error(
@@ -834,9 +805,8 @@ static boolean load_current_map_demo(void)
             if((stored_resource = CS_GetResource(resource.name)) == NULL)
             {
                if(!CS_AddWAD(resource.name))
-               {
                   I_Error("Could not find PWAD %s, exiting.\n", resource.name);
-               }
+
                stored_resource = CS_GetResource(resource.name);
             }
             resource_indices = realloc(
@@ -866,21 +836,14 @@ static boolean load_current_map_demo(void)
       );
    }
    else
-   {
       printf("Map %d was already initialized.\n", cs_current_demo_map);
-   }
 
-   // G_SetGameMap();
 
    if(!read_from_demo(&header_marker, sizeof(demo_marker_t), 1))
-   {
       return false;
-   }
 
    if(header_marker != DEMO_PACKET_HEADER_END)
-   {
       I_Error("Malformed demo header, demo likely corrupt.\n");
-   }
 
    first_map_loaded = true;
 
@@ -896,29 +859,20 @@ static boolean handle_network_message_demo_packet(void)
    char *network_message;
 
    if(!read_from_demo(&playernum, sizeof(int), 1))
-   {
       return false;
-   }
+
    if(!read_from_demo(&msg_size, sizeof(size_t), 1))
-   {
       return false;
-   }
 
    network_message = calloc(msg_size, sizeof(char));
 
    if(!read_from_demo(network_message, sizeof(char), msg_size))
-   {
       return false;
-   }
 
    if(CS_CLIENTDEMO)
-   {
       CL_HandleMessage(network_message, msg_size);
-   }
    else
-   {
       SV_HandleMessage(network_message, msg_size, playernum);
-   }
 
    return true;
 }
@@ -931,18 +885,12 @@ static boolean handle_player_command_demo_packet(void)
    cs_cmd_t *local_command;
 
    if(!read_from_demo(&command_size, sizeof(size_t), 1))
-   {
       return false;
-   }
 
    if(!read_from_demo(&command, command_size, 1))
-   {
       return false;
-   }
 
    memcpy(&players[consoleplayer].cmd, &command.ticcmd, sizeof(ticcmd_t));
-
-   // CS_ApplyCommandButtons(&players[consoleplayer].cmd);
 
    if(CS_CLIENTDEMO)
    {
@@ -961,38 +909,26 @@ static boolean handle_console_command_demo_packet(void)
    command_t *command;
 
    if(!read_from_demo(&command_type, sizeof(int), 1))
-   {
       return false;
-   }
 
    if(!read_from_demo(&command_source, sizeof(int), 1))
-   {
       return false;
-   }
 
    if(!read_from_demo(&command_size, sizeof(size_t), 1))
-   {
       return false;
-   }
 
    command_name = calloc(command_size, sizeof(char));
 
    if(!read_from_demo(command_name, sizeof(char), command_size))
-   {
       return false;
-   }
 
    if(!read_from_demo(&options_size, sizeof(size_t), 1))
-   {
       return false;
-   }
 
    options = calloc(options_size, sizeof(char));
 
    if(!read_from_demo(options, sizeof(char), options_size))
-   {
       return false;
-   }
 
    if((command = C_GetCmdForName((const char *)command_name)) == NULL)
    {
@@ -1010,9 +946,7 @@ static boolean handle_console_command_demo_packet(void)
 const char* CS_GetDemoErrorMessage(void)
 {
    if(demo_error_message == NULL)
-   {
       return (const char *)demo_error_strings[DEMO_ERROR_NONE];
-   }
 
    return (const char *)demo_error_message;
 }
@@ -1034,17 +968,13 @@ boolean CS_SetDemoFolderPath(char *demo_folder_path)
    }
 
    if(cs_demo_folder_path)
-   {
       free(cs_demo_folder_path);
-   }
 
    cs_demo_folder_path = strdup(demo_folder_path);
 
+   // [CG] Strip trailing '/' or '\'.
    if(*(demo_folder_path + (strlen(demo_folder_path) - 1)) == '/')
-   {
-      // [CG] Strip trailing '/' or '\'.
       demo_folder_path[strlen(demo_folder_path)] = '\0';
-   }
 
    return true;
 }
@@ -1057,14 +987,10 @@ boolean CS_RecordDemo(void)
    struct tm *local_current_time = localtime(&current_time);
 
    if(cs_demo_path)
-   {
       I_Error("Can't record a demo while already recording a demo (BUG).\n");
-   }
 
    if(!check_demo_folder())
-   {
       return false;
-   }
 
    // [CG] Build the timestamp.  This is used for the demo's info as well as
    //      a unique name for the demo; odds are extremely slim that a user will
@@ -1104,7 +1030,7 @@ boolean CS_RecordDemo(void)
    json_info = json_object_new_object();
    json_object_object_add(json_info, "version", json_object_new_int(version));
    json_object_object_add(
-      json_info, "subversion", json_object_new_int(SUBVERSION)
+      json_info, "subversion", json_object_new_int(subversion)
    );
    json_object_object_add(
       json_info,
@@ -1159,9 +1085,7 @@ boolean CS_UpdateDemoLength(void)
    }
 
    if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    demo_header.length = cl_latest_world_index / TICRATE;
 
@@ -1172,9 +1096,7 @@ boolean CS_UpdateDemoLength(void)
    }
 
    if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    if(fseek(current_demo_data_file, previous_demo_position, SEEK_SET) == -1)
    {
@@ -1205,9 +1127,7 @@ boolean CS_UpdateDemoSettings(void)
    }
 
    if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    memcpy(&demo_header.settings, cs_settings, sizeof(clientserver_settings_t));
 
@@ -1218,9 +1138,7 @@ boolean CS_UpdateDemoSettings(void)
    }
 
    if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    if(fseek(current_demo_data_file, previous_demo_position, SEEK_SET) == -1)
    {
@@ -1229,9 +1147,8 @@ boolean CS_UpdateDemoSettings(void)
    }
 
    if(json_object_object_get(map_info, "settings") != NULL)
-   {
       json_object_object_del(map_info, "settings");
-   }
+
    json_object_object_add(map_info, "settings", json_object_new_object());
 
    settings = json_object_object_get(map_info, "settings");
@@ -1352,9 +1269,8 @@ boolean CS_AddNewMapToDemo(void)
    if(current_demo_data_file != NULL)
    {
       if(!close_current_demo_data_file())
-      {
          return false;
-      }
+
       cs_current_demo_map++;
    }
 
@@ -1381,14 +1297,12 @@ boolean CS_AddNewMapToDemo(void)
    }
 
    if(!open_current_demo_data_file("w+b"))
-   {
       return false;
-   }
 
    map_info = json_object_new_object();
    json_object_object_add(map_info, "version", json_object_new_int(version));
    json_object_object_add(
-      map_info, "subversion", json_object_new_int(SUBVERSION)
+      map_info, "subversion", json_object_new_int(subversion)
    );
    json_object_object_add(
       map_info, "cs_protocol_version", json_object_new_int(CS_PROTOCOL_VERSION)
@@ -1455,16 +1369,14 @@ boolean CS_AddNewMapToDemo(void)
    json_object_put(map_info); // [CG] Frees the JSON object.
 
    demo_header.version = version;
-   demo_header.subversion = SUBVERSION;
+   demo_header.subversion = subversion;
    demo_header.cs_protocol_version = CS_PROTOCOL_VERSION;
+
    if(CS_CLIENT)
-   {
       demo_header.demo_type = CLIENTSIDE_DEMO;
-   }
    else
-   {
       demo_header.demo_type = SERVERSIDE_DEMO;
-   }
+
    memcpy(&demo_header.settings, cs_settings, sizeof(clientserver_settings_t));
    demo_header.local_options.player_bobbing = player_bobbing;
    demo_header.local_options.doom_weapon_toggles = doom_weapon_toggles;
@@ -1477,55 +1389,36 @@ boolean CS_AddNewMapToDemo(void)
    demo_header.resource_count = map->resource_count + 1;
 
    if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-   {
       return false;
-   }
 
    resource_name_size = strlen(cs_resources[0].name) + 1;
    if(!write_to_demo(&resource_name_size, sizeof(size_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(cs_resources[0].name, sizeof(char), resource_name_size))
-   {
       return false;
-   }
    if(!write_to_demo(&cs_resources[0].type, sizeof(resource_type_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&cs_resources[0].sha1_hash, sizeof(char), 41))
-   {
       return false;
-   }
 
    for(i = 0; i < map->resource_count; i++)
    {
       resource_index = map->resource_indices[i];
       res = &cs_resources[resource_index];
       resource_name_size = strlen(res->name) + 1;
+
       if(!write_to_demo(&resource_name_size, sizeof(size_t), 1))
-      {
          return false;
-      }
       if(!write_to_demo(res->name, sizeof(char), resource_name_size))
-      {
          return false;
-      }
       if(!write_to_demo(&res->type, sizeof(resource_type_t), 1))
-      {
          return false;
-      }
       if(!write_to_demo(res->sha1_hash, sizeof(char), 41))
-      {
          return false;
-      }
    }
 
    if(!write_to_demo(&header_marker, sizeof(demo_marker_t), 1))
-   {
       return false;
-   }
 
    fflush(current_demo_data_file);
 
@@ -1546,9 +1439,7 @@ boolean CS_PlayDemo(char *url)
    }
    
    if(!check_demo_folder())
-   {
       return false;
-   }
 
    cs_settings = malloc(sizeof(clientserver_settings_t));
    cs_original_settings = malloc(sizeof(clientserver_settings_t));
@@ -1618,17 +1509,18 @@ boolean CS_PlayDemo(char *url)
    }
 
    if(cs_maps)
-   {
       CS_ClearMaps();
-   }
+
    cs_map_count = 0;
    test_folder = calloc(strlen(cs_demo_path) + 6, sizeof(char));
    sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
+
    while(M_IsFolder(test_folder))
    {
       cs_map_count++;
       sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
    }
+
    free(test_folder);
    cs_maps = calloc(cs_map_count, sizeof(cs_map_t));
 
@@ -1644,9 +1536,7 @@ boolean CS_PlayDemo(char *url)
    cs_current_demo_map = 0;
 
    if(!load_current_map_demo())
-   {
       return false;
-   }
 
    return true;
 }
@@ -1662,17 +1552,13 @@ boolean CS_LoadDemoMap(unsigned int map_number)
    if(current_demo_data_file != NULL)
    {
       if(!close_current_map_demo())
-      {
          return false;
-      }
    }
 
    cs_current_demo_map = cs_current_map_number = map_number;
 
    if(!load_current_map_demo())
-   {
       return false;
-   }
 
    return true;
 }
@@ -1682,9 +1568,8 @@ boolean CS_LoadPreviousDemoMap(void)
    boolean res = CS_LoadDemoMap(cs_current_demo_map - 1);
 
    if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
-   {
       set_demo_error(DEMO_ERROR_NO_PREVIOUS_MAP);
-   }
+
    return res;
 }
 
@@ -1693,9 +1578,8 @@ boolean CS_LoadNextDemoMap(void)
    boolean res = CS_LoadDemoMap(cs_current_demo_map + 1);
 
    if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
-   {
       set_demo_error(DEMO_ERROR_NO_NEXT_MAP);
-   }
+
    return res;
 }
 
@@ -1707,25 +1591,15 @@ boolean CS_WriteNetworkMessageToDemo(void *network_message,
    int player_number = playernum;
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(CS_CLIENT)
-   {
       player_number = 0;
-   }
    if(!write_to_demo(&player_number, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&message_size, sizeof(size_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(network_message, sizeof(char), message_size))
-   {
       return false;
-   }
 
    return true;
 }
@@ -1736,17 +1610,11 @@ boolean CS_WritePlayerCommandToDemo(cs_cmd_t *player_command)
    size_t command_size = sizeof(cs_cmd_t);
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&command_size, sizeof(size_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(player_command, sizeof(cs_cmd_t), 1))
-   {
       return false;
-   }
 
    return true;
 }
@@ -1759,33 +1627,19 @@ boolean CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
    size_t options_size = strlen(options) + 1;
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&cmdtype, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&cmdsrc, sizeof(int32_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo(&command_size, sizeof(size_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo((void *)command->name, sizeof(char), command_size))
-   {
       return false;
-   }
    if(!write_to_demo(&options_size, sizeof(size_t), 1))
-   {
       return false;
-   }
    if(!write_to_demo((void *)options, sizeof(char), options_size))
-   {
       return false;
-   }
 
    return true;
 }
@@ -1795,9 +1649,7 @@ boolean CS_ReadDemoPacket(void)
    demo_marker_t type;
 
    if(!read_from_demo((void *)&type, sizeof(int32_t), 1))
-   {
       return false;
-   }
 
    switch(type)
    {
@@ -1817,39 +1669,31 @@ boolean CS_ReadDemoPacket(void)
 boolean CS_DemoFinished(void)
 {
    if(!current_demo_data_file)
-   {
       return true;
-   }
    if(feof(current_demo_data_file) != 0)
-   {
       return true;
-   }
+
    return false;
 }
 
 boolean CS_StopDemo(void)
 {
+   // [CG] Check if demo is already stopped.
    if(current_demo_data_file == NULL)
-   {
-      // [CG] Demo is already stopped.
       return true;
-   }
 
    if(cs_demo_recording)
    {
       cs_demo_recording = false;
 
       if(!close_current_demo())
-      {
          return false;
-      }
    }
    else if(cs_demo_playback)
    {
       if(!close_current_demo_data_file())
-      {
          return false;
-      }
+
       if(!M_DeleteFolderAndContents(cs_demo_path))
       {
          set_demo_error(DEMO_ERROR_FILE_ERRNO);
@@ -1857,9 +1701,7 @@ boolean CS_StopDemo(void)
       }
    }
    else
-   {
       return true;
-   }
 
    if(cs_demo_path)
    {

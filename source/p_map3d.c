@@ -521,7 +521,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
    // will adjust them.
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedFloorActive(newsubsec->sector) &&
+   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
       !(clip.thing->flags & MF_NOCLIP))
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight - (1024 * FRACUNIT);
    else
@@ -529,7 +529,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
       clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && R_LinkedCeilingActive(newsubsec->sector) &&
+   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
       clip.ceilingz = newsubsec->sector->ceilingheight + (1024 * FRACUNIT);
    else
@@ -1243,9 +1243,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    // Mark all things invalid
 
    for(n = sector->touching_thinglist; n; n = n->m_snext)
-   {
       n->visited = false;
-   }
 
    do
    {
@@ -1258,9 +1256,7 @@ boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
             {
                iterator(n->m_thing);                 // process it
                if(iterator2)
-               {
                   iterator2(n->m_thing);
-               }
             }
             break;                                   // exit and start over
          }
