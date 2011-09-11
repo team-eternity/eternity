@@ -2211,6 +2211,25 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
    return len;
 }
 
+//
+// M_SafeFilePath
+//
+// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure 
+// file path concatenation with automatic normalization on alloca-provided 
+// buffers.
+//
+char *M_SafeFilePath(const char *basepath, const char *newcomponent)
+{
+   int     newstrlen = 0;
+   char   *newstr    = NULL;
+
+   newstrlen = M_StringAlloca(&newstr, 3, 1, basepath, "/", newcomponent);
+   psnprintf(newstr, newstrlen, "%s/%s", basepath, newcomponent);
+   M_NormalizeSlashes(newstr);
+
+   return newstr;
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: m_misc.c,v $

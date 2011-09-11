@@ -244,9 +244,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
-      len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
-      psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
-      M_NormalizeSlashes(filename);
+      
+      filename = M_SafeFilePath(currentpath, argv[0]);
       
       return E_OpenAndCheckInclude(cfg, filename, -1);
    
@@ -359,15 +358,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 const char *E_BuildDefaultFn(const char *filename)
 {
-   char *buffer = NULL;
-   size_t len = 0;
-
-   len = M_StringAlloca(&buffer, 2, 2, basepath, filename);
-
-   psnprintf(buffer, len, "%s/%s", basepath, filename);
-   M_NormalizeSlashes(buffer);
-
-   return buffer;
+   return M_SafeFilePath(basepath, filename);
 }
 
 //

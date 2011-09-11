@@ -721,7 +721,6 @@ CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
    char *filename = NULL;
-   size_t len;
 
    // haleyjd 03/12/06: this is much more resilient than the 
    // chain of console commands that was used by SMMU
@@ -742,9 +741,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       return;
    }
 
-   len = M_StringAlloca(&filename, 2, 2, wad_directory, mn_wadname);
-
-   psnprintf(filename, len, "%s/%s", wad_directory, mn_wadname);
+   filename = M_SafeFilePath(wad_directory, mn_wadname);
 
    if(D_AddNewFile(filename))
    {

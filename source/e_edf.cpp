@@ -584,7 +584,6 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 {
    char *currentpath;
    char *filename = NULL;
-   size_t len;
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
@@ -609,10 +608,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    currentpath = (char *)(Z_Alloca(strlen(cfg->filename) + 1));
    M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
-   len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
-      
-   psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
-   M_NormalizeSlashes(filename);
+   filename = M_SafeFilePath(currentpath, argv[0]);
 
    // queue the file for later processing
    D_QueueDEH(filename, 0);

@@ -416,9 +416,7 @@ static WadDirectory *W_loadMasterLevelWad(const char *filename)
       return NULL;
 
    // construct full file path
-   len = M_StringAlloca(&fullpath, 2, 2, w_masterlevelsdirname, filename);
-
-   psnprintf(fullpath, len, "%s/%s", w_masterlevelsdirname, filename);
+   fullpath = M_SafeFilePath(w_masterlevelsdirname, filename);
 
    // make sure it wasn't already opened
    if((dir = W_GetManagedWad(fullpath)))

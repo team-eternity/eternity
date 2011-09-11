@@ -990,10 +990,7 @@ static void D_CheckGamePathParam(void)
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, myargv[p + 1]);
-
-      psnprintf(gamedir, len, "%s/%s", basepath, myargv[p + 1]);
-      M_NormalizeSlashes(gamedir);
+      gamedir = M_SafeFilePath(basepath, myargv[p + 1]);
       
       gamepathparm = p + 1;
 
@@ -1021,21 +1018,13 @@ static void D_CheckGamePathParam(void)
 static void D_SetGamePath(void)
 {
    struct stat sbuf;
-   char *gamedir = NULL;
-   size_t len;
    const char *mstr = GameModeInfo->missionInfo->gamePathName;
-
-   len = M_StringAlloca(&gamedir, 2, 2, basepath, mstr);
-
-   psnprintf(gamedir, len, "%s/%s", basepath, mstr);
+   char *gamedir = M_SafeFilePath(basepath, mstr);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-      {
          basegamepath = strdup(gamedir);
-         M_NormalizeSlashes(basegamepath);
-      }
       else
          I_Error("Game path %s is not a directory.\n", gamedir);
    }
@@ -1051,12 +1040,7 @@ static void D_SetGamePath(void)
 static char *D_CheckGameEDF(void)
 {
    struct stat sbuf;
-   static char *game_edf;
-   size_t len = strlen(basegamepath) + 10;
-
-   game_edf = (char *)(malloc(len));
-
-   psnprintf(game_edf, len, "%s/root.edf", basegamepath);
+   char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
 
    if(!stat(game_edf, &sbuf)) // check for existence
    {
@@ -1119,11 +1103,7 @@ static void D_GameAutoloadWads(void)
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname, 
-                                        direntry->d_name);
-               
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
@@ -1150,11 +1130,7 @@ static void D_GameAutoloadDEH(void)
          if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_QueueDEH(fn, 0);
          }
       }
@@ -1180,11 +1156,7 @@ static void D_GameAutoloadCSC(void)
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             C_RunScriptFromFile(fn);
          }
       }
@@ -2871,20 +2843,15 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
-      size_t len;  
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->dehnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->dehnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s", gfs->dehnames[i]);
+         filename = Z_Strdupa(gfs->dehnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open .deh or .bex %s\n", filename);
@@ -2911,25 +2878,15 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 
    for(i = 0; i < gfs->numwads; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->wadnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
+         filename = Z_Strdupa(gfs->wadnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
@@ -2945,25 +2902,15 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 
    for(i = 0; i < gfs->numcsc; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->cscnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
+         filename = Z_Strdupa(gfs->cscnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open CSC file %s\n", filename);
@@ -3024,12 +2971,19 @@ static void D_LoadEDF(gfs_t *gfs)
    {
       // command-line EDF file found
       edfname = Z_Strdupa(myargv[i + 1]);
+      M_NormalizeSlashes(edfname);
    }
    else if(gfs && (shortname = G_GFSCheckEDF()))
    {
       // GFS specified an EDF file
-      size_t len = M_StringAlloca(&edfname, 2, 2, gfs->filepath, shortname);
-      psnprintf(edfname, len, "%s/%s", gfs->filepath, shortname);
+      // haleyjd 09/10/11: bug fix - don't assume gfs->filepath is valid
+      if(gfs->filepath)
+         edfname = M_SafeFilePath(gfs->filepath, shortname);
+      else
+      {
+         edfname = Z_Strdupa(shortname);
+         M_NormalizeSlashes(edfname);
+      }
    }
    else
    {
@@ -3040,16 +2994,9 @@ static void D_LoadEDF(gfs_t *gfs)
 
          // haleyjd 08/20/07: check for root.edf in base/game first
          if((fn = D_CheckGameEDF()))
-         {
-            edfname = Z_Strdupa(fn);
-            free(fn);
-         }
+            edfname = fn;
          else
-         {
-            size_t len = M_StringAlloca(&edfname, 1, 10, basepath);
-               
-            psnprintf(edfname, len, "%s/root.edf",  basepath);
-         }
+            edfname = M_SafeFilePath(basepath, "root.edf");
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -3063,8 +3010,6 @@ static void D_LoadEDF(gfs_t *gfs)
          }
       }
    }
-
-   M_NormalizeSlashes(edfname);
 
    E_ProcessEDF(edfname);
 
