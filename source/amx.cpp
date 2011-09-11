@@ -21,6 +21,8 @@
  *  Version: $Id: amx.c,v 1.66 2005-02-09 10:24:12+01 thiadmer Exp $
  */
 
+#ifndef EE_NO_SMALL_SUPPORT
+
 #if BUILD_PLATFORM == WINDOWS && BUILD_TYPE == RELEASE && BUILD_COMPILER == MSVC && SMALL_CELL_SIZE == 64
   /* bad bad workaround but we have to prevent a compiler crash :/ */
   #pragma optimize("g",off)
@@ -4170,3 +4172,6 @@ int AMXAPI amx_UTF8Check(const char *string)
   return err;
 }
 #endif /* AMX_UTF8XXX */
+
+#endif // EE_NO_SMALL_SUPPORT
+

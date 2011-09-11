@@ -92,7 +92,7 @@ typedef struct anim_s
 //
 //      source animation definition
 //
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -102,11 +102,11 @@ struct animdef_s
    char endname[9];           //  if false, it is a flat
    char startname[9];
    int  speed;
-} __attribute__((packed)); //jff 3/23/98 pack to read from memory
+}; //jff 3/23/98 pack to read from memory
 
 typedef struct animdef_s animdef_t;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

@@ -104,7 +104,7 @@ static boolean stopchan(int handle)
    int cnum;
    boolean freeSound = true;
    boolean stoppedSound = false;
-   sfxinfo_t *sfx;
+   sfxinfo_t *sfx = NULL;
    
 #ifdef RANGECHECK
    // haleyjd 02/18/05: bounds checking
@@ -121,7 +121,7 @@ static boolean stopchan(int handle)
 
       channelinfo[handle].stopChannel = false;
 
-      if(channelinfo[handle].data)
+      if(sfx)
       {
          // haleyjd 06/07/09: bug fix!
          // this channel isn't interested in the sound any more, 
@@ -152,7 +152,7 @@ static boolean stopchan(int handle)
          }
          
          // set sample to PU_CACHE level
-         if(freeSound)
+         if(freeSound && sfx->data)
             Z_ChangeTag(sfx->data, PU_CACHE);
       }
    }
@@ -658,21 +658,6 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
          break;
    }
 
-   // haleyjd 10/30/10: if none found, look for channels to stop that are pending
-   // to be cleared - this is a much more efficient time to do this than in the
-   // I_UpdateSound handler.
-   if(handle == numChannels)
-   {
-      for(handle = 0; handle < numChannels; ++handle)
-      {
-         if(channelinfo[handle].stopChannel == true)
-         {
-            if(stopchan(handle))
-               break; // end loop if one is successfully cleared
-         }
-      }
-   }
-
    // all used? don't play the sound. It's preferable to miss a sound
    // than it is to cut off one already playing, which sounds weird.
    if(handle == numChannels)
@@ -872,6 +857,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             {
                // flag the channel to be stopped by the main thread ASAP
                chan->stopChannel = true;
+               chan->data = NULL;
                break;
             }
          }

@@ -1751,12 +1751,11 @@ void R_DrawPostBSP(void)
    int            firstds, lastds, firstsprite, lastsprite;
    int            i;
  
- 
    while(stacksize > 0)
    {
       --stacksize;
 
-      if(masked = pstack[stacksize].masked)
+      if((masked = pstack[stacksize].masked))
       {
          firstds = masked->firstds;
          lastds  = masked->lastds;
@@ -1786,9 +1785,9 @@ void R_DrawPostBSP(void)
                {
                   if (ds->silhouette || ds->maskedtexturecol)
                   {
-                     drawsegs_xrange[drawsegs_xrange_count].x1    = ds->x1;
-                     drawsegs_xrange[drawsegs_xrange_count].x2    = ds->x2;
-                     drawsegs_xrange[drawsegs_xrange_count].user  = ds;
+                     drawsegs_xrange[drawsegs_xrange_count].x1   = ds->x1;
+                     drawsegs_xrange[drawsegs_xrange_count].x2   = ds->x2;
+                     drawsegs_xrange[drawsegs_xrange_count].user = ds;
                      drawsegs_xrange_count++;
                   }
                }

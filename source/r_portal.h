@@ -44,7 +44,6 @@ typedef enum
 } rportaltype_e;
 
 
-
 // These are flags used to represent configurable options for portals
 typedef enum
 {
@@ -65,9 +64,9 @@ typedef enum
    // Portal has a blended texture overlay (alpha is default)
    PS_OVERLAY            = 0x010,
    // Overlay uses additive blending (must be used with PS_OVERLAY)
-   PS_ADDOVERLAY         = 0x020,
+   PS_ADDITIVE           = 0x020,
    // Mask for overlay blending flags
-   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDOVERLAY,
+   PS_OBLENDFLAGS        = PS_OVERLAY | PS_ADDITIVE,
    // Surface uses the global texture in the portal struct
    PS_USEGLOBALTEX       = 0x040,
    // Mask for all overlay flags
@@ -87,11 +86,9 @@ typedef enum
    
    // -- Opactiy -- 
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
-   PO_OPACITYSHIFT       = 22,
+   PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
 } portalflag_e;
-
-
 
 
 // Contains information representing a link from one portal group to another
@@ -111,7 +108,6 @@ typedef struct linkdata_s
 } linkdata_t;
 
 
-
 // Represents the information needed for an anchored portal
 typedef struct anchordata_s
 {
@@ -121,7 +117,6 @@ typedef struct anchordata_s
    // causing problems)
    int       maker, anchor;
 } anchordata_t;
-
 
 
 // Represents the data needed for a horizon portal

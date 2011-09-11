@@ -65,7 +65,7 @@ IF(WIN32 OR MINGW)
     IF(NOT MINGW)
         INCLUDE_DIRECTORIES(Win32/)
     ENDIF(NOT MINGW)
-    FILE(GLOB ARCH_SPECIFIC_SOURCES Win32/*.c)
+    FILE(GLOB ARCH_SPECIFIC_SOURCES Win32/*.cpp)
 ENDIF(WIN32 OR MINGW)
 
 IF(APPLE)
@@ -74,33 +74,33 @@ IF(APPLE)
 ENDIF(APPLE)
 
 INCLUDE_DIRECTORIES(Confuse/)
-FILE(GLOB CONFUSE_SOURCES Confuse/*.c)
+FILE(GLOB CONFUSE_SOURCES Confuse/*.cpp)
 
 INCLUDE_DIRECTORIES(textscreen/)
 FILE(GLOB TEXTSCREEN_SOURCES textscreen/*.c)
 
 INCLUDE_DIRECTORIES(./)
-FILE(GLOB ETERNITY_SOURCES *.c)
+FILE(GLOB ETERNITY_SOURCES *.cpp)
 
 ## FIXME: It would be better to pull i_cpu_posix.c out into a
 ## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES(sdl/)
 SET(SDL_SOURCES
-    sdl/i_input.c
-    sdl/i_main.c
-    sdl/i_net.c
-    sdl/i_pcsound.c
-    sdl/i_picker.c
-    sdl/i_sdlmusic.c
-    sdl/i_sdlsound.c
-    sdl/i_sound.c
-    sdl/i_system.c
-    sdl/i_video.c
-    sdl/mmus2mid.c
-    sdl/ser_main.c
+    sdl/i_input.cpp
+    sdl/i_main.cpp
+    sdl/i_net.cpp
+    sdl/i_pcsound.cpp
+    sdl/i_picker.cpp
+    sdl/i_sdlmusic.cpp
+    sdl/i_sdlsound.cpp
+    sdl/i_sound.cpp
+    sdl/i_system.cpp
+    sdl/i_video.cpp
+    sdl/mmus2mid.cpp
+    sdl/ser_main.cpp
 )
 IF(NOT WIN32 AND NOT MINGW)
-    SET(SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.c)
+    SET(SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
 ENDIF(NOT WIN32 AND NOT MINGW)
 
 ################################################################################

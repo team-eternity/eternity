@@ -161,7 +161,7 @@ signed int cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
    {
       cfg_assert(opt->type == CFGT_INT);
       if(opt->nvalues == 0)
-         return (signed int)opt->def;
+         return opt->idef;
       else
       {
          cfg_assert(index < opt->nvalues);
@@ -209,7 +209,7 @@ cfg_bool_t cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index)
    {
       cfg_assert(opt->type == CFGT_BOOL);
       if(opt->nvalues == 0)
-         return (cfg_bool_t)(!!opt->def);
+         return opt->bdef;
       else
       {
          cfg_assert(index < opt->nvalues);
@@ -225,7 +225,9 @@ cfg_bool_t cfg_getbool(cfg_t *cfg, const char *name)
    return cfg_getnbool(cfg, name, 0);
 }
 
-char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
+// haleyjd 12/27/10: return value must be explicitly const (was implicitly
+// considered that way anyway)
+const char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -233,7 +235,7 @@ char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
    {
       cfg_assert(opt->type == CFGT_STR || opt->type == CFGT_STRFUNC); // haleyjd
       if(opt->nvalues == 0) 
-         return (char *)opt->def;
+         return opt->sdef;
       else 
       {
          cfg_assert(index < opt->nvalues);
@@ -243,7 +245,7 @@ char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
    return 0;
 }
 
-char *cfg_getstr(cfg_t *cfg, const char *name)
+const char *cfg_getstr(cfg_t *cfg, const char *name)
 {
    return cfg_getnstr(cfg, name, 0);
 }
@@ -335,7 +337,7 @@ signed int cfg_getnflag(cfg_t *cfg, const char *name, unsigned int index)
    {
       cfg_assert(opt->type == CFGT_FLAG);
       if(opt->nvalues == 0)
-         return (signed int)opt->def;
+         return opt->idef;
       else
       {
          cfg_assert(index < opt->nvalues);
@@ -561,7 +563,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          if(is_set(CFGF_SIGNPREFIX, opt->flags))
             val->number = (value[0] == '+');
          else
-            val->number = !((signed int)opt->def);
+            val->number = !(opt->bdef);
       }
       break;
    default:

@@ -325,7 +325,8 @@ void Z_Init(void)
 //
 void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
-   register memblock_t *block;  
+   register memblock_t *block;
+   byte *ret;
    
    INSTRUMENT(size_t size_orig = size);   
 
@@ -362,27 +363,28 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
            
    INSTRUMENT_IF(tag >= PU_PURGELEVEL, 
                  purgable_memory += size_orig,
-                 active_memory += size_orig);
+                 active_memory   += size_orig);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
          
    IDCHECK(block->id = ZONEID); // signature required in block header
    
-   block->tag = tag;           // tag
-   block->user = user;         // user
-   block = (memblock_t *)((byte *) block + header_size);
-   if(user)                    // if there is a user
-      *user = block;           // set user to point to new block
+   block->tag  = tag;           // tag
+   block->user = user;          // user
+   
+   ret = ((byte *) block + header_size);
+   if(user)                     // if there is a user
+      *user = ret;              // set user to point to new block
 
-   Z_PrintStats();           // print memory allocation stats
+   Z_PrintStats();              // print memory allocation stats
 
    // scramble memory -- weed out any bugs
-   SCRAMBLER(block, size);
+   SCRAMBLER(ret, size);
 
    Z_LogPrintf("* %p = Z_Malloc(size=%lu, tag=%d, user=%p, source=%s:%d)\n", 
-               block, size, tag, user, file, line);
+               ret, size, tag, user, file, line);
 
-   return block;
+   return ret;
 }
 
 //
@@ -435,8 +437,8 @@ void (Z_Free)(void *p, const char *file, int line)
          block->next->prev = block->prev;
 
       INSTRUMENT_IF(block->tag >= PU_PURGELEVEL,
-         purgable_memory -= block->size,
-         active_memory -= block->size);
+                    purgable_memory -= block->size,
+                    active_memory   -= block->size);
          
       (free)(block);
          
@@ -483,9 +485,18 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
 //
 void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
 {
-   memblock_t *block = (memblock_t *)((byte *) ptr - header_size);
+   memblock_t *block;
    
    DEBUG_CHECKHEAP();
+   
+   if(!ptr)
+   {
+      I_FatalError(I_ERR_KILL, 
+                   "Z_ChangeTag: can't change a NULL pointer at %s:%d\n",
+                   file, line);
+   }
+   
+   block = (memblock_t *)((byte *) ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_ChangeTag: Changed a tag without ZONEID", block, file, line);

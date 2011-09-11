@@ -703,6 +703,79 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 }
 
 //
+// E_TranslucCB2
+//
+// libConfuse value-parsing callback for translucency fields. Can accept 
+// an integer value or a percentage. This one expects an integer from 0
+// to 255 when percentages are not used, and does not convert to fixed point.
+//
+int E_TranslucCB2(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                  void *result)
+{
+   char *endptr;
+   const char *pctloc;
+
+   // test for a percent sign (start looking at end)
+   pctloc = strrchr(value, '%');
+
+   if(pctloc)
+   {
+      int pctvalue;
+      
+      // get the percentage value (base 10 only)
+      pctvalue = strtol(value, &endptr, 10);
+
+      // strtol should stop at the percentage sign
+      if(endptr != pctloc)
+      {
+         if(cfg)
+         {
+            cfg_error(cfg, "invalid percentage value for option '%s'\n",
+                      opt->name);
+         }
+         return -1;
+      }
+      if(errno == ERANGE || pctvalue < 0 || pctvalue > 100) 
+      {
+         if(cfg)
+         {
+            cfg_error(cfg,
+               "percentage value for option '%s' is out of range\n",
+               opt->name);
+         }
+         return -1;
+      }
+
+      *(int *)result = (255 * pctvalue) / 100;
+   }
+   else
+   {
+      // process an integer
+      *(int *)result = (int)strtol(value, &endptr, 0);
+      
+      if(*endptr != '\0')
+      {
+         if(cfg)
+            cfg_error(cfg, "invalid integer value for option '%s'\n", opt->name);
+         return -1;
+      }
+      if(errno == ERANGE) 
+      {
+         if(cfg)
+         {
+            cfg_error(cfg,
+                      "integer value for option '%s' is out of range\n",
+                      opt->name);
+         }
+         return -1;
+      }
+   }
+
+   return 0;
+}
+
+
+//
 // E_ColorStrCB
 //
 // Accepts either a palette index or an RGB triplet, which will be
@@ -763,10 +836,10 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 // prefix written into prefixbuf. If the return value is NULL,
 // prefixbuf is unmodified.
 //
-char *E_ExtractPrefix(char *value, char *prefixbuf, int buflen)
+const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 {
    int i;
-   char *colonloc, *rover, *strval;
+   const char *colonloc, *rover, *strval;
 
    // look for a colon ending a possible prefix
    colonloc = strchr(value, ':');

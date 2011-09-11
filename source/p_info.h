@@ -195,7 +195,7 @@ typedef struct LevelInfo_s
 // the one and only LevelInfo object
 extern LevelInfo_t LevelInfo;
 
-extern boolean default_weaponowned[NUMWEAPONS];
+extern int default_weaponowned[NUMWEAPONS];
 
 #endif
 

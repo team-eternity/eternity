@@ -1560,7 +1560,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
    {
       sector_t *sector = &sectors[secnum];
       
-      S_StartSoundName((Mobj *)&sector->soundorg, sndname);
+      S_StartSoundName(&sector->soundorg, sndname);
    }
 
    Z_Free(sndname);
@@ -1586,7 +1586,7 @@ static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
    {
       sector_t *sector = &sectors[secnum];
       
-      S_StartSound((Mobj *)&sector->soundorg, sndnum);
+      S_StartSound(&sector->soundorg, sndnum);
    }
 
    return 0;

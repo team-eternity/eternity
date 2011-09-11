@@ -3278,6 +3278,7 @@ byte *G_ReadOptions(byte *demoptr)
          comp[i] = compatibility;
 
       G_SetCompatibility();
+
       monster_infighting = 1;           // killough 7/19/98
 
       monster_backing = 0;              // killough 9/8/98
@@ -3551,19 +3552,20 @@ boolean G_CheckDemoStatus(void)
 
    if(demoplayback)
    {
-      if(singledemo)
-      {
-         demoplayback = false;
-         C_SetConsole();
-         return false;
-      }
-
+      // haleyjd 01/08/11: refactored so that stopping netdemos doesn't cause
+      // access violations by leaving the game in "netgame" mode.
       Z_ChangeTag(demobuffer, PU_CACHE);
       G_ReloadDefaults();    // killough 3/1/98
       netgame = false;       // killough 3/29/98
-      D_AdvanceDemo();
-      return true;
+
+      if(singledemo)
+         C_SetConsole();
+      else
+         D_AdvanceDemo();
+
+      return !singledemo;
    }
+
    return false;
 }
 
@@ -3576,7 +3578,8 @@ void G_StopDemo(void)
 
    G_CheckDemoStatus();
    advancedemo = false;
-   C_SetConsole();
+   if(gamestate != GS_CONSOLE)
+      C_SetConsole();
 }
 
 // killough 1/22/98: this is a "Doom printf" for messages. I've gotten

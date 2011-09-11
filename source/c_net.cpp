@@ -169,29 +169,30 @@ void C_DealWithChar(unsigned char c, int source);
 
 void C_NetTicker(void)
 {
-  int i;
-  
-  if(netgame && !demoplayback)      // only deal with chat chars in
-    // netgames
-    
-    // check for incoming chat chars
-    for(i=0; i<MAXPLAYERS; i++)
+   int i;
+
+   if(netgame && !demoplayback)      // only deal with chat chars in netgames
+   {
+      // check for incoming chat chars
+      for(i=0; i<MAXPLAYERS; i++)
       {
-	if(!playeringame[i]) continue;
+         if(!playeringame[i]) 
+            continue;
 #ifdef CONSHUGE
-	if(gamestate == GS_CONSOLE)  // use the whole ticcmd in console mode
-          {
-	    int a;
-	    for(a=0; a<sizeof(ticcmd_t); a++)
-	      C_DealWithChar( ((unsigned char*)&players[i].cmd)[a], i);
-          }
-	else
+         if(gamestate == GS_CONSOLE)  // use the whole ticcmd in console mode
+         {
+            int a;
+            for(a=0; a<sizeof(ticcmd_t); a++)
+               C_DealWithChar( ((unsigned char*)&players[i].cmd)[a], i);
+         }
+         else
 #endif
-	  C_DealWithChar(players[i].cmd.chatchar,i);
+            C_DealWithChar(players[i].cmd.chatchar,i);
       }
-  
-  // run buffered commands essential for netgame sync
-  C_RunBuffer(c_netcmd);
+   }
+
+   // run buffered commands essential for netgame sync
+   C_RunBuffer(c_netcmd);
 }
 
 void C_DealWithChar(unsigned char c, int source)

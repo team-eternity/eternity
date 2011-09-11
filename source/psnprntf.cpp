@@ -480,7 +480,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) ip->p;
+                unumber = (unsigned int)((size_t)ip->p); // FIXME: Not x64 friendly
                 numbersigned = 0;
         }
         break;
@@ -499,7 +499,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) ip->p;
+                unumber = (unsigned int)((size_t)ip->p); // FIXME: Not x64 friendly
                 numbersigned = numbersigned;
         }
         break;
@@ -518,7 +518,7 @@ int pvsnfmt_int(pvsnfmt_vars *info, pvsnfmt_intparm_t *ip)
                 numbersigned = 0;
                 break;
              case 'p':
-                unumber = (unsigned int) ip->p;
+                unumber = (unsigned int)((size_t)ip->p); // FIXME: Not x64 friendly
                 numbersigned = 0;
          }
     } /* switch fmt to retrieve number */

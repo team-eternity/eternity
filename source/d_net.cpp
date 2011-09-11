@@ -98,7 +98,7 @@ static doomdata_t reboundstore;
 //
 static int NetbufferSize(void)
 {
-   return (int)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics]);
+   return (int)((size_t)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics])); 
 }
 
 //
@@ -111,7 +111,8 @@ static unsigned int NetbufferChecksum(void)
 
    c = 0x1234567;
 
-   len = (NetbufferSize() - (int)&(((doomdata_t *)0)->retransmitfrom)) / sizeof(unsigned int);
+   len = NetbufferSize() - (int)((size_t)&(((doomdata_t *)0)->retransmitfrom));
+   len /= sizeof(unsigned int);
 
    for(i = 0; i < len; ++i)
       c += ((unsigned int *)&netbuffer->retransmitfrom)[i] * (i + 1);

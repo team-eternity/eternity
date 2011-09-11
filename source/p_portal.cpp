@@ -638,10 +638,11 @@ boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 //
 // Returns the combined state flags for the given portal based on various
 // behavior flags
+//
 static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
 {
-   boolean   active;
-   int       ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
+   boolean active;
+   int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
    
    if(!portal)
       return 0;
@@ -652,7 +653,7 @@ static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
       ret |= PS_VISIBLE;
       
    // Next two flags are for linked portals only
-   active = active && portal->type == R_LINKED && useportalgroups == true;
+   active = (active && portal->type == R_LINKED && useportalgroups == true);
       
    if(active && !(portal->flags & PF_NOPASS) && !(sflags & PF_NOPASS))
       ret |= PS_PASSABLE;

@@ -116,6 +116,11 @@ typedef struct mapsectorext_s
    int    damageflagsadd;
    int    damageflagsrem;
 
+   unsigned int f_pflags;
+   unsigned int c_pflags;
+   unsigned int f_alpha;
+   unsigned int c_alpha;
+
    eterrainptr floorterrain;
    eterrainptr ceilingterrain;
 

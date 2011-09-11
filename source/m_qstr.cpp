@@ -250,14 +250,14 @@ qstring_t *QStrDelc(qstring_t *qstr)
 qstring_t *QStrCat(qstring_t *qstr, const char *str)
 {
    unsigned int cursize = qstr->size;
-   unsigned int newsize = qstr->index + strlen(str);
+   unsigned int newsize = qstr->index + strlen(str) + 1;
 
    if(newsize >= cursize)
       QStrGrow(qstr, newsize - cursize);
 
    strcat(qstr->buffer, str);
 
-   qstr->index = newsize;
+   qstr->index = strlen(qstr->buffer);
 
    return qstr;
 }
@@ -283,7 +283,7 @@ qstring_t *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize = dest->index + insertstrlen;
+   size_t totalsize = dest->index + insertstrlen + 1;
 
    // pos must be between 0 and dest->index - 1
    if(pos >= dest->index)
@@ -300,7 +300,7 @@ qstring_t *QStrInsert(qstring_t *dest, const char *insertstr, size_t pos)
    memmove(insertpoint + insertstrlen, insertpoint, charstomove);
    memmove(insertpoint, insertstr, insertstrlen);
 
-   dest->index = totalsize;
+   dest->index = strlen(dest->buffer);
 
    return dest;
 }
@@ -764,6 +764,22 @@ size_t QStrReplaceNotOf(qstring_t *qstr, const char *filter, char repl)
       qstr_repltable[*fptr++] = 0;
 
    return QStrReplaceInternal(qstr, repl);
+}
+
+//
+// QStrNormalizeSlashes
+//
+// Calls M_NormalizeSlashes on a qstring, which replaces \ characters with /
+// and eliminates any duplicate slashes. This isn't simply a convenience
+// method, as the qstring structure requires a fix-up after this function is
+// used on it, in order to keep the string length correct.
+//
+qstring_t *QStrNormalizeSlashes(qstring_t *qstr)
+{
+   M_NormalizeSlashes(qstr->buffer);
+   qstr->index = strlen(qstr->buffer);
+
+   return qstr;
 }
 
 //=============================================================================

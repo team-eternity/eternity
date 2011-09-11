@@ -460,9 +460,9 @@ void A_SkelMissile(Mobj *actor)
 //
 void A_Tracer(Mobj *actor)
 {
-   angle_t       exact;
-   fixed_t       dist;
-   fixed_t       slope;
+   angle_t      exact;
+   fixed_t      dist;
+   fixed_t      slope;
    Mobj        *dest;
    Mobj        *th;
 

@@ -1699,7 +1699,7 @@ static void E_AddAmbienceToHash(EAmbience_t *amb)
 static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
 {
    EAmbience_t *newAmb;
-   char *tempstr;
+   const char *tempstr;
    int index;
 
    // issue a warning if index is undefined

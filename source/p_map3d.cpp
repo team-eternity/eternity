@@ -247,10 +247,10 @@ static Mobj *stepthing;
 
 extern boolean PIT_CheckLine(line_t *ld);
 
-extern boolean P_Touched(Mobj *thing, Mobj *tmthing);
+extern boolean P_Touched(Mobj *thing);
 extern int     P_MissileBlockHeight(Mobj *mo);
-extern boolean P_CheckPickUp(Mobj *thing, Mobj *tmthing);
-extern boolean P_SkullHit(Mobj *thing, Mobj *tmthing);
+extern boolean P_CheckPickUp(Mobj *thing);
+extern boolean P_SkullHit(Mobj *thing);
 
 //
 // PIT_CheckThing3D
@@ -322,7 +322,7 @@ static boolean PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       {
          if(clip.thing->z == topz || clip.thing->z + clip.thing->height == thing->z)
          {
-            P_Touched(thing, clip.thing);
+            P_Touched(thing);
             // haleyjd: make the thing fly up a bit so it can run across
             clip.thing->momz += FRACUNIT;
             return true;
@@ -341,12 +341,12 @@ static boolean PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // surroundings such as walls, then the touchy thing dies immediately.
 
    if(!(clip.thing->intflags & MIF_NOTOUCH)) // haleyjd: not when just testing
-      if(P_Touched(thing, clip.thing))
+      if(P_Touched(thing))
          return true;
 
    // check for skulls slamming into things
 
-   if(P_SkullHit(thing, clip.thing))
+   if(P_SkullHit(thing))
       return false;
 
    // missiles can hit other things
@@ -392,7 +392,7 @@ static boolean PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          if(!(thing->flags&MF_NOBLOOD))
          {
             // Ok to spawn some blood
-            P_RipperBlood(tmthing);
+            P_RipperBlood(clip.thing);
          }
          */
 
@@ -468,7 +468,7 @@ static boolean PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       // that gets added by P_CheckPosition() so that you cannot pick
       // up things that are above your true height.
       && thing->z < clip.thing->z + clip.thing->height - 24*FRACUNIT)
-      return P_CheckPickUp(thing, clip.thing);
+      return P_CheckPickUp(thing);
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (tmthing) to move if it's non-solid,

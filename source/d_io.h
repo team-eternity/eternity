@@ -36,7 +36,7 @@
    #define F_OK 0
    #define W_OK 2
    #define R_OK 4
-   #define S_ISDIR(x) (((sbuf.st_mode & S_IFDIR)==S_IFDIR)?1:0)
+   #define S_ISDIR(x) (((x & S_IFDIR)==S_IFDIR)?1:0)
    #ifndef PATH_MAX
       #define PATH_MAX _MAX_PATH
    #endif

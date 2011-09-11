@@ -447,7 +447,7 @@ void P_AddSeenState(int statenum, seenstate_t **list);
 boolean P_CheckSeenState(int statenum, seenstate_t *list);
 
 // extern data
-extern int FloatBobOffsets[];
+extern fixed_t FloatBobOffsets[64];
 
 // Thing Collections
 

@@ -115,7 +115,7 @@ extern int default_colour;
 // use the entire ticcmd for transferring console commands when
 // in console mode ?
 
-#define CONSHUGE
+//#define CONSHUGE
 
 #endif
 

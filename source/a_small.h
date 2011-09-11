@@ -33,12 +33,12 @@
 #ifndef __A_SMALL_H__
 #define __A_SMALL_H__
 
-#ifndef EE_NO_SMALL_SUPPORT
-
-#include "doomtype.h"
 class Mobj;
 struct line_t;
 
+#ifndef EE_NO_SMALL_SUPPORT
+
+#include "doomtype.h"
 #include "amx.h"
 
 // custom app-defined errors

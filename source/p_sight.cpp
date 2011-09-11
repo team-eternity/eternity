@@ -348,8 +348,9 @@ boolean P_CheckSight(Mobj *t1, Mobj *t2)
    // same subsector? obviously visible
    // haleyjd: compatibility optioned for old demos -- thanks to cph
    // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
+   // haleyjd 12/28/10: This "fix" was not in BOOM 200-202 either!
 
-   if(!demo_compatibility && !t1->subsector->polyList && 
+   if(demo_version >= 203 && !t1->subsector->polyList && 
       t1->subsector == t2->subsector)
       return true;
 

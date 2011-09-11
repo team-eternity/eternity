@@ -643,11 +643,11 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 // be candidate for generalization, since other fields may need
 // this syntax in the near future.
 //
-static void E_ParseMiscField(char *value, int *target)
+static void E_ParseMiscField(const char *value, int *target)
 {
    int i;
    char prefix[16];
-   char *colonloc, *strval;
+   const char *colonloc, *strval;
    
    memset(prefix, 0, 16);
 
@@ -783,10 +783,10 @@ static void E_ParseMiscField(char *value, int *target)
 //
 // haleyjd 10/22/09: Skip over any prefix in the argument string.
 //
-static char *E_GetArgument(char *value)
+static const char *E_GetArgument(const char *value)
 {
    char prefix[16];
-   char *colonloc;
+   const char *colonloc;
    
    memset(prefix, 0, 16);
 
@@ -1192,7 +1192,7 @@ static void E_ProcessState(int i, cfg_t *framesec, boolean def)
 {
    int j;
    int tempint;
-   char *tempstr;
+   const char *tempstr;
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,

@@ -617,11 +617,15 @@ void R_ClearPlaneHash(planehash_t *table)
 void R_ClearPlanes(void)
 {
    int i;
-   float a;
+   float a = 0.0f;
+
+#if 0
+   // FIXME: borked in widescreen aspect ratios...
    int scaled_height = consoleactive ? video.x1lookup[Console.current_height] : 0;
 
    a = (float)(consoleactive ? 
          (scaled_height-viewwindowy) < 0 ? 0 : scaled_height-viewwindowy : 0);
+#endif
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -706,6 +710,10 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       table = &mainhash;
       
    blendflags &= PS_OBLENDFLAGS;
+
+   // haleyjd: tweak opacity/blendflags when 100% opaque is specified
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
+      blendflags = 0;
       
    // killough 10/98: PL_SKYFLAT
    if(picnum == skyflatnum || picnum == sky2flatnum || picnum & PL_SKYFLAT)
@@ -1159,8 +1167,8 @@ static void do_draw_plane(visplane_t *pl)
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
-      stylenum = pl->bflags & PS_ADDOVERLAY ? SPAN_STYLE_ADD : 
-                 pl->bflags & PS_OVERLAY    ? SPAN_STYLE_TL :
+      stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
+                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];

@@ -29,10 +29,10 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 339;
+int version = 340;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 21;
+unsigned char subversion = 0;
 
 // [CG] EE has pretty good versioning already, so all that's needed for c/s is
 //      a c/s protocol version.  A simple single number is sufficient because
@@ -43,11 +43,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Resheph";
+const char version_name[] = "Rebirth";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.39.21 \"Resheph\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.00 \"Rebirth\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -76,6 +76,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.39.21 \"Resheph\"";
 // 3.35.92 'Nekhbet'   -- 03/22/09
 // 3.37.00 'Sekhmet'   -- 01/01/10
 // 3.39.20 'Resheph'   -- 10/10/10
+// 3.40.00 'Rebirth'   -- 01/08/11
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

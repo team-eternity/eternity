@@ -47,6 +47,7 @@
 #include "d_dehtbl.h" // for dehflags parsing
 #include "r_data.h"
 #include "r_main.h"
+#include "r_portal.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -126,6 +127,10 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_TOPMAP         "colormaptop"
 #define FIELD_SECTOR_MIDMAP         "colormapmid"
 #define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
+#define FIELD_SECTOR_PORTALFLAGS_F  "portalflags.floor"
+#define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
+#define FIELD_SECTOR_OVERLAYALPHA_F "overlayalpha.floor"
+#define FIELD_SECTOR_OVERLAYALPHA_C "overlayalpha.ceiling"
 
 // mapthing options and related data structures
 
@@ -229,6 +234,12 @@ static cfg_opt_t sector_opts[] =
    CFG_FLOAT(FIELD_SECTOR_CEILINGOFFSETY, 0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_FLOORANGLE,     0.0,        CFGF_NONE),
    CFG_FLOAT(FIELD_SECTOR_CEILINGANGLE,   0.0,        CFGF_NONE),
+
+   // haleyjd 01/08/11: portal properties
+   CFG_STR(FIELD_SECTOR_PORTALFLAGS_F,     "",        CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
+   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB2),
+   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB2),
    
    CFG_END()
 };
@@ -262,6 +273,24 @@ static dehflags_t sectordamageflags[] =
 static dehflagset_t sectordamage_flagset =
 {
    sectordamageflags, // flaglist
+   0                  // mode
+};
+
+static dehflags_t sectorportalflags[] =
+{
+   { "DISABLED",     PF_DISABLED     },
+   { "NORENDER",     PF_NORENDER     },
+   { "NOPASS",       PF_NOPASS       },
+   { "BLOCKSOUND",   PF_BLOCKSOUND   },
+   { "OVERLAY",      PS_OVERLAY      },
+   { "ADDITIVE",     PS_ADDITIVE     },
+   { "USEGLOBALTEX", PS_USEGLOBALTEX },
+   { NULL,           0               }
+};
+
+static dehflagset_t sectorportal_flagset =
+{
+   sectorportalflags, // flaglist
    0                  // mode
 };
 
@@ -766,11 +795,11 @@ static unsigned int E_EDThingForRecordNum(int recnum)
 // Parses thing type fields in ExtraData. Allows resolving of
 // EDF thingtype mnemonics to their corresponding doomednums.
 //
-static int E_ParseTypeField(char *value)
+static int E_ParseTypeField(const char *value)
 {
    int i;
    char prefix[16];
-   char *colonloc, *strval;
+   const char *colonloc, *strval;
 
    memset(prefix, 0, 16);
 
@@ -854,7 +883,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
    for(i = 0; i < numEDMapThings; i++)
    {
       cfg_t *thingsec;
-      char *tempstr;
+      const char *tempstr;
       int tempint;
 
       thingsec = cfg_getnsec(cfg, SEC_MAPTHING, i);
@@ -1805,6 +1834,33 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
       if(strcasecmp(tempstr, "@flat"))
          sec->ceilingterrain = E_TerrainForName(tempstr);
+      /*
+   CFG_STR(FIELD_SECTOR_PORTALFLAGS_F,     "",        CFGF_NONE),
+   CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
+   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB),
+   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB),
+   */
+      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_F);
+      if(*tempstr != '\0')
+         sec->f_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
+
+      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_C);
+      if(*tempstr != '\0')
+         sec->c_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
+
+      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_F);
+      if(tempint < 0)
+         tempint = 0;
+      if(tempint > 255)
+         tempint = 255;
+      sec->f_alpha = (unsigned int)tempint;
+
+      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_C);
+      if(tempint < 0)
+         tempint = 0;
+      if(tempint > 255)
+         tempint = 255;
+      sec->c_alpha = (unsigned int)tempint;
    }
 }
 
@@ -2032,6 +2088,10 @@ void E_LoadSectorExt(line_t *line)
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;
    sector->ceilingterrain = edsector->ceilingterrain;
+
+   // per-sector portal properties
+   sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
+   sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
 
    // TODO: more?
 

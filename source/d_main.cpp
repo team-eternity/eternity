@@ -1386,6 +1386,146 @@ static void D_DiskMetaData(void)
 
 //=============================================================================
 //
+// DOOMWADPATH support
+//
+// haleyjd 12/31/10: A standard evolved later for DOOMWADPATH, in preference to
+// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is 
+// like the standard system path, except for wads. When looking for a file on
+// the DOOMWADPATH, the paths in the variable will be tried in the order they
+// are specified.
+//
+
+// doomwadpaths is an array of paths, the decomposition of the DOOMWADPATH
+// environment variable
+static char **doomwadpaths;
+static int numdoomwadpaths;
+static int numdoomwadpaths_alloc;
+
+//
+// D_AddDoomWadPath
+//
+// Adds a path to doomwadpaths.
+//
+static void D_AddDoomWadPath(const char *path)
+{
+   int numalloc = numdoomwadpaths_alloc;
+
+   if(numdoomwadpaths >= numalloc)
+   {
+      numalloc = numalloc ? numalloc * 2 : 8;
+      doomwadpaths = (char **)(realloc(doomwadpaths, 
+                                       numalloc * sizeof(*doomwadpaths)));
+      numdoomwadpaths_alloc = numalloc;
+   }
+   doomwadpaths[numdoomwadpaths] = strdup(path);
+   ++numdoomwadpaths;
+}
+
+//
+// D_ParseDoomWadPath
+//
+// Looks for the DOOMWADPATH environment variable. If it is defined, then
+// doomwadpaths will consist of the decomposed variable, and numdoomwadpaths
+// will contain the number of paths parsed from it.
+//
+static void D_ParseDoomWadPath(void)
+{
+   const char *dwp;
+
+   if((dwp = getenv("DOOMWADPATH")))
+   {
+      char *tempdwp = Z_Strdupa(dwp);
+      char *rover   = tempdwp;
+      char *currdir = tempdwp;
+      int   dirlen  = 0;
+
+      while(*rover)
+      {
+         // Found the end of a path?
+         // Add the string from the prior one (or the beginning) to here as
+         // a separate path.
+         if(*rover == ';')
+         {
+            *rover = '\0'; // replace ; with a null terminator
+            if(dirlen)
+               D_AddDoomWadPath(currdir);
+            dirlen = 0;
+            currdir = rover + 1; // start of next path is the next char
+         }
+         else
+            ++dirlen; // Length is tracked so that we don't add any 0-length paths
+
+         ++rover;
+      }
+
+      // Add the last path if necessary (it's either the only one, or the final
+      // one, which is probably not followed by a semicolon).
+      if(dirlen)
+         D_AddDoomWadPath(currdir);
+   }
+}
+
+//
+// D_FindInDoomWadPath
+//
+// Looks for a file in each path extracted from DOOMWADPATH in the order the
+// paths were defined. A normalized concatenation of the path and the filename
+// will be returned which must be freed by the calling code, if the file is
+// found. Otherwise NULL is returned.
+//
+char *D_FindInDoomWadPath(const char *filename, const char *extension)
+{
+   qstring_t qstr;
+   char *concat  = NULL;
+   char *currext = NULL;
+
+   QStrInitCreate(&qstr);
+
+   for(int i = 0; i < numdoomwadpaths; ++i)
+   {
+      struct stat sbuf;
+      
+      QStrClear(&qstr);
+      QStrCat(QStrPutc(QStrCopy(&qstr, doomwadpaths[i]), '/'), filename);
+      QStrNormalizeSlashes(&qstr);
+
+      // See if the file exists as-is
+      if(!stat(QStrConstPtr(&qstr), &sbuf)) // check for existence
+      {
+         if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
+         {
+            concat = QStrCDup(&qstr, PU_STATIC);
+            break; // done.
+         }
+      }
+
+      // See if the file could benefit from having the default extension
+      // added to it.
+      if(extension && (currext = QStrBufferAt(&qstr, QStrLen(&qstr) - 4))) 
+      {
+         if(strcasecmp(currext, extension)) // Doesn't already have it?
+         {
+            QStrCat(&qstr, extension);
+
+            if(!stat(QStrConstPtr(&qstr), &sbuf)) // exists?
+            {
+               if(!S_ISDIR(sbuf.st_mode)) // not a dir?
+               {
+                  concat = QStrCDup(&qstr, PU_STATIC); 
+                  break; // done.
+               }
+            }
+         }
+      }
+   }
+
+   QStrFree(&qstr);
+
+   return concat;
+}
+
+//=============================================================================
+//
 // IWAD Detection / Verification Code
 //
 
@@ -1397,7 +1537,7 @@ static char **iwadVarForNum[] =
    &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
    &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
    &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg,
-   &gi_path_sosr,
+   &gi_path_sosr
 };
 
 //
@@ -1441,6 +1581,132 @@ static const char *D_DoIWADMenu(void)
    return iwadToUse;
 }
 
+// Match modes for iwadpathmatch 
+enum
+{
+   MATCH_NONE,
+   MATCH_GAME,
+   MATCH_IWAD
+};
+
+//
+// iwadpathmatch
+//
+// This structure is used for finding an IWAD path variable that is the
+// best match for a -game or -iwad string. A predefined priority is imposed
+// on the IWAD variables so that the "best" version of the game available
+// is chosen.
+//
+struct iwadpathmatch_t
+{
+   int         mode;         // Mode for this entry: -game, or -iwad
+   const char *name;         // The -game or -iwad substring matched
+   char      **iwadpaths[3]; // IWAD path variables to check when this matches,
+                             // in order of precedence from greatest to least.
+};
+
+//
+// The IWAD matcher structures have a priority amongst themselves as well, in 
+// that "doom2" should match doom2 and not doom. Whichever entry returns a valid
+// strstr() value first wins.
+// 
+static iwadpathmatch_t iwadMatchers[] =
+{
+   // -game matches:
+   { MATCH_GAME, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
+   { MATCH_GAME, "doom",     { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_GAME, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_GAME, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_GAME, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+
+   // -iwad matches
+   { MATCH_IWAD, "doom2f",   { &gi_path_doom2,  NULL,             NULL            } },
+   { MATCH_IWAD, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
+   { MATCH_IWAD, "doomu",    { &gi_path_doomu,  NULL,             NULL            } },
+   { MATCH_IWAD, "doom1",    { &gi_path_doomsw, NULL,             NULL            } },
+   { MATCH_IWAD, "doom",     { &gi_path_doomu,  &gi_path_doomreg, NULL            } },
+   { MATCH_IWAD, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_IWAD, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_IWAD, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_IWAD, "heretic1", { &gi_path_hticsw, NULL,             NULL            } },
+   { MATCH_IWAD, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   
+   // Terminating entry
+   { MATCH_NONE, NULL,       { NULL,            NULL,             NULL            } }
+};
+
+//
+// D_IWADPathForGame
+//
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// -game parameter. Returns NULL if none found.
+//
+static char *D_IWADPathForGame(const char *game)
+{
+   iwadpathmatch_t *cur = iwadMatchers;
+
+   while(cur->mode != MATCH_NONE)
+   {
+      if(cur->mode == MATCH_GAME) // is a -game matcher?
+      {
+         if(!strcasecmp(cur->name, game)) // should be an exact match
+         {
+            for(int i = 0; i < 3; ++i) // try each path in order
+            {
+               if(!cur->iwadpaths[i]) // no more valid paths to try
+                  break;
+
+               if(**(cur->iwadpaths[i]) != '\0')
+                  return *(cur->iwadpaths[i]); // got one!
+            }
+         }
+      }
+      ++cur; // try the next entry
+   }
+
+   return NULL; // nothing was found
+}
+
+//
+// D_IWADPathForIWADParam
+//
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// -iwad parameter. Returns NULL if none found.
+//
+static char *D_IWADPathForIWADParam(const char *iwad)
+{
+   iwadpathmatch_t *cur = iwadMatchers;
+   
+   // If the name starts with a slash, step forward one
+   char *tmpname = Z_Strdupa(*iwad == '/' ? iwad + 1 : iwad);
+   
+   // Truncate at any extension
+   char *dotpos = strrchr(tmpname, '.');
+   if(dotpos)
+      *dotpos = '\0';
+
+   while(cur->mode != MATCH_NONE)
+   {
+      if(cur->mode == MATCH_IWAD) // is a -iwad matcher?
+      {
+         if(!strcasecmp(cur->name, tmpname)) // should be an exact match
+         {
+            for(int i = 0; i < 3; ++i) // try each path in order
+            {
+               if(!cur->iwadpaths[i]) // no more valid paths to try
+                  break;
+
+               if(**(cur->iwadpaths[i]) != '\0')
+                  return *(cur->iwadpaths[i]); // got one!
+            }
+         }
+      }
+      ++cur; // try the next entry
+   }
+
+   return NULL; // nothing was found
+}
 
 // macros for CheckIWAD
 
@@ -1489,7 +1755,7 @@ static void CheckIWAD(const char *iwadname,
    const char *n = lump.name;
 
    if(!(fp = fopen(iwadname, "rb")))
-      I_Error("Can't open IWAD: %s\n",iwadname);
+      I_Error("Can't open IWAD: %s\n", iwadname);
 
    // read IWAD header
    if(fread(&header, sizeof header, 1, fp) < 1 ||
@@ -1739,6 +2005,14 @@ char *FindIWADFile(void)
       // only if the file exists do we try to use it.
       if(!access(gameiwad, R_OK))
          basename = gameiwad;
+      else                        
+      {
+         // haleyjd 12/31/10: base/game/game.wad doesn't exist;
+         // try matching against appropriate configured IWAD path(s)
+         char *cfgpath = D_IWADPathForGame(myargv[gamepathparm]);
+         if(cfgpath && !access(cfgpath, R_OK))
+            basename = cfgpath;
+      }
    }
 
    //jff 3/24/98 get -iwad parm if specified else use .
@@ -1836,6 +2110,46 @@ char *FindIWADFile(void)
             iwad[n] = 0; // reset iwad length to former
          }
       }
+   }
+
+   // haleyjd 12/31/10: Try finding a match amongst configured IWAD paths
+   if(customiwad)
+   {
+      char *cfgpath = D_IWADPathForIWADParam(customiwad);
+      if(cfgpath && !access(cfgpath, R_OK))
+      {
+         if(iwad)
+            free(iwad);
+         iwad = strdup(cfgpath);
+         return iwad;
+      }
+   }
+
+   // haleyjd 01/01/11: support for DOOMWADPATH
+   D_ParseDoomWadPath();
+
+   if(numdoomwadpaths) // If at least one path is specified...
+   {
+      if(customiwad) // -iwad was used with a file name?
+      {
+         if(iwad)
+            free(iwad);
+         if((iwad = D_FindInDoomWadPath(customiwad, ".wad")))
+            return iwad;
+      }
+      else
+      {
+         // Try all the standard iwad names in the normal order
+         for(i = 0; i < nstandard_iwads; i++)
+         {
+            if(iwad)
+               free(iwad);
+            if((iwad = D_FindInDoomWadPath(standard_iwads[i], ".wad")))
+               return iwad;
+         }
+      }
+      // need to make sure iwad is set to a valid string for exit
+      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
    }
 
    for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
@@ -2116,11 +2430,10 @@ static void IdentifyIWAD(void)
               "To specify an IWAD, try one of the following:\n"
               "* Configure IWAD file paths in base/system.cfg\n"
               "* Use -iwad\n"
-              "* Set the DOOMWADDIR environment variable.\n"
+              "* Set the DOOMWADDIR or DOOMWADPATH environment variables.\n"
               "* Place an IWAD in the working directory.\n"
-              "* Place an IWAD file under the appropriate\n"
-              "  game folder of the base directory and use\n"
-              "  the -game parameter.");
+              "* Place an IWAD file under the appropriate game folder of\n"
+              "  the base directory and use the -game parameter.\n");
    }
 }
 
@@ -2851,7 +3164,7 @@ extern int levelFragLimit;
 static void D_StartupMessage(void)
 {
    puts("The Eternity Engine\n"
-        "Copyright 2010 James Haley and Stephen McGranahan\n"
+        "Copyright 2011 James Haley and Stephen McGranahan\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"

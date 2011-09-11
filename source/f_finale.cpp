@@ -166,7 +166,15 @@ void F_Ticker(void)
       // check for skipping
       for(i = 0; i < MAXPLAYERS; ++i)
          if(players[i].cmd.buttons)
-            goto next_level;      // go on to the next level
+         {
+            // haleyjd 12/27/10: No goto here!
+            // go on to the next level
+            if(LevelInfo.endOfGame)
+               F_StartCast(); // cast of Doom 2 characters
+            else
+               gameaction = ga_worlddone;  // next level, e.g. MAP07
+            return;
+         }
    }
    
    // advance animation
@@ -212,7 +220,6 @@ void F_Ticker(void)
          { 
             // you must press a button to continue in Doom 2
             // haleyjd: allow cast calls after arbitrary maps
-next_level:
             if(LevelInfo.endOfGame)
                F_StartCast(); // cast of Doom 2 characters
             else

@@ -122,14 +122,17 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
    if(sec->c_pflags & PS_PASSSOUND)
    {
-      // Ok, because the same portal can be used on many sectors and even lines, the portal
-      // structure won't tell you what sector is on the other side of the portal. SO
+      // Ok, because the same portal can be used on many sectors and even 
+      // lines, the portal structure won't tell you what sector is on the 
+      // other side of the portal. SO
       sector_t *other;
       line_t *check = sec->lines[0];
 
       other =
-      R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - R_CPLink(sec)->deltax,
-                         ((check->v1->y + check->v2->y) / 2) - R_CPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
+                             - R_CPLink(sec)->deltax,
+                            ((check->v1->y + check->v2->y) / 2) 
+                             - R_CPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -1154,15 +1157,24 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
             {
                if(serverside)
                {
-                  // haleyjd: must use P_SetTarget...
-                  P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
+                  // haleyjd: This SHOULD use P_SetTarget for both of the below
+                  // assignments; however, doing so may adversely affect 202
+                  // demo sync according to 4mer. I am taking the chance of
+                  // allowing this to use direct assignment, as it appears the
+                  // ref counts would ideally remain balanced (lastenemy
+                  // already has a ref from actor, so it's only moving to
+                  // target).
+                  actor->target = actor->lastenemy;
+                  /* [CG] Can't do this anymore.
                   if(CS_SERVER)
                      SV_BroadcastActorTarget(actor, CS_AT_TARGET);
+                  */
 
-                  P_SetTarget<Mobj>(&actor->lastenemy, NULL);
+                  actor->lastenemy = NULL;
+                  /* [CG] Can't do this anymore.
                   if(CS_SERVER)
                      SV_BroadcastActorTarget(actor, CS_AT_LASTENEMY);
-
+                  */
                }
                return true;
             }
@@ -1277,6 +1289,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 
          for(th = cap->cnext; th != cap; th = th->cnext)
          {
+            Mobj *mo = dynamic_cast<Mobj *>(th);
             if(--n < 0)
             {
                // Only a subset of the monsters were searched. Move all of
@@ -1287,7 +1300,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(!PIT_FindTarget((Mobj *) th))
+            else if(mo && !PIT_FindTarget(mo))
                // If target sighted
                return true;
          }
@@ -1330,17 +1343,21 @@ boolean P_HelpFriend(Mobj *actor)
 
    for (th = cap->cnext; th != cap; th = th->cnext)
    {
-      if(((Mobj *) th)->health*2 >=
-         ((Mobj *) th)->info->spawnhealth)
+      Mobj *mo;
+      
+      if(!(mo = dynamic_cast<Mobj *>(th)))
+         continue;
+
+      if(mo->health*2 >= mo->info->spawnhealth)
       {
          if(P_Random(pr_helpfriend) < 180)
             break;
       }
       else
-         if(((Mobj *) th)->flags & MF_JUSTHIT &&
-            ((Mobj *) th)->target && 
-            ((Mobj *) th)->target != actor->target &&
-            !PIT_FindTarget(((Mobj *) th)->target))
+         if(mo->flags & MF_JUSTHIT &&
+            mo->target && 
+            mo->target != actor->target &&
+            !PIT_FindTarget(mo->target))
          {
             // Ignore any attacking monsters, while searching for
             // friend

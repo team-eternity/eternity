@@ -1012,7 +1012,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // Check for new console commands.
    NetUpdate();
 
-   // Draw Post-BSP elements such as sprites, masked textures, and portal overlays
+   // Draw Post-BSP elements such as sprites, masked textures, and portal 
+   // overlays
    R_DrawPostBSP();
    
    // haleyjd 09/04/06: handle through column engine
