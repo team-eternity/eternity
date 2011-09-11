@@ -80,7 +80,7 @@ int EV_ThingSpawn(int *args, boolean fog)
 
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y)) // Didn't fit?
       {
-         newMobj->Remove();
+         newMobj->removeThinker();
       }
       else
       {

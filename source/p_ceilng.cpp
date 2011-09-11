@@ -103,13 +103,13 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
 //
 // Action routine that moves ceilings. Called once per tick.
 //
-// Passed a ceiling_t structure that contains all the info about the move.
+// Passed a CCeiling structure that contains all the info about the move.
 // see P_SPEC.H for fields. No return value.
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 //
-void ceiling_t::Think()
+void CCeiling::Think()
 {
    result_e  res;
 
@@ -269,7 +269,7 @@ void ceiling_t::Think()
    } // end switch
 }
 
-void P_CopyCeiling(ceiling_t *dest, ceiling_t *src)
+void P_CopyCeiling(CCeiling *dest, CCeiling *src)
 {
    dest->type         = src->type;
    dest->bottomheight = src->bottomheight;
@@ -284,12 +284,12 @@ void P_CopyCeiling(ceiling_t *dest, ceiling_t *src)
    dest->net_id       = src->net_id;
 }
 
-ceiling_t* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
+CCeiling* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
 {
    int noise = CNOISE_NORMAL; // haleyjd 09/28/06
-   ceiling_t *ceiling = new ceiling_t;
+   CCeiling *ceiling = new CCeiling;
 
-   ceiling->Add();
+   ceiling->addThinker();
    sec->ceilingdata = ceiling;               //jff 2/22/98
    ceiling->thinker.function = T_MoveCeiling;
    ceiling->sector = sec;
@@ -372,7 +372,7 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
    int       secnum = -1;
    int       rtn = 0;
    sector_t  *sec;
-   ceiling_t *ceiling;
+   CCeiling *ceiling;
 
    // Reactivate in-stasis ceilings...for certain types.
    // This restarts a crusher after it has been stopped
@@ -451,9 +451,9 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 int P_ActivateInStasisCeiling(line_t *line)
 {
    int rtn = 0, noise;
-   ceiling_t *c = NULL;
+   CCeiling *c = NULL;
 
-   while((c = (ceiling_t *)E_HashTableIterator(ceiling_by_netid, c)))
+   while((c = (CCeiling *)E_HashTableIterator(ceiling_by_netid, c)))
    {
       if(c->tag == line->tag && c->direction == 0)
       {
@@ -488,7 +488,7 @@ int oldP_ActivateInStasisCeiling(line_t *line)
 
    for(cl = activeceilings; cl; cl = cl->next)
    {
-      ceiling_t *ceiling = cl->ceiling;
+      CCeiling *ceiling = cl->ceiling;
       if(ceiling->tag == line->tag && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
@@ -528,17 +528,16 @@ int oldP_ActivateInStasisCeiling(line_t *line)
 int EV_CeilingCrushStop(line_t* line)
 {
    int rtn = 0;
-   ceiling_t *ceiling;
+   CCeiling *c;
 
-   while((ceiling =
-            (ceiling_t *)E_HashTableIterator(ceiling_by_netid, ceiling)))
+   while((c = (CCeiling *)E_HashTableIterator(ceiling_by_netid, c)))
    {
-      if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
+      if(c->direction != plat_stop && c->tag == line->tag)
       {
-         ceiling->olddirection = ceiling->direction;
-         ceiling->direction = plat_stop;
-         ceiling->thinker.function = NULL;
-         S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
+         c->olddirection = c->direction;
+         c->direction = plat_stop;
+         c->thinker.function = NULL;
+         S_StopSectorSequence(c->sector, true); // haleyjd 09/28/06
          rtn = 1;
       }
    }
@@ -552,7 +551,7 @@ int oldEV_CeilingCrushStop(line_t* line)
    ceilinglist_t *cl;
    for(cl = activeceilings; cl; cl = cl->next)
    {
-      ceiling_t *ceiling = cl->ceiling;
+      CCeiling *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
       {
          ceiling->olddirection = ceiling->direction;
@@ -573,12 +572,12 @@ int oldEV_CeilingCrushStop(line_t* line)
 // Passed the ceiling motion structure
 // Returns nothing
 //
-void P_AddActiveCeiling(ceiling_t *ceiling)
+void P_AddActiveCeiling(CCeiling *ceiling)
 {
    CS_ObtainCeilingNetID(ceiling);
 }
 
-void oldP_AddActiveCeiling(ceiling_t *ceiling)
+void oldP_AddActiveCeiling(CCeiling *ceiling)
 {
    ceilinglist_t *list = (ceilinglist_t *)(malloc(sizeof *list));
    list->ceiling = ceiling;
@@ -597,8 +596,7 @@ void oldP_AddActiveCeiling(ceiling_t *ceiling)
 // Passed the ceiling motion structure
 // Returns nothing
 //
-// [CG] Modified to use the ceiling hash instead of the linked list.
-void P_RemoveActiveCeiling(ceiling_t* ceiling)
+void P_RemoveActiveCeiling(CCeiling* ceiling)
 {
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
@@ -608,12 +606,12 @@ void P_RemoveActiveCeiling(ceiling_t* ceiling)
    CS_ReleaseCeilingNetID(ceiling);
 }
 
-void oldP_RemoveActiveCeiling(ceiling_t* ceiling)
+void oldP_RemoveActiveCeiling(CCeiling* ceiling)
 {
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
-   ceiling->Remove();
+   ceiling->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    free(list);

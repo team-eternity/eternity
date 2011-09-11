@@ -2524,7 +2524,7 @@ void G_FlushCorpse(int playernum)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(bodyque[bodyqueslot % bodyquesize]);
-         bodyque[bodyqueslot % bodyquesize]->Remove();
+         bodyque[bodyqueslot % bodyquesize]->removeThinker();
       }
 
       bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo;
@@ -2534,6 +2534,7 @@ void G_FlushCorpse(int playernum)
       if(CS_SERVER)
          SV_BroadcastActorRemoved(players[playernum].mo);
       players[playernum].mo->Remove();
+      players[playernum].mo->removeThinker();
    }
 }
 
@@ -3505,7 +3506,6 @@ byte *G_ReadOptions(byte *demoptr)
          comp[i] = compatibility;
 
       G_SetCompatibility();
-
       monster_infighting = 1;           // killough 7/19/98
 
       monster_backing = 0;              // killough 9/8/98

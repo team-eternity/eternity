@@ -1075,7 +1075,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    {
       if(CS_SERVER)
          SV_BroadcastActorRemoved(special);
-      special->Remove();
+      special->removeThinker();
    }
 
    // haleyjd 07/08/05: inverted condition
@@ -1109,7 +1109,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       target->player->health = 0;
 
    // killough 8/29/98: remove from threaded list
-   target->Update();
+   target->updateThinker();
 
    if(source && source->player)
    {
@@ -1134,7 +1134,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
             else
                team_scores[clients[source->player - players].team]++;
          }
-         HU_FragsUpdate();
+         HU_FragsupdateThinker();
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))

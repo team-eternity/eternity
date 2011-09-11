@@ -908,7 +908,7 @@ static void P_DoCrunch(mobj_t *thing)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(thing);
-         thing->Remove();
+         thing->removeThinker();
       }
       return;
    }

@@ -229,9 +229,9 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
 //
 // Adds a thinker as a thread on the given script.
 //
-static void ACS_addThread(acsthinker_t *script, acscript_t *acscript)
+static void ACS_addThread(CACSThinker *script, acscript_t *acscript)
 {
-   acsthinker_t *next = acscript->threads;
+   CACSThinker *next = acscript->threads;
 
    if((script->nextthread = next))
       next->prevthread = &script->nextthread;
@@ -244,10 +244,10 @@ static void ACS_addThread(acsthinker_t *script, acscript_t *acscript)
 //
 // Removes a thinker from the acscript thread list.
 //
-static void ACS_removeThread(acsthinker_t *script)
+static void ACS_removeThread(CACSThinker *script)
 {
-   acsthinker_t **prev = script->prevthread;
-   acsthinker_t *next  = script->nextthread;
+   CACSThinker **prev = script->prevthread;
+   CACSThinker *next  = script->nextthread;
    
    if((*prev = next))
       next->prevthread = prev;
@@ -260,12 +260,12 @@ static void ACS_removeThread(acsthinker_t *script)
 // same VM which are waiting on this one. All threads of the specified
 // script must be terminated first.
 //
-static void ACS_scriptFinished(acsthinker_t *script)
+static void ACS_scriptFinished(CACSThinker *script)
 {
    int i;
    acsvm_t *vm          = script->vm;
    acscript_t *acscript = script->acscript;
-   acsthinker_t *th;
+   CACSThinker *th;
 
    // first check that all threads of the same script have terminated
    if(acscript->threads)
@@ -295,7 +295,7 @@ static void ACS_scriptFinished(acsthinker_t *script)
 //
 // Ultimately terminates the script and removes its thinker.
 //
-static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
+static void ACS_stopScript(CACSThinker *script, acscript_t *acscript)
 {
    ACS_removeThread(script);
    
@@ -304,7 +304,7 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 
    P_SetTarget<mobj_t>(&script->trigger, NULL);
 
-   script->Remove();
+   script->removeThinker();
 }
 
 //
@@ -315,7 +315,7 @@ static void ACS_stopScript(acsthinker_t *script, acscript_t *acscript)
 //
 static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
 {
-   acsthinker_t *newScript = new acsthinker_t;
+   CACSThinker *newScript = new CACSThinker;
 
    newScript->vmID        = vmID;
    newScript->scriptNum   = acs->number;
@@ -336,7 +336,7 @@ static void ACS_runOpenScript(acsvm_t *vm, acscript_t *acs, int iNum, int vmID)
    newScript->vm          = vm;
 
    // set up thinker
-   newScript->Add();
+   newScript->addThinker();
 
    // mark as running
    newScript->sreg = ACS_STATE_RUNNING;
@@ -546,7 +546,7 @@ enum
 // Function for acs thinkers. Runs the script by interpreting its bytecode
 // until the script terminates, is suspended, or waits on some condition.
 //
-void acsthinker_t::Think()
+void CACSThinker::Think()
 {
    // cache vm data in local vars for efficiency
    register int *ip    = this->ip;
@@ -1332,8 +1332,8 @@ static boolean ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
 void ACS_RunDeferredScripts(void)
 {
    CDLListItem<deferredacs_t> *cur = acsDeferred, *next;
-   acsthinker_t *newScript = NULL;
-   acsthinker_t *rover = NULL;
+   CACSThinker *newScript = NULL;
+   CACSThinker *rover = NULL;
    int internalNum;
 
    while(cur)
@@ -1404,10 +1404,10 @@ void ACS_RunDeferredScripts(void)
 //
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
                           mobj_t *mo, line_t *line, int side,
-                          acsthinker_t **scr, boolean always)
+                          CACSThinker **scr, boolean always)
 {
    acscript_t   *scrData;
-   acsthinker_t *newScript, *rover;
+   CACSThinker *newScript, *rover;
    boolean foundScripts = false;
    int i, internalNum;
 
@@ -1450,7 +1450,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       return foundScripts;
 
    // setup the new script thinker
-   newScript = new acsthinker_t;
+   newScript = new CACSThinker;
 
    newScript->scriptNum   = scrnum;
    newScript->internalNum = internalNum;
@@ -1472,7 +1472,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
       newScript->locals[i] = args[i];
 
    // attach the thinker
-   newScript->Add();
+   newScript->addThinker();
 
    // add as a thread of the acscript
    ACS_addThread(newScript, scrData);
@@ -1495,7 +1495,7 @@ boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args,
 //
 boolean ACS_StartScript(int scrnum, int map, int *args, 
                         mobj_t *mo, line_t *line, int side,
-                        acsthinker_t **scr)
+                        CACSThinker **scr)
 {
    return ACS_StartScriptVM(&acsLevelScriptVM, scrnum, map, args, mo,
                             line, side, scr, false);
@@ -1523,7 +1523,7 @@ boolean ACS_TerminateScriptVM(acsvm_t *vm, int scrnum, int mapnum)
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
          acscript_t *script = &(vm->scripts[internalNum]);
-         acsthinker_t *rover = script->threads;
+         CACSThinker *rover = script->threads;
 
          while(rover)
          {
@@ -1574,7 +1574,7 @@ boolean ACS_SuspendScriptVM(acsvm_t *vm, int scrnum, int mapnum)
       if((internalNum = ACS_indexForNum(vm, scrnum)) != vm->numScripts)
       {
          acscript_t *script = &(vm->scripts[internalNum]);
-         acsthinker_t *rover = script->threads;
+         CACSThinker *rover = script->threads;
 
          while(rover)
          {
@@ -1633,9 +1633,9 @@ void ACS_PrepareForLoad(void)
 //
 // ACS_RestartSavedScript
 //
-// Fixes up an acsthinker_t loaded from a savegame.
+// Fixes up an CACSThinker loaded from a savegame.
 //
-void ACS_RestartSavedScript(acsthinker_t *th)
+void ACS_RestartSavedScript(CACSThinker *th)
 {
    // nullify list links for safety
    th->prevthread = NULL;

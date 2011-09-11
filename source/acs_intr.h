@@ -60,7 +60,7 @@ enum
 // Structures
 //
 
-class acsthinker_t;
+class CACSThinker;
 
 //
 // acscript
@@ -75,7 +75,7 @@ typedef struct acscript_s
    int *code;      // bytecode entry point
    boolean isOpen; // if true, is an open script
 
-   acsthinker_t *threads;
+   CACSThinker *threads;
 } acscript_t;
 
 //
@@ -83,15 +83,15 @@ typedef struct acscript_s
 //
 // A thinker which runs a script.
 //
-class acsthinker_t : public CThinker
+class CACSThinker : public CThinker
 {
 protected:
    void Think();
 
 public:
    // thread links
-   acsthinker_t **prevthread;
-   acsthinker_t  *nextthread;
+   CACSThinker **prevthread;
+   CACSThinker  *nextthread;
 
    // script info
    int vmID;                  // vm id number
@@ -173,13 +173,13 @@ void    ACS_LoadLevelScript(int lump);
 void    ACS_RunDeferredScripts(void);
 boolean ACS_StartScriptVM(acsvm_t *vm, int scrnum, int map, int *args, 
                           mobj_t *mo, line_t *line, int side,
-                          acsthinker_t **scr, boolean always);
+                          CACSThinker **scr, boolean always);
 boolean ACS_StartScript(int scrnum, int map, int *args, mobj_t *mo, 
-                        line_t *line, int side, acsthinker_t **scr);
+                        line_t *line, int side, CACSThinker **scr);
 boolean ACS_TerminateScript(int srcnum, int mapnum);
 boolean ACS_SuspendScript(int scrnum, int mapnum);
 void    ACS_PrepareForLoad(void);
-void    ACS_RestartSavedScript(acsthinker_t *th);
+void    ACS_RestartSavedScript(CACSThinker *th);
 
 // extern vars.
 

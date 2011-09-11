@@ -62,7 +62,7 @@ int EV_DoParamFloor(line_t *line, int tag, floordata_t *fd)
    int         rtn = 0;
    boolean     manual = false;
    sector_t    *sec;
-   floormove_t *floor;
+   CFloorMove *floor;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/07/04: only line actions can be manual
@@ -105,9 +105,9 @@ manual_floor:
 floormove_t* P_SpawnParamFloor(line_t *line, sector_t *sector, floordata_t *fd)
 {
    size_t secnum = sector - sectors;
-   floormove_t *floor = new floormove_t;
+   CFloorMove *floor = new CFloorMove;
 
-   floor->Add();
+   floor->addThinker();
    sector->floordata = floor;
    
    floor->crush = fd->crush;
@@ -509,7 +509,7 @@ int EV_DoParamCeiling(line_t *line, int tag, ceilingdata_t *cd)
    int       rtn = 0;
    boolean   manual = false;
    sector_t  *sec;
-   ceiling_t *ceiling;
+   CCeiling *ceiling;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(cd->trigger_type == PushOnce || cd->trigger_type == PushMany)
@@ -590,7 +590,7 @@ int EV_DoGenCeiling(line_t *line)
 //
 int EV_DoGenLift(line_t *line)
 {
-   plat_t   *plat;
+   CPlat   *plat;
    int      secnum;
    int      rtn;
    boolean  manual;
@@ -659,9 +659,9 @@ plat_t* P_SpawnGenPlatform(line_t *line, sector_t *sector)
    int Dely = (value & LiftDelay) >> LiftDelayShift;
    int Sped = (value & LiftSpeed) >> LiftSpeedShift;
    int Trig = (value & TriggerType) >> TriggerTypeShift;
+   CPlat *plat = new CPlat;
 
-   plat_t *plat = new plat_t;
-   plat->Add();
+   plat->addThinker();
    
    plat->sector = sector;
    plat->sector->floordata = plat;
@@ -772,7 +772,7 @@ int EV_DoParamStairs(line_t *line, int tag, stairdata_t *sd)
    sector_t *sec;
    sector_t *tsec;
    
-   floormove_t *floor;
+   CFloorMove *floor;
    
    fixed_t  stairsize;
    fixed_t  speed;  
@@ -807,8 +807,8 @@ manual_stair:
       
       // new floor thinker
       rtn = 1;
-      floor = new floormove_t;
-      floor->Add();
+      floor = new CFloorMove;
+      floor->addThinker();
       sec->floordata = floor;
 
       floor->direction = sd->direction ? plat_up : plat_down;
@@ -930,9 +930,9 @@ manual_stair:
             
             sec = tsec;
             secnum = newsecnum;
-            floor = new floormove_t;
+            floor = new CFloorMove;
             
-            floor->Add();
+            floor->addThinker();
             
             sec->floordata = floor;
             floor->direction = sd->direction ? plat_up : plat_down;
@@ -1025,7 +1025,7 @@ int EV_DoGenCrusher(line_t *line)
    int       rtn;
    boolean   manual;
    sector_t  *sec;
-   ceiling_t *ceiling;
+   CCeiling *ceiling;
    unsigned  value = (unsigned int)line->special - GenCrusherBase;
    
    // parse the bit fields in the line's special type
@@ -1067,8 +1067,8 @@ manual_crusher:
 
       // new ceiling thinker
       rtn = 1;
-      ceiling = new ceiling_t;
-      ceiling->Add();
+      ceiling = new CCeiling;
+      ceiling->addThinker();
       sec->ceilingdata = ceiling; //jff 2/22/98
       ceiling->crush = 10;
       ceiling->direction = plat_down;
@@ -1130,9 +1130,9 @@ mobj_t *genDoorThing;
 //
 static int GenDoorRetrigger(CThinker *th, int trig)
 {
-   vldoor_t *door;
+   CVerticalDoor *door;
 
-   if(!(door = thinker_cast<vldoor_t *>(th)))
+   if(!(door = thinker_cast<CVerticalDoor *>(th)))
       return 0;
 
    if(genDoorThing && (door->type == genRaise || door->type == genBlazeRaise) &&
@@ -1177,7 +1177,7 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
 {
    int secnum, rtn = 0;
    sector_t *sec;
-   vldoor_t *door;
+   CVerticalDoor *door;
    boolean manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
@@ -1224,10 +1224,10 @@ manual_door:
    return rtn;
 }
 
-vldoor_t* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd)
+CVerticalDoor* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd)
 {
    boolean turbo;
-   vldoor_t *door = new vldoor_t;
+   CVerticalDoor *door = new CVerticalDoor;
 
    door->Add();
    sector->ceilingdata = door; //jff 2/22/98
@@ -1300,6 +1300,16 @@ vldoor_t* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd)
       door->topheight = P_FindLowestCeilingSurrounding(sector);
       door->topheight -= 4 * FRACUNIT;
       if(door->speed >= VDOORSPEED * 4)
+=======
+      door = new CVerticalDoor;
+      door->addThinker();
+      sec->ceilingdata = door; //jff 2/22/98
+      
+      door->sector = sec;
+      
+      // setup delay for door remaining open/closed
+      switch(dd->delay_type)
+>>>>>>> .merge-right.r1366
       {
          door->type = genBlazeRaise;
          turbo = true;

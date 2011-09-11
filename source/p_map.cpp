@@ -2426,7 +2426,7 @@ static boolean PIT_ChangeSector(mobj_t *thing)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(thing);
-         thing->Remove();
+         thing->removeThinker();
       }
       return true;      // keep checking
    }

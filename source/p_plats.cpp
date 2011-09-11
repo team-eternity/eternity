@@ -73,7 +73,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void plat_t::Think()
+void CPlat::Think()
 {
    result_e      res;
 
@@ -209,7 +209,7 @@ void plat_t::Think()
    }
 }
 
-void P_CopyPlatform(plat_t *dest, plat_t *src)
+void P_CopyPlatform(CPlat *dest, CPlat *src)
 {
    dest->speed     = src->speed;
    dest->low       = src->low;
@@ -224,7 +224,7 @@ void P_CopyPlatform(plat_t *dest, plat_t *src)
    dest->net_id    = src->net_id;
 }
 
-boolean P_PlatformsEqual(plat_t *platform_one, plat_t *platform_two)
+boolean P_PlatformsEqual(CPlat *platform_one, CPlat *platform_two)
 {
    if(platform_one->speed     == platform_two->speed     &&
       platform_one->low       == platform_two->low       &&
@@ -242,7 +242,7 @@ boolean P_PlatformsEqual(plat_t *platform_one, plat_t *platform_two)
    return false;
 }
 
-void P_PrintPlatform(plat_t *platform)
+void P_PrintPlatform(CPlat *platform)
 {
    unsigned int index;
 
@@ -291,12 +291,12 @@ void P_PrintPlatform(plat_t *platform)
    }
 }
 
-plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
+CPlat* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                         plattype_e type)
 {
-   plat_t *plat = new plat_t;
+   CPlat *plat = new CPlat;
 
-   plat->Add();
+   plat->addThinker();
    plat->type = type;
    plat->sector = sec;
    plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
@@ -413,7 +413,7 @@ plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
 //
 int EV_DoPlat(line_t *line, plattype_e type, int amount)
 {
-   plat_t *plat;
+   CPlat   *plat;
    sector_t *sec;
    int rtn = 0;
    int secnum = -1;
@@ -478,7 +478,7 @@ void P_ActivateInStasis(int tag)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
-      plat_t *plat = pl->plat;              // for one in stasis with right tag
+      CPlat *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -504,7 +504,7 @@ int EV_StopPlat(line_t *line)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
-      plat_t *plat = pl->plat;             // for one with the tag not in stasis
+      CPlat *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -522,12 +522,12 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(plat_t *plat)
+void P_AddActivePlat(CPlat *plat)
 {
    CS_ObtainPlatformNetID(plat);
 }
 
-void oldP_AddActivePlat(plat_t *plat)
+void oldP_AddActivePlat(CPlat *plat)
 {
    platlist_t *list = malloc(sizeof *list);
    list->plat = plat;
@@ -546,7 +546,7 @@ void oldP_AddActivePlat(plat_t *plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(plat_t *plat)
+void P_RemoveActivePlat(CPlat *plat)
 {
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
    P_RemoveThinker(&plat->thinker);
@@ -555,11 +555,11 @@ void P_RemoveActivePlat(plat_t *plat)
    CS_ReleasePlatformNetID(plat);
 }
 
-void oldP_RemoveActivePlat(plat_t *plat)
+void oldP_RemoveActivePlat(CPlat *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   plat->Remove();
+   plat->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    free(list);
