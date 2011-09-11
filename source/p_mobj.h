@@ -41,8 +41,8 @@
 #include "p_skin.h"
 #include "m_fixed.h"
 #include "m_random.h"
-#include "tables.h"
 
+#include "tables.h"
 // [CG] Positions
 #include "cs_position.h"
 
@@ -143,7 +143,7 @@ struct subsector_t;
 // Any questions?
 //
 
-// ammo + weapon in a dropped backpack
+// ammo + weapon in a dropped backpack 
 
 typedef struct backpack_s
 {
@@ -399,25 +399,24 @@ typedef struct seenstate_s
 extern int iquehead;
 extern int iquetail;
 
-void  P_RespawnSpecials(void);
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+void    P_RespawnSpecials(void);
+Mobj  *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 boolean P_SetMobjState(Mobj *mobj, statenum_t state);
-// [CG] Added declaration.
-void  P_PlayerHitFloor(Mobj *mo, boolean onthing);
 void  P_MobjThinker(Mobj *mobj);
-<<<<<<< .working
-// [CG] Now returns the spawned puff instead of void.
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
                   boolean ptcl);
-// [CG] Now returns the spawned blood instead of void.
 Mobj *P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
                    Mobj *target);
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type,
                       fixed_t z);
+
 Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMapThing(mapthing_t *);
 void  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
+
+// [CG] Added declaration.
+void  P_PlayerHitFloor(Mobj *mo, boolean onthing);
 
 // particles and lines: sf
 /*

@@ -1,6 +1,15 @@
 ================================================================================
-Changes since Eternity Engine v3.37.00
+Changes since Eternity Engine v3.39.20
 ================================================================================
+--------------------------------------------------------------------------------
+01/08/11
+
+Merged cpp-branch into trunk for 10th anniversary release. Eternity is now 
+officially a C++ port, and the most compatible one in existence :)
+
+See cpp-branch-changes.txt for information on changes that took place during
+the branch development process.
+
 --------------------------------------------------------------------------------
 12/23/10
 

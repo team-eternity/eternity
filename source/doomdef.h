@@ -34,10 +34,6 @@
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
 // haleyjd: uhh, no. Include it in the files, not in another header.
 
-// [CG] So we can set some other defines if this is a client/server version of
-//      Eternity.
-#define CLIENTSERVER
-
 // Identify language to use, software localization.
 typedef enum {
   english,

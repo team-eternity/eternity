@@ -734,8 +734,8 @@ public:
    int tag;
    int type;
    struct platlist *list;   // killough
-  unsigned int net_id;     // [CG] Added for c/s.
-  unsigned int inactive;   // [CG] Added for c/s.
+   unsigned int net_id;     // [CG] Added for c/s.
+   unsigned int inactive;   // [CG] Added for c/s.
 };
 
 // New limit-free plat structure -- killough
@@ -784,8 +784,9 @@ public:
    line_t *line;
 
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
-  unsigned int net_id;   // [CG] Added for c/s.
-  unsigned int inactive; // [CG] Added for c/s.
+
+   unsigned int net_id;   // [CG] Added for c/s.
+   unsigned int inactive; // [CG] Added for c/s.
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
@@ -854,11 +855,11 @@ public:
    int olddirection;
    struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
 
-  unsigned int net_id;   // [CG] Added for c/s.
-  unsigned int inactive; // [CG] Added for c/s.
+   unsigned int net_id;   // [CG] Added for c/s.
+   unsigned int inactive; // [CG] Added for c/s.
 };
 
-typedef struct ceilinglist
+typedef struct ceilinglist 
 {
   CeilingThinker *ceiling; 
   struct ceilinglist *next,**prev;
@@ -1230,8 +1231,8 @@ int EV_Teleport(line_t *line, int side, Mobj *thing);
 int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(line_t *line, int side,
-			  Mobj *thing, boolean reverse);
+int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
+                          boolean reverse);
 
 // p_floor
 
@@ -1384,7 +1385,11 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 void P_CopyPlatform(PlatThinker *dest, PlatThinker *src);
 
+void P_AddActivePlat(PlatThinker *plat);
+
 boolean P_PlatformsEqual(PlatThinker *platform_one, PlatThinker *platform_two);
+
+void P_RemoveActivePlat(PlatThinker *plat);
 
 void P_PrintPlatform(PlatThinker *platform);
 
@@ -1527,7 +1532,7 @@ enum
 };
 
 boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
+boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
                             int *args, int side, int spac, boolean reuse);
 
 #endif
