@@ -2709,7 +2709,7 @@ void G_FlushCorpse(int playernum)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(bodyque[bodyqueslot % bodyquesize]);
-         P_RemoveMobj(bodyque[bodyqueslot % bodyquesize]);
+         bodyque[bodyqueslot % bodyquesize]->Remove();
       }
 
       bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo;
@@ -2718,7 +2718,7 @@ void G_FlushCorpse(int playernum)
    {
       if(CS_SERVER)
          SV_BroadcastActorRemoved(players[playernum].mo);
-      P_RemoveMobj(players[playernum].mo);
+      players[playernum].mo->Remove();
    }
 }
 

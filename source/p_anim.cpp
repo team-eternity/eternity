@@ -78,7 +78,7 @@ static void P_LightningFlash(void)
    sector_t *tempSec;
    boolean foundSec;
    int flashLight;
-   static degenmobj_t thunderSndOrigin;
+   static CPointThinker thunderSndOrigin;
 
    if(LightningFlash)
    {

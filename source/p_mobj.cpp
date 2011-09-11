@@ -277,7 +277,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
          else if(CS_CLIENT)
             CL_RemoveMobj(mobj);
          else
-            P_RemoveMobj(mobj);
+            mobj->Remove();
 
          ret = false;
          break;                 // killough 4/9/98
@@ -348,7 +348,7 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
       mobj->state = NULL;
       if(CS_SERVER)
          SV_BroadcastActorRemoved(mobj);
-      P_RemoveMobj(mobj);
+      mobj->Remove();
       return false;
    }
 
@@ -398,7 +398,7 @@ void P_ExplodeMissile(mobj_t *mo)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(mo);
-         P_RemoveMobj(mo); // don't explode on the actual sky itself
+         mo->Remove(); // don't explode on the actual sky itself
          return;
       }
    }
@@ -634,7 +634,7 @@ void P_XYMovement(mobj_t* mo)
                   {
                      if(CS_SERVER)
                         SV_BroadcastActorRemoved(mo);
-                     P_RemoveMobj(mo);
+                     mo->Remove();
                   }
                   return;
                }
@@ -903,7 +903,7 @@ static void P_ZMovement(mobj_t* mo)
                   {
                      if(CS_SERVER)
                         SV_BroadcastActorRemoved(mo);
-                     P_RemoveMobj(mo);      // missiles don't bounce off skies
+                     mo->Remove();      // missiles don't bounce off skies
                   }
                   if(demo_version >= 331)
                      return; // haleyjd: return here for below fix
@@ -951,7 +951,7 @@ static void P_ZMovement(mobj_t* mo)
             {
                if(CS_SERVER)
                   SV_BroadcastActorRemoved(mo);
-               P_RemoveMobj(mo);  // don't explode on skies
+               mo->Remove();  // don't explode on skies
             }
          }
          else
@@ -1210,7 +1210,7 @@ void P_NightmareRespawn(mobj_t* mobj)
    // remove the old monster,
    if(CS_SERVER)
       SV_BroadcastActorRemoved(mobj);
-   P_RemoveMobj(mobj);
+   mobj->Remove();
 }
 
 // PTODO
@@ -1516,7 +1516,7 @@ void mobj_t::Think()
          {
             if(CS_SERVER)
                SV_BroadcastActorRemoved(this);
-            P_RemoveMobj(this);
+            this->Remove();
          }
          else
             P_NightmareRespawn(this);
@@ -1709,7 +1709,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void P_RemoveMobj(mobj_t *mobj)
+void mobj_t::Remove()
 {
    // haleyjd 04/14/03: restructured
    boolean respawnitem = false;
@@ -1717,15 +1717,15 @@ void P_RemoveMobj(mobj_t *mobj)
    if(!CS_REMOVE_ACTOR_OK)
       I_Error("C/S clients cannot remove actors themselves, exiting.\n");
 
-   if((mobj->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
+   if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
       respawnitem = true; // respawning super powerups
-   else if((dmflags & DM_BARRELRESPAWN) && mobj->type == E_ThingNumForDEHNum(MT_BARREL))
+   else if((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL))
       respawnitem = true; // respawning barrels
    else
    {
       respawnitem =
-         !((mobj->flags ^ MF_SPECIAL) & (MF_SPECIAL | MF_DROPPED)) &&
-         !(mobj->flags3 & MF3_NOITEMRESP);
+         !((this->flags ^ MF_SPECIAL) & (MF_SPECIAL | MF_DROPPED)) &&
+         !(this->flags3 & MF3_NOITEMRESP);
    }
 
    // [CG] Only servers place items in the respawn queue
@@ -1734,36 +1734,38 @@ void P_RemoveMobj(mobj_t *mobj)
       if(respawnitem)
       {
          // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
-         itemrespawnque[iquehead] = mobj->spawnpoint;
+         itemrespawnque[iquehead] = this->spawnpoint;
          itemrespawntime[iquehead++] = leveltime;
-         // lose one off the end?
          if((iquehead &= ITEMQUESIZE - 1) == iquetail)
+         {
+            // lose one off the end?
             iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
+         }
       }
    }
 
    CS_ReleaseActorNetID(mobj);
 
    // haleyjd 02/02/04: remove from tid hash
-   P_RemoveThingTID(mobj);
+   P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-   P_UnsetThingPosition(mobj);
+   P_UnsetThingPosition(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
-   if(mobj->old_sectorlist)
-      P_DelSeclist(mobj->old_sectorlist);
+   if(this->old_sectorlist)
+      P_DelSeclist(this->old_sectorlist);
 
    // haleyjd 08/13/10: ensure that the object cannot be relinked, and
    // nullify old_sectorlist to avoid multiple release of msecnodes.
    if(demo_version > 337)
    {
-      mobj->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      mobj->old_sectorlist = NULL;
+      this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
+      this->old_sectorlist = NULL; 
    }
 
    // stop any playing sound
-   S_StopSound(mobj, CHAN_ALL);
+   S_StopSound(this, CHAN_ALL);
 
    // killough 11/98:
    //
@@ -1775,13 +1777,13 @@ void P_RemoveMobj(mobj_t *mobj)
 
    if(demo_version >= 203)
    {
-      P_SetTarget<mobj_t>(&mobj->target,    NULL);
-      P_SetTarget<mobj_t>(&mobj->tracer,    NULL);
-      P_SetTarget<mobj_t>(&mobj->lastenemy, NULL);
+      P_SetTarget<mobj_t>(&this->target,    NULL);
+      P_SetTarget<mobj_t>(&this->tracer,    NULL);
+      P_SetTarget<mobj_t>(&this->lastenemy, NULL);
    }
 
    // free block
-   mobj->Remove();
+   CThinker::Remove();
 }
 
 //

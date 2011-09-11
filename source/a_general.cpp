@@ -958,7 +958,8 @@ void A_ThingSummon(mobj_t *actor)
       case 1:
          if(CS_SERVER)
             SV_BroadcastActorRemoved(newmobj);
-         P_RemoveMobj(newmobj);
+
+         newmobj->Remove();
          break;
       }
       return;
@@ -984,7 +985,7 @@ void A_ThingSummon(mobj_t *actor)
       case 1:
          if(CS_SERVER)
             SV_BroadcastActorRemoved(newmobj);
-         P_RemoveMobj(newmobj);
+         newmobj->Remove();
          break;
       }
       return;
@@ -1029,7 +1030,7 @@ void A_KillChildren(mobj_t *actor)
             {
                if(CS_SERVER)
                   SV_BroadcastActorRemoved(mo);
-               P_RemoveMobj(mo);
+               mo->Remove();
             }
             break;
          }

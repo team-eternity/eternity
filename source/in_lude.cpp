@@ -127,7 +127,7 @@ void IN_StartCamera(void)
             players[i].mo->flags &= ~MF_SHOOTABLE;
             if(CS_SERVER)
                SV_BroadcastActorRemoved(players[i].mo);
-            P_RemoveMobj(players[i].mo);
+            players[i].mo->Remove();
          }
       }
 

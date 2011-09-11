@@ -28,6 +28,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <new>
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
@@ -1099,6 +1101,10 @@ void Polyobj_InitLevel(void)
       // allocate the PolyObjects array
       PolyObjects = (polyobj_t *)(Z_Calloc(numPolyObjects, sizeof(polyobj_t), 
                                            PU_LEVEL, NULL));
+
+      // CPP_FIXME: temporary in-place construction of origin
+      for(i = 0; i < numPolyObjects; ++i)
+         ::new (&(PolyObjects[i].spawnSpot)) CPointThinker;
 
       // setup hash fields
       for(i = 0; i < numPolyObjects; ++i)

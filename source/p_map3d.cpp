@@ -699,7 +699,7 @@ boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
    return xygood;
 }
 
-//=============================================================================
+/***************************************************************************/
 //
 // Sector Movement
 //
@@ -908,7 +908,7 @@ static void P_DoCrunch(mobj_t *thing)
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(thing);
-         P_RemoveMobj(thing);
+         thing->Remove();
       }
       return;
    }

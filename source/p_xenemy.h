@@ -36,7 +36,7 @@
 
 // Earthquakes
 
-class quakethinker_t : public degenmobj_t
+class quakethinker_t : public CPointThinker
 {
 protected:
    void Think();

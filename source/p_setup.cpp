@@ -25,6 +25,9 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <new>
+
+#include "z_zone.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
@@ -530,6 +533,10 @@ void P_LoadSectors(int lumpnum)
 
       // haleyjd 09/24/06: sound sequences -- set default
       ss->sndSeqID = defaultSndSeq;
+
+      // CPP_FIXME: temporary placement construction for sound origins
+      ::new (&ss->soundorg)  CPointThinker;
+      ::new (&ss->csoundorg) CPointThinker;
 
       // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
       //         12/31/08: convert BOOM generalized damage
@@ -1158,6 +1165,9 @@ void P_LoadLineDefs(int lump)
       if(ld->sidenum[0] != -1 && ld->special)
          sides[*ld->sidenum].special = ld->special;
 
+      // CPP_FIXME: temporary placement construction for sound origins
+      ::new (&ld->soundorg) CPointThinker;
+
       // haleyjd 04/19/09: position line sound origin
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
       ld->soundorg.y       = ld->v1->y + ld->dy / 2;
@@ -1320,6 +1330,9 @@ void P_LoadHexenLineDefs(int lump)
       // killough 4/4/98: support special sidedef interpretation below
       if(ld->sidenum[0] != -1 && ld->special)
          sides[*ld->sidenum].special = ld->special;
+
+      // CPP_FIXME: temporary placement construction for sound origins
+      ::new (&ld->soundorg) CPointThinker;
 
       // haleyjd 04/19/09: position line sound origin
       ld->soundorg.x       = ld->v1->x + ld->dx / 2;
@@ -2266,8 +2279,8 @@ static void P_InitNewLevel(int lumpnum, waddir_t *waddir)
    // Playsim
 
    // re-initialize thinker list
-   P_InitThinkers();
-
+   CThinker::InitThinkers();   
+   
    // haleyjd 02/02/04 -- clear the TID hash table
    P_InitTIDHash();
 

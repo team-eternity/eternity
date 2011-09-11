@@ -34,6 +34,7 @@
 class CZoneLevelItem
 {
 public:
+   virtual ~CZoneLevelItem() {}
    void *operator new (size_t size);
    void  operator delete (void *p);
 };
@@ -43,7 +44,10 @@ class CThinker : public CZoneLevelItem
 {
 private:
    // Private implementation details
-   void RemoveDelayed();   
+   void RemoveDelayed(); 
+   
+   // Current position in list during RunThinkers
+   static CThinker *CThinker::currentthinker;
 
 protected:
    // Virtual methods (overridables)
@@ -52,16 +56,29 @@ protected:
    // Methods
    void AddToThreadedList(int tclass);
 
+   // Data Members
+   boolean removed;
+
+   // killough 11/98: count of how many other objects reference
+   // this one using pointers. Used for garbage collection.
+   unsigned int references;
+
 public:
    // Static functions
+   static void InitThinkers();
    static void RunThinkers();
 
    // Methods
    void Add();
-   void Remove();
 
    // Virtual methods (overridables)
    virtual void Update();
+   virtual void Remove();
+
+   // Accessors
+   boolean isRemoved()    { return removed; }
+   void    addReference() { ++references;   }
+   void    delReference() { --references;   }
 
    // Data Members
 
@@ -72,15 +89,9 @@ public:
 
    CThinker *cnext, *cprev; // Next, previous thinkers in same class
 
-   // killough 11/98: count of how many other objects reference
-   // this one using pointers. Used for garbage collection.
-   unsigned int references;
-
    // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
    // GCC with thoughts of writing pointers into integers.
    unsigned int ordinal;
-
-   boolean removed;
 };
 
 // Called by C_Ticker, can call G_PlayerExited.
@@ -88,8 +99,6 @@ public:
 void P_Ticker(void);
 
 extern CThinker thinkercap;  // Both the head and tail of the thinker list
-
-void P_InitThinkers(void);
 
 template<typename T> void P_SetTarget(T **mop, T *targ); // killough 11/98
 

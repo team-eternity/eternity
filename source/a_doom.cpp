@@ -1637,7 +1637,7 @@ void A_SpawnFly(mobj_t *mo)
       SV_BroadcastActorRemoved(mo);
 
    // remove self (i.e., cube).
-   P_RemoveMobj(mo);
+   mo->Remove();
 }
 
 // EOF

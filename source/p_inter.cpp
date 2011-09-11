@@ -1075,7 +1075,7 @@ void P_TouchSpecialThing(mobj_t *special, mobj_t *toucher)
    {
       if(CS_SERVER)
          SV_BroadcastActorRemoved(special);
-      P_RemoveMobj(special);
+      special->Remove();
    }
 
    // haleyjd 07/08/05: inverted condition

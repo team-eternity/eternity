@@ -83,7 +83,7 @@ CThinker thinkerclasscap[NUMTHCLASS];
 //
 // P_InitThinkers
 //
-void P_InitThinkers(void)
+void CThinker::InitThinkers(void)
 {
    int i;
    
@@ -158,7 +158,7 @@ void CThinker::Add()
 // Make currentthinker external, so that P_RemoveThinkerDelayed
 // can adjust currentthinker when thinkers self-remove.
 
-static CThinker *currentthinker;
+CThinker *CThinker::currentthinker;
 
 //
 // P_RemoveThinkerDelayed
@@ -172,7 +172,7 @@ static CThinker *currentthinker;
 //
 void CThinker::RemoveDelayed()
 {
-   if(!references)
+   if(!this->references)
    {
       CThinker *lnext = this->next;
       (lnext->prev = currentthinker = this->prev)->next = lnext;
@@ -229,9 +229,9 @@ void CThinker::Remove()
 template<typename T> void P_SetTarget(T **mop, T *targ)
 {
    if(*mop)             // If there was a target already, decrease its refcount
-      (*mop)->references--;
+      (*mop)->delReference();
    if((*mop = targ))    // Set new target and if non-NULL, increase its counter
-      targ->references++;
+      targ->addReference();
 }
 
 //

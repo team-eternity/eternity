@@ -1640,7 +1640,7 @@ void A_BouncingBFG(mobj_t *mo)
          SV_BroadcastActorRemoved(mo);
       }
 
-      P_RemoveMobj(mo); // remove the old one
+      mo->Remove(); // remove the old one
 
       break; //only spawn 1
    }
