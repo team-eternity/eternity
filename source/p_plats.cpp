@@ -24,6 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "m_random.h"
 #include "r_main.h"
@@ -71,48 +73,47 @@ void P_PlatSequence(sector_t *s, const char *seqname)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-
-void T_PlatRaise(plat_t *plat)
+void plat_t::Think()
 {
    result_e      res;
 
    // handle plat moving, up, down, waiting, or in stasis,
-   switch(plat->status)
+   switch(this->status)
    {
    case up: // plat moving up
-      res = T_MovePlane(plat->sector,plat->speed,plat->high,plat->crush,0,1);
+      res = T_MovePlane(this->sector,this->speed,this->high,this->crush,0,1);
 
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences
       
       // if encountered an obstacle, and not a crush type, reverse direction
-      if(res == crushed && plat->crush <= 0)
+      if(res == crushed && this->crush <= 0)
       {
-         plat->count = plat->wait;
-         plat->status = down;
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         this->count = this->wait;
+         this->status = down;
+         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
       }
       else  // else handle reaching end of up stroke
       {
          if(res == pastdest) // end of stroke
          {
-            S_StopSectorSequence(plat->sector, false); // haleyjd
+            S_StopSectorSequence(this->sector, false); // haleyjd
 
             // if not an instant toggle type, wait, make plat stop sound
-            if(plat->type != toggleUpDn)
+            if(this->type != toggleUpDn)
             {
-               plat->count = plat->wait;
-               plat->status = waiting;
+               this->count = this->wait;
+               this->status = waiting;
             }
             else // else go into stasis awaiting next toggle activation
             {
-               plat->oldstatus = plat->status;//jff 3/14/98 after action wait  
-               plat->status = in_stasis;      //for reactivation of toggle
+               this->oldstatus = this->status;//jff 3/14/98 after action wait  
+               this->status = in_stasis;      //for reactivation of toggle
             }
                                         
             // lift types and pure raise types are done at end of up stroke
             // only the perpetual type waits then goes back up
-            switch(plat->type)
+            switch(this->type)
             {
             case raiseToNearestAndChange:
                // haleyjd 07/16/04: In Heretic, this type of plat goes into 
@@ -125,9 +126,9 @@ void T_PlatRaise(plat_t *plat)
             case genLift:
                // [CG] Just set the platform as inactive if we're a client.
                if(CS_CLIENT)
-                  plat->inactive = cl_current_world_index;
+                  inactive = cl_current_world_index;
                else
-                  P_RemoveActivePlat(plat);     // killough
+                  P_RemoveActivePlat(this);     // killough
             default:
                break;
             }
@@ -136,31 +137,31 @@ void T_PlatRaise(plat_t *plat)
       break;
         
    case down: // plat moving down
-      res = T_MovePlane(plat->sector, plat->speed, plat->low, -1, 0, -1);
+      res = T_MovePlane(this->sector, this->speed, this->low, -1, 0, -1);
 
       // handle reaching end of down stroke
       // SoM: attached sectors means the plat can crush when heading down too
       // if encountered an obstacle, and not a crush type, reverse direction
-      if(demo_version >= 333 && res == crushed && plat->crush <= 0)
+      if(demo_version >= 333 && res == crushed && this->crush <= 0)
       {
-         plat->count = plat->wait;
-         plat->status = up;
-         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         this->count = this->wait;
+         this->status = up;
+         P_PlatSequence(this->sector, "EEPlatNormal"); // haleyjd
       }
       else if(res == pastdest)
       {
-         S_StopSectorSequence(plat->sector, false); // haleyjd
+         S_StopSectorSequence(this->sector, false); // haleyjd
 
          // if not an instant toggle, start waiting, make plat stop sound
-         if(plat->type!=toggleUpDn) //jff 3/14/98 toggle up down
+         if(this->type!=toggleUpDn) //jff 3/14/98 toggle up down
          {                           // is silent, instant, no waiting
-            plat->count = plat->wait;
-            plat->status = waiting;
+            this->count = this->wait;
+            this->status = waiting;
          }
          else // instant toggles go into stasis awaiting next activation
          {
-            plat->oldstatus = plat->status;//jff 3/14/98 after action wait  
-            plat->status = in_stasis;      //for reactivation of toggle
+            this->oldstatus = this->status;//jff 3/14/98 after action wait  
+            this->status = in_stasis;      //for reactivation of toggle
          }
 
          //jff 1/26/98 remove the plat if it bounced so it can be tried again
@@ -170,15 +171,15 @@ void T_PlatRaise(plat_t *plat)
          // remove the plat if its a pure raise type
          if(demo_version < 203 ? !demo_compatibility : !comp[comp_floors])
          {
-            switch(plat->type)
+            switch(this->type)
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
                // [CG] Just set the platform as inactive if we're a client.
                if(CS_CLIENT)
-                  plat->inactive = cl_current_world_index;
+                  inactive = cl_current_world_index;
                else
-                  P_RemoveActivePlat(plat);
+                  P_RemoveActivePlat(this);
             default:
                break;
             }
@@ -187,19 +188,19 @@ void T_PlatRaise(plat_t *plat)
       break;
 
    case waiting: // plat is waiting
-      if(!--plat->count)  // downcount and check for delay elapsed
+      if(!--this->count)  // downcount and check for delay elapsed
       {
-         if(plat->sector->floorheight == plat->low)
-            plat->status = up;     // if at bottom, start up
+         if(this->sector->floorheight == this->low)
+            this->status = up;     // if at bottom, start up
          else
-            plat->status = down;   // if at top, start down
+            this->status = down;   // if at top, start down
          
          // make plat start sound
          // haleyjd: changed for sound sequences
-         if(plat->type == toggleUpDn)
-            P_PlatSequence(plat->sector, "EEPlatSilent");
+         if(this->type == toggleUpDn)
+            P_PlatSequence(this->sector, "EEPlatSilent");
          else
-            P_PlatSequence(plat->sector, "EEPlatNormal");
+            P_PlatSequence(this->sector, "EEPlatNormal");
       }
       break; //jff 1/27/98 don't pickup code added later to in_stasis
 
@@ -293,16 +294,15 @@ void P_PrintPlatform(plat_t *platform)
 plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                         plattype_e type)
 {
-   plat_t *plat = Z_Calloc(1, sizeof(plat_t), PU_LEVSPEC, 0);
+   plat_t *plat = new plat_t;
 
-   P_AddThinker(&plat->thinker);
+   plat->Add();
    plat->type = type;
    plat->sector = sec;
    plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
-   plat->thinker.function = T_PlatRaise;
    plat->crush = -1;
    plat->tag = line->tag;
-   plat->low = sec->floorheight;
+
    //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
    //going down forever -- default low to plat height when triggered
    plat->low = sec->floorheight;
@@ -414,9 +414,9 @@ plat_t* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
 int EV_DoPlat(line_t *line, plattype_e type, int amount)
 {
    plat_t *plat;
-   int secnum = -1;
-   int rtn = 0;
    sector_t *sec;
+   int rtn = 0;
+   int secnum = -1;
 
    // Activate all <type> plats that are in_stasis
    switch(type)
@@ -437,7 +437,7 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount)
    }
 
    // act on all sectors tagged the same as the activating linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
 
@@ -485,7 +485,6 @@ void P_ActivateInStasis(int tag)
             plat->status = plat->oldstatus==up? down : up;
          else
             plat->status = plat->oldstatus;
-         plat->thinker.function = T_PlatRaise;
       }
    }
 }
@@ -510,7 +509,6 @@ int EV_StopPlat(line_t *line)
       {
          plat->oldstatus = plat->status;    // put it in stasis
          plat->status = in_stasis;
-         plat->thinker.function = NULL;
       }
    }
    return 1;
@@ -561,7 +559,7 @@ void oldP_RemoveActivePlat(plat_t *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   P_RemoveThinker(&plat->thinker);
+   plat->Remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    free(list);

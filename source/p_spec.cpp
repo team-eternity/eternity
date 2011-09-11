@@ -32,7 +32,10 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
+#include "d_mod.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_setup.h"
@@ -48,6 +51,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 #include "m_bbox.h"                                         // phares 3/20/98
+#include "m_swap.h"
 #include "d_deh.h"
 #include "r_plane.h"  // killough 10/98
 #include "p_info.h"
@@ -64,6 +68,7 @@
 #include "a_small.h"
 #include "polyobj.h"
 #include "p_slopes.h"
+#include "p_portal.h"
 #include "g_dmflag.h" // [CG] Added.
 
 // [CG] Added.
@@ -2905,32 +2910,32 @@ void P_SpawnDeferredSpecials(int mapformat)
 //
 // This is the main scrolling code
 // killough 3/7/98
-
-void T_Scroll(scroll_t *s)
+//
+void scroll_t::Think()
 {
-   fixed_t dx = s->dx, dy = s->dy;
+   fixed_t dx = this->dx, dy = this->dy;
    
-   if(s->control != -1)
+   if(this->control != -1)
    {   // compute scroll amounts based on a sector's height changes
-      fixed_t height = sectors[s->control].floorheight +
-         sectors[s->control].ceilingheight;
-      fixed_t delta = height - s->last_height;
-      s->last_height = height;
+      fixed_t height = sectors[this->control].floorheight +
+         sectors[this->control].ceilingheight;
+      fixed_t delta = height - this->last_height;
+      this->last_height = height;
       dx = FixedMul(dx, delta);
       dy = FixedMul(dy, delta);
    }
 
    // killough 3/14/98: Add acceleration
-   if(s->accel)
+   if(this->accel)
    {
-      s->vdx = dx += s->vdx;
-      s->vdy = dy += s->vdy;
+      this->vdx = dx += this->vdx;
+      this->vdy = dy += this->vdy;
    }
 
    if(!(dx | dy))                   // no-op if both (x,y) offsets 0
       return;
 
-   switch (s->type)
+   switch(this->type)
    {
       side_t *side;
       sector_t *sec;
@@ -2939,19 +2944,19 @@ void T_Scroll(scroll_t *s)
       mobj_t *thing;
 
    case scroll_t::sc_side:          // killough 3/7/98: Scroll wall texture
-      side = sides + s->affectee;
+      side = sides + this->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
       break;
 
    case scroll_t::sc_floor:         // killough 3/7/98: Scroll floor texture
-      sec = sectors + s->affectee;
+      sec = sectors + this->affectee;
       sec->floor_xoffs += dx;
       sec->floor_yoffs += dy;
       break;
 
    case scroll_t::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
-      sec = sectors + s->affectee;
+      sec = sectors + this->affectee;
       sec->ceiling_xoffs += dx;
       sec->ceiling_yoffs += dy;
       break;
@@ -2963,7 +2968,7 @@ void T_Scroll(scroll_t *s)
       // killough 3/27/98: fix carrier bug
       // killough 4/4/98: Underwater, carry things even w/o gravity
 
-      sec = sectors + s->affectee;
+      sec = sectors + this->affectee;
       height = sec->floorheight;
       waterheight = sec->heightsec != -1 &&
          sectors[sec->heightsec].floorheight > height ?
@@ -3013,18 +3018,20 @@ void T_Scroll(scroll_t *s)
 static void Add_Scroller(int type, fixed_t dx, fixed_t dy,
                          int control, int affectee, int accel)
 {
-   scroll_t *s = (scroll_t *)(Z_Calloc(1, sizeof *s, PU_LEVSPEC, 0));
-   s->thinker.function = T_Scroll;
+   scroll_t *s = new scroll_t;
+
    s->type = type;
    s->dx = dx;
    s->dy = dy;
    s->accel = accel;
    s->vdx = s->vdy = 0;
+
    if((s->control = control) != -1)
       s->last_height =
        sectors[control].floorheight + sectors[control].ceilingheight;
+
    s->affectee = affectee;
-   P_AddThinker(&s->thinker);
+   s->Add();
 }
 
 // Adds wall scroller. Scroll amount is rotated with respect to wall's
@@ -3147,8 +3154,6 @@ static void P_SpawnScrollers(void)
 // e6y
 // restored boom's friction code
 
-void T_Friction(friction_t *f);
-
 //
 // Add a friction thinker to the thinker list
 //
@@ -3156,13 +3161,13 @@ void T_Friction(friction_t *f);
 //
 static void Add_Friction(int friction, int movefactor, int affectee)
 {
-   friction_t *f = (friction_t *)(Z_Malloc(sizeof *f, PU_LEVSPEC, 0));
+   friction_t *f = new friction_t;
 
-   f->thinker.function = T_Friction;
-   f->friction = friction;
+   f->friction   = friction;
    f->movefactor = movefactor;
-   f->affectee = affectee;
-   P_AddThinker(&f->thinker);
+   f->affectee   = affectee;
+
+   f->Add();
 }
 
 //
@@ -3171,16 +3176,16 @@ static void Add_Friction(int friction, int movefactor, int affectee)
 // more friction should be applied. The amount applied is proportional to
 // the length of the controlling linedef.
 //
-void T_Friction(friction_t *f)
+void friction_t::Think()
 {
-   sector_t *sec;
-   mobj_t   *thing;
-   msecnode_t* node;
+   sector_t   *sec;
+   mobj_t     *thing;
+   msecnode_t *node;
 
    if(compatibility || !variable_friction)
       return;
 
-   sec = sectors + f->affectee;
+   sec = sectors + this->affectee;
 
    // Be sure the special sector type is still turned on. If so, proceed.
    // Else, bail out; the sector type has been changed on us.
@@ -3206,10 +3211,10 @@ void T_Friction(friction_t *f)
          thing->z <= sec->floorheight)
       {
          if((thing->friction == ORIG_FRICTION) ||     // normal friction?
-            (f->friction < thing->friction))
+            (this->friction < thing->friction))
          {
-            thing->friction   = f->friction;
-            thing->movefactor = f->movefactor;
+            thing->friction   = this->friction;
+            thing->movefactor = this->movefactor;
          }
       }
       node = node->m_snext;
@@ -3391,9 +3396,8 @@ static void P_SpawnFriction(void)
 static void Add_Pusher(int type, int x_mag, int y_mag,
                        mobj_t *source, int affectee)
 {
-   pusher_t *p = (pusher_t *)(Z_Calloc(1, sizeof *p, PU_LEVSPEC, 0));
+   pusher_t *p = new pusher_t;
    
-   p->thinker.function = T_Pusher;
    p->source = source;
    p->type = type;
    p->x_mag = x_mag>>FRACBITS;
@@ -3406,7 +3410,7 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
       p->y = p->source->y;
    }
    p->affectee = affectee;
-   P_AddThinker(&p->thinker);
+   p->Add();
 }
 
 /////////////////////////////
@@ -3418,7 +3422,7 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 //
 // killough 10/98: allow to affect things besides players
 
-pusher_t* tmpusher; // pusher structure for blockmap searches
+pusher_t *tmpusher; // pusher structure for blockmap searches
 
 boolean PIT_PushThing(mobj_t* thing)
 {
@@ -3474,20 +3478,20 @@ boolean PIT_PushThing(mobj_t* thing)
 // Thinker function for BOOM push/pull effects that looks for all 
 // objects that are inside the radius of the effect.
 //
-void T_Pusher(pusher_t *p)
+void pusher_t::Think()
 {
-   sector_t *sec;
-   mobj_t   *thing;
-   msecnode_t* node;
-   int xspeed,yspeed;
-   int xl,xh,yl,yh,bx,by;
+   sector_t   *sec;
+   mobj_t     *thing;
+   msecnode_t *node;
+   int xspeed, yspeed;
+   int xl, xh, yl, yh, bx, by;
    int radius;
    int ht = 0;
    
    if(!allow_pushers)
       return;
 
-   sec = sectors + p->affectee;
+   sec = sectors + this->affectee;
    
    // Be sure the special sector type is still turned on. If so, proceed.
    // Else, bail out; the sector type has been changed on us.
@@ -3514,26 +3518,27 @@ void T_Pusher(pusher_t *p)
    //
    //    Apply nothing at any time!
 
-   if(p->type == pusher_t::p_push)
+   if(this->type == pusher_t::p_push)
    {
       // Seek out all pushable things within the force radius of this
       // point pusher. Crosses sectors, so use blockmap.
 
-      tmpusher = p; // PUSH/PULL point source
-      radius = p->radius; // where force goes to zero
-      clip.bbox[BOXTOP]    = p->y + radius;
-      clip.bbox[BOXBOTTOM] = p->y - radius;
-      clip.bbox[BOXRIGHT]  = p->x + radius;
-      clip.bbox[BOXLEFT]   = p->x - radius;
+      tmpusher = this; // PUSH/PULL point source
+      radius = this->radius; // where force goes to zero
+      clip.bbox[BOXTOP]    = this->y + radius;
+      clip.bbox[BOXBOTTOM] = this->y - radius;
+      clip.bbox[BOXRIGHT]  = this->x + radius;
+      clip.bbox[BOXLEFT]   = this->x - radius;
       
-      xl = (clip.bbox[BOXLEFT] - bmaporgx - MAXRADIUS)>>MAPBLOCKSHIFT;
-      xh = (clip.bbox[BOXRIGHT] - bmaporgx + MAXRADIUS)>>MAPBLOCKSHIFT;
-      yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS)>>MAPBLOCKSHIFT;
-      yh = (clip.bbox[BOXTOP] - bmaporgy + MAXRADIUS)>>MAPBLOCKSHIFT;
+      xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+      xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+      yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+      yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+
       for (bx = xl; bx <= xh; bx++)
       {
          for(by = yl; by <= yh; by++)
-            P_BlockThingsIterator(bx,by,PIT_PushThing);
+            P_BlockThingsIterator(bx, by, PIT_PushThing);
       }
       return;
    }
@@ -3542,7 +3547,9 @@ void T_Pusher(pusher_t *p)
    
    if(sec->heightsec != -1) // special water sector?
       ht = sectors[sec->heightsec].floorheight;
+
    node = sec->touching_thinglist; // things touching this sector
+
    for( ; node; node = node->m_snext)
     {
       thing = node->m_thing;
@@ -3550,34 +3557,35 @@ void T_Pusher(pusher_t *p)
          (thing->flags2 & MF2_NOTHRUST) ||                // haleyjd
          (thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
          continue;
-      if(p->type == pusher_t::p_wind)
+
+      if(this->type == pusher_t::p_wind)
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
             if(thing->z > thing->floorz) // above ground
             {
-               xspeed = p->x_mag; // full force
-               yspeed = p->y_mag;
+               xspeed = this->x_mag; // full force
+               yspeed = this->y_mag;
             }
             else // on ground
             {
-               xspeed = (p->x_mag)>>1; // half force
-               yspeed = (p->y_mag)>>1;
+               xspeed = (this->x_mag)>>1; // half force
+               yspeed = (this->y_mag)>>1;
             }
          }
          else // special water sector
          {
             if(thing->z > ht) // above ground
             {
-               xspeed = p->x_mag; // full force
-               yspeed = p->y_mag;
+               xspeed = this->x_mag; // full force
+               yspeed = this->y_mag;
             }
             else if(thing->player->viewz < ht) // underwater
                xspeed = yspeed = 0; // no force
             else // wading in water
             {
-               xspeed = (p->x_mag)>>1; // half force
-               yspeed = (p->y_mag)>>1;
+               xspeed = (this->x_mag)>>1; // half force
+               yspeed = (this->y_mag)>>1;
             }
          }
       }
@@ -3589,8 +3597,8 @@ void T_Pusher(pusher_t *p)
                xspeed = yspeed = 0; // no force
             else // on ground
             {
-               xspeed = p->x_mag; // full force
-               yspeed = p->y_mag;
+               xspeed = this->x_mag; // full force
+               yspeed = this->y_mag;
             }
          }
          else // special water sector
@@ -3599,8 +3607,8 @@ void T_Pusher(pusher_t *p)
                xspeed = yspeed = 0; // no force
             else // underwater
             {
-               xspeed = p->x_mag; // full force
-               yspeed = p->y_mag;
+               xspeed = this->x_mag; // full force
+               yspeed = this->y_mag;
             }
          }
       }

@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -387,12 +388,12 @@ void A_DropEquipment(mobj_t *actor)
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType1);
 
    P_TossEquipmentItem(mo, actor->angle + ANG90, xyMomShift, baseZMom);
-   P_SetTarget(&mo->target, actor);
+   P_SetTarget<mobj_t>(&mo->target, actor);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType2);
 
    P_TossEquipmentItem(mo, actor->angle - ANG90, xyMomShift, baseZMom);
-   P_SetTarget(&mo->target, actor);
+   P_SetTarget<mobj_t>(&mo->target, actor);
 }
 
 //
@@ -588,7 +589,7 @@ void A_DragonFX2(mobj_t *actor)
                        thingType);
 
       mo->tics = delay + (P_Random(pr_dragonfx) & 3) * i * 2;
-      P_SetTarget(&mo->target, actor->target);
+      P_SetTarget<mobj_t>(&mo->target, actor->target);
    } 
 }
 
@@ -758,7 +759,7 @@ void A_WraithFX2(mobj_t *actor)
                           finecosine[angle >> ANGLETOFINESHIFT]);
       mo->momy = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT, 
                           finesine[angle >> ANGLETOFINESHIFT]);
-      P_SetTarget(&mo->target, actor);
+      P_SetTarget<mobj_t>(&mo->target, actor);
       mo->floorclip = 10*FRACUNIT;
    }
 }
@@ -784,7 +785,7 @@ void A_WraithFX3(mobj_t *actor)
       mo->x += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx3) << 10);
-      P_SetTarget(&mo->target, actor);
+      P_SetTarget<mobj_t>(&mo->target, actor);
    }
 }
 
@@ -832,7 +833,7 @@ void A_WraithFX4(mobj_t *actor)
       mo->x += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx4c) << 10);
-      P_SetTarget(&mo->target, actor);
+      P_SetTarget<mobj_t>(&mo->target, actor);
    }
 }
 
@@ -894,7 +895,7 @@ void A_DropMace(mobj_t *actor)
    mo->momx = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momy = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momz = baseMomZ + (P_Random(pr_dropmace) << (momShift - 1));
-   P_SetTarget(&mo->target, actor);
+   P_SetTarget<mobj_t>(&mo->target, actor);
 }
 
 //
@@ -921,7 +922,7 @@ void A_AffritSpawnRock(mobj_t *actor)
    
    mo = P_SpawnMobj(x, y, z, rtype);
    
-   P_SetTarget(&mo->target, actor);
+   P_SetTarget<mobj_t>(&mo->target, actor);
 
    mo->momx = (P_Random(pr_affritrock) - 128) << 10;
    mo->momy = (P_Random(pr_affritrock) - 128) << 10;
@@ -1048,7 +1049,7 @@ void A_IceGuyChase(mobj_t *actor)
       mo->momx = actor->momx;
       mo->momy = actor->momy;
       mo->momz = actor->momz;
-      P_SetTarget(&mo->target, actor);
+      P_SetTarget<mobj_t>(&mo->target, actor);
    }
 }
 

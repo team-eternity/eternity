@@ -29,6 +29,7 @@
 #include "info.h"
 #include "d_items.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "e_states.h"
 #include "w_wad.h"
 

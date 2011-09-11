@@ -30,6 +30,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "p_info.h"
+#include "v_block.h"
 #include "v_video.h"
 #include "s_sound.h"
 #include "d_gi.h"

@@ -105,42 +105,42 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 
-void T_VerticalDoor(vldoor_t *door)
+void vldoor_t::Think()
 {
    result_e  res;
 
    // Is the door waiting, going up, or going down?
-   switch(door->direction)
+   switch(direction)
    {
    case plat_stop:
       // Door is waiting
-      if(!--door->topcountdown)  // downcount and check
+      if(!--topcountdown)  // downcount and check
       {
-         switch(door->type)
+         switch(type)
          {
          case blazeRaise:
          case genBlazeRaise:
          case paramBlazeCloseIn: // haleyjd 03/01/05
-            door->direction = plat_down; // time to go back down
-            P_DoorSequence(false, true, false, door->sector); // haleyjd
+            direction = plat_down; // time to go back down
+            P_DoorSequence(false, true, false, sector); // haleyjd
             break;
 
          case doorNormal:
          case genRaise:
          case paramCloseIn: // haleyjd 03/01/05
-            door->direction = plat_down; // time to go back down
-            P_DoorSequence(false, false, false, door->sector); // haleyjd
+            direction = plat_down; // time to go back down
+            P_DoorSequence(false, false, false, sector); // haleyjd
             break;
 
          case close30ThenOpen:
          case genCdO:
-            door->direction = plat_up;  // time to go back up
-            P_DoorSequence(true, false, false, door->sector); // haleyjd
+            direction = plat_up;  // time to go back up
+            P_DoorSequence(true, false, false, sector); // haleyjd
             break;
 
          case genBlazeCdO:
-            door->direction = plat_up;  // time to go back up
-            P_DoorSequence(true, true, false, door->sector); // haleyjd
+            direction = plat_up;  // time to go back up
+            P_DoorSequence(true, true, false, sector); // haleyjd
             break;
 
          default:
@@ -151,22 +151,22 @@ void T_VerticalDoor(vldoor_t *door)
 
    case plat_special: // haleyjd: changed from 2
       // Special case for sector type door that opens in 5 mins
-      if(!--door->topcountdown)  // 5 minutes up?
+      if(!--topcountdown)  // 5 minutes up?
       {
-         switch(door->type)
+         switch(type)
          {
          case raiseIn5Mins:
          case paramRaiseIn: // haleyjd 03/01/05: new param type
-            door->direction = plat_up; // time to raise then
-            door->type = doorNormal;   // door acts just like normal 1 DR door now
-            P_DoorSequence(true, false, false, door->sector); // haleyjd
+            direction = plat_up; // time to raise then
+            type = doorNormal;   // door acts just like normal 1 DR door now
+            P_DoorSequence(true, false, false, sector); // haleyjd
             break;
 
             // haleyjd 03/01/05: new param type
          case paramBlazeRaiseIn:
-            door->direction = plat_up;
-            door->type = genBlazeRaise;
-            P_DoorSequence(true, true, false, door->sector); // haleyjd
+            direction = plat_up;
+            type = genBlazeRaise;
+            P_DoorSequence(true, true, false, sector); // haleyjd
             break;
 
          default:
@@ -177,24 +177,20 @@ void T_VerticalDoor(vldoor_t *door)
 
    case plat_down:
       // Door is moving down
-      res = T_MovePlane(door->sector, door->speed,
-                        door->sector->floorheight,
-                        -1, 1, door->direction);
+      res = T_MovePlane(sector, speed, sector->floorheight, -1, 1, direction);
 
       // killough 10/98: implement gradual lighting effects
-      if(door->lighttag && door->topheight - door->sector->floorheight)
-         EV_LightTurnOnPartway(door->lighttag,
-                               FixedDiv(door->sector->ceilingheight -
-                                        door->sector->floorheight,
-                                        door->topheight -
-                                        door->sector->floorheight));
+      if(lighttag && topheight - sector->floorheight)
+         EV_LightTurnOnPartway(lighttag,
+                               FixedDiv(sector->ceilingheight - sector->floorheight,
+                                        topheight - sector->floorheight));
 
       // handle door reaching bottom
       if(res == pastdest)
       {
-         S_StopSectorSequence(door->sector, true);
+         S_StopSectorSequence(sector, true);
 
-         switch(door->type)
+         switch(type)
          {
          // regular open and close doors are all done, remove them
          case blazeRaise:
@@ -202,11 +198,12 @@ void T_VerticalDoor(vldoor_t *door)
          case genBlazeRaise:
          case genBlazeClose:
          case paramBlazeCloseIn: // haleyjd 03/01/05
+            sector->ceilingdata = NULL;  //jff 2/22/98
             // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               door->inactive = cl_current_world_index;
+               inactive = cl_current_world_index;
             else
-               P_RemoveDoor(door);
+               this->Remove(); // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
             break;
@@ -215,24 +212,25 @@ void T_VerticalDoor(vldoor_t *door)
          case genRaise:
          case genClose:
          case paramCloseIn: // haleyjd 03/01/05
+            sector->ceilingdata = NULL; //jff 2/22/98
             // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               door->inactive = cl_current_world_index;
+               inactive = cl_current_world_index;
             else
-               P_RemoveDoor(door);
+               this->Remove();  // unlink and free
             // haleyjd 10/06/06: sound stuff removed
             break;
 
             // close then open doors start waiting
          case close30ThenOpen:
-            door->direction = plat_stop;
-            door->topcountdown = TICRATE*30;
+            direction = plat_stop;
+            topcountdown = TICRATE*30;
             break;
 
          case genCdO:
          case genBlazeCdO:
-            door->direction = plat_stop;
-            door->topcountdown = door->topwait; // jff 5/8/98 insert delay
+            direction = plat_stop;
+            topcountdown = topwait; // jff 5/8/98 insert delay
             break;
 
          default:
@@ -246,7 +244,7 @@ void T_VerticalDoor(vldoor_t *door)
       else if(res == crushed)
       {
          // handle door meeting obstruction on way down
-         switch(door->type)
+         switch(type)
          {
          case paramCloseIn:      // haleyjd 03/01/05
          case paramBlazeCloseIn:
@@ -257,8 +255,8 @@ void T_VerticalDoor(vldoor_t *door)
             break;
 
          default:             // other types bounce off the obstruction
-            door->direction = plat_up;
-            P_DoorSequence(true, false, true, door->sector); // haleyjd
+            direction = plat_up;
+            P_DoorSequence(true, false, true, sector); // haleyjd
             break;
          }
       }
@@ -266,29 +264,25 @@ void T_VerticalDoor(vldoor_t *door)
 
    case plat_up:
       // Door is moving up
-      res = T_MovePlane(door->sector, door->speed,
-                        door->topheight, -1, 1,
-                        door->direction);
+      res = T_MovePlane(sector, speed, topheight, -1, 1, direction);
 
       // killough 10/98: implement gradual lighting effects
-      if(door->lighttag && door->topheight - door->sector->floorheight)
-         EV_LightTurnOnPartway(door->lighttag,
-                               FixedDiv(door->sector->ceilingheight -
-                                        door->sector->floorheight,
-                                        door->topheight -
-                                        door->sector->floorheight));
+      if(lighttag && topheight - sector->floorheight)
+         EV_LightTurnOnPartway(lighttag,
+                               FixedDiv(sector->ceilingheight - sector->floorheight,
+                                        topheight - sector->floorheight));
 
       // handle door reaching the top
       if(res == pastdest)
       {
-         switch(door->type)
+         switch(type)
          {
          case blazeRaise:       // regular open/close doors start waiting
          case doorNormal:
          case genRaise:
          case genBlazeRaise:
-            door->direction = plat_stop; // wait at top with delay
-            door->topcountdown = door->topwait;
+            direction = plat_stop; // wait at top with delay
+            topcountdown = topwait;
             break;
 
          case close30ThenOpen:  // close and close/open doors are done
@@ -298,12 +292,13 @@ void T_VerticalDoor(vldoor_t *door)
          case genOpen:
          case genCdO:
          case genBlazeCdO:
-            S_StopSectorSequence(door->sector, true);
+            S_StopSectorSequence(sector, true);
+            sector->ceilingdata = NULL; //jff 2/22/98
             // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               door->inactive = cl_current_world_index;
+               inactive = cl_current_world_index;
             else
-               P_RemoveDoor(door);
+               this->Remove(); // unlink and free
             break;
 
          default:
@@ -315,7 +310,7 @@ void T_VerticalDoor(vldoor_t *door)
       else if(demo_version >= 333 && res == crushed)
       {
          // handle door meeting obstruction on way down
-         switch(door->type)
+         switch(type)
          {
          case paramRaiseIn:      // haleyjd 03/01/05
          case paramBlazeRaiseIn:
@@ -326,8 +321,8 @@ void T_VerticalDoor(vldoor_t *door)
             break;
 
          default:             // other types bounce off the obstruction
-            door->direction = plat_down;
-            P_DoorSequence(false, false, true, door->sector); // haleyjd
+            direction = plat_down;
+            P_DoorSequence(false, false, true, sector); // haleyjd
             break;
          }
       }
@@ -401,12 +396,11 @@ void P_PrintDoor(vldoor_t *door)
 
 vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
 {
-   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
+   vldoor_t *door = new vldoor_t;
 
-   P_AddThinker(&door->thinker);
+   door->Add();
    sec->ceilingdata = door; //jff 2/22/98
 
-   door->thinker.function = T_VerticalDoor;
    door->sector = sec;
    door->type = type;
    door->topwait = VDOORWAIT;
@@ -473,11 +467,10 @@ vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
 
 vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec)
 {
-   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
+   vldoor_t *door = new vldoor_t;
 
-   P_AddThinker (&door->thinker);
+   door->Add();
    sec->ceilingdata = door; //jff 2/22/98
-   door->thinker.function = T_VerticalDoor;
    door->sector = sec;
    door->direction = plat_up;
    door->speed = VDOORSPEED;
@@ -551,14 +544,12 @@ vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec)
 
 vldoor_t* P_SpawnDoorCloseIn30(sector_t* sec)
 {
-   vldoor_t *door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
+   vldoor_t *door = new vldoor_t;
 
-   P_AddThinker(&door->thinker);
-
+   door->Add();
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
 
-   door->thinker.function = T_VerticalDoor;
    door->sector = sec;
    door->direction = plat_stop;
    door->type = doorNormal;
@@ -588,14 +579,12 @@ vldoor_t* P_SpawnDoorCloseIn30(sector_t* sec)
 
 vldoor_t* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   vldoor_t* door = (vldoor_t *)(Z_Calloc(1, sizeof(*door), PU_LEVSPEC, 0));
+   vldoor_t *door = new vldoor_t;
 
-   P_AddThinker(&door->thinker);
-
+   door->Add();
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
 
-   door->thinker.function = T_VerticalDoor;
    door->sector = sec;
    door->direction = plat_special; // haleyjd: changed from 2
    door->type = raiseIn5Mins;
@@ -713,9 +702,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       rtn = 1;
 
       if(serverside)
-      {
          door = P_SpawnTaggedDoor(line, sec, type);
-      }
    }
    return rtn;
 }
@@ -806,6 +793,33 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
+   if((door = dynamic_cast<vldoor_t *>(sec->ceilingdata))) // is a door
+   {
+      switch(line->special)
+      {
+      case  1: // only for "raise" doors, not "open"s
+      case  26:
+      case  27:
+      case  28:
+      case  117:
+         if(door->direction == plat_down)
+            door->direction = plat_up;  // go back up
+         else
+         {
+            if(!thing->player)
+               return 0;           // JDC: bad guys never close doors
+            
+            door->direction = plat_down; // start going down immediately
+         }
+         // haleyjd: squash the sector's sound sequence when a door reversal
+         // occurs, otherwise you get a doubled sound at the next downstroke.
+         S_SquashSectorSequence(door->sector, true);
+         return 1;
+      }
+   }
+
+   // CPP_FIXME: extremely difficult to emulate in C++
+#if 0
    if(sec->ceilingdata ||
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
@@ -844,6 +858,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
          return 1;
       }
    }
+#endif
 
    // emit proper sound
    switch(line->special)
@@ -865,6 +880,47 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
       door = P_SpawnManualDoor(line, sec);
 
    return 1;
+}
+
+<<<<<<< .working
+=======
+
+///////////////////////////////////////////////////////////////
+//
+// Sector type door spawners
+//
+///////////////////////////////////////////////////////////////
+
+//
+// P_SpawnDoorRaiseIn5Mins()
+//
+// Spawn a door that opens after 5 minutes (called at level init)
+//
+// Passed the sector of the door, whose type specified the door action
+// Returns nothing
+//
+
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+{
+   vldoor_t* door;
+   
+   door = new vldoor_t;
+   
+   door->Add();
+   
+   sec->ceilingdata = door; //jff 2/22/98
+   sec->special = 0;
+   
+   door->sector = sec;
+   door->direction = plat_special; // haleyjd: changed from 2
+   door->type = raiseIn5Mins;
+   door->speed = VDOORSPEED;
+   door->topheight = P_FindLowestCeilingSurrounding(sec);
+   door->topheight -= 4 * FRACUNIT;
+   door->topwait = VDOORWAIT;
+   door->topcountdown = 5 * 60 * 35;
+   door->line = NULL; // jff 1/31/98 remember line that triggered us
+   door->lighttag = 0;  // killough 10/98: no lighting changes
 }
 
 //----------------------------------------------------------------------------

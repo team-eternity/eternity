@@ -24,8 +24,11 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "m_bbox.h"

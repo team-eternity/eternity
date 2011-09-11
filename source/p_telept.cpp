@@ -44,7 +44,7 @@
 //
 int EV_Teleport(line_t *line, int side, mobj_t *thing)
 {
-   thinker_t *thinker;
+   CThinker *thinker;
    mobj_t    *m, *source_fog, *destination_fog;
    int       i;
 
@@ -59,10 +59,12 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
 
    for(i = -1; (i = P_FindSectorFromLineTag(line, i)) >= 0;)
    {
-      for(thinker=thinkercap.next; thinker!=&thinkercap; thinker=thinker->next)
+      for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
       {
-         if(thinker->function == P_MobjThinker &&
-            (m = (mobj_t *) thinker)->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
+         if(!(m = dynamic_cast<mobj_t *>(thinker)))
+            continue;
+
+         if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
             fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
@@ -164,7 +166,7 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
 {
    int       i;
    mobj_t    *m;
-   thinker_t *th;
+   CThinker *th;
    
    // don't teleport missiles
    // Don't teleport if hit back of line,
@@ -177,8 +179,10 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
-         if(th->function == P_MobjThinker &&
-            (m = (mobj_t *) th)->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
+         if(!(m = dynamic_cast<mobj_t *>(th)))
+            continue;
+         
+         if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
             // Height of thing above ground, in case of mid-air teleports:

@@ -26,35 +26,17 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_THINK__
-#define __D_THINK__
+#ifndef D_THINK_H__
+#define D_THINK_H__
+
+// haleyjd: 11/22/10: extinct, thinker structure moved to p_tick.h
 
 // killough 11/98: convert back to C instead of C++
-typedef  void (*actionf_t)();
+//typedef void (*actionf_t)(thinker_t *);
 
 // Historically, "think_t" is yet another function 
 // pointer to a routine to handle an actor.
-typedef actionf_t think_t;
-
-// Doubly linked list of actors.
-typedef struct thinker_s
-{
-  struct thinker_s *prev, *next;
-  think_t function;
-  
-  // killough 8/29/98: we maintain thinkers in several equivalence classes,
-  // according to various criteria, so as to allow quicker searches.
-
-  struct thinker_s *cnext, *cprev; // Next, previous thinkers in same class
-
-  // killough 11/98: count of how many other objects reference
-  // this one using pointers. Used for garbage collection.
-  unsigned int references;
-
-  // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
-  // GCC with thoughts of writing pointers into integers.
-  unsigned int ordinal;
-} thinker_t;
+//typedef actionf_t think_t;
 
 #endif
 

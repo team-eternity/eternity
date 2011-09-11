@@ -258,7 +258,7 @@ typedef struct mapthinghexen_s mapthinghexen_t;
 
 #define NUMMTARGS 5
 
-typedef struct mapthing_s
+struct mapthing_t
 {
    int16_t tid;       // scripting id
    int16_t x;         // x coord
@@ -273,7 +273,7 @@ typedef struct mapthing_s
 
    int     recordnum; // for ExtraData hashing
    int     next;
-} mapthing_t;
+};
 
 #ifdef _MSC_VER
 #pragma pack(pop)

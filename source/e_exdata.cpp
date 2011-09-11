@@ -45,12 +45,14 @@
 #include "w_wad.h"
 #include "i_system.h"
 #include "d_dehtbl.h" // for dehflags parsing
+#include "r_data.h"
 #include "r_main.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
 #include "e_lib.h"
+#include "e_mod.h"
 #include "e_exdata.h"
 #include "e_things.h"
 #include "e_ttypes.h"

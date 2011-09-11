@@ -40,6 +40,7 @@
 #ifdef ZONE_NATIVE
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "m_argv.h"
 

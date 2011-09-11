@@ -16,12 +16,12 @@
 #define PS_HITGROUND    0x0008
 #define PS_SPLASH       0x0010 
 
-typedef struct particle_s
+struct particle_t
 {
    // haleyjd 02/20/04: particles now need sector links
    // haleyjd 08/05/05: use generalized dbl-linked list code
    mdllistitem_t seclinks;         // sector links
-   struct subsector_s *subsector;
+   subsector_t *subsector;
 
    fixed_t x, y, z;
    fixed_t velx, vely, velz;
@@ -33,7 +33,7 @@ typedef struct particle_s
    byte color;
    int  next;
    int  styleflags; // haleyjd 07/03/03
-} particle_t;
+};
 
 extern int numParticles;
 extern int activeParticles;

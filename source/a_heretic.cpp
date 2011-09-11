@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -187,7 +188,7 @@ void A_MummyAttack2(mobj_t *actor)
                           E_SafeThingType(MT_MUMMYFX1),
                           actor->z + DEFAULTMISSILEZ);
 
-      P_SetTarget(&mo->tracer, actor->target);
+      P_SetTarget<mobj_t>(&mo->tracer, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(mo, CS_AT_TRACER);
    }
@@ -568,11 +569,11 @@ void A_SorcererRise(mobj_t *actor)
    mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // add to appropriate thread
-   P_UpdateThinker(&mo->thinker);
+   mo->Update();
 
    if(actor->target && !(mo->flags & MF_FRIEND))
    {
-      P_SetTarget(&mo->target, actor->target);
+      P_SetTarget<mobj_t>(&mo->target, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(mo, CS_AT_TARGET);
    }
@@ -752,7 +753,7 @@ void A_GenWizard(mobj_t *actor)
    mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // add to appropriate thread
-   P_UpdateThinker(&mo->thinker);
+   mo->Update();
 
    // Check for movements.
    if(!P_TryMove(mo, mo->x, mo->y, false))
@@ -869,7 +870,7 @@ static boss_spec_htic_t hboss_specs[NUM_HBOSS_SPECS] =
 //
 void A_HticBossDeath(mobj_t *actor)
 {
-   thinker_t *th;
+   CThinker *th;
    line_t    junk;
    int       i;
 
@@ -885,9 +886,9 @@ void A_HticBossDeath(mobj_t *actor)
       {
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
-            if(th->function == P_MobjThinker)
+            mobj_t *mo;
+            if((mo = dynamic_cast<mobj_t *>(th)))
             {
-               mobj_t *mo = (mobj_t *)th;
                unsigned int moflags =
                   hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;
                if(mo != actor &&
@@ -952,7 +953,7 @@ void A_PodPain(mobj_t *actor)
       if(CS_SERVER)
          SV_BroadcastActorSpawned(goo);
 
-      P_SetTarget(&goo->target, actor);
+      P_SetTarget<mobj_t>(&goo->target, actor);
       if(CS_SERVER)
          SV_BroadcastActorTarget(goo, CS_AT_TARGET);
 
@@ -1022,7 +1023,7 @@ void A_MakePod(mobj_t *actor)
 
    // use tracer field to link pod to generator, and increment
    // generator's pod count
-   P_SetTarget(&mo->tracer, actor);
+   P_SetTarget<mobj_t>(&mo->tracer, actor);
    if(CS_SERVER)
       SV_BroadcastActorTarget(mo, CS_AT_TRACER);
 
@@ -1064,7 +1065,7 @@ void A_VolcanoBlast(mobj_t *actor)
       if(CS_SERVER)
          SV_BroadcastActorSpawned(volcball);
 
-      P_SetTarget(&volcball->target, actor);
+      P_SetTarget<mobj_t>(&volcball->target, actor);
       if(CS_SERVER)
          SV_BroadcastActorTarget(volcball, CS_AT_TARGET);
 
@@ -1123,7 +1124,7 @@ void A_VolcBallImpact(mobj_t *actor)
          SV_BroadcastActorSpawned(svolcball);
 
       // pass on whatever shot the original volcano ball
-      P_SetTarget(&svolcball->target, actor->target);
+      P_SetTarget<mobj_t>(&svolcball->target, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(svolcball, CS_AT_TARGET);
 
@@ -1303,7 +1304,7 @@ void A_BeastPuff(mobj_t *actor)
          SV_BroadcastActorSpawned(mo);
 
       // pass on the beast so that it doesn't hurt itself
-      P_SetTarget(&mo->target, actor->target);
+      P_SetTarget<mobj_t>(&mo->target, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(mo, CS_AT_TARGET);
    }
@@ -1630,7 +1631,7 @@ void A_MntrFloorFire(mobj_t *actor)
       SV_BroadcastActorSpawned(mo);
 
    // pass on the Maulotaur as the source of damage
-   P_SetTarget(&mo->target, actor->target);
+   P_SetTarget<mobj_t>(&mo->target, actor->target);
    if(CS_SERVER)
       SV_BroadcastActorTarget(mo, CS_AT_TARGET);
 
@@ -1682,12 +1683,11 @@ void A_LichFire(mobj_t *actor)
       for(i = 0; i < 5; ++i)
       {
          fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
-
          if(CS_SERVER)
             SV_BroadcastActorSpawned(fire);
 
          // pass on the lich as the originator
-         P_SetTarget(&fire->target, baseFire->target);
+         P_SetTarget<mobj_t>(&fire->target, baseFire->target);
          if(CS_SERVER)
             SV_BroadcastActorTarget(fire, CS_AT_TARGET);
 
@@ -1730,10 +1730,10 @@ void A_LichWhirlwind(mobj_t *actor)
       mo = P_SpawnMissile(actor, target, wwType, actor->z);
 
       // use mo->tracer to track target
-      P_SetTarget(&mo->tracer, target);
+      P_SetTarget<mobj_t>(&mo->tracer, target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(mo, CS_AT_TRACER);
-
+   
       mo->counters[0] = 20 * TICRATE; // duration
       mo->counters[1] = 50;           // timer for active sound
       mo->counters[2] = 60;           // explocount limit
@@ -1844,7 +1844,7 @@ void A_WhirlwindSeek(mobj_t *actor)
          !(origtarget->flags3 & MF3_GHOST) &&
          !(originator->flags & origtarget->flags & MF_FRIEND))
       {
-         P_SetTarget(&actor->tracer, origtarget);
+         P_SetTarget<mobj_t>(&actor->tracer, origtarget);
          if(CS_SERVER)
             SV_BroadcastActorTarget(actor, CS_AT_TRACER);
       }
@@ -1882,7 +1882,7 @@ void A_LichIceImpact(mobj_t *actor)
       if(CS_SERVER)
          SV_BroadcastActorSpawned(shard);
 
-      P_SetTarget(&shard->target, actor->target);
+      P_SetTarget<mobj_t>(&shard->target, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(shard, CS_AT_TARGET);
 

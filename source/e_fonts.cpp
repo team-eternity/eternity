@@ -29,6 +29,7 @@
 #include "Confuse/confuse.h"
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "c_io.h"
 #include "d_io.h"
 #include "f_finale.h"

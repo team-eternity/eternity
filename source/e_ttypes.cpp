@@ -35,6 +35,7 @@
 #include "m_random.h"
 #include "p_enemy.h"
 #include "p_mobj.h"
+#include "p_partcl.h"
 #include "p_tick.h"
 #include "r_data.h"
 #include "r_main.h"
@@ -844,7 +845,7 @@ static void E_TerrainHit(ETerrain *terrain, mobj_t *thing, fixed_t z)
       if(splash->chunkclass != NUMMOBJTYPES)
       {
          mo = P_SpawnMobj(thing->x, thing->y, z, splash->chunkclass);
-         P_SetTarget(&mo->target, thing);
+         P_SetTarget<mobj_t>(&mo->target, thing);
          
          if(splash->chunkxvelshift != -1)
             mo->momx = P_SubRandom(pr_splash) << splash->chunkxvelshift;

@@ -30,6 +30,7 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "c_runcmd.h"
 #include "c_io.h"
 #include "c_net.h"

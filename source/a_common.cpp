@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -98,7 +99,7 @@ void A_Look(mobj_t *actor)
             return;
 
          // soundtarget is valid, acquire it.
-         P_SetTarget(&actor->target, sndtarget);
+         P_SetTarget<mobj_t>(&actor->target, sndtarget);
 
          if(CS_SERVER)
             SV_BroadcastActorTarget(actor, CS_AT_TARGET);

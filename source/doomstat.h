@@ -34,11 +34,13 @@
 
 // We need globally shared data structures,
 //  for defining the global state variables.
-#include "doomdata.h"
-#include "d_net.h"
+//#include "doomdata.h"
 
-// We need the playr data structure as well.
+#include "d_net.h"
+// We need the player data structure as well.
 #include "d_player.h"
+#include "p_tick.h"
+#include "tables.h"
 
 // [CG] Teams too
 #include "cs_team.h"
@@ -319,13 +321,7 @@ extern  boolean    playeringame[];
  *
  */
 
-extern player_t    *players;
-extern boolean     *playeringame;
-
-// [CG] Some other player-related things
-// extern teamcolor_t *playerteam;
-// extern boolean     *playerspectating;
-// extern int         *playerid; // [CG] A player's ENet peer connection ID
+struct mapthing_t;
 
 extern  mapthing_t *deathmatchstarts;     // killough
 extern  size_t     num_deathmatchstarts; // killough
@@ -388,7 +384,7 @@ extern  int        maketic;
 extern  ticcmd_t   netcmds[][BACKUPTICS];
 extern  int        ticdup;
 
-extern thinker_t thinkercap;  // Both the head and tail of the thinker list
+extern CThinker thinkercap;  // Both the head and tail of the thinker list
 
 //-----------------------------------------------------------------------------
 

@@ -25,13 +25,12 @@
 //
 //-----------------------------------------------------------------------------
 
-
 #ifndef V_BUFFER_H__
 #define V_BUFFER_H__
 
 #include "m_fixed.h"
 
-typedef struct VBuffer_s
+struct VBuffer
 {
    int  width;
    int  height;
@@ -41,10 +40,10 @@ typedef struct VBuffer_s
    boolean  owndata;
    int      subx, suby;
 
-   void (*BlockDrawer)(int, int, struct VBuffer_s *, int, int, byte *);
-   void (*MaskedBlockDrawer)(int, int, struct VBuffer_s *, int, int, int, 
+   void (*BlockDrawer)(int, int, VBuffer *, int, int, byte *);
+   void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, 
                              byte *, byte *);
-   void (*TileBlock64)(struct VBuffer_s *, byte *);
+   void (*TileBlock64)(VBuffer *, byte *);
 
    // SoM: Include the screen size
    boolean  scaled, freelookups;
@@ -61,9 +60,7 @@ typedef struct VBuffer_s
 
    // Only change this if you want memory leaks and/or crashes :P
    boolean needfree;
-} VBuffer;
-
-
+}; 
 
 // V_InitVBuffer
 // Initializes the given vbuffer and allocates pixeldata for it.
@@ -72,8 +69,6 @@ void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth);
 // V_CreateVBuffer
 // Allocates a new VBuffer object and returns it
 VBuffer *V_CreateVBuffer(int width, int height, int bitdepth);
-
-
 
 // V_InitVBufferFrom
 // Gives a VBuffer object the given pixeldata. The VBuffer does not OWN the
@@ -86,9 +81,6 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, int bitdep
 // V_FreeVBuffer
 VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, int bitdepth, byte *data);
 
-
-
-
 // V_InitSubVBuffer
 // 
 void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int height);
@@ -96,9 +88,6 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int
 // V_SubVBuffer
 // Allocates a new VBuffer object that shares pixel data with another. 
 VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height);
-
-
-
 
 // V_FreeVBuffer
 // Frees the given VBuffer object. If the VBuffer owns it's pixeldata, the data

@@ -36,8 +36,8 @@
 
 #include <inttypes.h>
 
-#ifndef __BYTEBOOL__
-#define __BYTEBOOL__
+#ifndef BYTEBOOL__
+#define BYTEBOOL__
 // Fixed to use builtin bool type with C++.
 #ifdef __cplusplus
 #define EE_BOOLEAN_DEFINED 1

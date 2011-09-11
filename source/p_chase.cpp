@@ -398,7 +398,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target)
 
    followcam.x = x;
    followcam.y = y;
-   P_SetTarget(&followtarget, target);
+   P_SetTarget<mobj_t>(&followtarget, target);
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);
@@ -410,7 +410,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target)
 
 void P_FollowCamOff(void)
 {
-   P_SetTarget(&followtarget, NULL);
+   P_SetTarget<mobj_t>(&followtarget, NULL);
 }
 
 void P_FollowCamTicker(void)

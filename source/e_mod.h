@@ -35,7 +35,7 @@
 //
 // Holds the info for a damage type.
 //
-typedef struct emod_s
+struct emod_t
 {
    mdllistitem_t numlinks;  // for numeric hash
    mdllistitem_t namelinks; // for name hash
@@ -47,7 +47,7 @@ typedef struct emod_s
    boolean obitIsBexString;
    boolean selfObitIsBexString;
    boolean sourceless;
-} emod_t;
+};
 
 emod_t *E_DamageTypeForName(const char *name);
 emod_t *E_DamageTypeForNum(int num);

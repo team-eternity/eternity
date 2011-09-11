@@ -30,6 +30,7 @@
 #include "c_io.h"
 #include "d_main.h"
 #include "w_wad.h"
+#include "m_swap.h"
 #include "p_skin.h"
 #include "p_setup.h"
 #include "r_main.h"
@@ -439,10 +440,13 @@ void R_PrecacheLevel(void)
    memset(hitlist, 0, numsprites);
 
    {
-      thinker_t *th;
+      CThinker *th;
       for(th = thinkercap.next ; th != &thinkercap ; th=th->next)
-         if(th->function == P_MobjThinker)
-            hitlist[((mobj_t *)th)->sprite] = 1;
+      {
+         mobj_t *mo;
+         if((mo = dynamic_cast<mobj_t *>(th)))
+            hitlist[mo->sprite] = 1;
+      }
    }
 
    for(i = numsprites; --i >= 0; )

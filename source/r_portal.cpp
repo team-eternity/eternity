@@ -25,6 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "c_io.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -42,7 +44,6 @@ static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
 
 portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
-
 static void R_RenderPortalNOP(pwindow_t *window)
 {
    I_FatalError(I_ERR_KILL, "R_RenderPortalNOP called\n");
@@ -50,8 +51,6 @@ static void R_RenderPortalNOP(pwindow_t *window)
 
 
 static void R_SetPortalFunction(pwindow_t *window);
-
-
 
 static void R_ClearPortalWindow(pwindow_t *window)
 {
@@ -74,9 +73,6 @@ static void R_ClearPortalWindow(pwindow_t *window)
    window->vx = window->vy = window->vz = 0;
 }
 
-
-
-
 static pwindow_t *newPortalWindow()
 {
    pwindow_t *ret;
@@ -93,9 +89,6 @@ static pwindow_t *newPortalWindow()
    
    return ret;
 }
-
-
-
 
 static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
 {
@@ -118,10 +111,6 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
    
    return ret;
 }
-
-
-
-
 
 //
 // R_CreateChildWindow
@@ -874,8 +863,6 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_RenderAnchoredPortal(window->child);
 }
 
-
-
 static void R_RenderLinkedPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -970,8 +957,6 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       R_RenderLinkedPortal(window->child);
 }
 
-
-
 //
 // R_UntaintPortals
 //
@@ -995,9 +980,6 @@ void R_UntaintPortals(void)
       r->tainted = 0;
    }
 }
-
-
-
 
 static void R_SetPortalFunction(pwindow_t *window)
 {
@@ -1031,8 +1013,6 @@ static void R_SetPortalFunction(pwindow_t *window)
    }
 }
 
-
-
 //
 // R_Get*PortalWindow
 //
@@ -1056,10 +1036,6 @@ pwindow_t *R_GetFloorPortalWindow(portal_t *portal)
    return R_NewPortalWindow(portal, NULL, pw_floor);
 }
 
-
-
-
-
 pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
 {
    pwindow_t *rover = windowhead;
@@ -1075,10 +1051,6 @@ pwindow_t *R_GetCeilingPortalWindow(portal_t *portal)
    // not found, so make it
    return R_NewPortalWindow(portal, NULL, pw_ceiling);
 }
-
-
-
-
 
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 {
@@ -1097,8 +1069,6 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
    return R_NewPortalWindow(portal, line, pw_line);
 }
 
-
-
 //
 // R_ClearPortals
 //
@@ -1113,8 +1083,6 @@ void R_ClearPortals(void)
       r = r->next;
    }
 }
-
-
 
 //
 // R_RenderPortals
@@ -1159,11 +1127,10 @@ void R_RenderPortals(void)
    windowlast = windowhead;
 }
 
-
-
-
-// ----------------------------------------------------------------------------
+//=============================================================================
+//
 // SoM: Begin linked portals
+//
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez,    int fromid,
@@ -1207,8 +1174,5 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    return ret;
 }
 
-//----------------------------------------------------------------------------
-//
-// $Log: r_portals.c,v $
-//
-//----------------------------------------------------------------------------
+// EOF
+

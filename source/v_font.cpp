@@ -33,9 +33,11 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "c_io.h"
 #include "d_gi.h"
+#include "m_swap.h"
 #include "v_video.h"
 #include "v_misc.h"
 #include "v_font.h"

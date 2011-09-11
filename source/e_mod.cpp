@@ -27,6 +27,7 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "i_system.h"
 
 #include "Confuse/confuse.h"
 

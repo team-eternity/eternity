@@ -29,7 +29,8 @@
 #ifndef __INFO__
 #define __INFO__
 
-#include "e_mod.h"
+//#include "e_mod.h"
+#include "m_dllist.h"
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -149,33 +150,33 @@ enum
 
 typedef int statenum_t;
 
-typedef struct mobj_s * mptr;
+class mobj_t;
 
 // ********************************************************************
 // Definition of the state (frames) structure
 // ********************************************************************
-typedef struct state_s
+struct state_t
 {
-   mdllistitem_t namelinks;         // haleyjd 03/30/10: new hashing: by name
-   mdllistitem_t numlinks;          // haleyjd 03/30/10: new hashing: by dehnum
+   mdllistitem_t namelinks;            // haleyjd 03/30/10: new hashing: by name
+   mdllistitem_t numlinks;             // haleyjd 03/30/10: new hashing: by dehnum
 
-   spritenum_t sprite;              // sprite number to show
-   int         frame;               // which frame/subframe of the sprite is shown
-   int         tics;                // number of gametics this frame should last
-   void        (*action)(mptr);     // code pointer to function for action if any
-   void        (*oldaction)(mptr);  // haleyjd: original action, for DeHackEd
-   statenum_t  nextstate;           // index of next state, or -1
-   int         misc1, misc2;        // used for psprite positioning
-   int         particle_evt;        // haleyjd: determines an event to run
+   spritenum_t sprite;                 // sprite number to show
+   int         frame;                  // which frame/subframe of the sprite is shown
+   int         tics;                   // number of gametics this frame should last
+   void        (*action)(mobj_t *);    // code pointer to function for action if any
+   void        (*oldaction)(mobj_t *); // haleyjd: original action, for DeHackEd
+   statenum_t  nextstate;              // index of next state, or -1
+   int         misc1, misc2;           // used for psprite positioning
+   int         particle_evt;           // haleyjd: determines an event to run
    
-   struct arglist_s *args;          // haleyjd: state arguments
+   struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;        // pointer to name of this state
    char        namebuf[41]; // buffer for name (max 40 chars)
    int         dehnum;      // DeHackEd number for fast access, comp.
    int         index;       // 06/12/09: number of state in states array
-} state_t;
+};
 
 // these are in info.c
 
@@ -380,7 +381,7 @@ typedef struct mobjinfo_s
    float xscale;      // haleyjd 11/22/09: x scaling
    float yscale;      // haleyjd 11/22/09: y scaling
 
-   void (*nukespec)(mptr); // haleyjd 08/18/09: nukespec made a native property
+   void (*nukespec)(mobj_t *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
    char name[41];     // name of this thing type (max 40 chars)

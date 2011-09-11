@@ -26,7 +26,9 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "v_buffer.h"
+#include "v_misc.h"
 #include "v_patch.h"
 
 //

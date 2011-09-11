@@ -31,8 +31,11 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "doomstat.h"
 #include "d_event.h"
+#include "d_mod.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"
@@ -54,6 +57,7 @@
 #include "d_gi.h"
 #include "e_lib.h"
 #include "e_args.h"
+#include "e_player.h"
 #include "g_dmflag.h" // [CG] Added.
 
 // [CG] Added.
@@ -1184,14 +1188,13 @@ void A_FireOldBFG(mobj_t *mo)
          if(CS_SERVER)
             SV_BroadcastActorSpawned(th);
 
-         P_SetTarget(&th->target, mo);
+         P_SetTarget<mobj_t>(&th->target, mo);
          if(CS_SERVER)
             SV_BroadcastActorTarget(th, CS_AT_TARGET);
-
          th->angle = an1;
-         th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
-         th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
-         th->momz = finetangent[an2>>ANGLETOFINESHIFT] * 25;
+         th->momx =  finecosine[an1 >> ANGLETOFINESHIFT] * 25;
+         th->momy =    finesine[an1 >> ANGLETOFINESHIFT] * 25;
+         th->momz = finetangent[an2 >> ANGLETOFINESHIFT] * 25;
          P_CheckMissileSpawn(th);
       }
    } while((type != type2) && (type = type2)); //killough: obfuscated!
@@ -1603,7 +1606,7 @@ void A_BouncingBFG(mobj_t *mo)
       newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
 
       S_StartSound(newmo, newmo->info->seesound);
-      P_SetTarget(&newmo->target, mo->target); // pass on the player
+      P_SetTarget<mobj_t>(&newmo->target, mo->target); // pass on the player
 
       newmo->angle = an2 = P_PointToAngle(
          newmo->x, newmo->y, clip.linetarget->x, clip.linetarget->y
@@ -1625,8 +1628,7 @@ void A_BouncingBFG(mobj_t *mo)
       ) / dist;
 
       newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-
-      P_SetTarget(&newmo->tracer, clip.linetarget); // haleyjd: track target
+      P_SetTarget<mobj_t>(&newmo->tracer, clip.linetarget); // haleyjd: track target
 
       P_CheckMissileSpawn(newmo);
 
@@ -1762,7 +1764,7 @@ void A_BFGBurst(mobj_t *mo)
       an += ANG90 / 10;
 
       th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
-      P_SetTarget(&th->target, mo->target);
+      P_SetTarget<mobj_t>(&th->target, mo->target);
 
       th->angle = an;
       th->momx = finecosine[an >> ANGLETOFINESHIFT] << 4;
@@ -2013,7 +2015,7 @@ void A_FirePlayerMissile(mobj_t *actor)
 
       if(clip.linetarget)
       {
-         P_SetTarget(&mo->tracer, clip.linetarget);
+         P_SetTarget<mobj_t>(&mo->tracer, clip.linetarget);
          if(CS_SERVER)
             SV_BroadcastActorTarget(mo, CS_AT_TRACER);
       }
@@ -2216,15 +2218,15 @@ void A_PlayerThunk(mobj_t *mo)
       // record old target
       oldtarget = mo->target;
       P_BulletSlope(mo);
-
-      if(!clip.linetarget)
+      if(clip.linetarget)
+      {
+         P_SetTarget<mobj_t>(&(mo->target), clip.linetarget);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(mo, CS_AT_TARGET);
+         localtarget = clip.linetarget;
+      }
+      else
          return;
-
-      P_SetTarget(&(mo->target), clip.linetarget);
-      if(CS_SERVER)
-         SV_BroadcastActorTarget(mo, CS_AT_TARGET);
-
-      localtarget = clip.linetarget;
    }
 
    // possibly disable the FaceTarget pointer using MIF_NOFACE
@@ -2261,7 +2263,7 @@ void A_PlayerThunk(mobj_t *mo)
       // restore player's old target if a new one was found & set
       if(settarget && localtarget)
       {
-         P_SetTarget(&(mo->target), oldtarget);
+         P_SetTarget<mobj_t>(&(mo->target), oldtarget);
          if(CS_SERVER)
             SV_BroadcastActorTarget(mo, CS_AT_TARGET);
       }

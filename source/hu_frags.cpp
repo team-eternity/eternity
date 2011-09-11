@@ -37,6 +37,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "g_game.h"
+#include "m_swap.h"
 #include "r_draw.h"
 #include "w_wad.h"
 #include "v_video.h"

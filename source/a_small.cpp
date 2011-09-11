@@ -33,6 +33,7 @@
 #ifndef EE_NO_SMALL_SUPPORT
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "doomtype.h"
 #include "w_wad.h"
 #include "v_misc.h"

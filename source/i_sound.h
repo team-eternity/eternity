@@ -27,6 +27,8 @@
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
 
+struct sfxinfo_t;
+
 typedef struct i_sounddriver_s
 {
    int  (*InitSound)(void);

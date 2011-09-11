@@ -24,7 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "c_io.h"
+#include "d_mod.h"
 #include "doomstat.h"
 #include "dstrings.h"
 #include "m_random.h"
@@ -1107,7 +1109,7 @@ void P_KillMobj(mobj_t *source, mobj_t *target, emod_t *mod)
       target->player->health = 0;
 
    // killough 8/29/98: remove from threaded list
-   P_UpdateThinker(&target->thinker);
+   target->Update();
 
    if(source && source->player)
    {
@@ -1797,7 +1799,7 @@ boolean P_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
       // If target is a player, set player's target to source,
       // so that a friend can tell who's hurting a player
       if(target->player)
-         P_SetTarget(&target->target, source);
+         P_SetTarget<mobj_t>(&target->target, source);
 
       // killough 9/8/98:
       // If target's health is less than 50%, move it to the front of its list.
@@ -1806,13 +1808,12 @@ boolean P_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
 
       if(target->health * 2 < target->info->spawnhealth)
       {
-         thinker_t *cap =
+         CThinker *cap = 
             &thinkerclasscap[target->flags & MF_FRIEND ?
                              th_friends : th_enemies];
-         (target->thinker.cprev->cnext = target->thinker.cnext)->cprev =
-            target->thinker.cprev;
-         (target->thinker.cnext = cap->cnext)->cprev = &target->thinker;
-         (target->thinker.cprev = cap)->cnext = &target->thinker;
+         (target->cprev->cnext = target->cnext)->cprev = target->cprev;
+         (target->cnext = cap->cnext)->cprev = target;
+         (target->cprev = cap)->cnext = target;
       }
    }
 
@@ -1887,10 +1888,10 @@ boolean P_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
           !((target->flags ^ target->lastenemy->flags) & MF_FRIEND) &&
              target->target != source)) // remember last enemy - killough
       {
-         P_SetTarget(&target->lastenemy, target->target);
+         P_SetTarget<mobj_t>(&target->lastenemy, target->target);
       }
 
-      P_SetTarget(&target->target, source);       // killough 11/98
+      P_SetTarget<mobj_t>(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
 
       if(target->state == states[target->info->spawnstate] &&
@@ -1923,17 +1924,15 @@ boolean P_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
 void P_Whistle(mobj_t *actor, int mobjtype)
 {
    mobj_t *mo;
-   thinker_t *t;
+   CThinker *th;
    fixed_t prevx, prevy, prevz, prestep, x, y, z;
    angle_t an;
 
    // look for a friend of the indicated type
-   for(t = thinkercap.next; t != &thinkercap; t = t->next)
+   for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(t->function != P_MobjThinker)
+      if(!(mo = dynamic_cast<mobj_t *>(th)))
          continue;
-
-      mo = (mobj_t *)t;
 
       // must be friendly, alive, and of the right type
       if(!(mo->flags & MF_FRIEND) || mo->health <= 0 ||
@@ -2096,7 +2095,7 @@ static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
 
    while((obj = P_FindMobjFromTID(params[1], obj, context->invocationData.trigger)))
    {
-      P_SetTarget(&(obj->target), targ);
+      P_SetTarget<mobj_t>(&(obj->target), targ);
    }
 
    return 0;

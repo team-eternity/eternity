@@ -28,9 +28,10 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-#include "p_mobj.h"
-#include "m_dllist.h"
+//#include "p_mobj.h"
+//#include "m_dllist.h"
 #include "m_qstr.h"
+#include "r_defs.h"
 
 //
 // Defines
@@ -57,6 +58,8 @@ enum
 // Structures
 //
 
+class acsthinker_t;
+
 //
 // acscript
 //
@@ -70,7 +73,7 @@ typedef struct acscript_s
    int *code;      // bytecode entry point
    boolean isOpen; // if true, is an open script
 
-   struct acsthinker_s *threads;
+   acsthinker_t *threads;
 } acscript_t;
 
 //
@@ -78,13 +81,15 @@ typedef struct acscript_s
 //
 // A thinker which runs a script.
 //
-typedef struct acsthinker_s
+class acsthinker_t : public CThinker
 {
-   thinker_t thinker;         // must be first
+protected:
+   void Think();
 
+public:
    // thread links
-   struct acsthinker_s **prev;
-   struct acsthinker_s *next;
+   acsthinker_t **prevthread;
+   acsthinker_t  *nextthread;
 
    // script info
    int vmID;                  // vm id number
@@ -112,7 +117,7 @@ typedef struct acsthinker_s
    mobj_t *trigger;           // thing that activated
    line_t *line;              // line that activated
    int    lineSide;           // line side of activation
-} acsthinker_t;
+};
 
 // deferred action types
 enum
@@ -157,7 +162,6 @@ typedef struct acsvm_s
 
 // Global function prototypes
 
-void    T_ACSThinker(acsthinker_t *script);
 void    ACS_Init(void);
 void    ACS_NewGame(void);
 void    ACS_InitLevel(void);

@@ -27,11 +27,17 @@
 #ifndef __R_MAIN__
 #define __R_MAIN__
 
-#include "d_player.h"
-#include "r_data.h"
-#include "r_draw.h"
-#include "r_defs.h"
-#include "p_chase.h"
+//#include "d_player.h"
+//#include "r_data.h"
+//#include "r_draw.h"
+//#include "r_defs.h"
+//#include "p_chase.h"
+
+#include "tables.h"
+
+struct pwindow_t;
+struct columndrawer_t;
+struct spandrawer_t;
 
 //
 // POV related.
@@ -87,6 +93,14 @@ extern boolean  showpsprites;
 
 #define LIGHTZDIV         16.0f
 
+#ifndef LIGHTTABLE_T__
+#define LIGHTTABLE_T__
+// sf: moved from r_main.h for coloured lighting
+#define MAXLIGHTZ        128
+#define MAXLIGHTSCALE     48
+typedef byte lighttable_t;
+#endif
+
 // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
 extern lighttable_t *(*scalelight)[MAXLIGHTSCALE];
 extern lighttable_t *(*zlight)[MAXLIGHTZ];
@@ -126,6 +140,11 @@ extern void (*colfunc)(void);
 // Utility functions.
 //
 
+struct node_t;
+struct seg_t;
+struct subsector_t;
+struct sector_t;
+
 int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
 int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
 int SlopeDiv(unsigned int num, unsigned int den);
@@ -137,6 +156,9 @@ void R_SectorColormap(sector_t *s);
 //
 // REFRESH - the actual rendering functions.
 //
+
+struct camera_t;
+struct player_t;
 
 // sf: camera point added
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
@@ -204,6 +226,15 @@ enum
    SEG_MARKFLOOR   = 0x04,
    SEG_MARKFPORTAL = 0x08
 };
+
+#ifndef LIGHTTABLE_T__
+#define LIGHTTABLE_T__
+typedef byte lighttable_t;
+#endif 
+
+struct side_t;
+struct visplane_t;
+struct portal_t;
 
 typedef struct cb_seg_s
 {

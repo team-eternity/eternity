@@ -28,6 +28,8 @@
 #ifndef IN_LUDE_H__
 #define IN_LUDE_H__
 
+#include "p_mobj.h"
+
 // Intermission object struct
 typedef struct interfns_s
 {

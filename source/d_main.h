@@ -27,8 +27,10 @@
 #ifndef __D_MAIN__
 #define __D_MAIN__
 
-#include "d_event.h"
-#include "p_chase.h"
+//#include "d_event.h"
+//#include "p_chase.h"
+#include "doomdef.h"
+#include "doomtype.h"
 
 // jff make startskill globally visible
 extern skill_t startskill;
@@ -65,8 +67,10 @@ extern boolean redrawsbar, redrawborder;
 extern boolean cdrom_mode;
 
 // Called by IO functions when input is detected.
+struct event_t;
 void D_PostEvent(event_t* ev);
 
+struct camera_t;
 extern camera_t *camera;
 extern char firstlevel[9];       // sf: first level of new wads
 

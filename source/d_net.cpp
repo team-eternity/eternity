@@ -45,6 +45,7 @@
 #include "d_gi.h"
 #include "g_dmflag.h"
 #include "e_player.h"
+#include "version.h"
 
 // [CG] Added.
 #include "cs_main.h"

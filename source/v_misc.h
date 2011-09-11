@@ -22,8 +22,10 @@
 #ifndef __V_MISC_H__
 #define __V_MISC_H__
 
-#include "v_patch.h"
-#include "v_block.h"
+//#include "v_patch.h"
+//#include "v_block.h"
+
+#include "m_fixed.h"
 
 void V_InitBox(void);
 void V_InitMisc(void);
@@ -121,9 +123,38 @@ extern int v_ticker;
 // Background 'tile' fill
 //
 
+struct VBuffer;
+
 void V_DrawBackgroundCached(byte *src, VBuffer *back_dest);
 void V_DrawBackground(const char *patchname, VBuffer *back_dest);
 void V_DrawDistortedBackground(const char* patchname, VBuffer *back_dest);
+
+// SoM: replaced globals with a struct and a single global
+typedef struct cb_video_s
+{
+   // SoM: Not implemented (yet)
+   int         bitdepth, pixelsize;
+
+   int         width, height;
+   int         pitch;
+   fixed_t     widthfrac, heightfrac;
+   fixed_t     xscale, yscale;
+   fixed_t     xstep, ystep;
+
+   float       xscalef, yscalef;
+   float       xstepf, ystepf;
+   boolean     scaled; // SoM: should be set when the scale values are
+
+   byte        *screens[5];
+
+   // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
+   int x1lookup[321];
+   int y1lookup[201];
+   int x2lookup[321];
+   int y2lookup[201];
+} cb_video_t;
+
+extern cb_video_t video;
 
 #endif
 

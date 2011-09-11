@@ -25,11 +25,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "c_io.h"
 #include "r_main.h"
 #include "p_info.h"
 #include "p_map.h"
+#include "p_portal.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -526,24 +528,22 @@ result_e T_MovePlane
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 
-void T_MoveFloor(floormove_t* floor)
+void floormove_t::Think()
 {
    result_e      res;
 
    // haleyjd 10/13/05: resetting stairs
-   if(floor->type == genBuildStair || floor->type == genWaitStair ||
-      floor->type == genDelayStair)
+   if(type == genBuildStair || type == genWaitStair || type == genDelayStair)
    {
-      if(floor->resetTime && !--floor->resetTime)
+      if(resetTime && !--resetTime)
       {
          // reset timer has expired, so reverse direction, set
          // destination to original floorheight, and change type
-         floor->direction =
-            (floor->direction == plat_up) ? plat_down : plat_up;
-         floor->floordestheight = floor->resetHeight;
-         floor->type = genResetStair;
+         direction = (direction == plat_up) ? plat_down : plat_up;
+         floordestheight = resetHeight;
+         type = genResetStair;
 
-         P_FloorSequence(floor->sector);
+         P_FloorSequence(sector);
       }
 
       // While stair is building, the delay timer is counting down
@@ -556,24 +556,24 @@ void T_MoveFloor(floormove_t* floor)
       //
       // Stairs waiting to reset never do normal thinking
 
-      switch(floor->type)
+      switch(type)
       {
       case genBuildStair:
-         if(floor->delayTimer && !--floor->delayTimer)
+         if(delayTimer && !--delayTimer)
          {
-            floor->type = genDelayStair;
-            floor->delayTimer = floor->delayTime;
-            S_StopSectorSequence(floor->sector, false);
+            type = genDelayStair;
+            delayTimer = delayTime;
+            S_StopSectorSequence(sector, false);
          }
          break;
       case genDelayStair:
-         if(floor->delayTimer && !--floor->delayTimer)
+         if(delayTimer && !--delayTimer)
          {
-            floor->type = genBuildStair;
-            floor->delayTimer = floor->stepRaiseTime;
+            type = genBuildStair;
+            delayTimer = stepRaiseTime;
 
-            if(floor->sector->floorheight != floor->floordestheight)
-               P_FloorSequence(floor->sector);
+            if(sector->floorheight != floordestheight)
+               P_FloorSequence(sector);
          }
          return;
       case genWaitStair:
@@ -583,85 +583,80 @@ void T_MoveFloor(floormove_t* floor)
       }
    }
 
-   res = T_MovePlane       // move the floor
-   (
-     floor->sector,
-     floor->speed,
-     floor->floordestheight,
-     floor->crush,
-     0,
-     floor->direction
-   );
+   // move the floor
+   res = T_MovePlane(sector, speed, floordestheight, crush, 0, direction);
 
    // sf: added silentmove
    // haleyjd: moving sound handled by sound sequences now
 
    if(res == pastdest)    // if destination height is reached
    {
-      S_StopSectorSequence(floor->sector, false);
+      S_StopSectorSequence(sector, false);
 
       // haleyjd 10/13/05: stairs that wish to reset must wait
       // until their reset timer expires.
-      if(floor->type == genBuildStair && floor->resetTime > 0)
+      if(type == genBuildStair && resetTime > 0)
       {
-         floor->type = genWaitStair;
+         type = genWaitStair;
          return;
       }
 
-      if(floor->direction == plat_up)       // going up
+      if(direction == plat_up)       // going up
       {
-         switch(floor->type) // handle texture/type changes
+         switch(type) // handle texture/type changes
          {
          case donutRaise:
-            P_TransferSectorSpecial(floor->sector, &(floor->special));
-            floor->sector->floorpic = floor->texture;
+            P_TransferSectorSpecial(sector, &special);
+            sector->floorpic = texture;
             break;
          case genFloorChgT:
          case genFloorChg0:
             //jff add to fix bug in special transfers from changes
-            P_TransferSectorSpecial(floor->sector, &(floor->special));
+            P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
-            floor->sector->floorpic = floor->texture;
+            sector->floorpic = texture;
             break;
          default:
             break;
          }
       }
-      else if (floor->direction == plat_down) // going down
+      else if (direction == plat_down) // going down
       {
-         switch(floor->type) // handle texture/type changes
+         switch(type) // handle texture/type changes
          {
          case lowerAndChange:
             //jff add to fix bug in special transfers from changes
-            P_TransferSectorSpecial(floor->sector, &(floor->special));
-            floor->sector->floorpic = floor->texture;
+            P_TransferSectorSpecial(sector, &special);
+            sector->floorpic = texture;
             break;
          case genFloorChgT:
          case genFloorChg0:
             //jff add to fix bug in special transfers from changes
-            P_TransferSectorSpecial(floor->sector, &(floor->special));
+            P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
-            floor->sector->floorpic = floor->texture;
+            sector->floorpic = texture;
             break;
          default:
             break;
          }
       }
 
+      sector->floordata = NULL; //jff 2/22/98
+
       // [CG] Just set the floor as inactive if we're a client.
       if(CS_CLIENT)
-         floor->inactive = cl_current_world_index;
+         inactive = cl_current_world_index;
       else
-         P_RemoveFloor(floor);
+         this->Remove(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
 
-      if(floor->sector->stairlock == -2) // if this sector is stairlocked
+      if(sector->stairlock == -2) // if this sector is stairlocked
       {
-         sector_t *sec = floor->sector;
+         sector_t *sec = sector;
          sec->stairlock = -1;             // thinker done, promote lock to -1
 
          while(sec->prevsec != -1 &&
@@ -669,7 +664,7 @@ void T_MoveFloor(floormove_t* floor)
             sec = &sectors[sec->prevsec]; // search for a non-done thinker
          if(sec->prevsec == -1)           // if all thinkers previous are done
          {
-            sec = floor->sector;          // search forward
+            sec = sector;          // search forward
             while(sec->nextsec != -1 &&
                   sectors[sec->nextsec].stairlock != -2)
                sec = &sectors[sec->nextsec];
@@ -695,7 +690,7 @@ void P_RemoveFloor(floormove_t *floor)
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(floor->net_id, ms_floor);
    else if(CS_CLIENT)
-      S_StopSectorSequence(floor->sector, false);
+      S_StopSectorSequence(sector, false);
 
    floor->sector->floordata = NULL;  //jff 2/22/98
    P_RemoveThinker(&floor->thinker); //remove this floor from list of movers
@@ -714,53 +709,24 @@ void P_RemoveFloor(floormove_t *floor)
 //
 // jff 02/22/98 added to support parallel floor/ceiling motion
 //
-void T_MoveElevator(elevator_t* elevator)
+void elevator_t::Think()
 {
    result_e      res;
 
-   if (elevator->direction<0)      // moving down
+   if (direction < 0)      // moving down
    {
-      res = T_MovePlane    //jff 4/7/98 reverse order of ceiling/floor
-      (
-         elevator->sector,
-         elevator->speed,
-         elevator->ceilingdestheight,
-         -1,
-         1,                          // move floor
-         elevator->direction
-      );
+      //jff 4/7/98 reverse order of ceiling/floor
+      res = T_MovePlane(sector, speed, ceilingdestheight, -1, 1, direction); // move floor
+
       if(res==ok || res==pastdest) // jff 4/7/98 don't move ceil if blocked
-         T_MovePlane
-         (
-            elevator->sector,
-            elevator->speed,
-            elevator->floordestheight,
-            -1,
-            0,                        // move ceiling
-            elevator->direction
-          );
+         T_MovePlane(sector, speed, floordestheight, -1, 0, direction); // move ceiling
    }
    else // up
    {
-      res = T_MovePlane    //jff 4/7/98 reverse order of ceiling/floor
-      (
-         elevator->sector,
-         elevator->speed,
-         elevator->floordestheight,
-         -1,
-         0,                          // move ceiling
-         elevator->direction
-      );
+      //jff 4/7/98 reverse order of ceiling/floor
+      res = T_MovePlane(sector, speed, floordestheight, -1, 0, direction); // move ceiling
       if(res==ok || res==pastdest) // jff 4/7/98 don't move floor if blocked
-         T_MovePlane
-         (
-            elevator->sector,
-            elevator->speed,
-            elevator->ceilingdestheight,
-            -1,
-            1,                        // move floor
-            elevator->direction
-         );
+         T_MovePlane(sector, speed, ceilingdestheight, -1, 1, direction); // move floor
    }
 
    // make floor move sound
@@ -768,13 +734,15 @@ void T_MoveElevator(elevator_t* elevator)
 
    if(res == pastdest)            // if destination height acheived
    {
-      S_StopSectorSequence(elevator->sector, false);
+      S_StopSectorSequence(sector, false);
+      sector->floordata = NULL;     //jff 2/22/98
+      sector->ceilingdata = NULL;   //jff 2/22/98
       // [CG] Just set the elevator as inactive if we're a client.
       if(CS_CLIENT)
-         elevator->inactive = cl_current_world_index;
+         inactive = cl_current_world_index;
       else
-         P_RemoveElevator(elevator);
-
+         this->Remove();               // remove elevator from actives
+      
       // make floor stop sound
       // haleyjd: handled through sound sequences
    }
@@ -799,28 +767,34 @@ void P_RemoveElevator(elevator_t *elevator)
 // Pillar thinker function
 // joek 4/9/06
 //
-void T_MovePillar(pillar_t *pillar)
+void pillar_t::Think()
 {
    boolean result;
 
    // Move floor
-   result  = (T_MovePlane(pillar->sector, pillar->floorSpeed,
-                          pillar->floordest, pillar->crush, 0,
-                          pillar->direction) == pastdest);
+   result = (T_MovePlane(
+      sector, floorSpeed, floordest, crush, 0, direction
+   ) == pastdest);
 
    // Move ceiling
-   result &= (T_MovePlane(pillar->sector, pillar->ceilingSpeed,
-                          pillar->ceilingdest, pillar->crush, 1,
-                          pillar->direction * -1) == pastdest);
+   result &= (T_MovePlane(
+      sector, ceilingSpeed, ceilingdest, crush, 1, direction * -1
+   ) == pastdest);
 
    if(result)
    {
-      S_StopSectorSequence(pillar->sector, false);
+      S_StopSectorSequence(sector, false);
+      sector->floordata = NULL;
+      sector->ceilingdata = NULL;      
       // [CG] Just set the pillar as inactive if we're a client.
       if(CS_CLIENT)
-         pillar->inactive = cl_current_world_index;
+         inactive = cl_current_world_index;
       else
-         P_RemovePillar(pillar);
+      {
+         // TODO: notify scripts
+         //P_TagFinished(sector->tag);
+         this->Remove();
+      }
    }
 }
 
@@ -841,13 +815,11 @@ floormove_t* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 {
    int i;
    int secnum = sec - sectors;
-   floormove_t *floor = (floormove_t *)(Z_Calloc(
-      1, sizeof(*floor), PU_LEVSPEC, 0
-   ));
+   floormove_t *floor = new floormove_t;
 
-   P_AddThinker (&floor->thinker);
+   floor->Add();
+
    sec->floordata = floor; //jff 2/22/98
-   floor->thinker.function = T_MoveFloor;
    floor->type = floortype;
    floor->crush = -1;
 
@@ -874,7 +846,7 @@ floormove_t* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
    case lowerFloor32Turbo:
       floor->direction = plat_down;
       floor->sector = sec;
-      floor->speed = FLOORSPEED*4;
+      floor->speed = FLOORSPEED * 4;
       floor->floordestheight =
          floor->sector->floorheight + 32 * FRACUNIT;
       break;
@@ -1101,9 +1073,7 @@ int EV_DoFloor(line_t *line, floor_e floortype)
       rtn = 1;
 
       if(serverside)
-      {
          floor = P_SpawnFloor(line, &sectors[secnum], floortype);
-      }
    }
    return rtn;
 }
@@ -1242,6 +1212,14 @@ int EV_BuildStairs(line_t *line, stair_e type)
          // create new floor thinker for first step
          rtn = 1;
 
+         floor = new floormove_t;
+         floor->Add();
+         sec->floordata = floor;
+         floor->direction = 1;
+         floor->sector = sec;
+         floor->type = buildStair;   //jff 3/31/98 do not leave uninited
+
+
          // set up the speed and stepsize according to the stairs type
          switch(type)
          {
@@ -1326,11 +1304,10 @@ int EV_BuildStairs(line_t *line, stair_e type)
                secnum = newsecnum;
 
                // create and initialize a thinker for the next step
-               floor = (floormove_t *)(Z_Calloc(1, sizeof(*floor), PU_LEVSPEC, 0));
-               P_AddThinker(&floor->thinker);
+               floor = new floormove_t;
+               floor->Add();
 
                sec->floordata = floor; //jff 2/22/98
-               floor->thinker.function = T_MoveFloor;
                floor->direction = 1;
                floor->sector = sec;
                floor->speed = speed;
@@ -1511,7 +1488,6 @@ int EV_DoDonut(line_t *line)
             //  Spawn lowering donut-hole pillar
             P_SpawnDonutHole(line, s1, s3_floorheight);
          }
-
          break;
       }
    }
@@ -1521,15 +1497,12 @@ int EV_DoDonut(line_t *line)
 floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
                           fixed_t floordestheight)
 {
-   floormove_t *floor = (floormove_t *)(Z_Calloc(
-      1, sizeof(*floor), PU_LEVSPEC, 0
-   ));
+   floormove_t *floor = new floormove_t;
 
-   P_AddThinker (&floor->thinker);
+   floor->Add();
 
    sec->floordata = floor; //jff 2/22/98
 
-   floor->thinker.function = T_MoveFloor;
    floor->type = donutRaise;
    floor->crush = -1;
    floor->direction = plat_up;
@@ -1556,15 +1529,12 @@ floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
 floormove_t* P_SpawnDonutHole(line_t *line, sector_t *sec,
                               fixed_t floordestheight)
 {
-   floormove_t *floor = (floormove_t *)(Z_Calloc(
-      1, sizeof(*floor), PU_LEVSPEC, 0
-   ));
+   floormove_t *floor = new floormove_t;
 
-   P_AddThinker (&floor->thinker);
+   floor->Add();
 
    sec->floordata = floor; //jff 2/22/98
 
-   floor->thinker.function = T_MoveFloor;
    floor->type = lowerFloor;
    floor->crush = -1;
    floor->direction = plat_down;
@@ -1623,16 +1593,13 @@ int EV_DoElevator(line_t *line, elevator_e elevtype)
 
 elevator_t* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
 {
-   elevator_t *elevator = (elevator_t *)(Z_Calloc(
-      1, sizeof(*elevator), PU_LEVSPEC, 0
-   ));
+   elevator_t *elevator = new elevator_t;
 
-   P_AddThinker (&elevator->thinker);
+   elevator->Add();
 
    sec->floordata = elevator; //jff 2/22/98
    sec->ceilingdata = elevator; //jff 2/22/98
 
-   elevator->thinker.function = T_MoveElevator;
    elevator->type = elevtype;
 
    // set up the fields according to the type of elevator action
@@ -1731,9 +1698,7 @@ manual_pillar:
       P_SpawnBuildPillar(line, sector, pd->height, pd->speed, pd->crush);
 
       if(manual)
-      {
          return returnval;
-      }
    }
 
    return returnval;
@@ -1742,17 +1707,13 @@ manual_pillar:
 pillar_t* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
                              fixed_t speed, int crush)
 {
-   pillar_t *pillar = (pillar_t *)(Z_Calloc(
-      1, sizeof(pillar_t), PU_LEVSPEC, 0
-   ));
    int destheight;
+   pillar_t *pillar = new pillar_t;
 
-   P_AddThinker(&pillar->thinker);
 
    sector->floordata = pillar;
    sector->ceilingdata = pillar;
-
-   pillar->thinker.function = T_MovePillar;
+   pillar->Add();
    pillar->sector = sector;
 
    if(height == 0) // height == 0 so we meet in the middle
@@ -1851,16 +1812,11 @@ manual_pillar:
 pillar_t* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
                             fixed_t fdist, fixed_t cdist)
 {
-   pillar_t *pillar = (pillar_t *)(Z_Calloc(
-      1, sizeof(pillar_t), PU_LEVSPEC, 0
-   ));
-
-   P_AddThinker(&pillar->thinker);
+   pillar_t *pillar = new pillar_t;
 
    sector->floordata   = pillar;
    sector->ceilingdata = pillar;
-
-   pillar->thinker.function = T_MovePillar;
+   pillar->Add();
    pillar->sector = sector;
 
    if(fdist == 0) // floordist == 0 so we find the next lowest floor
@@ -1948,62 +1904,72 @@ void P_RemoveFloorWaggle(floorwaggle_t *floorwaggle)
 //
 // haleyjd: thinker for floor waggle action.
 //
-void T_FloorWaggle(floorwaggle_t *waggle)
+void floorwaggle_t::Think()
 {
    fixed_t destheight;
    fixed_t dist;
    extern fixed_t FloatBobOffsets[64];
 
-   switch(waggle->state)
+   switch(this->state)
    {
    case WGLSTATE_EXPAND:
-      if((waggle->scale += waggle->scaleDelta) >= waggle->targetScale)
+      if((this->scale += this->scaleDelta) >= this->targetScale)
       {
-         waggle->scale = waggle->targetScale;
-         waggle->state = WGLSTATE_STABLE;
+         this->scale = this->targetScale;
+         this->state = WGLSTATE_STABLE;
       }
       break;
    case WGLSTATE_REDUCE:
-      if((waggle->scale -= waggle->scaleDelta) <= 0)
+      if((this->scale -= this->scaleDelta) <= 0)
       {
          // Remove
          /*
          waggle->sector->floorheight = waggle->originalHeight;
          P_ChangeSector(waggle->sector, 8);
          */
-         destheight = waggle->originalHeight;
-         dist       = waggle->originalHeight - waggle->sector->floorheight;
-         T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0,
-                     destheight >= waggle->sector->floorheight ? plat_down : plat_up);
+         destheight = this->originalHeight;
+         dist       = this->originalHeight - this->sector->floorheight;
+         T_MovePlane(this->sector, abs(dist), destheight, 8, 0, 
+                     destheight >= this->sector->floorheight ? plat_down : plat_up);
 
+         this->sector->floordata = NULL;
          // [CG] Just set the floor waggle as inactive if we're a client.
          if(CS_CLIENT)
-            waggle->inactive = cl_current_world_index;
+            this->inactive = cl_current_world_index;
          else
-            P_RemoveFloorWaggle(waggle);
+         {
+            // HEXEN_TODO: P_TagFinished
+            // P_TagFinished(waggle->sector->tag);
+            this->Remove();
+         }
          return;
       }
       break;
    case WGLSTATE_STABLE:
-      if(waggle->ticker != -1)
+      if(this->ticker != -1)
       {
-         if(!--waggle->ticker)
-            waggle->state = WGLSTATE_REDUCE;
+         if(!--this->ticker)
+            this->state = WGLSTATE_REDUCE;
       }
       break;
    }
 
-   waggle->accumulator += waggle->accDelta;
+   this->accumulator += this->accDelta;
 
-   destheight =
-      waggle->originalHeight +
-         FixedMul(FloatBobOffsets[(waggle->accumulator >> FRACBITS) & 63],
-                  waggle->scale);
-   dist = destheight - waggle->sector->floorheight;
+   destheight = this->originalHeight + FixedMul(
+      FloatBobOffsets[(this->accumulator >> FRACBITS) & 63],
+      this->scale
+   );
+   dist = destheight - this->sector->floorheight;
 
-   T_MovePlane(waggle->sector, abs(dist), destheight, 8, 0,
-               destheight >= waggle->sector->floorheight ? plat_up : plat_down);
-
+   T_MovePlane(
+      this->sector,
+      abs(dist),
+      destheight,
+      8,
+      0,
+      destheight >= this->sector->floorheight ? plat_up : plat_down
+   );
 }
 
 //
@@ -2054,12 +2020,11 @@ manual_waggle:
 floorwaggle_t* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
                                   int speed, int offset, int timer)
 {
-   floorwaggle_t *waggle = (floorwaggle_t *)(Z_Calloc(
-      1, sizeof(*waggle), PU_LEVSPEC, 0
-   ));
+   floorwaggle_t *waggle = new floorwaggle_t;
 
    sector->floordata = waggle;
-   waggle->thinker.function = T_FloorWaggle;
+   waggle->Add()
+
    P_AddThinker(&waggle->thinker);
 
    waggle->sector         = sector;

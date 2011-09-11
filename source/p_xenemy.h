@@ -32,18 +32,22 @@
 #ifndef P_XENEMY_H__
 #define P_XENEMY_H__
 
+#include "p_mobj.h"
+
 // Earthquakes
 
-typedef struct quakethinker_s
+class quakethinker_t : public degenmobj_t
 {
-   degenmobj_t origin;   // serves as thinker and sound origin
+protected:
+   void Think();
+
+public:
    int intensity;        // richter scale (hardly realistic)
    int duration;         // how long it lasts
    fixed_t quakeRadius;  // radius of shaking effects
    fixed_t damageRadius; // radius of damage effects (if any)
-} quakethinker_t;
+};
 
-void T_QuakeThinker(quakethinker_t *qt);
 boolean P_StartQuake(int *args);
 
 #endif

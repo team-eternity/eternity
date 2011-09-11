@@ -29,8 +29,9 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-
+#include "i_system.h"
 #include "doomstat.h"
+#include "d_mod.h"
 #include "g_game.h"
 #include "m_bbox.h"
 #include "m_queue.h"
@@ -1049,7 +1050,7 @@ typedef struct mobjqitem_s
 //
 void Polyobj_InitLevel(void)
 {
-   thinker_t   *th;
+   CThinker   *th;
    mqueue_t    spawnqueue;
    mqueue_t    anchorqueue;
    mobjqitem_t *qitem;
@@ -1069,10 +1070,9 @@ void Polyobj_InitLevel(void)
    // the mobj_t pointers on a queue for use below.
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
+      mobj_t *mo;
+      if((mo = dynamic_cast<mobj_t *>(th)))
       {
-         mobj_t *mo = (mobj_t *)th;
-
          if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
             mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||
             mo->info->doomednum == POLYOBJ_SPAWNDAMAGE_DOOMEDNUM)
@@ -1158,22 +1158,22 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 //
 // Thinker function for PolyObject rotation.
 //
-void T_PolyObjRotate(polyrotate_t *th)
+void polyrotate_t::Think()
 {
-   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
 #ifdef RANGECHECK
    if(!po)
-      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", this->polyObjNum);
 #endif
 
    // check for displacement due to override and reattach when possible
    if(po->thinker == NULL)
    {
-      po->thinker = &th->thinker;
+      po->thinker = this;
       
       // reset polyobject's thrust
-      po->thrust = D_abs(th->speed) >> 8;
+      po->thrust = D_abs(this->speed) >> 8;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1182,32 +1182,32 @@ void T_PolyObjRotate(polyrotate_t *th)
 
    // rotate by 'speed' angle per frame
    // if distance == -1, this polyobject rotates perpetually
-   if(Polyobj_rotate(po, th->speed) && th->distance != -1)
+   if(Polyobj_rotate(po, this->speed) && this->distance != -1)
    {
-      int avel = D_abs(th->speed);
+      int avel = D_abs(this->speed);
 
       // decrement distance by the amount it moved
-      th->distance -= avel;
+      this->distance -= avel;
 
       // are we at or past the destination?
-      if(th->distance <= 0)
+      if(this->distance <= 0)
       {
          // remove thinker
-         if(po->thinker == &th->thinker)
+         if(po->thinker == this)
          {
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         P_RemoveThinker(&th->thinker);
+         this->Remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
       }
-      else if(th->distance < avel)
+      else if(this->distance < avel)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
-         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+         this->speed = this->speed >= 0 ? this->distance : -this->distance;
       }
    }
 }
@@ -1224,22 +1224,22 @@ d_inline static void Polyobj_componentSpeed(int resVel, int angle,
    *yVel = FixedMul(resVel,   finesine[angle]);
 }
 
-void T_PolyObjMove(polymove_t *th)
+void polymove_t::Think()
 {
-   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
 #ifdef RANGECHECK
    if(!po)
-      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", th->polyObjNum);
+      I_Error("T_PolyObjRotate: thinker has invalid id %d\n", this->polyObjNum);
 #endif
 
    // check for displacement due to override and reattach when possible
    if(po->thinker == NULL)
    {
-      po->thinker = &th->thinker;
+      po->thinker = this;
       
       // reset polyobject's thrust
-      po->thrust = D_abs(th->speed) >> 3;
+      po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1247,53 +1247,53 @@ void T_PolyObjMove(polymove_t *th)
    }
 
    // move the polyobject one step along its movement angle
-   if(Polyobj_moveXY(po, th->momx, th->momy))
+   if(Polyobj_moveXY(po, this->momx, this->momy))
    {
-      int avel = D_abs(th->speed);
+      int avel = D_abs(this->speed);
 
       // decrement distance by the amount it moved
-      th->distance -= avel;
+      this->distance -= avel;
 
       // are we at or past the destination?
-      if(th->distance <= 0)
+      if(this->distance <= 0)
       {
          // remove thinker
-         if(po->thinker == &th->thinker)
+         if(po->thinker == this)
          {
             po->thinker = NULL;
             po->thrust = FRACUNIT;
          }
-         P_RemoveThinker(&th->thinker);
+         this->Remove();
 
          // TODO: notify scripts
          S_StopPolySequence(po);
       }
-      else if(th->distance < avel)
+      else if(this->distance < avel)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
-         th->speed = th->speed >= 0 ? th->distance : -th->distance;
-         Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+         this->speed = this->speed >= 0 ? this->distance : -this->distance;
+         Polyobj_componentSpeed(this->speed, this->angle, &this->momx, &this->momy);
       }
    }
 }
 
-void T_PolyDoorSlide(polyslidedoor_t *th)
+void polyslidedoor_t::Think()
 {
-   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
 #ifdef RANGECHECK
    if(!po)
-      I_Error("T_PolyDoorSlide: thinker has invalid id %d\n", th->polyObjNum);
+      I_Error("T_PolyDoorSlide: thinker has invalid id %d\n", this->polyObjNum);
 #endif
 
    // check for displacement due to override and reattach when possible
    if(po->thinker == NULL)
    {
-      po->thinker = &th->thinker;
+      po->thinker = this;
       
       // reset polyobject's thrust
-      po->thrust = D_abs(th->speed) >> 3;
+      po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1301,91 +1301,91 @@ void T_PolyDoorSlide(polyslidedoor_t *th)
    }
 
    // count down wait period
-   if(th->delayCount)
+   if(this->delayCount)
    {
-      if(--th->delayCount == 0)
+      if(--this->delayCount == 0)
          S_StartPolySequence(po);
       return;
    }
 
       // move the polyobject one step along its movement angle
-   if(Polyobj_moveXY(po, th->momx, th->momy))
+   if(Polyobj_moveXY(po, this->momx, this->momy))
    {
-      int avel = D_abs(th->speed);
+      int avel = D_abs(this->speed);
       
       // decrement distance by the amount it moved
-      th->distance -= avel;
+      this->distance -= avel;
       
       // are we at or past the destination?
-      if(th->distance <= 0)
+      if(this->distance <= 0)
       {
          // does it need to close?
-         if(!th->closing)
+         if(!this->closing)
          {
-            th->closing = true;
+            this->closing = true;
             
             // reset distance and speed
-            th->distance = th->initDistance;
-            th->speed    = th->initSpeed;
+            this->distance = this->initDistance;
+            this->speed    = this->initSpeed;
             
             // start delay
-            th->delayCount = th->delay;
+            this->delayCount = this->delay;
             
             // reverse angle
-            th->angle = th->revAngle;
+            this->angle = this->revAngle;
             
             // reset component speeds
-            Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+            Polyobj_componentSpeed(this->speed, this->angle, &this->momx, &this->momy);
          } 
          else
          {
             // remove thinker
-            if(po->thinker == &th->thinker)
+            if(po->thinker == this)
             {
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            P_RemoveThinker(&th->thinker);
+            this->Remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
       }
-      else if(th->distance < avel)
+      else if(this->distance < avel)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
-         th->speed = th->speed >= 0 ? th->distance : -th->distance;
-         Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
+         this->speed = this->speed >= 0 ? this->distance : -this->distance;
+         Polyobj_componentSpeed(this->speed, this->angle, &this->momx, &this->momy);
       }
    }
-   else if(th->closing && th->distance != th->initDistance)
+   else if(this->closing && this->distance != this->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
-      th->distance = th->initDistance - th->distance;
-      th->speed    = th->initSpeed;
-      th->angle    = th->initAngle;
-      Polyobj_componentSpeed(th->speed, th->angle, &th->momx, &th->momy);
-      th->closing  = false;
+      this->distance = this->initDistance - this->distance;
+      this->speed    = this->initSpeed;
+      this->angle    = this->initAngle;
+      Polyobj_componentSpeed(this->speed, this->angle, &this->momx, &this->momy);
+      this->closing  = false;
       S_StartPolySequence(po);
    }
 }
 
-void T_PolyDoorSwing(polyswingdoor_t *th)
+void polyswingdoor_t::Think()
 {
-   polyobj_t *po = Polyobj_GetForNum(th->polyObjNum);
+   polyobj_t *po = Polyobj_GetForNum(this->polyObjNum);
 
 #ifdef RANGECHECK
    if(!po)
-      I_Error("T_PolyDoorSwing: thinker has invalid id %d\n", th->polyObjNum);
+      I_Error("T_PolyDoorSwing: thinker has invalid id %d\n", this->polyObjNum);
 #endif
 
    // check for displacement due to override and reattach when possible
    if(po->thinker == NULL)
    {
-      po->thinker = &th->thinker;
+      po->thinker = this;
       
       // reset polyobject's thrust
-      po->thrust = D_abs(th->speed) >> 3;
+      po->thrust = D_abs(this->speed) >> 3;
       if(po->thrust < FRACUNIT)
          po->thrust = FRACUNIT;
       else if(po->thrust > 4*FRACUNIT)
@@ -1393,64 +1393,64 @@ void T_PolyDoorSwing(polyswingdoor_t *th)
    }
 
    // count down wait period
-   if(th->delayCount)
+   if(this->delayCount)
    {
-      if(--th->delayCount == 0)
+      if(--this->delayCount == 0)
          S_StartPolySequence(po);
       return;
    }
 
    // rotate by 'speed' angle per frame
    // if distance == -1, this polyobject rotates perpetually
-   if(Polyobj_rotate(po, th->speed) && th->distance != -1)
+   if(Polyobj_rotate(po, this->speed) && this->distance != -1)
    {
-      int avel = D_abs(th->speed);
+      int avel = D_abs(this->speed);
 
       // decrement distance by the amount it moved
-      th->distance -= avel;
+      this->distance -= avel;
 
       // are we at or past the destination?
-      if(th->distance <= 0)
+      if(this->distance <= 0)
       {
          // does it need to close?
-         if(!th->closing)
+         if(!this->closing)
          {
-            th->closing = true;
+            this->closing = true;
             
             // reset distance and speed
-            th->distance =  th->initDistance;
-            th->speed    = -th->initSpeed; // reverse speed on close
+            this->distance =  this->initDistance;
+            this->speed    = -this->initSpeed; // reverse speed on close
             
             // start delay
-            th->delayCount = th->delay;            
+            this->delayCount = this->delay;            
          } 
          else
          {
             // remove thinker
-            if(po->thinker == &th->thinker)
+            if(po->thinker == this)
             {
                po->thinker = NULL;
                po->thrust = FRACUNIT;
             }
-            P_RemoveThinker(&th->thinker);
+            this->Remove();
             // TODO: notify scripts
          }
          S_StopPolySequence(po);
       }
-      else if(th->distance < avel)
+      else if(this->distance < avel)
       {
          // we have less than one multiple of 'speed' left to go,
          // so change the speed so that it doesn't pass the destination
-         th->speed = th->speed >= 0 ? th->distance : -th->distance;
+         this->speed = this->speed >= 0 ? this->distance : -this->distance;
       }
    }
-   else if(th->closing && th->distance != th->initDistance)
+   else if(this->closing && this->distance != this->initDistance)
    {
       // move was blocked, special handling required -- make it reopen
 
-      th->distance = th->initDistance - th->distance;
-      th->speed    = th->initSpeed;
-      th->closing  = false;
+      this->distance = this->initDistance - this->distance;
+      this->speed    = this->initSpeed;
+      this->closing  = false;
 
       S_StartPolySequence(po);
    }
@@ -1480,10 +1480,9 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
       return 0;
 
    // create a new thinker
-   th = (polyrotate_t *)(Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL));
-   th->thinker.function = T_PolyObjRotate;
-   P_AddThinker(&th->thinker);
-   po->thinker = &th->thinker;
+   th = new polyrotate_t;
+   th->Add();
+   po->thinker = th;
 
    // set fields
    th->polyObjNum = prdata->polyObjNum;
@@ -1518,10 +1517,9 @@ int EV_DoPolyObjRotate(polyrotdata_t *prdata)
          break;
       
       // create a new thinker
-      th = (polyrotate_t *)(Z_Calloc(1, sizeof(polyrotate_t), PU_LEVSPEC, NULL));
-      th->thinker.function = T_PolyObjRotate;
-      P_AddThinker(&th->thinker);
-      po->thinker = &th->thinker;
+      th = new polyrotate_t;
+      th->Add();
+      po->thinker = th;
       
       // set fields
       th->polyObjNum = po->id;
@@ -1575,10 +1573,9 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
       return 0;
 
    // create a new thinker
-   th = (polymove_t *)(Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL));
-   th->thinker.function = T_PolyObjMove;
-   P_AddThinker(&th->thinker);
-   po->thinker = &th->thinker;
+   th = new polymove_t;
+   th->Add();
+   po->thinker = th;
 
    // set fields
    th->polyObjNum = pmdata->polyObjNum;
@@ -1609,10 +1606,9 @@ int EV_DoPolyObjMove(polymovedata_t *pmdata)
          break;
 
       // create a new thinker
-      th = (polymove_t *)(Z_Calloc(1, sizeof(polymove_t), PU_LEVSPEC, NULL));
-      th->thinker.function = T_PolyObjMove;
-      P_AddThinker(&th->thinker);
-      po->thinker = &th->thinker;
+      th = new polymove_t;
+      th->Add();
+      po->thinker = th;
       
       // set fields
       th->polyObjNum = po->id;
@@ -1646,12 +1642,11 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
    unsigned int angtemp, angadd = ANG180;
 
    // allocate and add a new slide door thinker
-   th = (polyslidedoor_t *)(Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL));
-   th->thinker.function = T_PolyDoorSlide;
-   P_AddThinker(&th->thinker);
+   th = new polyslidedoor_t;
+   th->Add();
    
    // point the polyobject to this thinker
-   po->thinker = &th->thinker;
+   po->thinker = th;
 
    // setup fields of the thinker
    th->polyObjNum = po->id;
@@ -1687,12 +1682,11 @@ static void Polyobj_doSlideDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = (polyslidedoor_t *)(Z_Calloc(1, sizeof(polyslidedoor_t), PU_LEVSPEC, NULL));
-      th->thinker.function = T_PolyDoorSlide;
-      P_AddThinker(&th->thinker);
+      th = new polyslidedoor_t;
+      th->Add();
 
       // point the polyobject to this thinker
-      po->thinker = &th->thinker;
+      po->thinker = th;
 
       th->polyObjNum = po->id;
       th->closing    = false;
@@ -1727,12 +1721,11 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
    int diracc = -1;
 
    // allocate and add a new swing door thinker
-   th = (polyswingdoor_t *)(Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL));
-   th->thinker.function = T_PolyDoorSwing;
-   P_AddThinker(&th->thinker);
+   th = new polyswingdoor_t;
+   th->Add();
    
    // point the polyobject to this thinker
-   po->thinker = &th->thinker;
+   po->thinker = th;
 
    // setup fields of the thinker
    th->polyObjNum   = po->id;
@@ -1760,12 +1753,11 @@ static void Polyobj_doSwingDoor(polyobj_t *po, polydoordata_t *doordata)
       if((po->flags & POF_ISBAD) || po->thinker)
          break;
 
-      th = (polyswingdoor_t *)(Z_Calloc(1, sizeof(polyswingdoor_t), PU_LEVSPEC, NULL));
-      th->thinker.function = T_PolyDoorSwing;
-      P_AddThinker(&th->thinker);
+      th = new polyswingdoor_t;
+      th->Add();
 
       // point the polyobject to this thinker
-      po->thinker = &th->thinker;
+      po->thinker = th;
 
       // setup fields of the thinker
       th->polyObjNum   = po->id;

@@ -28,7 +28,9 @@
 //---------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "d_io.h"
+#include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "d_main.h"

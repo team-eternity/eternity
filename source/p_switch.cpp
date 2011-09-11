@@ -24,10 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+#include "i_system.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "g_game.h"
+#include "m_swap.h"
 #include "p_info.h"
 #include "p_spec.h"
 #include "r_main.h"

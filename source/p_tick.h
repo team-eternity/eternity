@@ -19,26 +19,79 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __P_TICK__
-#define __P_TICK__
+#ifndef P_TICK_H__
+#define P_TICK_H__
 
-#include "d_think.h"
+#include "doomtype.h"
+
+//
+// CZoneLevelItem
+//
+// haleyjd 11/22/10:
+// This class can be inherited from to obtain the ability to be allocated on the
+// zone heap with a PU_LEVEL allocation tag.
+//
+class CZoneLevelItem
+{
+public:
+   void *operator new (size_t size);
+   void  operator delete (void *p);
+};
+
+// Doubly linked list of actors.
+class CThinker : public CZoneLevelItem
+{
+private:
+   // Private implementation details
+   void RemoveDelayed();   
+
+protected:
+   // Virtual methods (overridables)
+   virtual void Think() {}
+
+   // Methods
+   void AddToThreadedList(int tclass);
+
+public:
+   // Static functions
+   static void RunThinkers();
+
+   // Methods
+   void Add();
+   void Remove();
+
+   // Virtual methods (overridables)
+   virtual void Update();
+
+   // Data Members
+
+   CThinker *prev, *next;
+  
+   // killough 8/29/98: we maintain thinkers in several equivalence classes,
+   // according to various criteria, so as to allow quicker searches.
+
+   CThinker *cnext, *cprev; // Next, previous thinkers in same class
+
+   // killough 11/98: count of how many other objects reference
+   // this one using pointers. Used for garbage collection.
+   unsigned int references;
+
+   // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
+   // GCC with thoughts of writing pointers into integers.
+   unsigned int ordinal;
+
+   boolean removed;
+};
 
 // Called by C_Ticker, can call G_PlayerExited.
 // Carries out all thinking of monsters and players.
-
 void P_Ticker(void);
 
-extern thinker_t thinkercap;  // Both the head and tail of the thinker list
+extern CThinker thinkercap;  // Both the head and tail of the thinker list
 
 void P_InitThinkers(void);
-void P_AddThinker(thinker_t *thinker);
-void P_RemoveThinker(thinker_t *thinker);
-void P_RemoveThinkerDelayed(thinker_t *thinker);    // killough 4/25/98
 
-void P_UpdateThinker(thinker_t *thinker);   // killough 8/29/98
-
-void P_SetTarget(mobj_t **mo, mobj_t *target);   // killough 11/98
+template<typename T> void P_SetTarget(T **mop, T *targ); // killough 11/98
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
 typedef enum 
@@ -50,10 +103,11 @@ typedef enum
   NUMTHCLASS
 } th_class;
 
-extern thinker_t thinkerclasscap[];
+extern CThinker thinkerclasscap[];
 
-        // sf: jumping-viewz-on-hyperlift bug
+// sf: jumping-viewz-on-hyperlift bug
 extern boolean reset_viewz;
+
 #endif
 
 //----------------------------------------------------------------------------

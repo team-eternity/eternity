@@ -29,6 +29,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 #include "s_sndseq.h"
 #include "e_things.h"
 #include "r_state.h"

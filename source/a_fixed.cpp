@@ -29,6 +29,7 @@
 
 #include "a_small.h"
 #include "m_fixed.h"
+#include "tables.h"
 
 static cell AMX_NATIVE_CALL sm_floattofixed(AMX *amx, cell *params)
 {

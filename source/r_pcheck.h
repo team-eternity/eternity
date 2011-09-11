@@ -29,9 +29,9 @@
 #define R_PORTALCHECK_H__
 
 #include "r_portal.h"
+#include "r_defs.h"
 
 extern int demo_version;
-
 
 //
 // R_FPCam

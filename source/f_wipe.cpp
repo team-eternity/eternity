@@ -30,6 +30,7 @@
 // 13/12/99: restored movement of columns to being the same as in the
 // original, while retaining the new 'engine'
 
+#include "z_zone.h"
 #include "c_runcmd.h"
 #include "doomdef.h"
 #include "d_main.h"

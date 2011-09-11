@@ -30,8 +30,9 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-
+#include "z_zone.h"
+#include "i_system.h"
+#include "psnprntf.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "c_net.h"
@@ -56,6 +57,7 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "m_qstr.h"
+#include "m_swap.h"
 #include "a_small.h"
 #include "e_fonts.h"
 #include "g_dmflag.h" // [CG] Added.

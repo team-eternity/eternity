@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_gi.h"
+#include "d_mod.h"
 #include "c_io.h"
 #include "hu_stuff.h"
 #include "p_mobj.h"
@@ -664,7 +665,6 @@ void A_MissileAttack(mobj_t *actor)
    if(!a)
    {
       mo = P_SpawnMissile(actor, actor->target, type, z);
-
    }
    else
    {
@@ -683,7 +683,7 @@ void A_MissileAttack(mobj_t *actor)
 
    if(homing)
    {
-      P_SetTarget(&mo->tracer, actor->target);
+      P_SetTarget<mobj_t>(&mo->tracer, actor->target);
       if(CS_SERVER)
          SV_BroadcastActorTarget(mo, CS_AT_TRACER);
    }
@@ -968,7 +968,7 @@ void A_ThingSummon(mobj_t *actor)
    newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
 
    // killough 8/29/98: add to appropriate thread
-   P_UpdateThinker(&newmobj->thinker);
+   newmobj->Update();
 
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
@@ -991,14 +991,14 @@ void A_ThingSummon(mobj_t *actor)
    }
 
    // give same target
-   P_SetTarget(&newmobj->target, actor->target);
+   P_SetTarget<mobj_t>(&newmobj->target, actor->target);
    if(CS_SERVER)
       SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
 
    // set child properties
    if(make_child)
    {
-      P_SetTarget(&newmobj->tracer, actor);
+      P_SetTarget<mobj_t>(&newmobj->tracer, actor);
       if(CS_SERVER)
          SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
       newmobj->intflags |= MIF_ISCHILD;
@@ -1007,17 +1007,15 @@ void A_ThingSummon(mobj_t *actor)
 
 void A_KillChildren(mobj_t *actor)
 {
-   thinker_t *th;
+   CThinker *th;
    int kill_or_remove = !!E_ArgAsKwd(actor->state->args, 0, &killremovekwds, 0);
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo;
 
-      if(th->function != P_MobjThinker)
+      if(!(mo = dynamic_cast<mobj_t *>(th)))
          continue;
-
-      mo = (mobj_t *)th;
 
       if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)
       {

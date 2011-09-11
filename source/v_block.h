@@ -27,6 +27,10 @@
 #ifndef V_BLOCK_H__
 #define V_BLOCK_H__
 
+#include "doomtype.h"
+
+struct VBuffer;
+
 // Scaled color block drawers.
 
 void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);

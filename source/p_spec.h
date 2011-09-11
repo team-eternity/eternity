@@ -610,53 +610,67 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-typedef struct fireflicker_s
+class fireflicker_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   int count;
   int maxlight;
   int minlight;
-} fireflicker_t;
+};
 
-typedef struct lightflash_s
+class lightflash_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   int count;
   int maxlight;
   int minlight;
   int maxtime;
   int mintime;
-} lightflash_t;
+};
 
-typedef struct strobe_s
+class strobe_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   int count;
   int minlight;
   int maxlight;
   int darktime;
   int brighttime;
-} strobe_t;
+};
 
-typedef struct glow_s
+class glow_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   int minlight;
   int maxlight;
   int direction;
-
-} glow_t;
+};
 
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-typedef struct lightfade_s
+class lightfade_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   fixed_t lightlevel;
   fixed_t destlevel;
@@ -665,13 +679,16 @@ typedef struct lightfade_s
   fixed_t glowmax;
   int     glowspeed;
   lightfade_e type;
-} lightfade_t;
+};
 
 // p_plats
 
-typedef struct plat_s
+class plat_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   sector_t *sector;
   fixed_t speed;
   fixed_t low;
@@ -686,7 +703,7 @@ typedef struct plat_s
   struct platlist *list;   // killough
   unsigned int net_id;     // [CG] Added for c/s.
   unsigned int inactive;   // [CG] Added for c/s.
-} plat_t;
+};
 
 // New limit-free plat structure -- killough
 
@@ -705,9 +722,12 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-typedef struct vldoor_s
+class vldoor_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   vldoor_e type;
   sector_t *sector;
   fixed_t topheight;
@@ -728,7 +748,7 @@ typedef struct vldoor_s
   int lighttag; //killough 10/98: sector tag for gradual lighting effects
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
-} vldoor_t;
+};
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
 typedef struct doordata_s
@@ -761,9 +781,12 @@ typedef struct spectransfer_s
 
 // p_doors
 
-typedef struct ceiling_s
+class ceiling_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   ceiling_e type;
   sector_t *sector;
   fixed_t bottomheight;
@@ -780,13 +803,16 @@ typedef struct ceiling_s
   // 1 = up, 0 = waiting, -1 = down
   int direction;
 
+  // haleyjd: stasis
+  boolean inStasis;
+
   // ID
   int tag;
   int olddirection;
   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
-} ceiling_t;
+};
 
 typedef struct ceilinglist
 {
@@ -814,9 +840,12 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-typedef struct floormove_s
+class floormove_t : public CThinker
 {
-  thinker_t thinker;
+protected:
+   void Think();
+
+public:
   floor_e type;
   int crush;
   sector_t *sector;
@@ -836,7 +865,7 @@ typedef struct floormove_s
   int delayTimer;
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
-} floormove_t;
+};
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
 typedef struct floordata_s
@@ -873,33 +902,39 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-typedef struct elevator_s
+class elevator_t : public CThinker
 {
-  thinker_t thinker;
-  elevator_e type;
-  sector_t *sector;
-  int direction;
-  fixed_t floordestheight;
-  fixed_t ceilingdestheight;
-  fixed_t speed;
-  unsigned int net_id;   // [CG] Added for c/s.
-  unsigned int inactive; // [CG] Added for c/s.
-} elevator_t;
+protected:
+   void Think();
+
+public:
+   elevator_e type;
+   sector_t *sector;
+   int direction;
+   fixed_t floordestheight;
+   fixed_t ceilingdestheight;
+   fixed_t speed;
+   unsigned int net_id;   // [CG] Added for c/s.
+   unsigned int inactive; // [CG] Added for c/s.
+};
 
 // joek: pillars
-typedef struct pillar_s
+class pillar_t : public CThinker
 {
-  thinker_t thinker;
-  sector_t *sector;
-  int ceilingSpeed;
-  int floorSpeed;
-  int floordest;
-  int ceilingdest;
-  int direction;
-  int crush;
-  unsigned int net_id;   // [CG] Added for c/s.
-  unsigned int inactive; // [CG] Added for c/s.
-} pillar_t;
+protected:
+   void Think();
+
+public:
+   sector_t *sector;
+   int ceilingSpeed;
+   int floorSpeed;
+   int floordest;
+   int ceilingdest;
+   int direction;
+   int crush;
+   unsigned int net_id;   // [CG] Added for c/s.
+   unsigned int inactive; // [CG] Added for c/s.
+};
 
 // haleyjd 10/21/06: data struct for param pillars
 typedef struct pillardata_s
@@ -913,9 +948,12 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-typedef struct floorwaggle_s
+class floorwaggle_t : public CThinker
 {
-   thinker_t thinker;
+protected:
+   void Think();
+
+public:
    sector_t *sector;
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -927,15 +965,18 @@ typedef struct floorwaggle_s
    int state;
    unsigned int net_id;   // [CG] Added for c/s.
    unsigned int inactive; // [CG] Added for c/s.
-} floorwaggle_t;
+};
 
 // p_spec
 
 // killough 3/7/98: Add generalized scroll effects
 
-typedef struct scroll_s
+class scroll_t : public CThinker
 {
-  thinker_t thinker;   // Thinker structure for scrolling
+protected:
+   void Think();
+
+public:
   fixed_t dx, dy;      // (dx,dy) scroll speeds
   int affectee;        // Number of affected sidedef, sector, tag, or whatever
   int control;         // Control sector (-1 if none) used to control scrolling
@@ -951,24 +992,30 @@ typedef struct scroll_s
     sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
   };
   int type;              // Type of scroll effect
-} scroll_t;
+};
 
 // haleyjd 04/11/10: friction_t restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
 
-typedef struct friction_s
+class friction_t : public CThinker
 {
-   thinker_t thinker; // Thinker structure for friction
+protected:
+   void Think();
+
+public:
    int friction;      // friction value (E800 = normal)
    int movefactor;    // inertia factor when adding to momentum
    int affectee;      // Number of affected sector
-} friction_t;
+};
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
-typedef struct pusher_s
+class pusher_t : public CThinker
 {
-  thinker_t thinker;   // Thinker structure for Pusher
+protected:
+   void Think();
+
+public:
   enum
   {
     p_push,
@@ -985,7 +1032,7 @@ typedef struct pusher_s
   int x;               // X of point source if point pusher
   int y;               // Y of point source if point pusher
   int affectee;        // Number of affected sector
-} pusher_t;
+};
 
 // sf: direction plat moving
 
@@ -1084,53 +1131,10 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args);
 //
 ////////////////////////////////////////////////////////////////
 
-// p_lights
-
-void T_LightFlash(lightflash_t *flash);
-
-void T_StrobeFlash(strobe_t *flash);
-
-void T_Glow(glow_t *g);
-
-void T_FireFlicker(fireflicker_t *flick);  // killough 10/4/98
-
-void T_LightFade(lightfade_t *ll);     // sf 13/10/99
-
-// p_plats
-
-void T_PlatRaise(plat_t *plat);
-
-// p_doors
-
-void T_VerticalDoor(vldoor_t *door);
-
-// p_ceilng
-
-void T_MoveCeiling(ceiling_t *ceiling);
-
 // p_floor
 
 result_e T_MovePlane(sector_t *sector, fixed_t speed, fixed_t dest,
                      int crush, int floorOrCeiling, int direction);
-
-void T_MoveFloor(floormove_t *floor);
-
-void T_MoveElevator(elevator_t *elevator);
-
-void T_MovePillar(pillar_t *pillar);	// joek
-
-void T_FloorWaggle(floorwaggle_t *waggle); // haleyjd
-
-// p_spec
-
-void T_Scroll(scroll_t *);      // killough 3/7/98: scroll effect thinker
-
-// phares 3/12/98: friction thinker
-// haleyjd 05/02/04: removed dead T_Friction prototype
-
-void T_Pusher(pusher_t *);      // phares 3/20/98: Push thinker
-
-void T_FireFlicker(fireflicker_t *);  // killough 10/4/98
 
 ////////////////////////////////////////////////////////////////
 //

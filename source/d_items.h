@@ -28,6 +28,7 @@
 #define __D_ITEMS__
 
 #include "doomdef.h"
+#include "doomtype.h"
 
 //
 // haleyjd 09/11/07: weapon flags

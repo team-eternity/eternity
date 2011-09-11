@@ -71,9 +71,9 @@ typedef struct polyobj_s
 
    int mirror; // numeric id of a mirroring polyobject
 
-   struct subsector_s **dynaSubsecs; // list of subsectors holding fragments
-   int numDSS;                       // number of subsector pointers
-   int numDSSAlloc;                  // number of subsector pointers allocated
+   subsector_t **dynaSubsecs;  // list of subsectors holding fragments
+   int numDSS;                 // number of subsector pointers
+   int numDSSAlloc;            // number of subsector pointers allocated
 
    int numVertices;            // number of vertices (generally == segCount)
    int numVerticesAlloc;       // number of vertices allocated
@@ -81,15 +81,15 @@ typedef struct polyobj_s
    struct vertex_s *tmpVerts;  // temporary vertex backups for rotation
    struct vertex_s **vertices; // vertices this polyobject must move   
    
-   int numLines;          // number of linedefs (generally <= segCount)
-   int numLinesAlloc;     // number of linedefs allocated
-   struct line_s **lines; // linedefs this polyobject must move
+   int numLines;               // number of linedefs
+   int numLinesAlloc;          // number of linedefs allocated
+   line_t **lines;             // linedefs this polyobject must move
 
-   mobj_t *spawnSpotMobj;        // for use during init only!
-   struct degenmobj_s spawnSpot; // location of spawn spot
-   struct vertex_s    centerPt;  // center point
-   fixed_t zdist;                // viewz distance for sorting
-   angle_t angle;                // for rotation
+   mobj_t *spawnSpotMobj;      // for use during init only!
+   degenmobj_t spawnSpot;      // location of spawn spot
+   struct vertex_s centerPt;   // center point
+   fixed_t zdist;              // viewz distance for sorting
+   angle_t angle;              // for rotation
 
    fixed_t blockbox[4];            // bounding box for clipping
    struct polymaplink_s *linkhead; // haleyjd 05/18/06: unlink optimization
@@ -99,7 +99,7 @@ typedef struct polyobj_s
 
    int seqId;                      // 10/17/06: sound sequence id
 
-   thinker_t *thinker;  // pointer to a thinker affecting this polyobj
+   CThinker *thinker;  // pointer to a thinker affecting this polyobj
 
    unsigned int flags;  // 09/11/09: polyobject flags
 
@@ -120,31 +120,37 @@ typedef struct polymaplink_s
 // Polyobject Special Thinkers
 //
 
-typedef struct polyrotate_s
+class polyrotate_t : public CThinker
 {
-   thinker_t thinker; // must be first
+protected:
+   void Think();
 
+public:
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
    int distance;      // distance to move
-} polyrotate_t;
+};
 
-typedef struct polymove_s
+class polymove_t : public CThinker
 {
-   thinker_t thinker;  // must be first
+protected:
+   void Think();
 
+public:
    int polyObjNum;     // numeric id of polyobject
    int speed;          // resultant velocity
    int momx;           // x component of speed along angle
    int momy;           // y component of speed along angle
    int distance;       // total distance to move
    unsigned int angle; // angle along which to move
-} polymove_t;
+};
 
-typedef struct polyslidedoor_s
+class polyslidedoor_t : public CThinker
 {
-   thinker_t thinker;      // must be first
+protected:
+   void Think();
 
+public:
    int polyObjNum;         // numeric id of affected polyobject
    int delay;              // delay time
    int delayCount;         // delay counter
@@ -158,12 +164,14 @@ typedef struct polyslidedoor_s
    int momx;               // x component of speed along angle
    int momy;               // y component of speed along angle
    boolean closing;        // if true, is closing
-} polyslidedoor_t;
+};
 
-typedef struct polyswingdoor_s
+class polyswingdoor_t : public CThinker
 {
-   thinker_t thinker; // must be first
+protected:
+   void Think();
 
+public:
    int polyObjNum;    // numeric id of affected polyobject
    int delay;         // delay time
    int delayCount;    // delay counter
@@ -172,7 +180,7 @@ typedef struct polyswingdoor_s
    int initDistance;  // initial distance to travel
    int distance;      // current distance to travel
    boolean closing;   // if true, is closing
-} polyswingdoor_t;
+};
 
 //
 // Line Activation Data Structures
@@ -220,12 +228,6 @@ typedef struct polydoordata_s
 polyobj_t *Polyobj_GetForNum(int id);
 void Polyobj_InitLevel(void);
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
-
-// thinkers (needed in p_saveg.c)
-void T_PolyObjRotate(polyrotate_t *);
-void T_PolyObjMove  (polymove_t *);
-void T_PolyDoorSlide(polyslidedoor_t *);
-void T_PolyDoorSwing(polyswingdoor_t *);
 
 int EV_DoPolyDoor(polydoordata_t *);
 int EV_DoPolyObjMove(polymovedata_t *);
