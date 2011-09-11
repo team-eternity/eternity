@@ -32,6 +32,7 @@
 #include "m_random.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 
@@ -41,15 +42,17 @@
 //
 //////////////////////////////////////////////////////////
 
+IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
+
 //
 // T_FireFlicker()
 //
 // Firelight flicker action routine, called once per tick
 //
-// Passed a CFireFlicker structure containing light levels and timing
+// Passed a FireFlickerThinker structure containing light levels and timing
 // Returns nothing
 //
-void CFireFlicker::Think()
+void FireFlickerThinker::Think()
 {
    int amount;
    
@@ -67,14 +70,29 @@ void CFireFlicker::Think()
 }
 
 //
+// FireFlickerThinker::serialize
+//
+// Saves/loads a FireFlickerThinker thinker.
+//
+void FireFlickerThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << count << maxlight << minlight;
+}
+
+
+IMPLEMENT_THINKER_TYPE(LightFlashThinker)
+
+//
 // T_LightFlash()
 //
 // Broken light flashing action routine, called once per tick
 //
-// Passed a CLightFlash structure containing light levels and timing
+// Passed a LightFlashThinker structure containing light levels and timing
 // Returns nothing
 //
-void CLightFlash::Think()
+void LightFlashThinker::Think()
 {
    if(--this->count)
       return;
@@ -92,14 +110,29 @@ void CLightFlash::Think()
 }
 
 //
+// LightFlashThinker::serialize
+//
+// Saves/loads LightFlashThinker thinkers.
+//
+void LightFlashThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << count << maxlight << minlight << maxtime << mintime;
+}
+
+
+IMPLEMENT_THINKER_TYPE(StrobeThinker)
+
+//
 // T_StrobeFlash()
 //
 // Strobe light flashing action routine, called once per tick
 //
-// Passed a CStrobeThinker structure containing light levels and timing
+// Passed a StrobeThinker structure containing light levels and timing
 // Returns nothing
 //
-void CStrobeThinker::Think()
+void StrobeThinker::Think()
 {
    if(--this->count)
       return;
@@ -117,14 +150,29 @@ void CStrobeThinker::Think()
 }
 
 //
+// StrobeThinker::serialize
+//
+// Saves/loads a StrobeThinker.
+//
+void StrobeThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << count << minlight << maxlight << darktime << brighttime;
+}
+
+
+IMPLEMENT_THINKER_TYPE(GlowThinker)
+
+//
 // T_Glow
 //
 // Glowing light action routine, called once per tick
 //
-// Passed a CGlowThinker structure containing light levels and timing
+// Passed a GlowThinker structure containing light levels and timing
 // Returns nothing
 //
-void CGlowThinker::Think()
+void GlowThinker::Think()
 {
    switch(this->direction)
    {
@@ -151,6 +199,21 @@ void CGlowThinker::Think()
 }
 
 //
+// GlowThinker::serialize
+//
+// Saves/loads a GlowThinker.
+//
+void GlowThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << minlight << maxlight << direction;
+}
+
+
+IMPLEMENT_THINKER_TYPE(LightFadeThinker)
+
+//
 // T_LightFade
 //
 // sf 13/10/99:
@@ -158,7 +221,7 @@ void CGlowThinker::Think()
 //
 // haleyjd 01/10/07: changes for param line specs
 //
-void CLightFade::Think()
+void LightFadeThinker::Think()
 {
    boolean done = false;
 
@@ -194,6 +257,18 @@ void CLightFade::Think()
    }
 }
 
+//
+// LightFadeThinker::serialize
+//
+// Saves/loads a LightFadeThinker thinker.
+//
+void LightFadeThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << lightlevel << destlevel << step << glowmin << glowmax
+       << glowspeed << type;
+}
 
 //////////////////////////////////////////////////////////
 //
@@ -214,13 +289,13 @@ void CLightFade::Think()
 //
 void P_SpawnFireFlicker(sector_t *sector)
 {
-   CFireFlicker *flick;
+   FireFlickerThinker *flick;
    
    // Note that we are resetting sector attributes.
    // Nothing special about it during gameplay.
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flick = new CFireFlicker;
+   flick = new FireFlickerThinker;
    flick->addThinker();
    
    flick->sector = sector;
@@ -239,12 +314,12 @@ void P_SpawnFireFlicker(sector_t *sector)
 //
 void P_SpawnLightFlash(sector_t *sector)
 {
-   CLightFlash *flash;
+   LightFlashThinker *flash;
    
    // nothing special about it during gameplay
    sector->special &= ~31; //jff 3/14/98 clear non-generalized sector type
    
-   flash = new CLightFlash;
+   flash = new LightFlashThinker;
    flash->addThinker();
    
    flash->sector = sector;
@@ -268,9 +343,9 @@ void P_SpawnLightFlash(sector_t *sector)
 //
 void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 {
-   CStrobeThinker *flash;
+   StrobeThinker *flash;
    
-   flash = new CStrobeThinker;
+   flash = new StrobeThinker;
    flash->addThinker();
    
    flash->sector = sector;
@@ -301,9 +376,9 @@ void P_SpawnStrobeFlash(sector_t *sector, int fastOrSlow, int inSync)
 //
 void P_SpawnGlowingLight(sector_t *sector)
 {
-   CGlowThinker *g;
+   GlowThinker *g;
    
-   g = new CGlowThinker;
+   g = new GlowThinker;
    
    g->addThinker();
    
@@ -544,7 +619,7 @@ dobackside:
 int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 {
    int i, rtn = 0;
-   CLightFade *lf;
+   LightFadeThinker *lf;
    boolean backside = false;
 
    // speed <= 0? hell no.
@@ -566,7 +641,7 @@ int EV_FadeLight(line_t *line, int tag, int destvalue, int speed)
 dobackside:
       rtn = 1;
 
-      lf = new CLightFade;
+      lf = new LightFadeThinker;
       lf->addThinker();       // add thinker
 
       lf->sector = &sectors[i];
@@ -596,7 +671,7 @@ dobackside:
 int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 {
    int i, rtn = 0;
-   CLightFade *lf;
+   LightFadeThinker *lf;
    boolean backside = false;
 
    // speed <= 0? hell no.
@@ -626,7 +701,7 @@ int EV_GlowLight(line_t *line, int tag, int maxval, int minval, int speed)
 dobackside:
       rtn = 1;
 
-      lf = new CLightFade;
+      lf = new LightFadeThinker;
       lf->addThinker();
 
       lf->sector = &sectors[i];
@@ -660,7 +735,7 @@ dobackside:
 int EV_StrobeLight(line_t *line, int tag, 
                    int maxval, int minval, int maxtime, int mintime)
 {
-   CStrobeThinker *flash;
+   StrobeThinker *flash;
    int i, rtn = 0;
    boolean backside = false;
 
@@ -677,7 +752,7 @@ int EV_StrobeLight(line_t *line, int tag,
    {
 dobackside:
       rtn = 1;
-      flash = new CStrobeThinker;
+      flash = new StrobeThinker;
       flash->addThinker();
       
       flash->sector     = &sectors[i];
@@ -706,7 +781,7 @@ dobackside:
 //
 int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
 {
-   CLightFlash *flash;
+   LightFlashThinker *flash;
    int i, rtn = 0;
    boolean backside = false;
 
@@ -723,7 +798,7 @@ int EV_FlickerLight(line_t *line, int tag, int maxval, int minval)
    {
 dobackside:
       rtn = 1;
-      flash = new CLightFlash;
+      flash = new LightFlashThinker;
       flash->addThinker();
       
       flash->sector   = &sectors[i];

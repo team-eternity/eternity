@@ -85,7 +85,7 @@ typedef struct pcx_s
 //
 // pcx_Writer
 //
-static boolean pcx_Writer(COutBuffer *ob, byte *data, 
+static boolean pcx_Writer(OutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i;
@@ -211,7 +211,7 @@ typedef struct tagBITMAPINFOHEADER
 //
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-static boolean bmp_Writer(COutBuffer *ob, byte *data, 
+static boolean bmp_Writer(OutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i, j, wid;
@@ -323,7 +323,7 @@ typedef struct tgaheader_s
 //
 // haleyjd 12/28/09
 //
-static boolean tga_Writer(COutBuffer *ob, byte *data, 
+static boolean tga_Writer(OutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    tgaheader_t tga;
@@ -390,7 +390,7 @@ static boolean tga_Writer(COutBuffer *ob, byte *data,
 // Shared Code
 //
 
-typedef boolean (*ShotWriter_t)(COutBuffer *, byte *, uint32_t, uint32_t, byte *);
+typedef boolean (*ShotWriter_t)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
 
 typedef struct shotformat_s
 {
@@ -409,9 +409,9 @@ enum
 
 static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 {
-   { "bmp", COutBuffer::LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
-   { "pcx", COutBuffer::LENDIAN, pcx_Writer }, // ZSoft PC Paint
-   { "tga", COutBuffer::LENDIAN, tga_Writer }, // Truevision TARGA
+   { "bmp", OutBuffer::LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
+   { "pcx", OutBuffer::LENDIAN, pcx_Writer }, // ZSoft PC Paint
+   { "tga", OutBuffer::LENDIAN, tga_Writer }, // Truevision TARGA
 };
 
 //
@@ -427,7 +427,7 @@ void M_ScreenShot(void)
    boolean success = false;
    char   *path = NULL;
    size_t  len;
-   COutBuffer ob;
+   OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
    
    errno = 0;

@@ -272,7 +272,7 @@ static void GetPackets(void)
 
          if(gamestate == GS_LEVEL)
          {
-            mobj_t *tflash;
+            Mobj *tflash;
 
             tflash = P_SpawnMobj(
                players[netconsole].mo->x,

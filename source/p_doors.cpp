@@ -28,6 +28,7 @@
 #include "doomstat.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -96,6 +97,8 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 //
 ///////////////////////////////////////////////////////////////
 
+IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
+
 //
 // T_VerticalDoor
 //
@@ -106,7 +109,7 @@ void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 
-void CVerticalDoor::Think()
+void VerticalDoorThinker::Think()
 {
    result_e  res;
 
@@ -334,7 +337,7 @@ void CVerticalDoor::Think()
    }
 }
 
-void P_RemoveDoor(CVerticalDoor *door)
+void P_RemoveDoor(VerticalDoorThinker *door)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(door->net_id, ms_door_tagged);
@@ -344,7 +347,7 @@ void P_RemoveDoor(CVerticalDoor *door)
    CS_ReleaseDoorNetID(door);
 }
 
-void P_CopyDoor(CVerticalDoor *dest, CVerticalDoor *src)
+void P_CopyDoor(VerticalDoorThinker *dest, VerticalDoorThinker *src)
 {
    dest->topheight    = src->topheight;
    dest->speed        = src->speed;
@@ -354,7 +357,7 @@ void P_CopyDoor(CVerticalDoor *dest, CVerticalDoor *src)
    dest->net_id       = src->net_id;
 }
 
-void P_PrintDoor(CVerticalDoor *door)
+void P_PrintDoor(VerticalDoorThinker *door)
 {
    unsigned int index;
 
@@ -389,15 +392,33 @@ void P_PrintDoor(CVerticalDoor *door)
       printf("Sector XX (%5u): XXXXX XXXXX.\n", index);
 }
 
+//
+// VerticalDoorThinker::serialize
+//
+// Saves/loads VerticalDoorThinker thinkers.
+//
+void VerticalDoorThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << type << sector << topheight << speed << direction << topwait
+       << topcountdown << line << lighttag;
+
+   // Reattach to sector when loading
+   if(arc.isLoading())
+      sector->ceilingdata = this;
+}
+
+>>>>>>> .merge-right.r1368
 ///////////////////////////////////////////////////////////////
 //
 // [CG] General door spawners
 //
 ///////////////////////////////////////////////////////////////
 
-CVerticalDoor* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
+VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
 {
-   CVerticalDoor *door = new CVerticalDoor;
+   VerticalDoorThinker *door = new VerticalDoorThinker;
 
    door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
@@ -466,9 +487,9 @@ CVerticalDoor* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
    return door;
 }
 
-CVerticalDoor* P_SpawnManualDoor(line_t *line, sector_t *sec)
+VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec)
 {
-   CVerticalDoor *door = new CVerticalDoor;
+   VerticalDoorThinker *door = new VerticalDoorThinker;
 
    door->addThinker()
    sec->ceilingdata = door; //jff 2/22/98
@@ -543,9 +564,9 @@ CVerticalDoor* P_SpawnManualDoor(line_t *line, sector_t *sec)
 // Passed the sector of the door, whose type specified the door action
 // Returns the newly created door.
 
-CVerticalDoor* P_SpawnDoorCloseIn30(sector_t* sec)
+VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t* sec)
 {
-   CVerticalDoor *door = new CVerticalDoor;
+   VerticalDoorThinker *door = new VerticalDoorThinker;
 
    door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
@@ -578,9 +599,9 @@ CVerticalDoor* P_SpawnDoorCloseIn30(sector_t* sec)
 // Returns the newly created door.
 //
 
-CVerticalDoor* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
-   CVerticalDoor *door = new CVerticalDoor;
+   VerticalDoorThinker *door = new VerticalDoorThinker;
 
    door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
@@ -622,7 +643,7 @@ CVerticalDoor* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 // and the thing that activated the line
 // Returns true if a thinker created
 //
-int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing)
+int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
 {
    player_t *p = thing->player;
 
@@ -683,7 +704,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
-   CVerticalDoor *door;
+   VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
    while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
@@ -718,11 +739,11 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 // jff 2/12/98 added int return value, fixed all returns
 //
-int EV_VerticalDoor(line_t *line, mobj_t *thing)
+int EV_VerticalDoor(line_t *line, Mobj *thing)
 {
    player_t* player;
    sector_t* sec;
-   CVerticalDoor* door;
+   VerticalDoorThinker* door;
 
    //  Check for locks
    player = thing->player;
@@ -794,7 +815,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
-   if((door = thinker_cast<CVerticalDoor *>(sec->ceilingdata))) // is a door
+   if((door = thinker_cast<VerticalDoorThinker *>(sec->ceilingdata))) // is a door
    {
       switch(line->special)
       {
@@ -824,12 +845,12 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    if(sec->ceilingdata ||
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
-      door = (CVerticalDoor *)(sec->ceilingdata); //jff 2/22/98
+      door = (VerticalDoorThinker *)(sec->ceilingdata); //jff 2/22/98
 
       if(demo_compatibility) // haleyjd
       {
-         if(!door) door = (CVerticalDoor *)(sec->floordata);
-         if(!door) door = (CVerticalDoor *)(sec->lightingdata);
+         if(!door) door = (VerticalDoorThinker *)(sec->floordata);
+         if(!door) door = (VerticalDoorThinker *)(sec->lightingdata);
       }
 
       switch(line->special)

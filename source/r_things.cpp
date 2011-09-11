@@ -771,7 +771,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 // Generates a vissprite for a thing if it might be visible.
 //
-static void R_ProjectSprite(mobj_t *thing)
+static void R_ProjectSprite(Mobj *thing)
 {
    fixed_t       gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
@@ -1006,7 +1006,7 @@ static void R_ProjectSprite(mobj_t *thing)
 //
 void R_AddSprites(sector_t* sec, int lightlevel)
 {
-   mobj_t *thing;
+   Mobj *thing;
    int    lightnum;
    
    // BSP is traversed by subsector.
@@ -1038,7 +1038,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 
    if(drawparticles)
    {
-      CDLListItem<particle_t> *link;
+      DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
          R_ProjectParticle(link->dllObject);

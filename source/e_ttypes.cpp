@@ -673,7 +673,7 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(mobj_t *thing, boolean usefloorz)
+ETerrain *E_GetThingFloorType(Mobj *thing, boolean usefloorz)
 {
    ETerrain *terrain = NULL;
    
@@ -767,7 +767,7 @@ void E_PtclTerrainHit(particle_t *p)
 {
    ETerrain *terrain = NULL;
    ETerrainSplash *splash = NULL;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    fixed_t x, y, z;
    sector_t *sector = NULL;
 
@@ -820,10 +820,10 @@ void E_PtclTerrainHit(particle_t *p)
 //
 // Executes mobj terrain effects.
 //
-static void E_TerrainHit(ETerrain *terrain, mobj_t *thing, fixed_t z)
+static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
 {
    ETerrainSplash *splash = terrain->splash;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    boolean lowmass = (thing->info->mass < 10);   
 
    if(!splash)
@@ -845,7 +845,7 @@ static void E_TerrainHit(ETerrain *terrain, mobj_t *thing, fixed_t z)
       if(splash->chunkclass != NUMMOBJTYPES)
       {
          mo = P_SpawnMobj(thing->x, thing->y, z, splash->chunkclass);
-         P_SetTarget<mobj_t>(&mo->target, thing);
+         P_SetTarget<Mobj>(&mo->target, thing);
          
          if(splash->chunkxvelshift != -1)
             mo->momx = P_SubRandom(pr_splash) << splash->chunkxvelshift;
@@ -873,7 +873,7 @@ static void E_TerrainHit(ETerrain *terrain, mobj_t *thing, fixed_t z)
 //
 // Called when a thing hits a floor or passes a deep water plane.
 //
-boolean E_HitWater(mobj_t *thing, sector_t *sector)
+boolean E_HitWater(Mobj *thing, sector_t *sector)
 {
    fixed_t z;
    ETerrain *terrain;
@@ -905,7 +905,7 @@ boolean E_HitWater(mobj_t *thing, sector_t *sector)
 //
 // Called when a thing hits a floor.
 //
-boolean E_HitFloor(mobj_t *thing)
+boolean E_HitFloor(Mobj *thing)
 {
    msecnode_t  *m = NULL;
 

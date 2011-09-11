@@ -88,7 +88,7 @@
 //
 #define NUMSFXCHAINS 307
 static sfxinfo_t              *sfxchains[NUMSFXCHAINS];
-static CDLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
+static DLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
 
 //
 // Singularity types
@@ -239,7 +239,7 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
    unsigned int hash = dehnum % NUMSFXCHAINS;
-   CDLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
+   DLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
 
    // haleyjd 04/13/08: rewritten for dynamic hash chains
    while(rover && rover->dllObject->dehackednum != dehnum)
@@ -936,11 +936,11 @@ cfg_opt_t edf_sndseq_opts[] =
 
 #define NUM_EDFSEQ_CHAINS 127
 static ESoundSeq_t              *edf_seq_chains[NUM_EDFSEQ_CHAINS];
-static CDLListItem<ESoundSeq_t> *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
+static DLListItem<ESoundSeq_t> *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
 
 // need a separate hash for environmental sequences
 #define NUM_EDFSEQ_ENVCHAINS 31
-static CDLListItem<ESoundSeq_t> *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
+static DLListItem<ESoundSeq_t> *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
 
 // translator tables for specific types
 
@@ -1048,7 +1048,7 @@ ESoundSeq_t *E_SequenceForName(const char *name)
 ESoundSeq_t *E_SequenceForNum(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_CHAINS;
-   CDLListItem<ESoundSeq_t> *link = edf_seq_numchains[key];
+   DLListItem<ESoundSeq_t> *link = edf_seq_numchains[key];
 
    while(link && link->dllObject->index != id)
       link = link->dllNext;
@@ -1095,7 +1095,7 @@ ESoundSeq_t *E_SequenceForNumType(int id, int type)
 ESoundSeq_t *E_EnvironmentSequence(int id)
 {
    unsigned int key = id % NUM_EDFSEQ_ENVCHAINS;
-   CDLListItem<ESoundSeq_t> *link = edf_seq_envchains[key];
+   DLListItem<ESoundSeq_t> *link = edf_seq_envchains[key];
 
    while(link && link->dllObject->index != id)
       link = link->dllNext;

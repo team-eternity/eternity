@@ -1065,7 +1065,7 @@ static void AM_doFollowPlayer(void)
 
 int map_point_coordinates;
 
-void AM_Coordinates(const mobj_t *mo, fixed_t *x, fixed_t *y, fixed_t *z)
+void AM_Coordinates(const Mobj *mo, fixed_t *x, fixed_t *y, fixed_t *z)
 {
    if(followplayer || !map_point_coordinates)
    {
@@ -2177,7 +2177,7 @@ static void AM_drawPlayers(void)
 static void AM_drawThings(int colors, int colorrange)
 {
    int     i;
-   mobj_t *t;
+   Mobj *t;
    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
    
    // for all sectors

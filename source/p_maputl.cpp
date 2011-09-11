@@ -148,7 +148,7 @@ fixed_t P_InterceptVector(divline_t *v2, divline_t *v1)
 // through a two sided line.
 // OPTIMIZE: keep this precalculated
 //
-void P_LineOpening(line_t *linedef, mobj_t *mo)
+void P_LineOpening(line_t *linedef, Mobj *mo)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
    // SoM: used for 3dmidtex
@@ -302,7 +302,7 @@ void P_LineOpening(line_t *linedef, mobj_t *mo)
 // Pass a NULL mobj to close the log.
 //
 #ifdef THING_LOGGING
-void P_LogThingPosition(mobj_t *mo, const char *caller)
+void P_LogThingPosition(Mobj *mo, const char *caller)
 {
    static FILE *thinglog;
 
@@ -335,7 +335,7 @@ void P_LogThingPosition(mobj_t *mo, const char *caller)
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
 //
-void P_UnsetThingPosition(mobj_t *thing)
+void P_UnsetThingPosition(Mobj *thing)
 {
    P_LogThingPosition(thing, "unset");
 
@@ -346,8 +346,8 @@ void P_UnsetThingPosition(mobj_t *thing)
       
       // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
       // pointers, allows head node pointers to be treated like everything else
-      mobj_t **sprev = thing->sprev;
-      mobj_t  *snext = thing->snext;
+      Mobj **sprev = thing->sprev;
+      Mobj  *snext = thing->snext;
       if((*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
 
@@ -380,7 +380,7 @@ void P_UnsetThingPosition(mobj_t *thing)
       // at time of unlinking, assuming it was the same position as during
       // linking.
       
-      mobj_t *bnext, **bprev = thing->bprev;
+      Mobj *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
    }
@@ -398,7 +398,7 @@ void P_UnsetThingPosition(mobj_t *thing)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_SetThingPosition(mobj_t *thing)
+void P_SetThingPosition(Mobj *thing)
 {
    // link into subsector
    subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
@@ -416,8 +416,8 @@ void P_SetThingPosition(mobj_t *thing)
       // killough 8/11/98: simpler scheme using pointer-to-pointer prev
       // pointers, allows head nodes to be treated like everything else
       
-      mobj_t **link = &ss->sector->thinglist;
-      mobj_t *snext = *link;
+      Mobj **link = &ss->sector->thinglist;
+      Mobj *snext = *link;
       if((thing->snext = snext))
          snext->sprev = &thing->snext;
       thing->sprev = link;
@@ -452,8 +452,8 @@ void P_SetThingPosition(mobj_t *thing)
          // killough 8/11/98: simpler scheme using pointer-to-pointer prev
          // pointers, allows head nodes to be treated like everything else
 
-         mobj_t **link = &blocklinks[blocky*bmapwidth+blockx];
-         mobj_t *bnext = *link;
+         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
+         Mobj *bnext = *link;
          if((thing->bnext = bnext))
             bnext->bprev = &thing->bnext;
          thing->bprev = link;
@@ -472,7 +472,7 @@ void P_SetThingPosition(mobj_t *thing)
 // SoM, VERY inaccurate. I don't really know what its for or why
 // its here, but I'm leaving it be.
 //
-boolean ThingIsOnLine(mobj_t *t, line_t *l)
+boolean ThingIsOnLine(Mobj *t, line_t *l)
 {
    int dx = l->dx >> FRACBITS;                           // Linedef vector
    int dy = l->dy >> FRACBITS;
@@ -526,7 +526,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
-   CDLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
+   DLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
    
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
@@ -592,11 +592,11 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 //
 // killough 5/3/98: reformatted, cleaned up
 
-boolean P_BlockThingsIterator(int x, int y, boolean func(mobj_t*))
+boolean P_BlockThingsIterator(int x, int y, boolean func(Mobj*))
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
-      mobj_t *mobj = blocklinks[y * bmapwidth + x];
+      Mobj *mobj = blocklinks[y * bmapwidth + x];
 
       // haleyjd 08/14/10: use modification-safe traversal
       for(; mobj; mobj = mobj->bnext)

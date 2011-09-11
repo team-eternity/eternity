@@ -440,11 +440,11 @@ void R_PrecacheLevel(void)
    memset(hitlist, 0, numsprites);
 
    {
-      CThinker *th;
+      Thinker *th;
       for(th = thinkercap.next ; th != &thinkercap ; th=th->next)
       {
-         mobj_t *mo;
-         if((mo = thinker_cast<mobj_t *>(th)))
+         Mobj *mo;
+         if((mo = thinker_cast<Mobj *>(th)))
             hitlist[mo->sprite] = 1;
       }
    }

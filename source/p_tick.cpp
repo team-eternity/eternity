@@ -52,15 +52,15 @@ boolean reset_viewz;
 
 //=============================================================================
 //
-// haleyjd 11/21/10: CZoneLevelItem base class for thinkers
+// haleyjd 11/21/10: ZoneLevelItem base class for thinkers
 //
 
-void *CZoneLevelItem::operator new (size_t size)
+void *ZoneLevelItem::operator new (size_t size)
 {
    return Z_Calloc(1, size, PU_LEVEL, NULL);
 }
 
-void CZoneLevelItem::operator delete (void *p)
+void ZoneLevelItem::operator delete (void *p)
 {
    Z_Free(p);
 }
@@ -75,17 +75,17 @@ void CZoneLevelItem::operator delete (void *p)
 //
 
 // Both the head and tail of the thinker list.
-CThinker thinkercap;
+Thinker thinkercap;
 
 // killough 8/29/98: we maintain several separate threads, each containing
 // a special class of thinkers, to allow more efficient searches. 
 
-CThinker thinkerclasscap[NUMTHCLASS];
+Thinker thinkerclasscap[NUMTHCLASS];
 
 //
 // P_InitThinkers
 //
-void CThinker::InitThinkers(void)
+void Thinker::InitThinkers(void)
 {
    int i;
    
@@ -96,14 +96,14 @@ void CThinker::InitThinkers(void)
 }
 
 //
-// CThinker::addToThreadedList
+// Thinker::addToThreadedList
 //
 // haleyjd 11/22/10:
 // Puts the thinker in the indicated threaded list.
 //
-void CThinker::addToThreadedList(int tclass)
+void Thinker::addToThreadedList(int tclass)
 {
-   register CThinker *th;
+   register Thinker *th;
    
    // Remove from current thread, if in one -- haleyjd: from PrBoom
    if((th = this->cnext) != NULL)
@@ -130,7 +130,7 @@ void CThinker::addToThreadedList(int tclass)
 // code due to corruption of the th_enemies/th_friends lists when monsters get
 // removed at an inopportune moment.
 //
-void CThinker::updateThinker()
+void Thinker::updateThinker()
 {
    addToThreadedList(this->removed ? th_delete : th_misc);
 }
@@ -140,7 +140,7 @@ void CThinker::updateThinker()
 //
 // Adds a new thinker at the end of the list.
 //
-void CThinker::addThinker()
+void Thinker::addThinker()
 {
    thinkercap.prev->next = this;
    next = &thinkercap;
@@ -160,7 +160,7 @@ void CThinker::addThinker()
 // Make currentthinker external, so that P_RemoveThinkerDelayed
 // can adjust currentthinker when thinkers self-remove.
 
-CThinker *CThinker::currentthinker;
+Thinker *Thinker::currentthinker;
 
 //
 // P_RemoveThinkerDelayed
@@ -172,11 +172,11 @@ CThinker *CThinker::currentthinker;
 // remove it, and set currentthinker to one node preceeding it, so
 // that the next step in P_RunThinkers() will get its successor.
 //
-void CThinker::removeDelayed()
+void Thinker::removeDelayed()
 {
    if(!this->references)
    {
-      CThinker *lnext = this->next;
+      Thinker *lnext = this->next;
       (lnext->prev = currentthinker = this->prev)->next = lnext;
       
       // haleyjd 11/09/06: remove from threaded list now
@@ -198,7 +198,7 @@ void CThinker::removeDelayed()
 // set the function to P_RemoveThinkerDelayed(), so that later, it will be
 // removed automatically as part of the thinker process.
 //
-void CThinker::removeThinker()
+void Thinker::removeThinker()
 {
    removed = true;
    
@@ -239,7 +239,7 @@ void CThinker::removeThinker()
 // Rewritten to delete nodes implicitly, by making currentthinker
 // external and using P_RemoveThinkerDelayed() implicitly.
 //
-void CThinker::RunThinkers(void)
+void Thinker::RunThinkers(void)
 {
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
@@ -262,17 +262,17 @@ void CThinker::RunThinkers(void)
 }
 
 //
-// CThinker::serialize
+// Thinker::serialize
 //
-// CThinker serialization works together with the CSaveArchive class and the
-// series of CThinkerType-derived classes. CThinker subclasses should always
+// Thinker serialization works together with the SaveArchive class and the
+// series of ThinkerType-derived classes. Thinker subclasses should always
 // call their parent implementation's serialize method. This default 
 // implementation takes care of writing the class name when the archive is in
 // save mode. If the thinker is being loaded from a save, the save archive
 // has already read out the thinker name in order to instantiate an instance
-// of the proper class courtesy of CThinkerType.
+// of the proper class courtesy of ThinkerType.
 //
-void CThinker::serialize(CSaveArchive &arc)
+void Thinker::serialize(SaveArchive &arc)
 {
    if(arc.isSaving())
       arc.WriteLString(getClassName());
@@ -339,7 +339,7 @@ void P_Ticker(void)
 
    reset_viewz = false;  // sf
 
-   CThinker::RunThinkers();
+   Thinker::RunThinkers();
    P_UpdateSpecials();
    P_RespawnSpecials();
    if(demo_version >= 329)
@@ -367,20 +367,20 @@ void P_Ticker(void)
 // code create new thinkers.
 //
 
-// thinkerTypes - this is a list of all the CThinkerType global objects.
-static CThinkerType *thinkerTypes;
+// thinkerTypes - this is a list of all the ThinkerType global objects.
+static ThinkerType *thinkerTypes;
 
 //
-// CThinkerType::FindType
+// ThinkerType::FindType
 //
-// Static method to find a CThinkerType in the list by name. There are a 
+// Static method to find a ThinkerType in the list by name. There are a 
 // limited number of thinker types so this is just a linear search. The
 // overhead of hashing is not worth it here. Returns NULL if no such type 
 // exists (or it hasn't been registered yet).
 //
-CThinkerType *CThinkerType::FindType(const char *pName)
+ThinkerType *ThinkerType::FindType(const char *pName)
 {
-   CThinkerType *curType = thinkerTypes;
+   ThinkerType *curType = thinkerTypes;
 
    while(curType && strcmp(curType->name, pName))
       curType = curType->next;
@@ -389,15 +389,18 @@ CThinkerType *CThinkerType::FindType(const char *pName)
 }
 
 // 
-// CThinkerType Constructor
+// ThinkerType Constructor
 //
 // The object will automatically be added into the thinker factory list.
 //
-CThinkerType::CThinkerType(const char *pName) : name(pName)
+ThinkerType::ThinkerType(const char *pName) : name(pName)
 {
-   // CThinkerTypes must be singletons with unique names.
+   // ThinkerTypes must be singletons with unique names.
    if(FindType(pName))
-      I_Error("CThinkerType: duplicate class registered with name %s\n", pName);
+   {
+      I_FatalError(I_ERR_KILL,
+         "ThinkerType: duplicate class registered with name %s\n", pName);
+   }
 
    // Add it to the global list; order is unimportant.
    this->next = thinkerTypes;

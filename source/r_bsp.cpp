@@ -1935,7 +1935,7 @@ static int R_PolyobjCompare(const void *p1, const void *p2)
 // must be sorted to draw in DOOM's front-to-back order within individual
 // subsectors. This is a modified version of R_SortVisSprites.
 //
-static void R_SortPolyObjects(CDLListItem<rpolyobj_t> *list)
+static void R_SortPolyObjects(DLListItem<rpolyobj_t> *list)
 {
    int i = 0;
          
@@ -1965,7 +1965,7 @@ static void R_SortPolyObjects(CDLListItem<rpolyobj_t> *list)
 //
 static void R_AddDynaSegs(subsector_t *sub)
 {
-   CDLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
+   DLListItem<rpolyobj_t> *link = sub->polyList->dllNext;
    int i;
 
    numpolys = 1; // we know there is at least one

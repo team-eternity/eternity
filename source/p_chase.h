@@ -24,7 +24,7 @@
 
 #include "m_fixed.h"
 #include "tables.h"
-class mobj_t;
+class Mobj;
 
 // haleyjd 06/04/01: added heightsec field for use in R_FakeFlat
 // to fix SMMU camera deep water bugs
@@ -65,7 +65,7 @@ void P_ResetChasecam();
 void P_WalkTicker();
 void P_ResetWalkcam();
 
-void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target);
+void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);
 void P_FollowCamOff(void);
 void P_FollowCamTicker(void);
 

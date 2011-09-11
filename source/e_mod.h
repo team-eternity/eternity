@@ -38,8 +38,8 @@
 //
 struct emod_t
 {
-   CDLListItem<emod_t> numlinks;  // for numeric hash
-   CDLListItem<emod_t> namelinks; // for name hash
+   DLListItem<emod_t> numlinks;  // for numeric hash
+   DLListItem<emod_t> namelinks; // for name hash
    ENCStringHashKey    name;      // name key
    EIntHashKey         num;       // number key
 

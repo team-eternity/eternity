@@ -765,7 +765,7 @@ void R_IncrementFrameid(void)
 //
 void R_SetupFrame(player_t *player, camera_t *camera)
 {               
-   mobj_t *mobj;
+   Mobj *mobj;
    fixed_t pitch;
    fixed_t dy;
    fixed_t viewheightfrac;
@@ -1162,12 +1162,12 @@ void R_DoomTLStyle(void)
       // if we are in-level, update all things of the corresponding type too
       if(gamestate == GS_LEVEL)
       {
-         CThinker *th;
+         Thinker *th;
          
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
-            mobj_t *mo;
-            if((mo = thinker_cast<mobj_t *>(th)))
+            Mobj *mo;
+            if((mo = thinker_cast<Mobj *>(th)))
             {
                if(mo->type == tnum)
                {

@@ -42,7 +42,7 @@
 #include "d_keywds.h"
 
 // 
-// CDLListItem
+// DLListItem
 //
 // This template class is an evolution of the original mdllistitem_t.
 // However rather than using an is-a relationship, this functions best
@@ -52,17 +52,17 @@
 // This class is intentionally a POD and will most likely remain that way
 // for speed and efficiency concerns.
 //
-template<typename T> class CDLListItem
+template<typename T> class DLListItem
 {
 public:
-   CDLListItem<T>  *dllNext;
-   CDLListItem<T> **dllPrev;
+   DLListItem<T>  *dllNext;
+   DLListItem<T> **dllPrev;
    T               *dllObject; // 08/02/09: pointer back to object
    unsigned int     dllData;   // 02/07/10: arbitrary data cached at node
 
-   inline void insert(T *parentObject, CDLListItem<T> **head)
+   inline void insert(T *parentObject, DLListItem<T> **head)
    {
-      CDLListItem<T> *next = *head;
+      DLListItem<T> *next = *head;
 
       if((this->dllNext = next))
          next->dllPrev = &this->dllNext;
@@ -74,8 +74,8 @@ public:
 
    inline void remove()
    {
-      CDLListItem<T> **prev = this->dllPrev;
-      CDLListItem<T>  *next = this->dllNext;
+      DLListItem<T> **prev = this->dllPrev;
+      DLListItem<T>  *next = this->dllNext;
 
       if((*prev = next))
          next->dllPrev = prev;

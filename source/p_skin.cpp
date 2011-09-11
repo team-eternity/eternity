@@ -413,7 +413,7 @@ void P_SetSkin(skin_t *skin, int playernum)
    
    if(gamestate == GS_LEVEL)
    {
-      mobj_t *mo = pl->mo;
+      Mobj *mo = pl->mo;
       
       mo->skin = skin;
 

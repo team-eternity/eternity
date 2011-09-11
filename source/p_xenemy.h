@@ -36,12 +36,17 @@
 
 // Earthquakes
 
-class CQuakeThinker : public CPointThinker
+class QuakeThinker : public PointThinker
 {
 protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "QuakeThinker"; }
+
+   // Data Members
    int intensity;        // richter scale (hardly realistic)
    int duration;         // how long it lasts
    fixed_t quakeRadius;  // radius of shaking effects

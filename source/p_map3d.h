@@ -27,11 +27,11 @@
 #ifndef P_MAP3D_H__
 #define P_MAP3D_H__
 
-boolean P_TestMobjZ(mobj_t *mo);
-boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y);
-boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y);
+boolean P_TestMobjZ(Mobj *mo);
+boolean P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y);
+boolean P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y);
 boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil);
-mobj_t  *P_GetThingUnder(mobj_t *mo);
+Mobj  *P_GetThingUnder(Mobj *mo);
 
 #endif 
 

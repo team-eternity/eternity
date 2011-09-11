@@ -32,7 +32,7 @@
 
 struct edf_string_t
 {
-   CDLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
+   DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
    edf_string_t *next;                 // next in mnemonic hash chain
 
    char *string;       // string value

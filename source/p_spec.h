@@ -29,6 +29,8 @@
 #include "r_defs.h"
 #include "d_player.h"
 
+class SaveArchive;
+
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
 
@@ -577,7 +579,8 @@ typedef enum
 
 // switch animation structure type
 
-#ifdef _MSC_VER
+//jff 3/23/98 pack to read from memory
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
@@ -586,11 +589,11 @@ struct switchlist_s
   char    name1[9];
   char    name2[9];
   int16_t episode;
-} __attribute__((packed)); //jff 3/23/98 pack to read from memory
+}; 
 
 typedef struct switchlist_s switchlist_t;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
@@ -610,97 +613,127 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-class CFireFlicker : public CThinker
+class FireFlickerThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int maxlight;
-  int minlight;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "FireFlickerThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   int count;
+   int maxlight;
+   int minlight;
 };
 
-class CLightFlash : public CThinker
+class LightFlashThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int maxlight;
-  int minlight;
-  int maxtime;
-  int mintime;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "LightFlashThinker"; }
+   
+   // Data Members
+   sector_t *sector;
+   int count;
+   int maxlight;
+   int minlight;
+   int maxtime;
+   int mintime;
 };
 
-class CStrobeThinker : public CThinker
+class StrobeThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int count;
-  int minlight;
-  int maxlight;
-  int darktime;
-  int brighttime;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "StrobeThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   int count;
+   int minlight;
+   int maxlight;
+   int darktime;
+   int brighttime;
 };
 
-class CGlowThinker : public CThinker
+class GlowThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  int minlight;
-  int maxlight;
-  int direction;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "GlowThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   int minlight;
+   int maxlight;
+   int direction;
 };
 
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-class CLightFade : public CThinker
+class LightFadeThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  fixed_t lightlevel;
-  fixed_t destlevel;
-  fixed_t step;
-  fixed_t glowmin;
-  fixed_t glowmax;
-  int     glowspeed;
-  lightfade_e type;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "LightFadeThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   fixed_t lightlevel;
+   fixed_t destlevel;
+   fixed_t step;
+   fixed_t glowmin;
+   fixed_t glowmax;
+   int     glowspeed;
+   int     type;
 };
 
 // p_plats
 
-class CPlat : public CThinker
+class PlatThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  sector_t *sector;
-  fixed_t speed;
-  fixed_t low;
-  fixed_t high;
-  int wait;
-  int count;
-  plat_e status;
-  plat_e oldstatus;
-  int crush;
-  int tag;
-  plattype_e type;
-  struct platlist *list;   // killough
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PlatThinker"; }
+
+   // Data Members
+   sector_t *sector;
+   fixed_t speed;
+   fixed_t low;
+   fixed_t high;
+   int wait;
+   int count;
+   int status;
+   int oldstatus;
+   int crush;
+   int tag;
+   int type;
+   struct platlist *list;   // killough
   unsigned int net_id;     // [CG] Added for c/s.
   unsigned int inactive;   // [CG] Added for c/s.
 };
@@ -708,7 +741,7 @@ public:
 // New limit-free plat structure -- killough
 
 typedef struct platlist {
-  CPlat *plat; 
+  PlatThinker *plat; 
   struct platlist *next,**prev;
 } platlist_t;
 
@@ -722,30 +755,35 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-class CVerticalDoor : public CThinker
+class VerticalDoorThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  vldoor_e type;
-  sector_t *sector;
-  fixed_t topheight;
-  fixed_t speed;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "VerticalDoorThinker"; }
 
-  // 1 = up, 0 = waiting at top, -1 = down
-  int direction;
+   // Data Members
+   int type;
+   sector_t *sector;
+   fixed_t topheight;
+   fixed_t speed;
 
-  // tics to wait at the top
-  int topwait;
-  // (keep in case a door going down is reset)
-  // when it reaches 0, start going down
-  int topcountdown;
+   // 1 = up, 0 = waiting at top, -1 = down
+   int direction;
 
-  //jff 1/31/98 keep track of line door is triggered by
-  line_t *line;
+   // tics to wait at the top
+   int topwait;
+   // (keep in case a door going down is reset)
+   // when it reaches 0, start going down
+   int topcountdown;
 
-  int lighttag; //killough 10/98: sector tag for gradual lighting effects
+   //jff 1/31/98 keep track of line door is triggered by
+   line_t *line;
+
+   int lighttag; //killough 10/98: sector tag for gradual lighting effects
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
 };
@@ -769,7 +807,7 @@ typedef struct doordata_s
 
 // haleyjd 09/06/07: sector special transfer structure
 
-typedef struct spectransfer_s
+struct spectransfer_t
 {
    int newspecial;
    unsigned int flags;
@@ -777,46 +815,52 @@ typedef struct spectransfer_s
    int damagemask;
    int damagemod;
    int damageflags;
-} spectransfer_t;
+};
 
 // p_doors
 
-class CCeiling : public CThinker
+class CeilingThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  ceiling_e type;
-  sector_t *sector;
-  fixed_t bottomheight;
-  fixed_t topheight;
-  fixed_t speed;
-  fixed_t oldspeed;
-  int crush;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "CeilingThinker"; }
 
-  //jff 02/04/98 add these to support ceiling changers
-  //jff 3/14/98 add to fix bug in change transfers
-  spectransfer_t special; // haleyjd 09/06/07: spectransfer
-  int texture;
+   // Data Members
+   int type;
+   sector_t *sector;
+   fixed_t bottomheight;
+   fixed_t topheight;
+   fixed_t speed;
+   fixed_t oldspeed;
+   int crush;
 
-  // 1 = up, 0 = waiting, -1 = down
-  int direction;
+   //jff 02/04/98 add these to support ceiling changers
+   //jff 3/14/98 add to fix bug in change transfers
+   spectransfer_t special; // haleyjd 09/06/07: spectransfer
+   int texture;
 
-  // haleyjd: stasis
-  boolean inStasis;
+   // 1 = up, 0 = waiting, -1 = down
+   int direction;
 
-  // ID
-  int tag;
-  int olddirection;
-  struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+   // haleyjd: stasis
+   boolean inStasis;
+
+   // ID
+   int tag;                   
+   int olddirection;
+   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
 };
 
 typedef struct ceilinglist
 {
-  CCeiling *ceiling; 
+  CeilingThinker *ceiling; 
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
@@ -840,29 +884,35 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-class CFloorMove : public CThinker
+class FloorMoveThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  floor_e type;
-  int crush;
-  sector_t *sector;
-  int direction;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "FloorMoveThinker"; }
 
-  // jff 3/14/98 add to fix bug in change transfers
-  // haleyjd 09/06/07: spectransfer
-  spectransfer_t special;
+   // Data Members
+   int type;
+   int crush;
+   sector_t *sector;
+   int direction;
 
-  int16_t texture;
-  fixed_t floordestheight;
-  fixed_t speed;
-  int resetTime;       // haleyjd 10/13/05: resetting stairs
-  fixed_t resetHeight;
-  int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
-  int delayTime;
-  int delayTimer;
+   // jff 3/14/98 add to fix bug in change transfers
+   // haleyjd 09/06/07: spectransfer
+   spectransfer_t special;
+
+   int16_t texture;
+   fixed_t floordestheight;
+   fixed_t speed;
+   int resetTime;       // haleyjd 10/13/05: resetting stairs
+   fixed_t resetHeight;
+   int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
+   int delayTime;       
+   int delayTimer;
+
   unsigned int net_id;   // [CG] Added for c/s.
   unsigned int inactive; // [CG] Added for c/s.
 };
@@ -902,13 +952,18 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-class CElevator : public CThinker
+class ElevatorThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-   elevator_e type;
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "ElevatorThinker"; }
+
+   // Data Members
+   int type;
    sector_t *sector;
    int direction;
    fixed_t floordestheight;
@@ -919,12 +974,17 @@ public:
 };
 
 // joek: pillars
-class CPillar : public CThinker
+class PillarThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PillarThinker"; }
+
+   // Data Members
    sector_t *sector;
    int ceilingSpeed;
    int floorSpeed;
@@ -948,12 +1008,17 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-class CFloorWaggle : public CThinker
+class FloorWaggleThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "FloorWaggleThinker"; }
+
+   // Data Members
    sector_t *sector;
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -971,38 +1036,48 @@ public:
 
 // killough 3/7/98: Add generalized scroll effects
 
-class CScroller : public CThinker
+class ScrollThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  fixed_t dx, dy;      // (dx,dy) scroll speeds
-  int affectee;        // Number of affected sidedef, sector, tag, or whatever
-  int control;         // Control sector (-1 if none) used to control scrolling
-  fixed_t last_height; // Last known height of control sector
-  fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-  int accel;           // Whether it's accelerative
-  enum
-  {
-    sc_side,
-    sc_floor,
-    sc_ceiling,
-    sc_carry,
-    sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-  };
-  int type;              // Type of scroll effect
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "ScrollThinker"; }
+
+   // Data Members
+   fixed_t dx, dy;      // (dx,dy) scroll speeds
+   int affectee;        // Number of affected sidedef, sector, tag, or whatever
+   int control;         // Control sector (-1 if none) used to control scrolling
+   fixed_t last_height; // Last known height of control sector
+   fixed_t vdx, vdy;    // Accumulated velocity if accelerative
+   int accel;           // Whether it's accelerative
+   enum
+   {
+      sc_side,
+      sc_floor,
+      sc_ceiling,
+      sc_carry,
+      sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
+   };
+   int type;              // Type of scroll effect
 };
 
-// haleyjd 04/11/10: CFrictionThinker restored
+// haleyjd 04/11/10: FrictionThinker restored
 // phares 3/12/98: added new model of friction for ice/sludge effects
 
-class CFrictionThinker : public CThinker
+class FrictionThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "FrictionThinker"; }
+
+   // Data Members
    int friction;      // friction value (E800 = normal)
    int movefactor;    // inertia factor when adding to momentum
    int affectee;      // Number of affected sector
@@ -1010,28 +1085,33 @@ public:
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
-class CPusher : public CThinker
+class PushThinker : public Thinker
 {
 protected:
    void Think();
 
 public:
-  enum
-  {
-    p_push,
-    p_pull,
-    p_wind,
-    p_current,
-  }; 
-  int type;
-  mobj_t *source;      // Point source if point pusher
-  int x_mag;           // X Strength
-  int y_mag;           // Y Strength
-  int magnitude;       // Vector strength for point pusher
-  int radius;          // Effective radius for point pusher
-  int x;               // X of point source if point pusher
-  int y;               // Y of point source if point pusher
-  int affectee;        // Number of affected sector
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "PushThinker"; }
+
+   // Data Members
+   enum
+   {
+      p_push,
+      p_pull,
+      p_wind,
+      p_current,
+   }; 
+   int type;
+   Mobj *source;      // Point source if point pusher
+   int x_mag;           // X Strength
+   int y_mag;           // Y Strength
+   int magnitude;       // Vector strength for point pusher
+   int radius;          // Effective radius for point pusher
+   int x;               // X of point source if point pusher
+   int y;               // Y of point source if point pusher
+   int affectee;        // Number of affected sector
 };
 
 // sf: direction plat moving
@@ -1144,14 +1224,14 @@ result_e T_MovePlane(sector_t *sector, fixed_t speed, fixed_t dest,
 
 // p_telept
 
-int EV_Teleport(line_t *line, int side, mobj_t *thing);
+int EV_Teleport(line_t *line, int side, Mobj *thing);
 
 // killough 2/14/98: Add silent teleporter
-int EV_SilentTeleport(line_t *line, int side, mobj_t *thing);
+int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(line_t *line, int side,
-			  mobj_t *thing, boolean reverse);
+			  Mobj *thing, boolean reverse);
 
 // p_floor
 
@@ -1171,11 +1251,11 @@ void P_ChangeCeilingTex(const char *name, int tag);
 
 // p_doors
 
-int EV_VerticalDoor(line_t *line, mobj_t *thing);
+int EV_VerticalDoor(line_t *line, Mobj *thing);
 
 int EV_DoDoor(line_t *line, vldoor_e type);
 
-int EV_DoLockedDoor(line_t *line, vldoor_e type, mobj_t *thing);
+int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
@@ -1243,7 +1323,7 @@ int EV_DoGenLockedDoor(line_t *line);
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag);
 
 // haleyjd 02/23/04
-extern mobj_t *genDoorThing;
+extern Mobj *genDoorThing;
 
 // p_things
 
@@ -1274,11 +1354,11 @@ void P_SpawnDeferredSpecials(int mapformat);
 void P_UpdateSpecials(void);
 
 // when needed
-boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side);
+boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 
-void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side);
+void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
-void P_CrossSpecialLine(line_t *, int side, mobj_t *thing); // killough 11/98
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing); // killough 11/98
 
 void P_PlayerInSpecialSector(player_t *player);
 void P_PlayerOnSpecialFlat(player_t *player);
@@ -1302,20 +1382,20 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-void P_CopyPlatform(CPlat *dest, CPlat *src);
+void P_CopyPlatform(PlatThinker *dest, PlatThinker *src);
 
-boolean P_PlatformsEqual(CPlat *platform_one, CPlat *platform_two);
+boolean P_PlatformsEqual(PlatThinker *platform_one, PlatThinker *platform_two);
 
-void P_PrintPlatform(CPlat *platform);
+void P_PrintPlatform(PlatThinker *platform);
 
-CPlat* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
-                       plattype_e type);
+PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
+                             plattype_e type);
 
-CPlat* P_SpawnGenPlatform(line_t *line, sector_t *sec);
+PlatThinker* P_SpawnGenPlatform(line_t *line, sector_t *sec);
 
-void P_AddActivePlat(CPlat *plat);
+void P_AddActivePlat(PlatThinker *plat);
 
-void P_RemoveActivePlat(CPlat *plat);
+void P_RemoveActivePlat(PlatThinker *plat);
 
 void P_RemoveAllActivePlats(void);    // killough
 
@@ -1325,21 +1405,21 @@ void P_PlatSequence(sector_t *s, const char *seqname);
 
 // p_doors
 
-void P_CopyDoor(vldoor_t *dest, vldoor_t *src);
+void P_CopyDoor(VerticalDoorThinker *dest, VerticalDoorThinker *src);
 
-void P_RemoveDoor(vldoor_t *door);
+void P_RemoveDoor(VerticalDoorThinker *door);
 
-void P_PrintDoor(vldoor_t *door);
+void P_PrintDoor(VerticalDoorThinker *door);
 
-vldoor_t* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type);
+VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type);
 
-vldoor_t* P_SpawnManualDoor(line_t *line, sector_t *sec);
+VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec);
 
-vldoor_t* P_SpawnDoorCloseIn30(sector_t *sec);
+VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t *sec);
 
-vldoor_t* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
+VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
-vldoor_t* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd);
+VerticalDoorThinker* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd);
 
 // haleyjd
 void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s);
@@ -1399,19 +1479,19 @@ ceiling_t* P_SpawnParamCeiling(line_t *line, sector_t *sector,
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
-void P_RemoveActiveCeiling(CCeiling *ceiling);  //jff 2/22/98
+void P_RemoveActiveCeiling(CeilingThinker *ceiling);  //jff 2/22/98
 
 void P_RemoveAllActiveCeilings(void);                //jff 2/22/98
 
-void P_AddActiveCeiling(CCeiling *c);
+void P_AddActiveCeiling(CeilingThinker *c);
 
-void P_RemoveActiveCeiling(CCeiling *c);
+void P_RemoveActiveCeiling(CeilingThinker *c);
 
 int P_ActivateInStasisCeiling(line_t *line);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
-mobj_t *P_GetPushThing(int);                                // phares 3/23/98
+Mobj *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(line_t *cline, boolean ceiling);
@@ -1446,8 +1526,8 @@ enum
    SPAC_PUSH,
 };
 
-boolean P_ActivateParamLine(line_t *line, mobj_t *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special,
+boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
+boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
                             int *args, int side, int spac, boolean reuse);
 
 #endif
@@ -1498,7 +1578,7 @@ boolean P_ExecParamLineSpec(line_t *line, mobj_t *thing, int16_t special,
 // Added instant toggle floor type
 //
 // Revision 1.15  1998/03/09  07:24:40  killough
-// Add CScroller for generalized scrollers
+// Add ScrollThinker for generalized scrollers
 //
 // Revision 1.14  1998/03/02  12:11:35  killough
 // Add scroll_effect_offset declaration

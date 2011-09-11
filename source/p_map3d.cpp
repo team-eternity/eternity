@@ -53,7 +53,7 @@ extern fixed_t   FloatBobOffsets[64];
 // without any side-effects so that it's reversible: the only thing changed
 // is mo->z, which will be reset before the real move takes place.
 //
-static void P_ZMovementTest(mobj_t *mo)
+static void P_ZMovementTest(Mobj *mo)
 {
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
@@ -126,14 +126,14 @@ floater:
       mo->z = mo->ceilingz - mo->height;
 }
 
-static mobj_t *testz_mobj; // used to hold object found by P_TestMobjZ
+static Mobj *testz_mobj; // used to hold object found by P_TestMobjZ
 
 //
 // PIT_TestMobjZ
 //
 // Derived from zdoom; iterator function for P_TestMobjZ
 //
-static boolean PIT_TestMobjZ(mobj_t *thing)
+static boolean PIT_TestMobjZ(Mobj *thing)
 {
    fixed_t blockdist = thing->radius + clip.thing->radius;
 
@@ -162,7 +162,7 @@ static boolean PIT_TestMobjZ(mobj_t *thing)
 //
 // From zdoom; tests a thing's z position for validity.
 //
-boolean P_TestMobjZ(mobj_t *mo)
+boolean P_TestMobjZ(Mobj *mo)
 {
    int xl, xh, yl, yh, x, y;
 
@@ -200,7 +200,7 @@ boolean P_TestMobjZ(mobj_t *mo)
 // If we're standing on something, this function will return it. Otherwise,
 // it'll return NULL.
 //
-mobj_t *P_GetThingUnder(mobj_t *mo)
+Mobj *P_GetThingUnder(Mobj *mo)
 {
    // save the current z coordinate
    fixed_t mo_z = mo->z;
@@ -223,10 +223,10 @@ mobj_t *P_GetThingUnder(mobj_t *mo)
 // a search, which is an extension borrowed from zdoom and is needed for 3D
 // object clipping.
 //
-boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
-                               mobj_t *actor)
+boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(Mobj *),
+                               Mobj *actor)
 {
-   mobj_t *mobj;
+   Mobj *mobj;
 
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
@@ -243,19 +243,19 @@ boolean P_SBlockThingsIterator(int x, int y, boolean (*func)(mobj_t *),
    return true;
 }
 
-static mobj_t *stepthing;
+static Mobj *stepthing;
 
 extern boolean PIT_CheckLine(line_t *ld);
 
-extern boolean P_Touched(mobj_t *thing, mobj_t *tmthing);
-extern int     P_MissileBlockHeight(mobj_t *mo);
-extern boolean P_CheckPickUp(mobj_t *thing, mobj_t *tmthing);
-extern boolean P_SkullHit(mobj_t *thing, mobj_t *tmthing);
+extern boolean P_Touched(Mobj *thing, Mobj *tmthing);
+extern int     P_MissileBlockHeight(Mobj *mo);
+extern boolean P_CheckPickUp(Mobj *thing, Mobj *tmthing);
+extern boolean P_SkullHit(Mobj *thing, Mobj *tmthing);
 
 //
 // PIT_CheckThing3D
 //
-static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
+static boolean PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t topz;      // haleyjd: from zdoom
    fixed_t blockdist;
@@ -484,15 +484,15 @@ static boolean PIT_CheckThing3D(mobj_t *thing) // killough 3/26/98: make static
 //
 // A 3D version of P_CheckPosition.
 //
-boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
+boolean P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
    fixed_t thingdropoffz;
 
    // haleyjd: from zdoom:
-   mobj_t  *thingblocker;
-   //mobj_t  *fakedblocker;
+   Mobj  *thingblocker;
+   //Mobj  *fakedblocker;
    fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
@@ -555,7 +555,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 
    // Check things first, possibly picking things up.
    // The bounding box is extended by MAXRADIUS
-   // because mobj_ts are grouped into mapblocks
+   // because Mobjs are grouped into mapblocks
    // based on their origin point, and can overlap
    // into adjacent blocks by up to MAXRADIUS units.
 
@@ -578,7 +578,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
       for(by = yl; by <= yh; ++by)
       {
          // haleyjd: from zdoom:
-         mobj_t *robin = NULL;
+         Mobj *robin = NULL;
 
          do
          {
@@ -671,7 +671,7 @@ boolean P_CheckPosition3D(mobj_t *thing, fixed_t x, fixed_t y)
 // floorz/ceilingz clip. This is just for testing, and stuff like collecting
 // powerups and exploding touchy objects won't happen.
 //
-boolean P_CheckPositionExt(mobj_t *mo, fixed_t x, fixed_t y)
+boolean P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y)
 {
    int flags;
    boolean xygood;
@@ -715,7 +715,7 @@ static MobjCollection intersectors; // haleyjd: use MobjCollection
 //
 // From zdoom: what our system was mostly lacking.
 //
-static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
+static boolean P_AdjustFloorCeil(Mobj *thing, boolean midtex)
 {
    boolean isgood;
    unsigned int oldfl3 = thing->flags3;
@@ -749,7 +749,7 @@ static boolean P_AdjustFloorCeil(mobj_t *thing, boolean midtex)
 // over/under situations with an object being moved by a sector floor or
 // ceiling so that they can be dealt with uniformly at one time.
 //
-static boolean PIT_FindAboveIntersectors(mobj_t *thing)
+static boolean PIT_FindAboveIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
@@ -771,7 +771,7 @@ static boolean PIT_FindAboveIntersectors(mobj_t *thing)
    return true;
 }
 
-boolean PIT_FindBelowIntersectors(mobj_t *thing)
+boolean PIT_FindBelowIntersectors(Mobj *thing)
 {
    fixed_t blockdist;
    if(!(thing->flags & MF_SOLID) ||               // Can't hit thing?
@@ -802,7 +802,7 @@ boolean PIT_FindBelowIntersectors(mobj_t *thing)
 // Finds all the things above the thing being moved and puts them into an
 // MobjCollection (this is partially explained above). From zdoom.
 //
-static void P_FindAboveIntersectors(mobj_t *actor)
+static void P_FindAboveIntersectors(Mobj *actor)
 {
    int	xl, xh, yl, yh, bx, by;
    fixed_t x, y;
@@ -840,7 +840,7 @@ static void P_FindAboveIntersectors(mobj_t *actor)
 //
 // As the above function, but for things that are below the actor.
 //
-static void P_FindBelowIntersectors(mobj_t *actor)
+static void P_FindBelowIntersectors(Mobj *actor)
 {
    int	xl,xh,yl,yh,bx,by;
    fixed_t x, y;
@@ -879,9 +879,9 @@ static void P_FindBelowIntersectors(mobj_t *actor)
 // As in zdoom, the inner core of PIT_ChangeSector isolated for effects that
 // should occur when a thing definitely doesn't fit.
 //
-static void P_DoCrunch(mobj_t *thing)
+static void P_DoCrunch(Mobj *thing)
 {
-   mobj_t *mo;
+   Mobj *mo;
 
    // crunch bodies to giblets
    // TODO: support DONTGIB flag like zdoom?
@@ -969,7 +969,7 @@ static boolean midtex_moving;
 // Returns 0 if thing fits, 1 if ceiling got in the way, or 2 if something
 // above it didn't fit. From zdoom.
 //
-static int P_PushUp(mobj_t *thing)
+static int P_PushUp(Mobj *thing)
 {
    unsigned int firstintersect = intersectors.num;
    unsigned int lastintersect;
@@ -982,7 +982,7 @@ static int P_PushUp(mobj_t *thing)
    lastintersect = intersectors.num;
    for(; firstintersect < lastintersect; ++firstintersect)
    {
-      mobj_t *intersect = P_CollectionGetAt(&intersectors, firstintersect);
+      Mobj *intersect = P_CollectionGetAt(&intersectors, firstintersect);
       fixed_t oldz = intersect->z;
 
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) ||*/
@@ -1013,7 +1013,7 @@ static int P_PushUp(mobj_t *thing)
 // Returns 0 if thing fits, 1 if floor got in the way, or 2 if something
 // below it didn't fit.
 //
-static int P_PushDown(mobj_t *thing)
+static int P_PushDown(Mobj *thing)
 {
    unsigned int firstintersect = intersectors.num;
    unsigned int lastintersect;
@@ -1026,7 +1026,7 @@ static int P_PushDown(mobj_t *thing)
    lastintersect = intersectors.num;
    for(; firstintersect < lastintersect; ++firstintersect)
    {
-      mobj_t *intersect = P_CollectionGetAt(&intersectors, firstintersect);
+      Mobj *intersect = P_CollectionGetAt(&intersectors, firstintersect);
       fixed_t oldz = intersect->z;
 
       if(/*!(intersect->flags3 & MF3_PASSMOBJ) || */
@@ -1062,7 +1062,7 @@ static int P_PushDown(mobj_t *thing)
 // did leads to not being able to know who should move whom and in what
 // direction, which is evidently what was mainly wrong with our own code.
 //
-static void PIT_FloorDrop(mobj_t *thing)
+static void PIT_FloorDrop(Mobj *thing)
 {
    fixed_t oldfloorz = thing->floorz;
 
@@ -1091,7 +1091,7 @@ static void PIT_FloorDrop(mobj_t *thing)
 //
 // haleyjd: here's where the fun begins!
 //
-static void PIT_FloorRaise(mobj_t *thing)
+static void PIT_FloorRaise(Mobj *thing)
 {
    fixed_t oldfloorz = thing->floorz;
 
@@ -1128,7 +1128,7 @@ static void PIT_FloorRaise(mobj_t *thing)
 //
 // PIT_CeilingLower
 //
-static void PIT_CeilingLower(mobj_t *thing)
+static void PIT_CeilingLower(Mobj *thing)
 {
    boolean onfloor;
 
@@ -1162,7 +1162,7 @@ static void PIT_CeilingLower(mobj_t *thing)
 //
 // PIT_CeilingRaise
 //
-static void PIT_CeilingRaise(mobj_t *thing)
+static void PIT_CeilingRaise(Mobj *thing)
 {
    boolean isgood = P_AdjustFloorCeil(thing, midtex_moving);
 
@@ -1204,8 +1204,8 @@ static void PIT_CeilingRaise(mobj_t *thing)
 //
 boolean P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
 {
-   void (*iterator)(mobj_t *)  = NULL;
-   void (*iterator2)(mobj_t *) = NULL;
+   void (*iterator)(Mobj *)  = NULL;
+   void (*iterator2)(Mobj *) = NULL;
    msecnode_t *n;
 
    midtex_moving = false;

@@ -36,6 +36,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_portal.h"
+#include "p_saveg.h"
 #include "p_tick.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -113,16 +114,41 @@ fixed_t FloatBobDiffs[64] =
    48444, 49909, 50895
 };
 
+//=============================================================================
+// 
+// PointThinker Methods
+//
+
+IMPLEMENT_THINKER_TYPE(PointThinker)
+
+//
+// PointThinker::serialize
+//
+// Saves/loads a PointThinker.
+//
+void PointThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << x << y << z << groupid;
+}
+
+//=============================================================================
+//
+// Mobj
+//
+
+// haleyjd 03/27/10: new solution for state cycle detection
 /* [CG] Moved definition of seenstate_t to p_mobj.h.
 struct seenstate_t
 {
-   CDLListItem<seenstate_t> link;
+   DLListItem<seenstate_t> link;
    int statenum;
 };
 */
 
 // haleyjd 03/27/10: freelist of seenstate objects
-static CDLListItem<seenstate_t> *seenstate_freelist;
+static DLListItem<seenstate_t> *seenstate_freelist;
 
 //
 // P_InitSeenStates
@@ -145,10 +171,10 @@ static void P_InitSeenStates(void)
 //
 // haleyjd 03/27/10: puts a set of seenstates back onto the freelist
 //
-void P_FreeSeenStates(CDLListItem<seenstate_t> *list)
+void P_FreeSeenStates(DLListItem<seenstate_t> *list)
 {
-   CDLListItem<seenstate_t> *oldhead = seenstate_freelist;
-   CDLListItem<seenstate_t> *newtail = list;
+   DLListItem<seenstate_t> *oldhead = seenstate_freelist;
+   DLListItem<seenstate_t> *newtail = list;
 
    // find tail of list of objects to free
    while(newtail->dllNext)
@@ -176,7 +202,7 @@ static seenstate_t *P_GetSeenState(void)
 
    if(seenstate_freelist)
    {
-      CDLListItem<seenstate_t> *item = seenstate_freelist;
+      DLListItem<seenstate_t> *item = seenstate_freelist;
 
       item->remove();
 
@@ -194,7 +220,7 @@ static seenstate_t *P_GetSeenState(void)
 //
 // Marks a new state as having been seen.
 //
-static void P_AddSeenState(int statenum, CDLListItem<seenstate_t> **list)
+static void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
 {
    seenstate_t *newss = P_GetSeenState();
 
@@ -208,9 +234,9 @@ static void P_AddSeenState(int statenum, CDLListItem<seenstate_t> **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, CDLListItem<seenstate_t> *list)
+static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 {
-   CDLListItem<seenstate_t> *link = list;
+   DLListItem<seenstate_t> *link = list;
 
    while(link)
    {
@@ -228,7 +254,7 @@ static boolean P_CheckSeenState(int statenum, CDLListItem<seenstate_t> *list)
 //
 // Returns true if the mobj is still present.
 //
-boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
+boolean P_SetMobjState(Mobj* mobj, statenum_t state)
 {
    state_t *st;
    boolean client_should_handle = false;
@@ -237,7 +263,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 
    // haleyjd 03/27/10: new state cycle detection
    static boolean firsttime = true; // for initialization
-   CDLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
+   DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
    boolean ret = true;                           // return value
 
    if(firsttime)
@@ -331,7 +357,7 @@ boolean P_SetMobjState(mobj_t* mobj, statenum_t state)
 // This function was originally added by Raven in Heretic for the Maulotaur,
 // but it has proven itself useful elsewhere.
 //
-boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
+boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 {
    state_t *st;
 
@@ -371,7 +397,7 @@ boolean P_SetMobjStateNF(mobj_t *mobj, statenum_t state)
 //
 // P_ExplodeMissile
 //
-void P_ExplodeMissile(mobj_t *mo)
+void P_ExplodeMissile(Mobj *mo)
 {
    // [CG] Only servers explode missiles.
    if(!serverside)
@@ -420,7 +446,7 @@ void P_ExplodeMissile(mobj_t *mo)
    mo->effects = 0;
 }
 
-void P_ThrustMobj(mobj_t *mo, angle_t angle, fixed_t move)
+void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
 {
    angle >>= ANGLETOFINESHIFT;
    mo->momx += FixedMul(move, finecosine[angle]);
@@ -434,7 +460,7 @@ void P_ThrustMobj(mobj_t *mo, angle_t angle, fixed_t move)
 //
 // killough 11/98: minor restructuring
 
-void P_XYMovement(mobj_t* mo)
+void P_XYMovement(Mobj* mo)
 {
    player_t *player = mo->player;
    fixed_t xmove, ymove;
@@ -603,10 +629,10 @@ void P_XYMovement(mobj_t* mo)
                {
                   // send it back after the SOB who fired it
                   if(mo->tracer)
-                     P_SetTarget<mobj_t>(&mo->tracer, mo->target);
+                     P_SetTarget<Mobj>(&mo->tracer, mo->target);
                }
 
-               P_SetTarget<mobj_t>(&mo->target, clip.BlockingMobj);
+               P_SetTarget<Mobj>(&mo->target, clip.BlockingMobj);
                return;
             }
             // explode a missile
@@ -760,7 +786,7 @@ void P_XYMovement(mobj_t* mo)
 //
 // haleyjd: OVER_UNDER: Isolated code for players hitting floors/objects
 //
-void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
+void P_PlayerHitFloor(Mobj *mo, boolean onthing)
 {
    // Squat down.
    // Decrease viewheight for a moment
@@ -819,8 +845,7 @@ void P_PlayerHitFloor(mobj_t *mo, boolean onthing)
 //
 // Attempt vertical movement.
 
-// [CG] Un-static'd
-static void P_ZMovement(mobj_t* mo)
+void P_ZMovement(Mobj* mo)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
    //          scope
@@ -1093,13 +1118,13 @@ floater:
 //
 // P_NightmareRespawn
 //
-void P_NightmareRespawn(mobj_t* mobj)
+void P_NightmareRespawn(Mobj* mobj)
 {
    fixed_t      x;
    fixed_t      y;
    fixed_t      z;
    subsector_t* ss;
-   mobj_t*      mo;
+   Mobj*      mo;
    mapthing_t*  mthing;
    boolean      check; // haleyjd 11/11/04
 
@@ -1210,7 +1235,7 @@ void P_NightmareRespawn(mobj_t* mobj)
 
 // PTODO
 #ifdef R_LINKEDPORTALS
-static boolean P_CheckPortalTeleport(mobj_t *mobj)
+static boolean P_CheckPortalTeleport(Mobj *mobj)
 {
    boolean ret = false;
 
@@ -1270,10 +1295,12 @@ static boolean P_CheckPortalTeleport(mobj_t *mobj)
 }
 #endif
 
+IMPLEMENT_THINKER_TYPE(Mobj)
+
 //
 // P_MobjThinker
 //
-void mobj_t::Think()
+void Mobj::Think()
 {
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
@@ -1348,7 +1375,7 @@ void mobj_t::Think()
       if(!comp[comp_overunder]  &&
          ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
-         mobj_t *onmo;
+         Mobj *onmo;
 
          if(!(onmo = P_GetThingUnder(this)))
          {
@@ -1519,12 +1546,152 @@ void mobj_t::Think()
 }
 
 //
+// Mobj::serialize
+//
+// Handles saving and loading of mobjs through the thinker serialization 
+// mechanism.
+//
+void Mobj::serialize(SaveArchive &arc)
+{
+   // PointThinker will handle x,y,z coordinates, groupid, and the thinker name
+   // (via Thinker::serialize).
+   PointThinker::serialize(arc);
+
+   // Basic Properties
+   arc 
+      // Identity
+      << type << tid
+      // Position
+      << angle                                             // Angles
+      << momx << momy << momz                              // Momenta
+      << floorz << ceilingz << dropoffz                    // Basic z coords
+      << secfloorz << secceilz << passfloorz << passceilz  // Advanced z coords
+      << spawnpoint                                        // Spawn info
+      << friction << movefactor                            // BOOM 202 friction
+      << floatbob                                          // Floatbobbing
+      << floorclip                                         // Foot clipping
+      // Bit flags
+      << flags << flags2 << flags3 << flags4               // Editor flags
+      << effects                                           // Particle flags
+      << intflags                                          // Internal flags
+      // Basic metrics (copied to Mobj from mobjinfo)
+      << radius << height << health << damage
+      // State info (copied to Mobj from state)
+      << sprite << frame << tics
+      // Movement logic and clipping
+      << validcount                                        // Traversals
+      << movedir << movecount << strafecount               // Movement
+      << reactiontime << threshold << pursuecount          // Attack AI
+      << lastlook                                          // More AI
+      << gear                                              // Lee's torque
+      // Appearance
+      << colour                                            // Translations
+      << translucency << alphavelocity                     // Alpha blending
+      << xscale << yscale;                                 // Scaling
+
+   // Arrays
+   P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
+   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
+
+   if(arc.isSaving()) // Saving
+   {
+      unsigned int temp, targetNum, tracerNum, enemyNum;
+
+      // Basic serializable pointers (state, player)
+      arc << state->index;
+      temp = player ? player - players + 1 : 0;
+      arc << temp;
+
+      // Pointers to other mobjs
+      targetNum = P_NumForThinker(target);
+      tracerNum = P_NumForThinker(tracer);
+      enemyNum  = P_NumForThinker(lastenemy);
+
+      arc << targetNum << tracerNum << enemyNum;
+   }
+   else // Loading
+   {
+      // Restore basic pointers
+      int temp;
+
+      arc << temp; // State index
+      state = states[temp];
+      
+      // haleyjd 07/23/09: this must be before skin setting!
+      info = &mobjinfo[type]; 
+
+      arc << temp; // Player number
+      if(temp)
+      {
+         // Mobj is a player body
+         int playernum = temp - 1;
+         (player = &players[playernum])->mo = this;
+
+         // PCLASS_FIXME: Need to save and restore proper player class!
+         // Temporary hack.
+         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
+         
+         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
+         // back to default for player class if non-existant. Note: must be 
+         // after player class is set.
+         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+      }
+      else
+      {
+         // haleyjd 09/26/04: restore monster skins
+         // haleyjd 07/23/09: do not clear player->mo->skin here
+         if(info->altsprite != -1)
+            skin = P_GetMonsterSkin(info->altsprite);
+         else
+            skin = NULL;
+      }
+
+      P_SetThingPosition(this);
+      P_AddThingTID(this, tid);
+
+      // create the deswizzle info structure
+      dsInfo = (deswizzle_info *)(Z_Calloc(1, sizeof(*dsInfo), PU_LEVEL, NULL));
+
+      // Get the swizzled pointers
+      arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
+   }
+}
+
+//
+// Mobj::deswizzle
+//
+// Handles resolving swizzled references to other mobjs immediately after
+// deserialization. All saved mobj pointers MUST be restored here.
+//
+void Mobj::deswizzle()
+{
+   Mobj *lTarget, *lTracer, *lLEnemy;
+
+   if(!dsInfo) // eh?
+      return;
+
+   // Get the thinker pointers for each number
+   lTarget = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->target));
+   lTracer = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->tracer));
+   lLEnemy = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->lastenemy));
+
+   // Restore the pointers using P_SetNewTarget
+   P_SetNewTarget(&target,    lTarget);
+   P_SetNewTarget(&tracer,    lTracer);
+   P_SetNewTarget(&lastenemy, lLEnemy);
+
+   // Done with the deswizzle info structure.
+   free(dsInfo);
+   dsInfo = NULL;
+}
+
+//
 // Update
 //
-// haleyjd 11/22/10: Overrides CThinker::Update.
+// haleyjd 11/22/10: Overrides Thinker::Update.
 // Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
 // 
-void mobj_t::updateThinker()
+void Mobj::updateThinker()
 {
    int tclass = th_misc;
 
@@ -1548,16 +1715,16 @@ extern fixed_t tmsecceilz;
 //
 // P_SpawnMobj
 //
-mobj_t *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   mobj_t     *mobj;
+   Mobj     *mobj;
    mobjinfo_t *info;
    state_t    *st;
 
    if(!CS_SPAWN_ACTOR_OK)
       I_Error("C/S clients cannot spawn actors themselves, exiting.\n");
 
-   mobj = new mobj_t;
+   mobj = new Mobj;
    info = &mobjinfo[type];
 
    mobj->type    = type;
@@ -1703,7 +1870,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void mobj_t::removeThinker()
+void Mobj::removeThinker()
 {
    // haleyjd 04/14/03: restructured
    boolean respawnitem = false;
@@ -1771,13 +1938,13 @@ void mobj_t::removeThinker()
 
    if(demo_version >= 203)
    {
-      P_SetTarget<mobj_t>(&this->target,    NULL);
-      P_SetTarget<mobj_t>(&this->tracer,    NULL);
-      P_SetTarget<mobj_t>(&this->lastenemy, NULL);
+      P_SetTarget<Mobj>(&this->target,    NULL);
+      P_SetTarget<Mobj>(&this->tracer,    NULL);
+      P_SetTarget<Mobj>(&this->lastenemy, NULL);
    }
 
    // free block
-   CThinker::removeThinker();
+   Thinker::removeThinker();
 }
 
 //
@@ -1821,7 +1988,7 @@ void P_RespawnSpecials(void)
 {
    fixed_t x, y, z;
    subsector_t*  ss;
-   mobj_t*       mo;
+   Mobj*       mo;
    mapthing_t*   mthing;
    int           i;
 
@@ -1883,7 +2050,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 {
    player_t* p;
    fixed_t   x, y, z;
-   mobj_t*   mobj;
+   Mobj*   mobj;
    int       i;
 
    // not playing?
@@ -1957,14 +2124,14 @@ void P_SpawnPlayer(mapthing_t* mthing)
 // The fields of the mapthing should
 // already be in host byte order.
 //
-// sf: made to return mobj_t* spawned
+// sf: made to return Mobj* spawned
 //
 // haleyjd 03/03/07: rewritten again to use a unified mapthing_t type.
 //
-mobj_t *P_SpawnMapThing(mapthing_t *mthing)
+Mobj *P_SpawnMapThing(mapthing_t *mthing)
 {
    int    i;
-   mobj_t *mobj;
+   Mobj *mobj;
    fixed_t x, y, z;
 
    switch(mthing->type)
@@ -2300,10 +2467,10 @@ spawnit:
 //
 // P_SpawnPuff
 //
-mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+Mobj* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
                     int updown, boolean ptcl)
 {
-   mobj_t* th;
+   Mobj* th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnpuff) << 10;
@@ -2338,12 +2505,10 @@ mobj_t* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
 //
 // P_SpawnBlood
 //
-// [CG] Now returns the spawned blood instead of void.
-mobj_t* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage,
-                     mobj_t *target)
+Mobj* P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, Mobj *target)
 {
    // HTIC_TODO: Heretic support
-   mobj_t* th;
+   Mobj* th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnblood) << 10;
@@ -2386,7 +2551,7 @@ void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z)
 }
 
 
-void P_ParticleLine(mobj_t *source, mobj_t *dest)
+void P_ParticleLine(Mobj *source, Mobj *dest)
 {
    fixed_t sourcex, sourcey, sourcez;
    fixed_t destx, desty, destz;
@@ -2417,7 +2582,7 @@ void P_ParticleLine(mobj_t *source, mobj_t *dest)
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-void P_CheckMissileSpawn(mobj_t* th)
+void P_CheckMissileSpawn(Mobj* th)
 {
    // [CG] Only servers check missile spawns.
    if(!serverside)
@@ -2474,11 +2639,11 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 //
 // P_SpawnMissile
 //
-mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
+Mobj* P_SpawnMissile(Mobj* source, Mobj* dest, mobjtype_t type,
                        fixed_t z)
 {
    angle_t an;
-   mobj_t *th;  // haleyjd: restructured
+   Mobj *th;  // haleyjd: restructured
 
    if(z != ONFLOORZ)
       z -= source->floorclip;
@@ -2487,7 +2652,7 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 
    S_StartSound(th, th->info->seesound);
 
-   P_SetTarget<mobj_t>(&th->target, source); // where it came from // killough 11/98
+   P_SetTarget<Mobj>(&th->target, source); // where it came from // killough 11/98
    an = P_PointToAngle(source->x, source->y, dest->x, dest->y);
 
    // fuzzy player --  haleyjd: add total invisibility, ghost
@@ -2522,9 +2687,9 @@ mobj_t* P_SpawnMissile(mobj_t* source, mobj_t* dest, mobjtype_t type,
 //
 // Tries to aim at a nearby monster
 //
-mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
+Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
 {
-   mobj_t *th;
+   Mobj *th;
    fixed_t x, y, z, slope = 0;
 
    // see which target is to be aimed at
@@ -2575,7 +2740,7 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
    else
       S_StartSound(th, th->info->seesound);
 
-   P_SetTarget<mobj_t>(&th->target, source);   // killough 11/98
+   P_SetTarget<Mobj>(&th->target, source);   // killough 11/98
    th->angle = an;
    th->momx = FixedMul(th->info->speed,finecosine[an>>ANGLETOFINESHIFT]);
    th->momy = FixedMul(th->info->speed,finesine[an>>ANGLETOFINESHIFT]);
@@ -2593,10 +2758,10 @@ mobj_t *P_SpawnPlayerMissile(mobj_t* source, mobjtype_t type)
 // Start new Eternity mobj functions
 //
 
-mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
+Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
                             angle_t angle, fixed_t momz, fixed_t z)
 {
-   mobj_t *mo;
+   Mobj *mo;
 
    if(z != ONFLOORZ)
       z -= source->floorclip;
@@ -2606,7 +2771,7 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
    S_StartSound(mo, mo->info->seesound);
 
    // haleyjd 09/21/03: don't set this directly!
-   P_SetTarget<mobj_t>(&mo->target, source);
+   P_SetTarget<Mobj>(&mo->target, source);
 
    mo->angle = angle;
    angle >>= ANGLETOFINESHIFT;
@@ -2624,12 +2789,12 @@ mobj_t *P_SpawnMissileAngle(mobj_t *source, mobjtype_t type,
 
 void P_Massacre(int friends)
 {
-   mobj_t *mo;
-   CThinker *think;
+   Mobj *mo;
+   Thinker *think;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
-      if(!(mo = thinker_cast<mobj_t *>(think)))
+      if(!(mo = thinker_cast<Mobj *>(think)))
          continue;
 
       if((mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) &&
@@ -2694,7 +2859,7 @@ void P_FallingDamage(player_t *player)
 // Adapted from zdoom source, see the zdoom license.
 // Thanks to Randy Heit.
 //
-void P_AdjustFloorClip(mobj_t *thing)
+void P_AdjustFloorClip(Mobj *thing)
 {
    fixed_t oldclip = thing->floorclip;
    fixed_t shallowestclip = 0x7fffffff;
@@ -2762,15 +2927,15 @@ int P_ThingInfoHeight(mobjinfo_t *mi)
 //
 void P_ChangeThingHeights(void)
 {
-   CThinker *th;
+   Thinker *th;
 
    if(gamestate != GS_LEVEL)
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      mobj_t *mo;
-      if((mo = thinker_cast<mobj_t *>(th)))
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
          mo->height = P_ThingInfoHeight(mo->info);
    }
 }
@@ -2782,7 +2947,7 @@ void P_ChangeThingHeights(void)
 #define TIDCHAINS 131
 
 // TID hash chains
-static mobj_t *tidhash[TIDCHAINS];
+static Mobj *tidhash[TIDCHAINS];
 
 //
 // P_InitTIDHash
@@ -2791,7 +2956,7 @@ static mobj_t *tidhash[TIDCHAINS];
 //
 void P_InitTIDHash(void)
 {
-   memset(tidhash, 0, TIDCHAINS*sizeof(mobj_t *));
+   memset(tidhash, 0, TIDCHAINS*sizeof(Mobj *));
 }
 
 //
@@ -2799,7 +2964,7 @@ void P_InitTIDHash(void)
 //
 // Adds a thing to the tid hash table
 //
-void P_AddThingTID(mobj_t *mo, int tid)
+void P_AddThingTID(Mobj *mo, int tid)
 {
    // zero is no tid, and negative tids are reserved to
    // have special meanings
@@ -2832,7 +2997,7 @@ void P_AddThingTID(mobj_t *mo, int tid)
 // Removes the given thing from the tid hash table if it is
 // in it already.
 //
-void P_RemoveThingTID(mobj_t *mo)
+void P_RemoveThingTID(Mobj *mo)
 {
    if(mo->tid > 0 && mo->tid_prevn)
    {
@@ -2862,7 +3027,7 @@ void P_RemoveThingTID(mobj_t *mo)
 //
 // haleyjd 06/10/06: eliminated infinite loop for TID_TRIGGER
 //
-mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger)
+Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
 {
    switch(tid)
    {
@@ -2902,10 +3067,10 @@ mobj_t *P_FindMobjFromTID(int tid, mobj_t *rover, mobj_t *trigger)
 //
 // haleyjd: This pseudo-class is the ultimate generalization of the
 // boss spawner spots code, allowing arbitrary reallocating arrays
-// of mobj_t pointers to be maintained and manipulated. This is currently
+// of Mobj pointers to be maintained and manipulated. This is currently
 // used by boss spawn spots, D'Sparil spots, and intermission cameras.
 // I wish it was used by deathmatch spots, but that would present a
-// compatibility problem (spawning mobj_t's at their locations would
+// compatibility problem (spawning Mobj's at their locations would
 // most likely result in demo desyncs).
 //
 
@@ -2958,18 +3123,18 @@ void P_ClearMobjCollection(MobjCollection *mc)
 //
 void P_CollectThings(MobjCollection *mc)
 {
-   CThinker *th;
+   Thinker *th;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      mobj_t *mo;
-      if((mo = thinker_cast<mobj_t *>(th)))
+      Mobj *mo;
+      if((mo = thinker_cast<Mobj *>(th)))
       {
          if(mo->type == mc->type)
          {
             if(mc->num >= mc->numalloc)
             {
-               mc->ptrarray = (mobj_t **)realloc(mc->ptrarray,
+               mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
                   (mc->numalloc = mc->numalloc ?
                    mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
             }
@@ -2985,11 +3150,11 @@ void P_CollectThings(MobjCollection *mc)
 //
 // Adds a single object into an MobjCollection.
 //
-void P_AddToCollection(MobjCollection *mc, mobj_t *mo)
+void P_AddToCollection(MobjCollection *mc, Mobj *mo)
 {
    if(mc->num >= mc->numalloc)
    {
-      mc->ptrarray = (mobj_t **)realloc(mc->ptrarray,
+      mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
          (mc->numalloc = mc->numalloc ?
          mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
    }
@@ -3006,7 +3171,7 @@ void P_AddToCollection(MobjCollection *mc, mobj_t *mo)
 void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
 {
    if(mc->num > 1)
-      qsort(mc->ptrarray, mc->num, sizeof(mobj_t *), cb);
+      qsort(mc->ptrarray, mc->num, sizeof(Mobj *), cb);
 }
 
 //
@@ -3027,9 +3192,9 @@ boolean P_CollectionIsEmpty(MobjCollection *mc)
 // at each consecutive call, wrapping to the beginning when the end
 // is reached.
 //
-mobj_t *P_CollectionWrapIterator(MobjCollection *mc)
+Mobj *P_CollectionWrapIterator(MobjCollection *mc)
 {
-   mobj_t *ret = (mc->ptrarray)[mc->wrapiterator++];
+   Mobj *ret = (mc->ptrarray)[mc->wrapiterator++];
 
    mc->wrapiterator %= mc->num;
 
@@ -3042,7 +3207,7 @@ mobj_t *P_CollectionWrapIterator(MobjCollection *mc)
 // Gets the object at the specified index in the collection.
 // Returns NULL if the index is out of bounds.
 //
-mobj_t *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
+Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
 {
    return at < (unsigned int)mc->num ? (mc->ptrarray)[at] : NULL;
 }
@@ -3053,7 +3218,7 @@ mobj_t *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
 // Returns a random object from the collection using the specified
 // random number generator for full compatibility.
 //
-mobj_t *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
+Mobj *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
 {
    return (mc->ptrarray)[P_Random(rngnum) % mc->num];
 }
@@ -3072,7 +3237,7 @@ static cell AMX_NATIVE_CALL sm_thingspawn(AMX *amx, cell *params)
    int type, tid, ang;
    fixed_t x, y, z;
    angle_t angle;
-   mobj_t *mo;
+   Mobj *mo;
 
    if(gamestate != GS_LEVEL)
    {
@@ -3127,7 +3292,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
 {
    int type, spottid, tid, ang;
    angle_t angle;
-   mobj_t *mo, *spawnspot = NULL;
+   Mobj *mo, *spawnspot = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3178,7 +3343,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 {
    int err, tid;
    char *sndname;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3212,7 +3377,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 {
    int tid, sndnum;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3242,7 +3407,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
 {
    int tid, typenum;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3321,7 +3486,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 {
    int value = 0, field, tid;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3359,7 +3524,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
 {
    int field, value, tid;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3394,7 +3559,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    int     tid, op, err;
    char   *flags;
    int    *results;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3452,7 +3617,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 {
    int tid, friendly;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3493,7 +3658,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
    boolean friendly = false;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3520,7 +3685,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 {
    int tid;
    fixed_t x, y, z;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3552,7 +3717,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
 {
-   mobj_t  *mo   = NULL;
+   Mobj  *mo   = NULL;
    angle_t angle = FixedToAngle((fixed_t)params[1]);
    fixed_t force = (fixed_t)params[2];
    int     tid   = params[3];
@@ -3591,7 +3756,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 {
    int tid, valuetoget;
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3679,7 +3844,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    fixed_t oldy;
    fixed_t oldz;
 
-   mobj_t *mo = NULL;
+   Mobj *mo = NULL;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)

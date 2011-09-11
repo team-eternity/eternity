@@ -32,6 +32,7 @@
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -64,7 +65,7 @@ void P_FloorSequence(sector_t *s)
       S_StartSectorSequenceName(s, "EEFloor", false);
 }
 
-void P_CopyFloor(CFloorMove *dest, CFloorMove *src)
+void P_CopyFloor(FloorMoveThinker *dest, FloorMoveThinker *src)
 {
    dest->crush               = src->crush;
    dest->direction           = src->direction;
@@ -85,7 +86,7 @@ void P_CopyFloor(CFloorMove *dest, CFloorMove *src)
    dest->net_id              = src->net_id;
 }
 
-void P_CopyElevator(CElevator *dest, CElevator *src)
+void P_CopyElevator(ElevatorThinker *dest, ElevatorThinker *src)
 {
    dest->direction         = src->direction;
    dest->floordestheight   = src->floordestheight;
@@ -94,7 +95,7 @@ void P_CopyElevator(CElevator *dest, CElevator *src)
    dest->net_id            = src->net_id;
 }
 
-void P_CopyPillar(CPillar *dest, CPillar *src)
+void P_CopyPillar(PillarThinker *dest, PillarThinker *src)
 {
    dest->ceilingSpeed = src->ceilingSpeed;
    dest->floorSpeed   = src->floorSpeed;
@@ -105,7 +106,7 @@ void P_CopyPillar(CPillar *dest, CPillar *src)
    dest->net_id       = src->net_id;
 }
 
-void P_CopyFloorWaggle(CFloorWaggle *dest, CFloorWaggle *src)
+void P_CopyFloorWaggle(FloorWaggleThinker *dest, FloorWaggleThinker *src)
 {
    dest->originalHeight = src->originalHeight;
    dest->accumulator    = src->accumulator;
@@ -515,20 +516,22 @@ result_e T_MovePlane
    return ok;
 }
 
+IMPLEMENT_THINKER_TYPE(FloorMoveThinker)
+
 //
 // T_MoveFloor()
 //
 // Move a floor to it's destination (up or down).
 // Called once per tick for each moving floor.
 //
-// Passed a CFloorMove structure that contains all pertinent info about the
+// Passed a FloorMoveThinker structure that contains all pertinent info about the
 // move. See P_SPEC.H for fields.
 // No return value.
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
-
-void CFloorMove::Think()
+//
+void FloorMoveThinker::Think()
 {
    result_e      res;
 
@@ -684,7 +687,7 @@ void CFloorMove::Think()
    }
 }
 
-void P_RemoveFloor(CFloorMove *floor)
+void P_RemoveFloor(FloorMoveThinker *floor)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(floor->net_id, ms_floor);
@@ -697,18 +700,39 @@ void P_RemoveFloor(CFloorMove *floor)
 }
 
 //
+// FloorMoveThinker::serialize
+//
+// Saves/loads FloorMoveThinker thinkers.
+//
+void FloorMoveThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << type << crush << sector << direction << special << texture 
+       << floordestheight << speed << resetTime << resetHeight
+       << stepRaiseTime << delayTime << delayTimer;
+
+   // If loading, reattach to sector
+   if(arc.isLoading())
+      sector->floordata = this;
+}
+
+
+IMPLEMENT_THINKER_TYPE(ElevatorThinker)
+
+//
 // T_MoveElevator()
 //
 // Move an elevator to it's destination (up or down)
 // Called once per tick for each moving floor.
 //
-// Passed an CElevator structure that contains all pertinent info about the
+// Passed an ElevatorThinker structure that contains all pertinent info about the
 // move. See P_SPEC.H for fields.
 // No return value.
 //
 // jff 02/22/98 added to support parallel floor/ceiling motion
 //
-void CElevator::Think()
+void ElevatorThinker::Think()
 {
    result_e      res;
 
@@ -747,7 +771,7 @@ void CElevator::Think()
    }
 }
 
-void P_RemoveElevator(CElevator *elevator)
+void P_RemoveElevator(ElevatorThinker *elevator)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(elevator->net_id, ms_elevator);
@@ -758,7 +782,29 @@ void P_RemoveElevator(CElevator *elevator)
    CS_ReleaseElevatorNetID(elevator);
 }
 
+//
+// ElevatorThinker::serialize
+//
+// Saves/loads a ElevatorThinker thinker
+//
+void ElevatorThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << type << sector << direction << floordestheight << ceilingdestheight 
+       << speed;
+
+   if(arc.isLoading())
+   {
+      // Reattach to both floor and ceiling of sector
+      sector->floordata   = this;
+      sector->ceilingdata = this;
+   }
+}
+
 // haleyjd 10/07/06: Pillars by Joe :)
+
+IMPLEMENT_THINKER_TYPE(PillarThinker)
 
 //
 // T_MovePillar
@@ -766,7 +812,7 @@ void P_RemoveElevator(CElevator *elevator)
 // Pillar thinker function
 // joek 4/9/06
 //
-void CPillar::Think()
+void PillarThinker::Think()
 {
    boolean result;
 
@@ -797,7 +843,32 @@ void CPillar::Think()
    }
 }
 
-void P_RemovePillar(CPillar *pillar)
+//
+// PillarThinker::serialize
+//
+// Saves/loads a PillarThinker thinker.
+//
+void PillarThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << ceilingSpeed << floorSpeed << floordest 
+       << ceilingdest << direction << crush;
+
+   if(arc.isLoading())
+   {
+      // Reattach to floor and ceiling
+      sector->floordata   = this;
+      sector->ceilingdata = this;
+   }
+}
+
+///////////////////////////////////////////////////////////////////////
+// 
+// Floor motion linedef handlers
+//
+///////////////////////////////////////////////////////////////////////
+void P_RemovePillar(PillarThinker *pillar)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(pillar->net_id, ms_pillar_build);
@@ -810,11 +881,11 @@ void P_RemovePillar(CPillar *pillar)
    CS_ReleasePillarNetID(pillar);
 }
 
-CFloorMove* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
+FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 {
    int i, rtn;
    int secnum = sec - sectors;
-   CFloorMove *floor = new CFloorMove;
+   FloorMoveThinker *floor = new FloorMoveThinker;
    sector_t*     sec;
 
    floor->addThinker();
@@ -1045,7 +1116,7 @@ int EV_DoFloor(line_t *line, floor_e floortype)
 {
    int           secnum = -1;
    int           rtn = 0;
-   CFloorMove*  floor;
+   FloorMoveThinker*  floor;
 
    // [CG] Clients don't spawn floors themselves when lines are activated,
    //      but we have to inform the caller whether or not a thinker would have
@@ -1151,7 +1222,7 @@ static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start, int min)
    return start;
 }
 
-CFloorMove* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
+FloorMoveThinker* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
 {
    // [CG] TODO.
    return;
@@ -1203,7 +1274,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
       // don't start a stair if the first step's floor is already moving
       if(!P_SectorActive(floor_special,sec)) //jff 2/22/98
       {
-         CFloorMove*  floor;
+         FloorMoveThinker*  floor;
          int           texture, height;
          fixed_t       stairsize;
          fixed_t       speed;
@@ -1211,7 +1282,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
 
          // create new floor thinker for first step
          rtn = 1;
-         floor = new CFloorMove;
+         floor = new FloorMoveThinker;
          floor->addThinker();
          sec->floordata = floor;
          floor->direction = 1;
@@ -1237,7 +1308,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
             break;
          }
 
-         floor = new CFloorMove;
+         floor = new FloorMoveThinker;
          floor->addThinker();
 
          sec->floordata = floor;
@@ -1303,7 +1374,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
                secnum = newsecnum;
 
                // create and initialize a thinker for the next step
-               floor = new CFloorMove;
+               floor = new FloorMoveThinker;
                floor->addThinker();
 
                sec->floordata = floor; //jff 2/22/98
@@ -1493,10 +1564,10 @@ int EV_DoDonut(line_t *line)
    return rtn;
 }
 
-CFloorMove* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
+FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
                          fixed_t floordestheight)
 {
-   CFloorMove *floor = new CFloorMove;
+   FloorMoveThinker *floor = new FloorMoveThinker;
 
    floor->addThinker();
 
@@ -1525,10 +1596,10 @@ CFloorMove* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
    return floor;
 }
 
-CFloorMove* P_SpawnDonutHole(line_t *line, sector_t *sec,
-                             fixed_t floordestheight)
+FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
+                                   fixed_t floordestheight)
 {
-   CFloorMove *floor = new CFloorMove;
+   FloorMoveThinker *floor = new FloorMoveThinker;
 
    floor->addThinker();
 
@@ -1590,9 +1661,9 @@ int EV_DoElevator(line_t *line, elevator_e elevtype)
    return rtn;
 }
 
-CElevator* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
+ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
 {
-   CElevator *elevator = new CElevator;
+   ElevatorThinker *elevator = new ElevatorThinker;
 
    elevator->addThinker();
 
@@ -1703,11 +1774,11 @@ manual_pillar:
    return returnval;
 }
 
-CPillar* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
+PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
                             fixed_t speed, int crush)
 {
    int destheight;
-   CPillar *pillar = new CPillar;
+   PillarThinker *pillar = new PillarThinker;
 
 
    sector->floordata = pillar;
@@ -1811,10 +1882,10 @@ manual_pillar:
    return returnval;
 }
 
-CPillar* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
+PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
                             fixed_t fdist, fixed_t cdist)
 {
-   CPillar *pillar = new CPillar;
+   PillarThinker *pillar = new PillarThinker;
 
    sector->floordata   = pillar;
    sector->ceilingdata = pillar;
@@ -1885,11 +1956,13 @@ void P_ChangeFloorTex(const char *name, int tag)
 // haleyjd 06/30/09: joe was supposed to do these but he quit instead :P
 //
 
+IMPLEMENT_THINKER_TYPE(FloorWaggleThinker)
+
 #define WGLSTATE_EXPAND 1
 #define WGLSTATE_STABLE 2
 #define WGLSTATE_REDUCE 3
 
-void P_RemoveFloorWaggle(CFloorWaggle *floorwaggle)
+void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(floorwaggle->net_id, ms_floorwaggle);
@@ -1906,7 +1979,7 @@ void P_RemoveFloorWaggle(CFloorWaggle *floorwaggle)
 //
 // haleyjd: thinker for floor waggle action.
 //
-void CFloorWaggle::Think()
+void FloorWaggleThinker::Think()
 {
    fixed_t destheight;
    fixed_t dist;
@@ -1975,6 +2048,23 @@ void CFloorWaggle::Think()
 }
 
 //
+// FloorWaggleThinker::serialize
+//
+// Saves/loads a FloorWaggleThinker thinker.
+//
+void FloorWaggleThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << originalHeight << accumulator << accDelta << targetScale
+       << scale << scaleDelta << ticker << state;
+
+   // If loading, reattach to sector floor
+   if(arc.isLoading())
+      sector->floordata = this;
+}
+
+//
 // EV_StartFloorWaggle
 //
 int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
@@ -1983,8 +2073,8 @@ int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
    int           sectorIndex = -1;
    int           retCode = 0;
    boolean       manual = false;
-   sector_t      *sector;
-   CFloorWaggle *waggle;
+   sector_t     *sector;
+   FloorWaggleThinker *waggle;
 
    if(tag == 0)
    {
@@ -2019,10 +2109,10 @@ manual_waggle:
    return retCode;
 }
 
-CFloorWaggle* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
+FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
                                  int speed, int offset, int timer)
 {
-   CFloorWaggle *waggle = new CFloorWaggle;
+   FloorWaggleThinker *waggle = new FloorWaggleThinker;
 
    sector->floordata = waggle;
    waggle->addThinker();

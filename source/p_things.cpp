@@ -44,7 +44,7 @@ int EV_ThingSpawn(int *args, boolean fog)
 {
    int tid;
    angle_t angle;
-   mobj_t *mobj = NULL, *newMobj, *fogMobj;
+   Mobj *mobj = NULL, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
    boolean success = false;

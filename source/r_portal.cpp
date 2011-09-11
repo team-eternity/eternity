@@ -367,7 +367,7 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum)
 // Either finds a portal for the provided camera object, or creates
 // a new one for it. Used in p_spec.c.
 //
-portal_t *R_GetSkyBoxPortal(mobj_t *camera)
+portal_t *R_GetSkyBoxPortal(Mobj *camera)
 {
    portal_t *rover, *ret;
 

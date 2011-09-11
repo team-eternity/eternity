@@ -68,12 +68,12 @@
 //
 // Not strictly necessary for EE but a convenience routine nonetheless.
 //
-void A_SetInvulnerable(mobj_t *actor)
+void A_SetInvulnerable(Mobj *actor)
 {
    actor->flags2 |= MF2_INVULNERABLE;
 }
 
-void A_UnSetInvulnerable(mobj_t *actor)
+void A_UnSetInvulnerable(Mobj *actor)
 {
    actor->flags2 &= ~MF2_INVULNERABLE;
 }
@@ -83,14 +83,14 @@ void A_UnSetInvulnerable(mobj_t *actor)
 //
 // As above.
 //
-void A_SetReflective(mobj_t *actor)
+void A_SetReflective(Mobj *actor)
 {
    actor->flags2 |= MF2_REFLECTIVE;
 
    // note: no special case for Centaurs; use SetFlags pointer instead
 }
 
-void A_UnSetReflective(mobj_t *actor)
+void A_UnSetReflective(Mobj *actor)
 {
    actor->flags2 &= ~MF2_REFLECTIVE;
 }
@@ -98,7 +98,7 @@ void A_UnSetReflective(mobj_t *actor)
 //
 // P_UpdateMorphedMonster
 //
-boolean P_UpdateMorphedMonster(mobj_t *actor, int tics)
+boolean P_UpdateMorphedMonster(Mobj *actor, int tics)
 {
    // HEXEN_TODO
    return false;
@@ -107,7 +107,7 @@ boolean P_UpdateMorphedMonster(mobj_t *actor, int tics)
 //
 // A_PigLook
 //
-void A_PigLook(mobj_t *actor)
+void A_PigLook(Mobj *actor)
 {
    if(P_UpdateMorphedMonster(actor, 10))
       return;
@@ -118,7 +118,7 @@ void A_PigLook(mobj_t *actor)
 //
 // A_PigChase
 //
-void A_PigChase(mobj_t *actor)
+void A_PigChase(Mobj *actor)
 {
    if(P_UpdateMorphedMonster(actor, 3))
       return;
@@ -129,7 +129,7 @@ void A_PigChase(mobj_t *actor)
 //
 // A_PigAttack
 //
-void A_PigAttack(mobj_t *actor)
+void A_PigAttack(Mobj *actor)
 {
    if(P_UpdateMorphedMonster(actor, 18))
       return;
@@ -150,7 +150,7 @@ void A_PigAttack(mobj_t *actor)
 //
 // A_PigPain
 //
-void A_PigPain(mobj_t *actor)
+void A_PigPain(Mobj *actor)
 {
    A_Pain(actor);
 
@@ -165,7 +165,7 @@ void A_PigPain(mobj_t *actor)
 //
 // Hexen explosion effects pointer
 //
-void A_HexenExplode(mobj_t *actor)
+void A_HexenExplode(Mobj *actor)
 {
    // HEXEN_TODO
    // Note: requires new blast radius semantics
@@ -176,7 +176,7 @@ void A_HexenExplode(mobj_t *actor)
 //
 // A_SerpentUnHide
 //
-void A_SerpentUnHide(mobj_t *actor)
+void A_SerpentUnHide(Mobj *actor)
 {
    actor->flags2    &= ~MF2_DONTDRAW;
    actor->floorclip  = 24 * FRACUNIT;
@@ -185,7 +185,7 @@ void A_SerpentUnHide(mobj_t *actor)
 //
 // A_SerpentHide
 //
-void A_SerpentHide(mobj_t *actor)
+void A_SerpentHide(Mobj *actor)
 {
    actor->flags2    |= MF2_DONTDRAW;
    actor->floorclip  = 0;
@@ -194,7 +194,7 @@ void A_SerpentHide(mobj_t *actor)
 //
 // A_SerpentChase
 //
-void A_SerpentChase(mobj_t *actor)
+void A_SerpentChase(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -206,7 +206,7 @@ void A_SerpentChase(mobj_t *actor)
 // Parameters:
 // * args[0] == amount to reduce floorclip in eighths of a unit
 //
-void A_RaiseFloorClip(mobj_t *actor)
+void A_RaiseFloorClip(Mobj *actor)
 {
    fixed_t amt = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 8;
 
@@ -220,7 +220,7 @@ void A_RaiseFloorClip(mobj_t *actor)
 // Parameters:
 // * args[0] == amount to increase floorclip in eighths of a unit
 //
-void A_LowerFloorClip(mobj_t *actor)
+void A_LowerFloorClip(Mobj *actor)
 {
    fixed_t amt = E_ArgAsInt(actor->state->args, 0, 0) * FRACUNIT / 8;
 
@@ -230,7 +230,7 @@ void A_LowerFloorClip(mobj_t *actor)
 //
 // A_SerpentHumpDecide
 //
-void A_SerpentHumpDecide(mobj_t *actor)
+void A_SerpentHumpDecide(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -238,7 +238,7 @@ void A_SerpentHumpDecide(mobj_t *actor)
 //
 // A_SerpentWalk
 //
-void A_SerpentWalk(mobj_t *actor)
+void A_SerpentWalk(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -246,7 +246,7 @@ void A_SerpentWalk(mobj_t *actor)
 //
 // A_SerpentCheckForAttack
 //
-void A_SerpentCheckForAttack(mobj_t *actor)
+void A_SerpentCheckForAttack(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -254,7 +254,7 @@ void A_SerpentCheckForAttack(mobj_t *actor)
 //
 // A_SerpentChooseAttack
 //
-void A_SerpentChooseAttack(mobj_t *actor)
+void A_SerpentChooseAttack(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -262,7 +262,7 @@ void A_SerpentChooseAttack(mobj_t *actor)
 //
 // A_SerpentMeleeAttack
 //
-void A_SerpentMeleeAttack(mobj_t *actor)
+void A_SerpentMeleeAttack(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -270,7 +270,7 @@ void A_SerpentMeleeAttack(mobj_t *actor)
 //
 // A_SerpentMissileAttack
 //
-void A_SerpentMissileAttack(mobj_t *actor)
+void A_SerpentMissileAttack(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -278,7 +278,7 @@ void A_SerpentMissileAttack(mobj_t *actor)
 //
 // A_SerpentSpawnGibs
 //
-void A_SerpentSpawnGibs(mobj_t *actor)
+void A_SerpentSpawnGibs(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -291,7 +291,7 @@ void A_SerpentSpawnGibs(mobj_t *actor)
 // * args[0] : mode select (0 = random amt, 1 = use args[1])
 // * args[1] : if mode == 0, shift amt; if mode == 1, amount to subtract
 //
-void A_SubTics(mobj_t *actor)
+void A_SubTics(Mobj *actor)
 {
    int mode = E_ArgAsInt(actor->state->args, 0, 0);
    int amt  = E_ArgAsInt(actor->state->args, 1, 0);
@@ -316,7 +316,7 @@ void A_SubTics(mobj_t *actor)
 //
 // A_SerpentHeadCheck
 //
-void A_SerpentHeadCheck(mobj_t *actor)
+void A_SerpentHeadCheck(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -324,7 +324,7 @@ void A_SerpentHeadCheck(mobj_t *actor)
 //
 // A_CentaurAttack
 //
-void A_CentaurAttack(mobj_t *actor)
+void A_CentaurAttack(Mobj *actor)
 {
    int dmg;
 
@@ -341,7 +341,7 @@ void A_CentaurAttack(mobj_t *actor)
 //
 // A_CentaurAttack2
 //
-void A_CentaurAttack2(mobj_t *actor)
+void A_CentaurAttack2(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -351,7 +351,7 @@ void A_CentaurAttack2(mobj_t *actor)
 //
 // Throws an object away from the source.
 //
-static void P_TossEquipmentItem(mobj_t *mo, angle_t angle, int momshift, 
+static void P_TossEquipmentItem(Mobj *mo, angle_t angle, int momshift, 
                                 fixed_t baseZMom)
 {
    mo->momx = FixedMul(((P_Random(pr_dropequip) - 128) << momshift) + FRACUNIT,
@@ -374,7 +374,7 @@ static void P_TossEquipmentItem(mobj_t *mo, angle_t angle, int momshift,
 // * args[3] : base z momentum
 // * args[4] : z height
 //
-void A_DropEquipment(mobj_t *actor)
+void A_DropEquipment(Mobj *actor)
 {
    int moType1    = E_ArgAsThingNum(actor->state->args, 0);
    int moType2    = E_ArgAsThingNum(actor->state->args, 1);
@@ -383,23 +383,23 @@ void A_DropEquipment(mobj_t *actor)
    fixed_t baseZMom = E_ArgAsInt(actor->state->args, 3, 0) * FRACUNIT;
    fixed_t zHeight  = E_ArgAsInt(actor->state->args, 4, 0) * FRACUNIT;
 
-   mobj_t  *mo;
+   Mobj  *mo;
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType1);
 
    P_TossEquipmentItem(mo, actor->angle + ANG90, xyMomShift, baseZMom);
-   P_SetTarget<mobj_t>(&mo->target, actor);
+   P_SetTarget<Mobj>(&mo->target, actor);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType2);
 
    P_TossEquipmentItem(mo, actor->angle - ANG90, xyMomShift, baseZMom);
-   P_SetTarget<mobj_t>(&mo->target, actor);
+   P_SetTarget<Mobj>(&mo->target, actor);
 }
 
 //
 // A_CentaurDefend
 //
-void A_CentaurDefend(mobj_t *actor)
+void A_CentaurDefend(Mobj *actor)
 {
    if(!actor->target)
       return;
@@ -416,7 +416,7 @@ void A_CentaurDefend(mobj_t *actor)
 //
 // A_BishopAttack
 //
-void A_BishopAttack(mobj_t *actor)
+void A_BishopAttack(Mobj *actor)
 {
    int dmg;
 
@@ -434,7 +434,7 @@ void A_BishopAttack(mobj_t *actor)
       actor->counters[0] = (P_Random(pr_bishop1) & 3) + 5;
 }
 
-void A_BishopAttack2(mobj_t *actor)
+void A_BishopAttack2(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -444,7 +444,7 @@ void A_BishopAttack2(mobj_t *actor)
 //
 // I'm not even going to pretend to understand how it works.
 //
-void A_BishopMissileWeave(mobj_t *actor)
+void A_BishopMissileWeave(Mobj *actor)
 {
    fixed_t newX, newY;
    int weaveXY, weaveZ;
@@ -472,7 +472,7 @@ void A_BishopMissileWeave(mobj_t *actor)
 //
 // A_BishopDoBlur
 //
-void A_BishopDoBlur(mobj_t *actor)
+void A_BishopDoBlur(Mobj *actor)
 {
    actor->counters[0] = (P_Random(pr_bishop2) & 3) + 3; // Random number of blurs
 
@@ -496,9 +496,9 @@ void A_BishopDoBlur(mobj_t *actor)
 // * args[1] : attack state
 // * args[2] : thing type
 //
-void A_SpawnBlur(mobj_t *actor)
+void A_SpawnBlur(Mobj *actor)
 {
-   mobj_t *mo;
+   Mobj *mo;
    int walkState = E_ArgAsStateNum(actor->state->args, 0, actor);
    int atkState  = E_ArgAsStateNum(actor->state->args, 1, actor);
    int thingType = E_ArgAsThingNum(actor->state->args, 2);
@@ -521,7 +521,7 @@ void A_SpawnBlur(mobj_t *actor)
 //
 // A_BishopChase
 //
-void A_BishopChase(mobj_t *actor)
+void A_BishopChase(Mobj *actor)
 {
    actor->z -= FloatBobOffsets[actor->counters[1]] >> 1;
    actor->counters[1] = (actor->counters[1] + 4) & 63;
@@ -531,7 +531,7 @@ void A_BishopChase(mobj_t *actor)
 //
 // A_BishopPainBlur
 //
-void A_BishopPainBlur(mobj_t *actor)
+void A_BishopPainBlur(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -539,7 +539,7 @@ void A_BishopPainBlur(mobj_t *actor)
 //
 // A_DragonInitFlight
 //
-void A_DragonInitFlight(mobj_t *actor)
+void A_DragonInitFlight(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -547,7 +547,7 @@ void A_DragonInitFlight(mobj_t *actor)
 //
 // A_DragonFlight
 //
-void A_DragonFlight(mobj_t *actor)
+void A_DragonFlight(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -555,7 +555,7 @@ void A_DragonFlight(mobj_t *actor)
 //
 // A_DragonFlap
 //
-void A_DragonFlap(mobj_t *actor)
+void A_DragonFlap(Mobj *actor)
 {
    A_DragonFlight(actor);
 
@@ -572,10 +572,10 @@ void A_DragonFlap(mobj_t *actor)
 // Parameters:
 // * args[0] : thingtype to spawn
 //
-void A_DragonFX2(mobj_t *actor)
+void A_DragonFX2(Mobj *actor)
 {
    int thingType = E_ArgAsThingNum(actor->state->args, 0);
-   mobj_t *mo;
+   Mobj *mo;
    int i;
    int delay;
    
@@ -589,7 +589,7 @@ void A_DragonFX2(mobj_t *actor)
                        thingType);
 
       mo->tics = delay + (P_Random(pr_dragonfx) & 3) * i * 2;
-      P_SetTarget<mobj_t>(&mo->target, actor->target);
+      P_SetTarget<Mobj>(&mo->target, actor->target);
    } 
 }
 
@@ -603,7 +603,7 @@ void A_DragonFX2(mobj_t *actor)
 // * args[0] : state to branch into
 // * args[1] : counter to examine
 //
-void A_PainCounterBEQ(mobj_t *actor)
+void A_PainCounterBEQ(Mobj *actor)
 {
    int stateNum   = E_ArgAsStateNum(actor->state->args, 0, actor);
    int counterNum = E_ArgAsInt(actor->state->args, 1, 0);
@@ -625,7 +625,7 @@ void A_PainCounterBEQ(mobj_t *actor)
 //
 // A_DemonAttack1
 //
-void A_DemonAttack1(mobj_t *actor)
+void A_DemonAttack1(Mobj *actor)
 {
    int dmg;
 
@@ -642,7 +642,7 @@ void A_DemonAttack1(mobj_t *actor)
 //
 // A_DemonAttack2
 //
-void A_DemonAttack2(mobj_t *actor)
+void A_DemonAttack2(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -650,7 +650,7 @@ void A_DemonAttack2(mobj_t *actor)
 //
 // A_DemonDeath
 //
-void A_DemonDeath(mobj_t *actor)
+void A_DemonDeath(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -658,17 +658,17 @@ void A_DemonDeath(mobj_t *actor)
 //
 // A_Demon2Death
 //
-void A_Demon2Death(mobj_t *actor)
+void A_Demon2Death(Mobj *actor)
 {
 }
 
-static boolean P_SinkMobj(mobj_t *actor)
+static boolean P_SinkMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;
 }
 
-static boolean P_RaiseMobj(mobj_t *actor)
+static boolean P_RaiseMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;
@@ -677,7 +677,7 @@ static boolean P_RaiseMobj(mobj_t *actor)
 //
 // A_WraithInit
 //
-void A_WraithInit(mobj_t *actor)
+void A_WraithInit(Mobj *actor)
 {
    actor->z += 48 * FRACUNIT;
    actor->counters[0] = 0;         // index into floatbob
@@ -686,7 +686,7 @@ void A_WraithInit(mobj_t *actor)
 //
 // A_WraithRaiseInit
 //
-void A_WraithRaiseInit(mobj_t *actor)
+void A_WraithRaiseInit(Mobj *actor)
 {
    actor->flags2 &= ~MF2_DONTDRAW;
    // HEXEN_TODO: ???
@@ -698,7 +698,7 @@ void A_WraithRaiseInit(mobj_t *actor)
 //
 // A_WraithRaise
 //
-void A_WraithRaise(mobj_t *actor)
+void A_WraithRaise(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -706,7 +706,7 @@ void A_WraithRaise(mobj_t *actor)
 //
 // A_WraithMelee
 //
-void A_WraithMelee(mobj_t *actor)
+void A_WraithMelee(Mobj *actor)
 {
    int dmg;
 
@@ -726,7 +726,7 @@ void A_WraithMelee(mobj_t *actor)
 //
 // A_WraithMissile
 //
-void A_WraithMissile(mobj_t *actor)
+void A_WraithMissile(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -738,10 +738,10 @@ void A_WraithMissile(mobj_t *actor)
 // Parameters:
 // * args[0] : thingtype
 //
-void A_WraithFX2(mobj_t *actor)
+void A_WraithFX2(Mobj *actor)
 {
    int thingType = E_ArgAsThingNum(actor->state->args, 0);
-   mobj_t *mo;
+   Mobj *mo;
    angle_t angle;
    int i;
    
@@ -759,7 +759,7 @@ void A_WraithFX2(mobj_t *actor)
                           finecosine[angle >> ANGLETOFINESHIFT]);
       mo->momy = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT, 
                           finesine[angle >> ANGLETOFINESHIFT]);
-      P_SetTarget<mobj_t>(&mo->target, actor);
+      P_SetTarget<Mobj>(&mo->target, actor);
       mo->floorclip = 10*FRACUNIT;
    }
 }
@@ -771,10 +771,10 @@ void A_WraithFX2(mobj_t *actor)
 // Parameters:
 // * args[0] : thing type
 //
-void A_WraithFX3(mobj_t *actor)
+void A_WraithFX3(Mobj *actor)
 {
    int thingType = E_ArgAsThingNum(actor->state->args, 0);
-   mobj_t *mo;
+   Mobj *mo;
    int numdropped = P_Random(pr_wraithfx3) % 15;
    int i;
    
@@ -785,7 +785,7 @@ void A_WraithFX3(mobj_t *actor)
       mo->x += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx3) << 10);
-      P_SetTarget<mobj_t>(&mo->target, actor);
+      P_SetTarget<Mobj>(&mo->target, actor);
    }
 }
 
@@ -802,11 +802,11 @@ enum
 // * args[0] : thing type 1
 // * args[1] : thing type 2
 //
-void A_WraithFX4(mobj_t *actor)
+void A_WraithFX4(Mobj *actor)
 {
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
-   mobj_t *mo;
+   Mobj *mo;
    int chance = P_Random(pr_wraithfx4a);
    int spawnflags;
    
@@ -833,14 +833,14 @@ void A_WraithFX4(mobj_t *actor)
       mo->x += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx4c) << 10);
-      P_SetTarget<mobj_t>(&mo->target, actor);
+      P_SetTarget<Mobj>(&mo->target, actor);
    }
 }
 
 //
 // A_WraithLook
 //
-void A_WraithLook(mobj_t *actor)
+void A_WraithLook(Mobj *actor)
 {
    // HEXEN_TODO: reimplement?
    // A_WraithFX4(actor); // too expensive
@@ -850,7 +850,7 @@ void A_WraithLook(mobj_t *actor)
 //
 // A_WraithChase
 //
-void A_WraithChase(mobj_t *actor)
+void A_WraithChase(Mobj *actor)
 {
    int weaveindex = actor->counters[0];
    actor->z += FloatBobOffsets[weaveindex];
@@ -863,7 +863,7 @@ void A_WraithChase(mobj_t *actor)
 //
 // A_EttinAttack
 //
-void A_EttinAttack(mobj_t *actor)
+void A_EttinAttack(Mobj *actor)
 {
    int dmg;
 
@@ -882,12 +882,12 @@ void A_EttinAttack(mobj_t *actor)
 // * args[1] : x/y/z momentum shift (z = x/y - 1)
 // * args[2] : base z momentum
 //
-void A_DropMace(mobj_t *actor)
+void A_DropMace(Mobj *actor)
 {
    int thingType    = E_ArgAsThingNum(actor->state->args, 0);
    int momShift     = E_ArgAsInt(actor->state->args, 1, 0);
    fixed_t baseMomZ = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT;
-   mobj_t *mo;
+   Mobj *mo;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + (actor->height >> 1), 
                     thingType);
@@ -895,7 +895,7 @@ void A_DropMace(mobj_t *actor)
    mo->momx = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momy = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momz = baseMomZ + (P_Random(pr_dropmace) << (momShift - 1));
-   P_SetTarget<mobj_t>(&mo->target, actor);
+   P_SetTarget<Mobj>(&mo->target, actor);
 }
 
 //
@@ -904,9 +904,9 @@ void A_DropMace(mobj_t *actor)
 // Parameters:
 // args[0] - args[4]: thingtypes
 //
-void A_AffritSpawnRock(mobj_t *actor)
+void A_AffritSpawnRock(Mobj *actor)
 {
-   mobj_t *mo;
+   Mobj *mo;
    int x, y, z, i;
    int rtype;
    int thingTypes[5];
@@ -922,7 +922,7 @@ void A_AffritSpawnRock(mobj_t *actor)
    
    mo = P_SpawnMobj(x, y, z, rtype);
    
-   P_SetTarget<mobj_t>(&mo->target, actor);
+   P_SetTarget<Mobj>(&mo->target, actor);
 
    mo->momx = (P_Random(pr_affritrock) - 128) << 10;
    mo->momy = (P_Random(pr_affritrock) - 128) << 10;
@@ -938,7 +938,7 @@ void A_AffritSpawnRock(mobj_t *actor)
 //
 // A_AffritRocks
 //
-void A_AffritRocks(mobj_t *actor)
+void A_AffritRocks(Mobj *actor)
 {
    A_AffritSpawnRock(actor);
    A_AffritSpawnRock(actor);
@@ -950,7 +950,7 @@ void A_AffritRocks(mobj_t *actor)
 //
 // A_SmBounce
 //
-void A_SmBounce(mobj_t *actor)
+void A_SmBounce(Mobj *actor)
 {
    // give some more momentum (x,y,&z)
    actor->z    = actor->floorz + FRACUNIT;
@@ -961,7 +961,7 @@ void A_SmBounce(mobj_t *actor)
 
 #define FIREDEMON_ATTACK_RANGE	64*8*FRACUNIT
 
-void A_AffritChase(mobj_t *actor)
+void A_AffritChase(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -973,11 +973,11 @@ void A_AffritChase(mobj_t *actor)
 // * args[0] : thingtype 1
 // * args[1] : thingtype 2
 //
-void A_AffritSplotch(mobj_t *actor)
+void A_AffritSplotch(Mobj *actor)
 {
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
-   mobj_t *mo;
+   Mobj *mo;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType1);
    
@@ -999,7 +999,7 @@ void A_AffritSplotch(mobj_t *actor)
 // * args[0] : thingtype 1
 // * args[1] : thingtype 2
 //
-void A_IceGuyLook(mobj_t *actor)
+void A_IceGuyLook(Mobj *actor)
 {
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
@@ -1027,13 +1027,13 @@ void A_IceGuyLook(mobj_t *actor)
 // * args[0] : thingtype 1
 // * args[1] : thingtype 2
 //
-void A_IceGuyChase(mobj_t *actor)
+void A_IceGuyChase(Mobj *actor)
 {
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    fixed_t dist;
    fixed_t an;
-   mobj_t *mo;
+   Mobj *mo;
    
    A_Chase(actor);
 
@@ -1049,22 +1049,22 @@ void A_IceGuyChase(mobj_t *actor)
       mo->momx = actor->momx;
       mo->momy = actor->momy;
       mo->momz = actor->momz;
-      P_SetTarget<mobj_t>(&mo->target, actor);
+      P_SetTarget<Mobj>(&mo->target, actor);
    }
 }
 
 //
 // A_IceGuyAttack
 //
-void A_IceGuyAttack(mobj_t *actor)
+void A_IceGuyAttack(Mobj *actor)
 {
    // HEXEN_TODO
 }
 
-void A_IceGuyDie(mobj_t *actor)
+void A_IceGuyDie(Mobj *actor)
 {
    // HEXEN_TODO
-   //void A_FreezeDeathChunks(mobj_t *actor);
+   //void A_FreezeDeathChunks(Mobj *actor);
    
    actor->momx = 0;
    actor->momy = 0;
@@ -1075,7 +1075,7 @@ void A_IceGuyDie(mobj_t *actor)
    //A_FreezeDeathChunks(actor);
 }
 
-void A_IceGuyMissileExplode(mobj_t *actor)
+void A_IceGuyMissileExplode(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -1087,7 +1087,7 @@ void A_IceGuyMissileExplode(mobj_t *actor)
 //
 // A_CheckFloor
 //
-void A_CheckFloor(mobj_t *actor)
+void A_CheckFloor(Mobj *actor)
 {
    if(actor->z <= actor->floorz)
    {
@@ -1100,7 +1100,7 @@ void A_CheckFloor(mobj_t *actor)
 //
 // A_FreezeDeath
 //
-void A_FreezeDeath(mobj_t *actor)
+void A_FreezeDeath(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -1108,7 +1108,7 @@ void A_FreezeDeath(mobj_t *actor)
 //
 // A_IceSetTics
 //
-void A_IceSetTics(mobj_t *actor)
+void A_IceSetTics(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -1116,7 +1116,7 @@ void A_IceSetTics(mobj_t *actor)
 //
 // A_IceCheckHeadDone
 //
-void A_IceCheckHeadDone(mobj_t *actor)
+void A_IceCheckHeadDone(Mobj *actor)
 {
    // HEXEN_TODO
 }
@@ -1124,7 +1124,7 @@ void A_IceCheckHeadDone(mobj_t *actor)
 //
 // A_FreezeDeathChunks
 //
-void A_FreezeDeathChunks(mobj_t *actor)
+void A_FreezeDeathChunks(Mobj *actor)
 {
    // HEXEN_TODO
 }

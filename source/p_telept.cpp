@@ -43,11 +43,11 @@
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int EV_Teleport(line_t *line, int side, mobj_t *thing)
+int EV_Teleport(line_t *line, int side, Mobj *thing)
 {
-   CThinker *thinker;
-   mobj_t    *m, *source_fog, *destination_fog;
-   int       i;
+   int i;
+   Thinker *thinker;
+   Mobj *m, *source_fog, *destination_fog;
 
    // don't teleport missiles
    // Don't teleport if hit back of line,
@@ -62,7 +62,7 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
    {
       for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
       {
-         if(!(m = thinker_cast<mobj_t *>(thinker)))
+         if(!(m = thinker_cast<Mobj *>(thinker)))
             continue;
 
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
@@ -163,11 +163,11 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
 // Primarily for rooms-over-rooms etc.
 //
 
-int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
+int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
 {
    int       i;
-   mobj_t    *m;
-   CThinker *th;
+   Mobj    *m;
+   Thinker *th;
    
    // don't teleport missiles
    // Don't teleport if hit back of line,
@@ -180,7 +180,7 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
-         if(!(m = thinker_cast<mobj_t *>(th)))
+         if(!(m = thinker_cast<Mobj *>(th)))
             continue;
          
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
@@ -260,7 +260,7 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
 // maximum fixed_t units to move object to avoid hiccups
 #define FUDGEFACTOR 10
 
-int EV_SilentLineTeleport(line_t *line, int side, mobj_t *thing,
+int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
                           boolean reverse)
 {
    int i;

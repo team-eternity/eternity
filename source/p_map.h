@@ -39,40 +39,40 @@
 #define MAXRADIUS       (32*FRACUNIT)
 
 // killough 3/15/98: add fourth argument to P_TryMove
-boolean P_TryMove(mobj_t *thing, fixed_t x, fixed_t y, int dropoff);
+boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 // killough 8/9/98: extra argument for telefragging
-boolean P_TeleportMove(mobj_t *thing, fixed_t x, fixed_t y,boolean boss);
+boolean P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y,boolean boss);
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
-boolean P_TeleportMoveStrict(mobj_t *thing, fixed_t x, fixed_t y, boolean boss);
+boolean P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, boolean boss);
 #ifdef R_LINKEDPORTALS
 // SoM: new function that won't telefrag things which the transporting mobj isn't
 // touching on the z axis.
-boolean P_PortalTeleportMove(mobj_t *thing, fixed_t x, fixed_t y);
+boolean P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
 #endif
 
 
-void    P_SlideMove(mobj_t *mo);
-boolean P_CheckSight(mobj_t *t1, mobj_t *t2);
+void    P_SlideMove(Mobj *mo);
+boolean P_CheckSight(Mobj *t1, Mobj *t2);
 void    P_UseLines(player_t *player);
 
 // killough 8/2/98: add 'mask' argument to prevent friends autoaiming at others
-fixed_t P_AimLineAttack(mobj_t *t1, angle_t angle, fixed_t distance,int mask);
-void    P_LineAttack(mobj_t *t1, angle_t angle, fixed_t distance,
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
+void    P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
                      fixed_t slope, int damage );
-void    P_RadiusAttack(mobj_t *spot, mobj_t *source, int damage, int mod);
-boolean P_CheckPosition(mobj_t *thing, fixed_t x, fixed_t y);
+void    P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod);
+boolean P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
 boolean     P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
 void        P_DelSeclist(msecnode_t *);                      // phares 3/16/98
 void        P_FreeSecNodeList(void);                         // sf
-msecnode_t *P_CreateSecNodeList(mobj_t *,fixed_t, fixed_t);  // phares 3/14/98
-boolean     Check_Sides(mobj_t *, int, int);                 // phares
+msecnode_t *P_CreateSecNodeList(Mobj *,fixed_t, fixed_t);  // phares 3/14/98
+boolean     Check_Sides(Mobj *, int, int);                 // phares
 
-int         P_GetMoveFactor(mobj_t *mo, int *friction);      // killough 8/28/98
-int         P_GetFriction(const mobj_t *mo, int *factor);    // killough 8/28/98
-void        P_ApplyTorque(mobj_t *mo);                       // killough 9/12/98
+int         P_GetMoveFactor(Mobj *mo, int *friction);      // killough 8/28/98
+int         P_GetFriction(const Mobj *mo, int *factor);    // killough 8/28/98
+void        P_ApplyTorque(Mobj *mo);                       // killough 9/12/98
 
 typedef struct doom_mapinter_s
 {
@@ -90,7 +90,7 @@ typedef struct doom_mapinter_s
    // 2 == 3DMidTex responsible for floorz
    int        touch3dside;
 
-   mobj_t     *thing;    // current thing being clipped
+   Mobj     *thing;    // current thing being clipped
    fixed_t    x;         // x position, usually where we want to move
    fixed_t    y;         // y position, usually where we want to move
 
@@ -121,7 +121,7 @@ typedef struct doom_mapinter_s
    line_t     *blockline;   // killough 8/11/98: blocking linedef
    line_t     *floorline;   // killough 8/1/98: Highest touched floor
 
-   mobj_t     *linetarget;  // who got hit (or NULL)
+   Mobj     *linetarget;  // who got hit (or NULL)
 
    // keep track of special lines as they are hit,
    // but don't process them until the move is proven valid
@@ -148,7 +148,7 @@ typedef struct doom_mapinter_s
    // haleyjd: this is now *only* used inside P_CreateSecNodeList and callees
    msecnode_t *sector_list;     // phares 3/16/98
 
-   mobj_t     *BlockingMobj;    // haleyjd 1/17/00: global hit reference
+   Mobj     *BlockingMobj;    // haleyjd 1/17/00: global hit reference
 
 } doom_mapinter_t;
 

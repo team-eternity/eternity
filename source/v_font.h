@@ -57,7 +57,7 @@ typedef struct vfontfilter_s
 //
 struct vfont_t
 {
-   CDLListItem<vfont_t> numlinks; // for EDF hashing
+   DLListItem<vfont_t> numlinks; // for EDF hashing
 
    unsigned int start; // first character in font
    unsigned int end;   // last character in font

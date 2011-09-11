@@ -45,6 +45,7 @@
 #include "p_hubs.h"
 #include "p_skin.h"
 #include "p_setup.h"
+#include "r_draw.h"
 #include "e_edf.h"
 #include "a_small.h"
 #include "s_sndseq.h"
@@ -54,12 +55,10 @@
 #include "version.h"
 #include "w_wad.h"
 #include "w_levels.h"
+#include "c_io.h"
 
 // [CG] Added.
 #include "cs_netid.h"
-
-byte *save_p;
-
 
 // Pads save_p to a 4-byte boundary
 //  so that the load/save works on SGI&Gecko.
@@ -75,36 +74,36 @@ byte *save_p;
 //
 
 //
-// CSaveArchive::CSaveArchive(COutBuffer *)
+// SaveArchive::SaveArchive(OutBuffer *)
 //
-// Constructs a CSaveArchive object in saving mode.
+// Constructs a SaveArchive object in saving mode.
 //
-CSaveArchive::CSaveArchive(COutBuffer *pSaveFile) 
+SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
    : savefile(pSaveFile), loadfile(NULL)
 {
    if(!pSaveFile)
-      I_Error("CSaveArchive: created a save file without a valid COutBuffer\n");
+      I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
 }
 
 //
-// CSaveArchive::CSaveArchive(CInBuffer *)
+// SaveArchive::SaveArchive(InBuffer *)
 //
-// Constructs a CSaveArchive object in loading mode.
+// Constructs a SaveArchive object in loading mode.
 //
-CSaveArchive::CSaveArchive(CInBuffer *pLoadFile)
+SaveArchive::SaveArchive(InBuffer *pLoadFile)
    : savefile(NULL), loadfile(pLoadFile)
 {
    if(!pLoadFile)
-      I_Error("CSaveArchive: created a load file without a valid CInBuffer\n");
+      I_Error("SaveArchive: created a load file without a valid InBuffer\n");
 }
 
 //
-// CSaveArchive::ArchiveCString
+// SaveArchive::ArchiveCString
 //
 // Writes/reads strings with a fixed maximum length, which should be 
 // null-extended prior to the call.
 //
-void CSaveArchive::ArchiveCString(char *str, size_t maxLen)
+void SaveArchive::ArchiveCString(char *str, size_t maxLen)
 {
    if(savefile)
       savefile->Write(str, maxLen);
@@ -113,12 +112,12 @@ void CSaveArchive::ArchiveCString(char *str, size_t maxLen)
 }
 
 //
-// CSaveArchive::ArchiveLString
+// SaveArchive::ArchiveLString
 //
 // Writes/reads a C string with prepended length field.
 // When reading, the result is returned in a calloc'd buffer.
 //
-void CSaveArchive::ArchiveLString(char *&str, size_t &len)
+void SaveArchive::ArchiveLString(char *&str, size_t &len)
 {
    if(savefile)
    {
@@ -144,12 +143,12 @@ void CSaveArchive::ArchiveLString(char *&str, size_t &len)
 }
 
 //
-// CSaveArchive::WriteLString
+// SaveArchive::WriteLString
 //
 // Writes a C string with prepended length field. Do not call when loading!
 // Instead you must call ArchiveLString.
 //
-void CSaveArchive::WriteLString(const char *str, size_t len)
+void SaveArchive::WriteLString(const char *str, size_t len)
 {
    if(savefile)
    {
@@ -160,14 +159,14 @@ void CSaveArchive::WriteLString(const char *str, size_t len)
       savefile->Write(str, len);
    }
    else
-      I_Error("CSaveArchive::WriteLString: cannot deserialize!\n");
+      I_Error("SaveArchive::WriteLString: cannot deserialize!\n");
 }
 
 //
 // IO operators
 //
 
-CSaveArchive &CSaveArchive::operator << (int32_t &x)
+SaveArchive &SaveArchive::operator << (int32_t &x)
 {
    if(savefile)
       savefile->WriteSint32(x);
@@ -177,7 +176,7 @@ CSaveArchive &CSaveArchive::operator << (int32_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (uint32_t &x)
+SaveArchive &SaveArchive::operator << (uint32_t &x)
 {
    if(savefile)
       savefile->WriteUint32(x);
@@ -187,7 +186,7 @@ CSaveArchive &CSaveArchive::operator << (uint32_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (int16_t &x)
+SaveArchive &SaveArchive::operator << (int16_t &x)
 {
    if(savefile)
       savefile->WriteSint16(x);
@@ -197,7 +196,7 @@ CSaveArchive &CSaveArchive::operator << (int16_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (uint16_t &x)
+SaveArchive &SaveArchive::operator << (uint16_t &x)
 {
    if(savefile)
       savefile->WriteUint16(x);
@@ -207,7 +206,7 @@ CSaveArchive &CSaveArchive::operator << (uint16_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (int8_t &x)
+SaveArchive &SaveArchive::operator << (int8_t &x)
 {
    if(savefile)
       savefile->WriteSint8(x);
@@ -217,7 +216,7 @@ CSaveArchive &CSaveArchive::operator << (int8_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (uint8_t &x)
+SaveArchive &SaveArchive::operator << (uint8_t &x)
 {
    if(savefile)
       savefile->WriteUint8(x);
@@ -227,7 +226,7 @@ CSaveArchive &CSaveArchive::operator << (uint8_t &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (boolean &x)
+SaveArchive &SaveArchive::operator << (boolean &x)
 {
    if(savefile)
       savefile->WriteUint8((uint8_t)x);
@@ -241,14 +240,93 @@ CSaveArchive &CSaveArchive::operator << (boolean &x)
    return *this;
 }
 
-CSaveArchive &CSaveArchive::operator << (CThinker *th)
+SaveArchive &SaveArchive::operator << (float &x)
 {
+   // FIXME/TODO: Fix non-portable IO.
+   if(savefile)
+      savefile->Write(&x, sizeof(x));
+   else
+      loadfile->Read(&x, sizeof(x));
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (double &x)
+{
+   // FIXME/TODO: Fix non-portable IO.
+   if(savefile)
+      savefile->Write(&x, sizeof(x));
+   else
+      loadfile->Read(&x, sizeof(x));
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (sector_t *&s)
+{
+   int sectornum;
+
    if(savefile)
    {
+      sectornum = s - sectors;
+      savefile->WriteSint32(sectornum);
    }
    else
    {
+      loadfile->ReadSint32(sectornum);
+      if(sectornum < 0 || sectornum >= numsectors)
+      {
+         I_FatalError(I_ERR_KILL, "SaveArchive: sector num %d out of range\n",
+                      sectornum);
+      }
+      s = &sectors[sectornum];
    }
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (line_t *&ln)
+{
+   int linenum = -1;
+
+   if(savefile)
+   {
+      if(ln)
+         linenum = ln - lines;
+      savefile->WriteSint32(linenum);
+   }
+   else
+   {
+      loadfile->ReadSint32(linenum);
+      if(linenum == -1) // Some line pointers can be NULL
+         ln = NULL;
+      else if(linenum < 0 || linenum >= numlines)
+      {
+         I_FatalError(I_ERR_KILL, "SaveArchive: line num %d out of range\n",
+                      linenum);
+      }
+      else
+         ln = &lines[linenum];
+   }
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (spectransfer_t &st)
+{
+   *this << st.damage << st.damageflags << st.damagemask << st.damagemod
+         << st.flags << st.newspecial;
+   
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (mapthing_t &mt)
+{
+   *this << mt.angle << mt.height << mt.next << mt.options
+         << mt.recordnum << mt.special << mt.tid << mt.type
+         << mt.x << mt.y;
+
+   P_ArchiveArray<int>(*this, mt.args, NUMMTARGS);
 
    return *this;
 }
@@ -260,19 +338,19 @@ CSaveArchive &CSaveArchive::operator << (CThinker *th)
 
 static unsigned int num_thinkers; // number of thinkers in level being archived
 
-static CThinker **thinker_p;  // killough 2/14/98: Translation table
+static Thinker **thinker_p;  // killough 2/14/98: Translation table
 
 // sf: made these into separate functions
 //     for FraggleScript saving object ptrs too
 
-void P_FreeThinkerTable(void)
+static void P_FreeThinkerTable(void)
 {
    free(thinker_p);    // free translation table
 }
 
-void P_NumberThinkers(void)
+static void P_NumberThinkers(void)
 {
-   CThinker *th;
+   Thinker *th;
    
    num_thinkers = 0; // init to 0
    
@@ -290,9 +368,9 @@ void P_NumberThinkers(void)
    }
 }
 
-void P_DeNumberThinkers(void)
+static void P_DeNumberThinkers(void)
 {
-   CThinker *th;
+   Thinker *th;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
       th->setOrdinal(0);
@@ -302,27 +380,18 @@ void P_DeNumberThinkers(void)
 // P_ThinkerNum
 //
 // Get the mobj number from the mobj.
-// haleyjd 10/03/03: made static
 //
-static unsigned int P_ThinkerNum(CThinker *th)
+unsigned int P_NumForThinker(Thinker *th)
 {
-   unsigned int n = th ? th->getOrdinal() : 0; // 0 = NULL
-   
-   // extra check for invalid thingnum (prob. still ptr)
-   if(n > num_thinkers) 
-      n = 0;
-   
-   return n;
+   return th ? th->getOrdinal() : 0; // 0 == NULL
 }
 
 //
 // P_ThinkerForNum
 //
-// haleyjd 10/03/03: made static
-//
-static CThinker *P_ThinkerForNum(unsigned int n)
+Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return thinker_p[n];
+   return n <= num_thinkers ? thinker_p[n] : NULL;
 }
 
 //=============================================================================
@@ -335,7 +404,7 @@ static CThinker *P_ThinkerForNum(unsigned int n)
 //
 // haleyjd 12/06/10: Archiving for psprites
 //
-static void P_ArchivePSprite(CSaveArchive &arc, pspdef_t &pspr)
+static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 {
    arc << pspr.sx << pspr.sy << pspr.tics << pspr.trans;
 
@@ -358,7 +427,7 @@ static void P_ArchivePSprite(CSaveArchive &arc, pspdef_t &pspr)
 //
 // P_ArchivePlayers
 //
-static void P_ArchivePlayers(CSaveArchive &arc)
+static void P_ArchivePlayers(SaveArchive &arc)
 {
    int i;
    
@@ -431,14 +500,12 @@ extern int LightningFlash;
 extern int LevelSky;
 extern int LevelTempSky;
 
-extern byte *savebuffer;
-
 //
 // P_ArchiveWorld
 //
 // Saves dynamic properties of sectors, lines, and sides.
 //
-static void P_ArchiveWorld(CSaveArchive &arc)
+static void P_ArchiveWorld(SaveArchive &arc)
 {
    int       i;
    sector_t *sec;
@@ -464,7 +531,6 @@ static void P_ArchiveWorld(CSaveArchive &arc)
           << sec->floorpic << sec->ceilingpic
           << sec->lightlevel << sec->oldlightlevel 
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
-
    }
 
    // do lines
@@ -497,21 +563,90 @@ static void P_ArchiveWorld(CSaveArchive &arc)
 }
 
 //
+// Sound Targets
+//
+static void P_ArchiveSoundTargets(SaveArchive &arc)
+{
+   int i;
+
+   // killough 9/14/98: save soundtargets
+   if(arc.isSaving())
+   {
+      for(i = 0; i < numsectors; i++)
+      {
+         Mobj *target = sectors[i].soundtarget;
+         unsigned int ordinal = 0;
+         if(target)
+         {
+            // haleyjd 11/03/06: We must check for P_MobjThinker here as well,
+            // or player corpses waiting for deferred removal will be saved as
+            // raw pointer values instead of twizzled numbers, causing a crash
+            // on savegame load!
+            ordinal = target->getOrdinal();
+         }
+         arc << ordinal;
+      }
+   }
+   else
+   {
+      for(i = 0; i < numsectors; i++)
+      {
+         Mobj *target;
+         unsigned int ordinal = 0;
+         arc << ordinal;
+
+         if((target = dynamic_cast<Mobj *>(P_ThinkerForNum(ordinal))))
+            P_SetNewTarget(&sectors[i].soundtarget, target);
+         else
+            sectors[i].soundtarget = NULL;
+      }
+   }
+}
+
+//
 // Thinkers
 //
 
 #define tc_end "TC_END"
 
 //
+// P_RemoveAllThinkers
+//
+static void P_RemoveAllThinkers(void)
+{
+   Thinker *th;
+
+   // FIXME/TODO: This leaks all mobjs til the next level by calling
+   // Thinker::InitThinkers. This should really be handled more 
+   // uniformly with a virtual method.
+
+   // remove all the current thinkers
+   for(th = thinkercap.next; th != &thinkercap; )
+   {
+      Thinker *next;
+      Mobj *mo;
+      next = th->next;
+      if((mo = dynamic_cast<Mobj *>(th)))
+         mo->removeThinker();
+      else
+         delete th;
+      th = next;
+   }
+
+   // Clear out the list
+   Thinker::InitThinkers();
+}
+
+//
 // P_ArchiveThinkers
 //
 // 2/14/98 killough: substantially modified to fix savegame bugs
 //
-static void P_ArchiveThinkers(CSaveArchive &arc)
+static void P_ArchiveThinkers(SaveArchive &arc)
 {
    if(arc.isSaving())
    {
-      CThinker *th;
+      Thinker *th;
 
       // first, save count of enumerated thinkers
       arc << num_thinkers;
@@ -523,14 +658,25 @@ static void P_ArchiveThinkers(CSaveArchive &arc)
             th->serialize(arc);
       }
 
+      // add a terminating marker
       arc.WriteLString(tc_end);
    }
    else
    {
       char *className = "";
       size_t len;
-      CThinkerType *thinkerType;
-      CThinker     *newThinker;
+      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      ThinkerType *thinkerType;
+      Thinker     *newThinker, *th;
+
+      // get number of thinkers
+      arc << num_thinkers;
+
+      // allocate thinker table
+      thinker_p = (Thinker **)(calloc(num_thinkers+1, sizeof(Thinker *)));
+
+      // clear out the thinker list
+      P_RemoveAllThinkers();
 
       while(1)
       {
@@ -540,88 +686,38 @@ static void P_ArchiveThinkers(CSaveArchive &arc)
          // Get the next class name
          arc.ArchiveLString(className, len);
 
-         // Find the CThinkerType matching this name
-         if(!(thinkerType = CThinkerType::FindType(className)))
+         // Find the ThinkerType matching this name
+         if(!(thinkerType = ThinkerType::FindType(className)))
          {
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
-            else
-            {
-               // Unknown thinker type
+            else 
                I_FatalError(I_ERR_KILL, "Unknown tclass %s in savegame\n", className);
-            }
          }
 
          // Create a thinker of the appropriate type and load it
          newThinker = thinkerType->newThinker();
-         newThinker->serialize(*this);
+         newThinker->serialize(arc);
+
+         // Put it in the table
+         thinker_p[idx++] = newThinker;
+
+         // Add it
+         newThinker->addThinker();
       }
+
+      // Now, call deswizzle to fix up mutual references between thinkers, such
+      // as mobj targets/tracers and ACS triggers.
+      for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         th->deswizzle();
+
+      // killough 3/26/98: Spawn icon landings:
+      // haleyjd  3/30/03: call P_InitThingLists
+      P_InitThingLists();
    }
 
-   /*
-   CThinker *th;
-   int i;
-
-   // save off the current thinkers
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      if(thinker_cast<mobj_t *>(th))
-      {
-         mobj_t *mobj;
-         
-         *save_p++ = tc_mobj;
-         PADSAVEP();
-         mobj = (mobj_t *)save_p;
-         memcpy(mobj, th, sizeof(*mobj));
-         save_p += sizeof(*mobj);
-         mobj->state = (state_t *)(mobj->state->index);
-
-         // killough 2/14/98: convert pointers into indices.
-         // Fixes many savegame problems, by properly saving
-         // target and tracer fields. Note: we store NULL if
-         // the thinker pointed to by these fields is not a
-         // mobj thinker.
-         
-         if(mobj->target)
-            mobj->target = (mobj_t *)(mobj->target->getEnumeration());
-
-         if(mobj->tracer)
-            mobj->tracer = (mobj_t *)(mobj->tracer->getEnumeration());
-
-         // killough 2/14/98: new field: save last known enemy. Prevents
-         // monsters from going to sleep after killing monsters and not
-         // seeing player anymore.
-         if(mobj->lastenemy)
-            mobj->lastenemy = (mobj_t *)(mobj->lastenemy->getEnumeration());
-        
-         if(mobj->player)
-            mobj->player = (player_t *)((mobj->player-players) + 1);
-      }
-   }
-
-   // add a terminating marker
-   savefile.WriteUint8(tc_end);
-   
-   // killough 9/14/98: save soundtargets
-   for(i = 0; i < numsectors; i++)
-   {
-      mobj_t *target = sectors[i].soundtarget;
-      unsigned int ordinal = 0;
-      if(target)
-      {
-         // haleyjd 11/03/06: We must check for P_MobjThinker here as well,
-         // or player corpses waiting for deferred removal will be saved as
-         // raw pointer values instead of twizzled numbers, causing a crash
-         // on savegame load!
-         ordinal = target->getEnumeration();
-      }
-      arc << ordinal;
-   }
-   
-   // killough 2/14/98: restore prev pointers
-   // sf: still needed for saving script mobj pointers
-   // killough 2/14/98: end changes
-   */
+   // Do sound targets
+   P_ArchiveSoundTargets(arc);
 }
 
 //
@@ -631,759 +727,22 @@ static void P_ArchiveThinkers(CSaveArchive &arc)
 // first, so that no old target's reference count is decreased (when loading
 // savegames, old targets are indices, not really pointers to targets).
 //
-static void P_SetNewTarget(mobj_t **mop, mobj_t *targ)
+void P_SetNewTarget(Mobj **mop, Mobj *targ)
 {
    *mop = NULL;
-   P_SetTarget<mobj_t>(mop, targ);
+   P_SetTarget<Mobj>(mop, targ);
 }
 
 //
-// P_UnArchiveThinkers
+// P_ArchiveRNG
 //
-// 2/14/98 killough: substantially modified to fix savegame bugs
-//
-void P_UnArchiveThinkers(void)
-{
-   CThinker *th;
-   size_t    size;        // killough 2/14/98: size of into table
-   size_t    idx;         // haleyjd 11/03/06: separate index var
-   
-   // killough 3/26/98: Load boss brain state
-   // [CG] BRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAINS!!!!!
-   memcpy(&brain, save_p, sizeof brain);
-   save_p += sizeof brain;
-
-   // remove all the current thinkers
-   for(th = thinkercap.next; th != &thinkercap; )
-   {
-      CThinker *next;
-      next = th->next;
-      if(th->function == P_MobjThinker)
-         P_RemoveMobj((mobj_t *)th);
-      else
-         Z_Free(th);
-      th = next;
-   }
-
-   CThinker::InitThinkers();
-
-   // killough 2/14/98: count number of thinkers by skipping through them
-   {
-      byte *sp = save_p;     // save pointer and skip header
-      for(size = 1; *save_p++ == tc_mobj; ++size)  // killough 2/14/98
-      {                     // skip all entries, adding up count
-         PADSAVEP();
-         save_p += sizeof(mobj_t);
-      }
-
-      if(*--save_p != tc_end)
-         I_FatalError(I_ERR_KILL, "Unknown tclass %i in savegame", *save_p);
-
-      // first table entry special: 0 maps to NULL
-      *(mobj_p = (mobj_t **)(malloc(size * sizeof *mobj_p))) = 0;   // table of pointers
-      save_p = sp;           // restore save pointer
-   }
-
-   // read in saved thinkers
-   // haleyjd 11/03/06: use idx to save "size" for rangechecking
-   for(idx = 1; *save_p++ == tc_mobj; ++idx)    // killough 2/14/98
-   {
-      mobj_t *mobj = (mobj_t *)(Z_Malloc(sizeof(mobj_t), PU_LEVEL, NULL));
-      
-      // killough 2/14/98 -- insert pointers to thinkers into table, in order:
-      mobj_p[idx] = mobj;
-
-      PADSAVEP();
-      memcpy(mobj, save_p, sizeof(mobj_t));
-      save_p += sizeof(mobj_t);
-      mobj->state = states[(int)(mobj->state)];
-      
-      // haleyjd 07/23/09: this must be before skin setting!
-      mobj->info  = &mobjinfo[mobj->type];
-
-      if(mobj->player)
-      {
-         int playernum = (int)mobj->player - 1;
-
-         (mobj->player = &players[playernum])->mo = mobj;
-
-         // PCLASS_FIXME: Need to save and restore proper player class!
-         // Temporary hack.
-         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
-         
-         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall back
-         // to default for player class if non-existant. Note: must be after player
-         // class is set.
-         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
-      }
-      else
-      {
-         // haleyjd 09/26/04: restore monster skins
-         // haleyjd 07/23/09: do not clear player->mo->skin (put into else)
-         if(mobj->info->altsprite != -1)
-            mobj->skin = P_GetMonsterSkin(mobj->info->altsprite);
-         else
-            mobj->skin = NULL;
-      }
-
-      P_SetThingPosition(mobj);      
-
-      // killough 2/28/98:
-      // Fix for falling down into a wall after savegame loaded:
-      //      mobj->floorz = mobj->subsector->sector->floorheight;
-      //      mobj->ceilingz = mobj->subsector->sector->ceilingheight;
-      
-      mobj->addThinker();
-
-      // haleyjd 02/02/04: possibly add thing to tid hash table
-      P_AddThingTID(mobj, mobj->tid);
-
-      // [CG] Register the actor's Net ID.
-      if(mobj->net_id != 0)
-         CS_RegisterActorNetID(mobj);
-   }
-
-   // killough 2/14/98: adjust target and tracer fields, plus
-   // lastenemy field, to correctly point to mobj thinkers.
-   // NULL entries automatically handled by first table entry.
-   //
-   // killough 11/98: use P_SetNewTarget() to set fields
-   // haleyjd 11/03/06: rangecheck all mobj_p indices for security
-
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      mobj_t *mo = (mobj_t *)th;
-
-      if((size_t)mo->target < size)
-         P_SetNewTarget(&mo->target, mobj_p[(size_t)mo->target]);
-      else
-         mo->target = NULL;
-
-      if((size_t)mo->tracer < size)
-         P_SetNewTarget(&mo->tracer, mobj_p[(size_t)mo->tracer]);
-      else
-         mo->tracer = NULL;
-
-      if((size_t)mo->lastenemy < size)
-         P_SetNewTarget(&mo->lastenemy, mobj_p[(size_t)mo->lastenemy]);
-      else
-         mo->lastenemy = NULL;
-   }
-
-   {  // killough 9/14/98: restore soundtargets
-      int i;
-      for(i = 0; i < numsectors; i++)
-      {
-         mobj_t *target;
-         memcpy(&target, save_p, sizeof target);
-         save_p += sizeof target;
-
-         // haleyjd 11/03/06: rangecheck for security
-         if((size_t)target < size)
-            P_SetNewTarget(&sectors[i].soundtarget, mobj_p[(size_t) target]);
-         else
-            sectors[i].soundtarget = NULL;
-      }
-   }
-
-   // killough 3/26/98: Spawn icon landings:
-   // haleyjd  3/30/03: call P_InitThingLists
-   P_InitThingLists();
-}
-
-//
-// P_ArchiveSpecials
-//
-enum 
-{
-   tc_ceiling,
-   tc_door,
-   tc_floor,
-   tc_plat,
-   tc_flash,
-   tc_strobe,
-   tc_glow,
-   tc_elevator,      // jff 2/22/98 new elevator type thinker
-   tc_scroll,        // killough 3/7/98: new scroll effect thinker
-   tc_pusher,        // phares 3/22/98:  new push/pull effect thinker
-   tc_flicker,       // killough 10/4/98
-   tc_polyrotate,    // haleyjd 03/26/06: polyobjects
-   tc_polymove,
-   tc_polyslidedoor,
-   tc_polyswingdoor,
-   tc_pillar,        // joek: pillars
-   tc_quake,         // haleyjd 02/28/07: earthquake
-   tc_lightfade,     // haleyjd 02/28/07: lightfade thinker
-   tc_floorwaggle,   // haleyjd 07/05/09: floor waggle
-   tc_acs,           // haleyjd 07/06/09: acs
-   tc_endspecials
-} specials_e;
-
-//
-// Things to handle:
-//
-// T_MoveCeiling, (CCeiling: sector_t * swizzle), - active list
-// T_VerticalDoor, (CVerticalDoor: sector_t * swizzle),
-// T_MoveFloor, (CFloorMove: sector_t * swizzle),
-// T_LightFlash, (CLightFlash: sector_t * swizzle),
-// T_StrobeFlash, (CStrobeThinker: sector_t *),
-// T_Glow, (CGlowThinker: sector_t *),
-// T_PlatRaise, (CPlat: sector_t *), - active list
-// T_MoveElevator, (CPlat: sector_t *), - active list -- jff 2/22/98
-// T_Scroll                                            -- killough 3/7/98
-// T_Pusher                                            -- phares 3/22/98
-// T_FireFlicker                                       -- killough 10/4/98
-// T_PolyObjRotate                                     -- haleyjd 03/26/06:
-// T_PolyObjMove                                        -     
-// T_PolyDoorSlide                                      - polyobjects
-// T_PolyDoorSwing                                      -     
-// T_MovePillar                                        -- joek: pillars
-// T_QuakeThinker                                      -- haleyjd: quakes
-// T_LightFade                                         -- haleyjd: param light
-// T_FloorWaggle                                       -- haleyjd: floor waggle
-// T_ACSThinker                                        -- haleyjd: ACS
-//
-
-void P_ArchiveSpecials(COutBuffer &savefile)
-{
-   CThinker *th;
-   
-   // save off the current thinkers
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      if(th->function == T_MoveCeiling)
-      {
-         CCeiling *ceiling;
-         *save_p++ = tc_ceiling;
-         PADSAVEP();
-         ceiling = (CCeiling *)save_p;
-         memcpy(ceiling, th, sizeof(*ceiling));
-         save_p += sizeof(*ceiling);
-         ceiling->sector = (sector_t *)(ceiling->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_VerticalDoor)
-      {
-         CVerticalDoor *door;
-         *save_p++ = tc_door;
-         PADSAVEP();
-         door = (CVerticalDoor *) save_p;
-         memcpy(door, th, sizeof *door);
-         save_p += sizeof(*door);
-         door->sector = (sector_t *)(door->sector - sectors);
-         //jff 1/31/98 archive line remembered by door as well
-         door->line = (line_t *) (door->line ? door->line-lines : -1);
-         continue;
-      }
-
-      if(th->function == T_MoveFloor)
-      {
-         CFloorMove *floor;
-         *save_p++ = tc_floor;
-         PADSAVEP();
-         floor = (CFloorMove *)save_p;
-         memcpy(floor, th, sizeof(*floor));
-         save_p += sizeof(*floor);
-         floor->sector = (sector_t *)(floor->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_PlatRaise)
-      {
-         CPlat *plat;
-         *save_p++ = tc_plat;
-         PADSAVEP();
-         plat = (CPlat *)save_p;
-         memcpy(plat, th, sizeof(*plat));
-         save_p += sizeof(*plat);
-         plat->sector = (sector_t *)(plat->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_LightFlash)
-      {
-         CLightFlash *flash;
-         *save_p++ = tc_flash;
-         PADSAVEP();
-         flash = (CLightFlash *)save_p;
-         memcpy(flash, th, sizeof(*flash));
-         save_p += sizeof(*flash);
-         flash->sector = (sector_t *)(flash->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_StrobeFlash)
-      {
-         CStrobeThinker *strobe;
-         *save_p++ = tc_strobe;
-         PADSAVEP();
-         strobe = (CStrobeThinker *)save_p;
-         memcpy(strobe, th, sizeof(*strobe));
-         save_p += sizeof(*strobe);
-         strobe->sector = (sector_t *)(strobe->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_Glow)
-      {
-         CGlowThinker *glow;
-         *save_p++ = tc_glow;
-         PADSAVEP();
-         glow = (CGlowThinker *)save_p;
-         memcpy(glow, th, sizeof(*glow));
-         save_p += sizeof(*glow);
-         glow->sector = (sector_t *)(glow->sector - sectors);
-         continue;
-      }
-
-      // killough 10/4/98: save flickers
-      if(th->function == T_FireFlicker)
-      {
-         CFireFlicker *flicker;
-         *save_p++ = tc_flicker;
-         PADSAVEP();
-         flicker = (CFireFlicker *)save_p;
-         memcpy(flicker, th, sizeof(*flicker));
-         save_p += sizeof(*flicker);
-         flicker->sector = (sector_t *)(flicker->sector - sectors);
-         continue;
-      }
-
-      //jff 2/22/98 new case for elevators
-      if(th->function == T_MoveElevator)
-      {
-         CElevator *elevator;         //jff 2/22/98
-         *save_p++ = tc_elevator;
-         PADSAVEP();
-         elevator = (CElevator *)save_p;
-         memcpy(elevator, th, sizeof(*elevator));
-         save_p += sizeof(*elevator);
-         elevator->sector = (sector_t *)(elevator->sector - sectors);
-         continue;
-      }
-
-      // killough 3/7/98: Scroll effect thinkers
-      if(th->function == T_Scroll)
-      {
-         *save_p++ = tc_scroll;
-         memcpy(save_p, th, sizeof(CScroller));
-         save_p += sizeof(CScroller);
-         continue;
-      }
-
-      // phares 3/22/98: Push/Pull effect thinkers
-
-      if(th->function == T_Pusher)
-      {
-         *save_p++ = tc_pusher;
-         memcpy(save_p, th, sizeof(CPusher));
-         save_p += sizeof(CPusher);
-         continue;
-      }
-
-      // haleyjd 03/26/06: PolyObject thinkers
-      if(th->function == T_PolyObjRotate)
-      {
-         *save_p++ = tc_polyrotate;
-         memcpy(save_p, th, sizeof(CPolyRotate));
-         save_p += sizeof(CPolyRotate);
-         continue;
-      }
-
-      if(th->function == T_PolyObjMove)
-      {
-         *save_p++ = tc_polymove;
-         memcpy(save_p, th, sizeof(CPolyMove));
-         save_p += sizeof(CPolyMove);
-         continue;
-      }
-
-      if(th->function == T_PolyDoorSlide)
-      {
-         *save_p++ = tc_polyslidedoor;
-         memcpy(save_p, th, sizeof(CPolySlideDoor));
-         save_p += sizeof(CPolySlideDoor);
-         continue;
-      }
-
-      if(th->function == T_PolyDoorSwing)
-      {
-         *save_p++ = tc_polyswingdoor;
-         memcpy(save_p, th, sizeof(CPolySwingDoor));
-         save_p += sizeof(CPolySwingDoor);
-         continue;
-      }
-
-      if(th->function == T_MovePillar)
-      {
-      	 CPillar *pillar;
-         *save_p++ = tc_pillar;     
-         pillar = (CPillar *)save_p;
-         memcpy(save_p, th, sizeof(CPillar));
-         save_p += sizeof(CPillar);
-         pillar->sector = (sector_t *)(pillar->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_QuakeThinker)
-      {
-         *save_p++ = tc_quake;
-         memcpy(save_p, th, sizeof(CQuakeThinker));
-         save_p += sizeof(CQuakeThinker);
-         continue;
-      }
-
-      if(th->function == T_LightFade)
-      {
-         CLightFade *fade;
-         *save_p++ = tc_lightfade;
-         fade = (CLightFade *)save_p;
-         memcpy(save_p, th, sizeof(CLightFade));
-         save_p += sizeof(CLightFade);
-         fade->sector = (sector_t *)(fade->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_FloorWaggle)
-      {
-         CFloorWaggle *waggle;
-         *save_p++ = tc_floorwaggle;
-         waggle = (CFloorWaggle *)save_p;
-         memcpy(save_p, th, sizeof(CFloorWaggle));
-         save_p += sizeof(CFloorWaggle);
-         waggle->sector = (sector_t *)(waggle->sector - sectors);
-         continue;
-      }
-
-      if(th->function == T_ACSThinker)
-      {
-         CACSThinker *acs;
-         *save_p++ = tc_acs;
-         acs = (CACSThinker *)save_p;
-         memcpy(save_p, th, sizeof(CACSThinker));
-         save_p += sizeof(CACSThinker);
-         acs->ip      = (int *)(acs->ip - acs->code);
-         acs->line    = acs->line ? (line_t *)(acs->line - lines + 1) : NULL;
-         acs->trigger = (mobj_t *)P_MobjNum(acs->trigger);
-         continue;
-      }
-   }
-   
-   // add a terminating marker
-   savefile.WriteUint8(tc_endspecials);
-}
-
-
-//
-// P_UnArchiveSpecials
-//
-void P_UnArchiveSpecials(void)
-{
-   byte tclass;
-   
-   // read in saved thinkers
-   while((tclass = *save_p++) != tc_endspecials)  // killough 2/14/98
-   {
-      switch(tclass)
-      {
-      case tc_ceiling:
-         PADSAVEP();
-         {
-            CCeiling *ceiling = 
-               (CCeiling *)(Z_Malloc(sizeof(*ceiling), PU_LEVEL, NULL));
-            memcpy(ceiling, save_p, sizeof(*ceiling));
-            save_p += sizeof(*ceiling);
-            ceiling->sector = &sectors[(int)ceiling->sector];
-            ceiling->sector->ceilingdata = ceiling; //jff 2/22/98
-            
-            if(ceiling->thinker.function)
-               ceiling->thinker.function = T_MoveCeiling;
-            
-            ceiling->addThinker();
-            CS_RegisterCeilingNetID(ceiling);
-            break;
-         }
-
-      case tc_door:
-         PADSAVEP();
-         {
-            CVerticalDoor *door = (CVerticalDoor *)(Z_Malloc(sizeof(*door), PU_LEVEL, NULL));
-            memcpy(door, save_p, sizeof(*door));
-            save_p += sizeof(*door);
-            door->sector = &sectors[(int)door->sector];
-            
-            //jff 1/31/98 unarchive line remembered by door as well
-            door->line = (int)door->line!=-1? &lines[(int)door->line] : NULL;
-            
-            door->sector->ceilingdata = door;       //jff 2/22/98
-            door->thinker.function = T_VerticalDoor;
-            door->addThinker();
-            // [CG] Register the door's Net ID.
-            CS_RegisterDoorNetID(door);
-            break;
-         }
-
-      case tc_floor:
-         PADSAVEP();
-         {
-            CFloorMove *floor = 
-               (CFloorMove *)(Z_Malloc(sizeof(*floor), PU_LEVEL, NULL));
-            memcpy(floor, save_p, sizeof(*floor));
-            save_p += sizeof(*floor);
-            floor->sector = &sectors[(int)floor->sector];
-            floor->sector->floordata = floor; //jff 2/22/98
-            floor->thinker.function = T_MoveFloor;
-            floor->addThinker();
-            CS_RegisterFloorNetID(floor);
-            break;
-         }
-
-      case tc_plat:
-         PADSAVEP();
-         {
-            CPlat *plat = (CPlat *)(Z_Malloc(sizeof(*plat), PU_LEVEL, NULL));
-            memcpy(plat, save_p, sizeof(*plat));
-            save_p += sizeof(*plat);
-            plat->sector = &sectors[(int)plat->sector];
-            plat->sector->floordata = plat; //jff 2/22/98
-            
-            if(plat->thinker.function)
-               plat->thinker.function = T_PlatRaise;
-            
-            plat->addThinker();
-            if(CS_CLIENT)
-               CS_RegisterPlatformNetID(plat);
-            else
-               P_AddActivePlat(plat);
-            break;
-         }
-
-      case tc_flash:
-         PADSAVEP();
-         {
-            CLightFlash *flash = 
-               (CLightFlash *)(Z_Malloc(sizeof(*flash), PU_LEVEL, NULL));
-            memcpy(flash, save_p, sizeof(*flash));
-            save_p += sizeof(*flash);
-            flash->sector = &sectors[(int)flash->sector];
-            flash->thinker.function = T_LightFlash;
-            flash->addThinker();
-            break;
-         }
-
-      case tc_strobe:
-         PADSAVEP();
-         {
-            CStrobeThinker *strobe = 
-               (CStrobeThinker *)(Z_Malloc(sizeof(*strobe), PU_LEVEL, NULL));
-            memcpy(strobe, save_p, sizeof(*strobe));
-            save_p += sizeof(*strobe);
-            strobe->sector = &sectors[(int)strobe->sector];
-            strobe->thinker.function = T_StrobeFlash;
-            strobe->addThinker();
-            break;
-         }
-
-      case tc_glow:
-         PADSAVEP();
-         {
-            CGlowThinker *glow = (CGlowThinker *)(Z_Malloc(sizeof(*glow), PU_LEVEL, NULL));
-            memcpy(glow, save_p, sizeof(*glow));
-            save_p += sizeof(*glow);
-            glow->sector = &sectors[(int)glow->sector];
-            glow->thinker.function = T_Glow;
-            glow->addThinker();
-            break;
-         }
-
-      case tc_flicker:           // killough 10/4/98
-         PADSAVEP();
-         {
-            CFireFlicker *flicker = 
-               (CFireFlicker *)(Z_Malloc(sizeof(*flicker), PU_LEVEL, NULL));
-            memcpy(flicker, save_p, sizeof(*flicker));
-            save_p += sizeof(*flicker);
-            flicker->sector = &sectors[(int)flicker->sector];
-            flicker->thinker.function = T_FireFlicker;
-            flicker->addThinker();
-            break;
-         }
-
-         //jff 2/22/98 new case for elevators
-      case tc_elevator:
-         PADSAVEP();
-         {
-            CElevator *elevator = 
-               (CElevator *)(Z_Malloc(sizeof(*elevator), PU_LEVEL, NULL));
-            memcpy(elevator, save_p, sizeof(*elevator));
-            save_p += sizeof(*elevator);
-            elevator->sector = &sectors[(int)elevator->sector];
-            elevator->sector->floordata = elevator; //jff 2/22/98
-            elevator->sector->ceilingdata = elevator; //jff 2/22/98
-            elevator->thinker.function = T_MoveElevator;
-            elevator->addThinker();
-            CS_RegisterElevatorNetID(elevator);
-            break;
-         }
-
-      case tc_scroll:       // killough 3/7/98: scroll effect thinkers
-         {
-            CScroller *scroll = 
-               (CScroller *)(Z_Malloc(sizeof(CScroller), PU_LEVEL, NULL));
-            memcpy(scroll, save_p, sizeof(CScroller));
-            save_p += sizeof(CScroller);
-            scroll->thinker.function = T_Scroll;
-            scroll->addThinker();
-            break;
-         }
-
-      case tc_pusher:   // phares 3/22/98: new Push/Pull effect thinkers
-         {
-            CPusher *pusher = 
-               (CPusher *)(Z_Malloc(sizeof(CPusher), PU_LEVEL, NULL));
-            memcpy(pusher, save_p, sizeof(CPusher));
-            save_p += sizeof(CPusher);
-            pusher->thinker.function = T_Pusher;
-            pusher->source = P_GetPushThing(pusher->affectee);
-            pusher->addThinker();
-            break;
-         }
-
-         // haleyjd 03/26/06: PolyObjects
-
-      case tc_polyrotate: 
-         {
-            CPolyRotate *polyrot =
-               (CPolyRotate *)(Z_Malloc(sizeof(CPolyRotate), PU_LEVEL, NULL));
-            memcpy(polyrot, save_p, sizeof(CPolyRotate));
-            save_p += sizeof(CPolyRotate);
-            polyrot->thinker.function = T_PolyObjRotate;
-            polyrot->addThinker();
-            break;
-         }
-
-      case tc_polymove:
-         {
-            CPolyMove *polymove =
-               (CPolyMove *)(Z_Malloc(sizeof(CPolyMove), PU_LEVEL, NULL));
-            memcpy(polymove, save_p, sizeof(CPolyMove));
-            save_p += sizeof(CPolyMove);
-            polymove->thinker.function = T_PolyObjMove;
-            polymove->addThinker();
-            break;
-         }
-
-      case tc_polyslidedoor:
-         {
-            CPolySlideDoor *psldoor =
-               (CPolySlideDoor *)(Z_Malloc(sizeof(CPolySlideDoor), PU_LEVEL, NULL));
-            memcpy(psldoor, save_p, sizeof(CPolySlideDoor));
-            save_p += sizeof(CPolySlideDoor);
-            psldoor->thinker.function = T_PolyDoorSlide;
-            psldoor->addThinker();
-            break;
-         }
-
-      case tc_polyswingdoor:
-         {
-            CPolySwingDoor *pswdoor =
-               (CPolySwingDoor *)(Z_Malloc(sizeof(CPolySwingDoor), PU_LEVEL, NULL));
-            memcpy(pswdoor, save_p, sizeof(CPolySwingDoor));
-            save_p += sizeof(CPolySwingDoor);
-            pswdoor->thinker.function = T_PolyDoorSwing;
-            pswdoor->addThinker();
-            break;
-         }
-      
-      case tc_pillar:
-         {
-            CPillar *pillar = (CPillar *)(Z_Malloc(sizeof(CPillar), PU_LEVEL, NULL));
-            memcpy(pillar, save_p, sizeof(CPillar));
-            save_p += sizeof(CPillar);
-            pillar->sector = &sectors[(int)pillar->sector];
-            pillar->sector->floordata = pillar; 
-            pillar->sector->ceilingdata = pillar;
-            pillar->thinker.function = T_MovePillar;
-            pillar->addThinker();
-            CS_RegisterPillarNetID(pillar);
-            break;
-         }
-
-      case tc_quake:
-         {
-            CQuakeThinker *quake = 
-               (CQuakeThinker *)(Z_Malloc(sizeof(CQuakeThinker), PU_LEVEL, NULL));
-            memcpy(quake, save_p, sizeof(CQuakeThinker));
-            save_p += sizeof(CQuakeThinker);
-            quake->origin.thinker.function = T_QuakeThinker;
-            quake->addThinker();
-            break;
-         }
-
-      case tc_lightfade:
-         {
-            CLightFade *fade = 
-               (CLightFade *)(Z_Malloc(sizeof(CLightFade), PU_LEVEL, NULL));
-            memcpy(fade, save_p, sizeof(CLightFade));
-            save_p += sizeof(CLightFade);
-            fade->thinker.function = T_LightFade;
-            fade->sector = &sectors[(int)fade->sector];
-            fade->addThinker();
-            break;
-         }
-      
-      case tc_floorwaggle:
-         {
-            CFloorWaggle *waggle = 
-               (CFloorWaggle *)(Z_Malloc(sizeof(CFloorWaggle), PU_LEVEL, NULL));
-            memcpy(waggle, save_p, sizeof(CFloorWaggle));
-            save_p += sizeof(CFloorWaggle);
-            waggle->thinker.function = T_FloorWaggle;
-            waggle->sector = &sectors[(int)waggle->sector];
-            waggle->addThinker();
-            CS_RegisterFloorWaggleNetID(waggle);
-            break;
-         }
-
-      case tc_acs:
-         {
-            mobj_t *mo;
-            CACSThinker *acs = 
-               (CACSThinker *)(Z_Malloc(sizeof(CACSThinker), PU_LEVEL, NULL));
-            memcpy(acs, save_p, sizeof(CACSThinker));
-            save_p += sizeof(CACSThinker);
-            acs->thinker.function = T_ACSThinker;
-            acs->line = acs->line ? &lines[(size_t)acs->line - 1] : NULL;
-            mo = P_MobjForNum((int)acs->trigger);
-            P_SetNewTarget(&acs->trigger, mo);
-            acs->addThinker();
-            ACS_RestartSavedScript(acs);
-            break;
-         }
-
-      default:
-         // haleyjd: savegame read errors can cause heap corruption, so trigger
-         // a fatal error exit.
-         I_FatalError(I_ERR_KILL,
-                      "P_UnArchiveSpecials: Unknown tclass %i in savegame", 
-                      tclass);
-      }
-   }
-}
-
 // killough 2/16/98: save/restore random number generator state information
-
-void P_ArchiveRNG(void)
+//
+static void P_ArchiveRNG(SaveArchive &arc)
 {
-   memcpy(save_p, &rng, sizeof rng);
-   save_p += sizeof rng;
-}
+   arc << rng.rndindex << rng.prndindex;
 
-void P_UnArchiveRNG(void)
-{
-   memcpy(&rng, save_p, sizeof rng);
-   save_p += sizeof rng;
+   P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }
 
 //
@@ -1391,44 +750,31 @@ void P_UnArchiveRNG(void)
 //
 // killough 2/22/98: Save/restore automap state
 //
-static void P_ArchiveMap(CSaveArchive &arc)
+static void P_ArchiveMap(SaveArchive &arc)
 {
    arc << automapactive << followplayer << automap_grid << markpointnum;
 
    if(markpointnum)
    {
-      memcpy(save_p, markpoints, sizeof *markpoints * markpointnum);
-      save_p += markpointnum * sizeof *markpoints;
-   }
-}
-
-void P_UnArchiveMap(void)
-{
-   if(!hub_changelevel) 
-      memcpy(&automapactive, save_p, sizeof automapactive);
-   save_p += sizeof automapactive;
-   if(!hub_changelevel) 
-      memcpy(&followplayer, save_p, sizeof followplayer);
-   save_p += sizeof followplayer;
-   if(!hub_changelevel) 
-      memcpy(&automap_grid, save_p, sizeof automap_grid);
-   save_p += sizeof automap_grid;
-
-   if(automapactive)
-      AM_Start();
-
-   memcpy(&markpointnum, save_p, sizeof markpointnum);
-   save_p += sizeof markpointnum;
-
-   if(markpointnum)
-   {
-      while(markpointnum >= markpointnum_max)
+      if(arc.isSaving())
       {
-         markpoints = (mpoint_t *)(realloc(markpoints, sizeof *markpoints *
-            (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16)));
+         for(int i = 0; i < markpointnum; i++)
+            arc << markpoints[i].x << markpoints[i].y;
       }
-      memcpy(markpoints, save_p, markpointnum * sizeof *markpoints);
-      save_p += markpointnum * sizeof *markpoints;
+      else
+      {
+         if(automapactive)
+            AM_Start();
+
+         while(markpointnum >= markpointnum_max)
+         {
+            markpoints = (mpoint_t *)(realloc(markpoints, sizeof *markpoints *
+               (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16)));
+         }
+
+         for(int i = 0; i < markpointnum; i++)
+            arc << markpoints[i].x << markpoints[i].y;
+      }
    }
 }
 
@@ -1437,19 +783,30 @@ void P_UnArchiveMap(void)
 // haleyjd 03/26/06: PolyObject saving code
 //
 
-static void P_ArchivePolyObj(CSaveArchive &arc, polyobj_t *po)
+static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
 {
+   int id;
+   angle_t angle;
+   PointThinker pt;
+
    // nullify all polyobject thinker pointers;
    // the thinkers themselves will fight over who gets the field
    // when they first start to run.
    if(arc.isLoading())
       po->thinker = NULL;
 
-   arc << po->id << po->angle;
+   if(arc.isSaving())
+   {
+      id         = po->id;
+      angle      = po->angle;
+      pt.x       = po->spawnSpot.x;
+      pt.y       = po->spawnSpot.y;
+      pt.z       = po->spawnSpot.z;
+      pt.groupid = po->spawnSpot.groupid;
+   }
+   arc << id << angle;
 
-   // TODO: CPointThinker
-   memcpy(save_p, &po->spawnSpot, sizeof(po->spawnSpot));
-   save_p += sizeof(po->spawnSpot);
+   pt.serialize(arc);
 
    // if the object is bad or isn't in the id hash, we can do nothing more
    // with it, so return now
@@ -1459,11 +816,11 @@ static void P_ArchivePolyObj(CSaveArchive &arc, polyobj_t *po)
          return;
 
       // rotate and translate polyobject
-      Polyobj_MoveOnLoad(po, angle, spawnSpot.x, spawnSpot.y);
+      Polyobj_MoveOnLoad(po, angle, pt.x, pt.y);
    }
 }
 
-static void P_ArchivePolyObjects(CSaveArchive &arc)
+static void P_ArchivePolyObjects(SaveArchive &arc)
 {
    int i;
 
@@ -1503,66 +860,45 @@ static void P_ArchivePolyObjects(CSaveArchive &arc)
 //
 // P_ArchiveSmallAMX
 //
-// Saves the size and contents of a Small AMX's data segment.
-//
-#ifndef EE_NO_SMALL_SUPPORT
-static void P_ArchiveSmallAMX(AMX *amx)
-{
-   long amx_size = 0;
-   byte *data;
-
-   // get both size of and pointer to data segment
-   data = SM_GetAMXDataSegment(amx, &amx_size);
-
-   // check for enough room to save both the size and 
-   // the whole data segment
-   CheckSaveGame(sizeof(long) + amx_size);
-
-   // write the size
-   memcpy(save_p, &amx_size, sizeof(long));
-   save_p += sizeof(long);
-
-   // write the data segment
-   memcpy(save_p, data, amx_size);
-   save_p += amx_size;
-}
-#endif
-
-//
-// P_UnArchiveSmallAMX
-//
-// Restores a Small AMX's data segment to the archived state.
+// Saves the size and contents of a Small AMX's data segment, or
+// restores it to the saved state.
+// When loading:
 // The existing data segment will be checked for size consistency
 // with the archived one, and it'll bomb out if there's a conflict.
 // This will avoid most problems with maps that have had their
 // scripts recompiled since last being used.
 //
 #ifndef EE_NO_SMALL_SUPPORT
-static void P_UnArchiveSmallAMX(AMX *amx)
+static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
 {
-   long cur_amx_size, arch_amx_size;
+   uint32_t amx_size = 0, arch_amx_size;
+   long temp_size;
    byte *data;
 
-   // get pointer to AMX data segment and current data segment size
-   data = SM_GetAMXDataSegment(amx, &cur_amx_size);
+   // get both size of and pointer to data segment
+   data = SM_GetAMXDataSegment(amx, &temp_size);
 
-   // read the archived size
-   memcpy(&arch_amx_size, save_p, sizeof(long));
-   save_p += sizeof(long);
+   amx_size = (uint32_t)temp_size;
 
-   // make sure the archived data segment is consistent with the
-   // existing one (which was loaded by P_SetupLevel, or always
-   // exists in the case of a gamescript)
-
-   if(arch_amx_size != cur_amx_size)
+   // read/write the size
+   if(arc.isSaving())
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveSmallAMX: data segment consistency error\n");
-   }
+      arc << amx_size;
 
-   // copy the archived data segment into the VM
-   memcpy(data, save_p, arch_amx_size);
-   save_p += arch_amx_size;
+      // write the data segment
+      arc.getSaveFile()->Write(data, amx_size);
+   }
+   else
+   {
+      arc << arch_amx_size;
+      if(arch_amx_size != amx_size)
+      {
+         I_FatalError(I_ERR_KILL,
+                      "P_ArchiveSmallAMX: data segment consistency error\n");
+      }
+
+      arc.getLoadFile()->Read(data, arch_amx_size);
+   }
 }
 #endif
 
@@ -1580,64 +916,57 @@ static void P_UnArchiveSmallAMX(AMX *amx)
 // FIXME: Order may be important after all, at least for the
 // -recordfrom command.
 //
-static void P_ArchiveCallbacks(void)
+static void P_ArchiveCallbacks(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
    int callback_count = 0;
-   sc_callback_t *list = SM_GetCallbackList();
-   sc_callback_t *rover;
-
-   for(rover = list->next; rover != list; rover = rover->next)
-      ++callback_count;
-
-   // check for enough room for all the callbacks plus an end marker
-   CheckSaveGame(callback_count * sizeof(sc_callback_t) + sizeof(char));
-
-   // save off the callbacks
-   for(rover = list->next; rover != list; rover = rover->next)
-   {
-      memcpy(save_p, rover, sizeof(sc_callback_t));
-      save_p += sizeof(sc_callback_t);
-   }
-
-   // save an end marker
-   *save_p++ = SC_VM_END;
-#endif
-}
-
-//
-// P_UnArchiveCallbacks
-//
-// Kills any existing Small callbacks, then unarchives and links
-// in any saved callbacks.
-//
-// FIXME: restore callbacks to the order they were saved in.
-// Why? -recordfrom command.
-//
-static void P_UnArchiveCallbacks(void)
-{
-#ifndef EE_NO_SMALL_SUPPORT
-   // kill any existing callbacks
-   SM_RemoveCallbacks(-1);
-
-   // read until the end marker is hit
-   while(*save_p != SC_VM_END)
-   {
-      sc_callback_t *newCallback = (sc_callback_t *)(malloc(sizeof(sc_callback_t)));
-
-      memcpy(newCallback, save_p, sizeof(sc_callback_t));
-
-      // nullify pointers for maximum safety
-      newCallback->next = newCallback->prev = NULL;
-
-      // put this callback into the callback list
-      SM_LinkCallback(newCallback);
-
-      save_p += sizeof(sc_callback_t);
-   }
    
-   // move past the last sentinel byte
-   ++save_p;
+   if(arc.isSaving())
+   {
+      sc_callback_t *list = SM_GetCallbackList();
+      sc_callback_t *rover;
+
+      for(rover = list->next; rover != list; rover = rover->next)
+         ++callback_count;
+
+      // save number of callbacks
+      arc << callback_count;
+
+      // save off the callbacks
+      for(rover = list->next; rover != list; rover = rover->next)
+      {
+         int8_t vm = rover->vm;
+
+         arc << rover->flags << rover->scriptNum << vm
+             << rover->wait_data << rover->wait_type;
+      }
+   }
+   else
+   {
+      // kill any existing callbacks
+      SM_RemoveCallbacks(-1);
+
+      // get number of callbacks
+      arc << callback_count;
+
+      // read until the end marker is hit
+      for(int i = 0; i < callback_count; i++)
+      {
+         sc_callback_t *newCallback = (sc_callback_t *)(malloc(sizeof(sc_callback_t)));
+         int8_t vm;
+
+         arc << newCallback->flags << newCallback->scriptNum << vm 
+             << newCallback->wait_data << newCallback->wait_type;
+
+         newCallback->vm = vm;
+
+         // nullify pointers for maximum safety
+         newCallback->next = newCallback->prev = NULL;
+
+         // put this callback into the callback list
+         SM_LinkCallback(newCallback);
+      }
+   }
 #endif
 }
 
@@ -1653,63 +982,39 @@ static void P_UnArchiveCallbacks(void)
 // saves them if they exist.  Any scheduled callbacks are then
 // saved.
 //
-void P_ArchiveScripts(void)
-{
-#ifndef EE_NO_SMALL_SUPPORT
-   CheckSaveGame(2 * sizeof(unsigned char));
-
-   // save gamescript/levelscript presence flags
-   *save_p++ = (unsigned char)gameScriptLoaded;
-   *save_p++ = (unsigned char)levelScriptLoaded;
-
-   // save gamescript
-   if(gameScriptLoaded)
-      P_ArchiveSmallAMX(&GameScript.smallAMX);
-
-   // save levelscript
-   if(levelScriptLoaded)
-      P_ArchiveSmallAMX(&LevelScript.smallAMX);
-
-   // save callbacks
-   P_ArchiveCallbacks();
-#endif
-}
-
-//
-// P_UnArchiveScripts
-//
-// Unarchives any saved gamescript or levelscript. If one was
-// saved, but the corresponding script VM doesn't currently exist,
-// there's a script state consistency problem, and the game will
-// bomb out.  Any archived callbacks are then restored.
-//
-void P_UnArchiveScripts(void)
+void P_ArchiveScripts(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
    boolean hadGameScript, hadLevelScript;
 
-   // get saved presence flags
-   hadGameScript  = *save_p++;
-   hadLevelScript = *save_p++;
+   if(arc.isSaving())
+   {
+      hadGameScript  = gameScriptLoaded;
+      hadLevelScript = levelScriptLoaded;
+   }
+
+   arc << hadGameScript;
+   arc << hadLevelScript;
 
    // check for presence consistency
-   if((hadGameScript && !gameScriptLoaded) ||
+   if(arc.isLoading() &&
+      (hadGameScript && !gameScriptLoaded) ||
       (hadLevelScript && !levelScriptLoaded))
    {
       I_FatalError(I_ERR_KILL,
          "P_UnArchiveScripts: vm presence inconsistency\n");
    }
 
-   // restore gamescript
+   // save gamescript
    if(hadGameScript)
-      P_UnArchiveSmallAMX(&GameScript.smallAMX);
+      P_ArchiveSmallAMX(arc, &GameScript.smallAMX);
 
-   // restore levelscript
+   // save levelscript
    if(hadLevelScript)
-      P_UnArchiveSmallAMX(&LevelScript.smallAMX);
+      P_ArchiveSmallAMX(arc, &LevelScript.smallAMX);
 
-   // restore callbacks
-   P_UnArchiveCallbacks();
+   // save callbacks
+   P_ArchiveCallbacks(arc);
 
    // TODO: execute load game event callbacks?
 #endif
@@ -1720,78 +1025,57 @@ void P_UnArchiveScripts(void)
 // haleyjd 10/17/06: Sound Sequences
 //
 
-static void P_ArchiveSndSeq(SndSeq_t *seq)
+static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
 {
    int twizzle;
 
-   CheckSaveGame(33 + 7*sizeof(int));
-
    // save name of EDF sequence
-   memcpy(save_p, seq->sequence->name, 33);
-   save_p += 33;
+   arc.ArchiveCString(seq->sequence->name, 33);
 
    // twizzle command pointer
    twizzle = seq->cmdPtr - seq->sequence->commands;
-   memcpy(save_p, &twizzle, sizeof(int));
-   save_p += sizeof(int);
+   arc << twizzle;
 
    // save origin type
-   memcpy(save_p, &seq->originType, sizeof(int));
-   save_p += sizeof(int);
+   arc << seq->originType;
 
    // depending on origin type, either save the origin index (sector or polyobj
-   // number), or an mobj_t number. This differentiation is necessary because 
-   // degenmobj_t are not covered by mobj numbering.
+   // number), or an Mobj number. This differentiation is necessary because 
+   // degenMobj are not covered by mobj numbering.
    switch(seq->originType)
    {
    case SEQ_ORIGIN_SECTOR_F:
    case SEQ_ORIGIN_SECTOR_C:
    case SEQ_ORIGIN_POLYOBJ:
-      memcpy(save_p, &seq->originIdx, sizeof(int));
+      arc << seq->originIdx;
       break;
    case SEQ_ORIGIN_OTHER:
-      twizzle = P_MobjNum(seq->origin); // it better be a normal mobj_t here!
-      memcpy(save_p, &twizzle, sizeof(int));
+      twizzle = P_NumForThinker(seq->origin); // it better be a normal Mobj here!
+      arc << twizzle;
       break;
    default:
       I_Error("P_ArchiveSndSeq: unknown sequence origin type %d\n", 
               seq->originType);
    }
 
-   save_p += sizeof(int);
-
-   // save delay counter
-   memcpy(save_p, &seq->delayCounter, sizeof(int));
-   save_p += sizeof(int);
-
-   // save current volume level
-   memcpy(save_p, &seq->volume, sizeof(int));
-   save_p += sizeof(int);
-
-   // save current attenuation parameter
-   memcpy(save_p, &seq->attenuation, sizeof(int));
-   save_p += sizeof(int);
-
-   // save flags
-   memcpy(save_p, &seq->flags, sizeof(int));
-   save_p += sizeof(int);
+   // save basic data
+   arc << seq->delayCounter << seq->volume << seq->attenuation << seq->flags;
 }
 
-static void P_UnArchiveSndSeq(void)
+static void P_UnArchiveSndSeq(SaveArchive &arc)
 {
    SndSeq_t  *newSeq;
    sector_t  *s;
    polyobj_t *po;
-   mobj_t    *mo;
+   Mobj    *mo;
    int twizzle;
    char name[33];
 
    // allocate a new sound sequence
-   newSeq = (SndSeq_t *)(Z_Malloc(sizeof(SndSeq_t), PU_LEVEL, NULL));
+   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
 
    // get corresponding EDF sequence
-   memcpy(name, save_p, 33);
-   save_p += 33;
+   arc.ArchiveCString(name, 33);
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
    {
@@ -1803,17 +1087,14 @@ static void P_UnArchiveSndSeq(void)
    newSeq->currentSound = NULL; // not currently playing a sound
 
    // reset command pointer
-   memcpy(&twizzle, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << twizzle;
    newSeq->cmdPtr = newSeq->sequence->commands + twizzle;
 
    // get origin type
-   memcpy(&newSeq->originType, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << newSeq->originType;
 
    // get twizzled origin index
-   memcpy(&twizzle, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << twizzle;
 
    // restore pointer to origin
    switch(newSeq->originType)
@@ -1821,12 +1102,12 @@ static void P_UnArchiveSndSeq(void)
    case SEQ_ORIGIN_SECTOR_F:
       s = sectors + twizzle;
       newSeq->originIdx = twizzle;
-      newSeq->origin = (mobj_t *)&s->soundorg;
+      newSeq->origin = &s->soundorg;
       break;
    case SEQ_ORIGIN_SECTOR_C:
       s = sectors + twizzle;
       newSeq->originIdx = twizzle;
-      newSeq->origin = (mobj_t *)&s->csoundorg;
+      newSeq->origin = &s->csoundorg;
       break;
    case SEQ_ORIGIN_POLYOBJ:
       if(!(po = Polyobj_GetForNum(twizzle)))
@@ -1836,10 +1117,10 @@ static void P_UnArchiveSndSeq(void)
             twizzle);
       }
       newSeq->originIdx = po->id;
-      newSeq->origin = (mobj_t *)&po->spawnSpot;
+      newSeq->origin = &po->spawnSpot;
       break;
    case SEQ_ORIGIN_OTHER:
-      mo = P_MobjForNum((unsigned int)twizzle);
+      mo = dynamic_cast<Mobj *>(P_ThinkerForNum((unsigned int)twizzle));
       newSeq->originIdx = -1;
       newSeq->origin = mo;
       break;
@@ -1850,21 +1131,10 @@ static void P_UnArchiveSndSeq(void)
    }
 
    // restore delay counter
-   memcpy(&newSeq->delayCounter, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << newSeq->delayCounter << newSeq->volume << newSeq->attenuation
+       << newSeq->flags;
 
-   // restore current volume
-   memcpy(&newSeq->volume, save_p, sizeof(int));
-   save_p += sizeof(int);
-
-   // restore current attenuation
-   memcpy(&newSeq->attenuation, save_p, sizeof(int));
-   save_p += sizeof(int);
-
-   // restore flags and remove looping flag if present
-   memcpy(&newSeq->flags, save_p, sizeof(int));
-   save_p += sizeof(int);
-
+   // remove looping flag if present
    newSeq->flags &= ~SEQ_FLAG_LOOPING;
 
    // let the sound sequence code take care of putting this sequence into its 
@@ -1873,41 +1143,38 @@ static void P_UnArchiveSndSeq(void)
    S_SetSequenceStatus(newSeq);
 }
 
-void P_ArchiveSoundSequences(void)
+void P_ArchiveSoundSequences(SaveArchive &arc)
 {
-   SndSeq_t *seq = SoundSequences;
+   DLListItem<SndSeq_t> *item = SoundSequences;
    int count = 0;
 
-   CheckSaveGame(sizeof(int));
-
    // count active sound sequences (+1 if there's a running enviroseq)
-   while(seq)
+   while(item)
    {
       ++count;
-      seq = (SndSeq_t *)(seq->link.next);
+      item = item->dllNext;
    }
 
    if(EnviroSequence)
       ++count;
 
    // save count
-   memcpy(save_p, &count, sizeof(int));
-   save_p += sizeof(int);
+   arc << count;
 
    // save all the normal sequences
-   seq = SoundSequences;
-   while(seq)
+   item = SoundSequences;
+   while(item)
    {
-      P_ArchiveSndSeq(seq);
-      seq = (SndSeq_t *)(seq->link.next);
+      P_ArchiveSndSeq(arc, item->dllObject);
+      item = item->dllNext;
    }
 
    // save enviro sequence
    if(EnviroSequence)
-      P_ArchiveSndSeq(EnviroSequence);
+      P_ArchiveSndSeq(arc, EnviroSequence);
 }
 
-void P_UnArchiveSoundSequences(void)
+void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
    int i, count;
 
@@ -1915,13 +1182,12 @@ void P_UnArchiveSoundSequences(void)
    S_SequenceGameLoad();
 
    // get sequence count
-   memcpy(&count, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << count;
 
    // unarchive all sequences; the sound sequence code takes care of
    // distinguishing any special sequences (such as environmental) for us.
    for(i = 0; i < count; ++i)
-      P_UnArchiveSndSeq();
+      P_UnArchiveSndSeq(arc);
 }
 
 //============================================================================
@@ -1935,41 +1201,54 @@ void P_UnArchiveSoundSequences(void)
 // never did so after loading the save. No longer!
 //
 
-void P_ArchiveButtons(void)
+void P_ArchiveButtons(SaveArchive &arc)
 {
-   CheckSaveGame(sizeof(int) + numbuttonsalloc * sizeof(button_t));
-
    // first, save number of buttons
-   memcpy(save_p, &numbuttonsalloc, sizeof(int));
-   save_p += sizeof(int);
+   arc << numbuttonsalloc;
 
    // Save the button_t's directly. They no longer contain any pointers due to
    // my recent rewrite of the button code.
    if(numbuttonsalloc)
    {
-      memcpy(save_p, buttonlist, numbuttonsalloc * sizeof(button_t));
-      save_p += numbuttonsalloc * sizeof(button_t);
+      for(int i = 0; i < numbuttonsalloc; i++)
+      {
+         int where = (int)(buttonlist[i].where);
+
+         arc << buttonlist[i].btexture << buttonlist[i].btimer
+             << buttonlist[i].dopopout << buttonlist[i].line
+             << buttonlist[i].side     << where;
+      }
    }
 }
 
-void P_UnArchiveButtons(void)
+void P_UnArchiveButtons(SaveArchive &arc)
 {
    int numsaved;
 
    // get number allocated when the game was saved
-   memcpy(&numsaved, save_p, sizeof(int));
-   save_p += sizeof(int);
+   arc << numsaved;
 
    // if not equal, we need to realloc buttonlist
-   if(numsaved != numbuttonsalloc)
+   if(numsaved > 0 && numsaved != numbuttonsalloc)
    {
       buttonlist = (button_t *)(realloc(buttonlist, numsaved * sizeof(button_t)));
       numbuttonsalloc = numsaved;
    }
 
    // copy the buttons from the save
-   memcpy(buttonlist, save_p, numsaved * sizeof(button_t));
-   save_p += numsaved * sizeof(button_t);
+   if(numsaved)
+   {
+      for(int i = 0; i < numbuttonsalloc; i++)
+      {
+         int where;
+         
+         arc << buttonlist[i].btexture << buttonlist[i].btimer
+             << buttonlist[i].dopopout << buttonlist[i].line
+             << buttonlist[i].side     << where;
+
+         buttonlist[i].where = (bwhere_e)where;
+      }
+   }
 }
 
 //=============================================================================
@@ -2000,13 +1279,13 @@ void P_UnArchiveACS(void)
 
 void P_SaveCurrentLevel(char *filename, char *description)
 {
-   int  length, i;
+   int i;
    char name2[VERSIONSIZE];
    const char *fn;
-   COutBuffer savefile;
-   CSaveArchive arc(&savefile);
+   OutBuffer savefile;
+   SaveArchive arc(&savefile);
 
-   if(!savefile.CreateFile(filename, 512*1024, COutBuffer::NENDIAN))
+   if(!savefile.CreateFile(filename, 512*1024, OutBuffer::NENDIAN))
    {
       const char *str =
          errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
@@ -2029,11 +1308,16 @@ void P_SaveCurrentLevel(char *filename, char *description)
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
-      arc << compatibility << gameskill << inmasterlevels;
+      int tempskill = (int)gameskill;
+      
+      arc << compatibility << tempskill << inmasterlevels;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
-         arc << levelmapname[i];
+      {
+         int8_t lvc = levelmapname[i];
+         arc << lvc;
+      }
 
       // haleyjd 06/16/10: support for saving/loading levels in managed wad
       // directories.
@@ -2044,7 +1328,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
          // save length of managed directory filename string and
          // managed directory filename string
-         arc.ArchiveLString(fn, len);
+         arc.WriteLString(fn, len);
       }
       else
       {
@@ -2054,10 +1338,12 @@ void P_SaveCurrentLevel(char *filename, char *description)
       }
   
       // killough 3/16/98, 12/98: store lump name checksum
+      // FIXME/TODO: Will be simple with future save format
+      /*
       uint64_t checksum = G_Signature(g_dir);
       savefile.Write(&checksum, sizeof(checksum));
 
-      // killough 3/16/98: store pwad filenames in savegame      
+      // killough 3/16/98: store pwad filenames in savegame  
       for(wfileadd_t *file = wadfiles; file->filename; ++file)
       {
          const char *fn = file->filename;
@@ -2065,18 +1351,20 @@ void P_SaveCurrentLevel(char *filename, char *description)
          savefile.WriteUint8((uint8_t)'\n');
       }
       savefile.WriteUint8(0);
+      */
   
       for(i = 0; i < MAXPLAYERS; i++)
          arc << playeringame[i];
 
       for(; i < MIN_MAXPLAYERS; i++)         // killough 2/28/98
       {
-         int dummy = 0;
+         boolean dummy = 0;
          arc << dummy;
       }
 
       // jff 3/17/98 save idmus state
-      arc << idmusnum << GameType;
+      int tempGameType = (int)GameType;
+      arc << idmusnum << tempGameType;
 
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
@@ -2094,25 +1382,24 @@ void P_SaveCurrentLevel(char *filename, char *description)
       // killough 3/22/98: add Z_CheckHeap after each call to ensure consistency
       // haleyjd 07/06/09: just Z_CheckHeap after the end. This stuff works by now.
    
-      P_NumberObjects();    // turn ptrs to numbers
+      P_NumberThinkers();    // turn ptrs to numbers
 
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
       P_ArchivePolyObjects(arc); // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
-      P_ArchiveSpecials();
-      P_ArchiveRNG();    // killough 1/18/98: save RNG information
+      P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
       P_ArchiveMap(arc);    // killough 1/22/98: save automap information
-      P_ArchiveScripts();   // sf: archive scripts
-      P_ArchiveSoundSequences();
-      P_ArchiveButtons();
+      P_ArchiveScripts(arc);   // sf: archive scripts
+      P_ArchiveSoundSequences(arc);
+      P_ArchiveButtons(arc);
 
-      P_DeNumberObjects();
+      P_DeNumberThinkers();
 
       uint8_t cmarker = 0xE6; // consistancy marker
       arc << cmarker; 
    }
-   catch(CBufferedIOException)
+   catch(BufferedIOException)
    {
       // An IO error occurred while trying to save.
       const char *str =
@@ -2134,6 +1421,242 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
    if(!hub_changelevel) // sf: no 'game saved' message for hubs
       doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
+}
+
+//============================================================================
+// 
+// Loading -- Main Routine
+//
+
+void P_LoadGame(const char *filename)
+{
+   int i;
+   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
+   //uint64_t checksum, rchecksum;
+   int len;
+   InBuffer loadfile;
+   SaveArchive arc(&loadfile);
+
+   if(!loadfile.OpenFile(filename, 512*1024, OutBuffer::NENDIAN))
+   {
+      C_Printf(FC_ERROR "Failed to load savegame %s\n", filename);
+      C_SetConsole();
+      return;
+   }
+
+   // Enable buffered IO exceptions
+   loadfile.setThrowing(true);
+
+   try
+   {
+      // skip description
+      char throwaway[SAVESTRINGSIZE];
+
+      arc.ArchiveCString(throwaway, SAVESTRINGSIZE);
+      
+      // killough 2/22/98: "proprietary" version string :-)
+      sprintf(vcheck, VERSIONID, version);
+
+      arc.ArchiveCString(vread, VERSIONSIZE);
+   
+      // killough 2/22/98: Friendly savegame version difference message
+      // FIXME/TODO: version verification
+      if(strncmp(vread, vcheck, VERSIONSIZE))
+         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+
+      // killough 2/14/98: load compatibility mode
+      // haleyjd 06/16/10: reload "inmasterlevels" state
+      int tempskill;
+      arc << compatibility << tempskill << inmasterlevels;
+
+      gameskill = (skill_t)tempskill;
+      
+      demo_version    = version;    // killough 7/19/98: use this version's id
+      demo_subversion = subversion; // haleyjd 06/17/01   
+  
+      // sf: use string rather than episode, map
+      for(i = 0; i < 8; i++)
+      {
+         int8_t lvc;
+         arc << lvc;
+         gamemapname[i] = (char)lvc;
+      }
+      gamemapname[8] = '\0'; // ending NULL
+
+      G_SetGameMap(); // get gameepisode, map
+
+      // start out g_dir pointing at w_GlobalDir again
+      g_dir = &w_GlobalDir;
+
+      // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
+      // directory, we need to restore the managed directory to g_dir when loading
+      // the game here. When this is the case, the file name of the managed directory
+      // has been saved into the save game.
+      arc << len;
+
+      if(len)
+      {
+         waddir_t *dir;
+
+         // read a name of len bytes 
+         char *fn = (char *)(calloc(1, len));
+         arc.ArchiveCString(fn, (size_t)len);
+
+         // Try to get an existing managed wad first. If none such exists, try
+         // adding it now. If that doesn't work, the normal error message appears
+         // for a missing wad.
+         // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
+         if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
+            g_dir = d_dir = dir;
+
+         // done with temporary file name
+         free(fn);
+      }
+   
+      // killough 3/16/98, 12/98: check lump name checksum
+      // FIXME/TODO: advanced savegame verification
+      /*
+      checksum = G_Signature(g_dir);
+
+      loadfile.Read(&rchecksum, sizeof(rchecksum));
+
+      if(memcmp(&checksum, &rchecksum, sizeof checksum))
+      {
+         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
+         strcpy(msg,"Incompatible Savegame!!!\n");
+         if(save_p[sizeof checksum])
+            strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
+         strcat(msg, "\nAre you sure?");
+         C_Puts(msg);
+         G_LoadGameErr(msg);
+         free(msg);
+         return;
+      }
+      */
+
+      for(i = 0; i < MAXPLAYERS; ++i)
+         arc << playeringame[i];
+
+      for(; i < MIN_MAXPLAYERS; i++) // killough 2/28/98
+      {
+         boolean dummy = 0;
+         arc << dummy;
+      }
+
+      // jff 3/17/98 restore idmus music
+      // jff 3/18/98 account for unsigned byte
+      // killough 11/98: simplify
+      // haleyjd 04/14/03: game type
+      // note: don't set DefaultGameType from save games
+      int tempGameType;
+      arc << idmusnum << tempGameType;
+
+      GameType = (gametype_t)tempGameType;
+
+      /* cph 2001/05/23 - Must read options before we set up the level */
+      byte options[GAME_OPTION_SIZE];
+      loadfile.Read(options, sizeof(options));
+
+      G_ReadOptions(options);
+ 
+      // load a base level
+      // sf: in hubs, use g_doloadlevel instead of g_initnew
+      if(hub_changelevel)
+         G_DoLoadLevel();
+      else
+         G_InitNew(gameskill, gamemapname);
+
+      // killough 3/1/98: Read game options
+      // killough 11/98: move down to here
+   
+      // cph - MBF needs to reread the savegame options because 
+      // G_InitNew rereads the WAD options. The demo playback code does 
+      // this too.
+      G_ReadOptions(options);
+
+      /*
+      //killough 11/98: save entire word
+      arc << leveltime;
+   
+      // killough 11/98: save revenant tracer state
+      uint8_t tracerState = (uint8_t)((gametic-basetic) & 255);
+      arc << tracerState;
+
+      arc << dmflags;
+      */
+
+
+      // get the times
+      arc << leveltime;
+
+      // killough 11/98: load revenant tracer state
+      uint8_t tracerState;
+      arc << tracerState;
+      basetic = gametic - tracerState;
+
+      // haleyjd 04/14/03: load dmflags
+      arc << dmflags;
+
+      // haleyjd 07/06/09: prepare ACS for loading
+      ACS_PrepareForLoad();
+
+      // dearchive all the modifications
+      P_ArchivePlayers(arc);
+      P_ArchiveWorld(arc);
+      P_ArchivePolyObjects(arc);    // haleyjd 03/27/06
+      P_ArchiveThinkers(arc);
+      P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information
+      P_ArchiveMap(arc);            // killough 1/22/98: load automap information
+      P_ArchiveScripts(arc);        // sf: scripting
+      P_UnArchiveSoundSequences(arc);
+      P_UnArchiveButtons(arc);
+
+      P_FreeThinkerTable();
+
+      uint8_t cmarker;
+      arc << cmarker;
+      if(cmarker != 0xE6)
+         I_FatalError(I_ERR_KILL, "Bad savegame: last byte is 0x%x\n", cmarker);
+
+      // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
+      Z_CheckHeap(); 
+   }
+   catch(...)
+   {
+      // FIXME/TODO: I hate fatal errors, don't know what to do right now.
+      I_FatalError(I_ERR_KILL, "P_LoadGame: Savegame read error\n");
+   }
+
+   loadfile.Close();
+
+   if (setsizeneeded)
+      R_ExecuteSetViewSize();
+   
+   // draw the pattern into the back screen
+   R_FillBackScreen();
+
+   // haleyjd 02/09/10: wake up status bar again
+   ST_Start();
+
+   // killough 12/98: support -recordfrom and -loadgame -playdemo
+   if(!command_loadgame)
+      singledemo = false;         // Clear singledemo flag if loading from menu
+   else if(singledemo)
+   {
+      gameaction = ga_loadgame; // Mark that we're loading a game before demo
+      G_DoPlayDemo();           // This will detect it and won't reinit level
+   }
+   else       // Loading games from menu isn't allowed during demo recordings,
+      if(demorecording) // So this can only possibly be a -recordfrom command.
+         G_BeginRecording();// Start the -recordfrom, since the game was loaded.
+
+   // sf: if loading a hub level, restore position relative to sector
+   //  for 'seamless' travel between levels
+   if(hub_changelevel) 
+      P_RestorePlayerPosition();
+
+   // haleyjd 01/07/07: run deferred ACS scripts
+   ACS_RunDeferredScripts();
 }
 
 //----------------------------------------------------------------------------

@@ -30,7 +30,7 @@
 
 #include "doomdef.h"
 
-class mobj_t;
+class Mobj;
 
 typedef enum
 {
@@ -160,7 +160,7 @@ struct portal_t
       horizondata_t  horizon;
       anchordata_t   anchor;
       linkdata_t     link;
-      mobj_t         *camera;
+      Mobj         *camera;
    } data;
 
    // See: portalflag_e
@@ -176,7 +176,7 @@ struct portal_t
    int16_t tainted;
 };
 
-portal_t *R_GetSkyBoxPortal(mobj_t *camera);
+portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum);
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum);
 

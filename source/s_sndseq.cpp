@@ -36,14 +36,14 @@
 
 // Global data
 
-CDLListItem<SndSeq_t> *SoundSequences; // head of running sndseq list
+DLListItem<SndSeq_t> *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
 
 // Macros
 
 #define SECTOR_ORIGIN(s, b) \
-   (mobj_t *)((b) ? &((s)->csoundorg) : &((s)->soundorg))
+   ((b) ? &((s)->csoundorg) : &((s)->soundorg))
 
 //
 // S_CheckSequenceLoop
@@ -51,9 +51,9 @@ SndSeq_t *EnviroSequence; // currently playing environmental sequence
 // Returns true if the thing is playing a sequence and the sequence is looping,
 // and false in any other circumstance.
 //
-boolean S_CheckSequenceLoop(mobj_t *mo)
+boolean S_CheckSequenceLoop(PointThinker *mo)
 {
-   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
+   DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
    while(link)
    {
@@ -83,9 +83,9 @@ boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling)
 //
 // Stops any sound sequence being played by the given object.
 //
-void S_StopSequence(mobj_t *mo)
+void S_StopSequence(PointThinker *mo)
 {
-   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
+   DLListItem<SndSeq_t> *link = SoundSequences, *next;
    SndSeq_t *curSeq;
 
    while(link)
@@ -123,9 +123,9 @@ void S_StopSequence(mobj_t *mo)
 // cutting off the currently playing sound. This is needed by doors when
 // they bounce, or weird stuff happens.
 //
-void S_SquashSequence(mobj_t *mo)
+void S_SquashSequence(PointThinker *mo)
 {
-   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
+   DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
    while(link)
    {
@@ -149,9 +149,9 @@ void S_SquashSequence(mobj_t *mo)
 // Not only is the stop sound not played, but any sound being currently played
 // is cut off regardless of the nostopcutoff value.
 //
-void S_KillSequence(mobj_t *mo)
+void S_KillSequence(PointThinker *mo)
 {
-   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
+   DLListItem<SndSeq_t> *link = SoundSequences, *next;
 
    while(link)
    {
@@ -198,7 +198,7 @@ void S_SquashSectorSequence(sector_t *s, boolean floorOrCeiling)
 //
 void S_StopPolySequence(polyobj_t *po)
 {
-   S_StopSequence((mobj_t *)&po->spawnSpot);
+   S_StopSequence(&po->spawnSpot);
 }
 
 //
@@ -208,7 +208,7 @@ void S_StopPolySequence(polyobj_t *po)
 // altered by sound sequence redirects, depending on the sequence activation
 // type.
 //
-void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOriginType,
                         int seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
@@ -305,7 +305,7 @@ void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 //
 void S_StartPolySequence(polyobj_t *po)
 {
-   S_StartSequenceNum((mobj_t *)&po->spawnSpot, po->seqId, SEQ_DOOR, 
+   S_StartSequenceNum(&po->spawnSpot, po->seqId, SEQ_DOOR, 
                       SEQ_ORIGIN_POLYOBJ, po->id);
 }
 
@@ -314,7 +314,7 @@ void S_StartPolySequence(polyobj_t *po)
 //
 // Starts the named sound sequence.
 //
-void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType, 
+void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginType, 
                          int seqOriginIdx)
 {
    ESoundSeq_t *edfSeq;
@@ -525,11 +525,11 @@ static void S_StopEnviroSequence(void);
 //
 void S_RunSequences(void)
 {
-   CDLListItem<SndSeq_t> *link = SoundSequences;
+   DLListItem<SndSeq_t> *link = SoundSequences;
 
    while(link)
    {
-      CDLListItem<SndSeq_t> *next = link->dllNext;
+      DLListItem<SndSeq_t> *next = link->dllNext;
 
       S_RunSequence(link->dllObject);
 
@@ -576,7 +576,7 @@ EnviroSeqMgr_t EnviroSeqManager =
 
 static MobjCollection enviroSpots;
 static int enviroTics;
-static mobj_t *nextEnviroSpot;
+static Mobj *nextEnviroSpot;
 
 static SndSeq_t enviroSeq;
 
@@ -737,7 +737,7 @@ void S_SetSequenceStatus(SndSeq_t *seq)
 //
 void S_SequenceGameLoad(void)
 {
-   CDLListItem<SndSeq_t> *link;
+   DLListItem<SndSeq_t> *link;
 
    // kill all running sequences
    // note the loop restarts from the beginning each time because S_KillSequence

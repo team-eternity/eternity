@@ -162,22 +162,22 @@ struct sector_t
    int16_t tag;
    int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
    int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
-   mobj_t *soundtarget;     // thing that made a sound (or null)
+   Mobj *soundtarget;     // thing that made a sound (or null)
    int blockbox[4];         // mapblock bounding box for height changes
-   CPointThinker soundorg;  // origin for any sounds played by the sector
-   CPointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
+   PointThinker soundorg;  // origin for any sounds played by the sector
+   PointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
-   mobj_t *thinglist;       // list of mobjs in sector
+   Mobj *thinglist;       // list of mobjs in sector
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
-   // these fields used to be in mobj_t, but presented performance problems
+   // these fields used to be in Mobj, but presented performance problems
    // when processed as mobj properties. Fix is to make them sector properties.
    int friction, movefactor;
 
    // thinker_t for reversable actions
-   CThinker *floordata;    // jff 2/22/98 make thinkers on
-   CThinker *ceilingdata;  // floors, ceilings, lighting,
-   CThinker *lightingdata; // independent of one another
+   Thinker *floordata;    // jff 2/22/98 make thinkers on
+   Thinker *ceilingdata;  // floors, ceilings, lighting,
+   Thinker *lightingdata; // independent of one another
 
    // jff 2/26/98 lockout machinery for stairbuilding
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally
@@ -249,7 +249,7 @@ struct sector_t
    // haleyjd 09/24/06: sound sequence id
    int sndSeqID;
 
-   CDLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
+   DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
    // haleyjd 07/04/07: Happy July 4th :P
    // Angles for flat rotation!
@@ -338,7 +338,7 @@ struct line_t
    void *specialdata;      // thinker_t for reversable actions
    int tranlump;           // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
-   CPointThinker soundorg; // haleyjd 04/19/09: line sound origin
+   PointThinker soundorg; // haleyjd 04/19/09: line sound origin
 
    // SoM 12/10/03: wall portals
    int      pflags;
@@ -371,7 +371,7 @@ struct subsector_t
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   int    numlines, firstline;
 
-  CDLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
 };
 
 // phares 3/14/98
@@ -381,7 +381,7 @@ struct subsector_t
 // There are two threads that flow through these nodes. The first thread
 // starts at touching_thinglist in a sector_t and flows through the m_snext
 // links to find all mobjs that are entirely or partially in the sector.
-// The second thread starts at touching_sectorlist in an mobj_t and flows
+// The second thread starts at touching_sectorlist in an Mobj and flows
 // through the m_tnext links to find all sectors a thing touches. This is
 // useful when applying friction or push effects to sectors. These effects
 // can be done as thinkers that act upon all objects touching their sectors.
@@ -393,7 +393,7 @@ struct subsector_t
 typedef struct msecnode_s
 {
   sector_t          *m_sector; // a sector containing this object
-  mobj_t            *m_thing;  // this object
+  Mobj            *m_thing;  // this object
   struct msecnode_s *m_tprev;  // prev msecnode_t for this thing
   struct msecnode_s *m_tnext;  // next msecnode_t for this thing
   struct msecnode_s *m_sprev;  // prev msecnode_t for this sector

@@ -194,7 +194,7 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
    // 04/19/09: rewritten to use linedef sound origin
 
    // switch activation sound
-   S_StartSoundName((mobj_t *)&(line->soundorg), startsound);
+   S_StartSoundName((Mobj *)&(line->soundorg), startsound);
    
    // haleyjd 04/16/08: and thus dies one of the last static limits.
    // I_Error("P_StartButton: no button slots left!");
@@ -255,7 +255,7 @@ void P_RunButtons(void)
                   break;
                }
                
-               S_StartSoundName((mobj_t *)&(line->soundorg), "EE_SwitchOn");
+               S_StartSoundName((Mobj *)&(line->soundorg), "EE_SwitchOn");
             }
             
             // clear out the button
@@ -349,7 +349,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    }
 }
 
-extern void P_StartLineScript(line_t *line, mobj_t *thing);
+extern void P_StartLineScript(line_t *line, Mobj *thing);
 
 //
 // P_UseSpecialLine
@@ -361,7 +361,7 @@ extern void P_StartLineScript(line_t *line, mobj_t *thing);
 // Passed the thing using the line, the line being used, and the side used
 // Returns true if a thinker was created
 //
-boolean P_UseSpecialLine(mobj_t *thing, line_t *line, int side)
+boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
    boolean is_param = E_IsParamSpecial(line->special);

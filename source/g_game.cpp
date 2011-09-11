@@ -124,7 +124,6 @@ boolean         usergame;      // ok to save / end game
 boolean         timingdemo;    // if true, exit with report on completion
 boolean         fastdemo;      // if true, run at full speed -- killough
 boolean         nodrawers;     // for comparative timing purposes
-boolean         noblit;        // for comparative timing purposes
 int             startgametic;
 int             starttime;     // for comparative timing purposes
 boolean         deathmatch;    // only if started as net death
@@ -665,8 +664,6 @@ extern void R_InitPortals(void);
 //
 // G_DoLoadLevel
 //
-// [CG] Un-static'd.
-// static void G_DoLoadLevel(void)
 void G_DoLoadLevel(void)
 {
    int i;
@@ -1042,8 +1039,7 @@ static void G_SetCompatibility(void)
 // avenue should be pursued but it might be a good idea. The current
 // system being used to send them at startup is garbage.
 //
-
-static void G_DoPlayDemo(void)
+void G_DoPlayDemo(void)
 {
    skill_t skill;
    int i, episode, map;
@@ -1755,8 +1751,8 @@ static char *savename;
 // killough 5/15/98: add forced loadgames, which allow user to override checks
 //
 
-static boolean forced_loadgame = false;
-static boolean command_loadgame = false;
+boolean forced_loadgame = false;
+boolean command_loadgame = false;
 
 void G_ForcedLoadGame(void)
 {
@@ -1893,221 +1889,12 @@ static void G_DoSaveGame(void)
    savedescription[0] = 0;
 }
 
-static waddir_t *d_dir;
+waddir_t *d_dir;
 
 static void G_DoLoadGame(void)
 {
-   int i;
-   char vcheck[VERSIONSIZE];
-   uint64_t checksum;
-   int len;
-
    gameaction = ga_nothing;
-
-   // haleyjd 10/24/06: check for failure
-   if(M_ReadFile(savename, &savebuffer) == -1)
-   {
-      C_Printf(FC_ERROR "Failed to load savegame %s\n", savename);
-      C_SetConsole();
-      return;
-   }
-
-   //save_p = savebuffer + SAVESTRINGSIZE;
-
-   // skip the description field
-
-   // killough 2/22/98: "proprietary" version string :-)
-   sprintf(vcheck, VERSIONID, version);
-
-   // killough 2/22/98: Friendly savegame version difference message
-   if(!forced_loadgame && strncmp((const char *)save_p, vcheck, VERSIONSIZE))
-   {
-      G_LoadGameErr("Different Savegame Version!!!\n\nAre you sure?");
-      return;
-   }
-
-   // [CG] The network ID hashes need to be cleared.
-   CS_ResetNetIDs();
-
-   save_p += VERSIONSIZE;
-
-   // killough 2/14/98: load compatibility mode
-   compatibility = *save_p++;
-   demo_version = version;       // killough 7/19/98: use this version's id
-   demo_subversion = subversion; // haleyjd 06/17/01   
-   
-   gameskill = (skill_t)(*save_p++);
-
-   // haleyjd 06/16/10: reload "inmasterlevels" state
-   inmasterlevels = !!(*save_p++);
-
-   // sf: use string rather than episode, map
-
-   {
-      int i;
-
-      for(i = 0; i < 8; i++)
-         gamemapname[i] = *save_p++;
-      gamemapname[8] = '\0';        // ending NULL
-   }
-
-   G_SetGameMap();       // get gameepisode, map
-
-   // start out g_dir pointing at w_GlobalDir again
-   g_dir = &w_GlobalDir;
-
-   // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
-   // directory, we need to restore the managed directory to g_dir when loading
-   // the game here. When this is the case, the file name of the managed directory
-   // has been saved into the save game.
-   memcpy(&len, save_p, sizeof(len));
-   save_p += sizeof(len);
-
-   if(len)
-   {
-      waddir_t *dir;
-
-      // read a name of len bytes
-      char *fn = (char *)(calloc(1, len));
-      memcpy(fn, save_p, len);
-      save_p += len;
-
-      // Try to get an existing managed wad first. If none such exists, try
-      // adding it now. If that doesn't work, the normal error message appears
-      // for a missing wad.
-      // Note: set d_dir as well, so G_InitNew won't overwrite with w_GlobalDir!
-      if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
-         g_dir = d_dir = dir;
-
-      // done with temporary file name
-      free(fn);
-   }
-
-   if(!forced_loadgame)
-   {
-      // killough 3/16/98, 12/98: check lump name checksum
-      checksum = G_Signature(g_dir);
-
-      if(memcmp(&checksum, save_p, sizeof checksum))
-      {
-         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
-         strcpy(msg,"Incompatible Savegame!!!\n");
-         if(save_p[sizeof checksum])
-            strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
-         strcat(msg, "\nAre you sure?");
-         C_Puts(msg);
-         G_LoadGameErr(msg);
-         free(msg);
-         return;
-      }
-   }
-
-   save_p += sizeof checksum;
-   while(*save_p++);
-
-   for(i = 0; i < MAXPLAYERS; ++i)
-      playeringame[i] = !!(*save_p++);
-   save_p += MIN_MAXPLAYERS - MAXPLAYERS;         // killough 2/28/98
-
-   // jff 3/17/98 restore idmus music
-   // jff 3/18/98 account for unsigned byte
-   // killough 11/98: simplify
-   idmusnum = *(signed char *) save_p++;
-
-   // haleyjd 04/14/03: game type
-   // note: don't set DefaultGameType from save games
-   GameType = (gametype_t)(*save_p++);
-
-   /* cph 2001/05/23 - Must read options before we set up the level */
-   G_ReadOptions(save_p);
-
-   // load a base level
-   // sf: in hubs, use g_doloadlevel instead of g_initnew
-   if(hub_changelevel)
-      G_DoLoadLevel();
-   else
-      G_InitNew(gameskill, gamemapname);
-
-   // killough 3/1/98: Read game options
-   // killough 11/98: move down to here
-
-   // cph - MBF needs to reread the savegame options because
-   // G_InitNew rereads the WAD options. The demo playback code does
-   // this too.
-   save_p = G_ReadOptions(save_p);
-
-   // get the times
-   // killough 11/98: save entire word
-   // haleyjd  08/01/09: try sizeof variable, not sizeof pointer!
-   memcpy(&leveltime, save_p, sizeof(leveltime));
-   save_p += sizeof(leveltime);
-
-   // killough 11/98: load revenant tracer state
-   basetic = gametic - (int) *save_p++;
-
-   // haleyjd 04/14/03: load dmflags
-   memcpy(&dmflags, save_p, sizeof(dmflags));
-   save_p += sizeof(dmflags);
-
-   // haleyjd 07/06/09: prepare ACS for loading
-   ACS_PrepareForLoad();
-
-   // dearchive all the modifications
-   P_UnArchivePlayers();
-   P_UnArchiveWorld();
-   P_UnArchivePolyObjects();    // haleyjd 03/27/06
-   P_UnArchiveThinkers();
-   P_UnArchiveSpecials();
-   P_UnArchiveRNG();            // killough 1/18/98: load RNG information
-   P_UnArchiveMap();            // killough 1/22/98: load automap information
-   P_UnArchiveScripts();        // sf: scripting
-   P_UnArchiveSoundSequences();
-   P_UnArchiveButtons();
-   P_FreeObjTable();
-
-   if(*save_p != 0xe6)
-   {
-      C_SetConsole();
-      C_Printf(FC_ERROR "bad savegame: offset 0x%x is 0x%x\n",
-         save_p-savebuffer, *save_p);
-      Z_Free(savebuffer);
-      return;
-   }
-
-   // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
-   Z_CheckHeap();
-
-   // done
-   Z_Free(savebuffer);
-
-   if (setsizeneeded)
-      R_ExecuteSetViewSize();
-
-   // draw the pattern into the back screen
-   R_FillBackScreen();
-
-   // haleyjd 02/09/10: wake up status bar again
-   ST_Start();
-
-   // killough 12/98: support -recordfrom and -loadgame -playdemo
-   if(!command_loadgame)
-      singledemo = false;         // Clear singledemo flag if loading from menu
-   else if(singledemo)
-   {
-      gameaction = ga_loadgame; // Mark that we're loading a game before demo
-      G_DoPlayDemo();           // This will detect it and won't reinit level
-   }
-   else       // Loading games from menu isn't allowed during demo recordings,
-      if(demorecording) // So this can only possibly be a -recordfrom command.
-         G_BeginRecording();// Start the -recordfrom, since the game was loaded.
-
-   // sf: if loading a hub level, restore position relative to sector
-   //  for 'seamless' travel between levels
-   if(hub_changelevel)
-      P_RestorePlayerPosition();
-
-   // haleyjd 01/07/07: run deferred ACS scripts
-   ACS_RunDeferredScripts();
+   P_LoadGame(savename);
 }
 
 //
@@ -2504,19 +2291,14 @@ void G_FlushCorpse(int playernum)
    // killough 8/1/98: Fix bugs causing strange crashes
    if(bodyquesize > 0)
    {
-      static mobj_t **bodyque;
+      static Mobj **bodyque;
       static size_t queuesize;
 
       if(queuesize < (unsigned int)bodyquesize)
       {
-         bodyque = (mobj_t **)(realloc(
-            bodyque, bodyquesize * sizeof(*bodyque)
-         ));
-         memset(
-            bodyque + queuesize,
-            0,
-            (bodyquesize - queuesize) * sizeof(*bodyque)
-         );
+         bodyque = (Mobj **)(realloc(bodyque, bodyquesize*sizeof*bodyque));
+         memset(bodyque+queuesize, 0, 
+                (bodyquesize-queuesize)*sizeof*bodyque);
          queuesize = bodyquesize;
       }
 
@@ -2533,7 +2315,6 @@ void G_FlushCorpse(int playernum)
    {
       if(CS_SERVER)
          SV_BroadcastActorRemoved(players[playernum].mo);
-      players[playernum].mo->Remove();
       players[playernum].mo->removeThinker();
    }
 }
@@ -2615,10 +2396,10 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
+static boolean G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
    fixed_t     x, y;
-   mobj_t      *mo;
+   Mobj      *mo;
    int         i;
 
    if(!players[playernum].mo)
@@ -2635,7 +2416,7 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
 
    x = mthing->x << FRACBITS;
    y = mthing->y << FRACBITS;
-
+   
    // killough 4/2/98: fix bug where P_CheckPosition() uses a non-solid
    // corpse to detect collisions with other players in DM starts
    //
@@ -2655,14 +2436,6 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing, mobj_t **fog)
    // [CG] Broke out into G_SpawnFog.
    mo = G_SpawnFog(x, y, mthing->angle);
 
-   // haleyjd: There was a hack here trying to avoid playing the sound on the
-   // "first frame"; but if this is done, then you miss your own spawn sound
-   // quite often, due to the fact your sound origin hasn't been moved yet.
-   // So instead, I'll return the fog in *fog and play the sound at the caller.
-   if(fog)
-      *fog = mo;
-
-   return true;
 }
 
 //
@@ -2708,9 +2481,8 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = deathmatch_p - deathmatchstarts;
-   mobj_t *fog = NULL;
+   Mobj *fog = NULL;
 
-   // if(selections < MAXPLAYERS)
    if(selections < VANILLA_MAXPLAYERS)
    {
       static char errormsg[64];
@@ -2757,7 +2529,7 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
-      mobj_t *fog = NULL;
+      Mobj *fog = NULL;
 
       // first dissasociate the corpse
       if(players[playernum].mo != NULL)
@@ -2805,7 +2577,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < VANILLA_MAXPLAYERS; i++)
       {
-         mobj_t *fog = NULL;
+         Mobj *fog = NULL;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
@@ -3134,7 +2906,7 @@ public:
    int setNormalSpeed(int i)   { normalSpeed = i; }
    int setFastSpeed(int i)     { fastSpeed   = i; }
    
-   int setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
+   void setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
 };
 
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
@@ -3905,7 +3677,7 @@ void G_CoolViewPoint(void)
    else if(viewtype == 2) // camera view
    {
       // sometimes check out the player's enemies
-      mobj_t *spot = players[displayplayer].attacker;
+      Mobj *spot = players[displayplayer].attacker;
 
       // no enemy? check out the player's current location then.
       if(!spot || spot->health <= 0)

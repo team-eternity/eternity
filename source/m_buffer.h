@@ -30,24 +30,24 @@
 //
 // An exception class for buffered IO errors
 //
-class CBufferedIOException
+class BufferedIOException
 {
 protected:
    const char *message;
 
 public:
-   CBufferedIOException(const char *pMsg) : message(pMsg) {}
+   BufferedIOException(const char *pMsg) : message(pMsg) {}
    const char *GetMessage() { return message; }
 };
 
 //
-// CBufferedFileBase
+// BufferedFileBase
 //
 // Base class for buffers. Eventually I hpe to add an extra layer of indirection
 // so that this can function on more than just raw physical files (for example a
 // compressed data source).
 //
-class CBufferedFileBase
+class BufferedFileBase
 {
 protected:
    FILE *f;          // destination or source file
@@ -81,11 +81,11 @@ public:
 };
 
 //
-// COutBuffer
+// OutBuffer
 //
 // Buffered binary file output.
 //
-class COutBuffer : public CBufferedFileBase
+class OutBuffer : public BufferedFileBase
 {
 public:
    boolean CreateFile(const char *filename, size_t pLen, int pEndian);
@@ -102,20 +102,20 @@ public:
 };
 
 //
-// CInBuffer
+// InBuffer
 //
 // Buffered binary file input.
 //
-class CInBuffer : public CBufferedFileBase
+class InBuffer : public BufferedFileBase
 {
 protected:
-   size_t readlen; // amount actually read (may be less than len)
+   size_t  readlen; // amount actually read (may be less than len)
    boolean atEOF;
    boolean ReadFile();
 
 public:
    boolean OpenFile(const char *filename, size_t pLen, int pEndian);
-   void    Close();
+
    boolean Read(void *dest, size_t size);
    boolean ReadSint32(int32_t  &num);
    boolean ReadUint32(uint32_t &num);

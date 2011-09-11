@@ -75,7 +75,7 @@ camera_t   intercam;
 MobjCollection camerathings;
 
 // chosen camera
-mobj_t *wi_camera;
+Mobj *wi_camera;
 
 //
 // IN_AddCameras

@@ -61,8 +61,6 @@ const unsigned char rndtable[256] = { // 1/19/98 killough -- made const
     120, 163, 236, 249
 };
 
-int demo_insurance=0, default_demo_insurance=0;   // killough 3/31/98
-
 rng_t rng;     // the random number state
 
 unsigned int rngseed = 1993;   // killough 3/26/98: The seed

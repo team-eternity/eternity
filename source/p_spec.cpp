@@ -70,6 +70,7 @@
 #include "p_slopes.h"
 #include "p_portal.h"
 #include "g_dmflag.h" // [CG] Added.
+#include "p_saveg.h"
 
 // [CG] Added.
 #include "cs_main.h"
@@ -671,9 +672,8 @@ fixed_t P_FindShortestUpperAround(int secnum)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
    if(!comp[comp_model])
-      minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow
+      minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
 
-   // in height calcs
    for(i = 0; i < sec->linecount; i++)
    {
       if(twoSided(secnum, i))
@@ -703,7 +703,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 // jff 02/03/98 Add routine to find numeric model floor
 //  around a sector specified by sector number
 // jff 3/14/98 change first parameter to plain height to allow call
-//  from routine not using CFloorMove
+//  from routine not using FloorMoveThinker
 //
 // killough 11/98: reformatted
 // 
@@ -740,7 +740,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 //  around a sector specified by sector number
 //  used only from generalized ceiling types
 // jff 3/14/98 change first parameter to plain height to allow call
-//  from routine not using CCeiling
+//  from routine not using CeilingThinker
 //
 // killough 11/98: reformatted
 // haleyjd 09/23/02: reformatted again
@@ -1149,7 +1149,7 @@ boolean P_WasSecret(sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, mobj_t *thing)
+void P_StartLineScript(line_t *line, Mobj *thing)
 {
 #ifndef EE_NO_SMALL_SUPPORT
    if(levelScriptLoaded)
@@ -1213,7 +1213,7 @@ d_inline static boolean P_ClearSwitchOnFail(void)
 //
 // killough 11/98: change linenum parameter to a line_t pointer
 
-void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
+void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 {
    int ok;
 
@@ -2146,7 +2146,7 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing)
 //
 // haleyjd 03/13/05: added side argument for param line specials
 //
-void P_ShootSpecialLine(mobj_t *thing, line_t *line, int side)
+void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd 02/28/05: parameterized specials
    if(E_IsParamSpecial(line->special))
@@ -2892,6 +2892,8 @@ void P_SpawnDeferredSpecials(int mapformat)
 }
 
 
+IMPLEMENT_THINKER_TYPE(ScrollThinker)
+
 // killough 2/28/98:
 //
 // This function, with the help of r_plane.c and r_bsp.c, supports generalized
@@ -2911,7 +2913,7 @@ void P_SpawnDeferredSpecials(int mapformat)
 // This is the main scrolling code
 // killough 3/7/98
 //
-void CScroller::Think()
+void ScrollThinker::Think()
 {
    fixed_t dx = this->dx, dy = this->dy;
    
@@ -2941,27 +2943,27 @@ void CScroller::Think()
       sector_t *sec;
       fixed_t height, waterheight;  // killough 4/4/98: add waterheight
       msecnode_t *node;
-      mobj_t *thing;
+      Mobj *thing;
 
-   case CScroller::sc_side:          // killough 3/7/98: Scroll wall texture
+   case ScrollThinker::sc_side:          // killough 3/7/98: Scroll wall texture
       side = sides + this->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
       break;
 
-   case CScroller::sc_floor:         // killough 3/7/98: Scroll floor texture
+   case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
       sec = sectors + this->affectee;
       sec->floor_xoffs += dx;
       sec->floor_yoffs += dy;
       break;
 
-   case CScroller::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
+   case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + this->affectee;
       sec->ceiling_xoffs += dx;
       sec->ceiling_yoffs += dy;
       break;
 
-   case CScroller::sc_carry:
+   case ScrollThinker::sc_carry:
       
       // killough 3/7/98: Carry things on floor
       // killough 3/20/98: use new sector list which reflects true members
@@ -2992,9 +2994,22 @@ void CScroller::Think()
       }
       break;
 
-   case CScroller::sc_carry_ceiling:   // to be added later
+   case ScrollThinker::sc_carry_ceiling:   // to be added later
       break;
    }
+}
+
+//
+// ScrollThinker::serialize
+//
+// Save/load a ScrollThinker thinker.
+//
+void ScrollThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << dx << dy << affectee << control << last_height << vdx << vdy
+       << accel << type;
 }
 
 //
@@ -3018,7 +3033,7 @@ void CScroller::Think()
 static void Add_Scroller(int type, fixed_t dx, fixed_t dy,
                          int control, int affectee, int accel)
 {
-   CScroller *s = new CScroller;
+   ScrollThinker *s = new ScrollThinker;
 
    s->type = type;
    s->dx = dx;
@@ -3055,7 +3070,7 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 
    x = (int)((dy * -l->dy - dx * l->dx) / d);  // killough 10/98:
    y = (int)((dy * l->dx - dx * l->dy) / d);   // Use 64-bit arithmetic
-   Add_Scroller(CScroller::sc_side, x, y, control, *l->sidenum, accel);
+   Add_Scroller(ScrollThinker::sc_side, x, y, control, *l->sidenum, accel);
 }
 
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
@@ -3104,13 +3119,13 @@ static void P_SpawnScrollers(void)
 
       case 250:   // scroll effect ceiling
          for(s=-1; (s = P_FindSectorFromLineTag(l,s)) >= 0;)
-            Add_Scroller(CScroller::sc_ceiling, -dx, dy, control, s, accel);
+            Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
          break;
 
       case 251:   // scroll effect floor
       case 253:   // scroll and carry objects on floor
          for(s = -1; (s = P_FindSectorFromLineTag(l, s)) >= 0;)
-            Add_Scroller(CScroller::sc_floor, -dx, dy, control, s, accel);
+            Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel);
          if(special != 253)
             break;
 
@@ -3118,7 +3133,7 @@ static void P_SpawnScrollers(void)
          dx = FixedMul(dx,CARRYFACTOR);
          dy = FixedMul(dy,CARRYFACTOR);
          for(s=-1; (s = P_FindSectorFromLineTag(l,s)) >= 0;)
-            Add_Scroller(CScroller::sc_carry, dx, dy, control, s, accel);
+            Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel);
          break;
 
          // killough 3/1/98: scroll wall according to linedef
@@ -3133,16 +3148,16 @@ static void P_SpawnScrollers(void)
 
       case 255:    // killough 3/2/98: scroll according to sidedef offsets
          s = lines[i].sidenum[0];
-         Add_Scroller(CScroller::sc_side, -sides[s].textureoffset,
+         Add_Scroller(ScrollThinker::sc_side, -sides[s].textureoffset,
                       sides[s].rowoffset, -1, s, accel);
          break;
 
       case 48:                  // scroll first side
-         Add_Scroller(CScroller::sc_side,  FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
+         Add_Scroller(ScrollThinker::sc_side,  FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
          break;
          
       case 85:                  // jff 1/30/98 2-way scroll
-         Add_Scroller(CScroller::sc_side, -FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
+         Add_Scroller(ScrollThinker::sc_side, -FRACUNIT, 0, -1, lines[i].sidenum[0], accel);
          break;
       }
    }
@@ -3161,7 +3176,7 @@ static void P_SpawnScrollers(void)
 //
 static void Add_Friction(int friction, int movefactor, int affectee)
 {
-   CFrictionThinker *f = new CFrictionThinker;
+   FrictionThinker *f = new FrictionThinker;
 
    f->friction   = friction;
    f->movefactor = movefactor;
@@ -3170,16 +3185,18 @@ static void Add_Friction(int friction, int movefactor, int affectee)
    f->addThinker();
 }
 
+IMPLEMENT_THINKER_TYPE(FrictionThinker)
+
 //
 // This is where abnormal friction is applied to objects in the sectors.
 // A friction thinker has been spawned for each sector where less or
 // more friction should be applied. The amount applied is proportional to
 // the length of the controlling linedef.
 //
-void CFrictionThinker::Think()
+void FrictionThinker::Think()
 {
    sector_t   *sec;
-   mobj_t     *thing;
+   Mobj     *thing;
    msecnode_t *node;
 
    if(compatibility || !variable_friction)
@@ -3219,6 +3236,19 @@ void CFrictionThinker::Think()
       }
       node = node->m_snext;
    }
+}
+
+//
+// FrictionThinker::serialize
+//
+// haleyjd 12/25/10: This was actually missing, but is in fact needed in the
+// event that a user tries to save the game during playback of a BOOM demo.
+//
+void FrictionThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << friction << movefactor << affectee;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -3394,9 +3424,9 @@ static void P_SpawnFriction(void)
 // Add a push thinker to the thinker list
 
 static void Add_Pusher(int type, int x_mag, int y_mag,
-                       mobj_t *source, int affectee)
+                       Mobj *source, int affectee)
 {
-   CPusher *p = new CPusher;
+   PushThinker *p = new PushThinker;
    
    p->source = source;
    p->type = type;
@@ -3422,9 +3452,9 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 //
 // killough 10/98: allow to affect things besides players
 
-CPusher *tmpusher; // pusher structure for blockmap searches
+PushThinker *tmpusher; // pusher structure for blockmap searches
 
-boolean PIT_PushThing(mobj_t* thing)
+boolean PIT_PushThing(Mobj* thing)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
       thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
@@ -3472,16 +3502,19 @@ boolean PIT_PushThing(mobj_t* thing)
    return true;
 }
 
+
+IMPLEMENT_THINKER_TYPE(PushThinker)
+
 //
 // T_Pusher 
 //
 // Thinker function for BOOM push/pull effects that looks for all 
 // objects that are inside the radius of the effect.
 //
-void CPusher::Think()
+void PushThinker::Think()
 {
    sector_t   *sec;
-   mobj_t     *thing;
+   Mobj     *thing;
    msecnode_t *node;
    int xspeed, yspeed;
    int xl, xh, yl, yh, bx, by;
@@ -3518,7 +3551,7 @@ void CPusher::Think()
    //
    //    Apply nothing at any time!
 
-   if(this->type == CPusher::p_push)
+   if(this->type == PushThinker::p_push)
    {
       // Seek out all pushable things within the force radius of this
       // point pusher. Crosses sectors, so use blockmap.
@@ -3558,7 +3591,7 @@ void CPusher::Think()
          (thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
          continue;
 
-      if(this->type == CPusher::p_wind)
+      if(this->type == PushThinker::p_wind)
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
@@ -3617,14 +3650,30 @@ void CPusher::Think()
    }
 }
 
+//
+// PushThinker::serialize
+//
+// Saves/loads a PushThinker thinker.
+//
+void PushThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
+
+   // Restore point source origin if loading
+   if(arc.isLoading())
+      source = P_GetPushThing(affectee);
+}
+
 /////////////////////////////
 //
 // P_GetPushThing() returns a pointer to an PUSH or PULL thing,
 // NULL otherwise.
 
-mobj_t* P_GetPushThing(int s)
+Mobj* P_GetPushThing(int s)
 {
-   mobj_t* thing;
+   Mobj* thing;
    sector_t* sec;
    static int PushType = -1;
    static int PullType = -1;
@@ -3657,7 +3706,7 @@ static void P_SpawnPushers(void)
    int i;
    line_t *l = lines;
    register int s;
-   mobj_t* thing;
+   Mobj* thing;
 
    for(i = 0; i < numlines; i++, l++)
    {
@@ -3665,18 +3714,18 @@ static void P_SpawnPushers(void)
       {
       case 224: // wind
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
-            Add_Pusher(CPusher::p_wind, l->dx, l->dy, NULL, s);
+            Add_Pusher(PushThinker::p_wind, l->dx, l->dy, NULL, s);
          break;
       case 225: // current
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
-            Add_Pusher(CPusher::p_current, l->dx, l->dy, NULL, s);
+            Add_Pusher(PushThinker::p_current, l->dx, l->dy, NULL, s);
          break;
       case 226: // push/pull
          for(s = -1; (s = P_FindSectorFromLineTag(l,s)) >= 0 ; )
          {
             thing = P_GetPushThing(s);
             if(thing) // No P* means no effect
-               Add_Pusher(CPusher::p_push, l->dx, l->dy, thing, s);
+               Add_Pusher(PushThinker::p_push, l->dx, l->dy, thing, s);
          }
          break;
       }
@@ -4472,7 +4521,7 @@ void P_ConvertHereticSpecials(void)
          sector->hticPushAngle = 0;
          sector->hticPushForce = 2048*28;
          // scrolls to the east:
-         Add_Scroller(CScroller::sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
+         Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<3, 0, -1, sector - sectors, 0);
          sector->special = 0;
          continue;
       case 5: // Damage_LavaWimpy
@@ -4513,7 +4562,7 @@ void P_ConvertHereticSpecials(void)
          sector->hticPushType  = sector->special;
          sector->hticPushAngle = 0;
          sector->hticPushForce = pushForces[sector->special - 20];         
-         Add_Scroller(CScroller::sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
+         Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2)<<(sector->special - 20),
                       0, -1, sector-sectors, 0);
          sector->special = 0;
       }
@@ -4908,7 +4957,7 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 
    sector_t    *sector;
    portal_t    *portal = NULL;
-   mobj_t      *skycam;
+   Mobj      *skycam;
    fixed_t     planez = 0;
    int         anchortype = 0; // SoM 3-10-04: new plan.
    int         s;

@@ -28,6 +28,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "m_random.h"
+#include "p_saveg.h"
 #include "r_main.h"
 #include "p_info.h"
 #include "p_spec.h"
@@ -62,6 +63,8 @@ void P_PlatSequence(sector_t *s, const char *seqname)
       S_StartSectorSequenceName(s, seqname, false);
 }
 
+IMPLEMENT_THINKER_TYPE(PlatThinker)
+
 //
 // T_PlatRaise()
 //
@@ -73,7 +76,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
 // jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
-void CPlat::Think()
+void PlatThinker::Think()
 {
    result_e      res;
 
@@ -209,7 +212,7 @@ void CPlat::Think()
    }
 }
 
-void P_CopyPlatform(CPlat *dest, CPlat *src)
+void P_CopyPlatform(PlatThinker *dest, PlatThinker *src)
 {
    dest->speed     = src->speed;
    dest->low       = src->low;
@@ -224,7 +227,27 @@ void P_CopyPlatform(CPlat *dest, CPlat *src)
    dest->net_id    = src->net_id;
 }
 
-boolean P_PlatformsEqual(CPlat *platform_one, CPlat *platform_two)
+//
+// PlatThinker::serialize
+//
+// Saves/loads PlatThinker thinkers.
+//
+void PlatThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << sector << speed << low << high << wait << count << status << oldstatus
+       << crush << tag << type;
+
+   if(arc.isLoading())
+   {
+      // Reattach to sector and to active plats list
+      sector->floordata = this;
+      P_AddActivePlat(this);
+   }
+}
+
+boolean P_PlatformsEqual(PlatThinker *platform_one, PlatThinker *platform_two)
 {
    if(platform_one->speed     == platform_two->speed     &&
       platform_one->low       == platform_two->low       &&
@@ -242,22 +265,16 @@ boolean P_PlatformsEqual(CPlat *platform_one, CPlat *platform_two)
    return false;
 }
 
-void P_PrintPlatform(CPlat *platform)
+void P_PrintPlatform(PlatThinker *platform)
 {
    unsigned int index;
 
    if(CS_SERVER && playeringame[1])
-   {
       index = server_clients[1].last_command_run_index;
-   }
    else if(CS_CLIENT)
-   {
       index = cl_current_world_index;
-   }
    else if(CS_SERVER)
-   {
       index = sv_world_index;
-   }
 
    printf(
       "Platform %2u (%3u): %5u %5u %5u %3d %3d %2d %2d %2d %2d %2d %1d | ",
@@ -286,15 +303,13 @@ void P_PrintPlatform(CPlat *platform)
       );
    }
    else
-   {
       printf("Sector XX (%5u): XXXXX XXXXX.\n", index);
-   }
 }
 
-CPlat* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
+PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                         plattype_e type)
 {
-   CPlat *plat = new CPlat;
+   PlatThinker *plat = new PlatThinker;
 
    plat->addThinker();
    plat->type = type;
@@ -413,7 +428,7 @@ CPlat* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
 //
 int EV_DoPlat(line_t *line, plattype_e type, int amount)
 {
-   CPlat   *plat;
+   PlatThinker   *plat;
    sector_t *sec;
    int rtn = 0;
    int secnum = -1;
@@ -478,7 +493,7 @@ void P_ActivateInStasis(int tag)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
-      CPlat *plat = pl->plat;              // for one in stasis with right tag
+      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -504,7 +519,7 @@ int EV_StopPlat(line_t *line)
    platlist_t *pl;
    for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
-      CPlat *plat = pl->plat;             // for one with the tag not in stasis
+      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -522,12 +537,12 @@ int EV_StopPlat(line_t *line)
 // Passed a pointer to the plat to add
 // Returns nothing
 //
-void P_AddActivePlat(CPlat *plat)
+void P_AddActivePlat(PlatThinker *plat)
 {
    CS_ObtainPlatformNetID(plat);
 }
 
-void oldP_AddActivePlat(CPlat *plat)
+void oldP_AddActivePlat(PlatThinker *plat)
 {
    platlist_t *list = malloc(sizeof *list);
    list->plat = plat;
@@ -546,7 +561,7 @@ void oldP_AddActivePlat(CPlat *plat)
 // Passed a pointer to the plat to remove
 // Returns nothing
 //
-void P_RemoveActivePlat(CPlat *plat)
+void P_RemoveActivePlat(PlatThinker *plat)
 {
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
    P_RemoveThinker(&plat->thinker);
@@ -555,7 +570,7 @@ void P_RemoveActivePlat(CPlat *plat)
    CS_ReleasePlatformNetID(plat);
 }
 
-void oldP_RemoveActivePlat(CPlat *plat)
+void oldP_RemoveActivePlat(PlatThinker *plat)
 {
    platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers

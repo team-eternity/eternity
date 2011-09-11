@@ -184,7 +184,7 @@ static void R_FreeRPolyObj(rpolyobj_t *rpo)
 //
 static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 {
-   CDLListItem<rpolyobj_t> *link = ss->polyList;
+   DLListItem<rpolyobj_t> *link = ss->polyList;
    rpolyobj_t *rpo;
 
    while(link)
@@ -493,8 +493,8 @@ void R_DetachPolyObject(polyobj_t *poly)
    for(i = 0; i < poly->numDSS; ++i)
    {
       subsector_t *ss = poly->dynaSubsecs[i];
-      CDLListItem<rpolyobj_t> *link = ss->polyList;
-      CDLListItem<rpolyobj_t> *next;
+      DLListItem<rpolyobj_t> *link = ss->polyList;
+      DLListItem<rpolyobj_t> *next;
       
       // iterate on subsector rpolyobj_t lists
       while(link)

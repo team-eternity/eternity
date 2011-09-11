@@ -391,15 +391,15 @@ CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 //
 
 camera_t followcam;
-static mobj_t *followtarget;
+static Mobj *followtarget;
 
-void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target)
+void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 {
    subsector_t *subsec;
 
    followcam.x = x;
    followcam.y = y;
-   P_SetTarget<mobj_t>(&followtarget, target);
+   P_SetTarget<Mobj>(&followtarget, target);
 
    followcam.angle = P_PointToAngle(followcam.x, followcam.y,
                                     followtarget->x, followtarget->y);
@@ -411,7 +411,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, mobj_t *target)
 
 void P_FollowCamOff(void)
 {
-   P_SetTarget<mobj_t>(&followtarget, NULL);
+   P_SetTarget<Mobj>(&followtarget, NULL);
 }
 
 void P_FollowCamTicker(void)

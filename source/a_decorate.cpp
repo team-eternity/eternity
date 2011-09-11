@@ -57,7 +57,7 @@
 // ZDoom codepointer #3, implemented from scratch using wiki
 // documentation. 100% GPL version.
 // 
-void A_AlertMonsters(mobj_t *mo)
+void A_AlertMonsters(Mobj *mo)
 {
    if(mo->target)
       P_NoiseAlert(mo->target, mo->target);
@@ -70,7 +70,7 @@ void A_AlertMonsters(mobj_t *mo)
 // Extension: 
 //    args[0] == state DeHackEd number to transfer into
 //
-void A_CheckPlayerDone(mobj_t *actor)
+void A_CheckPlayerDone(Mobj *actor)
 {
    int statenum;
    
@@ -86,7 +86,7 @@ void A_CheckPlayerDone(mobj_t *actor)
 //
 // Codepointer needed for Heretic/Hexen/Strife support.
 //
-void A_ClearSkin(mobj_t *mo)
+void A_ClearSkin(Mobj *mo)
 {
    mo->skin   = NULL;
    mo->sprite = mo->state->sprite;
@@ -103,7 +103,7 @@ void A_ClearSkin(mobj_t *mo)
 // args[3] : alert?
 // args[4] : full damage radius
 //
-void A_DetonateEx(mobj_t *actor)
+void A_DetonateEx(Mobj *actor)
 {
 }
 
@@ -114,7 +114,7 @@ void A_DetonateEx(mobj_t *actor)
 //
 // args[0] : alpha step
 //
-void A_FadeIn(mobj_t *mo)
+void A_FadeIn(Mobj *mo)
 {
    mo->translucency += E_ArgAsFixed(mo->state->args, 0, 0);
    
@@ -131,7 +131,7 @@ void A_FadeIn(mobj_t *mo)
 //
 // args[0] : alpha step
 //
-void A_FadeOut(mobj_t *mo)
+void A_FadeOut(Mobj *mo)
 {
    mo->translucency -= E_ArgAsFixed(mo->state->args, 0, 0);
    
@@ -149,7 +149,7 @@ void A_FadeOut(mobj_t *mo)
 // args[0] : chance
 // args[N] : offset || state label
 //
-void A_Jump(mobj_t *actor)
+void A_Jump(Mobj *actor)
 {
    int     chance, choice;
    arglist_t *al = actor->state->args;
@@ -182,7 +182,7 @@ void A_Jump(mobj_t *actor)
 // ZDoom-compatible ammo jump. For weapons only!
 //    args[0] : state to jump to if not enough ammo
 //
-void A_JumpIfNoAmmo(mobj_t *mo)
+void A_JumpIfNoAmmo(Mobj *mo)
 {
    if(action_from_pspr)
    {
@@ -210,7 +210,7 @@ void A_JumpIfNoAmmo(mobj_t *mo)
 // args[1] : fov
 // args[2] : proj_target
 //
-void A_JumpIfTargetInLOS(mobj_t *mo)
+void A_JumpIfTargetInLOS(Mobj *mo)
 {
    int     statenum;
 
@@ -233,7 +233,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
    }
    else
    {
-      mobj_t *target = mo->target;
+      Mobj *target = mo->target;
       int seek = !!E_ArgAsInt(mo->state->args, 2, 0);
       int ifov =   E_ArgAsInt(mo->state->args, 1, 0);
 
@@ -298,7 +298,7 @@ void A_JumpIfTargetInLOS(mobj_t *mo)
 // args[0] : alpha
 // args[1] : mode
 //
-void A_SetTranslucent(mobj_t *mo)
+void A_SetTranslucent(Mobj *mo)
 {
    fixed_t alpha = E_ArgAsFixed(mo->state->args, 0, 0);
    int     mode  = E_ArgAsInt(mo->state->args, 1, 0);
@@ -397,7 +397,7 @@ static argkeywd_t attnkwdsnew = { kwds_attn_new, ATTN_NUM };
 // args[3] : attenuation
 // args[4] : EE extension - volume
 //
-void A_PlaySoundEx(mobj_t *mo)
+void A_PlaySoundEx(Mobj *mo)
 {
    sfxinfo_t *sfx = NULL;
    int channel, attn, volume;

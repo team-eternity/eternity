@@ -87,7 +87,7 @@ typedef enum {
 #define VANILLA_MAXPLAYERS 4
 
 // phares 5/14/98:
-// DOOM Editor Numbers (aka doomednum in mobj_t)
+// DOOM Editor Numbers (aka doomednum in Mobj)
 
 #define DEN_PLAYER5 4001
 #define DEN_PLAYER6 4002

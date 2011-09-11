@@ -53,7 +53,7 @@ extern int      bmapwidth;
 extern int      bmapheight;      // in mapblocks
 extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
-extern mobj_t   **blocklinks;    // for thing chains
+extern Mobj   **blocklinks;    // for thing chains
 
 extern boolean  newlevel;
 extern int      doom1level;
