@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -119,8 +119,8 @@ static const char *fontfmts[] =
 
 #define NUMFONTCHAINS 31
 
-static vfont_t *e_font_namechains[NUMFONTCHAINS];
-static vfont_t *e_font_numchains[NUMFONTCHAINS];
+static vfont_t              *e_font_namechains[NUMFONTCHAINS];
+static CDLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
 
 //=============================================================================
 //
@@ -201,8 +201,7 @@ static void E_AddFontToNumHash(vfont_t *font)
       return;
    }
 
-   M_DLListInsert((mdllistitem_t *)font, 
-                  (mdllistitem_t **)(&e_font_numchains[key]));
+   font->numlinks.insert(font, &e_font_numchains[key]);
 }
 
 //
@@ -213,7 +212,7 @@ static void E_AddFontToNumHash(vfont_t *font)
 //
 static void E_DelFontFromNumHash(vfont_t *font)
 {
-   M_DLListRemove((mdllistitem_t *)font);
+   font->numlinks.remove();
 }
 
 //=============================================================================
@@ -926,12 +925,12 @@ vfont_t *E_FontForName(const char *name)
 vfont_t *E_FontForNum(int num)
 {
    unsigned int key = num % NUMFONTCHAINS;
-   vfont_t *font = e_font_numchains[key];
+   CDLListItem<vfont_t> *link = e_font_numchains[key];
 
-   while(font && font->num != num)
-      font = (vfont_t *)(font->numlinks.next);
+   while(link && link->dllObject->num != num)
+      link = link->dllNext;
 
-   return font;
+   return link ? link->dllObject : NULL;
 }
 
 //

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,21 +30,9 @@
 
 // killough 4/25/98: Make gcc extensions mean nothing on other compilers
 // haleyjd 05/22/02: moved to d_keywds.h
-//#include "d_keywds.h"
 
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
-//#include "z_zone.h"
-
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <ctype.h>
-//#include <limits.h>
-
-//#include "m_swap.h"
-//#include "version.h"
-//#include "d_mod.h"
-//#include "m_fixed.h" // SoM 2-4-04: ANYRES
+// haleyjd: uhh, no. Include it in the files, not in another header.
 
 // [CG] So we can set some other defines if this is a client/server version of
 //      Eternity.
@@ -180,7 +168,8 @@ typedef enum {
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-typedef enum {
+enum 
+{
   wp_fist,
   wp_pistol,
   wp_shotgun,
@@ -193,7 +182,9 @@ typedef enum {
 
   NUMWEAPONS,
   wp_nochange              // No pending weapon change.
-} weapontype_t;
+};
+
+typedef int weapontype_t;
 
 // Ammunition types defined.
 enum 

@@ -22,7 +22,6 @@
 #ifndef __P_CHASE_H__
 #define __P_CHASE_H__
 
-//#include "p_mobj.h"
 #include "m_fixed.h"
 #include "tables.h"
 class mobj_t;

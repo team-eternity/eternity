@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -170,7 +170,7 @@ static texture_t *R_AllocTexStruct(const char *name, uint16_t width,
    ret = (texture_t *)(Z_Calloc(1, size, PU_RENDERER, NULL));
    
    ret->name = ret->namebuf;
-   strncpy(ret->name, name, 8);
+   strncpy(ret->namebuf, name, 8);
    ret->width = width;
    ret->height = height;
    ret->ccount = compcount;
@@ -1142,9 +1142,13 @@ static void R_InitTranslationLUT(void)
       texturetranslation[i] = i;
 }
 
+//=============================================================================
+//
+// Texture Hashing
+//
 
-E_KEYFUNC(texture_t, name);
-static ehash_t walltable, flattable;
+static EHashTable<texture_t, ENCStringHashKey> walltable(&texture_t::name, &texture_t::link);
+static EHashTable<texture_t, ENCStringHashKey> flattable(&texture_t::name, &texture_t::link);
 
 //
 // R_InitTextureHash
@@ -1156,17 +1160,19 @@ static void R_InitTextureHash(void)
 {
    int i;
    
-   E_HashDestroy(&walltable);
-   E_HashDestroy(&flattable);
-   
-   E_NCStrHashInit(&walltable, 599, E_KEYFUNCNAME(texture_t, name), NULL);
-   E_NCStrHashInit(&flattable, 599, E_KEYFUNCNAME(texture_t, name), NULL);
+   walltable.Destroy();
+   flattable.Destroy();
+
+   // haleyjd 12/12/10: For efficiency, allocate as many chains as there are 
+   // entries, plus a few more for breathing room.
+   walltable.Initialize(wallstop - wallstart + 31);
+   flattable.Initialize(flatstop - flatstart + 31);
    
    for(i = wallstart; i < wallstop; i++)
-      E_HashAddObject(&walltable, textures[i]);
+      walltable.addObject(textures[i]);
       
    for(i = flatstart; i < flatstop; i++)
-      E_HashAddObject(&flattable, textures[i]);
+      flattable.addObject(textures[i]);
 }
 
 //
@@ -1374,7 +1380,7 @@ byte *R_GetLinearBuffer(int tex)
 //
 static texture_t *R_SearchFlats(const char *name)
 {
-   return (texture_t *)(E_HashObjectForKey(&flattable, &name));
+   return flattable.objectForKey(name);
 }
 
 //
@@ -1384,7 +1390,7 @@ static texture_t *R_SearchFlats(const char *name)
 //
 static texture_t *R_SearchWalls(const char *name)
 {
-   return (texture_t *)(E_HashObjectForKey(&walltable, &name));
+   return walltable.objectForKey(name);
 }
 
 //

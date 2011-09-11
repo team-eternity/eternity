@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -37,14 +37,12 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <string.h>
+#include "z_zone.h"
 #include "c_io.h"
 #include "g_game.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "z_zone.h"
 #include "d_io.h" // SoM 3/14/2002: strncasecmp
 
 #define MAXHUBLEVELS 128
@@ -154,7 +152,7 @@ static void SaveHubLevel(void)
    if(!hublevel->tmpfile)
       hublevel->tmpfile = temp_hubfile();
    
-   G_SaveCurrentLevel(hublevel->tmpfile, "smmu hubs");
+   P_SaveCurrentLevel(hublevel->tmpfile, "smmu hubs");
 }
 
 static void LoadHubLevel(char *levelname)

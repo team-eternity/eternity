@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -161,7 +161,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
 {
    seg_t *seg;
    int count;
-   rpolyobj_t *rpo; // haleyjd 05/16/08
+   CDLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
    
 #ifdef RANGECHECK
    if(num >= numsubsectors)
@@ -172,11 +172,11 @@ static boolean P_CrossSubsector(int num, register los_t *los)
    seg = segs + subsectors[num].firstline;
 
    // haleyjd 02/23/06: check polyobject lines
-   if((rpo = subsectors[num].polyList))
+   if((link = subsectors[num].polyList))
    {
-      while(rpo)
+      while(link)
       {
-         polyobj_t *po = rpo->polyobj;
+         polyobj_t *po = link->dllObject->polyobj;
 
          if(po->validcount != validcount)
          {
@@ -184,7 +184,7 @@ static boolean P_CrossSubsector(int num, register los_t *los)
             if(!P_CrossSubsecPolyObj(po, los))
                return false;
          }
-         rpo = (rpolyobj_t *)(rpo->link.next);
+         link = link->dllNext;
       }
    }
 

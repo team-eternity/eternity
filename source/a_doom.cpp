@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -1129,7 +1129,7 @@ void A_PainShootSkull(mobj_t *actor, angle_t angle)
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
          mobj_t *mo;
-         if((mo = dynamic_cast<mobj_t *>(th)) && mo->type == skullType)
+         if((mo = thinker_cast<mobj_t *>(th)) && mo->type == skullType)
          {
             if(--count < 0)         // killough 8/29/98: early exit
                return;
@@ -1292,7 +1292,7 @@ void A_BossDeath(mobj_t *mo)
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             mobj_t *mo2;
-            if((mo2 = dynamic_cast<mobj_t *>(th)))
+            if((mo2 = thinker_cast<mobj_t *>(th)))
             {
                if(mo2 != mo &&
                   (mo2->flags2 & boss_specs[i].thing_flag) &&
@@ -1351,7 +1351,7 @@ void A_KeenDie(mobj_t* mo)
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo2;
-      if((mo2 = dynamic_cast<mobj_t *>(th)))
+      if((mo2 = thinker_cast<mobj_t *>(th)))
       {
          if(mo2 != mo && mo2->type == mo->type && mo2->health > 0)
             return;                           // other Keen not dead

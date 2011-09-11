@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,6 +27,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "c_runcmd.h"
 

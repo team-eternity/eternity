@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,6 +27,7 @@
 
 // killough 5/3/98: reformatted
 
+#include "z_zone.h"
 #include "doomtype.h"
 #include "sounds.h"
 #include "p_skin.h"

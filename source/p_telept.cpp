@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "p_chase.h"
 #include "p_maputl.h"
@@ -61,7 +62,7 @@ int EV_Teleport(line_t *line, int side, mobj_t *thing)
    {
       for(thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
       {
-         if(!(m = dynamic_cast<mobj_t *>(thinker)))
+         if(!(m = thinker_cast<mobj_t *>(thinker)))
             continue;
 
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
@@ -179,7 +180,7 @@ int EV_SilentTeleport(line_t *line, int side, mobj_t *thing)
    {
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
-         if(!(m = dynamic_cast<mobj_t *>(th)))
+         if(!(m = thinker_cast<mobj_t *>(th)))
             continue;
          
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&

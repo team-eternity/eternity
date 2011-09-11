@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // This module, except for code marked otherwise, is covered by the 
@@ -314,8 +314,7 @@ void P_InitParticleEffects(void)
 //
 static void P_UnsetParticlePosition(particle_t *ptcl)
 {
-   M_DLListRemove((mdllistitem_t *)ptcl);
-
+   ptcl->seclinks.remove();
    ptcl->subsector = NULL;
 }
 
@@ -331,9 +330,7 @@ static void P_SetParticlePosition(particle_t *ptcl)
 {
    subsector_t *ss = R_PointInSubsector(ptcl->x, ptcl->y);
 
-   M_DLListInsert((mdllistitem_t *)ptcl, 
-                  (mdllistitem_t **)(&ss->sector->ptcllist));
-
+   ptcl->seclinks.insert(ptcl, &(ss->sector->ptcllist));
    ptcl->subsector = ss;
 }
 
@@ -458,7 +455,7 @@ void P_RunEffects(void)
    while((th = th->next) != &thinkercap)
    {
       mobj_t *mobj;
-      if((mobj = dynamic_cast<mobj_t *>(th)))
+      if((mobj = thinker_cast<mobj_t *>(th)))
       {
          int rnum = snum + (mobj->subsector->sector - sectors);
          if(mobj->effects)

@@ -20,7 +20,7 @@ struct particle_t
 {
    // haleyjd 02/20/04: particles now need sector links
    // haleyjd 08/05/05: use generalized dbl-linked list code
-   mdllistitem_t seclinks;         // sector links
+   CDLListItem<particle_t> seclinks;         // sector links
    subsector_t *subsector;
 
    fixed_t x, y, z;
@@ -35,7 +35,6 @@ struct particle_t
    int  styleflags; // haleyjd 07/03/03
 };
 
-extern int numParticles;
 extern int activeParticles;
 extern int inactiveParticles;
 extern particle_t *Particles;

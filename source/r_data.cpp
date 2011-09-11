@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -444,7 +444,7 @@ void R_PrecacheLevel(void)
       for(th = thinkercap.next ; th != &thinkercap ; th=th->next)
       {
          mobj_t *mo;
-         if((mo = dynamic_cast<mobj_t *>(th)))
+         if((mo = thinker_cast<mobj_t *>(th)))
             hitlist[mo->sprite] = 1;
       }
    }

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Buffered file output.
+//   Buffered file input/output.
 //
 //-----------------------------------------------------------------------------
 
@@ -29,170 +29,521 @@
 #include "m_buffer.h"
 #include "m_swap.h"
 
+//=============================================================================
 //
-// M_BufferCreateFile
+// CBufferedFileBase
+//
+// haleyjd 11/26/10: Having converted to C++ with the aim of adding an input
+// buffer as well, these base class methods implement shared functionality.
+//
+
+//
+// CBufferedFileBase::InitBuffer
+//
+// Sets up the buffer
+//
+void CBufferedFileBase::InitBuffer(size_t pLen, int pEndian)
+{
+   buffer = (byte *)(calloc(pLen, sizeof(byte)));
+   len    = pLen;
+   idx    = 0;
+   endian = pEndian;
+}
+
+//
+// CBufferedFileBase::Tell
+//
+// Gives the current file offset, minus any data that might be currently
+// pending in an output buffer.
+//
+long CBufferedFileBase::Tell()
+{
+   return ftell(f);
+}
+
+//
+// CBufferedFileBase::Close
+//
+// Common functionality for closing the file.
+//
+void CBufferedFileBase::Close()
+{
+   if(f)
+   {
+      fclose(f);
+      f = NULL;
+   }
+
+   idx = 0;
+   len = 0;
+
+   if(buffer)
+   {
+      free(buffer);
+      buffer = NULL;
+   }
+}
+
+//
+// CBufferedFileBase::SwapULong
+//
+// Transform a uint32 value based on the 'endian' setting.
+//
+void CBufferedFileBase::SwapULong(uint32_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapULong(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigULong(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// CBufferedFileBase::SwapLong
+//
+// As above but for signed ints.
+//
+void CBufferedFileBase::SwapLong(int32_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapLong(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigLong(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// CBufferedFileBase::SwapUShort
+//
+// Transform a uint16 value based on the 'endian' setting.
+//
+void CBufferedFileBase::SwapUShort(uint16_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapUShort(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigUShort(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// CBufferedFileBase::SwapShort
+//
+// As above but for signed 16-bit shorts.
+//
+void CBufferedFileBase::SwapShort(int16_t &x)
+{
+   switch(endian)
+   {
+   case LENDIAN:
+      x = ::SwapShort(x);
+      break;
+   case BENDIAN:
+      x = ::SwapBigShort(x);
+      break;
+   default:
+      break;
+   }
+}
+
+//=============================================================================
+//
+// COutBuffer
+//
+// Buffered file output
+//
+
+//
+// COutBuffer::CreateFile
 //
 // Opens a file for buffered binary output with the given filename. The buffer
 // size is determined by the len parameter.
 //
-boolean M_BufferCreateFile(outbuffer_t *ob, const char *filename, 
-                           unsigned int len, int endian)
+boolean COutBuffer::CreateFile(const char *filename, size_t pLen, int pEndian)
 {
-   if(!(ob->f = fopen(filename, "wb")))
+   if(!(f = fopen(filename, "wb")))
       return false;
 
-   ob->buffer = (byte *)(calloc(len, sizeof(byte)));
-
-   ob->len = len;
-   ob->idx = 0;
-
-   ob->endian = endian;
+   InitBuffer(pLen, pEndian);
 
    return true;
 }
 
 //
-// M_BufferFlush
+// COutBuffer::Flush
 //
 // Call to flush the contents of the buffer to the output file. This will be
 // called automatically before the file is closed, but must be called explicitly
 // if a current file offset is needed. Returns false if an IO error occurs.
 //
-boolean M_BufferFlush(outbuffer_t *ob)
+boolean COutBuffer::Flush()
 {
-   if(ob->idx)
+   if(idx)
    {
-      if(fwrite(ob->buffer, sizeof(byte), ob->idx, ob->f) < (size_t)ob->idx)
+      if(fwrite(buffer, sizeof(byte), idx, f) < idx)
+      {
+         if(throwing)
+            throw CBufferedIOException("fwrite did not write the requested amount");
          return false;
-
-      ob->idx = 0;
+      }
+      idx = 0;
    }
 
    return true;
 }
 
 //
-// M_BufferClose
+// COutBuffer::Close
 //
+// Overrides CBufferedFileBase::Close()
 // Closes the output file, writing any pending data in the buffer first.
 // The output buffer is also freed.
 //
-void M_BufferClose(outbuffer_t *ob)
+void COutBuffer::Close()
 {
-   M_BufferFlush(ob);
-   fclose(ob->f);
-   free(ob->buffer);
+   try
+   {
+     if(f)
+        Flush();
+      
+     CBufferedFileBase::Close();
+   }
+   catch(CBufferedIOException)
+   {
+      // if it didn't close, close it now. 
+      // CPP_FIXME: should really use a proper RAII idiom
+      if(f)
+         CBufferedFileBase::Close();
 
-   memset(ob, 0, sizeof(outbuffer_t));
+      // propagate the exception
+      throw; 
+   }
 }
 
 //
-// M_BufferTell
-//
-// Gives the current file offset, minus any data that might be currently
-// pending in the output buffer. Call M_BufferFlush first if you need an
-// absolute file offset.
-//
-long M_BufferTell(outbuffer_t *ob)
-{
-   return ftell(ob->f);
-}
-
-//
-// M_BufferWrite
+// COutBuffer::Write
 //
 // Buffered writing function.
 //
-boolean M_BufferWrite(outbuffer_t *ob, const void *data, unsigned int size)
+boolean COutBuffer::Write(const void *data, size_t size)
 {
-   const byte *src = (const byte *)data;
-   unsigned int writeAmt;
-   unsigned int bytesToWrite = size;
+   const byte *lSrc = (const byte *)data;
+   size_t lWriteAmt;
+   size_t lBytesToWrite = size;
 
-   while(bytesToWrite)
+   while(lBytesToWrite)
    {
-      writeAmt = ob->len - ob->idx;
+      lWriteAmt = len - idx;
       
-      if(!writeAmt)
+      if(!lWriteAmt)
       {
-         if(!M_BufferFlush(ob))
+         if(!Flush())
             return false;
-         writeAmt = ob->len;
+         lWriteAmt = len;
       }
 
-      if(bytesToWrite < writeAmt)
-         writeAmt = bytesToWrite;
+      if(lBytesToWrite < lWriteAmt)
+         lWriteAmt = lBytesToWrite;
 
-      memcpy(&(ob->buffer[ob->idx]), src, writeAmt);
+      memcpy(&(buffer[idx]), lSrc, lWriteAmt);
 
-      ob->idx += writeAmt;
-      src += writeAmt;
-      bytesToWrite -= writeAmt;
+      idx  += lWriteAmt;
+      lSrc += lWriteAmt;
+      lBytesToWrite -= lWriteAmt;
    }
 
    return true;
 }
 
 //
-// M_BufferWriteUint32
+// COutBuffer::WriteUint32
 //
 // Convenience routine to write an unsigned integer into the buffer.
 //
-boolean M_BufferWriteUint32(outbuffer_t *ob, uint32_t num)
+boolean COutBuffer::WriteUint32(uint32_t num)
 {
-   switch(ob->endian)
-   {
-   case OUTBUFFER_LENDIAN:
-      num = SwapULong(num);
-      break;
-   case OUTBUFFER_BENDIAN:
-      num = SwapBigULong(num);
-      break;
-   default:
-      break;
-   }
-   return M_BufferWrite(ob, &num, sizeof(uint32_t));
+   SwapULong(num);
+   return Write(&num, sizeof(uint32_t));
 }
 
 //
-// M_BufferWriteUint16
+// COutBuffer::WriteSint32
+//
+// Convenience routine to write an integer into the buffer.
+//
+boolean COutBuffer::WriteSint32(int32_t num)
+{
+   SwapLong(num);
+   return Write(&num, sizeof(int32_t));
+}
+
+//
+// COutBuffer::WriteUint16
 //
 // Convenience routine to write an unsigned short int into the buffer.
 //
-boolean M_BufferWriteUint16(outbuffer_t *ob, uint16_t num)
+boolean COutBuffer::WriteUint16(uint16_t num)
 {
-   switch(ob->endian)
-   {
-   case OUTBUFFER_LENDIAN:
-      num = SwapUShort(num);
-      break;
-   case OUTBUFFER_BENDIAN:
-      num = SwapBigUShort(num);
-      break;
-   default:
-      break;
-   }
-   return M_BufferWrite(ob, &num, sizeof(uint16_t));
+   SwapUShort(num);
+   return Write(&num, sizeof(uint16_t));
 }
 
 //
-// M_BufferWriteUint8
+// COutBuffer::WriteSint16
+//
+// Convenience routine to write a short int into the buffer.
+//
+boolean COutBuffer::WriteSint16(int16_t num)
+{
+   SwapShort(num);
+   return Write(&num, sizeof(int16_t));
+}
+
+//
+// COutBuffer::WriteUint8
 //
 // Routine to write an unsigned byte into the buffer.
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
-boolean M_BufferWriteUint8(outbuffer_t *ob, uint8_t num)
+boolean COutBuffer::WriteUint8(uint8_t num)
 {     
-   if(ob->idx == ob->len)
+   if(idx == len)
    {
-      if(!M_BufferFlush(ob))
+      if(!Flush())
          return false;
    }
 
-   ob->buffer[ob->idx] = num;
-   ob->idx++;
+   buffer[idx] = num;
+   ++idx;
  
    return true;
+}
+
+//
+// COutBuffer::WriteSint8
+//
+// Routine to write a byte into the buffer.
+// This is much more efficient than calling M_BufferWrite for individual bytes.
+//
+boolean COutBuffer::WriteSint8(int8_t num)
+{     
+   return WriteUint8((uint8_t)num);
+}
+
+//=============================================================================
+//
+// CInBuffer
+//
+// haleyjd 11/26/10: Buffered file input
+//
+
+//
+// CInBuffer::OpenFile
+//
+// Opens a file for binary input.
+//
+boolean CInBuffer::OpenFile(const char *filename, size_t pLen, int pEndian)
+{
+   if(!(f = fopen(filename, "rb")))
+      return false;
+
+   InitBuffer(pLen, pEndian);
+   readlen = 0;
+   atEOF = false;
+   return true;
+}
+
+//
+// CInBuffer::ReadFile
+//
+// Read the buffer's amount of data from the file or as much as is left.
+// If has hit EOF, no further reads are made.
+//
+boolean CInBuffer::ReadFile()
+{
+   if(!atEOF)
+   {
+      readlen = fread(buffer, 1, len, f);
+
+      if(readlen != len)
+         atEOF = true;
+      idx = 0;
+   }
+   else
+   {
+      // exhausted input
+      idx = 0;
+      readlen = 0; 
+   }
+
+   return atEOF;
+}
+
+//
+// CInBuffer::Read
+//
+// Read 'size' amount of bytes from the file. Reads are done from the physical
+// medium in chunks of the buffer's length.
+//
+boolean CInBuffer::Read(void *dest, unsigned int size)
+{
+   byte *lDest = (byte *)dest;
+   size_t lReadAmt;
+   size_t lBytesToRead = size;
+
+   while(lBytesToRead)
+   {
+      lReadAmt = readlen - idx;
+
+      if(!lReadAmt) // nothing left in the buffer?
+      {
+         if(!ReadFile()) // try to read more
+         {
+            if(!readlen) // nothing was read? uh oh!
+               return false;
+         }
+         lReadAmt = readlen;
+      }
+
+      if(lBytesToRead < lReadAmt)
+         lReadAmt = lBytesToRead;
+
+      memcpy(lDest, &(buffer[idx]), lReadAmt);
+
+      idx += lReadAmt;
+      lDest += lReadAmt;
+      lBytesToRead -= lReadAmt;
+   }
+
+   return true;
+}
+
+//
+// CInBuffer::ReadUint32
+//
+// Read a uint32 value from the input file.
+//
+boolean CInBuffer::ReadUint32(uint32_t &num)
+{
+   uint32_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapULong(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadSint32
+//
+// Read an int32 value from the input file.
+//
+boolean CInBuffer::ReadSint32(int32_t &num)
+{
+   int32_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapLong(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadUint16
+//
+// Read a uint16 value from the input file.
+//
+boolean CInBuffer::ReadUint16(uint16_t &num)
+{
+   uint16_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapUShort(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadSint16
+//
+// Read an int16 value from the input file.
+//
+boolean CInBuffer::ReadSint16(int16_t &num)
+{
+   int16_t lNum;
+
+   if(!Read(&lNum, sizeof(lNum)))
+      return false;
+
+   SwapShort(lNum);
+   num = lNum;
+   return true;
+}
+
+//
+// CInBuffer::ReadUint8
+//
+// Read a uint8 value from input file.
+//
+boolean CInBuffer::ReadUint8(uint8_t &num)
+{
+   if(idx == readlen) // nothing left in the buffer?
+   {
+      if(!ReadFile()) // try to read more
+      {
+         if(!readlen) // nothing was read? uh oh!
+            return false;
+      }
+   }
+
+   num = buffer[idx];
+   ++idx;
+    return true;
+}
+
+//
+// CInBuffer::ReadSint8
+//
+// Read an int8 value from input file.
+//
+boolean CInBuffer::ReadSint8(int8_t &num)
+{
+   if(idx == readlen) // nothing left in the buffer?
+   {
+      if(!ReadFile()) // try to read more
+      {
+         if(!readlen) // nothing was read? uh oh!
+            return false;
+      }
+   }
+
+   num = (int8_t)(buffer[idx]);
+   ++idx;
+    return true;
 }
 
 // EOF

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -81,13 +81,13 @@ typedef enum
 struct texture_t
 {
    // SoM: New dog's in town
-   mdllistitem_t link;
+   CDLListItem<texture_t> link;
    
    // Index within the texture array of this object.
    int           index;
 
    // For use with ehash stuff
-   char       *name;
+   ENCStringHashKey name;
    char       namebuf[9];       // Keep name for switch changing, etc.
    int16_t    width, height;
    

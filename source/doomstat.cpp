@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 
 // Game Mode - identify IWAD as shareware, retail etc.

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon

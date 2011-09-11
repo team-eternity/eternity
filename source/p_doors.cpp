@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "g_game.h"
 #include "p_info.h"
@@ -793,7 +794,7 @@ int EV_VerticalDoor(line_t *line, mobj_t *thing)
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
-   if((door = dynamic_cast<vldoor_t *>(sec->ceilingdata))) // is a door
+   if((door = thinker_cast<vldoor_t *>(sec->ceilingdata))) // is a door
    {
       switch(line->special)
       {

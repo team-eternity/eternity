@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,11 +27,16 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
+#include "d_main.h"
+#include "g_dmflag.h"
+#include "g_game.h"
 #include "r_main.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_saveg.h"
+#include "m_buffer.h"
 #include "m_random.h"
 #include "am_map.h"
 #include "p_enemy.h"
@@ -46,11 +51,15 @@
 #include "d_gi.h"
 #include "acs_intr.h"
 #include "e_player.h"
+#include "version.h"
+#include "w_wad.h"
+#include "w_levels.h"
 
 // [CG] Added.
 #include "cs_netid.h"
 
 byte *save_p;
+
 
 // Pads save_p to a 4-byte boundary
 //  so that the load/save works on SGI&Gecko.
@@ -60,11 +69,173 @@ byte *save_p;
 // this makes for smaller savegames
 #define PADSAVEP()      {}
 
+//=============================================================================
+//
+// Basic IO
+//
+
+//
+// CSaveArchive::CSaveArchive(COutBuffer *)
+//
+// Constructs a CSaveArchive object in saving mode.
+//
+CSaveArchive::CSaveArchive(COutBuffer *pSaveFile) 
+   : savefile(pSaveFile), loadfile(NULL)
+{
+   if(!pSaveFile)
+      I_Error("CSaveArchive: created a save file without a valid COutBuffer\n");
+}
+
+//
+// CSaveArchive::CSaveArchive(CInBuffer *)
+//
+// Constructs a CSaveArchive object in loading mode.
+//
+CSaveArchive::CSaveArchive(CInBuffer *pLoadFile)
+   : savefile(NULL), loadfile(pLoadFile)
+{
+   if(!pLoadFile)
+      I_Error("CSaveArchive: created a load file without a valid CInBuffer\n");
+}
+
+//
+// CSaveArchive::ArchiveCString
+//
+// Writes/reads strings with a fixed maximum length, which should be 
+// null-extended prior to the call.
+//
+void CSaveArchive::ArchiveCString(char *str, size_t maxLen)
+{
+   if(savefile)
+      savefile->Write(str, maxLen);
+   else
+      loadfile->Read(str, maxLen);
+}
+
+//
+// CSaveArchive::ArchiveLString
+//
+// Writes/reads a C string with prepended length field.
+// When reading, the result is returned in a calloc'd buffer.
+//
+void CSaveArchive::ArchiveLString(char *&str, size_t &len)
+{
+   if(savefile)
+   {
+      if(!len)
+         len = strlen(str) + 1;
+
+      savefile->WriteUint32((uint32_t)len); // FIXME: size_t
+      savefile->Write(str, len);
+   }
+   else
+   {
+      uint32_t tempLen;
+      loadfile->ReadUint32(tempLen);
+      len = (size_t)tempLen; // FIXME: size_t
+      if(len != 0)
+      {
+         str = (char *)(calloc(1, len));
+         loadfile->Read(str, len);
+      }
+      else
+         str = NULL;
+   }
+}
+
+//
+// IO operators
+//
+
+CSaveArchive &CSaveArchive::operator << (int32_t &x)
+{
+   if(savefile)
+      savefile->WriteSint32(x);
+   else
+      loadfile->ReadSint32(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (uint32_t &x)
+{
+   if(savefile)
+      savefile->WriteUint32(x);
+   else
+      loadfile->ReadUint32(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (int16_t &x)
+{
+   if(savefile)
+      savefile->WriteSint16(x);
+   else
+      loadfile->ReadSint16(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (uint16_t &x)
+{
+   if(savefile)
+      savefile->WriteUint16(x);
+   else
+      loadfile->ReadUint16(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (int8_t &x)
+{
+   if(savefile)
+      savefile->WriteSint8(x);
+   else
+      loadfile->ReadSint8(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (uint8_t &x)
+{
+   if(savefile)
+      savefile->WriteUint8(x);
+   else
+      loadfile->ReadUint8(x);
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (boolean &x)
+{
+   if(savefile)
+      savefile->WriteUint8((uint8_t)x);
+   else
+   {
+      uint8_t temp;
+      loadfile->ReadUint8(temp);
+      x = !!temp;
+   }
+
+   return *this;
+}
+
+CSaveArchive &CSaveArchive::operator << (CThinker *th)
+{
+   return *this;
+}
+
+//=============================================================================
+//
+// Thinker Enumeration
+//
+
 static unsigned int num_thinkers; // number of thinkers in level being archived
 
 static mobj_t **mobj_p;  // killough 2/14/98: Translation table
 
-// sf: made these into seperate functions
+// sf: made these into separate functions
 //     for FraggleScript saving object ptrs too
 
 void P_FreeObjTable(void)
@@ -82,21 +253,19 @@ void P_NumberObjects(void)
    // count the number of thinkers, and mark each one with its index, using
    // the prev field as a placeholder, since it can be restored later.
 
-   // haleyjd 08/01/09: GCC doesn't like writing integer values into pointers,
-   // and I always thought it was messy anway. Instead, store the value into
-   // the new ordinal member of thinker_t.
+   // haleyjd 11/26/10: Replaced with virtual enumeration facility
    
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
-      if(dynamic_cast<mobj_t *>(th) != NULL)
-         th->ordinal = ++num_thinkers;
+   {
+      th->Enumerate(!th->isRemoved() ? num_thinkers + 1 : 0);
+      if(th->getEnumeration() == num_thinkers + 1) // if accepted, increment
+         ++num_thinkers;
+   }
 }
 
 void P_DeNumberObjects(void)
 {
-   CThinker *th;
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-      th->ordinal = 0;
+   // TODO: no-op
 }
 
 // 
@@ -107,7 +276,7 @@ void P_DeNumberObjects(void)
 //
 static unsigned int P_MobjNum(mobj_t *mo)
 {
-   unsigned int n = mo ? mo->ordinal : 0;   // 0 = NULL
+   unsigned int n = mo ? mo->getEnumeration() : 0; // 0 = NULL
    
    // extra check for invalid thingnum (prob. still ptr)
    if(n > num_thinkers) 
@@ -126,75 +295,102 @@ static mobj_t *P_MobjForNum(unsigned int n)
    return mobj_p[n];
 }
 
+//=============================================================================
 //
-// P_ArchivePlayers
+// Game World Saving and Loading
 //
-void P_ArchivePlayers(void)
+
+//
+// P_ArchivePSprite
+//
+// haleyjd 12/06/10: Archiving for psprites
+//
+static void P_ArchivePSprite(CSaveArchive &arc, pspdef_t &pspr)
 {
-   int i;
-   
-   CheckSaveGame(sizeof(player_t) * MAXPLAYERS); // killough
+   arc << pspr.sx << pspr.sy << pspr.tics << pspr.trans;
 
-   for(i = 0; i < MAXPLAYERS; i++)
+   if(arc.isSaving())
    {
-      if(playeringame[i])
-      {
-         int      j;
-         player_t *dest;
-
-         PADSAVEP();
-         dest = (player_t *) save_p;
-         memcpy(dest, &players[i], sizeof(player_t));
-         save_p += sizeof(player_t);
-         for(j = 0; j < NUMPSPRITES; j++)
-         {
-            if(dest->psprites[j].state)
-               dest->psprites[j].state =
-               (state_t *)(dest->psprites[j].state->index);
-         }
-      }
+      int statenum = pspr.state ? pspr.state->index : -1;
+      arc << statenum;
+   }
+   else
+   {
+      int statenum = -1;
+      arc << statenum;
+      if(statenum != -1) // TODO: bounds-check!
+         pspr.state = states[statenum];
+      else
+         pspr.state = NULL;
    }
 }
 
 //
-// P_UnArchivePlayers
+// P_ArchivePlayers
 //
-void P_UnArchivePlayers(void)
+static void P_ArchivePlayers(CSaveArchive &arc)
 {
    int i;
    
    for(i = 0; i < MAXPLAYERS; i++)
    {
+      // TODO: hub logic
       if(playeringame[i])
       {
          int j;
+         player_t &p = players[i];
 
-         PADSAVEP();
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove 
+             << p.cmd.look     << p.cmd.sidemove    << p.viewz
+             << p.viewheight   << p.deltaviewheight << p.bob
+             << p.pitch        << p.momx            << p.momy
+             << p.health       << p.armorpoints     << p.armortype
+             << p.hereticarmor << p.backpack        << p.totalfrags
+             << p.readyweapon  << p.pendingweapon   << p.extralight
+             << p.cheats       << p.refire          << p.killcount
+             << p.itemcount    << p.secretcount     << p.didsecret
+             << p.damagecount  << p.bonuscount      << p.fixedcolormap
+             << p.colormap     << p.curpsprite      << p.quake
+             << p.jumptime;
          
-         // sf: when loading a hub level using save games,
-         //     do not change the player data when crossing
-         //     levels: ie. retain the same weapons etc.
+         for(j = 0; j < NUMPOWERS; j++)
+            arc << p.powers[j];
 
-         if(!hub_changelevel)
+         for(j = 0; j < NUMCARDS; j++)
+            arc << p.cards[j];
+
+         for(j = 0; j < MAXPLAYERS; j++)
+            arc << p.frags[j];
+
+         for(j = 0; j < NUMWEAPONS; j++)
+            arc << p.weaponowned[j];
+
+         for(j = 0; j < NUMAMMO; j++)
+            arc << p.ammo[j] << p.maxammo[j];
+
+         for(j = 0; j < NUMWEAPONS; j++)
          {
-            memcpy(&players[i], save_p, sizeof(player_t));
-            for(j = 0; j < NUMPSPRITES; j++)
-            {
-               if(players[i].psprites[j].state)
-                  players[i].psprites[j].state =
-                   states[ (int)players[i].psprites[j].state ];
-            }
+            for(int k = 0; k < 3; k++)
+               arc << p.weaponctrs[j][k];
          }
-         
-         save_p += sizeof(player_t);
-         
-         // will be set when unarc thinker
-         players[i].mo = NULL;
-         players[i].attacker = NULL;
-         players[i].skin = NULL;
-         players[i].pclass = NULL;
-         players[i].attackdown = players[i].usedown = false;  // sf
-         players[i].cmd.buttons = 0;    // sf
+
+         for(j = 0; j < NUMPSPRITES; j++)
+            P_ArchivePSprite(arc, p.psprites[j]);
+
+         arc.ArchiveCString(p.name, 20);
+
+         if(arc.isLoading())
+         {
+            // will be set when unarc thinker
+            p.mo          = NULL;
+            p.attacker    = NULL;
+            p.skin        = NULL;
+            p.pclass      = NULL;
+            p.attackdown  = false; // sf
+            p.usedown     = false; // sf
+            p.cmd.buttons = 0;     // sf
+         }
       }
    }
 }
@@ -212,101 +408,32 @@ extern byte *savebuffer;
 //
 // Saves dynamic properties of sectors, lines, and sides.
 //
-void P_ArchiveWorld(void)
+static void P_ArchiveWorld(CSaveArchive &arc)
 {
-   int            i;
-   const sector_t *sec;
-   const line_t   *li;
-   const side_t   *si;
-   int16_t        *put;
-   
-   // killough 3/22/98: fix bug caused by hoisting save_p too early
-   // killough 10/98: adjust size for changes below
-   
-   // haleyjd  09/00: we need to save friction & movefactor now too
-   // for scripting purposes
-
-   // haleyjd 03/04/07: must save sector colormap indices
-   
-   size_t size = 
-      (sizeof(int16_t)*4 + 
-       sizeof(sec->floorheight) + sizeof(sec->ceilingheight) + 
-       sizeof(sec->friction) + sizeof(sec->movefactor) + 
-       sizeof(sec->topmap) + sizeof(sec->midmap) + sizeof(sec->bottommap) +
-       sizeof(sec->flags) + sizeof(sec->intflags) +
-       sizeof(sec->damage) + sizeof(sec->damageflags) + 
-       sizeof(sec->damagemask) + sizeof(sec->damagemod) +
-       sizeof(sec->ceilingpic) + sizeof(sec->floorpic))
-      * numsectors + sizeof(int16_t)*3*numlines + 4 + 4*sizeof(int);
-
-   for(i = 0; i < numlines; ++i)
-   {
-      if(lines[i].sidenum[0] != -1)
-         size +=
-          (sizeof(int16_t)*3 + sizeof si->textureoffset + 
-           sizeof si->rowoffset);
-      if(lines[i].sidenum[1] != -1)
-         size +=
-          (sizeof(int16_t)*3 + sizeof si->textureoffset + 
-           sizeof si->rowoffset);
-   }
-
-   CheckSaveGame(size); // killough
-   
-   PADSAVEP();                // killough 3/22/98
-   
-   put = (int16_t *)save_p;
-
+   int       i;
+   sector_t *sec;
+   line_t   *li;
+   side_t   *si;
+  
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
       // killough 10/98: save full floor & ceiling heights, including fraction
-      memcpy(put, &sec->floorheight, sizeof(sec->floorheight));
-      put = (int16_t *)((char *) put + sizeof(sec->floorheight));
-      memcpy(put, &sec->ceilingheight, sizeof(sec->ceilingheight));
-      put = (int16_t *)((char *) put + sizeof(sec->ceilingheight));
-
       // haleyjd: save the friction information too
-      memcpy(put, &sec->friction, sizeof(sec->friction));
-      put = (int16_t *)((char *) put + sizeof(sec->friction));
-      memcpy(put, &sec->movefactor, sizeof(sec->movefactor));
-      put = (int16_t *)((char *) put + sizeof(sec->movefactor));
-
       // haleyjd 03/04/07: save colormap indices
-      memcpy(put, &sec->topmap, sizeof(sec->topmap));
-      put = (int16_t *)((char *) put + sizeof(sec->topmap));
-      memcpy(put, &sec->midmap, sizeof(sec->midmap));
-      put = (int16_t *)((char *) put + sizeof(sec->midmap));
-      memcpy(put, &sec->bottommap, sizeof(sec->bottommap));
-      put = (int16_t *)((char *) put + sizeof(sec->bottommap));
-
       // haleyjd 12/28/08: save sector flags
       // haleyjd 08/30/09: intflags
-      memcpy(put, &sec->flags, sizeof(sec->flags));
-      put = (int16_t *)((char *) put + sizeof(sec->flags));
-      memcpy(put, &sec->intflags, sizeof(sec->intflags));
-      put = (int16_t *)((char *) put + sizeof(sec->intflags));
-
       // haleyjd 03/02/09: save sector damage properties
-      memcpy(put, &sec->damage, sizeof(sec->damage));
-      put = (int16_t *)((char *) put + sizeof(sec->damage));
-      memcpy(put, &sec->damageflags, sizeof(sec->damageflags));
-      put = (int16_t *)((char *) put + sizeof(sec->damageflags));
-      memcpy(put, &sec->damagemask, sizeof(sec->damagemask));
-      put = (int16_t *)((char *) put + sizeof(sec->damagemask));
-      memcpy(put, &sec->damagemod, sizeof(sec->damagemod));
-      put = (int16_t *)((char *) put + sizeof(sec->damagemod));
-
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
-      memcpy(put, &sec->floorpic, sizeof(sec->floorpic));
-      put = (int16_t *)((char *)put + sizeof(sec->floorpic));
-      memcpy(put, &sec->ceilingpic, sizeof(sec->ceilingpic));
-      put = (int16_t *)((char *)put + sizeof(sec->ceilingpic));
 
-      *put++ = sec->lightlevel;
-      *put++ = sec->oldlightlevel; // haleyjd
-      *put++ = sec->special;       // needed?   yes -- transfer types
-      *put++ = sec->tag;           // needed?   need them -- killough
+      arc << sec->floorheight << sec->ceilingheight 
+          << sec->friction << sec->movefactor  
+          << sec->topmap << sec->midmap << sec->bottommap
+          << sec->flags << sec->intflags 
+          << sec->damage << sec->damageflags << sec->damagemask << sec->damagemod
+          << sec->floorpic << sec->ceilingpic
+          << sec->lightlevel << sec->oldlightlevel 
+          << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
    }
 
@@ -315,9 +442,7 @@ void P_ArchiveWorld(void)
    {
       int j;
 
-      *put++ = li->flags;
-      *put++ = li->special;
-      *put++ = li->tag;
+      arc << li->flags << li->special << li->tag;
 
       for(j = 0; j < 2; j++)
       {
@@ -328,156 +453,25 @@ void P_ArchiveWorld(void)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            memcpy(put, &si->textureoffset, sizeof(si->textureoffset));
-            put = (int16_t *)((char *) put + sizeof(si->textureoffset));
-            memcpy(put, &si->rowoffset, sizeof(si->rowoffset));
-            put = (int16_t *)((char *) put + sizeof(si->rowoffset));
-            
-            *put++ = si->toptexture;
-            *put++ = si->bottomtexture;
-            *put++ = si->midtexture;
+            arc << si->textureoffset << si->rowoffset
+                << si->toptexture << si->bottomtexture << si->midtexture;
          }
       }
    }
 
-   // haleyjd 08/30/09: save state of lightning engine
-   memcpy(put, &NextLightningFlash, sizeof(NextLightningFlash));
-   put = (int16_t *)((char *)put + sizeof(NextLightningFlash));
-   memcpy(put, &LightningFlash, sizeof(LightningFlash));
-   put = (int16_t *)((char *)put + sizeof(LightningFlash));
-   memcpy(put, &LevelSky, sizeof(LevelSky));
-   put = (int16_t *)((char *)put + sizeof(LevelSky));
-   memcpy(put, &LevelTempSky, sizeof(LevelTempSky));
-   put = (int16_t *)((char *)put + sizeof(LevelTempSky));
-
-   save_p = (byte *)put;
-}
-
-
-
-//
-// P_UnArchiveWorld
-//
-// Restores dynamic properties of sectors, lines, and sides.
-//
-void P_UnArchiveWorld(void)
-{
-   int            i;
-   sector_t      *sec;
-   line_t        *li;
-   const int16_t *get;
-   
-   PADSAVEP();                // killough 3/22/98
-   
-   get = (int16_t *)save_p;
-
-   // do sectors
-   for(i = 0, sec = sectors; i < numsectors; i++, sec++)
-   {
-      // killough 10/98: load full floor & ceiling heights, including fractions      
-      memcpy(&sec->floorheight, get, sizeof(sec->floorheight));
-      get = (int16_t *)((char *) get + sizeof(sec->floorheight));
-      memcpy(&sec->ceilingheight, get, sizeof(sec->ceilingheight));
-      get = (int16_t *)((char *) get + sizeof(sec->ceilingheight));
-
-      // haleyjd: retrieve the friction information we now save
-      memcpy(&sec->friction, get, sizeof(sec->friction));
-      get = (int16_t *)((char *) get + sizeof(sec->friction));
-      memcpy(&sec->movefactor, get, sizeof(sec->movefactor));
-      get = (int16_t *)((char *) get + sizeof(sec->movefactor));
-
-      // haleyjd 03/04/07: retrieve colormap indices
-      memcpy(&sec->topmap, get, sizeof(sec->topmap));
-      get = (int16_t *)((char *) get + sizeof(sec->topmap));
-      memcpy(&sec->midmap, get, sizeof(sec->midmap));
-      get = (int16_t *)((char *) get + sizeof(sec->midmap));
-      memcpy(&sec->bottommap, get, sizeof(sec->bottommap));
-      get = (int16_t *)((char *) get + sizeof(sec->bottommap));
-
-      // haleyjd 12/28/08: retrieve sector flags
-      // haleyjd 08/30/09: intflags
-      memcpy(&sec->flags, get, sizeof(sec->flags));
-      get = (int16_t *)((char *) get + sizeof(sec->flags));
-      memcpy(&sec->intflags, get, sizeof(sec->intflags));
-      get = (int16_t *)((char *) get + sizeof(sec->intflags));
-
-      // haleyjd 03/02/09: retrieve sector damage info
-      memcpy(&sec->damage, get, sizeof(sec->damage));
-      get = (int16_t *)((char *) get + sizeof(sec->damage));
-      memcpy(&sec->damageflags, get, sizeof(sec->damageflags));
-      get = (int16_t *)((char *) get + sizeof(sec->damageflags));
-      memcpy(&sec->damagemask, get, sizeof(sec->damagemask));
-      get = (int16_t *)((char *) get + sizeof(sec->damagemask));
-      memcpy(&sec->damagemod, get, sizeof(sec->damagemod));
-      get = (int16_t *)((char *) get + sizeof(sec->damagemod));
-
-      memcpy(&sec->floorpic, get, sizeof(sec->floorpic));
-      get = (int16_t *)((char *) get + sizeof(sec->floorpic));
-      memcpy(&sec->ceilingpic, get, sizeof(sec->ceilingpic));
-      get = (int16_t *)((char *) get + sizeof(sec->ceilingpic));
-
-      sec->lightlevel    = *get++;
-      sec->oldlightlevel = *get++; // haleyjd
-      sec->special       = *get++;
-      sec->tag           = *get++;
-      
-      // jff 2/22/98 now three thinker fields, not two
-      sec->ceilingdata  = NULL;
-      sec->floordata    = NULL;
-      sec->lightingdata = NULL;
-      sec->soundtarget  = NULL;
-
-      // SoM: update the heights
-      P_SetFloorHeight(sec, sec->floorheight);
-      P_SetCeilingHeight(sec, sec->ceilingheight);
-   }
-
-   // do lines
-   for(i = 0, li = lines; i < numlines; ++i, ++li)
-   {
-      int j;
-
-      li->flags = *get++;
-      li->special = *get++;
-      li->tag = *get++;
-      for(j = 0; j < 2; j++)
-      {
-         if(li->sidenum[j] != -1)
-         {
-            side_t *si = &sides[li->sidenum[j]];
-            
-            // killough 10/98: load full sidedef offsets, including fractions
-            
-            memcpy(&si->textureoffset, get, sizeof(si->textureoffset));
-            get = (int16_t *)((char *) get + sizeof(si->textureoffset));
-            memcpy(&si->rowoffset, get, sizeof(si->rowoffset));
-            get = (int16_t *)((char *) get + sizeof(si->rowoffset));
-            
-            si->toptexture    = *get++;
-            si->bottomtexture = *get++;
-            si->midtexture    = *get++;
-         }
-      }
-   }
+   // killough 3/26/98: Save boss brain state
+   arc << brain.easy;
 
    // haleyjd 08/30/09: save state of lightning engine
-   memcpy(&NextLightningFlash, get, sizeof(NextLightningFlash));
-   get = (int16_t *)((char *) get + sizeof(NextLightningFlash));
-   memcpy(&LightningFlash, get, sizeof(LightningFlash));
-   get = (int16_t *)((char *) get + sizeof(LightningFlash));
-   memcpy(&LevelSky, get, sizeof(LevelSky));
-   get = (int16_t *)((char *) get + sizeof(LevelSky));
-   memcpy(&LevelTempSky, get, sizeof(LevelTempSky));
-   get = (int16_t *)((char *) get + sizeof(LevelTempSky));
-
-   save_p = (byte *)get;
+   arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
 }
 
 //
 // Thinkers
 //
 
-typedef enum {
+typedef enum 
+{
    tc_end,
    tc_mobj
 } thinkerclass_t;
@@ -486,22 +480,16 @@ typedef enum {
 // P_ArchiveThinkers
 //
 // 2/14/98 killough: substantially modified to fix savegame bugs
-
-void P_ArchiveThinkers(void)
+//
+static void P_ArchiveThinkers(CSaveArchive &arc)
 {
    CThinker *th;
-   
-   CheckSaveGame(sizeof brain);   // killough 3/26/98: Save boss brain state
-   memcpy(save_p, &brain, sizeof brain);
-   save_p += sizeof brain;
-
-   // check that enough room is available in savegame buffer
-   CheckSaveGame(num_thinkers*(sizeof(mobj_t)+4)); // killough 2/14/98
+   int i;
 
    // save off the current thinkers
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(th->function == P_MobjThinker)
+      if(thinker_cast<mobj_t *>(th))
       {
          mobj_t *mobj;
          
@@ -519,58 +507,39 @@ void P_ArchiveThinkers(void)
          // mobj thinker.
          
          if(mobj->target)
-            mobj->target = (mobj_t *)
-              (mobj->target->thinker.function == P_MobjThinker ?
-                mobj->target->ordinal : 0);
+            mobj->target = (mobj_t *)(mobj->target->getEnumeration());
 
          if(mobj->tracer)
-         {
-            mobj->tracer = (mobj_t *)
-               (mobj->tracer->thinker.function == P_MobjThinker ?
-                 mobj->tracer->ordinal : 0);
-         }
+            mobj->tracer = (mobj_t *)(mobj->tracer->getEnumeration());
 
          // killough 2/14/98: new field: save last known enemy. Prevents
          // monsters from going to sleep after killing monsters and not
          // seeing player anymore.
-
          if(mobj->lastenemy)
-         {
-            mobj->lastenemy = (mobj_t *)
-              (mobj->lastenemy->thinker.function == P_MobjThinker ?
-               mobj->lastenemy->ordinal : 0);
-         }
+            mobj->lastenemy = (mobj_t *)(mobj->lastenemy->getEnumeration());
         
          if(mobj->player)
-         {
             mobj->player = (player_t *)((mobj->player-players) + 1);
-         }
       }
    }
 
    // add a terminating marker
-   *save_p++ = tc_end;
+   savefile.WriteUint8(tc_end);
    
    // killough 9/14/98: save soundtargets
+   for(i = 0; i < numsectors; i++)
    {
-      int i;
-      CheckSaveGame(numsectors * sizeof(mobj_t *));       // killough 9/14/98
-      for(i = 0; i < numsectors; i++)
+      mobj_t *target = sectors[i].soundtarget;
+      unsigned int ordinal = 0;
+      if(target)
       {
-         mobj_t *target = sectors[i].soundtarget;
-         if(target)
-         {
-            // haleyjd 11/03/06: We must check for P_MobjThinker here as well,
-            // or player corpses waiting for deferred removal will be saved as
-            // raw pointer values instead of twizzled numbers, causing a crash
-            // on savegame load!
-            target = (mobj_t *)
-               (target->thinker.function == P_MobjThinker ? 
-                target->ordinal : 0);
-         }
-         memcpy(save_p, &target, sizeof target);
-         save_p += sizeof target;
+         // haleyjd 11/03/06: We must check for P_MobjThinker here as well,
+         // or player corpses waiting for deferred removal will be saved as
+         // raw pointer values instead of twizzled numbers, causing a crash
+         // on savegame load!
+         ordinal = target->getEnumeration();
       }
+      arc << ordinal;
    }
    
    // killough 2/14/98: restore prev pointers
@@ -748,7 +717,8 @@ void P_UnArchiveThinkers(void)
 //
 // P_ArchiveSpecials
 //
-enum {
+enum 
+{
    tc_ceiling,
    tc_door,
    tc_floor,
@@ -797,120 +767,16 @@ enum {
 // T_ACSThinker                                        -- haleyjd: ACS
 //
 
-void P_ArchiveSpecials(void)
+void P_ArchiveSpecials(COutBuffer &savefile)
 {
    CThinker *th;
-   size_t    size = 0;          // killough
    
-   // save off the current thinkers (memory size calculation -- killough)
-   
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      if(!th->function)
-      {
-         // [CG] These map specials now use hashes instead of linked lists, so
-         //      the lookup logic has to change.
-         // platlist_t *pl;
-         // ceilinglist_t *cl;     //jff 2/22/98 need this for ceilings too now
-         platform_netid_t *platform_netid = NULL;
-         ceiling_netid_t *ceiling_netid = NULL;
-         plat_t *platform = NULL;
-         ceiling_t *ceiling = NULL;
-
-         // [CG] It seems silly to iterate through the whole hash table, but
-         //      because this uses pointer comparisons (because the thinker
-         //      might not be either a platform or a ceiling) there's no way to
-         //      just use the Net ID.
-         while((platform_netid =
-                E_HashTableIterator(platform_by_netid, platform_netid)))
-         {
-            platform = platform_netid->platform;
-            if(platform == (plat_t *)th)
-            {
-               size += 4 + sizeof(plat_t);
-               goto end;
-            }
-         }
-
-         while((ceiling_netid =
-                E_HashTableIterator(ceiling_by_netid, ceiling_netid)))
-         {
-            ceiling = ceiling_netid->ceiling;
-            if(ceiling == (ceiling_t *)th)
-            {
-               size += 4 + sizeof(ceiling_t);
-               goto end;
-            }
-         }
-      end:;
-      }
-      else
-      {
-         size +=
-            th->function == T_MoveCeiling   ? 4 + sizeof(ceiling_t)       :
-            th->function == T_VerticalDoor  ? 4 + sizeof(vldoor_t)        :
-            th->function == T_MoveFloor     ? 4 + sizeof(floormove_t)     :
-            th->function == T_PlatRaise     ? 4 + sizeof(plat_t)          :
-            th->function == T_LightFlash    ? 4 + sizeof(lightflash_t)    :
-            th->function == T_StrobeFlash   ? 4 + sizeof(strobe_t)        :
-            th->function == T_Glow          ? 4 + sizeof(glow_t)          :
-            th->function == T_MoveElevator  ? 4 + sizeof(elevator_t)      :
-            th->function == T_Scroll        ? 4 + sizeof(scroll_t)        :
-            th->function == T_Pusher        ? 4 + sizeof(pusher_t)        :
-            th->function == T_FireFlicker   ? 4 + sizeof(fireflicker_t)   :
-            th->function == T_PolyObjRotate ? 4 + sizeof(polyrotate_t)    :
-            th->function == T_PolyObjMove   ? 4 + sizeof(polymove_t)      :
-            th->function == T_PolyDoorSlide ? 4 + sizeof(polyslidedoor_t) :
-            th->function == T_PolyDoorSwing ? 4 + sizeof(polyswingdoor_t) :
-            th->function == T_MovePillar    ? 4 + sizeof(pillar_t)        :
-            th->function == T_QuakeThinker  ? 4 + sizeof(quakethinker_t)  :
-            th->function == T_LightFade     ? 4 + sizeof(lightfade_t)     :
-            th->function == T_FloorWaggle   ? 4 + sizeof(floorwaggle_t)   :
-            th->function == T_ACSThinker    ? 4 + sizeof(acsthinker_t)    :
-            0;
-      }
-   }
-
-   CheckSaveGame(size);          // killough
-
    // save off the current thinkers
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(!th->function)
-      {
-         // killough 2/8/98: fix plat original height bug.
-         // Since acv==NULL, this could be a plat in stasis.
-         // so check the active plats list, and save this
-         // plat (jff: or ceiling) even if it is in stasis.
-
-         platform_netid_t *platform_netid = NULL;
-         ceiling_netid_t *ceiling_netid = NULL;
-         plat_t *platform = NULL;
-         ceiling_t *ceiling = NULL;
-
-         while((platform_netid =
-                E_HashTableIterator(platform_by_netid, platform_netid)))
-         {
-            platform = platform_netid->platform;
-            if(platform == (plat_t *)th)
-               goto plat;
-         }
-
-         while((ceiling_netid =
-                E_HashTableIterator(ceiling_by_netid, ceiling_netid)))
-         {
-            ceiling = ceiling_netid->ceiling;
-            if(ceiling == (ceiling_t *)th)
-               goto ceiling;
-         }
-
-         continue;
-      }
-
       if(th->function == T_MoveCeiling)
       {
          ceiling_t *ceiling;
-      ceiling:                               // killough 2/14/98
          *save_p++ = tc_ceiling;
          PADSAVEP();
          ceiling = (ceiling_t *)save_p;
@@ -949,7 +815,6 @@ void P_ArchiveSpecials(void)
       if(th->function == T_PlatRaise)
       {
          plat_t *plat;
-      plat:   // killough 2/14/98: added fix for original plat height above
          *save_p++ = tc_plat;
          PADSAVEP();
          plat = (plat_t *)save_p;
@@ -1129,7 +994,7 @@ void P_ArchiveSpecials(void)
    }
    
    // add a terminating marker
-   *save_p++ = tc_endspecials;
+   savefile.WriteUint8(tc_endspecials);
 }
 
 
@@ -1434,7 +1299,6 @@ void P_UnArchiveSpecials(void)
 
 void P_ArchiveRNG(void)
 {
-   CheckSaveGame(sizeof rng);
    memcpy(save_p, &rng, sizeof rng);
    save_p += sizeof rng;
 }
@@ -1445,21 +1309,14 @@ void P_UnArchiveRNG(void)
    save_p += sizeof rng;
 }
 
+//
+// P_ArchiveMap
+//
 // killough 2/22/98: Save/restore automap state
-void P_ArchiveMap(void)
+//
+static void P_ArchiveMap(CSaveArchive &arc)
 {
-   CheckSaveGame(sizeof followplayer + sizeof markpointnum +
-                 markpointnum * sizeof *markpoints +
-                 sizeof automapactive);
-
-   memcpy(save_p, &automapactive, sizeof automapactive);
-   save_p += sizeof automapactive;
-   memcpy(save_p, &followplayer, sizeof followplayer);
-   save_p += sizeof followplayer;
-   memcpy(save_p, &automap_grid, sizeof automap_grid);
-   save_p += sizeof automap_grid;
-   memcpy(save_p, &markpointnum, sizeof markpointnum);
-   save_p += sizeof markpointnum;
+   arc << automapactive << followplayer << automap_grid << markpointnum;
 
    if(markpointnum)
    {
@@ -1503,80 +1360,54 @@ void P_UnArchiveMap(void)
 // haleyjd 03/26/06: PolyObject saving code
 //
 
-static void P_ArchivePolyObj(polyobj_t *po)
+static void P_ArchivePolyObj(CSaveArchive &arc, polyobj_t *po)
 {
-   size_t poSize = sizeof(po->id) + sizeof(po->angle) + sizeof(po->spawnSpot);
-
-   CheckSaveGame(poSize);
-
-   memcpy(save_p, &po->id, sizeof(po->id));
-   save_p += sizeof(po->id);
-
-   memcpy(save_p, &po->angle, sizeof(po->angle));
-   save_p += sizeof(po->angle);
-
-   memcpy(save_p, &po->spawnSpot, sizeof(po->spawnSpot));
-   save_p += sizeof(po->spawnSpot);
-}
-
-static void P_UnArchivePolyObj(polyobj_t *po)
-{
-   int id;
-   unsigned int angle;
-   CPointThinker spawnSpot;
-
    // nullify all polyobject thinker pointers;
    // the thinkers themselves will fight over who gets the field
    // when they first start to run.
-   po->thinker = NULL;
+   if(arc.isLoading())
+      po->thinker = NULL;
 
-   memcpy(&id, save_p, sizeof(id));
-   save_p += sizeof(id);
+   arc << po->id << po->angle;
 
-   memcpy(&angle, save_p, sizeof(angle));
-   save_p += sizeof(angle);
-
-   memcpy(&spawnSpot, save_p, sizeof(spawnSpot));
-   save_p += sizeof(spawnSpot);
+   // TODO: CPointThinker
+   memcpy(save_p, &po->spawnSpot, sizeof(po->spawnSpot));
+   save_p += sizeof(po->spawnSpot);
 
    // if the object is bad or isn't in the id hash, we can do nothing more
    // with it, so return now
-   if((po->flags & POF_ISBAD) || po != Polyobj_GetForNum(id))
-      return;
+   if(arc.isLoading())
+   {
+      if((po->flags & POF_ISBAD) || po != Polyobj_GetForNum(po->id))
+         return;
 
-   // rotate and translate polyobject
-   Polyobj_MoveOnLoad(po, angle, spawnSpot.x, spawnSpot.y);
+      // rotate and translate polyobject
+      Polyobj_MoveOnLoad(po, angle, spawnSpot.x, spawnSpot.y);
+   }
 }
 
-void P_ArchivePolyObjects(void)
+static void P_ArchivePolyObjects(CSaveArchive &arc)
 {
    int i;
 
-   CheckSaveGame(sizeof(numPolyObjects));
-
    // save number of polyobjects
-   memcpy(save_p, &numPolyObjects, sizeof(numPolyObjects));
-   save_p += sizeof(numPolyObjects);
-
-   for(i = 0; i < numPolyObjects; ++i)
-      P_ArchivePolyObj(&PolyObjects[i]);
-}
-
-void P_UnArchivePolyObjects(void)
-{
-   int i, numSavedPolys;
-
-   memcpy(&numSavedPolys, save_p, sizeof(numSavedPolys));
-   save_p += sizeof(numSavedPolys);
-
-   if(numSavedPolys != numPolyObjects)
+   if(arc.isSaving())
+      arc << numPolyObjects;
+   else
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchivePolyObjects: polyobj count inconsistency\n");
+      int numSavedPolys = 0;
+
+      arc << numSavedPolys;
+
+      if(numSavedPolys != numPolyObjects)
+      {
+         I_FatalError(I_ERR_KILL,
+            "P_UnArchivePolyObjects: polyobj count inconsistency\n");
+      }
    }
 
-   for(i = 0; i < numSavedPolys; ++i)
-      P_UnArchivePolyObj(&PolyObjects[i]);
+   for(i = 0; i < numPolyObjects; ++i)
+      P_ArchivePolyObj(arc, &PolyObjects[i]);
 }
 
 /*******************************
@@ -1600,7 +1431,6 @@ void P_UnArchivePolyObjects(void)
 #ifndef EE_NO_SMALL_SUPPORT
 static void P_ArchiveSmallAMX(AMX *amx)
 {
-
    long amx_size = 0;
    byte *data;
 
@@ -2082,6 +1912,151 @@ void P_UnArchiveACS(void)
    // load map vars
    // load world vars (TODO: not on hub transfer)
    // TODO: load deferred scripts (TODO: not on hub transfer)
+}
+
+//============================================================================
+//
+// Saving - Main Routine
+//
+
+#define SAVESTRINGSIZE 24
+
+void P_SaveCurrentLevel(char *filename, char *description)
+{
+   int  length, i;
+   char name2[VERSIONSIZE];
+   const char *fn;
+   COutBuffer savefile;
+   CSaveArchive arc(&savefile);
+
+   if(!savefile.CreateFile(filename, 512*1024, COutBuffer::NENDIAN))
+   {
+      const char *str =
+         errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
+      doom_printf("%s", str);
+      return;
+   }
+
+   // Enable buffered IO exceptions
+   savefile.setThrowing(true);
+
+   try
+   {
+      arc.ArchiveCString(description, SAVESTRINGSIZE);
+      
+      // killough 2/22/98: "proprietary" version string :-)
+      memset(name2, 0, sizeof(name2));
+      sprintf(name2, VERSIONID, version);
+   
+      arc.ArchiveCString(name2, VERSIONSIZE);
+   
+      // killough 2/14/98: save old compatibility flag:
+      // haleyjd 06/16/10: save "inmasterlevels" state
+      arc << compatibility << gameskill << inmasterlevels;
+   
+      // sf: use string rather than episode, map
+      for(i = 0; i < 8; i++)
+         arc << levelmapname[i];
+
+      // haleyjd 06/16/10: support for saving/loading levels in managed wad
+      // directories.
+
+      if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
+      {
+         int len = 0;
+
+         // save length of managed directory filename string and
+         // managed directory filename string
+         arc.ArchiveLString(fn, len);
+      }
+      else
+      {
+         // just save 0; there is no name to save
+         int len = 0;
+         arc << len;
+      }
+  
+      // killough 3/16/98, 12/98: store lump name checksum
+      uint64_t checksum = G_Signature(g_dir);
+      savefile.Write(&checksum, sizeof(checksum));
+
+      // killough 3/16/98: store pwad filenames in savegame      
+      for(wfileadd_t *file = wadfiles; file->filename; ++file)
+      {
+         const char *fn = file->filename;
+         savefile.Write(fn, strlen(fn));
+         savefile.WriteUint8((uint8_t)'\n');
+      }
+      savefile.WriteUint8(0);
+  
+      for(i = 0; i < MAXPLAYERS; i++)
+         arc << playeringame[i];
+
+      for(; i < MIN_MAXPLAYERS; i++)         // killough 2/28/98
+      {
+         int dummy = 0;
+         arc << dummy;
+      }
+
+      // jff 3/17/98 save idmus state
+      arc << idmusnum << GameType;
+
+      byte options[GAME_OPTION_SIZE];
+      G_WriteOptions(options);    // killough 3/1/98: save game options
+      savefile.Write(options, sizeof(options));
+   
+      //killough 11/98: save entire word
+      arc << leveltime;
+   
+      // killough 11/98: save revenant tracer state
+      uint8_t tracerState = (uint8_t)((gametic-basetic) & 255);
+      arc << tracerState;
+
+      arc << dmflags;
+   
+      // killough 3/22/98: add Z_CheckHeap after each call to ensure consistency
+      // haleyjd 07/06/09: just Z_CheckHeap after the end. This stuff works by now.
+   
+      P_NumberObjects();    // turn ptrs to numbers
+
+      P_ArchivePlayers(arc);
+      P_ArchiveWorld(arc);
+      P_ArchivePolyObjects(arc); // haleyjd 03/27/06
+      P_ArchiveThinkers(arc);
+      P_ArchiveSpecials();
+      P_ArchiveRNG();    // killough 1/18/98: save RNG information
+      P_ArchiveMap(arc);    // killough 1/22/98: save automap information
+      P_ArchiveScripts();   // sf: archive scripts
+      P_ArchiveSoundSequences();
+      P_ArchiveButtons();
+
+      P_DeNumberObjects();
+
+      uint8_t cmarker = 0xE6; // consistancy marker
+      arc << cmarker; 
+   }
+   catch(CBufferedIOException)
+   {
+      // An IO error occurred while trying to save.
+      const char *str =
+         errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
+      doom_printf("%s", str);
+
+      // Close the file and remove it
+      savefile.setThrowing(false);
+      savefile.Close();
+      remove(filename);
+      return;
+   }
+
+   // Close the save file
+   savefile.Close();
+
+   // Check the heap.
+   Z_CheckHeap();
+
+   if(!hub_changelevel) // sf: no 'game saved' message for hubs
+      doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
 }
 
 //----------------------------------------------------------------------------

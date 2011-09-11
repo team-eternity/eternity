@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -20,20 +20,17 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//      System specific interface stuff.
+//      Main rendering module
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_MAIN__
-#define __R_MAIN__
-
-//#include "d_player.h"
-//#include "r_data.h"
-//#include "r_draw.h"
-//#include "r_defs.h"
-//#include "p_chase.h"
+#ifndef R_MAIN_H__
+#define R_MAIN_H__
 
 #include "tables.h"
+
+// haleyjd 12/15/2010: Lighting data is required
+#include "r_lighting.h"
 
 struct pwindow_t;
 struct columndrawer_t;
@@ -63,59 +60,6 @@ extern int      linecount;
 extern int      loopcount;
 
 extern boolean  showpsprites;
-
-//
-// Lighting LUT.
-// Used for z-depth cuing per column/row,
-//  and other lighting effects (sector ambient, flash).
-//
-
-// Lighting constants.
-
-// SoM: I am really speechless at this... just... why?
-// Lighting in doom was originally clamped off to just 16 brightness levels
-// for sector lighting. Simply changing the constants is enough to change this
-// it seriously bottles the mind why this wasn't done in doom from the start 
-// except for maybe memory usage savings. 
-//#define OLDMAPS
-#ifdef OLDMAPS
-   #define LIGHTLEVELS       16
-   #define LIGHTSEGSHIFT      4
-   #define LIGHTBRIGHT        1
-#else
-   #define LIGHTLEVELS       32
-   #define LIGHTSEGSHIFT      3
-   #define LIGHTBRIGHT        2
-#endif
-
-#define LIGHTSCALESHIFT   12
-#define LIGHTZSHIFT       20
-
-#define LIGHTZDIV         16.0f
-
-#ifndef LIGHTTABLE_T__
-#define LIGHTTABLE_T__
-// sf: moved from r_main.h for coloured lighting
-#define MAXLIGHTZ        128
-#define MAXLIGHTSCALE     48
-typedef byte lighttable_t;
-#endif
-
-// killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
-extern lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-extern lighttable_t *(*zlight)[MAXLIGHTZ];
-extern lighttable_t *fullcolormap;
-extern int numcolormaps;    // killough 4/4/98: dynamic number of maps
-extern lighttable_t **colormaps;
-// killough 3/20/98, 4/4/98: end dynamic colormaps
-
-extern int          extralight;
-extern lighttable_t *fixedcolormap;
-
-// Number of diminishing brightness levels.
-// There a 0-31, i.e. 32 LUT in the COLORMAP lump.
-
-#define NUMCOLORMAPS 32
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle
 enum
@@ -163,12 +107,12 @@ struct player_t;
 // sf: camera point added
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera); // Called by G_Drawer.
                                                                  // sf: G_Drawer???
-
 //
 // R_ResetFOV
 // 
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
+//
 void R_ResetFOV(int width, int height);
 
 void R_Init(void);                           // Called by startup code.
@@ -227,11 +171,6 @@ enum
    SEG_MARKFPORTAL = 0x08
 };
 
-#ifndef LIGHTTABLE_T__
-#define LIGHTTABLE_T__
-typedef byte lighttable_t;
-#endif 
-
 struct side_t;
 struct visplane_t;
 struct portal_t;
@@ -252,8 +191,7 @@ typedef struct cb_seg_s
 
    boolean twosided, clipsolid, maskedtex;
    int16_t toptex, midtex, bottomtex;
-   //boolean markfloor, markceiling;
-   //boolean markfportal, markcportal;
+
    unsigned int markflags; // haleyjd 03/11/10
 
    boolean segtextured;

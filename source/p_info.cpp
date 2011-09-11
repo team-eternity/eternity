@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Simon Howard, et al.
@@ -77,9 +77,9 @@ extern char gamemapname[9];
 //
 enum
 {
+   LI_PROTO_CURRENT,  // this prototype is the temporary parsing prototype
    LI_PROTO_HEXEN,    // this prototype comes from Hexen MAPINFO (not used yet)
    LI_PROTO_EMAPINFO, // this prototype comes from EMAPINFO
-   LI_PROTO_CURRENT   // this prototype is the temporary parsing prototype
 };
 
 //
@@ -95,14 +95,15 @@ enum
 // the fields of a static object without overwriting the LevelInfo object 
 // itself.
 //
-typedef struct LevelInfoProto_s
+struct LevelInfoProto_t
 {
-   mdllistitem_t links;                        // links for hashing
-   int           type;                         // type id via above enumeration
-   char          mapname[9];                   // name of map to which this belongs
-   LevelInfo_t   info;                         // the LevelInfo object
-   boolean       modified[LI_FIELD_NUMFIELDS]; // array of bools to track modified fields
-} LevelInfoProto_t;
+   CDLListItem<LevelInfoProto_t> links;        // links for hashing
+   ENCStringHashKey mapname;                   // name of map to which this belongs
+   char        mapnamestr[9];                  // storage for name
+   int         type;                           // type id via above enumeration   
+   LevelInfo_t info;                           // the LevelInfo object
+   boolean     modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
+};
 
 // haleyjd: moved everything into the LevelInfo struct
 LevelInfo_t LevelInfo;
@@ -110,7 +111,7 @@ LevelInfo_t LevelInfo;
 // haleyjd 06/25/10: LevelInfo prototype used for parsing. Data fields marked as
 // "modified" are then copied to the destination LevelInfo (either a prototype, 
 // or the actual LevelInfo object for the current level).
-LevelInfoProto_t LevelInfoProto = { { 0 }, LI_PROTO_CURRENT };
+LevelInfoProto_t LevelInfoProto;
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
 
 static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel);
@@ -319,10 +320,10 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
 static LevelInfoProto_t **levelInfoPrototypes; // reallocating array of pointers
 static int numPrototypes;
 static int numPrototypesAlloc;
-static ehash_t protoHash; // hash table for prototype objects
 
-// key retrieval function for prototype hash table
-E_KEYFUNC(LevelInfoProto_t, mapname)
+// hash table for prototype objects
+static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_t::mapname,
+                                                                &LevelInfoProto_t::links); 
 
 //
 // P_addLevelInfoPrototype
@@ -347,17 +348,15 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
    levelInfoPrototypes[numPrototypes++] = newProto;
 
    // initialize name
-   strncpy(newProto->mapname, mapname, 8);
+   strncpy(newProto->mapnamestr, mapname, 8);
+   newProto->mapname = newProto->mapnamestr;
 
    // initialize hash table first time if necessary
-   if(!protoHash.isinit)
-   {
-      E_NCStrHashInit(&protoHash, numPrototypesAlloc, 
-                      E_KEYFUNCNAME(LevelInfoProto_t, mapname), NULL);
-   }
+   if(!protoHash.isInitialized())
+      protoHash.Initialize(numPrototypesAlloc);
 
    // add it to the hash table
-   E_HashAddObject(&protoHash, newProto);
+   protoHash.addObject(newProto);
 
    return newProto;
 }
@@ -373,7 +372,7 @@ static void P_clearLevelInfoPrototypes(void)
    int i;
 
    // destroy the hash table
-   E_HashDestroy(&protoHash);
+   protoHash.Destroy();
 
    // free all the LevelInfo objects
    for(i = 0; i < numPrototypes; ++i)
@@ -393,7 +392,7 @@ static void P_clearLevelInfoPrototypes(void)
 //
 static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
 {
-   return (LevelInfoProto_t *)(E_HashObjectForKey(&protoHash, &mapname));
+   return protoHash.objectForKey(mapname);
 }
 
 

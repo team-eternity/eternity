@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -45,16 +45,16 @@ int screenshot_gamma;
 // killough 10/98: changed into macro to return failure instead of aborting
 
 #define SafeWrite(ob, data, size) \
-   if(!M_BufferWrite(ob, data, size)) return false
+   if(!ob->Write(data, size)) return false
 
 #define SafeWrite32(ob, data) \
-   if(!M_BufferWriteUint32(ob, data)) return false
+   if(!ob->WriteUint32(data)) return false
 
 #define SafeWrite16(ob, data) \
-   if(!M_BufferWriteUint16(ob, data)) return false
+   if(!ob->WriteUint16(data)) return false
 
 #define SafeWrite8(ob, data) \
-   if(!M_BufferWriteUint8(ob, data)) return false
+   if(!ob->WriteUint8(data)) return false
 
 //=============================================================================
 //
@@ -85,7 +85,7 @@ typedef struct pcx_s
 //
 // pcx_Writer
 //
-static boolean pcx_Writer(outbuffer_t *ob, byte *data, 
+static boolean pcx_Writer(COutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i;
@@ -139,8 +139,8 @@ static boolean pcx_Writer(outbuffer_t *ob, byte *data,
       }
       else
       {
-         if(!M_BufferWriteUint8(ob, 0xc1) || 
-            !M_BufferWriteUint8(ob, *data))
+         if(!ob->WriteUint8(0xc1) || 
+            !ob->WriteUint8(*data))
             return false;
          ++data;
       }
@@ -211,7 +211,7 @@ typedef struct tagBITMAPINFOHEADER
 //
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-static boolean bmp_Writer(outbuffer_t *ob, byte *data, 
+static boolean bmp_Writer(COutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i, j, wid;
@@ -323,7 +323,7 @@ typedef struct tgaheader_s
 //
 // haleyjd 12/28/09
 //
-static boolean tga_Writer(outbuffer_t *ob, byte *data, 
+static boolean tga_Writer(COutBuffer *ob, byte *data, 
                           uint32_t width, uint32_t height, byte *palette)
 {
    tgaheader_t tga;
@@ -390,7 +390,7 @@ static boolean tga_Writer(outbuffer_t *ob, byte *data,
 // Shared Code
 //
 
-typedef boolean (*ShotWriter_t)(outbuffer_t *, byte *, uint32_t, uint32_t, byte *);
+typedef boolean (*ShotWriter_t)(COutBuffer *, byte *, uint32_t, uint32_t, byte *);
 
 typedef struct shotformat_s
 {
@@ -409,9 +409,9 @@ enum
 
 static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
 {
-   { "bmp", OUTBUFFER_LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
-   { "pcx", OUTBUFFER_LENDIAN, pcx_Writer }, // ZSoft PC Paint
-   { "tga", OUTBUFFER_LENDIAN, tga_Writer }, // Truevision TARGA
+   { "bmp", COutBuffer::LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
+   { "pcx", COutBuffer::LENDIAN, pcx_Writer }, // ZSoft PC Paint
+   { "tga", COutBuffer::LENDIAN, tga_Writer }, // Truevision TARGA
 };
 
 //
@@ -427,7 +427,7 @@ void M_ScreenShot(void)
    boolean success = false;
    char   *path = NULL;
    size_t  len;
-   outbuffer_t ob;
+   COutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
    
    errno = 0;
@@ -457,7 +457,7 @@ void M_ScreenShot(void)
       }
       while(!access(lbmname, F_OK) && --tries);
 
-      if(tries && M_BufferCreateFile(&ob, lbmname, 512*1024, format->endian))
+      if(tries && ob.CreateFile(lbmname, 512*1024, format->endian))
       {
          // killough 4/18/98: make palette stay around
          // (PU_CACHE could cause crash)         
@@ -476,7 +476,7 @@ void M_ScreenShot(void)
                                   pal);
 
          // haleyjd: close the buffer
-         M_BufferClose(&ob);
+         ob.Close();
 
          // if not successful, remove the file now
          if(!success)

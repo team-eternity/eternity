@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -887,7 +887,7 @@ void A_HticBossDeath(mobj_t *actor)
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             mobj_t *mo;
-            if((mo = dynamic_cast<mobj_t *>(th)))
+            if((mo = thinker_cast<mobj_t *>(th)))
             {
                unsigned int moflags =
                   hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -36,7 +36,7 @@
 
 // Global data
 
-SndSeq_t *SoundSequences; // head of running sndseq list
+CDLListItem<SndSeq_t> *SoundSequences; // head of running sndseq list
 
 SndSeq_t *EnviroSequence; // currently playing environmental sequence
 
@@ -53,16 +53,16 @@ SndSeq_t *EnviroSequence; // currently playing environmental sequence
 //
 boolean S_CheckSequenceLoop(mobj_t *mo)
 {
-   SndSeq_t *curSeq = SoundSequences, *next;
+   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
 
-   while(curSeq)
+   while(link)
    {
-      next = (SndSeq_t *)(curSeq->link.next);
+      next = link->dllNext;
 
-      if(curSeq->origin == mo)
-         return ((curSeq->flags & SEQ_FLAG_LOOPING) == SEQ_FLAG_LOOPING);
+      if(link->dllObject->origin == mo)
+         return ((link->dllObject->flags & SEQ_FLAG_LOOPING) == SEQ_FLAG_LOOPING);
 
-      curSeq = next;
+      link = next;
    }
 
    return false; // if no sequence is playing, it's sure not looping o_O
@@ -85,11 +85,13 @@ boolean S_CheckSectorSequenceLoop(sector_t *s, boolean floorOrCeiling)
 //
 void S_StopSequence(mobj_t *mo)
 {
-   SndSeq_t *curSeq = SoundSequences, *next;
+   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
+   SndSeq_t *curSeq;
 
-   while(curSeq)
+   while(link)
    {
-      next = (SndSeq_t *)(curSeq->link.next);
+      next   = link->dllNext;
+      curSeq = link->dllObject;
 
       if(curSeq->origin == mo)
       {
@@ -106,11 +108,11 @@ void S_StopSequence(mobj_t *mo)
          }
 
          // unlink and delete this object
-         M_DLListRemove((mdllistitem_t *)curSeq);
+         curSeq->link.remove();
          Z_Free(curSeq);
       }
 
-      curSeq = next;
+      link = next;
    }
 }
 
@@ -123,20 +125,20 @@ void S_StopSequence(mobj_t *mo)
 //
 void S_SquashSequence(mobj_t *mo)
 {
-   SndSeq_t *curSeq = SoundSequences, *next;
+   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
 
-   while(curSeq)
+   while(link)
    {
-      next = (SndSeq_t *)(curSeq->link.next);
+      next = link->dllNext;
 
-      if(curSeq->origin == mo)
+      if(link->dllObject->origin == mo)
       {
          // unlink and delete this object
-         M_DLListRemove((mdllistitem_t *)curSeq);
-         Z_Free(curSeq);
+         link->remove();
+         Z_Free(link->dllObject);
       }
 
-      curSeq = next;
+      link = next;
    }
 }
 
@@ -149,23 +151,23 @@ void S_SquashSequence(mobj_t *mo)
 //
 void S_KillSequence(mobj_t *mo)
 {
-   SndSeq_t *curSeq = SoundSequences, *next;
+   CDLListItem<SndSeq_t> *link = SoundSequences, *next;
 
-   while(curSeq)
+   while(link)
    {
-      next = (SndSeq_t *)(curSeq->link.next);
+      next = link->dllNext;
 
-      if(curSeq->origin == mo)
+      if(link->dllObject->origin == mo)
       {
          // stop any sound playing
-         S_StopSound(curSeq->origin, CHAN_ALL);
+         S_StopSound(link->dllObject->origin, CHAN_ALL);
 
          // unlink and delete this object
-         M_DLListRemove((mdllistitem_t *)curSeq);
-         Z_Free(curSeq);
+         link->remove();
+         Z_Free(link->dllObject);
       }
 
-      curSeq = next;
+      link = next;
    }
 }
 
@@ -247,7 +249,7 @@ void S_StartSequenceNum(mobj_t *mo, int seqnum, int seqtype, int seqOriginType,
    // allocate a new SndSeq object and link it
    newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
 
-   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
+   newSeq->link.insert(newSeq, &SoundSequences);
 
    // set up all fields
    newSeq->origin       = mo;                  // set origin
@@ -332,7 +334,7 @@ void S_StartSequenceName(mobj_t *mo, const char *seqname, int seqOriginType,
    // allocate a new SndSeq object and link it
    newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
 
-   M_DLListInsert((mdllistitem_t *)newSeq, (mdllistitem_t **)&SoundSequences);
+   newSeq->link.insert(newSeq, &SoundSequences);
 
    // set up all fields
    newSeq->origin       = mo;                  // set origin
@@ -502,7 +504,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
             S_StopSound(curSeq->origin, CHAN_ALL);
          
          // unlink and delete this object
-         M_DLListRemove((mdllistitem_t *)curSeq);
+         curSeq->link.remove();
          Z_Free(curSeq);
       }
       break;
@@ -523,15 +525,15 @@ static void S_StopEnviroSequence(void);
 //
 void S_RunSequences(void)
 {
-   SndSeq_t *curSeq = SoundSequences;
+   CDLListItem<SndSeq_t> *link = SoundSequences;
 
-   while(curSeq)
+   while(link)
    {
-      SndSeq_t *next = (SndSeq_t *)(curSeq->link.next);
+      CDLListItem<SndSeq_t> *next = link->dllNext;
 
-      S_RunSequence(curSeq);
+      S_RunSequence(link->dllObject);
 
-      curSeq = next;
+      link = next;
    } // end while
 
    // run the environmental sequence, if any exists
@@ -723,7 +725,7 @@ void S_SetSequenceStatus(SndSeq_t *seq)
    else
    {
       // link this sequence
-      M_DLListInsert(&seq->link, (mdllistitem_t **)&SoundSequences);
+      seq->link.insert(seq, &SoundSequences);
    }
 }
 
@@ -735,14 +737,14 @@ void S_SetSequenceStatus(SndSeq_t *seq)
 //
 void S_SequenceGameLoad(void)
 {
-   SndSeq_t *curSeq;
+   CDLListItem<SndSeq_t> *link;
 
    // kill all running sequences
    // note the loop restarts from the beginning each time because S_KillSequence
    // modifies the double-linked list; it'll stop running when the last sequence
    // is deleted.
-   while((curSeq = SoundSequences))
-      S_KillSequence(curSeq->origin);
+   while((link = SoundSequences))
+      S_KillSequence(link->dllObject->origin);
 
    // reset the enviro sequence engine in a way that lets it start up again
    S_ResetEnviroSeqEngine();

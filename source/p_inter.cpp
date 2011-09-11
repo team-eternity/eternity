@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -1597,9 +1597,9 @@ void P_DamageMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
-      double df = MetaGetDouble(target->info->meta,
-                                E_ModFieldName("damagefactor", emod),
-                                1.0);
+      MetaTable *meta = target->info->meta;
+      double df = meta->getDouble(E_ModFieldName("damagefactor", emod), 1.0);
+
       damage = (int)(damage * df);
    }
 
@@ -1931,7 +1931,7 @@ void P_Whistle(mobj_t *actor, int mobjtype)
    // look for a friend of the indicated type
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
-      if(!(mo = dynamic_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<mobj_t *>(th)))
          continue;
 
       // must be friendly, alive, and of the right type

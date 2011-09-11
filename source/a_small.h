@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -35,7 +35,6 @@
 
 #ifndef EE_NO_SMALL_SUPPORT
 
-//#include "p_mobj.h"
 #include "doomtype.h"
 class mobj_t;
 struct line_t;

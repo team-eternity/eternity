@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -25,6 +25,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "r_defs.h"
 #include "r_state.h"

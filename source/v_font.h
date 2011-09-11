@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -55,9 +55,9 @@ typedef struct vfontfilter_s
 //
 // Contains all the data necessary to allow generalized font drawing.
 //
-typedef struct vfont_s
+struct vfont_t
 {
-   mdllistitem_t numlinks; // for EDF hashing
+   CDLListItem<vfont_t> numlinks; // for EDF hashing
 
    unsigned int start; // first character in font
    unsigned int end;   // last character in font
@@ -82,13 +82,13 @@ typedef struct vfont_s
 
    int  num;                 // numeric id
    char name[33];            // EDF mnemonic
-   struct vfont_s *namenext; // next by name
+   vfont_t *namenext;        // next by name
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
    int patchnumoffset;       // used during font loading only
    char lumpname[9];         // [CG] Used to reload linear fonts.
    int linear_font_format;   // [CG] Used to reload linear fonts.
-} vfont_t;
+};
 
 void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
 void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);

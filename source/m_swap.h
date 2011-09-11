@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -38,18 +38,20 @@
 
 // haleyjd 12/28/09: added semi-redundant unsigned versions for type safety.
 
+//=============================================================================
+//
 // Swap 16bit, that is, MSB and LSB byte.
-
+//
 
 d_inline static int16_t SwapShort(int16_t x)
 {
-  return (((uint8_t *) &x)[1] << 8) +
+  return (((uint8_t *) &x)[1] << 8) |
           ((uint8_t *) &x)[0];
 }
 
 d_inline static uint16_t SwapUShort(uint16_t x)
 {
-   return (((uint8_t *) &x)[1] << 8) +
+   return (((uint8_t *) &x)[1] << 8) |
            ((uint8_t *) &x)[0];
 }
 
@@ -57,31 +59,34 @@ d_inline static uint16_t SwapUShort(uint16_t x)
 
 d_inline static int16_t SwapBigShort(int16_t x)
 {
-   return (((uint8_t *) &x)[0] << 8) +
+   return (((uint8_t *) &x)[0] << 8) |
            ((uint8_t *) &x)[1];
 }
 
 d_inline static uint16_t SwapBigUShort(uint16_t x)
 {
-   return (((uint8_t *) &x)[0] << 8) +
+   return (((uint8_t *) &x)[0] << 8) |
            ((uint8_t *) &x)[1];
 }
 
+//=============================================================================
+//
 // Swapping 32bit.
+//
 
 d_inline static int32_t SwapLong(int32_t x)
 {
-  return (((uint8_t *) &x)[3] << 24) +
-         (((uint8_t *) &x)[2] << 16) +
-         (((uint8_t *) &x)[1] <<  8) +
+  return (((uint8_t *) &x)[3] << 24) |
+         (((uint8_t *) &x)[2] << 16) |
+         (((uint8_t *) &x)[1] <<  8) |
           ((uint8_t *) &x)[0];
 }
 
 d_inline static uint32_t SwapULong(uint32_t x)
 {
-   return (((uint8_t *) &x)[3] << 24) +
-          (((uint8_t *) &x)[2] << 16) +
-          (((uint8_t *) &x)[1] <<  8) +
+   return (((uint8_t *) &x)[3] << 24) |
+          (((uint8_t *) &x)[2] << 16) |
+          (((uint8_t *) &x)[1] <<  8) |
            ((uint8_t *) &x)[0];
 }
 
@@ -89,17 +94,17 @@ d_inline static uint32_t SwapULong(uint32_t x)
 
 d_inline static int32_t SwapBigLong(int32_t x)
 {
-  return (((uint8_t *) &x)[0] << 24) +
-         (((uint8_t *) &x)[1] << 16) +
-         (((uint8_t *) &x)[2] <<  8) +
+  return (((uint8_t *) &x)[0] << 24) |
+         (((uint8_t *) &x)[1] << 16) |
+         (((uint8_t *) &x)[2] <<  8) |
           ((uint8_t *) &x)[3];
 }
 
 d_inline static uint32_t SwapBigULong(uint32_t x)
 {
-   return (((uint8_t *) &x)[0] << 24) +
-          (((uint8_t *) &x)[1] << 16) +
-          (((uint8_t *) &x)[2] <<  8) +
+   return (((uint8_t *) &x)[0] << 24) |
+          (((uint8_t *) &x)[1] << 16) |
+          (((uint8_t *) &x)[2] <<  8) |
            ((uint8_t *) &x)[3];
 }
 

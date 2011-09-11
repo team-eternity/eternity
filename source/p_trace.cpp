@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.

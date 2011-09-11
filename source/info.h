@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,11 +26,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __INFO__
-#define __INFO__
+#ifndef INFO_H__
+#define INFO_H__
 
-//#include "e_mod.h"
 #include "m_dllist.h"
+#include "e_hashkeys.h"
+
+class MetaTable;
 
 // haleyjd 07/17/04: sprite constants removed
 
@@ -157,8 +159,8 @@ class mobj_t;
 // ********************************************************************
 struct state_t
 {
-   mdllistitem_t namelinks;            // haleyjd 03/30/10: new hashing: by name
-   mdllistitem_t numlinks;             // haleyjd 03/30/10: new hashing: by dehnum
+   CDLListItem<state_t> namelinks;     // haleyjd 03/30/10: new hashing: by name
+   CDLListItem<state_t> numlinks;      // haleyjd 03/30/10: new hashing: by dehnum
 
    spritenum_t sprite;                 // sprite number to show
    int         frame;                  // which frame/subframe of the sprite is shown
@@ -172,10 +174,10 @@ struct state_t
    struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   char       *name;        // pointer to name of this state
-   char        namebuf[41]; // buffer for name (max 40 chars)
-   int         dehnum;      // DeHackEd number for fast access, comp.
-   int         index;       // 06/12/09: number of state in states array
+   ENCStringHashKey name;        // pointer to name of this state
+   char             namebuf[41]; // buffer for name (max 40 chars)
+   EIntHashKey      dehnum;      // DeHackEd number for fast access, comp.
+   int              index;       // 06/12/09: number of state in states array
 };
 
 // these are in info.c
@@ -391,7 +393,7 @@ typedef struct mobjinfo_s
    int index;         // index in mobjinfo
 
    // 08/17/09: metatable
-   struct metatable_s *meta;
+   MetaTable *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    struct mobjinfo_s *parent;

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -115,7 +115,7 @@ polyobj_t *PolyObjects;
 int numPolyObjects;
 
 // Polyobject Blockmap -- initialized in P_LoadBlockMap
-polymaplink_t **polyblocklinks;
+CDLListItem<polymaplink_t> **polyblocklinks;
 
 
 //
@@ -659,8 +659,7 @@ static void Polyobj_linkToBlockmap(polyobj_t *po)
             l->po_next = po->linkhead;
             po->linkhead = l;
             
-            M_DLListInsert(&l->link, 
-                           (mdllistitem_t **)(&polyblocklinks[y*bmapwidth + x]));
+            l->link.insert(l, &polyblocklinks[y * bmapwidth + x]);
          }
       }
    }
@@ -690,7 +689,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
    while(l)
    {
       polymaplink_t *next = l->po_next;
-      M_DLListRemove(&l->link);
+      l->link.remove();
       Polyobj_putLink(l);
       l = next;
    }
@@ -1073,7 +1072,7 @@ void Polyobj_InitLevel(void)
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       mobj_t *mo;
-      if((mo = dynamic_cast<mobj_t *>(th)))
+      if((mo = thinker_cast<mobj_t *>(th)))
       {
          if(mo->info->doomednum == POLYOBJ_SPAWN_DOOMEDNUM ||
             mo->info->doomednum == POLYOBJ_SPAWNCRUSH_DOOMEDNUM ||

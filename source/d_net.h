@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,8 +26,6 @@
 
 #ifndef __D_NET__
 #define __D_NET__
-
-//#include "d_player.h"
 
 #include "d_ticcmd.h"
 

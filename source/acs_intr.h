@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -28,10 +28,12 @@
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__
 
-//#include "p_mobj.h"
-//#include "m_dllist.h"
-#include "m_qstr.h"
-#include "r_defs.h"
+#include "m_dllist.h"
+#include "p_tick.h"
+
+struct qstring_t;
+class  mobj_t;
+struct line_t;
 
 //
 // Defines
@@ -132,15 +134,16 @@ enum
 //
 // This struct keeps track of scripts to be executed on other maps.
 //
-typedef struct deferredacs_s
+struct deferredacs_t
 {
-   mdllistitem_t link;     // list links
+   CDLListItem<deferredacs_t> link; // list links
+   
    int  scriptNum;         // ACS script number to execute
    int  vmID;              // id # of vm on which to execute the script
    int  targetMap;         // target map number
    int  type;              // type of action to perform...
    int  args[NUMLINEARGS]; // additional arguments from linedef
-} deferredacs_t;
+};
 
 //
 // acsvm
@@ -152,7 +155,7 @@ typedef struct acsvm_s
 {
    byte       *data;         // ACS lump; jumps are relative to this
    char       **stringtable; // self-explanatory, yes?
-   qstring_t  printBuffer;   // used for message printing
+   qstring_t  *printBuffer;  // used for message printing
    acscript_t *scripts;      // the scripts...
    int        numScripts;    // ... and how many there are.
    boolean    loaded;        // for static VMs, if it's valid or not

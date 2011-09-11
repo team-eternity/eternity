@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -70,15 +70,23 @@ public:
 
    // Methods
    void Add();
+   
+   // Accessors
+   boolean isRemoved() const { return removed; }
+
+   // Reference counting
+   void addReference() { ++references; }
+   void delReference() { --references; }
 
    // Virtual methods (overridables)
    virtual void Update();
    virtual void Remove();
-
-   // Accessors
-   boolean isRemoved()    { return removed; }
-   void    addReference() { ++references;   }
-   void    delReference() { --references;   }
+   
+   // Enumeration 
+   // For thinkers needing savegame enumeration.
+   // Must be implemented by a child class.
+   virtual void Enumerate(unsigned int val) {}
+   virtual unsigned int getEnumeration() { return 0; }
 
    // Data Members
 
@@ -88,11 +96,21 @@ public:
    // according to various criteria, so as to allow quicker searches.
 
    CThinker *cnext, *cprev; // Next, previous thinkers in same class
-
-   // haleyjd 08/01/09: use to number thinkers instead of *prev, which angers
-   // GCC with thoughts of writing pointers into integers.
-   unsigned int ordinal;
 };
+
+//
+// thinker_cast
+//
+// Use this dynamic_cast variant to automatically check if something is a valid
+// unremoved CThinker subclass instance. This is necessary because the old 
+// behavior of checking function pointer values effectively changed the type 
+// that a thinker was considered to be when it was set into a deferred removal
+// state.
+//
+template<typename T> inline T thinker_cast(CThinker *th)
+{
+   return (th && !th->isRemoved()) ? dynamic_cast<T>(th) : NULL;
+}
 
 // Called by C_Ticker, can call G_PlayerExited.
 // Carries out all thinking of monsters and players.
@@ -116,6 +134,65 @@ extern CThinker thinkerclasscap[];
 
 // sf: jumping-viewz-on-hyperlift bug
 extern boolean reset_viewz;
+
+//
+// Thinker Factory
+//
+// haleyjd 12/07/10: The save game code needs to be able to construct thinkers
+// of any class without resort to a gigantic switch statement. This calls for
+// a factory pattern.
+//
+class CThinkerType
+{
+protected:
+   CThinkerType *next;
+   const char   *name;
+
+public:
+   CThinkerType(const char *pName);
+
+   // newThinker is a pure virtual method that must be overridden by a child 
+   // class to construct a specific type of thinker
+   virtual CThinker *newThinker() const = 0;
+
+   // FindType is a static method that will find the CThinkerType given the
+   // name of a CThinker-descendent class (ie., "CFireFlicker"). The returned
+   // object can then be used to construct a new instance of that type by 
+   // calling the newThinker method. The instance can then be fed to the
+   // serialization mechanism.
+   static CThinkerType *FindType(const char *pName); // find a type in the list
+};
+
+//
+// DECLARE_THINKER_TYPE
+//
+// Use this macro once per CThinker descendant. Best placed near the Think 
+// routine.
+// Example:
+//   DECLARE_THINKER_TYPE(CFireFlicker)
+//   This defines CFireFlickerType, which constructs a CThinkerType parent
+//   with "CFireFlicker" as its name member and which returns a new CFireFlicker
+//   instance via its newThinker virtual method.
+// 
+#define DECLARE_THINKER_TYPE(name) \
+class name ## Type : public CThinkerType \
+{ \
+protected: \
+   static name ## Type global ## name ## Type ; \
+public: \
+   name ## Type() : CThinkerType(#name) {} \
+   virtual CThinker *newThinker() const { return new #name ; } \
+};
+
+//
+// IMPLEMENT_THINKER_TYPE
+//
+// Use this macro to define the static member declared by
+// DECLARE_THINKER_TYPE.
+//
+#define IMPLEMENT_THINKER_TYPE(name) \
+   name ## Type name ## Type :: global ## name ## Type;
+   
 
 #endif
 

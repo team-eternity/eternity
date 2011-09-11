@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -62,8 +62,6 @@ boolean P_BuildLinkTable(void);
 // Currently just clears each group for every other group.
 //
 void P_LinkRejectTable(void);
-
-//#include "linkoffs.h"
 
 void P_InitPortals(void);
 

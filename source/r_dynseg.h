@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -52,17 +52,14 @@ typedef struct dynaseg_s
 // support multiple polyobjects per subsector (we do not want to do a z-sort 
 // on every single dynaseg, as that is significant unnecessary overhead).
 //
-typedef struct rpolyobj_s
+struct rpolyobj_t
 {
-   mdllistitem_t link;  // for subsector links; must be first
+   CDLListItem<rpolyobj_t> link;  // for subsector links
 
-   dynaseg_t *dynaSegs; // list of dynasegs
-
-   polyobj_t *polyobj;  // polyobject of which this rpolyobj_t is a fragment
-
-   struct rpolyobj_s *freenext; // next on freelist
-
-} rpolyobj_t;
+   dynaseg_t  *dynaSegs; // list of dynasegs
+   polyobj_t  *polyobj;  // polyobject of which this rpolyobj_t is a fragment
+   rpolyobj_t *freenext; // next on freelist
+};
 
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -65,31 +65,13 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static ehash_t e_mod_namehash;
-
-E_KEYFUNC(emod_t, name)
-E_LINKFUNC(emod_t, namelinks)
+static EHashTable<emod_t, ENCStringHashKey> e_mod_namehash(&emod_t::name, &emod_t::namelinks);
 
 // haleyjd 08/02/09: use new generic hash
-static ehash_t e_mod_numhash;
-
-E_KEYFUNC(emod_t, num)
+static EHashTable<emod_t, EIntHashKey> e_mod_numhash(&emod_t::num, &emod_t::numlinks);
 
 // default damage type - "Unknown"
-
-static emod_t unknown_mod =
-{
-   { NULL, NULL }, // numlinks
-   { NULL, NULL }, // namelinks
-
-   "Unknown",      // name
-   0,              // num
-   "OB_DEFAULT",   // obituary
-   "OB_DEFAULT",   // selfobituary
-   true,           // obitIsBexString
-   true,           // selfObitIsBexString
-   false,          // sourceless
-};
+static emod_t unknown_mod;
 
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_modnum = D_MAXINT;
@@ -105,13 +87,10 @@ static int edf_alloc_modnum = D_MAXINT;
 //
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
-   if(!e_mod_namehash.isinit)
-   {
-      E_NCStrHashInit(&e_mod_namehash, NUMMODCHAINS, E_KEYFUNCNAME(emod_t, name),
-                      E_LINKFUNCNAME(emod_t, namelinks));
-   }
-   
-   E_HashAddObject(&e_mod_namehash, mod);
+   if(!e_mod_namehash.isInitialized())
+      e_mod_namehash.Initialize(NUMMODCHAINS);
+
+   e_mod_namehash.addObject(*mod);
 }
 
 // need forward declaration for E_AutoAllocModNum
@@ -161,11 +140,8 @@ static boolean E_AutoAllocModNum(emod_t *mod)
 //
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
-   if(!e_mod_numhash.isinit)
-   {
-      E_SintHashInit(&e_mod_numhash, NUMMODCHAINS, 
-                     E_KEYFUNCNAME(emod_t, num), NULL);
-   }
+   if(!e_mod_numhash.isInitialized())
+      e_mod_numhash.Initialize(NUMMODCHAINS);
 
    // Auto-assign a numeric key to all damage types which don't have
    // a valid one explicitly specified. This avoids some gigantic, 
@@ -178,7 +154,7 @@ static void E_AddDamageTypeToNumHash(emod_t *mod)
       return;
    }
 
-   E_HashAddObject(&e_mod_numhash, mod);
+   e_mod_numhash.addObject(mod);
 }
 
 //
@@ -189,7 +165,7 @@ static void E_AddDamageTypeToNumHash(emod_t *mod)
 //
 static void E_DelDamageTypeFromNumHash(emod_t *mod)
 {
-   E_HashRemoveObject(&e_mod_numhash, mod);
+   e_mod_numhash.removeObject(mod);
 }
 
 //
@@ -200,7 +176,7 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
-   return (emod_t *)(E_HashObjectForKey(&e_mod_namehash, &name));
+   return e_mod_namehash.objectForKey(name);
 }
 
 #define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
@@ -322,6 +298,32 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 }
 
 //
+// E_initUnknownMod
+//
+// haleyjd 12/12/10: It's more convenient to do this at runtime now because of the
+// POD objects that are contained in the emod_t structure.
+//
+static void E_initUnknownMod(void)
+{
+   static boolean firsttime = true;
+
+   if(firsttime) // only needed once
+   {
+      firsttime = false;
+
+      memset(&unknown_mod, 0, sizeof(emod_t));
+
+      unknown_mod.name = "Unknown";
+      unknown_mod.num  = 0;
+      unknown_mod.obituary = "OB_DEFAULT";
+      unknown_mod.selfobituary = "OB_DEFAULT";
+      unknown_mod.obitIsBexString = true;
+      unknown_mod.selfObitIsBexString = true;
+      unknown_mod.sourceless = false;
+   }
+}
+
+//
 // Global Functions
 //
 
@@ -338,6 +340,9 @@ void E_ProcessDamageTypes(cfg_t *cfg)
    E_EDFLogPrintf("\t* Processing damagetypes\n"
                   "\t\t%d damagetype(s) defined\n", nummods);
 
+   // Initialized the "Unknown" damage type
+   E_initUnknownMod();
+
    for(i = 0; i < nummods; ++i)
       E_ProcessDamageType(cfg_getnsec(cfg, EDF_SEC_MOD, i));
 }
@@ -352,7 +357,7 @@ emod_t *E_DamageTypeForName(const char *name)
 {
    emod_t *mod;
 
-   if((mod = (emod_t *)(E_HashObjectForKey(&e_mod_namehash, &name))) == NULL)
+   if((mod = e_mod_namehash.objectForKey(name)) == NULL)
       mod = &unknown_mod;
 
    return mod;
@@ -368,7 +373,7 @@ emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
    
-   if((mod = (emod_t *)(E_HashObjectForKey(&e_mod_numhash, &num))) == NULL)
+   if((mod = e_mod_numhash.objectForKey(num)) == NULL)
       mod = &unknown_mod;
 
    return mod;

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -113,15 +113,11 @@ cfg_opt_t edf_fdelta_opts[] =
 // State Hashing
 #define NUMSTATECHAINS 2003
 
-static ehash_t state_namehash; // hash by name
-static ehash_t state_numhash;  // hash by DeHackEd number
+// hash by name
+static EHashTable<state_t, ENCStringHashKey> state_namehash(&state_t::name, &state_t::namelinks);
 
-// Key retrieval function for hashing by name
-E_KEYFUNC(state_t, name)
-
-// Key and link retrieval functions for hashing by number
-E_KEYFUNC(state_t, dehnum)
-E_LINKFUNC(state_t, numlinks);
+// hash by DeHackEd number
+static EHashTable<state_t, EIntHashKey> state_numhash(&state_t::dehnum, &state_t::numlinks);
 
 //
 // E_StateNumForDEHNum
@@ -140,7 +136,7 @@ int E_StateNumForDEHNum(int dehnum)
    // please some old, incorrect DeHackEd patches
    if(dehnum < 0)
       ret = NullStateNum;
-   else if((st = (state_t *)E_HashObjectForKey(&state_numhash, &dehnum)))
+   else if((st = state_numhash.objectForKey(dehnum)))
       ret = st->index;
 
    return ret;
@@ -190,7 +186,7 @@ int E_StateNumForName(const char *name)
    state_t *st = NULL;
    int ret = -1;
 
-   if((st = (state_t *)E_HashObjectForKey(&state_namehash, &name)))
+   if((st = state_namehash.objectForKey(name)))
       ret = st->index;
 
    return ret;
@@ -263,7 +259,7 @@ boolean E_AutoAllocStateDEHNum(int statenum)
 
    // assign it!
    st->dehnum = dehnum;
-   E_HashAddObject(&state_numhash, st);
+   state_numhash.addObject(st);
 
    return true;
 }
@@ -284,7 +280,7 @@ static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
    unsigned int count = 0;
 
    // if the state name hash is empty, short-circuit for efficiency
-   if(!state_namehash.numitems)
+   if(!state_namehash.getNumItems())
       return numstates;
 
    for(i = 0; i < numstates; ++i)
@@ -356,13 +352,10 @@ void E_CollectStates(cfg_t *cfg)
    static boolean firsttime = true;
 
    // initialize hash tables if needed
-   if(!state_namehash.isinit)
+   if(!state_namehash.isInitialized())
    {
-      E_NCStrHashInit(&state_namehash, NUMSTATECHAINS, 
-                      E_KEYFUNCNAME(state_t, name), NULL);   
-      E_SintHashInit(&state_numhash, NUMSTATECHAINS,
-                     E_KEYFUNCNAME(state_t, dehnum), 
-                     E_LINKFUNCNAME(state_t, numlinks));
+      state_namehash.Initialize(NUMSTATECHAINS);
+      state_numhash.Initialize(NUMSTATECHAINS);
    }
 
    // get number of states defined by the cfg
@@ -419,14 +412,14 @@ void E_CollectStates(cfg_t *cfg)
          {
             // if state has a valid dehnum, remove it from the deh hash
             if(st->dehnum >= 0)
-               E_HashRemoveObject(&state_numhash, st);
+               state_numhash.removeObject(st);
 
             // assign the new dehnum
             st->dehnum = dehnum;
 
             // if valid, add it back to the hash with the new id #
             if(st->dehnum >= 0)
-               E_HashAddObject(&state_numhash, st);
+               state_numhash.addObject(st);
          }
       }
       else
@@ -443,11 +436,11 @@ void E_CollectStates(cfg_t *cfg)
          st->name = st->namebuf;
 
          // add to name hash
-         E_HashAddObject(&state_namehash, st);
+         state_namehash.addObject(st);
 
          // get dehackednum and add state to dehacked hash table if valid
          if((st->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
-            E_HashAddObject(&state_numhash, st);
+            state_numhash.addObject(st);
       }
    }
 

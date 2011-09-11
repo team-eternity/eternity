@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -1015,7 +1015,7 @@ void A_KillChildren(mobj_t *actor)
    {
       mobj_t *mo;
 
-      if(!(mo = dynamic_cast<mobj_t *>(th)))
+      if(!(mo = thinker_cast<mobj_t *>(th)))
          continue;
 
       if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)

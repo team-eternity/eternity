@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,6 +27,9 @@
 #ifndef __R_DEFS__
 #define __R_DEFS__
 
+// haleyjd 12/15/10: lighting data is required here
+#include "r_lighting.h"
+
 // SoM: Slopes need vectors!
 #include "m_vector.h"
 
@@ -48,20 +51,6 @@ struct portal_t;
 #define MAXDRAWSEGS   256
 
 extern int r_blockmap;
-
-// This could be wider for >8 bit display.
-// Indeed, true color support is posibble
-// precalculating 24bpp lightmap/colormap LUT.
-// from darkening PLAYPAL to all black.
-// Could use even more than 32 levels.
-
-#ifndef LIGHTTABLE_T__
-#define LIGHTTABLE_T__
-// sf: moved from r_main.h for coloured lighting
-#define MAXLIGHTZ        128
-#define MAXLIGHTSCALE     48
-typedef byte  lighttable_t; 
-#endif
 
 //
 // INTERNAL MAP TYPES
@@ -260,7 +249,7 @@ struct sector_t
    // haleyjd 09/24/06: sound sequence id
    int sndSeqID;
 
-   particle_t *ptcllist; // haleyjd 02/20/04: list of particles in sector
+   CDLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
    // haleyjd 07/04/07: Happy July 4th :P
    // Angles for flat rotation!
@@ -366,6 +355,8 @@ struct line_t
    seg_t *segs;             // haleyjd: link to segs
 };
 
+struct rpolyobj_t;
+
 //
 // A SubSector.
 // References a Sector.
@@ -380,7 +371,7 @@ struct subsector_t
   // haleyjd 06/19/06: converted from short to long for 65535 segs
   int    numlines, firstline;
 
-  struct rpolyobj_s *polyList; // haleyjd 05/15/08: list of polyobj fragments
+  CDLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
 };
 
 // phares 3/14/98
@@ -481,44 +472,6 @@ typedef struct drawseg_s
 
    fixed_t viewx, viewy, viewz;
 } drawseg_t;
-
-//
-// A vissprite_t is a thing that will be drawn during a refresh.
-// i.e. a sprite object that is partly visible.
-//
-
-typedef struct vissprite_s
-{
-  int x1, x2;
-  fixed_t gx, gy;              // for line side calculation
-  fixed_t gz, gzt;             // global bottom / top for silhouette clipping
-  fixed_t xiscale;             // negative if flipped
-  fixed_t texturemid;
-  int patch;
-  int mobjflags, mobjflags3;   // flags, flags3 from thing
-
-  float   startx;
-  float   dist, xstep, ystep;
-  float   ytop, ybottom;
-  float   scale;
-
-  // for color translation and shadow draw, maxbright frames as well
-        // sf: also coloured lighting
-  lighttable_t *colormap;
-  int colour;   //sf: translated colour
-
-  // killough 3/27/98: height sector for underwater/fake ceiling support
-  int heightsec;
-
-  int translucency; // haleyjd: zdoom-style translucency
-
-  fixed_t footclip; // haleyjd: foot clipping
-
-  int    sector; // SoM: sector the sprite is in.
-
-  int pcolor; // haleyjd 08/25/09: for particles
-
-} vissprite_t;
 
 //  
 // Sprites are patches with a special naming convention
@@ -626,12 +579,12 @@ struct visplane_t
    byte                   opacity;
 };
 
-
 typedef struct planehash_s
 {
    int          chaincount;
    visplane_t   **chains;
 } planehash_t;
+
 #endif
 
 //----------------------------------------------------------------------------

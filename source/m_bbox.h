@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,8 +27,6 @@
 
 #ifndef __M_BBOX__
 #define __M_BBOX__
-
-#include "z_zone.h"         // killough 1/18/98
 
 //#include <values.h> haleyjd 02/22/02: don't include this directly
 #include "doomtype.h"

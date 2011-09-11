@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -31,6 +31,7 @@
 
 #include "Confuse/confuse.h"
 
+#include "r_defs.h"
 #include "acs_intr.h"
 #include "i_system.h"
 #include "w_wad.h"
@@ -646,13 +647,13 @@ boolean E_AutoAllocThingDEHNum(int thingnum)
 void E_CollectThings(cfg_t *tcfg)
 {
    int i;
-   metatable_t *metatables;
 
    // allocate array
    mobjinfo = (mobjinfo_t *)(calloc(NUMMOBJTYPES, sizeof(mobjinfo_t)));
 
    // 08/17/09: allocate metatables
-   metatables = (metatable_t *)(calloc(NUMMOBJTYPES, sizeof(metatable_t)));
+   for(i = 0; i < NUMMOBJTYPES; ++i)
+      mobjinfo[i].meta = new MetaTable();
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)
@@ -708,10 +709,6 @@ void E_CollectThings(cfg_t *tcfg)
          mobjinfo[i].dehnext = thing_dehchains[dehkey];
          thing_dehchains[dehkey] = i;
       }
-
-      // 08/17/09: initialize metatable
-      mobjinfo[i].meta = &metatables[i];
-      MetaInit(mobjinfo[i].meta);
    }
 
    // verify the existance of the Unknown thing type
@@ -771,30 +768,39 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 }
 
 //
-// Meta states
+// MetaState
 //
 // With DECORATE state support, it is necessary to allow storage of arbitrary
 // states in mobjinfo.
 //
-
-typedef struct metastate_s
+class MetaState : public MetaObject
 {
-   metaobject_t parent; // metaobject
+protected:
    state_t *state;      // the state
-} metastate_t;
 
-//
-// metaStateToString
-//
-// toString method for nice display of metastate properties.
-//
-static const char *metaStateToString(metatype_t *t, void *obj)
-{
-   return ((metastate_t *)obj)->state->name;
-}
+public:
+   // Constructor
+   MetaState(const char *key, state_t *pState) 
+      : MetaObject("MetaState", key), state(pState)
+   {
+   }
 
-static metatype_t metaStateType;
-static metatype_i metaStateMethods = { NULL, NULL, NULL, metaStateToString };
+   // Copy Constructor
+   MetaState(const MetaState &other) : MetaObject(other)
+   {
+      this->state = other.state;
+   }
+   
+   // Accessors
+   state_t *getValue() const { return state; }
+   void setValue(state_t *s) { state = s;    }
+
+   // Clone - virtual copy constructor
+   virtual MetaObject *clone() const { return new MetaState(*this); }
+
+   // toString - virtual method for nice display of metastate properties.
+   virtual const char *toString() const { return state->name; }
+};
 
 //
 // E_AddMetaState
@@ -803,22 +809,7 @@ static metatype_i metaStateMethods = { NULL, NULL, NULL, metaStateToString };
 //
 static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 {
-   metastate_t *newMetaState = NULL;
-
-   // first time, register a metatype for metastates
-   if(!metaStateType.isinit)
-   {
-      MetaRegisterTypeEx(&metaStateType, 
-                         METATYPE(metastate_t), sizeof(metastate_t),
-                         METATYPE(metaobject_t), &metaStateMethods);
-   }
-
-   newMetaState = (metastate_t *)(calloc(1, sizeof(metastate_t)));
-
-   newMetaState->state = state;
-
-   MetaAddObject(mi->meta, name, &newMetaState->parent, newMetaState, 
-                 METATYPE(metastate_t));
+   mi->meta->addObject(new MetaState(name, state));
 }
 
 //
@@ -826,11 +817,11 @@ static void E_AddMetaState(mobjinfo_t *mi, state_t *state, const char *name)
 //
 // Removes a state from the mobjinfo metatable given a metastate pointer.
 //
-static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
+static void E_RemoveMetaStatePtr(mobjinfo_t *mi, MetaState *ms)
 {
-   MetaRemoveObject(mi->meta, &ms->parent);
+   mi->meta->removeObject(ms);
    
-   free(ms);
+   delete ms;
 }
 
 //
@@ -841,10 +832,10 @@ static void E_RemoveMetaStatePtr(mobjinfo_t *mi, metastate_t *ms)
 //
 static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 {
-   metaobject_t *obj;
+   MetaObject *obj;
 
-   if((obj = MetaGetObjectKeyAndType(mi->meta, name, METATYPE(metastate_t))))
-      E_RemoveMetaStatePtr(mi, (metastate_t *)(obj->object));
+   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+      E_RemoveMetaStatePtr(mi, static_cast<MetaState *>(obj));
 }
 
 //
@@ -853,13 +844,13 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 // Gets a state that is stored inside an mobjinfo metatable.
 // Returns NULL if no such object exists.
 //
-static metastate_t *E_GetMetaState(mobjinfo_t *mi, const char *name)
+static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 {
-   metaobject_t *obj = NULL;
-   metastate_t  *ret = NULL;
+   MetaObject *obj = NULL;
+   MetaState  *ret = NULL;
    
-   if((obj = MetaGetObjectKeyAndType(mi->meta, name, METATYPE(metastate_t))))
-      ret = (metastate_t *)(obj->object);
+   if((obj = mi->meta->getObjectKeyAndType(name, METATYPE(MetaState))))
+      ret = static_cast<MetaState *>(obj);
 
    return ret;
 }
@@ -896,11 +887,11 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 //
 state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 {
-   state_t *ret = NULL;
-   metastate_t *mstate;
+   state_t   *ret = NULL;
+   MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
-      ret = mstate->state;
+      ret = mstate->getValue();
 
    return ret;
 }
@@ -932,11 +923,11 @@ state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
 static void E_AddDamageTypeState(mobjinfo_t *info, const char *base, 
                                  state_t *state, emod_t *mod)
 {
-   metastate_t *msnode;
+   MetaState *msnode;
    
    // if one exists for this mod already, use it, else create a new one.
    if((msnode = E_GetMetaState(info, E_ModFieldName(base, mod))))
-      msnode->state = state;
+      msnode->setValue(state);
    else
       E_AddMetaState(info, state, E_ModFieldName(base, mod));
 }
@@ -948,16 +939,16 @@ static void E_AddDamageTypeState(mobjinfo_t *info, const char *base,
 //
 static void E_DisposeDamageTypeList(mobjinfo_t *mi, const char *base)
 {
-   metaobject_t *obj  = NULL;
+   MetaObject *obj  = NULL;
 
    // iterate on the metatable to look for metastate_t objects with
    // the base string as the initial part of their name
 
-   while((obj = MetaGetNextType(mi->meta, obj, METATYPE(metastate_t))))
+   while((obj = mi->meta->getNextType(obj, METATYPE(MetaState))))
    {
-      if(!strncasecmp(obj->key, base, strlen(base)))
+      if(!strncasecmp(obj->getKey(), base, strlen(base)))
       {
-         metastate_t *state = (metastate_t *)(obj->object);
+         MetaState *state = static_cast<MetaState *>(obj);
 
          E_RemoveMetaStatePtr(mi, state);
 
@@ -1220,12 +1211,12 @@ static void E_processDecorateStates(mobjinfo_t *mi, edecstateout_t *dso)
          *nativefield = dso->states[i].state->index;
       else
       {
-         metastate_t *msnode;
+         MetaState *msnode;
 
          // there is not a matching native field, so add the state as a 
          // metastate
          if((msnode = E_GetMetaState(mi, dso->states[i].label)))
-            msnode->state = dso->states[i].state;
+            msnode->setValue(dso->states[i].state);
          else
             E_AddMetaState(mi, dso->states[i].state, dso->states[i].label);
       }
@@ -1312,8 +1303,8 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       // we don't add damage factors for the unknown damage type
       if(mod->num != 0)
       {
-         MetaSetDouble(info->meta, E_ModFieldName("damagefactor", mod),
-                       cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR));
+         info->meta->setDouble(E_ModFieldName("damagefactor", mod),
+                               cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR));
       }
    }
 }
@@ -1432,7 +1423,7 @@ static void E_CopyThing(int num, int pnum)
 {
    char name[41];
    mobjinfo_t *this_mi;
-   metatable_t *meta;
+   MetaTable *meta;
    int dehnum, dehnext, namenext, index;
    
    this_mi = &mobjinfo[num];
@@ -1456,11 +1447,11 @@ static void E_CopyThing(int num, int pnum)
    if(this_mi->meleeobit)
       this_mi->meleeobit = strdup(this_mi->meleeobit);
 
+   // copy metatable
+   meta->copyTableFrom(mobjinfo[pnum].meta);
+
    // restore metatable pointer
    this_mi->meta = meta;
-
-   // copy metatable
-   MetaCopyTable(this_mi->meta, mobjinfo[pnum].meta);
 
    // must restore name and dehacked num data
    this_mi->dehnum   = dehnum;
@@ -2262,13 +2253,13 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 //
 state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 {
-   metastate_t *ms;
+   MetaState *ms;
    state_t *ret = NULL;
    int *nativefield = NULL;
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
-      ret = ms->state;
+      ret = ms->getValue();
    else if((nativefield = E_GetNativeStateLoc(mi, label)))
    {
       // only if not S_NULL

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -1844,7 +1844,7 @@ void P_LoadBlockMap(int lump)
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = (polymaplink_t **)(Z_Calloc(1, count, PU_LEVEL, NULL));
+   polyblocklinks = (CDLListItem<polymaplink_t> **)(Z_Calloc(1, count, PU_LEVEL, NULL));
 }
 
 
@@ -2426,7 +2426,7 @@ void P_SetupLevel(waddir_t *dir, const char *mapname, int playermask,
    P_PreZoneFreeLevel();
 
    // free the old level
-   Z_FreeTags(PU_LEVEL, PU_LEVSPEC);
+   Z_FreeTags(PU_LEVEL, PU_LEVEL);
 
    // perform post-Z_FreeTags actions
    P_InitNewLevel(lumpnum, dir);

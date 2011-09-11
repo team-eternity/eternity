@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Stephen McGranahan, Julian Aubourg, et al.
@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "../z_zone.h"
 #include "../c_runcmd.h"
 #include "../c_io.h"
 #include "../d_main.h"

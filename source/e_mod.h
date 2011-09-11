@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*- 
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -29,6 +29,7 @@
 
 #include "doomtype.h"
 #include "m_dllist.h"
+#include "e_hashkeys.h"
 
 //
 // emod structure
@@ -37,11 +38,11 @@
 //
 struct emod_t
 {
-   mdllistitem_t numlinks;  // for numeric hash
-   mdllistitem_t namelinks; // for name hash
+   CDLListItem<emod_t> numlinks;  // for numeric hash
+   CDLListItem<emod_t> namelinks; // for name hash
+   ENCStringHashKey    name;      // name key
+   EIntHashKey         num;       // number key
 
-   char *name;
-   int num;
    char *obituary;
    char *selfobituary;
    boolean obitIsBexString;

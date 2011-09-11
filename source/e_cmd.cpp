@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -162,8 +162,8 @@ CONSOLE_COMMAND(e_thingtype, 0)
 //
 CONSOLE_COMMAND(e_dumpmeta, 0)
 {
-   metatable_t  *meta;
-   metaobject_t *obj = NULL;
+   MetaTable  *meta;
+   MetaObject *obj = NULL;
    int num;
 
    if(!Console.argc)
@@ -184,11 +184,11 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 
    meta = mobjinfo[num].meta;
 
-   while((obj = MetaTableIterator(meta, obj)))
+   while((obj = meta->tableIterator(obj)))
    {
       C_Printf(FC_ERROR "%s " FC_HI "(type %s):\n" 
-               FC_NORMAL "%s", obj->key, obj->type,
-               MetaToString(obj));
+               FC_NORMAL "%s", 
+               obj->getKey(), obj->getType(), obj->toString());
    }
 }
 

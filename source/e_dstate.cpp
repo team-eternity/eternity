@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -45,6 +45,7 @@
 #include "e_dstate.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "p_pspr.h"
 
 //==============================================================================
 //
@@ -69,9 +70,10 @@ enum
 // This is a temporary structure used to cache data about DECORATE state
 // sequences.
 //
-typedef struct estatebuf_s
+struct estatebuf_t
 {
-   mdllistitem_t links; // linked list links
+   CDLListItem<estatebuf_t> links; // linked list links
+
    int type;            // type of entry (label, state, etc.)
    int linenum;         // origin line number
    char *name;          // name when needed
@@ -79,7 +81,7 @@ typedef struct estatebuf_s
    // goto-specific info
    char *gotodest;      // goto destination
    int  gotooffset;     // goto offset
-} estatebuf_t;
+};
 
 //
 // internal goto relocation list
@@ -101,9 +103,11 @@ typedef struct edecparser_s
 {
    // buffered states - accumulated in the principals pass and
    // iterated over during the main pass to drive generation
-   estatebuf_t *statebuffer; // temporary data cache
+   CDLListItem<estatebuf_t> *statebuffer; // temporary data cache
+   CDLListItem<estatebuf_t> *curbufstate; // current state during main pass
+
    estatebuf_t *neweststate; // newest buffered state generated
-   estatebuf_t *curbufstate; // current state during main pass
+   
 
    // counts - incremented during the principals pass and used
    // to pre-allocate a sufficient number of entities for the main pass
@@ -151,9 +155,9 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
    newbuf->linenum = linenum;
 
    // use tail insertion to keep objects in order generated
-   M_DLListInsert(&newbuf->links,
-                  DSP.neweststate ? &(DSP.neweststate->links.next) : 
-                                    (mdllistitem_t **)&(DSP.statebuffer));
+   newbuf->links.insert(newbuf,
+                        DSP.neweststate ? &(DSP.neweststate->links.dllNext) :
+                                          &(DSP.statebuffer));
 
    DSP.neweststate = newbuf;
 }
@@ -748,15 +752,16 @@ static void PSWrapStates(pstate_t *ps)
    {
       // Increment curbufstate and currentstate until end of list is reached,
       // a non-state object is encountered, or the line number changes
-      estatebuf_t *cbs = DSP.curbufstate;
-      int   curlinenum = cbs->linenum;
+      CDLListItem<estatebuf_t> *link = DSP.curbufstate;
+      int curlinenum = link->dllObject->linenum;
 
-      while(cbs && cbs->linenum == curlinenum && cbs->type == BUF_STATE)
+      while(link && link->dllObject->linenum == curlinenum && 
+            link->dllObject->type == BUF_STATE)
       {
-         cbs = (estatebuf_t *)(cbs->links.next);
+         link = link->dllNext;
          DSP.currentstate++;
       }
-      DSP.curbufstate = cbs;
+      DSP.curbufstate = link;
    }
 }
 
@@ -871,28 +876,28 @@ static void doGoto(pstate_t *ps)
    else
    {
       // main parsing pass
-      if(DSP.curbufstate->type == BUF_LABEL)
+      if(DSP.curbufstate->dllObject->type == BUF_LABEL)
       {
-         estatebuf_t *cbs = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
 
          // last noticed state is a label; run down all labels and
          // create relocations that point to the current state.
-         while(cbs->type != BUF_GOTO)
+         while(link->dllObject->type != BUF_GOTO)
          {
             edecstateout_t *dso = DSP.pDSO;
             edecstate_t *s = &(dso->states[dso->numstates]);
-          
-            s->label = strdup(cbs->name);
+            
+            s->label = strdup(link->dllObject->name);
             s->state = states[DSP.currentstate];
             
             dso->numstates++;
             
-            cbs = (estatebuf_t *)(cbs->links.next);
+            link = link->dllNext;
          }
-         DSP.curbufstate = cbs;
+         DSP.curbufstate = link;
 
          // setup the current state as a goto state
-         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate;
+         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate->dllObject;
          DSP.internalgotos[DSP.numinternalgotos].state    = DSP.currentstate;
 
          DSP.numinternalgotos++; // move forward one internal goto
@@ -901,13 +906,14 @@ static void doGoto(pstate_t *ps)
       else
       {
          // this goto determines the nextstate field for the previous state
-         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate;
+         DSP.internalgotos[DSP.numinternalgotos].gotoInfo = DSP.curbufstate->dllObject;
          DSP.internalgotos[DSP.numinternalgotos].state    = DSP.currentstate - 1;
 
          DSP.numinternalgotos++; // move forward one internal goto
       }
+      
       // move to next buffered state object
-      DSP.curbufstate = (estatebuf_t *)(DSP.curbufstate->links.next);
+      DSP.curbufstate = DSP.curbufstate->dllNext;
    }
    ps->state = PSTATE_NEEDGOTOLABEL;
 }
@@ -966,23 +972,23 @@ static void doKeyword(pstate_t *ps)
          state->nextstate = DSP.lastlabelstate;
          break;
       case KWD_STOP:
-         if(DSP.curbufstate->type == BUF_LABEL)
+         if(DSP.curbufstate->dllObject->type == BUF_LABEL)
          {
-            estatebuf_t *cbs = DSP.curbufstate;
+            CDLListItem<estatebuf_t> *link = DSP.curbufstate;
 
             // if we're still on a label and this is a stop keyword, run 
             // forward through the labels and make kill states for each one
-            while(cbs->type != BUF_KEYWORD)
+            while(link->dllObject->type != BUF_KEYWORD)
             {
                edecstateout_t *dso = DSP.pDSO;
                ekillstate_t   *ks  = &(dso->killstates[dso->numkillstates]);
                
-               ks->killname = strdup(cbs->name);               
+               ks->killname = strdup(link->dllObject->name);               
                dso->numkillstates++;
 
-               cbs = (estatebuf_t *)(cbs->links.next);
+               link = link->dllNext;
             }
-            DSP.curbufstate = cbs;
+            DSP.curbufstate = link;
          }
          else
             state->nextstate = NullStateNum; // next state is null state
@@ -992,7 +998,7 @@ static void doKeyword(pstate_t *ps)
       }
 
       // move to next buffered state object
-      DSP.curbufstate = (estatebuf_t *)(DSP.curbufstate->links.next);
+      DSP.curbufstate = DSP.curbufstate->dllNext;
    }
    ps->state = PSTATE_NEEDKWEOL;
 }
@@ -1028,37 +1034,38 @@ static void doText(pstate_t *ps)
    else
    {
       int sprnum = E_SpriteNumForName(ps->tokenbuffer->buffer);
-      estatebuf_t *state;
+      CDLListItem<estatebuf_t> *link;
       int statenum;
 
-      state = DSP.curbufstate;
+      link = DSP.curbufstate;
 
       // if we are on a label, all the labels until we reach the next state
       // object should be associated with the current state
-      while(state->type == BUF_LABEL)
+      while(link->dllObject->type == BUF_LABEL)
       {
          edecstateout_t *dso = DSP.pDSO;
 
-         dso->states[dso->numstates].label = strdup(state->name);
+         dso->states[dso->numstates].label = strdup(link->dllObject->name);
          dso->states[dso->numstates].state = states[DSP.currentstate];
          dso->numstates++;
 
          // set lastlabelstate for loop keyword
          DSP.lastlabelstate = DSP.currentstate;
 
-         state = (estatebuf_t *)(state->links.next);
+         link = link->dllNext;
       }
-      DSP.curbufstate = state;
+      DSP.curbufstate = link;
       
       statenum = DSP.currentstate;
 
       // set sprite number of all frame objects on the list with the same
       // linenumber as the current buffered state object
-      while(state && state->linenum == DSP.curbufstate->linenum && 
-            state->type == BUF_STATE)
+      while(link && 
+            link->dllObject->linenum == DSP.curbufstate->dllObject->linenum &&
+            link->dllObject->type == BUF_STATE)
       {
          states[statenum]->sprite = sprnum;
-         state = (estatebuf_t *)(state->links.next);
+         link = link->dllNext;
          ++statenum;
       }
    }
@@ -1252,12 +1259,12 @@ static void DoPSNeedStateFrames(pstate_t *ps)
       {
          // Apply the frames to each state with the same line number.
          // We also set the nextstates here to be consecutive.
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
          unsigned int stridx = 0;
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             char c = toupper(QStrCharAt(ps->tokenbuffer, stridx));
 
@@ -1267,7 +1274,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
             {
                E_EDFLoggedWarning(2,
                   "DoPSNeedStateFrames: line %d: invalid DECORATE frame char %c\n",
-                  DSP.curbufstate->linenum, c);
+                  DSP.curbufstate->dllObject->linenum, c);
                ps->error = true;
                return;
             }
@@ -1277,7 +1284,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
 
             ++statenum; // move forward one state in states[]
             ++stridx;   // move forward one char in the qstring
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDSTATETICS;
@@ -1303,20 +1310,20 @@ static void DoPSNeedStateTics(pstate_t *ps)
       // Apply the tics to each state with the same line number.
       if(!ps->principals)
       {
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
          int tics = QStrAtoi(ps->tokenbuffer);
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             states[statenum]->tics = tics;
 
             if(states[statenum]->tics < -1)
                states[statenum]->tics = -1;
 
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            ++statenum;             // move forward one state in states[]
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDBRIGHTORACTION;
@@ -1335,7 +1342,7 @@ static void doAction(pstate_t *ps, const char *fn)
    // states in the current range.
    if(!ps->principals)
    {
-      estatebuf_t *state = DSP.curbufstate;
+      CDLListItem<estatebuf_t> *link = DSP.curbufstate;
       int statenum = DSP.currentstate;
       deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
 
@@ -1347,13 +1354,13 @@ static void doAction(pstate_t *ps, const char *fn)
          return;
       }
 
-      while(state && state->type == BUF_STATE && 
-         state->linenum == DSP.curbufstate->linenum)
+      while(link && link->dllObject->type == BUF_STATE && 
+            link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
       {
          states[statenum]->action = ptr->cptr;
 
-         ++statenum; // move forward one state in states[]
-         state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+         ++statenum;             // move forward one state in states[]
+         link = link->dllNext; // move forward one buffered state
       }
    }
    ps->state = PSTATE_NEEDSTATEEOLORPAREN;
@@ -1392,16 +1399,16 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       // Apply fullbright to all states in the current range
       if(!ps->principals)
       {
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             states[statenum]->frame |= FF_FULLBRIGHT;
 
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            ++statenum;             // move forward one state in states[]
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDSTATEACTION;
@@ -1459,16 +1466,16 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
       // Add argument object to all states
       if(!ps->principals)
       {
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             E_CreateArgList(states[statenum]);
 
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            ++statenum;           // move forward one state in states[]
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDSTATEARGORPAREN;
@@ -1497,16 +1504,16 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
       // Parse and populate argument in state range
       if(!ps->principals)
       {
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             E_AddArgToList(states[statenum]->args, ps->tokenbuffer->buffer);
 
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            ++statenum;           // move forward one state in states[]
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
@@ -1567,16 +1574,16 @@ static void DoPSNeedStateArg(pstate_t *ps)
       // Parse and populate argument in state range
       if(!ps->principals)
       {
-         estatebuf_t *state = DSP.curbufstate;
+         CDLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
 
-         while(state && state->type == BUF_STATE && 
-               state->linenum == DSP.curbufstate->linenum)
+         while(link && link->dllObject->type == BUF_STATE && 
+               link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
             E_AddArgToList(states[statenum]->args, ps->tokenbuffer->buffer);
 
-            ++statenum; // move forward one state in states[]
-            state = (estatebuf_t *)(state->links.next); // move forward one buffered state
+            ++statenum;           // move forward one state in states[]
+            link = link->dllNext; // move forward one buffered state
          }
       }
       ps->state = PSTATE_NEEDSTATECOMMAORPAREN;
@@ -1747,10 +1754,11 @@ static boolean E_parseDecorateInternal(const char *input, boolean principals)
 //
 static boolean E_checkPrincipalSemantics(void)
 {
-   estatebuf_t *bstate = DSP.statebuffer, *prev = NULL;
+   CDLListItem<estatebuf_t> *link = DSP.statebuffer; 
+   estatebuf_t *prev = NULL;
 
    // Empty? No way bub. Not gonna deal with it.
-   if(!bstate)
+   if(!link)
    {
       E_EDFLoggedWarning(2, "E_checkPrincipalSemantics: illegal empty DECORATE "
                             "state block\n");
@@ -1774,8 +1782,10 @@ static boolean E_checkPrincipalSemantics(void)
       return false;
    }
 
-   while(bstate)
+   while(link)
    {
+      estatebuf_t *bstate = link->dllObject;
+
       // Look for orphaned loop and wait keywords immediately after a label,
       // as this is not allowed.
       if(prev && prev->type == BUF_LABEL && bstate->type == BUF_KEYWORD)
@@ -1791,8 +1801,8 @@ static boolean E_checkPrincipalSemantics(void)
          }
       }
 
-      prev   = bstate;
-      bstate = (estatebuf_t *)(bstate->links.next);
+      prev = bstate;
+      link = link->dllNext;
    }
 
    // Orphaned label at the end?
@@ -1979,7 +1989,7 @@ static boolean E_resolveGotos(edecstateout_t *dso)
 //
 static void E_freeDecorateData(void)
 {
-   estatebuf_t *obj = NULL;
+   CDLListItem<estatebuf_t> *obj = NULL;
 
    // free the internalgotos list
    if(DSP.internalgotos)
@@ -1990,19 +2000,22 @@ static void E_freeDecorateData(void)
    // free the buffered state list
    while((obj = DSP.statebuffer))
    {
+      estatebuf_t *bs = obj->dllObject;
+
       // remove it
-      M_DLListRemove(&obj->links);
+      obj->remove();
 
       // free any allocated strings inside
-      if(obj->name)
-         free(obj->name);
-      if(obj->gotodest)
-         free(obj->gotodest);
+      if(bs->name)
+         free(bs->name);
+      if(bs->gotodest)
+         free(bs->gotodest);
 
       // free the object itself
-      free(obj);
+      free(bs);
    }
-   DSP.statebuffer = DSP.curbufstate = DSP.neweststate = NULL;
+   DSP.statebuffer = DSP.curbufstate = NULL;
+   DSP.neweststate = NULL;
 }
 
 //=============================================================================

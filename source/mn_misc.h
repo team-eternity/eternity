@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*- 
+// Emacs style mode select -*- C++ -*- 
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley

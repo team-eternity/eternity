@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -60,6 +60,8 @@ enum
    POF_DAMAGING = 0x08, // does damage just by touching objects
 };
 
+struct polymaplink_t;
+
 //
 // Polyobject Structure
 //
@@ -92,7 +94,7 @@ typedef struct polyobj_s
    angle_t angle;              // for rotation
 
    fixed_t blockbox[4];            // bounding box for clipping
-   struct polymaplink_s *linkhead; // haleyjd 05/18/06: unlink optimization
+   polymaplink_t *linkhead; // haleyjd 05/18/06: unlink optimization
    int validcount;                 // for clipping: prevents multiple checks
    int damage;                     // damage to inflict on stuck things
    fixed_t thrust;                 // amount of thrust to put on blocking objects
@@ -108,13 +110,12 @@ typedef struct polyobj_s
 //
 // Polyobject Blockmap Link Structure
 //
-
-typedef struct polymaplink_s
+struct polymaplink_t
 {
-   mdllistitem_t link;             // for blockmap links
-   polyobj_t *po;                  // pointer to polyobject
-   struct polymaplink_s *po_next;  // haleyjd 05/18/06: unlink optimization
-} polymaplink_t;
+   CDLListItem<polymaplink_t> link; // for blockmap links
+   polyobj_t *po;                   // pointer to polyobject
+   polymaplink_t *po_next;          // haleyjd 05/18/06: unlink optimization
+};
 
 //
 // Polyobject Special Thinkers
@@ -240,7 +241,7 @@ int EV_DoPolyObjRotate(polyrotdata_t *);
 
 extern polyobj_t *PolyObjects;
 extern int numPolyObjects;
-extern polymaplink_t **polyblocklinks; // polyobject blockmap
+extern CDLListItem<polymaplink_t> **polyblocklinks; // polyobject blockmap
 
 #endif
 

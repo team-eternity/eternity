@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*-
+// Emacs style mode select -*- C++ -*-
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -57,8 +57,8 @@ cfg_opt_t edf_string_opts[] =
 
 #define NUM_EDFSTR_CHAINS 257
 
-static edf_string_t *edf_str_chains[NUM_EDFSTR_CHAINS];
-static edf_string_t *edf_str_numchains[NUM_EDFSTR_CHAINS];
+static edf_string_t              *edf_str_chains[NUM_EDFSTR_CHAINS];
+static CDLListItem<edf_string_t> *edf_str_numchains[NUM_EDFSTR_CHAINS];
 
 //
 // haleyjd 08/05/05: To support editing the numeric keys of existing
@@ -79,8 +79,7 @@ static void E_AddStringToNumHash(edf_string_t *str)
 {
    int idx = str->numkey % NUM_EDFSTR_CHAINS;
 
-   M_DLListInsert((mdllistitem_t *)str, 
-                  (mdllistitem_t **)(&edf_str_numchains[idx]));
+   str->numlinks.insert(str, &edf_str_numchains[idx]);
 }
 
 //
@@ -92,7 +91,7 @@ static void E_AddStringToNumHash(edf_string_t *str)
 //
 static void E_DelStringFromNumHash(edf_string_t *str)
 {
-   M_DLListRemove((mdllistitem_t *)str);
+   str->numlinks.remove();
 }
 
 //
@@ -203,12 +202,12 @@ edf_string_t *E_GetStringForName(const char *key)
 edf_string_t *E_StringForNum(int num)
 {
    int keyval = num % NUM_EDFSTR_CHAINS;
-   edf_string_t *cur = edf_str_numchains[keyval];
+   CDLListItem<edf_string_t> *cur = edf_str_numchains[keyval];
 
-   while(cur && cur->numkey != num)
-      cur = (edf_string_t *)(cur->numlinks.next);
+   while(cur && cur->dllObject->numkey != num)
+      cur = cur->dllNext;
 
-   return cur;
+   return cur ? cur->dllObject : NULL;
 }
 
 //

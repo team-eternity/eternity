@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C -*-
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,6 +27,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "m_bbox.h"
 #include "r_main.h"
@@ -525,7 +526,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
-   polymaplink_t *plink; // haleyjd 02/22/06
+   CDLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
    
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
@@ -536,7 +537,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
 
    while(plink)
    {
-      polyobj_t *po = plink->po;
+      polyobj_t *po = plink->dllObject->po;
 
       if(po->validcount != validcount) // if polyobj hasn't been checked
       {
@@ -552,7 +553,7 @@ boolean P_BlockLinesIterator(int x, int y, boolean func(line_t*))
                return false;
          }
       }
-      plink = (polymaplink_t *)(plink->link.next);
+      plink = plink->dllNext;
    }
 
    // original was reading delimiting 0 as linedef 0 -- phares
