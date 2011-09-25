@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,6 +30,7 @@
 #include "c_runcmd.h"
 #include "c_io.h"
 #include "d_main.h"
+#include "e_things.h" // [CG] 09/18/11
 #include "p_user.h"
 #include "p_chase.h"
 #include "p_saveg.h"
@@ -39,31 +40,16 @@
 #include "p_partcl.h"
 #include "polyobj.h"
 #include "s_sndseq.h"
-#include "e_things.h" // [CG] Added.
 
-// [CG] Added.
-#include "cs_main.h"
-#include "cs_position.h"
-#include "cl_main.h"
-#include "sv_main.h"
+#include "cs_main.h"     // [CG] 09/18/11
+#include "cs_position.h" // [CG] 09/18/11
+#include "cl_cmd.h"     // [CG] 09/18/11
+#include "cl_main.h"     // [CG] 09/18/11
+#include "cl_pred.h"     // [CG] 09/18/11
+#include "sv_main.h"     // [CG] 09/18/11
 
 int leveltime;
-boolean reset_viewz;
-
-//=============================================================================
-//
-// haleyjd 11/21/10: ZoneLevelItem base class for thinkers
-//
-
-void *ZoneLevelItem::operator new (size_t size)
-{
-   return Z_Calloc(1, size, PU_LEVEL, NULL);
-}
-
-void ZoneLevelItem::operator delete (void *p)
-{
-   Z_Free(p);
-}
+bool reset_viewz;
 
 //=============================================================================
 //
@@ -241,6 +227,8 @@ void Thinker::removeThinker()
 //
 void Thinker::RunThinkers(void)
 {
+   Mobj *mo;
+
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
        currentthinker = currentthinker->next)
@@ -249,15 +237,10 @@ void Thinker::RunThinkers(void)
          currentthinker->removeDelayed();
       else if(!clientserver)
          currentthinker->Think();
-      else
-      {
-         mobj_t *actor = thinker_cast<mobj_t*>(currentthinker);
-
-         // [CG] In c/s mode player actors think separately from this loop,
-         //      but everything else has to think here.
-         if(actor == NULL || actor->player == NULL)
-            currentthinker->Think();
-      }
+      else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
+         currentthinker->Think();
+      else if(mo->player == NULL)
+         currentthinker->Think();
    }
 }
 
@@ -292,14 +275,12 @@ void P_Ticker(void)
    // playback, and compensates by incrementing basetic.
    // 
    // All of this complicated mess is used to preserve demo sync.
-   // [CG] Never pause in c/s.
-   if(!clientserver && (
-         paused || (
-            (menuactive || consoleactive) &&
-            !demoplayback &&
-            !netgame &&
-            players[consoleplayer].viewz != 1)))
-      return;
+   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
+                 players[consoleplayer].viewz != 1))
+   {
+      if(!clientserver) // [CG] Never pause in c/s.
+         return;
+   }
    
    P_ParticleThinker(); // haleyjd: think for particles
 
@@ -309,31 +290,41 @@ void P_Ticker(void)
    // haleyjd: players don't think during cinematic pauses
    if(gamestate == GS_LEVEL && !cinema_pause)
    {
-      if(!clientserver)
+      // [CG] Only tick on the server's spectator actor serverside.
+      i = 0;
+      if(clientserver)
       {
-         for(i = 0; i < VANILLA_MAXPLAYERS; i++)
-         {
-            if(playeringame[i])
-               P_PlayerThink(&players[i]);
-         }
+         if(CS_SERVER)
+            P_PlayerThink(&players[0]);
+         i = 1;
       }
-      else
-      {
-         for(i = 0; i < MAXPLAYERS; i++)
-         {
-            if(!playeringame[i])
-               continue;
 
-            if(clientserver)
-            {
-               // [CG] Don't tick on the server's spectator actor unless we're
-               //      serverside.
-               if(i != 0 || CS_SERVER)
-                  CS_PlayerTicker(i);
-            }
-            else
-               P_PlayerThink(&players[i]);
+      for(; i < MAXPLAYERS; i++)
+      {
+         if(!playeringame[i])
+            continue;
+
+         if(CS_SERVER)
+            SV_LoadClientOptions(i);
+
+         if(!clientserver || CS_SERVER || CS_DEMO)
+         {
+            P_PlayerThink(&players[i]);
          }
+         else if(i == consoleplayer && (cl_enable_prediction ||
+                                        clients[i].spectating))
+         {
+            CL_Predict(
+               cl_current_world_index, cl_current_world_index + 1, false
+            );
+         }
+         else if(!clients[i].spectating)
+         {
+            CL_PlayerThink(i);
+         }
+
+         if(CS_SERVER)
+            SV_RestoreServerOptions();
       }
    }
 
@@ -352,9 +343,8 @@ void P_Ticker(void)
    // to "jump". code in p_floor.c detects if a hyperlift has been
    // activated and viewz is reset appropriately here.
    
-   // Determines view height and bobbing
    if(demo_version >= 303 && reset_viewz && gamestate == GS_LEVEL)
-      P_CalcHeight(&players[displayplayer]);
+      P_CalcHeight(&players[displayplayer]); // Determines view height and bobbing
    
    P_RunEffects(); // haleyjd: run particle effects
 }
@@ -397,10 +387,7 @@ ThinkerType::ThinkerType(const char *pName) : name(pName)
 {
    // ThinkerTypes must be singletons with unique names.
    if(FindType(pName))
-   {
-      I_FatalError(I_ERR_KILL,
-         "ThinkerType: duplicate class registered with name %s\n", pName);
-   }
+      I_Error("ThinkerType: duplicate class registered with name %s\n", pName);
 
    // Add it to the global list; order is unimportant.
    this->next = thinkerTypes;

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -105,8 +105,8 @@ void M_SubVec3 (v3double_t *dest, const v3double_t *v1, const v3double_t *v2)
 //
 // M_LengthVec3f
 //
-// [CG] Returns the length of a given vector (relative to the origin).  Taken
-//      from Quake 2 (although honestly this is pretty basic trig/physics).
+// Returns the length of a given vector (relative to the origin).  Taken from
+// Quake 2, added by CG.
 //
 float M_LengthVec3f(v3float_t *v)
 {

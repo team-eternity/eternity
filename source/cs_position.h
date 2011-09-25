@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -74,16 +74,16 @@ typedef struct position_s
 
 #pragma pack(pop)
 
-void    CS_PrintPosition(position_t *position);
-void    CS_PrintActorPosition(mobj_t *actor, unsigned int index);
-void    CS_PrintPlayerPosition(int playernum, unsigned int index);
-void    CS_SetActorPosition(mobj_t *actor, position_t *position);
-void    CS_SetPlayerPosition(int playernum, position_t *position);
-boolean CS_ActorPositionEquals(mobj_t *actor, position_t *position);
-void    CS_SaveActorPosition(position_t *position, mobj_t *actor, int index);
-boolean CS_ActorPositionChanged(mobj_t *actor);
-boolean CS_PositionsEqual(position_t *position_one, position_t *position_two);
-void    CS_CopyPosition(position_t *dest, position_t *src);
+void CS_PrintPosition(position_t *position);
+void CS_PrintActorPosition(Mobj *actor, unsigned int index);
+void CS_PrintPlayerPosition(int playernum, unsigned int index);
+void CS_SetActorPosition(Mobj *actor, position_t *position);
+void CS_SetPlayerPosition(int playernum, position_t *position);
+bool CS_ActorPositionEquals(Mobj *actor, position_t *position);
+void CS_SaveActorPosition(position_t *position, Mobj *actor, int index);
+bool CS_ActorPositionChanged(Mobj *actor);
+bool CS_PositionsEqual(position_t *position_one, position_t *position_two);
+void CS_CopyPosition(position_t *dest, position_t *src);
 
 #endif
 

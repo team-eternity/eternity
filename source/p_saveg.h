@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -40,16 +40,16 @@ struct line_t;
 class SaveArchive
 {
 protected:
-   OutBuffer *savefile; // valid when saving
-   InBuffer  *loadfile; // valid when loading
+   OutBuffer *savefile;        // valid when saving
+   InBuffer  *loadfile;        // valid when loading
 
 public:
    SaveArchive(OutBuffer *pSaveFile);
    SaveArchive(InBuffer  *pLoadFile);
 
    // Accessors
-   boolean isSaving()  const { return (savefile != NULL); }
-   boolean isLoading() const { return (loadfile != NULL); }
+   bool isSaving()  const   { return (savefile != NULL); }
+   bool isLoading() const   { return (loadfile != NULL); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
 
@@ -72,7 +72,7 @@ public:
    SaveArchive &operator << (uint16_t &x);
    SaveArchive &operator << (int8_t   &x);
    SaveArchive &operator << (uint8_t  &x); 
-   SaveArchive &operator << (boolean  &x);
+   SaveArchive &operator << (bool     &x);
    SaveArchive &operator << (float    &x);
    SaveArchive &operator << (double   &x);
    // Pointers:

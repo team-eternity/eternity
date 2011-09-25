@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -50,8 +50,8 @@ void CS_CopyCommand(cs_cmd_t *dest, cs_cmd_t *src);
 void CS_CopyTiccmdToCommand(cs_cmd_t *command, ticcmd_t *cmd,
                             unsigned int index);
 void CS_CopyCommandToTiccmd(ticcmd_t *cmd, cs_cmd_t *command);
-boolean CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two);
-boolean CS_CommandIsBlank(cs_cmd_t *command);
+bool CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two);
+bool CS_CommandIsBlank(cs_cmd_t *command);
 void CS_SavePlayerCommand(cs_cmd_t *command, unsigned int playernum,
                           unsigned int index);
 void CS_SetPlayerCommand(unsigned int playernum, cs_cmd_t *command);

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -25,17 +25,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "w_wad.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
+#include "e_fonts.h"
+#include "e_string.h"
 #include "g_game.h"
 #include "in_lude.h"
 #include "p_info.h"
-#include "v_block.h"
-#include "v_video.h"
 #include "s_sound.h"
-#include "d_gi.h"
-#include "e_string.h"
-#include "e_fonts.h"
+#include "v_block.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 extern vfont_t *in_font;
 extern vfont_t *in_bigfont;
@@ -116,7 +120,7 @@ static int interstate;
 
 static int statetime;             // time until next state
 static int countdown;             // count down to end
-static boolean flashtime = false;
+static bool flashtime = false;
 
 static wbstartstruct_t hi_wbs;
 
@@ -158,12 +162,12 @@ static void HI_loadData(void)
    if(gameepisode <= 3)
    {
       sprintf(mapname, "MAPE%d", gameepisode);
-      hi_interpic = (patch_t *)W_CacheLumpName(mapname, PU_STATIC);
+      hi_interpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
    }
 
    // load positional indicators
-   hi_in_x   = (patch_t *)W_CacheLumpName("IN_X", PU_STATIC);
-   hi_in_yah = (patch_t *)W_CacheLumpName("IN_YAH", PU_STATIC);
+   hi_in_x   = PatchLoader::CacheName(wGlobalDir, "IN_X",   PU_STATIC);
+   hi_in_yah = PatchLoader::CacheName(wGlobalDir, "IN_YAH", PU_STATIC);
 
    // get lump numbers for faces
    for(i = 0; i < 4; i++)
@@ -230,7 +234,7 @@ static void HI_loadData(void)
 //
 // Returns true if the player is considered to be participating.
 //
-static boolean HI_playerInGame(int playernum)
+static bool HI_playerInGame(int playernum)
 {
 #ifdef HI_DEBUG_ALLPLAYERS
    return true;
@@ -410,7 +414,7 @@ static void HI_drawLeaving(void)
 {
    int i;
    int lastlevel, thislevel;
-   boolean drawsecret;
+   bool drawsecret;
 
    if(gameepisode > 3)
       return;
@@ -656,8 +660,9 @@ static void HI_drawCoopStats(void)
       if(HI_playerInGame(i))
       {
          V_DrawPatchShadowed(25, ypos, &vbscreen, 
-                             (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)), 
-                             NULL, FRACUNIT);
+            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
+            NULL, FRACUNIT);
+
          if(statstage == 1)
          {
             int kills = 0, items = 0, secrets = 0;
@@ -730,14 +735,16 @@ static void HI_drawDMStats(void)
       {
          if(HI_playerInGame(i))
          {
-            V_DrawPatchGeneral(40, (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
-                               &vbscreen,
-                               (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)), 
-                               false);
-            V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS, 18,
-                               &vbscreen,
-                               (patch_t *)(W_CacheLumpNum(hi_dead_faces[i], PU_CACHE)),
-                               false);
+            V_DrawPatchGeneral(40, 
+               (ypos*FRACUNIT + dSlideY[i]*intertime)>>FRACBITS,
+               &vbscreen,
+               PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
+               false);
+            V_DrawPatchGeneral((xpos*FRACUNIT + dSlideX[i]*intertime)>>FRACBITS,
+               18,
+               &vbscreen,
+               PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
+               false);
          }
       }
    }
@@ -774,11 +781,12 @@ static void HI_drawDMStats(void)
             }
 
             V_DrawPatchTL(40, ypos, &vbscreen,
-                          (patch_t *)(W_CacheLumpNum(hi_faces[i], PU_CACHE)),
-                          NULL, tllevel);
+               PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
+               NULL, tllevel);
             V_DrawPatchTL(xpos, 18, &vbscreen,
-                          (patch_t *)(W_CacheLumpNum(hi_dead_faces[i], PU_CACHE)),
-                          NULL, tllevel);
+               PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
+               NULL, tllevel);
+
             kpos = 86;
 
             for(j = 0; j < MAXPLAYERS; ++j)

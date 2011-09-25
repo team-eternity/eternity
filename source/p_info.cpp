@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley, Simon Howard, et al.
@@ -49,26 +49,28 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_io.h"
+#include "c_runcmd.h"
+#include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomdef.h"
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "f_finale.h"
-#include "w_wad.h"
-#include "p_setup.h"
-#include "p_info.h"
-#include "p_mobj.h"
-#include "sounds.h"
-#include "d_gi.h"
-#include "d_deh.h"
-#include "e_sound.h"
-#include "g_game.h"
-#include "m_qstr.h"
-#include "m_misc.h"
-#include "m_dllist.h"
 #include "e_lib.h"
 #include "e_hash.h"
+#include "e_sound.h"
+#include "f_finale.h"
+#include "g_game.h"
+#include "m_dllist.h"
+#include "m_qstr.h"
+#include "m_misc.h"
+#include "p_info.h"
+#include "p_mobj.h"
+#include "p_setup.h"
+#include "sounds.h"
+#include "w_wad.h"
 
 extern char gamemapname[9];
 
@@ -102,7 +104,7 @@ struct LevelInfoProto_t
    char        mapnamestr[9];                  // storage for name
    int         type;                           // type id via above enumeration   
    LevelInfo_t info;                           // the LevelInfo object
-   boolean     modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
+   bool        modified[LI_FIELD_NUMFIELDS];   // array of bools to track modified fields
 };
 
 // haleyjd: moved everything into the LevelInfo struct
@@ -114,10 +116,10 @@ LevelInfo_t LevelInfo;
 LevelInfoProto_t LevelInfoProto;
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info);
 
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel);
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel);
 
-static int  P_ParseInfoCmd(qstring_t *line, int cachelevel);
-static void P_ParseLevelVar(qstring_t *cmd, int cachelevel);
+static int  P_ParseInfoCmd(qstring *line, int cachelevel);
+static void P_ParseLevelVar(qstring *cmd, int cachelevel);
 
 static void P_ClearLevelVars(void);
 static void P_InitWeapons(void);
@@ -141,7 +143,7 @@ typedef struct metainfo_s
    const char *musname;   // music name
    int nextlevel;         // next level #, only used if non-0
    int nextsecret;        // next secret #, only used if non-0
-   boolean finale;        // if true, sets LevelInfo.endOfGame
+   bool finale;           // if true, sets LevelInfo.endOfGame
    const char *intertext; // only used if finale is true
 } metainfo_t;
 
@@ -164,7 +166,7 @@ static enum limode_e
    LI_NUMMODES
 } limode;
 
-static boolean foundGlobalMap;
+static bool foundGlobalMap;
 
 // haleyjd: flag set for boss specials
 static dehflags_t boss_spec_flags[] =
@@ -238,7 +240,8 @@ static textvals_t finaleTypeVals =
 //
 void P_LoadLevelInfo(int lumpnum, const char *lvname)
 {
-   lumpinfo_t *lump;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t  *lump;
    int glumpnum;
 
    // set all the level defaults
@@ -272,14 +275,14 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[glumpnum];
+      lump = lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) &&
          lump->li_namespace == lumpinfo_t::ns_global)
       {
          // reset the parser state         
          readtype = RT_OTHER;
-         P_ParseLevelInfo(&w_GlobalDir, glumpnum, PU_LEVEL); // FIXME
+         P_ParseLevelInfo(&wGlobalDir, glumpnum, PU_LEVEL); // FIXME
          if(foundGlobalMap) // parsed an entry for this map, so stop
             break;
       }
@@ -291,7 +294,7 @@ void P_LoadLevelInfo(int lumpnum, const char *lvname)
    // parse level lump
    limode   = LI_MODE_LEVEL;
    readtype = RT_OTHER;
-   P_ParseLevelInfo(&w_GlobalDir, lumpnum, PU_LEVEL); // FIXME
+   P_ParseLevelInfo(&wGlobalDir, lumpnum, PU_LEVEL); // FIXME
 
    // copy modified fields from the parsing prototype into LevelInfo
    P_copyPrototypeToLevelInfo(&LevelInfoProto, &LevelInfo);
@@ -408,6 +411,7 @@ static LevelInfoProto_t *P_getLevelInfoPrototype(const char *mapname)
 //
 static void P_copyPrototypeToLevelInfo(LevelInfoProto_t *proto, LevelInfo_t *info)
 {
+   LI_COPY(ACSSCRIPTLUMP,    acsScriptLump);
    LI_COPY(ALTSKYNAME,       altSkyName);
    LI_COPY(BOSSSPECS,        bossSpecs);
    LI_COPY(COLORMAP,         colorMap);
@@ -476,9 +480,10 @@ static void P_copyLevelInfoPrototype(LevelInfoProto_t *dest)
 // more than once (for example, for runtime wad loading), the hive will be
 // dumped and all EMAPINFO lumps will be parsed again.
 //
-void P_LoadGlobalLevelInfo(waddir_t *dir)
+void P_LoadGlobalLevelInfo(WadDirectory *dir)
 {
-   lumpinfo_t *lump;
+   lumpinfo_t **lumpinfo = dir->GetLumpInfo();
+   lumpinfo_t  *lump;
    int glumpnum;
 
    // if any prototypes exist, delete them
@@ -487,11 +492,11 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 
    limode = LI_MODE_GLOBAL;
 
-   lump = W_GetLumpNameChain("EMAPINFO");
+   lump = dir->GetLumpNameChain("EMAPINFO");
 
    for(glumpnum = lump->index; glumpnum >= 0; glumpnum = lump->next)
    {
-      lump = dir->lumpinfo[glumpnum];
+      lump = lumpinfo[glumpnum];
 
       if(!strncasecmp(lump->name, "EMAPINFO", 8) && 
          lump->li_namespace == lumpinfo_t::ns_global)
@@ -513,23 +518,23 @@ void P_LoadGlobalLevelInfo(waddir_t *dir)
 //
 // Parses one individual MapInfo lump.
 //
-static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
+static void P_ParseLevelInfo(WadDirectory *dir, int lumpnum, int cachelevel)
 {
-   qstring_t line;
+   qstring line;
    char *lump, *rover;
    int  size;
 
    // haleyjd 03/12/05: seriously restructured to eliminate last line
-   // problem and to use qstring_t to buffer lines
+   // problem and to use qstring to buffer lines
    
    // if lump is zero size, we are done
-   if(!(size = dir->lumpinfo[lumpnum]->size))
+   if(!(size = dir->LumpLength(lumpnum)))
       return;
 
    // allocate lump buffer with size + 2 to allow for termination
    size += 2;
    lump = (char *)(Z_Malloc(size, PU_STATIC, NULL));
-   W_ReadLumpInDir(dir, lumpnum, lump);
+   dir->ReadLump(lumpnum, lump);
 
    // terminate lump data with a line break and null character;
    // this makes uniform parsing much easier
@@ -540,7 +545,7 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
    rover = lump;
 
    // create the line buffer
-   QStrInitCreate(&line);
+   line.initCreate();
    
    while(*rover)
    {
@@ -550,16 +555,13 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
          // we can break out of parsing early
          if(P_ParseInfoCmd(&line, cachelevel) == -1)
             break;
-         QStrClear(&line); // clear line buffer
+         line.clear(); // clear line buffer
       }
       else
-         QStrPutc(&line, *rover); // add char to line buffer
+         line += *rover; // add char to line buffer
 
       ++rover;
    }
-
-   // free the line buffer
-   QStrFree(&line);
 
    // free the lump
    Z_Free(lump);
@@ -570,26 +572,26 @@ static void P_ParseLevelInfo(waddir_t *dir, int lumpnum, int cachelevel)
 //
 // Parses a single line of a MapInfo lump.
 //
-static int P_ParseInfoCmd(qstring_t *line, int cachelevel)
+static int P_ParseInfoCmd(qstring *line, int cachelevel)
 {
    unsigned int len;
    const char *label = NULL;
    LevelInfoProto_t *curproto = NULL;
 
-   QStrReplace(line, "\t\r\n", ' '); // erase any control characters
-   QStrLwr(line);                    // make everything lowercase
-   QStrLStrip(line, ' ');            // strip spaces at beginning
-   QStrRStrip(line, ' ');            // strip spaces at end
+   line->replace("\t\r\n", ' '); // erase any control characters
+   line->toLower();              // make everything lowercase
+   line->LStrip(' ');            // strip spaces at beginning
+   line->RStrip(' ');            // strip spaces at end
    
-   if(!(len = QStrLen(line)))        // ignore totally empty lines
+   if(!(len = line->length()))   // ignore totally empty lines
       return 0;
 
    // detect comments at beginning
-   if(line->buffer[0] == '#' || line->buffer[0] == ';' || 
-      (len > 1 && line->buffer[0] == '/' && line->buffer[1] == '/'))
+   if(line->charAt(0) == '#' || line->charAt(0) == ';' || 
+      (len > 1 && line->charAt(0) == '/' && line->charAt(1) == '/'))
       return 0;
      
-   if((label = QStrChr(line, '[')))  // a new section separator
+   if((label = line->strChr('[')))  // a new section separator
    {
       ++label;
 
@@ -693,12 +695,13 @@ typedef struct levelvar_s
 
 levelvar_t levelvars[]=
 {
+   LI_STRING("acsscript",       ACSSCRIPTLUMP,    acsScriptLump),
    LI_STRING("altskyname",      ALTSKYNAME,       altSkyName),
    LI_FLAGSF("boss-specials",   BOSSSPECS,        bossSpecs,        boss_flagset),
    LI_STRING("colormap",        COLORMAP,         colorMap),
    LI_STRING("creator",         CREATOR,          creator),
    LI_BOOLNF("doublesky",       DOUBLESKY,        doubleSky),
-   LI_BOOLNF("edf_intername",   USEEDFINTERNAME,  useEDFInterName),
+   LI_BOOLNF("edf-intername",   USEEDFINTERNAME,  useEDFInterName),
    LI_BOOLNF("endofgame",       ENDOFGAME,        endOfGame),
    LI_STRING("extradata",       EXTRADATA,        extraData),
    LI_BOOLNF("finale-secret",   FINALESECRETONLY, finaleSecretOnly), 
@@ -760,21 +763,21 @@ enum
 // any appropriate matching MapInfo variable to the retrieved
 // value.
 //
-static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
+static void P_ParseLevelVar(qstring *cmd, int cachelevel)
 {
    int state = 0;
-   qstring_t var, value;
+   qstring var, value;
    char c;
-   const char *rover = cmd->buffer;
+   const char *rover = cmd->constPtr();
    levelvar_t *current = levelvars;
 
    // haleyjd 03/12/05: seriously restructured to remove possible
    // overflow of static buffer and bad kludges used to separate
-   // the variable and value tokens -- now uses qstring_t.
+   // the variable and value tokens -- now uses qstring.
 
    // create qstrings to hold the tokens
-   QStrInitCreate(&var);
-   QStrInitCreate(&value);
+   var.initCreate();
+   value.initCreate();
 
    while((c = *rover++))
    {
@@ -784,17 +787,17 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
          if(c == ' ' || c == '=')
             state = STATE_BETWEEN;
          else
-            QStrPutc(&var, c);
+            var += c;
          continue;
       case STATE_BETWEEN: // between -- skip whitespace or =
          if(c != ' ' && c != '=')
          {
             state = STATE_VAL;
-            QStrPutc(&value, c);
+            value += c;
          }
          continue;
       case STATE_VAL: // value -- everything else goes here
-         QStrPutc(&value, c);
+         value += c;
          continue;
       default:
          I_Error("P_ParseLevelVar: undefined state in lexer\n");
@@ -802,29 +805,25 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
    }
 
    // detect some syntax errors
-   if(state != STATE_VAL || !QStrLen(&var) || !QStrLen(&value))
-   {
-      QStrFree(&var);
-      QStrFree(&value);
+   if(state != STATE_VAL || !var.length() || !value.length())
       return;
-   }
 
    // TODO: improve linear search? fixed small set, so may not matter
    while(current->type != IVT_END)
    {
-      if(!QStrCaseCmp(&var, current->name))
+      if(!var.strCaseCmp(current->name))
       {
          switch(current->type)
          {
          case IVT_STRING:
-            *(char**)current->variable = QStrCDup(&value, cachelevel);
+            *(char**)current->variable = value.duplicate(cachelevel);
             break;
 
             // haleyjd 10/05/05: named value support
          case IVT_STRNUM:
             {
                textvals_t *tv = (textvals_t *)current->extra;
-               int val = E_StrToNumLinear(tv->vals, tv->numvals, QStrConstPtr(&value));
+               int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
 
                if(val >= tv->numvals)
                   val = tv->defaultval;
@@ -834,13 +833,13 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             break;
             
          case IVT_INT:
-            *(int*)current->variable = QStrAtoi(&value);
+            *(int*)current->variable = value.toInt();
             break;
             
             // haleyjd 03/15/03: boolean support
          case IVT_BOOLEAN:
-            *(boolean *)current->variable = 
-               !QStrCaseCmp(&value, "true") ? true : false;
+            *(bool *)current->variable = 
+               !value.strCaseCmp("true") ? true : false;
             break;
 
             // haleyjd 03/14/05: flags support
@@ -848,7 +847,7 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
             {
                dehflagset_t *flagset = (dehflagset_t *)current->extra;
                
-               *(int *)current->variable = E_ParseFlags(QStrConstPtr(&value), flagset);
+               *(int *)current->variable = E_ParseFlags(value.constPtr(), flagset);
             }
             break;
          default:
@@ -860,10 +859,6 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
       }
       current++;
    }
-
-   // free the qstrings
-   QStrFree(&var);
-   QStrFree(&value);
 }
 
 //
@@ -887,7 +882,7 @@ static void P_ParseLevelVar(qstring_t *cmd, int cachelevel)
 // secret == true  -> Heretic hidden map
 // secret == false -> Just a plain new level
 //
-static void SynthLevelName(boolean secret)
+static void SynthLevelName(bool secret)
 {
    // haleyjd 12/14/01: halved size of this string, max length
    // is deterministic since gamemapname is 8 chars long
@@ -908,9 +903,9 @@ static void SynthLevelName(boolean secret)
 //
 static void P_InfoDefaultLevelName(void)
 {
-   const char *bexname  = NULL;
-   boolean deh_modified = false;
-   boolean synth_type   = false;
+   const char *bexname = NULL;
+   bool deh_modified   = false;
+   bool synth_type     = false;
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
    // if we have a current metainfo, use its level name
@@ -998,7 +993,7 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 //
 static void P_InfoDefaultSoundNames(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    int i;
 
    // if first time, save pointers to the sounds and their aliases
@@ -1076,7 +1071,7 @@ static void P_LoadInterTextLump(void)
       
       str = (char *)(Z_Malloc(lumpLen + 1, PU_LEVEL, 0));
       
-      W_ReadLump(lumpNum, str);
+      wGlobalDir.ReadLump(lumpNum, str);
       
       // null-terminate the string
       str[lumpLen] = '\0';
@@ -1376,6 +1371,7 @@ static void P_ClearLevelVars(void)
    LevelInfo.gravity         = DEFAULTGRAVITY;
    LevelInfo.hasScripts      = false;
    LevelInfo.scriptLump      = NULL;
+   LevelInfo.acsScriptLump   = NULL;
    LevelInfo.extraData       = NULL;
    
    // Hexen TODO: will be true for Hexen maps by default
@@ -1497,7 +1493,7 @@ static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 // possible PWAD(s) that originate from certain console versions of DOOM.
 //
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
-                      int next, int secr, boolean finale, const char *intertext)
+                      int next, int secr, bool finale, const char *intertext)
 {
    metainfo_t *mi;
 
@@ -1575,7 +1571,7 @@ typedef struct tmplpstate_s
    int i;
    int len;
    int state;
-   qstring_t *tokenbuf;
+   qstring *tokenbuf;
    int spacecount;
    int titleOrAuthor; // if non-zero, looking for Author, not title
 } tmplpstate_t;
@@ -1597,14 +1593,14 @@ static void TmplStateStart(tmplpstate_t *state)
    case 't':
       if(state->titleOrAuthor)
          break;
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       state->state = TMPL_STATE_TITLE; // start reading out "Title"
       break;
    case 'A':
    case 'a':
       if(state->titleOrAuthor)
       {
-         QStrPutc(state->tokenbuf, c);
+         *state->tokenbuf += c;
          state->state = TMPL_STATE_TITLE; // start reading out "Author"
       }
       break;
@@ -1622,7 +1618,7 @@ static void TmplStateQuote(tmplpstate_t *state)
    case ' ':
       if(++state->spacecount == 2)
       {
-         QStrPutc(state->tokenbuf, ' ');
+         *state->tokenbuf += ' ';
          state->spacecount = 0;
       }
       break;
@@ -1633,7 +1629,7 @@ static void TmplStateQuote(tmplpstate_t *state)
       break;
    default:
       state->spacecount = 0;
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1650,19 +1646,19 @@ static void TmplStateTitle(tmplpstate_t *state)
    case '\t':
    case ':':
       // whitespace - check to see if we have "Title" or "Author" in the token buffer
-      if(!QStrCaseCmp(state->tokenbuf, state->titleOrAuthor ? "Author" : "Title"))
+      if(!state->tokenbuf->strCaseCmp(state->titleOrAuthor ? "Author" : "Title"))
       {
-         QStrClear(state->tokenbuf);
+         state->tokenbuf->clear();
          state->state = TMPL_STATE_SPACE;
       }
       else
       {
-         QStrClear(state->tokenbuf);
+         state->tokenbuf->clear();
          state->state = TMPL_STATE_START; // start over
       }
       break;
    default:
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1682,7 +1678,7 @@ static void TmplStateSpace(tmplpstate_t *state)
       break; // stay in same state
    default:
       // should be start of title
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       state->state = TMPL_STATE_INTITLE;
       break;
    }
@@ -1697,7 +1693,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
    case '"':
       if(state->titleOrAuthor) // for authors, quotes are allowed
       {
-         QStrPutc(state->tokenbuf, c);
+         *state->tokenbuf += c;
          break;
       }
       // intentional fall-through for titles (end of title)
@@ -1707,7 +1703,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
       state->state = TMPL_STATE_DONE;
       break;
    default:
-      QStrPutc(state->tokenbuf, c);
+      *state->tokenbuf += c;
       break;
    }
 }
@@ -1732,10 +1728,10 @@ static tmplstatefunc_t statefuncs[] =
 static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 {
    tmplpstate_t state;
-   qstring_t tokenbuffer;
+   qstring tokenbuffer;
    char *ret = NULL;
 
-   QStrInitCreate(&tokenbuffer);
+   tokenbuffer.initCreate();
 
    state.text          = text;
    state.len           = len;
@@ -1753,9 +1749,7 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
    // valid termination states are DONE or INTITLE (though it's pretty unlikely
    // that we would hit EOF in the title string, I'll allow for it)
    if(state.state == TMPL_STATE_DONE || state.state == TMPL_STATE_INTITLE)
-      ret = QStrCDup(&tokenbuffer, PU_LEVEL);
-
-   QStrFree(&tokenbuffer);
+      ret = tokenbuffer.duplicate(PU_LEVEL);
 
    return ret;
 }

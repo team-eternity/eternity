@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
@@ -27,9 +27,11 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "v_buffer.h"
 #include "v_misc.h"
 #include "v_patch.h"
+#include "r_state.h"
 
 //
 // VB_MakeXYLUT

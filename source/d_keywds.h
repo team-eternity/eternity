@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -39,13 +39,7 @@
 // definition in SDL, so it needs to be factored out into a 
 // custom macro definition
 
-#if defined(__GNUC__)
-  #define d_inline __inline__
-#elif defined(_MSC_VER)
-  #define d_inline __inline
-#else
-  #define d_inline
-#endif
+// haleyjd 04/13/11: C++ supports inline natively
 
 //
 // Non-standard function availability defines

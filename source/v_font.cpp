@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -34,20 +34,22 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
 #include "d_gi.h"
+#include "doomstat.h"
 #include "m_swap.h"
-#include "v_video.h"
-#include "v_misc.h"
+#include "r_patch.h"
 #include "v_font.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "w_wad.h"
 
-static boolean fixedColor = false;
+static bool fixedColor = false;
 static int fixedColNum = 0;
 static char *altMap = NULL;
-static boolean shadowChar = false;
-static boolean absCentered = false; // 03/04/06: every line will be centered
+static bool shadowChar = false;
+static bool absCentered = false; // 03/04/06: every line will be centered
 
 //
 // V_FontLineWidth
@@ -85,7 +87,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
          if(!(patch = font->fontgfx[c]))
             length += font->space;
          else
-            length += SwapShort(patch->width) - font->dw;
+            length += patch->width - font->dw;
       }
    }   
    
@@ -112,9 +114,9 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
    unsigned int c;          // current character
    int cx, cy, tx;          // current screen position
 
-   byte    *color = NULL;     // current color range translation tbl
-   boolean tl = false;        // current translucency state
-   boolean useAltMap = false; // using alternate colormap source?
+   byte *color = NULL;      // current color range translation tbl
+   bool tl = false;         // current translucency state
+   bool useAltMap = false;  // using alternate colormap source?
 
    if(font->color)
    {
@@ -227,7 +229,7 @@ void V_FontWriteText(vfont_t *font, const char *s, int x, int y)
          continue;
       }
 
-      w = font->linear ? font->lsize : SwapShort(patch->width);
+      w = font->linear ? font->lsize : patch->width;
 
       // possibly adjust x coordinate for centering
       tx = (font->centered ? cx + (font->cw >> 1) - (w >> 1) : cx);
@@ -391,7 +393,7 @@ int V_FontStringWidth(vfont_t *font, const char *s)
          if(!(patch = font->fontgfx[c]))
             length += font->space;
          else
-            length += (SwapShort(patch->width) - font->dw);
+            length += (patch->width - font->dw);
       }
    }
    
@@ -435,7 +437,7 @@ int V_FontCharWidth(vfont_t *font, char pChar)
       if(!(patch = font->fontgfx[c]))
          width = font->space;
       else
-         width = (SwapShort(patch->width) - font->dw);
+         width = (patch->width - font->dw);
    }
    
    return width;
@@ -458,7 +460,7 @@ int16_t V_FontMaxWidth(vfont_t *font)
    {
       if(font->fontgfx[i])
       {
-         pw = SwapShort(font->fontgfx[i]->width);
+         pw = font->fontgfx[i]->width;
 
          if(pw > w)
             w = pw;

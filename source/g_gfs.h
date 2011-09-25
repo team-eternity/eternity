@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -33,11 +33,8 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __G_GFS_H__
-#define __G_GFS_H__
-
-#include "doomtype.h"
-#include "d_io.h"
+#ifndef G_GFS_H__
+#define G_GFS_H__
 
 typedef struct gfs_s
 {
@@ -52,8 +49,8 @@ typedef struct gfs_s
    int numwads;
    int numdehs;
    int numcsc;
-   boolean hasIWAD;
-   boolean hasEDF;
+   bool hasIWAD;
+   bool hasEDF;
 } gfs_t;
 
 gfs_t *G_LoadGFS(const char *filename);

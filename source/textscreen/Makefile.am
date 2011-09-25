@@ -1,5 +1,5 @@
 
-AM_CFLAGS = @SDL_CFLAGS@ -I../ -fno-strict-aliasing
+AM_CFLAGS = @SDL_CFLAGS@ -I../
 
 noinst_LIBRARIES = libtextscreen.a
 

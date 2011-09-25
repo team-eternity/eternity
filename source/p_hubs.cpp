@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -38,13 +38,19 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "c_io.h"
+#include "d_event.h"
+#include "doomstat.h"
+#include "d_io.h"       // SoM 3/14/2002: strncasecmp
 #include "g_game.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
+#include "r_defs.h"
+#include "r_state.h"
 
 #define MAXHUBLEVELS 128
 
@@ -59,7 +65,7 @@ extern char gamemapname[9];
 
 // sf: set when we are changing to
 //  another level in the hub
-boolean hub_changelevel = false;  
+bool hub_changelevel = false;  
 
 hublevel_t hub_levels[MAXHUBLEVELS];
 int num_hub_levels;
@@ -100,7 +106,7 @@ void P_ClearHubs(void)
 
 void P_ClearHubsAtExit(void)
 {
-   static boolean atexit_set = false;
+   static bool atexit_set = false;
    
    if(atexit_set) return;   // already set
    

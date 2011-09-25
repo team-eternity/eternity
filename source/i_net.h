@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,8 +29,8 @@
 
 // Called by D_DoomMain.
 
-void I_InitNetwork (void);
-void I_NetCmd (void);
+void I_InitNetwork(void);
+bool I_NetCmd(void);
 
 #endif
 

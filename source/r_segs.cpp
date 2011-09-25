@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,16 +28,21 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "doomstat.h"
 #include "e_exdata.h"
-#include "r_main.h"
-#include "r_bsp.h"
-#include "r_plane.h"
-#include "r_things.h"
-#include "r_draw.h"
-#include "w_wad.h"
-#include "p_user.h"
 #include "p_info.h"
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_bsp.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_plane.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "r_things.h"
+#include "w_wad.h"
 
 // OPTIMIZE: closed two sided lines as single sided
 // SoM: Done.
@@ -81,7 +86,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            tranmap = (byte *)(W_CacheLumpNum(linedef->tranlump-1, PU_STATIC));
+            tranmap = (byte *)(wGlobalDir.CacheLumpNum(linedef->tranlump-1, PU_STATIC));
          else
             tranmap = main_tranmap;
       }
@@ -141,13 +146,13 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
          ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
-      column.texmid = column.texmid + textures[texnum]->heightfrac - ds->viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
    }
    else
    {
       column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
          ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
-      column.texmid = column.texmid - ds->viewz;
+      column.texmid = column.texmid - viewz;
    }
 
    column.texmid += segclip.line->sidedef->rowoffset;
@@ -213,6 +218,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 }
 
 
+
+
 //
 // R_RenderSegLoop
 //
@@ -258,7 +265,7 @@ static void R_RenderSegLoop(void)
       b = segclip.bottom > floorclip[i]   ? clipbot : (int)segclip.bottom;
 
       // SoM 3/10/2005: Only add to the portal of the ceiling is marked
-      if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING))
+      if(segclip.markflags & (SEG_MARKCPORTAL|SEG_MARKCEILING|SEG_MARKCOVERLAY))
       {
          line = t - 1;
          
@@ -267,21 +274,36 @@ static void R_RenderSegLoop(void)
          
          if(line >= cliptop)
          {
-            if(segclip.markflags & SEG_MARKCPORTAL)
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+            if(segclip.markflags & SEG_MARKCOVERLAY)
+            {
+               int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
+               
+               if(segclip.ceilingplane && line >= otop)
+               {
+                  segclip.ceilingplane->top[i]    = otop;
+                  segclip.ceilingplane->bottom[i] = line;
+               }
+
+               overlaycclip[i] = (float)t;
+            }
             
-            if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
+            if(segclip.markflags & SEG_MARKCPORTAL)
+            {
+               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+               ceilingclip[i] = (float)t;
+            }
+            else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
             {
                segclip.ceilingplane->top[i]    = cliptop;
                segclip.ceilingplane->bottom[i] = line;
+               ceilingclip[i] = (float)t;
             }
          }
-
-         ceilingclip[i] = (float)t;
       }
-
+      
+  
       // SoM 3/10/2005: Only add to the portal of the floor is marked
-      if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR))
+      if(segclip.markflags & (SEG_MARKFPORTAL|SEG_MARKFLOOR|SEG_MARKFOVERLAY))
       {
          line = b + 1;
 
@@ -290,19 +312,35 @@ static void R_RenderSegLoop(void)
 
          if(line <= clipbot)
          {
-            if(segclip.markflags & SEG_MARKFPORTAL)
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+            if(segclip.markflags & SEG_MARKFOVERLAY)
+            {
+               int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
+               
+               if(segclip.floorplane && line <= olow)
+               {
+                  segclip.floorplane->top[i]    = line;
+                  segclip.floorplane->bottom[i] = olow;
+               }
+
+               overlayfclip[i] = (float)b;
+            }
             
-            if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
+            if(segclip.markflags & SEG_MARKFPORTAL)
+            {
+               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+               floorclip[i] = (float)b;
+            }
+            else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
             {
                segclip.floorplane->top[i]    = line;
                segclip.floorplane->bottom[i] = clipbot;
+               floorclip[i] = (float)b;
             }
          }
 
-         floorclip[i] = (float)b;
       }
-
+      
+      
       if(segclip.segtextured)
       {
          int index;
@@ -621,7 +659,7 @@ void R_StoreWallRange(const int start, const int stop)
 
    float pstep;
 
-   boolean usesegloop;
+   bool usesegloop;
    
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
@@ -728,9 +766,6 @@ void R_StoreWallRange(const int start, const int stop)
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
-   ds_p->viewx    = viewx;
-   ds_p->viewy    = viewy;
-   ds_p->viewz    = viewz;
    ds_p->curline  = segclip.line;
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;

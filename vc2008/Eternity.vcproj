@@ -44,13 +44,21 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
-				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="2"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
 				PrecompiledHeaderFile=".\Release/Eternity.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
@@ -71,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -80,6 +88,7 @@
 				GenerateMapFile="true"
 				MapFileName=".\Release/Eternity.map"
 				SubSystem="1"
+				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
@@ -138,8 +147,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -165,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -1967,6 +1976,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_collection.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_dllist.h"
 						>
 					</File>
@@ -2570,6 +2583,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\p_mobjcol.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\p_partcl.cpp"
 						>
 						<FileConfiguration
@@ -3013,6 +3030,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\p_mobj.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_mobjcol.h"
 						>
 					</File>
 					<File
@@ -3778,6 +3799,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgl2d.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\sdl\i_sdlmusic.cpp"
 						>
 						<FileConfiguration
@@ -3822,6 +3847,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlvideo.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\sdl\i_sound.cpp"
 						>
 						<FileConfiguration
@@ -3845,28 +3874,6 @@
 					</File>
 					<File
 						RelativePath="..\Source\sdl\i_system.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\Source\sdl\i_video.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -3970,15 +3977,19 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_sdlgl2d.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sdl\i_sdlvideo.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\i_sound.h"
 						>
 					</File>
 					<File
 						RelativePath="..\Source\i_system.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Source\i_video.h"
 						>
 					</File>
 					<File
@@ -4182,6 +4193,14 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\v_patchfmt.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_png.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_video.cpp"
 						>
 						<FileConfiguration
@@ -4228,6 +4247,14 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\v_patchfmt.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_png.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_video.h"
 						>
 					</File>
@@ -4236,68 +4263,62 @@
 			<Filter
 				Name="W_"
 				>
-				<File
-					RelativePath="..\source\w_levels.cpp"
+				<Filter
+					Name="W_ Headers"
 					>
-				</File>
-				<File
-					RelativePath="..\source\w_levels.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Source\w_wad.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
+					<File
+						RelativePath="..\source\w_hacks.h"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
+					</File>
+					<File
+						RelativePath="..\source\w_levels.h"
 						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\w_wad.h"
+					</File>
+					<File
+						RelativePath="..\Source\w_wad.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="W_ Source"
 					>
-				</File>
+					<File
+						RelativePath="..\source\w_hacks.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\w_levels.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Source\w_wad.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Z_"
 				>
 				<File
 					RelativePath="..\source\z_native.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Source\z_zone.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -4988,6 +5009,98 @@
 					</File>
 					<File
 						RelativePath="..\source\a_doom.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="XL_"
+				>
+				<File
+					RelativePath="..\source\xl_scripts.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\source\xl_scripts.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="HAL"
+				>
+				<Filter
+					Name="HAL Source"
+					>
+					<File
+						RelativePath="..\source\hal\i_video.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="HAL Headers"
+					>
+					<File
+						RelativePath="..\source\hal\i_picker.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\i_video.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="GL"
+				>
+				<Filter
+					Name="GL Source"
+					>
+					<File
+						RelativePath="..\source\gl\gl_init.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_primitives.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_projection.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_texture.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_vars.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="GL Headers"
+					>
+					<File
+						RelativePath="..\source\gl\gl_includes.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_init.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_primitives.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_projection.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_texture.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\gl\gl_vars.h"
 						>
 					</File>
 				</Filter>

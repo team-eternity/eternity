@@ -32,7 +32,7 @@ DWORD fs_error_code = 0;
 int fs_error_code = 0;
 #endif
 
-static char *error_messages[FS_ERROR_MAX] = {
+static const char *error_messages[FS_ERROR_MAX] = {
    "filesystem entry already exists.",
    "filesystem path not found."
 };
@@ -68,12 +68,12 @@ static int remover(const char *path, const struct stat *stat_result,
 }
 #endif
 
-char* M_GetFileSystemErrorMessage(void)
+const char* M_GetFileSystemErrorMessage(void)
 {
 #ifdef WIN32
    static LPVOID error_message_buffer = 0;
    static LPVOID error_message = 0;
-   static boolean should_free = false;
+   static bool should_free = false;
 
    if(should_free)
    {
@@ -112,13 +112,13 @@ char* M_GetFileSystemErrorMessage(void)
       error_message_buffer
    );
    should_free = true;
-   return (char *)error_message;
+   return (const char *)error_message;
 #else
-   return strerror(fs_error_code);
+   return (const char *)strerror(fs_error_code);
 #endif
 }
 
-boolean M_PathExists(char *path)
+bool M_PathExists(const char *path)
 {
    struct stat stat_result;
 
@@ -127,7 +127,7 @@ boolean M_PathExists(char *path)
    return false;
 }
 
-boolean M_IsFile(char *path)
+bool M_IsFile(const char *path)
 {
    struct stat stat_result;
 
@@ -140,7 +140,7 @@ boolean M_IsFile(char *path)
    return false;
 }
 
-boolean M_IsFolder(char *path)
+bool M_IsFolder(const char *path)
 {
    struct stat stat_result;
 
@@ -153,7 +153,7 @@ boolean M_IsFolder(char *path)
    return false;
 }
 
-boolean M_IsAbsolutePath(char *path)
+bool M_IsAbsolutePath(const char *path)
 {
    size_t path_size = strlen(path);
 
@@ -181,7 +181,7 @@ boolean M_IsAbsolutePath(char *path)
 
 // [CG] Creates a folder.  On *NIX systems the folder is given 0700
 //      permissions.
-boolean M_CreateFolder(char *path)
+bool M_CreateFolder(const char *path)
 {
 #ifdef WIN32
    if(!CreateDirectory(path, NULL))
@@ -197,7 +197,7 @@ boolean M_CreateFolder(char *path)
 
 // [CG] Creates a file.  On *NIX systems the folder is given 0600 permissions.
 //      If the file already exists, error codes are set.
-boolean M_CreateFile(char *path)
+bool M_CreateFile(const char *path)
 {
 #ifdef WIN32
    HANDLE fd = CreateFile(
@@ -229,7 +229,7 @@ boolean M_CreateFile(char *path)
    return true;
 }
 
-boolean M_DeleteFile(char *path)
+bool M_DeleteFile(const char *path)
 {
 #ifdef WIN32
    if(!DeleteFile(path))
@@ -243,7 +243,7 @@ boolean M_DeleteFile(char *path)
    return true;
 }
 
-boolean M_DeleteFolder(char *path)
+bool M_DeleteFolder(const char *path)
 {
 #ifdef WIN32
    if(!RemoveDirectory(path))
@@ -257,7 +257,7 @@ boolean M_DeleteFolder(char *path)
    return true;
 }
 
-boolean M_DeleteFolderAndContents(char *path)
+bool M_DeleteFolderAndContents(const char *path)
 {
 #ifdef WIN32
    WIN32_FIND_DATA fdata;
@@ -271,9 +271,7 @@ boolean M_DeleteFolderAndContents(char *path)
 
    // [CG] Check that the folder path has the minimum reasonable length.
    if(path_length < 4)
-   {
       I_Error("M_DeleteFolderAndContents: Invalid path: %s.\n", path);
-   }
 
    // [CG] Check that the folder path ends in a backslash, if not add it.  Then
    //      add an asterisk (apparently Windows needs this).
@@ -327,8 +325,8 @@ boolean M_DeleteFolderAndContents(char *path)
    }
    else
    {
-         set_error_code();
-         return false;
+      set_error_code();
+      return false;
    }
 #else
    if(nftw(path, remover, 64, FTW_CHDIR | FTW_DEPTH | FTW_PHYS) == -1)
@@ -340,7 +338,7 @@ boolean M_DeleteFolderAndContents(char *path)
    return true;
 }
 
-char* M_GetCurrentFolder(void)
+const char* M_GetCurrentFolder(void)
 {
 #ifdef WIN32
    LPTSTR buf;
@@ -356,43 +354,44 @@ char* M_GetCurrentFolder(void)
    if(buf_size == 0)
       return NULL;
 
-   return buf;
+   return (const char *)buf;
 #else
    long size;
-   char *buf;
+   const char *buf;
 
    size = pathconf(".", _PC_PATH_MAX);
 
-   if((buf = (char *)malloc((size_t)size)) == NULL)
+   if((buf = (const char *)malloc((size_t)size)) == NULL)
       return NULL;
 
-   return getcwd(buf, (size_t)size);
+   return (const char *)getcwd((char *)buf, (size_t)size);
 #endif
 }
 
-boolean M_SetCurrentFolder(char *path)
+bool M_SetCurrentFolder(const char *path)
 {
 #ifdef WIN32
    if(!SetCurrentDirectory(path))
       return false;
 #else
-   if(chdir((const char*)path) == -1)
+   if(chdir(path) == -1)
       return false;
 #endif
    return true;
 }
 
-char* M_Basename(char *path)
+const char* M_Basename(const char *path)
 {
-   char *basename;
+   const char *basename;
 #ifdef WIN32
    char path_sep = '\\';
 #else
    char path_sep = '/';
 #endif
 
-   if((basename = (char *)strrchr((const char *)path, path_sep)) == NULL)
+   if((basename = strrchr(path, path_sep)) == NULL)
       return path;
+
    return basename + 1;
 }
 

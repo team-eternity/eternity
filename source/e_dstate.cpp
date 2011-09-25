@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -271,16 +271,16 @@ enum
 typedef struct pstate_s
 {
    int state; // state of the parser, as defined by the above enumeration
-   qstring_t *linebuffer;  // qstring to use as line buffer
-   qstring_t *tokenbuffer; // qstring to use as token buffer
-   int index;              // current index into line buffer for tokenization
-   int linenum;            // line number (relative to start of state block)
-   boolean needline;       // if true, feed a line from the input
-   boolean principals;     // parsing for principals only
-   boolean error;          // if true, an error has occurred.
+   qstring *linebuffer;  // qstring to use as line buffer
+   qstring *tokenbuffer; // qstring to use as token buffer
+   int index;            // current index into line buffer for tokenization
+   int linenum;          // line number (relative to start of state block)
+   bool needline;        // if true, feed a line from the input
+   bool principals;      // parsing for principals only
+   bool error;           // if true, an error has occurred.
 
-   int tokentype;    // current token type, once decided upon
-   int tokenerror;   // current token error code
+   int tokentype;        // current token type, once decided upon
+   int tokenerror;       // current token error code
 } pstate_t;
 
 // tokenization
@@ -351,8 +351,8 @@ typedef struct tkstate_s
    int i;            // index into string
    int tokentype;    // token type, once decided upon
    int tokenerror;   // token error code
-   qstring_t *line;  // line text
-   qstring_t *token; // token text
+   qstring *line;  // line text
+   qstring *token; // token text
 } tkstate_t;
 
 //=============================================================================
@@ -367,16 +367,16 @@ typedef struct tkstate_s
 //
 static void DoTokenStateScan(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    // allow A-Za-z0-9, underscore, and leading - for numbers
    if(isalnum(str[i]) || str[i] == '_' || str[i] == '-')
    {
       // start a text token - we'll determine the more specific type, if any,
       // later.
-      QStrPutc(token, str[i]);
+      *token += str[i];
       tks->tokentype = TOKEN_TEXT;
       tks->state     = TSTATE_TEXT;
    }
@@ -396,22 +396,22 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_STRING;
          break;
       case '+':  // plus - used in relative goto statement
-         QStrPutc(token, '+');
+         *token += '+';
          tks->tokentype = TOKEN_PLUS;
          tks->state     = TSTATE_DONE;
          break;
       case '(':  // lparen - for action argument lists
-         QStrPutc(token, '(');
+         *token += '(';
          tks->tokentype = TOKEN_LPAREN;
          tks->state     = TSTATE_DONE;
          break;
       case ',':  // comma - for action argument lists
-         QStrPutc(token, ',');
+         *token += ',';
          tks->tokentype = TOKEN_COMMA;
          tks->state     = TSTATE_DONE;
          break;
       case ')':  // rparen - for action argument lists
-         QStrPutc(token, ')');
+         *token += ')';
          tks->tokentype = TOKEN_RPAREN;
          tks->state     = TSTATE_DONE;
          break;
@@ -419,7 +419,7 @@ static void DoTokenStateScan(tkstate_t *tks)
          tks->state     = TSTATE_SLASH;
          break;
       default: // whatever it is, we don't care for it.
-         QStrPutc(token, str[i]);
+         *token += str[i];
          tks->tokentype  = TOKEN_ERROR;
          tks->tokenerror = TERR_UNEXPECTEDCHAR;
          tks->state      = TSTATE_DONE;
@@ -433,15 +433,15 @@ static void DoTokenStateScan(tkstate_t *tks)
 //
 static void DoTokenStateSlash(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    if(str[i] == '/')
       tks->state = TSTATE_COMMENT;
    else
    {
-      QStrPutc(token, str[i]);
+      *token += str[i];
       tks->tokentype  = TOKEN_ERROR;
       tks->tokenerror = TERR_UNEXPECTEDCHAR;
       tks->state      = TSTATE_DONE;
@@ -453,7 +453,7 @@ static void DoTokenStateSlash(tkstate_t *tks)
 //
 static void DoTokenStateComment(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
+   const char *str  = tks->line->constPtr();
    int i            = tks->i;
 
    // eol?
@@ -490,7 +490,7 @@ enum
 // Returns true if the string matches a DECORATE state keyword, and false
 // otherwise.
 //
-static boolean isDecorateKeyword(const char *text)
+static bool isDecorateKeyword(const char *text)
 {
    return (E_StrToNumLinear(decorate_kwds, NUMDECKWDS, text) != NUMDECKWDS);
 }
@@ -503,14 +503,14 @@ static boolean isDecorateKeyword(const char *text)
 //
 static void DoTokenStateText(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    if(isalnum(str[i]) || str[i] == '_')
    {
       // continuing in label, keyword, or text
-      QStrPutc(token, str[i]);
+      *token += str[i];
    }
    else if(str[i] == '.')
    {
@@ -522,7 +522,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // parser can sort this out if the wrong token type appears when it
       // is expecting TOKEN_LABEL.
       
-      strtol(token->buffer, &endpos, 10);
+      token->toLong(&endpos, 10);
       
       if(*endpos != '\0')
       {      
@@ -533,7 +533,7 @@ static void DoTokenStateText(tkstate_t *tks)
       // otherwise, proceed as normal
       
       // add the dot character to the token
-      QStrPutc(token, '.');
+      *token += '.';
    }
    else if(str[i] == ':')
    {
@@ -546,7 +546,7 @@ static void DoTokenStateText(tkstate_t *tks)
    else // anything else ends this token, and steps back
    {
       // see if it is a keyword
-      if(isDecorateKeyword(token->buffer))
+      if(isDecorateKeyword(token->constPtr()))
          tks->tokentype = TOKEN_KEYWORD;
       tks->state = TSTATE_DONE;
       --tks->i; // the char we're on is the start of a new token, so back up.
@@ -561,16 +561,16 @@ static void DoTokenStateText(tkstate_t *tks)
 //
 static void DoTokenStateColon(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    if(str[i] == ':')
    {
       // Two colons in a row means we've found the namespace declarator.
       // Add two colons to the token buffer, and return to TSTATE_TEXT to
       // parse out the rest of the token.
-      QStrCat(token, "::");
+      token->concat("::");
       tks->state = TSTATE_TEXT;
    }
    else // anything else means this was a label
@@ -589,14 +589,14 @@ static void DoTokenStateColon(tkstate_t *tks)
 //
 static void DoTokenStateLabel(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    if(isalnum(str[i]) || str[i] == '_')
    {
       // continuing in label
-      QStrPutc(token, str[i]);
+      *token += str[i];
    }
    else if(str[i] == ':')
    {
@@ -622,9 +622,9 @@ static void DoTokenStateLabel(tkstate_t *tks)
 //
 static void DoTokenStateString(tkstate_t *tks)
 {
-   const char *str  = tks->line->buffer;
-   int i            = tks->i;
-   qstring_t *token = tks->token;
+   const char *str = tks->line->constPtr();
+   int i           = tks->i;
+   qstring *token  = tks->token;
 
    // note: DECORATE does not support escapes in strings?!?
    switch(str[i])
@@ -640,7 +640,7 @@ static void DoTokenStateString(tkstate_t *tks)
       break;
    default:
       // add character and continue scanning
-      QStrPutc(token, str[i]);
+      *token += str[i];
       break;
    }
 }
@@ -677,7 +677,7 @@ static int E_GetDSToken(pstate_t *ps)
    tks.line       = ps->linebuffer;
    tks.token      = ps->tokenbuffer;
 
-   QStrClear(tks.token);
+   tks.token->clear();
 
    while(tks.state != TSTATE_DONE)
    {
@@ -732,7 +732,7 @@ static void PSExpectedErr(pstate_t *ps, const char *expected)
                       ps->linenum,
                       hasvowel(expected)  ? "an" : "a", expected,
                       hasvowel(tokenname) ? "an" : "a", tokenname,
-                      ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->buffer : "\\n");
+                      ps->tokentype != TOKEN_EOL ? ps->tokenbuffer->constPtr() : "\\n");
    
    ps->error = true;
 }
@@ -788,7 +788,7 @@ static void DoPSNeedLabel(pstate_t *ps)
          // count a label
          DSP.numdeclabels++; 
          // make a label object
-         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer, ps->linenum);
+         E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->constPtr(), ps->linenum);
       }
       // Outside of principals, we don't do anything here. When we hit a 
       // non-label parsing state, we will run down the labels until we reach
@@ -826,7 +826,7 @@ static void doLabel(pstate_t *ps)
       // count a label
       DSP.numdeclabels++;
       // make a label object
-      E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->buffer, ps->linenum);
+      E_AddBufferedState(BUF_LABEL, ps->tokenbuffer->constPtr(), ps->linenum);
    }
    // Again, just keep going outside of principals.
 }
@@ -949,17 +949,17 @@ static void doKeyword(pstate_t *ps)
       // if the keyword is "stop" and the previous buffered object is a label, 
       // this is a "kill state"
       if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
-         !QStrCaseCmp(ps->tokenbuffer, "stop"))
+         *ps->tokenbuffer == "stop")
          DSP.numstops++;
 
       // make a keyword object
-      E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->buffer, ps->linenum);
+      E_AddBufferedState(BUF_KEYWORD, ps->tokenbuffer->getBuffer(), ps->linenum);
    }
    else
    {
       state_t *state = states[DSP.currentstate - 1];
       int kwdcode = E_StrToNumLinear(decorate_kwds, NUMDECKWDS, 
-                                     ps->tokenbuffer->buffer);
+                                     ps->tokenbuffer->getBuffer());
 
       switch(kwdcode)
       {
@@ -1025,15 +1025,15 @@ static void doText(pstate_t *ps)
    if(ps->principals)
    {
       // make a new sprite if this one doesn't already exist
-      if(E_SpriteNumForName(ps->tokenbuffer->buffer) == -1)
-         E_ProcessSingleSprite(ps->tokenbuffer->buffer);
+      if(E_SpriteNumForName(ps->tokenbuffer->constPtr()) == -1)
+         E_ProcessSingleSprite(ps->tokenbuffer->constPtr());
 
       // do not count or create a state yet; this will be done when we parse
       // the frame token, whose strlen is the number of states to count
    }
    else
    {
-      int sprnum = E_SpriteNumForName(ps->tokenbuffer->buffer);
+      int sprnum = E_SpriteNumForName(ps->tokenbuffer->constPtr());
       DLListItem<estatebuf_t> *link;
       int statenum;
 
@@ -1095,7 +1095,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 
    case TOKEN_KEYWORD:
       // generate appropriate state for keyword
-      if(!QStrCaseCmp(ps->tokenbuffer, "goto"))
+      if(*ps->tokenbuffer == "goto")
          doGoto(ps);
       else
          doKeyword(ps);
@@ -1131,7 +1131,7 @@ static void DoPSNeedGotoLabel(pstate_t *ps)
          if(DSP.neweststate->type != BUF_GOTO)
             I_Error("DoPSNeedGotoLabel: internal error - last state != GOTO\n");
 
-         DSP.neweststate->gotodest = QStrCDup(ps->tokenbuffer, PU_STATIC);
+         DSP.neweststate->gotodest = ps->tokenbuffer->duplicate(PU_STATIC);
       }
       // Nothing is required outside of principals
       ps->state = PSTATE_NEEDGOTOEOLORPLUS;
@@ -1187,7 +1187,7 @@ static void DoPSNeedGotoOffset(pstate_t *ps)
          if(DSP.neweststate->type != BUF_GOTO)
             I_Error("DoPSNeedGotoOffset: internal error - last state != GOTO\n");
 
-         DSP.neweststate->gotooffset = QStrAtoi(ps->tokenbuffer);
+         DSP.neweststate->gotooffset = ps->tokenbuffer->toInt();
       }
       // Nothing is required outside of principals
       ps->state = PSTATE_NEEDKWEOL;
@@ -1248,7 +1248,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          // values to all states from the current one to the last one found 
          // having the same line number.
          int i;
-         int numstatestomake = (int)(QStrLen(ps->tokenbuffer));
+         int numstatestomake = (int)(ps->tokenbuffer->length());
 
          for(i = 0; i < numstatestomake; ++i)
             E_AddBufferedState(BUF_STATE, NULL, ps->linenum);
@@ -1266,7 +1266,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            char c = toupper(QStrCharAt(ps->tokenbuffer, stridx));
+            char c = toupper(ps->tokenbuffer->charAt(stridx));
 
             states[statenum]->frame = c - 'A';
 
@@ -1312,7 +1312,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
       {
          DLListItem<estatebuf_t> *link = DSP.curbufstate;
          int statenum = DSP.currentstate;
-         int tics = QStrAtoi(ps->tokenbuffer);
+         int tics = ps->tokenbuffer->toInt();
 
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
@@ -1344,12 +1344,12 @@ static void doAction(pstate_t *ps, const char *fn)
    {
       DLListItem<estatebuf_t> *link = DSP.curbufstate;
       int statenum = DSP.currentstate;
-      deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->buffer);
+      deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->constPtr());
 
       if(!ptr)
       {
          E_EDFLoggedWarning(2, "%s: unknown action %s\n",
-                            fn, ps->tokenbuffer->buffer);
+                            fn, ps->tokenbuffer->constPtr());
          ps->error = true;
          return;
       }
@@ -1394,7 +1394,7 @@ static void DoPSNeedBrightOrAction(pstate_t *ps)
       return;
    }
 
-   if(!QStrCaseCmp(ps->tokenbuffer, "bright"))
+   if(!ps->tokenbuffer->strCaseCmp("bright"))
    {
       // Apply fullbright to all states in the current range
       if(!ps->principals)
@@ -1510,7 +1510,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->buffer);
+            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1580,7 +1580,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
          while(link && link->dllObject->type == BUF_STATE && 
                link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
          {
-            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->buffer);
+            E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state
@@ -1644,12 +1644,12 @@ static psfunc_t pstatefuncs[] =
 //
 // Gets the next line of DECORATE state input.
 //
-boolean E_GetDSLine(const char **src, pstate_t *ps)
+bool E_GetDSLine(const char **src, pstate_t *ps)
 {
-   boolean isdone = false;
+   bool isdone = false;
    const char *srctxt = *src;
 
-   QStrClear(ps->linebuffer);
+   ps->linebuffer->clear();
    ps->index = 0;
 
    if(!*srctxt) // at end?
@@ -1667,7 +1667,7 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
          if(c == '\n')
             break;
          
-         QStrPutc(ps->linebuffer, c);
+         *ps->linebuffer += c;
       }
 
       // track line numbers
@@ -1686,16 +1686,16 @@ boolean E_GetDSLine(const char **src, pstate_t *ps)
 // Can be called either to collect principals or to run the final collection
 // of data.
 //
-static boolean E_parseDecorateInternal(const char *input, boolean principals)
+static bool E_parseDecorateInternal(const char *input, bool principals)
 {
    pstate_t ps;
-   qstring_t linebuffer;
-   qstring_t tokenbuffer;
+   qstring linebuffer;
+   qstring tokenbuffer;
    const char *inputstr = input;
 
    // create line and token buffers
-   QStrInitCreate(&linebuffer);
-   QStrInitCreate(&tokenbuffer);
+   linebuffer.initCreate();
+   tokenbuffer.initCreate();
 
    // initialize pstate structure
    ps.index       = 0;
@@ -1740,10 +1740,6 @@ static boolean E_parseDecorateInternal(const char *input, boolean principals)
          ps.needline = true;
    }
 
-   // destroy qstrings
-   QStrFree(&linebuffer);
-   QStrFree(&tokenbuffer);
-
    return !ps.error;
 }
 
@@ -1752,7 +1748,7 @@ static boolean E_parseDecorateInternal(const char *input, boolean principals)
 //
 // Looks for simple errors in the principals.
 //
-static boolean E_checkPrincipalSemantics(void)
+static bool E_checkPrincipalSemantics(void)
 {
    DLListItem<estatebuf_t> *link = DSP.statebuffer; 
    estatebuf_t *prev = NULL;
@@ -1907,7 +1903,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
 // Parses through the data again, using the generated principals to drive
 // population of the states and DSO object.
 //
-static boolean E_DecorateMainPass(const char *input, edecstateout_t *dso)
+static bool E_DecorateMainPass(const char *input, edecstateout_t *dso)
 {
    // Set the global DSO for parsing
    DSP.pDSO = dso;
@@ -1926,14 +1922,14 @@ static boolean E_DecorateMainPass(const char *input, edecstateout_t *dso)
 // Any goto which cannot be resolved in such a way must be added 
 // instead to the DSO goto set for external resolution.
 //
-static boolean E_resolveGotos(edecstateout_t *dso)
+static bool E_resolveGotos(edecstateout_t *dso)
 {
    int gi;
 
    // check each internal goto record
    for(gi = 0; gi < DSP.numinternalgotos; ++gi)
    {
-      boolean foundmatch = false;
+      bool foundmatch = false;
       internalgoto_t *igt = &(DSP.internalgotos[gi]);
       estatebuf_t *gotoInfo = igt->gotoInfo;
       int ri;
@@ -2036,7 +2032,7 @@ static void E_freeDecorateData(void)
 edecstateout_t *E_ParseDecorateStates(const char *input)
 {
    edecstateout_t *dso = NULL;
-   boolean isgood = false;
+   bool isgood = false;
 
    // init variables
    memset(&DSP, 0, sizeof(DSP));

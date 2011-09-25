@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -67,20 +67,12 @@ typedef enum {
 #define SCREENWIDTH      320
 #define SCREENHEIGHT     200
 
-// [CG] TODO: Client/Server versions of Eternity are not compatible with non-
-//            client/server save games or demos.  However, it's possible to
-//            change some things to make them backwards compatible.
-
-#ifdef CLIENTSERVER
-#define MAXPLAYERS       256
-#else
-// The maximum number of players, multiplayer/networking.
-#define MAXPLAYERS       4
-#endif
-
-// [CG] Some things refer to the original maximum amount of players (which was
-//      four), so I've defined that as VANILLA_MAXPLAYERS here.
+// [CG] 09/13/11 Some things refer to the original maximum amount of players
+//      (which was 4), so I've defined that as VANILLA_MAXPLAYERS here.
 #define VANILLA_MAXPLAYERS 4
+// The maximum number of players, multiplayer/networking.
+// [CG] 09/13/11 Increased from 4 to 32.
+#define MAXPLAYERS       32
 
 // phares 5/14/98:
 // DOOM Editor Numbers (aka doomednum in Mobj)

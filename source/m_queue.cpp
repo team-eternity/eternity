@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,9 +62,9 @@ void M_QueueInsert(mqueueitem_t *item, mqueue_t *queue)
 //
 // M_QueueIsEmpty
 //
-// [CG] Returns true if the queue is empty, false otherwise.
+// Returns true if the queue is empty, false otherwise.
 //
-boolean M_QueueIsEmpty(mqueue_t *queue)
+bool M_QueueIsEmpty(mqueue_t *queue)
 {
    if(queue->head.next == NULL)
       return true;
@@ -75,7 +75,7 @@ boolean M_QueueIsEmpty(mqueue_t *queue)
 //
 // M_QueuePop
 //
-// [CG] Removes the oldest element in the queue and returns it.
+// Removes the oldest element in the queue and returns it.
 //
 mqueueitem_t* M_QueuePop(mqueue_t *queue)
 {
@@ -107,7 +107,7 @@ mqueueitem_t *M_QueueIterator(mqueue_t *queue)
 {
    if(queue->rover == NULL)
       return NULL;
-
+      
    return (queue->rover = queue->rover->next);
 }
 

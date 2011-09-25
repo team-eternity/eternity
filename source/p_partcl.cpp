@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // This module, except for code marked otherwise, is covered by the 
@@ -17,26 +17,32 @@
 //
 //----------------------------------------------------------------------------
 
-#include <math.h>
 #include "z_zone.h"
+
+#include "a_small.h"
+#include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "doomtype.h"
+#include "e_ttypes.h"
 #include "m_random.h"
+#include "p_chase.h"
+#include "p_info.h"
+#include "p_maputl.h"
+#include "p_mobj.h"
 #include "p_partcl.h"
 #include "p_setup.h"
+#include "p_spec.h"
+#include "r_defs.h"
 #include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
+#include "r_state.h"
 #include "r_things.h"
+#include "s_sound.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "p_mobj.h"
-#include "p_spec.h"
-#include "c_runcmd.h"
-#include "p_info.h"
-#include "a_small.h"
-#include "s_sound.h"
-#include "e_ttypes.h"
-#include "p_maputl.h"
 
 // static integers to hold particle color values
 static byte grey1, grey2, grey3, grey4, red, green, blue, yellow, black,
@@ -291,7 +297,7 @@ void P_InitParticleEffects(void)
    byte *palette;
    struct particleColorList *pc = particleColors;
 
-   palette = (byte *)W_CacheLumpName("PLAYPAL", PU_STATIC);
+   palette = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
 
    // match particle colors to best fit and write back to
    // static variables
@@ -742,7 +748,7 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    angle_t an;
    int ttl;
    fixed_t accz;
-   boolean hitwater = false;
+   bool hitwater = false;
    byte color1, color2;
 
    // default: grey puff
@@ -993,7 +999,7 @@ void P_DrawSplash3(int count, fixed_t x, fixed_t y, fixed_t z,
    int color1, color2;
    int zvel, zvelmod, zspread, zadd;
    // SoM: zvelocity should depend on particle effect type.
-   boolean smoke = false, consistant = false;
+   bool smoke = false, consistant = false;
    int mod = 31;
    byte ttl = 12;
    
@@ -1252,8 +1258,8 @@ static void P_BFGEffect(Mobj *actor)
 //
 static void P_DripEffect(Mobj *actor)
 {
-   boolean makesplash = !!actor->args[3];
-   boolean fullbright = !!actor->args[4];
+   bool makesplash = !!actor->args[3];
+   bool fullbright = !!actor->args[4];
    particle_t *p;
 
    // do not cause a division by zero crash or

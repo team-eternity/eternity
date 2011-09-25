@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -32,6 +32,7 @@
 #include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "st_stuff.h"
 #include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
@@ -51,10 +52,13 @@
 
 extern vfont_t *hud_font;
 extern vfont_t *hud_overfont;
-extern boolean fragsdrawn;
+extern bool fragsdrawn;
 extern int num_players;
 extern int show_scores;
 extern player_t *sortedplayers[MAXPLAYERS];
+extern int action_frags;
+extern int walkcam_active;
+extern int levelScoreLimit;
 
 // [CG] These are named backwards because EE names them backwards.
 static crange_idx_e team_colors_to_font_colors[team_color_max] = {

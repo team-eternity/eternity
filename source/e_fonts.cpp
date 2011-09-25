@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -28,6 +28,7 @@
 
 #include "Confuse/confuse.h"
 
+#include "doomtype.h"
 #include "z_zone.h"
 #include "i_system.h"
 #include "c_io.h"
@@ -40,6 +41,7 @@
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patch.h"
+#include "v_patchfmt.h"
 #include "w_wad.h"
 
 #include "e_lib.h"
@@ -153,7 +155,7 @@ static int edf_alloc_fontnum = D_MAXINT;
 // which was not given one by the author, to allow reference by name
 // anywhere without the chore of number allocation.
 //
-static boolean E_AutoAllocFontNum(vfont_t *font)
+static bool E_AutoAllocFontNum(vfont_t *font)
 {
    int num;
 
@@ -227,7 +229,7 @@ static void E_DelFontFromNumHash(vfont_t *font)
 // using the resource in question, before freeing it.
 // Returns true if the resource is used, and false otherwise.
 //
-static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
+static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 {
    int i;
 
@@ -255,7 +257,7 @@ static boolean E_IsLinearLumpUsed(vfont_t *font, byte *data)
 // Returns true if some other font is using the patch in question,
 // to support proper disposal of shared resources.
 //
-static boolean E_IsPatchUsed(vfont_t *font, patch_t *p)
+static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 {
    int i;
 
@@ -320,9 +322,8 @@ static void E_DisposePatches(vfont_t *font)
 //
 static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 {
-   byte *lump;
    int w, h, size, i, lumpnum;
-   boolean foundsize = false;
+   bool foundsize = false;
 
    // in case this font was changed from patch to block:
    E_DisposePatches(font);
@@ -337,24 +338,24 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 
    lumpnum = W_GetNumForName(name);
 
-   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
    size = W_LumpLength(lumpnum);
 
    if(fmt == FONT_FMT_PATCH)
    {
       // convert patch to linear
-      font->data = V_PatchToLinear((patch_t *)lump, false, 0, &w, &h);
+      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+      font->data = V_PatchToLinear(p, false, 0, &w, &h);
 
       // done with lump
-      Z_ChangeTag(lump, PU_CACHE);
+      Z_ChangeTag(p, PU_CACHE);
 
       size = w * h;
    }
    else
-      font->data = lump;
+      font->data = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
 
    font->linear_font_format = fmt;
-   if(font->lumpname != name)
+   if(strncmp(font->lumpname, name, 9) != 0)
       strncpy(font->lumpname, name, 9);
 
    // check for proper dimensions
@@ -401,8 +402,8 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
 static void E_VerifyFilter(const char *str)
 {
    const char *rover = str;
-   boolean inpct = false;
-   boolean foundpct = false;
+   bool inpct = false;
+   bool foundpct = false;
 
    while(*rover != '\0')
    {
@@ -592,7 +593,9 @@ void E_LoadPatchFont(vfont_t *font)
    // init all to NULL at beginning
    // [CG] Try PU_RENDERER here.
    // font->fontgfx = (patch_t **)(calloc(font->size, sizeof(patch_t *)));
-   Z_Calloc(font->size, sizeof(patch_t *), PU_RENDERER, &font->fontgfx));
+   font->fontgfx = (patch_t **)(Z_Calloc(
+      font->size, sizeof(patch_t *), PU_RENDERER, 0
+   ));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -624,7 +627,7 @@ void E_LoadPatchFont(vfont_t *font)
                    filtertouse->mask, j - font->patchnumoffset);
 
          if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
-            font->fontgfx[i] = (patch_t *)(W_CacheLumpNum(lnum, PU_STATIC));
+            font->fontgfx[i] = PatchLoader::CacheNum(wGlobalDir, lnum, PU_STATIC);
       }
    }
 }
@@ -636,8 +639,8 @@ void E_LoadPatchFont(vfont_t *font)
 //
 void E_UpdateFonts(void)
 {
+   unsigned int i;
    vfont_t *font = NULL;
-   unsigned int i, j;
 
    for(i = 0; i < NUMFONTCHAINS; i++)
    {
@@ -645,25 +648,15 @@ void E_UpdateFonts(void)
 
       while(font)
       {
-         /*
-         for(i = 0; i < font->size; ++i)
-         {
-            if(font->fontgfx[i])
-            {
-               Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
-            }
-         }
-         */
-
          if(font->linear)
             E_LoadLinearFont(font, font->lumpname, font->linear_font_format);
          else
             E_LoadPatchFont(font);
-
          font = font->namenext;
       }
    }
 }
+
 
 //=============================================================================
 //
@@ -681,7 +674,7 @@ static void E_ProcessFont(cfg_t *sec)
 {
    vfont_t *font;
    const char *title, *tempstr;
-   boolean def = true;
+   bool def = true;
    int num, tempnum = 0;
 
    title = cfg_title(sec);
@@ -842,25 +835,25 @@ static void E_ProcessFontVars(cfg_t *cfg)
    // [CG] These need to be free'd first if applicable, otherwise WAD reloads
    //      will leak memory.
    if(hud_fontname)
-      free(hud_fontname);
+      free((void *)hud_fontname);
    if(hud_overfontname)
-      free(hud_overfontname);
+      free((void *)hud_overfontname);
    if(mn_fontname)
-      free(mn_fontname);
+      free((void *)mn_fontname);
    if(mn_bigfontname)
-      free(mn_bigfontname);
+      free((void *)mn_bigfontname);
    if(mn_normalfontname)
-      free(mn_normalfontname);
+      free((void *)mn_normalfontname);
    if(f_fontname)
-      free(f_fontname);
+      free((void *)f_fontname);
    if(in_fontname)
-      free(in_fontname);
+      free((void *)in_fontname);
    if(in_bigfontname)
-      free(in_bigfontname);
+      free((void *)in_bigfontname);
    if(in_bignumfontname)
-      free(in_bignumfontname);
+      free((void *)in_bignumfontname);
    if(c_fontname)
-      free(c_fontname);
+      free((void *)c_fontname);
 
    // 02/25/09: set native module font names
    hud_fontname      = strdup(cfg_getstr(cfg, ITEM_FONT_HUD));

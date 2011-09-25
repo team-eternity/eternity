@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,27 +28,35 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
-#include "d_main.h"
-#include "s_sound.h"
-#include "i_sound.h"
-#include "r_main.h"
-#include "m_random.h"
-#include "w_wad.h"
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
+#include "d_main.h"
+#include "doomstat.h"
+#include "e_sound.h"
+#include "g_dmflag.h" // [CG] 09/22/11
+#include "i_sound.h"
+#include "m_random.h"
+#include "m_queue.h"
+#include "p_chase.h"
 #include "p_info.h"
 #include "p_portal.h"
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "d_gi.h"
-#include "a_small.h"
-#include "e_sound.h"
-#include "m_queue.h"
+#include "p_mobj.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
-// [CG] Added
-#include "g_dmflag.h"
+#include "cs_announcer.h" // [CG] 09/24/11
 
 // haleyjd 07/13/05: redefined to use sound-specific attenuation params
 #define S_ATTENUATOR ((sfx->clipping_dist - sfx->close_dist) >> FRACBITS)
@@ -62,7 +70,7 @@
 // sf: sound/music hashing
 // use sound_hash for music hash too
 
-static d_inline int sound_hash(const char *s)
+static inline int sound_hash(const char *s)
 {
    int i = 0, hash;
    const char *t = s;
@@ -81,13 +89,13 @@ static d_inline int sound_hash(const char *s)
 
 //jff 1/22/98 make sound enabling variables readable here
 extern int snd_card, mus_card;
-extern boolean nosfxparm, nomusicparm;
+extern bool nosfxparm, nomusicparm;
 //jff end sound enabling variables readable here
 
 typedef struct channel_s
 {
   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  PointThinker *origin;   // origin of sound
+  PointThinker *origin;    // origin of sound
   int subchannel;          // haleyjd 06/12/08: origin subchannel
   int volume;              // volume scale value for effect -- haleyjd 05/29/06
   int attenuation;         // attenuation type -- haleyjd 05/29/06
@@ -97,7 +105,7 @@ typedef struct channel_s
   int priority;            // current priority value
   int singularity;         // haleyjd 09/27/06: stored singularity value
   int idnum;               // haleyjd 09/30/06: unique id num for sound event
-  boolean looping;         // haleyjd 10/06/06: is this channel looping?
+  bool looping;            // haleyjd 10/06/06: is this channel looping?
 } channel_t;
 
 // the set of channels available
@@ -114,10 +122,11 @@ int snd_MusicVolume = 15;
 int s_precache = 1;
 
 // [CG] Announcer
-int s_use_announcer = 0;
+int s_announcer_type = S_ANNOUNCER_NONE;
+int s_default_announcer_type = S_ANNOUNCER_NONE;
 
 // whether songs are mus_paused
-static boolean mus_paused;
+static bool mus_paused;
 
 // music currently being played
 static musicinfo_t *mus_playing;
@@ -133,8 +142,8 @@ int idmusnum;
 
 // sf:
 // haleyjd: sound hashing is now kept up by EDF
-//sfxinfo_t *sfxinfos[SOUND_HASHSLOTS];
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
+static void S_CreateMusicHashTable(void);
 
 //
 // Internals.
@@ -172,7 +181,7 @@ static void S_StopChannel(int cnum)
 // haleyjd: isolated code to check for sector sound killing.
 // Returns true if the sound should be killed.
 //
-static boolean S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
+static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
@@ -333,6 +342,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    int cnum;
    int lowestpriority = D_MININT; // haleyjd
    int lpcnum = -1;
+   bool origin_equivalent;
 
    // haleyjd 09/28/06: moved this here. If we kill a sound already
    // being played, we can use that channel. There is no need to
@@ -343,9 +353,16 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    // haleyjd 06/12/08: only if subchannel matches
    for(cnum = 0; cnum < numChannels; ++cnum)
    {
+      // haleyjd 04/09/11: Allow different sounds played on NULL
+      // channel to not cut each other off
+      if(origin == NULL)
+         origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
+      else
+         origin_equivalent = (channels[cnum].origin == origin);
+
       if(channels[cnum].sfxinfo &&
          channels[cnum].singularity == singularity &&
-         channels[cnum].origin == origin &&
+         origin_equivalent &&
          channels[cnum].subchannel == schan)
       {
          S_StopChannel(cnum);
@@ -420,12 +437,12 @@ static int S_countChannels(void)
 // haleyjd 06/03/06: added ability to loop sound samples
 //
 void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
-                    int volumeScale, int attenuation, boolean loop, int subchannel)
+                    int volumeScale, int attenuation, bool loop, int subchannel)
 {
    int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
-   boolean priority_boost = false;
+   bool priority_boost = false;
    int volume = snd_SfxVolume;
-   boolean extcamera = false;
+   bool extcamera = false;
    camera_t playercam;
    camera_t *listener = &playercam;
    Mobj *mo;
@@ -605,11 +622,11 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
          pitch = 255;
    }
 
-   // [CG] Silent BFG support.  This probably affects more than just the BFG,
+   // [CG] Silent BFG support.  This affects way more than just the BFG,
    //      but that (should be) OK, it's an oldschool flag anyway.
    if(origin &&
-      origin->thinker.function == P_MobjThinker &&
-      origin->player &&
+      (mo = thinker_cast<Mobj *>(origin)) &&
+      mo->player &&
       dmflags2 & dmf_use_oldschool_sound_cutoff)
    {
       S_StopSound(origin, CHAN_ALL);
@@ -872,7 +889,7 @@ void S_UpdateSounds(const Mobj *listener)
          // killing. We do that here now instead.
          if(listener && S_CheckSectorKill(&playercam, c->origin))
             S_StopChannel(cnum);
-         else if(c->origin && listener != c->origin) // killough 3/20/98
+         else if(c->origin && (PointThinker *)listener != c->origin) // killough 3/20/98
          {
             // haleyjd 05/29/06: allow per-channel volume scaling
             // and attenuation type selection
@@ -901,7 +918,7 @@ void S_UpdateSounds(const Mobj *listener)
 //
 // haleyjd: rudimentary sound checking function
 //
-boolean S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
+bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 {
    int cnum;
 
@@ -927,7 +944,7 @@ boolean S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
 // on transitions between levels, when going into console gamestate, and when
 // resetting the state of EDF definitions.
 //
-void S_StopSounds(boolean killall)
+void S_StopSounds(bool killall)
 {
    int cnum;
    // kill all playing sounds at start of level
@@ -957,6 +974,79 @@ void S_StopLoopedSounds(void)
             S_StopChannel(cnum);
 }
 
+void S_SetSfxVolume(int volume)
+{
+   //jff 1/22/98 return if sound is not enabled
+   if (!snd_card || nosfxparm)
+      return;
+
+#ifdef RANGECHECK
+   if(volume < 0 || volume > 127)
+      I_Error("Attempt to set sfx volume at %d\n", volume);
+#endif
+
+   snd_SfxVolume = volume;
+}
+
+//=============================================================================
+//
+// Sound Hashing
+//
+
+sfxinfo_t *S_SfxInfoForName(const char *name)
+{   
+   // haleyjd 09/03/03: now calls down to master EDF sound hash   
+   sfxinfo_t *sfx = E_SoundForName(name);
+
+   // haleyjd 03/26/11: if not found, check for an implicit wad sound
+   if(!sfx)
+   {
+      char lumpname[16];
+      if(strncasecmp(name, "DS", 2))
+         psnprintf(lumpname, sizeof(lumpname), "DS%s", name);
+      else
+         psnprintf(lumpname, sizeof(lumpname), "%s", name);
+
+      if(W_CheckNumForName(lumpname) > 0)
+         sfx = E_NewWadSound(lumpname);
+   }
+
+   return sfx;
+}
+
+//
+// S_Chgun
+//
+// Delinks the chgun sound effect when a DSCHGUN lump has been
+// detected. This allows the sound to be used separately without 
+// use of EDF.
+//
+void S_Chgun(void)
+{
+   sfxinfo_t *s_chgun = E_SoundForName("chgun");
+
+   if(!s_chgun)
+      return;
+
+   s_chgun->link = NULL;
+   s_chgun->pitch = -1;
+   s_chgun->volume = -1;
+}
+
+// free sound and reload
+// also check to see if a new sound name has been found
+// (ie. not one in the original game). If so, we create
+// a new sfxinfo_t and hook it into the hashtable for use
+// by scripting and skins
+
+// haleyjd 03/26/2011: this is now done on-demand rather than by scanning
+// through the wad directory.
+
+//=============================================================================
+//
+// Music
+//
+
 void S_SetMusicVolume(int volume)
 {
    //jff 1/22/98 return if music is not enabled
@@ -972,18 +1062,50 @@ void S_SetMusicVolume(int volume)
    snd_MusicVolume = volume;
 }
 
-void S_SetSfxVolume(int volume)
+//
+// S_ChangeMusic
+//
+void S_ChangeMusic(musicinfo_t *music, int looping)
 {
-   //jff 1/22/98 return if sound is not enabled
-   if (!snd_card || nosfxparm)
+   int lumpnum;
+   char namebuf[16];
+
+   //jff 1/22/98 return if music is not enabled
+   if(!mus_card || nomusicparm)
       return;
 
-#ifdef RANGECHECK
-   if(volume < 0 || volume > 127)
-      I_Error("Attempt to set sfx volume at %d\n", volume);
-#endif
+   // same as the one playing ?
+   if(mus_playing == music)
+      return;  
 
-   snd_SfxVolume = volume;
+   // shutdown old music
+   S_StopMusic();
+
+   if(music->prefix)
+   {
+      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                GameModeInfo->musPrefix, music->name);
+   }
+   else
+      psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
+
+   if((lumpnum = W_CheckNumForName(namebuf)) == -1)
+   {
+      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
+      return;
+   }
+
+   // load & register it
+   // haleyjd: changed to PU_STATIC
+   // julian: added lump length
+
+   music->data   = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
+   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+
+   // play it
+   I_PlaySong(music->handle, looping);
+   
+   mus_playing = music;
 }
 
 //
@@ -1009,6 +1131,14 @@ void S_ChangeMusicNum(int musnum, int looping)
 }
 
 //
+// Starts some music with the music id found in sounds.h.
+//
+void S_StartMusic(int m_id)
+{
+   S_ChangeMusicNum(m_id, false);
+}
+
+//
 // S_ChangeMusicName
 //
 // change by name
@@ -1029,54 +1159,8 @@ void S_ChangeMusicName(const char *name, int looping)
 }
 
 //
-// S_ChangeMusic
+// S_StopMusic
 //
-void S_ChangeMusic(musicinfo_t *music, int looping)
-{
-   int lumpnum;
-   char namebuf[16];
-
-   //jff 1/22/98 return if music is not enabled
-   if(!mus_card || nomusicparm)
-      return;
-
-   // same as the one playing ?
-   if(mus_playing == music)
-      return;  
-
-   // shutdown old music
-   S_StopMusic();
-
-   psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             GameModeInfo->musPrefix, music->name);
-
-   if((lumpnum = W_CheckNumForName(namebuf)) == -1)
-   {
-      doom_printf(FC_ERROR "bad music name '%s'\n", music->name);
-      return;
-   }
-
-   // load & register it
-   // haleyjd: changed to PU_STATIC
-   // julian: added lump length
-
-   music->data   = W_CacheLumpNum(lumpnum, PU_STATIC);   
-   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
-
-   // play it
-   I_PlaySong(music->handle, looping);
-   
-   mus_playing = music;
-}
-
-//
-// Starts some music with the music id found in sounds.h.
-//
-void S_StartMusic(int m_id)
-{
-   S_ChangeMusicNum(m_id, false);
-}
-
 void S_StopMusic(void)
 {
    if(!mus_playing)
@@ -1240,6 +1324,7 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
+   S_CreateMusicHashTable();
    
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
@@ -1247,105 +1332,10 @@ void S_Init(int sfxVolume, int musicVolume)
 
 //=============================================================================
 //
-// Sound Hashing
-//
-
-sfxinfo_t *S_SfxInfoForName(const char *name)
-{   
-   // haleyjd 09/03/03: now calls down to master EDF sound hash   
-   return E_SoundForName(name);
-}
-
-//
-// S_Chgun
-//
-// Delinks the chgun sound effect when a DSCHGUN lump has been
-// detected. This allows the sound to be used separately without 
-// use of EDF.
-//
-void S_Chgun(void)
-{
-   sfxinfo_t *s_chgun = E_SoundForName("chgun");
-
-   if(!s_chgun)
-      return;
-
-   s_chgun->link = NULL;
-   s_chgun->pitch = -1;
-   s_chgun->volume = -1;
-}
-
-// free sound and reload
-// also check to see if a new sound name has been found
-// (ie. not one in the original game). If so, we create
-// a new sfxinfo_t and hook it into the hashtable for use
-// by scripting and skins
-
-// NOTE: LUMPNUM NOT SOUNDNUM
-void S_UpdateSound(int lumpnum)
-{
-   // haleyjd 09/03/03: now calls down to master EDF sound hash
-   E_NewWadSound(w_GlobalDir.lumpinfo[lumpnum]->name);
-}
-
-typedef struct squeueitem_s
-{
-   mqueueitem_t mqitem; // this must be first
-   char lumpname[9];
-} squeueitem_t;
-
-static mqueue_t defsndqueue;
-static boolean snd_queue_init = false;
-
-static void S_InitDefSndQueue(void)
-{
-   M_QueueInit(&defsndqueue);
-   snd_queue_init = true;
-}
-
-//
-// S_UpdateSoundDeferred
-//
-// haleyjd 09/13/03: We need to defer the updating of new wad sounds
-// found from W_InitMultipleFiles, otherwise EDF doesn't get a chance
-// at them first.
-//
-void S_UpdateSoundDeferred(int lumpnum)
-{
-   squeueitem_t *newsq;
-
-   if(!snd_queue_init)
-      S_InitDefSndQueue();
-
-   newsq = (squeueitem_t *)(calloc(1, sizeof(squeueitem_t)));
-
-   strncpy(newsq->lumpname, w_GlobalDir.lumpinfo[lumpnum]->name, 9);
-
-   M_QueueInsert(&(newsq->mqitem), &defsndqueue);
-}
-
-void S_ProcDeferredSounds(void)
-{
-   mqueueitem_t *rover;
-
-   while((rover = M_QueueIterator(&defsndqueue)))
-   {
-      squeueitem_t *sqitem = (squeueitem_t *)rover;
-
-      E_NewWadSound(sqitem->lumpname);
-   }
-
-   // free the queue
-   M_QueueFree(&defsndqueue);
-   snd_queue_init = false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
 // Music Hashing
 //
 
-static boolean mushash_created = false;
+static bool mushash_created = false;
 
 static void S_HookMusic(musicinfo_t *music)
 {
@@ -1378,63 +1368,120 @@ static void S_CreateMusicHashTable(void)
       S_HookMusic(&(GameModeInfo->s_music[i]));
 }
 
+//
+// S_MusicForName
+//
+// Returns a musicinfo_t structure given a music entry name.
+// Returns NULL if not found.
+//
 musicinfo_t *S_MusicForName(const char *name)
 {
-   int hashnum;
-   musicinfo_t *mus;
+   int hashnum, lumpnum;
+   musicinfo_t *mus = NULL;
+   bool nameHasPrefix, lumpHasPrefix;
+   const char *nameToUse;
+   qstring tempname;
+   size_t prefixlen = strlen(GameModeInfo->musPrefix);
+   size_t namelen   = strlen(name);
 
-   if(!name)
-      return NULL;
+   tempname = name;
+   tempname.toUpper(); // uppercase for insensitivity
 
-   hashnum = sound_hash(name);
-   
-   if(!mushash_created)
-      S_CreateMusicHashTable();
-   
+   // If the gamemode-dependent music prefix is present, skip past it
+   if(prefixlen > 0 && namelen > prefixlen && 
+      tempname.findSubStr(GameModeInfo->musPrefix) == tempname.constPtr())
+   {      
+      nameToUse = name + prefixlen;
+      nameHasPrefix = true;
+   }
+   else
+   {
+      nameToUse = name;
+      nameHasPrefix = false;
+   }
+
+   tempname = nameToUse;
+
+   hashnum = sound_hash(tempname.constPtr());
+  
    for(mus = musicinfos[hashnum]; mus; mus = mus->next)
    {
-      if(!strcasecmp(name, mus->name))
+      if(!tempname.strCaseCmp(mus->name))
          return mus;
    }
    
-   return NULL;
+   // Not found? Create a new musicinfo if the indicated lump is found.
+   lumpnum = W_CheckNumForName(name); // Try bare name first
+   lumpHasPrefix = nameHasPrefix;
+   if(lumpnum < 0 && !nameHasPrefix)  // Add prefix if that fails
+   {
+      tempname = GameModeInfo->musPrefix;
+      tempname.concat(name);
+      tempname.toUpper();
+      lumpnum = W_CheckNumForName(tempname.constPtr());
+      lumpHasPrefix = true;
+   }
+   if(lumpnum >= 0)
+   {
+      mus = (musicinfo_t *)(calloc(1, sizeof(musicinfo_t)));
+      mus->name = strdup(nameToUse);
+
+      // The music code should prefix the sound name to get the lump if:
+      // 1. The sound name does not have the prefix, AND
+      // 2. The lump does DOES have the prefix.
+      mus->prefix = (!nameHasPrefix && lumpHasPrefix);
+      S_HookMusic(mus);
+   }
+   
+   return mus;
 }
 
-void S_UpdateMusic(int lumpnum)
+/*
+void S_UpdateMusic(const char *lumpname)
 {
    musicinfo_t *music;
-   char sndname[16];
+   const char *musname;
    int prefixlen;
-
-   // haleyjd 11/03/06: enormous bug here for Heretic
+   
+   // haleyjd 04/10/11: rewritten completely
    prefixlen = strlen(GameModeInfo->musPrefix);
-
-   memset(sndname, 0, sizeof(sndname));
-   strncpy(sndname, w_GlobalDir.lumpinfo[lumpnum]->name + prefixlen, 8 - prefixlen);
+   if(prefixlen && strlen(lumpname) > prefixlen)
+      musname = lumpname + prefixlen;
+   else
+      musname = lumpname;
    
    // check if one already in the table first
+   music = S_MusicForName(musname);
    
-   music = S_MusicForName(sndname);
-   
-   if(!music)         // not found in list
+   if(!music) // not found in list?
    {
       // build a new musicinfo_t
-      music = (musicinfo_t *)(Z_Malloc(sizeof(*music), PU_STATIC, 0));
-      music->name = Z_Strdup(sndname, PU_STATIC, 0);
+      music = (musicinfo_t *)(calloc(1 ,sizeof(*music)));
+      music->name = strdup(musname);
       
       // hook into hash list
       S_HookMusic(music);
    }
 }
-
-///////////////////////////////////////////////////////////////////////////
+*/
+//=============================================================================
 //
 // Console Commands
 //
 
+const char *s_announcer_type_names[S_ANNOUNCER_MAX] = {
+   "none", "quake", "unreal tournament"
+};
+
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
-VARIABLE_BOOLEAN(s_use_announcer, NULL, yesno);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
+VARIABLE_INT(
+   s_announcer_type,
+   &s_default_announcer_type,
+   S_ANNOUNCER_NONE,
+   S_ANNOUNCER_UNREAL_TOURNAMENT,
+   s_announcer_type_names
+);
 VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
@@ -1442,7 +1489,17 @@ VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
 VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
-CONSOLE_VARIABLE(use_announcer, s_use_announcer, 0) {}
+CONSOLE_VARIABLE(announcer_type, s_announcer_type, 0)
+{
+   if(s_announcer_type == S_ANNOUNCER_NONE)
+      CS_SetAnnouncer(NULL);
+   else if(s_announcer_type == S_ANNOUNCER_QUAKE)
+      CS_SetAnnouncer(quake_announcer_events);
+   else if(clients[consoleplayer].team == team_color_blue)
+      CS_SetAnnouncer(blue_unreal_tournament_announcer_events);
+   else
+      CS_SetAnnouncer(red_unreal_tournament_announcer_events);
+}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
 CONSOLE_VARIABLE(snd_channels, default_numChannels, 0) {}
 
@@ -1471,21 +1528,26 @@ CONSOLE_COMMAND(s_playmusic, 0)
    }
 
    // check to see if there's a music by this name
-   if(!(music = S_MusicForName(QStrConstPtr(&Console.argv[0]))))
+   if(!(music = S_MusicForName(Console.argv[0]->constPtr())))
    {
-      C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]);
+      C_Printf(FC_ERROR "Unknown music %s\a\n", Console.argv[0]->constPtr());
       return;
    }
 
    // check to see if the lump exists to avoid stopping the current music if it
    // is missing
-   psnprintf(namebuf, sizeof(namebuf), "%s%s", 
-             GameModeInfo->musPrefix, music->name);
+   if(music->prefix)
+   {
+      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+                GameModeInfo->musPrefix, music->name);
+   }
+   else
+      psnprintf(namebuf, sizeof(namebuf), "%s", music->name);
 
    if(W_CheckNumForName(namebuf) < 0)
    {
       C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
-               Console.argv[0]);
+               Console.argv[0]->constPtr());
       return;
    }
 
@@ -1496,7 +1558,7 @@ void S_AddCommands(void)
 {
   C_AddCommand(s_pitched);
   C_AddCommand(s_precache);
-  C_AddCommand(use_announcer);
+  C_AddCommand(announcer_type);
   C_AddCommand(snd_channels);
   C_AddCommand(sfx_volume);
   C_AddCommand(music_volume);

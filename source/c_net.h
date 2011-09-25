@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -19,10 +19,10 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __C_NET_H__
-#define __C_NET_H__
+#ifndef C_NET_H__
+#define C_NET_H__
 
-#include "c_runcmd.h"
+struct command_t;
 
 // net command numbers
 
@@ -106,16 +106,12 @@ void C_NetInit(void);
 void C_SendNetData(void);
 void C_UpdateVar(command_t *command);
 
+struct command_t;
 extern command_t *c_netcmds[NUMNETCMDS];
 extern char* default_name;
 extern int default_colour;
 
 #define CN_BROADCAST 128
-
-// use the entire ticcmd for transferring console commands when
-// in console mode ?
-
-//#define CONSHUGE
 
 #endif
 

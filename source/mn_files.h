@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //---------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Simon Howard, James Haley
@@ -47,8 +47,8 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
 void MN_ClearDirectory(mndir_t *dir);
 
 void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
-                            const char *command, boolean dismissOnSelect,
-                            boolean allowExit);
+                            const char *command, bool dismissOnSelect,
+                            bool allowExit);
 
 #endif
 

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Queue HUD widget.
+//   Client/Server HUD widgets.
 //
 //----------------------------------------------------------------------------
 
@@ -37,28 +37,16 @@
                   clients[consoleplayer].queue_level == ql_none || \
                   clients[consoleplayer].spectating))
 
-typedef struct hu_customwidget_s
-{
-   hu_widget_t widget;
-   unsigned int x;
-   unsigned int y;
-   unsigned int width;
-   unsigned int height;
-   vfont_t *font;
-   int bg_color;
-   int bg_opacity;
-} hu_customwidget_t;
+extern bool show_timer;
+extern bool default_show_timer;
+extern bool show_netstats;
+extern bool default_show_netstats;
+extern bool show_team_widget;
+extern bool default_show_team_widget;
 
-extern boolean show_timer;
-extern boolean default_show_timer;
-extern boolean show_netstats;
-extern boolean default_show_netstats;
-extern boolean show_team_widget;
-extern boolean default_show_team_widget;
+extern bool cs_chat_active;
 
-extern boolean cs_chat_active;
-
-boolean CS_ChatResponder(event_t *ev);
+bool CS_ChatResponder(event_t *ev);
 void CS_UpdateQueueMessage(void);
 void CS_DrawChatWidget(void);
 void CS_InitNetWidget(void);

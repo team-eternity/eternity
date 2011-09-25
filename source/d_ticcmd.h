@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,12 +20,12 @@
 //--------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//	System specific interface stuff.
+//   System specific interface stuff.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_TICCMD__
-#define __D_TICCMD__
+#ifndef D_TICCMD_H__
+#define D_TICCMD_H__
 
 #include "doomtype.h"
 
@@ -59,19 +59,17 @@
 // and transmitted to other peers (multiplayer).
 // Mainly movements/button commands per game tick,
 // plus a checksum for internal state consistency.
-struct ticcmd_s
+struct ticcmd_t
 {
    int8_t  forwardmove; // *2048 for move
    int8_t  sidemove;    // *2048 for move
    int16_t look;        // haleyjd: <<16 for look delta
    int16_t angleturn;   // <<16 for angle delta
-   int16_t consistancy; // checks for net game
+   int16_t consistency; // checks for net game
    byte    chatchar;
    byte    buttons;
    byte    actions;
 };
-
-typedef struct ticcmd_s ticcmd_t;
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)

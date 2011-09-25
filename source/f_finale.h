@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,15 +28,16 @@
 #ifndef __F_FINALE__
 #define __F_FINALE__
 
-#include "doomtype.h"
-#include "d_event.h"
+#include "info.h"
+
+struct event_t;
 
 // haleyjd: this stuff is now needed in e_edf.c
 typedef struct castinfo_s
 {
    const char  *name;
    mobjtype_t  type;   
-   boolean     stopattack;
+   bool        stopattack;
    struct castsound_s { int frame; int sound; } sounds[4];
 } castinfo_t;
 
@@ -67,7 +68,7 @@ enum
 void F_Init(void);
 
 // Called by main loop.
-boolean F_Responder(event_t* ev);
+bool F_Responder(event_t *ev);
 
 // Called by main loop.
 void F_Ticker(void);

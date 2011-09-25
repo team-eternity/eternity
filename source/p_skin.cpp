@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //--------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Simon Howard, James Haley, et al.
@@ -221,14 +222,16 @@ static void P_AddSkin(skin_t *newskin)
 static void P_AddSpriteLumps(const char *named)
 {
    int i, n = strlen(named);
+   int numlumps = wGlobalDir.GetNumLumps();
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    
-   for(i = 0; i < w_GlobalDir.numlumps; i++)
+   for(i = 0; i < numlumps; i++)
    {
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, named, n))
+      if(!strncasecmp(lumpinfo[i]->name, named, n))
       {
          // mark as sprites so that W_CoalesceMarkedResource
          // will group them as sprites
-         w_GlobalDir.lumpinfo[i]->li_namespace = lumpinfo_t::ns_sprites;
+         lumpinfo[i]->li_namespace = lumpinfo_t::ns_sprites;
       }
    }
 }
@@ -291,7 +294,8 @@ void P_ParseSkin(int lumpnum)
    char *lump;
    char *rover;
    char inputline[256];
-   boolean comment;
+   bool comment;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
@@ -300,7 +304,7 @@ void P_ParseSkin(int lumpnum)
    newskin = (skin_t *)(Z_Calloc(1, sizeof(skin_t), PU_STATIC, 0));
 
    newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
-   strncpy(newskin->spritename, w_GlobalDir.lumpinfo[lumpnum+1]->name, 4);
+   strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
    newskin->spritename[4] = 0;
 
    newskin->facename = "STF";      // default status bar face
@@ -312,12 +316,12 @@ void P_ParseSkin(int lumpnum)
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
-   lump = (char *)(W_CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
+   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));  // get the lump
    
    rover = lump; 
    comment = false;
 
-   while(rover < lump + w_GlobalDir.lumpinfo[lumpnum]->size)
+   while(rover < lump + lumpinfo[lumpnum]->size)
    {
       if((*rover=='/' && *(rover+1)=='/') ||        // '//'
          (*rover==';') || (*rover=='#') )           // ';', '#'
@@ -543,20 +547,18 @@ CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)
       return;
    }
 
-   if(!QStrCmp(&Console.argv[0], "+"))
+   if(*Console.argv[0] == "+")
       skin = P_NextSkin(Console.cmdsrc);
-   else if(!QStrCmp(&Console.argv[0], "-"))
+   else if(*Console.argv[0] == "-")
       skin = P_PrevSkin(Console.cmdsrc);
-   else if(!(skin = P_SkinForName(QStrConstPtr(&Console.argv[0]))))
+   else if(!(skin = P_SkinForName(Console.argv[0]->constPtr())))
    {
       if(consoleplayer == Console.cmdsrc)
-         C_Printf("skin not found: '%s'\n", QStrConstPtr(&Console.argv[0]));
+         C_Printf("skin not found: '%s'\n", Console.argv[0]->constPtr());
       return;
    }
 
    P_SetSkin(skin, Console.cmdsrc);
-   // wake up status bar for new face
-   redrawsbar = true;
 }
 
 void P_Skin_AddCommands(void)

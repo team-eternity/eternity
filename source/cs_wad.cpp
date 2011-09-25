@@ -34,6 +34,7 @@
 #include "d_iwad.h"
 #include "d_main.h"
 #include "g_game.h"
+#include "i_system.h"
 #include "m_file.h"
 #include "r_data.h"
 #include "s_sound.h"
@@ -59,7 +60,6 @@ unsigned int cs_current_map_index = 0;
 unsigned int cs_current_map_number = 0;
 
 void IdentifyVersion(void);
-void G_DeferedInitNewFromDir(skill_t skill, char *levelname, waddir_t *dir);
 
 static cs_map_t* get_current_map(void)
 {
@@ -84,11 +84,11 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
    return 0;
 }
 
-static boolean need_new_wad_dir(void)
+static bool need_new_wad_dir(void)
 {
    cs_map_t *map = get_current_map();
    cs_resource_t *resource = NULL;
-   boolean found_mismatch = false;
+   bool found_mismatch = false;
    unsigned int wads_loaded = 0;
    unsigned int i, j;
 
@@ -128,8 +128,12 @@ char* CS_DownloadWAD(const char *wad_name)
 {
    size_t wad_name_size = strlen(wad_name);
    size_t wad_repository_size = strlen(cs_wad_repository);
-   char *url = calloc(wad_name_size + wad_repository_size + 2, sizeof(char));
-   char *wad_path = calloc(strlen(basepath) + wad_name_size + 7, sizeof(char));
+   char *url = (char *)(calloc(
+      wad_name_size + wad_repository_size + 2, sizeof(char)
+   ));
+   char *wad_path = (char *)(calloc(
+      strlen(basepath) + wad_name_size + 7, sizeof(char)
+   ));
    CURL *curl_handle;
    CURLcode res;
    FILE *fobj;
@@ -179,7 +183,7 @@ char* CS_DownloadWAD(const char *wad_name)
    return wad_path;
 }
 
-boolean CS_AddIWAD(const char *resource_name)
+bool CS_AddIWAD(const char *resource_name)
 {
    char *resource_path = D_FindWADByName((char *)resource_name);
    
@@ -188,9 +192,9 @@ boolean CS_AddIWAD(const char *resource_name)
 
    cs_iwad = resource_path;
 
-   cs_resources = realloc(
+   cs_resources = (cs_resource_t *)(realloc(
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   );
+   ));
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
    cs_resources[cs_resource_count - 1].type = rt_iwad;
    cs_resources[cs_resource_count - 1].path = strdup(resource_path);
@@ -203,9 +207,9 @@ boolean CS_AddIWAD(const char *resource_name)
    return true;
 }
 
-boolean CS_AddWAD(const char *resource_name)
+bool CS_AddWAD(const char *resource_name)
 {
-   boolean do_strdup = true;
+   bool do_strdup = true;
    char *resource_path = D_FindWADByName((char *)resource_name);
 
    if(resource_path == NULL)
@@ -216,9 +220,9 @@ boolean CS_AddWAD(const char *resource_name)
       do_strdup = false;
    }
 
-   cs_resources = realloc(
+   cs_resources = (cs_resource_t *)(realloc(
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   );
+   ));
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
 
    cs_resources[cs_resource_count - 1].type = rt_pwad;
@@ -237,7 +241,7 @@ boolean CS_AddWAD(const char *resource_name)
    return true;
 }
 
-boolean CS_AddDeHackEdFile(const char *resource_name)
+bool CS_AddDeHackEdFile(const char *resource_name)
 {
    char *resource_path = D_FindWADByName((char *)resource_name);
 
@@ -245,9 +249,9 @@ boolean CS_AddDeHackEdFile(const char *resource_name)
       return false;
 
    D_QueueDEH(resource_path, 0);
-   cs_resources = realloc(
+   cs_resources = (cs_resource_t *)(realloc(
       cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   );
+   ));
    cs_resources[cs_resource_count - 1].name = strdup(resource_name);
    cs_resources[cs_resource_count - 1].path = strdup(resource_path);
    cs_resources[cs_resource_count - 1].type = rt_deh;
@@ -273,7 +277,7 @@ cs_resource_t* CS_GetResource(const char *resource_name)
    return NULL;
 }
 
-boolean CS_CheckResourceHash(const char *resource_name, const char *sha1_hash)
+bool CS_CheckResourceHash(const char *resource_name, const char *sha1_hash)
 {
    cs_resource_t *res = CS_GetResource(resource_name);
 
@@ -307,11 +311,11 @@ void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
 void CS_AddMap(const char *name, unsigned int resource_count,
                                  unsigned int *resource_indices)
 {
-   cs_maps = realloc(cs_maps, sizeof(cs_map_t) * ++cs_map_count);
+   cs_maps = (cs_map_t *)(realloc(cs_maps, sizeof(cs_map_t) * ++cs_map_count));
    CS_AddMapAtIndex(name, resource_count, resource_indices, cs_map_count - 1);
 }
 
-boolean CS_LoadMap(void)
+bool CS_LoadMap(void)
 {
    unsigned int i, resource_index;
    cs_map_t *map = get_current_map();
@@ -322,10 +326,10 @@ boolean CS_LoadMap(void)
    if(!need_new_wad_dir())
       return false;
 
-   Z_LogPrintf("=== Start Logging (%u) ===\n", ++map_change_count);
+   // Z_LogPrintf("=== Start Logging (%u) ===\n", ++map_change_count);
 
    S_StopMusic();
-   W_ClearWadDir(&w_GlobalDir);
+   wGlobalDir.Clear();
    Z_FreeTags(PU_CACHE, PU_CACHE);
    D_ClearFiles();
    IdentifyVersion();
@@ -335,10 +339,14 @@ boolean CS_LoadMap(void)
       for(i = 0; i < map->resource_count; i++)
       {
          resource_index = map->resource_indices[i];
-         D_AddFile(cs_resources[resource_index].path, ns_global, NULL, 0, 0);
+         D_AddFile(
+            cs_resources[resource_index].path,
+            lumpinfo_t::ns_global,
+            NULL, 0, 0
+         );
       }
    }
-   W_InitMultipleFiles(&w_GlobalDir, wadfiles);
+   wGlobalDir.InitMultipleFiles(wadfiles);
    D_ReInitWadfiles();
    return true;
 }
@@ -350,18 +358,20 @@ void CS_NewGame(void)
    printf("CS_NewGame: Loading map %d.\n", cs_current_map_number);
 
    CS_LoadMap();
-   G_DeferedInitNew(cs_settings->skill, map->name);
+   G_DeferedInitNew((skill_t)cs_settings->skill, map->name);
 }
 
 void CS_InitNew(void)
 {
+   skill_t skill = (skill_t)cs_settings->skill;
+
    printf("CS_InitNew: Loading map %d.\n", cs_current_map_number);
 
    CS_LoadMap();
 
    if(cs_demo_playback)
-      G_InitNew(cs_settings->skill, cs_maps[cs_current_demo_map].name);
+      G_InitNew(skill, cs_maps[cs_current_demo_map].name);
    else
-      G_InitNew(cs_settings->skill, cs_maps[cs_current_map_number].name);
+      G_InitNew(skill, cs_maps[cs_current_map_number].name);
 }
 

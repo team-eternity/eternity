@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -27,7 +27,7 @@
 #ifndef E_LIB_H__
 #define E_LIB_H__
 
-#include "d_dehtbl.h"
+struct dehflagset_t;
 
 typedef struct E_Enable_s
 {
@@ -67,6 +67,21 @@ int E_EnableNumForName(const char *name, E_Enable_t *enables);
 int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
 int E_ParseFlags(const char *str, dehflagset_t *flagset);
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
+char *E_GetHeredocLine(char **src);
+
+#define E_MAXCMDTOKENS 8
+
+//
+// This structure is returned by E_ParseTextLine and is used to hold pointers
+// to the tokens inside the command string. The pointers may be NULL if the
+// corresponding tokens do not exist.
+//
+struct tempcmd_t
+{
+   const char *strs[E_MAXCMDTOKENS]; // command and up to 2 arguments
+};
+
+tempcmd_t E_ParseTextLine(char *str);
 
 #endif
 

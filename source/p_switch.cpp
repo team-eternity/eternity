@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,24 +26,25 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_gi.h"
+#include "d_mod.h" // [CG] 09/23/11: Needed for MOD_UNKNOWN.
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "g_dmflag.h" // [CG] 09/16/11
 #include "g_game.h"
 #include "m_swap.h"
 #include "p_info.h"
+#include "p_inter.h" // [CG] 09/16/11
+#include "p_skin.h"
 #include "p_spec.h"
+#include "r_data.h"
 #include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
-#include "d_gi.h"
-#include "g_dmflag.h" // [CG] Added.
-
-// [CG] Added.
-#include "p_inter.h"
-#include "cs_main.h"
-#include "sv_main.h"
 
 // killough 2/8/98: Remove switch limit
 
@@ -78,8 +79,9 @@ void P_InitSwitchList(void)
    int i, index = 0;
    int episode; 
    switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   lumpinfo_t *lump;
    int lumpnum;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+   lumpinfo_t  *lump;
 
    episode = GameModeInfo->switchEpisode;
 
@@ -90,7 +92,7 @@ void P_InitSwitchList(void)
    
    for(lumpnum = lump->index; lumpnum >= 0; lumpnum = lump->next)
    {
-      lump = w_GlobalDir.lumpinfo[lumpnum];
+      lump = lumpinfo[lumpnum];
 
       // look for a lump which is of a possibly good size
       if(!strcasecmp(lump->name, "SWITCHES") && 
@@ -101,7 +103,7 @@ void P_InitSwitchList(void)
    if(lumpnum < 0)
       I_Error("P_InitSwitchList: missing SWITCHES lump\n");
 
-   alphSwitchList = (switchlist_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+   alphSwitchList = (switchlist_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
 
    for(i = 0; ; i++)
    {
@@ -169,7 +171,7 @@ button_t *P_FindFreeButton(void)
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
 static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
-                          bwhere_e w, int texture, int time, boolean dopopout,
+                          bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound)
 {
    int i;
@@ -361,10 +363,10 @@ extern void P_StartLineScript(line_t *line, Mobj *thing);
 // Passed the thing using the line, the line being used, and the side used
 // Returns true if a thinker was created
 //
-boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side)
+bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // haleyjd: param lines make sidedness decisions on their own
-   boolean is_param = E_IsParamSpecial(line->special);
+   bool is_param = E_IsParamSpecial(line->special);
 
    if(side && !is_param) //jff 6/1/98 fix inadvertent deletion of side test
       return false;
@@ -594,28 +596,16 @@ boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          S_StartSound(thing, GameModeInfo->playerSounds[sk_oof]);
          return false;
       }
+
       // [CG] Only servers exit levels.
-      if(serverside)
+      if(serverside && ((!CS_SERVER) || (dmflags & dmf_allow_exit)))
       {
-         if(CS_SERVER)
-         {
-            if(dmflags & dmf_allow_exit)
-            {
-               if(dmflags & dmf_kill_on_exit)
-               {
-                  P_DamageMobj(thing, thing, thing, 10000, MOD_UNKNOWN);
-               }
-               else
-               {
-                  P_ChangeSwitchTexture(line,0,0);
-                  G_ExitLevel();
-               }
-            }
-         }
+         if(CS_SERVER && (dmflags & dmf_kill_on_exit))
+            P_DamageMobj(thing, thing, thing, 10000, MOD_UNKNOWN);
          else
          {
             P_ChangeSwitchTexture(line,0,0);
-            G_ExitLevel();
+            G_ExitLevel ();
          }
       }
       break;

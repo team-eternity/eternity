@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2001 James Haley
@@ -29,25 +29,33 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
-#include "doomstat.h"
-#include "w_wad.h"
-#include "g_game.h"
 #include "d_main.h"
-#include "m_swap.h"
-#include "p_skin.h"
-#include "r_main.h"
-#include "r_bsp.h"
-#include "r_segs.h"
-#include "r_draw.h"
-#include "r_things.h"
+#include "doomstat.h"
+#include "e_edf.h"
+#include "g_game.h"
 #include "m_argv.h"
+#include "m_swap.h"
+#include "p_chase.h"
+#include "p_info.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_skin.h"
 #include "p_user.h"
-#include "e_edf.h"
-#include "p_info.h"
+#include "r_bsp.h"
+#include "r_main.h"
+#include "r_draw.h"
+#include "r_patch.h"
 #include "r_plane.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "r_things.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 //=============================================================================
 //
@@ -126,13 +134,12 @@ typedef struct vissprite_s
   int x1, x2;
   fixed_t gx, gy;              // for line side calculation
   fixed_t gz, gzt;             // global bottom / top for silhouette clipping
-  fixed_t xiscale;             // negative if flipped
   fixed_t texturemid;
-  int patch;
-  int mobjflags, mobjflags3;   // flags, flags3 from thing
+  int     patch;
+  byte    drawstyle;
 
   float   startx;
-  float   dist, xstep, ystep;
+  float   dist, xstep;
   float   ytop, ybottom;
   float   scale;
 
@@ -149,8 +156,6 @@ typedef struct vissprite_s
   fixed_t footclip; // haleyjd: foot clipping
 
   int    sector; // SoM: sector the sprite is in.
-
-  int pcolor; // haleyjd 08/25/09: for particles
 
 } vissprite_t;
 
@@ -253,7 +258,7 @@ void R_SetMaskedSilhouette(float *top, float *bottom)
 // Local function for R_InitSprites.
 //
 static void R_InstallSpriteLump(int lump, unsigned frame,
-                                unsigned rotation, boolean flipped)
+                                unsigned rotation, bool flipped)
 {
    if(frame >= MAX_SPRITE_FRAMES || rotation > 8)
       I_Error("R_InstallSpriteLump: Bad frame characters in lump %i\n", lump);
@@ -284,6 +289,8 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
    }
 }
 
+// Empirically verified to have excellent hash
+// properties across standard Doom sprites:
 #define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
 
 //
@@ -307,15 +314,13 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 //
 // 1/25/98, 1/31/98 killough : Rewritten for performance
 //
-// Empirically verified to have excellent hash
-// properties across standard Doom sprites:
-//
 static void R_InitSpriteDefs(char **namelist)
 {
    size_t numentries = lastspritelump-firstspritelump+1;
    struct rsprhash_s { int index, next; } *hash;
    unsigned int i;
-      
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+
    if(!numentries || !*namelist)
       return;
    
@@ -327,9 +332,7 @@ static void R_InitSpriteDefs(char **namelist)
 
    // [CG] Try using PU_RENDERER here.
    // sprites = (spritedef_t *)(Z_Malloc(numsprites * sizeof(*sprites), PU_STATIC, NULL));
-   sprites = (spritedef_t *)(Z_Malloc(
-       numsprites * sizeof(*sprites), PU_RENDERER, NULL
-   ));
+   sprites = (spritedef_t *)(Z_Malloc(numsprites * sizeof(*sprites), PU_RENDERER, NULL));
    
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
@@ -341,7 +344,7 @@ static void R_InitSpriteDefs(char **namelist)
 
    for(i = 0; i < numentries; ++i)  // Prepend each sprite to hash chain
    {                                // prepend so that later ones win
-      int j = R_SpriteNameHash(w_GlobalDir.lumpinfo[i+firstspritelump]->name) % numentries;
+      int j = R_SpriteNameHash(lumpinfo[i+firstspritelump]->name) % numentries;
       hash[i].next = hash[j].index;
       hash[j].index = i;
    }
@@ -360,7 +363,7 @@ static void R_InitSpriteDefs(char **namelist)
          maxframe = -1;
          do
          {
-            register lumpinfo_t *lump = w_GlobalDir.lumpinfo[j + firstspritelump];
+            register lumpinfo_t *lump = lumpinfo[j + firstspritelump];
 
             // Fast portable comparison -- killough
             // (using int pointer cast is nonportable):
@@ -420,12 +423,10 @@ static void R_InitSpriteDefs(char **namelist)
             }
             // allocate space for the frames present and copy sprtemp to it
             // [CG] Try using PU_RENDERER here.
-            // sprites[i].spriteframes = (spriteframe_t *)(Z_Malloc(
-            //    maxframe * sizeof(spriteframe_t), PU_STATIC, NULL
-            // ));
-            sprites[i].spriteframes = (spriteframe_t *)(Z_Malloc(
-               maxframe * sizeof(spriteframe_t), PU_RENDERER, NULL
-            ));
+            // sprites[i].spriteframes =
+            //    (spriteframe_t *)(Z_Malloc(maxframe * sizeof(spriteframe_t), PU_STATIC, NULL));
+            sprites[i].spriteframes =
+               (spriteframe_t *)(Z_Malloc(maxframe * sizeof(spriteframe_t), PU_RENDERER, NULL));
             memcpy(sprites[i].spriteframes, sprtemp,
                    maxframe*sizeof(spriteframe_t));
          }
@@ -480,7 +481,7 @@ void R_ClearSprites(void)
 //
 // Pushes a new element on the post-BSP stack. 
 //
-void R_PushPost(boolean pushmasked, planehash_t *overlay)
+void R_PushPost(bool pushmasked, planehash_t *overlay)
 {
    poststack_t *post;
    
@@ -633,12 +634,12 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
 static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 {
    column_t *tcolumn;
-   int      texturecolumn;
-   float    frac;
+   int       texturecolumn;
+   float     frac;
    patch_t  *patch;
-   boolean  footclipon = false;
-   float baseclip = 0;
-   int w;
+   bool      footclipon = false;
+   float     baseclip = 0;
+   int       w;
 
    if(vis->patch == -1)
    {
@@ -647,70 +648,24 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       return;
    }
   
-   patch = (patch_t *)(W_CacheLumpNum(vis->patch+firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, vis->patch+firstspritelump, PU_CACHE);
    
    column.colormap = vis->colormap;
    
    // killough 4/11/98: rearrange and handle translucent sprites
    // mixed with translucent/non-translucent 2s normals
-   
-   // sf: shadow draw now done by mobj flags, not a null colormap
-   
-   if(vis->mobjflags & MF_SHADOW)   // shadow draw
-   {
-      colfunc = r_column_engine->DrawFuzzColumn;    // killough 3/14/98
-   }
-   else if(vis->mobjflags3 & MF3_TLSTYLEADD)
-   {
-      // haleyjd 02/08/05: additive translucency support
-      if(vis->colour)
-      {
-         colfunc = r_column_engine->DrawAddTRColumn;
-         column.translation = translationtables[vis->colour - 1];
-      }
-      else
-         colfunc = r_column_engine->DrawAddColumn;
 
-      column.translevel = vis->translucency;
-   }
-   else if(vis->translucency < FRACUNIT && general_translucency)
-   {
-      // haleyjd: zdoom-style translucency
-      // 01/12/04: changed translation handling
-      if(vis->colour)
-      {
-         colfunc = r_column_engine->DrawFlexTRColumn;
-         column.translation = translationtables[vis->colour - 1];
-      }
-      else
-         colfunc = r_column_engine->DrawFlexColumn;
-
-      column.translevel = vis->translucency;
-   }
-   else if(vis->mobjflags & MF_TRANSLUCENT && general_translucency) // phares
-   {
-      // haleyjd 02/08/05: allow translated BOOM tl columns too
-      if(vis->colour)
-      {
-         colfunc = r_column_engine->DrawTLTRColumn;
-         column.translation = translationtables[vis->colour - 1];
-      }
-      else
-         colfunc = r_column_engine->DrawTLColumn;
-      
-      tranmap = main_tranmap; // killough 4/11/98
-   }
-   else if(vis->colour)
-   {
-      // haleyjd 01/12/04: changed translation handling
-      colfunc = r_column_engine->DrawTRColumn;
+   if(vis->colour)
       column.translation = translationtables[vis->colour - 1];
-   }
-   else
-      colfunc = r_column_engine->DrawColumn;  // killough 3/14/98, 4/11/98
+   
+   column.translevel = vis->translucency;   
+   tranmap = main_tranmap; // killough 4/11/98   
+   
+   // haleyjd: faster selection for drawstyles
+   colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
 
-
-   column.step = M_FloatToFixed(vis->ystep);
+   //column.step = M_FloatToFixed(vis->ystep);
+   column.step = M_FloatToFixed(1.0f / vis->scale);
    column.texmid = vis->texturemid;
    maskedcolumn.scale = vis->scale;
    maskedcolumn.ytop = vis->ytop;
@@ -723,7 +678,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
       baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * maskedcolumn.scale;
    }
 
-   w = SwapShort(patch->width);
+   w = patch->width;
 
    // haleyjd: use a separate loop for footclip things, to minimize
    // overhead for regular sprites and to require no separate loop
@@ -743,8 +698,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
          
-         tcolumn = (column_t *)((byte *) patch +
-            SwapLong(patch->columnofs[texturecolumn]));
+         tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
    }
@@ -758,8 +712,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
          if(texturecolumn < 0 || texturecolumn >= w)
             continue;
          
-         tcolumn = (column_t *)((byte *) patch +
-            SwapLong(patch->columnofs[texturecolumn]));
+         tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
          R_DrawMaskedColumn(tcolumn);
       }
    }
@@ -773,13 +726,13 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
 //
 static void R_ProjectSprite(Mobj *thing)
 {
-   fixed_t       gzt;            // killough 3/27/98
+   fixed_t        gzt;            // killough 3/27/98
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int           lump;
-   boolean       flip;
+   int            lump;
+   bool           flip;
    vissprite_t   *vis;
-   int           heightsec;      // killough 3/27/98
+   int            heightsec;      // killough 3/27/98
 
    float tempx, tempy;
    float rotx, roty;
@@ -938,8 +891,6 @@ static void R_ProjectSprite(Mobj *thing)
    // killough 3/27/98: save sector for special clipping later   
    vis->heightsec = heightsec;
    
-   vis->mobjflags  = thing->flags;
-   vis->mobjflags3 = thing->flags3; // haleyjd
    vis->colour = thing->colour;
    vis->gx = thing->x;
    vis->gy = thing->y;
@@ -955,12 +906,10 @@ static void R_ProjectSprite(Mobj *thing)
 
    vis->dist = idist;
    vis->scale = distyscale * thing->yscale;
-   vis->ystep = 1.0f / (vis->scale);
 
    vis->ytop = y1;
    vis->ybottom = y2;
    vis->sector = thing->subsector->sector - sectors;
-   vis->pcolor = 0;
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
@@ -968,7 +917,7 @@ static void R_ProjectSprite(Mobj *thing)
    vis->translucency = thing->translucency; // haleyjd 09/01/02
 
    // haleyjd 11/14/02: ghost flag
-   if(thing->flags3 & MF3_GHOST)
+   if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT)
       vis->translucency = HTIC_GHOST_TRANS;
 
    // haleyjd 10/12/02: foot clipping
@@ -995,6 +944,21 @@ static void R_ProjectSprite(Mobj *thing)
       if(index >= MAXLIGHTSCALE)
          index = MAXLIGHTSCALE-1;
       vis->colormap = spritelights[index];
+   }
+
+   vis->drawstyle = VS_DRAWSTYLE_NORMAL;
+
+   // haleyjd 01/22/11: determine special drawstyles
+   if(thing->flags & MF_SHADOW)
+      vis->drawstyle = VS_DRAWSTYLE_SHADOW;
+   else if(general_translucency)
+   {   
+      if(thing->flags3 & MF3_TLSTYLEADD)
+         vis->drawstyle = VS_DRAWSTYLE_ADD;
+      else if(vis->translucency < FRACUNIT)
+         vis->drawstyle = VS_DRAWSTYLE_ALPHA;
+      else if(thing->flags & MF_TRANSLUCENT)
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
    }
 }
 
@@ -1058,10 +1022,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   int           lump;
-   boolean       flip;
+   int            lump;
+   bool           flip;
    vissprite_t   *vis;
-   vissprite_t   avis;
+   vissprite_t    avis;
    
    // haleyjd: total invis. psprite disable
    
@@ -1128,8 +1092,6 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    // store information in a vissprite
    vis = &avis;
-   vis->mobjflags = 0;
-   vis->mobjflags3 = 0; // haleyjd
    
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
@@ -1137,7 +1099,6 @@ static void R_DrawPSprite(pspdef_t *psp)
 
    vis->x1 = x1 < 0.0f ? 0 : (int)x1;
    vis->x2 = x2 >= view.width ? viewwidth - 1 : (int)x2;
-   vis->ystep = view.pspriteystep; // ANYRES
    vis->colour = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT; // haleyjd: default zdoom trans.
    vis->footclip = 0; // haleyjd
@@ -1145,7 +1106,6 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->ytop = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
    vis->ybottom = vis->ytop + (spriteheight[lump] * vis->scale);
    vis->sector = viewplayer->mo->subsector->sector - sectors;
-   vis->pcolor = 0;
    
    // haleyjd 07/01/07: use actual pixel range to scale graphic
    if(flip)
@@ -1163,19 +1123,23 @@ static void R_DrawPSprite(pspdef_t *psp)
       vis->startx += vis->xstep * (vis->x1-x1);
    
    vis->patch = lump;
+
+   vis->drawstyle = VS_DRAWSTYLE_NORMAL;
    
    if(viewplayer->powers[pw_invisibility] > 4*32 || 
       viewplayer->powers[pw_invisibility] & 8)
    {
       // sf: shadow draw now detected by flags
-      vis->mobjflags |= MF_SHADOW;                  // shadow draw
-      vis->colormap = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
+      vis->drawstyle = VS_DRAWSTYLE_SHADOW;         // shadow draw
+      vis->colormap  = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    }
    else if(viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-           viewplayer->powers[pw_ghost] & 8)
+           viewplayer->powers[pw_ghost] & 8 &&
+           general_translucency)
    {
+      vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
       vis->translucency = HTIC_GHOST_TRANS;
-      vis->colormap = spritelights[MAXLIGHTSCALE-1];
+      vis->colormap     = spritelights[MAXLIGHTSCALE-1];
    }
    else if(fixedcolormap)
       vis->colormap = fixedcolormap;           // fixed color
@@ -1184,13 +1148,13 @@ static void R_DrawPSprite(pspdef_t *psp)
    else
       vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
    
-   if(psp->trans) // translucent gunflash
-      vis->mobjflags |= MF_TRANSLUCENT;
+   if(psp->trans && general_translucency) // translucent gunflash
+      vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
 
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_DrawVisSprite (vis, vis->x1, vis->x2);
+   R_DrawVisSprite(vis, vis->x1, vis->x2);
    
    view.ycenter = oldycenter;
 }
@@ -1820,14 +1784,13 @@ void R_DrawPostBSP(void)
          masked = NULL;
       }
        
+      
       if(pstack[stacksize].overlay)
       {
          // haleyjd 09/04/06: handle through column engine
-         /*if(r_column_engine->ResetBuffer)
-            r_column_engine->ResetBuffer();*/
+         if(r_column_engine->ResetBuffer)
+            r_column_engine->ResetBuffer();
             
-         // SoM: TODO
-         // This is where rendering the overlay would be done
          R_DrawPlanes(pstack[stacksize].overlay);
       }
    }
@@ -1885,14 +1848,10 @@ void R_InitParticles(void)
       numParticles = 4000;
    else if(numParticles < 100)
       numParticles = 100;
-
+   
    // [CG] Try using PU_RENDERER here.
-   // Particles = (particle_t *)(Z_Malloc(
-   //     numParticles * sizeof(particle_t), PU_STATIC, NULL
-   // ));
-   Particles = (particle_t *)(Z_Malloc(
-       numParticles * sizeof(particle_t), PU_RENDERER, NULL
-   ));
+   // Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL));
+   Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_RENDERER, NULL));
    R_ClearParticles();
 }
 
@@ -1927,10 +1886,6 @@ static void R_ProjectParticle(particle_t *particle)
    float tempx, tempy, ty1, tx1, tx2, tz;
    float idist, xscale, yscale;
    float y1, y2;
-
-   // FIXME: particles are bad in low detail...
-   if(detailshift)
-      return;
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
    tempx = M_FixedToFloat(particle->x) - view.x;
@@ -2014,14 +1969,11 @@ static void R_ProjectParticle(particle_t *particle)
    vis->texturemid = vis->gzt - viewz;
    vis->x1 = x1 < 0 ? 0 : x1;
    vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;
-   //vis->translation = NULL;
-   vis->pcolor = particle->color;
+   vis->colour = particle->color;
    vis->patch = -1;
-   vis->mobjflags = particle->trans;
-   vis->mobjflags3 = 0; // haleyjd
+   vis->translucency = (signed int)particle->trans;
    // Cardboard
    vis->dist = idist;
-   vis->ystep = 1.0f / yscale;
    vis->xstep = 1.0f / xscale;
    vis->ytop = y1;
    vis->ybottom = y2;
@@ -2035,12 +1987,6 @@ static void R_ProjectParticle(particle_t *particle)
    } 
    else
    {
-      // haleyjd 01/12/02: wow is this code wrong! :)
-      /*int index = xcale >> (LIGHTSCALESHIFT + hires);
-      if(index >= MAXLIGHTSCALE) 
-         index = MAXLIGHTSCALE-1;      
-      vis->colormap = spritelights[index];*/
-
       R_SectorColormap(sector);
 
       if(LevelInfo.useFullBright && (particle->styleflags & PS_FULLBRIGHT))
@@ -2110,7 +2056,7 @@ static void R_DrawParticle(vissprite_t *vis)
    yl = (int)vis->ytop;
    yh = (int)vis->ybottom;
 
-   color = vis->colormap[vis->pcolor];
+   color = vis->colormap[vis->colour];
 
    {
       int xcount, ycount, spacing;
@@ -2136,7 +2082,7 @@ static void R_DrawParticle(vissprite_t *vis)
             unsigned int fglevel, bglevel;
 
             // look up translucency information
-            fglevel = (unsigned int)(vis->mobjflags) & ~0x3ff;
+            fglevel = (unsigned int)(vis->translucency) & ~0x3ff;
             bglevel = FRACUNIT - fglevel;
             fg2rgb  = Col2RGB8[fglevel >> 10];
             bg2rgb  = Col2RGB8[bglevel >> 10];

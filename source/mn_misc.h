@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- 
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -25,8 +25,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __MN_MISC_H__
-#define __MN_MISC_H__
+#ifndef MN_MISC_H__
+#define MN_MISC_H__
 
 // pop-up messages
 
@@ -40,8 +40,8 @@ void MN_StartHelpScreen();
 
 // map colour selection
 
-void MN_SelectColour(char *variable_name);
+void MN_SelectColour(const char *variable_name);
 
-#endif /** __MN_MISC_H__ **/
+#endif /* MN_MISC_H__ */
 
 // EOF

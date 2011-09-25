@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,34 +25,37 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "d_deh.h"    // Ty 03/27/98 - externalized
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "doomstat.h"
+#include "dstrings.h"
 #include "g_game.h"
+#include "hu_stuff.h"
 #include "p_info.h"
 #include "p_saveg.h"
+#include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "s_sound.h"
-#include "s_sndseq.h"
-#include "sounds.h"
 #include "r_main.h"
-#include "dstrings.h"
-#include "d_deh.h"  // Ty 03/27/98 - externalized
-#include "hu_stuff.h"
-#include "d_gi.h"
+#include "r_state.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "sounds.h"
 
-// [CG] Added.
-#include "cs_netid.h"
-#include "cs_spec.h"
-#include "cs_main.h"
-#include "cl_main.h"
-#include "sv_main.h"
+#include "cs_netid.h" // [CG] 09/18/11.
+#include "cs_spec.h"  // [CG] 09/18/11.
+#include "cs_main.h"  // [CG] 09/18/11.
+#include "cl_main.h"  // [CG] 09/18/11.
+#include "sv_main.h"  // [CG] 09/18/11.
 
 //
 // P_DoorSequence
 //
 // haleyjd 09/24/06: Plays the appropriate sound sequence for a door.
 //
-void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s)
+void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
 {
    const char *seqName;
 
@@ -112,7 +115,7 @@ IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 void VerticalDoorThinker::Think()
 {
    result_e  res;
-
+   
    // Is the door waiting, going up, or going down?
    switch(direction)
    {
@@ -128,7 +131,7 @@ void VerticalDoorThinker::Think()
             direction = plat_down; // time to go back down
             P_DoorSequence(false, true, false, sector); // haleyjd
             break;
-
+            
          case doorNormal:
          case genRaise:
          case paramCloseIn: // haleyjd 03/01/05
@@ -166,13 +169,13 @@ void VerticalDoorThinker::Think()
             P_DoorSequence(true, false, false, sector); // haleyjd
             break;
 
-         // haleyjd 03/01/05: new param type
+            // haleyjd 03/01/05: new param type
          case paramBlazeRaiseIn:
             direction = plat_up;
             type = genBlazeRaise;
             P_DoorSequence(true, true, false, sector); // haleyjd
             break;
-
+            
          default:
             break;
          }
@@ -202,26 +205,23 @@ void VerticalDoorThinker::Think()
          case genBlazeRaise:
          case genBlazeClose:
          case paramBlazeCloseIn: // haleyjd 03/01/05
-            sector->ceilingdata = NULL;  //jff 2/22/98
-            // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               inactive = cl_current_world_index;
+               this->inactive = cl_current_world_index;
             else
-               this->removeThinker();  // unlink and free
+               P_RemoveDoor(this);
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
             break;
+
          case doorNormal:
          case doorClose:
          case genRaise:
          case genClose:
          case paramCloseIn: // haleyjd 03/01/05
-            sector->ceilingdata = NULL; //jff 2/22/98
-            // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               inactive = cl_current_world_index;
+               this->inactive = cl_current_world_index;
             else
-               this->removeThinker();  // unlink and free
+               P_RemoveDoor(this);
             // haleyjd 10/06/06: sound stuff removed
             break;
 
@@ -257,7 +257,7 @@ void VerticalDoorThinker::Think()
          case blazeClose:
          case doorClose:      // Close types do not bounce, merely wait
             break;
-
+            
          default:             // other types bounce off the obstruction
             direction = plat_up;
             P_DoorSequence(true, false, true, sector); // haleyjd
@@ -288,7 +288,7 @@ void VerticalDoorThinker::Think()
             direction = plat_stop; // wait at top with delay
             topcountdown = topwait;
             break;
-
+            
          case close30ThenOpen:  // close and close/open doors are done
          case blazeOpen:
          case doorOpen:
@@ -297,14 +297,12 @@ void VerticalDoorThinker::Think()
          case genCdO:
          case genBlazeCdO:
             S_StopSectorSequence(sector, true);
-            sector->ceilingdata = NULL; //jff 2/22/98
-            // [CG] Just set the door as inactive if we're a client.
             if(CS_CLIENT)
-               inactive = cl_current_world_index;
+               this->inactive = cl_current_world_index;
             else
-               this->removeThinker(); // unlink and free
+               P_RemoveDoor(this);
             break;
-
+            
          default:
             break;
          }
@@ -323,7 +321,7 @@ void VerticalDoorThinker::Think()
          case blazeRaise:
          case doorOpen:      // Raise types do not bounce, merely wait
             break;
-
+            
          default:             // other types bounce off the obstruction
             direction = plat_down;
             P_DoorSequence(false, false, true, sector); // haleyjd
@@ -337,79 +335,16 @@ void VerticalDoorThinker::Think()
    }
 }
 
-void P_RemoveDoor(VerticalDoorThinker *door)
+void P_RemoveDoor(VerticalDoorThinker* door)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(door->net_id, ms_door_tagged);
+   NetDoors.remove(door);
 
    door->sector->ceilingdata = NULL;  //jff 2/22/98
-   P_RemoveThinker (&door->thinker);  // unlink and free
-   CS_ReleaseDoorNetID(door);
+   door->removeThinker();  // unlink and free
 }
 
-void P_CopyDoor(VerticalDoorThinker *dest, VerticalDoorThinker *src)
-{
-   dest->topheight    = src->topheight;
-   dest->speed        = src->speed;
-   dest->direction    = src->direction;
-   dest->topwait      = src->topwait;
-   dest->topcountdown = src->topcountdown;
-   dest->net_id       = src->net_id;
-}
-
-void P_PrintDoor(VerticalDoorThinker *door)
-{
-   unsigned int index;
-
-   if(CS_SERVER && playeringame[1])
-      index = server_clients[1].last_command_run_index;
-   else if(CS_CLIENT)
-      index = cl_current_world_index;
-   else if(CS_SERVER)
-      index = sv_world_index;
-
-   printf(
-      "Door %2u (%3u): %5u %5u %3d %3d %3d | ",
-      door->net_id,
-      index,
-      door->topheight >> FRACBITS,
-      door->speed >> FRACBITS,
-      door->direction,
-      door->topwait,
-      door->topcountdown
-   );
-
-   if(door->sector && ((door->sector - sectors) < numsectors))
-   {
-      printf(
-         "Sector %2u: %5u %5u.\n",
-         door->sector - sectors,
-         door->sector->ceilingheight >> FRACBITS,
-         door->sector->floorheight   >> FRACBITS
-      );
-   }
-   else
-      printf("Sector XX (%5u): XXXXX XXXXX.\n", index);
-}
-
-//
-// VerticalDoorThinker::serialize
-//
-// Saves/loads VerticalDoorThinker thinkers.
-//
-void VerticalDoorThinker::serialize(SaveArchive &arc)
-{
-   Thinker::serialize(arc);
-
-   arc << type << sector << topheight << speed << direction << topwait
-       << topcountdown << line << lighttag;
-
-   // Reattach to sector when loading
-   if(arc.isLoading())
-      sector->ceilingdata = this;
-}
-
->>>>>>> .merge-right.r1368
 ///////////////////////////////////////////////////////////////
 //
 // [CG] General door spawners
@@ -479,9 +414,13 @@ VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e typ
 
    if(serverside)
    {
-      CS_ObtainDoorNetID(door);
+      NetDoors.add(door);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(door, NULL, line, ms_door_tagged);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            door, NULL, line, door->sector, ms_door_tagged
+         );
+      }
    }
 
    return door;
@@ -491,7 +430,7 @@ VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
 
-   door->addThinker()
+   door->addThinker();
    sec->ceilingdata = door; //jff 2/22/98
    door->sector = sec;
    door->direction = plat_up;
@@ -542,9 +481,13 @@ VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec)
 
    if(serverside)
    {
-      CS_ObtainDoorNetID(door);
+      NetDoors.add(door);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(door, NULL, line, ms_door_manual);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            door, NULL, line, door->sector, ms_door_manual
+         );
+      }
    }
 
    return door;
@@ -569,6 +512,7 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t* sec)
    VerticalDoorThinker *door = new VerticalDoorThinker;
 
    door->addThinker();
+
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
 
@@ -582,9 +526,13 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t* sec)
 
    if(serverside)
    {
-      CS_ObtainDoorNetID(door);
+      NetDoors.add(door);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(door, NULL, NULL, ms_door_closein30);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            door, NULL, NULL, door->sector, ms_door_closein30
+         );
+      }
    }
 
    return door;
@@ -599,11 +547,12 @@ VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t* sec)
 // Returns the newly created door.
 //
 
-VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec)
 {
-   VerticalDoorThinker *door = new VerticalDoorThinker;
+   VerticalDoorThinker* door = new VerticalDoorThinker;
 
    door->addThinker();
+
    sec->ceilingdata = door; //jff 2/22/98
    sec->special = 0;
 
@@ -620,12 +569,33 @@ VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 
    if(serverside)
    {
-      CS_ObtainDoorNetID(door);
+      NetDoors.add(door);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(door, NULL, NULL, ms_door_raisein300);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            door, NULL, NULL, door->sector, ms_door_raisein300
+         );
+      }
    }
 
    return door;
+}
+
+//
+// VerticalDoorThinker::serialize
+//
+// Saves/loads VerticalDoorThinker thinkers.
+//
+void VerticalDoorThinker::serialize(SaveArchive &arc)
+{
+   Thinker::serialize(arc);
+
+   arc << type << sector << topheight << speed << direction << topwait
+       << topcountdown << line << lighttag;
+
+   // Reattach to sector when loading
+   if(arc.isLoading())
+      sector->ceilingdata = this;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -646,7 +616,7 @@ VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
 {
    player_t *p = thing->player;
-
+   
    if(!p)          // only players can open locked doors
       return 0;
 
@@ -668,7 +638,7 @@ int EV_DoLockedDoor(line_t *line, vldoor_e type, Mobj *thing)
    case 135:
       if(!p->cards[it_redcard] && !p->cards[it_redskull])
       {
-         const char *msg = (GameModeInfo->type == Game_Heretic)
+         const char *msg = (GameModeInfo->type == Game_Heretic) 
                            ? DEH_String("HPD_GREENO") : DEH_String("PD_REDO");
          player_printf(p, "%s", msg);  // Ty 03/27/98 - externalized
          S_StartSound(p->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
@@ -714,9 +684,6 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       if(P_SectorActive(ceiling_special,sec)) //jff 2/22/98
          continue;
 
-      // [CG] Clients don't spawn doors themselves when lines are activated,
-      //      but we have to inform the caller whether or not a thinker would
-      //      have been created regardless.
       if(CS_CLIENT)
          return 1;
 
@@ -726,6 +693,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       if(serverside)
          door = P_SpawnTaggedDoor(line, sec, type);
    }
+
    return rtn;
 }
 
@@ -744,10 +712,10 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    player_t* player;
    sector_t* sec;
    VerticalDoorThinker* door;
-
+   
    //  Check for locks
    player = thing->player;
-
+   
    switch(line->special)
    {
    case 26: // Blue Lock
@@ -806,12 +774,12 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 
    // haleyjd: adapted cph's prboom fix for demo compatibility and
    //          corruption of thinkers
-   // Two bugs:
+   // Two bugs: 
    // 1. DOOM used any thinker that was on a door
-   // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and
-   //    this bug was even still in Eternity -- fixed when not in
-   //    demo_compatibility, but this could cause segvs if a new
-   //    thinker data structure that is small or has a pointer
+   // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and 
+   //    this bug was even still in Eternity -- fixed when not in 
+   //    demo_compatibility, but this could cause segvs if a new 
+   //    thinker data structure that is small or has a pointer 
    //    following the thinker field is introduced.
 
    // if door already has a thinker, use it
@@ -846,7 +814,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       (demo_compatibility && (sec->floordata || sec->lightingdata)))
    {
       door = (VerticalDoorThinker *)(sec->ceilingdata); //jff 2/22/98
-
+      
       if(demo_compatibility) // haleyjd
       {
          if(!door) door = (VerticalDoorThinker *)(sec->floordata);
@@ -861,7 +829,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       case  28:
       case  117:
          // haleyjd: don't corrupt non-door thinkers
-         if(demo_version >= 329 &&
+         if(demo_version >= 329 && 
             door->thinker.function != T_VerticalDoor)
             return 0;
 
@@ -871,7 +839,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
          {
             if(!thing->player)
                return 0;           // JDC: bad guys never close doors
-
+            
             door->direction = plat_down; // start going down immediately
          }
          // haleyjd: squash the sector's sound sequence when a door reversal
@@ -897,13 +865,14 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       break;
    }
 
+   // new door thinker
    if(serverside)
       door = P_SpawnManualDoor(line, sec);
 
    return 1;
 }
 
-//
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_doors.c,v $

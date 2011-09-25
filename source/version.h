@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -21,14 +22,13 @@
 #ifndef VERSION_H__
 #define VERSION_H__
 
-#include "doomtype.h"
-#include "z_zone.h"  /* memory allocation wrappers -- killough */
+#include <stdint.h>
 
 // DOOM version
 // enum { VERSION =  203 };
 extern int version;              // sf: made version an int
 extern unsigned char subversion; // haleyjd
-extern const uint32_t CS_PROTOCOL_VERSION;
+extern uint32_t cs_protocol_version; // [CG] 09/13/11
 
 extern const char version_date[];
 extern const char version_time[];

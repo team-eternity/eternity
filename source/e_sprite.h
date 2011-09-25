@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -36,7 +37,7 @@ void    E_ProcessSprites(cfg_t *cfg);
 #endif
 
 // For DECORATE states in particular:
-boolean E_ProcessSingleSprite(const char *sprname);
+bool E_ProcessSingleSprite(const char *sprname);
 
 int E_SpriteNumForName(const char *name);
 

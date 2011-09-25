@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -101,7 +101,7 @@ int D_Ungetc(int c, DWFILE *fp)
 // Open a file into the DWFILE structure. Uses standard
 // fopen.
 //
-void D_OpenFile(DWFILE *infile, const char *filename, char *mode)
+void D_OpenFile(DWFILE *infile, const char *filename, const char *mode)
 {
    memset(infile, 0, sizeof(*infile));
    infile->inp = (byte *)fopen(filename, mode);
@@ -120,7 +120,7 @@ void D_OpenLump(DWFILE *infile, int lumpnum)
    // haleyjd 04/03/03: added origsize field for D_Ungetc
    memset(infile, 0, sizeof(*infile));
    infile->size = infile->origsize = W_LumpLength(lumpnum);
-   infile->inp = infile->lump = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+   infile->inp = infile->lump = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
    infile->lumpnum = lumpnum;
    infile->type = DWF_LUMP;
 }

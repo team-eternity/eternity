@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -28,7 +28,7 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-extern boolean useportalgroups;
+extern bool useportalgroups;
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -36,6 +36,12 @@ extern boolean useportalgroups;
 // doesn't have NUTS in the wad name? I didn't think so either.
 #define R_NOGROUP -1
 #endif
+
+struct line_t;
+struct linkoffset_t;
+struct portal_t;
+struct sector_t;
+
 
 //
 // P_CreatePortalGroup
@@ -55,7 +61,7 @@ void P_GatherSectors(sector_t *from, int groupid);
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
 //
-boolean P_BuildLinkTable(void);
+bool P_BuildLinkTable(void);
 
 //
 // P_LinkRejectTable
@@ -65,7 +71,7 @@ void P_LinkRejectTable(void);
 
 void P_InitPortals(void);
 
-boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
+bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 

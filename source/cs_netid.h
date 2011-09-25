@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -27,45 +27,112 @@
 #ifndef __CS_NETID_H__
 #define __CS_NETID_H__
 
-#include "e_hash.h"
-#include "m_dllist.h"
-#include "p_mobj.h"
-#include "p_spec.h"
+#include <map>
+#include <queue>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stddef.h>
 
-#define NETID_MAX D_MAXINT
-#define NETID_MAX_LOAD_FACTOR 0.7
+#include "i_system.h"
 
-// [CG] Just guessing at the proper amount, will probably need tuning.
-#define NETID_INIT_CHAINS 8192
+class Mobj;
+class CeilingThinker;
+class VerticalDoorThinker;
+class FloorMoveThinker;
+class ElevatorThinker;
+class PillarThinker;
+class FloorWaggleThinker;
+class PlatThinker;
 
-// [CG] Because there's a few of these and so much of the code is boilerplate,
-//      I've used the preprocessor to handle a lot of the work.
+template <class T> class NetIDLookup
+{
+private:
+   uint32_t netids_assigned;
+   std::queue<uint32_t> netid_queue;
+   std::map<uint32_t, T*> netid_map;
 
-#define DECLARE_NETID_LOOKUP(type, name, funcname) \
-   typedef struct name##_netid_s\
-   {\
-      mdllistitem_t link;\
-      type *name;\
-   } name##_netid_t;\
-   extern ehash_t *name##_by_netid;\
-   void CS_Obtain##funcname##NetID(type *name);\
-   void CS_Release##funcname##NetID(type *name);\
-   void CS_Register##funcname##NetID(type *name);\
-   void CS_Reset##funcname##NetIDs(void);\
-   type* CS_Get##funcname##FromNetID(unsigned int net_id);\
-   name##_netid_t* CS_Iterate##funcname##s(name##_netid_t *node)
+public:
+   NetIDLookup()
+   {
+      netids_assigned = 0;
+   }
 
-DECLARE_NETID_LOOKUP(mobj_t, actor, Actor);
-DECLARE_NETID_LOOKUP(ceiling_t, ceiling, Ceiling);
-DECLARE_NETID_LOOKUP(vldoor_t, door, Door);
-DECLARE_NETID_LOOKUP(floormove_t, floor, Floor);
-DECLARE_NETID_LOOKUP(elevator_t, elevator, Elevator);
-DECLARE_NETID_LOOKUP(pillar_t, pillar, Pillar);
-DECLARE_NETID_LOOKUP(floorwaggle_t, floorwaggle, FloorWaggle);
-DECLARE_NETID_LOOKUP(plat_t, platform, Platform);
+   void add(T *x)
+   {
+      uint32_t net_id;
 
-void CS_InitNetIDs(void);
-void CS_ResetNetIDs(void);
+      if(x->net_id != 0)
+      {
+         if(netid_map.count(x->net_id))
+            I_Error("Net ID %u has multiple owners, exiting.\n", x->net_id);
+         net_id = x->net_id;
+      }
+      else if(!netid_queue.empty())
+      {
+         net_id = netid_queue.front();
+         netid_queue.pop();
+      }
+      else
+      {
+         net_id = netids_assigned + 1;
+      }
+
+      netid_map[net_id] = x;
+      x->net_id = net_id;
+      netids_assigned++;
+   }
+
+   void remove(T *x)
+   {
+      if(x->net_id != 0)
+      {
+         netid_queue.push(x->net_id);
+         netid_map.erase(x->net_id);
+         x->net_id = 0;
+         netids_assigned--;
+      }
+   }
+
+   T* lookup(uint32_t net_id)
+   {
+      typename std::map<uint32_t, T*>::iterator it = netid_map.find(net_id);
+
+      if(it == netid_map.end())
+         return NULL;
+
+      return it->second;
+   }
+
+   void clear(void)
+   {
+      netids_assigned = 0;
+      while(netid_queue.size())
+         netid_queue.pop();
+      netid_map.clear();
+   }
+
+   typename std::map<uint32_t, T*>::iterator begin(void)
+   {
+      return netid_map.begin();
+   }
+
+   typename std::map<uint32_t, T*>::iterator end(void)
+   {
+      return netid_map.end();
+   }
+
+};
+
+extern NetIDLookup<Mobj>                NetActors;
+extern NetIDLookup<CeilingThinker>      NetCeilings;
+extern NetIDLookup<VerticalDoorThinker> NetDoors;
+extern NetIDLookup<FloorMoveThinker>    NetFloors;
+extern NetIDLookup<ElevatorThinker>     NetElevators;
+extern NetIDLookup<PillarThinker>       NetPillars;
+extern NetIDLookup<FloorWaggleThinker>  NetFloorWaggles;
+extern NetIDLookup<PlatThinker>         NetPlatforms;
+
+void CS_ClearNetIDs(void);
 
 #endif
 

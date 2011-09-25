@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-  vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -96,6 +96,7 @@ struct player_t
 
    // Determine POV,
    //  including viewpoint bobbing during movement.
+  
    fixed_t        viewz;           // Focal origin above r.z  
    fixed_t        viewheight;      // Base height above floor for viewz.  
    fixed_t        deltaviewheight; // Bob/squat speed.
@@ -111,12 +112,12 @@ struct player_t
    int            health;       // This is only used between levels
    int            armorpoints;
    int            armortype;    // Armor type is 0-2.  
-   boolean        hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
+   bool           hereticarmor; // haleyjd 10/10/02: true if heretic armor (FIXME)
 
    // Power ups. invinc and invis are tic counters.
    int            powers[NUMPOWERS];
-   boolean        cards[NUMCARDS];
-   boolean        backpack;
+   bool           cards[NUMCARDS];
+   bool           backpack;
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
@@ -143,7 +144,7 @@ struct player_t
    int            killcount;
    int            itemcount;
    int            secretcount;
-   boolean        didsecret;    // True if secret level has been done.
+   bool           didsecret;    // True if secret level has been done.
   
    // For screen flashing (red or bright).
    int            damagecount;
@@ -171,29 +172,29 @@ struct player_t
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 //
-typedef struct wbplayerstruct_s
+struct wbplayerstruct_t
 {
-  boolean     in;     // whether the player is in game
+  bool        in;     // whether the player is in game
     
   // Player stats, kills, collected items etc.
   int         skills;
   int         sitems;
   int         ssecret;
   int         stime; 
-  int         frags[MAXPLAYERS];
+  int         frags[4];
   int         score;  // current score on entry, modified on return
   
-} wbplayerstruct_t;
+};
 
-typedef struct wbstartstruct_s
+struct wbstartstruct_t
 {
   int         epsd;   // episode # (0-2)
 
   // if true, splash the secret level
-  boolean     didsecret;
+  bool        didsecret;
 
   // haleyjd: if player is going to secret map
-  boolean     gotosecret;
+  bool        gotosecret;
     
   // previous and next levels, origin 0
   int         last;
@@ -212,7 +213,7 @@ typedef struct wbstartstruct_s
 
   wbplayerstruct_t    plyr[MAXPLAYERS];
 
-} wbstartstruct_t;
+};
 
 
 #endif

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -37,23 +37,27 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "z_zone.h"  /* memory allocation wrappers -- killough */
+#include "z_zone.h"    /* memory allocation wrappers -- killough */
 #include "i_system.h"
-#include "doomstat.h"
+
 #include "c_io.h"
 #include "d_gi.h"
-#include "w_wad.h"
-#include "r_main.h"
-#include "r_draw.h"
-#include "r_things.h"
-#include "r_sky.h"
-#include "r_ripple.h"
-#include "r_plane.h"
-#include "v_video.h"
-#include "p_info.h"
+#include "doomstat.h"
 #include "p_anim.h"
-#include "p_user.h"
+#include "p_info.h"
 #include "p_slopes.h"
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_main.h"
+#include "r_plane.h"
+#include "r_portal.h"
+#include "r_ripple.h"
+#include "r_sky.h"
+#include "r_state.h"
+#include "r_things.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 #define MAINHASHCHAINS 128    /* must be a power of 2 */
 
@@ -90,6 +94,9 @@ float openings[MAXOPENINGS], *lastopening;
 // to the clipping arrays of portals.
 float floorcliparray[MAX_SCREENWIDTH], ceilingcliparray[MAX_SCREENWIDTH];
 float *floorclip = floorcliparray, *ceilingclip = ceilingcliparray;
+
+// SoM: We have to use secondary clipping arrays for portal overlays
+float overlayfclip[MAX_SCREENWIDTH], overlaycclip[MAX_SCREENWIDTH];
 
 
 // spanstart holds the start of a plane span; initialized to 0 at start
@@ -177,7 +184,7 @@ static void R_PlaneLight(void)
 static uint32_t R_doubleToUint32(double d)
 {
    int32_t i;
-   boolean neg;
+   bool    neg;
    double  two32;
 
    // FIXME: should check for finiteness first, but we have no code for 
@@ -479,7 +486,7 @@ static void R_MapSlope(int y, int x1, int x2)
 // SoM: Returns true if the texture spaces of the give slope structs are the
 // same.
 //
-boolean R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
+bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
    return 
       (s1 == s2) ||                 // both are equal, including both NULL; OR:
@@ -609,6 +616,28 @@ void R_ClearPlaneHash(planehash_t *table)
          freehead = &(*freehead)->next;
 }
 
+
+
+//
+// R_ClearOverlayClips
+//
+// Clears the arrays used to clip portal overlays. This function is called before the start of 
+// each portal rendering.
+//
+void R_ClearOverlayClips(void)
+{
+   int i;
+   
+   // opening / clipping determination
+   for(i = 0; i < MAX_SCREENWIDTH; ++i)
+   {
+      overlayfclip[i] = view.height - 1.0f;
+      overlaycclip[i] = 0.0f;
+   }
+}
+
+
+
 //
 // R_ClearPlanes
 //
@@ -633,8 +662,8 @@ void R_ClearPlanes(void)
    // opening / clipping determination
    for(i = 0; i < MAX_SCREENWIDTH; ++i)
    {
-      floorclip[i] = view.height - 1.0f;
-      ceilingclip[i] = a;
+      floorclip[i] = overlayfclip[i] = view.height - 1.0f;
+      ceilingclip[i] = overlaycclip[i] = a;
    }
 
    R_ClearPlaneHash(&mainhash);
@@ -1142,9 +1171,9 @@ static void do_draw_plane(visplane_t *pl)
    }
    else      // regular flat
    {  
-      texture_t  *tex;
+      texture_t *tex;
       int        stop, light;
-      boolean    lptex64 = false; // haleyjd 06/09/10
+      bool       lptex64 = false; // haleyjd 06/09/10
       int        stylenum;
 
       int picnum = texturetranslation[pl->picnum];

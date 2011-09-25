@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -77,7 +78,7 @@ int E_SpriteNumForName(const char *name)
 // haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
 // present. Returns true if successful and false otherwise.
 //
-static boolean E_AddSprite(const char *name, esprite_t *sprite)
+static bool E_AddSprite(const char *name, esprite_t *sprite)
 {
    // initialize the esprite object   
    strncpy(sprite->name, name, 4);
@@ -176,7 +177,7 @@ void E_ProcessSprites(cfg_t *cfg)
 // by an EDF frame or DECORATE state. Returns true if successful and false if
 // there is any kind of problem during the process.
 //
-boolean E_ProcessSingleSprite(const char *sprname)
+bool E_ProcessSingleSprite(const char *sprname)
 {
    esprite_t *spr;
 

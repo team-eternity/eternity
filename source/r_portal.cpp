@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -27,12 +27,16 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
-#include "r_bsp.h"
+#include "r_portal.h"
+#include "r_state.h"
 #include "r_things.h"
+#include "v_misc.h"
 
 static portal_t *portals = NULL, *last = NULL;
 static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
@@ -46,7 +50,7 @@ portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
 static void R_RenderPortalNOP(pwindow_t *window)
 {
-   I_FatalError(I_ERR_KILL, "R_RenderPortalNOP called\n");
+   I_Error("R_RenderPortalNOP called\n");
 }
 
 
@@ -153,7 +157,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
    if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
    {
       I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, ytop, ybottom);
+              "\tx:%i, top:%i, bottom:%i\n", x, ytop, ybottom);
    }
 #endif
 
@@ -165,7 +169,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       (ptop < 0 || pbottom < 0 || ptop >= view.height || pbottom >= view.height))
    {
       I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, ptop, pbottom);
+              "\tx:%i, top:%i, bottom:%i\n", x, ptop, pbottom);
    }
 #endif
 
@@ -628,6 +632,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.z = lastzf;
 }
 
+extern void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
+
 //
 // R_RenderSkyboxPortal
 //
@@ -654,7 +660,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
          {
             I_Error("R_RenderSkyboxPortal: clipping array contained invalid "
                     "information:\n"
-                    "   x:%i, ytop:%f, ybottom:%f\n", 
+                    "   x:%i, ytop:%i, ybottom:%i\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }
@@ -668,6 +674,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    floorclip = window->bottom;
    ceilingclip = window->top;
+   
+   R_ClearOverlayClips();
 
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
@@ -803,7 +811,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
-                    "   x:%i, ytop:%f, ybottom:%f\n", 
+                    "   x:%i, ytop:%i, ybottom:%i\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }
@@ -821,6 +829,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    floorclip = window->bottom;
    ceilingclip = window->top;
 
+   R_ClearOverlayClips();
+   
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
 
@@ -897,7 +907,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
          {
             I_Error("R_RenderAnchoredPortal: clipping array contained invalid "
                     "information:\n" 
-                    "   x:%i, ytop:%f, ybottom:%f\n", 
+                    "   x:%i, ytop:%i, ybottom:%i\n", 
                     i, window->top[i], window->bottom[i]);
          }
       }
@@ -915,6 +925,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    floorclip = window->bottom;
    ceilingclip = window->top;
 
+   R_ClearOverlayClips();
+   
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
 

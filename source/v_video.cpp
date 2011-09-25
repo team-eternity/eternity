@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,17 +29,21 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "r_main.h"
+#include "i_video.h"
 #include "m_bbox.h"
 #include "r_draw.h"
-#include "w_wad.h"   /* needed for color translation lump lookup */
-#include "v_video.h"
+#include "r_main.h"
 #include "v_patch.h" // haleyjd
-#include "i_video.h"
-#include "d_gi.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"   /* needed for color translation lump lookup */
+
 
 // Each screen is [SCREENWIDTH*SCREENHEIGHT];
 // SoM: Moved. See cb_video_t
@@ -191,11 +195,13 @@ static const crdef_t crdefs[] =
 void V_InitColorTranslation(void)
 {
   register const crdef_t *p;
-  for(p = crdefs; p->name; p++)
+  for (p=crdefs; p->name; p++)
   {
-    // [CG] Try PU_RENDERER here.
-    // *p->map1 = *p->map2 = (byte *)(W_CacheLumpName(p->name, PU_STATIC));
-    *p->map1 = *p->map2 = (byte *)(W_CacheLumpName(p->name, PU_RENDERER));
+      // [CG] Try PU_RENDERER here.
+      // *p->map1 = *p->map2 = (byte *)(wGlobalDir.CacheLumpName(p->name, PU_STATIC));
+      *p->map1 = *p->map2 = (byte *)(wGlobalDir.CacheLumpName(
+         p->name, PU_RENDERER
+      ));
   }
 }
 
@@ -403,7 +409,7 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
 // haleyjd  04/04: rewritten to use new ANYRES patch system
 //
 void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
-			               boolean flipped)
+			            bool flipped)
 {
    PatchInfo pi;
 
@@ -432,7 +438,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // haleyjd 04/03/04: rewritten for ANYRES patch system
 //
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
-                           byte *outr, boolean flipped)
+                           byte *outr, bool flipped)
 {
    PatchInfo pi;
    
@@ -574,7 +580,7 @@ static void V_BuildBlackMap(void)
 void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
                          byte *outr, int tl)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    if(firsttime)
    {
@@ -644,18 +650,25 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 // haleyjd 05/18/09: A single smart function which will determine the
 // format of a fullscreen graphic resource and draw it properly.
 //
-void V_DrawFSBackground(VBuffer *dest, void *source, int len)
+void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
+   void *source;
+   patch_t *patch;
+   int len = wGlobalDir.LumpLength(lumpnum);
+
    switch(len)
    {
    case 4096:  // 64x64 flat
+      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBackgroundCached((byte *)source, dest);
       break;
    case 64000: // 320x200 linear
+      source = wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE);
       V_DrawBlockFS(dest, (byte *)source);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
-      V_DrawPatchFS(dest, (patch_t *)source);
+      patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
+      V_DrawPatchFS(dest, patch);
       break;
    }
 }
@@ -758,7 +771,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // so it can be considered GPL as used here, rather than BSD. But,
 // I don't care either way. It is effectively dual-licensed I suppose.
 
-boolean flexTranInit = false;
+bool flexTranInit = false;
 unsigned int  Col2RGB8[65][256];
 unsigned int *Col2RGB8_LessPrecision[65];
 byte RGB32k[32][32][32];
@@ -850,6 +863,9 @@ void V_CacheBlock(int x, int y, int width, int height, byte *src,
       dest += SCREENWIDTH;
    }
 }
+
+
+
 
 //----------------------------------------------------------------------------
 //

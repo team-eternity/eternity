@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -42,6 +42,8 @@
 #include "cs_position.h"
 #include "cs_ctf.h"
 #include "cs_config.h"
+
+struct event_t;
 
 // [CG] Some debugging defines, setting them to 1 will dump debugging output
 //      to STDOUT.
@@ -188,7 +190,7 @@ typedef enum
    nm_specialstatus,           // (s => c) 33, Map special's status
    nm_specialremoved,          // (s => c) 34, Map special removed
    nm_sectorposition,          // (s => c) 35, Sector position
-   nm_soundplayed,             // (s => c) 36, Sound played
+   nm_announcerevent,          // (s => c) 36, Announcer event
    nm_ticfinished,             // (s => c) 37, TIC is finished
    nm_max_messages
 } network_message_e;
@@ -288,7 +290,7 @@ typedef enum
 
 #pragma pack(push, 1)
 
-typedef struct client_options_s
+typedef struct
 {
    uint8_t player_bobbing;
    uint8_t doom_weapon_toggles;
@@ -296,7 +298,7 @@ typedef struct client_options_s
    uint32_t weapon_speed;
 } client_options_t;
 
-typedef struct client_s
+typedef struct
 {
    // [CG] The gametic at which the client joined the spectators for the first
    //      time.
@@ -346,18 +348,18 @@ typedef struct client_s
 // [CG] Server clients are never sent over the wire, so they can stay as
 //      normal.
 
-typedef struct cs_buffered_command_s
+typedef struct
 {
    mqueueitem_t mqitem;
    cs_cmd_t command;
 } cs_buffered_command_t;
 
-typedef struct server_client_s
+typedef struct
 {
    enet_uint32 connect_id;
    ENetAddress address;
-   boolean added;
-   boolean synchronized;
+   bool added;
+   bool synchronized;
    cs_auth_level_e auth_level;
    int last_auth_attempt;
    unsigned int commands_dropped;
@@ -369,7 +371,7 @@ typedef struct server_client_s
    // [CG] This is so that unlagged knows which positions to load.
    unsigned int command_world_index;
    // [CG] So the server knows that a client's loaded the map.
-   boolean received_command_for_current_map;
+   bool received_command_for_current_map;
    // [CG] The serverside command buffer.
    mqueue_t commands;
    // [CG] The server stores player positions here for unlagged.
@@ -386,7 +388,7 @@ typedef struct server_client_s
    position_t saved_position;
 #if _UNLAG_DEBUG
    // [CG] For unlagged debugging.
-   mobj_t *ghost;
+   Mobj *ghost;
 #endif
 } server_client_t;
 
@@ -401,25 +403,26 @@ typedef struct server_client_s
 #pragma pack(push, 1)
 
 // [CG] A save-game-ish blob of data is at the end of this message.
-typedef struct nm_gamestate_s
+typedef struct
 {
    int32_t message_type;
+   uint32_t world_index;
    uint32_t map_number;
    uint32_t rngseed;
    uint32_t player_number;
-   size_t state_size;
+   uint32_t state_size;
    flag_t flags[team_color_max];
    int32_t team_scores[team_color_max];
    uint8_t playeringame[MAXPLAYERS];
    clientserver_settings_t settings;
 } nm_gamestate_t;
 
-typedef struct nm_syncrequest_s
+typedef struct
 {
    int32_t message_type;
 } nm_syncrequest_t;
 
-typedef struct nm_sync_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -429,12 +432,12 @@ typedef struct nm_sync_s
    int32_t leveltime;
 } nm_sync_t;
 
-typedef struct nm_syncreceived_s
+typedef struct
 {
    int32_t message_type;
 } nm_syncreceived_t;
 
-typedef struct nm_mapstarted_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -447,7 +450,7 @@ typedef struct nm_mapstarted_s
    uint32_t net_ids[MAXPLAYERS];
 } nm_mapstarted_t;
 
-typedef struct nm_mapcompleted_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -455,7 +458,7 @@ typedef struct nm_mapcompleted_s
    uint8_t enter_intermission;
 } nm_mapcompleted_t;
 
-typedef struct nm_clientinit_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -463,7 +466,7 @@ typedef struct nm_clientinit_s
    client_t client;
 } nm_clientinit_t;
 
-typedef struct nm_authresult_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -472,7 +475,7 @@ typedef struct nm_authresult_s
 } nm_authresult_t;
 
 // [CG] The contents of the message are at the end of this message.
-typedef struct nm_servermessage_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -482,7 +485,7 @@ typedef struct nm_servermessage_s
 } nm_servermessage_t;
 
 // [CG] The contents of the message are at the end of this message.
-typedef struct nm_playermessage_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -494,7 +497,7 @@ typedef struct nm_playermessage_s
    uint32_t length;
 } nm_playermessage_t;
 
-typedef struct nm_playerspawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -509,7 +512,7 @@ typedef struct nm_playerspawned_s
 
 // [CG] If the info_type is a string, then there is a string buffer at the end
 //      of this message (which is of variable length).
-typedef struct nm_playerinfoupdated_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -523,7 +526,7 @@ typedef struct nm_playerinfoupdated_s
    };
 } nm_playerinfoupdated_t;
 
-typedef struct nm_playerweaponstate_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -532,13 +535,13 @@ typedef struct nm_playerweaponstate_s
    int32_t weapon_state; // [CG] statenum_t.
 } nm_playerweaponstate_t;
 
-typedef struct nm_playercommand_s
+typedef struct
 {
    int32_t message_type;
    cs_cmd_t command;
 } nm_playercommand_t;
 
-typedef struct nm_clientstatus_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -552,7 +555,7 @@ typedef struct nm_clientstatus_s
    int32_t floor_status; // [CG] cs_floor_status_e.
 } nm_clientstatus_t;
 
-typedef struct nm_playertouchedspecial_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -560,7 +563,7 @@ typedef struct nm_playertouchedspecial_s
    uint32_t thing_net_id;
 } nm_playertouchedspecial_t;
 
-typedef struct nm_playerremoved_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -568,7 +571,7 @@ typedef struct nm_playerremoved_s
    int32_t reason; // [CG] disconnection_reason_t.
 } nm_playerremoved_t;
 
-typedef struct nm_puffspawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -581,7 +584,7 @@ typedef struct nm_puffspawned_s
    uint8_t ptcl;
 } nm_puffspawned_t;
 
-typedef struct nm_bloodspawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -594,7 +597,7 @@ typedef struct nm_bloodspawned_s
    int32_t damage;
 } nm_bloodspawned_t;
 
-typedef struct nm_actorspawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -610,7 +613,7 @@ typedef struct nm_actorspawned_s
    int32_t type; // [CG] mobjtype_t.
 } nm_actorspawned_t;
 
-typedef struct nm_actorposition_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -618,7 +621,7 @@ typedef struct nm_actorposition_s
    position_t position;
 } nm_actorposition_t;
 
-typedef struct nm_actortarget_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -627,7 +630,7 @@ typedef struct nm_actortarget_s
    uint32_t target_net_id;
 } nm_actortarget_t;
 
-typedef struct nm_actorstate_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -636,7 +639,7 @@ typedef struct nm_actorstate_s
    int32_t actor_type;   // [CG] mobjtype_t.
 } nm_actorstate_t;
 
-typedef struct nm_actordamaged_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -650,7 +653,7 @@ typedef struct nm_actordamaged_s
    uint8_t just_hit;
 } nm_actordamaged_t;
 
-typedef struct nm_actorkilled_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -661,14 +664,14 @@ typedef struct nm_actorkilled_s
    int32_t mod;
 } nm_actorkilled_t;
 
-typedef struct nm_actorremoved_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
    uint32_t actor_net_id;
 } nm_actorremoved_t;
 
-typedef struct nm_lineactivated_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -682,21 +685,21 @@ typedef struct nm_lineactivated_s
    int32_t side;
 } nm_lineactivated_t;
 
-typedef struct nm_monsteractive_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
    uint32_t monster_net_id;
 } nm_monsteractive_t;
 
-typedef struct nm_monsterawakened_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
    uint32_t monster_net_id;
 } nm_monsterawakened_t;
 
-typedef struct nm_missilespawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -712,7 +715,7 @@ typedef struct nm_missilespawned_s
    angle_t angle;
 } nm_missilespawned_t;
 
-typedef struct nm_missileexploded_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -720,7 +723,7 @@ typedef struct nm_missileexploded_s
    uint32_t tics;
 } nm_missileexploded_t;
 
-typedef struct nm_cubespawned_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -729,7 +732,7 @@ typedef struct nm_cubespawned_s
    int32_t flags;
 } nm_cubespawned_t;
 
-typedef struct nm_sectorposition_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -737,48 +740,44 @@ typedef struct nm_sectorposition_s
    sector_position_t sector_position;
 } nm_sectorposition_t;
 
-// [CG] A map special is appended to the end of this message, the type of which
-//      is indicated by the value of the special_type member.
-typedef struct nm_specialspawned_s
+// [CG] A map special's status is appended to the end of this message, the type
+//      of which is indicated by the value of the special_type member.
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_t.
+   int32_t special_type; // [CG] map_special_e.
    size_t line_number;
    size_t sector_number;
 } nm_specialspawned_t;
 
-// [CG] A map special is appended to the end of this message, the type of which
-//      is indicated by the value of the special_type member.
-typedef struct nm_specialstatus_s
+// [CG] A map special's status is appended to the end of this message, the type
+//      of which is indicated by the value of the special_type member.
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_t.
+   int32_t special_type; // [CG] map_special_e.
 } nm_specialstatus_t;
 
-typedef struct nm_specialremoved_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t special_type; // [CG] map_special_t.
+   int32_t special_type; // [CG] map_special_e.
    uint32_t net_id;
 } nm_specialremoved_t;
 
-// [CG] The name of the sound is appended to the end of this message.
-typedef struct nm_soundplayed_s
+// [CG] The name of the event is appended to the end of this message.
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
    uint32_t source_net_id;
-   uint32_t sound_name_size;
-   int32_t volume;
-   int32_t attenuation; // [CG] soundattn_e.
-   int8_t loop;
-   int32_t channel;     // [CG] schannel_e.
-} nm_soundplayed_t;
+   uint32_t event_index;
+} nm_announcerevent_t;
 
-typedef struct nm_ticfinished_s
+typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
@@ -786,8 +785,8 @@ typedef struct nm_ticfinished_s
 
 #pragma pack(pop)
 
-extern boolean display_target_names;
-extern boolean default_display_target_names;
+extern bool display_target_names;
+extern bool default_display_target_names;
 
 extern unsigned int weapon_switch_on_pickup;
 extern unsigned int default_weapon_switch_on_pickup;
@@ -799,16 +798,18 @@ extern ENetPeer *net_peer;
 extern ENetAddress *server_address;
 extern client_t *clients;
 extern enet_uint32 start_time;
-extern char *disconnection_strings[dr_max_reasons];
-extern char *network_message_names[nm_max_messages];
+extern const char *disconnection_strings[dr_max_reasons];
+extern const char *network_message_names[nm_max_messages];
 extern unsigned int world_index;
 extern unsigned int cs_shooting_player;
+extern char *cs_state_file_path;
 
+void CS_Init(void);
 void CS_DoWorldDone(void);
 void CS_PrintTime(void);
 char* CS_IPToString(int ip_address);
 void CS_PrintJSONToFile(const char *filename, const char *json_data);
-boolean CS_CheckURI(char *uri);
+bool CS_CheckURI(char *uri);
 float CS_VersionFloat(void);
 char* CS_VersionString(void);
 char* CS_GetSHA1Hash(const char *input, size_t input_size);
@@ -825,12 +826,11 @@ void CS_FormatTime(char *formatted_time, unsigned int seconds);
 void CS_FormatTicsAsTime(char *formatted_time, unsigned int tics);
 void CS_SetDisplayPlayer(int playernum);
 size_t CS_BuildGameState(int playernum, byte **buffer);
-void CS_ProcessPlayerCommand(int playernum);
 void CS_PlayerThink(int playernum);
 void CS_ApplyCommandButtons(ticcmd_t *cmd);
 void CS_PlayerTicker(int playernum);
-boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
-                                          weapontype_t weapon_two);
+bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
+                                       weapontype_t weapon_two);
 void CS_HandleSpectateKey(event_t *ev);
 void CS_HandleSpectatePrevKey(event_t *ev);
 void CS_HandleSpectateNextKey(event_t *ev);
@@ -845,15 +845,15 @@ void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
 void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
                                     int playernum, client_info_e info_type);
 
-void CS_SetSpectator(int playernum, boolean spectating);
+void CS_SetSpectator(int playernum, bool spectating);
 void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
-                    angle_t angle, boolean as_spectator);
-mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator);
+                    angle_t angle, bool as_spectator);
+mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator);
 
-mobj_t* CS_SpawnPuff(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
-                     angle_t angle, int updown, boolean ptcl);
-mobj_t* CS_SpawnBlood(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
-                      angle_t angle, int damage, mobj_t *target);
+Mobj* CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int updown, bool ptcl);
+Mobj* CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                    angle_t angle, int damage, Mobj *target);
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
 void CS_ServiceNetwork(void);

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -93,7 +93,7 @@ void CS_CopyCommandToTiccmd(ticcmd_t *cmd, cs_cmd_t *command)
    cmd->actions     = command->ticcmd.actions;
 }
 
-boolean CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two)
+bool CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two)
 {
    if(command_one->ticcmd.forwardmove == command_two->ticcmd.forwardmove &&
       command_one->ticcmd.sidemove    == command_two->ticcmd.sidemove    &&
@@ -107,7 +107,7 @@ boolean CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two)
    return false;
 }
 
-boolean CS_CommandIsBlank(cs_cmd_t *command)
+bool CS_CommandIsBlank(cs_cmd_t *command)
 {
    // [CG] We don't care about consistancy or chatchar, but everything else has
    //      to be zero.

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,23 +27,34 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "i_video.h"
-#include "doomstat.h"
-#include "d_event.h"
-#include "v_video.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "dstrings.h"
-#include "m_swap.h"
-#include "mn_engin.h"
-#include "d_deh.h"  // Ty 03/22/98 - externalizations
-#include "p_info.h"
-#include "d_gi.h"
+
 #include "c_io.h"
-#include "f_finale.h"
-#include "e_states.h"
+#include "c_runcmd.h"
+#include "d_deh.h"     // Ty 03/22/98 - externalizations
+#include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"
+#include "doomstat.h"
+#include "dstrings.h"
 #include "e_fonts.h"
 #include "e_player.h"
+#include "e_states.h"
+#include "f_finale.h"
+#include "m_swap.h"
+#include "mn_engin.h"
+#include "p_info.h"
+#include "p_skin.h"
+#include "r_patch.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"
+
+
 
 // Stage of animation:
 //  0 = text, 1 = art screen, 2 = character cast, 3 = Heretic underwater scene
@@ -57,10 +68,10 @@ int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void    F_StartCast (void);
-void    F_CastTicker (void);
-boolean F_CastResponder (event_t *ev);
-void    F_CastDrawer (void);
+void F_StartCast(void);
+void F_CastTicker(void);
+bool F_CastResponder(event_t *ev);
+void F_CastDrawer(void);
 
 void IN_checkForAccelerate(void);    // killough 3/28/98: used to
 extern int acceleratestage;          // accelerate intermission screens
@@ -106,7 +117,7 @@ void F_StartFinale(void)
 //
 // F_Responder
 //
-boolean F_Responder(event_t *event)
+bool F_Responder(event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -116,7 +127,7 @@ boolean F_Responder(event_t *event)
    {
       // restore normal palette and kick out to title screen
       finalestage = 4;
-      I_SetPalette((byte *)(W_CacheLumpName("PLAYPAL", PU_CACHE)));
+      I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
       return true;
    }
    
@@ -268,7 +279,7 @@ void F_TextWrite(void)
    {                     // normal picture
       patch_t *pic;
       
-      pic = (patch_t *)(W_CacheLumpNum(lumpnum, PU_CACHE));
+      pic = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
       V_DrawPatch(0, 0, &vbscreen, pic);
    }
 
@@ -302,11 +313,11 @@ void F_TextWrite(void)
          continue;
       }
       
-      w = SwapShort(f_font->fontgfx[c]->width);
+      w = f_font->fontgfx[c]->width;
       if(cx + w > SCREENWIDTH)
          continue; // haleyjd: continue if text off right side
 
-      h = SwapShort(f_font->fontgfx[c]->height);
+      h = f_font->fontgfx[c]->height;
       if(cy + h > SCREENHEIGHT)
          break; // haleyjd: break if text off bottom
 
@@ -332,10 +343,10 @@ castinfo_t      *castorder; // Ty 03/22/98 - externalized and init moved into f_
 int             castnum;
 int             casttics;
 state_t*        caststate;
-boolean         castdeath;
+bool            castdeath;
 int             castframes;
 int             castonmelee;
-boolean         castattacking;
+bool            castattacking;
 
 extern  gamestate_t     wipegamestate;
 
@@ -509,7 +520,7 @@ void F_CastTicker(void)
 //
 // F_CastResponder
 //
-boolean F_CastResponder(event_t* ev)
+bool F_CastResponder(event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -559,12 +570,13 @@ void F_CastDrawer(void)
    spritedef_t*        sprdef;
    spriteframe_t*      sprframe;
    int                 lump;
-   boolean             flip;
+   bool                flip;
    patch_t*            patch;
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawPatch(0, 0, &vbscreen, (patch_t *)(W_CacheLumpName(bgcastcall, PU_CACHE)));
+   V_DrawPatch(0, 0, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
    
    F_CastPrint(castorder[castnum].name);
    
@@ -587,7 +599,7 @@ void F_CastDrawer(void)
    lump = sprframe->lump[0];
    flip = !!sprframe->flip[0];
    
-   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    if(flip)
       V_DrawPatchFlipped(160, 170, &vbscreen, patch);
    else
@@ -606,8 +618,8 @@ void F_BunnyScroll(void)
    int         stage;
    static int  laststage;
    
-   p1 = (patch_t *)(W_CacheLumpName ("PFUB2", PU_LEVEL));
-   p2 = (patch_t *)(W_CacheLumpName ("PFUB1", PU_LEVEL));
+   p1 = PatchLoader::CacheName(wGlobalDir, "PFUB2", PU_LEVEL);
+   p2 = PatchLoader::CacheName(wGlobalDir, "PFUB1", PU_LEVEL);
    
    scrolled = 320 - (finalecount-230)/2;
    if(scrolled > 320)
@@ -627,7 +639,7 @@ void F_BunnyScroll(void)
    {
       V_DrawPatch((SCREENWIDTH - 13 * 8) / 2,
                   (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
-                  (patch_t *)W_CacheLumpName("END0", PU_CACHE));
+                  PatchLoader::CacheName(wGlobalDir, "END0", PU_CACHE));
       laststage = 0;
       return;
    }
@@ -644,7 +656,7 @@ void F_BunnyScroll(void)
    sprintf(name,"END%i", stage);
    V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
                (SCREENHEIGHT - 8 * 8) / 2, &vbscreen, 
-               (patch_t *)W_CacheLumpName(name, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, name, PU_CACHE));
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
@@ -658,11 +670,11 @@ void F_DrawUnderwater(void)
       {
          byte *palette;
 
-         palette = (byte *)W_CacheLumpName("E2PAL", PU_CACHE);
+         palette = (byte *)wGlobalDir.CacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
 
          V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                     (byte *)W_CacheLumpName("E2END", PU_CACHE));
+                     (byte *)wGlobalDir.CacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
       // fall through
@@ -675,7 +687,7 @@ void F_DrawUnderwater(void)
    case 4:
       Console.enabled = true;
       V_DrawBlock(0,0,&vbscreen,SCREENWIDTH,SCREENHEIGHT,
-                  (byte *)W_CacheLumpName("TITLE", PU_CACHE));
+                  (byte *)wGlobalDir.CacheLumpName("TITLE", PU_CACHE));
       break;
    }
 }
@@ -703,18 +715,18 @@ static void F_InitDemonScroller(void)
    V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
    
    if(lsize2 == 64000) // raw screen
-      W_ReadLump(lnum2, DemonBuffer);
+      wGlobalDir.ReadLump(lnum2, DemonBuffer);
    else
    {
-      patch_t *p = (patch_t *)(W_CacheLumpNum(lnum2, PU_CACHE));
+      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum2, PU_CACHE);
       V_DrawPatchGeneral(0, 0, &vbuf, p, false);
    }
 
    if(lsize1 == 64000) // raw screen
-      W_ReadLump(lnum1, DemonBuffer + 64000);
+      wGlobalDir.ReadLump(lnum1, DemonBuffer + 64000);
    else
    {
-      patch_t *p = (patch_t *)(W_CacheLumpNum(lnum1, PU_CACHE));
+      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum1, PU_CACHE);
       V_DrawPatchGeneral(0, 200, &vbuf, p, false);
    }
 
@@ -769,26 +781,28 @@ void F_DemonScroll(void)
 static void F_FinaleEndDrawer(void)
 {
    // haleyjd 05/18/09: handle shareware once up here
-   boolean sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
+   bool sw = ((GameModeInfo->flags & GIF_SHAREWARE) == GIF_SHAREWARE);
 
    switch(LevelInfo.finaleType)
    {
    case FINALE_DOOM_CREDITS:
       V_DrawPatch(0, 0, &vbscreen, 
-                  (patch_t *)W_CacheLumpName(sw ? "HELP2" : "CREDIT", PU_CACHE));
+         PatchLoader::CacheName(wGlobalDir, sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
-      V_DrawPatch(0,0,&vbscreen,(patch_t *)W_CacheLumpName("VICTORY2",PU_CACHE));
+      V_DrawPatch(0,0,&vbscreen, 
+         PatchLoader::CacheName(wGlobalDir, "VICTORY2",PU_CACHE));
       break;
    case FINALE_DOOM_BUNNY:
       F_BunnyScroll();
       break;
    case FINALE_DOOM_MARINE:
-      V_DrawPatch(0,0,&vbscreen,(patch_t *)W_CacheLumpName("ENDPIC",PU_CACHE));
+      V_DrawPatch(0,0,&vbscreen,
+         PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
       V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, SCREENHEIGHT,
-                  (byte *)W_CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+                  (byte *)wGlobalDir.CacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();

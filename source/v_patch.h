@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -30,11 +30,13 @@
 #include "r_data.h"
 #include "doomtype.h"
 
+struct patch_t;
+
 typedef struct PatchInfo_s
 {
    patch_t *patch;
    int x, y;        // screen coordinates
-   boolean flipped; // flipped?
+   bool flipped;    // flipped?
    int drawstyle;   // drawing style (normal, tr, tl, trtl, etc.)
 } PatchInfo;
 
@@ -92,7 +94,7 @@ typedef struct cb_patch_column_s
 
 } cb_patch_column_t; // It's cardboard now, bitches!
 
-byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
+byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
 
 #endif

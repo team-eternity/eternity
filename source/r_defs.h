@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,8 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __R_DEFS__
-#define __R_DEFS__
+#ifndef R_DEFS_H__
+#define R_DEFS_H__
 
 // haleyjd 12/15/10: lighting data is required here
 #include "r_lighting.h"
@@ -37,9 +37,10 @@
 #include "p_mobj.h"
 
 struct line_t;
-struct sector_t;
 struct particle_t;
+struct planehash_t;
 struct portal_t;
+struct sector_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -62,7 +63,7 @@ extern int r_blockmap;
 // Note: transformed values not buffered locally,
 // like some DOOM-alikes ("wt", "WebView") do.
 //
-typedef struct vertex_s
+struct vertex_t
 {
    fixed_t x, y;
 
@@ -70,9 +71,9 @@ typedef struct vertex_s
    // These should always be kept current to x and y
    float   fx, fy;
 
-   struct vertex_s *dynanext;
-   boolean dynafree;          // if true, is on free list
-} vertex_t;
+   struct vertex_t *dynanext;
+   bool dynafree;          // if true, is on free list
+};
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
@@ -123,7 +124,7 @@ enum
 
 // SoM: Map-slope struct. Stores both floating point and fixed point versions
 // of the vectors.
-typedef struct pslope_s
+struct pslope_t
 {
    // --- Information used in clipping/projection ---
    // Origin vector for the plane
@@ -141,7 +142,7 @@ typedef struct pslope_s
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
-} pslope_t;
+};
 
 typedef struct ETerrain_s *secterrainptr;
 
@@ -162,12 +163,12 @@ struct sector_t
    int16_t tag;
    int nexttag, firsttag;   // killough 1/30/98: improves searches for tags.
    int soundtraversed;      // 0 = untraversed, 1,2 = sndlines-1
-   Mobj *soundtarget;     // thing that made a sound (or null)
-   int blockbox[4];         // mapblock bounding box for height changes
-   PointThinker soundorg;  // origin for any sounds played by the sector
-   PointThinker csoundorg; // haleyjd 10/16/06: separate sound origin for ceiling
+   Mobj *soundtarget;       // thing that made a sound (or null)
+   fixed_t blockbox[4];     // mapblock bounding box for height changes
+   PointThinker soundorg;   // origin for any sounds played by the sector
+   PointThinker csoundorg;  // haleyjd 10/16/06: separate sound origin for ceiling
    int validcount;          // if == validcount, already checked
-   Mobj *thinglist;       // list of mobjs in sector
+   Mobj *thinglist;         // list of mobjs in sector
 
    // killough 8/28/98: friction is a sector property, not an mobj property.
    // these fields used to be in Mobj, but presented performance problems
@@ -207,7 +208,7 @@ struct sector_t
    
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
-   struct msecnode_s *touching_thinglist;               // phares 3/14/98  
+   msecnode_t *touching_thinglist;               // phares 3/14/98  
    
    int linecount;
    line_t **lines;
@@ -300,7 +301,6 @@ struct side_t
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
   // or lump number of special effect. Allows texture names to be overloaded
   // for other functions.
-
   int special;
 };
 
@@ -322,23 +322,23 @@ struct seg_t;
 struct line_t
 {
    vertex_t *v1, *v2;      // Vertices, from v1 to v2.
-   fixed_t dx, dy;         // Precalculated v2 - v1 for side checking.
-   int16_t flags;          // Animation related.
-   int16_t special;         
-   int   tag;              // haleyjd 02/27/07: line id's
+   fixed_t  dx, dy;        // Precalculated v2 - v1 for side checking.
+   int16_t  flags;         // Animation related.
+   int16_t  special;         
+   int      tag;           // haleyjd 02/27/07: line id's
 
    // haleyjd 06/19/06: extended from short to long for 65535 sidedefs
-   int   sidenum[2];       // Visual appearance: SideDefs.
+   int      sidenum[2];    // Visual appearance: SideDefs.
 
    fixed_t bbox[4];        // A bounding box, for the linedef's extent
    slopetype_t slopetype;  // To aid move clipping.
    sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
    int validcount;         // if == validcount, already checked
-   void *specialdata;      // thinker_t for reversable actions
    int tranlump;           // killough 4/11/98: translucency filter, -1 == none
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
-   PointThinker soundorg; // haleyjd 04/19/09: line sound origin
+   PointThinker soundorg;  // haleyjd 04/19/09: line sound origin
+   int intflags;           // haleyjd 01/22/11: internal flags
 
    // SoM 12/10/03: wall portals
    int      pflags;
@@ -351,8 +351,6 @@ struct line_t
    int   extflags;          // activation flags for param specials
    int   args[NUMLINEARGS]; // argument values for param specials
    float alpha;             // alpha
-
-   seg_t *segs;             // haleyjd: link to segs
 };
 
 struct rpolyobj_t;
@@ -390,16 +388,16 @@ struct subsector_t
 //
 // For the links, NULL means top or end of list.
 
-typedef struct msecnode_s
+struct msecnode_t
 {
-  sector_t          *m_sector; // a sector containing this object
-  Mobj            *m_thing;  // this object
-  struct msecnode_s *m_tprev;  // prev msecnode_t for this thing
-  struct msecnode_s *m_tnext;  // next msecnode_t for this thing
-  struct msecnode_s *m_sprev;  // prev msecnode_t for this sector
-  struct msecnode_s *m_snext;  // next msecnode_t for this sector
-  boolean visited; // killough 4/4/98, 4/7/98: used in search algorithms
-} msecnode_t;
+  sector_t   *m_sector; // a sector containing this object
+  Mobj       *m_thing;  // this object
+  msecnode_t *m_tprev;  // prev msecnode_t for this thing
+  msecnode_t *m_tnext;  // next msecnode_t for this thing
+  msecnode_t *m_sprev;  // prev msecnode_t for this sector
+  msecnode_t *m_snext;  // next msecnode_t for this sector
+  bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+};
 
 //
 // The LineSeg.
@@ -407,10 +405,9 @@ typedef struct msecnode_s
 struct seg_t
 {
   vertex_t *v1, *v2;
-  float offset;
-  //angle_t angle;
-  side_t* sidedef;
-  line_t* linedef;
+  float     offset;
+  side_t   *sidedef;
+  line_t   *linedef;
   
   // Sector references.
   // Could be retrieved from linedef, too
@@ -419,12 +416,8 @@ struct seg_t
 
   sector_t *frontsector, *backsector;
 
-  seg_t *linenext; // haleyjd: next seg by linedef
-
   // SoM: Precached seg length in float format
   float  len;
-
-  boolean nodraw; // don't render this seg, ever
 };
 
 //
@@ -446,33 +439,6 @@ struct node_t
 // OTHER TYPES
 //
 
-//
-// Masked 2s linedefs
-//
-
-typedef struct drawseg_s
-{
-   seg_t *curline;
-   int x1, x2;
-   float dist1, dist2, diststep;
-   int silhouette;                       // 0=none, 1=bottom, 2=top, 3=both
-   fixed_t bsilheight;                   // do not clip sprites above this
-   fixed_t tsilheight;                   // do not clip sprites below this
-
-   // sf: colormap to be used when drawing the drawseg
-   // for coloured lighting
-   lighttable_t *(*colormap)[MAXLIGHTSCALE];
-
-   // Pointers to lists for sprite clipping,
-   // all three adjusted so [x1] is first value.
-
-   float *sprtopclip, *sprbottomclip;
-   // SoM: this still needs to be int
-   float *maskedtexturecol;
-
-   fixed_t viewx, viewy, viewz;
-} drawseg_t;
-
 //  
 // Sprites are patches with a special naming convention
 //  so they can be recognized by R_InitSprites.
@@ -489,12 +455,12 @@ typedef struct drawseg_s
 // for all views: NNNNF0
 //
 
-typedef struct spriteframe_s
+struct spriteframe_t
 {
   // If false use 0 for any position.
   // Note: as eight entries are available,
   //  we might as well insert the same name eight times.
-  boolean rotate;
+  bool rotate;
 
   // Lump to use for view angles 0-7.
   int16_t lump[8];
@@ -502,27 +468,27 @@ typedef struct spriteframe_s
   // Flip bit (1 = flip) to use for view angles 0-7.
   byte  flip[8];
 
-} spriteframe_t;
+};
 
 //
 // A sprite definition:
 //  a number of animation frames.
 //
 
-typedef struct spritedef_s
+struct spritedef_t
 {
   int numframes;
   spriteframe_t *spriteframes;
-} spritedef_t;
+};
 
 
 // SoM: Information used in texture mapping sloped planes
-typedef struct rslope_s
+struct rslope_t
 {
    v3double_t P, M, N;
    v3double_t A, B, C;
    double     zat, plight, shade;
-} rslope_t;
+};
 
 
 //
@@ -572,18 +538,18 @@ struct visplane_t
    
    // Needed for overlays
    // This is the table the visplane currently belongs to
-   struct planehash_s     *table;
+   planehash_t           *table;
    // This is the blending flags from the portal surface (flags & PS_OVERLAYFLAGS)
    int                    bflags; 
    // Opacity of the overlay (255 - opaque, 0 - translucent)
    byte                   opacity;
 };
 
-typedef struct planehash_s
+struct planehash_t
 {
    int          chaincount;
    visplane_t   **chains;
-} planehash_t;
+};
 
 #endif
 

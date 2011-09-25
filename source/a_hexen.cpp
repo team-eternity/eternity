@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -54,9 +54,7 @@
 #include "e_ttypes.h"
 
 #include "a_common.h"
-
-// [CG] Added.
-#include "sv_main.h"
+#include "sv_main.h" // [CG] 9/13/11 Added.
 
 // HEXEN_TODO: When resweeping this module, dispense with a lot of the
 // parameterized bullcrap, since Aeon will probably remove the need for a bunch
@@ -98,7 +96,7 @@ void A_UnSetReflective(Mobj *actor)
 //
 // P_UpdateMorphedMonster
 //
-boolean P_UpdateMorphedMonster(Mobj *actor, int tics)
+bool P_UpdateMorphedMonster(Mobj *actor, int tics)
 {
    // HEXEN_TODO
    return false;
@@ -326,15 +324,13 @@ void A_SerpentHeadCheck(Mobj *actor)
 //
 void A_CentaurAttack(Mobj *actor)
 {
-   int dmg;
-
    if(!actor->target)
       return;
 
    if(P_CheckMeleeRange(actor))
    {
-      dmg = P_Random(pr_centauratk) % 7 + 3;
-      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
+      P_DamageMobj(actor->target, actor, actor, 
+                   P_Random(pr_centauratk) % 7 + 3, MOD_HIT);
    }
 }
 
@@ -385,15 +381,26 @@ void A_DropEquipment(Mobj *actor)
 
    Mobj  *mo;
 
+   if(!serverside)
+      return;
+
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType1);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    P_TossEquipmentItem(mo, actor->angle + ANG90, xyMomShift, baseZMom);
    P_SetTarget<Mobj>(&mo->target, actor);
+   if(CS_SERVER)
+      SV_BroadcastActorTarget(mo, CS_AT_TARGET);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zHeight, moType2);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    P_TossEquipmentItem(mo, actor->angle - ANG90, xyMomShift, baseZMom);
    P_SetTarget<Mobj>(&mo->target, actor);
+   if(CS_SERVER)
+      SV_BroadcastActorTarget(mo, CS_AT_TARGET);
 }
 
 //
@@ -418,8 +425,6 @@ void A_CentaurDefend(Mobj *actor)
 //
 void A_BishopAttack(Mobj *actor)
 {
-   int dmg;
-
    if(!actor->target)
       return;
 
@@ -427,8 +432,8 @@ void A_BishopAttack(Mobj *actor)
    
    if(P_CheckMeleeRange(actor))
    {
-      dmg = ((P_Random(pr_bishop1) & 7) + 1) * 4;
-      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
+      P_DamageMobj(actor->target, actor, actor, 
+                   ((P_Random(pr_bishop1) & 7) + 1) * 4, MOD_HIT);
    }
    else
       actor->counters[0] = (P_Random(pr_bishop1) & 3) + 5;
@@ -627,15 +632,13 @@ void A_PainCounterBEQ(Mobj *actor)
 //
 void A_DemonAttack1(Mobj *actor)
 {
-   int dmg;
-
    if(!actor->target)
       return;
 
    if(P_CheckMeleeRange(actor))
    {
-      dmg = ((P_Random(pr_chaosbite) & 7) + 1) * 2;
-      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
+      P_DamageMobj(actor->target, actor, actor, 
+                   ((P_Random(pr_chaosbite) & 7) + 1) * 2, MOD_HIT);
    }
 }
 
@@ -662,13 +665,13 @@ void A_Demon2Death(Mobj *actor)
 {
 }
 
-static boolean P_SinkMobj(Mobj *actor)
+static bool P_SinkMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;
 }
 
-static boolean P_RaiseMobj(Mobj *actor)
+static bool P_RaiseMobj(Mobj *actor)
 {
    // HEXEN_TODO
    return true;
@@ -708,7 +711,7 @@ void A_WraithRaise(Mobj *actor)
 //
 void A_WraithMelee(Mobj *actor)
 {
-   int dmg;
+   int amount;
 
    if(!actor->target)
       return;
@@ -716,10 +719,11 @@ void A_WraithMelee(Mobj *actor)
    // Steal health from target and give to actor
    if(P_CheckMeleeRange(actor) && (P_Random(pr_wraithm) < 220))
    {
-      dmg = ((P_Random(pr_wraithd) & 7) + 1) * 2;
-      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
-
-      actor->health += dmg;
+      amount = ((P_Random(pr_wraithd) & 7) + 1) * 2;
+      
+      P_DamageMobj(actor->target, actor, actor, amount, MOD_HIT);
+      
+      actor->health += amount;
    }
 }
 
@@ -744,10 +748,15 @@ void A_WraithFX2(Mobj *actor)
    Mobj *mo;
    angle_t angle;
    int i;
+
+   if(!serverside)
+      return;
    
    for(i = 0; i < 2; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType);
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
       
       if(P_Random(pr_wraithfx2) < 128)
          angle = actor->angle + (P_Random(pr_wraithfx2) << 22);
@@ -760,6 +769,8 @@ void A_WraithFX2(Mobj *actor)
       mo->momy = FixedMul((P_Random(pr_wraithfx2) << 7) + FRACUNIT, 
                           finesine[angle >> ANGLETOFINESHIFT]);
       P_SetTarget<Mobj>(&mo->target, actor);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(mo, CS_AT_TARGET);
       mo->floorclip = 10*FRACUNIT;
    }
 }
@@ -777,15 +788,22 @@ void A_WraithFX3(Mobj *actor)
    Mobj *mo;
    int numdropped = P_Random(pr_wraithfx3) % 15;
    int i;
+
+   if(!serverside)
+      return;
    
    for(i = 0; i < numdropped; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType);
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
       
       mo->x += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx3) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx3) << 10);
       P_SetTarget<Mobj>(&mo->target, actor);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(mo, CS_AT_TARGET);
    }
 }
 
@@ -809,6 +827,9 @@ void A_WraithFX4(Mobj *actor)
    Mobj *mo;
    int chance = P_Random(pr_wraithfx4a);
    int spawnflags;
+
+   if(!serverside)
+      return;
    
    if(chance < 10)
       spawnflags = WFX4_SPAWN_TYPE1;
@@ -830,10 +851,14 @@ void A_WraithFX4(Mobj *actor)
    if(spawnflags & WFX4_SPAWN_TYPE2)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType2);
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
       mo->x += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->y += (P_Random(pr_wraithfx4c) - 128) << 11;
       mo->z += (P_Random(pr_wraithfx4c) << 10);
       P_SetTarget<Mobj>(&mo->target, actor);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(mo, CS_AT_TARGET);
    }
 }
 
@@ -865,12 +890,10 @@ void A_WraithChase(Mobj *actor)
 //
 void A_EttinAttack(Mobj *actor)
 {
-   int dmg;
-
    if(P_CheckMeleeRange(actor))
    {
-      dmg = ((P_Random(pr_ettin) & 7) + 1) * 2;
-      P_DamageMobj(actor->target, actor, actor, dmg, MOD_HIT);
+      P_DamageMobj(actor->target, actor, actor, 
+                   ((P_Random(pr_ettin) & 7) + 1) * 2, MOD_HIT);
    }
 }
 
@@ -888,14 +911,21 @@ void A_DropMace(Mobj *actor)
    int momShift     = E_ArgAsInt(actor->state->args, 1, 0);
    fixed_t baseMomZ = E_ArgAsInt(actor->state->args, 2, 0) * FRACUNIT;
    Mobj *mo;
+
+   if(!serverside)
+      return;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + (actor->height >> 1), 
                     thingType);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
 
    mo->momx = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momy = (P_Random(pr_dropmace) - 128) << momShift;
    mo->momz = baseMomZ + (P_Random(pr_dropmace) << (momShift - 1));
    P_SetTarget<Mobj>(&mo->target, actor);
+   if(CS_SERVER)
+      SV_BroadcastActorTarget(mo, CS_AT_TARGET);
 }
 
 //
@@ -911,6 +941,10 @@ void A_AffritSpawnRock(Mobj *actor)
    int rtype;
    int thingTypes[5];
 
+
+   if(!serverside)
+      return;
+
    for(i = 0; i < 5; ++i)
       thingTypes[i] = E_ArgAsThingNum(actor->state->args, i);
    
@@ -921,8 +955,12 @@ void A_AffritSpawnRock(Mobj *actor)
    z = actor->z + (P_Random(pr_affritrock) << 11);
    
    mo = P_SpawnMobj(x, y, z, rtype);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
    
    P_SetTarget<Mobj>(&mo->target, actor);
+   if(CS_SERVER)
+      SV_BroadcastActorTarget(mo, CS_AT_TARGET);
 
    mo->momx = (P_Random(pr_affritrock) - 128) << 10;
    mo->momy = (P_Random(pr_affritrock) - 128) << 10;
@@ -978,14 +1016,21 @@ void A_AffritSplotch(Mobj *actor)
    int thingType1 = E_ArgAsThingNum(actor->state->args, 0);
    int thingType2 = E_ArgAsThingNum(actor->state->args, 1);
    Mobj *mo;
+
+   if(!serverside)
+      return;
    
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType1);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
    
    mo->momx = (P_Random(pr_affrits) - 128) << 11;
    mo->momy = (P_Random(pr_affrits) - 128) << 11;
    mo->momz = 3*FRACUNIT + (P_Random(pr_affrits) << 10);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, thingType2);
+   if(CS_SERVER)
+      SV_BroadcastActorSpawned(mo);
    
    mo->momx = (P_Random(pr_affrits) - 128) << 11;
    mo->momy = (P_Random(pr_affrits) - 128) << 11;
@@ -1008,15 +1053,22 @@ void A_IceGuyLook(Mobj *actor)
    
    A_Look(actor);
 
+   if(!serverside)
+      return;
+
    if(P_Random(pr_icelook) < 64)
    {
       dist = ((P_Random(pr_icelook2) - 128) * actor->radius) >> 7;
       an   = (actor->angle + ANG90) >> ANGLETOFINESHIFT;
       
-      P_SpawnMobj(actor->x + FixedMul(dist, finecosine[an]),
-                  actor->y + FixedMul(dist, finesine[an]), 
-                  actor->z + 60*FRACUNIT,
-                  (P_Random(pr_icelook2) & 1) ? thingType2 : thingType1);
+      Mobj *mo = P_SpawnMobj(
+         actor->x + FixedMul(dist, finecosine[an]),
+         actor->y + FixedMul(dist, finesine[an]), 
+         actor->z + 60*FRACUNIT,
+         (P_Random(pr_icelook2) & 1) ? thingType2 : thingType1
+      );
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
    }
 }
 
@@ -1037,6 +1089,9 @@ void A_IceGuyChase(Mobj *actor)
    
    A_Chase(actor);
 
+   if(!serverside)
+      return;
+
    if(P_Random(pr_icechase) < 128)
    {
       dist = ((P_Random(pr_icechase2) - 128) * actor->radius) >> 7;
@@ -1049,7 +1104,12 @@ void A_IceGuyChase(Mobj *actor)
       mo->momx = actor->momx;
       mo->momy = actor->momy;
       mo->momz = actor->momz;
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(mo);
+
       P_SetTarget<Mobj>(&mo->target, actor);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(mo, CS_AT_TARGET);
    }
 }
 

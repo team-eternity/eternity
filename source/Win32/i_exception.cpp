@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//
+//    
 //   Exception handling for Windows, because the SDL parachute sucks.
 //
 //   Based loosely on ExceptionHandler.cpp
@@ -33,14 +33,6 @@
 #ifndef _WIN32
 #error i_exception.c is for Win32 only
 #endif
-
-#ifdef __MINGW32__
-// [CG] MinGW doesn't support __try or __except, so I've included the LibSEH
-//      library that does.
-#include <seh/seh.h>
-#endif
-
-#define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 #include <tchar.h>
@@ -85,17 +77,17 @@ static PCONTEXT          contextRecord;
 static TCHAR *lstrrchr(LPCTSTR str, int ch)
 {
    TCHAR *start = (TCHAR *)str;
-
+   
    while(*str++)
       ; // find end
-
+   
    // search backward
    while(--str != start && *str != (TCHAR)ch)
       ;
-
+   
    if(*str == (TCHAR)ch)
       return (TCHAR *)str; // found it
-
+   
    return NULL;
 }
 
@@ -113,7 +105,7 @@ static TCHAR *ExtractFileName(LPCTSTR path)
       ++ret;
    else
       ret = (TCHAR *)path;
-
+   
    return ret;
 }
 
@@ -154,7 +146,7 @@ static void GetModuleName(void)
 //
 static int OpenLogFile(void)
 {
-   logFile = CreateFile(moduleFileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+   logFile = CreateFile(moduleFileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 
                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
 
    if(logFile == INVALID_HANDLE_VALUE)
@@ -193,17 +185,17 @@ static void LogPrintf(LPCTSTR fmt, ...)
 {
    DWORD bytecount;
    va_list args;
-
+   
    va_start(args, fmt);
-
+   
    if(logidx > LOG_BUFFER_SIZE - 1024)
    {
       WriteFile(logFile, logbuffer, lstrlen(logbuffer), &bytecount, 0);
       logidx = 0;
    }
-
+   
    logidx += wvsprintf(&logbuffer[logidx], fmt, args);
-
+   
    va_end(args);
 }
 
@@ -222,8 +214,9 @@ static exceptiondata_t ExceptionData[] =
 {
    { 0x40010005, _T("a Ctrl+C")                     },
    { 0x40010008, _T("a Ctrl+Brk")                   },
+   { 0x80000001, _T("a Guard Page Violation")       },
    { 0x80000002, _T("a Data Type Misalignment")     },
-   { 0x80000003, _T("a Breakpoint")                 },
+   { 0x80000003, _T("a Breakpoint")                 }, 
    { 0xC0000005, _T("an Access Violation")          },
    { 0xC0000006, _T("an In-Page Error")             },
    { 0xC0000017, _T("a No Memory")                  },
@@ -244,7 +237,7 @@ static exceptiondata_t ExceptionData[] =
    { 0xC00000FD, _T("a Stack Overflow")             },
    { 0xC0000142, _T("a DLL Initialization Failure") },
    { 0xE06D7363, _T("a Microsoft C++")              },
-
+   
    // must be last
    { 0, NULL }
 };
@@ -281,7 +274,7 @@ static void PrintHeader(void)
 {
    TCHAR *crashModuleFn = _T("Unknown");
    MEMORY_BASIC_INFORMATION memoryInfo;
-
+   
    ZeroMemory(crashModulePath, sizeof(crashModulePath));
 
 #ifdef _M_IX86
@@ -298,11 +291,11 @@ static void PrintHeader(void)
 
    LogPrintf(
       _T("%s caused %s Exception (0x%08x)\r\nin module %s at %04x:%08x.\r\n\r\n"),
-      moduleName,
+      moduleName, 
       PhraseForException(exceptionRecord->ExceptionCode),
       exceptionRecord->ExceptionCode,
-      crashModuleFn,
-      contextRecord->SegCs,
+      crashModuleFn, 
+      contextRecord->SegCs, 
       contextRecord->Eip);
 #else
    // FIXME: how to get crash module name and address on non-x86, x64?
@@ -322,7 +315,7 @@ static void MakeTimeString(FILETIME time, LPTSTR str)
    WORD d, t;
 
    str[0] = _T('\0');
-
+   
    if(FileTimeToLocalFileTime(&time, &time) &&
       FileTimeToDosDateTime(&time, &d, &t))
    {
@@ -339,7 +332,7 @@ static void MakeTimeString(FILETIME time, LPTSTR str)
 //
 static void PrintTime(void)
 {
-   FILETIME crashtime;
+   FILETIME crashtime;   
    TCHAR    timestr[256];
 
    GetSystemTimeAsFileTime(&crashtime);
@@ -365,7 +358,7 @@ static void PrintUserInfo(void)
 
    if(GetModuleFileName(0, moduleName, charcount(moduleName) - 2) <= 0)
       lstrcpy(moduleName, _T("Unknown"));
-
+      
    if(!GetUserName(userName, &userNameLen))
       lstrcpy(userName, _T("Unknown"));
 
@@ -383,7 +376,7 @@ static void PrintOSInfo(void)
    TCHAR         mmb[64];
 
    ZeroMemory(mmb, sizeof(mmb));
-
+   
    osinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
    if(GetVersionEx(&osinfo))
@@ -409,9 +402,9 @@ static void PrintOSInfo(void)
 static void PrintCPUInfo(void)
 {
    SYSTEM_INFO   sysinfo;
-
+ 
    GetSystemInfo(&sysinfo);
-
+   
    LogPrintf(_T("%d processor%s, type %d.\r\n"),
              sysinfo.dwNumberOfProcessors,
              sysinfo.dwNumberOfProcessors > 1 ? _T("s") : _T(""),
@@ -426,21 +419,21 @@ static void PrintCPUInfo(void)
 static void PrintMemInfo(void)
 {
    MEMORYSTATUS meminfo;
-
+   
    meminfo.dwLength = sizeof(meminfo);
-
+   
    GlobalMemoryStatus(&meminfo);
-
+   
    LogPrintf(_T("%d%% memory in use.\r\n"), meminfo.dwMemoryLoad);
-   LogPrintf(_T("%d MB physical memory.\r\n"),
+   LogPrintf(_T("%d MB physical memory.\r\n"), 
              RoundMem(meminfo.dwTotalPhys));
-   LogPrintf(_T("%d MB physical memory free.\r\n"),
+   LogPrintf(_T("%d MB physical memory free.\r\n"), 
              RoundMem(meminfo.dwAvailPhys));
-   LogPrintf(_T("%d MB page file.\r\n"),
+   LogPrintf(_T("%d MB page file.\r\n"), 
              RoundMem(meminfo.dwTotalPageFile));
-   LogPrintf(_T("%d MB paging file free.\r\n"),
+   LogPrintf(_T("%d MB paging file free.\r\n"), 
              RoundMem(meminfo.dwAvailPageFile));
-   LogPrintf(_T("%d MB user address space.\r\n"),
+   LogPrintf(_T("%d MB user address space.\r\n"), 
              RoundMem(meminfo.dwTotalVirtual));
    LogPrintf(_T("%d MB user address space free.\r\n"),
              RoundMem(meminfo.dwAvailVirtual));
@@ -458,7 +451,7 @@ static void PrintSegVInfo(void)
 
    if(exceptionRecord->ExceptionInformation[0])
       readOrWrite = _T("written");
-
+   
    wsprintf(msg, _T("Access violation at %08x. The memory could not be %s.\r\n"),
             exceptionRecord->ExceptionInformation[1], readOrWrite);
 
@@ -509,9 +502,6 @@ static void PrintCS(void)
       {
          LogPrintf(_T("?? "));
       }
-#ifdef __MINGW32__
-      __end_except
-#endif
    }
 }
 
@@ -530,32 +520,20 @@ static void PrintStack(void)
 
    LogPrintf(_T("\r\n\r\nStack:\r\n"));
 
-#ifdef __MINGW32__
-   LogPrintf(_T("\r\n\r\nSorry, can't print stack while using MinGW.\r\n"));
-   return;
-#endif
-
    __try
    {
-#ifdef __MINGW32__
-      asm(
-         "movl %fs:4, %eax\n\t"
-         "movl %eax, -16(%ebp)\n\t"
-      );
-#else
       __asm
       {
          // Load the top address of the stack from the thread information block.
          mov   eax, fs:[4]
          mov   stacktop, eax
       }
-#endif
 
       if(stacktop > stackptr + STACKTOPRINT)
          stacktop = stackptr + STACKTOPRINT;
 
       stackstart = stackptr;
-
+		
       while(stackptr + 1 <= stacktop)
       {
          if((cnt % 4) == 0)
@@ -573,7 +551,7 @@ static void PrintStack(void)
             ++numPrinted;
 
             n = numPrinted;
-
+            
             while(n < 4)
             {
                LogPrintf(_T("         "));
@@ -584,7 +562,7 @@ static void PrintStack(void)
             {
                int j;
                DWORD stackint = *stackstart;
-
+               
                for(j = 0; j < 4; ++j)
                {
                   char c = (char)(stackint & 0xFF);
@@ -612,9 +590,6 @@ static void PrintStack(void)
    {
       LogPrintf(_T("Could not access stack.\r\n"));
    }
-#ifdef __MINGW32__
-   __end_except
-#endif
 }
 
 #endif // _M_IX86
@@ -629,27 +604,27 @@ static int LaunchCrashApp(void)
    static STARTUPINFO si;
    static PROCESS_INFORMATION pi;
    static TCHAR cmdline[MAX_PATH];
-
+   
    // Replace the filename with our crash report exe file name
-   lstrcpy(fileName, _T("eecrashreport.exe"));
-   lstrcpy(cmdline, moduleFileName);
+   lstrcpy(fileName, _T("eecrashreport.exe"));   
+   lstrcpy(cmdline, moduleFileName);   
    lstrcat(cmdline, _T(" \""));	// surround app name with quotes
 
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
-
+   
    GetModuleFileName(0, moduleFileName, charcount(moduleFileName)-2);
-
+   
    lstrcat(cmdline, ExtractFileName(moduleFileName));
    lstrcat(cmdline, _T("\""));
-
+   
    ZeroMemory(&si, sizeof(si));
    ZeroMemory(&pi, sizeof(pi));
 
    si.cb = sizeof(si);
    si.dwFlags = STARTF_USESHOWWINDOW;
-   si.wShowWindow = SW_SHOW;
+   si.wShowWindow = SW_SHOW;   
 
-   return CreateProcess(NULL, cmdline, NULL, NULL, FALSE,
+   return CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 
                         0, NULL, NULL, &si, &pi) ? 1 : 0;
 }
 

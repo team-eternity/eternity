@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,60 +29,59 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "p_info.h"
-#include "doomdef.h"
+#include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_main.h"
+#include "d_net.h"
 #include "doomstat.h"
+#include "dstrings.h"
+#include "e_player.h"
+#include "e_states.h"
 #include "f_finale.h"
 #include "f_wipe.h"
+#include "g_bind.h"
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "in_lude.h"
 #include "m_argv.h"
 #include "m_misc.h"
+#include "m_random.h"
 #include "m_shots.h"
+#include "metaapi.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
-#include "m_random.h"
-#include "p_setup.h"
+#include "p_chase.h"
+#include "p_hubs.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "p_saveg.h"
+#include "p_setup.h"
 #include "p_tick.h"
-#include "d_main.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
-#include "st_stuff.h"
-#include "am_map.h"
-#include "w_wad.h"
-#include "w_levels.h" // haleyjd
-#include "r_main.h"
-#include "r_draw.h"
-#include "r_things.h" // haleyjd
-#include "p_map.h"
-#include "s_sound.h"
-#include "dstrings.h"
-#include "sounds.h"
-#include "p_chase.h"
 #include "r_data.h"
+#include "r_draw.h"
+#include "r_main.h"
 #include "r_sky.h"
-#include "d_deh.h"              // Ty 3/27/98 deh declarations
-#include "p_inter.h"
-#include "g_game.h"
-#include "c_net.h"
-#include "d_net.h"
-#include "p_hubs.h"
-#include "g_bind.h"
-#include "d_dialog.h"
-#include "d_gi.h"
-#include "in_lude.h"
-#include "a_small.h"
-#include "g_dmflag.h"
-#include "e_states.h"
+#include "r_things.h" // haleyjd
 #include "s_sndseq.h"
-#include "acs_intr.h"
-#include "metaapi.h"
-#include "p_maputl.h"
-#include "e_player.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_misc.h"
 #include "version.h"
+#include "w_levels.h" // haleyjd
+#include "w_wad.h"
 
 // [CG] Added
 #include "cs_config.h"
@@ -101,61 +100,54 @@ static char     eedemosig[] = "ETERN";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char     *demoname;
-boolean         netdemo;
+static bool      netdemo;
 static byte     *demobuffer;   // made some static -- killough
 static size_t   maxdemosize;
 static byte     *demo_p;
-static int16_t  consistancy[MAXPLAYERS][BACKUPTICS];
+static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 
-waddir_t *g_dir = &w_GlobalDir;
+WadDirectory *g_dir = &wGlobalDir;
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
 skill_t         gameskill;
-boolean         respawnmonsters;
+bool            respawnmonsters;
 int             gameepisode;
 int             gamemap;
 // haleyjd: changed to an array
-char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 };
+char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
 int             paused;
-boolean         sendpause;     // send a pause event next tic
-boolean         sendsave;      // send a save event next tic
-boolean         usergame;      // ok to save / end game
-boolean         timingdemo;    // if true, exit with report on completion
-boolean         fastdemo;      // if true, run at full speed -- killough
-boolean         nodrawers;     // for comparative timing purposes
+bool            sendpause;     // send a pause event next tic
+bool            sendsave;      // send a save event next tic
+bool            usergame;      // ok to save / end game
+bool            timingdemo;    // if true, exit with report on completion
+bool            fastdemo;      // if true, run at full speed -- killough
+bool            nodrawers;     // for comparative timing purposes
 int             startgametic;
 int             starttime;     // for comparative timing purposes
-boolean         deathmatch;    // only if started as net death
-boolean         netgame;       // only true if packets are broadcast
+bool            deathmatch;    // only if started as net death
+bool            netgame;       // only true if packets are broadcast
+bool            playeringame[MAXPLAYERS];
 // [CG] Added some booleans for c/s.
-boolean         clientside;
-boolean         serverside;
-boolean         clientserver;
+bool            clientside;
+bool            serverside;
+bool            clientserver;
 // [CG] See doomstat.h for defense of capitalization, haha.
-boolean         CS_HEADLESS;
-
-/*
- * [CG] Dynamically allocating these now.
-boolean         playeringame[MAXPLAYERS];
+bool            CS_HEADLESS;
 player_t        players[MAXPLAYERS];
- */
-
-player_t        *players;
-boolean         *playeringame;
 int             consoleplayer; // player taking events and displaying
 int             displayplayer; // view being displayed
 int             gametic;
 int             levelstarttic; // gametic at level start
 int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
-boolean         demorecording;
-boolean         demoplayback;
-/*boolean         timedemo_menuscreen;*/
-boolean         singledemo;           // quit after playing a demo from cmdline
-boolean         precache = true;      // if true, load all graphics at start
+bool            demorecording;
+bool            demoplayback;
+/*bool           timedemo_menuscreen;*/
+bool            singledemo;           // quit after playing a demo from cmdline
+bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
-boolean         haswolflevels = false;// jff 4/18/98 wolf levels present
+bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
 int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
@@ -197,21 +189,21 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-boolean gamekeydown[NUMKEYS];
-int     turnheld;       // for accelerative turning
+bool gamekeydown[NUMKEYS];
+int  turnheld;       // for accelerative turning
 
-boolean mousearray[4];
-boolean *mousebuttons = &mousearray[1];    // allow [-1]
+bool mousearray[4];
+bool *mousebuttons = &mousearray[1];    // allow [-1]
 
 // mouse values are used once
-int mousex;
-int mousey;
-int dclicktime;
-boolean dclickstate;
-int dclicks;
-int dclicktime2;
-boolean dclickstate2;
-int dclicks2;
+int  mousex;
+int  mousey;
+int  dclicktime;
+bool dclickstate;
+int  dclicks;
+int  dclicktime2;
+bool dclickstate2;
+int  dclicks2;
 
 // joystick values are repeated
 int joyxmove;
@@ -248,15 +240,15 @@ void G_CoolViewPoint();
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   boolean strafe;
-   boolean bstrafe;
-   boolean sendcenterview = false;
+   bool strafe;
+   bool bstrafe;
+   bool sendcenterview = false;
    int speed;
    int tspeed;
    int forward;
    int side;
    int newweapon;            // phares
-   int look = 0;
+   int look = 0; 
    int mlook = 0;
    static int prevmlook = 0;
    ticcmd_t *base;
@@ -266,29 +258,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    base = I_BaseTiccmd();    // empty, or external driver
    memcpy(cmd, base, sizeof(*cmd));
 
-#ifdef CONSHUGE
-   // in console mode the whole ticcmd is used
-   // to transfer console command chars
-
-   if(gamestate == GS_CONSOLE)
-   {
-      int i;
-
-      // fill ticcmd with console chars
-      for(i = 0; i < sizeof(ticcmd_t); i++)
-      {
-         ((unsigned char*)cmd)[i] = C_dequeueChatChar();
-      }
-      return;
-   }
-#endif
-
-   cmd->consistancy = consistancy[consoleplayer][maketic%BACKUPTICS];
+   cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
    strafe = !!action_strafe;
    //speed = autorun || action_speed;
    speed = (autorun ? !(runiswalk && action_speed) : action_speed);
-
+   
    forward = side = 0;
 
    // use two stage accelerative turning on the keyboard and joystick
@@ -366,7 +341,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // Toggle between the top 2 favorite weapons.
    // If not currently aiming one of these, switch to
    // the favorite. Only switch if you possess the weapon.
-
+   
    // killough 3/22/98:
    //
    // Perform automatic weapons switch here rather than in p_pspr.c,
@@ -383,7 +358,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // isn't going to be sufficient any more, there's not enough space
    // to support more than 16 weapons.
    //
-
+ 
    if((!demo_compatibility && players[consoleplayer].attackdown &&
        !P_CheckAmmo(&players[consoleplayer])) || action_nextweapon)
    {
@@ -416,7 +391,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 10/98: make SG/SSG and Fist/Chainsaw
       // weapon toggles optional
-
+      
       if(!demo_compatibility && doom_weapon_toggles)
       {
          const player_t *player = &players[consoleplayer];
@@ -466,12 +441,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // mouse -- haleyjd: some of this is obsolete now -- removed
-
+  
    // forward double click -- haleyjd: still allow double clicks
    if(mousebuttons[mousebforward] != dclickstate && dclicktime > 1 )
    {
       dclickstate = mousebuttons[mousebforward];
-
+      
       if(dclickstate)
          dclicks++;
 
@@ -498,7 +473,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(dclickstate2)
          dclicks2++;
-
+      
       if(dclicks2 == 2)
       {
          cmd->buttons |= BT_USE;
@@ -514,7 +489,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // sf: smooth out the mouse movement
-   // change to use tmousex, y
+   // change to use tmousex, y   
    // divide by the number of new tics so each gets an equal share
 
    tmousex = mousex /* / newtics */;
@@ -557,7 +532,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    prevmlook = mlook;
-
+   
    if(action_lookup)
       look += pc->lookspeed[speed];
    if(action_lookdown)
@@ -585,7 +560,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       forward = MAXPLMOVE;
    else if(forward < -MAXPLMOVE)
       forward = -MAXPLMOVE;
-
+   
    if(side > MAXPLMOVE)
       side = MAXPLMOVE;
    else if(side < -MAXPLMOVE)
@@ -620,7 +595,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
-
+   
    if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
@@ -628,7 +603,7 @@ void G_SetGameMap(void)
    }
    else
       gameepisode = 1;
-
+   
    if(gameepisode < 1)
       gameepisode = 1;
 
@@ -637,8 +612,8 @@ void G_SetGameMap(void)
    // bound to maximum episode for gamemode
    // (only start episode 1 on shareware, etc)
    if(gameepisode > GameModeInfo->numEpisodes)
-      gameepisode = GameModeInfo->numEpisodes;
-
+      gameepisode = GameModeInfo->numEpisodes;   
+   
    if(gamemap < 0)
       gamemap = 0;
    if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
@@ -667,9 +642,9 @@ extern void R_InitPortals(void);
 void G_DoLoadLevel(void)
 {
    int i;
-
+   
    levelstarttic = gametic; // for time calculation
-
+   
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
       basetic = gametic;
 
@@ -690,8 +665,8 @@ void G_DoLoadLevel(void)
    }
 
    // [CG] Clear the Net ID stacks.
-   if(!CS_CLIENT)
-      CS_ResetNetIDs();
+   if(!clientserver || !clientside)
+      CS_ClearNetIDs();
 
    // haleyjd 07/28/10: Waaaay too early for this.
    //gamestate = GS_LEVEL;
@@ -709,7 +684,7 @@ void G_DoLoadLevel(void)
 
    // [CG] Initialize sector positions.
    if(clientserver)
-      CL_SpecInit();
+      CS_InitSectorPositions();
 
    if(gamestate != GS_LEVEL)       // level load error
    {
@@ -723,7 +698,7 @@ void G_DoLoadLevel(void)
    // [CG] In c/s, consoleplayer is set before this.
    if(!clientserver && (!netgame || demoplayback))
       consoleplayer = 0;
-
+   
    gameaction = ga_nothing;
    displayplayer = consoleplayer;    // view the guy you are playing
    P_ResetChasecam();    // sf: because displayplayer changed
@@ -740,17 +715,19 @@ void G_DoLoadLevel(void)
 
    // killough: make -timedemo work on multilevel demos
    // Move to end of function to minimize noise -- killough 2/22/98:
-
+   
    //jff 4/26/98 wake up the status bar in case were coming out of a DM demo
    // killough 5/13/98: in case netdemo has consoleplayer other than green
    ST_Start();
 
    C_Popup();  // pop up the console
-
+   
    // sf: if loading a hub level, restore position relative to sector
    //  for 'seamless' travel between levels
    if(hub_changelevel)
+   {
       P_RestorePlayerPosition();
+   }
    else
    {  // sf: no screen wipe while changing hub level
       if(wipegamestate == GS_LEVEL)
@@ -763,7 +740,7 @@ void G_DoLoadLevel(void)
 //
 // Get info needed to make ticcmd_ts for the players.
 //
-boolean G_Responder(event_t* ev)
+bool G_Responder(event_t* ev)
 {
    // allow spy mode changes even during the demo
    // killough 2/22/98: even during DM demo
@@ -772,12 +749,12 @@ boolean G_Responder(event_t* ev)
 
    /* [CG] C/S has the spectate_next and spectate_prev commands which are
     *      slightly more advanced than key_spy.
-   if(ev->data1 == key_spy && netgame &&
+   if(ev->data1 == key_spy && netgame && 
       (demoplayback || GameType != gt_dm) && gamestate == GS_LEVEL)
    {
       if(ev->type == ev_keyup)
          gamekeydown[key_spy] = false;
-
+      
       if(ev->type == ev_keydown && !gamekeydown[key_spy])
       {
          gamekeydown[key_spy] = true;
@@ -787,7 +764,7 @@ boolean G_Responder(event_t* ev)
                displayplayer = 0;
          }
          while(!playeringame[displayplayer] && displayplayer != consoleplayer);
-
+         
          ST_Start();    // killough 3/7/98: switch status bar views too
          HU_Start();
          S_UpdateSounds(players[displayplayer].mo);
@@ -808,12 +785,8 @@ boolean G_Responder(event_t* ev)
       }
       else
       {
-         if(HU_Responder(ev) || // chat ate the event
-            ST_Responder(ev) || // status window ate it
-            AM_Responder(ev))   // automap ate it
-         {
+         if(HU_Responder(ev) || ST_Responder(ev) || AM_Responder(ev))
             return true;
-         }
       }
    }
    else if(clientserver && gamestate == GS_INTERMISSION)
@@ -855,7 +828,7 @@ boolean G_Responder(event_t* ev)
 
       if(!walkcam_active) // if so, we need to go on below
       {
-         if(gamestate == GS_DEMOSCREEN && !(paused & 2) &&
+         if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
             !automapactive &&
             ((ev->type == ev_keydown) ||
              (ev->type == ev_mouse && ev->data1) ||
@@ -891,37 +864,37 @@ boolean G_Responder(event_t* ev)
       else
       {
          if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;
+            gamekeydown[ev->data1] = true;         
          G_KeyResponder(ev, kac_game); // haleyjd
       }
       return true;    // eat key down events
-
+      
    case ev_keyup:
       if(ev->data1 < NUMKEYS)
          gamekeydown[ev->data1] = false;
       G_KeyResponder(ev, kac_game);   // haleyjd
       return false;   // always let key up events filter down
-
+      
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);
       mousebuttons[1] = !!(ev->data1 & 2);
       mousebuttons[2] = !!(ev->data1 & 4);
 
-      // SoM: this mimics the doom2 behavior better.
+      // SoM: this mimics the doom2 behavior better. 
       mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
       mousey += (ev->data3 * (mouseSensitivity_vert + 5) / 10);
       return true;    // eat events
-
+      
    case ev_joystick:
       // haleyjd: joybuttons now obsolete -- removed
       joyxmove = ev->data2;
       joyymove = ev->data3;
       return true;    // eat events
-
+      
    default:
       break;
    }
-
+   
    return false;
 }
 
@@ -933,7 +906,7 @@ boolean G_Responder(event_t* ev)
 // version field of its demos (because it's one more than v1.10 I guess).
 #define DOOM_191_VERSION 111
 
-static boolean longtics_demo; // if true, demo playing is longtics format
+static bool longtics_demo; // if true, demo playing is longtics format
 
 static char *defdemoname;
 
@@ -955,7 +928,7 @@ static void G_DemoStartMessage(const char *basename)
       C_Printf("Playing demo '%s'\n"
                FC_HI "\tVersion %d.%02d%s\n",
                basename, demo_version / 100, demo_version % 100,
-               demo_version >= 200 && demo_version <= 202 ?
+               demo_version >= 200 && demo_version <= 202 ? 
                   (compatibility ? "; comp=on" : "; comp=off") : "");
    }
    else // Eternity demos
@@ -1032,7 +1005,7 @@ static void G_SetCompatibility(void)
 //
 // More demo-related stuff here, for playing back demos. Will need more
 // version detection to detect the new non-homogeneous demo format.
-// Use of G_ReadOptions also impacts the configuration, netcode,
+// Use of G_ReadOptions also impacts the configuration, netcode, 
 // console, etc. G_ReadOptions and G_WriteOptions are, as indicated in
 // one of Lee's comments, designed to be able to transmit initial
 // variable values during netgame arbitration. I don't know if this
@@ -1048,13 +1021,15 @@ void G_DoPlayDemo(void)
    byte *option_p = NULL;      // killough 11/98
    int lumpnum;
 
+   memset(basename, 0, sizeof(basename));
+  
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
       basetic = gametic;  // killough 9/29/98
-
+      
    M_ExtractFileBase(defdemoname, basename);         // killough
-
+   
    // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = W_CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   if((lumpnum = wGlobalDir.CheckNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
    {
       if(singledemo)
          I_Error("G_DoPlayDemo: no such demo %s\n", basename);
@@ -1067,13 +1042,13 @@ void G_DoPlayDemo(void)
       return;
    }
 
-   demobuffer = demo_p = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC)); // killough
-
+   demobuffer = demo_p = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC)); // killough
+   
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
    // compatibility flag, and other flags as well, as a part of the demo.
-
-   // haleyjd: this is the version for DOOM/BOOM/MBF demos; new demos
+   
+   // haleyjd: this is the version for DOOM/BOOM/MBF demos; new demos 
    // test the signature and then get the new version number after it
    // if the signature matches the eedemosig array declared above.
 
@@ -1108,7 +1083,7 @@ void G_DoPlayDemo(void)
       }
       return;
    }
-
+   
    if(demover < 200)     // Autodetect old demos
    {
       // haleyjd 10/08/06: longtics support
@@ -1121,10 +1096,7 @@ void G_DoPlayDemo(void)
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
       {
-         // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
-         if(!clientserver)
-            comp[comp_terrain]   = 0; // terrain on
-
+         comp[comp_terrain]   = 0; // terrain on
          comp[comp_overunder] = 0; // 3D clipping on
       }
 
@@ -1144,7 +1116,7 @@ void G_DoPlayDemo(void)
       dog_jumping = 0;                  // killough 10/98
 
       monster_backing = 0;              // killough 9/8/98
-
+      
       monster_avoid_hazards = 0;        // killough 9/9/98
 
       monster_friction = 0;             // killough 10/98
@@ -1187,27 +1159,27 @@ void G_DoPlayDemo(void)
       if(demo_version == 255 && !strncmp((const char *)demo_p, eedemosig, 5))
       {
          int temp;
-
+         
          demo_p += 6; // increment past signature
-
+         
          // reconstruct full version number and reset it
          temp  =        *demo_p++;         // byte one
          temp |= ((int)(*demo_p++)) <<  8; // byte two
          temp |= ((int)(*demo_p++)) << 16; // byte three
          temp |= ((int)(*demo_p++)) << 24; // byte four
          demo_version = demover = temp;
-
+         
          // get subversion
          demo_subversion = *demo_p++;
       }
       else
       {
          demo_p += 6; // increment past signature
-
+         
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
-
+      
       compatibility = *demo_p++;       // load old compatibility flag
       skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
@@ -1232,10 +1204,10 @@ void G_DoPlayDemo(void)
       if(full_demo_version >= make_full_version(329, 5))
       {
          int i;
-
+         
          for(i = 0; i < 8; i++)
             gamemapname[i] = *demo_p++;
-
+         
          gamemapname[8] = '\0';
       }
 
@@ -1244,7 +1216,7 @@ void G_DoPlayDemo(void)
          option_p = demo_p;
 
       demo_p = G_ReadOptions(demo_p);  // killough 3/1/98: Read game options
-
+      
       if(demover == 200)        // killough 6/3/98: partially fix v2.00 demos
          demo_p += 256-GAME_OPTION_SIZE;
    }
@@ -1287,7 +1259,7 @@ void G_DoPlayDemo(void)
       // "deathmatch" now holds the game type
       GameType = (gametype_t)deathmatch;
    }
-
+   
    // don't spend a lot of time in loadlevel
 
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
@@ -1295,7 +1267,7 @@ void G_DoPlayDemo(void)
       // killough 2/22/98:
       // Do it anyway for timing demos, to reduce timing noise
       precache = timingdemo;
-
+      
       // haleyjd: choose appropriate G_InitNew based on version
       if(full_demo_version >= make_full_version(329, 5))
          G_InitNew(skill, gamemapname);
@@ -1305,7 +1277,7 @@ void G_DoPlayDemo(void)
       // killough 11/98: If OPTIONS were loaded from the wad in G_InitNew(),
       // reload any demo sync-critical ones from the demo itself, to be exactly
       // the same as during recording.
-
+      
       if(option_p)
          G_ReadOptions(option_p);
    }
@@ -1313,14 +1285,14 @@ void G_DoPlayDemo(void)
    precache = true;
    usergame = false;
    demoplayback = true;
-
+   
    for(i=0; i<MAXPLAYERS;i++)         // killough 4/24/98
       players[i].cheats = 0;
-
+   
    gameaction = ga_nothing;
 
    G_DemoStartMessage(basename);
-
+   
    if(timingdemo)
    {
       static int first = 1;
@@ -1359,7 +1331,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
    {
       cmd->forwardmove = ((signed char)*demo_p++);
       cmd->sidemove    = ((signed char)*demo_p++);
-
+      
       if(longtics_demo) // haleyjd 10/08/06: longtics support
       {
          cmd->angleturn  =  *demo_p++;
@@ -1367,7 +1339,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       }
       else
          cmd->angleturn = ((unsigned char)*demo_p++)<<8;
-
+      
       cmd->buttons = (unsigned char)*demo_p++;
 
       // old Heretic demo?
@@ -1376,7 +1348,7 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
          demo_p++;
          demo_p++;
       }
-
+      
       if(demo_version >= 335)
          cmd->actions = *demo_p++;
       else
@@ -1390,16 +1362,16 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
       else if(demo_version >= 329)
       {
          // haleyjd: 329 and 331 store updownangle, but we can't use
-         // it any longer. Demos recorded with mlook will desync,
+         // it any longer. Demos recorded with mlook will desync, 
          // but ones without can still play with this here.
          ++demo_p;
          cmd->look = 0;
       }
       else
          cmd->look = 0;
-
-      // killough 3/26/98, 10/98: Ignore savegames in demos
-      if(demoplayback &&
+      
+      // killough 3/26/98, 10/98: Ignore savegames in demos 
+      if(demoplayback && 
          cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
       {
          cmd->buttons &= ~BTS_SAVEGAME;
@@ -1426,7 +1398,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
    unsigned int position = demo_p - demobuffer;
    int i = 0;
-
+   
    demo_p[i++] = cmd->forwardmove;
    demo_p[i++] = cmd->sidemove;
 
@@ -1438,7 +1410,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
       demo_p[i++] = (cmd->angleturn >> 8) & 0xff;
    }
    else
-      demo_p[i++] = (cmd->angleturn + 128) >> 8;
+      demo_p[i++] = (cmd->angleturn + 128) >> 8; 
 
    demo_p[i++] =  cmd->buttons;
 
@@ -1450,7 +1422,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
       demo_p[i++] =  cmd->look & 0xff;
       demo_p[i]   = (cmd->look >> 8) & 0xff;
    }
-
+   
    if(position + 16 > maxdemosize)   // killough 8/23/98
    {
       // no more space
@@ -1459,14 +1431,14 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
-
+   
    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
 
-static boolean secretexit;
+static bool secretexit;
 
 // haleyjd: true if a script called exitsecret()
-boolean scriptSecret = false;
+bool scriptSecret = false; 
 
 void G_ExitLevel(void)
 {
@@ -1483,7 +1455,7 @@ void G_ExitLevel(void)
 //
 void G_SecretExitLevel(void)
 {
-   secretexit =
+   secretexit = 
       !(GameModeInfo->flags & GIF_WOLFHACK) || haswolflevels || scriptSecret;
    gameaction = ga_completed;
 }
@@ -1493,12 +1465,9 @@ void G_SecretExitLevel(void)
 //
 // Called when a player completes a level.
 //
-// [CG] Un-static'd
-// static void G_PlayerFinishLevel(int player)
-void G_PlayerFinishLevel(int player)
+static void G_PlayerFinishLevel(int player)
 {
    player_t *p = &players[player];
-
    memset(p->powers, 0, sizeof p->powers);
    memset(p->cards, 0, sizeof p->cards);
    p->mo->flags &= ~MF_SHADOW;     // cancel invisibility
@@ -1545,14 +1514,12 @@ static void G_SetNextMap(void)
 // Called upon level completion. Figures out what map is next and
 // starts the intermission.
 //
-// [CG] Un-static'd.
-// static void G_DoCompleted(void)
-void G_DoCompleted(boolean enter_intermission)
+void G_DoCompleted(bool enter_intermission)
 {
    int i;
-
+   
    gameaction = ga_nothing;
-
+   
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i])
@@ -1561,7 +1528,7 @@ void G_DoCompleted(boolean enter_intermission)
 
    // clear hubs now
    P_ClearHubs();
-
+   
    if(automapactive)
       AM_Stop();
 
@@ -1588,9 +1555,6 @@ void G_DoCompleted(boolean enter_intermission)
    wminfo.epsd = gameepisode - 1;
    wminfo.last = gamemap - 1;
 
-   // set the next gamemap
-   G_SetNextMap();
-
    if(clientserver)
    {
       G_SetGameMap();
@@ -1598,6 +1562,9 @@ void G_DoCompleted(boolean enter_intermission)
    }
    else
    {
+      // set the next gamemap
+      G_SetNextMap();
+
       // haleyjd: override with MapInfo values
       if(!secretexit)
       {
@@ -1637,29 +1604,27 @@ void G_DoCompleted(boolean enter_intermission)
       wminfo.plyr[i].sitems  = players[i].itemcount;
       wminfo.plyr[i].ssecret = players[i].secretcount;
       wminfo.plyr[i].stime   = leveltime;
-      memcpy(
-         wminfo.plyr[i].frags, players[i].frags, sizeof(wminfo.plyr[i].frags)
-      );
+      memcpy(wminfo.plyr[i].frags, players[i].frags,
+             sizeof(wminfo.plyr[i].frags));
    }
-
+  
    automapactive = false;
-
    if(enter_intermission)
    {
       gamestate = GS_INTERMISSION;
+      
       if(statcopy)
          memcpy(statcopy, &wminfo, sizeof(wminfo));
-
+      
       IN_Start(&wminfo);
    }
-
-   if(!enter_intermission)
+   else
+   {
       gamestate = GS_STARTUP;
+   }
 }
 
-// [CG] Un-static'd.
-// static void G_DoWorldDone(void)
-void G_DoWorldDone(void)
+static void G_DoWorldDone(void)
 {
    missioninfo_t *missionInfo = GameModeInfo->missionInfo;
 
@@ -1667,7 +1632,7 @@ void G_DoWorldDone(void)
    gamestate = GS_LOADING;
    gamemap = wminfo.next+1;
 
-   if(!clientserver || GameType == gt_coop || GameType == gt_single)
+   if(!clientserver)
    {
       // haleyjd: handle heretic hidden levels
       if((missionInfo->id == hticsosr && gameepisode == 6 && gamemap == 4) ||
@@ -1729,8 +1694,8 @@ void G_ForceFinale(void)
 {
    // in DOOM 2, we want a cast call
    if(GameModeInfo->flags & GIF_SETENDOFGAME)
-      LevelInfo.endOfGame = true;
-
+      LevelInfo.endOfGame = true;   
+   
    if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
       LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
@@ -1751,8 +1716,8 @@ static char *savename;
 // killough 5/15/98: add forced loadgames, which allow user to override checks
 //
 
-boolean forced_loadgame = false;
-boolean command_loadgame = false;
+bool forced_loadgame = false;
+bool command_loadgame = false;
 
 void G_ForcedLoadGame(void)
 {
@@ -1763,7 +1728,7 @@ void G_ForcedLoadGame(void)
 // killough 3/16/98: add slot info
 // killough 5/15/98: add command-line
 
-void G_LoadGame(char *name, int slot, boolean command)
+void G_LoadGame(char *name, int slot, bool command)
 {
    if(savename)
       free(savename);
@@ -1814,7 +1779,7 @@ void CheckSaveGame(size_t size)
 {
    size_t pos = save_p - savebuffer;
    size += 1024;  // breathing room
-
+   
    if(pos + size > savegamesize)
    {
       // haleyjd: deobfuscated
@@ -1835,11 +1800,11 @@ void G_SaveGameName(char *name, size_t len, int slot)
 
 #ifdef EE_CDROM_SUPPORT
    if(cdrom_mode)
-      psnprintf(name, len, "c:/doomdata/%.7s%d.dsg",
+      psnprintf(name, len, "c:/doomdata/%.7s%d.dsg", 
                 savegamename, slot);
    else
 #endif
-      psnprintf(name, len, "%s/%.7s%d.dsg",
+      psnprintf(name, len, "%s/%.7s%d.dsg", 
                 basesavegame, savegamename, slot);
 }
 
@@ -1853,23 +1818,23 @@ void G_SaveGameName(char *name, size_t len, int slot)
 //
 // killough 12/98: use faster algorithm which has less IO
 //
-uint64_t G_Signature(waddir_t *dir)
+uint64_t G_Signature(WadDirectory *dir)
 {
    uint64_t s = 0;
    int lump, i;
-
+   
    // sf: use gamemapname now, not gameepisode and gamemap
-   lump = W_CheckNumForNameInDir(dir, gamemapname, lumpinfo_t::ns_global);
-
-   if(lump != -1 && (i = lump + 10) < dir->numlumps)
+   lump = dir->CheckNumForName(gamemapname);
+   
+   if(lump != -1 && (i = lump + 10) < dir->GetNumLumps())
    {
       do
       {
-         s = s * 2 + W_LumpLengthInDir(dir, i);
+         s = s * 2 + dir->LumpLength(i);
       }
       while(--i > lump);
    }
-
+   
    return s;
 }
 
@@ -1880,16 +1845,16 @@ static void G_DoSaveGame(void)
 {
    char *name = NULL;
    size_t len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-
+   
    G_SaveGameName(name, len, savegameslot);
-
+   
    P_SaveCurrentLevel(name, savedescription);
-
+   
    gameaction = ga_nothing;
    savedescription[0] = 0;
 }
 
-waddir_t *d_dir;
+WadDirectory *d_dir;
 
 static void G_DoLoadGame(void)
 {
@@ -1913,7 +1878,7 @@ static void G_CameraTicker(void)
    else if(camera == &followcam)
       P_FollowCamTicker();
 
-   // cooldemo countdown
+   // cooldemo countdown   
    if(demoplayback && cooldemo)
    {
       // force refresh on death of displayed player
@@ -1935,22 +1900,22 @@ static void G_CameraTicker(void)
 void G_Ticker(void)
 {
    int i;
-   mapthing_t *spawn_point;
-   ticcmd_t *cmd;
 
    // do player reborns if needed
    // [CG] Do things slightly different in c/s.
-   for(i = 0; i < MAXPLAYERS; i++)
+   if(serverside)
    {
-      if(playeringame[i] && players[i].playerstate == PST_REBORN)
+      for(i = 0; i < MAXPLAYERS; i++)
       {
-         if(!clientserver)
-            G_DoReborn(i);
-
-         if(CS_SERVER)
+         if(playeringame[i] && players[i].playerstate == PST_REBORN)
          {
-            spawn_point = CS_SpawnPlayerCorrectly(i, clients[i].spectating);
-            SV_BroadcastPlayerSpawned(spawn_point, i);
+            if(CS_SERVER)
+            {
+               mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(i, clients[i].spectating);
+               SV_BroadcastPlayerSpawned(spawn_point, i);
+            }
+            else
+               G_DoReborn(i);
          }
       }
    }
@@ -1976,15 +1941,14 @@ void G_Ticker(void)
          G_DoPlayDemo();
          break;
       case ga_completed:
-         // [CG] Only servers do this here.
          if(serverside)
          {
             if(CS_SERVER)
             {
                SV_AdvanceMapList();
                SV_BroadcastMapCompleted(true);
+               G_SetGameMapName(cs_maps[cs_current_map_number].name);
             }
-            G_SetGameMapName(cs_maps[cs_current_map_number].name);
             G_DoCompleted(true);
          }
          else
@@ -2001,12 +1965,6 @@ void G_Ticker(void)
             CS_DoWorldDone();
          else
             G_DoWorldDone();
-         break;
-      case ga_disconnect:
-         if(CS_CLIENT)
-            CL_Disconnect();
-         else if(CS_SERVER)
-            I_Error("Disconnected.\n");
          break;
       case ga_screenshot:
          M_ScreenShot();
@@ -2029,7 +1987,7 @@ void G_Ticker(void)
 
    // killough 10/6/98: allow games to be saved during demo
    // playback, by the playback user (not by demo itself)
-
+   
    if (demoplayback && sendsave)
    {
       sendsave = false;
@@ -2048,77 +2006,74 @@ void G_Ticker(void)
    // [CG] Added !clientserver, because you can't pause a c/s game even
    //      by activating the menu or console.
 
-   if((paused & 2) || (
-      !demoplayback &&
-      (menuactive || consoleactive) &&
-      !netgame &&
-      !clientserver))
+   if((paused & 2) || (!demoplayback && (menuactive || consoleactive) && !netgame && !clientserver))
    {
       basetic++;  // For revenant tracers and RNG -- we must maintain sync
    }
    else
    {
-      // get commands, check consistancy, and build new consistancy check
+      // get commands, check consistency, and build new consistancy check
       int buf = (gametic / ticdup) % BACKUPTICS;
-
+      
       // [CG] None of this stuff really applies in c/s.
       if(!clientserver)
       {
-         for(i = 0; i < MAXPLAYERS; i++)
+         for(i=0; i<MAXPLAYERS; i++)
          {
             if(playeringame[i])
             {
-               cmd = &players[i].cmd;
+               ticcmd_t *cmd = &players[i].cmd;
                playerclass_t *pc = players[i].pclass;
-
+               
                memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
-
+               
                if(demoplayback)
                   G_ReadDemoTiccmd(cmd);
-
+               
                if(demorecording)
                   G_WriteDemoTiccmd(cmd);
-
+               
                /*
                if(isconsoletic && netgame)
                   continue;
                */
-
+               
                // check for turbo cheats
                // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
-
-               if((netgame || demoplayback) &&
+               
+               if((netgame || demoplayback) && 
                   cmd->forwardmove > TURBOTHRESHOLD &&
-                  !(gametic & 31) && ((gametic >> 5) & 3) == i)
+                  !(gametic&31) && ((gametic>>5)&3) == i)
                {
                   doom_printf("%s is turbo!", players[i].name); // killough 9/29/98
                }
-
-               if(netgame && /*!isconsoletic &&*/ !netdemo &&
+               
+               if(netgame && /*!isconsoletic &&*/ !netdemo && 
                   !(gametic % ticdup))
                {
-                  if(gametic > BACKUPTICS &&
-                     consistancy[i][buf] != cmd->consistancy)
+                  if(gametic > BACKUPTICS && 
+                     consistency[i][buf] != cmd->consistency)
                   {
                      D_QuitNetGame();
                      C_Printf(FC_ERROR "consistency failure");
                      C_Printf(FC_ERROR "(%i should be %i)",
-                                 cmd->consistancy, consistancy[i][buf]);
+                                 cmd->consistency, consistency[i][buf]);
                   }
-
+                  
                   // sf: include y as well as x
                   if(players[i].mo)
-                     consistancy[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
+                     consistency[i][buf] = (int16_t)(players[i].mo->x + players[i].mo->y);
                   else
-                     consistancy[i][buf] = 0; // killough 2/14/98
+                     consistency[i][buf] = 0; // killough 2/14/98
                }
             }
          }
-
+      
          // check for special buttons
-         for(i = 0; i < MAXPLAYERS; i++)
+         for(i=0; i<MAXPLAYERS; i++)
          {
-            if(playeringame[i] && players[i].cmd.buttons & BT_SPECIAL)
+            if(playeringame[i] && 
+               players[i].cmd.buttons & BT_SPECIAL)
             {
                // killough 9/29/98: allow multiple special buttons
                if(players[i].cmd.buttons & BTS_PAUSE)
@@ -2128,7 +2083,7 @@ void G_Ticker(void)
                   else
                      S_ResumeSound();
                }
-
+               
                if(players[i].cmd.buttons & BTS_SAVEGAME)
                {
                   if(!savedescription[0])
@@ -2142,11 +2097,10 @@ void G_Ticker(void)
       }
       else
       {
-         cmd = &players[consoleplayer].cmd;
+         ticcmd_t *cmd = &players[consoleplayer].cmd;
+
          if(serverside)
-         {
             cmd->buttons = 0; // [CG] Servers never press any buttons.
-         }
          else if(clients[consoleplayer].spectating)
          {
             // [CG] Spectators can only press the USE button.
@@ -2159,10 +2113,10 @@ void G_Ticker(void)
    }
 
    // do main actions
-
+   
    // killough 9/29/98: split up switch statement
    // into pauseable and unpauseable parts.
-
+   
    // call other tickers
    C_NetTicker();        // sf: console network commands
    if(inwipe)
@@ -2172,14 +2126,14 @@ void G_Ticker(void)
    // haleyjd 03/15/03: execute scheduled Small callbacks
    SM_ExecuteCallbacks();
 #endif
-
+   
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
-      CS_CTFTicker();
+      CS_CTFTicker(); // [CG] TODO: A more extensible way of adding tickers.
       G_CameraTicker(); // haleyjd: move cameras
-      ST_Ticker();
-      AM_Ticker();
+      ST_Ticker(); 
+      AM_Ticker(); 
       HU_Ticker();
    }
    else if(!(paused & 2)) // haleyjd: refactored
@@ -2226,7 +2180,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
 
-   memcpy(frags, players[player].frags, sizeof(int) * MAXPLAYERS);
+   memcpy (frags, players[player].frags, sizeof frags);
    killcount = players[player].killcount;
    itemcount = players[player].itemcount;
    secretcount = players[player].secretcount;
@@ -2235,7 +2189,7 @@ void G_PlayerReborn(int player)
    totalfrags = players[player].totalfrags;
    playerskin = players[player].skin;
    playerclass = players[player].pclass; // haleyjd: playerclass
-
+   
    p = &players[player];
 
    // killough 3/10/98,3/21/98: preserve cheats across idclev
@@ -2245,7 +2199,7 @@ void G_PlayerReborn(int player)
       p->cheats = cheats;
    }
 
-   memcpy(players[player].frags, frags, sizeof(int) * MAXPLAYERS);
+   memcpy(players[player].frags, frags, sizeof(players[player].frags));
    players[player].colormap = playercolour;
    strcpy(players[player].name, playername);
    players[player].killcount = killcount;
@@ -2254,7 +2208,7 @@ void G_PlayerReborn(int player)
    players[player].totalfrags = totalfrags;
    players[player].skin = playerskin;
    players[player].pclass = playerclass; // haleyjd: playerclass
-
+   
    p->usedown = p->attackdown = true;  // don't do anything immediately
    p->playerstate = PST_LIVE;
    p->health = initial_health;  // Ty 03/12/98 - use dehacked values
@@ -2267,16 +2221,16 @@ void G_PlayerReborn(int player)
    // WEAPON_FIXME: revive "weaponowned" feature?
    // sf: different weapons owned
    memcpy(p->weaponowned, default_weaponowned, sizeof(p->weaponowned));
-
+   
    // WEAPON_FIXME: always owned weapons
    // PCLASS_FIXME: always owned weapons
    p->weaponowned[wp_fist] = true;     // always fist and pistol
    p->weaponowned[wp_pistol] = true;
-
+   
    // WEAPON_FIXME: default ammo stuff
    // PCLASS_FIXME: default ammo stuff
    p->ammo[am_clip] = initial_bullets; // Ty 03/12/98 - use dehacked values
-
+   
    for(i = 0; i < NUMAMMO; i++)
       p->maxammo[i] = maxammo[i];
 }
@@ -2286,14 +2240,14 @@ void P_SpawnPlayer(mapthing_t *mthing);
 // [CG] Broke out of G_CheckSpot.
 void G_FlushCorpse(int playernum)
 {
+   static Mobj **bodyque = NULL;
+   static size_t queuesize;
+
    // flush an old corpse if needed
    // killough 2/8/98: make corpse queue have an adjustable limit
    // killough 8/1/98: Fix bugs causing strange crashes
    if(bodyquesize > 0)
    {
-      static Mobj **bodyque;
-      static size_t queuesize;
-
       if(queuesize < (unsigned int)bodyquesize)
       {
          bodyque = (Mobj **)(realloc(bodyque, bodyquesize*sizeof*bodyque));
@@ -2301,26 +2255,26 @@ void G_FlushCorpse(int playernum)
                 (bodyquesize-queuesize)*sizeof*bodyque);
          queuesize = bodyquesize;
       }
-
-      if(bodyqueslot >= bodyquesize)
+      
+      if(bodyqueslot >= bodyquesize) 
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(bodyque[bodyqueslot % bodyquesize]);
          bodyque[bodyqueslot % bodyquesize]->removeThinker();
       }
-
-      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo;
-   }
+      
+      bodyque[bodyqueslot++ % bodyquesize] = players[playernum].mo; 
+   } 
    else if(!bodyquesize)
    {
       if(CS_SERVER)
-         SV_BroadcastActorRemoved(players[playernum].mo);
+         SV_BroadcastActorRemoved(bodyque[bodyqueslot % bodyquesize]);
       players[playernum].mo->removeThinker();
    }
 }
 
 // [CG] Broke out of G_CheckSpot.
-mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
+Mobj* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
 {
    fixed_t mtcos, mtsin;
    subsector_t *ss;
@@ -2352,8 +2306,8 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
    else
    {
       // emulate out-of-bounds access to finecosine / finesine tables
-      mtangle = (angle_t)(angle / 45);
-
+      angle_t mtangle = (angle_t)(angle / 45);
+      
       an = ANG45 * mtangle;
 
       switch(mtangle)
@@ -2381,12 +2335,11 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
       }
    }
 
-   return P_SpawnMobj(
-      x + 20 * mtcos,
-      y + 20 * mtsin,
-      ss->sector->floorheight + GameModeInfo->teleFogHeight,
-      GameModeInfo->teleFogType
-   );
+   return P_SpawnMobj(x + 20 * mtcos, 
+                      y + 20 * mtsin,
+                      ss->sector->floorheight + 
+                         GameModeInfo->teleFogHeight, 
+                      GameModeInfo->teleFogType);
 }
 
 //
@@ -2396,7 +2349,7 @@ mobj_t* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
 // at the given mapthing_t spot
 // because something is occupying it
 //
-static boolean G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
+static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 {
    fixed_t     x, y;
    Mobj      *mo;
@@ -2436,6 +2389,14 @@ static boolean G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // [CG] Broke out into G_SpawnFog.
    mo = G_SpawnFog(x, y, mthing->angle);
 
+   // haleyjd: There was a hack here trying to avoid playing the sound on the
+   // "first frame"; but if this is done, then you miss your own spawn sound
+   // quite often, due to the fact your sound origin hasn't been moved yet.
+   // So instead, I'll return the fog in *fog and play the sound at the caller.
+   if(fog)
+      *fog = mo;
+
+   return true;
 }
 
 //
@@ -2459,7 +2420,7 @@ int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
    {
       fixed_t dist = P_AproxDistance(x - deathmatchstarts[j].x * FRACUNIT,
                                      y - deathmatchstarts[j].y * FRACUNIT);
-
+      
       if(dist < closestdist && j != notspot)
       {
          closestdist = dist;
@@ -2483,11 +2444,14 @@ void G_DeathMatchSpawnPlayer(int playernum)
    int j, selections = deathmatch_p - deathmatchstarts;
    Mobj *fog = NULL;
 
+   if(!serverside)
+      return;
+   
    if(selections < VANILLA_MAXPLAYERS)
    {
       static char errormsg[64];
-      psnprintf(errormsg, sizeof(errormsg),
-                "Only %d deathmatch spots, %d required",
+      psnprintf(errormsg, sizeof(errormsg), 
+                "Only %d deathmatch spots, %d required", 
                 selections, VANILLA_MAXPLAYERS);
       level_error = errormsg;
       return;
@@ -2496,7 +2460,7 @@ void G_DeathMatchSpawnPlayer(int playernum)
    for(j = 0; j < 20; j++)
    {
       int i = P_Random(pr_dmspawn) % selections;
-
+      
       if(G_CheckSpot(playernum, &deathmatchstarts[i], &fog))
       {
          deathmatchstarts[i].type = playernum + 1;
@@ -2530,23 +2494,17 @@ void G_DoReborn(int playernum)
    {                               // respawn at the start
       int i;
       Mobj *fog = NULL;
-
+      
       // first dissasociate the corpse
-      if(players[playernum].mo != NULL)
-         players[playernum].mo->player = NULL;
+      players[playernum].mo->player = NULL;
 
-      // [CG] If we're a c/s client, don't do anything.  On the other
-      //      hand, c/s servers need to use slightly different logic
-      //      when determining where to spawn a player.
-      if(CS_CLIENT)
-         return;
-
+      // [CG] C/S servers use slightly different logic when determining where
+      //      to spawn a player.
       if(CS_SERVER)
       {
          mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(
             playernum, clients[playernum].spectating
          );
-
          SV_BroadcastPlayerSpawned(spawn_point, playernum);
          return;
       }
@@ -2555,7 +2513,7 @@ void G_DoReborn(int playernum)
       if(GameType == gt_dm)
       {
          G_DeathMatchSpawnPlayer(playernum);
-
+         
          // haleyjd: G_DeathMatchSpawnPlayer may set level_error
          if(level_error)
          {
@@ -2609,7 +2567,7 @@ int pars[4][10] =
 };
 
 // DOOM II Par Times
-int cpars[34] =
+int cpars[34] = 
 {
    30,90,120,120,90,150,120,120,270,90,  //  1-10
    210,150,150,150,210,150,420,150,210,150,  // 11-20
@@ -2632,10 +2590,10 @@ void G_WorldDone(void)
 
    if(secretexit)
       players[consoleplayer].didsecret = true;
-
-   // [CG] Don't do the finale thing if we're in c/s mode.
+   
+   // [CG] No finales in c/s.
    if(!clientserver && (LevelInfo.interText && !LevelInfo.killFinale &&
-                        (!LevelInfo.finaleSecretOnly || secretexit)))
+      (!LevelInfo.finaleSecretOnly || secretexit)))
    {
       F_StartFinale();
    }
@@ -2655,10 +2613,10 @@ int G_GetMapForName(const char *name)
    strncpy(normName, name, 9);
 
    M_Strupr(normName);
-
+   
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      map = isMAPxy(normName) ?
+      map = isMAPxy(normName) ? 
          10 * (normName[3]-'0') + (normName[4]-'0') : 0;
       return map;
    }
@@ -2705,7 +2663,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 {
    strncpy(d_mapname, levelname, 8);
    d_map = G_GetMapForName(levelname);
-
+   
    if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       d_episode = d_map / 10;
@@ -2713,13 +2671,13 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
    }
    else
       d_episode = 1;
-
+   
    d_skill = skill;
 
    // haleyjd 06/16/10: default to NULL
    d_dir = NULL;
    inmasterlevels = false;
-
+   
    gameaction = ga_newgame;
 }
 
@@ -2729,7 +2687,7 @@ void G_DeferedInitNew(skill_t skill, const char *levelname)
 // haleyjd 06/16/10: Calls G_DeferedInitNew and sets d_dir to the provided wad
 // directory, for use when loading the level.
 //
-void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir)
+void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir)
 {
    G_DeferedInitNew(skill, levelname);
    d_dir = dir;
@@ -2739,7 +2697,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, waddir_t *dir
 static int G_GetHelpers(void)
 {
    int j = M_CheckParm ("-dog");
-
+   
    if(!j)
       j = M_CheckParm ("-dogs");
 
@@ -2754,8 +2712,8 @@ void G_ReloadDefaults(void)
    // killough 3/1/98: Initialize options based on config file
    // (allows functions above to load different values for demos
    // and savegames without messing up defaults).
-
-   // [CG] These things are taken care of elsewhere in c/s.
+   
+   // [CG] These things are handled elsewhere in c/s.
    if(clientserver)
    {
       CS_ReloadDefaults();
@@ -2763,70 +2721,70 @@ void G_ReloadDefaults(void)
    }
 
    weapon_recoil = default_weapon_recoil;    // weapon recoil
-
+   
    player_bobbing = default_player_bobbing;  // haleyjd: readded
-
+   
    variable_friction = allow_pushers = true;
-
+   
    monsters_remember = default_monsters_remember;   // remember former enemies
-
+   
    monster_infighting = default_monster_infighting; // killough 7/19/98
-
+   
    // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
    if(GameType == gt_single) // haleyjd 04/10/03
       dogs = G_GetHelpers();
    else
       dogs = 0;
-
+   
    dog_jumping = default_dog_jumping;
-
+   
    distfriend = default_distfriend;                 // killough 8/8/98
-
+   
    monster_backing = default_monster_backing;     // killough 9/8/98
-
+   
    monster_avoid_hazards = default_monster_avoid_hazards; // killough 9/9/98
-
+   
    monster_friction = default_monster_friction;     // killough 10/98
-
+   
    help_friends = default_help_friends;             // killough 9/9/98
-
+   
    autoaim = default_autoaim;
-
+   
    allowmlook = default_allowmlook;
-
+   
    monkeys = default_monkeys;
-
+   
    bfgtype = default_bfgtype;               // killough 7/19/98
-
+   
    // jff 1/24/98 reset play mode to command line spec'd version
    // killough 3/1/98: moved to here
    respawnparm = clrespawnparm;
    fastparm = clfastparm;
    nomonsters = clnomonsters;
-
+   
    //jff 3/24/98 set startskill from defaultskill in config file, unless
    // it has already been set by a -skill parameter
    if(startskill == sk_none)
       startskill = (skill_t)(defaultskill - 1);
-
+   
    demoplayback = false;
    singledemo = false; // haleyjd: restore from MBF
    netdemo = false;
-
+   
    // killough 2/21/98:
    memset(playeringame+1, 0, sizeof(*playeringame)*(MAXPLAYERS-1));
-
+   
    consoleplayer = 0;
-
+   
    compatibility = false;     // killough 10/98: replaced by comp[] vector
    memcpy(comp, default_comp, sizeof comp);
-
+   
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01
-
+   
    // killough 3/31/98, 4/5/98: demo sync insurance
    demo_insurance = default_demo_insurance == 1;
-
+   
    G_ScrambleRand();
 }
 
@@ -2844,12 +2802,12 @@ void G_DoNewGame (void)
    //G_StopDemo();
    G_ReloadDefaults();            // killough 3/1/98
    P_ClearHubs();                 // sf: clear hubs when starting new game
-
+   
    netgame  = false;              // killough 3/29/98
    GameType = DefaultGameType;    // haleyjd  4/10/03
    dmflags  = default_dmflags;    // haleyjd  4/15/03
    basetic  = gametic;            // killough 9/29/98
-
+   
    G_InitNew(d_skill, d_mapname);
    gameaction = ga_nothing;
 }
@@ -2915,7 +2873,9 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
    mobjinfo_t *mi = &mobjinfo[thingtype];
 
    if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
+   {
       static_cast<MetaSpeedSet *>(o)->setSpeeds(nspeed, fspeed);
+   }
    else
       mi->meta->addObject(new MetaSpeedSet(thingtype, nspeed, fspeed));
 }
@@ -2933,7 +2893,7 @@ void G_SetFastParms(int fast_pending)
    // EDF FIXME: demon frame speedup difficult to generalize
    int demonRun1  = E_SafeState(S_SARG_RUN1);
    int demonPain2 = E_SafeState(S_SARG_PAIN2);
-
+   
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
@@ -2943,7 +2903,7 @@ void G_SetFastParms(int fast_pending)
             // killough 4/10/98
             // don't change 1->0 since it causes cycles
             if(states[i]->tics != 1 || demo_compatibility)
-               states[i]->tics >>= 1;
+               states[i]->tics >>= 1;  
          }
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
@@ -2951,8 +2911,7 @@ void G_SetFastParms(int fast_pending)
             MetaTable *meta = mobjinfo[i].meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed =
-                  static_cast<MetaSpeedSet *>(o)->getFastSpeed();
+               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
          }
       }
@@ -2966,8 +2925,7 @@ void G_SetFastParms(int fast_pending)
             MetaTable *meta = mobjinfo[i].meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed =
-                  static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
+               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
          }
       }
@@ -3002,16 +2960,16 @@ void G_InitNew(skill_t skill, char *name)
    }
 
    hub_changelevel = false;  // sf
-
+   
    if(skill > sk_nightmare)
       skill = sk_nightmare;
 
    G_SetFastParms(fastparm || skill == sk_nightmare);  // killough 4/10/98
 
    M_ClearRandom();
-
-   respawnmonsters =
-      (GameModeInfo->flags & GIF_SKILL5RESPAWN && skill == sk_nightmare)
+   
+   respawnmonsters = 
+      (GameModeInfo->flags & GIF_SKILL5RESPAWN && skill == sk_nightmare) 
       || respawnparm;
 
    // [CG] Omit this for c/s.
@@ -3033,29 +2991,29 @@ void G_InitNew(skill_t skill, char *name)
    }
 
    demoplayback = false;
-
+   
    //G_StopDemo();
-
+   
    automapactive = false;
    gameskill = skill;
 
    G_SetGameMapName(name);
 
    G_SetGameMap();  // sf
-
+  
    //jff 4/16/98 force marks on automap cleared every new level start
    AM_clearMarks();
 
    if(demo_version >= 203)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
-
+  
    //G_StopDemo();
 
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
-   g_dir = d_dir ? d_dir : &w_GlobalDir;
+   g_dir = d_dir ? d_dir : &wGlobalDir;
    d_dir = NULL;
-
+   
    G_DoLoadLevel();
 }
 
@@ -3068,9 +3026,9 @@ void G_InitNew(skill_t skill, char *name)
 void G_RecordDemo(char *name)
 {
    int i;
-
+   
    demo_insurance = (default_demo_insurance != 0); // killough 12/98
-
+   
    usergame = false;
 
    if(demoname)
@@ -3078,17 +3036,17 @@ void G_RecordDemo(char *name)
    demoname = (char *)(malloc(strlen(name) + 8));
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
-
+   
    i = M_CheckParm("-maxdemo");
-
+   
    if(i && i<myargc-1)
       maxdemosize = atoi(myargv[i+1]) * 1024;
-
+   
    if(maxdemosize < 0x20000)  // killough
       maxdemosize = 0x20000;
-
+   
    demobuffer = (byte *)(malloc(maxdemosize)); // killough
-
+   
    demorecording = true;
 }
 
@@ -3109,69 +3067,69 @@ void G_RecordDemo(char *name)
 byte *G_WriteOptions(byte *demoptr)
 {
    byte *target = demoptr + GAME_OPTION_SIZE;
-
+   
    *demoptr++ = monsters_remember;  // part of monster AI -- byte 1
-
+   
    *demoptr++ = variable_friction;  // ice & mud -- byte 2
-
+   
    *demoptr++ = weapon_recoil;      // weapon recoil -- byte 3
-
+   
    *demoptr++ = allow_pushers;      // PUSH Things -- byte 4
-
+   
    *demoptr++ = 0;                  // ??? unused -- byte 5
-
+   
    *demoptr++ = player_bobbing;     // whether player bobs or not -- byte 6
-
+   
    // killough 3/6/98: add parameters to savegame, move around some in demos
    *demoptr++ = respawnparm; // byte 7
    *demoptr++ = fastparm;    // byte 8
    *demoptr++ = nomonsters;  // byte 9
-
+   
    *demoptr++ = demo_insurance;        // killough 3/31/98 -- byte 10
-
+   
    // killough 3/26/98: Added rngseed. 3/31/98: moved here
    *demoptr++ = (byte)((rngseed >> 24) & 0xff); // byte 11
    *demoptr++ = (byte)((rngseed >> 16) & 0xff); // byte 12
    *demoptr++ = (byte)((rngseed >>  8) & 0xff); // byte 13
    *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
-
+   
    // Options new to v2.03 begin here
    *demoptr++ = monster_infighting;   // killough 7/19/98 -- byte 15
-
+   
    *demoptr++ = dogs;                 // killough 7/19/98 -- byte 16
-
+   
    *demoptr++ = bfgtype;              // killough 7/19/98 -- byte 17
-
+   
    *demoptr++ = 0;                    // unused - (beta mode) -- byte 18
-
-   *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19
+   
+   *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
    *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
-
+   
    *demoptr++ = monster_backing;           // killough 9/8/98 -- byte 21
-
+   
    *demoptr++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
-
+   
    *demoptr++ = monster_friction;          // killough 10/98  -- byte 23
-
+   
    *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
-
+   
    *demoptr++ = dog_jumping; // byte 25
-
+   
    *demoptr++ = monkeys;     // byte 26
-
+   
    {   // killough 10/98: a compatibility vector now
       int i;
       for(i = 0; i < COMP_TOTAL; i++)
          *demoptr++ = comp[i] != 0;
    }
    // bytes 27 - 58 : comp
-
+   
    // haleyjd 05/23/04: autoaim is sync critical
    *demoptr++ = autoaim; // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
    *demoptr++ = allowmlook; // byte 60
-
+   
    // CURRENT BYTES LEFT: 3
 
    //----------------
@@ -3179,10 +3137,10 @@ byte *G_WriteOptions(byte *demoptr)
    //----------------
    while(demoptr < target)
       *demoptr++ = 0;
-
+   
    if(demoptr != target)
       I_Error("G_WriteOptions: GAME_OPTION_SIZE is too small\n");
-
+   
    return target;
 }
 
@@ -3230,27 +3188,27 @@ byte *G_ReadOptions(byte *demoptr)
    if(demo_version >= 203)
    {
       monster_infighting = *demoptr++;   // killough 7/19/98
-
+      
       dogs = *demoptr++;                 // killough 7/19/98
-
+      
       bfgtype = (bfg_t)(*demoptr++);     // killough 7/19/98
       demoptr++;                         // sf: where beta was
-
+      
       distfriend = *demoptr++ << 8;      // killough 8/8/98
       distfriend+= *demoptr++;
-
+      
       monster_backing = *demoptr++;      // killough 9/8/98
-
+      
       monster_avoid_hazards = *demoptr++; // killough 9/9/98
-
+      
       monster_friction = *demoptr++;     // killough 10/98
-
+      
       help_friends = *demoptr++;         // killough 9/9/98
-
+      
       dog_jumping = *demoptr++;          // killough 10/98
-
+      
       monkeys = *demoptr++;
-
+      
       {   // killough 10/98: a compatibility vector now
          int i;
          for(i = 0; i < COMP_TOTAL; ++i)
@@ -3258,7 +3216,7 @@ byte *G_ReadOptions(byte *demoptr)
       }
 
       G_SetCompatibility();
-
+     
       // Options new to v2.04, etc.
 
       // haleyjd 05/23/04: autoaim is sync-critical
@@ -3278,30 +3236,30 @@ byte *G_ReadOptions(byte *demoptr)
          comp[i] = compatibility;
 
       G_SetCompatibility();
-
+      
       monster_infighting = 1;           // killough 7/19/98
-
+      
       monster_backing = 0;              // killough 9/8/98
-
+      
       monster_avoid_hazards = 0;        // killough 9/9/98
-
+      
       monster_friction = 0;             // killough 10/98
-
+      
       help_friends = 0;                 // killough 9/9/98
-
+      
       bfgtype = bfg_normal;             // killough 7/19/98
-
+      
       dogs = 0;                         // killough 7/19/98
       dog_jumping = 0;                  // killough 10/98
       monkeys = 0;
-
+      
       default_autoaim = autoaim;
       autoaim = 1;
 
       default_allowmlook = allowmlook;
       allowmlook = 0;
    }
-
+  
    return target;
 }
 
@@ -3310,15 +3268,26 @@ byte *G_ReadOptions(byte *demoptr)
 //
 // haleyjd 02/21/10: Configure everything to run for an old demo.
 //
-static void G_SetOldDemoOptions(void)
+void G_SetOldDemoOptions(void)
 {
    int i;
+
+   // support -longtics when recording vanilla format demos
+   longtics_demo = (M_CheckParm("-longtics") != 0);
+
+   // set demo version appropriately
+   if(longtics_demo)
+      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
+   else
+      demo_version = 109;              // v1.9
+
+   demo_subversion = 0;
 
    compatibility = 1;
 
    for(i = 0; i < COMP_TOTAL; ++i)
       comp[i] = 1;
-
+      
    monsters_remember     = 0;
    variable_friction     = 0;
    weapon_recoil         = 0;
@@ -3349,22 +3318,12 @@ static void G_BeginRecordingOld(void)
 {
    int i;
 
-   // support -longtics when recording vanilla format demos
-   longtics_demo = (M_CheckParm("-longtics") != 0);
-
-   // set demo version appropriately
-   if(longtics_demo)
-      demo_version = DOOM_191_VERSION; // v1.91 (unofficial patch)
-   else
-      demo_version = 109;              // v1.9
-
-   demo_subversion = 0;
-
+   // haleyjd 01/16/11: set again to ensure consistency
    G_SetOldDemoOptions();
 
    demo_p = demobuffer;
 
-   *demo_p++ = demo_version;
+   *demo_p++ = demo_version;    
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;
    *demo_p++ = gamemap;
@@ -3373,8 +3332,6 @@ static void G_BeginRecordingOld(void)
    *demo_p++ = fastparm;
    *demo_p++ = nomonsters;
    *demo_p++ = consoleplayer;
-   // [CG] I suppose this should always be VANILLA_MAXPLAYERS here.
-   // for(i = 0; i < MAXPLAYERS; ++i)
    for(i = 0; i < VANILLA_MAXPLAYERS; ++i)
       *demo_p++ = playeringame[i];
 }
@@ -3408,17 +3365,17 @@ void G_BeginRecording(void)
       G_BeginRecordingOld();
       return;
    }
-
+   
    demo_p = demobuffer;
 
    longtics_demo = true;
-
+   
    //*demo_p++ = version;
    // haleyjd 06/17/01: always write 255 for Eternity-format demos,
    // since VERSION is now > 255 -- version setting is now handled
    // immediately after the new signature below.
    *demo_p++ = 255;
-
+   
    // signature -- haleyjd: updated to use new Eternity signature
    *demo_p++ = eedemosig[0]; //0x1d;
    *demo_p++ = eedemosig[1]; //'M';
@@ -3426,22 +3383,22 @@ void G_BeginRecording(void)
    *demo_p++ = eedemosig[3]; //'F';
    *demo_p++ = eedemosig[4]; //0xe6;
    *demo_p++ = '\0';
-
+   
    // haleyjd: write appropriate version and subversion numbers
    // write the WHOLE version number :P
    *demo_p++ =  version & 255;
    *demo_p++ = (version >> 8 ) & 255;
    *demo_p++ = (version >> 16) & 255;
    *demo_p++ = (version >> 24) & 255;
-
+   
    *demo_p++ = subversion; // always ranges from 0 to 255
-
+   
    // killough 2/22/98: save compatibility flag in new demos
    *demo_p++ = compatibility;       // killough 2/22/98
-
+   
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01
-
+   
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;
    *demo_p++ = gamemap;
@@ -3453,21 +3410,21 @@ void G_BeginRecording(void)
    *demo_p++ = (unsigned char)((dmflags >> 8 ) & 255);
    *demo_p++ = (unsigned char)((dmflags >> 16) & 255);
    *demo_p++ = (unsigned char)((dmflags >> 24) & 255);
-
+   
    // haleyjd 12/14/01: write gamemapname in new demos -- this will
    // enable demos to be recorded for arbitrarily-named levels
    for(i = 0; i < 8; i++)
       *demo_p++ = gamemapname[i];
-
+   
    demo_p = G_WriteOptions(demo_p); // killough 3/1/98: Save game options
-
+   
    for(i = 0; i < MAXPLAYERS; i++)
       *demo_p++ = playeringame[i];
-
+   
    // killough 2/28/98:
    // We always store at least MIN_MAXPLAYERS bytes in demo, to
    // support enhancements later w/o losing demo compatibility
-
+   
    for(; i < MIN_MAXPLAYERS; i++)
       *demo_p++ = 0;
 }
@@ -3487,7 +3444,7 @@ void G_DeferedPlayDemo(const char *name)
 //
 // G_TimeDemo - sf
 //
-void G_TimeDemo(const char *name, boolean showmenu)
+void G_TimeDemo(const char *name, bool showmenu)
 {
    // haleyjd 10/19/01: hoo boy this had problems
    // It was using a variable called "name" from who knows where --
@@ -3495,22 +3452,22 @@ void G_TimeDemo(const char *name, boolean showmenu)
    // that was in scope for this function -- now name is a
    // parameter, not s. I've also made some other adjustments.
 
-   if(W_CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
+   if(wGlobalDir.CheckNumForNameNSG(name, lumpinfo_t::ns_demos) == -1)
    {
       C_Printf("%s: demo not found\n", name);
       return;
    }
-
+   
    //G_StopDemo();         // stop any previous demos
-
+   
    if(defdemoname)
       free(defdemoname);
    defdemoname = strdup(name);
    gameaction = ga_playdemo;
    singledemo = true;      // sf: moved from reloaddefaults
-
+   
    singletics = true;
-   timingdemo = true;      // show stats after quit
+   timingdemo = true;      // show stats after quit   
 }
 
 //
@@ -3519,20 +3476,20 @@ void G_TimeDemo(const char *name, boolean showmenu)
 // Called after a death or level completion to allow demos to be cleaned up
 // Returns true if a new demo loop action will take place
 //
-boolean G_CheckDemoStatus(void)
+bool G_CheckDemoStatus(void)
 {
    if(demorecording)
    {
       demorecording = false;
       *demo_p++ = DEMOMARKER;
-
+      
       if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
       {
          // killough 11/98
          I_Error("Error recording demo %s: %s\n", demoname,
                  errno ? strerror(errno) : "(Unknown Error)");
       }
-
+      
       free(demobuffer);
       demobuffer = NULL;  // killough
       I_ExitWithMessage("Demo %s recorded\n", demoname);
@@ -3548,7 +3505,7 @@ boolean G_CheckDemoStatus(void)
       I_Error("Timed %u gametics in %u realtics = %-.1f frames per second\n",
               (unsigned int)(gametic), realtics,
               (unsigned int)(gametic) * (double) TICRATE / realtics);
-   }
+   }              
 
    if(demoplayback)
    {
@@ -3571,11 +3528,11 @@ boolean G_CheckDemoStatus(void)
 
 void G_StopDemo(void)
 {
-   extern boolean advancedemo;
-
+   extern bool advancedemo;
+   
    if(!demorecording && !demoplayback)
       return;
-
+   
    G_CheckDemoStatus();
    advancedemo = false;
    if(gamestate != GS_CONSOLE)
@@ -3596,11 +3553,11 @@ void doom_printf(const char *s, ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
-
+   
    va_start(v, s);
    pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
    va_end(v);
-
+   
    C_Puts(msg);  // set new message
    HU_PlayerMsg(msg);
 }
@@ -3615,11 +3572,11 @@ void player_printf(player_t *player, const char *s, ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
-
+   
    va_start(v, s);
    pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
    va_end(v);
-
+   
    if(player == &players[consoleplayer])
    {
       C_Puts(msg);  // set new message
@@ -3640,15 +3597,15 @@ void G_CoolViewPoint(void)
    int old_displayplayer = displayplayer;
 
    viewtype = M_Random() % 3;
-
+   
    // pick the next player
    do
-   {
-      displayplayer++;
-      if(displayplayer == MAXPLAYERS)
+   { 
+      displayplayer++; 
+      if(displayplayer == MAXPLAYERS) 
          displayplayer = 0;
    } while(!playeringame[displayplayer]);
-
+  
    if(displayplayer != old_displayplayer)
    {
       ST_Start();
@@ -3659,7 +3616,7 @@ void G_CoolViewPoint(void)
 
    if(players[displayplayer].health <= 0)
       viewtype = 1; // use chasecam when player is dead
-
+  
    // turn off the chasecam?
    if(chasecam_active && viewtype != 1)
    {
@@ -3671,7 +3628,7 @@ void G_CoolViewPoint(void)
    P_FollowCamOff();
    if(camera == &followcam)
       camera = NULL;
-
+  
    if(viewtype == 1)  // view from the chasecam
    {
       chasecam_active = true;
@@ -3687,10 +3644,10 @@ void G_CoolViewPoint(void)
          spot = players[displayplayer].mo;
 
       P_SetFollowCam(spot->x, spot->y, players[displayplayer].mo);
-
+      
       camera = &followcam;
    }
-
+  
    // pic a random number of tics until changing the viewpoint
    cooldemo_tics = (6 + M_Random() % 4) * TICRATE;
 }

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,11 +29,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomdef.h"
-#include "doomstat.h"
+
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_event.h"
+#include "d_gi.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "e_fonts.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_over.h"
@@ -43,12 +46,11 @@
 #include "p_setup.h"
 #include "r_draw.h"
 #include "s_sound.h"
+#include "st_stuff.h"
+#include "v_font.h"
+#include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "d_gi.h"
-#include "v_font.h"
-#include "e_fonts.h"
-
 
 // internal for other defines:
 
@@ -97,7 +99,7 @@ int hud_hidestatus = 0;
 // haleyjd 02/25/09: hud font set by EDF:
 const char *hud_overfontname;
 vfont_t *hud_overfont;
-static boolean hu_fontloaded = false;
+static bool hu_fontloaded = false;
 
 //
 // HU_LoadFont
@@ -522,7 +524,7 @@ void HU_OverlayDraw(void)
    }
 }
 
-char *str_style[] =
+const char *str_style[] =
 {
    "off",
    "boom style",

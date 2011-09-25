@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,26 +28,11 @@
 #ifndef DOOMTYPE_H__
 #define DOOMTYPE_H__
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <windows.h>
-#endif
-
 #include <inttypes.h>
 
 #ifndef BYTEBOOL__
 #define BYTEBOOL__
-// Fixed to use builtin bool type with C++.
-#ifdef __cplusplus
-#define EE_BOOLEAN_DEFINED 1
-typedef bool boolean;
-#else
-// typedef enum {false, true} boolean;
-typedef int boolean;
-#define false ((boolean)0)
-#define true ((boolean)1)
-#endif
+// haleyjd 04/10/11: boolean typedef eliminated in pref. of direct use of bool
 typedef uint8_t byte;
 #endif
 
@@ -57,11 +42,6 @@ typedef uint8_t byte;
 #define D_MAXINT INT_MAX
 #define D_MININT INT_MIN
 #define D_MAXSHORT  SHRT_MAX
-
-#ifndef WIN32
-#define MAXCHAR         ((char)0x7f)
-#define MINCHAR         ((char)0x80)
-#endif
 
 #endif
 

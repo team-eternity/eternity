@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,20 +26,26 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
+#include "d_io.h"     // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
-#include "w_wad.h"
+#include "doomstat.h"
+#include "e_hash.h"
+#include "m_misc.h"
 #include "m_swap.h"
+#include "p_info.h"   // haleyjd
 #include "p_skin.h"
 #include "p_setup.h"
+#include "r_defs.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "r_sky.h"
+#include "r_state.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
-#include "p_info.h" // haleyjd
-#include "d_io.h" // SoM 3/14/2002: strncasecmp
-#include "m_misc.h"
-#include "e_hash.h"
+#include "w_wad.h"
 
 // SoM: This has moved to r_textur.c
 void R_LoadDoom1();
@@ -100,12 +106,12 @@ void R_InitSpriteLumps(void)
       if(!(i&127))            // killough
          V_LoadingIncrease();
       
-      patch = (patch_t *)(W_CacheLumpNum(firstspritelump + i, PU_CACHE));
+      patch = PatchLoader::CacheNum(wGlobalDir, firstspritelump + i, PU_CACHE);
 
-      spritewidth[i]     = SwapShort(patch->width) << FRACBITS;
-      spriteoffset[i]    = SwapShort(patch->leftoffset) << FRACBITS;
-      spritetopoffset[i] = SwapShort(patch->topoffset) << FRACBITS;
-      spriteheight[i]    = (float)(SwapShort(patch->height));
+      spritewidth[i]     = patch->width << FRACBITS;
+      spriteoffset[i]    = patch->leftoffset << FRACBITS;
+      spritetopoffset[i] = patch->topoffset << FRACBITS;
+      spriteheight[i]    = (float)patch->height;
    }
 }
 
@@ -126,10 +132,10 @@ void R_InitColormaps(void)
    numcolormaps      = lastcolormaplump - firstcolormaplump;
    colormaps = (lighttable_t **)(Z_Malloc(sizeof(*colormaps) * numcolormaps, PU_RENDERER, 0));
    
-   colormaps[0] = (lighttable_t *)(W_CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
+   colormaps[0] = (lighttable_t *)(wGlobalDir.CacheLumpNum(W_GetNumForName("COLORMAP"), PU_RENDERER));
    
    for(i = 1; i < numcolormaps; ++i)
-      colormaps[i] = (lighttable_t *)(W_CacheLumpNum(i + firstcolormaplump, PU_RENDERER));
+      colormaps[i] = (lighttable_t *)(wGlobalDir.CacheLumpNum(i + firstcolormaplump, PU_RENDERER));
 }
 
 // haleyjd: new global colormap system -- simply sets an index to
@@ -206,11 +212,11 @@ void R_InitTranMap(int progress)
    // If a translucency filter map lump is present, use it
    
    if(lump != -1)  // Set a pointer to the translucency filter maps.
-      main_tranmap = (byte *)(W_CacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
+      main_tranmap = (byte *)(wGlobalDir.CacheLumpNum(lump, PU_RENDERER));   // killough 4/11/98
    else
    {
       // Compose a default transparent filter map based on PLAYPAL.
-      unsigned char *playpal = (unsigned char *)W_CacheLumpName("PLAYPAL", PU_STATIC);
+      unsigned char *playpal = (unsigned char *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
       
       char *fname = NULL;
       unsigned int fnamesize;
@@ -337,7 +343,7 @@ void R_InitTranMap(int progress)
 //
 void R_InitData(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
 
    P_InitSkins();
    R_InitColormaps();                    // killough 3/20/98
@@ -460,7 +466,7 @@ void R_PrecacheLevel(void)
             int16_t *sflump = sprites[i].spriteframes[j].lump;
             int k = 7;
             do
-               W_CacheLumpNum(firstspritelump + sflump[k], PU_CACHE);
+               wGlobalDir.CacheLumpNum(firstspritelump + sflump[k], PU_CACHE);
             while(--k >= 0);
          }
       }

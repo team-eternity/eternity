@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -28,34 +28,35 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+#include "i_system.h"
 
 #include "Confuse/confuse.h"
 
-#include "r_defs.h"
 #include "acs_intr.h"
-#include "i_system.h"
-#include "w_wad.h"
+
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
-#include "d_dehtbl.h"
 #include "d_mod.h"
+#include "e_dstate.h"
+#include "e_edf.h"
+#include "e_lib.h"
+#include "e_mod.h"
+#include "e_sound.h"
+#include "e_sprite.h"
+#include "e_states.h"
+#include "e_things.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_cheat.h"
+#include "m_qstr.h"
+#include "metaapi.h"
 #include "p_inter.h"
 #include "p_partcl.h"
+#include "r_defs.h"
 #include "r_draw.h"
+#include "w_wad.h"
 
-#include "e_lib.h"
-#include "e_edf.h"
-#include "e_sprite.h"
-#include "e_states.h"
-#include "e_dstate.h"
-#include "e_things.h"
-#include "e_sound.h"
-#include "e_mod.h"
-
-#include "metaapi.h"
 
 // 7/24/05: This is now global, for efficiency's sake
 
@@ -72,31 +73,35 @@ int UnknownThingType;
 #define ITEM_TNG_BASICTYPE    "basictype"
 
 // States
-#define ITEM_TNG_SPAWNSTATE   "spawnstate"
-#define ITEM_TNG_SEESTATE     "seestate"
-#define ITEM_TNG_PAINSTATE    "painstate"
-#define ITEM_TNG_PAINSTATES   "dmg_painstates"
-#define ITEM_TNG_PNSTATESADD  "dmg_painstates.add"
-#define ITEM_TNG_PNSTATESREM  "dmg_painstates.remove"
-#define ITEM_TNG_MELEESTATE   "meleestate"
-#define ITEM_TNG_MISSILESTATE "missilestate"
-#define ITEM_TNG_DEATHSTATE   "deathstate"
-#define ITEM_TNG_DEATHSTATES  "dmg_deathstates"
-#define ITEM_TNG_DTHSTATESADD "dmg_deathstates.add"
-#define ITEM_TNG_DTHSTATESREM "dmg_deathstates.remove"
-#define ITEM_TNG_XDEATHSTATE  "xdeathstate"
-#define ITEM_TNG_RAISESTATE   "raisestate"
-#define ITEM_TNG_CRASHSTATE   "crashstate"
+#define ITEM_TNG_SPAWNSTATE    "spawnstate"
+#define ITEM_TNG_SEESTATE      "seestate"
+#define ITEM_TNG_PAINSTATE     "painstate"
+#define ITEM_TNG_PAINSTATES    "dmg_painstates"
+#define ITEM_TNG_PNSTATESADD   "dmg_painstates.add"
+#define ITEM_TNG_PNSTATESREM   "dmg_painstates.remove"
+#define ITEM_TNG_MELEESTATE    "meleestate"
+#define ITEM_TNG_MISSILESTATE  "missilestate"
+#define ITEM_TNG_DEATHSTATE    "deathstate"
+#define ITEM_TNG_DEATHSTATES   "dmg_deathstates"
+#define ITEM_TNG_DTHSTATESADD  "dmg_deathstates.add"
+#define ITEM_TNG_DTHSTATESREM  "dmg_deathstates.remove"
+#define ITEM_TNG_XDEATHSTATE   "xdeathstate"
+#define ITEM_TNG_RAISESTATE    "raisestate"
+#define ITEM_TNG_CRASHSTATE    "crashstate"
+#define ITEM_TNG_ACTIVESTATE   "activestate"
+#define ITEM_TNG_INACTIVESTATE "inactivestate"
 
 // DECORATE state block
-#define ITEM_TNG_STATES       "states"
+#define ITEM_TNG_STATES        "states"
 
 // Sounds
-#define ITEM_TNG_SEESOUND     "seesound"
-#define ITEM_TNG_ATKSOUND     "attacksound"
-#define ITEM_TNG_PAINSOUND    "painsound"
-#define ITEM_TNG_DEATHSOUND   "deathsound"
-#define ITEM_TNG_ACTIVESOUND  "activesound"
+#define ITEM_TNG_SEESOUND      "seesound"
+#define ITEM_TNG_ATKSOUND      "attacksound"
+#define ITEM_TNG_PAINSOUND     "painsound"
+#define ITEM_TNG_DEATHSOUND    "deathsound"
+#define ITEM_TNG_ACTIVESOUND   "activesound"
+#define ITEM_TNG_ACTIVATESND   "activatesound"
+#define ITEM_TNG_DEACTIVATESND "deactivatesound"
 
 // Basic Stats
 #define ITEM_TNG_SPAWNHEALTH  "spawnhealth"
@@ -392,68 +397,72 @@ static cfg_opt_t dmgf_opts[] =
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
-   CFG_INT(   ITEM_TNG_DOOMEDNUM,    -1,        CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_DEHNUM,       -1,        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_BASICTYPE,    "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SPAWNSTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SEESTATE,     "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSTATE,    "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSTATES,   0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_PNSTATESADD,  0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_PNSTATESREM,  0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_MELEESTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_MISSILESTATE, "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSTATES,  0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_DTHSTATESADD, 0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_DTHSTATESREM, 0,         CFGF_LIST                ), \
-   CFG_STR(   ITEM_TNG_XDEATHSTATE,  "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_RAISESTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_CRASHSTATE,   "S_NULL",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_STATES,       0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_SEESOUND,     "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ATKSOUND,     "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PAINSOUND,    "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEATHSOUND,   "none",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ACTIVESOUND,  "none",    CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_SPAWNHEALTH,  1000,      CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_REACTTIME,    8,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_PAINCHANCE,   0,         CFGF_NONE                ), \
-   CFG_INT_CB(ITEM_TNG_SPEED,        0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,         CFGF_NONE, E_IntOrFixedCB), \
-   CFG_FLOAT( ITEM_TNG_RADIUS,       20.0f,     CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_HEIGHT,       16.0f,     CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_C3DHEIGHT,    0.0f,      CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_MASS,         100,       CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_RESPAWNTIME,  (12*35),   CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_RESPCHANCE,   4,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_DAMAGE,       0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DMGSPECIAL,   "NONE",    CFGF_NONE                ), \
-   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts, CFGF_MULTI|CFGF_NOCASE   ), \
-   CFG_INT(   ITEM_TNG_TOPDAMAGE,    0,         CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_TOPDMGMASK,   0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_MOD,          "Unknown", CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_OBIT1,        "NONE",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_OBIT2,        "NONE",    CFGF_NONE                ), \
-   CFG_INT(   ITEM_TNG_BLOODCOLOR,   0,         CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_NUKESPEC,     "NULL",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DROPTYPE,     "NONE",    CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_CFLAGS,       "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_ADDFLAGS,     "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_REMFLAGS,     "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS,        "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS2,       "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS3,       "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_FLAGS4,       "",        CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_PARTICLEFX,   "",        CFGF_NONE                ), \
-   CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,     CFGF_NONE, E_TranslucCB  ), \
-   CFG_INT_CB(ITEM_TNG_COLOR,        0,         CFGF_NONE, E_ColorCB     ), \
-   CFG_STR(   ITEM_TNG_SKINSPRITE,   "noskin",  CFGF_NONE                ), \
-   CFG_STR(   ITEM_TNG_DEFSPRITE,    NULL,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_AVELOCITY,    0.0f,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_XSCALE,       1.0f,      CFGF_NONE                ), \
-   CFG_FLOAT( ITEM_TNG_YSCALE,       1.0f,      CFGF_NONE                ), \
-   CFG_SEC(   ITEM_TNG_ACS_SPAWN,    acs_data,  CFGF_NOCASE              ), \
+   CFG_INT(   ITEM_TNG_DOOMEDNUM,     -1,        CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_DEHNUM,        -1,        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_BASICTYPE,     "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SPAWNSTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SEESTATE,      "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSTATE,     "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSTATES,    0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_PNSTATESADD,   0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_PNSTATESREM,   0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_MELEESTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_MISSILESTATE,  "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSTATES,   0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_DTHSTATESADD,  0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_DTHSTATESREM,  0,         CFGF_LIST                ), \
+   CFG_STR(   ITEM_TNG_XDEATHSTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_RAISESTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_CRASHSTATE,    "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ACTIVESTATE,   "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_INACTIVESTATE, "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_STATES,        0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_SEESOUND,      "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ATKSOUND,      "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PAINSOUND,     "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEATHSOUND,    "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ACTIVESOUND,   "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ACTIVATESND,   "none",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEACTIVATESND, "none",    CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_SPAWNHEALTH,   1000,      CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_REACTTIME,     8,         CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_PAINCHANCE,    0,         CFGF_NONE                ), \
+   CFG_INT_CB(ITEM_TNG_SPEED,         0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_INT_CB(ITEM_TNG_FASTSPEED,     0,         CFGF_NONE, E_IntOrFixedCB), \
+   CFG_FLOAT( ITEM_TNG_RADIUS,        20.0f,     CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_HEIGHT,        16.0f,     CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_C3DHEIGHT,     0.0f,      CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_MASS,          100,       CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_RESPAWNTIME,   (12*35),   CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_RESPCHANCE,    4,         CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_DAMAGE,        0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DMGSPECIAL,    "NONE",    CFGF_NONE                ), \
+   CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR,  dmgf_opts, CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_INT(   ITEM_TNG_TOPDAMAGE,     0,         CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_TOPDMGMASK,    0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_MOD,           "Unknown", CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_OBIT1,         "NONE",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_OBIT2,         "NONE",    CFGF_NONE                ), \
+   CFG_INT(   ITEM_TNG_BLOODCOLOR,    0,         CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_NUKESPEC,      "NULL",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DROPTYPE,      "NONE",    CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_CFLAGS,        "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_ADDFLAGS,      "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_REMFLAGS,      "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS,         "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS2,        "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS3,        "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FLAGS4,        "",        CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_PARTICLEFX,    "",        CFGF_NONE                ), \
+   CFG_INT_CB(ITEM_TNG_TRANSLUC,      65536,     CFGF_NONE, E_TranslucCB  ), \
+   CFG_INT_CB(ITEM_TNG_COLOR,         0,         CFGF_NONE, E_ColorCB     ), \
+   CFG_STR(   ITEM_TNG_SKINSPRITE,    "noskin",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_DEFSPRITE,     NULL,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_AVELOCITY,     0.0f,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_XSCALE,        1.0f,      CFGF_NONE                ), \
+   CFG_FLOAT( ITEM_TNG_YSCALE,        1.0f,      CFGF_NONE                ), \
+   CFG_SEC(   ITEM_TNG_ACS_SPAWN,     acs_data,  CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -600,7 +609,7 @@ int E_GetThingNumForName(const char *name)
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_thing_dehnum = D_MAXINT;
 
-boolean E_AutoAllocThingDEHNum(int thingnum)
+bool E_AutoAllocThingDEHNum(int thingnum)
 {
    unsigned int key;
    int dehnum;
@@ -653,7 +662,7 @@ void E_CollectThings(cfg_t *tcfg)
 
    // 08/17/09: allocate metatables
    for(i = 0; i < NUMMOBJTYPES; ++i)
-      mobjinfo[i].meta = new MetaTable();
+      mobjinfo[i].meta = new MetaTable("mobjinfo");
 
    // initialize hash slots
    for(i = 0; i < NUMTHINGCHAINS; ++i)
@@ -868,15 +877,15 @@ static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
 //
 const char *E_ModFieldName(const char *base, emod_t *mod)
 {
-   static qstring_t namebuffer;
+   static qstring namebuffer;
 
-   QStrClearOrCreate(&namebuffer, 64);
+   namebuffer.clearOrCreate(64);
 
-   QStrCat(&namebuffer, base);
-   QStrPutc(&namebuffer, '.');
-   QStrCat(&namebuffer, mod->name);
+   namebuffer  = base;
+   namebuffer += '.'; 
+   namebuffer += mod->name;
 
-   return namebuffer.buffer;
+   return namebuffer.constPtr();
 }
 
 //
@@ -1071,7 +1080,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // Returns true if the given mobjinfo inherits from the given type by name.
 // Returns false otherwise. Self-identity is *not* considered inheritance.
 //
-boolean E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+bool E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1364,7 +1373,7 @@ static int  thing_pindex   = 0;
 // been inherited during the current inheritance chain. Returns
 // false if the check fails, and true if it succeeds.
 //
-static boolean E_CheckThingInherit(int pnum)
+static bool E_CheckThingInherit(int pnum)
 {
    int i;
 
@@ -1487,14 +1496,14 @@ static void E_CopyThing(int num, int pnum)
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
-void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
+void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 {
    double tempfloat;
    int tempint;
    const char *tempstr;
-   boolean inherits = false;
-   boolean cflags   = false;
-   boolean hasbtype = false;
+   bool inherits = false;
+   bool cflags   = false;
+   bool hasbtype = false;
 
    // 01/27/04: added inheritance -- not in deltas
    if(def)
@@ -1571,6 +1580,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    if(IS_SET(ITEM_TNG_DOOMEDNUM))
       mobjinfo[i].doomednum = cfg_getint(thingsec, ITEM_TNG_DOOMEDNUM);
 
+   // ******************************** STATES ********************************
+
    // process spawnstate
    if(IS_SET_BT(ITEM_TNG_SPAWNSTATE))
    {
@@ -1578,10 +1589,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       E_ThingFrame(tempstr, ITEM_TNG_SPAWNSTATE, i, 
                    &(mobjinfo[i].spawnstate));
    }
-
-   // process spawnhealth
-   if(IS_SET(ITEM_TNG_SPAWNHEALTH))
-      mobjinfo[i].spawnhealth = cfg_getint(thingsec, ITEM_TNG_SPAWNHEALTH);
 
    // process seestate
    if(IS_SET(ITEM_TNG_SEESTATE))
@@ -1591,44 +1598,12 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
                    &(mobjinfo[i].seestate));
    }
 
-   // process seesound
-   if(IS_SET(ITEM_TNG_SEESOUND))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
-                   &(mobjinfo[i].seesound));
-   }
-
-   // process reactiontime
-   if(IS_SET(ITEM_TNG_REACTTIME))
-      mobjinfo[i].reactiontime = cfg_getint(thingsec, ITEM_TNG_REACTTIME);
-
-   // process attacksound
-   if(IS_SET(ITEM_TNG_ATKSOUND))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
-                   &(mobjinfo[i].attacksound));
-   }
-
    // process painstate
    if(IS_SET(ITEM_TNG_PAINSTATE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSTATE);
       E_ThingFrame(tempstr, ITEM_TNG_PAINSTATE, i,
                    &(mobjinfo[i].painstate));
-   }
-
-   // process painchance
-   if(IS_SET(ITEM_TNG_PAINCHANCE))
-      mobjinfo[i].painchance = cfg_getint(thingsec, ITEM_TNG_PAINCHANCE);
-
-   // process painsound
-   if(IS_SET(ITEM_TNG_PAINSOUND))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
-                   &(mobjinfo[i].painsound));
    }
 
    // process meleestate
@@ -1663,6 +1638,63 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
                    &(mobjinfo[i].xdeathstate));
    }
 
+   // process raisestate
+   if(IS_SET(ITEM_TNG_RAISESTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_RAISESTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i,
+                   &(mobjinfo[i].raisestate));
+   }
+
+   // 08/07/04: process crashstate
+   if(IS_SET(ITEM_TNG_CRASHSTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_CRASHSTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i,
+                   &(mobjinfo[i].crashstate));
+   }
+
+   // 03/19/11: process active/inactive states
+   if(IS_SET(ITEM_TNG_ACTIVESTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_ACTIVESTATE, i, 
+                   &(mobjinfo[i].activestate));
+   }
+
+   if(IS_SET(ITEM_TNG_INACTIVESTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_INACTIVESTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_INACTIVESTATE, i,
+                   &(mobjinfo[i].inactivestate));
+   }
+
+   // ******************************** SOUNDS ********************************
+   
+   // process seesound
+   if(IS_SET(ITEM_TNG_SEESOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
+      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
+                   &(mobjinfo[i].seesound));
+   }
+
+   // process attacksound
+   if(IS_SET(ITEM_TNG_ATKSOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
+      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
+                   &(mobjinfo[i].attacksound));
+   }
+
+   // process painsound
+   if(IS_SET(ITEM_TNG_PAINSOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
+      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
+                   &(mobjinfo[i].painsound));
+   }
+
    // process deathsound
    if(IS_SET(ITEM_TNG_DEATHSOUND))
    {
@@ -1671,9 +1703,57 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
                    &(mobjinfo[i].deathsound));
    }
 
+   // process activesound
+   if(IS_SET(ITEM_TNG_ACTIVESOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
+                   &(mobjinfo[i].activesound));
+   }
+
+   // 3/19/11: process activatesound/deactivatesound
+   if(IS_SET(ITEM_TNG_ACTIVATESND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVATESND);
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i,
+                   &(mobjinfo[i].activatesound));
+   }
+
+   if(IS_SET(ITEM_TNG_DEACTIVATESND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
+      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i,
+                   &(mobjinfo[i].deactivatesound));
+   }
+
+   // ******************************* METRICS ********************************
+
+   // process spawnhealth
+   if(IS_SET(ITEM_TNG_SPAWNHEALTH))
+      mobjinfo[i].spawnhealth = cfg_getint(thingsec, ITEM_TNG_SPAWNHEALTH);
+
+   // process reactiontime
+   if(IS_SET(ITEM_TNG_REACTTIME))
+      mobjinfo[i].reactiontime = cfg_getint(thingsec, ITEM_TNG_REACTTIME);
+
+   // process painchance
+   if(IS_SET(ITEM_TNG_PAINCHANCE))
+      mobjinfo[i].painchance = cfg_getint(thingsec, ITEM_TNG_PAINCHANCE);
+
    // process speed
    if(IS_SET(ITEM_TNG_SPEED))
       mobjinfo[i].speed = cfg_getint(thingsec, ITEM_TNG_SPEED);
+
+   // 07/13/03: process fastspeed
+   // get the fastspeed and, if non-zero, add the thing
+   // to the speedset list in g_game.c
+
+   if(IS_SET(ITEM_TNG_FASTSPEED))
+   {
+      tempint = cfg_getint(thingsec, ITEM_TNG_FASTSPEED);         
+      if(tempint)
+         G_SpeedSetAddThing(i, mobjinfo[i].speed, tempint);
+   }
 
    // process radius
    if(IS_SET(ITEM_TNG_RADIUS))
@@ -1687,6 +1767,13 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_HEIGHT);
       mobjinfo[i].height = (int)(tempfloat * FRACUNIT);
+   }
+
+   // 07/06/05: process correct 3D thing height
+   if(IS_SET(ITEM_TNG_C3DHEIGHT))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
+      mobjinfo[i].c3dheight = (int)(tempfloat * FRACUNIT);
    }
 
    // process mass
@@ -1704,13 +1791,37 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
    if(IS_SET(ITEM_TNG_DAMAGE))
       mobjinfo[i].damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
 
-   // process activesound
-   if(IS_SET(ITEM_TNG_ACTIVESOUND))
+   // 09/22/06: process topdamage 
+   if(IS_SET(ITEM_TNG_TOPDAMAGE))
+      mobjinfo[i].topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
+
+   // 09/23/06: process topdamagemask
+   if(IS_SET(ITEM_TNG_TOPDMGMASK))
+      mobjinfo[i].topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
+
+   // process translucency
+   if(IS_SET(ITEM_TNG_TRANSLUC))
+      mobjinfo[i].translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
+
+   // process bloodcolor
+   if(IS_SET(ITEM_TNG_BLOODCOLOR))
+      mobjinfo[i].bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
+
+   // 05/23/08: process alphavelocity
+   if(IS_SET(ITEM_TNG_AVELOCITY))
    {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
-                   &(mobjinfo[i].activesound));
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
+      mobjinfo[i].alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
    }
+
+   // 11/22/09: scaling properties
+   if(IS_SET(ITEM_TNG_XSCALE))
+      mobjinfo[i].xscale = (float)cfg_getfloat(thingsec, ITEM_TNG_XSCALE);
+
+   if(IS_SET(ITEM_TNG_YSCALE))
+      mobjinfo[i].yscale = (float)cfg_getfloat(thingsec, ITEM_TNG_YSCALE);
+
+   // ********************************* FLAGS ********************************
 
    // 02/19/04: process combined flags first
    if(IS_SET_BT(ITEM_TNG_CFLAGS))
@@ -1804,33 +1915,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       mobjinfo[i].flags2 &= ~(results[1]);
       mobjinfo[i].flags3 &= ~(results[2]);
       mobjinfo[i].flags4 &= ~(results[3]);
-   }
-
-   // process raisestate
-   if(IS_SET(ITEM_TNG_RAISESTATE))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_RAISESTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_RAISESTATE, i,
-                   &(mobjinfo[i].raisestate));
-   }
-
-   // process translucency
-   if(IS_SET(ITEM_TNG_TRANSLUC))
-      mobjinfo[i].translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
-
-   // process bloodcolor
-   if(IS_SET(ITEM_TNG_BLOODCOLOR))
-      mobjinfo[i].bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
-
-   // 07/13/03: process fastspeed
-   // get the fastspeed and, if non-zero, add the thing
-   // to the speedset list in g_game.c
-
-   if(IS_SET(ITEM_TNG_FASTSPEED))
-   {
-      tempint = cfg_getint(thingsec, ITEM_TNG_FASTSPEED);         
-      if(tempint)
-         G_SpeedSetAddThing(i, mobjinfo[i].speed, tempint);
    }
 
    // 07/13/03: process nukespecial
@@ -1951,14 +2035,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
       mobjinfo[i].dmgspecial = tempint;
    }
 
-   // 08/07/04: process crashstate
-   if(IS_SET(ITEM_TNG_CRASHSTATE))
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_CRASHSTATE);
-      E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i,
-                   &(mobjinfo[i].crashstate));
-   }
-
    // 09/26/04: process alternate sprite
    if(IS_SET(ITEM_TNG_SKINSPRITE))
    {
@@ -1977,34 +2053,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, boolean def)
          mobjinfo[i].defsprite = -1;
    }
 
-   // 07/06/05: process correct 3D thing height
-   if(IS_SET(ITEM_TNG_C3DHEIGHT))
-   {
-      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
-      mobjinfo[i].c3dheight = (int)(tempfloat * FRACUNIT);
-   }
-
-   // 09/22/06: process topdamage 
-   if(IS_SET(ITEM_TNG_TOPDAMAGE))
-      mobjinfo[i].topdamage = cfg_getint(thingsec, ITEM_TNG_TOPDAMAGE);
-
-   // 09/23/06: process topdamagemask
-   if(IS_SET(ITEM_TNG_TOPDMGMASK))
-      mobjinfo[i].topdamagemask = cfg_getint(thingsec, ITEM_TNG_TOPDMGMASK);
-
-   // 05/23/08: process alphavelocity
-   if(IS_SET(ITEM_TNG_AVELOCITY))
-   {
-      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_AVELOCITY);
-      mobjinfo[i].alphavelocity = (fixed_t)(tempfloat * FRACUNIT);
-   }
-
-   // 11/22/09: scaling properties
-   if(IS_SET(ITEM_TNG_XSCALE))
-      mobjinfo[i].xscale = (float)cfg_getfloat(thingsec, ITEM_TNG_XSCALE);
-
-   if(IS_SET(ITEM_TNG_YSCALE))
-      mobjinfo[i].yscale = (float)cfg_getfloat(thingsec, ITEM_TNG_YSCALE);
 
    // 06/05/08: process custom-damage painstates
    if(IS_SET(ITEM_TNG_PAINSTATES))
@@ -2193,7 +2241,9 @@ static const char *nativeStateLabels[] =
    "Death",
    "XDeath",
    "Raise",
-   "Crash"
+   "Crash",
+   "Active",
+   "Inactive"
 };
 
 //
@@ -2209,7 +2259,9 @@ enum
    NSTATE_DEATH,
    NSTATE_XDEATH,
    NSTATE_RAISE,
-   NSTATE_CRASH
+   NSTATE_CRASH,
+   NSTATE_ACTIVE,
+   NSTATE_INACTIVE
 };
 
 #define NUMNATIVESTATES (sizeof(nativeStateLabels) / sizeof(const char *))
@@ -2228,15 +2280,17 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 
    switch(nativenum)
    {
-   case NSTATE_SPAWN:   ret = &mi->spawnstate;   break;
-   case NSTATE_SEE:     ret = &mi->seestate;     break;
-   case NSTATE_MELEE:   ret = &mi->meleestate;   break;
-   case NSTATE_MISSILE: ret = &mi->missilestate; break;
-   case NSTATE_PAIN:    ret = &mi->painstate;    break;
-   case NSTATE_DEATH:   ret = &mi->deathstate;   break;
-   case NSTATE_XDEATH:  ret = &mi->xdeathstate;  break;
-   case NSTATE_RAISE:   ret = &mi->raisestate;   break;
-   case NSTATE_CRASH:   ret = &mi->crashstate;   break;
+   case NSTATE_SPAWN:    ret = &mi->spawnstate;    break;
+   case NSTATE_SEE:      ret = &mi->seestate;      break;
+   case NSTATE_MELEE:    ret = &mi->meleestate;    break;
+   case NSTATE_MISSILE:  ret = &mi->missilestate;  break;
+   case NSTATE_PAIN:     ret = &mi->painstate;     break;
+   case NSTATE_DEATH:    ret = &mi->deathstate;    break;
+   case NSTATE_XDEATH:   ret = &mi->xdeathstate;   break;
+   case NSTATE_RAISE:    ret = &mi->raisestate;    break;
+   case NSTATE_CRASH:    ret = &mi->crashstate;    break;
+   case NSTATE_ACTIVE:   ret = &mi->activestate;   break;
+   case NSTATE_INACTIVE: ret = &mi->inactivestate; break;
    default:
       break;
    }

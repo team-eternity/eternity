@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -22,8 +22,6 @@
 #ifndef __C_RUNCMD_H__
 #define __C_RUNCMD_H__
 
-#include "d_dwfile.h"
-#include "m_misc.h"
 #include "m_qstr.h"
 
 // NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
@@ -33,8 +31,9 @@
 // is the support of defaults for ALL archived console variables and
 // a way to set a variable's value without changing its default.
 
-typedef struct command_s  command_t;
-typedef struct variable_s variable_t;
+struct command_t;
+struct default_t;
+struct variable_t;
 
 /******************************** #defines ********************************/
 
@@ -115,7 +114,7 @@ typedef struct variable_s variable_t;
 
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings};
+                        vt_int, min, max, strings, 0, 0, NULL, NULL };
 
 // Simplified to create strings: 'max' is the maximum string length
 
@@ -205,24 +204,24 @@ enum    // variable type
 
 /******************************** STRUCTS ********************************/
 
-struct variable_s
+struct variable_t
 {  
-  void *variable;  // NB: for strings, this is char ** not char *
-  void *v_default; // the default 
-  int type;        // vt_?? variable type: int, string
-  int min;         // minimum value or string length
-  int max;         // maximum value/length
-  char **defines;  // strings representing the value: eg "on" not "1"
-  double dmin;     // haleyjd 04/21/10: min for double vars
-  double dmax;     //                   max for double vars
+  void *variable;        // NB: for strings, this is char ** not char *
+  void *v_default;       // the default 
+  int type;              // vt_?? variable type: int, string
+  int min;               // minimum value or string length
+  int max;               // maximum value/length
+  const char **defines;  // strings representing the value: eg "on" not "1"
+  double dmin;           // haleyjd 04/21/10: min for double vars
+  double dmax;           //                   max for double vars
   
-  struct default_s *cfgDefault; // haleyjd 07/04/10: pointer to config default
-  struct command_s *command;    // haleyjd 08/15/10: parent command
+  default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
+  command_t *command;           // haleyjd 08/15/10: parent command
 };
 
-struct command_s
+struct command_t
 {
-  char *name;
+  const char *name;
   int type;              // ct_?? command type
   int flags;             // cf_??
   variable_t *variable;
@@ -247,29 +246,29 @@ typedef struct alias_s
 //
 // Console state is now stored in the console_t structure.
 // 
-typedef struct console_s
+struct console_t
 {
    int current_height; // current height of console
    int current_target; // target height of console
-   boolean showprompt; // toggles input prompt on or off
-   boolean enabled;    // enabled state of console
+   bool showprompt;    // toggles input prompt on or off
+   bool enabled;       // enabled state of console
    int cmdsrc;         // player source of current command being run
    int cmdtype;        // source type of command (console, menu, etc)
    command_t *command; // current command being run
    int  argc;          // number of argv's
-   qstring_t  args;    // args as single string   
-   qstring_t *argv;    // argument values to current command
+   qstring   args;     // args as single string   
+   qstring **argv;     // argument values to current command
    int numargvsalloc;  // number of arguments available to command parsing
-} console_t;
+};
 
 extern console_t Console; // the one and only Console object
 
 /***** command running ****/
 
 void C_RunCommand(command_t *command, const char *options);
-// [CG] Added RCON for c/s.
-void C_RunRCONTextCmd(const char *cmdname, int clientnum);
 void C_RunTextCmd(const char *cmdname);
+// [CG] 09/13/11 Added RCON for c/s.
+void C_RunRCONTextCmd(const char *cmdname, int clientnum);
 
 const char *C_VariableValue(variable_t *command);
 const char *C_VariableStringValue(variable_t *command);
@@ -277,6 +276,7 @@ const char *C_VariableStringValue(variable_t *command);
 // haleyjd: the SMMU v3.30 script-running functions
 // (with my fixes :P)
 
+struct DWFILE;
 void C_RunScript(DWFILE *);
 void C_RunScriptFromFile(const char *filename);
 
@@ -285,8 +285,8 @@ void C_RunCmdLineScripts(void);
 /**** tab completion ****/
 
 void C_InitTab(void);
-qstring_t *C_NextTab(qstring_t *key);
-qstring_t *C_PrevTab(qstring_t *key);
+qstring &C_NextTab(qstring &key);
+qstring &C_PrevTab(qstring &key);
 
 /**** aliases ****/
 
@@ -294,7 +294,7 @@ extern alias_t aliases; // haleyjd 04/14/03: changed to linked list
 extern char *cmdoptions;
 
 alias_t *C_NewAlias(const char *aliasname, const char *command);
-void     C_RemoveAlias(qstring_t *aliasname);
+void     C_RemoveAlias(qstring *aliasname);
 alias_t *C_GetAlias(const char *name);
 
 /**** command buffers ****/
@@ -317,11 +317,11 @@ command_t *C_GetCmdForName(const char *cmdname);
 
 /***** define strings for variables *****/
 
-extern char *yesno[];
-extern char *onoff[];
-extern char *colournames[];
-extern char *textcolours[];
-extern char *skills[];
+extern const char *yesno[];
+extern const char *onoff[];
+extern const char *colournames[];
+extern const char *textcolours[];
+extern const char *skills[];
 
 #endif
 

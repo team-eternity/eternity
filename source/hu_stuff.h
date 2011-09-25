@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -19,12 +19,17 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __HU_STUFF_H__
-#define __HU_STUFF_H__
+#ifndef HU_STUFF_H__
+#define HU_STUFF_H__
 
-#include "d_event.h"
-#include "v_font.h"
-#include "m_dllist.h"
+#include <map>
+#include <string>
+
+#include "doomtype.h"
+
+struct event_t;
+struct vfont_t;
+struct patch_t;
 
 enum
 {
@@ -37,8 +42,6 @@ enum
 
 typedef struct hu_widget_s
 {
-   // [CG] HUD widgets are now hashable
-   mdllistitem_t link;
    // overridable functions (virtuals in a sense)
 
    void (*ticker)(struct hu_widget_s *); // ticker: called each gametic
@@ -50,11 +53,9 @@ typedef struct hu_widget_s
    int type;                 // widget type
    char *name;               // name of this widget
    // struct hu_widget_s *next; // next in hash chain
-   boolean disabled;         // disable flag
-   boolean prevdisabled;     // previous state of disable flag
+   bool disabled;            // disable flag
+   bool prevdisabled;        // previous state of disable flag
 } hu_widget_t;
-
-// [CG] Moved from hu_stuff.c.
 
 // erase data rect
 typedef struct tw_erase_s
@@ -86,28 +87,53 @@ typedef struct hu_textwidget_s
    int bg_opacity;       // [CG] Optional transparent background.
 } hu_textwidget_t;
 
-extern boolean chat_on;
+typedef struct hu_patchwidget_s
+{
+   hu_widget_t widget; // parent widget
+
+   int x, y;           // screen location
+   byte *color;        // color range translation to use
+   int tl_level;       // translucency level
+   char patchname[9];  // patch name -- haleyjd 06/15/06
+   patch_t *patch;     // screen patch
+} hu_patchwidget_t;
+
+// [CG] Added for c/s so the target's name (if any) can be stored in the
+//      crosshair itself.
+typedef struct hu_crosshairwidget_s
+{
+   hu_widget_t widget; // parent widget
+
+   int x, y;           // screen location
+   byte *color;        // color range translation to use
+   int tl_level;       // translucency level
+   char patchname[9];  // patch name -- haleyjd 06/15/06
+   patch_t *patch;     // screen patch
+   char *target_name;
+} hu_crosshairwidget_t;
+
+typedef std::map<std::string, hu_widget_t*> WidgetHash;
+
+extern bool chat_on;
 extern int obituaries;
 extern int obcolour;       // the colour of death messages
 extern int showMessages;   // Show messages has default, 0 = off, 1 = on
 extern int mess_colour;    // the colour of normal messages
 extern char *chat_macros[10];
+extern WidgetHash widgets;
 
-// [CG] Externalized shiftxform.
 extern const char *shiftxform;
 
-// [CG] Externalized a few functions.
 void HU_ClearWidgetHash(void);
-boolean HU_AddWidgetToHash(hu_widget_t *widget);
+bool HU_AddWidgetToHash(hu_widget_t *widget);
 hu_widget_t* HU_WidgetForName(const char *name);
 void HU_UpdateEraseData(hu_textwidget_t *tw);
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                           char *message, int cleartic, int flags);
-
 void HU_Init(void);
 void HU_Drawer(void);
 void HU_Ticker(void);
-boolean HU_Responder(event_t *ev);
+bool HU_Responder(event_t *ev);
 
 void HU_Start(void);
 
@@ -119,14 +145,14 @@ void HU_Erase(void);
 
 #define CROSSHAIRS 3
 extern int crosshairnum;       // 0= none
-extern boolean crosshair_hilite;
+extern bool crosshair_hilite;
 
 // haleyjd 02/12/06: lost and new options
-extern boolean hu_showtime;
-extern boolean hu_showcoords;
-extern int hu_timecolor;
-extern int hu_levelnamecolor;
-extern int hu_coordscolor;
+extern bool hu_showtime;
+extern bool hu_showcoords;
+extern int  hu_timecolor;
+extern int  hu_levelnamecolor;
+extern int  hu_coordscolor;
 
 extern const char *hud_fontname;
 

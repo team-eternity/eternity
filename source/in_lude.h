@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -28,16 +28,18 @@
 #ifndef IN_LUDE_H__
 #define IN_LUDE_H__
 
-#include "p_mobj.h"
+#include "p_mobj.h" // HEADER-FIXME
+
+struct wbstartstruct_t;
 
 // Intermission object struct
-typedef struct interfns_s
+struct interfns_t
 {
    void (*Ticker)(void);         // called by IN_Ticker
    void (*DrawBackground)(void); // called various places
    void (*Drawer)(void);         // called by IN_Drawer
    void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
-} interfns_t;
+};
 
 // intercam
 #define MAXCAMERAS 128
@@ -45,6 +47,7 @@ typedef struct interfns_s
 extern int intertime;
 extern int acceleratestage;
 
+class MobjCollection;
 extern MobjCollection camerathings;
 extern Mobj *wi_camera;
 

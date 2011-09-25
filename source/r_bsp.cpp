@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -25,16 +25,22 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
+
 #include "doomstat.h"
 #include "m_bbox.h"
-#include "i_system.h"
-#include "r_main.h"
-#include "r_segs.h"
-#include "r_plane.h"
-#include "r_things.h"
-#include "r_dynseg.h"
+#include "p_chase.h"
 #include "p_portal.h"
 #include "p_slopes.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_plane.h"
+#include "r_dynseg.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "r_things.h"
 
 drawseg_t *ds_p;
 
@@ -340,7 +346,7 @@ void R_ClearClipSegs(void)
 //
 // R_SetupPortalClipsegs
 //
-boolean R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
+bool R_SetupPortalClipsegs(int minx, int maxx, float *top, float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
@@ -447,7 +453,7 @@ extern camera_t *camera; // haleyjd
 
 sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
                      int *floorlightlevel, int *ceilinglightlevel,
-                     boolean back)
+                     bool back)
 {
    if(!sec)
       return NULL;
@@ -683,7 +689,16 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
    }
 }
 
-static boolean R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
+
+
+//
+// R_ClipInitialSegRange
+//
+// Performs initial clipping based on the opening of the portal. This can 
+// quickly reject segs that are all the way off the left or right edges 
+// of the portal window.
+// 
+static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
@@ -1005,6 +1020,8 @@ void R_ClipSegToLPortal(void)
    }
 }
 
+
+
 R_ClipSegFunc segclipfuncs[] = 
 {
    R_ClipSegToFPortal,
@@ -1019,8 +1036,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                         float texbottom, vertex_t *v1, vertex_t *v2, 
                         float lclip1, float lclip2)
 {
-   boolean mark; // haleyjd
-   boolean heightchange;
+   bool mark, markblend; // haleyjd
+   bool heightchange;
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
@@ -1127,6 +1144,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
                   (seg.backsec->ceilingheight != seg.frontsec->ceilingheight);
 
    seg.markflags = 0;
+   
+   markblend = seg.frontsec->c_portal != NULL 
+         && seg.backsec->c_portal != NULL 
+         && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
 
    if(seg.c_portal &&
       (seg.clipsolid || heightchange || 
@@ -1148,9 +1169,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->c_portal != seg.backsec->c_portal ||
-        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope))) // haleyjd
+        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKCEILING;
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
    }
 
    if(heightchange && side->toptexture)
@@ -1171,6 +1192,10 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    heightchange = seg.frontsec->f_slope || seg.backsec->f_slope ? (l != b || l2 != b2) :
                   seg.backsec->floorheight != seg.frontsec->floorheight;
 
+   markblend = seg.frontsec->f_portal != NULL 
+         && seg.backsec->f_portal != NULL 
+         && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
+         
    if(seg.f_portal &&
       (seg.clipsolid || heightchange ||
        seg.frontsec->f_portal != seg.backsec->f_portal))
@@ -1191,9 +1216,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
        seg.frontsec->f_portal != seg.backsec->f_portal ||
-       !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope))) // haleyjd
+       !R_CompareSlopes(seg.frontsec->f_slope, seg.backsec->f_slope) || markblend)) // haleyjd
    {
-      seg.markflags |= SEG_MARKFLOOR;
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
    }
 
    // SoM: some portal types should be rendered even if the player is above
@@ -1234,17 +1259,21 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   seg.l_window = line->linedef->portal &&
-                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                  line->linedef->sidenum[0] == line->sidedef - sides ?
-                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+      line->linedef->sidenum[0] == line->sidedef - sides)
+   {
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.clipsolid = true;
+   }
+   else
+      seg.l_window = NULL;
 }
 
 static void R_2S_Normal(float pstep, float i1, float i2, float textop, 
                         float texbottom)
 {
-   boolean mark; // haleyjd
-   boolean uppermissing, lowermissing;
+   bool mark, markblend; // haleyjd
+   bool uppermissing, lowermissing;
    float texhigh, texlow;
    side_t *side = seg.side;
    seg_t  *line = seg.line;
@@ -1308,8 +1337,11 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    seg.markflags = 0;
    
-   if(seg.ceilingplane && 
-      (mark || seg.clipsolid || frontc != backc || 
+   markblend = seg.frontsec->c_portal != NULL 
+            && seg.backsec->c_portal != NULL 
+            && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
+               
+   if(mark || seg.clipsolid || frontc != backc || 
        seg.frontsec->ceiling_xoffs != seg.backsec->ceiling_xoffs ||
        seg.frontsec->ceiling_yoffs != seg.backsec->ceiling_yoffs ||
        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
@@ -1317,15 +1349,15 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
        seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
        seg.frontsec->topmap != seg.backsec->topmap ||
-       seg.frontsec->c_portal != seg.backsec->c_portal)) // haleyjd
+       seg.frontsec->c_portal != seg.backsec->c_portal || markblend) // haleyjd
    {
-      seg.markflags |= SEG_MARKCEILING;
+      seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : 
+                    seg.ceilingplane ? SEG_MARKCEILING : 0;
    }
    
    if(seg.c_portal && 
       (seg.clipsolid || seg.frontsec->ceilingheight != seg.backsec->ceilingheight || 
-       seg.frontsec->c_portal != seg.backsec->c_portal ||
-       (seg.markflags & SEG_MARKCEILING && seg.floorplane->bflags & PS_OVERLAY)))
+       seg.frontsec->c_portal != seg.backsec->c_portal))
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal);
@@ -1348,8 +1380,12 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    else
       seg.toptex = 0;
 
-   if(seg.floorplane && 
-      (mark || seg.clipsolid ||  
+
+   markblend = seg.frontsec->f_portal != NULL 
+            && seg.backsec->f_portal != NULL 
+            && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
+             
+   if(mark || seg.clipsolid ||  
        seg.frontsec->floorheight != seg.backsec->floorheight ||
        seg.frontsec->floor_xoffs != seg.backsec->floor_xoffs ||
        seg.frontsec->floor_yoffs != seg.backsec->floor_yoffs ||
@@ -1358,15 +1394,16 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
        seg.frontsec->floorpic != seg.backsec->floorpic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->bottommap != seg.backsec->bottommap ||
-       seg.frontsec->f_portal != seg.backsec->f_portal)) // haleyjd
+       seg.frontsec->f_portal != seg.backsec->f_portal || 
+       markblend) // haleyjd
    {
-      seg.markflags |= SEG_MARKFLOOR;
+      seg.markflags |= seg.f_portal ? SEG_MARKFOVERLAY : 
+                       seg.floorplane ? SEG_MARKFLOOR : 0;
    }
    
    if(seg.f_portal &&
       (seg.clipsolid || seg.frontsec->floorheight != seg.backsec->floorheight ||
-       seg.frontsec->f_portal != seg.backsec->f_portal ||
-       (seg.markflags & SEG_MARKFLOOR && seg.floorplane->bflags & PS_OVERLAY)))
+       seg.frontsec->f_portal != seg.backsec->f_portal))
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal);
@@ -1416,10 +1453,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.maskedtex = !!seg.side->midtexture;
    seg.segtextured = (seg.maskedtex || seg.bottomtex || seg.toptex);
 
-   seg.l_window = line->linedef->portal &&
-                  line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
-                  line->linedef->sidenum[0] == line->sidedef - sides ?
-                  R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   if(line->linedef->portal && line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
+      line->linedef->sidenum[0] == line->sidedef - sides)
+   {
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.clipsolid = true;
+   }
+   else
+      seg.l_window = NULL;
 }
 
 //
@@ -1428,7 +1469,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-static void R_AddLine(seg_t *line)
+static void R_AddLine(seg_t *line, bool dynasegs)
 {
    static sector_t tempsec;
 
@@ -1460,7 +1501,7 @@ static void R_AddLine(seg_t *line)
       seg.frontsec->ceilingheight == seg.frontsec->floorheight)
       seg.backsec = NULL;
 
-   if(line->nodraw) // haleyjd
+   if(!dynasegs && (line->linedef->intflags & MLI_DYNASEGLINE)) // haleyjd
       return;
 
    // If the frontsector is closed, don't render the line!
@@ -1511,6 +1552,9 @@ static void R_AddLine(seg_t *line)
       // SoM 12/10/03: PORTALS
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
+      
+      && (seg.backsec->c_portal != NULL && (seg.backsec->c_pflags & PS_BLENDFLAGS) == (seg.frontsec->c_pflags & PS_BLENDFLAGS))
+      && (seg.backsec->f_portal != NULL && (seg.backsec->f_pflags & PS_BLENDFLAGS) == (seg.frontsec->f_pflags & PS_BLENDFLAGS))
 
       && !seg.line->linedef->portal
 
@@ -1720,9 +1764,10 @@ static void R_AddLine(seg_t *line)
       }
 
       if(seg.ceilingplane != NULL)
-         seg.markflags |= SEG_MARKCEILING;
+         seg.markflags |= seg.frontsec->c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
       if(seg.floorplane != NULL)
-         seg.markflags |= SEG_MARKFLOOR;
+         seg.markflags |= seg.frontsec->f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
+         
       seg.clipsolid   = true;
       seg.segtextured = (seg.midtex != 0);
       seg.l_window    = line->linedef->portal ?
@@ -1824,7 +1869,7 @@ static const int checkcoord[12][4] = // killough -- static const
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static boolean R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
+static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
    fixed_t x1, x2, y1, y2;
@@ -1998,7 +2043,7 @@ static void R_AddDynaSegs(subsector_t *sub)
 
       while(ds)
       {
-         R_AddLine(&ds->seg);
+         R_AddLine(&ds->seg, true);
 
          ds = ds->subnext;
       }
@@ -2025,7 +2070,7 @@ static void R_Subsector(int num)
    float       floorangle;           // haleyjd 01/05/08: plane angles
    float       ceilingangle;
 
-   boolean     visible;
+   bool        visible;
    v3float_t   cam;
    
 #ifdef RANGECHECK
@@ -2175,7 +2220,7 @@ static void R_Subsector(int num)
       R_AddDynaSegs(sub);
 
    while(count--)
-      R_AddLine(line++);
+      R_AddLine(line++, false);
 }
 
 //

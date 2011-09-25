@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -26,13 +26,14 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "am_map.h"
 #include "c_io.h"
 #include "d_deh.h"
 #include "d_gi.h"
 #include "doomstat.h"
-#include "e_string.h"
 #include "e_fonts.h"
+#include "e_string.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "in_lude.h"
@@ -42,16 +43,18 @@
 #include "p_mobj.h"
 #include "p_tick.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_stuff.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "wi_stuff.h"
-
-// [CG] Added.
-#include "cs_score.h"
+#include "cs_score.h" // [CG] 09/13/11
 
 extern vfont_t *in_bigfont;
 
@@ -97,7 +100,7 @@ extern char gamemapname[9];
 
 // NET GAME STUFF
 #define NG_STATSY     50
-#define NG_STATSX     (32 + SwapShort(star->width)/2 + 32*!dofrags)
+#define NG_STATSX     (32 + star->width/2 + 32*!dofrags)
 
 #define NG_SPACINGX   64
 
@@ -389,7 +392,7 @@ static patch_t *wi_lname_next;
 static int cur_pause_time;
 
 // haleyjd: whether decision to fade bg graphics has been made yet
-static boolean fade_applied = false;
+static bool fade_applied = false;
 
 // haleyjd 03/27/05: EDF-defined intermission map names
 static edf_string_t *mapName;
@@ -429,7 +432,7 @@ static void WI_drawLF(void)
    // haleyjd 06/17/06: only the needed patch is now cached
 
    if(LevelInfo.levelPic)
-      patch = (patch_t *)W_CacheLumpName(LevelInfo.levelPic, PU_STATIC);
+      patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.levelPic, PU_STATIC);
    else
       patch = wi_lname_this;
 
@@ -444,13 +447,13 @@ static void WI_drawLF(void)
       }
       else
       {
-         V_DrawPatch((SCREENWIDTH - SwapShort(patch->width))/2,
+         V_DrawPatch((SCREENWIDTH - patch->width)/2,
                      y, &vbscreen, patch);
-         y += (5 * SwapShort(patch->height)) / 4;
+         y += (5 * patch->height) / 4;
       }
       
       // draw "Finished!"
-      V_DrawPatch((SCREENWIDTH - SwapShort(finished->width))/2,
+      V_DrawPatch((SCREENWIDTH - finished->width)/2,
                   y, &vbscreen, finished);
    }
 
@@ -470,7 +473,7 @@ static void WI_drawEL(void)
 {
    int y = WI_TITLEY;
    patch_t *patch = NULL;
-   boolean loadedInfoPatch = false;
+   bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
    if(inmasterlevels)
@@ -481,13 +484,13 @@ static void WI_drawEL(void)
    {
       if(LevelInfo.nextSecretPic) // watch out; can't merge these if's
       {
-         patch = (patch_t *)W_CacheLumpName(LevelInfo.nextSecretPic, PU_STATIC);
+         patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.nextSecretPic, PU_STATIC);
          loadedInfoPatch = true;
       }
    }
    else if(LevelInfo.nextLevelPic)
    {
-      patch = (patch_t *)W_CacheLumpName(LevelInfo.nextLevelPic, PU_STATIC);
+      patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.nextLevelPic, PU_STATIC);
       loadedInfoPatch = true;
    }
 
@@ -498,11 +501,11 @@ static void WI_drawEL(void)
    if(patch || nextMapName)
    {
       // draw "Entering"
-      V_DrawPatch((SCREENWIDTH - SwapShort(entering->width))/2,
+      V_DrawPatch((SCREENWIDTH - entering->width)/2,
                   y, &vbscreen, entering);
 
       // haleyjd: corrected to use height of entering, not map name
-      y += (5 * SwapShort(entering->height))/4;
+      y += (5 * entering->height)/4;
 
       // draw level
       if(nextMapName)
@@ -513,7 +516,7 @@ static void WI_drawEL(void)
       }
       else
       {
-         V_DrawPatch((SCREENWIDTH - SwapShort(patch->width))/2,
+         V_DrawPatch((SCREENWIDTH - patch->width)/2,
                      y, &vbscreen, patch);
       }
    }
@@ -536,20 +539,20 @@ static void WI_drawEL(void)
 //
 static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
 {
-   int   i;
-   int   left;
-   int   top;
-   int   right;
-   int   bottom;
-   boolean fits = false;
+   int  i;
+   int  left;
+   int  top;
+   int  right;
+   int  bottom;
+   bool fits = false;
    
    i = 0;
    do
    {
-      left = lnodes[wbs->epsd][n].x - SwapShort(c[i]->leftoffset);
-      top = lnodes[wbs->epsd][n].y - SwapShort(c[i]->topoffset);
-      right = left + SwapShort(c[i]->width);
-      bottom = top + SwapShort(c[i]->height);
+      left   = lnodes[wbs->epsd][n].x - c[i]->leftoffset;
+      top    = lnodes[wbs->epsd][n].y - c[i]->topoffset;
+      right  = left + c[i]->width;
+      bottom = top  + c[i]->height;
       
       if(left >= 0
          && right < SCREENWIDTH
@@ -712,7 +715,7 @@ static void WI_drawAnimatedBack(void)
 //
 static int WI_drawNum(int x, int y, int n, int digits)
 {
-   int neg, temp, fontwidth = SwapShort(num[0]->width);
+   int neg, temp, fontwidth = num[0]->width;
 
    neg = n < 0;    // killough 11/98: move up to here, for /= 10 division below
    if(neg)
@@ -799,7 +802,7 @@ static void WI_drawTime(int x, int y, int t)
       do
       {
          n = (t / div) % 60;
-         x = WI_drawNum(x, y, n, 2) - SwapShort(colon->width);
+         x = WI_drawNum(x, y, n, 2) - colon->width;
          div *= 60;
          
          // draw
@@ -811,7 +814,7 @@ static void WI_drawTime(int x, int y, int t)
    else
    {
       // "sucks"
-      V_DrawPatch(x - SwapShort(sucks->width), y, &vbscreen, sucks); 
+      V_DrawPatch(x - sucks->width, y, &vbscreen, sucks); 
    }
 }
 
@@ -916,7 +919,7 @@ static void WI_initNoState(void)
 static void WI_updateNoState(void) 
 {
    WI_updateAnimatedBack();
-
+   
    if(!--cnt)
    {
       WI_End();
@@ -932,7 +935,7 @@ static void WI_updateNoState(void)
    }
 }
 
-static boolean snl_pointeron = false;
+static bool snl_pointeron = false;
 
 
 // ====================================================================
@@ -1099,10 +1102,10 @@ static void WI_initDeathmatchStats(void)
 //
 static void WI_updateDeathmatchStats(void)
 {
-   int     i, j = 0;
-   boolean stillticking;
    static int clientserver_tics = 0;
-   
+   int  i, j;    
+   bool stillticking;
+
    if(clientserver_tics == 0)
       clientserver_tics = gametic + (10 * TICRATE);
 
@@ -1192,7 +1195,7 @@ static void WI_updateDeathmatchStats(void)
    else if(dm_state == 4)
    {
       if(acceleratestage || (clientserver && gametic == clientserver_tics))
-      {
+      {   
          clientserver_tics = 0;
          S_StartSound(NULL, sfx_slop);
 
@@ -1241,7 +1244,7 @@ static void WI_drawDeathmatchStats(void)
    WI_drawLF();
 
    // draw stat titles (top line)
-   V_DrawPatch(DM_TOTALSX-SwapShort(total->width)/2,
+   V_DrawPatch(DM_TOTALSX-total->width/2,
                DM_MATRIXY-WI_SPACINGY+10,
                &vbscreen,
                total);
@@ -1257,24 +1260,24 @@ static void WI_drawDeathmatchStats(void)
    {
       if (playeringame[i])
       {
-         V_DrawPatch(x-SwapShort(p[i]->width)/2,
+         V_DrawPatch(x-p[i]->width/2,
                      DM_MATRIXY - WI_SPACINGY,
                      &vbscreen,
                      p[i]);
       
-         V_DrawPatch(DM_MATRIXX-SwapShort(p[i]->width)/2,
+         V_DrawPatch(DM_MATRIXX-p[i]->width/2,
                      y,
                      &vbscreen,
                      p[i]);
 
          if(i == me)
          {
-            V_DrawPatch(x-SwapShort(p[i]->width)/2,
+            V_DrawPatch(x-p[i]->width/2,
                         DM_MATRIXY - WI_SPACINGY,
                         &vbscreen,
                         bstar);
 
-            V_DrawPatch(DM_MATRIXX-SwapShort(p[i]->width)/2,
+            V_DrawPatch(DM_MATRIXX-p[i]->width/2,
                         y,
                         &vbscreen,
                         star);
@@ -1286,7 +1289,7 @@ static void WI_drawDeathmatchStats(void)
 
    // draw stats
    y = DM_MATRIXY + 10;
-   w = SwapShort(num[0]->width);
+   w = num[0]->width;
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
@@ -1387,7 +1390,7 @@ static void WI_initNetgameStats(void)
 static void WI_updateNetgameStats(void)
 {
    int i, fsum;    
-   boolean stillticking;
+   bool stillticking;
    
    WI_updateAnimatedBack();
 
@@ -1562,7 +1565,7 @@ static void WI_updateNetgameStats(void)
 //
 static void WI_drawNetgameStats(void)
 {
-   int i, x, y, pwidth = SwapShort(percent->width);
+   int i, x, y, pwidth = percent->width;
 
    if(!(fade_applied || cur_pause_time))
    {
@@ -1582,21 +1585,21 @@ static void WI_drawNetgameStats(void)
    WI_drawLF();
 
    // draw stat titles (top line)
-   V_DrawPatch(NG_STATSX+NG_SPACINGX-SwapShort(kills->width),
+   V_DrawPatch(NG_STATSX+NG_SPACINGX-kills->width,
                NG_STATSY, &vbscreen, kills);
 
-   V_DrawPatch(NG_STATSX+2*NG_SPACINGX-SwapShort(items->width),
+   V_DrawPatch(NG_STATSX+2*NG_SPACINGX-items->width,
                NG_STATSY, &vbscreen, items);
 
-   V_DrawPatch(NG_STATSX+3*NG_SPACINGX-SwapShort(secret->width),
+   V_DrawPatch(NG_STATSX+3*NG_SPACINGX-secret->width,
                NG_STATSY, &vbscreen, secret);
   
    if(dofrags)
-      V_DrawPatch(NG_STATSX+4*NG_SPACINGX-SwapShort(frags->width),
+      V_DrawPatch(NG_STATSX+4*NG_SPACINGX-frags->width,
                   NG_STATSY, &vbscreen, frags);
 
    // draw stats
-   y = NG_STATSY + SwapShort(kills->height);
+   y = NG_STATSY + kills->height;
 
    for(i = 0; i < MAXPLAYERS; ++i)
    {
@@ -1604,10 +1607,10 @@ static void WI_drawNetgameStats(void)
          continue;
       
       x = NG_STATSX;
-      V_DrawPatch(x-SwapShort(p[i]->width), y, &vbscreen, p[i]);
+      V_DrawPatch(x-p[i]->width, y, &vbscreen, p[i]);
       
       if(i == me)
-         V_DrawPatch(x-SwapShort(p[i]->width), y, &vbscreen, star);
+         V_DrawPatch(x-p[i]->width, y, &vbscreen, star);
       
       x += NG_SPACINGX;
       WI_drawPercent(x-pwidth, y+10, cnt_kills[i]); x += NG_SPACINGX;
@@ -1787,7 +1790,7 @@ static void WI_drawStats(void)
    // line height
    int lh; 
    
-   lh = (3*SwapShort(num[0]->height))/2;
+   lh = (3*num[0]->height)/2;
 
    if(!(fade_applied || cur_pause_time))
    {
@@ -1848,7 +1851,6 @@ static void WI_Ticker(void)
 {
    switch(state)
    {
-
    case StatCount:
       if(GameType == gt_dm) 
          WI_updateDeathmatchStats();
@@ -1901,7 +1903,7 @@ static void WI_DrawBackground(void)
       sprintf(name, "WIMAP%d", wbs->epsd);
 
    // background
-   bg = (patch_t *)W_CacheLumpName(name, PU_CACHE);    
+   bg = PatchLoader::CacheName(wGlobalDir, name, PU_CACHE);
    V_DrawPatch(0, 0, &backscreen1, bg);
 
    // re-fade if we were called due to video mode reset
@@ -1948,14 +1950,14 @@ static void WI_loadData(void)
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->last);
 
          if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_this = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+            wi_lname_this = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
          else
             wi_lname_this = NULL;
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
 
          if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_next = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+            wi_lname_next = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
          else
             wi_lname_next = NULL;
       }
@@ -1970,26 +1972,26 @@ static void WI_loadData(void)
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->last);
 
          if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_this = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+            wi_lname_this = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
          else
             wi_lname_this = NULL;
 
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
 
          if((lumpnum = W_CheckNumForName(name)) != -1)
-            wi_lname_next = (patch_t *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+            wi_lname_next = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
          else
             wi_lname_next = NULL;
       }
       
       // you are here
-      yah[0] = (patch_t *)W_CacheLumpName("WIURH0", PU_STATIC);
+      yah[0] = PatchLoader::CacheName(wGlobalDir, "WIURH0", PU_STATIC);
       
       // you are here (alt.)
-      yah[1] = (patch_t *)W_CacheLumpName("WIURH1", PU_STATIC);
+      yah[1] = PatchLoader::CacheName(wGlobalDir, "WIURH1", PU_STATIC);
 
       // splat
-      splat = (patch_t *)W_CacheLumpName("WISPLAT", PU_STATIC); 
+      splat = PatchLoader::CacheName(wGlobalDir, "WISPLAT", PU_STATIC);
       
       if(wbs->epsd < 3)
       {
@@ -2003,7 +2005,7 @@ static void WI_loadData(void)
                {
                   // animations
                   sprintf(name, "WIA%d%.2d%.2d", wbs->epsd, j, i);  
-                  a->p[i] = (patch_t *)W_CacheLumpName(name, PU_STATIC);
+                  a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
                }
                else
                {
@@ -2016,79 +2018,78 @@ static void WI_loadData(void)
    } // end else (!commercial)
 
    // More hacks on minus sign.
-   wiminus = (patch_t *)W_CacheLumpName("WIMINUS", PU_STATIC); 
+   wiminus = PatchLoader::CacheName(wGlobalDir, "WIMINUS", PU_STATIC); 
 
    for(i = 0; i < 10; ++i)
    {
       // numbers 0-9
       sprintf(name, "WINUM%d", i);     
-      num[i] = (patch_t *)W_CacheLumpName(name, PU_STATIC);
+      num[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 
    // percent sign
-   percent = (patch_t *)W_CacheLumpName("WIPCNT", PU_STATIC);
+   percent = PatchLoader::CacheName(wGlobalDir, "WIPCNT", PU_STATIC);
    
    // "finished"
-   finished = (patch_t *)W_CacheLumpName("WIF", PU_STATIC);
+   finished = PatchLoader::CacheName(wGlobalDir, "WIF", PU_STATIC);
    
    // "entering"
-   entering = (patch_t *)W_CacheLumpName("WIENTER", PU_STATIC);
+   entering = PatchLoader::CacheName(wGlobalDir, "WIENTER", PU_STATIC);
    
    // "kills"
-   kills = (patch_t *)W_CacheLumpName("WIOSTK", PU_STATIC);   
+   kills = PatchLoader::CacheName(wGlobalDir, "WIOSTK", PU_STATIC);   
 
    // "scrt"
-   secret = (patch_t *)W_CacheLumpName("WIOSTS", PU_STATIC);
+   secret = PatchLoader::CacheName(wGlobalDir, "WIOSTS", PU_STATIC);
    
    // "secret"
-   sp_secret = (patch_t *)W_CacheLumpName("WISCRT2", PU_STATIC);
+   sp_secret = PatchLoader::CacheName(wGlobalDir, "WISCRT2", PU_STATIC);
 
    // Yuck. // Ty 03/27/98 - got that right :)  
    // french is an enum=1 always true.
    // haleyjd: removed old crap
 
-   items = (patch_t *)W_CacheLumpName("WIOSTI", PU_STATIC);
+   items = PatchLoader::CacheName(wGlobalDir, "WIOSTI", PU_STATIC);
    
    // "frgs"
-   frags = (patch_t *)W_CacheLumpName("WIFRGS", PU_STATIC);    
+   frags = PatchLoader::CacheName(wGlobalDir, "WIFRGS", PU_STATIC);    
    
    // ":"
-   colon = (patch_t *)W_CacheLumpName("WICOLON", PU_STATIC); 
+   colon = PatchLoader::CacheName(wGlobalDir, "WICOLON", PU_STATIC); 
    
    // "time"
-   time_patch = (patch_t *)W_CacheLumpName("WITIME", PU_STATIC);   
+   time_patch = PatchLoader::CacheName(wGlobalDir, "WITIME", PU_STATIC);   
 
    // "sucks"
-   sucks = (patch_t *)W_CacheLumpName("WISUCKS", PU_STATIC);  
+   sucks = PatchLoader::CacheName(wGlobalDir, "WISUCKS", PU_STATIC);  
    
    // "par"
-   par = (patch_t *)W_CacheLumpName("WIPAR", PU_STATIC);   
+   par = PatchLoader::CacheName(wGlobalDir, "WIPAR", PU_STATIC);   
    
    // "killers" (vertical)
-   killers = (patch_t *)W_CacheLumpName("WIKILRS", PU_STATIC);
+   killers = PatchLoader::CacheName(wGlobalDir, "WIKILRS", PU_STATIC);
   
    // "victims" (horiz)
-   victims = (patch_t *)W_CacheLumpName("WIVCTMS", PU_STATIC);
+   victims = PatchLoader::CacheName(wGlobalDir, "WIVCTMS", PU_STATIC);
    
    // "total"
-   total = (patch_t *)W_CacheLumpName("WIMSTT", PU_STATIC);   
+   total = PatchLoader::CacheName(wGlobalDir, "WIMSTT", PU_STATIC);   
    
    // your face
-   star = (patch_t *)W_CacheLumpName("STFST01", PU_STATIC);
+   star = PatchLoader::CacheName(wGlobalDir, "STFST01", PU_STATIC);
    
    // dead face
-   bstar = (patch_t *)W_CacheLumpName("STFDEAD0", PU_STATIC);    
+   bstar = PatchLoader::CacheName(wGlobalDir, "STFDEAD0", PU_STATIC);    
 
-   // [CG] Capped at 3 due to changes made by c/s to MAXPLAYERS.
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       // "1,2,3,4"
-      sprintf(name, "STPB%d", i % VANILLA_MAXPLAYERS);
-      p[i] = (patch_t *)W_CacheLumpName(name, PU_STATIC);
+      sprintf(name, "STPB%d", i % VANILLA_MAXPLAYERS);      
+      p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
       
       // "1,2,3,4"
-      sprintf(name, "WIBP%d", (i % VANILLA_MAXPLAYERS) + 1);
-      bp[i] = (patch_t *)W_CacheLumpName(name, PU_STATIC);
+      sprintf(name, "WIBP%d", (i % VANILLA_MAXPLAYERS)+1);     
+      bp[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 }
 

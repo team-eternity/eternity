@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -68,7 +68,7 @@ int metaerrno = 0;
 // Constructor for MetaObject when type and/or key are known.
 //
 MetaObject::MetaObject(metatypename_t pType, const char *pKey) 
-   : links(), typelinks(), type(), key()
+   : ZoneObject(), links(), typelinks(), type(), key()
 {
    type_name = pType;   
    key_name  = strdup(pKey); // key_name is managed by the metaobject
@@ -83,7 +83,7 @@ MetaObject::MetaObject(metatypename_t pType, const char *pKey)
 // Copy constructor
 //
 MetaObject::MetaObject(const MetaObject &other)
-   : links(), typelinks(), type(), key()
+   : ZoneObject(), links(), typelinks(), type(), key()
 {
    type_name = other.type_name;
 
@@ -131,14 +131,22 @@ MetaObject *MetaObject::clone() const
 // C implementation, the returned string pointer is a static buffer and should
 // not be cached. The default toString method creates a hex dump representation
 // of the object. This should be pretty interesting in C++...
+// 04/03/11: Altered to use new ZoneObject functionality so that the entire
+// object, including all subclasses, are dumped properly. Really cool ;)
 //
 const char *MetaObject::toString() const
 {
-   static qstring_t qstr;
-   size_t bytestoprint = sizeof(*this);
-   const byte *data = reinterpret_cast<const byte *>(this); // Not evil, I promise.
+   static qstring qstr;
+   size_t bytestoprint = getZoneSize();
+   const byte *data    = reinterpret_cast<const byte *>(getBlockPtr());
    
-   QStrClearOrCreate(&qstr, 128);
+   qstr.clearOrCreate(128);
+
+   if(!bytestoprint) // Not a zone object? Can only dump the base class.
+   {
+      bytestoprint = sizeof(*this);
+      data = reinterpret_cast<const byte *>(this); // Not evil, I swear :P
+   }
 
    while(bytestoprint)
    {
@@ -152,12 +160,12 @@ const char *MetaObject::toString() const
 
          sprintf(bytes, "%02x ", val);
 
-         QStrCat(&qstr, bytes);
+         qstr += bytes;
       }
-      QStrPutc(&qstr, '\n');
+      qstr += '\n';
    }
 
-   return QStrConstPtr(&qstr);
+   return qstr.constPtr();
 }
 
 //
@@ -167,29 +175,9 @@ const char *MetaObject::toString() const
 // guarantee anything about the way typeid() works, and metaobject type names
 // may be very significant in the future in Aeon scripting.
 //
-boolean MetaObject::isKindOf(metatypename_t type) const
+bool MetaObject::isKindOf(metatypename_t type) const
 {
    return !strcmp(type_name, type);
-}
-
-//
-// MetaObject::operator new
-//
-// MetaObjects are zone allocated.
-// TODO: Inherit from a CZoneStaticItem class?
-// TODO: What about PU_LEVEL?
-//
-void *MetaObject::operator new (size_t size)
-{
-   return Z_Calloc(1, size, PU_STATIC, NULL);
-}
-
-//
-// MetaObject::operator delete
-//
-void MetaObject::operator delete (void *p)
-{
-   Z_Free(p);
 }
 
 //=============================================================================
@@ -401,14 +389,15 @@ void MetaString::setValue(const char *s, char **ret)
 //
 // A metatable is just a pair of hash tables, one on keys and one on types.
 //
-class metaTablePimpl
+class metaTablePimpl : public ZoneObject
 {
 public:
    EHashTable<MetaObject, ENCStringHashKey> keyhash;
    EHashTable<MetaObject, EStringHashKey>   typehash;
 
    metaTablePimpl() 
-      : keyhash (&MetaObject::key, &MetaObject::links),
+      : ZoneObject(),
+        keyhash (&MetaObject::key,  &MetaObject::links),
         typehash(&MetaObject::type, &MetaObject::typelinks)
    {
       // the key hash is growable.
@@ -421,9 +410,11 @@ public:
       typehash.Initialize(METANUMCHAINS);
    }
 
-   // Le Sigh. CPP_FIXME: We need a global way to deal with this.
-   void *operator new (size_t size) { return Z_Calloc(1, size, PU_STATIC, NULL); }
-   void  operator delete (void *p)  { Z_Free(p); }
+   virtual ~metaTablePimpl()
+   {
+      keyhash.Destroy();
+      typehash.Destroy();
+   }
 };
 
 //
@@ -431,10 +422,53 @@ public:
 //
 // Default Constructor
 //
-MetaTable::MetaTable()
+MetaTable::MetaTable(const char *name) : MetaObject("MetaTable", name)
 {
    // Construct the private implementation object that holds our dual hashes
    pImpl = new metaTablePimpl();
+}
+
+//
+// MetaTable(const MetaTable &)
+//
+// Copy constructor
+//
+MetaTable::MetaTable(const MetaTable &other) 
+  : MetaObject("MetaTable", other.key_name)
+{
+   pImpl = new metaTablePimpl();
+   copyTableFrom(&other);
+}
+
+//
+// MetaTable Destructor
+//
+MetaTable::~MetaTable()
+{
+   clearTable();
+
+   delete pImpl;
+   pImpl = NULL;
+}
+
+//
+// MetaTable::clone
+//
+// Virtual method inherited from MetaObject. Create a copy of this table.
+//
+MetaObject *MetaTable::clone() const
+{
+   return new MetaTable(*this);
+}
+
+//
+// MetaTable::toString
+//
+// Virtual method inherited from MetaObject.
+//
+const char *MetaTable::toString() const
+{
+   return key_name;
 }
 
 //
@@ -443,7 +477,7 @@ MetaTable::MetaTable()
 // Returns true or false if an object of the same key is in the metatable.
 // No type checking is done, so it will match any object with that key.
 //
-boolean MetaTable::hasKey(const char *key)
+bool MetaTable::hasKey(const char *key)
 {
    return (pImpl->keyhash.objectForKey(key) != NULL);
 }
@@ -453,7 +487,7 @@ boolean MetaTable::hasKey(const char *key)
 //
 // Returns true or false if an object of the same type is in the metatable.
 //
-boolean MetaTable::hasType(metatypename_t type)
+bool MetaTable::hasType(metatypename_t type)
 {
    return (pImpl->typehash.objectForKey(type) != NULL);
 }
@@ -465,10 +499,10 @@ boolean MetaTable::hasType(metatypename_t type)
 // and type, and it is the same object. This is naturally slower as it must
 // search down the key hash chain for a type match.
 //
-boolean MetaTable::hasKeyAndType(const char *key, metatypename_t type)
+bool MetaTable::hasKeyAndType(const char *key, metatypename_t type)
 {
    MetaObject *obj = NULL;
-   boolean found = false;
+   bool found = false;
 
    while((obj = pImpl->keyhash.keyIterator(obj, key)))
    {
@@ -533,11 +567,6 @@ int MetaTable::countOfKeyAndType(const char *key, metatypename_t type)
 
    return count;
 }
-
-// Le Sigh x 2. CPP_FIXME: We need a global way to deal with this.
-void *MetaTable::operator new (size_t size) { return Z_Calloc(1, size, PU_STATIC, NULL); }
-void  MetaTable::operator delete (void *p)  { Z_Free(p); }
-
 
 //=============================================================================
 //
@@ -711,7 +740,7 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, me
 //
 // Iterates on all objects in the metatable, regardless of key or type.
 //
-MetaObject *MetaTable::tableIterator(MetaObject *object)
+MetaObject *MetaTable::tableIterator(MetaObject *object) const
 {
    return pImpl->keyhash.tableIterator(object);
 }
@@ -1024,7 +1053,7 @@ void MetaTable::removeStringNR(const char *key)
 //
 // Adds copies of all objects in the source table to the destination table.
 //
-void MetaTable::copyTableTo(MetaTable *dest)
+void MetaTable::copyTableTo(MetaTable *dest) const
 {
    MetaObject *srcobj = NULL;
 
@@ -1045,9 +1074,27 @@ void MetaTable::copyTableTo(MetaTable *dest)
 // Convenience method
 // Adds copies of all objects in the source table to *this* table.
 //
-void MetaTable::copyTableFrom(MetaTable *source)
+void MetaTable::copyTableFrom(const MetaTable *source)
 {
    source->copyTableTo(this);
+}
+
+//
+// MetaTable::clearTable
+//
+// Removes all objects from a metatable.
+//
+void MetaTable::clearTable()
+{
+   MetaObject *obj = NULL;
+
+   // iterate on the source table
+   while((obj = tableIterator(NULL)))
+   {
+      removeObject(obj);
+
+      delete obj;
+   }
 }
 
 // EOF

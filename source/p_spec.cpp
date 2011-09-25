@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -34,47 +34,55 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
-#include "d_mod.h"
-#include "p_spec.h"
-#include "p_tick.h"
-#include "p_setup.h"
-#include "m_random.h"
-#include "d_englsh.h"
-#include "m_argv.h"
-#include "w_wad.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "g_game.h"
-#include "p_inter.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "m_bbox.h"                                         // phares 3/20/98
-#include "m_swap.h"
-#include "d_deh.h"
-#include "r_plane.h"  // killough 10/98
-#include "p_info.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
 #include "c_io.h"
 #include "c_runcmd.h"
-#include "hu_stuff.h"
-#include "r_ripple.h"
+#include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_englsh.h"
 #include "d_gi.h"
-#include "p_user.h"
-#include "e_things.h"
-#include "e_states.h"
-#include "e_ttypes.h"
+#include "d_mod.h"
+#include "doomstat.h"
 #include "e_exdata.h"
-#include "a_small.h"
-#include "polyobj.h"
-#include "p_slopes.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
+#include "g_dmflag.h" // [CG] 09/18/11
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "p_portal.h"
-#include "g_dmflag.h" // [CG] Added.
 #include "p_saveg.h"
+#include "p_setup.h"
+#include "p_skin.h"
+#include "p_slopes.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "p_user.h"
+#include "polyobj.h"
+#include "m_argv.h"
+#include "m_bbox.h"                                         // phares 3/20/98
+#include "m_random.h"
+#include "m_swap.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_plane.h"    // killough 10/98
+#include "r_portal.h"
+#include "r_ripple.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "v_misc.h"
+#include "v_video.h"
+#include "w_wad.h"
 
-// [CG] Added.
-#include "cs_main.h"
-#include "cs_team.h"
+#include "cs_main.h" // [CG] 09/18/11
+#include "cs_team.h" // [CG] 09/18/11
 
 //
 // Animating textures and planes
@@ -82,7 +90,7 @@
 //
 typedef struct anim_s
 {
-  boolean     istexture;
+  bool        istexture;
   int         picnum;
   int         basepic;
   int         numpics;
@@ -173,7 +181,7 @@ void P_InitPicAnims(void)
    
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
-   animdefs = (animdef_t *)W_CacheLumpName("ANIMATED", PU_STATIC);
+   animdefs = (animdef_t *)wGlobalDir.CacheLumpName("ANIMATED", PU_STATIC);
 
    lastanim = anims;
    for(i=0 ; animdefs[i].istexture != -1 ; i++)
@@ -889,7 +897,7 @@ int P_FindMinSurroundingLight(sector_t *sector, int min)
 //
 // haleyjd 08/22/00: fixed bug found by fraggle
 //
-boolean P_CanUnlockGenDoor(line_t *line, player_t *player)
+bool P_CanUnlockGenDoor(line_t *line, player_t *player)
 {
    // does this line special distinguish between skulls and keys?
    int skulliscard = (line->special & LockedNKeys)>>LockedNKeysShift;
@@ -1125,7 +1133,7 @@ int P_CheckTag(line_t *line)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-boolean P_IsSecret(sector_t *sec)
+bool P_IsSecret(sector_t *sec)
 {
    return (sec->flags & SECF_SECRET);
 }
@@ -1139,7 +1147,7 @@ boolean P_IsSecret(sector_t *sec)
 // jff 3/14/98 added to simplify checks for whether sector is secret
 //  in automap and other places
 //
-boolean P_WasSecret(sector_t *sec)
+bool P_WasSecret(sector_t *sec)
 {
    return (sec->intflags & SIF_WASSECRET) == SIF_WASSECRET;
 }
@@ -1174,9 +1182,9 @@ void P_StartLineScript(line_t *line, Mobj *thing)
       // destroy any child context that might have been created
       SM_DestroyChildContext(useContext);         
    }
-   else
-      doom_printf(FC_ERROR "P_StartLineScript: No Levelscript.\n");
+   else // haleyjd 03/20/11: Defer to ACS if there is no Small level script
 #endif
+      ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL, false);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1195,7 +1203,7 @@ void P_StartLineScript(line_t *line, Mobj *thing)
 // W1/S1/G1 line actions on action failure, because it makes some maps
 // unplayable if it is disabled unconditionally outside of demos.
 //
-d_inline static boolean P_ClearSwitchOnFail(void)
+inline static bool P_ClearSwitchOnFail(void)
 {
    return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
 }
@@ -2379,10 +2387,9 @@ void P_PlayerInSpecialSector(player_t *player)
 
    // Has hit ground
 
-   // haleyjd 12/31/08: generalized sector damage engine
    // killough 12/98: nukage disabling cheat
-   // [CG] Added a c/s dmflag for this as well.
-   //      TODO: Replace enable_nuke console stuff with the dmflag stuff.
+   // haleyjd 12/31/08: generalized sector damage engine
+   // [CG] 09/18/11: Added a c/s dmflag for this.
    if((sector->damage > 0) &&
       ((clientserver && (dmflags2 & dmf_enable_nukage)) ||
        (!clientserver && enable_nuke)))
@@ -2476,7 +2483,7 @@ void P_PlayerOnSpecialFlat(player_t *player)
 
 int             levelTimeLimit;
 int             levelFragLimit; // Ty 03/18/98 Added -frags support
-int             levelScoreLimit; // [CG] Added score limit support
+int             levelScoreLimit; // [CG] 09/18/11 Added score limit support.
 
 void P_UpdateSpecials(void)
 {
@@ -2493,6 +2500,7 @@ void P_UpdateSpecials(void)
    //  array somewhere, but until they are...
    if(levelFragLimit)  // we used -frags so compare count
    {
+      int i;
       for(i = 0; i < MAXPLAYERS; ++i)
       {
          if(!playeringame[i])
@@ -2506,13 +2514,10 @@ void P_UpdateSpecials(void)
    }
 
    if(levelScoreLimit)
-   {
-      for(i = 1; i <= cs_settings->number_of_teams; i++)
-      {
+      for(i = team_color_red; i < cs_settings->number_of_teams; i++)
          if(team_scores[i] >= levelScoreLimit)
             G_ExitLevel();
-      }
-   }
+
    // Animate flats and textures globally
    for(anim = anims; anim < lastanim; ++anim)
    {
@@ -2685,7 +2690,7 @@ void P_SpawnSpecials(int mapformat)
          
       case 14:
          // door raise in 5 minutes
-         P_SpawnDoorRaiseIn5Mins(sector, i);
+         P_SpawnDoorRaiseIn5Mins(sector);
          break;
 
       case 16:
@@ -3454,7 +3459,7 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 
 PushThinker *tmpusher; // pusher structure for blockmap searches
 
-boolean PIT_PushThing(Mobj* thing)
+bool PIT_PushThing(Mobj* thing)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
       thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
@@ -3956,11 +3961,11 @@ void P_ZeroSectorSpecial(sector_t *sec)
 // Runs through the given attached sector list and scrolls both
 // sides of any linedef it finds with same tag.
 //
-boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int crush)
+bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 {
-   boolean  ok = true;
+   bool     ok = true;
    int      i;
-   line_t   *line;
+   line_t  *line;
 
    int numattached;
    int *attached;
@@ -4020,7 +4025,7 @@ boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int cr
 //
 // SoM 11/9/04: Now attaches lines and records another list of sectors
 //
-void P_AttachLines(line_t *cline, boolean ceiling)
+void P_AttachLines(line_t *cline, bool ceiling)
 {
    static int maxattach = 0;
    static int numattach = 0;
@@ -4195,15 +4200,15 @@ void P_AttachLines(line_t *cline, boolean ceiling)
 // P_MoveAttached
 //
 // Moves all attached surfaces.
-boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int crush)
+bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 {
    int i;
 
    int count;
    attachedsurface_t *list;
 
-   boolean ok = true;
-
+   bool ok = true;
+   
    if(ceiling)
    {
       count = sector->c_asurfacecount;
@@ -4219,17 +4224,13 @@ boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int cru
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(
-            list[i].sector, list[i].sector->ceilingheight + delta
-         );
+         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(
-            list[i].sector, list[i].sector->ceilingheight - delta
-         );
+         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
       }
@@ -4263,7 +4264,7 @@ void P_AttachSectors(line_t *line)
    static int maxattached = 0;
    static attachedsurface_t *attached = NULL;
 
-   boolean ceiling = line->special == 379 ? true : false;
+   bool ceiling = line->special == 379 ? true : false;
    sector_t *sector = line->frontsector;
 
    int start = 0, i;
@@ -4872,18 +4873,26 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
       break;
    // UNUSED: 122-128
    case 129: // use puzzle item
+      *special = 0; // TODO ^^^^
+      break;
    case 130: // thing activate
+      *special = 404;
+      break;
    case 131: // thing deactivate
+      *special = 405;
+      break;
    case 132: // thing remove
    case 133: // thing destroy
-   case 134: // thing projectile
       *special = 0; // TODO ^^^^
+      break;
+   case 134: // thing projectile
+      *special = 402;
       break;
    case 135: // thing spawn
       *special = 398;
       break;
    case 136: // thing projectile gravity
-      *special = 0; // TODO ^^^^
+      *special = 403;
       break;
    case 137: // thing spawn no fog
       *special = 399;
@@ -4892,7 +4901,7 @@ void P_ConvertHexenLineSpec(int16_t *special, int *args)
       *special = 397;
       break;
    // UNUSED: 139
-   case 140: // sector sound change
+   case 140: // sector sound change (TODO)
    // UNUSED: 141-255
    default:
       *special = 0; // clear out anything that is currently not used

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -29,15 +29,20 @@
 #include "z_zone.h"
 #include "doomstat.h"
 #include "d_main.h"
+#include "d_gi.h"
+#include "gl/gl_vars.h"
+#include "hal/i_picker.h"
+#include "i_sound.h"
+#include "i_video.h"
 #include "m_misc.h"
 #include "m_shots.h"
-#include "d_gi.h"
-#include "i_sound.h"
+#include "mn_menus.h"
 #include "s_sound.h"
+#include "s_sndseq.h"
 #include "w_wad.h"
 #include "w_levels.h"
 
-// [CG] Added
+// [CG] 09/17/11 Added.
 #include "cs_config.h"
 #include "cs_main.h"
 #include "cs_hud.h"
@@ -48,14 +53,15 @@
 
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
-extern boolean d_fastrefresh;  // haleyjd 01/04/10
+extern bool d_fastrefresh;     // haleyjd 01/04/10
 extern int iwad_choice;        // haleyjd 03/19/10
 
 #ifdef _SDL_VER
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern boolean unicodeinput;
+extern bool unicodeinput;
+extern int audio_buffers;
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
@@ -80,6 +86,9 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
+#define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
+#define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
+#define ITEM_IWAD_FREEDM        "iwad_freedm"
 #define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
@@ -125,7 +134,16 @@ static default_t sysdefaults[] =
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", default_t::wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
 
-   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_FREEDOOM, &gi_path_fdoom, NULL, "", default_t::wad_no,
+               "IWAD path for Freedoom (Doom 2 gamemission)"),
+
+   DEFAULT_STR(ITEM_IWAD_FREEDOOMU, &gi_path_fdoomu, NULL, "", default_t::wad_no,
+               "IWAD path for Freedoom (Ultimate Doom gamemission)"),
+
+   DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
+               "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
+
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
    DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", default_t::wad_no,
@@ -135,9 +153,6 @@ static default_t sysdefaults[] =
 
    DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, default_t::wad_no,
                "Start up ETERNITY in text mode"),
-
-   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to enable wait for vsync to avoid display tearing"),
 
    DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, default_t::wad_no,
                "Percentage of normal speed (35 fps) realtic clock runs at"),
@@ -170,14 +185,52 @@ static default_t sysdefaults[] =
                  "Midrange gain"),
 
    DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
-                 "High pass gain"),                 
+                 "High pass gain"),  
+
+   DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
+               "Volume of environmental sound sequences"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
-               "screenshot format (0=BMP,1=PCX,2=TGA)"),
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 3, default_t::wad_no,
+               "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
+
+   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
+               default_t::wad_no, i_videohelpstr),
+
+   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
+               "Software backend screen bitdepth (8, 16, 24, or 32)"),
+
+   DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
+               "Description of video mode parameters (WWWWxHHHH[flags])"),
+
+   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
+               "1 to enable wait for vsync to avoid display tearing"),
+
+   DEFAULT_INT("mn_favaspectratio", &mn_favaspectratio, NULL, 0, 0, AR_NUMASPECTRATIOS-1,
+               default_t::wad_no, "Favorite aspect ratio for selection in menus"),
+
+   DEFAULT_INT("mn_favscreentype", &mn_favscreentype, NULL, 0, 0, MN_NUMSCREENTYPES-1,
+               default_t::wad_no, "Favorite screen type for selection in menus"),
+
+   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
+                "1 to enable use of GL extensions in general"),
+
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
+                "1 to enable use of GL ARB pixelbuffer object extension"),
+
+   DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
+               "GL backend screen bitdepth (16, 24, or 32)"),
+
+   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8, 
+               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no, 
+               "GL2D internal texture format"),
+
+   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
+               0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
+               "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, false, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
@@ -186,11 +239,15 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
                 "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
 
-   DEFAULT_INT("wait_at_exit",&waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
-   DEFAULT_INT("grabmouse",&grabmouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("grabmouse", &grabmouse, NULL, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
+
+   DEFAULT_INT("audio_buffers", &audio_buffers, NULL, 2048, 1024, 8192, default_t::wad_no,
+               "SDL_mixer audio buffer size"),
+
 #endif
 
 #if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
@@ -216,21 +273,23 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL(
       "predict_shots",
       &cl_predict_shots,
-      NULL, true, default_t::wad_no,
+      NULL,
+      true,
+      default_t::wad_no,
       "predict shot results"
    ),
 
    DEFAULT_BOOL(
-      "constant_prediction",
-      &cl_constant_prediction,
-      NULL,
-      true, default_t::wad_no,
-      "always predict local movement"
+       "constant_prediction",
+       &cl_constant_prediction,
+       NULL,
+       true, default_t::wad_no,
+       "always predict local movement"
    ),
 
    DEFAULT_INT(
       "damage_screen_cap",
-      &damage_screen_factor,
+      &damage_screen_cap,
       NULL,
       100, 0, 100, default_t::wad_no,
       "cap the damage screen intensity, 0 - no damage screen, 100 - full, "
@@ -265,7 +324,9 @@ static default_t sysdefaults[] =
    DEFAULT_STR(
       "clientserver_demo_folder",
       &cs_demo_folder_path,
-      NULL, "", default_t::wad_no,
+      NULL,
+      "",
+      default_t::wad_no,
       "folder in which to save client/server demos, defaults to base/demos"
    ),
 

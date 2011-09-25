@@ -1,7 +1,7 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2000 James Haley
+// Copyright(C) 2011 Stephen McGranahan, James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
 #include "doomstat.h"
 #include "d_gi.h"
@@ -34,9 +35,13 @@
 #include "e_hash.h"
 #include "m_swap.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "r_data.h"
 #include "r_draw.h"
+#include "r_patch.h"
 #include "r_ripple.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
 
@@ -260,7 +265,7 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
 
 static byte *R_ReadUnknownPatch(byte *rawpatch)
 {
-   I_FatalError(I_ERR_KILL, "R_ReadUnknownPatch called\n");
+   I_Error("R_ReadUnknownPatch called\n");
 
    return NULL;
 }
@@ -304,7 +309,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
 
 static byte *R_ReadUnknownTexture(byte *rawtexture)
 {
-   I_FatalError(I_ERR_KILL, "R_ReadUnknownTexture called\n");
+   I_Error("R_ReadUnknownTexture called\n");
 
    return NULL;
 }
@@ -327,7 +332,7 @@ static texturehandler_t TextureHandlers[] =
 //
 // Sets up a texturelump structure.
 //
-static texturelump_t *R_InitTextureLump(const char *lname, boolean required)
+static texturelump_t *R_InitTextureLump(const char *lname, bool required)
 {
    texturelump_t *tlump = (texturelump_t *)(calloc(1, sizeof(texturelump_t)));
 
@@ -341,7 +346,7 @@ static texturelump_t *R_InitTextureLump(const char *lname, boolean required)
       byte *temp;
 
       tlump->maxoff      = W_LumpLength(tlump->lumpnum);
-      tlump->data = temp = (byte *)(W_CacheLumpNum(tlump->lumpnum, PU_STATIC));
+      tlump->data = temp = (byte *)(wGlobalDir.CacheLumpNum(tlump->lumpnum, PU_STATIC));
       tlump->numtextures = TEXINT(temp);
       tlump->directory   = temp;
    }
@@ -422,8 +427,7 @@ static void R_TextureHacks(texture_t *t)
       t->name[1] == 'K' &&
       t->name[2] == 'Y' &&
       t->name[3] == '1' &&
-      t->name[4] == 0 &&
-      t->height == 128)
+      t->name[4] == 0)
    {
       t->components->originy = 0;
       return;
@@ -501,8 +505,6 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 
       for(j = 0; j < texture->ccount; ++j, ++component)
       {
-         patch_t   pheader;
-         
          rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
 
          component->originx = tp.originx;
@@ -515,16 +517,16 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
             // killough 8/8/98
             // sf: error_printf
             C_Printf(FC_ERROR "R_ReadTextureLump: Missing patch %d in texture %.8s\n",
-                         tp.patch, texture->name);
+                         tp.patch, (const char *)(texture->name));
             //++*errors;
             
             component->width = component->height = 0;
          }
          else
          {
-            W_ReadLumpHeader(component->lump, &pheader, sizeof(patch_t));
-            component->width = SwapShort(pheader.width);
-            component->height = SwapShort(pheader.height);
+            patch_t *p = PatchLoader::CacheNum(wGlobalDir, component->lump, PU_CACHE);
+            component->width  = p->width;
+            component->height = p->height;
          }
       }
       
@@ -566,9 +568,9 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 struct tempmask_s
 {
    // This is the buffer used for masking
-   boolean   mask;       // If set to true, FinishTexture should create columns
-   int       buffermax;  // size of allocated buffer
-   byte      *buffer;    // mask buffer.
+   bool       mask;       // If set to true, FinishTexture should create columns
+   int        buffermax;  // size of allocated buffer
+   byte      *buffer;     // mask buffer.
    texture_t *tex;
    
    texcol_t  *tempcols;
@@ -588,7 +590,8 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
    if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
       ptroff + len > tempmask.buffermax)
    {
-      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", tex->name, 
+      I_Error("AddTexColumn(%s) invalid ptroff: %i / (%i, %i)\n", 
+              (const char *)(tex->name), 
               ptroff + len, tex->width * tex->height, tempmask.buffermax);
    }
 #endif
@@ -623,7 +626,7 @@ static void AddTexColumn(texture_t *tex, const byte *src, int srcstep,
 //
 static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 {
-   byte      *src = (byte *)(W_CacheLumpNum(component->lump, PU_CACHE));
+   byte      *src = (byte *)(wGlobalDir.CacheLumpNum(component->lump, PU_CACHE));
    int       destoff, srcoff, deststep, srcxstep, srcystep;
    int       xstart, ystart, xstop, ystop;
    int       width, height, wcount, hcount;
@@ -680,7 +683,8 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
    {
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + (hcount - 1) * srcystep > tex->width * tex->height)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, tex->width * tex->height);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, tex->width * tex->height);
 #endif
       AddTexColumn(tex, src + srcoff, srcystep, destoff, hcount);
       srcoff += srcxstep;
@@ -696,11 +700,11 @@ static void AddTexFlat(texture_t *tex, tcomponent_t *component)
 //
 static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 {
-   patch_t    *patch = (patch_t *)(W_CacheLumpNum(component->lump, PU_CACHE));
-   int        destoff;
-   int        xstart, ystart, xstop;
-   int        colindex, colstep;
-   int        x, xstep;
+   patch_t *patch = PatchLoader::CacheNum(wGlobalDir, component->lump, PU_CACHE);
+   int      destoff;
+   int      xstart, ystart, xstop;
+   int      colindex, colstep;
+   int      x, xstep;
    
    // Make sure component is not entirely off of the texture (should this count
    // as a texture error?)
@@ -728,7 +732,7 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
    {
       int top, y1, y2, destbase;
       const column_t *column = 
-         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[colindex]));
+         (const column_t *)((byte *)patch + patch->columnofs[colindex]);
          
       destbase = x * tex->height;
       top = 0;
@@ -769,7 +773,8 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 
 #ifdef RANGECHECK
       if(srcoff < 0 || srcoff + y2 - y1 > column->length)
-         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", srcoff, column->length);
+         I_Error("AddTexFlat(%s): Invalid srcoff %i / %i\n", 
+                 (const char *)(tex->name), srcoff, column->length);
 #endif
             
          if(y2 - y1 > 0)
@@ -786,31 +791,26 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 // Allocates the texture buffer, as well as managing the temporary structs and
 // the mask buffer.
 //
-static void StartTexture(texture_t *tex, boolean mask)
+static void StartTexture(texture_t *tex, bool mask)
 {
    int bufferlen = tex->width * tex->height;
    
    // Static for now
    // [CG] Try PU_RENDERER here.
-   // tex->buffer = (byte *)(
-   //    Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer
-   // ));
-   tex->buffer = (byte *)(Z_Malloc(
-      bufferlen, PU_RENDERER, (void **)&tex->buffer
-   ));
+   // tex->buffer = (byte *)(Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer));
+   tex->buffer = (byte *)(Z_Malloc(bufferlen, PU_RENDERER, (void **)&tex->buffer));
    memset(tex->buffer, 0, sizeof(byte) * bufferlen);
    
    if((tempmask.mask = mask))
    {
       tempmask.tex = tex;
       
-      // Setup the temporary mask
+      // Setup the temprary mask
       if(bufferlen > tempmask.buffermax || !tempmask.buffer)
       {
          tempmask.buffermax = bufferlen;
-         tempmask.buffer = (byte *)(Z_Realloc(
-            tempmask.buffer, bufferlen, PU_RENDERER, (void **)&tempmask.buffer
-         ));
+         tempmask.buffer = (byte *)(Z_Realloc(tempmask.buffer, bufferlen, 
+                                        PU_RENDERER, (void **)&tempmask.buffer));
       }
       memset(tempmask.buffer, 0, bufferlen);
    }
@@ -827,11 +827,7 @@ static texcol_t *NextTempCol(texcol_t *current)
    if(!current)
    {
       if(!tempmask.tempcols)
-      {
-         return tempmask.tempcols = (texcol_t *)(Z_Calloc(
-            sizeof(texcol_t), 1, PU_STATIC, 0
-         ));
-      }
+         return tempmask.tempcols = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0));
       else
          return tempmask.tempcols;
    }
@@ -839,11 +835,9 @@ static texcol_t *NextTempCol(texcol_t *current)
    if(!current->next)
    {
       // [CG] Try PU_RENDERER here.
-      // return current->next = (texcol_t *)(Z_Calloc(
-      //    sizeof(texcol_t), 1, PU_STATIC, 0
-      // ));
-      current->next = (texcol_t *)(Z_Calloc(
-         sizeof(texcol_t), 1, PU_RENDERER, &current->next
+      // return current->next = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0));
+      return current->next = (texcol_t *)(Z_Calloc(
+         sizeof(texcol_t), 1, PU_RENDERER, 0
       ));
    }
    
@@ -874,9 +868,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = (texcol_t **)(Z_Calloc(
-      sizeof(texcol_t **), tex->width, PU_RENDERER, 0
-   ));
+   tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
    
    // Build the columsn based on mask info
    maskp = tempmask.buffer;
@@ -922,9 +914,8 @@ static void FinishTexture(texture_t *tex)
       }
          
       // Now allocate and build the actual column structs in the texture
-      tcol =
-         tex->columns[x] =
-         (texcol_t *)(Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, NULL));
+      tcol = tex->columns[x] 
+           = (texcol_t *)(Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, NULL));
            
       col = NULL;
       for(i = 0; i < colcount; i++)
@@ -961,7 +952,7 @@ texture_t *R_CacheTexture(int num)
    if(tex->ccount == 0)
    {
       I_Error("R_CacheTexture: texture %s cached with no buffer and no components.\n", 
-              tex->name);
+              (const char *)(tex->name));
    }
 
    // This function has two primary branches:
@@ -1020,19 +1011,15 @@ static void R_MakeMissingTexture(int count)
    
    badtex = count;
    textures[badtex] = tex = R_AllocTexStruct("BAADF00D", 64, 64, 0);
-   tex->buffer = (byte *)(Z_Malloc(64 * 64, PU_RENDERER, NULL));
+   tex->buffer = (byte *)(Z_Malloc(64*64, PU_RENDERER, NULL));
    
    // Allocate column pointers
-   tex->columns = (texcol_t **)(Z_Calloc(
-      sizeof(texcol_t **), tex->width, PU_RENDERER, 0
-   ));
+   tex->columns = (texcol_t **)(Z_Calloc(sizeof(texcol_t **), tex->width, PU_RENDERER, 0));
 
    // Make columns
    for(i = 0; i < tex->width; i++)
    {
-      tex->columns[i] = (texcol_t *)(Z_Calloc(
-         sizeof(texcol_t), 1, PU_RENDERER, 0
-      ));
+      tex->columns[i] = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_RENDERER, 0));
       tex->columns[i]->next = NULL;
       tex->columns[i]->yoff = 0;
       tex->columns[i]->len = tex->height;
@@ -1086,11 +1073,10 @@ static int *R_LoadPNames(void)
 
    // Load the patch names from pnames.lmp.
    name[8] = 0;
-   names = (char *)W_CacheLumpName("PNAMES", PU_STATIC);
+   names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
-   // killough
-   patchlookup = (int *)(malloc(nummappatches * sizeof(*patchlookup)));
+   patchlookup = (int *)(malloc(nummappatches * sizeof(*patchlookup))); // killough
    
    for(i = 0; i < nummappatches; ++i)
    {
@@ -1134,9 +1120,8 @@ static void R_InitTranslationLUT(void)
    // Create translation table for global animation.
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof   
-   texturetranslation = (int *)(Z_Malloc(
-      (texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, 0
-   ));
+   texturetranslation =
+      (int *)(Z_Malloc((texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, 0));
 
    for(i = 0; i < texturecount; ++i)
       texturetranslation[i] = i;
@@ -1198,10 +1183,11 @@ static void R_AddFlats(void)
    int       i;
    byte      flatsize;
    uint16_t  width, height;
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
    
    for(i = 0; i < numflats; ++i)
    {
-      lumpinfo_t *lump = w_GlobalDir.lumpinfo[i + firstflat];
+      lumpinfo_t *lump = lumpinfo[i + firstflat];
       texture_t  *tex;
       
       switch(lump->size)
@@ -1275,9 +1261,7 @@ void R_InitTextures(void)
    texturecount = numwalls + numflats + 1;
    
    // Allocate textures
-   textures = (texture_t **)(Z_Malloc(
-      sizeof(texture_t *) * texturecount, PU_RENDERER, NULL
-   ));
+   textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, NULL));
    memset(textures, 0, sizeof(texture_t *) * texturecount);
 
    // init lookup tables
@@ -1537,7 +1521,7 @@ void R_LoadDoom1(void)
    lumplen = W_LumpLength(lumpnum);
    lump    = (char *)(calloc(1, lumplen + 1));
    
-   W_ReadLump(lumpnum, lump);
+   wGlobalDir.ReadLump(lumpnum, lump);
    
    rover = lump;
    numconvs = 0;
@@ -1583,10 +1567,9 @@ void R_LoadDoom1(void)
             // lots of little mallocs; make the whole thing dynamic
             if(numconvs >= numconvsalloc)
             {
-               txtrconv = (doom1text_t *)(realloc(
-                  txtrconv,
-                  (numconvsalloc = numconvsalloc ?  numconvsalloc * 2 : 56)
-                    * sizeof *txtrconv));
+               txtrconv = (doom1text_t *)(realloc(txtrconv, 
+                                    (numconvsalloc = numconvsalloc ?
+                                     numconvsalloc*2 : 56) * sizeof *txtrconv));
             }
             
             strncpy(txtrconv[numconvs].doom1, texture1, 9);

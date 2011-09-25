@@ -52,6 +52,8 @@
 #include "../../snes_spc/spc.h"
 #endif
 
+extern int audio_buffers;
+
 #define STEP sizeof(Sint16)
 #define STEPSHIFT 1
 
@@ -104,11 +106,11 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
    }
 
    // get spc samples
-   if(spc_play(snes_spc, spcsamples, spc_buffer))
+   if(spc_play(snes_spc, spcsamples, (short *)spc_buffer))
       return;
 
    // filter samples
-   spc_filter_run(spc_filter, spc_buffer, spcsamples);
+   spc_filter_run(spc_filter, (short *)spc_buffer, spcsamples);
 
    datal = spc_buffer;
    datar = spc_buffer + 1;
@@ -208,11 +210,6 @@ static void I_SDLShutdownSoundForMusic(void)
 //
 static int I_SDLInitSoundForMusic(void)
 {
-   int audio_buffers;
-
-   /* Initialize variables */
-   audio_buffers = 512 * 44100 / 11025;
-   
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
       return 0;
@@ -223,7 +220,7 @@ static int I_SDLInitSoundForMusic(void)
    return 1;
 }
 
-extern boolean snd_init;
+extern bool snd_init;
 
 //
 // I_SDLInitMusic

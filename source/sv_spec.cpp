@@ -105,6 +105,7 @@ void SV_SaveSectorPositions(void)
 
 void SV_BroadcastMapSpecialStatuses(void)
 {
+#if 0
    ceiling_netid_t *ceiling_netid = NULL;
    door_netid_t *door_netid = NULL;
    floor_netid_t *floor_netid = NULL;
@@ -114,9 +115,10 @@ void SV_BroadcastMapSpecialStatuses(void)
    platform_netid_t *platform_netid = NULL;
 
    // [CG] Special types that don't actually change the C type of the special
-   //      (i.e. ms_door_tagged and ms_door_manual are both vldoor_t) are
-   //      inconsequential here, so in those cases I've just used the top value
-   //      that corresponds with the actual C type.
+   //      (i.e. ms_door_tagged and ms_door_manual are both
+   //      VerticalDoorThinker) are inconsequential here, so in those cases
+   //      I've just used the top value that corresponds with the actual C++
+   //      type.
 
    while((ceiling_netid = CS_IterateCeilings(ceiling_netid)) != NULL)
    {
@@ -161,5 +163,6 @@ void SV_BroadcastMapSpecialStatuses(void)
       // P_PrintPlatform(platform_netid->platform);
 #endif
    }
+#endif
 }
 

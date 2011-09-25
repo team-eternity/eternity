@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -25,18 +25,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
+#include "e_things.h"
 #include "p_chase.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_spec.h"
-#include "r_main.h"
 #include "p_tick.h"
+#include "p_user.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
-#include "p_user.h"
-#include "d_gi.h"
-#include "e_things.h"
 
 //
 // TELEPORTATION
@@ -45,9 +48,9 @@
 //
 int EV_Teleport(line_t *line, int side, Mobj *thing)
 {
-   int i;
    Thinker *thinker;
-   Mobj *m, *source_fog, *destination_fog;
+   Mobj    *m;
+   int       i;
 
    // don't teleport missiles
    // Don't teleport if hit back of line,
@@ -109,34 +112,18 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             if(thing->player == players + displayplayer)
                P_ResetChasecam();
 
-            if(serverside)
-            {
-                // spawn teleport fog and emit sound at source
-                source_fog = P_SpawnMobj(
-                   oldx,
-                   oldy,
-                   oldz + GameModeInfo->teleFogHeight, 
-                   GameModeInfo->teleFogType
-                ); 
+            // spawn teleport fog and emit sound at source
+            S_StartSound(P_SpawnMobj(oldx, oldy, 
+                                     oldz + GameModeInfo->teleFogHeight, 
+                                     GameModeInfo->teleFogType), 
+                         GameModeInfo->teleSound);
 
-                if(CS_SERVER)
-                    SV_BroadcastActorSpawned(source_fog);
-
-                S_StartSound(source_fog, GameModeInfo->teleSound);
-
-                // spawn teleport fog and emit sound at destination
-                destination_fog = P_SpawnMobj(
-                   m->x + 20 * finecosine[m->angle >> ANGLETOFINESHIFT],
-                   m->y + 20 * finesine[m->angle >> ANGLETOFINESHIFT],
-                   thing->z + GameModeInfo->teleFogHeight, 
-                   GameModeInfo->teleFogType
-                );
-
-                if(CS_SERVER)
-                    SV_BroadcastActorSpawned(destination_fog);
-
-                S_StartSound(destination_fog, GameModeInfo->teleSound);
-            }
+            // spawn teleport fog and emit sound at destination
+            S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
+                                     m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
+                                     thing->z + GameModeInfo->teleFogHeight, 
+                                     GameModeInfo->teleFogType),
+                         GameModeInfo->teleSound);
 
             P_AdjustFloorClip(thing);
 
@@ -261,7 +248,7 @@ int EV_SilentTeleport(line_t *line, int side, Mobj *thing)
 #define FUDGEFACTOR 10
 
 int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
-                          boolean reverse)
+                          bool reverse)
 {
    int i;
    line_t *l;

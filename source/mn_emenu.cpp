@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -26,17 +26,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_dehtbl.h"
 #include "mn_engin.h"
+#include "v_misc.h"
+#include "v_video.h"
 
 #define NEED_EDF_DEFINITIONS
+
 #include "Confuse/confuse.h"
-#include "e_lib.h"
 #include "e_edf.h"
+#include "e_lib.h"
 #include "mn_emenu.h"
 
 // menu section keywords
@@ -286,12 +290,13 @@ static void MN_ClearDynamicMenu(menu_t *menu)
       
       while(item->type != it_end)
       {
+         // FIXME: stupid constness problems...
          if(item->description)
-            free(item->description);
+            free(const_cast<char *>(item->description));
          if(item->data)
-            free(item->data);
+            free(const_cast<char *>(item->data));
          if(item->patch)
-            free(item->patch);
+            free(const_cast<char *>(item->patch));
 
          ++item;
       }
@@ -422,9 +427,9 @@ CONSOLE_COMMAND(mn_dynamenu, 0)
       return;
    }
 
-   if(!(menu = MN_DynamicMenuForName(QStrConstPtr(&Console.argv[0]))))
+   if(!(menu = MN_DynamicMenuForName(Console.argv[0]->constPtr())))
    {
-      C_Printf(FC_ERROR "no such menu %s\a\n", Console.argv[0]);
+      C_Printf(FC_ERROR "no such menu %s\a\n", Console.argv[0]->constPtr());
       return;
    }
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,13 +28,17 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "d_gi.h"
+#include "mn_engin.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
-#include "mn_engin.h"
-#include "d_gi.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -980,7 +984,16 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL
+   NULL,
+
+   {
+      // Normal              Translated
+      { CB_DrawColumn_8,     CB_DrawTRColumn_8     }, // NORMAL
+      { CB_DrawFuzzColumn_8, CB_DrawFuzzColumn_8   }, // SHADOW
+      { CB_DrawFlexColumn_8, CB_DrawFlexTRColumn_8 }, // ALPHA
+      { CB_DrawAddColumn_8,  CB_DrawAddTRColumn_8  }, // ADD
+      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // TRANMAP
+   },
 };
 
 //
@@ -1065,7 +1078,7 @@ void R_InitTranslationTables(void)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 
-      translationtables[i] = (byte *)(W_CacheLumpNum(lumpnum, PU_RENDERER));
+      translationtables[i] = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_RENDERER));
    }
 }
 
@@ -1101,7 +1114,7 @@ void R_InitBuffer(int width, int height)
 { 
    int i; 
    int st_height;
-   int tviewwidth = viewwidth << detailshift;
+   int tviewwidth = viewwidth;
    
    // SoM: use pitch damn you!
    linesize = video.pitch;    // killough 11/98
@@ -1157,22 +1170,22 @@ void R_FillBackScreen(void)
    // killough 11/98: use the function in m_menu.c
    V_DrawBackground(GameModeInfo->borderFlat, &backscreen1);
 
-   patch = (patch_t *)W_CacheLumpName(border->top, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->top, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)
       V_DrawPatch(scaledwindowx+x,scaledwindowy-offset,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->bottom, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->bottom, PU_CACHE);
 
    for(x = 0; x < scaledviewwidth; x += size)   // killough 11/98:
       V_DrawPatch(scaledwindowx+x,scaledwindowy+scaledviewheight,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->left, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->left, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx-offset,scaledwindowy+y,&backscreen1,patch);
 
-   patch = (patch_t *)W_CacheLumpName(border->right, PU_CACHE);
+   patch = PatchLoader::CacheName(wGlobalDir, border->right, PU_CACHE);
 
    for(y = 0; y < scaledviewheight; y += size)  // killough 11/98
       V_DrawPatch(scaledwindowx+scaledviewwidth,scaledwindowy+y,&backscreen1,patch);
@@ -1181,22 +1194,22 @@ void R_FillBackScreen(void)
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy-offset,
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_tl, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_tl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy-offset,
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_tr, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_tr, PU_CACHE));
 
    V_DrawPatch(scaledwindowx-offset,
                scaledwindowy+scaledviewheight,    // killough 11/98
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_bl, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_bl, PU_CACHE));
 
    V_DrawPatch(scaledwindowx+scaledviewwidth,
                scaledwindowy+scaledviewheight,     // killough 11/98
                &backscreen1,
-               (patch_t *)W_CacheLumpName(border->c_br, PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, border->c_br, PU_CACHE));
 } 
 
 //
@@ -1204,9 +1217,9 @@ void R_FillBackScreen(void)
 //
 // Copy a screen buffer.
 //
-// SoM: why the hell was this written to only take an offset and size
-// parameter?  this is a much nicer solution which fixes scaling issues in
-// highres modes that aren't perfectly 4/3
+// SoM: why the hell was this written to only take an offset and size parameter?
+// this is a much nicer solution which fixes scaling issues in highres modes that 
+// aren't perfectly 4/3
 //
 void R_VideoErase(unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 { 

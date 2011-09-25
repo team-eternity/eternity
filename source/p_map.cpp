@@ -27,35 +27,42 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
-#include "doomstat.h"
+#include "d_gi.h"
 #include "d_mod.h"
-#include "r_main.h"
+#include "doomstat.h"
+#include "e_exdata.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "m_argv.h"
+#include "m_bbox.h"
+#include "m_random.h"
+#include "m_vector.h" // [CG] 09/17/11.
+#include "p_inter.h"
 #include "p_mobj.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_map3d.h"
+#include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "p_spec.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "p_inter.h"
-#include "m_random.h"
-#include "r_segs.h"
-#include "m_argv.h"
-#include "m_bbox.h"
-#include "p_partcl.h"
 #include "p_tick.h"
 #include "p_user.h"
-#include "d_gi.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "m_vector.h" // [CG] Added.
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_portal.h"
+#include "r_segs.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "v_misc.h"
+#include "v_video.h"
 
+#include "sv_main.h" // [CG] 09/17/11.
 
-// [CG] Added.
-#include "sv_main.h"
 
 // SoM: This should be ok left out of the globals struct.
 static int pe_x; // Pain Elemental position for Lost Soul checks // phares
@@ -125,7 +132,7 @@ void P_PopClipStack(void)
 int spechits_emulation;
 #define MAXSPECHIT_OLD 8         // haleyjd 09/20/06: old limit for overflow emu
 
-extern boolean reset_viewz;
+extern bool reset_viewz;
 
 // haleyjd 09/20/06: moved to top for maximum visibility
 static int crushchange;
@@ -139,20 +146,20 @@ static int nofit;
 // PIT_StompThing
 //
 
-static boolean telefrag; // killough 8/9/98: whether to telefrag at exit
+static bool telefrag; // killough 8/9/98: whether to telefrag at exit
 
 // haleyjd 06/06/05: whether to return false if an inert thing 
 // blocks a teleport. DOOM has allowed you to simply get stuck in
 // such things so far.
-static boolean ignore_inerts = true;
+static bool ignore_inerts = true;
 
 #ifdef R_LINKEDPORTALS
 // SoM: for portal teleports, PIT_StompThing will stomp anything the player is touching on the
 // x/y plane which means if the player jumps through a mile above a demon, the demon will be
 // telefragged. This simply will not do.
-static boolean stomp3d = false;
+static bool stomp3d = false;
 
-static boolean PIT_StompThing3D(Mobj *thing)
+static bool PIT_StompThing3D(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -176,15 +183,31 @@ static boolean PIT_StompThing3D(Mobj *thing)
       thing->z >= clip.thing->z + clip.thing->height)
       return true;
 
-   // Stomp!
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG);
+   // The object moving is a player?
+   if(clip.thing->player)
+   {
+      // "thing" dies, unconditionally
+      P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
 
+      // if "thing" is also a player, both die, for fairness.
+      if(thing->player)
+         P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+   }
+   else if(thing->player) // Thing moving into a player?
+   {
+      // clip.thing dies
+      P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+   }
+   else // Neither thing is a player...
+   {
+   }
+   
    return true;
 }
 #endif
 
 
-static boolean PIT_StompThing(Mobj *thing)
+static bool PIT_StompThing(Mobj *thing)
 {
    fixed_t blockdist;
    
@@ -210,10 +233,9 @@ static boolean PIT_StompThing(Mobj *thing)
    // killough 8/9/98: make consistent across all levels
    if(!telefrag)
       return false;
-
-   // Stomp!
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG);
-
+   
+   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+   
    return true;
 }
 
@@ -345,11 +367,11 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
 //
 
 // killough 8/9/98
-boolean P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
-   boolean (*func)(Mobj *);
+   bool (*func)(Mobj *);
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
@@ -456,9 +478,9 @@ boolean P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
 // inert objects that are at their destination. Rather, the teleport
 // is rejected.
 //
-boolean P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
+bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 {
-   boolean res;
+   bool res;
 
    ignore_inerts = false;
    res = P_TeleportMove(thing, x, y, boss);
@@ -473,9 +495,9 @@ boolean P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, boolean boss)
 // P_PortalTeleportMove
 //
 // SoM: calls P_TeleportMove with the stomp3d flag set to true
-boolean P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
+bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 {
-   boolean res;
+   bool res;
 
    stomp3d = true;
    res = P_TeleportMove(thing, x, y, false);
@@ -507,7 +529,7 @@ boolean P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
 //
 // killough 11/98: reformatted
 
-static boolean PIT_CrossLine(line_t *ld)
+static bool PIT_CrossLine(line_t *ld)
 {
    // SoM 9/7/02: wow a killoughism... * SoM is scared
    int flags = ML_TWOSIDED | ML_BLOCKING | ML_BLOCKMONSTERS;
@@ -551,8 +573,8 @@ static int untouched(line_t *ld)
 //
 static void SpechitOverrun(line_t *ld)
 {
-   static boolean firsttime = true;
-   static boolean spechitparm = false;
+   static bool firsttime = true;
+   static bool spechitparm = false;
    static unsigned int baseaddr = 0;
    unsigned int addr;
    
@@ -618,7 +640,7 @@ static void SpechitOverrun(line_t *ld)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-boolean PIT_CheckLine(line_t *ld)
+bool PIT_CheckLine(line_t *ld)
 {
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
@@ -640,7 +662,8 @@ boolean PIT_CheckLine(line_t *ld)
    // could be crossed in either order.
 
    // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   if(!ld->backsector) // one sided line
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
    {
       clip.blockline = ld;
       return clip.unstuck && !untouched(ld) &&
@@ -733,9 +756,9 @@ boolean PIT_CheckLine(line_t *ld)
 //
 // haleyjd 12/28/10: must read from clip.thing in case of reentrant calls
 //
-boolean P_Touched(Mobj *thing)
+bool P_Touched(Mobj *thing)
 {
-   static int painType = -1, skullType;
+   static int painType = -1, skullType;   
 
    // EDF FIXME: temporary fix?
    if(painType == -1)
@@ -758,8 +781,7 @@ boolean P_Touched(Mobj *thing)
       (thing->type ^ skullType) |                  // (but Barons & Knights
       (clip.thing->type ^ painType))               // are intentionally not)
    {
-      // kill object
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN);
+      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
       return true;
    }
 
@@ -774,12 +796,10 @@ boolean P_Touched(Mobj *thing)
 //
 // haleyjd 12/28/10: Must read from clip.thing in case of reentrant calls.
 //
-boolean P_CheckPickUp(Mobj *thing)
+bool P_CheckPickUp(Mobj *thing)
 {
    int solid = thing->flags & MF_SOLID;
 
-   // [CG] Clients wait for server messages, so don't run any of this
-   //      clientside.
    if(serverside && (clip.thing->flags & MF_PICKUP))
       P_TouchSpecialThing(thing, clip.thing); // can remove thing
 
@@ -795,9 +815,9 @@ boolean P_CheckPickUp(Mobj *thing)
 // haleyjd 12/28/10: must read from clip.thing or a reentrant call to this
 // routine through P_DamageMobj can result in loss of demo compatibility.
 //
-boolean P_SkullHit(Mobj *thing)
+bool P_SkullHit(Mobj *thing)
 {
-   boolean ret = false;
+   bool ret = false;
 
    if(clip.thing->flags & MF_SKULLFLY)
    {
@@ -852,7 +872,7 @@ int P_MissileBlockHeight(Mobj *mo)
 //
 // PIT_CheckThing
 // 
-static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
+static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 {
    fixed_t blockdist;
    int damage;
@@ -1053,7 +1073,7 @@ static boolean PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
 // sides of the blocking line. If so, return true, otherwise
 // false.
 //
-boolean Check_Sides(Mobj *actor, int x, int y)
+bool Check_Sides(Mobj *actor, int x, int y)
 {
    int bx,by,xl,xh,yl,yh;
    
@@ -1114,7 +1134,7 @@ boolean Check_Sides(Mobj *actor, int x, int y)
 //  speciallines[]
 //  numspeciallines
 //
-boolean P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y) 
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y) 
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -1210,7 +1230,7 @@ boolean P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y)
 //
 // haleyjd 04/15/2010: Dropoff check for vanilla DOOM compatibility
 //
-static boolean P_CheckDropOffVanilla(Mobj *thing, int dropoff)
+static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
       clip.floorz - clip.dropoffz > 24 * FRACUNIT)
@@ -1224,7 +1244,7 @@ static boolean P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 //
 // haleyjd 04/15/2010: Dropoff check for BOOM compatibility
 //
-static boolean P_CheckDropOffBOOM(Mobj *thing, int dropoff)
+static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    if(compatibility || !dropoff)
@@ -1245,7 +1265,7 @@ static boolean P_CheckDropOffBOOM(Mobj *thing, int dropoff)
 // I am of the opinion that this is the single most-butchered segment of code
 // in the entire engine.
 //
-static boolean P_CheckDropOffMBF(Mobj *thing, int dropoff)
+static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 {
    // killough 3/15/98: Allow certain objects to drop off
    // killough 7/24/98, 8/1/98: 
@@ -1283,14 +1303,14 @@ static boolean P_CheckDropOffMBF(Mobj *thing, int dropoff)
    return true;
 }
 
-static boolean on3dmidtex;
+static bool on3dmidtex;
 
 //
 // P_CheckDropOffEE
 //
 // haleyjd 04/15/2010: Dropoff checking code for Eternity.
 //
-static boolean P_CheckDropOffEE(Mobj *thing, int dropoff)
+static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 {
    fixed_t floorz = clip.floorz;
 
@@ -1359,7 +1379,7 @@ static boolean P_CheckDropOffEE(Mobj *thing, int dropoff)
    return true;
 }
 
-typedef boolean (*dropoff_func_t)(Mobj *, int);
+typedef bool (*dropoff_func_t)(Mobj *, int);
 
 //
 // P_TryMove
@@ -1369,7 +1389,7 @@ typedef boolean (*dropoff_func_t)(Mobj *, int);
 //
 // killough 3/15/98: allow dropoff as option
 //
-boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
    dropoff_func_t dropofffunc;
@@ -1430,7 +1450,7 @@ boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    if(!(thing->flags & MF_NOCLIP))
    {
-      boolean ret = clip.unstuck 
+      bool ret = clip.unstuck 
                     && !(clip.ceilingline && untouched(clip.ceilingline))
                     && !(  clip.floorline && untouched(  clip.floorline));
 
@@ -1456,7 +1476,7 @@ boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
             fixed_t savedz = thing->z;
-            boolean good;
+            bool good;
             thing->z = clip.floorz;
             good = P_TestMobjZ(thing);
             thing->z = savedz;
@@ -1591,7 +1611,7 @@ boolean P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static boolean PIT_ApplyTorque(line_t *ld)
+static bool PIT_ApplyTorque(line_t *ld)
 {
    if(ld->backsector &&       // If thing touches two-sided pivot linedef
       clip.bbox[BOXRIGHT]  > ld->bbox[BOXLEFT]  &&
@@ -1715,9 +1735,9 @@ void P_ApplyTorque(Mobj *mo)
 // the z will be set to the lowest value
 // and false will be returned.
 //
-static boolean P_ThingHeightClip(Mobj *thing)
+static bool P_ThingHeightClip(Mobj *thing)
 {
-   boolean onfloor = thing->z == thing->floorz;
+   bool onfloor = thing->z == thing->floorz;
    fixed_t oldfloorz = thing->floorz; // haleyjd
 
    P_CheckPosition(thing, thing->x, thing->y);
@@ -1787,7 +1807,7 @@ static void P_HitSlideLine(line_t *ld)
    angle_t deltaangle;
    fixed_t movelen;
    fixed_t newlen;
-   boolean icyfloor;  // is floor icy?
+   bool icyfloor;  // is floor icy?
 
    // phares:
    // Under icy conditions, if the angle of approach to the wall
@@ -1809,7 +1829,7 @@ static void P_HitSlideLine(line_t *ld)
    }
    else
    {
-      extern boolean onground;
+      extern bool onground;
       icyfloor = !compatibility &&
          variable_friction &&
          slidemo->player &&
@@ -1897,7 +1917,7 @@ static void P_HitSlideLine(line_t *ld)
 //
 // PTR_SlideTraverse
 //
-static boolean PTR_SlideTraverse(intercept_t *in)
+static bool PTR_SlideTraverse(intercept_t *in)
 {
    line_t *li;
    
@@ -1914,6 +1934,10 @@ static boolean PTR_SlideTraverse(intercept_t *in)
          return true; // don't hit the back side
       goto isblocking;
    }
+
+   // haleyjd 04/30/11: 'Block everything' lines block sliding
+   if(li->extflags & EX_ML_BLOCKALL)
+      goto isblocking;
 
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
@@ -1932,7 +1956,7 @@ static boolean PTR_SlideTraverse(intercept_t *in)
            slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
-      boolean good;
+      bool good;
       fixed_t savedz = slidemo->z;
       slidemo->z = clip.openbottom;
       good = P_TestMobjZ(slidemo);
@@ -2099,9 +2123,14 @@ static int bombindex;              // current index into bombs array
 static bombdata_t bombs[MAXBOMBS]; // bombs away!
 static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
+//
+// P_CheckRadiusAttack
+//
+// Checks that a radius attack should affect the passed Mobj
+//
 // [CG] Broke out of PIT_RadiusAttack for use by both it and
 //      PIT_3DRadiusAttack.
-static boolean PIT_CheckRadiusAttack(Mobj *thing)
+static bool P_CheckRadiusAttack(Mobj *thing)
 {
    // killough 8/20/98: allow bouncers to take damage 
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
@@ -2140,173 +2169,17 @@ static boolean PIT_CheckRadiusAttack(Mobj *thing)
 }
 
 //
-// PIT_3DRadiusAttack
-//
-// [CG] Used to support rocket jumping in c/s.  Exactly how this works
-//      (there is a lot of magic in here) is explained in
-//      docs/cs_3d_radius_attacks.txt.  Additionally, this is probably slow
-//      as hell.  Finally, this really ought to go in p_map3d.cpp.
-//
-static boolean PIT_3DRadiusAttack(Mobj *thing)
-{
-   fixed_t pred_thrust;
-   unsigned ang;
-   // [CG] Don't worry about this for now.
-   // linkoffset_t *link;
-   v3double_t thing_v, bomb_v;
-   double thing_bottom, thing_top, thing_height, thing_middle, thing_radius,
-          dist, damage, thrust, z_delta;
-
-   if(PIT_CheckRadiusAttack(thing))
-      return true;
-
-   thing_radius = M_FixedToDouble(thing->radius);
-   thing_v.x    = M_FixedToDouble(thing->x);
-   thing_v.y    = M_FixedToDouble(thing->y);
-   thing_bottom = M_FixedToDouble(thing->z);
-   thing_height = M_FixedToDouble(thing->height);
-   thing_top    = thing_bottom + thing_height;
-   thing_middle = thing_bottom + (thing_height * .5);
-
-   bomb_v.x = M_FixedToDouble(theBomb->bombspot->x);
-   bomb_v.y = M_FixedToDouble(theBomb->bombspot->y);
-   bomb_v.z = M_FixedToDouble(theBomb->bombspot->z);
-   z_delta = thing_middle - bomb_v.z;
-
-   if(bomb_v.z < thing_bottom)    // [CG] Applies upward Z velocity.
-      thing_v.z = thing_bottom;
-   else if(bomb_v.z >= thing_top) // [CG] Applies downward Z velocity.
-      thing_v.z = thing_top;
-   else                           // [CG] Applies no Z velocity.
-      thing_v.z = bomb_v.z;
-
-   // [CG] Make sure fuzzy math doesn't mess this up.
-   if(thing_v.z == bomb_v.z)
-   {
-      M_SubVec3(&bomb_v, &thing_v, &bomb_v);
-      bomb_v.z = 0.;
-   }
-   else
-      M_SubVec3(&bomb_v, &thing_v, &bomb_v);
-
-   // [CG] If the explosion occurred inside the hitbox, only Z velocity is
-   //      applied.  Of course, if the explosion was neither above nor below
-   //      the hitbox, then no velocity will be applied at all.  Otherwise,
-   //      the explosion acts on the hitbox, so calculate the vector length
-   //      and move it the magnitude of the radius closer to the target's
-   //      origin.
-   if(sqrt((bomb_v.x * bomb_v.x) + (bomb_v.y * bomb_v.y)) <= thing_radius)
-      dist = bomb_v.z;
-   else
-      dist = M_LengthVec3(&bomb_v) - thing_radius;
-
-   damage = ((double)theBomb->bombdamage) - dist;
-
-   if(damage <= 0)
-      return true;
-
-   P_DamageMobj(
-      thing,
-      theBomb->bombspot,
-      theBomb->bombsource,
-      (int)damage,
-      theBomb->bombmod
-   );
-
-   // [CG] P_DamageMobj moves the actor based on damage, but it won't run
-   //      clientside.  So just predict the movement here.  This code was
-   //      copypasta'd from P_DamageMobj.
-
-   if(CS_CLIENT)
-   {
-      pred_thrust = (int)damage *
-                    (FRACUNIT >> 3) *
-                    GameModeInfo->thrustFactor /
-                    thing->info->mass;
-// [CG] Don't worry about this for now.
-#if 0
-#ifdef R_LINKEDPORTALS
-      link = P_GetLinkOffset(theBomb->bombspot->groupid, thing->groupid);
-      if(theBomb->bombspot->groupid == thing->groupid || !link)
-      {
-         ang = P_PointToAngle(
-            theBomb->bombspot->x,
-            theBomb->bombspot->y, 
-            thing->x,
-            thing->y
-         );
-      }
-      else
-      {
-         ang = P_PointToAngle(
-            theBomb->bombspot->x,
-            theBomb->bombspot->y, 
-            thing->x + link->x,
-            thing->y + link->y
-         );
-      }
-#else
-      ang = P_PointToAngle(
-         theBomb->bombspot->x, theBomb->bombspot->y, thing->x, thing->y
-      );
-#endif
-#endif
-      ang = P_PointToAngle(
-         theBomb->bombspot->x, theBomb->bombspot->y, thing->x, thing->y
-      );
-      P_ThrustMobj(thing, ang, pred_thrust);
-   }
-
-   thrust = (damage / 2.) / (double)(thing->info->mass);
-
-   /*
-   printf("z_delta: %.4f.\n", z_delta);
-
-   printf(
-      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
-      M_FixedToDouble(thing->momx),
-      M_FixedToDouble(thing->momy),
-      M_FixedToDouble(thing->momz)
-   );
-   */
-
-   thing->momx += M_DoubleToFixed(bomb_v.x * thrust);
-   thing->momy += M_DoubleToFixed(bomb_v.y * thrust);
-
-   // [CG] TODO: Really, all this should be configurable, like
-   //            "rocket_thrust_percentage_for_self" and
-   //            "rocket_thrust_percentage_for_others".  Additionally damage
-   //            needs to be separated out from thrust so it too can be
-   //            configured"
-   if(theBomb->bombsource == thing)
-      thing->momz += M_DoubleToFixed(z_delta * thrust);
-   else
-      thing->momz += M_DoubleToFixed(z_delta * thrust * 0.5);
-
-   /*
-   printf(
-      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
-      M_FixedToDouble(thing->momx),
-      M_FixedToDouble(thing->momy),
-      M_FixedToDouble(thing->momz)
-   );
-   */
-
-   return true;
-}
-
-//
 // PIT_RadiusAttack
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
 //
-static boolean PIT_RadiusAttack(Mobj *thing)
+static bool PIT_RadiusAttack(Mobj *thing)
 {
    fixed_t dx, dy, dist;
    Mobj *bombspot   = theBomb->bombspot;
    Mobj *bombsource = theBomb->bombsource;
-
-   if(PIT_CheckRadiusAttack(thing))
+   
+   if(P_CheckRadiusAttack(thing))
       return true;
 
    dx   = D_abs(thing->x - bombspot->x);
@@ -2327,6 +2200,139 @@ static boolean PIT_RadiusAttack(Mobj *thing)
                    theBomb->bombmod);
    }
    
+   return true;
+}
+
+//
+// PIT_3DRadiusAttack
+//
+// [CG] Used to support rocket jumping in c/s.  This is really just simple
+//      vector math.
+//
+static bool PIT_3DRadiusAttack(Mobj *thing)
+{
+   bool zvel, attacking_self;
+   v3double_t thing_v, bomb_v;
+   double bottom, top, height, middle, radius;
+   double dist, thrust, z_thrust;
+   double x_delta, y_delta, z_delta;
+   int damage = theBomb->bombdamage;
+   double damagef = theBomb->bombdamage;
+
+   if(P_CheckRadiusAttack(thing))
+      return true;
+
+   thing_v.x    = M_FixedToDouble(thing->x);
+   thing_v.y    = M_FixedToDouble(thing->y);
+
+   radius = M_FixedToDouble(thing->radius);
+   bottom = M_FixedToDouble(thing->z);
+   height = M_FixedToDouble(thing->height);
+   top    = bottom + height;
+   middle = bottom + (height * .5);
+
+   bomb_v.x = M_FixedToDouble(theBomb->bombspot->x);
+   bomb_v.y = M_FixedToDouble(theBomb->bombspot->y);
+   bomb_v.z = M_FixedToDouble(theBomb->bombspot->z);
+
+   x_delta = D_abs(thing_v.x - bomb_v.x);
+   y_delta = D_abs(thing_v.y - bomb_v.y);
+   z_delta = D_abs(thing_v.z - bomb_v.z);
+
+   if(bomb_v.z < bottom) // [CG] Applies upward Z velocity.
+      thing_v.z = bottom;
+   else if(bomb_v.z >= top) // [CG] Applies downward Z velocity.
+      thing_v.z = top;
+   else // [CG] Applies no Z velocity.
+      thing_v.z = bomb_v.z;
+
+   // [CG] Check if Z velocity should ever be applied.
+   if(thing_v.z != bomb_v.z)
+      zvel = true;
+   else
+      zvel = false;
+
+   // [CG] Check if the owner of the bomb is the same as the target here.
+   if(theBomb->bombsource == thing)
+      attacking_self = true;
+   else
+      attacking_self = false;
+
+   M_SubVec3(&bomb_v, &thing_v, &bomb_v);
+
+   // [CG] Make sure fuzzy vector math doesn't set this to something other than
+   //      zero if no Z velocity is to be applied.
+   if(!zvel)
+      bomb_v.z = 0.0;
+
+   // [CG] Check to see if the explosion occurs inside the actor's hitbox
+   //      (radius).  If not, the explosion acts on the actor's hitbox - as
+   //      opposed to the actor's origin coordinates.  This is simulated by
+   //      moving the explosion the magnitude of the radius closer to the
+   //      actor's origin.
+   if(zvel && sqrt((bomb_v.x * bomb_v.x) + (bomb_v.y * bomb_v.y)) <= radius)
+      dist = bomb_v.z;
+   else
+      dist = M_LengthVec3(&bomb_v) - radius;
+
+   if(dist <= 0.0)
+      dist = 0.0;
+   else
+   {
+      damage -= (int)dist;
+      damagef -= dist;
+   }
+
+   if(damage <= 0)
+      return true;
+
+   if(attacking_self && cs_settings->radial_self_damage != 1.0)
+      damage = (damagef * cs_settings->radial_self_damage);
+   else if(!attacking_self && cs_settings->radial_damage != 1.0)
+      damage = (damagef * cs_settings->radial_damage);
+
+   P_DamageMobj(
+      thing,
+      theBomb->bombspot,
+      theBomb->bombsource,
+      damage,
+      theBomb->bombmod
+   );
+
+   thrust = (damagef / 2.0) / (double)(thing->info->mass);
+
+   /*
+   printf("z_delta: %.4f.\n", z_delta);
+
+   printf(
+      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
+      M_FixedToDouble(thing->momx),
+      M_FixedToDouble(thing->momy),
+      M_FixedToDouble(thing->momz)
+   );
+   */
+
+   thing->momx += M_DoubleToFixed(bomb_v.x * thrust);
+   thing->momy += M_DoubleToFixed(bomb_v.y * thrust);
+
+   z_thrust = z_delta * thrust;
+
+   if(attacking_self && cs_settings->radial_self_lift != 1.0)
+      z_thrust *= cs_settings->radial_self_lift;
+   else if(!attacking_self && cs_settings->radial_lift != 1.0)
+      z_thrust *= cs_settings->radial_lift;
+
+   thing->momz += M_DoubleToFixed(z_thrust);
+
+   /*
+   printf(
+      "momx, momy, momz: %.4f/%.4f/%.4f.\n",
+      M_FixedToDouble(thing->momx),
+      M_FixedToDouble(thing->momy),
+      M_FixedToDouble(thing->momz)
+   );
+   */
+
    return true;
 }
 
@@ -2367,13 +2373,13 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
    theBomb->bombdamage = damage;
    theBomb->bombmod    = mod;
    
+   // [CG] Rocket jumping (and other tricks) requires that rocket splash damage
+   //      occurs in 3D, but this function only handles damage in 2D.  Because
+   //      this causes demo desyncs, it's comp flagged.
    for(y = yl; y <= yh; ++y)
    {
       for(x = xl; x <= xh; ++x)
       {
-         // [CG] Rocket jumping requires that rocket splash damage occurs
-         //      in 3D, but this function only handles damage in 2D.
-         //      Because this causes demo desyncs, it's comp flagged.
          if(comp[comp_2dradatk])
             P_BlockThingsIterator(x, y, PIT_RadiusAttack);
          else
@@ -2402,7 +2408,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
 //
 // PIT_ChangeSector
 //
-static boolean PIT_ChangeSector(Mobj *thing)
+static bool PIT_ChangeSector(Mobj *thing)
 {
    Mobj *mo;
 
@@ -2427,7 +2433,6 @@ static boolean PIT_ChangeSector(Mobj *thing)
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
-      // [CG] Only servers remove actors.
       if(serverside)
       {
          if(CS_SERVER)
@@ -2460,19 +2465,14 @@ static boolean PIT_ChangeSector(Mobj *thing)
          return true;
 
       P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
-
+      
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
-      // [CG] Serverside only.
       if(serverside && (demo_version < 333 || !(thing->flags & MF_NOBLOOD)))
       {
          // spray blood in a random direction
-         mo = P_SpawnMobj(
-            thing->x,
-            thing->y,
-            thing->z + thing->height / 2,
-            E_SafeThingType(MT_BLOOD)
-         );
+         mo = P_SpawnMobj(thing->x, thing->y, thing->z + thing->height/2,
+                          E_SafeThingType(MT_BLOOD));
          
          // haleyjd 08/05/04: use new function
          mo->momx = P_SubRandom(pr_crush) << 12;
@@ -2492,7 +2492,7 @@ static boolean PIT_ChangeSector(Mobj *thing)
 //
 // haleyjd: removed static; needed in p_floor.c
 //
-boolean P_ChangeSector(sector_t *sector, int crunch)
+bool P_ChangeSector(sector_t *sector, int crunch)
 {
    int x, y;
    
@@ -2522,7 +2522,7 @@ boolean P_ChangeSector(sector_t *sector, int crunch)
 // haleyjd: OVER_UNDER: pass down more information to P_ChangeSector3D
 // when 3D object clipping is enabled.
 //
-boolean P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
+bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
 {
    msecnode_t *n;
    
@@ -2747,7 +2747,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static boolean PIT_GetSectors(line_t *ld)
+static bool PIT_GetSectors(line_t *ld)
 {
    if(pClip->bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       pClip->bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||

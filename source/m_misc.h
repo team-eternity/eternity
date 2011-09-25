@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,28 +24,29 @@
 //    
 //-----------------------------------------------------------------------------
 
-#ifndef __M_MISC__
-#define __M_MISC__
+#ifndef M_MISC_H__
+#define M_MISC_H__
 
 #include "doomtype.h"
-#include "doomstat.h" // haleyjd: this was missing
 
 //
 // MISC
 //
 
-boolean M_WriteFile(const char *name, void *source, unsigned int length);
-int     M_ReadFile(const char *name, byte **buffer);
-int     M_DrawText(int x,int y,boolean direct, char *string);
-void    M_LoadOptions(void);                             // killough 11/98
+bool M_WriteFile(const char *name, void *source, unsigned int length);
+int  M_ReadFile(const char *name, byte **buffer);
+int  M_DrawText(int x,int y,bool direct, char *string);
+void M_LoadOptions(void);                             // killough 11/98
 
-// haleyjd: Portable versions of common non-standard C functions.
-// Some of these default to the standard implementation if its
-// existence is verifiable (see d_keywds.h)
+// haleyjd: Portable versions of common non-standard C functions, as well as
+// some misc string routines that really don't fit anywhere else. Some of these
+// default to the standard implementation if its existence is verifiable 
+// (see d_keywds.h)
 
 char *M_Strupr(char *string);
 char *M_Strlwr(char *string);
 char *M_Itoa(int value, char *string, int radix);
+int   M_CountNumLines(const char *str);
 
 // Misc file routines
 // haleyjd: moved a number of these here from w_wad module.
@@ -56,7 +57,8 @@ void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
 
-int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
+int   M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
+char *M_SafeFilePath(const char *basepath, const char *newcomponent);
 
 extern int config_help;
 
@@ -77,23 +79,23 @@ typedef enum
 //
 // killough 11/98: totally restructured
 
-// Forward declarations for interface (mainly for GCC)
-typedef struct default_s *defaultptr;
-typedef struct variable_s *variableptr;
+// Forward declarations for interface
+struct default_t;
+struct variable_t;
 
 // haleyjd 07/03/10: interface object for defaults
 typedef struct default_i_s
 {
-   boolean (*writeHelp) (defaultptr, FILE *);          // write help message
-   boolean (*writeOpt)  (defaultptr, FILE *);          // write option key and value
-   void    (*setValue)  (defaultptr, void *, boolean); // set value
-   boolean (*readOpt)   (defaultptr, char *, boolean); // read option from string
-   void    (*setDefault)(defaultptr);                  // set to hardcoded default
-   boolean (*checkCVar) (defaultptr, variableptr);     // check against a cvar
-   void    (*getDefault)(defaultptr, void *);          // get the default externally
+   bool (*writeHelp) (default_t *, FILE *);       // write help message
+   bool (*writeOpt)  (default_t *, FILE *);       // write option key and value
+   void (*setValue)  (default_t *, void *, bool); // set value
+   bool (*readOpt)   (default_t *, char *, bool); // read option from string
+   void (*setDefault)(default_t *);               // set to hardcoded default
+   bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
+   void (*getDefault)(default_t *, void *);       // get the default externally
 } default_i;
 
-typedef struct default_s
+struct default_t
 {
    const char *const   name;                 // name
    const defaulttype_e type;                 // type
@@ -104,7 +106,7 @@ typedef struct default_s
    int         defaultvalue_i;               // built-in default value
    const char *defaultvalue_s;
    double      defaultvalue_f;
-   boolean     defaultvalue_b;
+   bool        defaultvalue_b;
 
    struct { int min, max; } const limit;       // numerical limits
       
@@ -113,18 +115,18 @@ typedef struct default_s
    
    // internal fields (initialized implicitly to 0) follow
    
-   struct default_s *first, *next;           // hash table pointers
+   default_t *first, *next;                  // hash table pointers
    int modified;                             // Whether it's been modified
    
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
    double      orig_default_f;
-   boolean     orig_default_b;
+   bool        orig_default_b;
 
    default_i  *methods;
    
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
-} default_t;
+};
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
@@ -149,12 +151,12 @@ typedef struct default_s
 // haleyjd 03/14/09: defaultfile_t structure
 typedef struct defaultfile_s
 {
-   default_t   *defaults;   // array of defaults
-   size_t      numdefaults; // length of defaults array
-   boolean     hashInit;    // if true, this default file's hash table is setup
-   char        *fileName;   // name of corresponding file
-   boolean     loaded;      // if true, defaults are loaded
-   boolean     helpHeader;  // has help header?
+   default_t *defaults;    // array of defaults
+   size_t     numdefaults; // length of defaults array
+   bool       hashInit;    // if true, this default file's hash table is setup
+   char      *fileName;    // name of corresponding file
+   bool       loaded;      // if true, defaults are loaded
+   bool       helpHeader;  // has help header?
    struct comment_s
    { 
       char *text; 
@@ -165,21 +167,21 @@ typedef struct defaultfile_s
 } defaultfile_t;
 
 // haleyjd 06/29/09: default overrides
-typedef struct default_or_s
+struct default_or_t
 {
    const char *name;
    int defaultvalue;
-} default_or_t;
+};
 
 // killough 11/98:
-boolean    M_ParseOption(defaultfile_t *df, const char *name, boolean wad);
+bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
 void       M_ResetDefaultFileComments(defaultfile_t *df);
 void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
 void       M_ResetDefaultComments(void);
-default_t *M_FindDefaultForCVar(variableptr var);
+default_t *M_FindDefaultForCVar(variable_t *var);
 
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
@@ -188,20 +190,20 @@ default_t *M_FindDefaultForCVar(variableptr var);
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      7
-  #define SND_DESCR    "code used by Allegro to select sounds driver, -1 is autodetect"
+  #define SND_DESCR    "code used by Allegro to select sounds driver; -1 is autodetect"
   #define MUS_DEFAULT -1
   #define MUS_MIN     -1
   #define MUS_MAX      9
-  #define MUS_DESCR    "code used by Allegro to select music driver, -1 is autodetect"
+  #define MUS_DESCR    "code used by Allegro to select music driver; -1 is autodetect"
 #elif defined(_SDL_VER)
   #define SND_DEFAULT -1
   #define SND_MIN     -1
   #define SND_MAX      1
-  #define SND_DESCR    "code to select digital sound, -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
+  #define SND_DESCR    "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
   #define MUS_DEFAULT -1
   #define MUS_MIN     -1
   #define MUS_MAX      0
-  #define MUS_DESCR    "code to select music device, -1 is SDL_mixer, 0 is no music"
+  #define MUS_DESCR    "code to select music device; -1 is SDL_mixer, 0 is no music"
 #else
   #define SND_DEFAULT  0
   #define SND_MIN      0

@@ -18,18 +18,16 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __D_DEHTBL_H__
-#define __D_DEHTBL_H__
+#ifndef D_DEHTBL_H__
+#define D_DEHTBL_H__
 
-#include "sounds.h"
-#include "info.h"
-#include "p_mobj.h"
+class Mobj;
 
 typedef struct deh_bexptr_s
 {
    void (*cptr)(Mobj *); // actual pointer to the subroutine
-   char *lookup;           // mnemonic lookup string to be specified in BEX
-   int next;               // haleyjd: for bex hash chaining   
+   const char *lookup;   // mnemonic lookup string to be specified in BEX
+   int next;             // haleyjd: for bex hash chaining   
 } deh_bexptr;
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
@@ -37,11 +35,11 @@ extern int num_bexptrs;
 
 typedef struct dehstr_s
 {
-   char **ppstr;   // doubly indirect pointer to string   
-   char *lookup;   // pointer to lookup string name
-   char *original; // haleyjd 10/08/06: original string
-   int bnext;      // haleyjd: for bex hash chaining (by mnemonic)
-   int dnext;      // haleyjd: for deh hash chaining (by value)
+   const char **ppstr;   // doubly indirect pointer to string   
+   const char *lookup;   // pointer to lookup string name
+   const char *original; // haleyjd 10/08/06: original string
+   int bnext;            // haleyjd: for bex hash chaining (by mnemonic)
+   int dnext;            // haleyjd: for deh hash chaining (by value)
 } dehstr_t;
 
 extern char **deh_spritenames;
@@ -55,7 +53,7 @@ dehstr_t *D_GetDEHStr(const char *string);
 
 // haleyjd 10/08/06: new string fetching functions
 const char *DEH_String(const char *mnemonic);
-boolean DEH_StringChanged(const char *mnemonic);
+bool DEH_StringChanged(const char *mnemonic);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 
@@ -64,12 +62,12 @@ void D_BuildBEXTables(void);
 
 // haleyjd: flag field parsing stuff is now global for EDF and
 // ExtraData usage
-typedef struct dehflags_s
+struct dehflags_t
 {
-   char *name;
-   int  value;
-   int  index;
-} dehflags_t;
+   const char *name;
+   int value;
+   int index;
+};
 
 #define MAXFLAGFIELDS 4
 
@@ -82,12 +80,12 @@ enum
    DEHFLAGS_MODE_ALL
 };
 
-typedef struct dehflagset_s
+struct dehflagset_t
 {
    dehflags_t *flaglist;
    int mode;
    int results[MAXFLAGFIELDS];
-} dehflagset_t;
+};
 
 void deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 int  deh_ParseFlagsSingle(const char *strval, int mode);

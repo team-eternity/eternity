@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,21 +29,20 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_STATE__
-#define __D_STATE__
+#ifndef D_STATE_H__
+#define D_STATE_H__
 
 // We need globally shared data structures,
 //  for defining the global state variables.
-
-#include "d_net.h"
 
 // We need the player data structure as well.
 #include "d_player.h"
 #include "p_tick.h"
 #include "tables.h"
 
-// [CG] Teams too
-#include "cs_team.h"
+struct doomcom_t;
+struct doomdata_t;
+struct mapthing_t;
 
 typedef enum
 {
@@ -60,12 +59,12 @@ extern int use_doom_config;
 // Command line parameters.
 //
 
-extern boolean in_textmode;
+extern bool in_textmode;
 
-extern  boolean nomonsters; // checkparm of -nomonsters
-extern  boolean respawnparm;  // checkparm of -respawn
-extern  boolean fastparm; // checkparm of -fast
-extern  boolean devparm;  // DEBUG: launched with -devparm
+extern bool nomonsters;  // checkparm of -nomonsters
+extern bool respawnparm; // checkparm of -respawn
+extern bool fastparm;    // checkparm of -fast
+extern bool devparm;     // DEBUG: launched with -devparm
 
                 // sf: screenblocks removed, replaced w/screenSize
 extern  int screenSize;     // killough 11/98
@@ -78,7 +77,7 @@ extern  int screenSize;     // killough 11/98
 //extern GameMission_t  gamemission;
 
 // Set if homebrew PWAD stuff has been added.
-extern  boolean modifiedgame;
+extern bool modifiedgame;
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 extern int compatibility, default_compatibility;          // killough 1/31/98
@@ -145,8 +144,8 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
-  comp_mouselook,   // [CG]    06/30/11: vertically extend mouselook range
-  comp_2dradatk,    // [CG]    06/30/11: radius attacks thrust actors in 3D
+  comp_mouselook,   // [CG]    09/13/11: vertically extend mouselook range
+  comp_2dradatk,    // [CG]    09/13/11: radius attacks thrust actors in 3D
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 
@@ -161,38 +160,38 @@ extern  Language_t   language;
 //
 
 // Defaults for menu, methinks.
-extern  skill_t   startskill;
-extern  int             startepisode;
-extern  int   startmap;
+extern  skill_t startskill;
+extern  int     startepisode;
+extern  int     startmap;
 
-extern  boolean   autostart;
+extern  bool    autostart;
 
 // Selected by user.
-extern  skill_t         gameskill;
-extern  int   gameepisode;
-extern  int   gamemap;
+extern  skill_t gameskill;
+extern  int     gameepisode;
+extern  int     gamemap;
 
 // Nightmare mode flag, single player.
-extern  boolean         respawnmonsters;
+extern  bool    respawnmonsters;
 
 // Netgame? Only true if >1 player.
-extern  boolean netgame;
+extern  bool netgame;
 
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
-extern  boolean deathmatch;
+extern  bool deathmatch;
 
-// [CG] Added some booleans for c/s.
-extern boolean clientserver;
-extern boolean cs_demo_playback;
-extern boolean cs_demo_recording;
-extern boolean clientside;
-extern boolean serverside;
+// [CG] Added some bools for c/s.
+extern bool clientserver;
+extern bool cs_demo_playback;
+extern bool cs_demo_recording;
+extern bool clientside;
+extern bool serverside;
 
-// [CG] Although this is defined as a boolean, I've kept the CS_XXXXXXXX
-//      convention.  This is to avoid defining a common name such as "headless"
+// [CG] Although this is defined as a bool, I've kept the CS_XXXXXXXX
+//      convention in order to avoid defining a common name such as "headless"
 //      in the global scope.
-extern boolean CS_HEADLESS;
+extern bool CS_HEADLESS;
 
 // [CG] These #define's should be used more often then just plain clientside
 //      and serverside, so singleplayer isn't messed up.
@@ -245,26 +244,26 @@ extern int snd_DesiredSfxDevice;
 // Depending on view size - no status bar?
 // Note that there is no way to disable the
 //  status bar explicitely.
-extern  boolean statusbaractive;
+extern  bool statusbaractive;
 
-extern  boolean automapactive; // In AutoMap mode?
-extern  boolean menuactive;    // Menu overlayed?
-extern  int     paused;        // Game Pause?
-extern  int     hud_active;    //jff 2/17/98 toggles heads-up status display
-extern  boolean viewactive;
-extern  boolean nodrawers;
-extern  boolean noblit;
-extern  int     viewwindowx;
-extern  int     viewwindowy;
+extern  bool automapactive; // In AutoMap mode?
+extern  bool menuactive;    // Menu overlayed?
+extern  int  paused;        // Game Pause?
+extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
+extern  bool viewactive;
+extern  bool nodrawers;
+extern  bool noblit;
+extern  int  viewwindowx;
+extern  int  viewwindowy;
 // SoM 2-4-04: ANYRES
-extern  int     scaledwindowx;
-extern  int     scaledwindowy;
+extern  int  scaledwindowx;
+extern  int  scaledwindowy;
 
-extern  int     viewheight;
-extern  int     viewwidth;
-extern  int     scaledviewwidth;
-extern  int     scaledviewheight;         // killough 11/98
-extern  int     lefthanded; //sf
+extern  int  viewheight;
+extern  int  viewwidth;
+extern  int  scaledviewwidth;
+extern  int  scaledviewheight;         // killough 11/98
+extern  int  lefthanded; //sf
 
 // This one is related to the 3-screen display mode.
 // ANG90 = left side, ANG270 = right
@@ -289,16 +288,16 @@ extern  int leveltime;  // tics in game play for par
 // --------------------------------------
 // DEMO playback/recording related stuff.
 
-extern  boolean usergame;
-extern  boolean demoplayback;
-extern  boolean demorecording;
+extern  bool usergame;
+extern  bool demoplayback;
+extern  bool demorecording;
 
 // Quit after playing a demo from cmdline.
-extern  boolean   singledemo;
+extern  bool singledemo;
 // Print timing information after quitting.  killough
-extern  boolean   timingdemo;
+extern  bool timingdemo;
 // Run tick clock at fastest speed possible while playing demo.  killough
-extern  boolean   fastdemo;
+extern  bool fastdemo;
 
 extern  gamestate_t  gamestate;
 
@@ -311,17 +310,11 @@ extern  gamestate_t  gamestate;
 extern  int   gametic;
 
 
-/*
- * [CG] Dynamically allocating these now.
 // Bookkeeping on players - state.
 extern  player_t  players[MAXPLAYERS];
 
 // Alive? Disconnected?
-extern  boolean    playeringame[];
- *
- */
-
-struct mapthing_t;
+extern  bool playeringame[];
 
 extern  mapthing_t *deathmatchstarts;     // killough
 extern  size_t     num_deathmatchstarts; // killough
@@ -339,7 +332,7 @@ extern wbstartstruct_t wminfo;
 // This doubles with BackPack powerup item.
 extern int maxammo[];
 
-extern angle_t consoleangle;
+//extern angle_t consoleangle;
 
 //-----------------------------------------
 // Internal parameters, used for engine.
@@ -351,7 +344,7 @@ extern  char   *basepath;
 extern  char   *basegamepath;
 
 // if true, load all graphics at level load
-extern  boolean precache;
+extern  bool precache;
 
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw
@@ -364,7 +357,7 @@ extern  int             mouseSensitivity_vert;
 extern  int             mouseAccel_type;
 
 // debug flag to cancel adaptiveness
-extern  boolean         singletics;
+extern  bool            singletics;
 
 extern  int             bodyqueslot;
 
@@ -381,7 +374,6 @@ extern  int        rndindex;
 
 extern  int        maketic;
 
-extern  ticcmd_t   netcmds[][BACKUPTICS];
 extern  int        ticdup;
 
 extern Thinker thinkercap;  // Both the head and tail of the thinker list
@@ -434,7 +426,7 @@ extern int allowmlook, default_allowmlook; // haleyjd
 extern int flashing_hom; // killough 10/98
 
 extern int doom_weapon_toggles;   // killough 10/98
-extern int default_doom_weapon_toggles; // [CG] Added.
+extern int default_doom_weapon_toggles; // [CG] 09/24/11
 
 //=======================================================
 //
@@ -448,7 +440,7 @@ extern int sky2flatnum;          // flat num of F_SKY2
 
 extern fixed_t Sky1ColumnOffset, Sky2ColumnOffset;
 
-extern boolean cinema_pause;
+extern bool cinema_pause;
 extern int drawparticles;
 extern int bloodsplat_particle;
 extern int bulletpuff_particle;

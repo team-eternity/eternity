@@ -72,7 +72,8 @@ the Eternity console, as well as pointers on console command syntax.
           com
       <li><a href="#varclientserver">Client/Server variables</a><br>
           prediction, predict_shots, show_netstats, show_timer,
-          buffer_packets_while_spectating, flush_packet_buffer_on_respawn
+          buffer_packets_while_spectating, flush_packet_buffer_on_respawn,
+          constant_prediction
       <li><a href="#vargametype">Gametype / Deathmatch</a><br>
           skill, nomonsters, respawn, fraglimit, bfgtype, gametype,
           weapspeed, timelimit, fast, turbo, startlevel, dmflags
@@ -578,6 +579,7 @@ Synopsis of Commands:
 	* unbindall
 	* unbind
 	* listkeys
+    * multibind
 </pre>
 
 <ul>
@@ -625,7 +627,7 @@ Synopsis of Commands:
 <p>
 <a name="cmdmessaging">
 <hr width="75%" align="left">
-<b>Networking</b>
+<b>Messaging</b>
 <hr width="75%" align="left">
 </a>
 <p>
@@ -659,6 +661,55 @@ Synopsis of Commands:
 
   Sends all arguments as a single command to the server.  Requires appropriate
   authorization level.
+  <br><br>
+</ul>
+<a href="#contents">Return to Table of Contents</a>
+
+<a name="cmdclientserver">
+<hr width="75%" align="left">
+<b>Client/Server</b>
+<hr width="75%" align="left">
+</a>
+<p>
+Synopsis of Commands:
+<pre>
+    * team
+    * flush_packet_buffer
+    * password
+    * spectate
+    * spectate_prev
+    * spectate_next
+</pre>
+<ul>	
+<li> team color<br><br>
+
+  Changes teams.<br>
+  Flags: only in c/s games
+  <br><br>
+<li> flush_packet_buffer<br><br>
+
+  Flushes the clientside packet buffer manually.<br>
+  Flags: only in c/s games
+  <br><br>
+<li> password password<br><br>
+
+  Attempts to gain authorization from the server.<br>
+  Flags: only in c/s games
+  <br><br>
+<li> spectate<br><br>
+
+  Switches to spectator mode.<br>
+  Flags: only in c/s games
+  <br><br>
+<li> spectate_prev<br><br>
+
+  Spectates the previous player.<br>
+  Flags: only in c/s games
+  <br><br>
+<li> spectate_next<br><br>
+
+  Spectates the next player.<br>
+  Flags: only in c/s games
   <br><br>
 </ul>
 <a href="#contents">Return to Table of Contents</a>
@@ -1211,11 +1262,13 @@ Synopsis:
 Synopsis:
 <pre>
     * prediction
+    * constant_prediction
     * predict_shots
-    * show_netstats
-    * show_timer
+    * packet_buffer_size
     * buffer_packets_while_spectating
     * flush_packet_buffer_on_respawn
+    * show_netstats
+    * show_timer
 </pre>
 <ul>	
 <li> prediction<br>
@@ -1223,20 +1276,30 @@ Synopsis:
     on  = predict local client movement instead of waiting for the server<br>
     off = wait for the server before moving<br>
 	<br>
+<li> constant_prediction<br>
+	type: on / off<br>
+	on  = predict local client movement even when not receiving data from the server<br>
+	off = if no data received from the server, do not predict local client movement<br>
+    <br>
 <li> predict_shots<br>
 	type: yes / no<br>
     on  = predict the results of shots (bullet puffs/blood spots)<br>
     off = do not predict the results of shots (bullet puffs/blood spots)<br>
 	<br>
-<li> flush_packet_buffer_on_respawn<br>
-	type: on / off<br>
-	on  = flush packet buffer on respawn<br>
-	off = do not flush packet buffer on respawn<br>
+<li> packet_buffer_size<br>
+    type: integer<br>
+    value range: 1 - 350<br>
+    value = number of worlds to buffer (in TICs), 0 is adaptive, 1 is disabled.
     <br>
 <li> buffer_packets_while_spectating<br>
 	type: on / off<br>
 	on  = buffer packets while spectating<br>
 	off = do not buffer packets while spectating<br>
+    <br>
+<li> flush_packet_buffer_on_respawn<br>
+	type: on / off<br>
+	on  = flush packet buffer on respawn<br>
+	off = do not flush packet buffer on respawn<br>
     <br>
 <li> show_netstats<br>
 	type: on / off<br>

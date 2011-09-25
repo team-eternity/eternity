@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-  vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,10 +26,21 @@
 #ifndef P_SPEC_H__
 #define P_SPEC_H__
 
-#include "r_defs.h"
-#include "d_player.h"
+// HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
-class SaveArchive;
+#include <map>
+
+#include "m_fixed.h" // [CG] 09/23/11 Requred for fixed_t.
+
+// Required for: Thinker
+#include "p_tick.h"
+
+struct line_t;
+class  Mobj;
+struct player_t;
+class  SaveArchive;
+struct sector_t;
+struct side_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -61,7 +72,7 @@ class SaveArchive;
 // killough 2/14/98: redefine in terms of MAXPLAYERS
 // #define MAXBUTTONS    (MAXPLAYERS*4)
 
-// 1 second, in ticks.
+// 1 second, in ticks. 
 #define BUTTONTIME  TICRATE
 
 // p_lights
@@ -91,7 +102,7 @@ class SaveArchive;
 #define GENSECTOFLAGSMASK \
    (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
 
-//jff 02/04/98 Define masks, shifts, for fields in
+//jff 02/04/98 Define masks, shifts, for fields in 
 // generalized linedef types
 
 #define GenFloorBase          0x6000
@@ -120,7 +131,7 @@ class SaveArchive;
 #define FloorDirectionShift        6
 #define FloorModelShift            5
 #define FloorSpeedShift            3
-
+                               
 // define masks and shifts for the ceiling type fields
 
 #define CeilingCrush          0x1000
@@ -218,8 +229,8 @@ typedef enum
    SpeedSlow,
    SpeedNormal,
    SpeedFast,
-   SpeedTurbo,
-   SpeedParam, // haleyjd 05/04/04: parameterized extension
+   SpeedTurbo,  
+   SpeedParam, // haleyjd 05/04/04: parameterized extension 
 } motionspeed_e;
 
 // define names for the Target field of the general floor
@@ -234,7 +245,7 @@ typedef enum
    FbyST,
    Fby24,
    Fby32,
-
+  
    FbyParam, // haleyjd 05/07/04: parameterized extensions
    FtoAbs,
    FInst,
@@ -305,7 +316,7 @@ typedef enum
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
-
+ 
 typedef enum
 {
    StepSize4,
@@ -324,7 +335,7 @@ typedef enum
    ODoor,
    CdODoor,
    CDoor,
-
+  
    // haleyjd 03/01/05: new param types with initial delays
    pDOdCDoor,
    pDCDoor,
@@ -384,7 +395,7 @@ typedef enum
    raiseToNearestAndChange,
    blazeDWUS,
    genLift,      //jff added to support generalized Plat types
-   genPerpetual,
+   genPerpetual, 
    toggleUpDn,   //jff 3/14/98 added to support instant toggle type
 
 } plattype_e;
@@ -463,16 +474,16 @@ typedef enum
 {
    // lower floor to highest surrounding floor
    lowerFloor,
-
+  
    // lower floor to lowest surrounding floor
    lowerFloorToLowest,
-
+  
    // lower floor to highest surrounding floor VERY FAST
    turboLower,
-
+  
    // raise floor to lowest surrounding CEILING
    raiseFloor,
-
+  
    // raise floor to next highest surrounding floor
    raiseFloorToNearest,
 
@@ -487,7 +498,7 @@ typedef enum
 
    // raise floor to shortest height texture around it
    raiseToTexture,
-
+  
    // lower floor to lowest surrounding floor
    //  and change floorpic
    lowerAndChange,
@@ -501,7 +512,7 @@ typedef enum
    raiseFloorCrush,
 
    // raise to next highest floor, turbo-speed
-   raiseFloorTurbo,
+   raiseFloorTurbo,       
    donutRaise,
    raiseFloor512,
 
@@ -516,13 +527,13 @@ typedef enum
    genBuildStair,
    genWaitStair,  // haleyjd 10/10/05: stair resetting
    genDelayStair, // haleyjd 10/13/05: delayed stair
-   genResetStair,
+   genResetStair, 
 } floor_e;
 
 typedef enum
 {
    build8, // slowly build by 8
-   turbo16 // quickly build by 16
+   turbo16 // quickly build by 16    
 } stair_e;
 
 typedef enum
@@ -558,7 +569,7 @@ typedef enum
 {
    top,
    middle,
-   bottom
+   bottom      
 } bwhere_e;
 
 // crush check returns
@@ -604,7 +615,7 @@ typedef struct button_s
    int      where;
    int      btexture;
    int      btimer;
-   boolean  dopopout;
+   bool     dopopout;
 } button_t;
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
@@ -717,9 +728,78 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t type;
+      fixed_t speed;
+      fixed_t low;
+      fixed_t high;
+      int32_t wait;
+      int32_t count;
+      int32_t status;
+      int32_t old_status;
+      int32_t crush;
+      int32_t tag;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PlatThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id     = this->net_id;
+      status->type       = this->type;
+      status->speed      = this->speed;
+      status->low        = this->low;
+      status->high       = this->high;
+      status->wait       = this->wait;
+      status->count      = this->count;
+      status->status     = this->status;
+      status->old_status = this->oldstatus;
+      status->crush      = this->crush;
+      status->tag        = this->tag;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id     = this->net_id;
+      status->type       = this->type;
+      status->speed      = this->speed;
+      status->low        = this->low;
+      status->high       = this->high;
+      status->wait       = this->wait;
+      status->count      = this->count;
+      status->status     = this->status;
+      status->old_status = this->oldstatus;
+      status->crush      = this->crush;
+      status->tag        = this->tag;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id     = status->net_id;
+      this->type       = status->type;
+      this->speed      = status->speed;
+      this->low        = status->low;
+      this->high       = status->high;
+      this->wait       = status->wait;
+      this->count      = status->count;
+      this->status     = status->status;
+      this->oldstatus  = status->old_status;
+      this->crush      = status->crush;
+      this->tag        = status->tag;
+   }
 
    // Data Members
    sector_t *sector;
@@ -734,8 +814,8 @@ public:
    int tag;
    int type;
    struct platlist *list;   // killough
-   unsigned int net_id;     // [CG] Added for c/s.
-   unsigned int inactive;   // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // New limit-free plat structure -- killough
@@ -761,9 +841,62 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t type;
+      fixed_t top_height;
+      fixed_t speed;
+      int32_t direction;
+      int32_t top_wait;
+      int32_t top_countdown;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "VerticalDoorThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id        = this->net_id;
+      status->type          = this->type;
+      status->top_height    = this->topheight;
+      status->speed         = this->speed;
+      status->direction     = this->direction;
+      status->top_wait      = this->topwait;
+      status->top_countdown = this->topcountdown;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id        = this->net_id;
+      status->type          = this->type;
+      status->top_height    = this->topheight;
+      status->speed         = this->speed;
+      status->direction     = this->direction;
+      status->top_wait      = this->topwait;
+      status->top_countdown = this->topcountdown;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id       = status->net_id;
+      this->type         = status->type;
+      this->topheight    = status->top_height;
+      this->speed        = status->speed;
+      this->direction    = status->direction;
+      this->topwait      = status->top_wait;
+      this->topcountdown = status->top_countdown;
+   }
 
    // Data Members
    int type;
@@ -785,8 +918,8 @@ public:
 
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
 
-   unsigned int net_id;   // [CG] Added for c/s.
-   unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
@@ -802,7 +935,7 @@ typedef struct doordata_s
    fixed_t speed_value;
    int     delay_value;
    int     altlighttag;
-   boolean usealtlighttag;
+   bool    usealtlighttag;
    int     topcountdown;
 } doordata_t;
 
@@ -826,9 +959,78 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t type;
+      fixed_t bottom_height;
+      fixed_t top_height;
+      fixed_t speed;
+      fixed_t old_speed;
+      int32_t crush;
+      int32_t texture;
+      int8_t direction;
+      int32_t tag;
+      int32_t old_direction;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "CeilingThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id        = this->net_id;
+      status->type          = this->type;
+      status->bottom_height = this->bottomheight;
+      status->top_height    = this->topheight;
+      status->speed         = this->speed;
+      status->old_speed     = this->oldspeed;
+      status->crush         = this->crush;
+      status->texture       = this->texture;
+      status->direction     = this->direction;
+      status->tag           = this->tag;
+      status->old_direction = this->olddirection;
+
+      return status;
+   }
+   
+   void getStatus(status_t *status)
+   {
+      status->net_id        = this->net_id;
+      status->type          = this->type;
+      status->bottom_height = this->bottomheight;
+      status->top_height    = this->topheight;
+      status->speed         = this->speed;
+      status->old_speed     = this->oldspeed;
+      status->crush         = this->crush;
+      status->texture       = this->texture;
+      status->direction     = this->direction;
+      status->tag           = this->tag;
+      status->old_direction = this->olddirection;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id       = status->net_id;
+      this->type         = status->type;
+      this->bottomheight = status->bottom_height;
+      this->topheight    = status->top_height;
+      this->speed        = status->speed;
+      this->oldspeed     = status->old_speed;
+      this->crush        = status->crush;
+      this->texture      = status->texture;
+      this->direction    = status->direction;
+      this->tag          = status->tag;
+      this->olddirection = status->old_direction;
+   }
 
    // Data Members
    int type;
@@ -848,15 +1050,14 @@ public:
    int direction;
 
    // haleyjd: stasis
-   boolean inStasis;
+   bool inStasis;
 
    // ID
    int tag;                   
    int olddirection;
    struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
-
-   unsigned int net_id;   // [CG] Added for c/s.
-   unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 typedef struct ceilinglist 
@@ -867,7 +1068,7 @@ typedef struct ceilinglist
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
 typedef struct ceilingdata_s
-{
+{   
    // generalized values
    int trigger_type;
    int crush;
@@ -891,9 +1092,106 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t type;
+      int32_t crush;
+      int8_t direction;
+      int32_t new_special;
+      uint32_t flags;
+      int32_t damage;
+      int32_t damage_mask;
+      int32_t damage_mod;
+      int32_t damage_flags;
+      int16_t texture;
+      fixed_t floor_dest_height;
+      fixed_t speed;
+      int32_t reset_time;
+      fixed_t reset_height;
+      int32_t step_raise_time;
+      int32_t delay_time;
+      int32_t delay_timer;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorMoveThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id            = this->net_id;
+      status->type              = this->type;
+      status->crush             = this->crush;
+      status->direction         = this->direction;
+      status->new_special       = this->special.newspecial;
+      status->flags             = this->special.flags;
+      status->damage            = this->special.damage;
+      status->damage_mask       = this->special.damagemask;
+      status->damage_mod        = this->special.damagemod;
+      status->damage_flags      = this->special.damageflags;
+      status->texture           = this->texture;
+      status->floor_dest_height = this->floordestheight;
+      status->speed             = this->speed;
+      status->reset_time        = this->resetTime;
+      status->reset_height      = this->resetHeight;
+      status->step_raise_time   = this->stepRaiseTime;
+      status->delay_time        = this->delayTime;
+      status->delay_timer       = this->delayTimer;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id            = this->net_id;
+      status->type              = this->type;
+      status->crush             = this->crush;
+      status->direction         = this->direction;
+      status->new_special       = this->special.newspecial;
+      status->flags             = this->special.flags;
+      status->damage            = this->special.damage;
+      status->damage_mask       = this->special.damagemask;
+      status->damage_mod        = this->special.damagemod;
+      status->damage_flags      = this->special.damageflags;
+      status->texture           = this->texture;
+      status->floor_dest_height = this->floordestheight;
+      status->speed             = this->speed;
+      status->reset_time        = this->resetTime;
+      status->reset_height      = this->resetHeight;
+      status->step_raise_time   = this->stepRaiseTime;
+      status->delay_time        = this->delayTime;
+      status->delay_timer       = this->delayTimer;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id              = status->net_id;
+      this->type                = status->type;
+      this->crush               = status->crush;
+      this->direction           = status->direction;
+      this->special.newspecial  = status->new_special;
+      this->special.flags       = status->flags;
+      this->special.damage      = status->damage;
+      this->special.damagemask  = status->damage_mask;
+      this->special.damagemod   = status->damage_mod;
+      this->special.damageflags = status->damage_flags;
+      this->texture             = status->texture;
+      this->floordestheight     = status->floor_dest_height;
+      this->speed               = status->speed;
+      this->resetTime           = status->reset_time;
+      this->resetHeight         = status->reset_height;
+      this->stepRaiseTime       = status->step_raise_time;
+      this->delayTime           = status->delay_time;
+      this->delayTimer          = status->delay_timer;
+   }
 
    // Data Members
    int type;
@@ -913,14 +1211,13 @@ public:
    int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
    int delayTime;       
    int delayTimer;
-
-  unsigned int net_id;   // [CG] Added for c/s.
-  unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
 typedef struct floordata_s
-{
+{   
    // generalized values
    int trigger_type;
    int crush;
@@ -937,7 +1234,7 @@ typedef struct floordata_s
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
 typedef struct stairdata_s
-{
+{   
    // generalized values
    int trigger_type;
    int ignore;
@@ -959,9 +1256,59 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t type;
+      int8_t direction;
+      fixed_t floor_dest_height;
+      fixed_t ceiling_dest_height;
+      fixed_t speed;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "ElevatorThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id              = this->net_id;
+      status->type                = this->type;
+      status->direction           = this->direction;
+      status->floor_dest_height   = this->floordestheight;
+      status->ceiling_dest_height = this->ceilingdestheight;
+      status->speed               = this->speed;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id              = this->net_id;
+      status->type                = this->type;
+      status->direction           = this->direction;
+      status->floor_dest_height   = this->floordestheight;
+      status->ceiling_dest_height = this->ceilingdestheight;
+      status->speed               = this->speed;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id            = status->net_id;
+      this->type              = status->type;
+      this->direction         = status->direction;
+      this->floordestheight   = status->floor_dest_height;
+      this->ceilingdestheight = status->ceiling_dest_height;
+      this->speed             = status->speed;
+
+   }
 
    // Data Members
    int type;
@@ -970,8 +1317,8 @@ public:
    fixed_t floordestheight;
    fixed_t ceilingdestheight;
    fixed_t speed;
-   unsigned int net_id;   // [CG] Added for c/s.
-   unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // joek: pillars
@@ -981,9 +1328,62 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      int32_t ceiling_speed;
+      int32_t floor_speed;
+      int32_t floor_dest;
+      int32_t ceiling_dest;
+      int8_t direction;
+      int32_t crush;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PillarThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id        = this->net_id;
+      status->ceiling_speed = this->ceilingSpeed;
+      status->floor_speed   = this->floorSpeed;
+      status->floor_dest    = this->floordest;
+      status->ceiling_dest  = this->ceilingdest;
+      status->direction     = this->direction;
+      status->crush         = this->crush;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id        = this->net_id;
+      status->ceiling_speed = this->ceilingSpeed;
+      status->floor_speed   = this->floorSpeed;
+      status->floor_dest    = this->floordest;
+      status->ceiling_dest  = this->ceilingdest;
+      status->direction     = this->direction;
+      status->crush         = this->crush;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id       = status->net_id;
+      this->ceilingSpeed = status->ceiling_speed;
+      this->floorSpeed   = status->floor_speed;
+      this->floordest    = status->floor_dest;
+      this->ceilingdest  = status->ceiling_dest;
+      this->direction    = status->direction;
+      this->crush        = status->crush;
+   }
 
    // Data Members
    sector_t *sector;
@@ -993,8 +1393,8 @@ public:
    int ceilingdest;
    int direction;
    int crush;
-   unsigned int net_id;   // [CG] Added for c/s.
-   unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 10/21/06: data struct for param pillars
@@ -1015,9 +1415,70 @@ protected:
    void Think();
 
 public:
+   // [CG] 09/22/11: Status for sending over the network.
+#pragma pack(push, 1)
+   typedef struct
+   {
+      uint32_t net_id;
+      fixed_t original_height;
+      fixed_t accumulator;
+      fixed_t acc_delta;
+      fixed_t target_scale;
+      fixed_t scale;
+      fixed_t scale_delta;
+      int32_t ticker;
+      int32_t state;
+   } status_t;
+#pragma pack(pop)
+
+   std::map<uint32_t, status_t*> statuses;
+
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorWaggleThinker"; }
+
+   status_t* getStatus(void)
+   {
+      status_t *status = (status_t *)(malloc(sizeof(status_t)));
+
+      status->net_id          = this->net_id;
+      status->original_height = this->originalHeight;
+      status->accumulator     = this->accumulator;
+      status->acc_delta       = this->accDelta;
+      status->target_scale    = this->targetScale;
+      status->scale           = this->scale;
+      status->scale_delta     = this->scaleDelta;
+      status->ticker          = this->ticker;
+      status->state           = this->state;
+
+      return status;
+   }
+
+   void getStatus(status_t *status)
+   {
+      status->net_id          = this->net_id;
+      status->original_height = this->originalHeight;
+      status->accumulator     = this->accumulator;
+      status->acc_delta       = this->accDelta;
+      status->target_scale    = this->targetScale;
+      status->scale           = this->scale;
+      status->scale_delta     = this->scaleDelta;
+      status->ticker          = this->ticker;
+      status->state           = this->state;
+   }
+
+   void setStatus(status_t *status)
+   {
+      this->net_id         = status->net_id;
+      this->originalHeight = status->original_height;
+      this->accumulator    = status->accumulator;
+      this->accDelta       = status->acc_delta;
+      this->targetScale    = status->target_scale;
+      this->scale          = status->scale;
+      this->scaleDelta     = status->scale_delta;
+      this->ticker         = status->ticker;
+      this->state          = status->state;
+   }
 
    // Data Members
    sector_t *sector;
@@ -1029,8 +1490,8 @@ public:
    fixed_t scaleDelta;
    int ticker;
    int state;
-   unsigned int net_id;   // [CG] Added for c/s.
-   unsigned int inactive; // [CG] Added for c/s.
+   uint32_t net_id;   // [CG] 09/18/11
+   uint32_t inactive; // [CG] 09/18/11
 };
 
 // p_spec
@@ -1135,12 +1596,11 @@ enum
 //
 // End-level timer (-TIMER option)
 // frags limit (-frags)
-// [CG] Score limit (no command-line option)
 //
 
 extern int             levelTimeLimit;
 extern int             levelFragLimit;
-extern int             levelScoreLimit;
+extern int             levelScoreLimit; // [CG] 09/23/11.
 
 extern platlist_t *activeplats;        // killough 2/14/98
 
@@ -1180,7 +1640,7 @@ fixed_t P_FindShortestUpperAround(int secnum); // jff 2/04/98
 
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/04/98
 
-sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98
+sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 
@@ -1194,13 +1654,13 @@ sector_t *getNextSector(line_t *line, sector_t *sec);
 
 int P_CheckTag(line_t *line); // jff 2/27/98
 
-boolean P_CanUnlockGenDoor(line_t *line, player_t *player);
+bool P_CanUnlockGenDoor(line_t *line, player_t *player);
 
 int P_SectorActive(special_e t, sector_t *s);
 
-boolean P_IsSecret(sector_t *sec);
+bool P_IsSecret(sector_t *sec);
 
-boolean P_WasSecret(sector_t *sec);
+bool P_WasSecret(sector_t *sec);
 
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 
@@ -1231,8 +1691,8 @@ int EV_Teleport(line_t *line, int side, Mobj *thing);
 int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(line_t *line, int side, Mobj *thing,
-                          boolean reverse);
+int EV_SilentLineTeleport(line_t *line, int side, 
+			              Mobj *thing, bool reverse);
 
 // p_floor
 
@@ -1277,7 +1737,7 @@ int EV_SetLight(line_t *, int tag, setlight_e type, int lvl); // haleyjd 01/09/0
 int EV_FadeLight(line_t *, int tag, int destvalue, int speed); // haleyjd 01/10/07
 
 // haleyjd 01/10/07:
-int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed);
+int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed); 
 
 // haleyjd 01/16/07:
 int EV_StrobeLight(line_t *, int tag, int maxval, int minval, int maxtime, int mintime);
@@ -1294,7 +1754,7 @@ int EV_PillarBuild(line_t *line, pillardata_t *pd);	// joek: pillars
 
 int EV_PillarOpen(line_t *line, pillardata_t *pd);
 
-int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
+int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
                         int offset, int timer);
 
 void P_ChangeFloorTex(const char *name, int tag);
@@ -1321,14 +1781,18 @@ int EV_DoGenDoor(line_t *line);
 
 int EV_DoGenLockedDoor(line_t *line);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, boolean usetag);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
 
 // haleyjd 02/23/04
 extern Mobj *genDoorThing;
 
 // p_things
 
-int EV_ThingSpawn(int *args, boolean fog);
+int EV_ThingProjectile(int *args, bool gravity);
+int EV_ThingSpawn(int *args, bool fog);
+int EV_ThingActivate(int tid);
+int EV_ThingDeactivate(int tid);
+
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1344,10 +1808,10 @@ void P_InitSwitchList(void);
 // at map load
 void P_SpawnSpecials(int);
 
-//
+// 
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate
+// SoM: Specials that copy slopes, ect., need to be collected in a separate 
 // pass
 void P_SpawnDeferredSpecials(int mapformat);
 
@@ -1355,7 +1819,7 @@ void P_SpawnDeferredSpecials(int mapformat);
 void P_UpdateSpecials(void);
 
 // when needed
-boolean P_UseSpecialLine(Mobj *thing, line_t *line, int side);
+bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
@@ -1383,16 +1847,6 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-void P_CopyPlatform(PlatThinker *dest, PlatThinker *src);
-
-void P_AddActivePlat(PlatThinker *plat);
-
-boolean P_PlatformsEqual(PlatThinker *platform_one, PlatThinker *platform_two);
-
-void P_RemoveActivePlat(PlatThinker *plat);
-
-void P_PrintPlatform(PlatThinker *platform);
-
 PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
                              plattype_e type);
 
@@ -1410,77 +1864,65 @@ void P_PlatSequence(sector_t *s, const char *seqname);
 
 // p_doors
 
-void P_CopyDoor(VerticalDoorThinker *dest, VerticalDoorThinker *src);
-
 void P_RemoveDoor(VerticalDoorThinker *door);
 
-void P_PrintDoor(VerticalDoorThinker *door);
-
-VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type);
+VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
+                                       vldoor_e type);
 
 VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec);
 
 VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t *sec);
 
-VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
+VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec);
 
-VerticalDoorThinker* P_SpawnParamDoor(line_t *line, sector_t *sector, doordata_t *dd);
+VerticalDoorThinker* P_SpawnParamDoor(line_t *line, sector_t *sector,
+                                      doordata_t *dd);
 
-// haleyjd
-void P_DoorSequence(boolean raise, boolean turbo, boolean bounced, sector_t *s);
+void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
 
 // p_floor
-
-void P_CopyFloor(floormove_t *dest, floormove_t *src);
-
-void P_RemoveFloor(floormove_t *floor);
-
-void P_CopyElevator(elevator_t *dest, elevator_t *src);
-
-void P_RemoveElevator(elevator_t *elevator);
-
-void P_CopyPillar(pillar_t *dest, pillar_t *src);
-
-void P_RemovePillar(pillar_t *pillar);
-
-void P_CopyFloorWaggle(floorwaggle_t *dest, floorwaggle_t *src);
-
-void P_RemoveFloorWaggle(floorwaggle_t *floorwaggle);
-
-floormove_t* P_SpawnFloor(line_t *line, sector_t *sec, floor_e type);
-
-floormove_t* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type);
-
-floormove_t* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
-                          fixed_t floordestheight);
-
-floormove_t* P_SpawnDonutHole(line_t *line, sector_t *sec,
-                              fixed_t floordestheight);
-
-elevator_t* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype);
-
-pillar_t* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
-                             fixed_t speed, int crush);
-
-pillar_t* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
-                            fixed_t fdist, fixed_t cdist);
-
-floorwaggle_t* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
-                                  int speed, int offset, int timer);
-
-floormove_t* P_SpawnParamFloor(line_t *line, sector_t *sector,
-                               floordata_t *fd);
-
 void P_FloorSequence(sector_t *s);
+
+void P_RemoveFloor(FloorMoveThinker *floor);
+
+void P_RemoveElevator(ElevatorThinker *elevator);
+
+void P_RemovePillar(PillarThinker *pillar);
+
+void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle);
+
+FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e type);
+
+void P_SpawnStairs(line_t *line, sector_t *sec, stair_e type);
+
+FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
+                               fixed_t floordestheight);
+
+FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
+                                   fixed_t floordestheight);
+
+ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
+                                 elevator_e elevtype);
+
+PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
+                                  fixed_t height, fixed_t speed, int crush);
+
+PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
+                                 fixed_t fdist, fixed_t cdist);
+
+FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
+                                       int height, int speed, int offset,
+                                       int timer);
+
+FloorMoveThinker* P_SpawnParamFloor(line_t *line, sector_t *sector,
+                                    floordata_t *fd);
 
 // p_ceilng
 
-void P_CopyCeiling(ceiling_t *dest, ceiling_t *src);
+CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
 
-ceiling_t* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
-
-ceiling_t* P_SpawnParamCeiling(line_t *line, sector_t *sector,
-                               ceilingdata_t *cd);
+CeilingThinker* P_SpawnParamCeiling(line_t *line, sector_t *sector,
+                                    ceilingdata_t *cd);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
@@ -1492,18 +1934,18 @@ void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(line_t *line);
+int P_ActivateInStasisCeiling(line_t *line); 
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
 Mobj *P_GetPushThing(int);                                // phares 3/23/98
 
 // SoM 9/19/02: 3dside movement. :)
-void P_AttachLines(line_t *cline, boolean ceiling);
-boolean P_MoveAttached(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
+void P_AttachLines(line_t *cline, bool ceiling);
+bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 void P_AttachSectors(line_t *line);
 
-boolean P_Scroll3DSides(sector_t *sector, boolean ceiling, fixed_t delta, int crush);
+bool P_Scroll3DSides(sector_t *sector, bool ceiling, fixed_t delta, int crush);
 
 line_t *P_FindLine(int tag, int *searchPosition);
 
@@ -1531,9 +1973,9 @@ enum
    SPAC_PUSH,
 };
 
-boolean P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-boolean P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
-                            int *args, int side, int spac, boolean reuse);
+bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+                         int *args, int side, int spac, bool reuse);
 
 #endif
 

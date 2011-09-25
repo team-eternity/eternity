@@ -108,24 +108,24 @@ extern char *cs_demo_archive_path;
 extern unsigned int cs_current_demo_map;
 
 const char* CS_GetDemoErrorMessage(void);
-boolean CS_SetDemoFolderPath(char *demo_folder_path);
-boolean CS_AddNewMapToDemo(void);
-boolean CS_RecordDemo(void);
-boolean CS_UpdateDemoLength(void);
-boolean CS_UpdateDemoSettings(void);
-boolean CS_PlayDemo(char *url);
-boolean CS_StopDemo(void);
-boolean CS_WriteToDemo(void *data, size_t data_size);
-boolean CS_LoadDemoMap(unsigned int map_number);
-boolean CS_LoadPreviousDemoMap(void);
-boolean CS_LoadNextDemoMap(void);
-boolean CS_WriteNetworkMessageToDemo(void *network_message,
+bool CS_SetDemoFolderPath(char *demo_folder_path);
+bool CS_AddNewMapToDemo(void);
+bool CS_RecordDemo(void);
+bool CS_UpdateDemoLength(void);
+bool CS_UpdateDemoSettings(void);
+bool CS_PlayDemo(char *url);
+bool CS_StopDemo(void);
+bool CS_WriteToDemo(void *data, size_t data_size);
+bool CS_LoadDemoMap(unsigned int map_number);
+bool CS_LoadPreviousDemoMap(void);
+bool CS_LoadNextDemoMap(void);
+bool CS_WriteNetworkMessageToDemo(void *network_message,
                                      size_t message_size, int playernum);
-boolean CS_WritePlayerCommandToDemo(cs_cmd_t *player_command);
-boolean CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
+bool CS_WritePlayerCommandToDemo(cs_cmd_t *player_command);
+bool CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
                                      const char *options, int cmdsrc);
-boolean CS_ReadDemoPacket(void);
-boolean CS_DemoFinished(void);
+bool CS_ReadDemoPacket(void);
+bool CS_DemoFinished(void);
 
 /* [CG] Documentation for the various demo packets:
 

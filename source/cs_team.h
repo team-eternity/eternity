@@ -45,36 +45,18 @@ typedef enum
    team_color_none,
    team_color_red,
    team_color_blue,
-   /*
-   team_color_green,
-   team_color_white,
-   team_color_black,
-   team_color_purple,
-   team_color_yellow,
-   */
    team_color_max,
 } teamcolor_t;
 
-/*
- * 5080: Blue Start
- * 5081: Red Start
- * 5130: Blue Flag
- * 5131: Red Flag
- */
+// 5080: Blue Start
+// 5081: Red Start
+// 5130: Blue Flag
+// 5131: Red Flag
 
 enum
 {
-   // red_team_start    = 9027, // [CG] Red Particle Fountain
-   // blue_team_start   = 9029, // [CG] Blue Particle Fountain
    blue_team_start   = 5080,
    red_team_start    = 5081,
-   /*
-   green_team_start  = 9028, // [CG] Green Particle Fountain
-   yellow_team_start = 9030, // [CG] Yellow Particle Fountain
-   purple_team_start = 9031, // [CG] Purple Particle Fountain
-   black_team_start  = 9032, // [CG] Black Particle Fountain
-   white_team_start  = 9033, // [CG] White Particle Fountain
-   */
 };
 
 typedef struct team_start_s

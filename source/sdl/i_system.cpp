@@ -62,7 +62,7 @@ ticcmd_t *I_BaseTiccmd(void)
 // SoM 3/13/2002: SDL time. 1000 ticks per second.
 void I_WaitVBL(int count)
 {
-   SDL_Delay((count * 500) / TICRATE);
+   SDL_Delay((count*500)/TICRATE);
 }
 
 
@@ -71,18 +71,16 @@ void I_WaitVBL(int count)
 //
 // I_GetTime
 //
-static uint32_t basetime = 0;
+static Uint32 basetime=0;
 
-int I_GetTime_RealTime(void)
+int  I_GetTime_RealTime (void)
 {
-   uint32_t ticks = SDL_GetTicks(); // milliseconds since SDL initialization
-
-   // [CG] If this wraps (and it will) the math will be all messed up, so
-   //      reset basetime in that case.
-   if(ticks < basetime)
-      basetime = ticks;
+   Uint32        ticks;
    
-   return ((ticks - basetime) * TICRATE) / 1000;
+   // milliseconds since SDL initialization
+   ticks = SDL_GetTicks();
+   
+   return ((ticks - basetime)*TICRATE)/1000;
 }
 
 //
@@ -122,7 +120,7 @@ static int I_GetTime_FastDemo(void)
 
 static int I_GetTime_Error(void)
 {
-   I_FatalError(I_ERR_KILL, "Error: GetTime() used before initialization\n");
+   I_Error("Error: GetTime() used before initialization\n");
    return 0;
 }
 
@@ -200,7 +198,7 @@ void I_EnumerateJoysticks(void)
 //
 // haleyjd 04/15/02
 //
-boolean I_SetJoystickDevice(int deviceNum)
+bool I_SetJoystickDevice(int deviceNum)
 {
    if(deviceNum >= SDL_NumJoysticks())
       return false;
@@ -221,7 +219,7 @@ boolean I_SetJoystickDevice(int deviceNum)
    }
 }
 
-extern boolean unicodeinput;
+extern bool unicodeinput;
 
 void I_InitKeyboard(void)
 {   
@@ -229,6 +227,10 @@ void I_InitKeyboard(void)
 
    if(unicodeinput)
       SDL_EnableUNICODE(1);
+
+   // haleyjd 05/10/11: moved here from video module
+   // enable key repeat
+   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
 }
 
 void I_Init(void)
@@ -275,7 +277,7 @@ void I_Init(void)
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    { 
-      extern boolean nomusicparm, nosfxparm;
+      extern bool nomusicparm, nosfxparm;
       if(!(nomusicparm && nosfxparm))
          I_InitSound();
    }
@@ -489,7 +491,7 @@ void I_EndDoom(void)
    unsigned char *endoom_data;
    unsigned char *screendata;
    int start_ms;
-   boolean waiting;
+   bool waiting;
    
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
@@ -497,7 +499,7 @@ void I_EndDoom(void)
    if(!GameModeInfo || !showendoom)
       return;
    
-   endoom_data = (unsigned char *)W_CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
+   endoom_data = (unsigned char *)wGlobalDir.CacheLumpName(GameModeInfo->endTextName, PU_STATIC);
    
    // Set up text mode screen   
    if(!TXT_Init())
@@ -578,7 +580,7 @@ CONSOLE_COMMAND(i_joystick, 0)
    if(Console.argc != 1)
       return;
 
-   i_SDLJoystickNum = QStrAtoi(&Console.argv[0]);
+   i_SDLJoystickNum = Console.argv[0]->toInt();
 
    if(i_SDLJoystickNum != -1)
    {

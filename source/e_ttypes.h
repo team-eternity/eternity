@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -28,7 +28,13 @@
 #ifndef E_TTYPES_H__
 #define E_TTYPES_H__
 
+// Required for: byte, fixed_t
 #include "doomtype.h"
+#include "m_fixed.h"
+
+class  Mobj;
+struct particle_t;
+struct sector_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -70,9 +76,9 @@ typedef struct ETerrain_s
    int damagetype;          // MOD to use for damage
    int damagetimemask;      // time mask for damage chances
    fixed_t footclip;        // footclip amount
-   boolean liquid;          // is liquid?
-   boolean splashalert;     // normal splash causes P_NoiseAlert?
-   boolean usepcolors;      // use particle colors?   
+   bool liquid;             // is liquid?
+   bool splashalert;        // normal splash causes P_NoiseAlert?
+   bool usepcolors;         // use particle colors?   
    byte pcolor_1;           // particle color 1
    byte pcolor_2;           // particle color 2
 
@@ -89,14 +95,14 @@ typedef struct EFloor_s
    struct EFloor_s *next; // hash link
 } EFloor;
 
-void E_InitTerrainTypes(void);
+void      E_InitTerrainTypes(void);
 ETerrain *E_TerrainForName(const char *name);
-ETerrain *E_GetThingFloorType(Mobj *thing, boolean usefloorz);
+ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz);
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int pos);
-fixed_t E_SectorFloorClip(sector_t *sector);
-boolean E_HitWater(Mobj *thing, sector_t *sector);
-boolean E_HitFloor(Mobj *thing);
-void E_PtclTerrainHit(particle_t *);
+fixed_t   E_SectorFloorClip(sector_t *sector);
+bool      E_HitWater(Mobj *thing, sector_t *sector);
+bool      E_HitFloor(Mobj *thing);
+void      E_PtclTerrainHit(particle_t *);
 
 #endif
 

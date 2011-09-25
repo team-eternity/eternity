@@ -24,6 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include <string>
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,35 +34,37 @@
 #include "c_runcmd.h"
 #include "i_system.h"
 #include "m_misc.h"
+#include "v_misc.h"
 
 #include "cs_main.h"
 #include "cs_hud.h"
 #include "cs_config.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
+#include "cl_net.h"
 
-boolean cl_flush_packet_buffer = false;
+bool cl_flush_packet_buffer = false;
 
-boolean cl_predict_shots = true;
-boolean default_cl_predict_shots = true;
+bool cl_predict_shots = true;
+bool default_cl_predict_shots = true;
 
-boolean cl_enable_prediction = true;
-boolean default_cl_enable_prediction = true;
+bool cl_enable_prediction = true;
+bool default_cl_enable_prediction = true;
 
 unsigned int cl_packet_buffer_size;
 unsigned int default_cl_packet_buffer_size = 0;
 
-boolean cl_buffer_packets_while_spectating;
-boolean default_cl_buffer_packets_while_spectating = true;
+bool cl_buffer_packets_while_spectating;
+bool default_cl_buffer_packets_while_spectating = true;
 
-boolean cl_flush_packet_buffer_on_respawn;
-boolean default_cl_flush_packet_buffer_on_respawn = true;
+bool cl_flush_packet_buffer_on_respawn;
+bool default_cl_flush_packet_buffer_on_respawn = true;
 
-boolean cl_constant_prediction;
-boolean default_cl_constant_prediction = true;
+bool cl_constant_prediction;
+bool default_cl_constant_prediction = true;
 
-unsigned int damage_screen_factor;
-unsigned int default_damage_screen_factor = 100;
+unsigned int damage_screen_cap;
+unsigned int default_damage_screen_cap = 100;
 
 // [CG] Clientside prediction.
 VARIABLE_TOGGLE(cl_enable_prediction, &default_cl_enable_prediction, onoff);
@@ -96,7 +99,7 @@ CONSOLE_COMMAND(team, cf_netonly)
       return;
    }
 
-   team_buffer = QStrBuffer(&Console.argv[0]);
+   team_buffer = Console.argv[0]->getBuffer();
    if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
       CL_SendTeamRequest(team_color_red);
    else if(strncasecmp(team_buffer, team_color_names[team_color_blue], 4) == 0)
@@ -162,11 +165,11 @@ CONSOLE_VARIABLE(
 
 // [CG] Damage screen ("red screen") factor.
 VARIABLE_INT(
-   damage_screen_factor,
-   &default_damage_screen_factor,
+   damage_screen_cap,
+   &default_damage_screen_cap,
    0, 100, NULL
 );
-CONSOLE_VARIABLE(damage_screen_factor, damage_screen_factor, 0) {}
+CONSOLE_VARIABLE(damage_screen_cap, damage_screen_cap, 0) {}
 
 CONSOLE_COMMAND(disconnect, cf_netonly)
 {
@@ -190,8 +193,7 @@ CONSOLE_COMMAND(reconnect, cf_netonly)
 
 CONSOLE_COMMAND(password, cf_netonly)
 {
-   char *pw_buffer, *pw;
-   size_t length;
+   std::string pw_buffer;
 
    if(Console.argc < 1)
    {
@@ -200,15 +202,8 @@ CONSOLE_COMMAND(password, cf_netonly)
    }
 
    // [CG] Use Console.args to support passwords that contain spaces.
-   // [CG] ZARG.  EE has a bug where Console.args has a space at the end of it.
-   //      So we use calloc to zero the string buffer, and we give memcpy a
-   //      shorter-than-normal-by-one size to copy.
-   pw_buffer = QStrBuffer(&Console.args);
-   length = strlen(pw_buffer);
-   pw = calloc(length + 1, sizeof(char));
-   memcpy(pw, pw_buffer, length - 1);
-   CL_AuthMessage(pw);
-   free(pw);
+   pw_buffer += Console.args.getBuffer();
+   CL_SendAuthMessage(pw_buffer.c_str());
 }
 
 CONSOLE_COMMAND(spectate, cf_netonly)
@@ -285,7 +280,7 @@ void CL_AddCommands(void)
    C_AddCommand(packet_buffer_size);
    C_AddCommand(buffer_packets_while_spectating);
    C_AddCommand(flush_packet_buffer_on_respawn);
-   C_AddCommand(damage_screen_factor);
+   C_AddCommand(damage_screen_cap);
    C_AddCommand(disconnect);
    C_AddCommand(reconnect);
    C_AddCommand(password);

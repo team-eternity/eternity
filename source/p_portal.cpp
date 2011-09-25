@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 Stephen McGranahan
@@ -27,18 +27,25 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "c_io.h"
+#include "doomstat.h"
+#include "p_chase.h"
+#include "p_map.h"
+#include "p_portal.h"
+#include "p_setup.h"
+#include "p_user.h"
+#include "r_bsp.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
-#include "r_bsp.h"
+#include "r_portal.h"
+#include "r_state.h"
 #include "r_things.h"
-#include "p_setup.h"
-#include "p_map.h"
-#include "p_portal.h"
+#include "v_misc.h"
 
-// [CG] Added.
-#include "cl_spec.h"
+extern bool cl_predicting_sectors; // [CG] 09/23/11
+extern bool cl_setting_sector_positions; // [CG] 09/23/11
 
 // SoM: Linked portals
 // This list is allocated PU_LEVEL and is nullified in P_InitPortals. When the 
@@ -66,7 +73,7 @@ static int      grouplimit = 0;
 // This flag is a big deal. Heh, if this is true a whole lot of code will 
 // operate differently. This flag is cleared on P_PortalInit and is ONLY to be
 // set true by P_BuildLinkTable.
-boolean useportalgroups = false;
+bool useportalgroups = false;
 
 //
 // P_InitPortals
@@ -307,7 +314,7 @@ int P_AddLinkOffset(int startgroup, int targetgroup,
 // P_CheckLinkedPortal
 //
 // This function performs various consistency and validation checks.
-static boolean P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
+static bool P_CheckLinkedPortal(portal_t *portal, sector_t *sec)
 {
    int i = sec - sectors;
    linkoffset_t *link;
@@ -460,7 +467,7 @@ static void P_GlobalPortalStateCheck()
 //
 // P_BuildLinkTable
 //
-boolean P_BuildLinkTable(void)
+bool P_BuildLinkTable(void)
 {
    int i, p;
    sector_t *sec;
@@ -595,7 +602,7 @@ void P_LinkRejectTable(void)
 //
 // EV_PortalTeleport
 //
-boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
+bool EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 {
    fixed_t moz = mo->z;
    fixed_t momx = mo->momx;
@@ -614,13 +621,24 @@ boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
    mo->momy = momy;
    mo->momz = momz;
 
+   // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player)
+   if (mo->player)
    {
-      if(mo->player == players + displayplayer)
-          P_ResetChasecam();
+      // Save the current deltaviewheight, used in stepping
+      fixed_t deltaviewheight = mo->player->deltaviewheight;
 
-      mo->player->viewz = mo->z + vh;
+      // Clear deltaviewheight, since we don't want any changes now
+      mo->player->deltaviewheight = 0;
+
+      // Set player's view according to the newly set parameters
+      P_CalcHeight(mo->player);
+
+      // Reset the delta to have the same dynamics as before
+      mo->player->deltaviewheight = deltaviewheight;
+
+      if(mo->player == players+displayplayer)
+          P_ResetChasecam();
    }
 
    P_AdjustFloorClip(mo);
@@ -639,9 +657,9 @@ boolean EV_PortalTeleport(Mobj *mo, linkoffset_t *link)
 // Returns the combined state flags for the given portal based on various
 // behavior flags
 //
-static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
+static int P_GetPortalState(portal_t *portal, int sflags, bool obscured)
 {
-   boolean active;
+   bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
    
    if(!portal)
@@ -666,7 +684,7 @@ static int P_GetPortalState(portal_t *portal, int sflags, boolean obscured)
 
 void P_CheckCPortalState(sector_t *sec)
 {
-   boolean     obscured;
+   bool     obscured;
    
    if(!sec->c_portal)
    {
@@ -682,7 +700,7 @@ void P_CheckCPortalState(sector_t *sec)
 
 void P_CheckFPortalState(sector_t *sec)
 {
-   boolean     obscured;
+   bool     obscured;
    
    if(!sec->f_portal)
    {
@@ -720,12 +738,11 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
    //      positions to whatever was received from the server.
    if(serverside || cl_predicting_sectors || cl_setting_sector_positions)
    {
-      // TODO: Support for diabling a linked portal on a surface
       sec->floorheight = h;
       sec->floorheightf = M_FixedToFloat(sec->floorheight);
+   
+      P_CheckFPortalState(sec);
    }
-
-   P_CheckFPortalState(sec);
 }
 
 //
@@ -741,12 +758,23 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
    //      positions to whatever was received from the server.
    if(serverside || cl_predicting_sectors || cl_setting_sector_positions)
    {
-      // TODO: Support for diabling a linked portal on a surface
       sec->ceilingheight = h;
       sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
-   }
 
-   P_CheckCPortalState(sec);
+      P_CheckCPortalState(sec);
+   }
+}
+
+//
+// P_SetSectorPosition
+//
+// This function will set a sector's ceiling and floor height.
+//
+void P_SetSectorPosition(sector_t *sec, fixed_t ceiling_height,
+                                        fixed_t floor_height)
+{
+   P_SetCeilingHeight(sec, ceiling_height);
+   P_SetFloorHeight(sec, floor_height);
 }
 
 void P_SetPortalBehavior(portal_t *portal, int newbehavior)

@@ -1,0 +1,105 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
+//-----------------------------------------------------------------------------
+//
+// Copyright(C) 2011 Charles Gunyon
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//--------------------------------------------------------------------------
+//
+// DESCRIPTION:
+//   Clientside packet buffer.
+//
+//-----------------------------------------------------------------------------
+
+#ifndef CL_BUF_H__
+#define CL_BUF_H__
+
+#include <list>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+class NetPacket
+{
+public:
+   char *data;
+   uint32_t size;
+
+   NetPacket() : data(NULL), size(0) {}
+
+   NetPacket(char *input_data, uint32_t input_size)
+   {
+      size = input_size;
+      data = (char *)(malloc(size));
+      memcpy(data, input_data, size);
+   }
+
+   explicit NetPacket(const NetPacket& original)
+   {
+      size = original.size;
+      data = (char *)(malloc(size));
+      memcpy(data, original.data, size);
+   }
+
+   explicit NetPacket(NetPacket& original)
+   {
+      size = original.size;
+      data = (char *)(malloc(size));
+      memcpy(data, original.data, size);
+   }
+
+   NetPacket& operator= (const NetPacket& other)
+   {
+      if(this != &other)
+      {
+         size = other.size;
+         data = (char *)(realloc(data, size));
+         memcpy(data, other.data, size);
+      }
+      return *this;
+   }
+
+   ~NetPacket() { free(data); }
+
+   int32_t getType() const { return *(uint32_t *)data; }
+
+   uint32_t getWorldIndex() const { return *(((uint32_t *)data) + 1); }
+
+   uint32_t getSize() const { return size; }
+
+   const char* getData() const { return (const char *)data; }
+
+   bool shouldProcessNow();
+
+   void process();
+
+};
+
+class NetPacketBuffer
+{
+private:
+   std::list<NetPacket *> packet_buffer;
+
+public:
+   bool add(char *data, uint32_t size);
+   void processPacketsForIndex(uint32_t index);
+   void processAllPackets();
+};
+
+extern NetPacketBuffer cl_packet_buffer;
+
+#endif
+

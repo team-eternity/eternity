@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -31,6 +31,8 @@
 // macros
 #define NUMEDFSKINCHAINS 17
 
+struct skin_t;
+
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 //
@@ -59,10 +61,10 @@ struct playerclass_t
 
 playerclass_t *E_PlayerClassForName(const char *);
 
-void    E_VerifyDefaultPlayerClass(void);
-boolean E_IsPlayerClassThingType(mobjtype_t);
-boolean E_PlayerInWalkingState(player_t *);
-void    E_ApplyTurbo(int ts);
+void E_VerifyDefaultPlayerClass(void);
+bool E_IsPlayerClassThingType(mobjtype_t);
+bool E_PlayerInWalkingState(player_t *);
+void E_ApplyTurbo(int ts);
 
 // Inventory
 

@@ -60,7 +60,7 @@ typedef enum
 
 typedef struct flag_stand_s
 {
-   boolean exists;
+   bool exists;
    fixed_t x;
    fixed_t y;
    fixed_t z;
@@ -92,14 +92,14 @@ typedef struct flag_s
 extern flag_stand_t cs_flag_stands[team_color_max];
 extern flag_t cs_flags[team_color_max];
 
-void CS_PlayFlagSound(teamcolor_t flag_color);
-void CS_RemoveFlagActor(flag_t *flag);
-void CS_ReturnFlag(flag_t *flag);
-void CS_GiveFlag(int playernum, flag_t *flag);
-void CS_HandleFlagTouch(player_t *player, teamcolor_t color);
+void    CS_PlayFlagSound(teamcolor_t flag_color);
+void    CS_RemoveFlagActor(flag_t *flag);
+void    CS_ReturnFlag(flag_t *flag);
+void    CS_GiveFlag(int playernum, flag_t *flag);
+void    CS_HandleFlagTouch(player_t *player, teamcolor_t color);
 flag_t* CS_GetFlagCarriedByPlayer(int playernum);
-void CS_DropFlag(int playernum);
-void CS_CTFTicker(void);
+void    CS_DropFlag(int playernum);
+void    CS_CTFTicker(void);
 
 #endif
 

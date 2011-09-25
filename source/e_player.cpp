@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -32,17 +32,21 @@
 
 #include "Confuse/confuse.h"
 
+#include "d_dehtbl.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_items.h"
-#include "p_skin.h"
-
+#include "d_player.h"
 #include "e_lib.h"
 #include "e_edf.h"
+#include "e_player.h"
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
-#include "e_player.h"
+#include "p_mobj.h"
+#include "p_skin.h"
+#include "v_misc.h"
+#include "v_video.h"
 
 //
 // Player Class and Skin Options
@@ -196,7 +200,7 @@ static skin_t *E_EDFSkinForName(const char *name)
 //
 // Sets an EDF skin sound name.
 //
-static void E_DoSkinSound(cfg_t *sndsec, boolean def, skin_t *skin, int idx,
+static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
    if(IS_SET(sndsec, itemname))
@@ -235,7 +239,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
 {
    skin_t *newSkin;
    const char *tempstr;
-   boolean def; // if defining true; if modifying, false
+   bool def; // if defining true; if modifying, false
 
    // skin name is section title
    tempstr = cfg_title(skinsec);
@@ -378,7 +382,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
 {
    const char *tempstr;
    playerclass_t *pc;
-   boolean def;
+   bool def;
 
    // get mnemonic from section title
    tempstr = cfg_title(pcsec);
@@ -555,7 +559,7 @@ void E_VerifyDefaultPlayerClass(void)
 // indicated thingtype. Linear search over a small set. This is the only
 // real, efficient way to see if a thingtype is a potential player.
 //
-boolean E_IsPlayerClassThingType(mobjtype_t motype)
+bool E_IsPlayerClassThingType(mobjtype_t motype)
 {
    int i;
 
@@ -594,7 +598,7 @@ boolean E_IsPlayerClassThingType(mobjtype_t motype)
 // (4 frames or so), so this isn't going to be a time-consuming operation.
 // The walking frame cycle had better be closed, or this may go haywire.
 //
-boolean E_PlayerInWalkingState(player_t *player)
+bool E_PlayerInWalkingState(player_t *player)
 {
    state_t *pstate, *curstate, *seestate;
    int count = 0;
@@ -641,434 +645,13 @@ void E_ApplyTurbo(int ts)
       {
          pc->forwardmove[0] = pc->oforwardmove[0] * ts / 100;
          pc->forwardmove[1] = pc->oforwardmove[1] * ts / 100;
-         pc->sidemove[0]    =    pc->osidemove[0] * ts / 100;
-         pc->sidemove[1]    =    pc->osidemove[1] * ts / 100;
+         
+         pc->sidemove[0] = pc->osidemove[0] * ts / 100;
+         pc->sidemove[1] = pc->osidemove[1] * ts / 100;
+         
          pc = pc->next;
       }
    }
-}
-
-//==============================================================================
-//
-// Inventory
-//
-
-//
-// Ammo Subclass Options
-//
-
-#define ITEM_SUBCLASS_AMMO "ammo"
-
-#define ITEM_AMMO_BACKPACKAMOUNT    "backpackamount"
-#define ITEM_AMMO_BACKPACKMAXAMOUNT "backpackmaxamount"
-#define ITEM_AMMO_DROPAMOUNT        "dropamount"
-#define ITEM_AMMO_ID                "id"
-
-static cfg_opt_t edf_ammo_opts[] =
-{
-   CFG_INT(ITEM_AMMO_BACKPACKAMOUNT,    0, CFGF_NONE),
-   CFG_INT(ITEM_AMMO_BACKPACKMAXAMOUNT, 0, CFGF_NONE),
-   CFG_INT(ITEM_AMMO_DROPAMOUNT,        0, CFGF_NONE),
-   CFG_INT(ITEM_AMMO_ID,               -1, CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// ArmorPickup Subclass Options
-//
-
-#define ITEM_SUBCLASS_ARMORPICKUP "armorpickup"
-
-#define ITEM_ARMORPICKUP_SAVEAMOUNT  "saveamount"
-#define ITEM_ARMORPICKUP_SAVEPERCENT "savepercent"
-
-static cfg_opt_t edf_armorpickup_opts[] =
-{
-   CFG_INT(ITEM_ARMORPICKUP_SAVEAMOUNT,  0, CFGF_NONE),
-   CFG_INT(ITEM_ARMORPICKUP_SAVEPERCENT, 0, CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// ArmorBonus Subclass Options
-//
-
-#define ITEM_SUBCLASS_ARMORBONUS "armorbonus"
-
-#define ITEM_ARMORBONUS_SAVEPERCENT   "savepercent"
-#define ITEM_ARMORBONUS_MAXSAVEAMOUNT "maxsaveamount"
-#define ITEM_ARMORBONUS_SAVEAMOUNT    "saveamount"
-
-static cfg_opt_t edf_armorbonus_opts[] =
-{
-   CFG_INT(ITEM_ARMORBONUS_SAVEPERCENT,   0, CFGF_NONE),
-   CFG_INT(ITEM_ARMORBONUS_MAXSAVEAMOUNT, 0, CFGF_NONE),
-   CFG_INT(ITEM_ARMORBONUS_SAVEAMOUNT,    0, CFGF_NONE),
-
-   // TODO: maxbonus / maxbonusmax ??
-
-   CFG_END()
-};
-
-//
-// ClassArmor Subclass Options
-//
-
-#define ITEM_SUBCLASS_CLASSARMOR "classarmor"
-#define ITEM_CLASSARMOR_INDEX    "index"
-
-static cfg_opt_t edf_classarmor_opts[] =
-{
-   CFG_INT(ITEM_CLASSARMOR_INDEX, 0, CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// BackpackItem Subclass Options
-//
-
-#define ITEM_SUBCLASS_BACKPACKITEM "backpackitem"
-#define ITEM_BACKPACKITEM_TYPE     "type"
-
-static cfg_opt_t edf_backpackitem_opts[] =
-{
-   CFG_STR(ITEM_BACKPACKITEM_TYPE, "Normal", CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// TODO: CustomInventory Subclass Options
-//
-
-//
-// FakeInventory Subclass Options
-//
-
-#define ITEM_SUBCLASS_FAKEINVENTORY "fakeinventory"
-
-// TODO: no properties??
-
-//
-// Health Subclass Options
-//
-
-#define ITEM_SUBCLASS_HEALTH   "health"
-#define ITEM_HEALTH_LOWMESSAGE "lowmessage"
-
-static cfg_opt_t edf_health_opts[] =
-{
-   CFG_STR(ITEM_HEALTH_LOWMESSAGE, NULL, CFGF_NONE),
-   
-   CFG_END()
-};
-
-//
-// HealthPickup Subclass Options
-//
-
-#define ITEM_SUBCLASS_HEALTHPICKUP "healthpickup"
-#define ITEM_HEALTHPICKUP_HEALTH   "health"
-
-static cfg_opt_t edf_healthpickup_opts[] =
-{
-   CFG_INT(ITEM_HEALTHPICKUP_HEALTH, 0, CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// Key Subclass Options
-//
-
-#define ITEM_SUBCLASS_KEY "key"
-
-// TODO: properties
-// TODO: lock definition separate from key
-
-//
-// TODO: Powerup Subclass Options ??
-//
-// Would be token items that represent player powers, to allow giving/checking
-// through inventory API.
-//
-
-//
-// PowerupGiver Subclass Options
-//
-
-#define ITEM_SUBCLASS_POWERUPGIVER "powerupgiver"
-
-#define ITEM_POWERUPGIVER_DURATION "duration"
-#define ITEM_POWERUPGIVER_TYPE     "type"
-#define ITEM_POWERUPGIVER_MODE     "mode"
-
-static cfg_opt_t edf_powerupgiver_opts[] =
-{
-   CFG_INT(ITEM_POWERUPGIVER_DURATION, 0,    CFGF_NONE),
-   CFG_STR(ITEM_POWERUPGIVER_TYPE,     NULL, CFGF_NONE),
-   // TODO: what is mode again?
-
-   CFG_END()
-};
-
-//
-// PuzzleItem Subclass Options
-//
-
-#define ITEM_SUBCLASS_PUZZLEITEM "puzzleitem"
-
-#define ITEM_PUZZLEITEM_NUMBER      "number"
-#define ITEM_PUZZLEITEM_FAILMESSAGE "failmessage"
-
-static cfg_opt_t edf_puzzleitem_opts[] =
-{
-   CFG_INT(ITEM_PUZZLEITEM_NUMBER,      0,    CFGF_NONE),
-   CFG_STR(ITEM_PUZZLEITEM_FAILMESSAGE, NULL, CFGF_NONE),
-
-   CFG_END()
-};
-
-//
-// Weapon Subclass Options
-//
-
-#define ITEM_SUBCLASS_WEAPON    "weapon"
-
-#define ITEM_WEAPON_AMMO        "ammo"
-#define ITEM_WEAPON_AMMOPERSHOT "ammopershot"
-#define ITEM_WEAPON_RECOIL      "recoil"
-#define ITEM_WEAPON_UPSTATE     "upstate"
-#define ITEM_WEAPON_DOWNSTATE   "downstate"
-#define ITEM_WEAPON_READYSTATE  "readystate"
-#define ITEM_WEAPON_ATTACKSTATE "attackstate"
-#define ITEM_WEAPON_FLASHSTATE  "flashstate"
-#define ITEM_WEAPON_UPSOUND     "upsound"
-#define ITEM_WEAPON_IDLESOUND   "idlesound"
-#define ITEM_WEAPON_FLAGS       "flags"
-#define ITEM_WEAPON_ID          "id"
-
-static cfg_opt_t edf_weapon_opts[] =
-{
-   CFG_STR(ITEM_WEAPON_AMMO,        NULL,       CFGF_NONE), // TODO: default ammo type?
-   CFG_INT(ITEM_WEAPON_AMMOPERSHOT, 1,          CFGF_NONE),
-   CFG_INT(ITEM_WEAPON_RECOIL,      0,          CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSTATE,     "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_DOWNSTATE,   "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_READYSTATE,  "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_ATTACKSTATE, "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_FLASHSTATE,  "S_NULL",   CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_UPSOUND,     "none",     CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_IDLESOUND,   "none",     CFGF_NONE),
-   CFG_STR(ITEM_WEAPON_FLAGS,       "",         CFGF_NONE),
-   CFG_INT(ITEM_WEAPON_ID,          -1,         CFGF_NONE),
-
-   CFG_END()
-};
-
-// haleyjd: weapon flags!
-static dehflags_t weapon_flags[] =
-{
-   { "NOTHRUST",     WPF_NOTHRUST     },
-   { "NOHITGHOSTS",  WPF_NOHITGHOSTS  },
-   { "NOTSHAREWARE", WPF_NOTSHAREWARE },
-   { "UNUSED",       WPF_UNUSED       },
-   { "SILENCER",     WPF_SILENCER     },
-   { "SILENT",       WPF_SILENT       },
-   { "NOAUTOFIRE",   WPF_NOAUTOFIRE   },
-   { "FLEEMELEE",    WPF_FLEEMELEE    },
-   { "ALWAYSRECOIL", WPF_ALWAYSRECOIL },
-   { NULL,           0 }
-};
-
-static dehflagset_t weapon_flagset =
-{
-   weapon_flags, // flaglist
-   0,            // mode: single flags word
-};
-
-//
-// Inventory Options
-//
-// Inventory is the base class and defines the most basic options that apply to
-// all inventory items.
-//
-
-#define ITEM_INVENTORY_CLASS       "class"
-#define ITEM_INVENTORY_AMOUNT      "amount"
-#define ITEM_INVENTORY_MAXAMOUNT   "maxamount"
-#define ITEM_INVENTORY_ICON        "icon"
-#define ITEM_INVENTORY_PMESSAGE    "pickupmessage"
-#define ITEM_INVENTORY_PSOUND      "pickupsound"
-#define ITEM_INVENTORY_PFLASH      "pickupflash"
-#define ITEM_INVENTORY_USESOUND    "usesound"
-#define ITEM_INVENTORY_RESPAWNTICS "respawntics"
-#define ITEM_INVENTORY_GIVEQUEST   "givequest"
-#define ITEM_INVENTORY_FLAGS       "flags"
-
-cfg_opt_t edf_inventory_opts[] =
-{
-   // class may either be a predefined inventory class, or the mnemonic of
-   // another inventory item from which to inherit properties
-   CFG_STR(ITEM_INVENTORY_CLASS, "Inventory", CFGF_NONE),
-
-   // Basic properties
-   CFG_INT(ITEM_INVENTORY_AMOUNT,      0,    CFGF_NONE),
-   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,   0,    CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_ICON,        NULL, CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_PMESSAGE,    NULL, CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_PSOUND,      NULL, CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_PFLASH,      NULL, CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_USESOUND,    NULL, CFGF_NONE),
-   CFG_INT(ITEM_INVENTORY_RESPAWNTICS, 0,    CFGF_NONE),
-   CFG_INT(ITEM_INVENTORY_GIVEQUEST,   0,    CFGF_NONE),
-   CFG_STR(ITEM_INVENTORY_FLAGS,       NULL, CFGF_NONE),
-
-   // Subclass property blocks - only one of these may appear in a given
-   // inventory item definition, and which one may appear is determined by
-   // the class of the item in question. Any others will be ignored.
-   CFG_SEC(ITEM_SUBCLASS_AMMO,         edf_ammo_opts,         CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_ARMORPICKUP,  edf_armorpickup_opts,  CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_ARMORBONUS,   edf_armorbonus_opts,   CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_CLASSARMOR,   edf_classarmor_opts,   CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_BACKPACKITEM, edf_backpackitem_opts, CFGF_NOCASE),
-   // TODO: CustomInventory
-   // TODO: FakeInventory
-   CFG_SEC(ITEM_SUBCLASS_HEALTH,       edf_health_opts,       CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_HEALTHPICKUP, edf_healthpickup_opts, CFGF_NOCASE),
-   // TODO: Key
-   // TODO: Powerup
-   CFG_SEC(ITEM_SUBCLASS_POWERUPGIVER, edf_powerupgiver_opts, CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_PUZZLEITEM,   edf_puzzleitem_opts,   CFGF_NOCASE),
-   CFG_SEC(ITEM_SUBCLASS_WEAPON,       edf_weapon_opts,       CFGF_NOCASE),
-
-   CFG_END()
-};
-
-// inventory flags
-
-static dehflags_t inv_flagvalues[] =
-{
-   { "QUIET",         INVF_QUIET         },
-   { "AUTOACTIVATE",  INVF_AUTOACTIVATE  },
-   { "UNDROPPABLE",   INVF_UNDROPPABLE   },
-   { "INVBAR",        INVF_INVBAR        },
-   { "HUBPOWER",      INVF_HUBPOWER      },
-   { "INTERHUBSTRIP", INVF_INTERHUBSTRIP },
-   { "ALWAYSPICKUP",  INVF_ALWAYSPICKUP  },
-   { "BIGPOWERUP",    INVF_BIGPOWERUP    },
-   { "KEEPDEPLETED",  INVF_KEEPDEPLETED  },
-   { NULL,            0                  },
-};
-
-static dehflagset_t inv_flagset = { inv_flagvalues, 0 };
-
-//==============================================================================
-//
-// Inventory Static Variables
-//
-
-// numinventory: the number of inventory items defined. This can grow.
-static int numinventory;
-
-// inv_hitlist: keeps track of what inventory items are initialized
-static byte *inv_hitlist = NULL;
-
-// inv_pstack: used by recursive E_ProcessInventoryItem to track inheritance
-static int  *inv_pstack  = NULL;
-static int   inv_pindex  = 0;
-
-//==============================================================================
-//
-// Inventory Processing
-//
-
-//
-// E_CheckInventoryInherit
-//
-// Makes sure the inventory being inherited from has not already been inherited
-// during the current inheritance chain. Returns false if the check fails, and 
-// true if it succeeds.
-//
-static boolean E_CheckInventoryInherit(int pnum)
-{
-   int i;
-
-   for(i = 0; i < numinventory; ++i)
-   {
-      // circular inheritance
-      if(inv_pstack[i] == pnum)
-         return false;
-
-      // found end of list
-      if(inv_pstack[i] == -1)
-         break;
-   }
-
-   return true;
-}
-
-//
-// E_AddInventoryToPStack
-//
-// Adds a type number to the inheritance stack.
-//
-static void E_AddInventoryToPStack(int num)
-{
-   // Overflow shouldn't happen since it would require cyclic
-   // inheritance as well, but I'll guard against it anyways.
-   
-   if(inv_pindex >= numinventory)
-      E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
-
-   inv_pstack[inv_pindex++] = num;
-}
-
-//
-// E_ResetInventoryPStack
-//
-// Resets the inventory inheritance stack, setting all the pstack values to -1,
-// and setting pindex back to zero.
-//
-static void E_ResetInventoryPStack(void)
-{
-   int i;
-
-   for(i = 0; i < numinventory; ++i)
-      inv_pstack[i] = -1;
-
-   inv_pindex = 0;
-}
-
-//
-// E_CopyInventory
-//
-// Copies one inventory item into another.
-//
-static void E_CopyInventory(int num, int pnum)
-{
-}
-
-//
-// E_ProcessInventoryItem
-//
-// Static routine to process a single inventory definition.
-// Inheritance is handled via recursion as with mobjinfo.
-//
-static void E_ProcessInventoryItem(cfg_t *cfg)
-{
-}
-
-//
-// E_ProcessInventoryItems
-//
-// Processes all inventory definitions.
-//
-void E_ProcessInventoryItems(cfg_t *cfg)
-{
 }
 
 // EOF

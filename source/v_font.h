@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -31,6 +31,8 @@
 #include "doomtype.h"
 #include "r_defs.h"
 #include "m_dllist.h"
+
+struct patch_t;
 
 enum
 {
@@ -68,15 +70,15 @@ struct vfont_t
    int dw;    // width delta (can move characters together)
    int absh;  // absolute maximum height of any character
 
-   boolean color;    // supports color translations?
-   boolean upper;    // uses uppercase only?
-   boolean centered; // characters are centered in position?
+   bool color;    // supports color translations?
+   bool upper;    // uses uppercase only?
+   bool centered; // characters are centered in position?
 
    patch_t **fontgfx; // graphics patches for font (not owned)
 
    int cw;  // constant width, used only when centering is on
    
-   boolean linear;  // linear graphic lump?
+   bool linear;  // linear graphic lump?
    byte    *data;   // data for linear graphic
    int     lsize;   // character size in linear graphic
 
@@ -90,15 +92,15 @@ struct vfont_t
    int linear_font_format;   // [CG] Used to reload linear fonts.
 };
 
-void  V_FontWriteText(vfont_t *font, const char *s, int x, int y);
-void  V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
-void  V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
-void  V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
-int   V_FontStringHeight(vfont_t *font, const char *s);
-int   V_FontStringWidth(vfont_t *font, const char *s);
-int   V_FontCharWidth(vfont_t *font, char pChar);
-void  V_FontSetAbsCentered(void);
-short V_FontMaxWidth(vfont_t *font);
+void    V_FontWriteText(vfont_t *font, const char *s, int x, int y);
+void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y);
+void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map);
+void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y);
+int     V_FontStringHeight(vfont_t *font, const char *s);
+int     V_FontStringWidth(vfont_t *font, const char *s);
+int     V_FontCharWidth(vfont_t *font, char pChar);
+void    V_FontSetAbsCentered(void);
+int16_t V_FontMaxWidth(vfont_t *font);
 
 #endif
 

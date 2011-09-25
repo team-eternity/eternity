@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -24,6 +24,9 @@
 //
 //----------------------------------------------------------------------------
 
+#include <string>
+#include <sstream>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -39,6 +42,7 @@
 #include "doomdef.h"
 #include "doomdata.h"
 #include "doomstat.h"
+#include "e_player.h"
 #include "e_ttypes.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -49,6 +53,7 @@
 #include "m_argv.h"
 #include "m_fixed.h"
 #include "m_hash.h"
+#include "m_misc.h"
 #include "m_qstr.h"
 #include "p_chase.h"
 #include "p_inter.h"
@@ -65,6 +70,7 @@
 #include "v_block.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "version.h"
 #include "w_wad.h"
 
 #include <json/json.h>
@@ -80,6 +86,7 @@
 #include "cs_demo.h"
 #include "cs_wad.h"
 #include "cs_netid.h"
+#include "cl_buf.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "cl_pred.h"
@@ -94,8 +101,13 @@ ENetAddress *server_address;
 client_t *clients;
 enet_uint32 start_time;
 unsigned int cs_shooting_player = 0;
+char *cs_state_file_path = NULL;
 
-char *disconnection_strings[dr_max_reasons] = {
+extern int rngseed;
+extern int action_frags;
+extern char *default_skin;
+
+const char *disconnection_strings[dr_max_reasons] = {
    "",
    "Server is full",
    "Invalid message received",
@@ -103,7 +115,7 @@ char *disconnection_strings[dr_max_reasons] = {
    "Command flood"
 };
 
-char *network_message_names[nm_max_messages] = {
+const char *network_message_names[nm_max_messages] = {
    "game state",
    "sync request",
    "sync",
@@ -149,7 +161,7 @@ unsigned int death_time_limit;
 unsigned int death_time_expired_action;
 unsigned int friendly_damage_percentage;
 
-extern boolean d_fastrefresh;
+extern bool d_fastrefresh;
 extern int weapon_preferences[2][NUMWEAPONS+1];
 extern char *weapon_str[NUMWEAPONS];
 
@@ -166,36 +178,17 @@ static void build_game_state(nm_gamestate_t *message)
    message->rngseed = rngseed;
    memcpy(message->flags, cs_flags, sizeof(flag_t) * team_color_max);
    memcpy(message->team_scores, team_scores, sizeof(int32_t) * team_color_max);
+
    for(i = 0; i < MAXPLAYERS; i++)
-   {
       message->playeringame[i] = playeringame[i];
-   }
+
    memcpy(&message->settings, cs_settings, sizeof(clientserver_settings_t));
 }
 
-// [CG] Pretty much stolen from the save game routines.
-static size_t build_save_buffer(void)
+static int build_save_buffer(byte **buffer)
 {
-   // [CG] This is a global from g_game.c that lets the save game buffer size
-   //      checker reallocate the buffer properly.  Likewise, savebuffer and
-   //      save_p are globals as well.
-   savegamesize = 32768;
-   save_p = savebuffer = malloc(savegamesize);
-
-   P_NumberObjects(); // turn pointers into numbers
-   P_ArchivePlayers();
-   P_ArchiveWorld();
-   P_ArchivePolyObjects(); // haleyjd 03/27/06
-   P_ArchiveThinkers();
-   P_ArchiveSpecials();
-   P_ArchiveRNG();   // killough 1/18/98: save RNG information
-   P_ArchiveMap();   // killough 1/22/98: save automap information
-   P_ArchiveScripts();   // sf: archive scripts
-   P_ArchiveSoundSequences();
-   P_ArchiveButtons();
-   P_DeNumberObjects(); // clear those numbers (that once were pointers).
-
-   return (save_p - savebuffer);
+   P_SaveCurrentLevel(cs_state_file_path, "cs");
+   return M_ReadFile(cs_state_file_path, buffer);
 }
 
 static void indent_next_line(FILE *file, unsigned int indent_level)
@@ -205,6 +198,24 @@ static void indent_next_line(FILE *file, unsigned int indent_level)
    fputc('\n', file);
    for(i = 0; i < indent_level; i++)
       fputs("  ", file);
+}
+
+void CS_Init(void)
+{
+   cs_state_file_path = (char *)(calloc(
+      strlen(basepath) + strlen("/cs.state") + 1, sizeof(char)
+   ));
+
+   sprintf(cs_state_file_path, "%s/cs.state", basepath);
+   M_NormalizeSlashes(cs_state_file_path);
+
+   if(CS_SERVER)
+   {
+      SV_LoadConfig();
+      SV_Init();
+   }
+   else
+      CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
 }
 
 // [CG] JSON-C has a to_file function (whatever it's called) but it does no
@@ -249,7 +260,7 @@ void CS_PrintJSONToFile(const char *filename, const char *json_data)
    fclose(file);
 }
 
-boolean CS_CheckURI(char *uri)
+bool CS_CheckURI(char *uri)
 {
    if((strncmp(uri, "http", 4)   == 0) || // [CG] Also works for "https".
       (strncmp(uri, "file", 4)   == 0) ||
@@ -343,51 +354,43 @@ void CS_SetDisplayPlayer(int playernum)
    if(camera == &followcam)
      camera = NULL;
 
-  // use chasecam when player is dead.
+   // use chasecam when player is dead.
    if(players[displayplayer].health <= 0)
-     P_ChaseStart();
+      P_ChaseStart();
    else
       P_ChaseEnd();
 }
 
 char* CS_IPToString(int ip_address)
 {
-   char *address = calloc(16, sizeof(char));
+   std::stringstream address_stream;
 
-   sprintf(address, "%d.%d.%d.%d",
-      (ip_address      ) & 0xff,
-      (ip_address >>  8) & 0xff,
-      (ip_address >> 16) & 0xff,
-      (ip_address >> 24) & 0xff
-   );
+   address_stream << ((ip_address)       & 0xff) << '.'
+                  << ((ip_address >>  8) & 0xff) << '.'
+                  << ((ip_address >> 16) & 0xff) << '.'
+                  << ((ip_address >> 24) & 0xff);
 
-   return address;
-   
+   return strdup(address_stream.str().c_str());
 }
 
 char* CS_VersionString(void)
 {
-   // [CG] 20 is probably good....
-   char *version_string = calloc(20, sizeof(char));
+   std::stringstream version_stream;
 
-   sprintf(
-      version_string,
-      "%d.%d.%d",
-      version / 100,
-      version % 100,
-      subversion
-   );
+   version_stream << (version / 100) << '.'
+                  << (version % 100) << '.'
+                  << (subversion);
 
-   return version_string;
+   return strdup(version_stream.str().c_str());
 }
 
 char* CS_GetSHA1HashFile(char *path)
 {
-   hashdata_t newhash;
+   HashData localHash = HashData(HashData::SHA1);
    size_t bytes_read = 0;
    size_t total_bytes_read = 0;
    unsigned int chunk_size = 512;
-   const unsigned char chunk[chunk_size];
+   unsigned char chunk[chunk_size];
    FILE *f = fopen(path, "rb");
 
    if(f == NULL)
@@ -397,11 +400,10 @@ char* CS_GetSHA1HashFile(char *path)
       );
    }
 
-   M_HashInitialize(&newhash, HASH_SHA1);
    while(1)
    {
       if((bytes_read = fread((void *)chunk, sizeof(char), chunk_size, f)))
-         M_HashData(&newhash, (const uint8_t *)chunk, (uint32_t)bytes_read);
+         localHash.addData((const uint8_t *)chunk, (uint32_t)bytes_read);
 
       total_bytes_read += bytes_read;
 
@@ -417,36 +419,21 @@ char* CS_GetSHA1HashFile(char *path)
          );
       }
    }
-   M_HashWrapUp(&newhash);
 
-   if(newhash.gonebad)
-   {
-      I_Error(
-         "CS_GetSHA1HashFile: Unknown error computing SHA-1 hash for %s.\n",
-         path
-      );
-   }
-
-   return M_HashDigestToStr(&newhash);
+   localHash.wrapUp();
+   return localHash.digestToString();
 }
 
 char* CS_GetSHA1Hash(const char *input, size_t input_size)
 {
-   hashdata_t newhash;
-
-   M_HashInitialize(&newhash, HASH_SHA1);
-   M_HashData(&newhash, (const uint8_t *)input, (uint32_t)input_size);
-   M_HashWrapUp(&newhash);
-
-   if(newhash.gonebad)
-      I_Error("Error computing SHA-1 hash.\n");
-
-   return M_HashDigestToStr(&newhash);
+   return HashData(
+      HashData::SHA1, (const uint8_t *)input, (uint32_t)input_size
+   ).digestToString();
 }
 
 void CS_SetPlayerName(player_t *player, char *name)
 {
-   boolean initializing_name = false;
+   bool initializing_name = false;
 
    if(strlen(player->name) == 0)
       initializing_name = true;
@@ -547,506 +534,27 @@ void CS_ZeroClients(void)
 
 size_t CS_BuildGameState(int playernum, byte **buffer)
 {
-   nm_gamestate_t *message;
-   size_t state_size;
+   int state_size;
+   byte *savebuffer;
+   nm_gamestate_t message;
 
-   // [CG] Build the generic game state stuff like flags, scores, etc.
-   message = malloc(sizeof(nm_gamestate_t));
-   build_game_state(message);
+   build_game_state(&message);
+   state_size = build_save_buffer(&savebuffer);
 
-   // [CG] Build the save game and save its size.
-   state_size = build_save_buffer();
+   message.state_size = state_size;
+   message.player_number = playernum;
 
-   message->state_size = state_size;
-   message->player_number = playernum;
-
-   // [CG] Create the game state buffer, copy the message and save game into
-   //      it.
-   *buffer = malloc(sizeof(nm_gamestate_t) + state_size);
-   memcpy(*buffer, message, sizeof(nm_gamestate_t));
-   free(message);
+   *buffer = (byte *)(malloc(sizeof(nm_gamestate_t) + state_size));
+   memcpy(*buffer, &message, sizeof(nm_gamestate_t));
    memcpy(*buffer + sizeof(nm_gamestate_t), savebuffer, state_size);
 
-   // [CG] We're done with the savebuffer, free and NULL it.
    free(savebuffer);
-   savebuffer = save_p = NULL;
 
    return sizeof(nm_gamestate_t) + state_size;
 }
 
-void CS_ProcessPlayerCommand(int playernum)
-{
-   player_t *player = &players[playernum];
-   client_t *client = &clients[playernum];
-   weapontype_t newweapon;
-   mapthing_t *spawn_point;
-
-   if(player->playerstate == PST_DEAD)
-      return;
-
-   // haleyjd 04/03/05: new yshear code
-   if(!allowmlook || ((dmflags2 & dmf_allow_freelook) == 0))
-      player->pitch = 0;
-   else if(player->cmd.look)
-   {
-      // test for special centerview value
-      if(player->cmd.look == -32768)
-         player->pitch = 0;
-      else
-      {
-         player->pitch -= player->cmd.look << 16;
-         // [CG] Normal lower look range is 32 degrees, but "NS" range is 56.
-         if(comp[comp_mouselook])
-         {
-            if(player->pitch < -ANGLE_1 * 32)
-               player->pitch = -ANGLE_1 * 32;
-            else if(player->pitch > ANGLE_1 * 32)
-               player->pitch = ANGLE_1 * 32;
-         }
-         else
-         {
-            if(player->pitch < -ANGLE_1 * 32)
-               player->pitch = -ANGLE_1 * 32;
-            else if(player->pitch > ANGLE_1 * 56)
-               player->pitch = ANGLE_1 * 56;
-         }
-      }
-   }
-
-   // haleyjd: count down jump timer
-   if(player->jumptime)
-      player->jumptime--;
-
-   // Move around.
-   // Reactiontime is used to prevent movement
-   //  for a bit after a teleport.
-
-   if(player->mo->reactiontime)
-      player->mo->reactiontime--;
-   else
-   {
-      P_MovePlayer(player);
-
-      // Handle actions   -- joek 12/22/07
-      
-      if((dmflags2 & dmf_allow_jump) != 0)
-      {
-         if(player->cmd.actions & AC_JUMP)
-         {
-            if((player->mo->z == player->mo->floorz || 
-                (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
-            {
-               // PCLASS_FIXME: make jump height pclass property
-               player->mo->momz += 8 * FRACUNIT;
-               player->mo->intflags &= ~MIF_ONMOBJ;
-               player->jumptime = 18;
-            }
-         }
-      }
-   }
-
-   P_CalcHeight(player); // Determines view height and bobbing
-
-   // Check for weapon change.
-   
-   // A special event has no other buttons.
-
-   if(player->cmd.buttons & BT_SPECIAL)
-      player->cmd.buttons = 0;
-
-   if(!cl_predicting)
-   {
-      if(player->cmd.buttons & BT_CHANGE)
-      {
-         // The actual changing of the weapon is done
-         //  when the weapon psprite can do it
-         //  (read: not in the middle of an attack).
-
-         newweapon = (player->cmd.buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT;
-         
-         // killough 3/22/98: For demo compatibility we must perform the fist
-         // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
-         // other games which rely on user preferences, we must use the latter.
-
-         // WEAPON_FIXME: bunch of crap.
-
-         if(demo_compatibility)
-         { 
-            // compatibility mode -- required for old demos -- killough
-            if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-               (player->readyweapon != wp_chainsaw ||
-                !player->powers[pw_strength]))
-            {
-               newweapon = wp_chainsaw;
-            }
-            if(enable_ssg &&
-               newweapon == wp_shotgun &&
-               player->weaponowned[wp_supershotgun] &&
-               player->readyweapon != wp_supershotgun)
-            {
-               newweapon = wp_supershotgun;
-            }
-         }
-
-         // killough 2/8/98, 3/22/98 -- end of weapon selection changes
-
-         // WEAPON_FIXME: shareware availability -> weapon property
-
-         if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
-         {
-            // Do not go to plasma or BFG in shareware, even if cheated.
-            if((newweapon != wp_plasma && newweapon != wp_bfg)
-               || (GameModeInfo->id != shareware))
-            {
-               player->pendingweapon = newweapon;
-               if(CS_SERVER)
-                  SV_BroadcastPlayerScalarInfo(playernum, ci_pending_weapon);
-            }
-         }
-      }
-   }
-
-   if(player->cmd.buttons & BT_USE)
-   {
-      if(!player->usedown)
-      {
-         player->usedown = true;
-
-         if(!client->spectating)
-            P_UseLines(player);
-         else if(CS_SERVER && SV_HandleJoinRequest(playernum))
-         {
-            spawn_point = CS_SpawnPlayerCorrectly(playernum, false);
-            SV_BroadcastPlayerSpawned(spawn_point, playernum);
-         }
-      }
-   }
-   else
-      player->usedown = false;
-
-   // cycle psprites
-   if(!cl_predicting)
-      P_MovePsprites(player);
-}
-
-void CS_ApplyCommandButtons(ticcmd_t *cmd)
-{
-   int newweapon;
-
-   if((!demo_compatibility && players[consoleplayer].attackdown &&
-       !P_CheckAmmo(&players[consoleplayer])) || action_nextweapon)
-   {
-      newweapon = P_SwitchWeapon(&players[consoleplayer]); // phares
-   }
-   else
-   {                                 // phares 02/26/98: Added gamemode checks
-      newweapon =
-        action_weapon1 ? wp_fist :    // killough 5/2/98: reformatted
-        action_weapon2 ? wp_pistol :
-        action_weapon3 ? wp_shotgun :
-        action_weapon4 ? wp_chaingun :
-        action_weapon5 ? wp_missile :
-        action_weapon6 && GameModeInfo->id != shareware ? wp_plasma :
-        action_weapon7 && GameModeInfo->id != shareware ? wp_bfg :
-        action_weapon8 ? wp_chainsaw :
-        action_weapon9 && enable_ssg ? wp_supershotgun :
-        wp_nochange;
-
-      // killough 3/22/98: For network and demo consistency with the
-      // new weapons preferences, we must do the weapons switches here
-      // instead of in p_user.c. But for old demos we must do it in
-      // p_user.c according to the old rules. Therefore demo_compatibility
-      // determines where the weapons switch is made.
-
-      // killough 2/8/98:
-      // Allow user to switch to fist even if they have chainsaw.
-      // Switch to fist or chainsaw based on preferences.
-      // Switch to shotgun or SSG based on preferences.
-      //
-      // killough 10/98: make SG/SSG and Fist/Chainsaw
-      // weapon toggles optional
-
-      if(!demo_compatibility && doom_weapon_toggles)
-      {
-         const player_t *player = &players[consoleplayer];
-
-         // only select chainsaw from '1' if it's owned, it's
-         // not already in use, and the player prefers it or
-         // the fist is already in use, or the player does not
-         // have the berserker strength.
-
-         if(newweapon==wp_fist && player->weaponowned[wp_chainsaw] &&
-            player->readyweapon!=wp_chainsaw &&
-            (player->readyweapon==wp_fist ||
-             !player->powers[pw_strength] ||
-             P_WeaponPreferred(wp_chainsaw, wp_fist)))
-         {
-            newweapon = wp_chainsaw;
-         }
-
-         // Select SSG from '3' only if it's owned and the player
-         // does not have a shotgun, or if the shotgun is already
-         // in use, or if the SSG is not already in use and the
-         // player prefers it.
-
-         if(newweapon == wp_shotgun && enable_ssg &&
-            player->weaponowned[wp_supershotgun] &&
-            (!player->weaponowned[wp_shotgun] ||
-             player->readyweapon == wp_shotgun ||
-             (player->readyweapon != wp_supershotgun &&
-              P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
-         {
-            newweapon = wp_supershotgun;
-         }
-      }
-      // killough 2/8/98, 3/22/98 -- end of weapon selection changes
-   }
-
-   // haleyjd 03/06/09: next/prev weapon actions
-   if(action_weaponup)
-      newweapon = P_NextWeapon(&players[consoleplayer]);
-   else if(action_weapondown)
-      newweapon = P_PrevWeapon(&players[consoleplayer]);
-}
-
-void CS_PlayerThink(int playernum)
-{
-   player_t *player = &players[playernum];
-   client_t *client = &clients[playernum];
-
-   if(!playeringame[playernum])
-      return;
-
-   // killough 2/8/98, 3/21/98:
-   // (this code is necessary despite questions raised elsewhere in a comment)
-   if(player->cheats & CF_NOCLIP)
-      player->mo->flags |= MF_NOCLIP;
-   else
-      player->mo->flags &= ~MF_NOCLIP;
-
-   // chain saw run forward
-   if(player->mo->flags & MF_JUSTATTACKED)
-   {
-      player->cmd.angleturn = 0;
-      player->cmd.forwardmove = 0xc800/512;
-      player->cmd.sidemove = 0;
-      player->mo->flags &= ~MF_JUSTATTACKED;
-   }
-
-   if(player->playerstate == PST_DEAD)
-   {
-      P_DeathThink(player);
-      if(CS_SERVER)
-      {
-         SV_RunPlayerCommands(playernum);
-         P_MobjThinker(player->mo);
-      }
-      else if(CS_CLIENT)
-      {
-         player->cmd.forwardmove = 0;
-         player->cmd.sidemove = 0;
-         player->cmd.look = 0;
-         player->cmd.angleturn = 0;
-         if(player->cmd.buttons & BT_USE)
-            player->cmd.buttons = BT_USE;
-         else
-            player->cmd.buttons = 0;
-         player->cmd.actions = 0;
-         P_MobjThinker(player->mo);
-      }
-      return;
-   }
-
-   if(playernum == consoleplayer)
-      CS_ProcessPlayerCommand(playernum);
-   else if(CS_SERVER && !SV_RunPlayerCommands(playernum))
-      return;
-
-   // haleyjd: are we falling? might need to scream :->
-   // [CG] Spectators don't scream.
-   if(!client->spectating)
-   {
-      if(!comp[comp_fallingdmg] && demo_version >= 329)
-      {  
-         if(player->mo->momz >= 0)
-            player->mo->intflags &= ~MIF_SCREAMED;
-
-         if(player->mo->momz <= -35*FRACUNIT && 
-            player->mo->momz >= -40*FRACUNIT &&
-            !(player->mo->intflags & MIF_SCREAMED))
-         {
-            player->mo->intflags |= MIF_SCREAMED;
-            S_StartSound(player->mo, GameModeInfo->playerSounds[sk_plfall]);
-         }
-      }
-   }
-
-   // Determine if there's anything about the sector you're in that's
-   // going to affect you, like painful floors.
-   if(P_SectorIsSpecial(player->mo->subsector->sector))
-      P_PlayerInSpecialSector(player);
-
-   // haleyjd 08/23/05: terrain-based effects
-   P_PlayerOnSpecialFlat(player);
-
-   // haleyjd: Heretic current specials
-   P_HereticCurrent(player);
-
-   // Strength counts up to diminish fade.
-   if(player->powers[pw_strength])
-      player->powers[pw_strength]++;
-
-   // killough 1/98: Make idbeholdx toggle:
-   if(player->powers[pw_invulnerability] > 0) // killough
-      player->powers[pw_invulnerability]--;
-
-   if(player->powers[pw_invisibility] > 0)
-   {
-      if(!--player->powers[pw_invisibility] )
-         player->mo->flags &= ~MF_SHADOW;
-   }
-
-   if(player->powers[pw_infrared] > 0) // killough
-      player->powers[pw_infrared]--;
-
-   if(player->powers[pw_ironfeet] > 0) // killough
-      player->powers[pw_ironfeet]--;
-
-   if(player->powers[pw_ghost] > 0) // haleyjd
-   {
-      if(!--player->powers[pw_ghost])
-         player->mo->flags3 &= ~MF3_GHOST;
-   }
-
-   if(player->powers[pw_totalinvis] > 0) // haleyjd
-   {
-      player->mo->flags2 &= ~MF2_DONTDRAW; // flash
-      player->powers[pw_totalinvis]--;  
-      player->mo->flags2 |=               
-         player->powers[pw_totalinvis] &&
-         (player->powers[pw_totalinvis] > 4*32 ||
-          player->powers[pw_totalinvis] & 8)
-          ? MF2_DONTDRAW : 0;
-   }
-
-   if(player->damagecount)
-      player->damagecount--;
-
-   if(player->bonuscount)
-      player->bonuscount--;
-
-   // Handling colormaps.
-   // killough 3/20/98: reformat to terse C syntax
-   // sf: removed MBF beta stuff
-   player->fixedcolormap = 
-    (player->powers[pw_invulnerability] > 4*32 ||    
-     player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
-    (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
-
-   // haleyjd 01/21/07: clear earthquake flag before running quake thinkers
-   //                   later
-   player->quake = 0;
-
-   P_MobjThinker(player->mo);
-}
-
-void CS_PlayerTicker(int playernum)
-{
-   if(playeringame[playernum])
-   {
-      if(CS_SERVER)
-      {
-         SV_LoadClientOptions(playernum);
-         CS_PlayerThink(playernum);
-         SV_RestoreServerOptions();
-      }
-      else if(playernum == consoleplayer &&
-              (cl_enable_prediction || clients[playernum].spectating))
-      {
-         CL_Predict(cl_current_world_index, cl_current_world_index + 1, false);
-      }
-      else if(CS_DEMO)
-      {
-         CS_PlayerThink(playernum);
-      }
-      else
-      {
-         client_t *client = &clients[playernum];
-         player_t *player = &players[playernum];
-         mobj_t   *actor  = player->mo;
-
-         if(client->spectating)
-         {
-            // [CG] Don't think on spectators clientside.
-            return;
-         }
-
-         // [CG] Here we do some things clientside that are inconsequential to
-         //      the game world, but are necessary so that all players (local
-         //      or otherwise) "act" correctly.
-
-         // [CG] Move the player's weapon sprite.
-         P_MovePsprites(player);
-
-         // [CG] These shouldn't wait on server messages because they're
-         //      annoying when they linger.
-         if(player->damagecount)
-            player->damagecount--;
-
-         if(player->bonuscount)
-            player->bonuscount--;
-
-         // [CG] Make sounds when a player hits the floor.
-         if(client->floor_status)
-         {
-            if(actor->health > 0)
-            {
-               if(!comp[comp_fallingdmg])
-               {
-                  // haleyjd: new features -- feet sound for normal hits,
-                  //          grunt for harder, falling damage for worse
-                  if(actor->momz < -23 * FRACUNIT)
-                  {
-                     if(!actor->player->powers[pw_invulnerability] &&
-                        !(actor->player->cheats & CF_GODMODE))
-                     {
-                        // [CG] TODO: Figure out the if statement so it can be
-                        //            removed.
-                        // P_FallingDamage(actor->player);
-                     }
-                     else
-                     {
-                        S_StartSound(
-                           actor, GameModeInfo->playerSounds[sk_oof]
-                        );
-                     }
-                  }
-                  else if(actor->momz < -12 * FRACUNIT)
-                  {
-                     S_StartSound(actor, GameModeInfo->playerSounds[sk_oof]);
-                  }
-                  else if((client->floor_status == cs_fs_hit_on_thing) ||
-                          !E_GetThingFloorType(actor, true)->liquid)
-                  {
-                     S_StartSound(
-                        actor, GameModeInfo->playerSounds[sk_plfeet]
-                     );
-                  }
-               }
-               else if((client->floor_status == cs_fs_hit_on_thing) ||
-                       !E_GetThingFloorType(actor, true)->liquid)
-               {
-                  S_StartSound(actor, GameModeInfo->playerSounds[sk_oof]);
-               }
-            }
-            client->floor_status = cs_fs_none;
-         }
-      }
-   }
-}
-
-boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
-                                          weapontype_t weapon_two)
+bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
+                                       weapontype_t weapon_two)
 {
    unsigned int p1, p2;
    server_client_t *server_client;
@@ -1059,30 +567,22 @@ boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
       server_client = &server_clients[playernum];
 
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
-      {
          if(server_client->weapon_preferences[p1] == weapon_one)
             break;
-      }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
-      {
          if(server_client->weapon_preferences[p2] == weapon_two)
             break;
-      }
    }
    else
    {
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
-      {
          if(weapon_preferences[0][p1] == weapon_one)
             break;
-      }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
-      {
          if(weapon_preferences[0][p2] == weapon_two)
             break;
-      }
    }
 
    if(p1 < p2)
@@ -1093,7 +593,7 @@ boolean CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
 
 void CS_HandleSpectateKey(event_t *ev)
 {
-   boolean spectating = clients[consoleplayer].spectating;
+   bool spectating = clients[consoleplayer].spectating;
 
    if(CS_CLIENT && !spectating && ev->type == ev_keydown)
       Handler_spectate();
@@ -1102,9 +602,7 @@ void CS_HandleSpectateKey(event_t *ev)
 void CS_HandleSpectatePrevKey(event_t *ev)
 {
    if(clients[consoleplayer].spectating && ev->type == ev_keydown)
-   {
       Handler_spectate_prev();
-   }
 }
 
 void CS_HandleSpectateNextKey(event_t *ev)
@@ -1124,7 +622,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    char *buffer;
    mapthing_t *spawn_point;
    server_client_t *server_client;
-   boolean respawn_player = false;
+   bool respawn_player = false;
    int playernum = message->player_number;
    player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
@@ -1158,9 +656,8 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          if(!strlen(buffer))
          {
             if(CS_SERVER)
-            {
                SV_SendMessage(playernum, "Cannot blank your name.\n");
-            }
+
             return;
          }
 
@@ -1195,7 +692,11 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       }
 
       if(CS_SERVER)
-         SV_BroadcastPlayerStringInfo(playernum, message->info_type);
+      {
+         SV_BroadcastPlayerStringInfo(
+            playernum, (client_info_e)message->info_type
+         );
+      }
 
       return;
    }
@@ -1340,7 +841,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       if(!message->boolean_value)
       {
          // [CG] The case where the player is attempting to join the game is
-         //      handled in CS_ProcessPlayerCommand serverside and
+         //      handled in P_RunPLayerCommand serverside and
          //      CL_HandlePlayerSpawned clientside.  Receiving a false update
          //      for ci_spectating means the sending client is bugged somehow.
          if(CS_SERVER)
@@ -1461,7 +962,9 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    }
    if(CS_SERVER)
    {
-      SV_BroadcastPlayerScalarInfo(playernum, message->info_type);
+      SV_BroadcastPlayerScalarInfo(
+         playernum, (client_info_e)message->info_type
+      );
 
       if(respawn_player)
       {
@@ -1535,7 +1038,7 @@ size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
 
    info_size = strlen(player_info) + 1;
 
-   buffer = calloc(1, sizeof(nm_playerinfoupdated_t) + info_size);
+   buffer = (char *)(calloc(1, sizeof(nm_playerinfoupdated_t) + info_size));
 
    *update_message = (nm_playerinfoupdated_t *)buffer;
    (*update_message)->string_size = info_size;
@@ -1674,7 +1177,7 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
    }
 }
 
-void CS_SetSpectator(int playernum, boolean spectating)
+void CS_SetSpectator(int playernum, bool spectating)
 {
    client_t *client = &clients[playernum];
    player_t *player = &players[playernum];
@@ -1714,10 +1217,10 @@ void CS_SetSpectator(int playernum, boolean spectating)
 }
 
 void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
-                    angle_t angle, boolean as_spectator)
+                    angle_t angle, bool as_spectator)
 {
    int i;
-   mobj_t *fog;
+   Mobj *fog;
    player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
 
@@ -1731,7 +1234,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
       {
          if(CS_SERVER)
             SV_BroadcastActorRemoved(player->mo);
-         P_RemoveMobj(player->mo);
+         player->mo->removeThinker();
          player->mo = NULL;
       }
    }
@@ -1805,7 +1308,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    CS_SetSpectator(playernum, as_spectator);
 }
 
-mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
+mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
 {
    mapthing_t *spawn_point;
 
@@ -1840,10 +1343,10 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, boolean as_spectator)
    return spawn_point;
 }
 
-mobj_t* CS_SpawnPuff(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
-                     angle_t angle, int updown, boolean ptcl)
+Mobj* CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int updown, bool ptcl)
 {
-   mobj_t *puff;
+   Mobj *puff;
 
    if(CS_SHOULD_SHOW_SHOT(shooter))
    {
@@ -1860,10 +1363,10 @@ mobj_t* CS_SpawnPuff(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
    return puff;
 }
 
-mobj_t* CS_SpawnBlood(mobj_t *shooter, fixed_t x, fixed_t y, fixed_t z,
-                      angle_t angle, int damage, mobj_t *target)
+Mobj* CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                    angle_t angle, int damage, Mobj *target)
 {
-   mobj_t *blood;
+   Mobj *blood;
 
    if(CS_SHOULD_SHOW_SHOT(shooter))
    {
@@ -1905,7 +1408,7 @@ char* CS_ExtractMessage(char *data, size_t data_length)
    //      - strlen will be length - 1 (if correct).
    //      - buffer size will be length + 1
    data_length = data_length - sizeof(nm_playermessage_t);
-   message = calloc(data_length + 1, sizeof(char));
+   message = (char *)(calloc(data_length + 1, sizeof(char)));
    memcpy(message, data + sizeof(nm_playermessage_t), data_length);
    message_length = strlen(message);
 
@@ -2027,8 +1530,8 @@ void CS_ReadFromNetwork(void)
 
          if(CS_CLIENT)
          {
-            CL_HandleMessage(
-               (char *)event.packet->data, event.packet->dataLength
+            cl_packet_buffer.add(
+               (char *)event.packet->data, (uint32_t)event.packet->dataLength
             );
          }
          else if(CS_SERVER)

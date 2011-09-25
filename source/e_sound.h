@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -28,10 +28,8 @@
 #ifndef E_SOUND_H
 #define E_SOUND_H
 
-#include "doomtype.h"
-#include "sounds.h"
 #include "m_dllist.h"
-#include "s_sndseq.h"
+#include "sounds.h"
 
 // haleyjd 04/13/08: this replaces S_sfx[0].
 extern sfxinfo_t NullSound;
@@ -40,8 +38,9 @@ sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
 sfxinfo_t *E_SoundForDEHNum(int);
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
+sfxinfo_t *E_NewWadSound(const char *);
+sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name);
 
-void E_NewWadSound(const char *);
 void E_PreCacheSounds(void);
 void E_UpdateSoundCache(void);
 
@@ -91,12 +90,13 @@ struct ESoundSeq_t
 
    union seqcmd_s *commands;     // the compiled commands
 
-   boolean randvol;              // use random starting volume?
+   bool randvol;                 // use random starting volume?
    int volume;                   // starting volume (or max vol if randomized)
    int minvolume;                // minimum volume if randomized
    int attenuation;              // starting attenuation
    sfxinfo_t *stopsound;         // stopsound, if any
-   boolean nostopcutoff;         // if true, sounds aren't cut off at end
+   bool nostopcutoff;            // if true, sounds aren't cut off at end
+   bool randomplayvol;           // if true, volume is randomized on most play cmds
 
    ESoundSeq_t *doorseq;  // redirect for door sequence use
    ESoundSeq_t *platseq;  // redirect for platform sequence use
@@ -118,11 +118,11 @@ extern cfg_opt_t edf_ambience_opts[];
 extern cfg_opt_t edf_sndseq_opts[];
 extern cfg_opt_t edf_seqmgr_opts[];
 
-void    E_ProcessSounds(cfg_t *cfg);
-void    E_ProcessSoundDeltas(cfg_t *cfg, boolean add);
-void    E_ProcessSndSeqs(cfg_t *cfg);
-void    E_ProcessAmbience(cfg_t *cfg);
-boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
+void E_ProcessSounds(cfg_t *cfg);
+void E_ProcessSoundDeltas(cfg_t *cfg, bool add);
+void E_ProcessSndSeqs(cfg_t *cfg);
+void E_ProcessAmbience(cfg_t *cfg);
+bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
 #define EDF_SEC_SOUND     "sound"
 #define EDF_SEC_SDELTA    "sounddelta"

@@ -26,6 +26,9 @@ ENDIF(COMMAND cmake_policy)
 ######################### Set Project Source  ##################################
 ADD_DEFINITIONS(-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
 ADD_DEFINITIONS(-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
+IF(GL_LIBRARY)
+    ADD_DEFINITIONS(-DEE_FEATURE_OPENGL)
+ENDIF(GL_LIBRARY)
 
 IF(EE_STATIC_COMPILE)
     ADD_DEFINITIONS(
@@ -82,7 +85,13 @@ FILE(GLOB TEXTSCREEN_SOURCES textscreen/*.c)
 INCLUDE_DIRECTORIES(./)
 FILE(GLOB ETERNITY_SOURCES *.cpp)
 
-## FIXME: It would be better to pull i_cpu_posix.c out into a
+INCLUDE_DIRECTORIES(hal/)
+FILE(GLOB HAL_SOURCES hal/*.cpp)
+
+INCLUDE_DIRECTORIES(gl/)
+FILE(GLOB GL_SOURCES gl/*.cpp)
+
+## FIXME: It would be better to pull i_cpu_posix.cpp out into a
 ## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES(sdl/)
 SET(SDL_SOURCES
@@ -91,17 +100,18 @@ SET(SDL_SOURCES
     sdl/i_net.cpp
     sdl/i_pcsound.cpp
     sdl/i_picker.cpp
+    sdl/i_sdlgl2d.cpp
     sdl/i_sdlmusic.cpp
     sdl/i_sdlsound.cpp
     sdl/i_sound.cpp
     sdl/i_system.cpp
-    sdl/i_video.cpp
+    sdl/i_sdlvideo.cpp
     sdl/mmus2mid.cpp
     sdl/ser_main.cpp
 )
-IF(NOT WIN32 AND NOT MINGW)
+IF(NOT WIN32)
     SET(SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
-ENDIF(NOT WIN32 AND NOT MINGW)
+ENDIF(NOT WIN32)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -112,6 +122,8 @@ ADD_EXECUTABLE(eternity
     ${ETERNITY_SOURCES}
     ${CONFUSE_SOURCES}
     ${TEXTSCREEN_SOURCES}
+    ${HAL_SOURCES}
+    ${GL_SOURCES}
     ${SDL_SOURCES}
 )
 IF(EE_STATIC_COMPILE)
@@ -146,6 +158,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
             ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+            ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
             mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
         )
     ELSE(MINGW)
@@ -174,10 +187,27 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
             ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+            ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
             pthread m rt stdc++
         )
     ENDIF(MINGW)
 ELSE(EE_STATIC_COMPILE)
+    IF(GL_LIBRARY)
+    TARGET_LINK_LIBRARIES(eternity
+        ${SDL_LIBRARY}
+        ${SDLMIXER_LIBRARY}
+        ${SDLNET_LIBRARY}
+        ${PC_LIBARCHIVE_LDFLAGS}
+        ${PC_GNUTLS_LDFLAGS}
+        ${PC_ENET_LDFLAGS}
+        ${PC_JSON_LDFLAGS}
+        ${PC_CURL_LDFLAGS}
+        ${GL_LIBRARY}
+        ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+        ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
+        stdc++
+    )
+    ELSE(GL_LIBRARY)
     TARGET_LINK_LIBRARIES(eternity
         ${SDL_LIBRARY}
         ${SDLMIXER_LIBRARY}
@@ -188,8 +218,10 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+        ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
         stdc++
     )
+    ENDIF(GL_LIBRARY)
 ENDIF(EE_STATIC_COMPILE)
 
 INSTALL(TARGETS eternity

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,8 +26,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_ENEMY__
-#define __P_ENEMY__
+#ifndef P_ENEMY_H__
+#define P_ENEMY_H__
+
+// Required for pr_class_t, statenum_t
+#include "info.h"
+#include "m_random.h"
 
 enum 
 {
@@ -47,14 +51,16 @@ typedef int dirtype_t;
 extern fixed_t xspeed[8];
 extern fixed_t yspeed[8];
 
-boolean P_CheckMissileRange(Mobj *actor);
-boolean P_HelpFriend(Mobj *actor);
-boolean P_HitFriend(Mobj *actor);
-boolean P_LookForPlayers(Mobj *actor, int allaround);
-boolean P_LookForTargets(Mobj *actor, int allaround);
-int     P_Move(Mobj *actor, int dropoff); // killough 9/12/98
-void    P_NewChaseDir(Mobj *actor);
-boolean P_SmartMove(Mobj *actor);
+extern int p_lastenemyroar;
+
+bool P_CheckMissileRange(Mobj *actor);
+bool P_HelpFriend(Mobj *actor);
+bool P_HitFriend(Mobj *actor);
+bool P_LookForPlayers(Mobj *actor, int allaround);
+bool P_LookForTargets(Mobj *actor, int allaround);
+int  P_Move(Mobj *actor, int dropoff); // killough 9/12/98
+void P_NewChaseDir(Mobj *actor);
+bool P_SmartMove(Mobj *actor);
 
 void P_NoiseAlert (Mobj *target, Mobj *emmiter);
 void P_SpawnBrainTargets(void); // killough 3/26/98: spawn icon landings
@@ -64,7 +70,7 @@ extern struct brain_s {         // killough 3/26/98: global state of boss brain
   int easy;
 } brain;
 
-boolean P_CheckMeleeRange(Mobj *actor);
+bool P_CheckMeleeRange(Mobj *actor);
 
 // haleyjd 07/13/03: editable boss brain spawn types
 // schepe: removed 11-type limit
@@ -80,7 +86,7 @@ enum
    BOSSTELE_DEST
 };
 
-struct MobjCollection;
+class MobjCollection;
 
 // haleyjd: bossteleport_t
 //

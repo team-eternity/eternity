@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,9 +26,10 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "doomstat.h"
+
 #include "c_io.h"
-#include "r_main.h"
+#include "doomstat.h"
+#include "m_argv.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
@@ -38,16 +39,17 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
-#include "m_argv.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_state.h"
 
-// [CG] Added.
-#include "cs_netid.h"
-#include "cs_spec.h"
-#include "cs_main.h"
-#include "cl_main.h"
-#include "sv_main.h"
+#include "cs_netid.h" // [CG] 09/18/11
+#include "cs_spec.h"  // [CG] 09/18/11
+#include "cs_main.h"  // [CG] 09/18/11
+#include "cl_main.h"  // [CG] 09/18/11
+#include "sv_main.h"  // [CG] 09/18/11
 
-boolean P_ChangeSector(sector_t *, int);
+bool P_ChangeSector(sector_t *, int);
 
 //
 // P_FloorSequence
@@ -65,62 +67,8 @@ void P_FloorSequence(sector_t *s)
       S_StartSectorSequenceName(s, "EEFloor", false);
 }
 
-void P_CopyFloor(FloorMoveThinker *dest, FloorMoveThinker *src)
-{
-   dest->crush               = src->crush;
-   dest->direction           = src->direction;
-   dest->special.newspecial  = src->special.newspecial;
-   dest->special.flags       = src->special.flags;
-   dest->special.damage      = src->special.damage;
-   dest->special.damagemask  = src->special.damagemask;
-   dest->special.damagemod   = src->special.damagemod;
-   dest->special.damageflags = src->special.damageflags;
-   dest->texture             = src->texture;
-   dest->floordestheight     = src->floordestheight;
-   dest->speed               = src->speed;
-   dest->resetTime           = src->resetTime;
-   dest->resetHeight         = src->resetHeight;
-   dest->stepRaiseTime       = src->stepRaiseTime;
-   dest->delayTime           = src->delayTime;
-   dest->delayTimer          = src->delayTimer;
-   dest->net_id              = src->net_id;
-}
-
-void P_CopyElevator(ElevatorThinker *dest, ElevatorThinker *src)
-{
-   dest->direction         = src->direction;
-   dest->floordestheight   = src->floordestheight;
-   dest->ceilingdestheight = src->ceilingdestheight;
-   dest->speed             = src->speed;
-   dest->net_id            = src->net_id;
-}
-
-void P_CopyPillar(PillarThinker *dest, PillarThinker *src)
-{
-   dest->ceilingSpeed = src->ceilingSpeed;
-   dest->floorSpeed   = src->floorSpeed;
-   dest->floordest    = src->floordest;
-   dest->ceilingdest  = src->ceilingdest;
-   dest->direction    = src->direction;
-   dest->crush        = src->crush;
-   dest->net_id       = src->net_id;
-}
-
-void P_CopyFloorWaggle(FloorWaggleThinker *dest, FloorWaggleThinker *src)
-{
-   dest->originalHeight = src->originalHeight;
-   dest->accumulator    = src->accumulator;
-   dest->accDelta       = src->accDelta;
-   dest->targetScale    = src->targetScale;
-   dest->scale          = src->scale;
-   dest->scaleDelta     = src->scaleDelta;
-   dest->ticker         = src->ticker;
-   dest->state          = src->state;
-   dest->net_id         = src->net_id;
-}
-
 ///////////////////////////////////////////////////////////////////////
-//
+// 
 // Plane (floor or ceiling), Floor motion and Elevator action routines
 //
 ///////////////////////////////////////////////////////////////////////
@@ -131,12 +79,12 @@ void P_CopyFloorWaggle(FloorWaggleThinker *dest, FloorWaggleThinker *src)
 // Move a plane (floor or ceiling) and check for crushing. Called
 // every tick by all actions that move floors or ceilings.
 //
-// Passed the sector to move a plane in, the speed to move it at,
+// Passed the sector to move a plane in, the speed to move it at, 
 // the dest height it is to achieve, whether it crushes obstacles,
-// whether it moves a floor or ceiling, and the direction up or down
+// whether it moves a floor or ceiling, and the direction up or down 
 // to move.
 //
-// Returns a result_e:
+// Returns a result_e: 
 //  ok - plane moved normally, has not achieved destination yet
 //  pastdest - plane moved normally and is now at destination height
 //  crushed - plane encountered an obstacle, is holding until removed
@@ -149,12 +97,12 @@ result_e T_MovePlane
   int           floorOrCeiling,
   int           direction )
 {
-   boolean     flag;
-   fixed_t     lastpos;
-   fixed_t     destheight;  //jff 02/04/98 used to keep floors/ceilings
-                            // from moving thru each other
-   boolean     move3dsides; // SoM: If set, check for and move 3d sides.
-   boolean     moveattached; // SoM: if set, check for and move attached sector surfaces.
+   bool     flag;
+   fixed_t  lastpos;     
+   fixed_t  destheight;   //jff 02/04/98 used to keep floors/ceilings
+                          // from moving thru each other
+   bool     move3dsides;  // SoM: If set, check for and move 3d sides.
+   bool     moveattached; // SoM: if set, check for and move attached sector surfaces.
 
 
    switch(floorOrCeiling)
@@ -162,7 +110,7 @@ result_e T_MovePlane
    case 0:
       move3dsides  = (sector->f_attached  && demo_version >= 331);
       moveattached = (sector->f_asurfaces && demo_version >= 331);
-
+      
       // Moving a floor
       switch(direction)
       {
@@ -189,11 +137,11 @@ result_e T_MovePlane
                   P_MoveAttached(sector, false, lastpos - dest, crush);
                   return crushed;
                }
-            }
+            }            
 
             P_SetFloorHeight(sector, dest);
             flag = P_CheckSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
-            if(flag == true)
+            if(flag == true)                   
             {
                P_SetFloorHeight(sector, lastpos);
                P_CheckSector(sector,crush,lastpos-dest,0); //jff 3/19/98 use faster chk
@@ -203,7 +151,7 @@ result_e T_MovePlane
                   P_Scroll3DSides(sector, false, lastpos - dest, crush);
                if(moveattached)
                   P_MoveAttached(sector, false, lastpos - dest, crush);
-
+               
                // Note from SoM: Shouldn't we return crushed if the
                // last move was rejected?
             }
@@ -228,8 +176,8 @@ result_e T_MovePlane
                   P_MoveAttached(sector, false, speed, crush);
                   return crushed;
                }
-            }
-
+            }            
+            
             lastpos = sector->floorheight;
             P_SetFloorHeight(sector, sector->floorheight - speed);
             flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
@@ -237,7 +185,7 @@ result_e T_MovePlane
             // haleyjd 02/15/01: last of cph's current demo fixes:
             // cph - make more compatible with original Doom, by
             // reintroducing this code. This means floors can't lower
-            // if objects are stuck in the ceiling
+            // if objects are stuck in the ceiling 
             if((flag == true) && demo_compatibility)
             {
                P_SetFloorHeight(sector, lastpos);
@@ -281,7 +229,7 @@ result_e T_MovePlane
                   P_MoveAttached(sector, false, lastpos-destheight, crush);
                   return crushed;
                }
-            }
+            }            
 
             P_SetFloorHeight(sector, destheight);
             flag = P_CheckSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
@@ -316,7 +264,7 @@ result_e T_MovePlane
                   P_MoveAttached(sector, false, -speed, crush);
                   return crushed;
                }
-            }
+            }            
 
             // crushing is possible
             lastpos = sector->floorheight;
@@ -332,21 +280,20 @@ result_e T_MovePlane
                   if(crush > 0) //jff 1/25/98 fix floor crusher
                      return crushed;
                }
-
                P_SetFloorHeight(sector, lastpos);
                P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
                if(move3dsides)
                   P_Scroll3DSides(sector, false, -speed, crush);
                if(moveattached)
                   P_MoveAttached(sector, false, -speed, crush);
-
+               
                return crushed;
             }
          }
          break;
       }
       break;
-
+                                                                        
    case 1:
       move3dsides = sector->c_attached && demo_version >= 331;
       moveattached = (sector->c_asurfaces && demo_version >= 331);
@@ -381,16 +328,16 @@ result_e T_MovePlane
                   P_MoveAttached(sector, true, lastpos-destheight, crush);
                   return crushed;
                }
-            }
-
+            }            
+            
             P_SetCeilingHeight(sector, destheight);
             flag = P_CheckSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
-
+            
             if(flag == true)
             {
                P_SetCeilingHeight(sector, lastpos);
                P_CheckSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
-
+               
                if(move3dsides)
                   P_Scroll3DSides(sector, true, lastpos-destheight, crush);
                if(moveattached)
@@ -417,13 +364,13 @@ result_e T_MovePlane
                   P_MoveAttached(sector, true, speed, crush);
                   return crushed;
                }
-            }
+            }            
 
             // crushing is possible
             lastpos = sector->ceilingheight;
             P_SetCeilingHeight(sector, sector->ceilingheight - speed);
             flag = P_CheckSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
-
+            
             if(flag == true)
             {
                // haleyjd 07/23/05: crush no longer boolean
@@ -434,7 +381,7 @@ result_e T_MovePlane
 
                P_SetCeilingHeight(sector, lastpos);
                P_CheckSector(sector,crush,speed,1);      //jff 3/19/98 use faster chk
-
+               
                if(move3dsides)
                   P_Scroll3DSides(sector, true, speed, crush);
                if(moveattached)
@@ -443,7 +390,7 @@ result_e T_MovePlane
             }
          }
          break;
-
+         
       case plat_up:
          // moving a ceiling up
          if(sector->ceilingheight + speed > dest)
@@ -468,7 +415,7 @@ result_e T_MovePlane
                   P_MoveAttached(sector, true, lastpos - dest, crush);
                   return crushed;
                }
-            }
+            }            
 
             P_SetCeilingHeight(sector, dest);
             flag = P_CheckSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
@@ -521,14 +468,14 @@ IMPLEMENT_THINKER_TYPE(FloorMoveThinker)
 //
 // T_MoveFloor()
 //
-// Move a floor to it's destination (up or down).
+// Move a floor to it's destination (up or down). 
 // Called once per tick for each moving floor.
 //
 // Passed a FloorMoveThinker structure that contains all pertinent info about the
 // move. See P_SPEC.H for fields.
 // No return value.
 //
-// jff 02/08/98 all cases with labels beginning with gen added to support
+// jff 02/08/98 all cases with labels beginning with gen added to support 
 // generalized line type behaviors.
 //
 void FloorMoveThinker::Think()
@@ -545,12 +492,12 @@ void FloorMoveThinker::Think()
          direction = (direction == plat_up) ? plat_down : plat_up;
          floordestheight = resetHeight;
          type = genResetStair;
-
+         
          P_FloorSequence(sector);
       }
 
       // While stair is building, the delay timer is counting down
-      // the amount of time needed to move up one step; once it
+      // the amount of time needed to move up one step; once it 
       // expires, we need to wait for the specified delay time.
       //
       // While the stair is delayed, the delay timer is counting
@@ -574,7 +521,7 @@ void FloorMoveThinker::Think()
          {
             type = genBuildStair;
             delayTimer = stepRaiseTime;
-
+            
             if(sector->floorheight != floordestheight)
                P_FloorSequence(sector);
          }
@@ -585,13 +532,13 @@ void FloorMoveThinker::Think()
          break;
       }
    }
-
+   
    // move the floor
    res = T_MovePlane(sector, speed, floordestheight, crush, 0, direction);
 
    // sf: added silentmove
    // haleyjd: moving sound handled by sound sequences now
-
+    
    if(res == pastdest)    // if destination height is reached
    {
       S_StopSectorSequence(sector, false);
@@ -645,17 +592,15 @@ void FloorMoveThinker::Think()
             break;
          }
       }
-
-      sector->floordata = NULL; //jff 2/22/98
-      // [CG] Just set the floor as inactive if we're a client.
+      
       if(CS_CLIENT)
-         inactive = cl_current_world_index;
+         this->inactive = cl_current_world_index;
       else
-         this->removeThinker(); //remove this floor from list of movers
+         P_RemoveFloor(this);
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
-
+      
       if(sector->stairlock == -2) // if this sector is stairlocked
       {
          sector_t *sec = sector;
@@ -668,7 +613,7 @@ void FloorMoveThinker::Think()
          {
             sec = sector;          // search forward
             while(sec->nextsec != -1 &&
-                  sectors[sec->nextsec].stairlock != -2)
+                  sectors[sec->nextsec].stairlock != -2) 
                sec = &sectors[sec->nextsec];
             if(sec->nextsec == -1)        // if all thinkers ahead are done too
             {
@@ -689,14 +634,13 @@ void FloorMoveThinker::Think()
 
 void P_RemoveFloor(FloorMoveThinker *floor)
 {
+   // S_StopSectorSequence(sector, false);
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(floor->net_id, ms_floor);
-   else if(CS_CLIENT)
-      S_StopSectorSequence(sector, false);
+   NetFloors.remove(floor);
 
-   floor->sector->floordata = NULL;  //jff 2/22/98
-   P_RemoveThinker(&floor->thinker); //remove this floor from list of movers
-   CS_ReleaseFloorNetID(floor);
+   floor->sector->floordata = NULL;     //jff 2/22/98
+   floor->removeThinker();               // remove elevator from actives
 }
 
 //
@@ -735,7 +679,7 @@ IMPLEMENT_THINKER_TYPE(ElevatorThinker)
 void ElevatorThinker::Think()
 {
    result_e      res;
-
+   
    if (direction < 0)      // moving down
    {
       //jff 4/7/98 reverse order of ceiling/floor
@@ -754,17 +698,13 @@ void ElevatorThinker::Think()
 
    // make floor move sound
    // haleyjd: handled through sound sequences
-
+    
    if(res == pastdest)            // if destination height acheived
    {
-      S_StopSectorSequence(sector, false);
-      sector->floordata = NULL;     //jff 2/22/98
-      sector->ceilingdata = NULL;   //jff 2/22/98
-      // [CG] Just set the elevator as inactive if we're a client.
       if(CS_CLIENT)
-         inactive = cl_current_world_index;
+         this->inactive = cl_current_world_index;
       else
-         this->removeThinker();               // remove elevator from actives
+         P_RemoveElevator(this);
       
       // make floor stop sound
       // haleyjd: handled through sound sequences
@@ -775,13 +715,13 @@ void P_RemoveElevator(ElevatorThinker *elevator)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(elevator->net_id, ms_elevator);
+   NetElevators.remove(elevator);
 
+   S_StopSectorSequence(elevator->sector, false);
    elevator->sector->floordata = NULL;     //jff 2/22/98
    elevator->sector->ceilingdata = NULL;   //jff 2/22/98
-   P_RemoveThinker(&elevator->thinker);    // remove elevator from actives
-   CS_ReleaseElevatorNetID(elevator);
+   elevator->removeThinker();               // remove elevator from actives
 }
-
 //
 // ElevatorThinker::serialize
 //
@@ -814,33 +754,35 @@ IMPLEMENT_THINKER_TYPE(PillarThinker)
 //
 void PillarThinker::Think()
 {
-   boolean result;
-
+   bool result;
+   
    // Move floor
-   result = (T_MovePlane(
-      sector, floorSpeed, floordest, crush, 0, direction
-   ) == pastdest);
-
+   result  = (T_MovePlane(sector, floorSpeed, floordest, crush, 0, direction) == pastdest);
+   
    // Move ceiling
-   result &= (T_MovePlane(
-      sector, ceilingSpeed, ceilingdest, crush, 1, direction * -1
-   ) == pastdest);
-
+   result &= (T_MovePlane(sector, ceilingSpeed, ceilingdest, crush, 1, direction * -1) == pastdest);
+   
    if(result)
    {
-      S_StopSectorSequence(sector, false);
-      sector->floordata = NULL;
-      sector->ceilingdata = NULL;      
-      // [CG] Just set the pillar as inactive if we're a client.
       if(CS_CLIENT)
-         inactive = cl_current_world_index;
+         this->inactive = cl_current_world_index;
       else
-      {
-         // TODO: notify scripts
-         //P_TagFinished(sector->tag);
-         this->removeThinker();
-      }
+         P_RemovePillar(this);
    }
+}
+
+void P_RemovePillar(PillarThinker *pillar)
+{
+   if(CS_SERVER)
+      SV_BroadcastMapSpecialRemoved(pillar->net_id, ms_pillar_build);
+   NetPillars.remove(pillar);
+
+   S_StopSectorSequence(pillar->sector, false);
+   pillar->sector->floordata = NULL;
+   pillar->sector->ceilingdata = NULL;      
+   // TODO: notify scripts
+   //P_TagFinished(pillar->sector->tag);
+   pillar->removeThinker();
 }
 
 //
@@ -868,28 +810,51 @@ void PillarThinker::serialize(SaveArchive &arc)
 // Floor motion linedef handlers
 //
 ///////////////////////////////////////////////////////////////////////
-void P_RemovePillar(PillarThinker *pillar)
-{
-   if(CS_SERVER)
-      SV_BroadcastMapSpecialRemoved(pillar->net_id, ms_pillar_build);
 
-   pillar->sector->floordata = NULL;
-   pillar->sector->ceilingdata = NULL;
-   // TODO: notify scripts
-   //P_TagFinished(pillar->sector->tag);
-   P_RemoveThinker(&pillar->thinker);
-   CS_ReleasePillarNetID(pillar);
+//
+// EV_DoFloor()
+//
+// Handle regular and extended floor types
+//
+// Passed the line that activated the floor and the type of floor motion
+// Returns true if a thinker was created.
+//
+int EV_DoFloor(line_t *line, floor_e floortype )
+{
+   int           secnum;
+   int           rtn;
+   sector_t*     sec;
+   FloorMoveThinker*  floor;
+
+   secnum = -1;
+   rtn = 0;
+   // move all floors with the same tag as the linedef
+   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
+   {
+      sec = &sectors[secnum];
+      
+      // Don't start a second thinker on the same floor
+      if(P_SectorActive(floor_special,sec)) //jff 2/23/98
+         continue;
+
+      if(CS_CLIENT)
+         return 1;
+      
+      // new floor thinker
+      rtn = 1;
+
+      floor = P_SpawnFloor(line, sec, floortype);
+   }
+   return rtn;
 }
 
 FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
 {
-   int i, rtn;
+   int i;
    int secnum = sec - sectors;
    FloorMoveThinker *floor = new FloorMoveThinker;
-   sector_t*     sec;
 
    floor->addThinker();
-
    sec->floordata = floor; //jff 2/22/98
    floor->type = floortype;
    floor->crush = -1;
@@ -909,7 +874,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       floor->direction = plat_down;
       floor->sector = sec;
       floor->speed = FLOORSPEED;
-      floor->floordestheight =
+      floor->floordestheight = 
          floor->sector->floorheight + 24 * FRACUNIT;
       break;
 
@@ -917,7 +882,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
    case lowerFloor32Turbo:
       floor->direction = plat_down;
       floor->sector = sec;
-      floor->speed = FLOORSPEED * 4;
+      floor->speed = FLOORSPEED*4;
       floor->floordestheight =
          floor->sector->floorheight + 32 * FRACUNIT;
       break;
@@ -1016,7 +981,7 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
       {
          int minsize = D_MAXINT;
          side_t*     side;
-
+                   
          if(!comp[comp_model])  // killough 10/98
             minsize = 32000<<FRACBITS; //jff 3/13/98 no ovf
          floor->direction = plat_up;
@@ -1050,15 +1015,15 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
          else
          {
             floor->floordestheight =
-               (floor->sector->floorheight>>FRACBITS) +
+               (floor->sector->floorheight>>FRACBITS) + 
                (minsize>>FRACBITS);
             if(floor->floordestheight>32000)
                floor->floordestheight = 32000;   //jff 3/13/98 do not
             floor->floordestheight<<=FRACBITS;   // allow height overflow
          }
-      }
+      }                             
       break;
-
+     
    case lowerAndChange:
       floor->direction = plat_down;
       floor->sector = sec;
@@ -1087,66 +1052,15 @@ FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e floortype)
    }
 
    P_FloorSequence(floor->sector);
-
-   if(serverside)
+   
+   if(CS_SERVER)
    {
-      CS_ObtainFloorNetID(floor);
-      if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_floor);
+      SV_BroadcastMapSpecialSpawned(
+         floor, NULL, line, floor->sector, ms_floor
+      );
    }
 
    return floor;
-}
-
-///////////////////////////////////////////////////////////////////////
-//
-// Floor motion linedef handlers
-//
-///////////////////////////////////////////////////////////////////////
-
-//
-// EV_DoFloor()
-//
-// Handle regular and extended floor types
-//
-// Passed the line that activated the floor and the type of floor motion
-// Returns true if a thinker was created.
-//
-int EV_DoFloor(line_t *line, floor_e floortype)
-{
-   int           secnum = -1;
-   int           rtn = 0;
-   FloorMoveThinker*  floor;
-
-   // [CG] Clients don't spawn floors themselves when lines are activated,
-   //      but we have to inform the caller whether or not a thinker would have
-   //      been created regardless.
-   if(CS_CLIENT)
-   {
-      while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
-      {
-         if(!P_SectorActive(floor_special, &sectors[secnum]))
-         {
-            return 1;
-         }
-      }
-      return 0;
-   }
-
-   // move all floors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
-   {
-      // Don't start a second thinker on the same floor
-      if(P_SectorActive(floor_special, &sectors[secnum])) //jff 2/23/98
-         continue;
-
-      // new floor thinker
-      rtn = 1;
-
-      if(serverside)
-         floor = P_SpawnFloor(line, &sectors[secnum], floortype);
-   }
-   return rtn;
 }
 
 //
@@ -1173,7 +1087,7 @@ int EV_DoChange(line_t *line, change_e changetype)
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
-
+      
       rtn = 1;
 
       // handle trigger or numeric change type
@@ -1202,15 +1116,16 @@ int EV_DoChange(line_t *line, change_e changetype)
 //
 // P_FindSectorFromLineTagWithLowerBound
 //
-// haleyjd 07/15/04: this is from prboom, and is needed to repair
-// the stair-building logic bugs introduced in our various ancestral
+// haleyjd 07/15/04: this is from prboom, and is needed to repair 
+// the stair-building logic bugs introduced in our various ancestral 
 // ports.
 // BTW, I'm pretty sure this is the longest function name in the
 // source code! ^_^
 //
-static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start, int min)
+static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start,
+                                                 int min)
 {
-   // Emulate original Doom's linear lower-bounded
+   // Emulate original Doom's linear lower-bounded 
    // P_FindSectorFromLineTag as needed
 
    do
@@ -1220,12 +1135,6 @@ static int P_FindSectorFromLineTagWithLowerBound(line_t *l, int start, int min)
    while(start >= 0 && start <= min);
 
    return start;
-}
-
-FloorMoveThinker* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
-{
-   // [CG] TODO.
-   return;
 }
 
 //
@@ -1239,17 +1148,17 @@ FloorMoveThinker* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
 // Returns true if any thinkers are created
 //
 // cph 2001/09/21 - compatibility nightmares again
-// There are three different ways this function has, during its history,
+// There are three different ways this function has, during its history, 
 // stepped through all the stairs to be triggered by the single switch:
 //
-// * original Doom used a linear P_FindSectorFromLineTag, but failed to
-//   preserve the index of the previous sector found, so instead it
-//   would restart its linear search from the last sector of the
+// * original Doom used a linear P_FindSectorFromLineTag, but failed to 
+//   preserve the index of the previous sector found, so instead it 
+//   would restart its linear search from the last sector of the 
 //   previous staircase
 //
 // * MBF/PrBoom with comp_stairs fail to emulate this, because their
-//   P_FindSectorFromLineTag is a chained hash table implementation.
-//   Instead they start following the hash chain from the last sector
+//   P_FindSectorFromLineTag is a chained hash table implementation. 
+//   Instead they start following the hash chain from the last sector 
 //   of the previous staircase, which will (probably) have the wrong tag,
 //   so they miss any further stairs
 //
@@ -1257,184 +1166,197 @@ FloorMoveThinker* P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
 //
 int EV_BuildStairs(line_t *line, stair_e type)
 {
-   // cph 2001/09/22 - cleaned up this function to save my sanity.
-   // A separate outer loop index makes the logic much cleared, and
+   // cph 2001/09/22 - cleaned up this function to save my sanity. 
+   // A separate outer loop index makes the logic much cleared, and 
    // local variables moved into the inner blocks helps too
-   int ssec = -1;
-   int minssec = -1;
-   int rtn = 0;
-   int crush = 0;
+   int                   ssec = -1;
+   int                   minssec = -1;
+   int                   rtn = 0;
 
    // start a stair at each sector tagged the same as the linedef
    while((ssec = P_FindSectorFromLineTagWithLowerBound(line,ssec,minssec)) >= 0)
    {
       int           secnum = ssec;
       sector_t*     sec = &sectors[secnum];
-
+      
       // don't start a stair if the first step's floor is already moving
       if(!P_SectorActive(floor_special,sec)) //jff 2/22/98
-      {
-         FloorMoveThinker*  floor;
-         int           texture, height;
-         fixed_t       stairsize;
-         fixed_t       speed;
-         int           ok;
-
+      { 
+         if(CS_CLIENT)
+            return 1;
          // create new floor thinker for first step
          rtn = 1;
-         floor = new FloorMoveThinker;
-         floor->addThinker();
-         sec->floordata = floor;
-         floor->direction = 1;
-         floor->sector = sec;
-         floor->type = buildStair;   //jff 3/31/98 do not leave uninited
-
-
-         // set up the speed and stepsize according to the stairs type
-         switch(type)
-         {
-         default: // killough -- prevent compiler warning
-         case build8:
-            speed = FLOORSPEED/4;
-            stairsize = 8*FRACUNIT;
-            if(!demo_compatibility)
-               crush = -1; //jff 2/27/98 fix uninitialized crush field
-            break;
-         case turbo16:
-            speed = FLOORSPEED*4;
-            stairsize = 16*FRACUNIT;
-            if(!demo_compatibility)
-               crush = 10;  //jff 2/27/98 fix uninitialized crush field
-            break;
-         }
-
-         floor = new FloorMoveThinker;
-         floor->addThinker();
-
-         sec->floordata = floor;
-
-         floor->thinker.function = T_MoveFloor;
-         floor->direction = 1;
-         floor->sector = sec;
-         floor->type = buildStair;   //jff 3/31/98 do not leave uninited
-         floor->speed = speed;
-         height = sec->floorheight + stairsize;
-         floor->floordestheight = height;
-
-         texture = sec->floorpic;
-
-         P_FloorSequence(floor->sector);
-
-         // Find next sector to raise
-         //   1. Find 2-sided line with same sector side[0] (lowest numbered)
-         //   2. Other side is the next sector to raise
-         //   3. Unless already moving, or different texture, then stop building
-         do
-         {
-            int i;
-            ok = 0;
-
-            for(i = 0; i < sec->linecount; ++i)
-            {
-               sector_t* tsec = (sec->lines[i])->frontsector;
-               int newsecnum;
-               if(!((sec->lines[i])->flags & ML_TWOSIDED))
-                  continue;
-
-               newsecnum = tsec-sectors;
-
-               if(secnum != newsecnum)
-                  continue;
-
-               tsec = (sec->lines[i])->backsector;
-               if(!tsec) continue;     //jff 5/7/98 if no backside, continue
-               newsecnum = tsec - sectors;
-
-               // if sector's floor is different texture, look for another
-               if(tsec->floorpic != texture)
-                  continue;
-
-                 /* jff 6/19/98 prevent double stepsize
-                  * killough 10/98: intentionally left this way [MBF comment]
-                  * cph 2001/02/06: stair bug fix should be controlled by comp_stairs,
-                  *  except if we're emulating MBF which perversly reverted the fix
-                  */
-               if(comp[comp_stairs] || demo_version == 203)
-                  height += stairsize; // jff 6/28/98 change demo compatibility
-
-               // if sector's floor already moving, look for another
-               if(P_SectorActive(floor_special,tsec)) //jff 2/22/98
-                  continue;
-
-               /* cph - see comment above - do this iff we didn't do so above */
-               if(!comp[comp_stairs] && demo_version != 203)
-                  height += stairsize;
-
-               sec = tsec;
-               secnum = newsecnum;
-
-               // create and initialize a thinker for the next step
-               floor = new FloorMoveThinker;
-               floor->addThinker();
-
-               sec->floordata = floor; //jff 2/22/98
-               floor->direction = 1;
-               floor->sector = sec;
-               floor->speed = speed;
-               floor->floordestheight = height;
-               floor->type = buildStair; //jff 3/31/98 do not leave uninited
-               //jff 2/27/98 fix uninitialized crush field
-               if(!demo_compatibility)
-                  floor->crush = (type == build8 ? -1 : 10);
-               P_FloorSequence(floor->sector);
-               ok = 1;
-               break;
-            } // end for
-
-         } while(ok);      // continue until no next step is found
-
-      } // end if(!P_SectorActive())
-
+         P_SpawnStairs(line, sec, type);
+      }
       /* killough 10/98: compatibility option */
       if(comp[comp_stairs])
       {
-         // cph 2001/09/22 - emulate buggy MBF comp_stairs for demos,
-         // with logic reversed since we now have a separate outer loop
+         // cph 2001/09/22 - emulate buggy MBF comp_stairs for demos, 
+         // with logic reversed since we now have a separate outer loop 
          // index.
          // DEMOSYNC - what about boom_compatibility_compatibility?
-         if(demo_version >= 203 && demo_version < 331)
+         if(demo_version >= 203 && demo_version < 331) 
             ssec = secnum; /* Trash outer loop index */
          else
          {
-            // cph 2001/09/22 - now the correct comp_stairs - Doom used
-            // a linear search from the last secnum, so we set that as a
+            // cph 2001/09/22 - now the correct comp_stairs - Doom used 
+            // a linear search from the last secnum, so we set that as a 
             // minimum value and do a fresh tag search
-            ssec = -1;
+            ssec = -1; 
             minssec = secnum;
          }
       } // end if
-   } // end for
-
-   return rtn;
+   }
 }
 
-boolean donut_emulation;
+void P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)
+{
+   int secnum, texture, height, ok;
+   fixed_t stairsize, speed;
+   FloorMoveThinker *floor = new FloorMoveThinker;
+
+   floor->addThinker();
+   sec->floordata = floor;
+   floor->direction = 1;
+   floor->sector = sec;
+   floor->type = buildStair;   //jff 3/31/98 do not leave uninited
+
+   // set up the speed and stepsize according to the stairs type
+   switch(type)
+   {
+   default: // killough -- prevent compiler warning
+   case build8:
+      speed = FLOORSPEED/4;
+      stairsize = 8*FRACUNIT;
+      if(!demo_compatibility)
+         floor->crush = -1; //jff 2/27/98 fix uninitialized crush field
+      break;
+   case turbo16:
+      speed = FLOORSPEED*4;
+      stairsize = 16*FRACUNIT;
+      if(!demo_compatibility)
+         floor->crush = 10;  //jff 2/27/98 fix uninitialized crush field
+      break;
+   }
+
+   floor->speed = speed;
+   height = sec->floorheight + stairsize;
+   floor->floordestheight = height;
+   
+   texture = sec->floorpic;
+
+   P_FloorSequence(floor->sector);
+
+   if(serverside)
+   {
+      NetFloors.add(floor);
+      if(CS_SERVER)
+      {
+         SV_BroadcastMapSpecialSpawned(
+            floor, NULL, line, floor->sector, ms_floor
+         );
+      }
+   }
+   
+   // Find next sector to raise
+   //   1. Find 2-sided line with same sector side[0] (lowest numbered)
+   //   2. Other side is the next sector to raise
+   //   3. Unless already moving, or different texture, then stop building
+   do
+   {
+      int i;
+      ok = 0;
+      
+      for(i = 0; i < sec->linecount; ++i)
+      {
+         sector_t* tsec = (sec->lines[i])->frontsector;
+         int newsecnum;
+         if(!((sec->lines[i])->flags & ML_TWOSIDED))
+            continue;
+
+         newsecnum = tsec-sectors;
+         
+         if(secnum != newsecnum)
+            continue;
+         
+         tsec = (sec->lines[i])->backsector;
+         if(!tsec) continue;     //jff 5/7/98 if no backside, continue
+         newsecnum = tsec - sectors;
+
+         // if sector's floor is different texture, look for another
+         if(tsec->floorpic != texture)
+            continue;
+
+           /* jff 6/19/98 prevent double stepsize
+            * killough 10/98: intentionally left this way [MBF comment]
+            * cph 2001/02/06: stair bug fix should be controlled by comp_stairs,
+            *  except if we're emulating MBF which perversly reverted the fix
+            */
+         if(comp[comp_stairs] || demo_version == 203)
+            height += stairsize; // jff 6/28/98 change demo compatibility
+
+         // if sector's floor already moving, look for another
+         if(P_SectorActive(floor_special,tsec)) //jff 2/22/98
+            continue;
+
+         /* cph - see comment above - do this iff we didn't do so above */
+         if(!comp[comp_stairs] && demo_version != 203)
+            height += stairsize;
+
+         sec = tsec;
+         secnum = newsecnum;
+
+         // create and initialize a thinker for the next step
+         floor = new FloorMoveThinker;
+         floor->addThinker();
+
+
+         sec->floordata = floor; //jff 2/22/98
+         floor->direction = 1;
+         floor->sector = sec;
+         floor->speed = speed;
+         floor->floordestheight = height;
+         floor->type = buildStair; //jff 3/31/98 do not leave uninited
+         //jff 2/27/98 fix uninitialized crush field
+         if(!demo_compatibility)
+            floor->crush = (type == build8 ? -1 : 10);
+         P_FloorSequence(floor->sector);
+
+         if(serverside)
+         {
+            NetFloors.add(floor);
+            if(CS_SERVER)
+            {
+               SV_BroadcastMapSpecialSpawned(
+                  floor, NULL, line, floor->sector, ms_floor
+               );
+            }
+         }
+
+         ok = 1;
+         break;
+      } // end for
+
+   } while(ok);      // continue until no next step is found
+}
+
+bool donut_emulation;
 
 //
 // DonutOverflow
 //
 // haleyjd 10/16/09: enables emulation of undefined behavior by donut actions
-// when no proper reference sector is found outside the pool (ie, line is
+// when no proper reference sector is found outside the pool (ie, line is 
 // marked as two-sided but is really one-sided).
 //
 // Thanks to entryway for discovering and coding a fix to this.
 //
-static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
+static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 {
-   static boolean firsttime = true;
-   static boolean donutparm = false;
-   static int floorpic      = 0x16;
-   static int floorheight   = 0;
+   static bool firsttime  = true;
+   static bool donutparm  = false;
+   static int floorpic    = 0x16;
+   static int floorheight = 0;
 
    if(firsttime)
    {
@@ -1463,7 +1385,7 @@ static boolean DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
          return false;
    }
 
-   // SoM: Add the offset for the flats after all the calculations are done to
+   // SoM: Add the offset for the flats after all the calculations are done to 
    // preserve the old behavior in all cases.
    *pfloorheight = (fixed_t)floorheight;
    *pfloorpic    = (int16_t)floorpic + flatstart;
@@ -1495,19 +1417,19 @@ int EV_DoDonut(line_t *line)
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       s1 = &sectors[secnum];                // s1 is pillar's sector
-
+              
       // do not start the donut if the pillar is already moving
       if(P_SectorActive(floor_special, s1)) //jff 2/22/98
          continue;
-
+                      
       s2 = getNextSector(s1->lines[0],s1); // s2 is pool's sector
-      if(!s2)                     // note lowest numbered line around
-         continue;                // pillar must be two-sided
+      if(!s2) continue;           // note lowest numbered line around
+                                  // pillar must be two-sided 
 
       // do not start the donut if the pool is already moving
       if(!comp[comp_floors] && P_SectorActive(floor_special, s2))
          continue;                           //jff 5/7/98
-
+                      
       // find a two sided line around the pool whose other side isn't the pillar
       for (i = 0;i < s2->linecount;i++)
       {
@@ -1515,7 +1437,7 @@ int EV_DoDonut(line_t *line)
          if(comp[comp_model])
          {
             // haleyjd 10/12/10: The first check here, which has a typo that
-            // goes all the way back to vanilla DOOM, is inconsequential
+            // goes all the way back to vanilla DOOM, is inconsequential 
             // because it always evaluates to false. Since this is causing
             // a warning in GCC 4, I have commented it out.
             if(/*(!s2->lines[i]->flags & ML_TWOSIDED) ||*/
@@ -1528,13 +1450,12 @@ int EV_DoDonut(line_t *line)
             continue;
          }
 
+         if(CS_CLIENT)
+            return 1;
+
          //jff 1/26/98 no donut action - no switch change on return
          rtn = 1;
-
-         // [CG] Clients don't spawn donuts, so this is far enough.
-         if(CS_CLIENT)
-            return rtn;
-
+         
          // s3 is model sector for changes
          s3 = s2->lines[i]->backsector;
 
@@ -1550,14 +1471,12 @@ int EV_DoDonut(line_t *line)
             s3_floorheight = s3->floorheight;
             s3_floorpic    = s3->floorpic;
          }
+        
+         //  Spawn rising slime
+         P_SpawnDonut(line, s2, s3_floorpic, s3_floorheight);
+         //  Spawn lowering donut-hole pillar
+         P_SpawnDonutHole(line, s1, s3_floorheight);
 
-         if(serverside)
-         {
-            // Spawn rising slime
-            P_SpawnDonut(line, s2, s3_floorpic, s3_floorheight);
-            // Spawn lowering donut-hole pillar
-            P_SpawnDonutHole(line, s1, s3_floorheight);
-         }
          break;
       }
    }
@@ -1565,32 +1484,32 @@ int EV_DoDonut(line_t *line)
 }
 
 FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
-                         fixed_t floordestheight)
+                               fixed_t floordestheight)
 {
+
    FloorMoveThinker *floor = new FloorMoveThinker;
 
    floor->addThinker();
-
-   sec->floordata = floor; // jff 2/22/98
-
+   sec->floordata = floor; //jff 2/22/98
    floor->type = donutRaise;
    floor->crush = -1;
    floor->direction = plat_up;
    floor->sector = sec;
    floor->speed = FLOORSPEED / 2;
    floor->texture = texture;
-
    P_ZeroSpecialTransfer(&(floor->special));
-
    floor->floordestheight = floordestheight;
-
    P_FloorSequence(floor->sector);
 
    if(serverside)
    {
-      CS_ObtainFloorNetID(floor);
+      NetFloors.add(floor);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_donut);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            floor, NULL, line, floor->sector, ms_donut
+         );
+      }
    }
 
    return floor;
@@ -1602,23 +1521,24 @@ FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
    FloorMoveThinker *floor = new FloorMoveThinker;
 
    floor->addThinker();
-
    sec->floordata = floor; //jff 2/22/98
-
    floor->type = lowerFloor;
    floor->crush = -1;
    floor->direction = plat_down;
    floor->sector = sec;
    floor->speed = FLOORSPEED / 2;
    floor->floordestheight = floordestheight;
-
    P_FloorSequence(floor->sector);
 
    if(serverside)
    {
-      CS_ObtainFloorNetID(floor);
+      NetFloors.add(floor);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(floor, NULL, line, ms_donut_hole);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            floor, NULL, line, floor->sector, ms_donut_hole
+         );
+      }
    }
 
    return floor;
@@ -1633,35 +1553,39 @@ FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
 //
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
-int EV_DoElevator(line_t *line, elevator_e elevtype)
+int EV_DoElevator
+( line_t*       line,
+  elevator_e    elevtype )
 {
-   int secnum = -1;
-   int rtn = 0;
-   sector_t *sec;
+   int                   secnum;
+   int                   rtn;
+   sector_t*             sec;
+   ElevatorThinker*           elevator;
 
+   secnum = -1;
+   rtn = 0;
    // act on all sectors with the same tag as the triggering linedef
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
       sec = &sectors[secnum];
-
+              
       // If either floor or ceiling is already activated, skip it
       if(sec->floordata || sec->ceilingdata) //jff 2/22/98
          continue;
 
+      if(CS_CLIENT)
+         return 1;
+      
       // create and initialize new elevator thinker
       rtn = 1;
 
-      // [CG] Clients don't spawn elevators themselves when lines are
-      //      activated, but we have to inform the caller whether or not a
-      //      thinker would have been created regardless.
-      if(CS_CLIENT)
-         return rtn;
-      P_SpawnElevator(line, sec, elevtype);
+      elevator = P_SpawnElevator(line, sec, elevtype);
    }
    return rtn;
 }
 
-ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtype)
+ElevatorThinker *P_SpawnElevator(line_t *line, sector_t *sec,
+                                 elevator_e elevtype)
 {
    ElevatorThinker *elevator = new ElevatorThinker;
 
@@ -1669,7 +1593,6 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtyp
 
    sec->floordata = elevator; //jff 2/22/98
    sec->ceilingdata = elevator; //jff 2/22/98
-
    elevator->type = elevtype;
 
    // set up the fields according to the type of elevator action
@@ -1716,9 +1639,13 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtyp
 
    if(serverside)
    {
-      CS_ObtainElevatorNetID(elevator);
+      NetElevators.add(elevator);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(elevator, NULL, line, ms_elevator);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            elevator, NULL, line, elevator->sector, ms_elevator
+         );
+      }
    }
 
    return elevator;
@@ -1732,10 +1659,11 @@ ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec, elevator_e elevtyp
 //
 int EV_PillarBuild(line_t *line, pillardata_t *pd)
 {
+   PillarThinker *pillar;
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
-   boolean manual = false;
+   bool manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(pd->tag == 0)
@@ -1752,9 +1680,9 @@ int EV_PillarBuild(line_t *line, pillardata_t *pd)
       sector = &sectors[sectornum];
 
 manual_pillar:
-      // already being buggered about with,
+      // already being buggered about with, 
       // or ceiling <= floor, therefore closed
-      if(sector->floordata || sector->ceilingdata ||
+      if(sector->floordata || sector->ceilingdata || 
          sector->ceilingheight <= sector->floorheight)
       {
          if(manual)
@@ -1765,46 +1693,42 @@ manual_pillar:
 
       returnval = 1;
 
+      if(CS_CLIENT)
+         return returnval;
+
       P_SpawnBuildPillar(line, sector, pd->height, pd->speed, pd->crush);
 
       if(manual)
          return returnval;
    }
-
    return returnval;
 }
 
-PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height,
-                            fixed_t speed, int crush)
+PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
+                                  fixed_t height, fixed_t speed, int crush)
 {
    int destheight;
    PillarThinker *pillar = new PillarThinker;
-
 
    sector->floordata = pillar;
    sector->ceilingdata = pillar;
    pillar->addThinker();
    pillar->sector = sector;
-
-   if(height == 0)
+   
+   if(height == 0) // height == 0 so we meet in the middle
    {
-      // height == 0 so we meet in the middle
-      destheight = sector->floorheight +
+      destheight = sector->floorheight + 
                       ((sector->ceilingheight - sector->floorheight) / 2);
    }
-   else
-   {
-      // else we meet at floorheight + args[2]
+   else // else we meet at floorheight + args[2]
       destheight = sector->floorheight + height;
-   }
 
    if(height == 0) // height is 0 so we meet halfway
    {
       pillar->ceilingSpeed = speed;
       pillar->floorSpeed   = speed;
-   }
-   else if(destheight - sector->floorheight >
-           sector->ceilingheight - destheight)
+   }      
+   else if(destheight-sector->floorheight > sector->ceilingheight-destheight)
    {
       pillar->floorSpeed = speed;
       pillar->ceilingSpeed = FixedDiv(sector->ceilingheight - destheight,
@@ -1815,23 +1739,28 @@ PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height
    {
       pillar->ceilingSpeed = speed;
       pillar->floorSpeed = FixedDiv(destheight - sector->floorheight,
-                              FixedDiv(sector->ceilingheight - destheight,
+                              FixedDiv(sector->ceilingheight - destheight, 
                                        pillar->ceilingSpeed));
-   }
-
+   } 
+   
    pillar->floordest = destheight;
    pillar->ceilingdest = destheight;
    pillar->direction = 1;
    pillar->crush = crush;
-
+   
    P_FloorSequence(pillar->sector);
 
    if(serverside)
    {
-      CS_ObtainPillarNetID(pillar);
+      NetPillars.add(pillar);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(pillar, NULL, line, ms_pillar_build);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            pillar, NULL, line, pillar->sector, ms_pillar_build
+         );
+      }
    }
+
    return pillar;
 }
 
@@ -1843,10 +1772,11 @@ PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector, fixed_t height
 //
 int EV_PillarOpen(line_t *line, pillardata_t *pd)
 {
+   PillarThinker *pillar;
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
-   boolean manual = false;
+   bool manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
    if(pd->tag == 0)
@@ -1873,8 +1803,7 @@ manual_pillar:
             continue;
       }
 
-      if(serverside)
-         P_SpawnOpenPillar(line, sector, pd->speed, pd->fdist, pd->cdist);
+      P_SpawnOpenPillar(line, sector, pd->speed, pd->fdist, pd->cdist);
 
       if(manual)
          return returnval;
@@ -1883,7 +1812,7 @@ manual_pillar:
 }
 
 PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
-                            fixed_t fdist, fixed_t cdist)
+                                 fixed_t fdist, fixed_t cdist)
 {
    PillarThinker *pillar = new PillarThinker;
 
@@ -1891,48 +1820,46 @@ PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
    sector->ceilingdata = pillar;
    pillar->addThinker();
    pillar->sector = sector;
-
+   
    if(fdist == 0) // floordist == 0 so we find the next lowest floor
       pillar->floordest = P_FindLowestFloorSurrounding(sector);
    else               // else we meet at floorheight - args[2]
       pillar->floordest = sector->floorheight - fdist;
-
+   
    if(cdist == 0) // ceilingdist = 0 so we find the next highest ceiling
       pillar->ceilingdest = P_FindHighestCeilingSurrounding(sector);
    else               // else we meet at ceilingheight + args[3]
       pillar->ceilingdest = sector->ceilingheight + cdist;
-
-   if(pillar->ceilingdest - sector->ceilingheight >
-      sector->floorheight - pillar->floordest)
+    
+   if(pillar->ceilingdest - sector->ceilingheight > 
+         sector->floorheight - pillar->floordest)
    {
       pillar->ceilingSpeed = speed;
-      pillar->floorSpeed = FixedDiv(
-         sector->floorheight - pillar->floordest,
-         FixedDiv(
-            pillar->ceilingdest - sector->ceilingheight, pillar->ceilingSpeed
-         )
-      );
+      pillar->floorSpeed = FixedDiv(sector->floorheight - pillar->floordest, 
+                              FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+                                       pillar->ceilingSpeed));
    }
    else
    {
       pillar->floorSpeed = speed;
-      pillar->ceilingSpeed = FixedDiv(
-         pillar->ceilingdest - sector->ceilingheight,
-         FixedDiv(
-            sector->floorheight - pillar->floordest, pillar->floorSpeed
-         )
-      );
+      pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+                                FixedDiv(sector->floorheight - pillar->floordest, 
+                                         pillar->floorSpeed));
    }
 
    pillar->direction = -1;
-
+   
    P_FloorSequence(pillar->sector);
 
    if(serverside)
    {
-      CS_ObtainPillarNetID(pillar);
+      NetPillars.add(pillar);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(pillar, NULL, line, ms_pillar_open);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            pillar, NULL, line, pillar->sector, ms_pillar_open
+         );
+      }
    }
 
    return pillar;
@@ -1966,12 +1893,12 @@ void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle)
 {
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(floorwaggle->net_id, ms_floorwaggle);
+   NetFloorWaggles.remove(floorwaggle);
 
    floorwaggle->sector->floordata = NULL;
    // HEXEN_TODO: P_TagFinished
    // P_TagFinished(floorwaggle->sector->tag);
-   P_RemoveThinker(&floorwaggle->thinker);
-   CS_ReleaseFloorWaggleNetID(floorwaggle);
+   floorwaggle->removeThinker();
 }
 
 //
@@ -1996,7 +1923,7 @@ void FloorWaggleThinker::Think()
       break;
    case WGLSTATE_REDUCE:
       if((this->scale -= this->scaleDelta) <= 0)
-      {
+      { 
          // Remove
          /*
          waggle->sector->floorheight = waggle->originalHeight;
@@ -2006,17 +1933,10 @@ void FloorWaggleThinker::Think()
          dist       = this->originalHeight - this->sector->floorheight;
          T_MovePlane(this->sector, abs(dist), destheight, 8, 0, 
                      destheight >= this->sector->floorheight ? plat_down : plat_up);
-
-         this->sector->floordata = NULL;
-         // [CG] Just set the floor waggle as inactive if we're a client.
          if(CS_CLIENT)
             this->inactive = cl_current_world_index;
          else
-         {
-            // HEXEN_TODO: P_TagFinished
-            // P_TagFinished(waggle->sector->tag);
-            this->removeThinker();
-         }
+            P_RemoveFloorWaggle(this);
          return;
       }
       break;
@@ -2030,21 +1950,14 @@ void FloorWaggleThinker::Think()
    }
 
    this->accumulator += this->accDelta;
-
-   destheight = this->originalHeight + FixedMul(
-      FloatBobOffsets[(this->accumulator >> FRACBITS) & 63],
-      this->scale
-   );
+   
+   destheight = 
+      this->originalHeight + 
+         FixedMul(FloatBobOffsets[(this->accumulator >> FRACBITS) & 63], this->scale);
    dist = destheight - this->sector->floorheight;
 
-   T_MovePlane(
-      this->sector,
-      abs(dist),
-      destheight,
-      8,
-      0,
-      destheight >= this->sector->floorheight ? plat_up : plat_down
-   );
+   T_MovePlane(this->sector, abs(dist), destheight, 8, 0,
+               destheight >= this->sector->floorheight ? plat_up : plat_down);
 }
 
 //
@@ -2067,13 +1980,13 @@ void FloorWaggleThinker::serialize(SaveArchive &arc)
 //
 // EV_StartFloorWaggle
 //
-int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
+int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
                         int offset, int timer)
 {
-   int           sectorIndex = -1;
-   int           retCode = 0;
-   boolean       manual = false;
-   sector_t     *sector;
+   int       sectorIndex = -1;
+   int       retCode = 0;
+   bool      manual = false;
+   sector_t *sector;
    FloorWaggleThinker *waggle;
 
    if(tag == 0)
@@ -2084,7 +1997,7 @@ int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
       manual = true;
       goto manual_waggle;
    }
-
+   
    while((sectorIndex = P_FindSectorFromTag(tag, sectorIndex)) >= 0)
    {
       sector = &sectors[sectorIndex];
@@ -2101,23 +2014,26 @@ manual_waggle:
 
       retCode = 1;
 
+      if(CS_CLIENT)
+         return retCode;
+
       waggle = P_SpawnFloorWaggle(line, sector, height, speed, offset, timer);
 
       if(manual)
          return retCode;
    }
+
    return retCode;
 }
 
-FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int height,
-                                 int speed, int offset, int timer)
+FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
+                                       int height, int speed, int offset,
+                                       int timer)
 {
    FloorWaggleThinker *waggle = new FloorWaggleThinker;
 
-   sector->floordata = waggle;
+   sector->floordata = waggle;      
    waggle->addThinker();
-
-   P_AddThinker(&waggle->thinker);
 
    waggle->sector         = sector;
    waggle->originalHeight = sector->floorheight;
@@ -2131,9 +2047,13 @@ FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector, int heigh
 
    if(serverside)
    {
-      CS_ObtainFloorWaggleNetID(waggle);
+      NetFloorWaggles.add(waggle);
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(waggle, NULL, line, ms_floorwaggle);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            waggle, NULL, line, waggle->sector, ms_floorwaggle
+         );
+      }
    }
 
    return waggle;

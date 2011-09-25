@@ -46,17 +46,13 @@
 
 #include "../i_net.h"
 
-void    NetSend(void);
-boolean NetListen(void);
+void NetSend(void);
+bool NetListen(void);
 
 //
 // NETWORKING
 //
 
-void (*netget)(void);
-void (*netsend)(void);
-
-// haleyjd: new functions for anarkavre's WinMBF netcode
 static Uint16 DOOMPORT = 8626;
 
 static UDPsocket udpsocket;
@@ -64,7 +60,27 @@ static UDPpacket *packet;
 
 static IPaddress sendaddress[MAXNETNODES];
 
-d_inline static void HostToNet16(Sint16 value, byte *area)
+// haleyjd: new functions for anarkavre's WinMBF netcode
+
+// haleyjd 06/29/11: Default error-out funcs in case of high-level goofups, as
+// happened with the netdemo problem.
+
+static bool I_NetGetError()
+{
+   I_Error("I_NetGetError: Tried to get a packet without net init!\n");
+   return false;
+}
+
+static bool I_NetSendError()
+{
+   I_Error("I_NetSendError: Tried to send a packet without net init!\n");
+   return false;
+}
+
+static bool (*netget )() = I_NetGetError;
+static bool (*netsend)() = I_NetSendError;
+
+inline static void HostToNet16(Sint16 value, byte *area)
 {
    // input is host endianness, output is big endian
 
@@ -72,13 +88,13 @@ d_inline static void HostToNet16(Sint16 value, byte *area)
    area[1] = (byte)( value       & 0xff);
 }
 
-d_inline static Sint16 NetToHost16(const byte *area)
+inline static Sint16 NetToHost16(const byte *area)
 {
    // input is big endian, output is host endianness
    return ((Sint16)area[0] << 8) | area[1];
 }
 
-d_inline static void HostToNet32(Uint32 value, byte *area)
+inline static void HostToNet32(Uint32 value, byte *area)
 {
    // input is host endianness, output is big endian
 
@@ -88,7 +104,7 @@ d_inline static void HostToNet32(Uint32 value, byte *area)
    area[3] = (byte)( value        & 0xff);
 }
 
-d_inline static Uint32 NetToHost32(const byte *area)
+inline static Uint32 NetToHost32(const byte *area)
 {
    // input is big endian, output is host endianness
 
@@ -100,60 +116,103 @@ d_inline static Uint32 NetToHost32(const byte *area)
 
 // haleyjd: end new functions for anark's netcode
 
+// haleyjd 08/25/11: Moved checksumming to low-level protocol
+
+//
+// NetChecksum 
+//
+static uint32_t NetChecksum(byte *packet, int len)
+{
+   uint32_t c = 0x1234567;
+   int i;
+   
+   len /= sizeof(uint32_t);
+
+   for(i = 0; i < len; ++i)
+      c += ((uint32_t *)packet)[i] * (i + 1);
+   
+   return c & NCMD_CHECKSUM;
+}
+
+
+#define NETWRITEBYTE(b) \
+   *rover++ = (b); \
+   packetsize += 1
+
+#define NETWRITESHORT(s) \
+   HostToNet16((s), rover); \
+   rover += 2; \
+   packetsize += 2
+
+#define NETWRITELONG(dw) \
+   HostToNet32((dw), rover); \
+   rover += 4; \
+   packetsize += 4
+
 //
 // PacketSend
 //
-void PacketSend(void)
+bool PacketSend(void)
 {
    int c;
+   int packetsize = 0;
 
    byte *rover = (byte *)packet->data;
 
-   HostToNet32(netbuffer->checksum, rover);
-   rover += sizeof(netbuffer->checksum);
+   // reserve 4 bytes for the checksum
+   rover += 4;
 
-   *rover++ = netbuffer->player;
-   *rover++ = netbuffer->retransmitfrom;
-   *rover++ = netbuffer->starttic;
-   *rover++ = netbuffer->numtics;
+   NETWRITEBYTE(netbuffer->player);
+   NETWRITEBYTE(netbuffer->retransmitfrom);
+   NETWRITEBYTE(netbuffer->starttic);
+   NETWRITEBYTE(netbuffer->numtics);
 
    if(!(netbuffer->checksum & NCMD_SETUP))
    {
       for(c = 0; c < netbuffer->numtics; ++c)
       {
-         *rover++ = netbuffer->d.cmds[c].forwardmove;
-         *rover++ = netbuffer->d.cmds[c].sidemove;
-         HostToNet16(netbuffer->d.cmds[c].angleturn, rover);
-         rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         HostToNet16(netbuffer->d.cmds[c].consistancy, rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
-         *rover++ = netbuffer->d.cmds[c].chatchar;
-         *rover++ = netbuffer->d.cmds[c].buttons;
-         *rover++ = netbuffer->d.cmds[c].actions;
-         HostToNet16(netbuffer->d.cmds[c].look, rover);
-         rover += sizeof(netbuffer->d.cmds[c].look);
+         NETWRITEBYTE(netbuffer->d.cmds[c].forwardmove);
+         NETWRITEBYTE(netbuffer->d.cmds[c].sidemove);
+         NETWRITESHORT(netbuffer->d.cmds[c].angleturn);         
+         NETWRITESHORT(netbuffer->d.cmds[c].consistency);         
+         NETWRITEBYTE(netbuffer->d.cmds[c].chatchar);
+         NETWRITEBYTE(netbuffer->d.cmds[c].buttons);
+         NETWRITEBYTE(netbuffer->d.cmds[c].actions);
+         NETWRITESHORT(netbuffer->d.cmds[c].look);
+         
       }
    }
    else
    {
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          *rover++ = netbuffer->d.data[c];
+      
+      packetsize = GAME_OPTION_SIZE;
    }
+
+   // Go back and write the checksum at the beginning
+   rover = (byte *)packet->data;
+   netbuffer->checksum |= NetChecksum((byte *)packet->data + 4, packetsize);
+   NETWRITELONG(netbuffer->checksum);
    
-   packet->len     = doomcom->datalength;
+   packet->len     = packetsize;
    packet->address = sendaddress[doomcom->remotenode];
 
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
+   {
       I_Error("Error sending packet: %s\n", SDLNet_GetError());
+      return false;
+   }
+
+   return true;
 }
 
 //
 // PacketGet
 //
-void PacketGet(void)
+bool PacketGet(void)
 {
    int i, c, packets_read;
-   //doomdata_t *sw;
    byte *rover;
    
    packets_read = SDLNet_UDP_Recv(udpsocket, packet);
@@ -164,7 +223,7 @@ void PacketGet(void)
    if(packets_read == 0)
    {
       doomcom->remotenode = -1;
-      return;
+      return true;
    }
    
    for(i = 0; i < doomcom->numnodes; ++i)
@@ -177,17 +236,24 @@ void PacketGet(void)
    if(i == doomcom->numnodes)
    {
       doomcom->remotenode = -1;
-      return;
+      return true;
    }
    
    doomcom->remotenode = i;
-   doomcom->datalength = packet->len;
+
+   if(packet->len < 4)
+      return false;
    
-   //sw = (doomdata_t *)packet->data;
    rover = (byte *)packet->data;
-   
+
    netbuffer->checksum = NetToHost32(rover);
+   
+   // haleyjd: verify checksum first; if fails, don't even read the rest
+   if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
+      return false;
+   
    rover += sizeof(netbuffer->checksum);
+   
    netbuffer->player         = *rover++;
    netbuffer->retransmitfrom = *rover++;
    netbuffer->starttic       = *rover++;
@@ -201,8 +267,8 @@ void PacketGet(void)
          netbuffer->d.cmds[c].sidemove    = *rover++;
          netbuffer->d.cmds[c].angleturn   = NetToHost16(rover);
          rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         netbuffer->d.cmds[c].consistancy = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
+         netbuffer->d.cmds[c].consistency = NetToHost16(rover);
+         rover += sizeof(netbuffer->d.cmds[c].consistency);
          netbuffer->d.cmds[c].chatchar    = *rover++;
          netbuffer->d.cmds[c].buttons     = *rover++;
          netbuffer->d.cmds[c].actions     = *rover++;
@@ -215,6 +281,8 @@ void PacketGet(void)
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          netbuffer->d.data[c] = *rover++;
    }
+
+   return true;
 }
 
 //
@@ -259,7 +327,7 @@ void I_InitNetwork(void)
          doomcom->ticdup = 9;
    }
    else
-      doomcom-> ticdup = 1;
+      doomcom->ticdup = 1;
 	
    if(M_CheckParm("-extratic"))
       doomcom->extratics = 1;
@@ -279,15 +347,6 @@ void I_InitNetwork(void)
    if(!i)
    {
       // single player game
-      /*
-      netgame = false;
-      doomcom->id = DOOMCOM_ID;
-      doomcom->numplayers = doomcom->numnodes = 1;
-      doomcom->deathmatch = false;
-      doomcom->consoleplayer = 0;
-
-      return;
-      */
       doomcom->id = DOOMCOM_ID;
       doomcom->numplayers = doomcom->numnodes = 1;
       doomcom->deathmatch = false;
@@ -324,22 +383,25 @@ void I_InitNetwork(void)
    doomcom->numplayers = doomcom->numnodes;
    
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
-   
-   packet = SDLNet_AllocPacket(5000);
+
+   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 4) & ~4));
 }
 
-void I_NetCmd(void)
+bool I_NetCmd(void)
 {
    if(doomcom->command == CMD_SEND)
    {
-      netsend();
+      return netsend();
    }
    else if(doomcom->command == CMD_GET)
    {
-      netget();
+      return netget();
    }
    else
-      I_Error("Bad net cmd: %i\n",doomcom->command);
+   {
+      I_Error("Bad net cmd: %i\n", doomcom->command);
+      return false;
+   }
 }
 
 //----------------------------------------------------------------------------

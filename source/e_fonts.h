@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -27,7 +27,7 @@
 #ifndef E_FONTS_H__
 #define E_FONTS_H__
 
-#include "v_font.h"
+struct vfont_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -49,7 +49,7 @@ void    E_ProcessFonts(cfg_t *);
 
 #endif
 
-void     E_UpdateFonts(void); // [CG] Added.
+void     E_UpdateFonts(void); // [CG] 09/13/11
 vfont_t *E_FontForName(const char *);
 vfont_t *E_FontForNum(int);
 int      E_FontNumForName(const char *);

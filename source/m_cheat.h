@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -47,10 +47,10 @@ extern struct cheat_s {
   void (*const func)(const void *);
   const int arg;
   uint64_t code, mask;
-  boolean deh_modified;                // killough 9/12/98
+  bool deh_modified;                // killough 9/12/98
 } cheat[];
 
-boolean M_FindCheats(int key);
+bool M_FindCheats(int key);
 void M_DoCheat(char *cheatname);
 
 void M_AddNukeSpec(int mobjType, void (*func)(Mobj *)); // haleyjd

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -36,6 +36,8 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "c_runcmd.h"
 #include "d_gi.h"
 #include "m_misc.h"
 #include "m_syscfg.h"
@@ -49,6 +51,7 @@
 #include "d_englsh.h"
 #include "d_io.h"
 #include "d_main.h"
+#include "doomstat.h"
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_over.h"
@@ -58,6 +61,8 @@
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_menus.h"
+#include "p_chase.h"
+#include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"
 #include "r_draw.h"
@@ -65,9 +70,10 @@
 #include "r_sky.h"
 #include "r_things.h"
 #include "s_sound.h"
+#include "st_stuff.h"
 #include "v_video.h"
 
-// [CG] Added
+// [CG] 09/17/11
 #include "cs_config.h"
 #include "cs_main.h"
 #include "cs_hud.h"
@@ -99,13 +105,12 @@ extern int hud_msg_lines;   // number of message lines in window up to 16
 extern int hud_msg_scrollup;// killough 11/98: whether message list scrolls up
 extern int message_timer;   // killough 11/98: timer used for normal messages
 extern int show_scores;
+extern int s_announcer_type;
 
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
 extern int  showendoom;
 extern int  endoomdelay;
-extern char *i_videomode;
-extern char *i_default_videomode;
 #endif
 
 #ifdef HAVE_SPCLIB
@@ -165,11 +170,6 @@ default_t defaults[] =
    DEFAULT_INT("detect_voices", &detect_voices, NULL, 1, 0, 1, default_t::wad_no,
                "1 enables voice detection prior to calling install sound"),
 #endif
-
-#ifdef _SDL_VER
-   DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
-               "description of video mode parameters (WWWWxHHHH[flags])"),
-#endif
   
    // killough 10/98
    DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
@@ -216,12 +216,6 @@ default_t defaults[] =
    // haleyjd 06/07/05
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, NULL, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
-
-   // [CG] Target names
-   DEFAULT_BOOL(
-      "display_target_names", &display_target_names, NULL, false, default_t::wad_no,
-      "1 - display target player names below crosshair, 0 - disabled"
-   ),
 
    // sf
    // [CG] show_scores now defaults to on, because it's confusing otherwise ("I
@@ -282,6 +276,9 @@ default_t defaults[] =
    // killough 10/98
    DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, default_t::wad_yes,
                "1 to enable dogs to jump"),
+
+   DEFAULT_INT("p_lastenemyroar", &p_lastenemyroar, NULL, 1, 0, 1, default_t::wad_yes,
+               "1 to enable monster roaring when last enemy is remembered"),
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
@@ -490,7 +487,7 @@ default_t defaults[] =
    
    DEFAULT_INT("key_chat", &key_chat, NULL, 't', 0, 255, default_t::wad_no,
                "key to enter a chat message"),
-
+   
    DEFAULT_INT("key_chatplayer1", &destination_keys[0], NULL, 'g', 0, 255, default_t::wad_no,
                "key to chat with player 1"),
    
@@ -508,11 +505,11 @@ default_t defaults[] =
    DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no, 
                "set to 1 to always mouselook"),
    
-   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 1, 0, 1, default_t::wad_no,
+   // [CG] Now defaults to off.
+   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert mouse during mouselooking"),
 
    // [CG] Apparently smooth_turning was forgotten :), adding it here.
-
    DEFAULT_INT("smooth_turning", &smooth_turning, NULL, 0, 0, 1, default_t::wad_no,
                "1 to smooth out mouse turning"),
 
@@ -872,9 +869,6 @@ default_t defaults[] =
                0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
                "0 = high precision, 1 = low precision"),
    
-   DEFAULT_INT("r_detail", &c_detailshift, NULL, 0, 0, 1, default_t::wad_no,
-               "0 = high detail, 1 = low detail"),
-   
    DEFAULT_INT("r_vissprite_limit", &r_vissprite_limit, NULL, -1, -1, UL, default_t::wad_yes,
                "number of vissprites allowed per frame (-1 = no limit)"),
 
@@ -904,8 +898,26 @@ default_t defaults[] =
 
    // [CG] These are new defaults.
 
-   DEFAULT_INT("use_announcer", &s_use_announcer, NULL, 0, 0, 1, default_t::wad_no,
-               "use announcer if available"),
+   // [CG] Target names
+   DEFAULT_BOOL(
+      "display_target_names",
+      &display_target_names,
+      NULL,
+      false,
+      default_t::wad_no,
+      "1 - display target player names below crosshair, 0 - disabled"
+   ),
+
+   DEFAULT_INT(
+      "announcer",
+      &s_announcer_type,
+      &s_default_announcer_type,
+      S_ANNOUNCER_NONE,
+      S_ANNOUNCER_NONE,
+      S_ANNOUNCER_UNREAL_TOURNAMENT,
+      default_t::wad_no,
+      "type of announcer, none, Quake style, or Unreal Tournament style"
+   ),
 
    DEFAULT_BOOL("show_netstats", &show_netstats, NULL, false, default_t::wad_no,
                 "display netstats on the HUD"),
@@ -1085,13 +1097,13 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 //
 
 // Write help for a string option
-static boolean M_writeDefaultHelpString(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
 {
    return (fprintf(f, "[(\"%s\")]", dp->defaultvalue_s) == EOF);
 }
 
 // Write a string option key/value pair
-static boolean M_writeDefaultString(default_t *dp, FILE *f)
+static bool M_writeDefaultString(default_t *dp, FILE *f)
 {
    const char *value = 
       dp->modified ? dp->orig_default_s : *(const char **)dp->location;
@@ -1100,7 +1112,7 @@ static boolean M_writeDefaultString(default_t *dp, FILE *f)
 }
 
 // Set the value of a string option
-static void M_setDefaultValueString(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 {
    const char *strparm = (const char *)value;
 
@@ -1122,7 +1134,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, boolean wad)
 }
 
 // Read a string option and set it
-static boolean M_readDefaultString(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
    int len = strlen(src) - 1;
 
@@ -1153,7 +1165,7 @@ static void M_setDefaultString(default_t *dp)
 }
 
 // Test if a string default matches the given cvar
-static boolean M_checkCVarString(default_t *dp, variable_t *var)
+static bool M_checkCVarString(default_t *dp, variable_t *var)
 {
    // config strings only match string and chararray cvar types
    if(var->type != vt_string && var->type != vt_chararray)
@@ -1175,9 +1187,9 @@ static void M_getDefaultString(default_t *dp, void *dest)
 //
 
 // Write help for an integer option
-static boolean M_writeDefaultHelpInt(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpInt(default_t *dp, FILE *f)
 {
-   boolean written = false;
+   bool written = false;
 
    if(dp->limit.min == UL)
    {
@@ -1204,7 +1216,7 @@ static boolean M_writeDefaultHelpInt(default_t *dp, FILE *f)
 }
 
 // Write an integer key/value pair
-static boolean M_writeDefaultInt(default_t *dp, FILE *f)
+static bool M_writeDefaultInt(default_t *dp, FILE *f)
 {
    int value = dp->modified ? dp->orig_default_i : *(int *)dp->location;
 
@@ -1214,7 +1226,7 @@ static boolean M_writeDefaultInt(default_t *dp, FILE *f)
 }
 
 // Set the value of an integer option
-static void M_setDefaultValueInt(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
 {
    int parm = *(int *)value;
 
@@ -1236,7 +1248,7 @@ static void M_setDefaultValueInt(default_t *dp, void *value, boolean wad)
 }
 
 // Read the value of an integer option and set it to the default
-static boolean M_readDefaultInt(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
 {
    int parm = 0;
 
@@ -1260,7 +1272,7 @@ static void M_setDefaultInt(default_t *dp)
 }
 
 // Test if an integer default matches the given cvar
-static boolean M_checkCVarInt(default_t *dp, variable_t *var)
+static bool M_checkCVarInt(default_t *dp, variable_t *var)
 {
    if(var->type != vt_int)
       return false;
@@ -1278,9 +1290,9 @@ static void M_getDefaultInt(default_t *dp, void *dest)
 //
 
 // Write help for a float option
-static boolean M_writeDefaultHelpFloat(default_t *dp, FILE *f)
+static bool M_writeDefaultHelpFloat(default_t *dp, FILE *f)
 {
-   boolean written = false;
+   bool written = false;
 
    if(dp->limit.min == UL)
    {
@@ -1309,7 +1321,7 @@ static boolean M_writeDefaultHelpFloat(default_t *dp, FILE *f)
 }
 
 // Write a key/value pair for a float option
-static boolean M_writeDefaultFloat(default_t *dp, FILE *f)
+static bool M_writeDefaultFloat(default_t *dp, FILE *f)
 {
    double value = dp->modified ? dp->orig_default_f : *(double *)dp->location;
 
@@ -1317,7 +1329,7 @@ static boolean M_writeDefaultFloat(default_t *dp, FILE *f)
 }
 
 // Set the value of a float option
-static void M_setDefaultValueFloat(default_t *dp, void *value, boolean wad)
+static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
 {
    double tmp = *(double *)value;
 
@@ -1340,7 +1352,7 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, boolean wad)
 }
 
 // Read the value of a float option from a string and set it
-static boolean M_readDefaultFloat(default_t *dp, char *src, boolean wad)
+static bool M_readDefaultFloat(default_t *dp, char *src, bool wad)
 {
    double tmp;
 
@@ -1359,7 +1371,7 @@ static void M_setDefaultFloat(default_t *dp)
 }
 
 // Test if a float default matches the given cvar
-static boolean M_checkCVarFloat(default_t *dp, variable_t *var)
+static bool M_checkCVarFloat(default_t *dp, variable_t *var)
 {
    if(var->type != vt_float)
       return false;
@@ -1376,39 +1388,39 @@ static void M_getDefaultFloat(default_t *dp, void *dest)
 // Booleans
 //
 
-// Write help for a boolean option
-static boolean M_writeDefaultHelpBool(default_t *dp, FILE *f)
+// Write help for a bool option
+static bool M_writeDefaultHelpBool(default_t *dp, FILE *f)
 {
    return (fprintf(f, "[0-1(%d)]", !!dp->defaultvalue_b) == EOF);
 }
 
-// Write a key/value pair for a boolean option
-static boolean M_writeDefaultBool(default_t *dp, FILE *f)
+// Write a key/value pair for a bool option
+static bool M_writeDefaultBool(default_t *dp, FILE *f)
 {
-   boolean value = dp->modified ? dp->orig_default_b : *(boolean *)dp->location;
+   bool value = dp->modified ? dp->orig_default_b : *(bool *)dp->location;
 
    return (fprintf(f, "%-25s %5i\n", dp->name, !!value) == EOF);
 }
 
-// Sets the value of a boolean option
-static void M_setDefaultValueBool(default_t *dp, void *value, boolean wad)
+// Sets the value of a bool option
+static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
 {
-   boolean parm = *(boolean *)value;
+   bool parm = *(bool *)value;
    if(wad)
    {
       if(!dp->modified) // First time it's modified by wad
       {
          dp->modified = 1;                               // Mark it as modified
-         dp->orig_default_b = *(boolean *)dp->location;  // Save original default
+         dp->orig_default_b = *(bool *)dp->location;  // Save original default
       }
       if(dp->current)            // Change current value
-         *(boolean *)dp->current = !!parm;
+         *(bool *)dp->current = !!parm;
    }
-   *(boolean *)dp->location = !!parm;  // Change default
+   *(bool *)dp->location = !!parm;  // Change default
 }
 
-// Reads the value of a boolean option from a string and sets it
-static boolean M_readDefaultBool(default_t *dp, char *src, boolean wad)
+// Reads the value of a bool option from a string and sets it
+static bool M_readDefaultBool(default_t *dp, char *src, bool wad)
 {
    int parm;
 
@@ -1423,11 +1435,11 @@ static boolean M_readDefaultBool(default_t *dp, char *src, boolean wad)
 // Set to default value
 static void M_setDefaultBool(default_t *dp)
 {
-   *(boolean *)dp->location = dp->defaultvalue_b;
+   *(bool *)dp->location = dp->defaultvalue_b;
 }
 
-// Test if a boolean default matches the given cvar
-static boolean M_checkCVarBool(default_t *dp, variable_t *var)
+// Test if a bool default matches the given cvar
+static bool M_checkCVarBool(default_t *dp, variable_t *var)
 {
    if(var->type != vt_toggle)
       return false;
@@ -1437,7 +1449,7 @@ static boolean M_checkCVarBool(default_t *dp, variable_t *var)
 
 static void M_getDefaultBool(default_t *dp, void *dest)
 {
-   *(boolean *)dest = dp->defaultvalue_b;
+   *(bool *)dest = dp->defaultvalue_b;
 }
 
 //
@@ -1512,11 +1524,9 @@ static void M_populateDefaultMethods(defaultfile_t *df)
 //
 static void M_defaultFileWriteError(defaultfile_t *df, char *tmpfile)
 {
-   // haleyjd: I_FatalError should be called here, since this can be invoked
-   // via an I_Error action already.
-   I_FatalError(I_ERR_KILL,
-      "Could not write defaults to %s: %s\n%s left unchanged\n",
-      tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
+   // haleyjd 01/29/11: Why was this fatal? just print the message.
+   printf("Warning: could not write defaults to %s: %s\n%s left unchanged\n",
+          tmpfile, errno ? strerror(errno) : "(Unknown Error)", df->fileName);
 }
 
 //
@@ -1534,9 +1544,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, D_DoomExeDir(), D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 14, basepath, D_DoomExeName());
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", D_DoomExeDir(), D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", basepath, D_DoomExeName());
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
@@ -1636,9 +1646,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    if(rename(tmpfile, df->fileName))
    {
-      I_FatalError(I_ERR_KILL,
-                   "Could not write defaults to %s: %s\n", df->fileName,
-                   errno ? strerror(errno) : "(Unknown Error)");
+      // haleyjd 01/29/11: No error here, just print the message
+      printf("Warning: could not write defaults to %s: %s\n", df->fileName,
+              errno ? strerror(errno) : "(Unknown Error)");
    }
 }
 
@@ -1659,7 +1669,7 @@ void M_SaveDefaults(void)
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-boolean M_ParseOption(defaultfile_t *df, const char *p, boolean wad)
+bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
 {
    char name[80], strparm[100];
    default_t *dp;
@@ -1695,7 +1705,7 @@ void M_LoadOptions(void)
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
       int size = W_LumpLength(lump), buflen = 0;
-      char *buf = NULL, *p, *options = p = (char *)(W_CacheLumpNum(lump, PU_STATIC));
+      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.CacheLumpNum(lump, PU_STATIC));
       while (size > 0)
       {
          int len = 0;
@@ -1712,6 +1722,18 @@ void M_LoadOptions(void)
    }
 
    //  MN_ResetMenu();       // reset menu in case of change
+
+   // haleyjd 05/05/11: Believe it or not this was handled through the menu
+   // system in MBF, as the above commented-out line left over from SMMU
+   // hints. M_ResetMenu would execute action callbacks on any menu item
+   // that needed updating, and the action for general_translucency in MBF
+   // was altered so that it would refresh the tranmap.
+   //
+   // Without this here, the game will crash if an OPTIONS lump changes the
+   // value of general_translucency.
+   // FIXME: This is not extensible and should be considered a temporary hack!
+   // Instead there should be a generalized post-update action for options.
+   R_ResetTrans();
 }
 
 //
@@ -1813,9 +1835,12 @@ void M_LoadDefaults(void)
    if(clientserver)
    {
       CS_AddCommands();
-      if(CS_CLIENT) // [CG] The client can add commands once defaults are read.
+      // [CG] Once defaults are read, the client can add its commands.
+      //      Servers, on the other hand, need to ensure their settings aren't
+      //      overwritten by EE's defaults here.
+      if(CS_CLIENT)
          CL_AddCommands();
-      else if(CS_SERVER) // [CG] Ensure c/s server settings aren't overwritten.
+      else if(CS_SERVER)
          CS_ReloadDefaults();
    }
 }
@@ -1896,10 +1921,10 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // killough 9/98: rewritten to use stdio and to flash disk icon
 //
-boolean M_WriteFile(char const *name, void *source, unsigned int length)
+bool M_WriteFile(char const *name, void *source, unsigned int length)
 {
    FILE *fp;
-   boolean result;
+   bool result;
    
    errno = 0;
    
@@ -1976,7 +2001,7 @@ int M_FileLength(FILE *f)
 
 //=============================================================================
 //
-// Portable non-standard libc functions
+// Portable non-standard libc functions and misc string operations
 //
 
 // haleyjd: portable strupr function
@@ -2062,6 +2087,32 @@ char *M_Itoa(int value, char *string, int radix)
 #endif
 }
 
+//
+// M_CountNumLines
+//
+// Counts the number of lines in a string. If the string length is greater than
+// 0, we consider the string to have at least one line.
+//
+int M_CountNumLines(const char *str)
+{
+   const char *rover = str;
+   int numlines = 0;
+   char c;
+
+   if(strlen(str))
+   {
+      numlines = 1;
+
+      while((c = *rover++))
+      {
+         if(c == '\n')
+            ++numlines;
+      }
+   }
+
+   return numlines;
+}
+
 //=============================================================================
 //
 // Filename and Path Routines
@@ -2070,11 +2121,12 @@ char *M_Itoa(int value, char *string, int radix)
 //
 // M_GetFilePath
 //
-// haleyjd: general file path name extraction
+// haleyjd: General file path extraction. Strips a path+filename down to only
+// the path component.
 //
 void M_GetFilePath(const char *fn, char *base, size_t len)
 {
-   boolean found_slash = false;
+   bool found_slash = false;
    char *p;
 
    memset(base, 0, len);
@@ -2108,9 +2160,18 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
 //
 // M_ExtractFileBase
 //
+// Extract an up-to-eight-character filename out of a full file path
+// (relative or absolute), removing the path components and extensions.
+// This is not a general filename extraction routine and should only
+// be used for generating WAD lump names from files.
+//
+// haleyjd 04/17/11: Added support for truncation of LFNs courtesy of
+// Choco Doom. Thanks, fraggle ;)
+//
 void M_ExtractFileBase(const char *path, char *dest)
 {
    const char *src = path + strlen(path) - 1;
+   const char *filename;
    int length;
    
    // back up until a \ or the start
@@ -2121,19 +2182,23 @@ void M_ExtractFileBase(const char *path, char *dest)
       src--;
    }
 
+   filename = src;
+   
    // copy up to eight characters
+   // FIXME: insecure, does not ensure null termination of output string!
    memset(dest, 0, 8);
    length = 0;
 
    while(*src && *src != '.')
    {
-      if(++length == 9)
-         I_Error("M_ExtractFileBase: %s > 8 chars\n", path);
-      else
+      if(length >= 8)
       {
-         *dest++ = toupper(*src);
-         ++src;
+         usermsg("M_ExtractFileBase: warning - truncated '%s' to '%.8s'.",
+                 filename, dest);
+         break;
       }
+
+      dest[length++] = toupper(*src++);
    }
 }
 
@@ -2142,6 +2207,9 @@ void M_ExtractFileBase(const char *path, char *dest)
 //
 // 1/18/98 killough: adds a default extension to a path
 // Note: Backslashes are treated specially, for MS-DOS.
+//
+// Warning: the string passed here *MUST* have room for an
+// extension to be added to it! -haleyjd
 //
 char *M_AddDefaultExtension(char *path, const char *ext)
 {
@@ -2229,6 +2297,25 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
    *str = (char *)(Z_Alloca(len));
 
    return len;
+}
+
+//
+// M_SafeFilePath
+//
+// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure 
+// file path concatenation with automatic normalization on alloca-provided 
+// buffers.
+//
+char *M_SafeFilePath(const char *basepath, const char *newcomponent)
+{
+   int     newstrlen = 0;
+   char   *newstr    = NULL;
+
+   newstrlen = M_StringAlloca(&newstr, 3, 1, basepath, "/", newcomponent);
+   psnprintf(newstr, newstrlen, "%s/%s", basepath, newcomponent);
+   M_NormalizeSlashes(newstr);
+
+   return newstr;
 }
 
 //----------------------------------------------------------------------------

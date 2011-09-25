@@ -29,11 +29,6 @@
 #include <sys/stat.h>
 #include <inttypes.h> // haleyjd
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
-
 #ifdef DJGPP // proff: I don't use allegro in windows
 #include <allegro.h>
 #endif // DJGPP
@@ -43,14 +38,6 @@
 #ifndef STANDALONE
 #include "../z_zone.h"
 #endif
-
-// haleyjd: handle packing for GCC
-#ifndef __GNUC__
-#ifndef __attribute__
-#define __attribute__(x)
-#endif
-#endif
-
 
 // some macros to decode mus event bit fields
 
@@ -516,8 +503,11 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
                goto err;
          }
          data = *musptr++;
+         // Gez: Fix TNT.WAD's D_STALKS, based on Ben Ryves's fix in MUS2MID
+         if(data & 0x80)
+            data = 0x7F;
          // proff: Added typecast to avoid warning
-         if(TWriteByte(mididata, MIDItrack, (unsigned char)(data & 0x7F)))
+         if(TWriteByte(mididata, MIDItrack, (unsigned char)data))
             goto err;
          break;
          

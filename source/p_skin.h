@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //--------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -18,12 +19,13 @@
 //
 //--------------------------------------------------------------------------
 
-#ifndef __P_SKIN_H__
-#define __P_SKIN_H__
+#ifndef P_SKIN_H__
+#define P_SKIN_H__
 
-#include "r_patch.h"
+// Required for: spritenum_t
 #include "info.h"
 
+struct patch_t;
 struct player_t;
 
 enum
@@ -64,10 +66,8 @@ struct skin_t
 
    // haleyjd 11/07/06: for EDF hashing
    skin_t *ehashnext;
-   boolean edfskin; // if true, is an EDF skin
+   bool    edfskin; // if true, is an EDF skin
 };
-
-extern char *default_skin;
 
 extern char **spritelist; // new spritelist, same format as sprnames
                           // in info.c, but includes skins sprites.

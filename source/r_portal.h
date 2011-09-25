@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 Stephen McGranahan
@@ -30,7 +30,8 @@
 
 #include "doomdef.h"
 
-class Mobj;
+class  Mobj;
+struct planehash_t;
 
 typedef enum
 {
@@ -88,6 +89,9 @@ typedef enum
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
    PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
+   
+   // All overlay and blending flags
+   PS_BLENDFLAGS         = PS_OVERLAYFLAGS | PO_OPACITYMASK,
 } portalflag_e;
 
 
@@ -162,8 +166,8 @@ struct portal_t
    int    flags;
    
    // Planes that makeup a blended overlay
-   int    globaltex;
-   struct planehash_s *poverlay;
+   int          globaltex;
+   planehash_t *poverlay;
 
    portal_t *next;
 
@@ -250,15 +254,15 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
 // SoM 3/14/2004: flag if we are rendering portals.
 typedef struct portalrender_s
 {
-   boolean active;
-   int     minx, maxx;
-   float   miny, maxy;
+   bool  active;
+   int   minx, maxx;
+   float miny, maxy;
 
    pwindow_t *w;
 
    void (*segClipFunc)();
    
-   struct planehash_s   *overlay;
+   planehash_t *overlay;
 } portalrender_t;
 
 extern portalrender_t  portalrender;

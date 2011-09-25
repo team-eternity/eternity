@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -93,12 +93,12 @@ void Table_InitTanToAngle(void);
 // to lose accuracy, with the inaccuracy increasing with distance from this
 // range.
 //
-d_inline static angle_t FixedToAngle(fixed_t a)
+inline static angle_t FixedToAngle(fixed_t a)
 {
    return (angle_t)(((uint64_t)a * ANGLE_1) >> FRACBITS);
 }
 
-d_inline static fixed_t AngleToFixed(angle_t a)
+inline static fixed_t AngleToFixed(angle_t a)
 {
    return (fixed_t)(((uint64_t)a << FRACBITS) / ANGLE_1);
 }

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -34,18 +34,25 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomtype.h"
-#include "w_wad.h"
-#include "v_misc.h"
+
+
+#include "a_small.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
-#include "p_spec.h"
-#include "p_info.h"
-#include "m_misc.h"
-#include "a_small.h"
+#include "d_event.h"
+#include "doomstat.h"
+#include "doomtype.h"
 #include "hu_stuff.h"
+#include "m_misc.h"
 #include "m_qstr.h"
+#include "p_info.h"
+#include "p_spec.h"
+#include "r_defs.h"
+#include "r_state.h"
+#include "v_misc.h"
+#include "w_wad.h"
+
 
 //
 // The Game Script
@@ -54,8 +61,8 @@
 // for globally available scripts, such as those called from
 // mobj frames, etc.
 //
-void *gameScriptData = NULL;
-boolean gameScriptLoaded = false;
+void *gameScriptData   = NULL;
+bool  gameScriptLoaded = false;
 
 SmallContext_t GameScript;
 SmallContext_t *curGSContext;
@@ -68,8 +75,8 @@ SmallContext_t *curGSContext;
 // This is a per-level AMX. Used for level-local scripts provided
 // along with the map.
 //
-void *levelScriptData = NULL;
-boolean levelScriptLoaded = false;
+void *levelScriptData   = NULL;
+bool  levelScriptLoaded = false;
 
 SmallContext_t LevelScript;
 SmallContext_t *curLSContext;
@@ -269,7 +276,7 @@ static int SM_AMXLoadProgram(AMX *amx, char *lumpname, void *memblock)
    W_ReadLumpHeader(lumpnum, (void *)(&hdr), sizeof(hdr));
    amx_Align32((uint32_t *)(&hdr.size));
 
-   lump = (byte *)(W_CacheLumpNum(lumpnum, PU_CACHE));
+   lump = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
    memcpy(memblock, lump, (size_t)(hdr.size));
 
    return amx_Init(amx, memblock);
@@ -444,7 +451,7 @@ byte *SM_GetAMXDataSegment(AMX *amx, long *size)
    if(size)
       amx_MemInfo(amx, NULL, size, NULL);
 
-   return (amx->data != NULL) ? amx->data : amx->base + (int)hdr->dat;
+   return (byte *)((amx->data != NULL) ? amx->data : amx->base + (int)hdr->dat);
 }
 
 //
@@ -855,7 +862,7 @@ void SM_RemoveCallbacks(int vm)
 // This code is actually the only thing that has made its
 // way here from FraggleScript :)
 //
-static boolean SM_WaitFinished(sc_callback_t *callback)
+static bool SM_WaitFinished(sc_callback_t *callback)
 {
    // check pause flags
 
@@ -989,7 +996,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
       return;
    }
 
-   vmNum = QStrAtoi(&Console.argv[0]);
+   vmNum = Console.argv[0]->toInt();
 
    switch(vmNum)
    {
@@ -1019,7 +1026,7 @@ CONSOLE_COMMAND(sm_execv, cf_notnet)
    if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameV(vm, Console.argv[1].buffer);
+   SM_ExecScriptNameV(vm, Console.argv[1]->getBuffer());
 
    SM_ClearInvocation(context);
 }
@@ -1044,7 +1051,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
       return;
    }
 
-   vmNum = QStrAtoi(&Console.argv[0]);
+   vmNum = Console.argv[0]->toInt();
 
    switch(vmNum)
    {
@@ -1075,7 +1082,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
 
    for(i = 2; i < Console.argc; i++)
    {
-      params[i-2] = (cell)(QStrAtoi(&Console.argv[i]));
+      params[i-2] = (cell)(Console.argv[i]->toInt());
    }
 
    context->invocationData.invokeType = SC_INVOKE_CCMD;
@@ -1083,7 +1090,7 @@ CONSOLE_COMMAND(sm_execi, cf_notnet)
    if(gamestate == GS_LEVEL && players[Console.cmdsrc].mo)
       context->invocationData.trigger = players[Console.cmdsrc].mo;
 
-   SM_ExecScriptNameI(vm, Console.argv[1].buffer, argcount, params);
+   SM_ExecScriptNameI(vm, Console.argv[1]->getBuffer(), argcount, params);
 
    SM_ClearInvocation(context);
 
@@ -1535,7 +1542,7 @@ static cell AMX_NATIVE_CALL sm_setgamevar(AMX *amx, cell *params)
 // Small printf stuff
 //
 
-static qstring_t small_qstr;
+static qstring small_qstr;
 
 static int printstring(AMX *amx,cell *cstr, cell *params, int num);
 
@@ -1547,16 +1554,16 @@ static int dochar(AMX *amx, char ch, cell param)
    switch(ch)
    {
    case '%':
-      QStrPutc(&small_qstr, ch);
+      small_qstr += ch;
       return 0;
    case 'c':
       amx_GetAddr(amx, param, &cptr);
-      QStrPutc(&small_qstr, (char)*cptr);
+      small_qstr += (char)*cptr;
       return 1;
    case 'd':
       amx_GetAddr(amx, param, &cptr);
       M_Itoa((int)*cptr, intbuffer, 10);
-      QStrCat(&small_qstr, intbuffer);
+      small_qstr += intbuffer;
       return 1;
    case 's':
       amx_GetAddr(amx, param, &cptr);
@@ -1568,7 +1575,7 @@ static int dochar(AMX *amx, char ch, cell param)
    } /* switch */
 
    /* error in the string format, try to repair */
-   QStrPutc(&small_qstr, ch);
+   small_qstr += ch;
    return 0;
 }
 
@@ -1602,7 +1609,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          } 
          else
          {
-            QStrPutc(&small_qstr, c);
+            small_qstr += c;
          } /* if */
          if(j == 0)
             i++;
@@ -1628,7 +1635,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
          } 
          else
          {
-            QStrPutc(&small_qstr, (char)cstr[i]);
+            small_qstr += (char)cstr[i];
          } /* if */
       } /* for */
    } /* if */
@@ -1638,7 +1645,7 @@ static int printstring(AMX *amx, cell *cstr, cell *params, int num)
 
 static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
 {
-   static boolean first = true;
+   static bool first = true;
    int destination;
    cell *cstr;
    const char *msg;
@@ -1646,7 +1653,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    // first time: initialize the qstring
    if(first)
    {
-      QStrCreate(&small_qstr);
+      small_qstr.create();
       first = false;
    }
 
@@ -1658,7 +1665,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    printstring(amx, cstr, params+3, (int)(params[0] / sizeof(cell)) - 2);
 
    // now, display the qstring appropriately
-   msg = QStrConstPtr(&small_qstr);
+   msg = small_qstr.constPtr();
 
    switch(destination)
    {
@@ -1675,7 +1682,7 @@ static cell AMX_NATIVE_CALL sm_printf(AMX *amx, cell *params)
    }
 
    // clear the qstring
-   QStrClear(&small_qstr);
+   small_qstr.clear();
 
    return 0;
 }

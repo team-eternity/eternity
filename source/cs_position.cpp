@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -94,7 +94,7 @@ void CS_PrintPosition(position_t *position)
    );
 }
 
-void CS_PrintActorPosition(mobj_t *actor, unsigned int index)
+void CS_PrintActorPosition(Mobj *actor, unsigned int index)
 {
    position_t position;
 
@@ -107,7 +107,7 @@ void CS_PrintPlayerPosition(int playernum, unsigned int index)
    CS_PrintActorPosition(players[playernum].mo, index);
 }
 
-void CS_SetActorPosition(mobj_t *actor, position_t *position)
+void CS_SetActorPosition(Mobj *actor, position_t *position)
 {
    P_UnsetThingPosition(actor);
    actor->x             = position->x;
@@ -147,7 +147,7 @@ void CS_SetPlayerPosition(int playernum, position_t *position)
    CS_SetActorPosition(players[playernum].mo, position);
 }
 
-boolean CS_ActorPositionEquals(mobj_t *actor, position_t *position)
+bool CS_ActorPositionEquals(Mobj *actor, position_t *position)
 {
    if(actor->x                       == position->x               &&
       actor->y                       == position->y               &&
@@ -183,7 +183,7 @@ boolean CS_ActorPositionEquals(mobj_t *actor, position_t *position)
    return false;
 }
 
-void CS_SaveActorPosition(position_t *position, mobj_t *actor, int index)
+void CS_SaveActorPosition(position_t *position, Mobj *actor, int index)
 {
    position->world_index        = index;
    position->x                  = actor->x;
@@ -218,14 +218,14 @@ void CS_SaveActorPosition(position_t *position, mobj_t *actor, int index)
    }
 }
 
-boolean CS_ActorPositionChanged(mobj_t *actor)
+bool CS_ActorPositionChanged(Mobj *actor)
 {
    if(CS_ActorPositionEquals(actor, &actor->old_position))
       return false;
    return true;
 }
 
-boolean CS_PositionsEqual(position_t *position_one, position_t *position_two)
+bool CS_PositionsEqual(position_t *position_one, position_t *position_two)
 {
    if(position_one->x               == position_two->x               &&
       position_one->y               == position_two->y               &&

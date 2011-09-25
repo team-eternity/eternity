@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,11 +24,10 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_ITEMS__
-#define __D_ITEMS__
+#ifndef D_ITEMS_H__
+#define D_ITEMS_H__
 
 #include "doomdef.h"
-#include "doomtype.h"
 
 //
 // haleyjd 09/11/07: weapon flags
@@ -69,7 +68,7 @@ extern weaponinfo_t weaponinfo[NUMWEAPONS];
 // haleyjd: temporary hack
 void D_InitWeaponInfo(void);
 
-extern boolean enable_ssg;
+extern bool enable_ssg;
 
 #endif
 

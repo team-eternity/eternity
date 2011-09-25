@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -85,7 +85,7 @@ extern int  usegamma;
 // ----------------------------------------------------------------------------
 // haleyjd: DOSDoom-style translucency lookup tables
 
-extern boolean flexTranInit;
+extern bool flexTranInit;
 extern unsigned int Col2RGB8[65][256];
 extern unsigned int *Col2RGB8_LessPrecision[65];
 extern byte RGB32k[32][32][32];
@@ -122,7 +122,7 @@ void V_CopyRect(int srcx,  int srcy,  VBuffer *src, int width, int height,
 // Consolidated V_DrawPatch and V_DrawPatchFlipped. This function renders a
 // patch to a VBuffer object utilizing any scaling information the buffer has.
 void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, 
-                        boolean flipped);
+                        bool flipped);
 
 // V_DrawPatch
 // Macro-ized version of V_DrawPatchGeneral
@@ -137,7 +137,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies
 // The given color translation to the patch.
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
-                           byte *outr, boolean flipped);
+                           byte *outr, bool flipped);
 
 // V_DrawPatchTL
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
@@ -176,7 +176,7 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 // haleyjd 05/18/09: Fullscreen background drawing helpers
 void V_DrawBlockFS(VBuffer *buffer, byte *src);
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
-void V_DrawFSBackground(VBuffer *dest, void *source, int len);
+void V_DrawFSBackground(VBuffer *dest, int lumpnum);
 
 #ifdef DJGPP
 // Reads a linear block of pixels into the view buffer.
@@ -194,9 +194,6 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b);
 // linear buffer.
 void V_CacheBlock(int x, int y, int width, int height, byte *src,
                   byte *bdest);
-
-
-#include "v_misc.h"
 
 extern VBuffer vbscreen;
 extern VBuffer backscreen1;

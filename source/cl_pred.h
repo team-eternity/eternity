@@ -29,14 +29,14 @@
 
 #include "cs_position.h"
 
-extern boolean cl_predicting;
+extern bool cl_predicting;
 
 void      CL_InitPrediction(void);
 cs_cmd_t* CL_GetCurrentCommand(void);
 void      CL_PredictPlayerPosition(unsigned int index);
 void      CL_PredictSectorPositions(unsigned int index);
 void      CL_Predict(unsigned int start_index, unsigned int end_index,
-                     boolean repredicting);
+                     bool repredicting);
 
 #endif
 

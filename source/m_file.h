@@ -69,19 +69,19 @@ extern DWORD fs_error_code;
 extern int fs_error_code;
 #endif
 
-char* M_GetFileSystemErrorMessage(void);
-boolean M_PathExists(char *path);
-boolean M_IsFile(char *path);
-boolean M_IsFolder(char *path);
-boolean M_IsAbsolutePath(char *path);
-boolean M_CreateFolder(char *path);
-boolean M_CreateFile(char *path);
-boolean M_DeleteFolder(char *path);
-boolean M_DeleteFile(char *path);
-boolean M_DeleteFolderAndContents(char *path);
-char* M_GetCurrentFolder(void);
-boolean M_SetCurrentFolder(char *path);
-char* M_Basename(char *path);
+const char* M_GetFileSystemErrorMessage(void);
+bool        M_PathExists(const char *path);
+bool        M_IsFile(const char *path);
+bool        M_IsFolder(const char *path);
+bool        M_IsAbsolutePath(const char *path);
+bool        M_CreateFolder(const char *path);
+bool        M_CreateFile(const char *path);
+bool        M_DeleteFolder(const char *path);
+bool        M_DeleteFile(const char *path);
+bool        M_DeleteFolderAndContents(const char *path);
+const char* M_GetCurrentFolder(void);
+bool        M_SetCurrentFolder(const char *path);
+const char* M_Basename(const char *path);
 
 #endif
 

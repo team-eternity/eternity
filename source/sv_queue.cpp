@@ -87,9 +87,9 @@ unsigned int SV_GetNewQueuePosition(void)
    return max_queue_position;
 }
 
-void SV_AssignQueuePosition(int playernum, unsigned int queue_position)
+void SV_AssignQueuePosition(int playernum, unsigned int position)
 {
-   clients[playernum].queue_position = queue_position;
+   clients[playernum].queue_position = position;
    SV_BroadcastPlayerScalarInfo(playernum, ci_queue_position);
 
    if(clients[playernum].queue_level > 0)

@@ -1,3 +1,4 @@
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //=========================================================================
 //
 // Copyright(C) 2000 James Haley
@@ -76,7 +77,7 @@ static void P_LightningFlash(void)
 {
    int i;
    sector_t *tempSec;
-   boolean foundSec;
+   bool foundSec;
    int flashLight;
    static PointThinker thunderSndOrigin;
 

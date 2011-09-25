@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -74,18 +74,18 @@ enum
 struct doomdata_t
 {
     // High bit is retransmit request.
-    unsigned int        checksum;
+    uint32_t     checksum;
     // Only valid if NCMD_RETRANSMIT.
-    byte                retransmitfrom;
+    byte         retransmitfrom;
     
-    byte                starttic;
-    byte                player;
-    byte                numtics;
+    byte         starttic;
+    byte         player;
+    byte         numtics;
 
     union packetdata_u
     {
-       byte                data[GAME_OPTION_SIZE];
-       ticcmd_t            cmds[BACKUPTICS];
+       byte      data[GAME_OPTION_SIZE];
+       ticcmd_t  cmds[BACKUPTICS];
     } d;
 };
 
@@ -132,9 +132,6 @@ struct doomcom_t
     // Is dest for send, set by get (-1 = no packet).
     int16_t             remotenode;
     
-    // Number of bytes in doomdata to be sent
-    int16_t             datalength;
-
     // Info common to all nodes.
     // Console is allways node 0.
     int16_t             numnodes;
@@ -188,9 +185,11 @@ void TryRunTics(void);
 
 //extern int isconsoletic;        // is the current tic a gametic
                                   // or a list of console commands?
-extern boolean opensocket;
+extern bool opensocket;
 //extern doomcom_t singleplayer;
 //extern int newtics, ticnum;     //sf
+
+extern  ticcmd_t   netcmds[][BACKUPTICS];
 
 // haleyjd 10/16/07
 #if defined(_MSC_VER) || defined(__GNUC__)

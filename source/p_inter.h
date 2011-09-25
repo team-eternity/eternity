@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -25,30 +25,28 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_INTER__
-#define __P_INTER__
+#ifndef P_INTER_H__
+#define P_INTER_H__
 
-#include "d_player.h"
-#include "p_mobj.h"
+struct player_t;
+class  Mobj;
+struct emod_t;
 
 // Ty 03/09/98 Moved to an int in p_inter.c for deh and externalization 
 #define MAXHEALTH maxhealth
 
-// follow a player exlusively for 3 seconds
+// follow a player exclusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
-void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
-                    emod_t *mod);
+void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, emod_t *mod);
 void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod);
-boolean P_GivePower(player_t *, int);
+bool P_GivePower(player_t *, int);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
-void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, int damage,
-                  int mod);
-void P_Whistle(Mobj *actor, int mobjtype);
+void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
+bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
+                          emod_t *emod);
 
-// [CG] Broke out of P_DamageMobj.
-boolean P_HandleDamagedMobj(Mobj *target, Mobj *source, int damage,
-                            int mod, emod_t *emod);
+void P_Whistle(Mobj *actor, int mobjtype);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 

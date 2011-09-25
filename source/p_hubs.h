@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -39,7 +39,7 @@ void P_RestorePlayerPosition();
 
 void P_HubReborn();
 
-extern boolean hub_changelevel;
+extern bool hub_changelevel;
 
 #endif
 

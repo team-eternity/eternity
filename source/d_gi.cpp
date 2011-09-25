@@ -30,17 +30,23 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "w_wad.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
 #include "doomdef.h"
-#include "sounds.h"
-#include "hi_stuff.h"
-#include "wi_stuff.h"
-#include "d_gi.h"
-#include "p_info.h"
-#include "info.h"
 #include "e_things.h"
 #include "f_finale.h"
+#include "hi_stuff.h"
+#include "info.h"
+#include "mn_htic.h"
+#include "mn_menus.h"
+#include "p_info.h"
+#include "p_skin.h"
+#include "st_stuff.h"
+#include "sounds.h"
+#include "v_video.h"
+#include "w_wad.h"
+#include "wi_stuff.h"
 
 // definitions
 
@@ -143,10 +149,6 @@
 // holds the address of the gamemodeinfo_t for the current gamemode,
 // determined at startup
 gamemodeinfo_t *GameModeInfo;
-
-// [CG] The game mode & mission.
-GameMode_t game_mode;
-GameMission_t game_mission;
 
 // data
 
@@ -615,6 +617,9 @@ char *gi_path_hacx;
 char *gi_path_hticsw;
 char *gi_path_hticreg;
 char *gi_path_sosr;
+char *gi_path_fdoom;
+char *gi_path_fdoomu;
+char *gi_path_freedm;
 
 //
 // Default Override Objects
@@ -890,7 +895,7 @@ static gamemodeinfo_t giDoomSW =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -984,7 +989,7 @@ static gamemodeinfo_t giDoomReg =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -1078,7 +1083,7 @@ static gamemodeinfo_t giDoomRetail =
    S_MusicForMapDoom, // MusicForMap
    mus_None,          // musMin
    NUMMUSIC,          // numMusic
-   "d_",              // musPrefix
+   "D_",              // musPrefix
    "e1m1",            // defMusName
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
@@ -1172,7 +1177,7 @@ static gamemodeinfo_t giDoomCommercial =
    S_MusicForMapDoom2, // MusicForMap
    mus_None,           // musMin
    NUMMUSIC,           // numMusic
-   "d_",               // musPrefix
+   "D_",               // musPrefix
    "runnin",           // defMusName
    DOOMDEFSOUND,       // defSoundName
    doom_skindefs,      // skinSounds
@@ -1266,7 +1271,7 @@ static gamemodeinfo_t giHereticSW =
    S_MusicForMapHtic, // MusicForMap
    hmus_None,         // musMin
    NUMHTICMUSIC,      // numMusic
-   "mus_",            // musPrefix
+   "MUS_",            // musPrefix
    "e1m1",            // defMusName
    HTICDEFSOUND,      // defSoundName
    htic_skindefs,     // skinSounds
@@ -1364,7 +1369,7 @@ static gamemodeinfo_t giHereticReg =
    S_MusicForMapHtic, // MusicForMap
    hmus_None,         // musMin
    NUMHTICMUSIC,      // numMusic
-   "mus_",            // musPrefix
+   "MUS_",            // musPrefix
    "e1m1",            // defMusName
    HTICDEFSOUND,      // defSoundName
    htic_skindefs,     // skinSounds
@@ -1460,11 +1465,6 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(exitRules,        NULL);
    
    // Note: demostates are not overridden here, see below.
-
-   // [CG] If in c/s server mode, export the game mode and mission so that c/s
-   //      clients can check if they've loaded the correct IWAD.
-   game_mode = mode;
-   game_mission = mission;
 }
 
 //

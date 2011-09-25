@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2002 James Haley
@@ -26,19 +26,23 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
-#include "c_io.h"
-#include "d_gi.h"
-#include "c_runcmd.h"
+#include "e_fonts.h"
 #include "mn_engin.h"
 #include "mn_misc.h"
-#include "v_video.h"
+#include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
 #include "w_wad.h"
-#include "e_fonts.h"
 
 extern vfont_t *menu_font_big;
 
@@ -102,16 +106,17 @@ static void MN_HMainMenuDrawer(void)
    int skullIndex;
 
    // draw M_HTIC
-   V_DrawPatch(88, 0, &vbscreen, (patch_t *)W_CacheLumpName("M_HTIC", PU_CACHE));
+   V_DrawPatch(88, 0, &vbscreen, 
+      PatchLoader::CacheName(wGlobalDir, "M_HTIC", PU_CACHE));
 
    // draw spinning skulls
    skullIndex = (menutime / 3) % NUM_HSKULL;
 
    V_DrawPatch(40, 10, &vbscreen,
-      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[17-skullIndex], PU_CACHE)));
+      PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[17-skullIndex], PU_CACHE));
 
    V_DrawPatch(232, 10, &vbscreen,
-      (patch_t *)(W_CacheLumpNum(HSkullLumpNums[skullIndex], PU_CACHE)));
+      PatchLoader::CacheNum(wGlobalDir, HSkullLumpNums[skullIndex], PU_CACHE));
 }
 
 static menuitem_t mn_hepisode_items[] =
@@ -190,7 +195,7 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if((GameModeInfo->flags & GIF_SHAREWARE) && start_episode > 1)
    {
@@ -253,7 +258,8 @@ static void MN_HSaveDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, 
+                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
 }
@@ -318,7 +324,8 @@ static void MN_HLoadDrawer(void)
 
    for(i = 0; i < 8; ++i)
    {
-      V_DrawPatch(x, y, &vbscreen, (patch_t *)W_CacheLumpName("M_FSLOT", PU_CACHE));
+      V_DrawPatch(x, y, &vbscreen, 
+                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
       y += 20;
    }
 

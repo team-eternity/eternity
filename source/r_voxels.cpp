@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -48,7 +48,7 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
       return NULL;
 
    // cache the lump
-   rover = buffer = (byte *)(W_CacheLumpNum(lumpnum, PU_STATIC));
+   rover = buffer = (byte *)(wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC));
 
    // get sizes
    xsize = SwapLong(*(int32_t *)rover);

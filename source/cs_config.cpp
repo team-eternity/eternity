@@ -55,10 +55,12 @@
 #include "g_game.h"
 #include "i_system.h"
 #include "m_argv.h"
+#include "m_misc.h"
 #include "m_qstr.h"
 #include "p_inter.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "version.h"
 #include "w_wad.h"
 
 #include "cs_main.h"
@@ -71,6 +73,8 @@
 #include <json/json.h>
 #include <curl/curl.h>
 
+void D_CheckGamePath(char *game);
+
 // [CG] Zarg huge defines.
 
 #define __set_int(options, option_name, default_value)\
@@ -79,6 +83,13 @@
       cs_original_settings->option_name = default_value;\
    else\
       cs_original_settings->option_name = json_object_get_int(option);
+
+#define __set_float(options, option_name, default_value)\
+   option = json_object_object_get(options, #option_name);\
+   if(option == NULL)\
+      cs_original_settings->option_name = default_value;\
+   else\
+      cs_original_settings->option_name = json_object_get_double(option);
 
 #define __set_bool(options, option_name, default_value)\
    option = json_object_object_get(options, #option_name);\
@@ -172,6 +183,11 @@
    if(option != NULL)\
       cs_settings->option_name = json_object_get_int(option);
 
+#define __override_float(options, option_name)\
+   option = json_object_object_get(options, #option_name);\
+   if(option != NULL)\
+      cs_settings->option_name = json_object_get_double(option);
+
 #define __override_flags(options, option_name, flags)\
    option = json_object_object_get(options, #option_name);\
    if(option != NULL)\
@@ -225,7 +241,7 @@ extern json_object *cs_json;
 extern int levelFragLimit;
 extern int levelTimeLimit;
 extern int levelScoreLimit;
-extern boolean netdemo;
+extern bool gamepathset;
 
 extern void AddIWADDir(char *dir);
 
@@ -530,7 +546,9 @@ void SV_HandleMastersSection(json_object *masters)
    unsigned int master_server_count;
 
    master_server_count = json_object_array_length(masters);
-   master_servers = calloc(master_server_count, sizeof(cs_master_t));
+   master_servers = (cs_master_t *)(calloc(
+      master_server_count, sizeof(cs_master_t)
+   ));
 
    for(i = 0; i < master_server_count; i++)
    {
@@ -604,9 +622,9 @@ void SV_LoadConfig(void)
    char *write_config_to = NULL;
    int position_of_config, i;
    struct stat sbuf;
-   boolean requires_spectator_password, requires_player_password,
-           requires_moderator_password, requires_administrator_password,
-           should_free;
+   bool requires_spectator_password, requires_player_password,
+        requires_moderator_password, requires_administrator_password,
+        should_free;
 
    requires_spectator_password = false;
    requires_player_password = false;
@@ -623,9 +641,9 @@ void SV_LoadConfig(void)
    }
    else
    {
-      config_path = calloc(
+      config_path = (char *)(calloc(
          strlen(basepath) + strlen(DEFAULT_CONFIG_FILENAME) + 2, sizeof(char)
-      );
+      ));
       sprintf(config_path, "%s/%s", basepath, DEFAULT_CONFIG_FILENAME);
       M_NormalizeSlashes(config_path);
       should_free = true;
@@ -1283,6 +1301,12 @@ void CS_HandleOptionsSection(json_object *options)
    __set_int(options, respawn_protection_time, 0);
    __set_int(options, friend_distance, 128);
 
+   // [CG] Float options
+   __set_float(options, radial_damage, 1.0);
+   __set_float(options, radial_self_damage, 1.0);
+   __set_float(options, radial_lift, 0.5);
+   __set_float(options, radial_self_lift, 0.8);
+
    // [CG] Boolean options
    __set_bool(options, build_blockmap, false);
 
@@ -1290,13 +1314,16 @@ void CS_HandleOptionsSection(json_object *options)
    cs_original_settings->skill--;
 
    // [CG] General features
+   __set_flags(options, respawn_items, dmflags, false);
+   __set_flags(options, leave_weapons, dmflags, true);
+   __set_flags(options, respawn_barrels, dmflags, false);
+   __set_flags(options, players_drop_everything, dmflags, false);
+   __set_flags(options, respawn_super_items, dmflags, false);
+   __set_flags(options, instagib, dmflags, false);
    __set_flags(options, spawn_armor, dmflags, true);
    __set_flags(options, spawn_super_items, dmflags, true);
    __set_flags(options, respawn_health, dmflags, false);
-   __set_flags(options, respawn_items, dmflags, false);
    __set_flags(options, respawn_armor, dmflags, false);
-   __set_flags(options, respawn_super_items, dmflags, false);
-   __set_flags(options, respawn_barrels, dmflags, false);
    __set_flags(options, spawn_monsters, dmflags, false);
    __set_flags(options, fast_monsters, dmflags, false);
    __set_flags(options, strong_monsters, dmflags, false);
@@ -1307,9 +1334,8 @@ void CS_HandleOptionsSection(json_object *options)
    __set_flags(options, exit_to_same_level, dmflags, false);
    __set_flags(options, spawn_in_same_spot, dmflags, false);
    __set_flags(options, leave_keys, dmflags, true);
-   __set_flags(options, leave_weapons, dmflags, true);
-   __set_flags(options, drop_weapons, dmflags, false);
-   __set_flags(options, drop_items, dmflags, false);
+   __set_flags(options, players_drop_items, dmflags, false);
+   __set_flags(options, players_drop_weapons, dmflags, false);
    __set_flags(options, keep_items_on_exit, dmflags, false);
    __set_flags(options, keep_keys_on_exit, dmflags, false);
 
@@ -1326,7 +1352,6 @@ void CS_HandleOptionsSection(json_object *options)
    __set_flags(options, silent_weapon_pickup, dmflags2, true);
    __set_flags(options, allow_weapon_speed_change, dmflags2, false);
    __set_flags(options, teleport_missiles, dmflags2, false);
-   __set_flags(options, instagib, dmflags2, false);
    __set_flags(options, allow_chasecam, dmflags2, false);
    __set_flags(options, follow_fragger_on_death, dmflags2, false);
    __set_flags(options, spawn_farthest, dmflags2, false);
@@ -1506,7 +1531,9 @@ void CS_HandleMapsSection(json_object *maps)
             name_str
          );
       }
-      resource_indices = calloc(wads_count, sizeof(unsigned int));
+      resource_indices = (unsigned int *)(calloc(
+         wads_count, sizeof(unsigned int)
+      ));
       for(j = 0; j < wads_count; j++)
       {
          wad_str = json_object_get_string(json_object_array_get_idx(wads, j));
@@ -1529,15 +1556,19 @@ void CS_LoadConfig(void)
 {
    json_object *section;
 
-   server_address = realloc(server_address, sizeof(ENetAddress));
+   server_address = (ENetAddress *)(realloc(
+      server_address, sizeof(ENetAddress)
+   ));
    memset(server_address, 0, sizeof(ENetAddress));
 
-   cs_settings = realloc(cs_settings, sizeof(clientserver_settings_t));
+   cs_settings = (clientserver_settings_t *)(realloc(
+      cs_settings, sizeof(clientserver_settings_t)
+   ));
    memset(cs_settings, 0, sizeof(clientserver_settings_t));
 
-   cs_original_settings = realloc(
+   cs_original_settings = (clientserver_settings_t *)(realloc(
       cs_original_settings, sizeof(clientserver_settings_t)
-   );
+   ));
    memset(cs_original_settings, 0, sizeof(clientserver_settings_t));
 
    section = json_object_object_get(cs_json, "resources");
@@ -1584,7 +1615,6 @@ void CS_ReloadDefaults(void)
    //      in c/s mode.
    demoplayback = false;
    singledemo = false;
-   netdemo = false;
    // memset(playeringame + 1, 0, sizeof(*playeringame) * (MAXPLAYERS - 1));
    // consoleplayer = displayplayer = 0;
    compatibility = false;
@@ -1601,15 +1631,15 @@ void CS_ReloadDefaults(void)
 void CS_ApplyConfigSettings(void)
 {
    // [CG] Apply the settings.
-   GameType = DefaultGameType = cs_settings->game_type;
-   startskill = gameskill     = cs_settings->skill;
+   GameType = DefaultGameType = (gametype_t)cs_settings->game_type;
+   startskill = gameskill     = (skill_t)cs_settings->skill;
    dogs = default_dogs        = cs_settings->dogs;
    distfriend                 = cs_settings->friend_distance;
    respawn_protection_time    = cs_settings->respawn_protection_time;
    death_time_limit           = cs_settings->death_time_limit;
    death_time_expired_action  = cs_settings->death_time_expired_action;
    friendly_damage_percentage = cs_settings->friendly_damage_percentage;
-   bfgtype                    = cs_settings->bfg_type;
+   bfgtype                    = (bfg_t)cs_settings->bfg_type;
    levelTimeLimit             = cs_settings->time_limit;
    levelFragLimit             = cs_settings->frag_limit;
    levelScoreLimit            = cs_settings->score_limit;
@@ -2017,13 +2047,16 @@ void CS_LoadMapOverrides(unsigned int map_index)
    }
 
    // [CG] DMFLAGS
+   __override_flags(overrides, respawn_items, dmflags)
+   __override_flags(overrides, leave_weapons, dmflags)
+   __override_flags(overrides, respawn_barrels, dmflags)
+   __override_flags(overrides, players_drop_everything, dmflags)
+   __override_flags(overrides, respawn_super_items, dmflags)
+   __override_flags(overrides, instagib, dmflags)
    __override_flags(overrides, spawn_armor, dmflags)
    __override_flags(overrides, spawn_super_items, dmflags)
    __override_flags(overrides, respawn_health, dmflags)
-   __override_flags(overrides, respawn_items, dmflags)
    __override_flags(overrides, respawn_armor, dmflags)
-   __override_flags(overrides, respawn_super_items, dmflags)
-   __override_flags(overrides, respawn_barrels, dmflags)
    __override_flags(overrides, spawn_monsters, dmflags)
    __override_flags(overrides, fast_monsters, dmflags)
    __override_flags(overrides, strong_monsters, dmflags)
@@ -2034,9 +2067,8 @@ void CS_LoadMapOverrides(unsigned int map_index)
    __override_flags(overrides, exit_to_same_level, dmflags)
    __override_flags(overrides, spawn_in_same_spot, dmflags)
    __override_flags(overrides, leave_keys, dmflags)
-   __override_flags(overrides, leave_weapons, dmflags)
-   __override_flags(overrides, drop_weapons, dmflags)
-   __override_flags(overrides, drop_items, dmflags)
+   __override_flags(overrides, players_drop_items, dmflags)
+   __override_flags(overrides, players_drop_weapons, dmflags)
    __override_flags(overrides, keep_items_on_exit, dmflags)
    __override_flags(overrides, keep_keys_on_exit, dmflags)
 
@@ -2053,7 +2085,6 @@ void CS_LoadMapOverrides(unsigned int map_index)
    __override_flags(overrides, silent_weapon_pickup, dmflags2)
    __override_flags(overrides, allow_weapon_speed_change, dmflags2)
    __override_flags(overrides, teleport_missiles, dmflags2)
-   __override_flags(overrides, instagib, dmflags2)
    __override_flags(overrides, allow_chasecam, dmflags2)
    __override_flags(overrides, follow_fragger_on_death, dmflags2);
    __override_flags(overrides, spawn_farthest, dmflags2)
@@ -2123,6 +2154,11 @@ void CS_LoadMapOverrides(unsigned int map_index)
    __override_int(overrides, frag_limit);
    __override_int(overrides, score_limit);
    __override_int(overrides, skill);
+
+   __override_float(overrides, radial_damage);
+   __override_float(overrides, radial_self_damage);
+   __override_float(overrides, radial_lift);
+   __override_float(overrides, radial_self_lift);
 
    CS_ApplyConfigSettings();
 }

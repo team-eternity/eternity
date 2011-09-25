@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley, Stephen McGranahan
@@ -28,11 +28,13 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "r_draw.h"
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "r_draw.h"
 #include "r_main.h"
+#include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -65,26 +67,20 @@ static unsigned int *temp_bg2rgb;
 static byte   *tempfuzzmap;
 
 //
-// Error functions that will abort if R_FlushColumns tries to flush 
+// Do-nothing functions that will just return if R_FlushColumns tries to flush 
 // columns without a column type.
 //
 
-static void R_FlushWholeError(void)
+static void R_FlushWholeNil(void)
 {
-   I_FatalError(I_ERR_KILL,
-      "R_FlushWholeColumns called without being initialized.\n");
 }
 
-static void R_FlushHTError(void)
+static void R_FlushHTNil(void)
 {
-   I_FatalError(I_ERR_KILL,
-      "R_FlushHTColumns called without being initialized.\n");
 }
 
-static void R_QuadFlushError(void)
+static void R_QuadFlushNil(void)
 {
-   I_FatalError(I_ERR_KILL,
-      "R_FlushQuadColumn called without being initialized.\n");
 }
 
 //
@@ -520,8 +516,8 @@ static void R_FlushHTFlexAdd(void)
    }
 }
 
-static void (*R_FlushWholeColumns)(void) = R_FlushWholeError;
-static void (*R_FlushHTColumns)(void)    = R_FlushHTError;
+static void (*R_FlushWholeColumns)(void) = R_FlushWholeNil;
+static void (*R_FlushHTColumns)(void)    = R_FlushHTNil;
 
 // Begin: Quad column flushing functions.
 static void R_FlushQuadOpaque(void)
@@ -692,7 +688,7 @@ static void R_FlushQuadFlexAdd(void)
    }
 }
 
-static void (*R_FlushQuadColumn)(void) = R_QuadFlushError;
+static void (*R_FlushQuadColumn)(void) = R_QuadFlushNil;
 
 static void R_FlushColumns(void)
 {
@@ -719,9 +715,9 @@ static void R_QResetColumnBuffer(void)
    if(temp_x)
       R_FlushColumns();
    temptype = COL_NONE;
-   R_FlushWholeColumns = R_FlushWholeError;
-   R_FlushHTColumns    = R_FlushHTError;
-   R_FlushQuadColumn   = R_QuadFlushError;
+   R_FlushWholeColumns = R_FlushWholeNil;
+   R_FlushHTColumns    = R_FlushHTNil;
+   R_FlushQuadColumn   = R_QuadFlushNil;
 }
 
 // haleyjd 09/12/04: split up R_GetBuffer into various different
@@ -893,8 +889,8 @@ static byte *R_GetBufferFuzz(void)
       temptype = COL_FUZZ;
       tempfuzzmap = column.colormap; // SoM 7-28-04: Fix the fuzz problem.
       R_FlushWholeColumns = R_FlushWholeFuzz;
-      R_FlushHTColumns    = R_FlushHTError;
-      R_FlushQuadColumn   = R_QuadFlushError;
+      R_FlushHTColumns    = R_FlushHTNil;
+      R_FlushQuadColumn   = R_QuadFlushNil;
       return tempbuf + (column.y1 << 2);
    }
 
@@ -1561,7 +1557,16 @@ columndrawer_t r_quad_drawer =
    R_QDrawAddColumn,
    R_QDrawAddTRColumn,
 
-   R_QResetColumnBuffer
+   R_QResetColumnBuffer,
+
+   {
+      // Normal            Translated
+      { R_QDrawColumn,     R_QDrawTRColumn     }, // NORMAL
+      { R_QDrawFuzzColumn, R_QDrawFuzzColumn   }, // SHADOW
+      { R_QDrawFlexColumn, R_QDrawFlexTRColumn }, // ALPHA
+      { R_QDrawAddColumn,  R_QDrawAddTRColumn  }, // ADD
+      { R_QDrawTLColumn,   R_QDrawTLTRColumn   }, // TRANMAP
+   },
 };
 
 // EOF

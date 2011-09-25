@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,19 +26,27 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
+#include "c_io.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
+#include "d_gi.h"
 #include "d_main.h"
+#include "d_net.h"
+#include "doomstat.h"
+#include "e_edf.h"
+#include "e_player.h"
 #include "g_dmflag.h"
 #include "g_game.h"
-#include "r_main.h"
+#include "m_buffer.h"
+#include "m_random.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_saveg.h"
-#include "m_buffer.h"
-#include "m_random.h"
-#include "am_map.h"
 #include "p_enemy.h"
 #include "p_xenemy.h"
 #include "p_portal.h"
@@ -46,19 +54,17 @@
 #include "p_skin.h"
 #include "p_setup.h"
 #include "r_draw.h"
-#include "e_edf.h"
-#include "a_small.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sndseq.h"
-#include "d_gi.h"
-#include "acs_intr.h"
-#include "e_player.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_video.h"
 #include "version.h"
-#include "w_wad.h"
 #include "w_levels.h"
-#include "c_io.h"
+#include "w_wad.h"
 
-// [CG] Added.
-#include "cs_netid.h"
+#include "cs_netid.h" // [CG] 09/23/11
 
 // Pads save_p to a 4-byte boundary
 //  so that the load/save works on SGI&Gecko.
@@ -226,7 +232,7 @@ SaveArchive &SaveArchive::operator << (uint8_t &x)
    return *this;
 }
 
-SaveArchive &SaveArchive::operator << (boolean &x)
+SaveArchive &SaveArchive::operator << (bool &x)
 {
    if(savefile)
       savefile->WriteUint8((uint8_t)x);
@@ -265,7 +271,7 @@ SaveArchive &SaveArchive::operator << (double &x)
 // Swizzle a serialized sector_t pointer.
 SaveArchive &SaveArchive::operator << (sector_t *&s)
 {
-   int sectornum;
+   int32_t sectornum;
 
    if(savefile)
    {
@@ -277,8 +283,8 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
       loadfile->ReadSint32(sectornum);
       if(sectornum < 0 || sectornum >= numsectors)
       {
-         I_FatalError(I_ERR_KILL, "SaveArchive: sector num %d out of range\n",
-                      sectornum);
+         I_Error("SaveArchive: sector num %d out of range\n",
+                 sectornum);
       }
       s = &sectors[sectornum];
    }
@@ -289,7 +295,7 @@ SaveArchive &SaveArchive::operator << (sector_t *&s)
 // Serialize a swizzled line_t pointer.
 SaveArchive &SaveArchive::operator << (line_t *&ln)
 {
-   int linenum = -1;
+   int32_t linenum = -1;
 
    if(savefile)
    {
@@ -304,8 +310,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
          ln = NULL;
       else if(linenum < 0 || linenum >= numlines)
       {
-         I_FatalError(I_ERR_KILL, "SaveArchive: line num %d out of range\n",
-                      linenum);
+         I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
       else
          ln = &lines[linenum];
@@ -442,7 +447,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          player_t &p = players[i];
 
          arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
-             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove
+             << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
@@ -692,7 +697,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
       while(1)
       {
-         if(className != "")
+         if(*className != '\0')
             free(className);
 
          // Get the next class name
@@ -704,8 +709,12 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             if(!strcmp(className, tc_end))
                break; // Reached end of thinker list
             else 
-               I_FatalError(I_ERR_KILL, "Unknown tclass %s in savegame\n", className);
+               I_Error("Unknown tclass %s in savegame\n", className);
          }
+
+         // Too many thinkers?!
+         if(idx > num_thinkers) 
+            I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
          // Create a thinker of the appropriate type and load it
          newThinker = thinkerType->newThinker();
@@ -721,7 +730,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       // Now, call deswizzle to fix up mutual references between thinkers, such
       // as mobj targets/tracers and ACS triggers.
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
-         th->deswizzle();
+         th->deSwizzle();
 
       // killough 3/26/98: Spawn icon landings:
       // haleyjd  3/30/03: call P_InitThingLists
@@ -818,6 +827,18 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
    }
    arc << id << angle;
 
+   // Thinker::serialize won't read its own name so we need to do that here.
+   if(arc.isLoading())
+   {
+      char *className = NULL;
+      size_t len = 0;
+      
+      arc.ArchiveLString(className, len);
+
+      if(!className || strncmp(className, "PointThinker", len))
+         I_Error("P_ArchivePolyObj: no PointThinker for polyobject");
+   }
+
    pt.serialize(arc);
 
    // if the object is bad or isn't in the id hash, we can do nothing more
@@ -844,10 +865,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
       arc << numSavedPolys;
 
       if(numSavedPolys != numPolyObjects)
-      {
-         I_FatalError(I_ERR_KILL,
-            "P_UnArchivePolyObjects: polyobj count inconsistency\n");
-      }
+         I_Error("P_UnArchivePolyObjects: polyobj count inconsistency\n");
    }
 
    for(int i = 0; i < numPolyObjects; ++i)
@@ -902,10 +920,7 @@ static void P_ArchiveSmallAMX(SaveArchive &arc, AMX *amx)
    {
       arc << arch_amx_size;
       if(arch_amx_size != amx_size)
-      {
-         I_FatalError(I_ERR_KILL,
-                      "P_ArchiveSmallAMX: data segment consistency error\n");
-      }
+         I_Error("P_ArchiveSmallAMX: data segment consistency error\n");
 
       arc.getLoadFile()->Read(data, arch_amx_size);
    }
@@ -995,7 +1010,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
 void P_ArchiveScripts(SaveArchive &arc)
 {
 #ifndef EE_NO_SMALL_SUPPORT
-   boolean haveGameScript = false, haveLevelScript = false;
+   bool haveGameScript = false, haveLevelScript = false;
 
    if(arc.isSaving())
    {
@@ -1011,8 +1026,7 @@ void P_ArchiveScripts(SaveArchive &arc)
       ((haveGameScript  != gameScriptLoaded) ||
        (haveLevelScript != levelScriptLoaded)))
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveScripts: vm presence inconsistency\n");
+      I_Error("P_UnArchiveScripts: vm presence inconsistency\n");
    }
 
    // save gamescript
@@ -1089,9 +1103,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
 
    if(!(newSeq->sequence = E_SequenceForName(name)))
    {
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
-         name);
+      I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", 
+              name);
    }
 
    newSeq->currentSound = NULL; // not currently playing a sound
@@ -1122,9 +1135,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    case SEQ_ORIGIN_POLYOBJ:
       if(!(po = Polyobj_GetForNum(twizzle)))
       {
-         I_FatalError(I_ERR_KILL,
-            "P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
-            twizzle);
+         I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", 
+                 twizzle);
       }
       newSeq->originIdx = po->id;
       newSeq->origin = &po->spawnSpot;
@@ -1135,9 +1147,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
       newSeq->origin = mo;
       break;
    default:
-      I_FatalError(I_ERR_KILL,
-         "P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
-         newSeq->originType);
+      I_Error("P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
+              newSeq->originType);
    }
 
    // restore delay counter, volume, attenuation, and flags
@@ -1345,7 +1356,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       for(; i < MIN_MAXPLAYERS; i++)         // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 
@@ -1383,7 +1394,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_DeNumberThinkers();
 
-      uint8_t cmarker = 0xE6; // consistancy marker
+      uint8_t cmarker = 0xE6; // consistency marker
       arc << cmarker; 
    }
    catch(BufferedIOException)
@@ -1431,6 +1442,9 @@ void P_LoadGame(const char *filename)
       return;
    }
 
+   // [CG] 09/18/11: Clear Network ID hashes.
+   CS_ClearNetIDs();
+
    // Enable buffered IO exceptions
    loadfile.setThrowing(true);
 
@@ -1473,7 +1487,7 @@ void P_LoadGame(const char *filename)
       G_SetGameMap(); // get gameepisode, map
 
       // start out g_dir pointing at w_GlobalDir again
-      g_dir = &w_GlobalDir;
+      g_dir = &wGlobalDir;
 
       // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
       // directory, we need to restore the managed directory to g_dir when loading
@@ -1483,7 +1497,7 @@ void P_LoadGame(const char *filename)
 
       if(len)
       {
-         waddir_t *dir;
+         WadDirectory *dir;
 
          // read a name of len bytes 
          char *fn = (char *)(calloc(1, len));
@@ -1526,7 +1540,7 @@ void P_LoadGame(const char *filename)
 
       for(; i < MIN_MAXPLAYERS; i++) // killough 2/28/98
       {
-         boolean dummy = 0;
+         bool dummy = 0;
          arc << dummy;
       }
 

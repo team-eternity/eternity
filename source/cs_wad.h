@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C -*- vi:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -48,7 +48,7 @@ typedef struct cs_resource_s
 typedef struct cs_map_s
 {
    char *name;
-   boolean initialized;
+   bool initialized;
    unsigned int resource_count;
    unsigned int *resource_indices;
 } cs_map_t;
@@ -64,17 +64,17 @@ extern unsigned int cs_current_map_number;
 
 void CS_ClearMaps(void);
 char* CS_DownloadWAD(const char *wad_name);
-boolean CS_AddIWAD(const char *resource_name);
-boolean CS_AddWAD(const char *resource_name);
-boolean CS_AddDeHackEdFile(const char *resource_name);
+bool  CS_AddIWAD(const char *resource_name);
+bool  CS_AddWAD(const char *resource_name);
+bool  CS_AddDeHackEdFile(const char *resource_name);
 cs_resource_t* CS_GetResource(const char *resource_name);
-boolean CS_CheckResourceHash(const char *resource_name, const char *sha1_hash);
+bool CS_CheckResourceHash(const char *resource_name, const char *sha1_hash);
 void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
                                         unsigned int *resource_indices,
                                         unsigned int index);
 void CS_AddMap(const char *name, unsigned int resource_count,
                                  unsigned int *resource_indices);
-boolean CS_LoadMap(void);
+bool CS_LoadMap(void);
 void CS_NewGame(void);
 void CS_InitNew(void);
 

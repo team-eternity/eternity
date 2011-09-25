@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -29,6 +29,7 @@
 #include "d_gi.h"
 #include "g_bind.h"
 #include "hu_stuff.h"
+#include "i_system.h"
 #include "r_draw.h"
 #include "st_stuff.h"
 #include "v_font.h"
@@ -39,13 +40,13 @@
 #include "cs_main.h"
 #include "cl_main.h"
 
-boolean show_timer = false;
-boolean default_show_timer = false;
-boolean show_netstats = false;
-boolean default_show_netstats = false;
-boolean show_team_widget = false;
-boolean default_show_team_widget = false;
-boolean cs_chat_active = false;
+bool show_timer = false;
+bool default_show_timer = false;
+bool show_netstats = false;
+bool default_show_netstats = false;
+bool show_team_widget = false;
+bool default_show_team_widget = false;
+bool cs_chat_active = false;
 
 extern vfont_t *hud_font;
 
@@ -60,11 +61,11 @@ static hu_widget_t *timer_widget = NULL;
 static hu_widget_t *net_widget = NULL;
 static hu_widget_t *team_widget = NULL;
 
-boolean CS_ChatResponder(event_t *ev)
+bool CS_ChatResponder(event_t *ev)
 {
    char ch = 0;
    char cmd_buffer[CHAT_BUFFER_SIZE];
-   static boolean shiftdown;
+   static bool shiftdown;
 
    // haleyjd 06/11/08: get HUD actions
    G_KeyResponder(ev, kac_hud);
@@ -310,7 +311,7 @@ void CS_InitChatWidget(void)
    cw = (hu_textwidget_t *)chat_widget;
    cw->color = CR_GREEN + 1;
    free(cw->message);
-   cw->message = calloc(CHAT_BUFFER_SIZE, sizeof(char));
+   cw->message = (char *)(calloc(CHAT_BUFFER_SIZE, sizeof(char)));
 }
 
 void CS_InitQueueWidget(void)
@@ -362,7 +363,7 @@ void CS_UpdateQueueMessage(void)
       tw->disabled = false;
       if(client->queue_level == ql_waiting)
       {
-         cw->message = cw->alloc = calloc(21, sizeof(char));
+         cw->message = cw->alloc = (char *)(calloc(21, sizeof(char)));
          psnprintf(
             cw->alloc,
             21,
@@ -431,7 +432,7 @@ void CS_InitNetWidget(void)
 
 static void CS_TeamWidgetTick(hu_widget_t *widget)
 {
-   teamcolor_t team = clients[displayplayer].team;
+   teamcolor_t team = (teamcolor_t)clients[displayplayer].team;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
    if(team == team_color_none || !(CS_TEAMS_ENABLED && show_team_widget))

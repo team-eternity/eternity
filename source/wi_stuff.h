@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -27,7 +27,6 @@
 #ifndef WI_STUFF_H__
 #define WI_STUFF_H__
 
-#include "doomdef.h"
 #include "in_lude.h"
 
 // States for the intermission

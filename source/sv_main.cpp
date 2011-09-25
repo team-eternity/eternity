@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
 
 #include "acs_intr.h"
 #include "am_map.h"
@@ -43,18 +44,24 @@
 #include "i_system.h"
 #include "info.h"
 #include "m_fixed.h"
+#include "m_random.h"
+#include "mn_engin.h"
 #include "p_hubs.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_partcl.h"
 #include "p_saveg.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
 #include "psnprntf.h"
+#include "r_state.h"
 #include "s_sound.h"
+#include "v_misc.h"
+#include "version.h"
 
 #include "cs_config.h"
 #include "cs_main.h"
@@ -84,7 +91,7 @@ extern char gamemapname[9];
 unsigned int sv_world_index = 0;
 unsigned long sv_public_address = 0;
 unsigned int sv_minimum_buffer_size = 2;
-boolean sv_should_send_new_map = false;
+bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
 
 const char *sv_spectator_password = NULL;
@@ -146,7 +153,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_specialstatus:
    case nm_specialremoved:
    case nm_sectorposition:
-   case nm_soundplayed:
+   case nm_announcerevent:
    case nm_ticfinished:
       break;
    case nm_playercommand:
@@ -193,7 +200,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       // || message_type == nm_specialstatus
       || message_type == nm_specialremoved
       // || message_type == nm_sectorposition
-      || message_type == nm_soundplayed
+      || message_type == nm_announcerevent
       // || message_type == nm_ticfinished
       )
    {
@@ -248,17 +255,18 @@ static void broadcast_packet_excluding(int playernum, void *buffer,
       // [CG] Same as above, except a certain player is excluded.
       if(playeringame[i] && server_clients[i].auth_level > cs_auth_none &&
          i != playernum)
+      {
          send_packet(i, buffer, buffer_size);
+      }
    }
 }
 
-static nm_servermessage_t* build_message(boolean hud_msg,
-                                         boolean prepend_name,
+static nm_servermessage_t* build_message(bool hud_msg, bool prepend_name,
                                          const char *fmt, va_list args)
 {
    size_t total_size =
       sizeof(nm_servermessage_t) + (MAX_STRING_SIZE * sizeof(char));
-   char *buffer = calloc(1, total_size);
+   char *buffer = (char *)(calloc(1, total_size));
    nm_servermessage_t *server_message = (nm_servermessage_t *)buffer;
    char *message = (char *)(buffer + sizeof(nm_servermessage_t));
    int message_length =
@@ -274,7 +282,7 @@ static nm_servermessage_t* build_message(boolean hud_msg,
    return server_message;
 }
 
-static void send_message(int playernum, boolean hud_msg, boolean prepend_name,
+static void send_message(int playernum, bool hud_msg, bool prepend_name,
                          const char *fmt, va_list args)
 {
    send_packet(
@@ -284,7 +292,7 @@ static void send_message(int playernum, boolean hud_msg, boolean prepend_name,
    );
 }
 
-static void broadcast_message(boolean hud_msg, boolean prepend_name,
+static void broadcast_message(bool hud_msg, bool prepend_name,
                               const char *fmt, va_list args)
 {
    broadcast_packet(
@@ -325,8 +333,8 @@ void SV_Init(void)
 
    CS_ZeroClients();
 
-   // [CG] Initialize map specials.
-   CS_SpecInit();
+   // [CG] Initialize sector positions.
+   CS_InitSectorPositions();
 
    // [CG] Initialize CURL multi handle.
    SV_MultiInit();
@@ -334,7 +342,7 @@ void SV_Init(void)
 
    strncpy(players[0].name, SERVER_NAME, strlen(SERVER_NAME) + 1);
    free(default_name);
-   default_name = calloc(7, sizeof(char));
+   default_name = (char *)(calloc(7, sizeof(char)));
    strncpy(default_name, "Player", 7);
 }
 
@@ -347,13 +355,15 @@ void SV_CleanUp(void)
 
 char* SV_GetUserAgent(void)
 {
-   char *version = CS_VersionString();
-   char *user_agent = calloc(35, sizeof(char)); // [CG] 35 is probably good...
+   std::stringstream user_agent_stream;
 
-   sprintf(user_agent, "emp-server/%s", version);
-   free(version);
+   user_agent_stream << "emp-server"    << "/"
+                     << (version / 100) << "."
+                     << (version % 100) << "."
+                     << (subversion)    << "-"
+                     << (cs_protocol_version);
 
-   return user_agent;
+   return strdup(user_agent_stream.str().c_str());
 }
 
 ENetPeer* SV_GetPlayerPeer(int playernum)
@@ -405,8 +415,8 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
    int i;
    fixed_t x = 0;
    fixed_t y = 0;
-   boolean remove_solid = false;
-   boolean remove_tele_stomp = false;
+   bool remove_solid = false;
+   bool remove_tele_stomp = false;
 
    // [CG] FIXME: Apparently sometimes player->mo is NULL.
    if((players[playernum].mo->flags & MF_SOLID) == 0)
@@ -419,16 +429,13 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
    {
       x = playerstarts[i].x << FRACBITS;
       y = playerstarts[i].x << FRACBITS;
+
       if(P_CheckPosition(players[playernum].mo, x, y))
-      {
          break;
-      }
    }
 
    if(remove_solid)
-   {
       players[playernum].mo->flags &= ~MF_SOLID;
-   }
 
    if(GameType != gt_dm)
    {
@@ -440,11 +447,11 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
          remove_tele_stomp = true;
          players[playernum].mo->flags3 |= MF3_TELESTOMP;
       }
+
       P_TeleportMove(players[playernum].mo, x, y, false);
+
       if(remove_tele_stomp)
-      {
          players[playernum].mo->flags3 &= ~MF3_TELESTOMP;
-      }
    }
    return &playerstarts[i];
 }
@@ -452,7 +459,7 @@ mapthing_t* SV_GetCoopSpawnPoint(int playernum)
 mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum)
 {
    int i, j;
-   boolean remove_solid = false;
+   bool remove_solid = false;
    int deathmatch_start_count = deathmatch_p - deathmatchstarts;
 
    if(deathmatch_start_count == 0)
@@ -491,7 +498,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
    fixed_t x, y;
    teamcolor_t color;
    mapthing_t *spawn_point;
-   boolean remove_solid = false;
+   bool remove_solid = false;
 
    if(team_start_counts_by_team[clients[playernum].team] == 0)
    {
@@ -505,7 +512,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
       players[playernum].mo->flags |= MF_SOLID;
    }
 
-   color = clients[playernum].team;
+   color = (teamcolor_t)clients[playernum].team;
 
    for(i = 0; i < 20; i++)
    {
@@ -514,15 +521,12 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
       x = spawn_point->x;
       y = spawn_point->y;
       if(P_CheckPosition(players[playernum].mo, x, y))
-      {
          break;
-      }
    }
 
    if(remove_solid)
-   {
       players[playernum].mo->flags &= ~MF_SOLID;
-   }
+
    // [CG] Even if there was no good team spawn, we still use the 20th one
    //      tried... even if it means the player will probably be stuck.
    return spawn_point;
@@ -556,7 +560,7 @@ void SV_ConsoleTicker(void)
    char ch;
    size_t len;
    static char *buffer = NULL;
-   static boolean wrote_prompt = false;
+   static bool wrote_prompt = false;
 
    // [CG] In general this is a little less safe than I would be, but it's
    //      faster than memset'ing all the time (which is what I would do).
@@ -565,9 +569,7 @@ void SV_ConsoleTicker(void)
    //      messages are printed to the console the buffer can be re-printed.
 
    if(buffer == NULL)
-   {
-      buffer = calloc(CONSOLE_INPUT_LENGTH, sizeof(char));
-   }
+      buffer = (char *)(calloc(CONSOLE_INPUT_LENGTH, sizeof(char)));
 
    if(!wrote_prompt)
    {
@@ -632,9 +634,7 @@ void SV_ConsoleTicker(void)
    unsigned int max_buf_size = CONSOLE_INPUT_LENGTH - 2;
 
    if(buffer == NULL)
-   {
-      buffer = calloc(CONSOLE_INPUT_LENGTH, sizeof(char));
-   }
+      buffer = (char *)(calloc(CONSOLE_INPUT_LENGTH, sizeof(char)));
 
    FD_ZERO(&fdr);
    FD_SET(0, &fdr);
@@ -642,9 +642,7 @@ void SV_ConsoleTicker(void)
    tv.tv_usec = 0;
 
    if(!select(1, &fdr, NULL, NULL, &tv))
-   {
       return;
-   }
 
    buf_size = strlen(buffer);
 
@@ -654,12 +652,10 @@ void SV_ConsoleTicker(void)
    //      linebreak is entered, we have to implement a re-allocating buffer.
    //      Can't just keep writing into whatever junk memory comes after
    //      buffer.
+   // [CG] read() returns the amount of data that was read, so if nothing was
+   //      read we just return.
    if(read(0, buffer + buf_size, max_buf_size - (buf_size)) < 1)
-   {
-      // [CG] read() returns the amount of data that was read, so if nothing
-      //      was read we just return.
       return;
-   }
 
    last_char = strlen(buffer) - 1;
 
@@ -687,13 +683,13 @@ void SV_LoadCurrentPlayerPosition(int playernum)
 #if _UNLAG_DEBUG
 void SV_SpawnGhost(int playernum)
 {
-   mobj_t *actor = players[playernum].mo;
+   Mobj *actor = players[playernum].mo;
    server_client_t *sc = &server_clients[playernum];
 
    if(sc->ghost)
    {
       SV_BroadcastActorRemoved(sc->ghost);
-      P_RemoveMobj(sc->ghost);
+      sc->ghost->removeThinker();
    }
 
    sc->ghost = P_SpawnMobj(
@@ -1028,11 +1024,11 @@ void SV_AddNewClients(void)
 
 void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
 {
-   mobj_t *flash;
+   Mobj *flash;
    player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
-   cs_queue_level_e queue_level = client->queue_level;
+   cs_queue_level_e queue_level = (cs_queue_level_e)client->queue_level;
    unsigned int queue_position = client->queue_position;
 
    if(reason > dr_max_reasons)
@@ -1076,7 +1072,7 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
       }
 
       SV_BroadcastActorRemoved(player->mo);
-      P_RemoveMobj(player->mo);
+      player->mo->removeThinker();
       player->mo = NULL;
    }
 
@@ -1192,7 +1188,7 @@ void SV_BroadcastMapStarted(void)
    broadcast_packet(&message, sizeof(nm_mapstarted_t));
 }
 
-void SV_BroadcastMapCompleted(boolean enter_intermission)
+void SV_BroadcastMapCompleted(bool enter_intermission)
 {
    nm_mapcompleted_t message;
 
@@ -1205,7 +1201,7 @@ void SV_BroadcastMapCompleted(boolean enter_intermission)
 }
 
 void SV_SendAuthorizationResult(int playernum,
-                                boolean authorization_successful,
+                                bool authorization_successful,
                                 cs_auth_level_e authorization_level)
 {
    nm_authresult_t auth_result;
@@ -1218,7 +1214,7 @@ void SV_SendAuthorizationResult(int playernum,
    send_packet(playernum, &auth_result, sizeof(nm_authresult_t));
 }
 
-boolean SV_AuthorizeClient(int playernum, const char *password)
+bool SV_AuthorizeClient(int playernum, const char *password)
 {
    size_t length;
    server_client_t *server_client = &server_clients[playernum];
@@ -1353,13 +1349,13 @@ static void run_player_command(int playernum, cs_buffered_command_t *bufcmd)
    server_client->command_world_index = bufcmd->command.world_index;
    memcpy(&players[playernum].cmd, &bufcmd->command.ticcmd, sizeof(ticcmd_t));
 
-   CS_ProcessPlayerCommand(playernum);
+   P_RunPlayerCommand(playernum);
    server_client->last_command_run_index = bufcmd->command.world_index;
 
    free(bufcmd);
 }
 
-boolean SV_RunPlayerCommands(int playernum)
+bool SV_RunPlayerCommands(int playernum)
 {
    cs_buffered_command_t *bufcmd;
    client_t *client = &clients[playernum];
@@ -1430,19 +1426,17 @@ boolean SV_RunPlayerCommands(int playernum)
 
 void SV_SaveActorPositions(void)
 {
-   mobj_t *actor;
-   thinker_t *think;
+   Mobj *actor;
+   Thinker *think;
    server_client_t *server_client;
    position_t *p;
    int playernum;
-   teamcolor_t color;
+   int color;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
-      if(think->function != P_MobjThinker)
+      if(!(actor = thinker_cast<Mobj *>(think)))
          continue;
-
-      actor = (mobj_t *)think;
 
       if(actor->player != NULL)
       {
@@ -1478,7 +1472,9 @@ void SV_SaveActorPositions(void)
             //      the flag, the flag position will seem to lag behind them.
             if(cs_flags[color].net_id == actor->net_id &&
                cs_flags[color].state == flag_carried)
-               return;
+            {
+               continue;
+            }
          }
          SV_BroadcastActorPosition(actor, sv_world_index);
       }
@@ -1514,7 +1510,7 @@ void SV_SetWeaponPreference(int playernum, int slot, weapontype_t weapon)
    server_client->weapon_preferences[slot] = weapon;
 }
 
-boolean SV_HandleJoinRequest(int playernum)
+bool SV_HandleJoinRequest(int playernum)
 {
    client_t *client = &clients[playernum];
    server_client_t *server_client = &server_clients[playernum];
@@ -1562,7 +1558,8 @@ boolean SV_HandleJoinRequest(int playernum)
          SV_SetPlayerTeam(playernum, team_color_red);
       }
 
-      team_player_count = CS_GetTeamPlayerCount(client->team);
+      team_player_count = CS_GetTeamPlayerCount((teamcolor_t)client->team);
+
       if(team_player_count > cs_settings->max_players_per_team)
       {
          // [CG] Too many players on this team, inform the player.
@@ -1591,7 +1588,7 @@ void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum)
 {
    client_t *client;
    server_client_t *server_client;
-   boolean authorization_successful = false;
+   bool authorization_successful = false;
    nm_playermessage_t *player_message = (nm_playermessage_t *)data;
    char *message = NULL;
 
@@ -1821,7 +1818,9 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 #endif
 
    server_client->received_command_for_current_map = true;
-   cs_buffered_command_t *bufcmd = malloc(sizeof(cs_buffered_command_t));
+   cs_buffered_command_t *bufcmd = (cs_buffered_command_t *)(malloc(
+      sizeof(cs_buffered_command_t)
+   ));
    memcpy(&bufcmd->command, received_command, sizeof(cs_cmd_t));
    M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
 
@@ -1899,8 +1898,8 @@ void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_e reason)
    broadcast_packet(&remove_player_message, sizeof(nm_playerremoved_t));
 }
 
-void SV_BroadcastPuffSpawned(mobj_t *puff, mobj_t *shooter, int updown,
-                             boolean ptcl)
+void SV_BroadcastPuffSpawned(Mobj *puff, Mobj *shooter, int updown,
+                             bool ptcl)
 {
    nm_puffspawned_t puff_message;
 
@@ -1917,8 +1916,8 @@ void SV_BroadcastPuffSpawned(mobj_t *puff, mobj_t *shooter, int updown,
    broadcast_packet(&puff_message, sizeof(nm_puffspawned_t));
 }
 
-void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
-                              mobj_t *target)
+void SV_BroadcastBloodSpawned(Mobj *blood, Mobj *shooter, int damage,
+                              Mobj *target)
 {
    nm_bloodspawned_t blood_message;
 
@@ -1935,7 +1934,7 @@ void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
    broadcast_packet(&blood_message, sizeof(nm_bloodspawned_t));
 }
 
-void SV_BroadcastActorSpawned(mobj_t *actor)
+void SV_BroadcastActorSpawned(Mobj *actor)
 {
    nm_actorspawned_t spawn_message;
 
@@ -1955,7 +1954,7 @@ void SV_BroadcastActorSpawned(mobj_t *actor)
    broadcast_packet(&spawn_message, sizeof(nm_actorspawned_t));
 }
 
-void SV_BroadcastActorPosition(mobj_t *actor, int tic)
+void SV_BroadcastActorPosition(Mobj *actor, int tic)
 {
    int blood = E_SafeThingType(MT_BLOOD);
    int puff  = E_SafeThingType(MT_PUFF);
@@ -2006,54 +2005,48 @@ void SV_BroadcastSectorPosition(size_t sector_number)
    broadcast_packet(&position_message, sizeof(nm_sectorposition_t));
 }
 
-void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
-                                   line_t *line, map_special_t special_type)
+void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
+                                   sector_t *sector,
+                                   map_special_e special_type)
 {
    size_t msg_size = sizeof(nm_specialspawned_t);
-   size_t special_size, total_size, sector_number;
-   char *buffer;
+   size_t special_size, total_size;
+   char *buffer, *status_buffer;
    nm_specialspawned_t *spawn_message;
 
    switch(special_type)
    {
    case ms_ceiling:
    case ms_ceiling_param:
-      special_size = sizeof(ceiling_status_t);
-      sector_number = ((ceiling_t *)(special))->sector - sectors;
+      special_size = sizeof(CeilingThinker::status_t);
       break;
    case ms_door_tagged:
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
    case ms_door_param:
-      special_size = sizeof(door_status_t);
-      sector_number = ((vldoor_t *)(special))->sector - sectors;
+      special_size = sizeof(VerticalDoorThinker::status_t);
       break;
    case ms_floor:
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
    case ms_floor_param:
-      special_size = sizeof(floor_status_t);
-      sector_number = ((floormove_t *)(special))->sector - sectors;
+      special_size = sizeof(FloorMoveThinker::status_t);
       break;
    case ms_elevator:
-      special_size = sizeof(elevator_status_t);
-      sector_number = ((elevator_t *)(special))->sector - sectors;
+      special_size = sizeof(ElevatorThinker::status_t);
       break;
    case ms_pillar_build:
    case ms_pillar_open:
-      special_size = sizeof(pillar_status_t);
-      sector_number = ((pillar_t *)(special))->sector - sectors;
+      special_size = sizeof(PillarThinker::status_t);
       break;
    case ms_floorwaggle:
-      special_size = sizeof(floorwaggle_status_t);
-      sector_number = ((floorwaggle_t *)(special))->sector - sectors;
+      special_size = sizeof(FloorWaggleThinker::status_t);
       break;
    case ms_platform:
    case ms_platform_gen:
-      special_size = sizeof(platform_status_t);
-      sector_number = ((plat_t *)(special))->sector - sectors;
+      special_size = sizeof(PlatThinker::status_t);
       break;
    default:
       I_Error(
@@ -2079,106 +2072,107 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
       break;
    }
 
-   buffer = malloc(total_size);
+   buffer = (char *)(malloc(total_size));
+   status_buffer = (buffer + sizeof(nm_specialspawned_t));
    spawn_message = (nm_specialspawned_t *)buffer;
    spawn_message->message_type = nm_specialspawned;
    spawn_message->world_index = sv_world_index;
    spawn_message->special_type = special_type;
 
    if(line == NULL)
-   {
       spawn_message->line_number = 0;
-   }
    else
-   {
       spawn_message->line_number = line - lines;
-   }
-   spawn_message->sector_number = sector_number;
+
+   if(sector == NULL)
+      spawn_message->sector_number = 0;
+   else
+      spawn_message->sector_number = sector - sectors;
 
    switch(special_type)
    {
    case ms_ceiling:
    case ms_ceiling_param:
-      CS_SaveCeilingStatus(
-         (ceiling_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (ceiling_t *)special
-      );
+   {
+      CeilingThinker *ct = reinterpret_cast<CeilingThinker *>(special);
+      ct->getStatus((CeilingThinker::status_t *)status_buffer);
       break;
+   }
    case ms_door_tagged:
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
    case ms_door_param:
-      CS_SaveDoorStatus(
-         (door_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (vldoor_t *)special
-      );
+   {
+      VerticalDoorThinker *vdt =
+         reinterpret_cast<VerticalDoorThinker *>(special);
+      vdt->getStatus((VerticalDoorThinker::status_t *)status_buffer);
       break;
+   }
    case ms_floor:
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
    case ms_floor_param:
-      CS_SaveFloorStatus(
-         (floor_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (floormove_t *)special
-      );
+   {
+      FloorMoveThinker *fmt = reinterpret_cast<FloorMoveThinker *>(special);
+      fmt->getStatus((FloorMoveThinker::status_t *)status_buffer);
       break;
+   }
    case ms_elevator:
-      CS_SaveElevatorStatus(
-         (elevator_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (elevator_t *)special
-      );
+   {
+      ElevatorThinker *et = reinterpret_cast<ElevatorThinker *>(special);
+      et->getStatus((ElevatorThinker::status_t *)status_buffer);
       break;
+   }
    case ms_pillar_build:
    case ms_pillar_open:
-      CS_SavePillarStatus(
-         (pillar_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (pillar_t *)special
-      );
+   {
+      PillarThinker *pt = reinterpret_cast<PillarThinker *>(special);
+      pt->getStatus((PillarThinker::status_t *)status_buffer);
       break;
+   }
    case ms_floorwaggle:
-      CS_SaveFloorWaggleStatus(
-         (floorwaggle_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (floorwaggle_t *)special
-      );
+   {
+      FloorWaggleThinker *flt =
+         reinterpret_cast<FloorWaggleThinker *>(special);
+      flt->getStatus((FloorWaggleThinker::status_t *)status_buffer);
       break;
+   }
    case ms_platform:
    case ms_platform_gen:
-      CS_SavePlatformStatus(
-         (platform_status_t *)(buffer + sizeof(nm_specialspawned_t)),
-         (plat_t *)special
-      );
+   {
+      PlatThinker *plt = reinterpret_cast<PlatThinker *>(special);
+      plt->getStatus((PlatThinker::status_t *)status_buffer);
       break;
+   }
    default:
       return;
    }
 
-   switch(special_type)
+   if(special_type == ms_ceiling_param)
    {
-   case ms_ceiling_param:
-      CS_SaveCeilingData(
-         (cs_ceilingdata_t *)(buffer + sizeof(nm_specialspawned_t) +
-                                       sizeof(ceiling_status_t)),
-         (ceilingdata_t *)special_data
+      ceilingdata_t *ceiling_data = reinterpret_cast<ceilingdata_t *>(data);
+      cs_ceilingdata_t *ceiling_data_buffer = (cs_ceilingdata_t *)(
+         status_buffer + sizeof(CeilingThinker::status_t)
       );
-      break;
-   case ms_door_param:
-      CS_SaveDoorData(
-         (cs_doordata_t *)(buffer + sizeof(nm_specialspawned_t) +
-                                    sizeof(door_status_t)),
-         (doordata_t *)special_data
+      CS_SaveCeilingData(ceiling_data_buffer, ceiling_data);
+   }
+   else if(special_type == ms_door_param)
+   {
+      doordata_t *door_data = reinterpret_cast<doordata_t *>(data);
+      cs_doordata_t *door_data_buffer = (cs_doordata_t *)(
+         status_buffer + sizeof(VerticalDoorThinker::status_t)
       );
-      break;
-   case ms_floor_param:
-      CS_SaveFloorData(
-         (cs_floordata_t *)(buffer + sizeof(nm_specialspawned_t) +
-                                     sizeof(floor_status_t)),
-         (floordata_t *)special_data
+      CS_SaveDoorData(door_data_buffer, door_data);
+   }
+   else if(special_type == ms_floor_param)
+   {
+      floordata_t *floor_data = reinterpret_cast<floordata_t *>(data);
+      cs_floordata_t *floor_data_buffer = (cs_floordata_t *)(
+         status_buffer + sizeof(FloorMoveThinker::status_t)
       );
-      break;
-   default:
-      break;
+      CS_SaveFloorData(floor_data_buffer, floor_data);
    }
 
    broadcast_packet(buffer, total_size);
@@ -2186,46 +2180,46 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
    free(buffer);
 }
 
-void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
+void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type)
 {
    size_t msg_size = sizeof(nm_specialstatus_t);
    size_t special_size, total_size;
-   char *buffer;
+   char *buffer, *status_buffer;
    nm_specialstatus_t *status_message;
 
    switch(special_type)
    {
    case ms_ceiling:
    case ms_ceiling_param:
-      special_size = sizeof(ceiling_status_t);
+      special_size = sizeof(CeilingThinker::status_t);
       break;
    case ms_door_tagged:
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
    case ms_door_param:
-      special_size = sizeof(door_status_t);
+      special_size = sizeof(VerticalDoorThinker::status_t);
       break;
    case ms_floor:
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
    case ms_floor_param:
-      special_size = sizeof(floor_status_t);
+      special_size = sizeof(FloorMoveThinker::status_t);
       break;
    case ms_elevator:
-      special_size = sizeof(elevator_status_t);
+      special_size = sizeof(ElevatorThinker::status_t);
       break;
    case ms_pillar_build:
    case ms_pillar_open:
-      special_size = sizeof(pillar_status_t);
+      special_size = sizeof(PillarThinker::status_t);
       break;
    case ms_floorwaggle:
-      special_size = sizeof(floorwaggle_status_t);
+      special_size = sizeof(FloorWaggleThinker::status_t);
       break;
    case ms_platform:
    case ms_platform_gen:
-      special_size = sizeof(platform_status_t);
+      special_size = sizeof(PlatThinker::status_t);
       break;
    default:
       I_Error(
@@ -2236,7 +2230,8 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    }
 
    total_size = msg_size + special_size;
-   buffer = malloc(total_size);
+   buffer = (char *)(malloc(total_size));
+   status_buffer = (buffer + sizeof(nm_specialspawned_t));
 
    status_message = (nm_specialstatus_t *)buffer;
    status_message->message_type = nm_specialstatus;
@@ -2247,57 +2242,59 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
    {
    case ms_ceiling:
    case ms_ceiling_param:
-      CS_SaveCeilingStatus(
-         (ceiling_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (ceiling_t *)special
-      );
+   {
+      CeilingThinker *ct = reinterpret_cast<CeilingThinker *>(special);
+      ct->getStatus((CeilingThinker::status_t *)status_buffer);
       break;
+   }
    case ms_door_tagged:
    case ms_door_manual:
    case ms_door_closein30:
    case ms_door_raisein300:
    case ms_door_param:
-      CS_SaveDoorStatus(
-         (door_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (vldoor_t *)special
-      );
+   {
+      VerticalDoorThinker *vdt =
+         reinterpret_cast<VerticalDoorThinker *>(special);
+      vdt->getStatus((VerticalDoorThinker::status_t *)status_buffer);
       break;
+   }
    case ms_floor:
    case ms_stairs:
    case ms_donut:
    case ms_donut_hole:
    case ms_floor_param:
-      CS_SaveFloorStatus(
-         (floor_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (floormove_t *)special
-      );
+   {
+      FloorMoveThinker *fmt = reinterpret_cast<FloorMoveThinker *>(special);
+      fmt->getStatus((FloorMoveThinker::status_t *)status_buffer);
       break;
+   }
    case ms_elevator:
-      CS_SaveElevatorStatus(
-         (elevator_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (elevator_t *)special
-      );
+   {
+      ElevatorThinker *et = reinterpret_cast<ElevatorThinker *>(special);
+      et->getStatus((ElevatorThinker::status_t *)status_buffer);
       break;
+   }
    case ms_pillar_build:
    case ms_pillar_open:
-      CS_SavePillarStatus(
-         (pillar_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (pillar_t *)special
-      );
+   {
+      PillarThinker *pt = reinterpret_cast<PillarThinker *>(special);
+      pt->getStatus((PillarThinker::status_t *)status_buffer);
       break;
+   }
    case ms_floorwaggle:
-      CS_SaveFloorWaggleStatus(
-         (floorwaggle_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (floorwaggle_t *)special
-      );
+   {
+      FloorWaggleThinker *flt =
+         reinterpret_cast<FloorWaggleThinker *>(special);
+      flt->getStatus((FloorWaggleThinker::status_t *)status_buffer);
       break;
+   }
    case ms_platform:
    case ms_platform_gen:
-      CS_SavePlatformStatus(
-         (platform_status_t *)(buffer + sizeof(nm_specialstatus_t)),
-         (plat_t *)special
-      );
+   {
+      PlatThinker *plt = reinterpret_cast<PlatThinker *>(special);
+      plt->getStatus((PlatThinker::status_t *)status_buffer);
       break;
+   }
    default:
       return;
    }
@@ -2307,7 +2304,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type)
 }
 
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
-                                   map_special_t special_type)
+                                   map_special_e special_type)
 {
    nm_specialremoved_t removal_message;
 
@@ -2319,40 +2316,16 @@ void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
    broadcast_packet(&removal_message, sizeof(nm_specialremoved_t));
 }
 
-void SV_BroadcastSoundPlayed(mobj_t *source, const char *name, int volume,
-                             soundattn_e attenuation, boolean loop,
-                             schannel_e channel)
+void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source)
 {
-   char *buffer = NULL;
-   nm_soundplayed_t *sound_message;
-   uint32_t sound_name_size = strlen(name);
-   // [CG] Over-allocate slightly for safety.
-   size_t buffer_size = sizeof(nm_soundplayed_t) + sound_name_size + 2;
+   nm_announcerevent_t message;
 
-   // [CG] Allocate buffer.
-   buffer = calloc(buffer_size, sizeof(char));
+   message.message_type = nm_announcerevent;
+   message.world_index = sv_world_index;
+   message.source_net_id = source->net_id;
+   message.event_index = event;
 
-   // [CG] Type-pun buffer into sound message.
-   sound_message = (nm_soundplayed_t *)buffer;
-
-   // [CG] Build sound message.
-   sound_message->message_type = nm_soundplayed;
-   sound_message->world_index = sv_world_index;
-   sound_message->source_net_id = source->net_id;
-   sound_message->sound_name_size = sound_name_size;
-   sound_message->volume = volume;
-   sound_message->attenuation = attenuation;
-   sound_message->loop = loop;
-   sound_message->channel = channel;
-
-   // [CG] Copy sound name into the end of the buffer.
-   memcpy(buffer + sizeof(nm_soundplayed_t), name, sound_name_size);
-
-   // [CG] Broadcast the packet.
-   broadcast_packet(buffer, buffer_size);
-
-   // [CG] Free the buffer.
-   free(buffer);
+   broadcast_packet(&message, sizeof(nm_announcerevent_t));
 }
 
 void SV_BroadcastTICFinished(void)
@@ -2365,9 +2338,9 @@ void SV_BroadcastTICFinished(void)
    broadcast_packet(&tic_message, sizeof(nm_ticfinished_t));
 }
 
-void SV_BroadcastActorTarget(mobj_t *actor, actor_target_e target_type)
+void SV_BroadcastActorTarget(Mobj *actor, actor_target_e target_type)
 {
-   mobj_t *target;
+   Mobj *target;
    nm_actortarget_t target_message;
 
    target_message.message_type = nm_actortarget;
@@ -2401,7 +2374,7 @@ void SV_BroadcastActorTarget(mobj_t *actor, actor_target_e target_type)
    broadcast_packet(&target_message, sizeof(nm_actortarget_t));
 }
 
-void SV_BroadcastActorState(mobj_t *actor, statenum_t state_number)
+void SV_BroadcastActorState(Mobj *actor, statenum_t state_number)
 {
    nm_actorstate_t state_message;
 
@@ -2422,10 +2395,10 @@ void SV_BroadcastActorState(mobj_t *actor, statenum_t state_number)
    broadcast_packet(&state_message, sizeof(nm_actorstate_t));
 }
 
-void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
-                              mobj_t *source, int health_damage,
+void SV_BroadcastActorDamaged(Mobj *target, Mobj *inflictor,
+                              Mobj *source, int health_damage,
                               int armor_damage, int mod,
-                              boolean damage_was_fatal, boolean just_hit)
+                              bool damage_was_fatal, bool just_hit)
 {
    nm_actordamaged_t damage_message;
 
@@ -2452,7 +2425,7 @@ void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
    broadcast_packet(&damage_message, sizeof(nm_actordamaged_t));
 }
 
-void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
+void SV_BroadcastActorKilled(Mobj *target, Mobj *inflictor, Mobj *source,
                              int damage, int mod)
 {
    nm_actorkilled_t kill_message;
@@ -2477,7 +2450,7 @@ void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
    broadcast_packet(&kill_message, sizeof(nm_actorkilled_t));
 }
 
-void SV_BroadcastActorRemoved(mobj_t *mo)
+void SV_BroadcastActorRemoved(Mobj *mo)
 {
    nm_actorremoved_t remove_message;
 
@@ -2488,7 +2461,7 @@ void SV_BroadcastActorRemoved(mobj_t *mo)
    broadcast_packet(&remove_message, sizeof(nm_actorremoved_t));
 }
 
-static void build_line_packet(nm_lineactivated_t *line_message, mobj_t *actor,
+static void build_line_packet(nm_lineactivated_t *line_message, Mobj *actor,
                               line_t *line, int side,
                               activation_type_e activation_type)
 {
@@ -2504,7 +2477,7 @@ static void build_line_packet(nm_lineactivated_t *line_message, mobj_t *actor,
    line_message->side = side;
 }
 
-void SV_BroadcastLineCrossed(mobj_t *actor, line_t *line, int side)
+void SV_BroadcastLineCrossed(Mobj *actor, line_t *line, int side)
 {
    nm_lineactivated_t line_message;
 
@@ -2513,7 +2486,7 @@ void SV_BroadcastLineCrossed(mobj_t *actor, line_t *line, int side)
    broadcast_packet(&line_message, sizeof(nm_lineactivated_t));
 }
 
-void SV_BroadcastLineUsed(mobj_t *actor, line_t *line, int side)
+void SV_BroadcastLineUsed(Mobj *actor, line_t *line, int side)
 {
    nm_lineactivated_t line_message;
 
@@ -2522,7 +2495,7 @@ void SV_BroadcastLineUsed(mobj_t *actor, line_t *line, int side)
    broadcast_packet(&line_message, sizeof(nm_lineactivated_t));
 }
 
-void SV_BroadcastLineShot(mobj_t *actor, line_t *line, int side)
+void SV_BroadcastLineShot(Mobj *actor, line_t *line, int side)
 {
    nm_lineactivated_t line_message;
 
@@ -2531,7 +2504,7 @@ void SV_BroadcastLineShot(mobj_t *actor, line_t *line, int side)
    broadcast_packet(&line_message, sizeof(nm_lineactivated_t));
 }
 
-void SV_BroadcastMonsterActive(mobj_t *monster)
+void SV_BroadcastMonsterActive(Mobj *monster)
 {
    nm_monsteractive_t monster_message;
 
@@ -2542,7 +2515,7 @@ void SV_BroadcastMonsterActive(mobj_t *monster)
    broadcast_packet(&monster_message, sizeof(nm_monsteractive_t));
 }
 
-void SV_BroadcastMonsterAwakened(mobj_t *monster)
+void SV_BroadcastMonsterAwakened(Mobj *monster)
 {
    nm_monsterawakened_t monster_message;
 
@@ -2553,7 +2526,7 @@ void SV_BroadcastMonsterAwakened(mobj_t *monster)
    broadcast_packet(&monster_message, sizeof(nm_monsterawakened_t));
 }
 
-void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
+void SV_BroadcastMissileSpawned(Mobj *source, Mobj *missile)
 {
    nm_missilespawned_t missile_message;
 
@@ -2573,7 +2546,7 @@ void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile)
    broadcast_packet(&missile_message, sizeof(nm_missilespawned_t));
 }
 
-void SV_BroadcastMissileExploded(mobj_t *missile)
+void SV_BroadcastMissileExploded(Mobj *missile)
 {
    nm_missileexploded_t explode_message;
 
@@ -2585,7 +2558,7 @@ void SV_BroadcastMissileExploded(mobj_t *missile)
    broadcast_packet(&explode_message, sizeof(nm_missileexploded_t));
 }
 
-void SV_BroadcastCubeSpawned(mobj_t *cube)
+void SV_BroadcastCubeSpawned(Mobj *cube)
 {
    nm_cubespawned_t cube_message;
 
@@ -2720,8 +2693,8 @@ void SV_TryRunTics(void)
          SV_AddNewClients();
          if(sv_should_send_new_map)
          {
-            teamcolor_t color;
-            mobj_t *flag_actor;
+            int color;
+            Mobj *flag_actor;
 
             for(i = 1; i < MAXPLAYERS; i++)
             {
@@ -2736,7 +2709,7 @@ void SV_TryRunTics(void)
                if(!cs_flag_stands[color].exists)
                   continue;
 
-               if((flag_actor = CS_GetActorFromNetID(cs_flags[color].net_id)))
+               if((flag_actor = NetActors.lookup(cs_flags[color].net_id)))
                   SV_BroadcastActorSpawned(flag_actor);
             }
             sv_should_send_new_map = false;
@@ -2821,7 +2794,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_specialstatus:
    case nm_specialremoved:
    case nm_sectorposition:
-   case nm_soundplayed:
+   case nm_announcerevent:
    case nm_ticfinished:
       doom_printf(
          "Received invalid client message %s (%u)\n",

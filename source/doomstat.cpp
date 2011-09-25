@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -35,14 +35,14 @@
 Language_t   language = english;
 
 // Set if homebrew PWAD stuff has been added.
-boolean modifiedgame;
+bool modifiedgame;
 
 // haleyjd 03/05/09: support using same config for all DOOM game modes
 int use_doom_config = false;
 
 //-----------------------------------------------------------------------------
 
-boolean in_textmode = true;        // game in graphics mode yet?
+bool in_textmode = true;        // game in graphics mode yet?
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 int compatibility, default_compatibility;          // killough 1/31/98
@@ -112,11 +112,11 @@ int help_friends, default_help_friends;
 int flashing_hom;     // killough 10/98
 
 int doom_weapon_toggles; // killough 10/98
-int default_doom_weapon_toggles = 1; // [CG] Added.
+int default_doom_weapon_toggles; // [CG] 09/24/11
 
 int monkeys, default_monkeys;
 
-boolean cinema_pause = false; // haleyjd 08/22/01
+bool cinema_pause = false; // haleyjd 08/22/01
 
 int drawparticles;  // haleyjd 09/28/01
 int bloodsplat_particle;

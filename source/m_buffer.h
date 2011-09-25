@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -27,6 +27,9 @@
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
 
+// Required for: byte
+#include "doomtype.h"
+
 //
 // An exception class for buffered IO errors
 //
@@ -50,12 +53,12 @@ public:
 class BufferedFileBase
 {
 protected:
-   FILE *f;          // destination or source file
-   byte *buffer;     // buffer
-   size_t len;       // total buffer length
-   size_t idx;       // current index
-   int endian;       // endianness indicator
-   boolean throwing; // throws exceptions on IO errors
+   FILE *f;       // destination or source file
+   byte *buffer;  // buffer
+   size_t len;    // total buffer length
+   size_t idx;    // current index
+   int endian;    // endianness indicator
+   bool throwing; // throws exceptions on IO errors
    
    void InitBuffer(size_t pLen, int pEndian);
 
@@ -68,8 +71,8 @@ public:
    void SwapULong (uint32_t &x);
    void SwapUShort(uint16_t &x);
 
-   void setThrowing(boolean val) { throwing = val;  }
-   boolean getThrowing() const   { return throwing; }
+   void setThrowing(bool val) { throwing = val;  }
+   bool getThrowing() const   { return throwing; }
 
    // endianness values
    enum
@@ -88,17 +91,17 @@ public:
 class OutBuffer : public BufferedFileBase
 {
 public:
-   boolean CreateFile(const char *filename, size_t pLen, int pEndian);
-   boolean Flush();
-   void    Close();
+   bool CreateFile(const char *filename, size_t pLen, int pEndian);
+   bool Flush();
+   void Close();
 
-   boolean Write(const void *data, size_t size);
-   boolean WriteSint32(int32_t  num);
-   boolean WriteUint32(uint32_t num);
-   boolean WriteSint16(int16_t  num);
-   boolean WriteUint16(uint16_t num);
-   boolean WriteSint8 (int8_t   num);
-   boolean WriteUint8 (uint8_t  num);
+   bool Write(const void *data, size_t size);
+   bool WriteSint32(int32_t  num);
+   bool WriteUint32(uint32_t num);
+   bool WriteSint16(int16_t  num);
+   bool WriteUint16(uint16_t num);
+   bool WriteSint8 (int8_t   num);
+   bool WriteUint8 (uint8_t  num);
 };
 
 //
@@ -109,20 +112,20 @@ public:
 class InBuffer : public BufferedFileBase
 {
 protected:
-   size_t  readlen; // amount actually read (may be less than len)
-   boolean atEOF;
-   boolean ReadFile();
+   size_t readlen; // amount actually read (may be less than len)
+   bool atEOF;
+   bool ReadFile();
 
 public:
-   boolean OpenFile(const char *filename, size_t pLen, int pEndian);
+   bool OpenFile(const char *filename, size_t pLen, int pEndian);
 
-   boolean Read(void *dest, size_t size);
-   boolean ReadSint32(int32_t  &num);
-   boolean ReadUint32(uint32_t &num);
-   boolean ReadSint16(int16_t  &num);
-   boolean ReadUint16(uint16_t &num);
-   boolean ReadSint8 (int8_t   &num);
-   boolean ReadUint8 (uint8_t  &num);
+   bool Read(void *dest, size_t size);
+   bool ReadSint32(int32_t  &num);
+   bool ReadUint32(uint32_t &num);
+   bool ReadSint16(int16_t  &num);
+   bool ReadUint16(uint16_t &num);
+   bool ReadSint8 (int8_t   &num);
+   bool ReadUint8 (uint8_t  &num);
 };
 
 #endif

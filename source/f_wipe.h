@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -38,7 +38,7 @@ void Wipe_ScreenReset(void);
 void Wipe_SaveEndScreen(void);
 void Wipe_BlitEndScreen(void);
 
-extern boolean inwipe;
+extern bool inwipe;
 extern int wipetype;
 
 #endif

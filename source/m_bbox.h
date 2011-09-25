@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,12 +24,9 @@
 //    
 //-----------------------------------------------------------------------------
 
+#ifndef M_BBOX_H__
+#define M_BBOX_H__
 
-#ifndef __M_BBOX__
-#define __M_BBOX__
-
-//#include <values.h> haleyjd 02/22/02: don't include this directly
-#include "doomtype.h"
 #include "m_fixed.h"
 
 // Bounding box coordinate storage.
@@ -39,13 +36,13 @@ enum
   BOXBOTTOM,
   BOXLEFT,
   BOXRIGHT
-};  // bbox coordinates
+};
 
 // Bounding box functions.
 
-void M_ClearBox(fixed_t* box);
+void M_ClearBox(fixed_t *box);
 
-void M_AddToBox(fixed_t* box,fixed_t x,fixed_t y);
+void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
 
 #endif
 

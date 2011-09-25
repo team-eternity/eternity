@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -36,8 +36,10 @@
 #ifndef E_EXDATA_H__
 #define E_EXDATA_H__
 
+// Required for:
+// * maplinedef_t
+// * NUMLINEARGS, etc.
 #include "doomdata.h"
-#include "doomtype.h"
 #include "r_defs.h"
 
 // defines
@@ -69,6 +71,7 @@ enum
    EX_ML_REPEAT   = 0x00000080, // can be used multiple times
    EX_ML_1SONLY   = 0x00000100, // only activated from first side
    EX_ML_ADDITIVE = 0x00000200, // uses additive blending
+   EX_ML_BLOCKALL = 0x00000400  // line blocks everything
 };
 
 // ExtraData line structure
@@ -125,8 +128,8 @@ typedef struct mapsectorext_s
    eterrainptr ceilingterrain;
 
    // internal fields (used by ExtraData only)
-   boolean hasflags;
-   boolean hasdamageflags;
+   bool hasflags;
+   bool hasdamageflags;
    int recordnum;
    int next;
 
@@ -135,12 +138,12 @@ typedef struct mapsectorext_s
 // Globals
 
 void    E_LoadExtraData(void);
-Mobj *E_SpawnMapThingExt(mapthing_t *mt);
-void    E_LoadLineDefExt(line_t *line, boolean applySpecial);
-boolean E_IsParamSpecial(int16_t special);
+Mobj   *E_SpawnMapThingExt(mapthing_t *mt);
+void    E_LoadLineDefExt(line_t *line, bool applySpecial);
+bool    E_IsParamSpecial(int16_t special);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
-short   E_LineSpecForName(const char *name);
+int16_t E_LineSpecForName(const char *name);
 void    E_LoadSectorExt(line_t *line);
 
 #endif

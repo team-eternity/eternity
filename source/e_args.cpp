@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -26,14 +26,17 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "info.h"
-#include "m_misc.h"
+
+#include "e_args.h"
 #include "e_lib.h"
 #include "e_mod.h"
-#include "e_states.h"
-#include "e_things.h"
 #include "e_sound.h"
-#include "e_args.h"
+#include "e_states.h"
+#include "e_string.h"
+#include "e_things.h"
+#include "info.h"
+#include "m_misc.h"
+#include "p_mobj.h"
 
 // haleyjd 05/21/10: an empty string, to avoid allocating tons of memory for
 // single-byte strings.
@@ -51,9 +54,9 @@ static char e_argemptystr[] = "";
 // Adds an argument to the end of an argument list, if possible.
 // Returns false if the operation fails.
 //
-boolean E_AddArgToList(arglist_t *al, const char *value)
+bool E_AddArgToList(arglist_t *al, const char *value)
 {
-   boolean added = false;
+   bool added = false;
    
    if(al->numargs < EMAXARGS)
    {
@@ -76,7 +79,7 @@ boolean E_AddArgToList(arglist_t *al, const char *value)
 // does not exist already, empty arguments will be added until that index 
 // is valid.
 //
-boolean E_SetArg(arglist_t *al, int index, const char *value)
+bool E_SetArg(arglist_t *al, int index, const char *value)
 {
    if(index >= EMAXARGS)
       return false;
@@ -109,7 +112,7 @@ boolean E_SetArg(arglist_t *al, int index, const char *value)
 // This is for convenience in DeHackEd, which is not very smart about 
 // setting arguments.
 //
-boolean E_SetArgFromNumber(arglist_t *al, int index, int value)
+bool E_SetArgFromNumber(arglist_t *al, int index, int value)
 {
    char numbuffer[33];
 

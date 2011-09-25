@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -26,7 +26,9 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
 #include "m_swap.h"
+#include "r_patch.h"
 #include "v_block.h"
 #include "v_video.h"
 
@@ -487,7 +489,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    int        maxw;
    void       (*maskcolfunc)(column_t *);
 
-   w = SwapShort(patch->width); // haleyjd: holy crap, stop calling this 800 times
+   w = patch->width; // haleyjd: holy crap, stop calling this 800 times
    
    patchcol.buffer = buffer;
 
@@ -496,12 +498,12 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
    {
       // If flipped, then offsets are flipped as well which means they 
       // technically offset from the right side of the patch (x2)
-      x2 = pi->x + SwapShort(patch->leftoffset);
+      x2 = pi->x + patch->leftoffset;
       x1 = x2 - (w - 1);
    }
    else
    {
-      x1 = pi->x - SwapShort(patch->leftoffset);
+      x1 = pi->x - patch->leftoffset;
       x2 = x1 + w - 1;
    }
 
@@ -593,7 +595,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
          I_Error("V_DrawPatchInt: unknown patch drawstyle %d\n", pi->drawstyle);
       }
 
-      ytop = pi->y - SwapShort(patch->topoffset);
+      ytop = pi->y - patch->topoffset;
       
       for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {
@@ -604,8 +606,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
             I_Error("V_DrawPatchInt: bad texturecolumn %d\n", texturecolumn);
 #endif
          
-         column = (column_t *)((byte *)patch +
-            SwapLong(patch->columnofs[texturecolumn]));
+         column = (column_t *)((byte *)patch + patch->columnofs[texturecolumn]);
          maskcolfunc(column);
       }
    }
@@ -647,11 +648,11 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype)
 //
 // haleyjd 11/02/08: converts a patch into a linear buffer
 //
-byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
+byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height)
 {
-   int w = SwapShort(patch->width);
-   int h = SwapShort(patch->height);
+   int w = patch->width;
+   int h = patch->height;
    int col = w - 1, colstop = -1, colstep = -1;
 
    byte *desttop;
@@ -667,7 +668,7 @@ byte *V_PatchToLinear(patch_t *patch, boolean flipped, byte fillcolor,
    for(; col != colstop; col += colstep, ++desttop)
    {
       const column_t *column = 
-         (const column_t *)((byte *)patch + SwapLong(patch->columnofs[col]));
+         (const column_t *)((byte *)patch + patch->columnofs[col]);
       
       // step through the posts in a column
       while(column->topdelta != 0xff)

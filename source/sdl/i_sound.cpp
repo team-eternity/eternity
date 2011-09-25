@@ -25,14 +25,16 @@
 //-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
+
 #include "../c_runcmd.h"
 #include "../c_io.h"
 #include "../d_main.h"
 #include "../doomstat.h"
+#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
 #include "../i_sound.h"
 #include "../i_system.h"
-#include "../g_game.h"     //jff 1/21/98 added to use dprintf in I_RegisterSong
 #include "../m_argv.h"
+#include "../m_misc.h"
 #include "../mn_engin.h"
 #include "../s_sound.h"
 
@@ -41,8 +43,8 @@ int mus_card;   // jff 1/18/98
 
 // haleyjd: safety variables to keep changes to *_card from making
 // these routines think that sound has been initialized when it hasn't
-boolean snd_init = false;
-boolean mus_init = false;
+bool snd_init = false;
+bool mus_init = false;
 
 int detect_voices; //jff 3/4/98 enables voice detection prior to install_sound
 //jff 1/22/98 make these visible here to disable sound/music on install err
@@ -385,8 +387,8 @@ int I_QrySongPlaying(int handle)
 
 // system specific sound console commands
 
-static char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
-static char *muscardstr[] = { "SDL mixer", "none" };
+static const char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
+static const char *muscardstr[] = { "SDL mixer", "none" };
 
 VARIABLE_INT(snd_card,       NULL,      -1,  1, sndcardstr);
 VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);

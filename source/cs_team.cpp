@@ -37,22 +37,22 @@ int team_scores[team_color_max];
 int team_start_counts_by_team[team_color_max];
 mapthing_t **team_starts_by_team = NULL;
 
-char *team_color_names[team_color_max] = {
-   "none", "red", "blue" /*, "green", "white", "black", "purple", "gold" */
-};
+char *team_color_names[team_color_max] = { "none", "red", "blue" };
 
-unsigned int team_colormaps[team_color_max] = {
-   0, 3, 6 /*, 0, 14, 9, 10, 7 */
-};
+unsigned int team_colormaps[team_color_max] = { 0, 3, 6 };
 
 void CS_InitTeams(void)
 {
-   teamcolor_t color;
+   int color;
 
    number_of_team_starts = 0;
 
    if(team_starts_by_team == NULL)
-      team_starts_by_team = calloc(team_color_max, sizeof(mapthing_t *));
+   {
+      team_starts_by_team = (mapthing_t **)(calloc(
+         team_color_max, sizeof(mapthing_t *)
+      ));
+   }
 
    for(color = team_color_none; color < team_color_max; color++)
    {
@@ -63,9 +63,6 @@ void CS_InitTeams(void)
       }
       team_start_counts_by_team[color] = 0;
    }
-
-   // memset(team_start_counts_by_team, 0, team_color_max * sizeof(int));
-   // memset(team_starts_by_team, 0, team_color_max * sizeof(mapthing_t *));
 }
 
 void CS_AddTeamStart(mapthing_t *team_start)
@@ -81,23 +78,6 @@ void CS_AddTeamStart(mapthing_t *team_start)
    case blue_team_start:
       team_color = team_color_blue;
       break;
-   /*
-   case green_team_start:
-      team_color = team_color_green;
-      break;
-   case yellow_team_start:
-      team_color = team_color_yellow;
-      break;
-   case purple_team_start:
-      team_color = team_color_purple;
-      break;
-   case black_team_start:
-      team_color = team_color_black;
-      break;
-   case white_team_start:
-      team_color = team_color_white;
-      break;
-   */
    default:
       I_Error("Unknown team start type %d.\n", team_start->type);
       break;
@@ -107,10 +87,10 @@ void CS_AddTeamStart(mapthing_t *team_start)
       I_Error("Maximum number of team starts already reached.\n");
 
    thing_index = team_start_counts_by_team[team_color];
-   team_starts_by_team[team_color] = realloc(
+   team_starts_by_team[team_color] = (mapthing_t*)(realloc(
       team_starts_by_team[team_color],
       ++team_start_counts_by_team[team_color] * sizeof(mapthing_t)
-   );
+   ));
    memcpy(
       &team_starts_by_team[team_color][thing_index],
       team_start,

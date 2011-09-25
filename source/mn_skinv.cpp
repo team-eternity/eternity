@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -28,26 +28,32 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "d_io.h"
 
+#include "d_event.h"
+#include "d_gi.h"
+#include "d_io.h"
 #include "doomstat.h"
 #include "doomtype.h"
-#include "info.h"
-#include "mn_engin.h"
-#include "r_defs.h"
-#include "r_draw.h"
-#include "v_video.h"
-#include "w_wad.h"
-#include "p_pspr.h"
-#include "p_skin.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "m_random.h"
-#include "d_gi.h"
-#include "e_states.h"
-#include "e_things.h"
 #include "e_fonts.h"
 #include "e_player.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "g_bind.h"
+#include "info.h"
+#include "m_random.h"
+#include "mn_engin.h"
+#include "p_pspr.h"
+#include "p_skin.h"
+#include "r_defs.h"
+#include "r_draw.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
+#include "w_wad.h"
 
 // player skin sprite states
 enum
@@ -64,9 +70,9 @@ static state_t *skview_state     = NULL;
 static int      skview_tics      = 0;
 static int      skview_action    = SKV_WALKING;
 static int      skview_rot       = 0;
-static boolean  skview_halfspeed = false;
+static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
-static boolean  skview_haswdth   = false;       // 03/29/08
+static bool     skview_haswdth   = false;       // 03/29/08
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
@@ -93,7 +99,7 @@ static void MN_SkinSetState(state_t *state)
 // The skin viewer widget responder function. Sorta long and
 // hackish, but cool.
 //
-static boolean MN_SkinResponder(event_t *ev)
+static bool MN_SkinResponder(event_t *ev)
 {
    // only interested in keydown events
    if(ev->type != ev_keydown)
@@ -279,7 +285,7 @@ static void MN_SkinDrawer(void)
    spritedef_t *sprdef;
    spriteframe_t *sprframe;
    int lump;
-   boolean flip;
+   bool flip;
    patch_t *patch;
    int pctype;
 
@@ -319,7 +325,7 @@ static void MN_SkinDrawer(void)
    }
 
    // cache the sprite patch -- watch out for "firstspritelump"!
-   patch = (patch_t *)(W_CacheLumpNum(lump+firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump+firstspritelump, PU_CACHE);
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling

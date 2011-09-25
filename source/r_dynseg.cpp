@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -291,7 +291,7 @@ static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
 // from the partition line. If the distance is too small, we may decide to
 // change our idea of sidedness.
 //
-d_inline static double R_PartitionDistance(double x, double y, node_t *node)
+inline static double R_PartitionDistance(double x, double y, node_t *node)
 {
    return fabs((node->a * x + node->b * y + node->c) / node->len);
 }

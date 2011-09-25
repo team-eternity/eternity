@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,33 +27,31 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "a_small.h"
+#include "c_net.h"
 #include "doomstat.h"
 #include "d_event.h"
-#include "c_net.h"
-#include "g_game.h"
-#include "hu_frags.h"
-#include "r_main.h"
-#include "p_map.h"
-#include "p_spec.h"
-#include "p_user.h"
-#include "p_maputl.h"
-
-// haleyjd
-#include "sounds.h"
-#include "s_sound.h"
-#include "a_small.h"
+#include "d_gi.h"
 #include "e_player.h"
 #include "e_states.h"
-#include "d_gi.h"
-#include "c_io.h"
+#include "g_dmflag.h" // [CG] 09/18/11
+#include "g_game.h"
+#include "hu_frags.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_skin.h"
+#include "p_spec.h"
+#include "p_user.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "s_sound.h"
+#include "sounds.h"
 
-#include "g_dmflag.h" // [CG] Added.
-
-// [CG] Added.
-#include "cs_main.h"
-#include "cl_pred.h"
-#include "sv_main.h"
-#include "sv_queue.h"
+#include "cs_main.h"  // [CG] 09/18/11
+#include "cl_pred.h"  // [CG] 09/18/11
+#include "sv_main.h"  // [CG] 09/18/11
+#include "sv_queue.h" // [CG] 09/18/11
 
 //
 // Movement.
@@ -63,7 +61,9 @@
 
 #define MAXBOB  0x100000
 
-boolean onground; // whether player is on ground or in air
+bool onground; // whether player is on ground or in air
+
+extern int action_frags; // [CG] 09/23/11
 
 //
 // P_Thrust
@@ -127,7 +127,6 @@ void P_CalcHeight(player_t *player)
    player->bob = 0;
    if(demo_version >= 203)
    {
-      // [CG] Modified to support c/s DMFLAG disallowing movebob modification.
       if(player_bobbing || (clientserver &&
                             ((dmflags2 & dmf_allow_movebob_change) == 0)))
       {
@@ -209,7 +208,9 @@ void P_CalcHeight(player_t *player)
    // haleyjd 08/07/04: new floorclip system
    if(player->mo->floorclip && player->playerstate != PST_DEAD && 
       player->mo->z <= player->mo->floorz)
+   {
       player->viewz -= player->mo->floorclip;
+   }
    
    if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
       player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
@@ -313,37 +314,32 @@ void P_DeathThink(player_t *player)
    
    P_CalcHeight(player);
    
-   // [CG] This is where the camera follows the attacker.
-   if(!clientserver || dmflags2 & dmf_follow_fragger_on_death)
+   if(!clientserver || (dmflags2 & dmf_follow_fragger_on_death))
    {
       if(player->attacker && player->attacker != player->mo)
       {
-         angle = P_PointToAngle(
-            player->mo->x,
-            player->mo->y,
-            player->attacker->x,
-            player->attacker->y
-         );
+         angle = P_PointToAngle(player->mo->x,
+                                 player->mo->y,
+                                 player->attacker->x,
+                                 player->attacker->y);
 
          delta = angle - player->mo->angle;
          
-         if(delta < ANG5 || delta > (unsigned int) - ANG5)
+         if(delta < ANG5 || delta > (unsigned int)-ANG5)
          {
             // Looking at killer,
             //  so fade damage flash down.
             
             player->mo->angle = angle;
             
-            if(!clientserver && player->damagecount)
+            if(player->damagecount)
                player->damagecount--;
          }
          else 
-         {
             if(delta < ANG180)
                player->mo->angle += ANG5;
             else
                player->mo->angle -= ANG5;
-         }
       }
       else if(!clientserver && player->damagecount)
          player->damagecount--;
@@ -351,8 +347,8 @@ void P_DeathThink(player_t *player)
    else if(!clientserver && player->damagecount)
       player->damagecount--;
 
-   // [CG] Show the scoreboard when dead.
-   if(clientserver && !CS_HEADLESS)
+   // [CG] 09/18/11: Show scoreboard when dead.
+   if(CS_CLIENT)
       action_frags = 1;
 
    // haleyjd 10/05/08:
@@ -365,32 +361,31 @@ void P_DeathThink(player_t *player)
          player->pitch -= 2*ANGLE_1/3;
    }
       
-   // [CG] C/S mode supports a "death time limit" option where players can only
-   //      remain dead for so long before they're either forcibly respawned or
-   //      removed from the game.
+   // [CG] C/S adds a "death time limit" option where players can only remain
+   //      dead for so long before they're either forcibly respawned or removed
+   //      from the game.
    if(player->cmd.buttons & BT_USE)
-   {
       player->playerstate = PST_REBORN;
-   }
    else if(CS_SERVER && death_time_limit && GameType != gt_coop)
    {
       int playernum = player - players;
       mapthing_t *spawn_point;
       client_t *client = &clients[playernum];
+
       if((++client->death_time / TICRATE) > death_time_limit)
       {
          client->death_time = 0;
+
          if(death_time_expired_action == DEATH_LIMIT_SPECTATE)
          {
             client->spectating = true;
-            player->frags[playernum]++; // [CG] Spectating costs a frag.
+            player->frags[playernum]++;
             SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
             HU_FragsUpdate();
             SV_RemovePlayerFromQueue(playernum);
             SV_BroadcastMessage(
                "%s was forced to leave the game.\n", player->name
             );
-            SV_BroadcastPlayerScalarInfo(playernum, ci_spectating);
          }
          spawn_point = CS_SpawnPlayerCorrectly(playernum, client->spectating);
          SV_BroadcastPlayerSpawned(spawn_point, playernum);
@@ -436,49 +431,19 @@ void P_HereticCurrent(player_t *player)
 //
 // haleyjd 12/28/08: Determines whether or not a sector is special.
 //
-d_inline boolean P_SectorIsSpecial(sector_t *sector)
+inline static bool P_SectorIsSpecial(sector_t *sector)
 {
    return (sector->special || sector->flags || sector->damage);
 }
 
-//
-// P_PlayerThink
-//
-void P_PlayerThink(player_t *player)
+void P_RunPlayerCommand(int playernum)
 {
-   ticcmd_t*    cmd;
-   weapontype_t newweapon;
-
-   // killough 2/8/98, 3/21/98:
-   // (this code is necessary despite questions raised elsewhere in a comment)
-
-   if(player->cheats & CF_NOCLIP)
-      player->mo->flags |= MF_NOCLIP;
-   else
-      player->mo->flags &= ~MF_NOCLIP;
-
-   cmd = &player->cmd;
-
-   // chain saw run forward
-   if(player->mo->flags & MF_JUSTATTACKED)
-   {
-      cmd->angleturn = 0;
-      cmd->forwardmove = 0xc800/512;
-      cmd->sidemove = 0;
-      player->mo->flags &= ~MF_JUSTATTACKED;
-   }
-
-   if(player->playerstate == PST_DEAD)
-   {
-      P_DeathThink(player);
-      return;
-   }
+   player_t *player = &players[playernum];
+   ticcmd_t *cmd = &player->cmd;
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook || (clientserver && ((dmflags2 & dmf_allow_freelook) == 0)))
-   {
       player->pitch = 0;
-   }
    else
    {
       int look = cmd->look;
@@ -487,28 +452,26 @@ void P_PlayerThink(player_t *player)
       {
          // test for special centerview value
          if(look == -32768)
-         {
             player->pitch = 0;
-         }
          else
          {
             player->pitch -= look << 16;
-            // [CG] EE's normal lower look range is 32 degrees, but the range
-            //      for ZDoom derivatives (Odamex, ZDaemon & Skulltag) is 56.
-            //      is 56.
-            if(comp[comp_mouselook])
+            // [CG] 09/18/11: Normal lower look range is 32 degrees, but ZDoom
+            //      uses 56.
+            // [CG] TODO: demoversion this somehow, at some point.
+            if(comp[comp_mouselook]) 
             {
-               if(player->pitch < -ANGLE_1 * 32)
-                  player->pitch = -ANGLE_1 * 32;
-               else if(player->pitch > ANGLE_1 * 32)
-                  player->pitch = ANGLE_1 * 32;
+               if(player->pitch < -ANGLE_1*32)
+                  player->pitch = -ANGLE_1*32;
+               else if(player->pitch > ANGLE_1*32)
+                  player->pitch = ANGLE_1*32;
             }
             else
             {
-               if(player->pitch < -ANGLE_1 * 32)
-                  player->pitch = -ANGLE_1 * 32;
-               else if(player->pitch > ANGLE_1 * 56)
-                  player->pitch = ANGLE_1 * 56;
+               if(player->pitch < -ANGLE_1*32)
+                  player->pitch = -ANGLE_1*32;
+               else if(player->pitch > ANGLE_1*56)
+                  player->pitch = ANGLE_1*56;
             }
          }
       }
@@ -523,9 +486,7 @@ void P_PlayerThink(player_t *player)
    //  for a bit after a teleport.
    
    if(player->mo->reactiontime)
-   {
       player->mo->reactiontime--;
-   }
    else
    {
       P_MovePlayer(player);
@@ -539,19 +500,171 @@ void P_PlayerThink(player_t *player)
             if((player->mo->z == player->mo->floorz || 
                 (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
             {
-               // PCLASS_FIXME: make jump height pclass property
-               player->mo->momz += 8 * FRACUNIT;
+               player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
                player->mo->intflags &= ~MIF_ONMOBJ;
                player->jumptime = 18;
             }
          }
       }
    }
-
+  
    P_CalcHeight (player); // Determines view height and bobbing
+}
+   
+void P_CheckPlayerButtons(int playernum)
+{
+   weapontype_t newweapon;
+   player_t *player = &players[playernum];
+   client_t *client = &clients[playernum];
+   ticcmd_t *cmd = &player->cmd;
 
-   // [CG] Don't scream if predicting or spectating
-   if(!clients[consoleplayer].spectating && !cl_predicting)
+   if(cl_predicting)
+      return;
+   
+   // Check for weapon change.
+   
+   // A special event has no other buttons.
+
+   if(cmd->buttons & BT_SPECIAL)
+      cmd->buttons = 0;
+
+   if(cmd->buttons & BT_CHANGE)
+   {
+      // The actual changing of the weapon is done
+      //  when the weapon psprite can do it
+      //  (read: not in the middle of an attack).
+      
+      newweapon = (weapontype_t)((cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT);
+      
+      // killough 3/22/98: For demo compatibility we must perform the fist
+      // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
+      // other games which rely on user preferences, we must use the latter.
+
+      // WEAPON_FIXME: bunch of crap.
+
+      if(demo_compatibility)
+      { 
+         // compatibility mode -- required for old demos -- killough
+         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
+            (player->readyweapon != wp_chainsaw ||
+             !player->powers[pw_strength]))
+            newweapon = wp_chainsaw;
+         if(enable_ssg &&
+            newweapon == wp_shotgun &&
+            player->weaponowned[wp_supershotgun] &&
+            player->readyweapon != wp_supershotgun)
+            newweapon = wp_supershotgun;
+      }
+
+      // killough 2/8/98, 3/22/98 -- end of weapon selection changes
+
+      // WEAPON_FIXME: shareware availability -> weapon property
+
+      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      {
+         // Do not go to plasma or BFG in shareware, even if cheated.
+         if((newweapon != wp_plasma && newweapon != wp_bfg)
+            || (GameModeInfo->id != shareware))
+         {
+            player->pendingweapon = newweapon;
+            if(CS_SERVER)
+               SV_BroadcastPlayerScalarInfo(playernum, ci_pending_weapon);
+         }
+      }
+   }
+
+   // check for use
+   
+   if(cmd->buttons & BT_USE)
+   {
+      if(!player->usedown)
+      {
+         player->usedown = true;
+
+         if(!client->spectating)
+         {
+            P_UseLines(player);
+         }
+         else if(CS_SERVER && SV_HandleJoinRequest(playernum))
+         {
+            mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(
+               player - players, false
+            );
+            SV_BroadcastPlayerSpawned(spawn_point, player - players);
+         }
+      }
+   }
+   else
+      player->usedown = false;
+
+   // cycle psprites
+   if(!cl_predicting)
+      P_MovePsprites (player);
+}
+
+//
+// P_PlayerThink
+//
+void P_PlayerThink(player_t *player)
+{
+   ticcmd_t*    cmd;
+   int playernum = player - players;
+
+   // killough 2/8/98, 3/21/98:
+   // (this code is necessary despite questions raised elsewhere in a comment)
+
+   if(player->cheats & CF_NOCLIP)
+      player->mo->flags |= MF_NOCLIP;
+   else
+      player->mo->flags &= ~MF_NOCLIP;
+
+   // chain saw run forward
+
+   cmd = &player->cmd;
+   if(player->mo->flags & MF_JUSTATTACKED)
+   {
+      cmd->angleturn = 0;
+      cmd->forwardmove = 0xc800/512;
+      cmd->sidemove = 0;
+      player->mo->flags &= ~MF_JUSTATTACKED;
+   }
+
+   if(player->playerstate == PST_DEAD)
+   {
+      P_DeathThink(player);
+      if(clientserver)
+      {
+         if(CS_CLIENT)
+         {
+            cmd->forwardmove = 0;
+            cmd->sidemove = 0;
+            cmd->look = 0;
+            cmd->angleturn = 0;
+            if(cmd->buttons & BT_USE)
+               cmd->buttons = BT_USE;
+            else
+               cmd->buttons = 0;
+            cmd->actions = 0;
+         }
+         else
+            SV_RunPlayerCommands(playernum);
+         player->mo->Think();
+      }
+      return;
+   }
+
+   if(playernum == consoleplayer)
+      P_RunPlayerCommand(playernum);
+   else if(CS_SERVER)
+      SV_RunPlayerCommands(playernum); // [CG] May run more than one command.
+
+   // [CG] The player can be removed during SV_RunPlayerCommands, so check.
+   if(!playeringame[playernum])
+      return;
+
+   // [CG] 09/18/11: Don't scream if predicting or spectating (rofl).
+   if(!clientserver ||
+         (!clients[player - players].spectating && !cl_predicting))
    {
       // haleyjd: are we falling? might need to scream :->
       if(!comp[comp_fallingdmg] && demo_version >= 329)
@@ -596,71 +709,8 @@ void P_PlayerThink(player_t *player)
    // out from underneath you.                                         // phares
 
    // haleyjd: burn damage is now implemented, but is handled elsewhere.
-   
-   // Check for weapon change.
-   
-   // A special event has no other buttons.
 
-   if(cmd->buttons & BT_SPECIAL)
-      cmd->buttons = 0;
-
-   if(cmd->buttons & BT_CHANGE)
-   {
-      // The actual changing of the weapon is done
-      //  when the weapon psprite can do it
-      //  (read: not in the middle of an attack).
-
-      newweapon = (weapontype_t)((cmd->buttons & BT_WEAPONMASK) >> BT_WEAPONSHIFT);
-      
-      // killough 3/22/98: For demo compatibility we must perform the fist
-      // and SSG weapons switches here, rather than in G_BuildTiccmd(). For
-      // other games which rely on user preferences, we must use the latter.
-
-      // WEAPON_FIXME: bunch of crap.
-
-      if(demo_compatibility)
-      { 
-         // compatibility mode -- required for old demos -- killough
-         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
-             !player->powers[pw_strength]))
-            newweapon = wp_chainsaw;
-         if(enable_ssg &&
-            newweapon == wp_shotgun &&
-            player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
-            newweapon = wp_supershotgun;
-      }
-
-      // killough 2/8/98, 3/22/98 -- end of weapon selection changes
-
-      // WEAPON_FIXME: shareware availability -> weapon property
-
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
-      {
-         // Do not go to plasma or BFG in shareware, even if cheated.
-         if((newweapon != wp_plasma && newweapon != wp_bfg)
-            || (GameModeInfo->id != shareware))
-            player->pendingweapon = newweapon;
-      }
-   }
-
-   // check for use
-   
-   if(cmd->buttons & BT_USE)
-   {
-      if(!player->usedown)
-      {
-         P_UseLines(player);
-         player->usedown = true;
-      }
-   }
-   else
-      player->usedown = false;
-
-   // cycle psprites
-
-   P_MovePsprites (player);
+   P_CheckPlayerButtons(playernum);
 
    // Counters, time dependent power ups.
 
@@ -703,15 +753,11 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
-   // [CG] Predict this clientside.
-   if(serverside)
-   {
-      if(player->damagecount)
-         player->damagecount--;
+   if(player->damagecount)
+      player->damagecount--;
 
-      if(player->bonuscount)
-         player->bonuscount--;
-   }
+   if(player->bonuscount)
+      player->bonuscount--;
 
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax
@@ -719,12 +765,11 @@ void P_PlayerThink(player_t *player)
    // sf: removed MBF beta stuff
 
    player->fixedcolormap = 
-    (player->powers[pw_invulnerability] > 4 * 32 ||    
-     player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
-    (player->powers[pw_infrared] > 4 * 32 || player->powers[pw_infrared] & 8);
+      (player->powers[pw_invulnerability] > 4*32 ||    
+       player->powers[pw_invulnerability] & 8) ? INVERSECOLORMAP :
+      (player->powers[pw_infrared] > 4*32 || player->powers[pw_infrared] & 8);
 
-   // haleyjd 01/21/07: clear earthquake flag before running quake thinkers
-   // later
+   // haleyjd 01/21/07: clear earthquake flag before running quake thinkers later
    player->quake = 0;
 }
 

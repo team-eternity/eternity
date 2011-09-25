@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007 James Haley
@@ -26,16 +26,18 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "a_small.h"
-#include "doomstat.h"
 #include "d_mod.h"
-#include "p_xenemy.h"
+#include "doomstat.h"
+#include "e_sound.h"
+#include "m_random.h"
 #include "p_inter.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_tick.h"
-#include "e_sound.h"
+#include "p_xenemy.h"
 #include "s_sound.h"
 
 IMPLEMENT_THINKER_TYPE(QuakeThinker)
@@ -120,10 +122,10 @@ void QuakeThinker::serialize(SaveArchive &arc)
 //
 // Starts an earthquake at each object with the tid in args[4]
 //
-boolean P_StartQuake(int *args)
+bool P_StartQuake(int *args)
 {
-   Mobj *mo  = NULL;
-   boolean ret = false;
+   Mobj *mo = NULL;
+   bool ret = false;
 
    while((mo = P_FindMobjFromTID(args[4], mo, NULL)))
    {

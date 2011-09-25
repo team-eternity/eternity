@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2009 James Haley
@@ -26,6 +26,8 @@
 
 #ifndef E_HASHKEYS_H__
 #define E_HASHKEYS_H__
+
+#include <string.h> // [CG] 09/23/11: Needed for strcmp & strcasecmp.
 
 unsigned int D_HashTableKey(const char *str);
 unsigned int D_HashTableKeyCase(const char *str);

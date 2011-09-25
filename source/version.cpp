@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -25,29 +25,27 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "doomtype.h" // [CG] Added.
 #include "version.h"
 
 // sf: made int from define
 int version = 340;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 0;
-
-// [CG] EE has pretty good versioning already, so all that's needed for c/s is
-//      a c/s protocol version.  A simple single number is sufficient because
-//      it's only incremented for incompatible protocol changes.
-const uint32_t cs_protocol_version = 0;
+unsigned char subversion = 16;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
+// [CG] Added a c/s protocol version.  A simple single number is sufficient
+//      because it's only incremented for incompatible protocol changes.
+uint32_t cs_protocol_version = 0;
+
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Rebirth";
+const char version_name[] = "Mjolnir";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.40.00 \"Rebirth\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.16 \"Mjolnir\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -77,6 +75,9 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.00 \"Rebirth\"";
 // 3.37.00 'Sekhmet'   -- 01/01/10
 // 3.39.20 'Resheph'   -- 10/10/10
 // 3.40.00 'Rebirth'   -- 01/08/11
+// 3.40.10 'Aasgard'   -- 05/01/11
+// 3.40.11 'Aasgard'   -- 05/02/11
+// 3.40.15 'Wodanaz'   -- 06/21/11
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

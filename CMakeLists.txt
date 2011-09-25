@@ -1,4 +1,5 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+## Copyright (c) 2011 Charles Gunyon
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -440,6 +441,14 @@ IF(EE_STATIC_COMPILE)
     INCLUDE_DIRECTORIES(${EE_STATIC_DEPS}/include)
 ENDIF(EE_STATIC_COMPILE)
 
+MESSAGE(STATUS "Looking for OpenGL")
+FIND_LIBRARY(GL_LIBRARY GL)
+IF(GL_LIBRARY)
+    MESSAGE(STATUS "Looking for OpenGL - found")
+ELSE(GL_LIBRARY)
+    MESSAGE(STATUS "Looking for OpenGL - not found")
+ENDIF(GL_LIBRARY)
+
 FIND_PACKAGE(SDL 1.2.14 REQUIRED)
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 
@@ -497,6 +506,8 @@ INCLUDE_DIRECTORIES(${PC_ENET_INCLUDE_DIR})
 PKG_SEARCH_MODULE(PC_JSON REQUIRED json>=0.9)
 INCLUDE_DIRECTORIES(${PC_JSON_INCLUDE_DIR})
 
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libpng)
+
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL.dll
 ## then taking every .dll file found in that directory from your SDK.
@@ -516,6 +527,7 @@ ENDIF(NOT EE_STATIC_COMPILE)
 
 ADD_SUBDIRECTORY(snes_spc)
 ADD_SUBDIRECTORY(source)
+ADD_SUBDIRECTORY(libpng)
 
 IF(NOT EE_STATIC_COMPILE)
 IF(WIN32)

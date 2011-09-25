@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2001 James Haley
@@ -27,6 +27,9 @@
 //
 //----------------------------------------------------------------------------
 
+// Extinct code, left over from Eternity Total Conversion
+#if 0
+
 #ifndef __D_DIALOG_H__
 #define __D_DIALOG_H__
 
@@ -52,16 +55,18 @@ typedef struct runningdialog_s
 } runningdialog_t;
 
 extern runningdialog_t *currentdialog;
-extern boolean dlginit;
+extern bool dlginit;
 
 void DLG_Init(void);
 void DLG_Start(int, const char *, const char *, const char *);
 void DLG_Stop(void);
-void DLG_SetBGTrans(boolean);
+void DLG_SetBGTrans(bool);
 void DLG_SetTextColor(int);
 void DLG_SetBGColor(int);
 void DLG_Ticker(void);
 void DLG_Drawer(void);
+
+#endif
 
 #endif
 

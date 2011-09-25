@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,13 +26,17 @@
 //-----------------------------------------------------------------------------
 
 
-#ifndef __D_TEXTUR__
-#define __D_TEXTUR__
+#ifndef D_TEXTUR_H__
+#define D_TEXTUR_H__
 
 #include "doomtype.h"
 
-
 // NOTE: Checking all BOOM sources, there is nothing used called pic_t.
+
+// haleyjd: This file is a descendant of lumpy.h, which could be found, amongst
+// other places, in id's utility package, and, most significantly, in the ROTT
+// source. pic_t is a format dating back to DOOM's very early alphas. Preserved
+// due to historical curiosity.
 
 //
 // Flats?

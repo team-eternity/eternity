@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vim:sw=3 ts=3:
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include "doomtype.h"
+#include "i_system.h"
 
 #include <json/json.h>
 #include <curl/curl.h>
@@ -39,7 +40,7 @@
 #include "cl_main.h"
 #include "sv_main.h"
 
-static boolean advertised;
+static bool advertised;
 
 cs_master_t *master_servers;
 int master_server_count;
@@ -53,15 +54,17 @@ extern char gamemapname[9];
 static char* sys_strdup(const char *str)
 {
    size_t length = strlen(str) + 1;
-   char *out = Z_SysMalloc(length * sizeof(char));
+   char *out = (char *)(Z_SysMalloc(length * sizeof(char)));
 
-   strncpy(out, str, length);
+   if(out != NULL)
+      strncpy(out, str, length);
+
    return out;
 }
 
 void CS_InitCurl(void)
 {
-   long curl_errno;
+   CURLcode curl_errno;
 
    curl_errno = curl_global_init_mem(
       CURL_GLOBAL_NOTHING,
@@ -73,14 +76,10 @@ void CS_InitCurl(void)
    );
 
    if(curl_errno)
-   {
       I_Error("CS_InitCurl: %s\n", curl_easy_strerror(curl_errno));
-   }
 
    if(CS_SERVER)
-   {
       advertised = false;
-   }
 }
 
 // [CG] For atexit().
@@ -90,9 +89,7 @@ void SV_MasterCleanup(void)
    cs_master_request_t *request;
 
    if(!advertised)
-   {
       return;
-   }
 
    SV_MasterDelist();
 
@@ -100,7 +97,6 @@ void SV_MasterCleanup(void)
    {
       request = &cs_master_requests[i];
       free(request->url);
-      free(request->user_agent);
       if(request->curl_handle != NULL)
       {
          curl_multi_remove_handle(
@@ -119,9 +115,9 @@ void SV_MultiInit(void)
    cs_master_request_t *request;
    char *url, *address, *group, *name;
 
-   cs_master_requests = calloc(
+   cs_master_requests = (cs_master_request_t *)(calloc(
       master_server_count, sizeof(cs_master_request_t)
-   );
+   ));
 
    for(i = 0; i < master_server_count; i++)
    {
@@ -134,10 +130,10 @@ void SV_MultiInit(void)
       name = curl_easy_escape(NULL, master->name, 0);
       // [CG] "http://master.totaltrash.org/servers/totaltrash/Duel%201"
       //      "http://" +  "servers" +  "/" x 3 + '\0' is 18 characters.
-      url = calloc(
+      url = (char *)(calloc(
          strlen(address) + strlen(group) + strlen(name) + 18,
          sizeof(char)
-      );
+      ));
       sprintf(url, "http://%s/servers/%s/%s", address, group, name);
       curl_free(address);
       curl_free(group);
@@ -166,9 +162,9 @@ static size_t CS_ReceiveHTTPData(void *p, size_t size, size_t nmemb, void *d)
    // [CG] For debugging.
    // printf("Receiving HTTP data: %d/%d.\n", size, nmemb);
 
-   request->received_data = realloc(
+   request->received_data = (char *)(realloc(
       request->received_data, request->data_transferred + max_size + 1
-   );
+   ));
    memcpy(&(request->received_data[request->data_transferred]), p, max_size);
    request->data_transferred += max_size;
    request->received_data[request->data_transferred] = 0;
@@ -184,13 +180,9 @@ static size_t CS_SendHTTPData(void *p, size_t size, size_t nmemb, void *s)
 
 
    if(max_size < request->data_remaining)
-   {
       amount_to_send = max_size;
-   }
    else
-   {
       amount_to_send = request->data_remaining;
-   }
 
    memcpy(
       p, request->data_to_send + request->data_transferred, amount_to_send
@@ -215,25 +207,18 @@ static size_t CS_SendHTTPData(void *p, size_t size, size_t nmemb, void *s)
 cs_master_request_t* CS_BuildMasterRequest(cs_master_request_t *request,
                                            int method)
 {
-   // request->url = url;
-   // request->user_agent = user_agent;
    request->finished = false;
-   request->received_data = calloc(1, 1); // [CG] This will be realloc'd later.
+
+   // [CG] This will be realloc'd later.
+   request->received_data = (char *)(calloc(1, 1));
 
    if(strncmp(request->url, "http", 4) == 0)
-   {
       request->is_http = true;
-   }
    else
-   {
       request->is_http = false;
-   }
 
-   request->curl_handle = curl_easy_init();
-   if(request->curl_handle == NULL)
-   {
+   if((request->curl_handle = curl_easy_init()) == NULL)
       I_Error("Unknown error initializing CURL.\n");
-   }
 
    // [CG] For debugging.
    // curl_easy_setopt(request->curl_handle, CURLOPT_VERBOSE, 1L);
@@ -253,22 +238,14 @@ cs_master_request_t* CS_BuildMasterRequest(cs_master_request_t *request,
    if(method == CS_HTTP_METHOD_POST || method == CS_HTTP_METHOD_PUT)
    {
       if(method == CS_HTTP_METHOD_POST)
-      {
          curl_easy_setopt(request->curl_handle, CURLOPT_POST, 1L);
-      }
       else if(method == CS_HTTP_METHOD_PUT)
-      {
          curl_easy_setopt(request->curl_handle, CURLOPT_UPLOAD, 1L);
-      }
    }
    else if(method == CS_HTTP_METHOD_DELETE)
-   {
       curl_easy_setopt(request->curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
-   }
    else if(method != CS_HTTP_METHOD_GET)
-   {
       I_Error("CS_BuildMasterRequest: Unsupported HTTP method\n");
-   }
 
    request->method = method;
    request->data_to_send = NULL;
@@ -283,7 +260,7 @@ void CS_SendMasterRequest(cs_master_request_t *request)
    {
       I_Error(
          "Error sending master request:\n%ld %s\n",
-         request->curl_errno,
+         (long int)request->curl_errno,
          curl_easy_strerror(request->curl_errno)
       );
    }
@@ -307,27 +284,26 @@ void CS_SendMasterRequest(cs_master_request_t *request)
 
 void CS_FreeMasterRequest(cs_master_request_t *request)
 {
-   // request->url = NULL;
-   // request->user_agent = NULL;
    request->curl_handle = NULL;
-   // curl_free(request->curl_handle);
-   // curl_easy_cleanup(request->curl_handle);
    curl_slist_free_all(request->headers);
    request->headers = NULL;
    request->data_transferred = 0;
    request->data_remaining = 0;
+
    if(request->data_to_send != NULL)
    {
       free(request->data_to_send);
       request->data_to_send = NULL;
    }
+
    if(request->received_data != NULL)
    {
       free(request->received_data);
       request->received_data = NULL;
    }
+
    request->status_code = 0;
-   request->curl_errno = 0;
+   request->curl_errno = (CURLcode)0;
    request->finished = true;
    request->is_http = false;
 }
@@ -354,31 +330,14 @@ cs_master_request_t* SV_GetMasterRequest(cs_master_t *master, int method)
    // memset(request, 0, sizeof(cs_master_request_t));
    CS_FreeMasterRequest(request);
 
-   /*
-   address = group = name = NULL;
-
-   address = curl_easy_escape(NULL, master->address, 0);
-   group = curl_easy_escape(NULL, master->group, 0);
-   name = curl_easy_escape(NULL, master->name, 0);
-   // [CG] "http://master.totaltrash.org/servers/totaltrash/Duel%201"
-   //      "http://" +  "servers" +  "/" x 3 + '\0' is 18 characters.
-   url = calloc(
-      strlen(address) + strlen(group) + strlen(name) + 18,
-      sizeof(char)
-   );
-   sprintf(url, "http://%s/servers/%s/%s", address, group, name);
-   curl_free(address);
-   curl_free(group);
-   curl_free(name);
-   */
    CS_BuildMasterRequest(request, method);
 
    curl_easy_setopt(request->curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
    // [CG] ':' separator + '\0' is 2 characters.
-   auth = calloc(
+   auth = (char *)(calloc(
       strlen(master->username) + strlen(master->password_hash) + 2,
       sizeof(char)
-   );
+   ));
    sprintf(auth, "%s:%s", master->username, master->password_hash);
    curl_easy_setopt(request->curl_handle, CURLOPT_USERPWD, auth);
    free(auth);
@@ -439,9 +398,7 @@ char* SV_GetStateJSON(void)
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(playeringame[i])
-      {
          connected_clients++;
-      }
    }
 
    json = json_object_new_object();
@@ -456,10 +413,12 @@ char* SV_GetStateJSON(void)
       "map",
       json_object_new_string(gamemapname)
    );
+
    if(CS_TEAMS_ENABLED)
    {
       json_object_object_add(json, "teams", json_object_new_array());
       teams = json_object_object_get(json, "teams");
+
       for(i = 0; i < cs_settings->number_of_teams; i++)
       {
          team = json_object_new_object();
@@ -467,17 +426,14 @@ char* SV_GetStateJSON(void)
          json_players = json_object_new_array();
          json_object_object_add(team, "players", json_players);
          json_object_object_add(
-            team,
-            "color",
-            json_object_new_string(team_color_names[i])
+            team, "color", json_object_new_string(team_color_names[i])
          );
          json_object_object_add(
-            team,
-            "score",
-            json_object_new_int(team_scores[i])
+            team, "score", json_object_new_int(team_scores[i])
          );
          json_players = json_object_new_array();
          json_object_object_add(team, "players", json_players);
+
          for(j = 1; j < MAX_CLIENTS; j++)
          {
             client = &clients[j];
@@ -487,14 +443,10 @@ char* SV_GetStateJSON(void)
                json_player = json_object_new_object();
                json_object_array_add(json_players, json_player);
                json_object_object_add(
-                  json_player,
-                  "name",
-                  json_object_new_string(player->name)
+                  json_player, "name", json_object_new_string(player->name)
                );
                json_object_object_add(
-                  json_player,
-                  "lag",
-                  json_object_new_int(client->transit_lag)
+                  json_player, "lag", json_object_new_int(client->transit_lag)
                );
                json_object_object_add(
                   json_player,
@@ -502,9 +454,7 @@ char* SV_GetStateJSON(void)
                   json_object_new_double(client->packet_loss)
                );
                json_object_object_add(
-                  json_player,
-                  "frags",
-                  json_object_new_int(player->totalfrags)
+                  json_player, "frags", json_object_new_int(player->totalfrags)
                );
                json_object_object_add(
                   json_player,
@@ -514,17 +464,13 @@ char* SV_GetStateJSON(void)
                if(client->spectating)
                {
                   json_object_object_add(
-                     json_player,
-                     "playing",
-                     json_object_new_boolean(false)
+                     json_player, "playing", json_object_new_boolean(false)
                   );
                }
                else
                {
                   json_object_object_add(
-                     json_player,
-                     "playing",
-                     json_object_new_boolean(true)
+                     json_player, "playing", json_object_new_boolean(true)
                   );
                }
             }
@@ -543,14 +489,10 @@ char* SV_GetStateJSON(void)
             json_player = json_object_new_object();
             json_object_array_add(json_players, json_player);
             json_object_object_add(
-               json_player,
-               "name",
-               json_object_new_string(players[j].name)
+               json_player, "name", json_object_new_string(players[j].name)
             );
             json_object_object_add(
-               json_player,
-               "lag",
-               json_object_new_int(client->transit_lag)
+               json_player, "lag", json_object_new_int(client->transit_lag)
             );
             json_object_object_add(
                json_player,
@@ -558,9 +500,7 @@ char* SV_GetStateJSON(void)
                json_object_new_double(client->packet_loss)
             );
             json_object_object_add(
-               json_player,
-               "frags",
-               json_object_new_int(players[j].totalfrags)
+               json_player, "frags", json_object_new_int(players[j].totalfrags)
             );
             json_object_object_add(
                json_player,
@@ -570,35 +510,30 @@ char* SV_GetStateJSON(void)
             if(client->spectating)
             {
                json_object_object_add(
-                  json_player,
-                  "playing",
-                  json_object_new_boolean(false)
+                  json_player, "playing", json_object_new_boolean(false)
                );
             }
             else
             {
                json_object_object_add(
-                  json_player,
-                  "playing",
-                  json_object_new_boolean(true)
+                  json_player, "playing", json_object_new_boolean(true)
                );
             }
          }
       }
    }
+
    json_string_c = json_object_to_json_string(json);
    json_string = strdup(json_string_c);
    Z_SysFree((void *)json_string_c);
    json_object_object_del(json, "connected_clients");
    json_object_object_del(json, "map");
+
    if(CS_TEAMS_ENABLED)
-   {
       json_object_object_del(json, "teams");
-   }
    else
-   {
       json_object_object_del(json, "players");
-   }
+
    Z_SysFree((void *)json);
 
    return json_string;
@@ -633,13 +568,12 @@ void SV_MasterAdvertise(void)
       config = json_object_get_string(cs_server_config);
 
       SV_SetMasterRequestData(request, config);
-      // Z_SysFree((void *)config);
       CS_SendMasterRequest(request);
       if(request->curl_errno != 0)
       {
          I_Error(
             "Curl error during during advertising:\n%ld %s",
-            request->curl_errno,
+            (long int)request->curl_errno,
             curl_easy_strerror(request->curl_errno)
          );
       }
@@ -668,7 +602,7 @@ void SV_MasterAdvertise(void)
          I_Error(
             "Received unexpected HTTP status code '%ld' when advertising on "
             "master '%s'.\n",
-            request->status_code,
+            (long int)request->status_code,
             master->address
          );
       }
@@ -685,17 +619,17 @@ void SV_MasterDelist(void)
    for(i = 0; i < master_server_count; i++)
    {
       master = master_servers + i;
+
       if(master->disabled)
-      {
          continue;
-      }
+
       request = SV_GetMasterRequest(master, CS_HTTP_METHOD_DELETE);
       CS_SendMasterRequest(request);
       if(request->curl_errno != 0)
       {
          I_Error(
             "Curl error during during delisting:\n%ld %s",
-            request->curl_errno,
+            (long int)request->curl_errno,
             curl_easy_strerror(request->curl_errno)
          );
       }
@@ -710,7 +644,7 @@ void SV_MasterDelist(void)
          I_Error(
             "Received unexpected HTTP status code '%ld' when delisting from "
             "master [%s].\n",
-            request->status_code,
+            (long int)request->status_code,
             master->address
          );
       }
@@ -748,7 +682,7 @@ void SV_MasterUpdate(void)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_fdset:\n\t%d %s.\n",
-         multi_error, curl_easy_strerror(multi_error)
+         multi_error, curl_easy_strerror((CURLcode)multi_error)
       );
    }
 
@@ -757,7 +691,7 @@ void SV_MasterUpdate(void)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_timeout:\n\t%d %s.\n",
-         multi_error, curl_easy_strerror(multi_error)
+         multi_error, curl_easy_strerror((CURLcode)multi_error)
       );
    }
 
@@ -774,7 +708,7 @@ void SV_MasterUpdate(void)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_perform:\n\t%d %s.\n",
-         multi_error, curl_easy_strerror(multi_error)
+         multi_error, curl_easy_strerror((CURLcode)multi_error)
       );
    }
 
@@ -832,7 +766,7 @@ void SV_MasterUpdate(void)
             printf(
                "Curl error while updating master [%s]:\n%ld %s",
                master->address,
-               request->curl_errno,
+               (long int)request->curl_errno,
                curl_easy_strerror(request->curl_errno)
             );
          }
@@ -864,7 +798,7 @@ void SV_MasterUpdate(void)
                   "Master [%s] responded with unexpected HTTP status "
                   "code '%ld', removing from update list.\n",
                   master->address,
-                  request->status_code
+                  (long int)request->status_code
                );
                master->disabled = true;
                break;
@@ -914,7 +848,9 @@ void CL_RetrieveServerConfig(void)
 {
    char *json_data;
    json_object *state_and_configuration;
-   cs_master_request_t *request = calloc(1, sizeof(cs_master_request_t));
+   cs_master_request_t *request = (cs_master_request_t *)(calloc(
+      1, sizeof(cs_master_request_t)
+   ));
 
    request->url = strdup(cs_server_url);
    request->user_agent = CL_GetUserAgent();
@@ -935,7 +871,7 @@ void CL_RetrieveServerConfig(void)
             I_Error(
                "Received unexpected HTTP status code '%ld' when attempting to "
                "retrieve server data from [%s].\n",
-               request->status_code,
+               (long int)request->status_code,
                request->url
             );
          }

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,10 +24,11 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __P_MAPUTL__
-#define __P_MAPUTL__
+#ifndef P_MAPUTL_H__
+#define P_MAPUTL_H__
 
-#include "r_defs.h"
+struct line_t;
+class  Mobj;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -78,7 +79,7 @@ typedef struct linetracer_s
    fixed_t movefrac;
 
 
-   boolean finished;
+   bool finished;
 } linetracer_t;
 
 
@@ -86,14 +87,14 @@ typedef struct linetracer_s
 typedef struct intercept_s
 {
   fixed_t     frac;           // along trace line
-  boolean     isaline;
+  bool        isaline;
   union {
     Mobj* thing;
     line_t* line;
   } d;
 } intercept_t;
 
-typedef boolean (*traverser_t)(intercept_t *in);
+typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
 int     P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
@@ -105,13 +106,13 @@ int     P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 //SoM 9/2/02: added mo parameter for 3dside clipping
 void    P_LineOpening (line_t *linedef, Mobj *mo);
 
-void    P_UnsetThingPosition(Mobj *thing);
-void    P_SetThingPosition(Mobj *thing);
-boolean P_BlockLinesIterator (int x, int y, boolean func(line_t *));
-boolean P_BlockThingsIterator(int x, int y, boolean func(Mobj *));
-boolean ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
-boolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                           int flags, boolean trav(intercept_t *));
+void P_UnsetThingPosition(Mobj *thing);
+void P_SetThingPosition(Mobj *thing);
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *));
+bool P_BlockThingsIterator(int x, int y, bool func(Mobj *));
+bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
+bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+                    int flags, bool trav(intercept_t *));
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 

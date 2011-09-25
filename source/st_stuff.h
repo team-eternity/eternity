@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -26,12 +26,14 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __STSTUFF_H__
-#define __STSTUFF_H__
+#ifndef ST_STUFF_H__
+#define ST_STUFF_H__
 
 #include "doomtype.h"
 #include "d_event.h"
 #include "r_defs.h"
+
+struct patch_t;
 
 // Size of statusbar.
 // Now sensitive for scaling.
@@ -45,13 +47,13 @@
 //
 
 // Called by main loop.
-boolean ST_Responder(event_t* ev);
+bool ST_Responder(event_t* ev);
 
 // Called by main loop.
 void ST_Ticker(void);
 
 // Called by main loop.
-void ST_Drawer(boolean fullscreen, boolean refresh);
+void ST_Drawer(bool fullscreen);
 
 // Called when the console player is spawned on each level.
 void ST_Start(void);
@@ -63,7 +65,7 @@ void ST_CacheFaces(patch_t **faces, char *facename);
 
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 
-typedef struct stbarfns_s
+struct stbarfns_t
 {
    // data
    int  height;
@@ -74,7 +76,7 @@ typedef struct stbarfns_s
    void (*FSDrawer)(void); // fullscreen drawer
    void (*Start)(void);    // reinit
    void (*Init)(void);     // initialize at startup   
-} stbarfns_t;
+};
 
 extern stbarfns_t DoomStatusBar;
 extern stbarfns_t HticStatusBar;

@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -31,6 +31,7 @@
 #ifndef POLYOBJ_H__
 #define POLYOBJ_H__
 
+// Required for: DLListItem, PointThinker (FIXME?), vertex_t
 #include "m_dllist.h"
 #include "p_mobj.h"
 #include "r_defs.h"
@@ -79,31 +80,31 @@ typedef struct polyobj_s
 
    int numVertices;            // number of vertices (generally == segCount)
    int numVerticesAlloc;       // number of vertices allocated
-   struct vertex_s *origVerts; // original positions relative to spawn spot
-   struct vertex_s *tmpVerts;  // temporary vertex backups for rotation
-   struct vertex_s **vertices; // vertices this polyobject must move   
+   vertex_t *origVerts;        // original positions relative to spawn spot
+   vertex_t *tmpVerts;         // temporary vertex backups for rotation
+   vertex_t **vertices;        // vertices this polyobject must move   
    
    int numLines;               // number of linedefs
    int numLinesAlloc;          // number of linedefs allocated
    line_t **lines;             // linedefs this polyobject must move
 
-   Mobj *spawnSpotMobj;      // for use during init only!
-   PointThinker spawnSpot;    // location of spawn spot
-   struct vertex_s centerPt;   // center point
+   Mobj *spawnSpotMobj;        // for use during init only!
+   PointThinker spawnSpot;     // location of spawn spot
+   vertex_t centerPt;          // center point
    fixed_t zdist;              // viewz distance for sorting
    angle_t angle;              // for rotation
 
-   fixed_t blockbox[4];            // bounding box for clipping
-   polymaplink_t *linkhead; // haleyjd 05/18/06: unlink optimization
-   int validcount;                 // for clipping: prevents multiple checks
-   int damage;                     // damage to inflict on stuck things
-   fixed_t thrust;                 // amount of thrust to put on blocking objects
+   fixed_t blockbox[4];        // bounding box for clipping
+   polymaplink_t *linkhead;    // haleyjd 05/18/06: unlink optimization
+   int validcount;             // for clipping: prevents multiple checks
+   int damage;                 // damage to inflict on stuck things
+   fixed_t thrust;             // amount of thrust to put on blocking objects
 
-   int seqId;                      // 10/17/06: sound sequence id
+   int seqId;                  // 10/17/06: sound sequence id
 
-   Thinker *thinker;  // pointer to a thinker affecting this polyobj
+   Thinker *thinker;           // pointer to a thinker affecting this polyobj
 
-   unsigned int flags;  // 09/11/09: polyobject flags
+   unsigned int flags;         // 09/11/09: polyobject flags
 
 } polyobj_t;
 
@@ -181,7 +182,7 @@ public:
    unsigned int revAngle;  // reversed angle to avoid roundoff error
    int momx;               // x component of speed along angle
    int momy;               // y component of speed along angle
-   boolean closing;        // if true, is closing
+   bool closing;           // if true, is closing
 };
 
 class PolySwingDoorThinker : public Thinker
@@ -202,7 +203,7 @@ public:
    int speed;         // speed of rotation
    int initDistance;  // initial distance to travel
    int distance;      // current distance to travel
-   boolean closing;   // if true, is closing
+   bool closing;      // if true, is closing
 };
 
 //
@@ -215,7 +216,7 @@ typedef struct polyrotdata_s
    int direction;    // direction of rotation
    int speed;        // angular speed
    int distance;     // distance to move
-   boolean overRide; // if true, will override any action on the object
+   bool overRide;    // if true, will override any action on the object
 } polyrotdata_t;
 
 typedef struct polymovedata_s
@@ -224,7 +225,7 @@ typedef struct polymovedata_s
    fixed_t distance;   // distance to move
    fixed_t speed;      // linear speed
    unsigned int angle; // angle of movement
-   boolean overRide;   // if true, will override any action on the object
+   bool overRide;      // if true, will override any action on the object
 } polymovedata_t;
 
 // polyobject door types

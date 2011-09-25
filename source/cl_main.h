@@ -27,7 +27,7 @@
 #ifndef __CS_CLIENT_H__
 #define __CS_CLIENT_H__
 
-#include "m_dllist.h"
+#include "e_mod.h"
 #include "p_spec.h"
 
 #include "cs_main.h"
@@ -38,7 +38,7 @@
 
 #define PASSWORD_FILENAME "passwords.json"
 
-typedef struct client_status_s
+typedef struct
 {
    // [CG] tic is necessary because the server needs to know when clients are
    //      seeing other clients for unlagged; everything related to unlagged
@@ -46,7 +46,7 @@ typedef struct client_status_s
    //      given TIC, and clients acknowledge receipt of a status for the same
    //      TIC.
    int tic;
-   boolean has_command;
+   bool has_command;
    // [CG] Clients only care about a position's index member if it's their own
    //      position; they use it to check their prediction.  The value is
    //      the index of the last command run that resulted in this position.
@@ -54,115 +54,63 @@ typedef struct client_status_s
    cs_cmd_t command;
 } client_status_t;
 
-typedef struct nm_buffer_node_s
-{
-   mdllistitem_t link;
-   unsigned int world_index;
-   void *message;
-} nm_buffer_node_t;
-
 extern char *cs_server_url;
+extern char *cs_server_password;
 extern char *cs_client_password_file;
-extern boolean need_to_sync;
 extern json_object *cs_client_password_json;
-extern cs_queue_level_e client_queue_level;
-extern unsigned int client_queue_position;
 
 extern unsigned int cl_current_world_index;
 extern unsigned int cl_latest_world_index;
 
-extern boolean cl_initial_spawn;
-extern boolean cl_received_sync;
-extern boolean cl_spawning_actor_from_message;
-extern boolean cl_removing_actor_from_message;
+extern bool cl_received_sync;
+extern bool cl_initial_spawn;
+extern bool cl_spawning_actor_from_message;
+extern bool cl_removing_actor_from_message;
+extern bool cl_setting_player_weapon_sprites;
+extern bool cl_handling_damaged_actor;
+extern bool cl_handling_damaged_actor_and_justhit;
+extern bool cl_setting_actor_state;
 
-void CL_Init(char *url);
-void CL_InitPlayDemoMode(void);
-void CL_InitNetworkMessageHash(void);
-void CL_Reset(void);
+void  CL_Init(char *url);
+void  CL_InitPlayDemoMode(void);
+void  CL_InitNetworkMessageHash(void);
+void  CL_Reset(void);
 char* CL_GetUserAgent(void);
-void CL_Connect(void);
-void CL_Reconnect(void);
-void CL_Disconnect(void);
-void CL_Spectate(void);
+void  CL_Connect(void);
+void  CL_Reconnect(void);
+void  CL_Disconnect(void);
 
-void CL_SendPlayerStringInfo(client_info_e info_type);
-void CL_SendPlayerArrayInfo(client_info_e info_type, int array_index);
-void CL_SendPlayerScalarInfo(client_info_e info_type);
-void CL_SendCommand(void);
-void CL_SendTeamRequest(teamcolor_t team);
-void CL_SendSyncRequest(void);
-void CL_SendSyncReceived(void);
-
-void CL_ServerMessage(const char *message);
-void CL_PlayerMessage(int playernum, const char *message);
-void CL_TeamMessage(const char *message);
-void CL_BroadcastMessage(const char *message);
-void CL_AuthMessage(const char *password);
-void CL_RCONMessage(const char *command);
-void CL_SaveServerPassword(void);
-mobj_t* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
-                     mobjtype_t type);
-void CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,
-                    fixed_t z, angle_t angle, boolean as_spectator);
-void CL_RemovePlayer(int playernum);
-mobj_t* CL_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                     int updown, boolean ptcl);
-mobj_t* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                      int damage, mobj_t *target);
-void CL_RemoveMobj(mobj_t *actor);
-void CL_LoadWADs(void);
-boolean CL_SetMobjState(mobj_t *mobj, statenum_t state);
-mobj_t* CL_SpawnMissile(mobj_t *source, mobj_t *target,
-                        fixed_t x, fixed_t y, fixed_t z,
-                        fixed_t momx, fixed_t momy, fixed_t momz,
-                        angle_t angle, mobjtype_t type);
+void  CL_SaveServerPassword(void);
+Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                   mobjtype_t type);
+void  CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,
+                     fixed_t z, angle_t angle, bool as_spectator);
+void  CL_RemovePlayer(int playernum);
+Mobj* CL_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
+                   int updown, bool ptcl);
+Mobj* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
+                    int damage, Mobj *target);
+void  CL_RemoveMobj(Mobj *actor);
+void  CL_LoadWADs(void);
+bool  CL_SetMobjState(Mobj *mobj, statenum_t state);
+void  CL_PlayerThink(int playernum);
+Mobj* CL_SpawnMissile(Mobj *source, Mobj *target,
+                      fixed_t x, fixed_t y, fixed_t z,
+                      fixed_t momx, fixed_t momy, fixed_t momz,
+                      angle_t angle, mobjtype_t type);
 char* CL_ExtractServerMessage(nm_servermessage_t *message);
 char* CL_ExtractPlayerMessage(nm_playermessage_t *message);
-void CL_SetActorNetID(mobj_t *actor, unsigned int net_id);
-void CL_HandleMessage(char *data, size_t data_length);
-void CL_AdvancePlayerPositions(void);
-void CL_ProcessNetworkMessages(void);
-void CL_MoveCommands(unsigned int last_index, unsigned int position_index);
-void CL_SetPsprite(player_t *player, int position, statenum_t stnum);
-void CL_HandleDamagedMobj(mobj_t *target, mobj_t *source, int damage, int mod,
-                          emod_t *emod, boolean justhit);
-void CL_SetLatestFinishedIndices(unsigned int index);
-void CL_RunDemoTics(void);
-void CL_TryRunTics(void);
-
-// [CG] Really, this is more documentation of the client message handlers
-//      than anything.
-
-void CL_HandleGameStateMessage(nm_gamestate_t *message);
-void CL_HandleSyncMessage(nm_sync_t *message);
-void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message);
-void CL_HandleMapStartedMessage(nm_mapstarted_t *message);
-void CL_HandleAuthResultMessage(nm_authresult_t *message);
-void CL_HandleClientInitMessage(nm_clientinit_t *message);
-void CL_HandleClientStatusMessage(nm_clientstatus_t *message);
-void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message);
-void CL_HandlePlayerWeaponStateMessage(nm_playerweaponstate_t *message);
-void CL_HandlePlayerRemovedMessage(nm_playerremoved_t *message);
-void CL_HandlePlayerTouchedSpecialMessage(nm_playertouchedspecial_t *message);
-void CL_HandleServerMessage(nm_servermessage_t *message);
-void CL_HandlePlayerMessage(nm_playermessage_t *message);
-void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message);
-void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message);
-void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message);
-void CL_HandleActorPositionMessage(nm_actorposition_t *message);
-void CL_HandleActorTargetMessage(nm_actortarget_t *message);
-void CL_HandleActorStateMessage(nm_actorstate_t *message);
-void CL_HandleActorDamagedMessage(nm_actordamaged_t *message);
-void CL_HandleActorKilledMessage(nm_actorkilled_t *message);
-void CL_HandleActorRemovedMessage(nm_actorremoved_t *message);
-void CL_HandleLineActivatedMessage(nm_lineactivated_t *message);
-void CL_HandleMonsterActiveMessage(nm_monsteractive_t *message);
-void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message);
-void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message);
-void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message);
-void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message);
-void CL_HandleSoundPlayedMessage(nm_soundplayed_t *message);
+void  CL_SetActorNetID(Mobj *actor, unsigned int net_id);
+void  CL_HandleMessage(char *data, size_t data_length);
+void  CL_AdvancePlayerPositions(void);
+void  CL_ProcessNetworkMessages(void);
+void  CL_MoveCommands(unsigned int last_index, unsigned int position_index);
+void  CL_SetPsprite(player_t *player, int position, statenum_t stnum);
+void  CL_HandleDamagedMobj(Mobj *target, Mobj *source, int damage, int mod,
+                           emod_t *emod, bool justhit);
+void  CL_SetLatestFinishedIndices(unsigned int index);
+void  CL_RunDemoTics(void);
+void  CL_TryRunTics(void);
 
 #endif
 

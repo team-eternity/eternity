@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2004 James Haley
@@ -36,9 +36,9 @@ struct VBuffer
    int  height;
    int  pitch, pixelsize;
 
-   byte     *data; // video memory
-   boolean  owndata;
-   int      subx, suby;
+   byte *data; // video memory
+   bool  owndata;
+   int   subx, suby;
 
    void (*BlockDrawer)(int, int, VBuffer *, int, int, byte *);
    void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, 
@@ -46,8 +46,8 @@ struct VBuffer
    void (*TileBlock64)(VBuffer *, byte *);
 
    // SoM: Include the screen size
-   boolean  scaled, freelookups;
-   int  unscaledw, unscaledh;
+   bool  scaled, freelookups;
+   int   unscaledw, unscaledh;
    int  *x1lookup;
    int  *y1lookup;
    int  *x2lookup;
@@ -59,7 +59,7 @@ struct VBuffer
    int  *xlut;
 
    // Only change this if you want memory leaks and/or crashes :P
-   boolean needfree;
+   bool needfree;
 }; 
 
 // V_InitVBuffer

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2008 James Haley
@@ -27,7 +27,6 @@
 #ifndef E_MOD_H__
 #define E_MOD_H__
 
-#include "doomtype.h"
 #include "m_dllist.h"
 #include "e_hashkeys.h"
 
@@ -45,9 +44,9 @@ struct emod_t
 
    char *obituary;
    char *selfobituary;
-   boolean obitIsBexString;
-   boolean selfObitIsBexString;
-   boolean sourceless;
+   bool obitIsBexString;
+   bool selfObitIsBexString;
+   bool sourceless;
 };
 
 emod_t *E_DamageTypeForName(const char *name);

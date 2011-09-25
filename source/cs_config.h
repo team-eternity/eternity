@@ -86,11 +86,11 @@ typedef enum
 
 #pragma pack(push, 1)
 
-typedef struct clientserver_settings_s
+typedef struct
 {
-   int32_t skill;
-   int32_t game_type;
-   int8_t ctf;
+   int32_t  skill;
+   int32_t  game_type;
+   int8_t   ctf;
    uint32_t max_admin_clients;
    uint32_t max_player_clients;
    uint32_t max_players;
@@ -101,19 +101,23 @@ typedef struct clientserver_settings_s
    uint32_t score_limit;
    uint32_t dogs;
    uint32_t friend_distance;
-   int32_t bfg_type;
+   int32_t  bfg_type;
    uint32_t friendly_damage_percentage;
    uint32_t spectator_time_limit;
    uint32_t death_time_limit;
    uint32_t death_time_expired_action;
    uint32_t respawn_protection_time;
-   uint8_t build_blockmap;
+   double   radial_damage;
+   double   radial_self_damage;
+   double   radial_lift;
+   double   radial_self_lift;
+   uint8_t  build_blockmap;
    uint32_t dmflags;
    uint32_t dmflags2;
    uint32_t compatflags;
    uint32_t compatflags2;
-   uint8_t requires_spectator_password;
-   uint8_t requires_player_password;
+   uint8_t  requires_spectator_password;
+   uint8_t  requires_player_password;
 } clientserver_settings_t;
 
 #pragma pack(pop)
@@ -124,9 +128,9 @@ extern clientserver_settings_t *cs_settings;
 
 void CS_ValidateOptions(json_object *options);
 void SV_LoadConfig(void);
-boolean CS_AddIWAD(const char *resource_name);
-boolean CS_AddWAD(const char *resource_name);
-boolean CS_AddDeHackEdFile(const char *resource_name);
+bool CS_AddIWAD(const char *resource_name);
+bool CS_AddWAD(const char *resource_name);
+bool CS_AddDeHackEdFile(const char *resource_name);
 void CS_HandleMastersSection(json_object *masters);
 void CS_HandleResourcesSection(json_object *resources);
 void CS_HandleServerSection(json_object *server);

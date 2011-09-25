@@ -27,110 +27,75 @@
 #ifndef __CL_SPEC_H__
 #define __CL_SPEC_H__
 
-#include "doomtype.h"
-#include "m_dllist.h"
-#include "e_hash.h"
+#include "p_spec.h"
 
 #include "cs_main.h"
 #include "cs_spec.h"
 
-#define SPEC_MAX_LOAD_FACTOR 0.7
-
-// [CG] Just guessing at the proper amount, will probably need tuning.
-#define SPEC_INIT_CHAINS 8192
-
-#define SPEC_MAX_BUFFER_SIZE MAX_POSITIONS
-
-#define CL_FOR_ALL_SPEC_NODES(t, h, n) \
-   while(((n) = (t *)E_HashTableIterator((h), (n))) != NULL)
-
-#define CL_FOR_SPEC_NODES_AT(t, h, n, i) \
-   while(((n) = (t *)E_HashObjectIterator((h), (n), &(i))) != NULL)
-
-#define FOR_ALL_SECTOR_POSITION_NODES CL_FOR_ALL_SPEC_NODES(\
-   sector_position_buffer_node_t, cl_sector_position_hash, node\
-)
-
-#define FOR_SECTOR_POSITION_NODES_AT(i) CL_FOR_SPEC_NODES_AT(\
-   sector_position_buffer_node_t, cl_sector_position_hash, node, (i)\
-)
-
-#define FOR_ALL_SPECIAL_STATUS_NODES CL_FOR_ALL_SPEC_NODES(\
-   ms_status_buffer_node_t, cl_ms_status_hash, node\
-)
-
-#define FOR_SPECIAL_STATUS_NODES_AT(i) CL_FOR_SPEC_NODES_AT(\
-   ms_status_buffer_node_t, cl_ms_status_hash, node, (i)\
-)
-
-typedef struct sector_position_buffer_node_s
-{
-   mdllistitem_t link;
-   uint32_t world_index;
-   size_t sector_number;
-   sector_position_t position;
-} sector_position_buffer_node_t;
-
-typedef struct ms_status_buffer_node_s
-{
-   mdllistitem_t link;
-   map_special_t type;
-   uint32_t world_index;
-   size_t sector_number;
-   void *status;
-} ms_status_buffer_node_t;
-
-typedef struct ms_removal_buffer_node_s
-{
-   mdllistitem_t link;
-   map_special_t type;
-   uint32_t world_index;
-   uint32_t net_id;
-} ms_removal_buffer_node_t;
-
-extern boolean cl_predicting_sectors;
-extern boolean cl_setting_sector_positions;
-
-extern ehash_t *cl_sector_position_hash;
-extern ehash_t *cl_ms_status_hash;
-
-void CL_SpecInit(void);
-
-void CL_BufferSectorPosition(nm_sectorposition_t *message);
-void CL_BufferMapSpecialStatus(nm_specialstatus_t *message, void *special);
+extern bool cl_predicting_sectors;
+extern bool cl_setting_sector_positions;
 
 void CL_LoadSectorState(unsigned int index);
 void CL_LoadSectorPositions(unsigned int index);
 void CL_LoadCurrentSectorPositions(void);
 void CL_LoadCurrentSectorState(void);
 
-void CL_ApplyCeilingStatus(ceiling_status_t *status);
-void CL_ApplyDoorStatus(door_status_t *status);
-void CL_ApplyFloorStatus(floor_status_t *status);
-void CL_ApplyElevatorStatus(elevator_status_t *status);
-void CL_ApplyPillarStatus(pillar_status_t *status);
-void CL_ApplyFloorWaggleStatus(floorwaggle_status_t *status);
-void CL_ApplyPlatformStatus(platform_status_t *status);
+void CL_SpawnParamCeiling(line_t *line, sector_t *sector,
+                          CeilingThinker::status_t *status,
+                          cs_ceilingdata_t *data);
+void CL_SpawnParamDoor(line_t *line, sector_t *sector,
+                       VerticalDoorThinker::status_t *status,
+                       cs_doordata_t *data);
+void CL_SpawnParamFloor(line_t *line, sector_t *sector,
+                        FloorMoveThinker::status_t *status,
+                        cs_floordata_t *data);
 void CL_SpawnCeilingFromStatus(line_t *line, sector_t *sector,
-                               ceiling_status_t *status);
+                               CeilingThinker::status_t *status);
 void CL_SpawnDoorFromStatus(line_t *line, sector_t *sector,
-                            door_status_t *status, map_special_t type);
+                            VerticalDoorThinker::status_t *status,
+                            map_special_e type);
 void CL_SpawnFloorFromStatus(line_t *line, sector_t *sector,
-                             floor_status_t *status, map_special_t type);
+                             FloorMoveThinker::status_t *status,
+                             map_special_e type);
 void CL_SpawnElevatorFromStatus(line_t *line, sector_t *sector,
-                                elevator_status_t *status);
+                                ElevatorThinker::status_t *status);
 void CL_SpawnPillarFromStatus(line_t *line, sector_t *sector,
-                              pillar_status_t *status, map_special_t type);
+                              PillarThinker::status_t *status,
+                              map_special_e type);
 void CL_SpawnFloorWaggleFromStatus(line_t *line, sector_t *sector,
-                                   floorwaggle_status_t *status);
+                                   FloorWaggleThinker::status_t *status);
 void CL_SpawnPlatformFromStatus(line_t *line, sector_t *sector,
-                                platform_status_t *status);
+                                PlatThinker::status_t *status);
+void CL_SpawnGenPlatformFromStatus(line_t *line, sector_t *sector,
+                                   PlatThinker::status_t *status);
 
-void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message);
-void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message);
-void CL_ProcessSectorPositions(unsigned int index);
+void CL_SpawnParamCeilingFromBlob(line_t *line, sector_t *sector, void *blob);
+void CL_SpawnParamDoorFromBlob(line_t *line, sector_t *sector, void *blob);
+void CL_SpawnParamFloorFromBlob(line_t *line, sector_t *sector, void *blob);
 
-void CL_ClearSectorPositions(void);
+void CL_SpawnCeilingFromStatusBlob(line_t *line, sector_t *sector, void *blob);
+void CL_SpawnDoorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
+                                map_special_e type);
+void CL_SpawnFloorFromStatusBlob(line_t *line, sector_t *sector, void *blob,
+                                 map_special_e type);
+void CL_SpawnElevatorFromStatusBlob(line_t *line, sector_t *sector, void *blob);
+void CL_SpawnPillarFromStatusBlob(line_t *line, sector_t *sector, void *blob,
+                                    map_special_e type);
+void CL_SpawnFloorWaggleFromStatusBlob(line_t *line, sector_t *sector,
+                                       void *blob);
+void CL_SpawnPlatformFromStatusBlob(line_t *line, sector_t *sector,
+                                    void *blob);
+void CL_SpawnGenPlatformFromStatusBlob(line_t *line, sector_t *sector,
+                                       void *blob);
+
+void CL_ApplyCeilingStatusFromBlob(void *blob);
+void CL_ApplyDoorStatusFromBlob(void *blob);
+void CL_ApplyFloorStatusFromBlob(void *blob);
+void CL_ApplyElevatorStatusFromBlob(void *blob);
+void CL_ApplyPillarStatusFromBlob(void *blob);
+void CL_ApplyFloorWaggleStatusFromBlob(void *blob);
+void CL_ApplyPlatformStatusFromBlob(void *blob);
+
 void CL_ClearMapSpecialStatuses(void);
 void CL_PrintSpecialStatuses(void);
 

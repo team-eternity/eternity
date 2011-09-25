@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -401,7 +401,7 @@ void A_PlaySoundEx(Mobj *mo)
 {
    sfxinfo_t *sfx = NULL;
    int channel, attn, volume;
-   boolean loop;
+   bool loop;
 
    sfx = E_ArgAsSound(mo->state->args, 0);
    

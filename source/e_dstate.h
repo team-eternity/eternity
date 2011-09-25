@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -27,6 +27,9 @@
 
 #ifndef E_DSTATE_H__
 #define E_DSTATE_H__
+
+// Required for statenum_t:
+#include "info.h"
 
 //
 // DECORATE state output structure 1:

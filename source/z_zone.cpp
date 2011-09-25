@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -32,7 +32,8 @@
 // statistics and tunables.
 //-----------------------------------------------------------------------------
 
-#ifndef ZONE_NATIVE
+// Sorry, this isn't usable any more :P Preserved for historical interest only.
+#if 0
 
 #include "z_zone.h"
 #include "doomstat.h"
@@ -1353,7 +1354,7 @@ void Z_SysFree(void *p)
       (free)(p);
 }
 
-#endif // !ZONE_NATIVE
+#endif // if 0
 
 //-----------------------------------------------------------------------------
 //

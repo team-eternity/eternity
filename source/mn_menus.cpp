@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -29,18 +29,19 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
 
-#include "d_gi.h"
-#include "d_io.h"
-#include "doomdef.h"
-#include "doomstat.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
-#include "d_dialog.h" // haleyjd
+#include "d_dehtbl.h"
+#include "d_gi.h"
+#include "d_io.h"
 #include "d_main.h"
-#include "dstrings.h"
+#include "doomdef.h"
+#include "doomstat.h"
 #include "dhticstr.h" // haleyjd
+#include "dstrings.h"
 #include "e_fonts.h"
 #include "e_states.h"
 #include "g_dmflag.h"
@@ -54,19 +55,21 @@
 #include "mn_htic.h"
 #include "mn_engin.h"
 #include "mn_emenu.h"
+#include "mn_menus.h"
 #include "mn_misc.h"
 #include "mn_files.h"
 #include "p_setup.h"
+#include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_patch.h"
+#include "r_state.h"
 #include "s_sound.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
-
-// haleyjd 04/15/02: SDL joystick stuff
-#ifdef _SDL_VER
-#include "i_system.h"
-#endif
 
 // menus: all in this file (not really extern)
 extern menu_t menu_newgame;
@@ -95,7 +98,7 @@ char *savegamenames[SAVESLOTS];
 char *mn_start_mapname;
 
 // haleyjd: keep track of valid save slots
-boolean savegamepresent[SAVESLOTS];
+bool savegamepresent[SAVESLOTS];
 
 static void MN_PatchOldMainMenu(void);
 static void MN_InitCustomMenu(void);
@@ -104,20 +107,16 @@ static void MN_InitSearchStr(void);
 void MN_InitMenus(void)
 {
    int i; // haleyjd
-   // [CG] Try PU_RENDERER here.
-   // int tag = PU_STATIC;
-   int tag = PU_RENDERER;
-
    
-   mn_phonenum = Z_Strdup("555-1212", tag, 0);
-   mn_demoname = Z_Strdup("demo1", tag, 0);
-   mn_wadname  = Z_Strdup("", tag, 0);
-   mn_start_mapname = Z_Strdup("", tag, 0); // haleyjd 05/14/06
+   mn_phonenum = Z_Strdup("555-1212", PU_STATIC, 0);
+   mn_demoname = Z_Strdup("demo1", PU_STATIC, 0);
+   mn_wadname  = Z_Strdup("", PU_STATIC, 0);
+   mn_start_mapname = Z_Strdup("", PU_STATIC, 0); // haleyjd 05/14/06
    
    // haleyjd: initialize via zone memory
    for(i = 0; i < SAVESLOTS; ++i)
    {
-      savegamenames[i] = Z_Strdup("", tag, 0);
+      savegamenames[i] = Z_Strdup("", PU_STATIC, 0);
       savegamepresent[i] = false;
    }
 
@@ -167,7 +166,8 @@ menu_t menu_main =
 void MN_MainMenuDrawer(void)
 {
    // hack for m_doom compatibility
-   V_DrawPatch(94, 2, &vbscreen, (patch_t *)W_CacheLumpName("M_DOOM", PU_CACHE));
+   V_DrawPatch(94, 2, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_DOOM", PU_CACHE));
 }
 
 // haleyjd 05/14/06: moved these up here
@@ -185,15 +185,15 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    if(!Console.argc)
       return;
 
-   lumpnum = W_CheckNumForName(QStrConstPtr(&Console.argv[0]));
+   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
    
-   if(lumpnum == -1 || P_CheckLevel(&w_GlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
+   if(lumpnum == -1 || P_CheckLevel(&wGlobalDir, lumpnum) == LEVEL_FORMAT_INVALID)   
       C_Printf(FC_ERROR "level not found\a\n");
    else
    {
       if(mn_start_mapname)
          free(mn_start_mapname);
-      start_mapname = mn_start_mapname = QStrCDup(&Console.argv[0], PU_STATIC);
+      start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
    if(menuactive)
@@ -228,14 +228,15 @@ CONSOLE_COMMAND(mn_newgame, 0)
    {
       // determine startmap presence and origin
       int startMapLump = W_CheckNumForName("START");
-      boolean mapPresent = true;
+      bool mapPresent = true;
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
       // if lump not found or the game is modified and the
       // lump comes from the first loaded wad, consider it not
-      // present -- this assumes the resource wad is loaded first.
+      // present -- FIXME: this assumes the resource wad is loaded first.
       if(startMapLump < 0 || 
          (modifiedgame && 
-          w_GlobalDir.lumpinfo[startMapLump]->file == firstWadHandle))
+          lumpinfo[startMapLump]->source == WadDirectory::ResWADSource))
          mapPresent = false;
 
 
@@ -333,7 +334,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
       return;
    }
    
-   start_episode = QStrAtoi(&Console.argv[0]);
+   start_episode = Console.argv[0]->toInt();
    
    if(GameModeInfo->flags & GIF_SHAREWARE && start_episode > 1)
    {
@@ -420,7 +421,7 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    // skill level is argv 0
    
    if(Console.argc)
-      skill = QStrAtoi(&Console.argv[0]);
+      skill = Console.argv[0]->toInt();
 
    // haleyjd 07/27/05: restored nightmare behavior
    if(GameModeInfo->flags & GIF_SKILL5WARNING && skill == sk_nightmare)
@@ -480,7 +481,7 @@ menu_t menu_startmap =
    mf_leftaligned | mf_background, 
 };
 
-char *str_startmap[] = {"ask", "no", "yes"};
+const char *str_startmap[] = {"ask", "no", "yes"};
 VARIABLE_INT(use_startmap, NULL, -1, 1, str_startmap);
 CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 
@@ -532,7 +533,7 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
    MN_StartMenu(&menu_demos);
 }
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Load new pwad menu
 //
@@ -543,6 +544,7 @@ extern menu_t menu_loadwad;
 extern menu_t menu_wadmisc;
 extern menu_t menu_wadiwads1;
 extern menu_t menu_wadiwads2;
+extern menu_t menu_wadiwads3;
 
 static const char *mn_wad_names[] =
 {
@@ -550,6 +552,7 @@ static const char *mn_wad_names[] =
    "Misc Settings",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
+   "IWAD Paths - Freedoom",
    NULL
 };
 
@@ -559,6 +562,7 @@ static menu_t *mn_wad_pages[] =
    &menu_wadmisc,
    &menu_wadiwads1,
    &menu_wadiwads2,
+   &menu_wadiwads3,
    NULL
 };
 
@@ -624,6 +628,18 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_end}
 };
 
+static menuitem_t mn_wadiwad3_items[] =
+{
+   {it_title,    FC_GOLD "Wad Options", NULL,           "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "IWAD Paths - Freedoom", NULL,  NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "Freedoom:",          "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate Freedoom:", "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",            "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_end}
+};
+
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
@@ -670,8 +686,22 @@ menu_t menu_wadiwads2 =
 {
    mn_wadiwad2_items,
    &menu_wadiwads1,
-   NULL,
+   &menu_wadiwads3,
    &menu_loadwad, // rootpage
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadiwads3 =
+{
+   mn_wadiwad3_items,
+   &menu_wadiwads2,
+   NULL,
+   &menu_loadwad,
    200, 15,
    4,
    mf_background,
@@ -691,7 +721,6 @@ CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
    char *filename = NULL;
-   size_t len;
 
    // haleyjd 03/12/06: this is much more resilient than the 
    // chain of console commands that was used by SMMU
@@ -712,9 +741,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       return;
    }
 
-   len = M_StringAlloca(&filename, 2, 2, wad_directory, mn_wadname);
-
-   psnprintf(filename, len, "%s/%s", wad_directory, mn_wadname);
+   filename = M_SafeFilePath(wad_directory, mn_wadname);
 
    if(D_AddNewFile(filename))
    {
@@ -791,7 +818,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    if(!Console.argc)
       return;
    
-   newvalue = QStrConstPtr(&Console.argv[0]);
+   newvalue = Console.argv[0]->constPtr();
    
    // check for a valid level
    if(W_CheckNumForName(newvalue) == -1)
@@ -1039,10 +1066,10 @@ static menuitem_t mn_player_items[] =
 menu_t menu_player =
 {
    mn_player_items,
-   NULL, NULL, NULL, // pages
-   150, 5,            // x, y offset
-   2,                // player name at start
-   mf_background,    // full-screen and left-aligned
+   NULL, NULL, NULL,                     // pages
+   150, 5,                               // x, y offset
+   2,                                    // chatmacro0 at start
+   mf_background,                        // full-screen
    MN_PlayerDrawer
 };
 
@@ -1068,12 +1095,12 @@ void MN_PlayerDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[1];
    
-   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
 
-   w    = SwapShort(patch->width);
-   h    = SwapShort(patch->height);
-   toff = SwapShort(patch->topoffset);
-   loff = SwapShort(patch->leftoffset);
+   w    = patch->width;
+   h    = patch->height;
+   toff = patch->topoffset;
+   loff = patch->leftoffset;
    
    V_DrawBox(SPRITEBOX_X, SPRITEBOX_Y, w + 16, h + 16);
 
@@ -1095,6 +1122,7 @@ CONSOLE_COMMAND(mn_player, 0)
 {
    MN_StartMenu(&menu_player);
 }
+
 
 /////////////////////////////////////////////////////////////////
 //
@@ -1231,17 +1259,17 @@ void MN_DrawLoadBox(int x, int y)
 {
    int i;
    
-   patch_left  = (patch_t *)W_CacheLumpName("M_LSLEFT", PU_STATIC);
-   patch_mid   = (patch_t *)W_CacheLumpName("M_LSCNTR", PU_STATIC);
-   patch_right = (patch_t *)W_CacheLumpName("M_LSRGHT", PU_STATIC);
+   patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
+   patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
+   patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
 
    V_DrawPatch(x, y, &vbscreen, patch_left);
-   x += SwapShort(patch_left->width);
+   x += patch_left->width;
    
    for(i=0; i<24; i++)
    {
       V_DrawPatch(x, y, &vbscreen, patch_mid);
-      x += SwapShort(patch_mid->width);
+      x += patch_mid->width;
    }
    
    V_DrawPatch(x, y, &vbscreen, patch_right);
@@ -1339,7 +1367,7 @@ CONSOLE_COMMAND(mn_load, 0)
    if(Console.argc < 1)
       return;
    
-   slot = QStrAtoi(&Console.argv[0]);
+   slot = Console.argv[0]->toInt();
    
    // haleyjd 08/25/02: giant bug here
    if(!savegamepresent[slot])
@@ -1632,63 +1660,237 @@ CONSOLE_COMMAND(mn_endgame, 0)
    MN_Question(DEH_String("ENDGAME"), "starttitle");
 }
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Set video mode
 //
 
-#if 0
-static const char **mn_vidmode_desc;
-static const char **mn_vidmode_cmds;
+// haleyjd 06/19/11: user's favorite aspect ratio
+int mn_favaspectratio;
 
+static const char *aspect_ratio_desc[] =
+{
+   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9"
+};
+
+VARIABLE_INT(mn_favaspectratio, NULL, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
+CONSOLE_VARIABLE(mn_favaspectratio, mn_favaspectratio, 0) {}
+
+// haleyjd 06/19/11: user's favored fullscreen/window setting
+int mn_favscreentype;
+
+static const char *screen_type_desc[] = { "windowed", "fullscreen" };
+
+VARIABLE_INT(mn_favscreentype, NULL, 0, MN_NUMSCREENTYPES-1, screen_type_desc);
+CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
+
+// Video mode lists, per aspect ratio
+
+// Legacy settings, w/aspect-corrected variants
+static const char *legacyModes[] =
+{
+   "320x200",  // Mode 13h (16:10 logical, 4:3 physical)
+   "320x240",  // QVGA
+   "640x400",  // VESA Extension (same as 320x200)
+   "640x480",  // VGA
+   "960x600",  // x3
+   "960x720",  // x3 with aspect ratio correction
+   "1280x960", // x4 with aspect ratio correction  
+   NULL
+};
+
+// 5:4 modes (1.25 / 0.8)
+static const char *fiveFourModes[] =
+{
+   "320x256",   // NES resolution, IIRC
+   "640x512",
+   "800x640",
+   "960x768",
+   "1280x1024", // Most common 5:4 mode (name?)
+   "1400x1120",
+   "1600x1280",
+   NULL
+};
+
+// 4:3 modes (1.333... / 0.75)
+static const char *fourThreeModes[] =
+{
+   "768x576",   // PAL
+   "800x600",   // SVGA
+   "1024x768",  // XGA
+   "1152x864",  // XGA+
+   "1400x1050", // SXGA+
+   "1600x1200", // UGA
+   "2048x1536", // QXGA
+   NULL
+};
+
+// 3:2 modes (1.5 / 0.666...)
+static const char *threeTwoModes[] =
+{
+   "720x480",  // NTSC
+   "768x512",
+   "960x640",
+   "1152x768",
+   "1280x854",
+   "1440x960",
+   "1680x1120",
+   NULL
+};
+
+// 16:10 modes (1.6 / 0.625)
+static const char *sixteenTenModes[] =
+{
+   "1280x800",  // WXGA
+   "1440x900",
+   "1680x1050", // WSXGA+
+   "1920x1200", // WUXGA
+   "2560x1600", // WQXGA (This is the current max resolution)
+   NULL
+};
+
+// 5:3 modes (1.666... / 0.6)
+static const char *fiveThreeModes[] =
+{
+   "640x384",
+   "800x480",  // WVGA
+   "960x576",
+   "1280x768", // WXGA
+   "1400x840",
+   "1600x960",
+   "2560x1536",
+   NULL
+};
+
+// "WSVGA" modes (128:75 or 16:9.375: 1.70666... / 0.5859375)
+static const char *wsvgaModes[] =
+{
+   "1024x600", // WSVGA (common netbook resolution)
+   NULL
+};
+
+// 16:9 modes (1.777... / 0.5625)
+static const char *sixteenNineModes[] =
+{
+   "854x480",   // WVGA
+   "1280x720",  // HD720
+   "1360x768",  
+   "1440x810",
+   "1600x900",  // HD+
+   "1920x1080", // HD1080
+   "2048x1152",
+   NULL
+};
+
+// FIXME/TODO: Not supported as menu choices yet:
+// 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
+// 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
+// These are not choices here because EE doesn't support them properly yet.
+// Weapons will float above the status bar in these aspect ratios.
+
+static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
+{
+   legacyModes,      // Low-res 16:10, 4:3 modes and their multiples
+   fiveFourModes,    // 5:4 - very square
+   fourThreeModes,   // 4:3 (standard CRT)
+   threeTwoModes,    // 3:2 (similar to European TV)
+   sixteenTenModes,  // 16:10, common LCD widescreen monitors
+   fiveThreeModes,   // 5:3 
+   wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
+   sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
+};
+
+static int mn_vidmode_num;
+static char **mn_vidmode_desc;
+static char **mn_vidmode_cmds;
+
+//
+// MN_BuildVidmodeTables
+//
+// haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
+// from the precomposited lists above based on the user's favorite aspect
+// ratio and fullscreen/windowed settings.
+//
 static void MN_BuildVidmodeTables(void)
 {
-   static boolean menu_built = false;
-   
-   // don't build multiple times
-   if(!menu_built)
+   int useraspect = mn_favaspectratio;
+   int userfs     = mn_favscreentype;
+   const char **reslist = NULL;
+   int i = 0;
+   int nummodes;
+   qstring description;
+   qstring cmd;
+
+   if(mn_vidmode_desc)
    {
-      int nummodes, vidmode;
-      char tempstr[20];
-
-      nummodes = V_NumModes();
-
-      // allocate arrays
-      mn_vidmode_desc = Z_Malloc((nummodes + 1) * sizeof(char *), 
-                                 PU_STATIC, NULL);
-      mn_vidmode_cmds = Z_Malloc((nummodes + 1) * sizeof(char *),
-                                 PU_STATIC, NULL);
-            
-      for(vidmode = 0; vidmode < nummodes; ++vidmode)
-      {
-         mn_vidmode_desc[vidmode] = videomodes[vidmode].description;
-         sprintf(tempstr, "v_mode %i", vidmode);
-         mn_vidmode_cmds[vidmode] = strdup(tempstr);
-      }
-      mn_vidmode_desc[nummodes] = NULL;
-      mn_vidmode_cmds[nummodes] = NULL;
-          
-      menu_built = true;
+      for(i = 0; i < mn_vidmode_num; i++)
+         free(mn_vidmode_desc[i]);
+      free(mn_vidmode_desc);
+      mn_vidmode_desc = NULL;
    }
+   if(mn_vidmode_cmds)
+   {
+      for(i = 0; i < mn_vidmode_num; i++)
+         free(mn_vidmode_cmds[i]);
+      free(mn_vidmode_cmds);
+      mn_vidmode_cmds = NULL;
+   }
+
+   // pick the list of resolutions to use
+   if(useraspect >= 0 && useraspect < AR_NUMASPECTRATIOS)
+      reslist = resListForAspectRatio[useraspect];
+   else
+      reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
+
+   // count the modes on that list
+   while(reslist[i])
+      ++i;
+
+   nummodes = i;
+
+   // allocate arrays
+   mn_vidmode_desc = (char **)calloc(i+1, sizeof(const char *));
+   mn_vidmode_cmds = (char **)calloc(i+1, sizeof(const char *));
+
+   for(i = 0; i < nummodes; i++)
+   {
+      description = reslist[i];
+      switch(userfs)
+      {
+      case MN_FULLSCREEN:
+         description += 'f';
+         break;
+      case MN_WINDOWED:
+      default:
+         description += 'w';
+         break;
+      }
+
+      // set the mode description
+      mn_vidmode_desc[i] = description.duplicate(PU_STATIC);
+      
+      cmd  = "i_videomode ";
+      cmd += description;
+      
+      mn_vidmode_cmds[i] = cmd.duplicate(PU_STATIC);
+   }
+
+   // null-terminate the lists
+   mn_vidmode_desc[nummodes] = NULL;
+   mn_vidmode_cmds[nummodes] = NULL;
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   static char title[128];
-
    MN_BuildVidmodeTables();
 
-   psnprintf(title, sizeof(title), 
-             "choose a video mode\n\n  current mode:\n  %s",
-             videomodes[v_mode].description);
-
-   MN_SetupBoxWidget(title, mn_vidmode_desc, 1,
-                     NULL, mn_vidmode_cmds);
+   MN_SetupBoxWidget("Choose a Video Mode", 
+                     (const char **)mn_vidmode_desc, 1, NULL, 
+                     (const char **)mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
-#endif
 
-/////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Video Options
 //
@@ -1723,9 +1925,12 @@ static menuitem_t mn_video_items[] =
    {it_title,        FC_GOLD "Video Options",           NULL, "m_video"},
    {it_gap},
    {it_info,         FC_GOLD "Mode"                                    },
-   {it_variable_nd,  "video mode",              "i_videomode"          },
-   {it_runcmd,       "make default video mode", "i_default_videomode"  },
-   {it_toggle,       "wait for retrace",        "v_retrace"            },
+   {it_runcmd,       "choose a mode...",        "mn_vidmode"           },
+   {it_variable,     "video mode",              "i_videomode"          },
+   {it_toggle,       "favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_toggle,       "favorite screen mode",    "mn_favscreentype"     },
+   //{it_runcmd,       "make default video mode", "i_default_videomode"  },
+   {it_toggle,       "vertical sync",           "v_retrace"            },
    {it_slider,       "gamma correction",        "gamma"                },   
    {it_gap},
    {it_info,         FC_GOLD "Rendering"                               },
@@ -1761,7 +1966,7 @@ void MN_VideoModeDrawer(void)
    // draw an imp fireball
 
    // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[10].flags & MENUITEM_POSINIT))
+   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
       return;
    
    sprdef = &sprites[states[frame]->sprite];
@@ -1771,10 +1976,10 @@ void MN_VideoModeDrawer(void)
    sprframe = &sprdef->spriteframes[0];
    lump = sprframe->lump[0];
    
-   patch = (patch_t *)(W_CacheLumpNum(lump + firstspritelump, PU_CACHE));
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[11].y - 5;
+   y = menu_video.menuitems[13].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &vbscreen, patch, NULL, FTRANLEVEL);
 }
@@ -1792,7 +1997,6 @@ static menuitem_t mn_sysvideo_items[] =
    {it_toggle,   "textmode startup",        "textmode_startup"},
 #ifdef _SDL_VER
    {it_toggle,   "wait at exit",            "i_waitatexit"},
-   {it_toggle,   "window grabs mouse",      "i_grabmouse"},
    {it_toggle,   "show endoom",             "i_showendoom"},
    {it_variable, "endoom delay",            "i_endoomdelay"},
 #endif
@@ -1831,7 +2035,7 @@ static menuitem_t mn_video_page2_items[] =
    {it_gap},
    {it_info,    FC_GOLD "Misc."},
    {it_toggle,  "loading disk icon",       "v_diskicon"},
-   {it_slider,  "damage screen intensity", "damage_screen_factor"},
+   {it_slider,  "damage screen intensity", "damage_screen_cap"},
    {it_end}
 };
 
@@ -1922,14 +2126,12 @@ static menuitem_t mn_sound_items[] =
    {it_info,       FC_GOLD "Setup"},
    {it_toggle,     "Sound card",                   "snd_card"},
    {it_toggle,     "Music card",                   "mus_card"},
-   {it_toggle,     "Autodetect voices",            "detect_voices"},
    {it_toggle,     "Sound channels",               "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_gap},
    {it_info,       FC_GOLD "Misc"},
    {it_toggle,     "Precache sounds",              "s_precache"},
    {it_toggle,     "Pitched sounds",               "s_pitched"},
-   {it_toggle,     "Use announcer",                "use_announcer"},
    {it_end}
 };
 
@@ -2025,8 +2227,8 @@ static menuitem_t mn_mouse_items[] =
    {it_toggle,     "smooth turning",               "smooth_turning"},
    {it_toggle,     "mouse acceleration",           "mouse_accel"},
    {it_toggle,     "novert emulation",             "mouse_novert"},
-#ifndef _SDL_VER
-   {it_toggle,     "enable joystick",              "i_usejoystick"},
+#ifdef _SDL_VER
+   {it_toggle,     "window grabs mouse",           "i_grabmouse"},
 #endif
    {it_end}
 };
@@ -2093,7 +2295,7 @@ extern int numJoysticks;
 
 static void MN_BuildJSTables(void)
 {
-   static boolean menu_built = false;
+   static bool menu_built = false;
    
    // don't build multiple times
    if(!menu_built)
@@ -2287,7 +2489,7 @@ static void MN_HUDPg2Drawer(void)
       return;
 
    if(xhairnum >= 0 && crosshairs[xhairnum] != -1)
-      patch = (patch_t *)(W_CacheLumpNum(crosshairs[xhairnum], PU_CACHE));
+      patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[xhairnum], PU_CACHE);
   
    // approximately center box on "crosshair" item in menu
    y = menu_hud_pg2.menuitems[3].y - 5;
@@ -2295,10 +2497,10 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = SwapShort(patch->width);
-      int16_t h  = SwapShort(patch->height);
-      int16_t to = SwapShort(patch->topoffset);
-      int16_t lo = SwapShort(patch->leftoffset);
+      int16_t w  = patch->width;
+      int16_t h  = patch->height;
+      int16_t to = patch->topoffset;
+      int16_t lo = patch->leftoffset;
 
       V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
                     y + 12 - (h >> 1) + to, 
@@ -2550,11 +2752,6 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "autoaiming",                     "autoaim"},
    {it_variable,   "change time",                    "weapspeed"},
    {it_gap},
-   {it_info, FC_GOLD "weapon switch on pickup", NULL, NULL, MENUITEM_CENTERED},
-   {it_gap},
-   {it_toggle, "switch on weapon pickup", "weapon_switch_on_pickup"},
-   {it_toggle, "switch on ammo pickup", "ammo_switch_on_pickup"},
-   {it_gap},
    {it_end},
 };
 
@@ -2574,7 +2771,7 @@ menu_t menu_weapons =
 
 static menuitem_t mn_weapons_pref_items[] =
 {
-   {it_title, FC_GOLD "weapons", NULL, "M_WEAP"},
+   {it_title,      FC_GOLD "weapons",       NULL, "M_WEAP"},
    {it_gap},
    {it_info, FC_GOLD "preferred weapon order", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
@@ -2786,12 +2983,12 @@ static const char *mn_binding_contentnames[] =
    "basic movement",
    "advanced movement",
    "weapon keys",
+   "client/server keys",
    "environment",
    "game functions",
    "menu keys",
    "automap keys",
    "console keys",
-   "client/server keys",
    NULL
 };
 
@@ -2799,24 +2996,24 @@ static const char *mn_binding_contentnames[] =
 extern menu_t menu_movekeys;
 extern menu_t menu_advkeys;
 extern menu_t menu_weaponbindings;
+extern menu_t menu_clientserverkeys;
 extern menu_t menu_envbindings;
 extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
 extern menu_t menu_consolekeys;
-extern menu_t menu_clientserverkeys;
 
 static menu_t *mn_binding_contentpages[] =
 {
    &menu_movekeys,
    &menu_advkeys,
    &menu_weaponbindings,
+   &menu_clientserverkeys,
    &menu_envbindings,
    &menu_funcbindings,
    &menu_menukeys,
    &menu_automapkeys,
    &menu_consolekeys,
-   &menu_clientserverkeys,
    NULL
 };
 
@@ -3221,6 +3418,7 @@ static void MN_InitSearchStr(void)
 {
    if(mn_searchstr)
        free(mn_searchstr);
+
    mn_searchstr = strdup("");
 }
 
@@ -3263,7 +3461,7 @@ CONSOLE_COMMAND(mn_search, 0)
 {
    int i = 0;
    menu_t *curMenu;
-   boolean pastLast;
+   bool pastLast;
 
    // if lastMatch is set, set pastLast to false so that we'll seek
    // forward until we pass the last item that was matched
@@ -3529,7 +3727,7 @@ static menuitem_t mn_old_option_items[] =
 {
    { it_runcmd,    "end game",       "mn_endgame",    "M_ENDGAM" },
    { it_runcmd,    "messages",       "hu_messages /", "M_MESSG"  },
-   { it_runcmd,    "graphic detail", "r_detail /",    "M_DETAIL" },
+   { it_runcmd,    "graphic detail", "echo No.",      "M_DETAIL" },
    { it_bigslider, "screen size",    "screensize",    "M_SCRNSZ" },
    { it_gap },
    { it_bigslider, "mouse sens.",    "sens_combined", "M_MSENS"  },
@@ -3538,21 +3736,19 @@ static menuitem_t mn_old_option_items[] =
    { it_end }
 };
 
-extern int c_detailshift;
-
 static char detailNames[2][9] = { "M_GDHIGH", "M_GDLOW" };
 static char msgNames[2][9]    = { "M_MSGOFF", "M_MSGON" };
 
 static void MN_OldOptionsDrawer(void)
 {
    V_DrawPatch(108, 15, &vbscreen,
-               (patch_t *)W_CacheLumpName("M_OPTTTL", PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, "M_OPTTTL", PU_CACHE));
 
    V_DrawPatch(60 + 120, 37 + EMULATED_ITEM_SIZE, &vbscreen,
-               (patch_t *)W_CacheLumpName(msgNames[showMessages], PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, msgNames[showMessages], PU_CACHE));
 
    V_DrawPatch(60 + 175, 37 + EMULATED_ITEM_SIZE*2, &vbscreen,
-               (patch_t *)W_CacheLumpName(detailNames[c_detailshift], PU_CACHE));
+               PatchLoader::CacheName(wGlobalDir, detailNames[0], PU_CACHE));
 }
 
 menu_t menu_old_options =
@@ -3591,7 +3787,8 @@ static menuitem_t mn_old_sound_items[] =
 
 static void MN_OldSoundDrawer(void)
 {
-   V_DrawPatch(60, 38, &vbscreen, (patch_t *)W_CacheLumpName("M_SVOL", PU_CACHE));
+   V_DrawPatch(60, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_SVOL", PU_CACHE));
 }
 
 menu_t menu_old_sound =
@@ -3651,9 +3848,9 @@ void MN_AddMenus(void)
    C_AddCommand(mn_mouse);
    C_AddCommand(mn_video);
    C_AddCommand(mn_particle);  // haleyjd: particle options menu
-#if 0
    C_AddCommand(mn_vidmode);
-#endif
+   C_AddCommand(mn_favaspectratio);
+   C_AddCommand(mn_favscreentype);
    C_AddCommand(mn_sound);
    C_AddCommand(mn_weapons);
    C_AddCommand(mn_compat);

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -25,12 +25,8 @@
 //    
 //-----------------------------------------------------------------------------
 
-#ifndef __D_EVENT__
-#define __D_EVENT__
-
-
-#include "doomtype.h"
-
+#ifndef D_EVENT_H__
+#define D_EVENT_H__
 
 //
 // Event handling.
@@ -67,9 +63,7 @@ typedef enum
   ga_completed,
   ga_victory,
   ga_worlddone,
-  ga_screenshot,
-  ga_disconnect, // [CG] Added for client/server.
-  ga_stopdemo,   // [CG] Added for client/server.
+  ga_screenshot
 } gameaction_t;
 
 
@@ -123,7 +117,7 @@ typedef enum
 //
 // GLOBAL VARIABLES
 //
-// [CG] Increase this to avoid mouse deceleration.
+// [CG] 09/13/11 Increase this to avoid mouse deceleration.
 // #define MAXEVENTS               64
 #define MAXEVENTS 4096
 

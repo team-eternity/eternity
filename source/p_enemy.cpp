@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,46 +26,51 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "d_io.h"
-#include "d_mod.h"
-#include "doomstat.h"
-#include "m_random.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "p_map3d.h"
-#include "p_setup.h"
-#include "p_spec.h"
-#include "s_sound.h"
-#include "sounds.h"
-#include "p_inter.h"
-#include "g_game.h"
-#include "p_enemy.h"
-#include "p_tick.h"
-#include "m_bbox.h"
-#include "p_anim.h" // haleyjd
-#include "c_io.h"
-#include "c_runcmd.h"
-#include "w_wad.h"
-#include "p_partcl.h"
-#include "p_info.h"
-#include "a_small.h"
-#include "e_player.h"
-#include "e_states.h"
-#include "e_things.h"
-#include "e_ttypes.h"
-#include "d_gi.h"
-#include "r_main.h"
-#include "e_lib.h"
-#include "e_sound.h"
-#include "e_args.h"
 
 // Some action functions are still needed here.
 #include "a_common.h"
 #include "a_doom.h"
 
-// [CG] Added.
-#include "sv_main.h"
+#include "a_small.h"
+#include "c_io.h"
+#include "c_runcmd.h"
+#include "d_gi.h"
+#include "d_io.h"
+#include "d_mod.h"
+#include "doomstat.h"
+#include "e_args.h"
+#include "e_lib.h"
+#include "e_player.h"
+#include "e_sound.h"
+#include "e_states.h"
+#include "e_things.h"
+#include "e_ttypes.h"
+#include "g_game.h"
+#include "m_bbox.h"
+#include "m_random.h"
+#include "p_anim.h"      // haleyjd
+#include "p_enemy.h"
+#include "p_info.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_map3d.h"
+#include "p_maputl.h"
+#include "p_mobjcol.h"
+#include "p_partcl.h"
+#include "p_setup.h"
+#include "p_spec.h"
+#include "p_tick.h"
+#include "r_defs.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
+#include "r_state.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "w_wad.h"
+
+#include "cs_main.h" // [CG] 09/23/11
+#include "sv_main.h" // [CG] 09/23/11
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -92,7 +97,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
                              Mobj *soundtarget)
 {
    int i;
-
+   
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
       sec->soundtraversed <= soundblocks+1)
@@ -111,15 +116,15 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       sector_t *other;
       line_t *check = sec->lines[0];
 
-      other =
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2)
+      other = 
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
                              - R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2)
+                            ((check->v1->y + check->v2->y) / 2) 
                              - R_FPLink(sec)->deltay)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
-
+   
    if(sec->c_pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even 
@@ -128,7 +133,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       sector_t *other;
       line_t *check = sec->lines[0];
 
-      other =
+      other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
                              - R_CPLink(sec)->deltax,
                             ((check->v1->y + check->v2->y) / 2) 
@@ -142,13 +147,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    {
       sector_t *other;
       line_t *check = sec->lines[i];
-
+      
 #ifdef R_LINKEDPORTALS
       if(check->pflags & PS_PASSSOUND)
       {
          sector_t *other;
 
-         other =
+         other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - check->portal->data.link.deltax,
                             ((check->v1->y + check->v2->y) / 2) - check->portal->data.link.deltay)->sector;
 
@@ -159,12 +164,12 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
          continue;
 
       P_LineOpening(check, NULL);
-
+      
       if(clip.openrange <= 0)
          continue;       // closed door
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
-
+      
       if(!(check->flags & ML_SOUNDBLOCK))
          P_RecursiveSound(other, soundblocks, soundtarget);
       else if(!soundblocks)
@@ -187,10 +192,10 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 //
 // P_CheckMeleeRange
 //
-boolean P_CheckMeleeRange(Mobj *actor)
+bool P_CheckMeleeRange(Mobj *actor)
 {
    Mobj *pl = actor->target;
-
+   
    // haleyjd 02/15/02: revision of joel's fix for z height check
    if(pl && !comp[comp_overunder])
    {
@@ -216,9 +221,9 @@ boolean P_CheckMeleeRange(Mobj *actor)
 // haleyjd 09/22/09: rewrote to de-Killoughify ;)
 //                   also added ignoring of things with NOFRIENDDMG flag
 //
-boolean P_HitFriend(Mobj *actor)
+bool P_HitFriend(Mobj *actor)
 {
-   boolean hitfriend = false;
+   bool hitfriend = false;
 
    if(actor->target)
    {
@@ -237,9 +242,9 @@ boolean P_HitFriend(Mobj *actor)
 
       P_AimLineAttack(actor, angle, dist, 0);
 
-      if(clip.linetarget
-         && clip.linetarget != actor->target
-         && !((clip.linetarget->flags ^ actor->flags) & MF_FRIEND)
+      if(clip.linetarget 
+         && clip.linetarget != actor->target 
+         && !((clip.linetarget->flags ^ actor->flags) & MF_FRIEND) 
          && !(clip.linetarget->flags3 & MF3_NOFRIENDDMG))
       {
          hitfriend = true;
@@ -252,13 +257,13 @@ boolean P_HitFriend(Mobj *actor)
 //
 // P_CheckMissileRange
 //
-boolean P_CheckMissileRange(Mobj *actor)
+bool P_CheckMissileRange(Mobj *actor)
 {
    fixed_t dist;
-
+   
    if(!P_CheckSight(actor, actor->target))
       return false;
-
+   
    if (actor->flags & MF_JUSTHIT)
    {      // the target just hit the enemy, so fight back!
       actor->flags &= ~MF_JUSTHIT;
@@ -266,11 +271,11 @@ boolean P_CheckMissileRange(Mobj *actor)
       // killough 7/18/98: no friendly fire at corpses
       // killough 11/98: prevent too much infighting among friends
 
-      return
-         !(actor->flags & MF_FRIEND) ||
+      return 
+         !(actor->flags & MF_FRIEND) || 
          (actor->target->health > 0 &&
           (!(actor->target->flags & MF_FRIEND) ||
-          (actor->target->player ?
+          (actor->target->player ? 
            monster_infighting || P_Random(pr_defect) >128 :
            !(actor->target->flags & MF_JUSTHIT) && P_Random(pr_defect) >128)));
    }
@@ -279,7 +284,7 @@ boolean P_CheckMissileRange(Mobj *actor)
    // monsters or players (except when attacked, and then only once)
    if(actor->flags & actor->target->flags & MF_FRIEND)
       return false;
-
+   
    if(actor->reactiontime)
       return false;       // do not attack yet
 
@@ -324,7 +329,7 @@ boolean P_CheckMissileRange(Mobj *actor)
 
    if(P_Random(pr_missrange) < dist)
       return false;
-
+  
    if((actor->flags & MF_FRIEND) && P_HitFriend(actor))
       return false;
 
@@ -341,7 +346,7 @@ boolean P_CheckMissileRange(Mobj *actor)
 // or that a monster should stay on the lift for a while
 // while it goes up or down.
 //
-static boolean P_IsOnLift(const Mobj *actor)
+static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
    line_t line;
@@ -351,7 +356,7 @@ static boolean P_IsOnLift(const Mobj *actor)
    if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
       return true;
 
-   // Check to see if it's in a sector which can be
+   // Check to see if it's in a sector which can be 
    // activated as a lift.
    if((line.tag = sec->tag))
    {
@@ -369,7 +374,7 @@ static boolean P_IsOnLift(const Mobj *actor)
          }
       }
    }
-
+   
    return false;
 }
 
@@ -383,8 +388,8 @@ static boolean P_IsOnLift(const Mobj *actor)
 // -1 if it is serious. Used for AI.
 //
 static int P_IsUnderDamage(Mobj *actor)
-{
-   const struct msecnode_s *seclist;
+{ 
+   const msecnode_t *seclist;
    const CeilingThinker *cl;             // Crushing ceiling
    int dir = 0;
 
@@ -413,7 +418,7 @@ extern  int    numspechit;
 int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 {
    fixed_t tryx, tryy, deltax, deltay;
-   boolean try_ok, line_used; // [CG] Added line_used for P_UseSpecialLine.
+   bool try_ok;
    int movefactor = ORIG_FRICTION_FACTOR;    // killough 10/98
    int friction = ORIG_FRICTION;
    int speed;
@@ -426,7 +431,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(!comp[comp_overunder])
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz &&
+      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
          !(actor->intflags & MIF_ONMOBJ))
       {
          if (actor->z > actor->floorz + 24*FRACUNIT)
@@ -440,7 +445,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    if((unsigned int)actor->movedir >= 8)
       I_Error ("Weird actor->movedir!\n");
 #endif
-
+   
    // killough 10/98: make monsters get affected by ice and sludge too:
 
    if(monster_friction)
@@ -469,9 +474,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t floorz = actor->floorz;
       fixed_t ceilingz = actor->ceilingz;
       fixed_t dropoffz = actor->dropoffz;
-
+      
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
-
+      
       // killough 10/98:
       // Let normal momentum carry them, instead of steptoeing them across ice.
 
@@ -489,11 +494,11 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->momy += FixedMul(deltay, movefactor);
       }
    }
-
+   
    if(!try_ok)
    {      // open any specials
       int good;
-
+      
       if(actor->flags & MF_FLOAT && clip.floatok)
       {
          fixed_t savedz = actor->z;
@@ -516,7 +521,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          }
          else
          {
-            actor->flags |= MF_INFLOAT;
+            actor->flags |= MF_INFLOAT;            
             return true;
          }
       }
@@ -531,7 +536,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 #endif
 
       actor->movedir = DI_NODIR;
-
+      
       // if the special is not a door that can be opened, return false
       //
       // killough 8/9/98: this is what caused monsters to get stuck in
@@ -550,9 +555,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
       for(good = false; clip.numspechit--; )
       {
-         line_used = P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0);
-
-         if(line_used)
+         if(P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0))
          {
             if(CS_SERVER)
                SV_BroadcastLineUsed(actor, clip.spechit[clip.numspechit], 0);
@@ -589,7 +592,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       {
          fixed_t oldz = actor->z;
          actor->z = actor->floorz;
-
+         
          if(actor->z < oldz)
             E_HitFloor(actor);
       }
@@ -602,7 +605,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 //
 // killough 9/12/98: Same as P_Move, except smarter
 //
-boolean P_SmartMove(Mobj *actor)
+bool P_SmartMove(Mobj *actor)
 {
    Mobj *target = actor->target;
    int on_lift, dropoff = 0, under_damage;
@@ -613,7 +616,7 @@ boolean P_SmartMove(Mobj *actor)
       P_IsOnLift(actor);
 
    under_damage = monster_avoid_hazards && P_IsUnderDamage(actor);
-
+   
    // killough 10/98: allow dogs to drop off of taller ledges sometimes.
    // dropoff==1 means always allow it, dropoff==2 means only up to 128 high,
    // and only if the target is immediately on the other side of the line.
@@ -631,7 +634,7 @@ boolean P_SmartMove(Mobj *actor)
 #else
       P_AproxDistance(actor->x - target->x,
                       actor->y - target->y) < FRACUNIT*144 &&
-#endif
+#endif      
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -652,23 +655,19 @@ boolean P_SmartMove(Mobj *actor)
    {
       actor->movedir = DI_NODIR;    // avoid the area (most of the time anyway)
    }
-
+   
    return true;
 }
 
 //
 // P_TryWalk
 //
-// Attempts to move actor on
-// in its current (ob->moveangle) direction.
-// If blocked by either a wall or an actor
-// returns FALSE
-// If move is either clear or blocked only by a door,
-// returns TRUE and sets...
-// If a door is in the way,
-// an OpenDoor call is made to start it opening.
+// Attempts to move actor on in its current (ob->moveangle) direction.
+// If blocked by either a wall or an actor returns FALSE
+// If move is either clear or blocked only by a door, returns TRUE and sets...
+// If a door is in the way, an OpenDoor call is made to start it opening.
 //
-static boolean P_TryWalk(Mobj *actor)
+static bool P_TryWalk(Mobj *actor)
 {
    if(!P_SmartMove(actor))
       return false;
@@ -689,20 +688,20 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
    dirtype_t xdir, ydir, tdir;
    dirtype_t olddir = actor->movedir;
    dirtype_t turnaround = olddir;
-
+   
    if(turnaround != DI_NODIR)         // find reverse direction
       turnaround ^= 4;
 
-   xdir =
+   xdir = 
       (deltax >  10*FRACUNIT ? DI_EAST :
        deltax < -10*FRACUNIT ? DI_WEST : DI_NODIR);
-
+   
    ydir =
       (deltay < -10*FRACUNIT ? DI_SOUTH :
        deltay >  10*FRACUNIT ? DI_NORTH : DI_NODIR);
 
    // try direct route
-   if(xdir != DI_NODIR && ydir != DI_NODIR && turnaround !=
+   if(xdir != DI_NODIR && ydir != DI_NODIR && turnaround != 
       (actor->movedir = deltay < 0 ? deltax > 0 ? DI_SOUTHEAST : DI_SOUTHWEST :
        deltax > 0 ? DI_NORTHEAST : DI_NORTHWEST) && P_TryWalk(actor))
    {
@@ -744,7 +743,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
             return;
       }
    }
-
+  
    if((actor->movedir = turnaround) != DI_NODIR && !P_TryWalk(actor))
       actor->movedir = DI_NODIR;
 }
@@ -762,7 +761,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static boolean PIT_AvoidDropoff(line_t *line)
+static bool PIT_AvoidDropoff(line_t *line)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -827,7 +826,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
       for(by = yl; by <= yh; ++by)
          P_BlockLinesIterator(bx, by, PIT_AvoidDropoff);
    }
-
+   
    // Non-zero if movement prescribed
    return dropoff_deltax | dropoff_deltay;
 }
@@ -860,27 +859,27 @@ void P_NewChaseDir(Mobj *actor)
       if(actor->floorz - actor->dropoffz > FRACUNIT*24 &&
          actor->z <= actor->floorz &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         (comp[comp_overunder] ||
+         (comp[comp_overunder] || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
-
-         // If moving away from dropoff, set movecount to 1 so that
+         
+         // If moving away from dropoff, set movecount to 1 so that 
          // small steps are taken to get monster away from dropoff.
-
+         
          actor->movecount = 1;
          return;
       }
       else
       {
          fixed_t dist = P_AproxDistance(deltax, deltay);
-
+         
          // Move away from friends when too close, except
          // in certain situations (e.g. a crowded lift)
-
+         
          if(actor->flags & target->flags & MF_FRIEND &&
-            distfriend << FRACBITS > dist &&
+            distfriend << FRACBITS > dist && 
             !P_IsOnLift(target) && !P_IsUnderDamage(actor))
          {
             deltax = -deltax, deltay = -deltay;
@@ -889,10 +888,10 @@ void P_NewChaseDir(Mobj *actor)
          {
             if(target->health > 0 &&
                (actor->flags ^ target->flags) & MF_FRIEND)
-            {
+            {   
                // Live enemy target
                if(monster_backing &&
-                  actor->info->missilestate != NullStateNum &&
+                  actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
@@ -911,7 +910,7 @@ void P_NewChaseDir(Mobj *actor)
 
    // If strafing, set movecount to strafecount so that old Doom
    // logic still works the same, except in the strafing part
-
+   
    if(actor->strafecount)
       actor->movecount = actor->strafecount;
 }
@@ -921,7 +920,7 @@ void P_NewChaseDir(Mobj *actor)
 //
 // killough 9/9/98: whether a target is visible to a monster
 //
-static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
+static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 {
    if(mo->flags2 & MF2_DONTDRAW)
       return 0;  // haleyjd: total invisibility!
@@ -929,7 +928,7 @@ static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mo->x - actor->x, mo->y - actor->y) > 2*MELEERANGE
+      if(P_AproxDistance(mo->x - actor->x, mo->y - actor->y) > 2*MELEERANGE 
          && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
       {
          // when distant and moving slow, target is considered
@@ -942,7 +941,7 @@ static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 
    if(!allaround)
    {
-      angle_t an = P_PointToAngle(actor->x, actor->y,
+      angle_t an = P_PointToAngle(actor->x, actor->y, 
                                    mo->x, mo->y) - actor->angle;
       if(an > ANG90 && an < ANG270 &&
          P_AproxDistance(mo->x-actor->x, mo->y-actor->y) > MELEERANGE)
@@ -952,6 +951,22 @@ static boolean P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    return P_CheckSight(actor, mo);
 }
 
+int p_lastenemyroar;
+
+//
+// P_LastEnemyRoar
+//
+// haleyjd 01/20/11: BOOM's change to AI made in order to keep monsters from
+// falling asleep had the unfortunate side effect of eliminating the wake-up
+// sound they would make when killing their current target and returning to
+// fighting the player or another monster. This is an optional routine that
+// re-enables this behavior.
+//
+static void P_LastEnemyRoar(Mobj *actor)
+{
+   if(demo_version >= 340 && p_lastenemyroar)
+      P_MakeSeeSound(actor, pr_misc); // don't affect the play sim.
+}
 
 static int current_allaround;
 
@@ -962,7 +977,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static boolean PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo)
 {
    Mobj *actor = current_actor;
 
@@ -973,19 +988,18 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // If the monster is already engaged in a one-on-one attack
    // with a healthy friend, don't attack around 60% the time
+   const Mobj *targ = mo->target;
+   if(targ && targ->target == mo &&
+      P_Random(pr_skiptarget) > 100 &&
+      (targ->flags ^ mo->flags) & MF_FRIEND &&
+       targ->health*2 >= targ->info->spawnhealth)
    {
-      const Mobj *targ = mo->target;
-      if(targ && targ->target == mo &&
-         P_Random(pr_skiptarget) > 100 &&
-         (targ->flags ^ mo->flags) & MF_FRIEND &&
-         targ->health*2 >= targ->info->spawnhealth)
-         return true;
+      return true;
    }
 
    if(!P_IsVisible(actor, mo, current_allaround))
       return true;
 
-   // [CG] Only servers do this.
    if(serverside)
    {
       // Remember previous target
@@ -1001,16 +1015,11 @@ static boolean PIT_FindTarget(Mobj *mo)
 
    // Move the selected monster to the end of its associated
    // list, so that it gets searched last next time.
-
-   {
-      Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ?
-                                        th_friends : th_enemies];
-      (mo->cprev->cnext = mo->cnext)->cprev =
-         mo->cprev;
-      (mo->cprev = cap->cprev)->cnext = mo;
-      (mo->cnext = cap)->cprev = mo;
-   }
-
+   Thinker *cap = &thinkerclasscap[mo->flags & MF_FRIEND ? th_friends : th_enemies];
+   (mo->cprev->cnext = mo->cnext)->cprev = mo->cprev;
+   (mo->cprev = cap->cprev)->cnext = mo;
+   (mo->cnext = cap)->cprev = mo;
+   
    return false;
 }
 
@@ -1021,7 +1030,7 @@ static boolean PIT_FindTarget(Mobj *mo)
 // battling like mad when the player dies in Heretic. Who knows why
 // Raven added that "feature," but it's fun ^_^
 //
-static boolean P_HereticMadMelee(Mobj *actor)
+static bool P_HereticMadMelee(Mobj *actor)
 {
    Mobj *mo;
    Thinker *th;
@@ -1039,8 +1048,8 @@ static boolean P_HereticMadMelee(Mobj *actor)
       // * killable
       // * not self (will fight same type, however)
       // * alive
-      if(!(mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) ||
-         mo == actor ||
+      if(!(mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) || 
+         mo == actor || 
          mo->health <= 0)
          continue;
 
@@ -1053,7 +1062,12 @@ static boolean P_HereticMadMelee(Mobj *actor)
          continue;
 
       // got one
-      P_SetTarget<Mobj>(&actor->target, mo);
+      if(serverside)
+      {
+         P_SetTarget<Mobj>(&actor->target, mo);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(actor, CS_AT_TARGET);
+      }
       return true;
    }
 
@@ -1066,11 +1080,11 @@ static boolean P_HereticMadMelee(Mobj *actor)
 // If allaround is false, only look 180 degrees in front.
 // Returns true if a player is targeted.
 //
-boolean P_LookForPlayers(Mobj *actor, int allaround)
+bool P_LookForPlayers(Mobj *actor, int allaround)
 {
    player_t *player;
    int stop, stopc, c;
-
+   
    if(actor->flags & MF_FRIEND)
    {  // killough 9/9/98: friendly monsters go about players differently
       int anyone;
@@ -1085,22 +1099,18 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
       {
          for(c = 0; c < MAXPLAYERS; ++c)
          {
-            if(playeringame[c]
-               && players[c].playerstate == PST_LIVE
+            if(playeringame[c] 
+               && players[c].playerstate == PST_LIVE 
                && (anyone || P_IsVisible(actor, players[c].mo, allaround)))
             {
-               // [CG] Only servers do this.
                if(serverside)
                {
                   P_SetTarget<Mobj>(&actor->target, players[c].mo);
-
-                  // killough 12/98:
-                  // get out of refiring loop, to avoid hitting player
-                  // accidentally
-
-                  // [CG] Broadcast the target update.
                   if(CS_SERVER)
                      SV_BroadcastActorTarget(actor, CS_AT_TARGET);
+
+                  // killough 12/98:
+                  // get out of refiring loop, to avoid hitting player accidentally
 
                   if(actor->info->missilestate != NullStateNum)
                   {
@@ -1108,12 +1118,12 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
                      actor->flags &= ~MF_JUSTHIT;
                   }
                }
-
+               
                return true;
             }
          }
       }
-
+      
       return false;
    }
 
@@ -1128,17 +1138,12 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
    stop = (actor->lastlook - 1) & (MAXPLAYERS - 1);
 
    c = 0;
-   // [CG] C/S always uses MAXPLAYERS here
-   if(clientserver)
-   {
-	   stopc = MAXPLAYERS;
-   }
-   else
-   {
-	   stopc =
-		   demo_version < 203 && !demo_compatibility && monsters_remember ?
+
+   stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
-   }
+   // [CG] C/S always uses MAXPLAYERS here.
+   if(clientserver)
+      stopc = MAXPLAYERS;
 
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
@@ -1155,48 +1160,32 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
          {
             if(actor->lastenemy && actor->lastenemy->health > 0)
             {
-               if(serverside)
-               {
-                  // haleyjd: This SHOULD use P_SetTarget for both of the below
-                  // assignments; however, doing so may adversely affect 202
-                  // demo sync according to 4mer. I am taking the chance of
-                  // allowing this to use direct assignment, as it appears the
-                  // ref counts would ideally remain balanced (lastenemy
-                  // already has a ref from actor, so it's only moving to
-                  // target).
-                  actor->target = actor->lastenemy;
-                  /* [CG] Can't do this anymore.
-                  if(CS_SERVER)
-                     SV_BroadcastActorTarget(actor, CS_AT_TARGET);
-                  */
-
-                  actor->lastenemy = NULL;
-                  /* [CG] Can't do this anymore.
-                  if(CS_SERVER)
-                     SV_BroadcastActorTarget(actor, CS_AT_LASTENEMY);
-                  */
-               }
+               // haleyjd: This SHOULD use P_SetTarget for both of the below
+               // assignments; however, doing so may adversely affect 202 demo
+               // sync according to 4mer. I am taking the chance of allowing 
+               // this to use direct assignment, as it appears the ref counts
+               // would ideally remain balanced (lastenemy already has a ref
+               // from actor, so it's only moving to target).
+               actor->target = actor->lastenemy;
+               actor->lastenemy = NULL;
                return true;
             }
          }
 
          return false;
       }
-
+      
       player = &players[actor->lastlook];
-
+      
       if(player->health <= 0)
          continue;               // dead
-
+      
       if(!P_IsVisible(actor, player->mo, allaround))
          continue;
-
-      // [CG] Only servers do this.
+      
       if(serverside)
       {
          P_SetTarget<Mobj>(&actor->target, player->mo);
-
-         // [CG] Broadcast the target update.
          if(CS_SERVER)
             SV_BroadcastActorTarget(actor, CS_AT_TARGET);
       }
@@ -1205,30 +1194,32 @@ boolean P_LookForPlayers(Mobj *actor, int allaround)
       // (we don't want it to be too easy for a player with dogs :)
       if(demo_version >= 203 && !comp[comp_pursuit])
          actor->threshold = 60;
-
+      
       return true;
    }
 }
 
 //
 // P_LookForMonsters
-//
+// 
 // Friendly monsters, by Lee Killough 7/18/98
 //
-// Friendly monsters go after other monsters first, but
+// Friendly monsters go after other monsters first, but 
 // also return to owner if they cannot find any targets.
 // A marine's best friend :)  killough 7/18/98, 9/98
 //
-static boolean P_LookForMonsters(Mobj *actor, int allaround)
+static bool P_LookForMonsters(Mobj *actor, int allaround)
 {
    Thinker *cap, *th;
-
+   
    if(demo_compatibility)
       return false;
 
    if(actor->lastenemy && actor->lastenemy->health > 0 && monsters_remember &&
       !(actor->lastenemy->flags & actor->flags & MF_FRIEND)) // not friends
    {
+      if(actor->target != actor->lastenemy)
+         P_LastEnemyRoar(actor);
       if(serverside)
       {
          P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
@@ -1239,7 +1230,6 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
          if(CS_SERVER)
             SV_BroadcastActorTarget(actor, CS_AT_LASTENEMY);
       }
-
       return true;
    }
 
@@ -1259,9 +1249,9 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 
       current_actor = actor;
       current_allaround = allaround;
-
+      
       // Search first in the immediate vicinity.
-
+      
       if(!P_BlockThingsIterator(x, y, PIT_FindTarget))
          return true;
 
@@ -1291,10 +1281,10 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
          {
             Mobj *mo = dynamic_cast<Mobj *>(th);
             if(--n < 0)
-            {
+            { 
                // Only a subset of the monsters were searched. Move all of
                // the ones which were searched so far to the end of the list.
-
+               
                (cap->cnext->cprev = cap->cprev)->cnext = cap->cnext;
                (cap->cprev = th->cprev)->cnext = cap;
                (th->cprev = cap)->cnext = th;
@@ -1306,7 +1296,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
          }
       }
    }
-
+   
    return false;  // No monster found
 }
 
@@ -1315,7 +1305,7 @@ static boolean P_LookForMonsters(Mobj *actor, int allaround)
 //
 // killough 9/5/98: look for targets to go after, depending on kind of monster
 //
-boolean P_LookForTargets(Mobj *actor, int allaround)
+bool P_LookForTargets(Mobj *actor, int allaround)
 {
    return actor->flags & MF_FRIEND ?
       P_LookForMonsters(actor, allaround) || P_LookForPlayers (actor, allaround):
@@ -1327,7 +1317,7 @@ boolean P_LookForTargets(Mobj *actor, int allaround)
 //
 // killough 9/8/98: Help friends in danger of dying
 //
-boolean P_HelpFriend(Mobj *actor)
+bool P_HelpFriend(Mobj *actor)
 {
    Thinker *cap, *th;
 
@@ -1359,13 +1349,13 @@ boolean P_HelpFriend(Mobj *actor)
             mo->target != actor->target &&
             !PIT_FindTarget(mo->target))
          {
-            // Ignore any attacking monsters, while searching for
+            // Ignore any attacking monsters, while searching for 
             // friend
             actor->threshold = BASETHRESHOLD;
             return true;
          }
    }
-
+   
    return false;
 }
 
@@ -1381,7 +1371,7 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
    angle_t an;
    int     dist;
 
-   // [CG] Only servers do this.
+   // [CG] Serverside only.
    if(!serverside)
       return;
 
@@ -1392,8 +1382,8 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
    an = actor->angle >> ANGLETOFINESHIFT;
    actor->momx = FixedMul(speed, finecosine[an]);
    actor->momy = FixedMul(speed, finesine[an]);
-
-   dist = P_AproxDistance(getTargetX(actor) - actor->x,
+   
+   dist = P_AproxDistance(getTargetX(actor) - actor->x, 
                           getTargetY(actor) - actor->y);
    dist = dist / speed;
    if(dist < 1)
@@ -1407,19 +1397,17 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 //
 // haleyjd 11/19/02
 //
-// Generalized function for teleporting a boss (or any other thing)
-// around at random between a provided set of map spots, along
-// with special effects on demand.
+// Generalized function for teleporting a boss (or any other thing) around at 
+// random between a provided set of map spots, along with special effects on 
+// demand.
 // Currently used by D'Sparil.
 //
-// [CG] TODO: This currently does not work in c/s because sounds are intermixed
-//            with other logic.
 void P_BossTeleport(bossteleport_t *bt)
 {
    Mobj *boss, *mo, *targ;
    fixed_t prevx, prevy, prevz;
 
-   if(P_CollectionIsEmpty(bt->mc))
+   if(bt->mc->isEmpty())
       return;
 
    if(!serverside)
@@ -1430,14 +1418,14 @@ void P_BossTeleport(bossteleport_t *bt)
    // if minimum distance is specified, use a different point selection method
    if(bt->minDistance)
    {
-      int i = P_Random(bt->rngNum) % bt->mc->num;
+      int i = P_Random(bt->rngNum) % bt->mc->getLength();
       int starti = i;
       fixed_t x, y;
-      boolean foundSpot = true;
+      bool foundSpot = true;
 
       while(1)
       {
-         targ = P_CollectionGetAt(bt->mc, (unsigned int)i);
+         targ = (*bt->mc)[(unsigned int)i];
          x = targ->x;
          y = targ->y;
          if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
@@ -1447,7 +1435,7 @@ void P_BossTeleport(bossteleport_t *bt)
          }
 
          // wrapped around? abort loop
-         if((i = (i + 1) % bt->mc->num) == starti)
+         if((i = (i + 1) % bt->mc->getLength()) == starti)
             break;
       }
 
@@ -1456,7 +1444,7 @@ void P_BossTeleport(bossteleport_t *bt)
          return;
    }
    else
-      targ = P_CollectionGetRandom(bt->mc, bt->rngNum);
+      targ = bt->mc->getRandom(bt->rngNum);
 
    prevx = boss->x;
    prevy = boss->y;
@@ -1475,6 +1463,7 @@ void P_BossTeleport(bossteleport_t *bt)
 
       if(bt->state >= 0)
          P_SetMobjState(boss, bt->state);
+
       S_StartSound(boss, bt->soundNum);
 
       if(bt->hereThere >= BOSSTELE_BOTH &&
@@ -1607,15 +1596,15 @@ void A_FogSpawn(Mobj *actor)
    switch(P_Random(pr_cloudpick)%3)
    {
    case 0:
-      mo = P_SpawnMobj(actor->x, actor->y, actor->z,
+      mo = P_SpawnMobj(actor->x, actor->y, actor->z, 
          E_SafeThingType(MT_FOGPATCHS));
       break;
    case 1:
-      mo = P_SpawnMobj(actor->x, actor->y, actor->z,
+      mo = P_SpawnMobj(actor->x, actor->y, actor->z, 
          E_SafeThingType(MT_FOGPATCHM));
       break;
    case 2:
-      mo = P_SpawnMobj(actor->x, actor->y, actor->z,
+      mo = P_SpawnMobj(actor->x, actor->y, actor->z, 
          E_SafeThingType(MT_FOGPATCHL));
       break;
    }
@@ -1677,7 +1666,7 @@ void P_ClericTeleport(Mobj *actor)
    bt.boss      = actor;                    // teleport leader cleric
    bt.state     = E_SafeState(S_LCLER_TELE1); // put cleric in this state
    bt.fxtype    = E_SafeThingType(MT_IFOG); // spawn item fog for fx
-   bt.zpamt     = 24*FRACUNIT;              // add 24 units to fog z
+   bt.zpamt     = 24*FRACUNIT;              // add 24 units to fog z 
    bt.hereThere = BOSSTELE_BOTH;            // spawn fx @ origin & dest.
    bt.soundNum  = sfx_itmbk;                // use item respawn sound
 
@@ -1720,6 +1709,8 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    int      prestep;
    player_t *plyr = &players[consoleplayer];
 
+   if(!serverside)
+      return;
    // resolve EDF types (done once for efficiency)
    if(fountainType == -1)
    {
@@ -1736,28 +1727,38 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       newmobj = P_SpawnPlayerMissile(plyr->mo, type);
 
+      if(CS_SERVER)
+         SV_StartUnlag(plyr - players);
+
       // set the tracer target in case it is a homing missile
       P_BulletSlope(plyr->mo);
+
+      if(CS_SERVER)
+         SV_EndUnlag(plyr - players);
+
       if(clip.linetarget)
+      {
          P_SetTarget<Mobj>(&newmobj->tracer, clip.linetarget);
+         if(CS_SERVER)
+            SV_BroadcastActorTarget(newmobj, CS_AT_TRACER);
+      }
    }
    else
    {
       // do a good old Pain-Elemental style summoning
       an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-      prestep = 4 * FRACUNIT +
-                3 * (plyr->mo->info->radius + mobjinfo[type].radius) / 2;
-
+      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
+      
       x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
       y = plyr->mo->y + FixedMul(prestep, finesine[an]);
-
+      
       z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
-
+      
       if(Check_Sides(plyr->mo, x, y))
          return;
-
+      
       newmobj = P_SpawnMobj(x, y, z, type);
-
+      
       newmobj->angle = plyr->mo->angle;
 
       if(CS_SERVER)
@@ -1797,27 +1798,34 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    // code to tweak interesting objects
    if(type == vileFireType)
    {
+      if(CS_SERVER)
+         SV_StartUnlag(plyr - players);
       P_BulletSlope(plyr->mo);
+      if(CS_SERVER)
+         SV_EndUnlag(plyr - players);
+
       if(clip.linetarget)
       {
          P_SetTarget<Mobj>(&newmobj->target, plyr->mo);
          P_SetTarget<Mobj>(&newmobj->tracer, clip.linetarget);
+
          if(CS_SERVER)
          {
             SV_BroadcastActorTarget(newmobj, CS_AT_TARGET);
             SV_BroadcastActorTarget(newmobj, CS_AT_TRACER);
          }
+
          A_Fire(newmobj);
       }
    }
 
    // code to make spawning parameterized objects more useful
-
+      
    // fountain: random color
    if(type == fountainType)
    {
       int ft = 9027 + M_Random() % 7;
-
+      
       newmobj->effects |= (ft - 9026) << FX_FOUNTAINSHIFT;
    }
 
@@ -1861,14 +1869,14 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
      newmobj->flags &= ~MF_COUNTKILL;
      newmobj->flags3 |= MF3_KILLABLE;
    }
-
+   
    if(newmobj->flags & MF_COUNTITEM)
       newmobj->flags &= ~MF_COUNTITEM;
-
+   
    // 06/09/02: set player field for voodoo dolls
    if(E_IsPlayerClassThingType(newmobj->type))
       newmobj->player = plyr;
-
+   
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
 }
@@ -1888,18 +1896,18 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    if(Console.argc >= 2)
    {
       flagsmode = 1;
-      flags = QStrConstPtr(&Console.argv[1]);
+      flags = Console.argv[1]->constPtr();
    }
 
    if(Console.argc >= 3)
    {
-      if(!QStrCaseCmp(&Console.argv[2], "set"))
+      if(!Console.argv[2]->strCaseCmp("set"))
          flagsmode = 0; // set
-      else if(!QStrCaseCmp(&Console.argv[2], "remove"))
+      else if(!Console.argv[2]->strCaseCmp("remove"))
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(QStrConstPtr(&Console.argv[0]))) == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1914,9 +1922,9 @@ CONSOLE_COMMAND(viles, cf_notnet|cf_level|cf_hidden)
    if(GameModeInfo->id == commercial)
    {
       int vileType = E_ThingNumForName("Archvile");
-
+      
       S_ChangeMusicNum(mus_stalks, true);
-
+      
       P_ConsoleSummon(vileType,  0,     1, "FRIEND");
       P_ConsoleSummon(vileType,  ANG45, 1, "FRIEND");
       P_ConsoleSummon(vileType, -ANG45, 1, "FRIEND");
@@ -1932,8 +1940,8 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
 
    if(!Console.argc)
       return;
-
-   thingnum = E_ThingNumForName(QStrConstPtr(&Console.argv[0]));
+   
+   thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
@@ -1944,7 +1952,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       C_Printf("thing type is not a special\n");
       return;
    }
-   itemnum = (Console.argc >= 2) ? QStrAtoi(&Console.argv[1]) : 1;
+   itemnum = (Console.argc >= 2) ? Console.argv[1]->toInt() : 1;
 
    for(i = 0; i < itemnum; i++)
    {
@@ -1973,8 +1981,8 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
 
    if(!Console.argc)
       return;
-
-   thingnum = E_ThingNumForName(QStrConstPtr(&Console.argv[0]));
+   
+   thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
    if(thingnum == NUMMOBJTYPES)
    {
       C_Printf("unknown thing type\n");
@@ -2010,7 +2018,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    for(i = 0; i < 60; ++i)  // offset angles from its attack angle
    {
       angle_t an = (ANG360/60)*i;
-
+      
       slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
 
       if(clip.linetarget)
@@ -2037,7 +2045,7 @@ CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
    P_BulletSlope(plyr->mo);
    if(!clip.linetarget)
       return;
-
+   
    S_StartSound(plyr->mo, sfx_barexp);
    P_DamageMobj(clip.linetarget, plyr->mo, plyr->mo, 20, MOD_UNKNOWN);
    clip.linetarget->momz = 1000*FRACUNIT/clip.linetarget->info->mass;
@@ -2075,6 +2083,9 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
+VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
+
 void PE_AddCommands(void)
 {
    C_AddCommand(summon);
@@ -2086,6 +2097,7 @@ void PE_AddCommands(void)
    C_AddCommand(banish);
    C_AddCommand(vilehit);
    C_AddCommand(resurrect);
+   C_AddCommand(p_lastenemyroar);
 }
 
 //----------------------------------------------------------------------------

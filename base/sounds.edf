@@ -91,7 +91,7 @@ sound Earthquake
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
-// [CG] Odamex CTF Announcer.
+// [CG] Quake-style ("The enemy has your flag!") announcer.
 
 sound FriendlyFlagDropped
 {
@@ -157,7 +157,7 @@ sound EnemyFlagCaptured
     priority = 0
 }
 
-// [CG] Normal (ZVOX style) CTF Announcer.
+// [CG] Unreal Tournament ("Red flag taken!") announcer.
 
 sound BlueFlagDropped
 {
@@ -229,20 +229,20 @@ sound RedTeamScores
 
 soundsequence EEDoorOpenNormal
 {
-   cmds =
-   {
-      "play EE_DoorOpen",
-      "nostopcutoff"
-   }
+   commands
+   @"
+      play EE_DoorOpen
+      nostopcutoff
+   "@
 }
 
 soundsequence EEDoorOpenBlazing
 {
-   cmds =
-   {
-      "play EE_BDoorOpen",
-      "nostopcutoff"
-   }
+   commands
+   @"
+      play EE_BDoorOpen
+      nostopcutoff
+   "@
 }
 
 // Note: All gamemode sequences will be kept here since they are related.
@@ -253,20 +253,20 @@ ifgametype(DOOM)
 
 soundsequence EEDoorCloseNormal
 {
-   cmds =
-   {
-      "play EE_DoorClose",
-      "nostopcutoff"
-   }
+   commands
+   @"
+      play EE_DoorClose
+      nostopcutoff
+   "@
 }
 
 soundsequence EEDoorCloseBlazing
 {
-   cmds =
-   {
-      "play EE_BDoorClose",
-      "nostopcutoff"
-   }
+   commands
+   @"
+      play EE_BDoorClose
+      nostopcutoff
+   "@
 }
 
 // Note: This sequence is only used in DOOM when comp_blazing is enabled.
@@ -274,11 +274,11 @@ soundsequence EEDoorCloseBlazing
 
 soundsequence EEDoorCloseBlazingComp
 {
-   cmds =
-   {
-      "play EE_BDoorClose",
-      "stopsound EE_BDoorClose"
-   }
+   commands
+   @"
+      play EE_BDoorClose
+      stopsound EE_BDoorClose
+   "@
 }
 
 endif()
@@ -289,20 +289,20 @@ ifgametype(HERETIC)
 
 soundsequence EEDoorCloseNormal
 {
-   cmds =
-   {
-      "play EE_DoorOpen",
-      "stopsound EE_DoorClose"
-   }
+   commands
+   @"
+      play EE_DoorOpen
+      stopsound EE_DoorClose
+   "@
 }
 
 soundsequence EEDoorCloseBlazing
 {
-   cmds =
-   {
-      "play EE_BDoorOpen",
-      "stopsound EE_BDoorClose"
-   }
+   commands
+   @"
+      play EE_BDoorOpen
+      stopsound EE_BDoorClose
+   "@
 }
 
 endif()
@@ -312,21 +312,21 @@ endif()
 // This is used by most plat types, like the ordinary down-wait-up-stay type
 soundsequence EEPlatNormal
 {
-   cmds =
-   {
-      "play EE_PlatStart",
-      "stopsound EE_PlatStop"
-   }
+   commands
+   @"
+      play EE_PlatStart
+      stopsound EE_PlatStop
+   "@
 }
 
 // This is used by raise-and-change plat types.
 soundsequence EEPlatRaise
 {
-   cmds =
-   {
-      "playloop EE_PlatMove 8",
-      "stopsound EE_PlatStop"
-   }
+   commands
+   @"
+      playloop EE_PlatMove 8
+      stopsound EE_PlatStop
+   "@
 }
 
 // This may seem pointless, but defining it allows the silent behavior of 
@@ -340,19 +340,19 @@ soundsequence EEPlatSilent
 // Used by most ceiling actions
 soundsequence EECeilingNormal
 {
-   cmds =
-   {
-      "playloop EE_FCMove 8"
-   }
+   commands
+   @"
+      playloop EE_FCMove 8
+   "@
 }
 
 // Used by "silent" crushers that aren't really silent
 soundsequence EECeilingSemiSilent
 {
-   cmds =
-   {
-      "stopsound EE_PlatStop"
-   }
+   commands
+   @"
+      stopsound EE_PlatStop
+   "@
 }
 
 // Like above for plats, but for ceilings.
@@ -364,10 +364,10 @@ soundsequence EECeilingSilent
 
 soundsequence EEFloor
 {
-   cmds =
-   {
-      "playloop EE_FCMove 8",
-      "stopsound EE_PlatStop"
-   }
+   commands
+   @"
+      playloop EE_FCMove 8
+      stopsound EE_PlatStop
+   "@
 }
 

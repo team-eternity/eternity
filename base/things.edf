@@ -460,7 +460,7 @@ damagetype PlayerMisc { num = 24 }
 
 damagetype Fire { num = 27 }
 
-// [CG] These are some Bridge things from ZDoom
+// [CG] ZDoom bridge things.
 
 thingtype Bridge
 {
@@ -505,7 +505,7 @@ thingtype InvisibleBridge8
   flags2 = DONTDRAW
 }
 
-// [CG] These are CTF flags from Odamex
+// [CG] Odamex CTF flags.
 
 thingtype BlueFlagSocket
 {

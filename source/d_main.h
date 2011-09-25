@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -24,26 +24,25 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __D_MAIN__
-#define __D_MAIN__
+#ifndef D_MAIN_H__
+#define D_MAIN_H__
+
+#include <stdio.h>
 
 #include "doomdef.h"
-#include "doomtype.h"
 
 // jff make startskill globally visible
 extern skill_t startskill;
 extern char *startlevel;
-// [CG] We need startepisode and startmap too.
-extern int startepisode;
-extern int startmap;
-extern boolean gamepathset; // [CG] Externalized.
 
-void D_CheckGamePath(char *game);
 void D_ListWads(void);
-void D_ClearFiles(void); // [CG] Added for c/s.
 void D_ReInitWadfiles(void);
-void D_NewWadLumps(FILE *handle, int sound_update_type);
-boolean D_AddNewFile(const char *s);
+void D_NewWadLumps(FILE *handle);
+bool D_AddNewFile(const char *s);
+void D_ClearFiles(void); // [CG] 09/22/11
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
+               int privatedir);
+void D_ProcessEvents(void);
 
 
 char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
@@ -51,18 +50,18 @@ char *D_DoomExeName(void);      // killough 10/98: executable's name
 extern char *basesavegame;      // killough 2/16/98: savegame path
 
 //jff 1/24/98 make command line copies of play modes available
-extern boolean clnomonsters; // checkparm of -nomonsters
-extern boolean clrespawnparm;  // checkparm of -respawn
-extern boolean clfastparm; // checkparm of -fast
+extern bool clnomonsters;  // checkparm of -nomonsters
+extern bool clrespawnparm; // checkparm of -respawn
+extern bool clfastparm;    // checkparm of -fast
 //jff end of external declaration of command line playmode
 
-extern boolean nosfxparm;
-extern boolean nomusicparm;
+extern bool nosfxparm;
+extern bool nomusicparm;
 
 extern int use_startmap;
-extern boolean redrawsbar, redrawborder;
+extern bool redrawborder;
 
-extern boolean cdrom_mode;
+extern bool cdrom_mode;
 
 // Called by IO functions when input is detected.
 struct event_t;
@@ -83,18 +82,6 @@ void D_PageTicker(void);
 void D_PageDrawer(void);
 void D_AdvanceDemo(void);
 void D_StartTitle(void);
-
-// [CG] Added so that the main c/s loop can display things while waiting on the
-//      server.
-void D_Display(void);
-
-// [CG] Added so that the main client/server loop can process events.
-void D_ProcessEvents(void);
-
-// [CG] Added so that client/server configurations can add files.
-void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               int privatedir);
-
 void D_DoomMain(void);
 
 // sf: display a message to the player: either in text mode or graphics

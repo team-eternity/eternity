@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -29,17 +29,19 @@
 #ifndef P_USER_H__
 #define P_USER_H__
 
-#include "d_player.h"
+struct player_t;
+struct sector_t;
 
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
 
 #define INVERSECOLORMAP 32
 
-// [CG] Exported the following functions.
-boolean P_SectorIsSpecial(sector_t *sector);
+// bool P_SectorIsSpecial(sector_t *sector);
 void P_HereticCurrent(player_t *player);
 
+void P_RunPlayerCommand(int playernum);
+void P_CheckPlayerButtons(int playernum);
 void P_PlayerThink(player_t *player);
 void P_CalcHeight(player_t *player);
 void P_DeathThink(player_t *player);

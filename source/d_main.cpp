@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -27,12 +27,6 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef LINUX
-#include <sys/types.h>
-#endif
-#include <sys/stat.h>
-#include <fcntl.h>
-
 // haleyjd 10/28/04: Win32-specific repair for D_DoomExeDir
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
 #ifdef _MSC_VER
@@ -44,64 +38,66 @@
 
 #include "z_zone.h"
 
-#include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "hal/i_picker.h"
+
+#include "a_small.h"
+#include "acs_intr.h"
+#include "am_map.h"
+#include "c_io.h"
+#include "c_net.h"
+#include "c_runcmd.h"
+#include "d_deh.h"      // Ty 04/08/98 - Externalizations
+#include "d_dehtbl.h"
+#include "d_diskfile.h"
+#include "d_gi.h"
+#include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "d_main.h"
+#include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
-#include "d_diskfile.h"
-#include "sounds.h"
-#include "c_runcmd.h"
-#include "c_io.h"
-#include "c_net.h"
-#include "w_wad.h"
-#include "s_sound.h"
-#include "v_misc.h"
-#include "v_video.h"
+#include "e_edf.h"
+#include "e_fonts.h"
+#include "e_player.h"
 #include "f_finale.h"
 #include "f_wipe.h"
-#include "m_argv.h"
-#include "m_misc.h"
-#include "m_swap.h"
-#include "mn_engin.h"
+#include "g_bind.h"     // haleyjd
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "g_gfs.h"
+#include "hu_stuff.h"
 #include "i_system.h"
 #include "i_sound.h"
 #include "i_video.h"
-#include "g_game.h"
-#include "hu_stuff.h"
-#include "st_stuff.h"
-#include "am_map.h"
-#include "p_setup.h"
+#include "in_lude.h"
+#include "m_argv.h"
+#include "m_misc.h"
+#include "m_swap.h"
+#include "m_syscfg.h"
+#include "mn_engin.h"
 #include "p_chase.h"
 #include "p_info.h"
+#include "p_setup.h"
+#include "p_skin.h"
 #include "r_draw.h"
 #include "r_main.h"
-#include "d_main.h"
-#include "d_deh.h"  // Ty 04/08/98 - Externalizations
-#include "g_bind.h" // haleyjd
-#include "d_dialog.h"
-#include "d_gi.h"
-#include "in_lude.h"
-#include "a_small.h"
-#include "acs_intr.h"
-#include "g_gfs.h"
-#include "g_dmflag.h"
+#include "r_patch.h"
+#include "s_sound.h"
+#include "sounds.h"
+#include "st_stuff.h"
+#include "v_font.h"
+#include "v_misc.h"
+#include "v_patchfmt.h"
+#include "v_video.h"
 #include "version.h"
-#include "e_edf.h"
-#include "e_player.h"
-#include "e_fonts.h"
+#include "w_wad.h"
+#include "xl_scripts.h"
 
-// [CG] Added.
-
-#include "cs_config.h"
-#include "cs_hud.h"
-#include "cs_netid.h"
+#include "cs_demo.h"
 #include "cs_main.h"
 #include "cs_master.h"
-#include "cs_team.h"
-#include "cs_demo.h"
 #include "cs_wad.h"
 #include "cl_main.h"
-#include "sv_main.h"
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -115,44 +111,44 @@ char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
 int use_startmap = -1;     // default to -1 for asking in menu
-boolean devparm;           // started game with -devparm
+bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line
-boolean clnomonsters;   // checkparm of -nomonsters
-boolean clrespawnparm;  // checkparm of -respawn
-boolean clfastparm;     // checkparm of -fast
+bool clnomonsters;   // checkparm of -nomonsters
+bool clrespawnparm;  // checkparm of -respawn
+bool clfastparm;     // checkparm of -fast
 // jff 1/24/98 end definition of command line version of play mode switches
 
 int r_blockmap = false;       // -blockmap command line
 
-boolean nomonsters;     // working -nomonsters
-boolean respawnparm;    // working -respawn
-boolean fastparm;       // working -fast
+bool nomonsters;     // working -nomonsters
+bool respawnparm;    // working -respawn
+bool fastparm;       // working -fast
 
-boolean singletics = false; // debug flag to cancel adaptiveness
+bool singletics = false; // debug flag to cancel adaptiveness
 
 //jff 1/22/98 parms for disabling music and sound
-boolean nosfxparm;
-boolean nomusicparm;
+bool nosfxparm;
+bool nomusicparm;
 
 //jff 4/18/98
-extern boolean inhelpscreens;
+extern bool inhelpscreens;
 
 skill_t startskill;
 int     startepisode;
 int     startmap;
 char    *startlevel;
-boolean autostart;
+bool autostart;
 
-boolean advancedemo;
+bool advancedemo;
 
-extern boolean timingdemo, singledemo, demoplayback, fastdemo; // killough
+extern bool timingdemo, singledemo, demoplayback, fastdemo; // killough
 
-char    *basedefault = NULL;      // default file
-char    *baseiwad = NULL;         // jff 3/23/98: iwad directory
+char    *basedefault  = NULL;     // default file
+char    *baseiwad     = NULL;     // jff 3/23/98: iwad directory
 char    *basesavegame = NULL;     // killough 2/16/98: savegame directory
 
-char    *basepath;                // haleyjd 11/23/06: path of "base" directory
+char    *basepath     = NULL;     // haleyjd 11/23/06: path of "base" directory
 char    *basegamepath = NULL;     // haleyjd 11/23/06: path of game directory
 
 // set from iwad: level to start new games from
@@ -162,6 +158,8 @@ void D_CheckNetGame(void);
 void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
 void D_DoAdvanceDemo(void);
+
+void V_InitBox(void);
 
 //sf:
 void startupmsg(char *func, char *desc)
@@ -209,16 +207,9 @@ void D_ProcessEvents(void)
 
       // [CG] Headless servers don't use either the menu or graphical console,
       //      so just skip right to G_Responder in this case.
-      if(CS_HEADLESS)
-      {
-         G_Responder(evt);
-      }
-      else
-      {
-         if(!MN_Responder(evt))
-            if(!C_Responder(evt))
-               G_Responder(evt);
-      }
+      if(CS_HEADLESS || !MN_Responder(evt))
+         if(CS_HEADLESS || !C_Responder(evt))
+            G_Responder(evt);
    }
 }
 
@@ -231,16 +222,16 @@ void D_ProcessEvents(void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 
-gamestate_t    oldgamestate  = GS_NOSTATE;  // sf: globaled
-gamestate_t    wipegamestate = GS_DEMOSCREEN;
-void           R_ExecuteSetViewSize(void);
-camera_t       *camera;
-extern boolean setsizeneeded;
-boolean        redrawsbar;      // sf: globaled
-boolean        redrawborder;    // sf: cleaned up border redraw
-int            wipewait;        // haleyjd 10/09/07
+gamestate_t oldgamestate  = GS_NOSTATE;  // sf: globaled
+gamestate_t wipegamestate = GS_DEMOSCREEN;
+void        R_ExecuteSetViewSize(void);
+camera_t    *camera;
+extern bool setsizeneeded;
+//bool        redrawsbar;      // sf: globaled - haleyjd 04/16/11: no more caching
+bool        redrawborder;    // sf: cleaned up border redraw
+int         wipewait;        // haleyjd 10/09/07
 
-boolean        d_drawfps;       // haleyjd 09/07/10: show drawn fps
+bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
 
 //
 // D_showFPS
@@ -252,7 +243,7 @@ static void D_showDrawnFPS(void)
    static int lastfps;
    vfont_t *font;
    char msg[64];
-
+   
    accms += (curms = I_GetTicks()) - lastms;
    lastms = curms;
    ++frames;
@@ -268,6 +259,56 @@ static void D_showDrawnFPS(void)
    psnprintf(msg, 64, "DFPS: %d", lastfps);
    V_FontWriteText(font, msg, 5, 20);
 }
+
+#ifdef INSTRUMENTED
+struct cachelevelprint_t
+{
+   int cachelevel;
+   const char *name;
+};
+static cachelevelprint_t cachelevels[] =
+{
+   { PU_STATIC,   "static: " },
+   { PU_RENDERER, "render: " },
+   { PU_LEVEL,    " level: " },
+   { PU_CACHE,    " cache: " },
+   { PU_MAX,      " total: " }
+};
+#define NUMCACHELEVELSTOPRINT (sizeof(cachelevels) / sizeof(cachelevelprint_t))
+
+static void D_showMemStats(void)
+{
+   vfont_t *font;
+   size_t total_memory = 0;
+   double s;
+   char buffer[1024];
+   int i;
+
+   for(i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+      total_memory += memorybytag[cachelevels[i].cachelevel];
+   s = 100.0 / total_memory;
+
+   font = E_FontForName("ee_consolefont");   
+   // draw the labels
+   for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
+   {
+      int tag = cachelevels[i].cachelevel;
+      if(tag != PU_MAX)
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
+                   cachelevels[i].name,
+                   memorybytag[tag], memorybytag[tag] * s);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+      else
+      {
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
+                   cachelevels[i].name, total_memory, 100.0f);
+         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+      }
+   }
+}
+#endif
 
 //
 // D_Display
@@ -291,7 +332,7 @@ void D_Display(void)
       Wipe_StartScreen();
 
    if(inwipe || c_moving || menuactive)
-      redrawsbar = redrawborder = true;   // redraw status bar and border
+      redrawborder = true;   // redraw status bar and border
 
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
@@ -304,7 +345,7 @@ void D_Display(void)
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
          HU_Erase();
-
+         
          if(automapactive)
          {
             AM_Drawer();
@@ -316,14 +357,12 @@ void D_Display(void)
                R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
-
-         ST_Drawer(scaledviewheight == 200, redrawsbar);  // killough 11/98
+         
+         ST_Drawer(scaledviewheight == 200);  // killough 11/98
          HU_Drawer();
          break;
       case GS_INTERMISSION:
          IN_Drawer();
-         if(clientserver)
-            CS_DrawChatWidget();
          break;
       case GS_FINALE:
          F_Drawer();
@@ -336,49 +375,48 @@ void D_Display(void)
       default:
          break;
       }
-
-      redrawsbar = false; // reset this now
+         
       redrawborder = false;
-
+      
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
-         I_SetPalette((byte *)(W_CacheLumpName("PLAYPAL", PU_CACHE)));
-
+         I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
+      
       oldgamestate = wipegamestate = gamestate;
-
+         
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
       {                             // frads taking screenshots
-         const char *lumpname = GameModeInfo->pausePatch;
-
+         const char *lumpname = GameModeInfo->pausePatch; 
+         
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
-         patch_t *patch = (patch_t *)W_CacheLumpName(lumpname, PU_CACHE);
-         int width = SwapShort(patch->width);
+         patch_t *patch = PatchLoader::CacheName(wGlobalDir, lumpname, PU_CACHE);
+         int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
-
+         
          V_DrawPatch(x, y, &vbscreen, patch);
       }
 
       if(inwipe)
       {
-         boolean wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
-
-         // about to start wiping; if wipewait is enabled, save everything
+         bool wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
+         
+         // about to start wiping; if wipewait is enabled, save everything 
          // that was just drawn
          if(wait)
          {
             Wipe_SaveEndScreen();
-
+            
             do
             {
                int starttime = I_GetTime();
                int tics = 0;
-
+               
                Wipe_Drawer();
-
+               
                do
                {
                   tics = I_GetTime() - starttime;
@@ -387,16 +425,16 @@ void D_Display(void)
                   I_Sleep(1);
                }
                while(!tics);
-
+               
                Wipe_Ticker();
-
+               
                C_Drawer();
                MN_Drawer();
                NetUpdate();
                if(v_ticker)
                   V_FPSDrawer();
                I_FinishUpdate();
-
+               
                if(inwipe)
                   Wipe_BlitEndScreen();
             }
@@ -413,7 +451,7 @@ void D_Display(void)
    // menus go directly to the screen
    MN_Drawer();         // menu is drawn even on top of everything
    NetUpdate();         // send out any new accumulation
-
+   
    //sf : now system independent
    if(v_ticker)
       V_FPSDrawer();
@@ -421,9 +459,14 @@ void D_Display(void)
    if(d_drawfps)
       D_showDrawnFPS();
 
+#ifdef INSTRUMENTED
+   if(printstats)
+      D_showMemStats();
+#endif
+   
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop
-
+   
    I_FinishUpdate();              // page flip or blit buffer
 }
 
@@ -458,20 +501,16 @@ void D_PageTicker(void)
 void D_PageDrawer(void)
 {
    int l;
-   byte *t;
 
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
-      t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
-
       // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&vbscreen, t, W_LumpLength(l));
+      V_DrawFSBackground(&vbscreen, l);
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         l = W_GetNumForName("ADVISOR");
-         t = (byte *)(W_CacheLumpNum(l, PU_CACHE));
-         V_DrawPatch(4, 160, &vbscreen, (patch_t *)t);
+         V_DrawPatch(4, 160, &vbscreen, 
+                     PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
       }
    }
    else
@@ -742,18 +781,18 @@ char *D_DoomExeName(void)
 // D_ExpandTilde
 //     expand tilde in base path name for linux home dir
 //
-static char *D_ExpandTilde(char *basedir)
+static char *D_ExpandTilde(const char *basedir)
 {
    if(basedir[0] == '~')
    {
       char *home = strdup(getenv("HOME"));
       char *newalloc = NULL;
-
+      
       M_StringAlloca(&newalloc, 2, 0, home, basedir);
 
       strcpy(newalloc, home);
       strcpy(newalloc + strlen(home), basedir + 1);
-
+            
       if(home)
          free(home);
 
@@ -769,6 +808,9 @@ enum
    BASE_ISGOOD,
    BASE_NOTEXIST,
    BASE_NOTDIR,
+   BASE_CANTOPEN,
+   BASE_NOTEEBASE,
+   BASE_NUMCODES
 };
 
 //
@@ -777,21 +819,57 @@ enum
 // Checks a provided path to see that it both exists and that it is a directory
 // and not a plain file.
 //
-static int D_CheckBasePath(const char *path)
+static int D_CheckBasePath(const char *pPath)
 {
-   int ret;
+   int ret = -1;
    struct stat sbuf;
+   qstring str;
+   const char *path;
+
+   str = pPath;
+   
+   // Rub out any ending slashes; stat does not like them.
+   str.RStrip('\\');
+   str.RStrip('/');
+
+   path = str.constPtr();
 
    if(!stat(path, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-         ret = BASE_ISGOOD;
+      {
+         DIR *dir;
+         int score = 0;
+         
+         if((dir = opendir(path)))
+         {
+            // directory should contain at least startup.wad, root.edf, and /doom
+            dirent *ent;
+            while((ent = readdir(dir)))
+            {
+               if(!strcasecmp(ent->d_name, "startup.wad"))
+                  ++score;
+               else if(!strcasecmp(ent->d_name, "root.edf"))
+                  ++score;
+               else if(!strcasecmp(ent->d_name, "doom"))
+                  ++score;
+            }
+            closedir(dir);
+
+            if(score >= 3)
+               ret = BASE_ISGOOD;    // Got it.
+            else
+               ret = BASE_NOTEEBASE; // Doesn't look like EE's base folder.
+         }
+         else
+            ret = BASE_CANTOPEN; // opendir failed
+      }
       else
-         ret = BASE_NOTDIR;
+         ret = BASE_NOTDIR; // S_ISDIR failed
    }
    else
-      ret = BASE_NOTEXIST;
-
+      ret = BASE_NOTEXIST; // stat failed
+   
    return ret;
 }
 
@@ -814,7 +892,7 @@ enum
 static void D_SetBasePath(void)
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
-   char *s;
+   const char *s;
    char *basedir = NULL;
 
    // Priority:
@@ -854,7 +932,7 @@ static void D_SetBasePath(void)
    if(res != BASE_ISGOOD)
    {
       const char *exedir = D_DoomExeDir();
-
+      
       size_t len = M_StringAlloca(&basedir, 1, 6, exedir);
 
       psnprintf(basedir, len, "%s/base", D_DoomExeDir());
@@ -864,8 +942,16 @@ static void D_SetBasePath(void)
       else
       {
          // final straw.
-         I_Error("D_SetBasePath: base path %s.\n",
-                 res == BASE_NOTDIR ? "is not a directory" : "does not exist");
+         static const char *errmsgs[BASE_NUMCODES] =
+         {
+            "is FUBAR", // ???
+            "does not exist",
+            "is not a directory",
+            "cannot be opened",
+            "is not an Eternity base path"
+         };
+
+         I_Error("D_SetBasePath: base path %s.\n", errmsgs[res]);
       }
    }
 
@@ -895,10 +981,10 @@ static void D_SetBasePath(void)
 }
 
 // haleyjd 8/18/07: if true, the game path has been set
-boolean gamepathset;
+bool gamepathset;
 
 // haleyjd 8/19/07: index of the game name as specified on the command line
-// static int gamepathparm;
+static int gamepathparm;
 
 // [CG] Game name as specified either on the command line or the server's
 //      configuration file.
@@ -913,11 +999,9 @@ void D_CheckGamePath(char *game)
 {
    struct stat sbuf;
    char *gamedir = NULL;
-   size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, game);
-
-   psnprintf(gamedir, len, "%s/%s", basepath, game);
 
    gamename = strdup(game);
+   gamedir = M_SafeFilePath(basepath, gamename);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
@@ -927,7 +1011,6 @@ void D_CheckGamePath(char *game)
             free(basegamepath);
 
          basegamepath = strdup(gamedir);
-         M_NormalizeSlashes(basegamepath);
       }
       else
          I_Error("Game path %s is not a directory.\n", gamedir);
@@ -972,12 +1055,7 @@ static void D_SetGamePath(void)
 static char *D_CheckGameEDF(void)
 {
    struct stat sbuf;
-   static char *game_edf;
-   size_t len = strlen(basegamepath) + 10;
-
-   game_edf = (char *)(malloc(len));
-
-   psnprintf(game_edf, len, "%s/root.edf", basegamepath);
+   char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
 
    if(!stat(game_edf, &sbuf)) // check for existence
    {
@@ -1010,7 +1088,7 @@ static void D_EnumerateAutoloadDir(void)
       autoload_dirname = (char *)(malloc(len));
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
-
+      
       autoloads = opendir(autoload_dirname);
    }
 }
@@ -1035,20 +1113,16 @@ static void D_GameAutoloadWads(void)
    if(autoloads)
    {
       struct dirent *direntry;
-
+      
       while((direntry = readdir(autoloads)))
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
-
+      
       rewinddir(autoloads);
    }
 }
@@ -1068,14 +1142,10 @@ static void D_GameAutoloadDEH(void)
 
       while((direntry = readdir(autoloads)))
       {
-         if(strstr(direntry->d_name, ".deh") ||
+         if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_QueueDEH(fn, 0);
          }
       }
@@ -1101,11 +1171,7 @@ static void D_GameAutoloadCSC(void)
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             C_RunScriptFromFile(fn);
          }
       }
@@ -1142,8 +1208,8 @@ enum
    DISK_DOOM2
 };
 
-static boolean havediskfile; // if true, -disk loaded a file
-static boolean havediskiwad; // if true, an IWAD was found in the disk file
+static bool havediskfile;    // if true, -disk loaded a file
+static bool havediskiwad;    // if true, an IWAD was found in the disk file
 static const char *diskpwad; // PWAD name (or substring) to look for
 static diskfile_t *diskfile; // diskfile object (see d_diskfile.c)
 static diskwad_t   diskiwad; // diskwad object for iwad
@@ -1239,7 +1305,7 @@ static void D_LoadDiskFilePWAD(void)
 //
 // Gets a single line of input from the metadata.txt resource.
 //
-static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
+static bool D_metaGetLine(qstring *qstr, const char *input, int *idx)
 {
    int i = *idx;
 
@@ -1247,7 +1313,7 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
    if(input[i] == '\0')
       return false;
 
-   QStrClear(qstr);
+   qstr->clear();
 
    while(input[i] != '\n' && input[i] != '\0')
    {
@@ -1255,10 +1321,10 @@ static boolean D_metaGetLine(qstring_t *qstr, const char *input, int *idx)
       {
          // make \n sequence into a \n character
          ++i;
-         QStrPutc(qstr, '\n');
+         *qstr += '\n';
       }
       else if(input[i] != '\r')
-         QStrPutc(qstr, input[i]);
+         *qstr += input[i];
 
       ++i;
    }
@@ -1286,8 +1352,8 @@ static void D_DiskMetaData(void)
    int partime = 0, musicnum = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    diskwad_t wad;
-   qstring_t buffer;
-   qstring_t *qstr = &buffer;
+   qstring buffer;
+   qstring *qstr = &buffer;
 
    if(!diskpwad)
       return;
@@ -1301,7 +1367,7 @@ static void D_DiskMetaData(void)
 
    // construct the metadata filename
    M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-
+   
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
@@ -1317,29 +1383,29 @@ static void D_DiskMetaData(void)
    // parse it
 
    // setup qstring
-   QStrInitCreate(qstr);
+   qstr->initCreate();
 
    // get first line, which is an episode id
    D_metaGetLine(qstr, metatext, &index);
 
    // get episode name
    if(D_metaGetLine(qstr, metatext, &index))
-      GameModeInfo->versionName = QStrCDup(qstr, PU_STATIC);
+      GameModeInfo->versionName = qstr->duplicate(PU_STATIC);
 
    // get end text
    if(D_metaGetLine(qstr, metatext, &index))
-      endtext = QStrCDup(qstr, PU_STATIC);
+      endtext = qstr->duplicate(PU_STATIC);
 
    // get next level after secret
    if(D_metaGetLine(qstr, metatext, &index))
-      exitreturn = QStrAtoi(qstr);
+      exitreturn = qstr->toInt();
 
    // skip next line (wad name)
    D_metaGetLine(qstr, metatext, &index);
 
    // get secret level
    if(D_metaGetLine(qstr, metatext, &index))
-      secretlevel = QStrAtoi(qstr);
+      secretlevel = qstr->toInt();
 
    // get levels
    while(D_metaGetLine(qstr, metatext, &index))
@@ -1347,10 +1413,10 @@ static void D_DiskMetaData(void)
       switch(linenum)
       {
       case 0: // levelname
-         levelname = QStrCDup(qstr, PU_STATIC);
+         levelname = qstr->duplicate(PU_STATIC);
          break;
       case 1: // music number
-         musicnum = mus_runnin + QStrAtoi(qstr) - 1;
+         musicnum = mus_runnin + qstr->toInt() - 1;
 
          if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
             musicname = S_music[musicnum].name;
@@ -1358,13 +1424,13 @@ static void D_DiskMetaData(void)
             musicname = "";
          break;
       case 2: // partime (final field)
-         partime = QStrAtoi(qstr);
+         partime = qstr->toInt();
 
          // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname,
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1,
+                          levelnum == secretlevel - 1, 
                           (levelnum == secretlevel - 1) ? endtext : NULL);
          break;
       }
@@ -1376,9 +1442,6 @@ static void D_DiskMetaData(void)
          linenum = 0;
       }
    }
-
-   // done with qstring buffer
-   QStrFree(qstr);
 
    // done with metadata resource
    free(metatext);
@@ -1421,6 +1484,13 @@ static void D_AddDoomWadPath(const char *path)
    ++numdoomwadpaths;
 }
 
+// haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
+#ifdef _WIN32
+#define DOOMWADPATHSEP ';'
+#else
+#define DOOMWADPATHSEP ':'
+#endif
+
 //
 // D_ParseDoomWadPath
 //
@@ -1444,9 +1514,9 @@ static void D_ParseDoomWadPath(void)
          // Found the end of a path?
          // Add the string from the prior one (or the beginning) to here as
          // a separate path.
-         if(*rover == ';')
+         if(*rover == DOOMWADPATHSEP)
          {
-            *rover = '\0'; // replace ; with a null terminator
+            *rover = '\0'; // replace ; or : with a null terminator
             if(dirlen)
                D_AddDoomWadPath(currdir);
             dirlen = 0;
@@ -1475,51 +1545,51 @@ static void D_ParseDoomWadPath(void)
 //
 char *D_FindInDoomWadPath(const char *filename, const char *extension)
 {
-   qstring_t qstr;
+   qstring qstr;
    char *concat  = NULL;
    char *currext = NULL;
 
-   QStrInitCreate(&qstr);
+   qstr.initCreate();
 
    for(int i = 0; i < numdoomwadpaths; ++i)
    {
       struct stat sbuf;
       
-      QStrClear(&qstr);
-      QStrCat(QStrPutc(QStrCopy(&qstr, doomwadpaths[i]), '/'), filename);
-      QStrNormalizeSlashes(&qstr);
+      qstr = doomwadpaths[i];
+      qstr += '/';
+      qstr += filename;
+      qstr.normalizeSlashes();
+      qstr.RStrip('/');
 
       // See if the file exists as-is
-      if(!stat(QStrConstPtr(&qstr), &sbuf)) // check for existence
+      if(!stat(qstr.constPtr(), &sbuf)) // check for existence
       {
          if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
          {
-            concat = QStrCDup(&qstr, PU_STATIC);
+            concat = qstr.duplicate(PU_STATIC);
             break; // done.
          }
       }
 
       // See if the file could benefit from having the default extension
       // added to it.
-      if(extension && (currext = QStrBufferAt(&qstr, QStrLen(&qstr) - 4))) 
+      if(extension && (currext = qstr.bufferAt(qstr.length() - 4))) 
       {
          if(strcasecmp(currext, extension)) // Doesn't already have it?
          {
-            QStrCat(&qstr, extension);
+            qstr += extension;
 
-            if(!stat(QStrConstPtr(&qstr), &sbuf)) // exists?
+            if(!stat(qstr.constPtr(), &sbuf)) // exists?
             {
                if(!S_ISDIR(sbuf.st_mode)) // not a dir?
                {
-                  concat = QStrCDup(&qstr, PU_STATIC); 
+                  concat = qstr.duplicate(PU_STATIC);
                   break; // done.
                }
             }
          }
       }
    }
-
-   QStrFree(&qstr);
 
    return concat;
 }
@@ -1532,12 +1602,13 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
 int iwad_choice; // haleyjd 03/19/10: remember choice
 
 // variable-for-index lookup for D_DoIWADMenu
-static char **iwadVarForNum[] =
+static char **iwadVarForNum[NUMPICKIWADS] =
 {
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
-   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg,
-   &gi_path_sosr
+   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
+   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
+   &gi_path_hacx,                                      // HACX
+   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
+   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
 };
 
 //
@@ -1553,13 +1624,12 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(boolean haveIWADs[], int startchoice);
-   boolean haveIWADs[9];
+   bool haveIWADs[NUMPICKIWADS];
    int i, choice = -1;
-   boolean foundone = false;
+   bool foundone = false;
 
    // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < 9; ++i)
+   for(i = 0; i < NUMPICKIWADS; ++i)
    {
       if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
          foundone = true;
@@ -1613,27 +1683,30 @@ struct iwadpathmatch_t
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
-   { MATCH_GAME, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_GAME, "doom",     { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
 
-   // -iwad matches
-   { MATCH_IWAD, "doom2f",   { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doomu",    { &gi_path_doomu,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom1",    { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",     { &gi_path_doomu,  &gi_path_doomreg, NULL            } },
-   { MATCH_IWAD, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1", { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   // -iwad matches 
+   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
+   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
+   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
    
    // Terminating entry
-   { MATCH_NONE, NULL,       { NULL,            NULL,             NULL            } }
+   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
 };
 
 //
@@ -1723,7 +1796,7 @@ static char *D_IWADPathForIWADParam(const char *iwad)
    ((name)[0] == 'M' && (name)[1] == 'C' && !(name)[3])
 
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
-static boolean freedoom = false;
+static bool freedoom = false;
 
 //
 // CheckIWAD
@@ -1743,9 +1816,9 @@ static boolean freedoom = false;
 // Added Final Doom support (thanks to Joel Murdoch)
 //
 static void CheckIWAD(const char *iwadname,
-		      GameMode_t *gmode,
-		      GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
-		      boolean *hassec)
+                      GameMode_t *gmode,
+                      GameMission_t *gmission,  // joel 10/17/98 Final DOOM fix
+                      bool *hassec)
 {
    FILE *fp;
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0;
@@ -1762,7 +1835,7 @@ static void CheckIWAD(const char *iwadname,
       strncmp(header.identification, "IWAD", 4))
    {
       // haleyjd 06/06/09: do not error out here, due to some bad tools
-      // resetting peoples' IWADs to PWADs. Only error if it is also
+      // resetting peoples' IWADs to PWADs. Only error if it is also 
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
          I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
@@ -1801,8 +1874,8 @@ static void CheckIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) ||
-              !strncmp(n, "TINTTAB",  7) ||
+      else if(!strncmp(n, "ADVISOR",  7) || 
+              !strncmp(n, "TINTTAB",  7) || 
               !strncmp(n, "SNDCURVE", 8))
       {
          ++raven;
@@ -1877,7 +1950,7 @@ static void CheckIWAD(const char *iwadname,
 // a file or directory. If neither append .wad and check if it
 // exists as a file then. Else return non-existent.
 //
-static boolean WadFileStatus(char *filename, boolean *isdir)
+static bool WadFileStatus(char *filename, bool *isdir)
 {
    struct stat sbuf;
    int i;
@@ -1926,6 +1999,7 @@ static const char *const standard_iwads[]=
    "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
    "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
    "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
 };
 
@@ -1979,7 +2053,7 @@ char *FindIWADFile(void)
    static char *iwad = NULL;
    char *customiwad = NULL;
    char *gameiwad = NULL;
-   boolean isdir = false;
+   bool isdir = false;
    int i, j;
    char *p;
    const char *basename = NULL;
@@ -1998,12 +2072,12 @@ char *FindIWADFile(void)
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, gamename);
+      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, 
+                                  myargv[gamepathparm]);
 
-      psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, gamename);
+      psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, myargv[gamepathparm]);
 
-      // only if the file exists do we try to use it.
-      if(!access(gameiwad, R_OK))
+      if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
          basename = gameiwad;
       else                        
       {
@@ -2014,18 +2088,16 @@ char *FindIWADFile(void)
             basename = cfgpath;
       }
    }
-
+      
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
-      if(baseiwad != NULL)
-         free(baseiwad);
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
 
       iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
       strcpy(iwad, baseiwad);
-
+      
       if(WadFileStatus(iwad, &isdir))
       {
          if(!isdir)
@@ -2119,7 +2191,10 @@ char *FindIWADFile(void)
       if(cfgpath && !access(cfgpath, R_OK))
       {
          if(iwad)
+         {
             free(iwad);
+            iwad = NULL;
+         }
          iwad = strdup(cfgpath);
          return iwad;
       }
@@ -2133,7 +2208,10 @@ char *FindIWADFile(void)
       if(customiwad) // -iwad was used with a file name?
       {
          if(iwad)
+         {
             free(iwad);
+            iwad = NULL;
+         }
          if((iwad = D_FindInDoomWadPath(customiwad, ".wad")))
             return iwad;
       }
@@ -2143,13 +2221,14 @@ char *FindIWADFile(void)
          for(i = 0; i < nstandard_iwads; i++)
          {
             if(iwad)
+            {
                free(iwad);
+               iwad = NULL;
+            }
             if((iwad = D_FindInDoomWadPath(standard_iwads[i], ".wad")))
                return iwad;
          }
       }
-      // need to make sure iwad is set to a valid string for exit
-      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
    }
 
    for(i = 0; i < sizeof envvars / sizeof *envvars; i++)
@@ -2202,6 +2281,10 @@ char *FindIWADFile(void)
          } // end if(WadFileStatus(...))
       } // end if((p = getenv(...)))
    } // end for
+
+   // haleyjd 01/17/11: be sure iwad return string is valid...
+   if(!iwad)
+      iwad = (char *)(malloc(1));
 
    *iwad = 0;
    return iwad;
@@ -2383,7 +2466,7 @@ static void IdentifyDisk(void)
 }
 
 //
-// IdentifyDisk
+// IdentifyIWAD
 //
 // haleyjd 05/31/10: IdentifyVersion subroutine for dealing with normal IWADs.
 //
@@ -2421,7 +2504,6 @@ static void IdentifyIWAD(void)
 
       // done with iwad string
       free(iwad);
-      iwad = NULL;
    }
    else
    {
@@ -2441,8 +2523,10 @@ static void IdentifyIWAD(void)
 void D_ClearFiles(void)
 {
    wfileadd_t *curfile = NULL;
+
    for(curfile = wadfiles; curfile->filename != NULL; curfile++)
       free((void *)curfile->filename);
+
    numwadfiles = 0;
 }
 
@@ -2514,7 +2598,7 @@ void FindResponseFile(void)
          char **moreargs = (char **)(malloc(myargc * sizeof(char *)));
          char **newargv;
          char *fname = NULL;
-
+         
          size_t len = M_StringAlloca(&fname, 1, 6, myargv[i]);
 
          strncpy(fname, &myargv[i][1], len);
@@ -2593,7 +2677,7 @@ void FindResponseFile(void)
                   *p = 0;
                   newargv[indexinfile++] = (char *)(realloc(s,strlen(s)+1));
                }
-            }
+            } 
             while(size > 0);
          }
          free(file);
@@ -2640,7 +2724,7 @@ static void D_ProcessDehCommandLine(void)
       // Ty 04/11/98 - Allow multiple -deh files in a row
       // killough 11/98: allow multiple -deh parameters
 
-      boolean deh = true;
+      bool deh = true;
       while(++p < myargc)
       {
          if(*myargv[p] == '-')
@@ -2651,7 +2735,7 @@ static void D_ProcessDehCommandLine(void)
             {
                char *file; // killough
                M_StringAlloca(&file, 1, 6, myargv[p]);
-
+                  
                M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
                if(access(file, F_OK))  // nope
                {
@@ -2757,7 +2841,7 @@ static void D_AutoExecScripts(void)
             {
                char *file = NULL;
                M_StringAlloca(&file, 1, 6, s);
-
+                  
                M_AddDefaultExtension(strcpy(file, s), ".csc");
                if(!access(file, R_OK))
                   C_RunScriptFromFile(file);
@@ -2787,9 +2871,10 @@ static void D_ProcessDehInWad(int i)
 {
    if(i >= 0)
    {
-      D_ProcessDehInWad(w_GlobalDir.lumpinfo[i]->next);
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, "DEHACKED", 8) &&
-         w_GlobalDir.lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
+      lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
+      D_ProcessDehInWad(lumpinfo[i]->next);
+      if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
+         lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
    }
 }
@@ -2814,20 +2899,15 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->dehnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->dehnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s", gfs->dehnames[i]);
+         filename = Z_Strdupa(gfs->dehnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open .deh or .bex %s\n", filename);
@@ -2854,25 +2934,15 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 
    for(i = 0; i < gfs->numwads; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->wadnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
+         filename = Z_Strdupa(gfs->wadnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
@@ -2888,25 +2958,15 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 
    for(i = 0; i < gfs->numcsc; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->cscnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
+         filename = Z_Strdupa(gfs->cscnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open CSC file %s\n", filename);
@@ -2926,7 +2986,7 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 // Looks for a loose EDF file on the command line, to support
 // drag-and-drop.
 //
-static boolean D_LooseEDF(char **buffer)
+static bool D_LooseEDF(char **buffer)
 {
    int i;
    const char *dot;
@@ -2967,12 +3027,19 @@ static void D_LoadEDF(gfs_t *gfs)
    {
       // command-line EDF file found
       edfname = Z_Strdupa(myargv[i + 1]);
+      M_NormalizeSlashes(edfname);
    }
    else if(gfs && (shortname = G_GFSCheckEDF()))
    {
       // GFS specified an EDF file
-      size_t len = M_StringAlloca(&edfname, 2, 2, gfs->filepath, shortname);
-      psnprintf(edfname, len, "%s/%s", gfs->filepath, shortname);
+      // haleyjd 09/10/11: bug fix - don't assume gfs->filepath is valid
+      if(gfs->filepath)
+         edfname = M_SafeFilePath(gfs->filepath, shortname);
+      else
+      {
+         edfname = Z_Strdupa(shortname);
+         M_NormalizeSlashes(edfname);
+      }
    }
    else
    {
@@ -2983,16 +3050,9 @@ static void D_LoadEDF(gfs_t *gfs)
 
          // haleyjd 08/20/07: check for root.edf in base/game first
          if((fn = D_CheckGameEDF()))
-         {
-            edfname = Z_Strdupa(fn);
-            free(fn);
-         }
+            edfname = fn;
          else
-         {
-            size_t len = M_StringAlloca(&edfname, 1, 10, basepath);
-
-            psnprintf(edfname, len, "%s/root.edf",  basepath);
-         }
+            edfname = M_SafeFilePath(basepath, "root.edf");
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -3006,8 +3066,6 @@ static void D_LoadEDF(gfs_t *gfs)
          }
       }
    }
-
-   M_NormalizeSlashes(edfname);
 
    E_ProcessEDF(edfname);
 
@@ -3108,9 +3166,6 @@ static gfs_t *D_LooseGFS(void)
 // Primary Initialization Routines
 //
 
-// I am not going to make an entire header just for this :P
-extern void M_LoadSysConfig(const char *filename);
-
 //
 // D_LoadSysConfig
 //
@@ -3175,7 +3230,9 @@ static void D_StartupMessage(void)
 }
 
 // haleyjd 11/12/05: in cdrom mode?
-boolean cdrom_mode = false;
+bool cdrom_mode = false;
+
+static void stop_demo_at_exit(void) { CS_StopDemo(); }
 
 //
 // D_DoomInit
@@ -3187,7 +3244,7 @@ static void D_DoomInit(void)
 {
    int p, slot;
    int dmtype = 0;             // haleyjd 04/14/03
-   boolean haveGFS = false;    // haleyjd 03/10/03
+   bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
@@ -3267,83 +3324,73 @@ static void D_DoomInit(void)
       clientserver = false;
    }
 
-   // [CG] Allocate various players-related arrays.
-   players = calloc(MAXPLAYERS, sizeof(player_t));
-   playeringame = calloc(MAXPLAYERS, sizeof(boolean));
-   clients = malloc(MAXPLAYERS * sizeof(client_t));
-
-   playeringame[0] = true;
-
    if(clientserver)
    {
+      playeringame[0] = true;
+      clients = (client_t *)(malloc(MAXPLAYERS * sizeof(client_t)));
       consoleplayer = displayplayer = 0;
       clients[consoleplayer].spectating = true;
 
       // [CG] Initialize libcurl.
       CS_InitCurl();
    }
+   else
+   {
+      clients = (client_t *)(calloc(MAXPLAYERS, sizeof(client_t)));
+   }
 
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
 
-   // [CG] Load c/s configurations and networking.
    if(CS_DEMO)
    {
       if(!CS_PlayDemo(myargv[M_CheckParm("-csplaydemo") + 1]))
+      {
          I_Error("Error playing demo: %s\n", CS_GetDemoErrorMessage());
+      }
       CL_InitPlayDemoMode();
-      atexit(CS_StopDemo); // [CG] Ensure we clean up after ourselves.
+      atexit(stop_demo_at_exit); // [CG] Ensure we clean up after ourselves.
    }
-   else if(CS_SERVER)
-   {
-      SV_LoadConfig();
-      SV_Init();
-   }
-   else if(CS_CLIENT)
-      CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
 
-   // [CG] Initialize NetID stacks.
-   CS_InitNetIDs();
+   if(clientserver)
+      CS_Init();
 
-   // [CG] Can't use GFS in c/s.
+   // [CG] Can't use GFS or -game in c/s.
    if(!clientserver)
    {
-      // haleyjd 03/10/03: GFS support
-      // haleyjd 11/22/03: support loose GFS on the command line too
-      if((p = M_CheckParm("-gfs")) && p < myargc - 1)
-      {
-         char *fn = NULL;
-         M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
+       // haleyjd 03/10/03: GFS support
+       // haleyjd 11/22/03: support loose GFS on the command line too
+       if((p = M_CheckParm("-gfs")) && p < myargc - 1)
+       {
+          char *fn = NULL;
+          M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
+             
+          // haleyjd 01/19/05: corrected use of AddDefaultExtension
+          M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
+          if(access(fn, F_OK))
+             I_Error("GFS file %s not found\n", fn);
 
-         // haleyjd 01/19/05: corrected use of AddDefaultExtension
-         M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
-         if(access(fn, F_OK))
-            I_Error("GFS file %s not found\n", fn);
+          printf("Parsing GFS file %s\n", fn);
 
-         printf("Parsing GFS file %s\n", fn);
-
-         gfs = G_LoadGFS(fn);
-         haveGFS = true;
-      }
-      else if((gfs = D_LooseGFS()))
-      {
-         // ^^ look for a loose GFS for drag-and-drop support (comment moved by
-         //    [CG])
-         haveGFS = true;
-      }
-      else if(gamepathset)
-      {
-         // haleyjd 08/19/07: look for default.gfs in specified game path
-         char *fn = NULL;
-         size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
-
-         psnprintf(fn, len, "%s/default.gfs", basegamepath);
-         if(!access(fn, R_OK))
-         {
-            gfs = G_LoadGFS(fn);
-            haveGFS = true;
-         }
-      }
+          gfs = G_LoadGFS(fn);
+          haveGFS = true;
+       }
+       else if((gfs = D_LooseGFS())) // look for a loose GFS for drag-and-drop support
+       {
+          haveGFS = true;
+       }
+       else if(gamepathset) // haleyjd 08/19/07: look for default.gfs in specified game path
+       {
+          char *fn = NULL;
+          size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
+             
+          psnprintf(fn, len, "%s/default.gfs", basegamepath);
+          if(!access(fn, R_OK))
+          {
+             gfs = G_LoadGFS(fn);
+             haveGFS = true;
+          }
+       }
    }
 
    // haleyjd: init the dehacked queue (only necessary the first time)
@@ -3357,13 +3404,15 @@ static void D_DoomInit(void)
    D_ProcessDehCommandLine();
 
    // haleyjd 09/11/03: queue GFS DEH's
-   if(haveGFS)
+   // [CG] C/S doesn't use GFS.
+   if(!clientserver && haveGFS)
       D_ProcessGFSDeh(gfs);
 
    // killough 10/98: set default savename based on executable's name
    // haleyjd 08/28/03: must be done BEFORE bex hash chain init!
-   savegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
-   psnprintf(savegamename, 16, "%.4ssav", D_DoomExeName());
+   char *tmpsavegamename = (char *)(Z_Malloc(16, PU_STATIC, NULL));
+   psnprintf(tmpsavegamename, 16, "%.4ssav", D_DoomExeName());
+   savegamename = tmpsavegamename;
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
@@ -3375,7 +3424,7 @@ static void D_DoomInit(void)
    modifiedgame = false;
 
    // jff 1/24/98 set both working and command line value of play parms
-   // sf: make boolean for console
+   // sf: make bool for console
    // [CG] This is already done by this point in c/s (we've already processed
    //      the configuration file).
    if(!clientserver)
@@ -3388,24 +3437,24 @@ static void D_DoomInit(void)
 
    DefaultGameType = gt_single;
 
-   // [CG] Game type is set before this (and elsewhere) in c/s.
+   // [CG] All this is handled during configuration parsing in c/s.
    if(!clientserver)
    {
-      if(M_CheckParm("-deathmatch"))
-      {
-         DefaultGameType = gt_dm;
-         dmtype = 1;
-      }
-      if(M_CheckParm("-altdeath"))
-      {
-         DefaultGameType = gt_dm;
-         dmtype = 2;
-      }
-      if(M_CheckParm("-trideath"))  // deathmatch 3.0!
-      {
-         DefaultGameType = gt_dm;
-         dmtype = 3;
-      }
+       if(M_CheckParm("-deathmatch"))
+       {
+          DefaultGameType = gt_dm;
+          dmtype = 1;
+       }
+       if(M_CheckParm("-altdeath"))
+       {
+          DefaultGameType = gt_dm;
+          dmtype = 2;
+       }
+       if(M_CheckParm("-trideath"))  // deathmatch 3.0!
+       {
+          DefaultGameType = gt_dm;
+          dmtype = 3;
+       }
 
       GameType = DefaultGameType;
       G_SetDefaultDMFlags(dmtype, true);
@@ -3442,7 +3491,7 @@ static void D_DoomInit(void)
       // killough 10/98:
       if(basedefault)
          free(basedefault);
-
+      
       len = strlen(D_DoomExeName()) + 18;
 
       basedefault = (char *)(malloc(len));
@@ -3451,126 +3500,133 @@ static void D_DoomInit(void)
    }
 #endif
 
-   // [CG] Don't load any WADs (other than the IWAD) that aren't explicitly
-   //      listed by the server or in the server's configuration file.
+   // [CG] None of this applies in c/s.
    if(!clientserver)
    {
-      // haleyjd 03/10/03: Load GFS Wads
-      // 08/08/03: moved first, so that command line overrides
-      if(haveGFS)
-         D_ProcessGFSWads(gfs);
+       // haleyjd 03/10/03: Load GFS Wads
+       // 08/08/03: moved first, so that command line overrides
+       if(haveGFS)
+          D_ProcessGFSWads(gfs);
 
-      // haleyjd 11/22/03: look for loose wads (drag and drop)
-      D_LooseWads();
+       // haleyjd 11/22/03: look for loose wads (drag and drop)
+       D_LooseWads();
 
-      // add any files specified on the command line with -file wadfile
-      // to the wad list
+       // add any files specified on the command line with -file wadfile
+       // to the wad list
 
-      // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
+       // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
 
-      if((p = M_CheckParm("-file")))
-      {
-         // the parms after p are wadfile/lump names,
-         // until end of parms or another - preceded parm
-         // killough 11/98: allow multiple -file parameters
+       if((p = M_CheckParm("-file")))
+       {
+          // the parms after p are wadfile/lump names,
+          // until end of parms or another - preceded parm
+          // killough 11/98: allow multiple -file parameters
 
-         boolean file = modifiedgame = true; // homebrew levels
-         while(++p < myargc)
-         {
-            if(*myargv[p] == '-')
-               file = !strcasecmp(myargv[p], "-file");
-            else if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
-         }
-      }
+          bool file = modifiedgame = true; // homebrew levels
+          while(++p < myargc)
+          {
+             if(*myargv[p] == '-')
+             {
+                file = !strcasecmp(myargv[p], "-file");
+             }
+             else
+             {
+                if(file)
+                   D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
+             }
+          }
+       }
 
-      if(!(p = M_CheckParm("-playdemo")) || p >= myargc-1)   // killough
-      {
-         if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
-            fastdemo = true;            // run at fastest speed possible
-         else
-            p = M_CheckParm("-timedemo");
-      }
+       // haleyjd 01/17/11: allow -play also
+       const char *playdemoparms[] = { "-playdemo", "-play", NULL };
 
-      if(p && p < myargc - 1)
-      {
-         char *file = NULL;
-         size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+       if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
+       {
+          if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
+             fastdemo = true;            // run at fastest speed possible
+          else
+             p = M_CheckParm("-timedemo");
+       }
 
-         strncpy(file, myargv[p + 1], len);
+       if(p && p < myargc - 1)
+       {
+          char *file = NULL;
+          size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+             
+          strncpy(file, myargv[p + 1], len);
 
-         M_AddDefaultExtension(file, ".lmp");     // killough
-         D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
-         usermsg("Playing demo %s\n",file);
-      }
+          M_AddDefaultExtension(file, ".lmp");     // killough
+          D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
+          usermsg("Playing demo %s\n",file);
+       }
 
-      // get skill / episode / map from parms
+       // get skill / episode / map from parms
 
-      // jff 3/24/98 was sk_medium, just note not picked
-      startskill = sk_none;
-      startepisode = 1;
-      startmap = 1;
-      autostart = false;
+       // jff 3/24/98 was sk_medium, just note not picked
+       startskill = sk_none;
+       startepisode = 1;
+       startmap = 1;
+       autostart = false;
 
-      if((p = M_CheckParm("-skill")) && p < myargc - 1)
-      {
-         startskill = (skill_t)(myargv[p+1][0]-'1');
-         autostart = true;
-      }
+       if((p = M_CheckParm("-skill")) && p < myargc - 1)
+       {
+          startskill = (skill_t)(myargv[p+1][0]-'1');
+          autostart = true;
+       }
 
-      if((p = M_CheckParm("-episode")) && p < myargc - 1)
-      {
-         startepisode = myargv[p+1][0]-'0';
-         startmap = 1;
-         autostart = true;
-      }
+       if((p = M_CheckParm("-episode")) && p < myargc - 1)
+       {
+          startepisode = myargv[p+1][0]-'0';
+          startmap = 1;
+          autostart = true;
+       }
 
-      // haleyjd: deatchmatch-only options
-      if(GameType == gt_dm)
-      {
-         if((p = M_CheckParm("-timer")) && p < myargc-1)
-         {
-            int time = atoi(myargv[p+1]);
+       // haleyjd: deatchmatch-only options
+       if(GameType == gt_dm)
+       {
+          if((p = M_CheckParm("-timer")) && p < myargc-1)
+          {
+             int time = atoi(myargv[p+1]);
 
-            usermsg("Levels will end after %d minute%s.\n",
-               time, time > 1 ? "s" : "");
-            levelTimeLimit = time;
-         }
+             usermsg("Levels will end after %d minute%s.\n",
+                time, time > 1 ? "s" : "");
+             levelTimeLimit = time;
+          }
 
-         // sf: moved from p_spec.c
-         // See if -frags has been used
-         if((p = M_CheckParm("-frags")) && p < myargc-1)
-         {
-            int frags = atoi(myargv[p+1]);
+          // sf: moved from p_spec.c
+          // See if -frags has been used
+          if((p = M_CheckParm("-frags")) && p < myargc-1)
+          {
+             int frags = atoi(myargv[p+1]);
 
-            if(frags <= 0)
-               frags = 10;  // default 10 if no count provided
-            levelFragLimit = frags;
-         }
+             if(frags <= 0)
+                frags = 10;  // default 10 if no count provided
+             levelFragLimit = frags;
+          }
 
-         if((p = M_CheckParm("-avg")) && p < myargc-1)
-         {
-            levelTimeLimit = 20 * 60 * TICRATE;
-            usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
-         }
-      }
+          if((p = M_CheckParm("-avg")) && p < myargc-1)
+          {
+             levelTimeLimit = 20 * 60 * TICRATE;
+             usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
+          }
+       }
 
-      if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
-          (p = M_CheckParm("-wart"))) && p < myargc - 1)
-      {
-         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-         if(GameModeInfo->flags & GIF_MAPXY)
-         {
-            startmap = atoi(myargv[p + 1]);
-            autostart = true;
-         }
-         else if(p < myargc - 2)
-         {
-            startepisode = atoi(myargv[++p]);
-            startmap = atoi(myargv[p + 1]);
-            autostart = true;
-         }
-      }
+       if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
+           (p = M_CheckParm("-wart"))) && p < myargc - 1)
+       {
+          // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+          if(GameModeInfo->flags & GIF_MAPXY)
+          {
+             startmap = atoi(myargv[p + 1]);
+             autostart = true;
+          }
+          else if(p < myargc - 2)
+          {
+             startepisode = atoi(myargv[++p]);
+             startmap = atoi(myargv[p + 1]);
+             autostart = true;
+          }
+       }
    }
 
    // [CG] C/S servers default to -nosound, -nodraw and -noblit unless
@@ -3586,17 +3642,15 @@ static void D_DoomInit(void)
    else
    {
       //jff 1/22/98 add command line parms to disable sound and music
-      {
-         boolean nosound = !!M_CheckParm("-nosound");
-         nomusicparm = nosound || M_CheckParm("-nomusic");
-         nosfxparm   = nosound || M_CheckParm("-nosfx");
-      }
-      //jff end of sound/music command line parms
-
-      // killough 3/2/98: allow -nodraw -noblit generally
-      nodrawers = !!M_CheckParm("-nodraw");
-      noblit    = !!M_CheckParm("-noblit");
+      bool nosound = !!M_CheckParm("-nosound");
+      nomusicparm  = nosound || M_CheckParm("-nomusic");
+      nosfxparm    = nosound || M_CheckParm("-nosfx");
    }
+   //jff end of sound/music command line parms
+
+   // killough 3/2/98: allow -nodraw -noblit generally
+   nodrawers = !!M_CheckParm("-nodraw");
+   noblit    = !!M_CheckParm("-noblit");
 
    // haleyjd: need to do this before M_LoadDefaults
    C_InitPlayerName();
@@ -3620,19 +3674,18 @@ static void D_DoomInit(void)
 
    // 1/18/98 killough: Z_Init call moved to i_main.c
 
+   // [CG] This is all done during configuration parsing in c/s.
    if(!clientserver)
    {
-      // killough 10/98: add preincluded wads at the end
-      D_ProcessWadPreincludes();
+      D_ProcessWadPreincludes(); // killough 10/98: add preincluded wads at the end
 
-      // haleyjd 08/20/07: also, enumerate and load wads from
-      //                   base/game/autoload
+      // haleyjd 08/20/07: also, enumerate and load wads from base/game/autoload
       D_EnumerateAutoloadDir();
       D_GameAutoloadWads();
    }
 
    startupmsg("W_Init", "Init WADfiles.");
-   W_InitMultipleFiles(&w_GlobalDir, wadfiles);
+   wGlobalDir.InitMultipleFiles(wadfiles);
    usermsg("");  // gap
 
    // [CG] I feel like it's fair that to play c/s Doom you need to either buy
@@ -3680,17 +3733,18 @@ static void D_DoomInit(void)
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
 
+   // haleyjd 03/27/11: process Hexen scripts
+   XL_ParseHexenScripts();
+
    // Build BEX tables (some are EDF-dependent)
    D_BuildBEXTables();
 
    // Process the DeHackEd queue, then free it
    D_ProcessDEHQueue();
 
-   // Process the deferred wad sounds queue, after the above stuff.
-   S_ProcDeferredSounds();
-
    V_InitColorTranslation(); //jff 4/24/98 load color translation lumps
 
+   // [CG] No -turbo in c/s mode ;) .
    if(!clientserver)
    {
       // haleyjd: moved down turbo to here for player class support
@@ -3786,11 +3840,14 @@ static void D_DoomInit(void)
       G_SetDefaultDMFlags(0, true);
    }
 
+   // [CG] DMFLAGS/DMFLAGS2 are handled during configuration parsing in c/s.
    if(!clientserver)
    {
       // check for command-line override of dmflags
       if((p = M_CheckParm("-dmflags")) && p < myargc-1)
-         dmflags = default_dmflags = (unsigned int)atoi(myargv[p + 1]);
+      {
+         dmflags = default_dmflags = (unsigned int)atoi(myargv[p+1]);
+      }
    }
 
    // haleyjd: this SHOULD be late enough...
@@ -3936,21 +3993,22 @@ static void D_DoomInit(void)
    else
    {
       // sf: -blockmap option as a variable now
-      if(M_CheckParm("-blockmap"))
-         r_blockmap = true;
+      if(M_CheckParm("-blockmap")) r_blockmap = true;
 
       // start the appropriate game based on parms
 
       // killough 12/98:
       // Support -loadgame with -record and reimplement -recordfrom.
-      if((slot = M_CheckParm("-recordfrom")) && (p = slot + 2) < myargc)
-      {
+      if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
          G_RecordDemo(myargv[p]);
-      }
       else
       {
+         // haleyjd 01/17/11: allow -recorddemo as well
+         const char *recordparms[] = { "-record", "-recorddemo", NULL };
+
          slot = M_CheckParm("-loadgame");
-         if((p = M_CheckParm("-record")) && ++p < myargc)
+    
+         if((p = M_CheckMultiParm(recordparms, 1)) && ++p < myargc)
          {
             autostart = true;
             G_RecordDemo(myargv[p]);
@@ -3995,24 +4053,30 @@ static void D_DoomInit(void)
    else
    {
       startlevel = strdup(G_GetNameForMap(startepisode, startmap));
+
       if(slot && ++slot < myargc)
       {
          char *file = NULL;
          size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
-         slot = atoi(myargv[slot]);       // killough 3/16/98: add slot info
+         slot = atoi(myargv[slot]);        // killough 3/16/98: add slot info
          G_SaveGameName(file, len, slot); // killough 3/22/98
-         G_LoadGame(file, slot, true);    // killough 5/15/98: add command flag
+         G_LoadGame(file, slot, true);     // killough 5/15/98: add command flag
       }
-      else if(!singledemo) // killough 12/98
+      else if(!singledemo)                    // killough 12/98
       {
          if(autostart || netgame)
          {
+            // haleyjd 01/16/11: old demo options must be set BEFORE G_InitNew
+            if(M_CheckParm("-vanilla") > 0)
+               G_SetOldDemoOptions();
+
             G_InitNewNum(startskill, startepisode, startmap);
             if(demorecording)
                G_BeginRecording();
          }
          else
-            D_StartTitle(); // start up intro loop
+            D_StartTitle();                 // start up intro loop
+      }
    }
 
       /*
@@ -4027,8 +4091,6 @@ static void D_DoomInit(void)
             G_BeginRecording();
       }
       */
-   }
-
    // a lot of alloca calls are made during startup; kill them all now.
    Z_FreeAlloca();
 }
@@ -4043,7 +4105,7 @@ static void D_DoomInit(void)
 //
 void D_DoomMain(void)
 {
-   int i;
+   unsigned int i;
 
    D_DoomInit();
 
@@ -4061,11 +4123,11 @@ void D_DoomMain(void)
    if(CS_SERVER)
    {
       SV_MasterAdvertise();
+
       // [CG] Add update requests for each master.
       for(i = 0; i < master_server_count; i++)
-      {
          SV_AddUpdateRequest(&master_servers[i]);
-      }
+
       SV_MasterUpdate();
       // [CG] C/S server can never wait for screen wiping.
       wipewait = 0;
@@ -4114,14 +4176,15 @@ void D_DoomMain(void)
 void D_ReInitWadfiles(void)
 {
    R_FreeData();
-   E_ProcessNewEDF();   // haleyjd 03/24/10: process any new EDF lumps
-   D_ProcessDEHQueue(); // haleyjd 09/12/03: run any queued DEHs
+   E_ProcessNewEDF();      // haleyjd 03/24/10: process any new EDF lumps
+   XL_ParseHexenScripts(); // haleyjd 03/27/11: process Hexen scripts
+   D_ProcessDEHQueue();    // haleyjd 09/12/03: run any queued DEHs
    if(clientserver)
    {
       C_InitBackdrop();
       V_InitColorTranslation();
       V_InitBox();
-      I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
+      I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
       E_UpdateFonts();
    }
    R_Init();
@@ -4136,25 +4199,27 @@ void D_ReInitWadfiles(void)
 }
 
 // FIXME: various parts of this routine need tightening up
-void D_NewWadLumps(FILE *handle, int sound_update_type)
+void D_NewWadLumps(FILE *handle)
 {
    int i, format;
    char wad_firstlevel[9];
+   int numlumps = wGlobalDir.GetNumLumps();
+   lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
    memset(wad_firstlevel, 0, 9);
 
-   for(i = 0; i < w_GlobalDir.numlumps; ++i)
+   for(i = 0; i < numlumps; ++i)
    {
-      if(w_GlobalDir.lumpinfo[i]->file != handle)
+      if(lumpinfo[i]->file != handle)
          continue;
 
       // haleyjd: changed check for "THINGS" lump to a fullblown
       // P_CheckLevel call -- this should fix some problems with
       // some crappy wads that have partial levels sitting around
 
-      if((format = P_CheckLevel(&w_GlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
+      if((format = P_CheckLevel(&wGlobalDir, i)) != LEVEL_FORMAT_INVALID) // a level
       {
-         char *name = w_GlobalDir.lumpinfo[i]->name;
+         char *name = lumpinfo[i]->name;
 
          // ignore ones called 'start' as these are checked elsewhere
          if((!*wad_firstlevel && strcmp(name, "START")) ||
@@ -4167,36 +4232,17 @@ void D_NewWadLumps(FILE *handle, int sound_update_type)
       }
 
       // new sound
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
+      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
       {
          S_Chgun();
          continue;
       }
 
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "DS", 2))
-      {
-         switch(sound_update_type)
-         {
-         case 0: // called during startup, defer processing
-            S_UpdateSoundDeferred(i);
-            break;
-         case 1: // called during gameplay
-            S_UpdateSound(i);
-            break;
-         }
-         continue;
-      }
-
-      // new music -- haleyjd 06/17/06: should be strncasecmp, not strncmp
-      if(!strncasecmp(w_GlobalDir.lumpinfo[i]->name, GameModeInfo->musPrefix,
-                      strlen(GameModeInfo->musPrefix)))
-      {
-         S_UpdateMusic(i);
-         continue;
-      }
+      // haleyjd 03/26/11: sounds are not handled here any more
+      // haleyjd 04/10/11: music is not handled here now either
 
       // skins
-      if(!strncmp(w_GlobalDir.lumpinfo[i]->name, "S_SKIN", 6))
+      if(!strncmp(lumpinfo[i]->name, "S_SKIN", 6))
       {
          P_ParseSkin(i);
          continue;
@@ -4212,11 +4258,11 @@ void usermsg(const char *s, ...)
 {
    static char msg[1024];
    va_list v;
-
+   
    va_start(v,s);
    pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
    va_end(v);
-
+   
    if(in_textmode)
    {
       puts(msg);
@@ -4231,10 +4277,10 @@ void usermsg(const char *s, ...)
 // add a new .wad file
 // returns true if successfully loaded
 
-boolean D_AddNewFile(const char *s)
+bool D_AddNewFile(const char *s)
 {
    Console.showprompt = false;
-   if(W_AddNewFile(&w_GlobalDir, s))
+   if(wGlobalDir.AddNewFile(s))
       return false;
    modifiedgame = true;
    D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, 0);   // add to the list of wads
@@ -4244,7 +4290,7 @@ boolean D_AddNewFile(const char *s)
 }
 
 //============================================================================
-//
+// 
 // Console Commands
 //
 

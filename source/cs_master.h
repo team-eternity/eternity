@@ -48,8 +48,8 @@ typedef struct cs_master_s
    const char *group;
    const char *name;
    int last_update;
-   boolean updating;
-   boolean disabled;
+   bool updating;
+   bool disabled;
 } cs_master_t;
 
 typedef struct cs_master_request_s
@@ -64,9 +64,9 @@ typedef struct cs_master_request_s
    char *data_to_send;
    char *received_data;
    long status_code;
-   long curl_errno;
-   boolean finished;
-   boolean is_http;
+   CURLcode curl_errno;
+   bool finished;
+   bool is_http;
 } cs_master_request_t;
 
 extern cs_master_t *master_servers;

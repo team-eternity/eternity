@@ -28,30 +28,18 @@
 
 #include "../z_zone.h"
 #include "../i_system.h"
+#include "../hal/i_picker.h"
+
+#include "../doomstat.h"
 #include "../doomtype.h"
 #include "../m_misc.h"
+#include "../v_png.h"
 #include "../w_wad.h"
 
-static SDL_Surface *pickscreen; // SDL screen surface
-static waddir_t pickwad;        // private directory for startup.wad
-static int currentiwad;         // currently selected IWAD
-static boolean *haveIWADArray;  // valid IWADs, passed here from d_main.c
-
-// picker iwad enumeration
-enum
-{
-   IWAD_DOOMSW,
-   IWAD_DOOMREG,
-   IWAD_DOOMU,
-   IWAD_DOOM2,
-   IWAD_TNT,
-   IWAD_PLUT,
-   IWAD_HACX,
-   IWAD_HTICSW,
-   IWAD_HTICREG,
-   IWAD_HTICSOSR,
-   NUMPICKIWADS
-};
+static SDL_Surface  *pickscreen;    // SDL screen surface
+static WadDirectory  pickwad;       // private directory for startup.wad
+static int           currentiwad;   // currently selected IWAD
+static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
 // name of title screen lumps in startup.wad
 static const char *iwadPicNames[NUMPICKIWADS] =
@@ -63,39 +51,12 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "TNT",
    "PLUTONIA",
    "HACX",
-   "HERETIC",
+   "HTICSW",
    "HERETIC",
    "HTICSOSR",
-};
-
-// palette enumeration
-enum
-{
-   PAL_DOOM,
-   PAL_HTIC,
-   NUMPICKPALS,
-};
-
-// name of palette lumps in startup.wad
-static const char *palNames[NUMPICKPALS] =
-{
-   "DOOMPAL",
-   "HTICPAL",
-};
-
-// palette-for-pic lookup table
-static int iwadPicPals[NUMPICKIWADS] =
-{
-   PAL_DOOM, 
-   PAL_DOOM, 
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_DOOM,
-   PAL_HTIC,
-   PAL_HTIC,
-   PAL_HTIC,
+   "FREEDOOM",
+   "ULTFD",
+   "FREEDM",
 };
 
 // IWAD game names
@@ -111,11 +72,14 @@ static const char *titles[NUMPICKIWADS] =
    "Heretic Shareware Version",
    "Heretic Registered Version",
    "Heretic: Shadow of the Serpent Riders",
+   "Freedoom",
+   "Ultimate Freedoom",
+   "FreeDM",
 };
 
 static byte *bgframe;                // background graphics
 static byte *iwadpics[NUMPICKIWADS]; // iwad title pics
-static byte *pals[NUMPICKPALS];      // palettes
+static byte *pals[NUMPICKIWADS];     // palettes
 
 //=============================================================================
 // 
@@ -131,36 +95,50 @@ static void I_Pick_LoadGfx(void)
 {
    int lumpnum;
 
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, "FRAME", lumpinfo_t::ns_global)) != -1)
-      bgframe = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+   if((lumpnum = pickwad.CheckNumForName("FRAME")) != -1)
+   {
+      VPNGImage png;
+      void *lump = pickwad.CacheLumpNum(lumpnum, PU_STATIC);
+      
+      if(png.readImage(lump))
+      {
+         if(png.getWidth() == 540 && png.getHeight() == 380)
+            bgframe = png.getAs24Bit();
+      }
+
+      free(lump);
+   }
 }
 
 //
 // I_Pick_LoadIWAD
 //
-// Caches a particular IWAD titlescreen pic from startup.wad. If the 
-// corresponding palette hasn't been loaded, that is also cached.
+// Caches a particular IWAD titlescreen pic from startup.wad.
 //
 static void I_Pick_LoadIWAD(int num)
 {
    int lumpnum;
    const char *lumpname;
-   int palnum;
-   const char *palname;
 
    lumpname = iwadPicNames[num];
 
-   palnum   = iwadPicPals[num];
-   palname  = palNames[palnum];
-
-   if((lumpnum = W_CheckNumForNameInDir(&pickwad, lumpname, lumpinfo_t::ns_global)) != -1)
-      iwadpics[num] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
-
-   // load palette if needed also
-   if(!pals[palnum])
+   if((lumpnum = pickwad.CheckNumForName(lumpname)) != -1)
    {
-      if((lumpnum = W_CheckNumForNameInDir(&pickwad, palname, lumpinfo_t::ns_global)) != -1)
-         pals[palnum] = (byte *)(W_CacheLumpNumInDir(&pickwad, lumpnum, PU_STATIC));
+      VPNGImage png;
+      void *lump = pickwad.CacheLumpNum(lumpnum, PU_STATIC);
+
+      if(png.readImage(lump))
+      {
+         byte *pngPalette = png.expandPalette();
+
+         if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
+         {
+            iwadpics[num] = png.getAs8Bit(NULL);
+            pals[num]     = pngPalette;
+         }
+      }
+      
+      free(lump);
    }
 }
 
@@ -171,7 +149,7 @@ static void I_Pick_LoadIWAD(int num)
 // startup.wad carries over into the main game; it is completely closed and
 // freed below.
 //
-static boolean I_Pick_OpenWad(void)
+static bool I_Pick_OpenWad(void)
 {
    char *filename;
    int size;
@@ -179,7 +157,7 @@ static boolean I_Pick_OpenWad(void)
    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   if(W_AddNewFile(&pickwad, filename))
+   if(pickwad.AddNewFile(filename))
       return false;
 
    return true;
@@ -196,21 +174,26 @@ static boolean I_Pick_OpenWad(void)
 static void I_Pick_FreeWad(void)
 {
    // close the wad file if it is open
-   if(pickwad.lumpinfo)
+   pickwad.Close();
+}
+
+static void I_Pick_FreeImages(void)
+{
+   if(bgframe)
    {
-      // free all resources loaded from the wad
-      W_FreeDirectoryLumps(&pickwad);
+      free(bgframe);
+      bgframe = NULL;
+   }
 
-      if(pickwad.lumpinfo[0]->file) // kind of redundant, but who knows
-         fclose(pickwad.lumpinfo[0]->file);
+   for(int i = 0; i < NUMPICKIWADS; i++)
+   {
+      if(iwadpics[i])
+         free(iwadpics[i]);
+      iwadpics[i] = NULL;
 
-      // free all lumpinfo_t's allocated for the wad
-      W_FreeDirectoryAllocs(&pickwad);
-
-      // free the private wad directory
-      Z_Free(pickwad.lumpinfo);
-
-      pickwad.lumpinfo = NULL;
+      if(pals[i])
+         free(pals[i]);
+      pals[i] = NULL;
    }
 }
 
@@ -226,7 +209,7 @@ static void I_Pick_FreeWad(void)
 //
 static void I_Pick_ClearScreen(void)
 {
-   static boolean firsttime = true;
+   static bool firsttime = true;
    Uint32 color;
    SDL_Rect dstrect;
 
@@ -251,7 +234,7 @@ static void I_Pick_ClearScreen(void)
 //
 static void I_Pick_DrawBG(void)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    Uint32 *dest;
    int x, y;
@@ -301,17 +284,17 @@ static void I_Pick_DrawBG(void)
 //
 static void I_Pick_DrawIWADPic(int pic)
 {
-   boolean locked = false;
+   bool locked = false;
    byte   *src;
    byte   *pal;
    Uint32 *dest;
    int x, y;
 
-   if(!iwadpics[pic] || !pals[iwadPicPals[pic]])
+   if(!iwadpics[pic] || !pals[pic])
       return;
    
    src = iwadpics[pic];
-   pal = pals[iwadPicPals[pic]];
+   pal = pals[pic];
 
    if(SDL_MUSTLOCK(pickscreen))
    {
@@ -319,7 +302,7 @@ static void I_Pick_DrawIWADPic(int pic)
          return;
       locked = true;
    }
-
+   
    for(y = 19; y < 240 + 19; ++y)
    {
       dest = (Uint32 *)((byte *)pickscreen->pixels + y * pickscreen->pitch +
@@ -332,7 +315,7 @@ static void I_Pick_DrawIWADPic(int pic)
 
          color = *src++;
 
-         r = pal[color * 3];
+         r = pal[color * 3 + 0];
          g = pal[color * 3 + 1];
          b = pal[color * 3 + 2];
 
@@ -343,7 +326,7 @@ static void I_Pick_DrawIWADPic(int pic)
          *dest++ = color;
       }
    }
-
+   
    if(locked)
       SDL_UnlockSurface(pickscreen);
 }
@@ -428,7 +411,7 @@ static void I_Pick_DoAbort(void)
 // Tests a mouse button down event for a location within the specified
 // rectangle.
 //
-static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
+static bool I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 {
    return (x >= rect->x && x <= rect->x + rect->w &&
            y >= rect->y && y <= rect->y + rect->h);
@@ -439,7 +422,7 @@ static boolean I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 //
 // Tests mouse button down events against all valid button rectangles.
 //
-static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
+static void I_Pick_MouseEvent(SDL_Event *ev, bool *doloop)
 {
    SDL_Rect r;
    Uint16 x, y;
@@ -511,7 +494,7 @@ static void I_Pick_MouseEvent(SDL_Event *ev, boolean *doloop)
 //
 static void I_Pick_MainLoop(void)
 {
-   boolean doloop = true;
+   bool doloop = true;
    SDL_Event ev;
 
    while(doloop)
@@ -565,7 +548,7 @@ static void I_Pick_MainLoop(void)
 // Shutdown
 //
 
-static boolean pickvideoinit = false;
+static bool pickvideoinit = false;
 
 //
 // I_Pick_Shutdown
@@ -575,6 +558,7 @@ static boolean pickvideoinit = false;
 static void I_Pick_Shutdown(void)
 {
    I_Pick_FreeWad();
+   I_Pick_FreeImages();
 
 //   haleyjd: I hate SDL.
 //   if(pickvideoinit)
@@ -595,7 +579,7 @@ static void I_Pick_Shutdown(void)
 // in the system.cfg file under the Eternity base directory. The valid IWAD
 // paths are marked in the haveIWADs array as "true" values.
 //
-int I_Pick_DoPicker(boolean haveIWADs[], int startchoice)
+int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 {
    haveIWADArray = haveIWADs;
 

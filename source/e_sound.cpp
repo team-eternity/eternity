@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -44,21 +44,26 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "d_io.h"
 #include "i_system.h"
-#include "w_wad.h"
-#include "d_dehtbl.h"
-#include "sounds.h"
-#include "i_sound.h"
-#include "p_mobj.h"
-#include "s_sound.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
-#include "e_lib.h"
 #include "e_edf.h"
+#include "e_lib.h"
 #include "e_sound.h"
+
+#include "d_io.h"
+#include "d_dehtbl.h"
+#include "i_sound.h"
+#include "m_misc.h"
+#include "p_mobj.h"
+#include "p_skin.h"
+#include "sounds.h"
+#include "s_sndseq.h"
+#include "s_sound.h"
+#include "w_wad.h"
+
 
 //
 // Sound keywords
@@ -316,7 +321,7 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 //
 // haleyjd 04/13/08: There's a hackish little code segment in DeHackEd
 // that looks for a sound name match to a DeHackEd text string. Now that
-// the S_sfx table is gone, we need to do this search here,  using the
+// the S_sfx table is gone, we need to do this search here, using the
 // mnemonic hash table chains.
 //
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
@@ -356,7 +361,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 // allocation starts at D_MAXINT and works toward 0
 static int edf_alloc_sound_dehnum = D_MAXINT;
 
-boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
+bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 {
    int dehnum;
 
@@ -393,10 +398,10 @@ boolean E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
 //
 // Creates a sfxinfo_t structure for a new wad sound and hashes it.
 //
-void E_NewWadSound(const char *name)
+sfxinfo_t *E_NewWadSound(const char *name)
 {
    sfxinfo_t *sfx;
-   char mnemonic[9];
+   char mnemonic[16];
 
    memset(mnemonic, 0, sizeof(mnemonic));
    strncpy(mnemonic, name+2, 9);
@@ -410,24 +415,46 @@ void E_NewWadSound(const char *name)
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
-      sfx->prefix = false;  // do not add another DS prefix      
-      
-      sfx->singularity = sfxinfo_t::sg_none;
+
+      sfx->flags = SFXF_WAD; // born as implicit wad sound
       sfx->priority = 64;
-      sfx->link = NULL;
-      sfx->alias = NULL;
       sfx->pitch = sfx->volume = -1;
       sfx->clipping_dist = S_CLIPPING_DIST;
       sfx->close_dist = S_CLOSE_DIST;
-      sfx->subchannel = CHAN_AUTO;
-      sfx->skinsound = 0;
-      sfx->data = NULL;
       sfx->dehackednum = -1; // not accessible to DeHackEd
       
       E_AddSoundToHash(sfx);
-
-      return;
    }
+
+   return sfx;
+}
+
+// 
+// E_NewSndInfoSound
+//
+// haleyjd 03/27/11: 
+// Creates a sfxinfo_t for a SNDINFO entry.
+//
+sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
+{
+   sfxinfo_t *sfx;
+
+   // create a new one and hook into hashchain
+   sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+
+   strncpy(sfx->name,     name,      9);
+   strncpy(sfx->mnemonic, mnemonic, 33);
+
+   sfx->flags = SFXF_SNDINFO; // born via SNDINFO
+   sfx->priority = 64;
+   sfx->pitch = sfx->volume = -1;
+   sfx->clipping_dist = S_CLIPPING_DIST;
+   sfx->close_dist = S_CLOSE_DIST;
+   sfx->dehackednum = -1; // not accessible to DeHackEd
+
+   E_AddSoundToHash(sfx);
+
+   return sfx;
 }
 
 //
@@ -503,10 +530,10 @@ void E_UpdateSoundCache(void)
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
 {
-   boolean setLink = false;
-   boolean explicitLumpName = false;
+   bool setLink = false;
+   bool explicitLumpName = false;
    int tempint;
 
    // preconditions: 
@@ -543,9 +570,14 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
       // "prefix = false" in every single unprefixed sound.
 
       if(def && explicitLumpName && cfg_size(section, ITEM_SND_PREFIX) == 0)
-         sfx->prefix = false;
+         sfx->flags &= ~SFXF_PREFIX;
       else
-         sfx->prefix = (cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true);
+      {
+         if(cfg_getbool(section, ITEM_SND_PREFIX) == cfg_true)
+            sfx->flags |= SFXF_PREFIX;
+         else
+            sfx->flags &= ~SFXF_PREFIX;
+      }
    }
 
    // process the singularity
@@ -697,7 +729,10 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, boolean def)
    {
       cfg_bool_t nopcsound = cfg_getbool(section, ITEM_SND_NOPCSOUND);
 
-      sfx->nopcsound = (nopcsound == cfg_true);
+      if(nopcsound == cfg_true)
+         sfx->flags |= SFXF_NOPCSOUND;
+      else
+         sfx->flags &= ~SFXF_NOPCSOUND;
    }
 }
 
@@ -762,6 +797,9 @@ void E_ProcessSounds(cfg_t *cfg)
          // set dehackednum
          sfx->dehackednum = idnum;
 
+         // sfxinfo was born via EDF
+         sfx->flags = SFXF_EDF;
+
          // possibly add to numeric hash
          if(sfx->dehackednum > 0)
             E_AddSoundToDEHHash(sfx);
@@ -792,7 +830,7 @@ void E_ProcessSounds(cfg_t *cfg)
 // editing of existing sounds. The sounddelta shares most of its
 // fields and processing code with the sound section.
 //
-void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
+void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 {
    int i, numdeltas;
 
@@ -837,18 +875,20 @@ void E_ProcessSoundDeltas(cfg_t *cfg, boolean add)
 // haleyjd 05/28/06
 // 
 
-#define ITEM_SEQ_ID    "id"
-#define ITEM_SEQ_CMDS  "cmds"
-#define ITEM_SEQ_TYPE  "type"
-#define ITEM_SEQ_STOP  "stopsound"
-#define ITEM_SEQ_ATTN  "attenuation"
-#define ITEM_SEQ_VOL   "volume"
-#define ITEM_SEQ_MNVOL "minvolume"
-#define ITEM_SEQ_NSCO  "nostopcutoff"
-#define ITEM_SEQ_DOOR  "doorsequence"
-#define ITEM_SEQ_PLAT  "platsequence"
-#define ITEM_SEQ_FLOOR "floorsequence"
-#define ITEM_SEQ_CEIL  "ceilingsequence"
+#define ITEM_SEQ_ID     "id"
+#define ITEM_SEQ_CMDS   "cmds"
+#define ITEM_SEQ_HCMDS  "commands"
+#define ITEM_SEQ_TYPE   "type"
+#define ITEM_SEQ_STOP   "stopsound"
+#define ITEM_SEQ_ATTN   "attenuation"
+#define ITEM_SEQ_VOL    "volume"
+#define ITEM_SEQ_MNVOL  "minvolume"
+#define ITEM_SEQ_NSCO   "nostopcutoff"
+#define ITEM_SEQ_RNDVOL "randomplayvol"
+#define ITEM_SEQ_DOOR   "doorsequence"
+#define ITEM_SEQ_PLAT   "platsequence"
+#define ITEM_SEQ_FLOOR  "floorsequence"
+#define ITEM_SEQ_CEIL   "ceilingsequence"
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -919,18 +959,20 @@ enum
 
 cfg_opt_t edf_sndseq_opts[] =
 {
-   CFG_INT(ITEM_SEQ_ID,    -1,        CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CMDS,  0,         CFGF_LIST|CFGF_STRSPACE),
-   CFG_STR(ITEM_SEQ_TYPE,  "sector",  CFGF_NONE),
-   CFG_STR(ITEM_SEQ_STOP,  "none",    CFGF_NONE),
-   CFG_STR(ITEM_SEQ_ATTN,  "normal",  CFGF_NONE),
-   CFG_INT(ITEM_SEQ_VOL,   127,       CFGF_NONE),
-   CFG_INT(ITEM_SEQ_MNVOL, -1,        CFGF_NONE),
-   CFG_BOOL(ITEM_SEQ_NSCO, cfg_false, CFGF_NONE),
-   CFG_STR(ITEM_SEQ_DOOR,  NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_PLAT,  NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_FLOOR, NULL,      CFGF_NONE),
-   CFG_STR(ITEM_SEQ_CEIL,  NULL,      CFGF_NONE),
+   CFG_INT(ITEM_SEQ_ID,      -1,        CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CMDS,    NULL,      CFGF_LIST|CFGF_STRSPACE),
+   CFG_STR(ITEM_SEQ_HCMDS,   NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_TYPE,    "sector",  CFGF_NONE),
+   CFG_STR(ITEM_SEQ_STOP,    "none",    CFGF_NONE),
+   CFG_STR(ITEM_SEQ_ATTN,    "normal",  CFGF_NONE),
+   CFG_INT(ITEM_SEQ_VOL,     127,       CFGF_NONE),
+   CFG_INT(ITEM_SEQ_MNVOL,   -1,        CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_NSCO,   cfg_false, CFGF_NONE),
+   CFG_BOOL(ITEM_SEQ_RNDVOL, cfg_false, CFGF_NONE),
+   CFG_STR(ITEM_SEQ_DOOR,    NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_PLAT,    NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_FLOOR,   NULL,      CFGF_NONE),
+   CFG_STR(ITEM_SEQ_CEIL,    NULL,      CFGF_NONE),
    CFG_END()
 };
 
@@ -1104,87 +1146,12 @@ ESoundSeq_t *E_EnvironmentSequence(int id)
 }
 
 //
-// This structure is returned by E_ParseSeqCmdStr and is used to hold pointers
-// to the tokens inside the command string. The pointers may be NULL if the
-// corresponding tokens do not exist.
-//
-typedef struct tempcmd_s
-{
-   const char *strs[3]; // command and up to 2 arguments
-} tempcmd_t;
-
-// states for command mini-parser below.
-enum
-{
-   STATE_LOOKFORCMD,
-   STATE_INCMD,
-};
-
-//
-// E_ParseSeqCmdStr
-//
-// Tokenizes a sound sequence command string. Basically, breaks it up into
-// 0 to 3 tokens. Anything beyond the 3rd token is totally ignored.
-//
-static tempcmd_t E_ParseSeqCmdStr(char *str)
-{
-   tempcmd_t retcmd;
-   char *tokenstart = NULL;
-   int state = STATE_LOOKFORCMD, strnum = 0;
-
-   retcmd.strs[0] = retcmd.strs[1] = retcmd.strs[2] = NULL;
-
-   while(1)
-   {
-      switch(state)
-      {
-      case STATE_LOOKFORCMD: // looking for a command -- skip whitespace
-         switch(*str)
-         {
-         case '\0': // end of string -- done
-            return retcmd;
-         case ' ':
-         case '\t':
-            break;
-         default:
-            tokenstart = str;
-            state = STATE_INCMD;
-            break;
-         }
-         break;
-      case STATE_INCMD: // inside a command -- whitespace ends
-         switch(*str)
-         {
-         case '\0': // end of string
-         case ' ':
-         case '\t':
-            retcmd.strs[strnum] = tokenstart;
-            ++strnum;
-            if(*str == '\0' || strnum >= 3) // are we done?
-               return retcmd;
-            tokenstart = NULL;
-            state = STATE_LOOKFORCMD;
-            *str = '\0'; // modify string to terminate tokens
-            break;
-         default:
-            break;
-         }
-         break;
-      }
-
-      ++str;
-   }
-
-   return retcmd; // should be unreachable
-}
-
-//
 // E_SeqGetSound
 //
 // A safe wrapper around E_SoundForName that returns NULL for the
 // NULL pointer. This saves me a truckload of hassle below.
 //
-d_inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
+inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
 {
    return soundname ? E_SoundForName(soundname) : NULL;
 }
@@ -1194,7 +1161,7 @@ d_inline static sfxinfo_t *E_SeqGetSound(const char *soundname)
 //
 // A safe wrapper around strtol that returns 0 for the NULL string.
 //
-d_inline static int E_SeqGetNumber(const char *numstr)
+inline static int E_SeqGetNumber(const char *numstr)
 {
    return numstr ? strtol(numstr, NULL, 0) : 0;
 }
@@ -1219,6 +1186,103 @@ static int E_SeqGetAttn(const char *attnstr)
       attn = ATTN_NORMAL;
 
    return attn;
+}
+
+//
+// E_GenerateSeqOp
+//
+// Generate a sound sequence opcode.
+//
+static void E_GenerateSeqOp(ESoundSeq_t *newSeq, tempcmd_t &tempcmd, 
+                            seqcmd_t *tempcmdbuf, unsigned int &allocused)
+{
+   int cmdindex;
+
+   // translate to command index
+   cmdindex = E_StrToNumLinear(sndseq_cmdstrs, SEQ_NUM_TXTCMDS, 
+                               tempcmd.strs[0]);
+
+   // generate opcodes and their arguments in the temporary buffer
+   switch(cmdindex)
+   {
+   case SEQ_TXTCMD_PLAY:
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_PLAYUNTILDONE:
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      tempcmdbuf[allocused++].data = SEQ_CMD_WAITSOUND;
+      break;
+   case SEQ_TXTCMD_PLAYTIME:
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+      break;
+   case SEQ_TXTCMD_PLAYREPEAT:
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAYREPEAT;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_PLAYLOOP:
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAYLOOP;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+      break;
+   case SEQ_TXTCMD_PLAYABSVOL:
+      tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_PLAYRELVOL:
+      tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+      tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
+      tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_DELAY:
+      tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_DELAYRAND:
+      tempcmdbuf[allocused++].data = SEQ_CMD_DELAYRANDOM;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
+      break;
+   case SEQ_TXTCMD_VOLUME:
+      tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_RELVOLUME:
+      tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
+      tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_ATTENUATION:
+      tempcmdbuf[allocused++].data = SEQ_CMD_SETATTENUATION;
+      tempcmdbuf[allocused++].data = E_SeqGetAttn(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_STOPSOUND:
+      // this doesn't go into the command stream; rather, it changes the
+      // stopsound property of the sound sequence object
+      newSeq->stopsound = E_SeqGetSound(tempcmd.strs[1]);
+      break;
+   case SEQ_TXTCMD_NOSTOPCUTOFF:
+      // as above, but this sets the nostopcutoff property
+      newSeq->nostopcutoff = true;
+      break;
+   case SEQ_TXTCMD_RESTART:
+      tempcmdbuf[allocused++].data = SEQ_CMD_RESTART;
+      break;
+   case SEQ_TXTCMD_END:
+      // do nothing, an end command will be generated below
+      break;
+   default:
+      // invalid opcode :P
+      E_EDFLoggedWarning(2, "Warning: invalid cmd '%s' in sequence, ignored\n",
+                         tempcmd.strs[0]);
+      break;
+   }
 }
 
 //
@@ -1258,106 +1322,77 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
 
    for(i = 0; i < numcmds; ++i)
    {
-      int cmdindex;
       tempcmd_t tempcmd;
       char *tempstr = strdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
 
-      tempcmd = E_ParseSeqCmdStr(tempstr); // parse the command
+      tempcmd = E_ParseTextLine(tempstr); // parse the command
 
       // figure out the command (first token on the line)
       if(!tempcmd.strs[0])
          E_EDFLoggedWarning(2, "Warning: invalid command in sequence, ignored\n");
       else
-      {  
-         // translate to command index
-         cmdindex = E_StrToNumLinear(sndseq_cmdstrs, SEQ_NUM_TXTCMDS, 
-                                     tempcmd.strs[0]);
-
-         // generate opcodes and their arguments in the temporary buffer
-         switch(cmdindex)
-         {
-         case SEQ_TXTCMD_PLAY:
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_PLAYUNTILDONE:
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            tempcmdbuf[allocused++].data = SEQ_CMD_WAITSOUND;
-            break;
-         case SEQ_TXTCMD_PLAYTIME:
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
-            break;
-         case SEQ_TXTCMD_PLAYREPEAT:
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAYREPEAT;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_PLAYLOOP:
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAYLOOP;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
-            break;
-         case SEQ_TXTCMD_PLAYABSVOL:
-            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_PLAYRELVOL:
-            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
-            tempcmdbuf[allocused++].data = SEQ_CMD_PLAY;
-            tempcmdbuf[allocused++].sfx  = E_SeqGetSound(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_DELAY:
-            tempcmdbuf[allocused++].data = SEQ_CMD_DELAY;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_DELAYRAND:
-            tempcmdbuf[allocused++].data = SEQ_CMD_DELAYRANDOM;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[2]);
-            break;
-         case SEQ_TXTCMD_VOLUME:
-            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUME;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_RELVOLUME:
-            tempcmdbuf[allocused++].data = SEQ_CMD_SETVOLUMEREL;
-            tempcmdbuf[allocused++].data = E_SeqGetNumber(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_ATTENUATION:
-            tempcmdbuf[allocused++].data = SEQ_CMD_SETATTENUATION;
-            tempcmdbuf[allocused++].data = E_SeqGetAttn(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_STOPSOUND:
-            // this doesn't go into the command stream; rather, it changes the
-            // stopsound property of the sound sequence object
-            newSeq->stopsound = E_SeqGetSound(tempcmd.strs[1]);
-            break;
-         case SEQ_TXTCMD_NOSTOPCUTOFF:
-            // as above, but this sets the nostopcutoff property
-            newSeq->nostopcutoff = true;
-            break;
-         case SEQ_TXTCMD_RESTART:
-            tempcmdbuf[allocused++].data = SEQ_CMD_RESTART;
-            break;
-         case SEQ_TXTCMD_END:
-            // do nothing, an end command will be generated below
-            break;
-         default:
-            // invalid opcode :P
-            E_EDFLoggedWarning(2, "Warning: invalid cmd '%s' in sequence, ignored\n",
-                               tempcmd.strs[0]);
-            break;
-         }
-      } // end else
+         E_GenerateSeqOp(newSeq, tempcmd, tempcmdbuf, allocused);
 
       free(tempstr); // free temporary copy of command
    } // end for
+
+   // now, generate an end command -- doing it this way, we make sure the
+   // sequence is terminated whether or not the user provides an end command,
+   // which is good since it's really unnecessary in EDF due to syntax
+   tempcmdbuf[allocused++].data = SEQ_CMD_END;
+
+   // now, allocate the buffer in the ESoundSeq_t object at the size actually
+   // used by the compiled sound sequence commands
+   cmdalloc = allocused * sizeof(seqcmd_t);
+
+   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
+
+   // free the temp buffer
+   free(tempcmdbuf);
+}
+
+//
+// E_ParseSeqCmdsFromHereDoc
+//
+// haleyjd 01/10/11: Support for heredoc-embedded sequences.
+//
+static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
+{
+   int numcmds;
+   unsigned int cmdalloc, allocused = 0; // space allocated, space actually used
+   seqcmd_t *tempcmdbuf;                 // temporary command buffer
+   char *str   = Z_Strdupa(heredoc);     // make a temp mutable copy of the string
+   char *rover = str;                    // position in buffer
+   char *line  = NULL;                   // start of current line in buffer
+
+   // The number of commands should be equal to the number of lines in the
+   // heredoc string, plus a possible one extra for an implicit end command.
+   numcmds = M_CountNumLines(str);
+
+   // allocate the upper bound of command space in the temp buffer:
+   // * add 1 to numcmds for possible missing end command
+   // * multiply by 4 because no txt command compiles to more than 4 ops
+   cmdalloc = ((unsigned int)numcmds + 1) * 4 * sizeof(seqcmd_t);
+
+   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+
+   while((line = E_GetHeredocLine(&rover)))
+   {
+      tempcmd_t tempcmd;
+
+      // ignore empty lines
+      if(!strlen(line))
+         continue;
+
+      tempcmd = E_ParseTextLine(line); // parse the command
+
+      // figure out the command (first token on the line)
+      if(!tempcmd.strs[0])
+         E_EDFLoggedWarning(2, "Warning: invalid command in sequence, ignored\n");
+      else
+         E_GenerateSeqOp(newSeq, tempcmd, tempcmdbuf, allocused);
+   }
 
    // now, generate an end command -- doing it this way, we make sure the
    // sequence is terminated whether or not the user provides an end command,
@@ -1482,13 +1517,24 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    // process nostopcutoff
    newSeq->nostopcutoff = (cfg_getbool(cfg, ITEM_SEQ_NSCO) == cfg_true);
 
+   // haleyjd 01/12/11: support for proper Heretic randomization behavior
+   newSeq->randomplayvol = (cfg_getbool(cfg, ITEM_SEQ_RNDVOL) == cfg_true);
+
    // process command list
 
    // if a command list already exists, destroy it first
    if(newSeq->commands)
       free(newSeq->commands);
 
-   E_ParseSeqCmds(cfg, newSeq);
+   // haleyjd 01/11/11: I have added support for heredoc-based sound sequences,
+   // which are exclusive of and preferred to the old syntax. This allows Hexen-
+   // compatible SNDSEQ data to be pasted directly into EDF. It should also come
+   // in handy later when supporting actual SNDSEQ lumps.
+
+   if(cfg_size(cfg, ITEM_SEQ_HCMDS) > 0)
+      E_ParseSeqCmdsFromHereDoc(cfg_getstr(cfg, ITEM_SEQ_HCMDS), newSeq);
+   else
+      E_ParseSeqCmds(cfg, newSeq);
 }
 
 //

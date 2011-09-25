@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -22,32 +22,23 @@
 #ifndef P_TICK_H__
 #define P_TICK_H__
 
-#include "doomtype.h"
-
-//
-// ZoneLevelItem
-//
-// haleyjd 11/22/10:
-// This class can be inherited from to obtain the ability to be allocated on the
-// zone heap with a PU_LEVEL allocation tag.
-//
-class ZoneLevelItem
-{
-public:
-   virtual ~ZoneLevelItem() {}
-   void *operator new (size_t size);
-   void  operator delete (void *p);
-};
+#include "z_zone.h"
 
 class SaveArchive;
 
 // Doubly linked list of actors.
-class Thinker : public ZoneLevelItem
+class Thinker : public ZoneObject
 {
 private:
-   // Private implementation details
+   // Private implementation details - Methods
    void removeDelayed(); 
+
+   // Data members
+   // killough 11/98: count of how many other objects reference
+   // this one using pointers. Used for garbage collection.
+   unsigned int references;
    
+   // Statics
    // Current position in list during RunThinkers
    static Thinker *currentthinker;
 
@@ -59,16 +50,20 @@ protected:
    void addToThreadedList(int tclass);
 
    // Data Members
-   boolean removed;
-
-   // killough 11/98: count of how many other objects reference
-   // this one using pointers. Used for garbage collection.
-   unsigned int references;
+   bool removed;
 
    // haleyjd 12/22/2010: for savegame enumeration
    unsigned int ordinal;
 
 public:
+   // Constructor
+   Thinker() 
+      : ZoneObject(), references(0), removed(false), ordinal(0), prev(NULL),
+        next(NULL), cprev(NULL), cnext(NULL)
+   {
+      ChangeTag(PU_LEVEL);
+   }
+
    // Static functions
    static void InitThinkers();
    static void RunThinkers();
@@ -77,7 +72,7 @@ public:
    void addThinker();
    
    // Accessors
-   boolean isRemoved() const { return removed; }
+   bool isRemoved() const { return removed; }
    
    // Reference counting
    void addReference() { ++references; }
@@ -96,18 +91,20 @@ public:
    // When using serialize, always call your parent implementation!
    virtual void serialize(SaveArchive &arc);
    // De-swizzling should restore pointers to other thinkers.
-   virtual void deswizzle() {}
-   virtual boolean shouldSerialize()  const { return !removed;   }
+   virtual void deSwizzle() {}
+   virtual bool shouldSerialize() const { return !removed;  }
    virtual const char *getClassName() const { return "Thinker"; }
 
    // Data Members
 
-   Thinker *prev, *next;
+   Thinker *prev;
+   Thinker *next;
   
    // killough 8/29/98: we maintain thinkers in several equivalence classes,
    // according to various criteria, so as to allow quicker searches.
 
-   Thinker *cnext, *cprev; // Next, previous thinkers in same class
+   Thinker *cprev; // Next, previous thinkers in same class
+   Thinker *cnext;
 };
 
 //
@@ -117,7 +114,7 @@ public:
 // unremoved Thinker subclass instance. This is necessary because the old 
 // behavior of checking function pointer values effectively changed the type 
 // that a thinker was considered to be when it was set into a deferred removal
-// state.
+// state, and C++ doesn't support that with virtual methods OR RTTI.
 //
 template<typename T> inline T thinker_cast(Thinker *th)
 {
@@ -163,7 +160,7 @@ typedef enum
 extern Thinker thinkerclasscap[];
 
 // sf: jumping-viewz-on-hyperlift bug
-extern boolean reset_viewz;
+extern bool reset_viewz;
 
 //
 // Thinker Factory
@@ -176,7 +173,7 @@ class ThinkerType
 {
 protected:
    ThinkerType *next;
-   const char   *name;
+   const char  *name;
 
 public:
    ThinkerType(const char *pName);

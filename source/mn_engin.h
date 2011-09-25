@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,9 +30,8 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
-#include "c_runcmd.h"
-#include "d_event.h"
-#include "g_bind.h"
+struct event_t;
+struct variable_t;
 
 //
 // menu_t
@@ -70,25 +69,25 @@ enum
    it_end,              // last menuitem in the list
 };
 
-typedef struct menuitem_s
+struct menuitem_t
 {
   int type; // item types
   
-  char *description;  // the describing name of this item
+  const char *description;  // the describing name of this item
 
   // useful data for the item:
   // console command if console
   // variable name if variable, etc
-  char *data;         
+  const char *data;         
 
-  char *patch; // patch to use or NULL
+  const char *patch; // patch to use or NULL
 
   int flags;   // haleyjd 03/29/05: menu item flags
 
   /*** internal stuff used by menu code ***/
   int x, y;
   variable_t *var;        // ptr to console variable
-} menuitem_t;
+};
 
 // haleyjd 10/07/05: Menu engine changes:
 // 1. menuitems are no longer contained inside the menu_t structure,
@@ -107,15 +106,15 @@ enum
    mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
 };
 
-typedef struct menu_s
+struct menu_t
 {
    // 10/07/05: pointer to item array
    menuitem_t *menuitems;
 
    // 10/07/05: pointers to additional page menus
-   struct menu_s *prevpage;
-   struct menu_s *nextpage;
-   struct menu_s *rootpage;   // haleyjd 11/02/06: first page of a set
+   menu_t *prevpage;
+   menu_t *nextpage;
+   menu_t *rootpage;   // haleyjd 11/02/06: first page of a set
 
    // x,y offset of menu
    int x, y;
@@ -129,7 +128,7 @@ typedef struct menu_s
    void (*drawer)(void);              // separate drawer function 
 
    const char **content_names;    // table of contents stuff, optional
-   struct menu_s **content_pages;
+   menu_t     **content_pages;
    
    int gap_override;              // haleyjd 10/09/05: override gap size
 
@@ -137,11 +136,11 @@ typedef struct menu_s
 
    // internal fields
    char name[33];                 // haleyjd 03/14/06: for dynamic menus
-   struct menu_s *dynanext;
+   menu_t *dynanext;
 
-   struct menu_s *curpage;        // haleyjd 10/02/06: for multipage menus
+   menu_t *curpage;               // haleyjd 10/02/06: for multipage menus
    int widest_width;              // haleyjd 03/22/09: for LALIGNED flag
-} menu_t;
+};
 
 // menu 'widgets':
 // A structured way for the menu to display things
@@ -155,14 +154,14 @@ typedef struct menu_s
 typedef struct menuwidget_s
 {
   void (*drawer)();
-  boolean (*responder)(event_t *ev);
+  bool (*responder)(event_t *ev);
   void (*ticker)();   // haleyjd 05/29/06
-  boolean fullscreen; // haleyjd: optimization for fullscreen widgets
+  bool fullscreen; // haleyjd: optimization for fullscreen widgets
 } menuwidget_t;
 
 // responder for events
 
-boolean MN_Responder(event_t *ev);
+bool MN_Responder(event_t *ev);
 
 // Called by main loop,
 // only used for menu (skull cursor) animation.
@@ -175,7 +174,7 @@ void MN_Ticker(void);
 void MN_DrawMenu(menu_t *menu);
 void MN_Drawer(void);
 
-boolean MN_CheckFullScreen(void);
+bool MN_CheckFullScreen(void);
 
 // Called by D_DoomMain,
 // loads the config file.
@@ -226,7 +225,7 @@ extern int menutime;
 
 // haleyjd
 extern int quickSaveSlot;
-extern boolean menu_toggleisback;
+extern bool menu_toggleisback;
 extern const char *mn_fontname;
 extern const char *mn_bigfontname;
 extern const char *mn_normalfontname;

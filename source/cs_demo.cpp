@@ -52,6 +52,7 @@
 #include "doomdef.h"
 #include "c_runcmd.h"
 #include "g_game.h"
+#include "i_system.h"
 #include "m_file.h"
 #include "m_misc.h"
 #include "version.h"
@@ -68,6 +69,7 @@
 #include "cs_wad.h"
 #include "cs_demo.h"
 #include "cs_config.h"
+#include "cl_buf.h"
 #include "cl_main.h"
 #include "cl_pred.h"
 #include "sv_main.h"
@@ -79,15 +81,15 @@ extern char gamemapname[9];
 
 void IdentifyVersion(void);
 
-boolean cs_demo_recording = false;
-boolean cs_demo_playback  = false;
+bool cs_demo_recording = false;
+bool cs_demo_playback  = false;
 
 char *cs_demo_folder_path = NULL;
 char *cs_demo_path = NULL;
 char *cs_demo_archive_path = NULL;
 unsigned int cs_current_demo_map = 0;
 
-static boolean first_map_loaded = false;
+static bool first_map_loaded = false;
 
 static demo_error_t demo_error_code = DEMO_ERROR_NONE;
 static const char *demo_error_message = NULL;
@@ -98,7 +100,7 @@ static char *current_demo_info_path = NULL;
 static char *current_demo_data_path = NULL;
 static FILE *current_demo_data_file = NULL;
 
-static char *demo_error_strings[MAX_DEMO_ERRORS] = {
+static const char *demo_error_strings[MAX_DEMO_ERRORS] = {
    "No error.",
    "{DUMMY (errno)}",
    "{DUMMY (file errno)}",
@@ -178,7 +180,6 @@ static void set_demo_error(demo_error_t error_type)
       }
       break;
    }
-
 }
 
 static int copy_data(struct archive *ar, struct archive *aw)
@@ -207,7 +208,7 @@ static int copy_data(struct archive *ar, struct archive *aw)
    }
 }
 
-static boolean open_current_demo_data_file(const char *mode)
+static bool open_current_demo_data_file(const char *mode)
 {
    if(current_demo_data_file != NULL)
    {
@@ -225,7 +226,7 @@ static boolean open_current_demo_data_file(const char *mode)
    return true;
 }
 
-static boolean close_current_demo_data_file(void)
+static bool close_current_demo_data_file(void)
 {
    printf("close_current_demo_data_file: Closing.\n");
 
@@ -247,7 +248,7 @@ static boolean close_current_demo_data_file(void)
    return true;
 }
 
-static boolean close_current_map_demo(void)
+static bool close_current_map_demo(void)
 {
    printf("close_current_map_demo: Closing.\n");
 
@@ -284,10 +285,15 @@ static boolean close_current_map_demo(void)
 static void set_current_map_demo_paths(void)
 {
    if(current_demo_map_folder == NULL)
-      current_demo_map_folder = calloc(strlen(cs_demo_path) + 6, sizeof(char));
+   {
+      current_demo_map_folder = (char *)(calloc(
+         strlen(cs_demo_path) + 6, sizeof(char)
+      ));
+   }
    else
+   {
       memset(current_demo_map_folder, 0, strlen(cs_demo_path) + 6);
-
+   }
    sprintf(
       current_demo_map_folder, "%s/%d", cs_demo_path, cs_current_demo_map
    );
@@ -295,22 +301,22 @@ static void set_current_map_demo_paths(void)
    if(current_demo_info_path != NULL)
       free(current_demo_info_path);
 
-   current_demo_info_path = calloc(
+   current_demo_info_path = (char *)(calloc(
       strlen(current_demo_map_folder) + 10, sizeof(char)
-   );
+   ));
    sprintf(current_demo_info_path, "%s/info.txt", current_demo_map_folder);
 
    if(current_demo_data_path != NULL)
       free(current_demo_data_path);
 
-   current_demo_data_path = calloc(
+   current_demo_data_path = (char *)(calloc(
       strlen(current_demo_map_folder) + 14, sizeof(char)
-   );
+   ));
    sprintf(current_demo_data_path, "%s/demodata.bin", current_demo_map_folder);
 }
 
-static boolean add_entry_to_archive(struct archive *a,
-                                    struct archive_entry *entry, char *path)
+static bool add_entry_to_archive(struct archive *a,
+                                 struct archive_entry *entry, char *path)
 {
    struct stat stat_result;
    char buf[AR_BLOCK_SIZE];
@@ -361,7 +367,7 @@ static boolean add_entry_to_archive(struct archive *a,
    return true;
 }
 
-static boolean close_current_demo(void)
+static bool close_current_demo(void)
 {
    int r;
    unsigned int old_cs_current_demo_map;
@@ -371,7 +377,9 @@ static boolean close_current_demo(void)
 
    printf("close_current_demo: Closing.\n");
 
-   archive_file_path = calloc(strlen(cs_demo_path) + 5, sizeof(char));
+   archive_file_path = (char *)(calloc(
+      strlen(cs_demo_path) + 5, sizeof(char)
+   ));
    sprintf(archive_file_path, "%s.ecd", cs_demo_path);
 
    if(!close_current_map_demo())
@@ -445,7 +453,7 @@ static boolean close_current_demo(void)
    return true;
 }
 
-static boolean retrieve_demo(char *url)
+static bool retrieve_demo(char *url)
 {
    CURL *curl_handle;
    char *basename;
@@ -472,9 +480,9 @@ static boolean retrieve_demo(char *url)
 
    basename++; // [CG] Skip preceding '/'.
 
-   cs_demo_archive_path = calloc(
+   cs_demo_archive_path = (char *)(calloc(
       strlen(cs_demo_folder_path) + strlen(basename) + 2, sizeof(char)
-   );
+   ));
 
    sprintf(cs_demo_archive_path, "%s/%s", cs_demo_folder_path, basename);
 
@@ -516,7 +524,7 @@ static boolean retrieve_demo(char *url)
    return true;
 }
 
-static boolean open_demo(char *path)
+static bool open_demo(char *path)
 {
    struct archive *a;
    struct archive *ext;
@@ -562,6 +570,7 @@ static boolean open_demo(char *path)
       {
          if(r == ARCHIVE_EOF)
             break;
+
          demo_error_message = archive_error_string(a);
          return false;
       }
@@ -589,7 +598,7 @@ static boolean open_demo(char *path)
          size_t demo_path_size =
             strlen(cs_demo_folder_path) + basename_size + 2;
 
-         cs_demo_path = calloc(demo_path_size, sizeof(char));
+         cs_demo_path = (char *)(calloc(demo_path_size, sizeof(char)));
          sprintf(cs_demo_path, "%s/", cs_demo_folder_path);
          strncat(cs_demo_path, entry_path_name, basename_size);
          printf("cs_demo_path: %s.\n", cs_demo_path);
@@ -605,7 +614,7 @@ static boolean open_demo(char *path)
    return true;
 }
 
-static boolean write_to_demo(void *data, size_t data_size, size_t count)
+static bool write_to_demo(void *data, size_t data_size, size_t count)
 {
    if(!fwrite((const void *)data, data_size, count, current_demo_data_file))
    {
@@ -615,43 +624,42 @@ static boolean write_to_demo(void *data, size_t data_size, size_t count)
    return true;
 }
 
-static boolean read_from_demo(void *buffer, size_t size, size_t count)
+static bool read_from_demo(void *buffer, size_t size, size_t count)
 {
    if(size == 0 || count == 0)
-   {
       return true;
-   }
+
    if(fread(buffer, size, count, current_demo_data_file) < count)
    {
       if(feof(current_demo_data_file))
-      {
-         // printf("Reached end-of-file for %s.\n", current_demo_data_path);
-      }
+         printf("Reached end-of-file for %s.\n", current_demo_data_path);
       else if(ferror(current_demo_data_file))
-      {
          printf("Error reading %s.\n", current_demo_data_path);
-      }
       set_demo_error(DEMO_ERROR_ERRNO);
       return false;
    }
    return true;
 }
 
-static boolean check_demo_folder(void)
+static bool check_demo_folder(void)
 {
    if(cs_demo_folder_path != NULL)
    {
       if(!strlen(cs_demo_folder_path))
       {
          free(cs_demo_folder_path);
-         cs_demo_folder_path = calloc(strlen(basepath) + 7, sizeof(char));
+         cs_demo_folder_path = (char *)(calloc(
+            strlen(basepath) + 7, sizeof(char)
+         ));
          sprintf(cs_demo_folder_path, "%s/demos", basepath);
       }
    }
 
    if(!cs_demo_folder_path)
    {
-      cs_demo_folder_path = calloc(strlen(basepath) + 7, sizeof(char));
+      cs_demo_folder_path = (char *)(calloc(
+         strlen(basepath) + 7, sizeof(char)
+      ));
       sprintf(cs_demo_folder_path, "%s/demos", basepath);
    }
 
@@ -668,7 +676,7 @@ static boolean check_demo_folder(void)
    return true;
 }
 
-static boolean load_current_map_demo(void)
+static bool load_current_map_demo(void)
 {
    demo_header_t demo_header;
    demo_marker_t header_marker;
@@ -720,7 +728,7 @@ static boolean load_current_map_demo(void)
          if(!read_from_demo(&resource_name_size, sizeof(size_t), 1))
             return false;
 
-         resource.name = realloc(resource.name, resource_name_size);
+         resource.name = (char *)(realloc(resource.name, resource_name_size));
 
          if(!read_from_demo(resource.name, sizeof(char), resource_name_size))
             return false;
@@ -762,7 +770,6 @@ static boolean load_current_map_demo(void)
             {
                printf("load_current_map_demo: Skipping IWAD.\n");
             }
-
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
                I_Error(
@@ -809,9 +816,9 @@ static boolean load_current_map_demo(void)
 
                stored_resource = CS_GetResource(resource.name);
             }
-            resource_indices = realloc(
+            resource_indices = (unsigned int *)(realloc(
                resource_indices, resource_count * sizeof(unsigned int)
-            );
+            ));
             resource_indices[resource_count - 1] =
                stored_resource - cs_resources;
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
@@ -836,8 +843,11 @@ static boolean load_current_map_demo(void)
       );
    }
    else
+   {
       printf("Map %d was already initialized.\n", cs_current_demo_map);
+   }
 
+   // G_SetGameMap();
 
    if(!read_from_demo(&header_marker, sizeof(demo_marker_t), 1))
       return false;
@@ -852,11 +862,11 @@ static boolean load_current_map_demo(void)
    return true;
 }
 
-static boolean handle_network_message_demo_packet(void)
+static bool handle_network_message_demo_packet(void)
 {
    int playernum;
    size_t msg_size;
-   char *network_message;
+   char *message;
 
    if(!read_from_demo(&playernum, sizeof(int), 1))
       return false;
@@ -864,21 +874,21 @@ static boolean handle_network_message_demo_packet(void)
    if(!read_from_demo(&msg_size, sizeof(size_t), 1))
       return false;
 
-   network_message = calloc(msg_size, sizeof(char));
+   message = (char *)(calloc(msg_size, sizeof(char)));
 
-   if(!read_from_demo(network_message, sizeof(char), msg_size))
+   if(!read_from_demo(message, sizeof(char), msg_size))
       return false;
 
    if(CS_CLIENTDEMO)
-      CL_HandleMessage(network_message, msg_size);
+      cl_packet_buffer.add(message, (uint32_t)msg_size);
    else
-      SV_HandleMessage(network_message, msg_size, playernum);
+      SV_HandleMessage(message, msg_size, playernum);
 
    return true;
 }
 
 
-static boolean handle_player_command_demo_packet(void)
+static bool handle_player_command_demo_packet(void)
 {
    size_t command_size;
    cs_cmd_t command;
@@ -892,6 +902,8 @@ static boolean handle_player_command_demo_packet(void)
 
    memcpy(&players[consoleplayer].cmd, &command.ticcmd, sizeof(ticcmd_t));
 
+   // CS_ApplyCommandButtons(&players[consoleplayer].cmd);
+
    if(CS_CLIENTDEMO)
    {
       local_command = CL_GetCurrentCommand();
@@ -901,7 +913,7 @@ static boolean handle_player_command_demo_packet(void)
    return true;
 }
 
-static boolean handle_console_command_demo_packet(void)
+static bool handle_console_command_demo_packet(void)
 {
    int command_type, command_source;
    size_t command_size, options_size;
@@ -917,7 +929,7 @@ static boolean handle_console_command_demo_packet(void)
    if(!read_from_demo(&command_size, sizeof(size_t), 1))
       return false;
 
-   command_name = calloc(command_size, sizeof(char));
+   command_name = (char *)(calloc(command_size, sizeof(char)));
 
    if(!read_from_demo(command_name, sizeof(char), command_size))
       return false;
@@ -925,7 +937,7 @@ static boolean handle_console_command_demo_packet(void)
    if(!read_from_demo(&options_size, sizeof(size_t), 1))
       return false;
 
-   options = calloc(options_size, sizeof(char));
+   options = (char *)(calloc(options_size, sizeof(char)));
 
    if(!read_from_demo(options, sizeof(char), options_size))
       return false;
@@ -951,7 +963,7 @@ const char* CS_GetDemoErrorMessage(void)
    return (const char *)demo_error_message;
 }
 
-boolean CS_SetDemoFolderPath(char *demo_folder_path)
+bool CS_SetDemoFolderPath(char *demo_folder_path)
 {
    struct stat stat_result;
 
@@ -979,7 +991,7 @@ boolean CS_SetDemoFolderPath(char *demo_folder_path)
    return true;
 }
 
-boolean CS_RecordDemo(void)
+bool CS_RecordDemo(void)
 {
    char timestamp[TIMESTAMP_SIZE];
    json_object *json_info;
@@ -1001,9 +1013,9 @@ boolean CS_RecordDemo(void)
    );
 
    // [CG] Build the demo's filename
-   cs_demo_path = calloc(
+   cs_demo_path = (char *)(calloc(
       strlen(cs_demo_folder_path) + TIMESTAMP_SIZE + 2, sizeof(char)
-   );
+   ));
    sprintf(cs_demo_path, "%s/%s", cs_demo_folder_path, timestamp);
 
    // [CG] Demos start out as folders, and are only archived when demo
@@ -1017,7 +1029,9 @@ boolean CS_RecordDemo(void)
       return false;
    }
 
-   cs_demo_info_path = calloc(strlen(cs_demo_path) + 10, sizeof(char));
+   cs_demo_info_path = (char *)(calloc(
+      strlen(cs_demo_path) + 10, sizeof(char)
+   ));
    sprintf(cs_demo_info_path, "%s/info.txt", cs_demo_path);
 
    // [CG] Create the top-level info.txt file.
@@ -1035,7 +1049,7 @@ boolean CS_RecordDemo(void)
    json_object_object_add(
       json_info,
       "cs_protocol_version",
-      json_object_new_int(CS_PROTOCOL_VERSION)
+      json_object_new_int(cs_protocol_version)
    );
    json_object_object_add(json_info, "name", json_object_new_string(""));
    json_object_object_add(json_info, "author", json_object_new_string(""));
@@ -1051,7 +1065,7 @@ boolean CS_RecordDemo(void)
    return true;
 }
 
-boolean CS_UpdateDemoLength(void)
+bool CS_UpdateDemoLength(void)
 {
    demo_header_t demo_header;
    long previous_demo_position = ftell(current_demo_data_file);
@@ -1107,7 +1121,7 @@ boolean CS_UpdateDemoLength(void)
    return true;
 }
 
-boolean CS_UpdateDemoSettings(void)
+bool CS_UpdateDemoSettings(void)
 {
    demo_header_t demo_header;
    long previous_demo_position = ftell(current_demo_data_file);
@@ -1256,7 +1270,7 @@ boolean CS_UpdateDemoSettings(void)
    return true;
 }
 
-boolean CS_AddNewMapToDemo(void)
+bool CS_AddNewMapToDemo(void)
 {
    unsigned int i, resource_index;
    cs_resource_t *res;
@@ -1270,7 +1284,6 @@ boolean CS_AddNewMapToDemo(void)
    {
       if(!close_current_demo_data_file())
          return false;
-
       cs_current_demo_map++;
    }
 
@@ -1305,7 +1318,7 @@ boolean CS_AddNewMapToDemo(void)
       map_info, "subversion", json_object_new_int(subversion)
    );
    json_object_object_add(
-      map_info, "cs_protocol_version", json_object_new_int(CS_PROTOCOL_VERSION)
+      map_info, "cs_protocol_version", json_object_new_int(cs_protocol_version)
    );
    if(CS_CLIENT)
    {
@@ -1370,13 +1383,11 @@ boolean CS_AddNewMapToDemo(void)
 
    demo_header.version = version;
    demo_header.subversion = subversion;
-   demo_header.cs_protocol_version = CS_PROTOCOL_VERSION;
-
+   demo_header.cs_protocol_version = cs_protocol_version;
    if(CS_CLIENT)
       demo_header.demo_type = CLIENTSIDE_DEMO;
    else
       demo_header.demo_type = SERVERSIDE_DEMO;
-
    memcpy(&demo_header.settings, cs_settings, sizeof(clientserver_settings_t));
    demo_header.local_options.player_bobbing = player_bobbing;
    demo_header.local_options.doom_weapon_toggles = doom_weapon_toggles;
@@ -1406,7 +1417,6 @@ boolean CS_AddNewMapToDemo(void)
       resource_index = map->resource_indices[i];
       res = &cs_resources[resource_index];
       resource_name_size = strlen(res->name) + 1;
-
       if(!write_to_demo(&resource_name_size, sizeof(size_t), 1))
          return false;
       if(!write_to_demo(res->name, sizeof(char), resource_name_size))
@@ -1425,10 +1435,10 @@ boolean CS_AddNewMapToDemo(void)
    return true;
 }
 
-boolean CS_PlayDemo(char *url)
+bool CS_PlayDemo(char *url)
 {
    char *test_folder = NULL;
-   char *cwd = M_GetCurrentFolder();
+   const char *cwd = M_GetCurrentFolder();
 
    cs_demo_playback = true;
 
@@ -1441,8 +1451,12 @@ boolean CS_PlayDemo(char *url)
    if(!check_demo_folder())
       return false;
 
-   cs_settings = malloc(sizeof(clientserver_settings_t));
-   cs_original_settings = malloc(sizeof(clientserver_settings_t));
+   cs_settings = (clientserver_settings_t *)(malloc(
+      sizeof(clientserver_settings_t)
+   ));
+   cs_original_settings = (clientserver_settings_t *)(malloc(
+      sizeof(clientserver_settings_t)
+   ));
 
    if(strncmp(url, "file://", 7) == 0)
    {
@@ -1460,9 +1474,9 @@ boolean CS_PlayDemo(char *url)
       }
       else
       {
-         cs_demo_archive_path = realloc(
+         cs_demo_archive_path = (char *)(realloc(
             cs_demo_archive_path, strlen(cwd) + strlen(url + 7) + 2
-         );
+         ));
          sprintf(cs_demo_archive_path, "%s/%s", cwd, url + 7);
       }
    }
@@ -1510,19 +1524,17 @@ boolean CS_PlayDemo(char *url)
 
    if(cs_maps)
       CS_ClearMaps();
-
+   
    cs_map_count = 0;
-   test_folder = calloc(strlen(cs_demo_path) + 6, sizeof(char));
+   test_folder = (char *)(calloc(strlen(cs_demo_path) + 6, sizeof(char)));
    sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
-
    while(M_IsFolder(test_folder))
    {
       cs_map_count++;
       sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
    }
-
    free(test_folder);
-   cs_maps = calloc(cs_map_count, sizeof(cs_map_t));
+   cs_maps = (cs_map_t *)(calloc(cs_map_count, sizeof(cs_map_t)));
 
    if(strcmp(cs_demo_folder_path, cwd))
    {
@@ -1541,7 +1553,7 @@ boolean CS_PlayDemo(char *url)
    return true;
 }
 
-boolean CS_LoadDemoMap(unsigned int map_number)
+bool CS_LoadDemoMap(unsigned int map_number)
 {
    if(map_number > cs_map_count)
    {
@@ -1563,9 +1575,9 @@ boolean CS_LoadDemoMap(unsigned int map_number)
    return true;
 }
 
-boolean CS_LoadPreviousDemoMap(void)
+bool CS_LoadPreviousDemoMap(void)
 {
-   boolean res = CS_LoadDemoMap(cs_current_demo_map - 1);
+   bool res = CS_LoadDemoMap(cs_current_demo_map - 1);
 
    if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
       set_demo_error(DEMO_ERROR_NO_PREVIOUS_MAP);
@@ -1573,9 +1585,9 @@ boolean CS_LoadPreviousDemoMap(void)
    return res;
 }
 
-boolean CS_LoadNextDemoMap(void)
+bool CS_LoadNextDemoMap(void)
 {
-   boolean res = CS_LoadDemoMap(cs_current_demo_map + 1);
+   bool res = CS_LoadDemoMap(cs_current_demo_map + 1);
 
    if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
       set_demo_error(DEMO_ERROR_NO_NEXT_MAP);
@@ -1583,7 +1595,7 @@ boolean CS_LoadNextDemoMap(void)
    return res;
 }
 
-boolean CS_WriteNetworkMessageToDemo(void *network_message,
+bool CS_WriteNetworkMessageToDemo(void *network_message,
                                      size_t message_size,
                                      int playernum)
 {
@@ -1592,34 +1604,40 @@ boolean CS_WriteNetworkMessageToDemo(void *network_message,
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
       return false;
+
    if(CS_CLIENT)
       player_number = 0;
+
    if(!write_to_demo(&player_number, sizeof(int32_t), 1))
       return false;
+
    if(!write_to_demo(&message_size, sizeof(size_t), 1))
       return false;
+
    if(!write_to_demo(network_message, sizeof(char), message_size))
       return false;
 
    return true;
 }
 
-boolean CS_WritePlayerCommandToDemo(cs_cmd_t *player_command)
+bool CS_WritePlayerCommandToDemo(cs_cmd_t *player_command)
 {
    demo_marker_t demo_marker = DEMO_PACKET_PLAYER_COMMAND;
    size_t command_size = sizeof(cs_cmd_t);
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
       return false;
+
    if(!write_to_demo(&command_size, sizeof(size_t), 1))
       return false;
+
    if(!write_to_demo(player_command, sizeof(cs_cmd_t), 1))
       return false;
 
    return true;
 }
 
-boolean CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
+bool CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
                                      const char *options, int cmdsrc)
 {
    demo_marker_t demo_marker = DEMO_PACKET_CONSOLE_COMMAND;
@@ -1628,23 +1646,29 @@ boolean CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
 
    if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
       return false;
+
    if(!write_to_demo(&cmdtype, sizeof(int32_t), 1))
       return false;
+
    if(!write_to_demo(&cmdsrc, sizeof(int32_t), 1))
       return false;
+
    if(!write_to_demo(&command_size, sizeof(size_t), 1))
       return false;
+
    if(!write_to_demo((void *)command->name, sizeof(char), command_size))
       return false;
+
    if(!write_to_demo(&options_size, sizeof(size_t), 1))
       return false;
+
    if(!write_to_demo((void *)options, sizeof(char), options_size))
       return false;
 
    return true;
 }
 
-boolean CS_ReadDemoPacket(void)
+bool CS_ReadDemoPacket(void)
 {
    demo_marker_t type;
 
@@ -1666,17 +1690,18 @@ boolean CS_ReadDemoPacket(void)
    }
 }
 
-boolean CS_DemoFinished(void)
+bool CS_DemoFinished(void)
 {
    if(!current_demo_data_file)
       return true;
+
    if(feof(current_demo_data_file) != 0)
       return true;
 
    return false;
 }
 
-boolean CS_StopDemo(void)
+bool CS_StopDemo(void)
 {
    // [CG] Check if demo is already stopped.
    if(current_demo_data_file == NULL)
@@ -1701,7 +1726,9 @@ boolean CS_StopDemo(void)
       }
    }
    else
+   {
       return true;
+   }
 
    if(cs_demo_path)
    {

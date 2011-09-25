@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -24,13 +24,19 @@
 //
 //-----------------------------------------------------------------------------
 
+// haleyjd 04/22/11: LOST TO THE SANDS OF TIME!
+#if 0
+
 #include "z_zone.h"
 #include "i_system.h"
-#include "r_draw.h"
+
+
 #include "doomstat.h"
-#include "w_wad.h"
+#include "r_draw.h"
 #include "r_main.h"
+#include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 #define MAXWIDTH  MAX_SCREENWIDTH          /* kilough 2/8/98 */
 #define MAXHEIGHT MAX_SCREENHEIGHT
@@ -961,8 +967,19 @@ columndrawer_t r_lowdetail_drawer =
    R_LowDrawAddColumn,
    R_LowDrawAddTRColumn,
 
-   NULL
+   NULL,
+
+   {
+      // Normal              Translated
+      { R_LowDrawColumn,     R_LowDrawTRColumn     }, // NORMAL
+      { R_LowDrawFuzzColumn, R_LowDrawFuzzColumn   }, // SHADOW
+      { R_LowDrawFlexColumn, R_LowDrawFlexTRColumn }, // ALPHA
+      { R_LowDrawAddColumn,  R_LowDrawAddTRColumn  }, // ADD
+      { R_LowDrawTLColumn,   R_LowDrawTLTRColumn   }, // TRANMAP
+   },
 };
+
+#endif
 
 // EOF
 

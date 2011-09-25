@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -34,32 +34,29 @@
 #ifndef R_PATCH_H__
 #define R_PATCH_H__
 
-#include <stdint.h>
+// Required for: byte, stdint types
 #include "doomtype.h"
-
-typedef struct patch_s patch_t;
-typedef struct post_s post_t;
-
-// column_t is a list of 0 or more post_t, (byte)-1 terminated
-typedef post_t column_t;
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
 // posts are runs of non masked source pixels
-struct post_s
+struct post_t
 {
-  byte topdelta; // -1 is the last post in a column
-  byte length;   // length data bytes follows
+   byte topdelta; // -1 is the last post in a column
+   byte length;   // length data bytes follows
 };
 
-struct patch_s
+// column_t is a list of 0 or more post_t, (byte)-1 terminated
+typedef post_t column_t;
+
+struct patch_t
 { 
-  int16_t width, height;  // bounding box size 
-  int16_t leftoffset;     // pixels to the left of origin 
-  int16_t topoffset;      // pixels below the origin 
-  int32_t columnofs[8];   // only [width] used
+   int16_t width, height;  // bounding box size 
+   int16_t leftoffset;     // pixels to the left of origin 
+   int16_t topoffset;      // pixels below the origin 
+   int32_t columnofs[8];   // only [width] used
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

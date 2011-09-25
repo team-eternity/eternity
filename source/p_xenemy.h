@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2005 James Haley
@@ -53,7 +53,7 @@ public:
    fixed_t damageRadius; // radius of damage effects (if any)
 };
 
-boolean P_StartQuake(int *args);
+bool P_StartQuake(int *args);
 
 #endif
 

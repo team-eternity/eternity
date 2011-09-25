@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -30,6 +30,14 @@
 #ifndef A_COMMON_H__
 #define A_COMMON_H__
 
+// Required for pr_class_t:
+#include "m_random.h"
+
+class Mobj;
+
+void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum);
+void P_MakeActiveSound(Mobj *actor);
+
 void A_Chase(Mobj *actor);
 void A_Die(Mobj *actor);
 void A_Explode(Mobj *thingy);
@@ -37,9 +45,6 @@ void A_FaceTarget(Mobj *actor);
 void A_Fall(Mobj *actor);
 void A_Look(Mobj *actor);
 void A_Pain(Mobj *actor);
-
-// [CG] Was once static.
-void P_MakeActiveSound(mobj_t *actor);
 
 #endif
 

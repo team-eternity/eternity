@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*-
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2003 James Haley
@@ -33,34 +33,31 @@
 //
 //----------------------------------------------------------------------------
 
-#include <errno.h>
-
 #include "z_zone.h"
-#include "m_qstr.h"
-#include "doomdef.h"
-#include "d_io.h"
-#include "p_info.h"
-#include "p_mobj.h"
-#include "p_spec.h"
-#include "w_wad.h"
 #include "i_system.h"
-#include "d_dehtbl.h" // for dehflags parsing
-#include "r_data.h"
-#include "r_main.h"
-#include "r_portal.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
+#include "e_exdata.h"
 #include "e_lib.h"
 #include "e_mod.h"
-#include "e_exdata.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 
-// [CG] Added.
-#include "cs_main.h"
-#include "sv_main.h"
+#include "d_dehtbl.h" // for dehflags parsing
+#include "d_io.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "m_qstr.h"
+#include "p_info.h"
+#include "p_mobj.h"
+#include "p_portal.h"
+#include "p_spec.h"
+#include "r_data.h"
+#include "r_main.h"
+#include "r_portal.h"
+#include "w_wad.h"
 
 // statics
 
@@ -199,6 +196,7 @@ static dehflags_t extlineflags[] =
    { "REPEAT",   EX_ML_REPEAT   },
    { "1SONLY",   EX_ML_1SONLY   },
    { "ADDITIVE", EX_ML_ADDITIVE },
+   { "BLOCKALL", EX_ML_BLOCKALL },
    { NULL,       0              }
 };
 
@@ -734,6 +732,12 @@ static struct exlinespec
 
    // ExtraData sector control line
    { 401, "ExtraDataSector" },
+
+   // More misc Hexen specials
+   { 402, "Thing_Projectile" },
+   { 403, "Thing_ProjectileGravity" },
+   { 404, "Thing_Activate" },
+   { 405, "Thing_Deactivate" },
 };
 
 #define NUMLINESPECS (sizeof(exlinespecs) / sizeof(struct exlinespec))
@@ -994,7 +998,7 @@ static void E_InitLineSpecHash(void)
 //
 int16_t E_LineSpecForName(const char *name)
 {
-   static boolean hash_init = false;
+   static bool hash_init = false;
    unsigned int key = D_HashTableKey(name) % NUMLSPECCHAINS;
    unsigned int i;
 
@@ -1043,7 +1047,7 @@ static int16_t E_GenTypeForName(const char *name)
 //
 // A lexer function for generalized specials.
 //
-static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token)
+static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
 {
    char c;
    int state = 0;
@@ -1052,7 +1056,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    if(text[*index] == '\0')
       return NULL;
 
-   QStrClear(token);
+   token->clear();
 
    while((c = text[*index]) != '\0')
    {
@@ -1074,22 +1078,22 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
             continue;
          case '(':     // end of current token
          case ',':
-            return QStrConstPtr(token);
+            return token->constPtr();
          default:      // everything else == part of value
-            QStrPutc(token, c);
+            *token += c;
             continue;
          }
       case 1: // in quoted area (double quotes)
          if(c == '"') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       case 2: // in quoted area (single quotes)
          if(c == '\'') // end of quoted area
             state = 0;
          else
-            QStrPutc(token, c); // everything inside is literal
+            *token += c; // everything inside is literal
          continue;
       default:
          I_Error("E_GenTokenizer: internal error - undefined lexer state\n");
@@ -1097,7 +1101,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
    }
 
    // return final token, next call will return NULL
-   return QStrConstPtr(token);
+   return token->constPtr();
 }
 
 //
@@ -1105,7 +1109,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring_t *token
 // 
 // Parses a yes/no generalized type argument.
 //
-static boolean E_BooleanArg(const char *str)
+static bool E_BooleanArg(const char *str)
 {
    return !strcasecmp(str, "yes");
 }
@@ -1387,13 +1391,13 @@ static int16_t E_GenTrigger(const char *str)
 //
 static int16_t E_ProcessGenSpec(const char *value)
 {
-   qstring_t buffer;
+   qstring buffer;
    const char *curtoken = NULL;
    int t, forc = 0, tok_index = 0;
    int16_t trigger;
 
    // first things first, we have to initialize the qstring
-   QStrInitCreate(&buffer);
+   buffer.initCreate();
 
    // get special name (starts at beginning, ends at '[')
    // and convert to base trigger type
@@ -1482,9 +1486,6 @@ static int16_t E_ProcessGenSpec(const char *value)
    // for all: get trigger type
    NEXTTOKEN();
    trigger += (E_GenTrigger(curtoken) << TriggerTypeShift);
-
-   // free the qstring
-   QStrFree(&buffer);
 
    return trigger;
 }
@@ -1603,7 +1604,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       cfg_t *linesec;
       const char *tempstr;
       int tempint;
-      boolean tagset = false;
+      bool tagset = false;
 
       linesec = cfg_getnsec(cfg, SEC_LINEDEF, i);
 
@@ -1931,7 +1932,6 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 {
    unsigned int edThingIdx;
    mapthing_t *edthing;
-   mobj_t *actor;
 
    // The record number is stored in the control thing's options field.
    // Check to see if the record exists, and that ExtraData is loaded.
@@ -1939,17 +1939,8 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
       (edThingIdx = E_EDThingForRecordNum((uint16_t)(mt->options))) == numEDMapThings)
    {
       // spawn an Unknown thing
-      actor = P_SpawnMobj(
-         mt->x << FRACBITS,
-         mt->y << FRACBITS,
-         ONFLOORZ, 
-         UnknownThingType
-      );
-
-      if(CS_SERVER)
-         SV_BroadcastActorSpawned(actor);
-
-      return actor;
+      return P_SpawnMobj(mt->x << FRACBITS, mt->y << FRACBITS, ONFLOORZ, 
+                         UnknownThingType);
    }
 
    // get a pointer to the proper ExtraData mapthing record
@@ -1963,12 +1954,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
    // spawn the thing normally; 
    // return the spawned object back through P_SpawnMapThing
 
-   actor = P_SpawnMapThing(edthing);
-
-   if(CS_SERVER)
-      SV_BroadcastActorSpawned(actor);
-
-   return actor;
+   return P_SpawnMapThing(edthing);
 }
 
 //
@@ -1978,7 +1964,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 // have been initialized normally. Normal fields will be altered and
 // extended fields will be set in the linedef.
 //
-void E_LoadLineDefExt(line_t *line, boolean applySpecial)
+void E_LoadLineDefExt(line_t *line, bool applySpecial)
 {
    unsigned int edLineIdx;
    maplinedefext_t *edline;
@@ -2092,7 +2078,12 @@ void E_LoadSectorExt(line_t *line)
    // per-sector portal properties
    sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
    sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
-
+   
+   if(sector->f_portal)
+      P_CheckFPortalState(sector);
+   if(sector->c_portal)
+      P_CheckCPortalState(sector);
+   
    // TODO: more?
 
    // clear the line tag
@@ -2104,7 +2095,7 @@ void E_LoadSectorExt(line_t *line)
 //
 // Tests if a given line special is parameterized.
 //
-boolean E_IsParamSpecial(int16_t special)
+bool E_IsParamSpecial(int16_t special)
 {
    // no param line specs in old demos
    if(demo_version < 333)
@@ -2183,6 +2174,10 @@ boolean E_IsParamSpecial(int16_t special)
    case 398: // Thing_Spawn
    case 399: // Thing_SpawnNoFog
    case 400: // Teleport_EndGame
+   case 402: // Thing_Projectile
+   case 403: // Thing_ProjectileGravity
+   case 404: // Thing_Activate
+   case 405: // Thing_Deactivate
       return true;
    default:
       return false;

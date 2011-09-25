@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2010 James Haley
@@ -27,25 +27,25 @@
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__
 
-struct waddir_t;
+class WadDirectory;
 
 struct wadlevel_t
 {
-   char header[9]; // header lump name
-   int  lumpnum;   // lump number, relative to directory
-   waddir_t *dir;  // parent directory
+   char header[9];    // header lump name
+   int  lumpnum;      // lump number, relative to directory
+   WadDirectory *dir; // parent directory
 };
 
 extern char *w_masterlevelsdirname;
-extern boolean inmasterlevels;          // true if we are playing master levels
+extern bool inmasterlevels;          // true if we are playing master levels
 
-waddir_t   *W_AddManagedWad(const char *filename);
-waddir_t   *W_GetManagedWad(const char *filename);
-const char *W_GetManagedDirFN(waddir_t *waddir);
-wadlevel_t *W_FindAllMapsInLevelWad(waddir_t *dir);
-wadlevel_t *W_FindLevelInDir(waddir_t *waddir, const char *name);
-void        W_DoMasterLevels(boolean allowexit);
-void        W_EnumerateMasterLevels(boolean forceRefresh);
+WadDirectory *W_AddManagedWad(const char *filename);
+WadDirectory *W_GetManagedWad(const char *filename);
+const char   *W_GetManagedDirFN(WadDirectory *waddir);
+wadlevel_t   *W_FindAllMapsInLevelWad(WadDirectory *dir);
+wadlevel_t   *W_FindLevelInDir(WadDirectory *waddir, const char *name);
+void          W_DoMasterLevels(bool allowexit);
+void          W_EnumerateMasterLevels(bool forceRefresh);
 
 #endif
 

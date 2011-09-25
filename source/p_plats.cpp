@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -26,24 +26,25 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "d_gi.h"
 #include "doomstat.h"
 #include "m_random.h"
-#include "p_saveg.h"
-#include "r_main.h"
 #include "p_info.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "s_sound.h"
+#include "r_main.h"
+#include "r_state.h"
 #include "s_sndseq.h"
+#include "s_sound.h"
 #include "sounds.h"
-#include "d_gi.h"
 
-// [CG] Added.
-#include "cs_netid.h"
-#include "cs_spec.h"
-#include "cs_main.h"
-#include "cl_main.h"
-#include "sv_main.h"
+#include "cs_netid.h" // [CG] 09/18/11
+#include "cs_spec.h"  // [CG] 09/18/11
+#include "cs_main.h"  // [CG] 09/18/11
+#include "cl_main.h"  // [CG] 09/18/11
+#include "sv_main.h"  // [CG] 09/18/11
 
 platlist_t *activeplats;       // killough 2/14/98: made global again
 
@@ -79,13 +80,13 @@ IMPLEMENT_THINKER_TYPE(PlatThinker)
 void PlatThinker::Think()
 {
    result_e      res;
-
+   
    // handle plat moving, up, down, waiting, or in stasis,
    switch(this->status)
    {
    case up: // plat moving up
       res = T_MovePlane(this->sector,this->speed,this->high,this->crush,0,1);
-
+                                        
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences
       
@@ -113,7 +114,7 @@ void PlatThinker::Think()
                this->oldstatus = this->status;//jff 3/14/98 after action wait  
                this->status = in_stasis;      //for reactivation of toggle
             }
-                                        
+
             // lift types and pure raise types are done at end of up stroke
             // only the perpetual type waits then goes back up
             switch(this->type)
@@ -127,9 +128,8 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               // [CG] Just set the platform as inactive if we're a client.
                if(CS_CLIENT)
-                  inactive = cl_current_world_index;
+                  this->inactive = cl_current_world_index;
                else
                   P_RemoveActivePlat(this);     // killough
             default:
@@ -178,9 +178,8 @@ void PlatThinker::Think()
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
-               // [CG] Just set the platform as inactive if we're a client.
                if(CS_CLIENT)
-                  inactive = cl_current_world_index;
+                  this->inactive = cl_current_world_index;
                else
                   P_RemoveActivePlat(this);
             default:
@@ -212,21 +211,6 @@ void PlatThinker::Think()
    }
 }
 
-void P_CopyPlatform(PlatThinker *dest, PlatThinker *src)
-{
-   dest->speed     = src->speed;
-   dest->low       = src->low;
-   dest->high      = src->high;
-   dest->wait      = src->wait;
-   dest->count     = src->count;
-   dest->status    = src->status;
-   dest->oldstatus = src->oldstatus;
-   dest->crush     = src->crush;
-   dest->tag       = src->tag;
-   dest->type      = src->type;
-   dest->net_id    = src->net_id;
-}
-
 //
 // PlatThinker::serialize
 //
@@ -247,71 +231,70 @@ void PlatThinker::serialize(SaveArchive &arc)
    }
 }
 
-boolean P_PlatformsEqual(PlatThinker *platform_one, PlatThinker *platform_two)
+
+//
+// EV_DoPlat
+//
+// Handle Plat linedef types
+//
+// Passed the linedef that activated the plat, the type of plat action,
+// and for some plat types, an amount to raise
+// Returns true if a thinker is started, or restarted from stasis
+//
+int EV_DoPlat(line_t *line, plattype_e type, int amount )
 {
-   if(platform_one->speed     == platform_two->speed     &&
-      platform_one->low       == platform_two->low       &&
-      platform_one->high      == platform_two->high      &&
-      platform_one->wait      == platform_two->wait      &&
-      platform_one->count     == platform_two->count     &&
-      platform_one->status    == platform_two->status    &&
-      platform_one->oldstatus == platform_two->oldstatus &&
-      platform_one->crush     == platform_two->crush     &&
-      platform_one->tag       == platform_two->tag       &&
-      platform_one->type      == platform_two->type)
+   PlatThinker   *plat;
+   int       secnum;
+   int       rtn;
+   sector_t *sec;
+   
+   secnum = -1;
+   rtn = 0;
+
+   // Activate all <type> plats that are in_stasis
+   switch(type)
    {
-      return true;
+   case perpetualRaise:
+      P_ActivateInStasis(line->tag);
+      break;
+      
+   case toggleUpDn:
+      P_ActivateInStasis(line->tag);
+      rtn=1;
+      if(CS_CLIENT)
+         return rtn;
+      break;
+      
+   default:
+      break;
    }
-   return false;
-}
-
-void P_PrintPlatform(PlatThinker *platform)
-{
-   unsigned int index;
-
-   if(CS_SERVER && playeringame[1])
-      index = server_clients[1].last_command_run_index;
-   else if(CS_CLIENT)
-      index = cl_current_world_index;
-   else if(CS_SERVER)
-      index = sv_world_index;
-
-   printf(
-      "Platform %2u (%3u): %5u %5u %5u %3d %3d %2d %2d %2d %2d %2d %1d | ",
-      platform->net_id,
-      index,
-      platform->speed >> FRACBITS,
-      platform->low >> FRACBITS,
-      platform->high >> FRACBITS,
-      platform->wait,
-      platform->count,
-      platform->status,
-      platform->oldstatus,
-      platform->crush,
-      platform->tag,
-      platform->type,
-      platform->inactive
-   );
-
-   if(platform->sector && ((platform->sector - sectors) < numsectors))
+      
+   // act on all sectors tagged the same as the activating linedef
+   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {
-      printf(
-         "Sector %2u: %5u %5u.\n",
-         platform->sector - sectors,
-         platform->sector->ceilingheight >> FRACBITS,
-         platform->sector->floorheight   >> FRACBITS
-      );
+      sec = &sectors[secnum];
+      
+      // don't start a second floor function if already moving
+      if(P_SectorActive(floor_special,sec)) //jff 2/23/98 multiple thinkers
+         continue;
+      
+      // Create a thinker
+      rtn = 1;
+      if(CS_CLIENT)
+         return rtn;
+
+      plat = P_SpawnPlatform(line, sec, amount, type);
    }
-   else
-      printf("Sector XX (%5u): XXXXX XXXXX.\n", index);
+   return rtn;
 }
 
 PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
-                        plattype_e type)
+                             plattype_e type)
 {
    PlatThinker *plat = new PlatThinker;
 
    plat->addThinker();
+   
    plat->type = type;
    plat->sector = sec;
    plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
@@ -321,8 +304,8 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
    //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
    //going down forever -- default low to plat height when triggered
    plat->low = sec->floorheight;
-
-   // set up plat according to type
+   
+   // set up plat according to type  
    switch(type)
    {
    case raiseToNearestAndChange:
@@ -335,67 +318,66 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
       P_ZeroSectorSpecial(sec);
       P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
       break;
-
+       
    case raiseAndChange:
-      plat->speed = PLATSPEED / 2;
+      plat->speed = PLATSPEED/2;
       sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-      plat->high = sec->floorheight + amount * FRACUNIT;
+      plat->high = sec->floorheight + amount*FRACUNIT;
       plat->wait = 0;
       plat->status = up;
       
       P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
       break;
-
+       
    case downWaitUpStay:
       plat->speed = PLATSPEED * 4;
       plat->low = P_FindLowestFloorSurrounding(sec);
-
+      
       if(plat->low > sec->floorheight)
          plat->low = sec->floorheight;
-
+      
       plat->high = sec->floorheight;
-      plat->wait = 35 * PLATWAIT;
+      plat->wait = 35*PLATWAIT;
       plat->status = down;
       P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
       break;
-
+       
    case blazeDWUS:
       plat->speed = PLATSPEED * 8;
       plat->low = P_FindLowestFloorSurrounding(sec);
-
+      
       if(plat->low > sec->floorheight)
          plat->low = sec->floorheight;
-
+      
       plat->high = sec->floorheight;
-      plat->wait = 35 * PLATWAIT;
+      plat->wait = 35*PLATWAIT;
       plat->status = down;
       P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
       break;
-
+       
    case perpetualRaise:
       plat->speed = PLATSPEED;
       plat->low = P_FindLowestFloorSurrounding(sec);
-
+      
       if(plat->low > sec->floorheight)
          plat->low = sec->floorheight;
-
+      
       plat->high = P_FindHighestFloorSurrounding(sec);
-
+      
       if(plat->high < sec->floorheight)
          plat->high = sec->floorheight;
-
-      plat->wait = 35 * PLATWAIT;
-      plat->status = P_Random(pr_plats) & 1;
-
+      
+      plat->wait = 35*PLATWAIT;
+      plat->status = (P_Random(pr_plats) & 1) ? down : up;
+      
       P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-
       break;
 
    case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
       plat->speed = PLATSPEED;   //not used
-      plat->wait  = 35 * PLATWAIT; //not used
+      plat->wait  = 35*PLATWAIT; //not used
       plat->crush = 10;          //jff 3/14/98 crush anything in the way
-
+      
       // set up toggling between ceiling, floor inclusive
       plat->low    = sec->ceilingheight;
       plat->high   = sec->floorheight;
@@ -403,7 +385,7 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
 
       P_PlatSequence(plat->sector, "EEPlatSilent");
       break;
-
+      
    default:
       break;
    }
@@ -412,66 +394,14 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
    {
       P_AddActivePlat(plat);  // add plat to list of active plats
       if(CS_SERVER)
-         SV_BroadcastMapSpecialSpawned(plat, NULL, line, ms_platform);
+      {
+         SV_BroadcastMapSpecialSpawned(
+            plat, NULL, line, plat->sector, ms_platform
+         );
+      }
    }
+
    return plat;
-}
-
-//
-// EV_DoPlat
-//
-// Handle Plat linedef types
-//
-// Passed the linedef that activated the plat, the type of plat action,
-// and for some plat types, an amount to raise
-// Returns true if a thinker is started, or restarted from stasis
-//
-int EV_DoPlat(line_t *line, plattype_e type, int amount)
-{
-   PlatThinker   *plat;
-   sector_t *sec;
-   int rtn = 0;
-   int secnum = -1;
-
-   // Activate all <type> plats that are in_stasis
-   switch(type)
-   {
-   case perpetualRaise:
-      P_ActivateInStasis(line->tag);
-      break;
-
-   case toggleUpDn:
-      P_ActivateInStasis(line->tag);
-      rtn = 1;
-      if(CS_CLIENT)
-         return rtn;
-      break;
-
-   default:
-      break;
-   }
-
-   // act on all sectors tagged the same as the activating linedef
-   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
-   {
-      sec = &sectors[secnum];
-
-      // don't start a second floor function if already moving
-      if(P_SectorActive(floor_special,sec)) //jff 2/23/98 multiple thinkers
-         continue;
-
-      // Create a thinker
-      rtn = 1;
-
-      // [CG] Clients don't spawn platforms themselves when lines are
-      //      activated, but we have to inform the caller whether or not a
-      //      thinker would have been created regardless.
-      if(CS_CLIENT)
-         return rtn;
-      plat = P_SpawnPlatform(line, sec, amount, type);
-   }
-
-   return rtn;
 }
 
 // The following were all rewritten by Lee Killough to use the new structure 
@@ -490,10 +420,12 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount)
 //
 void P_ActivateInStasis(int tag)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)   // search the active plats
+   std::map<uint32_t, PlatThinker*>::iterator it;
+
+   // search the active plats for one in stasis with right tag
+   for(it = NetPlatforms.begin(); it != NetPlatforms.end(); it++)
    {
-      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
+      PlatThinker *plat = it->second;
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -516,10 +448,12 @@ void P_ActivateInStasis(int tag)
 //
 int EV_StopPlat(line_t *line)
 {
-   platlist_t *pl;
-   for(pl = activeplats; pl; pl = pl->next)  // search the active plats
+   std::map<uint32_t, PlatThinker*>::iterator it;
+
+   // search the active plats for one with the tag not in stasis
+   for(it = NetPlatforms.begin(); it != NetPlatforms.end(); it++)
    {
-      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
+      PlatThinker *plat = it->second;
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -539,18 +473,7 @@ int EV_StopPlat(line_t *line)
 //
 void P_AddActivePlat(PlatThinker *plat)
 {
-   CS_ObtainPlatformNetID(plat);
-}
-
-void oldP_AddActivePlat(PlatThinker *plat)
-{
-   platlist_t *list = malloc(sizeof *list);
-   list->plat = plat;
-   plat->list = list;
-   if((list->next = activeplats))
-      list->next->prev = &list->next;
-   list->prev = &activeplats;
-   activeplats = list;
+   NetPlatforms.add(plat);
 }
 
 //
@@ -564,20 +487,10 @@ void oldP_AddActivePlat(PlatThinker *plat)
 void P_RemoveActivePlat(PlatThinker *plat)
 {
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   P_RemoveThinker(&plat->thinker);
+   plat->removeThinker();
    if(CS_SERVER)
       SV_BroadcastMapSpecialRemoved(plat->net_id, ms_platform);
-   CS_ReleasePlatformNetID(plat);
-}
-
-void oldP_RemoveActivePlat(PlatThinker *plat)
-{
-   platlist_t *list = plat->list;
-   plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   plat->removeThinker();
-   if((*list->prev = list->next))
-      list->next->prev = list->prev;
-   free(list);
+   NetPlatforms.remove(plat);
 }
 
 //
@@ -589,17 +502,7 @@ void oldP_RemoveActivePlat(PlatThinker *plat)
 //
 void P_RemoveAllActivePlats(void)
 {
-   CS_ResetPlatformNetIDs();
-}
-
-void oldP_RemoveAllActivePlats(void)
-{
-   while(activeplats)
-   {  
-      platlist_t *next = activeplats->next;
-      free(activeplats);
-      activeplats = next;
-   }
+   NetPlatforms.clear();
 }
 
 //----------------------------------------------------------------------------

@@ -33,6 +33,9 @@
 #include "p_spec.h"
 #include "s_sound.h"
 
+class Mobj;
+
+#include "cs_announcer.h"
 #include "cs_main.h"
 
 #define CONSOLE_INPUT_LENGTH 1024
@@ -40,7 +43,7 @@
 extern unsigned int sv_world_index;
 extern unsigned long sv_public_address;
 extern unsigned int sv_minimum_buffer_size;
-extern boolean sv_should_send_new_map;
+extern bool sv_should_send_new_map;
 extern server_client_t server_clients[MAXPLAYERS];
 extern const char *sv_spectator_password;
 extern const char *sv_player_password;
@@ -75,15 +78,15 @@ mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum);
 mapthing_t* SV_GetTeamSpawnPoint(int playernum);
 
 // [CG] Authorization functions.
-boolean SV_AuthorizeClient(int playernum, const char *password);
+bool SV_AuthorizeClient(int playernum, const char *password);
 void SV_SendAuthorizationResult(int playernum,
-                                boolean authorization_successful,
+                                bool authorization_successful,
                                 cs_auth_level_e authorization_level);
 
 // [CG] Game loop functions.
 void SV_SaveActorPositions(void);
 void SV_ProcessPlayerCommand(int playernum);
-boolean SV_RunPlayerCommands(int playernum);
+bool SV_RunPlayerCommands(int playernum);
 
 // [CG] Misc. functions.
 void SV_AddClient(int playernum);
@@ -113,7 +116,7 @@ void SV_BroadcastMessage(const char *fmt, ...);
 void SV_BroadcastHUDMessage(const char *fmt, ...);
 // void SV_BroadcastGameState(void);
 void SV_BroadcastMapStarted(void);
-void SV_BroadcastMapCompleted(boolean enter_intermission);
+void SV_BroadcastMapCompleted(bool enter_intermission);
 void SV_BroadcastSettings(void);
 void SV_BroadcastCurrentMap(void);
 void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum);
@@ -126,43 +129,42 @@ void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id);
 void SV_BroadcastPlayerWeaponState(int playernum, int position,
                                    statenum_t stnum);
 void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_e reason);
-void SV_BroadcastPuffSpawned(mobj_t *puff, mobj_t *shooter, int updown,
-                             boolean ptcl);
-void SV_BroadcastBloodSpawned(mobj_t *blood, mobj_t *shooter, int damage,
-                              mobj_t *target);
-void SV_BroadcastActorSpawned(mobj_t *actor);
-void SV_BroadcastActorPosition(mobj_t *actor, int tic);
-void SV_BroadcastActorTarget(mobj_t *actor, actor_target_e target_type);
-void SV_BroadcastActorState(mobj_t *actor, statenum_t state_number);
-void SV_BroadcastActorDamaged(mobj_t *target, mobj_t *inflictor,
-                              mobj_t *source, int health_damage,
+void SV_BroadcastPuffSpawned(Mobj *puff, Mobj *shooter, int updown,
+                             bool ptcl);
+void SV_BroadcastBloodSpawned(Mobj *blood, Mobj *shooter, int damage,
+                              Mobj *target);
+void SV_BroadcastActorSpawned(Mobj *actor);
+void SV_BroadcastActorPosition(Mobj *actor, int tic);
+void SV_BroadcastActorTarget(Mobj *actor, actor_target_e target_type);
+void SV_BroadcastActorState(Mobj *actor, statenum_t state_number);
+void SV_BroadcastActorDamaged(Mobj *target, Mobj *inflictor,
+                              Mobj *source, int health_damage,
                               int armor_damage, int mod,
-                              boolean damage_was_fatal, boolean just_hit);
-void SV_BroadcastActorKilled(mobj_t *target, mobj_t *inflictor, mobj_t *source,
+                              bool damage_was_fatal, bool just_hit);
+void SV_BroadcastActorKilled(Mobj *target, Mobj *inflictor, Mobj *source,
                              int damage, int mod);
-void SV_BroadcastActorRemoved(mobj_t *mo);
-void SV_BroadcastLineUsed(mobj_t *actor, line_t *line, int side);
-void SV_BroadcastLineCrossed(mobj_t *actor, line_t *line, int side);
-void SV_BroadcastLineShot(mobj_t *actor, line_t *line, int side);
-void SV_BroadcastMonsterActive(mobj_t *monster);
-void SV_BroadcastMonsterAwakened(mobj_t *monster);
-void SV_BroadcastMissileSpawned(mobj_t *source, mobj_t *missile);
-void SV_BroadcastMissileExploded(mobj_t *missile);
-void SV_BroadcastCubeSpawned(mobj_t *cube);
+void SV_BroadcastActorRemoved(Mobj *mo);
+void SV_BroadcastLineUsed(Mobj *actor, line_t *line, int side);
+void SV_BroadcastLineCrossed(Mobj *actor, line_t *line, int side);
+void SV_BroadcastLineShot(Mobj *actor, line_t *line, int side);
+void SV_BroadcastMonsterActive(Mobj *monster);
+void SV_BroadcastMonsterAwakened(Mobj *monster);
+void SV_BroadcastMissileSpawned(Mobj *source, Mobj *missile);
+void SV_BroadcastMissileExploded(Mobj *missile);
+void SV_BroadcastCubeSpawned(Mobj *cube);
 void SV_BroadcastSectorPosition(size_t sector_number);
-void SV_BroadcastMapSpecialSpawned(void *special, void *special_data,
-                                   line_t *line, map_special_t special_type);
-void SV_BroadcastMapSpecialStatus(void *special, map_special_t special_type);
+void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
+                                   sector_t *sector,
+                                   map_special_e special_type);
+void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type);
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
-                                   map_special_t special_type);
-void SV_BroadcastSoundPlayed(mobj_t *source, const char *name, int volume,
-                             soundattn_e attenuation, boolean loop,
-                             schannel_e channel);
+                                   map_special_e special_type);
+void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source);
 void SV_BroadcastTICFinished(void);
 
 // [CG] Handler functions.
 int SV_HandleClientConnection(ENetPeer *peer);
-boolean SV_HandleJoinRequest(int playernum);
+bool SV_HandleJoinRequest(int playernum);
 void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum);
 void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
                                       int playernum);

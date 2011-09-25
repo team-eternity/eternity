@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:ts=3 sw=3:
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 Simon Howard
@@ -26,51 +26,54 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+
+#include "a_small.h"
+#include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
-#include "m_random.h"
-#include "r_draw.h"
-#include "r_main.h"
-#include "p_maputl.h"
-#include "p_map.h"
-#include "p_map3d.h"
-#include "p_portal.h"
-#include "p_saveg.h"
-#include "p_tick.h"
-#include "sounds.h"
-#include "st_stuff.h"
-#include "hu_stuff.h"
-#include "s_sound.h"
-#include "info.h"
-#include "g_game.h"
-#include "p_chase.h"
-#include "p_inter.h"
-#include "p_spec.h" // haleyjd 04/05/99: TerrainTypes
-#include "p_partcl.h"
-#include "in_lude.h"
-#include "d_gi.h"
-#include "p_user.h"
-#include "g_dmflag.h"
+#include "e_exdata.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
-#include "e_exdata.h"
-#include "a_small.h"
-#include "d_dehtbl.h"
+#include "g_dmflag.h"
+#include "g_game.h"
+#include "hu_stuff.h"
+#include "info.h"
+#include "in_lude.h"
+#include "m_random.h"
+#include "p_chase.h"
 #include "p_info.h"
-#include "c_io.h"
+#include "p_inter.h"
+#include "p_map.h"
+#include "p_maputl.h"
+#include "p_map3d.h"
+#include "p_partcl.h"
+#include "p_portal.h"
+#include "p_saveg.h"
+#include "p_skin.h"
+#include "p_tick.h"
+#include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
+#include "p_user.h"
+#include "r_draw.h"
+#include "r_main.h"
+#include "r_pcheck.h"
+#include "r_portal.h"
+#include "r_state.h"
+#include "sounds.h"
+#include "s_sound.h"
+#include "st_stuff.h"
+#include "v_misc.h"
+#include "v_video.h"
 
-// [CG] Added
-#include "cs_main.h"
-#include "cs_netid.h"
-#include "cs_position.h"
-#include "cs_team.h"
-#include "cs_ctf.h"
-#include "cl_main.h"
-#include "cl_pred.h"
-#include "sv_main.h"
+#include "cs_main.h" // [CG] 09/23/11
+#include "cs_netid.h" // [CG] 09/23/11
+#include "cl_net.h" // [CG] 09/23/11
+#include "cl_main.h" // [CG] 09/23/11
+#include "cl_pred.h" // [CG] 09/23/11
+#include "sv_main.h" // [CG] 09/23/11
 
 void P_FallingDamage(player_t *);
 
@@ -139,13 +142,11 @@ void PointThinker::serialize(SaveArchive &arc)
 //
 
 // haleyjd 03/27/10: new solution for state cycle detection
-/* [CG] Moved definition of seenstate_t to p_mobj.h.
 struct seenstate_t
 {
    DLListItem<seenstate_t> link;
    int statenum;
 };
-*/
 
 // haleyjd 03/27/10: freelist of seenstate objects
 static DLListItem<seenstate_t> *seenstate_freelist;
@@ -155,7 +156,7 @@ static DLListItem<seenstate_t> *seenstate_freelist;
 //
 // haleyjd 03/27/10: creates an initial pool of seenstate objects.
 //
-static void P_InitSeenStates(void)
+void P_InitSeenStates(void)
 {
    seenstate_t *newss;
    int i;
@@ -196,7 +197,7 @@ void P_FreeSeenStates(DLListItem<seenstate_t> *list)
 // Gets a seenstate from the free list if one is available, or creates a
 // new one.
 //
-static seenstate_t *P_GetSeenState(void)
+seenstate_t *P_GetSeenState(void)
 {
    seenstate_t *ret;
 
@@ -220,7 +221,7 @@ static seenstate_t *P_GetSeenState(void)
 //
 // Marks a new state as having been seen.
 //
-static void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
+void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
 {
    seenstate_t *newss = P_GetSeenState();
 
@@ -234,7 +235,7 @@ static void P_AddSeenState(int statenum, DLListItem<seenstate_t> **list)
 //
 // Checks if the given state has been seen
 //
-static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
+bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 {
    DLListItem<seenstate_t> *link = list;
 
@@ -254,17 +255,17 @@ static boolean P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 //
 // Returns true if the mobj is still present.
 //
-boolean P_SetMobjState(Mobj* mobj, statenum_t state)
+bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
    state_t *st;
-   boolean client_should_handle = false;
+   bool client_should_handle = false;
    int puff_type = E_SafeThingType(MT_PUFF);
    int blood_type = E_SafeThingType(MT_BLOOD);
 
    // haleyjd 03/27/10: new state cycle detection
-   static boolean firsttime = true; // for initialization
+   static bool firsttime = true; // for initialization
    DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
-   boolean ret = true;                           // return value
+   bool ret = true;                           // return value
 
    if(firsttime)
    {
@@ -278,11 +279,12 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
    {
       client_should_handle = true;
    }
-   else if(CS_CLIENT)
+   else if(CS_CLIENT && !cl_setting_actor_state)
    {
       // [CG] Clients only set state for the local player (because they're
-      //      predicting), blood, puffs and telefog.  Otherwise, they'll get a
-      //      message from the server.
+      //      predicting), blood and puffs.  Otherwise they'll get a message
+      //      from the server, in which case cl_setting_actor_state will be
+      //      true.
       return true;
    }
 
@@ -291,16 +293,21 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
       if(state == NullStateNum)
       {
          mobj->state = NULL;
+
          if(CS_SERVER && !client_should_handle)
          {
             SV_BroadcastActorState(mobj, NullStateNum);
             SV_BroadcastActorRemoved(mobj);
-            P_RemoveMobj(mobj);
+            mobj->removeThinker();
          }
          else if(CS_CLIENT)
-            CL_RemoveMobj(mobj);
+         {
+            if(client_should_handle)
+               CL_RemoveMobj(mobj);
+         }
          else
             mobj->removeThinker();
+
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -334,8 +341,9 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
       P_AddSeenState(state, &seenstates);
 
       state = st->nextstate;
-   } while(!mobj->tics && !P_CheckSeenState(state, seenstates));
-
+   }
+   while(!mobj->tics && !P_CheckSeenState(state, seenstates));
+   
    if(ret && !mobj->tics)  // killough 4/9/98: detect state cycles
       doom_printf(FC_ERROR "Warning: State Cycle Detected");
 
@@ -357,7 +365,7 @@ boolean P_SetMobjState(Mobj* mobj, statenum_t state)
 // This function was originally added by Raven in Heretic for the Maulotaur,
 // but it has proven itself useful elsewhere.
 //
-boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
+bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 {
    state_t *st;
 
@@ -379,7 +387,7 @@ boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 
    // haleyjd 09/29/09: don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
-
+   
    if(mobj->skin && st->sprite == mobj->info->defsprite)
       mobj->sprite = mobj->skin->sprite;
    else
@@ -399,7 +407,6 @@ boolean P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 //
 void P_ExplodeMissile(Mobj *mo)
 {
-   // [CG] Only servers explode missiles.
    if(!serverside)
       return;
 
@@ -512,42 +519,23 @@ void P_XYMovement(Mobj* mo)
       // This explains the tendency for Mancubus fireballs
       // to pass through walls.
 
-      // [CG] This allows 2-way wallrun, which did not exist in Vanilla Doom.
-      //      So c/s mode only allows this if the appropriate DMFLAG is set.
-      //      In fact, I can't believe this doesn't cause demo desyncs...?
-      if(!clientserver || (dmflags2 & dmf_allow_two_way_wallrun))
+      // [CG] Lee's above comment doesn't mention it, but this allows 2-way
+      //      wallrunning.  This must be specifically enabled in c/s however.
+      if(xmove > MAXMOVE/2 || ymove > MAXMOVE/2 ||  // killough 8/9/98:
+         ((xmove < -MAXMOVE/2 || ymove < -MAXMOVE/2) && (
+            (demo_version >= 203) &&
+            (!clientserver || (dmflags2 & dmf_allow_two_way_wallrun)))))
       {
-         if(xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2 ||  // killough 8/9/98:
-            ((xmove < -MAXMOVE / 2 || ymove < -MAXMOVE / 2)
-            && demo_version >= 203))
-         {
-            ptryx = mo->x + xmove / 2;
-            ptryy = mo->y + ymove / 2;
-            xmove >>= 1;
-            ymove >>= 1;
-         }
-         else
-         {
-            ptryx = mo->x + xmove;
-            ptryy = mo->y + ymove;
-            xmove = ymove = 0;
-         }
+         ptryx = mo->x + xmove/2;
+         ptryy = mo->y + ymove/2;
+         xmove >>= 1;
+         ymove >>= 1;
       }
       else
       {
-         if(xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2)
-         {
-            ptryx = mo->x + xmove / 2;
-            ptryy = mo->y + ymove / 2;
-            xmove >>= 1;
-            ymove >>= 1;
-         }
-         else
-         {
-            ptryx = mo->x + xmove;
-            ptryy = mo->y + ymove;
-            xmove = ymove = 0;
-         }
+         ptryx = mo->x + xmove;
+         ptryy = mo->y + ymove;
+         xmove = ymove = 0;
       }
 
       // killough 3/15/98: Allow objects to drop off
@@ -566,7 +554,7 @@ void P_XYMovement(Mobj* mo)
               variable_friction && mo->z <= mo->floorz &&
               P_GetFriction(mo, NULL) > ORIG_FRICTION)))
          {
-            if(clip.blockline)
+            if (clip.blockline)
             {
                fixed_t r = ((clip.blockline->dx >> FRACBITS) * mo->momx +
                             (clip.blockline->dy >> FRACBITS) * mo->momy) /
@@ -625,14 +613,24 @@ void P_XYMovement(Mobj* mo)
                mo->momx = FixedMul(mo->info->speed>>1, finecosine[refangle]);
                mo->momy = FixedMul(mo->info->speed>>1, finesine[refangle]);
 
-               if(mo->flags2 & MF2_SEEKERMISSILE)
+               if(serverside && (mo->flags2 & MF2_SEEKERMISSILE))
                {
                   // send it back after the SOB who fired it
                   if(mo->tracer)
+                  {
                      P_SetTarget<Mobj>(&mo->tracer, mo->target);
+                     if(CS_SERVER)
+                        SV_BroadcastActorTarget(mo, CS_AT_TRACER);
+                  }
                }
 
-               P_SetTarget<Mobj>(&mo->target, clip.BlockingMobj);
+               if(serverside)
+               {
+                  P_SetTarget<Mobj>(&mo->target, clip.BlockingMobj);
+                  if(CS_SERVER)
+                     SV_BroadcastActorTarget(mo, CS_AT_TARGET);
+               }
+
                return;
             }
             // explode a missile
@@ -640,7 +638,7 @@ void P_XYMovement(Mobj* mo)
             if(clip.ceilingline && clip.ceilingline->backsector &&
                clip.ceilingline->backsector->intflags & SIF_SKY)
             {
-               if(demo_compatibility ||  // killough
+               if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
                {
                   // Hack to prevent missiles exploding
@@ -651,7 +649,6 @@ void P_XYMovement(Mobj* mo)
                   // this fix is for "sky hack walls" only apparently --
                   // see P_ExplodeMissile for my real sky fix
 
-                  // [CG] Only servers remove actors.
                   if(serverside)
                   {
                      if(CS_SERVER)
@@ -661,6 +658,7 @@ void P_XYMovement(Mobj* mo)
                   return;
                }
             }
+
             P_ExplodeMissile(mo);
          }
          else // whatever else it is, it is now standing still in (x,y)
@@ -686,10 +684,10 @@ void P_XYMovement(Mobj* mo)
    // no friction for missiles or skulls ever
    if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
       return;
-
+   
    // no friction when airborne
    // haleyjd: OVER_UNDER
-   if(mo->z > mo->floorz &&
+   if(mo->z > mo->floorz && 
       (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
@@ -718,19 +716,19 @@ void P_XYMovement(Mobj* mo)
       // killough 10/98:
       // Don't affect main player when voodoo dolls stop, except in old demos:
 
-      if(player && E_PlayerInWalkingState(player) &&
+      if(player && E_PlayerInWalkingState(player) && 
          (player->mo == mo || demo_version < 203))
          P_SetMobjState(player->mo, player->mo->info->spawnstate);
 
       mo->momx = mo->momy = 0;
 
       // killough 10/98: kill any bobbing momentum too (except in voodoo dolls)
-      if(player && player->mo == mo)
+      if (player && player->mo == mo)
          player->momx = player->momy = 0;
    }
    else
    {
-      // haleyjd 04/11/10: BOOM friction compatibility
+      // haleyjd 04/11/10: BOOM friction compatibility 
       if(demo_version <= 201)
       {
          // phares 3/17/98
@@ -745,8 +743,8 @@ void P_XYMovement(Mobj* mo)
       {
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
-         if((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
-         {
+         if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
+         { 
             // No. Use original friction. This allows you to not bob so much
             // if you're on ice, but keeps enough momentum around to break free
             // when you're mildly stuck in a wall.
@@ -754,7 +752,7 @@ void P_XYMovement(Mobj* mo)
             mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
          }
          else
-         {
+         { 
             // Yes. Use stored friction.
             mo->momx = FixedMul(mo->momx,mo->friction);
             mo->momy = FixedMul(mo->momy,mo->friction);
@@ -786,22 +784,24 @@ void P_XYMovement(Mobj* mo)
 //
 // haleyjd: OVER_UNDER: Isolated code for players hitting floors/objects
 //
-void P_PlayerHitFloor(Mobj *mo, boolean onthing)
+void P_PlayerHitFloor(Mobj *mo, bool onthing)
 {
    // Squat down.
    // Decrease viewheight for a moment
    // after hitting the ground (hard),
    // and utter appropriate sound.
+   bool spectating = false;
 
-   client_t *client = &clients[mo->player - players];
+   if(clientserver && mo->player && clients[mo->player - players].spectating)
+      spectating = true;
 
    mo->player->deltaviewheight = mo->momz >> 3;
    mo->player->jumptime = 10;
 
    // haleyjd 05/09/99 no oof when dead :)
-   // [CG] Spectators don't oof either.  Also various sounds here are disabled
-   //      while predicting.
-   if((demo_version < 329 || mo->health > 0) && !client->spectating)
+   // [CG] 09/17/11: Disabled various sounds for spectating and predicting
+   //      clients.
+   if((demo_version < 329 || mo->health > 0) && !spectating)
    {
       if(!comp[comp_fallingdmg] && demo_version >= 329)
       {
@@ -812,31 +812,17 @@ void P_PlayerHitFloor(Mobj *mo, boolean onthing)
          {
             if(!mo->player->powers[pw_invulnerability] &&
                !(mo->player->cheats & CF_GODMODE))
-            {
                P_FallingDamage(mo->player);
-            }
-            else
-            {
-               if(!cl_predicting)
-                  S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-            }
-         }
-         else if(mo->momz < -12 * FRACUNIT)
-         {
-            if(!cl_predicting)
+            else if(!cl_predicting)
                S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
          }
-         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
-         {
-            if(!cl_predicting)
-               S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
-         }
-      }
-      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
-      {
-         if(!cl_predicting)
+         else if(mo->momz < -12*FRACUNIT && !cl_predicting)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+         else if((onthing || !E_GetThingFloorType(mo, true)->liquid) && !cl_predicting)
+            S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
+      else if((onthing || !E_GetThingFloorType(mo, true)->liquid) && !cl_predicting)
+         S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }
 
@@ -849,8 +835,8 @@ void P_ZMovement(Mobj* mo)
 {
    // haleyjd: part of lost soul fix, moved up here for maximum
    //          scope
-   boolean correct_lost_soul_bounce;
-   boolean moving_down;
+   bool correct_lost_soul_bounce;
+   bool moving_down;
 
    // 10/13/05: fraggle says original DOOM has no bounce either,
    // so if gamemode != retail, no bounce.
@@ -875,14 +861,14 @@ void P_ZMovement(Mobj* mo)
    {
       mo->z += mo->momz;
 
-      if(mo->z <= mo->floorz)                  // bounce off floors
+      if (mo->z <= mo->floorz)                  // bounce off floors
       {
          mo->z = mo->floorz;
          E_HitFloor(mo); // haleyjd
-         if(mo->momz < 0)
+         if (mo->momz < 0)
          {
             mo->momz = -mo->momz;
-            if(!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
+            if (!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
             {
                mo->momz = mo->flags & MF_FLOAT ?   // floaters fall slowly
                   mo->flags & MF_DROPOFF ?          // DROPOFF indicates rate
@@ -896,15 +882,11 @@ void P_ZMovement(Mobj* mo)
             }
 
             // killough 11/98: touchy objects explode on impact
-            if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
+            if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
                mo->health > 0)
-            {
-               P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
-            }
-            else if(mo->flags & MF_FLOAT && sentient(mo))
-            {
+               P_DamageMobj(mo, NULL, NULL, mo->health,MOD_UNKNOWN);
+            else if (mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
-            }
             return;
          }
       }
@@ -919,7 +901,6 @@ void P_ZMovement(Mobj* mo)
             {
                if(mo->flags & MF_MISSILE)
                {
-                  // [CG] Only servers remove actors.
                   if(serverside)
                   {
                      if(CS_SERVER)
@@ -933,7 +914,7 @@ void P_ZMovement(Mobj* mo)
                   mo->momz = -mo->momz; // bounce unless under gravity
             }
 
-            if(mo->flags & MF_FLOAT && sentient(mo))
+            if (mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
 
             // haleyjd 05/22/03: kludge for bouncers sticking to sky --
@@ -960,14 +941,13 @@ void P_ZMovement(Mobj* mo)
       // came to a stop
       mo->momz = 0;
 
-      if(mo->flags & MF_MISSILE)
+      if (mo->flags & MF_MISSILE)
       {
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
             clip.ceilingline->backsector->intflags & SIF_SKY)
          {
-            // [CG] Only servers remove actors.
             if(serverside)
             {
                if(CS_SERVER)
@@ -981,7 +961,7 @@ void P_ZMovement(Mobj* mo)
          }
       }
 
-      if(mo->flags & MF_FLOAT && sentient(mo))
+      if (mo->flags & MF_FLOAT && sentient(mo))
          goto floater;
       return;
    }
@@ -1021,7 +1001,8 @@ floater:
    }
 
    // clip movement
-   if(mo->z <= mo->floorz)
+
+   if (mo->z <= mo->floorz)
    {
       // hit the floor
 
@@ -1037,12 +1018,10 @@ floater:
 
       if((moving_down = (mo->momz < 0)))
       {
-            // killough 11/98: touchy objects explode on impact
+         // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
-         {
             P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
-         }
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
                  mo->momz < -LevelInfo.gravity*8)
@@ -1067,6 +1046,7 @@ floater:
        */
       if(!correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz;
+
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
@@ -1109,7 +1089,7 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile(mo);
+         P_ExplodeMissile (mo);
          return;
       }
    }
@@ -1124,11 +1104,10 @@ void P_NightmareRespawn(Mobj* mobj)
    fixed_t      y;
    fixed_t      z;
    subsector_t* ss;
-   Mobj*      mo;
+   Mobj*        mo;
    mapthing_t*  mthing;
-   boolean      check; // haleyjd 11/11/04
+   bool         check; // haleyjd 11/11/04
 
-   // [CG] Only servers do this.
    if(!serverside)
       return;
 
@@ -1179,27 +1158,25 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
-   mo = P_SpawnMobj(
-      mobj->x,
-      mobj->y,
-      mobj->subsector->sector->floorheight + GameModeInfo->teleFogHeight,
-      GameModeInfo->teleFogType
-   );
 
+   mo = P_SpawnMobj(mobj->x, mobj->y,
+                    mobj->subsector->sector->floorheight +
+                       GameModeInfo->teleFogHeight,
+                    GameModeInfo->teleFogType);
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
 
    // initiate teleport sound
+
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn a teleport fog at the new spot
+
    ss = R_PointInSubsector(x,y);
-   mo = P_SpawnMobj(
-      x,
-      y,
-      ss->sector->floorheight + GameModeInfo->teleFogHeight,
-      GameModeInfo->teleFogType
-   );
+
+   mo = P_SpawnMobj(x, y,
+                    ss->sector->floorheight + GameModeInfo->teleFogHeight,
+                    GameModeInfo->teleFogType);
 
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
@@ -1207,10 +1184,12 @@ void P_NightmareRespawn(Mobj* mobj)
    S_StartSound(mo, GameModeInfo->teleSound);
 
    // spawn the new monster
+
    mthing = &mobj->spawnpoint;
    z = mobj->info->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // inherit attributes from deceased one
+
    mo = P_SpawnMobj(x, y, z, mobj->type);
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
@@ -1235,9 +1214,9 @@ void P_NightmareRespawn(Mobj* mobj)
 
 // PTODO
 #ifdef R_LINKEDPORTALS
-static boolean P_CheckPortalTeleport(Mobj *mobj)
+static bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   boolean ret = false;
+   bool ret = false;
 
    if(mobj->subsector->sector->f_pflags & PS_PASSABLE)
    {
@@ -1264,7 +1243,7 @@ static boolean P_CheckPortalTeleport(Mobj *mobj)
          }
       }
    }
-
+   
    if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
@@ -1391,9 +1370,9 @@ void Mobj::Think()
                if(!(leveltime & onmo->info->topdamagemask) &&
                   (!player || !player->powers[pw_ironfeet]))
                {
-                  P_DamageMobj(
-                     this, onmo, onmo, onmo->info->topdamage, onmo->info->mod
-                  );
+                  P_DamageMobj(this, onmo, onmo,
+                               onmo->info->topdamage, 
+                               onmo->info->mod);
                }
             }
 
@@ -1401,10 +1380,7 @@ void Mobj::Think()
                momz < -LevelInfo.gravity*8)
             {
                if(CS_SERVER)
-               {
-                  clients[this->player - players].floor_status =
-                     cs_fs_hit_on_thing;
-               }
+                  clients[player - players].floor_status = cs_fs_hit_on_thing;
                P_PlayerHitFloor(this, true);
             }
             if(onmo->z + onmo->height - z <= 24*FRACUNIT)
@@ -1434,9 +1410,7 @@ void Mobj::Think()
          }
       }
       else
-      {
          P_ZMovement(this);
-      }
 
       if(removed) // killough
          return;       // mobj was removed
@@ -1511,7 +1485,7 @@ void Mobj::Think()
       // 1) counts for kill AND
       // 2) respawn is on OR
       // 3) thing always respawns or removes itself after death.
-      boolean can_respawn =
+      bool can_respawn =
          flags & MF_COUNTKILL &&
            (respawnmonsters ||
             (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
@@ -1531,7 +1505,7 @@ void Mobj::Think()
 
       if(can_respawn && movecount >= info->respawntime &&
          !(leveltime & 31) && P_Random(pr_respawn) <= info->respawnchance)
-      {
+      { 
          // check for nightmare respawn
          if(flags2 & MF2_REMOVEDEAD)
          {
@@ -1658,12 +1632,12 @@ void Mobj::serialize(SaveArchive &arc)
 }
 
 //
-// Mobj::deswizzle
+// Mobj::deSwizzle
 //
 // Handles resolving swizzled references to other mobjs immediately after
 // deserialization. All saved mobj pointers MUST be restored here.
 //
-void Mobj::deswizzle()
+void Mobj::deSwizzle()
 {
    Mobj *lTarget, *lTracer, *lLEnemy;
 
@@ -1686,9 +1660,9 @@ void Mobj::deswizzle()
 }
 
 //
-// Update
+// Mobj::updateThinker
 //
-// haleyjd 11/22/10: Overrides Thinker::Update.
+// haleyjd 11/22/10: Overrides Thinker::updateThinker.
 // Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
 // 
 void Mobj::updateThinker()
@@ -1717,10 +1691,12 @@ extern fixed_t tmsecceilz;
 //
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
-   Mobj     *mobj;
+   Mobj       *mobj;
    mobjinfo_t *info;
    state_t    *st;
 
+   // [CG] 09/17/11: A fail-safe to catch desyncs (so they can be reported and
+   //      prevented).
    if(!CS_SPAWN_ACTOR_OK)
       I_Error("C/S clients cannot spawn actors themselves, exiting.\n");
 
@@ -1813,11 +1789,11 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    if(z == FLOATRANDZ)
    {
       fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
-      if(space > 48 * FRACUNIT)
+      if(space > 48*FRACUNIT)
       {
-         space -= 40 * FRACUNIT;
+         space -= 40*FRACUNIT;
          mobj->z = ((space * P_Random(pr_spawnfloat)) >> 8)
-                     + mobj->floorz + 40 * FRACUNIT;
+                     + mobj->floorz + 40*FRACUNIT;
       }
       else
          mobj->z = mobj->floorz;
@@ -1854,9 +1830,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
-   // [CG] Some stuff for c/s.
    if(serverside || gamestate == GS_LOADING)
-      CS_ObtainActorNetID(mobj);
+      NetActors.add(mobj);
 
    CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
 
@@ -1873,15 +1848,21 @@ int iquehead, iquetail;
 void Mobj::removeThinker()
 {
    // haleyjd 04/14/03: restructured
-   boolean respawnitem = false;
+   bool respawnitem = false;
 
+   // [CG] 09/17/11: A fail-safe to catch desyncs (so they can be reported and
+   //      prevented).
    if(!CS_REMOVE_ACTOR_OK)
       I_Error("C/S clients cannot remove actors themselves, exiting.\n");
 
    if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
+   {
       respawnitem = true; // respawning super powerups
+   }
    else if((dmflags & DM_BARRELRESPAWN) && this->type == E_ThingNumForDEHNum(MT_BARREL))
+   {
       respawnitem = true; // respawning barrels
+   }
    else
    {
       respawnitem =
@@ -1889,28 +1870,23 @@ void Mobj::removeThinker()
          !(this->flags3 & MF3_NOITEMRESP);
    }
 
-   // [CG] Only servers place items in the respawn queue
-   if(serverside)
+   if(serverside && respawnitem)
    {
-      if(respawnitem)
-      {
-         // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
-         itemrespawnque[iquehead] = this->spawnpoint;
-         itemrespawntime[iquehead++] = leveltime;
-         if((iquehead &= ITEMQUESIZE - 1) == iquetail)
-         {
-            // lose one off the end?
-            iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
-         }
-      }
+      // haleyjd FIXME/TODO: spawnpoint is vulnerable to zeroing
+      itemrespawnque[iquehead] = this->spawnpoint;
+      itemrespawntime[iquehead++] = leveltime;
+      if((iquehead &= ITEMQUESIZE-1) == iquetail)
+         // lose one off the end?
+         iquetail = (iquetail+1)&(ITEMQUESIZE-1);
    }
 
-   CS_ReleaseActorNetID(mobj);
+   NetActors.remove(this);
 
    // haleyjd 02/02/04: remove from tid hash
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
+
    P_UnsetThingPosition(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
@@ -1926,6 +1902,7 @@ void Mobj::removeThinker()
    }
 
    // stop any playing sound
+
    S_StopSound(this, CHAN_ALL);
 
    // killough 11/98:
@@ -1992,7 +1969,6 @@ void P_RespawnSpecials(void)
    mapthing_t*   mthing;
    int           i;
 
-   // [CG] Only servers respawn specials.
    if(!serverside)
       return;
 
@@ -2014,7 +1990,6 @@ void P_RespawnSpecials(void)
    mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 
-   // [CG] Broadcast the item spawn fog.
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
 
@@ -2026,17 +2001,16 @@ void P_RespawnSpecials(void)
    // spawn it
    z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
-   mo = P_SpawnMobj(x, y, z, i);
+   mo = P_SpawnMobj(x,y,z, i);
    mo->spawnpoint = *mthing;
    // sf
    mo->angle = R_WadToAngle(mthing->angle);
 
-   // [CG] Broadcast the item respawn.
    if(CS_SERVER)
       SV_BroadcastActorSpawned(mo);
 
    // pull it from the queue
-   iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
+   iquetail = (iquetail+1)&(ITEMQUESIZE-1);
 }
 
 //
@@ -2058,7 +2032,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
    if(!playeringame[mthing->type - 1])
       return;
 
-   p = &players[mthing->type - 1];
+   p = &players[mthing->type-1];
 
    if(p->playerstate == PST_REBORN)
       G_PlayerReborn(mthing->type - 1);
@@ -2102,7 +2076,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    if(GameType == gt_dm)
    {
-      for(i = 0; i < NUMCARDS; i++)
+      for(i = 0 ; i < NUMCARDS ; i++)
          p->cards[i] = true;
    }
 
@@ -2217,15 +2191,18 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
       // save spots for respawning in network games
       playerstarts[mthing->type-1] = *mthing;
-      // [CG] Made some changes for c/s here.  The first thing to remember is
-      //      that nearly all the code expects that a valid player resides at
-      //      player[0], with a valid actor if gamestate is GS_LEVEL.  This
-      //      means that c/s clients & servers will always start with
-      //      consoleplayer set to 0, and that player will always be a
-      //      spectator.  Servers cannot join a game per se, but they spawn
-      //      themselves at playerstart 0 as a spectator.  Clients do the same
-      //      when they connect to a server, but when they join they wait for
-      //      the server to tell them where to spawn.
+      /* [CG] 09/17/11: Made some changes for c/s.  First though, remember that
+       *      nearly all the code expects a valid player at player[0], with a
+       *      valid actor if gamestate is GS_LEVEL.  This means that c/s
+       *      clients & servers will always start with consoleplayer set to 0
+       *      and player[consoleplayer] will be a spectator.  Clients do the
+       *      same when they connect to a server, but when they join they wait
+       *      for the server to tell them where to spawn.  This all works
+       *      because spectators have no Network IDs, so no desyncs are
+       *      possible.
+       * if(GameType != gt_dm)
+       *    P_SpawnPlayer(mthing);
+       */
       if(!clientserver)
       {
          if(GameType != gt_dm)
@@ -2233,8 +2210,6 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       }
       else if(mthing->type == 1)
       {
-         // [CG] Only do this if this is the first time we're loading a map.
-         //      Otherwise CS_DoWorldDone will do this for us.
          CS_SpawnPlayer(
             consoleplayer,
             mthing->x << FRACBITS,
@@ -2282,7 +2257,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       i = E_SafeThingName("EEEnviroSequence");
    else if(mthing->type >= 1400 && mthing->type < 1500) // sector sequence
       i = E_SafeThingName("EESectorSequence");
-   else if(mthing->type == 5080 || mthing->type == 5081)
+   else if(mthing->type == 5080 || mthing->type == 5081) // [CG] Team starts
    {
       CS_AddTeamStart(mthing);
       return NULL;
@@ -2349,7 +2324,7 @@ spawnit:
    mobj = P_SpawnMobj(x, y, z, i);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
-
+   
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
@@ -2424,6 +2399,7 @@ spawnit:
       subsec->sector->sndSeqID = mobj->args[0];
    }
 
+   // [CG] 09/17/11: Flags.
    if(mthing->type == RED_FLAG_ID)
    {
       if(cs_flag_stands[team_color_red].exists)
@@ -2468,7 +2444,7 @@ spawnit:
 // P_SpawnPuff
 //
 Mobj* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                    int updown, boolean ptcl)
+                  int updown, bool ptcl)
 {
    Mobj* th;
 
@@ -2476,7 +2452,7 @@ Mobj* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    z += P_SubRandom(pr_spawnpuff) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   CS_ReleaseActorNetID(th);
+   NetActors.remove(th);
 
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
@@ -2502,30 +2478,34 @@ Mobj* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    return th;
 }
 
+
 //
 // P_SpawnBlood
 //
-Mobj* P_SpawnBlood(fixed_t x,fixed_t y,fixed_t z, angle_t dir, int damage, Mobj *target)
+Mobj* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target)
 {
    // HTIC_TODO: Heretic support
-   Mobj* th;
+   Mobj *th;
 
    // haleyjd 08/05/04: use new function
    z += P_SubRandom(pr_spawnblood) << 10;
 
-   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_BLOOD));
-   CS_ReleaseActorNetID(th);
-
-   th->momz = FRACUNIT * 2;
-   th->tics -= P_Random(pr_spawnblood) & 3;
+   th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
+   NetActors.remove(th);
+   th->momz = FRACUNIT*2;
+   th->tics -= P_Random(pr_spawnblood)&3;
 
    if(th->tics < 1)
       th->tics = 1;
 
    if(damage <= 12 && damage >= 9)
+   {
       P_SetMobjState(th, E_SafeState(S_BLOOD2));
-   else if(damage < 9)
+   }
+   else if (damage < 9)
+   {
       P_SetMobjState(th, E_SafeState(S_BLOOD3));
+   }
 
    // for demo sync, etc, we still need to do the above, so
    // we'll make the sprites above invisible and draw particles
@@ -2576,17 +2556,25 @@ void P_ParticleLine(Mobj *source, Mobj *dest)
 }
 */
 
+//=============================================================================
+//
+// Missiles
+//
+
 //
 // P_CheckMissileSpawn
 //
 // Moves the missile forward a bit
 //  and possibly explodes it right there.
 //
-void P_CheckMissileSpawn(Mobj* th)
+// haleyjd 03/19/11: added bool return type for Hexen logic
+//
+bool P_CheckMissileSpawn(Mobj* th)
 {
-   // [CG] Only servers check missile spawns.
+   bool ok = true;
+
    if(!serverside)
-      return;
+      return ok;
 
    if(!(th->flags4 & MF4_NORANDOMIZE))
    {
@@ -2604,11 +2592,16 @@ void P_CheckMissileSpawn(Mobj* th)
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
    if(!(th->flags & MF_MISSILE) && demo_version >= 203)
-      return;
+      return ok;
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
+   {
       P_ExplodeMissile(th);
+      ok = false;
+   }
+
+   return ok;
 }
 
 //
@@ -2637,49 +2630,85 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 }
 
 //
-// P_SpawnMissile
+// P_SpawnMissileEx
 //
-Mobj* P_SpawnMissile(Mobj* source, Mobj* dest, mobjtype_t type,
-                       fixed_t z)
+// haleyjd 08/08/11: Core shared missile firing logic, taking a structure as a 
+// parameter to hold all possible information relevant to firing the missile.
+//
+Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
 {
-   angle_t an;
-   Mobj *th;  // haleyjd: restructured
+   Mobj    *source = missileinfo.source;
+   Mobj    *dest   = missileinfo.dest;
+   fixed_t  z      = missileinfo.z;
+   Mobj    *mo;
+   angle_t  an;
 
    if(z != ONFLOORZ)
       z -= source->floorclip;
 
-   th = P_SpawnMobj(source->x, source->y, z, type);
+   mo = P_SpawnMobj(source->x, source->y, z, missileinfo.type);
 
-   S_StartSound(th, th->info->seesound);
+   S_StartSound(mo, mo->info->seesound);
 
-   P_SetTarget<Mobj>(&th->target, source); // where it came from // killough 11/98
-   an = P_PointToAngle(source->x, source->y, dest->x, dest->y);
+   P_SetTarget<Mobj>(&mo->target, source); // where it came from -- killough 11/98
 
-   // fuzzy player --  haleyjd: add total invisibility, ghost
-   if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
-      dest->flags3 & MF3_GHOST)
+   if(missileinfo.flags & missileinfo_t::USEANGLE)
+      an = missileinfo.angle;
+   else
+      an = P_PointToAngle(source->x, source->y, missileinfo.destx, missileinfo.desty);
+
+   // fuzzy player -- haleyjd: add total invisibility, ghost
+   if(dest && !(missileinfo.flags & missileinfo_t::NOFUZZ))
    {
-      int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
-
-      an += P_SubRandom(pr_shadow) << shamt;
+      if(dest->flags & MF_SHADOW || dest->flags2 & MF2_DONTDRAW ||
+         dest->flags3 & MF3_GHOST)
+      {
+         int shamt = (dest->flags3 & MF3_GHOST) ? 21 : 20; // haleyjd
+         an += P_SubRandom(pr_shadow) << shamt;
+      }
+   }
+   
+   mo->angle = an;
+   an >>= ANGLETOFINESHIFT;
+   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
+   mo->momy = FixedMul(mo->info->speed, finesine[an]);   
+   
+   if(missileinfo.flags & missileinfo_t::USEANGLE)
+      mo->momz = missileinfo.momz;
+   else
+   {
+      mo->momz = P_MissileMomz(missileinfo.destx - source->x,
+                               missileinfo.desty - source->y,
+                               missileinfo.destz - source->z,
+                               mo->info->speed);
    }
 
-   th->angle = an;
-   an >>= ANGLETOFINESHIFT;
-   th->momx = FixedMul(th->info->speed, finecosine[an]);
-   th->momy = FixedMul(th->info->speed, finesine[an]);
-   th->momz = P_MissileMomz(dest->x - source->x,
-                            dest->y - source->y,
-                            dest->z - source->z,
-                            th->info->speed);
-
-   // [CG] Broadcast the missile spawned message.
    if(CS_SERVER)
-      SV_BroadcastMissileSpawned(source, th);
+      SV_BroadcastMissileSpawned(source, mo);
 
-   P_CheckMissileSpawn(th);
+   P_CheckMissileSpawn(mo);
 
-   return th;
+   return mo;
+}
+
+//
+// P_SpawnMissile
+//
+Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z)
+{
+   missileinfo_t missileinfo;
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.dest   = dest;
+   missileinfo.destx  = dest->x;
+   missileinfo.desty  = dest->y;
+   missileinfo.destz  = dest->z;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+
+   return P_SpawnMissileEx(missileinfo);
 }
 
 //
@@ -2687,7 +2716,7 @@ Mobj* P_SpawnMissile(Mobj* source, Mobj* dest, mobjtype_t type,
 //
 // haleyjd 12/28/10: Don't use mlook calculations in old demos!
 //
-static fixed_t P_PlayerPitchSlope(player_t *player)
+fixed_t P_PlayerPitchSlope(player_t *player)
 {
    // Support purely vanilla behavior, and also use in EE if pitch is 0.
    // Avoids very small roundoff errors.
@@ -2749,18 +2778,17 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(source->player && source->player->powers[pw_silencer] &&
       P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
    {
-      S_StartSoundAtVolume(
-         th, th->info->seesound, WEAPON_VOLUME_SILENCED, ATTN_NORMAL, CHAN_AUTO
-      );
+      S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
+                           ATTN_NORMAL, CHAN_AUTO);
    }
    else
       S_StartSound(th, th->info->seesound);
 
    P_SetTarget<Mobj>(&th->target, source);   // killough 11/98
    th->angle = an;
-   th->momx = FixedMul(th->info->speed,finecosine[an>>ANGLETOFINESHIFT]);
-   th->momy = FixedMul(th->info->speed,finesine[an>>ANGLETOFINESHIFT]);
-   th->momz = FixedMul(th->info->speed,slope);
+   th->momx = FixedMul(th->info->speed, finecosine[an>>ANGLETOFINESHIFT]);
+   th->momy = FixedMul(th->info->speed, finesine[an>>ANGLETOFINESHIFT]);
+   th->momz = FixedMul(th->info->speed, slope);
 
    if(CS_SERVER)
       SV_BroadcastMissileSpawned(source, th);
@@ -2770,38 +2798,51 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    return th;    //sf
 }
 
-//
-// Start new Eternity mobj functions
-//
-
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
-                            angle_t angle, fixed_t momz, fixed_t z)
+                          angle_t angle, fixed_t momz, fixed_t z)
 {
-   Mobj *mo;
+   missileinfo_t missileinfo;
 
-   if(z != ONFLOORZ)
-      z -= source->floorclip;
+   memset(&missileinfo, 0, sizeof(missileinfo));
 
-   mo = P_SpawnMobj(source->x, source->y, z, type);
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = angle;
+   missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
-   S_StartSound(mo, mo->info->seesound);
-
-   // haleyjd 09/21/03: don't set this directly!
-   P_SetTarget<Mobj>(&mo->target, source);
-
-   mo->angle = angle;
-   angle >>= ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[angle]);
-   mo->momy = FixedMul(mo->info->speed, finesine[angle]);
-   mo->momz = momz;
-
-   if(CS_SERVER)
-      SV_BroadcastMissileSpawned(source, mo);
-
-   P_CheckMissileSpawn(mo);
-
-   return mo;
+   return P_SpawnMissileEx(missileinfo);
 }
+
+//
+// P_SpawnMissileWithDest
+//
+// haleyjd 08/07/11: Ugly hack to solve a problem Lee created in A_Mushroom.
+//
+Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
+                             fixed_t srcz, 
+                             fixed_t destx, fixed_t desty, fixed_t destz)
+{
+   missileinfo_t missileinfo;
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.dest   = dest;
+   missileinfo.destx  = destx; // Use provided destination coordinates
+   missileinfo.desty  = desty;
+   missileinfo.destz  = destz;
+   missileinfo.type   = type;
+   missileinfo.z      = srcz;
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+//=============================================================================
+//
+// New Eternity mobj functions
+//
 
 void P_Massacre(int friends)
 {
@@ -2841,6 +2882,9 @@ void P_FallingDamage(player_t *player)
 {
    int mom, damage, dist;
 
+   if(!serverside)
+      return;
+
    mom = D_abs(player->mo->momz);
    dist = FixedMul(mom, 16*FRACUNIT/23);
 
@@ -2858,13 +2902,8 @@ void P_FallingDamage(player_t *player)
       damage = player->mo->health - 1;
    }
 
-   // [CG] Only servers will deal falling damage, so only set this flag if
-   //      we're serverside.
-   if(serverside)
-   {
-      if(damage >= player->mo->health)
-         player->mo->intflags |= MIF_DIEDFALLING;
-   }
+   if(damage >= player->mo->health)
+      player->mo->intflags |= MIF_DIEDFALLING;
 
    P_DamageMobj(player->mo, NULL, NULL, damage, MOD_FALLING);
 }
@@ -2882,8 +2921,8 @@ void P_AdjustFloorClip(Mobj *thing)
    const msecnode_t *m;
 
    // absorb test for FOOTCLIP flag here
-   // [CG] FIXME: Terrain types are disabled in c/s mode due to desyncs.
-   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP) || clientserver)
+   // [CG] FIXME: Terrain types are disabled in c/s due to desyncs.
+   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
    {
       thing->floorclip = 0;
       return;
@@ -3076,167 +3115,6 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
 
       return rover;
    }
-}
-
-//
-// Thing Collections
-//
-// haleyjd: This pseudo-class is the ultimate generalization of the
-// boss spawner spots code, allowing arbitrary reallocating arrays
-// of Mobj pointers to be maintained and manipulated. This is currently
-// used by boss spawn spots, D'Sparil spots, and intermission cameras.
-// I wish it was used by deathmatch spots, but that would present a
-// compatibility problem (spawning Mobj's at their locations would
-// most likely result in demo desyncs).
-//
-
-//
-// P_InitMobjCollection
-//
-// Sets up an MobjCollection object. This is for objects kept on the
-// stack.
-//
-void P_InitMobjCollection(MobjCollection *mc, int type)
-{
-   memset(mc, 0, sizeof(MobjCollection));
-
-   mc->type = type;
-}
-
-//
-// P_ReInitMobjCollection
-//
-// Call this to set the number of mobjs in the collection to zero.
-// Should be done for each global collection after a level ends and
-// before beginning a new one. Doesn't molest the array pointer or
-// numalloc fields. Resets the wrap iterator by necessity.
-//
-void P_ReInitMobjCollection(MobjCollection *mc, int type)
-{
-   mc->num = mc->wrapiterator = 0;
-   mc->type = type;
-}
-
-//
-// P_ClearMobjCollection
-//
-// Frees an mobj collection's pointer array and sets all the
-// fields to zero.
-//
-void P_ClearMobjCollection(MobjCollection *mc)
-{
-   free(mc->ptrarray);
-
-   memset(mc, 0, sizeof(MobjCollection));
-}
-
-//
-// P_CollectThings
-//
-// Generalized from the boss brain spot code; builds a collection
-// of mapthings of a certain type. The type must be set within the
-// collection object before calling this.
-//
-void P_CollectThings(MobjCollection *mc)
-{
-   Thinker *th;
-
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if(mo->type == mc->type)
-         {
-            if(mc->num >= mc->numalloc)
-            {
-               mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
-                  (mc->numalloc = mc->numalloc ?
-                   mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
-            }
-            (mc->ptrarray)[mc->num] = mo;
-            mc->num++;
-         }
-      }
-   }
-}
-
-//
-// P_AddToCollection
-//
-// Adds a single object into an MobjCollection.
-//
-void P_AddToCollection(MobjCollection *mc, Mobj *mo)
-{
-   if(mc->num >= mc->numalloc)
-   {
-      mc->ptrarray = (Mobj **)realloc(mc->ptrarray,
-         (mc->numalloc = mc->numalloc ?
-         mc->numalloc*2 : 32) * sizeof *mc->ptrarray);
-   }
-   (mc->ptrarray)[mc->num] = mo;
-   mc->num++;
-}
-
-//
-// P_CollectionSort
-//
-// Sorts the pointers in an MobjCollection using the supplied callback function
-// for determining collation order.
-//
-void P_CollectionSort(MobjCollection *mc, int (*cb)(const void *, const void *))
-{
-   if(mc->num > 1)
-      qsort(mc->ptrarray, mc->num, sizeof(Mobj *), cb);
-}
-
-//
-// P_CollectionIsEmpty
-//
-// Returns true if there are no objects in the collection, and
-// false otherwise.
-//
-boolean P_CollectionIsEmpty(MobjCollection *mc)
-{
-   return !mc->num;
-}
-
-//
-// P_CollectionWrapIterator
-//
-// Returns each object in a collection in the order they were added
-// at each consecutive call, wrapping to the beginning when the end
-// is reached.
-//
-Mobj *P_CollectionWrapIterator(MobjCollection *mc)
-{
-   Mobj *ret = (mc->ptrarray)[mc->wrapiterator++];
-
-   mc->wrapiterator %= mc->num;
-
-   return ret;
-}
-
-//
-// P_CollectionGetAt
-//
-// Gets the object at the specified index in the collection.
-// Returns NULL if the index is out of bounds.
-//
-Mobj *P_CollectionGetAt(MobjCollection *mc, unsigned int at)
-{
-   return at < (unsigned int)mc->num ? (mc->ptrarray)[at] : NULL;
-}
-
-//
-// P_CollectionGetRandom
-//
-// Returns a random object from the collection using the specified
-// random number generator for full compatibility.
-//
-Mobj *P_CollectionGetRandom(MobjCollection *mc, pr_class_t rngnum)
-{
-   return (mc->ptrarray)[P_Random(rngnum) % mc->num];
 }
 
 #ifndef EE_NO_SMALL_SUPPORT
@@ -3673,7 +3551,7 @@ static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
-   boolean friendly = false;
+   bool friendly = false;
    Mobj *mo = NULL;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
