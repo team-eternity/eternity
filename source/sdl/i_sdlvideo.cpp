@@ -32,6 +32,7 @@
 #include "i_sdlvideo.h"
 
 #include "../d_main.h"
+#include "../doomstat.h" // [CG] 09/25/11
 #include "../i_system.h"
 #include "../m_argv.h"
 #include "../v_misc.h"
@@ -362,6 +363,10 @@ bool SDLVideoDriver::InitGraphicsMode()
    int  v_h            = 480;
    int  v_bd           = 8;
    int  flags          = SDL_SWSURFACE;
+
+   // [CG] 09/25/11: Don't init graphics if headless.
+   if(CS_HEADLESS)
+      return false;
 
    // haleyjd 12/03/07: cross-bit-depth support
    if(M_CheckParm("-8in32"))

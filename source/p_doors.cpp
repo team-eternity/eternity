@@ -591,11 +591,14 @@ void VerticalDoorThinker::serialize(SaveArchive &arc)
    Thinker::serialize(arc);
 
    arc << type << sector << topheight << speed << direction << topwait
-       << topcountdown << line << lighttag;
+       << topcountdown << line << lighttag << net_id;
 
    // Reattach to sector when loading
    if(arc.isLoading())
+   {
       sector->ceilingdata = this;
+      NetDoors.add(this);
+   }
 }
 
 ///////////////////////////////////////////////////////////////

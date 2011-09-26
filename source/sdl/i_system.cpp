@@ -496,7 +496,8 @@ void I_EndDoom(void)
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
    // allow ENDOOM disable in configuration.
-   if(!GameModeInfo || !showendoom)
+   // [CG] 09/25/11: Can't do this in headless mode either.
+   if(!GameModeInfo || !showendoom || CS_HEADLESS)
       return;
    
    endoom_data = (unsigned char *)wGlobalDir.CacheLumpName(GameModeInfo->endTextName, PU_STATIC);

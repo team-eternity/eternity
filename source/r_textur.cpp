@@ -837,7 +837,7 @@ static texcol_t *NextTempCol(texcol_t *current)
       // [CG] Try PU_RENDERER here.
       // return current->next = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0));
       return current->next = (texcol_t *)(Z_Calloc(
-         sizeof(texcol_t), 1, PU_RENDERER, 0
+         sizeof(texcol_t), 1, PU_RENDERER, (void **)&current->next
       ));
    }
    

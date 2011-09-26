@@ -221,7 +221,7 @@ void PlatThinker::serialize(SaveArchive &arc)
    Thinker::serialize(arc);
 
    arc << sector << speed << low << high << wait << count << status << oldstatus
-       << crush << tag << type;
+       << crush << tag << type << net_id;
 
    if(arc.isLoading())
    {

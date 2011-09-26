@@ -308,19 +308,16 @@ void P_Ticker(void)
             SV_LoadClientOptions(i);
 
          if(!clientserver || CS_SERVER || CS_DEMO)
-         {
             P_PlayerThink(&players[i]);
-         }
-         else if(i == consoleplayer && (cl_enable_prediction ||
-                                        clients[i].spectating))
+         else if(i != consoleplayer)
+            CL_PlayerThink(i);
+         else if(cl_enable_prediction || clients[i].spectating)
+            P_PlayerThink(&players[i]);
+         else
          {
             CL_Predict(
                cl_current_world_index, cl_current_world_index + 1, false
             );
-         }
-         else if(!clients[i].spectating)
-         {
-            CL_PlayerThink(i);
          }
 
          if(CS_SERVER)

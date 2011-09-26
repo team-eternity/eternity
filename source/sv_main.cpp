@@ -38,6 +38,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_player.h"
+#include "e_states.h"
 #include "e_things.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -726,7 +727,7 @@ void SV_StartUnlag(int playernum)
 
    player = &players[playernum];
 
-#if _CMD_DEBUG || _UNLAG_DEBUG
+#if _UNLAG_DEBUG
    printf(
       "SV_StartUnlag: Unlagging client %u at %u.\n"
       "  Index:    %u\n"
@@ -1384,7 +1385,6 @@ bool SV_RunPlayerCommands(int playernum)
       }
       return false;
    }
-
 
    // [CG] Run at least one command, whether dead, spectating, or otherwise.
    bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);

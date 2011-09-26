@@ -654,11 +654,14 @@ void FloorMoveThinker::serialize(SaveArchive &arc)
 
    arc << type << crush << sector << direction << special << texture 
        << floordestheight << speed << resetTime << resetHeight
-       << stepRaiseTime << delayTime << delayTimer;
+       << stepRaiseTime << delayTime << delayTimer << net_id;
 
    // If loading, reattach to sector
    if(arc.isLoading())
+   {
       sector->floordata = this;
+      NetFloors.add(this);
+   }
 }
 
 
@@ -732,13 +735,14 @@ void ElevatorThinker::serialize(SaveArchive &arc)
    Thinker::serialize(arc);
 
    arc << type << sector << direction << floordestheight << ceilingdestheight 
-       << speed;
+       << speed << net_id;
 
    if(arc.isLoading())
    {
       // Reattach to both floor and ceiling of sector
       sector->floordata   = this;
       sector->ceilingdata = this;
+      NetElevators.add(this);
    }
 }
 
@@ -795,13 +799,14 @@ void PillarThinker::serialize(SaveArchive &arc)
    Thinker::serialize(arc);
 
    arc << sector << ceilingSpeed << floorSpeed << floordest 
-       << ceilingdest << direction << crush;
+       << ceilingdest << direction << crush << net_id;
 
    if(arc.isLoading())
    {
       // Reattach to floor and ceiling
       sector->floordata   = this;
       sector->ceilingdata = this;
+      NetPillars.add(this);
    }
 }
 
@@ -1970,11 +1975,14 @@ void FloorWaggleThinker::serialize(SaveArchive &arc)
    Thinker::serialize(arc);
 
    arc << sector << originalHeight << accumulator << accDelta << targetScale
-       << scale << scaleDelta << ticker << state;
+       << scale << scaleDelta << ticker << state << net_id;
 
    // If loading, reattach to sector floor
    if(arc.isLoading())
+   {
       sector->floordata = this;
+      NetFloorWaggles.add(this);
+   }
 }
 
 //

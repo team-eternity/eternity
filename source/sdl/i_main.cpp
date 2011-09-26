@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -30,6 +30,7 @@
 
 #include "../z_zone.h"
 #include "../doomdef.h"
+#include "../doomstat.h"
 #include "../m_argv.h"
 #include "../d_main.h"
 #include "../i_system.h"
@@ -94,6 +95,13 @@ int main(int argc, char **argv)
    else if(M_CheckParm("-gdi") || getenv("SDL_VIDEODRIVER") == NULL)
       putenv("SDL_VIDEODRIVER=windib");
 #endif
+
+   // [CG] 09/25/11: Use dummy audio & video drivers if headless.
+   if(CS_HEADLESS)
+   {
+      putenv("SDL_AUDIODRIVER=dummy");
+      putenv("SDL_VIDEODRIVER=dummy");
+   }
 
    // haleyjd 04/15/02: added check for failure
    if(SDL_Init(INIT_FLAGS) == -1)

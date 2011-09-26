@@ -196,7 +196,7 @@ void NetPacketBuffer::processPacketsForIndex(uint32_t index)
    {
       packet = packet_buffer.front();
 
-      if(packet->getWorldIndex() > index)
+      if(!packet || packet->getWorldIndex() > index)
          break;
 
       packet->process();

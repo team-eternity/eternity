@@ -48,6 +48,7 @@
 #include "s_sound.h"
 #include "sounds.h"
 
+#include "cs_position.h"
 #include "cs_main.h"  // [CG] 09/18/11
 #include "cl_pred.h"  // [CG] 09/18/11
 #include "sv_main.h"  // [CG] 09/18/11
@@ -663,8 +664,7 @@ void P_PlayerThink(player_t *player)
       return;
 
    // [CG] 09/18/11: Don't scream if predicting or spectating (rofl).
-   if(!clientserver ||
-         (!clients[player - players].spectating && !cl_predicting))
+   if(!clientserver || (!clients[playernum].spectating && !cl_predicting))
    {
       // haleyjd: are we falling? might need to scream :->
       if(!comp[comp_fallingdmg] && demo_version >= 329)

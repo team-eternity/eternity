@@ -278,7 +278,7 @@ void CeilingThinker::serialize(SaveArchive &arc)
 
    arc << type << sector << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
-       << olddirection;
+       << olddirection << net_id;
 
    if(arc.isLoading())
    {

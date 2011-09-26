@@ -461,6 +461,21 @@ default_t defaults[] =
    DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
+   DEFAULT_INT(
+      "comp_mouselook",
+      &default_comp[comp_mouselook],
+      &comp[comp_mouselook],
+      1, 0, 1, default_t::wad_yes,
+      "Clamp lower mouselook range to 32 degrees instead of 56."
+   ),
+
+   DEFAULT_INT(
+      "comp_2dradatk",
+      &default_comp[comp_2dradatk],
+      &comp[comp_2dradatk],
+      1, 0, 1, default_t::wad_yes,
+      "Radius attacks (rockets, arch-vile attacks) thrust only in 2D"
+   ),
 
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg

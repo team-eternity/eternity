@@ -1561,7 +1561,8 @@ void Mobj::serialize(SaveArchive &arc)
       // Appearance
       << colour                                            // Translations
       << translucency << alphavelocity                     // Alpha blending
-      << xscale << yscale;                                 // Scaling
+      << xscale << yscale                                  // Scaling
+      << net_id;                                           // [CG] Net ID.
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
@@ -1628,6 +1629,9 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
+
+      // [CG] Register Net ID.
+      NetActors.add(this);
    }
 }
 

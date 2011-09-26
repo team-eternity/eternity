@@ -3645,12 +3645,12 @@ static void D_DoomInit(void)
       bool nosound = !!M_CheckParm("-nosound");
       nomusicparm  = nosound || M_CheckParm("-nomusic");
       nosfxparm    = nosound || M_CheckParm("-nosfx");
-   }
-   //jff end of sound/music command line parms
+      //jff end of sound/music command line parms
 
-   // killough 3/2/98: allow -nodraw -noblit generally
-   nodrawers = !!M_CheckParm("-nodraw");
-   noblit    = !!M_CheckParm("-noblit");
+      // killough 3/2/98: allow -nodraw -noblit generally
+      nodrawers = !!M_CheckParm("-nodraw");
+      noblit    = !!M_CheckParm("-noblit");
+   }
 
    // haleyjd: need to do this before M_LoadDefaults
    C_InitPlayerName();

@@ -26,11 +26,14 @@
 
 #include "z_zone.h"
 #include "d_iwad.h"
+#include "d_main.h"
 #include "i_system.h"
 #include "m_argv.h"
+#include "m_file.h"
 #include "m_misc.h"
 #include "w_wad.h"
 
+extern char *basepath;
 
 //
 // M_FileExists
@@ -177,6 +180,7 @@ extern void CheckDOSDefaults(void);
 //
 static void BuildIWADDirList(void)
 {
+   char *base_wads;
    char *doomwaddir;
    
    if(iwad_dirs_built)
@@ -213,6 +217,30 @@ static void BuildIWADDirList(void)
    
 #endif
    
+   // [CG] Add base/wads.
+
+   base_wads = (char *)(calloc(strlen(basepath) + 6, sizeof(char)));
+   sprintf(base_wads, "%s/wads", basepath);
+   M_NormalizeSlashes(base_wads);
+   if(!M_PathExists(base_wads))
+   {
+      if(!M_CreateFolder(base_wads))
+      {
+         I_Error(
+            "Error creating base WAD folder %s: %s.\n", 
+            base_wads,
+            M_GetFileSystemErrorMessage()
+         );
+      }
+   }
+   else if(!M_IsFolder(base_wads))
+   {
+      I_Error(
+         "Base WAD folder %s/wads exists, but is not a folder.\n", basepath
+      );
+   }
+   AddIWADDir(base_wads);
+
    // Don't run this function again.
    
    iwad_dirs_built = true;

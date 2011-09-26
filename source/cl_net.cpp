@@ -666,8 +666,6 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 {
    player_t *player = &players[message->player_number];
 
-   printf("Handling player spawned message.\n");
-
    if(message->player_number > MAX_CLIENTS)
    {
       printf("Received invalid player spawned message, ignoring.");
