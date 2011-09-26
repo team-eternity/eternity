@@ -56,7 +56,7 @@ static void respawn_flag(flag_t *flag, fixed_t x, fixed_t y, fixed_t z,
    Mobj *flag_actor;
 
    if(!serverside)
-      return
+      return;
 
    CS_RemoveFlagActor(flag);
    flag_actor = P_SpawnMobj(x, y, z, E_SafeThingName(type_name));
