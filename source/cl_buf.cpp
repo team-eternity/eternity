@@ -24,11 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "doomdef.h"
 #include "g_game.h"
+#include "i_system.h"
 
 #include "cs_main.h"
 #include "cl_buf.h"
@@ -38,6 +40,13 @@
 #include "cl_spec.h"
 
 NetPacketBuffer cl_packet_buffer;
+
+int CL_serviceNetwork(void *)
+{
+   while(cl_packet_buffer.buffering_independently)
+      CS_ReadFromNetwork();
+   return 0;
+}
 
 bool NetPacket::shouldProcessNow()
 {
@@ -174,7 +183,7 @@ bool NetPacketBuffer::add(char *data, uint32_t size)
 {
    NetPacket *packet = new NetPacket(data, size);
 
-   if(packet->shouldProcessNow())
+   if((!buffering_independently) && packet->shouldProcessNow())
    {
       packet->process();
       delete packet;
@@ -183,6 +192,28 @@ bool NetPacketBuffer::add(char *data, uint32_t size)
 
    packet_buffer.push_back(packet);
    return false;
+}
+
+void NetPacketBuffer::startBufferingIndependently()
+{
+   if(buffering_independently)
+      return;
+
+   buffering_independently = true;
+   net_service_thread = I_CreateThread(CL_serviceNetwork, NULL);
+   if(net_service_thread == NULL)
+   {
+      I_Error(
+         "Unable to create thread to service network independently, "
+         "exiting.\n"
+      );
+   }
+}
+
+void NetPacketBuffer::stopBufferingIndependently()
+{
+   buffering_independently = false;
+   I_WaitThread(net_service_thread, NULL);
 }
 
 void NetPacketBuffer::processPacketsForIndex(uint32_t index)

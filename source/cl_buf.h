@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "i_thread.h"
+
 class NetPacket
 {
 public:
@@ -92,11 +94,19 @@ class NetPacketBuffer
 {
 private:
    std::list<NetPacket *> packet_buffer;
+   bool buffering_independently;
+   dthread_t *net_service_thread;
 
 public:
+   NetPacketBuffer() : buffering_independently(false) {}
    bool add(char *data, uint32_t size);
+   void startBufferingIndependently();
+   void stopBufferingIndependently();
    void processPacketsForIndex(uint32_t index);
    void processAllPackets();
+
+   friend int CL_serviceNetwork(void *);
+
 };
 
 extern NetPacketBuffer cl_packet_buffer;

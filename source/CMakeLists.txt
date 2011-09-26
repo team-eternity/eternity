@@ -106,6 +106,7 @@ SET(SDL_SOURCES
     sdl/i_sound.cpp
     sdl/i_system.cpp
     sdl/i_sdlvideo.cpp
+    sdl/i_thread.cpp
     sdl/mmus2mid.cpp
     sdl/ser_main.cpp
 )

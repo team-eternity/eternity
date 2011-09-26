@@ -56,6 +56,7 @@
 #include "cs_netid.h"
 #include "cs_position.h"
 #include "cs_wad.h"
+#include "cl_buf.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "cl_pred.h"
@@ -389,6 +390,8 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
    CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
    CS_ApplyConfigSettings();
+
+   cl_packet_buffer.startBufferingIndependently();
    CS_InitNew();
    memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
    memcpy(team_scores, message->team_scores, sizeof(int32_t) * team_color_max);
@@ -402,8 +405,10 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
    cl_setting_sector_positions = true;
    P_LoadGame(cs_state_file_path);
    cl_setting_sector_positions = false;
+   cl_packet_buffer.stopBufferingIndependently();
 
    CL_SendSyncRequest();
+   cl_flush_packet_buffer = true;
 }
 
 void CL_HandleSyncMessage(nm_sync_t *message)

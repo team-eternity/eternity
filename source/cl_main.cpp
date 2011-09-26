@@ -413,9 +413,12 @@ Mobj* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
 
 bool CL_SetMobjState(Mobj* mobj, statenum_t state)
 {
+   bool out;
+
    cl_setting_actor_state = true;
-   P_SetMobjState(mobj, state);
+   out = P_SetMobjState(mobj, state);
    cl_setting_actor_state = false;
+   return out;
 }
 
 void CL_PlayerThink(int playernum)
