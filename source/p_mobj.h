@@ -394,7 +394,6 @@ void  P_RespawnSpecials(void);
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_PlayerHitFloor(Mobj *mo, bool onthing);
-void  P_MobjThinker(Mobj *mobj);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
 Mobj *P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
 Mobj *P_SpawnMapThing(mapthing_t *);

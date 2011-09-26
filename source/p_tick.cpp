@@ -311,7 +311,7 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          else if(i != consoleplayer)
             CL_PlayerThink(i);
-         else if(cl_enable_prediction || clients[i].spectating)
+         else if(!cl_enable_prediction && !clients[i].spectating)
             P_PlayerThink(&players[i]);
          else
          {
@@ -319,6 +319,9 @@ void P_Ticker(void)
                cl_current_world_index, cl_current_world_index + 1, false
             );
          }
+
+         if(clientserver && players[i].mo)
+            players[i].mo->Think();
 
          if(CS_SERVER)
             SV_RestoreServerOptions();
