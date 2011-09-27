@@ -37,6 +37,12 @@ IF(EE_STATIC_COMPILE)
     )
 ENDIF(EE_STATIC_COMPILE)
 
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+    SET(LIBPNG_NAME "libpng15d.a")
+ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
+    SET(LIBPNG_NAME "libpng15.a")
+ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
 IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -159,7 +165,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
             ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-            ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
+            ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
             mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
         )
     ELSE(MINGW)
@@ -188,7 +194,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
             ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-            ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
+            ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
             pthread m rt stdc++
         )
     ENDIF(MINGW)
@@ -205,7 +211,7 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_CURL_LDFLAGS}
         ${GL_LIBRARY}
         ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-        ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
+        ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
         stdc++
     )
     ELSE(GL_LIBRARY)
@@ -219,7 +225,7 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-        ${CMAKE_BINARY_DIR}/libpng/libpng15d.a
+        ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
         stdc++
     )
     ENDIF(GL_LIBRARY)
