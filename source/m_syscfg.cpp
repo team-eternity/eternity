@@ -300,16 +300,16 @@ static default_t sysdefaults[] =
       "packet_buffer_size",
       &cl_packet_buffer_size,
       NULL,
-      0, 0, MAX_POSITIONS, default_t::wad_no,
+      1, 0, MAX_POSITIONS, default_t::wad_no,
       "how large to allow the packet buffer to grow before it's flushed "
-      "automatically, 0 - unlimited"
+      "automatically, 0 - unlimited, 1 - disabled"
    ),
 
    DEFAULT_BOOL(
       "buffer_packets_while_spectating",
       &cl_buffer_packets_while_spectating,
       NULL,
-      true, default_t::wad_no,
+      false, default_t::wad_no,
       "disables automatic packet buffer flushing while spectating"
    ),
 

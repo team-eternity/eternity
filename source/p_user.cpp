@@ -654,7 +654,7 @@ void P_PlayerThink(player_t *player)
       return;
    }
 
-   if(playernum == consoleplayer)
+   if(!clientserver || (playernum == consoleplayer))
       P_RunPlayerCommand(playernum);
    else if(CS_SERVER)
       SV_RunPlayerCommands(playernum); // [CG] May run more than one command.

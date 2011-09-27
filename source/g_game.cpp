@@ -2279,7 +2279,6 @@ Mobj* G_SpawnFog(fixed_t x, fixed_t y, angle_t angle)
    fixed_t mtcos, mtsin;
    subsector_t *ss;
    unsigned an;
-   angle_t mtangle;
 
    // spawn a teleport fog
    ss = R_PointInSubsector(x,y);

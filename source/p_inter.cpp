@@ -353,6 +353,13 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
       
       P_GiveAmmo(player, weaponinfo[weapon].ammo, 
                  (GameType == gt_dm) ? 5 : 2);
+
+      if(!clientserver) // [CG] Probably needs demo-versioned.
+      {
+         player->pendingweapon = weapon;
+         S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+         return false;
+      }
       
       // [CG] Allow players to pick up weapons without switching to them.
       if(GET_WSOP(playernum) == WEAPON_SWITCH_ALWAYS ||

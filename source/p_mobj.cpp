@@ -522,9 +522,9 @@ void P_XYMovement(Mobj* mo)
       // [CG] Lee's above comment doesn't mention it, but this allows 2-way
       //      wallrunning.  This must be specifically enabled in c/s however.
       if(xmove > MAXMOVE/2 || ymove > MAXMOVE/2 ||  // killough 8/9/98:
-         ((xmove < -MAXMOVE/2 || ymove < -MAXMOVE/2) && (
-            (demo_version >= 203) &&
-            (!clientserver || (dmflags2 & dmf_allow_two_way_wallrun)))))
+         ((xmove < -MAXMOVE/2 || ymove < -MAXMOVE/2) &&
+          ((demo_version >= 203) &&
+           (!clientserver || (dmflags2 & dmf_allow_two_way_wallrun)))))
       {
          ptryx = mo->x + xmove/2;
          ptryy = mo->y + ymove/2;
