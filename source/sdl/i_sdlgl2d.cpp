@@ -34,6 +34,7 @@
 // DOOM headers
 #include "../z_zone.h"
 #include "../d_main.h"
+#include "../doomstat.h" // [CG] 09/27/11
 #include "../i_system.h"
 #include "../v_misc.h"
 #include "../v_video.h"
@@ -462,6 +463,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    GLvoid *tempbuffer     = NULL;
    GLint   texformat      = GL_RGBA8;
    GLint   texfiltertype  = GL_LINEAR;
+
+   if(CS_HEADLESS)
+      return false;
 
    // Get video commands and geometry settings
 

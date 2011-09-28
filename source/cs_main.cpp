@@ -1349,44 +1349,30 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
    return spawn_point;
 }
 
-Mobj* CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
-                   angle_t angle, int updown, bool ptcl)
+void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                  angle_t angle, int updown, bool ptcl)
 {
-   Mobj *puff;
-
-   if(CS_SHOULD_SHOW_SHOT(shooter))
+   if(serverside)
    {
-      if(serverside)
-      {
-         puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
-         if(CS_SERVER)
-            SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
-      }
-      else if(CL_SHOULD_PREDICT_SHOT(shooter))
-         puff = CL_SpawnPuff(x, y, z, angle, updown, ptcl);
+      Mobj *puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+      if(CS_SERVER)
+         SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
    }
-
-   return puff;
+   else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
+      CL_SpawnPuff(x, y, z, angle, updown, ptcl);
 }
 
-Mobj* CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
-                    angle_t angle, int damage, Mobj *target)
+void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int damage, Mobj *target)
 {
-   Mobj *blood;
-
-   if(CS_SHOULD_SHOW_SHOT(shooter))
+   if(serverside)
    {
-      if(serverside)
-      {
-         blood = P_SpawnBlood(x, y, z, angle, damage, target);
-         if(CS_SERVER)
-            SV_BroadcastBloodSpawned(blood, shooter, damage, target);
-      }
-      else if(CL_SHOULD_PREDICT_SHOT(shooter))
-         blood = CL_SpawnBlood(x, y, z, angle, damage, target);
+      Mobj *blood = P_SpawnBlood(x, y, z, angle, damage, target);
+      if(CS_SERVER)
+         SV_BroadcastBloodSpawned(blood, shooter, damage, target);
    }
-
-   return blood;
+   else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
+      CL_SpawnBlood(x, y, z, angle, damage, target);
 }
 
 char* CS_ExtractMessage(char *data, size_t data_length)
@@ -1590,14 +1576,6 @@ void CS_ReadFromNetwork(void)
 
 void CS_TryRunTics(void)
 {
-   if(d_fastrefresh)
-   {
-      I_Error(
-         "CS_TryRunTics: d_fastrefresh is currently unsupported in c/s "
-         "Eternity, exiting.\n"
-      );
-   }
-
    if(CS_CLIENTDEMO)
       CL_RunDemoTics();
    else if(CS_SERVERDEMO)

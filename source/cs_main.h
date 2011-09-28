@@ -850,10 +850,10 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
                     angle_t angle, bool as_spectator);
 mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator);
 
-Mobj* CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
-                   angle_t angle, int updown, bool ptcl);
-Mobj* CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
-                    angle_t angle, int damage, Mobj *target);
+void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                  angle_t angle, int updown, bool ptcl);
+void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int damage, Mobj *target);
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
 void CS_ServiceNetwork(void);
