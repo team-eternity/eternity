@@ -601,13 +601,19 @@ void CS_HandleSpectateKey(event_t *ev)
 
 void CS_HandleSpectatePrevKey(event_t *ev)
 {
-   if(clients[consoleplayer].spectating && ev->type == ev_keydown)
+   if(ev->type != ev_keydown)
+      return;
+
+   if(!clientserver || clients[consoleplayer].spectating)
       Handler_spectate_prev();
 }
 
 void CS_HandleSpectateNextKey(event_t *ev)
 {
-   if(clients[consoleplayer].spectating && ev->type == ev_keydown)
+   if(ev->type != ev_keydown)
+      return;
+
+   if(!clientserver || clients[consoleplayer].spectating)
       Handler_spectate_next();
 }
 

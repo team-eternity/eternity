@@ -213,60 +213,6 @@ CONSOLE_COMMAND(spectate, cf_netonly)
    CL_Spectate();
 }
 
-CONSOLE_COMMAND(spectate_prev, cf_netonly)
-{
-   int i = displayplayer;
-   client_t *client = &clients[consoleplayer];
-
-   if(!client->spectating)
-   {
-      doom_printf("Cannot spectate other players while not a spectator.\n");
-      return;
-   }
-
-   do
-   {
-      i--;
-
-      if(i == -1)
-         i = (MAXPLAYERS - 1);
-
-      if(i == displayplayer)
-         return;
-
-   } while(!playeringame[i] || clients[i].spectating ||
-           (CS_TEAMS_ENABLED && clients[i].team != client->team));
-
-   CS_SetDisplayPlayer(i);
-}
-
-CONSOLE_COMMAND(spectate_next, cf_netonly)
-{
-   int i = displayplayer;
-   client_t *client = &clients[consoleplayer];
-
-   if(!client->spectating)
-   {
-      doom_printf("Cannot spectate other players while not a spectator.\n");
-      return;
-   }
-
-   do
-   {
-      i++;
-
-      if(i == MAXPLAYERS - 1)
-         i = 0;
-
-      if(i == displayplayer)
-         return;
-
-   } while(!playeringame[i] || clients[i].spectating ||
-           (CS_TEAMS_ENABLED && clients[i].team != client->team));
-
-   CS_SetDisplayPlayer(i);
-}
-
 void CL_AddCommands(void)
 {
    C_AddCommand(prediction);
@@ -285,7 +231,5 @@ void CL_AddCommands(void)
    C_AddCommand(reconnect);
    C_AddCommand(password);
    C_AddCommand(spectate);
-   C_AddCommand(spectate_prev);
-   C_AddCommand(spectate_next);
 }
 
