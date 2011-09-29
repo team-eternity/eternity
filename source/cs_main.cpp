@@ -973,10 +973,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       );
 
       if(respawn_player)
-      {
-         spawn_point = CS_SpawnPlayerCorrectly(playernum, true);
-         SV_BroadcastPlayerSpawned(spawn_point, playernum);
-      }
+         SV_SpawnPlayer(playernum, true);
    }
 }
 

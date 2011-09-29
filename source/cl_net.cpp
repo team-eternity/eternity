@@ -625,46 +625,34 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    if(client->packet_loss > 100)
       client->packet_loss = 100;
 
-   if(!client->spectating)
+   if(client->spectating)
+      return;
+
+   if(playernum == consoleplayer && players[playernum].playerstate == PST_LIVE)
    {
-      if(playernum == consoleplayer &&
-         players[playernum].playerstate == PST_LIVE)
-      {
-         oldbob = players[playernum].bob;
-         oldviewz = players[playernum].viewz;
-         oldviewheight = players[playernum].viewheight;
-         olddeltaviewheight = players[playernum].deltaviewheight;
-      }
-
-      CS_SetPlayerPosition(playernum, &message->position);
-      clients[playernum].floor_status = message->floor_status;
-
-      // [CG] Re-predicts from the position just received from the server on.
-      if(playernum == consoleplayer && cl_enable_prediction)
-      {
-         if(message->last_command_run > 0)
-         {
-            CL_Predict(
-               message->last_command_run + 1, cl_current_world_index, true
-            );
-         }
-      }
-
-      if(playernum == consoleplayer &&
-         players[playernum].playerstate == PST_LIVE)
-      {
-         players[playernum].bob = oldbob;
-         players[playernum].viewz = oldviewz;
-         players[playernum].viewheight = oldviewheight;
-         players[playernum].deltaviewheight = olddeltaviewheight;
-      }
+      oldbob = players[playernum].bob;
+      oldviewz = players[playernum].viewz;
+      oldviewheight = players[playernum].viewheight;
+      olddeltaviewheight = players[playernum].deltaviewheight;
    }
 
-   // [CG] TODO: Put something here that marks network message indices as no
-   //            longer needed, so they can be cleared accurately.  Once the
-   //            position for a given command has been checked, there's no
-   //            reason to keep network messages from that index or before, so
-   //            they can be cleared.
+   CS_SetPlayerPosition(playernum, &message->position);
+   clients[playernum].floor_status = message->floor_status;
+
+   if(playernum != consoleplayer)
+      return;
+
+   // [CG] Re-predicts from the position just received from the server on.
+   if(cl_enable_prediction && message->last_command_run > 0)
+      CL_RePredict(message->last_command_run+1, cl_current_world_index);
+
+   if(players[playernum].playerstate == PST_LIVE)
+   {
+      players[playernum].bob = oldbob;
+      players[playernum].viewz = oldviewz;
+      players[playernum].viewheight = oldviewheight;
+      players[playernum].deltaviewheight = olddeltaviewheight;
+   }
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)

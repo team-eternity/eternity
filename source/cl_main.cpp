@@ -134,6 +134,15 @@ static void run_world(void)
    gametic++;
 }
 
+static void flush_packet_buffer(void)
+{
+   unsigned int old_world_index = cl_current_world_index;
+   while(cl_current_world_index < (cl_latest_world_index - 2))
+      run_world();
+   CL_PredictFrom(old_world_index, cl_latest_world_index - 2);
+   cl_flush_packet_buffer = false;
+}
+
 void CL_Init(char *url)
 {
    size_t url_length;
@@ -523,10 +532,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
       CL_Disconnect();
       C_Printf("5.\n");
       */
-      unsigned int old_world_index = cl_current_world_index;
-      while(cl_current_world_index < (cl_latest_world_index - 2))
-         run_world();
-      CL_Predict(old_world_index, cl_latest_world_index - 2, false);
+      flush_packet_buffer();
    }
 }
 
@@ -598,105 +604,51 @@ void CL_RunDemoTics(void)
 
 void CL_TryRunTics(void)
 {
-   int current_tic, buffer_size;
-   bool flush_buffer = false;
+   int current_tic;
    bool received_sync = cl_received_sync;
-   client_t *client = &clients[consoleplayer];
    static int new_tic;
 
    current_tic = new_tic;
    new_tic = I_GetTime();
 
-   I_StartTic();
-   D_ProcessEvents();
-
    // [CG] Return early if d_fastrefresh is on and the TIC hasn't changed.
    if(d_fastrefresh && (current_tic == new_tic))
-   {
-      CS_ReadFromNetwork();
       return;
-   }
 
    // [CG] These go here to avoid super-fast speeds if d_fastrefresh is
    //      enabled.
+   I_StartTic();
+   D_ProcessEvents();
    MN_Ticker();
    C_Ticker();
    V_FPSTicker();
    CS_ReadFromNetwork();
 
-   // [CG] Because worlds may be skipped in order to keep buffer sizes low,
-   //      it's necessary to pull damagecount and bonuscount decrementing out
-   //      from the normal game loop.
+   // [CG] Because worlds may be skipped during buffer flushes, it's necessary
+   //      to pull damagecount and bonuscount decrementing out from the normal
+   //      game loop.
    if(consoleplayer && players[consoleplayer].damagecount)
       players[consoleplayer].damagecount--;
 
    if(consoleplayer && players[consoleplayer].bonuscount)
       players[consoleplayer].bonuscount--;
 
-   buffer_size = cl_latest_world_index - cl_current_world_index;
-   if(buffer_size < 0)
-      buffer_size = 0;
-
-   // [CG] There are a few cases in which we flush the packet buffer and some
-   //      precedents.  Hopefully these if statements are clear enough.
-   if(clients[consoleplayer].spectating && cl_buffer_packets_while_spectating)
-   {
-      // [CG] If the client's disabled buffer flushing while spectating, then
-      //      abort buffer flushing if it was activated above.
-      flush_buffer = false;
-   }
-   else if(cl_packet_buffer_size < 2)
-   {
-      // [CG] pbs == 1 disables the buffer, and pbs == 0 is handled specially
-      //      below.
-      flush_buffer = false;
-   }
-
-   // [CG] If we're directed to flush the buffer we must... unless we haven't
-   //      yet received sync.
-   if(cl_flush_packet_buffer)
-      flush_buffer = true;
-
    // [CG] The buffer absolutely cannot be flushed if we've not yet received
-   //      sync; this is a fail-safe here.
-   if(!cl_received_sync)
-      flush_buffer = false;
+   //      sync, so only honor cl_flush_packet_buffer if sync's been received.
+   if(cl_received_sync && cl_flush_packet_buffer)
+      flush_packet_buffer();
 
-   if(flush_buffer)
-   {
-      unsigned int old_world_index = cl_current_world_index;
-      printf("Flushing buffer.\n");
-      while(cl_current_world_index < (cl_latest_world_index - 2))
-         run_world();
-      CL_Predict(old_world_index, cl_latest_world_index - 2, false);
-      cl_flush_packet_buffer = false;
-   }
-   else if(cl_packet_buffer_size == 0)
-   {
-      // [CG] Adaptive buffer flushing.  Load a single extra world in an
-      //      attempt to catch up.
-      if(buffer_size > (((float)client->transit_lag / TICRATE) + 3))
-         run_world();
-   }
-   else if(!cl_constant_prediction && buffer_size > cl_packet_buffer_size)
-   {
-      // [CG] Manual buffer flushing.  Load a single extra world in an attempt
-      //      to catch up.
+   // [CG] When constant prediction is enabled, 1 world is always run each TIC.
+   //      Otherwise run a world if the server finished an index.
+   if(cl_constant_prediction)
       run_world();
-   }
-
-   if(cl_constant_prediction ||
-      (cl_current_world_index < (cl_latest_world_index - 1)))
-   {
-      // [CG] The server finished an index, so process network messages, send a
-      //      command, and run G_Ticker.
+   else if(cl_current_world_index < (cl_latest_world_index - 1))
       run_world();
-   }
 
    // [CG] For the rest of the TIC, try reading from the network.  Even though
    //      things happen "after" this, this functionally serves as the end of
    //      the main game loop.
-   if(!d_fastrefresh && net_peer)
+   if(net_peer && !d_fastrefresh)
    {
       do
       {

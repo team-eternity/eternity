@@ -388,8 +388,7 @@ void P_DeathThink(player_t *player)
                "%s was forced to leave the game.\n", player->name
             );
          }
-         spawn_point = CS_SpawnPlayerCorrectly(playernum, client->spectating);
-         SV_BroadcastPlayerSpawned(spawn_point, playernum);
+         SV_SpawnPlayer(playernum, client->spectating);
       }
    }
 }
@@ -582,25 +581,17 @@ void P_CheckPlayerButtons(int playernum)
       {
          player->usedown = true;
 
-         if(!client->spectating)
-         {
+         if(serverside && !client->spectating)
             P_UseLines(player);
-         }
          else if(CS_SERVER && SV_HandleJoinRequest(playernum))
-         {
-            mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(
-               player - players, false
-            );
-            SV_BroadcastPlayerSpawned(spawn_point, player - players);
-         }
+            SV_SpawnPlayer(player - players, false);
       }
    }
    else
       player->usedown = false;
 
    // cycle psprites
-   if(!cl_predicting)
-      P_MovePsprites (player);
+   P_MovePsprites (player);
 }
 
 //
@@ -753,11 +744,14 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
-   if(player->damagecount)
-      player->damagecount--;
+   if(serverside) // [CG] This is done elsewhere in c/s client mode.
+   {
+      if(player->damagecount)
+         player->damagecount--;
 
-   if(player->bonuscount)
-      player->bonuscount--;
+      if(player->bonuscount)
+         player->bonuscount--;
+   }
 
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax

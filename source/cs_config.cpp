@@ -615,8 +615,7 @@ void SV_HandleMastersSection(json_object *masters)
 
 void SV_LoadConfig(void)
 {
-   json_object *section, *password, *option, *json_write_out,
-               *minimum_buffer_size;
+   json_object *section, *password, *option, *json_write_out;
    char *config_path = NULL;
    const char *wad_folder;
    char *write_config_to = NULL;
@@ -710,20 +709,12 @@ void SV_LoadConfig(void)
    if(section != NULL)
       SV_HandleMastersSection(section);
 
-   sv_minimum_buffer_size = 0;
    sv_spectator_password = NULL;
    sv_player_password = NULL;
    sv_moderator_password = NULL;
    sv_administrator_password = NULL;
 
    section = json_object_object_get(cs_json, "server");
-
-   // [CG] Set the minimum size of the serverside command buffer.
-   minimum_buffer_size = json_object_object_get(
-      section, "minimum_buffer_size"
-   );
-   if(minimum_buffer_size != NULL)
-      sv_minimum_buffer_size = json_object_get_int(minimum_buffer_size);
 
    // [CG] Load password information (serverside-only).
    password = json_object_object_get(section, "spectator_password");

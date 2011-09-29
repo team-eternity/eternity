@@ -1910,10 +1910,7 @@ void G_Ticker(void)
          if(playeringame[i] && players[i].playerstate == PST_REBORN)
          {
             if(CS_SERVER)
-            {
-               mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(i, clients[i].spectating);
-               SV_BroadcastPlayerSpawned(spawn_point, i);
-            }
+               SV_SpawnPlayer(i, clients[i].spectating);
             else
                G_DoReborn(i);
          }
@@ -2501,10 +2498,7 @@ void G_DoReborn(int playernum)
       //      to spawn a player.
       if(CS_SERVER)
       {
-         mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(
-            playernum, clients[playernum].spectating
-         );
-         SV_BroadcastPlayerSpawned(spawn_point, playernum);
+         SV_SpawnPlayer(playernum, clients[playernum].spectating);
          return;
       }
 

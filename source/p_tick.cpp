@@ -314,14 +314,10 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          else if(i != consoleplayer)
             CL_PlayerThink(i);
-         else if(!cl_enable_prediction && !clients[i].spectating)
-            P_PlayerThink(&players[i]);
+         else if(cl_enable_prediction || clients[i].spectating)
+            CL_Predict(cl_current_world_index);
          else
-         {
-            CL_Predict(
-               cl_current_world_index, cl_current_world_index + 1, false
-            );
-         }
+            P_PlayerThink(&players[i]);
 
          if(clientserver && players[i].mo)
             players[i].mo->Think();

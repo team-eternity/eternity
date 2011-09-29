@@ -42,7 +42,6 @@ class Mobj;
 
 extern unsigned int sv_world_index;
 extern unsigned long sv_public_address;
-extern unsigned int sv_minimum_buffer_size;
 extern bool sv_should_send_new_map;
 extern server_client_t server_clients[MAXPLAYERS];
 extern const char *sv_spectator_password;
@@ -76,6 +75,7 @@ unsigned int SV_GetClientNumberFromAddress(ENetAddress *address);
 mapthing_t* SV_GetCoopSpawnPoint(int playernum);
 mapthing_t* SV_GetDeathMatchSpawnPoint(int playernum);
 mapthing_t* SV_GetTeamSpawnPoint(int playernum);
+void SV_SpawnPlayer(int playernum, bool as_spectator);
 
 // [CG] Authorization functions.
 bool SV_AuthorizeClient(int playernum, const char *password);

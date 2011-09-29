@@ -91,7 +91,6 @@ extern char gamemapname[9];
 
 unsigned int sv_world_index = 0;
 unsigned long sv_public_address = 0;
-unsigned int sv_minimum_buffer_size = 2;
 bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
 
@@ -940,6 +939,12 @@ void SV_SendClientInfo(int playernum, int clientnum)
    );
 }
 
+void SV_SpawnPlayer(int playernum, bool as_spectator)
+{
+   mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(playernum, as_spectator);
+   SV_BroadcastPlayerSpawned(spawn_point, playernum);
+}
+
 void SV_BroadcastNewClient(int clientnum)
 {
    nm_clientinit_t client_init_message;
@@ -1412,15 +1417,6 @@ bool SV_RunPlayerCommands(int playernum)
          run_player_command(playernum, bufcmd);
       }
    }
-   /*
-   else if(sc->commands.size >
-           (((float)client->transit_lag / TICRATE) + sv_minimum_buffer_size))
-   {
-      // [CG] Run an additional command in an attempt to catch up.
-      bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
-      run_player_command(playernum, bufcmd);
-   }
-   */
 
    sc->commands_dropped = 0;
    return true;
@@ -1492,8 +1488,7 @@ void SV_SetPlayerTeam(int playernum, teamcolor_t team)
    {
       client->team = team;
       SV_BroadcastPlayerScalarInfo(playernum, ci_team);
-      spawn_point = CS_SpawnPlayerCorrectly(playernum, true);
-      SV_BroadcastPlayerSpawned(spawn_point, playernum);
+      SV_SpawnPlayer(playernum, true);
    }
 }
 

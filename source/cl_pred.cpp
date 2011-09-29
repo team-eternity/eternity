@@ -24,33 +24,11 @@
 //
 //----------------------------------------------------------------------------
 
-/*
-#include "doomdef.h"
-#include "info.h"
-#include "e_states.h"
-#include "p_info.h"
-#include "p_inter.h"
-#include "p_map.h"
-#include "p_map3d.h"
-#include "p_mobj.h"
-#include "p_tick.h"
-#include "p_user.h"
-#include "r_state.h"
-#include "e_ttypes.h"
-
-#include "cs_cmd.h"
-#include "cs_position.h"
-#include "cs_netid.h"
-#include "cs_main.h"
-#include "cl_main.h"
-#include "cl_spec.h"
-#include "cl_pred.h"
-*/
-
 #include <stdlib.h>
 #include <string.h>
 
 #include "doomstat.h"
+#include "i_system.h"
 #include "r_state.h"
 #include "tables.h"
 #include "p_user.h"
@@ -108,31 +86,32 @@ void CL_PredictPlayerPosition(unsigned int index)
 #endif
 }
 
-void CL_Predict(unsigned int start_index, unsigned int end_index,
-                bool repredicting)
+void CL_Predict(unsigned int index)
+{
+   CL_PredictPlayerPosition(index);
+}
+
+void CL_PredictFrom(unsigned int start, unsigned int end)
 {
    unsigned int i;
 
-#if _PRED_DEBUG
-   printf(
-      "CL_Predict: Predicting from %u to %u.\n",
-      start_index,
-      end_index
-   );
-#endif
-   cl_predicting = repredicting;
-   for(i = start_index; i < end_index; i++)
-   {
-      if(!repredicting)
-         CL_LoadSectorPositions(i);
+   for(i = start; i < end; i++)
+      CL_PredictPlayerPosition(i);
+}
 
+void CL_RePredict(unsigned int start, unsigned int end)
+{
+   unsigned int i;
+
+   printf("CL_RePredict: Re-predicting from %u to %u.\n", start, end);
+   cl_predicting = true;
+   for(i = start; i < end; i++)
+   {
+      CL_LoadSectorPositions(i);
       CL_PredictPlayerPosition(i);
    }
-   cl_predicting = !repredicting;
+   cl_predicting = false;
    CL_LoadSectorState(cl_current_world_index);
    CL_LoadSectorPositions(cl_current_world_index);
-#if _PRED_DEBUG
-   printf("CL_Predict: Done.\n");
-#endif
 }
 
