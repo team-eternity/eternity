@@ -710,7 +710,7 @@ void SV_LoadConfig(void)
    if(section != NULL)
       SV_HandleMastersSection(section);
 
-   sv_minimum_buffer_size = 2;
+   sv_minimum_buffer_size = 0;
    sv_spectator_password = NULL;
    sv_player_password = NULL;
    sv_moderator_password = NULL;

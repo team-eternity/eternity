@@ -79,6 +79,10 @@ int  I_GetTime_RealTime (void)
    
    // milliseconds since SDL initialization
    ticks = SDL_GetTicks();
+
+   // [CG] 09/29/11: Handle ticks wrapping.
+   if(ticks < basetime)
+      basetime = ticks;
    
    return ((ticks - basetime)*TICRATE)/1000;
 }

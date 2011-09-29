@@ -295,7 +295,10 @@ void P_Ticker(void)
       if(clientserver)
       {
          if(CS_SERVER)
+         {
             P_PlayerThink(&players[0]);
+            players[0].mo->Think();
+         }
          i = 1;
       }
 

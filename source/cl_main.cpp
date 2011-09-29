@@ -109,6 +109,8 @@ extern int levelTimeLimit;
 extern int levelFragLimit;
 extern int levelScoreLimit;
 
+extern bool d_fastrefresh;
+
 extern unsigned int rngseed;
 
 extern char gamemapname[9];
@@ -591,7 +593,7 @@ void CL_RunDemoTics(void)
    {
       I_StartTic();
       D_ProcessEvents();
-   } while((new_tic = I_GetTime()) <= current_tic);
+   } while((new_tic = I_GetTime()) == current_tic);
 }
 
 void CL_TryRunTics(void)
@@ -607,9 +609,20 @@ void CL_TryRunTics(void)
 
    I_StartTic();
    D_ProcessEvents();
+
+   // [CG] Return early if d_fastrefresh is on and the TIC hasn't changed.
+   if(d_fastrefresh && (current_tic == new_tic))
+   {
+      CS_ReadFromNetwork();
+      return;
+   }
+
+   // [CG] These go here to avoid super-fast speeds if d_fastrefresh is
+   //      enabled.
    MN_Ticker();
    C_Ticker();
    V_FPSTicker();
+   CS_ReadFromNetwork();
 
    // [CG] Because worlds may be skipped in order to keep buffer sizes low,
    //      it's necessary to pull damagecount and bonuscount decrementing out
@@ -683,16 +696,14 @@ void CL_TryRunTics(void)
    // [CG] For the rest of the TIC, try reading from the network.  Even though
    //      things happen "after" this, this functionally serves as the end of
    //      the main game loop.
-   if(net_peer)
+   if(!d_fastrefresh && net_peer)
    {
       do
       {
-         // [CG] Without I_StartTic and D_ProcessEvents here, very noticeable
-         //      mouse deceleration occurs.
          I_StartTic();
          D_ProcessEvents();
          CS_ReadFromNetwork();
-      } while((new_tic = I_GetTime()) <= current_tic);
+      } while((new_tic = I_GetTime()) == current_tic);
    }
 
    if(cl_received_sync && received_sync)
@@ -703,15 +714,11 @@ void CL_TryRunTics(void)
          C_SetConsole();
          doom_printf("Lost connection to server.");
       }
-      else if(((new_tic - current_tic) > (MAX_LATENCY * TICRATE)))
+      else if((new_tic > current_tic) &&
+              ((new_tic - current_tic) > (MAX_LATENCY * TICRATE)))
       {
          CL_Disconnect();
-         if(received_sync)
-            doom_printf("Synced the whole loop.");
-         else if(cl_received_sync)
-            doom_printf("Received sync just this last loop.");
-         else
-            doom_printf("Never synchronized.");
+         doom_printf("Timed out: %u TICs expired.\n", new_tic - current_tic);
       }
    }
 }
