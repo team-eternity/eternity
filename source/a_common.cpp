@@ -49,6 +49,7 @@
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "r_defs.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -647,7 +648,7 @@ void A_PlayerSkull(Mobj *actor)
       head->player->mo          = head;  // set player's thing to head
       head->player->pitch       = 0;     // don't look up or down
       head->player->damagecount = 32;    // see red for a while
-      head->player->attacker    = actor; // look at old body
+      P_SetPlayerAttacker(head->player, actor); // look at old body
    }
    
    // send head flying

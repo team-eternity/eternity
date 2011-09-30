@@ -2164,6 +2164,9 @@ static void P_ClearPlayerVars(void)
 
       // haleyjd: explicitly nullify old player object pointers
       players[i].mo = NULL;
+
+      // haleyjd: explicitly nullify old player attacker
+      players[i].attacker = NULL;
    }
 
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
@@ -2181,6 +2184,11 @@ static void P_ClearPlayerVars(void)
 //
 static void P_PreZoneFreeLevel(void)
 {
+   //==============================================
+   // Clear player data
+
+   P_ClearPlayerVars();
+
    //==============================================
    // Scripting
 
@@ -2375,9 +2383,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
-
-   // clear player data
-   P_ClearPlayerVars();
 
    // perform pre-Z_FreeTags actions
    P_PreZoneFreeLevel();

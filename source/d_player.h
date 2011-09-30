@@ -151,7 +151,7 @@ struct player_t
    int            bonuscount;
    int            fixedcolormap; // Current PLAYPAL, for pain etc.
 
-   Mobj        *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj          *attacker;      // Who did damage (NULL for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 

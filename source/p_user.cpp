@@ -307,9 +307,9 @@ void P_DeathThink(player_t *player)
    if(player->attacker && player->attacker != player->mo)
    {
       angle = P_PointToAngle(player->mo->x,
-                              player->mo->y,
-                              player->attacker->x,
-                              player->attacker->y);
+                             player->mo->y,
+                             player->attacker->x,
+                             player->attacker->y);
 
       delta = angle - player->mo->angle;
       
@@ -642,6 +642,25 @@ void P_PlayerThink(player_t *player)
 
    // haleyjd 01/21/07: clear earthquake flag before running quake thinkers later
    player->quake = 0;
+}
+
+//
+// P_SetPlayerAttacker
+//
+// haleyjd 09/30/2011: Needed function to fix a BOOM problem wherein 
+// player_t::attacker is not properly reference-counted against the
+// Mobj to which it points.
+//
+// Usually the worst consequence of this problem was having your view
+// spin around to a pseudo-random angle when watching a Lost Soul that
+// had killed you be removed from the game world.
+//
+void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
+{
+   if(full_demo_version >= make_full_version(340, 17))
+      P_SetTarget<Mobj>(&player->attacker, attacker);
+   else
+      player->attacker = attacker;
 }
 
 #ifndef EE_NO_SMALL_SUPPORT
