@@ -38,8 +38,11 @@ set(PNGLIB_NAME libpng${PNGLIB_MAJOR}${PNGLIB_MINOR})
 set(PNGLIB_VERSION ${PNGLIB_MAJOR}.${PNGLIB_MINOR}.${PNGLIB_RELEASE})
 
 # needed packages
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIR})
+# [DH] Use local version.
+#find_package(ZLIB REQUIRED)
+#include_directories(${ZLIB_INCLUDE_DIR})
+set(ZLIB_LIBRARY zlib)
+set(ZLIB_INCLUDE_DIR ../zlib)
 
 if(NOT WIN32)
   find_library(M_LIBRARY
@@ -279,11 +282,12 @@ endif()
 # If CMake > 2.4.x, we set a variable used below to export
 # targets to an export file.
 # TODO: Use VERSION_GREATER after our cmake_minimum_required >= 2.6.2
-if(CMAKE_MAJOR_VERSION GREATER 1 AND CMAKE_MINOR_VERSION GREATER 4)
-  set(PNG_EXPORT_RULE EXPORT libpng)
-elseif(CMAKE_MAJOR_VERSION GREATER 2) # future proof
-  set(PNG_EXPORT_RULE EXPORT libpng)
-endif()
+# [DH] This doesn't work with the local zlib.
+#if(CMAKE_MAJOR_VERSION GREATER 1 AND CMAKE_MINOR_VERSION GREATER 4)
+#  set(PNG_EXPORT_RULE EXPORT libpng)
+#elseif(CMAKE_MAJOR_VERSION GREATER 2) # future proof
+#  set(PNG_EXPORT_RULE EXPORT libpng)
+#endif()
 
 # INSTALL
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
