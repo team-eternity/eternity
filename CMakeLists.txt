@@ -458,6 +458,8 @@ INCLUDE_DIRECTORIES(${SDLMIXER_INCLUDE_DIR})
 FIND_PACKAGE(SDL_net 1.2.7 REQUIRED)
 INCLUDE_DIRECTORIES(${SDLNET_INCLUDE_DIR})
 
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libpng)
+
 ## [CG] Further checks are unnecessary if building statically; it's assumed
 ##      that the user has set up the dependencies properly.
 IF(NOT EE_STATIC_COMPILE)
@@ -506,8 +508,6 @@ INCLUDE_DIRECTORIES(${PC_ENET_INCLUDE_DIR})
 PKG_SEARCH_MODULE(PC_JSON REQUIRED json>=0.9)
 INCLUDE_DIRECTORIES(${PC_JSON_INCLUDE_DIR})
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libpng)
-
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL.dll
 ## then taking every .dll file found in that directory from your SDK.
@@ -526,8 +526,8 @@ ENDIF(NOT EE_STATIC_COMPILE)
 ######################### Set Build Targets   ##################################
 
 ADD_SUBDIRECTORY(snes_spc)
-ADD_SUBDIRECTORY(source)
 ADD_SUBDIRECTORY(libpng)
+ADD_SUBDIRECTORY(source)
 
 IF(NOT EE_STATIC_COMPILE)
 IF(WIN32)

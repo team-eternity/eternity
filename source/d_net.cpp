@@ -840,7 +840,7 @@ static bool RunGameTics(void)
    opensocket_count = 0;
    opensocket = 0;
 
-   // run the count * ticdup dics
+   // run the count * ticdup tics
    while(counts--)
    {
       for(i = 0; i < ticdup; ++i)

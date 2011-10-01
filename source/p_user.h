@@ -30,7 +30,8 @@
 #define P_USER_H__
 
 struct player_t;
-struct sector_t;
+// struct sector_t;
+class  Mobj;
 
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
@@ -47,6 +48,7 @@ void P_CalcHeight(player_t *player);
 void P_DeathThink(player_t *player);
 void P_MovePlayer(player_t *player);
 void P_Thrust(player_t *player, angle_t angle, fixed_t move);
+void P_SetPlayerAttacker(player_t *player, Mobj *attacker);
 
 #endif // P_USER_H__
 

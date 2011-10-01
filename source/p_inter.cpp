@@ -50,6 +50,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_segs.h"
@@ -1696,7 +1697,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->health < 0)
          player->health = 0;
       
-      player->attacker = source;
+      P_SetPlayerAttacker(player, source);
       player->damagecount += damage;  // add damage after armor / invuln
       
       if(player->damagecount > 100)
