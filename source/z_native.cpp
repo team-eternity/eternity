@@ -519,6 +519,12 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
              "Z_Realloc: Reallocated a block without ZONEID\n", 
              block, file, line);
 
+   // haleyjd 10/01/11: do not allow shrinking reallocs, as these are considered
+   // to have "implementation-dependent" results by the C/C++ standard, and that
+   // can include "blowing up the program" as a valid interpretation.
+   if(block->size >= n)
+      return ptr;
+
    // nullify current user, if any
    if(block->user)
       *(block->user) = NULL;

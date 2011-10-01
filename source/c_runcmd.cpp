@@ -1430,15 +1430,9 @@ static bool C_Strcmp(const char *pa, const char *pb)
 
 command_t *cmdroots[CMDCHAINS];
 
-       // the hash key
-#define CmdHashKey(s)                                     \
-   (( (s)[0] + (s)[0] ? (s)[1] + (s)[1] ? (s)[2] +        \
-                 (s)[2] ? (s)[3] + (s)[3] ? (s)[4]        \
-                        : 0 : 0 : 0 : 0 ) % 16)
-
 void (C_AddCommand)(command_t *command)
 {
-   int hash = CmdHashKey(command->name);
+   unsigned int hash = D_HashTableKey(command->name) % CMDCHAINS;
    
    command->next = cmdroots[hash]; // hook it in at the start of
    cmdroots[hash] = command;       // the table
@@ -1463,7 +1457,7 @@ void (C_AddCommand)(command_t *command)
 
 void C_AddCommandList(command_t *list)
 {
-   for(;list->type != ct_end; list++)
+   for(; list->type != ct_end; list++)
       (C_AddCommand)(list);
 }
 
@@ -1472,14 +1466,14 @@ void C_AddCommandList(command_t *list)
 command_t *C_GetCmdForName(const char *cmdname)
 {
    command_t *current;
-   int hash;
+   unsigned int hash;
    
    while(*cmdname == ' ')
       cmdname++;
 
    // start hashing
    
-   hash = CmdHashKey(cmdname);
+   hash = D_HashTableKey(cmdname) % CMDCHAINS;
    
    current = cmdroots[hash];
    while(current)
