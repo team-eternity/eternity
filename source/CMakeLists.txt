@@ -224,8 +224,10 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_ENET_LDFLAGS}
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
-        ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-        ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
+        png15_static
+        snes_spc
+        ## ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
+        ## ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
         stdc++
     )
     ENDIF(GL_LIBRARY)
@@ -241,6 +243,7 @@ IF(UNIX)
         SET_TARGET_PROPERTIES(eternity PROPERTIES OUTPUT_NAME eternity.real)
     ENDIF(NOT APPLE OR NOT MINGW)
 ENDIF(UNIX)
+
 ## FIXME: base really needs to be refactored into read only and writeable
 ## data to conform to *NIX and Windows file system standards.
 ## On *NIX we use a wrapper script that set's up a per user

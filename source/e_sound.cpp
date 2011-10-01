@@ -786,7 +786,7 @@ void E_ProcessSounds(cfg_t *cfg)
       else
       {
          // create a new sound
-         sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+         sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
          // copy mnemonic
          strncpy(sfx->mnemonic, mnemonic, 33);
@@ -813,7 +813,7 @@ void E_ProcessSounds(cfg_t *cfg)
    {
       cfg_t *section = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
       const char *mnemonic = cfg_title(section);
-      sfxinfo_t *sfx = E_SoundForName(mnemonic);
+      sfx = E_SoundForName(mnemonic);
 
       E_ProcessSound(sfx, section, true);
 

@@ -525,8 +525,12 @@ ENDIF(NOT EE_STATIC_COMPILE)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
-ADD_SUBDIRECTORY(snes_spc)
+INCLUDE_DIRECTORIES(libpng)
+INCLUDE_DIRECTORIES(zlib)
+
+ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)
+ADD_SUBDIRECTORY(snes_spc)
 ADD_SUBDIRECTORY(source)
 
 IF(NOT EE_STATIC_COMPILE)

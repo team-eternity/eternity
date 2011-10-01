@@ -236,11 +236,11 @@ CONSOLE_COMMAND(closelog, 0)
 // SoM: omg why didn't we have this before?
 CONSOLE_COMMAND(cvarhelp, 0)
 {
-   command_t *current;
+   command_t  *current;
    variable_t *var;
-   int count;
+   int         count;
    const char *name;
-   default_t *def;
+   default_t  *def;
 
    if(Console.argc != 1)
    {

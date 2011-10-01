@@ -95,13 +95,13 @@ void C_InitPlayerName(void)
 
 void C_queueChatChar(unsigned char c)
 {
-  if (((head + 1) & (QUEUESIZE-1)) == tail)
-    C_Printf("command unsent\n");
-  else
-    {
+   if (((head + 1) & (QUEUESIZE-1)) == tail)
+      C_Printf("command unsent\n");
+   else
+   {
       chatchars[head++] = c;
       head &= QUEUESIZE-1;
-    }
+   }
 }
 
 //
@@ -113,16 +113,16 @@ void C_queueChatChar(unsigned char c)
 //
 unsigned char C_dequeueChatChar(void)
 {
-  char c;
+   char c;
 
-  if (head != tail)
-    {
+   if (head != tail)
+   {
       c = chatchars[tail++];
       tail &= QUEUESIZE-1;
-    }
-  else
-    c = 0;
-  return c;
+   }
+   else
+      c = 0;
+   return c;
 }
 
 void C_SendCmd(int dest, int cmdnum, char *s,...)

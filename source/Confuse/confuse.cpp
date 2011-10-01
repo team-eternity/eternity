@@ -420,22 +420,22 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
          val = 0;
          if(opt->type == CFGT_SEC && is_set(CFGF_TITLE, opt->flags))
          {
-            unsigned int i;
+            unsigned int ii;
 
             /* check if there is already a section with the same title */
             cfg_assert(value);
-            for(i = 0; i < opt->nvalues; i++)
+            for(ii = 0; ii < opt->nvalues; ii++)
             {
-               cfg_t *sec = opt->values[i]->section;
+               cfg_t *sec = opt->values[ii]->section;
                if(is_set(CFGF_NOCASE, cfg->flags))
                {
                   if(strcasecmp(value, sec->title) == 0)
-                     val = opt->values[i];
+                     val = opt->values[ii];
                }
                else
                {
                   if(strcmp(value, sec->title) == 0)
-                     val = opt->values[i];
+                     val = opt->values[ii];
                }
             }
          }

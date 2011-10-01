@@ -280,7 +280,7 @@ static int lexer_state_string(lexerstate_t *ls)
             ls->cfg->line++;
             
             // loop until a non-whitespace char is found
-            while(isspace((s = *bufferpos++)));
+            while(isspace((unsigned char)(s = *bufferpos++)));
             
             // better not be EOF!
             if(s == '\0')
