@@ -441,6 +441,8 @@ IF(EE_STATIC_COMPILE)
     INCLUDE_DIRECTORIES(${EE_STATIC_DEPS}/include)
 ENDIF(EE_STATIC_COMPILE)
 
+SET(BUILD_SHARED_LIBS FALSE)
+
 MESSAGE(STATUS "Looking for OpenGL")
 FIND_LIBRARY(GL_LIBRARY GL)
 IF(GL_LIBRARY)
@@ -525,8 +527,8 @@ ENDIF(NOT EE_STATIC_COMPILE)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
-INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)
+INCLUDE_DIRECTORIES(libpng)
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)

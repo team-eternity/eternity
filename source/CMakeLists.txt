@@ -145,7 +145,8 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
-            ${EE_STATIC_DEPS}/lib/libz.a
+            zlib
+            # ${EE_STATIC_DEPS}/lib/libz.a
             ${EE_STATIC_DEPS}/lib/libbz2.a
             ${EE_STATIC_DEPS}/lib/liblzma.a
             ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
@@ -164,8 +165,8 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
-            ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-            ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
+            png15_static
+            snes_spc
             mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
         )
     ELSE(MINGW)
@@ -181,7 +182,8 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libidn.a
             ${EE_STATIC_DEPS}/lib/libcares.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
-            ${EE_STATIC_DEPS}/lib/libz.a
+            zlib
+            # ${EE_STATIC_DEPS}/lib/libz.a
             ${EE_STATIC_DEPS}/lib/libbz2.a
             ${EE_STATIC_DEPS}/lib/liblzma.a
             ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
@@ -193,8 +195,8 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
-            ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-            ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
+            png15_static
+            snes_spc
             pthread m rt stdc++
         )
     ENDIF(MINGW)
@@ -210,8 +212,9 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${GL_LIBRARY}
-        ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-        ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
+        png15_static
+        zlib
+        snes_spc
         stdc++
     )
     ELSE(GL_LIBRARY)
@@ -225,9 +228,8 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         png15_static
+        zlib
         snes_spc
-        ## ${CMAKE_BINARY_DIR}/snes_spc/libsnes_spc.a
-        ## ${CMAKE_BINARY_DIR}/libpng/${LIBPNG_NAME}
         stdc++
     )
     ENDIF(GL_LIBRARY)
