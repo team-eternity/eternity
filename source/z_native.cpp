@@ -498,7 +498,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
    void *p;
-   memblock_t *block, *newblock;
+   memblock_t *block, *newblock, *origblock;
 
    // if not allocated at all, defer to Z_Malloc
    if(!ptr)
@@ -513,17 +513,11 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    DEBUG_CHECKHEAP();
 
-   block = (memblock_t *)((byte *)ptr - header_size);
+   block = origblock = (memblock_t *)((byte *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_Realloc: Reallocated a block without ZONEID\n", 
              block, file, line);
-
-   // haleyjd 10/01/11: do not allow shrinking reallocs, as these are considered
-   // to have "implementation-dependent" results by the C/C++ standard, and that
-   // can include "blowing up the program" as a valid interpretation.
-   if(block->size >= n)
-      return ptr;
 
    // nullify current user, if any
    if(block->user)
@@ -551,8 +545,16 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    if(!(block = newblock))
    {
-      I_FatalError(I_ERR_KILL, "Z_Realloc: Failure trying to allocate %u bytes\n"
-                               "Source: %s:%d\n", (unsigned int)n, file, line);
+      if(origblock->size >= n)
+      {
+         block = origblock; // restore original block if size was equal or smaller
+         n = block->size;   // keep same size in this event
+      }
+      else
+      {
+         I_FatalError(I_ERR_KILL, "Z_Realloc: Failure trying to allocate %u bytes\n"
+                                  "Source: %s:%d\n", (unsigned int)n, file, line);
+      }
    }
 
    block->size = n;
