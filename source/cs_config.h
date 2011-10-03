@@ -122,20 +122,20 @@ typedef struct
 
 #pragma pack(pop)
 
-extern json_object *cs_json;
+extern Json::Value cs_json;
 extern clientserver_settings_t *cs_original_settings;
 extern clientserver_settings_t *cs_settings;
 
-void CS_ValidateOptions(json_object *options);
+void CS_ValidateOptions(Json::Value &options);
 void SV_LoadConfig(void);
 bool CS_AddIWAD(const char *resource_name);
 bool CS_AddWAD(const char *resource_name);
 bool CS_AddDeHackEdFile(const char *resource_name);
-void CS_HandleMastersSection(json_object *masters);
-void CS_HandleResourcesSection(json_object *resources);
-void CS_HandleServerSection(json_object *server);
-void CS_HandleOptionsSection(json_object *options);
-void CS_HandleMapsSection(json_object *maps);
+void CS_HandleMastersSection(Json::Value &masters);
+void CS_HandleResourcesSection(Json::Value &resources);
+void CS_HandleServerSection(Json::Value &server);
+void CS_HandleOptionsSection(Json::Value &options);
+void CS_HandleMapsSection(Json::Value &maps);
 void CS_LoadConfig(void);
 void CL_LoadConfig(void);
 void CS_LoadWADs(void);

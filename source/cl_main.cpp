@@ -94,7 +94,7 @@
 char *cs_server_url = NULL;
 char *cs_server_password = NULL;
 char *cs_client_password_file = NULL;
-Json::Value cs_client_password_json = NULL;
+Json::Value cs_client_password_json;
 
 unsigned int cl_current_world_index = 0;
 unsigned int cl_latest_world_index  = 0;
@@ -198,7 +198,7 @@ void CL_Init(char *url)
       {
          I_Error(
             "CL_Init: Error parsing password file: %s",
-            reader.getFormattedErrorMessages()
+            reader.getFormattedErrorMessages().c_str()
          );
       }
    }
@@ -244,12 +244,10 @@ void CL_Reset(void)
 void CL_Connect(void)
 {
    ENetEvent event;
-   Json::Value server_section, spectator_password, password_entry;
    char *address = CS_IPToString(server_address->host);
 
    printf("Connecting to %s:%d\n", address, server_address->port);
    free(address);
-   // enet_address_set_host(&address, address_string);
 
    net_peer = enet_host_connect(net_host, server_address, MAX_CHANNELS, 0);
    if(net_peer == NULL)
@@ -267,7 +265,7 @@ void CL_Connect(void)
       //      password stored for it, inform the client they need to enter one.
       if(cs_json["server"]["requires_spectator_password"].asBool())
       {
-         if(cs_client_password_json[(const char *)cs_server_url].isNull())
+         if(cs_client_password_json[(const char *)cs_server_url].empty())
          {
             doom_printf(
                "This server requires a password in order to connect.  Use the "

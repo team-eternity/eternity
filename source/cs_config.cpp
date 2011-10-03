@@ -112,7 +112,7 @@ void D_CheckGamePath(char *game);
          cs_original_settings->flags &= ~dmf_##option_name;\
       }\
    }\
-   else if(options[#otion_name].asBool())\
+   else if(options[#option_name].asBool())\
    {\
       flags |= dmf_##option_name;\
       cs_original_settings->flags |= dmf_##option_name;\
@@ -214,7 +214,7 @@ void D_CheckGamePath(char *game);
 #define override_comp2(options, config_name, opt)\
    if(!options[#config_name].empty())\
    {\
-      if(options[#option_name].asBool())\
+      if(options[#config_name].asBool())\
       {\
          opt = true;\
          cs_settings->compatflags2 |= cmf_##opt;\
@@ -229,14 +229,13 @@ void D_CheckGamePath(char *game);
 #define check_int_option_range(options, option_name, min, max)\
    if(!options[#option_name].empty())\
    {\
-      if(options[#option_name].asInt() < min)\
-         I_Error("CS_LoadConfig: '" #option_name "' must be > " #min ".\n");\
-      else if(options["max_players"].asInt() > max)\
-         I_Error("CS_LoadConfig: '" #option_name "' must be < " #max ".\n");\
+      if(options[#option_name].asInt() < (min))\
+         I_Error("CS_LoadConfig: '" #option_name "' must be > %d.\n", (min));\
+      else if(options["max_players"].asInt() > (max))\
+         I_Error("CS_LoadConfig: '" #option_name "' must be < %d.\n", (max));\
    }
 
-#define string_option_is(option_name, s)\
-   (options[#option_name].asString().compare(s) == 0)
+#define string_option_is(option, s) ((option).asString().compare((s)) == 0)
 
 extern ENetAddress *server_address;
 extern int levelFragLimit;
@@ -257,21 +256,23 @@ static void CS_checkSectionHasOption(Json::Value& section,
    if(section[option_name].empty())
    {
       I_Error(
-         "CS_LoadConfig: " section_name " missing required option '"
-         option_name "'.\n"
+         "CS_LoadConfig: %s missing required option '%s'.\n",
+         section_name,
+         option_name
       );
    }
 }
 
 void CS_ValidateOptions(Json::Value &options)
 {
-   int int_value;
-   const char *str_value;
-
    if(MAX_CLIENTS < MAXPLAYERS)
+   {
       check_int_option_range(options, max_players, 1, MAX_CLIENTS);
+   }
    else
+   {
       check_int_option_range(options, max_players, 1, MAXPLAYERS);
+   }
    check_int_option_range(options, max_players_per_team, 1, 16);
    check_int_option_range(options, dogs, 0, 3);
    check_int_option_range(options, skill, 1, 5);
@@ -285,9 +286,9 @@ void CS_ValidateOptions(Json::Value &options)
 
    if(options["death_time_expired_action"].empty())
       cs_original_settings->death_time_expired_action = DEATH_LIMIT_SPECTATE;
-   else if(string_option_is("death_time_expired_action", "spectate"))
+   else if(string_option_is(options["death_time_expired_action"], "spectate"))
       cs_original_settings->death_time_expired_action = DEATH_LIMIT_SPECTATE;
-   else if(string_option_is("death_time_expired_action", "respawn"))
+   else if(string_option_is(options["death_time_expired_action"], "respawn"))
       cs_original_settings->death_time_expired_action = DEATH_LIMIT_RESPAWN;
    else
    {
@@ -299,15 +300,15 @@ void CS_ValidateOptions(Json::Value &options)
 
    if(options["bfg_type"].empty())
       cs_original_settings->bfg_type = bfg_normal;
-   else if(string_option_is("bfg_type", "9000"))
+   else if(string_option_is(options["bfg_type"], "9000"))
       cs_original_settings->bfg_type = bfg_normal;
-   else if(string_option_is("bfg_type", "2704"))
+   else if(string_option_is(options["bfg_type"], "2704"))
       cs_original_settings->bfg_type = bfg_classic;
-   else if(string_option_is("bfg_type", "11000"))
+   else if(string_option_is(options["bfg_type"], "11000"))
       cs_original_settings->bfg_type = bfg_11k;
-   else if(string_option_is("bfg_type", "bouncing"))
+   else if(string_option_is(options["bfg_type"], "bouncing"))
       cs_original_settings->bfg_type = bfg_bouncing;
-   else if(string_option_is("bfg_type", "plasma burst"))
+   else if(string_option_is(options["bfg_type"], "plasma burst"))
       cs_original_settings->bfg_type = bfg_burst;
    else
    {
@@ -342,7 +343,6 @@ void SV_HandleMastersSection(Json::Value &masters)
 {
    cs_master_t *master;
    unsigned int i;
-   Json::Value::iterator it;
    std::vector<std::string> member_names;
    std::vector<std::string>::iterator it;
 
@@ -375,8 +375,6 @@ void SV_HandleMastersSection(Json::Value &masters)
 void SV_LoadConfig(void)
 {
    char *config_path = NULL;
-   const char *wad_folder;
-   char *write_config_to = NULL;
    int position_of_config, i;
    struct stat sbuf;
    bool requires_spectator_password, requires_player_password,
@@ -425,45 +423,38 @@ void SV_LoadConfig(void)
 
    // [CG] Load master advertising information.
    if(!cs_json["masters"].empty())
-      SV_HandleMastersSection(section);
+      SV_HandleMastersSection(cs_json["masters"]);
 
    sv_spectator_password = NULL;
    sv_player_password = NULL;
    sv_moderator_password = NULL;
    sv_administrator_password = NULL;
 
-   section = json_object_object_get(cs_json, "server");
-
    // [CG] Load password information (serverside-only).
    if(!cs_json["server"]["spectator_password"].empty() &&
        cs_json["server"]["spectator_password"].asString().length())
    {
-      sv_spectator_password = strdup(json_object_get_string(password));
+      sv_spectator_password =
+         strdup(cs_json["server"]["spectator_password"].asCString());
       requires_spectator_password = true;
    }
 
    if(!cs_json["server"]["player_password"].empty() &&
        cs_json["server"]["player_password"].asString().length())
    {
-      sv_player_password = strdup(json_object_get_string(password));
+      sv_player_password =
+         strdup(cs_json["server"]["player_password"].asCString());
       requires_player_password = true;
    }
 
    if(!cs_json["server"]["moderator_password"].empty() &&
        cs_json["server"]["moderator_password"].asString().length())
    {
-      sv_moderator_password = strdup(json_object_get_string(password));
+      sv_moderator_password =
+         strdup(cs_json["server"]["moderator_password"].asCString());
       requires_moderator_password = true;
    }
-
-   if(!cs_json["server"]["administrator_password"].empty() &&
-       cs_json["server"]["administrator_password"].asString().length())
-   {
-      sv_administrator_password = strdup(json_object_get_string(password));
-      requires_administrator_password = true;
-   }
-
-   if(!requires_moderator_password)
+   else
    {
       I_Error(
          "SV_LoadConfig: Option 'moderator_password' blank or not found in "
@@ -471,7 +462,14 @@ void SV_LoadConfig(void)
       );
    }
 
-   if(!requires_administrator_password)
+   if(!cs_json["server"]["administrator_password"].empty() &&
+       cs_json["server"]["administrator_password"].asString().length())
+   {
+      sv_administrator_password =
+         strdup(cs_json["server"]["administrator_password"].asCString());
+      requires_administrator_password = true;
+   }
+   else
    {
       I_Error(
          "SV_LoadConfig: Option 'administrator_password' blank or not found "
@@ -526,15 +524,17 @@ void SV_LoadConfig(void)
    {
       Json::Value out;
 
-      config_out["configuration"] = cs_server_config;
-      CS_WriteJSON(cs_json["server"]["write_config_to"].asCString(), out);
+      out["configuration"] = cs_server_config;
+      CS_WriteJSON(
+         cs_json["server"]["write_config_to"].asCString(), out, true
+      );
    }
 }
 
 void CS_HandleResourcesSection(Json::Value &resources)
 {
-   int alternates_count, i, j;
-   const char *resource_name, *resource_type, *alternate_resource_name;
+   int i, j;
+   const char *resource_name;
 
    // [CG] Check for the IWAD first.
    for(i = 0; i < resources.size(); i++)
@@ -553,15 +553,16 @@ void CS_HandleResourcesSection(Json::Value &resources)
             continue;
          }
 
-         if(string_option_is(cs_json["resources"][i]["type"], "iwad")) 
+         if(cs_json["resources"][i]["type"].asString().compare("iwad") == 0)
          {
             if(cs_iwad != NULL)
                I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
 
             resource_name = cs_json["resources"][i]["name"].asCString();
-            if(!CS_AddIWAD(resource_name))
+            if(!CS_AddIWAD(resource_name) &&
+               !cs_json["resources"][i]["alternates"].empty())
             {
-               for(j = 0; j < alternates_count; j++)
+               for(j = 0; j < cs_json["resources"][i]["alternates"].size(); j++)
                {
                   resource_name =
                      cs_json["resources"][i]["alternates"][j].asCString();
@@ -581,7 +582,8 @@ void CS_HandleResourcesSection(Json::Value &resources)
    {
       if(cs_json["resources"][i].isString())
       {
-         if(!CS_AddWAD(cs_json["resources"][i].asCString()))
+         resource_name = cs_json["resources"][i].asCString();
+         if(!CS_AddWAD(resource_name))
             I_Error("Could not find PWAD '%s'.\n", resource_name);
 
          modifiedgame = true;
@@ -595,19 +597,19 @@ void CS_HandleResourcesSection(Json::Value &resources)
          }
 
          if(!cs_json["resources"][i]["type"].empty() &&
-            !string_option_is(cs_json["resources"][i]["type"], "iwad") &&
-            !string_option_is(cs_json["resources"][i]["type"], "wad") &&
-            !string_option_is(cs_json["resources"][i]["type"], "dehacked"))
+             cs_json["resources"][i]["type"].asString().compare("iwad") &&
+             cs_json["resources"][i]["type"].asString().compare("wad") &&
+             cs_json["resources"][i]["type"].asString().compare("dehacked"))
          {
             printf(
                "CS_LoadConfig: Skipping resource entry with invalid type "
                "%s.\n",
-               cs_json["resources"][i]["type"]
+               cs_json["resources"][i]["type"].asCString()
             );
             continue;
          }
 
-         if(string_option_is(cs_json["resources"][i]["type"], "dehacked"))
+         if(cs_json["resources"][i]["type"].asString().compare("dehacked"))
          {
             if(!cs_json["resources"][i]["alternates"].empty())
             {
@@ -620,13 +622,13 @@ void CS_HandleResourcesSection(Json::Value &resources)
             {
                I_Error(
                   "Could not find DeHackEd file '%s'.\n",
-                  cs_json["resources"][i]["name"]
+                  cs_json["resources"][i]["name"].asCString()
                );
             }
 
             modifiedgame = true;
          }
-         else if(string_option_is(cs_json["resources"][i]["type"], "wad"))
+         else if(cs_json["resources"][i]["type"].asString().compare("wad"))
          {
             // [CG] If the specified PWAD wasn't found, search for specified
             //      alternates.
@@ -637,13 +639,13 @@ void CS_HandleResourcesSection(Json::Value &resources)
                {
                   I_Error(
                      "Could not find PWAD '%s'.\n", 
-                     cs_json["resources"][i]["name"]
+                     cs_json["resources"][i]["name"].asCString()
                   );
                }
 
                for(j = 0; j < cs_json["resources"][i]["alternates"].size(); j++)
                {
-                  Json::Value alt = cs_json["resources"][i]["alternates"][j]
+                  Json::Value alt = cs_json["resources"][i]["alternates"][j];
                   if(CS_AddWAD(alt.asCString()))
                      break;
                }
@@ -653,7 +655,7 @@ void CS_HandleResourcesSection(Json::Value &resources)
                {
                   I_Error(
                      "Could not find PWAD '%s' or any alternates.\n",
-                     cs_json["resources"][i]["name"]
+                     cs_json["resources"][i]["name"].asCString()
                   );
                }
             }
@@ -666,12 +668,10 @@ void CS_HandleResourcesSection(Json::Value &resources)
 
 void CS_HandleServerSection(Json::Value &server)
 {
-   const char *str_value;
-   int int_value;
    unsigned long public_address = 0;
    char *public_address_string;
-   unsigned int i = 0;
 #ifdef WIN32
+   unsigned int i = 0;
    char hostname[256];
    struct hostent *host;
    struct in_addr interface_address;
@@ -684,7 +684,7 @@ void CS_HandleServerSection(Json::Value &server)
 
    if(server["address"].empty())
       server_address->host = ENET_HOST_ANY;
-   else if(string_option_is(server["address"], "public"))
+   else if(server["address"].asString().compare("public"))
       server_address->host = ENET_HOST_ANY;
    else
       enet_address_set_host(server_address, server["address"].asCString());
@@ -757,7 +757,7 @@ void CS_HandleServerSection(Json::Value &server)
 
    if(!server["game"].empty())
    {
-      D_CheckGamePath((char *)server["game"].asCString())
+      D_CheckGamePath((char *)server["game"].asCString());
       gamepathset = true;
    }
 
@@ -774,7 +774,7 @@ void CS_HandleServerSection(Json::Value &server)
    if(!server["max_player_clients"].empty())
    {
       check_int_option_range(server, max_player_clients, 2, (MAXPLAYERS - 2));
-      cs_original-settings->max_player_clients =
+      cs_original_settings->max_player_clients =
          server["max_player_clients"].asInt();
    }
 
@@ -797,7 +797,6 @@ void CS_HandleServerSection(Json::Value &server)
    }
 
    cs_original_settings->number_of_teams = 0;
-   setting = json_object_object_get(server, "number_of_teams");
    if(!server["number_of_teams"].empty())
    {
       check_int_option_range(server, number_of_teams, 0, 2);
@@ -805,7 +804,6 @@ void CS_HandleServerSection(Json::Value &server)
          server["number_of_teams"].asInt();
    }
 
-   setting = json_object_object_get(server, "game_type");
    if(server["game_type"].empty())
    {
       if(cs_original_settings->number_of_teams > 0)
@@ -815,8 +813,8 @@ void CS_HandleServerSection(Json::Value &server)
    else
    {
       cs_original_settings->ctf = false;
-      if(string_value_is(server["game_type"], "coop") ||
-         string_value_is(server["game_type"], "cooperative"))
+      if(string_option_is(server["game_type"], "coop") ||
+         string_option_is(server["game_type"], "cooperative"))
       {
          if(cs_original_settings->number_of_teams > 0)
             I_Error("CS_LoadConfig: Cannot enable teams in coop.\n");
@@ -825,16 +823,16 @@ void CS_HandleServerSection(Json::Value &server)
       else
       {
          cs_original_settings->game_type = DefaultGameType = GameType = gt_dm;
-         if(string_value_is(server["game_type"], "duel")||
-            string_value_is(server["game_type"], "1v1") ||
-            string_value_is(server["game_type"], "1on1"))
+         if(string_option_is(server["game_type"], "duel")||
+            string_option_is(server["game_type"], "1v1") ||
+            string_option_is(server["game_type"], "1on1"))
          {
             if(cs_original_settings->number_of_teams > 0)
                I_Error("CS_LoadConfig: Cannot enable teams in a duel.\n");
 
             cs_original_settings->max_players = 2;
          }
-         else if(string_value_is(server["game_type"], "ctf"))
+         else if(string_option_is(server["game_type"], "ctf"))
          {
             if(cs_original_settings->number_of_teams != 2)
                I_Error("CS_LoadConfig: 'number_of_teams' must be 2 in CTF.\n");
@@ -862,9 +860,11 @@ void CS_HandleMapsSection(Json::Value &maps)
 
    for(i = 0; i < maps.size(); i++)
    {
+      wads_count = overrides_count = 0;
+
       if(maps[i].isString())
       {
-         name = maps[i].asString();
+         name = maps[i].asCString();
          printf("CS_LoadConfig: Adding map '%s'.\n", name);
       }
       else if(maps[i].isObject())
@@ -888,7 +888,7 @@ void CS_HandleMapsSection(Json::Value &maps)
             printf(
                "CS_LoadConfig: Adding map '%s' using no PWADs and no "
                "overrides.\n",
-               name_str
+               name
             );
             continue;
          }
@@ -908,9 +908,9 @@ void CS_HandleMapsSection(Json::Value &maps)
          if(overrides_count == 0)
             printf(" no overrides");
          else if(overrides_count == 1)
-            printf(" %d override", overrides_count);
+            printf(" %u override", overrides_count);
          else
-            printf(" %d overrides", overrides_count);
+            printf(" %u overrides", overrides_count);
 
          if(wads_count > 1)
          {
@@ -942,7 +942,7 @@ void CS_HandleMapsSection(Json::Value &maps)
 
          resource_indices[j] = resource - cs_resources;
       }
-      CS_AddMap(name_str, wads_count, resource_indices);
+      CS_AddMap(name, wads_count, resource_indices);
    }
 
    cs_current_map_index = cs_current_map_number = 0;
@@ -1364,6 +1364,7 @@ void CS_HandleOptionsSection(Json::Value &options)
 
 void CS_LoadMapOverrides(unsigned int index)
 {
+   Json::Value overrides;
    // [CG] To ensure that map overrides are only valid for the given map,
    //      restore the original values first.
    CS_HandleOptionsSection(cs_json["options"]);
@@ -1372,8 +1373,6 @@ void CS_LoadMapOverrides(unsigned int index)
 
    if(index > cs_json["maps"].size())
       I_Error("CS_LoadMapOverrides: Invalid map index %d, exiting.\n", index);
-
-   map = json_object_array_get_idx(maps, index);
 
    // [CG] Non-object maplist entries can't have any overrides, so if this map
    //      is not an object entry then there's nothing to do.  This is also the
@@ -1385,8 +1384,10 @@ void CS_LoadMapOverrides(unsigned int index)
       return;
    }
 
+   overrides = cs_json["maps"][index]["overrides"];
+
    cs_settings->build_blockmap =
-      cs_json["maps"][i]["overrides"].get("build_blockmap", false).asBool();
+      overrides.get("build_blockmap", false).asBool();
 
    // [CG] DMFLAGS
    override_flags(overrides, respawn_items, dmflags)

@@ -39,6 +39,9 @@
 //      they can take appropriate action - usually start a new demo if possible
 //      and investigate the situation later.
 
+#include <iostream>
+#include <fstream>
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1142,38 +1145,41 @@ bool CS_UpdateDemoSettings(void)
       return false;
    }
 
-   json["settings"]["skill"] = cs_settings->skill;
-   json["settings"]["game_type"] = cs_settings->game_type;
-   json["settings"]["ctf"] = cs_settings->ctf;
-   json["settings"]["max_admin_clients"] = cs_settings->max_admin_clients;
-   json["settings"]["max_player_clients"] = cs_settings->max_player_clients;
-   json["settings"]["max_players"] = cs_settings->max_players;
-   json["settings"]["max_players_per_team"] =
+   map_info["settings"]["skill"] = cs_settings->skill;
+   map_info["settings"]["game_type"] = cs_settings->game_type;
+   map_info["settings"]["ctf"] = cs_settings->ctf;
+   map_info["settings"]["max_admin_clients"] = cs_settings->max_admin_clients;
+   map_info["settings"]["max_player_clients"] =
+      cs_settings->max_player_clients;
+   map_info["settings"]["max_players"] = cs_settings->max_players;
+   map_info["settings"]["max_players_per_team"] =
       cs_settings->max_players_per_team;
-   json["settings"]["number_of_teams"] = cs_settings->number_of_teams;
-   json["settings"]["frag_limit"] = cs_settings->frag_limit;
-   json["settings"]["time_limit"] = cs_settings->time_limit;
-   json["settings"]["score_limit"] = cs_settings->score_limit;
-   json["settings"]["dogs"] = cs_settings->dogs;
-   json["settings"]["friend_distance"] = cs_settings->friend_distance;
-   json["settings"]["bfg_type"] = cs_settings->bfg_type;
-   json["settings"]["friendly_damage_percentage"] =
+   map_info["settings"]["number_of_teams"] = cs_settings->number_of_teams;
+   map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
+   map_info["settings"]["time_limit"] = cs_settings->time_limit;
+   map_info["settings"]["score_limit"] = cs_settings->score_limit;
+   map_info["settings"]["dogs"] = cs_settings->dogs;
+   map_info["settings"]["friend_distance"] = cs_settings->friend_distance;
+   map_info["settings"]["bfg_type"] = cs_settings->bfg_type;
+   map_info["settings"]["friendly_damage_percentage"] =
       cs_settings->friendly_damage_percentage;
-   json["settings"]["spectator_time_limit"] =
+   map_info["settings"]["spectator_time_limit"] =
       cs_settings->spectator_time_limit;
-   json["settings"]["death_time_limit"] = cs_settings->death_time_limit;
+   map_info["settings"]["death_time_limit"] = cs_settings->death_time_limit;
 
    if(cs_settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
-      json["settings"]["death_time_expired_action"] = "spectate";
+      map_info["settings"]["death_time_expired_action"] = "spectate";
    else
-      json["settings"]["death_time_expired_action"] = "respawn";
+      map_info["settings"]["death_time_expired_action"] = "respawn";
 
-   json["settings"]["respawn_protection_time"] =
+   map_info["settings"]["respawn_protection_time"] =
       cs_settings->respawn_protection_time;
-   json["settings"]["dmflags"] = cs_settings->dmflags;
-   json["settings"]["dmflags2"] = cs_settings->dmflags2;
-   json["settings"]["compatflags"] = cs_settings->compatflags;
-   json["settings"]["compatflags2"] = cs_settings->compatflags2;
+   map_info["settings"]["dmflags"] = cs_settings->dmflags;
+   map_info["settings"]["dmflags2"] = cs_settings->dmflags2;
+   map_info["settings"]["compatflags"] = cs_settings->compatflags;
+   map_info["settings"]["compatflags2"] = cs_settings->compatflags2;
+
+   CS_WriteJSON(current_demo_info_path, map_info, false);
 
    return true;
 }
@@ -1184,9 +1190,9 @@ bool CS_AddNewMapToDemo(void)
    cs_resource_t *res;
    demo_header_t demo_header;
    size_t resource_name_size;
-   json_object *map_info, *local_options, *resources, *resource;
    cs_map_t *map = &cs_maps[cs_current_map_number];
    demo_marker_t header_marker = DEMO_PACKET_HEADER_END;
+   Json::Value map_info;
 
    if(current_demo_data_file != NULL)
    {
@@ -1211,6 +1217,7 @@ bool CS_AddNewMapToDemo(void)
       return false;
    }
 
+   // [CG] Create the demo data file.
    if(!M_CreateFile(current_demo_data_path))
    {
       set_demo_error(DEMO_ERROR_CREATING_DEMO_DATA_FILE_FAILED);
@@ -1219,6 +1226,10 @@ bool CS_AddNewMapToDemo(void)
 
    if(!open_current_demo_data_file("w+b"))
       return false;
+
+   CS_UpdateDemoSettings();
+
+   CS_ReadJSON(map_info, current_demo_info_path);
 
    map_info["version"] = version;
    map_info["subversion"] = subversion;
@@ -1230,14 +1241,13 @@ bool CS_AddNewMapToDemo(void)
       map_info["demo_type"] = "server";
 
    map_info["name"] = map->name;
-   map_info["timestamp"] = time(NULL);
-   local_options["player_bobbing"] = player_bobbing;
-   local_options["doom_weapon_toggles"] = doom_weapon_toggles;
-   local_options["autoaim"] = autoaim;
-   local_options["weapon_speed"] = weapon_speed;
+   map_info["timestamp"] = (uint32_t)time(NULL);
    map_info["length"] = 0;
    map_info["iwad"] = cs_resources[0].name;
-   CS_UpdateDemoSettings();
+   map_info["local_options"]["player_bobbing"] = player_bobbing;
+   map_info["local_options"]["doom_weapon_toggles"] = doom_weapon_toggles;
+   map_info["local_options"]["autoaim"] = autoaim;
+   map_info["local_options"]["weapon_speed"] = weapon_speed;
 
    for(i = 0; i < map->resource_count; i++)
    {
@@ -1245,11 +1255,9 @@ bool CS_AddNewMapToDemo(void)
       res = &cs_resources[resource_index];
       map_info["resources"][i]["name"] = res->name;
       map_info["resources"][i]["sha1_hash"] = res->sha1_hash;
-      json_object_array_add(resources, resource);
    }
 
-   json_object_to_file(current_demo_info_path, map_info);
-   json_object_put(map_info); // [CG] Frees the JSON object.
+   CS_WriteJSON(current_demo_info_path, map_info, false);
 
    demo_header.version = version;
    demo_header.subversion = subversion;

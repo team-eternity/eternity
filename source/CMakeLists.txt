@@ -137,7 +137,6 @@ IF(EE_STATIC_COMPILE)
             ${EE_CROSS_DIRECTX_LIBRARIES}
             ${EE_STATIC_DEPS}/lib/libseh.a
             ${EE_STATIC_DEPS}/lib/libenet.a
-            # ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
             zlib
@@ -167,7 +166,6 @@ IF(EE_STATIC_COMPILE)
     ELSE(MINGW)
         TARGET_LINK_LIBRARIES(eternity
             ${EE_STATIC_DEPS}/lib/libenet.a
-            # ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
             ${EE_STATIC_DEPS}/lib/libgnutls-openssl.a

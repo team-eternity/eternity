@@ -390,10 +390,8 @@ char* SV_GetStateJSON(void)
 
    connected_clients = 0;
    for(i = 1; i < MAX_CLIENTS; i++)
-   {
       if(playeringame[i])
          connected_clients++;
-   }
 
    server_json["connected_clients"] = connected_clients;
    server_json["map"] = gamemapname;
@@ -442,12 +440,12 @@ char* SV_GetStateJSON(void)
          server_json["players"][i - 1]["packet_loss"] = client->packet_loss;
          server_json["players"][i - 1]["frags"] = player->totalfrags;
          server_json["players"][i - 1]["time"] =
-            (gametic - client->join-tic) / TICRATE;
+            (gametic - client->join_tic) / TICRATE;
          server_json["players"][i - 1]["playing"] = !client->spectating;
       }
    }
 
-   return strdup(writer.write(root).c_str());
+   return strdup(writer.write(server_json).c_str());
 }
 
 void SV_MasterAdvertise(void)
@@ -467,7 +465,7 @@ void SV_MasterAdvertise(void)
       json["group"] = master->group;
       json["name"] = master->name;
       json_string = writer.write(json);
-      SV_SetMasterRequestData(json_string.c_str());
+      SV_SetMasterRequestData(request, json_string.c_str());
       CS_SendMasterRequest(request);
       if(request->curl_errno != 0)
       {
@@ -747,7 +745,7 @@ void SV_AddUpdateRequest(cs_master_t *master)
 void CL_RetrieveServerConfig(void)
 {
    std::string json_data;
-   Json::Value state_and_configuration;
+   Json::Value configuration;
    Json::Reader reader;
    cs_master_request_t *request = (cs_master_request_t *)(calloc(
       1, sizeof(cs_master_request_t)
@@ -774,13 +772,14 @@ void CL_RetrieveServerConfig(void)
 
    printf("success!\n");
    json_data = request->received_data;
-   if(!reader.parse(json_data, cs_json))
+   if(!reader.parse(json_data, configuration))
    {
       I_Error(
          "CS_LoadConfig: Parse error:\n\t%s.\n",
-         reader.getFormattedErrorMessages()
+         reader.getFormattedErrorMessages().c_str()
       );
    }
+   cs_json = configuration["configuration"];
    CL_FreeMasterRequest(request);
 }
 

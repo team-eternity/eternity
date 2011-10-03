@@ -26,6 +26,8 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 #include <stdio.h>
 #include <string.h>
@@ -186,15 +188,6 @@ static int build_save_buffer(byte **buffer)
 {
    P_SaveCurrentLevel(cs_state_file_path, "cs");
    return M_ReadFile(cs_state_file_path, buffer);
-}
-
-static void indent_next_line(FILE *file, unsigned int indent_level)
-{
-   unsigned int i;
-
-   fputc('\n', file);
-   for(i = 0; i < indent_level; i++)
-      fputs("  ", file);
 }
 
 void CS_Init(void)
@@ -559,7 +552,7 @@ void CS_ReadJSON(Json::Value &json, const char *filename)
    {
       I_Error(
          "CS_ReadJSONFromFile: Error parsing JSON: %s.\n",
-         reader.getFormattedErrorMessages()
+         reader.getFormattedErrorMessages().c_str()
       );
    }
 }
@@ -613,7 +606,6 @@ void CS_HandleFlushPacketBufferKey(event_t *ev)
 void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 {
    char *buffer;
-   mapthing_t *spawn_point;
    server_client_t *server_client;
    bool respawn_player = false;
    int playernum = message->player_number;

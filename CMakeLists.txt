@@ -76,7 +76,6 @@ SET(CPACK_DEBIAN_PACKAGE_DEPENDS
      libarchive1 (>=2.8.4),
      libc-ares2 (>=1.1.1-5.1),
      libcurl3-gnutls (>=7.21.0),
-     libjson0 (>=0.9-1),
      libenet1a (>=1.3.0),
      bash"
 )
@@ -506,9 +505,6 @@ INCLUDE_DIRECTORIES(${PC_GNUTLS_INCLUDE_DIR})
 
 PKG_SEARCH_MODULE(PC_ENET REQUIRED libenet>=1.3.0)
 INCLUDE_DIRECTORIES(${PC_ENET_INCLUDE_DIR})
-
-PKG_SEARCH_MODULE(PC_JSON REQUIRED json>=0.9)
-INCLUDE_DIRECTORIES(${PC_JSON_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL.dll
