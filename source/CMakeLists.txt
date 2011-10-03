@@ -25,23 +25,15 @@ ENDIF(COMMAND cmake_policy)
 ################################################################################
 ######################### Set Project Source  ##################################
 ADD_DEFINITIONS(-DR_LINKEDPORTALS -D_SDL_VER -DZONE_NATIVE -D_CONSOLE)
-ADD_DEFINITIONS(-DAMX_NODYNALOAD -DHAVE_SPCLIB -DEE_BOOLEAN_DEFINED)
+ADD_DEFINITIONS(-DAMX_NODYNALOAD -DHAVE_SPCLIB)
+ADD_DEFINITIONS(-DJSON_IS_AMALGAMATION)
 IF(GL_LIBRARY)
     ADD_DEFINITIONS(-DEE_FEATURE_OPENGL)
 ENDIF(GL_LIBRARY)
 
 IF(EE_STATIC_COMPILE)
-    ADD_DEFINITIONS(
-        -DCURL_STATICLIB
-        -DLIBARCHIVE_STATIC
-    )
+    ADD_DEFINITIONS(-DCURL_STATICLIB -DLIBARCHIVE_STATIC)
 ENDIF(EE_STATIC_COMPILE)
-
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-    SET(LIBPNG_NAME "libpng15d.a")
-ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
-    SET(LIBPNG_NAME "libpng15.a")
-ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
@@ -53,8 +45,8 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
     ADD_DEFINITIONS(-DHAVE_SCHED_SETAFFINITY)
 ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR WIN32 OR MINGW OR APPLE)
 
+## [CG] Ensure that _GNU_SOURCE is defined when using GCC.
 IF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    ## [CG] Ensure that _GNU_SOURCE is defined when using GCC.
     ADD_DEFINITIONS(-D_GNU_SOURCE)
 ENDIF(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
@@ -97,6 +89,8 @@ FILE(GLOB HAL_SOURCES hal/*.cpp)
 INCLUDE_DIRECTORIES(gl/)
 FILE(GLOB GL_SOURCES gl/*.cpp)
 
+FILE(GLOB JSON_SOURCES ${CMAKE_SOURCE_DIR}/json-cpp/*.cpp)
+
 ## FIXME: It would be better to pull i_cpu_posix.cpp out into a
 ## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES(sdl/)
@@ -132,6 +126,7 @@ ADD_EXECUTABLE(eternity
     ${HAL_SOURCES}
     ${GL_SOURCES}
     ${SDL_SOURCES}
+    ${JSON_SOURCES}
 )
 IF(EE_STATIC_COMPILE)
     IF(MINGW)
@@ -142,7 +137,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_CROSS_DIRECTX_LIBRARIES}
             ${EE_STATIC_DEPS}/lib/libseh.a
             ${EE_STATIC_DEPS}/lib/libenet.a
-            ${EE_STATIC_DEPS}/lib/libjson.a
+            # ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
             zlib
@@ -172,7 +167,7 @@ IF(EE_STATIC_COMPILE)
     ELSE(MINGW)
         TARGET_LINK_LIBRARIES(eternity
             ${EE_STATIC_DEPS}/lib/libenet.a
-            ${EE_STATIC_DEPS}/lib/libjson.a
+            # ${EE_STATIC_DEPS}/lib/libjson.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
             ${EE_STATIC_DEPS}/lib/libgnutls-openssl.a
@@ -209,7 +204,7 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_LIBARCHIVE_LDFLAGS}
         ${PC_GNUTLS_LDFLAGS}
         ${PC_ENET_LDFLAGS}
-        ${PC_JSON_LDFLAGS}
+        # ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${GL_LIBRARY}
         png15_static
@@ -225,7 +220,7 @@ ELSE(EE_STATIC_COMPILE)
         ${PC_LIBARCHIVE_LDFLAGS}
         ${PC_GNUTLS_LDFLAGS}
         ${PC_ENET_LDFLAGS}
-        ${PC_JSON_LDFLAGS}
+        # ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         png15_static
         zlib

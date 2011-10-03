@@ -25,6 +25,9 @@
 //----------------------------------------------------------------------------
 
 #include <sstream>
+#include <iostream>
+#include <fstream>
+
 #include <math.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -91,7 +94,7 @@
 char *cs_server_url = NULL;
 char *cs_server_password = NULL;
 char *cs_client_password_file = NULL;
-json_object *cs_client_password_json = NULL;
+Json::Value cs_client_password_json = NULL;
 
 unsigned int cl_current_world_index = 0;
 unsigned int cl_latest_world_index  = 0;
@@ -147,6 +150,7 @@ void CL_Init(char *url)
 {
    size_t url_length;
    struct stat sbuf;
+   Json::Reader reader;
 
    ENetCallbacks callbacks = { Z_SysMalloc, Z_SysFree, abort };
 
@@ -189,23 +193,14 @@ void CL_Init(char *url)
             cs_client_password_file
          );
       }
-      cs_client_password_json = json_object_from_file(cs_client_password_file);
-   }
-   else
-   {
-      cs_client_password_json = json_object_new_object();
-      CS_PrintJSONToFile(
-         cs_client_password_file,
-         json_object_get_string(cs_client_password_json)
-      );
-   }
 
-   if(is_error(cs_client_password_json))
-   {
-      I_Error(
-         "CL_Init: Password file parse error:\n\t%s.\n",
-         json_tokener_errors[(unsigned long)cs_client_password_json]
-      );
+      if(!reader.parse(cs_client_password_file, cs_client_password_json))
+      {
+         I_Error(
+            "CL_Init: Error parsing password file: %s",
+            reader.getFormattedErrorMessages()
+         );
+      }
    }
 
    CL_InitPrediction();
@@ -249,7 +244,7 @@ void CL_Reset(void)
 void CL_Connect(void)
 {
    ENetEvent event;
-   json_object *password_entry, *server_section, *spectator_password;
+   Json::Value server_section, spectator_password, password_entry;
    char *address = CS_IPToString(server_address->host);
 
    printf("Connecting to %s:%d\n", address, server_address->port);
@@ -267,19 +262,12 @@ void CL_Connect(void)
    {
       CS_ClearNetIDs(); // [CG] Clear the Net ID hashes.
 
-      server_section = json_object_object_get(cs_json, "server");
-      spectator_password =
-         json_object_object_get(server_section, "requires_spectator_password");
-      password_entry = json_object_object_get(
-         cs_client_password_json, cs_server_url
-      );
-
       // [CG] Automatically authenticate if possible.  If this server requires
       //      a password in order to connect as a spectator and we don't have a
       //      password stored for it, inform the client they need to enter one.
-      if(password_entry == NULL)
+      if(cs_json["server"]["requires_spectator_password"].asBool())
       {
-         if(json_object_get_boolean(spectator_password))
+         if(cs_client_password_json[(const char *)cs_server_url].isNull())
          {
             doom_printf(
                "This server requires a password in order to connect.  Use the "
@@ -287,13 +275,15 @@ void CL_Connect(void)
             );
          }
          else
+         {
             doom_printf("Connected!");
+            CL_SendAuthMessage(cs_client_password_json[
+               (const char *)cs_server_url
+            ].asCString());
+         }
       }
       else
-      {
          doom_printf("Connected!");
-         CL_SendAuthMessage(json_object_get_string(password_entry));
-      }
 
       if(cs_demo_recording)
       {
@@ -333,19 +323,8 @@ void CL_Disconnect(void)
 
 void CL_SaveServerPassword(void)
 {
-   if(json_object_object_get(cs_client_password_json, cs_server_url))
-      json_object_object_del(cs_client_password_json, cs_server_url);
-
-   json_object_object_add(
-      cs_client_password_json,
-      cs_server_url,
-      json_object_new_string(cs_server_password)
-   );
-
-   CS_PrintJSONToFile(
-      cs_client_password_file,
-      json_object_get_string(cs_client_password_json)
-   );
+   cs_client_password_json[(const char *)cs_server_url] = cs_server_password;
+   CS_WriteJSON(cs_client_password_file, cs_client_password_json, true);
 }
 
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,

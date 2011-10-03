@@ -33,7 +33,6 @@
 #include "p_skin.h"
 #include "r_defs.h"
 
-#include <json/json.h>
 #include <enet/enet.h>
 
 #include "cs_cmd.h"
@@ -808,7 +807,6 @@ void CS_Init(void);
 void CS_DoWorldDone(void);
 void CS_PrintTime(void);
 char* CS_IPToString(int ip_address);
-void CS_PrintJSONToFile(const char *filename, const char *json_data);
 bool CS_CheckURI(char *uri);
 float CS_VersionFloat(void);
 char* CS_VersionString(void);
@@ -831,6 +829,8 @@ void CS_ApplyCommandButtons(ticcmd_t *cmd);
 void CS_PlayerTicker(int playernum);
 bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
                                        weapontype_t weapon_two);
+void CS_ReadJSON(Json::Value &json, const char *filename);
+void CS_WriteJSON(const char *filename, Json::Value &value, bool styled);
 void CS_HandleSpectateKey(event_t *ev);
 void CS_HandleSpectatePrevKey(event_t *ev);
 void CS_HandleSpectateNextKey(event_t *ev);

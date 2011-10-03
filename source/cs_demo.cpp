@@ -994,7 +994,9 @@ bool CS_SetDemoFolderPath(char *demo_folder_path)
 bool CS_RecordDemo(void)
 {
    char timestamp[TIMESTAMP_SIZE];
-   json_object *json_info;
+   Json::Value json;
+   Json::StyledStreamWriter writer;
+   std::ofstream demo_info_file;
    const time_t current_time = time(NULL);
    struct tm *local_current_time = localtime(&current_time);
 
@@ -1041,24 +1043,14 @@ bool CS_RecordDemo(void)
       return false;
    }
 
-   json_info = json_object_new_object();
-   json_object_object_add(json_info, "version", json_object_new_int(version));
-   json_object_object_add(
-      json_info, "subversion", json_object_new_int(subversion)
-   );
-   json_object_object_add(
-      json_info,
-      "cs_protocol_version",
-      json_object_new_int(cs_protocol_version)
-   );
-   json_object_object_add(json_info, "name", json_object_new_string(""));
-   json_object_object_add(json_info, "author", json_object_new_string(""));
-   json_object_object_add(
-      json_info, "date_recorded", json_object_new_string(timestamp)
-   );
-
-   json_object_to_file(cs_demo_info_path, json_info);
-   json_object_put(json_info); // [CG] Frees the JSON object.
+   json["version"] = version;
+   json["subversion"] = subversion;
+   json["cs_protocol_version"] = cs_protocol_version;
+   json["name"] = "";
+   json["author"] = "";
+   json["date_recorded"] = timestamp;
+   demo_info_file.open(cs_demo_info_path);
+   writer.write(demo_info_file, json);
 
    cs_demo_recording = true;
 
@@ -1069,7 +1061,7 @@ bool CS_UpdateDemoLength(void)
 {
    demo_header_t demo_header;
    long previous_demo_position = ftell(current_demo_data_file);
-   json_object *map_info = json_object_from_file(current_demo_info_path);
+   Json::Value map_info;
 
    if(previous_demo_position == -1)
    {
@@ -1077,20 +1069,9 @@ bool CS_UpdateDemoLength(void)
       return false;
    }
 
-   if(map_info != NULL)
-   {
-      if(json_object_object_get(map_info, "length"))
-      {
-         json_object_object_del(map_info, "length");
-      }
-      json_object_object_add(
-         map_info,
-         "length",
-         json_object_new_int(cl_latest_world_index / TICRATE)
-      );
-      json_object_to_file(current_demo_info_path, map_info);
-      Z_SysFree(map_info);
-   }
+   CS_ReadJSON(map_info, current_demo_info_path);
+   map_info["length"] = cl_latest_world_index / TICRATE;
+   CS_WriteJSON(current_demo_info_path, map_info, true);
 
    if(fseek(current_demo_data_file, 0, SEEK_SET) == -1)
    {
@@ -1125,8 +1106,9 @@ bool CS_UpdateDemoSettings(void)
 {
    demo_header_t demo_header;
    long previous_demo_position = ftell(current_demo_data_file);
-   json_object *map_info = json_object_from_file(current_demo_info_path);
-   json_object *settings;
+   Json::Value map_info;
+
+   CS_ReadJSON(map_info, current_demo_info_path);
 
    if(previous_demo_position == -1)
    {
@@ -1160,112 +1142,38 @@ bool CS_UpdateDemoSettings(void)
       return false;
    }
 
-   if(json_object_object_get(map_info, "settings") != NULL)
-      json_object_object_del(map_info, "settings");
+   json["settings"]["skill"] = cs_settings->skill;
+   json["settings"]["game_type"] = cs_settings->game_type;
+   json["settings"]["ctf"] = cs_settings->ctf;
+   json["settings"]["max_admin_clients"] = cs_settings->max_admin_clients;
+   json["settings"]["max_player_clients"] = cs_settings->max_player_clients;
+   json["settings"]["max_players"] = cs_settings->max_players;
+   json["settings"]["max_players_per_team"] =
+      cs_settings->max_players_per_team;
+   json["settings"]["number_of_teams"] = cs_settings->number_of_teams;
+   json["settings"]["frag_limit"] = cs_settings->frag_limit;
+   json["settings"]["time_limit"] = cs_settings->time_limit;
+   json["settings"]["score_limit"] = cs_settings->score_limit;
+   json["settings"]["dogs"] = cs_settings->dogs;
+   json["settings"]["friend_distance"] = cs_settings->friend_distance;
+   json["settings"]["bfg_type"] = cs_settings->bfg_type;
+   json["settings"]["friendly_damage_percentage"] =
+      cs_settings->friendly_damage_percentage;
+   json["settings"]["spectator_time_limit"] =
+      cs_settings->spectator_time_limit;
+   json["settings"]["death_time_limit"] = cs_settings->death_time_limit;
 
-   json_object_object_add(map_info, "settings", json_object_new_object());
-
-   settings = json_object_object_get(map_info, "settings");
-   json_object_object_add(
-      settings, "skill", json_object_new_int(cs_settings->skill)
-   );
-   json_object_object_add(
-      settings, "game_type", json_object_new_int(cs_settings->game_type)
-   );
-   json_object_object_add(
-      settings, "ctf", json_object_new_boolean(cs_settings->ctf)
-   );
-   json_object_object_add(
-      settings,
-      "max_admin_clients",
-      json_object_new_int(cs_settings->max_admin_clients)
-   );
-   json_object_object_add(
-      settings,
-      "max_player_clients",
-      json_object_new_int(cs_settings->max_player_clients)
-   );
-   json_object_object_add(
-      settings, "max_players", json_object_new_int(cs_settings->max_players)
-   );
-   json_object_object_add(
-      settings,
-      "max_players_per_team",
-      json_object_new_int(cs_settings->max_players_per_team)
-   );
-   json_object_object_add(
-      settings,
-      "number_of_teams",
-      json_object_new_int(cs_settings->number_of_teams)
-   );
-   json_object_object_add(
-      settings, "frag_limit", json_object_new_int(cs_settings->frag_limit)
-   );
-   json_object_object_add(
-      settings, "time_limit", json_object_new_int(cs_settings->time_limit)
-   );
-   json_object_object_add(
-      settings, "score_limit", json_object_new_int(cs_settings->score_limit)
-   );
-   json_object_object_add(
-      settings, "dogs", json_object_new_int(cs_settings->dogs)
-   );
-   json_object_object_add(
-      settings,
-      "friend_distance",
-      json_object_new_int(cs_settings->friend_distance)
-   );
-   json_object_object_add(
-      settings, "bfg_type", json_object_new_int(cs_settings->bfg_type)
-   );
-   json_object_object_add(
-      settings,
-      "friendly_damage_percentage",
-      json_object_new_int(cs_settings->friendly_damage_percentage)
-   );
-   json_object_object_add(
-      settings,
-      "spectator_time_limit",
-      json_object_new_int(cs_settings->spectator_time_limit)
-   );
-   json_object_object_add(
-      settings,
-      "death_time_limit",
-      json_object_new_int(cs_settings->death_time_limit)
-   );
    if(cs_settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
-   {
-      json_object_object_add(
-         settings,
-         "death_time_expired_action",
-         json_object_new_string("spectate")
-      );
-   }
+      json["settings"]["death_time_expired_action"] = "spectate";
    else
-   {
-      json_object_object_add(
-         settings,
-         "death_time_expired_action",
-         json_object_new_string("respawn")
-      );
-   }
-   json_object_object_add(
-      settings,
-      "respawn_protection_time",
-      json_object_new_int(cs_settings->respawn_protection_time)
-   );
-   json_object_object_add(
-      settings, "dmflags", json_object_new_int(cs_settings->dmflags)
-   );
-   json_object_object_add(
-      settings, "dmflags2", json_object_new_int(cs_settings->dmflags2)
-   );
-   json_object_object_add(
-      settings, "compatflags", json_object_new_int(cs_settings->compatflags)
-   );
-   json_object_object_add(
-      settings, "compatflags2", json_object_new_int(cs_settings->compatflags2)
-   );
+      json["settings"]["death_time_expired_action"] = "respawn";
+
+   json["settings"]["respawn_protection_time"] =
+      cs_settings->respawn_protection_time;
+   json["settings"]["dmflags"] = cs_settings->dmflags;
+   json["settings"]["dmflags2"] = cs_settings->dmflags2;
+   json["settings"]["compatflags"] = cs_settings->compatflags;
+   json["settings"]["compatflags2"] = cs_settings->compatflags2;
 
    return true;
 }
@@ -1312,69 +1220,31 @@ bool CS_AddNewMapToDemo(void)
    if(!open_current_demo_data_file("w+b"))
       return false;
 
-   map_info = json_object_new_object();
-   json_object_object_add(map_info, "version", json_object_new_int(version));
-   json_object_object_add(
-      map_info, "subversion", json_object_new_int(subversion)
-   );
-   json_object_object_add(
-      map_info, "cs_protocol_version", json_object_new_int(cs_protocol_version)
-   );
+   map_info["version"] = version;
+   map_info["subversion"] = subversion;
+   map_info["cs_protocol_version"] = cs_protocol_version;
+
    if(CS_CLIENT)
-   {
-      json_object_object_add(
-         map_info, "demo_type", json_object_new_string("client")
-      );
-   }
+      map_info["demo_type"] = "client";
    else if(CS_SERVER)
-   {
-      json_object_object_add(
-         map_info, "demo_type", json_object_new_string("server")
-      );
-   }
-   json_object_object_add(map_info, "name", json_object_new_string(map->name));
-   json_object_object_add(map_info, "settings", json_object_new_object());
-   json_object_object_add(map_info, "local_options", json_object_new_object());
-   json_object_object_add(
-      map_info, "timestamp", json_object_new_int(time(NULL))
-   );
-   json_object_object_add(map_info, "resources", json_object_new_array());
+      map_info["demo_type"] = "server";
 
-   local_options = json_object_object_get(map_info, "local_options");
-
-   json_object_object_add(
-      local_options, "player_bobbing", json_object_new_boolean(player_bobbing)
-   );
-   json_object_object_add(
-      local_options,
-      "doom_weapon_toggles",
-      json_object_new_boolean(doom_weapon_toggles)
-   );
-   json_object_object_add(
-      local_options, "autoaim", json_object_new_boolean(autoaim)
-   );
-   json_object_object_add(
-      local_options, "weapon_speed", json_object_new_int(weapon_speed)
-   );
-   json_object_object_add(map_info, "length", json_object_new_int(0));
-   json_object_object_add(
-      map_info, "iwad", json_object_new_string(cs_resources[0].name)
-   );
-
+   map_info["name"] = map->name;
+   map_info["timestamp"] = time(NULL);
+   local_options["player_bobbing"] = player_bobbing;
+   local_options["doom_weapon_toggles"] = doom_weapon_toggles;
+   local_options["autoaim"] = autoaim;
+   local_options["weapon_speed"] = weapon_speed;
+   map_info["length"] = 0;
+   map_info["iwad"] = cs_resources[0].name;
    CS_UpdateDemoSettings();
 
-   resources = json_object_object_get(map_info, "resources");
    for(i = 0; i < map->resource_count; i++)
    {
-      resource = json_object_new_object();
       resource_index = map->resource_indices[i];
       res = &cs_resources[resource_index];
-      json_object_object_add(
-         resource, "name", json_object_new_string(res->name)
-      );
-      json_object_object_add(
-         resource, "sha1_hash", json_object_new_string(res->sha1_hash)
-      );
+      map_info["resources"][i]["name"] = res->name;
+      map_info["resources"][i]["sha1_hash"] = res->sha1_hash;
       json_object_array_add(resources, resource);
    }
 

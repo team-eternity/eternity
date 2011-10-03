@@ -29,7 +29,7 @@
 
 #include "doomtype.h"
 
-#include <json/json.h>
+#include <json/json-forwards.h>
 #include <curl/curl.h>
 
 enum
@@ -71,7 +71,7 @@ typedef struct cs_master_request_s
 
 extern cs_master_t *master_servers;
 extern int master_server_count;
-extern struct json_object *cs_server_config;
+extern Json::Value cs_server_config;
 
 // [CG] Initialization and cleanup functions.
 void CS_InitCurl(void);

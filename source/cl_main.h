@@ -57,7 +57,7 @@ typedef struct
 extern char *cs_server_url;
 extern char *cs_server_password;
 extern char *cs_client_password_file;
-extern json_object *cs_client_password_json;
+extern Json::Value cs_client_password_json;
 
 extern unsigned int cl_current_world_index;
 extern unsigned int cl_latest_world_index;

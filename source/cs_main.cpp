@@ -73,9 +73,6 @@
 #include "version.h"
 #include "w_wad.h"
 
-#include <json/json.h>
-#include <curl/curl.h>
-
 #include "cs_team.h"
 #include "cs_config.h"
 #include "cs_hud.h"
@@ -216,48 +213,6 @@ void CS_Init(void)
    }
    else
       CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
-}
-
-// [CG] JSON-C has a to_file function (whatever it's called) but it does no
-//      formatting.  In some cases this is fine or even preferred, but it's
-//      unsuitable for situations where the user is ever expected to view or
-//      edit the data.  For these situations, I wrote this naive pretty-printer
-//      for JSON data.  There are a couple bugs, but it does output valid JSON,
-//      and 40 minutes is all I'm willing to spend on this right now :) .
-void CS_PrintJSONToFile(const char *filename, const char *json_data)
-{
-   char c;
-   size_t i;
-   unsigned int indent_level = 0;
-   FILE *file = fopen(filename, "wb");
-
-   if(file == NULL)
-      I_Error("CS_LoadConfig: Error writing configuration out to file.\n");
-
-   for(i = 0; i < strlen(json_data); i++)
-   {
-      c = *(json_data + i);
-      if(c == '{' || c == '[')
-      {
-         fputc(c, file);
-         indent_next_line(file, ++indent_level);
-      }
-      else if(c == '}' || c == ']')
-      {
-         indent_next_line(file, --indent_level);
-         fputc(' ', file);
-         fputc(c, file);
-      }
-      else if(c == ',')
-      {
-         fputc(',', file);
-         indent_next_line(file, indent_level);
-      }
-      else
-         fputc(c, file);
-   }
-
-   fclose(file);
 }
 
 bool CS_CheckURI(char *uri)
@@ -589,6 +544,38 @@ bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
       return true;
 
    return false;
+}
+
+void CS_ReadJSON(Json::Value &json, const char *filename)
+{
+   byte *buffer = NULL;
+   std::string data;
+   Json::Reader reader;
+
+   M_ReadFile(filename, &buffer);
+   data = (char *)buffer;
+
+   if(!reader.parse(data, json))
+   {
+      I_Error(
+         "CS_ReadJSONFromFile: Error parsing JSON: %s.\n",
+         reader.getFormattedErrorMessages()
+      );
+   }
+}
+
+void CS_WriteJSON(const char *filename, Json::Value &value, bool styled)
+{
+   std::ofstream out_file;
+   Json::FastWriter fast_writer;
+   Json::StyledWriter styled_writer;
+
+   out_file.open(filename);
+
+   if(styled)
+      out_file << styled_writer.write(value);
+   else
+      out_file << fast_writer.write(value);
 }
 
 void CS_HandleSpectateKey(event_t *ev)

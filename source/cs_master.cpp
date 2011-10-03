@@ -44,7 +44,7 @@ static bool advertised;
 
 cs_master_t *master_servers;
 int master_server_count;
-struct json_object *cs_server_config;
+Json::Value cs_server_config;
 
 cs_master_request_t *cs_master_requests;
 CURLM *cs_master_multi_handle;
@@ -147,11 +147,8 @@ void SV_MultiInit(void)
       request->received_data = NULL;
    }
 
-   cs_master_multi_handle = curl_multi_init();
-   if(cs_master_multi_handle == NULL)
-   {
+   if((cs_master_multi_handle = curl_multi_init()) == NULL)
       I_Error("Could not initialize CURL.\n");
-   }
 }
 
 static size_t CS_ReceiveHTTPData(void *p, size_t size, size_t nmemb, void *d)
@@ -388,11 +385,8 @@ void SV_SetMasterRequestData(cs_master_request_t *request, const char *data)
 char* SV_GetStateJSON(void)
 {
    unsigned int i, j, connected_clients;
-   client_t *client;
-   player_t *player;
-   const char *json_string_c;
-   char *json_string;
-   json_object *json, *teams, *team, *json_players, *json_player;
+   Json::Value server_json;
+   Json::FastWriter writer;
 
    connected_clients = 0;
    for(i = 1; i < MAX_CLIENTS; i++)
@@ -401,173 +395,79 @@ char* SV_GetStateJSON(void)
          connected_clients++;
    }
 
-   json = json_object_new_object();
-
-   json_object_object_add(
-      json,
-      "connected_clients",
-      json_object_new_int(connected_clients)
-   );
-   json_object_object_add(
-      json,
-      "map",
-      json_object_new_string(gamemapname)
-   );
+   server_json["connected_clients"] = connected_clients;
+   server_json["map"] = gamemapname;
 
    if(CS_TEAMS_ENABLED)
    {
-      json_object_object_add(json, "teams", json_object_new_array());
-      teams = json_object_object_get(json, "teams");
-
       for(i = 0; i < cs_settings->number_of_teams; i++)
       {
-         team = json_object_new_object();
-         json_object_array_add(teams, team);
-         json_players = json_object_new_array();
-         json_object_object_add(team, "players", json_players);
-         json_object_object_add(
-            team, "color", json_object_new_string(team_color_names[i])
-         );
-         json_object_object_add(
-            team, "score", json_object_new_int(team_scores[i])
-         );
-         json_players = json_object_new_array();
-         json_object_object_add(team, "players", json_players);
-
-         for(j = 1; j < MAX_CLIENTS; j++)
+         server_json["teams"][i]["color"] = team_color_names[i];
+         server_json["teams"][i]["score"] = team_scores[i];
+         for(j = 1; j < MAXPLAYERS; j++)
          {
-            client = &clients[j];
-            player = &players[j];
-            if(playeringame[j] && client->team == i)
-            {
-               json_player = json_object_new_object();
-               json_object_array_add(json_players, json_player);
-               json_object_object_add(
-                  json_player, "name", json_object_new_string(player->name)
-               );
-               json_object_object_add(
-                  json_player, "lag", json_object_new_int(client->transit_lag)
-               );
-               json_object_object_add(
-                  json_player,
-                  "packet_loss",
-                  json_object_new_double(client->packet_loss)
-               );
-               json_object_object_add(
-                  json_player, "frags", json_object_new_int(player->totalfrags)
-               );
-               json_object_object_add(
-                  json_player,
-                  "time",
-                  json_object_new_int((gametic - client->join_tic) / TICRATE)
-               );
-               if(client->spectating)
-               {
-                  json_object_object_add(
-                     json_player, "playing", json_object_new_boolean(false)
-                  );
-               }
-               else
-               {
-                  json_object_object_add(
-                     json_player, "playing", json_object_new_boolean(true)
-                  );
-               }
-            }
+            client_t *client = &clients[j];
+            player_t *player = &players[j];
+
+            if(!playeringame[j] && !client->team == i)
+               continue;
+
+            server_json["teams"][i]["players"][j - 1]["name"] =
+               player->name;
+            server_json["teams"][i]["players"][j - 1]["lag"] =
+               client->transit_lag;
+            server_json["teams"][i]["players"][j - 1]["packet_loss"] =
+               client->packet_loss;
+            server_json["teams"][i]["players"][j - 1]["frags"] =
+               player->totalfrags;
+            server_json["teams"][i]["players"][j - 1]["time"] =
+               (gametic - client->join_tic) / TICRATE;
+            server_json["teams"][i]["players"][j - 1]["playing"] =
+               !client->spectating;
          }
       }
    }
    else
    {
-      json_players = json_object_new_array();
-      json_object_object_add(json, "players", json_players);
-      for(j = 1; j < MAX_CLIENTS; j++)
+      for(i = 1; i < MAXPLAYERS; i++)
       {
-         client = &clients[j];
-         if(playeringame[j])
-         {
-            json_player = json_object_new_object();
-            json_object_array_add(json_players, json_player);
-            json_object_object_add(
-               json_player, "name", json_object_new_string(players[j].name)
-            );
-            json_object_object_add(
-               json_player, "lag", json_object_new_int(client->transit_lag)
-            );
-            json_object_object_add(
-               json_player,
-               "packet_loss",
-               json_object_new_double(client->packet_loss)
-            );
-            json_object_object_add(
-               json_player, "frags", json_object_new_int(players[j].totalfrags)
-            );
-            json_object_object_add(
-               json_player,
-               "time",
-               json_object_new_int((gametic - client->join_tic) / TICRATE)
-            );
-            if(client->spectating)
-            {
-               json_object_object_add(
-                  json_player, "playing", json_object_new_boolean(false)
-               );
-            }
-            else
-            {
-               json_object_object_add(
-                  json_player, "playing", json_object_new_boolean(true)
-               );
-            }
-         }
+         client_t *client = &clients[i];
+         player_t *player = &players[i];
+
+         if(!playeringame[i])
+            continue;
+
+         server_json["players"][i - 1]["name"] = player->name;
+         server_json["players"][i - 1]["lag"] = client->transit_lag;
+         server_json["players"][i - 1]["packet_loss"] = client->packet_loss;
+         server_json["players"][i - 1]["frags"] = player->totalfrags;
+         server_json["players"][i - 1]["time"] =
+            (gametic - client->join-tic) / TICRATE;
+         server_json["players"][i - 1]["playing"] = !client->spectating;
       }
    }
 
-   json_string_c = json_object_to_json_string(json);
-   json_string = strdup(json_string_c);
-   Z_SysFree((void *)json_string_c);
-   json_object_object_del(json, "connected_clients");
-   json_object_object_del(json, "map");
-
-   if(CS_TEAMS_ENABLED)
-      json_object_object_del(json, "teams");
-   else
-      json_object_object_del(json, "players");
-
-   Z_SysFree((void *)json);
-
-   return json_string;
+   return strdup(writer.write(root).c_str());
 }
 
 void SV_MasterAdvertise(void)
 {
    int i;
-   const char *config;
    cs_master_t *master;
    cs_master_request_t *request;
-   json_object *section;
+   std::string json_string;
+   Json::Value json;
+   Json::FastWriter writer;
 
    for(i = 0; i < master_server_count; i++)
    {
       master = master_servers + i;
       request = SV_GetMasterRequest(master, CS_HTTP_METHOD_PUT);
-      section = json_object_object_get(cs_server_config, "server");
-      json_object_object_del(section, "group");
-      json_object_object_add(
-         section,
-         "group",
-         json_object_new_string(master->group)
-      );
-      json_object_object_del(section, "name");
-      json_object_object_add(
-         section,
-         "name",
-         json_object_new_string(master->name)
-      );
-
-      config = json_object_get_string(cs_server_config);
-
-      SV_SetMasterRequestData(request, config);
+      json = cs_server_config;
+      json["group"] = master->group;
+      json["name"] = master->name;
+      json_string = writer.write(json);
+      SV_SetMasterRequestData(json_string.c_str());
       CS_SendMasterRequest(request);
       if(request->curl_errno != 0)
       {
@@ -838,7 +738,7 @@ void SV_AddUpdateRequest(cs_master_t *master)
    // [CG] For debugging.
    // printf("Adding update request for [%s].\n", master->address);
 
-   SV_SetMasterRequestData(request, json_string);
+   SV_SetMasterRequestData(request, (const char *)json_string);
    free(json_string);
    curl_multi_add_handle(cs_master_multi_handle, request->curl_handle);
    master->updating = true;
@@ -846,8 +746,9 @@ void SV_AddUpdateRequest(cs_master_t *master)
 
 void CL_RetrieveServerConfig(void)
 {
-   char *json_data;
-   json_object *state_and_configuration;
+   std::string json_data;
+   Json::Value state_and_configuration;
+   Json::Reader reader;
    cs_master_request_t *request = (cs_master_request_t *)(calloc(
       1, sizeof(cs_master_request_t)
    ));
@@ -858,38 +759,28 @@ void CL_RetrieveServerConfig(void)
    CS_BuildMasterRequest(request, CS_HTTP_METHOD_GET);
    CS_SendMasterRequest(request);
 
-   if(request->is_http)
+   if(request->is_http && request->status_code != 200)
    {
-      if(request->status_code != 200)
-      {
-         if(request->status_code == 404)
-         {
-            I_Error("Server at [%s] was not found.\n", request->url);
-         }
-         else
-         {
-            I_Error(
-               "Received unexpected HTTP status code '%ld' when attempting to "
-               "retrieve server data from [%s].\n",
-               (long int)request->status_code,
-               request->url
-            );
-         }
-      }
+      if(request->status_code == 404)
+         I_Error("Server at [%s] was not found.\n", request->url);
+
+      I_Error(
+         "Received unexpected HTTP status code '%ld' when attempting to "
+         "retrieve server data from [%s].\n",
+         (long int)request->status_code,
+         request->url
+      );
    }
 
    printf("success!\n");
-   json_data = strdup(request->received_data);
-   // [CG] For debugging.
-   state_and_configuration = json_tokener_parse(json_data);
-   if(is_error(state_and_configuration))
+   json_data = request->received_data;
+   if(!reader.parse(json_data, cs_json))
    {
       I_Error(
          "CS_LoadConfig: Parse error:\n\t%s.\n",
-         json_tokener_errors[(unsigned long)state_and_configuration]
+         reader.getFormattedErrorMessages()
       );
    }
-   cs_json = json_object_object_get(state_and_configuration, "configuration");
    CL_FreeMasterRequest(request);
 }
 
