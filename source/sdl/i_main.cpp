@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 #endif
 
    // [CG] 09/25/11: Use dummy audio & video drivers if headless.
-   if(CS_HEADLESS)
+   if(M_CheckParm("-csserve") && !M_CheckParm("-showserverwindow"))
    {
       putenv("SDL_AUDIODRIVER=dummy");
       putenv("SDL_VIDEODRIVER=dummy");

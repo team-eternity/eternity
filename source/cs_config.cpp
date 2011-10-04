@@ -353,7 +353,6 @@ void SV_HandleMastersSection(Json::Value &masters)
    for(i = 0, it = member_names.begin(); it != member_names.end(); i++, it++)
    {
       master = &master_servers[i];
-      CS_checkSectionHasOption(masters[*it], "master entry", "address");
       CS_checkSectionHasOption(masters[*it], "master entry", "username");
       CS_checkSectionHasOption(masters[*it], "master entry", "password");
       CS_checkSectionHasOption(masters[*it], "master entry", "group");

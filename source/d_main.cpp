@@ -3293,18 +3293,16 @@ static void D_DoomInit(void)
    }
    else if(M_CheckParm("-csserve"))
    {
-      if(!M_CheckParm("-showserverwindow"))
+      CS_HEADLESS = true;
+
+      if(M_CheckParm("-showserverwindow"))
       {
-         printf("CS_Init: Initializing as headless c/s server.\n");
-         CS_HEADLESS = true;
-      }
-      else
-      {
-         printf(
-            "CS_Init: Initializing as c/s server with server window.\n"
-         );
+         printf("CS_Init: Initializing as c/s server with server window.\n");
          CS_HEADLESS = false;
       }
+      else
+         printf("CS_Init: Initializing as headless c/s server.\n");
+
       clientside  = false;
       serverside  = true;
       clientserver = true;
