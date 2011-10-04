@@ -154,11 +154,12 @@ if(MSVC)
   add_definitions(-DPNG_NO_MODULEDEF -D_CRT_SECURE_NO_DEPRECATE)
 endif(MSVC)
 
-if(PNG_SHARED OR  NOT MSVC)
-  #if building msvc static this has NOT to be defined
-  add_definitions(-DZLIB_DLL)
-endif()
-
+if(NOT EE_STATIC_COMPILE)
+    if(PNG_SHARED OR  NOT MSVC)
+      #if building msvc static this has NOT to be defined
+      add_definitions(-DZLIB_DLL)
+    endif()
+endif(NOT EE_STATIC_COMPILE)
 
 if(PNG_CONSOLE_IO_SUPPORTED)
   add_definitions(-DPNG_CONSOLE_IO_SUPPORTED)

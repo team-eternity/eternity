@@ -29,6 +29,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -45,6 +46,7 @@
 #endif
 
 #include "doomtype.h"
+#include "i_system.h"
 
 // [CG] There are pre-defined error strings for errors that we want to handle
 //      at some point, but because Windows and POSIX systems don't share error

@@ -27,11 +27,16 @@
 //-----------------------------------------------------------------------------
 
 #ifndef _WIN32
+#ifndef __MINGW32__
 #error i_w32main.cpp is for Windows only
+#endif
 #endif
 
 #include <windows.h>
 #include "SDL_syswm.h"
+#ifdef __MINGW32__
+#include "seh/seh.h"
+#endif
 
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
@@ -50,6 +55,9 @@ int main(int argc, char **argv)
    {
       I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info\n");
    }
+#ifdef __MINGW32__
+   __end_except
+#endif
 
    return 0;
 }

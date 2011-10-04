@@ -31,11 +31,16 @@
 //-----------------------------------------------------------------------------
 
 #ifndef _WIN32
+#ifndef __MINGW32__
 #error i_exception.c is for Win32 only
+#endif
 #endif
 
 #include <windows.h>
 #include <tchar.h>
+#ifdef __MINGW32__
+#include "seh/seh.h"
+#endif
 
 //=============================================================================
 //
@@ -502,6 +507,9 @@ static void PrintCS(void)
       {
          LogPrintf(_T("?? "));
       }
+#ifdef __MINGW32__
+      __end_except
+#endif
    }
 }
 
@@ -520,6 +528,9 @@ static void PrintStack(void)
 
    LogPrintf(_T("\r\n\r\nStack:\r\n"));
 
+#ifdef __MINGW32__
+   LogPrintf(_T("Sorry, can't print stack using MinGW.\r\n"));
+#else
    __try
    {
       __asm
@@ -590,6 +601,7 @@ static void PrintStack(void)
    {
       LogPrintf(_T("Could not access stack.\r\n"));
    }
+#endif
 }
 
 #endif // _M_IX86

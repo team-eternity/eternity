@@ -27,6 +27,8 @@
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__
 
+#include <stdarg.h>
+
 struct ticcmd_t;
 
 // Called by DoomMain.

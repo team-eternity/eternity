@@ -139,7 +139,6 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libenet.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
-            zlib
             # ${EE_STATIC_DEPS}/lib/libz.a
             ${EE_STATIC_DEPS}/lib/libbz2.a
             ${EE_STATIC_DEPS}/lib/liblzma.a
@@ -159,8 +158,9 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
+            zlib
             png15_static
-            snes_spc
+            snes_spc-static
             mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
         )
     ELSE(MINGW)
@@ -175,7 +175,6 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libidn.a
             ${EE_STATIC_DEPS}/lib/libcares.a
             ${EE_STATIC_DEPS}/lib/libarchive.a
-            zlib
             # ${EE_STATIC_DEPS}/lib/libz.a
             ${EE_STATIC_DEPS}/lib/libbz2.a
             ${EE_STATIC_DEPS}/lib/liblzma.a
@@ -189,7 +188,8 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
             png15_static
-            snes_spc
+            zlib
+            snes_spc-static
             pthread m rt stdc++
         )
     ENDIF(MINGW)

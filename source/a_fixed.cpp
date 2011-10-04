@@ -27,6 +27,8 @@
 
 #ifndef EE_NO_SMALL_SUPPORT
 
+#include <cstddef>
+
 #include "a_small.h"
 #include "m_fixed.h"
 #include "tables.h"

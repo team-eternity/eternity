@@ -33,6 +33,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifndef __MINGW32__
 #ifndef _MSC_VER
 #error i_opndir.c is for Microsoft Visual C++ only
 #endif
@@ -338,5 +339,6 @@ void seekdir(DIR *dirp, long lPos)
    }
 }
 
+#endif // ifndef __MINGW32__ 
 // EOF
 

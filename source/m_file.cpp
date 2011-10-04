@@ -277,14 +277,14 @@ bool M_DeleteFolderAndContents(const char *path)
    //      add an asterisk (apparently Windows needs this).
    if((*(path + path_length)) - 1 != '\\')
    {
-      folder_path = calloc(path_length + 2, sizeof(char));
-      star_path = calloc(path_length + 3, sizeof(char));
+      folder_path = (char *)calloc(path_length + 2, sizeof(char));
+      star_path = (char *)calloc(path_length + 3, sizeof(char));
       sprintf(folder_path, "%s\\", path);
    }
    else
    {
-      folder_path = calloc(path_length + 1, sizeof(char));
-      star_path = calloc(path_length + 2, sizeof(char));
+      folder_path = (char *)calloc(path_length + 1, sizeof(char));
+      star_path = (char *)calloc(path_length + 2, sizeof(char));
       strncpy(folder_path, path, path_length);
    }
    sprintf(star_path, "%s*", folder_path);
@@ -298,7 +298,7 @@ bool M_DeleteFolderAndContents(const char *path)
          continue;
 
       entry_length = strlen(fdata.cFileName);
-      entry_path = realloc(entry_path, path_length + entry_length + 1);
+      entry_path = (char *)realloc(entry_path, path_length + entry_length + 1);
       memset(entry_path, 0, path_length + entry_length + 1);
       strncat(entry_path, folder_path, path_length);
       strncat(entry_path, fdata.cFileName, entry_length);

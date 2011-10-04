@@ -675,7 +675,7 @@ void CS_HandleServerSection(Json::Value &server)
    char hostname[256];
    struct hostent *host;
    struct in_addr interface_address;
-   boolean found_address = false;
+   bool found_address = false;
 #else
    struct ifaddrs *interface_addresses = NULL;
    struct ifaddrs *interface_address = NULL;
