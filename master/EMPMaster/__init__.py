@@ -75,22 +75,23 @@ def create_new_database_session(handler):
     finally:
         web.ctx.sa_session.close()
 
-def email_errors(handler):
+def handle_errors(handler):
     try:
         return handler()
     except web.HTTPError:
         pass # [CG] Non-2XX status codes raise exceptions, so ignore them.
     except Exception, e:
-        sender = CONFIG['smtp_sender']
+        error = traceback.format_exc()
         recipient = CONFIG['admin_email']
         subject = 'Error on master server "%s"' % (CONFIG['server_name'])
         body = 'An error occured on master server "%s" [%s]:\n\n%s.' % (
             CONFIG['server_name'],
             '/'.join((web.ctx.homepath, web.ctx.path)),
-            traceback.format_exc(),
+            error
         )
-        web.sendmail(sender, recipient, subject, body)
-        raise
+        send_email([recipient], subject, body)
+        if web.config.debug:
+            web.debug(error)
 
 from EMPMaster.URLs import urls
 from EMPMaster.Controllers import *
@@ -105,5 +106,5 @@ app = web.application(urls, globals(), autoreload=True)
 
 app.add_processor(set_server_update_cutoff)
 app.add_processor(create_new_database_session)
-app.add_processor(email_errors)
+app.add_processor(handle_errors)
 
