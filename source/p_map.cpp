@@ -2143,7 +2143,7 @@ static bool PIT_RadiusAttack(Mobj *thing)
          return true;
    }
    else if((thing->flags2 & MF2_BOSS || thing->flags4 & MF4_NORADIUSDMG) &&
-           !(bombspot->flags4 && MF4_FORCERADIUSDMG))
+           !(bombspot->flags4 & MF4_FORCERADIUSDMG))
    {      
       // haleyjd 05/22/99: exclude all bosses
       // haleyjd 09/21/09: support separate MF4_NORADIUSDMG flag and

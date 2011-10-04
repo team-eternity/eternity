@@ -542,34 +542,34 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
    int i;
 
    if(!comp[comp_model])
-      height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in
+      height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in height calculations
 
    if(demo_version >= 333)
    {
       // SoM: ignore attached sectors.
-      for(i=0; i < sec->linecount; i++)
+      for(i = 0; i < sec->linecount; i++)
       {
          if((other = getNextSector(sec->lines[i],sec)) &&
             other->ceilingheight < height)
          {
-            int i;
+            int j;
 
-            for(i = 0; i < sec->c_asurfacecount; i++)
-               if(sec->c_asurfaces[i].sector == other)
+            for(j = 0; j < sec->c_asurfacecount; j++)
+               if(sec->c_asurfaces[j].sector == other)
                   break;
             
-            if(i == sec->c_asurfacecount)
+            if(j == sec->c_asurfacecount)
                height = other->ceilingheight;
          }
       }
    }
    else
-   {
-      // height calculations
-      for(i=0; i < sec->linecount; i++)
-         if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
+   {      
+      for(i = 0; i < sec->linecount; i++)
+      {
+         if((other = getNextSector(sec->lines[i],sec)) && other->ceilingheight < height)
             height = other->ceilingheight;
+      }
    }
 
    return height;

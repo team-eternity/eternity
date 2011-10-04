@@ -158,44 +158,44 @@ gfs_t *G_LoadGFS(const char *filename)
    return &gfs;
 }
 
-void G_FreeGFS(gfs_t *gfs)
+void G_FreeGFS(gfs_t *lgfs)
 {
    int i;
 
    // free all filenames, and then free the arrays they were in
    // as well
 
-   for(i = 0; i < gfs->numwads; i++)
+   for(i = 0; i < lgfs->numwads; i++)
    {
-      free(gfs->wadnames[i]);
+      free(lgfs->wadnames[i]);
    }
-   free(gfs->wadnames);
+   free(lgfs->wadnames);
 
-   for(i = 0; i < gfs->numdehs; i++)
+   for(i = 0; i < lgfs->numdehs; i++)
    {
-      free(gfs->dehnames[i]);
+      free(lgfs->dehnames[i]);
    }
-   free(gfs->dehnames);
+   free(lgfs->dehnames);
 
-   for(i = 0; i < gfs->numcsc; i++)
+   for(i = 0; i < lgfs->numcsc; i++)
    {
-      free(gfs->cscnames[i]);
+      free(lgfs->cscnames[i]);
    }
-   free(gfs->cscnames);
+   free(lgfs->cscnames);
 
-   if(gfs->edf)
-      free(gfs->edf);
-   gfs->edf = NULL;
-   gfs->hasEDF = false;
+   if(lgfs->edf)
+      free(lgfs->edf);
+   lgfs->edf = NULL;
+   lgfs->hasEDF = false;
 
-   if(gfs->iwad)
-      free(gfs->iwad);
-   gfs->iwad = NULL;
-   gfs->hasIWAD = false;
+   if(lgfs->iwad)
+      free(lgfs->iwad);
+   lgfs->iwad = NULL;
+   lgfs->hasIWAD = false;
 
-   if(gfs->filepath)
-      free(gfs->filepath);
-   gfs->filepath = NULL;
+   if(lgfs->filepath)
+      free(lgfs->filepath);
+   lgfs->filepath = NULL;
 }
 
 //

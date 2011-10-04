@@ -2709,10 +2709,10 @@ void P_AdjustFloorClip(Mobj *thing)
       if(m->m_sector->heightsec == -1 &&
          thing->z == m->m_sector->floorheight)
       {
-         fixed_t clip = E_SectorFloorClip(m->m_sector);
+         fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
-         if(clip < shallowestclip)
-            shallowestclip = clip;
+         if(fclip < shallowestclip)
+            shallowestclip = fclip;
       }
    }
 

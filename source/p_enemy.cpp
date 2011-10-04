@@ -148,13 +148,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 #ifdef R_LINKEDPORTALS
       if(check->pflags & PS_PASSSOUND)
       {
-         sector_t *other;
+         sector_t *iother;
 
-         other = 
+         iother = 
          R_PointInSubsector(((check->v1->x + check->v2->x) / 2) - check->portal->data.link.deltax,
                             ((check->v1->y + check->v2->y) / 2) - check->portal->data.link.deltay)->sector;
 
-         P_RecursiveSound(other, soundblocks, soundtarget);
+         P_RecursiveSound(iother, soundblocks, soundtarget);
       }
 #endif
       if(!(check->flags & ML_TWOSIDED))

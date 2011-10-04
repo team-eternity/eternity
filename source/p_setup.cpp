@@ -417,13 +417,13 @@ void P_LoadSegs(int lump)
 
 
 // SoM 5/13/09: calculate seg length
-void P_CalcSegLength(seg_t *seg)
+void P_CalcSegLength(seg_t *lseg)
 {
    float dx, dy;
 
-   dx = seg->v2->fx - seg->v1->fx;
-   dy = seg->v2->fy - seg->v1->fy;
-   seg->len = (float)sqrt(dx * dx + dy * dy);
+   dx = lseg->v2->fx - lseg->v1->fx;
+   dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->len = (float)sqrt(dx * dx + dy * dy);
 }
 
 //

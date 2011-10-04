@@ -186,6 +186,7 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 //
 bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 {
+   bool gaveweapon = false;
    bool gaveammo;
    
    if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -209,8 +210,15 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
    gaveammo = weaponinfo[weapon].ammo != am_noammo &&
       P_GiveAmmo(player, weaponinfo[weapon].ammo, dropped ? 1 : 2);
    
-   return !player->weaponowned[weapon] ?
-      player->weaponowned[player->pendingweapon = weapon] = true : gaveammo;
+   // haleyjd 10/4/11: de-Killoughized
+   if(!player->weaponowned[weapon])
+   {
+      player->pendingweapon = weapon;
+      player->weaponowned[weapon] = 1;
+      gaveweapon = true;
+   }
+
+   return gaveweapon || gaveammo;
 }
 
 //

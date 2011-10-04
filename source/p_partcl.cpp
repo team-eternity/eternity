@@ -599,24 +599,24 @@ static void P_RunEffect(Mobj *actor, int effects)
       
       for(i = 6; i; --i)
       {
-         particle_t *particle = JitterParticle (3 + (M_Random() & 31));
-         if(particle)
+         particle_t *iparticle = JitterParticle(3 + (M_Random() & 31));
+         if(iparticle)
          {
-            fixed_t pathdist = M_Random()<<8;
-            particle->x = backx - FixedMul(actor->momx, pathdist);
-            particle->y = backy - FixedMul(actor->momy, pathdist);
-            particle->z = backz - FixedMul(actor->momz, pathdist) + 
-                          (M_Random() << 10);
-            P_SetParticlePosition(particle);
+            fixed_t pathdist = M_Random() << 8;
+            iparticle->x = backx - FixedMul(actor->momx, pathdist);
+            iparticle->y = backy - FixedMul(actor->momy, pathdist);
+            iparticle->z = backz - FixedMul(actor->momz, pathdist) + 
+                             (M_Random() << 10);
+            P_SetParticlePosition(iparticle);
 
-            speed = (M_Random () - 128) * (FRACUNIT/200);
-            particle->velx += FixedMul(speed, finecosine[an]);
-            particle->vely += FixedMul(speed, finesine[an]);
-            particle->velz += FRACUNIT/80;
-            particle->accz += FRACUNIT/40;
-            particle->color = (M_Random() & 7) ? grey2 : grey1;            
-            particle->size = 3;
-            particle->styleflags = 0;
+            speed = (M_Random() - 128) * (FRACUNIT/200);
+            iparticle->velx += FixedMul(speed, finecosine[an]);
+            iparticle->vely += FixedMul(speed, finesine[an]);
+            iparticle->velz += FRACUNIT/80;
+            iparticle->accz += FRACUNIT/40;
+            iparticle->color = (M_Random() & 7) ? grey2 : grey1;            
+            iparticle->size = 3;
+            iparticle->styleflags = 0;
          } 
          else
             break;

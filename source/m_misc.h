@@ -58,7 +58,7 @@ char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
 
 int   M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
-char *M_SafeFilePath(const char *basepath, const char *newcomponent);
+char *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
 
 extern int config_help;
 

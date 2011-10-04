@@ -445,7 +445,7 @@ void P_Chase_AddCommands(void)
 #ifndef EE_NO_SMALL_SUPPORT
 static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
 {
-   int onoff = (int)params[1];
+   int cam_onoff = (int)params[1];
 
    if(gamestate != GS_LEVEL)
    {
@@ -453,7 +453,7 @@ static cell AMX_NATIVE_CALL sm_chasecam(AMX *amx, cell *params)
       return -1;
    }
 
-   if(onoff)
+   if(cam_onoff)
       P_ChaseStart();
    else
       P_ChaseEnd();

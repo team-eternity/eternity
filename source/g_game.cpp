@@ -1134,10 +1134,10 @@ void G_DoPlayDemo(void)
       // version
       if(full_demo_version >= make_full_version(329, 5))
       {
-         int i;
+         int mn;
          
-         for(i = 0; i < 8; i++)
-            gamemapname[i] = *demo_p++;
+         for(mn = 0; mn < 8; mn++)
+            gamemapname[mn] = *demo_p++;
          
          gamemapname[8] = '\0';
       }
@@ -2360,7 +2360,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         Mobj *fog = NULL;
+         fog = NULL;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {

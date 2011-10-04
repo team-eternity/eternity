@@ -196,17 +196,17 @@ manual_floor:
       {
          if(fd->change_model) // if a numeric model change
          {
-            sector_t *sec;
+            sector_t *msec;
 
             //jff 5/23/98 find model with ceiling at target height
             //if target is a ceiling type
-            sec = (fd->target_type == FtoLnC || fd->target_type == FtoC)?
+            msec = (fd->target_type == FtoLnC || fd->target_type == FtoC)?
                P_FindModelCeilingSector(floor->floordestheight,secnum) :
                P_FindModelFloorSector(floor->floordestheight,secnum);
             
-            if(sec)
+            if(msec)
             {
-               floor->texture = sec->floorpic;
+               floor->texture = msec->floorpic;
                switch(fd->change_type)
                {
                case FChgZero:  // zero type
@@ -216,7 +216,7 @@ manual_floor:
                   break;
                case FChgTyp:   // copy type
                   //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(sec, &(floor->special));
+                  P_SetupSpecialTransfer(msec, &(floor->special));
                   floor->type = genFloorChgT;
                   break;
                case FChgTxt:   // leave type be
@@ -444,16 +444,16 @@ manual_ceiling:
       {
          if(cd->change_model)   // if a numeric model change
          {
-            sector_t *sec;
+            sector_t *msec;
 
             // jff 5/23/98 find model with floor at target height if 
             // target is a floor type
-            sec = (cd->target_type == CtoHnF || cd->target_type == CtoF) ?
+            msec = (cd->target_type == CtoHnF || cd->target_type == CtoF) ?
                      P_FindModelFloorSector(targheight, secnum) :
                      P_FindModelCeilingSector(targheight, secnum);
-            if(sec)
+            if(msec)
             {
-               ceiling->texture = sec->ceilingpic;
+               ceiling->texture = msec->ceilingpic;
                switch(cd->change_type)
                {
                case CChgZero:  // type is zeroed
@@ -463,7 +463,7 @@ manual_ceiling:
                   break;
                case CChgTyp:   // type is copied
                   //jff 3/14/98 change old field too
-                  P_SetupSpecialTransfer(sec, &(ceiling->special));
+                  P_SetupSpecialTransfer(msec, &(ceiling->special));
                   ceiling->type = genCeilingChgT;
                   break;
                case CChgTxt:   // type is left alone

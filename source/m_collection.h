@@ -133,14 +133,14 @@ public:
    //
    // Returns a random item from the collection.
    //
-   T &getRandom(pr_class_t rng)
+   T &getRandom(pr_class_t rngnum)
    {
       size_t index;
 
       if(!ptrArray || !length)
          I_Error("BaseCollection::getRandom: called on empty collection\n");
       
-      index = (size_t)P_Random(rng) % length;
+      index = (size_t)P_Random(rngnum) % length;
 
       return ptrArray[index];
    }

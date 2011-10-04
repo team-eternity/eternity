@@ -1788,11 +1788,11 @@ void M_ResetDefaultComments(void)
 // haleyjd 07/04/10: static subroutine for M_FindDefaultForCVar that looks
 // for a match in a single set of defaults.
 //
-static default_t *M_findCVarInDefaults(default_t *defaults, variable_t *var)
+static default_t *M_findCVarInDefaults(default_t *defaultset, variable_t *var)
 {
    default_t *dp, *ret = NULL;
 
-   for(dp = defaults; dp->name; dp++)
+   for(dp = defaultset; dp->name; dp++)
    {
       if(dp->methods->checkCVar(dp, var))
       {
@@ -2218,13 +2218,13 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 // file path concatenation with automatic normalization on alloca-provided 
 // buffers.
 //
-char *M_SafeFilePath(const char *basepath, const char *newcomponent)
+char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
 {
    int     newstrlen = 0;
    char   *newstr    = NULL;
 
-   newstrlen = M_StringAlloca(&newstr, 3, 1, basepath, "/", newcomponent);
-   psnprintf(newstr, newstrlen, "%s/%s", basepath, newcomponent);
+   newstrlen = M_StringAlloca(&newstr, 3, 1, pbasepath, "/", newcomponent);
+   psnprintf(newstr, newstrlen, "%s/%s", pbasepath, newcomponent);
    M_NormalizeSlashes(newstr);
 
    return newstr;
