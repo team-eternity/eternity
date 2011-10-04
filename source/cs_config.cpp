@@ -358,7 +358,6 @@ void SV_HandleMastersSection(Json::Value &masters)
       CS_checkSectionHasOption(masters[*it], "master entry", "group");
       CS_checkSectionHasOption(masters[*it], "master entry", "name");
 
-      master->address = strdup(masters[*it]["address"].asCString());
       master->username = strdup(masters[*it]["username"].asCString());
       master->password_hash = CS_GetSHA1Hash(
          masters[*it]["password"].asCString(),
