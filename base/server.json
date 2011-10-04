@@ -1,13 +1,12 @@
 {
-    "masters": [
-        {
-            "address": "master.universe.net",
+    "masters": {
+        "master.universe.net": {
             "username": "adam",
             "password": "ihavethepower",
             "group": "eternia",
             "name": "grayskull1"
         }
-    ],
+    },
 
     "resources": [
         { "name": "doom2.wad", "type": "iwad" },

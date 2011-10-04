@@ -70,8 +70,10 @@ else
     STATIC_DEPS=$LINUX_DEPS
 fi
 
-if [ ! "$1" ]
-then echo "Usage: $0 [ generator ] ... see 'cmake -h' for details"; exit 1
+GENERATOR='Unix Makefiles'
+
+if [ "$1" ]
+then GENERATOR=$1
 fi
 
 if [ -d sbuild ]
@@ -99,5 +101,6 @@ fi
                      -DHAVE_STDINT_H=$STATIC_HAVE_STDINT_H \
                      -DHAVE_SCHED_SET_AFFINITY=$STATIC_HAVE_SSA \
                      -DCMAKE_TOOLCHAIN_FILE=CMakeStatic.txt \
-                     -G"$1" .. )
+                     -DCMAKE_PREFIX_PATH=$STATIC_DEPS \
+                     -G"$GENERATOR" .. )
 

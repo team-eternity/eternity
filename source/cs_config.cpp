@@ -231,7 +231,7 @@ void D_CheckGamePath(char *game);
    {\
       if(options[#option_name].asInt() < (min))\
          I_Error("CS_LoadConfig: '" #option_name "' must be > %d.\n", (min));\
-      else if(options["max_players"].asInt() > (max))\
+      else if(options[#option_name].asInt() > (max))\
          I_Error("CS_LoadConfig: '" #option_name "' must be < %d.\n", (max));\
    }
 
