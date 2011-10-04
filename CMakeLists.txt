@@ -54,8 +54,8 @@ INCLUDE(InstallRequiredSystemLibraries)
 SET(CPACK_PACKAGE_VENDOR "Team Eternity")
 SET(CPACK_PACKAGE_CONTACT "Team Eternity <haleyjd@hotmail.com>")
 SET(CPACK_PACKAGE_VERSION_MAJOR "3")
-SET(CPACK_PACKAGE_VERSION_MINOR "39")
-SET(CPACK_PACKAGE_VERSION_PATCH "50")
+SET(CPACK_PACKAGE_VERSION_MINOR "40")
+SET(CPACK_PACKAGE_VERSION_PATCH "17")
 SET(CPACK_PACKAGE_NAME "Eternity Engine")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY
@@ -72,7 +72,6 @@ SET(CPACK_DEBIAN_PACKAGE_DEPENDS
      libsdl-mixer1.2 (>=1.2.8),
      libsdl-net1.2 (>=1.2.7),
      libbz2-1.0 (>=1.0.4),
-     zlib1g (>=1:1.2.3.4)
      libarchive1 (>=2.8.4),
      libc-ares2 (>=1.1.1-5.1),
      libcurl3-gnutls (>=7.21.0),
