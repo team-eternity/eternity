@@ -553,7 +553,7 @@ void CS_HandleResourcesSection(Json::Value &resources)
             continue;
          }
 
-         if(cs_json["resources"][i]["type"].asString().compare("iwad") == 0)
+         if(string_option_is(cs_json["resources"][i]["type"], "iwad"))
          {
             if(cs_iwad != NULL)
                I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
@@ -597,9 +597,9 @@ void CS_HandleResourcesSection(Json::Value &resources)
          }
 
          if(!cs_json["resources"][i]["type"].empty() &&
-             cs_json["resources"][i]["type"].asString().compare("iwad") &&
-             cs_json["resources"][i]["type"].asString().compare("wad") &&
-             cs_json["resources"][i]["type"].asString().compare("dehacked"))
+            !string_option_is(cs_json["resources"][i]["type"], "iwad") &&
+            !string_option_is(cs_json["resources"][i]["type"], "wad") &&
+            !string_option_is(cs_json["resources"][i]["type"], "dehacked"))
          {
             printf(
                "CS_LoadConfig: Skipping resource entry with invalid type "
@@ -609,7 +609,7 @@ void CS_HandleResourcesSection(Json::Value &resources)
             continue;
          }
 
-         if(cs_json["resources"][i]["type"].asString().compare("dehacked"))
+         if(string_option_is(cs_json["resources"][i]["type"], "dehacked"))
          {
             if(!cs_json["resources"][i]["alternates"].empty())
             {
@@ -628,7 +628,7 @@ void CS_HandleResourcesSection(Json::Value &resources)
 
             modifiedgame = true;
          }
-         else if(cs_json["resources"][i]["type"].asString().compare("wad"))
+         else if(string_option_is(cs_json["resources"][i]["type"], "wad"))
          {
             // [CG] If the specified PWAD wasn't found, search for specified
             //      alternates.
@@ -684,7 +684,7 @@ void CS_HandleServerSection(Json::Value &server)
 
    if(server["address"].empty())
       server_address->host = ENET_HOST_ANY;
-   else if(server["address"].asString().compare("public"))
+   else if(string_option_is(server["address"], "public"))
       server_address->host = ENET_HOST_ANY;
    else
       enet_address_set_host(server_address, server["address"].asCString());

@@ -1438,9 +1438,6 @@ void CS_ReadFromNetwork(void)
 
    while(enet_host_service(net_host, &event, 1) > 0)
    {
-      if(CS_SERVER)
-         playernum = SV_GetPlayerNumberFromPeer(event.peer);
-
       switch(event.type)
       {
       case ENET_EVENT_TYPE_CONNECT:
@@ -1458,6 +1455,7 @@ void CS_ReadFromNetwork(void)
          else if(CS_SERVER)
          {
             address = CS_IPToString(event.peer->address.host);
+            playernum = SV_GetPlayerNumberFromPeer(event.peer);
             if(playernum == 0)
             {
                doom_printf(
@@ -1482,6 +1480,9 @@ void CS_ReadFromNetwork(void)
          }
          break;
       case ENET_EVENT_TYPE_RECEIVE:
+         if(CS_SERVER)
+            playernum = SV_GetPlayerNumberFromPeer(event.peer);
+
          // [CG] Save all received network messages in the demo if recording.
          if(cs_demo_recording)
          {
@@ -1504,6 +1505,7 @@ void CS_ReadFromNetwork(void)
          }
          else if(CS_SERVER)
          {
+            playernum = SV_GetPlayerNumberFromPeer(event.peer);
             if(playernum == 0)
             {
                doom_printf(
@@ -1520,11 +1522,9 @@ void CS_ReadFromNetwork(void)
          break;
       case ENET_EVENT_TYPE_DISCONNECT:
          if(CS_CLIENT)
-         {
-            printf("Lost connection.\n");
             CL_Disconnect();
-         }
-         else if(CS_SERVER)
+
+         if(CS_SERVER)
          {
             playernum = SV_GetClientNumberFromAddress(&event.peer->address);
             if(playernum && playernum < MAX_CLIENTS && playeringame[playernum])
@@ -1543,6 +1543,7 @@ void CS_ReadFromNetwork(void)
          event.peer->data = NULL;
          break;
       case ENET_EVENT_TYPE_NONE:
+         break;
       default:
          doom_printf("Received unknown event type: %d\n", event.type);
          break;

@@ -386,12 +386,9 @@ unsigned int SV_GetPlayerNumberFromPeer(ENetPeer *peer)
    unsigned int i;
 
    for(i = 1; i < MAXPLAYERS; i++)
-   {
       if(peer->connectID == server_clients[i].connect_id)
-      {
          return i;
-      }
-   }
+
    return 0;
 }
 
