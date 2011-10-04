@@ -230,9 +230,9 @@ void D_CheckGamePath(char *game);
    if(!options[#option_name].empty())\
    {\
       if(options[#option_name].asInt() < (min))\
-         I_Error("CS_LoadConfig: '" #option_name "' must be > %d.\n", (min));\
+         I_Error("CS_LoadConfig: '" #option_name "' must be >= %d.\n", (min));\
       else if(options[#option_name].asInt() > (max))\
-         I_Error("CS_LoadConfig: '" #option_name "' must be < %d.\n", (max));\
+         I_Error("CS_LoadConfig: '" #option_name "' must be <= %d.\n", (max));\
    }
 
 #define string_option_is(option, s) ((option).asString().compare((s)) == 0)
@@ -368,6 +368,8 @@ void SV_HandleMastersSection(Json::Value &masters)
       master_servers[i].disabled = false;
       master_servers[i].updating = false;
    }
+
+   sv_master_server_count = masters.size();
 }
 
 void SV_LoadConfig(void)
@@ -779,7 +781,7 @@ void CS_HandleServerSection(Json::Value &server)
    cs_original_settings->max_admin_clients = 2;
    if(!server["max_admin_clients"].empty())
    {
-      check_int_option_range(server, max_player_clients, 2, (MAXPLAYERS >> 1));
+      check_int_option_range(server, max_admin_clients, 2, (MAXPLAYERS >> 1));
       cs_original_settings->max_admin_clients =
          server["max_admin_clients"].asInt();
    }

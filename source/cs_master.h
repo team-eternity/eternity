@@ -70,7 +70,7 @@ typedef struct cs_master_request_s
 } cs_master_request_t;
 
 extern cs_master_t *master_servers;
-extern int master_server_count;
+extern int sv_master_server_count;
 extern Json::Value cs_server_config;
 
 // [CG] Initialization and cleanup functions.

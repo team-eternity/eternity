@@ -43,7 +43,7 @@
 static bool advertised;
 
 cs_master_t *master_servers;
-int master_server_count;
+int sv_master_server_count;
 Json::Value cs_server_config;
 
 cs_master_request_t *cs_master_requests;
@@ -93,7 +93,7 @@ void SV_MasterCleanup(void)
 
    SV_MasterDelist();
 
-   for(i = 0; i < master_server_count; i++)
+   for(i = 0; i < sv_master_server_count; i++)
    {
       request = &cs_master_requests[i];
       free(request->url);
@@ -116,10 +116,10 @@ void SV_MultiInit(void)
    char *url, *address, *group, *name;
 
    cs_master_requests = (cs_master_request_t *)(calloc(
-      master_server_count, sizeof(cs_master_request_t)
+      sv_master_server_count, sizeof(cs_master_request_t)
    ));
 
-   for(i = 0; i < master_server_count; i++)
+   for(i = 0; i < sv_master_server_count; i++)
    {
       master = &master_servers[i];
       request = &cs_master_requests[i];
@@ -457,7 +457,7 @@ void SV_MasterAdvertise(void)
    Json::Value json;
    Json::FastWriter writer;
 
-   for(i = 0; i < master_server_count; i++)
+   for(i = 0; i < sv_master_server_count; i++)
    {
       master = master_servers + i;
       request = SV_GetMasterRequest(master, CS_HTTP_METHOD_PUT);
@@ -514,7 +514,7 @@ void SV_MasterDelist(void)
    cs_master_t *master;
    cs_master_request_t *request;
 
-   for(i = 0; i < master_server_count; i++)
+   for(i = 0; i < sv_master_server_count; i++)
    {
       master = master_servers + i;
 
@@ -616,7 +616,7 @@ void SV_MasterUpdate(void)
       if(request_message->msg == CURLMSG_DONE)
       {
          request = NULL;
-         for(i = 0; i < master_server_count; i++)
+         for(i = 0; i < sv_master_server_count; i++)
          {
             if(request_message->easy_handle ==
                cs_master_requests[i].curl_handle)
@@ -710,7 +710,7 @@ void SV_MasterUpdate(void)
       }
    }
 
-   for(i = 0; i < master_server_count; i++)
+   for(i = 0; i < sv_master_server_count; i++)
    {
       master = &master_servers[i];
       if(!master->updating &&

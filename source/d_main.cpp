@@ -3343,9 +3343,8 @@ static void D_DoomInit(void)
    if(CS_DEMO)
    {
       if(!CS_PlayDemo(myargv[M_CheckParm("-csplaydemo") + 1]))
-      {
          I_Error("Error playing demo: %s\n", CS_GetDemoErrorMessage());
-      }
+
       CL_InitPlayDemoMode();
       atexit(stop_demo_at_exit); // [CG] Ensure we clean up after ourselves.
    }
@@ -4123,7 +4122,7 @@ void D_DoomMain(void)
       SV_MasterAdvertise();
 
       // [CG] Add update requests for each master.
-      for(i = 0; i < master_server_count; i++)
+      for(i = 0; i < sv_master_server_count; i++)
          SV_AddUpdateRequest(&master_servers[i]);
 
       SV_MasterUpdate();
