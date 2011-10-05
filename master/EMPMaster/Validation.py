@@ -3,12 +3,21 @@ from EMPMaster.Errors import *
 CE = InvalidServerConfigurationError
 SE = InvalidServerStateError
 
-isstr   = lambda x: isinstance(x, basestring)
-islist  = lambda x: isinstance(x, list)
-isdict  = lambda x: isinstance(x, dict)
-isbool  = lambda x: isinstance(x, bool)
-isint   = lambda x: isinstance(x, int)
-isfloat = lambda x: isinstance(x, float)
+isstr   = lambda x: x is None or isinstance(x, basestring)
+islist  = lambda x: x is None or isinstance(x, list)
+isdict  = lambda x: x is None or isinstance(x, dict)
+isbool  = lambda x: x is None or isinstance(x, bool)
+isint   = lambda x: x is None or isinstance(x, int)
+isfloat = lambda x: x is None or isinstance(x, float)
+
+validator_to_string = {
+    isstr:   'a string',
+    islist:  'a list',
+    isdict:  'a dict',
+    isbool:  'a boolean',
+    isint:   'an integer',
+    isfloat: 'a float'
+}
 
 def validate_resources(resources):
     if not islist(resources):
@@ -48,17 +57,15 @@ def validate_server(server):
         ('wad_repository', isstr)
     ]:
         if not validator(server[name]):
-            if validator == isstr:
-                raise CE('Server\'s "%s" is not a string.' % (name))
-            elif validator == isbool:
-                raise CE('Server\'s "%s" is not a boolean.' % (name))
-            elif validator == isint:
-                raise CE('Server\'s "%s" is not an integer.' % (name))
+            raise CE('Server\'s "%s" is not %s.' % (
+                name,
+                validator_to_string(validator)
+            ))
 
 def validate_options(options, section_name='options'):
-    if not islist(options):
+    if not isdict(options):
         raise CE('"%s" section is not an array.' % (section_name))
-    for name, s, validator in [
+    for name, validator in [
         ('actors_get_stuck_over_dropoffs', isbool),
         ('actors_have_infinite_height', isbool),
         ('actors_never_fall_off_ledges', isbool),
@@ -78,7 +85,7 @@ def validate_options(options, section_name='options'):
         ('bfg_type', isstr),
         ('build_blockmap', isbool),
         ('bullets_never_hit_floors_and_ceilings', isbool),
-        ('death_time_expired_action': 'respawn'),
+        ('death_time_expired_action', isstr),
         ('death_time_limit', isint),
         ('disable_falling_damage', isbool),
         ('disable_tagged_door_light_fading', isbool),
@@ -162,13 +169,15 @@ def validate_options(options, section_name='options'):
     ]:
         if name in options and not validator(options[name]):
             raise CE('%s "%s" is not %s.' % (
-                option_name[:-1].capitalize(), name, s
+                option_name[:-1].capitalize(),
+                name,
+                validator_to_string(validator)
             ))
-        if 'force_respawn_action' in options:
-            if options['force_respawn_action'] not in ('respawn', 'spectate'):
-                es = ('%s "force_respawn_action is not in ("respawn", '
-                      '"spectate").')
-                raise CE(es % (option_name[:-1].capitalize()))
+    if 'death_time_expired_action' in options and \
+        options['death_time_expired_action'] not in ('respawn', 'spectate'):
+        es = '%s "death_time_expired_action is not in ("respawn", "spectate").'
+        raise CE(es % (option_name[:-1].capitalize()))
+
 
 def validate_maps(maps):
     if not islist(maps):
