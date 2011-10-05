@@ -23,8 +23,6 @@
         "spectator_time_limit": 30,
         "game": "doom2",
         "game_type": "duel",
-        "number_of_teams": 0,
-        "minimum_buffer_size": 0,
         "spectator_password": "cookie",
         "player_password": "monster",
         "moderator_password": "omnomnom",

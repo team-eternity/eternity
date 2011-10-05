@@ -95,7 +95,6 @@ typedef struct
    uint32_t max_player_clients;
    uint32_t max_players;
    uint32_t max_players_per_team;
-   uint32_t number_of_teams;
    uint32_t frag_limit;
    uint32_t time_limit;
    uint32_t score_limit;
@@ -107,10 +106,10 @@ typedef struct
    uint32_t death_time_limit;
    uint32_t death_time_expired_action;
    uint32_t respawn_protection_time;
-   double   radial_damage;
-   double   radial_self_damage;
-   double   radial_lift;
-   double   radial_self_lift;
+   double   radial_attack_damage;
+   double   radial_attack_self_damage;
+   double   radial_attack_lift;
+   double   radial_attack_self_lift;
    uint8_t  build_blockmap;
    uint32_t dmflags;
    uint32_t dmflags2;

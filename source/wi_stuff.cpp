@@ -1852,7 +1852,7 @@ static void WI_Ticker(void)
    switch(state)
    {
    case StatCount:
-      if(GameType == gt_dm) 
+      if(DEATHMATCH) 
          WI_updateDeathmatchStats();
       else if(GameType == gt_coop) 
          WI_updateNetgameStats();
@@ -2107,7 +2107,7 @@ static void WI_Drawer(void)
    case StatCount:
       if(clientserver)
          WI_drawClientServerStats();
-      else if(GameType == gt_dm)
+      else if(DEATHMATCH)
          WI_drawDeathmatchStats();
       else if(GameType == gt_coop)
          WI_drawNetgameStats();
@@ -2222,7 +2222,7 @@ static void WI_Start(wbstartstruct_t *wbstartstruct)
    WI_initVariables(wbstartstruct);
    WI_loadData();
    
-   if(GameType == gt_dm)
+   if(DEATHMATCH)
       WI_initDeathmatchStats();
    else if(GameType == gt_coop)
       WI_initNetgameStats();

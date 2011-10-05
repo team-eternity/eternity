@@ -16,5 +16,5 @@ def sha1_hash(s):
 
 def get_random_token(used_tokens=[]):
     # [CG] Make sure this value doesn't overflow the database.
-    return random.randint(0, 0xFFFFFFFF)
+    return random.randint(0, 0x7FFFFFFE)
 

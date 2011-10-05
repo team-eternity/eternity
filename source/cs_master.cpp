@@ -218,7 +218,7 @@ cs_master_request_t* CS_BuildMasterRequest(cs_master_request_t *request,
       I_Error("Unknown error initializing CURL.\n");
 
    // [CG] For debugging.
-   // curl_easy_setopt(request->curl_handle, CURLOPT_VERBOSE, 1L);
+   curl_easy_setopt(request->curl_handle, CURLOPT_VERBOSE, 1L);
 
    curl_easy_setopt(request->curl_handle, CURLOPT_URL, request->url);
    curl_easy_setopt(
@@ -398,7 +398,7 @@ char* SV_GetStateJSON(void)
 
    if(CS_TEAMS_ENABLED)
    {
-      for(i = 0; i < cs_settings->number_of_teams; i++)
+      for(i = team_color_none; i < team_color_max; i++)
       {
          server_json["teams"][i]["color"] = team_color_names[i];
          server_json["teams"][i]["score"] = team_scores[i];
@@ -467,6 +467,11 @@ void SV_MasterAdvertise(void)
       json_string = writer.write(json);
       SV_SetMasterRequestData(request, json_string.c_str());
       CS_SendMasterRequest(request);
+
+      // printf("Attempting to advertise to %s.\n", request->url);
+      // printf("Sending JSON:\n%s\n", json_string.c_str());
+      // printf("Received data:\n%s\n", request->received_data);
+
       if(request->curl_errno != 0)
       {
          I_Error(

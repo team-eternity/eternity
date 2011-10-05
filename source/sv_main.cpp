@@ -357,10 +357,10 @@ char* SV_GetUserAgent(void)
 {
    std::stringstream user_agent_stream;
 
-   user_agent_stream << "emp-server"    << "/"
-                     << (version / 100) << "."
-                     << (version % 100) << "."
-                     << (subversion)    << "-"
+   user_agent_stream << "emp-server"           << "/"
+                     << (version / 100)        << "."
+                     << (version % 100)        << "."
+                     << ((uint32_t)subversion) << "-"
                      << (cs_protocol_version);
 
    return strdup(user_agent_stream.str().c_str());

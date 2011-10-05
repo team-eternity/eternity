@@ -1751,7 +1751,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    {
       mobj->flags &= ~(MF_BOUNCES | MF_FRIEND | MF_TOUCHY);
    }
-   else if(demo_version < 303 || !(GameType == gt_dm))
+   else if(demo_version < 303 || !(DEATHMATCH))
    {
       if(E_IsPlayerClassThingType(type)) // Except in old demos, players
          mobj->flags |= MF_FRIEND;       // are always friends.
@@ -2078,7 +2078,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // give all cards in death match mode
 
-   if(GameType == gt_dm)
+   if(DEATHMATCH)
    {
       for(i = 0 ; i < NUMCARDS ; i++)
          p->cards[i] = true;
@@ -2235,7 +2235,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    //jff 3/30/98 implement "not deathmatch" thing flag
 
-   if(GameType == gt_dm && (mthing->options & MTF_NOTDM))
+   if(DEATHMATCH && (mthing->options & MTF_NOTDM))
       return NULL; //sf
 
    //jff 3/30/98 implement "not cooperative" thing flag
@@ -2303,7 +2303,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // don't spawn keycards and players in deathmatch
 
-   if(GameType == gt_dm && (mobjinfo[i].flags & MF_NOTDMATCH))
+   if(DEATHMATCH && (mobjinfo[i].flags & MF_NOTDMATCH))
       return NULL;        // sf
 
    // don't spawn any monsters if -nomonsters

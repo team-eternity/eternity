@@ -415,9 +415,9 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
    }
 
    // [CG] Draw gamemode header
-   if(CS_TEAMDM)
+   if(GameType == gt_tdm)
       psnprintf(s, sizeof(s), "%s", "TEAM DEATHMATCH");
-   else if(CS_CTF)
+   else if(GameType == gt_ctf)
       psnprintf(s, sizeof(s), "%s", "CAPTURE THE FLAG");
    else
       psnprintf(s, sizeof(s), "%s", "TEAM GAME");
@@ -994,21 +994,12 @@ static void display_coop_scoreboard(unsigned int extra_top_margin)
 void CS_DrawScoreboard(unsigned int extra_top_margin)
 {
 
-   if(GameType == gt_dm)
-   {
-      if(CS_TEAMS_ENABLED)
-      {
-         display_team_scoreboard(extra_top_margin);
-      }
-      else
-      {
-         display_deathmatch_scoreboard(extra_top_margin);
-      }
-   }
-   else
-   {
+   if(!DEATHMATCH)
       display_coop_scoreboard(extra_top_margin);
-   }
+   else if(CS_TEAMS_ENABLED)
+      display_team_scoreboard(extra_top_margin);
+   else
+      display_deathmatch_scoreboard(extra_top_margin);
 
    fragsdrawn = true;
 }
@@ -1016,15 +1007,12 @@ void CS_DrawScoreboard(unsigned int extra_top_margin)
 void CS_ShowScores(void)
 {
    if(!show_scores || !action_frags || automapactive || walkcam_active)
-   {
       return;
-   }
 
+   // [CG] Don't even try to draw the scoreboard in this case.
    if (viewwidth < 320 || viewwidth < 200)
-   {
-      // [CG] Don't even try to draw the scoreboard in this case.
       return;
-   }
+
    CS_DrawScoreboard(0);
 }
 

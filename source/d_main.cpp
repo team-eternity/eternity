@@ -3579,7 +3579,7 @@ static void D_DoomInit(void)
        }
 
        // haleyjd: deatchmatch-only options
-       if(GameType == gt_dm)
+       if(DEATHMATCH)
        {
           if((p = M_CheckParm("-timer")) && p < myargc-1)
           {

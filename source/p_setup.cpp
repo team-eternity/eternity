@@ -2298,7 +2298,7 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 //
 static void P_DeathMatchSpawnPlayers(void)
 {
-   if(GameType == gt_dm)
+   if(DEATHMATCH)
    {
       int i;
 

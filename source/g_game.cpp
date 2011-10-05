@@ -673,13 +673,11 @@ void G_DoLoadLevel(void)
 
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
-   if(CS_CTF)
+   if(GameType == gt_ctf)
    {
       for(i = team_color_none; i < team_color_max; i++)
-      {
          if(cs_flag_stands[i].exists)
             CS_ReturnFlag(&cs_flags[i]);
-      }
    }
 
    // [CG] Initialize sector positions.
@@ -2503,7 +2501,7 @@ void G_DoReborn(int playernum)
       }
 
       // spawn at random spot if in deathmatch
-      if(GameType == gt_dm)
+      if(DEATHMATCH)
       {
          G_DeathMatchSpawnPlayer(playernum);
          
@@ -3320,7 +3318,7 @@ static void G_BeginRecordingOld(void)
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;
    *demo_p++ = gamemap;
-   *demo_p++ = (GameType == gt_dm);
+   *demo_p++ = (DEATHMATCH);
    *demo_p++ = respawnparm;
    *demo_p++ = fastparm;
    *demo_p++ = nomonsters;

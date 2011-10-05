@@ -502,6 +502,9 @@ void SV_LoadConfig(void)
    if(cs_server_config["server"].isMember("spectator_password"))
       cs_server_config["server"].removeMember("spectator_password");
 
+   if(cs_server_config["server"].isMember("player_password"))
+      cs_server_config["server"].removeMember("player_password");
+
    if(cs_server_config["server"].isMember("moderator_password"))
       cs_server_config["server"].removeMember("moderator_password");
 
@@ -797,51 +800,41 @@ void CS_HandleServerSection(Json::Value &server)
       );
    }
 
-   cs_original_settings->number_of_teams = 0;
-   if(!server["number_of_teams"].empty())
-   {
-      check_int_option_range(server, number_of_teams, 0, 2);
-      cs_original_settings->number_of_teams =
-         server["number_of_teams"].asInt();
-   }
-
-   if(server["game_type"].empty())
-   {
-      if(cs_original_settings->number_of_teams > 0)
-         I_Error("CS_LoadConfig: Cannot enable teams in coop.\n");
-      cs_original_settings->game_type = DefaultGameType = GameType = gt_coop;
-   }
-   else
+   cs_original_settings->game_type = gt_coop;
+   if(!server["game_type"].empty())
    {
       cs_original_settings->ctf = false;
-      if(string_option_is(server["game_type"], "coop") ||
-         string_option_is(server["game_type"], "cooperative"))
+      if(string_option_is(server["game_type"], "ctf") ||
+         string_option_is(server["game_type"], "capture-the-flag") ||
+         string_option_is(server["game_type"], "capture the flag"))
       {
-         if(cs_original_settings->number_of_teams > 0)
-            I_Error("CS_LoadConfig: Cannot enable teams in coop.\n");
-         cs_original_settings->game_type = DefaultGameType = GameType = gt_coop;
+         cs_original_settings->game_type = gt_ctf;
+      }
+      else if(string_option_is(server["game_type"], "tdm") ||
+              string_option_is(server["game_type"], "teamdm") ||
+              string_option_is(server["game_type"], "team dm") ||
+              string_option_is(server["game_type"], "team deathmatch"))
+      {
+         cs_original_settings->game_type = gt_tdm;
+      }
+      else if(string_option_is(server["game_type"], "coop") &&
+              string_option_is(server["game_type"], "cooperative"))
+      {
+         cs_original_settings->game_type = gt_coop;
       }
       else
       {
-         cs_original_settings->game_type = DefaultGameType = GameType = gt_dm;
+         cs_original_settings->game_type = gt_dm;
          if(string_option_is(server["game_type"], "duel")||
             string_option_is(server["game_type"], "1v1") ||
-            string_option_is(server["game_type"], "1on1"))
+            string_option_is(server["game_type"], "1on1") ||
+            string_option_is(server["game_type"], "1 on 1"))
          {
-            if(cs_original_settings->number_of_teams > 0)
-               I_Error("CS_LoadConfig: Cannot enable teams in a duel.\n");
-
             cs_original_settings->max_players = 2;
-         }
-         else if(string_option_is(server["game_type"], "ctf"))
-         {
-            if(cs_original_settings->number_of_teams != 2)
-               I_Error("CS_LoadConfig: 'number_of_teams' must be 2 in CTF.\n");
-
-            cs_original_settings->ctf = true;
          }
       }
    }
+   DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
 
    cs_wad_repository = NULL;
    if(!server["wad_repository"].empty() &&
@@ -1262,10 +1255,14 @@ void CS_HandleOptionsSection(Json::Value &options)
    set_int(options, friend_distance, 128);
 
    // [CG] Float options
-   set_float(options, radial_damage, 1.0);
-   set_float(options, radial_self_damage, 1.0);
-   set_float(options, radial_lift, 0.5);
-   set_float(options, radial_self_lift, 0.8);
+   cs_original_settings->radial_attack_damage =
+      options.get("radial_attack_damage", 1.0).asFloat();
+   cs_original_settings->radial_attack_self_damage =
+      options.get("radial_attack_self_damage", 1.0).asFloat();
+   cs_original_settings->radial_attack_lift =
+      options.get("radial_attack_lift", 0.5).asFloat();
+   cs_original_settings->radial_attack_self_lift =
+      options.get("radial_attack_self_lift", 0.8).asFloat();
 
    // [CG] Boolean options
    set_bool(options, build_blockmap, false);
@@ -1491,10 +1488,10 @@ void CS_LoadMapOverrides(unsigned int index)
    override_int(overrides, score_limit);
    override_int(overrides, skill);
 
-   override_float(overrides, radial_damage);
-   override_float(overrides, radial_self_damage);
-   override_float(overrides, radial_lift);
-   override_float(overrides, radial_self_lift);
+   override_float(overrides, radial_attack_damage);
+   override_float(overrides, radial_attack_self_damage);
+   override_float(overrides, radial_attack_lift);
+   override_float(overrides, radial_attack_self_lift);
 
    CS_ApplyConfigSettings();
 }

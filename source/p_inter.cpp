@@ -352,8 +352,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
       player->bonuscount += BONUSADD;
       player->weaponowned[weapon] = true;
       
-      P_GiveAmmo(player, weaponinfo[weapon].ammo, 
-                 (GameType == gt_dm) ? 5 : 2);
+      P_GiveAmmo(player, weaponinfo[weapon].ammo, (DEATHMATCH) ? 5 : 2);
 
       if(!clientserver) // [CG] Probably needs demo-versioned.
       {
@@ -1121,7 +1120,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       if(target->player)
       {
          source->player->frags[target->player-players]++;
-         if(CS_TEAMDM)
+         if(GameType == gt_tdm)
          {
             // [CG] Subtract 1 from the team's score for suicides and team
             //      kills.
@@ -1155,13 +1154,13 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          target->player->frags[target->player-players]++;
 
          // [CG] Subtract 1 from the team's score for environment kills.
-         if(CS_TEAMDM)
+         if(GameType == gt_tdm)
             team_scores[clients[target->player - players].team]--;
 
          HU_FragsUpdate();
       }
       // [CG] Drop the flag if the target was holding it.
-      if(CS_CTF)
+      if(GameType == gt_ctf)
          CS_DropFlag(target->player - players);
 
       target->flags &= ~MF_SOLID;

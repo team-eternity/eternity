@@ -83,8 +83,8 @@ void CS_AddTeamStart(mapthing_t *team_start)
       break;
     }
 
-   if(team_start_counts_by_team[team_color] == MAX_TEAM_STARTS)
-      I_Error("Maximum number of team starts already reached.\n");
+   if(team_start_counts_by_team[team_color] >= 100)
+      I_Error("CS_AddTeamStart: Excessive team starts.\n");
 
    thing_index = team_start_counts_by_team[team_color];
    team_starts_by_team[team_color] = (mapthing_t*)(realloc(

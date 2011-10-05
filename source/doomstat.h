@@ -461,7 +461,15 @@ typedef enum
    gt_single,
    gt_coop,
    gt_dm,
+   gt_tdm,
+   gt_ctf,
 } gametype_t;
+
+#define DEATHMATCH ( \
+   (GameType == gt_dm)  || \
+   (GameType == gt_tdm) || \
+   (GameType == gt_ctf) \
+)
 
 extern gametype_t GameType, DefaultGameType;
 

@@ -1154,7 +1154,6 @@ bool CS_UpdateDemoSettings(void)
    map_info["settings"]["max_players"] = cs_settings->max_players;
    map_info["settings"]["max_players_per_team"] =
       cs_settings->max_players_per_team;
-   map_info["settings"]["number_of_teams"] = cs_settings->number_of_teams;
    map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
    map_info["settings"]["time_limit"] = cs_settings->time_limit;
    map_info["settings"]["score_limit"] = cs_settings->score_limit;

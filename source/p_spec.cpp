@@ -2514,7 +2514,7 @@ void P_UpdateSpecials(void)
    }
 
    if(levelScoreLimit)
-      for(i = team_color_red; i < cs_settings->number_of_teams; i++)
+      for(i = team_color_red; i <= team_color_blue; i++)
          if(team_scores[i] >= levelScoreLimit)
             G_ExitLevel();
 

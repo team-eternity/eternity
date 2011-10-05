@@ -30,12 +30,10 @@
 #include "doomdef.h"
 #include "doomdata.h"
 
-#define CS_TEAMS_ENABLED ((clientserver) && (cs_settings->number_of_teams > 0))
-#define CS_TEAMDM \
-   (CS_TEAMS_ENABLED && GameType == gt_dm && cs_settings->ctf == false)
-#define CS_CTF \
-   (CS_TEAMS_ENABLED && GameType == gt_dm && cs_settings->ctf == true)
-#define MAX_TEAM_STARTS 32 // [CG] 32 starts per team should be plenty.
+#define CS_TEAMS_ENABLED (\
+   (GameType == gt_tdm) || \
+   (GameType == gt_ctf)\
+)
 
 // [CG] These are in order of max_teams, so max_teams = 2 means players can
 //      join the game on the red and blue teams, max_teams = 4 means players

@@ -30,6 +30,143 @@ def validate_resources(resources):
         elif not isstr(resource):
             raise CE('Invalid data type in "resources" section.')
 
+def validate_server(server):
+    if not isdict(server):
+        raise CE('"server" section is not an object.')
+    for name, validator in [
+        ('address', isstr),
+        ('game', isstr),
+        ('game_type', isstr),
+        ('hostname', isstr),
+        ('max_admin_clients', isint),
+        ('max_player_clients', isint),
+        ('port', isint),
+        ('requires_player_password', isbool),
+        ('requires_spectator_password', isbool),
+        ('spectator_time_limit', isint),
+        ('wad_repository', isstr)
+    ]:
+        if not validator(server[name]):
+            if validator == isstr:
+                raise CE('Server\'s "%s" is not a string.' % (name))
+            else
+                raise CE('Server\'s "%s" is not an integer.' % (name))
+
+def validate_options(options, section_name='options'):
+    if not islist(options):
+        raise CE('"%s" section is not an array.' % (section_name))
+    for name, s, validator in [
+        ('actors_get_stuck_over_dropoffs': isbool),
+        ('actors_have_infinite_height': isbool),
+        ('actors_never_fall_off_ledges': isbool),
+        ('allow_chasecam': isbool),
+        ('allow_crosshair': isbool),
+        ('allow_damage_screen_change': isbool),
+        ('allow_exit': isbool),
+        ('allow_freelook': isbool),
+        ('allow_jump': isbool),
+        ('allow_movebob_change': isbool),
+        ('allow_no_weapon_switch_on_pickup': isbool),
+        ('allow_preferred_weapon_order': isbool),
+        ('allow_target_names': isbool),
+        ('allow_two_way_wallrun': isbool),
+        ('allow_weapon_speed_change': isbool),
+        ('arch_viles_can_create_ghosts': isbool),
+        ('bfg_type': isstr),
+        ('build_blockmap': isbool),
+        ('bullets_never_hit_floors_and_ceilings': isbool),
+        ('death_time_expired_action': 'respawn'),
+        ('death_time_limit': isint),
+        ('disable_falling_damage': isbool),
+        ('disable_tagged_door_light_fading': isbool),
+        ('disable_terrain_types': isbool),
+        ('dogs': isint),
+        ('dogs_can_jump_down': isbool),
+        ('doom_actor_heights_are_inaccurate': isbool),
+        ('enable_boom_push_effects': isbool),
+        ('enable_nukage': isbool),
+        ('enable_variable_friction': isbool),
+        ('exit_to_same_level': isbool),
+        ('fast_monsters': isbool),
+        ('follow_fragger_on_death': isbool),
+        ('frag_limit': isint),
+        ('friend_distance': isint),
+        ('friendly_damage_percentage': isint),
+        ('imperfect_god_mode': isbool),
+        ('infinite_ammo': isbool),
+        ('instagib': isbool),
+        ('keep_items_on_exit': isbool),
+        ('keep_keys_on_exit': isbool),
+        ('kill_on_exit': isbool),
+        ('leave_keys': isbool),
+        ('leave_weapons': isbool),
+        ('limit_lost_souls': isbool),
+        ('line_effects_work_on_sector_tag_zero': isbool),
+        ('lost_souls_get_stuck_in_walls': isbool),
+        ('lost_souls_never_bounce_on_floors': isbool),
+        ('max_players': isint),
+        ('max_players_per_team': isint),
+        ('monster_infighting': isbool),
+        ('monsters_affected_by_friction': isbool),
+        ('monsters_avoid_hazards': isbool),
+        ('monsters_back_out': isbool),
+        ('monsters_can_respawn_outside_map': isbool),
+        ('monsters_can_telefrag_on_map30': isbool),
+        ('monsters_climb_tall_stairs': isbool),
+        ('monsters_get_stuck_on_door_tracks': isbool),
+        ('monsters_give_up_pursuit': isbool),
+        ('monsters_randomly_walk_off_lifts': isbool),
+        ('monsters_remember_target': isbool),
+        ('normal_sky_when_invulnerable': isbool),
+        ('one_time_line_effects_can_break': isbool),
+        ('players_drop_everything': isbool),
+        ('players_drop_items': isbool),
+        ('players_drop_weapons': isbool),
+        ('powerful_monsters': isbool),
+        ('radial_attack_damage': isfloat),
+        ('radial_attack_lift': isfloat),
+        ('radial_attack_self_damage': isfloat),
+        ('radial_attack_self_lift': isfloat),
+        ('radius_attacks_only_thrust_in_2d': isbool),
+        ('rescue_dying_friends': isbool),
+        ('respawn_armor': isbool),
+        ('respawn_barrels': isbool),
+        ('respawn_health': isbool),
+        ('respawn_items': isbool),
+        ('respawn_monsters': isbool),
+        ('respawn_protection_time': isint),
+        ('respawn_super_items': isbool),
+        ('respawns_are_sometimes_silent_in_dm': isbool),
+        ('score_limit': isint),
+        ('short_vertical_mouselook_range': isbool),
+        ('silent_weapon_pickup': isbool),
+        ('skill': isint),
+        ('spawn_armor': isbool),
+        ('spawn_farthest': isbool),
+        ('spawn_in_same_spot': isbool),
+        ('spawn_monsters': isbool),
+        ('spawn_super_items': isbool),
+        ('strong_monsters': isbool),
+        ('teleport_missiles': isbool),
+        ('time_limit': isint),
+        ('time_limit_powerups': isbool),
+        ('turbo_doors_make_two_closing_sounds': isbool),
+        ('use_doom_floor_motion_behavior': isbool),
+        ('use_doom_linedef_trigger_model': isbool),
+        ('use_doom_stairbuilding_method': isbool),
+        ('use_oldschool_sound_cutoff': isbool),
+        ('zombie_players_can_exit': isbool)
+    ]:
+        if name in options and not validator(options[name]):
+            raise CE('%s "%s" is not %s.' % (
+                option_name[:-1].capitalize(), name, s
+            ))
+        if 'force_respawn_action' in options:
+            if options['force_respawn_action'] not in ('respawn', 'spectate'):
+                es = ('%s "force_respawn_action is not in ("respawn", '
+                      '"spectate").')
+                raise CE(es % (option_name[:-1].capitalize()))
+
 def validate_maps(maps):
     if not islist(maps):
         raise CE('"maps" section is not an array.')
@@ -48,121 +185,6 @@ def validate_maps(maps):
         elif not isstr(map):
             raise CE('Invalid data type in "maps" section.')
 
-def validate_server(server):
-    if not isdict(server):
-        raise CE('"server" section is not an object.')
-    for name, s, validator in [
-        ('address', 'a string', isstr),
-        ('port', 'an integer', isint),
-        ('max_clients', 'an integer', isint),
-        ('game_type', 'a string', isstr),
-        ('number_of_teams', 'an integer', isint)
-    ]:
-        if not validator(server[name]):
-            raise CE('Server\'s "%s" is not %s.' % (name, s))
-
-def validate_options(options, section_name='options'):
-    if not islist(options):
-        raise CE('"%s" section is not an array.' % (section_name))
-    for name, s, validator in [
-        ('max_players', 'an integer', isint),
-        ('dogs', 'an integer', isint),
-        ('skill', 'an integer', isint),
-        ('frag_limit', 'an integer', isint),
-        ('time_limit', 'an integer', isint),
-        ('score_limit', 'an integer', isint),
-        ('spawn_armor', 'a boolean', isbool),
-        ('spawn_super_items', 'a boolean', isbool),
-        ('respawn_health', 'a boolean', isbool),
-        ('respawn_items', 'a boolean', isbool),
-        ('respawn_armor', 'a boolean', isbool),
-        ('respawn_super_items', 'a boolean', isbool),
-        ('respawn_barrels', 'a boolean', isbool),
-        ('spawn_monsters', 'a boolean', isbool),
-        ('fast_monsters', 'a boolean', isbool),
-        ('strong_monsters', 'a boolean', isbool),
-        ('powerful_monsters', 'a boolean', isbool),
-        ('respawn_monsters', 'a boolean', isbool),
-        ('allow_exit', 'a boolean', isbool),
-        ('kill_on_exit', 'a boolean', isbool),
-        ('exit_to_same_level', 'a boolean', isbool),
-        ('force_respawn_time_limit', 'an integer', isint),
-        ('force_respawn_action', 'respawn', isstr),
-        ('spawn_in_same_spot', 'a boolean', isbool),
-        ('spawn_farthest', 'a boolean', isbool),
-        ('respawn_protection_time', 'an integer', isint),
-        ('leave_keys', 'a boolean', isbool),
-        ('leave_weapons', 'a boolean', isbool),
-        ('drop_weapons', 'a boolean', isbool),
-        ('drop_items', 'a boolean', isbool),
-        ('infinite_ammo', 'a boolean', isbool),
-        ('keep_items_on_exit', 'a boolean', isbool),
-        ('keep_keys_on_exit', 'a boolean', isbool),
-        ('enable_variable_friction', 'a boolean', isbool),
-        ('enable_boom_push_effects', 'a boolean', isbool),
-        ('enable_nukage', 'a boolean', isbool),
-        ('allow_jump', 'a boolean', isbool),
-        ('allow_freelook', 'a boolean', isbool),
-        ('allow_crosshair', 'a boolean', isbool),
-        ('allow_movebob_change', 'a boolean', isbool),
-        ('disable_silent_bfg', 'a boolean', isbool),
-        ('allow_two_way_wallrun', 'a boolean', isbool),
-        ('allow_no_weapon_switch_on_pickup', 'a boolean', isbool),
-        ('allow_preferred_weapon_order', 'a boolean', isbool),
-        ('allow_silent_weapon_pickup', 'a boolean', isbool),
-        ('allow_weapon_recoil', 'a boolean', isbool),
-        ('allow_weapon_speed_change', 'a boolean', isbool),
-        ('teleport_missiles', 'a boolean', isbool),
-        ('instagib', 'a boolean', isbool),
-        ('allow_chasecam', 'a boolean', isbool),
-        ('imperfect_god_mode', 'a boolean', isbool),
-        ('time_limit_powerups', 'a boolean', isbool),
-        ('normal_sky_when_invulnerable', 'a boolean', isbool),
-        ('zombie_players_can_exit', 'a boolean', isbool),
-        ('arch_viles_can_create_ghosts', 'a boolean', isbool),
-        ('limit_lost_souls', 'a boolean', isbool),
-        ('lost_souls_get_stuck_in_walls', 'a boolean', isbool),
-        ('lost_souls_never_bounce_on_floors', 'a boolean', isbool),
-        ('monsters_randomly_walk_off_lifts', 'a boolean', isbool),
-        ('monsters_get_stuck_on_door_tracks', 'a boolean', isbool),
-        ('monsters_give_up_pursuit', 'a boolean', isbool),
-        ('actors_get_stuck_over_dropoffs', 'a boolean', isbool),
-        ('actors_never_fall_off_ledges', 'a boolean', isbool),
-        ('monsters_can_telefrag_on_map30', 'a boolean', isbool),
-        ('monsters_can_respawn_outside_map', 'a boolean', isbool),
-        ('disable_terrain_types', 'a boolean', isbool),
-        ('disable_falling_damage', 'a boolean', isbool),
-        ('actors_have_infinite_height', 'a boolean', isbool),
-        ('doom_actor_heights_are_inaccurate', 'a boolean', isbool),
-        ('bullets_never_hit_floors_and_ceilings', 'a boolean', isbool),
-        ('respawns_are_sometimes_silent_in_dm', 'a boolean', isbool),
-        ('turbo_doors_make_two_closing_sounds', 'a boolean', isbool),
-        ('disable_tagged_door_light_fading', 'a boolean', isbool),
-        ('use_doom_stairbuilding_method', 'a boolean', isbool),
-        ('use_doom_floor_motion_behavior', 'a boolean', isbool),
-        ('use_doom_linedef_trigger_model', 'a boolean', isbool),
-        ('line_effects_work_on_sector_tag_zero', 'a boolean', isbool),
-        ('one_time_line_effects_can_break', 'a boolean', isbool),
-        ('monsters_remember_target', 'a boolean', isbool),
-        ('monster_infighting', 'a boolean', isbool),
-        ('monsters_back_out', 'a boolean', isbool),
-        ('monsters_avoid_hazards', 'a boolean', isbool),
-        ('monsters_affected_by_friction', 'a boolean', isbool),
-        ('monsters_climb_tall_stairs', 'a boolean', isbool),
-        ('friend_distance', 'an integer', isint),
-        ('rescue_dying_friends', 'a boolean', isbool),
-        ('dogs_can_jump_down', 'a boolean', isbool)
-    ]:
-        if name in options and not validator(options[name]):
-            raise CE('%s "%s" is not %s.' % (
-                option_name[:-1].capitalize(), name, s
-            ))
-        if 'force_respawn_action' in options:
-            if options['force_respawn_action'] not in ('respawn', 'spectate'):
-                es = ('%s "force_respawn_action is not in ("respawn", '
-                      '"spectate").')
-                raise CE(es % (option_name[:-1].capitalize()))
-
 def validate_configuration(config):
     for section, validator in (
             ('resources', validate_resources),
@@ -174,7 +196,7 @@ def validate_configuration(config):
             raise InvalidServerConfigurationError('"%s" section missing.' % (
                 section
             ))
-            validator(section)
+        validator(config[section])
 
 def validate_state(state):
     ###

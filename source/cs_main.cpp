@@ -1276,7 +1276,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
 
    P_SetupPsprites(player);
 
-   if(GameType == gt_dm)
+   if(DEATHMATCH)
    {
       for(i = 0; i < NUMCARDS; i++)
          player->cards[i] = true;
@@ -1299,7 +1299,7 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
       // [CG] In order for clipping routines to work properly, the player can't
       //      be a spectator when we search for a spawn point.
       CS_SetSpectator(playernum, false);
-      if(GameType == gt_dm)
+      if(DEATHMATCH)
       {
          if(CS_TEAMS_ENABLED)
             spawn_point = SV_GetTeamSpawnPoint(playernum);

@@ -2286,10 +2286,10 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    if(damage <= 0)
       return true;
 
-   if(attacking_self && cs_settings->radial_self_damage != 1.0)
-      damage = (damagef * cs_settings->radial_self_damage);
-   else if(!attacking_self && cs_settings->radial_damage != 1.0)
-      damage = (damagef * cs_settings->radial_damage);
+   if(attacking_self && cs_settings->radial_attack_self_damage != 1.0)
+      damage = (damagef * cs_settings->radial_attack_self_damage);
+   else if(!attacking_self && cs_settings->radial_attack_damage != 1.0)
+      damage = (damagef * cs_settings->radial_attack_damage);
 
    P_DamageMobj(
       thing,
@@ -2317,10 +2317,10 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
 
    z_thrust = z_delta * thrust;
 
-   if(attacking_self && cs_settings->radial_self_lift != 1.0)
-      z_thrust *= cs_settings->radial_self_lift;
-   else if(!attacking_self && cs_settings->radial_lift != 1.0)
-      z_thrust *= cs_settings->radial_lift;
+   if(attacking_self && cs_settings->radial_attack_self_lift != 1.0)
+      z_thrust *= cs_settings->radial_attack_self_lift;
+   else if(!attacking_self && cs_settings->radial_attack_lift != 1.0)
+      z_thrust *= cs_settings->radial_attack_lift;
 
    thing->momz += M_DoubleToFixed(z_thrust);
 
