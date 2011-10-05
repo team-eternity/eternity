@@ -218,7 +218,7 @@ cs_master_request_t* CS_BuildMasterRequest(cs_master_request_t *request,
       I_Error("Unknown error initializing CURL.\n");
 
    // [CG] For debugging.
-   curl_easy_setopt(request->curl_handle, CURLOPT_VERBOSE, 1L);
+   // curl_easy_setopt(request->curl_handle, CURLOPT_VERBOSE, 1L);
 
    curl_easy_setopt(request->curl_handle, CURLOPT_URL, request->url);
    curl_easy_setopt(
@@ -407,7 +407,7 @@ char* SV_GetStateJSON(void)
             client_t *client = &clients[j];
             player_t *player = &players[j];
 
-            if(!playeringame[j] && !client->team == i)
+            if(!playeringame[j] || client->team != i)
                continue;
 
             server_json["teams"][i]["players"][j - 1]["name"] =
@@ -462,8 +462,8 @@ void SV_MasterAdvertise(void)
       master = master_servers + i;
       request = SV_GetMasterRequest(master, CS_HTTP_METHOD_PUT);
       json = cs_server_config;
-      json["group"] = master->group;
-      json["name"] = master->name;
+      json["server"]["group"] = master->group;
+      json["server"]["name"] = master->name;
       json_string = writer.write(json);
       SV_SetMasterRequestData(request, json_string.c_str());
       CS_SendMasterRequest(request);
