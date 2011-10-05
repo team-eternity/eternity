@@ -74,7 +74,7 @@
 #include "w_wad.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
 // MAP related Lookup tables.

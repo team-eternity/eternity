@@ -263,10 +263,10 @@ int SlopeDiv(unsigned int num, unsigned int den)
 // killough 5/2/98: reformatted, cleaned up
 // haleyjd 01/28/10: restored to Vanilla and made some modifications
 //
-angle_t R_PointToAngle2(fixed_t viewx, fixed_t viewy, fixed_t x, fixed_t y)
+angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
 {	
-   x -= viewx;
-   y -= viewy;
+   x -= pviewx;
+   y -= pviewy;
 
    if((x | y) == 0)
       return 0;
@@ -495,11 +495,11 @@ void R_InitLightTables (void)
       // SoM: the LIGHTBRIGHT constant must be used to scale the start offset of 
       // the colormaps, otherwise the levels are staggered and become slightly 
       // darker.
-      int j, startmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+      int j, startcmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTZ; ++j)
       {
-         int scale = FixedDiv ((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
-         int t, level = startmap - (scale >> LIGHTSCALESHIFT)/DISTMAP;
+         int scale = FixedDiv((SCREENWIDTH/2*FRACUNIT), (j+1)<<LIGHTZSHIFT);
+         int t, level = startcmap - (scale >> LIGHTSCALESHIFT)/DISTMAP;
          
          if(level < 0)
             level = 0;
@@ -657,10 +657,10 @@ void R_ExecuteSetViewSize(void)
    //  for each level / scale combination.
    for(i = 0; i < LIGHTLEVELS; ++i)
    {
-      int j, startmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
+      int j, startcmap = ((LIGHTLEVELS-LIGHTBRIGHT-i)*2)*NUMCOLORMAPS/LIGHTLEVELS;
       for(j = 0; j < MAXLIGHTSCALE; ++j)
       {                                       // killough 11/98:
-         int t, level = startmap - j*1/DISTMAP;
+         int t, level = startcmap - j*1/DISTMAP;
          
          if(level < 0)
             level = 0;

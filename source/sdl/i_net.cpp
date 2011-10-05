@@ -121,7 +121,7 @@ inline static Uint32 NetToHost32(const byte *area)
 //
 // NetChecksum 
 //
-static uint32_t NetChecksum(byte *packet, int len)
+static uint32_t NetChecksum(byte *packetdata, int len)
 {
    uint32_t c = 0x1234567;
    int i;
@@ -129,7 +129,7 @@ static uint32_t NetChecksum(byte *packet, int len)
    len /= sizeof(uint32_t);
 
    for(i = 0; i < len; ++i)
-      c += ((uint32_t *)packet)[i] * (i + 1);
+      c += ((uint32_t *)packetdata)[i] * (i + 1);
    
    return c & NCMD_CHECKSUM;
 }

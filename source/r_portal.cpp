@@ -455,25 +455,25 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
                            float *baseangle, float *angle)
 {
    portal_t *rover, *ret;
-   skyplanedata_t plane;
+   skyplanedata_t skyplane;
 
    if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle)
       return NULL;
       
-   memset(&plane, 0, sizeof(plane));
-   plane.pic = pic;
-   plane.delta = delta;
-   plane.lightlevel = lightlevel;
-   plane.xoff = xoff;
-   plane.yoff = yoff;
-   plane.baseangle = baseangle; // haleyjd 01/05/08: flat angles
-   plane.angle = angle;
-    
+   memset(&skyplane, 0, sizeof(skyplane));
+
+   skyplane.pic        = pic;
+   skyplane.delta      = delta;
+   skyplane.lightlevel = lightlevel;
+   skyplane.xoff       = xoff;
+   skyplane.yoff       = yoff;
+   skyplane.baseangle  = baseangle; // haleyjd 01/05/08: flat angles
+   skyplane.angle      = angle;    
 
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type != R_PLANE || 
-         memcmp(&rover->data.plane, &plane, sizeof(plane)))
+         memcmp(&rover->data.plane, &skyplane, sizeof(skyplane)))
          continue;
 
       return rover;
@@ -481,7 +481,7 @@ portal_t *R_GetPlanePortal(int *pic, fixed_t *delta,
 
    ret = R_CreatePortal();
    ret->type = R_PLANE;
-   ret->data.plane = plane;
+   ret->data.plane = skyplane;
    return ret;
 }
 
@@ -503,7 +503,7 @@ void R_InitPortals(void)
 //
 static void R_RenderPlanePortal(pwindow_t *window)
 {
-   visplane_t *plane;
+   visplane_t *vplane;
    int x;
    float angle;
    portal_t *portal = window->portal;
@@ -517,21 +517,21 @@ static void R_RenderPlanePortal(pwindow_t *window)
    // haleyjd 01/05/08: flat angle
    angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
 
-   plane = R_FindPlane(*portal->data.plane.delta + viewz, 
-                       *portal->data.plane.pic, 
-                       *portal->data.plane.lightlevel, 
-                       *portal->data.plane.xoff, 
-                       *portal->data.plane.yoff,
-                       angle, NULL, 0, 255, NULL);
+   vplane = R_FindPlane(*portal->data.plane.delta + viewz, 
+                        *portal->data.plane.pic, 
+                        *portal->data.plane.lightlevel, 
+                        *portal->data.plane.xoff, 
+                        *portal->data.plane.yoff,
+                        angle, NULL, 0, 255, NULL);
 
-   plane = R_CheckPlane(plane, window->minx, window->maxx);
+   vplane = R_CheckPlane(vplane, window->minx, window->maxx);
 
    for(x = window->minx; x <= window->maxx; x++)
    {
       if(window->top[x] < window->bottom[x])
       {
-         plane->top[x]    = (int)window->top[x];
-         plane->bottom[x] = (int)window->bottom[x];
+         vplane->top[x]    = (int)window->top[x];
+         vplane->bottom[x] = (int)window->bottom[x];
       }
    }
 

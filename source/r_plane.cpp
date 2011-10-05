@@ -398,7 +398,7 @@ static void R_MapPlane(int y, int x1, int x2)
 //
 // R_SlopeLights
 //
-static void R_SlopeLights(int len, double startmap, double endmap)
+static void R_SlopeLights(int len, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
@@ -410,8 +410,8 @@ static void R_SlopeLights(int len, double startmap, double endmap)
       return;
    }
 
-   map = M_FloatToFixed((startmap / 256.0 * NUMCOLORMAPS));
-   map2 = M_FloatToFixed((endmap / 256.0 * NUMCOLORMAPS));
+   map  = M_FloatToFixed((startcmap / 256.0 * NUMCOLORMAPS));
+   map2 = M_FloatToFixed((endcmap   / 256.0 * NUMCOLORMAPS));
 
    if(len > 1)
       step = (map2 - map) / (len - 1);

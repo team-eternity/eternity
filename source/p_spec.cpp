@@ -718,15 +718,19 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
    //jff 5/23/98 don't disturb sec->linecount while searching
    // but allow early exit in old demos
 
-   int i, linecount = sec->linecount;
+   int i, lineCount = sec->linecount;
    
-   for(i = 0; i < (demo_compatibility && sec->linecount < linecount ?
-      sec->linecount : linecount); i++)
-      if (twoSided(secnum, i) &&
+   for(i = 0; 
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+       i++)
+   {
+      if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-         getSide(secnum,i,0)->sector-sectors == secnum))->
-         floorheight == floordestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->floorheight == floordestheight)
+      {
          return sec;
+      }
+   }
       
    return NULL;
 }
@@ -756,15 +760,19 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
    //jff 5/23/98 don't disturb sec->linecount while searching
    // but allow early exit in old demos
 
-   int i, linecount = sec->linecount;
+   int i, lineCount = sec->linecount;
 
-   for(i = 0; i < (demo_compatibility && sec->linecount<linecount?
-                   sec->linecount : linecount); i++)
+   for(i = 0; 
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+       i++)
+   {
       if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-                          getSide(secnum,i,0)->sector-sectors == secnum))->
-          ceilingheight == ceildestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->ceilingheight == ceildestheight)
+      {
          return sec;
+      }
+   }
 
    return NULL;
 }
@@ -2491,16 +2499,16 @@ void P_UpdateSpecials(void)
    //  array somewhere, but until they are...
    if(levelFragLimit)  // we used -frags so compare count
    {
-      int i;
-      for(i = 0; i < MAXPLAYERS; ++i)
+      int pnum;
+      for(pnum = 0; pnum < MAXPLAYERS; pnum++)
       {
-         if(!playeringame[i])
+         if(!playeringame[pnum])
             continue;
           // sf: use hu_frags.c frag counter
-         if(players[i].totalfrags >= levelFragLimit)
+         if(players[pnum].totalfrags >= levelFragLimit)
             break;
       }
-      if(i < MAXPLAYERS)       // sf: removed exitflag (ugh)
+      if(pnum < MAXPLAYERS)       // sf: removed exitflag (ugh)
          G_ExitLevel();
    }
 
