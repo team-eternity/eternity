@@ -161,7 +161,8 @@ IF(EE_STATIC_COMPILE)
             zlib
             png15_static
             snes_spc-static
-            mingw32 m user32 gdi32 dxguid ws2_32 wldap32 winmm stdc++
+            mingw32 m opengl32 glu32 user32 gdi32 dxguid ws2_32 wldap32 winmm
+            stdc++
         )
     ELSE(MINGW)
         TARGET_LINK_LIBRARIES(eternity
@@ -187,10 +188,12 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
+            ${GL_LIBRARY}
             png15_static
             zlib
             snes_spc-static
-            pthread m rt stdc++
+            pthread m rt
+            stdc++
         )
     ENDIF(MINGW)
 ELSE(EE_STATIC_COMPILE)
