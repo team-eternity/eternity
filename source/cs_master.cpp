@@ -102,10 +102,8 @@ void SV_MasterCleanup(void)
          curl_multi_remove_handle(
             cs_master_multi_handle, request->curl_handle
          );
-         // curl_easy_cleanup(request->curl_handle);
       }
    }
-   // curl_multi_cleanup(cs_master_multi_handle);
 }
 
 void SV_MultiInit(void)
@@ -113,7 +111,8 @@ void SV_MultiInit(void)
    int i;
    cs_master_t *master;
    cs_master_request_t *request;
-   char *url, *address, *group, *name;
+   unsigned int port;
+   char *url, *addr, *group, *name;
 
    cs_master_requests = (cs_master_request_t *)(calloc(
       sv_master_server_count, sizeof(cs_master_request_t)
@@ -123,19 +122,25 @@ void SV_MultiInit(void)
    {
       master = &master_servers[i];
       request = &cs_master_requests[i];
-      address = group = name = NULL;
+      port = 0;
+      addr = group = name = NULL;
 
-      address = curl_easy_escape(NULL, master->address, 0);
+      addr = curl_easy_escape(NULL, master->address, 0);
+      port = master->port;
       group = curl_easy_escape(NULL, master->group, 0);
       name = curl_easy_escape(NULL, master->name, 0);
       // [CG] "http://master.totaltrash.org/servers/totaltrash/Duel%201"
-      //      "http://" +  "servers" +  "/" x 3 + '\0' is 18 characters.
+      //      "http://" +  "servers" +  "/" x 3 + '\0' is 18 characters, and 5
+      //      are added for any potential port, for a grand total of 23.
       url = (char *)(calloc(
-         strlen(address) + strlen(group) + strlen(name) + 18,
+         strlen(addr) + strlen(group) + strlen(name) + 23,
          sizeof(char)
       ));
-      sprintf(url, "http://%s/servers/%s/%s", address, group, name);
-      curl_free(address);
+      if(master->port == 80)
+         sprintf(url, "http://%s/servers/%s/%s", addr, group, name);
+      else
+         sprintf(url, "http://%s:%u/servers/%s/%s", addr, port, group, name);
+      curl_free(addr);
       curl_free(group);
       curl_free(name);
 

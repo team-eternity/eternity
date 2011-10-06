@@ -43,6 +43,7 @@ enum
 typedef struct cs_master_s
 {
    const char *address;
+   unsigned int port;
    const char *username;
    const char *password_hash;
    const char *group;

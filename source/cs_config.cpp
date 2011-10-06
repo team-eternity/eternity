@@ -343,8 +343,11 @@ void SV_HandleMastersSection(Json::Value &masters)
 {
    cs_master_t *master;
    unsigned int i;
+   size_t found;
+   std::string member_name;
    std::vector<std::string> member_names;
    std::vector<std::string>::iterator it;
+   qstring port_str;
 
    master_servers =
       (cs_master_t *)(calloc(masters.size(), sizeof(cs_master_t)));
@@ -358,7 +361,31 @@ void SV_HandleMastersSection(Json::Value &masters)
       CS_checkSectionHasOption(masters[*it], "master entry", "group");
       CS_checkSectionHasOption(masters[*it], "master entry", "name");
 
-      master->address = strdup((*it).c_str());
+      member_name = *it;
+      if((found = member_name.find(":")) == std::string::npos ||
+         (found + 1) == member_name.length())
+      {
+         master->address = strdup(member_name.c_str());
+         master->port = 80; // [CG] Default to port 80.
+         printf(">>> Master: %s:%u.\n", master->address, master->port);
+      }
+      else
+      {
+         port_str += member_name.substr(found+1, member_name.length()).c_str();
+         if(!port_str.isNum())
+         {
+            I_Error(
+               "CS_LoadConfig: Invalid master entry '%s'.\n",
+               port_str.getBuffer()
+            );
+         }
+
+         master->address = strdup(member_name.substr(0, found).c_str());
+         master->port = port_str.toInt();
+         printf("<<< Port string: %s.\n", port_str.getBuffer());
+         printf("<<< Master: %s:%u.\n", master->address, master->port);
+      }
+
       master->username = strdup(masters[*it]["username"].asCString());
       master->password_hash = CS_GetSHA1Hash(
          masters[*it]["password"].asCString(),
