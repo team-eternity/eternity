@@ -57,6 +57,8 @@ struct event_t;
 
 #define _DEBUG_SECTOR 350
 
+#define LOG_ALL_NETWORK_MESSAGES false
+
 // [CG] The maximum amount of latency we can tolerate in any situation.  For
 //      the sake of unlagged, this is the maximum amount of latency between any
 //      given pair of peers.  Note that this isn't fluid; if a peer's latency
@@ -409,7 +411,7 @@ typedef struct
    uint32_t map_number;
    uint32_t rngseed;
    uint32_t player_number;
-   uint32_t state_size;
+   uint64_t state_size;
    flag_t flags[team_color_max];
    int32_t team_scores[team_color_max];
    uint8_t playeringame[MAXPLAYERS];
@@ -480,7 +482,7 @@ typedef struct
    uint32_t world_index;
    uint8_t is_hud_message;
    uint8_t prepend_name;
-   uint32_t length;
+   uint64_t length;
 } nm_servermessage_t;
 
 // [CG] The contents of the message are at the end of this message.
@@ -493,7 +495,7 @@ typedef struct
    // [CG] If recipient is a player, this is that player's number.  Otherwise
    //      this is garbage.
    uint32_t recipient_number;
-   uint32_t length;
+   uint64_t length;
 } nm_playermessage_t;
 
 typedef struct
@@ -520,7 +522,7 @@ typedef struct
    int32_t array_index;
    union {
       int32_t int_value;
-      size_t string_size;
+      uint64_t string_size;
       uint8_t boolean_value;
    };
 } nm_playerinfoupdated_t;

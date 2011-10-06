@@ -78,6 +78,14 @@ public:
 
    int32_t getType() const { return *(uint32_t *)data; }
 
+   const char* getName() const
+   {
+      if(getType() < nm_max_messages)
+         return network_message_names[getType()];
+      else
+         return "Unknown";
+   }
+
    uint32_t getWorldIndex() const { return *(((uint32_t *)data) + 1); }
 
    uint32_t getSize() const { return size; }

@@ -202,6 +202,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       // || message_type == nm_sectorposition
       || message_type == nm_announcerevent
       // || message_type == nm_ticfinished
+      || LOG_ALL_NETWORK_MESSAGES
       )
    {
       printf(

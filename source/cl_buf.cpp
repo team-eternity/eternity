@@ -64,6 +64,9 @@ bool NetPacket::shouldProcessNow()
 
 void NetPacket::process()
 {
+   if(LOG_ALL_NETWORK_MESSAGES)
+      printf("Received [%s message].\n", getName());
+
    switch(getType())
    {
    case nm_gamestate:
