@@ -367,7 +367,6 @@ void SV_HandleMastersSection(Json::Value &masters)
       {
          master->address = strdup(member_name.c_str());
          master->port = 80; // [CG] Default to port 80.
-         printf(">>> Master: %s:%u.\n", master->address, master->port);
       }
       else
       {
@@ -382,8 +381,6 @@ void SV_HandleMastersSection(Json::Value &masters)
 
          master->address = strdup(member_name.substr(0, found).c_str());
          master->port = port_str.toInt();
-         printf("<<< Port string: %s.\n", port_str.getBuffer());
-         printf("<<< Master: %s:%u.\n", master->address, master->port);
       }
 
       master->username = strdup(masters[*it]["username"].asCString());

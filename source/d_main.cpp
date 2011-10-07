@@ -2058,6 +2058,12 @@ char *FindIWADFile(void)
    char *p;
    const char *basename = NULL;
 
+   // [CG] Always ensure this is free'd to avoid a memory leak.
+   if(iwad)
+      free(iwad);
+
+   iwad = NULL;
+
    //jff 3/24/98 get -iwad parm if specified else use .
    // [CG] C/S clients and servers either have this configured in the
    //      configuration file, or sent over the wire.
@@ -2501,9 +2507,6 @@ static void IdentifyIWAD(void)
       D_LoadResourceWad();
 
       D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
-
-      // done with iwad string
-      free(iwad);
    }
    else
    {
