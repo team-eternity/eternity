@@ -1430,13 +1430,13 @@ void CS_ServiceNetwork(void)
       enet_host_service(net_host, NULL, 1);
 }
 
-void CS_ReadFromNetwork(void)
+void CS_ReadFromNetwork(unsigned int timeout)
 {
    ENetEvent event;
    char *address;
    int playernum = 0;
 
-   while(enet_host_service(net_host, &event, 1) > 0)
+   while(enet_host_service(net_host, &event, timeout) > 0)
    {
       switch(event.type)
       {

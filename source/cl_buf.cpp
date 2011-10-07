@@ -44,7 +44,7 @@ NetPacketBuffer cl_packet_buffer;
 int CL_serviceNetwork(void *)
 {
    while(cl_packet_buffer.buffering_independently)
-      CS_ReadFromNetwork();
+      CS_ReadFromNetwork(1000 / TICRATE);
    return 0;
 }
 

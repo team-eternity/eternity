@@ -2631,7 +2631,7 @@ void SV_TryRunTics(void)
          I_StartTic();
          D_ProcessEvents();
       }
-      CS_ReadFromNetwork();
+      CS_ReadFromNetwork(1);
       return;
    }
 
@@ -2739,7 +2739,7 @@ void SV_TryRunTics(void)
          I_StartTic();
          D_ProcessEvents();
       }
-      CS_ReadFromNetwork();
+      CS_ReadFromNetwork(1);
    } while ((new_tic = I_GetTime()) == current_tic);
 }
 

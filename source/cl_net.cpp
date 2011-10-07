@@ -492,6 +492,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
       }
    }
 
+   cl_packet_buffer.startBufferingIndependently();
    CS_DoWorldDone();
 
    for(i = 0; i < MAXPLAYERS; i++)
@@ -516,6 +517,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
       if(players[i].mo->net_id != 0)
          NetActors.add(players[i].mo);
    }
+   cl_packet_buffer.stopBufferingIndependently();
 
    cl_flush_packet_buffer = true;
    cl_received_sync = true;

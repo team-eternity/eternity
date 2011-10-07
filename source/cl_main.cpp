@@ -599,7 +599,7 @@ void CL_TryRunTics(void)
    MN_Ticker();
    C_Ticker();
    V_FPSTicker();
-   CS_ReadFromNetwork();
+   CS_ReadFromNetwork(1);
 
    // [CG] Because worlds may be skipped during buffer flushes, it's necessary
    //      to pull damagecount and bonuscount decrementing out from the normal
@@ -631,7 +631,7 @@ void CL_TryRunTics(void)
       {
          I_StartTic();
          D_ProcessEvents();
-         CS_ReadFromNetwork();
+         CS_ReadFromNetwork(1);
       } while((new_tic = I_GetTime()) == current_tic);
    }
 

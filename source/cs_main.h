@@ -859,7 +859,7 @@ void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
 void CS_ServiceNetwork(void);
-void CS_ReadFromNetwork(void);
+void CS_ReadFromNetwork(unsigned int timeout);
 void CS_TryRunTics(void);
 void CS_AddCommands(void);
 
