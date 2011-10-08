@@ -75,6 +75,12 @@
 // haleyjd: C++ headers
 #include <new>
 
+// [CG] Add cstdlib for old GNU C++ standard library versions that pull in way
+//      more than they should.
+#ifdef __GNUC__
+#include <cstdlib>
+#endif
+
 // haleyjd: portable replacement function headers
 #include "psnprntf.h"
 

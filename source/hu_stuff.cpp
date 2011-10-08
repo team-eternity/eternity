@@ -952,9 +952,6 @@ void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    newtw->message = newtw->alloc = strdup(message);
 
    HU_UpdateEraseData(newtw);
-
-   if(!widgets.count(newtw->widget.name))
-      I_Error("What the fuck (3)!!!!! (%s)\n", name);
 }
 
 //
@@ -1961,9 +1958,7 @@ static cell AMX_NATIVE_CALL sm_newtextwidget(AMX *amx, cell *params)
                         params[6] != 0 ? leveltime + params[6] : 0, params[7]);
 
    free(name);
-   // [CG] The text widget will take ownership of the message pointer, no need
-   //      to free it here.
-   // free(msg);
+   free(msg);
 
    return 0;
 }
