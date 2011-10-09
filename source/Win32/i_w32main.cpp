@@ -64,6 +64,7 @@ int main(int argc, char **argv)
    return 0;
 }
 #endif
+#endif
 
 // haleyjd 02/04/10: use GetWindowLongPtr on platforms that support 64-bit
 // compilation, but not on 6.0, because it doesn't have the function in the
