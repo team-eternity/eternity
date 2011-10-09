@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Eternity Engine" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\eternity" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\eternity" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-DSNES_SPC_EXPORTS" />
+			<Add option="-DR_LINKEDPORTALS" />
+			<Add option="-D_SDL_VER" />
+			<Add option="-DZONE_NATIVE" />
+			<Add option="-D_CONSOLE" />
+			<Add option="-DAMX_NODYNALOAD" />
+			<Add option="-DHAVE_SPCLIB" />
+			<Add option="-DJSON_IS_AMALGAMATION" />
+			<Add option="-DEE_FEATURE_OPENGL" />
+			<Add option="-DCURL_STATICLIB" />
+			<Add option="-DLIBARCHIVE_STATIC" />
+			<Add option="-DHAVE_SCHED_SETAFFINITY" />
+			<Add option="-D_GNU_SOURCE" />
+			<Add option="-DEE_CDROM_SUPPORT" />
+			<Add directory="..\source\textscreen" />
+			<Add directory="..\source\sdl" />
+			<Add directory="..\source\hal" />
+			<Add directory="..\source\gl" />
+			<Add directory="..\source\Confuse" />
+			<Add directory="..\source" />
+			<Add directory="..\eedeps\mingw\include" />
+			<Add directory="..\json-cpp" />
+			<Add directory="..\libpng" />
+			<Add directory="..\snes_spc" />
+			<Add directory="..\eedeps\mingw\include\SDL" />
+			<Add directory="..\codeblocks" />
+		</Compiler>
+		<Linker>
+			<Add library="..\eedeps\mingw\lib\libenet.a" />
+			<Add library="..\eedeps\mingw\lib\libcurl.a" />
+			<Add library="..\eedeps\mingw\lib\libgnutls-extra.a" />
+			<Add library="..\eedeps\mingw\lib\libgnutls-openssl.a" />
+			<Add library="..\eedeps\mingw\lib\libgnutls.a" />
+			<Add library="..\eedeps\mingw\lib\libgcrypt.a" />
+			<Add library="..\eedeps\mingw\lib\libgpg-error.a" />
+			<Add library="..\eedeps\mingw\lib\libidn.a" />
+			<Add library="..\eedeps\mingw\lib\libcares.a" />
+			<Add library="..\eedeps\mingw\lib\libarchive.a" />
+			<Add library="..\eedeps\mingw\lib\libbz2.a" />
+			<Add library="..\eedeps\mingw\lib\liblzma.a" />
+			<Add library="..\eedeps\mingw\lib\libSDL_mixer.a" />
+			<Add library="..\eedeps\mingw\lib\libSDL_net.a" />
+			<Add library="..\eedeps\mingw\lib\libSDL.a" />
+			<Add library="..\eedeps\mingw\lib\libSDLmain.a" />
+			<Add library="..\eedeps\mingw\lib\libmad.a" />
+			<Add library="..\eedeps\mingw\lib\libogg.a" />
+			<Add library="..\eedeps\mingw\lib\libvorbis.a" />
+			<Add library="..\eedeps\mingw\lib\libFLAC.a" />
+			<Add library="..\eedeps\mingw\lib\libz.a" />
+			<Add library="pthread" />
+			<Add library="m" />
+			<Add library="stdc++" />
+			<Add library="ws2_32" />
+			<Add library="gdi32" />
+			<Add library="dxguid" />
+			<Add library="dsound" />
+			<Add library="dinput" />
+			<Add library="ddraw" />
+			<Add library="winmm" />
+			<Add library="wldap32" />
+			<Add library="opengl32" />
+			<Add directory="..\eedeps\mingw\lib" />
+		</Linker>
+		<Unit filename="Eternity.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="..\json-cpp\jsoncpp.cpp" />
+		<Unit filename="..\libpng\png.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngerror.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngget.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngmem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngpread.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngread.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngrio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngrtran.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngrutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngtrans.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngwio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngwrite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngwtran.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\pngwutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\libpng\scripts\pngwin.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="..\snes_spc\SNES_SPC.cpp" />
+		<Unit filename="..\snes_spc\SNES_SPC_misc.cpp" />
+		<Unit filename="..\snes_spc\SNES_SPC_state.cpp" />
+		<Unit filename="..\snes_spc\SPC_DSP.cpp" />
+		<Unit filename="..\snes_spc\SPC_Filter.cpp" />
+		<Unit filename="..\snes_spc\dsp.cpp" />
+		<Unit filename="..\snes_spc\spc.cpp" />
+		<Unit filename="..\source\Confuse\confuse.cpp" />
+		<Unit filename="..\source\Confuse\lexer.cpp" />
+		<Unit filename="..\source\Win32\i_cpu.cpp" />
+		<Unit filename="..\source\Win32\i_exception.cpp" />
+		<Unit filename="..\source\Win32\i_fnames.cpp" />
+		<Unit filename="..\source\Win32\i_iwad.cpp" />
+		<Unit filename="..\source\Win32\i_opndir.cpp" />
+		<Unit filename="..\source\Win32\i_w32main.cpp" />
+		<Unit filename="..\source\a_common.cpp" />
+		<Unit filename="..\source\a_counters.cpp" />
+		<Unit filename="..\source\a_decorate.cpp" />
+		<Unit filename="..\source\a_doom.cpp" />
+		<Unit filename="..\source\a_fixed.cpp" />
+		<Unit filename="..\source\a_general.cpp" />
+		<Unit filename="..\source\a_heretic.cpp" />
+		<Unit filename="..\source\a_hexen.cpp" />
+		<Unit filename="..\source\a_small.cpp" />
+		<Unit filename="..\source\acs_intr.cpp" />
+		<Unit filename="..\source\am_color.cpp" />
+		<Unit filename="..\source\am_map.cpp" />
+		<Unit filename="..\source\amx.cpp" />
+		<Unit filename="..\source\amxcore.cpp" />
+		<Unit filename="..\source\c_cmd.cpp" />
+		<Unit filename="..\source\c_io.cpp" />
+		<Unit filename="..\source\c_net.cpp" />
+		<Unit filename="..\source\c_runcmd.cpp" />
+		<Unit filename="..\source\cl_buf.cpp" />
+		<Unit filename="..\source\cl_cmd.cpp" />
+		<Unit filename="..\source\cl_main.cpp" />
+		<Unit filename="..\source\cl_net.cpp" />
+		<Unit filename="..\source\cl_pred.cpp" />
+		<Unit filename="..\source\cl_spec.cpp" />
+		<Unit filename="..\source\cs_announcer.cpp" />
+		<Unit filename="..\source\cs_cmd.cpp" />
+		<Unit filename="..\source\cs_config.cpp" />
+		<Unit filename="..\source\cs_ctf.cpp" />
+		<Unit filename="..\source\cs_demo.cpp" />
+		<Unit filename="..\source\cs_hud.cpp" />
+		<Unit filename="..\source\cs_main.cpp" />
+		<Unit filename="..\source\cs_master.cpp" />
+		<Unit filename="..\source\cs_netid.cpp" />
+		<Unit filename="..\source\cs_position.cpp" />
+		<Unit filename="..\source\cs_score.cpp" />
+		<Unit filename="..\source\cs_spec.cpp" />
+		<Unit filename="..\source\cs_team.cpp" />
+		<Unit filename="..\source\cs_wad.cpp" />
+		<Unit filename="..\source\d_deh.cpp" />
+		<Unit filename="..\source\d_dehtbl.cpp" />
+		<Unit filename="..\source\d_dialog.cpp" />
+		<Unit filename="..\source\d_diskfile.cpp" />
+		<Unit filename="..\source\d_gi.cpp" />
+		<Unit filename="..\source\d_io.cpp" />
+		<Unit filename="..\source\d_items.cpp" />
+		<Unit filename="..\source\d_iwad.cpp" />
+		<Unit filename="..\source\d_main.cpp" />
+		<Unit filename="..\source\d_net.cpp" />
+		<Unit filename="..\source\doomdef.cpp" />
+		<Unit filename="..\source\doomstat.cpp" />
+		<Unit filename="..\source\dstrings.cpp" />
+		<Unit filename="..\source\e_args.cpp" />
+		<Unit filename="..\source\e_cmd.cpp" />
+		<Unit filename="..\source\e_dstate.cpp" />
+		<Unit filename="..\source\e_edf.cpp" />
+		<Unit filename="..\source\e_exdata.cpp" />
+		<Unit filename="..\source\e_fonts.cpp" />
+		<Unit filename="..\source\e_hash.cpp" />
+		<Unit filename="..\source\e_hashkeys.h" />
+		<Unit filename="..\source\e_lib.cpp" />
+		<Unit filename="..\source\e_mod.cpp" />
+		<Unit filename="..\source\e_player.cpp" />
+		<Unit filename="..\source\e_sound.cpp" />
+		<Unit filename="..\source\e_sprite.cpp" />
+		<Unit filename="..\source\e_states.cpp" />
+		<Unit filename="..\source\e_string.cpp" />
+		<Unit filename="..\source\e_things.cpp" />
+		<Unit filename="..\source\e_ttypes.cpp" />
+		<Unit filename="..\source\f_finale.cpp" />
+		<Unit filename="..\source\f_wipe.cpp" />
+		<Unit filename="..\source\g_bind.cpp" />
+		<Unit filename="..\source\g_cmd.cpp" />
+		<Unit filename="..\source\g_dmflag.cpp" />
+		<Unit filename="..\source\g_game.cpp" />
+		<Unit filename="..\source\g_gfs.cpp" />
+		<Unit filename="..\source\gl\gl_init.cpp" />
+		<Unit filename="..\source\gl\gl_primitives.cpp" />
+		<Unit filename="..\source\gl\gl_projection.cpp" />
+		<Unit filename="..\source\gl\gl_texture.cpp" />
+		<Unit filename="..\source\gl\gl_vars.cpp" />
+		<Unit filename="..\source\hal\i_video.cpp" />
+		<Unit filename="..\source\hi_stuff.cpp" />
+		<Unit filename="..\source\hu_frags.cpp" />
+		<Unit filename="..\source\hu_over.cpp" />
+		<Unit filename="..\source\hu_stuff.cpp" />
+		<Unit filename="..\source\in_lude.cpp" />
+		<Unit filename="..\source\info.cpp" />
+		<Unit filename="..\source\m_argv.cpp" />
+		<Unit filename="..\source\m_bbox.cpp" />
+		<Unit filename="..\source\m_buffer.cpp" />
+		<Unit filename="..\source\m_cheat.cpp" />
+		<Unit filename="..\source\m_fcvt.cpp" />
+		<Unit filename="..\source\m_file.cpp" />
+		<Unit filename="..\source\m_hash.cpp" />
+		<Unit filename="..\source\m_misc.cpp" />
+		<Unit filename="..\source\m_qstr.cpp" />
+		<Unit filename="..\source\m_queue.cpp" />
+		<Unit filename="..\source\m_random.cpp" />
+		<Unit filename="..\source\m_shots.cpp" />
+		<Unit filename="..\source\m_syscfg.cpp" />
+		<Unit filename="..\source\m_vector.cpp" />
+		<Unit filename="..\source\metaapi.cpp" />
+		<Unit filename="..\source\mn_emenu.cpp" />
+		<Unit filename="..\source\mn_engin.cpp" />
+		<Unit filename="..\source\mn_files.cpp" />
+		<Unit filename="..\source\mn_htic.cpp" />
+		<Unit filename="..\source\mn_menus.cpp" />
+		<Unit filename="..\source\mn_misc.cpp" />
+		<Unit filename="..\source\mn_skinv.cpp" />
+		<Unit filename="..\source\p_anim.cpp" />
+		<Unit filename="..\source\p_ceilng.cpp" />
+		<Unit filename="..\source\p_chase.cpp" />
+		<Unit filename="..\source\p_cmd.cpp" />
+		<Unit filename="..\source\p_doors.cpp" />
+		<Unit filename="..\source\p_enemy.cpp" />
+		<Unit filename="..\source\p_floor.cpp" />
+		<Unit filename="..\source\p_genlin.cpp" />
+		<Unit filename="..\source\p_henemy.cpp" />
+		<Unit filename="..\source\p_hubs.cpp" />
+		<Unit filename="..\source\p_info.cpp" />
+		<Unit filename="..\source\p_inter.cpp" />
+		<Unit filename="..\source\p_lights.cpp" />
+		<Unit filename="..\source\p_map.cpp" />
+		<Unit filename="..\source\p_map3d.cpp" />
+		<Unit filename="..\source\p_maputl.cpp" />
+		<Unit filename="..\source\p_mobj.cpp" />
+		<Unit filename="..\source\p_mobjcol.cpp" />
+		<Unit filename="..\source\p_partcl.cpp" />
+		<Unit filename="..\source\p_plats.cpp" />
+		<Unit filename="..\source\p_portal.cpp" />
+		<Unit filename="..\source\p_pspr.cpp" />
+		<Unit filename="..\source\p_saveg.cpp" />
+		<Unit filename="..\source\p_setup.cpp" />
+		<Unit filename="..\source\p_sight.cpp" />
+		<Unit filename="..\source\p_skin.cpp" />
+		<Unit filename="..\source\p_slopes.cpp" />
+		<Unit filename="..\source\p_spec.cpp" />
+		<Unit filename="..\source\p_switch.cpp" />
+		<Unit filename="..\source\p_telept.cpp" />
+		<Unit filename="..\source\p_things.cpp" />
+		<Unit filename="..\source\p_tick.cpp" />
+		<Unit filename="..\source\p_trace.cpp" />
+		<Unit filename="..\source\p_user.cpp" />
+		<Unit filename="..\source\p_xenemy.cpp" />
+		<Unit filename="..\source\polyobj.cpp" />
+		<Unit filename="..\source\psnprntf.cpp" />
+		<Unit filename="..\source\r_bsp.cpp" />
+		<Unit filename="..\source\r_data.cpp" />
+		<Unit filename="..\source\r_draw.cpp" />
+		<Unit filename="..\source\r_drawl.cpp" />
+		<Unit filename="..\source\r_drawq.cpp" />
+		<Unit filename="..\source\r_dynseg.cpp" />
+		<Unit filename="..\source\r_main.cpp" />
+		<Unit filename="..\source\r_plane.cpp" />
+		<Unit filename="..\source\r_portal.cpp" />
+		<Unit filename="..\source\r_ripple.cpp" />
+		<Unit filename="..\source\r_segs.cpp" />
+		<Unit filename="..\source\r_sky.cpp" />
+		<Unit filename="..\source\r_span.cpp" />
+		<Unit filename="..\source\r_textur.cpp" />
+		<Unit filename="..\source\r_things.cpp" />
+		<Unit filename="..\source\r_voxels.cpp" />
+		<Unit filename="..\source\s_sndseq.cpp" />
+		<Unit filename="..\source\s_sound.cpp" />
+		<Unit filename="..\source\sdl\i_input.cpp" />
+		<Unit filename="..\source\sdl\i_main.cpp" />
+		<Unit filename="..\source\sdl\i_net.cpp" />
+		<Unit filename="..\source\sdl\i_pcsound.cpp" />
+		<Unit filename="..\source\sdl\i_picker.cpp" />
+		<Unit filename="..\source\sdl\i_sdlgl2d.cpp" />
+		<Unit filename="..\source\sdl\i_sdlmusic.cpp" />
+		<Unit filename="..\source\sdl\i_sdlsound.cpp" />
+		<Unit filename="..\source\sdl\i_sdlvideo.cpp" />
+		<Unit filename="..\source\sdl\i_sound.cpp" />
+		<Unit filename="..\source\sdl\i_system.cpp" />
+		<Unit filename="..\source\sdl\i_thread.cpp" />
+		<Unit filename="..\source\sdl\mmus2mid.cpp" />
+		<Unit filename="..\source\sdl\ser_main.cpp" />
+		<Unit filename="..\source\sounds.cpp" />
+		<Unit filename="..\source\st_hbar.cpp" />
+		<Unit filename="..\source\st_lib.cpp" />
+		<Unit filename="..\source\st_stuff.cpp" />
+		<Unit filename="..\source\sv_main.cpp" />
+		<Unit filename="..\source\sv_queue.cpp" />
+		<Unit filename="..\source\sv_spec.cpp" />
+		<Unit filename="..\source\tables.cpp" />
+		<Unit filename="..\source\textscreen\txt_button.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_checkbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_desktop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_dropdown.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_gui.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_inputbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_io.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_label.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_radiobutton.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_scrollpane.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_sdl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_separator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_spinctrl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_strut.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_table.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_widget.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\textscreen\txt_window_action.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\source\v_block.cpp" />
+		<Unit filename="..\source\v_buffer.cpp" />
+		<Unit filename="..\source\v_font.cpp" />
+		<Unit filename="..\source\v_misc.cpp" />
+		<Unit filename="..\source\v_patch.cpp" />
+		<Unit filename="..\source\v_patchfmt.cpp" />
+		<Unit filename="..\source\v_png.cpp" />
+		<Unit filename="..\source\v_video.cpp" />
+		<Unit filename="..\source\version.cpp" />
+		<Unit filename="..\source\w_hacks.cpp" />
+		<Unit filename="..\source\w_levels.cpp" />
+		<Unit filename="..\source\w_wad.cpp" />
+		<Unit filename="..\source\wi_stuff.cpp" />
+		<Unit filename="..\source\xl_scripts.cpp" />
+		<Unit filename="..\source\z_native.cpp" />
+		<Unit filename="..\source\z_zone.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

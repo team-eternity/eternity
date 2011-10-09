@@ -491,6 +491,7 @@ static void PrintRegInfo(void)
 //
 static void PrintCS(void)
 {
+#ifndef __MINGW32__
    BYTE *ipaddr = (BYTE *)contextRecord->Eip;
    int i;
 
@@ -507,10 +508,8 @@ static void PrintCS(void)
       {
          LogPrintf(_T("?? "));
       }
-#ifdef __MINGW32__
-      __end_except
-#endif
    }
+#endif
 }
 
 //

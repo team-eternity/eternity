@@ -44,6 +44,12 @@ extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
+#ifdef __MINGW32__
+int main(int argc, char **argv)
+{
+    common_main(argc, argv);
+}
+#else
 #ifndef _DEBUG
 int main(int argc, char **argv)
 {
@@ -55,10 +61,6 @@ int main(int argc, char **argv)
    {
       I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info\n");
    }
-#ifdef __MINGW32__
-   __end_except
-#endif
-
    return 0;
 }
 #endif
