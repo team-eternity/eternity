@@ -96,7 +96,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    char   *buffer;
    
    size   = D_FileLength(dwfile);
-   buffer = (char *)(malloc(size + 1));
+   buffer = emalloc(char *, size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {

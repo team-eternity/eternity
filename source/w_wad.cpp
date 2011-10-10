@@ -287,7 +287,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       header.infotableofs = SwapLong(header.infotableofs);
       
       length = header.numlumps * sizeof(filelump_t);
-      fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
+      fileinfo2free = fileinfo = emalloc(filelump_t *, length); // killough
       
       long info_offset = (long)(header.infotableofs);
       // subfile wads may exist at a positive base offset in the container file
@@ -328,7 +328,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
 
    // space for new lumps
-   newlumps = (lumpinfo_t *)(malloc((this->numlumps - startlump) * sizeof(lumpinfo_t)));
+   newlumps = estructalloc(lumpinfo_t, this->numlumps - startlump);
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps

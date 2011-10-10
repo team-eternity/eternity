@@ -316,7 +316,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 //
 static void R_InitSpriteDefs(char **namelist)
 {
-   size_t numentries = lastspritelump-firstspritelump+1;
+   size_t numentries = lastspritelump - firstspritelump + 1;
    struct rsprhash_s { int index, next; } *hash;
    unsigned int i;
    lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
@@ -335,7 +335,7 @@ static void R_InitSpriteDefs(char **namelist)
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
    
-   hash = (rsprhash_s *)(malloc(sizeof(*hash) * numentries)); // allocate hash table
+   hash = estructalloc(rsprhash_s, numentries); // allocate hash table
 
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
       hash[i].index = -1;
@@ -501,7 +501,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
          unusedmasked = unusedmasked->next;
       }
       else
-         post->masked = (maskedrange_t *)(malloc(sizeof(maskedrange_t)));
+         post->masked = estructalloc(maskedrange_t, 1);
          
       memset(post->masked, 0, sizeof(*post->masked));
       
@@ -1281,9 +1281,9 @@ static void R_SortVisSprites(void)
       if(num_vissprite_ptrs < num_vissprite*2)
       {
          free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = 
-            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                    * sizeof *vissprite_ptrs));
+         num_vissprite_ptrs = num_vissprite_alloc * 2;
+         vissprite_ptrs = emalloc(vissprite_t **, 
+                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)
@@ -1317,9 +1317,9 @@ static void R_SortVisSpriteRange(int first, int last)
       if(num_vissprite_ptrs < numsprites*2)
       {
          free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = 
-            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                    * sizeof *vissprite_ptrs));
+         num_vissprite_ptrs = num_vissprite_alloc * 2;
+         vissprite_ptrs = emalloc(vissprite_t **, 
+                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)

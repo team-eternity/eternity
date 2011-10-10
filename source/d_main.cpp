@@ -719,7 +719,7 @@ char *D_DoomExeDir(void)
 
       size_t len = strlen(myargv[0]) + 1;
 
-      base = (char *)(malloc(len));
+      base = emalloc(char *, len);
 
       // haleyjd 03/09/03: generalized
       M_GetFilePath(myargv[0], base, len);
@@ -727,7 +727,7 @@ char *D_DoomExeDir(void)
       // haleyjd 10/28/04: the above is not sufficient for all versions
       // of Windows. There is an API function which takes care of this,
       // however.  See i_fnames.c in the Win32 subdirectory.
-      base = (char *)(malloc(PATH_MAX + 1));
+      base = emalloc(char *, PATH_MAX + 1);
 
       WIN_GetExeDir(base, PATH_MAX + 1);
 #endif
@@ -1070,7 +1070,7 @@ static void D_EnumerateAutoloadDir(void)
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {
       size_t len = strlen(basegamepath) + 10;
-      autoload_dirname = (char *)(malloc(len));
+      autoload_dirname = emalloc(char *, len);
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
       
@@ -2245,7 +2245,7 @@ char *FindIWADFile(void)
 
    // haleyjd 01/17/11: be sure iwad return string is valid...
    if(!iwad)
-      iwad = (char *)(malloc(1));
+      iwad = emalloc(char *, 1);
 
    *iwad = 0;
    return iwad;
@@ -2334,7 +2334,7 @@ static void D_InitPaths(void)
       // hack for DOOM modes: optional use of /doom config
       size_t len = strlen(basepath) + strlen("/doom") +
                    strlen(D_DoomExeName()) + 8;
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
                 basepath, D_DoomExeName());
@@ -2343,7 +2343,7 @@ static void D_InitPaths(void)
    {
       size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
 
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
    }
@@ -2539,7 +2539,7 @@ void FindResponseFile(void)
          int size, index, indexinfile;
          byte *f;
          char *file = NULL, *firstargv;
-         char **moreargs = (char **)(malloc(myargc * sizeof(char *)));
+         char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          char *fname = NULL;
          
@@ -2595,7 +2595,7 @@ void FindResponseFile(void)
 
                if(size > 0)
                {
-                  char *s = (char *)(malloc(size+1));
+                  char *s = emalloc(char *, size+1);
                   char *p = s;
                   int quoted = 0;
 
@@ -3333,7 +3333,7 @@ static void D_DoomInit(void)
       
       len = strlen(D_DoomExeName()) + 18;
 
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "c:/doomdata/%s.cfg", D_DoomExeName());
    }

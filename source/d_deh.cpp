@@ -1924,7 +1924,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
    deh_LogPrintf("Processing extended string substitution\n");
 
    if(!holdstring)
-      holdstring = (char *)(malloc(maxstrlen * sizeof(*holdstring)));
+      holdstring = ecalloc(char *, maxstrlen, sizeof(*holdstring));
 
    *holdstring = '\0'; // empty string to start with
 

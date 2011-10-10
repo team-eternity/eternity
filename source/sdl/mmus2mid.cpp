@@ -37,6 +37,8 @@
 //#define STANDALONE  /* uncomment this to make MMUS2MID.EXE */
 #ifndef STANDALONE
 #include "../z_zone.h"
+#else
+#define emalloc(t, n) (t)(malloc(n))
 #endif
 
 // some macros to decode mus event bit fields
@@ -721,7 +723,7 @@ int MIDIToMidi(MIDI *mididata,UBYTE **mid,int *midlen)
          ntrks++;
       }
    }
-   if((*mid = (UBYTE *)(malloc(total))) == NULL)
+   if((*mid = emalloc(UBYTE *, total)) == NULL)
       return MEMALLOC;
    
 

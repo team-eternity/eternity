@@ -1914,7 +1914,7 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
 
    if((widget = HU_WidgetForName(name)) && widget->type == WIDGET_TEXT)
    {
-      char *tempbuf = (char *)(malloc(size+1));
+      char *tempbuf = emalloc(char *, size+1);
       
       tw = (hu_textwidget_t *)widget;
 

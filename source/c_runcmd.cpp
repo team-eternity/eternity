@@ -1189,7 +1189,7 @@ alias_t *C_NewAlias(const char *aliasname, const char *command)
    else
    {
       // create a new alias
-      alias = (alias_t *)(malloc(sizeof(alias_t)));
+      alias = estructalloc(alias_t, 1);
       alias->name = strdup(aliasname);
       alias->command = strdup(command);
       alias->next = aliases.next;
@@ -1306,7 +1306,7 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
    bufferedcmd *newbuf;
    
    // create bufferedcmd
-   newbuf = (bufferedcmd *)(malloc(sizeof(bufferedcmd)));
+   newbuf = estructalloc(bufferedcmd, 1);
    
    // add to new bufferedcmd
    newbuf->command = command;

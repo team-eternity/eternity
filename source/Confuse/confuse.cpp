@@ -84,7 +84,7 @@ static char *cfg_strndup(const char *s, size_t n)
    if(s == 0)
       return 0;
    
-   r = (char *)(malloc(n + 1));
+   r = emalloc(char *, n + 1);
    strncpy(r, s, n);
    r[n] = 0;
    return r;
@@ -364,8 +364,7 @@ static cfg_value_t *cfg_addval(cfg_opt_t *opt)
    opt->values = (cfg_value_t **)realloc(opt->values,
                                          (opt->nvalues+1) * sizeof(cfg_value_t *));
    cfg_assert(opt->values);
-   opt->values[opt->nvalues] = (cfg_value_t *)(malloc(sizeof(cfg_value_t)));
-   memset(opt->values[opt->nvalues], 0, sizeof(cfg_value_t));
+   opt->values[opt->nvalues] = estructalloc(cfg_value_t, 1);
    return opt->values[opt->nvalues++];
 }
 
@@ -376,7 +375,8 @@ static cfg_opt_t *cfg_dupopts(cfg_opt_t *opts)
    
    for(n = 0; opts[n].name; n++) /* do nothing */ ;
 
-   dupopts = (cfg_opt_t *)(malloc(++n * sizeof(cfg_opt_t)));
+   ++n;
+   dupopts = estructalloc(cfg_opt_t, n);
    memcpy(dupopts, opts, n * sizeof(cfg_opt_t));
    return dupopts;
 }
@@ -654,7 +654,7 @@ static int call_function(cfg_t *cfg, cfg_opt_t *opt, cfg_opt_t *funcopt)
     * the registered function
     */
 
-   argv = (const char **)(malloc(funcopt->nvalues * sizeof(char *)));
+   argv = ecalloc(const char **, funcopt->nvalues, sizeof(char *));
 
    for(i = 0; i < funcopt->nvalues; i++)
       argv[i] = funcopt->values[i]->string;
@@ -1052,7 +1052,7 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
 {
    cfg_t *cfg;
    
-   cfg = (cfg_t *)(malloc(sizeof(cfg_t)));
+   cfg = estructalloc(cfg_t, 1);
    cfg_assert(cfg);
    memset(cfg, 0, sizeof(cfg_t));
 

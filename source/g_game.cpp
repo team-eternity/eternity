@@ -2846,7 +2846,7 @@ void G_RecordDemo(char *name)
 
    if(demoname)
       free(demoname);
-   demoname = (char *)(malloc(strlen(name) + 8));
+   demoname = emalloc(char *, strlen(name) + 8);
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
    
@@ -2858,7 +2858,7 @@ void G_RecordDemo(char *name)
    if(maxdemosize < 0x20000)  // killough
       maxdemosize = 0x20000;
    
-   demobuffer = (byte *)(malloc(maxdemosize)); // killough
+   demobuffer = emalloc(byte *, maxdemosize); // killough
    
    demorecording = true;
 }

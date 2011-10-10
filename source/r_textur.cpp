@@ -1068,7 +1068,7 @@ static int *R_LoadPNames(void)
    names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
-   patchlookup = (int *)(malloc(nummappatches * sizeof(*patchlookup))); // killough
+   patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
    
    for(i = 0; i < nummappatches; ++i)
    {

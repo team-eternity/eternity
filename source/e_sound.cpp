@@ -635,7 +635,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       sfx->numrandomsounds = tempint;
 
       sfx->randomsounds = 
-         (sfxinfo_t **)(malloc(sfx->numrandomsounds * sizeof(sfxinfo_t *)));
+         ecalloc(sfxinfo_t **, sfx->numrandomsounds, sizeof(sfxinfo_t *));
 
       for(i = 0; i < sfx->numrandomsounds; ++i)
          sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
@@ -1345,7 +1345,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // used by the compiled sound sequence commands
    cmdalloc = allocused * sizeof(seqcmd_t);
 
-   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   newSeq->commands = emalloc(seqcmd_t *, cmdalloc);
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
@@ -1403,7 +1403,7 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
    // used by the compiled sound sequence commands
    cmdalloc = allocused * sizeof(seqcmd_t);
 
-   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   newSeq->commands = emalloc(seqcmd_t *, cmdalloc);
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
@@ -1761,7 +1761,7 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    // if one already exists, use it, else create a new one
    if(!(newAmb = E_AmbienceForNum(index)))
    {
-      newAmb = (EAmbience_t *)(malloc(sizeof(EAmbience_t)));
+      newAmb = estructalloc(EAmbience_t, 1);
 
       // add to hash table
       newAmb->index = index;

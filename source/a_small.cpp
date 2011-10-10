@@ -147,7 +147,7 @@ SmallContext_t *SM_CreateChildContext(SmallContext_t *parent,
 
    totalSize = dataSize + sthpSize;
 
-   data = (byte *)(malloc(totalSize));
+   data = emalloc(byte *, totalSize);
 
    if(amx_Clone(&child->smallAMX, &parent->smallAMX, data) != AMX_ERR_NONE)
       I_Error("SM_CreateChildContext: internal Small error\n");

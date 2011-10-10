@@ -485,8 +485,8 @@ void R_InitLightTables (void)
    
    // killough 4/4/98: dynamic colormaps
    // haleyjd: FIXME - wtf kind of types ARE these anyway??
-   c_zlight     = (lighttable_t *(*)[32][128])(malloc(sizeof(*c_zlight) * numcolormaps));
-   c_scalelight = (lighttable_t *(*)[32][48]) (malloc(sizeof(*c_scalelight) * numcolormaps));
+   c_zlight     = emalloc(lighttable_t *(*)[32][128], sizeof(*c_zlight) * numcolormaps);
+   c_scalelight = emalloc(lighttable_t *(*)[32][48],  sizeof(*c_scalelight) * numcolormaps);
    
    // Calculate the light levels to use
    //  for each level / distance combination.

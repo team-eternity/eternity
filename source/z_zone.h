@@ -36,7 +36,6 @@
 
 // Remove all definitions before including system definitions
 
-#undef malloc
 #undef free
 #undef realloc
 #undef strdup
@@ -137,12 +136,10 @@ void  Z_SysFree(void *p);
 #define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 
 // haleyjd 10/29/06: undefine any existing macros by these names
-#undef malloc
 #undef free
 #undef realloc
 #undef strdup
 
-#define malloc(n)          (Z_Malloc) (n,    PU_STATIC,0,__FILE__,__LINE__)
 #define free(p)            (Z_Free)   (p,                __FILE__,__LINE__)
 #define realloc(p,n)       (Z_Realloc)(p,n,  PU_STATIC,0,__FILE__,__LINE__)
 #define strdup(s)          (Z_Strdup) (s,    PU_STATIC,0,__FILE__,__LINE__)
@@ -152,7 +149,10 @@ template<typename T> inline T ecalloc_impl(size_t n1, size_t n2, const char *fil
    return static_cast<T>((Z_Calloc)(n1, n2, PU_STATIC, 0, file, line));
 }
 
+#define emalloc(type, n)      ecalloc_impl<type>(1,  n,  __FILE__, __LINE__)
 #define ecalloc(type, n1, n2) ecalloc_impl<type>(n1, n2, __FILE__, __LINE__)
+
+#define estructalloc(type, n) ecalloc_impl<type *>(n, sizeof(type), __FILE__, __LINE__)
 
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));

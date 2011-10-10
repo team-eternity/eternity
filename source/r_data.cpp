@@ -399,6 +399,7 @@ void R_PrecacheLevel(void)
 {
    register int i;
    register byte *hitlist;
+   int numalloc;
 
    if(demoplayback)
       return;
@@ -407,7 +408,8 @@ void R_PrecacheLevel(void)
       return;
 
    // SoM: Hey, you never know, it could happen....
-   hitlist = (byte *)(malloc(texturecount > numsprites ? texturecount : numsprites));
+   numalloc = (texturecount > numsprites ? texturecount : numsprites);
+   hitlist = emalloc(byte *, numalloc);
 
    // Precache textures.
    memset(hitlist, 0, texturecount);

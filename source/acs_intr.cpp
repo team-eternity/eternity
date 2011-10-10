@@ -1388,7 +1388,7 @@ static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
    }
 
    // allocate a new deferredacs_t
-   newdacs = (deferredacs_t *)(malloc(sizeof(deferredacs_t)));
+   newdacs = estructalloc(deferredacs_t, 1);
 
    // set script number
    newdacs->scriptNum = scrnum; 

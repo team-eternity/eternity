@@ -475,7 +475,7 @@ int EV_CeilingCrushStop(line_t* line)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
-   ceilinglist_t *list = (ceilinglist_t *)(malloc(sizeof *list));
+   ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
    list->ceiling = ceiling;
    ceiling->list = list;
    if((list->next = activeceilings))

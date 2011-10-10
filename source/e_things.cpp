@@ -2143,7 +2143,7 @@ void E_ProcessThings(cfg_t *cfg)
 
    // allocate inheritance stack and hitlist
    thing_hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
-   thing_pstack  = (int *) (malloc(NUMMOBJTYPES * sizeof(int)));
+   thing_pstack  = ecalloc(int  *, NUMMOBJTYPES, sizeof(int));
 
    // 01/17/07: initialize ACS thingtypes array
    for(i = 0; i < ACS_NUM_THINGTYPES; ++i)

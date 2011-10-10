@@ -975,7 +975,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
       // read until the end marker is hit
       for(int i = 0; i < callback_count; i++)
       {
-         sc_callback_t *newCallback = (sc_callback_t *)(malloc(sizeof(sc_callback_t)));
+         sc_callback_t *newCallback = estructalloc(sc_callback_t, 1);
          int8_t vm;
 
          arc << newCallback->flags << newCallback->scriptNum << vm 

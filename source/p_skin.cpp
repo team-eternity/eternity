@@ -139,7 +139,7 @@ void P_InitSkins(void)
    if((numskinsprites = numskins - numedfskins) < 0)
       I_Error("P_InitSkins: numedfskins > numskins\n");
 
-   spritelist = (char **)(malloc((numskinsprites + NUMSPRITES + 1) * sizeof(char *)));
+   spritelist = ecalloc(char **, numskinsprites + NUMSPRITES + 1, sizeof(char *));
 
    // add the normal sprites
    currentsprite = spritelist;

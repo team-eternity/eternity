@@ -1548,8 +1548,8 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    }
 
    NumBossTypes = numTypes;
-   BossSpawnTypes = (int *)(malloc(numTypes * sizeof(int)));
-   BossSpawnProbs = (int *)(malloc(numTypes * sizeof(int)));
+   BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
+   BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
 
    // load boss spawn probabilities
    for(i = 0; i < numTypes; ++i)

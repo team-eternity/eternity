@@ -586,7 +586,7 @@ void G_AddChatMacros(void)
       memset(tempstr, 0, 32);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &chat_macros[i];
       variable->v_default = NULL;
       variable->type = vt_string;      // string value
@@ -595,7 +595,7 @@ void G_AddChatMacros(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "chatmacro%i", i);
       command->name = strdup(tempstr);
@@ -656,7 +656,7 @@ void G_AddWeapPrefs(void)
       memset(tempstr, 0, 16);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &weapon_preferences[0][i];
       variable->v_default = NULL;
       variable->type = vt_int;
@@ -665,7 +665,7 @@ void G_AddWeapPrefs(void)
       variable->defines = weapon_str;  // use weapon string defines
 
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
 
       sprintf(tempstr, "weappref_%i", i+1);
       command->name = strdup(tempstr);
@@ -719,7 +719,7 @@ void G_AddAutoloadFiles(void)
    for(i = 0; i < 6; ++i)
    {
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = autoload_ptrs[i];
       variable->v_default = NULL;
       variable->type = vt_string;
@@ -728,7 +728,7 @@ void G_AddAutoloadFiles(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       command->name = autoload_names[i];
       command->type = ct_variable;
       command->flags = cf_allowblank;
@@ -794,7 +794,7 @@ void G_AddCompat(void)
       char tempstr[32];
 
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &comp[i];
       variable->v_default = &default_comp[i];
       variable->type = vt_int;      // string value
@@ -803,7 +803,7 @@ void G_AddCompat(void)
       variable->defines = yesno;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
       command->name = strdup(tempstr);

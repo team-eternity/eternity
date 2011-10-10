@@ -433,7 +433,7 @@ int EV_StopPlat(line_t *line)
 //
 void P_AddActivePlat(PlatThinker *plat)
 {
-   platlist_t *list = (platlist_t *)(malloc(sizeof *list));
+   platlist_t *list = estructalloc(platlist_t, 1);
    list->plat = plat;
    plat->list = list;
    if((list->next = activeplats))
