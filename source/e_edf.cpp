@@ -1390,8 +1390,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = (castinfo_t *)(calloc(sizeof(castinfo_t), max_castorder + 1));
-   ci_order  = (cfg_t **)    (calloc(sizeof(cfg_t *),    max_castorder));
+   castorder = ecalloc(castinfo_t *, sizeof(castinfo_t), max_castorder + 1);
+   ci_order  = ecalloc(cfg_t **,     sizeof(cfg_t *),    max_castorder);
 
    if(numcastorder > 0)
    {

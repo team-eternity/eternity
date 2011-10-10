@@ -117,7 +117,7 @@ static gunaction_t *P_GetGunAction(void)
       freegunactions = ret->next;
    }
    else
-      ret = (gunaction_t *)(calloc(1, sizeof(gunaction_t)));
+      ret = ecalloc(gunaction_t *, 1, sizeof(gunaction_t));
 
    return ret;
 }

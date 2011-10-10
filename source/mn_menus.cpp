@@ -1848,8 +1848,8 @@ static void MN_BuildVidmodeTables(void)
    nummodes = i;
 
    // allocate arrays
-   mn_vidmode_desc = (char **)calloc(i+1, sizeof(const char *));
-   mn_vidmode_cmds = (char **)calloc(i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
 
    for(i = 0; i < nummodes; i++)
    {

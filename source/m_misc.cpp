@@ -1874,7 +1874,7 @@ int M_ReadFile(char const *name, byte **buffer)
       length = ftell(fp);
       fseek(fp, 0, SEEK_SET);
 
-      *buffer = (byte *)(calloc(1, length));
+      *buffer = ecalloc(byte *, 1, length);
       
       if(fread(*buffer, 1, length, fp) == length)
       {

@@ -1069,7 +1069,7 @@ void Polyobj_InitLevel(void)
          {
             ++numPolyObjects;
             
-            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
+            qitem = ecalloc(mobjqitem_t *, 1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &spawnqueue);
          }
@@ -1077,7 +1077,7 @@ void Polyobj_InitLevel(void)
          {
             ++numAnchors;
 
-            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
+            qitem = ecalloc(mobjqitem_t *, 1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &anchorqueue);
          }

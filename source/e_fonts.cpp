@@ -506,7 +506,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    // is it a list?
    if((numchars = cfg_size(sec, ITEM_FILTER_CHARS)) > 0)
    {
-      f->chars    = (unsigned int *)(calloc(numchars, sizeof(unsigned int)));
+      f->chars    = ecalloc(unsigned int *, numchars, sizeof(unsigned int));
       f->numchars = numchars;
 
       for(i = 0; i < numchars; ++i)
@@ -585,7 +585,7 @@ void E_LoadPatchFont(vfont_t *font)
       E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
 
    // init all to NULL at beginning
-   font->fontgfx = (patch_t **)(calloc(font->size, sizeof(patch_t *)));
+   font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -665,7 +665,7 @@ static void E_ProcessFont(cfg_t *sec)
    }
    else
    {
-      font = (vfont_t *)(calloc(1, sizeof(vfont_t)));
+      font = ecalloc(vfont_t *, 1, sizeof(vfont_t));
 
       if(strlen(title) > 32)
          E_EDFLoggedErr(2, "E_ProcessFont: mnemonic '%s' is too long\n", title);
@@ -770,7 +770,7 @@ static void E_ProcessFont(cfg_t *sec)
          E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
 
       // allocate the font filters
-      font->filters    = (vfontfilter_t *)(calloc(numfilters, sizeof(vfontfilter_t)));
+      font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
       font->numfilters = numfilters;
       
       for(i = 0; i < numfilters; ++i)

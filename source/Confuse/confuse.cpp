@@ -517,7 +517,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
    case CFGT_MVPROP: // haleyjd
       // haleyjd 07/11/03: CVS bug fix for section overwrite mem. leak
       cfg_free(val->section);
-      val->section = (cfg_t *)calloc(1, sizeof(cfg_t));
+      val->section = ecalloc(cfg_t *, 1, sizeof(cfg_t));
       cfg_assert(val->section);
       val->section->namealloc = strdup(opt->name); // haleyjd 04/14/11
       val->section->name      = val->section->namealloc;

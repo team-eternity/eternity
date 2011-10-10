@@ -97,8 +97,8 @@ diskfile_t *D_OpenDiskFile(const char *filename)
    uint32_t temp;
 
    // allocate a diskfile structure and internal fields
-   df  = (diskfile_t *)   (calloc(1, sizeof(diskfile_t)));
-   dfi = (diskfileint_t *)(calloc(1, sizeof(diskfileint_t)));
+   df  = ecalloc(diskfile_t *,    1, sizeof(diskfile_t));
+   dfi = ecalloc(diskfileint_t *, 1, sizeof(diskfileint_t));
 
    df->opaque = dfi;
 
@@ -114,7 +114,7 @@ diskfile_t *D_OpenDiskFile(const char *filename)
    dfi->numfiles = SwapBigULong(temp);
 
    // allocate directory
-   dfi->entries = (diskentry_t *)(calloc(dfi->numfiles, sizeof(diskentry_t)));
+   dfi->entries = ecalloc(diskentry_t *, dfi->numfiles, sizeof(diskentry_t));
 
    // read directory entries
    if(!D_readDiskFileDirectory(dfi))
@@ -198,7 +198,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
       len++;
 
    // allocate a buffer, read the resource, and return it
-   buffer = calloc(1, len);
+   buffer = ecalloc(void *, 1, len);
 
    if(fseek(dfi->f, entry->offset, SEEK_SET))
       I_Error("D_CacheDiskFileResource: can't seek to resource %s\n", entry->name);

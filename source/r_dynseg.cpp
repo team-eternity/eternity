@@ -94,7 +94,7 @@ static vertex_t *R_GetFreeDynaVertex(void)
       memset(ret, 0, sizeof(vertex_t));
    }
    else
-      ret = (vertex_t *)(calloc(1, sizeof(vertex_t)));
+      ret = ecalloc(vertex_t *, 1, sizeof(vertex_t));
 
    return ret;
 }
@@ -127,7 +127,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
       memset(ret, 0, sizeof(dynaseg_t));
    }
    else
-      ret = (dynaseg_t *)(calloc(1, sizeof(dynaseg_t)));
+      ret = ecalloc(dynaseg_t *, 1, sizeof(dynaseg_t));
 
    return ret;
 }
@@ -159,7 +159,7 @@ static rpolyobj_t *R_GetFreeRPolyObj(void)
       memset(ret, 0, sizeof(rpolyobj_t));
    }
    else
-      ret = (rpolyobj_t *)(calloc(1, sizeof(rpolyobj_t)));
+      ret = ecalloc(rpolyobj_t *, 1, sizeof(rpolyobj_t));
 
    return ret;
 }

@@ -546,7 +546,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Configure framebuffer texture
    texturesize = framebuffer_umax * framebuffer_vmax * 4;
-   tempbuffer = (GLvoid *)calloc(framebuffer_umax * 4, framebuffer_vmax);
+   tempbuffer = ecalloc(GLvoid *, framebuffer_umax * 4, framebuffer_vmax);
    GL_BindTextureAndRemember(textureid);
    
    // villsa 05/29/11: set filtering otherwise texture won't render
@@ -564,7 +564,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Allocate framebuffer data, or PBOs
    if(!use_arb_pbo)
-      framebuffer = (Uint32 *)calloc(v_w * 4, v_h);
+      framebuffer = ecalloc(Uint32 *, v_w * 4, v_h);
    else
    {
       pglGenBuffersARB(2, pboIDs);

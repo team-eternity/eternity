@@ -1291,7 +1291,8 @@ void S_Init(int sfxVolume, int musicVolume)
       // simultaneously) within zone memory.
 
       // killough 10/98:
-      channels = (channel_t *)(calloc(numChannels = default_numChannels, sizeof(channel_t)));
+      numChannels = default_numChannels;
+      channels = ecalloc(channel_t *, numChannels, sizeof(channel_t));
    }
 
    if(s_precache)        // sf: option to precache sounds
@@ -1405,7 +1406,7 @@ musicinfo_t *S_MusicForName(const char *name)
    }
    if(lumpnum >= 0)
    {
-      mus = (musicinfo_t *)(calloc(1, sizeof(musicinfo_t)));
+      mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
       mus->name = strdup(nameToUse);
 
       // The music code should prefix the sound name to get the lump if:
@@ -1438,7 +1439,7 @@ void S_UpdateMusic(const char *lumpname)
    if(!music) // not found in list?
    {
       // build a new musicinfo_t
-      music = (musicinfo_t *)(calloc(1 ,sizeof(*music)));
+      music = ecalloc(musicinfo_t *, 1 ,sizeof(*music));
       music->name = strdup(musname);
       
       // hook into hash list

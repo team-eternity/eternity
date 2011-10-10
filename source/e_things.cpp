@@ -658,7 +658,7 @@ void E_CollectThings(cfg_t *tcfg)
    int i;
 
    // allocate array
-   mobjinfo = (mobjinfo_t *)(calloc(NUMMOBJTYPES, sizeof(mobjinfo_t)));
+   mobjinfo = ecalloc(mobjinfo_t *, NUMMOBJTYPES, sizeof(mobjinfo_t));
 
    // 08/17/09: allocate metatables
    for(i = 0; i < NUMMOBJTYPES; ++i)
@@ -2142,7 +2142,7 @@ void E_ProcessThings(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing thing data\n");
 
    // allocate inheritance stack and hitlist
-   thing_hitlist = (byte *)(calloc(NUMMOBJTYPES, sizeof(byte)));
+   thing_hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
    thing_pstack  = (int *) (malloc(NUMMOBJTYPES * sizeof(int)));
 
    // 01/17/07: initialize ACS thingtypes array

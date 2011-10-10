@@ -138,7 +138,7 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
       len = (size_t)tempLen; // FIXME: size_t
       if(len != 0)
       {
-         str = (char *)(calloc(1, len));
+         str = ecalloc(char *, 1, len);
          loadfile->Read(str, len);
       }
       else
@@ -688,7 +688,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       Thinker     *newThinker;
 
       // allocate thinker table
-      thinker_p = (Thinker **)(calloc(num_thinkers+1, sizeof(Thinker *)));
+      thinker_p = ecalloc(Thinker **, num_thinkers+1, sizeof(Thinker *));
 
       // clear out the thinker list
       P_RemoveAllThinkers();
@@ -1495,7 +1495,7 @@ void P_LoadGame(const char *filename)
          WadDirectory *dir;
 
          // read a name of len bytes 
-         char *fn = (char *)(calloc(1, len));
+         char *fn = ecalloc(char *, 1, len);
          arc.ArchiveCString(fn, (size_t)len);
 
          // Try to get an existing managed wad first. If none such exists, try
@@ -1518,7 +1518,7 @@ void P_LoadGame(const char *filename)
 
       if(memcmp(&checksum, &rchecksum, sizeof checksum))
       {
-         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
+         char *msg = ecalloc(char *, 1, strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
             strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));

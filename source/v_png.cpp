@@ -348,9 +348,8 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
       if(!outpal)
       {
          // Pure copy, no requantization
-         return (byte *)(memcpy(calloc(height, pitch), 
-                                surface,
-                                height * pitch));
+         byte *output = ecalloc(byte *, height, pitch);
+         return (byte *)(memcpy(output, surface, height * pitch));
       }
       else
       {

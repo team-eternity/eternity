@@ -227,7 +227,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       }
 
       // create a new mod
-      mod = (emod_t *)(calloc(1, sizeof(emod_t)));
+      mod = ecalloc(emod_t *, 1, sizeof(emod_t));
 
       mod->name = strdup(title);
       mod->num  = num;

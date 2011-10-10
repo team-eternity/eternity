@@ -755,7 +755,7 @@ char *D_DoomExeName(void)
       while(p[i] && p[i] != '.')
          i++;
 
-      name = (char *)(calloc(1, i + 1));
+      name = ecalloc(char *, 1, i + 1);
 
       strncpy(name, p, i);
    }
@@ -2076,7 +2076,7 @@ char *FindIWADFile(void)
       baseiwad = strdup(basename);
       M_NormalizeSlashes(baseiwad);
 
-      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
+      iwad = ecalloc(char *, 1, strlen(baseiwad) + 1024);
       strcpy(iwad, baseiwad);
       
       if(WadFileStatus(iwad, &isdir))
@@ -2120,14 +2120,14 @@ char *FindIWADFile(void)
       case 1:
          if(iwad)
             free(iwad);
-         iwad = (char *)(calloc(1, strlen(D_DoomExeDir()) + 1024));
+         iwad = ecalloc(char *, 1, strlen(D_DoomExeDir()) + 1024);
          strcpy(iwad, j ? D_DoomExeDir() : ".");
          break;
       case 2:
          // haleyjd: try basegamepath too when -game was used
          if(iwad)
             free(iwad);
-         iwad = (char *)(calloc(1, strlen(basegamepath) + 1024));
+         iwad = ecalloc(char *, 1, strlen(basegamepath) + 1024);
          strcpy(iwad, basegamepath);
          break;
       }
@@ -2201,7 +2201,7 @@ char *FindIWADFile(void)
       {
          if(iwad)
             free(iwad);
-         iwad = (char *)(calloc(1, sizeof(p) + 1024));
+         iwad = ecalloc(char *, 1, sizeof(p) + 1024);
          M_NormalizeSlashes(strcpy(iwad, p));
          if(WadFileStatus(iwad, &isdir))
          {
@@ -2562,7 +2562,7 @@ void FindResponseFile(void)
             int k;
             printf("\nResponse file empty!\n");
 
-            newargv = (char **)(calloc(sizeof(char *), MAXARGVS));
+            newargv = ecalloc(char **, sizeof(char *), MAXARGVS);
             newargv[0] = myargv[0];
             for(k = 1, index = 1; k < myargc; k++)
             {
@@ -2578,7 +2578,7 @@ void FindResponseFile(void)
                 (index = myargc - i - 1) * sizeof(myargv[0]));
 
          firstargv = myargv[0];
-         newargv = (char **)(calloc(sizeof(char *),MAXARGVS));
+         newargv = ecalloc(char **, sizeof(char *), MAXARGVS);
          newargv[0] = firstargv;
 
          {

@@ -39,7 +39,6 @@
 #undef malloc
 #undef free
 #undef realloc
-#undef calloc
 #undef strdup
 
 // Include system definitions so that prototypes become
@@ -141,13 +140,11 @@ void  Z_SysFree(void *p);
 #undef malloc
 #undef free
 #undef realloc
-#undef calloc
 #undef strdup
 
 #define malloc(n)          (Z_Malloc) (n,    PU_STATIC,0,__FILE__,__LINE__)
 #define free(p)            (Z_Free)   (p,                __FILE__,__LINE__)
 #define realloc(p,n)       (Z_Realloc)(p,n,  PU_STATIC,0,__FILE__,__LINE__)
-#define calloc(n1,n2)      (Z_Calloc) (n1,n2,PU_STATIC,0,__FILE__,__LINE__)
 #define strdup(s)          (Z_Strdup) (s,    PU_STATIC,0,__FILE__,__LINE__)
 
 template<typename T> inline T ecalloc_impl(size_t n1, size_t n2, const char *file, int line)

@@ -2092,7 +2092,7 @@ void D_DEHQueueInit(void)
 void D_QueueDEH(const char *filename, int lumpnum)
 {
    // allocate a new dehqueue_t
-   dehqueueitem_t *newdq = (dehqueueitem_t *)(calloc(1, sizeof(dehqueueitem_t)));
+   dehqueueitem_t *newdq = ecalloc(dehqueueitem_t *, 1, sizeof(dehqueueitem_t));
 
    // if filename is valid, this is a file DEH
    if(filename)

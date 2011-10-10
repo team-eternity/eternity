@@ -411,7 +411,7 @@ sfxinfo_t *E_NewWadSound(const char *name)
    if(!sfx)
    {
       // create a new one and hook into hashchain
-      sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+      sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
@@ -440,7 +440,7 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    sfxinfo_t *sfx;
 
    // create a new one and hook into hashchain
-   sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+   sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
    strncpy(sfx->name,     name,      9);
    strncpy(sfx->mnemonic, mnemonic, 33);
@@ -1318,7 +1318,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = (numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+   tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
    for(i = 0; i < numcmds; ++i)
    {
@@ -1375,7 +1375,7 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = ((unsigned int)numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+   tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
    while((line = E_GetHeredocLine(&rover)))
    {
@@ -1461,7 +1461,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    else
    {
       // Create a new sound sequence object
-      newSeq = (ESoundSeq_t *)(calloc(1, sizeof(ESoundSeq_t)));
+      newSeq = ecalloc(ESoundSeq_t *, 1, sizeof(ESoundSeq_t));
       
       // copy keys into sequence object
       strncpy(newSeq->name, name, 33);

@@ -629,7 +629,7 @@ static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
 static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
                                   int tl_level, char *patch)
 {
-   hu_patchwidget_t *newpw = (hu_patchwidget_t *)(calloc(1, sizeof(hu_patchwidget_t)));
+   hu_patchwidget_t *newpw = ecalloc(hu_patchwidget_t *, 1, sizeof(hu_patchwidget_t));
 
    // set id
    strncpy(newpw->widget.name, name, 33);
@@ -936,7 +936,7 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                                  char *message, int cleartic, int flags)
 {
-   hu_textwidget_t *newtw = (hu_textwidget_t *)(calloc(1, sizeof(hu_textwidget_t)));
+   hu_textwidget_t *newtw = ecalloc(hu_textwidget_t *, 1, sizeof(hu_textwidget_t));
 
    // set id
    strncpy(newtw->widget.name, name, 33);

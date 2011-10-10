@@ -1099,7 +1099,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
 //
 static void PushRange(tr_pstate_t *pstate)
 {
-   tr_range_t *newrange = (tr_range_t *)(calloc(1, sizeof(tr_range_t)));
+   tr_range_t *newrange = ecalloc(tr_range_t *, 1, sizeof(tr_range_t));
 
    newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
    newrange->srcend   = COLOR_CLAMP(pstate->srcend);
@@ -1309,7 +1309,7 @@ byte *E_ParseTranslation(const char *str)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = (byte *)(calloc(1, 256));
+   byte *translation = ecalloc(byte *, 1, 256);
    tr_pstate_t parserstate;
 
    tokenbuf.initCreate();

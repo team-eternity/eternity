@@ -336,7 +336,7 @@ static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_
 //
 static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 {
-   LevelInfoProto_t *newProto = (LevelInfoProto_t *)(calloc(1, sizeof(LevelInfoProto_t)));
+   LevelInfoProto_t *newProto = ecalloc(LevelInfoProto_t *, 1, sizeof(LevelInfoProto_t));
 
    // reallocate prototype pointers array if necessary
    if(numPrototypes >= numPrototypesAlloc)

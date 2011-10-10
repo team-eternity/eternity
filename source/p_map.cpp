@@ -85,7 +85,7 @@ void P_PushClipStack(void)
    doom_mapinter_t *newclip;
 
    if(!unusedclip)
-      newclip = (doom_mapinter_t *)(calloc(1, sizeof(doom_mapinter_t)));
+      newclip = ecalloc(doom_mapinter_t *, 1, sizeof(doom_mapinter_t));
    else
    {
       // SoM: Do not clear out the spechit stuff

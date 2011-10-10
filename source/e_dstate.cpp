@@ -145,7 +145,7 @@ static edecparser_t DSP;
 //
 static void E_AddBufferedState(int type, const char *name, int linenum)
 {
-   estatebuf_t *newbuf = (estatebuf_t *)(calloc(1, sizeof(estatebuf_t)));
+   estatebuf_t *newbuf = ecalloc(estatebuf_t *, 1, sizeof(estatebuf_t));
 
    newbuf->type = type;
 
@@ -1834,7 +1834,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       return NULL;
 
    // Create the DSO object
-   newdso = (edecstateout_t *)(calloc(1, sizeof(edecstateout_t)));
+   newdso = ecalloc(edecstateout_t *, 1, sizeof(edecstateout_t));
 
    // number of states to allocate is the number of declared states plus the
    // number of gotos which generate their own blank state with an immediate
@@ -1853,7 +1853,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       E_ReallocStates(totalstates);
 
       // Allocate the new states as a block
-      newstates = (state_t *)(calloc(totalstates, sizeof(state_t)));
+      newstates = ecalloc(state_t *, totalstates, sizeof(state_t));
 
       // Initialize states
       for(i = DSP.firststate; i < NUMSTATES; ++i)
@@ -1871,18 +1871,18 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
    // allocate arrays in the DSO object at worst-case sizes for efficiency
 
    // there can't be more labels to assign than labels that are defined
-   newdso->states = (edecstate_t *)(calloc(DSP.numdeclabels, sizeof(*newdso->states)));
+   newdso->states = ecalloc(edecstate_t *, DSP.numdeclabels, sizeof(*newdso->states));
    newdso->numstatesalloc = DSP.numdeclabels;
 
    if(DSP.numgotos)
    {
       // there can't be more gotos to externally fixup than the total number
       // of gotos
-      newdso->gotos = (egoto_t *)(calloc(DSP.numgotos, sizeof(*newdso->gotos)));
+      newdso->gotos = ecalloc(egoto_t *, DSP.numgotos, sizeof(*newdso->gotos));
       newdso->numgotosalloc = DSP.numgotos;
 
       // also allocate the internal goto list for the internal relocation pass
-      DSP.internalgotos = (internalgoto_t *)(calloc(DSP.numgotos, sizeof(*DSP.internalgotos)));
+      DSP.internalgotos = ecalloc(internalgoto_t *, DSP.numgotos, sizeof(*DSP.internalgotos));
       DSP.numinternalgotos = 0;
       DSP.numinternalgotosalloc = DSP.numgotos;
    }
@@ -1890,7 +1890,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
    // We have counted the number of stops after labels exactly.
    if(DSP.numstops)
    {
-      newdso->killstates = (ekillstate_t *)(calloc(DSP.numstops, sizeof(*newdso->killstates)));
+      newdso->killstates = ecalloc(ekillstate_t *, DSP.numstops, sizeof(*newdso->killstates));
       newdso->numkillsalloc = DSP.numstops;
    }
 

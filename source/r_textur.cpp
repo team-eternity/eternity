@@ -334,7 +334,7 @@ static texturehandler_t TextureHandlers[] =
 //
 static texturelump_t *R_InitTextureLump(const char *lname, bool required)
 {
-   texturelump_t *tlump = (texturelump_t *)(calloc(1, sizeof(texturelump_t)));
+   texturelump_t *tlump = ecalloc(texturelump_t *, 1, sizeof(texturelump_t));
 
    if(required)
       tlump->lumpnum = W_GetNumForName(lname);
@@ -1511,7 +1511,7 @@ void R_LoadDoom1(void)
    tx1 = tx2 = 0;
 
    lumplen = W_LumpLength(lumpnum);
-   lump    = (char *)(calloc(1, lumplen + 1));
+   lump    = ecalloc(char *, 1, lumplen + 1);
    
    wGlobalDir.ReadLump(lumpnum, lump);
    

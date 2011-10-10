@@ -1044,7 +1044,7 @@ void deh_procThing(DWFILE *fpin, char *line)
 static void deh_createArgList(state_t *state)
 {
    if(!state->args)
-      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t)));
+      state->args = ecalloc(arglist_t *, 1, sizeof(arglist_t));
 }
 
 // ====================================================================

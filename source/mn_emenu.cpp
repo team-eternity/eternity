@@ -171,7 +171,7 @@ static void MN_HashDynamicMenu(menu_t *menu)
 //
 static menu_t *MN_CreateDynamicMenu(const char *name)
 {
-   menu_t *newMenu = (menu_t *)(calloc(1, sizeof(menu_t)));
+   menu_t *newMenu = ecalloc(menu_t *, 1, sizeof(menu_t));
 
    // set name
    if(strlen(name) > 32)
@@ -238,7 +238,7 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
       return NULL;
 
    // add one to itemCount for the it_end terminator
-   items = (menuitem_t *)(calloc(itemCount + 1, sizeof(menuitem_t)));
+   items = ecalloc(menuitem_t *, itemCount + 1, sizeof(menuitem_t));
 
    for(i = 0; i < itemCount; ++i)
    {

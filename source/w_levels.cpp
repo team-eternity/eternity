@@ -104,7 +104,7 @@ static manageddir_t *W_addManagedDir(const char *filename)
    if(w_dirhash.objectForKey(filename))
       return NULL;
 
-   newdir = (manageddir_t *)(calloc(1, sizeof(manageddir_t)));
+   newdir = ecalloc(manageddir_t *, 1, sizeof(manageddir_t));
 
    newdir->name = strdup(filename);
 
@@ -320,7 +320,7 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
    // start out with a small set of levels
    numlevels = 0;
    numlevelsalloc = 8;
-   levels = (wadlevel_t *)(calloc(numlevelsalloc, sizeof(wadlevel_t)));
+   levels = ecalloc(wadlevel_t *, numlevelsalloc, sizeof(wadlevel_t));
 
    // find all the lumps
    for(i = 0; i < numlumps; i++)

@@ -687,7 +687,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = (visplane_t *)(calloc(1, sizeof *check));
+      check = ecalloc(visplane_t *, 1, sizeof *check);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -705,11 +705,11 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
          free(check->pad3);
 
       check->max_width = video.width;
-      check->pad1 = (int *)(calloc(1, (video.width + 2) * sizeof(int)));
+      check->pad1 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
       check->top = check->pad1 + 1;
       check->pad2 = check->pad1 + video.width + 1;
 
-      check->pad3 = (int *)(calloc(1, (video.width + 2) * sizeof(int)));
+      check->pad3 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
       check->bottom = check->pad3 + 1;
       check->pad4 = check->pad3 + video.width + 1;
    }

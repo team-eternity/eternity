@@ -404,7 +404,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
                                           const char *end_marker, 
                                           int li_namespace)
 {
-   lumpinfo_t **marked = (lumpinfo_t **)(calloc(sizeof(*marked), this->numlumps));
+   lumpinfo_t **marked = ecalloc(lumpinfo_t **, sizeof(*marked), this->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -466,7 +466,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
    
    if(mark_end)                                     // add end marker
    {
-      lumpinfo_t *newlump = (lumpinfo_t *)(calloc(1, sizeof(lumpinfo_t)));
+      lumpinfo_t *newlump = ecalloc(lumpinfo_t *, 1, sizeof(lumpinfo_t));
       int lNumLumps = this->numlumps;
       AddInfoPtr(newlump); // haleyjd: track it
       this->lumpinfo[lNumLumps] = newlump;

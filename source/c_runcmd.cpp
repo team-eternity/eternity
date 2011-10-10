@@ -118,10 +118,10 @@ static void C_initCmdTokens(void)
       int i;
 
       // haleyjd: MAXTOKENS is now just the starting size of the array
-      cmdtokens = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
+      cmdtokens = ecalloc(qstring **, MAXTOKENS, sizeof(qstring *));
       numtokensalloc = MAXTOKENS;
 
-      Console.argv = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
+      Console.argv = ecalloc(qstring **, MAXTOKENS, sizeof(qstring *));
       Console.numargvsalloc = MAXTOKENS;
 
       for(i = 0; i < numtokensalloc; i++)
@@ -518,7 +518,7 @@ void C_RunTextCmd(const char *command)
          
          // left
          // copy sub command, alloc slightly more than needed
-         sub_command = (char *)(calloc(1, rover-command+3)); 
+         sub_command = ecalloc(char *, 1, rover-command+3); 
          strncpy(sub_command, command, rover-command);
          sub_command[rover-command] = '\0';   // end string
          
