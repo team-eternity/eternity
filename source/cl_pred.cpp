@@ -103,7 +103,6 @@ void CL_RePredict(unsigned int start, unsigned int end)
 {
    unsigned int i;
 
-   printf("CL_RePredict: Re-predicting from %u to %u.\n", start, end);
    cl_predicting = true;
    for(i = start; i < end; i++)
    {
