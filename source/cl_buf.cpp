@@ -69,8 +69,11 @@ void NetPacket::process()
 
    switch(getType())
    {
-   case nm_gamestate:
-      CL_HandleGameStateMessage((nm_gamestate_t *)data);
+   case nm_initialstate:
+      CL_HandleInitialStateMessage((nm_initialstate_t *)data);
+      break;
+   case nm_currentstate:
+      CL_HandleCurrentStateMessage((nm_currentstate_t *)data);
       break;
    case nm_sync:
       CL_HandleSyncMessage((nm_sync_t *)data);

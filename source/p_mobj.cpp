@@ -273,8 +273,11 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       firsttime = false;
    }
 
-   if(mobj->type == blood_type ||
-      mobj->type == puff_type  ||
+   if(mobj->type == blood_type          ||
+      mobj->type == puff_type           ||
+      (mobj->flags & MF_PICKUP)         ||
+      (mobj->flags & MF_SPECIAL)        ||
+      (mobj->flags3 & MF3_3DDECORATION) ||
       mobj == players[consoleplayer].mo)
    {
       client_should_handle = true;

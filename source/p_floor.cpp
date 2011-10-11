@@ -1212,6 +1212,7 @@ int EV_BuildStairs(line_t *line, stair_e type)
          }
       } // end if
    }
+   return rtn;
 }
 
 void P_SpawnStairs(line_t *line, sector_t *sec, stair_e type)

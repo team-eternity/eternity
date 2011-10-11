@@ -45,7 +45,8 @@ void  CL_SendTeamMessage(const char *message);
 void  CL_BroadcastMessage(const char *message);
 void  CL_Spectate(void);
 
-void CL_HandleGameStateMessage(nm_gamestate_t *message);
+void CL_HandleInitialStateMessage(nm_initialstate_t *message);
+void CL_HandleCurrentStateMessage(nm_currentstate_t *message);
 void CL_HandleSyncMessage(nm_sync_t *message);
 void CL_HandleMapStartedMessage(nm_mapstarted_t *message);
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message);

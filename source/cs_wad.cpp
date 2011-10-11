@@ -46,6 +46,7 @@
 #include "cs_demo.h"
 #include "cs_config.h"
 #include "cs_wad.h"
+#include "cl_buf.h"
 
 extern wfileadd_t *wadfiles;
 extern int texturecount;
@@ -326,6 +327,12 @@ bool CS_LoadMap(void)
    if(!need_new_wad_dir())
       return false;
 
+   // [CG] This may take a while, and the client might timeout as a result, so
+   //      service the network in an independent thread (that buffers all
+   //      received messages) until we're finished here.
+   if(CS_CLIENT)
+      cl_packet_buffer.startBufferingIndependently();
+
    // Z_LogPrintf("=== Start Logging (%u) ===\n", ++map_change_count);
 
    S_StopMusic();
@@ -348,6 +355,10 @@ bool CS_LoadMap(void)
    }
    wGlobalDir.InitMultipleFiles(wadfiles);
    D_ReInitWadfiles();
+
+   if(CS_CLIENT)
+      cl_packet_buffer.stopBufferingIndependently();
+
    return true;
 }
 

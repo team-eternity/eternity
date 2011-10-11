@@ -665,8 +665,8 @@ void G_DoLoadLevel(void)
    }
 
    // [CG] Clear the Net ID stacks.
-   if(!clientserver || !clientside)
-      CS_ClearNetIDs();
+   // if(!clientserver || !clientside)
+   CS_ClearNetIDs();
 
    // haleyjd 07/28/10: Waaaay too early for this.
    //gamestate = GS_LEVEL;

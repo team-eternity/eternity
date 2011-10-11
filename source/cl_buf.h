@@ -112,6 +112,7 @@ public:
    void stopBufferingIndependently();
    void processPacketsForIndex(uint32_t index);
    void processAllPackets();
+   bool bufferingIndependently() const { return buffering_independently; }
 
    friend int CL_serviceNetwork(void *);
 

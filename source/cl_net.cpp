@@ -249,22 +249,24 @@ void CL_SendTeamRequest(teamcolor_t team)
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
-void CL_SendSyncRequest(void)
+void CL_SendCurrentStateRequest(void)
 {
-   nm_syncrequest_t message;
+   nm_clientrequest_t message;
 
-   message.message_type = nm_syncrequest;
+   message.message_type = nm_clientrequest;
+   message.request_type = scr_current_state;
 
-   send_packet(&message, sizeof(nm_syncrequest_t));
+   send_packet(&message, sizeof(nm_clientrequest_t));
 }
 
-void CL_SendSyncReceived(void)
+void CL_SendSyncRequest(void)
 {
-   nm_syncreceived_t message;
+   nm_clientrequest_t message;
 
-   message.message_type = nm_syncreceived;
+   message.message_type = nm_clientrequest;
+   message.request_type = scr_sync;
 
-   send_packet(&message, sizeof(nm_syncreceived_t));
+   send_packet(&message, sizeof(nm_clientrequest_t));
 }
 
 void CL_SendAuthMessage(const char *password)
@@ -322,29 +324,13 @@ void CL_Spectate(void)
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
-void CL_HandleGameStateMessage(nm_gamestate_t *message)
+void CL_HandleInitialStateMessage(nm_initialstate_t *message)
 {
    Mobj *mo;
    Thinker *th;
    unsigned int i;
    unsigned int new_num = message->player_number;
-
-   if(message->map_number > cs_map_count)
-   {
-      I_Error(
-         "CL_HandleGameStateMessage: Invalid map number %d.\n",
-         message->map_number
-      );
-   }
-
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      if(!th)
-         break;
-
-      if((mo = thinker_cast<Mobj *>(th)))
-         CL_RemoveMobj(mo);
-   }
+   int mn = message->map_number;
 
    // [CG] consoleplayer and displayplayer will both be zero at this point, so
    //      copy clients[0] and players[0] to "new_num" in their respective
@@ -369,7 +355,31 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
       CL_SendPlayerScalarInfo(ci_weapon_speed);
    }
 
+   if(mn > cs_map_count)
+      I_Error("CL_HandleInitialStateMessage: Invalid map number %d.\n", mn);
+
+   for(th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      if(!th)
+         break;
+
+      if((mo = thinker_cast<Mobj *>(th)))
+         CL_RemoveMobj(mo);
+   }
+
    cs_current_map_number = message->map_number;
+   rngseed = message->rngseed;
+   CS_ReloadDefaults();
+   memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
+   CS_ApplyConfigSettings();
+   CS_LoadMap();
+
+   CL_SendCurrentStateRequest();
+}
+
+void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
+{
+   unsigned int i;
 
    for(i = 0; i < MAXPLAYERS; i++)
       playeringame[i] = message->playeringame[i];
@@ -386,26 +396,18 @@ void CL_HandleGameStateMessage(nm_gamestate_t *message)
       return;
    }
 
-   rngseed = message->rngseed;
-   CS_ReloadDefaults();
-   memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
-   CS_ApplyConfigSettings();
-
-   cl_packet_buffer.startBufferingIndependently();
-   CS_InitNew();
    memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
    memcpy(team_scores, message->team_scores, sizeof(int32_t) * team_color_max);
 
    M_WriteFile(
       cs_state_file_path,
-      ((char *)message)+ sizeof(nm_gamestate_t),
+      ((char *)message)+ sizeof(nm_currentstate_t),
       message->state_size
    );
 
    cl_setting_sector_positions = true;
    P_LoadGame(cs_state_file_path);
    cl_setting_sector_positions = false;
-   cl_packet_buffer.stopBufferingIndependently();
 
    CL_SendSyncRequest();
    cl_flush_packet_buffer = true;
@@ -422,7 +424,6 @@ void CL_HandleSyncMessage(nm_sync_t *message)
    cl_flush_packet_buffer = true;
    cl_received_sync = true;
    CS_UpdateQueueMessage();
-   CL_SendSyncReceived();
 }
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
@@ -447,6 +448,8 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    unsigned int i;
    static unsigned int demo_map_number = 0;
 
+   printf("Handling map started message.\n");
+
    if(cs_demo_playback)
    {
       if(demo_map_number == cs_current_demo_map)
@@ -466,18 +469,11 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 
    demo_map_number = cs_current_demo_map;
 
-   gametic = message->gametic;
-   levelstarttic = message->gametic;
-   basetic = message->gametic;
-   leveltime = message->gametic;
-
-   for(i = 0; i < MAXPLAYERS; i++)
-      playeringame[i] = message->playeringame[i];
-
+   CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
+   CS_ApplyConfigSettings();
 
-   CS_ClearNetIDs();
-
+   /*
    if(cs_demo_recording)
    {
       // [CG] Add a demo for the new map, then write the map started message to
@@ -491,37 +487,11 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
          CS_StopDemo();
       }
    }
+   */
 
-   cl_packet_buffer.startBufferingIndependently();
    CS_DoWorldDone();
 
-   for(i = 0; i < MAXPLAYERS; i++)
-   {
-      if(!playeringame[i])
-         continue;
-
-      if(!players[i].mo)
-         continue;
-
-      if(players[i].mo->net_id != 0 &&
-         players[i].mo->net_id != message->net_ids[i])
-      {
-         I_Error(
-            "Net ID for %d did not match (%u/%u), exiting.\n",
-            i, players[i].mo->net_id, message->net_ids[i]
-         );
-      }
-
-      players[i].mo->net_id = message->net_ids[i];
-
-      if(players[i].mo->net_id != 0)
-         NetActors.add(players[i].mo);
-   }
-   cl_packet_buffer.stopBufferingIndependently();
-
-   cl_flush_packet_buffer = true;
-   cl_received_sync = true;
-   CS_UpdateQueueMessage();
+   CL_SendCurrentStateRequest();
 }
 
 void CL_HandleAuthResultMessage(nm_authresult_t *message)

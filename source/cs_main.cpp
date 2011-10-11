@@ -115,14 +115,14 @@ const char *disconnection_strings[dr_max_reasons] = {
 };
 
 const char *network_message_names[nm_max_messages] = {
-   "game state",
-   "sync request",
+   "initial state",
+   "current state",
    "sync",
-   "sync received",
+   "client request",
    "map started",
    "map completed",
-   "auth result",
-   "client init",
+   "authorization result",
+   "client initialization",
    "player command",
    "client status",
    "player spawned",
@@ -151,7 +151,7 @@ const char *network_message_names[nm_max_messages] = {
    "special status",
    "special removed",
    "sector position",
-   "sound played",
+   "announcer event",
    "tic finished",
 };
 
@@ -168,20 +168,16 @@ void Handler_spectate(void);
 void Handler_spectate_next(void);
 void Handler_spectate_prev(void);
 
-static void build_game_state(nm_gamestate_t *message)
+static void build_game_state(nm_currentstate_t *message)
 {
    unsigned int i;
 
-   message->message_type = nm_gamestate;
-   message->map_number = cs_current_map_number;
-   message->rngseed = rngseed;
+   message->message_type = nm_currentstate;
    memcpy(message->flags, cs_flags, sizeof(flag_t) * team_color_max);
    memcpy(message->team_scores, team_scores, sizeof(int32_t) * team_color_max);
 
    for(i = 0; i < MAXPLAYERS; i++)
       message->playeringame[i] = playeringame[i];
-
-   memcpy(&message->settings, cs_settings, sizeof(clientserver_settings_t));
 }
 
 static int build_save_buffer(byte **buffer)
@@ -250,6 +246,7 @@ void CS_DoWorldDone(void)
             client->join_tic = gametic;
             server_client->commands_dropped = 0;
             server_client->last_command_run_index = 0;
+            server_client->received_game_state = false;
             M_QueueFree(&server_client->commands);
             memset(
                server_client->positions, 0, MAX_POSITIONS * sizeof(position_t)
@@ -440,9 +437,9 @@ void CS_ZeroClient(int clientnum)
       sc = &server_clients[clientnum];
       sc->connect_id = 0;
       memset(&sc->address, 0, sizeof(ENetAddress));
-      sc->added = false;
-      sc->synchronized = false;
       sc->auth_level = cs_auth_none;
+      sc->current_request = scr_none;
+      sc->received_game_state = false;
       sc->last_auth_attempt = 0;
       sc->commands_dropped = 0;
       sc->last_command_run_index = 0;
@@ -484,21 +481,20 @@ size_t CS_BuildGameState(int playernum, byte **buffer)
 {
    int state_size;
    byte *savebuffer;
-   nm_gamestate_t message;
+   nm_currentstate_t message;
 
    build_game_state(&message);
    state_size = build_save_buffer(&savebuffer);
 
    message.state_size = state_size;
-   message.player_number = playernum;
 
-   *buffer = (byte *)(malloc(sizeof(nm_gamestate_t) + state_size));
-   memcpy(*buffer, &message, sizeof(nm_gamestate_t));
-   memcpy(*buffer + sizeof(nm_gamestate_t), savebuffer, state_size);
+   *buffer = (byte *)(malloc(sizeof(nm_currentstate_t) + state_size));
+   memcpy(*buffer, &message, sizeof(nm_currentstate_t));
+   memcpy(*buffer + sizeof(nm_currentstate_t), savebuffer, state_size);
 
    free(savebuffer);
 
-   return sizeof(nm_gamestate_t) + state_size;
+   return sizeof(nm_currentstate_t) + state_size;
 }
 
 bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
@@ -615,7 +611,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    if(CS_SERVER)
       server_client = &server_clients[playernum];
 
-   playeringame[playernum] = true;
+   // playeringame[playernum] = true;
 
    // [CG] Now dealing with client string info.
    if(message->info_type == ci_name ||

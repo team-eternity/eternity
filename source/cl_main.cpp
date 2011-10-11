@@ -297,7 +297,6 @@ void CL_Connect(void)
       doom_printf("Could not connect to server.\nConnection failed!\n");
       net_peer = NULL;
    }
-
 }
 
 void CL_Disconnect(void)
@@ -497,7 +496,8 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    if(cl_current_world_index == 0)
       return;
 
-   if((cl_latest_world_index > cl_current_world_index) &&
+   if(!cl_packet_buffer.bufferingIndependently() &&
+      (cl_latest_world_index > cl_current_world_index) &&
       ((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE))
    {
       /* [CG] Used to disconnect here, now we flush the buffer, even if

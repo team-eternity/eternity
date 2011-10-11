@@ -155,21 +155,21 @@ typedef enum
 
 typedef enum
 {
-   nm_gamestate,               // (s => c) 0,  Game state
-   nm_syncrequest,             // (c => s) 1,  Request sync
+   nm_initialstate,            // (s => c) 0,  Initial game state
+   nm_currentstate,            // (s => c) 1,  Current game state
    nm_sync,                    // (s => c) 2,  Game sync
-   nm_syncreceived,            // (c => s) 3,  Sync received
+   nm_clientrequest,           // (c => s) 3,  Generic client update request
    nm_mapstarted,              // (s => c) 4,  Map started
    nm_mapcompleted,            // (s => c) 5,  Map completed
    nm_authresult,              // (s => c) 6,  Authorization result
    nm_clientinit,              // (s => c) 7,  New client initialization info
    nm_playercommand,           // (c => s) 8,  Player command
-   nm_clientstatus,            // (s => c) 9,  Client's status
+   nm_clientstatus,            // (s => c) 9,  Client status
    nm_playerspawned,           // (s => c) 10, Player's actor spawned
    nm_playerinfoupdated,       // ( both ) 11, Player info
    nm_playerweaponstate,       // (s => c) 12, Player weapon state
    nm_playerremoved,           // (s => c) 13, Player removed
-   nm_playertouchedspecial,    // (s => c) 14, Player touched something special
+   nm_playertouchedspecial,    // (s => c) 14, Player touched special
    nm_servermessage,           // (s => c) 15, Server message
    nm_playermessage,           // ( both ) 16, Player message
    nm_puffspawned,             // (s => c) 17, Puff spawned
@@ -355,13 +355,21 @@ typedef struct
    cs_cmd_t command;
 } cs_buffered_command_t;
 
+typedef enum
+{
+   scr_none,
+   scr_initial_state,
+   scr_current_state,
+   scr_sync,
+} cs_client_request_e;
+
 typedef struct
 {
    enet_uint32 connect_id;
    ENetAddress address;
-   bool added;
-   bool synchronized;
    cs_auth_level_e auth_level;
+   cs_client_request_e current_request;
+   bool received_game_state;
    int last_auth_attempt;
    unsigned int commands_dropped;
    // [CG] This is used to keep track of the player's most recently run
@@ -393,17 +401,14 @@ typedef struct
 #endif
 } server_client_t;
 
-/*
- * [CG] Below are all the network message structure definitions.  Each struct
- *      must be packed (as in, it must be defined within the #pragma
- *      directives) and must use exact-width integer types (such as uint32_t)
- *      in order to ensure that machines of different architectures can still
- *      communicate properly.
- */
+// [CG] Below are all the network message structure definitions.  Each struct
+//      must be packed (as in, it must be defined within the #pragma
+//      directives) and must use exact-width integer types (such as uint32_t)
+//      in order to ensure that machines of different architectures can still
+//      communicate properly.
 
 #pragma pack(push, 1)
 
-// [CG] A save-game-ish blob of data is at the end of this message.
 typedef struct
 {
    int32_t message_type;
@@ -411,17 +416,19 @@ typedef struct
    uint32_t map_number;
    uint32_t rngseed;
    uint32_t player_number;
+   clientserver_settings_t settings;
+} nm_initialstate_t;
+
+// [CG] A save-game-ish blob of data is at the end of this message.
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
    uint64_t state_size;
    flag_t flags[team_color_max];
    int32_t team_scores[team_color_max];
    uint8_t playeringame[MAXPLAYERS];
-   clientserver_settings_t settings;
-} nm_gamestate_t;
-
-typedef struct
-{
-   int32_t message_type;
-} nm_syncrequest_t;
+} nm_currentstate_t;
 
 typedef struct
 {
@@ -436,19 +443,19 @@ typedef struct
 typedef struct
 {
    int32_t message_type;
-} nm_syncreceived_t;
+   int32_t request_type; // [CG] cs_client_request_e
+} nm_clientrequest_t;
+
+typedef struct
+{
+   int32_t message_type;
+} nm_clientready_t;
 
 typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   int32_t gametic;
-   int32_t levelstarttic;
-   int32_t basetic;
-   int32_t leveltime;
-   uint8_t playeringame[MAXPLAYERS];
    clientserver_settings_t settings;
-   uint32_t net_ids[MAXPLAYERS];
 } nm_mapstarted_t;
 
 typedef struct

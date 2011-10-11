@@ -81,6 +81,16 @@
 #include <conio.h>
 #endif
 
+#define SHOULD_SEND_PACKET_TO(i, mt) ( \
+   (((mt) == nm_initialstate) || \
+    ((mt) == nm_currentstate) || \
+    ((mt) == nm_authresult)   || \
+    ((mt) == nm_mapstarted))  || \
+   ((playeringame[(i)]) && \
+    (server_clients[(i)].auth_level >= cs_auth_spectator) && \
+    (server_clients[(i)].received_game_state)) \
+)
+
 extern int levelTimeLimit;
 extern int levelFragLimit;
 extern int levelScoreLimit;
@@ -109,18 +119,29 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    if(peer == NULL)
       return;
 
-   // [CG] Can't send non-auth result packets to players who aren't in the
-   //      game.
-   if(!playeringame[playernum] && message_type != nm_authresult)
+   if(!SHOULD_SEND_PACKET_TO(playernum, message_type))
+   {
+      if(playeringame[playernum])
+      {
+         printf(
+            "Not sending message [%s] to %d.\n", 
+            network_message_names[message_type],
+            playernum
+         );
+      }
+      else if(message_type == nm_initialstate)
+      {
+         printf("WTF.\n");
+      }
       return;
-
-   // client_index = clients[playernum].index;
+   }
 
    switch(message_type)
    {
-   case nm_gamestate:
-      ((nm_gamestate_t *)(buffer))->player_number = playernum;
+   case nm_initialstate:
+      ((nm_initialstate_t *)(buffer))->player_number = playernum;
       break;
+   case nm_currentstate:
    case nm_sync:
    case nm_mapstarted:
    case nm_mapcompleted:
@@ -156,6 +177,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_announcerevent:
    case nm_ticfinished:
       break;
+   case nm_clientrequest:
    case nm_playercommand:
    case nm_max_messages:
    default:
@@ -167,7 +189,8 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    // [CG] The weird style here is so it's easy to omit message transmissions
    //      that you don't want printed out.
    if(
-         message_type == nm_gamestate
+         message_type == nm_initialstate
+      || message_type == nm_currentstate
       || message_type == nm_sync
       || message_type == nm_mapstarted
       || message_type == nm_mapcompleted
@@ -224,13 +247,8 @@ static void send_packet_to_team(int playernum, void *buffer,
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(playeringame[i] && server_clients[i].auth_level > cs_auth_none &&
-         i != playernum && clients[i].team == clients[playernum].team)
-      {
+      if(i != playernum && clients[i].team == clients[playernum].team)
          send_packet(playernum, buffer, buffer_size);
-      }
-   }
 }
 
 static void broadcast_packet(void *buffer, size_t buffer_size)
@@ -238,12 +256,7 @@ static void broadcast_packet(void *buffer, size_t buffer_size)
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      // [CG] We never want to broadcast packets to disconnected or
-      //      unauthorized peers.
-      if(playeringame[i] && server_clients[i].auth_level > cs_auth_none)
-         send_packet(i, buffer, buffer_size);
-   }
+      send_packet(i, buffer, buffer_size);
 }
 
 static void broadcast_packet_excluding(int playernum, void *buffer,
@@ -252,14 +265,8 @@ static void broadcast_packet_excluding(int playernum, void *buffer,
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      // [CG] Same as above, except a certain player is excluded.
-      if(playeringame[i] && server_clients[i].auth_level > cs_auth_none &&
-         i != playernum)
-      {
+      if(i != playernum)
          send_packet(i, buffer, buffer_size);
-      }
-   }
 }
 
 static nm_servermessage_t* build_message(bool hud_msg, bool prepend_name,
@@ -882,10 +889,8 @@ int SV_HandleClientConnection(ENetPeer *peer)
    char *address;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-   {
       if(!playeringame[i])
          break;
-   }
 
    // [CG] No more client spots.
    if(i == MAX_CLIENTS)
@@ -895,12 +900,9 @@ int SV_HandleClientConnection(ENetPeer *peer)
 
    server_client = &server_clients[i];
 
-   // [CG] Start the client's command index at our own command index.
-   // clients[i].index = sv_world_index;
    server_client->connect_id = peer->connectID;
    memcpy(&server_client->address, &peer->address, sizeof(ENetAddress));
 
-   server_client->auth_level = cs_auth_none;
    if(sv_spectator_password == NULL)
    {
       if(sv_player_password == NULL)
@@ -909,7 +911,6 @@ int SV_HandleClientConnection(ENetPeer *peer)
          server_client->auth_level = cs_auth_spectator;
    }
 
-   // doom_printf("Player %d has connected.", i);
    address = CS_IPToString(peer->address.host);
    doom_printf(
       "Player %d has connected (%u, %s:%u).",
@@ -919,6 +920,8 @@ int SV_HandleClientConnection(ENetPeer *peer)
       peer->address.port
    );
    free(address);
+
+   server_clients[i].current_request = scr_initial_state;
 
    return i;
 }
@@ -957,19 +960,19 @@ void SV_BroadcastNewClient(int clientnum)
    );
 }
 
-void SV_AddClient(int playernum)
+void SV_SendCurrentState(int playernum)
 {
    unsigned int i;
    nm_playerspawned_t spawn_message;
    mapthing_t *spawn_point;
+   byte *buffer;
+   size_t message_size;
 
    printf(
       "SV_AddClient (%3u): Adding player %d.\n", sv_world_index, playernum
    );
 
    clients[playernum].join_tic = gametic;
-
-   // SV_BroadcastNewClient(playernum);
 
    spawn_point = CS_SpawnPlayerCorrectly(playernum, true);
    spawn_message.message_type = nm_playerspawned;
@@ -990,7 +993,10 @@ void SV_AddClient(int playernum)
    );
 
    // [CG] Now that we're ready for the client, send it the game's state.
-   SV_SendGameState(playernum);
+   playeringame[playernum] = true;
+   message_size = CS_BuildGameState(playernum, &buffer);
+   send_packet(playernum, buffer, message_size);
+   free(buffer);
 
    // [CG] Send client initialization info for all connected clients to the new
    //      client.
@@ -1000,30 +1006,27 @@ void SV_AddClient(int playernum)
          SV_SendClientInfo(playernum, i);
    }
 
-   // [CG] Sync the client up.
-   // SV_SendSync(playernum);
-
-   server_clients[playernum].added = true;
-
    if(CS_TEAMS_ENABLED)
       clients[playernum].team = team_color_red;
 
    // [CG] Send info on the new client to all the other clients.
    SV_BroadcastNewClient(playernum);
+
+   server_clients[playernum].received_game_state = true;
 }
 
-void SV_AddNewClients(void)
+void SV_SendInitialState(int playernum)
 {
-   unsigned int i;
+   nm_initialstate_t message;
 
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(!server_clients[i].added &&
-         server_clients[i].auth_level >= cs_auth_spectator)
-      {
-         SV_AddClient(i);
-      }
-   }
+   message.message_type = nm_initialstate;
+   message.world_index = sv_world_index;
+   message.map_number = cs_current_map_number;
+   message.rngseed = rngseed;
+   message.player_number = playernum;
+   memcpy(&message.settings, cs_settings, sizeof(clientserver_settings_t));
+
+   send_packet(playernum, &message, sizeof(nm_initialstate_t));
 }
 
 void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
@@ -1145,17 +1148,6 @@ void SV_SayToPlayer(int playernum, const char *fmt, ...)
    va_end(args);
 }
 
-void SV_SendGameState(int playernum)
-{
-   byte *buffer;
-   size_t message_size;
-   
-   playeringame[playernum] = true;
-   message_size = CS_BuildGameState(playernum, &buffer);
-   send_packet(playernum, buffer, message_size);
-   free(buffer);
-}
-
 void SV_SendSync(int playernum)
 {
    nm_sync_t message;
@@ -1176,17 +1168,6 @@ void SV_BroadcastMapStarted(void)
 
    message.message_type = nm_mapstarted;
    message.world_index = sv_world_index;
-   message.gametic = gametic;
-   message.levelstarttic = levelstarttic;
-   message.basetic = basetic;
-   message.leveltime = leveltime;
-
-   for(i = 0; i < MAXPLAYERS; i++)
-   {
-      message.net_ids[i] = 0;
-      message.playeringame[i] = playeringame[i];
-   }
-
    memcpy(&message.settings, cs_settings, sizeof(clientserver_settings_t));
 
    broadcast_packet(&message, sizeof(nm_mapstarted_t));
@@ -1842,15 +1823,13 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    server_client->last_command_received_index = received_command->world_index;
 }
 
-void SV_HandleSyncRequestMessage(char *data, size_t data_length, int playernum)
+void SV_HandleClientRequestMessage(char *data, size_t data_length,
+                                   int playernum)
 {
-   SV_SendSync(playernum);
-}
+   nm_clientrequest_t *message = (nm_clientrequest_t *)data;
+   cs_client_request_e request = (cs_client_request_e)message->request_type;
 
-void SV_HandleSyncReceivedMessage(char *data, size_t data_length,
-                                  int playernum)
-{
-   server_clients[playernum].synchronized = true;
+   server_clients[playernum].current_request = request;
 }
 
 void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id)
@@ -2695,9 +2674,25 @@ void SV_TryRunTics(void)
             //      and checking their state is simple enough.
             SV_BroadcastMapSpecialStatuses();
             SV_UpdateQueueLevels();
-            // [CG] Now that the game loop has finished, servers can send the
-            //      newly-loaded map and/or send game state to new clients.
-            SV_AddNewClients();
+            // [CG] Now that the game loop has finished, servers can address
+            //      new clients and map changes.
+            for(i = 1; i < MAX_CLIENTS; i++)
+            {
+               server_client_t *sc = &server_clients[i];
+
+               if(sc->auth_level < cs_auth_spectator)
+                  continue;
+
+               if(sc->current_request == scr_initial_state)
+                  SV_SendInitialState(i);
+               else if(sc->current_request == scr_current_state)
+                  SV_SendCurrentState(i);
+               else if(sc->current_request == scr_sync)
+                  SV_SendSync(i);
+
+               sc->current_request = scr_none;
+            }
+
             if(sv_should_send_new_map)
             {
                int color;
@@ -2705,11 +2700,10 @@ void SV_TryRunTics(void)
 
                for(i = 1; i < MAXPLAYERS; i++)
                {
-                  if(playeringame[i])
-                  {
-                     server_clients[i].received_command_for_current_map =
-                        false;
-                  }
+                  if(!playeringame[i])
+                     continue;
+
+                  server_clients[i].received_command_for_current_map = false;
                }
 
                SV_BroadcastMapStarted();
@@ -2749,11 +2743,8 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
 
    switch(message_type)
    {
-   case nm_syncrequest:
-      SV_HandleSyncRequestMessage(data, data_length, playernum);
-      break;
-   case nm_syncreceived:
-      SV_HandleSyncReceivedMessage(data, data_length, playernum);
+   case nm_clientrequest:
+      SV_HandleClientRequestMessage(data, data_length, playernum);
       break;
    case nm_playermessage:
       SV_HandlePlayerMessage(data, data_length, playernum);
@@ -2764,7 +2755,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_playercommand:
       SV_HandlePlayerCommandMessage(data, data_length, playernum);
       break;
-   case nm_gamestate:
+   case nm_currentstate:
    case nm_sync:
    case nm_mapstarted:
    case nm_mapcompleted:
