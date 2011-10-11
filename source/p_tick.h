@@ -58,7 +58,7 @@ protected:
 public:
    // Constructor
    Thinker() 
-      : ZoneObject(), removed(false), references(0), ordinal(0), prev(NULL),
+      : ZoneObject(), references(0), removed(false), ordinal(0), prev(NULL),
         next(NULL), cprev(NULL), cnext(NULL)
    {
       ChangeTag(PU_LEVEL);

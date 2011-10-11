@@ -293,6 +293,10 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 // properties across standard Doom sprites:
 #define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
 
+// haleyjd 10/10/11: externalized structure due to template limitations with
+// local struct types in the pre-C++11 standard
+struct rsprhash_s { int index, next; };
+
 //
 // R_InitSpriteDefs
 // Pass a null terminated list of sprite names
@@ -317,7 +321,7 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 static void R_InitSpriteDefs(char **namelist)
 {
    size_t numentries = lastspritelump - firstspritelump + 1;
-   struct rsprhash_s { int index, next; } *hash;
+   rsprhash_s *hash;
    unsigned int i;
    lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
