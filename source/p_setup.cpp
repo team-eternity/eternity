@@ -1480,6 +1480,9 @@ void P_LoadSideDefs2(int lumpnum)
    Z_Free(lump);
 }
 
+// haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
+typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+
 //
 // P_CreateBlockMap
 //
@@ -1544,7 +1547,6 @@ static void P_CreateBlockMap(void)
    //     the linedef.
 
    {
-      typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
       unsigned tot = bmapwidth * bmapheight;                  // size of blockmap
       bmap_t *bmap = ecalloc(bmap_t *, sizeof *bmap, tot);    // array of blocklists
 
