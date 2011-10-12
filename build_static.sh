@@ -81,7 +81,7 @@ then rm -rf sbuild/*
 else mkdir sbuild
 fi
 
-( cd sbuild && SDLDIR=$STATIC_DEPS \
+( cd sbuild && SDLDIR=$STATIC_DEPS/include/SDL \
                SDLNETDIR=$STATIC_DEPS/include/SDL \
                SDLMIXERDIR=$STATIC_DEPS/include/SDL \
                LD_LIBRARY_PATH=$STATIC_DEPS/lib \

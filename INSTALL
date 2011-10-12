@@ -1,19 +1,19 @@
-Basic Installation
+POSIX Installation
 ==================
 
-  Installation on POSIX platforms is done using CMake, better described in
-  README-CMAKE.txt.  The autotools system (autogen.sh, configure.sh, etc.) will
+  Compilation on POSIX platforms is done using CMake, better described in
+  README-CMAKE.txt.  The autotools system (autogen.sh, configure, etc.) will
   not successfully build Eternity.
 
   The installation process installs Eternity to /usr/local/games and the
   Eternity base dir to ~/.eternity/base . This is where the Eternity EDFs and
   WADs are stored, as well as screenshots (in base/shots), client/server demos
-  (in base/demos) and configs (in base/doom and base/heretic). Note that
-  lindirs.sh is the thing setting up the WAD and screenshot dirs, as well as
-  copying over the WADs and EDFs, not make install.
+  (in base/demos), configs (in base/doom and base/heretic), and downloaded
+  WADs. Note that lindirs.sh is the script that sets up the WAD and screenshot
+  dirs, as well as copying over the WADs and EDFs, not make install.
 
   lindirs.sh also checks that an environment variable called ETERNITYBASE
-  exists (this points to the ee base dir) and if not, adds
+  exists (this points to the Eternity base dir) and if not, adds
 
     export ETERNITYBASE='~/.eternity/base'
 
@@ -22,7 +22,26 @@ Basic Installation
   You may also wish to define DOOMWADDIR and DOOMWADPATH in your profile as
   well.
 
-Requirements
+Windows Installation 
+====================
+
+  Windows compilation is best accomplished using the Code::Blocks project file
+  in the codeblocks subdirectory.  You will also need to download the pre-
+  compiled dependencies at
+  http://static.totaltrash.org/eternity/eedeps/mingw.tar.xz.  Once downloaded,
+  decompress them using 7-Zip (available at http://www.7-zip.org) to
+  eedeps\mingw.  So, for example, if your source checkout is at C:\eecs, the
+  full path will be C:\eecs\eedeps\mingw.
+
+Building a Windows Installer
+============================
+
+  You can also build an installer for Windows platforms using NSIS.  You need
+  to download NSIS first (http://nsis.sourceforge.net), build the 'Release'
+  version of Eternity in Code::Blocks, and then compile the main.nsis script
+  in the nsis folder of the Eternity source checkout.
+
+Dependencies
 ============
 
   The following libraries are required in order to build Eternity.
@@ -46,4 +65,30 @@ Requirements
 
   Note that ENet ships a 1.2 version that is incompatible with ENet 1.3, and
   Eternity will not build with it.
+
+  POSIX platforms may require the Mesa OpenGL graphics library, Windows users
+  have GL libraries installed by default, either included by Microsoft or as
+  part of their video card's drivers.  This is only necessary if you want the
+  optional OpenGL support enabled in Eternity.
+
+CentOS Notes
+============
+
+  On a fresh installation of CentOS 5.7, I had to install the following
+  packages before I could compile EE successfully:
+
+  - subversion
+  - gcc
+  - gcc-g++
+  - xz
+  - cmake
+  - pkgconfig
+  - mesa-libGL-devel
+  - mesa-libGLU-devel
+  - mesa-libGLW-devel
+  - mesa-libOSMesa-devel
+
+  Again, the Mesa packages are optional, contingent on whether or not you want
+  OpenGL support in Eternity.  They do pull in several other packages, notably
+  X11 libraries.
 
