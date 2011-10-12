@@ -72,8 +72,8 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
    {
       po->numDSSAlloc = po->numDSSAlloc ? po->numDSSAlloc * 2 : 8;
       po->dynaSubsecs = 
-         (subsector_t **)(realloc(po->dynaSubsecs, 
-                                  po->numDSSAlloc * sizeof(subsector_t *)));
+         erealloc(subsector_t **, po->dynaSubsecs, 
+                  po->numDSSAlloc * sizeof(subsector_t *));
    }
    po->dynaSubsecs[po->numDSS++] = ss;
 }

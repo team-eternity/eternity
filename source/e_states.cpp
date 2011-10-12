@@ -324,7 +324,7 @@ void E_ReallocStates(int numnewstates)
          numstatesalloc += numnewstates;
 
       // reallocate states[]
-      states = (state_t **)(realloc(states, numstatesalloc * sizeof(state_t *)));
+      states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
       // set the new state pointers to NULL
       for(i = NUMSTATES; i < numstatesalloc; ++i)

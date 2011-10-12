@@ -192,7 +192,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    else
    {
       if(mn_start_mapname)
-         free(mn_start_mapname);
+         efree(mn_start_mapname);
       start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
@@ -1196,7 +1196,7 @@ void MN_CreateSaveCmds(void)
       save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
       
       sprintf(tempstr, "savegame_%i", i);
-      save_command->name = strdup(tempstr);
+      save_command->name = estrdup(tempstr);
       save_command->type = ct_variable;
       save_command->flags = 0;
       save_command->variable = save_variable;
@@ -1322,7 +1322,7 @@ void MN_LoadGameDrawer(void)
    int i, y;
 
    if(!emptystr)
-      emptystr = strdup(DEH_String("EMPTYSTRING"));
+      emptystr = estrdup(DEH_String("EMPTYSTRING"));
    
    for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
    {
@@ -1823,15 +1823,15 @@ static void MN_BuildVidmodeTables(void)
    if(mn_vidmode_desc)
    {
       for(i = 0; i < mn_vidmode_num; i++)
-         free(mn_vidmode_desc[i]);
-      free(mn_vidmode_desc);
+         efree(mn_vidmode_desc[i]);
+      efree(mn_vidmode_desc);
       mn_vidmode_desc = NULL;
    }
    if(mn_vidmode_cmds)
    {
       for(i = 0; i < mn_vidmode_num; i++)
-         free(mn_vidmode_cmds[i]);
-      free(mn_vidmode_cmds);
+         efree(mn_vidmode_cmds[i]);
+      efree(mn_vidmode_cmds);
       mn_vidmode_cmds = NULL;
    }
 
@@ -2314,7 +2314,7 @@ static void MN_BuildJSTables(void)
       {
          mn_js_desc[jsnum+1] = joysticks[jsnum].description;
          sprintf(tempstr, "i_joystick %i", jsnum);
-         mn_js_cmds[jsnum+1] = strdup(tempstr);
+         mn_js_cmds[jsnum+1] = estrdup(tempstr);
       }
       mn_js_desc[numJoysticks + 1] = NULL;
       mn_js_cmds[numJoysticks + 1] = NULL;
@@ -3365,7 +3365,7 @@ CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
 
 static void MN_InitSearchStr(void)
 {
-   mn_searchstr = strdup("");
+   mn_searchstr = estrdup("");
 }
 
 // haleyjd: searchable menus
@@ -3452,7 +3452,7 @@ CONSOLE_COMMAND(mn_search, 0)
             if(!pastLast)
                continue;
 
-            desc = M_Strlwr(strdup(item->description));
+            desc = M_Strlwr(estrdup(item->description));
 
             // found a match
             if(strstr(desc, mn_searchstr))
@@ -3463,10 +3463,10 @@ CONSOLE_COMMAND(mn_search, 0)
                MN_ErrorMsg("found: %s", desc);
                if(!is_a_gap(item))
                   curPage->selected = j - 1;
-               free(desc);
+               efree(desc);
                return;
             }
-            free(desc);
+            efree(desc);
          }
 
          curPage = curPage->nextpage;

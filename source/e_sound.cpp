@@ -507,7 +507,7 @@ void E_UpdateSoundCache(void)
       {
          if(cursfx->data)
          {
-            free(cursfx->data);
+            efree(cursfx->data);
             cursfx->data = NULL;
          }
          cursfx = cursfx->next;
@@ -630,7 +630,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       int i;
 
       if(sfx->randomsounds)
-         free(sfx->randomsounds);
+         efree(sfx->randomsounds);
 
       sfx->numrandomsounds = tempint;
 
@@ -645,7 +645,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       // if defining and a randomsound list is already defined, we need to destroy it,
       // as the new definition has not specified any random sounds.
       if(sfx->randomsounds)
-         free(sfx->randomsounds);
+         efree(sfx->randomsounds);
 
       sfx->randomsounds    = NULL;
       sfx->numrandomsounds = 0;
@@ -1323,7 +1323,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    for(i = 0; i < numcmds; ++i)
    {
       tempcmd_t tempcmd;
-      char *tempstr = strdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
+      char *tempstr = estrdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
 
       tempcmd = E_ParseTextLine(tempstr); // parse the command
 
@@ -1333,7 +1333,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
       else
          E_GenerateSeqOp(newSeq, tempcmd, tempcmdbuf, allocused);
 
-      free(tempstr); // free temporary copy of command
+      efree(tempstr); // free temporary copy of command
    } // end for
 
    // now, generate an end command -- doing it this way, we make sure the
@@ -1349,7 +1349,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
-   free(tempcmdbuf);
+   efree(tempcmdbuf);
 }
 
 //
@@ -1407,7 +1407,7 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
-   free(tempcmdbuf);
+   efree(tempcmdbuf);
 }
 
 //
@@ -1524,7 +1524,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
 
    // if a command list already exists, destroy it first
    if(newSeq->commands)
-      free(newSeq->commands);
+      efree(newSeq->commands);
 
    // haleyjd 01/11/11: I have added support for heredoc-based sound sequences,
    // which are exclusive of and preferred to the old syntax. This allows Hexen-

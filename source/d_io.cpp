@@ -151,7 +151,7 @@ void D_Fclose(DWFILE *dwfile)
       Z_ChangeTag(dwfile->lump, PU_CACHE);
       break;
    case DWF_DATA:
-      free(dwfile->data);
+      efree(dwfile->data);
       break;
    case DWF_FILE:
       fclose((FILE *)dwfile->inp);

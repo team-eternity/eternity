@@ -1358,7 +1358,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = (byte *)(realloc(demobuffer, maxdemosize));
+      demobuffer = erealloc(byte *, demobuffer, maxdemosize);
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
@@ -1644,8 +1644,8 @@ void G_ForcedLoadGame(void)
 void G_LoadGame(char *name, int slot, bool command)
 {
    if(savename)
-      free(savename);
-   savename = strdup(name);
+      efree(savename);
+   savename = estrdup(name);
    savegameslot = slot;
    gameaction = ga_loadgame;
    forced_loadgame = false;
@@ -1697,7 +1697,7 @@ void CheckSaveGame(size_t size)
    {
       // haleyjd: deobfuscated
       savegamesize += (size + 1023) & ~1023;
-      savebuffer = (byte *)(realloc(savebuffer, savegamesize));
+      savebuffer = erealloc(byte *, savebuffer, savegamesize);
       save_p = savebuffer + pos;
    }
 }
@@ -2154,7 +2154,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 
       if(queuesize < (unsigned int)bodyquesize)
       {
-         bodyque = (Mobj **)(realloc(bodyque, bodyquesize*sizeof*bodyque));
+         bodyque = erealloc(Mobj **, bodyque, bodyquesize*sizeof*bodyque);
          memset(bodyque+queuesize, 0, 
                 (bodyquesize-queuesize)*sizeof*bodyque);
          queuesize = bodyquesize;
@@ -2845,7 +2845,7 @@ void G_RecordDemo(char *name)
    usergame = false;
 
    if(demoname)
-      free(demoname);
+      efree(demoname);
    demoname = emalloc(char *, strlen(name) + 8);
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
@@ -3250,8 +3250,8 @@ void G_DeferedPlayDemo(const char *name)
 {
    // haleyjd: removed SMMU cruft in attempt to fix
    if(defdemoname)
-      free(defdemoname);
-   defdemoname = strdup(name);
+      efree(defdemoname);
+   defdemoname = estrdup(name);
    gameaction = ga_playdemo;
 }
 
@@ -3275,8 +3275,8 @@ void G_TimeDemo(const char *name, bool showmenu)
    //G_StopDemo();         // stop any previous demos
    
    if(defdemoname)
-      free(defdemoname);
-   defdemoname = strdup(name);
+      efree(defdemoname);
+   defdemoname = estrdup(name);
    gameaction = ga_playdemo;
    singledemo = true;      // sf: moved from reloaddefaults
    
@@ -3304,7 +3304,7 @@ bool G_CheckDemoStatus(void)
                  errno ? strerror(errno) : "(Unknown Error)");
       }
       
-      free(demobuffer);
+      efree(demobuffer);
       demobuffer = NULL;  // killough
       I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough

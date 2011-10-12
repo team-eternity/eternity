@@ -830,7 +830,7 @@ static void P_LoadZNodes(int lump)
          lines[i].v1 = lines[i].v1 - vertexes + newvertarray;
          lines[i].v2 = lines[i].v2 - vertexes + newvertarray;
       }
-      free(vertexes);
+      efree(vertexes);
       vertexes = newvertarray;
       numvertexes = (int)(orgVerts + newVerts);
    }
@@ -1588,10 +1588,9 @@ static void P_CreateBlockMap(void)
             // Increase size of allocated list if necessary
             if(bmap[b].n >= bmap[b].nalloc)
             {
-               bmap[b].list = 
-                  (int *)(realloc(bmap[b].list,
-                                  (bmap[b].nalloc = bmap[b].nalloc ? 
-                                   bmap[b].nalloc*2 : 8)*sizeof*bmap->list));
+               bmap[b].nalloc = bmap[b].nalloc ? bmap[b].nalloc * 2 : 8;
+               bmap[b].list = erealloc(int *, bmap[b].list,
+                                       bmap[b].nalloc*sizeof*bmap->list);
             }
 
             // Add linedef to end of list
@@ -1650,13 +1649,13 @@ static void P_CreateBlockMap(void)
                   blockmaplump[ndx++] = bp->list[--bp->n]; // Copy linedef list
                while (bp->n);
                blockmaplump[ndx++] = -1;                   // Store trailer
-               free(bp->list);                             // Free linedef list
+               efree(bp->list);                             // Free linedef list
             }
             else     // Empty blocklist: point to reserved empty blocklist
                blockmaplump[i] = tot;
          }
          
-         free(bmap);    // Free uncompressed blockmap
+         efree(bmap);    // Free uncompressed blockmap
       }
    }
 }
@@ -2008,7 +2007,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
    }
 
    // free hit list
-   free(hit);
+   efree(hit);
 }
 
 //

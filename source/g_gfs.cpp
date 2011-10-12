@@ -101,19 +101,19 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
 
-      gfs.wadnames[i] = strdup(str);
+      gfs.wadnames[i] = estrdup(str);
    }
    for(i = 0; i < gfs.numdehs; i++)
    {
       const char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
       
-      gfs.dehnames[i] = strdup(str);
+      gfs.dehnames[i] = estrdup(str);
    }
    for(i = 0; i < gfs.numcsc; i++)
    {
       const char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
 
-      gfs.cscnames[i] = strdup(str);
+      gfs.cscnames[i] = estrdup(str);
    }
 
    // haleyjd 07/05/03: support root EDF specification
@@ -121,7 +121,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_EDFFILE);
 
-      gfs.edf = strdup(str);
+      gfs.edf = estrdup(str);
 
       gfs.hasEDF = true;
    }
@@ -133,7 +133,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_IWAD);
 
-      gfs.iwad = strdup(str);
+      gfs.iwad = estrdup(str);
 
       gfs.hasIWAD = true;
    }
@@ -143,7 +143,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_BASEPATH);
 
-      gfs.filepath = strdup(str);
+      gfs.filepath = estrdup(str);
    }
    else
    {
@@ -167,34 +167,34 @@ void G_FreeGFS(gfs_t *lgfs)
 
    for(i = 0; i < lgfs->numwads; i++)
    {
-      free(lgfs->wadnames[i]);
+      efree(lgfs->wadnames[i]);
    }
-   free(lgfs->wadnames);
+   efree(lgfs->wadnames);
 
    for(i = 0; i < lgfs->numdehs; i++)
    {
-      free(lgfs->dehnames[i]);
+      efree(lgfs->dehnames[i]);
    }
-   free(lgfs->dehnames);
+   efree(lgfs->dehnames);
 
    for(i = 0; i < lgfs->numcsc; i++)
    {
-      free(lgfs->cscnames[i]);
+      efree(lgfs->cscnames[i]);
    }
-   free(lgfs->cscnames);
+   efree(lgfs->cscnames);
 
    if(lgfs->edf)
-      free(lgfs->edf);
+      efree(lgfs->edf);
    lgfs->edf = NULL;
    lgfs->hasEDF = false;
 
    if(lgfs->iwad)
-      free(lgfs->iwad);
+      efree(lgfs->iwad);
    lgfs->iwad = NULL;
    lgfs->hasIWAD = false;
 
    if(lgfs->filepath)
-      free(lgfs->filepath);
+      efree(lgfs->filepath);
    lgfs->filepath = NULL;
 }
 

@@ -733,7 +733,7 @@ bool PIT_CheckLine(line_t *ld)
       if(clip.numspechit >= clip.spechit_max)
       {
          clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = (line_t **)(realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max));
+         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
       }
       clip.spechit[clip.numspechit++] = ld;
 

@@ -457,7 +457,7 @@ void P_RemoveActivePlat(PlatThinker *plat)
    plat->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
-   free(list);
+   efree(list);
 }
 
 //
@@ -472,7 +472,7 @@ void P_RemoveAllActivePlats(void)
    while(activeplats)
    {  
       platlist_t *next = activeplats->next;
-      free(activeplats);
+      efree(activeplats);
       activeplats = next;
    }
 }

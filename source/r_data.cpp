@@ -473,7 +473,7 @@ void R_PrecacheLevel(void)
          }
       }
    }
-   free(hitlist);
+   efree(hitlist);
 }
 
 //

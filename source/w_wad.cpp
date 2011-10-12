@@ -97,7 +97,7 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
    {
       numallocsa = numallocsa ? numallocsa * 2 : 32;
 
-      infoptrs = (lumpinfo_t **)(realloc(infoptrs, numallocsa * sizeof(lumpinfo_t *)));
+      infoptrs = erealloc(lumpinfo_t **, infoptrs, numallocsa * sizeof(lumpinfo_t *));
    }
    
    // add it
@@ -300,7 +300,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
          if(filetype == ADDPRIVATE) // Error is tolerated for private files
          {
             fclose(openData.handle);
-            free(fileinfo2free);
+            efree(fileinfo2free);
             C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", openData.filename);
             return false;
          }
@@ -325,7 +325,8 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    }
    
    // Fill in lumpinfo
-   this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
+   this->lumpinfo = erealloc(lumpinfo_t **, this->lumpinfo, 
+                             this->numlumps * sizeof(lumpinfo_t *));
 
    // space for new lumps
    newlumps = estructalloc(lumpinfo_t, this->numlumps - startlump);
@@ -371,7 +372,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    ++source;
    
    if(fileinfo2free)
-      free(fileinfo2free); // killough
+      efree(fileinfo2free); // killough
    
    if(filetype == ADDPRIVATE)
       return true; // no error (note opposite return value semantics 9_9)
@@ -460,7 +461,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
    // Append marked list to end of unmarked list
    memcpy(this->lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
 
-   free(marked);                                    // free marked list
+   efree(marked);                                   // free marked list
    
    this->numlumps = num_unmarked + num_marked;      // new total number of lumps
    
@@ -939,10 +940,10 @@ void WadDirectory::FreeDirectoryAllocs()
 
    // free each lumpinfo_t allocation
    for(i = 0; i < numallocs; ++i)
-      free(infoptrs[i]);
+      efree(infoptrs[i]);
 
    // free the allocation tracking table
-   free(infoptrs);
+   efree(infoptrs);
    infoptrs = NULL;
    numallocs = numallocsa = 0;
 }

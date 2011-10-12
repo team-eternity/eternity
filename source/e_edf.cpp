@@ -1444,7 +1444,7 @@ static void E_ProcessCast(cfg_t *cfg)
       if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
          castorder[i].name = NULL; // set from DeHackEd
       else
-         castorder[i].name = strdup(tempstr); // store provided value
+         castorder[i].name = estrdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
       castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
@@ -1500,7 +1500,7 @@ static void E_ProcessCast(cfg_t *cfg)
    memset(&castorder[max_castorder], 0, sizeof(castinfo_t));
 
    // free the ci_order table
-   free(ci_order);
+   efree(ci_order);
 }
 
 // haleyjd 11/19/03:

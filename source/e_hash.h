@@ -113,7 +113,7 @@ public:
    void Destroy()
    {
       if(chains)
-         free(chains);
+         efree(chains);
 
       chains      =  NULL;
       isInit      =  false;
@@ -393,7 +393,7 @@ public:
       calcLoadFactor();
 
       // delete old chains
-      free(oldchains);
+      efree(oldchains);
    }
 };
 

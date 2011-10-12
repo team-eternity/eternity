@@ -443,7 +443,7 @@ static void R_InitSpriteDefs(char **namelist)
          sprites[i].spriteframes = NULL;
       }
    }
-   free(hash);             // free hash table
+   efree(hash);             // free hash table
 }
 
 //
@@ -487,7 +487,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
    if(stacksize == stackmax)
    {
       stackmax += 10;
-      pstack = (poststack_t *)(realloc(pstack, sizeof(poststack_t) * stackmax));
+      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * stackmax);
    }
    
    post = pstack + stacksize;
@@ -545,7 +545,7 @@ static vissprite_t *R_NewVisSprite(void)
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
-      vissprites = (vissprite_t *)(realloc(vissprites,num_vissprite_alloc*sizeof(*vissprites)));
+      vissprites = erealloc(vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
    }
 
    return vissprites + num_vissprite++;
@@ -1284,7 +1284,7 @@ static void R_SortVisSprites(void)
       
       if(num_vissprite_ptrs < num_vissprite*2)
       {
-         free(vissprite_ptrs);  // better than realloc -- no preserving needed
+         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
          vissprite_ptrs = emalloc(vissprite_t **, 
                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
@@ -1320,7 +1320,7 @@ static void R_SortVisSpriteRange(int first, int last)
       
       if(num_vissprite_ptrs < numsprites*2)
       {
-         free(vissprite_ptrs);  // better than realloc -- no preserving needed
+         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
          vissprite_ptrs = emalloc(vissprite_t **, 
                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
@@ -1741,8 +1741,9 @@ void R_DrawPostBSP(void)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * maxdrawsegs;
-                  drawsegs_xrange = (drawsegs_xrange_t *)(
-                     realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange)));
+                  drawsegs_xrange = 
+                     erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
+                              drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
                {

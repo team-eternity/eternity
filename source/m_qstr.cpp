@@ -56,7 +56,7 @@ const size_t qstring::basesize = 32;
 //
 qstring &qstring::createSize(size_t pSize)
 {
-   buffer = (char *)(realloc(buffer, pSize));
+   buffer = erealloc(char *, buffer, pSize);
    size   = pSize;
    index  = 0;
    memset(buffer, 0, size);
@@ -117,7 +117,7 @@ qstring &qstring::initCreateSize(size_t pSize)
 void qstring::freeBuffer()
 {
    if(buffer)
-      free(buffer);
+      efree(buffer);
    buffer = NULL;
    index = size = 0;
 }
@@ -202,7 +202,7 @@ qstring& qstring::grow(size_t len)
    {
       size_t newsize = size + len;
 
-      buffer = (char *)(realloc(buffer, newsize));
+      buffer = erealloc(char *, buffer, newsize);
       memset(buffer + size, 0, len);
       size += len;
    }

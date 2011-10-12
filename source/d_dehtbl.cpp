@@ -496,7 +496,7 @@ const char *savegamename;
 
 // Do this for a lookup--the pointer (loaded above) is 
 // cross-referenced to a string key that is the same as the define 
-// above.  We will use strdups to set these new values that we read 
+// above.  We will use estrdups to set these new values that we read 
 // from the file, orphaning the original value set above.
 
 dehstr_t deh_strlookup[] = 
@@ -2020,7 +2020,7 @@ char **deh_musicnames;
 //
 // D_BuildBEXTables
 //
-// strdup's string values in the sprites and music
+// estrdup's string values in the sprites and music
 // tables for use as unchanging mnemonics. Sounds now
 // store their own mnemonics and thus a table for them
 // is unnecessary.

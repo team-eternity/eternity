@@ -219,7 +219,7 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
    if(numACSVMs >= numACSVMsAlloc)
    {
       numACSVMsAlloc = numACSVMsAlloc ? numACSVMsAlloc * 2 : 4;
-      acsVMs = (acsvm_t **)(realloc(acsVMs, numACSVMsAlloc * sizeof(acsvm_t *)));
+      acsVMs = erealloc(acsvm_t **, acsVMs, numACSVMsAlloc * sizeof(acsvm_t *));
    }
 
    acsVMs[numACSVMs] = vm;
@@ -1257,7 +1257,7 @@ void ACS_NewGame(void)
    {
       next = cur->dllNext;
       cur->remove();      
-      free(cur->dllObject);
+      efree(cur->dllObject);
       cur = next;
    }
 
@@ -1477,7 +1477,7 @@ void ACS_RunDeferredScripts(void)
 
          // unhook and delete this deferred script
          cur->remove();
-         free(dacs);
+         efree(dacs);
       }
 
       cur = next;

@@ -106,7 +106,7 @@ static manageddir_t *W_addManagedDir(const char *filename)
 
    newdir = ecalloc(manageddir_t *, 1, sizeof(manageddir_t));
 
-   newdir->name = strdup(filename);
+   newdir->name = estrdup(filename);
 
    // set type information
    newdir->waddir.SetType(WadDirectory::MANAGED); // mark as managed
@@ -136,19 +136,19 @@ static void W_delManagedDir(manageddir_t *dir)
    // free directory filename
    if(dir->name.hashKey)
    {
-      free(const_cast<char *>(dir->name.hashKey)); // FIXME: ugh.
+      efree(const_cast<char *>(dir->name.hashKey)); // FIXME: ugh.
       dir->name.hashKey = NULL;
    }
 
    // free list of levels
    if(dir->levels)
    {
-      free(dir->levels);
+      efree(dir->levels);
       dir->levels = NULL;
    }
 
    // free directory
-   free(dir);
+   efree(dir);
 }
 
 //
@@ -331,7 +331,7 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
          if(numlevels + 1 >= numlevelsalloc)
          {
             numlevelsalloc *= 2;
-            levels = (wadlevel_t *)(realloc(levels, numlevelsalloc * sizeof(wadlevel_t)));
+            levels = erealloc(wadlevel_t *, levels, numlevelsalloc * sizeof(wadlevel_t));
          }
          memset(&levels[numlevels], 0, sizeof(wadlevel_t));
          levels[numlevels].dir = dir;

@@ -1538,7 +1538,7 @@ void Mobj::deSwizzle()
    P_SetNewTarget(&lastenemy, lLEnemy);
 
    // Done with the deswizzle info structure.
-   free(dsInfo);
+   efree(dsInfo);
    dsInfo = NULL;
 }
 
@@ -1999,9 +1999,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       {
          num_deathmatchstarts = num_deathmatchstarts ?
             num_deathmatchstarts*2 : 16;
-         deathmatchstarts = (mapthing_t *)(realloc(deathmatchstarts,
-                                           num_deathmatchstarts *
-                                           sizeof(*deathmatchstarts)));
+         deathmatchstarts = erealloc(mapthing_t *, deathmatchstarts,
+                                     num_deathmatchstarts * sizeof(*deathmatchstarts));
          deathmatch_p = deathmatchstarts + offset;
       }
       memcpy(deathmatch_p++, mthing, sizeof*mthing);
@@ -3273,7 +3272,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
       }
    }
 
-   free(flags);
+   efree(flags);
 
    return 0;
 }

@@ -391,7 +391,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(playernum == consoleplayer)
    {
-      free(default_name);
+      efree(default_name);
       default_name = Console.argv[0]->duplicate(PU_STATIC);
    }
 }
@@ -598,7 +598,7 @@ void G_AddChatMacros(void)
       command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "chatmacro%i", i);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = 0;
       command->variable = variable;
@@ -668,7 +668,7 @@ void G_AddWeapPrefs(void)
       command = estructalloc(command_t, 1);
 
       sprintf(tempstr, "weappref_%i", i+1);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = cf_handlerset;
       command->variable = variable;
@@ -806,7 +806,7 @@ void G_AddCompat(void)
       command = estructalloc(command_t, 1);
       
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
 
       switch(i)

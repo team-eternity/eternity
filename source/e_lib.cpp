@@ -93,7 +93,7 @@ static bool E_CheckInclude(const char *data, size_t size)
 
    E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
 
-   free(digest);
+   efree(digest);
 
    numincludes = eincludes.getLength();
 
@@ -146,7 +146,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
       {
          // we already parsed it, but this is not an error;
          // we ignore the include and return 0 to indicate success.
-         free(data);
+         efree(data);
          code = 0;
       }
    }
@@ -483,11 +483,11 @@ int E_ParseFlags(const char *str, dehflagset_t *flagset)
 {
    char *buffer, *bufptr;
 
-   bufptr = buffer = strdup(str);
+   bufptr = buffer = estrdup(str);
 
    deh_ParseFlags(flagset, &bufptr);
 
-   free(buffer);
+   efree(buffer);
 
    return flagset->results[0];
 }
@@ -1353,7 +1353,7 @@ byte *E_ParseTranslation(const char *str)
          }
 
          // done with this range
-         free(range);
+         efree(range);
 
          // step to next range
          range = next;

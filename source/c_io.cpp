@@ -167,7 +167,7 @@ static void C_initBackdrop(void)
          wGlobalDir.ReadLump(clumpnum, colormap);
          
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
-         free(colormap);
+         efree(colormap);
       }
       else
          V_DrawPatchFS(&cback, patch);

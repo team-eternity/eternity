@@ -66,7 +66,7 @@ protected:
       size_t newnumalloc = numalloc + amtToAdd;
       if(newnumalloc > numalloc)
       {
-         ptrArray = (T *)(realloc(ptrArray, newnumalloc * sizeof(T)));
+         ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
          memset(ptrArray + numalloc, 0, (newnumalloc - numalloc) * sizeof(T));
          numalloc = newnumalloc;
       }
@@ -80,7 +80,7 @@ protected:
    void baseClear()
    {
       if(ptrArray)
-         free(ptrArray);
+         efree(ptrArray);
       ptrArray = NULL;
       length = 0;
       numalloc = 0;

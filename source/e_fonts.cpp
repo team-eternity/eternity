@@ -304,7 +304,7 @@ static void E_DisposePatches(vfont_t *font)
    }
 
    // get rid of the patch array
-   free(font->fontgfx);
+   efree(font->fontgfx);
    font->fontgfx = NULL;
 }
 
@@ -330,7 +330,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    // handle disposal of previous font graphics 
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
-      free(font->data);
+      efree(font->data);
       font->data = NULL;
    }
 
@@ -452,13 +452,13 @@ static void E_FreeFilterData(vfontfilter_t *f)
 {
    if(f->chars)
    {
-      free(f->chars);
+      efree(f->chars);
       f->chars = NULL;
    }
 
    if(f->mask)
    {
-      free((void *)f->mask);
+      efree((void *)f->mask);
       f->mask = NULL;
    }
 }
@@ -478,7 +478,7 @@ static void E_FreeFontFilters(vfont_t *font)
    for(i = 0; i < font->numfilters; ++i)
       E_FreeFilterData(&(font->filters[i]));
 
-   free(font->filters);
+   efree(font->filters);
    font->filters = NULL;
 }
 
@@ -550,7 +550,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    }
 
    // get mask
-   f->mask = strdup(cfg_getstr(sec, ITEM_FILTER_MASK));
+   f->mask = estrdup(cfg_getstr(sec, ITEM_FILTER_MASK));
 
    // verify mask string to prevent hacks
    E_VerifyFilter(f->mask);
@@ -573,7 +573,7 @@ void E_LoadPatchFont(vfont_t *font)
    // in case this font was changed from block to patch:
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
-      free(font->data);
+      efree(font->data);
       font->data = NULL;
       font->linear = false;
    }
@@ -797,16 +797,16 @@ static void E_ProcessFont(cfg_t *sec)
 static void E_ProcessFontVars(cfg_t *cfg)
 {
    // 02/25/09: set native module font names
-   hud_fontname      = strdup(cfg_getstr(cfg, ITEM_FONT_HUD));
-   hud_overfontname  = strdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
-   mn_fontname       = strdup(cfg_getstr(cfg, ITEM_FONT_MENU));
-   mn_bigfontname    = strdup(cfg_getstr(cfg, ITEM_FONT_BMENU));
-   mn_normalfontname = strdup(cfg_getstr(cfg, ITEM_FONT_NMENU));
-   f_fontname        = strdup(cfg_getstr(cfg, ITEM_FONT_FINAL));
-   in_fontname       = strdup(cfg_getstr(cfg, ITEM_FONT_INTR));
-   in_bigfontname    = strdup(cfg_getstr(cfg, ITEM_FONT_INTRB));
-   in_bignumfontname = strdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
-   c_fontname        = strdup(cfg_getstr(cfg, ITEM_FONT_CONS));
+   hud_fontname      = estrdup(cfg_getstr(cfg, ITEM_FONT_HUD));
+   hud_overfontname  = estrdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
+   mn_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_MENU));
+   mn_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_BMENU));
+   mn_normalfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_NMENU));
+   f_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_FINAL));
+   in_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_INTR));
+   in_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRB));
+   in_bignumfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
+   c_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_CONS));
 }
 
 //=============================================================================

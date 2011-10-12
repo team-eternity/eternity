@@ -111,7 +111,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
          sec = cfg_getsec(sec, secname);
          if(sec == 0)
             cfg_error(cfg, _("no such option '%s'\n"), secname);
-         free(secname);
+         efree(secname);
          if(sec == 0)
             return 0;
       }
@@ -361,8 +361,8 @@ signed int cfg_getflag(cfg_t *cfg, const char *name)
 
 static cfg_value_t *cfg_addval(cfg_opt_t *opt)
 {
-   opt->values = (cfg_value_t **)realloc(opt->values,
-                                         (opt->nvalues+1) * sizeof(cfg_value_t *));
+   opt->values = erealloc(cfg_value_t **, opt->values,
+                          (opt->nvalues+1) * sizeof(cfg_value_t *));
    cfg_assert(opt->values);
    opt->values[opt->nvalues] = estructalloc(cfg_value_t, 1);
    return opt->values[opt->nvalues++];
@@ -503,15 +503,15 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
    case CFGT_STR:
    case CFGT_STRFUNC: // haleyjd
       if(val->string)
-         free(val->string);
+         efree(val->string);
       if(opt->cb)
       {
          s = 0;
          if((*opt->cb)(cfg, opt, value, &s) != 0)
             return 0;
-         val->string = strdup(s);
+         val->string = estrdup(s);
       } else
-         val->string = strdup(value);
+         val->string = estrdup(value);
       break;
    case CFGT_SEC:
    case CFGT_MVPROP: // haleyjd
@@ -519,7 +519,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       cfg_free(val->section);
       val->section = ecalloc(cfg_t *, 1, sizeof(cfg_t));
       cfg_assert(val->section);
-      val->section->namealloc = strdup(opt->name); // haleyjd 04/14/11
+      val->section->namealloc = estrdup(opt->name); // haleyjd 04/14/11
       val->section->name      = val->section->namealloc;
       val->section->opts      = cfg_dupopts(opt->subopts);
       val->section->flags     = cfg->flags;
@@ -586,12 +586,12 @@ void cfg_free_value(cfg_opt_t *opt)
    for(i = 0; i < opt->nvalues; i++)
    {
       if(opt->type == CFGT_STR || opt->type == CFGT_STRFUNC) // haleyjd
-         free(opt->values[i]->string);
+         efree(opt->values[i]->string);
       else if(opt->type == CFGT_SEC || opt->type == CFGT_MVPROP) // haleyjd
          cfg_free(opt->values[i]->section);
-      free(opt->values[i]);
+      efree(opt->values[i]);
    }
-   free(opt->values);
+   efree(opt->values);
    opt->values = 0;
    opt->nvalues = 0;
 }
@@ -660,7 +660,7 @@ static int call_function(cfg_t *cfg, cfg_opt_t *opt, cfg_opt_t *funcopt)
       argv[i] = funcopt->values[i]->string;
    ret = (*opt->func)(cfg, opt, funcopt->nvalues, argv);
    cfg_free_value(funcopt); // haleyjd: CVS fix
-   free((void *)argv);
+   efree((void *)argv);
    return ret;
 }
 
@@ -902,7 +902,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
             return STATE_ERROR;
          }
          else
-            opttitle = strdup(mytext);
+            opttitle = estrdup(mytext);
          state = STATE_EXPECT_SECBRACE;
          break;
 
@@ -950,7 +950,7 @@ static int cfg_parse_internal(cfg_t *cfg, int level)
          else if(tok == CFGT_STR)
          {
             val = cfg_addval(&funcopt);
-            val->string = strdup(mytext);
+            val->string = estrdup(mytext);
             state = STATE_EXPECT_ARGNEXT;
          } 
          else 
@@ -1074,7 +1074,7 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
 char *cfg_tilde_expand(const char *filename)
 {   
    // haleyjd 03/08/03: removed tilde expansion for eternity
-   return strdup(filename);
+   return estrdup(filename);
 }
 
 int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
@@ -1085,7 +1085,7 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
  
    // haleyjd 07/11/03: CVS fix
    if(cfg->filename)
-      free(cfg->filename);
+      efree(cfg->filename);
 
    cfg->filename = cfg_tilde_expand(filename);
    if(cfg->filename == 0)
@@ -1164,14 +1164,14 @@ void cfg_free(cfg_t *cfg)
 
    if(is_set(CFGF_ALLOCATED, cfg->flags))
    {
-      free(cfg->namealloc);
-      free(cfg->opts);
-      free(cfg->title);
+      efree(cfg->namealloc);
+      efree(cfg->opts);
+      efree(cfg->title);
    }
    else
-      free(cfg->filename);
+      efree(cfg->filename);
    
-   free(cfg);
+   efree(cfg);
 }
 
 int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
@@ -1302,8 +1302,8 @@ void cfg_opt_setnstr(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    cfg_assert(cfg && opt && opt->type == CFGT_STR);
    val = cfg_getval(opt, index);
    if(val->string) // haleyjd: !
-      free(val->string);
-   val->string = value ? strdup(value) : 0;
+      efree(val->string);
+   val->string = value ? estrdup(value) : 0;
 }
 
 void cfg_setnstr(cfg_t *cfg, const char *name, const char *value,

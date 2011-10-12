@@ -109,7 +109,7 @@ static char *SearchDirectoryForIWAD(char *dir, const char *const *iwads,
       if(M_FileExists(filename))
          return filename;
       
-      free(filename);
+      efree(filename);
    }
    
    return NULL;
@@ -132,7 +132,7 @@ static void AddDoomWadPath(void)
    if(doomwadpath == NULL)
       return;
    
-   doomwadpath = strdup(doomwadpath);
+   doomwadpath = estrdup(doomwadpath);
    
    // Add the initial directory
    
@@ -253,7 +253,7 @@ char *D_FindWADByName(char *name)
       if(exists)
          return buf;
       
-      free(buf);
+      efree(buf);
    }
 
    // File not found

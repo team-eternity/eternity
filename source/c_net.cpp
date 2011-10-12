@@ -81,7 +81,7 @@ static int  tail = 0;
 // haleyjd: this must be called from start-up -- see above.
 void C_InitPlayerName(void)
 {
-   default_name = strdup("player");
+   default_name = estrdup("player");
 }
 
 

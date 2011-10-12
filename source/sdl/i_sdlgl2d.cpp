@@ -357,7 +357,7 @@ void SDLGL2DVideoDriver::ShutdownGraphicsPartway()
    // Destroy the allocated temporary framebuffer
    if(framebuffer)
    {
-      free(framebuffer);
+      efree(framebuffer);
       framebuffer = NULL;
    }
 
@@ -560,7 +560,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
                 (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
-   free(tempbuffer);
+   efree(tempbuffer);
 
    // Allocate framebuffer data, or PBOs
    if(!use_arb_pbo)

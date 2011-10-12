@@ -210,7 +210,7 @@ void SM_DestroyChildContext(SmallContext_t *context)
    memcpy(dest, context->smallAMX.data, size);
 
    // free the previously allocated child data segment
-   free(context->smallAMX.data);
+   efree(context->smallAMX.data);
 
    parent->child = NULL;
 

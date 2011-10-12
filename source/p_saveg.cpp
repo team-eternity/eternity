@@ -352,7 +352,7 @@ static Thinker **thinker_p;  // killough 2/14/98: Translation table
 
 static void P_FreeThinkerTable(void)
 {
-   free(thinker_p);    // free translation table
+   efree(thinker_p);    // free translation table
 }
 
 static void P_NumberThinkers(void)
@@ -696,7 +696,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       while(1)
       {
          if(*className != '\0')
-            free(className);
+            efree(className);
 
          // Get the next class name
          arc.ArchiveLString(className, len);
@@ -787,8 +787,9 @@ static void P_ArchiveMap(SaveArchive &arc)
 
          while(markpointnum >= markpointnum_max)
          {
-            markpoints = (mpoint_t *)(realloc(markpoints, sizeof *markpoints *
-               (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16)));
+            markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
+            markpoints = erealloc(mpoint_t *, markpoints, 
+                                  sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
@@ -1233,7 +1234,7 @@ void P_ArchiveButtons(SaveArchive &arc)
    // When loading, if not equal, we need to realloc buttonlist
    if(arc.isLoading() && numsaved > 0 && numsaved != numbuttonsalloc)
    {
-      buttonlist = (button_t *)(realloc(buttonlist, numsaved * sizeof(button_t)));
+      buttonlist = erealloc(button_t *, buttonlist, numsaved * sizeof(button_t));
       numbuttonsalloc = numsaved;
    }
 
@@ -1506,7 +1507,7 @@ void P_LoadGame(const char *filename)
             g_dir = d_dir = dir;
 
          // done with temporary file name
-         free(fn);
+         efree(fn);
       }
    
       // killough 3/16/98, 12/98: check lump name checksum
@@ -1525,7 +1526,7 @@ void P_LoadGame(const char *filename)
          strcat(msg, "\nAre you sure?");
          C_Puts(msg);
          G_LoadGameErr(msg);
-         free(msg);
+         efree(msg);
          return;
       }
       */

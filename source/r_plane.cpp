@@ -700,9 +700,9 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    if(check->max_width < (unsigned int)video.width)
    {
       if(check->pad1)
-         free(check->pad1);
+         efree(check->pad1);
       if(check->pad3)
-         free(check->pad3);
+         efree(check->pad3);
 
       check->max_width = video.width;
       check->pad1 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));

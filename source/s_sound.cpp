@@ -1407,7 +1407,7 @@ musicinfo_t *S_MusicForName(const char *name)
    if(lumpnum >= 0)
    {
       mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
-      mus->name = strdup(nameToUse);
+      mus->name = estrdup(nameToUse);
 
       // The music code should prefix the sound name to get the lump if:
       // 1. The sound name does not have the prefix, AND
@@ -1440,7 +1440,7 @@ void S_UpdateMusic(const char *lumpname)
    {
       // build a new musicinfo_t
       music = ecalloc(musicinfo_t *, 1 ,sizeof(*music));
-      music->name = strdup(musname);
+      music->name = estrdup(musname);
       
       // hook into hash list
       S_HookMusic(music);

@@ -500,7 +500,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
    ceiling->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
-   free(list);
+   efree(list);
 }
 
 //
@@ -515,7 +515,7 @@ void P_RemoveAllActiveCeilings(void)
    while(activeceilings)
    {  
       ceilinglist_t *next = activeceilings->next;
-      free(activeceilings);
+      efree(activeceilings);
       activeceilings = next;
    }
 }

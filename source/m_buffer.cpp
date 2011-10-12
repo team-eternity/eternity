@@ -79,7 +79,7 @@ void BufferedFileBase::Close()
 
    if(buffer)
    {
-      free(buffer);
+      efree(buffer);
       buffer = NULL;
    }
 }

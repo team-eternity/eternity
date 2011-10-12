@@ -1452,9 +1452,9 @@ static void E_CopyThing(int num, int pnum)
 
    // must duplicate obituaries if they exist
    if(this_mi->obituary)
-      this_mi->obituary = strdup(this_mi->obituary);
+      this_mi->obituary = estrdup(this_mi->obituary);
    if(this_mi->meleeobit)
-      this_mi->meleeobit = strdup(this_mi->meleeobit);
+      this_mi->meleeobit = estrdup(this_mi->meleeobit);
 
    // copy metatable
    meta->copyTableFrom(mobjinfo[pnum].meta);
@@ -1990,11 +1990,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
       if((!def || inherits) && mobjinfo[i].obituary)
-         free(mobjinfo[i].obituary);
+         efree(mobjinfo[i].obituary);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i].obituary = strdup(tempstr);
+         mobjinfo[i].obituary = estrdup(tempstr);
       else
          mobjinfo[i].obituary = NULL;
    }
@@ -2004,11 +2004,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
       if((!def || inherits) && mobjinfo[i].meleeobit)
-         free(mobjinfo[i].meleeobit);
+         efree(mobjinfo[i].meleeobit);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i].meleeobit = strdup(tempstr);
+         mobjinfo[i].meleeobit = estrdup(tempstr);
       else
          mobjinfo[i].meleeobit = NULL;
    }
@@ -2163,8 +2163,8 @@ void E_ProcessThings(cfg_t *cfg)
    }
 
    // free tables
-   free(thing_hitlist);
-   free(thing_pstack);
+   efree(thing_hitlist);
+   efree(thing_pstack);
 }
 
 //

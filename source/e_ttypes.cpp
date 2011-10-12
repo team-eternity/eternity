@@ -641,7 +641,7 @@ void E_InitTerrainTypes(void)
 
    // if TerrainTypes already exists, free it
    if(TerrainTypes)
-      free(TerrainTypes);
+      efree(TerrainTypes);
 
    // allocate the TerrainTypes lookup
    numf = (texturecount + 1);

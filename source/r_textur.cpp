@@ -1271,7 +1271,7 @@ void R_InitTextures(void)
    R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
 
    // done with patch lookup
-   free(patchlookup);
+   efree(patchlookup);
 
    // done with texturelumps
    R_FreeTextureLump(maptex1);
@@ -1559,9 +1559,9 @@ void R_LoadDoom1(void)
             // lots of little mallocs; make the whole thing dynamic
             if(numconvs >= numconvsalloc)
             {
-               txtrconv = (doom1text_t *)(realloc(txtrconv, 
-                                    (numconvsalloc = numconvsalloc ?
-                                     numconvsalloc*2 : 56) * sizeof *txtrconv));
+               numconvsalloc = numconvsalloc ? numconvsalloc*2 : 56;
+               txtrconv = erealloc(doom1text_t *, txtrconv, 
+                                   numconvsalloc * sizeof *txtrconv);
             }
             
             strncpy(txtrconv[numconvs].doom1, texture1, 9);
@@ -1589,7 +1589,7 @@ void R_LoadDoom1(void)
    }
    
    // finished with lump
-   free(lump);
+   efree(lump);
 }
 
 static int R_Doom1Texture(const char *name)

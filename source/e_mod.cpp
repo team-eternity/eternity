@@ -229,7 +229,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       // create a new mod
       mod = ecalloc(emod_t *, 1, sizeof(emod_t));
 
-      mod->name = strdup(title);
+      mod->name = estrdup(title);
       mod->num  = num;
 
       // add to hash tables
@@ -244,7 +244,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       // if modifying, free any that already exists
       if(!def && mod->obituary)
       {
-         free(mod->obituary);
+         efree(mod->obituary);
          mod->obituary = NULL;
       }
 
@@ -259,7 +259,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
          else
             mod->obitIsBexString = false;
 
-         mod->obituary = strdup(obituary);
+         mod->obituary = estrdup(obituary);
       }
    }
 
@@ -271,7 +271,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       // if modifying, free any that already exists
       if(!def && mod->selfobituary)
       {
-         free(mod->selfobituary);
+         efree(mod->selfobituary);
          mod->selfobituary = NULL;
       }
 
@@ -286,7 +286,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
          else
             mod->selfObitIsBexString = false;
 
-         mod->selfobituary = strdup(obituary);
+         mod->selfobituary = estrdup(obituary);
       }
    }
 

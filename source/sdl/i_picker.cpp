@@ -106,7 +106,7 @@ static void I_Pick_LoadGfx(void)
             bgframe = png.getAs24Bit();
       }
 
-      free(lump);
+      efree(lump);
    }
 }
 
@@ -138,7 +138,7 @@ static void I_Pick_LoadIWAD(int num)
          }
       }
       
-      free(lump);
+      efree(lump);
    }
 }
 
@@ -181,18 +181,18 @@ static void I_Pick_FreeImages(void)
 {
    if(bgframe)
    {
-      free(bgframe);
+      efree(bgframe);
       bgframe = NULL;
    }
 
    for(int i = 0; i < NUMPICKIWADS; i++)
    {
       if(iwadpics[i])
-         free(iwadpics[i]);
+         efree(iwadpics[i]);
       iwadpics[i] = NULL;
 
       if(pals[i])
-         free(pals[i]);
+         efree(pals[i]);
       pals[i] = NULL;
    }
 }

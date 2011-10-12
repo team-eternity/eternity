@@ -150,7 +150,7 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
    newbuf->type = type;
 
    if(name)
-      newbuf->name = strdup(name);
+      newbuf->name = estrdup(name);
 
    newbuf->linenum = linenum;
 
@@ -887,7 +887,7 @@ static void doGoto(pstate_t *ps)
             edecstateout_t *dso = DSP.pDSO;
             edecstate_t *s = &(dso->states[dso->numstates]);
             
-            s->label = strdup(link->dllObject->name);
+            s->label = estrdup(link->dllObject->name);
             s->state = states[DSP.currentstate];
             
             dso->numstates++;
@@ -983,7 +983,7 @@ static void doKeyword(pstate_t *ps)
                edecstateout_t *dso = DSP.pDSO;
                ekillstate_t   *ks  = &(dso->killstates[dso->numkillstates]);
                
-               ks->killname = strdup(link->dllObject->name);               
+               ks->killname = estrdup(link->dllObject->name);               
                dso->numkillstates++;
 
                link = link->dllNext;
@@ -1045,7 +1045,7 @@ static void doText(pstate_t *ps)
       {
          edecstateout_t *dso = DSP.pDSO;
 
-         dso->states[dso->numstates].label = strdup(link->dllObject->name);
+         dso->states[dso->numstates].label = estrdup(link->dllObject->name);
          dso->states[dso->numstates].state = states[DSP.currentstate];
          dso->numstates++;
 
@@ -1966,7 +1966,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
       if(!foundmatch)
       {
          egoto_t *egoto   = &(dso->gotos[dso->numgotos]);
-         egoto->label     = strdup(gotoInfo->gotodest);
+         egoto->label     = estrdup(gotoInfo->gotodest);
          egoto->offset    = gotoInfo->gotooffset;
          egoto->nextstate = &(states[igt->state]->nextstate);
 
@@ -1989,7 +1989,7 @@ static void E_freeDecorateData(void)
 
    // free the internalgotos list
    if(DSP.internalgotos)
-      free(DSP.internalgotos);
+      efree(DSP.internalgotos);
    DSP.internalgotos = NULL;
    DSP.numinternalgotos = DSP.numinternalgotosalloc = 0;
 
@@ -2003,12 +2003,12 @@ static void E_freeDecorateData(void)
 
       // free any allocated strings inside
       if(bs->name)
-         free(bs->name);
+         efree(bs->name);
       if(bs->gotodest)
-         free(bs->gotodest);
+         efree(bs->gotodest);
 
       // free the object itself
-      free(bs);
+      efree(bs);
    }
    DSP.statebuffer = DSP.curbufstate = NULL;
    DSP.neweststate = NULL;
@@ -2079,9 +2079,9 @@ void E_FreeDSO(edecstateout_t *dso)
       for(i = 0; i < dso->numstates; ++i)
       {
          if(dso->states[i].label)
-            free(dso->states[i].label);
+            efree(dso->states[i].label);
       }
-      free(dso->states);
+      efree(dso->states);
       dso->states = NULL;
    }
 
@@ -2090,9 +2090,9 @@ void E_FreeDSO(edecstateout_t *dso)
       for(i = 0; i < dso->numgotos; ++i)
       {
          if(dso->gotos[i].label)
-            free(dso->gotos[i].label);
+            efree(dso->gotos[i].label);
       }
-      free(dso->gotos);
+      efree(dso->gotos);
       dso->gotos = NULL;
    }
 
@@ -2101,13 +2101,13 @@ void E_FreeDSO(edecstateout_t *dso)
       for(i = 0; i < dso->numkillstates; ++i)
       {
          if(dso->killstates[i].killname)
-            free(dso->killstates[i].killname);
+            efree(dso->killstates[i].killname);
       }
-      free(dso->killstates);
+      efree(dso->killstates);
       dso->killstates = NULL;
    }
 
-   free(dso);
+   efree(dso);
 }
 
 // EOF

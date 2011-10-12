@@ -1046,14 +1046,14 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
       dp->orig_default_s = *(char **)dp->location; // Save original default
    }
    else
-      free(*(char **)dp->location);               // Free old value
+      efree(*(char **)dp->location);               // Free old value
 
-   *(char **)dp->location = strdup(strparm);      // Change default value
+   *(char **)dp->location = estrdup(strparm);      // Change default value
 
    if(dp->current)                                // Current value
    {
-      free(*(char **)dp->current);                // Free old value
-      *(char **)dp->current = strdup(strparm);    // Change current value
+      efree(*(char **)dp->current);                // Free old value
+      *(char **)dp->current = estrdup(strparm);    // Change current value
    }
 }
 
@@ -1085,7 +1085,7 @@ static void M_setDefaultString(default_t *dp)
    // in it or not. This provides consistency later on when/if we need to
    // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-   *(char **)dp->location = strdup(dp->defaultvalue_s);
+   *(char **)dp->location = estrdup(dp->defaultvalue_s);
 }
 
 // Test if a string default matches the given cvar
@@ -1635,13 +1635,16 @@ void M_LoadOptions(void)
          int len = 0;
          while(len < size && p[len++] && p[len-1] != '\n');
          if(len >= buflen)
-            buf = (char *)(realloc(buf, buflen = len+1));
+         {
+            buflen = len + 1;
+            buf = erealloc(char *, buf, buflen);
+         }
          strncpy(buf, p, len)[len] = 0;
          p += len;
          size -= len;
          M_ParseOption(&maindefaults, buf, true);
       }
-      free(buf);
+      efree(buf);
       Z_ChangeTag(options, PU_CACHE);
    }
 
@@ -1714,13 +1717,15 @@ void M_LoadDefaultFile(defaultfile_t *df)
             }
 
             if(df->numcomments >= df->numcommentsalloc)
+            {
                df->comments = 
-               (defaultfile_s::comment_s *)
-                 realloc(df->comments, sizeof *(df->comments) *
-                         (df->numcommentsalloc = df->numcommentsalloc ?
-                          df->numcommentsalloc * 2 : df->numdefaults));
+                 erealloc(defaultfile_s::comment_s *,
+                          df->comments, sizeof *(df->comments) *
+                          (df->numcommentsalloc = df->numcommentsalloc ?
+                           df->numcommentsalloc * 2 : df->numdefaults));
+            }
             df->comments[df->numcomments].line = line;
-            df->comments[df->numcomments++].text = strdup(p);
+            df->comments[df->numcomments++].text = estrdup(p);
          }
       }
       fclose(f);
@@ -1746,9 +1751,9 @@ void M_LoadDefaults(void)
    if(!df->fileName)
    {
       if((p = M_CheckParm("-config")) && p < myargc - 1)
-         printf(" default file: %s\n", df->fileName = strdup(myargv[p + 1]));
+         printf(" default file: %s\n", df->fileName = estrdup(myargv[p + 1]));
       else
-         df->fileName = strdup(basedefault);
+         df->fileName = estrdup(basedefault);
    }
 
    // haleyjd 06/30/09: apply gamemode defaults first
@@ -1766,7 +1771,7 @@ void M_ResetDefaultFileComments(defaultfile_t *df)
 {
    if(df->comments)
    {
-      free(df->comments);
+      efree(df->comments);
       df->comments = NULL;
       df->numcomments = df->numcommentsalloc = 0;
    }

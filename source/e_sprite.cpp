@@ -99,7 +99,7 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
    if(NUMSPRITES + 1 >= numspritesalloc)
    {
       numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
-      sprnames = (char **)(realloc(sprnames, numspritesalloc * sizeof(char *)));
+      sprnames = erealloc(char **, sprnames, numspritesalloc * sizeof(char *));
    }
 
    // set the new sprnames entry, and make the next one NULL
@@ -190,7 +190,7 @@ bool E_ProcessSingleSprite(const char *sprname)
    // try adding it; if this fails, we need to free spr
    if(!E_AddSprite(sprname, spr))
    {
-      free(spr);
+      efree(spr);
       return false;
    }
    

@@ -542,8 +542,8 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    
    // cleanup
    png_destroy_write_struct(&pngStruct, &pngInfo);
-   free(row_pointers);
-   free(pngPalette);
+   efree(row_pointers);
+   efree(pngPalette);
 
    return pngIoData.writeOK;
 }

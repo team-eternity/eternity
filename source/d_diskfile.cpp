@@ -135,7 +135,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
    size_t i;
    diskwad_t wad;
    diskfileint_t *dfi = (diskfileint_t *)(df->opaque);
-   char *name = strdup(filename);
+   char *name = estrdup(filename);
 
    memset(&wad, 0, sizeof(wad));
 
@@ -157,7 +157,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
       }
    }
 
-   free(name);
+   efree(name);
 
    return wad;
 }
@@ -231,17 +231,17 @@ void D_CloseDiskFile(diskfile_t *df, bool closefile)
       // free the entries
       if(dfi->entries)
       {
-         free(dfi->entries);
+         efree(dfi->entries);
          dfi->entries = NULL;
       }
 
       // free the internal structure
-      free(dfi);
+      efree(dfi);
       df->opaque = NULL;
    }
 
    // free the structure itself
-   free(df);
+   efree(df);
 }
 
 // EOF

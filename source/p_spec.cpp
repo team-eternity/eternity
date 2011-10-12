@@ -188,7 +188,7 @@ void P_InitPicAnims(void)
       if(lastanim >= anims + maxanims)
       {
          size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
-         anims = (anim_t *)(realloc(anims, newmax*sizeof(*anims))); // killough
+         anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
          lastanim = anims + maxanims;
          maxanims = newmax;
       }
@@ -4043,7 +4043,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
       memcpy(attached, cline->frontsector->f_attached, sizeof(int) * numattach);
@@ -4059,7 +4059,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
       // haleyjd: check for safety
@@ -4098,7 +4098,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
             {
               maxattach += 5;
 
-              attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+              attached = erealloc(int *, attached, sizeof(int) * maxattach);
             }
 
             attached[numattach++] = line - lines;
@@ -4152,7 +4152,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+            attached = erealloc(int *, attached, sizeof(int) * maxattach);
          }
          attached[numattach++] = front;
       }
@@ -4169,7 +4169,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+            attached = erealloc(int *, attached, sizeof(int) * maxattach);
          }
          attached[numattach++] = back;
       }
@@ -4278,7 +4278,8 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+         attached = erealloc(attachedsurface_t *, attached, 
+                             sizeof(attachedsurface_t) * maxattached);
       }
 
       // haleyjd: check for safety
@@ -4297,7 +4298,8 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+         attached = erealloc(attachedsurface_t *, attached, 
+                             sizeof(attachedsurface_t) * maxattached);
       }
 
       memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
@@ -4418,7 +4420,8 @@ void P_AttachSectors(line_t *line)
          if(numattached == maxattached)
          {
             maxattached += 5;
-            attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+            attached = erealloc(attachedsurface_t *, attached, 
+                                sizeof(attachedsurface_t) * maxattached);
          }
 
          attached[numattached].sector = slaveline->frontsector;
