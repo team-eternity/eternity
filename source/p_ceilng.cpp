@@ -257,18 +257,15 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << bottomheight << topheight << speed << oldspeed
+   arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
        << olddirection;
 
+   // Reattach to active ceilings list
    if(arc.isLoading())
-   {
-      // Reattach to sector, and to active ceilings list
-      sector->ceilingdata = this;
       P_AddActiveCeiling(this);
-   }
 }
 
 

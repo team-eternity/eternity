@@ -330,14 +330,10 @@ void VerticalDoorThinker::Think()
 //
 void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << topheight << speed << direction << topwait
+   arc << type << topheight << speed << direction << topwait
        << topcountdown << line << lighttag;
-
-   // Reattach to sector when loading
-   if(arc.isLoading())
-      sector->ceilingdata = this;
 }
 
 ///////////////////////////////////////////////////////////////

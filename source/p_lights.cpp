@@ -78,9 +78,9 @@ void FireFlickerThinker::Think()
 //
 void FireFlickerThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << maxlight << minlight;
+   arc << count << maxlight << minlight;
 }
 
 
@@ -118,9 +118,9 @@ void LightFlashThinker::Think()
 //
 void LightFlashThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << maxlight << minlight << maxtime << mintime;
+   arc << count << maxlight << minlight << maxtime << mintime;
 }
 
 
@@ -158,9 +158,9 @@ void StrobeThinker::Think()
 //
 void StrobeThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << minlight << maxlight << darktime << brighttime;
+   arc << count << minlight << maxlight << darktime << brighttime;
 }
 
 
@@ -207,9 +207,9 @@ void GlowThinker::Think()
 //
 void GlowThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << minlight << maxlight << direction;
+   arc << minlight << maxlight << direction;
 }
 
 
@@ -266,9 +266,9 @@ void LightFadeThinker::Think()
 //
 void LightFadeThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << lightlevel << destlevel << step << glowmin << glowmax
+   arc << lightlevel << destlevel << step << glowmin << glowmax
        << glowspeed << type;
 }
 

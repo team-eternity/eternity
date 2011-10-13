@@ -206,17 +206,14 @@ void PlatThinker::Think()
 //
 void PlatThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << speed << low << high << wait << count << status << oldstatus
+   arc << speed << low << high << wait << count << status << oldstatus
        << crush << tag << type;
 
+   // Reattach to active plats list
    if(arc.isLoading())
-   {
-      // Reattach to sector and to active plats list
-      sector->floordata = this;
       P_AddActivePlat(this);
-   }
 }
 
 

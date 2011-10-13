@@ -632,15 +632,11 @@ void FloorMoveThinker::Think()
 //
 void FloorMoveThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << crush << sector << direction << special << texture 
+   arc << type << crush << direction << special << texture 
        << floordestheight << speed << resetTime << resetHeight
        << stepRaiseTime << delayTime << delayTimer;
-
-   // If loading, reattach to sector
-   if(arc.isLoading())
-      sector->floordata = this;
 }
 
 
@@ -700,17 +696,10 @@ void ElevatorThinker::Think()
 //
 void ElevatorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << direction << floordestheight << ceilingdestheight 
+   arc << type << direction << floordestheight << ceilingdestheight 
        << speed;
-
-   if(arc.isLoading())
-   {
-      // Reattach to both floor and ceiling of sector
-      sector->floordata   = this;
-      sector->ceilingdata = this;
-   }
 }
 
 // haleyjd 10/07/06: Pillars by Joe :)
@@ -751,17 +740,10 @@ void PillarThinker::Think()
 //
 void PillarThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << ceilingSpeed << floorSpeed << floordest 
+   arc << ceilingSpeed << floorSpeed << floordest 
        << ceilingdest << direction << crush;
-
-   if(arc.isLoading())
-   {
-      // Reattach to floor and ceiling
-      sector->floordata   = this;
-      sector->ceilingdata = this;
-   }
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1761,14 +1743,10 @@ void FloorWaggleThinker::Think()
 //
 void FloorWaggleThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << originalHeight << accumulator << accDelta << targetScale
+   arc << originalHeight << accumulator << accDelta << targetScale
        << scale << scaleDelta << ticker << state;
-
-   // If loading, reattach to sector floor
-   if(arc.isLoading())
-      sector->floordata = this;
 }
 
 //

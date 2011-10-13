@@ -30,6 +30,8 @@
 //     Friction
 //     Wind/Current
 //
+// haleyjd 10/13/2011: TODO - module is oversized; split up.
+//
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
@@ -245,11 +247,10 @@ void P_InitPicAnims(void)
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
 }
 
-///////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Linedef and Sector Special Implementation Utility Functions
 //
-///////////////////////////////////////////////////////////////
 
 //
 // getSide()
@@ -1191,14 +1192,13 @@ void P_StartLineScript(line_t *line, Mobj *thing)
       ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL, false);
 }
 
-//////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Events
 //
 // Events are operations triggered by using, crossing,
 // or shooting special lines, or by timed thinkers.
 //
-/////////////////////////////////////////////////////////////////////////
 
 //
 // P_ClearSwitchOnFail
@@ -2533,11 +2533,10 @@ void P_UpdateSpecials(void)
    P_RunButtons();
 }
 
-//////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sector and Line special thinker spawning at level startup
 //
-//////////////////////////////////////////////////////////////////////
 
 //
 // P_SetupHeightTransfer
@@ -3250,7 +3249,7 @@ void FrictionThinker::serialize(SaveArchive &arc)
    arc << friction << movefactor << affectee;
 }
 
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // FRICTION EFFECTS
 //
@@ -3295,7 +3294,7 @@ void FrictionThinker::serialize(SaveArchive &arc)
 // demos. Doom demos, which are more important IMO, are not affected by this
 // change.
 //
-/////////////////////////////
+//=====================================
 //
 // Initialize the sectors where friction is increased or decreased
 
@@ -3370,9 +3369,9 @@ static void P_SpawnFriction(void)
 //
 // phares 3/12/98: End of friction effects
 //
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // PUSH/PULL EFFECT
 //
@@ -3418,10 +3417,11 @@ static void P_SpawnFriction(void)
 
 #define PUSH_FACTOR 7
 
-/////////////////////////////
+//
+// Add_Pusher
 //
 // Add a push thinker to the thinker list
-
+//
 static void Add_Pusher(int type, int x_mag, int y_mag,
                        Mobj *source, int affectee)
 {
@@ -3442,7 +3442,8 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
    p->addThinker();
 }
 
-/////////////////////////////
+PushThinker *tmpusher; // pusher structure for blockmap searches
+
 //
 // PIT_PushThing determines the angle and magnitude of the effect.
 // The object's x and y momentum values are changed.
@@ -3450,9 +3451,7 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 // tmpusher belongs to the point source (PUSH/PULL).
 //
 // killough 10/98: allow to affect things besides players
-
-PushThinker *tmpusher; // pusher structure for blockmap searches
-
+//
 bool PIT_PushThing(Mobj* thing)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
@@ -3665,11 +3664,11 @@ void PushThinker::serialize(SaveArchive &arc)
       source = P_GetPushThing(affectee);
 }
 
-/////////////////////////////
 //
-// P_GetPushThing() returns a pointer to an PUSH or PULL thing,
-// NULL otherwise.
-
+// P_GetPushThing
+//
+// returns a pointer to an PUSH or PULL thing, NULL otherwise.
+//
 Mobj* P_GetPushThing(int s)
 {
    Mobj* thing;
@@ -3695,11 +3694,12 @@ Mobj* P_GetPushThing(int s)
    return NULL;
 }
 
-/////////////////////////////
+
+//
+// P_SpawnPushers
 //
 // Initialize the sectors where pushers are present
 //
-
 static void P_SpawnPushers(void)
 {
    int i;
@@ -3760,7 +3760,7 @@ static void P_SpawnHereticWind(line_t *line)
 //
 // phares 3/20/98: End of Pusher effects
 //
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 
 // haleyjd 08/22/05: TerrainTypes moved to e_ttypes.c
 
@@ -4194,6 +4194,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
 // P_MoveAttached
 //
 // Moves all attached surfaces.
+//
 bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 {
    int i;
