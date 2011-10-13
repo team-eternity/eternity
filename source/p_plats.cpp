@@ -216,6 +216,30 @@ void PlatThinker::serialize(SaveArchive &arc)
       P_AddActivePlat(this);
 }
 
+//
+// PlatThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a PlatThinker is treated as
+// a VerticalDoorThinker
+//
+bool PlatThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(wait == plat_down)
+      wait = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      wait = plat_down;
+   }
+
+   return true;
+}
+
 
 //
 // EV_DoPlat

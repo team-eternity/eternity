@@ -604,6 +604,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "SectorThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player) { return false; }
 
    // Data Members
    sector_t *sector;
@@ -673,6 +674,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "LightFlashThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
    
    // Data Members
    int count;
@@ -691,6 +693,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "StrobeThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int count;
@@ -752,6 +755,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PlatThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    fixed_t speed;
@@ -796,6 +800,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "VerticalDoorThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
@@ -859,6 +864,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "CeilingThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
@@ -922,6 +928,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorMoveThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;

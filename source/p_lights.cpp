@@ -123,6 +123,30 @@ void LightFlashThinker::serialize(SaveArchive &arc)
    arc << count << maxlight << minlight << maxtime << mintime;
 }
 
+//
+// LightFlashThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a LightFlashThiker is
+// treated as a VerticalDoorThinker
+//
+bool LightFlashThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(maxtime == plat_down)
+      maxtime = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      maxtime = plat_down;
+   }
+
+   return true;
+}
+
 
 IMPLEMENT_THINKER_TYPE(StrobeThinker)
 
@@ -161,6 +185,30 @@ void StrobeThinker::serialize(SaveArchive &arc)
    SectorThinker::serialize(arc);
 
    arc << count << minlight << maxlight << darktime << brighttime;
+}
+
+//
+// StrobeThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a strobe thinker is 
+// manipulated as a VerticalDoorThinker
+//
+bool StrobeThinker::reTriggerVerticalDoor(bool player) 
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(darktime == plat_down)
+      darktime = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      darktime = plat_down;
+   }
+   
+   return true;
 }
 
 

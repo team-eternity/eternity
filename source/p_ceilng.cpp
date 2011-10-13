@@ -268,6 +268,29 @@ void CeilingThinker::serialize(SaveArchive &arc)
       P_AddActiveCeiling(this);
 }
 
+//
+// CeilingThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a CeilingThinker is treated
+// as a VerticalDoorThinker
+//
+bool CeilingThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(speed == plat_down)
+      speed = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      speed = plat_down;
+   }
+
+   return true;
+}
 
 //
 // EV_DoCeiling

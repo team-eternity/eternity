@@ -639,6 +639,34 @@ void FloorMoveThinker::serialize(SaveArchive &arc)
        << stepRaiseTime << delayTime << delayTimer;
 }
 
+//
+// FloorMoveThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a FloorMoveThinker is
+// treated as a VerticalDoorThinker
+//
+bool FloorMoveThinker::reTriggerVerticalDoor(bool player)
+{
+   // FIXME/TODO: may not have same effects as in vanilla due to special
+   // transfer semantics... verify and fix if so
+   // (need a spectransfer-for-special-number function)
+
+   if(!demo_compatibility)
+      return false;
+
+   if(special.newspecial == plat_down)
+      special.newspecial = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      special.newspecial = plat_down;
+   }
+
+   return true;
+}
+
 
 IMPLEMENT_THINKER_TYPE(ElevatorThinker)
 
