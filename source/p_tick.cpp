@@ -315,7 +315,7 @@ void P_Ticker(void)
          else if(i != consoleplayer)
             CL_PlayerThink(i);
          else if(cl_enable_prediction || clients[i].spectating)
-            CL_Predict(cl_current_world_index);
+            CL_PredictPlayerPosition(cl_current_world_index);
          else
             P_PlayerThink(&players[i]);
 

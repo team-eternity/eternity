@@ -35,7 +35,6 @@ void      CL_InitPrediction(void);
 cs_cmd_t* CL_GetCurrentCommand(void);
 void      CL_PredictPlayerPosition(unsigned int index);
 void      CL_PredictSectorPositions(unsigned int index);
-void      CL_Predict(unsigned int index);
 void      CL_PredictFrom(unsigned int start, unsigned int end);
 void      CL_RePredict(unsigned int start, unsigned int end);
 

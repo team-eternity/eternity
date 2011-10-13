@@ -616,7 +616,7 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    // [CG] Re-predicts from the position just received from the server on.
    if(cl_enable_prediction && message->last_command_run > 0)
-      CL_RePredict(message->last_command_run + 1, cl_current_world_index + 1);
+      CL_RePredict(message->last_command_run + 1, cl_current_world_index);
 
    if(players[playernum].playerstate == PST_LIVE)
    {

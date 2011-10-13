@@ -86,11 +86,6 @@ void CL_PredictPlayerPosition(unsigned int index)
 #endif
 }
 
-void CL_Predict(unsigned int index)
-{
-   CL_PredictPlayerPosition(index);
-}
-
 void CL_PredictFrom(unsigned int start, unsigned int end)
 {
    unsigned int i;
@@ -103,14 +98,23 @@ void CL_RePredict(unsigned int start, unsigned int end)
 {
    unsigned int i;
 
+#if _PRED_DEBUG
+   printf("CL_RePredict: Re-predicting from %u=>%u.\n", start, end);
+#endif
+
    cl_predicting = true;
    for(i = start; i < end; i++)
    {
       CL_LoadSectorPositions(i);
       CL_PredictPlayerPosition(i);
+      players[consoleplayer].mo->Think();
    }
    cl_predicting = false;
    CL_LoadSectorState(cl_current_world_index);
    CL_LoadSectorPositions(cl_current_world_index);
+
+#if _PRED_DEBUG
+   printf("CL_RePredict: Done.\n");
+#endif
 }
 
