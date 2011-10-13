@@ -704,11 +704,8 @@ Section "-Core installation"
   
   ;Create shortcuts
   CreateDirectory "$SMPROGRAMS\$STARTMENU_FOLDER"
-  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Eternity Engine.lnk" "http://master.totaltrash.org" "" "${MUI_ICON}"
-  CreateShortCut "$DESKTOP\Eternity Engine.lnk" "http://master.totaltrash.org" "" "${MUI_ICON}"
-
-
-  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Eternity Engine.lnk" "http://master.totaltrash.org" "" "$INSTDIR\eternity.exe"
+  CreateShortCut "$DESKTOP\Eternity Engine.lnk" "http://master.totaltrash.org" "" "$INSTDIR\eternity.exe"
 
   ;Read a value from an InstallOptions INI file
   !insertmacro MUI_INSTALLOPTIONS_READ $DO_NOT_ADD_TO_PATH "NSIS.InstallOptions.ini" "Field 2" "State"
