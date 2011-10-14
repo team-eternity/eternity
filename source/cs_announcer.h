@@ -54,10 +54,12 @@ typedef enum
    max_announcer_event_types
 } announcer_event_type_e;
 
+extern announcer_event_t null_announcer_events[];
 extern announcer_event_t quake_announcer_events[];
 extern announcer_event_t red_unreal_tournament_announcer_events[];
 extern announcer_event_t blue_unreal_tournament_announcer_events[];
 
+bool               CS_AnnouncerEnabled(void);
 void               CS_SetAnnouncer(announcer_event_t *events);
 announcer_event_t* CS_GetAnnouncerEvent(uint32_t event_index);
 

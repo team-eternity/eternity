@@ -154,7 +154,6 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
    {
       if(client->team == color)
       {
-         CS_ReturnFlag(flag);
          if(CS_SERVER)
          {
             SV_BroadcastAnnouncerEvent(ae_flag_returned, flag_actor);
@@ -162,10 +161,10 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                "%s returned the %s flag", player->name, team_color_names[color]
             );
          }
+         CS_ReturnFlag(flag);
       }
       else
       {
-         CS_GiveFlag(playernum, flag);
          if(CS_SERVER)
          {
             SV_BroadcastAnnouncerEvent(ae_flag_taken, flag_actor);
@@ -175,13 +174,13 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                team_color_names[color]
             );
          }
+         CS_GiveFlag(playernum, flag);
       }
    }
    else
    {
       if(client->team != color)
       {
-         CS_GiveFlag(playernum, flag);
          if(CS_SERVER)
          {
             SV_BroadcastAnnouncerEvent(ae_flag_taken, flag_actor);
@@ -191,11 +190,10 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                team_color_names[color]
             );
          }
+         CS_GiveFlag(playernum, flag);
       }
       else if(cs_flags[other_color].carrier == playernum)
       {
-         CS_ReturnFlag(&cs_flags[other_color]);
-         team_scores[color]++;
          if(CS_SERVER)
          {
             SV_BroadcastAnnouncerEvent(ae_flag_captured, flag_actor);
@@ -205,6 +203,8 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
                team_color_names[other_color]
             );
          }
+         CS_ReturnFlag(&cs_flags[other_color]);
+         team_scores[color]++;
       }
    }
 }

@@ -31,10 +31,10 @@
 #include "cs_team.h"
 #include "sv_main.h"
 
-static announcer_event_t *cs_announcer_events = NULL;
-
 // [CG] TODO: It would be better if these could be defined somewhere instead of
 //            being hard-coded.
+
+announcer_event_t null_announcer_events[] = {};
 
 announcer_event_t quake_announcer_events[] =
 {
@@ -44,8 +44,8 @@ announcer_event_t quake_announcer_events[] =
    { "Enemy Flag Dropped", "EnemyFlagDropped", "Enemy Flag Dropped" },
    { "Friendly Flag Returned", "FriendlyFlagReturned", "Flag Returned" },
    { "Enemy Flag Returned", "EnemyFlagReturned", "Enemy Flag Returned" },
-   { "Friendly Flag Captured", "FriendlyFlagCaptured", "Flag Captured" },
    { "Enemy Flag Captured", "EnemyFlagCaptured", "Enemy Flag Captured" },
+   { "Friendly Flag Captured", "FriendlyFlagCaptured", "Flag Captured" },
 };
 
 announcer_event_t red_unreal_tournament_announcer_events[] =
@@ -56,8 +56,8 @@ announcer_event_t red_unreal_tournament_announcer_events[] =
    { "Blue Flag Dropped", "BlueFlagDropped", "Blue Flag Dropped" },
    { "Red Flag Returned", "RedFlagReturned", "Red Flag Returned" },
    { "Blue Flag Returned", "BlueFlagReturned", "Blue Flag Returned" },
-   { "Red Flag Captured", "RedFlagCaptured", "Blue Team Scores" },
    { "Blue Flag Captured", "BlueFlagCaptured", "Red Team Scores" },
+   { "Red Flag Captured", "RedFlagCaptured", "Blue Team Scores" },
 };
 
 announcer_event_t blue_unreal_tournament_announcer_events[] =
@@ -68,13 +68,26 @@ announcer_event_t blue_unreal_tournament_announcer_events[] =
    { "Red Flag Dropped", "RedFlagDropped", "Red Flag Dropped" },
    { "Blue Flag Returned", "BlueFlagReturned", "Blue Flag Returned" },
    { "Red Flag Returned", "RedFlagReturned", "Red Flag Returned" },
-   { "Blue Flag Captured", "BlueFlagCaptured", "Red Team Scores" },
    { "Red Flag Captured", "RedFlagCaptured", "Blue Team Scores" },
+   { "Blue Flag Captured", "BlueFlagCaptured", "Red Team Scores" },
 };
+
+static announcer_event_t *cs_announcer_events = null_announcer_events;
+
+bool CS_AnnouncerEnabled(void)
+{
+   if((s_announcer_type != S_ANNOUNCER_NONE) &&
+      (cs_announcer_events != null_announcer_events))
+      return true;
+   return false;
+}
 
 void CS_SetAnnouncer(announcer_event_t *events)
 {
-   cs_announcer_events = events;
+   if(events)
+      cs_announcer_events = events;
+   else
+      cs_announcer_events = null_announcer_events;
 }
 
 announcer_event_t* CS_GetAnnouncerEvent(uint32_t event_index)

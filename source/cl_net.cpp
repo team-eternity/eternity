@@ -1626,16 +1626,16 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
 {
+   int i;
    Mobj *source;
    sfxinfo_t *sfx;
    announcer_event_t *event;
 
-   if(s_announcer_type == S_ANNOUNCER_NONE)
+   if(!CS_AnnouncerEnabled())
       return;
    
-   // [CG] Ignore announcer events if we haven't received sync yet, or if a
-   //      game isn't currently running.
-   if(!cl_received_sync || gamestate != GS_LEVEL)
+   // [CG] Ignore announcer events if we haven't received sync yet.
+   if(!cl_received_sync)
       return;
 
    if((source = NetActors.lookup(message->source_net_id)) == NULL)
@@ -1645,6 +1645,28 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
          message->source_net_id
       );
       return;
+   }
+
+   switch(message->event_index)
+   {
+   case ae_flag_taken:
+   case ae_flag_dropped:
+   case ae_flag_returned:
+   case ae_flag_captured:
+      for(i = team_color_none; i < team_color_max; i++)
+      {
+         if(cs_flags[i].net_id == message->source_net_id)
+         {
+            if((teamcolor_t)i != clients[consoleplayer].team)
+            {
+               message->event_index++;
+               break;
+            }
+         }
+      }
+      break;
+   default:
+      break;
    }
 
    if((event = CS_GetAnnouncerEvent(message->event_index)) == NULL)
@@ -1657,7 +1679,7 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
       return;
    }
 
-   if((sfx = E_SoundForName(event->sound_name)) && source)
+   if((sfx = E_SoundForName(event->sound_name)))
       S_StartSfxInfo(source, sfx, 127, ATTN_NONE, false, CHAN_AUTO);
 
    if(strlen(event->message))
