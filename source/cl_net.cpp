@@ -396,9 +396,6 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       return;
    }
 
-   memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
-   memcpy(team_scores, message->team_scores, sizeof(int32_t) * team_color_max);
-
    M_WriteFile(
       cs_state_file_path,
       ((char *)message)+ sizeof(nm_currentstate_t),
@@ -408,6 +405,10 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    cl_setting_sector_positions = true;
    P_LoadGame(cs_state_file_path);
    cl_setting_sector_positions = false;
+
+   memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
+   for(i = 0; i < team_color_max; i++)
+      team_scores[i] = message->team_scores[i];
 
    CL_SendSyncRequest();
    cl_flush_packet_buffer = true;

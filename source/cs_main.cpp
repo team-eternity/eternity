@@ -174,7 +174,8 @@ static void build_game_state(nm_currentstate_t *message)
 
    message->message_type = nm_currentstate;
    memcpy(message->flags, cs_flags, sizeof(flag_t) * team_color_max);
-   memcpy(message->team_scores, team_scores, sizeof(int32_t) * team_color_max);
+   for(i = 0; i < team_color_max; i++)
+      message->team_scores[i] = team_scores[i];
 
    for(i = 0; i < MAXPLAYERS; i++)
       message->playeringame[i] = playeringame[i];
