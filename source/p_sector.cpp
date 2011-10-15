@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "m_fixed.h"
 #include "p_saveg.h"
 #include "p_spec.h"
