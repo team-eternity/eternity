@@ -30,6 +30,11 @@
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
+// [CG] GCC needs stdlib for size_t and NULL.
+#ifdef __GNUC__
+#include <stdlib.h>
+#endif
+
 class  Thinker;
 class  Mobj;
 class  OutBuffer;
