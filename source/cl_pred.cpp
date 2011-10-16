@@ -110,7 +110,7 @@ void CL_RePredict(unsigned int start, unsigned int end)
       players[consoleplayer].mo->Think();
    }
    cl_predicting = false;
-   CL_LoadSectorState(cl_current_world_index);
+   // CL_LoadSectorState(cl_current_world_index);
    CL_LoadSectorPositions(cl_current_world_index);
 
 #if _PRED_DEBUG

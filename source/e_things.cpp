@@ -658,7 +658,7 @@ void E_CollectThings(cfg_t *tcfg)
    int i;
 
    // allocate array
-   mobjinfo = (mobjinfo_t *)(calloc(NUMMOBJTYPES, sizeof(mobjinfo_t)));
+   mobjinfo = ecalloc(mobjinfo_t *, NUMMOBJTYPES, sizeof(mobjinfo_t));
 
    // 08/17/09: allocate metatables
    for(i = 0; i < NUMMOBJTYPES; ++i)
@@ -1452,9 +1452,9 @@ static void E_CopyThing(int num, int pnum)
 
    // must duplicate obituaries if they exist
    if(this_mi->obituary)
-      this_mi->obituary = strdup(this_mi->obituary);
+      this_mi->obituary = estrdup(this_mi->obituary);
    if(this_mi->meleeobit)
-      this_mi->meleeobit = strdup(this_mi->meleeobit);
+      this_mi->meleeobit = estrdup(this_mi->meleeobit);
 
    // copy metatable
    meta->copyTableFrom(mobjinfo[pnum].meta);
@@ -1990,11 +1990,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
       if((!def || inherits) && mobjinfo[i].obituary)
-         free(mobjinfo[i].obituary);
+         efree(mobjinfo[i].obituary);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i].obituary = strdup(tempstr);
+         mobjinfo[i].obituary = estrdup(tempstr);
       else
          mobjinfo[i].obituary = NULL;
    }
@@ -2004,11 +2004,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       // if this is a delta or the thing type inherited obits
       // from its parent, we need to free any old obituary
       if((!def || inherits) && mobjinfo[i].meleeobit)
-         free(mobjinfo[i].meleeobit);
+         efree(mobjinfo[i].meleeobit);
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
-         mobjinfo[i].meleeobit = strdup(tempstr);
+         mobjinfo[i].meleeobit = estrdup(tempstr);
       else
          mobjinfo[i].meleeobit = NULL;
    }
@@ -2142,8 +2142,8 @@ void E_ProcessThings(cfg_t *cfg)
    E_EDFLogPuts("\t* Processing thing data\n");
 
    // allocate inheritance stack and hitlist
-   thing_hitlist = (byte *)(calloc(NUMMOBJTYPES, sizeof(byte)));
-   thing_pstack  = (int *) (malloc(NUMMOBJTYPES * sizeof(int)));
+   thing_hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
+   thing_pstack  = ecalloc(int  *, NUMMOBJTYPES, sizeof(int));
 
    // 01/17/07: initialize ACS thingtypes array
    for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
@@ -2163,8 +2163,8 @@ void E_ProcessThings(cfg_t *cfg)
    }
 
    // free tables
-   free(thing_hitlist);
-   free(thing_pstack);
+   efree(thing_hitlist);
+   efree(thing_pstack);
 }
 
 //

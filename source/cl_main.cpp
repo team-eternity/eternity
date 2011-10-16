@@ -167,7 +167,7 @@ void CL_Init(char *url)
    enet_host_compress_with_range_coder(net_host);
 
    url_length = strlen(url);
-   cs_server_url = (char *)(calloc(url_length + 1, sizeof(char)));
+   cs_server_url = ecalloc(char *, url_length + 1, sizeof(char));
    if(strncmp(url, "eternity://", 11) == 0)
       sprintf(cs_server_url, "http://%s", url + 11);
    else
@@ -178,14 +178,17 @@ void CL_Init(char *url)
    if(!CS_CheckURI(cs_server_url))
       I_Error("Invalid URI [%s], exiting.\n", cs_server_url);
 
-   cs_client_password_file = (char *)(calloc(
-      strlen(basepath) + strlen(PASSWORD_FILENAME) + 2, sizeof(char)
-   ));
+   cs_client_password_file = ecalloc(
+      char *, strlen(basepath) + strlen(PASSWORD_FILENAME) + 2, sizeof(char)
+   );
    sprintf(cs_client_password_file, "%s/%s", basepath, PASSWORD_FILENAME);
    M_NormalizeSlashes(cs_client_password_file);
 
    if(!stat(cs_client_password_file, &sbuf))
    {
+      byte *buffer;
+      std::string json_string;
+
       if(!S_ISREG(sbuf.st_mode))
       {
          I_Error(
@@ -194,10 +197,13 @@ void CL_Init(char *url)
          );
       }
 
-      if(!reader.parse(cs_client_password_file, cs_client_password_json))
+      M_ReadFile(cs_client_password_file, &buffer);
+      json_string += (const char *)buffer;
+      if(!reader.parse(json_string, cs_client_password_json))
       {
          I_Error(
-            "CL_Init: Error parsing password file: %s",
+            "CL_Init: Error parsing password file %s: %s",
+            cs_client_password_file,
             reader.getFormattedErrorMessages().c_str()
          );
       }
@@ -226,7 +232,7 @@ char* CL_GetUserAgent(void)
                      << ((uint32_t)subversion) << "-"
                      << (cs_protocol_version);
 
-   return strdup(user_agent_stream.str().c_str());
+   return estrdup(user_agent_stream.str().c_str());
 }
 
 void CL_Reset(void)
@@ -247,7 +253,7 @@ void CL_Connect(void)
    char *address = CS_IPToString(server_address->host);
 
    printf("Connecting to %s:%d\n", address, server_address->port);
-   free(address);
+   efree(address);
 
    net_peer = enet_host_connect(net_host, server_address, MAX_CHANNELS, 0);
    if(net_peer == NULL)

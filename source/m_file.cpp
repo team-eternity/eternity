@@ -25,6 +25,7 @@
 //-----------------------------------------------------------------------------
 
 #include "m_file.h"
+#include "z_zone.h"
 
 #ifdef WIN32
 DWORD fs_error_code = 0;
@@ -263,7 +264,7 @@ bool M_DeleteFolderAndContents(const char *path)
    WIN32_FIND_DATA fdata;
    HANDLE folder_handle;
    size_t path_length = strlen(path);
-   size_t entry_length;
+   size_t entry_length, full_length;
    char *folder_path = NULL;
    char *star_path = NULL;
    char *entry_path = NULL;
@@ -277,19 +278,19 @@ bool M_DeleteFolderAndContents(const char *path)
    //      add an asterisk (apparently Windows needs this).
    if((*(path + path_length)) - 1 != '\\')
    {
-      folder_path = (char *)calloc(path_length + 2, sizeof(char));
-      star_path = (char *)calloc(path_length + 3, sizeof(char));
+      folder_path = ecalloc(char *, path_length + 2, sizeof(char));
+      star_path = ecalloc(char *, path_length + 3, sizeof(char));
       sprintf(folder_path, "%s\\", path);
    }
    else
    {
-      folder_path = (char *)calloc(path_length + 1, sizeof(char));
-      star_path = (char *)calloc(path_length + 2, sizeof(char));
+      folder_path = ecalloc(char *, path_length + 1, sizeof(char));
+      star_path = ecalloc(char *, path_length + 2, sizeof(char));
       strncpy(folder_path, path, path_length);
    }
    sprintf(star_path, "%s*", folder_path);
 
-   folder_handle = FindFirstFile(folder_path, &fdata);
+   folder_handle = FindFirstFile(star_path, &fdata);
 
    while(FindNextFile(folder_handle, &fdata))
    {
@@ -298,18 +299,25 @@ bool M_DeleteFolderAndContents(const char *path)
          continue;
 
       entry_length = strlen(fdata.cFileName);
-      entry_path = (char *)realloc(entry_path, path_length + entry_length + 1);
-      memset(entry_path, 0, path_length + entry_length + 1);
+      full_length = path_length + entry_length + 1;
+      entry_path = erealloc(char *, entry_path, full_length);
+      memset(entry_path, 0, full_length);
       strncat(entry_path, folder_path, path_length);
       strncat(entry_path, fdata.cFileName, entry_length);
       if(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
-         // [CG] M_DeleteFolderAndContents set an error, so quit.
-         if(!M_DeleteFolderAndContents(path))
+         if(!M_DeleteFolderAndContents(entry_path))
+         {
+            efree(folder_path);
+            efree(star_path);
+            efree(entry_path);
             return false;
       }
       else if(!DeleteFile(entry_path))
       {
+         efree(folder_path);
+         efree(star_path);
+         efree(entry_path);
          set_error_code();
          return false;
       }
@@ -349,22 +357,22 @@ const char* M_GetCurrentFolder(void)
    if(buf_size == 0)
       return NULL;
 
-   buf = (LPTSTR)calloc(buf_size, sizeof(TCHAR));
+   buf = ecalloc(LPTSTR, buf_size, sizeof(TCHAR));
    buf_size = GetCurrentDirectory(buf_size, buf);
    if(buf_size == 0)
       return NULL;
 
    return (const char *)buf;
 #else
-   long size;
-   const char *buf;
+   size_t size;
+   char *buf;
 
-   size = pathconf(".", _PC_PATH_MAX);
+   size = (size_t)pathconf(".", _PC_PATH_MAX);
 
-   if((buf = (const char *)malloc((size_t)size)) == NULL)
+   if((buf = emalloc(char *, size)) == NULL)
       return NULL;
 
-   return (const char *)getcwd((char *)buf, (size_t)size);
+   return (const char *)getcwd(buf, size);
 #endif
 }
 

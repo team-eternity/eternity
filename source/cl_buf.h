@@ -45,21 +45,21 @@ public:
    NetPacket(char *input_data, uint32_t input_size)
    {
       size = input_size;
-      data = (char *)(malloc(size));
+      data = emalloc(char *, size);
       memcpy(data, input_data, size);
    }
 
    explicit NetPacket(const NetPacket& original)
    {
       size = original.size;
-      data = (char *)(malloc(size));
+      data = emalloc(char *, size);
       memcpy(data, original.data, size);
    }
 
    explicit NetPacket(NetPacket& original)
    {
       size = original.size;
-      data = (char *)(malloc(size));
+      data = emalloc(char *, size);
       memcpy(data, original.data, size);
    }
 
@@ -68,13 +68,13 @@ public:
       if(this != &other)
       {
          size = other.size;
-         data = (char *)(realloc(data, size));
+         data = erealloc(char *, data, size);
          memcpy(data, other.data, size);
       }
       return *this;
    }
 
-   ~NetPacket() { free(data); }
+   ~NetPacket() { efree(data); }
 
    int32_t getType() const { return *(uint32_t *)data; }
 

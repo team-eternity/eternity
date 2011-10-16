@@ -979,7 +979,7 @@ void G_LoadDefaults(void)
          psnprintf(temp, len, "%s/keys.csc", basegamepath);
    }
    
-   cfg_file = strdup(temp);
+   cfg_file = estrdup(temp);
 
    if(access(cfg_file, R_OK))
    {

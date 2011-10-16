@@ -374,7 +374,7 @@ static void I_SDLUnRegisterSong(int handle)
       
       // Free music block
       if(music_block != NULL)
-         free(music_block);
+         efree(music_block);
       
       // Reinitialize all this
       music = NULL;
@@ -499,7 +499,7 @@ static int I_SDLRegisterSong(void *data, int size)
          // Conversion failed, free everything
          //SDL_FreeRW(rw);
          rw = NULL;
-         free(mid);         
+         efree(mid);         
       } 
       else 
       {   

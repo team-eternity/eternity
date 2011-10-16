@@ -336,15 +336,15 @@ static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_
 //
 static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 {
-   LevelInfoProto_t *newProto = (LevelInfoProto_t *)(calloc(1, sizeof(LevelInfoProto_t)));
+   LevelInfoProto_t *newProto = ecalloc(LevelInfoProto_t *, 1, sizeof(LevelInfoProto_t));
 
    // reallocate prototype pointers array if necessary
    if(numPrototypes >= numPrototypesAlloc)
    {
       numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
       levelInfoPrototypes = 
-         (LevelInfoProto_t **)(realloc(levelInfoPrototypes,
-                                       numPrototypesAlloc * sizeof(LevelInfoProto_t *)));
+         erealloc(LevelInfoProto_t **, levelInfoPrototypes,
+                  numPrototypesAlloc * sizeof(LevelInfoProto_t *));
    }
 
    // add it to the pointer array
@@ -379,10 +379,10 @@ static void P_clearLevelInfoPrototypes(void)
 
    // free all the LevelInfo objects
    for(i = 0; i < numPrototypes; ++i)
-      free(levelInfoPrototypes[i]);
+      efree(levelInfoPrototypes[i]);
 
    // free the pointer array
-   free(levelInfoPrototypes);
+   efree(levelInfoPrototypes);
    levelInfoPrototypes = NULL;
    numPrototypes = numPrototypesAlloc = 0;
 }
@@ -1500,7 +1500,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    if(nummetainfo >= nummetainfoalloc)
    {
       nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-      metainfo = (metainfo_t *)(realloc(metainfo, nummetainfoalloc * sizeof(metainfo_t)));
+      metainfo = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
    }
 
    mi = &metainfo[nummetainfo];
@@ -1534,7 +1534,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
-   char *fn = strdup(wadfile);
+   char *fn = estrdup(wadfile);
    char *dotloc = NULL;
    byte *buffer = NULL;
 

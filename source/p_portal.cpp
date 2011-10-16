@@ -134,8 +134,7 @@ int P_CreatePortalGroup(sector_t *from)
    if(groupcount == grouplimit)
    {
       grouplimit = grouplimit ? (grouplimit << 1) : 8;
-      groups = 
-         (pgroup_t **)(realloc(groups, sizeof(pgroup_t **) * grouplimit));
+      groups = erealloc(pgroup_t **, groups, sizeof(pgroup_t **) * grouplimit);
    }
    groupcount++;   
    
@@ -186,7 +185,7 @@ void P_GatherSectors(sector_t *from, int groupid)
    if(!list || listmax <= numsectors)
    {
       listmax = numsectors + 1;
-      list = (sector_t **)(realloc(list, sizeof(sector_t *) * listmax));
+      list = erealloc(sector_t **, list, sizeof(sector_t *) * listmax);
    }
 
    R_SetSectorGroupID(from, groupid);
@@ -233,7 +232,8 @@ void P_GatherSectors(sector_t *from, int groupid)
    }
 
    // Ok, so expand the group list
-   group->seclist = (sector_t **)(realloc(group->seclist, sizeof(sector_t *) * (group->listsize + count)));
+   group->seclist = erealloc(sector_t **, group->seclist, 
+                             sizeof(sector_t *) * (group->listsize + count));
    
    memcpy(group->seclist + group->listsize, list, count * sizeof(sector_t *));
    group->listsize += count;

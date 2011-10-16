@@ -411,12 +411,12 @@ CONSOLE_COMMAND(recordcsdemo, 0)
    if(!CS_WriteNetworkMessageToDemo(buffer, buffer_size, 0))
    {
       C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
-      free(buffer);
+      efree(buffer);
       CS_StopDemo();
       return;
    }
 
-   free(buffer);
+   efree(buffer);
 
    sync_packet.message_type = nm_sync;
 
@@ -596,7 +596,7 @@ CONSOLE_COMMAND(maplist, 0)
             line_length += 2;
       }
 
-      buf = buf_index = (char *)(realloc(buf, line_length * sizeof(char)));
+      buf = buf_index = erealloc(char *, buf, line_length * sizeof(char));
 
       buf_index += sprintf(buf, "%d. %s: ", i + 1, map->name);
       for(j = 0; j < map->resource_count; j++)
@@ -614,7 +614,7 @@ CONSOLE_COMMAND(maplist, 0)
    }
 
    if(buf)
-      free(buf);
+      efree(buf);
 }
 
 // change level
@@ -738,7 +738,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(playernum == consoleplayer)
    {
-      free(default_name);
+      efree(default_name);
       default_name = Console.argv[0]->duplicate(PU_STATIC);
    }
 
@@ -936,7 +936,7 @@ void G_AddChatMacros(void)
       memset(tempstr, 0, 32);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &chat_macros[i];
       variable->v_default = NULL;
       variable->type = vt_string;      // string value
@@ -945,10 +945,10 @@ void G_AddChatMacros(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "chatmacro%i", i);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = 0;
       command->variable = variable;
@@ -1012,7 +1012,7 @@ void G_AddWeapPrefs(void)
       memset(tempstr, 0, 16);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &weapon_preferences[0][i];
       variable->v_default = NULL;
       variable->type = vt_int;
@@ -1021,10 +1021,10 @@ void G_AddWeapPrefs(void)
       variable->defines = weapon_str;  // use weapon string defines
 
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
 
       sprintf(tempstr, "weappref_%i", i+1);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = cf_handlerset;
       command->variable = variable;
@@ -1075,7 +1075,7 @@ void G_AddAutoloadFiles(void)
    for(i = 0; i < 6; ++i)
    {
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = autoload_ptrs[i];
       variable->v_default = NULL;
       variable->type = vt_string;
@@ -1084,7 +1084,7 @@ void G_AddAutoloadFiles(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       command->name = autoload_names[i];
       command->type = ct_variable;
       command->flags = cf_allowblank;
@@ -1150,7 +1150,7 @@ void G_AddCompat(void)
       char tempstr[32];
 
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &comp[i];
       variable->v_default = &default_comp[i];
       variable->type = vt_int;      // string value
@@ -1159,10 +1159,10 @@ void G_AddCompat(void)
       variable->defines = yesno;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
 
       switch(i)

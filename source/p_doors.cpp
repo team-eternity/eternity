@@ -44,12 +44,6 @@
 #include "s_sound.h"
 #include "sounds.h"
 
-#include "cs_netid.h" // [CG] 09/18/11.
-#include "cs_spec.h"  // [CG] 09/18/11.
-#include "cs_main.h"  // [CG] 09/18/11.
-#include "cl_main.h"  // [CG] 09/18/11.
-#include "sv_main.h"  // [CG] 09/18/11.
-
 //
 // P_DoorSequence
 //
@@ -205,10 +199,8 @@ void VerticalDoorThinker::Think()
          case genBlazeRaise:
          case genBlazeClose:
          case paramBlazeCloseIn: // haleyjd 03/01/05
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveDoor(this);
+            sector->ceilingdata = NULL;  //jff 2/22/98
+            this->removeThinker();  // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
             break;
@@ -218,10 +210,8 @@ void VerticalDoorThinker::Think()
          case genRaise:
          case genClose:
          case paramCloseIn: // haleyjd 03/01/05
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveDoor(this);
+            sector->ceilingdata = NULL; //jff 2/22/98
+            this->removeThinker();  // unlink and free
             // haleyjd 10/06/06: sound stuff removed
             break;
 
@@ -297,10 +287,8 @@ void VerticalDoorThinker::Think()
          case genCdO:
          case genBlazeCdO:
             S_StopSectorSequence(sector, true);
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveDoor(this);
+            sector->ceilingdata = NULL; //jff 2/22/98
+            this->removeThinker(); // unlink and free
             break;
             
          default:
@@ -335,252 +323,6 @@ void VerticalDoorThinker::Think()
    }
 }
 
-void P_RemoveDoor(VerticalDoorThinker* door)
-{
-   if(CS_SERVER)
-      SV_BroadcastMapSpecialRemoved(door->net_id, ms_door_tagged);
-   NetDoors.remove(door);
-
-   door->sector->ceilingdata = NULL;  //jff 2/22/98
-   door->removeThinker();  // unlink and free
-}
-
-///////////////////////////////////////////////////////////////
-//
-// [CG] General door spawners
-//
-///////////////////////////////////////////////////////////////
-
-VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec, vldoor_e type)
-{
-   VerticalDoorThinker *door = new VerticalDoorThinker;
-
-   door->addThinker();
-   sec->ceilingdata = door; //jff 2/22/98
-
-   door->sector = sec;
-   door->type = type;
-   door->topwait = VDOORWAIT;
-   door->speed = VDOORSPEED;
-   door->line = line;  // jff 1/31/98 remember line that triggered us
-   door->lighttag = 0; // killough 10/98: no light effects with tagged doors
-
-   // setup door parameters according to type of door
-   switch(type)
-   {
-   case blazeClose:
-      door->topheight = P_FindLowestCeilingSurrounding(sec);
-      door->topheight -= 4*FRACUNIT;
-      door->direction = plat_down;
-      door->speed = VDOORSPEED * 4;
-      P_DoorSequence(false, true, false, door->sector); // haleyjd
-      break;
-
-   case doorClose:
-      door->topheight = P_FindLowestCeilingSurrounding(sec);
-      door->topheight -= 4*FRACUNIT;
-      door->direction = plat_down;
-      P_DoorSequence(false, false, false, door->sector); // haleyjd
-      break;
-
-   case close30ThenOpen:
-      door->topheight = sec->ceilingheight;
-      door->direction = plat_down;
-      P_DoorSequence(false, false, false, door->sector); // haleyjd
-      break;
-
-   case blazeRaise:
-   case blazeOpen:
-      door->direction = plat_up;
-      door->topheight = P_FindLowestCeilingSurrounding(sec);
-      door->topheight -= 4*FRACUNIT;
-      door->speed = VDOORSPEED * 4;
-      if(door->topheight != sec->ceilingheight)
-         P_DoorSequence(true, true, false, door->sector); // haleyjd
-      break;
-
-   case doorNormal:
-   case doorOpen:
-      door->direction = plat_up;
-      door->topheight = P_FindLowestCeilingSurrounding(sec);
-      door->topheight -= 4*FRACUNIT;
-      if(door->topheight != sec->ceilingheight)
-         P_DoorSequence(true, false, false, door->sector); // haleyjd
-      break;
-
-   default:
-      break;
-   }
-
-   if(serverside)
-   {
-      NetDoors.add(door);
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            door, NULL, line, door->sector, ms_door_tagged
-         );
-      }
-   }
-
-   return door;
-}
-
-VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec)
-{
-   VerticalDoorThinker *door = new VerticalDoorThinker;
-
-   door->addThinker();
-   sec->ceilingdata = door; //jff 2/22/98
-   door->sector = sec;
-   door->direction = plat_up;
-   door->speed = VDOORSPEED;
-   door->topwait = VDOORWAIT;
-   door->line = line; // jff 1/31/98 remember line that triggered us
-
-   // killough 10/98: use gradual lighting changes if nonzero tag given
-   door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
-
-   // set the type of door from the activating linedef type
-   switch(line->special)
-   {
-   case 1:
-   case 26:
-   case 27:
-   case 28:
-      door->type = doorNormal;
-      break;
-
-   case 31:
-   case 32:
-   case 33:
-   case 34:
-      door->type = doorOpen;
-      line->special = 0;
-      break;
-
-   case 117: // blazing door raise
-      door->type = blazeRaise;
-      door->speed = VDOORSPEED*4;
-      break;
-
-   case 118: // blazing door open
-      door->type = blazeOpen;
-      line->special = 0;
-      door->speed = VDOORSPEED*4;
-      break;
-
-   default:
-      door->lighttag = 0;   // killough 10/98
-      break;
-   }
-
-   // find the top and bottom of the movement range
-   door->topheight = P_FindLowestCeilingSurrounding(sec);
-   door->topheight -= 4*FRACUNIT;
-
-   if(serverside)
-   {
-      NetDoors.add(door);
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            door, NULL, line, door->sector, ms_door_manual
-         );
-      }
-   }
-
-   return door;
-}
-
-///////////////////////////////////////////////////////////////
-//
-// Sector type door spawners
-//
-///////////////////////////////////////////////////////////////
-
-//
-// P_SpawnDoorCloseIn30()
-//
-// Spawn a door that closes after 30 seconds (called at level init)
-//
-// Passed the sector of the door, whose type specified the door action
-// Returns the newly created door.
-
-VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t* sec)
-{
-   VerticalDoorThinker *door = new VerticalDoorThinker;
-
-   door->addThinker();
-
-   sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
-
-   door->sector = sec;
-   door->direction = plat_stop;
-   door->type = doorNormal;
-   door->speed = VDOORSPEED;
-   door->topcountdown = 30 * 35;
-   door->line = NULL; // jff 1/31/98 remember line that triggered us
-   door->lighttag = 0;  // killough 10/98: no lighting changes
-
-   if(serverside)
-   {
-      NetDoors.add(door);
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            door, NULL, NULL, door->sector, ms_door_closein30
-         );
-      }
-   }
-
-   return door;
-}
-
-//
-// P_SpawnDoorRaiseIn5Mins()
-//
-// Spawn a door that opens after 5 minutes (called at level init)
-//
-// Passed the sector of the door, whose type specified the door action
-// Returns the newly created door.
-//
-
-VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec)
-{
-   VerticalDoorThinker* door = new VerticalDoorThinker;
-
-   door->addThinker();
-
-   sec->ceilingdata = door; //jff 2/22/98
-   sec->special = 0;
-
-   door->sector = sec;
-   door->direction = plat_special; // haleyjd: changed from 2
-   door->type = raiseIn5Mins;
-   door->speed = VDOORSPEED;
-   door->topheight = P_FindLowestCeilingSurrounding(sec);
-   door->topheight -= 4*FRACUNIT;
-   door->topwait = VDOORWAIT;
-   door->topcountdown = 5 * 60 * 35;
-   door->line = NULL; // jff 1/31/98 remember line that triggered us
-   door->lighttag = 0;  // killough 10/98: no lighting changes
-
-   if(serverside)
-   {
-      NetDoors.add(door);
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            door, NULL, NULL, door->sector, ms_door_raisein300
-         );
-      }
-   }
-
-   return door;
-}
-
 //
 // VerticalDoorThinker::serialize
 //
@@ -588,17 +330,34 @@ VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec)
 //
 void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << topheight << speed << direction << topwait
-       << topcountdown << line << lighttag << net_id;
+   arc << type << topheight << speed << direction << topwait
+       << topcountdown << line << lighttag;
+}
 
-   // Reattach to sector when loading
-   if(arc.isLoading())
+//
+// VerticalDoorThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: extracted logic from EV_VerticalDoor for retriggering
+// and reversal of door thinkers that are in motion.
+//
+bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
+{
+   if(direction == plat_down)
+      direction = plat_up;  // go back up
+   else
    {
-      sector->ceilingdata = this;
-      NetDoors.add(this);
+      if(!player)
+         return false;           // JDC: bad guys never close doors
+
+      direction = plat_down; // start going down immediately
    }
+
+   // haleyjd: squash the sector's sound sequence when a door reversal
+   // occurs, otherwise you get a doubled sound at the next downstroke.
+   S_SquashSectorSequence(sector, true);
+   return true;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -687,16 +446,66 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       if(P_SectorActive(ceiling_special,sec)) //jff 2/22/98
          continue;
 
-      if(CS_CLIENT)
-         return 1;
-
       // new door thinker
       rtn = 1;
+      door = new VerticalDoorThinker;
+      door->addThinker();
+      sec->ceilingdata = door; //jff 2/22/98
 
-      if(serverside)
-         door = P_SpawnTaggedDoor(line, sec, type);
+      door->sector = sec;
+      door->type = type;
+      door->topwait = VDOORWAIT;
+      door->speed = VDOORSPEED;
+      door->line = line;  // jff 1/31/98 remember line that triggered us
+      door->lighttag = 0; // killough 10/98: no light effects with tagged doors
+
+      // setup door parameters according to type of door
+      switch(type)
+      {
+      case blazeClose:
+         door->topheight = P_FindLowestCeilingSurrounding(sec);
+         door->topheight -= 4*FRACUNIT;
+         door->direction = plat_down;
+         door->speed = VDOORSPEED * 4;
+         P_DoorSequence(false, true, false, door->sector); // haleyjd
+         break;
+
+      case doorClose:
+         door->topheight = P_FindLowestCeilingSurrounding(sec);
+         door->topheight -= 4*FRACUNIT;
+         door->direction = plat_down;
+         P_DoorSequence(false, false, false, door->sector); // haleyjd
+         break;
+
+      case close30ThenOpen:
+         door->topheight = sec->ceilingheight;
+         door->direction = plat_down;
+         P_DoorSequence(false, false, false, door->sector); // haleyjd
+         break;
+
+      case blazeRaise:
+      case blazeOpen:
+         door->direction = plat_up;
+         door->topheight = P_FindLowestCeilingSurrounding(sec);
+         door->topheight -= 4*FRACUNIT;
+         door->speed = VDOORSPEED * 4;
+         if(door->topheight != sec->ceilingheight)
+            P_DoorSequence(true, true, false, door->sector); // haleyjd
+         break;
+
+      case doorNormal:
+      case doorOpen:
+         door->direction = plat_up;
+         door->topheight = P_FindLowestCeilingSurrounding(sec);
+         door->topheight -= 4*FRACUNIT;
+         if(door->topheight != sec->ceilingheight)
+            P_DoorSequence(true, false, false, door->sector); // haleyjd
+         break;
+         
+      default:
+         break;
+      }
    }
-
    return rtn;
 }
 
@@ -712,9 +521,10 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 int EV_VerticalDoor(line_t *line, Mobj *thing)
 {
-   player_t* player;
-   sector_t* sec;
-   VerticalDoorThinker* door;
+   player_t *player;
+   sector_t *sec;
+   VerticalDoorThinker *door;
+   SectorThinker       *secThinker;
    
    //  Check for locks
    player = thing->player;
@@ -781,12 +591,22 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    // 1. DOOM used any thinker that was on a door
    // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and 
    //    this bug was even still in Eternity -- fixed when not in 
-   //    demo_compatibility, but this could cause segvs if a new 
-   //    thinker data structure that is small or has a pointer 
-   //    following the thinker field is introduced.
+   //    demo_compatibility (only VerticalDoorThinker::reTriggerVerticalDoor
+   //    will actually do anything outside of demo_compatibility mode)
 
+   secThinker = thinker_cast<SectorThinker *>(sec->ceilingdata);
+
+   // exactly only one of these pointers is valid during demo_compatibility
+   if(demo_compatibility)
+   {
+      if(!secThinker)
+         secThinker = thinker_cast<SectorThinker *>(sec->floordata);
+      if(!secThinker)
+         secThinker = thinker_cast<SectorThinker *>(sec->lightingdata);
+   }
+   
    // if door already has a thinker, use it
-   if((door = thinker_cast<VerticalDoorThinker *>(sec->ceilingdata))) // is a door
+   if(secThinker)
    {
       switch(line->special)
       {
@@ -795,63 +615,9 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       case  27:
       case  28:
       case  117:
-         if(door->direction == plat_down)
-            door->direction = plat_up;  // go back up
-         else
-         {
-            if(!thing->player)
-               return 0;           // JDC: bad guys never close doors
-            
-            door->direction = plat_down; // start going down immediately
-         }
-         // haleyjd: squash the sector's sound sequence when a door reversal
-         // occurs, otherwise you get a doubled sound at the next downstroke.
-         S_SquashSectorSequence(door->sector, true);
-         return 1;
+         return secThinker->reTriggerVerticalDoor(!!thing->player);
       }
    }
-
-   // CPP_FIXME: extremely difficult to emulate in C++
-#if 0
-   if(sec->ceilingdata ||
-      (demo_compatibility && (sec->floordata || sec->lightingdata)))
-   {
-      door = (VerticalDoorThinker *)(sec->ceilingdata); //jff 2/22/98
-      
-      if(demo_compatibility) // haleyjd
-      {
-         if(!door) door = (VerticalDoorThinker *)(sec->floordata);
-         if(!door) door = (VerticalDoorThinker *)(sec->lightingdata);
-      }
-
-      switch(line->special)
-      {
-      case  1: // only for "raise" doors, not "open"s
-      case  26:
-      case  27:
-      case  28:
-      case  117:
-         // haleyjd: don't corrupt non-door thinkers
-         if(demo_version >= 329 && 
-            door->thinker.function != T_VerticalDoor)
-            return 0;
-
-         if(door->direction == plat_down)
-            door->direction = plat_up;  // go back up
-         else
-         {
-            if(!thing->player)
-               return 0;           // JDC: bad guys never close doors
-            
-            door->direction = plat_down; // start going down immediately
-         }
-         // haleyjd: squash the sector's sound sequence when a door reversal
-         // occurs, otherwise you get a doubled sound at the next downstroke.
-         S_SquashSectorSequence(door->sector, true);
-         return 1;
-      }
-   }
-#endif
 
    // emit proper sound
    switch(line->special)
@@ -869,12 +635,122 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    }
 
    // new door thinker
-   if(serverside)
-      door = P_SpawnManualDoor(line, sec);
+   door = new VerticalDoorThinker;
+   door->addThinker();
+   sec->ceilingdata = door; //jff 2/22/98
+   door->sector = sec;
+   door->direction = plat_up;
+   door->speed = VDOORSPEED;
+   door->topwait = VDOORWAIT;
+   door->line = line; // jff 1/31/98 remember line that triggered us
 
+   // killough 10/98: use gradual lighting changes if nonzero tag given
+   door->lighttag = comp[comp_doorlight] ? 0 : line->tag; // killough 10/98
+   
+   // set the type of door from the activating linedef type
+   switch(line->special)
+   {
+   case 1:
+   case 26:
+   case 27:
+   case 28:
+      door->type = doorNormal;
+      break;
+
+   case 31:
+   case 32:
+   case 33:
+   case 34:
+      door->type = doorOpen;
+      line->special = 0;
+      break;
+
+   case 117: // blazing door raise
+      door->type = blazeRaise;
+      door->speed = VDOORSPEED*4;
+      break;
+
+   case 118: // blazing door open
+      door->type = blazeOpen;
+      line->special = 0;
+      door->speed = VDOORSPEED*4;
+      break;
+
+   default:
+      door->lighttag = 0;   // killough 10/98
+      break;
+   }
+   
+   // find the top and bottom of the movement range
+   door->topheight = P_FindLowestCeilingSurrounding(sec);
+   door->topheight -= 4*FRACUNIT;
    return 1;
 }
 
+
+///////////////////////////////////////////////////////////////
+//
+// Sector type door spawners
+//
+///////////////////////////////////////////////////////////////
+
+//
+// P_SpawnDoorCloseIn30()
+//
+// Spawn a door that closes after 30 seconds (called at level init)
+//
+// Passed the sector of the door, whose type specified the door action
+// Returns nothing
+
+void P_SpawnDoorCloseIn30 (sector_t* sec)
+{
+   VerticalDoorThinker *door = new VerticalDoorThinker;
+   
+   door->addThinker();
+   
+   sec->ceilingdata = door; //jff 2/22/98
+   sec->special = 0;
+   
+   door->sector = sec;
+   door->direction = plat_stop;
+   door->type = doorNormal;
+   door->speed = VDOORSPEED;
+   door->topcountdown = 30 * 35;
+   door->line = NULL; // jff 1/31/98 remember line that triggered us
+   door->lighttag = 0;  // killough 10/98: no lighting changes
+}
+
+//
+// P_SpawnDoorRaiseIn5Mins()
+//
+// Spawn a door that opens after 5 minutes (called at level init)
+//
+// Passed the sector of the door, whose type specified the door action
+// Returns nothing
+//
+
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
+{
+   VerticalDoorThinker* door;
+   
+   door = new VerticalDoorThinker;
+   
+   door->addThinker();
+   
+   sec->ceilingdata = door; //jff 2/22/98
+   sec->special = 0;
+   
+   door->sector = sec;
+   door->direction = plat_special; // haleyjd: changed from 2
+   door->type = raiseIn5Mins;
+   door->speed = VDOORSPEED;
+   door->topheight = P_FindLowestCeilingSurrounding(sec);
+   door->topheight -= 4*FRACUNIT;
+   door->topwait = VDOORWAIT;
+   door->topcountdown = 5 * 60 * 35;
+   door->line = NULL; // jff 1/31/98 remember line that triggered us
+   door->lighttag = 0;  // killough 10/98: no lighting changes
+}
 
 //----------------------------------------------------------------------------
 //

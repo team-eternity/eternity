@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2006 James Haley
@@ -39,12 +39,6 @@
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "sounds.h"
-
-#include "cs_netid.h" // [CG] 09/18/11
-#include "cs_spec.h"  // [CG] 09/18/11
-#include "cs_main.h"  // [CG] 09/18/11
-#include "cl_main.h"  // [CG] 09/18/11
-#include "sv_main.h"  // [CG] 09/18/11
 
 platlist_t *activeplats;       // killough 2/14/98: made global again
 
@@ -128,10 +122,7 @@ void PlatThinker::Think()
             case downWaitUpStay:
             case raiseAndChange:
             case genLift:
-               if(CS_CLIENT)
-                  this->inactive = cl_current_world_index;
-               else
-                  P_RemoveActivePlat(this);     // killough
+               P_RemoveActivePlat(this);     // killough
             default:
                break;
             }
@@ -178,10 +169,7 @@ void PlatThinker::Think()
             {
             case raiseAndChange:
             case raiseToNearestAndChange:
-               if(CS_CLIENT)
-                  this->inactive = cl_current_world_index;
-               else
-                  P_RemoveActivePlat(this);
+               P_RemoveActivePlat(this);
             default:
                break;
             }
@@ -218,17 +206,38 @@ void PlatThinker::Think()
 //
 void PlatThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << speed << low << high << wait << count << status << oldstatus
-       << crush << tag << type << net_id;
+   arc << speed << low << high << wait << count << status << oldstatus
+       << crush << tag << type;
 
+   // Reattach to active plats list
    if(arc.isLoading())
-   {
-      // Reattach to sector and to active plats list
-      sector->floordata = this;
       P_AddActivePlat(this);
+}
+
+//
+// PlatThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a PlatThinker is treated as
+// a VerticalDoorThinker
+//
+bool PlatThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(wait == plat_down)
+      wait = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      wait = plat_down;
    }
+
+   return true;
 }
 
 
@@ -261,8 +270,6 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
    case toggleUpDn:
       P_ActivateInStasis(line->tag);
       rtn=1;
-      if(CS_CLIENT)
-         return rtn;
       break;
       
    default:
@@ -280,128 +287,106 @@ int EV_DoPlat(line_t *line, plattype_e type, int amount )
       
       // Create a thinker
       rtn = 1;
-      if(CS_CLIENT)
-         return rtn;
+      plat = new PlatThinker;
+      plat->addThinker();
+      
+      plat->type = type;
+      plat->sector = sec;
+      plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
+      plat->crush = -1;
+      plat->tag = line->tag;
 
-      plat = P_SpawnPlatform(line, sec, amount, type);
+      //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
+      //going down forever -- default low to plat height when triggered
+      plat->low = sec->floorheight;
+      
+      // set up plat according to type  
+      switch(type)
+      {
+      case raiseToNearestAndChange:
+         plat->speed = PLATSPEED/2;
+         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+         plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
+         plat->wait = 0;
+         plat->status = up;
+         //jff 3/14/98 clear old field as well
+         P_ZeroSectorSpecial(sec);
+         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+         break;
+          
+      case raiseAndChange:
+         plat->speed = PLATSPEED/2;
+         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
+         plat->high = sec->floorheight + amount*FRACUNIT;
+         plat->wait = 0;
+         plat->status = up;
+         
+         P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
+         break;
+          
+      case downWaitUpStay:
+         plat->speed = PLATSPEED * 4;
+         plat->low = P_FindLowestFloorSurrounding(sec);
+         
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         
+         plat->high = sec->floorheight;
+         plat->wait = 35*PLATWAIT;
+         plat->status = down;
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         break;
+          
+      case blazeDWUS:
+         plat->speed = PLATSPEED * 8;
+         plat->low = P_FindLowestFloorSurrounding(sec);
+         
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         
+         plat->high = sec->floorheight;
+         plat->wait = 35*PLATWAIT;
+         plat->status = down;
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         break;
+          
+      case perpetualRaise:
+         plat->speed = PLATSPEED;
+         plat->low = P_FindLowestFloorSurrounding(sec);
+         
+         if(plat->low > sec->floorheight)
+            plat->low = sec->floorheight;
+         
+         plat->high = P_FindHighestFloorSurrounding(sec);
+         
+         if(plat->high < sec->floorheight)
+            plat->high = sec->floorheight;
+         
+         plat->wait = 35*PLATWAIT;
+         plat->status = (P_Random(pr_plats) & 1) ? down : up;
+         
+         P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
+         break;
+
+      case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
+         plat->speed = PLATSPEED;   //not used
+         plat->wait  = 35*PLATWAIT; //not used
+         plat->crush = 10;          //jff 3/14/98 crush anything in the way
+         
+         // set up toggling between ceiling, floor inclusive
+         plat->low    = sec->ceilingheight;
+         plat->high   = sec->floorheight;
+         plat->status = down;
+
+         P_PlatSequence(plat->sector, "EEPlatSilent");
+         break;
+         
+      default:
+         break;
+      }
+      P_AddActivePlat(plat);  // add plat to list of active plats
    }
    return rtn;
-}
-
-PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
-                             plattype_e type)
-{
-   PlatThinker *plat = new PlatThinker;
-
-   plat->addThinker();
-   
-   plat->type = type;
-   plat->sector = sec;
-   plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
-   plat->crush = -1;
-   plat->tag = line->tag;
-
-   //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
-   //going down forever -- default low to plat height when triggered
-   plat->low = sec->floorheight;
-   
-   // set up plat according to type  
-   switch(type)
-   {
-   case raiseToNearestAndChange:
-      plat->speed = PLATSPEED/2;
-      sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-      plat->high = P_FindNextHighestFloor(sec,sec->floorheight);
-      plat->wait = 0;
-      plat->status = up;
-      //jff 3/14/98 clear old field as well
-      P_ZeroSectorSpecial(sec);
-      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
-      break;
-       
-   case raiseAndChange:
-      plat->speed = PLATSPEED/2;
-      sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-      plat->high = sec->floorheight + amount*FRACUNIT;
-      plat->wait = 0;
-      plat->status = up;
-      
-      P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
-      break;
-       
-   case downWaitUpStay:
-      plat->speed = PLATSPEED * 4;
-      plat->low = P_FindLowestFloorSurrounding(sec);
-      
-      if(plat->low > sec->floorheight)
-         plat->low = sec->floorheight;
-      
-      plat->high = sec->floorheight;
-      plat->wait = 35*PLATWAIT;
-      plat->status = down;
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-      break;
-       
-   case blazeDWUS:
-      plat->speed = PLATSPEED * 8;
-      plat->low = P_FindLowestFloorSurrounding(sec);
-      
-      if(plat->low > sec->floorheight)
-         plat->low = sec->floorheight;
-      
-      plat->high = sec->floorheight;
-      plat->wait = 35*PLATWAIT;
-      plat->status = down;
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-      break;
-       
-   case perpetualRaise:
-      plat->speed = PLATSPEED;
-      plat->low = P_FindLowestFloorSurrounding(sec);
-      
-      if(plat->low > sec->floorheight)
-         plat->low = sec->floorheight;
-      
-      plat->high = P_FindHighestFloorSurrounding(sec);
-      
-      if(plat->high < sec->floorheight)
-         plat->high = sec->floorheight;
-      
-      plat->wait = 35*PLATWAIT;
-      plat->status = (P_Random(pr_plats) & 1) ? down : up;
-      
-      P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
-      break;
-
-   case toggleUpDn: //jff 3/14/98 add new type to support instant toggle
-      plat->speed = PLATSPEED;   //not used
-      plat->wait  = 35*PLATWAIT; //not used
-      plat->crush = 10;          //jff 3/14/98 crush anything in the way
-      
-      // set up toggling between ceiling, floor inclusive
-      plat->low    = sec->ceilingheight;
-      plat->high   = sec->floorheight;
-      plat->status = down;
-
-      P_PlatSequence(plat->sector, "EEPlatSilent");
-      break;
-      
-   default:
-      break;
-   }
-
-   if(serverside)
-   {
-      P_AddActivePlat(plat);  // add plat to list of active plats
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            plat, NULL, line, plat->sector, ms_platform
-         );
-      }
-   }
-
-   return plat;
 }
 
 // The following were all rewritten by Lee Killough to use the new structure 
@@ -420,12 +405,10 @@ PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
 //
 void P_ActivateInStasis(int tag)
 {
-   std::map<uint32_t, PlatThinker*>::iterator it;
-
-   // search the active plats for one in stasis with right tag
-   for(it = NetPlatforms.begin(); it != NetPlatforms.end(); it++)
+   platlist_t *pl;
+   for(pl = activeplats; pl; pl = pl->next)   // search the active plats
    {
-      PlatThinker *plat = it->second;
+      PlatThinker *plat = pl->plat;              // for one in stasis with right tag
       if(plat->tag == tag && plat->status == in_stasis) 
       {
          if(plat->type==toggleUpDn) //jff 3/14/98 reactivate toggle type
@@ -448,12 +431,10 @@ void P_ActivateInStasis(int tag)
 //
 int EV_StopPlat(line_t *line)
 {
-   std::map<uint32_t, PlatThinker*>::iterator it;
-
-   // search the active plats for one with the tag not in stasis
-   for(it = NetPlatforms.begin(); it != NetPlatforms.end(); it++)
+   platlist_t *pl;
+   for(pl = activeplats; pl; pl = pl->next)  // search the active plats
    {
-      PlatThinker *plat = it->second;
+      PlatThinker *plat = pl->plat;             // for one with the tag not in stasis
       if(plat->status != in_stasis && plat->tag == line->tag)
       {
          plat->oldstatus = plat->status;    // put it in stasis
@@ -473,7 +454,13 @@ int EV_StopPlat(line_t *line)
 //
 void P_AddActivePlat(PlatThinker *plat)
 {
-   NetPlatforms.add(plat);
+   platlist_t *list = estructalloc(platlist_t, 1);
+   list->plat = plat;
+   plat->list = list;
+   if((list->next = activeplats))
+      list->next->prev = &list->next;
+   list->prev = &activeplats;
+   activeplats = list;
 }
 
 //
@@ -486,11 +473,12 @@ void P_AddActivePlat(PlatThinker *plat)
 //
 void P_RemoveActivePlat(PlatThinker *plat)
 {
+   platlist_t *list = plat->list;
    plat->sector->floordata = NULL; //jff 2/23/98 multiple thinkers
    plat->removeThinker();
-   if(CS_SERVER)
-      SV_BroadcastMapSpecialRemoved(plat->net_id, ms_platform);
-   NetPlatforms.remove(plat);
+   if((*list->prev = list->next))
+      list->next->prev = list->prev;
+   efree(list);
 }
 
 //
@@ -502,7 +490,12 @@ void P_RemoveActivePlat(PlatThinker *plat)
 //
 void P_RemoveAllActivePlats(void)
 {
-   NetPlatforms.clear();
+   while(activeplats)
+   {  
+      platlist_t *next = activeplats->next;
+      efree(activeplats);
+      activeplats = next;
+   }
 }
 
 //----------------------------------------------------------------------------

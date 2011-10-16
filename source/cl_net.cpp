@@ -89,9 +89,8 @@ static void send_message(message_recipient_e recipient_type,
    player_message.recipient_number = recipient_number;
    player_message.length = strlen(message) + 1;
 
-   buffer = (char *)(calloc(
-      1, sizeof(nm_playermessage_t) + player_message.length
-   ));
+   buffer =
+      ecalloc(char *, 1, sizeof(nm_playermessage_t) + player_message.length);
 
    memcpy(buffer, &player_message, sizeof(nm_playermessage_t));
    memcpy(
@@ -111,7 +110,7 @@ static void send_message(message_recipient_e recipient_type,
    }
 
    send_packet(buffer, sizeof(nm_playermessage_t) + player_message.length);
-   free(buffer);
+   efree(buffer);
 }
 
 static char* CL_extractServerMessage(nm_servermessage_t *message)
@@ -214,7 +213,7 @@ void CL_SendPlayerStringInfo(client_info_e info_type)
    );
 
    send_packet(update_message, buffer_size);
-   free(update_message);
+   efree(update_message);
 }
 
 void CL_SendPlayerArrayInfo(client_info_e info_type, int array_index)
@@ -271,17 +270,20 @@ void CL_SendSyncRequest(void)
 
 void CL_SendAuthMessage(const char *password)
 {
-   size_t password_length = strlen(password);
+   // [CG] Console.args apparently has a bug where there's a space appended to
+   //      it, so strip it here.
+   size_t password_length = strlen(password) - 1;
 
    // [CG] We want to remember what password we sent so that if the server
    //      responds with "authorization successful" we can store the password
    //      for this server's URL as valid.
 
-   if(cs_server_password != NULL)
-      free(cs_server_password);
+   cs_server_password = erealloc(
+      char *, cs_server_password, (password_length + 1) * sizeof(char)
+   );
 
-   cs_server_password = (char *)(calloc(password_length + 1, sizeof(char)));
-   memcpy(cs_server_password, password, password_length);
+   memset(cs_server_password, 0, password_length + 1);
+   strncpy(cs_server_password, password, password_length);
 
    send_message(mr_auth, 0, cs_server_password);
 }
@@ -1413,6 +1415,7 @@ void CL_HandleCubeSpawnedMessage(nm_cubespawned_t *message)
 #endif
 }
 
+#if 0
 void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message)
 {
    line_t *line;
@@ -1499,7 +1502,9 @@ void CL_HandleMapSpecialSpawnedMessage(nm_specialspawned_t *message)
       break;
    }
 }
+#endif
 
+#if 0
 void CL_HandleMapSpecialStatusMessage(nm_specialstatus_t *message)
 {
    void *blob = (void *)(((char *)message) + sizeof(nm_specialstatus_t));
@@ -1546,7 +1551,9 @@ void CL_HandleMapSpecialStatusMessage(nm_specialstatus_t *message)
       break;
    }
 }
+#endif
 
+#if 0
 void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message)
 {
    switch(message->special_type)
@@ -1599,6 +1606,7 @@ void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message)
       break;
    }
 }
+#endif
 
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 {

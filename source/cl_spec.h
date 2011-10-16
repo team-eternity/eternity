@@ -40,6 +40,7 @@ void CL_LoadSectorPositions(unsigned int index);
 void CL_LoadCurrentSectorPositions(void);
 void CL_LoadCurrentSectorState(void);
 
+#if 0
 void CL_SpawnParamCeiling(line_t *line, sector_t *sector,
                           CeilingThinker::status_t *status,
                           cs_ceilingdata_t *data);
@@ -98,6 +99,7 @@ void CL_ApplyPlatformStatusFromBlob(void *blob);
 
 void CL_ClearMapSpecialStatuses(void);
 void CL_PrintSpecialStatuses(void);
+#endif
 
 #endif
 

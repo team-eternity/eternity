@@ -256,9 +256,9 @@ void CS_InitTimerWidget(void)
 
    if(timer_widget != NULL)
    {
-      free(((hu_textwidget_t *)timer_widget)->message);
-      free(timer_widget->name);
-      free(timer_widget);
+      efree(((hu_textwidget_t *)timer_widget)->message);
+      efree(timer_widget->name);
+      efree(timer_widget);
       timer_widget = NULL;
    }
 
@@ -287,9 +287,9 @@ void CS_InitChatWidget(void)
 
    if(chat_widget != NULL)
    {
-      free(((hu_textwidget_t *)chat_widget)->message);
-      free(chat_widget->name);
-      free(chat_widget);
+      efree(((hu_textwidget_t *)chat_widget)->message);
+      efree(chat_widget->name);
+      efree(chat_widget);
       chat_widget = NULL;
    }
 
@@ -310,17 +310,17 @@ void CS_InitChatWidget(void)
 
    cw = (hu_textwidget_t *)chat_widget;
    cw->color = CR_GREEN + 1;
-   free(cw->message);
-   cw->message = (char *)(calloc(CHAT_BUFFER_SIZE, sizeof(char)));
+   efree(cw->message);
+   cw->message = ecalloc(char *, CHAT_BUFFER_SIZE, sizeof(char));
 }
 
 void CS_InitQueueWidget(void)
 {
    if(queue_widget != NULL)
    {
-      free(((hu_textwidget_t *)queue_widget)->message);
-      free(queue_widget->name);
-      free(queue_widget);
+      efree(((hu_textwidget_t *)queue_widget)->message);
+      efree(queue_widget->name);
+      efree(queue_widget);
       queue_widget = NULL;
    }
 
@@ -356,14 +356,14 @@ void CS_UpdateQueueMessage(void)
    {
       if(cw->alloc)
       {
-         free(cw->alloc);
+         efree(cw->alloc);
          cw->alloc = NULL;
       }
 
       tw->disabled = false;
       if(client->queue_level == ql_waiting)
       {
-         cw->message = cw->alloc = (char *)(calloc(21, sizeof(char)));
+         cw->message = cw->alloc = ecalloc(char *, 21, sizeof(char));
          psnprintf(
             cw->alloc,
             21,
@@ -372,9 +372,9 @@ void CS_UpdateQueueMessage(void)
          );
       }
       else if(client->queue_level == ql_none || client->spectating)
-         cw->message = cw->alloc = strdup(FC_ABSCENTER "Press [USE] to join");
+         cw->message = cw->alloc = estrdup(FC_ABSCENTER "Press [USE] to join");
       else
-         cw->message = cw->alloc = strdup(FC_ABSCENTER);
+         cw->message = cw->alloc = estrdup(FC_ABSCENTER);
    }
    else
       tw->disabled = true;
@@ -387,7 +387,7 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
 
    if(show_netstats)
    {
-      snprintf(tw->message, 20, "%5u/%3u/%3u/%3u%%",
+      snprintf(tw->message, 21, "%5u/%3u/%3u/%3u%%",
          clients[consoleplayer].client_lag,
          client_buffer_size > 0 ? client_buffer_size : 0,
          clients[consoleplayer].server_lag,
@@ -405,9 +405,9 @@ void CS_InitNetWidget(void)
 
    if(net_widget != NULL)
    {
-      free(((hu_textwidget_t *)net_widget)->message);
-      free(net_widget->name);
-      free(net_widget);
+      efree(((hu_textwidget_t *)net_widget)->message);
+      efree(net_widget->name);
+      efree(net_widget);
       net_widget = NULL;
    }
 
@@ -416,7 +416,7 @@ void CS_InitNetWidget(void)
       SCREENWIDTH - (V_FontStringWidth(hud_font, "00000/000/000/000%") + 5),
       ST_Y - (16 + V_FontStringHeight(hud_font, "00000/000/000/000%")),
       hud_font->num,
-      "00000/000/000/000%",
+      "0000000000000000000000000",
       0,
       TW_NOCLEAR
    );
@@ -458,9 +458,9 @@ void CS_InitTeamWidget(void)
 
    if(team_widget != NULL)
    {
-      free(((hu_textwidget_t *)team_widget)->message);
-      free(team_widget->name);
-      free(team_widget);
+      efree(((hu_textwidget_t *)team_widget)->message);
+      efree(team_widget->name);
+      efree(team_widget);
       team_widget = NULL;
    }
 

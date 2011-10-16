@@ -39,6 +39,9 @@
 //      they can take appropriate action - usually start a new demo if possible
 //      and investigate the situation later.
 
+// [CG] It's probably worth making this into a class at some point, if only to
+//      drop all the scoping prefixes.
+
 #include <iostream>
 #include <fstream>
 
@@ -266,17 +269,17 @@ static bool close_current_map_demo(void)
 
    if(current_demo_map_folder)
    {
-      free(current_demo_map_folder);
+      efree(current_demo_map_folder);
       current_demo_map_folder = NULL;
    }
    if(current_demo_info_path)
    {
-      free(current_demo_info_path);
+      efree(current_demo_info_path);
       current_demo_info_path = NULL;
    }
    if(current_demo_data_path)
    {
-      free(current_demo_data_path);
+      efree(current_demo_data_path);
       current_demo_data_path = NULL;
    }
 
@@ -289,9 +292,8 @@ static void set_current_map_demo_paths(void)
 {
    if(current_demo_map_folder == NULL)
    {
-      current_demo_map_folder = (char *)(calloc(
-         strlen(cs_demo_path) + 6, sizeof(char)
-      ));
+      current_demo_map_folder =
+         ecalloc(char *, strlen(cs_demo_path) + 6, sizeof(char));
    }
    else
    {
@@ -302,19 +304,17 @@ static void set_current_map_demo_paths(void)
    );
 
    if(current_demo_info_path != NULL)
-      free(current_demo_info_path);
+      efree(current_demo_info_path);
 
-   current_demo_info_path = (char *)(calloc(
-      strlen(current_demo_map_folder) + 10, sizeof(char)
-   ));
+   current_demo_info_path =
+      ecalloc(char *, strlen(current_demo_map_folder) + 10, sizeof(char));
    sprintf(current_demo_info_path, "%s/info.txt", current_demo_map_folder);
 
    if(current_demo_data_path != NULL)
-      free(current_demo_data_path);
+      efree(current_demo_data_path);
 
-   current_demo_data_path = (char *)(calloc(
-      strlen(current_demo_map_folder) + 14, sizeof(char)
-   ));
+   current_demo_data_path =
+      ecalloc(char *, strlen(current_demo_map_folder) + 14, sizeof(char));
    sprintf(current_demo_data_path, "%s/demodata.bin", current_demo_map_folder);
 }
 
@@ -380,9 +380,7 @@ static bool close_current_demo(void)
 
    printf("close_current_demo: Closing.\n");
 
-   archive_file_path = (char *)(calloc(
-      strlen(cs_demo_path) + 5, sizeof(char)
-   ));
+   archive_file_path = ecalloc(char *, strlen(cs_demo_path) + 5, sizeof(char));
    sprintf(archive_file_path, "%s.ecd", cs_demo_path);
 
    if(!close_current_map_demo())
@@ -406,7 +404,7 @@ static bool close_current_demo(void)
       return false;
    }
 
-   free(archive_file_path);
+   efree(archive_file_path);
 
    if((entry = archive_entry_new()) == NULL)
    {
@@ -483,9 +481,11 @@ static bool retrieve_demo(char *url)
 
    basename++; // [CG] Skip preceding '/'.
 
-   cs_demo_archive_path = (char *)(calloc(
-      strlen(cs_demo_folder_path) + strlen(basename) + 2, sizeof(char)
-   ));
+   cs_demo_archive_path = ecalloc(
+      char *,
+      strlen(cs_demo_folder_path) + strlen(basename) + 2,
+      sizeof(char)
+   );
 
    sprintf(cs_demo_archive_path, "%s/%s", cs_demo_folder_path, basename);
 
@@ -601,7 +601,7 @@ static bool open_demo(char *path)
          size_t demo_path_size =
             strlen(cs_demo_folder_path) + basename_size + 2;
 
-         cs_demo_path = (char *)(calloc(demo_path_size, sizeof(char)));
+         cs_demo_path = ecalloc(char *, demo_path_size, sizeof(char));
          sprintf(cs_demo_path, "%s/", cs_demo_folder_path);
          strncat(cs_demo_path, entry_path_name, basename_size);
          printf("cs_demo_path: %s.\n", cs_demo_path);
@@ -650,19 +650,17 @@ static bool check_demo_folder(void)
    {
       if(!strlen(cs_demo_folder_path))
       {
-         free(cs_demo_folder_path);
-         cs_demo_folder_path = (char *)(calloc(
-            strlen(basepath) + 7, sizeof(char)
-         ));
+         efree(cs_demo_folder_path);
+         cs_demo_folder_path =
+            ecalloc(char *, strlen(basepath) + 7, sizeof(char));
          sprintf(cs_demo_folder_path, "%s/demos", basepath);
       }
    }
 
    if(!cs_demo_folder_path)
    {
-      cs_demo_folder_path = (char *)(calloc(
-         strlen(basepath) + 7, sizeof(char)
-      ));
+      cs_demo_folder_path =
+         ecalloc(char *, strlen(basepath) + 7, sizeof(char));
       sprintf(cs_demo_folder_path, "%s/demos", basepath);
    }
 
@@ -731,7 +729,7 @@ static bool load_current_map_demo(void)
          if(!read_from_demo(&resource_name_size, sizeof(size_t), 1))
             return false;
 
-         resource.name = (char *)(realloc(resource.name, resource_name_size));
+         resource.name = erealloc(char *, resource.name, resource_name_size);
 
          if(!read_from_demo(resource.name, sizeof(char), resource_name_size))
             return false;
@@ -819,9 +817,11 @@ static bool load_current_map_demo(void)
 
                stored_resource = CS_GetResource(resource.name);
             }
-            resource_indices = (unsigned int *)(realloc(
-               resource_indices, resource_count * sizeof(unsigned int)
-            ));
+            resource_indices = erealloc(
+               unsigned int *,
+               resource_indices,
+               resource_count * sizeof(unsigned int)
+            );
             resource_indices[resource_count - 1] =
                stored_resource - cs_resources;
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
@@ -877,7 +877,7 @@ static bool handle_network_message_demo_packet(void)
    if(!read_from_demo(&msg_size, sizeof(size_t), 1))
       return false;
 
-   message = (char *)(calloc(msg_size, sizeof(char)));
+   message = ecalloc(char *, msg_size, sizeof(char));
 
    if(!read_from_demo(message, sizeof(char), msg_size))
       return false;
@@ -932,7 +932,7 @@ static bool handle_console_command_demo_packet(void)
    if(!read_from_demo(&command_size, sizeof(size_t), 1))
       return false;
 
-   command_name = (char *)(calloc(command_size, sizeof(char)));
+   command_name = ecalloc(char *, command_size, sizeof(char));
 
    if(!read_from_demo(command_name, sizeof(char), command_size))
       return false;
@@ -940,7 +940,7 @@ static bool handle_console_command_demo_packet(void)
    if(!read_from_demo(&options_size, sizeof(size_t), 1))
       return false;
 
-   options = (char *)(calloc(options_size, sizeof(char)));
+   options = ecalloc(char *, options_size, sizeof(char));
 
    if(!read_from_demo(options, sizeof(char), options_size))
       return false;
@@ -983,9 +983,9 @@ bool CS_SetDemoFolderPath(char *demo_folder_path)
    }
 
    if(cs_demo_folder_path)
-      free(cs_demo_folder_path);
+      efree(cs_demo_folder_path);
 
-   cs_demo_folder_path = strdup(demo_folder_path);
+   cs_demo_folder_path = estrdup(demo_folder_path);
 
    // [CG] Strip trailing '/' or '\'.
    if(*(demo_folder_path + (strlen(demo_folder_path) - 1)) == '/')
@@ -1018,9 +1018,11 @@ bool CS_RecordDemo(void)
    );
 
    // [CG] Build the demo's filename
-   cs_demo_path = (char *)(calloc(
-      strlen(cs_demo_folder_path) + TIMESTAMP_SIZE + 2, sizeof(char)
-   ));
+   cs_demo_path = ecalloc(
+      char *,
+      strlen(cs_demo_folder_path) + TIMESTAMP_SIZE + 2,
+      sizeof(char)
+   );
    sprintf(cs_demo_path, "%s/%s", cs_demo_folder_path, timestamp);
 
    // [CG] Demos start out as folders, and are only archived when demo
@@ -1028,15 +1030,14 @@ bool CS_RecordDemo(void)
    //      here.
    if(!M_CreateFolder(cs_demo_path))
    {
-      free(cs_demo_path);
+      efree(cs_demo_path);
       cs_demo_path = NULL;
       set_demo_error(DEMO_ERROR_FILE_ERRNO);
       return false;
    }
 
-   cs_demo_info_path = (char *)(calloc(
-      strlen(cs_demo_path) + 10, sizeof(char)
-   ));
+   cs_demo_info_path =
+      ecalloc(char *, strlen(cs_demo_path) + 10, sizeof(char));
    sprintf(cs_demo_info_path, "%s/info.txt", cs_demo_path);
 
    // [CG] Create the top-level info.txt file.
@@ -1328,12 +1329,10 @@ bool CS_PlayDemo(char *url)
    if(!check_demo_folder())
       return false;
 
-   cs_settings = (clientserver_settings_t *)(malloc(
-      sizeof(clientserver_settings_t)
-   ));
-   cs_original_settings = (clientserver_settings_t *)(malloc(
-      sizeof(clientserver_settings_t)
-   ));
+   cs_settings =
+      emalloc(clientserver_settings_t *, sizeof(clientserver_settings_t));
+   cs_original_settings =
+      emalloc(clientserver_settings_t *, sizeof(clientserver_settings_t));
 
    if(strncmp(url, "file://", 7) == 0)
    {
@@ -1347,13 +1346,13 @@ bool CS_PlayDemo(char *url)
 
       if(M_IsAbsolutePath(url + 7))
       {
-         cs_demo_archive_path = strdup(url + 7);
+         cs_demo_archive_path = estrdup(url + 7);
       }
       else
       {
-         cs_demo_archive_path = (char *)(realloc(
-            cs_demo_archive_path, strlen(cwd) + strlen(url + 7) + 2
-         ));
+         cs_demo_archive_path = erealloc(
+            char *, cs_demo_archive_path, strlen(cwd) + strlen(url + 7) + 2
+         );
          sprintf(cs_demo_archive_path, "%s/%s", cwd, url + 7);
       }
    }
@@ -1403,15 +1402,15 @@ bool CS_PlayDemo(char *url)
       CS_ClearMaps();
    
    cs_map_count = 0;
-   test_folder = (char *)(calloc(strlen(cs_demo_path) + 6, sizeof(char)));
+   test_folder = ecalloc(char *, strlen(cs_demo_path) + 6, sizeof(char));
    sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
    while(M_IsFolder(test_folder))
    {
       cs_map_count++;
       sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
    }
-   free(test_folder);
-   cs_maps = (cs_map_t *)(calloc(cs_map_count, sizeof(cs_map_t)));
+   efree(test_folder);
+   cs_maps = ecalloc(cs_map_t *, cs_map_count, sizeof(cs_map_t));
 
    if(strcmp(cs_demo_folder_path, cwd))
    {
@@ -1609,12 +1608,12 @@ bool CS_StopDemo(void)
 
    if(cs_demo_path)
    {
-      free(cs_demo_path);
+      efree(cs_demo_path);
       cs_demo_path = NULL;
    }
    if(cs_demo_info_path)
    {
-      free(cs_demo_info_path);
+      efree(cs_demo_info_path);
       cs_demo_info_path = NULL;
    }
    cs_current_demo_map = 0;

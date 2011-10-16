@@ -314,7 +314,7 @@ static void MN_HLoadDrawer(void)
    static char *emptystr = NULL;
 
    if(!emptystr)
-      emptystr = strdup(DEH_String("EMPTYSTRING"));
+      emptystr = estrdup(DEH_String("EMPTYSTRING"));
 
    V_FontWriteText(menu_font_big, title, 
                    160 - V_FontStringWidth(menu_font_big, title) / 2, 10);

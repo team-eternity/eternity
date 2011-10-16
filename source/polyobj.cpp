@@ -347,7 +347,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
          if(numLineItems >= numLineItemsAlloc)
          {
             numLineItemsAlloc = numLineItemsAlloc ? numLineItemsAlloc*2 : 4;
-            lineitems = (lineitem_t *)(realloc(lineitems, numLineItemsAlloc*sizeof(lineitem_t)));
+            lineitems = erealloc(lineitem_t *, lineitems, numLineItemsAlloc*sizeof(lineitem_t));
          }
          lineitems[numLineItems].line = &lines[i];
          lineitems[numLineItems].num  = lines[i].args[1];
@@ -372,7 +372,7 @@ static void Polyobj_findExplicit(polyobj_t *po)
       Polyobj_addLine(po, lineitems[i].line);
 
    // free the temporary array
-   free(lineitems);
+   efree(lineitems);
 }
 
 // Setup functions
@@ -1069,7 +1069,7 @@ void Polyobj_InitLevel(void)
          {
             ++numPolyObjects;
             
-            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
+            qitem = ecalloc(mobjqitem_t *, 1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &spawnqueue);
          }
@@ -1077,7 +1077,7 @@ void Polyobj_InitLevel(void)
          {
             ++numAnchors;
 
-            qitem = (mobjqitem_t *)(calloc(1, sizeof(mobjqitem_t)));
+            qitem = ecalloc(mobjqitem_t *, 1, sizeof(mobjqitem_t));
             qitem->mo = mo;
             M_QueueInsert(&(qitem->mqitem), &anchorqueue);
          }

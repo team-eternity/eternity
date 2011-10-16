@@ -350,7 +350,7 @@ void SV_HandleMastersSection(Json::Value &masters)
    qstring port_str;
 
    master_servers =
-      (cs_master_t *)(calloc(masters.size(), sizeof(cs_master_t)));
+      ecalloc(cs_master_t *, masters.size(), sizeof(cs_master_t));
    member_names = masters.getMemberNames();
 
    for(i = 0, it = member_names.begin(); it != member_names.end(); i++, it++)
@@ -365,7 +365,7 @@ void SV_HandleMastersSection(Json::Value &masters)
       if((found = member_name.find(":")) == std::string::npos ||
          (found + 1) == member_name.length())
       {
-         master->address = strdup(member_name.c_str());
+         master->address = estrdup(member_name.c_str());
          master->port = 80; // [CG] Default to port 80.
       }
       else
@@ -379,17 +379,17 @@ void SV_HandleMastersSection(Json::Value &masters)
             );
          }
 
-         master->address = strdup(member_name.substr(0, found).c_str());
+         master->address = estrdup(member_name.substr(0, found).c_str());
          master->port = port_str.toInt();
       }
 
-      master->username = strdup(masters[*it]["username"].asCString());
+      master->username = estrdup(masters[*it]["username"].asCString());
       master->password_hash = CS_GetSHA1Hash(
          masters[*it]["password"].asCString(),
          strlen(masters[*it]["password"].asCString())
       );
-      master->group = strdup(masters[*it]["group"].asCString());
-      master->name = strdup(masters[*it]["name"].asCString());
+      master->group = estrdup(masters[*it]["group"].asCString());
+      master->name = estrdup(masters[*it]["name"].asCString());
       master_servers[i].disabled = false;
       master_servers[i].updating = false;
    }
@@ -419,9 +419,11 @@ void SV_LoadConfig(void)
    }
    else
    {
-      config_path = (char *)(calloc(
-         strlen(basepath) + strlen(DEFAULT_CONFIG_FILENAME) + 2, sizeof(char)
-      ));
+      config_path = ecalloc(
+         char *,
+         strlen(basepath) + strlen(DEFAULT_CONFIG_FILENAME) + 2,
+         sizeof(char)
+      );
       sprintf(config_path, "%s/%s", basepath, DEFAULT_CONFIG_FILENAME);
       M_NormalizeSlashes(config_path);
       should_free = true;
@@ -441,7 +443,7 @@ void SV_LoadConfig(void)
    CS_ReadJSON(cs_json, (const char *)config_path);
 
    if(should_free)
-      free(config_path);
+      efree(config_path);
 
    // [CG] Loads server and options sections.
    CS_LoadConfig();
@@ -460,7 +462,7 @@ void SV_LoadConfig(void)
        cs_json["server"]["spectator_password"].asString().length())
    {
       sv_spectator_password =
-         strdup(cs_json["server"]["spectator_password"].asCString());
+         estrdup(cs_json["server"]["spectator_password"].asCString());
       requires_spectator_password = true;
    }
 
@@ -468,7 +470,7 @@ void SV_LoadConfig(void)
        cs_json["server"]["player_password"].asString().length())
    {
       sv_player_password =
-         strdup(cs_json["server"]["player_password"].asCString());
+         estrdup(cs_json["server"]["player_password"].asCString());
       requires_player_password = true;
    }
 
@@ -476,7 +478,7 @@ void SV_LoadConfig(void)
        cs_json["server"]["moderator_password"].asString().length())
    {
       sv_moderator_password =
-         strdup(cs_json["server"]["moderator_password"].asCString());
+         estrdup(cs_json["server"]["moderator_password"].asCString());
       requires_moderator_password = true;
    }
    else
@@ -491,7 +493,7 @@ void SV_LoadConfig(void)
        cs_json["server"]["administrator_password"].asString().length())
    {
       sv_administrator_password =
-         strdup(cs_json["server"]["administrator_password"].asCString());
+         estrdup(cs_json["server"]["administrator_password"].asCString());
       requires_administrator_password = true;
    }
    else
@@ -780,7 +782,7 @@ void CS_HandleServerSection(Json::Value &server)
 
       public_address_string = CS_IPToString(public_address);
       server["address"] = public_address_string;
-      free(public_address_string);
+      efree(public_address_string);
    }
 
    if(!server["game"].empty())
@@ -865,7 +867,7 @@ void CS_HandleServerSection(Json::Value &server)
       server["wad_repository"].asString().length() &&
       CS_CheckURI((char *)server["wad_repository"].asCString()))
    {
-      cs_wad_repository = strdup(server["wad_repository"].asCString());
+      cs_wad_repository = estrdup(server["wad_repository"].asCString());
    }
 }
 
@@ -948,7 +950,7 @@ void CS_HandleMapsSection(Json::Value &maps)
          I_Error("Map name '%s' exceeds max length of 8 characters.\n", name);
 
       resource_indices =
-         (unsigned int *)(calloc(wads_count, sizeof(unsigned int)));
+         ecalloc(unsigned int *, wads_count, sizeof(unsigned int));
 
       for(j = 0; j < wads_count; j++)
       {
@@ -968,19 +970,20 @@ void CS_HandleMapsSection(Json::Value &maps)
 
 void CS_LoadConfig(void)
 {
-   server_address = (ENetAddress *)(realloc(
-      server_address, sizeof(ENetAddress)
-   ));
+   server_address =
+      erealloc(ENetAddress *, server_address, sizeof(ENetAddress));
    memset(server_address, 0, sizeof(ENetAddress));
 
-   cs_settings = (clientserver_settings_t *)(realloc(
-      cs_settings, sizeof(clientserver_settings_t)
-   ));
+   cs_settings = erealloc(
+      clientserver_settings_t *, cs_settings, sizeof(clientserver_settings_t)
+   );
    memset(cs_settings, 0, sizeof(clientserver_settings_t));
 
-   cs_original_settings = (clientserver_settings_t *)(realloc(
-      cs_original_settings, sizeof(clientserver_settings_t)
-   ));
+   cs_original_settings = erealloc(
+      clientserver_settings_t *,
+      cs_original_settings,
+      sizeof(clientserver_settings_t)
+   );
    memset(cs_original_settings, 0, sizeof(clientserver_settings_t));
 
    if(cs_json["resources"].empty())

@@ -233,7 +233,7 @@ static void E_ProcessSplash(cfg_t *cfg)
    // splash and add it to the splash hash table.
    if(!(newSplash = E_SplashForName(tempstr)))
    {
-      newSplash = (ETerrainSplash *)(calloc(1, sizeof(ETerrainSplash)));
+      newSplash = ecalloc(ETerrainSplash *, 1, sizeof(ETerrainSplash));
       strncpy(newSplash->name, tempstr, 33);
       E_AddSplashToHash(newSplash);
       newsp = true;
@@ -357,7 +357,7 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
       // terrain and add it to the terrain hash table.
       if(!(newTerrain = E_TerrainForName(tempstr)))
       {
-         newTerrain = (ETerrain *)(calloc(1, sizeof(ETerrain)));
+         newTerrain = ecalloc(ETerrain *, 1, sizeof(ETerrain));
          strncpy(newTerrain->name, tempstr, 33);
          E_AddTerrainToHash(newTerrain);
          newtr = true;
@@ -567,7 +567,7 @@ static void E_ProcessFloor(cfg_t *cfg)
    // terrain and add it to the terrain hash table.
    if(!(newFloor = E_FloorForName(tempstr)))
    {
-      newFloor = (EFloor *)(calloc(1, sizeof(EFloor)));
+      newFloor = ecalloc(EFloor *, 1, sizeof(EFloor));
       strncpy(newFloor->name, tempstr, 9);
       E_AddFloorToHash(newFloor);
    }
@@ -641,11 +641,11 @@ void E_InitTerrainTypes(void)
 
    // if TerrainTypes already exists, free it
    if(TerrainTypes)
-      free(TerrainTypes);
+      efree(TerrainTypes);
 
    // allocate the TerrainTypes lookup
    numf = (texturecount + 1);
-   TerrainTypes = (ETerrain **)calloc(numf, sizeof(ETerrain*));
+   TerrainTypes = ecalloc(ETerrain **, numf, sizeof(ETerrain*));
 
    // initialize all flats to Solid terrain
    for(i = 0; i < numf; ++i)

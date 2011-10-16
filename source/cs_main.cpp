@@ -147,12 +147,14 @@ const char *network_message_names[nm_max_messages] = {
    "missile spawned",
    "missile exploded",
    "cube spawned",
-   "special spawned",
-   "special status",
-   "special removed",
    "sector position",
    "announcer event",
    "tic finished",
+#if 0
+   "special spawned",
+   "special status",
+   "special removed",
+#endif
 };
 
 unsigned int respawn_protection_time;
@@ -189,9 +191,9 @@ static int build_save_buffer(byte **buffer)
 
 void CS_Init(void)
 {
-   cs_state_file_path = (char *)(calloc(
-      strlen(basepath) + strlen("/cs.state") + 1, sizeof(char)
-   ));
+   cs_state_file_path = ecalloc(
+      char *, strlen(basepath) + strlen("/cs.state") + 1, sizeof(char)
+   );
 
    sprintf(cs_state_file_path, "%s/cs.state", basepath);
    M_NormalizeSlashes(cs_state_file_path);
@@ -316,7 +318,7 @@ char* CS_IPToString(int ip_address)
                   << ((ip_address >> 16) & 0xff) << '.'
                   << ((ip_address >> 24) & 0xff);
 
-   return strdup(address_stream.str().c_str());
+   return estrdup(address_stream.str().c_str());
 }
 
 char* CS_VersionString(void)
@@ -327,7 +329,7 @@ char* CS_VersionString(void)
                   << (version % 100) << '.'
                   << (subversion);
 
-   return strdup(version_stream.str().c_str());
+   return estrdup(version_stream.str().c_str());
 }
 
 char* CS_GetSHA1HashFile(char *path)
@@ -489,11 +491,11 @@ size_t CS_BuildGameState(int playernum, byte **buffer)
 
    message.state_size = state_size;
 
-   *buffer = (byte *)(malloc(sizeof(nm_currentstate_t) + state_size));
+   *buffer = emalloc(byte *, sizeof(nm_currentstate_t) + state_size);
    memcpy(*buffer, &message, sizeof(nm_currentstate_t));
    memcpy(*buffer + sizeof(nm_currentstate_t), savebuffer, state_size);
 
-   free(savebuffer);
+   efree(savebuffer);
 
    return sizeof(nm_currentstate_t) + state_size;
 }
@@ -1017,7 +1019,7 @@ size_t CS_BuildPlayerStringInfoPacket(nm_playerinfoupdated_t **update_message,
 
    info_size = strlen(player_info) + 1;
 
-   buffer = (char *)(calloc(1, sizeof(nm_playerinfoupdated_t) + info_size));
+   buffer = ecalloc(char *, 1, sizeof(nm_playerinfoupdated_t) + info_size);
 
    *update_message = (nm_playerinfoupdated_t *)buffer;
    (*update_message)->string_size = info_size;
@@ -1373,7 +1375,7 @@ char* CS_ExtractMessage(char *data, size_t data_length)
    //      - strlen will be length - 1 (if correct).
    //      - buffer size will be length + 1
    data_length = data_length - sizeof(nm_playermessage_t);
-   message = (char *)(calloc(data_length + 1, sizeof(char)));
+   message = ecalloc(char *, data_length + 1, sizeof(char));
    memcpy(message, data + sizeof(nm_playermessage_t), data_length);
    message_length = strlen(message);
 
@@ -1473,7 +1475,7 @@ void CS_ReadFromNetwork(unsigned int timeout)
                   event.peer->address.port
                );
             }
-            free(address);
+            efree(address);
          }
          break;
       case ENET_EVENT_TYPE_RECEIVE:
@@ -1534,7 +1536,7 @@ void CS_ReadFromNetwork(unsigned int timeout)
                   address,
                   event.peer->address.port
                );
-               free(address);
+               efree(address);
             }
          }
          event.peer->data = NULL;

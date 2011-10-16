@@ -109,8 +109,8 @@ WidgetHash widgets;
 static void HU_SetWidgetName(hu_widget_t *widget, const char *name)
 {
    if(widget->name)
-      free(widget->name);
-   widget->name = strdup(name);
+      efree(widget->name);
+   widget->name = estrdup(name);
 }
 
 //
@@ -622,7 +622,7 @@ static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
 static void HU_DynamicPatchWidget(const char *name, int x, int y, int color,
                                   int tl_level, char *patch)
 {
-   hu_patchwidget_t *newpw = (hu_patchwidget_t *)(calloc(1, sizeof(hu_patchwidget_t)));
+   hu_patchwidget_t *newpw = ecalloc(hu_patchwidget_t *, 1, sizeof(hu_patchwidget_t));
 
    // set id
    HU_SetWidgetName(&newpw->widget, name);
@@ -631,7 +631,7 @@ static void HU_DynamicPatchWidget(const char *name, int x, int y, int color,
    if(!HU_AddWidgetToHash((hu_widget_t *)newpw))
    {
       // if addition was unsuccessful, we delete it now
-      free(newpw);
+      efree(newpw);
       return;
    }
 
@@ -866,7 +866,7 @@ static void HU_TextWidgetClear(hu_widget_t *widget)
    // if this widget owns its message, free it
    if(tw->alloc)
    {
-      free(tw->alloc);
+      efree(tw->alloc);
       tw->alloc = NULL;
    }
    
@@ -916,7 +916,7 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                           char *message, int cleartic, int flags)
 {
-   hu_textwidget_t *newtw = (hu_textwidget_t *)(calloc(1, sizeof(hu_textwidget_t)));
+   hu_textwidget_t *newtw = ecalloc(hu_textwidget_t *, 1, sizeof(hu_textwidget_t));
 
    // set id
    HU_SetWidgetName(&newtw->widget, name);
@@ -925,7 +925,7 @@ void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    if(!HU_AddWidgetToHash((hu_widget_t *)newtw))
    {
       // if addition was unsuccessful, we delete it now
-      free(newtw);
+      efree(newtw);
       return;
    }
 
@@ -949,7 +949,7 @@ void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    newtw->flags = flags;
 
    // set message
-   newtw->message = newtw->alloc = strdup(message);
+   newtw->message = newtw->alloc = estrdup(message);
 
    HU_UpdateEraseData(newtw);
 }
@@ -1811,7 +1811,7 @@ static cell AMX_NATIVE_CALL sm_movewidget(AMX *amx, cell *params)
 
    if(!(widget = HU_WidgetForName(name)))
    {
-      free(name);
+      efree(name);
       return 0;
    }
 
@@ -1839,7 +1839,7 @@ static cell AMX_NATIVE_CALL sm_movewidget(AMX *amx, cell *params)
       break;
    }
 
-   free(name);
+   efree(name);
    return 0;
 }
 
@@ -1856,14 +1856,14 @@ static cell AMX_NATIVE_CALL sm_newpatchwidget(AMX *amx, cell *params)
    if((err = SM_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
-      free(name);
+      efree(name);
       return -1;
    }
    
    HU_DynamicPatchWidget(name, params[3], params[4], params[5], params[6], patch);
 
-   free(name);
-   free(patch);
+   efree(name);
+   efree(patch);
 
    return 0;
 }
@@ -1886,7 +1886,7 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
    if((err = SM_GetSmallString(amx, &patch, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
-      free(name);
+      efree(name);
       return -1;
    }
 
@@ -1901,8 +1901,8 @@ static cell AMX_NATIVE_CALL sm_setwidgetpatch(AMX *amx, cell *params)
       pw->patch = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE);
    }
 
-   free(name);
-   free(patch);
+   efree(name);
+   efree(patch);
 
    return 0;
 }
@@ -1932,7 +1932,7 @@ static cell AMX_NATIVE_CALL sm_patchwidgetcolor(AMX *amx, cell *params)
          pw->tl_level = params[3];
    }
 
-   free(name);
+   efree(name);
 
    return 0;
 }
@@ -1950,15 +1950,15 @@ static cell AMX_NATIVE_CALL sm_newtextwidget(AMX *amx, cell *params)
    if((err = SM_GetSmallString(amx, &msg, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
-      free(name);
+      efree(name);
       return -1;
    }
 
    HU_DynamicTextWidget(name, params[3], params[4], params[5], msg,
                         params[6] != 0 ? leveltime + params[6] : 0, params[7]);
 
-   free(name);
-   free(msg);
+   efree(name);
+   efree(msg);
 
    return 0;
 }
@@ -1990,7 +1990,7 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
 
    if((widget = HU_WidgetForName(name)) && widget->type == WIDGET_TEXT)
    {
-      char *tempbuf = (char *)(malloc(size+1));
+      char *tempbuf = emalloc(char *, size+1);
       
       tw = (hu_textwidget_t *)widget;
 
@@ -2001,10 +2001,10 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
       
       amx_SetString(deststr, tempbuf, packed, 0);
 
-      free(tempbuf);
+      efree(tempbuf);
    }
 
-   free(name);
+   efree(name);
 
    return 0;
 }
@@ -2027,7 +2027,7 @@ static cell AMX_NATIVE_CALL sm_setwidgettext(AMX *amx, cell *params)
    if((err = SM_GetSmallString(amx, &value, params[2])) != AMX_ERR_NONE)
    {
       amx_RaiseError(amx, err);
-      free(name);
+      efree(name);
       return -1;
    }
 
@@ -2036,17 +2036,17 @@ static cell AMX_NATIVE_CALL sm_setwidgettext(AMX *amx, cell *params)
       tw = (hu_textwidget_t *)widget;
 
       if(tw->alloc)
-         free(tw->alloc);
+         efree(tw->alloc);
 
-      tw->message = tw->alloc = strdup(value);
+      tw->message = tw->alloc = estrdup(value);
 
       tw->cleartic = params[3] != 0 ? leveltime + params[3] : 0;
 
       HU_UpdateEraseData(tw);
    }
 
-   free(name);
-   free(value);
+   efree(name);
+   efree(value);
 
    return 0;
 }
@@ -2066,7 +2066,7 @@ static cell AMX_NATIVE_CALL sm_togglewidget(AMX *amx, cell *params)
    if((widget = HU_WidgetForName(name)))
       HU_ToggleWidget(widget, !!params[2]);
 
-   free(name);
+   efree(name);
 
    return 0;
 }
@@ -2086,7 +2086,7 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
 
    HU_CenterMessageTimed(text, tics);
 
-   free(text);
+   efree(text);
 
    return 0;
 }

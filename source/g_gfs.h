@@ -54,7 +54,7 @@ typedef struct gfs_s
 } gfs_t;
 
 gfs_t *G_LoadGFS(const char *filename);
-void G_FreeGFS(gfs_t *gfs);
+void G_FreeGFS(gfs_t *lgfs);
 const char *G_GFSCheckIWAD(void);
 const char *G_GFSCheckEDF(void);
 

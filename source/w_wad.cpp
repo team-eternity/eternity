@@ -97,7 +97,7 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
    {
       numallocsa = numallocsa ? numallocsa * 2 : 32;
 
-      infoptrs = (lumpinfo_t **)(realloc(infoptrs, numallocsa * sizeof(lumpinfo_t *)));
+      infoptrs = erealloc(lumpinfo_t **, infoptrs, numallocsa * sizeof(lumpinfo_t *));
    }
    
    // add it
@@ -141,9 +141,9 @@ void WadDirectory::Clear(void)
             if(handle_count == 0)
             {
                handle_count++;
-               handles = (FILE **)(realloc(
-                  handles, handle_count * sizeof(FILE *)
-               ));
+               handles = erealloc(
+                  FILE **, handles, handle_count * sizeof(FILE *)
+               );
                handles[handle_count - 1] = this->lumpinfo[i]->file;
             }
             else
@@ -155,9 +155,9 @@ void WadDirectory::Clear(void)
                if(j == handle_count) // [CG] Handle was not found.
                {
                   handle_count++;
-                  handles = (FILE **)(realloc(
-                     handles, handle_count * sizeof(FILE *)
-                  ));
+                  handles = erealloc(
+                     FILE **, handles, handle_count * sizeof(FILE *)
+                  );
                   handles[handle_count - 1] = this->lumpinfo[i]->file;
                }
             }
@@ -169,7 +169,7 @@ void WadDirectory::Clear(void)
          fclose(handles[i]);
 
       // [CG] Done with the file handle list.
-      free(handles);
+      efree(handles);
    }
 
    // [CG] Reset numlumps.
@@ -179,7 +179,7 @@ void WadDirectory::Clear(void)
    //      large chunks, not individually for each lump.
    if(this->infoptrs)
       for(i = 0; i < this->numallocs; i++)
-         free(this->infoptrs[i]);
+         efree(this->infoptrs[i]);
 
    this->numallocs = 0;
 }
@@ -366,7 +366,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       header.infotableofs = SwapLong(header.infotableofs);
       
       length = header.numlumps * sizeof(filelump_t);
-      fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
+      fileinfo2free = fileinfo = emalloc(filelump_t *, length); // killough
       
       long info_offset = (long)(header.infotableofs);
       // subfile wads may exist at a positive base offset in the container file
@@ -379,7 +379,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
          if(filetype == ADDPRIVATE) // Error is tolerated for private files
          {
             fclose(openData.handle);
-            free(fileinfo2free);
+            efree(fileinfo2free);
             C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", openData.filename);
             return false;
          }
@@ -404,10 +404,11 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    }
    
    // Fill in lumpinfo
-   this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
+   this->lumpinfo = erealloc(lumpinfo_t **, this->lumpinfo, 
+                             this->numlumps * sizeof(lumpinfo_t *));
 
    // space for new lumps
-   newlumps = (lumpinfo_t *)(malloc((this->numlumps - startlump) * sizeof(lumpinfo_t)));
+   newlumps = estructalloc(lumpinfo_t, this->numlumps - startlump);
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
@@ -450,7 +451,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    ++source;
    
    if(fileinfo2free)
-      free(fileinfo2free); // killough
+      efree(fileinfo2free); // killough
    
    if(filetype == ADDPRIVATE)
       return true; // no error (note opposite return value semantics 9_9)
@@ -483,7 +484,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
                                           const char *end_marker, 
                                           int li_namespace)
 {
-   lumpinfo_t **marked = (lumpinfo_t **)(calloc(sizeof(*marked), this->numlumps));
+   lumpinfo_t **marked = ecalloc(lumpinfo_t **, sizeof(*marked), this->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -543,13 +544,13 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
    // Append marked list to end of unmarked list
    memcpy(this->lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
 
-   free(marked);                                    // free marked list
+   efree(marked);                                   // free marked list
    
    this->numlumps = num_unmarked + num_marked;      // new total number of lumps
    
    if(mark_end)                                     // add end marker
    {
-      lumpinfo_t *newlump = (lumpinfo_t *)(calloc(1, sizeof(lumpinfo_t)));
+      lumpinfo_t *newlump = ecalloc(lumpinfo_t *, 1, sizeof(lumpinfo_t));
       int lNumLumps = this->numlumps;
       AddInfoPtr(newlump); // haleyjd: track it
       this->lumpinfo[lNumLumps] = newlump;
@@ -1022,10 +1023,10 @@ void WadDirectory::FreeDirectoryAllocs()
 
    // free each lumpinfo_t allocation
    for(i = 0; i < numallocs; ++i)
-      free(infoptrs[i]);
+      efree(infoptrs[i]);
 
    // free the allocation tracking table
-   free(infoptrs);
+   efree(infoptrs);
    infoptrs = NULL;
    numallocs = numallocsa = 0;
 }

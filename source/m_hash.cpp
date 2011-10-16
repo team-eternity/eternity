@@ -849,7 +849,7 @@ char *HashData::digestToString() const
    l_numdigest = HashAlgorithms[type]->getNumDigest();
    size = (8 * l_numdigest + 1) * sizeof(char);
    
-   c = buffer = (char *)(calloc(1, size));
+   c = buffer = ecalloc(char *, 1, size);
    
    for(i = 0; i < l_numdigest; ++i)
    {

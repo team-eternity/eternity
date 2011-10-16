@@ -163,11 +163,11 @@ void C_InitBackdrop(void)
          clumpnum = W_GetNumForName("COLORMAP");
          csize    = W_LumpLength(clumpnum);
 
-         colormap = (byte *)(malloc(csize));
+         colormap = emalloc(byte *, csize);
          wGlobalDir.ReadLump(clumpnum, colormap);
          
          V_DrawPatchTranslated(0, 0, &cback, patch, colormap + cmapnum * 256, false);
-         free(colormap);
+         efree(colormap);
       }
       else
          V_DrawPatchFS(&cback, patch);

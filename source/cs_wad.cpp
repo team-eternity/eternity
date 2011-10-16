@@ -37,6 +37,7 @@
 #include "i_system.h"
 #include "m_file.h"
 #include "r_data.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "w_wad.h"
 
@@ -60,6 +61,8 @@ unsigned int cs_resource_count = 0;
 unsigned int cs_current_map_index = 0;
 unsigned int cs_current_map_number = 0;
 
+static bool wad_download_ok = false;
+
 void IdentifyVersion(void);
 
 static cs_map_t* get_current_map(void)
@@ -73,13 +76,43 @@ static cs_map_t* get_current_map(void)
 static int console_progress(void *clientp, double dltotal, double dlnow,
                                            double ultotal, double ulnow)
 {
+   static int last_percent = 0;
    const char *wad_name = (const char *)clientp;
    double fraction_downloaded = (dlnow / dltotal) * 100.0;
+   unsigned short percent_downloaded;
+   int divisor;
+   const char *si_unit;
 
    if(dlnow < 1.0 || dltotal < 1.0)
       fraction_downloaded = 0.0;
 
-   C_Printf("Downloading %s: %f%%\n", wad_name, fraction_downloaded);
+   percent_downloaded = fraction_downloaded;
+
+   if(dltotal <= 1048576)
+   {
+      divisor = 1024;
+      si_unit = "K";
+   }
+   else
+   {
+      divisor = 1048576;
+      si_unit = "M";
+   }
+
+   if(((percent_downloaded % 5) == 0) && percent_downloaded != last_percent)
+   {
+      C_Printf(
+         "  %s: %.2f%s / %.2f%s\n",
+         wad_name,
+         dlnow / divisor,
+         si_unit,
+         dltotal / divisor,
+         si_unit
+      );
+   }
+   // C_Printf("Downloading %s: %f%%\n", wad_name, fraction_downloaded);
+   I_StartTic();
+   D_ProcessEvents();
    C_Update();
    C_Ticker();
    return 0;
@@ -112,29 +145,83 @@ static bool need_new_wad_dir(void)
    return found_mismatch;
 }
 
+void CS_SetWADDownloadOK(bool ok)
+{
+   wad_download_ok = ok;
+}
+
 void CS_ClearMaps(void)
 {
    unsigned int i;
 
    for(i = 0; i < cs_map_count; i++)
    {
-      free(cs_maps[i].name);
-      free(cs_maps[i].resource_indices);
+      efree(cs_maps[i].name);
+      efree(cs_maps[i].resource_indices);
    }
-   free(cs_maps);
+   efree(cs_maps);
    cs_maps = NULL;
+}
+
+bool CS_CheckWADOverHTTP(const char *wad_name)
+{
+   size_t wad_name_size = strlen(wad_name);
+   size_t wad_repository_size = strlen(cs_wad_repository);
+   char *url =
+      ecalloc(char *, wad_name_size = wad_repository_size + 2, sizeof(char));
+   char *wad_path =
+      ecalloc(char *, strlen(basepath) + wad_name_size + 7, sizeof(char));
+   CURL *curl_handle;
+   CURLcode res;
+   long status_code;
+
+   sprintf(url, "%s/%s", cs_wad_repository, wad_name);
+   sprintf(wad_path, "%s/wads/%s", basepath, wad_name);
+
+   curl_handle = curl_easy_init();
+   if(!curl_handle)
+   {
+      C_Printf("Error initializing curl.\n");
+      return false;
+   }
+
+   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+   curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1);
+   curl_easy_setopt(curl_handle, CURLOPT_NOBODY, 1);
+
+   if((res = curl_easy_perform(curl_handle)) != 0)
+   {
+      C_Printf("Error checking for WAD: %s.\n", curl_easy_strerror(res));
+      return false;
+   }
+
+   curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &status_code);
+
+   while(status_code == 0)
+   {
+      I_Sleep(1);
+      curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &status_code);
+   }
+
+   curl_easy_cleanup(curl_handle);
+
+   if(status_code == 200)
+   {
+      C_Printf("Found %s at %s.\n", wad_name, cs_wad_repository);
+      return true;
+   }
+
+   return false;
 }
 
 char* CS_DownloadWAD(const char *wad_name)
 {
    size_t wad_name_size = strlen(wad_name);
    size_t wad_repository_size = strlen(cs_wad_repository);
-   char *url = (char *)(calloc(
-      wad_name_size + wad_repository_size + 2, sizeof(char)
-   ));
-   char *wad_path = (char *)(calloc(
-      strlen(basepath) + wad_name_size + 7, sizeof(char)
-   ));
+   char *url =
+      ecalloc(char *, wad_name_size + wad_repository_size + 2, sizeof(char));
+   char *wad_path =
+      ecalloc(char *, strlen(basepath) + wad_name_size + 7, sizeof(char));
    CURL *curl_handle;
    CURLcode res;
    FILE *fobj;
@@ -169,7 +256,7 @@ char* CS_DownloadWAD(const char *wad_name)
    curl_easy_setopt(curl_handle, CURLOPT_PROGRESSDATA, (void *)wad_name);
    curl_easy_setopt(curl_handle, CURLOPT_PROGRESSFUNCTION, console_progress);
 
-   C_Printf("Downloading %s: 0%%\n", wad_name);
+   C_Printf("Downloading %s...\n", wad_name);
    C_Update();
 
    if((res = curl_easy_perform(curl_handle)) != 0)
@@ -193,12 +280,14 @@ bool CS_AddIWAD(const char *resource_name)
 
    cs_iwad = resource_path;
 
-   cs_resources = (cs_resource_t *)(realloc(
-      cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   ));
-   cs_resources[cs_resource_count - 1].name = strdup(resource_name);
+   cs_resources = erealloc(
+      cs_resource_t *,
+      cs_resources,
+      sizeof(cs_resource_t) * ++cs_resource_count
+   );
+   cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
    cs_resources[cs_resource_count - 1].type = rt_iwad;
-   cs_resources[cs_resource_count - 1].path = strdup(resource_path);
+   cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
    strncpy(
       cs_resources[cs_resource_count - 1].sha1_hash,
       CS_GetSHA1HashFile((char *)cs_iwad),
@@ -215,21 +304,32 @@ bool CS_AddWAD(const char *resource_name)
 
    if(resource_path == NULL)
    {
-      resource_path = CS_DownloadWAD(resource_name);
+      if(CS_SERVER)
+         return false;
+      else if(wad_download_ok)
+         resource_path = CS_DownloadWAD(resource_name);
+      else if(CS_CheckWADOverHTTP(resource_name))
+         return true;
+      else
+         return false;
+
       if(resource_path == NULL)
          return false;
+
       do_strdup = false;
    }
 
-   cs_resources = (cs_resource_t *)(realloc(
-      cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   ));
-   cs_resources[cs_resource_count - 1].name = strdup(resource_name);
+   cs_resources = erealloc(
+      cs_resource_t *,
+      cs_resources,
+      sizeof(cs_resource_t) * ++cs_resource_count
+   );
+   cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
 
    cs_resources[cs_resource_count - 1].type = rt_pwad;
 
    if(do_strdup)
-      cs_resources[cs_resource_count - 1].path = strdup(resource_path);
+      cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
    else
       cs_resources[cs_resource_count - 1].path = resource_path;
 
@@ -250,11 +350,13 @@ bool CS_AddDeHackEdFile(const char *resource_name)
       return false;
 
    D_QueueDEH(resource_path, 0);
-   cs_resources = (cs_resource_t *)(realloc(
-      cs_resources, sizeof(cs_resource_t) * ++cs_resource_count
-   ));
-   cs_resources[cs_resource_count - 1].name = strdup(resource_name);
-   cs_resources[cs_resource_count - 1].path = strdup(resource_path);
+   cs_resources = erealloc(
+      cs_resource_t *,
+      cs_resources,
+      sizeof(cs_resource_t) * ++cs_resource_count
+   );
+   cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
+   cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
    cs_resources[cs_resource_count - 1].type = rt_deh;
    strncpy(
       cs_resources[cs_resource_count - 1].sha1_hash,
@@ -303,7 +405,7 @@ void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
          cs_map_count
       );
    }
-   cs_maps[index].name = strdup(name);
+   cs_maps[index].name = estrdup(name);
    cs_maps[index].initialized = true;
    cs_maps[index].resource_count = resource_count;
    cs_maps[index].resource_indices = resource_indices;
@@ -312,15 +414,25 @@ void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
 void CS_AddMap(const char *name, unsigned int resource_count,
                                  unsigned int *resource_indices)
 {
-   cs_maps = (cs_map_t *)(realloc(cs_maps, sizeof(cs_map_t) * ++cs_map_count));
+   cs_maps = erealloc(cs_map_t *, cs_maps, sizeof(cs_map_t) * ++cs_map_count);
    CS_AddMapAtIndex(name, resource_count, resource_indices, cs_map_count - 1);
+}
+
+void CS_LoadBlankMap(void)
+{
+   S_StopMusic();
+   wGlobalDir.Clear();
+   D_ClearFiles();
+   IdentifyVersion();
+   wGlobalDir.InitMultipleFiles(wadfiles);
+   R_Init();
 }
 
 bool CS_LoadMap(void)
 {
    unsigned int i, resource_index;
    cs_map_t *map = get_current_map();
-   static unsigned int map_change_count = 0;
+   // static unsigned int map_change_count = 0;
 
    // [CG] Check first that we actually need to reload everything, if not, we
    //      don't need to do any of this.

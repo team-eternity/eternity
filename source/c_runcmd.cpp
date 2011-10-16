@@ -94,13 +94,13 @@ static void C_nextCmdToken(void)
 
       // grow by MAXTOKENS at a time (doubling is likely to waste memory)
       numtokensalloc += MAXTOKENS;
-      cmdtokens = (qstring **)(realloc(cmdtokens, numtokensalloc * sizeof(qstring *)));
+      cmdtokens = erealloc(qstring **, cmdtokens, numtokensalloc * sizeof(qstring *));
 
       for(i = numtokens; i < numtokensalloc; i++)
          cmdtokens[i] = new qstring(128);
 
       Console.numargvsalloc += MAXTOKENS;
-      Console.argv = (qstring **)(realloc(Console.argv, Console.numargvsalloc * sizeof(qstring *)));
+      Console.argv = erealloc(qstring **, Console.argv, Console.numargvsalloc * sizeof(qstring *));
 
       for(i = numtokens; i < Console.numargvsalloc; i++)
          Console.argv[i] = new qstring(128);
@@ -122,10 +122,10 @@ static void C_initCmdTokens(void)
       int i;
 
       // haleyjd: MAXTOKENS is now just the starting size of the array
-      cmdtokens = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
+      cmdtokens = ecalloc(qstring **, MAXTOKENS, sizeof(qstring *));
       numtokensalloc = MAXTOKENS;
 
-      Console.argv = (qstring **)(calloc(MAXTOKENS, sizeof(qstring *)));
+      Console.argv = ecalloc(qstring **, MAXTOKENS, sizeof(qstring *));
       Console.numargvsalloc = MAXTOKENS;
 
       for(i = 0; i < numtokensalloc; i++)
@@ -613,7 +613,7 @@ void C_RunTextCmd(const char *command)
          
          // left
          // copy sub command, alloc slightly more than needed
-         sub_command = (char *)(calloc(1, rover-command+3)); 
+         sub_command = ecalloc(char *, 1, rover-command+3); 
          strncpy(sub_command, command, rover-command);
          sub_command[rover-command] = '\0';   // end string
          
@@ -623,7 +623,7 @@ void C_RunTextCmd(const char *command)
          C_RunTextCmd(rover+1);
          
          // leave to the other function calls (above) to run commands
-         free(sub_command);
+         efree(sub_command);
          return;
       }
    }
@@ -660,7 +660,7 @@ void C_RunRCONTextCmd(const char *command, int clientnum)
          
          // left
          // copy sub command, alloc slightly more than needed
-         sub_command = (char *)(calloc(1, rover-command+3)); 
+         sub_command = ecalloc(char *, 1, rover-command+3); 
          strncpy(sub_command, command, rover-command);
          sub_command[rover-command] = '\0';   // end string
          
@@ -670,7 +670,7 @@ void C_RunRCONTextCmd(const char *command, int clientnum)
          C_RunRCONTextCmd(rover+1, clientnum);
          
          // leave to the other function calls (above) to run commands
-         free(sub_command);
+         efree(sub_command);
          return;
       }
    }
@@ -1089,12 +1089,12 @@ static void C_SetVariable(command_t *command)
       case vt_string:
          if(setflags & CCF_CANSETVAR)
          {
-            free(*(char**)variable->variable);
+            efree(*(char**)variable->variable);
             *(char**)variable->variable = Console.argv[0]->duplicate(PU_STATIC);
          }
          if((setflags & CCF_CANSETDEF) && cmd_setdefault)  // default
          {
-            free(*(char**)variable->v_default);
+            efree(*(char**)variable->v_default);
             *(char**)variable->v_default = Console.argv[0]->duplicate(PU_STATIC);
          }
          break;
@@ -1152,7 +1152,7 @@ static void CheckTabs(void)
    if(numtabs >= numtabsalloc)
    {
       numtabsalloc = numtabsalloc ? 2 * numtabsalloc : 128;
-      tabs = (command_t **)(realloc(tabs, numtabsalloc * sizeof(command_t *)));
+      tabs = erealloc(command_t **, tabs, numtabsalloc * sizeof(command_t *));
    }
 }
 
@@ -1325,15 +1325,15 @@ alias_t *C_NewAlias(const char *aliasname, const char *command)
    // search for an existing alias with this name
    if((alias = C_GetAlias(aliasname)))
    {
-      free(alias->command);
-      alias->command = strdup(command);
+      efree(alias->command);
+      alias->command = estrdup(command);
    }
    else
    {
       // create a new alias
-      alias = (alias_t *)(malloc(sizeof(alias_t)));
-      alias->name = strdup(aliasname);
-      alias->command = strdup(command);
+      alias = estructalloc(alias_t, 1);
+      alias->name = estrdup(aliasname);
+      alias->command = estrdup(command);
       alias->next = aliases.next;
       aliases.next = alias;
    }
@@ -1373,15 +1373,15 @@ void C_RemoveAlias(qstring *aliasname)
    C_Printf("removing alias \"%s\"\n", aliasname->constPtr());
    
    // free alias data
-   free(alias->name);
-   free(alias->command);
+   efree(alias->name);
+   efree(alias->command);
 
    // unlink alias
    prev->next  = alias->next;
    alias->next = NULL;
 
    // free the alias
-   free(alias);
+   efree(alias);
 }
 
 // run an alias
@@ -1448,11 +1448,11 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
    bufferedcmd *newbuf;
    
    // create bufferedcmd
-   newbuf = (bufferedcmd *)(malloc(sizeof(bufferedcmd)));
+   newbuf = estructalloc(bufferedcmd, 1);
    
    // add to new bufferedcmd
    newbuf->command = command;
-   newbuf->options = strdup(options);
+   newbuf->options = estrdup(options);
    newbuf->cmdsrc = cmdsrc;
    newbuf->next = NULL;            // is always at end of chain
    
@@ -1462,8 +1462,8 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
       Console.cmdtype = cmtype;
       C_RunBufferedCommand(newbuf);
       
-      free(newbuf->options);
-      free(newbuf);
+      efree(newbuf->options);
+      efree(newbuf);
       return;
    }
    
@@ -1509,8 +1509,8 @@ void C_RunBuffer(int cmtype)
       
       // free bufferedcmd
       
-      free(bufcmd->options);
-      free(bufcmd);
+      efree(bufcmd->options);
+      efree(bufcmd);
       
       // go to next in list
       bufcmd = buffers[cmtype].cmdbuffer = next;

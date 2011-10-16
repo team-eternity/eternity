@@ -484,8 +484,8 @@ static bool png_Writer(OutBuffer *ob, byte *data,
       return false;
    }
    
-   row_pointers = static_cast<byte **>(calloc(height, sizeof(byte *)));
-   pngPalette   = static_cast<png_colorp>(calloc(256, png_sizeof(png_color)));
+   row_pointers = ecalloc(byte **, height, sizeof(byte *));
+   pngPalette   = ecalloc(png_colorp, 256, png_sizeof(png_color));
 
    try
    {
@@ -542,8 +542,8 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    
    // cleanup
    png_destroy_write_struct(&pngStruct, &pngInfo);
-   free(row_pointers);
-   free(pngPalette);
+   efree(row_pointers);
+   efree(pngPalette);
 
    return pngIoData.writeOK;
 }

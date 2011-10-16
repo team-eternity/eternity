@@ -324,7 +324,7 @@ void E_ReallocStates(int numnewstates)
          numstatesalloc += numnewstates;
 
       // reallocate states[]
-      states = (state_t **)(realloc(states, numstatesalloc * sizeof(state_t *)));
+      states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
       // set the new state pointers to NULL
       for(i = NUMSTATES; i < numstatesalloc; ++i)
@@ -370,7 +370,7 @@ void E_CollectStates(cfg_t *cfg)
    if(numnew)
    {
       // allocate state_t structures for the new states
-      statestructs = (state_t *)(calloc(numnew, sizeof(state_t)));
+      statestructs = ecalloc(state_t *, numnew, sizeof(state_t));
 
       // add space to the states array
       curnewstate = firstnewstate = NUMSTATES;
@@ -469,7 +469,7 @@ void E_CollectStates(cfg_t *cfg)
 void E_CreateArgList(state_t *state)
 {
    if(!state->args)
-      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t))); // create one
+      state->args = ecalloc(arglist_t *, 1, sizeof(arglist_t)); // create one
    else
       E_DisposeArgs(state->args);                 // clear it out
 }

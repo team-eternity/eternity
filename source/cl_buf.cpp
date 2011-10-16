@@ -159,6 +159,7 @@ void NetPacket::process()
    case nm_cubespawned:
       CL_HandleCubeSpawnedMessage((nm_cubespawned_t *)data);
       break;
+#if 0
    case nm_specialspawned:
       CL_HandleMapSpecialSpawnedMessage((nm_specialspawned_t *)data);
       break;
@@ -168,6 +169,7 @@ void NetPacket::process()
    case nm_specialremoved:
       CL_HandleMapSpecialRemovedMessage((nm_specialremoved_t *)data);
       break;
+#endif
    case nm_sectorposition:
       CL_HandleSectorPositionMessage((nm_sectorposition_t *)data);
       break;

@@ -193,8 +193,6 @@ CONSOLE_COMMAND(reconnect, cf_netonly)
 
 CONSOLE_COMMAND(password, cf_netonly)
 {
-   std::string pw_buffer;
-
    if(Console.argc < 1)
    {
       C_Printf(FC_HI"Usage:" FC_NORMAL " password <password>\n");
@@ -202,8 +200,7 @@ CONSOLE_COMMAND(password, cf_netonly)
    }
 
    // [CG] Use Console.args to support passwords that contain spaces.
-   pw_buffer += Console.args.getBuffer();
-   CL_SendAuthMessage(pw_buffer.c_str());
+   CL_SendAuthMessage(Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(spectate, cf_netonly)

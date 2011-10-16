@@ -187,12 +187,12 @@ typedef enum
    nm_missilespawned,          // (s => c) 29, Missile spawned
    nm_missileexploded,         // (s => c) 30, Missile exploded
    nm_cubespawned,             // (s => c) 31, Boss brain cube spawned
-   nm_specialspawned,          // (s => c) 32, Map special spawned
-   nm_specialstatus,           // (s => c) 33, Map special's status
-   nm_specialremoved,          // (s => c) 34, Map special removed
-   nm_sectorposition,          // (s => c) 35, Sector position
-   nm_announcerevent,          // (s => c) 36, Announcer event
-   nm_ticfinished,             // (s => c) 37, TIC is finished
+   nm_sectorposition,          // (s => c) 32, Sector position
+   nm_announcerevent,          // (s => c) 33, Announcer event
+   nm_ticfinished,             // (s => c) 34, TIC is finished
+   // nm_specialspawned,          // (s => c) 32, Map special spawned
+   // nm_specialstatus,           // (s => c) 33, Map special's status
+   // nm_specialremoved,          // (s => c) 34, Map special removed
    nm_max_messages
 } network_message_e;
 
@@ -748,6 +748,7 @@ typedef struct
    sector_position_t sector_position;
 } nm_sectorposition_t;
 
+#if 0
 // [CG] A map special's status is appended to the end of this message, the type
 //      of which is indicated by the value of the special_type member.
 typedef struct
@@ -775,6 +776,7 @@ typedef struct
    int32_t special_type; // [CG] map_special_e.
    uint32_t net_id;
 } nm_specialremoved_t;
+#endif
 
 // [CG] The name of the event is appended to the end of this message.
 typedef struct

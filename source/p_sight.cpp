@@ -161,7 +161,7 @@ static bool P_CrossSubsecPolyObj(polyobj_t *po, register los_t *los)
 //
 static bool P_CrossSubsector(int num, register los_t *los)
 {
-   seg_t *seg;
+   seg_t *lseg;
    int count;
    DLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
    
@@ -171,7 +171,7 @@ static bool P_CrossSubsector(int num, register los_t *los)
 #endif
 
    // haleyjd 02/23/06: this assignment should be after the above check
-   seg = segs + subsectors[num].firstline;
+   lseg = segs + subsectors[num].firstline;
 
    // haleyjd 02/23/06: check polyobject lines
    if((link = subsectors[num].polyList))
@@ -190,9 +190,9 @@ static bool P_CrossSubsector(int num, register los_t *los)
       }
    }
 
-   for(count = subsectors[num].numlines; --count >= 0; seg++)  // check lines
+   for(count = subsectors[num].numlines; --count >= 0; lseg++)  // check lines
    {
-      line_t *line = seg->linedef;
+      line_t *line = lseg->linedef;
       divline_t divl;
       fixed_t opentop, openbottom;
       const sector_t *front, *back;
@@ -244,8 +244,8 @@ static bool P_CrossSubsector(int num, register los_t *los)
 
       // crosses a two sided line
       // no wall to block sight with?
-      if((front = seg->frontsector)->floorheight ==
-         (back = seg->backsector)->floorheight   &&
+      if((front = lseg->frontsector)->floorheight ==
+         (back = lseg->backsector)->floorheight   &&
          front->ceilingheight == back->ceilingheight)
          continue;
 

@@ -1394,8 +1394,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = (castinfo_t *)(calloc(sizeof(castinfo_t), max_castorder + 1));
-   ci_order  = (cfg_t **)    (calloc(sizeof(cfg_t *),    max_castorder));
+   castorder = ecalloc(castinfo_t *, sizeof(castinfo_t), max_castorder + 1);
+   ci_order  = ecalloc(cfg_t **,     sizeof(cfg_t *),    max_castorder);
 
    if(numcastorder > 0)
    {
@@ -1448,7 +1448,7 @@ static void E_ProcessCast(cfg_t *cfg)
       if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
          castorder[i].name = NULL; // set from DeHackEd
       else
-         castorder[i].name = strdup(tempstr); // store provided value
+         castorder[i].name = estrdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
       castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
@@ -1504,7 +1504,7 @@ static void E_ProcessCast(cfg_t *cfg)
    memset(&castorder[max_castorder], 0, sizeof(castinfo_t));
 
    // free the ci_order table
-   free(ci_order);
+   efree(ci_order);
 }
 
 // haleyjd 11/19/03:
@@ -1552,8 +1552,8 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    }
 
    NumBossTypes = numTypes;
-   BossSpawnTypes = (int *)(malloc(numTypes * sizeof(int)));
-   BossSpawnProbs = (int *)(malloc(numTypes * sizeof(int)));
+   BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
+   BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
 
    // load boss spawn probabilities
    for(i = 0; i < numTypes; ++i)

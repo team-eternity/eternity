@@ -293,6 +293,10 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 // properties across standard Doom sprites:
 #define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
 
+// haleyjd 10/10/11: externalized structure due to template limitations with
+// local struct types in the pre-C++11 standard
+struct rsprhash_s { int index, next; };
+
 //
 // R_InitSpriteDefs
 // Pass a null terminated list of sprite names
@@ -316,8 +320,8 @@ static void R_InstallSpriteLump(int lump, unsigned frame,
 //
 static void R_InitSpriteDefs(char **namelist)
 {
-   size_t numentries = lastspritelump-firstspritelump+1;
-   struct rsprhash_s { int index, next; } *hash;
+   size_t numentries = lastspritelump - firstspritelump + 1;
+   rsprhash_s *hash;
    unsigned int i;
    lumpinfo_t **lumpinfo = wGlobalDir.GetLumpInfo();
 
@@ -337,7 +341,7 @@ static void R_InitSpriteDefs(char **namelist)
    // Create hash table based on just the first four letters of each sprite
    // killough 1/31/98
    
-   hash = (rsprhash_s *)(malloc(sizeof(*hash) * numentries)); // allocate hash table
+   hash = estructalloc(rsprhash_s, numentries); // allocate hash table
 
    for(i = 0; i < numentries; ++i) // initialize hash table as empty
       hash[i].index = -1;
@@ -444,7 +448,7 @@ static void R_InitSpriteDefs(char **namelist)
          sprites[i].spriteframes = NULL;
       }
    }
-   free(hash);             // free hash table
+   efree(hash);             // free hash table
 }
 
 //
@@ -488,7 +492,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
    if(stacksize == stackmax)
    {
       stackmax += 10;
-      pstack = (poststack_t *)(realloc(pstack, sizeof(poststack_t) * stackmax));
+      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * stackmax);
    }
    
    post = pstack + stacksize;
@@ -506,7 +510,7 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
          unusedmasked = unusedmasked->next;
       }
       else
-         post->masked = (maskedrange_t *)(malloc(sizeof(maskedrange_t)));
+         post->masked = estructalloc(maskedrange_t, 1);
          
       memset(post->masked, 0, sizeof(*post->masked));
       
@@ -546,7 +550,7 @@ static vissprite_t *R_NewVisSprite(void)
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
-      vissprites = (vissprite_t *)(realloc(vissprites,num_vissprite_alloc*sizeof(*vissprites)));
+      vissprites = erealloc(vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
    }
 
    return vissprites + num_vissprite++;
@@ -1285,10 +1289,10 @@ static void R_SortVisSprites(void)
       
       if(num_vissprite_ptrs < num_vissprite*2)
       {
-         free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = 
-            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                    * sizeof *vissprite_ptrs));
+         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
+         num_vissprite_ptrs = num_vissprite_alloc * 2;
+         vissprite_ptrs = emalloc(vissprite_t **, 
+                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)
@@ -1321,10 +1325,10 @@ static void R_SortVisSpriteRange(int first, int last)
       
       if(num_vissprite_ptrs < numsprites*2)
       {
-         free(vissprite_ptrs);  // better than realloc -- no preserving needed
-         vissprite_ptrs = 
-            (vissprite_t **)(malloc((num_vissprite_ptrs = num_vissprite_alloc*2)
-                                    * sizeof *vissprite_ptrs));
+         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
+         num_vissprite_ptrs = num_vissprite_alloc * 2;
+         vissprite_ptrs = emalloc(vissprite_t **, 
+                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)
@@ -1742,8 +1746,9 @@ void R_DrawPostBSP(void)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * maxdrawsegs;
-                  drawsegs_xrange = (drawsegs_xrange_t *)(
-                     realloc(drawsegs_xrange, drawsegs_xrange_size * sizeof(*drawsegs_xrange)));
+                  drawsegs_xrange = 
+                     erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
+                              drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
                {

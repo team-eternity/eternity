@@ -440,7 +440,7 @@ extern void I_UnsetPrimaryBuffer(void);
 void V_Init(void)
 {
    static byte *s = NULL;
-   
+
    int size = video.width * video.height;
 
    // haleyjd 05/30/08: removed screens from zone heap

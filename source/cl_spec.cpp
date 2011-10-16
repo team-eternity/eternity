@@ -38,6 +38,52 @@
 bool cl_predicting_sectors = false;
 bool cl_setting_sector_positions = false;
 
+void CL_LoadSectorPositions(unsigned int index)
+{
+   unsigned int i;
+   sector_position_t *position;
+
+   cl_setting_sector_positions = true;
+
+   for(i = 0; i < numsectors; i++)
+   {
+      position = &cs_sector_positions[i][index % MAX_POSITIONS];
+      if(position->world_index != index)
+      {
+         continue;
+      }
+      CS_SetSectorPosition(&sectors[i], position);
+#if _SECTOR_PRED_DEBUG
+      if(i == _DEBUG_SECTOR)
+      {
+         printf(
+            "CL_LoadSectorPositions (%3u/%3u): "
+            "Sector %2u: %3u %5u %5u.\n",
+            cl_current_world_index,
+            cl_latest_world_index,
+            i,
+            position->world_index,
+            position->ceiling_height >> FRACBITS,
+            position->floor_height   >> FRACBITS
+         );
+      }
+#endif
+   }
+   cl_setting_sector_positions = false;
+}
+
+#if 0
+
+void CL_LoadCurrentSectorState(void)
+{
+   CL_LoadSectorState(cl_current_world_index);
+}
+
+void CL_LoadCurrentSectorPositions(void)
+{
+   CL_LoadSectorPositions(cl_current_world_index);
+}
+
 void CL_LoadSectorState(uint32_t index)
 {
 #if _SECTOR_PRED_DEBUG
@@ -398,50 +444,6 @@ void CL_ApplyPlatformStatusFromBlob(void *blob)
       t->setStatus(status);
 }
 
-void CL_LoadSectorPositions(unsigned int index)
-{
-   unsigned int i;
-   sector_position_t *position;
-
-   cl_setting_sector_positions = true;
-
-   for(i = 0; i < numsectors; i++)
-   {
-      position = &cs_sector_positions[i][index % MAX_POSITIONS];
-      if(position->world_index != index)
-      {
-         continue;
-      }
-      CS_SetSectorPosition(&sectors[i], position);
-#if _SECTOR_PRED_DEBUG
-      if(i == _DEBUG_SECTOR)
-      {
-         printf(
-            "CL_LoadSectorPositions (%3u/%3u): "
-            "Sector %2u: %3u %5u %5u.\n",
-            cl_current_world_index,
-            cl_latest_world_index,
-            i,
-            position->world_index,
-            position->ceiling_height >> FRACBITS,
-            position->floor_height   >> FRACBITS
-         );
-      }
-#endif
-   }
-   cl_setting_sector_positions = false;
-}
-
-void CL_LoadCurrentSectorState(void)
-{
-   CL_LoadSectorState(cl_current_world_index);
-}
-
-void CL_LoadCurrentSectorPositions(void)
-{
-   CL_LoadSectorPositions(cl_current_world_index);
-}
-
 // [CG] For debugging.
 void CL_PrintSpecialStatuses(void)
 {
@@ -458,4 +460,6 @@ void CL_PrintSpecialStatuses(void)
    printf("===\n");
 #endif
 }
+
+#endif
 

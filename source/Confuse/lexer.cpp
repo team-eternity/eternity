@@ -96,7 +96,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    char   *buffer;
    
    size   = D_FileLength(dwfile);
-   buffer = (char *)(malloc(size + 1));
+   buffer = emalloc(char *, size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {
@@ -117,7 +117,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 static void lexer_free_buffer(void)
 {
    if(lexbuffer)
-      free(lexbuffer);
+      efree(lexbuffer);
    lexbuffer = bufferpos = NULL;
 }
 
@@ -613,7 +613,7 @@ include:
       else
       {
          // done with an include file      
-         free(cfg->filename);
+         efree(cfg->filename);
          lexer_free_buffer();
          lexbuffer     = include_stack[include_stack_ptr].buffer;
          bufferpos     = include_stack[include_stack_ptr].pos;

@@ -62,21 +62,24 @@ extern unsigned int cs_resource_count;
 extern unsigned int cs_current_map_index;
 extern unsigned int cs_current_map_number;
 
-void CS_ClearMaps(void);
+void  CS_SetWADDownloadOK(bool ok);
+void  CS_ClearMaps(void);
+bool  CS_CheckWADOverHTTP(const char *wad_name);
 char* CS_DownloadWAD(const char *wad_name);
 bool  CS_AddIWAD(const char *resource_name);
 bool  CS_AddWAD(const char *resource_name);
 bool  CS_AddDeHackEdFile(const char *resource_name);
+bool  CS_CheckResourceHash(const char *resource_name, const char *sha1_hash);
+void  CS_AddMapAtIndex(const char *name, unsigned int resource_count,
+                                         unsigned int *resource_indices,
+                                         unsigned int index);
+void  CS_AddMap(const char *name, unsigned int resource_count,
+                                  unsigned int *resource_indices);
+void  CS_LoadBlankMap(void);
+bool  CS_LoadMap(void);
+void  CS_NewGame(void);
+void  CS_InitNew(void);
 cs_resource_t* CS_GetResource(const char *resource_name);
-bool CS_CheckResourceHash(const char *resource_name, const char *sha1_hash);
-void CS_AddMapAtIndex(const char *name, unsigned int resource_count,
-                                        unsigned int *resource_indices,
-                                        unsigned int index);
-void CS_AddMap(const char *name, unsigned int resource_count,
-                                 unsigned int *resource_indices);
-bool CS_LoadMap(void);
-void CS_NewGame(void);
-void CS_InitNew(void);
 
 #endif
 

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -28,10 +28,6 @@
 
 // HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
-#include <map>
-
-#include "m_fixed.h" // [CG] 09/23/11 Requred for fixed_t.
-
 // Required for: Thinker
 #include "p_tick.h"
 
@@ -41,6 +37,11 @@ struct player_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
+
+// [CG] GCC needs fixed_t from m_fixed.h
+#ifdef __GNUC__
+#include "m_fixed.h"
+#endif
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -580,11 +581,40 @@ typedef enum
    pastdest
 } result_e;
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // linedef and sector special data types
 //
-//////////////////////////////////////////////////////////////////
+
+// haleyjd 10/13/2011: base class for sector action types
+class SectorThinker : public Thinker
+{
+protected:
+   // sector attach points
+   typedef enum
+   {
+      ATTACH_NONE, 
+      ATTACH_FLOOR,
+      ATTACH_CEILING,
+      ATTACH_FLOORCEILING,
+      ATTACH_LIGHT
+   } attachpoint_e;
+
+   // Methods
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
+
+public:
+   SectorThinker() : Thinker(), sector(NULL) {}
+
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "SectorThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player) { return false; }
+
+   // Data Members
+   sector_t *sector;
+};
+
 
 // p_switch
 
@@ -624,7 +654,7 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-class FireFlickerThinker : public Thinker
+class FireFlickerThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -635,13 +665,12 @@ public:
    virtual const char *getClassName() const { return "FireFlickerThinker"; }
 
    // Data Members
-   sector_t *sector;
    int count;
    int maxlight;
    int minlight;
 };
 
-class LightFlashThinker : public Thinker
+class LightFlashThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -650,9 +679,9 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "LightFlashThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
    
    // Data Members
-   sector_t *sector;
    int count;
    int maxlight;
    int minlight;
@@ -660,7 +689,7 @@ public:
    int mintime;
 };
 
-class StrobeThinker : public Thinker
+class StrobeThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -669,9 +698,9 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "StrobeThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
-   sector_t *sector;
    int count;
    int minlight;
    int maxlight;
@@ -679,7 +708,7 @@ public:
    int brighttime;
 };
 
-class GlowThinker : public Thinker
+class GlowThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -690,7 +719,6 @@ public:
    virtual const char *getClassName() const { return "GlowThinker"; }
 
    // Data Members
-   sector_t *sector;
    int minlight;
    int maxlight;
    int direction;
@@ -699,7 +727,7 @@ public:
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-class LightFadeThinker : public Thinker
+class LightFadeThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -710,7 +738,6 @@ public:
    virtual const char *getClassName() const { return "LightFadeThinker"; }
 
    // Data Members
-   sector_t *sector;
    fixed_t lightlevel;
    fixed_t destlevel;
    fixed_t step;
@@ -722,87 +749,20 @@ public:
 
 // p_plats
 
-class PlatThinker : public Thinker
+class PlatThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t type;
-      fixed_t speed;
-      fixed_t low;
-      fixed_t high;
-      int32_t wait;
-      int32_t count;
-      int32_t status;
-      int32_t old_status;
-      int32_t crush;
-      int32_t tag;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PlatThinker"; }
-
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id     = this->net_id;
-      status->type       = this->type;
-      status->speed      = this->speed;
-      status->low        = this->low;
-      status->high       = this->high;
-      status->wait       = this->wait;
-      status->count      = this->count;
-      status->status     = this->status;
-      status->old_status = this->oldstatus;
-      status->crush      = this->crush;
-      status->tag        = this->tag;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id     = this->net_id;
-      status->type       = this->type;
-      status->speed      = this->speed;
-      status->low        = this->low;
-      status->high       = this->high;
-      status->wait       = this->wait;
-      status->count      = this->count;
-      status->status     = this->status;
-      status->old_status = this->oldstatus;
-      status->crush      = this->crush;
-      status->tag        = this->tag;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id     = status->net_id;
-      this->type       = status->type;
-      this->speed      = status->speed;
-      this->low        = status->low;
-      this->high       = status->high;
-      this->wait       = status->wait;
-      this->count      = status->count;
-      this->status     = status->status;
-      this->oldstatus  = status->old_status;
-      this->crush      = status->crush;
-      this->tag        = status->tag;
-   }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
-   sector_t *sector;
    fixed_t speed;
    fixed_t low;
    fixed_t high;
@@ -814,15 +774,14 @@ public:
    int tag;
    int type;
    struct platlist *list;   // killough
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // New limit-free plat structure -- killough
 
-typedef struct platlist {
+typedef struct platlist 
+{
   PlatThinker *plat; 
-  struct platlist *next,**prev;
+  struct platlist *next, **prev;
 } platlist_t;
 
 // p_ceilng
@@ -835,72 +794,21 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-class VerticalDoorThinker : public Thinker
+class VerticalDoorThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t type;
-      fixed_t top_height;
-      fixed_t speed;
-      int32_t direction;
-      int32_t top_wait;
-      int32_t top_countdown;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "VerticalDoorThinker"; }
-
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id        = this->net_id;
-      status->type          = this->type;
-      status->top_height    = this->topheight;
-      status->speed         = this->speed;
-      status->direction     = this->direction;
-      status->top_wait      = this->topwait;
-      status->top_countdown = this->topcountdown;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id        = this->net_id;
-      status->type          = this->type;
-      status->top_height    = this->topheight;
-      status->speed         = this->speed;
-      status->direction     = this->direction;
-      status->top_wait      = this->topwait;
-      status->top_countdown = this->topcountdown;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id       = status->net_id;
-      this->type         = status->type;
-      this->topheight    = status->top_height;
-      this->speed        = status->speed;
-      this->direction    = status->direction;
-      this->topwait      = status->top_wait;
-      this->topcountdown = status->top_countdown;
-   }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
-   sector_t *sector;
    fixed_t topheight;
    fixed_t speed;
 
@@ -917,9 +825,6 @@ public:
    line_t *line;
 
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
-
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
@@ -953,88 +858,21 @@ struct spectransfer_t
 
 // p_doors
 
-class CeilingThinker : public Thinker
+class CeilingThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t type;
-      fixed_t bottom_height;
-      fixed_t top_height;
-      fixed_t speed;
-      fixed_t old_speed;
-      int32_t crush;
-      int32_t texture;
-      int8_t direction;
-      int32_t tag;
-      int32_t old_direction;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "CeilingThinker"; }
-
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id        = this->net_id;
-      status->type          = this->type;
-      status->bottom_height = this->bottomheight;
-      status->top_height    = this->topheight;
-      status->speed         = this->speed;
-      status->old_speed     = this->oldspeed;
-      status->crush         = this->crush;
-      status->texture       = this->texture;
-      status->direction     = this->direction;
-      status->tag           = this->tag;
-      status->old_direction = this->olddirection;
-
-      return status;
-   }
-   
-   void getStatus(status_t *status)
-   {
-      status->net_id        = this->net_id;
-      status->type          = this->type;
-      status->bottom_height = this->bottomheight;
-      status->top_height    = this->topheight;
-      status->speed         = this->speed;
-      status->old_speed     = this->oldspeed;
-      status->crush         = this->crush;
-      status->texture       = this->texture;
-      status->direction     = this->direction;
-      status->tag           = this->tag;
-      status->old_direction = this->olddirection;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id       = status->net_id;
-      this->type         = status->type;
-      this->bottomheight = status->bottom_height;
-      this->topheight    = status->top_height;
-      this->speed        = status->speed;
-      this->oldspeed     = status->old_speed;
-      this->crush        = status->crush;
-      this->texture      = status->texture;
-      this->direction    = status->direction;
-      this->tag          = status->tag;
-      this->olddirection = status->old_direction;
-   }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
-   sector_t *sector;
    fixed_t bottomheight;
    fixed_t topheight;
    fixed_t speed;
@@ -1056,8 +894,6 @@ public:
    int tag;                   
    int olddirection;
    struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 typedef struct ceilinglist 
@@ -1086,117 +922,22 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-class FloorMoveThinker : public Thinker
+class FloorMoveThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t type;
-      int32_t crush;
-      int8_t direction;
-      int32_t new_special;
-      uint32_t flags;
-      int32_t damage;
-      int32_t damage_mask;
-      int32_t damage_mod;
-      int32_t damage_flags;
-      int16_t texture;
-      fixed_t floor_dest_height;
-      fixed_t speed;
-      int32_t reset_time;
-      fixed_t reset_height;
-      int32_t step_raise_time;
-      int32_t delay_time;
-      int32_t delay_timer;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorMoveThinker"; }
-
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id            = this->net_id;
-      status->type              = this->type;
-      status->crush             = this->crush;
-      status->direction         = this->direction;
-      status->new_special       = this->special.newspecial;
-      status->flags             = this->special.flags;
-      status->damage            = this->special.damage;
-      status->damage_mask       = this->special.damagemask;
-      status->damage_mod        = this->special.damagemod;
-      status->damage_flags      = this->special.damageflags;
-      status->texture           = this->texture;
-      status->floor_dest_height = this->floordestheight;
-      status->speed             = this->speed;
-      status->reset_time        = this->resetTime;
-      status->reset_height      = this->resetHeight;
-      status->step_raise_time   = this->stepRaiseTime;
-      status->delay_time        = this->delayTime;
-      status->delay_timer       = this->delayTimer;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id            = this->net_id;
-      status->type              = this->type;
-      status->crush             = this->crush;
-      status->direction         = this->direction;
-      status->new_special       = this->special.newspecial;
-      status->flags             = this->special.flags;
-      status->damage            = this->special.damage;
-      status->damage_mask       = this->special.damagemask;
-      status->damage_mod        = this->special.damagemod;
-      status->damage_flags      = this->special.damageflags;
-      status->texture           = this->texture;
-      status->floor_dest_height = this->floordestheight;
-      status->speed             = this->speed;
-      status->reset_time        = this->resetTime;
-      status->reset_height      = this->resetHeight;
-      status->step_raise_time   = this->stepRaiseTime;
-      status->delay_time        = this->delayTime;
-      status->delay_timer       = this->delayTimer;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id              = status->net_id;
-      this->type                = status->type;
-      this->crush               = status->crush;
-      this->direction           = status->direction;
-      this->special.newspecial  = status->new_special;
-      this->special.flags       = status->flags;
-      this->special.damage      = status->damage;
-      this->special.damagemask  = status->damage_mask;
-      this->special.damagemod   = status->damage_mod;
-      this->special.damageflags = status->damage_flags;
-      this->texture             = status->texture;
-      this->floordestheight     = status->floor_dest_height;
-      this->speed               = status->speed;
-      this->resetTime           = status->reset_time;
-      this->resetHeight         = status->reset_height;
-      this->stepRaiseTime       = status->step_raise_time;
-      this->delayTime           = status->delay_time;
-      this->delayTimer          = status->delay_timer;
-   }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
    int crush;
-   sector_t *sector;
    int direction;
 
    // jff 3/14/98 add to fix bug in change transfers
@@ -1211,8 +952,6 @@ public:
    int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
    int delayTime;       
    int delayTimer;
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
@@ -1250,151 +989,46 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-class ElevatorThinker : public Thinker
+class ElevatorThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t type;
-      int8_t direction;
-      fixed_t floor_dest_height;
-      fixed_t ceiling_dest_height;
-      fixed_t speed;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "ElevatorThinker"; }
 
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id              = this->net_id;
-      status->type                = this->type;
-      status->direction           = this->direction;
-      status->floor_dest_height   = this->floordestheight;
-      status->ceiling_dest_height = this->ceilingdestheight;
-      status->speed               = this->speed;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id              = this->net_id;
-      status->type                = this->type;
-      status->direction           = this->direction;
-      status->floor_dest_height   = this->floordestheight;
-      status->ceiling_dest_height = this->ceilingdestheight;
-      status->speed               = this->speed;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id            = status->net_id;
-      this->type              = status->type;
-      this->direction         = status->direction;
-      this->floordestheight   = status->floor_dest_height;
-      this->ceilingdestheight = status->ceiling_dest_height;
-      this->speed             = status->speed;
-
-   }
-
    // Data Members
    int type;
-   sector_t *sector;
    int direction;
    fixed_t floordestheight;
    fixed_t ceilingdestheight;
    fixed_t speed;
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // joek: pillars
-class PillarThinker : public Thinker
+class PillarThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      int32_t ceiling_speed;
-      int32_t floor_speed;
-      int32_t floor_dest;
-      int32_t ceiling_dest;
-      int8_t direction;
-      int32_t crush;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PillarThinker"; }
 
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id        = this->net_id;
-      status->ceiling_speed = this->ceilingSpeed;
-      status->floor_speed   = this->floorSpeed;
-      status->floor_dest    = this->floordest;
-      status->ceiling_dest  = this->ceilingdest;
-      status->direction     = this->direction;
-      status->crush         = this->crush;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id        = this->net_id;
-      status->ceiling_speed = this->ceilingSpeed;
-      status->floor_speed   = this->floorSpeed;
-      status->floor_dest    = this->floordest;
-      status->ceiling_dest  = this->ceilingdest;
-      status->direction     = this->direction;
-      status->crush         = this->crush;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id       = status->net_id;
-      this->ceilingSpeed = status->ceiling_speed;
-      this->floorSpeed   = status->floor_speed;
-      this->floordest    = status->floor_dest;
-      this->ceilingdest  = status->ceiling_dest;
-      this->direction    = status->direction;
-      this->crush        = status->crush;
-   }
-
    // Data Members
-   sector_t *sector;
    int ceilingSpeed;
    int floorSpeed;
    int floordest;
    int ceilingdest;
    int direction;
    int crush;
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // haleyjd 10/21/06: data struct for param pillars
@@ -1409,79 +1043,19 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-class FloorWaggleThinker : public Thinker
+class FloorWaggleThinker : public SectorThinker
 {
 protected:
    void Think();
 
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
+
 public:
-   // [CG] 09/22/11: Status for sending over the network.
-#pragma pack(push, 1)
-   typedef struct
-   {
-      uint32_t net_id;
-      fixed_t original_height;
-      fixed_t accumulator;
-      fixed_t acc_delta;
-      fixed_t target_scale;
-      fixed_t scale;
-      fixed_t scale_delta;
-      int32_t ticker;
-      int32_t state;
-   } status_t;
-#pragma pack(pop)
-
-   std::map<uint32_t, status_t*> statuses;
-
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorWaggleThinker"; }
 
-   status_t* getStatus(void)
-   {
-      status_t *status = (status_t *)(malloc(sizeof(status_t)));
-
-      status->net_id          = this->net_id;
-      status->original_height = this->originalHeight;
-      status->accumulator     = this->accumulator;
-      status->acc_delta       = this->accDelta;
-      status->target_scale    = this->targetScale;
-      status->scale           = this->scale;
-      status->scale_delta     = this->scaleDelta;
-      status->ticker          = this->ticker;
-      status->state           = this->state;
-
-      return status;
-   }
-
-   void getStatus(status_t *status)
-   {
-      status->net_id          = this->net_id;
-      status->original_height = this->originalHeight;
-      status->accumulator     = this->accumulator;
-      status->acc_delta       = this->accDelta;
-      status->target_scale    = this->targetScale;
-      status->scale           = this->scale;
-      status->scale_delta     = this->scaleDelta;
-      status->ticker          = this->ticker;
-      status->state           = this->state;
-   }
-
-   void setStatus(status_t *status)
-   {
-      this->net_id         = status->net_id;
-      this->originalHeight = status->original_height;
-      this->accumulator    = status->accumulator;
-      this->accDelta       = status->acc_delta;
-      this->targetScale    = status->target_scale;
-      this->scale          = status->scale;
-      this->scaleDelta     = status->scale_delta;
-      this->ticker         = status->ticker;
-      this->state          = status->state;
-   }
-
    // Data Members
-   sector_t *sector;
    fixed_t originalHeight;
    fixed_t accumulator;
    fixed_t accDelta;
@@ -1490,8 +1064,6 @@ public:
    fixed_t scaleDelta;
    int ticker;
    int state;
-   uint32_t net_id;   // [CG] 09/18/11
-   uint32_t inactive; // [CG] 09/18/11
 };
 
 // p_spec
@@ -1566,7 +1138,7 @@ public:
       p_current,
    }; 
    int type;
-   Mobj *source;      // Point source if point pusher
+   Mobj *source;        // Point source if point pusher
    int x_mag;           // X Strength
    int y_mag;           // Y Strength
    int magnitude;       // Vector strength for point pusher
@@ -1600,7 +1172,6 @@ enum
 
 extern int             levelTimeLimit;
 extern int             levelFragLimit;
-extern int             levelScoreLimit; // [CG] 09/23/11.
 
 extern platlist_t *activeplats;        // killough 2/14/98
 
@@ -1847,11 +1418,6 @@ void P_SpawnGlowingLight(sector_t *sector);
 
 // p_plats
 
-PlatThinker* P_SpawnPlatform(line_t *line, sector_t *sec, int amount,
-                             plattype_e type);
-
-PlatThinker* P_SpawnGenPlatform(line_t *line, sector_t *sec);
-
 void P_AddActivePlat(PlatThinker *plat);
 
 void P_RemoveActivePlat(PlatThinker *plat);
@@ -1864,65 +1430,16 @@ void P_PlatSequence(sector_t *s, const char *seqname);
 
 // p_doors
 
-void P_RemoveDoor(VerticalDoorThinker *door);
+void P_SpawnDoorCloseIn30(sector_t *sec);
 
-VerticalDoorThinker* P_SpawnTaggedDoor(line_t *line, sector_t *sec,
-                                       vldoor_e type);
-
-VerticalDoorThinker* P_SpawnManualDoor(line_t *line, sector_t *sec);
-
-VerticalDoorThinker* P_SpawnDoorCloseIn30(sector_t *sec);
-
-VerticalDoorThinker* P_SpawnDoorRaiseIn5Mins(sector_t *sec);
-
-VerticalDoorThinker* P_SpawnParamDoor(line_t *line, sector_t *sector,
-                                      doordata_t *dd);
+void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum);
 
 void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s); // haleyjd
 
 // p_floor
 void P_FloorSequence(sector_t *s);
 
-void P_RemoveFloor(FloorMoveThinker *floor);
-
-void P_RemoveElevator(ElevatorThinker *elevator);
-
-void P_RemovePillar(PillarThinker *pillar);
-
-void P_RemoveFloorWaggle(FloorWaggleThinker *floorwaggle);
-
-FloorMoveThinker* P_SpawnFloor(line_t *line, sector_t *sec, floor_e type);
-
-void P_SpawnStairs(line_t *line, sector_t *sec, stair_e type);
-
-FloorMoveThinker* P_SpawnDonut(line_t *line, sector_t *sec, int16_t texture,
-                               fixed_t floordestheight);
-
-FloorMoveThinker* P_SpawnDonutHole(line_t *line, sector_t *sec,
-                                   fixed_t floordestheight);
-
-ElevatorThinker* P_SpawnElevator(line_t *line, sector_t *sec,
-                                 elevator_e elevtype);
-
-PillarThinker* P_SpawnBuildPillar(line_t *line, sector_t *sector,
-                                  fixed_t height, fixed_t speed, int crush);
-
-PillarThinker* P_SpawnOpenPillar(line_t *line, sector_t *sector, fixed_t speed,
-                                 fixed_t fdist, fixed_t cdist);
-
-FloorWaggleThinker* P_SpawnFloorWaggle(line_t *line, sector_t *sector,
-                                       int height, int speed, int offset,
-                                       int timer);
-
-FloorMoveThinker* P_SpawnParamFloor(line_t *line, sector_t *sector,
-                                    floordata_t *fd);
-
 // p_ceilng
-
-CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type);
-
-CeilingThinker* P_SpawnParamCeiling(line_t *line, sector_t *sector,
-                                    ceilingdata_t *cd);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 

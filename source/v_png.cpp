@@ -289,7 +289,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
    if(row_pointers)
-      free(row_pointers);
+      efree(row_pointers);
    row_pointers = NULL;
 
    return readSuccess;
@@ -303,11 +303,11 @@ bool VPNGImagePimpl::readImage(const void *data)
 void VPNGImagePimpl::freeImage()
 {
    if(palette.colors)
-      free(palette.colors);
+      efree(palette.colors);
    palette.colors = NULL;
 
    if(surface)
-      free(surface);
+      efree(surface);
    surface = NULL;
 }
 
@@ -348,9 +348,8 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
       if(!outpal)
       {
          // Pure copy, no requantization
-         return (byte *)(memcpy(calloc(height, pitch), 
-                                surface,
-                                height * pitch));
+         byte *output = ecalloc(byte *, height, pitch);
+         return (byte *)(memcpy(output, surface, height * pitch));
       }
       else
       {
@@ -368,7 +367,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
          }
 
          // free the translation table
-         free(trtbl);
+         efree(trtbl);
 
          return output;
       }
@@ -478,7 +477,7 @@ VPNGImage::~VPNGImage()
       pImpl->freeImage();
 
       // Free the pImpl
-      free(pImpl);
+      efree(pImpl);
       pImpl = NULL;
    }
 }

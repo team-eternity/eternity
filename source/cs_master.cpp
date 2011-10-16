@@ -51,29 +51,11 @@ CURLM *cs_master_multi_handle;
 
 extern char gamemapname[9];
 
-static char* sys_strdup(const char *str)
-{
-   size_t length = strlen(str) + 1;
-   char *out = (char *)(Z_SysMalloc(length * sizeof(char)));
-
-   if(out != NULL)
-      strncpy(out, str, length);
-
-   return out;
-}
-
 void CS_InitCurl(void)
 {
    CURLcode curl_errno;
 
-   curl_errno = curl_global_init_mem(
-      CURL_GLOBAL_NOTHING,
-      Z_SysMalloc,
-      Z_SysFree,
-      Z_SysRealloc,
-      sys_strdup,
-      Z_SysCalloc
-   );
+   curl_errno = curl_global_init(CURL_GLOBAL_NOTHING);
 
    if(curl_errno)
       I_Error("CS_InitCurl: %s\n", curl_easy_strerror(curl_errno));
@@ -96,7 +78,7 @@ void SV_MasterCleanup(void)
    for(i = 0; i < sv_master_server_count; i++)
    {
       request = &cs_master_requests[i];
-      free(request->url);
+      efree(request->url);
       if(request->curl_handle != NULL)
       {
          curl_multi_remove_handle(
@@ -114,9 +96,11 @@ void SV_MultiInit(void)
    unsigned int port;
    char *url, *addr, *group, *name;
 
-   cs_master_requests = (cs_master_request_t *)(calloc(
-      sv_master_server_count, sizeof(cs_master_request_t)
-   ));
+   cs_master_requests = ecalloc(
+      cs_master_request_t *,
+      sv_master_server_count,
+      sizeof(cs_master_request_t)
+   );
 
    for(i = 0; i < sv_master_server_count; i++)
    {
@@ -132,10 +116,9 @@ void SV_MultiInit(void)
       // [CG] "http://master.totaltrash.org/servers/totaltrash/Duel%201"
       //      "http://" +  "servers" +  "/" x 3 + '\0' is 18 characters, and 5
       //      are added for any potential port, for a grand total of 23.
-      url = (char *)(calloc(
-         strlen(addr) + strlen(group) + strlen(name) + 23,
-         sizeof(char)
-      ));
+      url = ecalloc(
+         char *, strlen(addr) + strlen(group) + strlen(name) + 23, sizeof(char)
+      );
       if(master->port == 80)
          sprintf(url, "http://%s/servers/%s/%s", addr, group, name);
       else
@@ -164,9 +147,9 @@ static size_t CS_ReceiveHTTPData(void *p, size_t size, size_t nmemb, void *d)
    // [CG] For debugging.
    // printf("Receiving HTTP data: %d/%d.\n", size, nmemb);
 
-   request->received_data = (char *)(realloc(
-      request->received_data, request->data_transferred + max_size + 1
-   ));
+   request->received_data = erealloc(
+      char *, request->received_data, request->data_transferred + max_size + 1
+   );
    memcpy(&(request->received_data[request->data_transferred]), p, max_size);
    request->data_transferred += max_size;
    request->received_data[request->data_transferred] = 0;
@@ -212,7 +195,7 @@ cs_master_request_t* CS_BuildMasterRequest(cs_master_request_t *request,
    request->finished = false;
 
    // [CG] This will be realloc'd later.
-   request->received_data = (char *)(calloc(1, 1));
+   request->received_data = ecalloc(char *, 1, 1);
 
    if(strncmp(request->url, "http", 4) == 0)
       request->is_http = true;
@@ -294,13 +277,13 @@ void CS_FreeMasterRequest(cs_master_request_t *request)
 
    if(request->data_to_send != NULL)
    {
-      free(request->data_to_send);
+      efree(request->data_to_send);
       request->data_to_send = NULL;
    }
 
    if(request->received_data != NULL)
    {
-      free(request->received_data);
+      efree(request->received_data);
       request->received_data = NULL;
    }
 
@@ -313,14 +296,14 @@ void CS_FreeMasterRequest(cs_master_request_t *request)
 void CL_FreeMasterRequest(cs_master_request_t *request)
 {
    CS_FreeMasterRequest(request);
-   free(request->url);
-   free(request->user_agent);
-   free(request);
+   efree(request->url);
+   efree(request->user_agent);
+   efree(request);
 }
 
 void SV_FreeMasterRequest(cs_master_request_t *request)
 {
-   // free(request->url);
+   // efree(request->url);
    CS_FreeMasterRequest(request);
 }
 
@@ -336,13 +319,14 @@ cs_master_request_t* SV_GetMasterRequest(cs_master_t *master, int method)
 
    curl_easy_setopt(request->curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
    // [CG] ':' separator + '\0' is 2 characters.
-   auth = (char *)(calloc(
+   auth = ecalloc(
+      char *,
       strlen(master->username) + strlen(master->password_hash) + 2,
       sizeof(char)
-   ));
+   );
    sprintf(auth, "%s:%s", master->username, master->password_hash);
    curl_easy_setopt(request->curl_handle, CURLOPT_USERPWD, auth);
-   free(auth);
+   efree(auth);
 
    return request;
 }
@@ -351,7 +335,7 @@ void SV_SetMasterRequestData(cs_master_request_t *request, const char *data)
 {
    int i = strlen(data);
 
-   request->data_to_send = strdup(data);
+   request->data_to_send = estrdup(data);
 
    // [CG] For debugging.
    // printf("SV_SetMasterRequestData: Data: %s.\n", request->data_to_send);
@@ -450,7 +434,7 @@ char* SV_GetStateJSON(void)
       }
    }
 
-   return strdup(writer.write(server_json).c_str());
+   return estrdup(writer.write(server_json).c_str());
 }
 
 void SV_MasterAdvertise(void)
@@ -747,7 +731,7 @@ void SV_AddUpdateRequest(cs_master_t *master)
    // printf("Adding update request for [%s].\n", master->address);
 
    SV_SetMasterRequestData(request, (const char *)json_string);
-   free(json_string);
+   efree(json_string);
    curl_multi_add_handle(cs_master_multi_handle, request->curl_handle);
    master->updating = true;
 }
@@ -757,11 +741,10 @@ void CL_RetrieveServerConfig(void)
    std::string json_data;
    Json::Value configuration;
    Json::Reader reader;
-   cs_master_request_t *request = (cs_master_request_t *)(calloc(
-      1, sizeof(cs_master_request_t)
-   ));
+   cs_master_request_t *request =
+      ecalloc(cs_master_request_t *, 1, sizeof(cs_master_request_t));
 
-   request->url = strdup(cs_server_url);
+   request->url = estrdup(cs_server_url);
    request->user_agent = CL_GetUserAgent();
 
    CS_BuildMasterRequest(request, CS_HTTP_METHOD_GET);

@@ -411,7 +411,7 @@ sfxinfo_t *E_NewWadSound(const char *name)
    if(!sfx)
    {
       // create a new one and hook into hashchain
-      sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+      sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
       
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
@@ -440,7 +440,7 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    sfxinfo_t *sfx;
 
    // create a new one and hook into hashchain
-   sfx = (sfxinfo_t *)(calloc(1, sizeof(sfxinfo_t)));
+   sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
    strncpy(sfx->name,     name,      9);
    strncpy(sfx->mnemonic, mnemonic, 33);
@@ -507,7 +507,7 @@ void E_UpdateSoundCache(void)
       {
          if(cursfx->data)
          {
-            free(cursfx->data);
+            efree(cursfx->data);
             cursfx->data = NULL;
          }
          cursfx = cursfx->next;
@@ -630,12 +630,12 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       int i;
 
       if(sfx->randomsounds)
-         free(sfx->randomsounds);
+         efree(sfx->randomsounds);
 
       sfx->numrandomsounds = tempint;
 
       sfx->randomsounds = 
-         (sfxinfo_t **)(malloc(sfx->numrandomsounds * sizeof(sfxinfo_t *)));
+         ecalloc(sfxinfo_t **, sfx->numrandomsounds, sizeof(sfxinfo_t *));
 
       for(i = 0; i < sfx->numrandomsounds; ++i)
          sfx->randomsounds[i] = E_SoundForName(cfg_getnstr(section, ITEM_SND_RANDOM, i));
@@ -645,7 +645,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       // if defining and a randomsound list is already defined, we need to destroy it,
       // as the new definition has not specified any random sounds.
       if(sfx->randomsounds)
-         free(sfx->randomsounds);
+         efree(sfx->randomsounds);
 
       sfx->randomsounds    = NULL;
       sfx->numrandomsounds = 0;
@@ -1318,12 +1318,12 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = (numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+   tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
    for(i = 0; i < numcmds; ++i)
    {
       tempcmd_t tempcmd;
-      char *tempstr = strdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
+      char *tempstr = estrdup(cfg_getnstr(cfg, ITEM_SEQ_CMDS, i));
 
       tempcmd = E_ParseTextLine(tempstr); // parse the command
 
@@ -1333,7 +1333,7 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
       else
          E_GenerateSeqOp(newSeq, tempcmd, tempcmdbuf, allocused);
 
-      free(tempstr); // free temporary copy of command
+      efree(tempstr); // free temporary copy of command
    } // end for
 
    // now, generate an end command -- doing it this way, we make sure the
@@ -1345,11 +1345,11 @@ static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
    // used by the compiled sound sequence commands
    cmdalloc = allocused * sizeof(seqcmd_t);
 
-   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   newSeq->commands = emalloc(seqcmd_t *, cmdalloc);
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
-   free(tempcmdbuf);
+   efree(tempcmdbuf);
 }
 
 //
@@ -1375,7 +1375,7 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
    // * multiply by 4 because no txt command compiles to more than 4 ops
    cmdalloc = ((unsigned int)numcmds + 1) * 4 * sizeof(seqcmd_t);
 
-   tempcmdbuf = (seqcmd_t *)(calloc(1, cmdalloc));
+   tempcmdbuf = ecalloc(seqcmd_t *, 1, cmdalloc);
 
    while((line = E_GetHeredocLine(&rover)))
    {
@@ -1403,11 +1403,11 @@ static void E_ParseSeqCmdsFromHereDoc(const char *heredoc, ESoundSeq_t *newSeq)
    // used by the compiled sound sequence commands
    cmdalloc = allocused * sizeof(seqcmd_t);
 
-   newSeq->commands = (seqcmd_t *)(malloc(cmdalloc));
+   newSeq->commands = emalloc(seqcmd_t *, cmdalloc);
    memcpy(newSeq->commands, tempcmdbuf, cmdalloc);
 
    // free the temp buffer
-   free(tempcmdbuf);
+   efree(tempcmdbuf);
 }
 
 //
@@ -1461,7 +1461,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    else
    {
       // Create a new sound sequence object
-      newSeq = (ESoundSeq_t *)(calloc(1, sizeof(ESoundSeq_t)));
+      newSeq = ecalloc(ESoundSeq_t *, 1, sizeof(ESoundSeq_t));
       
       // copy keys into sequence object
       strncpy(newSeq->name, name, 33);
@@ -1524,7 +1524,7 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
 
    // if a command list already exists, destroy it first
    if(newSeq->commands)
-      free(newSeq->commands);
+      efree(newSeq->commands);
 
    // haleyjd 01/11/11: I have added support for heredoc-based sound sequences,
    // which are exclusive of and preferred to the old syntax. This allows Hexen-
@@ -1761,7 +1761,7 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
    // if one already exists, use it, else create a new one
    if(!(newAmb = E_AmbienceForNum(index)))
    {
-      newAmb = (EAmbience_t *)(malloc(sizeof(EAmbience_t)));
+      newAmb = estructalloc(EAmbience_t, 1);
 
       // add to hash table
       newAmb->index = index;

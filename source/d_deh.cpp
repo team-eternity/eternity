@@ -781,13 +781,13 @@ int deh_ParseFlagsSingle(const char *strval, int mode)
    char *buffer;
    char *bufferptr;
 
-   bufferptr = buffer = strdup(strval);
+   bufferptr = buffer = estrdup(strval);
 
    dehacked_flags.mode = mode;
 
    deh_ParseFlags(&dehacked_flags, &bufferptr);
 
-   free(buffer);
+   efree(buffer);
 
    return dehacked_flags.results[mode];
 }
@@ -797,13 +797,13 @@ int *deh_ParseFlagsCombined(const char *strval)
    char *buffer;
    char *bufferptr;
 
-   bufferptr = buffer = strdup(strval);
+   bufferptr = buffer = estrdup(strval);
 
    dehacked_flags.mode = DEHFLAGS_MODE_ALL;
 
    deh_ParseFlags(&dehacked_flags, &bufferptr);
 
-   free(buffer);
+   efree(buffer);
 
    return dehacked_flags.results;
 }
@@ -1044,7 +1044,7 @@ void deh_procThing(DWFILE *fpin, char *line)
 static void deh_createArgList(state_t *state)
 {
    if(!state->args)
-      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t)));
+      state->args = ecalloc(arglist_t *, 1, sizeof(arglist_t));
 }
 
 // ====================================================================
@@ -1657,7 +1657,7 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
                     }
                   }
                 }
-                cheat[iy].cheat = strdup(p);
+                cheat[iy].cheat = estrdup(p);
                 deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'at index %d\n",
                               p, cheat[ix].deh_cheat, iy); // killough 4/18/98
             }
@@ -1820,7 +1820,7 @@ void deh_procText(DWFILE *fpin, char *line)
             // use strdup unless we redeclare sprnames and change all else
             
             // haleyjd 03/11/03: can now use the original
-            // sprnames[i] = strdup(sprnames[i]);
+            // sprnames[i] = estrdup(sprnames[i]);
 
             strncpy(sprnames[i],&inbuffer[fromlen],tolen);
             found = true;
@@ -1865,7 +1865,7 @@ void deh_procText(DWFILE *fpin, char *line)
                deh_LogPrintf("Changing name of music from %s to %*s\n",
                              S_music[i].name, usedlen, &inbuffer[fromlen]);
 
-               S_music[i].name = strdup(&inbuffer[fromlen]);
+               S_music[i].name = estrdup(&inbuffer[fromlen]);
                found = true;
                break;  // only one matches, quit early
             }
@@ -1883,7 +1883,7 @@ void deh_procText(DWFILE *fpin, char *line)
 
       if(fromlen <= strlen(inbuffer))
       {
-         line2 = strdup(&inbuffer[fromlen]);
+         line2 = estrdup(&inbuffer[fromlen]);
          inbuffer[fromlen] = '\0';
       }
       
@@ -1891,7 +1891,7 @@ void deh_procText(DWFILE *fpin, char *line)
    }
 
    if(line2)
-      free(line2);
+      efree(line2);
 }
 
 void deh_procError(DWFILE *fpin, char *line)
@@ -1924,7 +1924,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
    deh_LogPrintf("Processing extended string substitution\n");
 
    if(!holdstring)
-      holdstring = (char *)(malloc(maxstrlen * sizeof(*holdstring)));
+      holdstring = ecalloc(char *, maxstrlen, sizeof(*holdstring));
 
    *holdstring = '\0'; // empty string to start with
 
@@ -1959,7 +1959,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
          deh_LogPrintf("* Increased buffer from to %d for buffer size %d\n",
                        maxstrlen, (int)strlen(inbuffer));
 
-         holdstring = (char *)(realloc(holdstring,maxstrlen*sizeof(*holdstring)));
+         holdstring = erealloc(char *, holdstring, maxstrlen*sizeof(*holdstring));
       }
       // concatenate the whole buffer if continuation or the value iffirst
       strcat(holdstring,ptr_lstrip(((*holdstring) ? inbuffer : strval)));
@@ -2019,7 +2019,7 @@ bool deh_procStringSub(char *key, char *lookfor, char *newstring)
       return false;
    }
 
-   char *copyNewStr = strdup(newstring); 
+   char *copyNewStr = estrdup(newstring); 
 
    // Handle embedded \n's in the incoming string, convert to 0x0a's
    char *s, *t;
@@ -2146,7 +2146,7 @@ void deh_procBexSprites(DWFILE *fpin, char *line)
                           candidate, deh_spritenames[rover]);
             
             // haleyjd 03/11/03: can now use original due to EDF
-            // sprnames[rover] = strdup(candidate);
+            // sprnames[rover] = estrdup(candidate);
             strncpy(sprnames[rover], candidate, 4);
             break;
          }
@@ -2260,7 +2260,7 @@ void deh_procBexMusic(DWFILE *fpin, char *line)
             deh_LogPrintf("Substituting '%s' for music '%s'\n",
                           candidate, deh_musicnames[rover]);
             
-            S_music[rover].name = strdup(candidate);
+            S_music[rover].name = estrdup(candidate);
             break;
          }
          rover++;

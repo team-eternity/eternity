@@ -27,20 +27,16 @@
 //
 // Rewritten by Lee Killough, though, since it was not efficient enough.
 //
-//---------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-#ifndef __Z_ZONE__
-#define __Z_ZONE__
+#ifndef Z_ZONE_H__
+#define Z_ZONE_H__
 
 #include "d_keywds.h" // haleyjd 05/22/02
 
 // Remove all definitions before including system definitions
-
-#undef malloc
-#undef free
-#undef realloc
-#undef calloc
-#undef strdup
+// - haleyjd 10/11/11: eliminated non-portable standards-violating idiom from 
+//   BOOM
 
 // Include system definitions so that prototypes become
 // active before macro replacements below are in effect.
@@ -75,10 +71,12 @@
 // haleyjd: C++ headers
 #include <new>
 
+#if 0
 // [CG] Add cstdlib for old GNU C++ standard library versions that pull in way
 //      more than they should.
 #ifdef __GNUC__
 #include <cstdlib>
+#endif
 #endif
 
 // haleyjd: portable replacement function headers
@@ -143,25 +141,22 @@ void  Z_SysFree(void *p);
 #define Z_CheckHeap()      (Z_CheckHeap)(        __FILE__,__LINE__)
 #define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 
-// haleyjd 10/29/06: undefine any existing macros by these names
-#undef malloc
-#undef free
-#undef realloc
-#undef calloc
-#undef strdup
-
-#define malloc(n)          (Z_Malloc) (n,    PU_STATIC,0,__FILE__,__LINE__)
-#define free(p)            (Z_Free)   (p,                __FILE__,__LINE__)
-#define realloc(p,n)       (Z_Realloc)(p,n,  PU_STATIC,0,__FILE__,__LINE__)
-#define calloc(n1,n2)      (Z_Calloc) (n1,n2,PU_STATIC,0,__FILE__,__LINE__)
-#define strdup(s)          (Z_Strdup) (s,    PU_STATIC,0,__FILE__,__LINE__)
-
 template<typename T> inline T ecalloc_impl(size_t n1, size_t n2, const char *file, int line)
 {
    return static_cast<T>((Z_Calloc)(n1, n2, PU_STATIC, 0, file, line));
 }
 
+template<typename T> inline T erealloc_impl(void *p, size_t size, const char *file, int line)
+{
+   return static_cast<T>((Z_Realloc)(p, size, PU_STATIC, 0, file, line));
+}
+
+#define emalloc(type, n)      ecalloc_impl<type>(1,  n,  __FILE__, __LINE__)
 #define ecalloc(type, n1, n2) ecalloc_impl<type>(n1, n2, __FILE__, __LINE__)
+#define erealloc(type, p, n)  erealloc_impl<type>(p, n,  __FILE__, __LINE__)
+#define estructalloc(type, n) ecalloc_impl<type *>(n, sizeof(type), __FILE__, __LINE__)
+#define estrdup(s)            (Z_Strdup) (s,    PU_STATIC, 0, __FILE__, __LINE__)
+#define efree(p)              (Z_Free)   (p,                  __FILE__, __LINE__)
 
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));

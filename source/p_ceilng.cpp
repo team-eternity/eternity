@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -37,11 +37,6 @@
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "sounds.h"
-
-#include "cs_netid.h" // [CG] 09/18/11
-#include "cs_main.h"  // [CG] 09/18/11
-#include "cl_main.h"  // [CG] 09/18/11
-#include "sv_main.h"  // [CG] 09/18/11
 
 // the list of ceilings moving currently, including crushers
 ceilinglist_t *activeceilings;
@@ -139,10 +134,7 @@ void CeilingThinker::Think()
             // plain movers are just removed
          case raiseToHighest:
          case genCeiling:
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveActiveCeiling(this);
+            P_RemoveActiveCeiling(this);
             break;
 
             // movers with texture change, change the texture then get removed
@@ -152,10 +144,7 @@ void CeilingThinker::Think()
             P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
             P_SetSectorCeilingPic(sector, texture);
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveActiveCeiling(this);
+            P_RemoveActiveCeiling(this);
             break;
 
             // crushers reverse direction at the top
@@ -217,10 +206,7 @@ void CeilingThinker::Think()
             P_TransferSectorSpecial(sector, &special);
          case genCeilingChg:
             P_SetSectorCeilingPic(sector, texture);
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveActiveCeiling(this);
+            P_RemoveActiveCeiling(this);
             break;
 
             // all other case, just remove the active ceiling
@@ -229,10 +215,7 @@ void CeilingThinker::Think()
          case lowerToLowest:
          case lowerToMaxFloor:
          case genCeiling:
-            if(CS_CLIENT)
-               this->inactive = cl_current_world_index;
-            else
-               P_RemoveActiveCeiling(this);
+            P_RemoveActiveCeiling(this);
             break;
             
          default:
@@ -274,96 +257,39 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << bottomheight << topheight << speed << oldspeed
+   arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
-       << olddirection << net_id;
+       << olddirection;
 
+   // Reattach to active ceilings list
    if(arc.isLoading())
-   {
-      // Reattach to sector, and to active ceilings list
-      sector->ceilingdata = this;
       P_AddActiveCeiling(this);
-   }
 }
 
-CeilingThinker* P_SpawnCeiling(line_t *line, sector_t *sec, ceiling_e type)
+//
+// CeilingThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a CeilingThinker is treated
+// as a VerticalDoorThinker
+//
+bool CeilingThinker::reTriggerVerticalDoor(bool player)
 {
-   int noise = CNOISE_NORMAL; // haleyjd 09/28/06
-   CeilingThinker *ceiling = new CeilingThinker;
+   if(!demo_compatibility)
+      return false;
 
-   ceiling->addThinker();
-   sec->ceilingdata = ceiling; //jff 2/22/98
-   ceiling->sector = sec;
-   ceiling->crush = -1;
-
-   // setup ceiling structure according to type of function
-   switch(type)
+   if(speed == plat_down)
+      speed = plat_up;
+   else
    {
-   case fastCrushAndRaise:
-      ceiling->crush = 10;
-      ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED * 2;
-      break;
+      if(!player)
+         return false;
 
-   case silentCrushAndRaise:
-      noise = CNOISE_SEMISILENT;
-   case crushAndRaise:
-      ceiling->crush = 10;
-      ceiling->topheight = sec->ceilingheight;
-   case lowerAndCrush:
-   case lowerToFloor:
-      ceiling->bottomheight = sec->floorheight;
-      if(type != lowerToFloor)
-         ceiling->bottomheight += 8*FRACUNIT;
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-
-   case raiseToHighest:
-      ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
-      ceiling->direction = plat_up;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   case lowerToLowest:
-      ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   case lowerToMaxFloor:
-      ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
-      ceiling->direction = plat_down;
-      ceiling->speed = CEILSPEED;
-      break;
-      
-   default:
-      break;
-   }
-    
-   // add the ceiling to the active list
-   ceiling->tag = sec->tag;
-   ceiling->type = type;
-
-   // haleyjd 09/28/06: sound sequences
-   P_CeilingSequence(ceiling->sector, noise);
-
-   if(serverside)
-   {
-      P_AddActiveCeiling(ceiling);
-      if(CS_SERVER)
-      {
-         SV_BroadcastMapSpecialSpawned(
-            ceiling, NULL, line, ceiling->sector, ms_ceiling
-         );
-      }
+      speed = plat_down;
    }
 
-   return ceiling;
+   return true;
 }
 
 //
@@ -395,33 +321,79 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
       break;
    }
   
-   // [CG] Clients don't spawn ceilings themselves when lines are activated,
-   //      but we have to inform the caller whether or not a thinker would have
-   //      been created regardless.
-   if(CS_CLIENT && rtn != 0)
-      return rtn;
-
    // affects all sectors with the same tag as the linedef
    while((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
    {
+      sec = &sectors[secnum];
+      
       // if ceiling already moving, don't start a second function on it
-      if(P_SectorActive(ceiling_special, &sectors[secnum]))  //jff 2/22/98
+      if(P_SectorActive(ceiling_special, sec))  //jff 2/22/98
          continue;
-      else if(CS_CLIENT)
-         return 1;
-
+  
       // create a new ceiling thinker
       rtn = 1;
+      ceiling = new CeilingThinker;
+      ceiling->addThinker();
+      sec->ceilingdata = ceiling;               //jff 2/22/98
+      ceiling->sector = sec;
+      ceiling->crush = -1;
+  
+      // setup ceiling structure according to type of function
+      switch(type)
+      {
+      case fastCrushAndRaise:
+         ceiling->crush = 10;
+         ceiling->topheight = sec->ceilingheight;
+         ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED * 2;
+         break;
 
-      if(serverside)
-         ceiling = P_SpawnCeiling(line, &sectors[secnum], type);
+      case silentCrushAndRaise:
+         noise = CNOISE_SEMISILENT;
+      case crushAndRaise:
+         ceiling->crush = 10;
+         ceiling->topheight = sec->ceilingheight;
+      case lowerAndCrush:
+      case lowerToFloor:
+         ceiling->bottomheight = sec->floorheight;
+         if(type != lowerToFloor)
+            ceiling->bottomheight += 8*FRACUNIT;
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
 
+      case raiseToHighest:
+         ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
+         ceiling->direction = plat_up;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      case lowerToLowest:
+         ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      case lowerToMaxFloor:
+         ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
+         ceiling->direction = plat_down;
+         ceiling->speed = CEILSPEED;
+         break;
+         
+      default:
+         break;
+      }
+    
+      // add the ceiling to the active list
+      ceiling->tag = sec->tag;
+      ceiling->type = type;
+      P_AddActiveCeiling(ceiling);
+
+      // haleyjd 09/28/06: sound sequences
+      P_CeilingSequence(ceiling->sector, noise);
    }
-
-   if(CS_CLIENT)
-      return 0;
-
-   return 1;
+   return rtn;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -452,12 +424,12 @@ int EV_DoCeiling(line_t *line, ceiling_e type)
 //
 int P_ActivateInStasisCeiling(line_t *line)
 {
-   std::map<uint32_t, CeilingThinker*>::iterator it;
+   ceilinglist_t *cl;
    int rtn = 0, noise;
-
-   for(it = NetCeilings.begin(); it != NetCeilings.end(); it++)
+   
+   for(cl = activeceilings; cl; cl = cl->next)
    {
-      CeilingThinker *ceiling = (*it).second;
+      CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->tag == line->tag && ceiling->direction == 0)
       {
          ceiling->direction = ceiling->olddirection;
@@ -496,11 +468,11 @@ int P_ActivateInStasisCeiling(line_t *line)
 int EV_CeilingCrushStop(line_t* line)
 {
    int rtn = 0;
-   std::map<uint32_t, CeilingThinker*>::iterator it;
-
-   for(it = NetCeilings.begin(); it != NetCeilings.end(); it++)
+   
+   ceilinglist_t *cl;
+   for(cl = activeceilings; cl; cl = cl->next)
    {
-      CeilingThinker *ceiling = (*it).second;
+      CeilingThinker *ceiling = cl->ceiling;
       if(ceiling->direction != plat_stop && ceiling->tag == line->tag)
       {
          ceiling->olddirection = ceiling->direction;
@@ -523,7 +495,13 @@ int EV_CeilingCrushStop(line_t* line)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
-   NetCeilings.add(ceiling);
+   ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
+   list->ceiling = ceiling;
+   ceiling->list = list;
+   if((list->next = activeceilings))
+      list->next->prev = &list->next;
+   list->prev = &activeceilings;
+   activeceilings = list;
 }
 
 //
@@ -536,12 +514,13 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 //
 void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
+   ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
    ceiling->removeThinker();
-   if(CS_SERVER)
-      SV_BroadcastMapSpecialRemoved(ceiling->net_id, ms_ceiling);
-   NetCeilings.remove(ceiling);
+   if((*list->prev = list->next))
+      list->next->prev = list->prev;
+   efree(list);
 }
 
 //
@@ -553,7 +532,12 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 //
 void P_RemoveAllActiveCeilings(void)
 {
-   NetCeilings.clear();
+   while(activeceilings)
+   {  
+      ceilinglist_t *next = activeceilings->next;
+      efree(activeceilings);
+      activeceilings = next;
+   }
 }
 
 //

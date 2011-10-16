@@ -78,9 +78,9 @@ void FireFlickerThinker::Think()
 //
 void FireFlickerThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << maxlight << minlight;
+   arc << count << maxlight << minlight;
 }
 
 
@@ -118,9 +118,33 @@ void LightFlashThinker::Think()
 //
 void LightFlashThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << maxlight << minlight << maxtime << mintime;
+   arc << count << maxlight << minlight << maxtime << mintime;
+}
+
+//
+// LightFlashThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a LightFlashThiker is
+// treated as a VerticalDoorThinker
+//
+bool LightFlashThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(maxtime == plat_down)
+      maxtime = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      maxtime = plat_down;
+   }
+
+   return true;
 }
 
 
@@ -158,9 +182,33 @@ void StrobeThinker::Think()
 //
 void StrobeThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << count << minlight << maxlight << darktime << brighttime;
+   arc << count << minlight << maxlight << darktime << brighttime;
+}
+
+//
+// StrobeThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a strobe thinker is 
+// manipulated as a VerticalDoorThinker
+//
+bool StrobeThinker::reTriggerVerticalDoor(bool player) 
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(darktime == plat_down)
+      darktime = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      darktime = plat_down;
+   }
+   
+   return true;
 }
 
 
@@ -207,9 +255,9 @@ void GlowThinker::Think()
 //
 void GlowThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << minlight << maxlight << direction;
+   arc << minlight << maxlight << direction;
 }
 
 
@@ -266,9 +314,9 @@ void LightFadeThinker::Think()
 //
 void LightFadeThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << lightlevel << destlevel << step << glowmin << glowmax
+   arc << lightlevel << destlevel << step << glowmin << glowmax
        << glowspeed << type;
 }
 

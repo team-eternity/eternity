@@ -36,7 +36,7 @@
 #include <winbase.h>
 
 extern void I_FatalError(int code, const char *error, ...);
-extern void M_GetFilePath(const char *fn, char *bane, size_t len);
+extern void M_GetFilePath(const char *fn, char *base, size_t len);
 
 //
 // WIN_GetExeDir

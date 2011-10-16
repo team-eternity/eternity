@@ -334,7 +334,7 @@ static texturehandler_t TextureHandlers[] =
 //
 static texturelump_t *R_InitTextureLump(const char *lname, bool required)
 {
-   texturelump_t *tlump = (texturelump_t *)(calloc(1, sizeof(texturelump_t)));
+   texturelump_t *tlump = ecalloc(texturelump_t *, 1, sizeof(texturelump_t));
 
    if(required)
       tlump->lumpnum = W_GetNumForName(lname);
@@ -915,7 +915,7 @@ static void FinishTexture(texture_t *tex)
          
       // Now allocate and build the actual column structs in the texture
       tcol = tex->columns[x] 
-           = (texcol_t *)(Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, NULL));
+           = (texcol_t *)(Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, (void **)&tex->columns[x]));
            
       col = NULL;
       for(i = 0; i < colcount; i++)
@@ -1076,7 +1076,7 @@ static int *R_LoadPNames(void)
    names = (char *)wGlobalDir.CacheLumpName("PNAMES", PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
    name_p = names + 4;
-   patchlookup = (int *)(malloc(nummappatches * sizeof(*patchlookup))); // killough
+   patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
    
    for(i = 0; i < nummappatches; ++i)
    {
@@ -1279,7 +1279,7 @@ void R_InitTextures(void)
    R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
 
    // done with patch lookup
-   free(patchlookup);
+   efree(patchlookup);
 
    // done with texturelumps
    R_FreeTextureLump(maptex1);
@@ -1519,7 +1519,7 @@ void R_LoadDoom1(void)
    tx1 = tx2 = 0;
 
    lumplen = W_LumpLength(lumpnum);
-   lump    = (char *)(calloc(1, lumplen + 1));
+   lump    = ecalloc(char *, 1, lumplen + 1);
    
    wGlobalDir.ReadLump(lumpnum, lump);
    
@@ -1567,9 +1567,9 @@ void R_LoadDoom1(void)
             // lots of little mallocs; make the whole thing dynamic
             if(numconvs >= numconvsalloc)
             {
-               txtrconv = (doom1text_t *)(realloc(txtrconv, 
-                                    (numconvsalloc = numconvsalloc ?
-                                     numconvsalloc*2 : 56) * sizeof *txtrconv));
+               numconvsalloc = numconvsalloc ? numconvsalloc*2 : 56;
+               txtrconv = erealloc(doom1text_t *, txtrconv, 
+                                   numconvsalloc * sizeof *txtrconv);
             }
             
             strncpy(txtrconv[numconvs].doom1, texture1, 9);
@@ -1597,7 +1597,7 @@ void R_LoadDoom1(void)
    }
    
    // finished with lump
-   free(lump);
+   efree(lump);
 }
 
 static int R_Doom1Texture(const char *name)

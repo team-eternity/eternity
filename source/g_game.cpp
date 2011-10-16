@@ -1201,10 +1201,10 @@ void G_DoPlayDemo(void)
       // version
       if(full_demo_version >= make_full_version(329, 5))
       {
-         int i;
+         int mn;
          
-         for(i = 0; i < 8; i++)
-            gamemapname[i] = *demo_p++;
+         for(mn = 0; mn < 8; mn++)
+            gamemapname[mn] = *demo_p++;
          
          gamemapname[8] = '\0';
       }
@@ -1425,7 +1425,7 @@ static void G_WriteDemoTiccmd(ticcmd_t *cmd)
    {
       // no more space
       maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = (byte *)(realloc(demobuffer, maxdemosize));
+      demobuffer = erealloc(byte *, demobuffer, maxdemosize);
       demo_p = position + demobuffer;  // back on track
       // end of main demo limit changes -- killough
    }
@@ -1729,8 +1729,8 @@ void G_ForcedLoadGame(void)
 void G_LoadGame(char *name, int slot, bool command)
 {
    if(savename)
-      free(savename);
-   savename = strdup(name);
+      efree(savename);
+   savename = estrdup(name);
    savegameslot = slot;
    gameaction = ga_loadgame;
    forced_loadgame = false;
@@ -1782,7 +1782,7 @@ void CheckSaveGame(size_t size)
    {
       // haleyjd: deobfuscated
       savegamesize += (size + 1023) & ~1023;
-      savebuffer = (byte *)(realloc(savebuffer, savegamesize));
+      savebuffer = erealloc(byte *, savebuffer, savegamesize);
       save_p = savebuffer + pos;
    }
 }
@@ -2245,7 +2245,7 @@ void G_FlushCorpse(int playernum)
    {
       if(queuesize < (unsigned int)bodyquesize)
       {
-         bodyque = (Mobj **)(realloc(bodyque, bodyquesize*sizeof*bodyque));
+         bodyque = erealloc(Mobj **, bodyque, bodyquesize*sizeof*bodyque);
          memset(bodyque+queuesize, 0, 
                 (bodyquesize-queuesize)*sizeof*bodyque);
          queuesize = bodyquesize;
@@ -2526,7 +2526,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < VANILLA_MAXPLAYERS; i++)
       {
-         Mobj *fog = NULL;
+         fog = NULL;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
@@ -3023,8 +3023,8 @@ void G_RecordDemo(char *name)
    usergame = false;
 
    if(demoname)
-      free(demoname);
-   demoname = (char *)(malloc(strlen(name) + 8));
+      efree(demoname);
+   demoname = emalloc(char *, strlen(name) + 8);
 
    M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
    
@@ -3036,7 +3036,7 @@ void G_RecordDemo(char *name)
    if(maxdemosize < 0x20000)  // killough
       maxdemosize = 0x20000;
    
-   demobuffer = (byte *)(malloc(maxdemosize)); // killough
+   demobuffer = emalloc(byte *, maxdemosize); // killough
    
    demorecording = true;
 }
@@ -3427,8 +3427,8 @@ void G_DeferedPlayDemo(const char *name)
 {
    // haleyjd: removed SMMU cruft in attempt to fix
    if(defdemoname)
-      free(defdemoname);
-   defdemoname = strdup(name);
+      efree(defdemoname);
+   defdemoname = estrdup(name);
    gameaction = ga_playdemo;
 }
 
@@ -3452,8 +3452,8 @@ void G_TimeDemo(const char *name, bool showmenu)
    //G_StopDemo();         // stop any previous demos
    
    if(defdemoname)
-      free(defdemoname);
-   defdemoname = strdup(name);
+      efree(defdemoname);
+   defdemoname = estrdup(name);
    gameaction = ga_playdemo;
    singledemo = true;      // sf: moved from reloaddefaults
    
@@ -3481,7 +3481,7 @@ bool G_CheckDemoStatus(void)
                  errno ? strerror(errno) : "(Unknown Error)");
       }
       
-      free(demobuffer);
+      efree(demobuffer);
       demobuffer = NULL;  // killough
       I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough

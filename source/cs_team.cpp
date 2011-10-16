@@ -49,16 +49,15 @@ void CS_InitTeams(void)
 
    if(team_starts_by_team == NULL)
    {
-      team_starts_by_team = (mapthing_t **)(calloc(
-         team_color_max, sizeof(mapthing_t *)
-      ));
+      team_starts_by_team =
+         ecalloc(mapthing_t **, team_color_max, sizeof(mapthing_t *));
    }
 
    for(color = team_color_none; color < team_color_max; color++)
    {
       if(team_starts_by_team[color])
       {
-         free(team_starts_by_team[color]);
+         efree(team_starts_by_team[color]);
          team_starts_by_team[color] = NULL;
       }
       team_start_counts_by_team[color] = 0;
@@ -87,10 +86,11 @@ void CS_AddTeamStart(mapthing_t *team_start)
       I_Error("CS_AddTeamStart: Excessive team starts.\n");
 
    thing_index = team_start_counts_by_team[team_color];
-   team_starts_by_team[team_color] = (mapthing_t*)(realloc(
+   team_starts_by_team[team_color] = erealloc(
+      mapthing_t*,
       team_starts_by_team[team_color],
       ++team_start_counts_by_team[team_color] * sizeof(mapthing_t)
-   ));
+   );
    memcpy(
       &team_starts_by_team[team_color][thing_index],
       team_start,

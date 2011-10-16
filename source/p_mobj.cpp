@@ -161,7 +161,7 @@ void P_InitSeenStates(void)
    seenstate_t *newss;
    int i;
 
-   newss = (seenstate_t *)(calloc(32, sizeof(seenstate_t)));
+   newss = ecalloc(seenstate_t *, 32, sizeof(seenstate_t));
 
    for(i = 0; i < 32; ++i)
       newss[i].link.insert(&newss[i], &seenstate_freelist);
@@ -211,7 +211,7 @@ seenstate_t *P_GetSeenState(void)
       memset(ret, 0, sizeof(seenstate_t));
    }
    else
-      ret = (seenstate_t *)(calloc(1, sizeof(seenstate_t)));
+      ret = ecalloc(seenstate_t *, 1, sizeof(seenstate_t));
 
    return ret;
 }
@@ -1662,7 +1662,7 @@ void Mobj::deSwizzle()
    P_SetNewTarget(&lastenemy, lLEnemy);
 
    // Done with the deswizzle info structure.
-   free(dsInfo);
+   efree(dsInfo);
    dsInfo = NULL;
 }
 
@@ -2152,9 +2152,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       {
          num_deathmatchstarts = num_deathmatchstarts ?
             num_deathmatchstarts*2 : 16;
-         deathmatchstarts = (mapthing_t *)(realloc(deathmatchstarts,
-                                           num_deathmatchstarts *
-                                           sizeof(*deathmatchstarts)));
+         deathmatchstarts = erealloc(mapthing_t *, deathmatchstarts,
+                                     num_deathmatchstarts * sizeof(*deathmatchstarts));
          deathmatch_p = deathmatchstarts + offset;
       }
       memcpy(deathmatch_p++, mthing, sizeof*mthing);
@@ -2942,10 +2941,10 @@ void P_AdjustFloorClip(Mobj *thing)
       if(m->m_sector->heightsec == -1 &&
          thing->z == m->m_sector->floorheight)
       {
-         fixed_t clip = E_SectorFloorClip(m->m_sector);
+         fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
-         if(clip < shallowestclip)
-            shallowestclip = clip;
+         if(fclip < shallowestclip)
+            shallowestclip = fclip;
       }
    }
 
@@ -3506,7 +3505,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
       }
    }
 
-   free(flags);
+   efree(flags);
 
    return 0;
 }

@@ -77,8 +77,8 @@ static bool filecmp(const char *filename, const char *wildcard)
    int i = 0;
   
    // haleyjd: must be case insensitive
-   filename_main = M_Strupr(strdup(filename));
-   wildcard_main = M_Strupr(strdup(wildcard));
+   filename_main = M_Strupr(estrdup(filename));
+   wildcard_main = M_Strupr(estrdup(wildcard));
    
    // find separator -- haleyjd: use strrchr, not strchr
    filename_ext = strrchr(filename_main, '.');
@@ -160,8 +160,8 @@ static bool filecmp(const char *filename, const char *wildcard)
    }
 
    // done with temporary strings
-   free(filename_main);
-   free(wildcard_main);
+   efree(filename_main);
+   efree(wildcard_main);
 
    return res;
 }
@@ -177,11 +177,11 @@ static void MN_addFile(mndir_t *dir, const char *filename)
    {
       // realloc bigger: limitless
       dir->numfilesalloc = dir->numfilesalloc ? dir->numfilesalloc * 2 : 32;
-      dir->filenames = (char **)(realloc(dir->filenames, 
-                                         dir->numfilesalloc * sizeof(char *)));
+      dir->filenames = erealloc(char **, dir->filenames, 
+                                dir->numfilesalloc * sizeof(char *));
    }
 
-   (dir->filenames)[dir->numfiles++] = strdup(filename);
+   (dir->filenames)[dir->numfiles++] = estrdup(filename);
 }
 
 //
@@ -217,7 +217,7 @@ void MN_ClearDirectory(mndir_t *dir)
    // clear all alloced files   
    for(i = 0; i < dir->numfiles; ++i)
    {
-      free((dir->filenames)[i]);
+      efree((dir->filenames)[i]);
       (dir->filenames)[i] = NULL;
    }
 

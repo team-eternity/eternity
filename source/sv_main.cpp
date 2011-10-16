@@ -170,9 +170,11 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_missilespawned:
    case nm_missileexploded:
    case nm_cubespawned:
+#if 0
    case nm_specialspawned:
    case nm_specialstatus:
    case nm_specialremoved:
+#endif
    case nm_sectorposition:
    case nm_announcerevent:
    case nm_ticfinished:
@@ -219,9 +221,11 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       || message_type == nm_missilespawned
       || message_type == nm_missileexploded
       || message_type == nm_cubespawned
+#if 0
       || message_type == nm_specialspawned
       // || message_type == nm_specialstatus
       || message_type == nm_specialremoved
+#endif
       // || message_type == nm_sectorposition
       || message_type == nm_announcerevent
       // || message_type == nm_ticfinished
@@ -274,7 +278,7 @@ static nm_servermessage_t* build_message(bool hud_msg, bool prepend_name,
 {
    size_t total_size =
       sizeof(nm_servermessage_t) + (MAX_STRING_SIZE * sizeof(char));
-   char *buffer = (char *)(calloc(1, total_size));
+   char *buffer = ecalloc(char *, 1, total_size);
    nm_servermessage_t *server_message = (nm_servermessage_t *)buffer;
    char *message = (char *)(buffer + sizeof(nm_servermessage_t));
    int message_length =
@@ -313,9 +317,8 @@ void SV_Init(void)
 {
    char *address;
    unsigned int i;
-   ENetCallbacks callbacks = { Z_SysMalloc, Z_SysFree, abort };
 
-   if(enet_initialize_with_callbacks(ENET_VERSION, &callbacks) != 0)
+   if(enet_initialize() != 0)
       I_Error("Could not initialize networking.\n");
 
    net_host = enet_host_create(
@@ -331,7 +334,7 @@ void SV_Init(void)
    printf(
       "SV_Init: Server listening on %s:%d.\n", address, server_address->port
    );
-   free(address);
+   efree(address);
 
    enet_socket_set_option(net_host->socket, ENET_SOCKOPT_NONBLOCK, 1);
    enet_host_compress_with_range_coder(net_host);
@@ -349,8 +352,8 @@ void SV_Init(void)
    atexit(SV_CleanUp);
 
    strncpy(players[0].name, SERVER_NAME, strlen(SERVER_NAME) + 1);
-   free(default_name);
-   default_name = (char *)(calloc(7, sizeof(char)));
+   efree(default_name);
+   default_name = ecalloc(char *, 7, sizeof(char));
    strncpy(default_name, "Player", 7);
 }
 
@@ -371,7 +374,7 @@ char* SV_GetUserAgent(void)
                      << ((uint32_t)subversion) << "-"
                      << (cs_protocol_version);
 
-   return strdup(user_agent_stream.str().c_str());
+   return estrdup(user_agent_stream.str().c_str());
 }
 
 ENetPeer* SV_GetPlayerPeer(int playernum)
@@ -574,7 +577,7 @@ void SV_ConsoleTicker(void)
    //      messages are printed to the console the buffer can be re-printed.
 
    if(buffer == NULL)
-      buffer = (char *)(calloc(CONSOLE_INPUT_LENGTH, sizeof(char)));
+      buffer = ecalloc(char *, CONSOLE_INPUT_LENGTH, sizeof(char));
 
    if(!wrote_prompt)
    {
@@ -639,7 +642,7 @@ void SV_ConsoleTicker(void)
    unsigned int max_buf_size = CONSOLE_INPUT_LENGTH - 2;
 
    if(buffer == NULL)
-      buffer = (char *)(calloc(CONSOLE_INPUT_LENGTH, sizeof(char)));
+      buffer = ecalloc(char *, CONSOLE_INPUT_LENGTH, sizeof(char));
 
    FD_ZERO(&fdr);
    FD_SET(0, &fdr);
@@ -919,7 +922,7 @@ int SV_HandleClientConnection(ENetPeer *peer)
       address,
       peer->address.port
    );
-   free(address);
+   efree(address);
 
    server_clients[i].current_request = scr_initial_state;
 
@@ -996,7 +999,7 @@ void SV_SendCurrentState(int playernum)
    playeringame[playernum] = true;
    message_size = CS_BuildGameState(playernum, &buffer);
    send_packet(playernum, buffer, message_size);
-   free(buffer);
+   efree(buffer);
 
    // [CG] Send client initialization info for all connected clients to the new
    //      client.
@@ -1337,7 +1340,7 @@ static void run_player_command(int playernum, cs_buffered_command_t *bufcmd)
    P_RunPlayerCommand(playernum);
    server_client->last_command_run_index = bufcmd->command.world_index;
 
-   free(bufcmd);
+   efree(bufcmd);
 }
 
 bool SV_RunPlayerCommands(int playernum)
@@ -1648,7 +1651,7 @@ void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum)
       doom_printf("Received message with unknown recipient type.");
       break;
    }
-   free(message);
+   efree(message);
 }
 
 void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
@@ -1707,7 +1710,7 @@ void SV_BroadcastGameState(void)
    size_t message_size = CS_BuildGameState(0, &buffer);
 
    broadcast_packet(buffer, message_size);
-   free(buffer);
+   efree(buffer);
 }
 #endif
 
@@ -1738,7 +1741,7 @@ void SV_BroadcastPlayerStringInfo(int playernum, client_info_e info_type)
    update_message->world_index = sv_world_index;
 
    broadcast_packet(update_message, buffer_size);
-   free(update_message);
+   efree(update_message);
 }
 
 void SV_BroadcastPlayerArrayInfo(int playernum, client_info_e info_type,
@@ -1792,9 +1795,8 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 #endif
 
    server_client->received_command_for_current_map = true;
-   cs_buffered_command_t *bufcmd = (cs_buffered_command_t *)(malloc(
-      sizeof(cs_buffered_command_t)
-   ));
+   cs_buffered_command_t *bufcmd =
+      emalloc(cs_buffered_command_t *, sizeof(cs_buffered_command_t));
    memcpy(&bufcmd->command, received_command, sizeof(cs_cmd_t));
    M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
 
@@ -1981,6 +1983,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
                                    sector_t *sector,
                                    map_special_e special_type)
 {
+#if 0
    size_t msg_size = sizeof(nm_specialspawned_t);
    size_t special_size, total_size;
    char *buffer, *status_buffer;
@@ -2044,7 +2047,7 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
       break;
    }
 
-   buffer = (char *)(malloc(total_size));
+   buffer = emalloc(char *, total_size));
    status_buffer = (buffer + sizeof(nm_specialspawned_t));
    spawn_message = (nm_specialspawned_t *)buffer;
    spawn_message->message_type = nm_specialspawned;
@@ -2149,11 +2152,13 @@ void SV_BroadcastMapSpecialSpawned(void *special, void *data, line_t *line,
 
    broadcast_packet(buffer, total_size);
 
-   free(buffer);
+   efree(buffer);
+#endif
 }
 
 void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type)
 {
+#if 0
    size_t msg_size = sizeof(nm_specialstatus_t);
    size_t special_size, total_size;
    char *buffer, *status_buffer;
@@ -2202,7 +2207,7 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type)
    }
 
    total_size = msg_size + special_size;
-   buffer = (char *)(malloc(total_size));
+   buffer = emalloc(char *, total_size));
    status_buffer = (buffer + sizeof(nm_specialspawned_t));
 
    status_message = (nm_specialstatus_t *)buffer;
@@ -2272,12 +2277,14 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type)
    }
 
    broadcast_packet(buffer, total_size);
-   free(buffer);
+   efree(buffer);
+#endif
 }
 
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
                                    map_special_e special_type)
 {
+#if 0
    nm_specialremoved_t removal_message;
 
    removal_message.message_type = nm_specialremoved;
@@ -2286,6 +2293,7 @@ void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
    removal_message.net_id = net_id;
 
    broadcast_packet(&removal_message, sizeof(nm_specialremoved_t));
+#endif
 }
 
 void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source)
@@ -2782,9 +2790,11 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_missilespawned:
    case nm_missileexploded:
    case nm_cubespawned:
+#if 0
    case nm_specialspawned:
    case nm_specialstatus:
    case nm_specialremoved:
+#endif
    case nm_sectorposition:
    case nm_announcerevent:
    case nm_ticfinished:

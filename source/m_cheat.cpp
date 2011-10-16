@@ -740,12 +740,12 @@ bool M_FindCheats(int key)
 
          for(p = (const unsigned char *)cheat[i].cheat; *p; p++)
          {
-            unsigned key = tolower(*p) - 'a'; // convert to 0-31
+            unsigned int ikey = tolower(*p) - 'a'; // convert to 0-31
 
-            if(key >= 32)             // ignore most non-alpha cheat letters
+            if(ikey >= 32)             // ignore most non-alpha cheat letters
                continue;
 
-            c = (c << 5) + key;       // shift key into code
+            c = (c << 5) + ikey;      // shift key into code
             m = (m << 5) + 31;        // shift 1's into mask
          }
 

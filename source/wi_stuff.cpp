@@ -767,16 +767,16 @@ static int WI_drawNum(int x, int y, int n, int digits)
 // Purpose: Draws a percentage, really just a call to WI_drawNum 
 //          after putting a percent sign out there
 // Args:    x, y   -- location
-//          p      -- the percentage value to be drawn, no negatives
+//          pct    -- the percentage value to be drawn, no negatives
 // Returns: void
 //
-static void WI_drawPercent(int x, int y, int p )
+static void WI_drawPercent(int x, int y, int pct )
 {
-   if(p < 0)
+   if(pct < 0)
       return;
    
    V_DrawPatch(x, y, &vbscreen, percent);
-   WI_drawNum(x, y, p, -1);
+   WI_drawNum(x, y, pct, -1);
 }
 
 
@@ -1036,23 +1036,23 @@ static void WI_drawNoState(void)
 //
 static int WI_fragSum(int playernum)
 {
-   int i, frags = 0;
+   int i, numfrags = 0;
     
    for(i = 0; i < MAXPLAYERS; ++i)
    {
       if(playeringame[i]  // is this player playing?
          && i != playernum) // and it's not the player we're calculating
       {
-         frags += plrs[playernum].frags[i];  
+         numfrags += plrs[playernum].frags[i];  
       }
    }
       
    // JDC hack - negative frags.
-   frags -= plrs[playernum].frags[playernum];
+   numfrags -= plrs[playernum].frags[playernum];
    // UNUSED if (frags < 0)
    //  frags = 0;
    
-   return frags;
+   return numfrags;
 }
 
 static int dm_state;

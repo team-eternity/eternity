@@ -355,7 +355,7 @@ void M_LoadSysConfig(const char *filename)
 {
    startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
 
-   sysdeffile.fileName = strdup(filename);
+   sysdeffile.fileName = estrdup(filename);
 
    M_LoadDefaultFile(&sysdeffile);
 }

@@ -1327,7 +1327,7 @@ bool MN_Responder(event_t *ev)
    // are we inputting a new value into a variable?
    if(input_command)
    {
-      unsigned char ch = 0;
+      unsigned char ich = 0;
       variable_t *var = input_command->variable;
       
       if(ev->data1 == KEYD_ESCAPE)        // cancel input
@@ -1370,18 +1370,18 @@ bool MN_Responder(event_t *ev)
       // dont allow too many characters on one command line
 
       if(ev->character)
-         ch = (unsigned char)(ev->character);
+         ich = (unsigned char)(ev->character);
       else if(ev->data1 > 31 && ev->data1 < 127)
-         ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+         ich = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
 
-      if(ch > 31 && ch < 127)
+      if(ich > 31 && ich < 127)
       {
          if(strlen((char *)input_buffer) <=
             ((var->type == vt_string) ? (unsigned int)var->max :
              (var->type == vt_int || var->type == vt_toggle) ? 33 : 20))
          {
             input_buffer[strlen((char *)input_buffer) + 1] = 0;
-            input_buffer[strlen((char *)input_buffer)] = ch;
+            input_buffer[strlen((char *)input_buffer)] = ich;
          }
       }
       

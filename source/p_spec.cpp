@@ -30,6 +30,8 @@
 //     Friction
 //     Wind/Current
 //
+// haleyjd 10/13/2011: TODO - module is oversized; split up.
+//
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
@@ -192,7 +194,7 @@ void P_InitPicAnims(void)
       if(lastanim >= anims + maxanims)
       {
          size_t newmax = maxanims ? maxanims*2 : MAXANIMS;
-         anims = (anim_t *)(realloc(anims, newmax*sizeof(*anims))); // killough
+         anims = erealloc(anim_t *, anims, newmax*sizeof(*anims)); // killough
          lastanim = anims + maxanims;
          maxanims = newmax;
       }
@@ -249,11 +251,10 @@ void P_InitPicAnims(void)
    Z_ChangeTag(animdefs, PU_CACHE); //jff 3/23/98 allow table to be freed
 }
 
-///////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Linedef and Sector Special Implementation Utility Functions
 //
-///////////////////////////////////////////////////////////////
 
 //
 // getSide()
@@ -546,34 +547,34 @@ fixed_t P_FindLowestCeilingSurrounding(sector_t* sec)
    int i;
 
    if(!comp[comp_model])
-      height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in
+      height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in height calculations
 
    if(demo_version >= 333)
    {
       // SoM: ignore attached sectors.
-      for(i=0; i < sec->linecount; i++)
+      for(i = 0; i < sec->linecount; i++)
       {
          if((other = getNextSector(sec->lines[i],sec)) &&
             other->ceilingheight < height)
          {
-            int i;
+            int j;
 
-            for(i = 0; i < sec->c_asurfacecount; i++)
-               if(sec->c_asurfaces[i].sector == other)
+            for(j = 0; j < sec->c_asurfacecount; j++)
+               if(sec->c_asurfaces[j].sector == other)
                   break;
             
-            if(i == sec->c_asurfacecount)
+            if(j == sec->c_asurfacecount)
                height = other->ceilingheight;
          }
       }
    }
    else
-   {
-      // height calculations
-      for(i=0; i < sec->linecount; i++)
-         if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
+   {      
+      for(i = 0; i < sec->linecount; i++)
+      {
+         if((other = getNextSector(sec->lines[i],sec)) && other->ceilingheight < height)
             height = other->ceilingheight;
+      }
    }
 
    return height;
@@ -722,15 +723,19 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
    //jff 5/23/98 don't disturb sec->linecount while searching
    // but allow early exit in old demos
 
-   int i, linecount = sec->linecount;
+   int i, lineCount = sec->linecount;
    
-   for(i = 0; i < (demo_compatibility && sec->linecount < linecount ?
-      sec->linecount : linecount); i++)
-      if (twoSided(secnum, i) &&
+   for(i = 0; 
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+       i++)
+   {
+      if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-         getSide(secnum,i,0)->sector-sectors == secnum))->
-         floorheight == floordestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->floorheight == floordestheight)
+      {
          return sec;
+      }
+   }
       
    return NULL;
 }
@@ -760,15 +765,19 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
    //jff 5/23/98 don't disturb sec->linecount while searching
    // but allow early exit in old demos
 
-   int i, linecount = sec->linecount;
+   int i, lineCount = sec->linecount;
 
-   for(i = 0; i < (demo_compatibility && sec->linecount<linecount?
-                   sec->linecount : linecount); i++)
+   for(i = 0; 
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+       i++)
+   {
       if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-                          getSide(secnum,i,0)->sector-sectors == secnum))->
-          ceilingheight == ceildestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->ceilingheight == ceildestheight)
+      {
          return sec;
+      }
+   }
 
    return NULL;
 }
@@ -1187,14 +1196,13 @@ void P_StartLineScript(line_t *line, Mobj *thing)
       ACS_StartScript(line->tag, gamemap, line->args, thing, line, 0, NULL, false);
 }
 
-//////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Events
 //
 // Events are operations triggered by using, crossing,
 // or shooting special lines, or by timed thinkers.
 //
-/////////////////////////////////////////////////////////////////////////
 
 //
 // P_ClearSwitchOnFail
@@ -2500,16 +2508,16 @@ void P_UpdateSpecials(void)
    //  array somewhere, but until they are...
    if(levelFragLimit)  // we used -frags so compare count
    {
-      int i;
-      for(i = 0; i < MAXPLAYERS; ++i)
+      int pnum;
+      for(pnum = 0; pnum < MAXPLAYERS; pnum++)
       {
-         if(!playeringame[i])
+         if(!playeringame[pnum])
             continue;
           // sf: use hu_frags.c frag counter
-         if(players[i].totalfrags >= levelFragLimit)
+         if(players[pnum].totalfrags >= levelFragLimit)
             break;
       }
-      if(i < MAXPLAYERS)       // sf: removed exitflag (ugh)
+      if(pnum < MAXPLAYERS)       // sf: removed exitflag (ugh)
          G_ExitLevel();
    }
 
@@ -2539,11 +2547,10 @@ void P_UpdateSpecials(void)
    P_RunButtons();
 }
 
-//////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Sector and Line special thinker spawning at level startup
 //
-//////////////////////////////////////////////////////////////////////
 
 //
 // P_SetupHeightTransfer
@@ -2690,7 +2697,7 @@ void P_SpawnSpecials(int mapformat)
          
       case 14:
          // door raise in 5 minutes
-         P_SpawnDoorRaiseIn5Mins(sector);
+         P_SpawnDoorRaiseIn5Mins(sector, i);
          break;
 
       case 16:
@@ -3256,7 +3263,7 @@ void FrictionThinker::serialize(SaveArchive &arc)
    arc << friction << movefactor << affectee;
 }
 
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // FRICTION EFFECTS
 //
@@ -3301,7 +3308,7 @@ void FrictionThinker::serialize(SaveArchive &arc)
 // demos. Doom demos, which are more important IMO, are not affected by this
 // change.
 //
-/////////////////////////////
+//=====================================
 //
 // Initialize the sectors where friction is increased or decreased
 
@@ -3376,9 +3383,9 @@ static void P_SpawnFriction(void)
 //
 // phares 3/12/98: End of friction effects
 //
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // PUSH/PULL EFFECT
 //
@@ -3424,10 +3431,11 @@ static void P_SpawnFriction(void)
 
 #define PUSH_FACTOR 7
 
-/////////////////////////////
+//
+// Add_Pusher
 //
 // Add a push thinker to the thinker list
-
+//
 static void Add_Pusher(int type, int x_mag, int y_mag,
                        Mobj *source, int affectee)
 {
@@ -3448,7 +3456,8 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
    p->addThinker();
 }
 
-/////////////////////////////
+PushThinker *tmpusher; // pusher structure for blockmap searches
+
 //
 // PIT_PushThing determines the angle and magnitude of the effect.
 // The object's x and y momentum values are changed.
@@ -3456,9 +3465,7 @@ static void Add_Pusher(int type, int x_mag, int y_mag,
 // tmpusher belongs to the point source (PUSH/PULL).
 //
 // killough 10/98: allow to affect things besides players
-
-PushThinker *tmpusher; // pusher structure for blockmap searches
-
+//
 bool PIT_PushThing(Mobj* thing)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
@@ -3671,11 +3678,11 @@ void PushThinker::serialize(SaveArchive &arc)
       source = P_GetPushThing(affectee);
 }
 
-/////////////////////////////
 //
-// P_GetPushThing() returns a pointer to an PUSH or PULL thing,
-// NULL otherwise.
-
+// P_GetPushThing
+//
+// returns a pointer to an PUSH or PULL thing, NULL otherwise.
+//
 Mobj* P_GetPushThing(int s)
 {
    Mobj* thing;
@@ -3701,11 +3708,12 @@ Mobj* P_GetPushThing(int s)
    return NULL;
 }
 
-/////////////////////////////
+
+//
+// P_SpawnPushers
 //
 // Initialize the sectors where pushers are present
 //
-
 static void P_SpawnPushers(void)
 {
    int i;
@@ -3766,7 +3774,7 @@ static void P_SpawnHereticWind(line_t *line)
 //
 // phares 3/20/98: End of Pusher effects
 //
-////////////////////////////////////////////////////////////////////////////
+//=============================================================================
 
 // haleyjd 08/22/05: TerrainTypes moved to e_ttypes.c
 
@@ -4049,7 +4057,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
       memcpy(attached, cline->frontsector->f_attached, sizeof(int) * numattach);
@@ -4065,7 +4073,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
       if(numattach >= maxattach)
       {
          maxattach = numattach + 5;
-         attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+         attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
       // haleyjd: check for safety
@@ -4104,7 +4112,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
             {
               maxattach += 5;
 
-              attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+              attached = erealloc(int *, attached, sizeof(int) * maxattach);
             }
 
             attached[numattach++] = line - lines;
@@ -4158,7 +4166,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+            attached = erealloc(int *, attached, sizeof(int) * maxattach);
          }
          attached[numattach++] = front;
       }
@@ -4175,7 +4183,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
          if(numattach == maxattach)
          {
             maxattach += 5;
-            attached = (int *)(realloc(attached, sizeof(int) * maxattach));
+            attached = erealloc(int *, attached, sizeof(int) * maxattach);
          }
          attached[numattach++] = back;
       }
@@ -4200,6 +4208,7 @@ void P_AttachLines(line_t *cline, bool ceiling)
 // P_MoveAttached
 //
 // Moves all attached surfaces.
+//
 bool P_MoveAttached(sector_t *sector, bool ceiling, fixed_t delta, int crush)
 {
    int i;
@@ -4284,7 +4293,8 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+         attached = erealloc(attachedsurface_t *, attached, 
+                             sizeof(attachedsurface_t) * maxattached);
       }
 
       // haleyjd: check for safety
@@ -4303,7 +4313,8 @@ void P_AttachSectors(line_t *line)
       if(numattached >= maxattached)
       {
          maxattached = numattached + 5;
-         attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+         attached = erealloc(attachedsurface_t *, attached, 
+                             sizeof(attachedsurface_t) * maxattached);
       }
 
       memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
@@ -4424,7 +4435,8 @@ void P_AttachSectors(line_t *line)
          if(numattached == maxattached)
          {
             maxattached += 5;
-            attached = (attachedsurface_t *)(realloc(attached, sizeof(attachedsurface_t) * maxattached));
+            attached = erealloc(attachedsurface_t *, attached, 
+                                sizeof(attachedsurface_t) * maxattached);
          }
 
          attached[numattached].sector = slaveline->frontsector;

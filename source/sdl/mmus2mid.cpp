@@ -37,6 +37,9 @@
 //#define STANDALONE  /* uncomment this to make MMUS2MID.EXE */
 #ifndef STANDALONE
 #include "../z_zone.h"
+#else
+#define emalloc(t, n) (t)(malloc(n))
+#define efree(p)      free(p)
 #endif
 
 // some macros to decode mus event bit fields
@@ -171,9 +174,8 @@ static int TWriteByte(MIDI *mididata, int MIDItrack, unsigned char byte)
         TRACKBUFFERSIZE;
 
       if(!(mididata->track[MIDItrack].data =     // attempt to reallocate
-         (unsigned char *)(realloc(mididata->track[MIDItrack].data, track[MIDItrack].alloced))))
-
-      return MEMALLOC;
+         erealloc(unsigned char *, mididata->track[MIDItrack].data, track[MIDItrack].alloced)))
+         return MEMALLOC;
    }
 
    mididata->track[MIDItrack].data[pos] = byte;
@@ -365,7 +367,7 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
       track[i].velocity = 64;
       track[i].deltaT = 0;
       track[i].lastEvt = 0;
-      free(mididata->track[i].data);//jff 3/5/98 remove old allocations
+      efree(mididata->track[i].data);//jff 3/5/98 remove old allocations
       mididata->track[i].data=NULL;
       track[i].alloced = 0;
       mididata->track[i].len = 0;
@@ -382,7 +384,7 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
    
    // allocat for midi tempo/key track, allow for end of track 
    if(!(mididata->track[0].data =
-      (unsigned char *)(realloc(mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4))))  
+      erealloc(unsigned char *, mididata->track[0].data,sizeof(midikey)+sizeof(miditempo)+4)))
       return MEMALLOC;
 
    // key C major
@@ -551,12 +553,12 @@ int mmus2mid(UBYTE *mus, int size, MIDI *mididata, UWORD division, int nocomp)
          // jff 1/23/98 fix failure to set data NULL, len 0 for unused tracks
          // shorten allocation to proper length (important for Allegro)
          if(!(mididata->track[i].data =
-            (unsigned char *)(realloc(mididata->track[i].data,mididata->track[i].len))))
+            erealloc(unsigned char *, mididata->track[i].data,mididata->track[i].len)))
             return MEMALLOC;
       }
       else
       {
-         free(mididata->track[i].data);
+         efree(mididata->track[i].data);
          mididata->track[i].data = NULL;
       }
    }
@@ -630,7 +632,8 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
       mididata->track[i].len = ReadLength(&mid);  // get length, move mid past it
       
       // read a track
-      mididata->track[i].data = (unsigned char *)(realloc(mididata->track[i].data,mididata->track[i].len));
+      mididata->track[i].data = 
+         erealloc(unsigned char *, mididata->track[i].data,mididata->track[i].len);
       memcpy(mididata->track[i].data,mid,mididata->track[i].len);
       mid += mididata->track[i].len;
    }
@@ -639,7 +642,7 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
    {
       if(mididata->track[i].len)
       {
-         free(mididata->track[i].data);
+         efree(mididata->track[i].data);
          mididata->track[i].data = NULL;
          mididata->track[i].len = 0;
       }
@@ -669,7 +672,7 @@ static void FreeTracks(MIDI *mididata)
    
    for(i = 0; i < MIDI_TRACKS; i++)
    {
-      free(mididata->track[i].data);
+      efree(mididata->track[i].data);
       mididata->track[i].data = NULL;
       mididata->track[i].len = 0;
    }
@@ -721,7 +724,7 @@ int MIDIToMidi(MIDI *mididata,UBYTE **mid,int *midlen)
          ntrks++;
       }
    }
-   if((*mid = (UBYTE *)(malloc(total))) == NULL)
+   if((*mid = emalloc(UBYTE *, total)) == NULL)
       return MEMALLOC;
    
 
@@ -812,7 +815,7 @@ int main(int argc,char **argv)
             if(!fread(mus,MUSh.ScoreLength+MUSh.ScoreStart,1,musst))
             {          
                printf("Error reading MUS file\n");
-               free(mus);
+               efree(mus);
                exit(1);
             }
             fclose(musst);
@@ -820,7 +823,7 @@ int main(int argc,char **argv)
          else
          {
             printf("Out of memory\n");
-            free(mus);
+            efree(mus);
             exit(1);
          }
          
@@ -830,7 +833,7 @@ int main(int argc,char **argv)
             printf("Error converting MUS file to MIDI: %d\n",err);
             exit(1);
          }
-         free(mus);
+         efree(mus);
          
          MIDIToMidi(&mididata,&mid,&midlen);
 
@@ -841,7 +844,7 @@ int main(int argc,char **argv)
             {
                printf("Error writing MIDI file\n");
                FreeTracks(&mididata);
-               free(mid);
+               efree(mid);
                exit(1);
             }
             fclose(midst);
@@ -850,7 +853,7 @@ int main(int argc,char **argv)
          {
             printf("Can't open MIDI file for output: %s\n", midfile);
             FreeTracks(&mididata);
-            free(mid);
+            efree(mid);
             exit(1);
          }
       }
@@ -862,7 +865,7 @@ int main(int argc,char **argv)
       
       printf("MUS file %s converted to MIDI file %s\n",musfile,midfile);
       FreeTracks(&mididata);
-      free(mid);
+      efree(mid);
    }
 
    return 0;

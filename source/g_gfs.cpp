@@ -88,32 +88,32 @@ gfs_t *G_LoadGFS(const char *filename)
    gfs.numcsc  = cfg_size(cfg, SEC_CSCFILE);
 
    if(gfs.numwads)
-      gfs.wadnames = (char **)(malloc(gfs.numwads * sizeof(char *)));
+      gfs.wadnames = ecalloc(char **, gfs.numwads, sizeof(char *));
 
    if(gfs.numdehs)
-      gfs.dehnames = (char **)(malloc(gfs.numdehs * sizeof(char *)));
+      gfs.dehnames = ecalloc(char **, gfs.numdehs, sizeof(char *));
 
    if(gfs.numcsc)
-      gfs.cscnames = (char **)(malloc(gfs.numcsc  * sizeof(char *)));
+      gfs.cscnames = ecalloc(char **, gfs.numcsc,  sizeof(char *));
 
    // load wads, dehs, csc
    for(i = 0; i < gfs.numwads; i++)
    {
       const char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
 
-      gfs.wadnames[i] = strdup(str);
+      gfs.wadnames[i] = estrdup(str);
    }
    for(i = 0; i < gfs.numdehs; i++)
    {
       const char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
       
-      gfs.dehnames[i] = strdup(str);
+      gfs.dehnames[i] = estrdup(str);
    }
    for(i = 0; i < gfs.numcsc; i++)
    {
       const char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
 
-      gfs.cscnames[i] = strdup(str);
+      gfs.cscnames[i] = estrdup(str);
    }
 
    // haleyjd 07/05/03: support root EDF specification
@@ -121,7 +121,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_EDFFILE);
 
-      gfs.edf = strdup(str);
+      gfs.edf = estrdup(str);
 
       gfs.hasEDF = true;
    }
@@ -133,7 +133,7 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_IWAD);
 
-      gfs.iwad = strdup(str);
+      gfs.iwad = estrdup(str);
 
       gfs.hasIWAD = true;
    }
@@ -143,11 +143,11 @@ gfs_t *G_LoadGFS(const char *filename)
    {
       const char *str = cfg_getstr(cfg, SEC_BASEPATH);
 
-      gfs.filepath = strdup(str);
+      gfs.filepath = estrdup(str);
    }
    else
    {
-      gfs.filepath = (char *)(malloc(strlen(filename) + 1));
+      gfs.filepath = emalloc(char *, strlen(filename) + 1);
       M_GetFilePath(filename, gfs.filepath, strlen(filename));
    }
 
@@ -158,44 +158,44 @@ gfs_t *G_LoadGFS(const char *filename)
    return &gfs;
 }
 
-void G_FreeGFS(gfs_t *gfs)
+void G_FreeGFS(gfs_t *lgfs)
 {
    int i;
 
    // free all filenames, and then free the arrays they were in
    // as well
 
-   for(i = 0; i < gfs->numwads; i++)
+   for(i = 0; i < lgfs->numwads; i++)
    {
-      free(gfs->wadnames[i]);
+      efree(lgfs->wadnames[i]);
    }
-   free(gfs->wadnames);
+   efree(lgfs->wadnames);
 
-   for(i = 0; i < gfs->numdehs; i++)
+   for(i = 0; i < lgfs->numdehs; i++)
    {
-      free(gfs->dehnames[i]);
+      efree(lgfs->dehnames[i]);
    }
-   free(gfs->dehnames);
+   efree(lgfs->dehnames);
 
-   for(i = 0; i < gfs->numcsc; i++)
+   for(i = 0; i < lgfs->numcsc; i++)
    {
-      free(gfs->cscnames[i]);
+      efree(lgfs->cscnames[i]);
    }
-   free(gfs->cscnames);
+   efree(lgfs->cscnames);
 
-   if(gfs->edf)
-      free(gfs->edf);
-   gfs->edf = NULL;
-   gfs->hasEDF = false;
+   if(lgfs->edf)
+      efree(lgfs->edf);
+   lgfs->edf = NULL;
+   lgfs->hasEDF = false;
 
-   if(gfs->iwad)
-      free(gfs->iwad);
-   gfs->iwad = NULL;
-   gfs->hasIWAD = false;
+   if(lgfs->iwad)
+      efree(lgfs->iwad);
+   lgfs->iwad = NULL;
+   lgfs->hasIWAD = false;
 
-   if(gfs->filepath)
-      free(gfs->filepath);
-   gfs->filepath = NULL;
+   if(lgfs->filepath)
+      efree(lgfs->filepath);
+   lgfs->filepath = NULL;
 }
 
 //

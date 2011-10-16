@@ -71,7 +71,7 @@ MetaObject::MetaObject(metatypename_t pType, const char *pKey)
    : ZoneObject(), links(), typelinks(), type(), key()
 {
    type_name = pType;   
-   key_name  = strdup(pKey); // key_name is managed by the metaobject
+   key_name  = estrdup(pKey); // key_name is managed by the metaobject
 
    key  = key_name;
    type = type_name;
@@ -88,8 +88,8 @@ MetaObject::MetaObject(const MetaObject &other)
    type_name = other.type_name;
 
    if(key_name)
-      free(key_name);
-   key_name = strdup(other.key_name);
+      efree(key_name);
+   key_name = estrdup(other.key_name);
 
    key  = key_name;
    type = type_name;
@@ -104,7 +104,7 @@ MetaObject::~MetaObject()
 {
    // key_name is managed by the metaobject
    if(key_name)
-      free(key_name);
+      efree(key_name);
 
    key_name  = NULL;
    type_name = NULL;
@@ -303,7 +303,7 @@ const char *MetaDouble::toString() const
 MetaString::MetaString(const char *key, const char *s)
    : MetaObject("MetaString", key)
 {
-   this->value = strdup(s);
+   this->value = estrdup(s);
 }
 
 //
@@ -313,7 +313,7 @@ MetaString::MetaString(const char *key, const char *s)
 //
 MetaString::MetaString(const MetaString &other) : MetaObject(other)
 {
-   this->value = strdup(other.value);
+   this->value = estrdup(other.value);
 }
 
 //
@@ -324,7 +324,7 @@ MetaString::MetaString(const MetaString &other) : MetaObject(other)
 MetaString::~MetaString()
 {
    if(value)
-      free(value);
+      efree(value);
 
    value = NULL;
 }
@@ -364,10 +364,10 @@ void MetaString::setValue(const char *s, char **ret)
       if(ret)
          *ret = value;
       else
-         free(value);
+         efree(value);
    }
 
-   value = strdup(s);
+   value = estrdup(s);
 }
 
 //
@@ -1011,7 +1011,7 @@ char *MetaTable::removeString(const char *key)
    // Destroying the MetaString will destroy the value inside it too, unless we
    // get and then nullify its value manually. This is one reason why MetaTable
    // is a friend to these basic types, as it makes some simple management 
-   // chores like this more efficient. Otherwise I'd have to strdup the string 
+   // chores like this more efficient. Otherwise I'd have to estrdup the string 
    // and that's stupid.
 
    str = static_cast<MetaString *>(obj);

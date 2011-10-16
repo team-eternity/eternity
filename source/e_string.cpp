@@ -111,8 +111,8 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    if((newStr = E_StringForName(key)))
    {
       // Modify existing object.
-      free(newStr->string);
-      newStr->string = strdup(value);
+      efree(newStr->string);
+      newStr->string = estrdup(value);
 
       // Modify numeric id and rehash object if necessary
       if(num != newStr->numkey)
@@ -132,7 +132,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    else
    {
       // Create a new string object
-      newStr = (edf_string_t *)(calloc(1, sizeof(edf_string_t)));
+      newStr = ecalloc(edf_string_t *, 1, sizeof(edf_string_t));
       
       // copy keys into string object
       if(strlen(key) > 32)
@@ -145,7 +145,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
       newStr->numkey = num;
       
       // duplicate value
-      newStr->string = strdup(value);
+      newStr->string = estrdup(value);
       
       // add to hash tables
       
@@ -271,7 +271,7 @@ void E_ProcessStrings(cfg_t *cfg)
 
       if((dehstr = D_GetBEXStr(bex)))
       {
-         *(dehstr->ppstr) = strdup(value);
+         *(dehstr->ppstr) = estrdup(value);
 
          E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n", bex);
       }

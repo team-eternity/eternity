@@ -46,12 +46,14 @@ void CS_InitSectorPositions(void)
    if(cs_sector_positions != NULL)
    {
       for(i = 0; i < old_numsectors; i++)
-         free(cs_sector_positions[i]);
+         efree(cs_sector_positions[i]);
    }
 
-   cs_sector_positions = (sector_position_t **)(realloc(
-      cs_sector_positions, numsectors * sizeof(sector_position_t *)
-   ));
+   cs_sector_positions = erealloc(
+      sector_position_t **,
+      cs_sector_positions,
+      numsectors * sizeof(sector_position_t *)
+   );
 
    memset(
       cs_sector_positions, 0, numsectors * sizeof(sector_position_t *)
@@ -59,9 +61,9 @@ void CS_InitSectorPositions(void)
 
    for(i = 0; i < numsectors; i++)
    {
-      cs_sector_positions[i] = (sector_position_t*)(calloc(
-         MAX_POSITIONS, sizeof(sector_position_t)
-      ));
+      cs_sector_positions[i] = ecalloc(
+         sector_position_t *, MAX_POSITIONS, sizeof(sector_position_t)
+      );
       CS_SaveSectorPosition(&cs_sector_positions[i][0], &sectors[i]);
    }
    old_numsectors = numsectors;
