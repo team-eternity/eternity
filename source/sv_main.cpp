@@ -1456,7 +1456,8 @@ void SV_SaveActorPositions(void)
                continue;
             }
          }
-         SV_BroadcastActorPosition(actor, sv_world_index);
+         if((actor->flags & MF_MISSILE) == 0)
+            SV_BroadcastActorPosition(actor, sv_world_index);
       }
    }
 }

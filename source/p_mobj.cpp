@@ -411,7 +411,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 void P_ExplodeMissile(Mobj *mo)
 {
    if(!serverside)
+   {
+      mo->momx = mo->momy = mo->momz = 0;
       return;
+   }
 
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)

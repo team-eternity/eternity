@@ -228,6 +228,8 @@ void Thinker::removeThinker()
 void Thinker::RunThinkers(void)
 {
    Mobj *mo;
+   int puff_type = E_SafeThingType(MT_PUFF);
+   int blood_type = E_SafeThingType(MT_BLOOD);
 
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
@@ -239,7 +241,14 @@ void Thinker::RunThinkers(void)
          currentthinker->Think();
       else if(!(mo = thinker_cast<Mobj *>(currentthinker)))
          currentthinker->Think();
-      else if(mo->player == NULL)
+      else if(serverside && mo->player == NULL)
+         currentthinker->Think();
+      else if(clientside && ((mo->type == blood_type)  ||
+                             (mo->type == puff_type)   ||
+                             (mo->flags  & MF_MISSILE) ||
+                             (mo->flags  & MF_PICKUP)  ||
+                             (mo->flags  & MF_SPECIAL) ||
+                             (mo->flags3 & MF3_3DDECORATION)))
          currentthinker->Think();
    }
 }
