@@ -862,6 +862,13 @@ void CS_HandleServerSection(Json::Value &server)
    }
    DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
 
+   sv_randomize_maps = false;
+   if(!server["randomize_maps"].empty() &&
+       server["randomize_maps"].asBool())
+   {
+      sv_randomize_maps = true;
+   }
+
    cs_wad_repository = NULL;
    if(!server["wad_repository"].empty() &&
       server["wad_repository"].asString().length() &&

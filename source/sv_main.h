@@ -44,6 +44,7 @@ extern unsigned int sv_world_index;
 extern unsigned long sv_public_address;
 extern bool sv_should_send_new_map;
 extern server_client_t server_clients[MAXPLAYERS];
+extern bool sv_randomize_maps;
 extern const char *sv_spectator_password;
 extern const char *sv_player_password;
 extern const char *sv_moderator_password;

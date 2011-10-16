@@ -103,6 +103,7 @@ unsigned int sv_world_index = 0;
 unsigned long sv_public_address = 0;
 bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
+bool sv_randomize_maps = false;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -120,21 +121,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       return;
 
    if(!SHOULD_SEND_PACKET_TO(playernum, message_type))
-   {
-      if(playeringame[playernum])
-      {
-         printf(
-            "Not sending message [%s] to %d.\n", 
-            network_message_names[message_type],
-            playernum
-         );
-      }
-      else if(message_type == nm_initialstate)
-      {
-         printf("WTF.\n");
-      }
       return;
-   }
 
    switch(message_type)
    {
@@ -1676,11 +1663,14 @@ void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
 void SV_AdvanceMapList(void)
 {
    // [CG] TODO: Add map randomization here.
-   if(((dmflags & dmf_exit_to_same_level) == 0) &&
-      ++cs_current_map_index >= cs_map_count)
-   {
+   if(dmflags & dmf_exit_to_same_level)
+      return;
+
+   if(sv_randomize_maps)
+      cs_current_map_index = (M_Random() % cs_map_count);
+   else if(++cs_current_map_index >= cs_map_count)
       cs_current_map_index = 0;
-   }
+
    cs_current_map_number = cs_current_map_index;
 }
 
