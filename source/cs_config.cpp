@@ -851,8 +851,8 @@ void CS_HandleServerSection(Json::Value &server)
       else
       {
          cs_original_settings->game_type = gt_dm;
-         if(string_option_is(server["game_type"], "duel")||
-            string_option_is(server["game_type"], "1v1") ||
+         if(string_option_is(server["game_type"], "duel") ||
+            string_option_is(server["game_type"], "1v1")  ||
             string_option_is(server["game_type"], "1on1") ||
             string_option_is(server["game_type"], "1 on 1"))
          {
@@ -862,11 +862,13 @@ void CS_HandleServerSection(Json::Value &server)
    }
    DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
 
-   sv_randomize_maps = false;
-   if(!server["randomize_maps"].empty() &&
-       server["randomize_maps"].asBool())
+   sv_randomize_maps = map_randomization_none;
+   if(!server["randomize_maps"].empty())
    {
-      sv_randomize_maps = true;
+      if(string_option_is(server["randomize_maps"], "random"))
+         sv_randomize_maps = map_randomization_random;
+      else if(string_option_is(server["randomize_maps"], "shuffle"))
+         sv_randomize_maps = map_randomization_shuffle;
    }
 
    cs_wad_repository = NULL;

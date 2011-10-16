@@ -81,6 +81,13 @@ typedef enum
    cmf_dog_jumping           = 2 << 7,
 } compatflags2_t;
 
+enum
+{
+   map_randomization_none,
+   map_randomization_random,
+   map_randomization_shuffle
+};
+
 // [CG] C/S settings are sent over the wire and stored in demos, and therefore
 //      must be packed and use exact-width integer types.
 

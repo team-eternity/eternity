@@ -103,7 +103,7 @@ unsigned int sv_world_index = 0;
 unsigned long sv_public_address = 0;
 bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
-bool sv_randomize_maps = false;
+int sv_randomize_maps = false;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -1660,14 +1660,38 @@ void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
    }
 }
 
+static void SV_findNextShuffledMap(void)
+{
+   static int count = 1;
+   int i;
+
+   if(++count > cs_map_count)
+   {
+      SV_BroadcastMessage("All maps used, resetting shuffle.");
+      count = 1;
+      for(i = 0; i < cs_map_count; i++)
+         cs_maps[i].used = false;
+   }
+   else
+   {
+      cs_maps[cs_current_map_index].used = true;
+   }
+
+   cs_current_map_index = (M_Random() % cs_map_count);
+
+   while(cs_maps[cs_current_map_index].used)
+      cs_current_map_index = (M_Random() % cs_map_count);
+}
+
 void SV_AdvanceMapList(void)
 {
-   // [CG] TODO: Add map randomization here.
    if(dmflags & dmf_exit_to_same_level)
       return;
 
-   if(sv_randomize_maps)
+   if(sv_randomize_maps == map_randomization_random)
       cs_current_map_index = (M_Random() % cs_map_count);
+   else if(sv_randomize_maps == map_randomization_shuffle)
+      SV_findNextShuffledMap();
    else if(++cs_current_map_index >= cs_map_count)
       cs_current_map_index = 0;
 

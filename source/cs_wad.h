@@ -51,6 +51,7 @@ typedef struct cs_map_s
    bool initialized;
    unsigned int resource_count;
    unsigned int *resource_indices;
+   bool used;
 } cs_map_t;
 
 extern const char *cs_iwad;

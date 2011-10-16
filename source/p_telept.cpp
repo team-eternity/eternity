@@ -41,6 +41,8 @@
 #include "s_sound.h"
 #include "sounds.h"
 
+#include "sv_main.h" // [CG] 10/16/11
+
 //
 // TELEPORTATION
 //
@@ -113,17 +115,36 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
                P_ResetChasecam();
 
             // spawn teleport fog and emit sound at source
-            S_StartSound(P_SpawnMobj(oldx, oldy, 
-                                     oldz + GameModeInfo->teleFogHeight, 
-                                     GameModeInfo->teleFogType), 
-                         GameModeInfo->teleSound);
+            // [CG] Only servers spawn actors.
+            if(serverside)
+            {
+               Mobj *telefog;
 
-            // spawn teleport fog and emit sound at destination
-            S_StartSound(P_SpawnMobj(m->x + 20*finecosine[m->angle>>ANGLETOFINESHIFT],
-                                     m->y + 20*finesine[m->angle>>ANGLETOFINESHIFT],
-                                     thing->z + GameModeInfo->teleFogHeight, 
-                                     GameModeInfo->teleFogType),
-                         GameModeInfo->teleSound);
+               telefog = P_SpawnMobj(
+                  oldx,
+                  oldy,
+                  oldz + GameModeInfo->teleFogHeight, 
+                  GameModeInfo->teleFogType
+               ); 
+
+               if(CS_SERVER)
+                  SV_BroadcastActorSpawned(telefog);
+
+               S_StartSound(telefog, GameModeInfo->teleSound);
+
+               telefog = P_SpawnMobj(
+                  m->x + 20 * finecosine[m->angle >> ANGLETOFINESHIFT],
+                  m->y + 20 * finesine[m->angle >> ANGLETOFINESHIFT],
+                  thing->z + GameModeInfo->teleFogHeight, 
+                  GameModeInfo->teleFogType
+               );
+
+               if(CS_SERVER)
+                  SV_BroadcastActorSpawned(telefog);
+
+               // spawn teleport fog and emit sound at destination
+               S_StartSound(telefog, GameModeInfo->teleSound);
+            }
 
             P_AdjustFloorClip(thing);
 
