@@ -62,7 +62,7 @@ extern unsigned int cs_resource_count;
 extern unsigned int cs_current_map_index;
 extern unsigned int cs_current_map_number;
 
-void  CS_SetWADDownloadOK(bool ok);
+void  CS_ClearTempWADDownloads(void);
 void  CS_ClearMaps(void);
 bool  CS_CheckWADOverHTTP(const char *wad_name);
 char* CS_DownloadWAD(const char *wad_name);
@@ -75,7 +75,6 @@ void  CS_AddMapAtIndex(const char *name, unsigned int resource_count,
                                          unsigned int index);
 void  CS_AddMap(const char *name, unsigned int resource_count,
                                   unsigned int *resource_indices);
-void  CS_LoadBlankMap(void);
 bool  CS_LoadMap(void);
 void  CS_NewGame(void);
 void  CS_InitNew(void);

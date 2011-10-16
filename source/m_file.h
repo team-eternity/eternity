@@ -73,17 +73,21 @@ extern int fs_error_code;
 
 const char* M_GetFileSystemErrorMessage(void);
 bool        M_PathExists(const char *path);
+char*       M_PathJoin(const char *one, const char *two);
 bool        M_IsFile(const char *path);
+bool        M_IsFileInFolder(const char *folder, const char *file);
 bool        M_IsFolder(const char *path);
 bool        M_IsAbsolutePath(const char *path);
-bool        M_CreateFolder(const char *path);
 bool        M_CreateFile(const char *path);
-bool        M_DeleteFolder(const char *path);
+bool        M_CreateFolder(const char *path);
 bool        M_DeleteFile(const char *path);
+bool        M_DeleteFileInFolder(const char *folder, const char *file);
+bool        M_DeleteFolder(const char *path);
 bool        M_DeleteFolderAndContents(const char *path);
 const char* M_GetCurrentFolder(void);
 bool        M_SetCurrentFolder(const char *path);
 const char* M_Basename(const char *path);
+bool        M_RenamePath(const char *oldpath, const char *newpath);
 
 #endif
 

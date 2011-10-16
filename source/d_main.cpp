@@ -3956,8 +3956,6 @@ static void D_DoomInit(void)
       {
          printf("CS_LoadWADs: Loading WADs.\n");
 
-         CS_SetWADDownloadOK(false);
-
          if(CS_SERVER)
          {
             CS_HandleResourcesSection(cs_json["resources"]);
@@ -4139,10 +4137,8 @@ void D_DoomMain(void)
       I_UpdateSound();
       I_SubmitSound();
       Z_FreeAlloca();
-      CS_SetWADDownloadOK(true);
       CS_HandleResourcesSection(cs_json["resources"]);
       CS_HandleMapsSection(cs_json["maps"]);
-      CS_SetWADDownloadOK(false);
       CL_Connect();
    }
 

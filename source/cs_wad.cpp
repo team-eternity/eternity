@@ -25,9 +25,14 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdlib.h>
-#include <string.h>
+#ifdef _MSC_VER
+#include "Win32/i_fnames.h"
+#include "Win32/i_opndir.h"
+#else
+#include <dirent.h>
+#endif
 
+#include "z_zone.h"
 #include "c_io.h"
 #include "doomtype.h"
 #include "d_dehtbl.h"
@@ -60,8 +65,6 @@ cs_resource_t *cs_resources = NULL;
 unsigned int cs_resource_count = 0;
 unsigned int cs_current_map_index = 0;
 unsigned int cs_current_map_number = 0;
-
-static bool wad_download_ok = false;
 
 void IdentifyVersion(void);
 
@@ -122,7 +125,6 @@ static bool need_new_wad_dir(void)
 {
    cs_map_t *map = get_current_map();
    cs_resource_t *resource = NULL;
-   bool found_mismatch = false;
    unsigned int wads_loaded = 0;
    unsigned int i, j;
 
@@ -135,19 +137,12 @@ static bool need_new_wad_dir(void)
    for(i = 0, j = 2; i < map->resource_count; i++, j++)
    {
       resource = &cs_resources[map->resource_indices[i]];
+
       if(strcmp(M_Basename(wadfiles[j].filename), resource->name))
-      {
-         found_mismatch = true;
-         break;
-      }
+         return true;
    }
 
-   return found_mismatch;
-}
-
-void CS_SetWADDownloadOK(bool ok)
-{
-   wad_download_ok = ok;
+   return false;
 }
 
 void CS_ClearMaps(void)
@@ -222,22 +217,31 @@ char* CS_DownloadWAD(const char *wad_name)
       ecalloc(char *, wad_name_size + wad_repository_size + 2, sizeof(char));
    char *wad_path =
       ecalloc(char *, strlen(basepath) + wad_name_size + 7, sizeof(char));
+   char *temp_path =
+      ecalloc(char *, strlen(basepath) + wad_name_size + 13, sizeof(char));
    CURL *curl_handle;
    CURLcode res;
    FILE *fobj;
 
    sprintf(url, "%s/%s", cs_wad_repository, wad_name);
    sprintf(wad_path, "%s/wads/%s", basepath, wad_name);
+   sprintf(temp_path, "%s/wads/%s.temp", basepath, wad_name);
 
-   if(!M_CreateFile(wad_path))
+   if(!M_CreateFile(temp_path))
    {
       C_Printf("Error creating PWAD file on disk.\n");
+      efree(url);
+      efree(wad_path);
+      efree(temp_path);
       return NULL;
    }
 
-   if((fobj = fopen(wad_path, "wb")) == NULL)
+   if((fobj = fopen(temp_path, "wb")) == NULL)
    {
       C_Printf("Error opening PWAD file for writing.\n");
+      efree(url);
+      efree(wad_path);
+      efree(temp_path);
       return NULL;
    }
 
@@ -246,6 +250,9 @@ char* CS_DownloadWAD(const char *wad_name)
    {
       fclose(fobj);
       C_Printf("Error initializing curl.\n");
+      efree(url);
+      efree(wad_path);
+      efree(temp_path);
       return NULL;
    }
 
@@ -263,12 +270,66 @@ char* CS_DownloadWAD(const char *wad_name)
    {
       fclose(fobj);
       C_Printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
+      efree(url);
+      efree(wad_path);
+      efree(temp_path);
       return NULL;
    }
 
    fclose(fobj);
    curl_easy_cleanup(curl_handle);
+   if(!M_RenamePath((const char *)temp_path, (const char *)wad_path))
+   {
+      C_Printf("Error downloading WAD: %s.\n", M_GetFileSystemErrorMessage());
+      efree(url);
+      efree(wad_path);
+      efree(temp_path);
+      return NULL;
+   }
+   efree(url);
+   efree(temp_path);
    return wad_path;
+}
+
+void CS_ClearTempWADDownloads(void)
+{
+   DIR *folder;
+   dirent *entry;
+   size_t entry_length;
+   char *wads_folder_path =
+      ecalloc(char *, strlen(basepath) + 7, sizeof(char));
+
+   sprintf(wads_folder_path, "%s/wads", basepath);
+
+   if(!(folder = opendir(wads_folder_path)))
+   {
+      I_Error(
+         "Unable to open WAD download folder %s, exiting.\n", cs_wad_repository
+      );
+   }
+
+   while((entry = readdir(folder)))
+   {
+      if(!M_IsFileInFolder(wads_folder_path, entry->d_name))
+         continue;
+
+      entry_length = strlen(entry->d_name);
+
+      if(!strcasecmp(entry->d_name + (entry_length - 5), ".temp"))
+      {
+         if(!M_DeleteFileInFolder(wads_folder_path, entry->d_name))
+         {
+            printf(
+               "Error deleting partial WAD %s (%s), skipping.\n",
+               entry->d_name,
+               M_GetFileSystemErrorMessage()
+            );
+         }
+      }
+   }
+
+   closedir(folder);
+   efree(wads_folder_path);
 }
 
 bool CS_AddIWAD(const char *resource_name)
@@ -306,14 +367,8 @@ bool CS_AddWAD(const char *resource_name)
    {
       if(CS_SERVER)
          return false;
-      else if(wad_download_ok)
-         resource_path = CS_DownloadWAD(resource_name);
-      else if(CS_CheckWADOverHTTP(resource_name))
-         return true;
-      else
-         return false;
 
-      if(resource_path == NULL)
+      if((resource_path = CS_DownloadWAD(resource_name)) == NULL)
          return false;
 
       do_strdup = false;
@@ -416,16 +471,6 @@ void CS_AddMap(const char *name, unsigned int resource_count,
 {
    cs_maps = erealloc(cs_map_t *, cs_maps, sizeof(cs_map_t) * ++cs_map_count);
    CS_AddMapAtIndex(name, resource_count, resource_indices, cs_map_count - 1);
-}
-
-void CS_LoadBlankMap(void)
-{
-   S_StopMusic();
-   wGlobalDir.Clear();
-   D_ClearFiles();
-   IdentifyVersion();
-   wGlobalDir.InitMultipleFiles(wadfiles);
-   R_Init();
 }
 
 bool CS_LoadMap(void)

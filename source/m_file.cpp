@@ -61,7 +61,7 @@ static int remover(const char *path, const struct stat *stat_result,
    }
    else if(flags == FTW_F || flags == FTW_SL)
    {
-      if(unlink((char *)path) == -1)
+      if(remove((char *)path) == -1)
          return -1;
    }
 
@@ -128,6 +128,20 @@ bool M_PathExists(const char *path)
    return false;
 }
 
+char* M_PathJoin(const char *one, const char *two)
+{
+   size_t one_length = strlen(one);
+   size_t two_length = strlen(two);
+   char *buf = ecalloc(char *, 1, one_length + two_length + 2);
+
+   if((one[one_length]) == '/' || (one[one_length]) == '\\')
+      sprintf(buf, "%s%s", one, two);
+   else
+      sprintf(buf, "%s/%s", one, two);
+
+   return buf;
+}
+
 bool M_IsFile(const char *path)
 {
    struct stat stat_result;
@@ -139,6 +153,17 @@ bool M_IsFile(const char *path)
       return true;
 
    return false;
+}
+
+bool M_IsFileInFolder(const char *folder, const char *file)
+{
+   bool ret;
+   char *full_path = M_PathJoin(folder, file);
+
+   ret = M_IsFile(full_path);
+   efree(full_path);
+
+   return ret;
 }
 
 bool M_IsFolder(const char *path)
@@ -233,15 +258,26 @@ bool M_CreateFile(const char *path)
 bool M_DeleteFile(const char *path)
 {
 #ifdef WIN32
-   if(!DeleteFile(path))
+   if(DeleteFile(path) == 0)
 #else
-   if(unlink(path) == -1)
+   if(remove(path) != 0)
 #endif
    {
       set_error_code();
       return false;
    }
    return true;
+}
+
+bool M_DeleteFileInFolder(const char *folder, const char *file)
+{
+   bool ret;
+   char *full_path = M_PathJoin(folder, file);
+
+   ret = M_DeleteFile(full_path);
+   efree(full_path);
+
+   return ret;
 }
 
 bool M_DeleteFolder(const char *path)
@@ -401,5 +437,15 @@ const char* M_Basename(const char *path)
       return path;
 
    return basename + 1;
+}
+
+bool M_RenamePath(const char *oldpath, const char *newpath)
+{
+   if(rename(oldpath, newpath))
+   {
+      set_error_code();
+      return false;
+   }
+   return true;
 }
 

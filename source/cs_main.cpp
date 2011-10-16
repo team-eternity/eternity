@@ -198,6 +198,8 @@ void CS_Init(void)
    sprintf(cs_state_file_path, "%s/cs.state", basepath);
    M_NormalizeSlashes(cs_state_file_path);
 
+   CS_ClearTempWADDownloads();
+
    if(CS_SERVER)
    {
       SV_LoadConfig();
