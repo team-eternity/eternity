@@ -581,9 +581,6 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    client = &clients[playernum];
 
-   if(playernum == consoleplayer && !cl_enable_prediction)
-      client->client_lag = cl_current_world_index - message->world_index;
-
    if(message->world_index > message->last_command_run)
       client->client_lag = message->world_index - message->last_command_run;
    else
@@ -605,16 +602,6 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    if(client->spectating)
       return;
 
-   /*
-   if(playernum == consoleplayer && players[playernum].playerstate == PST_LIVE)
-   {
-      oldbob = players[playernum].bob;
-      oldviewz = players[playernum].viewz;
-      oldviewheight = players[playernum].viewheight;
-      olddeltaviewheight = players[playernum].deltaviewheight;
-   }
-   */
-
    CS_SetPlayerPosition(playernum, &message->position);
    clients[playernum].floor_status = message->floor_status;
 
@@ -623,17 +610,8 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    // [CG] Re-predicts from the position just received from the server on.
    if(cl_enable_prediction && message->last_command_run > 0)
-      CL_RePredict(message->last_command_run + 1, cl_current_world_index);
+      CL_RePredict(message->last_command_run + 1, cl_current_world_index + 1);
 
-   /*
-   if(players[playernum].playerstate == PST_LIVE)
-   {
-      players[playernum].bob = oldbob;
-      players[playernum].viewz = oldviewz;
-      players[playernum].viewheight = oldviewheight;
-      players[playernum].deltaviewheight = olddeltaviewheight;
-   }
-   */
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)

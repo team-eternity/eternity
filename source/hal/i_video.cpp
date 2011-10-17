@@ -122,8 +122,12 @@ static haldriveritem_t *I_DefaultVideoDriver()
 {
    haldriveritem_t *item = NULL;
 
-   if(i_videodriverid < 0 || i_videodriverid >= VDR_MAXDRIVERS ||
-      halVideoDriverTable[i_videodriverid].driver == NULL)
+   if(CS_SERVER)
+   {
+       return &halVideoDriverTable[0];
+   }
+   else if(i_videodriverid < 0 || i_videodriverid >= VDR_MAXDRIVERS ||
+           halVideoDriverTable[i_videodriverid].driver == NULL)
    {
       // Default or plain invalid setting, or unsupported driver on current
       // compile. Find the lowest-numbered valid driver and use it.

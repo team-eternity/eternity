@@ -94,10 +94,9 @@
 extern int levelTimeLimit;
 extern int levelFragLimit;
 extern int levelScoreLimit;
-
 extern unsigned int rngseed;
-
 extern char gamemapname[9];
+extern bool d_fastrefresh;
 
 unsigned int sv_world_index = 0;
 unsigned long sv_public_address = 0;
@@ -1667,7 +1666,6 @@ static void SV_findNextShuffledMap(void)
 
    if(++count > cs_map_count)
    {
-      SV_BroadcastMessage("All maps used, resetting shuffle.");
       count = 1;
       for(i = 0; i < cs_map_count; i++)
          cs_maps[i].used = false;
@@ -2608,146 +2606,139 @@ void SV_BroadcastClientStatus(int playernum)
 
 void SV_RunDemoTics(void) {}
 
+void SV_HandleClientRequests(void)
+{
+   int i;
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      server_client_t *sc = &server_clients[i];
+
+      if(sc->auth_level < cs_auth_spectator)
+         continue;
+
+      if(sc->current_request == scr_initial_state)
+         SV_SendInitialState(i);
+      else if(sc->current_request == scr_current_state)
+         SV_SendCurrentState(i);
+      else if(sc->current_request == scr_sync)
+         SV_SendSync(i);
+
+      sc->current_request = scr_none;
+   }
+}
+
+void SV_SendNewMap(void)
+{
+   int color, i;
+   Mobj *flag_actor;
+
+   for(i = 1; i < MAXPLAYERS; i++)
+      server_clients[i].received_command_for_current_map = false;
+
+   SV_BroadcastMapStarted();
+
+   for(color = team_color_red; color < team_color_max; color++)
+   {
+      if(!cs_flag_stands[color].exists)
+         continue;
+
+      if((flag_actor = NetActors.lookup(cs_flags[color].net_id)))
+         SV_BroadcastActorSpawned(flag_actor);
+   }
+
+   sv_should_send_new_map = false;
+}
+
 void SV_TryRunTics(void)
 {
-   uint32_t i, realtics;
    int current_tic;
+   uint32_t realtics;
    cs_cmd_t command;
    static int new_tic = 0;
 
+   if(d_fastrefresh)
+      d_fastrefresh = false;
+
    current_tic = new_tic;
    new_tic = I_GetTime();
-
-   realtics = new_tic - current_tic;
 
    I_StartTic();
    D_ProcessEvents();
    C_RunBuffers();
    V_FPSTicker();
 
-   // [CG] Nothing to do.
-   if(realtics < 1)
+   realtics = new_tic - current_tic;
+
+   do
    {
+      if(CS_HEADLESS)
+         SV_ConsoleTicker();
+
       if(!CS_HEADLESS)
       {
-         I_StartTic();
-         D_ProcessEvents();
+         MN_Ticker();
+         C_Ticker();
       }
-      CS_ReadFromNetwork(1);
-      return;
-   }
 
-   if(realtics >= 1)
-   {
-      while(realtics--)
+      // [CG] If a player we're spectating becomes a spectator, be sure to
+      //      switch displayplayer back.
+      if(displayplayer != consoleplayer && clients[displayplayer].spectating)
+         CS_SetDisplayPlayer(consoleplayer);
+
+      SV_MasterUpdate();
+
+      // [CG] If the console is active, then store/use/send a blank command.
+      if(consoleactive)
+         memset(&players[consoleplayer].cmd, 0, sizeof(ticcmd_t));
+
+      if(!consoleactive)
       {
-         if(CS_HEADLESS)
-            SV_ConsoleTicker();
-
-         if(!CS_HEADLESS)
+         G_BuildTiccmd(&players[consoleplayer].cmd);
+         if(cs_demo_recording)
          {
-            MN_Ticker();
-            C_Ticker();
-         }
+            command.world_index = sv_world_index;
+            memcpy(
+               &command.ticcmd,
+               &players[consoleplayer].cmd,
+               sizeof(ticcmd_t)
+            );
 
-         // [CG] If a player we're spectating becomes a spectator, be sure to
-         //      switch displayplayer back.
-         if(displayplayer != consoleplayer && clients[displayplayer].spectating)
-            CS_SetDisplayPlayer(consoleplayer);
-
-         SV_MasterUpdate();
-
-         // [CG] If the console is active, then store/use/send a blank command.
-         if(consoleactive)
-            memset(&players[consoleplayer].cmd, 0, sizeof(ticcmd_t));
-
-         if(!consoleactive)
-         {
-            G_BuildTiccmd(&players[consoleplayer].cmd);
-            if(cs_demo_recording)
+            if(!CS_WritePlayerCommandToDemo(&command))
             {
-               command.world_index = sv_world_index;
-               memcpy(
-                  &command.ticcmd,
-                  &players[consoleplayer].cmd,
-                  sizeof(ticcmd_t)
+               doom_printf(
+                  "Demo error, recording aborted: %s\n",
+                  CS_GetDemoErrorMessage()
                );
-
-               if(!CS_WritePlayerCommandToDemo(&command))
-               {
-                  doom_printf(
-                     "Demo error, recording aborted: %s\n",
-                     CS_GetDemoErrorMessage()
-                  );
-                  CS_StopDemo();
-               }
-
+               CS_StopDemo();
             }
+
          }
-
-         G_Ticker();
-
-         if(gamestate == GS_LEVEL)
-         {
-            SV_SaveSectorPositions();
-            SV_SaveActorPositions();
-            // [CG] Because map specials are ephemeral by nature, it's probably
-            //      not too much extra bandwidth to send updates even if their
-            //      states haven't changed.  If this becomes ridiculous, saving
-            //      and checking their state is simple enough.
-            SV_BroadcastMapSpecialStatuses();
-            SV_UpdateQueueLevels();
-            // [CG] Now that the game loop has finished, servers can address
-            //      new clients and map changes.
-            for(i = 1; i < MAX_CLIENTS; i++)
-            {
-               server_client_t *sc = &server_clients[i];
-
-               if(sc->auth_level < cs_auth_spectator)
-                  continue;
-
-               if(sc->current_request == scr_initial_state)
-                  SV_SendInitialState(i);
-               else if(sc->current_request == scr_current_state)
-                  SV_SendCurrentState(i);
-               else if(sc->current_request == scr_sync)
-                  SV_SendSync(i);
-
-               sc->current_request = scr_none;
-            }
-
-            if(sv_should_send_new_map)
-            {
-               int color;
-               Mobj *flag_actor;
-
-               for(i = 1; i < MAXPLAYERS; i++)
-               {
-                  if(!playeringame[i])
-                     continue;
-
-                  server_clients[i].received_command_for_current_map = false;
-               }
-
-               SV_BroadcastMapStarted();
-
-               for(color = team_color_red; color < team_color_max; color++)
-               {
-                  if(!cs_flag_stands[color].exists)
-                     continue;
-
-                  if((flag_actor = NetActors.lookup(cs_flags[color].net_id)))
-                     SV_BroadcastActorSpawned(flag_actor);
-               }
-               sv_should_send_new_map = false;
-            }
-         }
-
-         SV_BroadcastTICFinished();
-         sv_world_index++;
-         gametic++;
       }
-   }
+
+      G_Ticker();
+
+      if(gamestate == GS_LEVEL)
+      {
+         SV_SaveSectorPositions();
+         SV_SaveActorPositions();
+         // [CG] Because map specials are ephemeral by nature, it's probably
+         //      not too much extra bandwidth to send updates even if their
+         //      states haven't changed.  If this becomes ridiculous, saving
+         //      and checking their state is simple enough.
+         SV_BroadcastMapSpecialStatuses();
+         SV_UpdateQueueLevels();
+         // [CG] Now that the game loop has finished, servers can address
+         //      new clients and map changes.
+         SV_HandleClientRequests();
+
+         if(sv_should_send_new_map)
+            SV_SendNewMap();
+      }
+
+      SV_BroadcastTICFinished();
+      sv_world_index++;
+      gametic++;
+   } while (realtics--);
 
    do
    {

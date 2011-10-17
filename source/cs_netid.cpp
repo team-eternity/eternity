@@ -24,6 +24,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "cs_netid.h"
 
 NetIDLookup<Mobj>                NetActors;
@@ -39,6 +40,7 @@ NetIDLookup<PlatThinker>         NetPlatforms;
 
 void CS_ClearNetIDs(void)
 {
+   printf("Clearing Net IDs.\n");
    NetActors.clear();
 #if 0
    NetCeilings.clear();
