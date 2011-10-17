@@ -25,9 +25,8 @@
 //----------------------------------------------------------------------------
 
 #include <string>
-#include <stdlib.h>
-#include <string.h>
 
+#include "z_zone.h"
 #include "doomstat.h"
 #include "doomtype.h"
 #include "c_io.h"
@@ -193,14 +192,24 @@ CONSOLE_COMMAND(reconnect, cf_netonly)
 
 CONSOLE_COMMAND(password, cf_netonly)
 {
+   char *password;
+   size_t password_size = strlen(Console.args.constPtr());
+
    if(Console.argc < 1)
    {
       C_Printf(FC_HI"Usage:" FC_NORMAL " password <password>\n");
       return;
    }
 
+   password = ecalloc(char *, password_size, sizeof(char));
+   // [CG] Console.args apparently has a bug where there's a space appended to
+   //      it, so strip it here.
+   strncpy(password, Console.args.constPtr(), password_size - 1);
+
    // [CG] Use Console.args to support passwords that contain spaces.
-   CL_SendAuthMessage(Console.args.constPtr());
+   CL_SendAuthMessage(password);
+
+   efree(password);
 }
 
 CONSOLE_COMMAND(spectate, cf_netonly)

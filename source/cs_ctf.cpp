@@ -340,6 +340,16 @@ void CS_CTFTicker(void)
                flag_actor->flags2 &= ~MF2_DONTDRAW;
          }
       }
+
+      // [CG] Don't draw the flag if we're carrying it (clientside).  Prevents
+      //      the flag from ever blocking the local player's view.
+      if(clientside && (flag_actor = NetActors.lookup(flag->net_id)))
+      {
+         if(flag->carrier == displayplayer)
+            flag_actor->flags2 |= MF2_DONTDRAW;
+         else
+            flag_actor->flags2 &= ~MF2_DONTDRAW;
+      }
    }
 }
 

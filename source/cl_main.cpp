@@ -281,13 +281,20 @@ void CL_Connect(void)
          else
          {
             doom_printf("Connected!");
-            CL_SendAuthMessage(cs_client_password_json[
-               (const char *)cs_server_url
-            ].asCString());
+            CL_SendAuthMessage(
+               cs_client_password_json[(const char *)cs_server_url].asCString()
+            );
          }
       }
       else
          doom_printf("Connected!");
+
+      if(!cs_client_password_json[(const char *)cs_server_url].empty())
+      {
+         CL_SendAuthMessage(
+            cs_client_password_json[(const char *)cs_server_url].asCString()
+         );
+      }
 
       if(cs_demo_recording)
       {

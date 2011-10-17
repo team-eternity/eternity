@@ -278,9 +278,7 @@ void CL_SendSyncRequest(void)
 
 void CL_SendAuthMessage(const char *password)
 {
-   // [CG] Console.args apparently has a bug where there's a space appended to
-   //      it, so strip it here.
-   size_t password_length = strlen(password) - 1;
+   size_t password_length = strlen(password);
 
    // [CG] We want to remember what password we sent so that if the server
    //      responds with "authorization successful" we can store the password
@@ -289,6 +287,8 @@ void CL_SendAuthMessage(const char *password)
    cs_server_password = erealloc(
       char *, cs_server_password, (password_length + 1) * sizeof(char)
    );
+
+   printf("Authenticating...\n", cs_server_password);
 
    memset(cs_server_password, 0, password_length + 1);
    strncpy(cs_server_password, password, password_length);
@@ -907,11 +907,6 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
       }
 
       cs_flags[color].net_id = actor->net_id;
-
-      // [CG] Don't draw the flag if we're carrying it.  Prevents the flag from
-      //      ever blocking the local player's view.
-      if(cs_flags[color].carrier == consoleplayer)
-         actor->flags2 |= MF2_DONTDRAW;
    }
 }
 
