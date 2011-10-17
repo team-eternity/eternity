@@ -92,6 +92,8 @@ typedef struct flag_s
 extern flag_stand_t cs_flag_stands[team_color_max];
 extern flag_t cs_flags[team_color_max];
 
+void    CL_SpawnFlag(flag_t *flag, uint32_t net_id);
+void    SV_SpawnFlag(flag_t *flag);
 void    CS_PlayFlagSound(teamcolor_t flag_color);
 void    CS_RemoveFlagActor(flag_t *flag);
 void    CS_ReturnFlag(flag_t *flag);

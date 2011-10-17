@@ -665,7 +665,6 @@ void G_DoLoadLevel(void)
    }
 
    // [CG] Clear the Net ID stacks.
-   // if(!clientserver || !clientside)
    CS_ClearNetIDs();
 
    // haleyjd 07/28/10: Waaaay too early for this.
@@ -673,11 +672,14 @@ void G_DoLoadLevel(void)
 
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
-   if(GameType == gt_ctf)
+   if(serverside)
    {
-      for(i = team_color_none; i < team_color_max; i++)
-         if(cs_flag_stands[i].exists)
-            CS_ReturnFlag(&cs_flags[i]);
+      if(GameType == gt_ctf)
+      {
+         for(i = team_color_none; i < team_color_max; i++)
+            if(cs_flag_stands[i].exists)
+               SV_SpawnFlag(&cs_flags[i]);
+      }
    }
 
    // [CG] Initialize sector positions.

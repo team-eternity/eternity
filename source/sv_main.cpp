@@ -1671,14 +1671,12 @@ static void SV_findNextShuffledMap(void)
          cs_maps[i].used = false;
    }
    else
-   {
       cs_maps[cs_current_map_index].used = true;
-   }
 
-   cs_current_map_index = (M_Random() % cs_map_count);
-
-   while(cs_maps[cs_current_map_index].used)
+   do
+   {
       cs_current_map_index = (M_Random() % cs_map_count);
+   } while (cs_maps[cs_current_map_index].used);
 }
 
 void SV_AdvanceMapList(void)
@@ -2815,5 +2813,8 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
       doom_printf("Received unknown client message %u\n", message_type);
       break;
    }
+
+   if(LOG_ALL_NETWORK_MESSAGES)
+      printf("Received [%s message].\n", network_message_names[message_type]);
 }
 

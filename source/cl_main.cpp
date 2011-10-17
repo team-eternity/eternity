@@ -331,7 +331,7 @@ void CL_SaveServerPassword(void)
 }
 
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
-                     mobjtype_t type)
+                   mobjtype_t type)
 {
    Mobj *actor;
 

@@ -72,6 +72,14 @@ static void send_packet(void *data, size_t data_size)
    if(!net_peer)
       return;
    
+   if(LOG_ALL_NETWORK_MESSAGES)
+   {
+      printf(
+         "Sending [%s message].\n",
+         network_message_names[*((int *)data)]
+      );
+   }
+
    packet = enet_packet_create(data, data_size, ENET_PACKET_FLAG_RELIABLE);
    enet_peer_send(net_peer, SEQUENCED_CHANNEL, packet);
 }
@@ -408,9 +416,22 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    P_LoadGame(cs_state_file_path);
    cl_setting_sector_positions = false;
 
+   for(i = 1; i < team_color_max; i++)
+   {
+      // CL_SpawnFlag(&cs_flags[i], message->flags[i].net_id);
+      cs_flags[i].net_id = message->flags[i].net_id;
+      cs_flags[i].carrier = message->flags[i].carrier;
+      cs_flags[i].pickup_time = message->flags[i].pickup_time;
+      cs_flags[i].timeout = message->flags[i].timeout;
+      cs_flags[i].state = message->flags[i].state;
+      team_scores[i] = message->team_scores[i];
+   }
+
+   /*
    memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
    for(i = 0; i < team_color_max; i++)
       team_scores[i] = message->team_scores[i];
+   */
 
    CL_SendSyncRequest();
    cl_flush_packet_buffer = true;
@@ -450,8 +471,6 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
    unsigned int i;
    static unsigned int demo_map_number = 0;
-
-   printf("Handling map started message.\n");
 
    if(cs_demo_playback)
    {
@@ -611,7 +630,6 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    // [CG] Re-predicts from the position just received from the server on.
    if(cl_enable_prediction && message->last_command_run > 0)
       CL_RePredict(message->last_command_run + 1, cl_current_world_index + 1);
-
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)

@@ -102,6 +102,52 @@ void CS_RemoveFlagActor(flag_t *flag)
    flag->net_id = 0;
 }
 
+void CL_SpawnFlag(flag_t *flag, uint32_t net_id)
+{
+   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   flag_stand_t *flag_stand = &cs_flag_stands[color];
+   const char *flag_name = get_flag_name(color);
+
+   CL_SpawnMobj(
+      net_id,
+      flag_stand->x,
+      flag_stand->y,
+      flag_stand->z,
+      E_SafeThingName(flag_name)
+   );
+
+   flag->net_id = net_id;
+   flag->carrier = 0;
+   flag->pickup_time = 0;
+   flag->timeout = 0;
+   flag->state = flag_home;
+}
+
+void SV_SpawnFlag(flag_t *flag)
+{
+   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   flag_stand_t *flag_stand = &cs_flag_stands[color];
+   const char *flag_name = get_flag_name(color);
+
+   // [CG] This function is only called from G_DoLoadLevel in g_game.cpp.  It
+   //      cannot broadcast flag spawns because it will cause Net ID errors in
+   //      any connected clients.  This isn't a problem, because clients are
+   //      sent the flags when they request state each map anyway.
+
+   CS_RemoveFlagActor(flag);
+   flag->net_id = P_SpawnMobj(
+      flag_stand->x,
+      flag_stand->y,
+      flag_stand->z,
+      E_SafeThingName(flag_name)
+   )->net_id;
+
+   flag->carrier = 0;
+   flag->pickup_time = 0;
+   flag->timeout = 0;
+   flag->state = flag_home;
+}
+
 void CS_ReturnFlag(flag_t *flag)
 {
    teamcolor_t color = (teamcolor_t)(flag - cs_flags);
