@@ -56,6 +56,7 @@ cs_cmd_t* CL_GetCurrentCommand(void)
 
 void CL_PredictPlayerPosition(unsigned int index)
 {
+   return;
    CS_SetPlayerCommand(consoleplayer, &local_commands[index % MAX_POSITIONS]);
 #if _PRED_DEBUG
    printf(

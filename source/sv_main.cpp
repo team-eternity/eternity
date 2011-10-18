@@ -773,9 +773,11 @@ void SV_StartUnlag(int playernum)
          SV_LoadPlayerPositionAt(i, index);
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
-         if(server_clients[i].positions[index % MAX_POSITIONS].playerstate !=
-            PST_LIVE)
+         if(server_clients[i].positions[index % MAX_POSITIONS].playerstate
+            != PST_LIVE)
+         {
             target->mo->flags4 |= MF4_NODAMAGE;
+         }
 #if _UNLAG_DEBUG
          printf("  ");
          CS_PrintPlayerPosition(i, index);
@@ -823,34 +825,40 @@ void SV_EndUnlag(int playernum)
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
-      if(playeringame[i] && i != playernum)
+      if(!playeringame[i] || i == playernum)
+         continue;
+
+#if _UNLAG_DEBUG
+      printf("Moved player %d:\n  ", i);
+      CS_PrintPlayerPosition(
+         i, server_clients[playernum].command_world_index
+      );
+#endif
+      // [CG] Check to see if thrust due to damage was applied to the player
+      //      during unlagged.  If it was, apply that thrust to the ultimate
+      //      position.
+      position = &server_clients[i].positions[player_index % MAX_POSITIONS];
+      added_momx = added_momy = 0;
+
+      if(players[i].mo->momx != position->momx)
+         added_momx = players[i].mo->momx - position->momx;
+
+      if(players[i].mo->momy != position->momy)
+         added_momy = players[i].mo->momy - position->momy;
+
+      if(server_clients[i].positions[player_index % MAX_POSITIONS].playerstate
+         != PST_LIVE)
       {
-#if _UNLAG_DEBUG
-         printf("Moved player %d:\n  ", i);
-         CS_PrintPlayerPosition(
-            i, server_clients[playernum].command_world_index
-         );
-#endif
-         // [CG] Check to see if thrust due to damage was applied to the player
-         //      during unlagged.  If it was, apply that thrust to the ultimate
-         //      position.
-         position = &server_clients[i].positions[player_index % MAX_POSITIONS];
-         added_momx = added_momy = 0;
-
-         if(players[i].mo->momx != position->momx)
-            added_momx = players[i].mo->momx - position->momx;
-
-         if(players[i].mo->momy != position->momy)
-            added_momy = players[i].mo->momy - position->momy;
-
-         CS_SetPlayerPosition(i, &server_clients[i].saved_position);
-         players[i].mo->momx += added_momx;
-         players[i].mo->momy += added_momy;
-#if _UNLAG_DEBUG
-         printf("  ");
-         CS_PrintPlayerPosition(i, world_index);
-#endif
+         players[i].mo->flags4 &= ~MF4_NODAMAGE;
       }
+
+      CS_SetPlayerPosition(i, &server_clients[i].saved_position);
+      players[i].mo->momx += added_momx;
+      players[i].mo->momy += added_momy;
+#if _UNLAG_DEBUG
+      printf("  ");
+      CS_PrintPlayerPosition(i, world_index);
+#endif
    }
 
    for(i = 0; i < numsectors; i++)
@@ -1408,40 +1416,24 @@ void SV_SaveActorPositions(void)
       {
          // [CG] Handling a player here.
          playernum = actor->player - players;
-         if(playernum > 0 && playeringame[playernum])
-         {
-            if(playernum > 200)
-            {
-               I_Error(
-                  "SV_SaveActorPositions: sending client status for invalid "
-                  "client.\n"
-               );
-            }
-            // [CG] Don't send info about the server's spectator actor.
-            server_client = &server_clients[playernum];
-            p = &server_client->positions[sv_world_index % MAX_POSITIONS];
-            CS_SaveActorPosition(p, actor, sv_world_index);
+
+         if(playernum == 0 || !playeringame[playernum])
+            continue;
+
+         // [CG] Don't send info about the server's spectator actor.
+         server_client = &server_clients[playernum];
+         p = &server_client->positions[sv_world_index % MAX_POSITIONS];
+         CS_SaveActorPosition(p, actor, sv_world_index);
 #if _UNLAG_DEBUG
-            CS_PrintPlayerPosition(playernum, sv_world_index);
+         CS_PrintPlayerPosition(playernum, sv_world_index);
 #endif
-            SV_BroadcastClientStatus(playernum);
-         }
+         SV_BroadcastClientStatus(playernum);
       }
       else if(CS_ActorPositionChanged(actor))
       {
          CS_SaveActorPosition(&actor->old_position, actor, sv_world_index);
-         for(color = team_color_none; color < team_color_max; color++)
-         {
-            // [CG] Don't send positions of flags if they're carried, because
-            //      they're locked to their carrier and it's redundant, and if
-            //      a client has constant prediction on and they're carrying
-            //      the flag, the flag position will seem to lag behind them.
-            if(cs_flags[color].net_id == actor->net_id &&
-               cs_flags[color].state == flag_carried)
-            {
-               continue;
-            }
-         }
+
+         // [CG] Let clients move missiles on their own.
          if((actor->flags & MF_MISSILE) == 0)
             SV_BroadcastActorPosition(actor, sv_world_index);
       }
