@@ -32,6 +32,7 @@
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_player.h"
 #include "d_main.h"
@@ -1806,6 +1807,18 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    SV_LoadClientOptions(playernum);
    server_client->command_world_index = received_command->world_index;
    memcpy(&player->cmd, ticcmd, sizeof(ticcmd_t));
+   if(player->playerstate == PST_DEAD)
+   {
+      player->cmd.forwardmove = 0;
+      player->cmd.sidemove = 0;
+      player->cmd.look = 0;
+      player->cmd.angleturn = 0;
+      if(player->cmd.buttons & BT_USE)
+         player->cmd.buttons = BT_USE;
+      else
+         player->cmd.buttons = 0;
+      player->cmd.actions = 0;
+   }
    P_RunPlayerCommand(playernum);
    if(player->mo)
       player->mo->Think();

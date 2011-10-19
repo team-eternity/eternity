@@ -623,23 +623,6 @@ void P_PlayerThink(player_t *player)
    if(player->playerstate == PST_DEAD)
    {
       P_DeathThink(player);
-      if(clientserver)
-      {
-         if(CS_CLIENT)
-         {
-            cmd->forwardmove = 0;
-            cmd->sidemove = 0;
-            cmd->look = 0;
-            cmd->angleturn = 0;
-            if(cmd->buttons & BT_USE)
-               cmd->buttons = BT_USE;
-            else
-               cmd->buttons = 0;
-            cmd->actions = 0;
-         }
-         else
-            SV_RunPlayerCommands(playernum);
-      }
       return;
    }
 

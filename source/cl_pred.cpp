@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "d_event.h"
 #include "doomstat.h"
 #include "i_system.h"
 #include "r_state.h"
@@ -57,6 +58,18 @@ cs_cmd_t* CL_GetCurrentCommand(void)
 void CL_PredictPlayerPosition(unsigned int index)
 {
    CS_SetPlayerCommand(consoleplayer, &local_commands[index % MAX_POSITIONS]);
+   if(players[consoleplayer].playerstate == PST_DEAD)
+   {
+      players[consoleplayer].cmd.forwardmove = 0;
+      players[consoleplayer].cmd.sidemove = 0;
+      players[consoleplayer].cmd.look = 0;
+      players[consoleplayer].cmd.angleturn = 0;
+      if(players[consoleplayer].cmd.buttons & BT_USE)
+         players[consoleplayer].cmd.buttons = BT_USE;
+      else
+         players[consoleplayer].cmd.buttons = 0;
+      players[consoleplayer].cmd.actions = 0;
+   }
 #if _PRED_DEBUG
    printf(
       "CL_PredictPlayerPosition (%3u/%3u): Predicting...\n  %u: ",

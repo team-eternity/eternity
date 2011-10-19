@@ -309,7 +309,7 @@ void NetPacketBuffer::processAllPackets()
 
 bool NetPacketBuffer::overflowed(void)
 {
-   return tics_stored > size;
+   return tics_stored > getFillingSize();
 }
 
 void NetPacketBuffer::setSize(uint32_t new_size)
