@@ -122,7 +122,7 @@ extern wfileadd_t *wadfiles;
 struct seenstate_t;
 extern seenstate_t *seenstates;
 
-static void run_world(void)
+void CL_RunWorldUpdate(void)
 {
    cl_packet_buffer.processPacketsForIndex(++cl_current_world_index);
 
@@ -137,13 +137,14 @@ static void run_world(void)
    gametic++;
 }
 
-static void flush_packet_buffer(void)
+void CL_RunAllWorldUpdates(void)
 {
    unsigned int old_world_index = cl_current_world_index;
+
    while(cl_current_world_index < (cl_latest_world_index - 2))
-      run_world();
+      CL_RunWorldUpdate();
+
    CL_PredictFrom(old_world_index, cl_latest_world_index - 2);
-   cl_flush_packet_buffer = false;
 }
 
 void CL_Init(char *url)
@@ -484,46 +485,23 @@ void CL_PlayerThink(int playernum)
 
 void CL_SetLatestFinishedIndices(unsigned int index)
 {
-#if _PRED_DEBUG
-   /*
-   printf(
-      "CL_SetLatestFinishedIndices (%3u/%3u): %u finished.\n",
-      cl_current_world_index,
-      cl_latest_world_index,
-      index
-   );
-   */
-#endif
-
    cl_latest_world_index = index;
-
-#if _SECTOR_PRED_DEBUG
-   // printf(
-   //    "CL_SetLatestFinishedIndices: %3u is finished.\n",
-   //    cl_latest_world_index
-   // );
-#endif
 
    // [CG] This means we haven't even completed a single TIC yet, so ignore the
    //      piled up messages we're receiving.
    if(cl_current_world_index == 0)
       return;
 
-   if(!cl_packet_buffer.bufferingIndependently() &&
-      (cl_latest_world_index > cl_current_world_index) &&
-      ((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE))
-   {
-      /* [CG] Used to disconnect here, now we flush the buffer, even if
-       *      flushing all these TICs is extremely disorienting.
-      doom_printf(
-         "Network message buffer overflowed (%u/%u), disconnecting.",
-         cl_current_world_index, cl_latest_world_index
-      );
-      CL_Disconnect();
-      C_Printf("5.\n");
-      */
-      flush_packet_buffer();
-   }
+   // [CG] Can't flush during independent buffering.
+   if(cl_packet_buffer.bufferingIndependently())
+      return;
+
+   // [CG] Can't flush if there's no TICs to run.
+   if(cl_latest_world_index <= cl_current_world_index)
+      return;
+
+   if((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE)
+      CL_RunAllWorldUpdates();
 }
 
 void CL_RunDemoTics(void)
@@ -582,7 +560,7 @@ void CL_RunDemoTics(void)
       }
 
       while(cl_latest_world_index > cl_current_world_index)
-         run_world();
+         CL_RunWorldUpdate();
    }
 
    do
@@ -624,16 +602,20 @@ void CL_TryRunTics(void)
       players[consoleplayer].bonuscount--;
 
    // [CG] The buffer absolutely cannot be flushed if we've not yet received
-   //      sync, so only honor cl_flush_packet_buffer if sync's been received.
-   if(cl_received_sync && cl_flush_packet_buffer)
-      flush_packet_buffer();
+   //      sync, so only honor cl_packet_buffer.needsFlushing() if sync's been
+   //      received.
+   if(cl_received_sync)
+   {
+      if(cl_packet_buffer.needsFlushing() || cl_packet_buffer.getSize() == 1)
+         CL_RunAllWorldUpdates();
 
-   // [CG] When constant prediction is enabled, 1 world is always run each TIC.
-   //      Otherwise run a world if the server finished an index.
-   if(cl_constant_prediction)
-      run_world();
-   else if(cl_current_world_index < (cl_latest_world_index - 1))
-      run_world();
+      // [CG] When constant prediction is enabled, 1 world is always run each
+      //      TIC.  Otherwise run a world if the server finished an index.
+      if(cl_constant_prediction)
+         CL_RunWorldUpdate();
+      else if(cl_current_world_index < (cl_latest_world_index - 1))
+         CL_RunWorldUpdate();
+   }
 
    // [CG] For the rest of the TIC, try reading from the network.  Even though
    //      things happen "after" this, this functionally serves as the end of

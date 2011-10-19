@@ -56,7 +56,6 @@ cs_cmd_t* CL_GetCurrentCommand(void)
 
 void CL_PredictPlayerPosition(unsigned int index)
 {
-   return;
    CS_SetPlayerCommand(consoleplayer, &local_commands[index % MAX_POSITIONS]);
 #if _PRED_DEBUG
    printf(
@@ -81,9 +80,6 @@ void CL_PredictPlayerPosition(unsigned int index)
       sectors[_DEBUG_SECTOR].ceilingheight >> FRACBITS,
       sectors[_DEBUG_SECTOR].floorheight >> FRACBITS
    );
-#endif
-#if _PRED_DEBUG || _SECTOR_PRED_DEBUG
-   // printf("CL_PredictPlayerPosition: Done.\n");
 #endif
 }
 

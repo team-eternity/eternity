@@ -1367,6 +1367,11 @@ bool SV_RunPlayerCommands(int playernum)
       return false;
    }
 
+   /*
+
+   while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)))
+      run_player_command(playernum, bufcmd);
+
    // [CG] Run at least one command, whether dead, spectating, or otherwise.
    bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
    run_player_command(playernum, bufcmd);
@@ -1393,6 +1398,7 @@ bool SV_RunPlayerCommands(int playernum)
          run_player_command(playernum, bufcmd);
       }
    }
+   */
 
    sc->commands_dropped = 0;
    return true;
@@ -1779,6 +1785,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    server_client_t *server_client = &server_clients[playernum];
    nm_playercommand_t *message = (nm_playercommand_t *)data;
    cs_cmd_t *received_command = &message->command;
+   cs_buffered_command_t *bufcmd;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
@@ -1798,8 +1805,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 #endif
 
    server_client->received_command_for_current_map = true;
-   cs_buffered_command_t *bufcmd =
-      emalloc(cs_buffered_command_t *, sizeof(cs_buffered_command_t));
+   bufcmd = emalloc(cs_buffered_command_t *, sizeof(cs_buffered_command_t));
    memcpy(&bufcmd->command, received_command, sizeof(cs_cmd_t));
    M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
 
@@ -1814,7 +1820,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    // [CG] Some additional checks to prevent tomfoolery.
    if(received_command->world_index <=
-         server_client->last_command_received_index)
+      server_client->last_command_received_index)
    {
       printf(
          "SV_HandlePlayerCommandMessage: <!> (%u < %u <= %u).\n",

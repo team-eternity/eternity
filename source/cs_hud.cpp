@@ -38,6 +38,7 @@
 
 #include "cs_hud.h"
 #include "cs_main.h"
+#include "cl_buf.h"
 #include "cl_main.h"
 
 bool show_timer = false;
@@ -385,11 +386,14 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
    int client_buffer_size = cl_latest_world_index - cl_current_world_index;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
+   if(client_buffer_size < 0)
+      client_buffer_size = 0;
+
    if(show_netstats)
    {
       snprintf(tw->message, 21, "%5u/%3u/%3u/%3u%%",
          clients[consoleplayer].client_lag,
-         client_buffer_size > 0 ? client_buffer_size : 0,
+         cl_packet_buffer.ticsStored(),
          clients[consoleplayer].server_lag,
          100 - clients[consoleplayer].packet_loss
       );

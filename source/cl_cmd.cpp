@@ -41,6 +41,7 @@
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "cl_net.h"
+#include "cl_buf.h"
 
 bool cl_flush_packet_buffer = false;
 
@@ -124,7 +125,7 @@ CONSOLE_VARIABLE(show_team, show_team_widget, 0) {}
 // [CG] Packet buffer flushing.
 CONSOLE_COMMAND(flush_packet_buffer, cf_netonly)
 {
-   cl_flush_packet_buffer = true;
+   cl_packet_buffer.setNeedsFlushing(true);
 }
 
 // [CG] Packet buffer size.
@@ -135,7 +136,8 @@ VARIABLE_INT(
 );
 CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
 {
-   cl_flush_packet_buffer = true;
+   cl_packet_buffer.setSize((uint32_t)cl_packet_buffer_size);
+   cl_packet_buffer.setNeedsFlushing(true);
 }
 
 // [CG] Packet buffer flushing when the player's spectating.

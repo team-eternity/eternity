@@ -601,7 +601,7 @@ void CS_HandleSpectateNextKey(event_t *ev)
 void CS_HandleFlushPacketBufferKey(event_t *ev)
 {
    if(CS_CLIENT && net_peer != NULL && ev->type == ev_keydown)
-      cl_flush_packet_buffer = true;
+      cl_packet_buffer.setNeedsFlushing(true);
 }
 
 void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
@@ -615,8 +615,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 
    if(CS_SERVER)
       server_client = &server_clients[playernum];
-
-   // playeringame[playernum] = true;
 
    // [CG] Now dealing with client string info.
    if(message->info_type == ci_name ||

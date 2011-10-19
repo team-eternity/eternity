@@ -103,16 +103,28 @@ class NetPacketBuffer
 private:
    std::list<NetPacket *> packet_buffer;
    bool buffering_independently;
+   bool needs_flushing;
    dthread_t *net_service_thread;
+   uint32_t tics_stored;
+   uint32_t size;
 
 public:
-   NetPacketBuffer() : buffering_independently(false) {}
-   bool add(char *data, uint32_t size);
-   void startBufferingIndependently();
-   void stopBufferingIndependently();
-   void processPacketsForIndex(uint32_t index);
-   void processAllPackets();
-   bool bufferingIndependently() const { return buffering_independently; }
+   NetPacketBuffer(void);
+   bool     add(char *data, uint32_t size);
+   void     startBufferingIndependently();
+   void     stopBufferingIndependently();
+   void     processPacketsForIndex(uint32_t index);
+   void     processAllPackets();
+   bool     bufferingIndependently() const { return buffering_independently; }
+   uint32_t ticsStored(void) const { return tics_stored; }
+   bool     needsFlushing(void) const { return needs_flushing; }
+   void     setNeedsFlushing(bool b) { needs_flushing = b; }
+   uint32_t getSize(void) const { return size; }
+   void     setSize(uint32_t new_size)
+   {
+      size = new_size;
+      setNeedsFlushing(true);
+   }
 
    friend int CL_serviceNetwork(void *);
 

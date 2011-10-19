@@ -418,7 +418,6 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
 
    for(i = 1; i < team_color_max; i++)
    {
-      // CL_SpawnFlag(&cs_flags[i], message->flags[i].net_id);
       cs_flags[i].net_id = message->flags[i].net_id;
       cs_flags[i].carrier = message->flags[i].carrier;
       cs_flags[i].pickup_time = message->flags[i].pickup_time;
@@ -427,14 +426,8 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       team_scores[i] = message->team_scores[i];
    }
 
-   /*
-   memcpy(cs_flags, message->flags, sizeof(flag_t) * team_color_max);
-   for(i = 0; i < team_color_max; i++)
-      team_scores[i] = message->team_scores[i];
-   */
-
    CL_SendSyncRequest();
-   cl_flush_packet_buffer = true;
+   cl_packet_buffer.setNeedsFlushing(true);
 }
 
 void CL_HandleSyncMessage(nm_sync_t *message)
@@ -445,7 +438,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
    levelstarttic    = message->levelstarttic;
    cl_current_world_index = cl_latest_world_index = message->world_index;
 
-   cl_flush_packet_buffer = true;
+   cl_packet_buffer.setNeedsFlushing(true);
    cl_received_sync = true;
    CS_UpdateQueueMessage();
 }
@@ -629,7 +622,12 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    // [CG] Re-predicts from the position just received from the server on.
    if(cl_enable_prediction && message->last_command_run > 0)
-      CL_RePredict(message->last_command_run + 1, cl_current_world_index + 1);
+      CL_RePredict(message->last_command_run + 1, cl_current_world_index);
+
+#if _PRED_DEBUG || _CMD_DEBUG || _UNLAG_DEBUG
+   printf("CL_HandleClientStatusMessage:\n  ");
+   CS_PrintPlayerPosition(playernum, cl_current_world_index);
+#endif
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)

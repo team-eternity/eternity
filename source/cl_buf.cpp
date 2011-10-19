@@ -53,7 +53,7 @@ bool NetPacket::shouldProcessNow()
    if(!cl_received_sync)
       return true;
 
-   if(cl_packet_buffer_size == 1)
+   if(cl_packet_buffer.getSize() == 1)
       return true;
 
    if((getWorldIndex() <= cl_current_world_index) && cl_constant_prediction)
@@ -187,13 +187,29 @@ void NetPacket::process()
    }
 }
 
+NetPacketBuffer::NetPacketBuffer(void)
+{
+   buffering_independently = false;
+   needs_flushing = false;
+   net_service_thread = NULL;
+   tics_stored = 0;
+   size = 0;
+}
+
 bool NetPacketBuffer::add(char *data, uint32_t size)
 {
    NetPacket *packet = new NetPacket(data, size);
 
+   if(packet->getType() == nm_ticfinished)
+      tics_stored++;
+
    if((!buffering_independently) && packet->shouldProcessNow())
    {
       packet->process();
+
+      if(packet->getType() == nm_ticfinished)
+         tics_stored--;
+
       delete packet;
       return true;
    }
@@ -228,17 +244,24 @@ void NetPacketBuffer::processPacketsForIndex(uint32_t index)
 {
    NetPacket *packet;
 
-   if(cl_received_sync && cl_packet_buffer_size == 1)
+   if(cl_received_sync && cl_packet_buffer.getSize() == 1)
       return;
 
    while(true)
    {
+      if(!packet_buffer.size())
+         return;
+
       packet = packet_buffer.front();
 
       if(!packet || packet->getWorldIndex() > index)
          break;
 
       packet->process();
+
+      if(packet_buffer.front()->getType() == nm_ticfinished)
+         tics_stored--;
+
       packet_buffer.pop_front();
       delete(packet);
    }
@@ -249,6 +272,10 @@ void NetPacketBuffer::processAllPackets()
    while(!packet_buffer.empty())
    {
       packet_buffer.front()->process();
+
+      if(packet_buffer.front()->getType() == nm_ticfinished)
+         tics_stored--;
+
       packet_buffer.pop_front();
    }
 }

@@ -324,7 +324,7 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          else if(i != consoleplayer)
             CL_PlayerThink(i);
-         else if(cl_enable_prediction || clients[i].spectating)
+         else if(!cl_enable_prediction && !clients[i].spectating)
             CL_PredictPlayerPosition(cl_current_world_index);
          else
             P_PlayerThink(&players[i]);
@@ -334,8 +334,19 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          else if(i != consoleplayer)
             CL_PlayerThink(i);
+         else if(cl_enable_prediction || clients[i].spectating)
+            CL_PredictPlayerPosition(cl_current_world_index);
          else
             P_PlayerThink(&players[i]);
+
+         /*
+         if(!clientserver || CS_SERVER || CS_DEMO)
+            P_PlayerThink(&players[i]);
+         else if(i != consoleplayer)
+            CL_PlayerThink(i);
+         else
+            P_PlayerThink(&players[i]);
+         */
 
          if(clientserver && players[i].mo)
             players[i].mo->Think();
