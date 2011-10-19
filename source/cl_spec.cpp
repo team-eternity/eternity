@@ -25,6 +25,7 @@
 //----------------------------------------------------------------------------
 
 #include "doomtype.h"
+#include "m_fixed.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -384,7 +385,7 @@ void CL_ApplyCeilingStatusFromBlob(void *blob)
 {
    CeilingThinker *t;
    CeilingThinker::status_t *status = (CeilingThinker::status_t *)blob;
-   
+
    if((t = NetCeilings.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -394,7 +395,7 @@ void CL_ApplyDoorStatusFromBlob(void *blob)
    VerticalDoorThinker *t;
    VerticalDoorThinker::status_t *status =
       (VerticalDoorThinker::status_t *)blob;
-   
+
    if((t = NetDoors.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -403,7 +404,7 @@ void CL_ApplyFloorStatusFromBlob(void *blob)
 {
    FloorMoveThinker *t;
    FloorMoveThinker::status_t *status = (FloorMoveThinker::status_t *)blob;
-   
+
    if((t = NetFloors.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -412,7 +413,7 @@ void CL_ApplyElevatorStatusFromBlob(void *blob)
 {
    ElevatorThinker *t;
    ElevatorThinker::status_t *status = (ElevatorThinker::status_t *)blob;
-   
+
    if((t = NetElevators.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -421,7 +422,7 @@ void CL_ApplyPillarStatusFromBlob(void *blob)
 {
    PillarThinker *t;
    PillarThinker::status_t *status = (PillarThinker::status_t *)blob;
-   
+
    if((t = NetPillars.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -430,7 +431,7 @@ void CL_ApplyFloorWaggleStatusFromBlob(void *blob)
 {
    FloorWaggleThinker *t;
    FloorWaggleThinker::status_t *status = (FloorWaggleThinker::status_t *)blob;
-   
+
    if((t = NetFloorWaggles.lookup(status->net_id)))
       t->setStatus(status);
 }
@@ -439,7 +440,7 @@ void CL_ApplyPlatformStatusFromBlob(void *blob)
 {
    PlatThinker *t;
    PlatThinker::status_t *status = (PlatThinker::status_t *)blob;
-   
+
    if((t = NetPlatforms.lookup(status->net_id)))
       t->setStatus(status);
 }

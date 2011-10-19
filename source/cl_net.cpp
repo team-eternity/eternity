@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -40,6 +40,7 @@
 #include "i_system.h"
 #include "i_thread.h"
 #include "m_file.h"
+#include "m_fixed.h"
 #include "p_inter.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -72,7 +73,7 @@ static void send_packet(void *data, size_t data_size)
 
    if(!net_peer)
       return;
-   
+
    if(LOG_ALL_NETWORK_MESSAGES)
    {
       printf(
@@ -1637,7 +1638,7 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
 
    if(!CS_AnnouncerEnabled())
       return;
-   
+
    // [CG] Ignore announcer events if we haven't received sync yet.
    if(!cl_received_sync)
       return;

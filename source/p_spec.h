@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,11 +37,6 @@ struct player_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
-
-// [CG] GCC needs fixed_t from m_fixed.h
-#ifdef __GNUC__
-#include "m_fixed.h"
-#endif
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -73,7 +68,7 @@ struct side_t;
 // killough 2/14/98: redefine in terms of MAXPLAYERS
 // #define MAXBUTTONS    (MAXPLAYERS*4)
 
-// 1 second, in ticks. 
+// 1 second, in ticks.
 #define BUTTONTIME  TICRATE
 
 // p_lights
@@ -103,7 +98,7 @@ struct side_t;
 #define GENSECTOFLAGSMASK \
    (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
 
-//jff 02/04/98 Define masks, shifts, for fields in 
+//jff 02/04/98 Define masks, shifts, for fields in
 // generalized linedef types
 
 #define GenFloorBase          0x6000
@@ -132,7 +127,7 @@ struct side_t;
 #define FloorDirectionShift        6
 #define FloorModelShift            5
 #define FloorSpeedShift            3
-                               
+
 // define masks and shifts for the ceiling type fields
 
 #define CeilingCrush          0x1000
@@ -230,8 +225,8 @@ typedef enum
    SpeedSlow,
    SpeedNormal,
    SpeedFast,
-   SpeedTurbo,  
-   SpeedParam, // haleyjd 05/04/04: parameterized extension 
+   SpeedTurbo,
+   SpeedParam, // haleyjd 05/04/04: parameterized extension
 } motionspeed_e;
 
 // define names for the Target field of the general floor
@@ -246,7 +241,7 @@ typedef enum
    FbyST,
    Fby24,
    Fby32,
-  
+
    FbyParam, // haleyjd 05/07/04: parameterized extensions
    FtoAbs,
    FInst,
@@ -317,7 +312,7 @@ typedef enum
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
- 
+
 typedef enum
 {
    StepSize4,
@@ -336,7 +331,7 @@ typedef enum
    ODoor,
    CdODoor,
    CDoor,
-  
+
    // haleyjd 03/01/05: new param types with initial delays
    pDOdCDoor,
    pDCDoor,
@@ -396,7 +391,7 @@ typedef enum
    raiseToNearestAndChange,
    blazeDWUS,
    genLift,      //jff added to support generalized Plat types
-   genPerpetual, 
+   genPerpetual,
    toggleUpDn,   //jff 3/14/98 added to support instant toggle type
 
 } plattype_e;
@@ -475,16 +470,16 @@ typedef enum
 {
    // lower floor to highest surrounding floor
    lowerFloor,
-  
+
    // lower floor to lowest surrounding floor
    lowerFloorToLowest,
-  
+
    // lower floor to highest surrounding floor VERY FAST
    turboLower,
-  
+
    // raise floor to lowest surrounding CEILING
    raiseFloor,
-  
+
    // raise floor to next highest surrounding floor
    raiseFloorToNearest,
 
@@ -499,7 +494,7 @@ typedef enum
 
    // raise floor to shortest height texture around it
    raiseToTexture,
-  
+
    // lower floor to lowest surrounding floor
    //  and change floorpic
    lowerAndChange,
@@ -513,7 +508,7 @@ typedef enum
    raiseFloorCrush,
 
    // raise to next highest floor, turbo-speed
-   raiseFloorTurbo,       
+   raiseFloorTurbo,
    donutRaise,
    raiseFloor512,
 
@@ -528,13 +523,13 @@ typedef enum
    genBuildStair,
    genWaitStair,  // haleyjd 10/10/05: stair resetting
    genDelayStair, // haleyjd 10/13/05: delayed stair
-   genResetStair, 
+   genResetStair,
 } floor_e;
 
 typedef enum
 {
    build8, // slowly build by 8
-   turbo16 // quickly build by 16    
+   turbo16 // quickly build by 16
 } stair_e;
 
 typedef enum
@@ -570,7 +565,7 @@ typedef enum
 {
    top,
    middle,
-   bottom      
+   bottom
 } bwhere_e;
 
 // crush check returns
@@ -593,7 +588,7 @@ protected:
    // sector attach points
    typedef enum
    {
-      ATTACH_NONE, 
+      ATTACH_NONE,
       ATTACH_FLOOR,
       ATTACH_CEILING,
       ATTACH_FLOORCEILING,
@@ -630,7 +625,7 @@ struct switchlist_s
   char    name1[9];
   char    name2[9];
   int16_t episode;
-}; 
+};
 
 typedef struct switchlist_s switchlist_t;
 
@@ -680,7 +675,7 @@ public:
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "LightFlashThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
-   
+
    // Data Members
    int count;
    int maxlight;
@@ -778,9 +773,9 @@ public:
 
 // New limit-free plat structure -- killough
 
-typedef struct platlist 
+typedef struct platlist
 {
-  PlatThinker *plat; 
+  PlatThinker *plat;
   struct platlist *next, **prev;
 } platlist_t;
 
@@ -891,20 +886,20 @@ public:
    bool inStasis;
 
    // ID
-   int tag;                   
+   int tag;
    int olddirection;
    struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
 };
 
-typedef struct ceilinglist 
+typedef struct ceilinglist
 {
-  CeilingThinker *ceiling; 
+  CeilingThinker *ceiling;
   struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
 typedef struct ceilingdata_s
-{   
+{
    // generalized values
    int trigger_type;
    int crush;
@@ -950,13 +945,13 @@ public:
    int resetTime;       // haleyjd 10/13/05: resetting stairs
    fixed_t resetHeight;
    int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
-   int delayTime;       
+   int delayTime;
    int delayTimer;
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
 typedef struct floordata_s
-{   
+{
    // generalized values
    int trigger_type;
    int crush;
@@ -973,7 +968,7 @@ typedef struct floordata_s
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
 typedef struct stairdata_s
-{   
+{
    // generalized values
    int trigger_type;
    int ignore;
@@ -1136,7 +1131,7 @@ public:
       p_pull,
       p_wind,
       p_current,
-   }; 
+   };
    int type;
    Mobj *source;        // Point source if point pusher
    int x_mag;           // X Strength
@@ -1211,7 +1206,7 @@ fixed_t P_FindShortestUpperAround(int secnum); // jff 2/04/98
 
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/04/98
 
-sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
+sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98
 
 int P_FindSectorFromLineTag(const line_t *line, int start); // killough 4/17/98
 
@@ -1262,7 +1257,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing);
 int EV_SilentTeleport(line_t *line, int side, Mobj *thing);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(line_t *line, int side, 
+int EV_SilentLineTeleport(line_t *line, int side,
 			              Mobj *thing, bool reverse);
 
 // p_floor
@@ -1308,7 +1303,7 @@ int EV_SetLight(line_t *, int tag, setlight_e type, int lvl); // haleyjd 01/09/0
 int EV_FadeLight(line_t *, int tag, int destvalue, int speed); // haleyjd 01/10/07
 
 // haleyjd 01/10/07:
-int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed); 
+int EV_GlowLight(line_t *, int tag, int maxval, int minval, int speed);
 
 // haleyjd 01/16/07:
 int EV_StrobeLight(line_t *, int tag, int maxval, int minval, int maxtime, int mintime);
@@ -1325,7 +1320,7 @@ int EV_PillarBuild(line_t *line, pillardata_t *pd);	// joek: pillars
 
 int EV_PillarOpen(line_t *line, pillardata_t *pd);
 
-int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed, 
+int EV_StartFloorWaggle(line_t *line, int tag, int height, int speed,
                         int offset, int timer);
 
 void P_ChangeFloorTex(const char *name, int tag);
@@ -1379,10 +1374,10 @@ void P_InitSwitchList(void);
 // at map load
 void P_SpawnSpecials(int);
 
-// 
+//
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate 
+// SoM: Specials that copy slopes, ect., need to be collected in a separate
 // pass
 void P_SpawnDeferredSpecials(int mapformat);
 
@@ -1451,7 +1446,7 @@ void P_AddActiveCeiling(CeilingThinker *c);
 
 void P_RemoveActiveCeiling(CeilingThinker *c);
 
-int P_ActivateInStasisCeiling(line_t *line); 
+int P_ActivateInStasisCeiling(line_t *line);
 
 void P_CeilingSequence(sector_t *s, int noiseLevel);
 
@@ -1491,7 +1486,7 @@ enum
 };
 
 bool P_ActivateParamLine(line_t *line, Mobj *thing, int side, int spac);
-bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special, 
+bool P_ExecParamLineSpec(line_t *line, Mobj *thing, int16_t special,
                          int *args, int side, int spac, bool reuse);
 
 #endif

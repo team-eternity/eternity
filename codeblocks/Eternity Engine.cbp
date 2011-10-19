@@ -218,7 +218,6 @@
 		<Unit filename="..\source\e_exdata.cpp" />
 		<Unit filename="..\source\e_fonts.cpp" />
 		<Unit filename="..\source\e_hash.cpp" />
-		<Unit filename="..\source\e_hashkeys.h" />
 		<Unit filename="..\source\e_lib.cpp" />
 		<Unit filename="..\source\e_mod.cpp" />
 		<Unit filename="..\source\e_player.cpp" />
@@ -292,6 +291,7 @@
 		<Unit filename="..\source\p_portal.cpp" />
 		<Unit filename="..\source\p_pspr.cpp" />
 		<Unit filename="..\source\p_saveg.cpp" />
+		<Unit filename="..\source\p_sector.cpp" />
 		<Unit filename="..\source\p_setup.cpp" />
 		<Unit filename="..\source\p_sight.cpp" />
 		<Unit filename="..\source\p_skin.cpp" />

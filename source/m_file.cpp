@@ -348,6 +348,7 @@ bool M_DeleteFolderAndContents(const char *path)
             efree(star_path);
             efree(entry_path);
             return false;
+         }
       }
       else if(!DeleteFile(entry_path))
       {
