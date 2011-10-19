@@ -24,9 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <stdlib.h>
-#include <string.h>
+#include <list>
 
+#include "z_zone.h"
 #include "a_common.h"
 #include "c_io.h"
 #include "c_runcmd.h"
@@ -38,6 +38,7 @@
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "m_file.h"
 #include "p_inter.h"
 #include "m_misc.h"
@@ -427,7 +428,7 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    }
 
    CL_SendSyncRequest();
-   cl_packet_buffer.setNeedsFlushing(true);
+   cl_packet_buffer.setSize(cl_packet_buffer_size);
 }
 
 void CL_HandleSyncMessage(nm_sync_t *message)
@@ -438,7 +439,6 @@ void CL_HandleSyncMessage(nm_sync_t *message)
    levelstarttic    = message->levelstarttic;
    cl_current_world_index = cl_latest_world_index = message->world_index;
 
-   cl_packet_buffer.setNeedsFlushing(true);
    cl_received_sync = true;
    CS_UpdateQueueMessage();
 }

@@ -441,6 +441,15 @@ void P_RunPlayerCommand(int playernum)
    player_t *player = &players[playernum];
    ticcmd_t *cmd = &player->cmd;
 
+   // chain saw run forward
+   if(player->mo->flags & MF_JUSTATTACKED)
+   {
+      cmd->angleturn = 0;
+      cmd->forwardmove = 0xc800/512;
+      cmd->sidemove = 0;
+      player->mo->flags &= ~MF_JUSTATTACKED;
+   }
+
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook || (clientserver && ((dmflags2 & dmf_allow_freelook) == 0)))
       player->pitch = 0;
@@ -610,17 +619,7 @@ void P_PlayerThink(player_t *player)
    else
       player->mo->flags &= ~MF_NOCLIP;
 
-   // chain saw run forward
-
    cmd = &player->cmd;
-   if(player->mo->flags & MF_JUSTATTACKED)
-   {
-      cmd->angleturn = 0;
-      cmd->forwardmove = 0xc800/512;
-      cmd->sidemove = 0;
-      player->mo->flags &= ~MF_JUSTATTACKED;
-   }
-
    if(player->playerstate == PST_DEAD)
    {
       P_DeathThink(player);
@@ -640,17 +639,15 @@ void P_PlayerThink(player_t *player)
          }
          else
             SV_RunPlayerCommands(playernum);
-         player->mo->Think();
       }
       return;
    }
 
-   if(!clientserver || (playernum == consoleplayer))
+   if(!clientserver || (CS_CLIENT && (playernum == consoleplayer)))
       P_RunPlayerCommand(playernum);
-   else if(CS_SERVER)
-      SV_RunPlayerCommands(playernum); // [CG] May run more than one command.
 
-   // [CG] The player can be removed during SV_RunPlayerCommands, so check.
+   // [CG] The player can be removed during P_RunPlayerCommand, so check.
+   // [CG] FIXME: Is the above still true?
    if(!playeringame[playernum])
       return;
 
@@ -744,7 +741,7 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
-   if(serverside) // [CG] This is done elsewhere in c/s client mode.
+   if(!CS_CLIENT) // [CG] This is done elsewhere in c/s client mode.
    {
       if(player->damagecount)
          player->damagecount--;

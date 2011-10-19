@@ -1367,11 +1367,6 @@ bool SV_RunPlayerCommands(int playernum)
       return false;
    }
 
-   /*
-
-   while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)))
-      run_player_command(playernum, bufcmd);
-
    // [CG] Run at least one command, whether dead, spectating, or otherwise.
    bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
    run_player_command(playernum, bufcmd);
@@ -1398,7 +1393,6 @@ bool SV_RunPlayerCommands(int playernum)
          run_player_command(playernum, bufcmd);
       }
    }
-   */
 
    sc->commands_dropped = 0;
    return true;
@@ -1781,42 +1775,18 @@ void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type)
 void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
                                    int playernum)
 {
+   nm_playercommand_t *message = (nm_playercommand_t *)data;
+   player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
    server_client_t *server_client = &server_clients[playernum];
-   nm_playercommand_t *message = (nm_playercommand_t *)data;
    cs_cmd_t *received_command = &message->command;
-   cs_buffered_command_t *bufcmd;
+   ticcmd_t *ticcmd = &received_command->ticcmd;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
       return;
 
-#if _CMD_DEBUG
-   printf(
-      "SV_HandlePlayerCommandMessage (%3u): Received command %3u - "
-      "(%3u/%3u/%3u): ",
-      sv_world_index,
-      server_client->commands.size,
-      server_client->last_command_run_index,
-      server_client->last_command_received_index,
-      received_command->world_index
-   );
-   CS_PrintCommand(received_command);
-#endif
-
    server_client->received_command_for_current_map = true;
-   bufcmd = emalloc(cs_buffered_command_t *, sizeof(cs_buffered_command_t));
-   memcpy(&bufcmd->command, received_command, sizeof(cs_cmd_t));
-   M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
-
-   if(server_client->commands.size > MAX_POSITIONS)
-   {
-      if(client->spectating)
-         M_QueueFree(&server_client->commands);
-      else if(server_client->commands.size > (TICRATE * 10))
-         SV_DisconnectPlayer(playernum, dr_command_flood);
-      return;
-   }
 
    // [CG] Some additional checks to prevent tomfoolery.
    if(received_command->world_index <=
@@ -1832,6 +1802,15 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    }
 
    server_client->last_command_received_index = received_command->world_index;
+
+   SV_LoadClientOptions(playernum);
+   server_client->command_world_index = received_command->world_index;
+   memcpy(&player->cmd, ticcmd, sizeof(ticcmd_t));
+   P_RunPlayerCommand(playernum);
+   if(player->mo)
+      player->mo->Think();
+   server_client->last_command_run_index = received_command->world_index;
+   SV_RestoreServerOptions();
 }
 
 void SV_HandleClientRequestMessage(char *data, size_t data_length,

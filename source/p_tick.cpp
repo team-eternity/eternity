@@ -330,14 +330,12 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          */
 
-         if(!clientserver || CS_SERVER || CS_DEMO)
+         if(serverside || CS_DEMO)
             P_PlayerThink(&players[i]);
          else if(i != consoleplayer)
             CL_PlayerThink(i);
          else if(cl_enable_prediction || clients[i].spectating)
             CL_PredictPlayerPosition(cl_current_world_index);
-         else
-            P_PlayerThink(&players[i]);
 
          /*
          if(!clientserver || CS_SERVER || CS_DEMO)
@@ -348,7 +346,7 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          */
 
-         if(clientserver && players[i].mo)
+         if(players[i].mo && !CS_SERVER)
             players[i].mo->Think();
 
          if(CS_SERVER)

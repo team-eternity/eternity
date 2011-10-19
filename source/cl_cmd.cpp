@@ -24,6 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include <list>
 #include <string>
 
 #include "z_zone.h"
@@ -32,6 +33,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "m_misc.h"
 #include "v_misc.h"
 
@@ -137,7 +139,6 @@ VARIABLE_INT(
 CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
 {
    cl_packet_buffer.setSize((uint32_t)cl_packet_buffer_size);
-   cl_packet_buffer.setNeedsFlushing(true);
 }
 
 // [CG] Packet buffer flushing when the player's spectating.

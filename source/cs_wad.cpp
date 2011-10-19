@@ -32,6 +32,8 @@
 #include <dirent.h>
 #endif
 
+#include <list>
+
 #include "z_zone.h"
 #include "c_io.h"
 #include "doomtype.h"
@@ -40,6 +42,7 @@
 #include "d_main.h"
 #include "g_game.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "m_file.h"
 #include "r_data.h"
 #include "r_main.h"

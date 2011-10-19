@@ -24,14 +24,15 @@
 //
 //----------------------------------------------------------------------------
 
+#include <list>
+#include <fstream>
 #include <sstream>
 #include <iostream>
-#include <fstream>
 
 #include <math.h>
-#include <string.h>
 #include <sys/stat.h>
 
+#include "z_zone.h"
 #include "acs_intr.h"
 #include "a_common.h"
 #include "c_io.h"
@@ -52,6 +53,7 @@
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "m_argv.h"
 #include "m_misc.h"
 #include "m_qstr.h"
@@ -140,11 +142,20 @@ void CL_RunWorldUpdate(void)
 void CL_RunAllWorldUpdates(void)
 {
    unsigned int old_world_index = cl_current_world_index;
+   unsigned int new_world_index = cl_latest_world_index - 2;
 
-   while(cl_current_world_index < (cl_latest_world_index - 2))
+   if(!cl_packet_buffer.disabled())
+      printf("Running all world updates (%u).\n", old_world_index);
+
+   if(cl_packet_buffer.getSize() == 0)
+      new_world_index -= ADAPTIVE_LATENCY_AMOUNT;
+   else if(!cl_packet_buffer.disabled())
+      new_world_index -= cl_packet_buffer.getSize();
+
+   while(cl_current_world_index < new_world_index)
       CL_RunWorldUpdate();
 
-   CL_PredictFrom(old_world_index, cl_latest_world_index - 2);
+   CL_PredictFrom(old_world_index, new_world_index);
 }
 
 void CL_Init(char *url)
@@ -500,7 +511,7 @@ void CL_SetLatestFinishedIndices(unsigned int index)
    if(cl_latest_world_index <= cl_current_world_index)
       return;
 
-   if((cl_latest_world_index - cl_current_world_index) > CL_MAX_BUFFER_SIZE)
+   if(cl_packet_buffer.overflowed())
       CL_RunAllWorldUpdates();
 }
 
@@ -603,17 +614,21 @@ void CL_TryRunTics(void)
 
    // [CG] The buffer absolutely cannot be flushed if we've not yet received
    //      sync, so only honor cl_packet_buffer.needsFlushing() if sync's been
-   //      received.
-   if(cl_received_sync)
+   //      received.  Also always process all packets if the packet buffer's
+   //      size is 1.
+   if(cl_received_sync && !cl_packet_buffer.filling())
    {
       if(cl_packet_buffer.needsFlushing() || cl_packet_buffer.getSize() == 1)
+      {
          CL_RunAllWorldUpdates();
+         cl_packet_buffer.setNeedsFlushing(false);
+      }
 
       // [CG] When constant prediction is enabled, 1 world is always run each
       //      TIC.  Otherwise run a world if the server finished an index.
       if(cl_constant_prediction)
          CL_RunWorldUpdate();
-      else if(cl_current_world_index < (cl_latest_world_index - 1))
+      else if(cl_packet_buffer.ticsStored())
          CL_RunWorldUpdate();
    }
 

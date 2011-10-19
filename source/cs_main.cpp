@@ -24,14 +24,13 @@
 //
 //----------------------------------------------------------------------------
 
+#include <list>
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <iostream>
-#include <fstream>
 
-#include <stdio.h>
-#include <string.h>
-
+#include "z_zone.h"
 #include "acs_intr.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -51,6 +50,7 @@
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "info.h"
 #include "m_argv.h"
 #include "m_fixed.h"

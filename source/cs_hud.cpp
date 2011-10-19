@@ -24,12 +24,15 @@
 //
 //----------------------------------------------------------------------------
 
+#include <list>
+
 #include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "g_bind.h"
 #include "hu_stuff.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "r_draw.h"
 #include "st_stuff.h"
 #include "v_font.h"

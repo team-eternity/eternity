@@ -42,8 +42,9 @@
 // [CG] It's probably worth making this into a class at some point, if only to
 //      drop all the scoping prefixes.
 
-#include <iostream>
+#include <list>
 #include <fstream>
+#include <iostream>
 
 #include <errno.h>
 #include <stdio.h>
@@ -59,6 +60,7 @@
 #include "c_runcmd.h"
 #include "g_game.h"
 #include "i_system.h"
+#include "i_thread.h"
 #include "m_file.h"
 #include "m_misc.h"
 #include "version.h"

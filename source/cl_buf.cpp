@@ -24,13 +24,13 @@
 //
 //-----------------------------------------------------------------------------
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <string.h>
+#include <list>
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "g_game.h"
 #include "i_system.h"
+#include "i_thread.h"
 
 #include "cs_main.h"
 #include "cl_buf.h"
@@ -56,7 +56,7 @@ bool NetPacket::shouldProcessNow()
    if(cl_packet_buffer.getSize() == 1)
       return true;
 
-   if((getWorldIndex() <= cl_current_world_index) && cl_constant_prediction)
+   if(cl_constant_prediction && (getWorldIndex() <= cl_current_world_index))
       return true;
 
    return false;
@@ -196,14 +196,30 @@ NetPacketBuffer::NetPacketBuffer(void)
    size = 0;
 }
 
-bool NetPacketBuffer::add(char *data, uint32_t size)
+uint32_t NetPacketBuffer::getFillingSize(void)
 {
-   NetPacket *packet = new NetPacket(data, size);
+   switch(size)
+   {
+      case 0:
+         return ADAPTIVE_LATENCY_AMOUNT;
+      case 1:
+         return 0;
+      default:
+         return size;
+   }
+}
+
+bool NetPacketBuffer::add(char *data, uint32_t data_size)
+{
+   NetPacket *packet = new NetPacket(data, data_size);
 
    if(packet->getType() == nm_ticfinished)
       tics_stored++;
 
-   if((!buffering_independently) && packet->shouldProcessNow())
+   if(filling() && tics_stored > getFillingSize())
+      setFull();
+
+   if((!buffering_independently) && !filling() && packet->shouldProcessNow())
    {
       packet->process();
 
@@ -247,9 +263,12 @@ void NetPacketBuffer::processPacketsForIndex(uint32_t index)
    if(cl_received_sync && cl_packet_buffer.getSize() == 1)
       return;
 
+   if(filling())
+      return;
+
    while(true)
    {
-      if(!packet_buffer.size())
+      if(packet_buffer.empty())
          return;
 
       packet = packet_buffer.front();
@@ -269,14 +288,42 @@ void NetPacketBuffer::processPacketsForIndex(uint32_t index)
 
 void NetPacketBuffer::processAllPackets()
 {
+   NetPacket *packet;
+
+   if(filling())
+      return;
+
    while(!packet_buffer.empty())
    {
+      packet = packet_buffer.front();
+
       packet_buffer.front()->process();
 
       if(packet_buffer.front()->getType() == nm_ticfinished)
          tics_stored--;
 
       packet_buffer.pop_front();
+      delete(packet);
    }
+}
+
+bool NetPacketBuffer::overflowed(void)
+{
+   return tics_stored > size;
+}
+
+void NetPacketBuffer::setSize(uint32_t new_size)
+{
+   uint32_t latency_in_tics = ADAPTIVE_LATENCY_AMOUNT;
+
+   if(new_size >= CL_MAX_BUFFER_SIZE || new_size == size)
+      return;
+
+   setNeedsFlushing(true);
+
+   if(new_size != 1)
+      fill();
+
+   size = new_size;
 }
 

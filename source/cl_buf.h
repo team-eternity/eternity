@@ -27,12 +27,12 @@
 #ifndef CL_BUF_H__
 #define CL_BUF_H__
 
-#include <list>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "i_thread.h"
+// [CG] This must be equal to double the amount of time it takes for a packet
+//      travel to/from client/server for optimal smoothness.
+#define ADAPTIVE_LATENCY_AMOUNT ( \
+   clients[consoleplayer].transit_lag > TICRATE ? \
+      ((clients[consoleplayer].transit_lag / TICRATE) * 2) : 2 \
+)
 
 class NetPacket
 {
@@ -104,27 +104,31 @@ private:
    std::list<NetPacket *> packet_buffer;
    bool buffering_independently;
    bool needs_flushing;
+   bool _filling;
    dthread_t *net_service_thread;
    uint32_t tics_stored;
    uint32_t size;
 
+   uint32_t getFillingSize(void);
+   void     setFull(void) { _filling = false; }
+
 public:
    NetPacketBuffer(void);
-   bool     add(char *data, uint32_t size);
+   bool     add(char *data, uint32_t data_size);
    void     startBufferingIndependently();
    void     stopBufferingIndependently();
    void     processPacketsForIndex(uint32_t index);
    void     processAllPackets();
    bool     bufferingIndependently() const { return buffering_independently; }
+   bool     overflowed(void);
+   bool     disabled(void) { return size == 1; }
    uint32_t ticsStored(void) const { return tics_stored; }
    bool     needsFlushing(void) const { return needs_flushing; }
    void     setNeedsFlushing(bool b) { needs_flushing = b; }
    uint32_t getSize(void) const { return size; }
-   void     setSize(uint32_t new_size)
-   {
-      size = new_size;
-      setNeedsFlushing(true);
-   }
+   void     setSize(uint32_t new_size);
+   bool     filling(void) const { return _filling; }
+   void     fill(void) { _filling = true; }
 
    friend int CL_serviceNetwork(void *);
 
