@@ -596,7 +596,7 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
 
    secThinker = thinker_cast<SectorThinker *>(sec->ceilingdata);
 
-   // exactly only one of these pointers is valid during demo_compatibility
+   // exactly only one at most of these pointers is valid during demo_compatibility
    if(demo_compatibility)
    {
       if(!secThinker)

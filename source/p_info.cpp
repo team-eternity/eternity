@@ -661,14 +661,14 @@ enum
    IVT_END
 };
 
-typedef struct levelvar_s
+struct levelvar_t
 {
-   int   type;
-   char *name;
-   int   fieldenum;
-   void *variable;
-   void *extra;
-} levelvar_t;
+   int         type;
+   const char *name;
+   int         fieldenum;
+   void       *variable;
+   void       *extra;
+};
 
 
 //
@@ -679,19 +679,19 @@ typedef struct levelvar_s
 //
 #define LI_STRING(name, enumval, field) \
    { IVT_STRING, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfoProto.info . field)) }
+     (void *)(&(LevelInfoProto.info . field)), NULL }
 #define LI_STRNUM(name, enumval, field, extra) \
    { IVT_STRNUM, name, LI_FIELD_ ## enumval, \
      (void *)(&(LevelInfoProto.info . field)), &(extra) }
 #define LI_INTEGR(name, enumval, field) \
-   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
 #define LI_BOOLNF(name, enumval, field) \
-   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
 #define LI_FLAGSF(name, enumval, field, extra) \
    { IVT_FLAGS, name, LI_FIELD_ ## enumval, \
      &(LevelInfoProto.info . field), &(extra) }
 #define LI_END() \
-   { IVT_END, NULL, LI_FIELD_NUMFIELDS }
+   { IVT_END, NULL, LI_FIELD_NUMFIELDS, NULL, NULL }
 
 levelvar_t levelvars[]=
 {
