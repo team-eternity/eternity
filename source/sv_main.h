@@ -87,7 +87,6 @@ void SV_SendAuthorizationResult(int playernum,
 // [CG] Game loop functions.
 void SV_SaveActorPositions(void);
 void SV_ProcessPlayerCommand(int playernum);
-bool SV_RunPlayerCommands(int playernum);
 
 // [CG] Misc. functions.
 void SV_AddClient(int playernum);

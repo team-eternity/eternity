@@ -55,6 +55,7 @@ bool CS_CommandIsBlank(cs_cmd_t *command);
 void CS_SavePlayerCommand(cs_cmd_t *command, unsigned int playernum,
                           unsigned int index);
 void CS_SetPlayerCommand(unsigned int playernum, cs_cmd_t *command);
+void CS_RunPlayerCommand(int playernum, ticcmd_t *cmd, bool think);
 
 #endif
 

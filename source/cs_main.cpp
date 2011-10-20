@@ -257,7 +257,9 @@ void CS_DoWorldDone(void)
                server_client->positions, 0, MAX_POSITIONS * sizeof(position_t)
             );
          }
+         cl_spawning_actor_from_message = true;
          CS_SpawnPlayerCorrectly(i, true);
+         cl_spawning_actor_from_message = false;
       }
    }
 

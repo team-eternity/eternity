@@ -39,6 +39,7 @@
 #include "mn_menus.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
+#include "st_stuff.h"
 #include "w_wad.h"
 #include "w_levels.h"
 
@@ -263,14 +264,6 @@ static default_t sysdefaults[] =
    // [CG] These are c/s defaults.
 
    DEFAULT_BOOL(
-      "prediction",
-      &cl_enable_prediction,
-      NULL,
-      true, default_t::wad_no,
-      "predict local movement without waiting for the server"
-   ),
-   
-   DEFAULT_BOOL(
       "predict_shots",
       &cl_predict_shots,
       NULL,
@@ -280,45 +273,42 @@ static default_t sysdefaults[] =
    ),
 
    DEFAULT_BOOL(
-       "constant_prediction",
-       &cl_constant_prediction,
-       NULL,
-       true, default_t::wad_no,
-       "always predict local movement"
+      "packet_buffer",
+      &cl_packet_buffer_enabled,
+      NULL,
+      true,
+      default_t::wad_no,
+      "buffer incoming packets"
+   ),
+
+
+   DEFAULT_INT(
+      "packet_buffer_size",
+      &cl_packet_buffer_size,
+      NULL,
+      2, 1, MAX_POSITIONS >> 1, default_t::wad_no,
+      "how many TICs to buffer in the packet buffer, 0 - adaptive, other "
+      "values are considered custom sizes"
    ),
 
    DEFAULT_INT(
       "damage_screen_cap",
       &damage_screen_cap,
       NULL,
-      100, 0, 100, default_t::wad_no,
-      "cap the damage screen intensity, 0 - no damage screen, 100 - full, "
+      NUMREDPALS, 0, NUMREDPALS, default_t::wad_no,
+      "cap the damage screen intensity, 0 - no damage screen, 8 - full, "
       "original damage screen"
    ),
 
    DEFAULT_INT(
-      "packet_buffer_size",
-      &cl_packet_buffer_size,
-      NULL,
-      1, 0, MAX_POSITIONS, default_t::wad_no,
-      "how large to allow the packet buffer to grow before it's flushed "
-      "automatically, 0 - unlimited, 1 - disabled"
-   ),
-
-   DEFAULT_BOOL(
-      "buffer_packets_while_spectating",
-      &cl_buffer_packets_while_spectating,
-      NULL,
-      false, default_t::wad_no,
-      "disables automatic packet buffer flushing while spectating"
-   ),
-
-   DEFAULT_BOOL(
-      "flush_packet_buffer_on_respawn",
-      &cl_flush_packet_buffer_on_respawn,
-      NULL,
-      true, default_t::wad_no,
-      "automatically flushes the packet buffer when the player respawns"
+      "announcer",
+      &s_announcer_type,
+      &s_default_announcer_type,
+      S_ANNOUNCER_NONE,
+      S_ANNOUNCER_NONE, 
+      S_ANNOUNCER_UNREAL_TOURNAMENT,
+      default_t::wad_no,
+      "announcer type, 0 - none, 1 - quake, 2 - unreal tournament"
    ),
 
    DEFAULT_STR(

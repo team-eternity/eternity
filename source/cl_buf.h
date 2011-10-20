@@ -27,13 +27,6 @@
 #ifndef CL_BUF_H__
 #define CL_BUF_H__
 
-// [CG] This must be equal to double the amount of time it takes for a packet
-//      travel to/from client/server for optimal smoothness.
-#define ADAPTIVE_LATENCY_AMOUNT ( \
-   clients[consoleplayer].transit_lag > TICRATE ? \
-      ((clients[consoleplayer].transit_lag / TICRATE) * 2) : 2 \
-)
-
 class NetPacket
 {
 public:
@@ -102,33 +95,37 @@ class NetPacketBuffer
 {
 private:
    std::list<NetPacket *> packet_buffer;
-   bool buffering_independently;
-   bool needs_flushing;
-   bool _filling;
-   dthread_t *net_service_thread;
-   uint32_t tics_stored;
-   uint32_t size;
-
-   uint32_t getFillingSize(void);
-   void     setFull(void) { _filling = false; }
+   bool       m_buffering_independently;
+   bool       m_needs_flushing;
+   bool       m_needs_filling;
+   bool       m_synchronized;
+   bool       m_enabled;
+   dthread_t *m_net_service_thread;
+   uint32_t   m_size;
+   uint32_t   m_capacity;
 
 public:
    NetPacketBuffer(void);
-   bool     add(char *data, uint32_t data_size);
    void     startBufferingIndependently();
    void     stopBufferingIndependently();
+   bool     bufferingIndependently() const { return m_buffering_independently; }
+   bool     needsFlushing(void) const { return m_needs_flushing; }
+   void     setNeedsFlushing(bool b) { m_needs_flushing = b; }
+   bool     needsFilling(void) const { return m_needs_filling; }
+   void     setNeedsFilling(bool b) { m_needs_filling = b; }
+   bool     synchronized(void) const { return m_synchronized; }
+   void     setSynchronized(bool b);
+   uint32_t size(void) const { return m_size; }
+   void     enable(void) { m_enabled = true; }
+   void     disable(void) { m_enabled = false; }
+   bool     enabled(void) const { return m_enabled; }
+   bool     adaptive(void) { return m_capacity == 0; }
+   bool     overflowed(void);
+   uint32_t capacity(void);
+   void     setCapacity(uint32_t new_capacity);
+   void     add(char *data, uint32_t data_size);
    void     processPacketsForIndex(uint32_t index);
    void     processAllPackets();
-   bool     bufferingIndependently() const { return buffering_independently; }
-   bool     overflowed(void);
-   bool     disabled(void) { return size == 1; }
-   uint32_t ticsStored(void) const { return tics_stored; }
-   bool     needsFlushing(void) const { return needs_flushing; }
-   void     setNeedsFlushing(bool b) { needs_flushing = b; }
-   uint32_t getSize(void) const { return size; }
-   void     setSize(uint32_t new_size);
-   bool     filling(void) const { return _filling; }
-   void     fill(void) { _filling = true; }
 
    friend int CL_serviceNetwork(void *);
 

@@ -191,7 +191,6 @@ enum keyaction_e
    ka_spectate,
    ka_spectate_prev,
    ka_spectate_next,
-   ka_flush_packet_buffer,
    ka_multibind,
    NUMKEYACTIONS
 };

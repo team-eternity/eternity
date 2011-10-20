@@ -150,7 +150,6 @@ int action_show_scoreboard;
 int action_spectate;
 int action_spectate_prev;
 int action_spectate_next;
-int action_flush_packet_buffer;
 
 //
 // Handler Functions
@@ -291,7 +290,6 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    {"spectate",            kac_cmd,  at_function, {NULL}},
    {"spectate_prev",       kac_cmd,  at_function, {NULL}},
    {"spectate_next",       kac_cmd,  at_function, {NULL}},
-   {"flush_packet_buffer", kac_cmd,  at_function, {NULL}},
    {"multibind",           kac_game, at_function, {NULL}}
 };
 
@@ -533,8 +531,6 @@ void G_InitKeyBindings(void)
    keyactions[ka_spectate].value.Handler = CS_HandleSpectateKey;
    keyactions[ka_spectate_prev].value.Handler = CS_HandleSpectatePrevKey;
    keyactions[ka_spectate_next].value.Handler = CS_HandleSpectateNextKey;
-   keyactions[ka_flush_packet_buffer].value.Handler = \
-                                                CS_HandleFlushPacketBufferKey;
    keyactions[ka_multibind].value.Handler = G_HandleMultibind;
 
 }

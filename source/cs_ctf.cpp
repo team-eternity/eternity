@@ -301,55 +301,70 @@ void CS_CTFTicker(void)
 {
    int color;
    flag_t *flag;
-   position_t position;
    Mobj *flag_actor;
 
    for(color = team_color_none; color < team_color_max; color++)
    {
       flag = &cs_flags[color];
 
-      if(flag->state == flag_dropped)
-      {
-         if(++flag->timeout > (10 * TICRATE))
-         {
-            CS_ReturnFlag(flag);
-            flag_actor = NetActors.lookup(flag->net_id);
-            if(CS_SERVER)
-            {
-               SV_BroadcastAnnouncerEvent(ae_flag_returned, flag_actor);
-               SV_BroadcastMessage(
-                  "%s flag returned", team_color_names[color]
-               );
-            }
-         }
-      }
-      else if(flag->state == flag_carried)
-      {
-         if((flag_actor = NetActors.lookup(flag->net_id)) != NULL)
-         {
-            CS_SaveActorPosition(&position, players[flag->carrier].mo, 0);
-            P_UnsetThingPosition(flag_actor);
-            flag_actor->x = position.x;
-            flag_actor->y = position.y;
-            flag_actor->z = position.z;
-            P_SetThingPosition(flag_actor);
+      if(flag->state != flag_dropped)
+         continue;
 
-            if(flag->carrier == displayplayer)
-               flag_actor->flags2 |= MF2_DONTDRAW;
-            else
-               flag_actor->flags2 &= ~MF2_DONTDRAW;
-         }
-      }
+      if(++flag->timeout <= (10 * TICRATE))
+         continue;
 
-      // [CG] Don't draw the flag if we're carrying it (clientside).  Prevents
-      //      the flag from ever blocking the local player's view.
-      if(clientside && (flag_actor = NetActors.lookup(flag->net_id)))
+      CS_ReturnFlag(flag);
+
+      if(CS_SERVER)
       {
-         if(flag->carrier == displayplayer)
-            flag_actor->flags2 |= MF2_DONTDRAW;
-         else
-            flag_actor->flags2 &= ~MF2_DONTDRAW;
+         if((flag_actor = NetActors.lookup(flag->net_id)) == NULL)
+            continue;
+         SV_BroadcastAnnouncerEvent(ae_flag_returned, flag_actor);
+         SV_BroadcastMessage("%s flag returned", team_color_names[color]);
       }
    }
+}
+
+void CS_CheckCarriedFlagPosition(int playernum)
+{
+   flag_t *flag = NULL;
+   Mobj *flag_actor = NULL;
+   player_t *player = &players[playernum];
+
+   if((flag = CS_GetFlagCarriedByPlayer(playernum)) != NULL)
+   {
+      if((flag_actor = NetActors.lookup(flag->net_id)) != NULL)
+      {
+         P_UnsetThingPosition(flag_actor);
+         flag_actor->x = player->mo->x;
+         flag_actor->y = player->mo->y;
+         flag_actor->z = player->mo->z;
+         flag_actor->momx = player->mo->momx;
+         flag_actor->momy = player->mo->momy;
+         flag_actor->momz = player->mo->momz;
+         /*
+         // [CG] Not sure about this next one, flags will probably have to fall
+         //      at some point right?  Snapping them to the ground seems lame.
+         flag_actor->momx = flag_actor->momy = flag_actor->momz = 0;
+         */
+         P_SetThingPosition(flag_actor);
+      }
+   }
+}
+
+bool CS_ActorIsCarriedFlag(Mobj *actor)
+{
+   int color;
+
+   for(color = team_color_none; color < team_color_max; color++)
+   {
+      if((cs_flags[color].net_id == actor->net_id) &&
+         (cs_flags[color].state == flag_carried))
+      {
+         return true;
+      }
+   }
+
+   return false;
 }
 

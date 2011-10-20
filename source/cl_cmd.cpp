@@ -35,6 +35,7 @@
 #include "i_system.h"
 #include "i_thread.h"
 #include "m_misc.h"
+#include "st_stuff.h"
 #include "v_misc.h"
 
 #include "cs_main.h"
@@ -45,44 +46,41 @@
 #include "cl_net.h"
 #include "cl_buf.h"
 
-bool cl_flush_packet_buffer = false;
-
 bool cl_predict_shots = true;
 bool default_cl_predict_shots = true;
 
-bool cl_enable_prediction = true;
-bool default_cl_enable_prediction = true;
+bool cl_packet_buffer_enabled = false;
+bool default_cl_packet_buffer_enabled = false;
 
-unsigned int cl_packet_buffer_size;
+unsigned int cl_packet_buffer_size = 0;
 unsigned int default_cl_packet_buffer_size = 0;
 
-bool cl_buffer_packets_while_spectating;
-bool default_cl_buffer_packets_while_spectating = true;
-
-bool cl_flush_packet_buffer_on_respawn;
-bool default_cl_flush_packet_buffer_on_respawn = true;
-
-bool cl_constant_prediction;
-bool default_cl_constant_prediction = true;
-
-unsigned int damage_screen_cap;
-unsigned int default_damage_screen_cap = 100;
-
-// [CG] Clientside prediction.
-VARIABLE_TOGGLE(cl_enable_prediction, &default_cl_enable_prediction, onoff);
-CONSOLE_VARIABLE(prediction, cl_enable_prediction, cf_netonly) {}
+unsigned int damage_screen_cap = NUMREDPALS;
+unsigned int default_damage_screen_cap = NUMREDPALS;
 
 // [CG] Shot result prediction.
 VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
 CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
 
-// [CG] Constant prediction.
-VARIABLE_TOGGLE(
-   cl_constant_prediction,
-   &default_cl_constant_prediction,
-   onoff
+// [CG] Packet buffer.
+VARIABLE_TOGGLE(cl_packet_buffer_enabled, &default_cl_packet_buffer_enabled,
+                onoff);
+CONSOLE_VARIABLE(packet_buffer, cl_packet_buffer_enabled, cf_netonly)
+{
+   if(cl_packet_buffer_enabled)
+      cl_packet_buffer.enable();
+   else
+      cl_packet_buffer.disable();
+}
+VARIABLE_INT(
+   cl_packet_buffer_size,
+   &default_cl_packet_buffer_size,
+   0, MAX_POSITIONS >> 1, NULL
 );
-CONSOLE_VARIABLE(constant_prediction, cl_constant_prediction, cf_netonly) {}
+CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
+{
+   cl_packet_buffer.setCapacity((uint32_t)cl_packet_buffer_size);
+}
 
 // [CG] Team.
 CONSOLE_COMMAND(team, cf_netonly)
@@ -124,52 +122,11 @@ CONSOLE_VARIABLE(show_timer, show_timer, 0) {}
 VARIABLE_TOGGLE(show_team_widget, &default_show_team_widget, yesno);
 CONSOLE_VARIABLE(show_team, show_team_widget, 0) {}
 
-// [CG] Packet buffer flushing.
-CONSOLE_COMMAND(flush_packet_buffer, cf_netonly)
-{
-   cl_packet_buffer.setNeedsFlushing(true);
-}
-
-// [CG] Packet buffer size.
-VARIABLE_INT(
-   cl_packet_buffer_size,
-   &default_cl_packet_buffer_size,
-   0, MAX_POSITIONS, NULL
-);
-CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
-{
-   cl_packet_buffer.setSize((uint32_t)cl_packet_buffer_size);
-}
-
-// [CG] Packet buffer flushing when the player's spectating.
-VARIABLE_TOGGLE(
-   cl_buffer_packets_while_spectating,
-   &default_cl_buffer_packets_while_spectating,
-   onoff
-);
-CONSOLE_VARIABLE(
-   buffer_packets_while_spectating,
-   cl_buffer_packets_while_spectating,
-   cf_netonly
-) {}
-
-// [CG] Packet buffer flushing when the player respawns.
-VARIABLE_TOGGLE(
-   cl_flush_packet_buffer_on_respawn,
-   &default_cl_flush_packet_buffer_on_respawn,
-   onoff
-);
-CONSOLE_VARIABLE(
-   flush_packet_buffer_on_respawn,
-   cl_flush_packet_buffer_on_respawn,
-   cf_netonly
-) {}
-
-// [CG] Damage screen ("red screen") factor.
+// [CG] Damage screen ("red screen") cap.
 VARIABLE_INT(
    damage_screen_cap,
    &default_damage_screen_cap,
-   0, 100, NULL
+   0, NUMREDPALS, NULL
 );
 CONSOLE_VARIABLE(damage_screen_cap, damage_screen_cap, 0) {}
 
@@ -224,17 +181,13 @@ CONSOLE_COMMAND(spectate, cf_netonly)
 
 void CL_AddCommands(void)
 {
-   C_AddCommand(prediction);
-   C_AddCommand(predict_shots);
-   C_AddCommand(constant_prediction);
    C_AddCommand(team);
    C_AddCommand(show_netstats);
    C_AddCommand(show_timer);
    C_AddCommand(show_team);
-   C_AddCommand(flush_packet_buffer);
+   C_AddCommand(predict_shots);
+   C_AddCommand(packet_buffer);
    C_AddCommand(packet_buffer_size);
-   C_AddCommand(buffer_packets_while_spectating);
-   C_AddCommand(flush_packet_buffer_on_respawn);
    C_AddCommand(damage_screen_cap);
    C_AddCommand(disconnect);
    C_AddCommand(reconnect);

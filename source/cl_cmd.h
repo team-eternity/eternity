@@ -25,23 +25,14 @@
 //----------------------------------------------------------------------------
 
 
-extern unsigned int cl_packet_buffer_size;
-extern unsigned int default_cl_packet_buffer_size;
-extern unsigned int cl_flush_packet_buffer_on_death_speed;
-extern unsigned int default_cl_flush_packet_buffer_on_death_speed;
-extern unsigned int damage_screen_cap;
-extern unsigned int default_damage_screen_cap;
-extern bool cl_flush_packet_buffer;
-extern bool cl_enable_prediction;
-extern bool default_cl_enable_prediction;
 extern bool cl_predict_shots;
 extern bool default_cl_predict_shots;
-extern bool cl_buffer_packets_while_spectating;
-extern bool default_cl_buffer_packets_while_spectating;
-extern bool cl_flush_packet_buffer_on_respawn;
-extern bool default_cl_flush_packet_buffer_on_respawn;
-extern bool cl_constant_prediction;
-extern bool default_cl_constant_prediction;
+extern bool cl_packet_buffer_enabled;
+extern bool default_cl_packet_buffer_enabled;
+extern unsigned int cl_packet_buffer_size;
+extern unsigned int default_cl_packet_buffer_size;
+extern unsigned int damage_screen_cap;
+extern unsigned int default_damage_screen_cap;
 
 void CL_AddCommands(void);
 

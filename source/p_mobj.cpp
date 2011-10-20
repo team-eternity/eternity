@@ -24,6 +24,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <list>
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -41,6 +43,7 @@
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "i_thread.h"
 #include "info.h"
 #include "in_lude.h"
 #include "m_random.h"
@@ -68,12 +71,14 @@
 #include "v_misc.h"
 #include "v_video.h"
 
-#include "cs_main.h" // [CG] 09/23/11
+#include "cs_main.h"  // [CG] 09/23/11
 #include "cs_netid.h" // [CG] 09/23/11
-#include "cl_net.h" // [CG] 09/23/11
-#include "cl_main.h" // [CG] 09/23/11
-#include "cl_pred.h" // [CG] 09/23/11
-#include "sv_main.h" // [CG] 09/23/11
+#include "cs_ctf.h"   // [CG] 10/20/11
+#include "cl_buf.h"   // [CG] 10/20/11
+#include "cl_net.h"   // [CG] 09/23/11
+#include "cl_main.h"  // [CG] 09/23/11
+#include "cl_pred.h"  // [CG] 09/23/11
+#include "sv_main.h"  // [CG] 09/23/11
 
 void P_FallingDamage(player_t *);
 
@@ -1478,6 +1483,9 @@ void Mobj::Think()
    // cycle through states,
    // calling action functions at transitions
    // killough 11/98: simplify
+
+   if(this->player && (!clientserver || ((this->player - players) != 0)))
+      CS_CheckCarriedFlagPosition(this->player - players);
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {

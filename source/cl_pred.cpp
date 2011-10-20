@@ -43,6 +43,7 @@
 bool cl_predicting = false;
 
 static cs_cmd_t local_commands[MAX_POSITIONS];
+static position_t last_server_position;
 
 void CL_InitPrediction(void)
 {
@@ -55,45 +56,11 @@ cs_cmd_t* CL_GetCurrentCommand(void)
    return &local_commands[cl_current_world_index % MAX_POSITIONS];
 }
 
-void CL_PredictPlayerPosition(unsigned int index)
+void CL_PredictPlayerPosition(unsigned int index, bool think)
 {
-   CS_SetPlayerCommand(consoleplayer, &local_commands[index % MAX_POSITIONS]);
-   if(players[consoleplayer].playerstate == PST_DEAD)
-   {
-      players[consoleplayer].cmd.forwardmove = 0;
-      players[consoleplayer].cmd.sidemove = 0;
-      players[consoleplayer].cmd.look = 0;
-      players[consoleplayer].cmd.angleturn = 0;
-      if(players[consoleplayer].cmd.buttons & BT_USE)
-         players[consoleplayer].cmd.buttons = BT_USE;
-      else
-         players[consoleplayer].cmd.buttons = 0;
-      players[consoleplayer].cmd.actions = 0;
-   }
-#if _PRED_DEBUG
-   printf(
-      "CL_PredictPlayerPosition (%3u/%3u): Predicting...\n  %u: ",
-      cl_current_world_index,
-      cl_latest_world_index,
-      index
+   CS_RunPlayerCommand(
+      consoleplayer, &local_commands[index % MAX_POSITIONS].ticcmd, think
    );
-   CS_PrintTiccmd(&players[consoleplayer].cmd);
-#endif
-
-   P_PlayerThink(&players[consoleplayer]);
-#if _PRED_DEBUG
-   printf("  ");
-   CS_PrintPlayerPosition(consoleplayer, index);
-#endif
-
-#if _SECTOR_PRED_DEBUG
-   printf(
-      "CL_PredictPlayerPosition: Sector %2u: %3u/%3u\n",
-      _DEBUG_SECTOR,
-      sectors[_DEBUG_SECTOR].ceilingheight >> FRACBITS,
-      sectors[_DEBUG_SECTOR].floorheight >> FRACBITS
-   );
-#endif
 }
 
 void CL_PredictFrom(unsigned int start, unsigned int end)
@@ -101,30 +68,37 @@ void CL_PredictFrom(unsigned int start, unsigned int end)
    unsigned int i;
 
    for(i = start; i < end; i++)
-      CL_PredictPlayerPosition(i);
+      CL_PredictPlayerPosition(i, true);
 }
 
 void CL_RePredict(unsigned int start, unsigned int end)
 {
    unsigned int i;
 
-#if _PRED_DEBUG
-   printf("CL_RePredict: Re-predicting from %u=>%u.\n", start, end);
-#endif
-
    cl_predicting = true;
    for(i = start; i < end; i++)
    {
       CL_LoadSectorPositions(i);
-      CL_PredictPlayerPosition(i);
-      players[consoleplayer].mo->Think();
+      CL_PredictPlayerPosition(i, true);
    }
    cl_predicting = false;
-   // CL_LoadSectorState(cl_current_world_index);
    CL_LoadSectorPositions(cl_current_world_index);
 
-#if _PRED_DEBUG
-   printf("CL_RePredict: Done.\n");
-#endif
+}
+
+void CL_StoreLastServerPosition(position_t *new_server_position, uint32_t index)
+{
+   CS_CopyPosition(&last_server_position, new_server_position);
+   last_server_position.world_index = index;
+}
+
+void CL_LoadLastServerPosition(void)
+{
+   CS_SetPlayerPosition(consoleplayer, &last_server_position);
+}
+
+uint32_t CL_GetLastServerPositionIndex(void)
+{
+   return last_server_position.world_index;
 }
 

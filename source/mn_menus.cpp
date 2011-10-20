@@ -1056,7 +1056,8 @@ static menuitem_t mn_player_items[] =
    {it_variable,       "player name",          "name"},
    {it_toggle,         "player colour",        "colour"},
    {it_toggle,         "handedness",           "lefthanded"},
-   {it_variable, "packet buffer size", "packet_buffer_size"},
+   {it_toggle,         "packet buffer",        "packet_buffer"},
+   {it_variable,       "packet buffer size",   "packet_buffer_size"},
    {it_toggle,         "player skin",          "skin"},
    {it_runcmd,         "skin viewer...",       "skinviewer"},
    {it_gap},
@@ -2132,6 +2133,7 @@ static menuitem_t mn_sound_items[] =
    {it_info,       FC_GOLD "Misc"},
    {it_toggle,     "Precache sounds",              "s_precache"},
    {it_toggle,     "Pitched sounds",               "s_pitched"},
+   {it_toggle,     "Announcer",                    "announcer_type"},
    {it_end}
 };
 
@@ -3373,7 +3375,6 @@ static menuitem_t mn_clientserverkeys_items[] =
    {it_binding, "spectate",             "spectate"},
    {it_binding, "spectate_prev",        "spectate_prev"},
    {it_binding, "spectate_next",        "spectate_next"},
-   {it_binding, "flush_packet_buffer",  "flush_packet_buffer"},
    {it_end}
 };
 

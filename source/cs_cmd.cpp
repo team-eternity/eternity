@@ -24,14 +24,17 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-
+#include "z_zone.h"
 #include "doomstat.h"
-#include "d_ticcmd.h"
+#include "d_event.h"
 #include "d_player.h"
+#include "d_ticcmd.h"
+#include "p_mobj.h"
+#include "p_user.h"
 
-#include "cs_position.h"
 #include "cs_cmd.h"
+#include "cs_ctf.h"
+#include "cs_position.h"
 
 void CS_PrintCommand(cs_cmd_t *command)
 {
@@ -147,5 +150,30 @@ void CS_SetPlayerCommand(unsigned int playernum, cs_cmd_t *command)
    player->cmd.angleturn   = command->ticcmd.angleturn;
    player->cmd.buttons     = command->ticcmd.buttons;
    player->cmd.actions     = command->ticcmd.actions;
+}
+
+void CS_RunPlayerCommand(int playernum, ticcmd_t *cmd, bool think)
+{
+   player_t *player = &players[playernum];
+
+   memcpy(&player->cmd, cmd, sizeof(ticcmd_t));
+
+   if(player->playerstate == PST_DEAD)
+   {
+      player->cmd.forwardmove = 0;
+      player->cmd.sidemove = 0;
+      player->cmd.look = 0;
+      player->cmd.angleturn = 0;
+      if(player->cmd.buttons & BT_USE)
+         player->cmd.buttons = BT_USE;
+      else
+         player->cmd.buttons = 0;
+      player->cmd.actions = 0;
+   }
+
+   P_RunPlayerCommand(playernum);
+
+   if(think && player->mo)
+      player->mo->Think();
 }
 

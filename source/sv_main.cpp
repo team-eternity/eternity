@@ -1325,80 +1325,6 @@ bool SV_AuthorizeClient(int playernum, const char *password)
    return false;
 }
 
-static void run_player_command(int playernum, cs_buffered_command_t *bufcmd)
-{
-   server_client_t *server_client = &server_clients[playernum];
-
-   server_client->command_world_index = bufcmd->command.world_index;
-   memcpy(&players[playernum].cmd, &bufcmd->command.ticcmd, sizeof(ticcmd_t));
-
-   P_RunPlayerCommand(playernum);
-   server_client->last_command_run_index = bufcmd->command.world_index;
-
-   efree(bufcmd);
-}
-
-bool SV_RunPlayerCommands(int playernum)
-{
-   cs_buffered_command_t *bufcmd;
-   client_t *client = &clients[playernum];
-   server_client_t *sc = &server_clients[playernum];
-
-   if(!playeringame[playernum])
-      return false;
-
-   if(M_QueueIsEmpty(&sc->commands))
-   {
-      // [CG] The client's dropped this command, so increment the number of
-      //      commands dropped.
-      if(!client->spectating && sc->received_command_for_current_map)
-      {
-#if _CMD_DEBUG
-         printf(
-            "SV_RunPlayerCommands (%u): Player %d dropped a command (%u).\n",
-            sv_world_index,
-            playernum,
-            sc->commands_dropped
-         );
-#endif
-         sc->commands_dropped++;
-         if(sc->commands_dropped > MAX_POSITIONS)
-            SV_DisconnectPlayer(playernum, dr_excessive_latency);
-      }
-      return false;
-   }
-
-   // [CG] Run at least one command, whether dead, spectating, or otherwise.
-   bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
-   run_player_command(playernum, bufcmd);
-
-   // [CG] If smooth player movement is disabled or the player is spectating,
-   //      run all commands in the buffer.
-
-   // [CG] If the player is spectating, run all the commands in the buffer.
-   if(clients[playernum].spectating)
-   {
-      while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)))
-         run_player_command(playernum, bufcmd);
-   }
-   else if(players[playernum].playerstate == PST_DEAD &&
-           bufcmd->command.ticcmd.actions == 0 &&
-           bufcmd->command.ticcmd.buttons == 0)
-   {
-      // [CG] Otherwise, if a player's dead, run through all their commands
-      //      that don't have buttons or actions active.
-      while((bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands)) &&
-            bufcmd->command.ticcmd.actions == 0 &&
-            bufcmd->command.ticcmd.buttons == 0)
-      {
-         run_player_command(playernum, bufcmd);
-      }
-   }
-
-   sc->commands_dropped = 0;
-   return true;
-}
-
 void SV_SaveActorPositions(void)
 {
    Mobj *actor;
@@ -1411,6 +1337,11 @@ void SV_SaveActorPositions(void)
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
       if(!(actor = thinker_cast<Mobj *>(think)))
+         continue;
+
+      // [CG] Don't save/broadcast carried flag actor positions, they're always
+      //      stuck to their carrier.
+      if(CS_ActorIsCarriedFlag(actor))
          continue;
 
       if(actor->player != NULL)
@@ -1781,7 +1712,6 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    client_t *client = &clients[playernum];
    server_client_t *server_client = &server_clients[playernum];
    cs_cmd_t *received_command = &message->command;
-   ticcmd_t *ticcmd = &received_command->ticcmd;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
@@ -1806,22 +1736,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    SV_LoadClientOptions(playernum);
    server_client->command_world_index = received_command->world_index;
-   memcpy(&player->cmd, ticcmd, sizeof(ticcmd_t));
-   if(player->playerstate == PST_DEAD)
-   {
-      player->cmd.forwardmove = 0;
-      player->cmd.sidemove = 0;
-      player->cmd.look = 0;
-      player->cmd.angleturn = 0;
-      if(player->cmd.buttons & BT_USE)
-         player->cmd.buttons = BT_USE;
-      else
-         player->cmd.buttons = 0;
-      player->cmd.actions = 0;
-   }
-   P_RunPlayerCommand(playernum);
-   if(player->mo)
-      player->mo->Think();
+   CS_RunPlayerCommand(playernum, &received_command->ticcmd, true);
    server_client->last_command_run_index = received_command->world_index;
    SV_RestoreServerOptions();
 }

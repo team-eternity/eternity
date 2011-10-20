@@ -102,9 +102,7 @@ struct event_t;
 //      spawned.
 
 #define CL_SHOULD_PREDICT_SHOT(shooter) (clientside && ( \
-   cl_enable_prediction && \
-   cl_predict_shots     && \
-   ((shooter)->player - players == consoleplayer)) \
+   cl_predict_shots && ((shooter)->player - players == consoleplayer)) \
 )
 
 #define CS_SHOULD_SHOW_SHOT(shooter) ( \
@@ -115,14 +113,14 @@ struct event_t;
    serverside || \
    cl_spawning_actor_from_message || \
    gamestate != GS_LEVEL || \
-   !cl_received_sync \
+   !cl_packet_buffer.synchronized() \
 )
 
 #define CS_REMOVE_ACTOR_OK (\
    serverside || \
    cl_removing_actor_from_message || \
    gamestate != GS_LEVEL || \
-   !cl_received_sync \
+   !cl_packet_buffer.synchronized() \
 )
 
 typedef enum

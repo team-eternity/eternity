@@ -50,7 +50,9 @@
 
 #include "cs_position.h"
 #include "cs_main.h"  // [CG] 09/18/11
+#include "cl_cmd.h"   // [CG] 10/19/11
 #include "cl_pred.h"  // [CG] 09/18/11
+#include "cl_main.h"  // [CG] 10/19/11
 #include "sv_main.h"  // [CG] 09/18/11
 #include "sv_queue.h" // [CG] 09/18/11
 
@@ -441,6 +443,9 @@ void P_RunPlayerCommand(int playernum)
    player_t *player = &players[playernum];
    ticcmd_t *cmd = &player->cmd;
 
+   if(clientserver && !player->mo)
+      return;
+
    // chain saw run forward
    if(player->mo->flags & MF_JUSTATTACKED)
    {
@@ -626,13 +631,10 @@ void P_PlayerThink(player_t *player)
       return;
    }
 
-   if(!clientserver || (CS_CLIENT && (playernum == consoleplayer)))
+   if(!clientserver)
       P_RunPlayerCommand(playernum);
-
-   // [CG] The player can be removed during P_RunPlayerCommand, so check.
-   // [CG] FIXME: Is the above still true?
-   if(!playeringame[playernum])
-      return;
+   else if(CS_CLIENT && playernum == consoleplayer)
+      CL_PredictPlayerPosition(cl_current_world_index, false);
 
    // [CG] 09/18/11: Don't scream if predicting or spectating (rofl).
    if(!clientserver || (!clients[playernum].spectating && !cl_predicting))

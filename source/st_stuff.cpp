@@ -57,15 +57,6 @@
 // STATUS BAR DATA
 //
 
-// Palette indices.
-// For damage/bonus red-/gold-shifts
-#define STARTREDPALS            1
-#define STARTBONUSPALS          9
-#define NUMREDPALS              8
-#define NUMBONUSPALS            4
-// Radiation suit, green shift.
-#define RADIATIONPAL            13
-
 // Location of status bar
 #define ST_X                    0
 #define ST_X2                   104
@@ -697,17 +688,16 @@ static void ST_doPaletteStuff(void)
       if(bzc > cnt)
          cnt = bzc;
    }
-   else if(cnt > damage_screen_cap &&
-           damage_screen_cap < 100 &&
-           (dmflags2 & dmf_allow_damage_screen_change))
-   {
-      cnt = damage_screen_cap;
-   }
 
    if(cnt)
    {
       palette = (cnt+7)>>3;
-      if(palette >= NUMREDPALS)
+      if(!plyr->powers[pw_strength] && damage_screen_cap < NUMREDPALS)
+      {
+         if(palette >= damage_screen_cap)
+            palette = damage_screen_cap - 1;
+      }
+      else if(palette >= NUMREDPALS)
          palette = NUMREDPALS-1;
       palette += STARTREDPALS;
    }

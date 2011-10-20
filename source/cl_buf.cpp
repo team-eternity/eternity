@@ -43,20 +43,20 @@ NetPacketBuffer cl_packet_buffer;
 
 int CL_serviceNetwork(void *)
 {
-   while(cl_packet_buffer.buffering_independently)
+   while(cl_packet_buffer.m_buffering_independently)
       CS_ReadFromNetwork(1000 / TICRATE);
    return 0;
 }
 
 bool NetPacket::shouldProcessNow()
 {
-   if(!cl_received_sync)
+   if(!cl_packet_buffer.synchronized())
       return true;
 
-   if(cl_packet_buffer.getSize() == 1)
+   if(!cl_packet_buffer.enabled())
       return true;
 
-   if(cl_constant_prediction && (getWorldIndex() <= cl_current_world_index))
+   if(getWorldIndex() <= cl_current_world_index)
       return true;
 
    return false;
@@ -189,59 +189,24 @@ void NetPacket::process()
 
 NetPacketBuffer::NetPacketBuffer(void)
 {
-   buffering_independently = false;
-   needs_flushing = false;
-   net_service_thread = NULL;
-   tics_stored = 0;
-   size = 0;
-}
-
-uint32_t NetPacketBuffer::getFillingSize(void)
-{
-   switch(size)
-   {
-      case 0:
-         return ADAPTIVE_LATENCY_AMOUNT;
-      case 1:
-         return 0;
-      default:
-         return size;
-   }
-}
-
-bool NetPacketBuffer::add(char *data, uint32_t data_size)
-{
-   NetPacket *packet = new NetPacket(data, data_size);
-
-   if(packet->getType() == nm_ticfinished)
-      tics_stored++;
-
-   if(filling() && tics_stored > getFillingSize())
-      setFull();
-
-   if((!buffering_independently) && !filling() && packet->shouldProcessNow())
-   {
-      packet->process();
-
-      if(packet->getType() == nm_ticfinished)
-         tics_stored--;
-
-      delete packet;
-      return true;
-   }
-
-   packet_buffer.push_back(packet);
-   return false;
+   m_buffering_independently = false;
+   m_needs_flushing = false;
+   m_needs_filling = false;
+   m_synchronized = false;
+   m_enabled = false;
+   m_net_service_thread = NULL;
+   m_size = 0;
+   m_capacity = 0;
 }
 
 void NetPacketBuffer::startBufferingIndependently()
 {
-   if(buffering_independently)
+   if(m_buffering_independently)
       return;
 
-   buffering_independently = true;
-   net_service_thread = I_CreateThread(CL_serviceNetwork, NULL);
-   if(net_service_thread == NULL)
+   m_buffering_independently = true;
+   m_net_service_thread = I_CreateThread(CL_serviceNetwork, NULL);
+   if(m_net_service_thread == NULL)
    {
       I_Error(
          "Unable to create thread to service network independently, "
@@ -252,18 +217,91 @@ void NetPacketBuffer::startBufferingIndependently()
 
 void NetPacketBuffer::stopBufferingIndependently()
 {
-   buffering_independently = false;
-   I_WaitThread(net_service_thread, NULL);
+   m_buffering_independently = false;
+   I_WaitThread(m_net_service_thread, NULL);
+}
+
+void NetPacketBuffer::setSynchronized(bool b)
+{
+   m_synchronized = b;
+
+   if(synchronized())
+   {
+      setNeedsFlushing(true);
+      setNeedsFilling(true);
+   }
+   else
+   {
+      disable();
+   }
+}
+
+bool NetPacketBuffer::overflowed(void)
+{
+   return m_size > capacity();
+}
+
+uint32_t NetPacketBuffer::capacity(void)
+{
+   uint32_t c = m_capacity;
+
+   if(adaptive())
+   {
+      if(clients[consoleplayer].transit_lag <= TICRATE)
+         return 2;
+      else
+         return (clients[consoleplayer].transit_lag / TICRATE) * 2;
+   }
+
+   return c;
+}
+
+void NetPacketBuffer::setCapacity(uint32_t new_capacity)
+{
+   if(new_capacity >= CL_MAX_BUFFER_SIZE || new_capacity == m_capacity)
+      return;
+
+   setNeedsFlushing(true);
+   setNeedsFilling(true);
+
+   m_capacity = new_capacity;
+}
+
+void NetPacketBuffer::add(char *data, uint32_t data_size)
+{
+   NetPacket *packet = new NetPacket(data, data_size);
+
+   if(packet->getType() == nm_ticfinished)
+      m_size++;
+
+   if(m_needs_filling && m_size > capacity())
+      m_needs_filling = false;
+
+   if((!m_buffering_independently) &&
+      (!m_needs_filling) &&
+      (packet->shouldProcessNow()))
+   {
+      packet->process();
+
+      if(packet->getType() == nm_ticfinished)
+         m_size--;
+
+      delete packet;
+   }
+   else
+   {
+      packet_buffer.push_back(packet);
+   }
 }
 
 void NetPacketBuffer::processPacketsForIndex(uint32_t index)
 {
    NetPacket *packet;
 
-   if(cl_received_sync && cl_packet_buffer.getSize() == 1)
+   if(synchronized() && !enabled())
       return;
 
-   if(filling())
+   if(m_needs_filling)
       return;
 
    while(true)
@@ -279,7 +317,7 @@ void NetPacketBuffer::processPacketsForIndex(uint32_t index)
       packet->process();
 
       if(packet_buffer.front()->getType() == nm_ticfinished)
-         tics_stored--;
+         m_size--;
 
       packet_buffer.pop_front();
       delete(packet);
@@ -290,7 +328,7 @@ void NetPacketBuffer::processAllPackets()
 {
    NetPacket *packet;
 
-   if(filling())
+   if(m_needs_filling)
       return;
 
    while(!packet_buffer.empty())
@@ -300,30 +338,10 @@ void NetPacketBuffer::processAllPackets()
       packet_buffer.front()->process();
 
       if(packet_buffer.front()->getType() == nm_ticfinished)
-         tics_stored--;
+         m_size--;
 
       packet_buffer.pop_front();
       delete(packet);
    }
-}
-
-bool NetPacketBuffer::overflowed(void)
-{
-   return tics_stored > getFillingSize();
-}
-
-void NetPacketBuffer::setSize(uint32_t new_size)
-{
-   uint32_t latency_in_tics = ADAPTIVE_LATENCY_AMOUNT;
-
-   if(new_size >= CL_MAX_BUFFER_SIZE || new_size == size)
-      return;
-
-   setNeedsFlushing(true);
-
-   if(new_size != 1)
-      fill();
-
-   size = new_size;
 }
 

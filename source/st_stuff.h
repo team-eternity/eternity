@@ -35,6 +35,15 @@
 
 struct patch_t;
 
+// Palette indices.
+// For damage/bonus red-/gold-shifts
+#define STARTREDPALS            1
+#define STARTBONUSPALS          9
+#define NUMREDPALS              8
+#define NUMBONUSPALS            4
+// Radiation suit, green shift.
+#define RADIATIONPAL            13
+
 // Size of statusbar.
 // Now sensitive for scaling.
 

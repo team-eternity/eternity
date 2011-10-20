@@ -290,7 +290,7 @@ void CL_SendAuthMessage(const char *password)
       char *, cs_server_password, (password_length + 1) * sizeof(char)
    );
 
-   printf("Authenticating...\n", cs_server_password);
+   printf("Authenticating...\n");
 
    memset(cs_server_password, 0, password_length + 1);
    strncpy(cs_server_password, password, password_length);
@@ -414,9 +414,14 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       message->state_size
    );
 
+   // [CG] FIXME WTF
    cl_setting_sector_positions = true;
+   cl_spawning_actor_from_message = true;
+   cl_removing_actor_from_message = true;
    P_LoadGame(cs_state_file_path);
    cl_setting_sector_positions = false;
+   cl_spawning_actor_from_message = false;
+   cl_removing_actor_from_message = false;
 
    for(i = 1; i < team_color_max; i++)
    {
@@ -429,7 +434,6 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    }
 
    CL_SendSyncRequest();
-   cl_packet_buffer.setSize(cl_packet_buffer_size);
 }
 
 void CL_HandleSyncMessage(nm_sync_t *message)
@@ -440,7 +444,11 @@ void CL_HandleSyncMessage(nm_sync_t *message)
    levelstarttic    = message->levelstarttic;
    cl_current_world_index = cl_latest_world_index = message->world_index;
 
-   cl_received_sync = true;
+   cl_packet_buffer.setSynchronized(true);
+   cl_packet_buffer.setCapacity(cl_packet_buffer_size);
+   if(cl_packet_buffer_enabled)
+      cl_packet_buffer.enable();
+
    CS_UpdateQueueMessage();
 }
 
@@ -458,12 +466,11 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
    cs_current_map_number = message->new_map_number;
    // G_SetGameMapName(cs_maps[message->new_map_number].name);
    G_DoCompleted(message->enter_intermission);
-   cl_received_sync = false;
+   cl_packet_buffer.disable();
 }
 
 void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
-   unsigned int i;
    static unsigned int demo_map_number = 0;
 
    if(cs_demo_playback)
@@ -565,29 +572,8 @@ void CL_HandleClientInitMessage(nm_clientinit_t *message)
 
 void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 {
-   /*
-   fixed_t oldbob;
-   fixed_t oldviewz;
-   fixed_t oldviewheight;
-   fixed_t olddeltaviewheight;
-   */
    client_t *client;
    unsigned int playernum = message->client_number;
-
-#if _PRED_DEBUG || _CMD_DEBUG || _UNLAG_DEBUG
-   printf(
-      "CL_HandleClientStatusMessage (%3u/%3u): %3u/%3u/%3u.\n",
-      cl_current_world_index,
-      cl_latest_world_index,
-      message->world_index,
-      message->last_command_run,
-      message->position.world_index
-   );
-   printf("  ");
-   CS_PrintPlayerPosition(playernum, cl_current_world_index);
-   printf("  ");
-   CS_PrintPosition(&message->position);
-#endif
 
    if(playernum > MAX_CLIENTS || !playeringame[playernum])
       return;
@@ -615,20 +601,17 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    if(client->spectating)
       return;
 
-   CS_SetPlayerPosition(playernum, &message->position);
    clients[playernum].floor_status = message->floor_status;
 
-   if(playernum != consoleplayer)
-      return;
+   if(playernum == consoleplayer)
+      CL_StoreLastServerPosition(&message->position, message->last_command_run);
+   else if(players[playernum].mo)
+      players[playernum].mo->Think();
 
-   // [CG] Re-predicts from the position just received from the server on.
-   if(cl_enable_prediction && message->last_command_run > 0)
-      CL_RePredict(message->last_command_run + 1, cl_current_world_index);
-
-#if _PRED_DEBUG || _CMD_DEBUG || _UNLAG_DEBUG
-   printf("CL_HandleClientStatusMessage:\n  ");
-   CS_PrintPlayerPosition(playernum, cl_current_world_index);
-#endif
+   /*
+   CS_SetPlayerPosition(playernum, &message->position);
+   clients[playernum].floor_status = message->floor_status;
+   */
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
@@ -677,7 +660,7 @@ void CL_HandlePlayerWeaponStateMessage(nm_playerweaponstate_t *message)
    if(!playeringame[message->player_number])
       return;
 
-   if(message->player_number != consoleplayer || !cl_enable_prediction)
+   if(message->player_number != consoleplayer)
    {
       cl_setting_player_weapon_sprites = true;
       P_SetPsprite(
@@ -797,7 +780,6 @@ void CL_HandlePlayerMessage(nm_playermessage_t *message)
 void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
 {
    if(cl_predict_shots &&
-      cl_enable_prediction &&
       message->shooter_net_id == players[consoleplayer].mo->net_id)
    {
       return;
@@ -818,7 +800,6 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
    Mobj *target;
 
    if(cl_predict_shots &&
-      cl_enable_prediction &&
       message->shooter_net_id == players[consoleplayer].mo->net_id)
    {
       return;
@@ -892,9 +873,9 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
    {
       teamcolor_t color;
 
-      if(message->type == safe_red_flag_type           ||
-           message->type == safe_dropped_red_flag_type ||
-           message->type == safe_carried_red_flag_type)
+      if(message->type == safe_red_flag_type         ||
+         message->type == safe_dropped_red_flag_type ||
+         message->type == safe_carried_red_flag_type)
       {
          color = team_color_red;
       }
@@ -992,8 +973,8 @@ void CL_HandleActorStateMessage(nm_actorstate_t *message)
       return;
    }
 
-   // [CG] Don't accept state messages for ourselves if we're predicting.
-   if(!cl_enable_prediction || actor != players[consoleplayer].mo)
+   // [CG] Don't accept state messages for ourselves because we're predicting.
+   if(actor != players[consoleplayer].mo)
       CL_SetMobjState(actor, message->state_number);
 }
 
@@ -1640,7 +1621,7 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
       return;
 
    // [CG] Ignore announcer events if we haven't received sync yet.
-   if(!cl_received_sync)
+   if(!cl_packet_buffer.synchronized())
       return;
 
    if((source = NetActors.lookup(message->source_net_id)) == NULL)

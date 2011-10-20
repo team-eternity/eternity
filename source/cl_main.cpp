@@ -101,7 +101,6 @@ Json::Value cs_client_password_json;
 unsigned int cl_current_world_index = 0;
 unsigned int cl_latest_world_index  = 0;
 
-bool cl_received_sync = false;
 bool cl_initial_spawn = true;
 bool cl_spawning_actor_from_message = false;
 bool cl_removing_actor_from_message = false;
@@ -132,7 +131,7 @@ void CL_RunWorldUpdate(void)
    if(displayplayer != consoleplayer && clients[displayplayer].spectating)
       CS_SetDisplayPlayer(consoleplayer);
 
-   if(gamestate == GS_LEVEL && cl_received_sync && !cs_demo_playback)
+   if(gamestate == GS_LEVEL && cl_packet_buffer.synchronized() && !cs_demo_playback)
       CL_SendCommand();
 
    G_Ticker();
@@ -144,13 +143,7 @@ void CL_RunAllWorldUpdates(void)
    unsigned int old_world_index = cl_current_world_index;
    unsigned int new_world_index = cl_latest_world_index - 2;
 
-   if(!cl_packet_buffer.disabled())
-      printf("Running all world updates (%u).\n", old_world_index);
-
-   if(cl_packet_buffer.getSize() == 0)
-      new_world_index -= ADAPTIVE_LATENCY_AMOUNT;
-   else if(!cl_packet_buffer.disabled())
-      new_world_index -= cl_packet_buffer.getSize();
+   new_world_index -= cl_packet_buffer.capacity();
 
    while(cl_current_world_index < new_world_index)
       CL_RunWorldUpdate();
@@ -251,7 +244,7 @@ void CL_Reset(void)
 {
    cl_current_world_index = 0;
    cl_latest_world_index = 0;
-   cl_received_sync = false;
+   cl_packet_buffer.setSynchronized(false);
    consoleplayer = displayplayer = 0;
    CS_InitPlayers();
    CS_ZeroClients();
@@ -266,6 +259,8 @@ void CL_Connect(void)
 
    printf("Connecting to %s:%d\n", address, server_address->port);
    efree(address);
+
+   cl_packet_buffer.setSynchronized(false);
 
    net_peer = enet_host_connect(net_host, server_address, MAX_CHANNELS, 0);
    if(net_peer == NULL)
@@ -584,7 +579,7 @@ void CL_RunDemoTics(void)
 void CL_TryRunTics(void)
 {
    int current_tic;
-   bool received_sync = cl_received_sync;
+   bool received_sync = cl_packet_buffer.synchronized();
    static int new_tic;
 
    current_tic = new_tic;
@@ -616,20 +611,15 @@ void CL_TryRunTics(void)
    //      sync, so only honor cl_packet_buffer.needsFlushing() if sync's been
    //      received.  Also always process all packets if the packet buffer's
    //      size is 1.
-   if(cl_received_sync && !cl_packet_buffer.filling())
+   if(cl_packet_buffer.synchronized() && !cl_packet_buffer.needsFilling())
    {
-      if(cl_packet_buffer.needsFlushing() || cl_packet_buffer.getSize() == 1)
+      if(cl_packet_buffer.needsFlushing() || !cl_packet_buffer.enabled())
       {
          CL_RunAllWorldUpdates();
          cl_packet_buffer.setNeedsFlushing(false);
       }
 
-      // [CG] When constant prediction is enabled, 1 world is always run each
-      //      TIC.  Otherwise run a world if the server finished an index.
-      if(cl_constant_prediction)
-         CL_RunWorldUpdate();
-      else if(cl_packet_buffer.ticsStored())
-         CL_RunWorldUpdate();
+      CL_RunWorldUpdate();
    }
 
    // [CG] For the rest of the TIC, try reading from the network.  Even though
@@ -645,7 +635,7 @@ void CL_TryRunTics(void)
       } while((new_tic = I_GetTime()) == current_tic);
    }
 
-   if(cl_received_sync && received_sync)
+   if(cl_packet_buffer.synchronized() && received_sync)
    {
       if(!net_peer)
       {

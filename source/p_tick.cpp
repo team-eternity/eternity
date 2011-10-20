@@ -43,7 +43,7 @@
 
 #include "cs_main.h"     // [CG] 09/18/11
 #include "cs_position.h" // [CG] 09/18/11
-#include "cl_cmd.h"     // [CG] 09/18/11
+#include "cl_cmd.h"      // [CG] 09/18/11
 #include "cl_main.h"     // [CG] 09/18/11
 #include "cl_pred.h"     // [CG] 09/18/11
 #include "sv_main.h"     // [CG] 09/18/11
@@ -319,34 +319,25 @@ void P_Ticker(void)
          if(CS_SERVER)
             SV_LoadClientOptions(i);
 
-         /*
-         if(!clientserver || CS_SERVER || CS_DEMO)
-            P_PlayerThink(&players[i]);
-         else if(i != consoleplayer)
+         if(CS_CLIENT && i != consoleplayer)
+         {
             CL_PlayerThink(i);
-         else if(!cl_enable_prediction && !clients[i].spectating)
-            CL_PredictPlayerPosition(cl_current_world_index);
+         }
          else
-            P_PlayerThink(&players[i]);
-         */
+         {
+            if(CS_CLIENT && i == consoleplayer && !clients[i].spectating)
+            {
+               CL_LoadLastServerPosition();
+               CL_RePredict(
+                  CL_GetLastServerPositionIndex() + 1,
+                  cl_current_world_index
+               );
+            }
 
-         if(serverside || CS_DEMO)
             P_PlayerThink(&players[i]);
-         else if(i != consoleplayer)
-            CL_PlayerThink(i);
-         else if(cl_enable_prediction || clients[i].spectating)
-            CL_PredictPlayerPosition(cl_current_world_index);
+         }
 
-         /*
-         if(!clientserver || CS_SERVER || CS_DEMO)
-            P_PlayerThink(&players[i]);
-         else if(i != consoleplayer)
-            CL_PlayerThink(i);
-         else
-            P_PlayerThink(&players[i]);
-         */
-
-         if(players[i].mo && !CS_SERVER)
+         if(players[i].mo && (clientside))
             players[i].mo->Think();
 
          if(CS_SERVER)

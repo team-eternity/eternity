@@ -1471,7 +1471,7 @@ void S_UpdateMusic(const char *lumpname)
 //
 
 const char *s_announcer_type_names[S_ANNOUNCER_MAX] = {
-   "none", "quake", "unreal tournament"
+   "none", "quake", "unreal"
 };
 
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
