@@ -202,7 +202,9 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(ae_flag_returned, flag_actor);
+            SV_BroadcastAnnouncerEvent(
+               ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
+            );
             SV_BroadcastMessage(
                "%s returned the %s flag", player->name, team_color_names[color]
             );
@@ -213,7 +215,9 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(ae_flag_taken, flag_actor);
+            SV_BroadcastAnnouncerEvent(
+               ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
+            );
             SV_BroadcastMessage(
                "%s picked up the %s flag",
                player->name,
@@ -229,7 +233,9 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(ae_flag_taken, flag_actor);
+            SV_BroadcastAnnouncerEvent(
+               ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
+            );
             SV_BroadcastMessage(
                "%s has taken the %s flag",
                player->name,
@@ -242,7 +248,9 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(ae_flag_captured, flag_actor);
+            SV_BroadcastAnnouncerEvent(
+               ae_flag_captured, CS_GetFlagStandActorForFlag(flag)
+            );
             SV_BroadcastMessage(
                "%s captured the %s flag",
                player->name,
@@ -283,7 +291,9 @@ void CS_DropFlag(int playernum)
 
    if(CS_SERVER)
    {
-      SV_BroadcastAnnouncerEvent(ae_flag_dropped, flag_actor);
+      SV_BroadcastAnnouncerEvent(
+         ae_flag_dropped, CS_GetFlagStandActorForFlag(flag)
+      );
       SV_BroadcastMessage(
          "%s dropped the %s flag",
          players[playernum].name,
@@ -319,7 +329,9 @@ void CS_CTFTicker(void)
       {
          if((flag_actor = NetActors.lookup(flag->net_id)) == NULL)
             continue;
-         SV_BroadcastAnnouncerEvent(ae_flag_returned, flag_actor);
+         SV_BroadcastAnnouncerEvent(
+            ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
+         );
          SV_BroadcastMessage("%s flag returned", team_color_names[color]);
       }
    }
@@ -358,5 +370,10 @@ bool CS_ActorIsCarriedFlag(Mobj *actor)
    }
 
    return false;
+}
+
+Mobj* CS_GetFlagStandActorForFlag(flag_t *flag)
+{
+   return NetActors.lookup(cs_flag_stands[flag - cs_flags].net_id);
 }
 

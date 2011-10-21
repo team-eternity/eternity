@@ -57,7 +57,7 @@ struct event_t;
 
 #define _DEBUG_SECTOR 350
 
-#define LOG_ALL_NETWORK_MESSAGES true
+#define LOG_ALL_NETWORK_MESSAGES false
 
 // [CG] The maximum amount of latency we can tolerate in any situation.  For
 //      the sake of unlagged, this is the maximum amount of latency between any

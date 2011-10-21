@@ -940,8 +940,22 @@ void SV_SendClientInfo(int playernum, int clientnum)
 
 void SV_SpawnPlayer(int playernum, bool as_spectator)
 {
+   Mobj *fog;
    mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(playernum, as_spectator);
+
    SV_BroadcastPlayerSpawned(spawn_point, playernum);
+
+   // [CG] Only create spawn fog for non-spectators.
+   if(!as_spectator)
+   {
+      fog = G_SpawnFog(
+         spawn_point->x << FRACBITS,
+         spawn_point->y << FRACBITS,
+         spawn_point->angle
+      );
+      SV_BroadcastActorSpawned(fog);
+      S_StartSound(fog, GameModeInfo->teleSound);
+   }
 }
 
 void SV_BroadcastNewClient(int clientnum)
@@ -2542,7 +2556,7 @@ void SV_SendNewMap(void)
 
    for(color = team_color_red; color < team_color_max; color++)
    {
-      if(!cs_flag_stands[color].exists)
+      if(!cs_flag_stands[color].net_id)
          continue;
 
       if((flag_actor = NetActors.lookup(cs_flags[color].net_id)))

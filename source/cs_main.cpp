@@ -760,6 +760,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       CS_DropFlag(playernum);
 
       client->team = message->int_value;
+      CS_InitAnnouncer();
       if(client->queue_level == ql_none)
       {
          if(playernum == consoleplayer)
@@ -1203,7 +1204,6 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
                     angle_t angle, bool as_spectator)
 {
    int i;
-   Mobj *fog;
    player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
 
@@ -1211,12 +1211,11 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
 
    playeringame[playernum] = true;
 
-   if(serverside)
+   if(CS_SERVER)
    {
       if(player->mo != NULL)
       {
-         if(CS_SERVER)
-            SV_BroadcastActorRemoved(player->mo);
+         SV_BroadcastActorRemoved(player->mo);
          player->mo->removeThinker();
          player->mo = NULL;
       }
@@ -1229,29 +1228,11 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    if(!CS_HEADLESS || playernum == consoleplayer)
       action_frags = 0;
 
-   // [CG] Spectators create no telefog and make no sounds when they spawn.
-   //      Additionally we don't muck with their colormap.
-   if(!as_spectator)
-   {
-      if(serverside)
-      {
-         fog = G_SpawnFog(x, y, angle);
-         if(CS_SERVER)
-            SV_BroadcastActorSpawned(fog);
-         S_StartSound(fog, GameModeInfo->teleSound);
-      }
-
-      if(CS_TEAMS_ENABLED && client->team != team_color_none)
-         player->colormap = team_colormaps[client->team];
-   }
+   // [CG] Only set non-spectators' colormaps.
+   if(!as_spectator && CS_TEAMS_ENABLED && client->team != team_color_none)
+      player->colormap = team_colormaps[client->team];
 
    player->mo = P_SpawnMobj(x, y, z, player->pclass->type);
-
-   /*
-   // [CG] Spectator actors don't have Net IDs.
-   if(as_spectator)
-      CS_ReleaseActorNetID(player->mo);
-   */
 
    player->mo->colour = player->colormap;
    player->mo->angle = R_WadToAngle(angle);

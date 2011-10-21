@@ -2412,28 +2412,28 @@ spawnit:
    // [CG] 09/17/11: Flags.
    if(mthing->type == RED_FLAG_ID)
    {
-      if(cs_flag_stands[team_color_red].exists)
+      if(cs_flag_stands[team_color_red].net_id)
       {
          I_Error(
             "Multiple %s flag stands, exiting.\n",
             team_color_names[team_color_red]
          );
       }
-      cs_flag_stands[team_color_red].exists = true;
+      cs_flag_stands[team_color_red].net_id = mobj->net_id;
       cs_flag_stands[team_color_red].x = mobj->x;
       cs_flag_stands[team_color_red].y = mobj->y;
       cs_flag_stands[team_color_red].z = mobj->z;
    }
    else if(mthing->type == BLUE_FLAG_ID)
    {
-      if(cs_flag_stands[team_color_blue].exists)
+      if(cs_flag_stands[team_color_blue].net_id)
       {
          I_Error(
             "Multiple %s flag stands, exiting.\n",
             team_color_names[team_color_blue]
          );
       }
-      cs_flag_stands[team_color_blue].exists = true;
+      cs_flag_stands[team_color_blue].net_id = mobj->net_id;
       cs_flag_stands[team_color_blue].x = mobj->x;
       cs_flag_stands[team_color_blue].y = mobj->y;
       cs_flag_stands[team_color_blue].z = mobj->z;

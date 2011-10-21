@@ -60,7 +60,7 @@ typedef enum
 
 typedef struct flag_stand_s
 {
-   bool exists;
+   uint32_t net_id;
    fixed_t x;
    fixed_t y;
    fixed_t z;
@@ -104,6 +104,7 @@ void    CS_DropFlag(int playernum);
 void    CS_CTFTicker(void);
 void    CS_CheckCarriedFlagPosition(int playernum);
 bool    CS_ActorIsCarriedFlag(Mobj *actor);
+Mobj*   CS_GetFlagStandActorForFlag(flag_t *flag);
 
 #endif
 

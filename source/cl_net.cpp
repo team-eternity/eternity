@@ -1645,7 +1645,7 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
    case ae_flag_captured:
       for(i = team_color_none; i < team_color_max; i++)
       {
-         if(cs_flags[i].net_id == message->source_net_id)
+         if(cs_flag_stands[i].net_id == message->source_net_id)
          {
             if((teamcolor_t)i != clients[consoleplayer].team)
             {

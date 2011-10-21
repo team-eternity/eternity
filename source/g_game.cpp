@@ -677,7 +677,7 @@ void G_DoLoadLevel(void)
       if(GameType == gt_ctf)
       {
          for(i = team_color_none; i < team_color_max; i++)
-            if(cs_flag_stands[i].exists)
+            if(cs_flag_stands[i].net_id)
                SV_SpawnFlag(&cs_flags[i]);
       }
    }

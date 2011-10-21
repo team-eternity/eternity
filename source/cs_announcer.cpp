@@ -56,8 +56,8 @@ announcer_event_t red_unreal_tournament_announcer_events[] =
    { "Blue Flag Dropped", "BlueFlagDropped", "Blue Flag Dropped" },
    { "Red Flag Returned", "RedFlagReturned", "Red Flag Returned" },
    { "Blue Flag Returned", "BlueFlagReturned", "Blue Flag Returned" },
-   { "Blue Flag Captured", "BlueFlagCaptured", "Red Team Scores" },
-   { "Red Flag Captured", "RedFlagCaptured", "Blue Team Scores" },
+   { "Blue Flag Captured", "RedTeamScores", "Red Team Scores" },
+   { "Red Flag Captured", "BlueTeamScores", "Blue Team Scores" },
 };
 
 announcer_event_t blue_unreal_tournament_announcer_events[] =
@@ -68,8 +68,8 @@ announcer_event_t blue_unreal_tournament_announcer_events[] =
    { "Red Flag Dropped", "RedFlagDropped", "Red Flag Dropped" },
    { "Blue Flag Returned", "BlueFlagReturned", "Blue Flag Returned" },
    { "Red Flag Returned", "RedFlagReturned", "Red Flag Returned" },
-   { "Red Flag Captured", "RedFlagCaptured", "Blue Team Scores" },
-   { "Blue Flag Captured", "BlueFlagCaptured", "Red Team Scores" },
+   { "Red Flag Captured", "BlueTeamScores", "Blue Team Scores" },
+   { "Blue Flag Captured", "RedTeamScores", "Red Team Scores" },
 };
 
 static announcer_event_t *cs_announcer_events = null_announcer_events;
