@@ -1492,14 +1492,7 @@ VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(announcer_type, s_announcer_type, 0)
 {
-   if(s_announcer_type == S_ANNOUNCER_NONE)
-      CS_SetAnnouncer(NULL);
-   else if(s_announcer_type == S_ANNOUNCER_QUAKE)
-      CS_SetAnnouncer(quake_announcer_events);
-   else if(clients[consoleplayer].team == team_color_blue)
-      CS_SetAnnouncer(blue_unreal_tournament_announcer_events);
-   else
-      CS_SetAnnouncer(red_unreal_tournament_announcer_events);
+   CS_InitAnnouncer();
 }
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
 CONSOLE_VARIABLE(snd_channels, default_numChannels, 0) {}

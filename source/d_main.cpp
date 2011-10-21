@@ -93,7 +93,9 @@
 #include "w_wad.h"
 #include "xl_scripts.h"
 
+#include "cs_announcer.h"
 #include "cs_demo.h"
+#include "cs_hud.h"
 #include "cs_main.h"
 #include "cs_master.h"
 #include "cs_wad.h"
@@ -363,6 +365,8 @@ void D_Display(void)
          break;
       case GS_INTERMISSION:
          IN_Drawer();
+         if(clientserver)
+            CS_DrawChatWidget();
          break;
       case GS_FINALE:
          F_Drawer();
@@ -3336,6 +3340,8 @@ static void D_DoomInit(void)
 
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
+
+   CS_InitAnnouncer();
 
    if(CS_DEMO)
    {

@@ -2417,6 +2417,8 @@ static menuitem_t mn_hud_items[] =
    {it_variable,   "message time (ms)",            "hu_messagetime"},
    {it_toggle,     "obituaries",                   "hu_obituaries"},
    {it_toggle,     "obituary colour",              "hu_obitcolor"},
+   {it_toggle,     "center message color",         "hu_center_mess_color"},
+   {it_toggle,     "enlarge center message",       "hu_center_mess_large"},
    {it_gap},
    {it_info,       FC_GOLD "BOOM HUD options"},
    {it_toggle,     "display type",                 "hu_overlay"},

@@ -84,6 +84,8 @@ char *chat_macros[10];
 extern const char* shiftxform;
 extern const char english_shiftxform[]; // haleyjd: forward declaration
 extern vfont_t *hud_overfont; // [CG] 09/15/11 Added for target names.
+extern vfont_t *in_bigfont; // [CG] 10/20/11 Added for enlarged center message
+extern const char *in_bigfontname;
 //boolean chat_on;
 bool chat_active = false;
 int obituaries = 0;
@@ -233,6 +235,9 @@ void HU_Init(void)
 
    if(!(hud_font = E_FontForName(hud_fontname)))
       I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
+
+   if(!(in_bigfont = E_FontForName(in_bigfontname)))
+      I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
 
    HU_LoadFont(); // overlay font
 
@@ -389,6 +394,10 @@ int hud_msg_scrollup;// whether message list scrolls up
 int message_timer;   // timer used for normal messages
 int showMessages;    // Show messages has default, 0 = off, 1 = on
 int mess_colour = CR_RED;      // the colour of normal messages
+int center_mess_colour = CR_GRAY; // [CG] The colour of center messages
+int center_mess_large = 1; // [CG] Whether to enlarge the center message widget
+int default_center_mess_colour = CR_GRAY;
+int default_center_mess_large = 1;
 
 //
 // HU_MessageTick
@@ -981,6 +990,11 @@ static void HU_InitCenterMessage(void)
    centermessage_widget.y = 0;
    centermessage_widget.message = NULL;
    centermessage_widget.cleartic = 0;
+   if(center_mess_large)
+      centermessage_widget.font = in_bigfont;
+   else
+      centermessage_widget.font = hud_font;
+   centermessage_widget.color = center_mess_colour + 1;
 }
 
 static const char *centermsg_color;
@@ -1008,8 +1022,8 @@ void HU_CenterMessage(const char *s)
    qstr += s;
   
    tw->message = qstr.getBuffer();
-   tw->x = (SCREENWIDTH  - V_FontStringWidth(hud_font, s)) / 2;
-   tw->y = (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
+   tw->x = (SCREENWIDTH  - V_FontStringWidth(tw->font, s)) / 2;
+   tw->y = (SCREENHEIGHT - V_FontStringHeight(tw->font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
    tw->cleartic = leveltime + (message_timer * 35) / 1000;
 
@@ -1662,21 +1676,23 @@ const char english_shiftxform[] =
 // Console Commands
 //
 
-VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
-VARIABLE_INT(mess_colour,       NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_BOOLEAN(showMessages,      NULL,                   onoff);
+VARIABLE_INT(mess_colour,           NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(center_mess_colour,    NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_BOOLEAN(center_mess_large, NULL,                   yesno);
 
-VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
-VARIABLE_INT(obcolour,          NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(crosshairnum,      NULL, 0, CROSSHAIRS-1,  cross_str);
-VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
-VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
+VARIABLE_BOOLEAN(obituaries,        NULL,                   onoff);
+VARIABLE_INT(obcolour,              NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(crosshairnum,          NULL, 0, CROSSHAIRS-1,  cross_str);
+VARIABLE_INT(hud_msg_lines,         NULL, 0, 14,            NULL);
+VARIABLE_INT(message_timer,         NULL, 0, 100000,        NULL);
 
 // haleyjd 02/12/06: lost/new hud options
-VARIABLE_TOGGLE(hu_showtime,    NULL,                   yesno);
-VARIABLE_TOGGLE(hu_showcoords,  NULL,                   yesno);
-VARIABLE_INT(hu_timecolor,      NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_LIMIT-1,    textcolours);
-VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_TOGGLE(hu_showtime,        NULL,                   yesno);
+VARIABLE_TOGGLE(hu_showcoords,      NULL,                   yesno);
+VARIABLE_INT(hu_timecolor,          NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_levelnamecolor,     NULL, 0, CR_LIMIT-1,    textcolours);
+VARIABLE_INT(hu_coordscolor,        NULL, 0, CR_LIMIT-1,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
@@ -1687,6 +1703,23 @@ CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
+CONSOLE_VARIABLE(hu_center_mess_large, center_mess_large, 0)
+{
+   hu_textwidget_t *tw =
+      (hu_textwidget_t *)HU_WidgetForName("_HU_CenterMsgWidget");
+
+   if(center_mess_large)
+      tw->font = in_bigfont;
+   else
+      tw->font = hud_font;
+}
+CONSOLE_VARIABLE(hu_center_mess_color, center_mess_colour, 0)
+{
+   hu_textwidget_t *tw =
+      (hu_textwidget_t *)HU_WidgetForName("_HU_CenterMsgWidget");
+
+   tw->color = center_mess_colour + 1;
+}
 
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
@@ -1761,7 +1794,6 @@ CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
 CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
 CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}
 
-
 extern void HU_FragsAddCommands(void);
 extern void HU_OverAddCommands(void);
 
@@ -1786,6 +1818,8 @@ void HU_AddCommands(void)
    C_AddCommand(hu_timecolor);
    C_AddCommand(hu_levelnamecolor);
    C_AddCommand(hu_coordscolor);
+   C_AddCommand(hu_center_mess_large);
+   C_AddCommand(hu_center_mess_color);
    
    HU_FragsAddCommands();
    HU_OverAddCommands();

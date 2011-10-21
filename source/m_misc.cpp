@@ -331,6 +331,14 @@ default_t defaults[] =
    DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_no,
                "messages colour"),
 
+   DEFAULT_INT("center_mess_colour", &center_mess_colour,
+               &default_center_mess_colour, CR_RED, 0, CR_LIMIT-1,
+               default_t::wad_no, "center messages colour"),
+
+   DEFAULT_BOOL("center_message_large", &center_mess_large,
+                &default_center_mess_large, true, default_t::wad_no,
+                "0 - leave alone, 1 - embiggen"),
+
    // killough 3/6/98: preserve autorun across games
    DEFAULT_INT("autorun", &autorun, NULL, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 

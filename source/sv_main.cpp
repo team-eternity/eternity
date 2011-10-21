@@ -996,6 +996,8 @@ void SV_SendCurrentState(int playernum)
    send_packet(playernum, buffer, message_size);
    efree(buffer);
 
+   server_clients[playernum].received_game_state = true;
+
    // [CG] Send client initialization info for all connected clients to the new
    //      client.
    for(i = 1; i < MAX_CLIENTS; i++)
@@ -1009,8 +1011,6 @@ void SV_SendCurrentState(int playernum)
 
    // [CG] Send info on the new client to all the other clients.
    SV_BroadcastNewClient(playernum);
-
-   server_clients[playernum].received_game_state = true;
 }
 
 void SV_SendInitialState(int playernum)

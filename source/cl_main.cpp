@@ -601,11 +601,13 @@ void CL_TryRunTics(void)
    // [CG] Because worlds may be skipped during buffer flushes, it's necessary
    //      to pull damagecount and bonuscount decrementing out from the normal
    //      game loop.
+   /*
    if(consoleplayer && players[consoleplayer].damagecount)
       players[consoleplayer].damagecount--;
 
    if(consoleplayer && players[consoleplayer].bonuscount)
       players[consoleplayer].bonuscount--;
+   */
 
    // [CG] The buffer absolutely cannot be flushed if we've not yet received
    //      sync, so only honor cl_packet_buffer.needsFlushing() if sync's been

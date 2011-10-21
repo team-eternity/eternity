@@ -38,7 +38,8 @@ void      CL_PredictSectorPositions(unsigned int index);
 void      CL_PredictFrom(unsigned int start, unsigned int end);
 void      CL_RePredict(unsigned int start, unsigned int end);
 void      CL_StoreLastServerPosition(position_t *new_server_position,
-                                     uint32_t index);
+                                     uint32_t index,
+                                     cs_floor_status_e floor_status);
 void      CL_LoadLastServerPosition(void);
 uint32_t  CL_GetLastServerPositionIndex(void);
 

@@ -339,14 +339,6 @@ void CS_CheckCarriedFlagPosition(int playernum)
          flag_actor->x = player->mo->x;
          flag_actor->y = player->mo->y;
          flag_actor->z = player->mo->z;
-         flag_actor->momx = player->mo->momx;
-         flag_actor->momy = player->mo->momy;
-         flag_actor->momz = player->mo->momz;
-         /*
-         // [CG] Not sure about this next one, flags will probably have to fall
-         //      at some point right?  Snapping them to the ground seems lame.
-         flag_actor->momx = flag_actor->momy = flag_actor->momz = 0;
-         */
          P_SetThingPosition(flag_actor);
       }
    }

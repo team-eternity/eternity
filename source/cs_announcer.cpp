@@ -90,6 +90,18 @@ void CS_SetAnnouncer(announcer_event_t *events)
       cs_announcer_events = null_announcer_events;
 }
 
+void CS_InitAnnouncer(void)
+{
+   if(s_announcer_type == S_ANNOUNCER_NONE)
+      CS_SetAnnouncer(NULL);
+   else if(s_announcer_type == S_ANNOUNCER_QUAKE)
+      CS_SetAnnouncer(quake_announcer_events);
+   else if(clients[consoleplayer].team == team_color_blue)
+      CS_SetAnnouncer(blue_unreal_tournament_announcer_events);
+   else
+      CS_SetAnnouncer(red_unreal_tournament_announcer_events);
+}
+
 announcer_event_t* CS_GetAnnouncerEvent(uint32_t event_index)
 {
    if(event_index >= max_announcer_event_types)

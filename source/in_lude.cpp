@@ -281,8 +281,6 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    {
       if(!(in_font = E_FontForName(in_fontname)))
          I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
-      if(!(in_bigfont = E_FontForName(in_bigfontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
       if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
          I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
    }

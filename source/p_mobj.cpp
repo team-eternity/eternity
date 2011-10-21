@@ -255,6 +255,15 @@ bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
    return false;
 }
 
+#define CLIENT_SHOULD_HANDLE(mobj) ( \
+   (!sentient((mobj))) || ((mobj) == players[consoleplayer].mo) \
+)
+
+#define ACTOR_IS_BLOOD_OR_PUFF(mobj) ( \
+   ((mobj)->type == E_SafeThingType(MT_PUFF)) || \
+   ((mobj)->type == E_SafeThingType(MT_BLOOD)) \
+)
+
 //
 // P_SetMobjState
 //
@@ -263,9 +272,6 @@ bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
    state_t *st;
-   bool client_should_handle = false;
-   int puff_type = E_SafeThingType(MT_PUFF);
-   int blood_type = E_SafeThingType(MT_BLOOD);
 
    // haleyjd 03/27/10: new state cycle detection
    static bool firsttime = true; // for initialization
@@ -278,23 +284,12 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       firsttime = false;
    }
 
-   if(mobj->type == blood_type          ||
-      mobj->type == puff_type           ||
-      (mobj->flags & MF_PICKUP)         ||
-      (mobj->flags & MF_SPECIAL)        ||
-      (mobj->flags3 & MF3_3DDECORATION) ||
-      mobj == players[consoleplayer].mo)
-   {
-      client_should_handle = true;
-   }
-   else if(CS_CLIENT && !cl_setting_actor_state)
-   {
-      // [CG] Clients only set state for the local player (because they're
-      //      predicting), blood and puffs.  Otherwise they'll get a message
-      //      from the server, in which case cl_setting_actor_state will be
-      //      true.
+   // [CG] Clients only set state for the local player (because they're
+   //      predicting) and non-sentient actors.  Otherwise they'll get a
+   //      message from the server, in which case cl_setting_actor_state will
+   //      be true.
+   if(CS_CLIENT && !CLIENT_SHOULD_HANDLE(mobj) && !cl_setting_actor_state)
       return true;
-   }
 
    do
    {
@@ -302,15 +297,15 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       {
          mobj->state = NULL;
 
-         if(CS_SERVER && !client_should_handle)
+         if(CS_SERVER && sentient(mobj))
          {
             SV_BroadcastActorState(mobj, NullStateNum);
             SV_BroadcastActorRemoved(mobj);
-            mobj->removeThinker();
          }
-         else if(CS_CLIENT)
+
+         if(CS_CLIENT)
          {
-            if(client_should_handle)
+            if(!sentient(mobj))
                CL_RemoveMobj(mobj);
          }
          else
@@ -324,7 +319,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       mobj->state = st;
       mobj->tics = st->tics;
 
-      if(CS_SERVER && !client_should_handle)
+      if(CS_SERVER && !CLIENT_SHOULD_HANDLE(mobj))
          SV_BroadcastActorState(mobj, state);
 
       // sf: skins
@@ -348,7 +343,9 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
 
       P_AddSeenState(state, &seenstates);
 
-      state = st->nextstate;
+      if(!CS_CLIENT || st->nextstate != NullStateNum ||
+                       ACTOR_IS_BLOOD_OR_PUFF(mobj))
+         state = st->nextstate;
    }
    while(!mobj->tics && !P_CheckSeenState(state, seenstates));
    
@@ -1492,7 +1489,7 @@ void Mobj::Think()
       if(!--tics)
          P_SetMobjState(this, state->nextstate);
    }
-   else
+   else if(serverside) // [CG] Only servers from here on.
    {
       // haleyjd: minor restructuring, eternity features
       // A thing can respawn if:
@@ -1503,10 +1500,6 @@ void Mobj::Think()
          flags & MF_COUNTKILL &&
            (respawnmonsters ||
             (flags2 & (MF2_ALWAYSRESPAWN | MF2_REMOVEDEAD)));
-
-      // [CG] Only servers should run the rest of this function.
-      if(!serverside)
-         return;
 
       // haleyjd 07/13/05: increment mobj->movecount earlier
       if(can_respawn || effects & FX_FLIESONDEATH)

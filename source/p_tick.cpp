@@ -48,6 +48,8 @@
 #include "cl_pred.h"     // [CG] 09/18/11
 #include "sv_main.h"     // [CG] 09/18/11
 
+extern int NullStateNum;
+
 int leveltime;
 bool reset_viewz;
 
@@ -243,12 +245,7 @@ void Thinker::RunThinkers(void)
          currentthinker->Think();
       else if(serverside && mo->player == NULL)
          currentthinker->Think();
-      else if(clientside && ((mo->type == blood_type)  ||
-                             (mo->type == puff_type)   ||
-                             (mo->flags  & MF_MISSILE) ||
-                             (mo->flags  & MF_PICKUP)  ||
-                             (mo->flags  & MF_SPECIAL) ||
-                             (mo->flags3 & MF3_3DDECORATION)))
+      else if(clientside && !sentient(mo))
          currentthinker->Think();
    }
 }

@@ -119,6 +119,10 @@ extern int obituaries;
 extern int obcolour;       // the colour of death messages
 extern int showMessages;   // Show messages has default, 0 = off, 1 = on
 extern int mess_colour;    // the colour of normal messages
+extern int center_mess_colour;
+extern int center_mess_large;
+extern int default_center_mess_colour;
+extern int default_center_mess_large;
 extern char *chat_macros[10];
 extern WidgetHash widgets;
 

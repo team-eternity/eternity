@@ -335,7 +335,7 @@ void P_DeathThink(player_t *player)
             
             player->mo->angle = angle;
             
-            if(!CS_CLIENT && player->damagecount)
+            if(player->damagecount)
                player->damagecount--;
          }
          else 
@@ -344,14 +344,14 @@ void P_DeathThink(player_t *player)
             else
                player->mo->angle -= ANG5;
       }
-      else if(!CS_CLIENT && player->damagecount)
+      else if(player->damagecount)
          player->damagecount--;
    }
-   else if(!CS_CLIENT && player->damagecount)
+   else if(player->damagecount)
       player->damagecount--;
 
    // [CG] 09/18/11: Show scoreboard when dead.
-   if(CS_CLIENT)
+   if(CS_CLIENT && player == &players[consoleplayer])
       action_frags = 1;
 
    // haleyjd 10/05/08:
@@ -726,14 +726,14 @@ void P_PlayerThink(player_t *player)
           ? MF2_DONTDRAW : 0;
    }
 
-   if(!CS_CLIENT) // [CG] This is done elsewhere in c/s client mode.
-   {
+   // if(!CS_CLIENT) // [CG] This is done elsewhere in c/s client mode.
+   // {
       if(player->damagecount)
          player->damagecount--;
 
       if(player->bonuscount)
          player->bonuscount--;
-   }
+   // }
 
    // Handling colormaps.
    // killough 3/20/98: reformat to terse C syntax

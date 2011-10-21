@@ -604,14 +604,18 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    clients[playernum].floor_status = message->floor_status;
 
    if(playernum == consoleplayer)
-      CL_StoreLastServerPosition(&message->position, message->last_command_run);
+   {
+      CL_StoreLastServerPosition(
+         &message->position,
+         message->last_command_run,
+         (cs_floor_status_e)message->floor_status
+      );
+   }
    else if(players[playernum].mo)
-      players[playernum].mo->Think();
-
-   /*
-   CS_SetPlayerPosition(playernum, &message->position);
-   clients[playernum].floor_status = message->floor_status;
-   */
+   {
+      CS_SetPlayerPosition(playernum, &message->position);
+      clients[playernum].floor_status = message->floor_status;
+   }
 }
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
