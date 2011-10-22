@@ -200,7 +200,7 @@ enum
 bool PacketSend(void)
 {
    int c;
-   int packetsize  = 0;   
+   int packetsize = 0;   
 
    byte *rover = (byte *)packet->data;
 
