@@ -31,7 +31,7 @@
 int version = 340;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 17;
+unsigned char subversion = 19;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
@@ -41,7 +41,7 @@ const char version_name[] = "Mjolnir";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.40.16 \"Mjolnir\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.19 \"Mjolnir\"";
 #endif
             
 // haleyjd: Eternity release history
