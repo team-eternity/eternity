@@ -600,7 +600,7 @@ void D_CheckNetGame(void)
    
    D_InitPlayers();      
    
-   //C_NetInit();
+   C_NetInit();
    atexit(D_QuitNetGame);       // killough
 }
 
