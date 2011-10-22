@@ -311,7 +311,7 @@ bool PacketGet(void)
    if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
       return false;
    
-   rover += sizeof(netbuffer->checksum);
+   rover += 4;
    
    netbuffer->player         = *rover++;
    netbuffer->retransmitfrom = *rover++;
@@ -325,32 +325,33 @@ bool PacketGet(void)
          Sint16 ticcmdflags;
 
          ticcmdflags = NetToHost16(rover);
+         rover += 2;
 
          memset(&(netbuffer->d.cmds[c]), 0, sizeof(ticcmd_t));
 
          if(ticcmdflags & TCF_FORWARDMOVE)
             netbuffer->d.cmds[c].forwardmove = *rover++;
          if(ticcmdflags & TCF_SIDEMOVE)
-            netbuffer->d.cmds[c].sidemove    = *rover++;
+            netbuffer->d.cmds[c].sidemove = *rover++;
          if(ticcmdflags & TCF_ANGLETURN)
          {
-            netbuffer->d.cmds[c].angleturn   = NetToHost16(rover);
-            rover += sizeof(netbuffer->d.cmds[c].angleturn);
+            netbuffer->d.cmds[c].angleturn = NetToHost16(rover);
+            rover += 2;
          }
          
          netbuffer->d.cmds[c].consistency = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistency);
+         rover += 2;
          
          if(ticcmdflags & TCF_CHATCHAR)
             netbuffer->d.cmds[c].chatchar = *rover++;
          if(ticcmdflags & TCF_BUTTONS)
-            netbuffer->d.cmds[c].buttons  = *rover++;
+            netbuffer->d.cmds[c].buttons = *rover++;
          if(ticcmdflags & TCF_ACTIONS)
-            netbuffer->d.cmds[c].actions  = *rover++;
+            netbuffer->d.cmds[c].actions = *rover++;
          if(ticcmdflags & TCF_LOOK)
          {
             netbuffer->d.cmds[c].look = NetToHost16(rover);
-            rover += sizeof(netbuffer->d.cmds[c].look);
+            rover += 2;
          }
       }
    }
