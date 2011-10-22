@@ -462,7 +462,7 @@ void I_InitNetwork(void)
    
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
 
-   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 4) & ~4));
+   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 31) & ~31));
 }
 
 bool I_NetCmd(void)
