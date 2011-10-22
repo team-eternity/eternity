@@ -155,9 +155,6 @@ public:
    qstring &operator += (char  ch);
 };
 
-//#define qstring_npos ((size_t) -1)
-
-
 #endif
 
 // EOF
