@@ -443,7 +443,7 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
    strncpy(sfx->name,     name,      9);
-   strncpy(sfx->mnemonic, mnemonic, 33);
+   strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
 
    sfx->flags = SFXF_SNDINFO; // born via SNDINFO
    sfx->priority = 64;
@@ -757,13 +757,6 @@ void E_ProcessSounds(cfg_t *cfg)
       int idnum = cfg_getint(sndsection, ITEM_SND_DEHNUM);
       
       mnemonic = cfg_title(sndsection);
-      
-      // verify the length -- haleyjd 06/03/06: doubled length limit
-      if(strlen(mnemonic) > 32)
-      {
-         E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
-                        mnemonic);
-      }
 
       // if one already exists by this name, use it
       if((sfx = E_SoundForName(mnemonic)))
@@ -786,10 +779,17 @@ void E_ProcessSounds(cfg_t *cfg)
       else
       {
          // create a new sound
-         sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
+         sfx = estructalloc(sfxinfo_t, 1);
+         
+         // verify the length
+         if(strlen(mnemonic) >= sizeof(sfx->mnemonic))
+         {
+            E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
+                           mnemonic);
+         }
 
          // copy mnemonic
-         strncpy(sfx->mnemonic, mnemonic, 33);
+         strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
          
          // add this sound to the hash table
          E_AddSoundToHash(sfx);
@@ -1075,7 +1075,7 @@ ESoundSeq_t *E_SequenceForName(const char *name)
    unsigned int key = D_HashTableKey(name) % NUM_EDFSEQ_CHAINS;
    ESoundSeq_t *seq = edf_seq_chains[key];
 
-   while(seq && strncasecmp(seq->name, name, 33))
+   while(seq && strncasecmp(seq->name, name, sizeof(seq->name)))
       seq = seq->namenext;
 
    return seq;
@@ -1424,10 +1424,6 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    // get name of sequence
    name = cfg_title(cfg);
 
-   // verify length
-   if(strlen(name) > 32)
-      E_EDFLoggedErr(2, "E_ProcessSndSeq: invalid mnemonic '%s'\n", name);
-
    // get numeric id and type now
    idnum = cfg_getint(cfg, ITEM_SEQ_ID);
 
@@ -1461,10 +1457,14 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
    else
    {
       // Create a new sound sequence object
-      newSeq = ecalloc(ESoundSeq_t *, 1, sizeof(ESoundSeq_t));
+      newSeq = estructalloc(ESoundSeq_t, 1);
+
+      // verify length
+      if(strlen(name) >= sizeof(newSeq->name))
+         E_EDFLoggedErr(2, "E_ProcessSndSeq: invalid mnemonic '%s'\n", name);
       
       // copy keys into sequence object
-      strncpy(newSeq->name, name, 33);
+      strncpy(newSeq->name, name, sizeof(newSeq->name));
       
       newSeq->index = idnum;
       newSeq->type  = type;

@@ -55,7 +55,7 @@ struct playerclass_t
    fixed_t osidemove[2];
 
    // hashing data
-   char mnemonic[33];
+   char mnemonic[129];
    playerclass_t *next;
 };
 

@@ -428,11 +428,11 @@ void E_CollectStates(cfg_t *cfg)
          state_t *st = states[curnewstate++];
 
          // check name for validity
-         if(strlen(name) > 40)
+         if(strlen(name) >= sizeof(st->namebuf))
             E_EDFLoggedErr(2, "E_CollectStates: bad frame name '%s'\n", name);
 
          // initialize name
-         strncpy(st->namebuf, name, 41);
+         strncpy(st->namebuf, name, sizeof(st->namebuf));
          st->name = st->namebuf;
 
          // add to name hash
