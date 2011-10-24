@@ -30,6 +30,24 @@
 #include "m_dllist.h"
 #include "e_hashkeys.h"
 
+// Inventory flags
+enum
+{
+   INV_AUTOACTIVATE    = 0x00000001,
+   INV_UNDROPPABLE     = 0x00000002,
+   INV_INVBAR          = 0x00000004,
+   INV_HUBPOWER        = 0x00000008,
+   INV_PERSISTENTPOWER = 0x00000010,
+   INV_ALWAYSPICKUP    = 0x00000020,
+   INV_KEEPDEPLETED    = 0x00000040,
+   INV_ADDITIVETIME    = 0x00000080,
+   INV_UNTOSSABLE      = 0x00000100
+
+   // Possible TODOs:
+   // INV_BIGPOWERUP  - redundant with flags value
+   // INV_IGNORESKILL - would rather have more flexible skill props...
+};
+
 //
 // inventory_t
 //

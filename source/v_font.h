@@ -83,7 +83,7 @@ struct vfont_t
    int     lsize;   // character size in linear graphic
 
    int  num;                 // numeric id
-   char name[33];            // EDF mnemonic
+   char name[129];           // EDF mnemonic
    vfont_t *namenext;        // next by name
    vfontfilter_t *filters;   // graphic loading filters
    unsigned int numfilters;  // number of filters
