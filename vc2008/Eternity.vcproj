@@ -1080,6 +1080,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_inventory.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_lib.cpp"
 						>
 						<FileConfiguration
@@ -1289,6 +1293,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_hashkeys.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_inventory.h"
 						>
 					</File>
 					<File
