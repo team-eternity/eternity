@@ -1081,13 +1081,27 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data   = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
-   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
 
-   // play it
-   I_PlaySong(music->handle, looping);
-   
-   mus_playing = music;
+   if(music->data)
+   {
+      music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+      
+      // play it
+      if(music->handle)
+      {
+         I_PlaySong(music->handle, looping);
+         mus_playing = music;
+      }
+      else
+      {
+         Z_ChangeTag(music->data, PU_CACHE);
+         music->data = NULL;
+         mus_playing = NULL;
+      }
+   }
+   else
+      mus_playing = NULL;
 }
 
 //
@@ -1145,7 +1159,7 @@ void S_ChangeMusicName(const char *name, int looping)
 //
 void S_StopMusic(void)
 {
-   if(!mus_playing)
+   if(!mus_playing || !mus_playing->data)
       return;
 
    if(mus_paused)
@@ -1392,18 +1406,29 @@ musicinfo_t *S_MusicForName(const char *name)
       if(!tempname.strCaseCmp(mus->name))
          return mus;
    }
-   
-   // Not found? Create a new musicinfo if the indicated lump is found.
-   lumpnum = W_CheckNumForName(name); // Try bare name first
-   lumpHasPrefix = nameHasPrefix;
-   if(lumpnum < 0 && !nameHasPrefix)  // Add prefix if that fails
+
+   if(nameHasPrefix) // name is prefixed? use it unconditionally as provided.
+   {
+      lumpnum = W_CheckNumForName(name);
+      lumpHasPrefix = true;
+   }
+   else // name is unprefixed; try with prefix first, then without.
    {
       tempname = GameModeInfo->musPrefix;
       tempname.concat(name);
       tempname.toUpper();
       lumpnum = W_CheckNumForName(tempname.constPtr());
-      lumpHasPrefix = true;
+
+      if(lumpnum < 0) // try, try again...
+      {
+         lumpnum = W_CheckNumForName(name);
+         lumpHasPrefix = false;
+      }
+      else
+         lumpHasPrefix = true;
    }
+   
+   // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
       mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
