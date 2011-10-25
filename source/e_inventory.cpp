@@ -28,5 +28,29 @@
 
 #include "e_inventory.h"
 
+#include "d_dehtbl.h" // for dehflags parsing
+
+// basic inventory flag values and mnemonics
+
+static dehflags_t inventoryflags[] =
+{
+   { "AUTOACTIVATE",    INVF_AUTOACTIVATE    },
+   { "UNDROPPABLE",     INVF_UNDROPPABLE     },
+   { "INVBAR",          INVF_INVBAR          },
+   { "HUBPOWER",        INVF_HUBPOWER        },
+   { "PERSISTENTPOWER", INVF_PERSISTENTPOWER },
+   { "ALWAYSPICKUP",    INVF_ALWAYSPICKUP    },
+   { "KEEPDEPLETED",    INVF_KEEPDEPLETED    },
+   { "ADDITIVETIME",    INVF_ADDITIVETIME    },
+   { "UNTOSSABLE",      INVF_UNTOSSABLE      },
+   { NULL,              0                    }
+};
+
+static dehflagset_t inventory_flagset =
+{
+   inventoryflags, // flaglist
+   0,              // mode
+};
+
 // EOF
 
