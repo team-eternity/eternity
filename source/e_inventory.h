@@ -77,6 +77,16 @@ struct inventory_t
    EIntHashKey      idnum;        // ID number
 };
 
+#ifdef NEED_EDF_DEFINITIONS
+
+#define EDF_SEC_INVENTORY "inventory"
+#define EDF_SEC_INVDELTA  "inventorydelta"
+
+extern cfg_opt_t edf_inv_opts[];
+extern cfg_opt_t edf_invdelta_opts[];
+
+#endif
+
 #endif
 
 // EOF
