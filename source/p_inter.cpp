@@ -1667,6 +1667,19 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(source && dmflags & DM_INSTAGIB)
          damage = 10000;
 
+      // [CG] Handle friendly damage.
+      if(source && source->player && source->player != player)
+      {
+         if(friendly_damage_percentage < 100 && (GameType == gt_coop || (
+            CS_TEAMS_ENABLED &&
+            clients[target->player - players].team ==
+            clients[source->player - players].team)))
+         {
+            damage *= cs_settings->friendly_damage_percentage;
+            damage /= 100;
+         }
+      }
+
       // end of game hell hack
       if(target->subsector->sector->special == 11 && damage >= target->health)
          damage = target->health - 1;
