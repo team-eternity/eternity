@@ -230,8 +230,6 @@ void Thinker::removeThinker()
 void Thinker::RunThinkers(void)
 {
    Mobj *mo;
-   int puff_type = E_SafeThingType(MT_PUFF);
-   int blood_type = E_SafeThingType(MT_BLOOD);
 
    for(currentthinker = thinkercap.next; 
        currentthinker != &thinkercap;
@@ -334,7 +332,7 @@ void P_Ticker(void)
             P_PlayerThink(&players[i]);
          }
 
-         if(players[i].mo && (clientside))
+         if(players[i].mo && (CS_CLIENT))
             players[i].mo->Think();
 
          if(CS_SERVER)
