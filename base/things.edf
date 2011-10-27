@@ -460,13 +460,14 @@ damagetype PlayerMisc { num = 24 }
 
 damagetype Fire { num = 27 }
 
-// [CG] ZDoom bridge things.
+// [CG] These are some Bridge things from ZDoom
 
 thingtype Bridge
 {
   doomednum = 118
   spawnstate = S_BRIDGE1
   flags = SOLID|NOGRAVITY
+  flags3 = PASSMOBJ
 }
 
 thingtype InvisibleBridge
@@ -476,6 +477,7 @@ thingtype InvisibleBridge
   height = 4
   flags = SOLID|NOGRAVITY
   flags2 = DONTDRAW
+  flags3 = PASSMOBJ
 }
 
 thingtype InvisibleBridge32
@@ -485,6 +487,7 @@ thingtype InvisibleBridge32
   height = 8
   flags = SOLID|NOGRAVITY
   flags2 = DONTDRAW
+  flags3 = PASSMOBJ
 }
 
 thingtype InvisibleBridge16
@@ -494,6 +497,7 @@ thingtype InvisibleBridge16
   height = 8
   flags = SOLID|NOGRAVITY
   flags2 = DONTDRAW
+  flags3 = PASSMOBJ
 }
 
 thingtype InvisibleBridge8
@@ -503,9 +507,10 @@ thingtype InvisibleBridge8
   height = 8
   flags = SOLID|NOGRAVITY
   flags2 = DONTDRAW
+  flags3 = PASSMOBJ
 }
 
-// [CG] Odamex CTF flags.
+// [CG] These are CTF flags from Odamex
 
 thingtype BlueFlagSocket
 {
@@ -513,6 +518,7 @@ thingtype BlueFlagSocket
     spawnstate = S_BSOK
     radius = 20
     height = 14
+    flags3 = PASSMOBJ|3DDECORATION
 }
 
 thingtype RedFlagSocket
@@ -521,6 +527,7 @@ thingtype RedFlagSocket
     spawnstate = S_RSOK
     radius = 20
     height = 14
+    flags3 = PASSMOBJ|3DDECORATION
 }
 
 thingtype BlueFlag
@@ -529,7 +536,7 @@ thingtype BlueFlag
     radius = 20
     height = 16
     flags = SPECIAL
-    flags3 = NOITEMRESP
+    flags3 = PASSMOBJ|3DDECORATION
 }
 
 thingtype RedFlag
@@ -538,7 +545,7 @@ thingtype RedFlag
     radius = 20
     height = 16
     flags = SPECIAL
-    flags3 = NOITEMRESP
+    flags3 = NOITEMRESP|PASSMOBJ|3DDECORATION
 }
 
 thingtype DroppedBlueFlag
@@ -547,7 +554,7 @@ thingtype DroppedBlueFlag
     radius = 20
     height = 16
     flags = SPECIAL
-    flags3 = NOITEMRESP
+    flags3 = NOITEMRESP|PASSMOBJ|3DDECORATION
 }
 
 thingtype DroppedRedFlag
@@ -556,7 +563,7 @@ thingtype DroppedRedFlag
     radius = 20
     height = 16
     flags = SPECIAL
-    flags3 = NOITEMRESP
+    flags3 = NOITEMRESP|PASSMOBJ|3DDECORATION
 }
 
 thingtype CarriedBlueFlag
@@ -565,6 +572,7 @@ thingtype CarriedBlueFlag
     radius = 20
     height = 16
     flags = NOGRAVITY
+    flags3 = PASSMOBJ
 }
 
 thingtype CarriedRedFlag
@@ -573,5 +581,6 @@ thingtype CarriedRedFlag
     radius = 20
     height = 16
     flags = NOGRAVITY
+    flags3 = PASSMOBJ
 }
 

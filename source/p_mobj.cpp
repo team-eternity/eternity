@@ -1483,6 +1483,8 @@ void Mobj::Think()
 
    if(this->player && (!clientserver || ((this->player - players) != 0)))
       CS_CheckCarriedFlagPosition(this->player - players);
+   else if(CS_ActorIsCarriedFlag(this))
+      CS_SnapCarriedFlagToCarrier(this);
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {

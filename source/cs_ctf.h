@@ -102,6 +102,7 @@ void    CS_HandleFlagTouch(player_t *player, teamcolor_t color);
 flag_t* CS_GetFlagCarriedByPlayer(int playernum);
 void    CS_DropFlag(int playernum);
 void    CS_CTFTicker(void);
+void    CS_SnapCarriedFlagToCarrier(Mobj *flag_actor);
 void    CS_CheckCarriedFlagPosition(int playernum);
 bool    CS_ActorIsCarriedFlag(Mobj *actor);
 Mobj*   CS_GetFlagStandActorForFlag(flag_t *flag);

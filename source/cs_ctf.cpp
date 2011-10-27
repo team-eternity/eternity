@@ -89,6 +89,15 @@ static const char* get_carried_flag_name(teamcolor_t color)
    return "CarriedBlueFlag";
 }
 
+static void CS_setFlagPosition(Mobj* actor, fixed_t x, fixed_t y, fixed_t z)
+{
+   P_UnsetThingPosition(actor);
+   actor->x = x;
+   actor->y = y;
+   actor->z = z;
+   P_SetThingPosition(actor);
+}
+
 void CS_RemoveFlagActor(flag_t *flag)
 {
    Mobj *flag_actor;
@@ -193,7 +202,6 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
    unsigned int playernum = player - players;
    client_t *client = &clients[playernum];
    flag_t *flag = &cs_flags[color];
-   Mobj *flag_actor = NetActors.lookup(flag->net_id);
    teamcolor_t other_color = get_other_color(color);
 
    if(flag->state == flag_dropped)
@@ -337,6 +345,30 @@ void CS_CTFTicker(void)
    }
 }
 
+void CS_SnapCarriedFlagToCarrier(Mobj *flag_actor)
+{
+   player_t *player;
+   flag_t *flag = &cs_flags[team_color_none];
+
+   for(; flag != &cs_flags[team_color_max]; flag++)
+   {
+      if(flag->state != flag_carried)
+         continue;
+
+      if(flag->net_id == flag_actor->net_id)
+         break;
+   }
+
+   if(flag == &cs_flags[team_color_max])
+      return;
+
+   player = &players[flag->carrier];
+
+   CS_setFlagPosition(
+      flag_actor, player->mo->x, player->mo->y, player->mo->z
+   );
+}
+
 void CS_CheckCarriedFlagPosition(int playernum)
 {
    flag_t *flag = NULL;
@@ -347,11 +379,12 @@ void CS_CheckCarriedFlagPosition(int playernum)
    {
       if((flag_actor = NetActors.lookup(flag->net_id)) != NULL)
       {
-         P_UnsetThingPosition(flag_actor);
-         flag_actor->x = player->mo->x;
-         flag_actor->y = player->mo->y;
-         flag_actor->z = player->mo->z;
-         P_SetThingPosition(flag_actor);
+         CS_setFlagPosition(
+            flag_actor,
+            player->mo->x,
+            player->mo->y,
+            player->mo->z
+         );
       }
    }
 }
@@ -362,11 +395,11 @@ bool CS_ActorIsCarriedFlag(Mobj *actor)
 
    for(color = team_color_none; color < team_color_max; color++)
    {
-      if((cs_flags[color].net_id == actor->net_id) &&
-         (cs_flags[color].state == flag_carried))
-      {
+      if(cs_flags[color].state != flag_carried)
+         continue;
+
+      if(cs_flags[color].net_id == actor->net_id)
          return true;
-      }
    }
 
    return false;
