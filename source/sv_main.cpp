@@ -104,6 +104,7 @@ unsigned long sv_public_address = 0;
 bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
 int sv_randomize_maps = false;
+bool sv_buffer_commands = false;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -1722,6 +1723,9 @@ unsigned int SV_ClientCommandBufferSize(int playernum)
 {
    client_t *client = &clients[playernum];
 
+   if(!sv_buffer_commands)
+      return 2;
+
    if(!client->packet_loss)
       return 0;
 
@@ -1745,6 +1749,9 @@ void SV_RunPlayerCommands(int playernum)
    server_client_t *sc = &server_clients[playernum];
    uint32_t command_buffer_size = SV_ClientCommandBufferSize(playernum);
 
+   if(M_QueueIsEmpty(&sc->commands))
+      return;
+
    if(!sc->command_buffer_filled)
    {
       if(sc->commands.size >= SV_ClientCommandBufferSize(playernum))
@@ -1752,9 +1759,6 @@ void SV_RunPlayerCommands(int playernum)
       else
          return;
    }
-
-   if(M_QueueIsEmpty(&sc->commands))
-      return;
 
    // [CG] Run at least 1 command.  If the buffer's overflowed, run all the
    //      extra commands until we get back to the normal size.

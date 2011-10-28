@@ -799,7 +799,7 @@ void CS_HandleServerSection(Json::Value &server)
       server_address->port = server["port"].asInt();
    }
 
-   // [CG] 2 for the server's spectator and a given client.
+   // [CG] 2 for the server's spectator and at least 1 client.
    cs_original_settings->max_player_clients = (MAXPLAYERS - 2);
    if(!server["max_player_clients"].empty())
    {
@@ -861,6 +861,13 @@ void CS_HandleServerSection(Json::Value &server)
       }
    }
    DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
+
+   sv_buffer_commands = false;
+   if(!server["buffer_client_commands"].empty())
+   {
+      if(server["buffer_client_commands"].asBool())
+         sv_buffer_commands = true;
+   }
 
    sv_randomize_maps = map_randomization_none;
    if(!server["randomize_maps"].empty())

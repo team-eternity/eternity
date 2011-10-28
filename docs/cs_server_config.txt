@@ -79,22 +79,20 @@
 ** Example:
 */
 
-    "masters": [
-        {
-            "address": "master.totaltrash.org",
+    "masters": {
+        "master.totaltrash.org": {
             "username": "ladna",
             "password": "0wn$u",
             "group": "totaltrash",
             "name": "duel1"
         },
-        {
-            "address": "master.universe.net",
+        "master.universe.net": {
             "username": "adam",
             "password": "ihavethepower",
             "group": "eternia",
             "name": "grayskull 1"
         }
-    ],
+    },
 
 /**** "resources"
 ** An array of WADs and other resource files (DEH/BEX files for instance) that
@@ -119,15 +117,9 @@
         {
             "name": "zvox2.wad",
             "type": "wad",
-            "alternates": [
-                "zvox4.wad",
-                "facevox.wad" 
-            ] 
+            "alternates": [ "zvox4.wad", "facevox.wad" ] 
         },
-        {
-            "name": "420.deh",
-            "type": "dehacked" 
-        } 
+        { "name": "420.deh", "type": "dehacked" } 
     ],
 
 /*
@@ -192,8 +184,8 @@
         "spectator_time_limit": 30,
         "game": "doom2",
         "game_type": "duel",
-        "number_of_teams": 0,
-        "minimum_buffer_size": 0,
+        "buffer_client_commands": false,
+        "randomize_maps": "no"
         "spectator_password": "cookie",
         "player_password": "monster",
         "moderator_password": "omnomnom",

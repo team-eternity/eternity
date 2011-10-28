@@ -23,6 +23,8 @@
         "spectator_time_limit": 30,
         "game": "doom2",
         "game_type": "duel",
+        "buffer_client_commands": false,
+        "randomize_maps": "no",
         "spectator_password": "cookie",
         "player_password": "monster",
         "moderator_password": "omnomnom",
