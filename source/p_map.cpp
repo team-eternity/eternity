@@ -2380,7 +2380,7 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int mod)
    {
       for(x = xl; x <= xh; ++x)
       {
-         if((demo_version <= 340) || comp[comp_2dradatk])
+         if((demo_version < 340) || comp[comp_2dradatk])
             P_BlockThingsIterator(x, y, PIT_RadiusAttack);
          else
             P_BlockThingsIterator(x, y, PIT_3DRadiusAttack);
