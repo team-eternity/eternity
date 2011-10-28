@@ -2,6 +2,80 @@
 Changes since Eternity Engine v3.40.15
 ================================================================================
 --------------------------------------------------------------------------------
+10/28/11
+
+Added GNUlib's Knuth-Morris-Pratt implementation of strcasestr as M_StrCaseStr,
+and added a wrapper method for it to qstring as qstring::findSubStrNoCase. This
+allows for more compact case-insensitive substring searches. 
+
+K-M-P has O(n) behavior compared to O(n*m) behavior of the naive but common BSD
+implementation of this routine. It does however still use a malloc of the size 
+of the input "haystack" string in order to build a lookup table. 
+
+However, this cost is amortized via not invoking K-M-P until an empirically 
+established comparison threshold has been crossed in execution of the naive 
+algorithm.
+
+Added skeletal code for the inventory and inventorydelta EDF sections based on
+the code from e_things.cpp. This includes the inheritance mechanism used there,
+which will be adapted to function on inventory definitions so that they can
+be extended.
+
+--------------------------------------------------------------------------------
+10/25/11
+
+Added basic inventory dehflags_t and dehflagset_t structures, for eventual
+parsing of the basic inventory flags field.
+
+Added libConfuse cfg_opt_t definitions for the inventory and inventorydelta 
+structures.
+
+Removed the old inventory flag definitions from e_player.h, which were missed
+earlier and started conflicting with the new ones.
+
+The main EDF cfg_opt_t now references the inventory sections.
+
+--------------------------------------------------------------------------------
+10/24/11
+
+esselfortium found some major bugs in dynamic musicinfo defs when he loaded the
+32in24-11 alpha wad into EE:
+
+* If music loading failed, EE would still think it was playing music later. This
+  would lead to a Z_ChangeTag(NULL) call in S_StopMusic later, causing the
+  engine to exit.
+
+* A non-prefixed music name passed in would match an identical lump name
+  preferentially, rather than testing for a prefixed (ie. D_ or MUS_) version of
+  the lump first. This lead to a problem in this wad of the map name header
+  lumps being selected because the music lumps were named things such as 
+  "D_MAP33". Now, the music code will prefer prefixed lumps over unprefixed
+  ones.
+  
+* Essel also discovered that the unprefixed lump would even be preferred if the
+  name specified in MapInfo was prefixed. This was just plain wrong. If an
+  explicitly prefixed name is passed in from MapInfo now, it will never match
+  an unprefixed one, period.
+
+--------------------------------------------------------------------------------
+10/23/11
+
+Added a new module to contain inventory definitions and processing code for EDF,
+at long last.
+
+inventory_t has been added as a prototypical basic inventory definition 
+structure. This may change significantly before the system is finished, 
+especially where support for both inheritance between inventory definitions,
+and for provision of "subclass" information for support of specific types of
+inventory items - weapons, health, powerups, quest givers, etc.
+
+Also added some basic inventory flag definitions, based on ones from ZDoom.
+
+The length of all mnemonics in EDF that are still limited to a static maximum
+have been increased to 128 characters. It is likely in the future that these
+names will shift to being dynamically allocated instead, though.
+
+--------------------------------------------------------------------------------
 10/22/11
 
 Repaired a qstring security hazard by adding private method qstring::checkBuffer
