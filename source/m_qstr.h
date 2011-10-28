@@ -137,6 +137,7 @@ public:
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
    const char *findSubStr(const char *substr) const;
+   const char *findSubStrNoCase(const char *substr) const;
    qstring    &LStrip(char c);
    qstring    &RStrip(char c);
    qstring    &truncate(size_t pos);

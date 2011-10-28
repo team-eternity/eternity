@@ -1898,6 +1898,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_strcasestr.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_syscfg.cpp"
 						>
 						<FileConfiguration
@@ -2021,6 +2025,10 @@
 					</File>
 					<File
 						RelativePath="..\source\m_shots.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_strcasestr.h"
 						>
 					</File>
 					<File

@@ -36,8 +36,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_qstr.h"
-#include "m_misc.h"   // for M_Strupr/M_Strlwr
-#include "d_io.h"     // for strcasecmp
+#include "m_misc.h"       // for M_Strupr/M_Strlwr
+#include "m_strcasestr.h" // for M_StrCaseStr
+#include "d_io.h"         // for strcasecmp
 
 const size_t qstring::npos = ((size_t) -1);
 const size_t qstring::basesize = 32;
@@ -711,9 +712,20 @@ size_t qstring::findFirstNotOf(char c) const
 // Calls strstr on the qstring. If the passed-in string is found, then the
 // return value points to the location of the first instance of that substring.
 //
-const char *qstring::findSubStr(const char * substr) const
+const char *qstring::findSubStr(const char *substr) const
 {
    return strstr(buffer ? buffer : "", substr);
+}
+
+//
+// qstring::findSubStrNoCase
+//
+// haleyjd 10/28/11: call strcasestr on the qstring, courtesy of implementation
+// of the non-standard routine adapted from GNUlib.
+//
+const char *qstring::findSubStrNoCase(const char *substr) const
+{
+   return M_StrCaseStr(buffer ? buffer : "", substr);
 }
 
 //=============================================================================
