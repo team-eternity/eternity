@@ -85,6 +85,9 @@ struct inventory_t
 extern cfg_opt_t edf_inv_opts[];
 extern cfg_opt_t edf_invdelta_opts[];
 
+void E_ProcessInventoryDefs(cfg_t *cfg);
+void E_ProcessInventoryDeltas(cfg_t *cfg);
+
 #endif
 
 #endif
