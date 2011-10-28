@@ -97,6 +97,9 @@ void SV_SetWeaponPreference(int playernum, int slot, weapontype_t weapon);
 void SV_AdvanceMapList(void);
 void SV_LoadClientOptions(int playernum);
 void SV_RestoreServerOptions(void);
+unsigned int SV_ClientCommandBufferSize(int playernum);
+void SV_RunPlayerCommand(int playernum, cs_cmd_t *command);
+void SV_RunPlayerCommands(int playernum);
 
 // [CG] Sending functions.
 void SV_SendNewClient(int playernum, int clientnum);

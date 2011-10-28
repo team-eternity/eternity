@@ -1718,6 +1718,46 @@ void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type)
    broadcast_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
+unsigned int SV_ClientCommandBufferSize(int playernum)
+{
+   client_t *client = &clients[playernum];
+
+   if(!client->packet_loss)
+      return 0;
+
+   return (client->packet_loss / 2) + (client->transit_lag / 99) + 1;
+}
+
+void SV_RunPlayerCommand(int playernum, cs_cmd_t *command)
+{
+   server_client_t *server_client = &server_clients[playernum];
+
+   SV_LoadClientOptions(playernum);
+   server_client->command_world_index = command->world_index;
+   CS_RunPlayerCommand(playernum, &command->ticcmd, true);
+   server_client->last_command_run_index = command->world_index;
+   SV_RestoreServerOptions();
+}
+
+void SV_RunPlayerCommands(int playernum)
+{
+   cs_buffered_command_t *bufcmd;
+   server_client_t *sc = &server_clients[playernum];
+   uint32_t command_buffer_size = SV_ClientCommandBufferSize(playernum);
+
+   if(M_QueueIsEmpty(&sc->commands))
+      return;
+
+   // [CG] Run at least 1 command.  If the buffer's overflowed, run all the
+   //      extra commands until we get back to the normal size.
+   do
+   {
+      bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
+      SV_RunPlayerCommand(playernum, &bufcmd->command);
+      efree(bufcmd);
+   } while(sc->commands.size > command_buffer_size);
+}
+
 void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
                                    int playernum)
 {
@@ -1725,7 +1765,7 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    player_t *player = &players[playernum];
    client_t *client = &clients[playernum];
    server_client_t *server_client = &server_clients[playernum];
-   cs_cmd_t *received_command = &message->command;
+   cs_buffered_command_t *bufcmd;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
@@ -1734,25 +1774,24 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    server_client->received_command_for_current_map = true;
 
    // [CG] Some additional checks to prevent tomfoolery.
-   if(received_command->world_index <=
+   if(message->command.world_index <=
       server_client->last_command_received_index)
    {
       printf(
          "SV_HandlePlayerCommandMessage: <!> (%u < %u <= %u).\n",
          sv_world_index,
-         received_command->world_index,
+         message->command.world_index,
          server_client->last_command_received_index
       );
       SV_DisconnectPlayer(playernum, dr_command_flood);
    }
 
-   server_client->last_command_received_index = received_command->world_index;
+   server_client->last_command_received_index = message->command.world_index;
+   // SV_RunPlayerCommand(playernum, &message->command);
 
-   SV_LoadClientOptions(playernum);
-   server_client->command_world_index = received_command->world_index;
-   CS_RunPlayerCommand(playernum, &received_command->ticcmd, true);
-   server_client->last_command_run_index = received_command->world_index;
-   SV_RestoreServerOptions();
+   bufcmd = ecalloc(cs_buffered_command_t *, 1, sizeof(cs_buffered_command_t));
+   memcpy(&bufcmd->command, &message->command, sizeof(cs_cmd_t));
+   M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
 }
 
 void SV_HandleClientRequestMessage(char *data, size_t data_length,

@@ -447,6 +447,7 @@ void CS_ZeroClient(int clientnum)
       sc->auth_level = cs_auth_none;
       sc->current_request = scr_none;
       sc->received_game_state = false;
+      sc->command_buffer_filled = false;
       sc->last_auth_attempt = 0;
       sc->commands_dropped = 0;
       sc->last_command_run_index = 0;

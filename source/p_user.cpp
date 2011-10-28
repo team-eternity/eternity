@@ -635,6 +635,15 @@ void P_PlayerThink(player_t *player)
       P_RunPlayerCommand(playernum);
    else if(CS_CLIENT && playernum == consoleplayer)
       CL_PredictPlayerPosition(cl_current_world_index, false);
+   else if(CS_SERVER)
+   {
+      server_client_t *sc = &server_clients[playernum];
+
+      if(sc->command_buffer_filled)
+         SV_RunPlayerCommands(playernum);
+      else if(sc->commands.size >= SV_ClientCommandBufferSize(playernum))
+         sc->command_buffer_filled = true;
+   }
 
    // [CG] 09/18/11: Don't scream if predicting or spectating (rofl).
    if(!clientserver || (!clients[playernum].spectating && !cl_predicting))

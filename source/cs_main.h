@@ -368,6 +368,7 @@ typedef struct
    cs_auth_level_e auth_level;
    cs_client_request_e current_request;
    bool received_game_state;
+   bool command_buffer_filled;
    int last_auth_attempt;
    unsigned int commands_dropped;
    // [CG] This is used to keep track of the player's most recently run
