@@ -297,6 +297,15 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       {
          mobj->state = NULL;
 
+         if(CS_SERVER)
+            SV_BroadcastActorRemoved(mobj);
+
+         if(!CS_CLIENT)
+            mobj->removeThinker();
+         else if(mobj->net_id == 0 && ACTOR_IS_BLOOD_OR_PUFF(mobj))
+            CL_RemoveMobj(mobj);
+
+         /*
          if(CS_SERVER && sentient(mobj))
          {
             SV_BroadcastActorState(mobj, NullStateNum);
@@ -310,6 +319,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          }
          else
             mobj->removeThinker();
+         */
 
          ret = false;
          break;                 // killough 4/9/98
@@ -2464,7 +2474,7 @@ Mobj* P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
    z += P_SubRandom(pr_spawnpuff) << 10;
 
    th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   NetActors.remove(th);
+   // NetActors.remove(th);
 
    th->momz = FRACUNIT;
    th->tics -= P_Random(pr_spawnpuff) & 3;
@@ -2503,7 +2513,7 @@ Mobj* P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mob
    z += P_SubRandom(pr_spawnblood) << 10;
 
    th = P_SpawnMobj(x,y,z, E_SafeThingType(MT_BLOOD));
-   NetActors.remove(th);
+   // NetActors.remove(th);
    th->momz = FRACUNIT*2;
    th->tics -= P_Random(pr_spawnblood)&3;
 

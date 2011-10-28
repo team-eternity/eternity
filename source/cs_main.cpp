@@ -1311,27 +1311,35 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
 void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
                   angle_t angle, int updown, bool ptcl)
 {
+   Mobj *puff = NULL;
+
    if(serverside)
    {
-      Mobj *puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+      puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
       if(CS_SERVER)
          SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
    }
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
-      CL_SpawnPuff(x, y, z, angle, updown, ptcl);
+   {
+      puff = CL_SpawnPuff(0, x, y, z, angle, updown, ptcl);
+   }
 }
 
 void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
                    angle_t angle, int damage, Mobj *target)
 {
+   Mobj *blood = NULL;
+
    if(serverside)
    {
-      Mobj *blood = P_SpawnBlood(x, y, z, angle, damage, target);
+      blood = P_SpawnBlood(x, y, z, angle, damage, target);
       if(CS_SERVER)
          SV_BroadcastBloodSpawned(blood, shooter, damage, target);
    }
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
-      CL_SpawnBlood(x, y, z, angle, damage, target);
+   {
+      blood = CL_SpawnBlood(0, x, y, z, angle, damage, target);
+   }
 }
 
 char* CS_ExtractMessage(char *data, size_t data_length)

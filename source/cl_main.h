@@ -86,10 +86,10 @@ Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
 void  CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,
                      fixed_t z, angle_t angle, bool as_spectator);
 void  CL_RemovePlayer(int playernum);
-Mobj* CL_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                   int updown, bool ptcl);
-Mobj* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                    int damage, Mobj *target);
+Mobj* CL_SpawnPuff(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int updown, bool ptcl);
+Mobj* CL_SpawnBlood(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                    angle_t angle, int damage, Mobj *target);
 void  CL_RemoveMobj(Mobj *actor);
 void  CL_LoadWADs(void);
 bool  CL_SetMobjState(Mobj *mobj, statenum_t state);

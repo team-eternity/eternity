@@ -783,13 +783,19 @@ void CL_HandlePlayerMessage(nm_playermessage_t *message)
 
 void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
 {
-   if(cl_predict_shots &&
-      message->shooter_net_id == players[consoleplayer].mo->net_id)
+   Mobj *puff, *shooter;
+
+   if((shooter = NetActors.lookup(message->shooter_net_id)) == NULL)
    {
+      doom_printf(
+         "Received spawn puff message for invalid shooter %u, ignoring.\n",
+         message->shooter_net_id
+      );
       return;
    }
 
-   CL_SpawnPuff(
+   puff = CL_SpawnPuff(
+      message->puff_net_id,
       message->x,
       message->y,
       message->z,
@@ -797,15 +803,23 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
       message->updown,
       message->ptcl
    );
+
+   if(CL_SHOULD_PREDICT_SHOT(shooter))
+      puff->flags2 |= MF2_DONTDRAW;
+
+   printf("CL_HandlePuffSpawnedMessage: Spawned puff %u.\n", puff->net_id);
 }
 
 void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
 {
-   Mobj *target;
+   Mobj *blood, *shooter, *target;
 
-   if(cl_predict_shots &&
-      message->shooter_net_id == players[consoleplayer].mo->net_id)
+   if((shooter = NetActors.lookup(message->shooter_net_id)) == NULL)
    {
+      doom_printf(
+         "Received spawn puff message for invalid shooter %u, ignoring.\n",
+         message->shooter_net_id
+      );
       return;
    }
 
@@ -818,7 +832,8 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
       return;
    }
 
-   CL_SpawnBlood(
+   blood = CL_SpawnBlood(
+      message->blood_net_id,
       message->x,
       message->y,
       message->z,
@@ -826,6 +841,10 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
       message->damage,
       target
    );
+
+   if(CL_SHOULD_PREDICT_SHOT(shooter))
+      blood->flags2 |= MF2_DONTDRAW;
+
 }
 
 void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)

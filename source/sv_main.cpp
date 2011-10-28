@@ -1724,7 +1724,7 @@ unsigned int SV_ClientCommandBufferSize(int playernum)
    client_t *client = &clients[playernum];
 
    if(!sv_buffer_commands)
-      return 2;
+      return 0;
 
    if(!client->packet_loss)
       return 0;
@@ -1860,6 +1860,7 @@ void SV_BroadcastPuffSpawned(Mobj *puff, Mobj *shooter, int updown,
 
    puff_message.message_type = nm_puffspawned;
    puff_message.world_index = sv_world_index;
+   puff_message.puff_net_id = puff->net_id;
    puff_message.shooter_net_id = shooter->net_id;
    puff_message.x = puff->x;
    puff_message.y = puff->y;
@@ -1878,6 +1879,7 @@ void SV_BroadcastBloodSpawned(Mobj *blood, Mobj *shooter, int damage,
 
    blood_message.message_type = nm_bloodspawned;
    blood_message.world_index = sv_world_index;
+   blood_message.blood_net_id = blood->net_id;
    blood_message.shooter_net_id = shooter->net_id;
    blood_message.target_net_id = target->net_id;
    blood_message.x = blood->x;

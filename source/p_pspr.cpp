@@ -546,6 +546,7 @@ void P_SubtractAmmo(player_t *player, int compat_amt)
 
    // WEAPON_FIXME/TODO: comp flag for corruption of player->maxammo by DeHackEd
    if(player->cheats & CF_INFAMMO || 
+      (dmflags2 & dmf_infinite_ammo) ||
       (demo_version >= 329 && ammotype >= NUMAMMO))
       return;
    

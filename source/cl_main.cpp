@@ -394,25 +394,35 @@ void CL_RemovePlayer(int playernum)
    CS_InitPlayer(playernum);
 }
 
-Mobj* CL_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                     int updown, bool ptcl)
+Mobj* CL_SpawnPuff(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                   angle_t angle, int updown, bool ptcl)
 {
    Mobj *puff;
 
    cl_spawning_actor_from_message = true;
    puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+   if(net_id)
+   {
+      puff->net_id = net_id;
+      NetActors.add(puff);
+   }
    cl_spawning_actor_from_message = false;
 
    return puff;
 }
 
-Mobj* CL_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t angle,
-                      int damage, Mobj *target)
+Mobj* CL_SpawnBlood(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
+                    angle_t angle, int damage, Mobj *target)
 {
    Mobj *blood;
 
    cl_spawning_actor_from_message = true;
    blood = P_SpawnBlood(x, y, z, angle, damage, target);
+   if(net_id)
+   {
+      blood->net_id = net_id;
+      NetActors.add(blood);
+   }
    cl_spawning_actor_from_message = false;
 
    return blood;

@@ -69,14 +69,14 @@ public:
             I_Error("Net ID %u has multiple owners, exiting.\n", x->net_id);
          net_id = x->net_id;
       }
-      else if(!netid_queue.empty())
+      else if(netid_queue.empty())
       {
-         net_id = netid_queue.front();
-         netid_queue.pop();
+         net_id = netids_assigned + 1;
       }
       else
       {
-         net_id = netids_assigned + 1;
+         net_id = netid_queue.front();
+         netid_queue.pop();
       }
 
       netid_map[net_id] = x;

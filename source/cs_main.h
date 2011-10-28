@@ -102,8 +102,9 @@ struct event_t;
 //      spawned.
 
 #define CL_SHOULD_PREDICT_SHOT(shooter) (clientside && ( \
-   cl_predict_shots && ((shooter)->player - players == consoleplayer)) \
-)
+   cl_predict_shots && \
+   ((shooter)->net_id == players[consoleplayer].mo->net_id) \
+))
 
 #define CS_SHOULD_SHOW_SHOT(shooter) ( \
    serverside || (!(shooter)->player) || (CL_SHOULD_PREDICT_SHOT((shooter))) \
@@ -582,6 +583,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t puff_net_id;
    uint32_t shooter_net_id;
    fixed_t x;
    fixed_t y;
@@ -595,6 +597,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
+   uint32_t blood_net_id;
    uint32_t shooter_net_id;
    uint32_t target_net_id;
    fixed_t x;
