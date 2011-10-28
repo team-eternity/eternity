@@ -1745,6 +1745,14 @@ void SV_RunPlayerCommands(int playernum)
    server_client_t *sc = &server_clients[playernum];
    uint32_t command_buffer_size = SV_ClientCommandBufferSize(playernum);
 
+   if(!sc->command_buffer_filled)
+   {
+      if(sc->commands.size >= SV_ClientCommandBufferSize(playernum))
+         sc->command_buffer_filled = true;
+      else
+         return;
+   }
+
    if(M_QueueIsEmpty(&sc->commands))
       return;
 

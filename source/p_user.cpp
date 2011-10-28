@@ -628,6 +628,10 @@ void P_PlayerThink(player_t *player)
    if(player->playerstate == PST_DEAD)
    {
       P_DeathThink(player);
+
+      if(CS_SERVER)
+         SV_RunPlayerCommands(playernum);
+
       return;
    }
 
@@ -636,14 +640,7 @@ void P_PlayerThink(player_t *player)
    else if(CS_CLIENT && playernum == consoleplayer)
       CL_PredictPlayerPosition(cl_current_world_index, false);
    else if(CS_SERVER)
-   {
-      server_client_t *sc = &server_clients[playernum];
-
-      if(sc->command_buffer_filled)
-         SV_RunPlayerCommands(playernum);
-      else if(sc->commands.size >= SV_ClientCommandBufferSize(playernum))
-         sc->command_buffer_filled = true;
-   }
+      SV_RunPlayerCommands(playernum);
 
    // [CG] 09/18/11: Don't scream if predicting or spectating (rofl).
    if(!clientserver || (!clients[playernum].spectating && !cl_predicting))
