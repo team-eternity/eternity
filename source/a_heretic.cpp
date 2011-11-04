@@ -246,13 +246,13 @@ void A_HticDrop(Mobj *actor)
    A_Fall(actor);
 
    // haleyjd 07/05/03: adjusted for EDF
-   if(thingtype1 >= 0 && thingtype1 < NUMMOBJTYPES)
+   if(thingtype1 >= 0)
    {
       if(P_Random(pr_hdrop1) <= chance1)
          P_HticDrop(actor, drop1, thingtype1);
    }
 
-   if(thingtype2 >= 0 && thingtype2 < NUMMOBJTYPES)
+   if(thingtype2 >= 0)
    {
       if(P_Random(pr_hdrop2) <= chance2)
          P_HticDrop(actor, drop2, thingtype2);
@@ -554,7 +554,7 @@ void P_SpawnSorcSpots(void)
    sorcspots.setMobjType(spotType);
    sorcspots.makeEmpty();
 
-   if(spotType == NUMMOBJTYPES)
+   if(spotType == -1)
       return;
 
    sorcspots.collectThings();

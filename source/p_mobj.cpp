@@ -2033,7 +2033,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
          if(HelperThing != -1)
          {
             // haleyjd 07/05/03: adjusted for EDF
-            if(HelperThing != NUMMOBJTYPES)
+            if(HelperThing != -1)
                i = HelperThing;
             else
                doom_printf(FC_ERROR "Invalid value for helper, ignored.");
@@ -2097,7 +2097,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // Do not abort because of an unknown thing. Ignore it, but post a
    // warning message for the player.
 
-   if(i == NUMMOBJTYPES)
+   // EDF3-FIXME: eliminate different behavior of doomednum hash
+   if(i == -1 || i == NUMMOBJTYPES)
    {
       // haleyjd: handle Doom Builder camera spots specially here, so that they
       // cannot desync demos recorded in BOOM-compatible ports

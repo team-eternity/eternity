@@ -679,7 +679,7 @@ static void E_ParseMiscField(const char *value, int *target)
       case PREFIX_THING:
          {
             int thingnum = E_ThingNumForName(strval);
-            if(thingnum == NUMMOBJTYPES)
+            if(thingnum == -1)
             {
                E_EDFLoggedWarning(2, "Warning: invalid thing '%s' in misc field\n",
                                   strval);
@@ -762,7 +762,7 @@ static void E_ParseMiscField(const char *value, int *target)
          edf_string_t *str;
          deh_bexptr *dp;
          
-         if((temp = E_ThingNumForName(value)) != NUMMOBJTYPES) // thingtype?
+         if((temp = E_ThingNumForName(value)) != -1)           // thingtype?
             E_AssignMiscThing(target, temp);
          else if((temp = E_StateNumForName(value)) >= 0)       // frame?
             E_AssignMiscState(target, temp);

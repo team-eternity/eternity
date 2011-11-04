@@ -1851,7 +1851,7 @@ void A_FirePlayerMissile(Mobj *actor)
    seek     = !!E_ArgAsKwd(psp->state->args, 1, &seekkwds, 0);
 
    // validate thingtype
-   if(thingnum < 0 || thingnum == NUMMOBJTYPES)
+   if(thingnum < 0 || thingnum == -1)
       return;
 
    // decrement ammo if appropriate

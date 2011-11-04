@@ -1120,7 +1120,7 @@ void R_DoomTLStyle(void)
       int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
       int action = DoomThingStyles[i].actions[r_tlstyle];
       
-      if(tnum == NUMMOBJTYPES)
+      if(tnum == -1)
          continue;
 
       // Do not modify any flags if TLSTYLEADD was set in EDF initially.

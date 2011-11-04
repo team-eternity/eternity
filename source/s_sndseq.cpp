@@ -625,7 +625,7 @@ void S_InitEnviroSpots(void)
    enviroSpots.setMobjType(enviroType);
    enviroSpots.makeEmpty();
 
-   if(enviroType != NUMMOBJTYPES)
+   if(enviroType != -1)
       enviroSpots.collectThings();
 
    S_ResetEnviroSeqEngine();

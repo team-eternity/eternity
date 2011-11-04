@@ -100,7 +100,7 @@ void IN_AddCameras(void)
 
    // no camera view if camera type is undefined or we're in an
    // older demo.
-   if(cameratype == NUMMOBJTYPES || demo_version < 331)
+   if(cameratype == -1 || demo_version < 331)
       return;
    
    camerathings.collectThings();

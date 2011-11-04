@@ -77,7 +77,7 @@ void A_Mushroom(Mobj *actor)
 
    ShotType = E_ArgAsThingNumG0(actor->state->args, 0);
 
-   if(ShotType < 0 || ShotType == NUMMOBJTYPES)
+   if(ShotType < 0 || ShotType == -1)
       ShotType = E_SafeThingType(MT_FATSHOT);
    
    A_Explode(actor);               // make normal explosion

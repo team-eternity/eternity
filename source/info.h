@@ -159,14 +159,14 @@ class Mobj;
 // ********************************************************************
 struct state_t
 {
-   DLListItem<state_t> namelinks;     // haleyjd 03/30/10: new hashing: by name
-   DLListItem<state_t> numlinks;      // haleyjd 03/30/10: new hashing: by dehnum
+   DLListItem<state_t> namelinks;      // haleyjd 03/30/10: new hashing: by name
+   DLListItem<state_t> numlinks;       // haleyjd 03/30/10: new hashing: by dehnum
 
    spritenum_t sprite;                 // sprite number to show
    int         frame;                  // which frame/subframe of the sprite is shown
    int         tics;                   // number of gametics this frame should last
-   void        (*action)(Mobj *);    // code pointer to function for action if any
-   void        (*oldaction)(Mobj *); // haleyjd: original action, for DeHackEd
+   void        (*action)(Mobj *);      // code pointer to function for action if any
+   void        (*oldaction)(Mobj *);   // haleyjd: original action, for DeHackEd
    statenum_t  nextstate;              // index of next state, or -1
    int         misc1, misc2;           // used for psprite positioning
    int         particle_evt;           // haleyjd: determines an event to run
@@ -390,18 +390,19 @@ struct mobjinfo_t
    void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
-   char name[129];    // name of this thing type (max 40 chars)
-   int dehnum;        // DeHackEd number for fast lookup and comparison
-   int namenext;      // next mobjinfo_t in name hash chain
-   int dehnext;       // next mobjinfo_t in DEH hash chain
-   int index;         // index in mobjinfo
+   DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name
+   DLListItem<mobjinfo_t> numlinks;  // haleyjd 11/03/11: new hashing: by dehnum
+
+   ENCStringHashKey namekey;      // pointer to name of this state
+   char             name[129];    // buffer for name (max 128 chars)
+   EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
+   int index;                     // index in mobjinfo
 
    // 08/17/09: metatable
    MetaTable *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    mobjinfo_t *parent;
-
 };
 
 // See p_mobj_h for addition more technical info

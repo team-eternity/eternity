@@ -1265,7 +1265,7 @@ void P_SpawnBrainTargets(void)  // killough 3/26/98: renamed old function
 
    brain.easy = 0;   // killough 3/26/98: always init easy to 0
 
-   if(BrainSpotType == NUMMOBJTYPES)
+   if(BrainSpotType == -1)
       return;
 
    braintargets.collectThings();

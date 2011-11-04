@@ -805,12 +805,12 @@ void E_PtclTerrainHit(particle_t *p)
    z = p->z;
 
    // low mass splash -- always when possible.
-   if(splash->smallclass != NUMMOBJTYPES)
+   if(splash->smallclass != -1)
    {
       mo = P_SpawnMobj(x, y, z, splash->smallclass);
       mo->floorclip += splash->smallclip;      
    }
-   else if(splash->baseclass != NUMMOBJTYPES)
+   else if(splash->baseclass != -1)
    {
       // spawn only a splash base otherwise
       mo = P_SpawnMobj(x, y, z, splash->baseclass);
@@ -837,17 +837,17 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z)
    // low mass splash?
    // note: small splash didn't exist before version 3.33
    if(demo_version >= 333 && 
-      lowmass && splash->smallclass != NUMMOBJTYPES)
+      lowmass && splash->smallclass != -1)
    {
       mo = P_SpawnMobj(thing->x, thing->y, z, splash->smallclass);
       mo->floorclip += splash->smallclip;
    }
    else
    {
-      if(splash->baseclass != NUMMOBJTYPES)
+      if(splash->baseclass != -1)
          mo = P_SpawnMobj(thing->x, thing->y, z, splash->baseclass);
 
-      if(splash->chunkclass != NUMMOBJTYPES)
+      if(splash->chunkclass != -1)
       {
          mo = P_SpawnMobj(thing->x, thing->y, z, splash->chunkclass);
          P_SetTarget<Mobj>(&mo->target, thing);

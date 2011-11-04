@@ -40,6 +40,7 @@
 #include "d_mod.h"
 #include "e_dstate.h"
 #include "e_edf.h"
+#include "e_hash.h"
 #include "e_lib.h"
 #include "e_mod.h"
 #include "e_sound.h"
@@ -484,36 +485,35 @@ cfg_opt_t edf_tdelta_opts[] =
 // Thing hash tables
 // Note: Keep some buffer space between this prime number and the
 // number of default mobj types defined, so that users can add a
-// number of types without causing significant hash collisions. I
-// do not recommend changing the hash table to be dynamically allocated.
+// number of types without causing significant hash collisions.
 
+// Number of chains
 #define NUMTHINGCHAINS 307
-static int thing_namechains[NUMTHINGCHAINS];
-static int thing_dehchains[NUMTHINGCHAINS];
+
+// hash by name
+static EHashTable<mobjinfo_t, ENCStringHashKey> thing_namehash(&mobjinfo_t::namekey, 
+                                                               &mobjinfo_t::namelinks);
+
+// hash by DeHackEd number
+static EHashTable<mobjinfo_t, EIntHashKey> thing_dehhash(&mobjinfo_t::dehnum,
+                                                         &mobjinfo_t::numlinks);
 
 //
 // E_ThingNumForDEHNum
 //
 // As with states, things need to store their DeHackEd number now.
-// Returns NUMMOBJTYPES if a thing type is not found. This is used
+// Returns -1 if a thing type is not found. This is used
 // extensively by parameterized codepointers.
 //
 int E_ThingNumForDEHNum(int dehnum)
 {
-   int thingnum;
-   int thingkey = dehnum % NUMTHINGCHAINS;
+   mobjinfo_t *info = NULL;
+   int ret = -1;
 
-   if(dehnum < 0)
-      return NUMMOBJTYPES;
+   if((info = thing_dehhash.objectForKey(dehnum)))
+      ret = info->index;
 
-   thingnum = thing_dehchains[thingkey];
-   while(thingnum != NUMMOBJTYPES && 
-         mobjinfo[thingnum]->dehnum != dehnum)
-   {
-      thingnum = mobjinfo[thingnum]->dehnext;
-   }
-
-   return thingnum;
+   return ret;
 }
 
 //
@@ -525,7 +525,7 @@ int E_GetThingNumForDEHNum(int dehnum)
 {
    int thingnum = E_ThingNumForDEHNum(dehnum);
 
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
       I_Error("E_GetThingNumForDEHNum: invalid deh num %d\n", dehnum);
 
    return thingnum;
@@ -541,7 +541,7 @@ int E_SafeThingType(int dehnum)
 {
    int thingnum = E_ThingNumForDEHNum(dehnum);
 
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
       thingnum = UnknownThingType;
 
    return thingnum;
@@ -556,7 +556,7 @@ int E_SafeThingName(const char *name)
 {
    int thingnum = E_ThingNumForName(name);
 
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
       thingnum = UnknownThingType;
 
    return thingnum;
@@ -565,22 +565,18 @@ int E_SafeThingName(const char *name)
 //
 // E_ThingNumForName
 //
-// Returns a thing type index given its name. Returns NUMMOBJTYPES
+// Returns a thing type index given its name. Returns -1
 // if a thing type is not found.
 //
 int E_ThingNumForName(const char *name)
 {
-   int thingnum;
-   unsigned int thingkey = D_HashTableKey(name) % NUMTHINGCHAINS;
-   
-   thingnum = thing_namechains[thingkey];
-   while(thingnum != NUMMOBJTYPES && 
-         strcasecmp(name, mobjinfo[thingnum]->name))
-   {
-      thingnum = mobjinfo[thingnum]->namenext;
-   }
-   
-   return thingnum;
+   mobjinfo_t *info = NULL;
+   int ret = -1;
+
+   if((info = thing_namehash.objectForKey(name)))
+      ret = info->index;
+
+   return ret;
 }
 
 //
@@ -592,7 +588,7 @@ int E_GetThingNumForName(const char *name)
 {
    int thingnum = E_ThingNumForName(name);
 
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
       I_Error("E_GetThingNumForName: bad thing type %s\n", name);
 
    return thingnum;
@@ -611,7 +607,6 @@ static int edf_alloc_thing_dehnum = D_MAXINT;
 
 bool E_AutoAllocThingDEHNum(int thingnum)
 {
-   unsigned int key;
    int dehnum;
    mobjinfo_t *mi = mobjinfo[thingnum];
 
@@ -628,7 +623,7 @@ bool E_AutoAllocThingDEHNum(int thingnum)
    {
       dehnum = edf_alloc_thing_dehnum--;
    } 
-   while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != NUMMOBJTYPES);
+   while(dehnum >= 0 && E_ThingNumForDEHNum(dehnum) != -1);
 
    // ran out while looking for an unused number?
    if(dehnum < 0)
@@ -636,9 +631,7 @@ bool E_AutoAllocThingDEHNum(int thingnum)
 
    // assign it!
    mi->dehnum = dehnum;
-   key = dehnum % NUMTHINGCHAINS;
-   mi->dehnext = thing_dehchains[key];
-   thing_dehchains[key] = thingnum;
+   thing_dehhash.addObject(mi);
 
    return true;
 }
@@ -658,6 +651,13 @@ void E_CollectThings(cfg_t *tcfg)
    int i;
    mobjinfo_t *newMobjInfo;
 
+   // initialize hash tables if needed
+   if(!thing_namehash.isInitialized())
+   {
+      thing_namehash.Initialize(NUMTHINGCHAINS);
+      thing_dehhash.Initialize(NUMTHINGCHAINS);
+   }
+
    // allocate pointer array
    // EDF3-TODO: reallocation logic ala states
    mobjinfo = ecalloc(mobjinfo_t **, NUMMOBJTYPES, sizeof(mobjinfo_t *));
@@ -674,19 +674,13 @@ void E_CollectThings(cfg_t *tcfg)
       mobjinfo[i]->meta = new MetaTable("mobjinfo");
    }
 
-   // initialize hash slots
-   for(i = 0; i < NUMTHINGCHAINS; ++i)
-      thing_namechains[i] = thing_dehchains[i] = NUMMOBJTYPES;
-
    // build hash tables
    E_EDFLogPuts("\t\tBuilding thing hash tables\n");
 
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
-      unsigned int key;
       cfg_t *thingcfg = cfg_getnsec(tcfg, EDF_SEC_THING, i);
       const char *name = cfg_title(thingcfg);
-      int tempint;
 
       // set index
       mobjinfo[i]->index = i;
@@ -699,40 +693,21 @@ void E_CollectThings(cfg_t *tcfg)
       }
 
       // copy it to the thing
-      memset (mobjinfo[i]->name, 0,    sizeof(mobjinfo[i]->name));
       strncpy(mobjinfo[i]->name, name, sizeof(mobjinfo[i]->name));
+      mobjinfo[i]->namekey = mobjinfo[i]->name;
 
       // hash it
-      key = D_HashTableKey(name) % NUMTHINGCHAINS;
-      mobjinfo[i]->namenext = thing_namechains[key];
-      thing_namechains[key] = i;
+      thing_namehash.addObject(mobjinfo[i]);
 
       // process dehackednum and add thing to dehacked hash table,
       // if appropriate
-      tempint = cfg_getint(thingcfg, ITEM_TNG_DEHNUM);
-      mobjinfo[i]->dehnum = tempint;
-      if(tempint != -1)
-      {
-         int dehkey = tempint % NUMTHINGCHAINS;
-         int cnum;
-         
-         // make sure it doesn't exist yet
-         if((cnum = E_ThingNumForDEHNum(tempint)) != NUMMOBJTYPES)
-         {
-            E_EDFLoggedErr(2, 
-               "E_CollectThings: thing '%s' reuses dehackednum %d\n"
-               "                 Conflicting thing: '%s'\n",
-               mobjinfo[i]->name, tempint, mobjinfo[cnum]->name);
-         }
-   
-         mobjinfo[i]->dehnext = thing_dehchains[dehkey];
-         thing_dehchains[dehkey] = i;
-      }
+      if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
+         thing_dehhash.addObject(mobjinfo[i]);
    }
 
    // verify the existance of the Unknown thing type
    UnknownThingType = E_ThingNumForName("Unknown");
-   if(UnknownThingType == NUMMOBJTYPES)
+   if(UnknownThingType == -1)
       E_EDFLoggedErr(2, "E_CollectThings: 'Unknown' thingtype must be defined!\n");
 }
 
@@ -1442,16 +1417,20 @@ static void E_CopyThing(int num, int pnum)
 {
    char name[129];
    mobjinfo_t *this_mi;
-   MetaTable *meta;
-   int dehnum, dehnext, namenext, index;
+   DLListItem<mobjinfo_t> namelinks, numlinks;
+   ENCStringHashKey namekey;
+   EIntHashKey numkey;
+   MetaTable  *meta;
+   int         index;
    
    this_mi = mobjinfo[num];
 
    // must save the following fields in the destination thing
+   namelinks  = this_mi->namelinks;
+   numlinks   = this_mi->numlinks;
+   namekey    = this_mi->namekey;
+   numkey     = this_mi->dehnum;
    meta       = this_mi->meta;
-   dehnum     = this_mi->dehnum;
-   dehnext    = this_mi->dehnext;
-   namenext   = this_mi->namenext;
    index      = this_mi->index;
    memcpy(name, this_mi->name, sizeof(this_mi->name));
 
@@ -1473,10 +1452,11 @@ static void E_CopyThing(int num, int pnum)
    this_mi->meta = meta;
 
    // must restore name and dehacked num data
-   this_mi->dehnum   = dehnum;
-   this_mi->dehnext  = dehnext;
-   this_mi->namenext = namenext;
-   this_mi->index    = index;
+   this_mi->namelinks = namelinks;
+   this_mi->numlinks  = numlinks;
+   this_mi->namekey   = namekey;
+   this_mi->dehnum    = numkey;
+   this_mi->index     = index;
    memcpy(this_mi->name, name, sizeof(this_mi->name));
 
    // other fields not inherited:
@@ -1965,7 +1945,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       {
          tempint = E_ThingNumForName(tempstr);
 
-         if(tempint == NUMMOBJTYPES)
+         if(tempint == -1)
          {
             // haleyjd 05/31/06: demoted to warning
             E_EDFLoggedWarning(2, "Warning: thing '%s': bad drop type '%s'\n",

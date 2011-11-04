@@ -1432,7 +1432,7 @@ static void E_ProcessCast(cfg_t *cfg)
       // resolve thing type
       tempstr = cfg_getstr(castsec, ITEM_CAST_TYPE);
       if(!tempstr || 
-         (tempint = E_ThingNumForName(tempstr)) == NUMMOBJTYPES)
+         (tempint = E_ThingNumForName(tempstr)) == -1)
       {
          E_EDFLoggedWarning(2, "Warning: cast %d: unknown thing type %s\n",
                             i, tempstr);
@@ -1578,7 +1578,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
       const char *typeName = cfg_getnstr(cfg, SEC_BOSSTYPES, i);
       int typeNum = E_ThingNumForName(typeName);
 
-      if(typeNum == NUMMOBJTYPES)
+      if(typeNum == -1)
       {
          E_EDFLoggedWarning(2, "Warning: invalid boss type '%s'\n", typeName);
 

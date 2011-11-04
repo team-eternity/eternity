@@ -1816,7 +1816,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1851,7 +1851,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       return;
    
    thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1892,7 +1892,7 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
       return;
    
    thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
    {
       C_Printf("unknown thing type\n");
       return;
