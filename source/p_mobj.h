@@ -248,7 +248,7 @@ public:
    int                 validcount;
 
    mobjtype_t          type;
-   mobjinfo_t*         info;   // &mobjinfo[mobj->type]
+   mobjinfo_t*         info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
 

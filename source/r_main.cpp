@@ -1127,19 +1127,19 @@ void R_DoomTLStyle(void)
       // None of the target thingtypes normally start out with this flag,
       // so if they already have it, then we know an older mod (essel's
       // Eternity enhancement pack, probably) is active.
-      if(firsttime && mobjinfo[tnum].flags3 & MF3_TLSTYLEADD)
+      if(firsttime && mobjinfo[tnum]->flags3 & MF3_TLSTYLEADD)
          continue;
       
       // Do the action
       if(action & R_CLEARTL)
-         mobjinfo[tnum].flags &= ~MF_TRANSLUCENT;
+         mobjinfo[tnum]->flags &= ~MF_TRANSLUCENT;
       else if(action & R_SETTL)
-         mobjinfo[tnum].flags |= MF_TRANSLUCENT;
+         mobjinfo[tnum]->flags |= MF_TRANSLUCENT;
       
       if(action & R_CLEARADD)
-         mobjinfo[tnum].flags3 &= ~MF3_TLSTYLEADD;
+         mobjinfo[tnum]->flags3 &= ~MF3_TLSTYLEADD;
       else if(action & R_SETADD)
-         mobjinfo[tnum].flags3 |= MF3_TLSTYLEADD;
+         mobjinfo[tnum]->flags3 |= MF3_TLSTYLEADD;
       
       // if we are in-level, update all things of the corresponding type too
       if(gamestate == GS_LEVEL)

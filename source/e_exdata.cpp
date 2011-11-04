@@ -817,7 +817,7 @@ static int E_ParseTypeField(const char *value)
       {
          // translate from EDF mnemonic to doomednum
          int type = E_SafeThingName(strval);
-         int num = mobjinfo[type].doomednum;
+         int num = mobjinfo[type]->doomednum;
          
          // don't return -1, use no-op zero in that case
          // (this'll work even if somebody messed with 'Unknown')
@@ -914,7 +914,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // ExtraData, but the error is tolerated by changing it to an 
       // "Unknown" thing
       if(EDThings[i].type == ED_CTRL_DOOMEDNUM)
-         EDThings[i].type = mobjinfo[UnknownThingType].doomednum;
+         EDThings[i].type = mobjinfo[UnknownThingType]->doomednum;
 
       // options
       tempstr = cfg_getstr(thingsec, FIELD_OPTIONS);

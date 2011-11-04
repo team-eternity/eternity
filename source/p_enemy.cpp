@@ -1658,7 +1658,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    }
 
    // if it's a missile, shoot it
-   if(mobjinfo[type].flags & MF_MISSILE)
+   if(mobjinfo[type]->flags & MF_MISSILE)
    {
       newmobj = P_SpawnPlayerMissile(plyr->mo, type);
 
@@ -1671,12 +1671,12 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       // do a good old Pain-Elemental style summoning
       an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
+      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
       
       x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
       y = plyr->mo->y + FixedMul(prestep, finesine[an]);
       
-      z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+      z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
       if(Check_Sides(plyr->mo, x, y))
          return;
@@ -1856,7 +1856,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       C_Printf("unknown thing type\n");
       return;
    }
-   if(!(mobjinfo[thingnum].flags & MF_SPECIAL))
+   if(!(mobjinfo[thingnum]->flags & MF_SPECIAL))
    {
       C_Printf("thing type is not a special\n");
       return;

@@ -672,7 +672,7 @@ void A_GenWizard(Mobj *actor)
    }
    
    mo = P_SpawnMobj(actor->x, actor->y, 
-                    actor->z-mobjinfo[wizType].height/2, 
+                    actor->z-mobjinfo[wizType]->height/2, 
                     wizType);
 
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
@@ -701,7 +701,7 @@ void A_GenWizard(Mobj *actor)
 
    // set this missile object to die
    actor->momx = actor->momy = actor->momz = 0;
-   P_SetMobjState(actor, mobjinfo[actor->type].deathstate);
+   P_SetMobjState(actor, mobjinfo[actor->type]->deathstate);
    actor->flags &= ~MF_MISSILE;
    
    // spawn a telefog

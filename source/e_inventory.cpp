@@ -234,7 +234,7 @@ static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
          {
             E_EDFLoggedErr(2, 
                "E_ProcessInventory: cyclic inheritance detected in inventory '%s'\n",
-               /*TODO: mobjinfo[i].name*/ "");
+               /*TODO: mobjinfo[i]->name*/ "");
          }
          
          // add to inheritance stack
@@ -248,13 +248,13 @@ static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
          E_CopyInventory(i, pnum);
 
          // TODO: keep track of parent explicitly
-         // mobjinfo[i].parent = &mobjinfo[pnum];
+         // mobjinfo[i]->parent = mobjinfo[pnum];
          
          // we inherit, so treat defaults as no value
          inherits = true;
       }
       else
-        ; // TODO: mobjinfo[i].parent = NULL; // no parent.
+        ; // TODO: mobjinfo[i]->parent = NULL; // no parent.
 
       // mark this inventory def as processed
       inv_hitlist[i] = 1;
@@ -264,7 +264,7 @@ static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
 
    // output end message if processing a definition
    if(def)
-      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", ""/*TODO:mobjinfo[i].name*/, i);
+      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", ""/*TODO:mobjinfo[i]->name*/, i);
 }
 
 //
@@ -334,7 +334,7 @@ void E_ProcessInventoryDeltas(cfg_t *cfg)
       E_ProcessInventory(0/*TODO:mobjType*/, deltasec, cfg, false);
 
       E_EDFLogPrintf("\t\tApplied inventorydelta #%d to %s(#%d)\n",
-                     i, ""/*TODO:mobjinfo[mobjType].name*/, 0/*TODO:mobjType*/);
+                     i, ""/*TODO:mobjinfo[mobjType]->name*/, 0/*TODO:mobjType*/);
    }
 }
 

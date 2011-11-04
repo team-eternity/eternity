@@ -439,7 +439,7 @@ static jumpinfo_t E_getJumpInfo(mobjinfo_t *mi, const char *arg)
          return ji;
       }
       else
-         ji.mi = &mobjinfo[thingtype];
+         ji.mi = mobjinfo[thingtype];
    }
 
    ji.statename = statename;

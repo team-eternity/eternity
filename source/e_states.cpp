@@ -570,13 +570,13 @@ static void E_AssignMiscThing(int *target, int thingnum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(mobjinfo[thingnum].dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
-      *target = mobjinfo[thingnum].dehnum;
+   if(mobjinfo[thingnum]->dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
+      *target = mobjinfo[thingnum]->dehnum;
    else
    {
       E_EDFLoggedWarning(2, 
                          "Warning: failed to auto-allocate DeHackEd number "
-                         "for thing %s\n", mobjinfo[thingnum].name);
+                         "for thing %s\n", mobjinfo[thingnum]->name);
       *target = UnknownThingType;
    }
 }

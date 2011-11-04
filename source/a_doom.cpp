@@ -544,7 +544,7 @@ bool PIT_VileCheck(Mobj *thing)
    if(thing->info->raisestate == NullStateNum)
       return true;        // monster doesn't have a raise state
    
-   maxdist = thing->info->radius + mobjinfo[vileType].radius;
+   maxdist = thing->info->radius + mobjinfo[vileType]->radius;
    
    if(D_abs(thing->x-viletryx) > maxdist ||
       D_abs(thing->y-viletryy) > maxdist)
@@ -1027,7 +1027,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    
    an = angle >> ANGLETOFINESHIFT;
    
-   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType].radius)/2;
+   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
 
    x = actor->x + FixedMul(prestep, finecosine[an]);
    y = actor->y + FixedMul(prestep, finesine[an]);

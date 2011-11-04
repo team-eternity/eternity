@@ -820,7 +820,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    if(mobjInfoIndex < 0 || mobjInfoIndex >= NUMMOBJTYPES)
       return;
 
-   mi = &mobjinfo[mobjInfoIndex];
+   mi = mobjinfo[mobjInfoIndex];
 
    // haleyjd 07/05/03: field resolution adjusted for EDF
 

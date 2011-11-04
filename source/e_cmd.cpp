@@ -54,9 +54,9 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    {
       //  04/13/08: do not display auto-allocated dehnums
       C_Printf("%5d  %5d  %s\n", 
-               mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
-               mobjinfo[i].doomednum,
-               mobjinfo[i].name);
+               mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
+               mobjinfo[i]->doomednum,
+               mobjinfo[i]->name);
    }
 }
 
@@ -84,9 +84,9 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
             FC_HI "Next by DeHackEd #: " FC_NORMAL "%d\n"
             FC_HI "DoomEd #: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].name, mobjinfo[num].namenext,
-            mobjinfo[num].dehnum, mobjinfo[num].dehnext,
-            mobjinfo[num].doomednum);
+            mobjinfo[num]->name, mobjinfo[num]->namenext,
+            mobjinfo[num]->dehnum, mobjinfo[num]->dehnext,
+            mobjinfo[num]->doomednum);
 
    C_Printf(FC_ERROR "State Data:\n"
             FC_HI "Spawn state: " FC_NORMAL "%d\n"
@@ -98,11 +98,11 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "XDeath state: " FC_NORMAL "%d\n"
             FC_HI "Crash state: " FC_NORMAL "%d\n"
             FC_HI "Raise state: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].spawnstate, mobjinfo[num].seestate,
-            mobjinfo[num].meleestate, mobjinfo[num].missilestate,
-            mobjinfo[num].painstate, mobjinfo[num].deathstate,
-            mobjinfo[num].xdeathstate, mobjinfo[num].crashstate,
-            mobjinfo[num].raisestate);
+            mobjinfo[num]->spawnstate, mobjinfo[num]->seestate,
+            mobjinfo[num]->meleestate, mobjinfo[num]->missilestate,
+            mobjinfo[num]->painstate, mobjinfo[num]->deathstate,
+            mobjinfo[num]->xdeathstate, mobjinfo[num]->crashstate,
+            mobjinfo[num]->raisestate);
 
    C_Printf(FC_ERROR "Sound data:\n"
             FC_HI "See sound: " FC_NORMAL "%d\n"
@@ -110,9 +110,9 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Attack sound: " FC_NORMAL "%d\n"
             FC_HI "Pain sound: " FC_NORMAL "%d\n"
             FC_HI "Death sound: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].seesound, mobjinfo[num].activesound,
-            mobjinfo[num].attacksound, mobjinfo[num].painsound,
-            mobjinfo[num].deathsound);
+            mobjinfo[num]->seesound, mobjinfo[num]->activesound,
+            mobjinfo[num]->attacksound, mobjinfo[num]->painsound,
+            mobjinfo[num]->deathsound);
 
    C_Printf(FC_ERROR "Metrics:\n"
             FC_HI "Spawnhealth: " FC_NORMAL "%d\n"
@@ -123,10 +123,10 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Mass: " FC_NORMAL "%d\n"
             FC_HI "Speed: " FC_NORMAL "%d\n"
             FC_HI "Reaction time: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].spawnhealth, mobjinfo[num].painchance,
-            mobjinfo[num].droptype, mobjinfo[num].radius >> FRACBITS,
-            mobjinfo[num].height >> FRACBITS, mobjinfo[num].mass,
-            mobjinfo[num].speed, mobjinfo[num].reactiontime);
+            mobjinfo[num]->spawnhealth, mobjinfo[num]->painchance,
+            mobjinfo[num]->droptype, mobjinfo[num]->radius >> FRACBITS,
+            mobjinfo[num]->height >> FRACBITS, mobjinfo[num]->mass,
+            mobjinfo[num]->speed, mobjinfo[num]->reactiontime);
 
    C_Printf(FC_ERROR "Damage data:\n"
             FC_HI "Damage: " FC_NORMAL "%d\n"
@@ -134,10 +134,10 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Means of Death: " FC_NORMAL "%d\n"
             FC_HI "Obituary: " FC_NORMAL "%s\n"
             FC_HI "Melee Obituary: " FC_NORMAL "%s\n\n",
-            mobjinfo[num].damage, mobjinfo[num].dmgspecial,
-            mobjinfo[num].mod,
-            mobjinfo[num].obituary ? mobjinfo[num].obituary : "none",
-            mobjinfo[num].meleeobit ? mobjinfo[num].meleeobit : "none");
+            mobjinfo[num]->damage, mobjinfo[num]->dmgspecial,
+            mobjinfo[num]->mod,
+            mobjinfo[num]->obituary ? mobjinfo[num]->obituary : "none",
+            mobjinfo[num]->meleeobit ? mobjinfo[num]->meleeobit : "none");
 
    C_Printf(FC_ERROR "Graphics data:\n"
             FC_HI "Skin sprite: " FC_NORMAL "%d\n"
@@ -145,17 +145,17 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Color: " FC_NORMAL "%d\n"
             FC_HI "Particle FX: " FC_NORMAL "0x%08x\n"
             FC_HI "Translucency: " FC_NORMAL "%d%%\n\n",
-            mobjinfo[num].altsprite, mobjinfo[num].bloodcolor,
-            mobjinfo[num].colour, mobjinfo[num].particlefx,
-            mobjinfo[num].translucency*100/65536);
+            mobjinfo[num]->altsprite, mobjinfo[num]->bloodcolor,
+            mobjinfo[num]->colour, mobjinfo[num]->particlefx,
+            mobjinfo[num]->translucency*100/65536);
 
    C_Printf(FC_ERROR "Flags:\n"
             FC_HI "Flags 1: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 2: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 3: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 4: " FC_NORMAL "0x%08x\n",
-            mobjinfo[num].flags, mobjinfo[num].flags2,
-            mobjinfo[num].flags3, mobjinfo[num].flags4);
+            mobjinfo[num]->flags, mobjinfo[num]->flags2,
+            mobjinfo[num]->flags3, mobjinfo[num]->flags4);
 }
 
 //
@@ -183,9 +183,9 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
       return;
    }
 
-   C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num].name);
+   C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num]->name);
 
-   meta = mobjinfo[num].meta;
+   meta = mobjinfo[num]->meta;
 
    while((obj = meta->tableIterator(obj)))
    {
@@ -210,12 +210,12 @@ CONSOLE_COMMAND(e_dumpitems, 0)
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
       // 04/13/08: do not display auto-allocated dehnums
-      if(mobjinfo[i].flags & MF_SPECIAL)
+      if(mobjinfo[i]->flags & MF_SPECIAL)
       {
          C_Printf("%5d  %5d  %s\n",
-                  mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
-                  mobjinfo[i].doomednum,
-                  mobjinfo[i].name);
+                  mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
+                  mobjinfo[i]->doomednum,
+                  mobjinfo[i]->name);
       }
    }
 }

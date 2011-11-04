@@ -159,7 +159,7 @@ static bool MN_SkinResponder(event_t *ev)
       {
          S_StartSoundName(NULL,
             players[consoleplayer].skin->sounds[sk_plpain]);
-         MN_SkinSetState(states[mobjinfo[skview_typenum].painstate]);
+         MN_SkinSetState(states[mobjinfo[skview_typenum]->painstate]);
          skview_action = SKV_PAIN;
       }
       break;
@@ -196,7 +196,7 @@ static bool MN_SkinResponder(event_t *ev)
                   players[consoleplayer].skin->sounds[sk_pldeth] :
                   players[consoleplayer].skin->sounds[sk_pdiehi]);
          }
-         MN_SkinSetState(states[mobjinfo[skview_typenum].deathstate]);
+         MN_SkinSetState(states[mobjinfo[skview_typenum]->deathstate]);
          skview_action = SKV_DEAD;
       }
       break;
@@ -207,7 +207,7 @@ static bool MN_SkinResponder(event_t *ev)
       {
          S_StartSoundName(NULL,
             players[consoleplayer].skin->sounds[sk_slop]);
-         MN_SkinSetState(states[mobjinfo[skview_typenum].xdeathstate]);
+         MN_SkinSetState(states[mobjinfo[skview_typenum]->xdeathstate]);
          skview_action = SKV_DEAD;
       }
       break;
@@ -221,7 +221,7 @@ static bool MN_SkinResponder(event_t *ev)
       if(skview_action == SKV_DEAD)
       {
          S_StartSound(NULL, GameModeInfo->teleSound);
-         MN_SkinSetState(states[mobjinfo[skview_typenum].seestate]);
+         MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
          skview_action = SKV_WALKING;
       }
       break;
@@ -297,7 +297,7 @@ static void MN_SkinDrawer(void)
 
    pctype = players[consoleplayer].pclass->type;
 
-   if(skview_state->sprite == mobjinfo[pctype].defsprite)
+   if(skview_state->sprite == mobjinfo[pctype]->defsprite)
    {
       // get the player skin sprite definition
       sprdef = &sprites[players[consoleplayer].skin->sprite];
@@ -348,9 +348,9 @@ void MN_SkinTicker(void)
    {
       // hack states: these need special nextstate handling so
       // that the player will start walking again afterward
-      if(skview_state->nextstate == mobjinfo[skview_typenum].spawnstate)
+      if(skview_state->nextstate == mobjinfo[skview_typenum]->spawnstate)
       {
-         MN_SkinSetState(states[mobjinfo[skview_typenum].seestate]);
+         MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
          skview_action = SKV_WALKING;
       }
       else
@@ -393,7 +393,7 @@ void MN_InitSkinViewer(void)
    skview_haswdth = 
       (strcasecmp(players[consoleplayer].skin->sounds[sk_plwdth], "none") != 0);
 
-   MN_SkinSetState(states[mobjinfo[skview_typenum].seestate]);
+   MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
 
    // set the widget
    current_menuwidget = &skinviewer;

@@ -60,7 +60,7 @@ int EV_ThingProjectile(int *args, bool gravity)
    else
       moType = UnknownThingType;
 
-   mi = &mobjinfo[moType];
+   mi = mobjinfo[moType];
  
    // Don't spawn monsters if -nomonsters
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
@@ -117,7 +117,7 @@ int EV_ThingSpawn(int *args, bool fog)
    else
       moType = UnknownThingType;
 
-   mi = &mobjinfo[moType];
+   mi = mobjinfo[moType];
    
    // Don't spawn monsters if -nomonsters 
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))

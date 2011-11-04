@@ -459,7 +459,7 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
       // thing type's normal missilestate.
       if(!tempstr || (statenum = E_StateNumForName(tempstr)) < 0)
       {
-         mobjinfo_t *mi = &mobjinfo[pc->type];
+         mobjinfo_t *mi = mobjinfo[pc->type];
          statenum = mi->missilestate;
       }
       

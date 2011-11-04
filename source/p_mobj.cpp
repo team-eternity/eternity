@@ -377,7 +377,7 @@ void P_ExplodeMissile(Mobj *mo)
       }
    }
 
-   P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 
    if(!(mo->flags4 & MF4_NORANDOMIZE))
    {
@@ -1475,7 +1475,7 @@ void Mobj::serialize(SaveArchive &arc)
       state = states[temp];
       
       // haleyjd 07/23/09: this must be before skin setting!
-      info = &mobjinfo[type]; 
+      info = mobjinfo[type]; 
 
       arc << temp; // Player number
       if(temp)
@@ -1575,7 +1575,7 @@ extern fixed_t tmsecceilz;
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
    Mobj       *mobj = new Mobj;
-   mobjinfo_t *info = &mobjinfo[type];
+   mobjinfo_t *info = mobjinfo[type];
    state_t    *st;
 
    mobj->type    = type;
@@ -1806,9 +1806,9 @@ int P_FindDoomedNum(int type)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; ++i)
       {
-         if(mobjinfo[i].doomednum != -1)
+         if(mobjinfo[i]->doomednum != -1)
          {
-            unsigned h = (unsigned int) mobjinfo[i].doomednum % NUMMOBJTYPES;
+            unsigned h = (unsigned int) mobjinfo[i]->doomednum % NUMMOBJTYPES;
             hash[i].next = hash[h].first;
             hash[h].first = i;
          }
@@ -1816,7 +1816,7 @@ int P_FindDoomedNum(int type)
    }
 
    i = hash[type % NUMMOBJTYPES].first;
-   while(i < NUMMOBJTYPES && mobjinfo[i].doomednum != type)
+   while(i < NUMMOBJTYPES && mobjinfo[i]->doomednum != type)
       i = hash[i].next;
    return i;
 }
@@ -1856,7 +1856,7 @@ void P_RespawnSpecials(void)
    i = P_FindDoomedNum(mthing->type);
 
    // spawn it
-   z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
+   z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    mo = P_SpawnMobj(x,y,z, i);
    mo->spawnpoint = *mthing;
@@ -2122,14 +2122,14 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // don't spawn keycards and players in deathmatch
 
-   if(GameType == gt_dm && (mobjinfo[i].flags & MF_NOTDMATCH))
+   if(GameType == gt_dm && (mobjinfo[i]->flags & MF_NOTDMATCH))
       return NULL;        // sf
 
    // don't spawn any monsters if -nomonsters
 
    if(nomonsters &&
-      ((mobjinfo[i].flags3 & MF3_KILLABLE) ||
-       (mobjinfo[i].flags & MF_COUNTKILL)))
+      ((mobjinfo[i]->flags3 & MF3_KILLABLE) ||
+       (mobjinfo[i]->flags & MF_COUNTKILL)))
       return NULL;        // sf
 
    // spawn it
@@ -2138,10 +2138,10 @@ spawnit:
    x = mthing->x << FRACBITS;
    y = mthing->y << FRACBITS;
 
-   z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
+   z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // haleyjd 10/13/02: float rand z
-   if(mobjinfo[i].flags2 & MF2_SPAWNFLOAT)
+   if(mobjinfo[i]->flags2 & MF2_SPAWNFLOAT)
       z = FLOATRANDZ;
 
    mobj = P_SpawnMobj(x, y, z, i);

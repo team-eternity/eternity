@@ -1588,7 +1588,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
       BossSpawnTypes[i] = typeNum;
 
       E_EDFLogPrintf("\t\tAssigned type %s(#%d) to boss type %d\n",
-                     mobjinfo[typeNum].name, typeNum, i);
+                     mobjinfo[typeNum]->name, typeNum, i);
    }
 }
 

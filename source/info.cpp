@@ -115,7 +115,7 @@ int NUMSTATES = 0;
 // This goes on for the next 3000+ lines...
 
 // haleyjd: made dynamic via EDF
-mobjinfo_t *mobjinfo = NULL;
+mobjinfo_t **mobjinfo = NULL;
 int NUMMOBJTYPES = 0;
 
 
