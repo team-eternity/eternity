@@ -1062,10 +1062,11 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 //
 // E_IsMobjInfoDescendantOf
 //
-// Returns true if the given mobjinfo inherits from the given type by name.
-// Returns false otherwise. Self-identity is *not* considered inheritance.
+// Returns an mobjinfo_t * if the given mobjinfo inherits from the given type 
+// by name. Returns NULL otherwise. Self-identity is *not* considered 
+// inheritance.
 //
-bool E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1073,13 +1074,13 @@ bool E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
    while(curmi)
    {
       if(curmi->index == targettype)
-         return true;
+         break; // found it
 
       // walk up the inheritance tree
       curmi = curmi->parent;
    }
 
-   return false;
+   return curmi;
 }
 
 //
@@ -1144,9 +1145,8 @@ static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
          // otherwise, check if the indicated type inherits from this one
          if(!strcasecmp(typestr, "super") && mi->parent)
             type = mi->parent;
-         else if(E_IsMobjInfoDescendantOf(mi, typestr))
-            type = mobjinfo[E_GetThingNumForName(typestr)];
-
+         else 
+            type = E_IsMobjInfoDescendantOf(mi, typestr);
       }
       else
       {
