@@ -397,6 +397,7 @@ struct mobjinfo_t
    char             name[129];    // buffer for name (max 128 chars)
    EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
    int index;                     // index in mobjinfo
+   int generation;                // EDF generation number
 
    // 08/17/09: metatable
    MetaTable *meta;

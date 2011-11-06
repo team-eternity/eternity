@@ -58,6 +58,8 @@
 #include "r_draw.h"
 #include "w_wad.h"
 
+// 11/06/11: track generations
+static int edf_thing_generation = 1; 
 
 // 7/24/05: This is now global, for efficiency's sake
 
@@ -640,16 +642,90 @@ bool E_AutoAllocThingDEHNum(int thingnum)
 // Processing Functions
 //
 
+// Dynamic Reallocation - haleyjd 11/06/11
+
+//
+// E_CountUniqueThings
+//
+// haleyjd 11/06/11: counts the number of thingtypes in a cfg which do not 
+// overwrite any pre-existing thingtypes by virtue of having the same name.
+//
+static unsigned int E_CountUniqueThings(cfg_t *cfg, unsigned int numthingtypes)
+{
+   unsigned int i;
+   unsigned int count = 0;
+
+   // if the thingtypes name hash is empty, short-circuit for efficiency
+   if(!thing_namehash.getNumItems())
+      return numthingtypes;
+
+   for(i = 0; i < numthingtypes; i++)
+   {
+      cfg_t *thingcfg  = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name = cfg_title(thingcfg);
+
+      // if not in the name table, count it
+      if(E_ThingNumForName(name) < 0)
+         ++count;
+   }
+
+   return count;
+}
+
+//
+// E_ReallocThings
+//
+// haleyjd 11/06/11: Function to reallocate the thingtypes array safely.
+//
+static void E_ReallocThings(int numnewthings)
+{
+   static int numthingsalloc = 0;
+
+   // only realloc when needed
+   if(!numthingsalloc || (NUMMOBJTYPES < numthingsalloc + numnewthings))
+   {
+      int i;
+
+      // First time, just allocate the requested number of mobjinfo.
+      // Afterward:
+      // * If the number of mobjinfo requested is small, add 2 times as many
+      //   requested, plus a small constant amount.
+      // * If the number is large, just add that number.
+
+      if(!numthingsalloc)
+         numthingsalloc = numnewthings;
+      else if(numnewthings <= 50)
+         numthingsalloc += numnewthings * 2 + 32;
+      else
+         numthingsalloc += numnewthings;
+
+      // reallocate mobjinfo[]
+      mobjinfo = erealloc(mobjinfo_t **, mobjinfo, numthingsalloc * sizeof(mobjinfo_t *));
+
+      // set the new mobjinfo pointers to NULL
+      for(i = NUMMOBJTYPES; i < numthingsalloc; i++)
+         mobjinfo[i] = NULL;
+   }
+
+   // increment NUMMOBJTYPES
+   NUMMOBJTYPES += numnewthings;
+}
+
 //
 // E_CollectThings
 //
 // Pre-creates and hashes by name the thingtypes, for purpose 
 // of mutual and forward references.
 //
-void E_CollectThings(cfg_t *tcfg)
+void E_CollectThings(cfg_t *cfg)
 {
-   int i;
-   mobjinfo_t *newMobjInfo;
+   unsigned int i;
+   unsigned int numthingtypes;     // number of thingtypes defined by the cfg
+   unsigned int numnew;            // number of thingtypes that are new
+   unsigned int firstnewthing = 0; // index of first new thingtype
+   unsigned int curnewthing = 0;   // index of current new thingtype being used
+   mobjinfo_t  *newMobjInfo = NULL;
+   static bool firsttime = true;
 
    // initialize hash tables if needed
    if(!thing_namehash.isInitialized())
@@ -658,57 +734,111 @@ void E_CollectThings(cfg_t *tcfg)
       thing_dehhash.Initialize(NUMTHINGCHAINS);
    }
 
-   // allocate pointer array
-   // EDF3-TODO: reallocation logic ala states
-   mobjinfo = ecalloc(mobjinfo_t **, NUMMOBJTYPES, sizeof(mobjinfo_t *));
+   // get number of thingtypes defined by the cfg
+   numthingtypes = cfg_size(cfg, EDF_SEC_THING);
 
-   // allocate structs
-   newMobjInfo = estructalloc(mobjinfo_t, NUMMOBJTYPES);
+   // get number of new thingtypes in the cfg
+   numnew = E_CountUniqueThings(cfg, numthingtypes);
 
-   // 08/17/09: allocate metatables
-   // 11/03/11: also, initialize mobjinfo pointers
-   // EDF3-TODO: only initialize the *new* pointers added to mobjinfo
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   // echo counts
+   E_EDFLogPrintf("\t\t%u thingtypes defined (%u new)\n", numthingtypes, numnew);
+
+   if(numnew)
    {
-      mobjinfo[i] = &newMobjInfo[i];
-      mobjinfo[i]->meta = new MetaTable("mobjinfo");
+      // allocate mobjinfo_t structures for the new thingtypes
+      newMobjInfo = estructalloc(mobjinfo_t, numnew);
+
+      // add space to the mobjinfo array
+      curnewthing = firstnewthing = NUMMOBJTYPES;
+
+      E_ReallocThings((int)numnew);
+
+      // set pointers in mobjinfo[] to the proper structures;
+      // also set self-referential index member, and allocate a
+      // metatable.
+      for(i = firstnewthing; i < (unsigned int)NUMMOBJTYPES; i++)
+      {
+         mobjinfo[i] = &newMobjInfo[i - firstnewthing];
+         mobjinfo[i]->index = i;
+         mobjinfo[i]->meta = new MetaTable("mobjinfo");
+      }
    }
 
    // build hash tables
    E_EDFLogPuts("\t\tBuilding thing hash tables\n");
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   
+   // cycle through the thingtypes defined in the cfg
+   for(i = 0; i < numthingtypes; i++)
    {
-      cfg_t *thingcfg = cfg_getnsec(tcfg, EDF_SEC_THING, i);
+      cfg_t *thingcfg = cfg_getnsec(cfg, EDF_SEC_THING, i);
       const char *name = cfg_title(thingcfg);
+      int thingnum;
 
-      // set index
-      mobjinfo[i]->index = i;
-
-      // verify length
-      if(strlen(name) >= sizeof(mobjinfo[i]->name))
+      if((thingnum = E_ThingNumForName(name)) >= 0)
       {
-         E_EDFLoggedErr(2, 
-            "E_CollectThings: invalid thing mnemonic '%s'\n", name);
+         int dehnum;
+
+         // an mobjinfo already exists by this name
+         mobjinfo_t *mi = mobjinfo[thingnum];
+
+         // get dehackednum of libConfuse definition
+         dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM);
+
+         // if not equal to current mobjinfo dehnum...
+         if(dehnum != mi->dehnum)
+         {
+            // if thing has a valid dehnum, remove it from the deh hash
+            if(mi->dehnum >= 0)
+               thing_dehhash.removeObject(mi);
+
+            // assign the new dehnum
+            mi->dehnum = dehnum;
+
+            // if valid, add it back to the hash with the new id #
+            if(mi->dehnum >= 0)
+               thing_dehhash.addObject(mi);
+         }
       }
+      else
+      {
+         // this is a new mobjinfo
+         mobjinfo_t *mi = mobjinfo[curnewthing++];
 
-      // copy it to the thing
-      strncpy(mobjinfo[i]->name, name, sizeof(mobjinfo[i]->name));
-      mobjinfo[i]->namekey = mobjinfo[i]->name;
+         // check name for validity
+         if(strlen(name) >= sizeof(mi->name))
+            E_EDFLoggedErr(2, "E_CollectStates: bad thing name '%s'\n", name);
 
-      // hash it
-      thing_namehash.addObject(mobjinfo[i]);
+         // initialize name
+         strncpy(mi->name, name, sizeof(mi->name));
+         mi->namekey = mi->name;
 
-      // process dehackednum and add thing to dehacked hash table,
-      // if appropriate
-      if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
-         thing_dehhash.addObject(mobjinfo[i]);
+         // add to name hash
+         thing_namehash.addObject(mi);
+
+         // process dehackednum and add thing to dehacked hash table,
+         // if appropriate
+         if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
+            thing_dehhash.addObject(mobjinfo[i]);
+
+         // set generation
+         mi->generation = edf_thing_generation;
+      }
    }
 
-   // verify the existance of the Unknown thing type
-   UnknownThingType = E_ThingNumForName("Unknown");
-   if(UnknownThingType == -1)
-      E_EDFLoggedErr(2, "E_CollectThings: 'Unknown' thingtype must be defined!\n");
+   // first-time-only events
+   if(firsttime)
+   {
+      // check that at least one thingtype was defined
+      if(!NUMMOBJTYPES)
+         E_EDFLoggedErr(2, "E_CollectThings: no thingtypes defined.\n");
+
+      // verify the existance of the Unknown thing type
+      UnknownThingType = E_ThingNumForName("Unknown");
+      if(UnknownThingType < 0)
+         E_EDFLoggedErr(2, "E_CollectThings: 'Unknown' thingtype must be defined.\n");
+
+      firsttime = false;
+   }
 }
 
 //
@@ -1349,7 +1479,7 @@ static byte *thing_hitlist = NULL;
 
 // thing_pstack: used by recursive E_ProcessThing to track inheritance
 static int  *thing_pstack  = NULL;
-static int  thing_pindex   = 0;
+static int   thing_pindex  = 0;
 
 //
 // E_CheckThingInherit
@@ -1422,6 +1552,7 @@ static void E_CopyThing(int num, int pnum)
    EIntHashKey numkey;
    MetaTable  *meta;
    int         index;
+   int         generation;
    
    this_mi = mobjinfo[num];
 
@@ -1432,6 +1563,7 @@ static void E_CopyThing(int num, int pnum)
    numkey     = this_mi->dehnum;
    meta       = this_mi->meta;
    index      = this_mi->index;
+   generation = this_mi->generation;
    memcpy(name, this_mi->name, sizeof(this_mi->name));
 
    // copy from source to destination
@@ -1452,11 +1584,12 @@ static void E_CopyThing(int num, int pnum)
    this_mi->meta = meta;
 
    // must restore name and dehacked num data
-   this_mi->namelinks = namelinks;
-   this_mi->numlinks  = numlinks;
-   this_mi->namekey   = namekey;
-   this_mi->dehnum    = numkey;
-   this_mi->index     = index;
+   this_mi->namelinks  = namelinks;
+   this_mi->numlinks   = numlinks;
+   this_mi->namekey    = namekey;
+   this_mi->dehnum     = numkey;
+   this_mi->index      = index;
+   this_mi->generation = generation;
    memcpy(this_mi->name, name, sizeof(this_mi->name));
 
    // other fields not inherited:
@@ -2114,10 +2247,6 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_STATES);
       E_ProcessDecorateStateList(mobjinfo[i], tempstr);
    }
-
-   // output end message if processing a definition
-   if(def)
-      E_EDFLogPrintf("\t\tFinished thing %s(#%d)\n", mobjinfo[i]->name, i);
 }
 
 //
@@ -2127,34 +2256,56 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 //
 void E_ProcessThings(cfg_t *cfg)
 {
-   int i;
+   unsigned int i, numthings;
+   static bool firsttime = true;
 
    E_EDFLogPuts("\t* Processing thing data\n");
+
+   numthings = cfg_size(cfg, EDF_SEC_THING);
 
    // allocate inheritance stack and hitlist
    thing_hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
    thing_pstack  = ecalloc(int  *, NUMMOBJTYPES, sizeof(int));
 
-   // 01/17/07: initialize ACS thingtypes array
-   for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
-      ACS_thingtypes[i] = UnknownThingType;
-
-   for(i = 0; i < NUMMOBJTYPES; ++i)
+   // haleyjd 11/06/11: add all things from previous generations to the
+   // processed hit list
+   for(i = 0; i < (unsigned int)NUMMOBJTYPES; i++)
    {
-      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      if(mobjinfo[i]->generation != edf_thing_generation)
+         thing_hitlist[i] = 1;
+   }
+
+   // 01/17/07: first time, initialize ACS thingtypes array
+   if(firsttime)
+   {
+     for(i = 0; i < ACS_NUM_THINGTYPES; ++i)
+        ACS_thingtypes[i] = UnknownThingType;
+   }
+
+   for(i = 0; i < numthings; i++)
+   {
+      cfg_t *thingsec  = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name = cfg_title(thingsec);
+      int thingnum     = E_ThingNumForName(name);
 
       // reset the inheritance stack
       E_ResetThingPStack();
 
       // add this thing to the stack
-      E_AddThingToPStack(i);
+      E_AddThingToPStack(thingnum);
 
-      E_ProcessThing(i, thingsec, cfg, true);
+      E_ProcessThing(thingnum, thingsec, cfg, true);
+      
+      E_EDFLogPrintf("\t\tFinished thingtype %s (#%d)\n", 
+                     mobjinfo[thingnum]->name, thingnum);
    }
 
    // free tables
    efree(thing_hitlist);
    efree(thing_pstack);
+
+   // increment generation count
+   ++edf_thing_generation;
 }
 
 //

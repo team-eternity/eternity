@@ -1330,17 +1330,11 @@ static void E_CollectNames(cfg_t *cfg)
 // E_ProcessStatesAndThings
 //
 // E_ProcessEDF now calls this function to accomplish all state
-// and thing processing. This is necessary to facilitate loading
-// of defaults in the event that there are zero frame or thing
-// definitions.
+// and thing processing. 
 //
 static void E_ProcessStatesAndThings(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Beginning state and thing processing\n");
-
-   // check number of things
-   if((NUMMOBJTYPES = cfg_size(cfg, EDF_SEC_THING)) == 0)
-      E_EDFLoggedErr(2, "E_ProcessStatesAndThings: no things defined\n");
 
    // allocate structures, build mnemonic and dehnum hash tables
    E_CollectNames(cfg);
@@ -1820,9 +1814,9 @@ void E_ProcessEDF(const char *filename)
 // haleyjd 03/24/10: This routine is called to do parsing and processing of new
 // EDF lumps when loading wad files at runtime. Ideally the processing phase
 // will be shared with the routine above, but currently not all EDF definitions
-// are runtime additive - chiefly, states and things. These will be individually
-// remedied in the future, at which time a separate routine can be created to
-// do the shared processing phase.
+// are runtime additive. These will be individually remedied in the future, at 
+// which time a separate routine can be created to do the shared processing 
+// phase.
 //
 void E_ProcessNewEDF(void)
 {
@@ -1862,6 +1856,12 @@ void E_ProcessNewEDF(void)
    // process damage types
    E_ProcessDamageTypes(cfg);
 
+   // process frame and thing definitions (added 11/06/11)
+   E_ProcessStatesAndThings(cfg);
+
+   // process player sections
+   E_ProcessPlayerData(cfg);
+
    // process TerrainTypes
    E_ProcessTerrainTypes(cfg);
 
@@ -1875,6 +1875,9 @@ void E_ProcessNewEDF(void)
    E_ProcessSoundDeltas(cfg, true);
    E_ProcessStateDeltas(cfg); // see e_states.c
    E_ProcessThingDeltas(cfg); // see e_things.c
+
+   // post-processing routines
+   E_SetThingDefaultSprites();
 
    //
    // Shutdown and Cleanup
