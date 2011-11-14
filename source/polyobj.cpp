@@ -1147,7 +1147,7 @@ void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y)
 
 // Thinker Functions
 
-IMPLEMENT_THINKER_TYPE(PolyRotateThinker)
+IMPLEMENT_THINKER_TYPE(PolyRotateThinker, Thinker)
 
 //
 // T_PolyObjRotate
@@ -1232,7 +1232,7 @@ inline static void Polyobj_componentSpeed(int resVel, int angle,
    *yVel = FixedMul(resVel,   finesine[angle]);
 }
 
-IMPLEMENT_THINKER_TYPE(PolyMoveThinker)
+IMPLEMENT_THINKER_TYPE(PolyMoveThinker, Thinker)
 
 void PolyMoveThinker::Think()
 {
@@ -1301,7 +1301,7 @@ void PolyMoveThinker::serialize(SaveArchive &arc)
 }
 
 
-IMPLEMENT_THINKER_TYPE(PolySlideDoorThinker)
+IMPLEMENT_THINKER_TYPE(PolySlideDoorThinker, Thinker)
 
 void PolySlideDoorThinker::Think()
 {
@@ -1410,7 +1410,7 @@ void PolySlideDoorThinker::serialize(SaveArchive &arc)
 }
 
 
-IMPLEMENT_THINKER_TYPE(PolySwingDoorThinker)
+IMPLEMENT_THINKER_TYPE(PolySwingDoorThinker, Thinker)
 
 void PolySwingDoorThinker::Think()
 {

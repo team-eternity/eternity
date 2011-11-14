@@ -60,6 +60,21 @@ Thinker thinkercap;
 
 Thinker thinkerclasscap[NUMTHCLASS];
 
+// 
+// RootThinkerType
+//
+// haleyjd 11/14/11: This one is special and is for the Thinker class itself.
+//
+class RootThinkerType : public ThinkerType
+{ 
+protected: 
+   static RootThinkerType globalRootThinkerType;
+public:
+   RootThinkerType() : ThinkerType("Thinker", NULL) {}
+   virtual Thinker *newThinker() const { return new Thinker; }
+};
+RootThinkerType RootThinkerType::globalRootThinkerType;
+
 //
 // P_InitThinkers
 //
@@ -71,6 +86,9 @@ void Thinker::InitThinkers(void)
       thinkerclasscap[i].cprev = thinkerclasscap[i].cnext = &thinkerclasscap[i];
    
    thinkercap.prev = thinkercap.next  = &thinkercap;
+
+   // haleyjd 11/14/11: initialize ThinkerType classes' parent class pointers
+   ThinkerType::FindParents();
 }
 
 //
@@ -327,12 +345,39 @@ ThinkerType *ThinkerType::FindType(const char *pName)
    return curType;
 }
 
+//
+// ThinkerType::FindParents
+//
+// Called from Thinker::InitThinkers to initialize the parent field of all
+// ThinkerType instances. Obviously this is well after C++ construction has
+// finished for global objects, to avoid problems with order of constructor
+// calls.
+//
+void ThinkerType::FindParents()
+{
+   ThinkerType *curType = thinkerTypes;
+
+   while(curType)
+   {
+      if(curType->parentName)
+      {
+         if(!(curType->parent = FindType(curType->parentName)))
+         {
+            I_Error("ThinkerType::FindParents: '%s' has invalid parent class '%s'!\n",
+                    curType->name, curType->parentName);
+         }
+      }
+      curType = curType->next;
+   }
+}
+
 // 
 // ThinkerType Constructor
 //
 // The object will automatically be added into the thinker factory list.
 //
-ThinkerType::ThinkerType(const char *pName) : name(pName)
+ThinkerType::ThinkerType(const char *pName, const char *pInherits) 
+  : name(pName), parentName(pInherits), parent(NULL)
 {
    // ThinkerTypes must be singletons with unique names.
    if(FindType(pName))

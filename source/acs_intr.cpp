@@ -567,7 +567,7 @@ enum
    ACTION_ENDSCRIPT, // end script execution on cmd or error
 };
 
-IMPLEMENT_THINKER_TYPE(ACSThinker)
+IMPLEMENT_THINKER_TYPE(ACSThinker, Thinker)
 
 //
 // T_ACSThinker

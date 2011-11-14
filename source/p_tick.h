@@ -172,11 +172,13 @@ extern bool reset_viewz;
 class ThinkerType
 {
 protected:
+   ThinkerType *parent;
    ThinkerType *next;
+   const char  *parentName;
    const char  *name;
 
 public:
-   ThinkerType(const char *pName);
+   ThinkerType(const char *pName, const char *pInherits);
 
    // newThinker is a pure virtual method that must be overridden by a child 
    // class to construct a specific type of thinker
@@ -188,6 +190,11 @@ public:
    // calling the newThinker method. The instance can then be fed to the
    // serialization mechanism.
    static ThinkerType *FindType(const char *pName); // find a type in the list
+
+   // FindParents will set the parent type of all ThinkerType instances.
+   // This must be called from startup, for example from Thinker::InitThinkers,
+   // which is well after all ThinkerType instances have constructed themselves.
+   static void FindParents();
 };
 
 //
@@ -196,18 +203,18 @@ public:
 // Use this macro once per Thinker descendant. Best placed near the Think 
 // routine.
 // Example:
-//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
+//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker, SectorThinker)
 //   This defines FireFlickerThinkerType, which constructs a ThinkerType parent
 //   with "FireFlickerThinker" as its name member and which returns a new FireFlickerThinker
 //   instance via its newThinker virtual method.
 // 
-#define IMPLEMENT_THINKER_TYPE(name) \
+#define IMPLEMENT_THINKER_TYPE(name, inherits) \
 class name ## Type : public ThinkerType \
 { \
 protected: \
    static name ## Type global ## name ## Type ; \
 public: \
-   name ## Type() : ThinkerType( #name ) {} \
+   name ## Type() : ThinkerType( #name , #inherits ) {} \
    virtual Thinker *newThinker() const { return new name ; } \
 }; \
 name ## Type name ## Type :: global ## name ## Type;

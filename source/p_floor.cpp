@@ -458,7 +458,7 @@ result_e T_MovePlane
    return ok;
 }
 
-IMPLEMENT_THINKER_TYPE(FloorMoveThinker)
+IMPLEMENT_THINKER_TYPE(FloorMoveThinker, SectorThinker)
 
 //
 // T_MoveFloor()
@@ -668,7 +668,7 @@ bool FloorMoveThinker::reTriggerVerticalDoor(bool player)
 }
 
 
-IMPLEMENT_THINKER_TYPE(ElevatorThinker)
+IMPLEMENT_THINKER_TYPE(ElevatorThinker, SectorThinker)
 
 //
 // T_MoveElevator()
@@ -732,7 +732,7 @@ void ElevatorThinker::serialize(SaveArchive &arc)
 
 // haleyjd 10/07/06: Pillars by Joe :)
 
-IMPLEMENT_THINKER_TYPE(PillarThinker)
+IMPLEMENT_THINKER_TYPE(PillarThinker, SectorThinker)
 
 //
 // T_MovePillar
@@ -1698,7 +1698,7 @@ void P_ChangeFloorTex(const char *name, int tag)
 // haleyjd 06/30/09: joe was supposed to do these but he quit instead :P
 //
 
-IMPLEMENT_THINKER_TYPE(FloorWaggleThinker)
+IMPLEMENT_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
 
 #define WGLSTATE_EXPAND 1
 #define WGLSTATE_STABLE 2
