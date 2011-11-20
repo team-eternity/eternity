@@ -1218,7 +1218,7 @@ void ACSThinker::serialize(SaveArchive &arc)
 //
 void ACSThinker::deSwizzle()
 {
-   Mobj *mo = dynamic_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
+   Mobj *mo = thinker_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
    P_SetNewTarget(&trigger, mo);
    triggerSwizzle = 0;
 }

@@ -154,13 +154,14 @@ typedef struct backpack_s
 // class for all thinkers that want to be located somewhere in the game world.
 class PointThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PointThinker)
+
 public:
    PointThinker() : Thinker(), x(0), y(0), z(0), groupid(0) {}
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PointThinker"; }
-
+   
    // Data Members
    fixed_t x, y, z;
    // SoM: yes Quasar, this is entirely necessary
@@ -186,6 +187,8 @@ public:
 //
 class Mobj : public PointThinker
 {
+   DECLARE_THINKER_TYPE(Mobj)
+
 protected:
    // Data Members
    struct deswizzle_info
@@ -208,8 +211,7 @@ public:
    virtual void removeThinker();
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
-   virtual const char *getClassName() const { return "Mobj"; }
-
+   
    // Data members
 
    // More list: links in sector (if needed)

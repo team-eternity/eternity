@@ -613,7 +613,7 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
          unsigned int ordinal = 0;
          arc << ordinal;
 
-         if((target = dynamic_cast<Mobj *>(P_ThinkerForNum(ordinal))))
+         if((target = thinker_cast<Mobj *>(P_ThinkerForNum(ordinal))))
             P_SetNewTarget(&sectors[i].soundtarget, target);
          else
             sectors[i].soundtarget = NULL;
@@ -642,10 +642,9 @@ static void P_RemoveAllThinkers(void)
    for(th = thinkercap.next; th != &thinkercap; )
    {
       Thinker *next;
-      Mobj *mo;
       next = th->next;
-      if((mo = dynamic_cast<Mobj *>(th)))
-         mo->removeThinker();
+      if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+         th->removeThinker();
       else
          delete th;
       th = next;
@@ -1141,7 +1140,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
       newSeq->origin = &po->spawnSpot;
       break;
    case SEQ_ORIGIN_OTHER:
-      mo = dynamic_cast<Mobj *>(P_ThinkerForNum((unsigned int)twizzle));
+      mo = thinker_cast<Mobj *>(P_ThinkerForNum((unsigned int)twizzle));
       newSeq->originIdx = -1;
       newSeq->origin = mo;
       break;

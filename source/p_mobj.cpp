@@ -1528,9 +1528,9 @@ void Mobj::deSwizzle()
       return;
 
    // Get the thinker pointers for each number
-   lTarget = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->target));
-   lTracer = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->tracer));
-   lLEnemy = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->lastenemy));
+   lTarget = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->target));
+   lTracer = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->tracer));
+   lLEnemy = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->lastenemy));
 
    // Restore the pointers using P_SetNewTarget
    P_SetNewTarget(&target,    lTarget);

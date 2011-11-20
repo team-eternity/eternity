@@ -584,6 +584,8 @@ typedef enum
 // haleyjd 10/13/2011: base class for sector action types
 class SectorThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(SectorThinker)
+
 protected:
    // sector attach points
    typedef enum
@@ -603,7 +605,6 @@ public:
 
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "SectorThinker"; }
    virtual bool reTriggerVerticalDoor(bool player) { return false; }
 
    // Data Members
@@ -651,14 +652,15 @@ extern int numbuttonsalloc;
 
 class FireFlickerThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(FireFlickerThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "FireFlickerThinker"; }
-
+   
    // Data Members
    int count;
    int maxlight;
@@ -667,13 +669,14 @@ public:
 
 class LightFlashThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(LightFlashThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "LightFlashThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
    
    // Data Members
@@ -686,13 +689,14 @@ public:
 
 class StrobeThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(StrobeThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "StrobeThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
@@ -705,14 +709,15 @@ public:
 
 class GlowThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(GlowThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "GlowThinker"; }
-
+   
    // Data Members
    int minlight;
    int maxlight;
@@ -724,14 +729,15 @@ public:
 
 class LightFadeThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(LightFadeThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "LightFadeThinker"; }
-
+   
    // Data Members
    fixed_t lightlevel;
    fixed_t destlevel;
@@ -746,6 +752,8 @@ public:
 
 class PlatThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(PlatThinker)
+
 protected:
    void Think();
 
@@ -754,7 +762,6 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PlatThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
@@ -791,6 +798,8 @@ enum
 
 class VerticalDoorThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(VerticalDoorThinker)
+
 protected:
    void Think();
 
@@ -799,7 +808,6 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "VerticalDoorThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
@@ -855,6 +863,8 @@ struct spectransfer_t
 
 class CeilingThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(CeilingThinker)
+
 protected:
    void Think();
 
@@ -863,7 +873,6 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "CeilingThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
@@ -919,6 +928,8 @@ typedef struct ceilingdata_s
 
 class FloorMoveThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(FloorMoveThinker)
+
 protected:
    void Think();
 
@@ -927,7 +938,6 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "FloorMoveThinker"; }
    virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
@@ -986,6 +996,8 @@ typedef struct stairdata_s
 
 class ElevatorThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(ElevatorThinker)
+
 protected:
    void Think();
 
@@ -994,8 +1006,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "ElevatorThinker"; }
-
+   
    // Data Members
    int type;
    int direction;
@@ -1007,6 +1018,8 @@ public:
 // joek: pillars
 class PillarThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(PillarThinker)
+
 protected:
    void Think();
 
@@ -1015,8 +1028,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PillarThinker"; }
-
+   
    // Data Members
    int ceilingSpeed;
    int floorSpeed;
@@ -1040,6 +1052,8 @@ typedef struct pillardata_s
 // haleyjd 06/30/09: waggle floors
 class FloorWaggleThinker : public SectorThinker
 {
+   DECLARE_THINKER_TYPE(FloorWaggleThinker)
+
 protected:
    void Think();
 
@@ -1048,8 +1062,7 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "FloorWaggleThinker"; }
-
+   
    // Data Members
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -1067,14 +1080,15 @@ public:
 
 class ScrollThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(ScrollThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "ScrollThinker"; }
-
+   
    // Data Members
    fixed_t dx, dy;      // (dx,dy) scroll speeds
    int affectee;        // Number of affected sidedef, sector, tag, or whatever
@@ -1098,14 +1112,15 @@ public:
 
 class FrictionThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(FrictionThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "FrictionThinker"; }
-
+   
    // Data Members
    int friction;      // friction value (E800 = normal)
    int movefactor;    // inertia factor when adding to momentum
@@ -1116,14 +1131,15 @@ public:
 
 class PushThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PushThinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PushThinker"; }
-
+   
    // Data Members
    enum
    {

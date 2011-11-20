@@ -71,6 +71,9 @@
 // haleyjd: C++ headers
 #include <new>
 
+// haleyjd: Stuff that C++11 will make unneeded
+#include "precpp11.h"
+
 // haleyjd: portable replacement function headers
 #include "psnprntf.h"
 

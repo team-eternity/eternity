@@ -1236,7 +1236,6 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
 
          for(th = cap->cnext; th != cap; th = th->cnext)
          {
-            Mobj *mo = dynamic_cast<Mobj *>(th);
             if(--n < 0)
             { 
                // Only a subset of the monsters were searched. Move all of
@@ -1247,9 +1246,11 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(mo && !PIT_FindTarget(mo))
-               // If target sighted
-               return true;
+            else if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+            {
+               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+                  return true;
+            }
          }
       }
    }
@@ -1292,8 +1293,10 @@ bool P_HelpFriend(Mobj *actor)
    {
       Mobj *mo;
       
-      if(!(mo = dynamic_cast<Mobj *>(th)))
+      if(!th->isInstanceOf(RUNTIME_CLASS(Mobj)))
          continue;
+         
+      mo = static_cast<Mobj *>(th);
 
       if(mo->health*2 >= mo->info->spawnhealth)
       {

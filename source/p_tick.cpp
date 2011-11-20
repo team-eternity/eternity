@@ -26,9 +26,10 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomstat.h"
 #include "c_runcmd.h"
 #include "c_io.h"
+#include "doomstat.h"
+#include "d_dehtbl.h"
 #include "d_main.h"
 #include "p_user.h"
 #include "p_chase.h"
@@ -70,10 +71,14 @@ class RootThinkerType : public ThinkerType
 protected: 
    static RootThinkerType globalRootThinkerType;
 public:
-   RootThinkerType() : ThinkerType("Thinker", NULL) {}
+   RootThinkerType() : ThinkerType("Thinker", NULL) 
+   {
+      Thinker::StaticType = this;
+   }
    virtual Thinker *newThinker() const { return new Thinker; }
 };
 RootThinkerType RootThinkerType::globalRootThinkerType;
+ThinkerType *Thinker::StaticType;
 
 //
 // P_InitThinkers
@@ -87,8 +92,8 @@ void Thinker::InitThinkers(void)
    
    thinkercap.prev = thinkercap.next  = &thinkercap;
 
-   // haleyjd 11/14/11: initialize ThinkerType classes' parent class pointers
-   ThinkerType::FindParents();
+   // haleyjd 11/14/11: initialize ThinkerType classes
+   ThinkerType::InitThinkerTypes();
 }
 
 //
@@ -318,57 +323,86 @@ void P_Ticker(void)
 
 //=============================================================================
 //
-// Thinker Factory
+// Thinker RTTI and Factory
 //
 // haleyjd 12/18/10: The functions and methods below here help the savegame
 // code create new thinkers.
+// 
+// haleyjd 11/19/11: ThinkerType now also facilitates a custom RTTI solution 
+// for the Thinker class hierarchy.
 //
 
-// thinkerTypes - this is a list of all the ThinkerType global objects.
-static ThinkerType *thinkerTypes;
+#define NUMTTYPECHAINS 31
+
+// thinkerTypes - this is a hash table of all the ThinkerType global objects.
+ThinkerType **ThinkerType::thinkerTypes;
 
 //
 // ThinkerType::FindType
 //
-// Static method to find a ThinkerType in the list by name. There are a 
-// limited number of thinker types so this is just a linear search. The
-// overhead of hashing is not worth it here. Returns NULL if no such type 
-// exists (or it hasn't been registered yet).
+// Static global method.
+// Find a ThinkerType in the list by name. Reimplemented with a hash table as of
+// 11/19/11 in order to support maximum efficiency during runtime searches by 
+// name. Returns NULL if no such type exists (or it hasn't been registered yet).
 //
 ThinkerType *ThinkerType::FindType(const char *pName)
 {
-   ThinkerType *curType = thinkerTypes;
+   unsigned int hashcode = D_HashTableKey(pName) % NUMTTYPECHAINS;
+   ThinkerType *chain = thinkerTypes[hashcode];
 
-   while(curType && strcmp(curType->name, pName))
-      curType = curType->next;
+   while(chain && strcmp(chain->name, pName))
+      chain = chain->next;
 
-   return curType;
+   return chain;
 }
 
 //
 // ThinkerType::FindParents
 //
-// Called from Thinker::InitThinkers to initialize the parent field of all
+// Static private method.
+// Called from InitThinkerTypes to initialize the parent field of all
 // ThinkerType instances. Obviously this is well after C++ construction has
 // finished for global objects, to avoid problems with order of constructor
 // calls.
 //
 void ThinkerType::FindParents()
 {
-   ThinkerType *curType = thinkerTypes;
-
-   while(curType)
+   for(int i = 0; i < NUMTTYPECHAINS; i++)
    {
-      if(curType->parentName)
+      ThinkerType *curType = thinkerTypes[i];
+
+      while(curType)
       {
-         if(!(curType->parent = FindType(curType->parentName)))
+         if(curType->parentName)
          {
-            I_Error("ThinkerType::FindParents: '%s' has invalid parent class '%s'!\n",
-                    curType->name, curType->parentName);
+            if(!(curType->parent = FindType(curType->parentName)))
+            {
+               I_Error("ThinkerType::FindParents: '%s' has invalid parent class '%s'!\n",
+                  curType->name, curType->parentName);
+            }
          }
+         curType = curType->next;
       }
-      curType = curType->next;
    }
+}
+
+//
+// ThinkerType::InitThinkerTypes
+//
+// Static method.
+// Called from Thinker::InitThinkers to perform all ThinkerType setup.
+//
+void ThinkerType::InitThinkerTypes()
+{
+   static bool firsttime = true;
+
+   if(!firsttime) // One time only.
+      return;
+
+   firsttime = false;
+
+   // Set parent class pointers
+   FindParents();
 }
 
 // 
@@ -379,13 +413,19 @@ void ThinkerType::FindParents()
 ThinkerType::ThinkerType(const char *pName, const char *pInherits) 
   : name(pName), parentName(pInherits), parent(NULL)
 {
+   unsigned int hashcode;
+
+   if(!thinkerTypes)
+      thinkerTypes = ecalloc(ThinkerType **, NUMTTYPECHAINS, sizeof(ThinkerType *));
+
    // ThinkerTypes must be singletons with unique names.
    if(FindType(pName))
-      I_Error("ThinkerType: duplicate class registered with name %s\n", pName);
+      I_Error("ThinkerType: duplicate class registered with name '%s'\n", pName);
 
-   // Add it to the global list; order is unimportant.
-   this->next = thinkerTypes;
-   thinkerTypes = this;
+   // Add it to the hash table; order is unimportant.
+   hashcode = D_HashTableKey(name) % NUMTTYPECHAINS;
+   this->next = thinkerTypes[hashcode];
+   thinkerTypes[hashcode] = this;   
 }
 
 //----------------------------------------------------------------------------
