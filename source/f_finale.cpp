@@ -392,7 +392,7 @@ void F_StartCast(void)
    for(i = 0; i < OLDCASTMAX && i < max_castorder; ++i)
    {
       if(!castorder[i].name)
-         castorder[i].name = DEH_String(oldnames[i]);
+         castorder[i].name = estrdup(DEH_String(oldnames[i]));
    }
 
    wipegamestate = GS_NOSTATE;         // force a screen wipe
@@ -578,7 +578,8 @@ void F_CastDrawer(void)
    V_DrawPatch(0, 0, &vbscreen, 
                PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
    
-   F_CastPrint(castorder[castnum].name);
+   if(castorder[castnum].name)
+      F_CastPrint(castorder[castnum].name);
    
    // draw the current frame in the middle of the screen
    sprdef = sprites + caststate->sprite;

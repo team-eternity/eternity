@@ -717,9 +717,9 @@ void A_Nailbomb(Mobj *thing)
 
 //
 // A_Detonate
+//
 // killough 8/9/98: same as A_Explode, except that the damage is variable
 //
-
 void A_Detonate(Mobj *mo)
 {
    P_RadiusAttack(mo, mo->target, mo->damage, mo->info->mod);

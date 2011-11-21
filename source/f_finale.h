@@ -24,9 +24,8 @@
 //    
 //-----------------------------------------------------------------------------
 
-
-#ifndef __F_FINALE__
-#define __F_FINALE__
+#ifndef F_FINALE_H__
+#define F_FINALE_H__
 
 #include "info.h"
 
@@ -35,7 +34,7 @@ struct event_t;
 // haleyjd: this stuff is now needed in e_edf.c
 typedef struct castinfo_s
 {
-   const char  *name;
+   char       *name;
    mobjtype_t  type;   
    bool        stopattack;
    struct castsound_s { int frame; int sound; } sounds[4];

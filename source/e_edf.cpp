@@ -1217,12 +1217,19 @@ static void E_ParseIndividualLumps(cfg_t *cfg)
 //
 static void E_ProcessSpriteVars(cfg_t *cfg)
 {
+   static bool firsttime = true;
    int sprnum;
    const char *str;
 
    E_EDFLogPuts("\t* Processing sprite variables\n");
 
    // haleyjd 11/11/09: removed processing of obsolete playersprite variable
+
+   // haleyjd 11/21/11: on subsequent runs, only replace if changed
+   if(!firsttime && cfg_size(cfg, ITEM_BLANKSPRITE) == 0)
+      return;
+
+   firsttime = false;
 
    // load blank sprite number
 
@@ -1246,15 +1253,25 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 //
 static void E_ProcessItems(cfg_t *cfg)
 {
-   int i, numpickups;
+   static int oldnumsprites;
+   int i, numnew, numpickups;
 
    E_EDFLogPuts("\t* Processing pickup items\n");
 
    // allocate and initialize pickup effects array
-   pickupfx  = (int *)(Z_Malloc(NUMSPRITES * sizeof(int), PU_STATIC, 0));
-   
-   for(i = 0; i < NUMSPRITES; ++i)
-      pickupfx[i] = PFX_NONE;
+   // haleyjd 11/21/11: allow multiple runs
+   numnew = NUMSPRITES - oldnumsprites;
+   if(numnew > 0)
+   {
+      pickupfx = erealloc(int *, pickupfx, NUMSPRITES * sizeof(int));
+      for(i = oldnumsprites; i < NUMSPRITES; i++)
+         pickupfx[i] = PFX_NONE;
+      oldnumsprites = NUMSPRITES;
+   }
+
+   // sanity check
+   if(!pickupfx)
+      E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
    
    // load pickupfx
    numpickups = cfg_size(cfg, SEC_PICKUPFX);
@@ -1364,6 +1381,7 @@ static void E_ProcessPlayerData(cfg_t *cfg)
 //
 static void E_ProcessCast(cfg_t *cfg)
 {
+   static bool firsttime = true;
    int i, numcastorder = 0, numcastsections = 0;
    cfg_t **ci_order;
 
@@ -1372,10 +1390,29 @@ static void E_ProcessCast(cfg_t *cfg)
    // get number of cast sections
    numcastsections = cfg_size(cfg, SEC_CAST);
 
-   if(!numcastsections)
+   if(firsttime && !numcastsections) // on main parse, at least one is required.
       E_EDFLoggedErr(2, "E_ProcessCast: no cast members defined.\n");
 
+   firsttime = false;
+
    E_EDFLogPrintf("\t\t%d cast member(s) defined\n", numcastsections);
+
+   // haleyjd 11/21/11: allow multiple runs
+   if(castorder)
+   {
+      int i;
+
+      // free names
+      for(i = 0; i < max_castorder; i++)
+      {
+         if(castorder[i].name)
+            efree(castorder[i].name);
+      }
+      // free castorder
+      efree(castorder);
+      castorder = NULL;
+      max_castorder = 0;
+   }
 
    // check if the "castorder" array is defined for imposing an
    // order on the castinfo sections
@@ -1387,8 +1424,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = ecalloc(castinfo_t *, sizeof(castinfo_t), max_castorder + 1);
-   ci_order  = ecalloc(cfg_t **,     sizeof(cfg_t *),    max_castorder);
+   castorder = estructalloc(castinfo_t, max_castorder + 1);
+   ci_order  = ecalloc(cfg_t **, sizeof(cfg_t *), max_castorder);
 
    if(numcastorder > 0)
    {
@@ -1544,6 +1581,18 @@ static void E_ProcessBossTypes(cfg_t *cfg)
          numTypes, useProbs ? numProbs : 11);
    }
 
+   // haleyjd 11/21/11: allow multiple runs
+   if(BossSpawnTypes)
+   {
+      efree(BossSpawnTypes);
+      BossSpawnTypes = NULL;
+   }
+   if(BossSpawnProbs)
+   {
+      efree(BossSpawnProbs);
+      BossSpawnProbs = NULL;
+   }
+
    NumBossTypes = numTypes;
    BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
    BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
@@ -1683,6 +1732,81 @@ static void E_ParseEDF(cfg_t *cfg, const char *filename)
 }
 
 //
+// E_DoEDFProcessing
+//
+// haleyjd 11/21/11: Shared processing phase code, now that all EDF sections
+// are fully dynamic with repeatable processing.
+//
+static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
+{
+   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
+
+   // Echo final enable values to the log file for reference.
+   if(firsttime)
+      E_EchoEnables();
+
+   // NOTE: The order of most of the following calls is extremely 
+   // important and must be preserved, unless the static routines 
+   // above and in other files are rewritten accordingly.
+   
+   // process strings
+   E_ProcessStrings(cfg);
+
+   // process sprites
+   E_ProcessSprites(cfg);
+
+   // process sprite-related pickup item effects (made dynamic 11/21/11)
+   E_ProcessItems(cfg);
+
+   // process sprite-related variables (made dynamic 11/21/11)
+   E_ProcessSpriteVars(cfg);
+
+   // process sounds
+   E_ProcessSounds(cfg);
+
+   // process ambience information
+   E_ProcessAmbience(cfg);
+
+   // process sound sequences
+   E_ProcessSndSeqs(cfg);
+
+   // process damage types
+   E_ProcessDamageTypes(cfg);
+
+   // process frame and thing definitions (made dynamic 11/06/11)
+   E_ProcessStatesAndThings(cfg);
+
+   // process player sections
+   E_ProcessPlayerData(cfg);
+
+   // process cast call (made dynamic 11/21/11)
+   E_ProcessCast(cfg);
+
+   // process boss spawn types (made dynamic 11/21/11)
+   E_ProcessBossTypes(cfg);
+
+   // process TerrainTypes
+   E_ProcessTerrainTypes(cfg);
+
+   // process dynamic menus
+   MN_ProcessMenus(cfg);
+
+   // process fonts
+   E_ProcessFonts(cfg);
+
+   // process misc vars (made dynamic 11/21/11)
+   E_ProcessMiscVars(cfg);
+
+   // 08/30/03: apply deltas
+   E_ProcessSoundDeltas(cfg, true);
+   E_ProcessStateDeltas(cfg); // see e_states.c
+   E_ProcessThingDeltas(cfg); // see e_things.c
+
+   // post-processing routines
+   E_SetThingDefaultSprites();
+}
+
+//
 // E_CleanUpEDF
 //
 // Shared shutdown phase code for E_ProcessEDF and E_ProcessNewEDF
@@ -1735,72 +1859,7 @@ void E_ProcessEDF(const char *filename)
    //
    // Now we chew on all of the data accumulated from the various sources.
    //
-
-   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
-
-   // Echo final enable values to the log file for reference.
-   E_EchoEnables();
-
-   // NOTE: The order of most of the following calls is extremely 
-   // important and must be preserved, unless the static routines 
-   // above and in other files are rewritten accordingly.
-
-   // process strings
-   E_ProcessStrings(cfg);
-
-   // process sprites, sprite-related variables, and pickup item fx
-   E_ProcessSprites(cfg);
-
-   // process sprite-related pickup item effects
-   E_ProcessItems(cfg);
-
-   // process sprite-related variables
-   E_ProcessSpriteVars(cfg);
-
-   // 09/03/03: process sounds
-   E_AllocSounds(cfg);
-
-   // 05/30/06: process ambience information
-   E_ProcessAmbience(cfg);
-
-   // 06/06/06: process sound sequences
-   E_ProcessSndSeqs(cfg);
-
-   // 06/01/08: process damage types
-   E_ProcessDamageTypes(cfg);
-
-   // allocate frames and things, build name hash tables, and
-   // process frame and thing definitions
-   E_ProcessStatesAndThings(cfg);
-
-   // 11/13/06: process player sections (skins, pclasses, weapons)
-   E_ProcessPlayerData(cfg);
-
-   // process cast call
-   E_ProcessCast(cfg);
-
-   // process boss spawn types
-   E_ProcessBossTypes(cfg);
-
-   // 08/23/05: process TerrainTypes
-   E_ProcessTerrainTypes(cfg);
-
-   // 03/13/05: process dynamic menus
-   MN_ProcessMenus(cfg);
-
-   // 02/25/09: process fonts
-   E_ProcessFonts(cfg);
-
-   // 01/11/04: process misc vars
-   E_ProcessMiscVars(cfg);
-
-   // 08/30/03: apply deltas
-   E_ProcessSoundDeltas(cfg, false);
-   E_ProcessStateDeltas(cfg); // see e_states.c
-   E_ProcessThingDeltas(cfg); // see e_things.c
-
-   // post-processing routines
-   E_SetThingDefaultSprites();
+   E_DoEDFProcessing(cfg, true);
 
    //
    // Shutdown and Cleanup
@@ -1812,11 +1871,7 @@ void E_ProcessEDF(const char *filename)
 // E_ProcessNewEDF
 //
 // haleyjd 03/24/10: This routine is called to do parsing and processing of new
-// EDF lumps when loading wad files at runtime. Ideally the processing phase
-// will be shared with the routine above, but currently not all EDF definitions
-// are runtime additive. These will be individually remedied in the future, at 
-// which time a separate routine can be created to do the shared processing 
-// phase.
+// EDF lumps when loading wad files at runtime.
 //
 void E_ProcessNewEDF(void)
 {
@@ -1835,49 +1890,7 @@ void E_ProcessNewEDF(void)
    //
    // Processing
    //
-
-   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
-   
-   // process strings
-   E_ProcessStrings(cfg);
-
-   // process sprites
-   E_ProcessSprites(cfg);
-
-   // process sounds
-   E_ProcessSounds(cfg);
-
-   // process ambience information
-   E_ProcessAmbience(cfg);
-
-   // process sound sequences
-   E_ProcessSndSeqs(cfg);
-
-   // process damage types
-   E_ProcessDamageTypes(cfg);
-
-   // process frame and thing definitions (added 11/06/11)
-   E_ProcessStatesAndThings(cfg);
-
-   // process player sections
-   E_ProcessPlayerData(cfg);
-
-   // process TerrainTypes
-   E_ProcessTerrainTypes(cfg);
-
-   // process dynamic menus
-   MN_ProcessMenus(cfg);
-
-   // process fonts
-   E_ProcessFonts(cfg);
-
-   // 08/30/03: apply deltas
-   E_ProcessSoundDeltas(cfg, true);
-   E_ProcessStateDeltas(cfg); // see e_states.c
-   E_ProcessThingDeltas(cfg); // see e_things.c
-
-   // post-processing routines
-   E_SetThingDefaultSprites();
+   E_DoEDFProcessing(cfg, false);
 
    //
    // Shutdown and Cleanup
