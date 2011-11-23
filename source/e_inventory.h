@@ -72,10 +72,16 @@ struct inventory_t
    int   giveQuest;      // quest flag # given, if non-zero
 
    // fields needed for EDF identification and hashing
-   ENCStringHashKey name;         // pointer to name
-   char             namebuf[129]; // buffer for name (max 128 chars)
-   EIntHashKey      idnum;        // ID number
+   ENCStringHashKey namekey;      // pointer to name
+   char             name[129];    // buffer for name (max 128 chars)
+   EIntHashKey      numkey;       // ID number
 };
+
+// Lookup functions
+inventory_t *E_InventoryForID(int idnum);
+inventory_t *E_GetInventoryForID(int idnum);
+inventory_t *E_InventoryForName(const char *name);
+inventory_t *E_GetInventoryForName(const char *name);
 
 #ifdef NEED_EDF_DEFINITIONS
 

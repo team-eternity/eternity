@@ -25,6 +25,8 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
+
 #include "d_dehtbl.h" // for dehflags parsing
 #include "doomtype.h"
 
@@ -32,8 +34,12 @@
 
 #include "Confuse/confuse.h"
 #include "e_edf.h"
+#include "e_hash.h"
 #include "e_lib.h"
 #include "e_inventory.h"
+
+// 11/22/11: track generations
+static int edf_inventory_generation = 1; 
 
 // basic inventory flag values and mnemonics
 
@@ -116,6 +122,78 @@ static int   inv_pindex  = 0;
 
 // global vars
 int NumInventoryDefs;
+
+//=============================================================================
+//
+// Inventory Hashing 
+//
+
+#define NUMINVCHAINS 307
+
+// hash by name
+static EHashTable<inventory_t, ENCStringHashKey> inv_namehash(&inventory_t::namekey, 
+                                                              &inventory_t::namelinks);
+
+// hash by ID number
+static EHashTable<inventory_t, EIntHashKey> inv_numhash(&inventory_t::numkey,
+                                                        &inventory_t::numlinks);
+
+
+//
+// E_InventoryForID
+//
+// Get an inventory item by ID number.
+//
+inventory_t *E_InventoryForID(int idnum)
+{
+   return inv_numhash.objectForKey(idnum);
+}
+
+//
+// E_GetInventoryForID
+//
+// As above, but causes a fatal error if an inventory def is not found.
+//
+inventory_t *E_GetInventoryForID(int idnum)
+{
+   inventory_t *inv = E_InventoryForID(idnum);
+
+   if(!inv)
+      I_Error("E_GetInventoryForID: invalid inventory ID %d\n", idnum);
+
+   return inv;
+}
+
+//
+// E_InventoryForName
+//
+// Returns an inventory definition given its name. Returns NULL
+// if not found.
+//
+inventory_t *E_InventoryForName(const char *name)
+{
+   return inv_namehash.objectForKey(name);
+}
+
+//
+// E_GetInventoryForName
+//
+// As above, but causes a fatal error if the inventory def isn't found.
+//
+inventory_t *E_GetInventoryForName(const char *name)
+{
+   inventory_t *inv = E_InventoryForName(name);
+
+   if(!inv)
+      I_Error("E_GetInventoryForName: bad inventory item %s\n", name);
+
+   return inv;
+}
+
+//=============================================================================
+//
+// Inheritance
+//
 
 //
 // E_CheckInventoryInherit
@@ -274,16 +352,30 @@ static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
 //
 void E_ProcessInventoryDefs(cfg_t *cfg)
 {
-   int i;
+   unsigned int i, numinventory;
+   //static bool firsttime = true;
 
    E_EDFLogPuts("\t* Processing inventory data\n");
+
+   numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
 
    // allocate inheritance stack and hitlist
    inv_hitlist = ecalloc(byte *, NumInventoryDefs, sizeof(byte));
    inv_pstack  = ecalloc(int  *, NumInventoryDefs, sizeof(int));
+   
+   // add all items from previous generations to the processed hit list
+   for(i = 0; i < (unsigned int)NumInventoryDefs; i++)
+   {
+      /*
+      // TODO
+      if(mobjinfo[i]->generation != edf_thing_generation)
+         thing_hitlist[i] = 1;
+      */
+   }
 
-   // TODO: Be sure to fully support additive defs like states.
-   for(i = 0; i < NumInventoryDefs; ++i)
+   // TODO: any first-time-only processing?
+
+   for(i = 0; i < numinventory; i++)
    {
       cfg_t *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
 
@@ -294,11 +386,17 @@ void E_ProcessInventoryDefs(cfg_t *cfg)
       E_AddInventoryToPStack(i);
 
       E_ProcessInventory(i, invsec, cfg, true);
+
+      E_EDFLogPrintf("\t\tFinished inventory %s (#%d)\n", 
+                     /*mobjinfo[thingnum]->name*/ "", 0 /*TODO*/);
    }
 
    // free tables
    efree(inv_hitlist);
    efree(inv_pstack);
+
+   // increment generation count
+   ++edf_inventory_generation;
 }
 
 //
