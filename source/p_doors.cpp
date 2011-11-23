@@ -330,14 +330,34 @@ void VerticalDoorThinker::Think()
 //
 void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << topheight << speed << direction << topwait
+   arc << type << topheight << speed << direction << topwait
        << topcountdown << line << lighttag;
+}
 
-   // Reattach to sector when loading
-   if(arc.isLoading())
-      sector->ceilingdata = this;
+//
+// VerticalDoorThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: extracted logic from EV_VerticalDoor for retriggering
+// and reversal of door thinkers that are in motion.
+//
+bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
+{
+   if(direction == plat_down)
+      direction = plat_up;  // go back up
+   else
+   {
+      if(!player)
+         return false;           // JDC: bad guys never close doors
+
+      direction = plat_down; // start going down immediately
+   }
+
+   // haleyjd: squash the sector's sound sequence when a door reversal
+   // occurs, otherwise you get a doubled sound at the next downstroke.
+   S_SquashSectorSequence(sector, true);
+   return true;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -501,9 +521,10 @@ int EV_DoDoor(line_t *line, vldoor_e type)
 //
 int EV_VerticalDoor(line_t *line, Mobj *thing)
 {
-   player_t* player;
-   sector_t* sec;
-   VerticalDoorThinker* door;
+   player_t *player;
+   sector_t *sec;
+   VerticalDoorThinker *door;
+   SectorThinker       *secThinker;
    
    //  Check for locks
    player = thing->player;
@@ -570,12 +591,22 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    // 1. DOOM used any thinker that was on a door
    // 2. DOOM assumed the thinker was a T_VerticalDoor thinker, and 
    //    this bug was even still in Eternity -- fixed when not in 
-   //    demo_compatibility, but this could cause segvs if a new 
-   //    thinker data structure that is small or has a pointer 
-   //    following the thinker field is introduced.
+   //    demo_compatibility (only VerticalDoorThinker::reTriggerVerticalDoor
+   //    will actually do anything outside of demo_compatibility mode)
 
+   secThinker = thinker_cast<SectorThinker *>(sec->ceilingdata);
+
+   // exactly only one at most of these pointers is valid during demo_compatibility
+   if(demo_compatibility)
+   {
+      if(!secThinker)
+         secThinker = thinker_cast<SectorThinker *>(sec->floordata);
+      if(!secThinker)
+         secThinker = thinker_cast<SectorThinker *>(sec->lightingdata);
+   }
+   
    // if door already has a thinker, use it
-   if((door = thinker_cast<VerticalDoorThinker *>(sec->ceilingdata))) // is a door
+   if(secThinker)
    {
       switch(line->special)
       {
@@ -584,63 +615,9 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       case  27:
       case  28:
       case  117:
-         if(door->direction == plat_down)
-            door->direction = plat_up;  // go back up
-         else
-         {
-            if(!thing->player)
-               return 0;           // JDC: bad guys never close doors
-            
-            door->direction = plat_down; // start going down immediately
-         }
-         // haleyjd: squash the sector's sound sequence when a door reversal
-         // occurs, otherwise you get a doubled sound at the next downstroke.
-         S_SquashSectorSequence(door->sector, true);
-         return 1;
+         return secThinker->reTriggerVerticalDoor(!!thing->player);
       }
    }
-
-   // CPP_FIXME: extremely difficult to emulate in C++
-#if 0
-   if(sec->ceilingdata ||
-      (demo_compatibility && (sec->floordata || sec->lightingdata)))
-   {
-      door = (VerticalDoorThinker *)(sec->ceilingdata); //jff 2/22/98
-      
-      if(demo_compatibility) // haleyjd
-      {
-         if(!door) door = (VerticalDoorThinker *)(sec->floordata);
-         if(!door) door = (VerticalDoorThinker *)(sec->lightingdata);
-      }
-
-      switch(line->special)
-      {
-      case  1: // only for "raise" doors, not "open"s
-      case  26:
-      case  27:
-      case  28:
-      case  117:
-         // haleyjd: don't corrupt non-door thinkers
-         if(demo_version >= 329 && 
-            door->thinker.function != T_VerticalDoor)
-            return 0;
-
-         if(door->direction == plat_down)
-            door->direction = plat_up;  // go back up
-         else
-         {
-            if(!thing->player)
-               return 0;           // JDC: bad guys never close doors
-            
-            door->direction = plat_down; // start going down immediately
-         }
-         // haleyjd: squash the sector's sound sequence when a door reversal
-         // occurs, otherwise you get a doubled sound at the next downstroke.
-         S_SquashSectorSequence(door->sector, true);
-         return 1;
-      }
-   }
-#endif
 
    // emit proper sound
    switch(line->special)

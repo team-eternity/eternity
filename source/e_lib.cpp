@@ -83,20 +83,17 @@ static Collection<HashData> eincludes;
 static bool E_CheckInclude(const char *data, size_t size)
 {
    size_t i, numincludes;
-   HashData newhash;
    char *digest;
-
-   // calculate the SHA-1 hash of the data
-   newhash.Initialize(HashData::SHA1);
-   newhash.AddData((const uint8_t *)data, (uint32_t)size);
-   newhash.WrapUp();
+   
+   // calculate the SHA-1 hash of the data   
+   HashData newHash = HashData(HashData::SHA1, (const uint8_t *)data, (uint32_t)size);
 
    // output digest string
-   digest = newhash.DigestToString();
+   digest = newHash.digestToString();
 
    E_EDFLogPrintf("\t\t  SHA-1 = %s\n", digest);
 
-   free(digest);
+   efree(digest);
 
    numincludes = eincludes.getLength();
 
@@ -104,7 +101,7 @@ static bool E_CheckInclude(const char *data, size_t size)
    for(i = 0; i < numincludes; ++i)
    {
       // found a match?
-      if(newhash.compare(eincludes[i]))
+      if(newHash == eincludes[i])
       {
          E_EDFLogPuts("\t\t\tDeclined, SHA-1 match detected.\n");
          return false;
@@ -112,7 +109,7 @@ static bool E_CheckInclude(const char *data, size_t size)
    }
 
    // this source has not been processed before, so add its hash to the list
-   eincludes.add(newhash);
+   eincludes.add(newHash);
 
    return true;
 }
@@ -149,7 +146,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
       {
          // we already parsed it, but this is not an error;
          // we ignore the include and return 0 to indicate success.
-         free(data);
+         efree(data);
          code = 0;
       }
    }
@@ -247,9 +244,8 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
-      len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
-      psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
-      M_NormalizeSlashes(filename);
+      
+      filename = M_SafeFilePath(currentpath, argv[0]);
       
       return E_OpenAndCheckInclude(cfg, filename, -1);
    
@@ -362,15 +358,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 const char *E_BuildDefaultFn(const char *filename)
 {
-   char *buffer = NULL;
-   size_t len = 0;
-
-   len = M_StringAlloca(&buffer, 2, 2, basepath, filename);
-
-   psnprintf(buffer, len, "%s/%s", basepath, filename);
-   M_NormalizeSlashes(buffer);
-
-   return buffer;
+   return M_SafeFilePath(basepath, filename);
 }
 
 //
@@ -495,11 +483,11 @@ int E_ParseFlags(const char *str, dehflagset_t *flagset)
 {
    char *buffer, *bufptr;
 
-   bufptr = buffer = strdup(str);
+   bufptr = buffer = estrdup(str);
 
    deh_ParseFlags(flagset, &bufptr);
 
-   free(buffer);
+   efree(buffer);
 
    return flagset->results[0];
 }
@@ -1111,7 +1099,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
 //
 static void PushRange(tr_pstate_t *pstate)
 {
-   tr_range_t *newrange = (tr_range_t *)(calloc(1, sizeof(tr_range_t)));
+   tr_range_t *newrange = ecalloc(tr_range_t *, 1, sizeof(tr_range_t));
 
    newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
    newrange->srcend   = COLOR_CLAMP(pstate->srcend);
@@ -1321,7 +1309,7 @@ byte *E_ParseTranslation(const char *str)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = (byte *)(calloc(1, 256));
+   byte *translation = ecalloc(byte *, 1, 256);
    tr_pstate_t parserstate;
 
    tokenbuf.initCreate();
@@ -1365,7 +1353,7 @@ byte *E_ParseTranslation(const char *str)
          }
 
          // done with this range
-         free(range);
+         efree(range);
 
          // step to next range
          range = next;

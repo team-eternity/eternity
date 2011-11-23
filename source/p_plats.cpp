@@ -206,17 +206,38 @@ void PlatThinker::Think()
 //
 void PlatThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << speed << low << high << wait << count << status << oldstatus
+   arc << speed << low << high << wait << count << status << oldstatus
        << crush << tag << type;
 
+   // Reattach to active plats list
    if(arc.isLoading())
-   {
-      // Reattach to sector and to active plats list
-      sector->floordata = this;
       P_AddActivePlat(this);
+}
+
+//
+// PlatThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a PlatThinker is treated as
+// a VerticalDoorThinker
+//
+bool PlatThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(wait == plat_down)
+      wait = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      wait = plat_down;
    }
+
+   return true;
 }
 
 
@@ -433,7 +454,7 @@ int EV_StopPlat(line_t *line)
 //
 void P_AddActivePlat(PlatThinker *plat)
 {
-   platlist_t *list = (platlist_t *)(malloc(sizeof *list));
+   platlist_t *list = estructalloc(platlist_t, 1);
    list->plat = plat;
    plat->list = list;
    if((list->next = activeplats))
@@ -457,7 +478,7 @@ void P_RemoveActivePlat(PlatThinker *plat)
    plat->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
-   free(list);
+   efree(list);
 }
 
 //
@@ -472,7 +493,7 @@ void P_RemoveAllActivePlats(void)
    while(activeplats)
    {  
       platlist_t *next = activeplats->next;
-      free(activeplats);
+      efree(activeplats);
       activeplats = next;
    }
 }

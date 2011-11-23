@@ -319,12 +319,12 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
    if(!size)
       return user ? *user = NULL : NULL;          // malloc(0) returns NULL
    
-   if(!(block = (memblock_t *)((malloc)(size + header_size))))
+   if(!(block = (memblock_t *)(malloc(size + header_size))))
    {
       if(blockbytag[PU_CACHE])
       {
          Z_FreeTags(PU_CACHE, PU_CACHE);
-         block = (memblock_t *)((malloc)(size + header_size));
+         block = (memblock_t *)(malloc(size + header_size));
       }
    }
 
@@ -406,7 +406,7 @@ void (Z_Free)(void *p, const char *file, int line)
       if((*block->prev = block->next))
          block->next->prev = block->prev;
          
-      (free)(block);
+      free(block);
          
       Z_LogPrintf("* Z_Free(p=%p, file=%s:%d)\n", p, file, line);
    }
@@ -498,7 +498,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
                   const char *file, int line)
 {
    void *p;
-   memblock_t *block, *newblock;
+   memblock_t *block, *newblock, *origblock;
 
    // if not allocated at all, defer to Z_Malloc
    if(!ptr)
@@ -513,7 +513,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    DEBUG_CHECKHEAP();
 
-   block = (memblock_t *)((byte *)ptr - header_size);
+   block = origblock = (memblock_t *)((byte *)ptr - header_size);
 
    Z_IDCheck(IDBOOL(block->id != ZONEID),
              "Z_Realloc: Reallocated a block without ZONEID\n", 
@@ -532,21 +532,29 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    INSTRUMENT(memorybytag[block->tag] -= block->size);
 
-   if(!(newblock = (memblock_t *)((realloc)(block, n + header_size))))
+   if(!(newblock = (memblock_t *)(realloc(block, n + header_size))))
    {
       // haleyjd 07/09/10: Note that unlinking the block above makes this safe 
       // even if the current block is PU_CACHE; Z_FreeTags won't find it.
       if(blockbytag[PU_CACHE])
       {
          Z_FreeTags(PU_CACHE, PU_CACHE);
-         newblock = (memblock_t *)((realloc)(block, n + header_size));
+         newblock = (memblock_t *)(realloc(block, n + header_size));
       }
    }
 
    if(!(block = newblock))
    {
-      I_FatalError(I_ERR_KILL, "Z_Realloc: Failure trying to allocate %u bytes\n"
-                               "Source: %s:%d\n", (unsigned int)n, file, line);
+      if(origblock->size >= n)
+      {
+         block = origblock; // restore original block if size was equal or smaller
+         n = block->size;   // keep same size in this event
+      }
+      else
+      {
+         I_FatalError(I_ERR_KILL, "Z_Realloc: Failure trying to allocate %u bytes\n"
+                                  "Source: %s:%d\n", (unsigned int)n, file, line);
+      }
    }
 
    block->size = n;
@@ -734,7 +742,7 @@ void *Z_SysMalloc(size_t size)
 {
    void *ret;
    
-   if(!(ret = (malloc)(size)))
+   if(!(ret = malloc(size)))
    {
       I_FatalError(I_ERR_KILL,
                    "Z_SysMalloc: failed on allocation of %u bytes\n", 
@@ -753,7 +761,7 @@ void *Z_SysCalloc(size_t n1, size_t n2)
 {
    void *ret;
 
-   if(!(ret = (calloc)(n1, n2)))
+   if(!(ret = calloc(n1, n2)))
    {
       I_FatalError(I_ERR_KILL,
                    "Z_SysCalloc: failed on allocation of %u bytes\n", 
@@ -773,7 +781,7 @@ void *Z_SysRealloc(void *ptr, size_t size)
 {
    void *ret;
 
-   if(!(ret = (realloc)(ptr, size)))
+   if(!(ret = realloc(ptr, size)))
    {
       I_FatalError(I_ERR_KILL,
                    "Z_SysRealloc: failed on allocation of %u bytes\n", 
@@ -791,7 +799,7 @@ void *Z_SysRealloc(void *ptr, size_t size)
 void Z_SysFree(void *p)
 {
    if(p)
-      (free)(p);
+      free(p);
 }
 
 //=============================================================================
@@ -935,7 +943,7 @@ void ZoneObject::ChangeTag(int tag)
    {
       if(zonetag != PU_FREE) // already in a list? remove it.
       {
-         if(*zoneprev = zonenext)
+         if((*zoneprev = zonenext))
             zonenext->zoneprev = zoneprev;
          INSTRUMENT(memorybytag[zonetag] -= getZoneSize());
       }

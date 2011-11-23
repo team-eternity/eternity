@@ -31,6 +31,7 @@
 #include "d_main.h"
 #include "d_gi.h"
 #include "gl/gl_vars.h"
+#include "hal/i_picker.h"
 #include "i_sound.h"
 #include "i_video.h"
 #include "m_misc.h"
@@ -78,6 +79,9 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
 #define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
+#define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
+#define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
+#define ITEM_IWAD_FREEDM        "iwad_freedm"
 #define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
@@ -123,7 +127,16 @@ static default_t sysdefaults[] =
    DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", default_t::wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
 
-   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, 8, default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_FREEDOOM, &gi_path_fdoom, NULL, "", default_t::wad_no,
+               "IWAD path for Freedoom (Doom 2 gamemission)"),
+
+   DEFAULT_STR(ITEM_IWAD_FREEDOOMU, &gi_path_fdoomu, NULL, "", default_t::wad_no,
+               "IWAD path for Freedoom (Ultimate Doom gamemission)"),
+
+   DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
+               "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
+
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
    DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", default_t::wad_no,
@@ -171,8 +184,8 @@ static default_t sysdefaults[] =
                "Volume of environmental sound sequences"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 2, default_t::wad_no,
-               "screenshot format (0=BMP,1=PCX,2=TGA)"),
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 3, default_t::wad_no,
+               "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
    
    DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
@@ -263,7 +276,7 @@ void M_LoadSysConfig(const char *filename)
 {
    startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
 
-   sysdeffile.fileName = strdup(filename);
+   sysdeffile.fileName = estrdup(filename);
 
    M_LoadDefaultFile(&sysdeffile);
 }

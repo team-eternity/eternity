@@ -336,15 +336,15 @@ static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_
 //
 static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 {
-   LevelInfoProto_t *newProto = (LevelInfoProto_t *)(calloc(1, sizeof(LevelInfoProto_t)));
+   LevelInfoProto_t *newProto = ecalloc(LevelInfoProto_t *, 1, sizeof(LevelInfoProto_t));
 
    // reallocate prototype pointers array if necessary
    if(numPrototypes >= numPrototypesAlloc)
    {
       numPrototypesAlloc = numPrototypesAlloc ? numPrototypesAlloc * 2 : 40;
       levelInfoPrototypes = 
-         (LevelInfoProto_t **)(realloc(levelInfoPrototypes,
-                                       numPrototypesAlloc * sizeof(LevelInfoProto_t *)));
+         erealloc(LevelInfoProto_t **, levelInfoPrototypes,
+                  numPrototypesAlloc * sizeof(LevelInfoProto_t *));
    }
 
    // add it to the pointer array
@@ -379,10 +379,10 @@ static void P_clearLevelInfoPrototypes(void)
 
    // free all the LevelInfo objects
    for(i = 0; i < numPrototypes; ++i)
-      free(levelInfoPrototypes[i]);
+      efree(levelInfoPrototypes[i]);
 
    // free the pointer array
-   free(levelInfoPrototypes);
+   efree(levelInfoPrototypes);
    levelInfoPrototypes = NULL;
    numPrototypes = numPrototypesAlloc = 0;
 }
@@ -661,14 +661,14 @@ enum
    IVT_END
 };
 
-typedef struct levelvar_s
+struct levelvar_t
 {
-   int   type;
-   char *name;
-   int   fieldenum;
-   void *variable;
-   void *extra;
-} levelvar_t;
+   int         type;
+   const char *name;
+   int         fieldenum;
+   void       *variable;
+   void       *extra;
+};
 
 
 //
@@ -679,19 +679,19 @@ typedef struct levelvar_s
 //
 #define LI_STRING(name, enumval, field) \
    { IVT_STRING, name, LI_FIELD_ ## enumval, \
-     (void *)(&(LevelInfoProto.info . field)) }
+     (void *)(&(LevelInfoProto.info . field)), NULL }
 #define LI_STRNUM(name, enumval, field, extra) \
    { IVT_STRNUM, name, LI_FIELD_ ## enumval, \
      (void *)(&(LevelInfoProto.info . field)), &(extra) }
 #define LI_INTEGR(name, enumval, field) \
-   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
+   { IVT_INT, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
 #define LI_BOOLNF(name, enumval, field) \
-   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field) }
+   { IVT_BOOLEAN, name, LI_FIELD_ ## enumval, &(LevelInfoProto.info . field), NULL }
 #define LI_FLAGSF(name, enumval, field, extra) \
    { IVT_FLAGS, name, LI_FIELD_ ## enumval, \
      &(LevelInfoProto.info . field), &(extra) }
 #define LI_END() \
-   { IVT_END, NULL, LI_FIELD_NUMFIELDS }
+   { IVT_END, NULL, LI_FIELD_NUMFIELDS, NULL, NULL }
 
 levelvar_t levelvars[]=
 {
@@ -1500,7 +1500,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    if(nummetainfo >= nummetainfoalloc)
    {
       nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-      metainfo = (metainfo_t *)(realloc(metainfo, nummetainfoalloc * sizeof(metainfo_t)));
+      metainfo = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
    }
 
    mi = &metainfo[nummetainfo];
@@ -1534,7 +1534,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
-   char *fn = strdup(wadfile);
+   char *fn = estrdup(wadfile);
    char *dotloc = NULL;
    byte *buffer = NULL;
 

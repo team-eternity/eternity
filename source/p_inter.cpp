@@ -50,6 +50,7 @@
 #include "p_clipen.h"
 #include "p_maputl.h"
 #include "p_tick.h"
+#include "p_user.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_segs.h"
@@ -185,6 +186,7 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 //
 bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 {
+   bool gaveweapon = false;
    bool gaveammo;
    
    if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -208,8 +210,15 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
    gaveammo = weaponinfo[weapon].ammo != am_noammo &&
       P_GiveAmmo(player, weaponinfo[weapon].ammo, dropped ? 1 : 2);
    
-   return !player->weaponowned[weapon] ?
-      player->weaponowned[player->pendingweapon = weapon] = true : gaveammo;
+   // haleyjd 10/4/11: de-Killoughized
+   if(!player->weaponowned[weapon])
+   {
+      player->pendingweapon = weapon;
+      player->weaponowned[weapon] = 1;
+      gaveweapon = true;
+   }
+
+   return gaveweapon || gaveammo;
 }
 
 //
@@ -1409,7 +1418,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->health < 0)
          player->health = 0;
       
-      player->attacker = source;
+      P_SetPlayerAttacker(player, source);
       player->damagecount += damage;  // add damage after armor / invuln
       
       if(player->damagecount > 100)

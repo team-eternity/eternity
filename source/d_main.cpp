@@ -38,6 +38,8 @@
 
 #include "z_zone.h"
 
+#include "hal/i_picker.h"
+
 #include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
@@ -71,6 +73,7 @@
 #include "m_argv.h"
 #include "m_misc.h"
 #include "m_swap.h"
+#include "m_syscfg.h"
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_info.h"
@@ -670,10 +673,10 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
    {
       numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
 
-      wadfiles = (wfileadd_t *)(realloc(wadfiles, numwadfiles_alloc * sizeof(*wadfiles)));
+      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
    }
 
-   wadfiles[numwadfiles].filename     = strdup(file);
+   wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
@@ -716,7 +719,7 @@ char *D_DoomExeDir(void)
 
       size_t len = strlen(myargv[0]) + 1;
 
-      base = (char *)(malloc(len));
+      base = emalloc(char *, len);
 
       // haleyjd 03/09/03: generalized
       M_GetFilePath(myargv[0], base, len);
@@ -724,7 +727,7 @@ char *D_DoomExeDir(void)
       // haleyjd 10/28/04: the above is not sufficient for all versions
       // of Windows. There is an API function which takes care of this,
       // however.  See i_fnames.c in the Win32 subdirectory.
-      base = (char *)(malloc(PATH_MAX + 1));
+      base = emalloc(char *, PATH_MAX + 1);
 
       WIN_GetExeDir(base, PATH_MAX + 1);
 #endif
@@ -752,7 +755,7 @@ char *D_DoomExeName(void)
       while(p[i] && p[i] != '.')
          i++;
 
-      name = (char *)(calloc(1, i + 1));
+      name = ecalloc(char *, 1, i + 1);
 
       strncpy(name, p, i);
    }
@@ -772,7 +775,7 @@ static char *D_ExpandTilde(const char *basedir)
 {
    if(basedir[0] == '~')
    {
-      char *home = strdup(getenv("HOME"));
+      char *home = estrdup(getenv("HOME"));
       char *newalloc = NULL;
       
       M_StringAlloca(&newalloc, 2, 0, home, basedir);
@@ -781,7 +784,7 @@ static char *D_ExpandTilde(const char *basedir)
       strcpy(newalloc + strlen(home), basedir + 1);
             
       if(home)
-         free(home);
+         efree(home);
 
       return newalloc;
    }
@@ -942,7 +945,7 @@ static void D_SetBasePath(void)
       }
    }
 
-   basepath = strdup(basedir);
+   basepath = estrdup(basedir);
    M_NormalizeSlashes(basepath);
 
    switch(source)
@@ -987,10 +990,7 @@ static void D_CheckGamePathParam(void)
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      size_t len = M_StringAlloca(&gamedir, 2, 2, basepath, myargv[p + 1]);
-
-      psnprintf(gamedir, len, "%s/%s", basepath, myargv[p + 1]);
-      M_NormalizeSlashes(gamedir);
+      gamedir = M_SafeFilePath(basepath, myargv[p + 1]);
       
       gamepathparm = p + 1;
 
@@ -998,7 +998,7 @@ static void D_CheckGamePathParam(void)
       {
          if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
          {
-            basegamepath = strdup(gamedir);
+            basegamepath = estrdup(gamedir);
             gamepathset = true;
          }
          else
@@ -1018,21 +1018,13 @@ static void D_CheckGamePathParam(void)
 static void D_SetGamePath(void)
 {
    struct stat sbuf;
-   char *gamedir = NULL;
-   size_t len;
    const char *mstr = GameModeInfo->missionInfo->gamePathName;
-
-   len = M_StringAlloca(&gamedir, 2, 2, basepath, mstr);
-
-   psnprintf(gamedir, len, "%s/%s", basepath, mstr);
+   char *gamedir = M_SafeFilePath(basepath, mstr);
 
    if(!stat(gamedir, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-      {
-         basegamepath = strdup(gamedir);
-         M_NormalizeSlashes(basegamepath);
-      }
+         basegamepath = estrdup(gamedir);
       else
          I_Error("Game path %s is not a directory.\n", gamedir);
    }
@@ -1048,12 +1040,7 @@ static void D_SetGamePath(void)
 static char *D_CheckGameEDF(void)
 {
    struct stat sbuf;
-   static char *game_edf;
-   size_t len = strlen(basegamepath) + 10;
-
-   game_edf = (char *)(malloc(len));
-
-   psnprintf(game_edf, len, "%s/root.edf", basegamepath);
+   char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
 
    if(!stat(game_edf, &sbuf)) // check for existence
    {
@@ -1083,7 +1070,7 @@ static void D_EnumerateAutoloadDir(void)
    if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
    {
       size_t len = strlen(basegamepath) + 10;
-      autoload_dirname = (char *)(malloc(len));
+      autoload_dirname = emalloc(char *, len);
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
       
@@ -1116,11 +1103,7 @@ static void D_GameAutoloadWads(void)
       {
          if(strstr(direntry->d_name, ".wad"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname, 
-                                        direntry->d_name);
-               
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
@@ -1147,11 +1130,7 @@ static void D_GameAutoloadDEH(void)
          if(strstr(direntry->d_name, ".deh") || 
             strstr(direntry->d_name, ".bex"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             D_QueueDEH(fn, 0);
          }
       }
@@ -1177,11 +1156,7 @@ static void D_GameAutoloadCSC(void)
       {
          if(strstr(direntry->d_name, ".csc"))
          {
-            size_t len = M_StringAlloca(&fn, 2, 2, autoload_dirname,
-                                        direntry->d_name);
-
-            psnprintf(fn, len, "%s/%s", autoload_dirname, direntry->d_name);
-            M_NormalizeSlashes(fn);
+            fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
             C_RunScriptFromFile(fn);
          }
       }
@@ -1454,7 +1429,7 @@ static void D_DiskMetaData(void)
    }
 
    // done with metadata resource
-   free(metatext);
+   efree(metatext);
 }
 
 //=============================================================================
@@ -1486,11 +1461,10 @@ static void D_AddDoomWadPath(const char *path)
    if(numdoomwadpaths >= numalloc)
    {
       numalloc = numalloc ? numalloc * 2 : 8;
-      doomwadpaths = (char **)(realloc(doomwadpaths, 
-                                       numalloc * sizeof(*doomwadpaths)));
+      doomwadpaths = erealloc(char **, doomwadpaths, numalloc * sizeof(*doomwadpaths));
       numdoomwadpaths_alloc = numalloc;
    }
-   doomwadpaths[numdoomwadpaths] = strdup(path);
+   doomwadpaths[numdoomwadpaths] = estrdup(path);
    ++numdoomwadpaths;
 }
 
@@ -1612,12 +1586,13 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
 int iwad_choice; // haleyjd 03/19/10: remember choice
 
 // variable-for-index lookup for D_DoIWADMenu
-static char **iwadVarForNum[] =
+static char **iwadVarForNum[NUMPICKIWADS] =
 {
-   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,
-   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,
-   &gi_path_hacx,   &gi_path_hticsw,  &gi_path_hticreg, 
-   &gi_path_sosr
+   &gi_path_doomsw, &gi_path_doomreg, &gi_path_doomu,  // Doom 1
+   &gi_path_doom2,  &gi_path_tnt,     &gi_path_plut,   // Doom 2
+   &gi_path_hacx,                                      // HACX
+   &gi_path_hticsw, &gi_path_hticreg, &gi_path_sosr,   // Heretic
+   &gi_path_fdoom,  &gi_path_fdoomu,  &gi_path_freedm, // FreeDoom
 };
 
 //
@@ -1633,13 +1608,12 @@ static const char *D_DoIWADMenu(void)
    const char *iwadToUse = NULL;
 
 #ifdef _SDL_VER
-   extern int I_Pick_DoPicker(bool haveIWADs[], int startchoice);
-   bool haveIWADs[9];
+   bool haveIWADs[NUMPICKIWADS];
    int i, choice = -1;
    bool foundone = false;
 
    // populate haveIWADs array based on system.cfg variables
-   for(i = 0; i < 9; ++i)
+   for(i = 0; i < NUMPICKIWADS; ++i)
    {
       if((haveIWADs[i] = (**iwadVarForNum[i] != '\0')))
          foundone = true;
@@ -1693,27 +1667,30 @@ struct iwadpathmatch_t
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
-   { MATCH_GAME, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_GAME, "doom",     { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_GAME, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_GAME, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_GAME, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
+   { MATCH_GAME, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_GAME, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_doomsw } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
 
-   // -iwad matches
-   { MATCH_IWAD, "doom2f",   { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom2",    { &gi_path_doom2,  NULL,             NULL            } },
-   { MATCH_IWAD, "doomu",    { &gi_path_doomu,  NULL,             NULL            } },
-   { MATCH_IWAD, "doom1",    { &gi_path_doomsw, NULL,             NULL            } },
-   { MATCH_IWAD, "doom",     { &gi_path_doomu,  &gi_path_doomreg, NULL            } },
-   { MATCH_IWAD, "tnt",      { &gi_path_tnt,    NULL,             NULL            } },
-   { MATCH_IWAD, "plutonia", { &gi_path_plut,   NULL,             NULL            } },
-   { MATCH_IWAD, "hacx",     { &gi_path_hacx,   NULL,             NULL            } },
-   { MATCH_IWAD, "heretic1", { &gi_path_hticsw, NULL,             NULL            } },
-   { MATCH_IWAD, "heretic",  { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   // -iwad matches 
+   { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw, NULL,             NULL            } },
+   { MATCH_IWAD, "doom",      { &gi_path_doomu,  &gi_path_doomreg, &gi_path_fdoomu } },
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,    NULL,             NULL            } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,   NULL,             NULL            } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw, NULL,             NULL            } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, NULL            } },
+   { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
+   { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
    
    // Terminating entry
-   { MATCH_NONE, NULL,       { NULL,            NULL,             NULL            } }
+   { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
 };
 
 //
@@ -2006,6 +1983,7 @@ static const char *const standard_iwads[]=
    "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03
    "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10
    "/freedoom1.wad", // Freedoom "Demo"         -- haleyjd 03/07/10
+   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
    "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
 };
 
@@ -2094,10 +2072,10 @@ char *FindIWADFile(void)
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
-      baseiwad = strdup(basename);
+      baseiwad = estrdup(basename);
       M_NormalizeSlashes(baseiwad);
 
-      iwad = (char *)(calloc(1, strlen(baseiwad) + 1024));
+      iwad = ecalloc(char *, 1, strlen(baseiwad) + 1024);
       strcpy(iwad, baseiwad);
       
       if(WadFileStatus(iwad, &isdir))
@@ -2127,7 +2105,7 @@ char *FindIWADFile(void)
       const char *name = D_DoIWADMenu();
       if(name && *name)
       {
-         baseiwad = strdup(name);
+         baseiwad = estrdup(name);
          M_NormalizeSlashes(baseiwad);
          return baseiwad;
       }
@@ -2140,15 +2118,15 @@ char *FindIWADFile(void)
       case 0:
       case 1:
          if(iwad)
-            free(iwad);
-         iwad = (char *)(calloc(1, strlen(D_DoomExeDir()) + 1024));
+            efree(iwad);
+         iwad = ecalloc(char *, 1, strlen(D_DoomExeDir()) + 1024);
          strcpy(iwad, j ? D_DoomExeDir() : ".");
          break;
       case 2:
          // haleyjd: try basegamepath too when -game was used
          if(iwad)
-            free(iwad);
-         iwad = (char *)(calloc(1, strlen(basegamepath) + 1024));
+            efree(iwad);
+         iwad = ecalloc(char *, 1, strlen(basegamepath) + 1024);
          strcpy(iwad, basegamepath);
          break;
       }
@@ -2185,8 +2163,8 @@ char *FindIWADFile(void)
       if(cfgpath && !access(cfgpath, R_OK))
       {
          if(iwad)
-            free(iwad);
-         iwad = strdup(cfgpath);
+            efree(iwad);
+         iwad = estrdup(cfgpath);
          return iwad;
       }
    }
@@ -2199,7 +2177,7 @@ char *FindIWADFile(void)
       if(customiwad) // -iwad was used with a file name?
       {
          if(iwad)
-            free(iwad);
+            efree(iwad);
          if((iwad = D_FindInDoomWadPath(customiwad, ".wad")))
             return iwad;
       }
@@ -2209,7 +2187,7 @@ char *FindIWADFile(void)
          for(i = 0; i < nstandard_iwads; i++)
          {
             if(iwad)
-               free(iwad);
+               efree(iwad);
             if((iwad = D_FindInDoomWadPath(standard_iwads[i], ".wad")))
                return iwad;
          }
@@ -2221,8 +2199,8 @@ char *FindIWADFile(void)
       if((p = getenv(envvars[i])))
       {
          if(iwad)
-            free(iwad);
-         iwad = (char *)(calloc(1, sizeof(p) + 1024));
+            efree(iwad);
+         iwad = ecalloc(char *, 1, sizeof(p) + 1024);
          M_NormalizeSlashes(strcpy(iwad, p));
          if(WadFileStatus(iwad, &isdir))
          {
@@ -2266,7 +2244,7 @@ char *FindIWADFile(void)
 
    // haleyjd 01/17/11: be sure iwad return string is valid...
    if(!iwad)
-      iwad = (char *)(malloc(1));
+      iwad = emalloc(char *, 1);
 
    *iwad = 0;
    return iwad;
@@ -2355,7 +2333,7 @@ static void D_InitPaths(void)
       // hack for DOOM modes: optional use of /doom config
       size_t len = strlen(basepath) + strlen("/doom") +
                    strlen(D_DoomExeName()) + 8;
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
                 basepath, D_DoomExeName());
@@ -2364,14 +2342,14 @@ static void D_InitPaths(void)
    {
       size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
 
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use basegamepath
    // set save path to -save parm or current dir
-   basesavegame = strdup(basegamepath);
+   basesavegame = estrdup(basegamepath);
 
    if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
    {
@@ -2380,8 +2358,8 @@ static void D_InitPaths(void)
       if(!stat(myargv[i+1],&sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
       {
          if(basesavegame)
-            free(basesavegame);
-         basesavegame = strdup(myargv[i+1]); //jff 3/24/98 use that for savegame
+            efree(basesavegame);
+         basesavegame = estrdup(myargv[i+1]); //jff 3/24/98 use that for savegame
       }
       else
          puts("Error: -save path does not exist, using game path");  // killough 8/8/98
@@ -2479,7 +2457,7 @@ static void IdentifyIWAD(void)
       D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
 
       // done with iwad string
-      free(iwad);
+      efree(iwad);
    }
    else
    {
@@ -2560,7 +2538,7 @@ void FindResponseFile(void)
          int size, index, indexinfile;
          byte *f;
          char *file = NULL, *firstargv;
-         char **moreargs = (char **)(malloc(myargc * sizeof(char *)));
+         char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          char *fname = NULL;
          
@@ -2583,7 +2561,7 @@ void FindResponseFile(void)
             int k;
             printf("\nResponse file empty!\n");
 
-            newargv = (char **)(calloc(sizeof(char *), MAXARGVS));
+            newargv = ecalloc(char **, sizeof(char *), MAXARGVS);
             newargv[0] = myargv[0];
             for(k = 1, index = 1; k < myargc; k++)
             {
@@ -2599,7 +2577,7 @@ void FindResponseFile(void)
                 (index = myargc - i - 1) * sizeof(myargv[0]));
 
          firstargv = myargv[0];
-         newargv = (char **)(calloc(sizeof(char *),MAXARGVS));
+         newargv = ecalloc(char **, sizeof(char *), MAXARGVS);
          newargv[0] = firstargv;
 
          {
@@ -2616,7 +2594,7 @@ void FindResponseFile(void)
 
                if(size > 0)
                {
-                  char *s = (char *)(malloc(size+1));
+                  char *s = emalloc(char *, size+1);
                   char *p = s;
                   int quoted = 0;
 
@@ -2640,15 +2618,15 @@ void FindResponseFile(void)
 
                   // Terminate string, realloc and add to argv
                   *p = 0;
-                  newargv[indexinfile++] = (char *)(realloc(s,strlen(s)+1));
+                  newargv[indexinfile++] = erealloc(char *, s, strlen(s)+1);
                }
             } 
             while(size > 0);
          }
-         free(file);
+         efree(file);
 
          memcpy((void *)&newargv[indexinfile],moreargs,index*sizeof(moreargs[0]));
-         free((void *)moreargs);
+         efree((void *)moreargs);
 
          myargc = indexinfile+index; myargv = newargv;
 
@@ -2864,20 +2842,15 @@ static void D_ProcessGFSDeh(gfs_t *gfs)
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
-      size_t len;  
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->dehnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->dehnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->dehnames[i]);
-         psnprintf(filename, len, "%s", gfs->dehnames[i]);
+         filename = Z_Strdupa(gfs->dehnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open .deh or .bex %s\n", filename);
@@ -2904,25 +2877,15 @@ static void D_ProcessGFSWads(gfs_t *gfs)
 
    for(i = 0; i < gfs->numwads; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->wadnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->wadnames[i]);
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
+         filename = Z_Strdupa(gfs->wadnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->wadnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->wadnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
@@ -2938,25 +2901,15 @@ static void D_ProcessGFSCsc(gfs_t *gfs)
 
    for(i = 0; i < gfs->numcsc; ++i)
    {
-      size_t len;
-
       if(gfs->filepath)
       {
-         len = M_StringAlloca(&filename, 2, 2, gfs->filepath, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
+         filename = M_SafeFilePath(gfs->filepath, gfs->cscnames[i]);
       }
       else
       {
-         len = M_StringAlloca(&filename, 1, 2, gfs->cscnames[i]);
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
+         filename = Z_Strdupa(gfs->cscnames[i]);
+         M_NormalizeSlashes(filename);
       }
-
-      if(gfs->filepath)
-         psnprintf(filename, len, "%s/%s", gfs->filepath, gfs->cscnames[i]);
-      else
-         psnprintf(filename, len, "%s", gfs->cscnames[i]);
-
-      M_NormalizeSlashes(filename);
 
       if(access(filename, F_OK))
          I_Error("Couldn't open CSC file %s\n", filename);
@@ -3017,12 +2970,19 @@ static void D_LoadEDF(gfs_t *gfs)
    {
       // command-line EDF file found
       edfname = Z_Strdupa(myargv[i + 1]);
+      M_NormalizeSlashes(edfname);
    }
    else if(gfs && (shortname = G_GFSCheckEDF()))
    {
       // GFS specified an EDF file
-      size_t len = M_StringAlloca(&edfname, 2, 2, gfs->filepath, shortname);
-      psnprintf(edfname, len, "%s/%s", gfs->filepath, shortname);
+      // haleyjd 09/10/11: bug fix - don't assume gfs->filepath is valid
+      if(gfs->filepath)
+         edfname = M_SafeFilePath(gfs->filepath, shortname);
+      else
+      {
+         edfname = Z_Strdupa(shortname);
+         M_NormalizeSlashes(edfname);
+      }
    }
    else
    {
@@ -3033,16 +2993,9 @@ static void D_LoadEDF(gfs_t *gfs)
 
          // haleyjd 08/20/07: check for root.edf in base/game first
          if((fn = D_CheckGameEDF()))
-         {
-            edfname = Z_Strdupa(fn);
-            free(fn);
-         }
+            edfname = fn;
          else
-         {
-            size_t len = M_StringAlloca(&edfname, 1, 10, basepath);
-               
-            psnprintf(edfname, len, "%s/root.edf",  basepath);
-         }
+            edfname = M_SafeFilePath(basepath, "root.edf");
 
          // disable other game modes' definitions implicitly ONLY
          // when using the default root.edf
@@ -3056,8 +3009,6 @@ static void D_LoadEDF(gfs_t *gfs)
          }
       }
    }
-
-   M_NormalizeSlashes(edfname);
 
    E_ProcessEDF(edfname);
 
@@ -3157,9 +3108,6 @@ static gfs_t *D_LooseGFS(void)
 //
 // Primary Initialization Routines
 //
-
-// I am not going to make an entire header just for this :P
-extern void M_LoadSysConfig(const char *filename);
 
 //
 // D_LoadSysConfig
@@ -3380,11 +3328,11 @@ static void D_DoomInit(void)
 #endif
       // killough 10/98:
       if(basedefault)
-         free(basedefault);
+         efree(basedefault);
       
       len = strlen(D_DoomExeName()) + 18;
 
-      basedefault = (char *)(malloc(len));
+      basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "c:/doomdata/%s.cfg", D_DoomExeName());
    }
@@ -3852,7 +3800,7 @@ static void D_DoomInit(void)
       singledemo = true;          // quit after one demo
    }
 
-   startlevel = strdup(G_GetNameForMap(startepisode, startmap));
+   startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
 
    if(slot && ++slot < myargc)
    {

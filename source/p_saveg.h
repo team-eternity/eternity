@@ -30,6 +30,8 @@
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
+class  Thinker;
+class  Mobj;
 class  OutBuffer;
 class  InBuffer;
 struct spectransfer_t;

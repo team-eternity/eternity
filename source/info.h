@@ -174,10 +174,10 @@ struct state_t
    struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   ENCStringHashKey name;        // pointer to name of this state
-   char             namebuf[41]; // buffer for name (max 40 chars)
-   EIntHashKey      dehnum;      // DeHackEd number for fast access, comp.
-   int              index;       // 06/12/09: number of state in states array
+   ENCStringHashKey name;         // pointer to name of this state
+   char             namebuf[129]; // buffer for name (max 40 chars)
+   EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
+   int              index;        // 06/12/09: number of state in states array
 };
 
 // these are in info.c
@@ -390,7 +390,7 @@ struct mobjinfo_t
    void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
-   char name[41];     // name of this thing type (max 40 chars)
+   char name[129];    // name of this thing type (max 40 chars)
    int dehnum;        // DeHackEd number for fast lookup and comparison
    int namenext;      // next mobjinfo_t in name hash chain
    int dehnext;       // next mobjinfo_t in DEH hash chain

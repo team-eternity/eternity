@@ -1047,14 +1047,14 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
       dp->orig_default_s = *(char **)dp->location; // Save original default
    }
    else
-      free(*(char **)dp->location);               // Free old value
+      efree(*(char **)dp->location);               // Free old value
 
-   *(char **)dp->location = strdup(strparm);      // Change default value
+   *(char **)dp->location = estrdup(strparm);      // Change default value
 
    if(dp->current)                                // Current value
    {
-      free(*(char **)dp->current);                // Free old value
-      *(char **)dp->current = strdup(strparm);    // Change current value
+      efree(*(char **)dp->current);                // Free old value
+      *(char **)dp->current = estrdup(strparm);    // Change current value
    }
 }
 
@@ -1086,7 +1086,7 @@ static void M_setDefaultString(default_t *dp)
    // in it or not. This provides consistency later on when/if we need to
    // edit these strings (i.e. chat macros in the Chat Strings Setup screen).
 
-   *(char **)dp->location = strdup(dp->defaultvalue_s);
+   *(char **)dp->location = estrdup(dp->defaultvalue_s);
 }
 
 // Test if a string default matches the given cvar
@@ -1636,13 +1636,16 @@ void M_LoadOptions(void)
          int len = 0;
          while(len < size && p[len++] && p[len-1] != '\n');
          if(len >= buflen)
-            buf = (char *)(realloc(buf, buflen = len+1));
+         {
+            buflen = len + 1;
+            buf = erealloc(char *, buf, buflen);
+         }
          strncpy(buf, p, len)[len] = 0;
          p += len;
          size -= len;
          M_ParseOption(&maindefaults, buf, true);
       }
-      free(buf);
+      efree(buf);
       Z_ChangeTag(options, PU_CACHE);
    }
 
@@ -1715,13 +1718,15 @@ void M_LoadDefaultFile(defaultfile_t *df)
             }
 
             if(df->numcomments >= df->numcommentsalloc)
+            {
                df->comments = 
-               (defaultfile_s::comment_s *)
-                 realloc(df->comments, sizeof *(df->comments) *
-                         (df->numcommentsalloc = df->numcommentsalloc ?
-                          df->numcommentsalloc * 2 : df->numdefaults));
+                 erealloc(defaultfile_s::comment_s *,
+                          df->comments, sizeof *(df->comments) *
+                          (df->numcommentsalloc = df->numcommentsalloc ?
+                           df->numcommentsalloc * 2 : df->numdefaults));
+            }
             df->comments[df->numcomments].line = line;
-            df->comments[df->numcomments++].text = strdup(p);
+            df->comments[df->numcomments++].text = estrdup(p);
          }
       }
       fclose(f);
@@ -1747,9 +1752,9 @@ void M_LoadDefaults(void)
    if(!df->fileName)
    {
       if((p = M_CheckParm("-config")) && p < myargc - 1)
-         printf(" default file: %s\n", df->fileName = strdup(myargv[p + 1]));
+         printf(" default file: %s\n", df->fileName = estrdup(myargv[p + 1]));
       else
-         df->fileName = strdup(basedefault);
+         df->fileName = estrdup(basedefault);
    }
 
    // haleyjd 06/30/09: apply gamemode defaults first
@@ -1767,7 +1772,7 @@ void M_ResetDefaultFileComments(defaultfile_t *df)
 {
    if(df->comments)
    {
-      free(df->comments);
+      efree(df->comments);
       df->comments = NULL;
       df->numcomments = df->numcommentsalloc = 0;
    }
@@ -1789,11 +1794,11 @@ void M_ResetDefaultComments(void)
 // haleyjd 07/04/10: static subroutine for M_FindDefaultForCVar that looks
 // for a match in a single set of defaults.
 //
-static default_t *M_findCVarInDefaults(default_t *defaults, variable_t *var)
+static default_t *M_findCVarInDefaults(default_t *defaultset, variable_t *var)
 {
    default_t *dp, *ret = NULL;
 
-   for(dp = defaults; dp->name; dp++)
+   for(dp = defaultset; dp->name; dp++)
    {
       if(dp->methods->checkCVar(dp, var))
       {
@@ -1875,7 +1880,7 @@ int M_ReadFile(char const *name, byte **buffer)
       length = ftell(fp);
       fseek(fp, 0, SEEK_SET);
 
-      *buffer = (byte *)(calloc(1, length));
+      *buffer = ecalloc(byte *, 1, length);
       
       if(fread(*buffer, 1, length, fp) == length)
       {
@@ -2210,6 +2215,25 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
    *str = (char *)(Z_Alloca(len));
 
    return len;
+}
+
+//
+// M_SafeFilePath
+//
+// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure 
+// file path concatenation with automatic normalization on alloca-provided 
+// buffers.
+//
+char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
+{
+   int     newstrlen = 0;
+   char   *newstr    = NULL;
+
+   newstrlen = M_StringAlloca(&newstr, 3, 1, pbasepath, "/", newcomponent);
+   psnprintf(newstr, newstrlen, "%s/%s", pbasepath, newcomponent);
+   M_NormalizeSlashes(newstr);
+
+   return newstr;
 }
 
 //----------------------------------------------------------------------------

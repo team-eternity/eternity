@@ -99,7 +99,7 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
    if(NUMSPRITES + 1 >= numspritesalloc)
    {
       numspritesalloc = numspritesalloc ? numspritesalloc + 128 : 256;
-      sprnames = (char **)(realloc(sprnames, numspritesalloc * sizeof(char *)));
+      sprnames = erealloc(char **, sprnames, numspritesalloc * sizeof(char *));
    }
 
    // set the new sprnames entry, and make the next one NULL
@@ -148,7 +148,7 @@ void E_ProcessSprites(cfg_t *cfg)
 
    // 10/17/03: allocate a single array of sprite objects to save a lot of
    // memory and some time.
-   sprites = (esprite_t *)(calloc(numarraysprites, sizeof(*sprites)));
+   sprites = ecalloc(esprite_t *, numarraysprites, sizeof(*sprites));
 
    // process each spritename
    for(i = 0; i < numarraysprites; ++i)
@@ -185,12 +185,12 @@ bool E_ProcessSingleSprite(const char *sprname)
       return false;
 
    // allocate separate storage for implicit sprites
-   spr = (esprite_t *)(calloc(1, sizeof(*spr)));
+   spr = ecalloc(esprite_t *, 1, sizeof(*spr));
 
    // try adding it; if this fails, we need to free spr
    if(!E_AddSprite(sprname, spr))
    {
-      free(spr);
+      efree(spr);
       return false;
    }
    

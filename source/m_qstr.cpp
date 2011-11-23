@@ -36,8 +36,9 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "m_qstr.h"
-#include "m_misc.h"   // for M_Strupr/M_Strlwr
-#include "d_io.h"     // for strcasecmp
+#include "m_misc.h"       // for M_Strupr/M_Strlwr
+#include "m_strcasestr.h" // for M_StrCaseStr
+#include "d_io.h"         // for strcasecmp
 
 const size_t qstring::npos = ((size_t) -1);
 const size_t qstring::basesize = 32;
@@ -56,7 +57,7 @@ const size_t qstring::basesize = 32;
 //
 qstring &qstring::createSize(size_t pSize)
 {
-   buffer = (char *)(realloc(buffer, pSize));
+   buffer = erealloc(char *, buffer, pSize);
    size   = pSize;
    index  = 0;
    memset(buffer, 0, size);
@@ -108,6 +109,20 @@ qstring &qstring::initCreateSize(size_t pSize)
 }
 
 //
+// qstring::checkBuffer
+//
+// Private method.
+// Will allocate a buffer for the qstring if it doesn't have one already.
+//
+char *qstring::checkBuffer()
+{
+   if(!buffer)
+      create();
+
+   return buffer;
+}
+
+//
 // qstring::freeBuffer
 //
 // Frees the qstring object. It should not be used after this,
@@ -117,7 +132,7 @@ qstring &qstring::initCreateSize(size_t pSize)
 void qstring::freeBuffer()
 {
    if(buffer)
-      free(buffer);
+      efree(buffer);
    buffer = NULL;
    index = size = 0;
 }
@@ -133,8 +148,10 @@ void qstring::freeBuffer()
 // Indexing function to access a character in a qstring. This is slower but 
 // more secure than using qstring::getBuffer with array indexing.
 //
-char qstring::charAt(size_t idx) const
+char qstring::charAt(size_t idx)
 {
+   checkBuffer();
+
    if(idx >= size)
       I_Error("qstring::charAt: index out of range\n");
 
@@ -147,8 +164,10 @@ char qstring::charAt(size_t idx) const
 // Gets a pointer into the buffer at the given position, if that position would
 // be valid. Returns NULL otherwise. The same caveats apply as with qstring::getBuffer.
 //
-char *qstring::bufferAt(size_t idx) const
+char *qstring::bufferAt(size_t idx)
 {
+   checkBuffer();
+
    return idx < size ? buffer + idx : NULL;
 }
 
@@ -165,10 +184,10 @@ char *qstring::bufferAt(size_t idx) const
 //
 qstring &qstring::clear()
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
-   memset(buffer, 0, size);
+   if(size)
+      memset(buffer, 0, size);
    index = 0;
 
    return *this;
@@ -196,13 +215,13 @@ qstring &qstring::clearOrCreate(size_t pSize)
 // called by other qstring methods, so there is generally no need to call it 
 // yourself.
 //
-qstring& qstring::grow(size_t len)
+qstring &qstring::grow(size_t len)
 {   
    if(len > 0)
    {
       size_t newsize = size + len;
 
-      buffer = (char *)(realloc(buffer, newsize));
+      buffer = erealloc(char *, buffer, newsize);
       memset(buffer + size, 0, len);
       size += len;
    }
@@ -223,8 +242,7 @@ qstring& qstring::grow(size_t len)
 //
 qstring &qstring::Putc(char ch)
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    if(index >= size - 1) // leave room for \0
       grow(size);        // double buffer size
@@ -270,9 +288,8 @@ qstring &qstring::concat(const char *str)
 {
    unsigned int cursize = size;
    unsigned int newsize = index + strlen(str) + 1;
-   
-   if(!buffer)
-      initCreateSize(newsize);
+
+   checkBuffer();
    
    if(newsize > cursize)
       grow(newsize - cursize);
@@ -448,9 +465,8 @@ qstring &qstring::LStrip(char c)
 {
    size_t i   = 0;
    size_t len = index;
-   
-   if(!buffer)
-      initCreate();
+
+   checkBuffer();
    
    while(buffer[i] != '\0' && buffer[i] == c)
       ++i;
@@ -477,8 +493,7 @@ qstring &qstring::LStrip(char c)
 //
 qstring &qstring::RStrip(char c)
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    while(index && buffer[index - 1] == c)
       Delc();
@@ -493,8 +508,7 @@ qstring &qstring::RStrip(char c)
 //
 qstring &qstring::truncate(size_t pos)
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    // pos must be between 0 and qstr->index - 1
    if(pos >= index)
@@ -698,9 +712,20 @@ size_t qstring::findFirstNotOf(char c) const
 // Calls strstr on the qstring. If the passed-in string is found, then the
 // return value points to the location of the first instance of that substring.
 //
-const char *qstring::findSubStr(const char * substr) const
+const char *qstring::findSubStr(const char *substr) const
 {
    return strstr(buffer ? buffer : "", substr);
+}
+
+//
+// qstring::findSubStrNoCase
+//
+// haleyjd 10/28/11: call strcasestr on the qstring, courtesy of implementation
+// of the non-standard routine adapted from GNUlib.
+//
+const char *qstring::findSubStrNoCase(const char *substr) const
+{
+   return M_StrCaseStr(buffer ? buffer : "", substr);
 }
 
 //=============================================================================
@@ -729,8 +754,7 @@ int qstring::toInt() const
 //
 long qstring::toLong(char **endptr, int radix) 
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    return strtol(buffer, endptr, radix);
 }
@@ -746,8 +770,7 @@ long qstring::toLong(char **endptr, int radix)
 
 double qstring::toDouble(char **endptr)
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    return strtod(buffer, endptr);
 }
@@ -789,10 +812,7 @@ char *qstring::duplicateAuto() const
 //
 qstring &qstring::toLower()
 {
-   if(!buffer)
-      initCreate();
-
-   M_Strlwr(buffer);
+   M_Strlwr(checkBuffer());
    return *this;
 }
 
@@ -803,10 +823,7 @@ qstring &qstring::toLower()
 //
 qstring &qstring::toUpper()
 {
-   if(!buffer)
-      initCreate();
-
-   M_Strupr(buffer);
+   M_Strupr(checkBuffer());
    return *this;
 }
 
@@ -851,9 +868,8 @@ static size_t QStrReplaceInternal(qstring *qstr, char repl)
 size_t qstring::replace(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
-   
-   if(!buffer)
-      initCreate();
+
+   checkBuffer();
    
    memset(qstr_repltable, 0, sizeof(qstr_repltable));
 
@@ -872,9 +888,8 @@ size_t qstring::replace(const char *filter, char repl)
 size_t qstring::replaceNotOf(const char *filter, char repl)
 {
    const unsigned char *fptr = (unsigned char *)filter;
-   
-   if(!buffer)
-      initCreate();
+
+   checkBuffer();
    
    memset(qstr_repltable, 1, sizeof(qstr_repltable));
 
@@ -895,8 +910,7 @@ size_t qstring::replaceNotOf(const char *filter, char repl)
 //
 qstring &qstring::normalizeSlashes()
 {
-   if(!buffer)
-      initCreate();
+   checkBuffer();
 
    M_NormalizeSlashes(buffer);
    index = strlen(buffer);

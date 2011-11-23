@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
@@ -36,6 +37,9 @@
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
+
+// Need libpng here.
+#include "png.h"
 
 // jff 3/30/98: option to output screenshot as pcx or bmp
 // haleyjd 12/28/09: selects from any number of formats now.
@@ -390,6 +394,162 @@ static bool tga_Writer(OutBuffer *ob, byte *data,
 
 //=============================================================================
 //
+// PNG
+//
+// haleyjd 08/28/11: At long last, the most demanded screenshot format!
+//
+
+struct pngiodata_t
+{
+   OutBuffer *ob;      // OutBuffer to call Write on.
+   bool       writeOK; // Tracks if a write error has occurred.
+};
+
+//
+// PNG_dataWrite
+//
+// Writing callback for libpng
+//
+static void PNG_dataWrite(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+   pngiodata_t *pngIoData = static_cast<pngiodata_t *>(png_get_io_ptr(png_ptr));
+
+   pngIoData->writeOK = (pngIoData->ob->Write(data, length) && pngIoData->writeOK);
+}
+
+//
+// PNG_dataFlush
+//
+// Flush callback for libpng.
+//
+static void PNG_dataFlush(png_structp png_ptr)
+{
+   // No-op. We don't want to flush and override the buffering semantics.
+}
+
+// 
+// PNG_handleError
+//
+// Error callback for libpng.
+//
+static void PNG_handleError(png_structp png_ptr, png_const_charp error_msg)
+{
+   C_Printf(FC_ERROR "libpng error: %s\a", error_msg);
+
+   throw 0;
+}
+
+//
+// PNG_handleWarning
+//
+// Warning callback for libpng.
+//
+static void PNG_handleWarning(png_structp png_ptr, png_const_charp error_msg)
+{
+   C_Printf(FC_ERROR "libpng warning: %s", error_msg);
+}
+
+//
+// png_Writer
+//
+// haleyjd 08/28/11
+//
+// Some code derived from WadGen, copyright 2011 Samuel 'Kaiser' Villarreal
+// Used under GPLv2.0 or later.
+//
+static bool png_Writer(OutBuffer *ob, byte *data, 
+                       uint32_t width, uint32_t height, byte *palette)
+{
+   png_structp pngStruct;
+   png_infop   pngInfo;
+   png_colorp  pngPalette;
+   pngiodata_t pngIoData;
+
+   pngIoData.ob      = ob;
+   pngIoData.writeOK = true;
+
+   byte **row_pointers;
+
+   // setup png structure pointer
+   if(!(pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, &pngIoData, 
+                                            PNG_handleError, PNG_handleWarning)))
+   {
+      return false;
+   }
+
+   // setup info pointer
+   if(!(pngInfo = png_create_info_struct(pngStruct)))
+   {
+      png_destroy_write_struct(&pngStruct, NULL);
+      return false;
+   }
+   
+   row_pointers = ecalloc(byte **, height, sizeof(byte *));
+   pngPalette   = ecalloc(png_colorp, 256, png_sizeof(png_color));
+
+   try
+   {
+      // setup custom data writing procedure
+      png_set_write_fn(pngStruct, &pngIoData, PNG_dataWrite, PNG_dataFlush);
+
+      // setup image header
+      png_set_IHDR(pngStruct, pngInfo, width, height, 8, PNG_COLOR_TYPE_PALETTE,
+                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, 
+                   PNG_FILTER_TYPE_DEFAULT);      
+
+      // setup palette
+      if(screenshot_gamma)
+      {
+         for(int i = 0; i < 256; i++)
+         {
+            pngPalette[i].red   = gammatable[usegamma][palette[i*3+0]];
+            pngPalette[i].green = gammatable[usegamma][palette[i*3+1]];
+            pngPalette[i].blue  = gammatable[usegamma][palette[i*3+2]];
+         }
+      }
+      else
+      {
+         for(int i = 0; i < 256; i++)
+         {
+            pngPalette[i].red   = palette[i*3+0];
+            pngPalette[i].green = palette[i*3+1];
+            pngPalette[i].blue  = palette[i*3+2];
+         }
+      }
+      // add palette to png
+      png_set_PLTE(pngStruct, pngInfo, pngPalette, 256);
+
+      // add png info to data
+      png_write_info(pngStruct, pngInfo);
+
+      // setup packing if needed
+      png_set_packing(pngStruct);
+      png_set_packswap(pngStruct);
+
+      // copy data over
+      for(uint32_t i = 0; i < height; i++)
+         row_pointers[i] = &data[i*width];
+
+      png_write_image(pngStruct, row_pointers);
+
+      // end
+      png_write_end(pngStruct, pngInfo);
+   }
+   catch(...)
+   {
+      pngIoData.writeOK = false;
+   }
+   
+   // cleanup
+   png_destroy_write_struct(&pngStruct, &pngInfo);
+   efree(row_pointers);
+   efree(pngPalette);
+
+   return pngIoData.writeOK;
+}
+
+//=============================================================================
+//
 // Shared Code
 //
 
@@ -407,6 +567,7 @@ enum
    SHOT_BMP,
    SHOT_PCX,
    SHOT_TGA,
+   SHOT_PNG,
    SHOT_NUMSHOTFORMATS
 };
 
@@ -415,6 +576,7 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
    { "bmp", OutBuffer::LENDIAN, bmp_Writer }, // Windows / OS/2 Bitmap
    { "pcx", OutBuffer::LENDIAN, pcx_Writer }, // ZSoft PC Paint
    { "tga", OutBuffer::LENDIAN, tga_Writer }, // Truevision TARGA
+   { "png", OutBuffer::NENDIAN, png_Writer }, // Portable Network Graphics
 };
 
 //

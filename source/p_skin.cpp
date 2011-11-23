@@ -99,7 +99,7 @@ static void P_ResolveSkinSounds(skin_t *skin)
    for(i = 0; i < NUMSKINSOUNDS; ++i)
    {
       if(!skin->sounds[i])
-         skin->sounds[i] = strdup(skinsounddefs[i]);
+         skin->sounds[i] = estrdup(skinsounddefs[i]);
    }
 }
 
@@ -125,7 +125,7 @@ void P_InitSkins(void)
    if(default_skin == NULL) 
    {
       playerclass_t *dpc = E_PlayerClassForName(GameModeInfo->defPClassName);
-      default_skin = strdup(dpc->defaultskin->skinname);
+      default_skin = estrdup(dpc->defaultskin->skinname);
    }
 
    // haleyjd 11/14/06: add EDF skins
@@ -139,7 +139,7 @@ void P_InitSkins(void)
    if((numskinsprites = numskins - numedfskins) < 0)
       I_Error("P_InitSkins: numedfskins > numskins\n");
 
-   spritelist = (char **)(malloc((numskinsprites + NUMSPRITES + 1) * sizeof(char *)));
+   spritelist = ecalloc(char **, numskinsprites + NUMSPRITES + 1, sizeof(char *));
 
    // add the normal sprites
    currentsprite = spritelist;
@@ -211,7 +211,7 @@ static void P_AddSkin(skin_t *newskin)
    if(numskins >= numskinsalloc)
    {
       numskinsalloc = numskinsalloc ? numskinsalloc*2 : 32;
-      skins = (skin_t **)(realloc(skins, numskinsalloc*sizeof(skin_t *)));
+      skins = erealloc(skin_t **, skins, numskinsalloc*sizeof(skin_t *));
    }
    
    skins[numskins] = newskin;
@@ -251,7 +251,7 @@ static void P_ParseSkinCmd(char *line)
       char *skinname = line+4;
       while(*skinname == ' ') 
          skinname++;
-      newskin->skinname = strdup(skinname);
+      newskin->skinname = estrdup(skinname);
    }
    if(!strncasecmp(line, "sprite", 6))
    {
@@ -264,7 +264,7 @@ static void P_ParseSkinCmd(char *line)
    {
       char *facename = line+4;
       while(*facename == ' ') facename++;
-      newskin->facename = strdup(facename);
+      newskin->facename = estrdup(facename);
       newskin->facename[3] = 0;
    }
 
@@ -283,7 +283,7 @@ static void P_ParseSkinCmd(char *line)
          // the value is a raw sound mnemonic already
          newsoundname += 2;        // ds
          
-         newskin->sounds[i] = strdup(newsoundname);
+         newskin->sounds[i] = estrdup(newsoundname);
       }
    }
 }

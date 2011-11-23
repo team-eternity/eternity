@@ -603,7 +603,7 @@ static int LaunchCrashApp(void)
 {
    static STARTUPINFO si;
    static PROCESS_INFORMATION pi;
-   static TCHAR cmdline[MAX_PATH];
+   static TCHAR cmdline[MAX_PATH*2];
    
    // Replace the filename with our crash report exe file name
    lstrcpy(fileName, _T("eecrashreport.exe"));   

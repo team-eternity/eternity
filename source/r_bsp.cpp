@@ -2026,8 +2026,9 @@ static void R_AddDynaSegs(subsector_t *sub)
    if(num_po_ptrs < numpolys*2)
    {
       // use free instead of realloc since faster (thanks Lee ^_^)
-      free(po_ptrs);
-      po_ptrs = (rpolyobj_t **)(malloc((num_po_ptrs = numpolys*2) * sizeof(*po_ptrs)));
+      efree(po_ptrs);
+      num_po_ptrs = numpolys*2;
+      po_ptrs = emalloc(rpolyobj_t **, num_po_ptrs * sizeof(*po_ptrs));
    }
 
    // sort polyobjects if necessary

@@ -257,20 +257,40 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << bottomheight << topheight << speed << oldspeed
+   arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
        << olddirection;
 
+   // Reattach to active ceilings list
    if(arc.isLoading())
-   {
-      // Reattach to sector, and to active ceilings list
-      sector->ceilingdata = this;
       P_AddActiveCeiling(this);
-   }
 }
 
+//
+// CeilingThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a CeilingThinker is treated
+// as a VerticalDoorThinker
+//
+bool CeilingThinker::reTriggerVerticalDoor(bool player)
+{
+   if(!demo_compatibility)
+      return false;
+
+   if(speed == plat_down)
+      speed = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      speed = plat_down;
+   }
+
+   return true;
+}
 
 //
 // EV_DoCeiling
@@ -475,7 +495,7 @@ int EV_CeilingCrushStop(line_t* line)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
-   ceilinglist_t *list = (ceilinglist_t *)(malloc(sizeof *list));
+   ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
    list->ceiling = ceiling;
    ceiling->list = list;
    if((list->next = activeceilings))
@@ -500,7 +520,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
    ceiling->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
-   free(list);
+   efree(list);
 }
 
 //
@@ -515,7 +535,7 @@ void P_RemoveAllActiveCeilings(void)
    while(activeceilings)
    {  
       ceilinglist_t *next = activeceilings->next;
-      free(activeceilings);
+      efree(activeceilings);
       activeceilings = next;
    }
 }

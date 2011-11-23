@@ -398,7 +398,7 @@ static void R_MapPlane(int y, int x1, int x2)
 //
 // R_SlopeLights
 //
-static void R_SlopeLights(int len, double startmap, double endmap)
+static void R_SlopeLights(int len, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
@@ -410,8 +410,8 @@ static void R_SlopeLights(int len, double startmap, double endmap)
       return;
    }
 
-   map = M_FloatToFixed((startmap / 256.0 * NUMCOLORMAPS));
-   map2 = M_FloatToFixed((endmap / 256.0 * NUMCOLORMAPS));
+   map  = M_FloatToFixed((startcmap / 256.0 * NUMCOLORMAPS));
+   map2 = M_FloatToFixed((endcmap   / 256.0 * NUMCOLORMAPS));
 
    if(len > 1)
       step = (map2 - map) / (len - 1);
@@ -687,7 +687,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = (visplane_t *)(calloc(1, sizeof *check));
+      check = ecalloc(visplane_t *, 1, sizeof *check);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -700,16 +700,16 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    if(check->max_width < (unsigned int)video.width)
    {
       if(check->pad1)
-         free(check->pad1);
+         efree(check->pad1);
       if(check->pad3)
-         free(check->pad3);
+         efree(check->pad3);
 
       check->max_width = video.width;
-      check->pad1 = (int *)(calloc(1, (video.width + 2) * sizeof(int)));
+      check->pad1 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
       check->top = check->pad1 + 1;
       check->pad2 = check->pad1 + video.width + 1;
 
-      check->pad3 = (int *)(calloc(1, (video.width + 2) * sizeof(int)));
+      check->pad3 = ecalloc(int *, 1, (video.width + 2) * sizeof(int));
       check->bottom = check->pad3 + 1;
       check->pad4 = check->pad3 + video.width + 1;
    }

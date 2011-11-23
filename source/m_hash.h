@@ -58,12 +58,20 @@ protected:
    friend class SHA1Hash;
 
 public:
-   void  Initialize(hashtype_e type);
-   void  AddData(const uint8_t *data, uint32_t size);
-   void  WrapUp();
-   bool  compare(const HashData &other) const;
-   void  StringToDigest(const char *str);
-   char *DigestToString() const;
+   HashData();
+   HashData(hashtype_e pType);
+   HashData(hashtype_e pType, const uint8_t *data, uint32_t size, 
+            bool doWrapUp = true);
+
+   void      initialize(hashtype_e type);
+   void      addData(const uint8_t *data, uint32_t size);
+   void      wrapUp();
+   bool      compare(const HashData &other) const;
+   void      stringToDigest(const char *str);
+   char     *digestToString() const;
+   uint32_t  getDigestPart(int i) const { return digest[i]; }
+
+   bool  operator == (const HashData &other) const { return compare(other); }
 };
 
 #endif

@@ -391,15 +391,15 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(playernum == consoleplayer)
    {
-      free(default_name);
+      efree(default_name);
       default_name = Console.argv[0]->duplicate(PU_STATIC);
    }
 }
 
 // screenshot type
 
-const char *str_pcx[] = { "bmp", "pcx", "tga" };
-VARIABLE_INT(screenshot_pcx, NULL, 0, 2, str_pcx);
+const char *str_pcx[] = { "bmp", "pcx", "tga", "png" };
+VARIABLE_INT(screenshot_pcx, NULL, 0, 3, str_pcx);
 CONSOLE_VARIABLE(shot_type, screenshot_pcx, 0) {}
 
 VARIABLE_BOOLEAN(screenshot_gamma, NULL, yesno);
@@ -464,6 +464,9 @@ VARIABLE_STRING(gi_path_hacx,    NULL, UL);
 VARIABLE_STRING(gi_path_hticsw,  NULL, UL);
 VARIABLE_STRING(gi_path_hticreg, NULL, UL);
 VARIABLE_STRING(gi_path_sosr,    NULL, UL);
+VARIABLE_STRING(gi_path_fdoom,   NULL, UL);
+VARIABLE_STRING(gi_path_fdoomu,  NULL, UL);
+VARIABLE_STRING(gi_path_freedm,  NULL, UL);
 
 VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
 
@@ -535,6 +538,21 @@ CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank)
    G_TestIWADPath(gi_path_sosr);
 }
 
+CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,   cf_allowblank)
+{
+   G_TestIWADPath(gi_path_fdoom);
+}
+
+CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,  cf_allowblank)
+{
+   G_TestIWADPath(gi_path_fdoomu);
+}
+
+CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,  cf_allowblank)
+{
+   G_TestIWADPath(gi_path_freedm);
+}
+
 CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
 {
    if(G_TestIWADPath(w_masterlevelsdirname))
@@ -568,7 +586,7 @@ void G_AddChatMacros(void)
       memset(tempstr, 0, 32);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &chat_macros[i];
       variable->v_default = NULL;
       variable->type = vt_string;      // string value
@@ -577,10 +595,10 @@ void G_AddChatMacros(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       sprintf(tempstr, "chatmacro%i", i);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = 0;
       command->variable = variable;
@@ -638,7 +656,7 @@ void G_AddWeapPrefs(void)
       memset(tempstr, 0, 16);
       
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &weapon_preferences[0][i];
       variable->v_default = NULL;
       variable->type = vt_int;
@@ -647,10 +665,10 @@ void G_AddWeapPrefs(void)
       variable->defines = weapon_str;  // use weapon string defines
 
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
 
       sprintf(tempstr, "weappref_%i", i+1);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
       command->flags = cf_handlerset;
       command->variable = variable;
@@ -701,7 +719,7 @@ void G_AddAutoloadFiles(void)
    for(i = 0; i < 6; ++i)
    {
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = autoload_ptrs[i];
       variable->v_default = NULL;
       variable->type = vt_string;
@@ -710,7 +728,7 @@ void G_AddAutoloadFiles(void)
       variable->defines = NULL;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       command->name = autoload_names[i];
       command->type = ct_variable;
       command->flags = cf_allowblank;
@@ -776,7 +794,7 @@ void G_AddCompat(void)
       char tempstr[32];
 
       // create the variable first
-      variable = (variable_t *)(malloc(sizeof(*variable)));
+      variable = estructalloc(variable_t, 1);
       variable->variable = &comp[i];
       variable->v_default = &default_comp[i];
       variable->type = vt_int;      // string value
@@ -785,10 +803,10 @@ void G_AddCompat(void)
       variable->defines = yesno;
       
       // now the command
-      command = (command_t *)(malloc(sizeof(*command)));
+      command = estructalloc(command_t, 1);
       
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
-      command->name = strdup(tempstr);
+      command->name = estrdup(tempstr);
       command->type = ct_variable;
 
       switch(i)
@@ -876,6 +894,9 @@ void G_AddCommands(void)
    C_AddCommand(iwad_heretic_shareware);
    C_AddCommand(iwad_heretic);
    C_AddCommand(iwad_heretic_sosr);
+   C_AddCommand(iwad_freedoom);
+   C_AddCommand(iwad_freedoomu);
+   C_AddCommand(iwad_freedm);
    C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 

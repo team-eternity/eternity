@@ -96,7 +96,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
    char   *buffer;
    
    size   = D_FileLength(dwfile);
-   buffer = (char *)(malloc(size + 1));
+   buffer = emalloc(char *, size + 1);
 
    if((foo = D_Fread(buffer, 1, size, dwfile)) != size)
    {
@@ -117,7 +117,7 @@ static char *lexer_buffer_file(DWFILE *dwfile, size_t *len)
 static void lexer_free_buffer(void)
 {
    if(lexbuffer)
-      free(lexbuffer);
+      efree(lexbuffer);
    lexbuffer = bufferpos = NULL;
 }
 
@@ -280,7 +280,7 @@ static int lexer_state_string(lexerstate_t *ls)
             ls->cfg->line++;
             
             // loop until a non-whitespace char is found
-            while(isspace((s = *bufferpos++)));
+            while(isspace((unsigned char)(s = *bufferpos++)));
             
             // better not be EOF!
             if(s == '\0')
@@ -613,7 +613,7 @@ include:
       else
       {
          // done with an include file      
-         free(cfg->filename);
+         efree(cfg->filename);
          lexer_free_buffer();
          lexbuffer     = include_stack[include_stack_ptr].buffer;
          bufferpos     = include_stack[include_stack_ptr].pos;

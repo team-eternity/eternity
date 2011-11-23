@@ -106,8 +106,8 @@ void P_InitSwitchList(void)
    {
       if(index + 1 >= max_numswitches)
       {
-         switchlist = (int *)(realloc(switchlist, sizeof(*switchlist) *
-         (max_numswitches = max_numswitches ? max_numswitches * 2 : 8)));
+         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
+         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
       }
       if(SwapShort(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
       {
@@ -145,7 +145,7 @@ button_t *P_FindFreeButton(void)
    // if we get here, there are no free buttons. Reallocate.
    oldnumbuttons = numbuttonsalloc;
    numbuttonsalloc = numbuttonsalloc ? numbuttonsalloc * 2 : MAXPLAYERS * 4;
-   buttonlist = (button_t *)(realloc(buttonlist, numbuttonsalloc * sizeof(button_t)));
+   buttonlist = erealloc(button_t *, buttonlist, numbuttonsalloc * sizeof(button_t));
 
    // 05/04/08: be sure all the new buttons are initialized
    for(i = oldnumbuttons; i < numbuttonsalloc; ++i)

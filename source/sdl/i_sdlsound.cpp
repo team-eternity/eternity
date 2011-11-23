@@ -476,11 +476,8 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    //  as well. Thus loop those channels.
    for(chan = channelinfo; chan != &channelinfo[numChannels]; ++chan)
    {
-      if(chan->shouldstop) // Channels are only stopped here.
-         chan->data = NULL;
-         
       // fast rejection before semaphore lock
-      if(!chan->data)
+      if(chan->shouldstop || !chan->data)
          continue;
          
       // try to acquire semaphore, but do not block; if the main thread is using
@@ -496,7 +493,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       // Lost before semaphore acquired? (very unlikely, but must check for 
       // safety). BTW, don't move this up or you'll chew major CPU whenever this
       // does happen.
-      if(!chan->data)
+      if(chan->shouldstop || !chan->data)
       {
          SDL_SemPost(chan->semaphore);
          continue;
@@ -745,7 +742,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    // haleyjd 06/03/06: look for an unused hardware channel
    for(handle = 0; handle < numChannels; ++handle)
    {
-      if(channelinfo[handle].data == NULL)
+      if(channelinfo[handle].data == NULL || channelinfo[handle].shouldstop)
          break;
    }
 

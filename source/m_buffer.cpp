@@ -44,7 +44,7 @@
 //
 void BufferedFileBase::InitBuffer(size_t pLen, int pEndian)
 {
-   buffer = (byte *)(calloc(pLen, sizeof(byte)));
+   buffer = ecalloc(byte *, pLen, sizeof(byte));
    len    = pLen;
    idx    = 0;
    endian = pEndian;
@@ -79,7 +79,7 @@ void BufferedFileBase::Close()
 
    if(buffer)
    {
-      free(buffer);
+      efree(buffer);
       buffer = NULL;
    }
 }

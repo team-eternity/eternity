@@ -44,6 +44,8 @@ private:
    char   *buffer;
    size_t  index;
    size_t  size;
+   
+   char   *checkBuffer();
 
 public:
    static const size_t npos;
@@ -68,14 +70,14 @@ public:
    // cached, and is not meant for writing into (although it is safe to do so, it
    // circumvents the encapsulation and security of this structure).
    //
-   char *getBuffer() { return buffer; }
+   char *getBuffer() { return checkBuffer(); }
 
    //
    // qstring::constPtr
    //
    // Like qstring::getBuffer, but casts to const to enforce safety.
    //
-   const char *constPtr() const { return buffer; }
+   const char *constPtr() { return checkBuffer(); }
 
    //
    // qstring::length
@@ -102,8 +104,8 @@ public:
    qstring    &clear();
    qstring    &clearOrCreate(size_t size);
    void        freeBuffer();
-   char        charAt(size_t idx) const;
-   char       *bufferAt(size_t idx) const;
+   char        charAt(size_t idx);
+   char       *bufferAt(size_t idx);
    qstring    &Putc(char ch);
    qstring    &Delc();
    qstring    &concat(const char *str);
@@ -135,6 +137,7 @@ public:
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
    const char *findSubStr(const char *substr) const;
+   const char *findSubStrNoCase(const char *substr) const;
    qstring    &LStrip(char c);
    qstring    &RStrip(char c);
    qstring    &truncate(size_t pos);
@@ -152,9 +155,6 @@ public:
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
 };
-
-//#define qstring_npos ((size_t) -1)
-
 
 #endif
 

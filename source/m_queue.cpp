@@ -89,7 +89,7 @@ void M_QueueFree(mqueue_t *queue)
    while(rover)
    {
       mqueueitem_t *next = rover->next;
-      free(rover);
+      efree(rover);
 
       rover = next;
    }

@@ -66,7 +66,7 @@ protected:
       size_t newnumalloc = numalloc + amtToAdd;
       if(newnumalloc > numalloc)
       {
-         ptrArray = (T *)(realloc(ptrArray, newnumalloc * sizeof(T)));
+         ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
          memset(ptrArray + numalloc, 0, (newnumalloc - numalloc) * sizeof(T));
          numalloc = newnumalloc;
       }
@@ -80,7 +80,7 @@ protected:
    void baseClear()
    {
       if(ptrArray)
-         free(ptrArray);
+         efree(ptrArray);
       ptrArray = NULL;
       length = 0;
       numalloc = 0;
@@ -133,14 +133,14 @@ public:
    //
    // Returns a random item from the collection.
    //
-   T &getRandom(pr_class_t rng)
+   T &getRandom(pr_class_t rngnum)
    {
       size_t index;
 
       if(!ptrArray || !length)
          I_Error("BaseCollection::getRandom: called on empty collection\n");
       
-      index = (size_t)P_Random(rng) % length;
+      index = (size_t)P_Random(rngnum) % length;
 
       return ptrArray[index];
    }

@@ -797,7 +797,7 @@ static void check_intercept(void)
    if(offset >= num_intercepts)
    {
       num_intercepts = num_intercepts ? num_intercepts*2 : 128;
-      intercepts = (intercept_t *)(realloc(intercepts, sizeof(*intercepts)*num_intercepts));
+      intercepts = erealloc(intercept_t *, intercepts, sizeof(*intercepts)*num_intercepts);
       intercept_p = intercepts + offset;
    }
 }

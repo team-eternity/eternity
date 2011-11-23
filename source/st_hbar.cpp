@@ -199,7 +199,7 @@ static void ST_drawBackground(void)
 #define SHADOW_BOX_WIDTH  16
 #define SHADOW_BOX_HEIGHT 10
 
-static void ST_BlockDrawerS(int x, int y, int startmap, int mapdir)
+static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
 {
    byte *dest, *row, *colormap;
    int w, h, i, realx, realy;
@@ -234,7 +234,7 @@ static void ST_BlockDrawerS(int x, int y, int startmap, int mapdir)
    {
       row = dest;
       i = w;
-      mapnum = startmap << FRACBITS;
+      mapnum = startcmap << FRACBITS;
       
       while(i--)
       {

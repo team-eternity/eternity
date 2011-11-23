@@ -85,7 +85,7 @@ void P_PushClipStack(void)
    doom_mapinter_t *newclip;
 
    if(!unusedclip)
-      newclip = (doom_mapinter_t *)(calloc(1, sizeof(doom_mapinter_t)));
+      newclip = ecalloc(doom_mapinter_t *, 1, sizeof(doom_mapinter_t));
    else
    {
       // SoM: Do not clear out the spechit stuff
@@ -733,7 +733,7 @@ bool PIT_CheckLine(line_t *ld)
       if(clip.numspechit >= clip.spechit_max)
       {
          clip.spechit_max = clip.spechit_max ? clip.spechit_max * 2 : 8;
-         clip.spechit = (line_t **)(realloc(clip.spechit, sizeof(*clip.spechit) * clip.spechit_max));
+         clip.spechit = erealloc(line_t **, clip.spechit, sizeof(*clip.spechit) * clip.spechit_max);
       }
       clip.spechit[clip.numspechit++] = ld;
 
@@ -2143,7 +2143,7 @@ static bool PIT_RadiusAttack(Mobj *thing)
          return true;
    }
    else if((thing->flags2 & MF2_BOSS || thing->flags4 & MF4_NORADIUSDMG) &&
-           !(bombspot->flags4 && MF4_FORCERADIUSDMG))
+           !(bombspot->flags4 & MF4_FORCERADIUSDMG))
    {      
       // haleyjd 05/22/99: exclude all bosses
       // haleyjd 09/21/09: support separate MF4_NORADIUSDMG flag and

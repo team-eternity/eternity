@@ -410,9 +410,9 @@ static void AM_addMark(void)
    // remove limit on automap marks
    
    if(markpointnum >= markpointnum_max)
-      markpoints = (mpoint_t *)(realloc(markpoints,
-                                 (markpointnum_max = markpointnum_max ? 
-                                  markpointnum_max*2 : 16) * sizeof(*markpoints)));
+      markpoints = erealloc(mpoint_t *, markpoints,
+                            (markpointnum_max = markpointnum_max ? 
+                             markpointnum_max*2 : 16) * sizeof(*markpoints));
 
    markpoints[markpointnum].x = m_x + m_w/2;
    markpoints[markpointnum].y = m_y + m_h/2;

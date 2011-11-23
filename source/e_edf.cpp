@@ -107,6 +107,7 @@
 #include "e_player.h"
 #include "e_mod.h"
 #include "e_fonts.h"
+#include "e_inventory.h"
 
 // EDF Keywords used by features implemented in this module
 
@@ -303,6 +304,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_INVENTORY,   edf_inv_opts,      EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
@@ -317,6 +319,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_INVDELTA,    edf_invdelta_opts, EDF_NSEC_FLAGS),
    CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
@@ -584,7 +587,6 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 {
    char *currentpath;
    char *filename = NULL;
-   size_t len;
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
@@ -609,10 +611,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    currentpath = (char *)(Z_Alloca(strlen(cfg->filename) + 1));
    M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
-   len = M_StringAlloca(&filename, 2, 2, currentpath, argv[0]);
-      
-   psnprintf(filename, len, "%s/%s", currentpath, argv[0]);
-   M_NormalizeSlashes(filename);
+   filename = M_SafeFilePath(currentpath, argv[0]);
 
    // queue the file for later processing
    D_QueueDEH(filename, 0);
@@ -1394,8 +1393,8 @@ static void E_ProcessCast(cfg_t *cfg)
    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
    // allocate with size+1 for an end marker
-   castorder = (castinfo_t *)(calloc(sizeof(castinfo_t), max_castorder + 1));
-   ci_order  = (cfg_t **)    (calloc(sizeof(cfg_t *),    max_castorder));
+   castorder = ecalloc(castinfo_t *, sizeof(castinfo_t), max_castorder + 1);
+   ci_order  = ecalloc(cfg_t **,     sizeof(cfg_t *),    max_castorder);
 
    if(numcastorder > 0)
    {
@@ -1448,7 +1447,7 @@ static void E_ProcessCast(cfg_t *cfg)
       if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
          castorder[i].name = NULL; // set from DeHackEd
       else
-         castorder[i].name = strdup(tempstr); // store provided value
+         castorder[i].name = estrdup(tempstr); // store provided value
 
       // get stopattack flag (used by player)
       castorder[i].stopattack = (cfg_getbool(castsec, ITEM_CAST_SA) == cfg_true);
@@ -1504,7 +1503,7 @@ static void E_ProcessCast(cfg_t *cfg)
    memset(&castorder[max_castorder], 0, sizeof(castinfo_t));
 
    // free the ci_order table
-   free(ci_order);
+   efree(ci_order);
 }
 
 // haleyjd 11/19/03:
@@ -1552,8 +1551,8 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    }
 
    NumBossTypes = numTypes;
-   BossSpawnTypes = (int *)(malloc(numTypes * sizeof(int)));
-   BossSpawnProbs = (int *)(malloc(numTypes * sizeof(int)));
+   BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
+   BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
 
    // load boss spawn probabilities
    for(i = 0; i < numTypes; ++i)

@@ -51,7 +51,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
+				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
 				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -147,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32"
+				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
 				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -1080,6 +1080,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_inventory.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\e_lib.cpp"
 						>
 						<FileConfiguration
@@ -1289,6 +1293,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_hashkeys.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_inventory.h"
 						>
 					</File>
 					<File
@@ -1890,6 +1898,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_strcasestr.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_syscfg.cpp"
 						>
 						<FileConfiguration
@@ -2013,6 +2025,10 @@
 					</File>
 					<File
 						RelativePath="..\source\m_shots.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_strcasestr.h"
 						>
 					</File>
 					<File
@@ -2687,6 +2703,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\p_sector.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\Source\p_setup.cpp"
@@ -4203,6 +4223,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\v_png.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\v_video.cpp"
 						>
 						<FileConfiguration
@@ -4250,6 +4274,10 @@
 					</File>
 					<File
 						RelativePath="..\source\v_patchfmt.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_png.h"
 						>
 					</File>
 					<File
@@ -5037,6 +5065,10 @@
 				<Filter
 					Name="HAL Headers"
 					>
+					<File
+						RelativePath="..\source\hal\i_picker.h"
+						>
+					</File>
 					<File
 						RelativePath="..\source\i_video.h"
 						>

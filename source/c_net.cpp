@@ -81,7 +81,7 @@ static int  tail = 0;
 // haleyjd: this must be called from start-up -- see above.
 void C_InitPlayerName(void)
 {
-   default_name = strdup("player");
+   default_name = estrdup("player");
 }
 
 
@@ -95,13 +95,13 @@ void C_InitPlayerName(void)
 
 void C_queueChatChar(unsigned char c)
 {
-  if (((head + 1) & (QUEUESIZE-1)) == tail)
-    C_Printf("command unsent\n");
-  else
-    {
+   if (((head + 1) & (QUEUESIZE-1)) == tail)
+      C_Printf("command unsent\n");
+   else
+   {
       chatchars[head++] = c;
       head &= QUEUESIZE-1;
-    }
+   }
 }
 
 //
@@ -113,16 +113,16 @@ void C_queueChatChar(unsigned char c)
 //
 unsigned char C_dequeueChatChar(void)
 {
-  char c;
+   char c;
 
-  if (head != tail)
-    {
+   if (head != tail)
+   {
       c = chatchars[tail++];
       tail &= QUEUESIZE-1;
-    }
-  else
-    c = 0;
-  return c;
+   }
+   else
+      c = 0;
+   return c;
 }
 
 void C_SendCmd(int dest, int cmdnum, char *s,...)
@@ -180,16 +180,7 @@ void C_NetTicker(void)
       {
          if(!playeringame[i]) 
             continue;
-#ifdef CONSHUGE
-         if(gamestate == GS_CONSOLE)  // use the whole ticcmd in console mode
-         {
-            int a;
-            for(a=0; a<sizeof(ticcmd_t); a++)
-               C_DealWithChar( ((unsigned char*)&players[i].cmd)[a], i);
-         }
-         else
-#endif
-            C_DealWithChar(players[i].cmd.chatchar,i);
+         C_DealWithChar(players[i].cmd.chatchar,i);
       }
    }
 

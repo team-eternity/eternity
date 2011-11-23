@@ -96,33 +96,6 @@ static bool       reboundpacket;
 static doomdata_t reboundstore;
 
 //
-// NetbufferSize
-//
-static int NetbufferSize(void)
-{
-   return (int)((size_t)&(((doomdata_t *)0)->d.cmds[netbuffer->numtics])); 
-}
-
-//
-// Checksum 
-//
-static unsigned int NetbufferChecksum(void)
-{
-   unsigned int c;
-   int i, len;
-   
-   c = 0x1234567;
-   
-   len = NetbufferSize() - (int)((size_t)&(((doomdata_t *)0)->retransmitfrom));
-   len /= sizeof(unsigned int);
-
-   for(i = 0; i < len; ++i)
-      c += ((unsigned int *)&netbuffer->retransmitfrom)[i] * (i + 1);
-   
-   return c & NCMD_CHECKSUM;
-}
-
-//
 // ExpandTics
 //
 static int ExpandTics(int low)
@@ -179,7 +152,7 @@ void ResetNet(void)
 //
 static void HSendPacket(int node, int flags)
 {
-   netbuffer->checksum = NetbufferChecksum() | flags;
+   netbuffer->checksum = (uint32_t)flags;
    
    if(!node)
    {
@@ -196,7 +169,6 @@ static void HSendPacket(int node, int flags)
 
    doomcom->command    = CMD_SEND;
    doomcom->remotenode = node;
-   doomcom->datalength = NetbufferSize();
    
    I_NetCmd();
 }
@@ -222,16 +194,13 @@ static bool HGetPacket(void)
       return false;
 
    doomcom->command = CMD_GET;
-   I_NetCmd();
+   if(!I_NetCmd())
+      return false;
    
    if(doomcom->remotenode == -1)
       return false;
    
-   if(doomcom->datalength != NetbufferSize())
-      return false;
-   
-   if(NetbufferChecksum() != (netbuffer->checksum & NCMD_CHECKSUM))
-      return false;
+   // haleyjd 08/25/11: length & checksum not handled here any more
    
    return true;
 }
@@ -339,21 +308,19 @@ static void GetPackets(void)
       }
       
       // update command store from the packet
+      int start;
+         
+      remoteresend[netnode] = false;
+         
+      start = nettics[netnode] - realstart;               
+      src = &netbuffer->d.cmds[start];
+         
+      while(nettics[netnode] < realend)
       {
-         int start;
-         
-         remoteresend[netnode] = false;
-         
-         start = nettics[netnode] - realstart;               
-         src = &netbuffer->d.cmds[start];
-         
-         while (nettics[netnode] < realend)
-         {
-            dest = &netcmds[netconsole][nettics[netnode]%BACKUPTICS];
-            nettics[netnode]++;
-            *dest = *src;
-            src++;
-         }
+         dest = &netcmds[netconsole][nettics[netnode]%BACKUPTICS];
+         nettics[netnode]++;
+         *dest = *src;
+         src++;
       }
    }
 }
@@ -633,7 +600,7 @@ void D_CheckNetGame(void)
    
    D_InitPlayers();      
    
-   //C_NetInit();
+   C_NetInit();
    atexit(D_QuitNetGame);       // killough
 }
 
@@ -856,7 +823,7 @@ static bool RunGameTics(void)
    opensocket_count = 0;
    opensocket = 0;
 
-   // run the count * ticdup dics
+   // run the count * ticdup tics
    while(counts--)
    {
       for(i = 0; i < ticdup; ++i)

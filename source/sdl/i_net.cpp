@@ -65,18 +65,20 @@ static IPaddress sendaddress[MAXNETNODES];
 // haleyjd 06/29/11: Default error-out funcs in case of high-level goofups, as
 // happened with the netdemo problem.
 
-static void I_NetGetError()
+static bool I_NetGetError()
 {
    I_Error("I_NetGetError: Tried to get a packet without net init!\n");
+   return false;
 }
 
-static void I_NetSendError()
+static bool I_NetSendError()
 {
    I_Error("I_NetSendError: Tried to send a packet without net init!\n");
+   return false;
 }
 
-void (*netget )() = I_NetGetError;
-void (*netsend)() = I_NetSendError;
+static bool (*netget )() = I_NetGetError;
+static bool (*netsend)() = I_NetSendError;
 
 inline static void HostToNet16(Sint16 value, byte *area)
 {
@@ -114,60 +116,162 @@ inline static Uint32 NetToHost32(const byte *area)
 
 // haleyjd: end new functions for anark's netcode
 
+// haleyjd 08/25/11: Moved checksumming to low-level protocol
+
+//
+// NetChecksum 
+//
+static uint32_t NetChecksum(byte *packetdata, int len)
+{
+   uint32_t c = 0x1234567;
+   int i;
+   
+   len /= sizeof(uint32_t);
+
+   for(i = 0; i < len; ++i)
+      c += ((uint32_t *)packetdata)[i] * (i + 1);
+   
+   return c & NCMD_CHECKSUM;
+}
+
+
+#define NETWRITEBYTE(b) \
+   *rover++ = (b); \
+   packetsize += 1
+
+#define NETWRITEBYTEIF(b, flag) \
+   do \
+   { \
+      if((b)) \
+      { \
+         NETWRITEBYTE((b)); \
+         ticcmdflags |= (flag); \
+      } \
+   } \
+   while(0)
+
+#define NETWRITESHORT(s) \
+   HostToNet16((s), rover); \
+   rover += 2; \
+   packetsize += 2
+
+#define NETWRITESHORTIF(s, flag) \
+   do \
+   { \
+      if((s)) \
+      { \
+         NETWRITESHORT((s)); \
+         ticcmdflags |= (flag); \
+      } \
+   } \
+   while(0)
+
+#define NETWRITELONG(dw) \
+   HostToNet32((dw), rover); \
+   rover += 4; \
+   packetsize += 4
+
+#define NETWRITELONGIF(dw, flag) \
+   do \
+   { \
+      if((dw)) \
+      { \
+         NETWRITELONG((dw)); \
+         ticcmdflags |= (flag); \
+      } \
+   } \
+   while(0)
+
+enum
+{
+   TCF_FORWARDMOVE = 0x00000001,
+   TCF_SIDEMOVE    = 0x00000002,
+   TCF_ANGLETURN   = 0x00000004,
+   TCF_CHATCHAR    = 0x00000008,
+   TCF_BUTTONS     = 0x00000010,
+   TCF_ACTIONS     = 0x00000020,
+   TCF_LOOK        = 0x00000040
+};
+
+
 //
 // PacketSend
 //
-void PacketSend(void)
+bool PacketSend(void)
 {
    int c;
+   int packetsize = 0;   
 
    byte *rover = (byte *)packet->data;
 
-   HostToNet32(netbuffer->checksum, rover);
-   rover += sizeof(netbuffer->checksum);
+   // reserve 4 bytes for the checksum
+   rover += 4;
 
-   *rover++ = netbuffer->player;
-   *rover++ = netbuffer->retransmitfrom;
-   *rover++ = netbuffer->starttic;
-   *rover++ = netbuffer->numtics;
+   NETWRITEBYTE(netbuffer->player);
+   NETWRITEBYTE(netbuffer->retransmitfrom);
+   NETWRITEBYTE(netbuffer->starttic);
+   NETWRITEBYTE(netbuffer->numtics);
 
    if(!(netbuffer->checksum & NCMD_SETUP))
    {
       for(c = 0; c < netbuffer->numtics; ++c)
       {
-         *rover++ = netbuffer->d.cmds[c].forwardmove;
-         *rover++ = netbuffer->d.cmds[c].sidemove;
-         HostToNet16(netbuffer->d.cmds[c].angleturn, rover);
-         rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         HostToNet16(netbuffer->d.cmds[c].consistancy, rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
-         *rover++ = netbuffer->d.cmds[c].chatchar;
-         *rover++ = netbuffer->d.cmds[c].buttons;
-         *rover++ = netbuffer->d.cmds[c].actions;
-         HostToNet16(netbuffer->d.cmds[c].look, rover);
-         rover += sizeof(netbuffer->d.cmds[c].look);
+         byte *ticstart = rover, *ticend;
+         Sint16 ticcmdflags = 0;         
+         
+         // reserve 2 bytes for the flags
+         rover += 2;
+
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].forwardmove, TCF_FORWARDMOVE);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].sidemove,    TCF_SIDEMOVE);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].angleturn,  TCF_ANGLETURN);         
+         
+         NETWRITESHORT(netbuffer->d.cmds[c].consistency);         
+
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].chatchar, TCF_CHATCHAR);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].buttons,  TCF_BUTTONS);
+         NETWRITEBYTEIF(netbuffer->d.cmds[c].actions,  TCF_ACTIONS);
+         NETWRITESHORTIF(netbuffer->d.cmds[c].look,    TCF_LOOK);
+
+         // go back to ticstart and write in the flags
+         ticend = rover;
+         rover  = ticstart;
+         NETWRITESHORT(ticcmdflags);
+
+         rover = ticend;
       }
    }
    else
    {
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          *rover++ = netbuffer->d.data[c];
+      
+      packetsize = GAME_OPTION_SIZE;
    }
+
+   // Go back and write the checksum at the beginning
+   rover = (byte *)packet->data;
+   netbuffer->checksum |= NetChecksum((byte *)packet->data + 4, packetsize);
+   NETWRITELONG(netbuffer->checksum);
    
-   packet->len     = doomcom->datalength;
+   packet->len     = packetsize;
    packet->address = sendaddress[doomcom->remotenode];
 
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
+   {
       I_Error("Error sending packet: %s\n", SDLNet_GetError());
+      return false;
+   }
+
+   return true;
 }
 
 //
 // PacketGet
 //
-void PacketGet(void)
+bool PacketGet(void)
 {
    int i, c, packets_read;
-   //doomdata_t *sw;
    byte *rover;
    
    packets_read = SDLNet_UDP_Recv(udpsocket, packet);
@@ -178,7 +282,7 @@ void PacketGet(void)
    if(packets_read == 0)
    {
       doomcom->remotenode = -1;
-      return;
+      return true;
    }
    
    for(i = 0; i < doomcom->numnodes; ++i)
@@ -191,17 +295,24 @@ void PacketGet(void)
    if(i == doomcom->numnodes)
    {
       doomcom->remotenode = -1;
-      return;
+      return true;
    }
    
    doomcom->remotenode = i;
-   doomcom->datalength = packet->len;
+
+   if(packet->len < 4)
+      return false;
    
-   //sw = (doomdata_t *)packet->data;
    rover = (byte *)packet->data;
-   
+
    netbuffer->checksum = NetToHost32(rover);
-   rover += sizeof(netbuffer->checksum);
+   
+   // haleyjd: verify checksum first; if fails, don't even read the rest
+   if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
+      return false;
+   
+   rover += 4;
+   
    netbuffer->player         = *rover++;
    netbuffer->retransmitfrom = *rover++;
    netbuffer->starttic       = *rover++;
@@ -211,17 +322,37 @@ void PacketGet(void)
    {
       for(c = 0; c < netbuffer->numtics; ++c)
       {
-         netbuffer->d.cmds[c].forwardmove = *rover++;
-         netbuffer->d.cmds[c].sidemove    = *rover++;
-         netbuffer->d.cmds[c].angleturn   = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].angleturn);
-         netbuffer->d.cmds[c].consistancy = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].consistancy);
-         netbuffer->d.cmds[c].chatchar    = *rover++;
-         netbuffer->d.cmds[c].buttons     = *rover++;
-         netbuffer->d.cmds[c].actions     = *rover++;
-         netbuffer->d.cmds[c].look        = NetToHost16(rover);
-         rover += sizeof(netbuffer->d.cmds[c].look);
+         Sint16 ticcmdflags;
+
+         ticcmdflags = NetToHost16(rover);
+         rover += 2;
+
+         memset(&(netbuffer->d.cmds[c]), 0, sizeof(ticcmd_t));
+
+         if(ticcmdflags & TCF_FORWARDMOVE)
+            netbuffer->d.cmds[c].forwardmove = *rover++;
+         if(ticcmdflags & TCF_SIDEMOVE)
+            netbuffer->d.cmds[c].sidemove = *rover++;
+         if(ticcmdflags & TCF_ANGLETURN)
+         {
+            netbuffer->d.cmds[c].angleturn = NetToHost16(rover);
+            rover += 2;
+         }
+         
+         netbuffer->d.cmds[c].consistency = NetToHost16(rover);
+         rover += 2;
+         
+         if(ticcmdflags & TCF_CHATCHAR)
+            netbuffer->d.cmds[c].chatchar = *rover++;
+         if(ticcmdflags & TCF_BUTTONS)
+            netbuffer->d.cmds[c].buttons = *rover++;
+         if(ticcmdflags & TCF_ACTIONS)
+            netbuffer->d.cmds[c].actions = *rover++;
+         if(ticcmdflags & TCF_LOOK)
+         {
+            netbuffer->d.cmds[c].look = NetToHost16(rover);
+            rover += 2;
+         }
       }
    }
    else
@@ -229,6 +360,8 @@ void PacketGet(void)
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          netbuffer->d.data[c] = *rover++;
    }
+
+   return true;
 }
 
 //
@@ -260,7 +393,7 @@ void I_InitNetwork(void)
 {
    int i, p;
    
-   doomcom = (doomcom_t *)(calloc(1, sizeof(*doomcom)));
+   doomcom = estructalloc(doomcom_t, 1);
    
    // set up for network
    i = M_CheckParm("-dup");
@@ -293,15 +426,6 @@ void I_InitNetwork(void)
    if(!i)
    {
       // single player game
-      /*
-      netgame = false;
-      doomcom->id = DOOMCOM_ID;
-      doomcom->numplayers = doomcom->numnodes = 1;
-      doomcom->deathmatch = false;
-      doomcom->consoleplayer = 0;
-
-      return;
-      */
       doomcom->id = DOOMCOM_ID;
       doomcom->numplayers = doomcom->numnodes = 1;
       doomcom->deathmatch = false;
@@ -339,21 +463,24 @@ void I_InitNetwork(void)
    
    udpsocket = SDLNet_UDP_Open(DOOMPORT);
 
-   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 4) & ~4));
+   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 31) & ~31));
 }
 
-void I_NetCmd(void)
+bool I_NetCmd(void)
 {
    if(doomcom->command == CMD_SEND)
    {
-      netsend();
+      return netsend();
    }
    else if(doomcom->command == CMD_GET)
    {
-      netget();
+      return netget();
    }
    else
-      I_Error("Bad net cmd: %i\n",doomcom->command);
+   {
+      I_Error("Bad net cmd: %i\n", doomcom->command);
+      return false;
+   }
 }
 
 //----------------------------------------------------------------------------

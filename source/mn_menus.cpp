@@ -192,7 +192,7 @@ CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
    else
    {
       if(mn_start_mapname)
-         free(mn_start_mapname);
+         efree(mn_start_mapname);
       start_mapname = mn_start_mapname = Console.argv[0]->duplicate(PU_STATIC);
    }
 
@@ -533,7 +533,7 @@ CONSOLE_COMMAND(mn_demos, cf_notnet)
    MN_StartMenu(&menu_demos);
 }
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Load new pwad menu
 //
@@ -544,6 +544,7 @@ extern menu_t menu_loadwad;
 extern menu_t menu_wadmisc;
 extern menu_t menu_wadiwads1;
 extern menu_t menu_wadiwads2;
+extern menu_t menu_wadiwads3;
 
 static const char *mn_wad_names[] =
 {
@@ -551,6 +552,7 @@ static const char *mn_wad_names[] =
    "Misc Settings",
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
+   "IWAD Paths - Freedoom",
    NULL
 };
 
@@ -560,6 +562,7 @@ static menu_t *mn_wad_pages[] =
    &menu_wadmisc,
    &menu_wadiwads1,
    &menu_wadiwads2,
+   &menu_wadiwads3,
    NULL
 };
 
@@ -625,6 +628,18 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_end}
 };
 
+static menuitem_t mn_wadiwad3_items[] =
+{
+   {it_title,    FC_GOLD "Wad Options", NULL,           "M_WADOPT"},
+   {it_gap},
+   {it_info,     FC_GOLD "IWAD Paths - Freedoom", NULL,  NULL, MENUITEM_CENTERED },
+   {it_gap}, 
+   {it_variable, "Freedoom:",          "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate Freedoom:", "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",            "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_end}
+};
+
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
@@ -671,8 +686,22 @@ menu_t menu_wadiwads2 =
 {
    mn_wadiwad2_items,
    &menu_wadiwads1,
-   NULL,
+   &menu_wadiwads3,
    &menu_loadwad, // rootpage
+   200, 15,
+   4,
+   mf_background,
+   NULL,
+   mn_wad_names,
+   mn_wad_pages,
+};
+
+menu_t menu_wadiwads3 =
+{
+   mn_wadiwad3_items,
+   &menu_wadiwads2,
+   NULL,
+   &menu_loadwad,
    200, 15,
    4,
    mf_background,
@@ -692,7 +721,6 @@ CONSOLE_COMMAND(mn_loadwad, cf_notnet)
 CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
 {
    char *filename = NULL;
-   size_t len;
 
    // haleyjd 03/12/06: this is much more resilient than the 
    // chain of console commands that was used by SMMU
@@ -713,9 +741,7 @@ CONSOLE_COMMAND(mn_loadwaditem, cf_notnet|cf_hidden)
       return;
    }
 
-   len = M_StringAlloca(&filename, 2, 2, wad_directory, mn_wadname);
-
-   psnprintf(filename, len, "%s/%s", wad_directory, mn_wadname);
+   filename = M_SafeFilePath(wad_directory, mn_wadname);
 
    if(D_AddNewFile(filename))
    {
@@ -1170,7 +1196,7 @@ void MN_CreateSaveCmds(void)
       save_command = (command_t *)(Z_Malloc(sizeof(*save_command), PU_STATIC, 0)); // haleyjd
       
       sprintf(tempstr, "savegame_%i", i);
-      save_command->name = strdup(tempstr);
+      save_command->name = estrdup(tempstr);
       save_command->type = ct_variable;
       save_command->flags = 0;
       save_command->variable = save_variable;
@@ -1296,7 +1322,7 @@ void MN_LoadGameDrawer(void)
    int i, y;
 
    if(!emptystr)
-      emptystr = strdup(DEH_String("EMPTYSTRING"));
+      emptystr = estrdup(DEH_String("EMPTYSTRING"));
    
    for(i = 0, y = 46; i < SAVESLOTS; ++i, y += 16) // haleyjd
    {
@@ -1797,15 +1823,15 @@ static void MN_BuildVidmodeTables(void)
    if(mn_vidmode_desc)
    {
       for(i = 0; i < mn_vidmode_num; i++)
-         free(mn_vidmode_desc[i]);
-      free(mn_vidmode_desc);
+         efree(mn_vidmode_desc[i]);
+      efree(mn_vidmode_desc);
       mn_vidmode_desc = NULL;
    }
    if(mn_vidmode_cmds)
    {
       for(i = 0; i < mn_vidmode_num; i++)
-         free(mn_vidmode_cmds[i]);
-      free(mn_vidmode_cmds);
+         efree(mn_vidmode_cmds[i]);
+      efree(mn_vidmode_cmds);
       mn_vidmode_cmds = NULL;
    }
 
@@ -1822,8 +1848,8 @@ static void MN_BuildVidmodeTables(void)
    nummodes = i;
 
    // allocate arrays
-   mn_vidmode_desc = (char **)calloc(i+1, sizeof(const char *));
-   mn_vidmode_cmds = (char **)calloc(i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
 
    for(i = 0; i < nummodes; i++)
    {
@@ -2288,7 +2314,7 @@ static void MN_BuildJSTables(void)
       {
          mn_js_desc[jsnum+1] = joysticks[jsnum].description;
          sprintf(tempstr, "i_joystick %i", jsnum);
-         mn_js_cmds[jsnum+1] = strdup(tempstr);
+         mn_js_cmds[jsnum+1] = estrdup(tempstr);
       }
       mn_js_desc[numJoysticks + 1] = NULL;
       mn_js_cmds[numJoysticks + 1] = NULL;
@@ -3339,7 +3365,7 @@ CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
 
 static void MN_InitSearchStr(void)
 {
-   mn_searchstr = strdup("");
+   mn_searchstr = estrdup("");
 }
 
 // haleyjd: searchable menus
@@ -3426,7 +3452,7 @@ CONSOLE_COMMAND(mn_search, 0)
             if(!pastLast)
                continue;
 
-            desc = M_Strlwr(strdup(item->description));
+            desc = M_Strlwr(estrdup(item->description));
 
             // found a match
             if(strstr(desc, mn_searchstr))
@@ -3437,10 +3463,10 @@ CONSOLE_COMMAND(mn_search, 0)
                MN_ErrorMsg("found: %s", desc);
                if(!is_a_gap(item))
                   curPage->selected = j - 1;
-               free(desc);
+               efree(desc);
                return;
             }
-            free(desc);
+            efree(desc);
          }
 
          curPage = curPage->nextpage;

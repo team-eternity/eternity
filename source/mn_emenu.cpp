@@ -171,7 +171,7 @@ static void MN_HashDynamicMenu(menu_t *menu)
 //
 static menu_t *MN_CreateDynamicMenu(const char *name)
 {
-   menu_t *newMenu = (menu_t *)(calloc(1, sizeof(menu_t)));
+   menu_t *newMenu = ecalloc(menu_t *, 1, sizeof(menu_t));
 
    // set name
    if(strlen(name) > 32)
@@ -238,7 +238,7 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
       return NULL;
 
    // add one to itemCount for the it_end terminator
-   items = (menuitem_t *)(calloc(itemCount + 1, sizeof(menuitem_t)));
+   items = ecalloc(menuitem_t *, itemCount + 1, sizeof(menuitem_t));
 
    for(i = 0; i < itemCount; ++i)
    {
@@ -254,15 +254,15 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
          items[i].type = it_info; // default to information only
 
       // set description
-      items[i].description = strdup(cfg_getstr(itemSec, ITEM_MNITEM_TEXT));
+      items[i].description = estrdup(cfg_getstr(itemSec, ITEM_MNITEM_TEXT));
 
       // set command
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_CMD)))
-         items[i].data = strdup(tempstr);
+         items[i].data = estrdup(tempstr);
 
       // set patch
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_PATCH)))
-         items[i].patch = strdup(tempstr);
+         items[i].patch = estrdup(tempstr);
 
       // set flags
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_FLAGS)))
@@ -292,15 +292,15 @@ static void MN_ClearDynamicMenu(menu_t *menu)
       {
          // FIXME: stupid constness problems...
          if(item->description)
-            free(const_cast<char *>(item->description));
+            efree(const_cast<char *>(item->description));
          if(item->data)
-            free(const_cast<char *>(item->data));
+            efree(const_cast<char *>(item->data));
          if(item->patch)
-            free(const_cast<char *>(item->patch));
+            efree(const_cast<char *>(item->patch));
 
          ++item;
       }
-      free(menu->menuitems);
+      efree(menu->menuitems);
    }
 
    // zero out menu data fields (cannot memset, must maintain hash data)

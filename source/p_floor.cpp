@@ -630,15 +630,39 @@ void FloorMoveThinker::Think()
 //
 void FloorMoveThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << crush << sector << direction << special << texture 
+   arc << type << crush << direction << special << texture 
        << floordestheight << speed << resetTime << resetHeight
        << stepRaiseTime << delayTime << delayTimer;
+}
 
-   // If loading, reattach to sector
-   if(arc.isLoading())
-      sector->floordata = this;
+//
+// FloorMoveThinker::reTriggerVerticalDoor
+//
+// haleyjd 10/13/2011: emulate vanilla behavior when a FloorMoveThinker is
+// treated as a VerticalDoorThinker
+//
+bool FloorMoveThinker::reTriggerVerticalDoor(bool player)
+{
+   // FIXME/TODO: may not have same effects as in vanilla due to special
+   // transfer semantics... verify and fix if so
+   // (need a spectransfer-for-special-number function)
+
+   if(!demo_compatibility)
+      return false;
+
+   if(special.newspecial == plat_down)
+      special.newspecial = plat_up;
+   else
+   {
+      if(!player)
+         return false;
+
+      special.newspecial = plat_down;
+   }
+
+   return true;
 }
 
 
@@ -698,17 +722,10 @@ void ElevatorThinker::Think()
 //
 void ElevatorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << type << sector << direction << floordestheight << ceilingdestheight 
+   arc << type << direction << floordestheight << ceilingdestheight 
        << speed;
-
-   if(arc.isLoading())
-   {
-      // Reattach to both floor and ceiling of sector
-      sector->floordata   = this;
-      sector->ceilingdata = this;
-   }
 }
 
 // haleyjd 10/07/06: Pillars by Joe :)
@@ -749,17 +766,10 @@ void PillarThinker::Think()
 //
 void PillarThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << ceilingSpeed << floorSpeed << floordest 
+   arc << ceilingSpeed << floorSpeed << floordest 
        << ceilingdest << direction << crush;
-
-   if(arc.isLoading())
-   {
-      // Reattach to floor and ceiling
-      sector->floordata   = this;
-      sector->ceilingdata = this;
-   }
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1759,14 +1769,10 @@ void FloorWaggleThinker::Think()
 //
 void FloorWaggleThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   SectorThinker::serialize(arc);
 
-   arc << sector << originalHeight << accumulator << accDelta << targetScale
+   arc << originalHeight << accumulator << accDelta << targetScale
        << scale << scaleDelta << ticker << state;
-
-   // If loading, reattach to sector floor
-   if(arc.isLoading())
-      sector->floordata = this;
 }
 
 //

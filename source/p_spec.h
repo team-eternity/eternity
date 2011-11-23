@@ -576,11 +576,40 @@ typedef enum
    pastdest
 } result_e;
 
-//////////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // linedef and sector special data types
 //
-//////////////////////////////////////////////////////////////////
+
+// haleyjd 10/13/2011: base class for sector action types
+class SectorThinker : public Thinker
+{
+protected:
+   // sector attach points
+   typedef enum
+   {
+      ATTACH_NONE, 
+      ATTACH_FLOOR,
+      ATTACH_CEILING,
+      ATTACH_FLOORCEILING,
+      ATTACH_LIGHT
+   } attachpoint_e;
+
+   // Methods
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
+
+public:
+   SectorThinker() : Thinker(), sector(NULL) {}
+
+   // Methods
+   virtual void serialize(SaveArchive &arc);
+   virtual const char *getClassName() const { return "SectorThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player) { return false; }
+
+   // Data Members
+   sector_t *sector;
+};
+
 
 // p_switch
 
@@ -620,7 +649,7 @@ extern int numbuttonsalloc;
 
 // p_lights
 
-class FireFlickerThinker : public Thinker
+class FireFlickerThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -631,13 +660,12 @@ public:
    virtual const char *getClassName() const { return "FireFlickerThinker"; }
 
    // Data Members
-   sector_t *sector;
    int count;
    int maxlight;
    int minlight;
 };
 
-class LightFlashThinker : public Thinker
+class LightFlashThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -646,9 +674,9 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "LightFlashThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
    
    // Data Members
-   sector_t *sector;
    int count;
    int maxlight;
    int minlight;
@@ -656,7 +684,7 @@ public:
    int mintime;
 };
 
-class StrobeThinker : public Thinker
+class StrobeThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -665,9 +693,9 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "StrobeThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
-   sector_t *sector;
    int count;
    int minlight;
    int maxlight;
@@ -675,7 +703,7 @@ public:
    int brighttime;
 };
 
-class GlowThinker : public Thinker
+class GlowThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -686,7 +714,6 @@ public:
    virtual const char *getClassName() const { return "GlowThinker"; }
 
    // Data Members
-   sector_t *sector;
    int minlight;
    int maxlight;
    int direction;
@@ -695,7 +722,7 @@ public:
 // sf 13/10/99
 // haleyjd 01/10/06: revised for parameterized line specs
 
-class LightFadeThinker : public Thinker
+class LightFadeThinker : public SectorThinker
 {
 protected:
    void Think();
@@ -706,7 +733,6 @@ public:
    virtual const char *getClassName() const { return "LightFadeThinker"; }
 
    // Data Members
-   sector_t *sector;
    fixed_t lightlevel;
    fixed_t destlevel;
    fixed_t step;
@@ -718,18 +744,20 @@ public:
 
 // p_plats
 
-class PlatThinker : public Thinker
+class PlatThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "PlatThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
-   sector_t *sector;
    fixed_t speed;
    fixed_t low;
    fixed_t high;
@@ -745,9 +773,10 @@ public:
 
 // New limit-free plat structure -- killough
 
-typedef struct platlist {
+typedef struct platlist 
+{
   PlatThinker *plat; 
-  struct platlist *next,**prev;
+  struct platlist *next, **prev;
 } platlist_t;
 
 // p_ceilng
@@ -760,19 +789,21 @@ enum
    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
-class VerticalDoorThinker : public Thinker
+class VerticalDoorThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "VerticalDoorThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
-   sector_t *sector;
    fixed_t topheight;
    fixed_t speed;
 
@@ -822,19 +853,21 @@ struct spectransfer_t
 
 // p_doors
 
-class CeilingThinker : public Thinker
+class CeilingThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_CEILING; }
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "CeilingThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
-   sector_t *sector;
    fixed_t bottomheight;
    fixed_t topheight;
    fixed_t speed;
@@ -884,20 +917,22 @@ typedef struct ceilingdata_s
 
 // p_floor
 
-class FloorMoveThinker : public Thinker
+class FloorMoveThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual const char *getClassName() const { return "FloorMoveThinker"; }
+   virtual bool reTriggerVerticalDoor(bool player);
 
    // Data Members
    int type;
    int crush;
-   sector_t *sector;
    int direction;
 
    // jff 3/14/98 add to fix bug in change transfers
@@ -949,10 +984,12 @@ typedef struct stairdata_s
    int sync_value;
 } stairdata_t;
 
-class ElevatorThinker : public Thinker
+class ElevatorThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
 
 public:
    // Methods
@@ -961,7 +998,6 @@ public:
 
    // Data Members
    int type;
-   sector_t *sector;
    int direction;
    fixed_t floordestheight;
    fixed_t ceilingdestheight;
@@ -969,10 +1005,12 @@ public:
 };
 
 // joek: pillars
-class PillarThinker : public Thinker
+class PillarThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOORCEILING; }
 
 public:
    // Methods
@@ -980,7 +1018,6 @@ public:
    virtual const char *getClassName() const { return "PillarThinker"; }
 
    // Data Members
-   sector_t *sector;
    int ceilingSpeed;
    int floorSpeed;
    int floordest;
@@ -1001,10 +1038,12 @@ typedef struct pillardata_s
 } pillardata_t;
 
 // haleyjd 06/30/09: waggle floors
-class FloorWaggleThinker : public Thinker
+class FloorWaggleThinker : public SectorThinker
 {
 protected:
    void Think();
+
+   virtual attachpoint_e getAttachPoint() const { return ATTACH_FLOOR; }
 
 public:
    // Methods
@@ -1012,7 +1051,6 @@ public:
    virtual const char *getClassName() const { return "FloorWaggleThinker"; }
 
    // Data Members
-   sector_t *sector;
    fixed_t originalHeight;
    fixed_t accumulator;
    fixed_t accDelta;
@@ -1095,7 +1133,7 @@ public:
       p_current,
    }; 
    int type;
-   Mobj *source;      // Point source if point pusher
+   Mobj *source;        // Point source if point pusher
    int x_mag;           // X Strength
    int y_mag;           // Y Strength
    int magnitude;       // Vector strength for point pusher

@@ -324,7 +324,7 @@ void E_ReallocStates(int numnewstates)
          numstatesalloc += numnewstates;
 
       // reallocate states[]
-      states = (state_t **)(realloc(states, numstatesalloc * sizeof(state_t *)));
+      states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
       // set the new state pointers to NULL
       for(i = NUMSTATES; i < numstatesalloc; ++i)
@@ -370,7 +370,7 @@ void E_CollectStates(cfg_t *cfg)
    if(numnew)
    {
       // allocate state_t structures for the new states
-      statestructs = (state_t *)(calloc(numnew, sizeof(state_t)));
+      statestructs = estructalloc(state_t, numnew);
 
       // add space to the states array
       curnewstate = firstnewstate = NUMSTATES;
@@ -428,11 +428,11 @@ void E_CollectStates(cfg_t *cfg)
          state_t *st = states[curnewstate++];
 
          // check name for validity
-         if(strlen(name) > 40)
+         if(strlen(name) >= sizeof(st->namebuf))
             E_EDFLoggedErr(2, "E_CollectStates: bad frame name '%s'\n", name);
 
          // initialize name
-         strncpy(st->namebuf, name, 41);
+         strncpy(st->namebuf, name, sizeof(st->namebuf));
          st->name = st->namebuf;
 
          // add to name hash
@@ -469,9 +469,9 @@ void E_CollectStates(cfg_t *cfg)
 void E_CreateArgList(state_t *state)
 {
    if(!state->args)
-      state->args = (arglist_t *)(calloc(1, sizeof(arglist_t))); // create one
+      state->args = estructalloc(arglist_t, 1); // create one
    else
-      E_DisposeArgs(state->args);                 // clear it out
+      E_DisposeArgs(state->args);               // clear it out
 }
 
 // frame field parsing routines

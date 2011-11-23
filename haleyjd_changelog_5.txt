@@ -1,4 +1,450 @@
 ================================================================================
+Changes since Eternity Engine v3.40.15
+================================================================================
+--------------------------------------------------------------------------------
+10/28/11
+
+Added GNUlib's Knuth-Morris-Pratt implementation of strcasestr as M_StrCaseStr,
+and added a wrapper method for it to qstring as qstring::findSubStrNoCase. This
+allows for more compact case-insensitive substring searches. 
+
+K-M-P has O(n) behavior compared to O(n*m) behavior of the naive but common BSD
+implementation of this routine. It does however still use a malloc of the size 
+of the input "haystack" string in order to build a lookup table. 
+
+However, this cost is amortized via not invoking K-M-P until an empirically 
+established comparison threshold has been crossed in execution of the naive 
+algorithm.
+
+Added skeletal code for the inventory and inventorydelta EDF sections based on
+the code from e_things.cpp. This includes the inheritance mechanism used there,
+which will be adapted to function on inventory definitions so that they can
+be extended.
+
+--------------------------------------------------------------------------------
+10/25/11
+
+Added basic inventory dehflags_t and dehflagset_t structures, for eventual
+parsing of the basic inventory flags field.
+
+Added libConfuse cfg_opt_t definitions for the inventory and inventorydelta 
+structures.
+
+Removed the old inventory flag definitions from e_player.h, which were missed
+earlier and started conflicting with the new ones.
+
+The main EDF cfg_opt_t now references the inventory sections.
+
+--------------------------------------------------------------------------------
+10/24/11
+
+esselfortium found some major bugs in dynamic musicinfo defs when he loaded the
+32in24-11 alpha wad into EE:
+
+* If music loading failed, EE would still think it was playing music later. This
+  would lead to a Z_ChangeTag(NULL) call in S_StopMusic later, causing the
+  engine to exit.
+
+* A non-prefixed music name passed in would match an identical lump name
+  preferentially, rather than testing for a prefixed (ie. D_ or MUS_) version of
+  the lump first. This lead to a problem in this wad of the map name header
+  lumps being selected because the music lumps were named things such as 
+  "D_MAP33". Now, the music code will prefer prefixed lumps over unprefixed
+  ones.
+  
+* Essel also discovered that the unprefixed lump would even be preferred if the
+  name specified in MapInfo was prefixed. This was just plain wrong. If an
+  explicitly prefixed name is passed in from MapInfo now, it will never match
+  an unprefixed one, period.
+
+--------------------------------------------------------------------------------
+10/23/11
+
+Added a new module to contain inventory definitions and processing code for EDF,
+at long last.
+
+inventory_t has been added as a prototypical basic inventory definition 
+structure. This may change significantly before the system is finished, 
+especially where support for both inheritance between inventory definitions,
+and for provision of "subclass" information for support of specific types of
+inventory items - weapons, health, powerups, quest givers, etc.
+
+Also added some basic inventory flag definitions, based on ones from ZDoom.
+
+The length of all mnemonics in EDF that are still limited to a static maximum
+have been increased to 128 characters. It is likely in the future that these
+names will shift to being dynamically allocated instead, though.
+
+--------------------------------------------------------------------------------
+10/22/11
+
+Repaired a qstring security hazard by adding private method qstring::checkBuffer
+which is now called pretty much everywhere before doing operations on the
+qstring that require its buffer allocation to be valid first. Uninitialized
+qstrings are no longer a problem for the engine because of this.
+
+Ladna contributed a fix in the form of re-enabling the commented out call to
+C_NetInit in d_main - don't confuse this with the C_InitNet call, which I also
+had to restore much earlier.
+
+Seems fraggle had a knack for naming functions in very similar manners :P
+
+--------------------------------------------------------------------------------
+10/21/11
+
+Basic compression has finally been added to the i_net low-level networking code
+so that zero-valued fields in ticcmds won't be translated. Due to the fact that
+a growing number of fields in ticcmd_t are zero for the vast majority of game
+play (especially such fields as buttons, actions, chatchar, and look), this
+should significantly reduce EE's packet overhead in the P2P netcode system.
+
+This clears the way for Wagnerian expansion of the ticcmd structure which will
+allow for guiltless support of inventory and weapons without an unreasonable
+static limit on the total number of them implemented.
+
+Corrected some stupid bugs in the packet size calculation and field parsing.
+
+--------------------------------------------------------------------------------
+10/18/11
+
+Warning fixes for p_info.cpp to cut down the Jenkins warning count a bit :P
+
+--------------------------------------------------------------------------------
+10/15/11
+
+Ladna added z_zone.h to p_sector.cpp, which I somehow neglected. This was oddly
+only causing compile problems in GCC due to missing definitions of NULL and
+size_t in p_saveg.h.
+
+I think this can probably be blamed on Microsoft Visual C++'s propensity to
+pre-discard code from semantic evaluation which it has determined early on is
+unreferenced in the translation module... bloody brilliant, that stuff, but it
+sure is good at hiding otherwise glaringly obvious problems.
+
+--------------------------------------------------------------------------------
+10/13/11
+
+I have added a SectorThinker class and re-derived all sector thinker types from
+it in order to add abstracted support to it for emulation of vanilla DOOM's
+undefined behavior when retriggering vertical doors in motion and having that
+action apply to a thinker type which is not actually a VerticalDoorThinker
+(vldoor_t in the original code).
+
+This self-corruption is implemented through the virtual function
+SectorThinker::reTriggerVerticalDoor. Outside of old demos, only the 
+VerticalDoorThinker class's implementation of this method actually does anything
+and the rest simply return.
+
+--------------------------------------------------------------------------------
+10/11/11
+
+The rest of the standards-violating BOOM allocation macros have been replaced:
+ realloc -> erealloc
+ strdup  -> estrdup
+ free    -> efree
+ 
+I have also introduced an awesome estructalloc macro which takes a structure
+type name and a number of structure instances to allocate. This makes allocation
+of single structs and arrays of structs very simple without requiring use of C++
+new, which EE cannot override globally without causing problems with libraries.
+
+--------------------------------------------------------------------------------
+10/10/11
+
+Fixed a problem identified by Yagisan's Jenkins compiler farm introduced
+yesterday - GCC 4.4 still doesn't allow use of locally defined structure types
+as parameters to template functions, despite the impending adoption of C++11 as
+an official standard. Seems you have to specify support for the standard to be
+enabled explicitly and I'm not ready to require that for compiling EE yet, so
+all such types have been externalized from their functions, for now at least.
+
+--------------------------------------------------------------------------------
+10/09/11
+
+The BOOM-introduced macro redefinitions of calloc and malloc, which are in 
+violation of the C and C++ standards which do not allow for macro-redefinition
+of names reserved by the C standard library in the event the library will be
+included into the program, have been removed entirely.
+
+All calls have been replaced with the ecalloc and new emalloc macros.
+
+--------------------------------------------------------------------------------
+10/04/11
+
+Removed more instances of scope shadowing.
+
+A buffer being used in the i_exception code was too small, according to the 
+static analyzer output, and has been fixed.
+
+--------------------------------------------------------------------------------
+10/02/11
+
+After further research, I have re-enabled the ability to do shrinking reallocs,
+but with a fix that will return the currently allocated block if C realloc 
+happens to return NULL during a shrinking operation - which according to the
+standard it is allowed to do even though it seems illogical.
+
+--------------------------------------------------------------------------------
+10/01/11
+
+Applied DavidPH's patch to successfully build on Linux using the in-tree 
+versions of zlib and libpng.
+
+D_HashTableKey is now used for console command hashing, versus the custom key
+calculation it was using since SMMU.
+
+Eliminated a lot of instances of variables being shadowed by declarations in
+inner scopes, with assistance of some static analyzer output provided by 
+CSonicGo.
+
+Changed more calloc calls to ecalloc.
+
+I have disabled the ability to do shrinking realloc calls through Z_Realloc. It
+will now just return the buffer unmodified if the size is less than or equal to
+the allocation's current size.
+
+--------------------------------------------------------------------------------
+09/30/11
+
+player_t::attacker is now properly reference-counted against the Mobj to which
+it points, outside of old demos.
+
+This is a bug persisting from the original DOOM engine, but one that was missed
+by the BOOM team when Lee added thinker reference counting. As a result, it was
+possible to observe undefined behavior occuring when you were killed by an 
+object which removes itself after death (such as a Lost Soul), and stayed there
+watching it as it infought with other monsters and was killed.
+
+With ZONESCRAMBLE (or INSTRUMENTED, in BOOM) defined, you would immediately see
+the player's view spin around to an unrelated diagonal direction along the 
+line y = x due to the Mobj's x and y coordinates being memset to gametic & 0xff
+as it passed through Z_Free.
+
+Without ZONESCRAMBLE, you would occasionally observe nothing if the allocation
+wasn't immediately recycled by the C heap, but occasionally you'd turn to face
+an entirely random-seeming direction. This was especially the case in the debug
+build of the executable, where the Microsoft run-time's debug heap also does its
+own clearing of freed memory in free() - in this case to the value 0xFEEEFEEE.
+
+This usually does not crash the game merely by chance. If the page that the mobj
+had been allocated on were released back to the system heap (ie, unmapped from
+the process's address space on account of having no further allocations in it),
+it would be possible to get an Invalid Page Fault exception. I've never seen it
+happen though, in any DOOM-based engine so far. It is probably a consequence of
+operating system behavior (ie, they don't happen to release pages from processes
+in that manner at all, or rarely if ever).
+
+--------------------------------------------------------------------------------
+09/10/11
+
+I have backported the awesome M_SafeFilePath routine which I wrote for the hub
+savegame code in Chocolate Strife to Eternity, where it can fully benefit from
+the free-less use of Z_Alloca. This has replaced most direct usage of the
+M_StringAlloca function in Eternity, which is called as a subroutine from
+M_SafeFilePath.
+
+What M_SafeFilePath does is the following:
+
+It accepts two file path component strings. It safely and securely concatenates 
+them by pre-allocating a zero-filled buffer of the necessary size to hold both
+input strings and an additional path separator character using M_StringAlloca.
+It then performs the tripartite concatenation and then calls M_NormalizeSlashes
+on the result to automatically ensure that a duplicate path separator has not
+been introduced, in the event that either string A or B contain path separators
+at the beginning or end.
+
+This is the kind of basic useful utility that can eliminate hundreds of lines of
+bothersome, boring-ass, and dangerous code from a game engine.
+
+--------------------------------------------------------------------------------
+09/02/11
+
+Added hal/i_picker.h to contain a unified enumeration of supported IWADs for the
+IWAD picker. Eventually there will be an i_picker.cpp to support a proper HAL
+for IWAD picker implementations as well.
+
+--------------------------------------------------------------------------------
+09/01/11
+
+Created an ecalloc macro to clean up the mess that resulted from the C++ porting
+process whereby casts had to be added to all calloc calls. This macro evaluates
+into a call to a template function called ecalloc_impl, which takes as its 
+template parameter the type of pointer it should return. This function is 
+implemented inline in z_zone.h and calls down to Z_Calloc.
+
+--------------------------------------------------------------------------------
+08/31/11
+
+PNG reading is now fully functional. All graphic resources in startup.wad have
+been replaced with PNGs, cutting the size of the file by 75%.
+
+Low level sound channels can now attempt to have themselves recycled as soon as
+the "shouldstop" structure member is asserted. There is no need after all to
+wait for the sound update thread to set the channel data pointer to NULL first,
+as only one thread can have the semaphore lock on the channel at a time.
+
+This repairs loss of player gun sounds when the sound engine is fully
+saturated, which was happening as a result of no channels being apparently 
+available because they were all locked - even though some had just been stopped
+by the S_StartSound call for the player gun weapon - the sound update thread did
+not have a chance to run and mark the channels as free yet.
+
+--------------------------------------------------------------------------------
+08/30/11
+
+Started work on v_png.cpp module, which will contain the VPNGImage class. This
+class will be of utility in eventually supporting PNG resources anywhere in the
+game engine.
+
+--------------------------------------------------------------------------------
+08/28/11
+
+Support has been added to the IWAD settings menu and IWAD picker for FreeDoom
+IWADs, partially courtesy of a patch from Gez.
+
+zlib and libpng have been integrated into the game engine.
+
+PNG screenshots are now supported.
+
+--------------------------------------------------------------------------------
+08/27/11
+
+Corrected a mistake made with the new packet checksumming system whereby the
+checksum was being included into the checksum calculation on net receive.
+
+HashData has been further converted to C++ via addition of constructors and an
+operator == method. A new constructor has also been added which accepts data to
+be immediately hashed and finalized.
+
+SMMU's W_LumpCheckSum algorithm has been replaced with a standard CRC32, 
+courtesy of HashData.
+
+--------------------------------------------------------------------------------
+08/26/11
+
+Removed the dead CONSHUGE code from SMMU, which was known by fraggle to have bad
+stability problems.
+
+--------------------------------------------------------------------------------
+08/25/11
+
+Did away with yet more proof that programmers are bad spellers by changing all
+instances of "consistancy" to consistency. This glaring error has been in place
+since the id source release...
+
+Continuing with revisions to the low-level networking code, I have moved the
+ticcmd checksumming feature into the low-level code, so that eventually the size
+of packets can be made variable. The new code in i_net.cpp is written to be
+completely agnostic with respect to the size or layout of the doomcom_t 
+structure; instead of trying to read a struct as a byte array, the data from the
+struct is now actually streamed into a plain old linear buffer of bytes first.
+
+--------------------------------------------------------------------------------
+08/22/11
+
+The number of thinkers being loaded from a savegame will now be rangechecked
+against the number the savegame says it should contain, for additional safety.
+
+A_Scratch now supports a new "immediate operand mode" when given value 3, which
+allows it to do a specified constant amount of damage. Special thanks to ellmo
+for the suggestion.
+
+--------------------------------------------------------------------------------
+08/13/11
+
+Minor tweaks to the Thinker class:
+
+* Renamed deswizzle to deSwizzle for stylistic consistency.
+
+* Thinker::references has been changed into a private class member, since it is
+  not nor should be accessed directly anywhere outside of Thinker, including 
+  inside descendant classes.
+
+--------------------------------------------------------------------------------
+08/09/11
+
+Tracer attacks (aka bullets, shotgun pellets, etc) will now obey the player
+autoaim setting in the same manner as projectiles, outside of old demo playback.
+
+--------------------------------------------------------------------------------
+08/08/11
+
+Created P_SpawnMissileEx to drastically reduce code duplication amongst the 
+various P_SpawnMissile variant functions.
+
+--------------------------------------------------------------------------------
+08/07/11
+
+With help from printz we finally nailed down a heap corruption issue which was
+causing EE to crash for him in ~ZoneObject. Lee Killough's implementation of
+A_Mushroom copied an mobj to a temporary variable on the stack in order to
+modify its position for use as an aiming target for P_SpawnMissile. Big hack.
+
+I have fixed this by adding a P_SpawnMissileWithPos function that takes, in 
+addition to the target object, coordinates at which to actually aim the missile.
+
+--------------------------------------------------------------------------------
+06/29/11
+
+In further preparation for renewed work on weapons and inventory for EDF, I have
+started some refactoring work on the netcode. This is necessitated by the fact
+that the ticcmd_t structure is going to become too overgrown to remain 
+functional with EE's packet-flooding networking system.
+
+The following adjustments have been made:
+
+* Default values of the netsend and netget routines are now set to functions
+  that will call I_Error in case future mistakes occur similar to the one which
+  caused netdemos to crash Eternity by causing it to suddenly believe it was in
+  an actual network game as soon as the demo finished playing.
+  
+* The UDP packet buffer requested from SDL_net does not need to be 5000 bytes 
+  long. It is now created at the size of the doomdata_t structure rounded up to
+  the next four-byte boundary to leave some leeway.
+
+--------------------------------------------------------------------------------
+06/27/11
+
+All menu patches drawn by the menu system are no longer translated using the
+CR_RED table as they were in SMMU - this caused problems with various mods, such
+as Plutonia 2, due to the wonky nature of the BOOM translation tables, which 
+change colors that they shouldn't have to change. Blah.
+
+--------------------------------------------------------------------------------
+06/26/11
+
+I have added a long-planned ability to pass preprocessing and format validation
+callbacks into W_ReadLump courtesy of a WadLumpLoader class which bears a 
+couple of virtual methods used to validate and preprocess respectively. 
+
+I have immediately put this to its first pre-planned usage by creating a 
+PatchLoader descendant. Use of this class when loading all patches from the WADs
+has enabled the formerly ubiquitous calls to SwapShort and SwapLong used to fix
+up the endianness of multibyte values read out of patches to be completely
+removed from the engine, speeding up patch drawing routines by a non-negligible
+amount and cleaning up the code significantly.
+
+--------------------------------------------------------------------------------
+06/24/11
+
+In early preparation for restarting on the inventory system, I have removed all
+of the dead inventory code from e_player.cpp.
+
+MetaTables can now nest courtesy of re-derivation of MetaTable from MetaObject.
+This means that a MetaTable can become a property of another MetaTable. Neat.
+
+--------------------------------------------------------------------------------
+06/23/11
+
+The temporary configuration file created during the saving process needs to be
+written to the base folder, and not in the EXE dir, to avoid problems with the
+rename() call on Linux where it would state "Invalid cross-device link", as a 
+result of the source and destination paths being on different logical mounts.
+
+DavidPH contributed a patch to establish ability to build with OpenGL support
+enabled on Linux using the CMake script.
+
+================================================================================
 Changes since Eternity Engine v3.40.11
 ================================================================================
 --------------------------------------------------------------------------------

@@ -99,7 +99,7 @@ public:
    void Initialize(unsigned int pNumChains)
    {
       numChains = pNumChains;
-      chains    = (link_type **)(calloc(numChains, sizeof(link_type *)));
+      chains    = ecalloc(link_type **, numChains, sizeof(link_type *));
       isInit    = true;
    }
 
@@ -113,7 +113,7 @@ public:
    void Destroy()
    {
       if(chains)
-         free(chains);
+         efree(chains);
 
       chains      =  NULL;
       isInit      =  false;
@@ -361,7 +361,7 @@ public:
          return;
 
       // allocate a new chains table
-      chains = (link_type **)(calloc(newNumChains, sizeof(link_type *)));
+      chains = ecalloc(link_type **, newNumChains, sizeof(link_type *));
       numChains = newNumChains;
 
       // run down the old chains
@@ -393,7 +393,7 @@ public:
       calcLoadFactor();
 
       // delete old chains
-      free(oldchains);
+      efree(oldchains);
    }
 };
 

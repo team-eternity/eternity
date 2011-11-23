@@ -219,7 +219,7 @@ static void ACS_addVirtualMachine(acsvm_t *vm)
    if(numACSVMs >= numACSVMsAlloc)
    {
       numACSVMsAlloc = numACSVMsAlloc ? numACSVMsAlloc * 2 : 4;
-      acsVMs = (acsvm_t **)(realloc(acsVMs, numACSVMsAlloc * sizeof(acsvm_t *)));
+      acsVMs = erealloc(acsvm_t **, acsVMs, numACSVMsAlloc * sizeof(acsvm_t *));
    }
 
    acsVMs[numACSVMs] = vm;
@@ -1212,11 +1212,11 @@ void ACSThinker::serialize(SaveArchive &arc)
 }
 
 //
-// ACSThinker::deswizzle
+// ACSThinker::deSwizzle
 //
 // Fixes up the trigger reference in a ACSThinker.
 //
-void ACSThinker::deswizzle()
+void ACSThinker::deSwizzle()
 {
    Mobj *mo = dynamic_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
    P_SetNewTarget(&trigger, mo);
@@ -1257,7 +1257,7 @@ void ACS_NewGame(void)
    {
       next = cur->dllNext;
       cur->remove();      
-      free(cur->dllObject);
+      efree(cur->dllObject);
       cur = next;
    }
 
@@ -1388,7 +1388,7 @@ static bool ACS_addDeferredScriptVM(acsvm_t *vm, int scrnum, int mapnum,
    }
 
    // allocate a new deferredacs_t
-   newdacs = (deferredacs_t *)(malloc(sizeof(deferredacs_t)));
+   newdacs = estructalloc(deferredacs_t, 1);
 
    // set script number
    newdacs->scriptNum = scrnum; 
@@ -1477,7 +1477,7 @@ void ACS_RunDeferredScripts(void)
 
          // unhook and delete this deferred script
          cur->remove();
-         free(dacs);
+         efree(dacs);
       }
 
       cur = next;

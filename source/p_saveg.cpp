@@ -138,7 +138,7 @@ void SaveArchive::ArchiveLString(char *&str, size_t &len)
       len = (size_t)tempLen; // FIXME: size_t
       if(len != 0)
       {
-         str = (char *)(calloc(1, len));
+         str = ecalloc(char *, 1, len);
          loadfile->Read(str, len);
       }
       else
@@ -352,7 +352,7 @@ static Thinker **thinker_p;  // killough 2/14/98: Translation table
 
 static void P_FreeThinkerTable(void)
 {
-   free(thinker_p);    // free translation table
+   efree(thinker_p);    // free translation table
 }
 
 static void P_NumberThinkers(void)
@@ -445,7 +445,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          player_t &p = players[i];
 
          arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
-             << p.cmd.chatchar << p.cmd.consistancy << p.cmd.forwardmove
+             << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
@@ -688,7 +688,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       Thinker     *newThinker;
 
       // allocate thinker table
-      thinker_p = (Thinker **)(calloc(num_thinkers+1, sizeof(Thinker *)));
+      thinker_p = ecalloc(Thinker **, num_thinkers+1, sizeof(Thinker *));
 
       // clear out the thinker list
       P_RemoveAllThinkers();
@@ -696,7 +696,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       while(1)
       {
          if(*className != '\0')
-            free(className);
+            efree(className);
 
          // Get the next class name
          arc.ArchiveLString(className, len);
@@ -709,6 +709,10 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             else 
                I_Error("Unknown tclass %s in savegame\n", className);
          }
+
+         // Too many thinkers?!
+         if(idx > num_thinkers) 
+            I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
          // Create a thinker of the appropriate type and load it
          newThinker = thinkerType->newThinker();
@@ -724,7 +728,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
       // Now, call deswizzle to fix up mutual references between thinkers, such
       // as mobj targets/tracers and ACS triggers.
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
-         th->deswizzle();
+         th->deSwizzle();
 
       // killough 3/26/98: Spawn icon landings:
       // haleyjd  3/30/03: call P_InitThingLists
@@ -783,8 +787,9 @@ static void P_ArchiveMap(SaveArchive &arc)
 
          while(markpointnum >= markpointnum_max)
          {
-            markpoints = (mpoint_t *)(realloc(markpoints, sizeof *markpoints *
-               (markpointnum_max = markpointnum_max ? markpointnum_max*2 : 16)));
+            markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
+            markpoints = erealloc(mpoint_t *, markpoints, 
+                                  sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
@@ -971,7 +976,7 @@ static void P_ArchiveCallbacks(SaveArchive &arc)
       // read until the end marker is hit
       for(int i = 0; i < callback_count; i++)
       {
-         sc_callback_t *newCallback = (sc_callback_t *)(malloc(sizeof(sc_callback_t)));
+         sc_callback_t *newCallback = estructalloc(sc_callback_t, 1);
          int8_t vm;
 
          arc << newCallback->flags << newCallback->scriptNum << vm 
@@ -1229,7 +1234,7 @@ void P_ArchiveButtons(SaveArchive &arc)
    // When loading, if not equal, we need to realloc buttonlist
    if(arc.isLoading() && numsaved > 0 && numsaved != numbuttonsalloc)
    {
-      buttonlist = (button_t *)(realloc(buttonlist, numsaved * sizeof(button_t)));
+      buttonlist = erealloc(button_t *, buttonlist, numsaved * sizeof(button_t));
       numbuttonsalloc = numsaved;
    }
 
@@ -1388,7 +1393,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_DeNumberThinkers();
 
-      uint8_t cmarker = 0xE6; // consistancy marker
+      uint8_t cmarker = 0xE6; // consistency marker
       arc << cmarker; 
    }
    catch(BufferedIOException)
@@ -1491,7 +1496,7 @@ void P_LoadGame(const char *filename)
          WadDirectory *dir;
 
          // read a name of len bytes 
-         char *fn = (char *)(calloc(1, len));
+         char *fn = ecalloc(char *, 1, len);
          arc.ArchiveCString(fn, (size_t)len);
 
          // Try to get an existing managed wad first. If none such exists, try
@@ -1502,7 +1507,7 @@ void P_LoadGame(const char *filename)
             g_dir = d_dir = dir;
 
          // done with temporary file name
-         free(fn);
+         efree(fn);
       }
    
       // killough 3/16/98, 12/98: check lump name checksum
@@ -1514,14 +1519,14 @@ void P_LoadGame(const char *filename)
 
       if(memcmp(&checksum, &rchecksum, sizeof checksum))
       {
-         char *msg = (char *)(calloc(1, strlen((const char *)(save_p + sizeof checksum)) + 128));
+         char *msg = ecalloc(char *, 1, strlen((const char *)(save_p + sizeof checksum)) + 128);
          strcpy(msg,"Incompatible Savegame!!!\n");
          if(save_p[sizeof checksum])
             strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
          strcat(msg, "\nAre you sure?");
          C_Puts(msg);
          G_LoadGameErr(msg);
-         free(msg);
+         efree(msg);
          return;
       }
       */

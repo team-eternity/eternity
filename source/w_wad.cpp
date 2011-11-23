@@ -97,7 +97,7 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
    {
       numallocsa = numallocsa ? numallocsa * 2 : 32;
 
-      infoptrs = (lumpinfo_t **)(realloc(infoptrs, numallocsa * sizeof(lumpinfo_t *)));
+      infoptrs = erealloc(lumpinfo_t **, infoptrs, numallocsa * sizeof(lumpinfo_t *));
    }
    
    // add it
@@ -194,7 +194,9 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    filelump_t   singleinfo;
    lumpinfo_t  *newlumps;
    bool         isWad;     // haleyjd 05/23/04
-   HashData     wadHash;   // haleyjd 04/07/11
+   
+   // haleyjd 04/07/11
+   HashData     wadHash  = HashData(HashData::SHA1);
    bool         showHash = false;
    bool         doHacks  = false;
 
@@ -232,9 +234,6 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    // wad directory hacks. Quite useful for when a new hack needs to be added.
    if(M_CheckParm("-showhashes"))
       showHash = true;
-   
-   if(doHacks || showHash)
-      wadHash.Initialize(HashData::SHA1);
 
    // killough:
    if(filetype == ADDWADFILE && // only when adding normal wad files
@@ -269,7 +268,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
 
       // Feed the wad header data into the hash computation
       if(doHacks || showHash)
-         wadHash.AddData((const uint8_t *)&header, (uint32_t)sizeof(header));
+         wadHash.addData((const uint8_t *)&header, (uint32_t)sizeof(header));
       
       if(strncmp(header.identification, "IWAD", 4) && 
          strncmp(header.identification, "PWAD", 4))
@@ -288,7 +287,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       header.infotableofs = SwapLong(header.infotableofs);
       
       length = header.numlumps * sizeof(filelump_t);
-      fileinfo2free = fileinfo = (filelump_t *)(malloc(length)); // killough
+      fileinfo2free = fileinfo = emalloc(filelump_t *, length); // killough
       
       long info_offset = (long)(header.infotableofs);
       // subfile wads may exist at a positive base offset in the container file
@@ -301,7 +300,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
          if(filetype == ADDPRIVATE) // Error is tolerated for private files
          {
             fclose(openData.handle);
-            free(fileinfo2free);
+            efree(fileinfo2free);
             C_Printf(FC_ERROR "Failed reading directory for wad file %s\n", openData.filename);
             return false;
          }
@@ -313,10 +312,10 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       // output it to the console.
       if(doHacks || showHash)
       {
-         wadHash.AddData((const uint8_t *)fileinfo, (uint32_t)length);
-         wadHash.WrapUp();
+         wadHash.addData((const uint8_t *)fileinfo, (uint32_t)length);
+         wadHash.wrapUp();
          if(in_textmode && showHash)
-            printf("\thash = %s\n", wadHash.DigestToString());
+            printf("\thash = %s\n", wadHash.digestToString());
          // haleyjd 04/08/11: apply wad directory hacks as needed
          if(doHacks)
             W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
@@ -326,10 +325,11 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    }
    
    // Fill in lumpinfo
-   this->lumpinfo = (lumpinfo_t **)(realloc(this->lumpinfo, this->numlumps * sizeof(lumpinfo_t *)));
+   this->lumpinfo = erealloc(lumpinfo_t **, this->lumpinfo, 
+                             this->numlumps * sizeof(lumpinfo_t *));
 
    // space for new lumps
-   newlumps = (lumpinfo_t *)(malloc((this->numlumps - startlump) * sizeof(lumpinfo_t)));
+   newlumps = estructalloc(lumpinfo_t, this->numlumps - startlump);
    lump_p   = newlumps;
 
    // haleyjd: keep track of this allocation of lumps
@@ -372,7 +372,7 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
    ++source;
    
    if(fileinfo2free)
-      free(fileinfo2free); // killough
+      efree(fileinfo2free); // killough
    
    if(filetype == ADDPRIVATE)
       return true; // no error (note opposite return value semantics 9_9)
@@ -405,7 +405,7 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
                                           const char *end_marker, 
                                           int li_namespace)
 {
-   lumpinfo_t **marked = (lumpinfo_t **)(calloc(sizeof(*marked), this->numlumps));
+   lumpinfo_t **marked = ecalloc(lumpinfo_t **, sizeof(*marked), this->numlumps);
    size_t i, num_marked = 0, num_unmarked = 0;
    int is_marked = 0, mark_end = 0;
    lumpinfo_t *lump;
@@ -461,13 +461,13 @@ void WadDirectory::CoalesceMarkedResource(const char *start_marker,
    // Append marked list to end of unmarked list
    memcpy(this->lumpinfo + num_unmarked, marked, num_marked * sizeof(lumpinfo_t *));
 
-   free(marked);                                    // free marked list
+   efree(marked);                                   // free marked list
    
    this->numlumps = num_unmarked + num_marked;      // new total number of lumps
    
    if(mark_end)                                     // add end marker
    {
-      lumpinfo_t *newlump = (lumpinfo_t *)(calloc(1, sizeof(lumpinfo_t)));
+      lumpinfo_t *newlump = ecalloc(lumpinfo_t *, 1, sizeof(lumpinfo_t));
       int lNumLumps = this->numlumps;
       AddInfoPtr(newlump); // haleyjd: track it
       this->lumpinfo[lNumLumps] = newlump;
@@ -851,8 +851,9 @@ void *WadDirectory::CacheLumpNum(int lump, int tag, WadLumpLoader *lfmt)
    
    if(!(lumpinfo[lump]->cache))      // read the lump in
    {
-      ReadLump(lump, Z_Malloc(LumpLength(lump), tag, 
-               &(lumpinfo[lump]->cache)), lfmt);
+      ReadLump(lump, 
+               Z_Malloc(LumpLength(lump), tag, &(lumpinfo[lump]->cache)), 
+               lfmt);
    }
    else
    {
@@ -886,20 +887,14 @@ void *WadDirectory::CacheLumpName(const char *name, int tag, WadLumpLoader *lfmt
 // W_LumpCheckSum
 //
 // sf
+// haleyjd 08/27/11: Rewritten to use CRC32 hash algorithm
 //
-int W_LumpCheckSum(int lumpnum)
+uint32_t W_LumpCheckSum(int lumpnum)
 {
-   int   i, lumplength;
-   char *lump;
-   int   checksum = 0;
-   
-   lump = (char *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
-   lumplength = W_LumpLength(lumpnum);
-   
-   for(i = 0; i < lumplength; i++)
-      checksum += lump[i] * i;
-   
-   return checksum;
+   uint8_t  *lump    = (uint8_t *)(wGlobalDir.CacheLumpNum(lumpnum, PU_CACHE));
+   uint32_t  lumplen = (uint32_t )(W_LumpLength(lumpnum));
+
+   return HashData(HashData::CRC32, lump, lumplen).getDigestPart(0);
 }
 
 //
@@ -945,10 +940,10 @@ void WadDirectory::FreeDirectoryAllocs()
 
    // free each lumpinfo_t allocation
    for(i = 0; i < numallocs; ++i)
-      free(infoptrs[i]);
+      efree(infoptrs[i]);
 
    // free the allocation tracking table
-   free(infoptrs);
+   efree(infoptrs);
    infoptrs = NULL;
    numallocs = numallocsa = 0;
 }

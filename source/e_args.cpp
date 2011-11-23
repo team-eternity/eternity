@@ -63,7 +63,7 @@ bool E_AddArgToList(arglist_t *al, const char *value)
       if(ISEMPTY(value))
          al->args[al->numargs] = e_argemptystr;
       else
-         al->args[al->numargs] = strdup(value);
+         al->args[al->numargs] = estrdup(value);
       
       al->numargs++;
       added = true;
@@ -92,12 +92,12 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
 
    // dispose of old argument and set new value
    if(!ISARGEMPTYSTR(al->args[index]))
-      free(al->args[index]);
+      efree(al->args[index]);
 
    if(ISEMPTY(value))
       al->args[index] = e_argemptystr;
    else
-      al->args[index] = strdup(value);
+      al->args[index] = estrdup(value);
 
    // any cached evaluation is now invalid
    al->values[index].type = EVALTYPE_NONE;
@@ -133,7 +133,7 @@ void E_DisposeArgs(arglist_t *al)
    for(i = 0; i < al->numargs; ++i)
    {
       if(!ISARGEMPTYSTR(al->args[i]))
-         free(al->args[i]);
+         efree(al->args[i]);
    }
 
    memset(al, 0, sizeof(arglist_t));

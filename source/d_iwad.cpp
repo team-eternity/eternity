@@ -96,7 +96,7 @@ static char *SearchDirectoryForIWAD(char *dir, const char *const *iwads,
 
       iwadname = iwads[i];
       
-      filename = (char *)(malloc(strlen(dir) + strlen(iwadname) + 3));
+      filename = emalloc(char *, strlen(dir) + strlen(iwadname) + 3);
       
       if(!strcmp(dir, "."))
          strcpy(filename, iwadname);
@@ -109,7 +109,7 @@ static char *SearchDirectoryForIWAD(char *dir, const char *const *iwads,
       if(M_FileExists(filename))
          return filename;
       
-      free(filename);
+      efree(filename);
    }
    
    return NULL;
@@ -132,7 +132,7 @@ static void AddDoomWadPath(void)
    if(doomwadpath == NULL)
       return;
    
-   doomwadpath = strdup(doomwadpath);
+   doomwadpath = estrdup(doomwadpath);
    
    // Add the initial directory
    
@@ -242,7 +242,7 @@ char *D_FindWADByName(char *name)
    {
       // Construct a string for the full path
       
-      buf = (char *)(malloc(strlen(iwad_dirs[i]) + strlen(name) + 5));
+      buf = emalloc(char *, strlen(iwad_dirs[i]) + strlen(name) + 5);
       sprintf(buf, "%s/%s", iwad_dirs[i], name);
 
       // haleyjd
@@ -253,7 +253,7 @@ char *D_FindWADByName(char *name)
       if(exists)
          return buf;
       
-      free(buf);
+      efree(buf);
    }
 
    // File not found

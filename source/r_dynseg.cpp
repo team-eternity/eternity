@@ -72,8 +72,8 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
    {
       po->numDSSAlloc = po->numDSSAlloc ? po->numDSSAlloc * 2 : 8;
       po->dynaSubsecs = 
-         (subsector_t **)(realloc(po->dynaSubsecs, 
-                                  po->numDSSAlloc * sizeof(subsector_t *)));
+         erealloc(subsector_t **, po->dynaSubsecs, 
+                  po->numDSSAlloc * sizeof(subsector_t *));
    }
    po->dynaSubsecs[po->numDSS++] = ss;
 }
@@ -94,7 +94,7 @@ static vertex_t *R_GetFreeDynaVertex(void)
       memset(ret, 0, sizeof(vertex_t));
    }
    else
-      ret = (vertex_t *)(calloc(1, sizeof(vertex_t)));
+      ret = ecalloc(vertex_t *, 1, sizeof(vertex_t));
 
    return ret;
 }
@@ -127,7 +127,7 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
       memset(ret, 0, sizeof(dynaseg_t));
    }
    else
-      ret = (dynaseg_t *)(calloc(1, sizeof(dynaseg_t)));
+      ret = ecalloc(dynaseg_t *, 1, sizeof(dynaseg_t));
 
    return ret;
 }
@@ -137,10 +137,10 @@ static dynaseg_t *R_GetFreeDynaSeg(void)
 //
 // Puts a dynaseg onto the free list.
 //
-static void R_FreeDynaSeg(dynaseg_t *seg)
+static void R_FreeDynaSeg(dynaseg_t *dseg)
 {
-   seg->freenext = dynaSegFreeList;
-   dynaSegFreeList = seg;
+   dseg->freenext = dynaSegFreeList;
+   dynaSegFreeList = dseg;
 }
 
 //
@@ -159,7 +159,7 @@ static rpolyobj_t *R_GetFreeRPolyObj(void)
       memset(ret, 0, sizeof(rpolyobj_t));
    }
    else
-      ret = (rpolyobj_t *)(calloc(1, sizeof(rpolyobj_t)));
+      ret = ecalloc(rpolyobj_t *, 1, sizeof(rpolyobj_t));
 
    return ret;
 }
@@ -215,18 +215,18 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 // haleyjd 06/14/10: made global for map loading in p_setup.c and added
 //                   side parameter.
 //
-void R_DynaSegOffset(seg_t *seg, line_t *line, int side)
+void R_DynaSegOffset(seg_t *lseg, line_t *line, int side)
 {
    double t;
-   double dx = (side ? line->v2->fx : line->v1->fx) - seg->v1->fx;
-   double dy = (side ? line->v2->fy : line->v1->fy) - seg->v1->fy;
+   double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
+   double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
  
    if(dx == 0.0 && dy == 0.0)
       t = 0;
    else
       t = sqrt((dx * dx) + (dy * dy));
 
-   seg->offset = (float)t;
+   lseg->offset = (float)t;
 }
 
 //
@@ -258,11 +258,11 @@ static dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2)
 //
 // Finds the point where a node line crosses a seg.
 //
-static void R_IntersectPoint(seg_t *seg, node_t *bsp, float *x, float *y)
+static void R_IntersectPoint(seg_t *lseg, node_t *bsp, float *x, float *y)
 {
-   double a1 = seg->v2->fy - seg->v1->fy;
-   double b1 = seg->v1->fx - seg->v2->fx;
-   double c1 = seg->v2->fx * seg->v1->fy - seg->v1->fx * seg->v2->fy;
+   double a1 = lseg->v2->fy - lseg->v1->fy;
+   double b1 = lseg->v1->fx - lseg->v2->fx;
+   double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
    
    // haleyjd 05/13/09: massive optimization
    double a2 = -bsp->a;
@@ -309,21 +309,21 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    while(!(bspnum & NF_SUBSECTOR))
    {
       node_t *bsp = &nodes[bspnum];
-      seg_t  *seg = &dseg->seg;
+      seg_t  *lseg = &dseg->seg;
 
       // test vertices against node line
-      int side_v1 = R_PointOnSide(seg->v1->x, seg->v1->y, bsp);
-      int side_v2 = R_PointOnSide(seg->v2->x, seg->v2->y, bsp);
+      int side_v1 = R_PointOnSide(lseg->v1->x, lseg->v1->y, bsp);
+      int side_v2 = R_PointOnSide(lseg->v2->x, lseg->v2->y, bsp);
 
       // get distance of vertices from partition line
-      double dist_v1 = R_PartitionDistance(seg->v1->fx, seg->v1->fy, bsp);
-      double dist_v2 = R_PartitionDistance(seg->v2->fx, seg->v2->fy, bsp);
+      double dist_v1 = R_PartitionDistance(lseg->v1->fx, lseg->v1->fy, bsp);
+      double dist_v2 = R_PartitionDistance(lseg->v2->fx, lseg->v2->fy, bsp);
 
       // If the distances are less than epsilon, consider the points as being
       // on the same side as the polyobj origin. Why? People like to build
       // polyobject doors flush with their door tracks. This breaks using the
       // usual assumptions.
-#if 1
+
       if(dist_v1 <= DS_EPSILON)
       {
          if(dist_v2 <= DS_EPSILON)
@@ -341,34 +341,24 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
       {         
          side_v2 = side_v1; // v2 is very close; classify as v1 side
       }
-#else
-      // DYNASEG_FIXME: eliminate if above tests out
-      if(dist_v1 <= DS_EPSILON && dist_v2 <= DS_EPSILON)
-      {
-         // test polyobj origin against node line
-         side_v1 = R_PointOnSide(dseg->polyobj->centerPt.x, 
-                                 dseg->polyobj->centerPt.y,
-                                 bsp);
-      }
-      else
-#endif
+
       if(side_v1 != side_v2)
       {
          // the partition line crosses this seg, so we must split it.
          dynaseg_t *nds;
          vertex_t  *nv = R_GetFreeDynaVertex();
 
-         R_IntersectPoint(seg, bsp, &nv->fx, &nv->fy);
+         R_IntersectPoint(lseg, bsp, &nv->fx, &nv->fy);
 
          // also set fixed-point coordinates
          nv->x = M_FloatToFixed(nv->fx);
          nv->y = M_FloatToFixed(nv->fy);
 
          // create new dynaseg from nv to seg->v2
-         nds = R_CreateDynaSeg(dseg, nv, seg->v2);
+         nds = R_CreateDynaSeg(dseg, nv, lseg->v2);
 
          // alter current seg to run from seg->v1 to nv
-         seg->v2 = nv;
+         lseg->v2 = nv;
 
          // recurse to split v2 side
          R_SplitLine(nds, bsp->children[side_v2]);
@@ -379,49 +369,47 @@ static void R_SplitLine(dynaseg_t *dseg, int bspnum)
    }
 
    // reached a subsector: attach dynaseg
-   {
-      int num;
-      rpolyobj_t *fragment;
+   int num;
+   rpolyobj_t *fragment;
       
-      num = bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR;
+   num = bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR;
       
 #ifdef RANGECHECK
-      if(num >= numsubsectors)
-         I_Error("R_SplitLine: ss %d with numss = %d\n", num, numsubsectors);
+   if(num >= numsubsectors)
+      I_Error("R_SplitLine: ss %d with numss = %d\n", num, numsubsectors);
 #endif
 
-      // see if this subsector already has an rpolyobj_t for this polyobject
-      // if it does not, then one will be created.
-      fragment = R_FindFragment(&subsectors[num], dseg->polyobj);
+   // see if this subsector already has an rpolyobj_t for this polyobject
+   // if it does not, then one will be created.
+   fragment = R_FindFragment(&subsectors[num], dseg->polyobj);
       
-      // link this seg in at the end of the list in the rpolyobj_t
-      if(fragment->dynaSegs)
-      {
-         dynaseg_t *seg = fragment->dynaSegs;
+   // link this seg in at the end of the list in the rpolyobj_t
+   if(fragment->dynaSegs)
+   {
+      dynaseg_t *fdseg = fragment->dynaSegs;
          
-         while(seg->subnext)
-            seg = seg->subnext;
-         
-         seg->subnext = dseg;
-      }
-      else
-         fragment->dynaSegs = dseg;
-
-      // 05/13/09: calculate seg length for SoM
-      P_CalcSegLength(&dseg->seg);
-
-      // 07/15/09: rendering consistency - set frontsector/backsector here
-      dseg->seg.frontsector = subsectors[num].sector;
-
-      // 10/30/09: only set backsector if line is 2S (it really shouldn't be...)
-      if(dseg->seg.linedef->backsector)
-         dseg->seg.backsector = subsectors[num].sector;
-      else
-         dseg->seg.backsector = NULL;
-
-      // add the subsector if it hasn't been added already
-      R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
+      while(fdseg->subnext)
+         fdseg = fdseg->subnext;
+        
+      fdseg->subnext = dseg;
    }
+   else
+      fragment->dynaSegs = dseg;
+
+   // 05/13/09: calculate seg length for SoM
+   P_CalcSegLength(&dseg->seg);
+
+   // 07/15/09: rendering consistency - set frontsector/backsector here
+   dseg->seg.frontsector = subsectors[num].sector;
+
+   // 10/30/09: only set backsector if line is 2S (it really shouldn't be...)
+   if(dseg->seg.linedef->backsector)
+      dseg->seg.backsector = subsectors[num].sector;
+   else
+      dseg->seg.backsector = NULL;
+
+   // add the subsector if it hasn't been added already
+   R_AddDynaSubsec(&subsectors[num], dseg->polyobj);
 }
 
 //

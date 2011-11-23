@@ -74,7 +74,7 @@ enum
 struct doomdata_t
 {
     // High bit is retransmit request.
-    unsigned int checksum;
+    uint32_t     checksum;
     // Only valid if NCMD_RETRANSMIT.
     byte         retransmitfrom;
     
@@ -132,9 +132,6 @@ struct doomcom_t
     // Is dest for send, set by get (-1 = no packet).
     int16_t             remotenode;
     
-    // Number of bytes in doomdata to be sent
-    int16_t             datalength;
-
     // Info common to all nodes.
     // Console is allways node 0.
     int16_t             numnodes;

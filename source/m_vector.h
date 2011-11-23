@@ -55,7 +55,6 @@ struct v2float_t
    float x, y;
 };
 
-
 // 
 // M_TranslateVec3
 //

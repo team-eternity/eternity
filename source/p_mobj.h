@@ -208,7 +208,7 @@ public:
    virtual void updateThinker();
    virtual void removeThinker();
    virtual void serialize(SaveArchive &arc);
-   virtual void deswizzle();
+   virtual void deSwizzle();
    virtual const char *getClassName() const { return "Mobj"; }
 
    // Data members
@@ -387,8 +387,6 @@ bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl, fixed_t attackrange);
 void  P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int damage, Mobj *target);
-Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
 Mobj *P_SpawnMapThing(mapthing_t *);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *);     // killough
@@ -399,13 +397,45 @@ void P_SpawnParticle(fixed_t x, fixed_t y, fixed_t z);
 void P_ParticleLine(Mobj *source, Mobj *dest);
 */
 
-// new Eternity mobj function prototypes  haleyjd
-void    P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
-bool    P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
-Mobj   *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);  // cleaner angled firing
-void    P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
 fixed_t P_MissileMomz(fixed_t, fixed_t, fixed_t, int);
+fixed_t P_PlayerPitchSlope(player_t *player);
 
+// haleyjd 08/08/11: structure for use with P_SpawnMissileEx
+struct missileinfo_t
+{
+   enum
+   {
+      USEANGLE = 0x01, // angle and momz are valid
+      NOFUZZ   = 0x02, // fuzz will not affect aiming
+   };
+
+   Mobj       *source; // Object firing the missile
+   Mobj       *dest;   // Destination object, if one exists
+   mobjtype_t  type;   // Type of object to fire
+   fixed_t     z;      // z height to fire from at source
+   angle_t     angle;  // angle to fire missile at
+   fixed_t     momz;   // z momentum when firing at an angle
+   fixed_t     destx;  // target position x (may come from dest)
+   fixed_t     desty;  // target position y (may come from dest)
+   fixed_t     destz;  // target position z (may come from dest)
+   uint32_t    flags;  // flags to affect firing (use enum values)
+};
+
+Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
+
+// Convenience routines for missile shooting
+Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
+Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
+                             fixed_t destx, fixed_t desty, fixed_t destz);
+
+// new Eternity mobj function prototypes  haleyjd
+void P_Massacre(int friends); // haleyjd 1/22/99:  kills everything
+bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
+void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
+
+// TIDs
 void P_InitTIDHash(void);
 void P_AddThingTID(Mobj *mo, int tid);
 void P_RemoveThingTID(Mobj *mo);

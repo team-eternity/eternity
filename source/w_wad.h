@@ -180,7 +180,7 @@ public:
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
 protected:
-   // openwad structure -t his is for return from WadDirectory::OpenFile
+   // openwad structure - this is for return from WadDirectory::OpenFile
    struct openwad_t
    {
       const char *filename; // possibly altered filename
@@ -201,17 +201,17 @@ protected:
    void       *data;      // user data (mainly for w_levels code)
 
    // Protected methods
-   void    InitLumpHash();
-   void    InitResources();
-   void    AddInfoPtr(lumpinfo_t *infoptr);
-   void    CoalesceMarkedResource(const char *start_marker, 
-                                  const char *end_marker, 
-                                  int li_namespace);
+   void InitLumpHash();
+   void InitResources();
+   void AddInfoPtr(lumpinfo_t *infoptr);
+   void CoalesceMarkedResource(const char *start_marker, 
+                               const char *end_marker, 
+                               int li_namespace);
    openwad_t OpenFile(const char *name, int filetype);
-   bool      AddFile(const char *name, int li_namespace, int filetype,
-                     FILE *file = NULL, size_t baseoffset = 0);
-   void      FreeDirectoryLumps();  // haleyjd 06/27/09
-   void      FreeDirectoryAllocs(); // haleyjd 06/06/10
+   bool AddFile(const char *name, int li_namespace, int filetype,
+                FILE *file = NULL, size_t baseoffset = 0);
+   void FreeDirectoryLumps();  // haleyjd 06/27/09
+   void FreeDirectoryAllocs(); // haleyjd 06/06/10
 
    // Utilities
    static int          IsMarker(const char *marker, const char *name);
@@ -257,7 +257,7 @@ int         W_GetNumForName(const char* name);
 lumpinfo_t *W_GetLumpNameChain(const char *name);
 
 int         W_LumpLength(int lump);
-int         W_LumpCheckSum(int lumpnum);
+uint32_t    W_LumpCheckSum(int lumpnum);
 int         W_ReadLumpHeader(int lump, void *dest, size_t size);
 
 void I_BeginRead(void), I_EndRead(void); // killough 10/98

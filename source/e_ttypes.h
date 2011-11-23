@@ -55,7 +55,7 @@ typedef struct ETerrainSplash_s
 {
    int smallclass;        // mobjtype used for small splash
    int smallclip;         // amount of floorclip to apply to small splash
-   char smallsound[33];   // sound to play for small splash
+   char smallsound[129];  // sound to play for small splash
    
    int baseclass;         // mobjtype used for normal splash
    int chunkclass;        // mobjtype used for normal splash chunk
@@ -63,10 +63,10 @@ typedef struct ETerrainSplash_s
    int chunkyvelshift;    // chunk's y velocity factor
    int chunkzvelshift;    // chunk's z velocity factor
    fixed_t chunkbasezvel; // base amount of z velocity for chunk
-   char sound[33];        // sound to play for normal splash
+   char sound[129];       // sound to play for normal splash
 
    struct ETerrainSplash_s *next; // hash link
-   char   name[33];               // hash name
+   char   name[129];              // hash name
 } ETerrainSplash;
 
 typedef struct ETerrain_s
@@ -85,7 +85,7 @@ typedef struct ETerrain_s
    int minversion;          // minimum demo version for this terrain
 
    struct ETerrain_s *next; // hash link
-   char name[33];           // hash name
+   char name[129];          // hash name
 } ETerrain;
 
 typedef struct EFloor_s

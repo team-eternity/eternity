@@ -74,7 +74,7 @@
 #include "w_wad.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *seg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
 
 //
 // MAP related Lookup tables.
@@ -417,13 +417,13 @@ void P_LoadSegs(int lump)
 
 
 // SoM 5/13/09: calculate seg length
-void P_CalcSegLength(seg_t *seg)
+void P_CalcSegLength(seg_t *lseg)
 {
    float dx, dy;
 
-   dx = seg->v2->fx - seg->v1->fx;
-   dy = seg->v2->fy - seg->v1->fy;
-   seg->len = (float)sqrt(dx * dx + dy * dy);
+   dx = lseg->v2->fx - lseg->v1->fx;
+   dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->len = (float)sqrt(dx * dx + dy * dy);
 }
 
 //
@@ -805,7 +805,7 @@ static void P_LoadZNodes(int lump)
    }
    else
    {
-      newvertarray = (vertex_t *)(calloc(orgVerts + newVerts, sizeof(vertex_t)));
+      newvertarray = ecalloc(vertex_t *, orgVerts + newVerts, sizeof(vertex_t));
       memcpy(newvertarray, vertexes, orgVerts * sizeof(vertex_t));
    }
 
@@ -830,7 +830,7 @@ static void P_LoadZNodes(int lump)
          lines[i].v1 = lines[i].v1 - vertexes + newvertarray;
          lines[i].v2 = lines[i].v2 - vertexes + newvertarray;
       }
-      free(vertexes);
+      efree(vertexes);
       vertexes = newvertarray;
       numvertexes = (int)(orgVerts + newVerts);
    }
@@ -846,7 +846,7 @@ static void P_LoadZNodes(int lump)
       Z_Free(lumpptr);
       return;
    }
-   subsectors = (subsector_t *)(calloc(numsubsectors, sizeof(subsector_t)));
+   subsectors = ecalloc(subsector_t *, numsubsectors, sizeof(subsector_t));
 
    CheckZNodesOverflow(len, numSubs * sizeof(uint32_t));
    for(i = currSeg = 0; i < numSubs; i++)
@@ -870,7 +870,7 @@ static void P_LoadZNodes(int lump)
    }
 
    numsegs = (int)numSegs;
-   segs = (seg_t *)(calloc(numsegs, sizeof(seg_t)));
+   segs = ecalloc(seg_t *, numsegs, sizeof(seg_t));
 
    CheckZNodesOverflow(len, numsegs * 11);
    P_LoadZSegs(data);
@@ -881,7 +881,7 @@ static void P_LoadZNodes(int lump)
    numNodes = GetLevelDWordU(&data);
 
    numnodes = numNodes;
-   nodes = (node_t *)(calloc(numNodes, sizeof(node_t)));
+   nodes = ecalloc(node_t *, numNodes, sizeof(node_t));
 
    CheckZNodesOverflow(len, numNodes * 32);
    for (i = 0; i < numNodes; i++)
@@ -951,7 +951,7 @@ void P_LoadThings(int lump)
    numthings = setupwad->LumpLength(lump) / sizeof(mapthingdoom_t); //sf: use global
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
+   mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
    for(i = 0; i < numthings; ++i)
    {
@@ -1023,7 +1023,7 @@ void P_LoadHexenThings(int lump)
    numthings = setupwad->LumpLength(lump) / sizeof(mapthinghexen_t);
 
    // haleyjd 03/03/07: allocate full mapthings
-   mapthings = (mapthing_t *)(calloc(numthings, sizeof(mapthing_t)));
+   mapthings = ecalloc(mapthing_t *, numthings, sizeof(mapthing_t));
    
    for(i = 0; i < numthings; ++i)
    {
@@ -1480,6 +1480,9 @@ void P_LoadSideDefs2(int lumpnum)
    Z_Free(lump);
 }
 
+// haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
+typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+
 //
 // P_CreateBlockMap
 //
@@ -1544,9 +1547,8 @@ static void P_CreateBlockMap(void)
    //     the linedef.
 
    {
-      typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
       unsigned tot = bmapwidth * bmapheight;                  // size of blockmap
-      bmap_t *bmap = (bmap_t *)(calloc(sizeof *bmap, tot));   // array of blocklists
+      bmap_t *bmap = ecalloc(bmap_t *, sizeof *bmap, tot);    // array of blocklists
 
       for(i = 0; i < (unsigned int)numlines; ++i)
       {
@@ -1586,10 +1588,9 @@ static void P_CreateBlockMap(void)
             // Increase size of allocated list if necessary
             if(bmap[b].n >= bmap[b].nalloc)
             {
-               bmap[b].list = 
-                  (int *)(realloc(bmap[b].list,
-                                  (bmap[b].nalloc = bmap[b].nalloc ? 
-                                   bmap[b].nalloc*2 : 8)*sizeof*bmap->list));
+               bmap[b].nalloc = bmap[b].nalloc ? bmap[b].nalloc * 2 : 8;
+               bmap[b].list = erealloc(int *, bmap[b].list,
+                                       bmap[b].nalloc*sizeof*bmap->list);
             }
 
             // Add linedef to end of list
@@ -1648,13 +1649,13 @@ static void P_CreateBlockMap(void)
                   blockmaplump[ndx++] = bp->list[--bp->n]; // Copy linedef list
                while (bp->n);
                blockmaplump[ndx++] = -1;                   // Store trailer
-               free(bp->list);                             // Free linedef list
+               efree(bp->list);                             // Free linedef list
             }
             else     // Empty blocklist: point to reserved empty blocklist
                blockmaplump[i] = tot;
          }
          
-         free(bmap);    // Free uncompressed blockmap
+         efree(bmap);    // Free uncompressed blockmap
       }
    }
 }
@@ -1971,7 +1972,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
    if(demo_version < 203)
       return;
 
-   hit = (byte *)(calloc(1, numvertexes)); // Hitlist for vertices
+   hit = ecalloc(byte *, 1, numvertexes); // Hitlist for vertices
 
    for(i = 0; i < numsegs; ++i)            // Go through each seg
    {
@@ -2006,7 +2007,7 @@ void P_RemoveSlimeTrails(void)             // killough 10/98
    }
 
    // free hit list
-   free(hit);
+   efree(hit);
 }
 
 //
@@ -2164,6 +2165,9 @@ static void P_ClearPlayerVars(void)
 
       // haleyjd: explicitly nullify old player object pointers
       players[i].mo = NULL;
+
+      // haleyjd: explicitly nullify old player attacker
+      players[i].attacker = NULL;
    }
 
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
@@ -2181,6 +2185,11 @@ static void P_ClearPlayerVars(void)
 //
 static void P_PreZoneFreeLevel(void)
 {
+   //==============================================
+   // Clear player data
+
+   P_ClearPlayerVars();
+
    //==============================================
    // Scripting
 
@@ -2375,9 +2384,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
-
-   // clear player data
-   P_ClearPlayerVars();
 
    // perform pre-Z_FreeTags actions
    P_PreZoneFreeLevel();

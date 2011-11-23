@@ -206,8 +206,8 @@ static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
    if(IS_SET(sndsec, itemname))
    {
       if(skin->sounds[idx])
-         free(skin->sounds[idx]);
-      skin->sounds[idx] = strdup(cfg_getstr(sndsec, itemname));
+         efree(skin->sounds[idx]);
+      skin->sounds[idx] = estrdup(cfg_getstr(sndsec, itemname));
    }
 }
 
@@ -250,10 +250,10 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    {
       E_EDFLogPrintf("\t\tCreating skin '%s'\n", tempstr);
 
-      newSkin = (skin_t *)(calloc(1, sizeof(skin_t)));
+      newSkin = ecalloc(skin_t *, 1, sizeof(skin_t));
 
       // set name
-      newSkin->skinname = strdup(tempstr);
+      newSkin->skinname = estrdup(tempstr);
 
       // type is always player
       newSkin->type = SKIN_PLAYER;
@@ -278,7 +278,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    if(IS_SET(skinsec, ITEM_SKIN_SPRITE))
    {
       if(newSkin->spritename)
-         free(newSkin->spritename);
+         efree(newSkin->spritename);
 
       tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
@@ -291,7 +291,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       }
 
       // set it
-      newSkin->spritename = strdup(tempstr);
+      newSkin->spritename = estrdup(tempstr);
 
       // sprite has been reset, so reset the sprite number
       newSkin->sprite = E_SpriteNumForName(newSkin->spritename);
@@ -301,8 +301,8 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    if(IS_SET(skinsec, ITEM_SKIN_FACES))
    {
       if(newSkin->facename)
-         free(newSkin->facename);
-      newSkin->facename = strdup(cfg_getstr(skinsec, ITEM_SKIN_FACES));
+         efree(newSkin->facename);
+      newSkin->facename = estrdup(cfg_getstr(skinsec, ITEM_SKIN_FACES));
 
       // faces have been reset, so clear the face array pointer
       newSkin->faces = NULL; // handled by skin code
@@ -387,17 +387,17 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    // get mnemonic from section title
    tempstr = cfg_title(pcsec);
 
-   // verify mnemonic
-   if(strlen(tempstr) > 32)
-      E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid mnemonic %s\n", tempstr);
-
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
       // create a new player class
-      pc = (playerclass_t *)(calloc(1, sizeof(playerclass_t)));
+      pc = estructalloc(playerclass_t, 1);
+
+      // verify mnemonic
+      if(strlen(tempstr) >= sizeof(pc->mnemonic))
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid mnemonic %s\n", tempstr);
 
       // set mnemonic and hash it
-      strncpy(pc->mnemonic, tempstr, 33);
+      strncpy(pc->mnemonic, tempstr, sizeof(pc->mnemonic));
       E_AddPlayerClass(pc);
 
       E_EDFLogPrintf("\t\tCreating player class %s\n", pc->mnemonic);

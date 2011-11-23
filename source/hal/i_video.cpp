@@ -445,10 +445,10 @@ static bool I_InitGraphicsMode(void)
    bool result; 
 
    if(!i_default_videomode)
-      i_default_videomode = strdup("640x480w");
+      i_default_videomode = estrdup("640x480w");
 
    if(!i_videomode)
-      i_videomode = strdup(i_default_videomode);
+      i_videomode = estrdup(i_default_videomode);
 
    // A false return value from HALVideoDriver::InitGraphicsMode means that no
    // errors have occured and we should continue with initialization.
@@ -612,18 +612,18 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
    V_ResetMode();
 
    if(i_default_videomode)
-      free(i_default_videomode);
+      efree(i_default_videomode);
 
-   i_default_videomode = strdup(i_videomode);
+   i_default_videomode = estrdup(i_videomode);
 }
 
 CONSOLE_COMMAND(i_default_videomode, 0)
 {
    /*
    if(i_default_videomode)
-      free(i_default_videomode);
+      efree(i_default_videomode);
 
-   i_default_videomode = strdup(i_videomode);
+   i_default_videomode = estrdup(i_videomode);
    */
 }
 

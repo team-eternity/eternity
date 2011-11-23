@@ -86,7 +86,7 @@ struct ESoundSeq_t
 
    int index;                    // numeric id
    int type;                     // type of sequence (see above enum)
-   char name[33];                // mnemonic
+   char name[129];               // mnemonic
 
    union seqcmd_s *commands;     // the compiled commands
 

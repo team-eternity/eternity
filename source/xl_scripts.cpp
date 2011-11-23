@@ -232,7 +232,7 @@ public:
       // kill off any lump that might still be cached
       if(lumpdata)
       {
-         free(lumpdata);
+         efree(lumpdata);
          lumpdata = NULL;
       }
    }
@@ -255,7 +255,7 @@ void XLParser::ParseLump(WadDirectory &dir, lumpinfo_t *lump)
    // free any previously loaded lump
    if(lumpdata)
    {
-      free(lumpdata);
+      efree(lumpdata);
       lumpdata = NULL;
    }
 
@@ -263,7 +263,7 @@ void XLParser::ParseLump(WadDirectory &dir, lumpinfo_t *lump)
    StartLump();
 
    // allocate at lump->size + 1 for null termination
-   lumpdata = (char *)(calloc(1, lump->size + 1));
+   lumpdata = ecalloc(char *, 1, lump->size + 1);
    dir.ReadLump(lump->selfindex, lumpdata);
 
    XLTokenizer tokenizer = XLTokenizer(lumpdata);

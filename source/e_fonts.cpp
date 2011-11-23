@@ -120,7 +120,7 @@ static const char *fontfmts[] =
 
 #define NUMFONTCHAINS 31
 
-static vfont_t              *e_font_namechains[NUMFONTCHAINS];
+static vfont_t             *e_font_namechains[NUMFONTCHAINS];
 static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
 
 //=============================================================================
@@ -304,7 +304,7 @@ static void E_DisposePatches(vfont_t *font)
    }
 
    // get rid of the patch array
-   free(font->fontgfx);
+   efree(font->fontgfx);
    font->fontgfx = NULL;
 }
 
@@ -330,7 +330,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt)
    // handle disposal of previous font graphics 
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
-      free(font->data);
+      efree(font->data);
       font->data = NULL;
    }
 
@@ -424,7 +424,7 @@ static void E_VerifyFilter(const char *str)
             break;
          default: // screw you, hacker boy
             E_EDFLoggedErr(2, 
-               "E_VerifyFilter: '%s' has bad format specifier %c\n",
+               "E_VerifyFilter: '%s' has bad format specifier '%c'\n",
                str, *rover);
          }
       }
@@ -452,13 +452,13 @@ static void E_FreeFilterData(vfontfilter_t *f)
 {
    if(f->chars)
    {
-      free(f->chars);
+      efree(f->chars);
       f->chars = NULL;
    }
 
    if(f->mask)
    {
-      free((void *)f->mask);
+      efree((void *)f->mask);
       f->mask = NULL;
    }
 }
@@ -478,7 +478,7 @@ static void E_FreeFontFilters(vfont_t *font)
    for(i = 0; i < font->numfilters; ++i)
       E_FreeFilterData(&(font->filters[i]));
 
-   free(font->filters);
+   efree(font->filters);
    font->filters = NULL;
 }
 
@@ -506,7 +506,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    // is it a list?
    if((numchars = cfg_size(sec, ITEM_FILTER_CHARS)) > 0)
    {
-      f->chars    = (unsigned int *)(calloc(numchars, sizeof(unsigned int)));
+      f->chars    = ecalloc(unsigned int *, numchars, sizeof(unsigned int));
       f->numchars = numchars;
 
       for(i = 0; i < numchars; ++i)
@@ -550,7 +550,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    }
 
    // get mask
-   f->mask = strdup(cfg_getstr(sec, ITEM_FILTER_MASK));
+   f->mask = estrdup(cfg_getstr(sec, ITEM_FILTER_MASK));
 
    // verify mask string to prevent hacks
    E_VerifyFilter(f->mask);
@@ -573,7 +573,7 @@ void E_LoadPatchFont(vfont_t *font)
    // in case this font was changed from block to patch:
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
-      free(font->data);
+      efree(font->data);
       font->data = NULL;
       font->linear = false;
    }
@@ -585,7 +585,7 @@ void E_LoadPatchFont(vfont_t *font)
       E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
 
    // init all to NULL at beginning
-   font->fontgfx = (patch_t **)(calloc(font->size, sizeof(patch_t *)));
+   font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -665,12 +665,12 @@ static void E_ProcessFont(cfg_t *sec)
    }
    else
    {
-      font = (vfont_t *)(calloc(1, sizeof(vfont_t)));
+      font = estructalloc(vfont_t, 1);
 
-      if(strlen(title) > 32)
+      if(strlen(title) >= sizeof(font->name))
          E_EDFLoggedErr(2, "E_ProcessFont: mnemonic '%s' is too long\n", title);
 
-      strncpy(font->name, title, 33);
+      strncpy(font->name, title, sizeof(font->name));
       font->num = num;
 
       // add to hash tables
@@ -770,7 +770,7 @@ static void E_ProcessFont(cfg_t *sec)
          E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
 
       // allocate the font filters
-      font->filters    = (vfontfilter_t *)(calloc(numfilters, sizeof(vfontfilter_t)));
+      font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
       font->numfilters = numfilters;
       
       for(i = 0; i < numfilters; ++i)
@@ -797,16 +797,16 @@ static void E_ProcessFont(cfg_t *sec)
 static void E_ProcessFontVars(cfg_t *cfg)
 {
    // 02/25/09: set native module font names
-   hud_fontname      = strdup(cfg_getstr(cfg, ITEM_FONT_HUD));
-   hud_overfontname  = strdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
-   mn_fontname       = strdup(cfg_getstr(cfg, ITEM_FONT_MENU));
-   mn_bigfontname    = strdup(cfg_getstr(cfg, ITEM_FONT_BMENU));
-   mn_normalfontname = strdup(cfg_getstr(cfg, ITEM_FONT_NMENU));
-   f_fontname        = strdup(cfg_getstr(cfg, ITEM_FONT_FINAL));
-   in_fontname       = strdup(cfg_getstr(cfg, ITEM_FONT_INTR));
-   in_bigfontname    = strdup(cfg_getstr(cfg, ITEM_FONT_INTRB));
-   in_bignumfontname = strdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
-   c_fontname        = strdup(cfg_getstr(cfg, ITEM_FONT_CONS));
+   hud_fontname      = estrdup(cfg_getstr(cfg, ITEM_FONT_HUD));
+   hud_overfontname  = estrdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
+   mn_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_MENU));
+   mn_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_BMENU));
+   mn_normalfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_NMENU));
+   f_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_FINAL));
+   in_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_INTR));
+   in_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRB));
+   in_bignumfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
+   c_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_CONS));
 }
 
 //=============================================================================
