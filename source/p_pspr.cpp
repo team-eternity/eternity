@@ -119,7 +119,7 @@ static gunaction_t *P_GetGunAction(void)
       freegunactions = ret->next;
    }
    else
-      ret = (gunaction_t *)(calloc(1, sizeof(gunaction_t)));
+      ret = ecalloc(gunaction_t *, 1, sizeof(gunaction_t));
 
    return ret;
 }
@@ -892,6 +892,65 @@ void A_GunFlash(Mobj *mo)
    A_FireSomething(player, 0);                               // phares
 }
 
+//=============================================================================
+//
+// Autoaiming
+//
+
+//
+// P_doAutoAim
+//
+// Does basic autoaiming logic and returns the slope value calculated by
+// P_AimLineAttack.
+//
+static fixed_t P_doAutoAim(TracerContext *tc, Mobj *mo, angle_t angle, fixed_t distance)
+{
+   if(demo_version >= 203)
+   {
+      // autoaiming is disabled?
+      if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+         return P_PlayerPitchSlope(mo->player);
+
+      // killough 8/2/98: make autoaiming prefer enemies
+      fixed_t slope = trace->aimLineAttack(mo, angle, distance, MF_FRIEND, tc);
+      if(tc->linetarget)
+         return slope;
+   }
+   
+   return trace->aimLineAttack(mo, angle, distance, 0, tc);
+}
+
+/*
+   // killough 7/19/98: autoaiming was not in original beta
+   // sf: made a multiplayer option
+   if(autoaim)
+   {
+      // killough 8/2/98: prefer autoaiming at enemies
+      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      do
+      {
+         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+         {
+            an = source->angle;
+            // haleyjd: use true slope angle
+            slope = P_PlayerPitchSlope(source->player);
+         }
+      }
+      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+   }
+   else
+   {
+      // haleyjd: use true slope angle
+      slope = P_PlayerPitchSlope(source->player);
+   }
+*/
+
+//=============================================================================
 //
 // WEAPON ATTACKS
 //
@@ -920,7 +979,8 @@ void A_GunFlash(Mobj *mo)
 void A_Punch(Mobj *mo)
 {
    angle_t angle;
-   int slope, damage = (P_Random(pr_punch) % 10 + 1) << 1;
+   fixed_t slope;
+   int damage = (P_Random(pr_punch) % 10 + 1) << 1;
    player_t *player  = mo->player;
 
    if(!player)
@@ -938,12 +998,7 @@ void A_Punch(Mobj *mo)
    angle += P_SubRandom(pr_punchangle) << 18;
 
    TracerContext *tc = trace->getContext();
-   
-  // killough 8/2/98: make autoaiming prefer enemies
-   if(demo_version<203 ||
-      (slope = trace->aimLineAttack(mo, angle, MELEERANGE, MF_FRIEND, tc),
-       !tc->linetarget))
-      slope = trace->aimLineAttack(mo, angle, MELEERANGE, 0, tc);
+   slope = P_doAutoAim(tc, mo, angle, MELEERANGE);
 
    trace->lineAttack(mo, angle, MELEERANGE, slope, damage);
 
@@ -965,21 +1020,16 @@ void A_Punch(Mobj *mo)
 //
 void A_Saw(Mobj *mo)
 {
-   int slope, damage = 2 * (P_Random(pr_saw) % 10 + 1);
+   fixed_t slope;
+   int damage = 2 * (P_Random(pr_saw) % 10 + 1);
    angle_t angle     = mo->angle;
    
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_saw) << 18;
 
    // Use meleerange + 1 so that the puff doesn't skip the flash
-   
    TracerContext *tc = trace->getContext();
-   
-   // killough 8/2/98: make autoaiming prefer enemies
-   if(demo_version<203 ||
-      (slope = trace->aimLineAttack(mo, angle, MELEERANGE+1, MF_FRIEND, tc),
-       !tc->linetarget))
-      slope = trace->aimLineAttack(mo, angle, MELEERANGE+1, 0, tc);
+   slope = P_doAutoAim(mo, angle, MELEERANGE + 1);
 
    trace->lineAttack(mo, angle, MELEERANGE+1, slope, damage);
    
@@ -1195,6 +1245,13 @@ void P_BulletSlope(Mobj *mo, TracerContext *tc)
    
    // killough 8/2/98: make autoaiming prefer enemies
    int mask = demo_version < 203 ? 0 : MF_FRIEND;
+
+   // haleyjd 08/09/11: allow autoaim disable
+   if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+   {
+      bulletslope = P_PlayerPitchSlope(mo->player);
+      return;
+   }
    
    do
    {
@@ -1884,7 +1941,8 @@ static argkeywd_t cpmkwds =
 void A_CustomPlayerMelee(Mobj *mo)
 {
    angle_t angle;
-   int slope, damage, dmgfactor, dmgmod, berzerkmul, deftype;
+   fixed_t slope;
+   int damage, dmgfactor, dmgmod, berzerkmul, deftype;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1927,10 +1985,7 @@ void A_CustomPlayerMelee(Mobj *mo)
       angle += P_SubRandom(pr_custompunch) << 18;
    
    TracerContext *tc = trace->getContext();
-   
-   if((slope = trace->aimLineAttack(mo, angle, MELEERANGE, MF_FRIEND, tc),
-      !tc->linetarget))
-      slope = trace->aimLineAttack(mo, angle, MELEERANGE, 0, tc);
+   slope = P_doAutoAim(mo, angle, MELEERANGE);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
