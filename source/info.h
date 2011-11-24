@@ -174,10 +174,9 @@ struct state_t
    struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   ENCStringHashKey name;         // pointer to name of this state
-   char             namebuf[129]; // buffer for name (max 40 chars)
-   EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
-   int              index;        // 06/12/09: number of state in states array
+   char       *name;      // buffer for name
+   int         dehnum;    // DeHackEd number for fast access, comp.
+   int         index;     // 06/12/09: number of state in states array
 };
 
 // these are in info.c
@@ -393,11 +392,10 @@ struct mobjinfo_t
    DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name
    DLListItem<mobjinfo_t> numlinks;  // haleyjd 11/03/11: new hashing: by dehnum
 
-   ENCStringHashKey namekey;      // pointer to name of this state
-   char             name[129];    // buffer for name (max 128 chars)
-   EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
-   int index;                     // index in mobjinfo
-   int generation;                // EDF generation number
+   char *name;         // buffer for name (max 128 chars)
+   int   dehnum;       // DeHackEd number for fast access, comp.
+   int   index;        // index in mobjinfo
+   int   generation;   // EDF generation number
 
    // 08/17/09: metatable
    MetaTable *meta;

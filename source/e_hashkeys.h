@@ -60,26 +60,15 @@ class EIntHashKey
 public:
    typedef int basic_type;
 
-   int hashKey;
-
-   EIntHashKey &operator = (int key) { hashKey = key; return *this; }
-   
-   unsigned int hashCode() const 
-   { 
-      return (unsigned int)hashKey;
-   }
-
-   bool operator == (const EIntHashKey &other) const
-   { 
-      return (hashKey == other.hashKey);
-   }
-   
-   bool operator != (const EIntHashKey &other) const
+   static unsigned int HashCode(int input)
    {
-      return (hashKey != other.hashKey);
+      return (unsigned int)input;
    }
 
-   operator int () const { return hashKey; }
+   static bool Compare(int first, int second)
+   {
+      return (first == second);
+   }
 };
 
 //
@@ -88,28 +77,17 @@ public:
 class EStringHashKey
 {
 public: 
-   typedef const char * basic_type;
+   typedef const char *basic_type;
 
-   const char *hashKey;
-
-   EStringHashKey &operator = (const char *key) { hashKey = key; return *this; }
-   
-   unsigned int hashCode() const
+   static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKeyCase(hashKey);
-   }
-   
-   bool operator == (const EStringHashKey &other) const
-   {
-      return !strcmp(hashKey, other.hashKey);
-   }
-   
-   bool operator != (const EStringHashKey &other) const
-   {
-      return (strcmp(hashKey, other.hashKey) != 0);
+      return D_HashTableKeyCase(input);
    }
 
-   operator const char * () const { return hashKey; }
+   static bool Compare(const char *first, const char *second)
+   {
+      return !strcmp(first, second);
+   }
 };
 
 // 
@@ -118,28 +96,17 @@ public:
 class ENCStringHashKey
 {
 public:
-   typedef const char * basic_type;
+   typedef const char *basic_type;
 
-   ENCStringHashKey &operator = (const char *key) { hashKey = key; return *this; }
-
-   const char *hashKey;
-   
-   unsigned int hashCode() const
+   static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKey(hashKey);
-   }
-   
-   bool operator == (const ENCStringHashKey &other) const
-   {
-      return !strcasecmp(hashKey, other.hashKey);
-   }
-   
-   bool operator != (const ENCStringHashKey &other) const
-   {
-      return (strcasecmp(hashKey, other.hashKey) != 0);
+      return D_HashTableKey(input);
    }
 
-   operator const char * () const { return hashKey; }
+   static bool Compare(const char *first, const char *second)
+   {
+      return !strcasecmp(first, second);
+   }
 };
 
 #endif

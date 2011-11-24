@@ -54,7 +54,7 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    {
       //  04/13/08: do not display auto-allocated dehnums
       C_Printf("%5d  %5d  %s\n", 
-               mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum.hashKey : -1,
+               mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
                mobjinfo[i]->doomednum,
                mobjinfo[i]->name);
    }
@@ -83,7 +83,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
             FC_HI "DoomEd #: " FC_NORMAL "%d\n\n",
             mobjinfo[num]->name, 
-            mobjinfo[num]->dehnum.hashKey, 
+            mobjinfo[num]->dehnum, 
             mobjinfo[num]->doomednum);
 
    C_Printf(FC_ERROR "State Data:\n"
@@ -211,7 +211,7 @@ CONSOLE_COMMAND(e_dumpitems, 0)
       if(mobjinfo[i]->flags & MF_SPECIAL)
       {
          C_Printf("%5d  %5d  %s\n",
-                  mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum.hashKey : -1,
+                  mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
                   mobjinfo[i]->doomednum,
                   mobjinfo[i]->name);
       }

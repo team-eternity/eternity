@@ -45,7 +45,7 @@ static int     numspritesalloc; // number of sprites allocated
 struct esprite_t
 {
    DLListItem<esprite_t> link;    // hash links
-   ENCStringHashKey       nameptr; // hash key
+   char                 *nameptr; // hash key
    
    int  num;      // sprite number
    char name[5];  // sprite name   

@@ -1860,8 +1860,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       {
          states[i] = &newstates[i - DSP.firststate];
          states[i]->index = i;
-         psnprintf(states[i]->namebuf, 41, "{DS %d}", i);
-         states[i]->name = states[i]->namebuf;
+         psnprintf(states[i]->name, 41, "{DS %d}", i);         
          states[i]->dehnum = -1;
          states[i]->sprite = blankSpriteNum;
          states[i]->nextstate = NullStateNum;

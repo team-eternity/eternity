@@ -114,10 +114,12 @@ cfg_opt_t edf_fdelta_opts[] =
 #define NUMSTATECHAINS 2003
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey> state_namehash(&state_t::name, &state_t::namelinks);
+static EHashTable<state_t, ENCStringHashKey> state_namehash(&state_t::name, 
+                                                            &state_t::namelinks);
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey> state_numhash(&state_t::dehnum, &state_t::numlinks);
+static EHashTable<state_t, EIntHashKey> state_numhash(&state_t::dehnum, 
+                                                      &state_t::numlinks);
 
 //
 // E_StateNumForDEHNum
@@ -427,13 +429,8 @@ void E_CollectStates(cfg_t *cfg)
          // this is a new state
          state_t *st = states[curnewstate++];
 
-         // check name for validity
-         if(strlen(name) >= sizeof(st->namebuf))
-            E_EDFLoggedErr(2, "E_CollectStates: bad frame name '%s'\n", name);
-
          // initialize name
-         strncpy(st->namebuf, name, sizeof(st->namebuf));
-         st->name = st->namebuf;
+         st->name = estrdup(name);
 
          // add to name hash
          state_namehash.addObject(st);

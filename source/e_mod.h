@@ -37,10 +37,10 @@
 //
 struct emod_t
 {
-   DLListItem<emod_t> numlinks;  // for numeric hash
-   DLListItem<emod_t> namelinks; // for name hash
-   ENCStringHashKey   name;      // name key
-   EIntHashKey        num;       // number key
+   DLListItem<emod_t>  numlinks;  // for numeric hash
+   DLListItem<emod_t>  namelinks; // for name hash
+   char               *name;      // name key
+   int                 num;       // number key
 
    char *obituary;
    char *selfobituary;

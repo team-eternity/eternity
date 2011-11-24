@@ -67,7 +67,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 struct manageddir_t
 {
    DLListItem<manageddir_t> links; // links
-   EStringHashKey           name;  // name
+   char                    *name;  // name
 
    WadDirectory  waddir; // directory
    wadlevel_t   *levels; // enumerated levels
@@ -134,10 +134,10 @@ static void W_delManagedDir(manageddir_t *dir)
    w_dirhash.removeObject(dir);
 
    // free directory filename
-   if(dir->name.hashKey)
+   if(dir->name)
    {
-      efree(const_cast<char *>(dir->name.hashKey)); // FIXME: ugh.
-      dir->name.hashKey = NULL;
+      efree(dir->name); 
+      dir->name = NULL;
    }
 
    // free list of levels

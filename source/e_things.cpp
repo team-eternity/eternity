@@ -493,7 +493,7 @@ cfg_opt_t edf_tdelta_opts[] =
 #define NUMTHINGCHAINS 307
 
 // hash by name
-static EHashTable<mobjinfo_t, ENCStringHashKey> thing_namehash(&mobjinfo_t::namekey, 
+static EHashTable<mobjinfo_t, ENCStringHashKey> thing_namehash(&mobjinfo_t::name, 
                                                                &mobjinfo_t::namelinks);
 
 // hash by DeHackEd number
@@ -804,13 +804,8 @@ void E_CollectThings(cfg_t *cfg)
          // this is a new mobjinfo
          mobjinfo_t *mi = mobjinfo[curnewthing++];
 
-         // check name for validity
-         if(strlen(name) >= sizeof(mi->name))
-            E_EDFLoggedErr(2, "E_CollectStates: bad thing name '%s'\n", name);
-
          // initialize name
-         strncpy(mi->name, name, sizeof(mi->name));
-         mi->namekey = mi->name;
+         mi->name = estrdup(name);
 
          // add to name hash
          thing_namehash.addObject(mi);
@@ -1545,11 +1540,10 @@ static void E_ResetThingPStack(void)
 //
 static void E_CopyThing(int num, int pnum)
 {
-   char name[129];
    mobjinfo_t *this_mi;
    DLListItem<mobjinfo_t> namelinks, numlinks;
-   ENCStringHashKey namekey;
-   EIntHashKey numkey;
+   int         dehnum;
+   char       *name;
    MetaTable  *meta;
    int         index;
    int         generation;
@@ -1559,8 +1553,8 @@ static void E_CopyThing(int num, int pnum)
    // must save the following fields in the destination thing
    namelinks  = this_mi->namelinks;
    numlinks   = this_mi->numlinks;
-   namekey    = this_mi->namekey;
-   numkey     = this_mi->dehnum;
+   dehnum     = this_mi->dehnum;
+   name       = this_mi->name;
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
@@ -1586,8 +1580,8 @@ static void E_CopyThing(int num, int pnum)
    // must restore name and dehacked num data
    this_mi->namelinks  = namelinks;
    this_mi->numlinks   = numlinks;
-   this_mi->namekey    = namekey;
-   this_mi->dehnum     = numkey;
+   this_mi->name       = name;
+   this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
    memcpy(this_mi->name, name, sizeof(this_mi->name));

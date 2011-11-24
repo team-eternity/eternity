@@ -39,23 +39,22 @@
 // links to traverse through.
 //
 // Provide the template the primary type of object to be stored in T, and the
-// type of HashKey object being used in K (see e_hashkeys.h for some basic key 
-// object types that implement the required interface).
+// type of HashKey class being used in K (see e_hashkeys.h for some basic key 
+// class types that implement the required interface).
 //
-template<typename T, typename K> class EHashTable
+template<typename item_type, typename key_type> class EHashTable
 {
 public:
-   typedef T              item_type;    // Type of item this hashtable can hold
-   typedef K              key_type;     // Type of key marshalling object
-   typedef DLListItem<T>  link_type;    // Type of linked list item
-   typedef key_type  T::* keyptr_type;  // Type of pointer-to-member for key
-   typedef link_type T::* linkptr_type; // Type of pointer-to-member for links
+   typedef DLListItem<item_type> link_type;    // Type of linked list item
    
    // Type of key's basic data member
    typedef typename key_type::basic_type basic_key_type; 
+   
+   typedef basic_key_type const item_type::* keyptr_type;  // Type of pointer-to-member for key
+   typedef link_type      item_type::* linkptr_type; // Type of pointer-to-member for links
 
 protected:
-   keyptr_type    hashKey;     // pointer-to-member for hash key object
+   keyptr_type    hashKey;     // pointer-to-member for hash key field
    linkptr_type   linkPtr;     // pointer-to-member for linked list links
    link_type    **chains;      // hash chains
    bool           isInit;      // true if hash is initialized
@@ -133,7 +132,7 @@ public:
       if(isInit)
       {
          link_type &link = object.*linkPtr;
-         link.dllData    = (object.*hashKey).hashCode();
+         link.dllData    = key_type::HashCode(object.*hashKey);
          unsigned int hc = link.dllData % numChains;
 
          link.insert(&object, &chains[hc]);
@@ -170,17 +169,18 @@ public:
    //
    // objectForKey(key_type&)
    //
-   // Tries to find an object for the given key in the hash table. This version
-   // takes a reference to an object of the key type passed into the template.
+   // Tries to find an object for the given key in the hash table. 
+   // Takes an argument of the key object type's basic_type typedef. 
+   // ie., an int, const char *, etc.
    //
-   item_type *objectForKey(const key_type &key) const
+   item_type *objectForKey(basic_key_type key) const
    {
       if(isInit)
       {
-         unsigned int hc  = key.hashCode() % numChains;
+         unsigned int hc  = key_type::HashCode(key) % numChains;
          link_type *chain = chains[hc];
 
-         while(chain && chain->dllObject->*hashKey != key)
+         while(chain && !key_type::Compare(chain->dllObject->*hashKey, key))
             chain = chain->dllNext;
 
          return chain ? chain->dllObject : NULL;
@@ -190,52 +190,23 @@ public:
    }
 
    //
-   // objectForKey(basic_key_type)
-   //
-   // As above, but taking an argument of the key object type's basic_type 
-   // typedef. ie., an int, const char *, etc. This is useful for passing in
-   // literals without having to manually construct a temporary object at
-   // every point of call.
-   //
-   item_type *objectForKey(basic_key_type key) const
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return objectForKey(tempKey);
-   }
-
-   //
    // chainForKey(key_type&)
    //
    // Returns the first object on the hash chain used by the given key, or NULL
    // if that hash chain is empty. The object returned does not necessarily 
    // match the given key.
    //
-   item_type *chainForKey(const key_type &key) const
+   item_type *chainForKey(basic_key_type key) const
    {
       if(isInit)
       {
-         unsigned int hc  = key.hashCode() % numChains;
+         unsigned int hc  = key_type::HashCode(key) % numChains;
          link_type *chain = chains[hc];
 
          return chain ? chain->dllObject : NULL;
       }
       else
          return NULL;
-   }
-
-   //
-   // chainForKey(basic_key_type)
-   //
-   // As above but allowing literal key input, as with objectForKey.
-   //
-   item_type *chainForKey(basic_key_type key) const
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return chainForKey(tempKey);
    }
 
    //
@@ -261,9 +232,9 @@ public:
    //
    // Retrieves a key from an object in the hash table.
    //
-   key_type &keyForObject(T *object) const
+   basic_key_type keyForObject(item_type *object) const
    {
-      return isInit ? object->*hashKey : NULL;
+      return object->*hashKey;
    }
 
    //
@@ -273,7 +244,7 @@ public:
    // same key. If passed NULL in object, it will start a new search.
    // Returns NULL when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, const key_type &key)
+   item_type *keyIterator(item_type *object, basic_key_type key)
    {
       item_type *ret;
 
@@ -290,21 +261,13 @@ public:
          link = link->dllNext;
 
          // walk down the chain
-         while(link && link->dllObject->*hashKey != key)
+         while(link && !key_type::Compare(link->dllObject->*hashKey, key))
             link = link->dllNext;
 
          ret = link ? link->dllObject : NULL;
       }
 
       return ret;
-   }
-
-   item_type *keyIterator(item_type *object, basic_key_type key)
-   {
-      key_type tempKey;
-      tempKey = key;
-
-      return keyIterator(object, tempKey);
    }
 
    //
