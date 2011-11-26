@@ -39,6 +39,7 @@
 #include "z_zone.h"
 
 #include "hal/i_picker.h"
+#include "hal/i_platform.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -1469,7 +1470,7 @@ static void D_AddDoomWadPath(const char *path)
 }
 
 // haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
-#ifdef _WIN32
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #define DOOMWADPATHSEP ';'
 #else
 #define DOOMWADPATHSEP ':'
@@ -3482,7 +3483,7 @@ static void D_DoomInit(void)
    M_LoadDefaults();              // load before initing other systems
 
    // haleyjd 01/11/09: process affinity mask stuff
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    {
       extern void I_SetAffinityMask(void);
 

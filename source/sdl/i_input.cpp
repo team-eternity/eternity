@@ -27,6 +27,8 @@
 
 #include "SDL.h"
 
+#include "../hal/i_platform.h"
+
 #include "../c_io.h"
 #include "../c_runcmd.h"
 #include "../d_event.h"
@@ -442,7 +444,7 @@ static void I_GetEvent(void)
 {
    static int    buttons = 0;
    static Uint32 mwheeluptic = 0, mwheeldowntic = 0;
-#ifdef _WIN32
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
    static Uint32 capslocktic = 0;
 #endif
    Uint32        calltic;
@@ -470,7 +472,7 @@ static void I_GetEvent(void)
       case SDL_KEYDOWN:
          d_event.type = ev_keydown;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
-#ifdef _WIN32
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          if(d_event.data1 == KEYD_CAPSLOCK)
             capslocktic = gametic;
 #endif
@@ -486,7 +488,7 @@ static void I_GetEvent(void)
       case SDL_KEYUP:
          d_event.type = ev_keyup;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
-#ifdef _WIN32
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
          if(d_event.data1 == KEYD_CAPSLOCK)
          {
             d_event.type = ev_keydown;
@@ -643,7 +645,7 @@ static void I_GetEvent(void)
       mwheeldowntic = 0;
    }
 
-#ifdef _WIN32
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
    if(capslocktic && capslocktic + 1 < calltic)
    {
       d_event.type  = ev_keyup;
