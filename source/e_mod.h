@@ -28,7 +28,6 @@
 #define E_MOD_H__
 
 #include "m_dllist.h"
-#include "e_hashkeys.h"
 
 //
 // emod structure

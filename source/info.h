@@ -30,7 +30,6 @@
 #define INFO_H__
 
 #include "m_dllist.h"
-#include "e_hashkeys.h"
 
 class MetaTable;
 

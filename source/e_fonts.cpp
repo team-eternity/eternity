@@ -31,6 +31,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "c_io.h"
+#include "d_dehtbl.h"
 #include "d_io.h"
 #include "f_finale.h"
 #include "hu_over.h"

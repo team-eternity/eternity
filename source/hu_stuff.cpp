@@ -39,6 +39,7 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"

@@ -28,8 +28,7 @@
 #ifndef R_DATA_H__
 #define R_DATA_H__
 
-// Required for: DLListItem, ENCStrHashKey
-#include "e_hashkeys.h"
+// Required for: DLListItem
 #include "m_dllist.h"
 
 // haleyjd 08/30/02: externalized these structures

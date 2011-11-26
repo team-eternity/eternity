@@ -28,7 +28,6 @@
 #define E_INVENTORY_H__
 
 #include "m_dllist.h"
-#include "e_hashkeys.h"
 
 // Inventory flags
 enum
