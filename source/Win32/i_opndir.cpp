@@ -33,9 +33,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef _MSC_VER
-#error i_opndir.c is for Microsoft Visual C++ only
-#endif
+// For Visual C++ only.
+#ifdef _MSC_VER
 
 #include <stdlib.h>
 #include <errno.h>
@@ -337,6 +336,8 @@ void seekdir(DIR *dirp, long lPos)
          ; /* do-nothing loop */
    }
 }
+
+#endif
 
 // EOF
 
