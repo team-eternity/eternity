@@ -26,7 +26,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef _WIN32
+#include "../hal/i_platform.h"
+
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
 #error i_w32main.cpp is for Windows only
 #endif
 
@@ -39,7 +41,7 @@ extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
-#ifndef _DEBUG
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 int main(int argc, char **argv)
 {
    __try

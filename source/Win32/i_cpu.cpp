@@ -28,7 +28,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef _WIN32
+#include "../hal/i_platform.h"
+
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
 #error This version of i_cpu.c is for Win32 only.
 #endif
 

@@ -30,9 +30,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef _WIN32
-#error i_exception.c is for Win32 only
-#endif
+#ifdef _MSC_VER
 
 #include <windows.h>
 #include <tchar.h>
@@ -692,7 +690,7 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
       return EXCEPTION_CONTINUE_SEARCH;
 }
 
+#endif
+
 // EOF
-
-
 

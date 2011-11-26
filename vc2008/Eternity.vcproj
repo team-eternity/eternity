@@ -5056,6 +5056,10 @@
 					Name="HAL Source"
 					>
 					<File
+						RelativePath="..\source\hal\i_platform.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\hal\i_video.cpp"
 						>
 					</File>
@@ -5065,6 +5069,10 @@
 					>
 					<File
 						RelativePath="..\source\hal\i_picker.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\hal\i_platform.h"
 						>
 					</File>
 					<File
