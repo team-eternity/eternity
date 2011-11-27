@@ -171,7 +171,7 @@ void SDLVideoDriver::InitDiskFlash()
 
    // draw the disk graphic into the VBuffer
    V_DrawPatch(0, -1, &diskvb,
-      PatchLoader::CacheName(wGlobalDir, cdrom_mode ? "STCDROM" : "STDISK", PU_CACHE));
+      PatchLoader::CacheName(wGlobalDir, /*cdrom_mode ? "STCDROM" :*/ "STDISK", PU_CACHE));
 
    // Done with VBuffer object
    V_FreeVBuffer(&diskvb);
