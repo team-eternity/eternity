@@ -1071,6 +1071,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\e_inventory.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_lib.cpp"
 						>
 						<FileConfiguration
@@ -1276,6 +1280,10 @@
 					</File>
 					<File
 						RelativePath="..\source\e_hash.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\e_inventory.h"
 						>
 					</File>
 					<File
@@ -1877,6 +1885,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_strcasestr.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_syscfg.cpp"
 						>
 						<FileConfiguration
@@ -2000,6 +2012,10 @@
 					</File>
 					<File
 						RelativePath="..\source\m_shots.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_strcasestr.h"
 						>
 					</File>
 					<File
@@ -2704,6 +2720,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\source\p_sector.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\source\p_setup.cpp"
@@ -4196,6 +4216,14 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\v_patchfmt.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_png.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\v_video.cpp"
 						>
 						<FileConfiguration
@@ -4239,6 +4267,14 @@
 					</File>
 					<File
 						RelativePath="..\source\v_patch.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_patchfmt.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\v_png.h"
 						>
 					</File>
 					<File
@@ -5028,10 +5064,22 @@
 				<Filter
 					Name="HAL Headers"
 					>
+					<File
+						RelativePath="..\source\hal\i_picker.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\hal\i_platform.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="HAL Source"
 					>
+					<File
+						RelativePath="..\source\hal\i_platform.cpp"
+						>
+					</File>
 					<File
 						RelativePath="..\source\hal\i_video.cpp"
 						>
