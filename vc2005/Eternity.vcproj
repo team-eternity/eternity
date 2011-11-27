@@ -45,7 +45,7 @@
 				AdditionalOptions=""
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32"
+				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include,..\source\win32;..\libpng"
 				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;ZONE_NATIVE;HAVE_STDINT_H;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"

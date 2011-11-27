@@ -2,8 +2,17 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual C++ Express 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcproj", "{4FA700E5-E09A-4387-AE0F-4AFAA19F384A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0} = {6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}
+		{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386} = {DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}
+		{D940EAD0-F921-48F1-86F9-F5348E9F776B} = {D940EAD0-F921-48F1-86F9-F5348E9F776B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snes_spc", "snes_spc.vcproj", "{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcproj", "{D940EAD0-F921-48F1-86F9-F5348E9F776B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng.vcproj", "{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +28,14 @@ Global
 		{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}.Debug|Win32.Build.0 = Debug|Win32
 		{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}.Release|Win32.ActiveCfg = Release|Win32
 		{DCA5BFC2-F8FD-4C2F-AAFC-B2F4C8A73386}.Release|Win32.Build.0 = Release|Win32
+		{D940EAD0-F921-48F1-86F9-F5348E9F776B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D940EAD0-F921-48F1-86F9-F5348E9F776B}.Debug|Win32.Build.0 = Debug|Win32
+		{D940EAD0-F921-48F1-86F9-F5348E9F776B}.Release|Win32.ActiveCfg = Release|Win32
+		{D940EAD0-F921-48F1-86F9-F5348E9F776B}.Release|Win32.Build.0 = Release|Win32
+		{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}.Debug|Win32.Build.0 = Debug|Win32
+		{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}.Release|Win32.ActiveCfg = Release|Win32
+		{6EB84FB1-A8A9-4E04-89BF-5C13EBE9ABF0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
