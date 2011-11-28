@@ -117,7 +117,8 @@
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -144,10 +145,14 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;SNES_SPC_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
+				FloatingPointModel="2"
 				PrecompiledHeaderFile=".\Release/snes_spc.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
@@ -174,6 +179,7 @@
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="..\snes_spc\snes_spc.def"
 				ProgramDatabaseFile=".\Release/snes_spc.pdb"
+				LinkTimeCodeGeneration="1"
 				ImportLibrary=".\Release/snes_spc.lib"
 				TargetMachine="1"
 			/>
