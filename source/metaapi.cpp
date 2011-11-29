@@ -392,13 +392,10 @@ void MetaString::setValue(const char *s, char **ret)
 class metaTablePimpl : public ZoneObject
 {
 public:
-   EHashTable<MetaObject, ENCStringHashKey> keyhash;
-   EHashTable<MetaObject, EStringHashKey>   typehash;
+   EHashTable<MetaObject, ENCStringHashKey, &MetaObject::key, &MetaObject::links>    keyhash;
+   EHashTable<MetaObject, EStringHashKey, &MetaObject::type, &MetaObject::typelinks> typehash;
 
-   metaTablePimpl() 
-      : ZoneObject(),
-        keyhash (&MetaObject::key,  &MetaObject::links),
-        typehash(&MetaObject::type, &MetaObject::typelinks)
+   metaTablePimpl() : ZoneObject(), keyhash(), typehash()
    {
       // the key hash is growable.
       // keys are case-insensitive.
