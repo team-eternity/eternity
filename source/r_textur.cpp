@@ -1124,8 +1124,8 @@ static void R_InitTranslationLUT(void)
 // Texture Hashing
 //
 
-static EHashTable<texture_t, ENCStringHashKey> walltable(&texture_t::name, &texture_t::link);
-static EHashTable<texture_t, ENCStringHashKey> flattable(&texture_t::name, &texture_t::link);
+static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> walltable;
+static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> flattable;
 
 //
 // R_InitTextureHash

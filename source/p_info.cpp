@@ -325,8 +325,8 @@ static int numPrototypes;
 static int numPrototypesAlloc;
 
 // hash table for prototype objects
-static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_t::mapname,
-                                                                &LevelInfoProto_t::links); 
+static EHashTable<LevelInfoProto_t, ENCStringHashKey, 
+                  &LevelInfoProto_t::mapname, &LevelInfoProto_t::links> protoHash; 
 
 //
 // P_addLevelInfoPrototype
