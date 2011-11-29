@@ -131,12 +131,12 @@ int NumInventoryDefs;
 #define NUMINVCHAINS 307
 
 // hash by name
-static EHashTable<inventory_t, ENCStringHashKey> inv_namehash(&inventory_t::name, 
-                                                              &inventory_t::namelinks);
+static EHashTable<inventory_t, ENCStringHashKey,
+                  &inventory_t::name, &inventory_t::namelinks> inv_namehash;
 
 // hash by ID number
-static EHashTable<inventory_t, EIntHashKey> inv_numhash(&inventory_t::numkey,
-                                                        &inventory_t::numlinks);
+static EHashTable<inventory_t, EIntHashKey,
+                  &inventory_t::numkey, &inventory_t::numlinks> inv_numhash;
 
 
 //

@@ -493,12 +493,12 @@ cfg_opt_t edf_tdelta_opts[] =
 #define NUMTHINGCHAINS 307
 
 // hash by name
-static EHashTable<mobjinfo_t, ENCStringHashKey> thing_namehash(&mobjinfo_t::name, 
-                                                               &mobjinfo_t::namelinks);
+static EHashTable<mobjinfo_t, ENCStringHashKey, 
+                  &mobjinfo_t::name, &mobjinfo_t::namelinks> thing_namehash;
 
 // hash by DeHackEd number
-static EHashTable<mobjinfo_t, EIntHashKey> thing_dehhash(&mobjinfo_t::dehnum,
-                                                         &mobjinfo_t::numlinks);
+static EHashTable<mobjinfo_t, EIntHashKey,
+                  &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash;
 
 //
 // E_ThingNumForDEHNum
