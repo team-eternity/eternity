@@ -3173,9 +3173,6 @@ static void D_StartupMessage(void)
         "infringement of US and international copyright laws.\n");
 }
 
-// haleyjd 11/12/05: in cdrom mode?
-bool cdrom_mode = false;
-
 //
 // D_DoomInit
 //
@@ -3194,12 +3191,6 @@ static void D_DoomInit(void)
    D_StartupMessage();
 
    FindResponseFile(); // Append response file arguments to command-line
-
-   // haleyjd 11/12/05: moved -cdrom check up and made status global
-#ifdef EE_CDROM_SUPPORT
-   if(M_CheckParm("-cdrom"))
-      cdrom_mode = true;
-#endif
 
    // haleyjd 08/18/07: set base path
    D_SetBasePath();
@@ -3314,30 +3305,6 @@ static void D_DoomInit(void)
       printf(D_DEVSTR);
       v_ticker = true;  // turn on the fps ticker
    }
-
-#ifdef EE_CDROM_SUPPORT
-   // sf: ok then, this is broken under linux.
-   // haleyjd: FIXME
-   if(cdrom_mode)
-   {
-      size_t len;
-
-#ifndef DJGPP
-      mkdir("c:/doomdata");
-#else
-      mkdir("c:/doomdata", 0);
-#endif
-      // killough 10/98:
-      if(basedefault)
-         efree(basedefault);
-      
-      len = strlen(D_DoomExeName()) + 18;
-
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "c:/doomdata/%s.cfg", D_DoomExeName());
-   }
-#endif
 
    // haleyjd 03/10/03: Load GFS Wads
    // 08/08/03: moved first, so that command line overrides
@@ -3569,13 +3536,6 @@ static void D_DoomInit(void)
    }
 
    // killough 2/22/98: copyright / "modified game" / SPA banners removed
-
-   // haleyjd 11/13/05: moved down CD-ROM mode notice and changed to
-   // use BEX string like it really always should have. Because it was
-   // previously before the point where DEH/BEX was loaded, it couldn't
-   // be done.
-   if(cdrom_mode)
-      puts(DEH_String("D_CDROM"));
 
    // Ty 04/08/98 - Add 5 lines of misc. data, only if nonblank
    // The expectation is that these will be set in a .bex file
