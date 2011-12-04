@@ -46,21 +46,8 @@ typedef int32_t fixed_t;
 // killough 9/05/98: better code seems to be gotten from using inlined C
 
 // haleyjd 04/24/02: renamed to D_abs, added Win32 version
-
 #if defined(__GNUC__)
-  #define D_abs(x) ({fixed_t _t = (x), _s = _t >> (8*sizeof _t-1); (_t^_s)-_s;})
-#elif defined(_MSC_VER) && defined(_M_IX86)
-#pragma warning(disable: 4035) 
-inline static int D_abs(int x)
-{
-   __asm
-   {
-      mov eax,x
-      cdq
-      xor eax,edx
-      sub eax,edx
-   }
-}
+#define D_abs(x) ({fixed_t _t = (x), _s = _t >> (8*sizeof _t-1); (_t^_s)-_s;})
 #else
 inline static int D_abs(int x)
 {
