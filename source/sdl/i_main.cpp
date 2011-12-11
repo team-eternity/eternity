@@ -30,11 +30,12 @@
 
 #include "../z_zone.h"
 #include "../doomdef.h"
+#include "../hal/i_platform.h"
 #include "../m_argv.h"
 #include "../d_main.h"
 #include "../i_system.h"
 
-#if defined(_WIN32) && !defined(_WIN32_WCE)
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_WIN32_WCE)
 
 // haleyjd: we do not need SDL_main under Win32.
 #undef main
@@ -43,7 +44,7 @@
 // in release mode, rename this function to common_main and use the main 
 // defined in i_w32main.c, which contains an exception handler to replace
 // the useless SDL parachute.
-#ifndef _DEBUG
+#if !defined(_DEBUG)
 #define main common_main
 #endif
 
@@ -57,7 +58,7 @@ void I_Quit(void);
 
 #define BASE_INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
-#if defined(_WIN32) || defined(_DEBUG)
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) || defined(_DEBUG)
 #define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
 #else
 #define INIT_FLAGS BASE_INIT_FLAGS
@@ -77,7 +78,7 @@ int main(int argc, char **argv)
    putenv("SDL_VIDEO_CENTERED=1");
    
    // SoM: From CHOCODOOM Thank you fraggle!!
-#ifdef _WIN32
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
    // Allow -gdi as a shortcut for using the windib driver.
    
    //!

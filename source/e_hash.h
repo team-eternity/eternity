@@ -42,21 +42,23 @@
 // type of HashKey object being used in K (see e_hashkeys.h for some basic key 
 // object types that implement the required interface).
 //
-template<typename T, typename K> class EHashTable
+// Pass the pointer-to-member from the contained type for the key and the
+// link (must be a DLListItem<T>). The hash table uses these pointer-to-
+// members on all the objects in the hash so that it can manipulate the
+// objects without knowing anything else about their type or layout.
+//
+template<typename T, typename K, K T::* hashKey, DLListItem<T> T::* linkPtr> 
+class EHashTable
 {
 public:
    typedef T              item_type;    // Type of item this hashtable can hold
    typedef K              key_type;     // Type of key marshalling object
    typedef DLListItem<T>  link_type;    // Type of linked list item
-   typedef key_type  T::* keyptr_type;  // Type of pointer-to-member for key
-   typedef link_type T::* linkptr_type; // Type of pointer-to-member for links
    
    // Type of key's basic data member
    typedef typename key_type::basic_type basic_key_type; 
 
 protected:
-   keyptr_type    hashKey;     // pointer-to-member for hash key object
-   linkptr_type   linkPtr;     // pointer-to-member for linked list links
    link_type    **chains;      // hash chains
    bool           isInit;      // true if hash is initialized
    unsigned int   numChains;   // number of chains
@@ -70,14 +72,9 @@ public:
    //
    // Constructor
    //
-   // Pass the pointer-to-member from the contained type for the key and the
-   // link (must be a DLListItem<T>). The hash table uses these pointer-to-
-   // members on all the objects in the hash so that it can manipulate the
-   // objects without knowing anything else about their type or layout.
-   //
-   EHashTable(keyptr_type pKey, linkptr_type pLink) 
-      : hashKey(pKey), linkPtr(pLink), chains(NULL), isInit(false), 
-        numChains(0), numItems(0), loadFactor(0.0f), iteratorPos(-1)
+   EHashTable() 
+      : chains(NULL), isInit(false), numChains(0), numItems(0), 
+        loadFactor(0.0f), iteratorPos(-1)
    {
    }
 

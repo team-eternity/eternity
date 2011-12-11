@@ -32,6 +32,7 @@
 #include "d_gi.h"
 #include "gl/gl_vars.h"
 #include "hal/i_picker.h"
+#include "hal/i_platform.h"
 #include "i_sound.h"
 #include "i_video.h"
 #include "m_misc.h"
@@ -57,7 +58,7 @@ extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
 extern unsigned int process_affinity_mask;
 #endif
 
@@ -243,7 +244,7 @@ static default_t sysdefaults[] =
 
 #endif
 
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    DEFAULT_INT("process_affinity_mask", &process_affinity_mask, NULL, 1, 0, UL, default_t::wad_no, 
                "process affinity mask - warning: expert setting only!"),
 #endif

@@ -114,10 +114,10 @@ cfg_opt_t edf_fdelta_opts[] =
 #define NUMSTATECHAINS 2003
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey> state_namehash(&state_t::name, &state_t::namelinks);
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> state_namehash;
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey> state_numhash(&state_t::dehnum, &state_t::numlinks);
+static EHashTable<state_t, EIntHashKey, &state_t::dehnum, &state_t::numlinks> state_numhash;
 
 //
 // E_StateNumForDEHNum

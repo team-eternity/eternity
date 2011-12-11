@@ -52,7 +52,7 @@ struct esprite_t
 };
 
 // sprite hash table
-static EHashTable<esprite_t, ENCStringHashKey> spritehash(&esprite_t::nameptr, &esprite_t::link);
+static EHashTable<esprite_t, ENCStringHashKey, &esprite_t::nameptr, &esprite_t::link> spritehash;
 
 //
 // E_SpriteNumForName

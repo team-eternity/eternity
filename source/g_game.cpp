@@ -1711,14 +1711,8 @@ void G_SaveGameName(char *name, size_t len, int slot)
    // Ty 05/04/98 - use savegamename variable (see d_deh.c)
    // killough 12/98: add .7 to truncate savegamename
 
-#ifdef EE_CDROM_SUPPORT
-   if(cdrom_mode)
-      psnprintf(name, len, "c:/doomdata/%.7s%d.dsg", 
-                savegamename, slot);
-   else
-#endif
-      psnprintf(name, len, "%s/%.7s%d.dsg", 
-                basesavegame, savegamename, slot);
+   psnprintf(name, len, "%s/%.7s%d.dsg", 
+             basesavegame, savegamename, slot);
 }
 
 //

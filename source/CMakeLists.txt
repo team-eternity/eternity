@@ -48,7 +48,9 @@ IF (CMAKE_SIZEOF_VOID_P MATCHES "8")
 ENDIF (CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 IF (WIN32)
-        INCLUDE_DIRECTORIES (win32/)
+        IF (MSVC)
+                INCLUDE_DIRECTORIES (win32/)
+        ENDIF (MSVC)
         FILE (GLOB ARCH_SPECIFIC_SOURCES win32/*.cpp)
 ENDIF (WIN32)
 
@@ -79,7 +81,7 @@ SET (SDL_SOURCES sdl/i_input.cpp sdl/i_main.cpp sdl/i_net.cpp sdl/i_pcsound.cpp
 sdl/i_picker.cpp sdl/i_sdlgl2d.cpp sdl/i_sdlmusic.cpp sdl/i_sdlsound.cpp sdl/i_sound.cpp
 sdl/i_system.cpp sdl/i_sdlvideo.cpp sdl/mmus2mid.cpp sdl/ser_main.cpp)
 IF (NOT WIN32)
-        SET ($SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
+        SET (SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
 ENDIF (NOT WIN32)
 
 ################################################################################
