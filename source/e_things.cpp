@@ -645,34 +645,6 @@ bool E_AutoAllocThingDEHNum(int thingnum)
 // Dynamic Reallocation - haleyjd 11/06/11
 
 //
-// E_CountUniqueThings
-//
-// haleyjd 11/06/11: counts the number of thingtypes in a cfg which do not 
-// overwrite any pre-existing thingtypes by virtue of having the same name.
-//
-static unsigned int E_CountUniqueThings(cfg_t *cfg, unsigned int numthingtypes)
-{
-   unsigned int i;
-   unsigned int count = 0;
-
-   // if the thingtypes name hash is empty, short-circuit for efficiency
-   if(!thing_namehash.getNumItems())
-      return numthingtypes;
-
-   for(i = 0; i < numthingtypes; i++)
-   {
-      cfg_t *thingcfg  = cfg_getnsec(cfg, EDF_SEC_THING, i);
-      const char *name = cfg_title(thingcfg);
-
-      // if not in the name table, count it
-      if(E_ThingNumForName(name) < 0)
-         ++count;
-   }
-
-   return count;
-}
-
-//
 // E_ReallocThings
 //
 // haleyjd 11/06/11: Function to reallocate the thingtypes array safely.
@@ -721,7 +693,6 @@ void E_CollectThings(cfg_t *cfg)
 {
    unsigned int i;
    unsigned int numthingtypes;     // number of thingtypes defined by the cfg
-   unsigned int numnew;            // number of thingtypes that are new
    unsigned int firstnewthing = 0; // index of first new thingtype
    unsigned int curnewthing = 0;   // index of current new thingtype being used
    mobjinfo_t  *newMobjInfo = NULL;
@@ -737,21 +708,18 @@ void E_CollectThings(cfg_t *cfg)
    // get number of thingtypes defined by the cfg
    numthingtypes = cfg_size(cfg, EDF_SEC_THING);
 
-   // get number of new thingtypes in the cfg
-   numnew = E_CountUniqueThings(cfg, numthingtypes);
-
    // echo counts
-   E_EDFLogPrintf("\t\t%u thingtypes defined (%u new)\n", numthingtypes, numnew);
+   E_EDFLogPrintf("\t\t%u thingtypes defined\n", numthingtypes);
 
-   if(numnew)
+   if(numthingtypes)
    {
       // allocate mobjinfo_t structures for the new thingtypes
-      newMobjInfo = estructalloc(mobjinfo_t, numnew);
+      newMobjInfo = estructalloc(mobjinfo_t, numthingtypes);
 
       // add space to the mobjinfo array
       curnewthing = firstnewthing = NUMMOBJTYPES;
 
-      E_ReallocThings((int)numnew);
+      E_ReallocThings((int)numthingtypes);
 
       // set pointers in mobjinfo[] to the proper structures;
       // also set self-referential index member, and allocate a
@@ -772,52 +740,27 @@ void E_CollectThings(cfg_t *cfg)
    {
       cfg_t *thingcfg = cfg_getnsec(cfg, EDF_SEC_THING, i);
       const char *name = cfg_title(thingcfg);
-      int thingnum;
 
-      if((thingnum = E_ThingNumForName(name)) >= 0)
-      {
-         int dehnum;
+      // This is a new mobjinfo, whether or not one already exists by this name
+      // in the hash table. For subsequent addition of EDF thingtypes at runtime,
+      // the hash table semantics of "find newest first" take care of overriding,
+      // while not breaking objects that depend on the original definition of
+      // the thingtype for inheritance purposes.
+      mobjinfo_t *mi = mobjinfo[curnewthing++];
 
-         // an mobjinfo already exists by this name
-         mobjinfo_t *mi = mobjinfo[thingnum];
+      // initialize name
+      mi->name = estrdup(name);
 
-         // get dehackednum of libConfuse definition
-         dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM);
+      // add to name hash
+      thing_namehash.addObject(mi);
 
-         // if not equal to current mobjinfo dehnum...
-         if(dehnum != mi->dehnum)
-         {
-            // if thing has a valid dehnum, remove it from the deh hash
-            if(mi->dehnum >= 0)
-               thing_dehhash.removeObject(mi);
+      // process dehackednum and add thing to dehacked hash table,
+      // if appropriate
+      if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
+         thing_dehhash.addObject(mobjinfo[i]);
 
-            // assign the new dehnum
-            mi->dehnum = dehnum;
-
-            // if valid, add it back to the hash with the new id #
-            if(mi->dehnum >= 0)
-               thing_dehhash.addObject(mi);
-         }
-      }
-      else
-      {
-         // this is a new mobjinfo
-         mobjinfo_t *mi = mobjinfo[curnewthing++];
-
-         // initialize name
-         mi->name = estrdup(name);
-
-         // add to name hash
-         thing_namehash.addObject(mi);
-
-         // process dehackednum and add thing to dehacked hash table,
-         // if appropriate
-         if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
-            thing_dehhash.addObject(mobjinfo[i]);
-
-         // set generation
-         mi->generation = edf_thing_generation;
-      }
+      // set generation
+      mi->generation = edf_thing_generation;
    }
 
    // first-time-only events
