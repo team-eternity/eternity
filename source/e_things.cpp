@@ -756,8 +756,8 @@ void E_CollectThings(cfg_t *cfg)
 
       // process dehackednum and add thing to dehacked hash table,
       // if appropriate
-      if((mobjinfo[i]->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
-         thing_dehhash.addObject(mobjinfo[i]);
+      if((mi->dehnum = cfg_getint(thingcfg, ITEM_TNG_DEHNUM)) >= 0)
+         thing_dehhash.addObject(mi);
 
       // set generation
       mi->generation = edf_thing_generation;

@@ -121,7 +121,8 @@ static int  *inv_pstack  = NULL;
 static int   inv_pindex  = 0;
 
 // global vars
-int NumInventoryDefs;
+inventory_t **inventoryDefs;
+int numInventoryDefs;
 
 //=============================================================================
 //
@@ -192,6 +193,146 @@ inventory_t *E_GetInventoryForName(const char *name)
 
 //=============================================================================
 //
+// Dynamic Allocation
+//
+
+//
+// E_ReallocInventory
+//
+// haleyjd 12/12/11: Function to reallocate the inventory array safely.
+//
+static void E_ReallocInventory(int numnewinventory)
+{
+   static int numinvalloc = 0;
+
+   // only realloc when needed
+   if(!numinvalloc || (numInventoryDefs < numinvalloc + numnewinventory))
+   {
+      int i;
+
+      // First time, just allocate the requested number of inventory defs.
+      // Afterward:
+      // * If the number of inventory defs requested is small, add 2 times as 
+      //   many requested, plus a small constant amount.
+      // * If the number is large, just add that number.
+
+      if(!numinvalloc)
+         numinvalloc = numnewinventory;
+      else if(numnewinventory <= 50)
+         numinvalloc += numnewinventory * 2 + 32;
+      else
+         numinvalloc += numnewinventory;
+
+      // reallocate inventoryDefs[]
+      inventoryDefs = erealloc(inventory_t **, inventoryDefs, numinvalloc * sizeof(inventory_t *));
+
+      // set the new mobjinfo pointers to NULL
+      for(i = numInventoryDefs; i < numinvalloc; i++)
+         inventoryDefs[i] = NULL;
+   }
+
+   // increment numInventoryDefs
+   numInventoryDefs += numnewinventory;
+}
+
+//
+// E_CollectInventory
+//
+// Pre-creates and hashes by name the inventory definitions, for purpose 
+// of mutual and forward references.
+//
+void E_CollectInventory(cfg_t *cfg)
+{
+   unsigned int i;
+   unsigned int numinventory;    // number of inventory defs defined by the cfg
+   unsigned int firstnewinv = 0; // index of first new thingtype
+   unsigned int curnewinv   = 0; // index of current new thingtype being used
+   inventory_t *newInvDefs  = NULL;
+   static bool firsttime = true;
+
+   // initialize hash tables if needed
+   if(!inv_namehash.isInitialized())
+   {
+      inv_namehash.Initialize(NUMINVCHAINS);
+      inv_numhash.Initialize(NUMINVCHAINS);
+   }
+
+   // get number of inventory definitions defined by the cfg
+   numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
+
+   // echo counts
+   E_EDFLogPrintf("\t\t%u inventory items defined\n", numinventory);
+
+   if(numinventory)
+   {
+      // allocate inventory structures for the new thingtypes
+      newInvDefs = estructalloc(inventory_t, numinventory);
+
+      // add space to the mobjinfo array
+      curnewinv = firstnewinv = (unsigned int)numInventoryDefs;
+
+      E_ReallocInventory((int)numinventory);
+
+      // set pointers in mobjinfo[] to the proper structures;
+      // also set self-referential index member, and allocate a
+      // metatable.
+      for(i = firstnewinv; i < (unsigned int)numInventoryDefs; i++)
+      {
+         inventoryDefs[i] = &newInvDefs[i - firstnewinv];
+         inventoryDefs[i]->index = i;
+         //inventoryDefs[i]->meta = new MetaTable("inventory"); - TODO
+      }
+   }
+
+   // build hash tables
+   E_EDFLogPuts("\t\tBuilding inventory hash tables\n");
+   
+   // cycle through the thingtypes defined in the cfg
+   for(i = 0; i < numinventory; i++)
+   {
+      cfg_t *invcfg = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      const char *name = cfg_title(invcfg);
+
+      // This is a new inventory, whether or not one already exists by this name
+      // in the hash table. For subsequent addition of EDF inventory defs at 
+      // runtime, the hash table semantics of "find newest first" take care of 
+      // overriding, while not breaking objects that depend on the original 
+      // definition of the inventory type for inheritance purposes.
+      inventory_t *inv = inventoryDefs[curnewinv++];
+
+      // initialize name
+      inv->name = estrdup(name);
+
+      // add to name hash
+      inv_namehash.addObject(inv);
+
+      // process ID number and add to hash table, if appropriate
+      if((inv->numkey = cfg_getint(invcfg, ITEM_INVENTORY_ID)) >= 0)
+         inv_numhash.addObject(inv);
+
+      // set generation
+      inv->generation = edf_inventory_generation;
+   }
+
+   // first-time-only events
+   if(firsttime)
+   {
+      // check that at least one inventory was defined
+      if(!numInventoryDefs)
+         E_EDFLoggedErr(2, "E_CollectInventory: no inventory definitions.\n");
+
+      // verify the existance of the Unknown thing type
+      // TODO: ???
+      //UnknownThingType = E_ThingNumForName("Unknown");
+      //if(UnknownThingType < 0)
+      //   E_EDFLoggedErr(2, "E_CollectThings: 'Unknown' thingtype must be defined.\n");
+
+      firsttime = false;
+   }
+}
+
+//=============================================================================
+//
 // Inheritance
 //
 
@@ -206,7 +347,7 @@ static bool E_CheckInventoryInherit(int pnum)
 {
    int i;
 
-   for(i = 0; i < NumInventoryDefs; i++)
+   for(i = 0; i < numInventoryDefs; i++)
    {
       // circular inheritance
       if(inv_pstack[i] == pnum)
@@ -230,7 +371,7 @@ static void E_AddInventoryToPStack(int num)
    // Overflow shouldn't happen since it would require cyclic inheritance as 
    // well, but I'll guard against it anyways.
    
-   if(inv_pindex >= NumInventoryDefs)
+   if(inv_pindex >= numInventoryDefs)
       E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
 
    inv_pstack[inv_pindex++] = num;
@@ -246,7 +387,7 @@ static void E_ResetInventoryPStack(void)
 {
    int i;
 
-   for(i = 0; i < NumInventoryDefs; i++)
+   for(i = 0; i < numInventoryDefs; i++)
       inv_pstack[i] = -1;
 
    inv_pindex = 0;
@@ -271,6 +412,11 @@ static void E_CopyInventory(int num, int pnum)
 
    // TODO: reset any uninherited fields to defaults
 }
+
+//=============================================================================
+//
+// Processing
+//
 
 // IS_SET: this macro tests whether or not a particular field should
 // be set. When applying deltas, we should not retrieve defaults.
@@ -360,11 +506,11 @@ void E_ProcessInventoryDefs(cfg_t *cfg)
    numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
 
    // allocate inheritance stack and hitlist
-   inv_hitlist = ecalloc(byte *, NumInventoryDefs, sizeof(byte));
-   inv_pstack  = ecalloc(int  *, NumInventoryDefs, sizeof(int));
+   inv_hitlist = ecalloc(byte *, numInventoryDefs, sizeof(byte));
+   inv_pstack  = ecalloc(int  *, numInventoryDefs, sizeof(int));
    
    // add all items from previous generations to the processed hit list
-   for(i = 0; i < (unsigned int)NumInventoryDefs; i++)
+   for(i = 0; i < (unsigned int)numInventoryDefs; i++)
    {
       /*
       // TODO
