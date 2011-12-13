@@ -117,8 +117,8 @@ cfg_opt_t edf_invdelta_opts[] =
 static byte *inv_hitlist = NULL;
 
 // inv_pstack: used by recursive E_ProcessInventory to track inheritance
-static int  *inv_pstack  = NULL;
-static int   inv_pindex  = 0;
+static inventory_t **inv_pstack  = NULL;
+static int inv_pindex  = 0;
 
 // global vars
 inventory_t **inventoryDefs;
@@ -343,18 +343,18 @@ void E_CollectInventory(cfg_t *cfg)
 // been inherited during the current inheritance chain. Returns false if the
 // check fails, and true if it succeeds.
 //
-static bool E_CheckInventoryInherit(int pnum)
+static bool E_CheckInventoryInherit(inventory_t *inv)
 {
    int i;
 
    for(i = 0; i < numInventoryDefs; i++)
    {
       // circular inheritance
-      if(inv_pstack[i] == pnum)
+      if(inv_pstack[i] == inv)
          return false;
 
       // found end of list
-      if(inv_pstack[i] == -1)
+      if(inv_pstack[i] == NULL)
          break;
    }
 
@@ -364,9 +364,9 @@ static bool E_CheckInventoryInherit(int pnum)
 //
 // E_AddInventoryToPStack
 //
-// Adds a type number to the inheritance stack.
+// Adds an inventory definition to the inheritance stack.
 //
-static void E_AddInventoryToPStack(int num)
+static void E_AddInventoryToPStack(inventory_t *inv)
 {
    // Overflow shouldn't happen since it would require cyclic inheritance as 
    // well, but I'll guard against it anyways.
@@ -374,7 +374,7 @@ static void E_AddInventoryToPStack(int num)
    if(inv_pindex >= numInventoryDefs)
       E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
 
-   inv_pstack[inv_pindex++] = num;
+   inv_pstack[inv_pindex++] = inv;
 }
 
 //
@@ -383,12 +383,12 @@ static void E_AddInventoryToPStack(int num)
 // Resets the inventory inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
-static void E_ResetInventoryPStack(void)
+static void E_ResetInventoryPStack()
 {
    int i;
 
    for(i = 0; i < numInventoryDefs; i++)
-      inv_pstack[i] = -1;
+      inv_pstack[i] = NULL;
 
    inv_pindex = 0;
 }
@@ -398,7 +398,7 @@ static void E_ResetInventoryPStack(void)
 //
 // Copies one inventory definition into another.
 //
-static void E_CopyInventory(int num, int pnum)
+static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 {
    // TODO: save out fields that shouldn't be overwritten
 
@@ -432,63 +432,66 @@ static void E_CopyInventory(int num, int pnum)
 // Generalized code to process the data for a single inventory definition
 // structure. Doubles as code for inventory and inventorydelta.
 //
-static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
+static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, bool def)
 {
    //int tempint;
    //const char *tempstr;
    bool inherits = false;
+
+   if(!invsec)
+      return;
 
    // Process inheritance (not in deltas)
    if(def)
    {
       // if this inventory is already processed via recursion due to
       // inheritance, don't process it again
-      if(inv_hitlist[i])
+      if(inv_hitlist[inv->index])
          return;
       
       if(cfg_size(invsec, ITEM_INVENTORY_INHERITS) > 0)
       {
          cfg_t *parent_invsec;
          
-         // TODO: resolve parent inventory def
-         int pnum = -1; //E_GetInventoryNumForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
+         // resolve parent inventory def
+         inventory_t *parent = E_GetInventoryForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
 
          // check against cyclic inheritance
-         if(!E_CheckInventoryInherit(pnum))
+         if(!E_CheckInventoryInherit(parent))
          {
             E_EDFLoggedErr(2, 
                "E_ProcessInventory: cyclic inheritance detected in inventory '%s'\n",
-               /*TODO: mobjinfo[i]->name*/ "");
+               inv->name);
          }
          
          // add to inheritance stack
-         E_AddInventoryToPStack(pnum);
+         E_AddInventoryToPStack(parent);
 
          // process parent recursively
-         parent_invsec = cfg_getnsec(pcfg, EDF_SEC_INVENTORY, pnum);
-         E_ProcessInventory(pnum, parent_invsec, pcfg, true);
+         parent_invsec = cfg_gettsec(pcfg, EDF_SEC_INVENTORY, parent->name);
+         E_ProcessInventory(parent, parent_invsec, pcfg, true);
          
          // copy parent to this thing
-         E_CopyInventory(i, pnum);
+         E_CopyInventory(inv, parent);
 
-         // TODO: keep track of parent explicitly
-         // mobjinfo[i]->parent = mobjinfo[pnum];
+         // keep track of parent explicitly
+         inv->parent = parent;
          
          // we inherit, so treat defaults as no value
          inherits = true;
       }
       else
-        ; // TODO: mobjinfo[i]->parent = NULL; // no parent.
+         inv->parent = NULL; // no parent.
 
       // mark this inventory def as processed
-      inv_hitlist[i] = 1;
+      inv_hitlist[inv->index] = 1;
    }
 
    // TODO: field processing
 
    // output end message if processing a definition
    if(def)
-      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", ""/*TODO:mobjinfo[i]->name*/, i);
+      E_EDFLogPrintf("\t\tFinished inventory %s(#%u)\n", inv->name, inv->index);
 }
 
 //
@@ -506,35 +509,34 @@ void E_ProcessInventoryDefs(cfg_t *cfg)
    numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
 
    // allocate inheritance stack and hitlist
-   inv_hitlist = ecalloc(byte *, numInventoryDefs, sizeof(byte));
-   inv_pstack  = ecalloc(int  *, numInventoryDefs, sizeof(int));
+   inv_hitlist = ecalloc(byte *,         numInventoryDefs, sizeof(byte));
+   inv_pstack  = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
    
    // add all items from previous generations to the processed hit list
    for(i = 0; i < (unsigned int)numInventoryDefs; i++)
    {
-      /*
-      // TODO
-      if(mobjinfo[i]->generation != edf_thing_generation)
-         thing_hitlist[i] = 1;
-      */
+      if(inventoryDefs[i]->generation != edf_inventory_generation)
+         inv_hitlist[i] = 1;
    }
 
    // TODO: any first-time-only processing?
 
    for(i = 0; i < numinventory; i++)
    {
-      cfg_t *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      cfg_t       *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      const char  *name   = cfg_title(invsec);
+      inventory_t *inv    = E_InventoryForName(name);
 
       // reset the inheritance stack
       E_ResetInventoryPStack();
 
       // add this def to the stack
-      E_AddInventoryToPStack(i);
+      E_AddInventoryToPStack(inv);
 
-      E_ProcessInventory(i, invsec, cfg, true);
+      E_ProcessInventory(inv, invsec, cfg, true);
 
       E_EDFLogPrintf("\t\tFinished inventory %s (#%d)\n", 
-                     /*mobjinfo[thingnum]->name*/ "", 0 /*TODO*/);
+                     /*inventoryDefs[thingnum]->name*/ "", 0 /*TODO*/);
    }
 
    // free tables

@@ -74,7 +74,8 @@ struct inventory_t
    char *name;           // buffer for name
    int   numkey;         // ID number
    int   generation;     // EDF generation number
-   unsigned int index;   // index in inventoryDefs   
+   unsigned int index;   // index in inventoryDefs 
+   inventory_t *parent;  // parent record for inheritance
 };
 
 // Lookup functions

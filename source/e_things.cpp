@@ -1565,6 +1565,12 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool cflags   = false;
    bool hasbtype = false;
 
+   // if thingsec is NULL, we are in the situation of inheriting from a thing
+   // that was processed in a previous EDF generation, so no processing is
+   // required; return immediately.
+   if(!thingsec)
+      return; 
+
    // 01/27/04: added inheritance -- not in deltas
    if(def)
    {
@@ -1576,7 +1582,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       if(cfg_size(thingsec, ITEM_TNG_INHERITS) > 0)
       {
          cfg_t *parent_tngsec;
-         
+
          // resolve parent thingtype
          int pnum = E_GetThingNumForName(cfg_getstr(thingsec, ITEM_TNG_INHERITS));
 
@@ -1592,7 +1598,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          E_AddThingToPStack(pnum);
 
          // process parent recursively
-         parent_tngsec = cfg_getnsec(pcfg, EDF_SEC_THING, pnum);
+         // 12/12/2011: must use cfg_gettsec; note can return NULL
+         parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_THING, mobjinfo[pnum]->name);
          E_ProcessThing(pnum, parent_tngsec, pcfg, true);
          
          // copy parent to this thing
