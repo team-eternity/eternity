@@ -145,7 +145,7 @@ static edecparser_t DSP;
 //
 static void E_AddBufferedState(int type, const char *name, int linenum)
 {
-   estatebuf_t *newbuf = ecalloc(estatebuf_t *, 1, sizeof(estatebuf_t));
+   estatebuf_t *newbuf = estructalloc(estatebuf_t, 1);
 
    newbuf->type = type;
 
@@ -1095,7 +1095,7 @@ static void DoPSNeedLabelOrKWOrState(pstate_t *ps)
 
    case TOKEN_KEYWORD:
       // generate appropriate state for keyword
-      if(*ps->tokenbuffer == "goto")
+      if(!ps->tokenbuffer->strCaseCmp("goto"))
          doGoto(ps);
       else
          doKeyword(ps);
@@ -1359,7 +1359,7 @@ static void doAction(pstate_t *ps, const char *fn)
       {
          states[statenum]->action = ptr->cptr;
 
-         ++statenum;             // move forward one state in states[]
+         ++statenum;           // move forward one state in states[]
          link = link->dllNext; // move forward one buffered state
       }
    }
@@ -1834,7 +1834,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       return NULL;
 
    // Create the DSO object
-   newdso = ecalloc(edecstateout_t *, 1, sizeof(edecstateout_t));
+   newdso = estructalloc(edecstateout_t, 1);
 
    // number of states to allocate is the number of declared states plus the
    // number of gotos which generate their own blank state with an immediate
@@ -1853,7 +1853,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
       E_ReallocStates(totalstates);
 
       // Allocate the new states as a block
-      newstates = ecalloc(state_t *, totalstates, sizeof(state_t));
+      newstates = estructalloc(state_t, totalstates);
 
       // Initialize states
       for(i = DSP.firststate; i < NUMSTATES; ++i)
@@ -1870,14 +1870,14 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
    // allocate arrays in the DSO object at worst-case sizes for efficiency
 
    // there can't be more labels to assign than labels that are defined
-   newdso->states = ecalloc(edecstate_t *, DSP.numdeclabels, sizeof(*newdso->states));
+   newdso->states = estructalloc(edecstate_t, DSP.numdeclabels);
    newdso->numstatesalloc = DSP.numdeclabels;
 
    if(DSP.numgotos)
    {
       // there can't be more gotos to externally fixup than the total number
       // of gotos
-      newdso->gotos = ecalloc(egoto_t *, DSP.numgotos, sizeof(*newdso->gotos));
+      newdso->gotos = estructalloc(egoto_t, DSP.numgotos);
       newdso->numgotosalloc = DSP.numgotos;
 
       // also allocate the internal goto list for the internal relocation pass
@@ -1889,7 +1889,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input)
    // We have counted the number of stops after labels exactly.
    if(DSP.numstops)
    {
-      newdso->killstates = ecalloc(ekillstate_t *, DSP.numstops, sizeof(*newdso->killstates));
+      newdso->killstates = estructalloc(ekillstate_t, DSP.numstops);
       newdso->numkillsalloc = DSP.numstops;
    }
 
