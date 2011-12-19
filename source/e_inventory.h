@@ -73,9 +73,8 @@ struct inventory_t
    // fields needed for EDF identification and hashing
    char *name;           // buffer for name
    int   numkey;         // ID number
-   int   generation;     // EDF generation number
-   unsigned int index;   // index in inventoryDefs 
    inventory_t *parent;  // parent record for inheritance
+   bool  processed;      // if true, has been processed
 };
 
 // Lookup functions
@@ -92,6 +91,7 @@ inventory_t *E_GetInventoryForName(const char *name);
 extern cfg_opt_t edf_inv_opts[];
 extern cfg_opt_t edf_invdelta_opts[];
 
+void E_CollectInventory(cfg_t *cfg);
 void E_ProcessInventoryDefs(cfg_t *cfg);
 void E_ProcessInventoryDeltas(cfg_t *cfg);
 

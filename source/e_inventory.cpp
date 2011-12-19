@@ -38,8 +38,7 @@
 #include "e_lib.h"
 #include "e_inventory.h"
 
-// 11/22/11: track generations
-static int edf_inventory_generation = 1; 
+static unsigned int numInventoryDefs;
 
 // basic inventory flag values and mnemonics
 
@@ -64,7 +63,6 @@ static dehflagset_t inventory_flagset =
 };
 
 // Frame section keywords
-#define ITEM_INVENTORY_ID             "id"
 #define ITEM_INVENTORY_INHERITS       "inherits"
 #define ITEM_INVENTORY_AMOUNT         "amount"
 #define ITEM_INVENTORY_MAXAMOUNT      "maxamount"
@@ -85,7 +83,6 @@ static dehflagset_t inventory_flagset =
 //
 
 #define INVENTORY_FIELDS \
-   CFG_INT(ITEM_INVENTORY_ID,             -1, CFGF_NONE), \
    CFG_INT(ITEM_INVENTORY_AMOUNT,          0, CFGF_NONE), \
    CFG_INT(ITEM_INVENTORY_MAXAMOUNT,       0, CFGF_NONE), \
    CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,  0, CFGF_NONE), \
@@ -113,16 +110,9 @@ cfg_opt_t edf_invdelta_opts[] =
 
 // Inventory Inheritance
 
-// inv_hitlist: keeps track of what inventory defs are initialized
-static byte *inv_hitlist = NULL;
-
 // inv_pstack: used by recursive E_ProcessInventory to track inheritance
 static inventory_t **inv_pstack  = NULL;
-static int inv_pindex  = 0;
-
-// global vars
-inventory_t **inventoryDefs;
-int numInventoryDefs;
+static unsigned int inv_pindex  = 0;
 
 //=============================================================================
 //
@@ -193,47 +183,8 @@ inventory_t *E_GetInventoryForName(const char *name)
 
 //=============================================================================
 //
-// Dynamic Allocation
+// Pre-Processing
 //
-
-//
-// E_ReallocInventory
-//
-// haleyjd 12/12/11: Function to reallocate the inventory array safely.
-//
-static void E_ReallocInventory(int numnewinventory)
-{
-   static int numinvalloc = 0;
-
-   // only realloc when needed
-   if(!numinvalloc || (numInventoryDefs < numinvalloc + numnewinventory))
-   {
-      int i;
-
-      // First time, just allocate the requested number of inventory defs.
-      // Afterward:
-      // * If the number of inventory defs requested is small, add 2 times as 
-      //   many requested, plus a small constant amount.
-      // * If the number is large, just add that number.
-
-      if(!numinvalloc)
-         numinvalloc = numnewinventory;
-      else if(numnewinventory <= 50)
-         numinvalloc += numnewinventory * 2 + 32;
-      else
-         numinvalloc += numnewinventory;
-
-      // reallocate inventoryDefs[]
-      inventoryDefs = erealloc(inventory_t **, inventoryDefs, numinvalloc * sizeof(inventory_t *));
-
-      // set the new mobjinfo pointers to NULL
-      for(i = numInventoryDefs; i < numinvalloc; i++)
-         inventoryDefs[i] = NULL;
-   }
-
-   // increment numInventoryDefs
-   numInventoryDefs += numnewinventory;
-}
 
 //
 // E_CollectInventory
@@ -243,12 +194,10 @@ static void E_ReallocInventory(int numnewinventory)
 //
 void E_CollectInventory(cfg_t *cfg)
 {
+   static int currentID = 1;
    unsigned int i;
-   unsigned int numinventory;    // number of inventory defs defined by the cfg
-   unsigned int firstnewinv = 0; // index of first new thingtype
-   unsigned int curnewinv   = 0; // index of current new thingtype being used
+   unsigned int numInventory;    // number of inventory defs defined by the cfg
    inventory_t *newInvDefs  = NULL;
-   static bool firsttime = true;
 
    // initialize hash tables if needed
    if(!inv_namehash.isInitialized())
@@ -258,37 +207,30 @@ void E_CollectInventory(cfg_t *cfg)
    }
 
    // get number of inventory definitions defined by the cfg
-   numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
+   numInventory = cfg_size(cfg, EDF_SEC_INVENTORY);
 
    // echo counts
-   E_EDFLogPrintf("\t\t%u inventory items defined\n", numinventory);
+   E_EDFLogPrintf("\t\t%u inventory items defined\n", numInventory);
 
-   if(numinventory)
+   if(numInventory)
    {
       // allocate inventory structures for the new thingtypes
-      newInvDefs = estructalloc(inventory_t, numinventory);
+      newInvDefs = estructalloc(inventory_t, numInventory);
 
-      // add space to the mobjinfo array
-      curnewinv = firstnewinv = (unsigned int)numInventoryDefs;
+      numInventoryDefs += numInventory;
 
-      E_ReallocInventory((int)numinventory);
-
-      // set pointers in mobjinfo[] to the proper structures;
-      // also set self-referential index member, and allocate a
-      // metatable.
-      for(i = firstnewinv; i < (unsigned int)numInventoryDefs; i++)
-      {
-         inventoryDefs[i] = &newInvDefs[i - firstnewinv];
-         inventoryDefs[i]->index = i;
-         //inventoryDefs[i]->meta = new MetaTable("inventory"); - TODO
-      }
+      // TODO: metatables?
+      /*
+      for(i = 0; i < numInventory; i++)
+         inventoryDefs[i]->meta = new MetaTable("inventory");
+      */
    }
 
    // build hash tables
    E_EDFLogPuts("\t\tBuilding inventory hash tables\n");
    
    // cycle through the thingtypes defined in the cfg
-   for(i = 0; i < numinventory; i++)
+   for(i = 0; i < numInventory; i++)
    {
       cfg_t *invcfg = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
       const char *name = cfg_title(invcfg);
@@ -298,7 +240,7 @@ void E_CollectInventory(cfg_t *cfg)
       // runtime, the hash table semantics of "find newest first" take care of 
       // overriding, while not breaking objects that depend on the original 
       // definition of the inventory type for inheritance purposes.
-      inventory_t *inv = inventoryDefs[curnewinv++];
+      inventory_t *inv = &newInvDefs[i];
 
       // initialize name
       inv->name = estrdup(name);
@@ -306,28 +248,9 @@ void E_CollectInventory(cfg_t *cfg)
       // add to name hash
       inv_namehash.addObject(inv);
 
-      // process ID number and add to hash table, if appropriate
-      if((inv->numkey = cfg_getint(invcfg, ITEM_INVENTORY_ID)) >= 0)
-         inv_numhash.addObject(inv);
-
-      // set generation
-      inv->generation = edf_inventory_generation;
-   }
-
-   // first-time-only events
-   if(firsttime)
-   {
-      // check that at least one inventory was defined
-      if(!numInventoryDefs)
-         E_EDFLoggedErr(2, "E_CollectInventory: no inventory definitions.\n");
-
-      // verify the existance of the Unknown thing type
-      // TODO: ???
-      //UnknownThingType = E_ThingNumForName("Unknown");
-      //if(UnknownThingType < 0)
-      //   E_EDFLoggedErr(2, "E_CollectThings: 'Unknown' thingtype must be defined.\n");
-
-      firsttime = false;
+      // create ID number and add to hash table
+      inv->numkey = currentID++;
+      inv_numhash.addObject(inv);
    }
 }
 
@@ -345,9 +268,7 @@ void E_CollectInventory(cfg_t *cfg)
 //
 static bool E_CheckInventoryInherit(inventory_t *inv)
 {
-   int i;
-
-   for(i = 0; i < numInventoryDefs; i++)
+   for(unsigned int i = 0; i < numInventoryDefs; i++)
    {
       // circular inheritance
       if(inv_pstack[i] == inv)
@@ -385,9 +306,7 @@ static void E_AddInventoryToPStack(inventory_t *inv)
 //
 static void E_ResetInventoryPStack()
 {
-   int i;
-
-   for(i = 0; i < numInventoryDefs; i++)
+   for(unsigned int i = 0; i < numInventoryDefs; i++)
       inv_pstack[i] = NULL;
 
    inv_pindex = 0;
@@ -446,7 +365,7 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    {
       // if this inventory is already processed via recursion due to
       // inheritance, don't process it again
-      if(inv_hitlist[inv->index])
+      if(inv->processed)
          return;
       
       if(cfg_size(invsec, ITEM_INVENTORY_INHERITS) > 0)
@@ -484,14 +403,10 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
          inv->parent = NULL; // no parent.
 
       // mark this inventory def as processed
-      inv_hitlist[inv->index] = 1;
+      inv->processed = true;
    }
 
    // TODO: field processing
-
-   // output end message if processing a definition
-   if(def)
-      E_EDFLogPrintf("\t\tFinished inventory %s(#%u)\n", inv->name, inv->index);
 }
 
 //
@@ -501,27 +416,19 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
 //
 void E_ProcessInventoryDefs(cfg_t *cfg)
 {
-   unsigned int i, numinventory;
+   unsigned int i, numInventory;
    //static bool firsttime = true;
 
    E_EDFLogPuts("\t* Processing inventory data\n");
 
-   numinventory = cfg_size(cfg, EDF_SEC_INVENTORY);
+   numInventory = cfg_size(cfg, EDF_SEC_INVENTORY);
 
    // allocate inheritance stack and hitlist
-   inv_hitlist = ecalloc(byte *,         numInventoryDefs, sizeof(byte));
    inv_pstack  = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
-   
-   // add all items from previous generations to the processed hit list
-   for(i = 0; i < (unsigned int)numInventoryDefs; i++)
-   {
-      if(inventoryDefs[i]->generation != edf_inventory_generation)
-         inv_hitlist[i] = 1;
-   }
 
    // TODO: any first-time-only processing?
 
-   for(i = 0; i < numinventory; i++)
+   for(i = 0; i < numInventory; i++)
    {
       cfg_t       *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
       const char  *name   = cfg_title(invsec);
@@ -535,16 +442,11 @@ void E_ProcessInventoryDefs(cfg_t *cfg)
 
       E_ProcessInventory(inv, invsec, cfg, true);
 
-      E_EDFLogPrintf("\t\tFinished inventory %s (#%d)\n", 
-                     /*inventoryDefs[thingnum]->name*/ "", 0 /*TODO*/);
+      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", inv->name, inv->numkey);
    }
 
    // free tables
-   efree(inv_hitlist);
    efree(inv_pstack);
-
-   // increment generation count
-   ++edf_inventory_generation;
 }
 
 //

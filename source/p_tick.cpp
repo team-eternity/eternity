@@ -347,7 +347,7 @@ ThinkerType **ThinkerType::thinkerTypes;
 //
 ThinkerType *ThinkerType::FindType(const char *pName)
 {
-   unsigned int hashcode = D_HashTableKey(pName) % NUMTTYPECHAINS;
+   unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTTYPECHAINS;
    ThinkerType *chain = thinkerTypes[hashcode];
 
    while(chain && strcmp(chain->name, pName))
@@ -378,7 +378,7 @@ void ThinkerType::FindParents()
             if(!(curType->parent = FindType(curType->parentName)))
             {
                I_Error("ThinkerType::FindParents: '%s' has invalid parent class '%s'!\n",
-                  curType->name, curType->parentName);
+                       curType->name, curType->parentName);
             }
          }
          curType = curType->next;
@@ -423,7 +423,7 @@ ThinkerType::ThinkerType(const char *pName, const char *pInherits)
       I_Error("ThinkerType: duplicate class registered with name '%s'\n", pName);
 
    // Add it to the hash table; order is unimportant.
-   hashcode = D_HashTableKey(name) % NUMTTYPECHAINS;
+   hashcode = D_HashTableKeyCase(name) % NUMTTYPECHAINS;
    this->next = thinkerTypes[hashcode];
    thinkerTypes[hashcode] = this;   
 }

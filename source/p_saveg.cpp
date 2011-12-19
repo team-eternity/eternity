@@ -641,12 +641,13 @@ static void P_RemoveAllThinkers(void)
    // remove all the current thinkers
    for(th = thinkercap.next; th != &thinkercap; )
    {
-      Thinker *next;
-      next = th->next;
+      Thinker *next = th->next;
+
       if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
          th->removeThinker();
       else
          delete th;
+      
       th = next;
    }
 
