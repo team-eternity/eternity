@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   Position functions and data structure.
+//   Position functions and data structures.
 //
 //----------------------------------------------------------------------------
 
@@ -37,9 +37,8 @@
 // [CG] For debugging, really.
 void CS_PrintPosition(position_t *position)
 {
-   // [CG] Actual position members.
    printf(
-      "%u: %5d/%5d/%5d %5d/%5d/%5d %3d ",
+      "%u: %5d/%5d/%5d %5d/%5d/%5d %3d %3d",
       position->world_index,
       position->x >> FRACBITS,
       position->y >> FRACBITS,
@@ -47,50 +46,8 @@ void CS_PrintPosition(position_t *position)
       position->momx >> FRACBITS,
       position->momy >> FRACBITS,
       position->momz >> FRACBITS,
-      position->angle / ANGLE_1
-   );
-
-   // [CG] Sector-relative information.
-   printf(
-      "%5d/%5d/%5d ",
-      position->ceilingz >> FRACBITS,
-      position->floorz >> FRACBITS,
-      position->floorclip >> FRACBITS
-   );
-
-   // [CG] Flags.
-   printf(
-      "%d/%d/%d/%d/%d ",
-      position->flags,
-      position->flags2,
-      position->flags3,
-      position->flags4,
-      position->intflags
-   );
-
-   // [CG] Miscellaneous.
-   printf(
-      "%d/%d/%d/%d",
-      position->friction,
-      position->movefactor,
-      position->alphavelocity,
-      position->reactiontime
-   );
-
-   // [CG] Bobbing and viewheight; this is below miscellaneous because most of
-   //      it is related to the player, and because player-only members in the
-   //      position come last.  Also pitch, jumptime and playerstate are tacked
-   //      onto the end.
-   printf(
-      "%d/%d/%d/%d/%d %5d %d %d\n",
-      position->floatbob,
-      position->bob,
-      position->viewz,
-      position->viewheight,
-      position->deltaviewheight,
+      position->angle / ANGLE_1,
       position->pitch >> FRACBITS,
-      position->jumptime,
-      position->playerstate
    );
 }
 
@@ -110,35 +67,15 @@ void CS_PrintPlayerPosition(int playernum, unsigned int index)
 void CS_SetActorPosition(Mobj *actor, position_t *position)
 {
    P_UnsetThingPosition(actor);
-   actor->x             = position->x;
-   actor->y             = position->y;
-   actor->z             = position->z;
-   actor->momx          = position->momx;
-   actor->momy          = position->momy;
-   actor->momz          = position->momz;
-   actor->angle         = position->angle;
-   actor->ceilingz      = position->ceilingz;
-   actor->floorz        = position->floorz;
-   actor->floorclip     = position->floorclip;
-   actor->flags         = position->flags;
-   actor->flags2        = position->flags2;
-   actor->flags3        = position->flags3;
-   actor->flags4        = position->flags4;
-   actor->intflags      = position->intflags;
-   actor->friction      = position->friction;
-   actor->movefactor    = position->movefactor;
-   actor->alphavelocity = position->alphavelocity;
-   actor->reactiontime  = position->reactiontime;
-   actor->floatbob      = position->floatbob;
+   actor->x     = position->x;
+   actor->y     = position->y;
+   actor->z     = position->z;
+   actor->momx  = position->momx;
+   actor->momy  = position->momy;
+   actor->momz  = position->momz;
+   actor->angle = position->angle;
    if(actor->player)
-   {
-      actor->player->bob             = position->bob;
-      actor->player->viewz           = position->viewz;
-      actor->player->viewheight      = position->viewheight;
-      actor->player->deltaviewheight = position->deltaviewheight;
-      actor->player->pitch           = position->pitch;
-      actor->player->jumptime        = position->jumptime;
-   }
+      actor->player->pitch = position->pitch;
    P_SetThingPosition(actor);
 }
 
@@ -149,34 +86,14 @@ void CS_SetPlayerPosition(int playernum, position_t *position)
 
 bool CS_ActorPositionEquals(Mobj *actor, position_t *position)
 {
-   if(actor->x                       == position->x               &&
-      actor->y                       == position->y               &&
-      actor->z                       == position->z               &&
-      actor->momx                    == position->momx            &&
-      actor->momy                    == position->momy            &&
-      actor->momz                    == position->momz            &&
-      actor->angle                   == position->angle           &&
-      actor->ceilingz                == position->ceilingz        &&
-      actor->floorz                  == position->floorz          &&
-      actor->floorclip               == position->floorclip       &&
-      actor->flags                   == position->flags           &&
-      actor->flags2                  == position->flags2          &&
-      actor->flags3                  == position->flags3          &&
-      actor->flags4                  == position->flags4          &&
-      actor->intflags                == position->intflags        &&
-      actor->friction                == position->friction        &&
-      actor->movefactor              == position->movefactor      &&
-      actor->alphavelocity           == position->alphavelocity   &&
-      actor->reactiontime            == position->reactiontime    &&
-      actor->floatbob                == position->floatbob        &&
-      (!actor->player || (
-      actor->player->bob             == position->bob             &&
-      actor->player->viewz           == position->viewz           &&
-      actor->player->viewheight      == position->viewheight      &&
-      actor->player->deltaviewheight == position->deltaviewheight &&
-      actor->player->pitch           == position->pitch           &&
-      actor->player->jumptime        == position->jumptime        &&
-      actor->player->playerstate     == position->playerstate)))
+   if(actor->x                                 == position->x     &&
+      actor->y                                 == position->y     &&
+      actor->z                                 == position->z     &&
+      actor->momx                              == position->momx  &&
+      actor->momy                              == position->momy  &&
+      actor->momz                              == position->momz  &&
+      actor->angle                             == position->angle &&
+      (!actor->player || (actor->player->pitch == position->pitch)))
    {
       return true;
    }
@@ -185,37 +102,16 @@ bool CS_ActorPositionEquals(Mobj *actor, position_t *position)
 
 void CS_SaveActorPosition(position_t *position, Mobj *actor, int index)
 {
-   position->world_index        = index;
-   position->x                  = actor->x;
-   position->y                  = actor->y;
-   position->z                  = actor->z;
-   position->momx               = actor->momx;
-   position->momy               = actor->momy;
-   position->momz               = actor->momz;
-   position->angle              = actor->angle;
-   position->ceilingz           = actor->ceilingz;
-   position->floorz             = actor->floorz;
-   position->floorclip          = actor->floorclip;
-   position->flags              = actor->flags;
-   position->flags2             = actor->flags2;
-   position->flags3             = actor->flags3;
-   position->flags4             = actor->flags4;
-   position->intflags           = actor->intflags;
-   position->friction           = actor->friction;
-   position->movefactor         = actor->movefactor;
-   position->alphavelocity      = actor->alphavelocity;
-   position->reactiontime       = actor->reactiontime;
-   position->floatbob           = actor->floatbob;
+   position->world_index = index;
+   position->x           = actor->x;
+   position->y           = actor->y;
+   position->z           = actor->z;
+   position->momx        = actor->momx;
+   position->momy        = actor->momy;
+   position->momz        = actor->momz;
+   position->angle       = actor->angle;
    if(actor->player)
-   {
-      position->bob             = actor->player->bob;
-      position->viewz           = actor->player->viewz;
-      position->viewheight      = actor->player->viewheight;
-      position->deltaviewheight = actor->player->deltaviewheight;
-      position->pitch           = actor->player->pitch;
-      position->jumptime        = actor->player->jumptime;
-      position->playerstate     = actor->player->playerstate;
-   }
+      position->pitch = actor->player->pitch;
 }
 
 bool CS_ActorPositionChanged(Mobj *actor)
@@ -227,33 +123,14 @@ bool CS_ActorPositionChanged(Mobj *actor)
 
 bool CS_PositionsEqual(position_t *position_one, position_t *position_two)
 {
-   if(position_one->x               == position_two->x               &&
-      position_one->y               == position_two->y               &&
-      position_one->z               == position_two->z               &&
-      position_one->momx            == position_two->momx            &&
-      position_one->momy            == position_two->momy            &&
-      position_one->momz            == position_two->momz            &&
-      position_one->angle           == position_two->angle           &&
-      position_one->ceilingz        == position_two->ceilingz        &&
-      position_one->floorz          == position_two->floorz          &&
-      position_one->floorclip       == position_two->floorclip       &&
-      position_one->flags           == position_two->flags           &&
-      position_one->flags2          == position_two->flags2          &&
-      position_one->flags3          == position_two->flags3          &&
-      position_one->flags4          == position_two->flags4          &&
-      position_one->intflags        == position_two->intflags        &&
-      position_one->friction        == position_two->friction        &&
-      position_one->movefactor      == position_two->movefactor      &&
-      position_one->alphavelocity   == position_two->alphavelocity   &&
-      position_one->reactiontime    == position_two->reactiontime    &&
-      position_one->floatbob        == position_two->floatbob        &&
-      position_one->bob             == position_two->bob             &&
-      position_one->viewz           == position_two->viewz           &&
-      position_one->viewheight      == position_two->viewheight      &&
-      position_one->deltaviewheight == position_two->deltaviewheight &&
-      position_one->pitch           == position_two->pitch           &&
-      position_one->jumptime        == position_two->jumptime        &&
-      position_one->playerstate     == position_two->playerstate)
+   if(position_one->x     == position_two->x     &&
+      position_one->y     == position_two->y     &&
+      position_one->z     == position_two->z     &&
+      position_one->momx  == position_two->momx  &&
+      position_one->momy  == position_two->momy  &&
+      position_one->momz  == position_two->momz  &&
+      position_one->angle == position_two->angle &&
+      position_one->pitch == position_two->pitch)
    {
       return true;
    }
@@ -262,32 +139,174 @@ bool CS_PositionsEqual(position_t *position_one, position_t *position_two)
 
 void CS_CopyPosition(position_t *dest, position_t *src)
 {
-   dest->x               = src->x;
-   dest->y               = src->y;
-   dest->z               = src->z;
-   dest->momx            = src->momx;
-   dest->momy            = src->momy;
-   dest->momz            = src->momz;
-   dest->angle           = src->angle;
-   dest->ceilingz        = src->ceilingz;
-   dest->floorz          = src->floorz;
-   dest->floorclip       = src->floorclip;
-   dest->flags           = src->flags;
-   dest->flags2          = src->flags2;
-   dest->flags3          = src->flags3;
-   dest->flags4          = src->flags4;
-   dest->intflags        = src->intflags;
-   dest->friction        = src->friction;
-   dest->movefactor      = src->movefactor;
-   dest->alphavelocity   = src->alphavelocity;
-   dest->reactiontime    = src->reactiontime;
-   dest->floatbob        = src->floatbob;
-   dest->bob             = src->bob;
-   dest->viewz           = src->viewz;
-   dest->viewheight      = src->viewheight;
-   dest->deltaviewheight = src->deltaviewheight;
-   dest->pitch           = src->pitch;
-   dest->jumptime        = src->jumptime;
-   dest->playerstate     = src->playerstate;
+   dest->x     = src->x;
+   dest->y     = src->y;
+   dest->z     = src->z;
+   dest->momx  = src->momx;
+   dest->momy  = src->momy;
+   dest->momz  = src->momz;
+   dest->angle = src->angle;
+   dest->pitch = src->pitch;
+}
+
+// [CG] For debugging, really.
+void CS_PrintMiscState(misc_state_t *state)
+{
+   printf(
+      "%u: %d/%d/%d/%d/%d %d/%d %d %d/%d %d/%d/%d %d %d",
+      state->world_index,
+      state->flags,
+      state->flags2,
+      state->flags3,
+      state->flags4,
+      state->intflags,
+      state->friction,
+      state->movefactor,
+      state->reactiontime,
+      state->floatbob,
+      state->bob,
+      state->viewz,
+      state->viewheight,
+      state->deltaviewheight,
+      state->jumptime,
+      state->playerstate
+   );
+}
+
+void CS_PrintActorMiscState(Mobj *actor, unsigned int index)
+{
+   position_t position;
+
+   CS_SaveActorMiscState(&position, actor, index);
+   CS_PrintMiscState(&position);
+}
+
+void CS_PrintPlayerMiscState(int playernum, unsigned int index)
+{
+   CS_PrintActorMiscState(players[playernum].mo, index);
+}
+
+void CS_SetActorMiscState(Mobj *actor, misc_state_t *state)
+{
+   actor->flags        = state->flags;
+   actor->flags2       = state->flags2;
+   actor->flags3       = state->flags3;
+   actor->flags4       = state->flags4;
+   actor->intflags     = state->intflags;
+   actor->friction     = state->friction;
+   actor->movefactor   = state->movefactor;
+   actor->reactiontime = state->reactiontime;
+   actor->floatbob     = state->floatbob;
+   if(actor->player)
+   {
+      actor->player->bob             = state->bob;
+      actor->player->viewz           = state->viewz;
+      actor->player->viewheight      = state->viewheight;
+      actor->player->deltaviewheight = state->deltaviewheight;
+      actor->player->jumptime        = state->jumptime;
+      actor->player->playerstate     = state->playerstate;
+   }
+}
+
+void CS_SetPlayerMiscState(int playernum, misc_state_t *state)
+{
+   CS_SetActorPosition(players[playernum].mo, state);
+}
+
+bool CS_ActorMiscStateEquals(Mobj *actor, misc_state_t *state)
+{
+   if(actor->flags        == state->flags        &&
+      actor->flags2       == state->flags2       &&
+      actor->flags3       == state->flags3       &&
+      actor->flags4       == state->flags4       &&
+      actor->intflags     == state->intflags     &&
+      actor->friction     == state->friction     &&
+      actor->movefactor   == state->movefactor   && 
+      actor->reactiontime == state->reactiontime &&
+      actor->floatbob     == state->floatbob     &&
+      (!actor->player || (
+      actor->player->bob             == state->bob             &&
+      actor->player->viewz           == state->viewz           &&
+      actor->player->viewheight      == state->viewheight      &&
+      actor->player->deltaviewheight == state->deltaviewheight &&
+      actor->player->jumptime        == state->jumptime        &&
+      actor->player->playerstate     == state->playerstate
+      )))
+   {
+      return true;
+   }
+   return false;
+}
+
+void CS_SaveActorMiscState(misc_state_t *state, Mobj *actor, int index)
+{
+   state->world_index  = index;
+   state->flags        = actor->flags;
+   state->flags2       = actor->flags2;
+   state->flags3       = actor->flags3;
+   state->flags4       = actor->flags4;
+   state->intflag      = actor->intflags;
+   state->friction     = actor->friction;
+   state->movefactor   = actor->movefactor;
+   state->reactiontime = actor->reactiontime;
+   state->floatbob     = actor->floatbob;
+   if(actor->player)
+   {
+      state->bob             = actor->player->bob;
+      state->viewz           = actor->player->viewz;
+      state->viewheight      = actor->player->viewheight;
+      state->deltaviewheight = actor->player->deltaviewheight;
+      state->jumptime        = actor->player->jumptime;
+      state->playerstate     = actor->player->playerstate;
+   }
+}
+
+bool CS_ActorMiscStateChanged(Mobj *actor)
+{
+   if(CS_ActorMiscStateEquals(actor, &actor->old_misc_state))
+      return false;
+   return true;
+}
+
+bool CS_MiscStatesEqual(misc_state_t *state_one, misc_state_t *state_two)
+{
+   if(state_one->flags           == state_two->flags           &&
+      state_one->flags2          == state_two->flags2          &&
+      state_one->flags3          == state_two->flags3          &&
+      state_one->flags4          == state_two->flags4          &&
+      state_one->intflags        == state_two->intflags        &&
+      state_one->friction        == state_two->friction        &&
+      state_one->movefactor      == state_two->movefactor      &&
+      state_one->reactiontime    == state_two->reactiontime    &&
+      state_one->floatbob        == state_two->floatbob        &&
+      state_one->bob             == state_two->bob             &&
+      state_one->viewz           == state_two->viewz           &&
+      state_one->viewheight      == state_two->viewheight      &&
+      state_one->deltaviewheight == state_two->deltaviewheight &&
+      state_one->jumptime        == state_two->jumptime        &&
+      state_one->playerstate     == state_two->playerstate)
+   {
+      return true;
+   }
+   return false;
+}
+
+void CS_CopyMiscState(misc_state_t *dest, misc_state_t *src)
+{
+   state_one->flags           = state_two->flags;
+   state_one->flags2          = state_two->flags2;
+   state_one->flags3          = state_two->flags3;
+   state_one->flags4          = state_two->flags4;
+   state_one->intflags        = state_two->intflags;
+   state_one->friction        = state_two->friction;
+   state_one->movefactor      = state_two->movefactor;
+   state_one->reactiontime    = state_two->reactiontime;
+   state_one->floatbob        = state_two->floatbob;
+   state_one->bob             = state_two->bob;
+   state_one->viewz           = state_two->viewz;
+   state_one->viewheight      = state_two->viewheight;
+   state_one->deltaviewheight = state_two->deltaviewheight;
+   state_one->jumptime        = state_two->jumptime;
+   state_one->playerstate     = state_two->playerstate;
 }
 

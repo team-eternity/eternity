@@ -714,11 +714,9 @@ void SV_StartUnlag(int playernum)
    server_client_t *server_client = &server_clients[playernum];
    unsigned int index = server_client->command_world_index;
 
+   // [CG] Don't run for the server's spectator actor.
    if(playernum == 0)
-   {
-      // [CG] Don't run for the server's spectator actor.
       return;
-   }
 
    player = &players[playernum];
 
@@ -1342,27 +1340,28 @@ bool SV_AuthorizeClient(int playernum, const char *password)
 
 void SV_SaveActorPositions(void)
 {
-   Mobj *actor;
+   Mobj *mobj;
    Thinker *think;
    server_client_t *server_client;
    position_t *p;
+   misc_state_t *ms;
    int playernum;
    int color;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
-      if(!(actor = thinker_cast<Mobj *>(think)))
+      if(!(mobj = thinker_cast<Mobj *>(think)))
          continue;
 
       // [CG] Don't save/broadcast carried flag actor positions, they're always
       //      stuck to their carrier.
-      if(CS_ActorIsCarriedFlag(actor))
+      if(CS_ActorIsCarriedFlag(mobj))
          continue;
 
-      if(actor->player != NULL)
+      if(mobj->player != NULL)
       {
          // [CG] Handling a player here.
-         playernum = actor->player - players;
+         playernum = mobj->player - players;
 
          if(playernum == 0 || !playeringame[playernum])
             continue;
@@ -1370,19 +1369,30 @@ void SV_SaveActorPositions(void)
          // [CG] Don't send info about the server's spectator actor.
          server_client = &server_clients[playernum];
          p = &server_client->positions[sv_world_index % MAX_POSITIONS];
-         CS_SaveActorPosition(p, actor, sv_world_index);
+         ms = &server_client->misc_states[sv_world_index % MAX_POSITIONS];
+         CS_SaveActorPosition(p, mobj, sv_world_index);
+         CS_SaveActorMiscState(ms, mobj, sv_world_index);
 #if _UNLAG_DEBUG
          CS_PrintPlayerPosition(playernum, sv_world_index);
 #endif
          SV_BroadcastClientStatus(playernum);
       }
-      else if(CS_ActorPositionChanged(actor))
+      else
       {
-         CS_SaveActorPosition(&actor->old_position, actor, sv_world_index);
+         if(CS_ActorPositionChanged(mobj))
+         {
+            CS_SaveActorPosition(&mobj->old_position, mobj, sv_world_index);
 
-         // [CG] Let clients move missiles on their own.
-         if((actor->flags & MF_MISSILE) == 0)
-            SV_BroadcastActorPosition(actor, sv_world_index);
+            // [CG] Let clients move missiles on their own.
+            if((mobj->flags & MF_MISSILE) == 0)
+               SV_BroadcastActorPosition(mobj, sv_world_index);
+         }
+
+         if(CS_ActorMiscStateChanged(mobj))
+         {
+            CS_SaveActorMiscState(&mobj->old_misc_state, mobj, sv_world_index);
+            SV_BroadcastActorMiscState(mobj, sv_world_index);
+         }
       }
    }
 }

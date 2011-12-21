@@ -50,9 +50,13 @@ typedef struct position_s
    fixed_t momy;
    fixed_t momz;
    angle_t angle;
-   fixed_t ceilingz;
-   fixed_t floorz;
-   fixed_t floorclip;
+   fixed_t pitch; // [CG] Players only, 0 otherwise.
+} position_t;
+
+// [CG] Same with miscellaneous state.
+typedef struct misc_state_s
+{
+   uint32_t world_index;
    int32_t flags;
    int32_t flags2;
    int32_t flags3;
@@ -60,17 +64,15 @@ typedef struct position_s
    int32_t intflags;
    int32_t friction;
    int32_t movefactor;
-   int32_t alphavelocity;
-   int16_t reactiontime;
+   int32_t reactiontime;
    int32_t floatbob;
    int32_t bob;             // [CG] Players only, 0 otherwise.
-   fixed_t viewz;           // [CG] Players only, 0 otherwise.
+   int32_t viewz;           // [CG] Players only, 0 otherwise.
    int32_t viewheight;      // [CG] Players only, 0 otherwise.
    int32_t deltaviewheight; // [CG] Players only, 0 otherwise.
-   fixed_t pitch;           // [CG] Players only, 0 otherwise.
    int32_t jumptime;        // [CG] Players only, 0 otherwise.
    int32_t playerstate;     // [CG] Players only, 0 otherwise.
-} position_t;
+} misc_state_t;
 
 #pragma pack(pop)
 
@@ -84,6 +86,17 @@ void CS_SaveActorPosition(position_t *position, Mobj *actor, int index);
 bool CS_ActorPositionChanged(Mobj *actor);
 bool CS_PositionsEqual(position_t *position_one, position_t *position_two);
 void CS_CopyPosition(position_t *dest, position_t *src);
+
+void CS_PrintMiscState(misc_state_t *state);
+void CS_PrintActorMiscState(Mobj *actor, unsigned int index);
+void CS_PrintPlayerMiscState(int playernum, unsigned int index);
+void CS_SetActorMiscState(Mobj *actor, misc_state_t *state);
+void CS_SetPlayerMiscState(int playernum, misc_state_t *state);
+bool CS_ActorMiscStateEquals(Mobj *actor, misc_state_t *state);
+void CS_SaveActorMiscState(misc_state_t *state, Mobj *actor, int index);
+bool CS_ActorMiscStateChanged(Mobj *actor);
+bool CS_MiscStatesEqual(misc_state_t *state_one, misc_state_t *state_two);
+void CS_CopyMiscState(misc_state_t *dest, misc_state_t *src);
 
 #endif
 

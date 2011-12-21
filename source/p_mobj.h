@@ -379,6 +379,9 @@ public:
    //      can be a serious amount of bandwidth with either a high amount of
    //      clients or actors.
    position_t old_position;
+
+   // [CG] Same deal with miscellaneos state.
+   misc_state_t old_misc_state;
 };
 
 // External declarations (formerly in p_local.h) -- killough 5/2/98

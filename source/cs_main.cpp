@@ -231,7 +231,7 @@ void CS_DoWorldDone(void)
 {
    unsigned int i;
    client_t *client;
-   server_client_t *server_client;
+   server_client_t *sc;
 
    idmusnum = -1;
    hub_changelevel = false;
@@ -247,15 +247,14 @@ void CS_DoWorldDone(void)
          client->spectating = true;
          if(CS_SERVER)
          {
-            server_client = &server_clients[i];
+            sc = &server_clients[i];
             client->join_tic = gametic;
-            server_client->commands_dropped = 0;
-            server_client->last_command_run_index = 0;
-            server_client->received_game_state = false;
-            M_QueueFree(&server_client->commands);
-            memset(
-               server_client->positions, 0, MAX_POSITIONS * sizeof(position_t)
-            );
+            sc->commands_dropped = 0;
+            sc->last_command_run_index = 0;
+            sc->received_game_state = false;
+            M_QueueFree(&sc->commands);
+            memset(sc->positions, 0, MAX_POSITIONS * sizeof(position_t));
+            memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(misc_state_t));
          }
          cl_spawning_actor_from_message = true;
          CS_SpawnPlayerCorrectly(i, true);
@@ -454,6 +453,7 @@ void CS_ZeroClient(int clientnum)
       sc->received_command_for_current_map = 0;
       M_QueueFree(&sc->commands);
       memset(sc->positions, 0, MAX_POSITIONS * sizeof(position_t));
+      memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(misc_state_t));
       memcpy(
          sc->weapon_preferences,
          weapon_preferences[1],
