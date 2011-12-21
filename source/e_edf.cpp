@@ -1334,13 +1334,14 @@ static void E_AllocSounds(cfg_t *cfg)
 //
 // E_CollectNames
 //
-// Pre-creates and hashes by name the states and things, for purpose 
-// of mutual and forward references.
+// Pre-creates and hashes by name states, things, and inventory
+// definitions, for purpose of mutual and forward references.
 //
 static void E_CollectNames(cfg_t *cfg)
 {
-   E_CollectStates(cfg); // see e_states.c
-   E_CollectThings(cfg); // see e_things.c
+   E_CollectStates(cfg);    // see e_states.cpp
+   E_CollectThings(cfg);    // see e_things.cpp
+   E_CollectInventory(cfg); // see e_inventory.cpp
 }
 
 //
@@ -1372,6 +1373,7 @@ static void E_ProcessPlayerData(cfg_t *cfg)
 {
    E_ProcessSkins(cfg);
    E_ProcessPlayerClasses(cfg);
+   E_ProcessInventoryDefs(cfg);
 }
 
 //

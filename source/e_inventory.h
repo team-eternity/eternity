@@ -29,6 +29,8 @@
 
 #include "m_dllist.h"
 
+class MetaTable;
+
 // Inventory flags
 enum
 {
@@ -75,6 +77,7 @@ struct inventory_t
    int   numkey;         // ID number
    inventory_t *parent;  // parent record for inheritance
    bool  processed;      // if true, has been processed
+   MetaTable *meta;      // metatable
 };
 
 // Lookup functions

@@ -29,6 +29,7 @@
 
 #include "d_dehtbl.h" // for dehflags parsing
 #include "doomtype.h"
+#include "metaapi.h"
 
 #define NEED_EDF_DEFINITIONS
 
@@ -219,11 +220,9 @@ void E_CollectInventory(cfg_t *cfg)
 
       numInventoryDefs += numInventory;
 
-      // TODO: metatables?
-      /*
+      // create metatables
       for(i = 0; i < numInventory; i++)
-         inventoryDefs[i]->meta = new MetaTable("inventory");
-      */
+         newInvDefs[i].meta = new MetaTable("inventory");
    }
 
    // build hash tables
@@ -417,11 +416,11 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
 void E_ProcessInventoryDefs(cfg_t *cfg)
 {
    unsigned int i, numInventory;
-   //static bool firsttime = true;
 
    E_EDFLogPuts("\t* Processing inventory data\n");
 
-   numInventory = cfg_size(cfg, EDF_SEC_INVENTORY);
+   if(!(numInventory = cfg_size(cfg, EDF_SEC_INVENTORY)))
+      return;
 
    // allocate inheritance stack and hitlist
    inv_pstack  = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
@@ -468,21 +467,19 @@ void E_ProcessInventoryDeltas(cfg_t *cfg)
 
    for(i = 0; i < numdeltas; i++)
    {
-      const char *tempstr;
-      //int mobjType;
-      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_INVDELTA, i);
+      cfg_t       *deltasec = cfg_getnsec(cfg, EDF_SEC_INVDELTA, i);
+      inventory_t *inv;
 
       // get thingtype to edit
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
          E_EDFLoggedErr(2, "E_ProcessInventoryDeltas: inventorydelta requires name field\n");
 
-      tempstr = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      // TODO:mobjType = E_GetThingNumForName(tempstr);
+      inv = E_GetInventoryForName(cfg_getstr(deltasec, ITEM_DELTA_NAME));
 
-      E_ProcessInventory(0/*TODO:mobjType*/, deltasec, cfg, false);
+      E_ProcessInventory(inv, deltasec, cfg, false);
 
       E_EDFLogPrintf("\t\tApplied inventorydelta #%d to %s(#%d)\n",
-                     i, ""/*TODO:mobjinfo[mobjType]->name*/, 0/*TODO:mobjType*/);
+                     i, inv->name, inv->numkey);
    }
 }
 

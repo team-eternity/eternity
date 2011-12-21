@@ -30,6 +30,7 @@
 #define METAAPI_H__
 
 #include "z_zone.h"
+#include "m_dllist.h"
 
 // A metatypename is just a string constant.
 typedef const char *metatypename_t;
