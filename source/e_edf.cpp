@@ -1800,9 +1800,10 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    E_ProcessMiscVars(cfg);
 
    // 08/30/03: apply deltas
-   E_ProcessSoundDeltas(cfg, true);
-   E_ProcessStateDeltas(cfg); // see e_states.c
-   E_ProcessThingDeltas(cfg); // see e_things.c
+   E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
+   E_ProcessStateDeltas(cfg);       // see e_states.cpp
+   E_ProcessThingDeltas(cfg);       // see e_things.cpp
+   E_ProcessInventoryDeltas(cfg);   // see e_inventory.cpp
 
    // post-processing routines
    E_SetThingDefaultSprites();

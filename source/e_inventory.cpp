@@ -356,7 +356,8 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
    //const char *tempstr;
    bool inherits = false;
 
-   if(!invsec)
+   // possible when inheriting from an inventory def of a previous EDF generation
+   if(!invsec) 
       return;
 
    // Process inheritance (not in deltas)
