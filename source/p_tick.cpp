@@ -70,8 +70,9 @@ class RootThinkerType : public ThinkerType
 { 
 protected: 
    static RootThinkerType globalRootThinkerType;
+   virtual ThinkerType *getParentType() const { return NULL; }
 public:
-   RootThinkerType() : ThinkerType("Thinker", NULL) 
+   RootThinkerType() : ThinkerType("Thinker") 
    {
       Thinker::StaticType = this;
    }
@@ -357,40 +358,13 @@ ThinkerType *ThinkerType::FindType(const char *pName)
 }
 
 //
-// ThinkerType::FindParents
-//
-// Static private method.
-// Called from InitThinkerTypes to initialize the parent field of all
-// ThinkerType instances. Obviously this is well after C++ construction has
-// finished for global objects, to avoid problems with order of constructor
-// calls.
-//
-void ThinkerType::FindParents()
-{
-   for(int i = 0; i < NUMTTYPECHAINS; i++)
-   {
-      ThinkerType *curType = thinkerTypes[i];
-
-      while(curType)
-      {
-         if(curType->parentName)
-         {
-            if(!(curType->parent = FindType(curType->parentName)))
-            {
-               I_Error("ThinkerType::FindParents: '%s' has invalid parent class '%s'!\n",
-                       curType->name, curType->parentName);
-            }
-         }
-         curType = curType->next;
-      }
-   }
-}
-
-//
 // ThinkerType::InitThinkerTypes
 //
 // Static method.
-// Called from Thinker::InitThinkers to perform all ThinkerType setup.
+// Called from Thinker::InitThinkers to initialize the parent field of all
+// ThinkerType instances. Obviously this is well after C++ construction has
+// finished for global objects, to avoid problems with order of constructor
+// calls.
 //
 void ThinkerType::InitThinkerTypes()
 {
@@ -402,7 +376,11 @@ void ThinkerType::InitThinkerTypes()
    firsttime = false;
 
    // Set parent class pointers
-   FindParents();
+   for(int i = 0; i < NUMTTYPECHAINS; i++)
+   {
+      for(ThinkerType *curType = thinkerTypes[i]; curType; curType = curType->next)
+         curType->parent = curType->getParentType();
+   }
 }
 
 // 
@@ -410,8 +388,7 @@ void ThinkerType::InitThinkerTypes()
 //
 // The object will automatically be added into the thinker factory list.
 //
-ThinkerType::ThinkerType(const char *pName, const char *pInherits) 
-  : name(pName), parentName(pInherits), parent(NULL)
+ThinkerType::ThinkerType(const char *pName) : name(pName), parent(NULL)
 {
    unsigned int hashcode;
 

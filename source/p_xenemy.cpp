@@ -40,7 +40,7 @@
 #include "p_xenemy.h"
 #include "s_sound.h"
 
-IMPLEMENT_THINKER_TYPE(QuakeThinker, PointThinker)
+IMPLEMENT_THINKER_TYPE(QuakeThinker)
 
 //
 // T_QuakeThinker

@@ -126,7 +126,7 @@ class SaveArchive;
 
 class PolyRotateThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PolyRotateThinker)
+   DECLARE_THINKER_TYPE(PolyRotateThinker, Thinker)
 
 protected:
    void Think();
@@ -143,7 +143,7 @@ public:
 
 class PolyMoveThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PolyMoveThinker)
+   DECLARE_THINKER_TYPE(PolyMoveThinker, Thinker)
 
 protected:
    void Think();
@@ -163,7 +163,7 @@ public:
 
 class PolySlideDoorThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PolySlideDoorThinker)
+   DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)
 
 protected:
    void Think();
@@ -190,7 +190,7 @@ public:
 
 class PolySwingDoorThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PolySwingDoorThinker)
+   DECLARE_THINKER_TYPE(PolySwingDoorThinker, Thinker)
 
 protected:
    void Think();

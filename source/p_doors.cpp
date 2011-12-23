@@ -94,7 +94,7 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
 //
 ///////////////////////////////////////////////////////////////
 
-IMPLEMENT_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 
 //
 // T_VerticalDoor

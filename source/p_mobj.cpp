@@ -115,7 +115,7 @@ fixed_t FloatBobDiffs[64] =
 // PointThinker Methods
 //
 
-IMPLEMENT_THINKER_TYPE(PointThinker, Thinker)
+IMPLEMENT_THINKER_TYPE(PointThinker)
 
 //
 // PointThinker::serialize
@@ -1167,7 +1167,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
 }
 #endif
 
-IMPLEMENT_THINKER_TYPE(Mobj, PointThinker)
+IMPLEMENT_THINKER_TYPE(Mobj)
 
 //
 // P_MobjThinker

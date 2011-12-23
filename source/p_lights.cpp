@@ -44,7 +44,7 @@
 //
 //////////////////////////////////////////////////////////
 
-IMPLEMENT_THINKER_TYPE(FireFlickerThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
 
 //
 // T_FireFlicker()
@@ -84,7 +84,7 @@ void FireFlickerThinker::serialize(SaveArchive &arc)
 }
 
 
-IMPLEMENT_THINKER_TYPE(LightFlashThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(LightFlashThinker)
 
 //
 // T_LightFlash()
@@ -148,7 +148,7 @@ bool LightFlashThinker::reTriggerVerticalDoor(bool player)
 }
 
 
-IMPLEMENT_THINKER_TYPE(StrobeThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(StrobeThinker)
 
 //
 // T_StrobeFlash()
@@ -212,7 +212,7 @@ bool StrobeThinker::reTriggerVerticalDoor(bool player)
 }
 
 
-IMPLEMENT_THINKER_TYPE(GlowThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(GlowThinker)
 
 //
 // T_Glow
@@ -261,7 +261,7 @@ void GlowThinker::serialize(SaveArchive &arc)
 }
 
 
-IMPLEMENT_THINKER_TYPE(LightFadeThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(LightFadeThinker)
 
 //
 // T_LightFade

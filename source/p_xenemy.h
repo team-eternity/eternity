@@ -38,7 +38,7 @@
 
 class QuakeThinker : public PointThinker
 {
-   DECLARE_THINKER_TYPE(QuakeThinker)
+   DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
 
 protected:
    void Think();

@@ -86,7 +86,7 @@ typedef struct acscript_s
 //
 class ACSThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(ACSThinker)
+   DECLARE_THINKER_TYPE(ACSThinker, Thinker)
 
 protected:
    // Data Members

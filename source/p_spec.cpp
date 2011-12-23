@@ -2890,7 +2890,7 @@ void P_SpawnDeferredSpecials(int mapformat)
 }
 
 
-IMPLEMENT_THINKER_TYPE(ScrollThinker, Thinker)
+IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
 // killough 2/28/98:
 //
@@ -3183,7 +3183,7 @@ static void Add_Friction(int friction, int movefactor, int affectee)
    f->addThinker();
 }
 
-IMPLEMENT_THINKER_TYPE(FrictionThinker, Thinker)
+IMPLEMENT_THINKER_TYPE(FrictionThinker)
 
 //
 // This is where abnormal friction is applied to objects in the sectors.
@@ -3501,7 +3501,7 @@ bool PIT_PushThing(Mobj* thing)
 }
 
 
-IMPLEMENT_THINKER_TYPE(PushThinker, Thinker)
+IMPLEMENT_THINKER_TYPE(PushThinker)
 
 //
 // T_Pusher 

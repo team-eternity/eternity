@@ -584,7 +584,7 @@ typedef enum
 // haleyjd 10/13/2011: base class for sector action types
 class SectorThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(SectorThinker)
+   DECLARE_THINKER_TYPE(SectorThinker, Thinker)
 
 protected:
    // sector attach points
@@ -652,7 +652,7 @@ extern int numbuttonsalloc;
 
 class FireFlickerThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FireFlickerThinker)
+   DECLARE_THINKER_TYPE(FireFlickerThinker, SectorThinker)
 
 protected:
    void Think();
@@ -669,7 +669,7 @@ public:
 
 class LightFlashThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(LightFlashThinker)
+   DECLARE_THINKER_TYPE(LightFlashThinker, SectorThinker)
 
 protected:
    void Think();
@@ -689,7 +689,7 @@ public:
 
 class StrobeThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(StrobeThinker)
+   DECLARE_THINKER_TYPE(StrobeThinker, SectorThinker)
 
 protected:
    void Think();
@@ -709,7 +709,7 @@ public:
 
 class GlowThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(GlowThinker)
+   DECLARE_THINKER_TYPE(GlowThinker, SectorThinker)
 
 protected:
    void Think();
@@ -729,7 +729,7 @@ public:
 
 class LightFadeThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(LightFadeThinker)
+   DECLARE_THINKER_TYPE(LightFadeThinker, SectorThinker)
 
 protected:
    void Think();
@@ -752,7 +752,7 @@ public:
 
 class PlatThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(PlatThinker)
+   DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
 
 protected:
    void Think();
@@ -798,7 +798,7 @@ enum
 
 class VerticalDoorThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(VerticalDoorThinker)
+   DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
 
 protected:
    void Think();
@@ -863,7 +863,7 @@ struct spectransfer_t
 
 class CeilingThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(CeilingThinker)
+   DECLARE_THINKER_TYPE(CeilingThinker, SectorThinker)
 
 protected:
    void Think();
@@ -928,7 +928,7 @@ typedef struct ceilingdata_s
 
 class FloorMoveThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FloorMoveThinker)
+   DECLARE_THINKER_TYPE(FloorMoveThinker, SectorThinker)
 
 protected:
    void Think();
@@ -996,7 +996,7 @@ typedef struct stairdata_s
 
 class ElevatorThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(ElevatorThinker)
+   DECLARE_THINKER_TYPE(ElevatorThinker, SectorThinker)
 
 protected:
    void Think();
@@ -1018,7 +1018,7 @@ public:
 // joek: pillars
 class PillarThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(PillarThinker)
+   DECLARE_THINKER_TYPE(PillarThinker, SectorThinker)
 
 protected:
    void Think();
@@ -1052,7 +1052,7 @@ typedef struct pillardata_s
 // haleyjd 06/30/09: waggle floors
 class FloorWaggleThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FloorWaggleThinker)
+   DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
 
 protected:
    void Think();
@@ -1080,7 +1080,7 @@ public:
 
 class ScrollThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(ScrollThinker)
+   DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
 
 protected:
    void Think();
@@ -1112,7 +1112,7 @@ public:
 
 class FrictionThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(FrictionThinker)
+   DECLARE_THINKER_TYPE(FrictionThinker, Thinker)
 
 protected:
    void Think();
@@ -1131,7 +1131,7 @@ public:
 
 class PushThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PushThinker)
+   DECLARE_THINKER_TYPE(PushThinker, Thinker)
 
 protected:
    void Think();

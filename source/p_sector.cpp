@@ -35,7 +35,7 @@
 // SectorThinker class methods
 //
 
-IMPLEMENT_THINKER_TYPE(SectorThinker, Thinker)
+IMPLEMENT_THINKER_TYPE(SectorThinker)
 
 //
 // SectorThinker::serialize

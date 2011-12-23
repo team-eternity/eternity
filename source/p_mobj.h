@@ -154,7 +154,7 @@ typedef struct backpack_s
 // class for all thinkers that want to be located somewhere in the game world.
 class PointThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PointThinker)
+   DECLARE_THINKER_TYPE(PointThinker, Thinker)
 
 public:
    PointThinker() : Thinker(), x(0), y(0), z(0), groupid(0) {}
@@ -187,7 +187,7 @@ public:
 //
 class Mobj : public PointThinker
 {
-   DECLARE_THINKER_TYPE(Mobj)
+   DECLARE_THINKER_TYPE(Mobj, PointThinker)
 
 protected:
    // Data Members

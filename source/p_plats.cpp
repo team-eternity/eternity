@@ -58,7 +58,7 @@ void P_PlatSequence(sector_t *s, const char *seqname)
       S_StartSectorSequenceName(s, seqname, false);
 }
 
-IMPLEMENT_THINKER_TYPE(PlatThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(PlatThinker)
 
 //
 // T_PlatRaise()

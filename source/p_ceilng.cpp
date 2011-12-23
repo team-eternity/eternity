@@ -93,7 +93,7 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
 //
 /////////////////////////////////////////////////////////////////
 
-IMPLEMENT_THINKER_TYPE(CeilingThinker, SectorThinker)
+IMPLEMENT_THINKER_TYPE(CeilingThinker)
 
 //
 // T_MoveCeiling

@@ -39,21 +39,19 @@ class ThinkerType
 private:
    static ThinkerType **thinkerTypes;
 
-   // FindParents will set the parent type of all ThinkerType instances.
-   // This must be called from startup, for example from Thinker::InitThinkers,
-   // which is well after all ThinkerType instances have constructed themselves.
-   static void FindParents();
-
 protected:
    friend class Thinker;
 
    ThinkerType *parent;
    ThinkerType *next;
-   const char  *parentName;
    const char  *name;
 
+   // getParentType is a pure virtual method that is ideally called only once
+   // at startup; the result is then cached in the parent member.
+   virtual ThinkerType *getParentType() const = 0;
+
 public:
-   ThinkerType(const char *pName, const char *pInherits);
+   ThinkerType(const char *pName);
 
    // newThinker is a pure virtual method that must be overridden by a child 
    // class to construct a specific type of thinker
@@ -251,8 +249,9 @@ extern bool reset_viewz;
 //     actual type of the object (the parent instances of StaticType are hidden
 //     in each descendant scope).
 //
-#define DECLARE_THINKER_TYPE(name) \
+#define DECLARE_THINKER_TYPE(name, inherited) \
 public: \
+   typedef inherited Super; \
    static ThinkerType *StaticType; \
    virtual const ThinkerType *getDynamicType() const { return StaticType; } \
 private:
@@ -263,18 +262,20 @@ private:
 // Use this macro once per Thinker descendant. Best placed near the Think 
 // routine.
 // Example:
-//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker, SectorThinker)
+//   IMPLEMENT_THINKER_TYPE(FireFlickerThinker)
 //   This defines FireFlickerThinkerType, which constructs a ThinkerType parent
 //   with "FireFlickerThinker" as its name member and which returns a new FireFlickerThinker
 //   instance via its newThinker virtual method.
 // 
-#define IMPLEMENT_THINKER_TYPE(name, inherits) \
+#define IMPLEMENT_THINKER_TYPE(name) \
 class name ## Type : public ThinkerType \
 { \
 protected: \
    static name ## Type global ## name ## Type ; \
+   typedef name Class; \
+   virtual ThinkerType *getParentType() const { return Class::Super::StaticType; } \
 public: \
-   name ## Type() : ThinkerType( #name , #inherits ) \
+   name ## Type() : ThinkerType( #name ) \
    { \
      name :: StaticType = this; \
    } \
