@@ -34,6 +34,7 @@
 #include "e_sound.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "p_info.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 
@@ -332,29 +333,29 @@ protected:
    // keyword enumeration
    enum
    {
-     KWD_RANDOM,
      KWD_ALIAS,
-     KWD_LIMIT,
-     KWD_SINGULAR,
-     KWD_PITCHSHIFT,
-     KWD_VOLUME,
-     KWD_ROLLOFF,
-     KWD_PLAYERSOUND,
-     KWD_PLAYERSOUNDDUP,
-     KWD_PLAYERALIAS,
-     KWD_PLAYERCOMPAT,
-     KWD_AMBIENT,
+     KWD_AMBIENT,     
+     KWD_ARCHIVEPATH,
+     KWD_EDFOVERRIDE,
+     KWD_ENDIF,
      KWD_IFDOOM,
      KWD_IFHERETIC,
      KWD_IFHEXEN,
      KWD_IFSTRIFE,
-     KWD_ENDIF,
+     KWD_LIMIT,
      KWD_MAP,
-     KWD_MUSICVOLUME,
-     KWD_REGISTERED,
-     KWD_ARCHIVEPATH,
      KWD_MIDIDEVICE,
-     KWD_EDFOVERRIDE,
+     KWD_MUSICVOLUME,
+     KWD_PITCHSHIFT,
+     KWD_PLAYERALIAS,
+     KWD_PLAYERCOMPAT,
+     KWD_PLAYERSOUND,
+     KWD_PLAYERSOUNDDUP,
+     KWD_RANDOM,
+     KWD_REGISTERED,
+     KWD_ROLLOFF,
+     KWD_SINGULAR,
+     KWD_VOLUME,
      NUMKWDS
    };
 
@@ -368,9 +369,10 @@ protected:
       STATE_EATTOKEN
    };
 
-   int state;
+   int     state;
    qstring soundname;
-   bool edfOverRide; // if true, definitions can override EDF sounds
+   bool    edfOverRide; // if true, definitions can override EDF sounds
+   int     musicmapnum;
 
    void DoStateExpectCmd(XLTokenizer &token);
    void DoStateExpectMapNum(XLTokenizer &token);
@@ -387,7 +389,7 @@ protected:
 public:
    // Constructor
    XLSndInfoParser() 
-      : XLParser("SNDINFO"), soundname(32), edfOverRide(false)
+      : XLParser("SNDINFO"), soundname(32), edfOverRide(false), musicmapnum(0)
    {
    }
 };
@@ -464,15 +466,47 @@ void XLSndInfoParser::DoStateExpectCmd(XLTokenizer &token)
 // Expecting the map number after a $map command
 void XLSndInfoParser::DoStateExpectMapNum(XLTokenizer &token)
 {
-   // TODO
-   state = STATE_EXPECTMUSLUMP;
+   if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
+   {
+      state = STATE_EXPECTCMD;
+      DoStateExpectCmd(token);
+   }
+   else
+   {
+      musicmapnum = token.GetToken().toInt();
+
+      // Expect music lump name next.
+      state = STATE_EXPECTMUSLUMP;
+   }
 }
 
 // Expecting the music lump name after a map number
 void XLSndInfoParser::DoStateExpectMusLump(XLTokenizer &token)
 {
-   // TODO
-   state = STATE_EXPECTCMD;
+   if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
+   {
+      state = STATE_EXPECTCMD;
+      DoStateExpectCmd(token);
+   }
+   else
+   {
+      qstring &muslump = token.GetToken();
+
+      // Lump must exist
+      if(muslump.length() <= 8 &&
+         waddir->CheckNumForName(muslump.constPtr()) != -1)
+      {
+         P_AddSndInfoMusic(musicmapnum, muslump.constPtr());
+
+         // Return to expecting a command
+         state = STATE_EXPECTCMD;
+      }
+      else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
+      {
+         state = STATE_EXPECTCMD;
+         DoStateExpectCmd(token);
+      }
+   }
 }
 
 // Expecting the lump name after a sound definition
@@ -507,16 +541,15 @@ void XLSndInfoParser::DoStateExpectSndLump(XLTokenizer &token)
          } // create a new sound
          else
             E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
+
+         // Return to expecting a command
+         state = STATE_EXPECTCMD;
       }
       else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
       {
          state = STATE_EXPECTCMD;
          DoStateExpectCmd(token);
-         return;
       }
-
-      // Return to expecting a command
-      state = STATE_EXPECTCMD;
    }
 }
 
