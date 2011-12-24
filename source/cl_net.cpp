@@ -989,6 +989,24 @@ void CL_HandleActorPositionMessage(nm_actorposition_t *message)
    CS_SetActorPosition(actor, &message->position);
 }
 
+void CL_HandleActorMiscStateMessage(nm_actormiscstate_t *message)
+{
+   Mobj *actor;
+
+   actor = NetActors.lookup(message->actor_net_id);
+
+   if(actor == NULL)
+   {
+      printf(
+         "Received misc state update for invalid actor %u, ignoring.\n",
+         message->actor_net_id
+      );
+      return;
+   }
+
+   CS_SetActorMiscState(actor, &message->misc_state);
+}
+
 void CL_HandleActorTargetMessage(nm_actortarget_t *message)
 {
    Mobj *actor;

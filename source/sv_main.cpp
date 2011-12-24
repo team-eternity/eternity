@@ -147,6 +147,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_bloodspawned:
    case nm_actorspawned:
    case nm_actorposition:
+   case nm_actormiscstate:
    case nm_actortarget:
    case nm_actorstate:
    case nm_actordamaged:

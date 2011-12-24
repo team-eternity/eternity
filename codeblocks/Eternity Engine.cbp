@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='-base &quot;E:\Doom\Eternity Engine\base&quot; -directx -8in32 -nomusic -csjoin &quot;eternity://master.totaltrash.org/servers/totaltrash/ctf&quot; ' />
+				<Option parameters='-base &quot;E:\Code\eecs\codeblocks\bin\Debug\base&quot; -csserve' />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -420,6 +420,7 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

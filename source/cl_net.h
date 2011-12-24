@@ -63,6 +63,7 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message);
 void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message);
 void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message);
 void CL_HandleActorPositionMessage(nm_actorposition_t *message);
+void CL_HandleActorMiscStateMessage(nm_actormiscstate_t *message);
 void CL_HandleActorTargetMessage(nm_actortarget_t *message);
 void CL_HandleActorStateMessage(nm_actorstate_t *message);
 void CL_HandleActorDamagedMessage(nm_actordamaged_t *message);

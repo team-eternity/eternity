@@ -126,6 +126,9 @@ void NetPacket::process()
    case nm_actorposition:
       CL_HandleActorPositionMessage((nm_actorposition_t *)data);
       break;
+   case nm_actormiscstate:
+      CL_HandleActorMiscStateMessage((nm_actormiscstate_t *)data);
+      break;
    case nm_actortarget:
       CL_HandleActorTargetMessage((nm_actortarget_t *)data);
       break;
