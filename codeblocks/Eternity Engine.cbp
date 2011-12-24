@@ -7,10 +7,11 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\eternity" prefix_auto="1" extension_auto="1" />
+				<Option output="E:\Doom\Eternity Engine\eternity" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters='-base &quot;E:\Doom\Eternity Engine\base&quot; -directx -8in32 -nomusic -csjoin &quot;eternity://master.totaltrash.org/servers/totaltrash/ctf&quot; ' />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

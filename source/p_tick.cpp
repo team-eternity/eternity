@@ -322,11 +322,18 @@ void P_Ticker(void)
          {
             if(CS_CLIENT && i == consoleplayer && !clients[i].spectating)
             {
-               CL_LoadLastServerPosition();
-               CL_RePredict(
-                  CL_GetLastServerPositionIndex() + 1,
-                  cl_current_world_index
-               );
+               unsigned int last_server_command_index =
+                  CL_GetLastServerCommandIndex() + 1;
+
+               if((cl_commands_sent - 1) > last_server_command_index)
+               {
+                  CL_LoadLastServerPosition();
+                  CL_RePredict(
+                     last_server_command_index,
+                     CL_GetLastServerPositionIndex() + 1,
+                     (cl_commands_sent - last_server_command_index) - 2
+                  );
+               }
             }
 
             P_PlayerThink(&players[i]);

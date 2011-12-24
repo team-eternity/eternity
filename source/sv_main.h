@@ -99,7 +99,7 @@ void SV_AdvanceMapList(void);
 void SV_LoadClientOptions(int playernum);
 void SV_RestoreServerOptions(void);
 unsigned int SV_ClientCommandBufferSize(int playernum);
-void SV_RunPlayerCommand(int playernum, cs_cmd_t *command);
+void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd);
 void SV_RunPlayerCommands(int playernum);
 
 // [CG] Sending functions.
@@ -139,6 +139,7 @@ void SV_BroadcastBloodSpawned(Mobj *blood, Mobj *shooter, int damage,
                               Mobj *target);
 void SV_BroadcastActorSpawned(Mobj *actor);
 void SV_BroadcastActorPosition(Mobj *actor, int tic);
+void SV_BroadcastActorMiscState(Mobj *actor, int tic);
 void SV_BroadcastActorTarget(Mobj *actor, actor_target_e target_type);
 void SV_BroadcastActorState(Mobj *actor, statenum_t state_number);
 void SV_BroadcastActorDamaged(Mobj *target, Mobj *inflictor,

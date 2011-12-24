@@ -638,7 +638,7 @@ void P_PlayerThink(player_t *player)
    if(!clientserver)
       P_RunPlayerCommand(playernum);
    else if(CS_CLIENT && playernum == consoleplayer)
-      CL_PredictPlayerPosition(cl_current_world_index, false);
+      CL_PredictPlayerPosition(cl_commands_sent - 1, false);
    else if(CS_SERVER)
       SV_RunPlayerCommands(playernum);
 

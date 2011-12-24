@@ -45,6 +45,7 @@ bool cl_predicting = false;
 static cs_cmd_t local_commands[MAX_POSITIONS];
 static position_t last_server_position;
 static cs_floor_status_e last_floor_status;
+static uint32_t last_server_command_index;
 
 void CL_InitPrediction(void)
 {
@@ -52,16 +53,23 @@ void CL_InitPrediction(void)
    memset(local_commands, 0, MAX_POSITIONS * sizeof(cs_cmd_t));
 }
 
-cs_cmd_t* CL_GetCurrentCommand(void)
+cs_cmd_t* CL_GetCommandAtIndex(uint32_t index)
 {
-   return &local_commands[cl_current_world_index % MAX_POSITIONS];
+   return &local_commands[index % MAX_POSITIONS];
 }
 
-void CL_PredictPlayerPosition(unsigned int index, bool think)
+cs_cmd_t* CL_GetCurrentCommand(void)
 {
-   CS_RunPlayerCommand(
-      consoleplayer, &local_commands[index % MAX_POSITIONS].ticcmd, think
-   );
+   return CL_GetCommandAtIndex(cl_commands_sent - 1);
+}
+
+void CL_PredictPlayerPosition(unsigned int command_index, bool think)
+{
+   ticcmd_t ticcmd;
+   cs_cmd_t *command = CL_GetCommandAtIndex(command_index);
+
+   CS_CopyCommandToTiccmd(&ticcmd, command);
+   CS_RunPlayerCommand(consoleplayer, &ticcmd, think);
 }
 
 void CL_PredictFrom(unsigned int start, unsigned int end)
@@ -72,27 +80,28 @@ void CL_PredictFrom(unsigned int start, unsigned int end)
       CL_PredictPlayerPosition(i, true);
 }
 
-void CL_RePredict(unsigned int start, unsigned int end)
+void CL_RePredict(unsigned int command_index, unsigned int position_index,
+                  unsigned int count)
 {
    unsigned int i;
 
    cl_predicting = true;
-   for(i = start; i < end; i++)
+   for(i = 0; i < count; i++)
    {
-      CL_LoadSectorPositions(i);
-      CL_PredictPlayerPosition(i, true);
+      CL_LoadSectorPositions(position_index + i);
+      CL_PredictPlayerPosition(command_index + i, true);
    }
    cl_predicting = false;
    CL_LoadSectorPositions(cl_current_world_index);
-
 }
 
 void CL_StoreLastServerPosition(position_t *new_server_position,
-                                uint32_t index,
-                                cs_floor_status_e floor_status)
+                                cs_floor_status_e floor_status,
+                                uint32_t index, uint32_t world_index)
 {
    CS_CopyPosition(&last_server_position, new_server_position);
-   last_server_position.world_index = index;
+   last_server_command_index = index;
+   last_server_position.world_index = world_index;
    last_floor_status = floor_status;
 }
 
@@ -105,5 +114,10 @@ void CL_LoadLastServerPosition(void)
 uint32_t CL_GetLastServerPositionIndex(void)
 {
    return last_server_position.world_index;
+}
+
+uint32_t CL_GetLastServerCommandIndex(void)
+{
+   return last_server_command_index;
 }
 

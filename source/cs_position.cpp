@@ -47,7 +47,7 @@ void CS_PrintPosition(position_t *position)
       position->momy >> FRACBITS,
       position->momz >> FRACBITS,
       position->angle / ANGLE_1,
-      position->pitch >> FRACBITS,
+      position->pitch >> FRACBITS
    );
 }
 
@@ -175,10 +175,10 @@ void CS_PrintMiscState(misc_state_t *state)
 
 void CS_PrintActorMiscState(Mobj *actor, unsigned int index)
 {
-   position_t position;
+   misc_state_t state;
 
-   CS_SaveActorMiscState(&position, actor, index);
-   CS_PrintMiscState(&position);
+   CS_SaveActorMiscState(&state, actor, index);
+   CS_PrintMiscState(&state);
 }
 
 void CS_PrintPlayerMiscState(int playernum, unsigned int index)
@@ -210,7 +210,7 @@ void CS_SetActorMiscState(Mobj *actor, misc_state_t *state)
 
 void CS_SetPlayerMiscState(int playernum, misc_state_t *state)
 {
-   CS_SetActorPosition(players[playernum].mo, state);
+   CS_SetActorMiscState(players[playernum].mo, state);
 }
 
 bool CS_ActorMiscStateEquals(Mobj *actor, misc_state_t *state)
@@ -245,7 +245,7 @@ void CS_SaveActorMiscState(misc_state_t *state, Mobj *actor, int index)
    state->flags2       = actor->flags2;
    state->flags3       = actor->flags3;
    state->flags4       = actor->flags4;
-   state->intflag      = actor->intflags;
+   state->intflags     = actor->intflags;
    state->friction     = actor->friction;
    state->movefactor   = actor->movefactor;
    state->reactiontime = actor->reactiontime;
@@ -293,20 +293,20 @@ bool CS_MiscStatesEqual(misc_state_t *state_one, misc_state_t *state_two)
 
 void CS_CopyMiscState(misc_state_t *dest, misc_state_t *src)
 {
-   state_one->flags           = state_two->flags;
-   state_one->flags2          = state_two->flags2;
-   state_one->flags3          = state_two->flags3;
-   state_one->flags4          = state_two->flags4;
-   state_one->intflags        = state_two->intflags;
-   state_one->friction        = state_two->friction;
-   state_one->movefactor      = state_two->movefactor;
-   state_one->reactiontime    = state_two->reactiontime;
-   state_one->floatbob        = state_two->floatbob;
-   state_one->bob             = state_two->bob;
-   state_one->viewz           = state_two->viewz;
-   state_one->viewheight      = state_two->viewheight;
-   state_one->deltaviewheight = state_two->deltaviewheight;
-   state_one->jumptime        = state_two->jumptime;
-   state_one->playerstate     = state_two->playerstate;
+   dest->flags           = src->flags;
+   dest->flags2          = src->flags2;
+   dest->flags3          = src->flags3;
+   dest->flags4          = src->flags4;
+   dest->intflags        = src->intflags;
+   dest->friction        = src->friction;
+   dest->movefactor      = src->movefactor;
+   dest->reactiontime    = src->reactiontime;
+   dest->floatbob        = src->floatbob;
+   dest->bob             = src->bob;
+   dest->viewz           = src->viewz;
+   dest->viewheight      = src->viewheight;
+   dest->deltaviewheight = src->deltaviewheight;
+   dest->jumptime        = src->jumptime;
+   dest->playerstate     = src->playerstate;
 }
 

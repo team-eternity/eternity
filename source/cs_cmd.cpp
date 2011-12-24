@@ -41,69 +41,71 @@ void CS_PrintCommand(cs_cmd_t *command)
    printf(
       "%u: %d/%d %d/%d %d/%d.\n",
       command->world_index,
-      command->ticcmd.forwardmove,
-      command->ticcmd.sidemove,
-      command->ticcmd.look,
-      command->ticcmd.angleturn,
-      command->ticcmd.buttons,
-      command->ticcmd.actions
+      command->forwardmove,
+      command->sidemove,
+      command->look,
+      command->angleturn,
+      command->buttons,
+      command->actions
    );
 }
 
-void CS_PrintTiccmd(ticcmd_t *cmd)
+void CS_PrintTiccmd(ticcmd_t *command)
 {
    printf(
       "%d/%d %d/%d %d/%d.\n",
-      cmd->forwardmove,
-      cmd->sidemove,
-      cmd->look,
-      cmd->angleturn,
-      cmd->buttons,
-      cmd->actions
+      command->forwardmove,
+      command->sidemove,
+      command->look,
+      command->angleturn,
+      command->buttons,
+      command->actions
    );
 }
 
 void CS_CopyCommand(cs_cmd_t *dest, cs_cmd_t *src)
 {
-   dest->world_index        = src->world_index;
-   dest->ticcmd.forwardmove = src->ticcmd.forwardmove;
-   dest->ticcmd.sidemove    = src->ticcmd.sidemove;
-   dest->ticcmd.look        = src->ticcmd.look;
-   dest->ticcmd.angleturn   = src->ticcmd.angleturn;
-   dest->ticcmd.buttons     = src->ticcmd.buttons;
-   dest->ticcmd.actions     = src->ticcmd.actions;
+   dest->index       = src->index;
+   dest->world_index = src->world_index;
+   dest->forwardmove = src->forwardmove;
+   dest->sidemove    = src->sidemove;
+   dest->look        = src->look;
+   dest->angleturn   = src->angleturn;
+   dest->buttons     = src->buttons;
+   dest->actions     = src->actions;
 }
 
-void CS_CopyTiccmdToCommand(cs_cmd_t *command, ticcmd_t *cmd,
-                            unsigned int index)
+void CS_CopyTiccmdToCommand(cs_cmd_t *command, ticcmd_t *cmd, uint32_t index,
+                            uint32_t world_index)
 {
-   command->world_index        = index;
-   command->ticcmd.forwardmove = cmd->forwardmove;
-   command->ticcmd.sidemove    = cmd->sidemove;
-   command->ticcmd.look        = cmd->look;
-   command->ticcmd.angleturn   = cmd->angleturn;
-   command->ticcmd.buttons     = cmd->buttons;
-   command->ticcmd.actions     = cmd->actions;
+   command->index       = index;
+   command->world_index = world_index;
+   command->forwardmove = cmd->forwardmove;
+   command->sidemove    = cmd->sidemove;
+   command->look        = cmd->look;
+   command->angleturn   = cmd->angleturn;
+   command->buttons     = cmd->buttons;
+   command->actions     = cmd->actions;
 }
 
 void CS_CopyCommandToTiccmd(ticcmd_t *cmd, cs_cmd_t *command)
 {
-   cmd->forwardmove = command->ticcmd.forwardmove;
-   cmd->sidemove    = command->ticcmd.sidemove;
-   cmd->look        = command->ticcmd.look;
-   cmd->angleturn   = command->ticcmd.angleturn;
-   cmd->buttons     = command->ticcmd.buttons;
-   cmd->actions     = command->ticcmd.actions;
+   cmd->forwardmove = command->forwardmove;
+   cmd->sidemove    = command->sidemove;
+   cmd->look        = command->look;
+   cmd->angleturn   = command->angleturn;
+   cmd->buttons     = command->buttons;
+   cmd->actions     = command->actions;
 }
 
 bool CS_CommandsEqual(cs_cmd_t *command_one, cs_cmd_t *command_two)
 {
-   if(command_one->ticcmd.forwardmove == command_two->ticcmd.forwardmove &&
-      command_one->ticcmd.sidemove    == command_two->ticcmd.sidemove    &&
-      command_one->ticcmd.look        == command_two->ticcmd.look        &&
-      command_one->ticcmd.angleturn   == command_two->ticcmd.angleturn   &&
-      command_one->ticcmd.buttons     == command_two->ticcmd.buttons     &&
-      command_one->ticcmd.actions     == command_two->ticcmd.actions)
+   if(command_one->forwardmove == command_two->forwardmove &&
+      command_one->sidemove    == command_two->sidemove    &&
+      command_one->look        == command_two->look        &&
+      command_one->angleturn   == command_two->angleturn   &&
+      command_one->buttons     == command_two->buttons     &&
+      command_one->actions     == command_two->actions)
    {
       return true;
    }
@@ -114,42 +116,43 @@ bool CS_CommandIsBlank(cs_cmd_t *command)
 {
    // [CG] We don't care about consistancy or chatchar, but everything else has
    //      to be zero.
-   if(command->ticcmd.forwardmove == 0 &&
-      command->ticcmd.sidemove    == 0 &&
-      command->ticcmd.look        == 0 &&
-      command->ticcmd.angleturn   == 0 &&
-      command->ticcmd.buttons     == 0 &&
-      command->ticcmd.actions     == 0)
+   if(command->forwardmove == 0 &&
+      command->sidemove    == 0 &&
+      command->look        == 0 &&
+      command->angleturn   == 0 &&
+      command->buttons     == 0 &&
+      command->actions     == 0)
    {
       return true;
    }
    return false;
 }
 
-void CS_SavePlayerCommand(cs_cmd_t *command, unsigned int playernum,
-                          unsigned int index)
+void CS_SavePlayerCommand(cs_cmd_t *command, int playernum, uint32_t index,
+                          uint32_t world_index)
 {
    player_t *player = &players[playernum];
 
-   command->world_index        = index;
-   command->ticcmd.forwardmove = player->cmd.forwardmove;
-   command->ticcmd.sidemove    = player->cmd.sidemove;
-   command->ticcmd.look        = player->cmd.look;
-   command->ticcmd.angleturn   = player->cmd.angleturn;
-   command->ticcmd.buttons     = player->cmd.buttons;
-   command->ticcmd.actions     = player->cmd.actions;
+   command->index       = index;
+   command->world_index = world_index;
+   command->forwardmove = player->cmd.forwardmove;
+   command->sidemove    = player->cmd.sidemove;
+   command->look        = player->cmd.look;
+   command->angleturn   = player->cmd.angleturn;
+   command->buttons     = player->cmd.buttons;
+   command->actions     = player->cmd.actions;
 }
 
-void CS_SetPlayerCommand(unsigned int playernum, cs_cmd_t *command)
+void CS_SetPlayerCommand(int playernum, cs_cmd_t *command)
 {
    player_t *player = &players[playernum];
 
-   player->cmd.forwardmove = command->ticcmd.forwardmove;
-   player->cmd.sidemove    = command->ticcmd.sidemove;
-   player->cmd.look        = command->ticcmd.look;
-   player->cmd.angleturn   = command->ticcmd.angleturn;
-   player->cmd.buttons     = command->ticcmd.buttons;
-   player->cmd.actions     = command->ticcmd.actions;
+   player->cmd.forwardmove = command->forwardmove;
+   player->cmd.sidemove    = command->sidemove;
+   player->cmd.look        = command->look;
+   player->cmd.angleturn   = command->angleturn;
+   player->cmd.buttons     = command->buttons;
+   player->cmd.actions     = command->actions;
 }
 
 void CS_RunPlayerCommand(int playernum, ticcmd_t *cmd, bool think)

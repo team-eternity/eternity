@@ -67,7 +67,8 @@
 extern unsigned int rngseed;
 extern int s_announcer_type;
 
-static void send_packet(void *data, size_t data_size)
+static void send_any_packet(void *data, size_t data_size, uint8_t flags,
+                            uint8_t channel_id)
 {
    ENetPacket *packet;
 
@@ -77,13 +78,26 @@ static void send_packet(void *data, size_t data_size)
    if(LOG_ALL_NETWORK_MESSAGES)
    {
       printf(
-         "Sending [%s message].\n",
-         network_message_names[*((int *)data)]
+         "Sending [%s message].\n", network_message_names[*((int *)data)]
       );
    }
 
-   packet = enet_packet_create(data, data_size, ENET_PACKET_FLAG_RELIABLE);
-   enet_peer_send(net_peer, SEQUENCED_CHANNEL, packet);
+   packet = enet_packet_create(data, data_size, flags);
+   enet_peer_send(net_peer, channel_id, packet);
+}
+
+static void send_packet(void *data, size_t data_size)
+{
+   send_any_packet(
+      data, data_size, ENET_PACKET_FLAG_RELIABLE, RELIABLE_CHANNEL
+   );
+}
+
+static void send_unreliable_packet(void *data, size_t data_size)
+{
+   send_any_packet(
+      data, data_size, ENET_PACKET_FLAG_UNSEQUENCED, UNRELIABLE_CHANNEL
+   );
 }
 
 static void send_message(message_recipient_e recipient_type,
@@ -149,34 +163,32 @@ static char* CL_extractPlayerMessage(nm_playermessage_t *message)
 
 void CL_SendCommand(void)
 {
-   nm_playercommand_t command_message;
-   cs_cmd_t *command = CL_GetCurrentCommand();
-   // static unsigned int commands_sent = 0;
+   char *buffer;
+   nm_playercommand_t *command_message;
+   cs_cmd_t *command;
+   ticcmd_t ticcmd;
+   size_t buffer_size;
+   uint32_t i, command_count;
 
+   // [CG] Ensure no commands are made during demo playback.
    if(CS_DEMO)
       I_Error("Error: made a command during demo playback.\n");
 
-   command_message.message_type = nm_playercommand;
-   command->world_index = cl_current_world_index;
+   command = CL_GetCommandAtIndex(cl_commands_sent);
 
    if(consoleactive)
-      memset(&command->ticcmd, 0, sizeof(ticcmd_t));
+   {
+      memset(command, 0, sizeof(ticcmd_t));
+      command->index = cl_commands_sent;
+      command->world_index = cl_current_world_index;
+   }
    else
-      G_BuildTiccmd(&command->ticcmd);
-
-   CS_CopyCommand(&command_message.command, command);
-
-#if _CMD_DEBUG
-   printf(
-      "CL_SendCommand (%3u/%3u): Sending command %u: ",
-      cl_current_world_index,
-      cl_latest_world_index,
-      command->world_index
-   );
-   CS_PrintTiccmd(&command->ticcmd);
-#endif
-
-   send_packet(&command_message, sizeof(nm_playercommand_t));
+   {
+      G_BuildTiccmd(&ticcmd);
+      CS_CopyTiccmdToCommand(
+         command, &ticcmd, cl_commands_sent, cl_current_world_index
+      );
+   }
 
    // [CG] Save all sent commands in the demo if recording.
    if(cs_demo_recording)
@@ -191,8 +203,19 @@ void CL_SendCommand(void)
       }
    }
 
+#if _CMD_DEBUG
+   printf(
+      "CL_SendCommand (%3u/%3u): Sending command %u: ",
+      cl_current_world_index,
+      cl_latest_world_index,
+      command->world_index
+   );
+   CS_PrintTiccmd(&ticcmd);
+   CS_PrintCommand(command);
+#endif
+
 #if _UNLAG_DEBUG
-   if(command->ticcmd.buttons & BT_ATTACK)
+   if(command->buttons & BT_ATTACK)
    {
       printf(
          "CL_SendCommand (%3u/%3u): Sending command %u: ",
@@ -200,7 +223,7 @@ void CL_SendCommand(void)
          cl_latest_world_index,
          command->world_index
       );
-      CS_PrintTiccmd(&command->ticcmd);
+      CS_PrintCommand(command);
       if(consoleplayer == 1 && playeringame[2])
       {
          printf("CL_SendCommand: Position of 2: ");
@@ -213,6 +236,38 @@ void CL_SendCommand(void)
       }
    }
 #endif
+
+   buffer = ecalloc(
+      char *,
+      sizeof(char),
+      sizeof(nm_playercommand_t) + (sizeof(cs_cmd_t) * COMMAND_BUNDLE_SIZE)
+   );
+
+   if(cl_commands_sent < (COMMAND_BUNDLE_SIZE - 1))
+      command_count = cl_commands_sent + 1;
+   else
+      command_count = COMMAND_BUNDLE_SIZE;
+
+   buffer_size = sizeof(nm_playercommand_t) +
+                (sizeof(cs_cmd_t) * command_count);
+   buffer = ecalloc(char *, sizeof(char), buffer_size);
+
+   command_message = (nm_playercommand_t *)(buffer);
+   command = (cs_cmd_t *)(buffer + sizeof(nm_playercommand_t));
+
+   command_message->message_type = nm_playercommand;
+   command_message->command_count = command_count;
+
+   for(i = ((cl_commands_sent + 1) - command_count);
+       i <= cl_commands_sent;
+       i++, command++)
+   {
+      CS_CopyCommand(command, CL_GetCommandAtIndex(i));
+   }
+
+   send_unreliable_packet(buffer, buffer_size);
+   cl_commands_sent++;
+   efree(buffer);
 }
 
 void CL_SendPlayerStringInfo(client_info_e info_type)
@@ -515,6 +570,8 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    CS_DoWorldDone();
 
    CL_SendCurrentStateRequest();
+
+   cl_commands_sent = 0;
 }
 
 void CL_HandleAuthResultMessage(nm_authresult_t *message)
@@ -580,8 +637,8 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    client = &clients[playernum];
 
-   if(message->world_index > message->last_command_run)
-      client->client_lag = message->world_index - message->last_command_run;
+   if(message->world_index > message->last_world_index_run)
+      client->client_lag = message->world_index - message->last_world_index_run;
    else
       client->client_lag = 0;
 
@@ -607,8 +664,9 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    {
       CL_StoreLastServerPosition(
          &message->position,
-         message->last_command_run,
-         (cs_floor_status_e)message->floor_status
+         (cs_floor_status_e)message->floor_status,
+         message->last_index_run,
+         message->last_world_index_run
       );
    }
    else if(players[playernum].mo)

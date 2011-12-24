@@ -228,7 +228,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
          server_index
       );
    }
-   enet_peer_send(peer, SEQUENCED_CHANNEL, enet_packet_create(
+   enet_peer_send(peer, RELIABLE_CHANNEL, enet_packet_create(
       buffer, buffer_size, ENET_PACKET_FLAG_RELIABLE
    ));
 }
@@ -712,6 +712,7 @@ void SV_StartUnlag(int playernum)
    unsigned int i;
    player_t *player, *target;
    server_client_t *server_client = &server_clients[playernum];
+   misc_state_t *misc_state;
    unsigned int index = server_client->command_world_index;
 
    // [CG] Don't run for the server's spectator actor.
@@ -725,7 +726,7 @@ void SV_StartUnlag(int playernum)
       "SV_StartUnlag: Unlagging client %u at %u.\n"
       "  Index:    %u\n"
       "  LIndex:   %u\n"
-      "  RIndex:   %u\n"
+      "  RIndex:   %u/%u\n"
       "  CIndex:   %u\n"
       "  Received: %u\n"
       "  Dropped:  %u\n"
@@ -736,6 +737,7 @@ void SV_StartUnlag(int playernum)
       index,
       server_client->last_command_received_index,
       server_client->last_command_run_index,
+      server_client->last_command_run_world_index,
       server_client->command_world_index,
       server_client->commands.size,
       server_client->commands_dropped,
@@ -767,17 +769,15 @@ void SV_StartUnlag(int playernum)
          printf("Moved player %d:\n  ", i);
          CS_PrintPlayerPosition(i, sv_world_index - 1);
 #endif
+         misc_state = &server_clients[i].misc_states[index % MAX_POSITIONS];
          CS_SaveActorPosition(
             &server_clients[i].saved_position, target->mo, sv_world_index - 1
          );
          SV_LoadPlayerPositionAt(i, index);
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
-         if(server_clients[i].positions[index % MAX_POSITIONS].playerstate
-            != PST_LIVE)
-         {
+         if(misc_state->playerstate != PST_LIVE)
             target->mo->flags4 |= MF4_NODAMAGE;
-         }
 #if _UNLAG_DEBUG
          printf("  ");
          CS_PrintPlayerPosition(i, index);
@@ -821,7 +821,8 @@ void SV_EndUnlag(int playernum)
    unsigned int world_index = sv_world_index - 1;
    position_t *position;
    fixed_t added_momx, added_momy;
-   unsigned int player_index = server_clients[playernum].command_world_index;
+   unsigned int pindex = server_clients[playernum].command_world_index;
+   misc_state_t *misc_state;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -830,14 +831,13 @@ void SV_EndUnlag(int playernum)
 
 #if _UNLAG_DEBUG
       printf("Moved player %d:\n  ", i);
-      CS_PrintPlayerPosition(
-         i, server_clients[playernum].command_world_index
-      );
+      CS_PrintPlayerPosition(i, pindex);
 #endif
       // [CG] Check to see if thrust due to damage was applied to the player
       //      during unlagged.  If it was, apply that thrust to the ultimate
       //      position.
-      position = &server_clients[i].positions[player_index % MAX_POSITIONS];
+      position = &server_clients[i].positions[pindex % MAX_POSITIONS];
+      misc_state = &server_clients[i].misc_states[pindex % MAX_POSITIONS];
       added_momx = added_momy = 0;
 
       if(players[i].mo->momx != position->momx)
@@ -846,11 +846,8 @@ void SV_EndUnlag(int playernum)
       if(players[i].mo->momy != position->momy)
          added_momy = players[i].mo->momy - position->momy;
 
-      if(server_clients[i].positions[player_index % MAX_POSITIONS].playerstate
-         != PST_LIVE)
-      {
+      if(misc_state->playerstate != PST_LIVE)
          players[i].mo->flags4 &= ~MF4_NODAMAGE;
-      }
 
       CS_SetPlayerPosition(i, &server_clients[i].saved_position);
       players[i].mo->momx += added_momx;
@@ -1742,14 +1739,18 @@ unsigned int SV_ClientCommandBufferSize(int playernum)
    return (client->packet_loss / 2) + (client->transit_lag / 99) + 1;
 }
 
-void SV_RunPlayerCommand(int playernum, cs_cmd_t *command)
+void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd)
 {
    server_client_t *server_client = &server_clients[playernum];
+   ticcmd_t ticcmd;
 
    SV_LoadClientOptions(playernum);
-   server_client->command_world_index = command->world_index;
-   CS_RunPlayerCommand(playernum, &command->ticcmd, true);
-   server_client->last_command_run_index = command->world_index;
+   server_client->command_world_index = bufcmd->command.world_index;
+   CS_CopyCommandToTiccmd(&ticcmd, &bufcmd->command);
+   CS_RunPlayerCommand(playernum, &ticcmd, true);
+   server_client->last_command_run_index = bufcmd->command.index;
+   server_client->last_command_run_world_index = bufcmd->command.world_index;
+
    SV_RestoreServerOptions();
 }
 
@@ -1764,7 +1765,7 @@ void SV_RunPlayerCommands(int playernum)
 
    if(!sc->command_buffer_filled)
    {
-      if(sc->commands.size >= SV_ClientCommandBufferSize(playernum))
+      if(sc->commands.size >= command_buffer_size)
          sc->command_buffer_filled = true;
       else
          return;
@@ -1775,7 +1776,7 @@ void SV_RunPlayerCommands(int playernum)
    do
    {
       bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
-      SV_RunPlayerCommand(playernum, &bufcmd->command);
+      SV_RunPlayerCommand(playernum, bufcmd);
       efree(bufcmd);
    } while(sc->commands.size > command_buffer_size);
 }
@@ -1784,10 +1785,11 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
                                    int playernum)
 {
    nm_playercommand_t *message = (nm_playercommand_t *)data;
-   player_t *player = &players[playernum];
-   client_t *client = &clients[playernum];
+   cs_cmd_t *commands = (cs_cmd_t *)(data + sizeof(nm_playercommand_t));
    server_client_t *server_client = &server_clients[playernum];
-   cs_buffered_command_t *bufcmd;
+   uint32_t last_index = server_client->last_command_received_index;
+   cs_buffered_command_t *bc;
+   cs_cmd_t *command;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
@@ -1795,25 +1797,20 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    server_client->received_command_for_current_map = true;
 
-   // [CG] Some additional checks to prevent tomfoolery.
-   if(message->command.world_index <=
-      server_client->last_command_received_index)
+   for(command = commands;
+       (command - commands) < message->command_count;
+       command++)
    {
-      printf(
-         "SV_HandlePlayerCommandMessage: <!> (%u < %u <= %u).\n",
-         sv_world_index,
-         message->command.world_index,
-         server_client->last_command_received_index
-      );
-      SV_DisconnectPlayer(playernum, dr_command_flood);
+      // [CG] Skip messages we've seen before.
+      if(command->world_index <= last_index)
+         continue;
+
+      // [CG] Queue this command to be run later.
+      bc = ecalloc(cs_buffered_command_t *, 1, sizeof(cs_buffered_command_t));
+      CS_CopyCommand(&bc->command, command);
+      M_QueueInsert((mqueueitem_t *)bc, &server_client->commands);
+      server_client->last_command_received_index = command->world_index;
    }
-
-   server_client->last_command_received_index = message->command.world_index;
-   // SV_RunPlayerCommand(playernum, &message->command);
-
-   bufcmd = ecalloc(cs_buffered_command_t *, 1, sizeof(cs_buffered_command_t));
-   memcpy(&bufcmd->command, &message->command, sizeof(cs_cmd_t));
-   M_QueueInsert((mqueueitem_t *)bufcmd, &server_client->commands);
 }
 
 void SV_HandleClientRequestMessage(char *data, size_t data_length,
@@ -1942,6 +1939,29 @@ void SV_BroadcastActorPosition(Mobj *actor, int tic)
    CS_SaveActorPosition(&position_message.position, actor, tic);
 
    broadcast_packet(&position_message, sizeof(nm_actorposition_t));
+}
+
+void SV_BroadcastActorMiscState(Mobj *actor, int tic)
+{
+   int blood = E_SafeThingType(MT_BLOOD);
+   int puff  = E_SafeThingType(MT_PUFF);
+   int fog   = GameModeInfo->teleFogType;
+   nm_actormiscstate_t misc_state_message;
+
+   // [CG] Information about actors with NET ID 0 never gets sent to clients.
+   if(actor->net_id == 0)
+      return;
+
+   // [CG] Clients control this stuff after it's spawned.
+   if(actor->type == blood || actor->type == puff || actor->type == fog)
+      return;
+
+   misc_state_message.message_type = nm_actormiscstate;
+   misc_state_message.world_index = sv_world_index;
+   misc_state_message.actor_net_id = actor->net_id;
+   CS_SaveActorMiscState(&misc_state_message.misc_state, actor, tic);
+
+   broadcast_packet(&misc_state_message, sizeof(nm_actorposition_t));
 }
 
 void SV_BroadcastSectorPosition(size_t sector_number)
@@ -2577,7 +2597,9 @@ void SV_BroadcastClientStatus(int playernum)
    status_message.transit_lag = client->transit_lag;
    status_message.packet_loss = client->packet_loss;
    CS_SaveActorPosition(&status_message.position, player->mo, sv_world_index);
-   status_message.last_command_run = server_client->last_command_run_index;
+   status_message.last_index_run = server_client->last_command_run_index;
+   status_message.last_world_index_run =
+      server_client->last_command_run_world_index;
    status_message.floor_status = clients[playernum].floor_status;
    clients[playernum].floor_status = cs_fs_none;
 
@@ -2676,13 +2698,9 @@ void SV_TryRunTics(void)
          G_BuildTiccmd(&players[consoleplayer].cmd);
          if(cs_demo_recording)
          {
-            command.world_index = sv_world_index;
-            memcpy(
-               &command.ticcmd,
-               &players[consoleplayer].cmd,
-               sizeof(ticcmd_t)
+            CS_CopyTiccmdToCommand(
+               &command, &players[consoleplayer].cmd, 0, sv_world_index
             );
-
             if(!CS_WritePlayerCommandToDemo(&command))
             {
                doom_printf(

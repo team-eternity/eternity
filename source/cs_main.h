@@ -67,6 +67,14 @@ struct event_t;
 //      seconds.
 #define MAX_LATENCY 3
 
+// [CG] The number of commands bundled together by the client to mitigate the
+//      effects of packet loss.
+// [CG] TODO: 56k can really only handle 14 command bundles TOTAL, so this
+//            should maybe be configurable... except that lowering it means you
+//            will skip more and be more difficult to hit... so maybe not?
+//            Requires testing.
+#define COMMAND_BUNDLE_SIZE TICRATE // [CG] 35 commands/bundle.
+
 // [CG] The default port the server listens on if none is given.
 #define DEFAULT_PORT 10666
 
@@ -140,8 +148,8 @@ typedef enum
 
 enum
 {
-    SEQUENCED_CHANNEL,
-    UNSEQUENCED_CHANNEL,
+    RELIABLE_CHANNEL,
+    UNRELIABLE_CHANNEL,
     MAX_CHANNELS
 };
 
@@ -175,20 +183,21 @@ typedef enum
    nm_bloodspawned,            // (s => c) 18, Blood spawned
    nm_actorspawned,            // (s => c) 19, Actor spawned
    nm_actorposition,           // (s => c) 20, Actor position
-   nm_actortarget,             // (s => c) 21, Actor target
-   nm_actorstate,              // (s => c) 22, Actor state
-   nm_actordamaged,            // (s => c) 23, Actor damaged
-   nm_actorkilled,             // (s => c) 24, Actor killed
-   nm_actorremoved,            // (s => c) 25, Actor removed
-   nm_lineactivated,           // (s => c) 26, Line activated
-   nm_monsteractive,           // (s => c) 27, Monster active
-   nm_monsterawakened,         // (s => c) 28, Monster awakened
-   nm_missilespawned,          // (s => c) 29, Missile spawned
-   nm_missileexploded,         // (s => c) 30, Missile exploded
-   nm_cubespawned,             // (s => c) 31, Boss brain cube spawned
-   nm_sectorposition,          // (s => c) 32, Sector position
-   nm_announcerevent,          // (s => c) 33, Announcer event
-   nm_ticfinished,             // (s => c) 34, TIC is finished
+   nm_actormiscstate,          // (s => c) 21, Actor miscellaneous state
+   nm_actortarget,             // (s => c) 22, Actor target
+   nm_actorstate,              // (s => c) 23, Actor state
+   nm_actordamaged,            // (s => c) 24, Actor damaged
+   nm_actorkilled,             // (s => c) 25, Actor killed
+   nm_actorremoved,            // (s => c) 26, Actor removed
+   nm_lineactivated,           // (s => c) 27, Line activated
+   nm_monsteractive,           // (s => c) 28, Monster active
+   nm_monsterawakened,         // (s => c) 29, Monster awakened
+   nm_missilespawned,          // (s => c) 30, Missile spawned
+   nm_missileexploded,         // (s => c) 31, Missile exploded
+   nm_cubespawned,             // (s => c) 32, Boss brain cube spawned
+   nm_sectorposition,          // (s => c) 33, Sector position
+   nm_announcerevent,          // (s => c) 34, Announcer event
+   nm_ticfinished,             // (s => c) 35, TIC is finished
    // nm_specialspawned,          // (s => c) 32, Map special spawned
    // nm_specialstatus,           // (s => c) 33, Map special's status
    // nm_specialremoved,          // (s => c) 34, Map special removed
@@ -348,12 +357,6 @@ typedef struct
 // [CG] Server clients are never sent over the wire, so they can stay as
 //      normal.
 
-typedef struct
-{
-   mqueueitem_t mqitem;
-   cs_cmd_t command;
-} cs_buffered_command_t;
-
 typedef enum
 {
    scr_none,
@@ -372,9 +375,10 @@ typedef struct
    bool command_buffer_filled;
    int last_auth_attempt;
    unsigned int commands_dropped;
-   // [CG] This is used to keep track of the player's most recently run
+   // [CG] These are used to keep track of the player's most recently run
    //      command.
    unsigned int last_command_run_index;
+   unsigned int last_command_run_world_index;
    // [CG] This is used to check validity of the nm_playercommand message.
    unsigned int last_command_received_index;
    // [CG] This is so that unlagged knows which positions to load.
@@ -545,10 +549,11 @@ typedef struct
    int32_t weapon_state; // [CG] statenum_t.
 } nm_playerweaponstate_t;
 
+// [CG] An array of cs_cmd_t structures is appended to this message.
 typedef struct
 {
    int32_t message_type;
-   cs_cmd_t command;
+   uint8_t command_count;
 } nm_playercommand_t;
 
 typedef struct
@@ -560,8 +565,9 @@ typedef struct
    uint32_t transit_lag;
    uint8_t packet_loss;
    position_t position;
-   // [CG] This is the index of the last client command run by the server.
-   uint32_t last_command_run;
+   // [CG] These are the indices of the last client command run by the server.
+   uint32_t last_index_run;
+   uint32_t last_world_index_run;
    int32_t floor_status; // [CG] cs_floor_status_e.
 } nm_clientstatus_t;
 
@@ -632,6 +638,14 @@ typedef struct
    uint32_t actor_net_id;
    position_t position;
 } nm_actorposition_t;
+
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint32_t actor_net_id;
+   misc_state_t misc_state;
+} nm_actormiscstate_t;
 
 typedef struct
 {

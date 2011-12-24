@@ -892,12 +892,10 @@ static bool handle_network_message_demo_packet(void)
    return true;
 }
 
-
 static bool handle_player_command_demo_packet(void)
 {
-   size_t command_size;
    cs_cmd_t command;
-   cs_cmd_t *local_command;
+   size_t command_size;
 
    if(!read_from_demo(&command_size, sizeof(size_t), 1))
       return false;
@@ -905,15 +903,10 @@ static bool handle_player_command_demo_packet(void)
    if(!read_from_demo(&command, command_size, 1))
       return false;
 
-   memcpy(&players[consoleplayer].cmd, &command.ticcmd, sizeof(ticcmd_t));
-
-   // CS_ApplyCommandButtons(&players[consoleplayer].cmd);
+   CS_CopyCommandToTiccmd(&players[consoleplayer].cmd, &command);
 
    if(CS_CLIENTDEMO)
-   {
-      local_command = CL_GetCurrentCommand();
-      CS_CopyCommand(local_command, &command);
-   }
+      CS_CopyCommand(CL_GetCurrentCommand(), &command);
 
    return true;
 }

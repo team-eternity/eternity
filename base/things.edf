@@ -536,7 +536,7 @@ thingtype BlueFlag
     radius = 20
     height = 16
     flags = SPECIAL
-    flags3 = PASSMOBJ|3DDECORATION
+    flags3 = NOITEMRESP|PASSMOBJ|3DDECORATION
 }
 
 thingtype RedFlag

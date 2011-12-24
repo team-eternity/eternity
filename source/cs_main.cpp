@@ -136,6 +136,7 @@ const char *network_message_names[nm_max_messages] = {
    "blood spawned",
    "actor spawned",
    "actor position",
+   "actor miscellaneous state",
    "actor target",
    "actor state",
    "actor damaged",

@@ -61,6 +61,7 @@ extern Json::Value cs_client_password_json;
 
 extern unsigned int cl_current_world_index;
 extern unsigned int cl_latest_world_index;
+extern unsigned int cl_commands_sent;
 
 extern bool cl_received_sync;
 extern bool cl_initial_spawn;

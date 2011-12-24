@@ -32,16 +32,20 @@
 extern bool cl_predicting;
 
 void      CL_InitPrediction(void);
+cs_cmd_t* CL_GetCommandAtIndex(uint32_t index);
 cs_cmd_t* CL_GetCurrentCommand(void);
-void      CL_PredictPlayerPosition(unsigned int index, bool think);
+void      CL_PredictPlayerPosition(unsigned int command_index, bool think);
 void      CL_PredictSectorPositions(unsigned int index);
 void      CL_PredictFrom(unsigned int start, unsigned int end);
-void      CL_RePredict(unsigned int start, unsigned int end);
+void      CL_RePredict(unsigned int command_index,
+                       unsigned int position_index, unsigned int count);
 void      CL_StoreLastServerPosition(position_t *new_server_position,
-                                     uint32_t index,
-                                     cs_floor_status_e floor_status);
+                                     cs_floor_status_e floor_status,
+                                     unsigned int index,
+                                     unsigned int world_index);
 void      CL_LoadLastServerPosition(void);
 uint32_t  CL_GetLastServerPositionIndex(void);
+uint32_t  CL_GetLastServerCommandIndex(void);
 
 #endif
 
