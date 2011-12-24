@@ -69,6 +69,7 @@
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
+#include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
 
@@ -1581,6 +1582,11 @@ void P_AddSndInfoMusic(int mapnum, const char *lumpname)
 
       sndInfoMusHash.addObject(newmus);
    }
+
+   // Make sure that this music appears in the music selection menu by asking
+   // for a musicinfo_t from the sound engine. This'll add a musicinfo structure
+   // for it right now, rather than waiting for the music to actually be played.
+   S_MusicForName(newmus->lumpname);
 }
 
 // 

@@ -68,7 +68,7 @@ struct lumpinfo_t
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
    enum 
    {
-      ns_global = 0,
+      ns_global,
       ns_sprites,
       ns_flats,
       ns_colormaps,
@@ -126,19 +126,13 @@ public:
    // verifyData should do format checking and return true if the data is valid,
    // and false otherwise. If verifyData returns false, formatData is not called
    // under any circumstance.
-   virtual bool verifyData(const void *data, size_t size) const
-   { 
-      return true; 
-   }
+   virtual bool verifyData(const void *data, size_t size) const { return true; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
    // be done once only and not every time the lump is retrieved from the wad
    // file. Return false if an error occurs, and true otherwise.
-   virtual bool formatData(void *data, size_t size) const
-   { 
-      return true; 
-   }
+   virtual bool formatData(void *data, size_t size) const { return true; }
 
    // Error modes enumeration
    enum

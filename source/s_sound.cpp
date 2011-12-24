@@ -1321,7 +1321,6 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
-   S_CreateMusicHashTable();
    
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
@@ -1332,37 +1331,34 @@ void S_Init(int sfxVolume, int musicVolume)
 // Music Hashing
 //
 
-static bool mushash_created = false;
+static void S_HookMusic(musicinfo_t *);
+
+static void S_CreateMusicHashTable(void)
+{
+   // hook in all natively defined music
+   for(int i = 0; i < GameModeInfo->numMusic; i++)
+      S_HookMusic(&(GameModeInfo->s_music[i]));
+}
 
 static void S_HookMusic(musicinfo_t *music)
 {
+   static bool mushash_created = false;
    int hashslot;
    
-   if(!music || !music->name) return;
+   // only build once
+   if(!mushash_created)
+   {
+      mushash_created = true;
+      S_CreateMusicHashTable();
+   }
+   
+   if(!music || !music->name) 
+      return;
    
    hashslot = sound_hash(music->name);
    
    music->next = musicinfos[hashslot];
    musicinfos[hashslot] = music;
-}
-
-static void S_CreateMusicHashTable(void)
-{
-   int i;
-   
-   // only build once
-   
-   if(mushash_created)
-      return;
-   else
-      mushash_created = true;
-
-   for(i = 0; i < SOUND_HASHSLOTS; ++i)
-      musicinfos[i] = NULL;
-   
-   // hook in all natively defined music
-   for(i = 0; i < GameModeInfo->numMusic; ++i)
-      S_HookMusic(&(GameModeInfo->s_music[i]));
 }
 
 //
