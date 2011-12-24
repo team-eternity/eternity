@@ -1361,10 +1361,10 @@ void SV_SaveActorPositions(void)
          // [CG] Handling a player here.
          playernum = mobj->player - players;
 
+         // [CG] Don't send info about the server's spectator actor.
          if(playernum == 0 || !playeringame[playernum])
             continue;
 
-         // [CG] Don't send info about the server's spectator actor.
          server_client = &server_clients[playernum];
          p = &server_client->positions[sv_world_index % MAX_POSITIONS];
          ms = &server_client->misc_states[sv_world_index % MAX_POSITIONS];
@@ -1511,11 +1511,6 @@ void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum)
    if(player_message->recipient_type != mr_auth &&
       player_message->sender_number  != playernum)
    {
-      // printf(
-      //    "player_message->sender_number != playernum: %d/%d.\n"
-      //    player_message->sender_number,
-      //    playernum
-      // );
       SV_DisconnectPlayer(playernum, dr_invalid_message);
       return;
    }
@@ -1751,7 +1746,6 @@ void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd)
    CS_RunPlayerCommand(playernum, &ticcmd, true);
    server_client->last_command_run_index = bufcmd->command.index;
    server_client->last_command_run_world_index = bufcmd->command.world_index;
-
    SV_RestoreServerOptions();
 }
 

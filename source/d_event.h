@@ -117,13 +117,12 @@ typedef enum
 //
 // GLOBAL VARIABLES
 //
-// [CG] 09/13/11 Increase this to avoid mouse deceleration.
-// #define MAXEVENTS               64
-#define MAXEVENTS 4096
+// [CG] events is now dynamically reallocated and resized to avoid mouse
+//      deceleration.
+#define MAXEVENTS               64
 
-extern event_t   events[MAXEVENTS];
-extern int       eventhead;
-extern int       eventtail;
+extern event_t   *events;
+extern unsigned int event_index, event_array_size;
 
 extern gameaction_t gameaction;
 

@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
+#include "d_main.h"
 #include "doomstat.h"
 #include "e_sound.h"
 #include "e_things.h"
@@ -174,11 +175,13 @@ void CL_SendCommand(void)
    if(CS_DEMO)
       I_Error("Error: made a command during demo playback.\n");
 
+   // I_StartTic();
+   // D_ProcessEvents();
    command = CL_GetCommandAtIndex(cl_commands_sent);
 
    if(consoleactive)
    {
-      memset(command, 0, sizeof(ticcmd_t));
+      memset(command, 0, sizeof(cs_cmd_t));
       command->index = cl_commands_sent;
       command->world_index = cl_current_world_index;
    }
@@ -682,7 +685,7 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 
    if(message->player_number > MAX_CLIENTS)
    {
-      printf("Received invalid player spawned message, ignoring.");
+      doom_printf("Received invalid player spawned message, ignoring.");
       return;
    }
 
@@ -864,8 +867,6 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
 
    if(CL_SHOULD_PREDICT_SHOT(shooter))
       puff->flags2 |= MF2_DONTDRAW;
-
-   printf("CL_HandlePuffSpawnedMessage: Spawned puff %u.\n", puff->net_id);
 }
 
 void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
@@ -979,8 +980,8 @@ void CL_HandleActorPositionMessage(nm_actorposition_t *message)
 
    if(actor == NULL)
    {
-      printf(
-         "Received position update for invalid actor %u, ignoring.\n",
+      doom_printf(
+         "Received position update for invalid actor %u, ignoring.",
          message->actor_net_id
       );
       return;
@@ -997,8 +998,8 @@ void CL_HandleActorMiscStateMessage(nm_actormiscstate_t *message)
 
    if(actor == NULL)
    {
-      printf(
-         "Received misc state update for invalid actor %u, ignoring.\n",
+      doom_printf(
+         "Received misc state update for invalid actor %u, ignoring.",
          message->actor_net_id
       );
       return;
@@ -1062,9 +1063,9 @@ void CL_HandleActorStateMessage(nm_actorstate_t *message)
 
    if(actor == NULL)
    {
-      printf(
+      doom_printf(
          "Received actor state message for invalid "
-         "actor %u, type %d, state %d, ignoring.\n",
+         "actor %u, type %d, state %d, ignoring.",
          message->actor_net_id,
          message->actor_type,
          message->state_number
@@ -1090,8 +1091,8 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
 
    if(target == NULL)
    {
-      printf(
-         "Received actor damaged message for invalid target %u.\n",
+      doom_printf(
+         "Received actor damaged message for invalid target %u.",
          message->target_net_id
       );
       return;
@@ -1102,8 +1103,8 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       source = NetActors.lookup(message->source_net_id);
       if(source == NULL)
       {
-         printf(
-            "Received actor damaged message for invalid target %u.\n",
+         doom_printf(
+            "Received actor damaged message for invalid target %u.",
             message->target_net_id
          );
          return;
@@ -1115,8 +1116,8 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       inflictor = NetActors.lookup(message->inflictor_net_id);
       if(inflictor == NULL)
       {
-         printf(
-            "Received actor damaged message for invalid inflictor %u.\n",
+         doom_printf(
+            "Received actor damaged message for invalid inflictor %u.",
             message->inflictor_net_id
          );
          return;
@@ -1185,8 +1186,8 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
    target = NetActors.lookup(message->target_net_id);
    if(target == NULL)
    {
-      printf(
-         "Received actor killed message for invalid target %u.\n",
+      doom_printf(
+         "Received actor killed message for invalid target %u.",
          message->target_net_id
       );
       return;
@@ -1197,8 +1198,8 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
       inflictor = NetActors.lookup(message->inflictor_net_id);
       if(inflictor == NULL)
       {
-         printf(
-            "Received actor killed message for invalid inflictor %u.\n",
+         doom_printf(
+            "Received actor killed message for invalid inflictor %u.",
             message->inflictor_net_id
          );
          return;
@@ -1212,8 +1213,8 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
       source = NetActors.lookup(message->source_net_id);
       if(source == NULL)
       {
-         printf(
-            "Received actor killed message for invalid source %u.\n",
+         doom_printf(
+            "Received actor killed message for invalid source %u.",
             message->source_net_id
          );
          return;
@@ -1221,8 +1222,6 @@ void CL_HandleActorKilledMessage(nm_actorkilled_t *message)
    }
    else
       source = NULL;
-
-   // printf("Received actor killed message\n");
 
    // [CG] TODO: Ensure this is valid.
    emod = E_DamageTypeForNum(message->mod);
@@ -1242,8 +1241,8 @@ void CL_HandleActorRemovedMessage(nm_actorremoved_t *message)
 
    if((actor = NetActors.lookup(message->actor_net_id)) == NULL)
    {
-      printf(
-         "Received an actor removed message for an invalid actor %u.\n",
+      doom_printf(
+         "Received an actor removed message for an invalid actor %u.",
          message->actor_net_id
       );
       return;
@@ -1261,8 +1260,8 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    actor = NetActors.lookup(message->actor_net_id);
    if(actor == NULL)
    {
-      printf(
-         "Received an activate line message for an invalid actor %u.\n",
+      doom_printf(
+         "Received an activate line message for an invalid actor %u.",
          message->actor_net_id
       );
       return;
@@ -1270,8 +1269,8 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
 
    if(message->line_number > (numlines - 1))
    {
-      printf(
-         "Received an activate line message for an invalid line %u.\n",
+      doom_printf(
+         "Received an activate line message for an invalid line %u.",
          message->line_number
       );
       return;
@@ -1280,8 +1279,8 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
 
    if(message->side > 1)
    {
-      printf(
-         "Received an activate line message for an invalid side %u.\n",
+      doom_printf(
+         "Received an activate line message for an invalid side %u.",
          message->side
       );
       return;
@@ -1290,7 +1289,7 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    if(message->activation_type < 0 ||
       message->activation_type >= at_max)
    {
-      printf(
+      doom_printf(
          "Received an activate line message with an invalid activation type.\n"
       );
       return;
@@ -1326,8 +1325,8 @@ void CL_HandleMonsterActiveMessage(nm_monsteractive_t *message)
    monster = NetActors.lookup(message->monster_net_id);
    if(monster == NULL)
    {
-      printf(
-         "Received a monster active message for an invalid monster %u.\n",
+      doom_printf(
+         "Received a monster active message for an invalid monster %u.",
          message->monster_net_id
       );
       return;
@@ -1343,8 +1342,8 @@ void CL_HandleMonsterAwakenedMessage(nm_monsterawakened_t *message)
 
    if(monster == NULL)
    {
-      printf(
-         "Received monster awakened message for invalid actor %u, ignoring.\n",
+      doom_printf(
+         "Received monster awakened message for invalid actor %u, ignoring.",
          message->monster_net_id
       );
       return;
@@ -1382,8 +1381,8 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
    source = NetActors.lookup(message->source_net_id);
    if(source == NULL)
    {
-      printf(
-         "Received a missile spawned message for an invalid actor %u.\n",
+      doom_printf(
+         "Received a missile spawned message for an invalid actor %u.",
          message->source_net_id
       );
       return;
@@ -1395,8 +1394,8 @@ void CL_HandleMissileSpawnedMessage(nm_missilespawned_t *message)
       player_number = player - players;
       if(!playeringame[player_number] || clients[player_number].spectating)
       {
-         printf(
-            "Received spawn missile message for invalid player %d.\n",
+         doom_printf(
+            "Received spawn missile message for invalid player %d.",
             player_number
          );
          return;
@@ -1443,8 +1442,8 @@ void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message)
    missile = NetActors.lookup(message->missile_net_id);
    if(missile == NULL)
    {
-      printf(
-         "Received an explode missile message for an invalid missile %u.\n",
+      doom_printf(
+         "Received an explode missile message for an invalid missile %u.",
          message->missile_net_id
       );
       return;

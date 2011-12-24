@@ -331,7 +331,7 @@ void P_Ticker(void)
                   CL_RePredict(
                      last_server_command_index,
                      CL_GetLastServerPositionIndex() + 1,
-                     (cl_commands_sent - last_server_command_index) - 2
+                     (cl_commands_sent - last_server_command_index) - 1
                   );
                }
             }

@@ -144,7 +144,6 @@ void CL_RunAllWorldUpdates(void)
    unsigned int old_world_index = cl_current_world_index;
    unsigned int new_world_index = cl_latest_world_index - 2;
    unsigned int old_commands_sent = cl_commands_sent;
-   unsigned int new_commands_sent = cl_commands_sent;
    
    new_world_index -= cl_packet_buffer.capacity();
 
@@ -651,8 +650,8 @@ void CL_TryRunTics(void)
    {
       do
       {
-         I_StartTic();
-         D_ProcessEvents();
+         // I_StartTic();
+         // D_ProcessEvents();
          CS_ReadFromNetwork(1);
       } while((new_tic = I_GetTime()) == current_tic);
    }

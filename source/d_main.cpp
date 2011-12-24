@@ -179,8 +179,9 @@ void startupmsg(char *func, char *desc)
 // Events can be discarded if no responder claims them
 //
 
-event_t events[MAXEVENTS];
-int eventhead, eventtail;
+event_t *events = NULL;
+unsigned int event_index = 0;
+unsigned int event_array_size = MAXEVENTS;
 
 //
 // D_PostEvent
@@ -188,8 +189,25 @@ int eventhead, eventtail;
 //
 void D_PostEvent(event_t *ev)
 {
-   events[eventhead++] = *ev;
-   eventhead &= MAXEVENTS-1;
+   bool need_to_reallocate = false;
+
+   if(!events)
+      need_to_reallocate = true;
+
+   if(event_index >= (event_array_size - 1))
+   {
+      need_to_reallocate = true;
+      event_array_size *= 2;
+   }
+
+   if(need_to_reallocate)
+   {
+      if(events)
+         doom_printf("D_PostEvent: Resizing events to %u.", event_array_size);
+      events = erealloc(event_t *, events, event_array_size * sizeof(event_t));
+   }
+
+   events[event_index++] = *ev;
 }
 
 //
@@ -198,21 +216,19 @@ void D_PostEvent(event_t *ev)
 //
 void D_ProcessEvents(void)
 {
+   unsigned int i;
    // IF STORE DEMO, DO NOT ACCEPT INPUT
    // sf: I don't think SMMU is going to be played in any store any
    //     time soon =)
    // if (gamemode != commercial || W_CheckNumForName("map01") >= 0)
 
-   for(; eventtail != eventhead; eventtail = (eventtail+1) & (MAXEVENTS-1))
+   for(i = 0; i < event_index; i++)
    {
-      event_t *evt = events + eventtail;
-
-      // [CG] Headless servers don't use either the menu or graphical console,
-      //      so just skip right to G_Responder in this case.
-      if(CS_HEADLESS || !MN_Responder(evt))
-         if(CS_HEADLESS || !C_Responder(evt))
-            G_Responder(evt);
+      if(CS_HEADLESS || !MN_Responder(&events[i]))
+         if(CS_HEADLESS || !C_Responder(&events[i]))
+            G_Responder(&events[i]);
    }
+   event_index = 0;
 }
 
 //=============================================================================
