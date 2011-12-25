@@ -85,6 +85,7 @@ struct lumpinfo_t
    {
       lump_direct,  // lump accessed via stdio (physical file)
       lump_memory,  // lump is a memory buffer
+      lump_file,    // lump is a directory file; must be opened to use
       lump_numtypes
    }; 
    int type;
@@ -96,6 +97,7 @@ struct lumpinfo_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
+   const char *lfn;  // long file name, where relevant
 };
 
 //
@@ -112,6 +114,7 @@ struct wfileadd_t
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
    int privatedir;       // if not 0, has a private directory
+   bool directory;       // if true, is an on-disk directory
 };
 
 //
@@ -223,6 +226,7 @@ public:
    int         AddNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
    int         AddNewPrivateFile(const char *filename);
+   int         AddDirectory(const char *dirpath);
    int         LumpLength(int lump);
    void        ReadLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
    int         ReadLumpHeader(int lump, void *dest, size_t size);

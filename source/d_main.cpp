@@ -659,6 +659,22 @@ void D_StartTitle(void)
 static int numwadfiles, numwadfiles_alloc;
 
 //
+// D_reAllocFiles
+//
+// haleyjd 12/24/11: resize the wadfiles array
+//
+static void D_reAllocFiles()
+{
+   // sf: allocate for +2 for safety
+   if(numwadfiles + 2 >= numwadfiles_alloc)
+   {
+      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
+
+      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
+   }
+}
+
+//
 // D_AddFile
 //
 // Rewritten by Lee Killough
@@ -669,23 +685,39 @@ static int numwadfiles, numwadfiles_alloc;
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir)
 {
-   // sf: allocate for +2 for safety
-   if(numwadfiles + 2 >= numwadfiles_alloc)
-   {
-      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
-
-      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
-   }
+   D_reAllocFiles();
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
    wadfiles[numwadfiles].privatedir   = privatedir;
+   wadfiles[numwadfiles].directory    = false;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
-   numwadfiles++;
+   ++numwadfiles;
+}
+
+//
+// D_AddDirectory
+//
+// haleyjd 12/24/11: add a directory to be loaded as if it's a wad file
+//
+void D_AddDirectory(const char *dir)
+{
+   D_reAllocFiles();
+
+   wadfiles[numwadfiles].filename     = estrdup(dir);
+   wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
+   wadfiles[numwadfiles].f            = NULL;
+   wadfiles[numwadfiles].baseoffset   = 0;
+   wadfiles[numwadfiles].privatedir   = 0;
+   wadfiles[numwadfiles].directory    = true;
+
+   wadfiles[numwadfiles+1].filename = NULL;
+
+   ++numwadfiles;
 }
 
 //sf: console command to list loaded files
@@ -880,7 +912,7 @@ enum
 // haleyjd 11/23/06: Sets the path to the "base" folder, where Eternity stores
 // all of its data.
 //
-static void D_SetBasePath(void)
+static void D_SetBasePath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
@@ -983,7 +1015,7 @@ static int gamepathparm;
 // haleyjd 08/18/07: This function checks for the -game command-line parameter.
 // If it is set, then its value is saved and gamepathset is asserted.
 //
-static void D_CheckGamePathParam(void)
+static void D_CheckGamePathParam()
 {
    int p;
    struct stat sbuf;
@@ -1016,7 +1048,7 @@ static void D_CheckGamePathParam(void)
 // haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
 // been determined by the IWAD in use.
 //
-static void D_SetGamePath(void)
+static void D_SetGamePath()
 {
    struct stat sbuf;
    const char *mstr = GameModeInfo->missionInfo->gamePathName;
@@ -1038,7 +1070,7 @@ static void D_SetGamePath(void)
 //
 // Looks for an optional root.edf file in base/game
 //
-static char *D_CheckGameEDF(void)
+static char *D_CheckGameEDF()
 {
    struct stat sbuf;
    char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
@@ -1050,6 +1082,27 @@ static char *D_CheckGameEDF(void)
    }
 
    return NULL; // return NULL to indicate the file doesn't exist
+}
+
+//
+// D_CheckGameMusic
+//
+// haleyjd 12/24/11: Looks for an optional music directory in base/game,
+// provided that s_hidefmusic is enabled.
+//
+static void D_CheckGameMusic()
+{
+   if(s_hidefmusic)
+   {
+      struct stat sbuf;
+      char *music_dir = M_SafeFilePath(basegamepath, "music");
+
+      if(!stat(music_dir, &sbuf))
+      {
+         if(S_ISDIR(sbuf.st_mode))
+            D_AddDirectory(music_dir); // add as if it's a wad file
+      }
+   }
 }
 
 //=============================================================================
@@ -1660,11 +1713,6 @@ struct iwadpathmatch_t
                              // in order of precedence from greatest to least.
 };
 
-//
-// The IWAD matcher structures have a priority amongst themselves as well, in 
-// that "doom2" should match doom2 and not doom. Whichever entry returns a valid
-// strstr() value first wins.
-// 
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
@@ -2415,6 +2463,9 @@ static void IdentifyDisk(void)
    if(diskpwad)
       D_LoadDiskFilePWAD();
 
+   // 12/24/11: check for game folder hi-def music
+   D_CheckGameMusic();
+
    // done with the diskfile structure
    D_CloseDiskFile(diskfile, false);
    diskfile = NULL;
@@ -2456,6 +2507,9 @@ static void IdentifyIWAD(void)
       D_LoadResourceWad();
 
       D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
+
+      // 12/24/11: check for game folder hi-def music
+      D_CheckGameMusic();
 
       // done with iwad string
       efree(iwad);

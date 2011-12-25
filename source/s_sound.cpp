@@ -137,6 +137,9 @@ int idmusnum;
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 static void S_CreateMusicHashTable(void);
 
+// haleyjd 12/24/11: hi-def music support
+bool s_hidefmusic;
+
 //
 // Internals.
 //
@@ -1095,7 +1098,7 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
       }
       else
       {
-         Z_ChangeTag(music->data, PU_CACHE);
+         Z_Free(music->data);
          music->data = NULL;
          mus_playing = NULL;
       }
@@ -1167,7 +1170,7 @@ void S_StopMusic(void)
 
    I_StopSong(mus_playing->handle);
    I_UnRegisterSong(mus_playing->handle);
-   Z_ChangeTag(mus_playing->data, PU_CACHE);
+   Z_Free(mus_playing->data);
    
    mus_playing->data = NULL;
    mus_playing = NULL;
@@ -1478,8 +1481,8 @@ VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
 VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
-
 VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
+VARIABLE_TOGGLE(s_hidefmusic,     NULL, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
@@ -1497,6 +1500,8 @@ CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 
 // haleyjd 12/08/01: allow user to force reversal of audio channels
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
+
+CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
 {
@@ -1545,6 +1550,7 @@ void S_AddCommands(void)
   C_AddCommand(music_volume);
   C_AddCommand(s_flippan);
   C_AddCommand(s_playmusic);
+  C_AddCommand(s_hidefmusic);
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

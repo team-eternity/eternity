@@ -24,6 +24,14 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+// for Visual C++:
+#include "Win32/i_opndir.h"
+#else
+// for SANE compilers:
+#include <dirent.h>
+#endif
+
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
@@ -31,6 +39,7 @@
 
 #include "c_io.h"
 #include "m_argv.h"
+#include "m_collection.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_swap.h"
@@ -63,6 +72,7 @@ typedef struct lumptype_s
 
 static size_t W_DirectReadLump(lumpinfo_t *, void *, size_t);
 static size_t W_MemoryReadLump(lumpinfo_t *, void *, size_t);
+static size_t W_FileReadLump  (lumpinfo_t *, void *, size_t);
 
 static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 {
@@ -74,6 +84,11 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
    // memory lump
    {
       W_MemoryReadLump,
+   },
+
+   // directory file lump
+   {
+      W_FileReadLump,
    },
 };
 
@@ -182,7 +197,7 @@ WadDirectory::openwad_t WadDirectory::OpenFile(const char *name, int filetype)
 // killough 1/31/98: static, const
 //
 bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
-                              FILE *file, size_t baseoffset)
+                           FILE *file, size_t baseoffset)
 {
    wadinfo_t    header;
    openwad_t    openData;
@@ -381,6 +396,106 @@ bool WadDirectory::AddFile(const char *name, int li_namespace, int filetype,
       D_NewWadLumps(openData.handle);
    
    return false; // no error
+}
+
+struct dirfile_t
+{
+   char   *fullfn;
+   bool    isdir;
+   size_t  size;
+};
+
+//
+// WadDirectory::AddDirectory
+//
+// Add an on-disk file directory to the WadDirectory.
+//
+int WadDirectory::AddDirectory(const char *dirpath)
+{
+   DIR    *dir;
+   dirent *ent;
+   int     localcount = 0;
+   int     totalcount = 0;
+   int     startlump;
+   int     usinglump  = 0; 
+   int     globallump = 0;
+   size_t  i, fileslen;
+
+   PODCollection<dirfile_t> files;
+   lumpinfo_t *newlumps;
+   
+   if(!(dir = opendir(dirpath)))
+      return 0;
+
+   // count the files in the directory
+   while((ent = readdir(dir)))
+   {
+      dirfile_t newfile;
+      struct stat sbuf;
+
+      if(!strcmp(ent->d_name, ".")  || !strcmp(ent->d_name, ".."))
+         continue;
+      
+      newfile.fullfn = M_SafeFilePath(dirpath, ent->d_name);
+
+      if(!stat(newfile.fullfn, &sbuf)) // check for existence
+      {
+         if(S_ISDIR(sbuf.st_mode)) // if it's a directory, mark it
+            newfile.isdir = true;
+         else
+         {
+            newfile.isdir = false;
+            newfile.size  = (size_t)(sbuf.st_size);
+            ++localcount;
+         }
+      
+         files.add(newfile);
+      }
+   }
+   
+   closedir(dir);
+
+   fileslen = files.getLength();
+
+   for(i = 0; i < fileslen; i++)
+   {
+      // recurse into subdirectories first.
+      if(files[i].isdir)
+         totalcount += AddDirectory(files[i].fullfn);
+   }
+
+   // Fill in lumpinfo
+   startlump = numlumps;
+   numlumps += localcount;
+   lumpinfo = erealloc(lumpinfo_t **, lumpinfo, numlumps * sizeof(lumpinfo_t *));
+
+   // create lumpinfo_t structures for the files
+   newlumps = estructalloc(lumpinfo_t, localcount);
+   
+   // keep track of this allocation of lumps
+   AddInfoPtr(newlumps);
+
+   for(i = 0, globallump = startlump; i < fileslen; i++)
+   {
+      if(!files[i].isdir)
+      {
+         lumpinfo_t *lump = &newlumps[usinglump++];
+         
+         M_ExtractFileBase(files[i].fullfn, lump->name);
+         lump->li_namespace = lumpinfo_t::ns_global; // TODO
+         lump->type         = lumpinfo_t::lump_file;
+         lump->lfn          = estrdup(files[i].fullfn);
+         lump->source       = source;
+         lump->size         = files[i].size;
+
+         lumpinfo[globallump++] = lump;
+      }
+   }
+
+   // increment source
+   ++source;
+
+   return totalcount + localcount;
 }
 
 // jff 1/23/98 Create routines to reorder the master directory
@@ -715,10 +830,16 @@ void WadDirectory::InitMultipleFiles(wfileadd_t *files)
          // Open them with a special routine; they can be treated uniformly with
          // other wad files afterward.
          // 04/07/11: Merged AddFile and AddSubFile
-         AddFile(curfile->filename, curfile->li_namespace,
-                 curfile->baseoffset ? ADDSUBFILE : ADDWADFILE, 
-                 curfile->baseoffset ? curfile->f : NULL,
-                 curfile->baseoffset);
+         // 12/24/11: Support for physical file system directories
+         if(curfile->directory)
+            AddDirectory(curfile->filename);
+         else
+         {
+            AddFile(curfile->filename, curfile->li_namespace,
+                    curfile->baseoffset ? ADDSUBFILE : ADDWADFILE, 
+                    curfile->baseoffset ? curfile->f : NULL,
+                    curfile->baseoffset);
+         }
       }
 
       ++curfile;
@@ -1008,6 +1129,28 @@ static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest, size_t size)
    memcpy(dest, (byte *)(l->data) + l->position, size);
 
    return size;
+}
+
+//
+// Directory file lumps -- lumps that are physical files on disk that are
+// not kept open except when being read.
+//
+
+static size_t W_FileReadLump(lumpinfo_t *l, void *dest, size_t size)
+{
+   FILE *f;
+   size_t sizeread = 0;
+
+   if((f = fopen(l->lfn, "rb")))
+   {
+      I_BeginRead();
+      sizeread = fread(dest, 1, size, f);
+      I_EndRead();
+
+      fclose(f);
+   }
+   
+   return sizeread;
 }
 
 //----------------------------------------------------------------------------

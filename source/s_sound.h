@@ -137,6 +137,9 @@ extern int idmusnum;
 
 extern musicinfo_t *musicinfos[];
 
+// haleyjd 12/24/11: hi-def music support
+extern bool s_hidefmusic;
+
 #endif
 
 //----------------------------------------------------------------------------
