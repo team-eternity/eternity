@@ -464,6 +464,10 @@ int WadDirectory::AddDirectory(const char *dirpath)
          totalcount += AddDirectory(files[i].fullfn);
    }
 
+   // No lumps to add for this directory?
+   if(!localcount)
+      return totalcount;
+
    // Fill in lumpinfo
    startlump = numlumps;
    numlumps += localcount;
@@ -494,6 +498,9 @@ int WadDirectory::AddDirectory(const char *dirpath)
 
    // increment source
    ++source;
+
+   if(ispublic && in_textmode)
+      printf(" adding directory %s\n", dirpath);
 
    return totalcount + localcount;
 }
