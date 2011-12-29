@@ -35,7 +35,6 @@
 
 bool M_WriteFile(const char *name, void *source, unsigned int length);
 int  M_ReadFile(const char *name, byte **buffer);
-int  M_DrawText(int x,int y,bool direct, char *string);
 void M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions, as well as

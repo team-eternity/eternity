@@ -31,7 +31,7 @@
 int version = 340;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 19;
+unsigned char subversion = 20;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
@@ -41,7 +41,7 @@ const char version_name[] = "Mjolnir";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v3.40.19 \"Mjolnir\"";
+const char ee_wmCaption[] = "Eternity Engine v3.40.20 \"Mjolnir\"";
 #endif
             
 // haleyjd: Eternity release history
@@ -74,6 +74,7 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.19 \"Mjolnir\"";
 // 3.40.10 'Aasgard'   -- 05/01/11
 // 3.40.11 'Aasgard'   -- 05/02/11
 // 3.40.15 'Wodanaz'   -- 06/21/11
+// 3.40.20 'Mjolnir'   -- 12/25/11
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
@@ -88,3 +89,4 @@ const char ee_wmCaption[] = "Eternity Engine v3.40.19 \"Mjolnir\"";
 // version information files
 //
 //----------------------------------------------------------------------------
+

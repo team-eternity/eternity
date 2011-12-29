@@ -156,12 +156,6 @@ default_t defaults[] =
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
-
-#ifdef DJGPP
-   // jff 3/4/98 detect # voices
-   DEFAULT_INT("detect_voices", &detect_voices, NULL, 1, 0, 1, default_t::wad_no,
-               "1 enables voice detection prior to calling install sound"),
-#endif
   
    // killough 10/98
    DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
@@ -2109,11 +2103,7 @@ void M_ExtractFileBase(const char *path, char *dest)
    while(*src && *src != '.')
    {
       if(length >= 8)
-      {
-         usermsg("M_ExtractFileBase: warning - truncated '%s' to '%.8s'.",
-                 filename, dest);
-         break;
-      }
+         break; // stop at 8
 
       dest[length++] = toupper(*src++);
    }

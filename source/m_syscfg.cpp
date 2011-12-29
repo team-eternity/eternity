@@ -184,6 +184,10 @@ static default_t sysdefaults[] =
    DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
                "Volume of environmental sound sequences"),
 
+   // haleyjd 12/24/11
+   DEFAULT_BOOL("s_hidefmusic", &s_hidefmusic, NULL, false, default_t::wad_no,
+                "use hi-def music if available"),
+
    // jff 3/30/98 add ability to take screenshots in BMP format
    DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 1, 0, 3, default_t::wad_no,
                "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
