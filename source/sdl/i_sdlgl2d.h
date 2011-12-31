@@ -41,6 +41,7 @@ protected:
 
    void DrawPixels(void *buffer, unsigned int width);
    void LoadPBOExtension();
+   void fillPBO(int index);
 
 public:
    // Overrides

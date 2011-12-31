@@ -209,6 +209,34 @@ void SDLGL2DVideoDriver::FinishUpdate()
 }
 
 //
+// SDLGL2DVideoDriver::fillPBO
+//
+// haleyjd 12/30/11: fill a PBO with black pixels
+//
+void SDLGL2DVideoDriver::fillPBO(int index)
+{
+   void *ptr;
+
+   // bind the PBO
+   pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[index]);
+
+   // map the PBO into client memory
+   pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
+
+   if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
+   {
+      memset(ptr, 0, texturesize); 
+
+      // release pointer
+      pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+   }
+
+   // Unbind all PBOs
+   pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+}
+
+
+//
 // SDLGL2DVideoDriver::ReadScreen
 //
 void SDLGL2DVideoDriver::ReadScreen(byte *scr)
@@ -573,6 +601,9 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[1]);
       pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+
+      // haleyjd 12/30/11: fill PBO 0 so it's not white at startup
+      fillPBO(0);
    }
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
