@@ -50,7 +50,7 @@ typedef struct
    // [CG] Clients only care about a position's index member if it's their own
    //      position; they use it to check their prediction.  The value is
    //      the index of the last command run that resulted in this position.
-   position_t position;
+   cs_player_position_t position;
    cs_cmd_t command;
 } client_status_t;
 

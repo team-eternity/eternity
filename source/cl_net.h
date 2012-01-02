@@ -53,6 +53,7 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message);
 void CL_HandleAuthResultMessage(nm_authresult_t *message);
 void CL_HandleClientInitMessage(nm_clientinit_t *message);
 void CL_HandleClientStatusMessage(nm_clientstatus_t *message);
+void CL_HandlePlayerPositionMessage(nm_playerposition_t *message);
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message);
 void CL_HandlePlayerWeaponStateMessage(nm_playerweaponstate_t *message);
 void CL_HandlePlayerRemovedMessage(nm_playerremoved_t *message);

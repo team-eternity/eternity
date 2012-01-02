@@ -111,9 +111,10 @@ const char *sv_player_password = NULL;
 const char *sv_moderator_password = NULL;
 const char *sv_administrator_password = NULL;
 
-static void send_packet(int playernum, void *buffer, size_t buffer_size)
+static void send_any_packet(int playernum, void *data, size_t data_size,
+                            uint8_t flags, uint8_t channel_id)
 {
-   uint32_t message_type = *((uint32_t *)buffer);
+   uint32_t message_type = *((uint32_t *)data);
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
    unsigned int server_index = sv_world_index;
 
@@ -127,7 +128,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    switch(message_type)
    {
    case nm_initialstate:
-      ((nm_initialstate_t *)(buffer))->player_number = playernum;
+      ((nm_initialstate_t *)(data))->player_number = playernum;
       break;
    case nm_currentstate:
    case nm_sync:
@@ -136,6 +137,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
    case nm_clientinit:
    case nm_authresult:
    case nm_clientstatus:
+   case nm_playerposition:
    case nm_playerspawned:
    case nm_playerinfoupdated:
    case nm_playerweaponstate:
@@ -188,6 +190,7 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
       || message_type == nm_authresult
       || message_type == nm_clientinit
       // || message_type == nm_clientstatus
+      // || message_type == nm_playerposition
       || message_type == nm_playerspawned
       || message_type == nm_playerinfoupdated
       // || message_type == nm_playerweaponstate
@@ -229,37 +232,62 @@ static void send_packet(int playernum, void *buffer, size_t buffer_size)
          server_index
       );
    }
-   enet_peer_send(peer, RELIABLE_CHANNEL, enet_packet_create(
-      buffer, buffer_size, ENET_PACKET_FLAG_RELIABLE
-   ));
+   enet_peer_send(
+      peer, channel_id, enet_packet_create(data, data_size, flags)
+   );
 }
 
-static void send_packet_to_team(int playernum, void *buffer,
-                                size_t buffer_size)
+static void send_packet(int playernum, void *data, size_t data_size)
+{
+   send_any_packet(
+      playernum, data, data_size, ENET_PACKET_FLAG_RELIABLE, RELIABLE_CHANNEL
+   );
+}
+
+static void send_unreliable_packet(int playernum, void *data, size_t data_size)
+{
+   send_any_packet(
+      playernum,
+      data,
+      data_size,
+      ENET_PACKET_FLAG_UNSEQUENCED,
+      UNRELIABLE_CHANNEL
+   );
+}
+
+static void send_packet_to_team(int playernum, void *data, size_t data_size)
 {
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       if(i != playernum && clients[i].team == clients[playernum].team)
-         send_packet(playernum, buffer, buffer_size);
+         send_packet(playernum, data, data_size);
 }
 
-static void broadcast_packet(void *buffer, size_t buffer_size)
+static void broadcast_packet(void *data, size_t data_size)
 {
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-      send_packet(i, buffer, buffer_size);
+      send_packet(i, data, data_size);
 }
 
-static void broadcast_packet_excluding(int playernum, void *buffer,
-                                       size_t buffer_size)
+static void broadcast_unreliable_packet(void *data, size_t data_size)
+{
+   unsigned int i;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+      send_unreliable_packet(i, data, data_size);
+}
+
+static void broadcast_packet_excluding(int playernum, void *data,
+                                       size_t data_size)
 {
    unsigned int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       if(i != playernum)
-         send_packet(i, buffer, buffer_size);
+         send_packet(i, data, data_size);
 }
 
 static nm_servermessage_t* build_message(bool hud_msg, bool prepend_name,
@@ -672,9 +700,23 @@ void SV_LoadPlayerPositionAt(int playernum, unsigned int index)
    );
 }
 
+void SV_LoadPlayerMiscStateAt(int playernum, unsigned int index)
+{
+   player_t *player = &players[playernum];
+
+   CS_SetActorMiscState(
+      player->mo, &server_clients[playernum].misc_states[index % MAX_POSITIONS]
+   );
+}
+
 void SV_LoadCurrentPlayerPosition(int playernum)
 {
    SV_LoadPlayerPositionAt(playernum, sv_world_index);
+}
+
+void SV_LoadCurrentPlayerMiscState(int playernum)
+{
+   SV_LoadPlayerMiscStateAt(playernum, sv_world_index);
 }
 
 #if _UNLAG_DEBUG
@@ -713,7 +755,7 @@ void SV_StartUnlag(int playernum)
    unsigned int i;
    player_t *player, *target;
    server_client_t *server_client = &server_clients[playernum];
-   misc_state_t *misc_state;
+   cs_player_position_t *position;
    unsigned int index = server_client->command_world_index;
 
    // [CG] Don't run for the server's spectator actor.
@@ -764,20 +806,21 @@ void SV_StartUnlag(int playernum)
       //      It's easier to think of this as reconstructing the world the
       //      player was seeing as precisely as possible.
       target = &players[i];
+      position = &server_clients[i].positions[index % MAX_POSITIONS];
       if(playeringame[i] && i != playernum)
       {
 #if _UNLAG_DEBUG
          printf("Moved player %d:\n  ", i);
          CS_PrintPlayerPosition(i, sv_world_index - 1);
 #endif
-         misc_state = &server_clients[i].misc_states[index % MAX_POSITIONS];
-         CS_SaveActorPosition(
-            &server_clients[i].saved_position, target->mo, sv_world_index - 1
+         CS_SavePlayerPosition(
+            &server_clients[i].saved_position, i, sv_world_index - 1
          );
          SV_LoadPlayerPositionAt(i, index);
+         SV_LoadPlayerMiscStateAt(i, index);
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
-         if(misc_state->playerstate != PST_LIVE)
+         if(position->playerstate != PST_LIVE)
             target->mo->flags4 |= MF4_NODAMAGE;
 #if _UNLAG_DEBUG
          printf("  ");
@@ -820,10 +863,9 @@ void SV_EndUnlag(int playernum)
 {
    unsigned int i;
    unsigned int world_index = sv_world_index - 1;
-   position_t *position;
    fixed_t added_momx, added_momy;
    unsigned int pindex = server_clients[playernum].command_world_index;
-   misc_state_t *misc_state;
+   cs_player_position_t *position;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -838,7 +880,6 @@ void SV_EndUnlag(int playernum)
       //      during unlagged.  If it was, apply that thrust to the ultimate
       //      position.
       position = &server_clients[i].positions[pindex % MAX_POSITIONS];
-      misc_state = &server_clients[i].misc_states[pindex % MAX_POSITIONS];
       added_momx = added_momy = 0;
 
       if(players[i].mo->momx != position->momx)
@@ -847,7 +888,7 @@ void SV_EndUnlag(int playernum)
       if(players[i].mo->momy != position->momy)
          added_momy = players[i].mo->momy - position->momy;
 
-      if(misc_state->playerstate != PST_LIVE)
+      if(position->playerstate != PST_LIVE)
          players[i].mo->flags4 &= ~MF4_NODAMAGE;
 
       CS_SetPlayerPosition(i, &server_clients[i].saved_position);
@@ -1173,7 +1214,6 @@ void SV_SendSync(int playernum)
 void SV_BroadcastMapStarted(void)
 {
    nm_mapstarted_t message;
-   unsigned int i;
 
    message.message_type = nm_mapstarted;
    message.world_index = sv_world_index;
@@ -1336,15 +1376,79 @@ bool SV_AuthorizeClient(int playernum, const char *password)
    return false;
 }
 
-void SV_SaveActorPositions(void)
+void SV_UpdateClientStatuses(void)
+{
+   unsigned int i;
+
+   ENetPeer *peer;
+   client_t *client;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      peer = SV_GetPlayerPeer(i);
+      if(peer == NULL)
+         return;
+
+      client = &clients[i];
+
+      client->transit_lag = peer->roundTripTime;
+      client->packet_loss =
+         (peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+
+      if(client->packet_loss > 100)
+         client->packet_loss = 100;
+   }
+}
+
+void SV_BroadcastPlayerPositions(void)
+{
+   unsigned int i;
+   nm_playerposition_t message;
+   cs_player_position_t *pos;
+   cs_misc_state_t *ms;
+   client_t *client;
+   player_t *player;
+   server_client_t *sc;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      client = &clients[i];
+      player = &players[i];
+      sc = &server_clients[i];
+
+      if(!playeringame[i] || player->mo == NULL)
+         continue;
+
+#if _UNLAG_DEBUG
+      CS_PrintPlayerPosition(i, sv_world_index);
+#endif
+
+      // [CG] Save position & misc state for unlagged.
+      pos = &sc->positions[sv_world_index % MAX_POSITIONS];
+      ms = &sc->misc_states[sv_world_index % MAX_POSITIONS];
+      CS_SavePlayerPosition(pos, i, sv_world_index);
+      CS_SaveActorMiscState(ms, player->mo, sv_world_index);
+
+      message.message_type = nm_playerposition;
+      message.world_index = sv_world_index;
+      message.player_number = i;
+      CS_SavePlayerPosition(&message.position, i, sv_world_index);
+      message.floor_status = client->floor_status;
+      message.last_index_run = sc->last_command_run_index;
+      message.last_world_index_run = sc->last_command_run_world_index;
+
+      if(sc->buffering)
+         broadcast_packet(&message, sizeof(nm_playerposition_t));
+      else
+         broadcast_unreliable_packet(&message, sizeof(nm_playerposition_t));
+      client->floor_status = cs_fs_none;
+   }
+}
+
+void SV_BroadcastUpdatedActorPositionsAndMiscState(void)
 {
    Mobj *mobj;
    Thinker *think;
-   server_client_t *server_client;
-   position_t *p;
-   misc_state_t *ms;
-   int playernum;
-   int color;
 
    for(think = thinkercap.next; think != &thinkercap; think = think->next)
    {
@@ -1356,48 +1460,25 @@ void SV_SaveActorPositions(void)
       if(CS_ActorIsCarriedFlag(mobj))
          continue;
 
-      if(mobj->player != NULL)
+      if(mobj->player == NULL && CS_ActorPositionChanged(mobj))
       {
-         // [CG] Handling a player here.
-         playernum = mobj->player - players;
+         CS_SaveActorPosition(&mobj->old_position, mobj, sv_world_index);
 
-         // [CG] Don't send info about the server's spectator actor.
-         if(playernum == 0 || !playeringame[playernum])
-            continue;
-
-         server_client = &server_clients[playernum];
-         p = &server_client->positions[sv_world_index % MAX_POSITIONS];
-         ms = &server_client->misc_states[sv_world_index % MAX_POSITIONS];
-         CS_SaveActorPosition(p, mobj, sv_world_index);
-         CS_SaveActorMiscState(ms, mobj, sv_world_index);
-#if _UNLAG_DEBUG
-         CS_PrintPlayerPosition(playernum, sv_world_index);
-#endif
-         SV_BroadcastClientStatus(playernum);
+         // [CG] Let clients move missiles on their own.
+         if((mobj->flags & MF_MISSILE) == 0)
+            SV_BroadcastActorPosition(mobj, sv_world_index);
       }
-      else
+
+      if(CS_ActorMiscStateChanged(mobj))
       {
-         if(CS_ActorPositionChanged(mobj))
-         {
-            CS_SaveActorPosition(&mobj->old_position, mobj, sv_world_index);
-
-            // [CG] Let clients move missiles on their own.
-            if((mobj->flags & MF_MISSILE) == 0)
-               SV_BroadcastActorPosition(mobj, sv_world_index);
-         }
-
-         if(CS_ActorMiscStateChanged(mobj))
-         {
-            CS_SaveActorMiscState(&mobj->old_misc_state, mobj, sv_world_index);
-            SV_BroadcastActorMiscState(mobj, sv_world_index);
-         }
+         CS_SaveActorMiscState(&mobj->old_misc_state, mobj, sv_world_index);
+         SV_BroadcastActorMiscState(mobj, sv_world_index);
       }
    }
 }
 
 void SV_SetPlayerTeam(int playernum, teamcolor_t team)
 {
-   mapthing_t *spawn_point;
    client_t *client = &clients[playernum];
 
    if(client->team != team)
@@ -2558,47 +2639,43 @@ void SV_BroadcastCubeSpawned(Mobj *cube)
    broadcast_packet(&cube_message, sizeof(nm_cubespawned_t));
 }
 
-void SV_BroadcastClientStatus(int playernum)
+void SV_BroadcastClientStatuses(void)
 {
+   unsigned int i;
    nm_clientstatus_t status_message;
-   player_t *player = &players[playernum];
-   client_t *client = &clients[playernum];
-   server_client_t *server_client = &server_clients[playernum];
-   ENetPeer *peer = SV_GetPlayerPeer(playernum);
+   ENetPeer *peer;
+   client_t *client;
+   server_client_t *server_client;
 
-   // [CG] The player probably disconnected between when we received a command
-   //      from them and now; no need to send their client's status in this
-   //      case, so return early.
-   if(peer == NULL)
-      return;
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      peer = SV_GetPlayerPeer(i);
+      client = &clients[i];
+      server_client = &server_clients[i];
 
-   // [CG] Don't broadcast status for the server's spectator actor.
-   if(playernum == 0)
-      return;
+      // [CG] The player probably disconnected between when we received a
+      //      command from them and now; no need to send their client's status
+      //      in this case, so return early.
+      if(peer == NULL)
+         return;
 
-   // [CG] Update some client variables.
-   client->transit_lag = peer->roundTripTime;
-   client->packet_loss =
-      (peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+      // [CG] Build most of the status message.
+      status_message.message_type = nm_clientstatus;
+      status_message.world_index = sv_world_index;
+      status_message.client_number = i;
+      if(sv_world_index > server_client->last_command_run_world_index)
+      {
+         status_message.client_lag =
+            sv_world_index - server_client->last_command_run_world_index;
+      }
+      else
+         status_message.client_lag = 0;
+      status_message.server_lag = server_client->commands.size;
+      status_message.transit_lag = client->transit_lag;
+      status_message.packet_loss = client->packet_loss;
 
-   if(client->packet_loss > 100)
-      client->packet_loss = 100;
-
-   // [CG] Build most of the status message.
-   status_message.message_type = nm_clientstatus;
-   status_message.world_index = sv_world_index;
-   status_message.client_number = playernum;
-   status_message.server_lag = server_client->commands.size;
-   status_message.transit_lag = client->transit_lag;
-   status_message.packet_loss = client->packet_loss;
-   CS_SaveActorPosition(&status_message.position, player->mo, sv_world_index);
-   status_message.last_index_run = server_client->last_command_run_index;
-   status_message.last_world_index_run =
-      server_client->last_command_run_world_index;
-   status_message.floor_status = clients[playernum].floor_status;
-   clients[playernum].floor_status = cs_fs_none;
-
-   broadcast_packet(&status_message, sizeof(nm_clientstatus_t));
+      broadcast_packet(&status_message, sizeof(nm_clientstatus_t));
+   }
 }
 
 void SV_RunDemoTics(void) {}
@@ -2710,10 +2787,15 @@ void SV_TryRunTics(void)
 
       G_Ticker();
 
+      SV_UpdateClientStatuses();
+      if((gametic % TICRATE) == 0)
+         SV_BroadcastClientStatuses();
+
       if(gamestate == GS_LEVEL)
       {
          SV_SaveSectorPositions();
-         SV_SaveActorPositions();
+         SV_BroadcastPlayerPositions();
+         SV_BroadcastUpdatedActorPositionsAndMiscState();
          // [CG] Because map specials are ephemeral by nature, it's probably
          //      not too much extra bandwidth to send updates even if their
          //      states haven't changed.  If this becomes ridiculous, saving
@@ -2769,6 +2851,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_authresult:
    case nm_clientinit:
    case nm_clientstatus:
+   case nm_playerposition:
    case nm_playerspawned:
    case nm_playerweaponstate:
    case nm_playerremoved:

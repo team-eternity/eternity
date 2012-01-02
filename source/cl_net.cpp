@@ -423,6 +423,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
       CL_SendPlayerScalarInfo(ci_weapon_toggle);
       CL_SendPlayerScalarInfo(ci_autoaim);
       CL_SendPlayerScalarInfo(ci_weapon_speed);
+      CL_SendPlayerScalarInfo(ci_buffering);
    }
 
    if(mn > cs_map_count)
@@ -640,31 +641,45 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    client = &clients[playernum];
 
-   if(message->world_index > message->last_world_index_run)
-      client->client_lag = message->world_index - message->last_world_index_run;
-   else
-      client->client_lag = 0;
-
+   client->client_lag = message->client_lag;
    client->server_lag = message->server_lag;
    client->transit_lag = message->transit_lag;
    if(playernum == consoleplayer)
    {
       client->packet_loss =
          (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+
+      if(client->packet_loss > 100)
+         client->packet_loss = 100;
    }
    else
       client->packet_loss = message->packet_loss;
+}
 
-   if(client->packet_loss > 100)
-      client->packet_loss = 100;
+void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
+{
+   unsigned int playernum = message->player_number;
+   client_t *client = &clients[playernum];
+   player_t *player = &players[playernum];
+
+   if(playernum > MAX_CLIENTS || !playeringame[playernum])
+      return;
 
    if(client->spectating)
       return;
 
-   clients[playernum].floor_status = message->floor_status;
+   // [CG] Out-of-order position message.
+   if(message->world_index <= client->latest_position_index)
+      return;
+
+   client->latest_position_index = message->world_index;
 
    if(playernum == consoleplayer)
    {
+      printf(
+         "CL_HandlePlayerPosition: Received position, floorz: %d.\n",
+         players[consoleplayer].mo->floorz >> FRACBITS
+      );
       CL_StoreLastServerPosition(
          &message->position,
          (cs_floor_status_e)message->floor_status,
@@ -672,10 +687,10 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
          message->last_world_index_run
       );
    }
-   else if(players[playernum].mo)
+   else if(player->mo)
    {
       CS_SetPlayerPosition(playernum, &message->position);
-      clients[playernum].floor_status = message->floor_status;
+      client->floor_status = message->floor_status;
    }
 }
 
@@ -1255,7 +1270,7 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
 {
    Mobj *actor;
    line_t *line;
-   position_t saved_position, line_position;
+   cs_actor_position_t saved_position, line_position;
 
    actor = NetActors.lookup(message->actor_net_id);
    if(actor == NULL)
@@ -1301,7 +1316,7 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    //      afterwards.  This is sort of like unlagged for line activations.
    CS_SaveActorPosition(&saved_position, actor, gametic);
 
-   CS_CopyPosition(&line_position, &saved_position);
+   CS_CopyActorPosition(&line_position, &saved_position);
    line_position.x     = message->actor_x;
    line_position.y     = message->actor_y;
    line_position.z     = message->actor_z;

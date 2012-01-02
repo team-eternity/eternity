@@ -116,8 +116,8 @@ public:
    bool     synchronized(void) const { return m_synchronized; }
    void     setSynchronized(bool b);
    uint32_t size(void) const { return m_size; }
-   void     enable(void) { m_enabled = true; }
-   void     disable(void) { m_enabled = false; }
+   void     enable(void);
+   void     disable(void);
    bool     enabled(void) const { return m_enabled; }
    bool     adaptive(void) { return m_capacity == 0; }
    bool     overflowed(void);

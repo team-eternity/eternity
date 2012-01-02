@@ -176,7 +176,7 @@ void CS_GiveFlag(int playernum, flag_t *flag)
 {
    teamcolor_t color = (teamcolor_t)(flag - cs_flags);
    player_t *player = &players[playernum];
-   position_t position;
+   cs_actor_position_t position;
 
    CS_SaveActorPosition(&position, player->mo, 0);
 

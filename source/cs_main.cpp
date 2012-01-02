@@ -125,6 +125,7 @@ const char *network_message_names[nm_max_messages] = {
    "client initialization",
    "player command",
    "client status",
+   "player position",
    "player spawned",
    "player info updated",
    "player weapon state",
@@ -254,8 +255,12 @@ void CS_DoWorldDone(void)
             sc->last_command_run_index = 0;
             sc->received_game_state = false;
             M_QueueFree(&sc->commands);
-            memset(sc->positions, 0, MAX_POSITIONS * sizeof(position_t));
-            memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(misc_state_t));
+            memset(
+               sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t)
+            );
+            memset(
+               sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t)
+            );
          }
          cl_spawning_actor_from_message = true;
          CS_SpawnPlayerCorrectly(i, true);
@@ -452,9 +457,14 @@ void CS_ZeroClient(int clientnum)
       sc->commands_dropped = 0;
       sc->last_command_run_index = 0;
       sc->received_command_for_current_map = 0;
+      sc->buffering = false;
       M_QueueFree(&sc->commands);
-      memset(sc->positions, 0, MAX_POSITIONS * sizeof(position_t));
-      memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(misc_state_t));
+      memset(
+         sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t)
+      );
+      memset(
+         sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t)
+      );
       memcpy(
          sc->weapon_preferences,
          weapon_preferences[1],
@@ -942,6 +952,11 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       if(CS_SERVER)
          server_client->options.weapon_speed = message->int_value;
    }
+   else if(message->info_type == ci_buffering)
+   {
+      if(CS_SERVER)
+         server_client->buffering = message->boolean_value;
+   }
    else
    {
       doom_printf(
@@ -1153,6 +1168,13 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
          update_message->int_value = weapon_speed;
       else if(CS_SERVER)
          update_message->int_value = server_client->options.weapon_speed;
+   }
+   else if(info_type == ci_buffering)
+   {
+      if(CS_CLIENT)
+         update_message->boolean_value = cl_packet_buffer.enabled();
+      else if(CS_SERVER)
+         update_message->boolean_value = server_client->buffering;
    }
    else
    {

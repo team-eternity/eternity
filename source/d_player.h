@@ -43,6 +43,9 @@
 // as commands per game tick.
 #include "d_ticcmd.h"
 
+// [CG] C/S requires c/s player positions as well.
+#include "cs_position.h"
+
 // skins.
 // haleyjd: player classes
 
@@ -165,6 +168,11 @@ struct player_t
 
    // Player name
    char           name[20];
+
+   // [CG] Keeps track of this player's latest position so the server can avoid
+   //      sending its position every TIC, which can be a serious amount of
+   //      bandwidth with either a high amount of clients.
+   cs_player_position_t old_position;
 };
 
 

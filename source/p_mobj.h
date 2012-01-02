@@ -374,14 +374,13 @@ public:
    // [CG] 09/17/11 An actor's Net ID.
    uint32_t net_id;
 
-   // [CG] Even though this makes an actor much bigger, it's necessary so that
-   //      the server can avoid sending an actor's position every TIC, which
-   //      can be a serious amount of bandwidth with either a high amount of
-   //      clients or actors.
-   position_t old_position;
+   // [CG] Keeps track of this actor's latest position so the server can avoid
+   //      sending its position every TIC, which can be a serious amount of
+   //      bandwidth with either a high amount of clients or actors.
+   cs_actor_position_t old_position;
 
-   // [CG] Same deal with miscellaneos state.
-   misc_state_t old_misc_state;
+   // [CG] Same deal with miscellaneous state.
+   cs_misc_state_t old_misc_state;
 };
 
 // External declarations (formerly in p_local.h) -- killough 5/2/98

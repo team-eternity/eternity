@@ -172,32 +172,33 @@ typedef enum
    nm_clientinit,              // (s => c) 7,  New client initialization info
    nm_playercommand,           // (c => s) 8,  Player command
    nm_clientstatus,            // (s => c) 9,  Client status
-   nm_playerspawned,           // (s => c) 10, Player's actor spawned
-   nm_playerinfoupdated,       // ( both ) 11, Player info
-   nm_playerweaponstate,       // (s => c) 12, Player weapon state
-   nm_playerremoved,           // (s => c) 13, Player removed
-   nm_playertouchedspecial,    // (s => c) 14, Player touched special
-   nm_servermessage,           // (s => c) 15, Server message
-   nm_playermessage,           // ( both ) 16, Player message
-   nm_puffspawned,             // (s => c) 17, Puff spawned
-   nm_bloodspawned,            // (s => c) 18, Blood spawned
-   nm_actorspawned,            // (s => c) 19, Actor spawned
-   nm_actorposition,           // (s => c) 20, Actor position
-   nm_actormiscstate,          // (s => c) 21, Actor miscellaneous state
-   nm_actortarget,             // (s => c) 22, Actor target
-   nm_actorstate,              // (s => c) 23, Actor state
-   nm_actordamaged,            // (s => c) 24, Actor damaged
-   nm_actorkilled,             // (s => c) 25, Actor killed
-   nm_actorremoved,            // (s => c) 26, Actor removed
-   nm_lineactivated,           // (s => c) 27, Line activated
-   nm_monsteractive,           // (s => c) 28, Monster active
-   nm_monsterawakened,         // (s => c) 29, Monster awakened
-   nm_missilespawned,          // (s => c) 30, Missile spawned
-   nm_missileexploded,         // (s => c) 31, Missile exploded
-   nm_cubespawned,             // (s => c) 32, Boss brain cube spawned
-   nm_sectorposition,          // (s => c) 33, Sector position
-   nm_announcerevent,          // (s => c) 34, Announcer event
-   nm_ticfinished,             // (s => c) 35, TIC is finished
+   nm_playerposition,          // (s => c) 10, Player position
+   nm_playerspawned,           // (s => c) 11, Player's actor spawned
+   nm_playerinfoupdated,       // ( both ) 12, Player info
+   nm_playerweaponstate,       // (s => c) 13, Player weapon state
+   nm_playerremoved,           // (s => c) 14, Player removed
+   nm_playertouchedspecial,    // (s => c) 15, Player touched special
+   nm_servermessage,           // (s => c) 16, Server message
+   nm_playermessage,           // ( both ) 17, Player message
+   nm_puffspawned,             // (s => c) 18, Puff spawned
+   nm_bloodspawned,            // (s => c) 19, Blood spawned
+   nm_actorspawned,            // (s => c) 20, Actor spawned
+   nm_actorposition,           // (s => c) 21, Actor position
+   nm_actormiscstate,          // (s => c) 22, Actor miscellaneous state
+   nm_actortarget,             // (s => c) 23, Actor target
+   nm_actorstate,              // (s => c) 24, Actor state
+   nm_actordamaged,            // (s => c) 25, Actor damaged
+   nm_actorkilled,             // (s => c) 26, Actor killed
+   nm_actorremoved,            // (s => c) 27, Actor removed
+   nm_lineactivated,           // (s => c) 28, Line activated
+   nm_monsteractive,           // (s => c) 29, Monster active
+   nm_monsterawakened,         // (s => c) 30, Monster awakened
+   nm_missilespawned,          // (s => c) 31, Missile spawned
+   nm_missileexploded,         // (s => c) 32, Missile exploded
+   nm_cubespawned,             // (s => c) 33, Boss brain cube spawned
+   nm_sectorposition,          // (s => c) 34, Sector position
+   nm_announcerevent,          // (s => c) 35, Announcer event
+   nm_ticfinished,             // (s => c) 36, TIC is finished
    // nm_specialspawned,          // (s => c) 32, Map special spawned
    // nm_specialstatus,           // (s => c) 33, Map special's status
    // nm_specialremoved,          // (s => c) 34, Map special removed
@@ -258,6 +259,7 @@ typedef enum
    ci_weapon_toggle,  // doom_weapon_toggles
    ci_autoaim,        // autoaim
    ci_weapon_speed,   // weapon_speed
+   ci_buffering,
 } client_info_e;
 
 typedef enum
@@ -350,6 +352,8 @@ typedef struct
    uint32_t death_time;
    // [CG] The number of times this client has died.
    uint32_t death_count;
+   // [CG] The world index of the latest received position.
+   uint32_t latest_position_index;
 } client_t;
 
 #pragma pack(pop)
@@ -388,9 +392,9 @@ typedef struct
    // [CG] The serverside command buffer.
    mqueue_t commands;
    // [CG] The server stores player positions here for unlagged.
-   position_t positions[MAX_POSITIONS];
+   cs_player_position_t positions[MAX_POSITIONS];
    // [CG] The server stores miscellaneous player states here.
-   misc_state_t misc_states[MAX_POSITIONS];
+   cs_misc_state_t misc_states[MAX_POSITIONS];
    // [CG] Per-client preferred weapon order.
    weapontype_t weapon_preferences[NUMWEAPONS + 1];
    // [CG] Per-client weapon switch on weapon pickup preference.
@@ -400,7 +404,9 @@ typedef struct
    // [CG] Sync-critical configuration options.
    client_options_t options;
    // [CG] Last position, used for unlagged.
-   position_t saved_position;
+   cs_player_position_t saved_position;
+   // [CG] Whether or not a client is buffering incoming server messages.
+   uint8_t buffering;
 #if _UNLAG_DEBUG
    // [CG] For unlagged debugging.
    Mobj *ghost;
@@ -561,15 +567,24 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint32_t client_number;
+   uint32_t client_lag;
    uint32_t server_lag;
    uint32_t transit_lag;
    uint8_t packet_loss;
-   position_t position;
-   // [CG] These are the indices of the last client command run by the server.
-   uint32_t last_index_run;
-   uint32_t last_world_index_run;
-   int32_t floor_status; // [CG] cs_floor_status_e.
 } nm_clientstatus_t;
+
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint32_t player_number;
+   cs_player_position_t position;
+   int32_t floor_status; // [CG] cs_floor_status_e.
+   // [CG] Last client command index run.
+   uint32_t last_index_run;
+   // [CG] World index at which the last command was run.
+   uint32_t last_world_index_run;
+} nm_playerposition_t;
 
 typedef struct
 {
@@ -636,7 +651,7 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint32_t actor_net_id;
-   position_t position;
+   cs_actor_position_t position;
 } nm_actorposition_t;
 
 typedef struct
@@ -644,7 +659,7 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint32_t actor_net_id;
-   misc_state_t misc_state;
+   cs_misc_state_t misc_state;
 } nm_actormiscstate_t;
 
 typedef struct

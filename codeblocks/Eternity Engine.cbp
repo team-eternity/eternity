@@ -7,11 +7,11 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="E:\Doom\Eternity Engine\eternity" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug\eternity.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='-base &quot;E:\Code\eecs\codeblocks\bin\Debug\base&quot; -csserve' />
+				<Option parameters="-csserve" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

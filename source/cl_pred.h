@@ -39,7 +39,7 @@ void      CL_PredictSectorPositions(unsigned int index);
 void      CL_PredictFrom(unsigned int start, unsigned int end);
 void      CL_RePredict(unsigned int command_index,
                        unsigned int position_index, unsigned int count);
-void      CL_StoreLastServerPosition(position_t *new_server_position,
+void      CL_StoreLastServerPosition(cs_player_position_t *new_server_position,
                                      cs_floor_status_e floor_status,
                                      unsigned int index,
                                      unsigned int world_index);

@@ -27,6 +27,8 @@
 #ifndef __CS_POSITION_H__
 #define __CS_POSITION_H__
 
+#include "tables.h"
+
 // [CG] A position really is everything that's critical to an actor's or
 //      player's position at any given TIC.  When prediction is incorrect, the
 //      correct position/state (provided by the server) is loaded and
@@ -40,7 +42,7 @@
 
 #pragma pack(push, 1)
 
-typedef struct position_s
+typedef struct
 {
    uint32_t world_index;
    fixed_t x;
@@ -50,11 +52,31 @@ typedef struct position_s
    fixed_t momy;
    fixed_t momz;
    angle_t angle;
-   fixed_t pitch; // [CG] Players only, 0 otherwise.
-} position_t;
+   int32_t floatbob;
+} cs_actor_position_t;
+
+// [CG] Same with player positions.
+typedef struct 
+{
+   uint32_t world_index;
+   fixed_t x;
+   fixed_t y;
+   fixed_t z;
+   fixed_t momx;
+   fixed_t momy;
+   fixed_t momz;
+   angle_t angle;
+   fixed_t pitch;
+   int32_t bob;
+   int32_t viewz;
+   int32_t viewheight;
+   int32_t deltaviewheight;
+   int32_t jumptime;
+   int32_t playerstate;
+} cs_player_position_t;
 
 // [CG] Same with miscellaneous state.
-typedef struct misc_state_s
+typedef struct
 {
    uint32_t world_index;
    int32_t flags;
@@ -65,38 +87,42 @@ typedef struct misc_state_s
    int32_t friction;
    int32_t movefactor;
    int32_t reactiontime;
-   int32_t floatbob;
-   int32_t bob;             // [CG] Players only, 0 otherwise.
-   int32_t viewz;           // [CG] Players only, 0 otherwise.
-   int32_t viewheight;      // [CG] Players only, 0 otherwise.
-   int32_t deltaviewheight; // [CG] Players only, 0 otherwise.
-   int32_t jumptime;        // [CG] Players only, 0 otherwise.
-   int32_t playerstate;     // [CG] Players only, 0 otherwise.
-} misc_state_t;
+} cs_misc_state_t;
 
 #pragma pack(pop)
 
-void CS_PrintPosition(position_t *position);
-void CS_PrintActorPosition(Mobj *actor, unsigned int index);
-void CS_PrintPlayerPosition(int playernum, unsigned int index);
-void CS_SetActorPosition(Mobj *actor, position_t *position);
-void CS_SetPlayerPosition(int playernum, position_t *position);
-bool CS_ActorPositionEquals(Mobj *actor, position_t *position);
-void CS_SaveActorPosition(position_t *position, Mobj *actor, int index);
+void CS_PrintActorPosition(cs_actor_position_t *position);
+void CS_PrintPositionForActor(Mobj *actor, uint32_t index);
+void CS_SetActorPosition(Mobj *actor, cs_actor_position_t *position);
+bool CS_ActorPositionEquals(Mobj *actor, cs_actor_position_t *position);
+void CS_SaveActorPosition(cs_actor_position_t *position, Mobj *actor,
+                          uint32_t index);
 bool CS_ActorPositionChanged(Mobj *actor);
-bool CS_PositionsEqual(position_t *position_one, position_t *position_two);
-void CS_CopyPosition(position_t *dest, position_t *src);
+bool CS_ActorPositionsEqual(cs_actor_position_t *position_one,
+                            cs_actor_position_t *position_two);
+void CS_CopyActorPosition(cs_actor_position_t *dest, cs_actor_position_t *src);
 
-void CS_PrintMiscState(misc_state_t *state);
-void CS_PrintActorMiscState(Mobj *actor, unsigned int index);
-void CS_PrintPlayerMiscState(int playernum, unsigned int index);
-void CS_SetActorMiscState(Mobj *actor, misc_state_t *state);
-void CS_SetPlayerMiscState(int playernum, misc_state_t *state);
-bool CS_ActorMiscStateEquals(Mobj *actor, misc_state_t *state);
-void CS_SaveActorMiscState(misc_state_t *state, Mobj *actor, int index);
+void CS_PrintMiscState(cs_misc_state_t *state);
+void CS_SetActorMiscState(Mobj *actor, cs_misc_state_t *state);
+bool CS_ActorMiscStateEquals(Mobj *actor, cs_misc_state_t *state);
+void CS_SaveActorMiscState(cs_misc_state_t *state, Mobj *actor,
+                           uint32_t index);
 bool CS_ActorMiscStateChanged(Mobj *actor);
-bool CS_MiscStatesEqual(misc_state_t *state_one, misc_state_t *state_two);
-void CS_CopyMiscState(misc_state_t *dest, misc_state_t *src);
+bool CS_MiscStatesEqual(cs_misc_state_t *state_one,
+                        cs_misc_state_t *state_two);
+void CS_CopyMiscState(cs_misc_state_t *dest, cs_misc_state_t *src);
+
+void CS_PrintPlayerPosition(cs_player_position_t *position);
+void CS_PrintPositionForPlayer(int playernum, uint32_t index);
+void CS_SetPlayerPosition(int playernum, cs_player_position_t *position);
+bool CS_PlayerPositionEquals(int playernum, cs_player_position_t *position);
+void CS_SavePlayerPosition(cs_player_position_t *position, int playernum,
+                           uint32_t index);
+bool CS_PlayerPositionChanged(int playernum);
+bool CS_PlayerPositionsEqual(cs_player_position_t *position_one,
+                             cs_player_position_t *position_two);
+void CS_CopyPlayerPosition(cs_player_position_t *dest,
+                           cs_player_position_t *src);
 
 #endif
 

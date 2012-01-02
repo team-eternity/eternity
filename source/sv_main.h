@@ -66,7 +66,9 @@ void SV_SpawnGhost(int playernum);
 void SV_StartUnlag(int playernum);
 void SV_EndUnlag(int playernum);
 void SV_LoadPlayerPositionAt(int playernum, unsigned int index);
+void SV_LoadPlayerMiscStateAt(int playernum, unsigned int index);
 void SV_LoadCurrentPlayerPosition(int playernum);
+void SV_LoadCurrentPlayerMiscState(int playernum);
 
 // [CG] Some lookup functions.
 ENetPeer* SV_GetPlayerPeer(int playernum);
@@ -86,8 +88,8 @@ void SV_SendAuthorizationResult(int playernum,
                                 cs_auth_level_e authorization_level);
 
 // [CG] Game loop functions.
-void SV_SaveActorPositions(void);
 void SV_ProcessPlayerCommand(int playernum);
+void SV_BroadcastUpdatedActorPositionsAndMiscState(void);
 
 // [CG] Misc. functions.
 void SV_AddClient(int playernum);
@@ -101,6 +103,7 @@ void SV_RestoreServerOptions(void);
 unsigned int SV_ClientCommandBufferSize(int playernum);
 void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd);
 void SV_RunPlayerCommands(int playernum);
+void SV_UpdateClientStatus(void);
 
 // [CG] Sending functions.
 void SV_SendNewClient(int playernum, int clientnum);
@@ -124,7 +127,8 @@ void SV_BroadcastMapCompleted(bool enter_intermission);
 void SV_BroadcastSettings(void);
 void SV_BroadcastCurrentMap(void);
 void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum);
-void SV_BroadcastClientStatus(int playernum);
+void SV_BroadcastClientStatuses(void);
+void SV_BroadcastPlayerPositions(void);
 void SV_BroadcastPlayerStringInfo(int playernum, client_info_e info_type);
 void SV_BroadcastPlayerArrayInfo(int playernum, client_info_e info_type,
                                  int array_index);

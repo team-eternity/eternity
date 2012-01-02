@@ -93,6 +93,9 @@ void NetPacket::process()
    case nm_clientstatus:
       CL_HandleClientStatusMessage((nm_clientstatus_t *)data);
       break;
+   case nm_playerposition:
+      CL_HandlePlayerPositionMessage((nm_playerposition_t *)data);
+      break;
    case nm_playerspawned:
       CL_HandlePlayerSpawnedMessage((nm_playerspawned_t *)data);
       break;
@@ -237,6 +240,18 @@ void NetPacketBuffer::setSynchronized(bool b)
    {
       disable();
    }
+}
+
+void NetPacketBuffer::enable(void)
+{
+   m_enabled = true;
+   CL_SendPlayerScalarInfo(ci_buffering);
+}
+
+void NetPacketBuffer::disable(void)
+{
+   m_enabled = false;
+   CL_SendPlayerScalarInfo(ci_buffering);
 }
 
 bool NetPacketBuffer::overflowed(void)

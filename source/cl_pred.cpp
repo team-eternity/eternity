@@ -43,7 +43,7 @@
 bool cl_predicting = false;
 
 static cs_cmd_t local_commands[MAX_POSITIONS];
-static position_t last_server_position;
+static cs_player_position_t last_server_position;
 static cs_floor_status_e last_floor_status;
 static uint32_t last_server_command_index;
 
@@ -95,11 +95,11 @@ void CL_RePredict(unsigned int command_index, unsigned int position_index,
    CL_LoadSectorPositions(cl_current_world_index);
 }
 
-void CL_StoreLastServerPosition(position_t *new_server_position,
+void CL_StoreLastServerPosition(cs_player_position_t *new_server_position,
                                 cs_floor_status_e floor_status,
                                 uint32_t index, uint32_t world_index)
 {
-   CS_CopyPosition(&last_server_position, new_server_position);
+   CS_CopyPlayerPosition(&last_server_position, new_server_position);
    last_server_command_index = index;
    last_server_position.world_index = world_index;
    last_floor_status = floor_status;
