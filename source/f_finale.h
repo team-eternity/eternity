@@ -43,7 +43,7 @@ typedef struct castinfo_s
 extern int max_castorder;
 extern castinfo_t *castorder;
 
-extern const char *f_fontname;
+extern char *f_fontname;
 
 //
 // FINALE

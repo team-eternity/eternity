@@ -81,7 +81,7 @@ static void F_InitDemonScroller(void);
 static byte *DemonBuffer; // haleyjd 08/23/02
 
 vfont_t *f_font;
-const char *f_fontname;
+char *f_fontname;
 
 //
 // F_Init

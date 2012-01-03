@@ -66,9 +66,9 @@ static interfns_t *InterFuncs = NULL;
 vfont_t *in_font;
 vfont_t *in_bigfont;
 vfont_t *in_bignumfont;
-const char *in_fontname;
-const char *in_bigfontname;
-const char *in_bignumfontname;
+char *in_fontname;
+char *in_bigfontname;
+char *in_bignumfontname;
 
 //
 // Intermission Camera

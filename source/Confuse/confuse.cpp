@@ -84,7 +84,7 @@ static char *cfg_strndup(const char *s, size_t n)
    if(s == 0)
       return 0;
    
-   r = emalloc(char *, n + 1);
+   r = ecalloc(char *, 1, n + 1);
    strncpy(r, s, n);
    r[n] = 0;
    return r;
@@ -151,6 +151,12 @@ unsigned int cfg_size(cfg_t *cfg, const char *name)
    if(opt)
       return opt->nvalues;
    return 0;
+}
+
+cfg_t *cfg_displaced(cfg_t *cfg)
+{
+   // haleyjd 01/02/12: for getting the displaced cfg_t
+   return cfg->displaced;
 }
 
 signed int cfg_getnint(cfg_t *cfg, const char *name, unsigned int index)
@@ -248,6 +254,14 @@ const char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
 const char *cfg_getstr(cfg_t *cfg, const char *name)
 {
    return cfg_getnstr(cfg, name, 0);
+}
+
+char *cfg_getstrdup(cfg_t *cfg, const char *name)
+{
+   // haleyjd 12/31/11: get a dynamic copy of a string
+   const char *value = cfg_getstr(cfg, name);
+
+   return value ? estrdup(value) : NULL;
 }
 
 cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
@@ -402,6 +416,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
    double f;
    int i;
    char *endptr;
+   cfg_t *oldsection;
    
    cfg_assert(cfg && opt);
    
@@ -515,9 +530,8 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       break;
    case CFGT_SEC:
    case CFGT_MVPROP: // haleyjd
-      // haleyjd 07/11/03: CVS bug fix for section overwrite mem. leak
-      cfg_free(val->section);
-      val->section = ecalloc(cfg_t *, 1, sizeof(cfg_t));
+      oldsection = val->section;
+      val->section = estructalloc(cfg_t, 1);
       cfg_assert(val->section);
       val->section->namealloc = estrdup(opt->name); // haleyjd 04/14/11
       val->section->name      = val->section->namealloc;
@@ -528,6 +542,9 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, char *value)
       val->section->line      = cfg->line;
       val->section->errfunc   = cfg->errfunc;
       val->section->title     = value;
+      // haleyjd 01/02/12: make the old section a displaced version of the
+      // new one, so that it can remain accessible
+      val->section->displaced = oldsection;
       break;
    case CFGT_BOOL:
       if(opt->cb)
@@ -1158,8 +1175,15 @@ void cfg_free(cfg_t *cfg)
    
    if(cfg == 0)
       return;
+
+   // haleyjd 01/02/12: free any displaced section(s) recursively
+   if(cfg->displaced)
+   {
+      cfg_free(cfg->displaced);
+      cfg->displaced = 0;
+   }
    
-   for(i = 0; cfg->opts[i].name; ++i)
+   for(i = 0; cfg->opts[i].name; i++)
       cfg_free_value(&cfg->opts[i]);
 
    if(is_set(CFGF_ALLOCATED, cfg->flags))

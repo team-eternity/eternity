@@ -65,7 +65,7 @@ enum
    it_slider,           // slider
    it_bigslider,        // big slider -- haleyjd 08/30/06
    it_automap,          // an automap colour
-   it_binding,		      // haleyjd: a key binding
+   it_binding,		// haleyjd: a key binding
    it_end,              // last menuitem in the list
 };
 
@@ -87,6 +87,9 @@ struct menuitem_t
   /*** internal stuff used by menu code ***/
   int x, y;
   variable_t *var;        // ptr to console variable
+  char *dyndescription;   // for EDF use only
+  char *dyndata;
+  char *dynpatch;
 };
 
 // haleyjd 10/07/05: Menu engine changes:
@@ -226,9 +229,9 @@ extern int menutime;
 // haleyjd
 extern int quickSaveSlot;
 extern bool menu_toggleisback;
-extern const char *mn_fontname;
-extern const char *mn_bigfontname;
-extern const char *mn_normalfontname;
+extern char *mn_fontname;
+extern char *mn_bigfontname;
+extern char *mn_normalfontname;
 extern char *mn_background;
 extern const char *mn_background_flat;
 

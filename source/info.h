@@ -176,6 +176,7 @@ struct state_t
    char       *name;      // buffer for name
    int         dehnum;    // DeHackEd number for fast access, comp.
    int         index;     // 06/12/09: number of state in states array
+   bool        decorate;  // 01/01/12: reserved for DECORATE definition
 };
 
 // these are in info.c

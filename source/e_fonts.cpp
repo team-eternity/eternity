@@ -551,7 +551,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
    }
 
    // get mask
-   f->mask = estrdup(cfg_getstr(sec, ITEM_FILTER_MASK));
+   f->mask = cfg_getstrdup(sec, ITEM_FILTER_MASK);
 
    // verify mask string to prevent hacks
    E_VerifyFilter(f->mask);
@@ -798,16 +798,16 @@ static void E_ProcessFont(cfg_t *sec)
 static void E_ProcessFontVars(cfg_t *cfg)
 {
    // 02/25/09: set native module font names
-   hud_fontname      = estrdup(cfg_getstr(cfg, ITEM_FONT_HUD));
-   hud_overfontname  = estrdup(cfg_getstr(cfg, ITEM_FONT_HUDO));
-   mn_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_MENU));
-   mn_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_BMENU));
-   mn_normalfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_NMENU));
-   f_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_FINAL));
-   in_fontname       = estrdup(cfg_getstr(cfg, ITEM_FONT_INTR));
-   in_bigfontname    = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRB));
-   in_bignumfontname = estrdup(cfg_getstr(cfg, ITEM_FONT_INTRBN));
-   c_fontname        = estrdup(cfg_getstr(cfg, ITEM_FONT_CONS));
+   E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
+   E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
+   E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
+   E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
+   E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));
+   E_ReplaceString(f_fontname,        cfg_getstrdup(cfg, ITEM_FONT_FINAL));
+   E_ReplaceString(in_fontname,       cfg_getstrdup(cfg, ITEM_FONT_INTR));
+   E_ReplaceString(in_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_INTRB));
+   E_ReplaceString(in_bignumfontname, cfg_getstrdup(cfg, ITEM_FONT_INTRBN));
+   E_ReplaceString(c_fontname,        cfg_getstrdup(cfg, ITEM_FONT_CONS));
 }
 
 //=============================================================================

@@ -863,6 +863,20 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 //
 
 //
+// E_ReplaceString
+//
+// haleyjd 12/31/11: Free a string if it's non-null and then give it the 
+// new value.
+//
+void E_ReplaceString(char *&dest, char *newvalue)
+{
+   if(dest)
+      efree(dest);
+
+   dest = newvalue;
+}
+
+//
 // E_GetHeredocLine
 //
 // Finds the start of the next line in the string, and modifies the string with

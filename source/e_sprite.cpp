@@ -185,7 +185,7 @@ bool E_ProcessSingleSprite(const char *sprname)
       return false;
 
    // allocate separate storage for implicit sprites
-   spr = ecalloc(esprite_t *, 1, sizeof(*spr));
+   spr = estructalloc(esprite_t, 1);
 
    // try adding it; if this fails, we need to free spr
    if(!E_AddSprite(sprname, spr))

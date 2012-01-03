@@ -30,11 +30,14 @@
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "e_args.h"
 #include "e_exdata.h"
 #include "e_sound.h"
+#include "e_states.h"
 #include "e_things.h"
 #include "info.h"
 #include "metaapi.h"
+#include "p_pspr.h"
 #include "s_sound.h"
 #include "v_misc.h"
 
@@ -191,6 +194,65 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
                FC_NORMAL "%s", 
                obj->getKey(), obj->getType(), obj->toString());
    }
+}
+
+//
+// e_dumpstate
+//
+// Displays information on one EDF state definition.
+//
+CONSOLE_COMMAND(e_dumpstate, 0)
+{
+   int num;
+   state_t *state;
+
+   if(!Console.argc)
+   {
+      C_Printf("usage: e_dumpstate mnemonic\n");
+      return;
+   }
+
+   num = E_StateNumForName(Console.argv[0]->constPtr());
+
+   if(num == -1)
+   {
+      C_Printf("State not found\n");
+      return;
+   }
+   
+   state = states[num];
+
+   C_Printf(FC_ERROR "Data for State %s:\n"
+            FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
+            FC_HI "Index: "      FC_NORMAL "%d\n"
+            FC_HI "Decorate: "   FC_NORMAL "%s\n"
+            FC_HI "Sprite: "     FC_NORMAL "%d\n"
+            FC_HI "Frame: "      FC_NORMAL "%d\n"
+            FC_HI "Bright: "     FC_NORMAL "%s\n"
+            FC_HI "Tics: "       FC_NORMAL "%d\n"
+            FC_HI "Next State: " FC_NORMAL "%d\n"
+            FC_HI "Misc 1: "     FC_NORMAL "%d\n"
+            FC_HI "Misc 2: "     FC_NORMAL "%d\n"
+            FC_ERROR "Arguments:\n",
+            state->name, 
+            state->dehnum,
+            state->index,
+            state->decorate ? "true" : "false",
+            state->sprite, 
+            state->frame & FF_FRAMEMASK,
+            state->frame & FF_FULLBRIGHT ? "true" : "false",
+            state->tics,
+            state->nextstate,
+            state->misc1, 
+            state->misc2);
+
+   if(state->args)
+   {
+      for(int i = 0; i < state->args->numargs; i++)
+         C_Printf(FC_HI "%d: " FC_NORMAL "%s\n", i, state->args->args[i]);
+   }
+   else
+      C_Printf(FC_HI "No arguments defined\n");
 }
 
 //
@@ -393,6 +455,7 @@ void E_AddCommands(void)
    C_AddCommand(e_dumpthings);
    C_AddCommand(e_thingtype);
    C_AddCommand(e_dumpmeta);
+   C_AddCommand(e_dumpstate);
    C_AddCommand(e_dumpitems);
    C_AddCommand(e_playsound);
    C_AddCommand(e_listmapthings);

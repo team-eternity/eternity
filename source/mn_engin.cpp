@@ -1977,9 +1977,9 @@ void MN_StartControlPanel(void)
 //
 
 // haleyjd 02/25/09: font names set by EDF:
-const char *mn_fontname;
-const char *mn_normalfontname;
-const char *mn_bigfontname;
+char *mn_fontname;
+char *mn_normalfontname;
+char *mn_bigfontname;
 
 //
 // MN_InitFonts

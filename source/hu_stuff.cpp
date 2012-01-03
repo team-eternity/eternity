@@ -80,7 +80,7 @@ int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
 
 vfont_t *hud_font;
-const char *hud_fontname;
+char *hud_fontname;
 
 static bool HU_ChatRespond(event_t *ev);
 

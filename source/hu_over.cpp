@@ -97,7 +97,7 @@ int hud_hidestatus = 0;
 // most ports
 
 // haleyjd 02/25/09: hud font set by EDF:
-const char *hud_overfontname;
+char *hud_overfontname;
 vfont_t *hud_overfont;
 static bool hu_fontloaded = false;
 

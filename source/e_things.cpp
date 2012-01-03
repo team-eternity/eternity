@@ -93,6 +93,7 @@ int UnknownThingType;
 #define ITEM_TNG_CRASHSTATE    "crashstate"
 #define ITEM_TNG_ACTIVESTATE   "activestate"
 #define ITEM_TNG_INACTIVESTATE "inactivestate"
+#define ITEM_TNG_FIRSTDECSTATE "firstdecoratestate"
 
 // DECORATE state block
 #define ITEM_TNG_STATES        "states"
@@ -420,6 +421,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(   ITEM_TNG_CRASHSTATE,    "S_NULL",  CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ACTIVESTATE,   "S_NULL",  CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_INACTIVESTATE, "S_NULL",  CFGF_NONE                ), \
+   CFG_STR(   ITEM_TNG_FIRSTDECSTATE, NULL,      CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_STATES,        0,         CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_SEESOUND,      "none",    CFGF_NONE                ), \
    CFG_STR(   ITEM_TNG_ATKSOUND,      "none",    CFGF_NONE                ), \
@@ -1312,11 +1314,12 @@ static void E_processKillStates(mobjinfo_t *mi, edecstateout_t *dso)
 //
 // haleyjd 06/22/10: Processes the DECORATE state list in a thing
 //
-static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
+static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str, 
+                                       const char *firststate, bool recursive)
 {
    edecstateout_t *dso;
 
-   if(!(dso = E_ParseDecorateStates(str)))
+   if(!(dso = E_ParseDecorateStates(str, firststate)))
    {
       E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to thing '%s'.\n",
                          mi->name);
@@ -1328,15 +1331,49 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str)
       E_processDecorateGotos(mi, dso);
 
    // add all labeled states from the block to the mobjinfo
-   if(dso->numstates)
+   if(dso->numstates && !recursive)
       E_processDecorateStates(mi, dso);
 
    // deal with kill states
-   if(dso->numkillstates)
+   if(dso->numkillstates && !recursive)
       E_processKillStates(mi, dso);
 
    // free the DSO object
    E_FreeDSO(dso);
+}
+
+//
+// E_ProcessDecorateStatesRecursive
+//
+// haleyjd 01/02/12: A change-over to DECORATE-format states in the default EDFs
+// requires that we not drop DECORATE state blocks defined in sections that are
+// displaced via a more recent definition during initial EDF processing. A small
+// modification to libConfuse has made this possible to achieve. This recursive
+// processing is only necessary when the displaced thingtype definition uses the
+// "firstdecoratestate" mechanism to populate global states with its data.
+//
+static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool recursive)
+{
+   cfg_t *displaced;
+
+   // 01/02/12: Process displaced sections recursively first.
+   if((displaced = cfg_displaced(thingsec)))
+      E_ProcessDecorateStatesRecursive(displaced, thingnum, true);
+
+   // haleyjd 06/22/10: Process DECORATE state block
+   if(cfg_size(thingsec, ITEM_TNG_STATES) > 0)
+   {
+      // 01/01/12: allow use of pre-existing reserved states; they must be
+      // defined consecutively in EDF and should be flagged +decorate in order
+      // for values inside them to be overridden by the DECORATE state block.
+      // If this isn't being done, firststate will be NULL.
+      const char *firststate = cfg_getstr(thingsec, ITEM_TNG_FIRSTDECSTATE);
+      const char *tempstr    = cfg_getstr(thingsec, ITEM_TNG_STATES);
+
+      // recursion should process states only if firststate is valid
+      if(!recursive || firststate)
+         E_ProcessDecorateStateList(mobjinfo[thingnum], tempstr, firststate, recursive);
+   }
 }
 
 //
@@ -2186,11 +2223,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
 
    // haleyjd 06/22/10: Process DECORATE state block
-   if(cfg_size(thingsec, ITEM_TNG_STATES) > 0)
-   {
-      tempstr = cfg_getstr(thingsec, ITEM_TNG_STATES);
-      E_ProcessDecorateStateList(mobjinfo[i], tempstr);
-   }
+   E_ProcessDecorateStatesRecursive(thingsec, i, false);
 }
 
 //

@@ -55,6 +55,7 @@
 int NullStateNum;
 
 // Frame section keywords
+#define ITEM_FRAME_DECORATE  "decorate"
 #define ITEM_FRAME_SPRITE    "sprite"
 #define ITEM_FRAME_SPRFRAME  "spriteframe"
 #define ITEM_FRAME_FULLBRT   "fullbright"
@@ -94,6 +95,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
 cfg_opt_t edf_frame_opts[] =
 {
+   CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
    CFG_STR(ITEM_FRAME_CMP, 0, CFGF_NONE),
    FRAME_FIELDS
 };
@@ -114,10 +116,12 @@ cfg_opt_t edf_fdelta_opts[] =
 #define NUMSTATECHAINS 2003
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> state_namehash;
+static EHashTable<state_t, ENCStringHashKey, 
+                  &state_t::name, &state_t::namelinks> state_namehash;
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey, &state_t::dehnum, &state_t::numlinks> state_numhash;
+static EHashTable<state_t, EIntHashKey, 
+                  &state_t::dehnum, &state_t::numlinks> state_numhash;
 
 //
 // E_StateNumForDEHNum
@@ -1190,8 +1194,21 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
    // In definitions only, see if the cmp field is defined. If so,
    // we go into it with E_ProcessCmpState above, and ignore most
    // other fields in the frame block.
+   // 01/01/12:
+   // In definitions only, see if this state is reserved for definition
+   // in a DECORATE state block by a thingtype.
    if(def)
    {
+      int decoratestate = cfg_getflag(framesec, ITEM_FRAME_DECORATE);
+
+      if(decoratestate)
+      {
+         states[i]->decorate = true;
+         goto hitdecorate; // skip most processing
+      }
+      else
+         states[i]->decorate = false;
+
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {
          tempstr = cfg_getstr(framesec, ITEM_FRAME_CMP);
@@ -1245,31 +1262,8 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
       E_StateNextFrame(tempstr, i);
    }
 
-   // process particle event
-   if(IS_SET(ITEM_FRAME_PTCLEVENT))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
-
-      E_StatePtclEvt(tempstr, i);
-   }
-
    // 03/30/05: the following fields are now also allowed in cmp frames
 hitcmp:
-      
-   // misc field parsing (complicated)
-
-   if(IS_SET(ITEM_FRAME_MISC1))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
-      E_ParseMiscField(tempstr, &(states[i]->misc1));
-   }
-
-   if(IS_SET(ITEM_FRAME_MISC2))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
-      E_ParseMiscField(tempstr, &(states[i]->misc2));
-   }
-
    // args field parsing (even more complicated, but similar)
    // Note: deltas can only set the entire args list at once, not
    // just parts of it.
@@ -1286,6 +1280,31 @@ hitcmp:
          
          E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
       }
+   }
+
+   // 01/01/12: the following fields are allowed when processing a 
+   // DECORATE-reserved state
+hitdecorate:
+   // misc field parsing (complicated)
+
+   if(IS_SET(ITEM_FRAME_MISC1))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
+      E_ParseMiscField(tempstr, &(states[i]->misc1));
+   }
+
+   if(IS_SET(ITEM_FRAME_MISC2))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
+      E_ParseMiscField(tempstr, &(states[i]->misc2));
+   }
+
+   // process particle event
+   if(IS_SET(ITEM_FRAME_PTCLEVENT))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
+
+      E_StatePtclEvt(tempstr, i);
    }
 }
 

@@ -318,17 +318,53 @@ static void E_ResetInventoryPStack()
 //
 static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 {
-   // TODO: save out fields that shouldn't be overwritten
+   // save out fields that shouldn't be overwritten
+   DLListItem<inventory_t> namelinks = child->namelinks;
+   DLListItem<inventory_t> numlinks  = child->numlinks;
+   char *name      = child->name;
+   int   numkey    = child->numkey;
+   bool  processed = child->processed;
+   MetaTable *meta = child->meta;
 
-   // TODO: copy from source to destination
+   // wipe out any dynamically allocated strings in inheriting inventory
+   if(child->icon)
+      efree(child->icon);
+   if(child->pickUpMessage)
+      efree(child->pickUpMessage);
+   if(child->pickUpSound)
+      efree(child->pickUpSound);
+   if(child->pickUpFlash)
+      efree(child->pickUpFlash);
+   if(child->useSound)
+      efree(child->useSound);
 
-   // TODO: normalize special fields
-   // * duplicate any mallocs
-   // * copy any metatables
+   // copy from source to destination
+   memcpy(child, parent, sizeof(inventory_t));
+
+   // restore saved fields
+   child->namelinks = namelinks;
+   child->numlinks  = numlinks;
+   child->name      = name;
+   child->numkey    = numkey;
+   child->processed = processed;
+   child->meta      = meta;
    
-   // TODO: restore saved fields
+   // normalize special fields
+   
+   // * duplicate mallocs
+   if(child->icon)
+      child->icon = estrdup(child->icon);
+   if(child->pickUpMessage)
+      child->pickUpMessage = estrdup(child->pickUpMessage);
+   if(child->pickUpSound)
+      child->pickUpSound = estrdup(child->pickUpSound);
+   if(child->pickUpFlash)
+      child->pickUpFlash = estrdup(child->pickUpFlash);
+   if(child->useSound)
+      child->useSound = estrdup(child->useSound);
 
-   // TODO: reset any uninherited fields to defaults
+   // * copy metatable
+   child->meta->copyTableFrom(parent->meta);
 }
 
 //=============================================================================
@@ -353,7 +389,7 @@ static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, bool def)
 {
    //int tempint;
-   //const char *tempstr;
+   const char *tempstr;
    bool inherits = false;
 
    // possible when inheriting from an inventory def of a previous EDF generation
@@ -406,7 +442,49 @@ static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, boo
       inv->processed = true;
    }
 
-   // TODO: field processing
+   // field processing
+
+   if(IS_SET(ITEM_INVENTORY_AMOUNT))
+      inv->amount = cfg_getint(invsec, ITEM_INVENTORY_AMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_MAXAMOUNT))
+      inv->maxAmount = cfg_getint(invsec, ITEM_INVENTORY_MAXAMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_INTERHUBAMOUNT))
+      inv->interHubAmount = cfg_getint(invsec, ITEM_INVENTORY_INTERHUBAMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_ICON))
+      E_ReplaceString(inv->icon, cfg_getstrdup(invsec, ITEM_INVENTORY_ICON));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPMESSAGE))
+      E_ReplaceString(inv->pickUpMessage, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPMESSAGE));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPSOUND))
+      E_ReplaceString(inv->pickUpSound, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPSOUND));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPFLASH))
+      E_ReplaceString(inv->pickUpFlash, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPFLASH));
+
+   if(IS_SET(ITEM_INVENTORY_USESOUND))
+      E_ReplaceString(inv->useSound, cfg_getstrdup(invsec, ITEM_INVENTORY_USESOUND));
+
+   if(IS_SET(ITEM_INVENTORY_RESPAWNTICS))
+      inv->respawnTics = cfg_getint(invsec, ITEM_INVENTORY_RESPAWNTICS);
+
+   if(IS_SET(ITEM_INVENTORY_GIVEQUEST))
+      inv->giveQuest = cfg_getint(invsec, ITEM_INVENTORY_GIVEQUEST);
+
+   if(IS_SET(ITEM_INVENTORY_FLAGS))
+   {
+      tempstr = cfg_getstr(invsec, ITEM_INVENTORY_FLAGS);
+      if(*tempstr == '\0')
+         inv->giveQuest = 0;
+      else
+         inv->giveQuest = E_ParseFlags(tempstr, &inventory_flagset);
+   }
+
+   // TODO: addflags/remflags
+   // TODO: effects/"child class" fields
 }
 
 //
@@ -424,7 +502,7 @@ void E_ProcessInventoryDefs(cfg_t *cfg)
       return;
 
    // allocate inheritance stack and hitlist
-   inv_pstack  = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
+   inv_pstack = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
 
    // TODO: any first-time-only processing?
 

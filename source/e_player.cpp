@@ -204,11 +204,7 @@ static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
    if(IS_SET(sndsec, itemname))
-   {
-      if(skin->sounds[idx])
-         efree(skin->sounds[idx]);
-      skin->sounds[idx] = estrdup(cfg_getstr(sndsec, itemname));
-   }
+      E_ReplaceString(skin->sounds[idx], cfg_getstrdup(sndsec, itemname));
 }
 
 //
@@ -277,9 +273,6 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    // set sprite information
    if(IS_SET(skinsec, ITEM_SKIN_SPRITE))
    {
-      if(newSkin->spritename)
-         efree(newSkin->spritename);
-
       tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
       // check sprite for validity
@@ -291,7 +284,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       }
 
       // set it
-      newSkin->spritename = estrdup(tempstr);
+      E_ReplaceString(newSkin->spritename, estrdup(tempstr));
 
       // sprite has been reset, so reset the sprite number
       newSkin->sprite = E_SpriteNumForName(newSkin->spritename);
@@ -300,9 +293,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    // set faces
    if(IS_SET(skinsec, ITEM_SKIN_FACES))
    {
-      if(newSkin->facename)
-         efree(newSkin->facename);
-      newSkin->facename = estrdup(cfg_getstr(skinsec, ITEM_SKIN_FACES));
+      E_ReplaceString(newSkin->facename, cfg_getstrdup(skinsec, ITEM_SKIN_FACES));
 
       // faces have been reset, so clear the face array pointer
       newSkin->faces = NULL; // handled by skin code
