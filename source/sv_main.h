@@ -50,6 +50,7 @@ extern const char *sv_spectator_password;
 extern const char *sv_player_password;
 extern const char *sv_moderator_password;
 extern const char *sv_administrator_password;
+extern const char *sv_access_list_filename;
 
 // [CG] General stuff.
 void SV_Init(void);

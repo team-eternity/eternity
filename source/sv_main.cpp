@@ -73,12 +73,15 @@
 #include "cs_team.h"
 #include "cs_demo.h"
 #include "cs_wad.h"
+#include "sv_bans.h"
 #include "sv_main.h"
 #include "sv_queue.h"
 #include "sv_spec.h"
 
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <conio.h>
 #endif
 
@@ -110,6 +113,7 @@ const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
 const char *sv_moderator_password = NULL;
 const char *sv_administrator_password = NULL;
+const char *sv_access_list_filename = NULL;
 
 static void send_any_packet(int playernum, void *data, size_t data_size,
                             uint8_t flags, uint8_t channel_id)
@@ -372,6 +376,8 @@ void SV_Init(void)
    efree(default_name);
    default_name = ecalloc(char *, 7, sizeof(char));
    strncpy(default_name, "Player", 7);
+
+   sv_access_list = new AccessList();
 }
 
 // [CG] For atexit().
@@ -400,12 +406,9 @@ ENetPeer* SV_GetPlayerPeer(int playernum)
    server_client_t *server_client = &server_clients[playernum];
 
    for(i = 0; i < net_host->peerCount; i++)
-   {
       if(net_host->peers[i].connectID == server_client->connect_id)
-      {
          return &net_host->peers[i];
-      }
-   }
+
    return NULL;
 }
 
@@ -921,16 +924,20 @@ void SV_EndUnlag(int playernum)
 int SV_HandleClientConnection(ENetPeer *peer)
 {
    unsigned int i;
+   Json::Value ban;
    server_client_t *server_client;
-   char *address;
+   char *address = CS_IPToString(peer->address.host);
 
    for(i = 1; i < MAX_CLIENTS; i++)
-      if(!playeringame[i])
+      if(!playeringame[i] && server_clients[i].current_request == scr_none)
          break;
 
    // [CG] No more client spots.
    if(i == MAX_CLIENTS)
+   {
+      efree(address);
       return 0;
+   }
 
    CS_ZeroClient(i);
 
@@ -945,6 +952,23 @@ int SV_HandleClientConnection(ENetPeer *peer)
          server_client->auth_level = cs_auth_player;
       else
          server_client->auth_level = cs_auth_spectator;
+   }
+
+
+   if(sv_access_list->isBanned((const char *)address))
+   {
+      Json::Value& ban = sv_access_list->getBan((const char *)address);
+      SV_SendMessage(
+         i,
+         "Banned: %s (%s): %s",
+         ban["name"].asCString(),
+         address,
+         ban["reason"].asCString()
+      );
+      enet_host_flush(net_host);
+      CS_ZeroClient(i);
+      efree(address);
+      return 0;
    }
 
    address = CS_IPToString(peer->address.host);

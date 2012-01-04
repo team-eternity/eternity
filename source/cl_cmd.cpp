@@ -162,11 +162,11 @@ CONSOLE_COMMAND(password, cf_netonly)
    }
 
    password = ecalloc(char *, password_size, sizeof(char));
+   // [CG] Use Console.args to support passwords that contain spaces.
    // [CG] Console.args apparently has a bug where there's a space appended to
    //      it, so strip it here.
    strncpy(password, Console.args.constPtr(), password_size - 1);
 
-   // [CG] Use Console.args to support passwords that contain spaces.
    CL_SendAuthMessage(password);
 
    efree(password);

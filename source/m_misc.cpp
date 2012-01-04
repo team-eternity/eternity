@@ -79,6 +79,7 @@
 #include "cs_hud.h"
 #include "cs_demo.h"
 #include "cl_cmd.h"
+#include "sv_cmd.h"
 
 //
 // DEFAULTS
@@ -1864,12 +1865,16 @@ void M_LoadDefaults(void)
    {
       CS_AddCommands();
       // [CG] Once defaults are read, the client can add its commands.
-      //      Servers, on the other hand, need to ensure their settings aren't
-      //      overwritten by EE's defaults here.
       if(CS_CLIENT)
          CL_AddCommands();
-      else if(CS_SERVER)
+
+      // [CG] Servers, on the other hand, need to ensure their settings aren't
+      //      overwritten by EE's defaults here.
+      if(CS_SERVER)
+      {
          CS_ReloadDefaults();
+         SV_AddCommands();
+      }
    }
 }
 

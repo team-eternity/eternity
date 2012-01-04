@@ -212,6 +212,8 @@ typedef enum
    dr_invalid_message,
    dr_excessive_latency,
    dr_command_flood,
+   dr_kicked,
+   dr_banned,
    dr_max_reasons
 } disconnection_reason_e;
 
@@ -850,7 +852,7 @@ extern char *cs_state_file_path;
 void CS_Init(void);
 void CS_DoWorldDone(void);
 void CS_PrintTime(void);
-char* CS_IPToString(int ip_address);
+char* CS_IPToString(uint32_t ip_address);
 bool CS_CheckURI(char *uri);
 float CS_VersionFloat(void);
 char* CS_VersionString(void);

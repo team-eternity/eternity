@@ -190,6 +190,7 @@
         "player_password": "monster",
         "moderator_password": "omnomnom",
         "administrator_password": "cookiecookiecookiestartswithc",
+        "access_list": "/home/tumadre/ee/access_lists/duel1.json",
         "wad_folders": [ "/home/tumadre/Documents/WADs" ],
         "wad_repository": "http://static.totaltrash.org/wads",
         "write_config_to": "/home/tumadre/Documents/configs/duel1.json"

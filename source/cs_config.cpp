@@ -58,6 +58,7 @@
 #include "g_game.h"
 #include "i_system.h"
 #include "m_argv.h"
+#include "m_file.h"
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "p_inter.h"
@@ -71,6 +72,7 @@
 #include "cs_master.h"
 #include "cs_wad.h"
 #include "cl_main.h"
+#include "sv_bans.h"
 #include "sv_main.h"
 
 #include <json/json.h>
@@ -884,6 +886,18 @@ void CS_HandleServerSection(Json::Value &server)
       CS_CheckURI((char *)server["wad_repository"].asCString()))
    {
       cs_wad_repository = estrdup(server["wad_repository"].asCString());
+   }
+
+   if(!server["access_list"].empty() &&
+       server["access_list"].asString().length())
+   {
+      sv_access_list_filename =
+         (const char *)estrdup(server["access_list"].asCString());
+   }
+   else
+   {
+      sv_access_list_filename =
+         (const char *)M_PathJoin(basepath, DEFAULT_ACCESS_LIST_FILENAME);
    }
 }
 

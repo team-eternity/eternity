@@ -422,7 +422,6 @@ void NetUpdate(void)
    GetPackets();
 }
 
-/*
 //
 // D_KickPlayer
 //
@@ -430,7 +429,6 @@ void D_KickPlayer(int playernum)
 {
    HSendPacket(nodeforplayer[playernum], NCMD_KILL);
 }
-*/
 
 
 //

@@ -111,7 +111,9 @@ const char *disconnection_strings[dr_max_reasons] = {
    "Server is full",
    "Invalid message received",
    "Latency limit exceeded",
-   "Command flood"
+   "Command flood",
+   "Kicked",
+   "Banned"
 };
 
 const char *network_message_names[nm_max_messages] = {
@@ -318,7 +320,7 @@ void CS_SetDisplayPlayer(int playernum)
       P_ChaseEnd();
 }
 
-char* CS_IPToString(int ip_address)
+char* CS_IPToString(uint32_t ip_address)
 {
    std::stringstream address_stream;
 
@@ -1477,8 +1479,9 @@ void CS_ReadFromNetwork(unsigned int timeout)
                   address,
                   event.peer->address.port
                );
-               // [CG] The server couldn't find a slot for the new client, so
-               //      disconnect it.
+
+               // [CG] Try and find a slot for the new client.  If no slot is
+               //      available, disconnect it.
                if(SV_HandleClientConnection(event.peer) == 0)
                   enet_peer_disconnect(event.peer, 1);
             }
