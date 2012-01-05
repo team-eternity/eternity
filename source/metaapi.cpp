@@ -87,7 +87,7 @@ MetaObject::MetaObject(const MetaObject &other)
 {
    type_name = other.type_name;
 
-   if(key_name)
+   if(key_name && key_name != other.key_name)
       efree(key_name);
    key_name = estrdup(other.key_name);
 
