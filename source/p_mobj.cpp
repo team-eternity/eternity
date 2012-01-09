@@ -1064,7 +1064,7 @@ void P_NightmareRespawn(Mobj* mobj)
    mo = P_SpawnMobj(mobj->x, mobj->y,
                     mobj->subsector->sector->floorheight +
                        GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    // initiate teleport sound
 
@@ -1076,7 +1076,7 @@ void P_NightmareRespawn(Mobj* mobj)
 
    mo = P_SpawnMobj(x, y,
                     ss->sector->floorheight + GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
 
@@ -3540,14 +3540,14 @@ static cell sm_thingteleport(AMX *amx, cell *params)
          // spawn teleport fog and emit sound at source
          S_StartSound(P_SpawnMobj(oldx, oldy,
                   oldz + GameModeInfo->teleFogHeight,
-                  GameModeInfo->teleFogType),
+                  E_SafeThingType(GameModeInfo->teleFogType)),
                   GameModeInfo->teleSound);
 
          // spawn teleport fog and emit sound at destination
          S_StartSound(P_SpawnMobj(mo->x + 20*finecosine[mo->angle>>ANGLETOFINESHIFT],
                   mo->y + 20*finesine[mo->angle>>ANGLETOFINESHIFT],
                   mo->z + GameModeInfo->teleFogHeight,
-                  GameModeInfo->teleFogType),
+                  E_SafeThingType(GameModeInfo->teleFogType)),
                   GameModeInfo->teleSound);
       }
    }

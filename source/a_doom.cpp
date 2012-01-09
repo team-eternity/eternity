@@ -530,10 +530,7 @@ bool PIT_VileCheck(Mobj *thing)
 {
    int maxdist;
    bool check;
-   static int vileType = -1;
-   
-   if(vileType == -1)
-      vileType = E_SafeThingType(MT_VILE);
+   int vileType = E_SafeThingType(MT_VILE);
    
    if(!(thing->flags & MF_CORPSE))
       return true;        // not a monster
@@ -831,8 +828,6 @@ void A_FatRaise(Mobj *actor)
    S_StartSound(actor, sfx_manatk);
 }
 
-static int FatShotType = -1;
-
 //
 // A_FatAttack1
 //
@@ -843,14 +838,12 @@ void A_FatAttack1(Mobj *actor)
    Mobj *mo;
    int    an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   
+   int FatShotType = E_SafeThingType(MT_FATSHOT);
+
    // haleyjd: no crashing
    if(!actor->target)
       return;
 
-   if(FatShotType == -1)
-      FatShotType = E_SafeThingType(MT_FATSHOT);
-   
    A_FaceTarget(actor);
 
    // Change direction  to ...
@@ -872,18 +865,17 @@ void A_FatAttack1(Mobj *actor)
 //
 void A_FatAttack2(Mobj *actor)
 {
-   Mobj *mo;
-   int    an;
+   Mobj   *mo;
+   int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
+   int     FatShotType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
       return;
-   
-   if(FatShotType == -1)
-      FatShotType = E_SafeThingType(MT_FATSHOT);
 
    A_FaceTarget(actor);
+
    // Now here choose opposite deviation.
    actor->angle -= FATSPREAD;
    P_SpawnMissile(actor, actor->target, FatShotType, z);
@@ -902,16 +894,14 @@ void A_FatAttack2(Mobj *actor)
 //
 void A_FatAttack3(Mobj *actor)
 {
-   Mobj *mo;
-   int    an;
+   Mobj   *mo;
+   int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
+   int     FatShotType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
       return;
-   
-   if(FatShotType == -1)
-      FatShotType = E_SafeThingType(MT_FATSHOT);
    
    A_FaceTarget(actor);
    
@@ -994,14 +984,11 @@ void A_Stop(Mobj *actor)
 //
 void A_PainShootSkull(Mobj *actor, angle_t angle)
 {
-   fixed_t       x,y,z;
-   Mobj        *newmobj;
-   angle_t       an;
-   int           prestep;
-   static int    skullType = -1;
-      
-   if(skullType == -1)
-      skullType = E_SafeThingType(MT_SKULL);
+   fixed_t  x, y, z;
+   Mobj    *newmobj;
+   angle_t  an;
+   int      prestep;
+   int      skullType = E_SafeThingType(MT_SKULL);
 
    // The original code checked for 20 skulls on the level,    // phares
    // and wouldn't spit another one if there were. If not in   // phares
@@ -1301,16 +1288,13 @@ void A_BrainPain(Mobj *mo)
 void A_BrainScream(Mobj *mo)
 {
    int x;
-   static int rocketType = -1;
-   
-   if(rocketType == -1)
-      rocketType = E_SafeThingType(MT_ROCKET);
+   int rocketType = E_SafeThingType(MT_ROCKET);
 
-   for(x=mo->x - 196*FRACUNIT ; x< mo->x + 320*FRACUNIT ; x+= FRACUNIT*8)
+   for(x = mo->x - 196*FRACUNIT; x < mo->x + 320*FRACUNIT; x += FRACUNIT*8)
    {
-      int y = mo->y - 320*FRACUNIT;
-      int z = 128 + P_Random(pr_brainscream)*2*FRACUNIT;
-      Mobj *th = P_SpawnMobj (x,y,z, rocketType);
+      int   y  = mo->y - 320*FRACUNIT;
+      int   z  = 128 + P_Random(pr_brainscream)*2*FRACUNIT;      
+      Mobj *th = P_SpawnMobj(x, y, z, rocketType);
       // haleyjd 02/21/05: disable particle events/effects for this thing
       th->intflags |= MIF_NOPTCLEVTS;
       th->effects = 0;
@@ -1365,10 +1349,7 @@ void A_BrainDie(Mobj *mo)
 void A_BrainSpit(Mobj *mo)
 {
    Mobj *targ, *newmobj;
-   static int SpawnShotType = -1;
-   
-   if(SpawnShotType == -1)
-      SpawnShotType = E_SafeThingType(MT_SPAWNSHOT);
+   int SpawnShotType = E_SafeThingType(MT_SPAWNSHOT);
    
     // killough 4/1/98: ignore if no targets
    if(braintargets.isEmpty())
@@ -1382,8 +1363,7 @@ void A_BrainSpit(Mobj *mo)
    targ = braintargets.wrapIterator();
 
    // spawn brain missile
-   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, 
-                            mo->z + DEFAULTMISSILEZ);
+   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + DEFAULTMISSILEZ);
    P_SetTarget<Mobj>(&newmobj->target, targ);
    newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
@@ -1426,7 +1406,7 @@ void A_SpawnFly(Mobj *mo)
    Mobj *newmobj;  // killough 8/9/98
    int    r;
    mobjtype_t type = 0;
-   static int fireType = -1;
+   int fireType = E_SafeThingType(MT_SPAWNFIRE); 
       
    Mobj *fog;
    Mobj *targ;
@@ -1434,9 +1414,6 @@ void A_SpawnFly(Mobj *mo)
    // haleyjd 05/31/06: allow 0 boss types
    if(NumBossTypes == 0)
       return;
-
-   if(fireType == -1)
-      fireType = E_SafeThingType(MT_SPAWNFIRE);
 
    if(--mo->reactiontime)
       return;     // still flying

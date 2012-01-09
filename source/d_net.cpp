@@ -38,6 +38,7 @@
 #include "d_net.h"
 #include "doomstat.h"
 #include "e_player.h"
+#include "e_things.h"
 #include "f_wipe.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -249,7 +250,7 @@ static void GetPackets(void)
                                  players[netconsole].mo->y,
                                  players[netconsole].mo->z + 
                                     GameModeInfo->teleFogHeight,
-                                 GameModeInfo->teleFogType);
+                                 E_SafeThingType(GameModeInfo->teleFogType));
 	      
             tflash->momx = players[netconsole].mo->momx;
             tflash->momy = players[netconsole].mo->momy;

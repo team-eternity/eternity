@@ -3673,14 +3673,8 @@ Mobj* P_GetPushThing(int s)
 {
    Mobj* thing;
    sector_t* sec;
-   static int PushType = -1;
-   static int PullType = -1;
-
-   if(PushType == -1)
-   {
-      PushType = E_ThingNumForDEHNum(MT_PUSH);
-      PullType = E_ThingNumForDEHNum(MT_PULL);
-   }
+   int PushType = E_ThingNumForDEHNum(MT_PUSH); 
+   int PullType = E_ThingNumForDEHNum(MT_PULL);
 
    sec = sectors + s;
    thing = sec->thinglist;
@@ -4960,15 +4954,14 @@ static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_ef
 //
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
-   static int  CamType = -1;
-
-   sector_t    *sector;
-   portal_t    *portal = NULL;
-   Mobj      *skycam;
-   fixed_t     planez = 0;
-   int         anchortype = 0; // SoM 3-10-04: new plan.
-   int         s;
-   int         fromid, toid;
+   int       CamType = E_ThingNumForName("EESkyboxCam"); // find the skybox camera object
+   sector_t *sector;
+   portal_t *portal = NULL;
+   Mobj     *skycam;
+   fixed_t   planez = 0;
+   int       anchortype = 0; // SoM 3-10-04: new plan.
+   int       s;
+   int       fromid, toid;
 
    if(!(sector = line->frontsector))
       return;
@@ -4995,10 +4988,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
                                   &sector->ceilingbaseangle, &sector->ceilingangle);
       break;
    case portal_skybox:
-      // find the skybox camera object
-      if(CamType == -1)
-         CamType = E_ThingNumForName("EESkyboxCam");
-
       skycam = sector->thinglist;
       while(skycam)
       {

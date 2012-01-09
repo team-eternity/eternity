@@ -142,7 +142,7 @@ int EV_ThingSpawn(int *args, bool fog)
             fogMobj = 
                P_SpawnMobj(mobj->x, mobj->y,
                            mobj->z + GameModeInfo->teleFogHeight, 
-                           GameModeInfo->teleFogType);
+                           E_SafeThingType(GameModeInfo->teleFogType));
             S_StartSound(fogMobj, GameModeInfo->teleSound);
          }
          

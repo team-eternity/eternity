@@ -625,11 +625,9 @@ void A_PlayerScream(Mobj *mo)
 void A_PlayerSkull(Mobj *actor)
 {
    Mobj *head;
-   static int skullType = -1;
 
    // PCLASS_FIXME: skull type a playerclass property?
-   if(skullType == -1)
-      skullType = E_SafeThingType(MT_HPLAYERSKULL);
+   int skullType = E_SafeThingType(MT_HPLAYERSKULL);
 
    head = P_SpawnMobj(actor->x, actor->y, actor->z + SKULLHEIGHT, skullType);
 
