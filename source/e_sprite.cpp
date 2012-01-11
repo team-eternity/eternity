@@ -86,7 +86,7 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
 
    // initialize the sprite hash if it has not been initialized
    if(!spritehash.isInitialized())
-      spritehash.Initialize(257);
+      spritehash.initialize(257);
    else if(spritehash.objectForKey(name))
       return false; // don't add the same sprite name twice
    

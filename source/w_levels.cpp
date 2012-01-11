@@ -98,7 +98,7 @@ static manageddir_t *W_addManagedDir(const char *filename)
 
    // initialize hash table if first time
    if(!w_dirhash.isInitialized())
-      w_dirhash.Initialize(31);
+      w_dirhash.initialize(31);
 
    // make sure there isn't one by this name already
    if(w_dirhash.objectForKey(filename))

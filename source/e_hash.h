@@ -78,6 +78,13 @@ public:
    {
    }
 
+   EHashTable(unsigned int pNumChains)
+      : chains(NULL), isInit(false), numChains(0), numItems(0),
+        loadFactor(0.0f), iteratorPos(-1)
+   {
+      initialize(pNumChains);
+   }
+
    // Basic accessors
    int   isInitialized() const { return isInit;     }
    float getLoadFactor() const { return loadFactor; }
@@ -86,28 +93,31 @@ public:
    unsigned int getNumChains() const { return numChains; }
 
    // 
-   // Initialize
+   // initialize
    //
    // Initializes a hash table. This is currently done here rather than in the
    // constructor primarily because EHashTables are generally global objects,
    // and therefore they cannot safely call Z_Malloc during C++ init. I'd rather
    // this move to the constructor eventually.
    //
-   void Initialize(unsigned int pNumChains)
+   void initialize(unsigned int pNumChains)
    {
-      numChains = pNumChains;
-      chains    = ecalloc(link_type **, numChains, sizeof(link_type *));
-      isInit    = true;
+      if(!isInit)
+      {
+         numChains = pNumChains;
+         chains    = ecalloc(link_type **, numChains, sizeof(link_type *));
+         isInit    = true;
+      }
    }
 
    //
-   // Destroy
+   // destroy
    //
    // Frees the hash table's chains. Again this would be better in the 
    // destructor, but it should remain here until/unless initialization is moved
    // into the constructor, so it remains balanced.
    //
-   void Destroy()
+   void destroy()
    {
       if(chains)
          efree(chains);
@@ -127,17 +137,17 @@ public:
    //
    void addObject(item_type &object)
    {
-      if(isInit)
-      {
-         link_type &link = object.*linkPtr;
-         link.dllData    = key_type::HashCode(object.*hashKey);
-         unsigned int hc = link.dllData % numChains;
+      if(!isInit)
+         initialize(127);
 
-         link.insert(&object, &chains[hc]);
+      link_type &link = object.*linkPtr;
+      link.dllData    = key_type::HashCode(object.*hashKey);
+      unsigned int hc = link.dllData % numChains;
 
-         ++numItems;
-         calcLoadFactor();
-      }
+      link.insert(&object, &chains[hc]);
+
+      ++numItems;
+      calcLoadFactor();
    }
 
    // Convenience overload for pointers
@@ -307,12 +317,12 @@ public:
    }
 
    //
-   // Rebuild
+   // rebuild
    //
    // Rehashes all objects in the table, in the event that the load factor has
    // exceeded acceptable levels. Rehashing policy is determined by user code.
    //
-   void Rebuild(unsigned int newNumChains)
+   void rebuild(unsigned int newNumChains)
    {
       link_type    **oldchains    = chains;    // save current chains
       unsigned int   oldNumChains = numChains;

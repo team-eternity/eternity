@@ -358,8 +358,8 @@ void E_CollectStates(cfg_t *cfg)
    // initialize hash tables if needed
    if(!state_namehash.isInitialized())
    {
-      state_namehash.Initialize(NUMSTATECHAINS);
-      state_numhash.Initialize(NUMSTATECHAINS);
+      state_namehash.initialize(NUMSTATECHAINS);
+      state_numhash.initialize(NUMSTATECHAINS);
    }
 
    // get number of states defined by the cfg

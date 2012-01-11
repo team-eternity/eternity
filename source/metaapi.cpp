@@ -399,18 +399,18 @@ public:
    {
       // the key hash is growable.
       // keys are case-insensitive.
-      keyhash.Initialize(METANUMCHAINS);
+      keyhash.initialize(METANUMCHAINS);
      
       // the type hash is fixed size since there are a limited number of types
       // defined in the source code.
       // types are case sensitive, because they are based on C types.
-      typehash.Initialize(METANUMCHAINS);
+      typehash.initialize(METANUMCHAINS);
    }
 
    virtual ~metaTablePimpl()
    {
-      keyhash.Destroy();
-      typehash.Destroy();
+      keyhash.destroy();
+      typehash.destroy();
    }
 };
 
@@ -591,7 +591,7 @@ void MetaTable::addObject(MetaObject *object)
       // find a prime larger than the current number of chains
       for(i = 0; curNumChains < metaPrimes[i]; ++i);
 
-      pImpl->keyhash.Rebuild(metaPrimes[i]);
+      pImpl->keyhash.rebuild(metaPrimes[i]);
    }
 
    // Add the object to the key table

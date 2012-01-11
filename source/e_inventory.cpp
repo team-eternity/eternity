@@ -203,8 +203,8 @@ void E_CollectInventory(cfg_t *cfg)
    // initialize hash tables if needed
    if(!inv_namehash.isInitialized())
    {
-      inv_namehash.Initialize(NUMINVCHAINS);
-      inv_numhash.Initialize(NUMINVCHAINS);
+      inv_namehash.initialize(NUMINVCHAINS);
+      inv_numhash.initialize(NUMINVCHAINS);
    }
 
    // get number of inventory definitions defined by the cfg

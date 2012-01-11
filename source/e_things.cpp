@@ -703,8 +703,8 @@ void E_CollectThings(cfg_t *cfg)
    // initialize hash tables if needed
    if(!thing_namehash.isInitialized())
    {
-      thing_namehash.Initialize(NUMTHINGCHAINS);
-      thing_dehhash.Initialize(NUMTHINGCHAINS);
+      thing_namehash.initialize(NUMTHINGCHAINS);
+      thing_dehhash.initialize(NUMTHINGCHAINS);
    }
 
    // get number of thingtypes defined by the cfg

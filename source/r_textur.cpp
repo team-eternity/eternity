@@ -1137,13 +1137,13 @@ static void R_InitTextureHash(void)
 {
    int i;
    
-   walltable.Destroy();
-   flattable.Destroy();
+   walltable.destroy();
+   flattable.destroy();
 
    // haleyjd 12/12/10: For efficiency, allocate as many chains as there are 
    // entries, plus a few more for breathing room.
-   walltable.Initialize(wallstop - wallstart + 31);
-   flattable.Initialize(flatstop - flatstart + 31);
+   walltable.initialize(wallstop - wallstart + 31);
+   flattable.initialize(flatstop - flatstart + 31);
    
    for(i = wallstart; i < wallstop; i++)
       walltable.addObject(textures[i]);

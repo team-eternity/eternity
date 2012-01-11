@@ -357,7 +357,7 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 
    // initialize hash table first time if necessary
    if(!protoHash.isInitialized())
-      protoHash.Initialize(numPrototypesAlloc);
+      protoHash.initialize(numPrototypesAlloc);
 
    // add it to the hash table
    protoHash.addObject(newProto);
@@ -376,7 +376,7 @@ static void P_clearLevelInfoPrototypes(void)
    int i;
 
    // destroy the hash table
-   protoHash.Destroy();
+   protoHash.destroy();
 
    // free all the LevelInfo objects
    for(i = 0; i < numPrototypes; ++i)
@@ -1565,7 +1565,7 @@ void P_AddSndInfoMusic(int mapnum, const char *lumpname)
    sndinfomus_t *newmus;
 
    if(!sndInfoMusHash.isInitialized())
-      sndInfoMusHash.Initialize(101);
+      sndInfoMusHash.initialize(101);
 
    // If one already exists, modify it. Otherwise create a new one.
    if((newmus = sndInfoMusHash.objectForKey(mapnum)))

@@ -89,7 +89,7 @@ static int edf_alloc_modnum = D_MAXINT;
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
    if(!e_mod_namehash.isInitialized())
-      e_mod_namehash.Initialize(NUMMODCHAINS);
+      e_mod_namehash.initialize(NUMMODCHAINS);
 
    e_mod_namehash.addObject(*mod);
 }
@@ -142,7 +142,7 @@ static bool E_AutoAllocModNum(emod_t *mod)
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    if(!e_mod_numhash.isInitialized())
-      e_mod_numhash.Initialize(NUMMODCHAINS);
+      e_mod_numhash.initialize(NUMMODCHAINS);
 
    // Auto-assign a numeric key to all damage types which don't have
    // a valid one explicitly specified. This avoids some gigantic, 
