@@ -52,7 +52,8 @@ struct esprite_t
 };
 
 // sprite hash table
-static EHashTable<esprite_t, ENCStringHashKey, &esprite_t::nameptr, &esprite_t::link> spritehash;
+static EHashTable<esprite_t, ENCStringHashKey, 
+                  &esprite_t::nameptr, &esprite_t::link> spritehash(257);
 
 //
 // E_SpriteNumForName
@@ -83,11 +84,8 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
    strncpy(sprite->name, name, 4);
    sprite->num = NUMSPRITES;
    sprite->nameptr = sprite->name;
-
-   // initialize the sprite hash if it has not been initialized
-   if(!spritehash.isInitialized())
-      spritehash.initialize(257);
-   else if(spritehash.objectForKey(name))
+   
+   if(spritehash.objectForKey(name))
       return false; // don't add the same sprite name twice
    
    E_EDFLogPrintf("\t\tAdding spritename %s\n", name);

@@ -28,6 +28,11 @@
 //
 //-----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
+#include "e_hash.h"
+#include "e_hashkeys.h"
+#include "e_things.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
 
@@ -41,6 +46,9 @@ void MobjCollection::collectThings()
 {
    Thinker *th;
 
+   if(!enabled)
+      return;
+
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
       Mobj *mo;
@@ -52,6 +60,118 @@ void MobjCollection::collectThings()
       }
    }
 }
+
+//=============================================================================
+//
+// MobjCollectionSet Methods
+//
+
+// mobjCollectionSetPimpl - private implementation idiom object for the 
+// MobjCollectionSet class.
+
+class mobjCollectionSetPimpl : public ZoneObject
+{
+public:
+   EHashTable<MobjCollection, 
+              EIntHashKey, 
+              &MobjCollection::mobjType, 
+              &MobjCollection::hashLinks> collectionHash;
+
+   mobjCollectionSetPimpl() : ZoneObject(), collectionHash(31) {}   
+};
+
+//
+// MobjCollectionSet constructor
+//
+MobjCollectionSet::MobjCollectionSet()
+{
+   pImpl = new mobjCollectionSetPimpl();
+}
+
+//
+// MobjCollectionSet::collectionForType
+//
+// Finds the collection for a given mobjtype index. 
+// NULL is returned if it does not exist.
+//
+MobjCollection *MobjCollectionSet::collectionForType(int mobjType)
+{
+   return pImpl->collectionHash.objectForKey(mobjType);
+}
+
+//
+// MobjCollectionSet::collectionForDEHNum
+//
+// Tries to find a collection matching the thingtype with the given
+// dehackednum. Returns NULL if not found or there's no such thing.
+//
+MobjCollection *MobjCollectionSet::collectionForDEHNum(int dehnum)
+{
+   int mt = E_ThingNumForDEHNum(dehnum);
+
+   return (mt >= 0 ? pImpl->collectionHash.objectForKey(mt) : NULL);
+}
+
+//
+// MobjCollectionSet::collectionForName
+//
+// Tries to find a collection matching the thingtype with the given
+// mnemonic. Returns NULL if not found or there's no such thing.
+//
+MobjCollection *MobjCollectionSet::collectionForName(const char *name)
+{
+   int mt = E_ThingNumForName(name);
+
+   return (mt >= 0 ? pImpl->collectionHash.objectForKey(mt) : NULL);
+}
+
+//
+// MobjCollection::addCollection
+//
+// Add a collection for a thingtype, if it doesn't exist already.
+//
+void MobjCollectionSet::addCollection(int mobjType)
+{
+   if(!pImpl->collectionHash.objectForKey(mobjType))
+   {
+      MobjCollection *newcol = new MobjCollection();
+      newcol->setMobjType(mobjType);
+      pImpl->collectionHash.addObject(newcol);
+   }
+}
+
+//
+// MobjCollectionSet::setCollectionEnabled
+//
+// Change the enable state of a collection
+//
+void MobjCollectionSet::setCollectionEnabled(int mobjType, bool enabled)
+{
+   MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
+
+   if(col)
+      col->setEnabled(enabled);
+}
+
+//
+// MobjCollectionSet::collectAllThings
+//
+// Called at the start of each level to collect all spawned mapthings into
+// their corresponding collections.
+//
+void MobjCollectionSet::collectAllThings()
+{
+   MobjCollection *rover = NULL;
+
+   while((rover = pImpl->collectionHash.tableIterator(rover)))
+   {
+      rover->clear();
+      rover->collectThings();
+   }
+}
+
+// The one and only global MobjCollectionSet
+MobjCollectionSet MobjCollections;
 
 // EOF
 

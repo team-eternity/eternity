@@ -66,10 +66,12 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static EHashTable<emod_t, ENCStringHashKey, &emod_t::name, &emod_t::namelinks> e_mod_namehash;
+static EHashTable<emod_t, ENCStringHashKey, 
+                 &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);
 
 // haleyjd 08/02/09: use new generic hash
-static EHashTable<emod_t, EIntHashKey, &emod_t::num, &emod_t::numlinks> e_mod_numhash;
+static EHashTable<emod_t, EIntHashKey, 
+                  &emod_t::num, &emod_t::numlinks> e_mod_numhash(NUMMODCHAINS);
 
 // default damage type - "Unknown"
 static emod_t unknown_mod;
@@ -88,9 +90,6 @@ static int edf_alloc_modnum = D_MAXINT;
 //
 static void E_AddDamageTypeToNameHash(emod_t *mod)
 {
-   if(!e_mod_namehash.isInitialized())
-      e_mod_namehash.initialize(NUMMODCHAINS);
-
    e_mod_namehash.addObject(*mod);
 }
 
@@ -141,9 +140,6 @@ static bool E_AutoAllocModNum(emod_t *mod)
 //
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
-   if(!e_mod_numhash.isInitialized())
-      e_mod_numhash.initialize(NUMMODCHAINS);
-
    // Auto-assign a numeric key to all damage types which don't have
    // a valid one explicitly specified. This avoids some gigantic, 
    // messy code rewrites by allowing mobjinfo to always store the 

@@ -1553,7 +1553,7 @@ struct sndinfomus_t
 };
 
 static EHashTable<sndinfomus_t, EIntHashKey, 
-                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash;
+                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash(101);
 
 //
 // P_AddSndInfoMusic
@@ -1563,9 +1563,6 @@ static EHashTable<sndinfomus_t, EIntHashKey,
 void P_AddSndInfoMusic(int mapnum, const char *lumpname)
 {
    sndinfomus_t *newmus;
-
-   if(!sndInfoMusHash.isInitialized())
-      sndInfoMusHash.initialize(101);
 
    // If one already exists, modify it. Otherwise create a new one.
    if((newmus = sndInfoMusHash.objectForKey(mapnum)))

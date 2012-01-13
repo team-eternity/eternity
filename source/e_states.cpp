@@ -117,11 +117,11 @@ cfg_opt_t edf_fdelta_opts[] =
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
-                  &state_t::name, &state_t::namelinks> state_namehash;
+                  &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
 static EHashTable<state_t, EIntHashKey, 
-                  &state_t::dehnum, &state_t::numlinks> state_numhash;
+                  &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
 
 //
 // E_StateNumForDEHNum
@@ -354,13 +354,6 @@ void E_CollectStates(cfg_t *cfg)
    unsigned int curnewstate = 0;   // index of current new state being used
    state_t *statestructs = NULL;
    static bool firsttime = true;
-
-   // initialize hash tables if needed
-   if(!state_namehash.isInitialized())
-   {
-      state_namehash.initialize(NUMSTATECHAINS);
-      state_numhash.initialize(NUMSTATECHAINS);
-   }
 
    // get number of states defined by the cfg
    numstates = cfg_size(cfg, EDF_SEC_FRAME);

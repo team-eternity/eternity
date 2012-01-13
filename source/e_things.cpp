@@ -496,11 +496,11 @@ cfg_opt_t edf_tdelta_opts[] =
 
 // hash by name
 static EHashTable<mobjinfo_t, ENCStringHashKey, 
-                  &mobjinfo_t::name, &mobjinfo_t::namelinks> thing_namehash;
+                  &mobjinfo_t::name, &mobjinfo_t::namelinks> thing_namehash(NUMTHINGCHAINS);
 
 // hash by DeHackEd number
 static EHashTable<mobjinfo_t, EIntHashKey,
-                  &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash;
+                  &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
 
 //
 // E_ThingNumForDEHNum
@@ -699,13 +699,6 @@ void E_CollectThings(cfg_t *cfg)
    unsigned int curnewthing = 0;   // index of current new thingtype being used
    mobjinfo_t  *newMobjInfo = NULL;
    static bool firsttime = true;
-
-   // initialize hash tables if needed
-   if(!thing_namehash.isInitialized())
-   {
-      thing_namehash.initialize(NUMTHINGCHAINS);
-      thing_dehhash.initialize(NUMTHINGCHAINS);
-   }
 
    // get number of thingtypes defined by the cfg
    numthingtypes = cfg_size(cfg, EDF_SEC_THING);

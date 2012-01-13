@@ -80,7 +80,7 @@ struct manageddir_t
 
 // hash table
 static EHashTable<manageddir_t, EStringHashKey, 
-                  &manageddir_t::name, &manageddir_t::links> w_dirhash;
+                  &manageddir_t::name, &manageddir_t::links> w_dirhash(31);
 
 //=============================================================================
 //
@@ -95,10 +95,6 @@ static EHashTable<manageddir_t, EStringHashKey,
 static manageddir_t *W_addManagedDir(const char *filename)
 {
    manageddir_t *newdir = NULL;
-
-   // initialize hash table if first time
-   if(!w_dirhash.isInitialized())
-      w_dirhash.initialize(31);
 
    // make sure there isn't one by this name already
    if(w_dirhash.objectForKey(filename))

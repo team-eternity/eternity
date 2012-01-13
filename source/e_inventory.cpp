@@ -124,11 +124,11 @@ static unsigned int inv_pindex  = 0;
 
 // hash by name
 static EHashTable<inventory_t, ENCStringHashKey,
-                  &inventory_t::name, &inventory_t::namelinks> inv_namehash;
+                  &inventory_t::name, &inventory_t::namelinks> inv_namehash(NUMINVCHAINS);
 
 // hash by ID number
 static EHashTable<inventory_t, EIntHashKey,
-                  &inventory_t::numkey, &inventory_t::numlinks> inv_numhash;
+                  &inventory_t::numkey, &inventory_t::numlinks> inv_numhash(NUMINVCHAINS);
 
 
 //
@@ -199,13 +199,6 @@ void E_CollectInventory(cfg_t *cfg)
    unsigned int i;
    unsigned int numInventory;    // number of inventory defs defined by the cfg
    inventory_t *newInvDefs  = NULL;
-
-   // initialize hash tables if needed
-   if(!inv_namehash.isInitialized())
-   {
-      inv_namehash.initialize(NUMINVCHAINS);
-      inv_numhash.initialize(NUMINVCHAINS);
-   }
 
    // get number of inventory definitions defined by the cfg
    numInventory = cfg_size(cfg, EDF_SEC_INVENTORY);

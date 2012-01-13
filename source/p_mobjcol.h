@@ -32,21 +32,54 @@
 #define P_MOBJCOL_H__
 
 #include "m_collection.h"
+#include "m_dllist.h"
 
 class Mobj;
+class mobjCollectionSetPimpl;
 
 class MobjCollection : public PODCollection<Mobj *>
 {
 protected:
-   int mobjType;
+   DLListItem<MobjCollection> hashLinks; // links for MobjCollectionSet hash
+   int  mobjType;
+   bool enabled;
+
+   friend class mobjCollectionSetPimpl;
 
 public:
-   MobjCollection() : PODCollection<Mobj *>(), mobjType(-1) {}
+   MobjCollection() 
+      : PODCollection<Mobj *>(), hashLinks(), mobjType(-1), enabled(true) 
+   {
+   }
+
    int  getMobjType() const { return mobjType; }
    void setMobjType(int mt) { mobjType = mt;   }
+   bool isEnabled() const   { return enabled;  }
+   void setEnabled(bool en) { enabled = en;    }
 
    void collectThings();
 };
+
+// MobjCollectionSet maintains a global hash of MobjCollection objects that
+// are created via EDF and will probably eventually be accessible through
+// Aeon scripting too.
+
+class MobjCollectionSet
+{
+private:
+   mobjCollectionSetPimpl *pImpl; // yet another private implementation idiom
+
+public:
+   MobjCollectionSet();
+   MobjCollection *collectionForType(int mobjType);
+   MobjCollection *collectionForDEHNum(int dehnum);
+   MobjCollection *collectionForName(const char *name);
+   void addCollection(int mobjType);
+   void setCollectionEnabled(int mobjType, bool enabled);
+   void collectAllThings();
+};
+
+extern MobjCollectionSet MobjCollections;
 
 #endif
 
