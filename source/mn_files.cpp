@@ -668,6 +668,12 @@ CONSOLE_COMMAND(mn_selectmusic, 0)
       }
    }
 
+   if(mn_diskdir.numfiles < 1)
+   {
+      C_Printf(FC_ERROR "No music found");
+      return;
+   }
+
    // sort the list
    MN_sortFiles(&mn_diskdir);
 
@@ -696,6 +702,12 @@ CONSOLE_COMMAND(mn_selectflat, 0)
       // size must be exactly 64x64
       if(textures[i]->width == 64 && textures[i]->height == 64)
          MN_addFile(&mn_diskdir, textures[i]->name);
+   }
+
+   if(mn_diskdir.numfiles < 1)
+   {
+      MN_ErrorMsg("No flats found");
+      return;
    }
 
    // sort the list
