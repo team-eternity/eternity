@@ -1369,7 +1369,7 @@ static void doAction(pstate_t *ps, const char *fn)
             link->dllObject->linenum == DSP.curbufstate->dllObject->linenum)
       {
          if(states[statenum]->decorate)
-            states[statenum]->action = ptr->cptr;
+            states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
 
          ++statenum;           // move forward one state in states[]
          link = link->dllNext; // move forward one buffered state
