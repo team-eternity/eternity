@@ -1008,11 +1008,11 @@ bool P_CanUnlockGenDoor(line_t *line, player_t *player)
       //          allowed door to be opened without yellow keys
       //          06/30/01: optioned on MBF demo comp. (v2.03)
       if(skulliscard &&
-         (!(player->cards[it_redcard] | player->cards[it_redskull]) ||
-          !(player->cards[it_bluecard] | player->cards[it_blueskull]) ||
+         (!(player->cards[it_redcard   ] | player->cards[it_redskull ]) ||
+          !(player->cards[it_bluecard  ] | player->cards[it_blueskull]) ||
           !(player->cards[it_yellowcard] | 
-          ((demo_version == 203) ? !player->cards[it_yellowskull] : 
-                                    player->cards[it_yellowskull]))))
+            ((demo_version == 203) ? !player->cards[it_yellowskull] : 
+                                      player->cards[it_yellowskull]))))
       {
          player_printf(player, "%s", DEH_String("PD_ALL3"));
          S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98

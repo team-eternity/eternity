@@ -268,12 +268,10 @@ static void GetPackets(void)
       }
 
       /*
-      // NETCODE_FIXME: bomb out here like it used to do.
-
       // check for a remote game kill
       if(netbuffer->checksum & NCMD_KILL)
       {
-         C_Printf (FC_ERROR"Killed by network driver\n");
+         C_Printf(FC_ERROR "Killed by network driver\n");
          D_QuitNetGame();
       }
       */
@@ -492,9 +490,10 @@ static void D_ArbitrateNetStart(void)
 
    if(doomcom->consoleplayer)
    {
-      usermsg("Listening for network start info...");
+      usermsg("Listening for network start info... (ESC to cancel)");
       while(1)
       {
+         C_Update(); // haleyjd 01/14/12: update the screen
          CheckAbort();
          if(!HGetPacket())
             continue;

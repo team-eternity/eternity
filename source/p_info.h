@@ -31,6 +31,8 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
 
 void P_AddSndInfoMusic(int mapnum, const char *lumpname);
 const char *P_GetSndInfoMusic(int mapnum);
+void P_AddMusInfoMusic(const char *mapname, int number, const char *lump);
+const char *P_GetMusInfoMusic(const char *mapname, int number);
 
 // boss special flags
 enum

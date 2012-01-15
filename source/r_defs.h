@@ -41,6 +41,7 @@ struct particle_t;
 struct planehash_t;
 struct portal_t;
 struct sector_t;
+struct ETerrain;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
@@ -144,7 +145,20 @@ struct pslope_t
    float   zdeltaf;
 };
 
-typedef struct ETerrain_s *secterrainptr;
+//
+// Sector Actions
+//
+
+#define NUMLINEARGS 5
+
+struct sectoraction_t
+{
+   DLListItem<sectoraction_t> links;
+
+   int16_t special;
+   int     args[NUMLINEARGS];
+   int     spacflags;
+};
 
 //
 // The SECTORS record, at runtime.
@@ -259,8 +273,8 @@ struct sector_t
    // Cardboard optimization
    // They are set in R_Subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
-   //unsigned int frameid;
-   float ceilingheightf, floorheightf;
+   float ceilingheightf;
+   float floorheightf;
 
    // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
    // generalized sector types outside of DOOM-format maps.
@@ -281,8 +295,8 @@ struct sector_t
    int16_t oldlightlevel; 
 
    // haleyjd 10/17/10: terrain type overrides
-   secterrainptr floorterrain;
-   secterrainptr ceilingterrain;
+   ETerrain *floorterrain;
+   ETerrain *ceilingterrain;
 };
 
 //
@@ -314,8 +328,6 @@ typedef enum
   ST_POSITIVE,
   ST_NEGATIVE
 } slopetype_t;
-
-#define NUMLINEARGS 5
 
 struct seg_t;
 

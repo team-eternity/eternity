@@ -236,10 +236,10 @@ thingtype EEPolyObjSpawnSpotCrush
 
 thingtype EEPolyObjSpawnSpotDamage
 {
-  doomednum = 9303
-  spawnstate = S_TNT1
-  cflags = NOBLOCKMAP|NOSECTOR|NOGRAVITY
-  dehackednum = 157
+  doomednum   9303
+  dehackednum 157
+  spawnstate  S_TNT1
+  cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Ambience object
@@ -249,6 +249,15 @@ thingtype EEAmbience
   doomednum   14065
   spawnstate  S_EE_AMBIENCE_SPAWN
   cflags      NOBLOCKMAP|NOGRAVITY
+}
+
+// Music Changer
+
+thingtype EEMusicChanger
+{
+  doomednum  14100
+  spawnstate S_TNT1
+  cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
 // Environmental Sequence Point

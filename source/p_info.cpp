@@ -63,6 +63,7 @@
 #include "e_sound.h"
 #include "f_finale.h"
 #include "g_game.h"
+#include "m_collection.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
 #include "m_misc.h"
@@ -1599,6 +1600,107 @@ const char *P_GetSndInfoMusic(int mapnum)
 
    if((music = sndInfoMusHash.objectForKey(mapnum)))
       lumpname = music->lumpname;
+
+   return lumpname;
+}
+
+//=============================================================================
+//
+// MUSINFO Music Definitions
+//
+
+struct musinfomap_t
+{
+   int   num;
+   char *lump;
+};
+
+class MusInfoMusic : public ZoneObject
+{
+public:
+   DLListItem<MusInfoMusic>    links;
+   PODCollection<musinfomap_t> maps;
+   char *mapname;
+};
+
+static EHashTable<MusInfoMusic, ENCStringHashKey, 
+                  &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
+
+//
+// P_AddMusInfoMusic
+//
+// Add a single music definition from a Risen3D MUSINFO lump.
+//
+void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
+{
+   MusInfoMusic *music = NULL;
+
+   // Does it exist already?
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      int nummaps = music->maps.getLength();
+      bool foundnum = false;
+
+      // Does it have an entry for this number already?
+      for(int i = 0; i < nummaps; i++)
+      {
+         if(music->maps[i].num == number)
+         {
+            E_ReplaceString(music->maps[i].lump, estrdup(lump));
+            foundnum = true;
+            break;
+         }
+      }
+
+      if(!foundnum) // Add a new one.
+      {
+         musinfomap_t newmap;
+         newmap.num  = number;
+         newmap.lump = estrdup(lump);
+         music->maps.add(newmap);
+      }
+   }
+   else
+   {
+      // Create a new MUSINFO entry.
+      MusInfoMusic *newMusInfo = new MusInfoMusic();
+      newMusInfo->mapname = estrdup(mapname);
+
+      // Create a new subentry.
+      musinfomap_t newmap;
+      newmap.num = number;
+      newmap.lump = estrdup(lump);
+      newMusInfo->maps.add(newmap);
+
+      // Add it to the hash table.
+      musInfoMusHash.addObject(newMusInfo);
+   }
+}
+
+// 
+// P_GetMusInfoMusic
+//
+// If a Risen3D MUSINFO music definition exists for the passed-in map name,
+// the lumpname to use will be passed in. Otherwise, NULL is returned.
+//
+const char *P_GetMusInfoMusic(const char *mapname, int number)
+{
+   const char   *lumpname = NULL;
+   MusInfoMusic *music    = NULL;
+
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      int nummaps = music->maps.getLength();
+
+      for(int i = 0; i < nummaps; i++)
+      {
+         if(music->maps[i].num == number)
+         {
+            lumpname = music->maps[i].lump;
+            break;
+         }
+      }
+   }
 
    return lumpname;
 }

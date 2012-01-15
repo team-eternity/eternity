@@ -23,6 +23,7 @@
 //
 //   Parsing and processing for Hexen's data scripts, including:
 //   * SNDINFO
+//   * MUSINFO (Risen3D)
 //
 //   By James Haley
 //
@@ -74,12 +75,12 @@ protected:
    int tokentype;     // type of current token
    qstring token;     // current token value
 
-   void DoStateScan();
-   void DoStateInToken();
-   void DoStateComment();
+   void doStateScan();
+   void doStateInToken();
+   void doStateComment();
 
    // State table declaration
-   static void (XLTokenizer::*states[])();
+   static void (XLTokenizer::*States[])();
 
 public:
    // Constructor / Destructor
@@ -88,11 +89,11 @@ public:
    { 
    }
 
-   int GetNextToken();
+   int getNextToken();
    
    // Accessors
-   int GetTokenType() const { return tokentype; }
-   qstring &GetToken() { return token; }
+   int getTokenType() const { return tokentype; }
+   qstring &getToken() { return token; }
 };
 
 //
@@ -100,7 +101,7 @@ public:
 //
 
 // Looking for the start of a new token
-void XLTokenizer::DoStateScan()
+void XLTokenizer::doStateScan()
 {
    switch(input[idx])
    {
@@ -130,7 +131,7 @@ void XLTokenizer::DoStateScan()
 }
 
 // Scanning inside a token
-void XLTokenizer::DoStateInToken() 
+void XLTokenizer::doStateInToken() 
 {
    switch(input[idx])
    {
@@ -153,7 +154,7 @@ void XLTokenizer::DoStateInToken()
 }
 
 // Reading out a single-line comment
-void XLTokenizer::DoStateComment()
+void XLTokenizer::doStateComment()
 {
    // consume all input to the end of the line
    if(input[idx] == '\n')
@@ -166,21 +167,21 @@ void XLTokenizer::DoStateComment()
 }
 
 // State table for the tokenizer - static array of method pointers :)
-void (XLTokenizer::* XLTokenizer::states[])() =
+void (XLTokenizer::* XLTokenizer::States[])() =
 {
-   &XLTokenizer::DoStateScan,
-   &XLTokenizer::DoStateInToken,
-   &XLTokenizer::DoStateComment
+   &XLTokenizer::doStateScan,
+   &XLTokenizer::doStateInToken,
+   &XLTokenizer::doStateComment
 };
 
 //
-// XLTokenizer::GetNextToken
+// XLTokenizer::getNextToken
 //
 // Call this to retrieve the next token from the input string. The token
 // type is returned for convenience. Get the text of the token using the
 // GetToken() method.
 //
-int XLTokenizer::GetNextToken()
+int XLTokenizer::getNextToken()
 {
    token.clear();
    state     = STATE_SCAN; // always start out scanning for a new token
@@ -191,7 +192,7 @@ int XLTokenizer::GetNextToken()
    {
       while(state != STATE_DONE)
       {
-         (this->*states[state])();
+         (this->*States[state])();
          ++idx;
       }
    }
@@ -217,11 +218,11 @@ protected:
    WadDirectory *waddir;   // Current directory
 
    // Override me!
-   virtual void StartLump() {} // called at beginning of a new lump
-   virtual void DoToken(XLTokenizer &token) {} // called for each token
+   virtual void startLump() {} // called at beginning of a new lump
+   virtual void doToken(XLTokenizer &token) {} // called for each token
 
-   void ParseLump(WadDirectory &dir, lumpinfo_t *lump);
-   void ParseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump);
+   void parseLump(WadDirectory &dir, lumpinfo_t *lump);
+   void parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump);
 
 public:
    // Constructors
@@ -238,20 +239,20 @@ public:
       }
    }
 
-   void ParseAll(WadDirectory &dir);
-   void ParseNew(WadDirectory &dir);
+   void parseAll(WadDirectory &dir);
+   void parseNew(WadDirectory &dir);
 
    // Accessors
-   const char *GetLumpName() const { return lumpname; }
-   void SetLumpName(const char *s) { lumpname = s;    }
+   const char *getLumpName() const { return lumpname; }
+   void setLumpName(const char *s) { lumpname = s;    }
 };
 
 //
-// XLParser::ParseLump
+// XLParser::parseLump
 //
 // Parses a single lump.
 //
-void XLParser::ParseLump(WadDirectory &dir, lumpinfo_t *lump) 
+void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump) 
 {
    // free any previously loaded lump
    if(lumpdata)
@@ -261,7 +262,7 @@ void XLParser::ParseLump(WadDirectory &dir, lumpinfo_t *lump)
    }
 
    waddir = &dir;
-   StartLump();
+   startLump();
 
    // allocate at lump->size + 1 for null termination
    lumpdata = ecalloc(char *, 1, lump->size + 1);
@@ -269,53 +270,53 @@ void XLParser::ParseLump(WadDirectory &dir, lumpinfo_t *lump)
 
    XLTokenizer tokenizer = XLTokenizer(lumpdata);
 
-   while(tokenizer.GetNextToken() != XLTokenizer::TOKEN_EOF)
-      DoToken(tokenizer);
+   while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
+      doToken(tokenizer);
 }
 
 //
-// XLParser::ParseLumpRecursive
+// XLParser::parseLumpRecursive
 //
 // Runs down the lumpinfo hash chain for the lumpname used by the descendent
 // parser and parses each lump in order from oldest to newest.
 //
-void XLParser::ParseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
+void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
 {
    lumpinfo_t **lumpinfo = dir.GetLumpInfo();
 
    // Recurse to parse next lump on the chain first
    if(curlump->next != -1)
-      ParseLumpRecursive(dir, lumpinfo[curlump->next]);
+      parseLumpRecursive(dir, lumpinfo[curlump->next]);
 
    // Parse this lump, provided it matches by name and is global
    if(!strncasecmp(curlump->name, lumpname, 8) &&
       curlump->li_namespace == lumpinfo_t::ns_global)
-      ParseLump(dir, curlump);
+      parseLump(dir, curlump);
 }
 
 //
-// XLParser::ParseAll
+// XLParser::parseAll
 //
 // Call this to kick off a recursive parsing process.
 //
-void XLParser::ParseAll(WadDirectory &dir)
+void XLParser::parseAll(WadDirectory &dir)
 {
    lumpinfo_t **lumpinfo = dir.GetLumpInfo();
    lumpinfo_t  *root     = dir.GetLumpNameChain(lumpname);
    if(root->index >= 0)
-      ParseLumpRecursive(dir, lumpinfo[root->index]);
+      parseLumpRecursive(dir, lumpinfo[root->index]);
 }
 
 //
-// XLParser::ParseNew
+// XLParser::parseNew
 //
 // Call this to only parse a SNDINFO from the given WadDirectory
 //
-void XLParser::ParseNew(WadDirectory &dir)
+void XLParser::parseNew(WadDirectory &dir)
 {
    int lumpnum = dir.CheckNumForName(lumpname);
    if(lumpnum >= 0)
-      ParseLump(dir, dir.GetLumpInfo()[lumpnum]);
+      parseLump(dir, dir.GetLumpInfo()[lumpnum]);
 }
 
 //=============================================================================
@@ -374,17 +375,17 @@ protected:
    bool    edfOverRide; // if true, definitions can override EDF sounds
    int     musicmapnum;
 
-   void DoStateExpectCmd(XLTokenizer &token);
-   void DoStateExpectMapNum(XLTokenizer &token);
-   void DoStateExpectMusLump(XLTokenizer &token);
-   void DoStateExpectSndLump(XLTokenizer &token);
-   void DoStateEatToken(XLTokenizer &token);
+   void doStateExpectCmd(XLTokenizer &token);
+   void doStateExpectMapNum(XLTokenizer &token);
+   void doStateExpectMusLump(XLTokenizer &token);
+   void doStateExpectSndLump(XLTokenizer &token);
+   void doStateEatToken(XLTokenizer &token);
 
    // State table declaration
-   static void (XLSndInfoParser::*states[])(XLTokenizer &);
+   static void (XLSndInfoParser::*States[])(XLTokenizer &);
 
-   virtual void DoToken(XLTokenizer &token);
-   virtual void StartLump();
+   virtual void doToken(XLTokenizer &token);
+   virtual void startLump();
 
 public:
    // Constructor
@@ -430,12 +431,12 @@ const char *XLSndInfoParser::sndInfoKwds[] =
 //
    
 // Expecting the start of a SNDINFO command or sound definition
-void XLSndInfoParser::DoStateExpectCmd(XLTokenizer &token)
+void XLSndInfoParser::doStateExpectCmd(XLTokenizer &token)
 {
    int cmdnum;
-   qstring &tokenText = token.GetToken();
+   qstring &tokenText = token.getToken();
 
-   switch(token.GetTokenType())
+   switch(token.getTokenType())
    {
    case XLTokenizer::TOKEN_KEYWORD: // a $ keyword
       cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
@@ -464,16 +465,16 @@ void XLSndInfoParser::DoStateExpectCmd(XLTokenizer &token)
 }
 
 // Expecting the map number after a $map command
-void XLSndInfoParser::DoStateExpectMapNum(XLTokenizer &token)
+void XLSndInfoParser::doStateExpectMapNum(XLTokenizer &token)
 {
-   if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
+   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
    {
       state = STATE_EXPECTCMD;
-      DoStateExpectCmd(token);
+      doStateExpectCmd(token);
    }
    else
    {
-      musicmapnum = token.GetToken().toInt();
+      musicmapnum = token.getToken().toInt();
 
       // Expect music lump name next.
       state = STATE_EXPECTMUSLUMP;
@@ -481,16 +482,16 @@ void XLSndInfoParser::DoStateExpectMapNum(XLTokenizer &token)
 }
 
 // Expecting the music lump name after a map number
-void XLSndInfoParser::DoStateExpectMusLump(XLTokenizer &token)
+void XLSndInfoParser::doStateExpectMusLump(XLTokenizer &token)
 {
-   if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
+   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
    {
       state = STATE_EXPECTCMD;
-      DoStateExpectCmd(token);
+      doStateExpectCmd(token);
    }
    else
    {
-      qstring &muslump = token.GetToken();
+      qstring &muslump = token.getToken();
 
       // Lump must exist
       if(muslump.length() <= 8 &&
@@ -504,24 +505,24 @@ void XLSndInfoParser::DoStateExpectMusLump(XLTokenizer &token)
       else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
       {
          state = STATE_EXPECTCMD;
-         DoStateExpectCmd(token);
+         doStateExpectCmd(token);
       }
    }
 }
 
 // Expecting the lump name after a sound definition
-void XLSndInfoParser::DoStateExpectSndLump(XLTokenizer &token)
+void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
 {
-   if(token.GetTokenType() != XLTokenizer::TOKEN_STRING)
+   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
    {
       // Not a string? We are probably in an error state.
       // Get out with an immediate call to the expect command state
       state = STATE_EXPECTCMD;
-      DoStateExpectCmd(token);
+      doStateExpectCmd(token);
    }
    else
    {
-      qstring &soundlump = token.GetToken();
+      qstring &soundlump = token.getToken();
 
       // Lump must exist, otherwise we create erroneous sounds if there are
       // unknown keywords in the lump. Thanks to ZDoom for defining such a 
@@ -548,25 +549,25 @@ void XLSndInfoParser::DoStateExpectSndLump(XLTokenizer &token)
       else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
       {
          state = STATE_EXPECTCMD;
-         DoStateExpectCmd(token);
+         doStateExpectCmd(token);
       }
    }
 }
 
 // Throw away a token unconditionally
-void XLSndInfoParser::DoStateEatToken(XLTokenizer &token)
+void XLSndInfoParser::doStateEatToken(XLTokenizer &token)
 {
    state = STATE_EXPECTCMD; // return to expecting a command
 }
 
 // State table for SNDINFO parser
-void (XLSndInfoParser::* XLSndInfoParser::states[])(XLTokenizer &) =
+void (XLSndInfoParser::* XLSndInfoParser::States[])(XLTokenizer &) =
 {
-   &XLSndInfoParser::DoStateExpectCmd,
-   &XLSndInfoParser::DoStateExpectMapNum,
-   &XLSndInfoParser::DoStateExpectMusLump,
-   &XLSndInfoParser::DoStateExpectSndLump,
-   &XLSndInfoParser::DoStateEatToken
+   &XLSndInfoParser::doStateExpectCmd,
+   &XLSndInfoParser::doStateExpectMapNum,
+   &XLSndInfoParser::doStateExpectMusLump,
+   &XLSndInfoParser::doStateExpectSndLump,
+   &XLSndInfoParser::doStateEatToken
 };
 
 //
@@ -574,12 +575,12 @@ void (XLSndInfoParser::* XLSndInfoParser::states[])(XLTokenizer &) =
 //
 // Processes a token extracted from the SNDINFO input
 //
-void XLSndInfoParser::DoToken(XLTokenizer &token)
+void XLSndInfoParser::doToken(XLTokenizer &token)
 {
    // Call handler method for the current state. Why is this done from
    // a virtual call-down? Because parent classes cannot call child
    // class method pointers! :P
-   (this->*states[state])(token);
+   (this->*States[state])(token);
 }
 
 //
@@ -587,10 +588,173 @@ void XLSndInfoParser::DoToken(XLTokenizer &token)
 //
 // Resets the parser at the beginning of a new SNDINFO lump.
 //
-void XLSndInfoParser::StartLump()
+void XLSndInfoParser::startLump()
 {
    state = STATE_EXPECTCMD; // starting state
    edfOverRide = false;
+}
+
+//=============================================================================
+//
+// Risen3D MUSINFO 
+//
+
+class XLMusInfoParser : public XLParser
+{
+protected:
+   // state enumeration
+   enum
+   {
+      STATE_EXPECTMAP,
+      STATE_EXPECTMAPNUM,
+      STATE_EXPECTMAPNUM2,
+      STATE_EXPECTMUSLUMP
+   };
+
+   int     state;
+   qstring mapname;
+   qstring lumpname;
+   int     mapnum;
+
+   void doStateExpectMap(XLTokenizer &token);
+   void doStateExpectMapNum(XLTokenizer &token);
+   void doStateExpectMapNum2(XLTokenizer &token);
+   void doStateExpectMusLump(XLTokenizer &token);
+
+   void pushMusInfoDef();
+
+   // State table declaration
+   static void (XLMusInfoParser::*States[])(XLTokenizer &);
+
+   virtual void doToken(XLTokenizer &token);
+   virtual void startLump();
+
+public:
+   // Constructor
+   XLMusInfoParser() 
+      : XLParser("MUSINFO"), state(STATE_EXPECTMAP), mapname(), mapnum(0)
+   {
+   }
+};
+
+//
+// XLMusInfoParser::DoStateExpectMap
+//
+// Expecting a map name.
+//
+void XLMusInfoParser::doStateExpectMap(XLTokenizer &token)
+{
+   qstring &tokenText = token.getToken();
+
+   switch(token.getTokenType())
+   {
+   case XLTokenizer::TOKEN_STRING:  // a normal string
+      mapname = tokenText;          // remember the map name
+      state = STATE_EXPECTMAPNUM;
+      break;
+   default:
+      break;
+   }
+}
+
+//
+// XLMusInfoParser::doStateExpectMapNum
+//
+// Expecting a map number.
+//
+void XLMusInfoParser::doStateExpectMapNum(XLTokenizer &token)
+{
+   mapnum = token.getToken().toInt();
+   state = STATE_EXPECTMUSLUMP;
+}
+
+//
+// XLMusInfoParser::pushMusInfoDef
+//
+// Called when enough information is available to push a MUSINFO definition.
+//
+void XLMusInfoParser::pushMusInfoDef()
+{
+   if(mapnum >= 0 &&
+      waddir->CheckNumForName(mapname.constPtr())  >= 0 &&
+      waddir->CheckNumForName(lumpname.constPtr()) >= 0)
+   {
+      P_AddMusInfoMusic(mapname.constPtr(), mapnum, lumpname.constPtr());
+   }
+   mapnum = -1;
+   lumpname.clear();
+}
+
+//
+// XLMusInfoParser::doStateExpectMapNum2
+//
+// Expecting a map number, or the next map name.
+//
+void XLMusInfoParser::doStateExpectMapNum2(XLTokenizer &token)
+{
+   char *end = NULL;
+   qstring &tokenText = token.getToken();
+   long num = tokenText.toLong(&end, 10);
+
+   if(end && *end != '\0') // not a number?
+   {
+      // push out any current definition
+      pushMusInfoDef();
+
+      // return to STATE_EXPECTMAP immediately
+      state = STATE_EXPECTMAP;
+      doStateExpectMap(token);
+   }
+   else
+   {
+      mapnum = (int)num;
+      state = STATE_EXPECTMUSLUMP;
+   }
+}
+
+//
+// XLMusInfoParser::doStateExpectMusLump
+//
+// Expecting a music lump.
+//
+void XLMusInfoParser::doStateExpectMusLump(XLTokenizer &token)
+{
+   lumpname = token.getToken();
+   pushMusInfoDef(); // push out the complete definition
+   
+   // expecting either another mapnum, or a new mapname token
+   state = STATE_EXPECTMAPNUM2;
+}
+
+// State table for MUSINFO parser
+void (XLMusInfoParser::* XLMusInfoParser::States[])(XLTokenizer &) =
+{
+   &XLMusInfoParser::doStateExpectMap,
+   &XLMusInfoParser::doStateExpectMapNum,
+   &XLMusInfoParser::doStateExpectMapNum2,
+   &XLMusInfoParser::doStateExpectMusLump
+};
+
+//
+// XLMusInfoParser::doToken
+//
+// Dispatch a token via this class's state table.
+//
+void XLMusInfoParser::doToken(XLTokenizer &token)
+{
+   (this->*States[state])(token);
+}
+
+//
+// XLMusInfoParser::startLump
+//
+void XLMusInfoParser::startLump()
+{
+   // clear all data
+   state = STATE_EXPECTMAP;
+   mapname.clear();
+   lumpname.clear();
+   mapnum = -1;
 }
 
 //=============================================================================
@@ -606,8 +770,10 @@ void XLSndInfoParser::StartLump()
 void XL_ParseHexenScripts()
 {
    XLSndInfoParser sndInfoParser;
+   XLMusInfoParser musInfoParser;
 
-   sndInfoParser.ParseAll(wGlobalDir);
+   sndInfoParser.parseAll(wGlobalDir);
+   musInfoParser.parseAll(wGlobalDir);
 }
 
 // EOF

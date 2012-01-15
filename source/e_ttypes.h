@@ -69,7 +69,7 @@ typedef struct ETerrainSplash_s
    char   name[129];              // hash name
 } ETerrainSplash;
 
-typedef struct ETerrain_s
+struct ETerrain
 {
    ETerrainSplash *splash;  // pointer to splash object
    int damageamount;        // damage amount at each chance to hurt
@@ -84,9 +84,9 @@ typedef struct ETerrain_s
 
    int minversion;          // minimum demo version for this terrain
 
-   struct ETerrain_s *next; // hash link
+   struct ETerrain *next;   // hash link
    char name[129];          // hash name
-} ETerrain;
+};
 
 typedef struct EFloor_s
 {

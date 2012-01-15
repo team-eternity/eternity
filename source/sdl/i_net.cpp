@@ -246,7 +246,7 @@ bool PacketSend(void)
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          *rover++ = netbuffer->d.data[c];
       
-      packetsize = GAME_OPTION_SIZE;
+      packetsize += GAME_OPTION_SIZE;
    }
 
    // Go back and write the checksum at the beginning
@@ -436,6 +436,9 @@ void I_InitNetwork(void)
       netgame = false;
       return;      
    }
+
+   if(i + 2 >= myargc)
+      I_Error("I_InitNetwork: insufficient parameters to -net\n");
    
    netsend = PacketSend;
    netget  = PacketGet;

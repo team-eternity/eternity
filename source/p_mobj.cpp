@@ -2079,14 +2079,16 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // haleyjd: special thing types that need to undergo the processing
    // below must be caught here
 
-   if(mthing->type >= 9027 && mthing->type <= 9033) // particle fountains
-      i = E_SafeThingName("EEParticleFountain");
-   else if(mthing->type >= 1200 && mthing->type < 1300) // enviro sequences
+   if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
       i = E_SafeThingName("EEEnviroSequence");
-   else if(mthing->type >= 1400 && mthing->type < 1500) // sector sequence
+   else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
+   else if(mthing->type >= 9027 && mthing->type <= 9033)   // particle fountains
+      i = E_SafeThingName("EEParticleFountain");
    else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
       i = E_SafeThingName("EEAmbience");
+   else if(mthing->type >= 14100 && mthing->type <= 14164) // music changer
+      i = E_SafeThingName("EEMusicChanger");
    else
    {
       // killough 8/23/98: use table for faster lookup
@@ -2200,10 +2202,6 @@ spawnit:
       mobj->tics = -1; // don't go through state transitions
    }
 
-   // haleyjd: set particle fountain color
-   if(mthing->type >= 9027 && mthing->type <= 9033)
-      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
-
    // haleyjd: set environment sequence # for first 100 types
    if(mthing->type >= 1200 && mthing->type < 1300)
       mobj->args[0] = mthing->type - 1200;
@@ -2223,9 +2221,17 @@ spawnit:
       subsec->sector->sndSeqID = mobj->args[0];
    }
 
+   // haleyjd: set particle fountain color
+   if(mthing->type >= 9027 && mthing->type <= 9033)
+      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
+
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)
       mobj->args[0] = mthing->type - 14000;
+
+   // haleyjd: set music number for first 64 types
+   if(mthing->type >= 14101 && mthing->type <= 14164)
+      mobj->args[0] = mthing->type - 14100;
 
    return mobj;
 }
