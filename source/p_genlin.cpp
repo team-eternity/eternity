@@ -1305,7 +1305,6 @@ manual_door:
          else
             door->type = paramCloseIn;
          break;
-         break;
       default:
          break;
       }

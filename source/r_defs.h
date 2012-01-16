@@ -151,20 +151,24 @@ struct pslope_t
 
 #define NUMLINEARGS 5
 
+// sector action flags
+enum
+{
+   SEC_ACTION_ENTER = 0x00000001
+};
+
 struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
    int16_t special;
    int     args[NUMLINEARGS];
-   int     spacflags;
+   int     actionflags;
 };
 
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
-//
-// SoM: moved the definition of sector_t to by the r_portal.h include
 //
 struct sector_t
 {
@@ -297,6 +301,9 @@ struct sector_t
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *floorterrain;
    ETerrain *ceilingterrain;
+
+   // haleyjd 01/15/12: sector actions
+   DLListItem<sectoraction_t> *actions;
 };
 
 //

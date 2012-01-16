@@ -2087,7 +2087,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       i = E_SafeThingName("EEParticleFountain");
    else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
       i = E_SafeThingName("EEAmbience");
-   else if(mthing->type >= 14100 && mthing->type <= 14164) // music changer
+   else if(mthing->type >= 14101 && mthing->type <= 14164) // music changer
       i = E_SafeThingName("EEMusicChanger");
    else
    {

@@ -246,16 +246,16 @@ thingtype EEPolyObjSpawnSpotDamage
 
 thingtype EEAmbience 
 {
-  doomednum   14065
-  spawnstate  S_EE_AMBIENCE_SPAWN
-  cflags      NOBLOCKMAP|NOGRAVITY
+  doomednum  14065
+  spawnstate S_EE_AMBIENCE_SPAWN
+  cflags     NOBLOCKMAP|NOGRAVITY
 }
 
 // Music Changer
 
 thingtype EEMusicChanger
 {
-  doomednum  14100
+  doomednum  14165
   spawnstate S_TNT1
   cflags     NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
