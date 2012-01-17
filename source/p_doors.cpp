@@ -308,7 +308,7 @@ void VerticalDoorThinker::Think()
 //
 void VerticalDoorThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << topheight << speed << direction << topwait
        << topcountdown << line << lighttag << turbo;

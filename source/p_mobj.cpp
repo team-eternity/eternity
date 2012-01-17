@@ -124,7 +124,7 @@ IMPLEMENT_THINKER_TYPE(PointThinker)
 //
 void PointThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << x << y << z << groupid;
 }
@@ -1412,7 +1412,7 @@ void Mobj::serialize(SaveArchive &arc)
 {
    // PointThinker will handle x,y,z coordinates, groupid, and the thinker name
    // (via Thinker::serialize).
-   PointThinker::serialize(arc);
+   Super::serialize(arc);
 
    // Basic Properties
    arc 

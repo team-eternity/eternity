@@ -1172,7 +1172,7 @@ void ACSThinker::Think()
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    // Basic properties
    arc << vmID << scriptNum << internalNum << stp << sreg << sdata 

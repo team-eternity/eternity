@@ -3004,7 +3004,7 @@ void ScrollThinker::Think()
 //
 void ScrollThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << dx << dy << affectee << control << last_height << vdx << vdy
        << accel << type;
@@ -3244,7 +3244,7 @@ void FrictionThinker::Think()
 //
 void FrictionThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << friction << movefactor << affectee;
 }
@@ -3655,7 +3655,7 @@ void PushThinker::Think()
 //
 void PushThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
 

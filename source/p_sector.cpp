@@ -45,7 +45,7 @@ IMPLEMENT_THINKER_TYPE(SectorThinker)
 //
 void SectorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << sector;
 

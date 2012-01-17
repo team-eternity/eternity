@@ -632,7 +632,7 @@ void FloorMoveThinker::Think()
 //
 void FloorMoveThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << crush << direction << special << texture 
        << floordestheight << speed << resetTime << resetHeight
@@ -724,7 +724,7 @@ void ElevatorThinker::Think()
 //
 void ElevatorThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << direction << floordestheight << ceilingdestheight 
        << speed;
@@ -768,7 +768,7 @@ void PillarThinker::Think()
 //
 void PillarThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << ceilingSpeed << floorSpeed << floordest 
        << ceilingdest << direction << crush;
@@ -1771,7 +1771,7 @@ void FloorWaggleThinker::Think()
 //
 void FloorWaggleThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << originalHeight << accumulator << accDelta << targetScale
        << scale << scaleDelta << ticker << state;

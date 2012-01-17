@@ -1215,7 +1215,7 @@ void PolyRotateThinker::Think()
 //
 void PolyRotateThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << polyObjNum << speed << distance;
 }
@@ -1295,7 +1295,7 @@ void PolyMoveThinker::Think()
 //
 void PolyMoveThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << polyObjNum << speed << momx << momy << distance << angle;
 }
@@ -1402,7 +1402,7 @@ void PolySlideDoorThinker::Think()
 //
 void PolySlideDoorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << initAngle << angle << revAngle
@@ -1505,7 +1505,7 @@ void PolySwingDoorThinker::Think()
 //
 void PolySwingDoorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << polyObjNum << delay << delayCount << initSpeed << speed
        << initDistance << distance << closing;

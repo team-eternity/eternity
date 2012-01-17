@@ -206,7 +206,7 @@ void PlatThinker::Think()
 //
 void PlatThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << speed << low << high << wait << count << status << oldstatus
        << crush << tag << type;

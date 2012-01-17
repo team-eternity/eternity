@@ -257,7 +257,7 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
