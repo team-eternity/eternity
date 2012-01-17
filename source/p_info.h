@@ -52,6 +52,8 @@ enum
 {
    LI_TYPE_DOOM,
    LI_TYPE_HERETIC,
+   LI_TYPE_HEXEN,
+   LI_TYPE_STRIFE
 };
 
 //

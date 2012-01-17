@@ -32,9 +32,20 @@
 
 #include "e_hash.h"
 #include "e_hashkeys.h"
+#include "e_lib.h"
 #include "e_things.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
+
+//
+// MobjCollection::setMobjType
+//
+// Set the type of object this collection tracks.
+//
+void MobjCollection::setMobjType(const char *mt)
+{
+   E_ReplaceString(mobjType, estrdup(mt));
+}
 
 //
 // MobjCollection::collectThings
@@ -45,8 +56,12 @@
 void MobjCollection::collectThings()
 {
    Thinker *th;
+   int typenum;
 
-   if(!enabled)
+   if(!enabled || !mobjType)
+      return;
+
+   if((typenum = E_ThingNumForName(mobjType)) < 0)
       return;
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
@@ -55,7 +70,7 @@ void MobjCollection::collectThings()
 
       if((mo = thinker_cast<Mobj *>(th)))
       {
-         if(mo->type == mobjType)
+         if(mo->type == typenum)
             add(mo);
       }
    }
@@ -73,7 +88,7 @@ class mobjCollectionSetPimpl : public ZoneObject
 {
 public:
    EHashTable<MobjCollection, 
-              EIntHashKey, 
+              ENCStringHashKey, 
               &MobjCollection::mobjType, 
               &MobjCollection::hashLinks> collectionHash;
 
@@ -89,30 +104,6 @@ MobjCollectionSet::MobjCollectionSet()
 }
 
 //
-// MobjCollectionSet::collectionForType
-//
-// Finds the collection for a given mobjtype index. 
-// NULL is returned if it does not exist.
-//
-MobjCollection *MobjCollectionSet::collectionForType(int mobjType)
-{
-   return pImpl->collectionHash.objectForKey(mobjType);
-}
-
-//
-// MobjCollectionSet::collectionForDEHNum
-//
-// Tries to find a collection matching the thingtype with the given
-// dehackednum. Returns NULL if not found or there's no such thing.
-//
-MobjCollection *MobjCollectionSet::collectionForDEHNum(int dehnum)
-{
-   int mt = E_ThingNumForDEHNum(dehnum);
-
-   return (mt >= 0 ? pImpl->collectionHash.objectForKey(mt) : NULL);
-}
-
-//
 // MobjCollectionSet::collectionForName
 //
 // Tries to find a collection matching the thingtype with the given
@@ -120,9 +111,7 @@ MobjCollection *MobjCollectionSet::collectionForDEHNum(int dehnum)
 //
 MobjCollection *MobjCollectionSet::collectionForName(const char *name)
 {
-   int mt = E_ThingNumForName(name);
-
-   return (mt >= 0 ? pImpl->collectionHash.objectForKey(mt) : NULL);
+   return pImpl->collectionHash.objectForKey(name);
 }
 
 //
@@ -130,7 +119,7 @@ MobjCollection *MobjCollectionSet::collectionForName(const char *name)
 //
 // Add a collection for a thingtype, if it doesn't exist already.
 //
-void MobjCollectionSet::addCollection(int mobjType)
+void MobjCollectionSet::addCollection(const char *mobjType)
 {
    if(!pImpl->collectionHash.objectForKey(mobjType))
    {
@@ -145,7 +134,7 @@ void MobjCollectionSet::addCollection(int mobjType)
 //
 // Change the enable state of a collection
 //
-void MobjCollectionSet::setCollectionEnabled(int mobjType, bool enabled)
+void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 {
    MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
 

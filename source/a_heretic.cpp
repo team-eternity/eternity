@@ -537,14 +537,8 @@ MobjCollection sorcspots;
 
 void P_SpawnSorcSpots(void)
 {
-   int spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
-
-   sorcspots.setMobjType(spotType);
+   sorcspots.setMobjType("DsparilTeleSpot");
    sorcspots.makeEmpty();
-
-   if(spotType == -1)
-      return;
-
    sorcspots.collectThings();
 }
 

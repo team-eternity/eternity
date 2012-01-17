@@ -2858,7 +2858,7 @@ static menuitem_t mn_compat2_items[] =
    { it_info,   FC_GOLD "Simulation",    NULL, NULL, MENUITEM_CENTERED   },
    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
    { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
-   { it_toggle, "Monsters can telefrag on MAP30",      "comp_telefrag"   },
+   { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag"   },
    { it_toggle, "Monsters can respawn outside map",    "comp_respawnfix" },
    { it_toggle, "Disable terrain types",               "comp_terrain"    },
    { it_toggle, "Disable falling damage",              "comp_fallingdmg" },

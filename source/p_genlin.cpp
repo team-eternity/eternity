@@ -1117,7 +1117,6 @@ int EV_DoParamDoor(line_t *line, int tag, doordata_t *dd)
    sector_t *sec;
    VerticalDoorThinker *door;
    bool manual = false;
-   bool turbo;
 
    // check if a manual trigger, if so do just the sector on the backside
    // haleyjd 05/04/04: door actions with no line can't be manual
@@ -1160,6 +1159,7 @@ manual_door:
       sec->ceilingdata = door; //jff 2/22/98
       
       door->sector = sec;
+      door->turbo  = false;
       
       // setup delay for door remaining open/closed
       switch(dd->delay_type)
@@ -1222,66 +1222,42 @@ manual_door:
          door->direction = plat_up;
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
-         if(door->speed >= VDOORSPEED*4)
-         {
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
             door->type = genBlazeRaise;
-            turbo = true;
-         }
          else
-         {
             door->type = genRaise;
-            turbo = false;
-         }
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, turbo, false, door->sector); // haleyjd
+            P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
       case ODoor:
          door->direction = plat_up;
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
-         if(door->speed >= VDOORSPEED*4)
-         {
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
             door->type = genBlazeOpen;
-            turbo = true;
-         }
          else
-         {
             door->type = genOpen;
-            turbo = false;
-         }
          if(door->topheight != sec->ceilingheight)
-            P_DoorSequence(true, turbo, false, door->sector); // haleyjd
+            P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
       case CdODoor:
          door->topheight = sec->ceilingheight;
          door->direction = plat_down;
-         if(door->speed >= VDOORSPEED*4)
-         {
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
             door->type = genBlazeCdO;
-            turbo = true;;
-         }
          else
-         {
             door->type = genCdO;
-            turbo = false;
-         }
-         P_DoorSequence(false, turbo, false, door->sector); // haleyjd
+         P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
          break;
       case CDoor:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
-         if(door->speed >= VDOORSPEED*4)
-         {
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
             door->type = genBlazeClose;
-            turbo = true;
-         }
          else
-         {
             door->type = genClose;
-            turbo = false;
-         }
-         P_DoorSequence(false, turbo, false, door->sector); // haleyjd
+         P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
          break;
       
       // haleyjd: The following door types are parameterized only
@@ -1291,19 +1267,19 @@ manual_door:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->topcountdown = dd->topcountdown; // wait to start
-         if(door->speed >= VDOORSPEED*4)
-            door->type = paramBlazeRaiseIn;
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
+            door->type  = paramBlazeRaiseIn;
          else
-            door->type = paramRaiseIn;
+            door->type  = paramRaiseIn;
          break;
       case pDCDoor:
          // parameterized "close in" type
          door->direction    = plat_stop;        // door starts in wait
          door->topcountdown = dd->topcountdown; // wait to start
-         if(door->speed >= VDOORSPEED*4)
-            door->type = paramBlazeCloseIn;
+         if((door->turbo = (door->speed >= VDOORSPEED*4)))
+            door->type  = paramBlazeCloseIn;
          else
-            door->type = paramCloseIn;
+            door->type  = paramCloseIn;
          break;
       default:
          break;

@@ -1244,16 +1244,11 @@ struct brain_s brain;   // killough 3/26/98: global state of boss brain
 
 void P_SpawnBrainTargets(void)  // killough 3/26/98: renamed old function
 {
-   int BrainSpotType = E_ThingNumForDEHNum(MT_BOSSTARGET);
-
    // find all the target spots
-   braintargets.setMobjType(BrainSpotType);
+   braintargets.setMobjType("BossSpawnSpot");
    braintargets.makeEmpty();
 
    brain.easy = 0;   // killough 3/26/98: always init easy to 0
-
-   if(BrainSpotType == -1)
-      return;
 
    braintargets.collectThings();
 }

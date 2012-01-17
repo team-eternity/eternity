@@ -93,14 +93,11 @@ Mobj *wi_camera;
 //
 void IN_AddCameras(void)
 {
-   int cameratype = E_ThingNumForDEHNum(MT_CAMERA);
-
-   camerathings.setMobjType(cameratype);
+   camerathings.setMobjType("SMMUCameraSpot");
    camerathings.makeEmpty();
 
-   // no camera view if camera type is undefined or we're in an
-   // older demo.
-   if(cameratype == -1 || demo_version < 331)
+   // no camera view if we're in an older demo.
+   if(demo_version < 331)
       return;
    
    camerathings.collectThings();

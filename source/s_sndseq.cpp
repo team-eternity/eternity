@@ -620,13 +620,9 @@ static void S_ResetEnviroSeqEngine(void)
 //
 void S_InitEnviroSpots(void)
 {
-   int enviroType = E_ThingNumForName("EEEnviroSequence");
-
-   enviroSpots.setMobjType(enviroType);
+   enviroSpots.setMobjType("EEEnviroSequence");
    enviroSpots.makeEmpty();
-
-   if(enviroType != -1)
-      enviroSpots.collectThings();
+   enviroSpots.collectThings();
 
    S_ResetEnviroSeqEngine();
 }

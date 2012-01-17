@@ -828,6 +828,8 @@ public:
    line_t *line;
 
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
+
+   bool turbo;
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors

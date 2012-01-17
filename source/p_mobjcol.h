@@ -41,19 +41,19 @@ class MobjCollection : public PODCollection<Mobj *>
 {
 protected:
    DLListItem<MobjCollection> hashLinks; // links for MobjCollectionSet hash
-   int  mobjType;
-   bool enabled;
+   char *mobjType;
+   bool  enabled;
 
    friend class mobjCollectionSetPimpl;
 
 public:
    MobjCollection() 
-      : PODCollection<Mobj *>(), hashLinks(), mobjType(-1), enabled(true) 
+      : PODCollection<Mobj *>(), hashLinks(), mobjType(NULL), enabled(true) 
    {
    }
 
-   int  getMobjType() const { return mobjType; }
-   void setMobjType(int mt) { mobjType = mt;   }
+   const char *getMobjType() const  { return mobjType; }
+   void setMobjType(const char *mt);
    bool isEnabled() const   { return enabled;  }
    void setEnabled(bool en) { enabled = en;    }
 
@@ -71,11 +71,9 @@ private:
 
 public:
    MobjCollectionSet();
-   MobjCollection *collectionForType(int mobjType);
-   MobjCollection *collectionForDEHNum(int dehnum);
    MobjCollection *collectionForName(const char *name);
-   void addCollection(int mobjType);
-   void setCollectionEnabled(int mobjType, bool enabled);
+   void addCollection(const char *mobjType);
+   void setCollectionEnabled(const char *mobjType, bool enabled);
    void collectAllThings();
 };
 
