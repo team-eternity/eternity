@@ -1726,7 +1726,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       return;
 
    // allocate the mapsectorext_t structures
-   EDSectors = (mapsectorext_t *)(Z_Calloc(numEDSectors, sizeof(mapsectorext_t), PU_LEVEL, NULL));
+   EDSectors = estructalloctag(mapsectorext_t, numEDSectors, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMSECCHAINS; ++i)

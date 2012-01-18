@@ -1507,7 +1507,7 @@ void Mobj::serialize(SaveArchive &arc)
       P_AddThingTID(this, tid);
 
       // create the deswizzle info structure
-      dsInfo = (deswizzle_info *)(Z_Calloc(1, sizeof(*dsInfo), PU_LEVEL, NULL));
+      dsInfo = estructalloctag(deswizzle_info, 1, PU_LEVEL);
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;

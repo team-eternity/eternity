@@ -1077,7 +1077,10 @@ void ACSThinker::Think()
             int strnum = POP();
 
             if(this->line && (sec = this->line->frontsector))
-               S_StartSectorSequenceName(sec, this->stringtable[strnum], false);
+            {
+               S_StartSectorSequenceName(sec, this->stringtable[strnum], 
+                                         SEQ_ORIGIN_SECTOR_F);
+            }
             /*
             FIXME
             else
@@ -1308,7 +1311,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       return;
 
    // allocate scripts array
-   vm->scripts = (acscript_t *)(Z_Calloc(1, vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL));
+   vm->scripts = estructalloctag(acscript_t, vm->numScripts, PU_LEVEL);
 
    vm->loaded = true;
 

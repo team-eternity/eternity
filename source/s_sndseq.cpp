@@ -77,9 +77,9 @@ bool S_CheckSequenceLoop(PointThinker *mo)
 //
 // Convenience routine.
 //
-bool S_CheckSectorSequenceLoop(sector_t *s, bool floorOrCeiling)
+bool S_CheckSectorSequenceLoop(sector_t *s, int originType)
 {
-   return S_CheckSequenceLoop(SECTOR_ORIGIN(s, floorOrCeiling));
+   return S_CheckSequenceLoop(SECTOR_ORIGIN(s, originType));
 }
 
 //
@@ -180,9 +180,9 @@ void S_KillSequence(PointThinker *mo)
 //
 // Convenience routine.
 //
-void S_StopSectorSequence(sector_t *s, bool floorOrCeiling)
+void S_StopSectorSequence(sector_t *s, int originType)
 {
-   S_StopSequence(SECTOR_ORIGIN(s, floorOrCeiling));
+   S_StopSequence(SECTOR_ORIGIN(s, originType));
 }
 
 //
@@ -190,9 +190,9 @@ void S_StopSectorSequence(sector_t *s, bool floorOrCeiling)
 //
 // Convenience routine.
 //
-void S_SquashSectorSequence(sector_t *s, bool floorOrCeiling)
+void S_SquashSectorSequence(sector_t *s, int originType)
 {
-   S_SquashSequence(SECTOR_ORIGIN(s, floorOrCeiling));
+   S_SquashSequence(SECTOR_ORIGIN(s, originType));
 }
 
 //
@@ -251,7 +251,7 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOrigin
    S_StopSequence(mo);
 
    // allocate a new SndSeq object and link it
-   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
+   newSeq = estructalloctag(SndSeq_t, 1, PU_LEVEL);
 
    newSeq->link.insert(newSeq, &SoundSequences);
 
@@ -278,11 +278,15 @@ void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, int seqOrigin
 //
 void S_StartSectorSequence(sector_t *s, int seqtype)
 {
-   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
+   int origintype;
+
+   if(seqtype == SEQ_CEILING || seqtype == SEQ_DOOR)
+      origintype = SEQ_ORIGIN_SECTOR_C;
+   else
+      origintype = SEQ_ORIGIN_SECTOR_F;
    
-   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
-                      ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
-                      s - sectors);
+   S_StartSequenceNum(SECTOR_ORIGIN(s, origintype), s->sndSeqID, seqtype, 
+                      origintype, s - sectors);
 }
 
 //
@@ -293,13 +297,17 @@ void S_StartSectorSequence(sector_t *s, int seqtype)
 //
 void S_ReplaceSectorSequence(sector_t *s, int seqtype)
 {
-   bool ceil = (seqtype == SEQ_CEILING || seqtype == SEQ_DOOR);
-
-   S_SquashSectorSequence(s, ceil);
+   int originType;
    
-   S_StartSequenceNum(SECTOR_ORIGIN(s, ceil), s->sndSeqID, seqtype,
-                      ceil ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
-                      s - sectors);
+   if(seqtype == SEQ_CEILING || seqtype == SEQ_DOOR)
+      originType = SEQ_ORIGIN_SECTOR_C;
+   else
+      originType = SEQ_ORIGIN_SECTOR_F;
+
+   S_SquashSectorSequence(s, originType);
+   
+   S_StartSequenceNum(SECTOR_ORIGIN(s, originType), s->sndSeqID, seqtype,
+                      originType, s - sectors);
 }
 
 //
@@ -336,7 +344,7 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
    S_StopSequence(mo);
 
    // allocate a new SndSeq object and link it
-   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
+   newSeq = estructalloctag(SndSeq_t, 1, PU_LEVEL);
 
    newSeq->link.insert(newSeq, &SoundSequences);
 
@@ -361,10 +369,9 @@ void S_StartSequenceName(PointThinker *mo, const char *seqname, int seqOriginTyp
 //
 // Convenience routine for starting a sector sequence by name.
 //
-void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
+void S_StartSectorSequenceName(sector_t *s, const char *seqname, int originType)
 {
-   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
-                       fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
+   S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType, 
                        s - sectors);
 }
 
@@ -374,12 +381,11 @@ void S_StartSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
 // Convenience routine for starting a sector sequence by name without playing
 // the stop sound of any currently playing sequence.
 //
-void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, bool fOrC)
+void S_ReplaceSectorSequenceName(sector_t *s, const char *seqname, int originType)
 {
-   S_SquashSectorSequence(s, fOrC);
+   S_SquashSectorSequence(s, originType);
 
-   S_StartSequenceName(SECTOR_ORIGIN(s, fOrC), seqname, 
-                       fOrC ? SEQ_ORIGIN_SECTOR_C : SEQ_ORIGIN_SECTOR_F, 
+   S_StartSequenceName(SECTOR_ORIGIN(s, originType), seqname, originType,
                        s - sectors);
 }
 

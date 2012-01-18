@@ -82,17 +82,16 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
       }
 
       if(bounced)
-         S_ReplaceSectorSequenceName(s, seqName, true);
+         S_ReplaceSectorSequenceName(s, seqName, SEQ_ORIGIN_SECTOR_C);
       else
-         S_StartSectorSequenceName(s, seqName, true);
+         S_StartSectorSequenceName(s, seqName, SEQ_ORIGIN_SECTOR_C);
    }
 }
 
-///////////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Door action routines, called once per tick
 //
-///////////////////////////////////////////////////////////////
 
 IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 
@@ -105,7 +104,7 @@ IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 //
 // jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
-
+//
 void VerticalDoorThinker::Think()
 {
    result_e  res;
@@ -178,7 +177,7 @@ void VerticalDoorThinker::Think()
       // handle door reaching bottom
       if(res == pastdest)
       {
-         S_StopSectorSequence(sector, true);
+         S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
 
          switch(type)
          {
@@ -266,7 +265,7 @@ void VerticalDoorThinker::Think()
          case genOpen:
          case genCdO:
          case genBlazeCdO:
-            S_StopSectorSequence(sector, true);
+            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             sector->ceilingdata = NULL; //jff 2/22/98
             this->removeThinker(); // unlink and free
             break;
@@ -334,7 +333,7 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 
    // haleyjd: squash the sector's sound sequence when a door reversal
    // occurs, otherwise you get a doubled sound at the next downstroke.
-   S_SquashSectorSequence(sector, true);
+   S_SquashSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
    return true;
 }
 

@@ -585,7 +585,7 @@ static polymaplink_t *Polyobj_getLink(void)
       bmap_freelist = link->po_next;
    }
    else
-      link = (polymaplink_t *)(Z_Calloc(1, sizeof(*link), PU_LEVEL, NULL));
+      link = estructalloctag(polymaplink_t, 1, PU_LEVEL);
 
    return link;
 }
@@ -1087,8 +1087,7 @@ void Polyobj_InitLevel(void)
    if(numPolyObjects)
    {
       // allocate the PolyObjects array
-      PolyObjects = (polyobj_t *)(Z_Calloc(numPolyObjects, sizeof(polyobj_t), 
-                                           PU_LEVEL, NULL));
+      PolyObjects = estructalloctag(polyobj_t, numPolyObjects, PU_LEVEL);
 
       // CPP_FIXME: temporary in-place construction of origin
       for(i = 0; i < numPolyObjects; ++i)

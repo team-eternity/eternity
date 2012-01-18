@@ -1087,7 +1087,7 @@ static int GenDoorRetrigger(Thinker *th, int trig)
       }
 
       // haleyjd: squash the sector's sound sequence
-      S_SquashSectorSequence(door->sector, true);
+      S_SquashSectorSequence(door->sector, SEQ_ORIGIN_SECTOR_C);
       
       return 1;
    }

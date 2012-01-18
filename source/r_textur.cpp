@@ -825,13 +825,13 @@ static texcol_t *NextTempCol(texcol_t *current)
    if(!current)
    {
       if(!tempmask.tempcols)
-         return tempmask.tempcols = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0));
+         return tempmask.tempcols = estructalloc(texcol_t, 1);
       else
          return tempmask.tempcols;
    }
    
    if(!current->next)
-      return current->next = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_STATIC, 0));
+      return current->next = estructalloc(texcol_t, 1);
    
    return current->next;
 }
@@ -906,8 +906,7 @@ static void FinishTexture(texture_t *tex)
       }
          
       // Now allocate and build the actual column structs in the texture
-      tcol = tex->columns[x] 
-           = (texcol_t *)(Z_Calloc(sizeof(texcol_t), colcount, PU_RENDERER, NULL));
+      tcol = tex->columns[x] = estructalloctag(texcol_t, colcount, PU_RENDERER);
            
       col = NULL;
       for(i = 0; i < colcount; i++)
@@ -1011,7 +1010,7 @@ static void R_MakeMissingTexture(int count)
    // Make columns
    for(i = 0; i < tex->width; i++)
    {
-      tex->columns[i] = (texcol_t *)(Z_Calloc(sizeof(texcol_t), 1, PU_RENDERER, 0));
+      tex->columns[i] = estructalloctag(texcol_t, 1, PU_RENDERER);
       tex->columns[i]->next = NULL;
       tex->columns[i]->yoff = 0;
       tex->columns[i]->len = tex->height;

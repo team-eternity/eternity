@@ -1050,7 +1050,7 @@ void P_ArchiveScripts(SaveArchive &arc)
 
 static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
 {
-   int twizzle;
+   unsigned int twizzle;
 
    // save name of EDF sequence
    arc.ArchiveCString(seq->sequence->name, 33);
@@ -1095,7 +1095,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    char name[33];
 
    // allocate a new sound sequence
-   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
+   newSeq = estructalloctag(SndSeq_t, 1, PU_LEVEL);
 
    // get corresponding EDF sequence
    arc.ArchiveCString(name, 33);
