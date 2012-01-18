@@ -34,6 +34,10 @@
 void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
                           GLfloat smax, GLfloat tmax);
 
+void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
+                      GLfloat r, GLfloat b, GLfloat g);
+
+
 #endif
 
 #endif

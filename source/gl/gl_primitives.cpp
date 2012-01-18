@@ -51,6 +51,22 @@ void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
    glVertex2f(x + w, y);
 }
 
+//
+// GL_OrthoQuadFlat
+//
+// Push a flat shaded quad of size (w, h) at upper-left-hand coordinate (x, y)
+// with all vertices colored as specified by the (r,g,b) parameters.
+//
+void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
+                      GLfloat r, GLfloat b, GLfloat g)
+{
+   glColor3f(r, g, b);
+   glVertex2f(x,     y);
+   glVertex2f(x,     y + h);
+   glVertex2f(x + w, y + h);
+   glVertex2f(x + w, y);
+}
+
 #endif
 
 // EOF
