@@ -343,6 +343,8 @@
 		<Unit filename="..\source\st_hbar.cpp" />
 		<Unit filename="..\source\st_lib.cpp" />
 		<Unit filename="..\source\st_stuff.cpp" />
+		<Unit filename="..\source\sv_bans.cpp" />
+		<Unit filename="..\source\sv_cmd.cpp" />
 		<Unit filename="..\source\sv_main.cpp" />
 		<Unit filename="..\source\sv_queue.cpp" />
 		<Unit filename="..\source\sv_spec.cpp" />

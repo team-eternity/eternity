@@ -196,8 +196,8 @@ typedef struct keyaction_s
 //      bind q sr50l
 
 // [CG] For multibinds.
-static std::map<std::string, std::string> multibind_hash;
-static std::map<int, std::string> multibind_key_hash;
+static std::map<std::string, std::string> multibindHash;
+static std::map<int, std::string> multibindKeyHash;
 
 static int G_KeyForName(const char *name);
 static void G_HandleMultibind(event_t *ev);
@@ -353,16 +353,16 @@ static void G_HandleMultibind(event_t *ev)
    const char *rover, *name_start;
    bool quotemark = false;
    int key = tolower(ev->data1);
-   const char *multibind_name = multibind_key_hash[key].c_str();
+   const char *multibind_name = multibindKeyHash[key].c_str();
    const char *multibind_actions;
    std::map<std::string, std::string>::iterator it; // [CG] God I love colons.
 
    if(!strlen(multibind_name)) // [CG] Blank multibind, skip it.
       return;
 
-   it = multibind_hash.find(multibind_name);
+   it = multibindHash.find(multibind_name);
 
-   if(it == multibind_hash.end()) // [CG] No such multibind, give up.
+   if(it == multibindHash.end()) // [CG] No such multibind, give up.
       return;
 
    multibind_actions = (*it).second.c_str();
@@ -580,7 +580,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    }
    
    // [CG] Check multibinds.
-   if(multibind_hash.count(name))
+   if(multibindHash.count(name))
       return G_KeyActionForName("multibind");
 
    // check console keyactions
@@ -671,21 +671,10 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
    // [CG] Check if the user is trying to create a multibind; we then have to
    //      map this key to its multibind handler.
    if(strncmp(action->name, "multibind", 9) == 0)
-      multibind_key_hash[key] = action_name;
+      multibindKeyHash[key] = action_name;
 
    // haleyjd 07/03/04: support multiple binding classes
    keybindings[key].bindings[action->bclass] = action;
-}
-
-CONSOLE_COMMAND(multibind, 0)
-{
-   if(Console.argc != 2)
-   {
-      C_Printf("usage: multibind name cmd1;cmd2;...;cmdN\n");
-      return;
-   }
-
-   multibind_hash[Console.argv[0]->constPtr()] = Console.argv[1]->constPtr();
 }
 
 //
@@ -1021,7 +1010,7 @@ void G_SaveDefaults(void)
    }
 
    // [CG] Write multibinds first.
-   for(mbit = multibind_hash.begin(); mbit != multibind_hash.end(); mbit++)
+   for(mbit = multibindHash.begin(); mbit != multibindHash.end(); mbit++)
    {
       fprintf(
          file,
@@ -1043,7 +1032,7 @@ void G_SaveDefaults(void)
 
             if(strncmp("multibind", keybindings[i].bindings[j]->name, 9) == 0)
             {
-               multibind_name = multibind_key_hash[i].c_str();
+               multibind_name = multibindKeyHash[i].c_str();
                if(strlen(multibind_name))
                   fprintf(file, "bind %s \"%s\"\n", keyname, multibind_name);
             }
@@ -1108,6 +1097,17 @@ CONSOLE_COMMAND(bind, 0)
    }
    else
       C_Printf("usage: bind key action\n");
+}
+
+CONSOLE_COMMAND(multibind, 0)
+{
+   if(Console.argc != 2)
+   {
+      C_Printf("usage: multibind name cmd1;cmd2;...;cmdN\n");
+      return;
+   }
+
+   multibindHash[Console.argv[0]->constPtr()] = Console.argv[1]->constPtr();
 }
 
 // haleyjd: utility functions

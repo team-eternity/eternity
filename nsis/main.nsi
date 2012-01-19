@@ -5,7 +5,7 @@
 
   !define VERSION "3.40.17"
   !define PATCH  "17"
-  !define INST_DIR "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\build"
+  !define INST_DIR "build"
 
 ;--------------------------------
 ;Variables
@@ -32,17 +32,17 @@
 
   ;Name and file
   Name "Eternity Engine"
-  OutFile "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\eternity-engine-3.40.17_windows-x86.exe"
+  OutFile "eternity-engine-3.40.17_windows-x86.exe"
 
   ;Set compression
   SetCompressor /SOLID lzma
 
-  !define MUI_ICON "C:\Documents and Settings\Charlie\Desktop\eecs\codeblocks\res\ee.ico"
+  !define MUI_ICON "..\codeblocks\res\ee.ico"
 
-  !system 'copy "C:\Documents and Settings\Charlie\Desktop\eecs\codeblocks\bin\Release\eternity.exe" "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\build\"'
-  !system 'copy "C:\Documents and Settings\Charlie\Desktop\eecs\COPYING" "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\build"'
-  !system 'xcopy /Y /Q /S /E /I "C:\Documents and Settings\Charlie\Desktop\eecs\base" "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\build\base"'
-  !system 'xcopy /Y /Q /S /E /I "C:\Documents and Settings\Charlie\Desktop\eecs\docs\licenses" "C:\Documents and Settings\Charlie\Desktop\eecs\nsis\build\licenses"'
+  !system 'copy "..\codeblocks\bin\Release\eternity.exe" "build"'
+  !system 'copy "..\COPYING" "build"'
+  !system 'xcopy /Y /Q /S /E /I "..\base" "build\base"'
+  !system 'xcopy /Y /Q /S /E /I "..\docs\licenses" "build\licenses"'
   ReserveFile "wads.ini"
 
   !include Sections.nsh
@@ -551,7 +551,7 @@ FunctionEnd
 ;Pages
   !insertmacro MUI_PAGE_WELCOME
 
-  !insertmacro MUI_PAGE_LICENSE "C:\Documents and Settings\Charlie\Desktop\eecs\COPYING"
+  !insertmacro MUI_PAGE_LICENSE "..\COPYING"
   Page custom InstallOptionsPage
   !insertmacro MUI_PAGE_DIRECTORY
   
