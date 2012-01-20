@@ -49,6 +49,14 @@ enum
    // INV_IGNORESKILL - would rather have more flexible skill props...
 };
 
+// Inventory classes
+enum
+{
+   INV_CLASS_NONE,       // A token, functionless inventory item
+   INV_CLASS_HEALTH,     // Collectable health powerup
+   INV_CLASS_NUMCLASSES
+};
+
 //
 // inventory_t
 //
@@ -61,6 +69,7 @@ struct inventory_t
    DLListItem<inventory_t> numlinks;
 
    // basic properties
+   int   classtype;      // inventory item class
    int   amount;         // amount given on pickup
    int   maxAmount;      // maximum amount that can be carried
    int   interHubAmount; // amount that persists between hubs or non-hub levels
@@ -71,6 +80,8 @@ struct inventory_t
    char *useSound;       // name of use sound, if any
    int   respawnTics;    // length of time it takes to respawn w/item respawn on
    int   giveQuest;      // quest flag # given, if non-zero
+
+   unsigned int flags;   // basic inventory flags
 
    // fields needed for EDF identification and hashing
    char *name;           // buffer for name

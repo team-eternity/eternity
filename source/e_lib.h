@@ -58,6 +58,10 @@ int E_TranslucCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_TranslucCB2  (cfg_t *, cfg_opt_t *, const char *, void *);
 int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 
+// MetaTable adapter utilities
+class  MetaTable;
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
+
 #endif
 
 const char *E_BuildDefaultFn(const char *filename);

@@ -1373,7 +1373,6 @@ static void E_ProcessPlayerData(cfg_t *cfg)
 {
    E_ProcessSkins(cfg);
    E_ProcessPlayerClasses(cfg);
-   E_ProcessInventoryDefs(cfg);
 }
 
 //
@@ -1757,12 +1756,6 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process sprites
    E_ProcessSprites(cfg);
 
-   // process sprite-related pickup item effects (made dynamic 11/21/11)
-   E_ProcessItems(cfg);
-
-   // process sprite-related variables (made dynamic 11/21/11)
-   E_ProcessSpriteVars(cfg);
-
    // process sounds
    E_ProcessSounds(cfg);
 
@@ -1777,6 +1770,15 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);
+   
+   // Process inventory definitions
+   E_ProcessInventoryDefs(cfg);
+   
+   // process sprite-related variables (made dynamic 11/21/11)
+   E_ProcessSpriteVars(cfg);
+
+   // process sprite-related pickup item effects (made dynamic 11/21/11)
+   E_ProcessItems(cfg);
 
    // process player sections
    E_ProcessPlayerData(cfg);

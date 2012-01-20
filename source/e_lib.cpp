@@ -43,6 +43,7 @@
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "metaapi.h"
 #include "psnprntf.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -874,6 +875,18 @@ void E_ReplaceString(char *&dest, char *newvalue)
       efree(dest);
 
    dest = newvalue;
+}
+
+//
+// E_MetaStringFromCfgString
+//
+// Utility function.
+// Adds a MetaString property to the passed-in table with the same name and
+// value as the cfg_t property.
+//
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setString(prop, cfg_getstr(cfg, prop));
 }
 
 //
