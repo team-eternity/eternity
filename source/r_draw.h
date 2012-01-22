@@ -66,7 +66,7 @@ struct columndrawer_t
 
 extern columndrawer_t r_normal_drawer;
 
-#define TRANSLATIONCOLOURS 15
+#define TRANSLATIONCOLOURS 14
 
 extern int      linesize;        // killough 11/98
 

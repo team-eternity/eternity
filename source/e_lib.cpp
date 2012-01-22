@@ -1126,7 +1126,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
 //
 static void PushRange(tr_pstate_t *pstate)
 {
-   tr_range_t *newrange = ecalloc(tr_range_t *, 1, sizeof(tr_range_t));
+   tr_range_t *newrange = estructalloc(tr_range_t, 1);
 
    newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
    newrange->srcend   = COLOR_CLAMP(pstate->srcend);
@@ -1207,7 +1207,7 @@ static void DoPStateColon(tr_pstate_t *pstate)
       // , or end-of-string here means the destination range is a single color;
       // duplicate the color, back up one character, and go to the end state.
       pstate->dstend = pstate->dstbegin;
-      if(pstate->inputpos > 0)
+      if(pstate->inputpos > 0 && tokentype != TR_TOKEN_END)
          --pstate->inputpos;
       pstate->state = TR_PSTATE_COMMAOREND;
    }
@@ -1332,11 +1332,11 @@ static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] =
 //
 // E_ParseTranslation
 //
-byte *E_ParseTranslation(const char *str)
+byte *E_ParseTranslation(const char *str, int tag)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = ecalloc(byte *, 1, 256);
+   byte *translation = ecalloctag(byte *, 1, 256, tag);
    tr_pstate_t parserstate;
 
    tokenbuf.initCreate();
@@ -1367,16 +1367,22 @@ byte *E_ParseTranslation(const char *str)
       while(range)
       {
          tr_range_t *next = range->next;
-         int numsrccolors = range->srcend - range->srcbegin + 1;
-         int numdstcolors = range->dstend - range->dstbegin + 1;
-         fixed_t dst      = range->dstbegin * FRACUNIT;
-         fixed_t deststep = (numdstcolors * FRACUNIT) / numsrccolors;
+         int numsrccolors = range->srcend - range->srcbegin;
+         int numdstcolors = range->dstend - range->dstbegin;
 
-         // populate source indices with destination colors
-         for(int src = range->srcbegin; src <= range->srcend; src++)
+         if(numsrccolors == 0)
+            translation[range->srcbegin] = range->dstbegin;
+         else
          {
-            translation[src] = RANGE_CLAMP(dst / FRACUNIT, range->dstend);
-            dst += deststep;
+            fixed_t dst      = range->dstbegin * FRACUNIT;
+            fixed_t deststep = (numdstcolors * FRACUNIT) / numsrccolors;
+
+            // populate source indices with destination colors
+            for(int src = range->srcbegin; src <= range->srcend; src++)
+            {
+               translation[src] = RANGE_CLAMP(dst / FRACUNIT, range->dstend);
+               dst += deststep;
+            }
          }
 
          // done with this range

@@ -27,6 +27,8 @@
 #ifndef E_LIB_H__
 #define E_LIB_H__
 
+#include "doomtype.h"
+
 struct dehflagset_t;
 
 typedef struct E_Enable_s
@@ -73,6 +75,7 @@ int E_ParseFlags(const char *str, dehflagset_t *flagset);
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
 void E_ReplaceString(char *&dest, char *newvalue);
 char *E_GetHeredocLine(char **src);
+byte *E_ParseTranslation(const char *str, int tag);
 
 #define E_MAXCMDTOKENS 8
 
