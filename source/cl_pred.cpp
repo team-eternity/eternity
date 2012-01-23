@@ -24,8 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdlib.h>
-#include <string.h>
+#include "z_zone.h"
 
 #include "d_event.h"
 #include "doomstat.h"

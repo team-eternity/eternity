@@ -403,7 +403,6 @@ void SV_LoadConfig(void)
 {
    char *config_path = NULL;
    int position_of_config, i;
-   struct stat sbuf;
    bool requires_spectator_password, requires_player_password,
         requires_moderator_password, requires_administrator_password,
         should_free;
@@ -431,10 +430,10 @@ void SV_LoadConfig(void)
       should_free = true;
    }
 
-   if(stat(config_path, &sbuf))
+   if(!M_PathExists((const char *)config_path))
       I_Error("CS_LoadConfig: Config file %s does not exist.\n", config_path);
 
-   if(!S_ISREG(sbuf.st_mode))
+   if(!M_IsFile((const char *)config_path))
    {
       I_Error(
          "CS_LoadConfig: Config file %s exists but is not a file.\n",

@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomstat.h"
-
 #include "cs_main.h"
 #include "sv_main.h"
 #include "sv_queue.h"

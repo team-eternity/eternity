@@ -27,8 +27,6 @@
 #ifndef E_HASHKEYS_H__
 #define E_HASHKEYS_H__
 
-#include <string.h> // [CG] 09/23/11: Needed for strcmp & strcasecmp.
-
 unsigned int D_HashTableKey(const char *str);
 unsigned int D_HashTableKeyCase(const char *str);
 

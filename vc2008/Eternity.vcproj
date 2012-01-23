@@ -51,8 +51,8 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\SDL-1.2.14\include;..\source\win32;..\libpng"
-				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\libpng"
+				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;JSON_IS_AMALGAMATION;CURL_STATICLIB;LIBARCHIVE_STATIC"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -79,11 +79,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Release/snes_spc.lib ./Release/libpng.lib ./Release/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="../eedeps/msvc/lib/Release/archive_static.lib ../eedeps/msvc/lib/Release/libbz2.lib ../eedeps/msvc/lib/Release/zlib.lib ../eedeps/msvc/lib/Release/enet.lib ../eedeps/msvc/lib/Release/libcurl.lib ../eedeps/msvc/lib/Release/libeay32.lib ../eedeps/msvc/lib/Release/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib"
 				OutputFile=".\Release/Eternity.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				IgnoreAllDefaultLibraries="true"
+				IgnoreAllDefaultLibraries="false"
+				IgnoreDefaultLibraryNames="MSVCRTD;LIBCMT"
 				ProgramDatabaseFile=".\Release/Eternity.pdb"
 				GenerateMapFile="true"
 				MapFileName=".\Release/Eternity.map"
@@ -147,8 +148,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.14\include&quot;;..\source\win32;..\libpng"
-				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\libpng;..\zlib"
+				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;JSON_IS_AMALGAMATION;CURL_STATICLIB;LIBARCHIVE_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -174,11 +175,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="./Debug/snes_spc.lib ./Debug/libpng.lib ./Debug/zlib.lib sdl.lib sdl_mixer.lib sdl_net.lib oldnames.lib msvcrt.lib opengl32.lib"
+				AdditionalDependencies="../eedeps/msvc/lib/Debug/archive_static.lib ../eedeps/msvc/lib/Debug/libbz2.lib ../eedeps/msvc/lib/Debug/zlib.lib ../eedeps/msvc/lib/Debug/enet.lib ../eedeps/msvc/lib/Debug/libcurl.lib ../eedeps/msvc/lib/Debug/libeay32.lib ../eedeps/msvc/lib/Debug/ssleay32.lib ./Debug/snes_spc.lib ./Debug/libpng.lib ../eedeps/msvc/lib/SDL/SDL.lib ../eedeps/msvc/lib/SDL/SDL_mixer.lib ../eedeps/msvc/lib/SDL/SDL_net.lib ../eedeps/msvc/lib/SDL/SDLmain.lib ws2_32.lib wldap32.lib winmm.lib opengl32.lib user32.lib advapi32.lib $(NOINHERIT)"
 				OutputFile=".\Debug/Eternity.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				IgnoreAllDefaultLibraries="true"
+				IgnoreAllDefaultLibraries="false"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Eternity.pdb"
 				SubSystem="1"
@@ -1794,6 +1796,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\m_file.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\m_hash.cpp"
 						>
 					</File>
@@ -1985,6 +1991,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\m_fcvt.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\m_file.h"
 						>
 					</File>
 					<File
@@ -3899,6 +3909,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\source\sdl\i_thread.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\source\Win32\i_w32main.cpp"
 						>
 						<FileConfiguration
@@ -3994,6 +4008,10 @@
 					</File>
 					<File
 						RelativePath="..\Source\i_system.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\i_thread.h"
 						>
 					</File>
 					<File
@@ -5105,6 +5123,266 @@
 					</File>
 					<File
 						RelativePath="..\source\gl\gl_vars.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="CS_"
+				>
+				<Filter
+					Name="Headers"
+					>
+					<File
+						RelativePath="..\source\cs_announcer.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_cmd.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_config.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_ctf.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_demo.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_hud.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_main.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_master.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_netid.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_position.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_score.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_spec.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_team.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_wad.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source"
+					>
+					<File
+						RelativePath="..\source\cs_announcer.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_cmd.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_config.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_ctf.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_demo.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_hud.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_main.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_master.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_netid.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_position.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_score.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_spec.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_team.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cs_wad.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="CL_"
+				>
+				<Filter
+					Name="Headers"
+					>
+					<File
+						RelativePath="..\source\cl_buf.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_cmd.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_main.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_net.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_pred.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_spec.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source"
+					>
+					<File
+						RelativePath="..\source\cl_buf.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_cmd.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_main.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_net.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_pred.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\cl_spec.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="SV_"
+				>
+				<Filter
+					Name="Headers"
+					>
+					<File
+						RelativePath="..\source\sv_bans.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_cmd.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_main.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_queue.h"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_spec.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source"
+					>
+					<File
+						RelativePath="..\source\sv_bans.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_cmd.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_main.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_queue.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\sv_spec.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="JSON"
+				>
+				<Filter
+					Name="Headers"
+					>
+					<File
+						RelativePath="..\json-cpp\json\json-forwards.h"
+						>
+					</File>
+					<File
+						RelativePath="..\json-cpp\json\json.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Source"
+					>
+					<File
+						RelativePath="..\json-cpp\jsoncpp.cpp"
 						>
 					</File>
 				</Filter>

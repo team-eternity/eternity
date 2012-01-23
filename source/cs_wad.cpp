@@ -92,7 +92,7 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
    if(dlnow < 1.0 || dltotal < 1.0)
       fraction_downloaded = 0.0;
 
-   percent_downloaded = fraction_downloaded;
+   percent_downloaded = (int)fraction_downloaded;
 
    if(dltotal <= 1048576)
    {

@@ -24,6 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
 #include "doomdef.h"
 #include "doomdata.h"
 #include "doomstat.h"

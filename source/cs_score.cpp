@@ -24,8 +24,9 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include <stdio.h>
-#include <string.h>
 
 #include "c_io.h"
 #include "d_player.h"

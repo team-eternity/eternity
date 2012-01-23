@@ -349,7 +349,7 @@ char* CS_GetSHA1HashFile(char *path)
    size_t bytes_read = 0;
    size_t total_bytes_read = 0;
    unsigned int chunk_size = 512;
-   unsigned char chunk[chunk_size];
+   unsigned char chunk[512];
    FILE *f = fopen(path, "rb");
 
    if(f == NULL)
@@ -590,10 +590,9 @@ void CS_WriteJSON(const char *filename, Json::Value &value, bool styled)
 
 void CS_HandleSpectateKey(event_t *ev)
 {
-   bool spectating = clients[consoleplayer].spectating;
-
-   if(CS_CLIENT && !spectating && ev->type == ev_keydown)
-      Handler_spectate();
+   if(!clients[consoleplayer].spectating)
+      if(CS_CLIENT && ev->type == ev_keydown)
+         Handler_spectate();
 }
 
 void CS_HandleSpectatePrevKey(event_t *ev)

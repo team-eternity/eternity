@@ -33,6 +33,7 @@
 #include "hu_stuff.h"
 #include "i_system.h"
 #include "i_thread.h"
+#include "psnprntf.h"
 #include "r_draw.h"
 #include "st_stuff.h"
 #include "v_font.h"
@@ -394,7 +395,7 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
 
    if(show_netstats)
    {
-      snprintf(tw->message, 21, "%5u/%3u/%3u/%3u%%",
+      psnprintf(tw->message, 21, "%5u/%3u/%3u/%3u%%",
          clients[consoleplayer].client_lag,
          cl_packet_buffer.size(),
          clients[consoleplayer].server_lag,

@@ -29,6 +29,7 @@
 //      implementation varies significantly from this one, it's still the same
 //      fundamental design.  Thanks :) .
 
+#include "z_zone.h"
 #include "c_io.h"
 #include "doomtype.h"
 #include "doomstat.h"

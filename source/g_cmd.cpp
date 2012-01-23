@@ -648,7 +648,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
       map_number = Console.argv[0]->toInt() - 1;
 
-      if(map_number < 0 || map_number >= cs_map_count)
+      if(map_number < 0 || (unsigned int)(map_number) >= cs_map_count)
       {
          C_Printf("Invalid map number '%d'.\n", map_number + 1);
          return;

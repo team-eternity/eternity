@@ -694,8 +694,8 @@ static void ST_doPaletteStuff(void)
       palette = (cnt+7)>>3;
       if(!plyr->powers[pw_strength] && damage_screen_cap < NUMREDPALS)
       {
-         if(palette >= damage_screen_cap)
-            palette = damage_screen_cap - 1;
+         if(palette >= (signed int)damage_screen_cap)
+            palette = (signed int)(damage_screen_cap) - 1;
       }
       else if(palette >= NUMREDPALS)
          palette = NUMREDPALS-1;

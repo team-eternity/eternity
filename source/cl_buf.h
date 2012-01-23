@@ -49,12 +49,14 @@ public:
       memcpy(data, original.data, size);
    }
 
+   /*
    explicit NetPacket(NetPacket& original)
    {
       size = original.size;
       data = emalloc(char *, size);
       memcpy(data, original.data, size);
    }
+   */
 
    NetPacket& operator= (const NetPacket& other)
    {
@@ -67,7 +69,7 @@ public:
       return *this;
    }
 
-   ~NetPacket() { efree(data); }
+   ~NetPacket() { if (data) { efree(data); } }
 
    int32_t getType() const { return *(uint32_t *)data; }
 

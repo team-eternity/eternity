@@ -42,6 +42,8 @@
 // [CG] It's probably worth making this into a class at some point, if only to
 //      drop all the scoping prefixes.
 
+#include "z_zone.h"
+
 #include <list>
 #include <fstream>
 #include <iostream>
@@ -53,6 +55,10 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <fcntl.h>
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <io.h>
+#endif
 
 #include "doomstat.h"
 #include "doomtype.h"
@@ -345,13 +351,21 @@ static bool add_entry_to_archive(struct archive *a,
       return false;
    }
 
+#ifdef WIN32
+   if((fd = _open(path, O_RDONLY)) < 0)
+#else
    if((fd = open(path, O_RDONLY)) < 0)
+#endif
    {
       set_demo_error(DEMO_ERROR_ERRNO);
       return false;
    }
 
+#ifdef WIN32
+   if((len = _read(fd, buf, AR_BLOCK_SIZE)) < 0)
+#else
    if((len = read(fd, buf, AR_BLOCK_SIZE)) < 0)
+#endif
    {
       set_demo_error(DEMO_ERROR_ERRNO);
       return false;
@@ -362,11 +376,19 @@ static bool add_entry_to_archive(struct archive *a,
       if((r = archive_write_data(a, buf, len)) < 0)
          return false;
 
+#ifdef WIN32
+      if((len = _read(fd, buf, AR_BLOCK_SIZE)) < 0)
+#else
       if((len = read(fd, buf, AR_BLOCK_SIZE)) < 0)
+#endif
          return false;
    }
 
+#ifdef WIN32
+   _close(fd);
+#else
    close(fd);
+#endif
    archive_entry_clear(entry);
 
    return true;
@@ -397,7 +419,8 @@ static bool close_current_demo(void)
 
    r = archive_write_set_compression_bzip2(a);
    archive_write_set_format_ustar(a);
-   archive_write_set_options(a, "compression=9");
+   // [CG] FIXME: Caused a symbol not found error linking in MSVC++?
+   // archive_write_set_options(a, "compression=9");
 
    if((r = archive_write_open_filename(a, archive_file_path)) != ARCHIVE_OK)
    {
@@ -963,15 +986,13 @@ const char* CS_GetDemoErrorMessage(void)
 
 bool CS_SetDemoFolderPath(char *demo_folder_path)
 {
-   struct stat stat_result;
-
-   if(stat(demo_folder_path, &stat_result))
+   if(!M_PathExists((const char *)demo_folder_path))
    {
       set_demo_error(DEMO_ERROR_DEMO_FOLDER_NOT_FOUND);
       return false;
    }
 
-   if(!S_ISDIR(stat_result.st_mode))
+   if(!M_IsFolder((const char *)demo_folder_path))
    {
       set_demo_error(DEMO_ERROR_DEMO_FOLDER_NOT_FOLDER);
       return false;

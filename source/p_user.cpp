@@ -372,7 +372,6 @@ void P_DeathThink(player_t *player)
    else if(CS_SERVER && death_time_limit && GameType != gt_coop)
    {
       int playernum = player - players;
-      mapthing_t *spawn_point;
       client_t *client = &clients[playernum];
 
       if((++client->death_time / TICRATE) > death_time_limit)

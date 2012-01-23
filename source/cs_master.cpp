@@ -24,9 +24,9 @@
 //
 //----------------------------------------------------------------------------
 
+#include "z_zone.h"
+
 #include <stdio.h>
-#include <string.h>
-#include <time.h>
 
 #include "doomtype.h"
 #include "i_system.h"

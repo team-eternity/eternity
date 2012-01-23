@@ -112,8 +112,8 @@ void WadDirectory::AddInfoPtr(lumpinfo_t *infoptr)
 //
 void WadDirectory::Clear(void)
 {
-   unsigned int i, j;
-   unsigned int handle_count = 0;
+   int i, j;
+   int handle_count = 0;
    FILE **handles = NULL;
 
    if(this->lumpinfo)

@@ -386,7 +386,7 @@ bool M_DeleteFolderAndContents(const char *path)
 const char* M_GetCurrentFolder(void)
 {
 #ifdef WIN32
-   LPTSTR buf;
+   LPTSTR buf = NULL;
    DWORD buf_size;
 
    buf_size = GetCurrentDirectory(0, buf);

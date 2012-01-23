@@ -199,7 +199,7 @@ protected:
    int          numallocsa; // number of entries allocated for the infoptrs table   
    int          type;       // directory type
    void         *data;      // user data (mainly for w_levels code)
-   unsigned int numlumps_before_coalescing; // [CG] 09/18/11: For clearing.
+   int numlumps_before_coalescing; // [CG] 09/18/11: For clearing.
 
    // Protected methods
    void InitLumpHash();

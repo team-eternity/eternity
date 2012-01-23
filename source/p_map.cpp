@@ -2222,8 +2222,9 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    if(P_CheckRadiusAttack(thing))
       return true;
 
-   thing_v.x    = M_FixedToDouble(thing->x);
-   thing_v.y    = M_FixedToDouble(thing->y);
+   thing_v.x = M_FixedToDouble(thing->x);
+   thing_v.y = M_FixedToDouble(thing->y);
+   thing_v.z = M_FixedToDouble(thing->z);
 
    radius = M_FixedToDouble(thing->radius);
    bottom = M_FixedToDouble(thing->z);

@@ -4120,7 +4120,7 @@ static void D_DoomInit(void)
 //
 void D_DoomMain(void)
 {
-   unsigned int i;
+   int i;
 
    D_DoomInit();
 

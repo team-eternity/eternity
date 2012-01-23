@@ -29,10 +29,10 @@
 #include <sstream>
 #include <iostream>
 
-#include <math.h>
-#include <sys/stat.h>
 
 #include "z_zone.h"
+#include <sys/stat.h>
+
 #include "acs_intr.h"
 #include "a_common.h"
 #include "c_io.h"
@@ -55,6 +55,7 @@
 #include "i_system.h"
 #include "i_thread.h"
 #include "m_argv.h"
+#include "m_file.h"
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "mn_engin.h"
@@ -162,7 +163,6 @@ void CL_RunAllWorldUpdates(void)
 void CL_Init(char *url)
 {
    size_t url_length;
-   struct stat sbuf;
    Json::Reader reader;
 
    ENetCallbacks callbacks = { Z_SysMalloc, Z_SysFree, abort };
@@ -197,12 +197,12 @@ void CL_Init(char *url)
    sprintf(cs_client_password_file, "%s/%s", basepath, PASSWORD_FILENAME);
    M_NormalizeSlashes(cs_client_password_file);
 
-   if(!stat(cs_client_password_file, &sbuf))
+   if(!M_PathExists((const char *)cs_client_password_file))
    {
       byte *buffer;
       std::string json_string;
 
-      if(!S_ISREG(sbuf.st_mode))
+      if(!M_IsFile((const char *)cs_client_password_file))
       {
          I_Error(
             "CL_Init: Password file %s exists but is not a file.\n",
