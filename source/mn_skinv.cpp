@@ -34,13 +34,17 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "doomtype.h"
+#include "e_args.h"
 #include "e_fonts.h"
+#include "e_metastate.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "g_bind.h"
 #include "info.h"
+#include "m_collection.h"
 #include "m_random.h"
+#include "m_strcasestr.h"
 #include "mn_engin.h"
 #include "p_pspr.h"
 #include "p_skin.h"
@@ -73,9 +77,79 @@ static int      skview_rot       = 0;
 static bool     skview_halfspeed = false;
 static int      skview_typenum;                 // 07/12/03
 static bool     skview_haswdth   = false;       // 03/29/08
+static int      skview_light     = 0;          // 01/22/12
 
 // haleyjd 09/29/07: rewrites for player class engine
 static statenum_t skview_atkstate2;
+
+// haleyjd 01/22/12: for special death states
+static PODCollection<MetaState *> skview_metadeaths;
+static MetaState *skview_metadeath = NULL;
+
+extern void A_PlaySoundEx(Mobj *);
+extern void A_Pain(Mobj *);
+extern void A_Scream(Mobj *);
+extern void A_PlayerScream(Mobj *);
+extern void A_XScream(Mobj *);
+
+//
+// MN_skinEmulateAction
+//
+// Some actions can be emulated here.
+//
+static void MN_skinEmulateAction(state_t *state)
+{
+   if(state->action == A_PlaySoundEx)
+   {
+      sfxinfo_t *snd;
+
+      if((snd = E_ArgAsSound(state->args, 0)))
+         S_StartSfxInfo(NULL, snd, 127, ATTN_NORMAL, false, CHAN_AUTO);
+   }
+   else if(state->action == A_Pain)
+   {
+      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_plpain]);
+   }
+   else if(state->action == A_Scream)
+   {
+      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_pldeth]);
+   }
+   else if(state->action == A_PlayerScream)
+   {
+      // 03/29/08: sometimes play wimpy death if the player skin specifies one
+      if(skview_haswdth)
+      {
+         int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
+         int sndnum = 0;
+
+         switch(rnd)
+         {
+         case 0:
+            sndnum = sk_pldeth;
+            break;
+         case 1:
+            sndnum = sk_plwdth;
+            break;
+         case 2:
+            sndnum = sk_pdiehi;
+            break;
+         }
+
+         S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sndnum]);
+      }
+      else
+      {
+         S_StartSoundName(NULL,
+            (GameModeInfo->id == shareware || M_Random() % 2) ? 
+             players[consoleplayer].skin->sounds[sk_pldeth] :
+             players[consoleplayer].skin->sounds[sk_pdiehi]);
+      }
+   }
+   else if(state->action == A_XScream)
+   {
+      S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sk_slop]);
+   }
+}
 
 //
 // MN_SkinSetState
@@ -91,6 +165,8 @@ static void MN_SkinSetState(state_t *state)
    
    tics = skview_state->tics;
    skview_tics = menutime + (skview_halfspeed ? 2*tics : tics);
+
+   MN_skinEmulateAction(skview_state);
 }
 
 //
@@ -110,6 +186,7 @@ static bool MN_SkinResponder(event_t *ev)
       action_menu_toggle = action_menu_previous = false;
 
       // kill the widget
+      skview_metadeaths.clear();
       S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
       current_menuwidget = NULL;
       return true;
@@ -141,6 +218,28 @@ static bool MN_SkinResponder(event_t *ev)
       return true;
    }
 
+   if(action_menu_up)
+   {
+      action_menu_up = false;
+
+      // increase light level
+      if(skview_light != 0)
+         --skview_light;
+
+      return true;
+   }
+
+   if(action_menu_down)
+   {
+      action_menu_down = false;
+
+      // decrease light level
+      if(skview_light != 31)
+         ++skview_light;
+
+      return true;
+   }
+
    switch(ev->data1)
    {
    case KEYD_RCTRL:
@@ -157,8 +256,6 @@ static bool MN_SkinResponder(event_t *ev)
       // act hurt
       if(skview_action == SKV_WALKING)
       {
-         S_StartSoundName(NULL,
-            players[consoleplayer].skin->sounds[sk_plpain]);
          MN_SkinSetState(states[mobjinfo[skview_typenum]->painstate]);
          skview_action = SKV_PAIN;
       }
@@ -168,35 +265,17 @@ static bool MN_SkinResponder(event_t *ev)
       // die normally
       if(skview_action != SKV_DEAD)
       {
-         // 03/29/08: sometimes play wimpy death if the player skin specifies one
-         if(skview_haswdth)
-         {
-            int rnd = M_Random() % ((GameModeInfo->id == shareware) ? 2 : 3);
-            int sndnum = 0;
-
-            switch(rnd)
-            {
-            case 0:
-               sndnum = sk_pldeth;
-               break;
-            case 1:
-               sndnum = sk_plwdth;
-               break;
-            case 2:
-               sndnum = sk_pdiehi;
-               break;
-            }
-
-            S_StartSoundName(NULL, players[consoleplayer].skin->sounds[sndnum]);
-         }
-         else
-         {
-            S_StartSoundName(NULL,
-               (GameModeInfo->id == shareware || M_Random() % 2) ? 
-                  players[consoleplayer].skin->sounds[sk_pldeth] :
-                  players[consoleplayer].skin->sounds[sk_pdiehi]);
-         }
          MN_SkinSetState(states[mobjinfo[skview_typenum]->deathstate]);
+         skview_action = SKV_DEAD;
+      }
+      break;
+   case 'm':
+   case 'M':
+      // "meta" death (elemental death states)
+      if(skview_action != SKV_DEAD && !skview_metadeaths.isEmpty())
+      {
+         skview_metadeath = skview_metadeaths.wrapIterator();
+         MN_SkinSetState(skview_metadeath->getValue());
          skview_action = SKV_DEAD;
       }
       break;
@@ -205,8 +284,6 @@ static bool MN_SkinResponder(event_t *ev)
       // gib
       if(skview_action != SKV_DEAD)
       {
-         S_StartSoundName(NULL,
-            players[consoleplayer].skin->sounds[sk_slop]);
          MN_SkinSetState(states[mobjinfo[skview_typenum]->xdeathstate]);
          skview_action = SKV_DEAD;
       }
@@ -288,6 +365,8 @@ static void MN_SkinDrawer(void)
    bool flip;
    patch_t *patch;
    int pctype;
+   int lighttouse;
+   byte *translate = NULL;
 
    // draw the normal menu background
    V_DrawBackground(mn_background_flat, &vbscreen);
@@ -324,16 +403,18 @@ static void MN_SkinDrawer(void)
       flip = !!sprframe->flip[0];
    }
 
+   lighttouse = (skview_state->frame & FF_FULLBRIGHT ? 0 : skview_light);
+
+   if(players[consoleplayer].colormap)
+      translate = translationtables[players[consoleplayer].colormap - 1];
+
    // cache the sprite patch -- watch out for "firstspritelump"!
    patch = PatchLoader::CacheNum(wGlobalDir, lump+firstspritelump, PU_CACHE);
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling
-   V_DrawPatchTranslated(160, 120, &vbscreen, patch,
-      players[consoleplayer].colormap ?
-        translationtables[(players[consoleplayer].colormap - 1)] :
-        NULL, 
-      flip);
+   V_DrawPatchTranslatedLit(160, 120, &vbscreen, patch, translate, 
+                            colormaps[0] + 256 * lighttouse, flip);
 }
 
 //
@@ -365,6 +446,28 @@ void MN_SkinTicker(void)
    }
 }
 
+//
+// MN_initMetaDeaths
+//
+// haleyjd 01/22/12: Pull all meta death states out of the player class
+// object's metatable.
+//
+static void MN_initMetaDeaths()
+{
+   playerclass_t *pclass = players[consoleplayer].pclass;
+   MetaTable     *meta   = mobjinfo[pclass->type]->meta;
+   MetaObject    *obj    = NULL;
+   
+   skview_metadeaths.clear();
+
+   while((obj = meta->getNextType(obj, METATYPE(MetaState))))
+   {
+      // NB: also matches XDeath implicitly.
+      if(M_StrCaseStr(obj->getKey(), "Death."))
+         skview_metadeaths.add(static_cast<MetaState *>(obj));
+   }
+}
+
 // the skinviewer menu widget
 
 menuwidget_t skinviewer = { MN_SkinDrawer, MN_SkinResponder, MN_SkinTicker, true };
@@ -381,10 +484,11 @@ void MN_InitSkinViewer(void)
    playerclass_t *pclass = players[consoleplayer].pclass; // haleyjd 09/29/07
 
    // reset all state variables
-   skview_action = SKV_WALKING;
-   skview_rot = 0;
+   skview_action    = SKV_WALKING;
+   skview_rot       = 0;
    skview_halfspeed = false;
-   skview_typenum = pclass->type;
+   skview_typenum   = pclass->type;
+   skview_light     = 0;
 
    // haleyjd 09/29/07: save alternate attack state number
    skview_atkstate2 = pclass->altattack;
@@ -394,6 +498,8 @@ void MN_InitSkinViewer(void)
       (strcasecmp(players[consoleplayer].skin->sounds[sk_plwdth], "none") != 0);
 
    MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);
+
+   MN_initMetaDeaths();
 
    // set the widget
    current_menuwidget = &skinviewer;

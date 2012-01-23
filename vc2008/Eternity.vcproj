@@ -1304,6 +1304,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\e_metastate.h"
+						>
+					</File>
+					<File
 						RelativePath="..\source\e_mod.h"
 						>
 					</File>

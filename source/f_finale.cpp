@@ -44,6 +44,7 @@
 #include "mn_engin.h"
 #include "p_info.h"
 #include "p_skin.h"
+#include "r_draw.h"
 #include "r_patch.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -566,31 +567,39 @@ void F_CastPrint(const char *text)
 //
 void F_CastDrawer(void)
 {
-   spritenum_t         altsprite;
-   spritedef_t*        sprdef;
-   spriteframe_t*      sprframe;
-   int                 lump;
-   bool                flip;
-   patch_t*            patch;
+   spritedef_t   *sprdef;
+   spriteframe_t *sprframe;
+   int            lump;
+   bool           flip;
+   patch_t       *patch;
+   byte          *translate = NULL;
+   castinfo_t    *cast    = &castorder[castnum];
+   mobjinfo_t    *mi      =  mobjinfo[cast->type];
+   player_t      *cplayer = &players[consoleplayer];
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
    V_DrawPatch(0, 0, &vbscreen, 
                PatchLoader::CacheName(wGlobalDir, bgcastcall, PU_CACHE));
    
-   if(castorder[castnum].name)
-      F_CastPrint(castorder[castnum].name);
+   if(cast->name)
+      F_CastPrint(cast->name);
    
    // draw the current frame in the middle of the screen
    sprdef = sprites + caststate->sprite;
    
    // override for alternate monster sprite?
-   if((altsprite = mobjinfo[castorder[castnum].type]->altsprite) != -1)
-      sprdef = &sprites[altsprite];
+   if(mi->altsprite != -1)
+      sprdef = &sprites[mi->altsprite];
    
    // override for player skin?
-   if(castorder[castnum].type == players[consoleplayer].pclass->type)
-      sprdef = &sprites[players[consoleplayer].skin->sprite];
+   if(cast->type == cplayer->pclass->type)
+   {
+      int colormap = cplayer->colormap;
+      
+      sprdef    = &sprites[cplayer->skin->sprite];
+      translate = colormap ? translationtables[colormap - 1] : NULL;
+   }
    
    // haleyjd 08/15/02
    if(!(sprdef->spriteframes))
@@ -601,10 +610,8 @@ void F_CastDrawer(void)
    flip = !!sprframe->flip[0];
    
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   if(flip)
-      V_DrawPatchFlipped(160, 170, &vbscreen, patch);
-   else
-      V_DrawPatch(160, 170, &vbscreen, patch);
+   
+   V_DrawPatchTranslated(160, 170, &vbscreen, patch, translate, flip);      
 }
 
 //

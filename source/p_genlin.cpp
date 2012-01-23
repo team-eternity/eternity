@@ -1073,23 +1073,11 @@ static int GenDoorRetrigger(Thinker *th, int trig)
    if(!(door = thinker_cast<VerticalDoorThinker *>(th)))
       return 0;
 
-   if(genDoorThing && (door->type == genRaise || door->type == genBlazeRaise) &&
+   if(genDoorThing && 
+      (door->type == doorNormal || door->type == blazeRaise) &&
       trig == PushMany)
    {
-      if(door->direction == plat_down) // door is closing
-         door->direction = plat_up;
-      else
-      {
-         // monsters will not close doors
-         if(!genDoorThing->player)
-            return 0;
-         door->direction = plat_down;
-      }
-
-      // haleyjd: squash the sector's sound sequence
-      S_SquashSectorSequence(door->sector, SEQ_ORIGIN_SECTOR_C);
-      
-      return 1;
+      return door->reTriggerVerticalDoor(!!genDoorThing->player);
    }
 
    return 0;
@@ -1160,48 +1148,10 @@ manual_door:
       
       door->sector = sec;
       door->turbo  = false;
-      
-      // setup delay for door remaining open/closed
-      switch(dd->delay_type)
-      {
-      default:
-      case doorWaitOneSec:
-         door->topwait = 35;
-         break;
-      case doorWaitStd:
-         door->topwait = VDOORWAIT;
-         break;
-      case doorWaitStd2x:
-         door->topwait = 2*VDOORWAIT;
-         break;
-      case doorWaitStd7x:
-         door->topwait = 7*VDOORWAIT;
-         break;
-      case doorWaitParam: // haleyjd 05/04/04: parameterized wait
-         door->topwait = dd->delay_value;
-         break;
-      }
 
-      // setup speed of door motion
-      switch(dd->speed_type)
-      {
-      default:
-      case SpeedSlow:
-         door->speed = VDOORSPEED;
-         break;
-      case SpeedNormal:
-         door->speed = VDOORSPEED*2;
-         break;
-      case SpeedFast:
-         door->speed = VDOORSPEED*4;
-         break;
-      case SpeedTurbo:
-         door->speed = VDOORSPEED*8;
-         break;
-      case SpeedParam: // haleyjd 05/04/04: parameterized speed
-         door->speed = dd->speed_value;
-         break;
-      }
+      door->topwait = dd->delay_value;
+      door->speed   = dd->speed_value;
+
       door->line = line; // jff 1/31/98 remember line that triggered us
 
       // killough 10/98: implement gradual lighting
@@ -1223,9 +1173,9 @@ manual_door:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type = genBlazeRaise;
+            door->type = blazeRaise;
          else
-            door->type = genRaise;
+            door->type = doorNormal;
          if(door->topheight != sec->ceilingheight)
             P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
@@ -1234,19 +1184,17 @@ manual_door:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type = genBlazeOpen;
+            door->type = blazeOpen;
          else
-            door->type = genOpen;
+            door->type = doorOpen;
          if(door->topheight != sec->ceilingheight)
             P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
       case CdODoor:
          door->topheight = sec->ceilingheight;
          door->direction = plat_down;
-         if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type = genBlazeCdO;
-         else
-            door->type = genCdO;
+         door->turbo = (door->speed >= VDOORSPEED*4);
+         door->type = closeThenOpen;
          P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
          break;
       case CDoor:
@@ -1254,9 +1202,9 @@ manual_door:
          door->topheight -= 4*FRACUNIT;
          door->direction = plat_down;
          if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type = genBlazeClose;
+            door->type = blazeClose;
          else
-            door->type = genClose;
+            door->type = doorClose;
          P_DoorSequence(false, door->turbo, false, door->sector); // haleyjd
          break;
       
@@ -1267,19 +1215,15 @@ manual_door:
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->topcountdown = dd->topcountdown; // wait to start
-         if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type  = paramBlazeRaiseIn;
-         else
-            door->type  = paramRaiseIn;
+         door->turbo = (door->speed >= VDOORSPEED*4);
+         door->type  = doorRaiseIn;
          break;
       case pDCDoor:
          // parameterized "close in" type
          door->direction    = plat_stop;        // door starts in wait
          door->topcountdown = dd->topcountdown; // wait to start
-         if((door->turbo = (door->speed >= VDOORSPEED*4)))
-            door->type  = paramBlazeCloseIn;
-         else
-            door->type  = paramCloseIn;
+         door->turbo = (door->speed >= VDOORSPEED*4);
+         door->type  = paramCloseIn;
          break;
       default:
          break;
@@ -1304,12 +1248,18 @@ int EV_DoGenLockedDoor(line_t *line)
 {
    doordata_t dd = { 0 };
    unsigned value = (unsigned int)line->special - GenLockedBase;
+   int speedType;
 
    // parse the bit fields in the line's special type
    
-   dd.delay_type   = doorWaitStd;
+   dd.delay_value = VDOORWAIT;
+   
+   speedType = (value & LockedSpeed) >> LockedSpeedShift;
+
+   // setup speed of door motion
+   dd.speed_value  = VDOORSPEED * (1 << speedType);
+
    dd.kind         = (value & LockedKind ) >> LockedKindShift;
-   dd.speed_type   = (value & LockedSpeed) >> LockedSpeedShift;
    dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
    dd.usealtlighttag = false;
    
@@ -1330,12 +1280,36 @@ int EV_DoGenDoor(line_t* line)
 {
    doordata_t dd = { 0 };
    unsigned int value = (unsigned int)line->special - GenDoorBase;
+   int delayType, speedType;
 
    // parse the bit fields in the line's special type
    
-   dd.delay_type   = (value & DoorDelay  ) >> DoorDelayShift;
+   delayType = (value & DoorDelay) >> DoorDelayShift;
+   
+   // setup delay for door remaining open/closed
+   switch(delayType)
+   {
+   default:
+   case doorWaitOneSec:
+      dd.delay_value = 35;
+      break;
+   case doorWaitStd:
+      dd.delay_value = VDOORWAIT;
+      break;
+   case doorWaitStd2x:
+      dd.delay_value = 2*VDOORWAIT;
+      break;
+   case doorWaitStd7x:
+      dd.delay_value = 7*VDOORWAIT;
+      break;
+   }
+   
+   speedType = (value & DoorSpeed) >> DoorSpeedShift;
+
+   // setup speed of door motion
+   dd.speed_value  = VDOORSPEED * (1 << speedType);
+
    dd.kind         = (value & DoorKind   ) >> DoorKindShift;
-   dd.speed_type   = (value & DoorSpeed  ) >> DoorSpeedShift;
    dd.trigger_type = (value & TriggerType) >> TriggerTypeShift;
    dd.usealtlighttag = false;
 
@@ -1415,7 +1389,6 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
 
    // speed is always second parameter
    // value is eighths of a unit per tic
-   dd.speed_type  = SpeedParam;
    dd.speed_value = args[1] * FRACUNIT / 8;
   
    // all param doors support alternate light tagging
@@ -1433,23 +1406,19 @@ static bool pspec_Door(line_t *line, Mobj *thing, int *args,
    {
    case OdCDoor:
    case CdODoor:
-      dd.delay_type  = doorWaitParam;
       dd.delay_value = args[2];
       dd.altlighttag = args[3];
       break;
    case pDCDoor:
-      dd.delay_type   = doorWaitStd; // not used by this door type
       dd.topcountdown = args[2];
       dd.altlighttag  = args[3];
       break;
    case pDOdCDoor:
-      dd.delay_type   = doorWaitParam;
       dd.delay_value  = args[2];
       dd.topcountdown = args[3];
       dd.altlighttag  = args[4];
       break;
    default:
-      dd.delay_type  = doorWaitStd; // not used by this door type
       dd.altlighttag = args[2];
       break;
    }

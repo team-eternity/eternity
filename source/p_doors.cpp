@@ -119,18 +119,13 @@ void VerticalDoorThinker::Think()
          switch(type)
          {
          case doorNormal:
-         case genRaise:
          case paramCloseIn: // haleyjd 03/01/05
          case blazeRaise:
-         case genBlazeRaise:
-         case paramBlazeCloseIn: // haleyjd 03/01/05
             direction = plat_down; // time to go back down
             P_DoorSequence(false, turbo, false, sector); // haleyjd
             break;
 
-         case close30ThenOpen:
-         case genCdO:
-         case genBlazeCdO:
+         case closeThenOpen:
             direction = plat_up;  // time to go back up
             P_DoorSequence(true, turbo, false, sector); // haleyjd
             break;
@@ -147,14 +142,12 @@ void VerticalDoorThinker::Think()
       {
          switch(type)
          {
-         case raiseIn5Mins:
-         case paramRaiseIn:      // haleyjd 03/01/05: new param type
-         case paramBlazeRaiseIn: // haleyjd 03/01/05: new param type
+         case doorRaiseIn:
             direction = plat_up; // time to raise then
             if(turbo)
-               type = genBlazeRaise; // act like a blaze raise door
+               type = blazeRaise; // act like a blaze raise door
             else
-               type = doorNormal;    // door acts just like normal 1 DR door now
+               type = doorNormal; // door acts just like normal 1 DR door now
             P_DoorSequence(true, turbo, false, sector); // haleyjd
             break;
             
@@ -186,12 +179,7 @@ void VerticalDoorThinker::Think()
          case doorClose:
          case blazeRaise:
          case blazeClose:
-         case genRaise:
-         case genClose:
-         case genBlazeRaise:
-         case genBlazeClose:
          case paramCloseIn:      // haleyjd 03/01/05
-         case paramBlazeCloseIn: // haleyjd 03/01/05
             sector->ceilingdata = NULL;  //jff 2/22/98
             this->removeThinker();  // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
@@ -199,9 +187,7 @@ void VerticalDoorThinker::Think()
             break;
 
             // close then open doors start waiting
-         case close30ThenOpen:
-         case genCdO:
-         case genBlazeCdO:
+         case closeThenOpen:
             direction    = plat_stop;
             topcountdown = topwait; // jff 5/8/98 insert delay
             break;
@@ -220,9 +206,6 @@ void VerticalDoorThinker::Think()
          switch(type)
          {
          case paramCloseIn:      // haleyjd 03/01/05
-         case paramBlazeCloseIn:
-         case genClose:
-         case genBlazeClose:
          case blazeClose:
          case doorClose:      // Close types do not bounce, merely wait
             break;
@@ -252,19 +235,13 @@ void VerticalDoorThinker::Think()
          {
          case blazeRaise:       // regular open/close doors start waiting
          case doorNormal:
-         case genRaise:
-         case genBlazeRaise:
             direction    = plat_stop; // wait at top with delay
             topcountdown = topwait;
             break;
             
-         case close30ThenOpen:  // close and close/open doors are done
+         case closeThenOpen:  // close and close/open doors are done
          case blazeOpen:
          case doorOpen:
-         case genBlazeOpen:
-         case genOpen:
-         case genCdO:
-         case genBlazeCdO:
             S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
             sector->ceilingdata = NULL; //jff 2/22/98
             this->removeThinker(); // unlink and free
@@ -283,8 +260,6 @@ void VerticalDoorThinker::Think()
          {
          case doorOpen:      // Open types do not bounce, merely wait
          case blazeOpen:
-         case genOpen:
-         case genBlazeOpen:
             break;
             
          default:             // other types bounce off the obstruction
@@ -416,11 +391,11 @@ int EV_DoDoor(line_t *line, vldoor_e type)
    VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
-   while ((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineTag(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       // if the ceiling already moving, don't start the door action
-      if(P_SectorActive(ceiling_special,sec)) //jff 2/22/98
+      if(P_SectorActive(ceiling_special, sec)) //jff 2/22/98
          continue;
 
       // new door thinker
@@ -429,12 +404,12 @@ int EV_DoDoor(line_t *line, vldoor_e type)
       door->addThinker();
       sec->ceilingdata = door; //jff 2/22/98
 
-      door->sector   = sec;
-      door->type     = type;
-      door->topwait  = VDOORWAIT;
-      door->speed    = VDOORSPEED;
-      door->line     = line;  // jff 1/31/98 remember line that triggered us
-      door->lighttag = 0; // killough 10/98: no light effects with tagged doors
+      door->sector    = sec;
+      door->type      = type;
+      door->topwait   = VDOORWAIT;
+      door->speed     = VDOORSPEED;
+      door->line      = line;  // jff 1/31/98 remember line that triggered us
+      door->lighttag  = 0;     // killough 10/98: no light effects with tagged doors
 
       // setup door parameters according to type of door
       switch(type)
@@ -456,7 +431,7 @@ int EV_DoDoor(line_t *line, vldoor_e type)
          P_DoorSequence(false, false, false, door->sector); // haleyjd
          break;
 
-      case close30ThenOpen:
+      case closeThenOpen:
          door->topheight = sec->ceilingheight;
          door->direction = plat_down;
          door->topwait   = 30 * TICRATE;                    // haleyjd 01/16/12: set here
@@ -600,6 +575,14 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
       case  117:
          return secThinker->reTriggerVerticalDoor(!!thing->player);
       }
+      
+      // haleyjd 01/22/12: never start multiple thinkers on a door sector.
+      // This bug has been here since the beginning, and got especially bad
+      // in Strife. In Vanilla DOOM, door types 31-34 and 118 can fall through
+      // here and cause the sector to become jammed as multiple thinkers fight 
+      // for control.
+      if(full_demo_version >= make_full_version(340, 22))
+         return 0; // sector is busy.
    }
 
    // emit proper sound
@@ -638,28 +621,28 @@ int EV_VerticalDoor(line_t *line, Mobj *thing)
    case 26:
    case 27:
    case 28:
-      door->type = doorNormal;
+      door->type      = doorNormal;
       break;
 
    case 31:
    case 32:
    case 33:
    case 34:
-      door->type = doorOpen;
-      line->special = 0;
+      door->type      = doorOpen;
+      line->special   = 0;
       break;
 
    case 117: // blazing door raise
-      door->type = blazeRaise;
-      door->speed = VDOORSPEED*4;
-      door->turbo = true;
+      door->type      = blazeRaise;
+      door->speed     = VDOORSPEED*4;
+      door->turbo     = true;
       break;
 
    case 118: // blazing door open
-      door->type = blazeOpen;
-      line->special = 0;
-      door->speed = VDOORSPEED*4;
-      door->turbo = true;
+      door->type      = blazeOpen;
+      line->special   = 0;
+      door->speed     = VDOORSPEED*4;
+      door->turbo     = true;
       break;
 
    default:
@@ -715,7 +698,6 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 // Passed the sector of the door, whose type specified the door action
 // Returns nothing
 //
-
 void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
 {
    VerticalDoorThinker *door = new VerticalDoorThinker;
@@ -727,7 +709,7 @@ void P_SpawnDoorRaiseIn5Mins(sector_t *sec, int secnum)
    
    door->sector       = sec;
    door->direction    = plat_special; // haleyjd: changed from 2
-   door->type         = raiseIn5Mins;
+   door->type         = doorRaiseIn;
    door->speed        = VDOORSPEED;
    door->turbo        = false;
    door->topheight    = P_FindLowestCeilingSurrounding(sec);

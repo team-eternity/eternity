@@ -405,29 +405,19 @@ typedef enum
 typedef enum
 {
    doorNormal,
-   close30ThenOpen,
+   closeThenOpen,
    doorClose,
    doorOpen,
-   raiseIn5Mins,
+   doorRaiseIn,
    blazeRaise,
    blazeOpen,
    blazeClose,
 
-   //jff 02/05/98 add generalize door types
-   genRaise,
-   genBlazeRaise,
-   genOpen,
-   genBlazeOpen,
-   genClose,
-   genBlazeClose,
-   genCdO,
-   genBlazeCdO,
+   // jff 02/05/98 add generalize door types
+   // haleyjd 01/22/12: no distinction is necessary any longer
 
    // haleyjd 03/01/05: exclusively param door types
-   paramRaiseIn,
-   paramBlazeRaiseIn,
    paramCloseIn,
-   paramBlazeCloseIn,
 } vldoor_e;
 
 // haleyjd 05/04/04: door wait types
@@ -829,16 +819,14 @@ public:
 
    int lighttag; //killough 10/98: sector tag for gradual lighting effects
 
-   bool turbo;
+   bool turbo;     // haleyjd: behave as a turbo door, independent of speed
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
 typedef struct doordata_s
 {
    // generalized values
-   int delay_type;
    int kind;
-   int speed_type;
    int trigger_type;
 
    // parameterized values

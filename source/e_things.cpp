@@ -42,6 +42,7 @@
 #include "e_edf.h"
 #include "e_hash.h"
 #include "e_lib.h"
+#include "e_metastate.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_sprite.h"
@@ -823,41 +824,6 @@ static void E_ThingFrame(const char *data, const char *fieldname,
    }
    *target = index;
 }
-
-//
-// MetaState
-//
-// With DECORATE state support, it is necessary to allow storage of arbitrary
-// states in mobjinfo.
-//
-class MetaState : public MetaObject
-{
-protected:
-   state_t *state;      // the state
-
-public:
-   // Constructor
-   MetaState(const char *key, state_t *pState) 
-      : MetaObject("MetaState", key), state(pState)
-   {
-   }
-
-   // Copy Constructor
-   MetaState(const MetaState &other) : MetaObject(other)
-   {
-      this->state = other.state;
-   }
-   
-   // Accessors
-   state_t *getValue() const { return state; }
-   void setValue(state_t *s) { state = s;    }
-
-   // Clone - virtual copy constructor
-   virtual MetaObject *clone() const { return new MetaState(*this); }
-
-   // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const { return state->name; }
-};
 
 //
 // E_AddMetaState

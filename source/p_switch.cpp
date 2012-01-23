@@ -886,7 +886,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          case 175:
             // Close Door, Open in 30 secs
             // 175 S1  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line,close30ThenOpen))
+            if (EV_DoDoor(line, closeThenOpen))
                P_ChangeSwitchTexture(line,0,0);
             break;
 
@@ -1103,7 +1103,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          case 196:
             // Close Door, Open in 30 secs
             // 196 SR  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line,close30ThenOpen))
+            if (EV_DoDoor(line, closeThenOpen))
                P_ChangeSwitchTexture(line,1,0);
             break;
             

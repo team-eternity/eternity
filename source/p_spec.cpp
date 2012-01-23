@@ -1457,7 +1457,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 
    case 16:
       // Close Door 30
-      if(EV_DoDoor(line,close30ThenOpen) || P_ClearSwitchOnFail())
+      if(EV_DoDoor(line, closeThenOpen) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
@@ -1675,7 +1675,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
       
    case 76:
       // Close Door 30
-      EV_DoDoor(line,close30ThenOpen);
+      EV_DoDoor(line, closeThenOpen);
       break;
       
    case 77:
