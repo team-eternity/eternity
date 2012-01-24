@@ -112,7 +112,7 @@ CONSOLE_COMMAND(creator, 0)
 // colors. It needs serious refinement.
 //
 
-VARIABLE_INT(default_colour, NULL, 0, TRANSLATIONCOLOURS-1, colournames);
+VARIABLE_INT(default_colour, NULL, 0, TRANSLATIONCOLOURS, colournames);
 CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 {
    int playernum, colour;
@@ -121,13 +121,20 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
       return;
    
    playernum = Console.cmdsrc;
-   colour = Console.argv[0]->toInt() % TRANSLATIONCOLOURS;
+
+   colour = Console.argv[0]->toInt();
+
+   if(colour < 0)
+      colour = 0;
+   if(colour > TRANSLATIONCOLOURS)
+      colour = TRANSLATIONCOLOURS;
    
    players[playernum].colormap = colour;
    if(gamestate == GS_LEVEL)
       players[playernum].mo->colour = colour;
    
-   if(playernum == consoleplayer) default_colour = colour; // typed
+   if(playernum == consoleplayer) 
+      default_colour = colour; // typed
 }
 
 // deathmatch
