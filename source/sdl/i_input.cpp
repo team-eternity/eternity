@@ -336,7 +336,8 @@ void I_StartFrame(void)
 
 extern void MN_QuitDoom(void);
 extern int mouseAccel_type;
-
+extern int mouseAccel_threshold;
+extern double mouseAccel_value;
 
 //
 // Mouse acceleration
@@ -507,20 +508,32 @@ static void I_GetEvent(void)
             continue;
 
          // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most 
-         // people  like it the most.
+         // people like it the most.
          if(mouseAccel_type == 0)
          {
-            mouseevent.data3 -= event.motion.yrel;
             mouseevent.data2 += event.motion.xrel;
+            mouseevent.data3 -= event.motion.yrel;
          }
          else if(mouseAccel_type == 1)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
-            mouseevent.data2 += (int)(event.motion.xrel + 
-                                      (float)(event.motion.xrel * 0.25f));
-            mouseevent.data3 -= (int)(event.motion.yrel + 
-                                      (float)(event.motion.yrel * 0.25f));
+            mouseevent.data2 += (event.motion.xrel + 
+                                 (float)(event.motion.xrel * 0.25f));
+            mouseevent.data3 -= (event.motion.yrel + 
+                                 (float)(event.motion.yrel * 0.25f));
+         }
+         else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
+         {
+             if(event.motion.xrel > mouseAccel_threshold)
+                 mouseevent.data2 += (event.motion.xrel * mouseAccel_value);
+             else
+                 mouseevent.data2 += event.motion.xrel;
+
+             if((-event.motion.yrel) > mouseAccel_threshold)
+                 mouseevent.data3 -= (event.motion.yrel * mouseAccel_value);
+             else
+                 mouseevent.data3 -= event.motion.yrel;
          }
 
          sendmouseevent = 1;

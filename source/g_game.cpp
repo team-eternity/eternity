@@ -139,11 +139,14 @@ int             smooth_turning = 0;   // sf
 int             novert;               // haleyjd
 
 // sf: moved sensitivity here
-int             mouseSensitivity_horiz; // has default   //  killough
-int             mouseSensitivity_vert;  // has default
+double          mouseSensitivity_horiz;   // has default   //  killough
+double          mouseSensitivity_vert;    // has default
+bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 int             invert_mouse = true;
 int             animscreenshot = 0;       // animated screenshots
 int             mouseAccel_type = 0;
+int             mouseAccel_threshold = 10; // [CG] 01/20/12
+double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 
 //
 // controls (have defaults)
@@ -176,18 +179,18 @@ bool mousearray[4];
 bool *mousebuttons = &mousearray[1];    // allow [-1]
 
 // mouse values are used once
-int  mousex;
-int  mousey;
-int  dclicktime;
-bool dclickstate;
-int  dclicks;
-int  dclicktime2;
-bool dclickstate2;
-int  dclicks2;
+double  mousex;
+double  mousey;
+int     dclicktime;
+bool    dclickstate;
+int     dclicks;
+int     dclicktime2;
+bool    dclickstate2;
+int     dclicks2;
 
 // joystick values are repeated
-int joyxmove;
-int joyymove;
+double joyxmove;
+double joyymove;
 
 int  savegameslot;
 char savedescription[32];
@@ -232,7 +235,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int mlook = 0;
    static int prevmlook = 0;
    ticcmd_t *base;
-   int tmousex, tmousey;     // local mousex, mousey
+   double tmousex, tmousey;     // local mousex, mousey
    playerclass_t *pc = players[consoleplayer].pclass;
 
    base = I_BaseTiccmd();    // empty, or external driver
@@ -479,13 +482,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // this is most important in smoothing movement
    if(smooth_turning)
    {
-      static int oldmousex=0, mousex2;
-      static int oldmousey=0, mousey2;
+      static double oldmousex=0.0, mousex2;
+      static double oldmousey=0.0, mousey2;
 
       mousex2 = tmousex; mousey2 = tmousey;
-      tmousex = (tmousex + oldmousex)/2;        // average
+      tmousex = (tmousex + oldmousex) / 2.0;        // average
       oldmousex = mousex2;
-      tmousey = (tmousey + oldmousey)/2;        // average
+      tmousey = (tmousey + oldmousey) / 2.0;        // average
       oldmousey = mousey2;
    }
 
@@ -494,7 +497,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(mlook)
    {
       // YSHEAR_FIXME: provide separate mlook speed setting?
-      int lookval = tmousey * 16 / ticdup;
+      int lookval = (int)(tmousey * 16.0 / ((double)ticdup));
       if(invert_mouse)
          look -= lookval;
       else
@@ -508,7 +511,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       // haleyjd 10/24/08: novert support
       if(!novert)
-         forward += tmousey;
+         forward += (int)tmousey;
    }
 
    prevmlook = mlook;
@@ -532,9 +535,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    if(strafe)
-      side += tmousex*2;
+      side += (int)(tmousex * 2.0);
    else
-      cmd->angleturn -= tmousex*0x8;
+      cmd->angleturn -= (int)(tmousex * 8.0);
 
    if(forward > MAXPLMOVE)
       forward = MAXPLMOVE;
@@ -564,7 +567,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot << BTS_SAVESHIFT);
    }
 
-   mousex = mousey = 0;
+   mousex = mousey = 0.0;
 }
 
 //
@@ -653,7 +656,7 @@ void G_DoLoadLevel(void)
    // clear cmd building stuff
    memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
-   mousex = mousey = 0;
+   mousex = mousey = 0.0;
    sendpause = sendsave = false;
    paused = 0;
    memset(mousebuttons, 0, sizeof(mousebuttons));
@@ -812,8 +815,18 @@ bool G_Responder(event_t* ev)
       mousebuttons[2] = !!(ev->data1 & 4);
 
       // SoM: this mimics the doom2 behavior better. 
-      mousex += (ev->data2 * (mouseSensitivity_horiz + 5) / 10);
-      mousey += (ev->data3 * (mouseSensitivity_vert + 5) / 10);
+      if(mouseSensitivity_vanilla)
+      {
+          mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
+          mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
+      }
+      else
+      {
+          // [CG] 01/20/12: raw sensitivity
+          mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
+          mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
+      }
+
       return true;    // eat events
       
    case ev_joystick:
