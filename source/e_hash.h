@@ -57,6 +57,7 @@ public:
    
    // Type of key's basic data member
    typedef typename key_type::basic_type basic_key_type; 
+   typedef typename key_type::param_type param_key_type;
 
 protected:
    link_type    **chains;      // hash chains
@@ -181,7 +182,7 @@ public:
    // Takes an argument of the key object type's basic_type typedef. 
    // ie., an int, const char *, etc.
    //
-   item_type *objectForKey(basic_key_type key) const
+   item_type *objectForKey(param_key_type key) const
    {
       if(isInit)
       {
@@ -204,7 +205,7 @@ public:
    // if that hash chain is empty. The object returned does not necessarily 
    // match the given key.
    //
-   item_type *chainForKey(basic_key_type key) const
+   item_type *chainForKey(param_key_type key) const
    {
       if(isInit)
       {
@@ -252,7 +253,7 @@ public:
    // same key. If passed NULL in object, it will start a new search.
    // Returns NULL when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, basic_key_type key)
+   item_type *keyIterator(item_type *object, param_key_type key)
    {
       item_type *ret;
 

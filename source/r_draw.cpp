@@ -1005,37 +1005,6 @@ columndrawer_t r_normal_drawer =
 // Could be read from a lump instead.
 //
 
-/*
-typedef struct translat_s
-{
-  int start;      // start of the sequence of colours
-  int number;     // number of colours
-} translat_t;
-
-translat_t translations[TRANSLATIONCOLOURS] =
-{
-    {96,  16},     // indigo
-    {64,  16},     // brown
-    {32,  16},     // red
-  
-  /////////////////////////
-  // New colours
-  
-    {176, 16},     // tomato
-    {128, 16},     // dirt
-    {200, 8},      // blue
-    {160, 8},      // gold
-    {152, 8},      // felt?
-    {0,   1},      // bleeacckk!!
-    {250, 5},      // purple
-  //  {168, 8}, // bright pink, kinda
-    {216, 8},      // vomit yellow
-    {16,  16},     // pink
-    {56,  8},      // cream
-    {88,  8},      // white
-};
-*/
-
 static const char *translations[TRANSLATIONCOLOURS] =
 {
    // Standard Doom Colors:
@@ -1044,10 +1013,10 @@ static const char *translations[TRANSLATIONCOLOURS] =
    /*Red   */ "112:127=32:47", 
 
    // SMMU-compatible colors, re-designed by ptoing:
-   /*Tomato*/ "112=169,113=16,114:121=171:185,122:124=187:189,125:126=45:47,127=1",
+   /*Tomato*/ "112:113=171,114=172,115:122=173:187,123:124=188:189,125:126=45:47,127=1",
    /*Dirt  */ "112:117=128:133,118:120=135:137,121:123=139:143,124:125=237:239,126:127=1:2",
-   /*Blue  */ "112:124=195:207,125=242,126:127=244:245",
-   /*Gold  */ "112=4,113:119=160:166,120=73,121:124=236:239,125:126=1:2,127=8",
+   /*Blue  */ "112:121=197:206,122:127=240:245",
+   /*Gold  */ "112:113=160,114:119=161:166,120:123=236:239,124:125=1:2,126:127=7:8",
    /*Sea   */ "112=91,113:114=94:95,115:122=152:159,123:126=9:12,127=8",
    /*Black */ "112=101,113:121=103:111,122:125=5:8,126:127=0",
    /*Purple*/ "112:113=4,114:115=170,116:117=250,118:119=251,120:121=252,122:123=253,124:125=254,126:127=46",

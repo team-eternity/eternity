@@ -34,6 +34,7 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_dehtbl.h"     // for D_HashTableKey
 #include "i_system.h"
 #include "m_qstr.h"
 #include "m_misc.h"       // for M_Strupr/M_Strlwr
@@ -623,6 +624,35 @@ bool qstring::operator != (const char *other) const
 bool qstring::operator != (const qstring &other) const
 {
    return strcmp(buffer ? buffer : "", other.buffer) != 0;
+}
+
+//=============================================================================
+//
+// Hash Code Functions
+//
+// These are just convenience wrappers.
+//
+
+//
+// qstring::hashCode
+//
+// Calls the standard D_HashTableKey that is used for the vast majority of
+// string hash code computations in Eternity.
+//
+unsigned int qstring::hashCode()
+{
+   return D_HashTableKey(checkBuffer());
+}
+
+//
+// qstring::hashCodeCase
+//
+// Returns a hash code computed with the case of characters being treated as
+// relevant to the computation.
+//
+unsigned int qstring::hashCodeCase()
+{
+   return D_HashTableKeyCase(checkBuffer());
 }
 
 //=============================================================================

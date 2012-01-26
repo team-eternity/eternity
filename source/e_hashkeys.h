@@ -43,10 +43,14 @@ unsigned int D_HashTableKeyCase(const char *str);
 // must adhere:
 // * They should expose the type of their basic literal key field in a 
 //   public typedef called basic_type.
-// * They should support an operator = accepting the same type for assignment
-//   purposes.
-// * They should define a hashCode method returning an unsigned int.
-// * They should be comparable via defining operators == and !=.
+// * They should expose the type of a secondary type that is comparable with
+//   the basic key type for use as the function parameter to EHashTable's
+//   objectForKey and chainForKey methods. This can be the same as the basic
+//   type, or different.
+// * They should define a HashCode method returning an unsigned int.
+// * They should define a Compare method taking two basic_type parameters
+//   and returning boolean value true if there is a match, and false
+//   otherwise.
 //
 // Specializations are provided here for integers, C strings, and case-
 // insensitive C strings.
@@ -59,6 +63,7 @@ class EIntHashKey
 {
 public:
    typedef int basic_type;
+   typedef int param_type;
 
    static unsigned int HashCode(int input)
    {
@@ -78,6 +83,7 @@ class EStringHashKey
 {
 public: 
    typedef const char *basic_type;
+   typedef const char *param_type;
 
    static unsigned int HashCode(const char *input)
    {
@@ -97,6 +103,7 @@ class ENCStringHashKey
 {
 public:
    typedef const char *basic_type;
+   typedef const char *param_type;
 
    static unsigned int HashCode(const char *input)
    {
