@@ -317,11 +317,16 @@ extern  bool precache;
 //  to force a wipe on the next draw
 extern  gamestate_t     wipegamestate;
 
-extern  int             mouseSensitivity_horiz; // killough
-extern  int             mouseSensitivity_vert;
+extern  double          mouseSensitivity_horiz; // killough
+extern  double          mouseSensitivity_vert;
+extern  bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 
 // SoM: 
 extern  int             mouseAccel_type;
+
+// [CG] 01/20/12
+extern  int             mouseAccel_threshold;
+extern  double          mouseAccel_value;
 
 // debug flag to cancel adaptiveness
 extern  bool            singletics;
