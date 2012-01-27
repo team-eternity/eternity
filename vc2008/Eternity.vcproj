@@ -2020,6 +2020,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\source\m_qstrkeys.h"
+						>
+					</File>
+					<File
 						RelativePath="..\Source\m_queue.h"
 						>
 					</File>

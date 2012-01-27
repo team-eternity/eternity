@@ -639,7 +639,7 @@ bool qstring::operator != (const qstring &other) const
 // Calls the standard D_HashTableKey that is used for the vast majority of
 // string hash code computations in Eternity.
 //
-unsigned int qstring::hashCode()
+unsigned int qstring::hashCode() const
 {
    return D_HashTableKey(checkBuffer());
 }
@@ -650,7 +650,7 @@ unsigned int qstring::hashCode()
 // Returns a hash code computed with the case of characters being treated as
 // relevant to the computation.
 //
-unsigned int qstring::hashCodeCase()
+unsigned int qstring::hashCodeCase() const
 {
    return D_HashTableKeyCase(checkBuffer());
 }

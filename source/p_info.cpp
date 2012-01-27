@@ -66,6 +66,7 @@
 #include "m_collection.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 #include "m_misc.h"
 #include "p_info.h"
 #include "p_mobj.h"
@@ -1620,10 +1621,10 @@ class MusInfoMusic : public ZoneObject
 public:
    DLListItem<MusInfoMusic>    links;
    PODCollection<musinfomap_t> maps;
-   char *mapname;
+   qstring mapname;
 };
 
-static EHashTable<MusInfoMusic, ENCStringHashKey, 
+static EHashTable<MusInfoMusic, ENCQStrHashKey, 
                   &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
 
 //
@@ -1664,7 +1665,7 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
    {
       // Create a new MUSINFO entry.
       MusInfoMusic *newMusInfo = new MusInfoMusic();
-      newMusInfo->mapname = estrdup(mapname);
+      newMusInfo->mapname = mapname;
 
       // Create a new subentry.
       musinfomap_t newmap;

@@ -126,8 +126,8 @@ public:
    bool compare(const qstring &other) const;
 
    // Hashing
-   unsigned int hashCode();      // case-insensitive
-   unsigned int hashCodeCase();  // case-considering
+   unsigned int hashCode() const;      // case-insensitive
+   unsigned int hashCodeCase() const;  // case-considering
 
    // Copying and Swapping
    qstring &copy(const char *str);
