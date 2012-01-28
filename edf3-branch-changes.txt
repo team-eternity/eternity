@@ -4,14 +4,270 @@ add fully dynamic EDF, inventory and weapons support, and other miscellaneous
 features. edf3-branch spans SVN revisions from 1754 to ????.
 ===============================================================================
 -------------------------------------------------------------------------------
+01/27/12
+
+Added adapter classes EQStrHashKey and ENCQStrHashKey, for using qstring as
+the storage type for EHashTable keys. This should be very useful in the future
+for avoiding reallocating C string logic and the need to use E_ReplaceString
+everywhere.
+
+To test it out, I converted the MUSINFO hash table to use qstrings as keys.
+Works flawlessly.
+
+-------------------------------------------------------------------------------
+01/25/12
+
+E*HashKey classes all now define a param_type typedef in addition to their
+basic_type typedef. This allows the type of parameter passed into functions
+such as EHashTable<>::objectForKey to differ from the type used as internal
+storage. This allows use of non-POD types for internal storage without 
+resulting in a requirement for EHashTable to receive them passed by value,
+with its ominous invocation of copy constructors.
+
+qstring::hashCode and qstring::hashCodeCase have been added as wrappers around
+the global D_HashTableKey functions.
+
+The dead code for the old SMMU translations list has been removed. ptoing also
+submitted updated versions of his tomato, blue, and gold player translations
+for DOOM, and those have been integrated now. I think they are much improved,
+especially blue which I myself use.
+
+Did I ever mention that blue is my favorite color? :P
+
+Numerous modifications by Ladna to trunk have been merged in. Ladna will be
+working on trunk a lot more in the future, or at least that's his plan. I
+hope to see many of the things he has planned come to full fruition.
+
+-------------------------------------------------------------------------------
+01/23/12
+
+I was again without an Internet connection for two days, so I have a huge
+amount of work to report on in this revision:
+
+MetaState has been exported from the middle of e_things.cpp into its own
+e_metastate.h header. This allows me to reference it elsewhere.
+
+The DOOM II finale will now draw the player using the consoleplayer's 
+translation setting. I think it used to do this a long time ago in SMMU, and
+I removed and/or broke it somehow. It *has* always displayed the player's skin
+properly, at least.
+
+The menu responder now eats all events while the menus or a menu widget are
+up, as doing otherwise leads to some very poor behaviors, *especially* during
+netgames!
+
+Unfortunately this has made it impossible to take screenshots of the menus.
+I need to think of a fix to this problem ASAP.
+
+Additional refactoring to VerticalDoorThinker has enabled me to entirely
+eliminate numerous redundant door type enumeration values introduced by BOOM
+team during their implementation of generalized line specials. Blazing doors
+are mostly now treated the same as regular doors as well, with the internal
+"turbo" field of VerticalDoorThinker keeping track of whether a door should
+act like it is turbo or not.
+
+Added a V_DrawPatchTranslatedLit function so I could...
+
+Add support to the skin viewer for viewing the player's sprite at various 
+light levels. Just press the up or down key and the light level will raise or
+lower respectively. Fullbright frames are properly respected, even.
+
+In addition, I also added support to the skin viewer for any metatable death
+or extreme death states in the player class. Pressing "m" will cycle through
+these in metatable order (which is arbitrary due to the list of them being
+drawn from a hash table). So for example you can now see Corvus's fiery death
+sequence in the menu skin viewer.
+
+As a part of the previous change, I modified the handling of sounds inside the
+skin viewer's state transition engine so that they are emulated based on the
+action in the state_t - this means that A_PlaySoundEx, A_Scream, A_XScream,
+and A_PlayerScream are all accurately emulated and the sounds played to
+represent them (not always strictly in the same way the pointer selects sounds)
+will occur on the same frame they would when killing the player during 
+gameplay.
+
+Internal copyright dates have been bumped to 2012, and I also remembered to
+update the window caption string to be consistent with the current dev version
+number.
+
+Another translation bug fix was pointed out by ptoing - since my change the
+other day to fix SMMU's glitch of thinking it had one too many translations,
+the very last translation that EE *does* have became unselectable via the 
+console or menus due to additionally incorrect treatment in the console 
+variable's handler function (it "forgets" that 0 means no translation, and 
+that the total range of values is thus one greater than the number of
+translation table entries).
+
+I finally discovered the cause of monsters sticking to locked door linedef
+types 32-34, a bug stemming all the way back to vanilla Doom: the game
+deliberately tells monsters in P_UseSpecialLine that they are capable of
+opening locked doors.
+
+The subsequent call to EV_VerticalDoor denies the attempt if the opener is not
+a player. However, P_UseSpecialLine is braindead and does not return the 
+result of any of the EV_ functions it calls (EV_VerticalDoor notably DOES
+return 0 if rejecting a monster for locked doors!), so the monster believes
+it has opened the door successfully.
+
+This leads to the exact same kind of stickiness that door tracks previously had
+in vanilla DOOM, which has long been fixed with a comp var. Upon discussing
+this in #doom-tech, it turns out RjY also discovered this a few years ago and
+had planned to implement a fix to it in "prboom 7" complevel. Unfortnately it
+never came to fruition.
+
+It is special cases like these that are beginning to make me feel like a 
+completely unified linedef specials engine will never be possible for Eternity.
+The number of compatibility quirks requiring precise vanilla behavior in order
+to avoid desyncing demos or breaking esoteric maps is enormous, and it is far
+too simple to break some of these things by making seemingly innocuous changes
+to the logic.
+
+Instead I am starting to lean in the same direction that SoM has taken with
+his current idea on portal clipping. It may be best to separate out all linedef
+special activation logic from the underlying thinkers, and then implement an
+inheritable interface - instantiated once per map type/gamemode combination -
+for linedef triggering.
+
+This would keep a hard and fast separation between DOOM and Hexen logic, the
+exact opposite of what ZDoom did. ZDoom didn't worry about maintaining 
+compatibility though, so I have entirely different design criteria to consider.
+
+-------------------------------------------------------------------------------
+01/21/12
+
+ptoing has returned and is working on various things - the first thing that has
+drawn his interest are player translations, and so I've started working on 
+those internally again.
+
+R_InitTranslationTables has been rewritten so that it uses an array of ZDoom
+translation language strings instead of fraggle's numeric range table. This
+allowed me to catch a bug in my implementation of the parser, though - when
+reaching end-of-string after a single-color destination range, the parser would
+back up one character - this works in every case *except* when the parser is
+at EOS and in that case it causes a parse failure by backing up more than the
+tokenizer has advanced.
+
+After fixing that problem, ptoing's new translations are functional. He has
+done his best to create ones that are compatible with the existing SMMU color
+set but look much better. A couple of them still require some tweaking though,
+as some of the colors fade to gray too fast at lower levels and stick out
+badly.
+
+Eventually translations will move out into EDF and become player class
+properties, and this will most likely occur on this development branch.
+
+I noticed a SMMU glitch - the function thought there was one more translation
+in the array than fraggle had defined - this was due to fraggle having removed
+one of the translations by commenting it out (apparently it was too ugly to
+grant countenance). This never had an ill effect before because the array 
+was defined at size TRANSLATIONCOLOURS, and the final entry was zero-inited
+and therefore useless.
+
+Added an additional ecalloctag macro and replaced more Z_Calloc calls.
+
+-------------------------------------------------------------------------------
+01/19/12
+
+I have finally gotten around to removing the old array-style sprite
+declarations from sprites.edf for Heretic gamemode, as they are no longer
+required - those sprites are created while parsing the states now.
+
+This does require EDF spritevar and pickup effects processing to occur after
+thingtypes and states are fully processed however, the former in particular
+since DECORATE states may also create new sprite values.
+
+An inventory classing mechanism has been re-implemented (this was also in the
+old aborted inventory attempt, but worked differently there). I started out by
+adding one of the simplest inventory types, Health, which give the player
+health immediately upon being picked up.
+
+However I am running into a lot of roadblocks, much more than I expected, so it
+is going to be slow going from here on out with the principal project for this
+branch.
+
+Added an E_MetaStringFromCfgString utility (possibly the longest function name
+in Eternity currently) that turns a cfg_opt_t CFG_STR property into a 
+MetaTable property under the same key. 
+
+It seems, upon greater thought, that there might be a use for an entire 
+framework of functions that do the same thing for various types - int, float,
+etc.
+
+For that matter libConfuse itself *could* be rewritten ground-up to be based
+on MetaTables, but I am divided on whether that would be a useful diversion at
+the present time.
+
+-------------------------------------------------------------------------------
+01/18/12
+
+I tried implementing some suggestions by Ryan C. Gordon on the SDL mailing list
+that might would address the way that Eternity starts out in SDL GL2D mode
+showing a screen that is variously bright white or full of weird "dead" screen
+contents depending on how it is started up, but unfortunately they had no 
+effect.
+
+As a result I have removed the fillPBO method of SDLGL2DVideoDriver, as it is
+not having the effect that it seemed to have at first. As part of my various
+other experiments, I added a GL_OrthQuadFlat function to gl_primitives. It is
+not currently used for anything.
+
+-------------------------------------------------------------------------------
+01/17/12
+
+All Thinker descendants have been adjusted to use their new Super typedef to
+call up to their parent serialize method. The advantage here is obvious: if 
+the parent type changes, the code will continue to work without intervention.
+
+I have simplified the new e* allocation macros to eliminate their use of a
+template function as an intermediary, as it's simply totally unnecessary. The
+type parameter can be placed into the angle brackets of static_cast directly by
+the macro.
+
+I also added estructalloctag, so that I can use estructalloc in situations
+where the allocation tag isn't PU_STATIC.
+
+estructalloc is now used pretty much everywhere, in preference to direct
+Z_Calloc calls to allocate structs or arrays of structs.
+
+Sector sound sequence functions' origin type parameter has always bugged me in
+that I wrote them to take that parameter as an arbitrary boolean that is
+false to mean floor and true to mean ceiling. I have rewritten them to take
+the sequence origin type enumeration values that are defined in the s_sndseq
+header file instead.
+
+-------------------------------------------------------------------------------
 01/16/12
+
+EEMusicChanger was using the wrong doomednum courtesy of me misreading the 
+ZDoom wiki page about it.
+
+However, I am going to put sector actions and everything they entail back on
+hold until udmf-branch (the next scheduled major project after this one),
+because they run into problems with Eternity's current gigantic mess of a 
+linedef special system.
+
+MobjCollection has been altered so that the mobjType is stored as a name
+instead of a type number. This ensures that it will be looked up every time
+the collectThings method is invoked instead of only once at startup, meaning
+that the thingtype they depend on can change via runtime EDF parsing once
+EDF collections are functional.
+
+MapInfo level type enumeration values were added for Strife and Hexen (just a
+bit of early prep work ;)
+
+In advance of udmf-branch I am also looking at various aspects of the linedef
+special system and seeing if they cannot be cleaned up at least a little bit
+right now. I started, as always, with doors, and managed to merge several
+special cases in VerticalDoorThinker::Think whereby multiple types of doors
+always act the same way.
+
+-------------------------------------------------------------------------------
+01/15/12
 
 DECORATE states did not set the state_t::oldaction member which is critical for
 the functioning of DeHackEd. This caused a significant game-breaking regression
 for HACX which was stumbled upon by DavidPH while testing the network code.
 
--------------------------------------------------------------------------------
-01/15/12
 
 When calculating the network packet checksum, do not write it back into the
 netbuffer structure until it is verified to be valid. This might improve
