@@ -197,7 +197,7 @@ void CL_Init(char *url)
    sprintf(cs_client_password_file, "%s/%s", basepath, PASSWORD_FILENAME);
    M_NormalizeSlashes(cs_client_password_file);
 
-   if(!M_PathExists((const char *)cs_client_password_file))
+   if(M_PathExists((const char *)cs_client_password_file))
    {
       byte *buffer;
       std::string json_string;

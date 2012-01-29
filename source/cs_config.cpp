@@ -899,7 +899,7 @@ void CS_HandleServerSection(Json::Value &server)
       {
          if(!M_DirnameIsFolder(sv_access_list_filename))
          {
-            doom_printf(
+            printf(
                "Could not find access list %s, using default %s.\n",
                sv_access_list_filename,
                sv_default_access_list_filename
@@ -909,14 +909,14 @@ void CS_HandleServerSection(Json::Value &server)
          }
          else
          {
-            doom_printf(
+            printf(
                "Creating new access list at %s.\n", sv_access_list_filename
             );
          }
       }
       else if(!M_IsFile(sv_access_list_filename))
       {
-         doom_printf(
+         printf(
             "Access list %s is not a file, using default %s.\n",
             sv_access_list_filename,
             sv_default_access_list_filename
