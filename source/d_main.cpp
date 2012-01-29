@@ -852,8 +852,8 @@ static int D_CheckBasePath(const char *pPath)
    str = pPath;
    
    // Rub out any ending slashes; stat does not like them.
-   str.RStrip('\\');
-   str.RStrip('/');
+   str.rstrip('\\');
+   str.rstrip('/');
 
    path = str.constPtr();
 
@@ -1597,7 +1597,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
       qstr += '/';
       qstr += filename;
       qstr.normalizeSlashes();
-      qstr.RStrip('/');
+      qstr.rstrip('/');
 
       // See if the file exists as-is
       if(!stat(qstr.constPtr(), &sbuf)) // check for existence

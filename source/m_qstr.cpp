@@ -407,11 +407,11 @@ qstring &qstring::operator = (const qstring &other)
 // qstring::operator =
 //
 // Assignment from a const char *
+//
 qstring &qstring::operator = (const char *other)
 {
    return copy(other);
 }
-
 
 //
 // qstring::copyInto
@@ -442,27 +442,29 @@ qstring &qstring::copyInto(qstring &dest) const
 //
 void qstring::swapWith(qstring &str2)
 {
-   qstring temp;
-   
-   temp.buffer = this->buffer; // make a shallow copy
-   temp.size   = this->size;
-   temp.index  = this->index;
+   char   *tmpbuffer;
+   size_t  tmpsize;
+   size_t  tmpindex;
+
+   tmpbuffer = this->buffer; // make a shallow copy
+   tmpsize   = this->size;
+   tmpindex  = this->index;
 
    this->buffer = str2.buffer;
    this->size   = str2.size;
    this->index  = str2.index;
 
-   str2.buffer = temp.buffer;
-   str2.size   = temp.size;
-   str2.index  = temp.index;
+   str2.buffer = tmpbuffer;
+   str2.size   = tmpsize;
+   str2.index  = tmpindex;
 }
 
 //
-// qstring::LStrip
+// qstring::lstrip
 //
 // Removes occurrences of a specified character at the beginning of a qstring.
 //
-qstring &qstring::LStrip(char c)
+qstring &qstring::lstrip(char c)
 {
    size_t i   = 0;
    size_t len = index;
@@ -488,11 +490,11 @@ qstring &qstring::LStrip(char c)
 }
 
 //
-// qstring::RStrip
+// qstring::rstrip
 //
 // Removes occurrences of a specified character at the end of a qstring.
 //
-qstring &qstring::RStrip(char c)
+qstring &qstring::rstrip(char c)
 {
    checkBuffer();
 

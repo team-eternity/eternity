@@ -583,8 +583,8 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
 
    line->replace("\t\r\n", ' '); // erase any control characters
    line->toLower();              // make everything lowercase
-   line->LStrip(' ');            // strip spaces at beginning
-   line->RStrip(' ');            // strip spaces at end
+   line->lstrip(' ');            // strip spaces at beginning
+   line->rstrip(' ');            // strip spaces at end
    
    if(!(len = line->length()))   // ignore totally empty lines
       return 0;

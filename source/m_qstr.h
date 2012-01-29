@@ -166,8 +166,8 @@ public:
    const char *findSubStrNoCase(const char *substr) const;
 
    // Stripping and Truncation
-   qstring &LStrip(char c);
-   qstring &RStrip(char c);
+   qstring &lstrip(char c);
+   qstring &rstrip(char c);
    qstring &truncate(size_t pos);
 
    // Special Formatting 
