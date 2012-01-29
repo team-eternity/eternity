@@ -801,39 +801,37 @@ static unsigned int E_EDThingForRecordNum(int recnum)
 //
 static int E_ParseTypeField(const char *value)
 {
-   int i;
+   long num;
+   int  i;
    char prefix[16];
    const char *colonloc, *strval;
+   char *numpos = NULL;
+
+   num = strtol(value, &numpos, 0);
 
    memset(prefix, 0, 16);
-
    colonloc = E_ExtractPrefix(value, prefix, 16);
 
-   if(colonloc)
+   // If has a colon, or is otherwise not just a number...
+   if(colonloc || (numpos && *numpos != '\0'))
    {
-      strval = colonloc + 1;
+      if(colonloc) // allow a thing: prefix for compatibility
+         strval = colonloc + 1;
+      else
+         strval = value; // use input directly
 
-      if(!strcasecmp(prefix, "thing"))
-      {
-         // translate from EDF mnemonic to doomednum
-         int type = E_SafeThingName(strval);
-         int num = mobjinfo[type]->doomednum;
-         
-         // don't return -1, use no-op zero in that case
-         // (this'll work even if somebody messed with 'Unknown')
-         return (num >= 0 ? num : 0);
-      }
- 
-      // invalid prefix
-      I_Error("E_ParseTypeField: invalid prefix %s\n", prefix);
-      return 0;
+      // translate from EDF mnemonic to doomednum
+      i = mobjinfo[E_SafeThingName(strval)]->doomednum;
    }
    else
    {
       // integer value
-      i = strtol(value, NULL, 0);
-      return (i >= 0 ? i : 0);
+      i = (int)num;
    }
+
+   // don't return -1, use no-op zero in that case
+   // (this'll work even if somebody messed with 'Unknown')
+   return (i >= 0 ? i : 0);
 }
 
 //
