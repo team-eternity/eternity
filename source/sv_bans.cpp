@@ -31,6 +31,7 @@
 
 #include "z_zone.h"
 #include "cs_main.h"
+#include "m_file.h"
 #include "sv_bans.h"
 #include "sv_main.h"
 
@@ -46,7 +47,9 @@ AccessList *sv_access_list = NULL;
 AccessList::AccessList(void)
 {
    error = NULL;
-   CS_ReadJSON(json, sv_access_list_filename);
+
+   if(M_PathExists(sv_access_list_filename))
+      CS_ReadJSON(json, sv_access_list_filename);
 }
 
 void AccessList::setError(int error_code)
@@ -54,7 +57,8 @@ void AccessList::setError(int error_code)
    error = access_list_error_strings[error_code];
 }
 
-void AccessList::writeOutAccessList(void) {
+void AccessList::writeOutAccessList(void)
+{
    CS_WriteJSON(sv_access_list_filename, json, true);
 }
 

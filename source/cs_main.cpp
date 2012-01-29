@@ -202,13 +202,8 @@ void CS_Init(void)
    sprintf(cs_state_file_path, "%s/cs.state", basepath);
    M_NormalizeSlashes(cs_state_file_path);
 
-   CS_ClearTempWADDownloads();
-
    if(CS_SERVER)
-   {
-      SV_LoadConfig();
       SV_Init();
-   }
    else
       CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
 }
@@ -562,13 +557,19 @@ void CS_ReadJSON(Json::Value &json, const char *filename)
    std::string data;
    Json::Reader reader;
 
-   M_ReadFile(filename, &buffer);
+   if(M_ReadFile(filename, &buffer) == -1)
+   {
+      I_Error(
+         "CS_ReadJSON: Error reading file %s: %s.\n", filename, strerror(errno)
+      );
+   }
+
    data = (char *)buffer;
 
    if(!reader.parse(data, json))
    {
       I_Error(
-         "CS_ReadJSONFromFile: Error parsing JSON: %s.\n",
+         "CS_ReadJSON: Error parsing JSON: %s.\n",
          reader.getFormattedErrorMessages().c_str()
       );
    }

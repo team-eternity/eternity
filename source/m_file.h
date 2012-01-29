@@ -73,6 +73,7 @@ extern int fs_error_code;
 
 const char* M_GetFileSystemErrorMessage(void);
 bool        M_PathExists(const char *path);
+bool        M_DirnameIsFolder(const char *path);
 char*       M_PathJoin(const char *one, const char *two);
 bool        M_IsFile(const char *path);
 bool        M_IsFileInFolder(const char *folder, const char *file);

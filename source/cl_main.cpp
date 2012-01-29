@@ -225,6 +225,7 @@ void CL_Init(char *url)
    CL_InitPrediction();
    CS_ZeroClients();
    CL_LoadConfig();
+   CS_ClearTempWADDownloads();
    CS_InitSectorPositions();
 }
 

@@ -705,7 +705,6 @@ void CS_HandleServerSection(Json::Value &server)
    unsigned int i = 0;
    char hostname[256];
    struct hostent *host;
-   struct in_addr interface_address;
    bool found_address = false;
 #else
    struct ifaddrs *interface_addresses = NULL;
@@ -726,7 +725,7 @@ void CS_HandleServerSection(Json::Value &server)
       {
 #ifdef WIN32
          if(gethostname(hostname, 256) == SOCKET_ERROR)
-            I_Error("Error getting hostname: %s.\n", WSAGetLastError());
+            I_Error("Error getting hostname: %d.\n", WSAGetLastError());
          if((host = gethostbyname(hostname)) == 0)
             I_Error("Error looking up local hostname, exiting.\n");
          if(host->h_addrtype != AF_INET)
@@ -887,16 +886,44 @@ void CS_HandleServerSection(Json::Value &server)
       cs_wad_repository = estrdup(server["wad_repository"].asCString());
    }
 
+   sv_access_list_filename = sv_default_access_list_filename =
+      (const char *)M_PathJoin(basepath, DEFAULT_ACCESS_LIST_FILENAME);
+
    if(!server["access_list"].empty() &&
        server["access_list"].asString().length())
    {
       sv_access_list_filename =
          (const char *)estrdup(server["access_list"].asCString());
-   }
-   else
-   {
-      sv_access_list_filename =
-         (const char *)M_PathJoin(basepath, DEFAULT_ACCESS_LIST_FILENAME);
+
+      if(!M_PathExists(sv_access_list_filename))
+      {
+         if(!M_DirnameIsFolder(sv_access_list_filename))
+         {
+            doom_printf(
+               "Could not find access list %s, using default %s.\n",
+               sv_access_list_filename,
+               sv_default_access_list_filename
+            );
+            efree((void *)sv_access_list_filename);
+            sv_access_list_filename = sv_default_access_list_filename;
+         }
+         else
+         {
+            doom_printf(
+               "Creating new access list at %s.\n", sv_access_list_filename
+            );
+         }
+      }
+      else if(!M_IsFile(sv_access_list_filename))
+      {
+         doom_printf(
+            "Access list %s is not a file, using default %s.\n",
+            sv_access_list_filename,
+            sv_default_access_list_filename
+         );
+         efree((void *)sv_access_list_filename);
+         sv_access_list_filename = sv_default_access_list_filename;
+      }
    }
 }
 

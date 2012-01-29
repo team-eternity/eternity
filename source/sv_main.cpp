@@ -114,6 +114,7 @@ const char *sv_player_password = NULL;
 const char *sv_moderator_password = NULL;
 const char *sv_administrator_password = NULL;
 const char *sv_access_list_filename = NULL;
+const char *sv_default_access_list_filename = NULL;
 
 static void send_any_packet(int playernum, void *data, size_t data_size,
                             uint8_t flags, uint8_t channel_id)
@@ -341,6 +342,8 @@ void SV_Init(void)
 
    if(enet_initialize() != 0)
       I_Error("Could not initialize networking.\n");
+
+   SV_LoadConfig();
 
    net_host = enet_host_create(
       server_address, MAX_CLIENTS, MAX_CHANNELS, 0, 0

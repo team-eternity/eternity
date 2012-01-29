@@ -128,6 +128,38 @@ bool M_PathExists(const char *path)
    return false;
 }
 
+bool M_DirnameIsFolder(const char *path)
+{
+#ifdef WIN32
+   char path_sep = '\\';
+#else
+   char path_sep = '/';
+#endif
+   char *buffer = NULL;
+   char *basename = NULL;
+   size_t dirname_size;
+   bool exists = false;
+
+   if(!M_IsAbsolutePath(path))
+      return false;
+
+   if(!(basename = strrchr((char *)path, path_sep)))
+      return false;
+
+   if(path == basename)
+      return true;
+
+   dirname_size = (basename - path);
+   buffer = ecalloc(char *, 1, dirname_size + 1);
+   strncpy(buffer, path, dirname_size);
+   if(M_IsFolder((const char *)buffer))
+      exists = true;
+
+   efree(buffer);
+
+   return exists;
+}
+
 char* M_PathJoin(const char *one, const char *two)
 {
    size_t one_length = strlen(one);
