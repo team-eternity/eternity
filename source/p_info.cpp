@@ -69,6 +69,7 @@
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
+#include "s_sound.h"
 #include "sounds.h"
 #include "w_wad.h"
 
@@ -325,8 +326,8 @@ static int numPrototypes;
 static int numPrototypesAlloc;
 
 // hash table for prototype objects
-static EHashTable<LevelInfoProto_t, ENCStringHashKey> protoHash(&LevelInfoProto_t::mapname,
-                                                                &LevelInfoProto_t::links); 
+static EHashTable<LevelInfoProto_t, ENCStringHashKey, 
+                  &LevelInfoProto_t::mapname, &LevelInfoProto_t::links> protoHash; 
 
 //
 // P_addLevelInfoPrototype
@@ -1254,6 +1255,28 @@ static void P_InfoDefaultBossSpecials(void)
 }
 
 //
+// P_InfoDefaultMusic
+//
+// haleyjd 12/22/11: Considers various sources for a default value of musicname
+// for the current map.
+//
+static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
+{
+   const char *sndInfoLump;
+
+   // Default to undefined
+   LevelInfo.musicName = ""; 
+
+   // Is there a diskfile metainfo?
+   if(curmetainfo)
+      LevelInfo.musicName = curmetainfo->musname;
+
+   // Is there a Hexen SNDINFO definition?
+   if((sndInfoLump = P_GetSndInfoMusic(gamemap)))
+      LevelInfo.musicName = sndInfoLump;
+}
+
+//
 // P_SetSky2Texture
 //
 // Post-processing routine.
@@ -1355,7 +1378,6 @@ static void P_ClearLevelVars(void)
    LevelInfo.levelPic        = NULL;
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
-   LevelInfo.musicName       = curmetainfo ? curmetainfo->musname : "";
    LevelInfo.creator         = "unknown";
    LevelInfo.interPic        = GameModeInfo->interPic;
    LevelInfo.partime         = curmetainfo ? curmetainfo->partime : -1;
@@ -1383,6 +1405,7 @@ static void P_ClearLevelVars(void)
    P_InfoDefaultFinale();
    P_InfoDefaultSky();
    P_InfoDefaultBossSpecials();
+   P_InfoDefaultMusic(curmetainfo);
    
    // special handling for ExMy maps under DOOM II
    if(GameModeInfo->id == commercial && isExMy(levelmapname))
@@ -1515,6 +1538,72 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
    mi->intertext  = intertext;
 
    ++nummetainfo;
+}
+
+//=============================================================================
+//
+// SNDINFO Music Definitions
+//
+
+struct sndinfomus_t
+{
+   DLListItem<sndinfomus_t> links;
+   EIntHashKey  mapnum;
+   char        *lumpname;
+};
+
+static EHashTable<sndinfomus_t, EIntHashKey, 
+                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash;
+
+//
+// P_AddSndInfoMusic
+//
+// Adds a music definition from a Hexen SNDINFO lump.
+//
+void P_AddSndInfoMusic(int mapnum, const char *lumpname)
+{
+   sndinfomus_t *newmus;
+
+   if(!sndInfoMusHash.isInitialized())
+      sndInfoMusHash.Initialize(101);
+
+   // If one already exists, modify it. Otherwise create a new one.
+   if((newmus = sndInfoMusHash.objectForKey(mapnum)))
+   {
+      efree(newmus->lumpname);
+      newmus->lumpname = estrdup(lumpname);
+   }
+   else
+   {
+      newmus = estructalloc(sndinfomus_t, 1);
+
+      newmus->mapnum   = mapnum;
+      newmus->lumpname = estrdup(lumpname);
+
+      sndInfoMusHash.addObject(newmus);
+   }
+
+   // Make sure that this music appears in the music selection menu by asking
+   // for a musicinfo_t from the sound engine. This'll add a musicinfo structure
+   // for it right now, rather than waiting for the music to actually be played.
+   S_MusicForName(newmus->lumpname);
+}
+
+// 
+// P_GetSndInfoMusic
+//
+// If a Hexen SNDINFO music definition exists for the passed-in map number,
+// the lumpname to use will be passed in. Otherwise, NULL is returned.
+//
+const char *P_GetSndInfoMusic(int mapnum)
+{
+   const char   *lumpname = NULL;
+   sndinfomus_t *music    = NULL;
+
+   if((music = sndInfoMusHash.objectForKey(mapnum)))
+      lumpname = music->lumpname;
+
+   return lumpname;
 }
 
 //=============================================================================

@@ -207,12 +207,12 @@ CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
 // horizontal mouse sensitivity
 
-VARIABLE_INT(mouseSensitivity_horiz, NULL, 0, 1024, NULL);
+VARIABLE_FLOAT(mouseSensitivity_horiz, NULL, 0.0, 1024.0);
 CONSOLE_VARIABLE(sens_horiz, mouseSensitivity_horiz, 0) {}
 
 // vertical mouse sensitivity
 
-VARIABLE_INT(mouseSensitivity_vert, NULL, 0, 1024, NULL);
+VARIABLE_FLOAT(mouseSensitivity_vert, NULL, 0.0, 1024.0);
 CONSOLE_VARIABLE(sens_vert, mouseSensitivity_vert, 0) {}
 
 int mouseSensitivity_c;
@@ -223,6 +223,12 @@ CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
 {
    mouseSensitivity_horiz = mouseSensitivity_vert = mouseSensitivity_c * 4;
 }
+
+// [CG] 01/20/12: Create "vanilla" and "raw" mouse sensitivities.
+bool default_vanilla_mouse_sensitivity = true;
+VARIABLE_TOGGLE(mouseSensitivity_vanilla, &default_vanilla_mouse_sensitivity,
+                yesno);
+CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 
 // player bobbing -- haleyjd: altered to read default, use netcmd
 
@@ -772,11 +778,21 @@ extern int smooth_turning;
 VARIABLE_BOOLEAN(smooth_turning, NULL,          onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
-
 // SoM: mouse accel
-const char *accel_options[]={ "off", "linear", "choco" };
-VARIABLE_INT(mouseAccel_type, NULL, 0, 2, accel_options);
-CONSOLE_VARIABLE(mouse_accel, mouseAccel_type, 0) {}
+int default_mouse_accel_type = 0;
+const char *accel_options[]={ "off", "linear", "choco", "custom" };
+VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type, 0, 3, accel_options);
+CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, 0) {}
+
+// [CG] 01/20/12: Custom mouse acceleration (threshold & value).
+int default_mouse_accel_threshold = 10;
+VARIABLE_INT(mouseAccel_threshold, &default_mouse_accel_threshold, 0, 1024,
+             NULL);
+CONSOLE_VARIABLE(mouse_accel_threshold, mouseAccel_threshold, 0) {}
+
+double default_mouse_accel_value = 2.0;
+VARIABLE_FLOAT(mouseAccel_value, &default_mouse_accel_value, 0.0, 100.0);
+CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
 VARIABLE_BOOLEAN(novert, NULL, onoff);
 CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
@@ -1202,10 +1218,13 @@ void G_AddCommands(void)
    C_AddCommand(alwaysmlook);
    C_AddCommand(bobbing);
    C_AddCommand(doom_weapon_toggles);
-   C_AddCommand(sens_vert);
    C_AddCommand(sens_horiz);
+   C_AddCommand(sens_vert);
    C_AddCommand(sens_combined);
-   C_AddCommand(mouse_accel);
+   C_AddCommand(sens_vanilla);
+   C_AddCommand(mouse_accel_type);
+   C_AddCommand(mouse_accel_threshold);
+   C_AddCommand(mouse_accel_value);
    C_AddCommand(mouse_novert);
    C_AddCommand(invertmouse);
    C_AddCommand(turbo);

@@ -26,7 +26,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef _WIN32
+#include "../hal/i_platform.h"
+
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
 #ifndef __MINGW32__
 #error i_w32main.cpp is for Windows only
 #endif

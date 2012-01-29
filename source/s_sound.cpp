@@ -145,6 +145,9 @@ int idmusnum;
 musicinfo_t *musicinfos[SOUND_HASHSLOTS];
 static void S_CreateMusicHashTable(void);
 
+// haleyjd 12/24/11: hi-def music support
+bool s_hidefmusic;
+
 //
 // Internals.
 //
@@ -1099,13 +1102,27 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data   = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
-   music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
 
-   // play it
-   I_PlaySong(music->handle, looping);
-   
-   mus_playing = music;
+   if(music->data)
+   {
+      music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
+      
+      // play it
+      if(music->handle)
+      {
+         I_PlaySong(music->handle, looping);
+         mus_playing = music;
+      }
+      else
+      {
+         Z_Free(music->data);
+         music->data = NULL;
+         mus_playing = NULL;
+      }
+   }
+   else
+      mus_playing = NULL;
 }
 
 //
@@ -1163,7 +1180,7 @@ void S_ChangeMusicName(const char *name, int looping)
 //
 void S_StopMusic(void)
 {
-   if(!mus_playing)
+   if(!mus_playing || !mus_playing->data)
       return;
 
    if(mus_paused)
@@ -1171,7 +1188,7 @@ void S_StopMusic(void)
 
    I_StopSong(mus_playing->handle);
    I_UnRegisterSong(mus_playing->handle);
-   Z_ChangeTag(mus_playing->data, PU_CACHE);
+   Z_Free(mus_playing->data);
    
    mus_playing->data = NULL;
    mus_playing = NULL;
@@ -1325,7 +1342,6 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
-   S_CreateMusicHashTable();
    
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
@@ -1336,37 +1352,34 @@ void S_Init(int sfxVolume, int musicVolume)
 // Music Hashing
 //
 
-static bool mushash_created = false;
+static void S_HookMusic(musicinfo_t *);
+
+static void S_CreateMusicHashTable(void)
+{
+   // hook in all natively defined music
+   for(int i = 0; i < GameModeInfo->numMusic; i++)
+      S_HookMusic(&(GameModeInfo->s_music[i]));
+}
 
 static void S_HookMusic(musicinfo_t *music)
 {
+   static bool mushash_created = false;
    int hashslot;
    
-   if(!music || !music->name) return;
+   // only build once
+   if(!mushash_created)
+   {
+      mushash_created = true;
+      S_CreateMusicHashTable();
+   }
+   
+   if(!music || !music->name) 
+      return;
    
    hashslot = sound_hash(music->name);
    
    music->next = musicinfos[hashslot];
    musicinfos[hashslot] = music;
-}
-
-static void S_CreateMusicHashTable(void)
-{
-   int i;
-   
-   // only build once
-   
-   if(mushash_created)
-      return;
-   else
-      mushash_created = true;
-
-   for(i = 0; i < SOUND_HASHSLOTS; ++i)
-      musicinfos[i] = NULL;
-   
-   // hook in all natively defined music
-   for(i = 0; i < GameModeInfo->numMusic; ++i)
-      S_HookMusic(&(GameModeInfo->s_music[i]));
 }
 
 //
@@ -1410,18 +1423,29 @@ musicinfo_t *S_MusicForName(const char *name)
       if(!tempname.strCaseCmp(mus->name))
          return mus;
    }
-   
-   // Not found? Create a new musicinfo if the indicated lump is found.
-   lumpnum = W_CheckNumForName(name); // Try bare name first
-   lumpHasPrefix = nameHasPrefix;
-   if(lumpnum < 0 && !nameHasPrefix)  // Add prefix if that fails
+
+   if(nameHasPrefix) // name is prefixed? use it unconditionally as provided.
+   {
+      lumpnum = W_CheckNumForName(name);
+      lumpHasPrefix = true;
+   }
+   else // name is unprefixed; try with prefix first, then without.
    {
       tempname = GameModeInfo->musPrefix;
       tempname.concat(name);
       tempname.toUpper();
       lumpnum = W_CheckNumForName(tempname.constPtr());
-      lumpHasPrefix = true;
+
+      if(lumpnum < 0) // try, try again...
+      {
+         lumpnum = W_CheckNumForName(name);
+         lumpHasPrefix = false;
+      }
+      else
+         lumpHasPrefix = true;
    }
+   
+   // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
       mus = ecalloc(musicinfo_t *, 1, sizeof(musicinfo_t));
@@ -1486,8 +1510,8 @@ VARIABLE_INT(
 VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
 VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
 VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
-
 VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
+VARIABLE_TOGGLE(s_hidefmusic,     NULL, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(announcer_type, s_announcer_type, 0)
@@ -1509,6 +1533,8 @@ CONSOLE_VARIABLE(music_volume, snd_MusicVolume, 0)
 
 // haleyjd 12/08/01: allow user to force reversal of audio channels
 CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
+
+CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
 {
@@ -1558,6 +1584,7 @@ void S_AddCommands(void)
   C_AddCommand(music_volume);
   C_AddCommand(s_flippan);
   C_AddCommand(s_playmusic);
+  C_AddCommand(s_hidefmusic);
 }
 
 #ifndef EE_NO_SMALL_SUPPORT

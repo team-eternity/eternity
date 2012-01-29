@@ -682,15 +682,15 @@ void E_CollectThings(cfg_t *tcfg)
       mobjinfo[i].index = i;
 
       // verify length
-      if(strlen(name) > 40)
+      if(strlen(name) >= sizeof(mobjinfo[i].name))
       {
          E_EDFLoggedErr(2, 
             "E_CollectThings: invalid thing mnemonic '%s'\n", name);
       }
 
       // copy it to the thing
-      memset(mobjinfo[i].name, 0, 41);
-      strncpy(mobjinfo[i].name, name, 41);
+      memset (mobjinfo[i].name, 0,    sizeof(mobjinfo[i].name));
+      strncpy(mobjinfo[i].name, name, sizeof(mobjinfo[i].name));
 
       // hash it
       key = D_HashTableKey(name) % NUMTHINGCHAINS;
@@ -1430,7 +1430,7 @@ static void E_ResetThingPStack(void)
 //
 static void E_CopyThing(int num, int pnum)
 {
-   char name[41];
+   char name[129];
    mobjinfo_t *this_mi;
    MetaTable *meta;
    int dehnum, dehnext, namenext, index;
@@ -1443,7 +1443,7 @@ static void E_CopyThing(int num, int pnum)
    dehnext    = this_mi->dehnext;
    namenext   = this_mi->namenext;
    index      = this_mi->index;
-   memcpy(name, this_mi->name, 41);
+   memcpy(name, this_mi->name, sizeof(this_mi->name));
 
    // copy from source to destination
    memcpy(this_mi, &mobjinfo[pnum], sizeof(mobjinfo_t));
@@ -1467,7 +1467,7 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnext  = dehnext;
    this_mi->namenext = namenext;
    this_mi->index    = index;
-   memcpy(this_mi->name, name, 41);
+   memcpy(this_mi->name, name, sizeof(this_mi->name));
 
    // other fields not inherited:
 

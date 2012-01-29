@@ -2201,13 +2201,13 @@ static const char *mn_mousejoy_names[] =
 };
 
 extern menu_t menu_mouse;
-extern menu_t menu_mouse_mlook;
+extern menu_t menu_mouse_accel_and_mlook;
 extern menu_t menu_joystick;
 
 static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
-   &menu_mouse_mlook,
+   &menu_mouse_accel_and_mlook,
 #ifdef _SDL_VER
    &menu_joystick,
 #endif
@@ -2218,19 +2218,19 @@ static menuitem_t mn_mouse_items[] =
 {
    {it_title,      FC_GOLD "mouse settings",       NULL,   "m_mouse"},
    {it_gap},
-   {it_toggle,     "enable mouse",                 "i_usemouse"},
+   {it_toggle,     "enable mouse",                  "i_usemouse"},
    {it_gap},
    {it_info,       FC_GOLD "sensitivity"},
-   {it_variable,   "horizontal",                   "sens_horiz"},
-   {it_variable,   "vertical",                     "sens_vert"},
+   {it_variable,   "horizontal",                    "sens_horiz"},
+   {it_variable,   "vertical",                      "sens_vert"},
+   {it_toggle,     "vanilla sensitivity",           "sens_vanilla"},
    {it_gap},
    {it_info,       FC_GOLD "misc."},
-   {it_toggle,     "invert mouse",                 "invertmouse"},
-   {it_toggle,     "smooth turning",               "smooth_turning"},
-   {it_toggle,     "mouse acceleration",           "mouse_accel"},
-   {it_toggle,     "novert emulation",             "mouse_novert"},
+   {it_toggle,     "invert mouse",                  "invertmouse"},
+   {it_toggle,     "smooth turning",                "smooth_turning"},
+   {it_toggle,     "novert emulation",              "mouse_novert"},
 #ifdef _SDL_VER
-   {it_toggle,     "window grabs mouse",           "i_grabmouse"},
+   {it_toggle,     "window grabs mouse",            "i_grabmouse"},
 #endif
    {it_end}
 };
@@ -2239,7 +2239,7 @@ menu_t menu_mouse =
 {
    mn_mouse_items,               // menu items
    NULL,                         // previous page
-   &menu_mouse_mlook,            // next page
+   &menu_mouse_accel_and_mlook,  // next page
    &menu_mouse,                  // rootpage
    200, 15,                      // x, y offset
    2,                            // first selectable
@@ -2254,32 +2254,37 @@ CONSOLE_COMMAND(mn_mouse, 0)
    MN_StartMenu(&menu_mouse);
 }
 
-static menuitem_t mn_mouse_mlook_items[] =
+static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
    {it_title,      FC_GOLD "Mouse Settings",       NULL,   "m_mouse"},
    {it_gap},
+   {it_info,       FC_GOLD"acceleration"},
+   {it_toggle,     "type",                "mouse_accel_type"},
+   {it_variable,   "custom threshold",    "mouse_accel_threshold"},
+   {it_variable,   "custom amount",       "mouse_accel_value"},
+   {it_gap},
    {it_info,       FC_GOLD"mouselook"},
-   {it_toggle,     "enable mouselook",             "allowmlook" },
-   {it_toggle,     "always mouselook",             "alwaysmlook"},
-   {it_toggle,     "stretch short skies",          "r_stretchsky"},
+   {it_toggle,     "enable mouselook",    "allowmlook" },
+   {it_toggle,     "always mouselook",    "alwaysmlook"},
+   {it_toggle,     "stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
-menu_t menu_mouse_mlook =
+menu_t menu_mouse_accel_and_mlook =
 {
-   mn_mouse_mlook_items,         // menu items
-   &menu_mouse,                  // previous page
+   mn_mouse_accel_and_mlook_items, // menu items
+   &menu_mouse,                    // previous page
 #ifdef _SDL_VER
-   &menu_joystick,               // next page
+   &menu_joystick,                 // next page
 #else
    NULL,
 #endif
-   &menu_mouse,                  // rootpage
-   200, 15,                      // x, y offset
-   3,                            // first selectable
-   mf_background,                // full-screen menu
-   NULL,                         // no drawer
-   mn_mousejoy_names,            // TOC stuff
+   &menu_mouse,                    // rootpage
+   200, 15,                        // x, y offset
+   3,                              // first selectable
+   mf_background,                  // full-screen menu
+   NULL,                           // no drawer
+   mn_mousejoy_names,              // TOC stuff
    mn_mousejoy_pages,
 };
 
@@ -2363,14 +2368,14 @@ static menuitem_t mn_joystick_items[] =
 menu_t menu_joystick =
 {
    mn_joystick_items,
-   &menu_mouse_mlook,    // previous page
-   NULL,                 // next page
-   &menu_mouse,          // rootpage
-   200, 15,              // x,y offset
-   2,                    // start on first selectable
-   mf_background,        // full-screen menu
-   NULL,                 // no drawer
-   mn_mousejoy_names,    // TOC stuff
+   &menu_mouse_accel_and_mlook,    // previous page
+   NULL,                           // next page
+   &menu_mouse,                    // rootpage
+   200, 15,                        // x,y offset
+   2,                              // start on first selectable
+   mf_background,                  // full-screen menu
+   NULL,                           // no drawer
+   mn_mousejoy_names,              // TOC stuff
    mn_mousejoy_pages,
 };
 
@@ -3769,7 +3774,7 @@ extern int mouseSensitivity_c;
 CONSOLE_COMMAND(mn_old_options, 0)
 {
    // propagate horizontal mouse sensitivity to combined setting
-   mouseSensitivity_c = mouseSensitivity_horiz / 4;
+   mouseSensitivity_c = (int)(mouseSensitivity_horiz / 4.0);
 
    // bound to max 16
    if(mouseSensitivity_c > 16)

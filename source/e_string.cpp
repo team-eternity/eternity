@@ -99,7 +99,7 @@ static void E_DelStringFromNumHash(edf_string_t *str)
 //
 // Creates an EDF string object with the given value which is hashable
 // by one or two different keys. The mnemonic key is required and must
-// be 32 or fewer characters long. The numeric key is optional. If a
+// be 128 or fewer characters long. The numeric key is optional. If a
 // negative value is passed as the numeric key, the object will not be 
 // added to the numeric hash table.
 //
@@ -132,15 +132,15 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    else
    {
       // Create a new string object
-      newStr = ecalloc(edf_string_t *, 1, sizeof(edf_string_t));
+      newStr = estructalloc(edf_string_t, 1);
       
       // copy keys into string object
-      if(strlen(key) > 32)
+      if(strlen(key) >= sizeof(newStr->key))
       {
          E_EDFLoggedErr(2, 
             "E_CreateString: invalid string mnemonic '%s'\n", key);
       }
-      strncpy(newStr->key, key, 33);
+      strncpy(newStr->key, key, sizeof(newStr->key));
       
       newStr->numkey = num;
       
@@ -172,7 +172,7 @@ edf_string_t *E_StringForName(const char *key)
    int keyval = D_HashTableKey(key) % NUM_EDFSTR_CHAINS;
    edf_string_t *cur = edf_str_chains[keyval];
 
-   while(cur && strncasecmp(cur->key, key, 33))
+   while(cur && strncasecmp(cur->key, key, sizeof(cur->key)))
       cur = cur->next;
 
    return cur;

@@ -223,18 +223,20 @@ static void E_ProcessSplash(cfg_t *cfg)
 
    // init name and add to hash table
    tempstr = cfg_title(cfg);
-   if(strlen(tempstr) > 32)
-   {
-      E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
-                     tempstr);
-   }
 
    // If one already exists, modify it. Otherwise, allocate a new
    // splash and add it to the splash hash table.
    if(!(newSplash = E_SplashForName(tempstr)))
    {
-      newSplash = ecalloc(ETerrainSplash *, 1, sizeof(ETerrainSplash));
-      strncpy(newSplash->name, tempstr, 33);
+      newSplash = estructalloc(ETerrainSplash, 1);
+      
+      if(strlen(tempstr) >= sizeof(newSplash->name))
+      {
+         E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
+                        tempstr);
+      }
+      strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
+      
       E_AddSplashToHash(newSplash);
       newsp = true;
    }
@@ -248,12 +250,12 @@ static void E_ProcessSplash(cfg_t *cfg)
 
    // process smallsound
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
-   if(strlen(tempstr) > 32)
+   if(strlen(tempstr) >= sizeof(newSplash->smallsound))
    {
       E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
                      tempstr);
    }
-   strncpy(newSplash->smallsound, tempstr, 33);
+   strncpy(newSplash->smallsound, tempstr, sizeof(newSplash->smallsound));
 
    // process baseclass
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
@@ -274,12 +276,12 @@ static void E_ProcessSplash(cfg_t *cfg)
    
    // process sound
    tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
-   if(strlen(tempstr) > 32)
+   if(strlen(tempstr) >= sizeof(newSplash->sound))
    {
       E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
                      tempstr);
    }
-   strncpy(newSplash->sound, tempstr, 33);
+   strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
 
    E_EDFLogPrintf("\t\t\t%s splash '%s'\n", 
                   newsp ? "Finished" : "Modified", 
@@ -347,18 +349,18 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
    {
       // definition:
       tempstr = cfg_title(cfg);
-      if(strlen(tempstr) > 32)
-      {
-         E_EDFLoggedErr(3, "E_ProcessTerrain: invalid terrain mnemonic '%s'\n",
-            tempstr);
-      }
 
       // If one already exists, modify it. Otherwise, allocate a new
       // terrain and add it to the terrain hash table.
       if(!(newTerrain = E_TerrainForName(tempstr)))
       {
-         newTerrain = ecalloc(ETerrain *, 1, sizeof(ETerrain));
-         strncpy(newTerrain->name, tempstr, 33);
+         newTerrain = estructalloc(ETerrain, 1);
+         if(strlen(tempstr) >= sizeof(newTerrain->name))
+         {
+            E_EDFLoggedErr(3, "E_ProcessTerrain: invalid terrain mnemonic '%s'\n",
+                           tempstr);
+         }
+         strncpy(newTerrain->name, tempstr, sizeof(newTerrain->name));
          E_AddTerrainToHash(newTerrain);
          newtr = true;
       }
@@ -473,7 +475,7 @@ static void E_AddSolidTerrain(void)
    if(!solidinit)
    {
       E_EDFLogPuts("\t\t\tCreating Solid terrain...\n");
-      strncpy(solid.name, "Solid", 33);
+      strncpy(solid.name, "Solid", sizeof(solid.name));
       E_AddTerrainToHash(&solid);
       solidinit = true;
       --numterrains; // do not count the solid terrain 

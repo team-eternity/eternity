@@ -55,7 +55,7 @@ struct playerclass_t
    fixed_t osidemove[2];
 
    // hashing data
-   char mnemonic[33];
+   char mnemonic[129];
    playerclass_t *next;
 };
 
@@ -65,46 +65,6 @@ void E_VerifyDefaultPlayerClass(void);
 bool E_IsPlayerClassThingType(mobjtype_t);
 bool E_PlayerInWalkingState(player_t *);
 void E_ApplyTurbo(int ts);
-
-// Inventory
-
-// Inventory subclass enumeration
-
-typedef enum
-{
-   INV_GENERIC, // not subclassed - a no-op inventory item
-} inventoryclass_e;
-
-// inventory flags
-enum
-{
-   INVF_QUIET         = 0x00000001, // makes no sound on pickup
-   INVF_AUTOACTIVATE  = 0x00000002, // automatically used on pickup
-   INVF_UNDROPPABLE   = 0x00000004, // cannot be dropped from inventory
-   INVF_INVBAR        = 0x00000008, // is displayed in inventory bar
-   INVF_HUBPOWER      = 0x00000010, // kept between levels of a hub
-   INVF_INTERHUBSTRIP = 0x00000020, // removed on hub or level transfer
-   INVF_ALWAYSPICKUP  = 0x00000040, // item is always picked up
-   INVF_BIGPOWERUP    = 0x00000080, // same as MF3_SUPERITEM
-   INVF_KEEPDEPLETED  = 0x00000100, // icon remains even when used up
-};
-
-typedef struct inventoryitem_s
-{
-   inventoryclass_e invclass; // specific type of this inventory item
-
-   // basic inventory properties - shared by all inventory items
-   int amount;           // amount given on pick-up
-   int maxamount;        // maximum amount that can be in the inventory
-   const char *icon;     // icon graphic name
-   const char *pmessage; // pickup message
-   const char *psound;   // pickup sound
-   int flashtype;        // pickup flash thingtype
-   const char *usesound; // sound when used
-   int respawntics;      // time til item respawns
-   int givequest;        // strife quest item number
-
-} inventoryitem_t;
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

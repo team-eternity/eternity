@@ -36,7 +36,7 @@ struct edf_string_t
    edf_string_t *next;                 // next in mnemonic hash chain
 
    char *string;       // string value
-   char key[33];       // mnemonic for hashing
+   char key[129];      // mnemonic for hashing
    int  numkey;        // number for hashing
 };
 

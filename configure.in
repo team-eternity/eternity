@@ -20,5 +20,6 @@ source/Makefile
 source/sdl/Makefile
 source/textscreen/Makefile
 source/Confuse/Makefile
+source/hal/Makefile
 ])
 

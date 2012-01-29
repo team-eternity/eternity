@@ -387,17 +387,17 @@ static void E_ProcessPlayerClass(cfg_t *pcsec)
    // get mnemonic from section title
    tempstr = cfg_title(pcsec);
 
-   // verify mnemonic
-   if(strlen(tempstr) > 32)
-      E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid mnemonic %s\n", tempstr);
-
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
       // create a new player class
-      pc = ecalloc(playerclass_t *, 1, sizeof(playerclass_t));
+      pc = estructalloc(playerclass_t, 1);
+
+      // verify mnemonic
+      if(strlen(tempstr) >= sizeof(pc->mnemonic))
+         E_EDFLoggedErr(2, "E_ProcessPlayerClass: invalid mnemonic %s\n", tempstr);
 
       // set mnemonic and hash it
-      strncpy(pc->mnemonic, tempstr, 33);
+      strncpy(pc->mnemonic, tempstr, sizeof(pc->mnemonic));
       E_AddPlayerClass(pc);
 
       E_EDFLogPrintf("\t\tCreating player class %s\n", pc->mnemonic);

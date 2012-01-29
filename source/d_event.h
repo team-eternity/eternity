@@ -46,8 +46,8 @@ struct event_t
 {
   evtype_t  type;
   int       data1;     // keys / mouse/joystick buttons
-  int       data2;     // mouse/joystick x move
-  int       data3;     // mouse/joystick y move
+  double    data2;     // mouse/joystick x move
+  double    data3;     // mouse/joystick y move
   char      character; // actual character input when supported
 };
 

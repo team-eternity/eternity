@@ -79,8 +79,8 @@ struct manageddir_t
 //
 
 // hash table
-static EHashTable<manageddir_t, EStringHashKey> w_dirhash(&manageddir_t::name,
-                                                          &manageddir_t::links);
+static EHashTable<manageddir_t, EStringHashKey, 
+                  &manageddir_t::name, &manageddir_t::links> w_dirhash;
 
 //=============================================================================
 //

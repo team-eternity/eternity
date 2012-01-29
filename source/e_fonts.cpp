@@ -121,7 +121,7 @@ static const char *fontfmts[] =
 
 #define NUMFONTCHAINS 31
 
-static vfont_t              *e_font_namechains[NUMFONTCHAINS];
+static vfont_t             *e_font_namechains[NUMFONTCHAINS];
 static DLListItem<vfont_t> *e_font_numchains[NUMFONTCHAINS];
 
 //=============================================================================
@@ -430,7 +430,7 @@ static void E_VerifyFilter(const char *str)
             break;
          default: // screw you, hacker boy
             E_EDFLoggedErr(2, 
-               "E_VerifyFilter: '%s' has bad format specifier %c\n",
+               "E_VerifyFilter: '%s' has bad format specifier '%c'\n",
                str, *rover);
          }
       }
@@ -701,12 +701,12 @@ static void E_ProcessFont(cfg_t *sec)
    }
    else
    {
-      font = ecalloc(vfont_t *, 1, sizeof(vfont_t));
+      font = estructalloc(vfont_t, 1);
 
-      if(strlen(title) > 32)
+      if(strlen(title) >= sizeof(font->name))
          E_EDFLoggedErr(2, "E_ProcessFont: mnemonic '%s' is too long\n", title);
 
-      strncpy(font->name, title, 33);
+      strncpy(font->name, title, sizeof(font->name));
       font->num = num;
 
       // add to hash tables

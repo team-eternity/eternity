@@ -68,7 +68,7 @@ struct lumpinfo_t
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
    enum 
    {
-      ns_global = 0,
+      ns_global,
       ns_sprites,
       ns_flats,
       ns_colormaps,
@@ -85,6 +85,7 @@ struct lumpinfo_t
    {
       lump_direct,  // lump accessed via stdio (physical file)
       lump_memory,  // lump is a memory buffer
+      lump_file,    // lump is a directory file; must be opened to use
       lump_numtypes
    }; 
    int type;
@@ -96,6 +97,7 @@ struct lumpinfo_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    const void *data; // for a memory lump, a pointer to its static memory buffer
    size_t position;  // for direct and memory lumps, offset into file/buffer
+   const char *lfn;  // long file name, where relevant
 };
 
 //
@@ -112,6 +114,7 @@ struct wfileadd_t
    FILE *f;              // pointer to file handle if this is a subfile
    size_t baseoffset;    // base offset if this is a subfile
    int privatedir;       // if not 0, has a private directory
+   bool directory;       // if true, is an on-disk directory
 };
 
 //
@@ -126,19 +129,13 @@ public:
    // verifyData should do format checking and return true if the data is valid,
    // and false otherwise. If verifyData returns false, formatData is not called
    // under any circumstance.
-   virtual bool verifyData(const void *data, size_t size) const
-   { 
-      return true; 
-   }
+   virtual bool verifyData(const void *data, size_t size) const { return true; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
    // be done once only and not every time the lump is retrieved from the wad
    // file. Return false if an error occurs, and true otherwise.
-   virtual bool formatData(void *data, size_t size) const
-   { 
-      return true; 
-   }
+   virtual bool formatData(void *data, size_t size) const { return true; }
 
    // Error modes enumeration
    enum
@@ -230,6 +227,7 @@ public:
    int         AddNewFile(const char *filename);
    // haleyjd 06/15/10: special private wad file support
    int         AddNewPrivateFile(const char *filename);
+   int         AddDirectory(const char *dirpath);
    int         LumpLength(int lump);
    void        ReadLump(int lump, void *dest, WadLumpLoader *lfmt = NULL);
    int         ReadLumpHeader(int lump, void *dest, size_t size);

@@ -66,10 +66,10 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static EHashTable<emod_t, ENCStringHashKey> e_mod_namehash(&emod_t::name, &emod_t::namelinks);
+static EHashTable<emod_t, ENCStringHashKey, &emod_t::name, &emod_t::namelinks> e_mod_namehash;
 
 // haleyjd 08/02/09: use new generic hash
-static EHashTable<emod_t, EIntHashKey> e_mod_numhash(&emod_t::num, &emod_t::numlinks);
+static EHashTable<emod_t, EIntHashKey, &emod_t::num, &emod_t::numlinks> e_mod_numhash;
 
 // default damage type - "Unknown"
 static emod_t unknown_mod;

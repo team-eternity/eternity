@@ -948,21 +948,12 @@ void G_LoadDefaults(void)
 
    len = M_StringAlloca(&temp, 1, 18, basegamepath);
 
-   // haleyjd 03/15/03: fix for -cdrom
-   // haleyjd 07/03/04: FIXME: doesn't work for linux
    // haleyjd 11/23/06: use basegamepath
    // haleyjd 08/29/09: allow use_doom_config override
-#ifdef EE_CDROM_SUPPORT
-   if(cdrom_mode)
-      psnprintf(temp, len, "%s", "c:/doomdata/keys.csc");
+   if(GameModeInfo->type == Game_DOOM && use_doom_config)
+      psnprintf(temp, len, "%s/doom/keys.csc", basepath);
    else
-#endif
-   {
-      if(GameModeInfo->type == Game_DOOM && use_doom_config)
-         psnprintf(temp, len, "%s/doom/keys.csc", basepath);
-      else
-         psnprintf(temp, len, "%s/keys.csc", basegamepath);
-   }
+      psnprintf(temp, len, "%s/keys.csc", basegamepath);
    
    cfg_file = estrdup(temp);
 

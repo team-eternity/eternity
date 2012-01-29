@@ -705,5 +705,3 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
 
 // EOF
 
-
-

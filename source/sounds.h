@@ -117,7 +117,7 @@ struct sfxinfo_t
    int usefulness;
 
    // haleyjd: EDF mnemonic
-   char mnemonic[33];
+   char mnemonic[129];
       
    // haleyjd 09/03/03: revised for dynamic EDF sounds
    DLListItem<sfxinfo_t> numlinks; // haleyjd 04/13/08: numeric hash links

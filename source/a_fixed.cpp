@@ -27,7 +27,7 @@
 
 #ifndef EE_NO_SMALL_SUPPORT
 
-#include <cstddef>
+#include "z_zone.h"
 
 #include "a_small.h"
 #include "m_fixed.h"

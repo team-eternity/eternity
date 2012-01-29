@@ -39,6 +39,7 @@
 #include "z_zone.h"
 
 #include "hal/i_picker.h"
+#include "hal/i_platform.h"
 
 #include "a_small.h"
 #include "acs_intr.h"
@@ -688,6 +689,22 @@ void D_StartTitle(void)
 static int numwadfiles, numwadfiles_alloc;
 
 //
+// D_reAllocFiles
+//
+// haleyjd 12/24/11: resize the wadfiles array
+//
+static void D_reAllocFiles()
+{
+   // sf: allocate for +2 for safety
+   if(numwadfiles + 2 >= numwadfiles_alloc)
+   {
+      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
+
+      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
+   }
+}
+
+//
 // D_AddFile
 //
 // Rewritten by Lee Killough
@@ -698,23 +715,39 @@ static int numwadfiles, numwadfiles_alloc;
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir)
 {
-   // sf: allocate for +2 for safety
-   if(numwadfiles + 2 >= numwadfiles_alloc)
-   {
-      numwadfiles_alloc = numwadfiles_alloc ? numwadfiles_alloc * 2 : 8;
-
-      wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
-   }
+   D_reAllocFiles();
 
    wadfiles[numwadfiles].filename     = estrdup(file);
    wadfiles[numwadfiles].li_namespace = li_namespace;
    wadfiles[numwadfiles].f            = fp;
    wadfiles[numwadfiles].baseoffset   = baseoffset;
    wadfiles[numwadfiles].privatedir   = privatedir;
+   wadfiles[numwadfiles].directory    = false;
 
    wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
 
-   numwadfiles++;
+   ++numwadfiles;
+}
+
+//
+// D_AddDirectory
+//
+// haleyjd 12/24/11: add a directory to be loaded as if it's a wad file
+//
+void D_AddDirectory(const char *dir)
+{
+   D_reAllocFiles();
+
+   wadfiles[numwadfiles].filename     = estrdup(dir);
+   wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
+   wadfiles[numwadfiles].f            = NULL;
+   wadfiles[numwadfiles].baseoffset   = 0;
+   wadfiles[numwadfiles].privatedir   = 0;
+   wadfiles[numwadfiles].directory    = true;
+
+   wadfiles[numwadfiles+1].filename = NULL;
+
+   ++numwadfiles;
 }
 
 //sf: console command to list loaded files
@@ -909,7 +942,7 @@ enum
 // haleyjd 11/23/06: Sets the path to the "base" folder, where Eternity stores
 // all of its data.
 //
-static void D_SetBasePath(void)
+static void D_SetBasePath()
 {
    int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
    const char *s;
@@ -1073,7 +1106,7 @@ static void D_SetGamePath(void)
 //
 // Looks for an optional root.edf file in base/game
 //
-static char *D_CheckGameEDF(void)
+static char *D_CheckGameEDF()
 {
    struct stat sbuf;
    char *game_edf = M_SafeFilePath(basegamepath, "root.edf");
@@ -1085,6 +1118,27 @@ static char *D_CheckGameEDF(void)
    }
 
    return NULL; // return NULL to indicate the file doesn't exist
+}
+
+//
+// D_CheckGameMusic
+//
+// haleyjd 12/24/11: Looks for an optional music directory in base/game,
+// provided that s_hidefmusic is enabled.
+//
+static void D_CheckGameMusic()
+{
+   if(s_hidefmusic)
+   {
+      struct stat sbuf;
+      char *music_dir = M_SafeFilePath(basegamepath, "music");
+
+      if(!stat(music_dir, &sbuf))
+      {
+         if(S_ISDIR(sbuf.st_mode))
+            D_AddDirectory(music_dir); // add as if it's a wad file
+      }
+   }
 }
 
 //=============================================================================
@@ -1505,7 +1559,7 @@ static void D_AddDoomWadPath(const char *path)
 }
 
 // haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
-#ifdef _WIN32
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #define DOOMWADPATHSEP ';'
 #else
 #define DOOMWADPATHSEP ':'
@@ -1695,11 +1749,6 @@ struct iwadpathmatch_t
                              // in order of precedence from greatest to least.
 };
 
-//
-// The IWAD matcher structures have a priority amongst themselves as well, in 
-// that "doom2" should match doom2 and not doom. Whichever entry returns a valid
-// strstr() value first wins.
-// 
 static iwadpathmatch_t iwadMatchers[] =
 {
    // -game matches:
@@ -2477,6 +2526,9 @@ static void IdentifyDisk(void)
    if(diskpwad)
       D_LoadDiskFilePWAD();
 
+   // 12/24/11: check for game folder hi-def music
+   D_CheckGameMusic();
+
    // done with the diskfile structure
    D_CloseDiskFile(diskfile, false);
    diskfile = NULL;
@@ -2519,6 +2571,9 @@ static void IdentifyIWAD(void)
       D_LoadResourceWad();
 
       D_AddFile(iwad, lumpinfo_t::ns_global, NULL, 0, 0);
+      // 12/24/11: check for game folder hi-def music
+      D_CheckGameMusic();
+
       // done with iwad string
       // efree(iwad);
    }
@@ -3246,9 +3301,6 @@ static void D_StartupMessage(void)
         "infringement of US and international copyright laws.\n");
 }
 
-// haleyjd 11/12/05: in cdrom mode?
-bool cdrom_mode = false;
-
 static void stop_demo_at_exit(void) { CS_StopDemo(); }
 
 //
@@ -3269,12 +3321,6 @@ static void D_DoomInit(void)
    D_StartupMessage();
 
    FindResponseFile(); // Append response file arguments to command-line
-
-   // haleyjd 11/12/05: moved -cdrom check up and made status global
-#ifdef EE_CDROM_SUPPORT
-   if(M_CheckParm("-cdrom"))
-      cdrom_mode = true;
-#endif
 
    // haleyjd 08/18/07: set base path
    D_SetBasePath();
@@ -3492,30 +3538,6 @@ static void D_DoomInit(void)
       v_ticker = true;  // turn on the fps ticker
    }
 
-#ifdef EE_CDROM_SUPPORT
-   // sf: ok then, this is broken under linux.
-   // haleyjd: FIXME
-   if(cdrom_mode)
-   {
-      size_t len;
-
-#ifndef DJGPP
-      mkdir("c:/doomdata");
-#else
-      mkdir("c:/doomdata", 0);
-#endif
-      // killough 10/98:
-      if(basedefault)
-         efree(basedefault);
-      
-      len = strlen(D_DoomExeName()) + 18;
-
-      basedefault = emalloc(char *, len);
-
-      psnprintf(basedefault, len, "c:/doomdata/%s.cfg", D_DoomExeName());
-   }
-#endif
-
    // [CG] None of this applies in c/s.
    if(!clientserver)
    {
@@ -3675,7 +3697,7 @@ static void D_DoomInit(void)
    M_LoadDefaults();              // load before initing other systems
 
    // haleyjd 01/11/09: process affinity mask stuff
-#if defined(_WIN32) || defined(HAVE_SCHED_SETAFFINITY)
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    {
       extern void I_SetAffinityMask(void);
 
@@ -3780,13 +3802,6 @@ static void D_DoomInit(void)
    }
 
    // killough 2/22/98: copyright / "modified game" / SPA banners removed
-
-   // haleyjd 11/13/05: moved down CD-ROM mode notice and changed to
-   // use BEX string like it really always should have. Because it was
-   // previously before the point where DEH/BEX was loaded, it couldn't
-   // be done.
-   if(cdrom_mode)
-      puts(DEH_String("D_CDROM"));
 
    // Ty 04/08/98 - Add 5 lines of misc. data, only if nonblank
    // The expectation is that these will be set in a .bex file
