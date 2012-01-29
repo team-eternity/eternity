@@ -28,7 +28,6 @@
 #ifndef M_QSTRKEYS_H__
 #define M_QSTRKEYS_H__
 
-#include "d_dehtbl.h"
 #include "m_qstr.h"
 
 //
@@ -46,7 +45,7 @@ public:
 
    static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKey(input);
+      return qstring::HashCodeStatic(input);
    }
 
    static unsigned int HashCode(const qstring &qstr)
@@ -73,7 +72,7 @@ public:
 
    static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKeyCase(input);
+      return qstring::HashCodeCaseStatic(input);
    }
 
    static unsigned int HashCode(const qstring &qstr)

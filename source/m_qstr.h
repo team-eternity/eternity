@@ -126,6 +126,9 @@ public:
    bool compare(const qstring &other) const;
 
    // Hashing
+   static unsigned int HashCodeStatic(const char *str);
+   static unsigned int HashCodeCaseStatic(const char *str);
+
    unsigned int hashCode() const;      // case-insensitive
    unsigned int hashCodeCase() const;  // case-considering
 

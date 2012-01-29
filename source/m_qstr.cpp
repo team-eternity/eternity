@@ -634,6 +634,28 @@ bool qstring::operator != (const qstring &other) const
 //
 
 //
+// qstring::HashCodeStatic
+//
+// Static version, for convenience and so that the convention of hashing a
+// null pointer to 0 hash code is enforceable without special checks, even
+// if the thing being hashed isn't a qstring instance.
+//
+unsigned int qstring::HashCodeStatic(const char *str)
+{
+   return D_HashTableKey(str ? str : "");
+}
+
+//
+// qstring::HashCodeCaseStatic
+//
+// As above, but with case sensitivity.
+//
+unsigned int qstring::HashCodeCaseStatic(const char *str)
+{
+   return D_HashTableKeyCase(str ? str : "");
+}
+
+//
 // qstring::hashCode
 //
 // Calls the standard D_HashTableKey that is used for the vast majority of
@@ -641,7 +663,7 @@ bool qstring::operator != (const qstring &other) const
 //
 unsigned int qstring::hashCode() const
 {
-   return D_HashTableKey(checkBuffer());
+   return HashCodeStatic(buffer);
 }
 
 //
@@ -652,7 +674,7 @@ unsigned int qstring::hashCode() const
 //
 unsigned int qstring::hashCodeCase() const
 {
-   return D_HashTableKeyCase(checkBuffer());
+   return HashCodeCaseStatic(buffer);
 }
 
 //=============================================================================
