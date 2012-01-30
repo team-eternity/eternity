@@ -759,6 +759,7 @@ void SV_SpawnGhost(int playernum)
 void SV_StartUnlag(int playernum)
 {
    unsigned int i;
+   int j;
    player_t *player, *target;
    server_client_t *server_client = &server_clients[playernum];
    cs_player_position_t *position;
@@ -817,7 +818,8 @@ void SV_StartUnlag(int playernum)
       {
 #if _UNLAG_DEBUG
          printf("Moved player %d:\n  ", i);
-         CS_PrintPlayerPosition(i, sv_world_index - 1);
+         CS_PrintPositionForPlayer(i, sv_world_index - 1);
+         printf("\n");
 #endif
          CS_SavePlayerPosition(
             &server_clients[i].saved_position, i, sv_world_index - 1
@@ -830,10 +832,9 @@ void SV_StartUnlag(int playernum)
             target->mo->flags4 |= MF4_NODAMAGE;
 #if _UNLAG_DEBUG
          printf("  ");
-         CS_PrintPlayerPosition(i, index);
-         /*
+         CS_PrintPositionForPlayer(i, index);
          printf(
-            "Spawning ghost for %d at %u: %d/%d/%d.\n",
+            "\nSpawning ghost for %d at %u: %d/%d/%d.\n",
             playernum,
             index,
             target->mo->x >> FRACBITS,
@@ -841,24 +842,22 @@ void SV_StartUnlag(int playernum)
             target->mo->z >> FRACBITS
          );
          SV_SpawnGhost(i);
-         */
-         // SV_LoadPlayerPositionAt(i, sv_world_index - 1);
 #endif
       }
    }
 
-   for(i = 0; i < numsectors; i++)
+   for(j = 0; j < numsectors; j++)
    {
-      SV_LoadSectorPositionAt(i, index);
+      SV_LoadSectorPositionAt(j, index);
 #if _SECTOR_PRED_DEBUG
-      if(i == _DEBUG_SECTOR)
+      if(j == _DEBUG_SECTOR)
       {
          printf(
             "SV_StartUnlag: Position for sector %u at %u: %3u/%3u.\n",
-            i,
+            j,
             index,
-            sectors[i].ceilingheight >> FRACBITS,
-            sectors[i].floorheight >> FRACBITS
+            sectors[j].ceilingheight >> FRACBITS,
+            sectors[j].floorheight >> FRACBITS
          );
       }
 #endif
@@ -868,6 +867,7 @@ void SV_StartUnlag(int playernum)
 void SV_EndUnlag(int playernum)
 {
    unsigned int i;
+   int j;
    unsigned int world_index = sv_world_index - 1;
    fixed_t added_momx, added_momy;
    unsigned int pindex = server_clients[playernum].command_world_index;
@@ -880,7 +880,8 @@ void SV_EndUnlag(int playernum)
 
 #if _UNLAG_DEBUG
       printf("Moved player %d:\n  ", i);
-      CS_PrintPlayerPosition(i, pindex);
+      CS_PrintPositionForPlayer(i, pindex);
+      printf("\n");
 #endif
       // [CG] Check to see if thrust due to damage was applied to the player
       //      during unlagged.  If it was, apply that thrust to the ultimate
@@ -902,22 +903,23 @@ void SV_EndUnlag(int playernum)
       players[i].mo->momy += added_momy;
 #if _UNLAG_DEBUG
       printf("  ");
-      CS_PrintPlayerPosition(i, world_index);
+      CS_PrintPositionForPlayer(i, world_index);
+      printf("\n");
 #endif
    }
 
-   for(i = 0; i < numsectors; i++)
+   for(j = 0; j < numsectors; j++)
    {
-      SV_LoadSectorPositionAt(i, world_index);
+      SV_LoadSectorPositionAt(j, world_index);
 #if _SECTOR_PRED_DEBUG
-      if(i == _DEBUG_SECTOR)
+      if(j == _DEBUG_SECTOR)
       {
          printf(
             "SV_EndUnlag: Position for sector %u at %u: %3u/%3u.\n",
-            i,
+            j,
             world_index,
-            sectors[i].ceilingheight >> FRACBITS,
-            sectors[i].floorheight >> FRACBITS
+            sectors[j].ceilingheight >> FRACBITS,
+            sectors[j].floorheight >> FRACBITS
          );
       }
 #endif
@@ -1420,7 +1422,7 @@ void SV_UpdateClientStatuses(void)
 
       client->transit_lag = peer->roundTripTime;
       client->packet_loss =
-         (peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+         (int)((peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100);
 
       if(client->packet_loss > 100)
          client->packet_loss = 100;
@@ -1445,10 +1447,6 @@ void SV_BroadcastPlayerPositions(void)
 
       if(!playeringame[i] || player->mo == NULL)
          continue;
-
-#if _UNLAG_DEBUG
-      CS_PrintPlayerPosition(i, sv_world_index);
-#endif
 
       // [CG] Save position & misc state for unlagged.
       pos = &sc->positions[sv_world_index % MAX_POSITIONS];
@@ -1711,8 +1709,8 @@ void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
 
 static void SV_findNextShuffledMap(void)
 {
-   static int count = 1;
-   int i;
+   static unsigned int count = 1;
+   unsigned int i;
 
    if(++count > cs_map_count)
    {
@@ -1905,15 +1903,22 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
        command++)
    {
       // [CG] Skip messages we've seen before.
-      if(command->world_index <= last_index)
+      if(command->index <= last_index)
          continue;
 
       // [CG] Queue this command to be run later.
       bc = ecalloc(cs_buffered_command_t *, 1, sizeof(cs_buffered_command_t));
       CS_CopyCommand(&bc->command, command);
       M_QueueInsert((mqueueitem_t *)bc, &server_client->commands);
-      server_client->last_command_received_index = command->world_index;
+      server_client->last_command_received_index = command->index;
    }
+#if _UNLAG_DEBUG
+   if(message->command_count && command && command->world_index <= last_index)
+   {
+      printf("Command: ");
+      CS_PrintCommand(command);
+   }
+#endif
 }
 
 void SV_HandleClientRequestMessage(char *data, size_t data_length,
@@ -2709,7 +2714,8 @@ void SV_RunDemoTics(void) {}
 
 void SV_HandleClientRequests(void)
 {
-   int i;
+   unsigned int i;
+
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       server_client_t *sc = &server_clients[i];

@@ -114,14 +114,15 @@ static void send_message(message_recipient_e recipient_type,
    player_message.recipient_number = recipient_number;
    player_message.length = strlen(message) + 1;
 
-   buffer =
-      ecalloc(char *, 1, sizeof(nm_playermessage_t) + player_message.length);
+   buffer = ecalloc(
+      char *, 1, sizeof(nm_playermessage_t) + (size_t)player_message.length
+   );
 
    memcpy(buffer, &player_message, sizeof(nm_playermessage_t));
    memcpy(
       buffer + sizeof(nm_playermessage_t),
       message,
-      player_message.length - 1
+      ((size_t)player_message.length) - 1
    );
 
    if(recipient_type == mr_auth)
@@ -134,7 +135,9 @@ static void send_message(message_recipient_e recipient_type,
       doom_printf("%s: %s", players[consoleplayer].name, message);
    }
 
-   send_packet(buffer, sizeof(nm_playermessage_t) + player_message.length);
+   send_packet(
+      buffer, sizeof(nm_playermessage_t) + (size_t)player_message.length
+   );
    efree(buffer);
 }
 
@@ -189,7 +192,7 @@ void CL_SendCommand(void)
    {
       G_BuildTiccmd(&ticcmd);
       CS_CopyTiccmdToCommand(
-         command, &ticcmd, cl_commands_sent, cl_current_world_index
+         command, &ticcmd, cl_commands_sent, cl_latest_world_index
       );
    }
 
@@ -230,12 +233,14 @@ void CL_SendCommand(void)
       if(consoleplayer == 1 && playeringame[2])
       {
          printf("CL_SendCommand: Position of 2: ");
-         CS_PrintPlayerPosition(2, 0);
+         CS_PrintPositionForPlayer(2, 0);
+         printf("\n");
       }
       else if(consoleplayer == 2 && playeringame[1])
       {
          printf("CL_SendCommand: Position of 1: ");
-         CS_PrintPlayerPosition(1, 0);
+         CS_PrintPositionForPlayer(1, 0);
+         printf("\n");
       }
    }
 #endif
@@ -400,7 +405,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
    Thinker *th;
    unsigned int i;
    unsigned int new_num = message->player_number;
-   int mn = message->map_number;
+   unsigned int mn = message->map_number;
 
    // [CG] consoleplayer and displayplayer will both be zero at this point, so
    //      copy clients[0] and players[0] to "new_num" in their respective
@@ -453,7 +458,12 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    unsigned int i;
 
    for(i = 0; i < MAXPLAYERS; i++)
-      playeringame[i] = message->playeringame[i];
+   {
+      if(message->playeringame[i])
+         playeringame[i] = true;
+      else
+         playeringame[i] = false;
+   }
 
    // [CG] Have to be "in-game" at this point.  This should be sent over
    //      in the game state message, so error out if not.
@@ -470,7 +480,7 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    M_WriteFile(
       cs_state_file_path,
       ((char *)message)+ sizeof(nm_currentstate_t),
-      message->state_size
+      (size_t)message->state_size
    );
 
    // [CG] FIXME WTF
@@ -524,7 +534,12 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
 
    cs_current_map_number = message->new_map_number;
    // G_SetGameMapName(cs_maps[message->new_map_number].name);
-   G_DoCompleted(message->enter_intermission);
+
+   if(message->enter_intermission)
+      G_DoCompleted(true);
+   else
+      G_DoCompleted(false);
+
    cl_packet_buffer.disable();
 }
 
@@ -646,8 +661,9 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    client->transit_lag = message->transit_lag;
    if(playernum == consoleplayer)
    {
-      client->packet_loss =
-         (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100;
+      client->packet_loss = (uint8_t)(
+         (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100
+      );
 
       if(client->packet_loss > 100)
          client->packet_loss = 100;
@@ -676,10 +692,6 @@ void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
 
    if(playernum == consoleplayer)
    {
-      printf(
-         "CL_HandlePlayerPosition: Received position, floorz: %d.\n",
-         players[consoleplayer].mo->floorz >> FRACBITS
-      );
       CL_StoreLastServerPosition(
          &message->position,
          (cs_floor_status_e)message->floor_status,
@@ -697,6 +709,7 @@ void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 {
    player_t *player = &players[message->player_number];
+   bool as_spectator;
 
    if(message->player_number > MAX_CLIENTS)
    {
@@ -706,6 +719,10 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 
    playeringame[message->player_number] = true;
    player->playerstate = PST_REBORN;
+   if(message->as_spectator)
+      as_spectator = true;
+   else
+      as_spectator = false;
 
    CL_SpawnPlayer(
       message->player_number,
@@ -714,7 +731,7 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
       message->y << FRACBITS,
       message->z,
       message->angle,
-      message->as_spectator
+      as_spectator
    );
 
    if(message->player_number == consoleplayer)
@@ -860,6 +877,7 @@ void CL_HandlePlayerMessage(nm_playermessage_t *message)
 void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
 {
    Mobj *puff, *shooter;
+   bool ptcl;
 
    if((shooter = NetActors.lookup(message->shooter_net_id)) == NULL)
    {
@@ -870,6 +888,11 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
       return;
    }
 
+   if(message->ptcl)
+      ptcl = true;
+   else
+      ptcl = false;
+
    puff = CL_SpawnPuff(
       message->puff_net_id,
       message->x,
@@ -877,7 +900,7 @@ void CL_HandlePuffSpawnedMessage(nm_puffspawned_t *message)
       message->z,
       message->angle,
       message->updown,
-      message->ptcl
+      ptcl
    );
 
    if(CL_SHOULD_PREDICT_SHOT(shooter))
@@ -1184,7 +1207,10 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
    if(!message->damage_was_fatal)
    {
       cl_handling_damaged_actor = true;
-      cl_handling_damaged_actor_and_justhit = message->just_hit;
+      if(message->just_hit)
+         cl_handling_damaged_actor_and_justhit = true;
+      else
+         cl_handling_damaged_actor_and_justhit = false;
       P_HandleDamagedActor(
          target, source, message->health_damage, message->mod, emod
       );
@@ -1701,8 +1727,9 @@ void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message)
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 {
    uint32_t index = message->world_index % MAX_POSITIONS;
+   int sector_number = message->sector_number;
 
-   if(message->sector_number >= numsectors)
+   if(sector_number >= numsectors)
    {
       doom_printf(
          "Received a map special spawned message containing invalid sector "

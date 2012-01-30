@@ -66,6 +66,7 @@ typedef struct
    fixed_t momy;
    fixed_t momz;
    angle_t angle;
+   int32_t floatbob;
    fixed_t pitch;
    int32_t bob;
    int32_t viewz;

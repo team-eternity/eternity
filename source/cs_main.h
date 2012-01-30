@@ -73,7 +73,8 @@ struct event_t;
 //            should maybe be configurable... except that lowering it means you
 //            will skip more and be more difficult to hit... so maybe not?
 //            Requires testing.
-#define COMMAND_BUNDLE_SIZE TICRATE // [CG] 35 commands/bundle.
+// [CG] Try 10 instead of 35 (TICRATE) here.
+#define COMMAND_BUNDLE_SIZE 10
 
 // [CG] The default port the server listens on if none is given.
 #define DEFAULT_PORT 10666

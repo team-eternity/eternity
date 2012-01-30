@@ -232,6 +232,8 @@ char* CS_DownloadWAD(const char *wad_name)
 
    if(!M_CreateFile(temp_path))
    {
+      printf("Error creating PWAD file on disk %s.\n", temp_path);
+      printf("  Error: %s.\n", M_GetFileSystemErrorMessage());
       C_Printf("Error creating PWAD file on disk.\n");
       efree(url);
       efree(wad_path);
@@ -241,6 +243,7 @@ char* CS_DownloadWAD(const char *wad_name)
 
    if((fobj = fopen(temp_path, "wb")) == NULL)
    {
+      printf("Error opening PWAD file for writing.\n");
       C_Printf("Error opening PWAD file for writing.\n");
       efree(url);
       efree(wad_path);
@@ -252,6 +255,7 @@ char* CS_DownloadWAD(const char *wad_name)
    if(!curl_handle)
    {
       fclose(fobj);
+      printf("Error initializing curl.\n");
       C_Printf("Error initializing curl.\n");
       efree(url);
       efree(wad_path);
@@ -272,6 +276,7 @@ char* CS_DownloadWAD(const char *wad_name)
    if((res = curl_easy_perform(curl_handle)) != 0)
    {
       fclose(fobj);
+      printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
       C_Printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
       efree(url);
       efree(wad_path);
@@ -283,6 +288,7 @@ char* CS_DownloadWAD(const char *wad_name)
    curl_easy_cleanup(curl_handle);
    if(!M_RenamePath((const char *)temp_path, (const char *)wad_path))
    {
+      printf("Error downloading WAD: %s.\n", M_GetFileSystemErrorMessage());
       C_Printf("Error downloading WAD: %s.\n", M_GetFileSystemErrorMessage());
       efree(url);
       efree(wad_path);
@@ -429,8 +435,9 @@ cs_resource_t* CS_GetResource(const char *resource_name)
 {
    cs_resource_t *res = NULL;
    size_t name_length = strlen(resource_name);
+   int resource_count = cs_resource_count;
 
-   for(res = cs_resources; (res - cs_resources) < cs_resource_count; res++)
+   for(res = cs_resources; (res - cs_resources) < resource_count; res++)
    {
       if(strncmp(resource_name, res->name, name_length) == 0)
          return res;

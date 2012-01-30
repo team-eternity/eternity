@@ -249,7 +249,8 @@ void CS_PrintPlayerPosition(cs_player_position_t *position)
       position->momx >> FRACBITS,
       position->momy >> FRACBITS,
       position->momz >> FRACBITS,
-      position->angle / ANGLE_1
+      position->angle / ANGLE_1,
+      position->floatbob
    );
 }
 
@@ -273,6 +274,7 @@ void CS_SetPlayerPosition(int playernum, cs_player_position_t *position)
    player->mo->momy        = position->momy;
    player->mo->momz        = position->momz;
    player->mo->angle       = position->angle;
+   player->mo->floatbob    = position->floatbob;
    player->pitch           = position->pitch;
    player->bob             = position->bob;
    player->viewz           = position->viewz;
@@ -294,6 +296,7 @@ bool CS_PlayerPositionEquals(int playernum, cs_player_position_t *position)
       player->mo->momy        == position->momy            &&
       player->mo->momz        == position->momz            &&
       player->mo->angle       == position->angle           &&
+      player->mo->floatbob    == position->floatbob        &&
       player->pitch           == position->pitch           &&
       player->bob             == position->bob             &&
       player->viewz           == position->viewz           &&
@@ -320,6 +323,7 @@ void CS_SavePlayerPosition(cs_player_position_t *position, int playernum,
    position->momy            = player->mo->momy;
    position->momz            = player->mo->momz;
    position->angle           = player->mo->angle;
+   position->floatbob        = player->mo->floatbob;
    position->pitch           = player->pitch;
    position->bob             = player->bob;
    position->viewz           = player->viewz;
@@ -348,6 +352,7 @@ bool CS_PlayerPositionsEqual(cs_player_position_t *position_one,
       position_one->momy            == position_two->momy            &&
       position_one->momz            == position_two->momz            &&
       position_one->angle           == position_two->angle           &&
+      position_one->floatbob        == position_two->floatbob        &&
       position_one->pitch           == position_two->pitch           &&
       position_one->bob             == position_two->bob             &&
       position_one->viewz           == position_two->viewz           &&
@@ -371,6 +376,7 @@ void CS_CopyPlayerPosition(cs_player_position_t *dest,
    dest->momy            = src->momy;
    dest->momz            = src->momz;
    dest->angle           = src->angle;
+   dest->floatbob        = src->floatbob;
    dest->pitch           = src->pitch;
    dest->bob             = src->bob;
    dest->viewz           = src->viewz;

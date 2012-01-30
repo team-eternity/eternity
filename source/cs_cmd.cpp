@@ -39,7 +39,8 @@
 void CS_PrintCommand(cs_cmd_t *command)
 {
    printf(
-      "%u: %d/%d %d/%d %d/%d.\n",
+      "%u/%u: %d/%d %d/%d %d/%d.\n",
+      command->index,
       command->world_index,
       command->forwardmove,
       command->sidemove,
