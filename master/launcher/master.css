@@ -44,9 +44,9 @@ table td, table th {
 }
 
 table#servers_table, div.jspPane {
-    width: 642px;
-    min-width: 642px;
-    max-width: 642px;
+    width: 624px;
+    min-width: 624px;
+    max-width: 624px;
 }
 
 table#servers_table {
@@ -57,17 +57,22 @@ table#servers_table {
 }
 
 table#servers_table th {
-    border-bottom: 1px solid #505050;
+    font-size: .8em;
+    font-weight: bold;
+    border-bottom: 2px solid #505050;
+}
+
+table#servers_table th:hover {
+   cursor: pointer;
 }
 
 table#servers_table td {
     border-width: 1px 0px 0px 0px;
-    border-bottom: 1px solid #505050;
+    border-bottom: 2px solid #505050;
     overflow: hidden;
 }
 
 table#servers_table tr.highlighted {
-    /* background-color: #404040; */
     background: rgba(255, 255, 255, .15);
 }
 
@@ -77,82 +82,83 @@ div.shade {
 
 div#content {
     width: 100%;
-    max-width: 985px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 0px;
-    margin-bottom: 0px;
+    margin: 0px;
+    padding: 0px;
     padding-top: 5px;
 }
 
 div#top_panel, div#main_panel {
-    min-width: 985px;
-    max-width: 985px;
+    min-width: 960px;
+    max-width: 960px;
+    width: 960px;
     margin: 0px;
+    padding: 0px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 div#main_panel {
     margin-top: 4px;
 }
 
-div#header, div#account {
+div#header, div#refresh, div#account {
     display: inline-block;
+    margin: 0px;
+    padding: 0px;
 }
 
-h1#master_name, h1#section_label {
-    font-size: 1em;
-    padding: .25em;
-    padding-top: .4em;
-    padding-bottom: .4em;
+h1#master_name, .top_button {
+    font-size: 1.25em;
+    padding: 3px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     margin: 1px;
     width: auto;
 }
 
 h1#master_name {
-    padding-left: .5em;
+    padding-left: 6px;
 }
 
-h1#section_label:hover {
+.active_top_button:hover {
     background: rgba(255, 255, 255, .15);
 }
 
 div#header {
-    width: 835px;
-    margin: 0px;
+    min-width: 687px;
+    max-width: 687px;
+}
+
+div#refresh {
+    min-width: 120px;
+    max-width: 120px;
+    text-align: center;
 }
 
 div#account {
-    width: 9em;
-    min-width: 9em;
-    max-width: 9em;
+    width: 144px;
+    min-width: 144px;
+    max-width: 144px;
     text-align: center;
 }
 
 div#main_window, div#sidebar {
     display: inline-block;
     margin: 0px;
-    padding: 1em;
-    font-size: .6em;
-    font-weight: bold;
+    padding: 0px;
+    font-size: .9em;
 }
 
 div.jspContainer {
-    max-width: 662px;
-    min-width: 662px;
+    padding-left: 4px;
 }
 
 div#main_window {
-    min-height: 54em;
-    max-height: 54em;
-    min-width: 662px;
-    max-width: 662px;
-    /*
-    min-width: 658px;
-    max-width: 658px;
-    */
+    width: 633px;
+    min-height: 670px;
+    max-height: 670px;
     overflow: auto;
-    padding-left: 4px;
-    padding-right: 0px;
+    vertical-align: top;
 }
 
 div#main_window a, div#main_window a:visited {
@@ -164,11 +170,14 @@ div#main_window a:hover {
 }
 
 div#sidebar {
-    margin: 0;
-    min-height: 52em;
-    max-height: 52em;
+    margin: 0px;
+    padding: 0px;
+    padding-left: 12px;
+    padding-right: 12px;
     min-width: 298px;
     max-width: 298px;
+    min-height: 670px;
+    max-height: 670px;
     vertical-align: top;
 }
 
@@ -201,13 +210,12 @@ ul#server_pwads_list li {
     margin: 0px;
     margin-top: 2px;
     padding: 3px;
-    padding-left: 6px;
-    border-left: 3px solid blue;
+    padding-left: 5px;
+    border-left: 5px solid #0050DD;
 }
 
 a.pwad_link, a.pwad_link:visited {
     color: white;
-    font-weight: bold;
 }
 
 a.pwad_link:hover {
@@ -219,60 +227,52 @@ div#no_servers {
     max-width: 165px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 21em;
+    margin-top: 252px;
     background: rgba(0, 0, 0, .4);
     border: 2px solid #505050;
-    padding: 2em;
+    padding: 24px;
 }
 
 div.server_group {
     width: 100%;
     text-align: right;
-    padding-top: .5em;
-    padding-bottom: .5em;
-    /*
-    border-top: 1px solid #505050;
-    border-bottom: 1px solid #505050;
-    */
-    border-right: 3px solid blue;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-right: 5px solid #0050DD;
     background: rgba(255, 255, 255, .1);
-    padding-right: 8px;
-    margin-bottom: .5em;
+    padding-right: 5px;
+    margin-bottom: 5px;
 }
 
 div.delete_this_group {
-    border-right: 3px solid red;
-    /* background: rgba(255, 0, 0, .15); */
+    border-right: 5px solid #DD5050;
 }
 
 span.success, span.error {
-    padding: .25em;
-    padding-top: .3em;
-    padding-bottom: .4em;
-    padding-left: 3px;
-    margin-top: .5em;
-    margin-right: 1em;
-    min-height: 1em;
-    max-height: 1em;
+    padding: 3px;
+    padding-top: 3px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    margin-top: 6px;
+    margin-right: 12px;
+    min-height: 12px;
+    max-height: 12px;
     background: rgba(255, 255, 255, .1);
 }
 
 span.success {
-    border-left: 3px solid green;
-    /* background: rgba(0, 255, 0, .15); */
+    border-left: 5px solid green;
 }
 
 span.error {
-    border-left: 3px solid red;
-    /* background: rgba(255, 0, 0, .15); */
+    border-left: 5px solid #DD5050;
 }
 
 img.loading {
     display: none;
     margin: 0px;
     padding: 0;
-    margin-right: 1em;
-    /* padding-bottom: 3px; */
+    margin-right: 12px;
     vertical-align: middle;
     margin-bottom: 3px;
 }
@@ -282,21 +282,19 @@ div#account_forms {
     max-width: 220px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 17em;
+    margin-top: 204px;
     background: rgba(0, 0, 0, .4);
     border: 2px solid #505050;
-    padding: 2em;
+    padding: 24px;
 }
 
 input {
-    margin-top: .5em;
-    margin-bottom: .5em;
+    margin-top: 6px;
+    margin-bottom: 6px;
     background: rgba(255, 255, 255, 0);
     color: white;
     border: 1px solid white;
     font-family: sans-serif;
-    font-size: 1em;
-    font-weight: bold;
 }
 
 button::-moz-focus-inner {
@@ -310,14 +308,12 @@ button {
     min-width: 40px;
     border: 1px solid white;
     font-family: sans-serif;
-    font-size: 1em;
-    font-weight: bold;
     padding-top: 2px;
     padding-bottom: 2px;
     padding-left: 6px;
     padding-right: 6px;
-    margin-top: .5em;
-    margin-bottom: 1em;
+    margin-top: 6px;
+    margin-bottom: 12px;
     margin-left: auto;
     text-align: center;
 }
@@ -388,7 +384,7 @@ table tr.spectating_player_row {
 }
 
 h3.account_heading {
-    margin-top: .5em;
-    margin-bottom: 1em;
+    margin-top: 6px;
+    margin-bottom: 12px;
 }
 

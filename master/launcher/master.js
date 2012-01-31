@@ -6,14 +6,15 @@
  *     - Full IWAD & PWAD listing
  *       - If the server provided a WAD repository link, list PWADs as links
  */
-var hostname_length = 38;
-var pwads_length = 21;
+var max_hostname_length = 38;
+var max_pwads_length = 21;
 
 var servers = null;
 var username = null;
 var password_hash = null;
 var server_groups = null;
 var email_regexp = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i; // [CG] BAHAHAHAHAHAHAHAHA.
+var tablesorter_initialized = false;
 
 function escapeHTML(s) {
     return $('<div/>').text(s).html();
@@ -63,6 +64,54 @@ function formatList(l, length) {
     return ellipsize(l.join(', '), length);
 }
 
+function formatPWADs(pwads) {
+    return String(formatList(pwads)).replace(/\.wad/g, '');
+}
+
+function formatTime(ss) {
+    t = parseInt(ss);
+    hours = parseInt(t / 3600);
+    if (hours >= 1) {
+        return '59:59';
+    }
+    minutes = parseInt(t / 60);
+    if (minutes < 1) {
+        minutes = '00';
+    }
+    else if (minutes < 10) {
+        minutes = '0' + minutes;
+    }
+    seconds = parseInt(t % 60);
+    if (seconds < 1) {
+        seconds = '00';
+    }
+    else if (seconds < 10) {
+        seconds = '0' + seconds;
+    }
+    return minutes + ':' + seconds;
+}
+
+function formatGameType(game_type) {
+    if (game_type == 'deathmatch') {
+        return 'DM';
+    }
+    else if (game_type == 'tdm') {
+        return 'TDM';
+    }
+    else if (game_type == 'ctf') {
+        return 'CTF';
+    }
+    else if (game_type == 'duel') {
+        return 'DUEL';
+    }
+    else if (game_type == 'cooperative' || game_type == 'coop') {
+        return 'COOP';
+    }
+    else {
+        return '-';
+    }
+}
+
 function setProtocolToEternity(uri) {
     var x = new String(uri);
     var colon_index = x.indexOf(":");
@@ -82,7 +131,7 @@ function toURI(group_name, server_name) {
 
 function toLink(group_name, server_name, hostname) {
     var uri = toURI(group_name, server_name);
-    hostname = ellipsize(hostname, hostname_length);
+    hostname = ellipsize(hostname, max_hostname_length);
     return '<a class="server_link" href="' + uri + '">' + hostname + '</a>';
 }
 
@@ -411,55 +460,53 @@ function getRowColorClass(color, playing) {
     return color_class + ' spectating_player_row';
 }
 
-function formatTime(ss) {
-    t = parseInt(ss);
-    hours = parseInt(t / 3600);
-    if (hours >= 1) {
-        return '59:59';
-    }
-    minutes = parseInt(t / 60);
-    if (minutes < 1) {
-        minutes = '00';
-    }
-    else if (minutes < 10) {
-        minutes = '0' + minutes;
-    }
-    seconds = parseInt(t % 60);
-    if (seconds < 1) {
-        seconds = '00';
-    }
-    else if (seconds < 10) {
-        seconds = '0' + seconds;
-    }
-    return minutes + ':' + seconds;
-}
-
 function buildTeamsTable(teams, parent_element) {
-    $('<table id="teams_table"></table>').appendTo(parent_element);
+    var teams_table = $('<table id="teams_table">');
+    var teams_table_body = $('<tbody id="teams_table_body">');
     $('<thead>' +
           '<tr>' +
               '<th>Player</th>' +
-              '<th colspan="2">Lag/PL</th>' +
+              '<th>Lag / PL</th>' +
               '<th>Frags</th>' +
               '<th>Time</th>' +
           '</tr>' +
-      '</thead>' +
-      '<tbody id="teams_table_body"></tbody>'
-    ).appendTo('#teams_table');
+      '</thead>'
+     ).appendTo(teams_table);
     var team_row_index;
+    var found_a_player = false;
     for (team_row_index = 0; team_row_index < teams.length; team_row_index++) {
         var team_row = teams[team_row_index];
+
+        if (!team_row.players) {
+           continue;
+        }
+
+        found_a_player = true;
+
         $.each(team_row.players, function (index, row) {
-            var row_color_class = getRowColorClass(team_row.color, row.playing);
-            $('<tr class="' + row_color_class + '">' +
-                  '<td class="name_cell">' + row.name + '</td>' +
-                  '<td class="lag_cell">' + row.lag + '</td>' +
-                  '<td class="packet_loss_cell">' + row.packet_loss + '</td>' +
-                  '<td class="frags_cell">' + row.frags + '</td>' +
-                  '<td class="time_cell">' + formatTime(row.time) + '</td>' +
-              '</tr>'
-             ).appendTo('#teams_table_body');
+            if (row) {
+                var row_color_class = getRowColorClass(
+                    team_row.color, row.playing
+                );
+                var lag = row.lag + 'ms';
+                var pl = row.packet_loss + '%';
+                var tm = formatTime(row.time);
+                $('<tr class="' + row_color_class + '">' +
+                      '<td class="name_cell">' + row.name + '</td>' +
+                      '<td class="lag_cell">' + lag + ' / ' + pl + '</td>' +
+                      '<td class="frags_cell">' + row.frags + '</td>' +
+                      '<td class="time_cell">' + tm + '</td>' +
+                  '</tr>'
+                ).appendTo(teams_table_body);
+            }
         });
+    }
+    if (found_a_player) {
+        teams_table_body.appendTo(teams_table);
+        teams_table.appendTo(parent_element);
+    }
+    else {
+        $('#sidebar').append('<div class="centered">- No Players -</div>');
     }
 }
 
@@ -468,7 +515,7 @@ function buildPlayersTable(players, parent_element) {
     $('<thead>' +
           '<tr>' +
               '<th>Player</th>' +
-              '<th colspan="2">Lag/PL</th>' +
+              '<th colspan="2">Lag / PL</th>' +
               '<th>Frags</th>' +
               '<th>Time</th>' +
           '</tr>' +
@@ -476,59 +523,64 @@ function buildPlayersTable(players, parent_element) {
       '<tbody id="players_table_body"></tbody>'
     ).appendTo('#players_table');
     $.each(players, function (index, row) {
-        if (row.playing) {
-            var row_class = "no_team_player_row";
+        if (row) {
+            var lag = row.lag + 'ms';
+            var pl = row.packet_loss + '%';
+            var tm = formatTime(row.time);
+            if (row.playing) {
+                var row_class = "no_team_player_row";
+            }
+            else {
+                var row_class = "no_team_player_row spectating_player_row";
+            }
+            $('<tr class="' + row_class + '">' +
+                  '<td class="name_cell">' + row.name + '</td>' +
+                  '<td class="lag_cell">' + lag + ' / ' + pl + '</td>' +
+                  '<td class="frags_cell">' + row.frags + '</td>' +
+                  '<td class="time_cell">' + tm + '</td>' +
+              '</tr>'
+            ).appendTo('#players_table_body');
         }
-        else {
-            var row_class = "no_team_player_row spectating_player_row";
-        }
-        $('<tr class="' + row_class + '">' +
-              '<td class="name_cell">' + row.name + '</td>' +
-              '<td class="lag_cell">' + row.lag + '</td>' +
-              '<td class="packet_loss_cell">' + row.packet_loss + '</td>' +
-              '<td class="frags_cell">' + row.frags + '</td>' +
-              '<td class="time_cell">' + formatTime(row.time) + '</td>' +
-          '</tr>'
-         ).appendTo('#players_table_body');
     });
 }
 
 function showServerInfo(server_index) {
-    var server = servers[server_index];
-    var config = server.configuration;
-    var state = server.state;
+    var data = servers[server_index];
+    var config = data.configuration;
+    var state = data.state;
     var repo = config.server.wad_repository;
     var sidebar = $('#sidebar');
     sidebar.empty().append('<h2 id="server_info_header">').append('<hr/>');
     $('#server_info_header').text(config.server.hostname);
-    if (server.state.teams) {
-        buildTeamsTable(server.state.teams, sidebar);
+    if (state.teams) {
+        buildTeamsTable(state.teams, sidebar);
     }
-    else if (server.state.players.length > 0) {
-        buildPlayersTable(server.state.players, sidebar);
+    else if (state.players && state.players.length > 0) {
+        buildPlayersTable(state.players, sidebar);
     }
     else {
         sidebar.append('<div class="centered">- No Players -</div>');
     }
     
     if (config.server.pwads.length > 0) {
-        var pwads_element = $('<ul id="server_pwads_list">');
+        var pwads = $('<ul id="server_pwads_list">');
         var pwad;
-        for (i = 0; i < config.server.pwads.length; i++) {
+        for (var i = 0; i < config.server.pwads.length; i++) {
+            var name = config.server.pwads[i];
             if (repo) {
-                pwad = '<a class="pwad_link" href="' + repo +
-                       config.server.pwads[i] + '">' + config.server.pwads[i] +
-                       '</a>';
+                var link = repo + name;
+                $('<li>').addClass('server_pwad').append(
+                   $('<a>').addClass('pwad_link').attr('href', link).html(name)
+                ).appendTo(pwads);
             }
             else {
-                pwad = config.server.pwads[i];
+                $('<li>').addClass('server_pwad').html(name).appendTo(pwads);
             }
-            pwads_element.append('<li class="server_pwad">' + pwad + '</li>');
         }
         sidebar.append('<hr/>')
                .append('<h2 id="server_pwads_header">- Download WADs -</h2>')
                .append('<hr/>')
-               .append(pwads_element);
+               .append(pwads);
     }
 }
 
@@ -553,7 +605,12 @@ function addServer(index, server) {
     if (repo && repo.charAt(repo.length - 1) != '/') {
         config.server.wad_repository += '/';
     }
-    var pwads = formatList(config.server.pwads, pwads_length, null);
+    var pwads = formatPWADs(
+        config.server.pwads.slice(0, 2), max_pwads_length, null
+    );
+    if (config.server.pwads.length > 2) {
+        pwads += ', ...';
+    }
     var full_address = config.server.address + ':' +
         new String(config.server.port);
     var row_id = "'server_row_" + index + "'";
@@ -561,25 +618,46 @@ function addServer(index, server) {
     $('<tr id=' + row_id + ' onclick="rowSelected(' + id_str + ')">' +
           '<td class="link_cell">' + link + '</td>' +
           '<td class="players_cell">' +
-            state.connected_clients + '/' + config.server.max_player_clients
+           state.connected_clients + ' / ' + config.server.max_player_clients +
           '</td>' +
           '<td class="game_type_cell">' +
-              config.server.game_type +
+              formatGameType(config.server.game_type) +
           '</td>' +
           '<td class="pwads_cell">' + pwads + '</td>' +
-          '<td class="map_cell">' + state.map + '</td>' +
-          // '<td class="address_cell">' + full_address + '</td>' +
+          '<td class="maps_cell">' + state.map + '</td>' +
       '</tr>'
      ).appendTo('#servers_table_body');
 }
 
+function rebuildServerTable() {
+    $('#servers_table').replaceWith(
+        '<table id="servers_table">' +
+            '<thead id="servers_table_head">' +
+                '<tr>' +
+                    '<th>Server</th>' +
+                    '<th>Clients</th>' +
+                    '<th>Type</th>' +
+                    '<th>WADs</th>' +
+                    '<th>Map</th>' +
+                '</tr>' +
+            '</thead>' +
+            '<tbody id="servers_table_body"></tbody>' +
+        '</table>'
+    );
+}
+
 function buildServerList(data, textStatus, xhr) {
+    var sl = [[0, 0]];
+    rebuildServerTable();
     if (data != null || servers != null) {
         servers = data;
         $.each(servers, addServer);
-        $('#servers_table').tablesorter();
+        $('#servers_table').tablesorter({
+            sortMultiSortKey: "ctrlKey",
+            sortList: [[0, 0]]
+        });
+        reInitializeScrollpane();
     }
-    $('#main_window').jScrollPane();
     showServerList();
 }
 
@@ -625,11 +703,16 @@ function switchMainWindow() {
     clearMainWindow();
     if (current_main_window_contents == "server_list") {
         showAccountForms();
-        $('#section_label').text('< Servers');
+        $('#section_label').html('< Servers');
+        $('#refresh').unbind();
+        $('#refresh_button').removeClass('active_top_button');
+
     }
     else {
         showServerList();
-        $('#section_label').text('Account >');
+        $('#section_label').html('Account >');
+        $('#refresh').click(loadServers);
+        $('#refresh_button').addClass('active_top_button');
     }
 }
 
@@ -698,13 +781,25 @@ function showServerGroupsForm() {
     );
 }
 
+function loadServers() {
+    if (servers) {
+        $('#servers_table_body').children().remove();
+        servers = null;
+    }
+    $.getJSON(window.location + 'servers', buildServerList);
+}
+
 $(document).ready(function() {
+    $('#main_window').jScrollPane();
     clearMainWindow();
     wrapForm('login_form', 'Login', sendLogin);
     wrapForm('registration_form', 'Register', sendRegistration);
     wrapForm('change_password_form', 'Set', sendNewPassword);
     wrapForm('server_groups_form', 'Create', sendNewServerGroup);
-    $.getJSON(window.location + 'servers', buildServerList);
-    // $('#server_groups').jScrollPane();
+    $('#refresh').click(loadServers);
+    $('#account').click(switchMainWindow);
+    loadServers();
 });
+
+// vi:sw=4 ts=4:
 
