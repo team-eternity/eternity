@@ -1813,6 +1813,8 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
 
       // sector colormaps
+      sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->topmap = R_ColormapNumForName(tempstr);
@@ -1833,12 +1835,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
       if(strcasecmp(tempstr, "@flat"))
          sec->ceilingterrain = E_TerrainForName(tempstr);
-      /*
-   CFG_STR(FIELD_SECTOR_PORTALFLAGS_F,     "",        CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
-   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB),
-   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB),
-   */
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_F);
       if(*tempstr != '\0')
          sec->f_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
@@ -2065,9 +2062,12 @@ void E_LoadSectorExt(line_t *line)
    sector->ceilingbaseangle = (float)(edsector->ceilingangle * PI / 180.0f);
 
    // colormaps
-   sector->topmap    = edsector->topmap;
-   sector->midmap    = edsector->midmap;
-   sector->bottommap = edsector->bottommap;
+   if(edsector->topmap >= 0)
+      sector->topmap    = edsector->topmap;
+   if(edsector->midmap >= 0)
+      sector->midmap    = edsector->midmap;
+   if(edsector->bottommap >= 0)
+      sector->bottommap = edsector->bottommap;
 
    // terrain overrides
    sector->floorterrain   = edsector->floorterrain;
