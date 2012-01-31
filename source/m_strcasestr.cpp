@@ -171,8 +171,8 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
             // See if needle + comparison_count now reaches the end of the needle
             if(needle_last_ccount)
             {
-               needle_last_ccount += strnlen(needle_last_ccount, 
-                                             comparison_count - last_ccount);
+               needle_last_ccount += pstrnlen(needle_last_ccount, 
+                                              comparison_count - last_ccount);
                if(!*needle_last_ccount)
                   needle_last_ccount = NULL;
                last_ccount = comparison_count;
