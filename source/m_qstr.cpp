@@ -287,13 +287,16 @@ qstring &qstring::Delc()
 //
 qstring &qstring::concat(const char *str)
 {
-   unsigned int cursize = size;
-   unsigned int newsize = index + strlen(str) + 1;
+   if(!buffer)
+      initCreateSize(strlen(str) + 1);
+   else
+   {
+      unsigned int cursize = size;
+      unsigned int newsize = index + strlen(str) + 1;
 
-   checkBuffer();
-   
-   if(newsize > cursize)
-      grow(newsize - cursize);
+      if(newsize > cursize)
+         grow(newsize - cursize);
+   }
 
    strcat(buffer, str);
 
@@ -343,7 +346,7 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
    char *insertpoint;
    size_t charstomove;
    size_t insertstrlen = strlen(insertstr);
-   size_t totalsize = index + insertstrlen + 1;
+   size_t totalsize    = index + insertstrlen + 1;; 
    
    if(!buffer)
       initCreateSize(totalsize);
@@ -376,7 +379,8 @@ qstring &qstring::insert(const char *insertstr, size_t pos)
 //
 qstring &qstring::copy(const char *str)
 {
-   clear();
+   if(index > 0)
+      clear();
    
    return concat(str);
 }
@@ -388,7 +392,8 @@ qstring &qstring::copy(const char *str)
 //
 qstring &qstring::copy(const qstring &src)
 {
-   clear();
+   if(index > 0)
+      clear();
 
    return concat(src);
 }
@@ -430,7 +435,8 @@ char *qstring::copyInto(char *dest, size_t pSize) const
 //
 qstring &qstring::copyInto(qstring &dest) const
 {
-   dest.clear();
+   if(dest.index > 0)
+      dest.clear();
    
    return dest.concat(*this);
 }
@@ -840,7 +846,7 @@ double qstring::toDouble(char **endptr)
 //
 char *qstring::duplicate(int tag) const
 {
-   return (char *)Z_Strdup(buffer ? buffer : "", tag, NULL);
+   return Z_Strdup(buffer ? buffer : "", tag, NULL);
 }
 
 //
@@ -851,7 +857,7 @@ char *qstring::duplicate(int tag) const
 //
 char *qstring::duplicateAuto() const
 {
-   return (char *)Z_Strdupa(buffer ? buffer : "");
+   return Z_Strdupa(buffer ? buffer : "");
 }
 
 //=============================================================================
@@ -1008,9 +1014,14 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
 {
    va_list va2;
    int returnval;
+   size_t fmtsize = strlen(fmt) + 1;
 
    if(maxlen)
    {
+      // If format string is longer than max specified, use format string len
+      if(fmtsize > maxlen)
+         maxlen = fmtsize;
+
       // maxlen is specified. Check it against the qstring's current size.
       if(maxlen > size)
          createSize(maxlen);
@@ -1020,15 +1031,15 @@ int qstring::Printf(size_t maxlen, const char *fmt, ...)
    else
    {
       // determine a worst-case size by parsing the fmt string
-      va_list va1;                     // args
-      char c;                          // current character
-      const char *s = fmt;             // pointer into format string
-      bool pctstate = false;           // seen a percentage?
-      int dummyint;                    // dummy vars just to get args
+      va_list va1;                // args
+      char c;                     // current character
+      const char *s = fmt;        // pointer into format string
+      bool pctstate = false;      // seen a percentage?
+      int dummyint;               // dummy vars just to get args
       double dummydbl;
       const char *dummystr;
       void *dummyptr;
-      size_t charcount = strlen(fmt) + 1; // start at strlen of format string
+      size_t charcount = fmtsize; // start at strlen of format string
 
       va_start(va1, fmt);
       while((c = *s++))

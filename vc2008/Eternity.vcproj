@@ -1949,28 +1949,6 @@
 							/>
 						</FileConfiguration>
 					</File>
-					<File
-						RelativePath="..\source\metaapi.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
 				</Filter>
 				<Filter
 					Name="M_ Headers"
@@ -2049,10 +2027,6 @@
 					</File>
 					<File
 						RelativePath="..\source\m_vector.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\metaapi.h"
 						>
 					</File>
 				</Filter>
@@ -5144,6 +5118,44 @@
 						>
 					</File>
 				</Filter>
+			</Filter>
+			<Filter
+				Name="MetaAPI"
+				>
+				<File
+					RelativePath="..\source\metaadapter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\metaapi.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\source\metaapi.h"
+					>
+				</File>
+				<File
+					RelativePath="..\source\metaqstring.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

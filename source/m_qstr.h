@@ -51,7 +51,7 @@ public:
    static const size_t npos;
    static const size_t basesize;
 
-   // Constructor / Destructor
+   // Constructors / Destructor
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
       : ZoneObject(), buffer(NULL), index(0), size(0)
    {
@@ -59,6 +59,13 @@ public:
       if(startSize)
          initCreateSize(startSize);
    }
+
+   qstring(const qstring &other) 
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      copy(other);
+   }
+
    ~qstring() { freeBuffer(); }
 
    // Basic Property Getters
