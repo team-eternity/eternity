@@ -94,7 +94,6 @@ private:
    char *hidden_action_name;
    bool repeatable;
    bool pressed;
-   bool marked_for_deletion;
    unsigned short flags;
    input_action_category_e category;
 
@@ -119,7 +118,6 @@ public:
       hidden_action_name = estrdup(new_action_name);
       keys_to_actions_key = (const char *)hidden_key_name;
       actions_to_keys_key = (const char *)hidden_action_name;
-      marked_for_deletion = false;
    }
 
    KeyBind(const char *new_key_name, const char *new_action_name,
@@ -131,7 +129,6 @@ public:
       hidden_action_name = estrdup(new_action_name);
       keys_to_actions_key = (const char *)hidden_key_name;
       actions_to_keys_key = (const char *)hidden_action_name;
-      marked_for_deletion = false;
    }
 
    ~KeyBind()
@@ -248,111 +245,54 @@ public:
       efree(hidden_name);
    }
 
-   bool InputAction::handleEvent(event_t *ev, KeyBind *kb, int categories)
+   bool InputAction::handleEvent(event_t *ev, KeyBind *kb)
    {
-      bool processed_event = false;
+      /*
+       |---------------------------------------------------------------------|
+       | activate   | nothing    | bind +y "+left" | isPO && isAO            |
+       | deactivate | nothing    | bind +u "-left" | isPO && isDO            |
+       | activate   | nothing    | bind +i "left"  | isPO && (!isAO || isDO) |
+       | nothing    | activate   | bind -o "+left" | isRO && isAO            |
+       | nothing    | deactivate | bind -p "-left" | isRO && isDO            |
+       | nothing    | activate   | bind -h "left"  | isRO && !(isAO || isDO) |
+       | activate   | activate   | bind j "+left"  | isAO                    |
+       | deactivate | deactivate | bind k "-left"  | isDO                    |
+       | activate   | deactivate | bind l "left"   | isN                     |
+       | deactivate | activate   | ...             | n/a                     |
+       |---------------------------------------------------------------------|
+      */
 
-      if((categories & category) == 0)
-         return processed_event;
-
-      if(kb->isNormal())
+      if(kb->isPressOnly())
       {
-         if(ev->type == ev_keydown)
-         {
-            if(kb->isRepeatable() || !kb->isPressed())
-            {
-               activate(ev);
-               kb->press();
-               processed_event = true;
-            }
-         }
-         else if(ev->type == ev_keyup)
-         {
+         if(kb->isDeactivateOnly())
             deactivate(ev);
-            kb->release();
-            processed_event = true;
-         }
+         else
+            activate(ev);
+      }
+      else if(kb->isReleaseOnly())
+      {
+         if(kb->isDeactivateOnly())
+            deactivate(ev);
+         else
+            activate(ev);
       }
       else if(kb->isActivateOnly())
-      {
-         if(ev->type == ev_keydown)
-         {
-            if(kb->isRepeatable() || !kb->isPressed())
-            {
-               activate(ev);
-               kb->press();
-               processed_event = true;
-            }
-         }
-         else if(ev->type == ev_keyup)
-         {
-            activate(ev);
-            kb->release();
-            processed_event = true;
-         }
-      }
+         activate(ev);
       else if(kb->isDeactivateOnly())
-      {
-         if(ev->type == ev_keydown)
-         {
-            if(kb->isRepeatable() || !kb->isPressed())
-            {
-               deactivate(ev);
-               kb->release();
-               processed_event = true;
-            }
-         }
-         else if(ev->type == ev_keyup)
-         {
-            deactivate(ev);
-            kb->release();
-            processed_event = true;
-         }
-      }
-      else if(kb->isPressOnly() || kb->isActivateOnly())
-      {
-         if(ev->type == ev_keydown)
-         {
-            if(kb->isRepeatable() || !kb->isPressed())
-            {
-               activate(ev);
-               kb->release();
-               processed_event = true;
-            }
-         }
-      }
-      else if(kb->isPressOnly() || kb->isDeactivateOnly())
-      {
-         if(ev->type == ev_keydown)
-         {
-            if(kb->isRepeatable() || !kb->isPressed())
-            {
-               deactivate(ev);
-               kb->release();
-               processed_event = true;
-            }
-         }
-      }
-      else if(kb->isReleaseOnly() || kb->isActivateOnly())
-      {
-         if(ev->type == ev_keyup)
-         {
-            activate(ev);
-            kb->release();
-            processed_event = true;
-         }
-      }
-      else if(kb->isReleaseOnly() || kb->isDeactivateOnly())
-      {
-         if(ev->type == ev_keyup)
-         {
-            deactivate(ev);
-            kb->release();
-            processed_event = true;
-         }
-      }
+         deactivate(ev);
+      else if(ev->type == ev_keydown)
+         activate(ev);
+      else if(ev->type == ev_keyup)
+         deactivate(ev);
+      else
+         return false;
 
-      return processed_event;
+      if(ev->type == ev_keydown)
+         kb->press();
+      else if(ev->type == ev_keyup)
+         kb->release();
+
+      return true;
    }
 
 
@@ -1049,20 +989,30 @@ bool G_KeyResponder(event_t *ev, int categories)
 
    while((kb = keys_to_actions.keyIterator(kb, key->getName())))
    {
-      if((kb->isPressOnly()) && ev->type == ev_keyup)
-         continue;
+      if(ev->type == ev_keyup)
+      {
+         if(kb->isPressOnly())
+            continue;
+      }
+      else if(ev->type == ev_keydown)
+      {
+         if(kb->isPressed() && !kb->isRepeatable())
+            continue;
 
-      if((kb->isReleaseOnly()) && ev->type == ev_keydown)
-         continue;
+         if(kb->isReleaseOnly())
+            continue;
+      }
 
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
       {
-         doom_printf("Action [%s] not found", kb->getActionName());
+         doom_printf("Action [%s] not found.", kb->getActionName());
          continue;
       }
 
-      if(action->handleEvent(ev, kb, categories))
-         processed_event = true;
+      if((categories & action->getCategory()) == 0)
+         continue;
+
+      processed_event = action->handleEvent(ev, kb);
    }
 
    return processed_event;
