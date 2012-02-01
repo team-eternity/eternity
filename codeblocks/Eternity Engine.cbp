@@ -219,6 +219,7 @@
 		<Unit filename="..\source\e_exdata.cpp" />
 		<Unit filename="..\source\e_fonts.cpp" />
 		<Unit filename="..\source\e_hash.cpp" />
+		<Unit filename="..\source\e_inventory.cpp" />
 		<Unit filename="..\source\e_lib.cpp" />
 		<Unit filename="..\source\e_mod.cpp" />
 		<Unit filename="..\source\e_player.cpp" />
@@ -259,6 +260,7 @@
 		<Unit filename="..\source\m_queue.cpp" />
 		<Unit filename="..\source\m_random.cpp" />
 		<Unit filename="..\source\m_shots.cpp" />
+		<Unit filename="..\source\m_strcasestr.cpp" />
 		<Unit filename="..\source\m_syscfg.cpp" />
 		<Unit filename="..\source\m_vector.cpp" />
 		<Unit filename="..\source\metaapi.cpp" />

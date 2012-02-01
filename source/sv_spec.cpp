@@ -57,7 +57,7 @@ void SV_SaveSectorPositions(void)
       return;
    }
 
-   for(i = 0; i < numsectors; i++)
+   for(i = 0; i < (unsigned int)numsectors; i++)
    {
       old_position =
          &cs_sector_positions[i][(sv_world_index - 1) % MAX_POSITIONS];

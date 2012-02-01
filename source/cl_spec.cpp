@@ -46,7 +46,7 @@ void CL_LoadSectorPositions(unsigned int index)
 
    cl_setting_sector_positions = true;
 
-   for(i = 0; i < numsectors; i++)
+   for(i = 0; i < (unsigned int)numsectors; i++)
    {
       position = &cs_sector_positions[i][index % MAX_POSITIONS];
       if(position->world_index != index)

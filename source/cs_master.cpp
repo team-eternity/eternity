@@ -548,7 +548,8 @@ void SV_MasterDelist(void)
 void SV_MasterUpdate(void)
 {
    int maxfd = -1;
-   int i, active_transfer_count, request_message_count;
+   unsigned int i;
+   int active_transfer_count, request_message_count;
    long curl_timeout;
    CURLMsg *request_message;
    CURLMcode multi_error;
@@ -610,7 +611,7 @@ void SV_MasterUpdate(void)
       if(request_message->msg == CURLMSG_DONE)
       {
          request = NULL;
-         for(i = 0; i < sv_master_server_count; i++)
+         for(i = 0; i < (unsigned int)sv_master_server_count; i++)
          {
             if(request_message->easy_handle ==
                cs_master_requests[i].curl_handle)
@@ -704,7 +705,7 @@ void SV_MasterUpdate(void)
       }
    }
 
-   for(i = 0; i < sv_master_server_count; i++)
+   for(i = 0; i < (unsigned int)sv_master_server_count; i++)
    {
       master = &master_servers[i];
       if(!master->updating &&

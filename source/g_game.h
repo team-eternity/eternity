@@ -101,7 +101,6 @@ extern int  key_escape;                                             // phares
 extern int  key_autorun;
 extern int  key_chat;
 extern int  key_help;
-extern int  key_spy;
 extern int  key_pause;
 extern int  destination_keys[MAXPLAYERS];
 extern int  autorun;           // always running?                   // phares

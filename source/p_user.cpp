@@ -38,6 +38,8 @@
 #include "g_dmflag.h" // [CG] 09/18/11
 #include "g_game.h"
 #include "hu_frags.h"
+#include "hu_stuff.h"
+#include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_skin.h"
@@ -47,6 +49,7 @@
 #include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "st_stuff.h"
 
 #include "cs_position.h"
 #include "cs_main.h"  // [CG] 09/18/11
@@ -67,6 +70,21 @@
 bool onground; // whether player is on ground or in air
 
 extern int action_frags; // [CG] 09/23/11
+
+//
+// P_SetDisplayPlayer
+//
+// Sets the current display player.
+//
+void P_SetDisplayPlayer(int new_displayplayer)
+{
+   displayplayer = new_displayplayer;
+
+   ST_Start();
+   HU_Start();
+   S_UpdateSounds(players[displayplayer].mo);
+   P_ResetChasecam();
+}
 
 //
 // P_Thrust
@@ -389,7 +407,10 @@ void P_DeathThink(player_t *player)
                "%s was forced to leave the game.\n", player->name
             );
          }
-         SV_SpawnPlayer(playernum, client->spectating);
+         if(client->spectating)
+            SV_SpawnPlayer(playernum, true);
+         else
+            SV_SpawnPlayer(playernum, false);
       }
    }
 }

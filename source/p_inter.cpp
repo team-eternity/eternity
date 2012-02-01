@@ -850,8 +850,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, special->flags & MF_DROPPED))
+      if(special->flags & MF_DROPPED)
+      {
+         if(!P_GiveWeapon(player, wp_chaingun, true))
+            return;
+      }
+      else if(!P_GiveWeapon(player, wp_chaingun, false))
          return;
+
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);
       message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
@@ -886,8 +892,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, special->flags & MF_DROPPED))
+      if(special->flags & MF_DROPPED)
+      {
+         if(!P_GiveWeapon(player, wp_shotgun, true))
+            return;
+      }
+      else if(!P_GiveWeapon(player, wp_shotgun, false))
          return;
+
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);
       message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
@@ -895,8 +907,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
    case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, special->flags & MF_DROPPED))
+      if(special->flags & MF_DROPPED)
+      {
+         if(!P_GiveWeapon(player, wp_supershotgun, true))
+            return;
+      }
+      else if(!P_GiveWeapon(player, wp_supershotgun, false))
          return;
+
       removeobj = special->flags & MF_DROPPED ||
                   ((dmflags & dmf_leave_weapons) == 0);
       message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized

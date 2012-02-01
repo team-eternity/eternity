@@ -2236,9 +2236,9 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    bomb_v.y = M_FixedToDouble(theBomb->bombspot->y);
    bomb_v.z = M_FixedToDouble(theBomb->bombspot->z);
 
-   x_delta = D_abs(thing_v.x - bomb_v.x);
-   y_delta = D_abs(thing_v.y - bomb_v.y);
-   z_delta = D_abs(thing_v.z - bomb_v.z);
+   x_delta = fabs(thing_v.x - bomb_v.x);
+   y_delta = fabs(thing_v.y - bomb_v.y);
+   z_delta = fabs(thing_v.z - bomb_v.z);
 
    if(bomb_v.z < bottom) // [CG] Applies upward Z velocity.
       thing_v.z = bottom;
@@ -2288,9 +2288,9 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
       return true;
 
    if(attacking_self && cs_settings->radial_attack_self_damage != 1.0)
-      damage = (damagef * cs_settings->radial_attack_self_damage);
+      damage = (int)(damagef * cs_settings->radial_attack_self_damage);
    else if(!attacking_self && cs_settings->radial_attack_damage != 1.0)
-      damage = (damagef * cs_settings->radial_attack_damage);
+      damage = (int)(damagef * cs_settings->radial_attack_damage);
 
    P_DamageMobj(
       thing,

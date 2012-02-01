@@ -233,7 +233,7 @@ void D_CheckGamePath(char *game);
    {\
       if(options[#option_name].asInt() < (min))\
          I_Error("CS_LoadConfig: '" #option_name "' must be >= %d.\n", (min));\
-      else if(options[#option_name].asInt() > (max))\
+      else if(options[#option_name].asInt() > (signed int)(max))\
          I_Error("CS_LoadConfig: '" #option_name "' must be <= %d.\n", (max));\
    }
 
@@ -268,13 +268,10 @@ static void CS_checkSectionHasOption(Json::Value& section,
 void CS_ValidateOptions(Json::Value &options)
 {
    if(MAX_CLIENTS < MAXPLAYERS)
-   {
-      check_int_option_range(options, max_players, 1, MAX_CLIENTS);
-   }
+      check_int_option_range(options, max_players, 1, MAX_CLIENTS)
    else
-   {
-      check_int_option_range(options, max_players, 1, MAXPLAYERS);
-   }
+      check_int_option_range(options, max_players, 1, MAXPLAYERS)
+
    check_int_option_range(options, max_players_per_team, 1, 16);
    check_int_option_range(options, dogs, 0, 3);
    check_int_option_range(options, skill, 1, 5);
@@ -402,7 +399,8 @@ void SV_HandleMastersSection(Json::Value &masters)
 void SV_LoadConfig(void)
 {
    char *config_path = NULL;
-   int position_of_config, i;
+   int position_of_config;
+   unsigned int i;
    bool requires_spectator_password, requires_player_password,
         requires_moderator_password, requires_administrator_password,
         should_free;
@@ -564,7 +562,7 @@ void SV_LoadConfig(void)
 
 void CS_HandleResourcesSection(Json::Value &resources)
 {
-   int i, j;
+   unsigned int i, j;
    const char *resource_name;
 
    // [CG] Check for the IWAD first.

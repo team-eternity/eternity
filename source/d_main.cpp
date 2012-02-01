@@ -50,6 +50,7 @@
 #include "d_deh.h"      // Ty 04/08/98 - Externalizations
 #include "d_dehtbl.h"
 #include "d_diskfile.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"       // SoM 3/12/2002: moved unistd stuff into d_io.h
 #include "d_main.h"

@@ -28,8 +28,11 @@
 #include "i_system.h"
 
 #include "am_map.h"
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalizations
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_main.h"
 #include "doomstat.h"
@@ -897,7 +900,7 @@ void AM_HandlerRight(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          m_paninc.x = FTOM(F_PANINC);
          am_key_handled = true;
@@ -916,7 +919,7 @@ void AM_HandlerLeft(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          m_paninc.x = -FTOM(F_PANINC);
          am_key_handled = true;
@@ -935,7 +938,7 @@ void AM_HandlerUp(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          m_paninc.y = FTOM(F_PANINC);
          am_key_handled = true;
@@ -954,7 +957,7 @@ void AM_HandlerDown(event_t *ev)
 {
    if(automapactive && !followplayer)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          m_paninc.y = -FTOM(F_PANINC);
          am_key_handled = true;
@@ -973,7 +976,7 @@ void AM_HandlerZoomout(event_t *ev)
 {
    if(automapactive)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          mtof_zoommul = M_ZOOMOUT;
          ftom_zoommul = M_ZOOMIN;
@@ -996,7 +999,7 @@ void AM_HandlerZoomin(event_t *ev)
 {
    if(automapactive)
    {
-      if(ev->type == ev_keydown)
+      if(ev && (ev->type == ev_keydown))
       {
          mtof_zoommul = M_ZOOMIN;
          ftom_zoommul = M_ZOOMOUT;

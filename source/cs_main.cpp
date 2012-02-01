@@ -718,9 +718,19 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       else if(CS_CLIENT && message->info_type == ci_power_enabled)
          player->powers[message->array_index] = message->int_value;
       else if(CS_CLIENT && message->info_type == ci_owns_card)
-         player->cards[message->array_index] = message->boolean_value;
+      {
+         if(message->boolean_value)
+            player->cards[message->array_index] = true;
+         else
+            player->cards[message->array_index] = false;
+      }
       else if(CS_CLIENT && message->info_type == ci_owns_weapon)
-         player->weaponowned[message->array_index] = message->boolean_value;
+      {
+         if(message->boolean_value)
+            player->weaponowned[message->array_index] = true;
+         else
+            player->weaponowned[message->array_index] = false;
+      }
       else if(CS_CLIENT && message->info_type == ci_ammo_amount)
          player->ammo[message->array_index] = message->int_value;
       else if(CS_CLIENT && message->info_type == ci_max_ammo)
@@ -909,9 +919,19 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
    else if(CS_CLIENT && message->info_type == ci_armor_type)
       player->armortype = message->int_value;
    else if(CS_CLIENT && message->info_type == ci_owns_backpack)
-      player->backpack = message->boolean_value;
+   {
+      if(message->boolean_value)
+         player->backpack = true;
+      else
+         player->backpack = false;
+   }
    else if(CS_CLIENT && message->info_type == ci_did_secret)
-      player->didsecret = message->boolean_value;
+   {
+      if(message->boolean_value)
+         player->didsecret = true;
+      else
+         player->didsecret = false;
+   }
    else if(CS_CLIENT && message->info_type == ci_queue_level)
    {
       client->queue_level = message->int_value;
@@ -1544,8 +1564,11 @@ void CS_ReadFromNetwork(unsigned int timeout)
          if(CS_SERVER)
          {
             playernum = SV_GetClientNumberFromAddress(&event.peer->address);
-            if(playernum && playernum < MAX_CLIENTS && playeringame[playernum])
+            if(playernum && playernum < (signed int)MAX_CLIENTS
+                         && playeringame[playernum])
+            {
                SV_DisconnectPlayer(playernum, dr_no_reason);
+            }
             else
             {
                address = CS_IPToString(event.peer->address.host);

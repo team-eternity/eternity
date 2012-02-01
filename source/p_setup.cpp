@@ -1193,8 +1193,12 @@ void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if(ld->special == ED_LINE_SPECIAL)
          E_LoadLineDefExt(ld, true);
-      else if(E_IsParamSpecial(ld->special))
+      else if(E_IsParamSpecial(ld->special) || 
+              ld->special == POLYOBJ_START_LINE || 
+              ld->special == POLYOBJ_EXPLICIT_LINE)
+      {
          E_LoadLineDefExt(ld, false);
+      }
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);

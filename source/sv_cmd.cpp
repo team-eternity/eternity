@@ -80,7 +80,7 @@ CONSOLE_COMMAND(kick, cf_server)
 
 CONSOLE_COMMAND(ban, cf_server)
 {
-   int i, playernum;
+   unsigned int i, playernum;
    uint32_t ip_address;
    char *address = NULL;
    const char *name = NULL;
@@ -93,7 +93,7 @@ CONSOLE_COMMAND(ban, cf_server)
       return;
    }
 
-   playernum = Console.argv[0]->toInt();
+   playernum = (unsigned int)Console.argv[0]->toInt();
 
    if(!playeringame[playernum])
       return;

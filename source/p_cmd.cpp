@@ -382,101 +382,6 @@ CONSOLE_COMMAND(thunder, 0)
    P_ForceLightning();
 }
 
-CONSOLE_COMMAND(spectate_prev, 0)
-{
-   int i = displayplayer;
-   client_t *client;
-   
-   if(netgame || demoplayback)
-   {
-      do
-      {
-         i--;
-
-         if(i == -1)
-            i = (MAXPLAYERS - 1);
-
-         if(i == displayplayer)
-            return;
-
-      } while (!playeringame[i]);
-
-      displayplayer = i;
-      return;
-   }
-
-   client = &clients[consoleplayer];
-
-   if(!client->spectating)
-   {
-      doom_printf("Cannot spectate other players while not a spectator.\n");
-      return;
-   }
-
-   do
-   {
-      i--;
-
-      if(i == -1)
-         i = (MAXPLAYERS - 1);
-
-      if(i == displayplayer)
-         return;
-
-   } while(!playeringame[i] ||
-           clients[i].spectating ||
-           (CS_TEAMS_ENABLED && clients[i].team != client->team));
-
-   CS_SetDisplayPlayer(i);
-}
-
-CONSOLE_COMMAND(spectate_next, 0)
-{
-   int i = displayplayer;
-   client_t *client;
-
-   if(netgame || demoplayback)
-   {
-      do
-      {
-         i++;
-
-         if(i == (MAXPLAYERS - 1))
-            i = 0;
-
-         if(i == displayplayer)
-            return;
-
-      } while (!playeringame[i]);
-
-      displayplayer = i;
-      return;
-   }
-
-   client = &clients[consoleplayer];
-
-   if(!client->spectating)
-   {
-      doom_printf("Cannot spectate other players while not a spectator.\n");
-      return;
-   }
-
-   do
-   {
-      i++;
-
-      if(i == MAXPLAYERS - 1)
-         i = 0;
-
-      if(i == displayplayer)
-         return;
-
-   } while(!playeringame[i] || clients[i].spectating ||
-           (CS_TEAMS_ENABLED && clients[i].team != client->team));
-
-   CS_SetDisplayPlayer(i);
-}
-
 void P_AddCommands(void)
 {
    C_AddCommand(creator);
@@ -524,9 +429,6 @@ void P_AddCommands(void)
    
    P_Chase_AddCommands();
    P_Skin_AddCommands();
-
-   C_AddCommand(spectate_prev);
-   C_AddCommand(spectate_next);
 }
 
 // EOF
