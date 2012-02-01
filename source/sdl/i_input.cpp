@@ -456,7 +456,7 @@ static void I_ReadMouse(void)
       else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
       {
          ev.data2 = CustomAccelerateMouse(x);
-         ev.data3 = CustomAccelerateMouse(y);
+         ev.data3 = -CustomAccelerateMouse(y);
       }
 
       D_PostEvent(&ev);
