@@ -36,6 +36,8 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "g_game.h"
+#include "hu_stuff.h"
+#include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_skin.h"
@@ -45,6 +47,7 @@
 #include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "st_stuff.h"
 
 //
 // Movement.
@@ -55,6 +58,21 @@
 #define MAXBOB  0x100000
 
 bool onground; // whether player is on ground or in air
+
+//
+// P_SetDisplayPlayer
+//
+// Sets the current display player.
+//
+void P_SetDisplayPlayer(int new_displayplayer)
+{
+   displayplayer = new_displayplayer;
+
+   ST_Start();
+   HU_Start();
+   S_UpdateSounds(players[displayplayer].mo);
+   P_ResetChasecam();
+}
 
 //
 // P_Thrust

@@ -29,6 +29,8 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
+#include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"

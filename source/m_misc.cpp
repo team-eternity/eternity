@@ -471,9 +471,6 @@ default_t defaults[] =
 
    // TODO/FIXME: make ALL keys dynamically rebindable
 
-   DEFAULT_INT("key_spy", &key_spy, NULL, KEYD_F12, 0, 255, default_t::wad_no,
-               "key to view from another player's vantage"),
-   
    DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, default_t::wad_no,
                "key to pause the game"),
    

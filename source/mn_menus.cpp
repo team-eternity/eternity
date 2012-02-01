@@ -3154,6 +3154,9 @@ static menuitem_t mn_envbindings_items[] =
    {it_binding, "screen size up",       "screensize +"},
    {it_binding, "screen size down",     "screensize -"},
    {it_binding, "take screenshot",      "screenshot"},
+   {it_binding, "spectate prev",        "spectate_prev"},
+   {it_binding, "spectate next",        "spectate_next"},
+   {it_binding, "spectate self",        "spectate_self"},
    {it_end}
 };
 

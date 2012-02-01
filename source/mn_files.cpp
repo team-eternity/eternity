@@ -44,6 +44,7 @@
 #include "d_main.h"
 #include "d_gi.h"
 #include "d_io.h"
+#include "doomstat.h"
 #include "g_bind.h"
 #include "m_misc.h"
 #include "mn_engin.h"
