@@ -42,8 +42,8 @@
 // calls and operators through the star and arrow operator overloads, which 
 // make this class behave similar to a smart pointer. Via use of operator ->,
 // it is possible to delegate directly all messages to the contained object
-// without forcing an is-a relationship that would otherwise lead to multiple 
-// inheritance for many types such as qstring.
+// without forcing an is-a relationship that would otherwise lead to virtual 
+// multiple inheritance for many types such as qstring.
 //
 template<typename T> class MetaAdapter : public MetaObject
 {
