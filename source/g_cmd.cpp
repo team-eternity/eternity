@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,6 +38,7 @@
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "d_event.h"
 #include "d_main.h"
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
@@ -52,6 +53,7 @@
 #include "p_inter.h"
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
+#include "p_user.h"
 #include "s_sound.h"  // haleyjd: restored exit sounds
 #include "sounds.h"   // haleyjd: restored exit sounds
 #include "v_misc.h"
@@ -122,14 +124,14 @@ void G_QuitDoom(void)
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
-   
+
    if((!netgame || demoplayback) && !nosfxparm && snd_card &&
       GameModeInfo->flags & GIF_HASEXITSOUNDS)
    {
       S_StartSound(NULL, GameModeInfo->exitSounds[(gametic>>2)&7]);
       I_WaitVBL(105);
    }
-   
+
    exit(0);
 }
 
@@ -264,7 +266,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
       C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
       return;
    }
-   
+
    G_DeferedPlayDemo(Console.argv[0]->constPtr());
    singledemo = true;            // quit after one demo
 }
@@ -314,7 +316,7 @@ CONSOLE_COMMAND(listwads, 0)
 {
    D_ListWads();
 }
-                                     
+
 // random seed
 
 CONST_INT(rngseed);
@@ -326,9 +328,9 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
 {
    Mobj *mobj;
    int playernum;
-   
+
    playernum = Console.cmdsrc;
-   
+
    mobj = players[playernum].mo;
    P_DamageMobj(mobj, NULL, NULL,
                 2*(players[playernum].health+players[playernum].armorpoints),
@@ -349,14 +351,14 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
                "   or map <wadfile.wad>\n");
       return;
    }
-   
+
    G_StopDemo();
-   
+
    // check for .wad files
    // i'm not particularly a fan of this myself, but..
 
    // haleyjd 03/12/06: no .wad loading in netgames
-   
+
    if(!netgame && Console.argv[0]->length() > 4)
    {
       const char *extension;
@@ -375,7 +377,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
 
    if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
-   {   
+   {
       G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
    }
    else
@@ -390,9 +392,9 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(Console.argc < 1)
       return;
-   
+
    playernum = Console.cmdsrc;
-   
+
    Console.argv[0]->copyInto(players[playernum].name, 20);
 
    if(playernum == consoleplayer)
@@ -504,32 +506,32 @@ static bool G_TestIWADPath(char *path)
    return true;
 }
 
-CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  cf_allowblank) 
+CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,  cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomsw);
 }
 
-CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, cf_allowblank) 
+CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg, cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomreg);
 }
 
-CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   cf_allowblank) 
+CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_doomu);
 }
 
-CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   cf_allowblank) 
+CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_doom2);
 }
 
-CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     cf_allowblank) 
+CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_tnt);
 }
 
-CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    cf_allowblank) 
+CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,    cf_allowblank)
 {
    G_TestIWADPath(gi_path_plut);
 }
@@ -539,17 +541,17 @@ CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,    cf_allowblank)
    G_TestIWADPath(gi_path_hacx);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  cf_allowblank) 
+CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,  cf_allowblank)
 {
    G_TestIWADPath(gi_path_hticsw);
 }
 
-CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, cf_allowblank) 
+CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg, cf_allowblank)
 {
    G_TestIWADPath(gi_path_hticreg);
 }
 
-CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank) 
+CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,    cf_allowblank)
 {
    G_TestIWADPath(gi_path_sosr);
 }
@@ -584,6 +586,52 @@ CONSOLE_COMMAND(m_resetcomments, 0)
    M_ResetSysComments();
 }
 
+CONSOLE_COMMAND(spectate_prev, 0)
+{
+   int i = displayplayer - 1;
+
+   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+      return;
+
+   for(; i != displayplayer; i--)
+   {
+      if(i == -1)
+         i = (MAXPLAYERS - 1);
+
+      if(playeringame[i])
+         break;
+   }
+
+   P_SetDisplayPlayer(i);
+}
+
+CONSOLE_COMMAND(spectate_next, 0)
+{
+   int i = displayplayer + 1;
+
+   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+      return;
+
+   for(; i != displayplayer; i++)
+   {
+      if(i >= MAXPLAYERS)
+         i = 0;
+
+      if(playeringame[i])
+         break;
+   }
+
+   P_SetDisplayPlayer(i);
+}
+
+CONSOLE_COMMAND(spectate_self, 0)
+{
+   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+      return;
+
+   P_SetDisplayPlayer(consoleplayer);
+}
+
 ////////////////////////////////////////////////////////////////
 //
 // Chat Macros
@@ -592,7 +640,7 @@ CONSOLE_COMMAND(m_resetcomments, 0)
 void G_AddChatMacros(void)
 {
    int i;
-   
+
    for(i=0; i<10; i++)
    {
       variable_t *variable;
@@ -600,7 +648,7 @@ void G_AddChatMacros(void)
       char tempstr[32];
 
       memset(tempstr, 0, 32);
-      
+
       // create the variable first
       variable = estructalloc(variable_t, 1);
       variable->variable = &chat_macros[i];
@@ -609,10 +657,10 @@ void G_AddChatMacros(void)
       variable->min = 0;
       variable->max = 128;
       variable->defines = NULL;
-      
+
       // now the command
       command = estructalloc(command_t, 1);
-      
+
       sprintf(tempstr, "chatmacro%i", i);
       command->name = estrdup(tempstr);
       command->type = ct_variable;
@@ -620,7 +668,7 @@ void G_AddChatMacros(void)
       command->variable = variable;
       command->handler = NULL;
       command->netcmd = 0;
-      
+
       (C_AddCommand)(command); // hook into cmdlist
    }
 }
@@ -630,17 +678,17 @@ void G_AddChatMacros(void)
 // Weapon Prefs
 //
 
-extern int weapon_preferences[2][NUMWEAPONS+1];                   
+extern int weapon_preferences[2][NUMWEAPONS+1];
 
 void G_SetWeapPref(int prefnum, int newvalue)
 {
    int i;
-   
+
    // find the pref which has the new value
-   
+
    for(i=0; i<NUMWEAPONS; i++)
       if(weapon_preferences[0][i] == newvalue) break;
-      
+
    weapon_preferences[0][i] = weapon_preferences[0][prefnum];
    weapon_preferences[0][prefnum] = newvalue;
 }
@@ -653,7 +701,7 @@ void G_WeapPrefHandler(void)
 {
    if(Console.argc)
    {
-      int prefnum = 
+      int prefnum =
          (int *)(Console.command->variable->variable) - weapon_preferences[0];
       G_SetWeapPref(prefnum, Console.argv[0]->toInt());
    }
@@ -662,7 +710,7 @@ void G_WeapPrefHandler(void)
 void G_AddWeapPrefs(void)
 {
    int i;
-   
+
    for(i=0; i<NUMWEAPONS; i++)   // haleyjd
    {
       variable_t *variable;
@@ -670,7 +718,7 @@ void G_AddWeapPrefs(void)
       char tempstr[16]; // haleyjd: increased size -- bug fix!
 
       memset(tempstr, 0, 16);
-      
+
       // create the variable first
       variable = estructalloc(variable_t, 1);
       variable->variable = &weapon_preferences[0][i];
@@ -731,7 +779,7 @@ void G_AddAutoloadFiles(void)
    variable_t *variable;
    command_t *command;
    int i;
-   
+
    for(i = 0; i < 6; ++i)
    {
       // create the variable first
@@ -742,7 +790,7 @@ void G_AddAutoloadFiles(void)
       variable->min = 0;
       variable->max = 1024;
       variable->defines = NULL;
-      
+
       // now the command
       command = estructalloc(command_t, 1);
       command->name = autoload_names[i];
@@ -802,7 +850,7 @@ static void Handler_CompTHeights(void)
 void G_AddCompat(void)
 {
    int i;
-   
+
    for(i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
@@ -817,10 +865,10 @@ void G_AddCompat(void)
       variable->min = 0;
       variable->max = 1;
       variable->defines = yesno;
-      
+
       // now the command
       command = estructalloc(command_t, 1);
-      
+
       psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
       command->name = estrdup(tempstr);
       command->type = ct_variable;
@@ -839,7 +887,7 @@ void G_AddCompat(void)
 
       command->variable = variable;
       command->netcmd = netcmd_comp_0 + i;
-      
+
       (C_AddCommand)(command); // hook into cmdlist
    }
 }
@@ -886,10 +934,10 @@ void G_AddCommands(void)
    C_AddCommand(textmode_startup);
    C_AddCommand(demo_insurance);
    C_AddCommand(smooth_turning);
-   
+
    // haleyjd: new stuff
    C_AddCommand(map_coords);
-   C_AddCommand(numhelpers);   
+   C_AddCommand(numhelpers);
    C_AddCommand(dogjumping);
    C_AddCommand(draw_particles);
    C_AddCommand(bloodsplattype);
@@ -901,6 +949,11 @@ void G_AddCommands(void)
    C_AddCommand(autorun);
    C_AddCommand(runiswalk);
    C_AddCommand(m_resetcomments);
+
+   // [CG] 01/29/2012: Spectate previous, next and self
+   C_AddCommand(spectate_prev);
+   C_AddCommand(spectate_next);
+   C_AddCommand(spectate_self);
 
    // haleyjd 03/22/09: iwad paths
    C_AddCommand(iwad_doom_shareware);

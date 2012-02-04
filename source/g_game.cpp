@@ -37,6 +37,7 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"              // Ty 3/27/98 deh declarations
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
@@ -158,7 +159,6 @@ double          mouseAccel_value = 2.0;    // [CG] 01/20/12
 int key_escape = KEYD_ESCAPE;
 int key_chat;
 int key_help = KEYD_F1;
-int key_spy;
 int key_pause;
 int destination_keys[MAXPLAYERS];
 
@@ -173,7 +173,6 @@ int mousebforward;  // causes a use action, however
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
 
-bool gamekeydown[NUMKEYS];
 int  turnheld;       // for accelerative turning
 
 bool mousearray[4];
@@ -268,7 +267,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       action_flip = false;
    }
 
-  // let movement keys cancel each other out
+   // let movement keys cancel each other out
    if(strafe)
    {
       if(action_right)
@@ -655,7 +654,6 @@ void G_DoLoadLevel(void)
    Z_CheckHeap();
 
    // clear cmd building stuff
-   memset(gamekeydown, 0, sizeof(gamekeydown));
    joyxmove = joyymove = 0;
    mousex = mousey = 0.0;
    sendpause = sendsave = false;
@@ -692,35 +690,6 @@ void G_DoLoadLevel(void)
 //
 bool G_Responder(event_t* ev)
 {
-   // allow spy mode changes even during the demo
-   // killough 2/22/98: even during DM demo
-   //
-   // killough 11/98: don't autorepeat spy mode switch
-
-   if(ev->data1 == key_spy && netgame && 
-      (demoplayback || GameType != gt_dm) && gamestate == GS_LEVEL)
-   {
-      if(ev->type == ev_keyup)
-         gamekeydown[key_spy] = false;
-      
-      if(ev->type == ev_keydown && !gamekeydown[key_spy])
-      {
-         gamekeydown[key_spy] = true;
-         do // spy mode
-         {
-            if(++displayplayer >= MAXPLAYERS)
-               displayplayer = 0;
-         }
-         while(!playeringame[displayplayer] && displayplayer != consoleplayer);
-         
-         ST_Start();    // killough 3/7/98: switch status bar views too
-         HU_Start();
-         S_UpdateSounds(players[displayplayer].mo);
-         P_ResetChasecam();
-      }
-      return true;
-   }
-
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -729,9 +698,6 @@ bool G_Responder(event_t* ev)
    {
       return true;
    }
-
-   if(G_KeyResponder(ev, kac_cmd))
-      return true;
 
    // any other key pops up menu if in demos
    //
@@ -751,6 +717,10 @@ bool G_Responder(event_t* ev)
             S_ResumeSound();
          return true;
       }
+
+      // [CG] 01/29/12: Respond to command events.
+      if(G_KeyResponder(ev, kac_command))
+         return true;
 
       // killough 10/98:
       // Don't pop up menu, if paused in middle
@@ -793,21 +763,13 @@ bool G_Responder(event_t* ev)
    {
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
-      {
          C_RunTextCmd("pause");
-      }
       else
-      {
-         if(ev->data1 < NUMKEYS)
-            gamekeydown[ev->data1] = true;         
-         G_KeyResponder(ev, kac_game); // haleyjd
-      }
+         G_KeyResponder(ev, kac_player | kac_command); // haleyjd
       return true;    // eat key down events
       
    case ev_keyup:
-      if(ev->data1 < NUMKEYS)
-         gamekeydown[ev->data1] = false;
-      G_KeyResponder(ev, kac_game);   // haleyjd
+      G_KeyResponder(ev, kac_player | kac_command);   // haleyjd
       return false;   // always let key up events filter down
       
    case ev_mouse:

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
+//
 //   keyboard, mouse, and joystick code.
 //
 //-----------------------------------------------------------------------------
@@ -35,10 +35,10 @@
 #include "../d_main.h"
 #include "../doomdef.h"
 #include "../doomstat.h"
+#include "../g_bind.h"
 #include "../m_argv.h"
 #include "../v_misc.h"
 #include "../v_video.h"
-
 
 // Grab the mouse? (int type for config code)
 int         grabmouse;
@@ -62,7 +62,7 @@ bool MouseShouldBeGrabbed(void);
 // WM
 //
 
-// 
+//
 // UpdateGrab
 //
 // haleyjd 10/08/05: from Chocolate DOOM
@@ -71,22 +71,22 @@ void UpdateGrab(void)
 {
    static bool currently_grabbed = false;
    bool grab;
-   
+
    grab = MouseShouldBeGrabbed();
-   
+
    if(grab && !currently_grabbed)
    {
       SDL_ShowCursor(SDL_DISABLE);
       SDL_WM_GrabInput(SDL_GRAB_ON);
    }
-   
+
    if(!grab && currently_grabbed)
    {
       SDL_ShowCursor(SDL_ENABLE);
       SDL_WM_GrabInput(SDL_GRAB_OFF);
    }
-   
-   currently_grabbed = grab;   
+
+   currently_grabbed = grab;
 }
 
 //
@@ -99,27 +99,27 @@ bool MouseShouldBeGrabbed(void)
    // if the window doesnt have focus, never grab it
    if(!window_focused)
       return false;
-   
-   // always grab the mouse when full screen (dont want to 
+
+   // always grab the mouse when full screen (dont want to
    // see the mouse pointer)
    if(fullscreen)
       return true;
-   
+
    // if we specify not to grab the mouse, never grab
    if(!grabmouse)
       return false;
-   
-   // when menu is active or game is paused, release the mouse 
+
+   // when menu is active or game is paused, release the mouse
    if(menuactive || consoleactive || paused)
       return false;
-   
+
    // only grab mouse when playing levels (but not demos)
    return (gamestate == GS_LEVEL) && !demoplayback;
 }
 
 //
 // UpdateFocus
-// 
+//
 // haleyjd 10/08/05: From Chocolate Doom
 // Update the value of window_focused when we get a focus event
 //
@@ -129,14 +129,36 @@ bool MouseShouldBeGrabbed(void)
 //
 void UpdateFocus(void)
 {
-   Uint8 state = SDL_GetAppState();
-   
-   // We should have input (keyboard) focus and be visible 
-   // (not minimised)   
+   Uint8 state;
+   SDL_Event  event;
+   static bool currently_focused = false;
+
+   SDL_PumpEvents();
+
+   state = SDL_GetAppState();
+
+   // We should have input (keyboard) focus and be visible
+   // (not minimised)
    window_focused = (state & SDL_APPINPUTFOCUS) && (state & SDL_APPACTIVE);
-   
-   // Should the screen be grabbed?   
+
+   // Should the screen be grabbed?
    screenvisible = (state & SDL_APPACTIVE) != 0;
+
+   // [CG] Handle focus changes, this is all necessary to avoid repeat events.
+   if(currently_focused != window_focused)
+   {
+      if(window_focused)
+      {
+         while(SDL_PollEvent(&event)) {}
+         SDL_EnableKeyRepeat(
+            SDL_DEFAULT_REPEAT_DELAY / 2, SDL_DEFAULT_REPEAT_INTERVAL * 4
+         );
+      }
+      else
+         SDL_EnableKeyRepeat(0, 0);
+      G_ClearKeyStates();
+      currently_focused = window_focused;
+   }
 }
 
 //=============================================================================
@@ -153,8 +175,8 @@ static int I_TranslateKey(int sym)
 {
    int rc = 0;
 
-   switch(sym) 
-   {  
+   switch(sym)
+   {
    case SDLK_LEFT:        rc = KEYD_LEFTARROW;  break;
    case SDLK_RIGHT:       rc = KEYD_RIGHTARROW; break;
    case SDLK_DOWN:        rc = KEYD_DOWNARROW;  break;
@@ -178,7 +200,7 @@ static int I_TranslateKey(int sym)
    case SDLK_PAUSE:       rc = KEYD_PAUSE;      break;
    case SDLK_EQUALS:      rc = KEYD_EQUALS;     break;
    case SDLK_MINUS:       rc = KEYD_MINUS;      break;
-      
+
    case SDLK_KP0:         rc = KEYD_KP0;        break;
    case SDLK_KP1:         rc = KEYD_KP1;        break;
    case SDLK_KP2:         rc = KEYD_KP2;        break;
@@ -196,7 +218,7 @@ static int I_TranslateKey(int sym)
    case SDLK_KP_PLUS:     rc = KEYD_KPPLUS;     break;
    case SDLK_KP_ENTER:    rc = KEYD_KPENTER;    break;
    case SDLK_KP_EQUALS:   rc = KEYD_KPEQUALS;   break;
-      
+
    case SDLK_NUMLOCK:     rc = KEYD_NUMLOCK;    break;
    case SDLK_SCROLLOCK:   rc = KEYD_SCROLLLOCK; break;
    case SDLK_CAPSLOCK:    rc = KEYD_CAPSLOCK;   break;
@@ -204,7 +226,7 @@ static int I_TranslateKey(int sym)
    case SDLK_RSHIFT:      rc = KEYD_RSHIFT;     break;
    case SDLK_LCTRL:
    case SDLK_RCTRL:       rc = KEYD_RCTRL;      break;
-      
+
    case SDLK_LALT:
    case SDLK_RALT:
    case SDLK_LMETA:
@@ -254,7 +276,7 @@ static int keyForButtonNum[8] =
 //
 // I_JoystickEvents
 //
-// Gathers joystick data and creates an event_t for later processing 
+// Gathers joystick data and creates an event_t for later processing
 // by G_Responder().
 //
 static void I_JoystickEvents(void)
@@ -267,26 +289,26 @@ static void I_JoystickEvents(void)
    static int old_joyb[8];
 
    memset(joyb, 0, sizeof(joyb));
-   
-   if(!joystickpresent || !usejoystick || !sdlJoystick || 
+
+   if(!joystickpresent || !usejoystick || !sdlJoystick ||
       !sdlJoystickNumButtons)
       return;
-   
+
    SDL_JoystickUpdate(); // read the current joystick settings
    event.type = ev_joystick;
    event.data1 = 0;
-   
+
    // read the button settings
    for(i = 0; i < 8 && i < sdlJoystickNumButtons; ++i)
    {
       if((joyb[i] = SDL_JoystickGetButton(sdlJoystick, i)))
          event.data1 |= (1 << i);
    }
-   
+
    // Read the x,y settings. Convert to -1 or 0 or +1.
    joy_x = SDL_JoystickGetAxis(sdlJoystick, 0);
    joy_y = SDL_JoystickGetAxis(sdlJoystick, 1);
-   
+
    if(joy_x < -joystickSens_x)
       event.data2 = -1;
    else if(joy_x > joystickSens_x)
@@ -300,11 +322,11 @@ static void I_JoystickEvents(void)
       event.data3 = 1;
    else
       event.data3 = 0;
-   
+
    // post what you found
-   
+
    D_PostEvent(&event);
-   
+
    // build button events (make joystick buttons virtual keyboard keys
    // as originally suggested by lee killough in the boom suggestions file)
 
@@ -317,7 +339,7 @@ static void I_JoystickEvents(void)
          D_PostEvent(&event);
          old_joyb[i] = joyb[i];
       }
-   }   
+   }
 }
 
 
@@ -367,6 +389,17 @@ static int AccelerateMouse(int val)
              val;
 }
 
+static double CustomAccelerateMouse(int val)
+{
+   if(val < 0)
+      return -CustomAccelerateMouse(-val);
+
+   if((mouseAccel_value != 1.0) && (val > mouseAccel_threshold))
+      return val * mouseAccel_value;
+
+   return val;
+}
+
 //
 // CenterMouse
 //
@@ -376,11 +409,11 @@ static int AccelerateMouse(int val)
 static void CenterMouse(void)
 {
    // Warp the the screen center
-   
+
    SDL_WarpMouse((Uint16)(video.width / 2), (Uint16)(video.height / 2));
-   
+
    // Clear any relative movement caused by warping
-   
+
    SDL_PumpEvents();
    SDL_GetRelativeMouseState(NULL, NULL);
 }
@@ -399,17 +432,33 @@ static void I_ReadMouse(void)
 {
    int x, y;
    event_t ev;
-   
-   SDL_GetRelativeMouseState(&x, &y);
-   
-   if(x != 0 || y != 0) 
+   static Uint8 previous_state = 137;
+   Uint8 state;
+
+   SDL_PumpEvents();
+
+   state = SDL_GetRelativeMouseState(&x, &y);
+
+   if(state != previous_state)
+      previous_state = state;
+
+   if(x != 0 || y != 0)
    {
       ev.type = ev_mouse;
-      ev.data1 = 0; // FIXME?
-      // SoM: So the values that go to Eternity should be 16.16 fixed point...
-      ev.data2 = AccelerateMouse(x);
-      ev.data3 = -AccelerateMouse(y);
-      
+      ev.data1 = SDL_MOUSEMOTION;
+      if(mouseAccel_type == 2)
+      {
+         // SoM: So the values that go to Eternity should be 16.16 fixed
+         //      point...
+         ev.data2 = AccelerateMouse(x);
+         ev.data3 = -AccelerateMouse(y);
+      }
+      else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
+      {
+         ev.data2 = CustomAccelerateMouse(x);
+         ev.data3 = -CustomAccelerateMouse(y);
+      }
+
       D_PostEvent(&ev);
    }
 
@@ -421,13 +470,13 @@ static void I_ReadMouse(void)
 // I_InitMouse
 //
 // Once upon a time this function existed in vanilla DOOM, and now here it is
-// again. 
+// again.
 // haleyjd 05/10/11: Moved -grabmouse check here from the video subsystem.
 //
 void I_InitMouse()
 {
    // haleyjd 10/09/05: from Chocolate DOOM
-   // mouse grabbing   
+   // mouse grabbing
    if(M_CheckParm("-grabmouse"))
       grabmouse = 1;
    else if(M_CheckParm("-nograbmouse"))
@@ -445,6 +494,7 @@ static void I_GetEvent(void)
 {
    static int    buttons = 0;
    static Uint32 mwheeluptic = 0, mwheeldowntic = 0;
+
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
    static Uint32 capslocktic = 0;
 #endif
@@ -457,12 +507,17 @@ static void I_GetEvent(void)
 
    calltic = gametic;
 
+   // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse
+   //                  grabbing.
+   UpdateFocus();
+   UpdateGrab();
+
    while(SDL_PollEvent(&event))
    {
       // haleyjd 10/08/05: from Chocolate DOOM
-      if(!window_focused && 
-         (event.type == SDL_MOUSEMOTION     || 
-          event.type == SDL_MOUSEBUTTONDOWN || 
+      if(!window_focused &&
+         (event.type == SDL_MOUSEMOTION     ||
+          event.type == SDL_MOUSEBUTTONDOWN ||
           event.type == SDL_MOUSEBUTTONUP))
       {
          continue;
@@ -485,7 +540,7 @@ static void I_GetEvent(void)
 
          D_PostEvent(&d_event);
          break;
-      
+
       case SDL_KEYUP:
          d_event.type = ev_keyup;
          d_event.data1 = I_TranslateKey(event.key.keysym.sym);
@@ -498,16 +553,16 @@ static void I_GetEvent(void)
 #endif
          D_PostEvent(&d_event);
          break;
-      
-      case SDL_MOUSEMOTION:       
-         if(!usemouse || mouseAccel_type == 2)
+
+      case SDL_MOUSEMOTION:
+         if(!usemouse || ((mouseAccel_type == 2) || mouseAccel_type == 3))
             continue;
 
          // haleyjd 06/14/10: no mouse motion at startup.
          if(gametic == 0)
             continue;
 
-         // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most 
+         // SoM 1-20-04 Ok, use xrel/yrel for mouse movement because most
          // people like it the most.
          if(mouseAccel_type == 0)
          {
@@ -518,22 +573,10 @@ static void I_GetEvent(void)
          {
             // Simple linear acceleration
             // Evaluates to 1.25 * x. So Why don't I just do that? .... shut up
-            mouseevent.data2 += (event.motion.xrel + 
+            mouseevent.data2 += (event.motion.xrel +
                                  (float)(event.motion.xrel * 0.25f));
-            mouseevent.data3 -= (event.motion.yrel + 
+            mouseevent.data3 -= (event.motion.yrel +
                                  (float)(event.motion.yrel * 0.25f));
-         }
-         else if(mouseAccel_type == 3) // [CG] 01/20/12 Custom acceleration
-         {
-             if(event.motion.xrel > mouseAccel_threshold)
-                 mouseevent.data2 += (event.motion.xrel * mouseAccel_value);
-             else
-                 mouseevent.data2 += event.motion.xrel;
-
-             if((-event.motion.yrel) > mouseAccel_threshold)
-                 mouseevent.data3 -= (event.motion.yrel * mouseAccel_value);
-             else
-                 mouseevent.data3 -= event.motion.yrel;
          }
 
          sendmouseevent = 1;
@@ -548,18 +591,18 @@ static void I_GetEvent(void)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
-            buttons |= 1;            
+            buttons |= 1;
             d_event.data1 = KEYD_MOUSE1;
             break;
          case SDL_BUTTON_MIDDLE:
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
             sendmouseevent = 1;
-            buttons |= 4;            
+            buttons |= 4;
             d_event.data1 = KEYD_MOUSE3;
             break;
          case SDL_BUTTON_RIGHT:
             sendmouseevent = 1;
-            buttons |= 2;            
+            buttons |= 2;
             d_event.data1 = KEYD_MOUSE2;
             break;
          case SDL_BUTTON_WHEELUP:
@@ -582,8 +625,8 @@ static void I_GetEvent(void)
 
          D_PostEvent(&d_event);
          break;
-      
-      case SDL_MOUSEBUTTONUP:      
+
+      case SDL_MOUSEBUTTONUP:
          if(!usemouse)
             continue;
          d_event.type = ev_keyup;
@@ -593,18 +636,18 @@ static void I_GetEvent(void)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
-            buttons &= ~1;            
+            buttons &= ~1;
             d_event.data1 = KEYD_MOUSE1;
             break;
          case SDL_BUTTON_MIDDLE:
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
             sendmouseevent = 1;
-            buttons &= ~4;            
+            buttons &= ~4;
             d_event.data1 = KEYD_MOUSE3;
             break;
          case SDL_BUTTON_RIGHT:
             sendmouseevent = 1;
-            buttons &= ~2;            
+            buttons &= ~2;
             d_event.data1 = KEYD_MOUSE2;
             break;
          case SDL_BUTTON_WHEELUP:
@@ -674,7 +717,7 @@ static void I_GetEvent(void)
       D_PostEvent(&mouseevent);
    }
 
-   // SoM: if paused, delay for a short amount of time to allow other threads 
+   // SoM: if paused, delay for a short amount of time to allow other threads
    // to process on the system. Otherwise Eternity will use almost 100% of the
    // CPU even while paused.
    if(paused || !window_focused)
@@ -688,7 +731,7 @@ void I_StartTic(void)
 {
    I_GetEvent();
 
-   if(usemouse && mouseAccel_type == 2)
+   if(usemouse && ((mouseAccel_type == 2) || (mouseAccel_type == 3)))
       I_ReadMouse();
 }
 
