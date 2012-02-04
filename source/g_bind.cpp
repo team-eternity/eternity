@@ -245,7 +245,7 @@ public:
       efree(hidden_name);
    }
 
-   bool InputAction::handleEvent(event_t *ev, KeyBind *kb)
+   bool handleEvent(event_t *ev, KeyBind *kb)
    {
       /*
        |---------------------------------------------------------------------|
