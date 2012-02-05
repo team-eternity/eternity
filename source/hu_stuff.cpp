@@ -39,6 +39,7 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
+#include "d_dehtbl.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_io.h"
@@ -79,7 +80,7 @@ int obituaries = 0;
 int obcolour = CR_BRICK;       // the colour of death messages
 
 vfont_t *hud_font;
-const char *hud_fontname;
+char *hud_fontname;
 
 static bool HU_ChatRespond(event_t *ev);
 

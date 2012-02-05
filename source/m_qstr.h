@@ -51,7 +51,7 @@ public:
    static const size_t npos;
    static const size_t basesize;
 
-   // Constructor / Destructor
+   // Constructors / Destructor
    qstring(size_t startSize = 0, int tag = PU_STATIC) 
       : ZoneObject(), buffer(NULL), index(0), size(0)
    {
@@ -59,6 +59,13 @@ public:
       if(startSize)
          initCreateSize(startSize);
    }
+
+   qstring(const qstring &other) 
+      : ZoneObject(), buffer(NULL), index(0), size(0)
+   {
+      copy(other);
+   }
+
    ~qstring() { freeBuffer(); }
 
    // Basic Property Getters
@@ -96,53 +103,83 @@ public:
    //
    size_t getSize() const { return size; }
 
-   qstring    &initCreate();
-   qstring    &initCreateSize(size_t size);
-   qstring    &createSize(size_t size);
-   qstring    &create();
-   qstring    &grow(size_t len);
-   qstring    &clear();
-   qstring    &clearOrCreate(size_t size);
-   void        freeBuffer();
-   char        charAt(size_t idx) const;
-   char       *bufferAt(size_t idx);
-   qstring    &Putc(char ch);
-   qstring    &Delc();
-   qstring    &concat(const char *str);
-   qstring    &concat(const qstring &src);
-   qstring    &insert(const char *insertstr, size_t pos);
-   int         strCmp(const char *str) const;
-   int         strNCmp(const char *str, size_t maxcount) const;
-   int         strCaseCmp(const char *str) const;
-   int         strNCaseCmp(const char *str, size_t maxcount) const;
-   bool        compare(const char *str) const;
-   bool        compare(const qstring &other) const;
-   qstring    &copy(const char *str);
-   qstring    &copy(const qstring &src);
-   char       *copyInto(char *dest, size_t size) const;
-   qstring    &copyInto(qstring &dest) const;
-   void        swapWith(qstring &str2);
-   qstring    &toUpper();
-   qstring    &toLower();
-   size_t      replace(const char *filter, char repl);
-   size_t      replaceNotOf(const char *filter, char repl);
-   qstring    &normalizeSlashes();
-   char       *duplicate(int tag) const;
-   char       *duplicateAuto() const;
-   int         toInt() const;
-   long        toLong(char **endptr, int radix);
-   double      toDouble(char **endptr);
+   // Initialization and Resizing
+   qstring &initCreate();
+   qstring &initCreateSize(size_t size);
+   qstring &createSize(size_t size);
+   qstring &create();
+   qstring &grow(size_t len);
+   qstring &clear();
+   qstring &clearOrCreate(size_t size);
+   void     freeBuffer();
+
+   // Indexing operations
+   char  charAt(size_t idx) const;
+   char *bufferAt(size_t idx);
+
+   // Concatenation and insertion/deletion
+   qstring &Putc(char ch);
+   qstring &Delc();
+   qstring &concat(const char *str);
+   qstring &concat(const qstring &src);
+   qstring &insert(const char *insertstr, size_t pos);
+
+   // Comparisons: C and C++ style
+   int  strCmp(const char *str) const;
+   int  strNCmp(const char *str, size_t maxcount) const;
+   int  strCaseCmp(const char *str) const;
+   int  strNCaseCmp(const char *str, size_t maxcount) const;
+   bool compare(const char *str) const;
+   bool compare(const qstring &other) const;
+
+   // Hashing
+   static unsigned int HashCodeStatic(const char *str);
+   static unsigned int HashCodeCaseStatic(const char *str);
+
+   unsigned int hashCode() const;      // case-insensitive
+   unsigned int hashCodeCase() const;  // case-considering
+
+   // Copying and Swapping
+   qstring &copy(const char *str);
+   qstring &copy(const qstring &src);
+   char    *copyInto(char *dest, size_t size) const;
+   qstring &copyInto(qstring &dest) const;
+   void     swapWith(qstring &str2);
+
+   // In-Place Case Conversions
+   qstring &toUpper();
+   qstring &toLower();
+
+   // Substring Replacements
+   size_t   replace(const char *filter, char repl);
+   size_t   replaceNotOf(const char *filter, char repl);
+   qstring &normalizeSlashes();
+
+   // Zone strdup wrappers
+   char *duplicate(int tag) const;
+   char *duplicateAuto() const;
+
+   // Numeric Conversions
+   int    toInt() const;
+   long   toLong(char **endptr, int radix);
+   double toDouble(char **endptr);
+
+   // Searching/Substring Finding Routines
    const char *strChr(char c) const;
    const char *strRChr(char c) const;
    size_t      findFirstOf(char c) const;
    size_t      findFirstNotOf(char c) const;
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
-   qstring    &LStrip(char c);
-   qstring    &RStrip(char c);
-   qstring    &truncate(size_t pos);
-   qstring    &makeQuoted();
-   int         Printf(size_t maxlen, const char *fmt, ...);
+
+   // Stripping and Truncation
+   qstring &lstrip(char c);
+   qstring &rstrip(char c);
+   qstring &truncate(size_t pos);
+
+   // Special Formatting 
+   qstring &makeQuoted();
+   int      Printf(size_t maxlen, const char *fmt, ...);
 
    // Operators
    bool     operator == (const qstring &other) const;

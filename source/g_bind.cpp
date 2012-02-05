@@ -107,8 +107,8 @@ public:
    DLListItem<KeyBind> action_to_key_links;
    DLListItem<KeyBind> unbind_links;
 
-   ENCStringHashKey keys_to_actions_key;
-   ENCStringHashKey actions_to_keys_key;
+   const char *keys_to_actions_key;
+   const char *actions_to_keys_key;
 
    KeyBind(const char *new_key_name, const char *new_action_name,
            unsigned short new_flags)
@@ -195,7 +195,7 @@ private:
    int number;
 public:
    DLListItem<InputKey> links;
-   ENCStringHashKey key;
+   const char *key;
 
    InputKey(int new_number, const char *new_name)
       : ZoneObject()
@@ -224,7 +224,7 @@ protected:
 
 public:
    DLListItem<InputAction> links;
-   ENCStringHashKey key;
+   const char *key;
 
    InputAction(const char *new_name, input_action_category_e new_category)
       : ZoneObject(), category(new_category), repeatable(false)
@@ -415,13 +415,13 @@ public:
 static InputKey *keys[NUM_KEYS];
 
 static EHashTable<InputKey, ENCStringHashKey, &InputKey::key,
-                  &InputKey::links> names_to_keys;
+                  &InputKey::links> names_to_keys(NUM_KEYS);
 static EHashTable<InputAction, ENCStringHashKey, &InputAction::key,
-                  &InputAction::links> names_to_actions;
+                  &InputAction::links> names_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
 static EHashTable<KeyBind, ENCStringHashKey, &KeyBind::keys_to_actions_key,
-                  &KeyBind::key_to_action_links> keys_to_actions;
+                  &KeyBind::key_to_action_links> keys_to_actions(INITIAL_KEY_ACTION_CHAIN_SIZE);
 static EHashTable<KeyBind, ENCStringHashKey, &KeyBind::actions_to_keys_key,
-                  &KeyBind::action_to_key_links> actions_to_keys;
+                  &KeyBind::action_to_key_links> actions_to_keys(INITIAL_KEY_ACTION_CHAIN_SIZE);
 
 // name of configuration file to read from/write to.
 static char *cfg_file = NULL;
@@ -605,10 +605,10 @@ static void G_createBind(InputKey *key, InputAction *action,
    keys_to_actions.addObject(kb);
 
    if(actions_to_keys.getLoadFactor() > MAX_LOAD_FACTOR)
-      actions_to_keys.Rebuild(actions_to_keys.getNumChains() * 2);
+      actions_to_keys.rebuild(actions_to_keys.getNumChains() * 2);
 
    if(keys_to_actions.getLoadFactor() > MAX_LOAD_FACTOR)
-      keys_to_actions.Rebuild(keys_to_actions.getNumChains() * 2);
+      keys_to_actions.rebuild(keys_to_actions.getNumChains() * 2);
 
    G_updateBoundKeyDescription(action);
 }
@@ -743,11 +743,6 @@ void G_InitKeyBindings(void)
    int i;
    qstring key_name;
    command_t *command;
-
-   names_to_keys.Initialize(NUM_KEYS);
-   names_to_actions.Initialize(INITIAL_KEY_ACTION_CHAIN_SIZE);
-   actions_to_keys.Initialize(INITIAL_KEY_ACTION_CHAIN_SIZE);
-   keys_to_actions.Initialize(INITIAL_KEY_ACTION_CHAIN_SIZE);
 
    // various names for different keys
    G_addKey(KEYD_RIGHTARROW, rightarrow);

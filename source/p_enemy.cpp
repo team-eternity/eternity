@@ -1236,7 +1236,6 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
 
          for(th = cap->cnext; th != cap; th = th->cnext)
          {
-            Mobj *mo = dynamic_cast<Mobj *>(th);
             if(--n < 0)
             { 
                // Only a subset of the monsters were searched. Move all of
@@ -1247,9 +1246,11 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
                (th->cprev = cap)->cnext = th;
                break;
             }
-            else if(mo && !PIT_FindTarget(mo))
-               // If target sighted
-               return true;
+            else if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+            {
+               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+                  return true;
+            }
          }
       }
    }
@@ -1292,8 +1293,10 @@ bool P_HelpFriend(Mobj *actor)
    {
       Mobj *mo;
       
-      if(!(mo = dynamic_cast<Mobj *>(th)))
+      if(!th->isInstanceOf(RUNTIME_CLASS(Mobj)))
          continue;
+         
+      mo = static_cast<Mobj *>(th);
 
       if(mo->health*2 >= mo->info->spawnhealth)
       {
@@ -1634,31 +1637,20 @@ extern int *deh_ParseFlagsCombined(const char *strval);
 
 static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *flags)
 {
-   static int fountainType = -1;
-   static int dripType = -1;
-   static int ambienceType = -1;
-   static int enviroType = -1;
-   static int vileFireType = -1;
-   static int spawnSpotType = -1;
+   int fountainType  = E_ThingNumForName("EEParticleFountain");
+   int dripType      = E_ThingNumForName("EEParticleDrip");
+   int ambienceType  = E_ThingNumForName("EEAmbience");
+   int enviroType    = E_ThingNumForName("EEEnviroSequence");
+   int vileFireType  = E_ThingNumForName("VileFire");
+   int spawnSpotType = E_ThingNumForName("BossSpawnSpot");
 
    fixed_t  x, y, z;
    Mobj   *newmobj;
    int      prestep;
    player_t *plyr = &players[consoleplayer];
 
-   // resolve EDF types (done once for efficiency)
-   if(fountainType == -1)
-   {
-      fountainType  = E_ThingNumForName("EEParticleFountain");
-      dripType      = E_ThingNumForName("EEParticleDrip");
-      ambienceType  = E_ThingNumForName("EEAmbience");
-      enviroType    = E_ThingNumForName("EEEnviroSequence");
-      vileFireType  = E_ThingNumForName("VileFire");
-      spawnSpotType = E_ThingNumForName("BossSpawnSpot");
-   }
-
    // if it's a missile, shoot it
-   if(mobjinfo[type].flags & MF_MISSILE)
+   if(mobjinfo[type]->flags & MF_MISSILE)
    {
       newmobj = P_SpawnPlayerMissile(plyr->mo, type);
 
@@ -1671,12 +1663,12 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       // do a good old Pain-Elemental style summoning
       an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type].radius)/2;
+      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
       
       x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
       y = plyr->mo->y + FixedMul(prestep, finesine[an]);
       
-      z = (mobjinfo[type].flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+      z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
       if(Check_Sides(plyr->mo, x, y))
          return;
@@ -1816,7 +1808,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == NUMMOBJTYPES)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1851,12 +1843,12 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
       return;
    
    thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
    {
       C_Printf("unknown thing type\n");
       return;
    }
-   if(!(mobjinfo[thingnum].flags & MF_SPECIAL))
+   if(!(mobjinfo[thingnum]->flags & MF_SPECIAL))
    {
       C_Printf("thing type is not a special\n");
       return;
@@ -1892,7 +1884,7 @@ CONSOLE_COMMAND(whistle, cf_notnet|cf_level)
       return;
    
    thingnum = E_ThingNumForName(Console.argv[0]->constPtr());
-   if(thingnum == NUMMOBJTYPES)
+   if(thingnum == -1)
    {
       C_Printf("unknown thing type\n");
       return;

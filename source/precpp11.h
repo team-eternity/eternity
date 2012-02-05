@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*-
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -20,25 +20,30 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
-//  OpenGL Primitives
-//  haleyjd 05/15/11
+//    Stuff that will only be needed until Eternity has converted up to the
+//    C++11 standard.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef GL_PRIMITIVES_H__
-#define GL_PRIMITIVES_H__
+#ifndef PRECPP11_H__
+#define PRECPP11_H__
 
-#ifdef EE_FEATURE_OPENGL
-
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                          GLfloat smax, GLfloat tmax);
-
-void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                      GLfloat r, GLfloat b, GLfloat g);
-
-
-#endif
+namespace eeprestd
+{
+  //
+  // remove_pointer
+  //
+  // This series of partially-specialized templates allows the "pointerism" of
+  // template parameters to be discarded, retrieving the base type for access
+  // to static methods and members, amongst other possible uses.
+  //
+  // Originally defined by the Boost library and then absorbed into C++11 as
+  // std::remove_pointer in the <type_traits> header.
+  //
+  template<typename T> struct remove_pointer           { typedef T type; };
+  template<typename T> struct remove_pointer<T *>      { typedef T type; };
+  template<typename T> struct remove_pointer<T *const> { typedef T type; };
+}
 
 #endif
 

@@ -204,37 +204,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
    glEnd();
 
    // push the frame
-   glFinish();
    SDL_GL_SwapBuffers();
 }
-
-//
-// SDLGL2DVideoDriver::fillPBO
-//
-// haleyjd 12/30/11: fill a PBO with black pixels
-//
-void SDLGL2DVideoDriver::fillPBO(int index)
-{
-   void *ptr;
-
-   // bind the PBO
-   pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[index]);
-
-   // map the PBO into client memory
-   pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
-
-   if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
-   {
-      memset(ptr, 0, texturesize); 
-
-      // release pointer
-      pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
-   }
-
-   // Unbind all PBOs
-   pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-}
-
 
 //
 // SDLGL2DVideoDriver::ReadScreen
@@ -535,7 +506,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    // Set GL attributes through SDL
    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-   SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,  colordepth);
+   SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  colordepth >= 24 ? 8 : 5);
+   SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, colordepth == 32 ? 8 : 0);
    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, wantvsync ? 1 : 0); // OMG vsync!
 
    // Set GL video mode
@@ -601,9 +575,6 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[1]);
       pglBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, texturesize, 0, GL_STREAM_DRAW_ARB);
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-
-      // haleyjd 12/30/11: fill PBO 0 so it's not white at startup
-      fillPBO(0);
    }
 
    SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);

@@ -407,7 +407,6 @@ extern char *gi_path_freedm;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
-void D_InitGameInfo(void);
 void D_InitGMIPostWads(void);
 
 #endif

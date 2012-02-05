@@ -126,14 +126,15 @@ class SaveArchive;
 
 class PolyRotateThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PolyRotateThinker, Thinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PolyRotateThinker"; }
-
+   
    // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
    int speed;         // speed of movement per frame
@@ -142,14 +143,15 @@ public:
 
 class PolyMoveThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PolyMoveThinker, Thinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PolyMoveThinker"; }
-
+   
    // Data Members
    int polyObjNum;     // numeric id of polyobject
    int speed;          // resultant velocity
@@ -161,14 +163,15 @@ public:
 
 class PolySlideDoorThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PolySlideDoorThinker"; }
-
+   
    // Data Members
    int polyObjNum;         // numeric id of affected polyobject
    int delay;              // delay time
@@ -187,14 +190,15 @@ public:
 
 class PolySwingDoorThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(PolySwingDoorThinker, Thinker)
+
 protected:
    void Think();
 
 public:
    // Methods
    virtual void serialize(SaveArchive &arc);
-   virtual const char *getClassName() const { return "PolySwingDoorThinker"; }
-
+   
    // Data Members
    int polyObjNum;    // numeric id of affected polyobject
    int delay;         // delay time

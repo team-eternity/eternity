@@ -63,8 +63,10 @@
 #include "e_sound.h"
 #include "f_finale.h"
 #include "g_game.h"
+#include "m_collection.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 #include "m_misc.h"
 #include "p_info.h"
 #include "p_mobj.h"
@@ -100,8 +102,8 @@ enum
 //
 struct LevelInfoProto_t
 {
-   DLListItem<LevelInfoProto_t> links;        // links for hashing
-   ENCStringHashKey mapname;                   // name of map to which this belongs
+   DLListItem<LevelInfoProto_t> links;         // links for hashing
+   char       *mapname;                        // name of map to which this belongs
    char        mapnamestr[9];                  // storage for name
    int         type;                           // type id via above enumeration   
    LevelInfo_t info;                           // the LevelInfo object
@@ -357,7 +359,7 @@ static LevelInfoProto_t *P_addLevelInfoPrototype(const char *mapname)
 
    // initialize hash table first time if necessary
    if(!protoHash.isInitialized())
-      protoHash.Initialize(numPrototypesAlloc);
+      protoHash.initialize(numPrototypesAlloc);
 
    // add it to the hash table
    protoHash.addObject(newProto);
@@ -376,7 +378,7 @@ static void P_clearLevelInfoPrototypes(void)
    int i;
 
    // destroy the hash table
-   protoHash.Destroy();
+   protoHash.destroy();
 
    // free all the LevelInfo objects
    for(i = 0; i < numPrototypes; ++i)
@@ -581,8 +583,8 @@ static int P_ParseInfoCmd(qstring *line, int cachelevel)
 
    line->replace("\t\r\n", ' '); // erase any control characters
    line->toLower();              // make everything lowercase
-   line->LStrip(' ');            // strip spaces at beginning
-   line->RStrip(' ');            // strip spaces at end
+   line->lstrip(' ');            // strip spaces at beginning
+   line->rstrip(' ');            // strip spaces at end
    
    if(!(len = line->length()))   // ignore totally empty lines
       return 0;
@@ -1548,12 +1550,12 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus,
 struct sndinfomus_t
 {
    DLListItem<sndinfomus_t> links;
-   EIntHashKey  mapnum;
-   char        *lumpname;
+   int   mapnum;
+   char *lumpname;
 };
 
 static EHashTable<sndinfomus_t, EIntHashKey, 
-                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash;
+                  &sndinfomus_t::mapnum, &sndinfomus_t::links> sndInfoMusHash(101);
 
 //
 // P_AddSndInfoMusic
@@ -1563,9 +1565,6 @@ static EHashTable<sndinfomus_t, EIntHashKey,
 void P_AddSndInfoMusic(int mapnum, const char *lumpname)
 {
    sndinfomus_t *newmus;
-
-   if(!sndInfoMusHash.isInitialized())
-      sndInfoMusHash.Initialize(101);
 
    // If one already exists, modify it. Otherwise create a new one.
    if((newmus = sndInfoMusHash.objectForKey(mapnum)))
@@ -1602,6 +1601,107 @@ const char *P_GetSndInfoMusic(int mapnum)
 
    if((music = sndInfoMusHash.objectForKey(mapnum)))
       lumpname = music->lumpname;
+
+   return lumpname;
+}
+
+//=============================================================================
+//
+// MUSINFO Music Definitions
+//
+
+struct musinfomap_t
+{
+   int   num;
+   char *lump;
+};
+
+class MusInfoMusic : public ZoneObject
+{
+public:
+   DLListItem<MusInfoMusic>    links;
+   PODCollection<musinfomap_t> maps;
+   qstring mapname;
+};
+
+static EHashTable<MusInfoMusic, ENCQStrHashKey, 
+                  &MusInfoMusic::mapname, &MusInfoMusic::links> musInfoMusHash(101);
+
+//
+// P_AddMusInfoMusic
+//
+// Add a single music definition from a Risen3D MUSINFO lump.
+//
+void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
+{
+   MusInfoMusic *music = NULL;
+
+   // Does it exist already?
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      int nummaps = music->maps.getLength();
+      bool foundnum = false;
+
+      // Does it have an entry for this number already?
+      for(int i = 0; i < nummaps; i++)
+      {
+         if(music->maps[i].num == number)
+         {
+            E_ReplaceString(music->maps[i].lump, estrdup(lump));
+            foundnum = true;
+            break;
+         }
+      }
+
+      if(!foundnum) // Add a new one.
+      {
+         musinfomap_t newmap;
+         newmap.num  = number;
+         newmap.lump = estrdup(lump);
+         music->maps.add(newmap);
+      }
+   }
+   else
+   {
+      // Create a new MUSINFO entry.
+      MusInfoMusic *newMusInfo = new MusInfoMusic();
+      newMusInfo->mapname = mapname;
+
+      // Create a new subentry.
+      musinfomap_t newmap;
+      newmap.num = number;
+      newmap.lump = estrdup(lump);
+      newMusInfo->maps.add(newmap);
+
+      // Add it to the hash table.
+      musInfoMusHash.addObject(newMusInfo);
+   }
+}
+
+// 
+// P_GetMusInfoMusic
+//
+// If a Risen3D MUSINFO music definition exists for the passed-in map name,
+// the lumpname to use will be passed in. Otherwise, NULL is returned.
+//
+const char *P_GetMusInfoMusic(const char *mapname, int number)
+{
+   const char   *lumpname = NULL;
+   MusInfoMusic *music    = NULL;
+
+   if((music = musInfoMusHash.objectForKey(mapname)))
+   {
+      int nummaps = music->maps.getLength();
+
+      for(int i = 0; i < nummaps; i++)
+      {
+         if(music->maps[i].num == number)
+         {
+            lumpname = music->maps[i].lump;
+            break;
+         }
+      }
+   }
 
    return lumpname;
 }

@@ -172,6 +172,7 @@ struct cfg_t
    cfg_lexfunc_t lexfunc;  /**< haleyjd: A callback dispatched by the lexer
                                 * when initially opening a file. */
    const char *lookfor;    /**< Name of a function to look for. */
+   cfg_t *displaced;       /**< haleyjd: pointer to a displaced section */
 };
 
 /** Data structure holding the value of a fundamental option value.
@@ -326,10 +327,10 @@ struct cfg_opt_t
 /** Initialize a flag property option.
  */
 #define CFG_FLAG(name, def, flags) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, 0, 0, def, 0, 0, 0, 0}
+   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, 0}
 
 #define CFG_FLAG_CB(name, def, flags, cb) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, 0, 0, def, 0, 0, 0, cb}
+   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, cfg_false, 0, 0, 0, cb}
 
 /** Terminate list of options. This must be the last initializer in
  * the option list.
@@ -451,6 +452,16 @@ double        cfg_getfloat(cfg_t *cfg, const char *name);
  */
 const char *  cfg_getstr(cfg_t *cfg, const char *name);
 
+/** Returns a heap-allocated duplicate of a string option.
+ * @param cfg The configuration file context.
+ * @param name The name of the option.
+ * @return A heap-allocated copy of the value is returned. If the option
+ * was not set in the configuration file, the default value given in the
+ * corresponding cfg_opt_t structure is returned. If no option is found
+ * with that name, cfg_error is called and NULL is returned.
+ */
+char *cfg_getstrdup(cfg_t *cfg, const char *name);
+
 /** Returns the value of a boolean option.
  * @param cfg The configuration file context.
  * @param name The name of the option.
@@ -563,6 +574,14 @@ cfg_t *       cfg_gettsec(cfg_t *cfg, const char *name, const char *title);
  * should not be modified.
  */
 const char *  cfg_title(cfg_t *cfg);
+
+/** Return a displaced section. A displaced section occurs when more than
+ * one section in the same option with the same name has been defined.
+ *
+ * @param cfg The configuration file context.
+ * @return Returns a displaced section, or 0 if there is none.
+ */
+cfg_t *       cfg_displaced(cfg_t *cfg);
 
 /** Indexed version of cfg_getmvprop().
  *

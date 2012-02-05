@@ -533,8 +533,8 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       switch(line->special)
       {
       case 1:         // MANUAL DOOR RAISE
-      case 32:        // MANUAL BLUE
-      case 33:        // MANUAL RED
+      case 32:        // MANUAL BLUE           - haleyjd 01/23/12: !?!!?!??!?!!
+      case 33:        // MANUAL RED            - This is why monsters get stuck on key doors...
       case 34:        // MANUAL YELLOW
          //jff 3/5/98 add ability to use teleporters for monsters
       case 195:       // switch teleporters
@@ -545,7 +545,6 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          
       default:
          return false;
-         break;
       }
    }
 
@@ -568,7 +567,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
       
    case 117:           // Blazing door raise
    case 118:           // Blazing door open
-      EV_VerticalDoor(line, thing);
+      EV_VerticalDoor(line, thing);          // haleyjd: note ignored return value...
       break;
         
       // Switches (non-retriggerable)
@@ -886,7 +885,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          case 175:
             // Close Door, Open in 30 secs
             // 175 S1  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line,close30ThenOpen))
+            if (EV_DoDoor(line, closeThenOpen))
                P_ChangeSwitchTexture(line,0,0);
             break;
 
@@ -1103,7 +1102,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
          case 196:
             // Close Door, Open in 30 secs
             // 196 SR  EV_DoDoor(close30ThenOpen)
-            if (EV_DoDoor(line,close30ThenOpen))
+            if (EV_DoDoor(line, closeThenOpen))
                P_ChangeSwitchTexture(line,1,0);
             break;
             

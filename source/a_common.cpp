@@ -625,11 +625,9 @@ void A_PlayerScream(Mobj *mo)
 void A_PlayerSkull(Mobj *actor)
 {
    Mobj *head;
-   static int skullType = -1;
 
    // PCLASS_FIXME: skull type a playerclass property?
-   if(skullType == -1)
-      skullType = E_SafeThingType(MT_HPLAYERSKULL);
+   int skullType = E_SafeThingType(MT_HPLAYERSKULL);
 
    head = P_SpawnMobj(actor->x, actor->y, actor->z + SKULLHEIGHT, skullType);
 
@@ -717,9 +715,9 @@ void A_Nailbomb(Mobj *thing)
 
 //
 // A_Detonate
+//
 // killough 8/9/98: same as A_Explode, except that the damage is variable
 //
-
 void A_Detonate(Mobj *mo)
 {
    P_RadiusAttack(mo, mo->target, mo->damage, mo->info->mod);

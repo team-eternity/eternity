@@ -1077,7 +1077,10 @@ void ACSThinker::Think()
             int strnum = POP();
 
             if(this->line && (sec = this->line->frontsector))
-               S_StartSectorSequenceName(sec, this->stringtable[strnum], false);
+            {
+               S_StartSectorSequenceName(sec, this->stringtable[strnum], 
+                                         SEQ_ORIGIN_SECTOR_F);
+            }
             /*
             FIXME
             else
@@ -1172,7 +1175,7 @@ void ACSThinker::Think()
 //
 void ACSThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    // Basic properties
    arc << vmID << scriptNum << internalNum << stp << sreg << sdata 
@@ -1218,7 +1221,7 @@ void ACSThinker::serialize(SaveArchive &arc)
 //
 void ACSThinker::deSwizzle()
 {
-   Mobj *mo = dynamic_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
+   Mobj *mo = thinker_cast<Mobj *>(P_ThinkerForNum(triggerSwizzle));
    P_SetNewTarget(&trigger, mo);
    triggerSwizzle = 0;
 }
@@ -1308,7 +1311,7 @@ void ACS_LoadScript(acsvm_t *vm, int lump)
       return;
 
    // allocate scripts array
-   vm->scripts = (acscript_t *)(Z_Calloc(1, vm->numScripts * sizeof(acscript_t), PU_LEVEL, NULL));
+   vm->scripts = estructalloctag(acscript_t, vm->numScripts, PU_LEVEL);
 
    vm->loaded = true;
 

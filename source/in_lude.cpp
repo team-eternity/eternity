@@ -66,9 +66,9 @@ static interfns_t *InterFuncs = NULL;
 vfont_t *in_font;
 vfont_t *in_bigfont;
 vfont_t *in_bignumfont;
-const char *in_fontname;
-const char *in_bigfontname;
-const char *in_bignumfontname;
+char *in_fontname;
+char *in_bigfontname;
+char *in_bignumfontname;
 
 //
 // Intermission Camera
@@ -93,14 +93,11 @@ Mobj *wi_camera;
 //
 void IN_AddCameras(void)
 {
-   int cameratype = E_ThingNumForDEHNum(MT_CAMERA);
-
-   camerathings.setMobjType(cameratype);
+   camerathings.setMobjType("SMMUCameraSpot");
    camerathings.makeEmpty();
 
-   // no camera view if camera type is undefined or we're in an
-   // older demo.
-   if(cameratype == NUMMOBJTYPES || demo_version < 331)
+   // no camera view if we're in an older demo.
+   if(demo_version < 331)
       return;
    
    camerathings.collectThings();

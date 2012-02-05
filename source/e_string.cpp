@@ -35,6 +35,7 @@
 #include "Confuse/confuse.h"
 
 #include "e_edf.h"
+#include "e_lib.h"
 #include "e_string.h"
 
 // 03/27/05: EDF strings!
@@ -111,8 +112,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    if((newStr = E_StringForName(key)))
    {
       // Modify existing object.
-      efree(newStr->string);
-      newStr->string = estrdup(value);
+      E_ReplaceString(newStr->string, estrdup(value));
 
       // Modify numeric id and rehash object if necessary
       if(num != newStr->numkey)

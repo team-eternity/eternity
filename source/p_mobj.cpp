@@ -124,7 +124,7 @@ IMPLEMENT_THINKER_TYPE(PointThinker)
 //
 void PointThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << x << y << z << groupid;
 }
@@ -377,7 +377,7 @@ void P_ExplodeMissile(Mobj *mo)
       }
    }
 
-   P_SetMobjState(mo, mobjinfo[mo->type].deathstate);
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 
    if(!(mo->flags4 & MF4_NORANDOMIZE))
    {
@@ -1064,7 +1064,7 @@ void P_NightmareRespawn(Mobj* mobj)
    mo = P_SpawnMobj(mobj->x, mobj->y,
                     mobj->subsector->sector->floorheight +
                        GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    // initiate teleport sound
 
@@ -1076,7 +1076,7 @@ void P_NightmareRespawn(Mobj* mobj)
 
    mo = P_SpawnMobj(x, y,
                     ss->sector->floorheight + GameModeInfo->teleFogHeight,
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
 
@@ -1412,7 +1412,7 @@ void Mobj::serialize(SaveArchive &arc)
 {
    // PointThinker will handle x,y,z coordinates, groupid, and the thinker name
    // (via Thinker::serialize).
-   PointThinker::serialize(arc);
+   Super::serialize(arc);
 
    // Basic Properties
    arc 
@@ -1475,7 +1475,7 @@ void Mobj::serialize(SaveArchive &arc)
       state = states[temp];
       
       // haleyjd 07/23/09: this must be before skin setting!
-      info = &mobjinfo[type]; 
+      info = mobjinfo[type]; 
 
       arc << temp; // Player number
       if(temp)
@@ -1507,7 +1507,7 @@ void Mobj::serialize(SaveArchive &arc)
       P_AddThingTID(this, tid);
 
       // create the deswizzle info structure
-      dsInfo = (deswizzle_info *)(Z_Calloc(1, sizeof(*dsInfo), PU_LEVEL, NULL));
+      dsInfo = estructalloctag(deswizzle_info, 1, PU_LEVEL);
 
       // Get the swizzled pointers
       arc << dsInfo->target << dsInfo->tracer << dsInfo->lastenemy;
@@ -1528,9 +1528,9 @@ void Mobj::deSwizzle()
       return;
 
    // Get the thinker pointers for each number
-   lTarget = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->target));
-   lTracer = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->tracer));
-   lLEnemy = dynamic_cast<Mobj *>(P_ThinkerForNum(dsInfo->lastenemy));
+   lTarget = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->target));
+   lTracer = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->tracer));
+   lLEnemy = thinker_cast<Mobj *>(P_ThinkerForNum(dsInfo->lastenemy));
 
    // Restore the pointers using P_SetNewTarget
    P_SetNewTarget(&target,    lTarget);
@@ -1575,7 +1575,7 @@ extern fixed_t tmsecceilz;
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 {
    Mobj       *mobj = new Mobj;
-   mobjinfo_t *info = &mobjinfo[type];
+   mobjinfo_t *info = mobjinfo[type];
    state_t    *st;
 
    mobj->type    = type;
@@ -1806,9 +1806,9 @@ int P_FindDoomedNum(int type)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; ++i)
       {
-         if(mobjinfo[i].doomednum != -1)
+         if(mobjinfo[i]->doomednum != -1)
          {
-            unsigned h = (unsigned int) mobjinfo[i].doomednum % NUMMOBJTYPES;
+            unsigned h = (unsigned int) mobjinfo[i]->doomednum % NUMMOBJTYPES;
             hash[i].next = hash[h].first;
             hash[h].first = i;
          }
@@ -1816,7 +1816,7 @@ int P_FindDoomedNum(int type)
    }
 
    i = hash[type % NUMMOBJTYPES].first;
-   while(i < NUMMOBJTYPES && mobjinfo[i].doomednum != type)
+   while(i < NUMMOBJTYPES && mobjinfo[i]->doomednum != type)
       i = hash[i].next;
    return i;
 }
@@ -1856,7 +1856,7 @@ void P_RespawnSpecials(void)
    i = P_FindDoomedNum(mthing->type);
 
    // spawn it
-   z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
+   z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    mo = P_SpawnMobj(x,y,z, i);
    mo->spawnpoint = *mthing;
@@ -2033,7 +2033,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
          if(HelperThing != -1)
          {
             // haleyjd 07/05/03: adjusted for EDF
-            if(HelperThing != NUMMOBJTYPES)
+            if(HelperThing != -1)
                i = HelperThing;
             else
                doom_printf(FC_ERROR "Invalid value for helper, ignored.");
@@ -2079,14 +2079,16 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // haleyjd: special thing types that need to undergo the processing
    // below must be caught here
 
-   if(mthing->type >= 9027 && mthing->type <= 9033) // particle fountains
-      i = E_SafeThingName("EEParticleFountain");
-   else if(mthing->type >= 1200 && mthing->type < 1300) // enviro sequences
+   if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
       i = E_SafeThingName("EEEnviroSequence");
-   else if(mthing->type >= 1400 && mthing->type < 1500) // sector sequence
+   else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
+   else if(mthing->type >= 9027 && mthing->type <= 9033)   // particle fountains
+      i = E_SafeThingName("EEParticleFountain");
    else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
       i = E_SafeThingName("EEAmbience");
+   else if(mthing->type >= 14101 && mthing->type <= 14164) // music changer
+      i = E_SafeThingName("EEMusicChanger");
    else
    {
       // killough 8/23/98: use table for faster lookup
@@ -2097,7 +2099,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // Do not abort because of an unknown thing. Ignore it, but post a
    // warning message for the player.
 
-   if(i == NUMMOBJTYPES)
+   // EDF3-FIXME: eliminate different behavior of doomednum hash
+   if(i == -1 || i == NUMMOBJTYPES)
    {
       // haleyjd: handle Doom Builder camera spots specially here, so that they
       // cannot desync demos recorded in BOOM-compatible ports
@@ -2122,14 +2125,14 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // don't spawn keycards and players in deathmatch
 
-   if(GameType == gt_dm && (mobjinfo[i].flags & MF_NOTDMATCH))
+   if(GameType == gt_dm && (mobjinfo[i]->flags & MF_NOTDMATCH))
       return NULL;        // sf
 
    // don't spawn any monsters if -nomonsters
 
    if(nomonsters &&
-      ((mobjinfo[i].flags3 & MF3_KILLABLE) ||
-       (mobjinfo[i].flags & MF_COUNTKILL)))
+      ((mobjinfo[i]->flags3 & MF3_KILLABLE) ||
+       (mobjinfo[i]->flags & MF_COUNTKILL)))
       return NULL;        // sf
 
    // spawn it
@@ -2138,10 +2141,10 @@ spawnit:
    x = mthing->x << FRACBITS;
    y = mthing->y << FRACBITS;
 
-   z = mobjinfo[i].flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
+   z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
 
    // haleyjd 10/13/02: float rand z
-   if(mobjinfo[i].flags2 & MF2_SPAWNFLOAT)
+   if(mobjinfo[i]->flags2 & MF2_SPAWNFLOAT)
       z = FLOATRANDZ;
 
    mobj = P_SpawnMobj(x, y, z, i);
@@ -2199,10 +2202,6 @@ spawnit:
       mobj->tics = -1; // don't go through state transitions
    }
 
-   // haleyjd: set particle fountain color
-   if(mthing->type >= 9027 && mthing->type <= 9033)
-      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
-
    // haleyjd: set environment sequence # for first 100 types
    if(mthing->type >= 1200 && mthing->type < 1300)
       mobj->args[0] = mthing->type - 1200;
@@ -2222,9 +2221,17 @@ spawnit:
       subsec->sector->sndSeqID = mobj->args[0];
    }
 
+   // haleyjd: set particle fountain color
+   if(mthing->type >= 9027 && mthing->type <= 9033)
+      mobj->effects |= (mthing->type - 9026) << FX_FOUNTAINSHIFT;
+
    // haleyjd: set ambience sequence # for first 64 types
    if(mthing->type >= 14001 && mthing->type <= 14064)
       mobj->args[0] = mthing->type - 14000;
+
+   // haleyjd: set music number for first 64 types
+   if(mthing->type >= 14101 && mthing->type <= 14164)
+      mobj->args[0] = mthing->type - 14100;
 
    return mobj;
 }
@@ -3539,14 +3546,14 @@ static cell sm_thingteleport(AMX *amx, cell *params)
          // spawn teleport fog and emit sound at source
          S_StartSound(P_SpawnMobj(oldx, oldy,
                   oldz + GameModeInfo->teleFogHeight,
-                  GameModeInfo->teleFogType),
+                  E_SafeThingType(GameModeInfo->teleFogType)),
                   GameModeInfo->teleSound);
 
          // spawn teleport fog and emit sound at destination
          S_StartSound(P_SpawnMobj(mo->x + 20*finecosine[mo->angle>>ANGLETOFINESHIFT],
                   mo->y + 20*finesine[mo->angle>>ANGLETOFINESHIFT],
                   mo->z + GameModeInfo->teleFogHeight,
-                  GameModeInfo->teleFogType),
+                  E_SafeThingType(GameModeInfo->teleFogType)),
                   GameModeInfo->teleSound);
       }
    }

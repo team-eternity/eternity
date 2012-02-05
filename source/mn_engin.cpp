@@ -1305,21 +1305,11 @@ bool MN_Responder(event_t *ev)
    if(ev->data1 == KEYD_RALT)
       altdown = (ev->type == ev_keydown);
 
-   // we only care about key presses
-   switch(ev->type)
-   {
-   case ev_keydown:
-      break;
-   default: // not interested in anything else
-      return false;
-   }
-
    // are we displaying a widget?
    if(current_menuwidget)
    {
-      return
-         current_menuwidget->responder ?
-            current_menuwidget->responder(ev) : false;
+      current_menuwidget->responder(ev);
+      return true;
    }
 
    // are we inputting a new value into a variable?
@@ -1799,7 +1789,7 @@ bool MN_Responder(event_t *ev)
       } while(n != current_menu->selected);
    }
    
-   return false; //!!current_menu;
+   return true; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1977,9 +1967,9 @@ void MN_StartControlPanel(void)
 //
 
 // haleyjd 02/25/09: font names set by EDF:
-const char *mn_fontname;
-const char *mn_normalfontname;
-const char *mn_bigfontname;
+char *mn_fontname;
+char *mn_normalfontname;
+char *mn_bigfontname;
 
 //
 // MN_InitFonts

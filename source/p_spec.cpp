@@ -1008,11 +1008,11 @@ bool P_CanUnlockGenDoor(line_t *line, player_t *player)
       //          allowed door to be opened without yellow keys
       //          06/30/01: optioned on MBF demo comp. (v2.03)
       if(skulliscard &&
-         (!(player->cards[it_redcard] | player->cards[it_redskull]) ||
-          !(player->cards[it_bluecard] | player->cards[it_blueskull]) ||
+         (!(player->cards[it_redcard   ] | player->cards[it_redskull ]) ||
+          !(player->cards[it_bluecard  ] | player->cards[it_blueskull]) ||
           !(player->cards[it_yellowcard] | 
-          ((demo_version == 203) ? !player->cards[it_yellowskull] : 
-                                    player->cards[it_yellowskull]))))
+            ((demo_version == 203) ? !player->cards[it_yellowskull] : 
+                                      player->cards[it_yellowskull]))))
       {
          player_printf(player, "%s", DEH_String("PD_ALL3"));
          S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
@@ -1457,7 +1457,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
 
    case 16:
       // Close Door 30
-      if(EV_DoDoor(line,close30ThenOpen) || P_ClearSwitchOnFail())
+      if(EV_DoDoor(line, closeThenOpen) || P_ClearSwitchOnFail())
          line->special = 0;
       break;
 
@@ -1675,7 +1675,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
       
    case 76:
       // Close Door 30
-      EV_DoDoor(line,close30ThenOpen);
+      EV_DoDoor(line, closeThenOpen);
       break;
       
    case 77:
@@ -3004,7 +3004,7 @@ void ScrollThinker::Think()
 //
 void ScrollThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << dx << dy << affectee << control << last_height << vdx << vdy
        << accel << type;
@@ -3244,7 +3244,7 @@ void FrictionThinker::Think()
 //
 void FrictionThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << friction << movefactor << affectee;
 }
@@ -3655,7 +3655,7 @@ void PushThinker::Think()
 //
 void PushThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
 
@@ -3673,14 +3673,8 @@ Mobj* P_GetPushThing(int s)
 {
    Mobj* thing;
    sector_t* sec;
-   static int PushType = -1;
-   static int PullType = -1;
-
-   if(PushType == -1)
-   {
-      PushType = E_ThingNumForDEHNum(MT_PUSH);
-      PullType = E_ThingNumForDEHNum(MT_PULL);
-   }
+   int PushType = E_ThingNumForDEHNum(MT_PUSH); 
+   int PullType = E_ThingNumForDEHNum(MT_PULL);
 
    sec = sectors + s;
    thing = sec->thinglist;
@@ -4960,15 +4954,14 @@ static void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_ef
 //
 static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
 {
-   static int  CamType = -1;
-
-   sector_t    *sector;
-   portal_t    *portal = NULL;
-   Mobj      *skycam;
-   fixed_t     planez = 0;
-   int         anchortype = 0; // SoM 3-10-04: new plan.
-   int         s;
-   int         fromid, toid;
+   int       CamType = E_ThingNumForName("EESkyboxCam"); // find the skybox camera object
+   sector_t *sector;
+   portal_t *portal = NULL;
+   Mobj     *skycam;
+   fixed_t   planez = 0;
+   int       anchortype = 0; // SoM 3-10-04: new plan.
+   int       s;
+   int       fromid, toid;
 
    if(!(sector = line->frontsector))
       return;
@@ -4995,10 +4988,6 @@ static void P_SpawnPortal(line_t *line, portal_type type, portal_effect effects)
                                   &sector->ceilingbaseangle, &sector->ceilingangle);
       break;
    case portal_skybox:
-      // find the skybox camera object
-      if(CamType == -1)
-         CamType = E_ThingNumForName("EESkyboxCam");
-
       skycam = sector->thinglist;
       while(skycam)
       {

@@ -613,7 +613,7 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
          unsigned int ordinal = 0;
          arc << ordinal;
 
-         if((target = dynamic_cast<Mobj *>(P_ThinkerForNum(ordinal))))
+         if((target = thinker_cast<Mobj *>(P_ThinkerForNum(ordinal))))
             P_SetNewTarget(&sectors[i].soundtarget, target);
          else
             sectors[i].soundtarget = NULL;
@@ -641,13 +641,13 @@ static void P_RemoveAllThinkers(void)
    // remove all the current thinkers
    for(th = thinkercap.next; th != &thinkercap; )
    {
-      Thinker *next;
-      Mobj *mo;
-      next = th->next;
-      if((mo = dynamic_cast<Mobj *>(th)))
-         mo->removeThinker();
+      Thinker *next = th->next;
+
+      if(th->isInstanceOf(RUNTIME_CLASS(Mobj)))
+         th->removeThinker();
       else
          delete th;
+      
       th = next;
    }
 
@@ -1050,7 +1050,7 @@ void P_ArchiveScripts(SaveArchive &arc)
 
 static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
 {
-   int twizzle;
+   unsigned int twizzle;
 
    // save name of EDF sequence
    arc.ArchiveCString(seq->sequence->name, 33);
@@ -1095,7 +1095,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    char name[33];
 
    // allocate a new sound sequence
-   newSeq = (SndSeq_t *)(Z_Calloc(1, sizeof(SndSeq_t), PU_LEVEL, NULL));
+   newSeq = estructalloctag(SndSeq_t, 1, PU_LEVEL);
 
    // get corresponding EDF sequence
    arc.ArchiveCString(name, 33);
@@ -1141,7 +1141,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
       newSeq->origin = &po->spawnSpot;
       break;
    case SEQ_ORIGIN_OTHER:
-      mo = dynamic_cast<Mobj *>(P_ThinkerForNum((unsigned int)twizzle));
+      mo = thinker_cast<Mobj *>(P_ThinkerForNum((unsigned int)twizzle));
       newSeq->originIdx = -1;
       newSeq->origin = mo;
       break;

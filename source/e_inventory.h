@@ -28,7 +28,8 @@
 #define E_INVENTORY_H__
 
 #include "m_dllist.h"
-#include "e_hashkeys.h"
+
+class MetaTable;
 
 // Inventory flags
 enum
@@ -48,6 +49,14 @@ enum
    // INV_IGNORESKILL - would rather have more flexible skill props...
 };
 
+// Inventory classes
+enum
+{
+   INV_CLASS_NONE,       // A token, functionless inventory item
+   INV_CLASS_HEALTH,     // Collectable health powerup
+   INV_CLASS_NUMCLASSES
+};
+
 //
 // inventory_t
 //
@@ -60,6 +69,7 @@ struct inventory_t
    DLListItem<inventory_t> numlinks;
 
    // basic properties
+   int   classtype;      // inventory item class
    int   amount;         // amount given on pickup
    int   maxAmount;      // maximum amount that can be carried
    int   interHubAmount; // amount that persists between hubs or non-hub levels
@@ -71,11 +81,21 @@ struct inventory_t
    int   respawnTics;    // length of time it takes to respawn w/item respawn on
    int   giveQuest;      // quest flag # given, if non-zero
 
+   unsigned int flags;   // basic inventory flags
+
    // fields needed for EDF identification and hashing
-   ENCStringHashKey name;         // pointer to name
-   char             namebuf[129]; // buffer for name (max 128 chars)
-   EIntHashKey      idnum;        // ID number
+   char *name;           // buffer for name
+   int   numkey;         // ID number
+   inventory_t *parent;  // parent record for inheritance
+   bool  processed;      // if true, has been processed
+   MetaTable *meta;      // metatable
 };
+
+// Lookup functions
+inventory_t *E_InventoryForID(int idnum);
+inventory_t *E_GetInventoryForID(int idnum);
+inventory_t *E_InventoryForName(const char *name);
+inventory_t *E_GetInventoryForName(const char *name);
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -85,6 +105,7 @@ struct inventory_t
 extern cfg_opt_t edf_inv_opts[];
 extern cfg_opt_t edf_invdelta_opts[];
 
+void E_CollectInventory(cfg_t *cfg);
 void E_ProcessInventoryDefs(cfg_t *cfg);
 void E_ProcessInventoryDeltas(cfg_t *cfg);
 

@@ -46,6 +46,7 @@
 #include "dstrings.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_things.h"
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
@@ -2195,7 +2196,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
                     y + 20 * mtsin,
                     ss->sector->floorheight + 
                        GameModeInfo->teleFogHeight, 
-                    GameModeInfo->teleFogType);
+                    E_SafeThingType(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the
    // "first frame"; but if this is done, then you miss your own spawn sound
@@ -2656,7 +2657,7 @@ public:
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 {
    MetaObject *o;
-   mobjinfo_t *mi = &mobjinfo[thingtype];
+   mobjinfo_t *mi = mobjinfo[thingtype];
 
    if((o = mi->meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
    {
@@ -2694,10 +2695,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            MetaTable *meta = mobjinfo[i].meta;
+            MetaTable *meta = mobjinfo[i]->meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
+               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getFastSpeed();
             }
          }
       }
@@ -2708,10 +2709,10 @@ void G_SetFastParms(int fast_pending)
 
          for(i = 0; i < NUMMOBJTYPES; ++i)
          {
-            MetaTable *meta = mobjinfo[i].meta;
+            MetaTable *meta = mobjinfo[i]->meta;
             if((o = meta->getObjectKeyAndType("speedset", METATYPE(MetaSpeedSet))))
             {
-               mobjinfo[i].speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
+               mobjinfo[i]->speed = static_cast<MetaSpeedSet *>(o)->getNormalSpeed();
             }
          }
       }
@@ -3292,18 +3293,20 @@ bool G_CheckDemoStatus(void)
 
    if(demoplayback)
    {
+      bool wassingledemo = singledemo; // haleyjd 01/08/12: must remember this
+
       // haleyjd 01/08/11: refactored so that stopping netdemos doesn't cause
       // access violations by leaving the game in "netgame" mode.
       Z_ChangeTag(demobuffer, PU_CACHE);
       G_ReloadDefaults();    // killough 3/1/98
       netgame = false;       // killough 3/29/98
 
-      if(singledemo)
+      if(wassingledemo)
          C_SetConsole();
       else
          D_AdvanceDemo();
 
-      return !singledemo;
+      return !wassingledemo;
    }
 
    return false;

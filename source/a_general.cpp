@@ -77,7 +77,7 @@ void A_Mushroom(Mobj *actor)
 
    ShotType = E_ArgAsThingNumG0(actor->state->args, 0);
 
-   if(ShotType < 0 || ShotType == NUMMOBJTYPES)
+   if(ShotType < 0 || ShotType == -1)
       ShotType = E_SafeThingType(MT_FATSHOT);
    
    A_Explode(actor);               // make normal explosion
@@ -675,7 +675,7 @@ void A_MissileAttack(Mobj *actor)
       momz = P_MissileMomz(target->x - actor->x,
                            target->y - actor->y,
                            target->z - actor->z,
-                           mobjinfo[type].speed);
+                           mobjinfo[type]->speed);
 
       mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
    }
@@ -751,7 +751,7 @@ void A_MissileSpread(Mobj *actor)
                            actor->target->y - actor->y,
                            actor->target->z - actor->z,
 #endif
-                           mobjinfo[type].speed);
+                           mobjinfo[type]->speed);
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
 
@@ -910,7 +910,7 @@ void A_ThingSummon(Mobj *actor)
    
    an = actor->angle >> ANGLETOFINESHIFT;
    
-   prestep = prestep + 3*(actor->info->radius + mobjinfo[type].radius)/2;
+   prestep = prestep + 3*(actor->info->radius + mobjinfo[type]->radius)/2;
    
    x = actor->x + FixedMul(prestep, finecosine[an]);
    y = actor->y + FixedMul(prestep, finesine[an]);

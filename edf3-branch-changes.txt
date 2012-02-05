@@ -1,0 +1,760 @@
+===============================================================================
+This log contains a summary  of changes performed in the edf3-branch to 
+add fully dynamic EDF, inventory and weapons support, and other miscellaneous
+features. edf3-branch spans SVN revisions from 1754 to 1871.
+===============================================================================
+-------------------------------------------------------------------------------
+02/04/12
+
+Merged with trunk to pull in Ladna's new keybindings system, which he brought
+in early from C/S branch and modified. I then went back to trunk, made a few
+modifications of my own, and merged those in as well, along with some conflict
+resolutions.
+
+Due to the amount of feature creep that has occurred on edf3-branch, and the
+fact that some of the fundamental APIs of the engine have changed on this 
+branch in a way that creates serious burdens for merging of changes to trunk,
+I am going to declare this branch closed as of r1871.
+
+Finishing of inventory support will start immediately on a new branch, which 
+I will attempt to keep more focused to task (haha, yeah right :P )
+
+-------------------------------------------------------------------------------
+01/31/12
+
+qstring has been modified to have a proper copy constructor so that it can 
+work with the new MetaAdapter<T> template class. This class inherits from
+MetaObject in a way that allows provision of metatable storage to objects 
+which are *not* MetaObject descendants, and in particular to those that cannot
+be made MetaObject descendants without violating Eternity's ban on multiple
+inheritance. (An object requiring multiple inheritance of ZoneObject 
+descendants would break the entire MetaObject heirarchy and force it to use 
+dynamic_cast everywhere! This is not acceptable.)
+
+MetaQString inherits from MetaAdapter<qstring> and provides a proper class 
+name as well as a toString() implementation that invokes qstring::constPtr().
+
+The MetaAPI modules, which now number one C++ module and 3 headers, have been
+moved into their own folder in the Visual C++ 2008 project.
+
+-------------------------------------------------------------------------------
+01/30/12
+
+Modifications were pulled in from trunk to avoid use of non-standard strnlen
+in m_strcasestr.cpp, and a requested fix to ExtraData attachment to polyobject
+line specials 348 and 349 specified directly within maps.
+
+Sector colormap values should additionally not be overwritten by ExtraData
+sector definitions when there was no value specified, in order to agree with
+the documented and intended behavior that "@default" implies that any global
+or sky map for the level as settable via MapInfo will apply as usual. Instead 
+what was happening is that such sectors would get reset to the default COLORMAP 
+lump on account of the mapsectorext_t fields being 0.
+
+-------------------------------------------------------------------------------
+01/29/12
+
+ExtraData thing definitions may now specify an EDF thingtype mnemonic in 
+place of a doomednum without using the "thing:" prefix, as this never should
+have been required except that I didn't know how to properly work the char **
+of strtol back when I first started work on ExtraData ;)  Damn, that was a long
+time ago :P
+
+-------------------------------------------------------------------------------
+01/28/12
+
+The new hashCode and hashCodeCase methods of qstring could not use checkBuffer,
+since it is not a this-const method (it modifies qstring::buffer and
+qstring::size). 
+
+I went ahead and added static versions of HashCode() and HashCodeCase() to
+qstring, so that they can be used on other strings wherever qstrings need to
+be hashed without requiring the d_dehtbl.h header file to be included and
+effectively exposing the implementation details of qstring's hash code
+calculation implementation.
+
+I renamed the lstrip and rstrip methods of qstring for consistency with EE
+style guidelines in regard to method names (initial lower camel case for
+most ordinary methods, initial capital camel case for statics).
+
+I found a bug in qstring::swapWith which came into being when the code was
+transitioned to C++ - use of a temporary qstring instance in this function
+would result in one of the two persistent qstring objects' buffers getting
+deleted when the function returned. This didn't happen in C since it doesn't
+have destructors, obviously.
+
+-------------------------------------------------------------------------------
+01/27/12
+
+Added adapter classes EQStrHashKey and ENCQStrHashKey, for using qstring as
+the storage type for EHashTable keys. This should be very useful in the future
+for avoiding reallocating C string logic and the need to use E_ReplaceString
+everywhere.
+
+To test it out, I converted the MUSINFO hash table to use qstrings as keys.
+Works flawlessly.
+
+-------------------------------------------------------------------------------
+01/25/12
+
+E*HashKey classes all now define a param_type typedef in addition to their
+basic_type typedef. This allows the type of parameter passed into functions
+such as EHashTable<>::objectForKey to differ from the type used as internal
+storage. This allows use of non-POD types for internal storage without 
+resulting in a requirement for EHashTable to receive them passed by value,
+with its ominous invocation of copy constructors.
+
+qstring::hashCode and qstring::hashCodeCase have been added as wrappers around
+the global D_HashTableKey functions.
+
+The dead code for the old SMMU translations list has been removed. ptoing also
+submitted updated versions of his tomato, blue, and gold player translations
+for DOOM, and those have been integrated now. I think they are much improved,
+especially blue which I myself use.
+
+Did I ever mention that blue is my favorite color? :P
+
+Numerous modifications by Ladna to trunk have been merged in. Ladna will be
+working on trunk a lot more in the future, or at least that's his plan. I
+hope to see many of the things he has planned come to full fruition.
+
+-------------------------------------------------------------------------------
+01/23/12
+
+I was again without an Internet connection for two days, so I have a huge
+amount of work to report on in this revision:
+
+MetaState has been exported from the middle of e_things.cpp into its own
+e_metastate.h header. This allows me to reference it elsewhere.
+
+The DOOM II finale will now draw the player using the consoleplayer's 
+translation setting. I think it used to do this a long time ago in SMMU, and
+I removed and/or broke it somehow. It *has* always displayed the player's skin
+properly, at least.
+
+The menu responder now eats all events while the menus or a menu widget are
+up, as doing otherwise leads to some very poor behaviors, *especially* during
+netgames!
+
+Unfortunately this has made it impossible to take screenshots of the menus.
+I need to think of a fix to this problem ASAP.
+
+Additional refactoring to VerticalDoorThinker has enabled me to entirely
+eliminate numerous redundant door type enumeration values introduced by BOOM
+team during their implementation of generalized line specials. Blazing doors
+are mostly now treated the same as regular doors as well, with the internal
+"turbo" field of VerticalDoorThinker keeping track of whether a door should
+act like it is turbo or not.
+
+Added a V_DrawPatchTranslatedLit function so I could...
+
+Add support to the skin viewer for viewing the player's sprite at various 
+light levels. Just press the up or down key and the light level will raise or
+lower respectively. Fullbright frames are properly respected, even.
+
+In addition, I also added support to the skin viewer for any metatable death
+or extreme death states in the player class. Pressing "m" will cycle through
+these in metatable order (which is arbitrary due to the list of them being
+drawn from a hash table). So for example you can now see Corvus's fiery death
+sequence in the menu skin viewer.
+
+As a part of the previous change, I modified the handling of sounds inside the
+skin viewer's state transition engine so that they are emulated based on the
+action in the state_t - this means that A_PlaySoundEx, A_Scream, A_XScream,
+and A_PlayerScream are all accurately emulated and the sounds played to
+represent them (not always strictly in the same way the pointer selects sounds)
+will occur on the same frame they would when killing the player during 
+gameplay.
+
+Internal copyright dates have been bumped to 2012, and I also remembered to
+update the window caption string to be consistent with the current dev version
+number.
+
+Another translation bug fix was pointed out by ptoing - since my change the
+other day to fix SMMU's glitch of thinking it had one too many translations,
+the very last translation that EE *does* have became unselectable via the 
+console or menus due to additionally incorrect treatment in the console 
+variable's handler function (it "forgets" that 0 means no translation, and 
+that the total range of values is thus one greater than the number of
+translation table entries).
+
+I finally discovered the cause of monsters sticking to locked door linedef
+types 32-34, a bug stemming all the way back to vanilla Doom: the game
+deliberately tells monsters in P_UseSpecialLine that they are capable of
+opening locked doors.
+
+The subsequent call to EV_VerticalDoor denies the attempt if the opener is not
+a player. However, P_UseSpecialLine is braindead and does not return the 
+result of any of the EV_ functions it calls (EV_VerticalDoor notably DOES
+return 0 if rejecting a monster for locked doors!), so the monster believes
+it has opened the door successfully.
+
+This leads to the exact same kind of stickiness that door tracks previously had
+in vanilla DOOM, which has long been fixed with a comp var. Upon discussing
+this in #doom-tech, it turns out RjY also discovered this a few years ago and
+had planned to implement a fix to it in "prboom 7" complevel. Unfortnately it
+never came to fruition.
+
+It is special cases like these that are beginning to make me feel like a 
+completely unified linedef specials engine will never be possible for Eternity.
+The number of compatibility quirks requiring precise vanilla behavior in order
+to avoid desyncing demos or breaking esoteric maps is enormous, and it is far
+too simple to break some of these things by making seemingly innocuous changes
+to the logic.
+
+Instead I am starting to lean in the same direction that SoM has taken with
+his current idea on portal clipping. It may be best to separate out all linedef
+special activation logic from the underlying thinkers, and then implement an
+inheritable interface - instantiated once per map type/gamemode combination -
+for linedef triggering.
+
+This would keep a hard and fast separation between DOOM and Hexen logic, the
+exact opposite of what ZDoom did. ZDoom didn't worry about maintaining 
+compatibility though, so I have entirely different design criteria to consider.
+
+-------------------------------------------------------------------------------
+01/21/12
+
+ptoing has returned and is working on various things - the first thing that has
+drawn his interest are player translations, and so I've started working on 
+those internally again.
+
+R_InitTranslationTables has been rewritten so that it uses an array of ZDoom
+translation language strings instead of fraggle's numeric range table. This
+allowed me to catch a bug in my implementation of the parser, though - when
+reaching end-of-string after a single-color destination range, the parser would
+back up one character - this works in every case *except* when the parser is
+at EOS and in that case it causes a parse failure by backing up more than the
+tokenizer has advanced.
+
+After fixing that problem, ptoing's new translations are functional. He has
+done his best to create ones that are compatible with the existing SMMU color
+set but look much better. A couple of them still require some tweaking though,
+as some of the colors fade to gray too fast at lower levels and stick out
+badly.
+
+Eventually translations will move out into EDF and become player class
+properties, and this will most likely occur on this development branch.
+
+I noticed a SMMU glitch - the function thought there was one more translation
+in the array than fraggle had defined - this was due to fraggle having removed
+one of the translations by commenting it out (apparently it was too ugly to
+grant countenance). This never had an ill effect before because the array 
+was defined at size TRANSLATIONCOLOURS, and the final entry was zero-inited
+and therefore useless.
+
+Added an additional ecalloctag macro and replaced more Z_Calloc calls.
+
+-------------------------------------------------------------------------------
+01/19/12
+
+I have finally gotten around to removing the old array-style sprite
+declarations from sprites.edf for Heretic gamemode, as they are no longer
+required - those sprites are created while parsing the states now.
+
+This does require EDF spritevar and pickup effects processing to occur after
+thingtypes and states are fully processed however, the former in particular
+since DECORATE states may also create new sprite values.
+
+An inventory classing mechanism has been re-implemented (this was also in the
+old aborted inventory attempt, but worked differently there). I started out by
+adding one of the simplest inventory types, Health, which give the player
+health immediately upon being picked up.
+
+However I am running into a lot of roadblocks, much more than I expected, so it
+is going to be slow going from here on out with the principal project for this
+branch.
+
+Added an E_MetaStringFromCfgString utility (possibly the longest function name
+in Eternity currently) that turns a cfg_opt_t CFG_STR property into a 
+MetaTable property under the same key. 
+
+It seems, upon greater thought, that there might be a use for an entire 
+framework of functions that do the same thing for various types - int, float,
+etc.
+
+For that matter libConfuse itself *could* be rewritten ground-up to be based
+on MetaTables, but I am divided on whether that would be a useful diversion at
+the present time.
+
+-------------------------------------------------------------------------------
+01/18/12
+
+I tried implementing some suggestions by Ryan C. Gordon on the SDL mailing list
+that might would address the way that Eternity starts out in SDL GL2D mode
+showing a screen that is variously bright white or full of weird "dead" screen
+contents depending on how it is started up, but unfortunately they had no 
+effect.
+
+As a result I have removed the fillPBO method of SDLGL2DVideoDriver, as it is
+not having the effect that it seemed to have at first. As part of my various
+other experiments, I added a GL_OrthQuadFlat function to gl_primitives. It is
+not currently used for anything.
+
+-------------------------------------------------------------------------------
+01/17/12
+
+All Thinker descendants have been adjusted to use their new Super typedef to
+call up to their parent serialize method. The advantage here is obvious: if 
+the parent type changes, the code will continue to work without intervention.
+
+I have simplified the new e* allocation macros to eliminate their use of a
+template function as an intermediary, as it's simply totally unnecessary. The
+type parameter can be placed into the angle brackets of static_cast directly by
+the macro.
+
+I also added estructalloctag, so that I can use estructalloc in situations
+where the allocation tag isn't PU_STATIC.
+
+estructalloc is now used pretty much everywhere, in preference to direct
+Z_Calloc calls to allocate structs or arrays of structs.
+
+Sector sound sequence functions' origin type parameter has always bugged me in
+that I wrote them to take that parameter as an arbitrary boolean that is
+false to mean floor and true to mean ceiling. I have rewritten them to take
+the sequence origin type enumeration values that are defined in the s_sndseq
+header file instead.
+
+-------------------------------------------------------------------------------
+01/16/12
+
+EEMusicChanger was using the wrong doomednum courtesy of me misreading the 
+ZDoom wiki page about it.
+
+However, I am going to put sector actions and everything they entail back on
+hold until udmf-branch (the next scheduled major project after this one),
+because they run into problems with Eternity's current gigantic mess of a 
+linedef special system.
+
+MobjCollection has been altered so that the mobjType is stored as a name
+instead of a type number. This ensures that it will be looked up every time
+the collectThings method is invoked instead of only once at startup, meaning
+that the thingtype they depend on can change via runtime EDF parsing once
+EDF collections are functional.
+
+MapInfo level type enumeration values were added for Strife and Hexen (just a
+bit of early prep work ;)
+
+In advance of udmf-branch I am also looking at various aspects of the linedef
+special system and seeing if they cannot be cleaned up at least a little bit
+right now. I started, as always, with doors, and managed to merge several
+special cases in VerticalDoorThinker::Think whereby multiple types of doors
+always act the same way.
+
+-------------------------------------------------------------------------------
+01/15/12
+
+DECORATE states did not set the state_t::oldaction member which is critical for
+the functioning of DeHackEd. This caused a significant game-breaking regression
+for HACX which was stumbled upon by DavidPH while testing the network code.
+
+
+When calculating the network packet checksum, do not write it back into the
+netbuffer structure until it is verified to be valid. This might improve
+behavior somehow, though it should really have no effect if everything is
+otherwise working the way it ought.
+
+-------------------------------------------------------------------------------
+01/14/12
+
+I am working on adding support for Risen3D's MUSINFO lump, now that it is 
+supported by both ZDoom and prboom-plus, and is used in the new Memorial wad 
+for DOOM II which is otherwise completely Eternity-compatible.
+
+In advance of this, I need to support sector actions like ZDoom has, since the
+MusicChanger object is a special case of a "player enters sector" action. I 
+will be allowing type 9998 as "EESectorActionEnter" at the same time.
+
+Some problems have been identified in EE's peer-to-peer networking code and I
+am trying to iron them out. Two fixes so far:
+
+  * When sending the startup packet, the size of the game options should be
+    added in, not assigned to packetsize.
+  * -net should not crash the game if given less than two parameters
+    (anarkavre!!!! >:O )
+
+-------------------------------------------------------------------------------
+01/13/12
+
+Advanced menu filebox selection widgets should not be launched when the file
+list is empty. This avoids the crash mentioned in the 1/12 entry below.
+
+-------------------------------------------------------------------------------
+01/12/12
+
+Most calls to EHashTable<>::initialize have been eliminated throughout the 
+engine in preference to use of the new parameterized constructor.
+
+I found a bug whereby the mn_selectmusic menu could start out empty, and if you
+tried to use it, the game would crash. I have to make sure that the static
+music definitions are added to the music hash table at startup always, and
+cannot be missed due to a music-playing error.
+
+The fact the menu crashes is a separate issue that I will look into later.
+
+MobjCollection objects can now be managed by a global MobjCollectionSet class.
+I intend to use this to make the definition of mapspot collections, such as
+those used by the Boss Brain in DOOM II and D'Sparil in Heretic, defined via
+EDF and extensible to additional object types. This will allow me to add the
+Mace Spots from Heretic, which are the last missing thingtype with a doomednum
+in that game.
+
+-------------------------------------------------------------------------------
+01/11/12
+
+EHashTable will now self-initialize, in much the same fashion as qstring, if
+objects are added to the table before it has been explicitly initialized. An
+additional constructor has also been added which accepts the number of chains
+to start the table out with, and this constructor also results in immediate
+initialization.
+
+-------------------------------------------------------------------------------
+01/08/12
+
+Two additional steps were needed for fully dynamic thingtypes:
+
+  * Caching of thingtype lookups throughout the engine, mostly in action
+    routines, had to be eliminated, as was done previously for states. (Note
+    this does not include the caching mechanism of argument lookups, which 
+    has a mechanism for resetting all evaluations when EDF is processed at
+    runtime).
+    
+  * GameModeInfo->teleFogType is resolved at runtime instead of at startup.
+  
+A bug was additionally fixed which caused a regression in G_CheckDemoStatus
+whereby the demo loop would continue after playing a single demo from the
+command line: the function G_ReloadDefaults changes the value of the singledemo
+variable, and so it needs to be cached in a local across the call to that
+function in G_CheckDemoStatus, or else it "forgets" that it was in singledemo
+mode.
+
+-------------------------------------------------------------------------------
+01/04/12
+
+I adjusted the MetaObject copy constructor to be safe if it is trying to copy
+over itself.
+
+-------------------------------------------------------------------------------
+01/03/12
+
+My Internet was down all weekend due to my DSL apparently shorting out on a bad
+terminal contact, so I was able to complete a large amount of work:
+
+  * const_cast is no longer used anywhere to get around passing const char *'s
+    which actually point to heap-allocated values into efree() to free them.
+    Instead, structures with this problem have additional members that point
+    to the heap-allocated value and serve to track it for purposes of freeing
+    and reallocation separately from the const char * that is used to access
+    it otherwise.
+    
+  * Added an e_dumpstate command so you can look at states as defined by EDF in
+    the console.
+    
+  * DECORATE state blocks may now be used to populate a set of consecutively
+    pre-defined global states in EDF. A firstdecoratestate member has been 
+    added to the EDF thingtype block to specify what the first global state a
+    thingtype should start filling in with its DECORATE states is. Note that
+    this property is "immediate" - it is not stored in the thingtype, and it
+    is NOT inherited by child types, as that simply wouldn't make sense.
+    
+  * libConfuse now keeps track of the displaced copy/copies of a section when
+    it overwrites a section with a newer section of the same name, instead of
+    freeing and destroying the previous definitions.
+    
+  * The previous change allows for displaced thingtypes' DECORATE state blocks
+    to still be processed. This is required when an EDF thingtype overrides one
+    of the default thingtypes, since if they didn't get their DECORATE state
+    block processed, they would never fill in the global state blocks either
+    and DeHackEd and older EDFs would stop working as a result.
+    
+  * Added a +decorate flag to global EDF frame definitions, which is required
+    to be present in order for DECORATE states to overwrite that frame. If a 
+    frame is modified first by a global EDF frame definition, it will clear 
+    this flag.
+    
+    This is required to keep the ability to override global frames by
+    redefintion. Otherwise, they'd always get overwritten by the original data
+    when DECORATE-format states are parsed into them.
+    
+  * doom/things.edf and doom/frames.edf have been refactored to use DECORATE
+    state format. Heretic will follow soon. Hexen and Strife definitions will
+    start out in this format eventually.
+    
+  * Inventory inheritance and basic field processing are now functional.
+  
+  * Added an E_ReplaceString utility, which frees the current value of a char *
+    if it is valid and then assigns it a new value. This can be used like the
+    following example:
+    
+    E_ReplaceString(foo, estrdup("bar")); // if duplicating a non-dynamic value
+    E_ReplaceString(baz, qux);            // if 2nd param is already dynamic
+    
+  * The development version has been bumped up to 3.40.21 and the name of the
+    next version will be "Midgard," which is the Norse mythological name for
+    the Earth, meaning literally "middle earth" (familiar?).
+    
+    Middle Earth is where humans live, and it is supported by the trunk of the
+    great world tree, Yggdrasil. It is "middle" on account of being between
+    the various other nine realms of existence, amongst them Asgard, the home
+    of the gods, and Jötunheimr, the home of the giants. Being in the middle,
+    it is naturally where all the other beings meet to fight and end up making
+    trouble for humans rather than minding their own business :P
+
+-------------------------------------------------------------------------------
+12/31/11
+
+Merged changes from trunk to pull in fix to white startup screen in GL2D mode.
+
+-------------------------------------------------------------------------------
+12/29/11
+
+Merged changes from trunk to pull in support for hi-def music.
+
+-------------------------------------------------------------------------------
+12/23/11
+
+The ThinkerType hierarchy has again been altered to eliminate the need to
+specify a Thinker's parent class inside the IMPLEMENT_THINKER_TYPE macro, 
+which is away from the class definition inside a source file.
+
+Instead, the parent class is now specified in the DECLARE_THINKER_TYPE macro,
+inside the Thinker descendant class definition in the header file.
+
+The following typedefs are created as part of this change:
+
+  * All Thinker descendants define a Super typedef that refers to their 
+    immediate parent class (ie. Mobj::Super is equivalent to PointThinker,
+    and PointThinker::Super is equivalent to Thinker).
+    
+  * All ThinkerType descendants define a Class typedef, which refers to the
+    Thinker descendant class for which they serve as an RTTI "whipping boy."
+    (ie. MobjType::Class is Mobj, and PointThinkerType::Class is PointThinker).
+    
+As a result of these changes, there is no longer a need for startup code to
+dynamically lookup the parent type of each class in the ThinkerType hash table.
+
+Instead, a virtual ThinkerType *getParentType() method in ThinkerType classes
+is able to simply return Class::Super::StaticType. The StaticType member of
+each Thinker class was already used to refer to its ThinkerType instance and
+is initialized at startup as the ThinkerType objects construct themselves.
+
+-------------------------------------------------------------------------------
+12/22/11
+
+Added a call to E_ProcessInventoryDeltas to main EDF processing.
+
+Merged code from trunk to process SNDINFO music definitions, and altered it
+accordingly for edf3-branch changes to the EHashTable API.
+
+-------------------------------------------------------------------------------
+12/20/11
+
+metaapi.h must include DLListItem; I have no idea why only certain compilers
+could get away without it while others object.
+
+MetaTable instantiation and delta section processing have rendered the basic
+inventory definition section of EDF parsable and processable (still doesn't
+really DO anything, of course), and so I have added call downs to the new
+module's routines in e_edf.cpp.
+
+configure.in changes were merged in from trunk.
+
+-------------------------------------------------------------------------------
+12/18/11
+
+Since inventory definitions are completely dynamic from the get-go, I have 
+determined that the inventoryDefs array is completely unnecessary and thus I
+have eliminated it and all "GetNumForName" style routines, which now return
+a pointer to an inventory_t structure instead of an index into inventoryDefs.
+
+ThinkerType RTTI has been altered to use case sensitive name hashing, since the
+identifiers it is based on are also case sensitive at compile time.
+
+-------------------------------------------------------------------------------
+12/17/11
+
+Merged changes from trunk to pull in the fix to "goto" being treated as case
+sensitive inside DECORATE state blocks.
+
+-------------------------------------------------------------------------------
+12/12/11
+
+After additional thought about the way that inheritance should work in the
+presence of dynamically changing thingtypes, I determined that the proper
+course of action to take is to always create a new mobjinfo and let it override
+the one previously defined through the "last-added-is-first-found" semantics of
+EHashTable, which were precisely created originally to allow this behavior.
+
+This allows thingtypes that inherited from a type altered later in dynamically
+loaded EDFs to retain their proper behavior, as they continue to point to the
+old, displaced mobjinfo as their parent type, including any DECORATE states it
+may possess in its MetaTable.
+
+The rest of the game engine will see the newly defined thingtype when it is
+looked up via E_ThingNumForName and friends.
+
+DeHackEd number hashing works again (it was temporarily broken due to some
+mistakes).
+
+Inventory reallocation routines E_CollectInventory and E_ReallocInventory have
+been added, matching like-named routines for thingtypes.
+
+-------------------------------------------------------------------------------
+12/03/11
+
+Elimination of the assembly version of D_abs was merged from trunk.
+
+-------------------------------------------------------------------------------
+11/28/11
+
+Additional changes have been merged from trunk, with some following changes 
+made to hash tables defined in this branch that don't exist in trunk yet
+necessitated by more changes to EHashTable, as suggested by DavidPH, which
+resulted in elimination of passing the pointer-to-members to the class
+constructor in preference of passing them into the template as parameters.
+
+Another -timedemo increase was noted as a result of this change, since it
+enables the templated EHashTable to incorporate the pointers to members as
+constants at compile time and bake them into the code itself, with full
+optimizations, instead of accessing them at runtime as if they're variables.
+
+-------------------------------------------------------------------------------
+11/26/11
+
+The change to the semantics of the E*HashKey classes has made the inclusion of
+the e_hashkeys.h header file unnecessary in many locations.
+
+I have merged changes from trunk, including the addition of hal/i_platform
+defines.
+
+-------------------------------------------------------------------------------
+11/23/11
+
+DavidPH suggested another modification to EHashTable which would have the 
+E*HashKey interface classes use static methods. 
+
+As a result of this change, which did result in an extremely small but
+consistent boost in -timedemo mode, I needed to make the names of states and
+mobjinfo definitions fully dynamic, so there is no longer any mnemonic length
+limit for these sections in EDF.
+
+-------------------------------------------------------------------------------
+11/22/11
+
+A functional inventory system is the next major milestone for edf3-branch.
+
+I have added hashing for inventory definitions.
+
+-------------------------------------------------------------------------------
+11/21/11
+
+With the following list of changes, EDF has become fully dynamic:
+
+  * sprite variables can be set more than once
+  * pickup items are additive
+  * castinfo can be defined more than once (the new cast entirely replaces any
+    existing one, however, since castinfo is a singular resource)
+  * boss spawn types can be defined more than once, with the same caveat as
+    for castinfo
+  * EDF processing for the initial root parsing and for runtime additive
+    parsing has been folded together into a single routine, as earlier planned
+    for once all sections became properly dynamic.
+    
+I also found and fixed yet another problem with castinfo whereby F_CastPrint
+could cause an access violation if any of the castinfo entries after the first
+17 had an undefined name.
+
+-------------------------------------------------------------------------------
+11/20/11
+
+ThinkerType RTTI is now fully functional. I have observed an average gain of 
+1.2 FPS in -timedemo ran on Sunder MAP11 allowing the default DEMO1 lump to
+load and play - which is the DEMO1 from the IWAD, and features the player
+wandering around in the first room shooting at walls while thousands of demons
+grunt and growl outside - every one of them generating at LEAST one and 
+possibly several dynamic_cast calls per frame.
+
+-------------------------------------------------------------------------------
+11/14/11
+
+I have completed a previously planned revamp of the ThinkerType class hierarchy
+so that it supports inheritance information. With some additional minor 
+changes, this will enable EE to use these classes as its own form of RTTI in
+preference to C++'s built-in mechanisms. With a simple test program, I found
+that employing your own custom RTTI solution to implement a dynamic_cast
+equivalent operation results in up to ten times faster code in Visual C++.
+
+It is unfortunate that the C++ object model is not only so minimal, but also
+at the same time so broken on account of having to support hateful features 
+such as multiple inheritance and virtual inheritance. These make dynamic_cast
+and the obtaining & using of pointers to members significantly more complicated
+than any basic, clean, and properly designed code needs.
+
+-------------------------------------------------------------------------------
+11/12/11
+
+A bug was found in EE where if you started out in a position where you could
+only see HOM, a segmentation violation would occur. This happened because the
+drawsegs_xrange table would not be allocated until at least one drawseg was
+added to it. If there were NO drawsegs, the pointer stayed NULL unexpectedly
+and the renderer would crash trying to access it without checking.
+
+This was fixed by making sure drawsegs_xrange starts out with room for at least
+one drawseg allocated, instead of starting out NULL. This resolves the crash in
+sargezar.wad MAP10 when -warp is used to go to that map directly.
+
+This ideally should have been done on trunk, but I have decided that
+edf3-branch will, to the greatest extent reasonable, serve as the development
+branch for the next version of EE, to ensure that it does not end up back-
+burnered and ignored in favor of other projects. This means that most fixes
+and other changes will be occuring in this branch for a while, instead of on
+trunk.
+
+-------------------------------------------------------------------------------
+11/06/11
+
+Dynamic mobjinfo has been largely completed and tested to work at a basic
+level, so the first major milestone is complete.
+
+  * thingtype definitions are now recognized during runtime EDF parsing.
+  * inheritance is now more friendly to dynamic definition, with generation
+    tracking (a generation being each individual EDF parsing process).
+
+-------------------------------------------------------------------------------
+11/05/11
+
+E_IsMobjInfoDescendantOf has been optimized by altering it to return a pointer
+to the parent type (or NULL when the type in question does not inherit from the
+indicated type). This prevents the need to immediately lookup the parent type
+using E_ThingNumForName when it was already iterated over in the process of
+answering the inheritance question.
+
+-------------------------------------------------------------------------------
+11/04/11
+
+Again exactly as was previously carried out for states, I have made mobjinfo
+hashing fully dynamic via use of EHashTable, and I have changed the return 
+value from mobjinfo lookup functions that means "no such object" from
+NUMMOBJTYPES to -1, so that its value need not change at runtime.
+
+-------------------------------------------------------------------------------
+11/03/11
+
+I have created a new branch to continue development of EDF 3.0 features, which
+may require significant refactoring that will render the branch unbuildable or
+create temporary regressions and functionality gaps that wouldn't be acceptable
+on the trunk build.
+
+The first significant project for edf3-branch is the goal of fully dynamic EDF,
+so that no definition types are treated non-additively or are ignored when
+loading EDFs at runtime.
+
+The first step on that road is to make mobjinfo fully dynamic. As with states
+during edf-branch (which resulted in EDF 2.0), I have begun by turning mobjinfo
+into an array of pointers to mobjinfo_t structures, instead of a solid array.
+For cache coherency, the actual mobjinfo structures are still allocated as
+contiguous blocks during each EDF parsing.
+
+===============================================================================
+EOF
+===============================================================================

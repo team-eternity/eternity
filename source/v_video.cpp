@@ -416,8 +416,6 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
    V_DrawPatchInt(&pi, buffer);
 }
 
-
-
 //
 // V_DrawPatchTranslated
 //
@@ -452,6 +450,50 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
 
    V_DrawPatchInt(&pi, buffer);
 }
+
+//
+// V_DrawPatchTranslatedLit
+//
+// haleyjd 01/22/12: Translated patch drawer that also supports a secondary
+// lighting remapping.
+//
+void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
+                              byte *outr, byte *lighttable, bool flipped)
+{
+   PatchInfo pi;
+   
+   pi.x = x;
+   pi.y = y;
+   pi.patch = patch;
+   pi.flipped = flipped;
+
+   // is the patch really translated?
+   if(outr)
+   {
+      if(lighttable) // is it really lit?
+      {
+         pi.drawstyle = PSTYLE_TLATEDLIT;
+         V_SetPatchLight(lighttable);
+      }
+      else
+      {
+         pi.drawstyle = PSTYLE_TLATED;   
+      }
+      V_SetPatchColrng(outr);
+   }
+   else if(lighttable)
+   {
+      // still treat as translated; just use the lighttable
+      pi.drawstyle = PSTYLE_TLATED;
+      V_SetPatchColrng(lighttable);
+   }
+   else
+      pi.drawstyle = PSTYLE_NORMAL;
+
+   V_DrawPatchInt(&pi, buffer);
+}
+
+
 
 //
 // V_DrawPatchTL

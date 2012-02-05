@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 James Haley
+// Copyright(C) 2009 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,46 +17,47 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
 //
-// Hexen-inspired action functions
-//
-// DISCLAIMER: None of this code was taken from Hexen. Any
-// resemblence is purely coincidental or is the result of work from
-// a common base source.
+//   MetaQString adapter class for storage of qstrings as metatable properites.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef P_XENEMY_H__
-#define P_XENEMY_H__
+#ifndef METAQSTRING_H__
+#define METAQSTRING_H__
 
-#include "p_mobj.h"
+#include "metaadapter.h"
+#include "m_qstr.h"
 
-// Earthquakes
-
-class QuakeThinker : public PointThinker
+class MetaQString : public MetaAdapter<qstring>
 {
-   DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
-
-protected:
-   void Think();
-
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc);
+   MetaQString(const char *key) : MetaAdapter<qstring>("MetaQString", key)
+   {
+   }
 
-   // Data Members
-   int intensity;        // richter scale (hardly realistic)
-   int duration;         // how long it lasts
-   fixed_t quakeRadius;  // radius of shaking effects
-   fixed_t damageRadius; // radius of damage effects (if any)
+   MetaQString(const char *key, const qstring &initValue)
+      : MetaAdapter<qstring>("MetaQString", key, initValue)
+   {
+   }
+
+   MetaQString(const char *key, const char *value)
+      : MetaAdapter<qstring>("MetaQString", key)
+   {
+      containedObject = value;
+   }
+
+   MetaQString(const MetaQString &other) : MetaAdapter<qstring>(other) {}
+
+   // Virtuals
+   MetaObject *clone()    const { return new MetaQString(*this);     }
+   const char *toString() const { return containedObject.constPtr(); }
 };
-
-bool P_StartQuake(int *args);
 
 #endif
 
 // EOF
+
 

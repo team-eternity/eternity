@@ -1397,22 +1397,6 @@ gamemodeinfo_t *GameModeInfoObjects[NumGameModes] =
 };
 
 //
-// D_InitGameInfo
-//
-// Called after GameModeInfo is set to normalize some fields.
-// EDF makes this necessary.
-//
-void D_InitGameInfo(void)
-{
-#ifdef RANGECHECK
-   if(!GameModeInfo)
-      I_Error("D_InitGameInfo: called before GameModeInfo set\n");
-#endif
-
-   GameModeInfo->teleFogType = E_SafeThingType(GameModeInfo->teleFogType);
-}
-
-//
 // OVERRIDE macro
 //
 // Keeps me from typing this over and over :)

@@ -1120,26 +1120,26 @@ void R_DoomTLStyle(void)
       int tnum   = E_ThingNumForName(DoomThingStyles[i].className);
       int action = DoomThingStyles[i].actions[r_tlstyle];
       
-      if(tnum == NUMMOBJTYPES)
+      if(tnum == -1)
          continue;
 
       // Do not modify any flags if TLSTYLEADD was set in EDF initially.
       // None of the target thingtypes normally start out with this flag,
       // so if they already have it, then we know an older mod (essel's
       // Eternity enhancement pack, probably) is active.
-      if(firsttime && mobjinfo[tnum].flags3 & MF3_TLSTYLEADD)
+      if(firsttime && mobjinfo[tnum]->flags3 & MF3_TLSTYLEADD)
          continue;
       
       // Do the action
       if(action & R_CLEARTL)
-         mobjinfo[tnum].flags &= ~MF_TRANSLUCENT;
+         mobjinfo[tnum]->flags &= ~MF_TRANSLUCENT;
       else if(action & R_SETTL)
-         mobjinfo[tnum].flags |= MF_TRANSLUCENT;
+         mobjinfo[tnum]->flags |= MF_TRANSLUCENT;
       
       if(action & R_CLEARADD)
-         mobjinfo[tnum].flags3 &= ~MF3_TLSTYLEADD;
+         mobjinfo[tnum]->flags3 &= ~MF3_TLSTYLEADD;
       else if(action & R_SETADD)
-         mobjinfo[tnum].flags3 |= MF3_TLSTYLEADD;
+         mobjinfo[tnum]->flags3 |= MF3_TLSTYLEADD;
       
       // if we are in-level, update all things of the corresponding type too
       if(gamestate == GS_LEVEL)
