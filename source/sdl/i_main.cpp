@@ -49,6 +49,13 @@
 #define main common_main
 #endif
 
+#else
+
+#ifdef __MINGW32__
+#undef main
+#define main common_main
+#endif
+
 #endif
 
 void I_Quit(void);

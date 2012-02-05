@@ -69,7 +69,7 @@
 
 bool onground; // whether player is on ground or in air
 
-extern int action_frags; // [CG] 09/23/11
+extern int action_scoreboard; // [CG] 09/23/11
 
 //
 // P_SetDisplayPlayer
@@ -370,7 +370,7 @@ void P_DeathThink(player_t *player)
 
    // [CG] 09/18/11: Show scoreboard when dead.
    if(CS_CLIENT && player == &players[consoleplayer])
-      action_frags = 1;
+      action_scoreboard = 1;
 
    // haleyjd 10/05/08:
    // handle looking slightly up when the player is attached to a non-player

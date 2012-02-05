@@ -213,9 +213,9 @@ default_t defaults[] =
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, NULL, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
 
-   // sf
    // [CG] show_scores now defaults to on, because it's confusing otherwise ("I
    //      bound a key to "frags" but it doesn't show the scoreboard... help!")
+   // sf
    DEFAULT_INT("show_scores", &show_scores, NULL, 1, 0, 1, default_t::wad_yes,
                "show scores in deathmatch"),
 

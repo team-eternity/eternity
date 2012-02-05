@@ -54,6 +54,12 @@ typedef struct
    cs_cmd_t command;
 } client_status_t;
 
+typedef struct
+{
+   Mobj *local_ghost;
+   Mobj *remote_ghost;
+} cl_ghost_t;
+
 extern char *cs_server_url;
 extern char *cs_server_password;
 extern char *cs_client_password_file;
@@ -72,6 +78,8 @@ extern bool cl_handling_damaged_actor;
 extern bool cl_handling_damaged_actor_and_justhit;
 extern bool cl_setting_actor_state;
 
+extern cl_ghost_t cl_unlagged_ghosts[MAXPLAYERS];
+
 void  CL_Init(char *url);
 void  CL_InitPlayDemoMode(void);
 void  CL_InitNetworkMessageHash(void);
@@ -81,6 +89,9 @@ void  CL_Connect(void);
 void  CL_Reconnect(void);
 void  CL_Disconnect(void);
 
+void  CL_SpawnLocalGhost(Mobj *actor);
+void  CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
+                          angle_t angle, unsigned int world_index);
 void  CL_SaveServerPassword(void);
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                    mobjtype_t type);

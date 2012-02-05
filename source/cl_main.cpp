@@ -45,6 +45,7 @@
 #include "d_ticcmd.h"
 #include "doomdata.h"
 #include "e_edf.h"
+#include "e_player.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -110,6 +111,8 @@ bool cl_setting_player_weapon_sprites = false;
 bool cl_handling_damaged_actor = false;
 bool cl_handling_damaged_actor_and_justhit = false;
 bool cl_setting_actor_state = false;
+
+cl_ghost_t cl_unlagged_ghosts[MAXPLAYERS];
 
 extern int levelTimeLimit;
 extern int levelFragLimit;
@@ -354,6 +357,88 @@ void CL_SaveServerPassword(void)
    CS_WriteJSON(cs_client_password_file, cs_client_password_json, true);
 }
 
+void CL_SpawnLocalGhost(Mobj *actor)
+{
+   size_t i;
+   mobjtype_t ptype = E_PlayerClassForName(GameModeInfo->defPClassName)->type;
+   player_t *player = actor->player;
+
+   if(!player)
+   {
+      doom_printf("No player for actor %u, not spawning ghost.", actor->net_id);
+      return;
+   }
+
+   i = player - players;
+
+   if(cl_unlagged_ghosts[i].local_ghost)
+   {
+      CL_RemoveMobj(cl_unlagged_ghosts[i].local_ghost);
+      cl_unlagged_ghosts[i].local_ghost = NULL;
+   }
+
+   cl_unlagged_ghosts[i].local_ghost = CL_SpawnMobj(
+      0, actor->x, actor->y, actor->z, ptype
+   );
+   cl_unlagged_ghosts[i].local_ghost->angle = actor->angle;
+   cl_unlagged_ghosts[i].local_ghost->flags |= MF_NOCLIP;
+   cl_unlagged_ghosts[i].local_ghost->flags |= MF_TRANSLUCENT;
+   cl_unlagged_ghosts[i].local_ghost->flags &= ~MF_SHOOTABLE;
+   cl_unlagged_ghosts[i].local_ghost->colour = 4;
+   doom_printf(
+      "Local: (%u) %d/%d/%d/%d.",
+      cl_latest_world_index,
+      actor->x >> FRACBITS,
+      actor->y >> FRACBITS,
+      actor->z >> FRACBITS,
+      actor->angle / ANGLE_1
+   );
+}
+
+void CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
+                         angle_t angle, unsigned int world_index)
+{
+   unsigned int i;
+   Mobj *actor = NetActors.lookup(net_id);
+   mobjtype_t ptype = E_PlayerClassForName(GameModeInfo->defPClassName)->type;
+
+   if(!actor)
+   {
+      doom_printf("No actor for Net ID %u, not spawning ghost.", net_id);
+      return;
+   }
+
+   if(!actor->player)
+   {
+      doom_printf("No player for actor %u, not spawning ghost.", net_id);
+      return;
+   }
+
+   i = actor->player - players;
+
+   if(cl_unlagged_ghosts[i].remote_ghost)
+   {
+      CL_RemoveMobj(cl_unlagged_ghosts[i].remote_ghost);
+      cl_unlagged_ghosts[i].remote_ghost = NULL;
+   }
+
+   cl_unlagged_ghosts[i].remote_ghost = CL_SpawnMobj(0, x, y, z, ptype);
+   cl_unlagged_ghosts[i].remote_ghost->angle = actor->angle;
+   cl_unlagged_ghosts[i].remote_ghost->flags |= MF_NOCLIP;
+   cl_unlagged_ghosts[i].remote_ghost->flags |= MF_TRANSLUCENT;
+   cl_unlagged_ghosts[i].remote_ghost->flags &= ~MF_SHOOTABLE;
+   cl_unlagged_ghosts[i].remote_ghost->colour = 5;
+   doom_printf(
+      "Remote: (%u) %d/%d/%d/%d.",
+      world_index,
+      x >> FRACBITS,
+      y >> FRACBITS,
+      z >> FRACBITS,
+      angle / ANGLE_1
+   );
+}
+
+
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                    mobjtype_t type)
 {
@@ -364,7 +449,9 @@ Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
    cl_spawning_actor_from_message = false;
 
    actor->net_id = net_id;
-   NetActors.add(actor);
+
+   if(net_id != 0)
+      NetActors.add(actor);
 
    return actor;
 }

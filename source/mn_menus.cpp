@@ -3381,7 +3381,7 @@ static menuitem_t mn_clientserverkeys_items[] =
    {it_binding, "message player",       "message_player"},
    {it_binding, "message server",       "message_server"},
    {it_binding, "rcon",                 "rcon"},
-   {it_binding, "show scoreboard",      "frags"},
+   {it_binding, "show scoreboard",      "scoreboard"},
    {it_binding, "spectate",             "spectate"},
    {it_binding, "spectate_prev",        "spectate_prev"},
    {it_binding, "spectate_next",        "spectate_next"},

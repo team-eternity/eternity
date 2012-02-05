@@ -46,6 +46,7 @@
 #include "cs_main.h"  // [CG] 09/18/11
 #include "cs_netid.h" // [CG] 09/18/11
 #include "cl_cmd.h"   // [CG] 09/18/11
+#include "cl_main.h"  // [CG] 02/04/12
 #include "cl_pred.h"  // [CG] 09/18/11
 #include "sv_main.h"  // [CG] 09/18/11
 
@@ -359,6 +360,9 @@ static bool P_ShootThing(intercept_t *in)
    
    if(trace.la_damage)
    {
+      if(CS_CLIENT && th->player && cl_debug_unlagged)
+         CL_SpawnLocalGhost(th);
+
       P_DamageMobj(th, shootthing, shootthing, trace.la_damage, 
                    shootthing->info->mod);
    }

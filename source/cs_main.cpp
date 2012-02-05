@@ -103,7 +103,7 @@ unsigned int cs_shooting_player = 0;
 char *cs_state_file_path = NULL;
 
 extern int rngseed;
-extern int action_frags;
+extern int action_scoreboard;
 extern char *default_skin;
 
 const char *disconnection_strings[dr_max_reasons] = {
@@ -876,7 +876,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
          // printf("Spectating costs a frag: %d.\n", player->frags[playernum]);
          HU_FragsUpdate();
-         SV_PutPlayerAtQueueEnd(playernum);
+         SV_RemovePlayerFromQueue(playernum);
          respawn_player = true;
       }
       else
@@ -1272,7 +1272,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
    // [CG] Stop perpetually displaying the scoreboard in c/s mode once we
    //      respawn.
    if(!CS_HEADLESS || playernum == consoleplayer)
-      action_frags = 0;
+      action_scoreboard = 0;
 
    // [CG] Only set non-spectators' colormaps.
    if(!as_spectator && CS_TEAMS_ENABLED && client->team != team_color_none)

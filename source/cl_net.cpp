@@ -1162,6 +1162,20 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
       }
    }
 
+#if _UNLAG_DEBUG
+   if(cl_debug_unlagged)
+   {
+      CL_SpawnRemoteGhost(
+         message->target_net_id,
+         message->x,
+         message->y,
+         message->z,
+         message->angle,
+         message->world_index
+      );
+   }
+#endif
+
    // a dormant thing being destroyed gets restored to normal first
    if(target->flags2 & MF2_DORMANT)
    {

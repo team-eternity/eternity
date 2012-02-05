@@ -51,7 +51,7 @@ struct event_t;
 #define _PRED_DEBUG 0
 #define _PLAYER_DEBUG 0
 #define _AUTH_DEBUG 0
-#define _UNLAG_DEBUG 0
+#define _UNLAG_DEBUG 1
 #define _SPECIAL_DEBUG 0
 #define _SECTOR_PRED_DEBUG 0
 
@@ -695,6 +695,12 @@ typedef struct
    int32_t mod;
    uint8_t damage_was_fatal;
    uint8_t just_hit;
+#if _UNLAG_DEBUG
+   fixed_t x;
+   fixed_t y;
+   fixed_t z;
+   angle_t angle;
+#endif
 } nm_actordamaged_t;
 
 typedef struct

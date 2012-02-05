@@ -57,7 +57,7 @@ extern bool fragsdrawn;
 extern int num_players;
 extern int show_scores;
 extern player_t *sortedplayers[MAXPLAYERS];
-extern int action_frags;
+extern int action_scoreboard;
 extern int walkcam_active;
 extern int levelScoreLimit;
 
@@ -1007,7 +1007,7 @@ void CS_DrawScoreboard(unsigned int extra_top_margin)
 
 void CS_ShowScores(void)
 {
-   if(!show_scores || !action_frags || automapactive || walkcam_active)
+   if(!show_scores || !action_scoreboard || automapactive || walkcam_active)
       return;
 
    // [CG] Don't even try to draw the scoreboard in this case.

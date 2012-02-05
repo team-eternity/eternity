@@ -456,7 +456,7 @@ int action_weapon9;     // select weapon 9
 int action_nextweapon;  // toggle to next-favored weapon
 int action_weaponup;    // haleyjd: next weapon in order
 int action_weapondown;  // haleyjd: prev weapon in order
-int action_frags;       // show frags
+int action_scoreboard;  // show frags
 int action_autorun;     // autorun
 
 // Menu Actions -- handled by MN_Responder
@@ -574,8 +574,26 @@ static void G_createBind(InputKey *key, InputAction *action,
    // duplicate binds.
    while((kb = keys_to_actions.keyIterator(kb, key->getName())))
    {
-      if((kb->getFlags() == flags) && (strncmp(kname, aname, aname_len) == 0))
-         return;
+      const char *kb_aname;
+      size_t kb_aname_len;
+      size_t max_len;
+
+      if(kb->getFlags() != flags)
+         continue; // Flags don't match, check next bind.
+
+      kb_aname = kb->getActionName();
+      kb_aname_len = strlen(kb_aname);
+
+      if(kb_aname_len > aname_len)
+         max_len = kb_aname_len;
+      else
+         max_len = aname_len;
+
+      if(strncasecmp(aname, kb_aname, max_len))
+         continue; // Action names don't match, check next bind.
+
+      // Key is already bound to this action, so don't bind it again.
+      return;
    }
 
    kb = new KeyBind(
@@ -845,7 +863,7 @@ void G_InitKeyBindings(void)
    G_addVariableAction(nextweapon, kac_player);
    G_addVariableAction(weaponup, kac_player);
    G_addVariableAction(weapondown, kac_player);
-   G_addVariableAction(frags, kac_hud);
+   G_addVariableAction(scoreboard, kac_hud);
    G_addVariableAction(menu_toggle, kac_menu);
    G_addVariableAction(menu_help, kac_menu);
    G_addVariableAction(menu_setup, kac_menu);
@@ -955,7 +973,6 @@ bool G_KeyResponder(event_t *ev, int categories)
 {
    static bool ctrldown;
    static bool altdown;
-   int key_number;
    InputKey *key = NULL;
    InputAction *action = NULL;
    KeyBind *kb = NULL;
@@ -965,12 +982,13 @@ bool G_KeyResponder(event_t *ev, int categories)
    if(ev->data1 >= NUM_KEYS)
       return false;
 
-   key_number = tolower(ev->data1);
+   // Check for ctrl/alt keys.
+   if(ev->data1 == KEYD_RCTRL)
+      ctrldown = (ev->type == ev_keydown);
+   else if(ev->data1 == KEYD_RALT)
+      altdown = (ev->type == ev_keydown);
 
    // netgame disconnect binding
-   if(ev->data1 == KEYD_RCTRL)      // ctrl
-      ctrldown = (ev->type == ev_keydown);
-
    if(opensocket && ctrldown && ev->data1 == 'd')
    {
       char buffer[128];
@@ -986,16 +1004,13 @@ bool G_KeyResponder(event_t *ev, int categories)
    }
 
    // Alt-tab binding (ignore whatever is bound to tab if alt is down)
-   if(ev->data1 == KEYD_RALT)
-      altdown = (ev->type == ev_keydown);
-
    if(altdown && ev->data1 == KEYD_TAB)
    {
       altdown = false;
       return true;
    }
 
-   key = keys[key_number];
+   key = keys[tolower(ev->data1)];
 
    while((kb = keys_to_actions.keyIterator(kb, key->getName())))
    {
@@ -1116,7 +1131,7 @@ bool G_BindResponder(event_t *ev)
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
          continue;
 
-      if(!(strncmp(binding_action, action->getName(), action_name_length)))
+      if(!(strncasecmp(binding_action, action->getName(), action_name_length)))
       {
          found_bind = true;
          G_removeBind(&kb);
@@ -1232,12 +1247,11 @@ void G_SaveDefaults(void)
                fprintf(file, "bind -%s \"", key->getName());
             else
                fprintf(file, "bind %s \"", key->getName());
+
             found_bind = true;
          }
          else
-         {
             fprintf(file, ";");
-         }
 
          if(kb->isActivateOnly())
             fprintf(file, "+%s", kb->getActionName());
@@ -1275,6 +1289,7 @@ CONSOLE_COMMAND(bind, 0)
       KeyBind *kb = NULL;
       const char *key_name = Console.argv[0]->constPtr();
       bool found_bind = false;
+
 
       if(!(key = names_to_keys.objectForKey(key_name)))
       {

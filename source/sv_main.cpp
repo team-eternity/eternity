@@ -725,34 +725,6 @@ void SV_LoadCurrentPlayerMiscState(int playernum)
    SV_LoadPlayerMiscStateAt(playernum, sv_world_index);
 }
 
-#if _UNLAG_DEBUG
-void SV_SpawnGhost(int playernum)
-{
-   Mobj *actor = players[playernum].mo;
-   server_client_t *sc = &server_clients[playernum];
-
-   if(sc->ghost)
-   {
-      SV_BroadcastActorRemoved(sc->ghost);
-      sc->ghost->removeThinker();
-   }
-
-   sc->ghost = P_SpawnMobj(
-      actor->x,
-      actor->y,
-      actor->z,
-      players[playernum].pclass->type
-   );
-
-   sc->ghost->angle = actor->angle;
-   sc->ghost->flags |= MF_NOCLIP;
-   sc->ghost->flags |= MF_TRANSLUCENT;
-   sc->ghost->flags &= ~MF_SHOOTABLE;
-
-   SV_BroadcastActorSpawned(sc->ghost);
-}
-#endif
-
 // [CG] Currently this just does players and sectors.  We certainly don't
 //      store positions for *ALL* actors - that would take up tons of memory
 //      on huge maps.
@@ -770,33 +742,6 @@ void SV_StartUnlag(int playernum)
       return;
 
    player = &players[playernum];
-
-#if _UNLAG_DEBUG
-   printf(
-      "SV_StartUnlag: Unlagging client %u at %u.\n"
-      "  Index:    %u\n"
-      "  LIndex:   %u\n"
-      "  RIndex:   %u/%u\n"
-      "  CIndex:   %u\n"
-      "  Received: %u\n"
-      "  Dropped:  %u\n"
-      "  PSprite:  %u\n"
-      "  Chain123: %d/%d %d/%d %d/%d\n",
-      playernum,
-      sv_world_index,
-      index,
-      server_client->last_command_received_index,
-      server_client->last_command_run_index,
-      server_client->last_command_run_world_index,
-      server_client->command_world_index,
-      server_client->commands.size,
-      server_client->commands_dropped,
-      player->psprites[player->curpsprite].state->index,
-      S_CHAIN1, E_StateNumForDEHNum(S_CHAIN1),
-      S_CHAIN2, E_StateNumForDEHNum(S_CHAIN2),
-      S_CHAIN3, E_StateNumForDEHNum(S_CHAIN3)
-   );
-#endif
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -816,11 +761,6 @@ void SV_StartUnlag(int playernum)
       position = &server_clients[i].positions[index % MAX_POSITIONS];
       if(playeringame[i] && i != playernum)
       {
-#if _UNLAG_DEBUG
-         printf("Moved player %d:\n  ", i);
-         CS_PrintPositionForPlayer(i, sv_world_index - 1);
-         printf("\n");
-#endif
          CS_SavePlayerPosition(
             &server_clients[i].saved_position, i, sv_world_index - 1
          );
@@ -830,19 +770,6 @@ void SV_StartUnlag(int playernum)
          //      let them take damage for the old actor at the old position.
          if(position->playerstate != PST_LIVE)
             target->mo->flags4 |= MF4_NODAMAGE;
-#if _UNLAG_DEBUG
-         printf("  ");
-         CS_PrintPositionForPlayer(i, index);
-         printf(
-            "\nSpawning ghost for %d at %u: %d/%d/%d.\n",
-            playernum,
-            index,
-            target->mo->x >> FRACBITS,
-            target->mo->y >> FRACBITS,
-            target->mo->z >> FRACBITS
-         );
-         SV_SpawnGhost(i);
-#endif
       }
    }
 
@@ -878,11 +805,6 @@ void SV_EndUnlag(int playernum)
       if(!playeringame[i] || i == playernum)
          continue;
 
-#if _UNLAG_DEBUG
-      printf("Moved player %d:\n  ", i);
-      CS_PrintPositionForPlayer(i, pindex);
-      printf("\n");
-#endif
       // [CG] Check to see if thrust due to damage was applied to the player
       //      during unlagged.  If it was, apply that thrust to the ultimate
       //      position.
@@ -901,11 +823,6 @@ void SV_EndUnlag(int playernum)
       CS_SetPlayerPosition(i, &server_clients[i].saved_position);
       players[i].mo->momx += added_momx;
       players[i].mo->momy += added_momy;
-#if _UNLAG_DEBUG
-      printf("  ");
-      CS_PrintPositionForPlayer(i, world_index);
-      printf("\n");
-#endif
    }
 
    for(j = 0; j < numsectors; j++)
@@ -1912,13 +1829,6 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
       M_QueueInsert((mqueueitem_t *)bc, &server_client->commands);
       server_client->last_command_received_index = command->index;
    }
-#if _UNLAG_DEBUG
-   if(message->command_count && command && command->world_index <= last_index)
-   {
-      printf("Command: ");
-      CS_PrintCommand(command);
-   }
-#endif
 }
 
 void SV_HandleClientRequestMessage(char *data, size_t data_length,
@@ -2522,6 +2432,13 @@ void SV_BroadcastActorDamaged(Mobj *target, Mobj *inflictor,
    damage_message.armor_damage = armor_damage;
    damage_message.mod = mod;
    damage_message.damage_was_fatal = damage_was_fatal;
+
+#if _UNLAG_DEBUG
+   damage_message.x = target->x;
+   damage_message.y = target->y;
+   damage_message.z = target->z;
+   damage_message.angle = target->angle;
+#endif
 
    broadcast_packet(&damage_message, sizeof(nm_actordamaged_t));
 }

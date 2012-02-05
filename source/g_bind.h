@@ -82,7 +82,7 @@ extern int action_weapon9;
 extern int action_nextweapon;
 extern int action_weaponup;
 extern int action_weapondown;
-extern int action_frags;
+extern int action_scoreboard;
 extern int action_menu_help;
 extern int action_menu_toggle;
 extern int action_menu_setup;

@@ -296,6 +296,15 @@ static default_t sysdefaults[] =
       "values are considered custom sizes"
    ),
 
+   DEFAULT_BOOL(
+      "debug_unlagged",
+      &cl_debug_unlagged,
+      NULL,
+      false,
+      default_t::wad_no,
+      "debug unlagged"
+   ),
+
    DEFAULT_INT(
       "damage_screen_cap",
       &damage_screen_cap,

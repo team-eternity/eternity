@@ -58,6 +58,9 @@ unsigned int default_cl_packet_buffer_size = 0;
 unsigned int damage_screen_cap = NUMREDPALS;
 unsigned int default_damage_screen_cap = NUMREDPALS;
 
+bool cl_debug_unlagged = false;
+bool default_cl_debug_unlagged = false;
+
 // [CG] Shot result prediction.
 VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
 CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
@@ -72,6 +75,8 @@ CONSOLE_VARIABLE(packet_buffer, cl_packet_buffer_enabled, cf_netonly)
    else
       cl_packet_buffer.disable();
 }
+
+// [CG] Packet buffer size.
 VARIABLE_INT(
    cl_packet_buffer_size,
    &default_cl_packet_buffer_size,
@@ -80,6 +85,31 @@ VARIABLE_INT(
 CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
 {
    cl_packet_buffer.setCapacity((uint32_t)cl_packet_buffer_size);
+}
+
+// [CG] Unlagged debugging.
+VARIABLE_TOGGLE(cl_debug_unlagged, &default_cl_debug_unlagged, yesno);
+CONSOLE_VARIABLE(debug_unlagged, cl_debug_unlagged, cf_netonly)
+{
+   unsigned int i;
+
+   if(!cl_debug_unlagged)
+   {
+      for(i = 0; i < MAXPLAYERS; i++)
+      {
+         if(cl_unlagged_ghosts[i].local_ghost)
+         {
+            CL_RemoveMobj(cl_unlagged_ghosts[i].local_ghost);
+            cl_unlagged_ghosts[i].local_ghost = NULL;
+         }
+
+         if(cl_unlagged_ghosts[i].remote_ghost)
+         {
+            CL_RemoveMobj(cl_unlagged_ghosts[i].remote_ghost);
+            cl_unlagged_ghosts[i].remote_ghost = NULL;
+         }
+      }
+   }
 }
 
 // [CG] Team.
@@ -188,6 +218,7 @@ void CL_AddCommands(void)
    C_AddCommand(predict_shots);
    C_AddCommand(packet_buffer);
    C_AddCommand(packet_buffer_size);
+   C_AddCommand(debug_unlagged);
    C_AddCommand(damage_screen_cap);
    C_AddCommand(disconnect);
    C_AddCommand(reconnect);
