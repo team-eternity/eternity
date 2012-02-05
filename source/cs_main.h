@@ -408,12 +408,10 @@ typedef struct
    client_options_t options;
    // [CG] Last position, used for unlagged.
    cs_player_position_t saved_position;
+   // [CG] Last misc state, used for unlagged.
+   cs_misc_state_t saved_misc_state;
    // [CG] Whether or not a client is buffering incoming server messages.
    uint8_t buffering;
-#if _UNLAG_DEBUG
-   // [CG] For unlagged debugging.
-   Mobj *ghost;
-#endif
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct

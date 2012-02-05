@@ -237,9 +237,7 @@ void NetPacketBuffer::setSynchronized(bool b)
       setNeedsFilling(true);
    }
    else
-   {
       disable();
-   }
 }
 
 void NetPacketBuffer::enable(void)

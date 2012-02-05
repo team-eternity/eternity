@@ -708,10 +708,10 @@ void SV_LoadPlayerPositionAt(int playernum, unsigned int index)
 
 void SV_LoadPlayerMiscStateAt(int playernum, unsigned int index)
 {
-   player_t *player = &players[playernum];
+   Mobj *actor = players[playernum].mo;
 
    CS_SetActorMiscState(
-      player->mo, &server_clients[playernum].misc_states[index % MAX_POSITIONS]
+      actor, &server_clients[playernum].misc_states[index % MAX_POSITIONS]
    );
 }
 
@@ -732,16 +732,12 @@ void SV_StartUnlag(int playernum)
 {
    unsigned int i;
    int j;
-   player_t *player, *target;
-   server_client_t *server_client = &server_clients[playernum];
-   cs_player_position_t *position;
-   unsigned int index = server_client->command_world_index;
+   unsigned int command_index = server_clients[playernum].command_world_index;
+   unsigned int current_index = sv_world_index - 1;
 
    // [CG] Don't run for the server's spectator actor.
    if(playernum == 0)
       return;
-
-   player = &players[playernum];
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -757,90 +753,67 @@ void SV_StartUnlag(int playernum)
       //         are.
       //      It's easier to think of this as reconstructing the world the
       //      player was seeing as precisely as possible.
-      target = &players[i];
-      position = &server_clients[i].positions[index % MAX_POSITIONS];
       if(playeringame[i] && i != playernum)
       {
-         CS_SavePlayerPosition(
-            &server_clients[i].saved_position, i, sv_world_index - 1
-         );
-         SV_LoadPlayerPositionAt(i, index);
-         SV_LoadPlayerMiscStateAt(i, index);
+         Mobj *a = players[i].mo;
+         server_client_t *sc = &server_clients[i];
+         cs_player_position_t *old_position =
+            &sc->positions[command_index % MAX_POSITIONS];
+
+         CS_SavePlayerPosition(&sc->saved_position, i, current_index);
+         CS_SaveActorMiscState(&sc->saved_misc_state, a, current_index);
+         SV_LoadPlayerPositionAt(i, command_index);
+         SV_LoadPlayerMiscStateAt(i, command_index);
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
-         if(position->playerstate != PST_LIVE)
-            target->mo->flags4 |= MF4_NODAMAGE;
+         // [CG] FIXME: playerstate really shouldn't be in positions.
+         if(old_position->playerstate != PST_LIVE)
+            a->flags4 |= MF4_NODAMAGE;
       }
    }
 
    for(j = 0; j < numsectors; j++)
-   {
-      SV_LoadSectorPositionAt(j, index);
-#if _SECTOR_PRED_DEBUG
-      if(j == _DEBUG_SECTOR)
-      {
-         printf(
-            "SV_StartUnlag: Position for sector %u at %u: %3u/%3u.\n",
-            j,
-            index,
-            sectors[j].ceilingheight >> FRACBITS,
-            sectors[j].floorheight >> FRACBITS
-         );
-      }
-#endif
-   }
+      SV_LoadSectorPositionAt(j, command_index);
 }
 
 void SV_EndUnlag(int playernum)
 {
    unsigned int i;
    int j;
-   unsigned int world_index = sv_world_index - 1;
-   fixed_t added_momx, added_momy;
-   unsigned int pindex = server_clients[playernum].command_world_index;
-   cs_player_position_t *position;
+   server_client_t *server_client = &server_clients[playernum];
+   unsigned int command_index = server_client->command_world_index;
+   unsigned int current_index = sv_world_index - 1;
+
+   if(playernum == 0)
+      return;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
-      if(!playeringame[i] || i == playernum)
-         continue;
+      if(playeringame[i] && i != playernum)
+      {
+         fixed_t added_momx, added_momy;
+         Mobj *a = players[i].mo;
+         server_client_t *sc = &server_clients[i];
+         cs_player_position_t *old_position =
+            &sc->positions[command_index % MAX_POSITIONS];
 
-      // [CG] Check to see if thrust due to damage was applied to the player
-      //      during unlagged.  If it was, apply that thrust to the ultimate
-      //      position.
-      position = &server_clients[i].positions[pindex % MAX_POSITIONS];
-      added_momx = added_momy = 0;
+         // [CG] Check to see if thrust due to damage was applied to the player
+         //      during unlagged.
+         added_momx = a->momx - old_position->momx;
+         added_momy = a->momy - old_position->momy;
 
-      if(players[i].mo->momx != position->momx)
-         added_momx = players[i].mo->momx - position->momx;
+         CS_SetPlayerPosition(i, &sc->saved_position);
+         CS_SetActorMiscState(a, &sc->saved_misc_state);
 
-      if(players[i].mo->momy != position->momy)
-         added_momy = players[i].mo->momy - position->momy;
-
-      if(position->playerstate != PST_LIVE)
-         players[i].mo->flags4 &= ~MF4_NODAMAGE;
-
-      CS_SetPlayerPosition(i, &server_clients[i].saved_position);
-      players[i].mo->momx += added_momx;
-      players[i].mo->momy += added_momy;
+         // [CG] If thrust was applied during unlagged, apply it to the
+         //      ultimate position.
+         players[i].mo->momx += added_momx;
+         players[i].mo->momy += added_momy;
+      }
    }
 
    for(j = 0; j < numsectors; j++)
-   {
-      SV_LoadSectorPositionAt(j, world_index);
-#if _SECTOR_PRED_DEBUG
-      if(j == _DEBUG_SECTOR)
-      {
-         printf(
-            "SV_EndUnlag: Position for sector %u at %u: %3u/%3u.\n",
-            j,
-            world_index,
-            sectors[j].ceilingheight >> FRACBITS,
-            sectors[j].floorheight >> FRACBITS
-         );
-      }
-#endif
-   }
+      SV_LoadSectorPositionAt(j, current_index);
 }
 
 int SV_HandleClientConnection(ENetPeer *peer)

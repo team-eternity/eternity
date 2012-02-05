@@ -34,7 +34,7 @@
 // [CG] TODO: It would be better if these could be defined somewhere instead of
 //            being hard-coded.
 
-announcer_event_t null_announcer_events[1] = {NULL};
+announcer_event_t null_announcer_events[1] = {{NULL}};
 
 announcer_event_t quake_announcer_events[] =
 {

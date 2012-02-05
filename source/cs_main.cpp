@@ -453,8 +453,10 @@ void CS_ZeroClient(int clientnum)
       sc->last_auth_attempt = 0;
       sc->commands_dropped = 0;
       sc->last_command_run_index = 0;
+      sc->last_command_run_world_index = 0;
+      sc->last_command_received_index = 0;
+      sc->command_world_index = 0;
       sc->received_command_for_current_map = 0;
-      sc->buffering = false;
       M_QueueFree(&sc->commands);
       memset(
          sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t)
@@ -467,9 +469,15 @@ void CS_ZeroClient(int clientnum)
          weapon_preferences[1],
          (NUMWEAPONS + 1) * sizeof(int)
       );
-#if _UNLAG_DEBUG
-      sc->ghost = NULL;
-#endif
+      sc->weapon_switch_on_pickup = false;
+      sc->ammo_switch_on_pickup = false;
+      sc->options.player_bobbing = false;
+      sc->options.doom_weapon_toggles = false;
+      sc->options.autoaim = false;
+      sc->options.autoaim = 0;
+      memset(&sc->saved_position, 0, sizeof(cs_player_position_t));
+      memset(&sc->saved_misc_state, 0, sizeof(cs_misc_state_t));
+      sc->buffering = false;
    }
 }
 
