@@ -96,8 +96,12 @@ struct cb_patch_column_t  // It's cardboard now, bitches!
    unsigned int *bg2rgb;
 }; 
 
+// Conversion routines
+
 byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
+
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag);
 
 #endif
 

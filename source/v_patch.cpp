@@ -786,7 +786,7 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
 //
 // haleyjd 07/07/07: converts a linear graphic to a patch
 //
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag)
 {
    int      x, y;
    patch_t  *p;
@@ -801,7 +801,7 @@ patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize)
    size_t total_size = 
       4 * sizeof(int16_t) + w * (h + sizeof(int32_t) + sizeof(column_t) + 3);
    
-   byte *out = emalloc(byte *, total_size);
+   byte *out = ecalloctag(byte *, 1, total_size, tag);
 
    p = (patch_t *)out;
 
