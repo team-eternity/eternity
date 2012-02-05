@@ -220,31 +220,6 @@ void CL_SendCommand(void)
    CS_PrintCommand(command);
 #endif
 
-#if _UNLAG_DEBUG
-   if(command->buttons & BT_ATTACK)
-   {
-      printf(
-         "CL_SendCommand (%3u/%3u): Sending command %u: ",
-         cl_current_world_index,
-         cl_latest_world_index,
-         command->world_index
-      );
-      CS_PrintCommand(command);
-      if(consoleplayer == 1 && playeringame[2])
-      {
-         printf("CL_SendCommand: Position of 2: ");
-         CS_PrintPositionForPlayer(2, 0);
-         printf("\n");
-      }
-      else if(consoleplayer == 2 && playeringame[1])
-      {
-         printf("CL_SendCommand: Position of 1: ");
-         CS_PrintPositionForPlayer(1, 0);
-         printf("\n");
-      }
-   }
-#endif
-
    buffer = ecalloc(
       char *,
       sizeof(char),
@@ -991,7 +966,7 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
            message->type == safe_carried_red_flag_type  ||
            message->type == safe_carried_blue_flag_type)
    {
-      teamcolor_t color;
+      teamcolor_t color = team_color_none;
 
       if(message->type == safe_red_flag_type         ||
          message->type == safe_dropped_red_flag_type ||

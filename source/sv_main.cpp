@@ -108,6 +108,7 @@ bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
 int sv_randomize_maps = false;
 bool sv_buffer_commands = false;
+unsigned int sv_queue_wait_seconds = 0;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -757,8 +758,6 @@ void SV_StartUnlag(int playernum)
       {
          Mobj *a = players[i].mo;
          server_client_t *sc = &server_clients[i];
-         cs_player_position_t *old_position =
-            &sc->positions[command_index % MAX_POSITIONS];
 
          CS_SavePlayerPosition(&sc->saved_position, i, current_index);
          CS_SaveActorMiscState(&sc->saved_misc_state, a, current_index);
@@ -1002,10 +1001,9 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
 {
    Mobj *flash;
    player_t *player = &players[playernum];
-   client_t *client = &clients[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
-   cs_queue_level_e queue_level = (cs_queue_level_e)client->queue_level;
-   unsigned int queue_position = client->queue_position;
+
+   SV_RemovePlayerFromQueue(playernum);
 
    if(reason > dr_max_reasons)
       I_Error("Invalid disconnection reason index %d.\n", reason);
@@ -1056,11 +1054,6 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
    playeringame[playernum] = false;
    CS_InitPlayer(playernum);
    CS_DisconnectPeer(peer, reason);
-
-   if(queue_level != ql_none)
-      SV_AdvanceQueue(queue_position);
-
-   SV_UpdateQueueLevels();
 }
 
 void SV_SendMessage(int playernum, const char *fmt, ...)
@@ -1434,16 +1427,14 @@ bool SV_HandleJoinRequest(int playernum)
       return false;
    }
 
+   // [CG] If the client isn't yet in the queue, put them there (assign them a 
+   //      queue position and the attendant queue level).
    if(client->queue_level == ql_none)
-   {
-      // [CG] The client is attempting to enter the player queue, so assign
-      //      them a queue position (and the attendant queue level).
       SV_PutPlayerInQueue(playernum);
-   }
 
+   // [CG] If the client is still in line, they can't join the game yet.
    if(client->queue_level == ql_waiting)
    {
-      // [CG] The client is still in line, so they can't join the game yet.
       SV_SendHUDMessage(playernum, "No open player slots.");
       return false;
    }
@@ -1456,41 +1447,43 @@ bool SV_HandleJoinRequest(int playernum)
    );
 
    // [CG] If the client has gone through the queue (or there wasn't anyone
-   //      else in line), then let them join the game.  For team modes we need
-   //      to check that they can actually join the game on this team though.
-   if(CS_TEAMS_ENABLED)
+   //      else in line), then let them join the game.
+   if(!CS_TEAMS_ENABLED)
    {
-      if(client->team == team_color_none)
-      {
-         // [CG] If the client hasn't selected a team previous to attempting
-         //      to join the game, just default to the red team (which is
-         //      the first team, so it's sure to be available).
-         SV_SetPlayerTeam(playernum, team_color_red);
-      }
-
-      team_player_count = CS_GetTeamPlayerCount((teamcolor_t)client->team);
-
-      if(team_player_count > cs_settings->max_players_per_team)
-      {
-         // [CG] Too many players on this team, inform the player.
-         SV_SendHUDMessage(playernum, "Team is full.");
-         return false;
-      }
-      else
-      {
-         // [CG] Joining the team is a go.
-         SV_BroadcastMessage(
-            "%s has entered the game on the %s team!",
-            player->name,
-            team_color_names[client->team]
-         );
-      }
-   }
-   else
-   {
-      // [CG] Joining the game is a go.
+      client->afk = false;
+      SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
       SV_BroadcastMessage("%s has entered the game!", player->name);
+      return true;
    }
+
+   // [CG] For team modes we need to check that they can actually join the game
+   //      on this team.
+
+   // [CG] Can't join the game if not yet on a team.
+   if(client->team == team_color_none)
+   {
+      SV_SendHUDMessage(playernum, "Cannot join the game on this team.");
+      return false;
+   }
+
+   team_player_count = CS_GetTeamPlayerCount((teamcolor_t)client->team);
+
+   // [CG] Check if there is room on the team.
+   if(team_player_count > cs_settings->max_players_per_team)
+   {
+      SV_SendHUDMessage(playernum, "Team is full.");
+      return false;
+   }
+
+   client->afk = false;
+   SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
+
+   // [CG] Joining the game on this team is a go.
+   SV_BroadcastMessage(
+      "%s has entered the game on the %s team!",
+      player->name,
+      team_color_names[client->team]
+   );
    return true;
 }
 
@@ -1751,6 +1744,7 @@ void SV_RunPlayerCommands(int playernum)
    cs_buffered_command_t *bufcmd;
    server_client_t *sc = &server_clients[playernum];
    uint32_t command_buffer_size = SV_ClientCommandBufferSize(playernum);
+   uint32_t commands_run = 0;
 
    if(M_QueueIsEmpty(&sc->commands))
       return;
@@ -1770,7 +1764,8 @@ void SV_RunPlayerCommands(int playernum)
       bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
       SV_RunPlayerCommand(playernum, bufcmd);
       efree(bufcmd);
-   } while(sc->commands.size > command_buffer_size);
+      commands_run++;
+   } while((sc->commands.size > command_buffer_size) && (commands_run <= 2));
 }
 
 void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
@@ -2726,6 +2721,7 @@ void SV_TryRunTics(void)
          //      and checking their state is simple enough.
          SV_BroadcastMapSpecialStatuses();
          SV_UpdateQueueLevels();
+         SV_MarkQueuePlayersAFK();
          // [CG] Now that the game loop has finished, servers can address
          //      new clients and map changes.
          SV_HandleClientRequests();

@@ -263,6 +263,7 @@ typedef enum
    ci_autoaim,        // autoaim
    ci_weapon_speed,   // weapon_speed
    ci_buffering,
+   ci_afk,
 } client_info_e;
 
 typedef enum
@@ -296,6 +297,7 @@ typedef enum
 {
    ql_none,
    ql_waiting,
+   ql_can_join,
    ql_playing
 } cs_queue_level_e;
 
@@ -357,6 +359,8 @@ typedef struct
    uint32_t death_count;
    // [CG] The world index of the latest received position.
    uint32_t latest_position_index;
+   // [CG] Whether or not a client is AFK
+   uint8_t afk;
 } client_t;
 
 #pragma pack(pop)
@@ -414,6 +418,8 @@ typedef struct
    cs_misc_state_t saved_misc_state;
    // [CG] Whether or not a client is buffering incoming server messages.
    uint8_t buffering;
+   // [CG] The TIC at which the client was able to join the game.
+   uint32_t finished_waiting_in_queue_tic;
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct

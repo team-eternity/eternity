@@ -475,6 +475,7 @@ void CS_ZeroClient(int clientnum)
       memset(&sc->saved_position, 0, sizeof(cs_player_position_t));
       memset(&sc->saved_misc_state, 0, sizeof(cs_misc_state_t));
       sc->buffering = false;
+      sc->finished_waiting_in_queue_tic = 0;
    }
 }
 
@@ -628,7 +629,7 @@ void CS_HandleFlushPacketBufferKey(event_t *ev)
 void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 {
    char *buffer;
-   server_client_t *server_client;
+   server_client_t *server_client = NULL;
    bool respawn_player = false;
    int playernum = message->player_number;
    player_t *player = &players[playernum];
@@ -715,36 +716,57 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       message->info_type == ci_max_ammo      ||
       message->info_type == ci_pwo)
    {
-      if(CS_CLIENT && message->info_type == ci_frags)
+      if(message->info_type == ci_frags)
       {
-         player->frags[message->array_index] = message->int_value;
-         HU_FragsUpdate();
+         if(CS_CLIENT)
+         {
+            player->frags[message->array_index] = message->int_value;
+            HU_FragsUpdate();
+         }
       }
-      else if(CS_CLIENT && message->info_type == ci_power_enabled)
-         player->powers[message->array_index] = message->int_value;
-      else if(CS_CLIENT && message->info_type == ci_owns_card)
+      else if(message->info_type == ci_power_enabled)
       {
-         if(message->boolean_value)
-            player->cards[message->array_index] = true;
-         else
-            player->cards[message->array_index] = false;
+         if(CS_CLIENT)
+            player->powers[message->array_index] = message->int_value;
       }
-      else if(CS_CLIENT && message->info_type == ci_owns_weapon)
+      else if(message->info_type == ci_owns_card)
       {
-         if(message->boolean_value)
-            player->weaponowned[message->array_index] = true;
-         else
-            player->weaponowned[message->array_index] = false;
+         if(CS_CLIENT)
+         {
+            if(message->boolean_value)
+               player->cards[message->array_index] = true;
+            else
+               player->cards[message->array_index] = false;
+         }
       }
-      else if(CS_CLIENT && message->info_type == ci_ammo_amount)
-         player->ammo[message->array_index] = message->int_value;
-      else if(CS_CLIENT && message->info_type == ci_max_ammo)
-         player->maxammo[message->array_index] = message->int_value;
-      else if(CS_SERVER && message->info_type == ci_pwo)
+      else if(message->info_type == ci_owns_weapon)
       {
-         SV_SetWeaponPreference(
-            playernum, message->array_index, message->int_value
-         );
+         if(CS_CLIENT)
+         {
+            if(message->boolean_value)
+               player->weaponowned[message->array_index] = true;
+            else
+               player->weaponowned[message->array_index] = false;
+         }
+      }
+      else if(message->info_type == ci_ammo_amount)
+      {
+         if(CS_CLIENT)
+            player->ammo[message->array_index] = message->int_value;
+      }
+      else if(message->info_type == ci_max_ammo)
+      {
+         if(CS_CLIENT)
+            player->maxammo[message->array_index] = message->int_value;
+      }
+      else if(message->info_type == ci_pwo)
+      {
+         if(CS_SERVER)
+         {
+            SV_SetWeaponPreference(
+               playernum, message->array_index, message->int_value
+            );
+         }
       }
       return;
    }
@@ -879,7 +901,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          client->spectating = true;
          player->frags[playernum]++; // [CG] Spectating costs a frag.
          SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
-         // printf("Spectating costs a frag: %d.\n", player->frags[playernum]);
          HU_FragsUpdate();
          SV_RemovePlayerFromQueue(playernum);
          respawn_player = true;
@@ -895,59 +916,94 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
             doom_printf("%s is now spectating.\n", player->name);
       }
    }
-   else if(CS_CLIENT && message->info_type == ci_ready_weapon)
+   else if(message->info_type == ci_ready_weapon)
    {
       // [CG] We always know what our own ready and pending weapons are.
-      if(playernum != consoleplayer)
+      if(CS_CLIENT && playernum != consoleplayer)
          player->readyweapon = message->int_value;
    }
-   else if(CS_CLIENT && message->info_type == ci_pending_weapon)
+   else if(message->info_type == ci_pending_weapon)
    {
       // [CG] We always know what our own ready and pending weapons are.
-      if(playernum != consoleplayer)
+      if(CS_CLIENT && playernum != consoleplayer)
          player->pendingweapon = message->int_value;
    }
    else if(message->info_type == ci_colormap)
       player->colormap = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_kill_count)
-      player->killcount = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_item_count)
-      player->itemcount = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_secret_count)
-      player->secretcount = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_cheats)
-      player->cheats = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_health)
-      player->health = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_armor_points)
-      player->armorpoints = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_armor_type)
-      player->armortype = message->int_value;
-   else if(CS_CLIENT && message->info_type == ci_owns_backpack)
+   else if(message->info_type == ci_kill_count)
    {
-      if(message->boolean_value)
-         player->backpack = true;
-      else
-         player->backpack = false;
+      if(CS_CLIENT)
+         player->killcount = message->int_value;
    }
-   else if(CS_CLIENT && message->info_type == ci_did_secret)
+   else if(message->info_type == ci_item_count)
    {
-      if(message->boolean_value)
-         player->didsecret = true;
-      else
-         player->didsecret = false;
+      if(CS_CLIENT)
+         player->itemcount = message->int_value;
    }
-   else if(CS_CLIENT && message->info_type == ci_queue_level)
+   else if(message->info_type == ci_secret_count)
    {
-      client->queue_level = message->int_value;
-      if(playernum == consoleplayer)
-         CS_UpdateQueueMessage();
+      if(CS_CLIENT)
+         player->secretcount = message->int_value;
    }
-   else if(CS_CLIENT && message->info_type == ci_queue_position)
+   else if(message->info_type == ci_cheats)
    {
-      client->queue_position = message->int_value;
-      if(playernum == consoleplayer)
-         CS_UpdateQueueMessage();
+      if(CS_CLIENT)
+         player->cheats = message->int_value;
+   }
+   else if(message->info_type == ci_health)
+   {
+      if(CS_CLIENT)
+         player->health = message->int_value;
+   }
+   else if(message->info_type == ci_armor_points)
+   {
+      if(CS_CLIENT)
+         player->armorpoints = message->int_value;
+   }
+   else if(message->info_type == ci_armor_type)
+   {
+      if(CS_CLIENT)
+         player->armortype = message->int_value;
+   }
+   else if(message->info_type == ci_owns_backpack)
+   {
+      if(CS_CLIENT)
+      {
+         if(message->boolean_value)
+            player->backpack = true;
+         else
+            player->backpack = false;
+      }
+   }
+   else if(message->info_type == ci_did_secret)
+   {
+      if(CS_CLIENT)
+      {
+         if(message->boolean_value)
+            player->didsecret = true;
+         else
+            player->didsecret = false;
+      }
+   }
+   else if(message->info_type == ci_queue_level)
+   {
+      if(CS_CLIENT)
+      {
+         client->queue_level = message->int_value;
+         if(playernum == consoleplayer)
+            CS_UpdateQueueMessage();
+         doom_printf("Got new queue level %d.\n", message->int_value);
+      }
+   }
+   else if(message->info_type == ci_queue_position)
+   {
+      if(CS_CLIENT)
+      {
+         client->queue_position = message->int_value;
+         if(playernum == consoleplayer)
+            CS_UpdateQueueMessage();
+         doom_printf("Got new queue position %d.\n", message->int_value);
+      }
    }
    else if(message->info_type == ci_wsop)
    {
@@ -984,6 +1040,16 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       if(CS_SERVER)
          server_client->buffering = message->boolean_value;
    }
+   else if(message->info_type == ci_afk)
+   {
+      if(message->boolean_value)
+      {
+         client->afk = true;
+         doom_printf("%s is AFK.", (player->name));
+      }
+      else
+         client->afk = false;
+   }
    else
    {
       doom_printf(
@@ -991,6 +1057,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       );
       return;
    }
+
    if(CS_SERVER)
    {
       SV_BroadcastPlayerScalarInfo(
@@ -1119,7 +1186,7 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
 {
    client_t *client = &clients[playernum];
    player_t *player = &players[playernum];
-   server_client_t *server_client;
+   server_client_t *server_client = NULL;
 
    if(CS_SERVER)
       server_client = &server_clients[playernum];
@@ -1165,6 +1232,8 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
       update_message->int_value = GET_WSOP(playernum);
    else if(info_type == ci_asop)
       update_message->int_value = GET_ASOP(playernum);
+   else if(info_type == ci_afk)
+      update_message->boolean_value = client->afk;
    else if(info_type == ci_bobbing)
    {
       if(CS_CLIENT)

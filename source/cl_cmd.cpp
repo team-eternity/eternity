@@ -204,9 +204,19 @@ CONSOLE_COMMAND(password, cf_netonly)
 
 CONSOLE_COMMAND(spectate, cf_netonly)
 {
-   // [CG] As a bonus, this will reset displayplayer to consoleplayer.
    CS_SetDisplayPlayer(consoleplayer);
    CL_Spectate();
+}
+
+CONSOLE_COMMAND(afk, cf_netonly)
+{
+   if(!clients[consoleplayer].spectating)
+   {
+      CS_SetDisplayPlayer(consoleplayer);
+      CL_Spectate();
+   }
+   clients[consoleplayer].afk = true;
+   CL_SendPlayerScalarInfo(ci_afk);
 }
 
 void CL_AddCommands(void)
@@ -224,5 +234,6 @@ void CL_AddCommands(void)
    C_AddCommand(reconnect);
    C_AddCommand(password);
    C_AddCommand(spectate);
+   C_AddCommand(afk);
 }
 

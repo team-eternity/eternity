@@ -276,16 +276,16 @@ void CS_ValidateOptions(Json::Value &options)
       check_int_option_range(options, max_players, 1, MAXPLAYERS)
    }
 
-   check_int_option_range(options, max_players_per_team, 1, 16);
-   check_int_option_range(options, dogs, 0, 3);
-   check_int_option_range(options, skill, 1, 5);
-   check_int_option_range(options, frag_limit, 0, 100000);
-   check_int_option_range(options, time_limit, 0, 100000);
-   check_int_option_range(options, score_limit, 0, 100000);
-   check_int_option_range(options, death_time_limit, 0, 100000);
-   check_int_option_range(options, respawn_protection_time, 0, 100000);
-   check_int_option_range(options, friend_distance, 1, 1024);
-   check_int_option_range(options, friendly_damage_percentage, 0, 100);
+   check_int_option_range(options, max_players_per_team, 1, 16)
+   check_int_option_range(options, dogs, 0, 3)
+   check_int_option_range(options, skill, 1, 5)
+   check_int_option_range(options, frag_limit, 0, 100000)
+   check_int_option_range(options, time_limit, 0, 100000)
+   check_int_option_range(options, score_limit, 0, 100000)
+   check_int_option_range(options, death_time_limit, 0, 100000)
+   check_int_option_range(options, respawn_protection_time, 0, 100000)
+   check_int_option_range(options, friend_distance, 1, 1024)
+   check_int_option_range(options, friendly_damage_percentage, 0, 100)
 
    if(options["death_time_expired_action"].empty())
       cs_original_settings->death_time_expired_action = DEATH_LIMIT_SPECTATE;
@@ -805,7 +805,7 @@ void CS_HandleServerSection(Json::Value &server)
    cs_original_settings->max_player_clients = (MAXPLAYERS - 2);
    if(!server["max_player_clients"].empty())
    {
-      check_int_option_range(server, max_player_clients, 2, (MAXPLAYERS - 2));
+      check_int_option_range(server, max_player_clients, 2, (MAXPLAYERS - 2))
       cs_original_settings->max_player_clients =
          server["max_player_clients"].asInt();
    }
@@ -813,7 +813,7 @@ void CS_HandleServerSection(Json::Value &server)
    cs_original_settings->max_admin_clients = 2;
    if(!server["max_admin_clients"].empty())
    {
-      check_int_option_range(server, max_admin_clients, 2, (MAXPLAYERS >> 1));
+      check_int_option_range(server, max_admin_clients, 2, (MAXPLAYERS >> 1))
       cs_original_settings->max_admin_clients =
          server["max_admin_clients"].asInt();
    }
@@ -863,6 +863,13 @@ void CS_HandleServerSection(Json::Value &server)
       }
    }
    DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
+
+   sv_queue_wait_seconds = 5;
+   if(!server["seconds_to_join_game"].empty())
+   {
+      check_int_option_range(server, seconds_to_join_game, 0, 30)
+      sv_queue_wait_seconds = server["seconds_to_join_game"].asInt();
+   }
 
    sv_buffer_commands = false;
    if(!server["buffer_client_commands"].empty())

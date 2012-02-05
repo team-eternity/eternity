@@ -402,6 +402,8 @@ void P_DeathThink(player_t *player)
             player->frags[playernum]++;
             SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
             HU_FragsUpdate();
+            client->afk = true;
+            SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
             SV_RemovePlayerFromQueue(playernum);
             SV_BroadcastMessage(
                "%s was forced to leave the game.\n", player->name

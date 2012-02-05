@@ -61,23 +61,12 @@ extern int action_scoreboard;
 extern int walkcam_active;
 extern int levelScoreLimit;
 
-// [CG] These are named backwards because EE names them backwards.
+static bool test_scoreboard = false;
+
 static crange_idx_e team_colors_to_font_colors[team_color_max] = {
    CR_GREEN,
    CR_RED,
-   CR_BLUE /*,
-   CR_GREEN, CR_GRAY, CR_BROWN, CR_BRICK, CR_GOLD */
-};
-
-static int team_colors_to_color_ranges[team_color_max] = {
-   TEXT_COLOR_GREEN,
-   TEXT_COLOR_RED,
-   TEXT_COLOR_BLUE /*,
-   TEXT_COLOR_GREEN,
-   TEXT_COLOR_GRAY,
-   TEXT_COLOR_BROWN,
-   TEXT_COLOR_BRICK,
-   TEXT_COLOR_GOLD */
+   CR_BLUE
 };
 
 static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
@@ -110,7 +99,7 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
    //      possible in this case.
    if(extra_top_margin > 0)
       window_height = SCREENHEIGHT - (WINDOW_MARGIN + extra_top_margin);
-   else if(CS_TEAMS_ENABLED)
+   else
       window_height = ST_Y - WINDOW_MARGIN;
 
    psnprintf(s, sizeof(s), "[TKV]RussianDumbass  -9999  9999  9999ms");
@@ -218,37 +207,38 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
    // [CG] Draw stat rows (names, etc.).
 
    // [CG] This fills up the scoreboard for testing.
-   /*
-   for(i = num_players; i < 17; i++)
+   if(test_scoreboard)
    {
-      // [CG] Draw the player's name.
-      V_FontWriteTextColored(
-         hud_overfont, "[TKV]RussianDumbass", CR_GREEN,
-         scores_x, y
-      );
-      // [CG] Draw the player's frags.
-      psnprintf(s, sizeof(s), "%d", -9999);
-      V_FontWriteTextColored(
-         hud_overfont, s, CR_GREEN,
-         frags_column_end - V_FontStringWidth(hud_overfont, s), y
-      );
-      // [CG] Draw the player's deaths.
-      psnprintf(s, sizeof(s), "%u", 9999);
-      V_FontWriteTextColored(
-         hud_overfont, s, CR_GREEN,
-         deaths_column_end - V_FontStringWidth(hud_overfont, s), y
-      );
-      // [CG] Draw the player's lag.
-      psnprintf(s, sizeof(s), "%3ums", 9999);
-      V_FontWriteTextColored(
-         hud_overfont, s, CR_GREEN,
-         lag_column_end - V_FontStringWidth(hud_overfont, s), y
-      );
+      for(i = num_players; i < 17; i++)
+      {
+         // [CG] Draw the player's name.
+         V_FontWriteTextColored(
+            hud_overfont, "[TKV]RussianDumbass", CR_GREEN,
+            scores_x, y
+         );
+         // [CG] Draw the player's frags.
+         psnprintf(s, sizeof(s), "%d", -9999);
+         V_FontWriteTextColored(
+            hud_overfont, s, CR_GREEN,
+            frags_column_end - V_FontStringWidth(hud_overfont, s), y
+         );
+         // [CG] Draw the player's deaths.
+         psnprintf(s, sizeof(s), "%u", 9999);
+         V_FontWriteTextColored(
+            hud_overfont, s, CR_GREEN,
+            deaths_column_end - V_FontStringWidth(hud_overfont, s), y
+         );
+         // [CG] Draw the player's lag.
+         psnprintf(s, sizeof(s), "%3ums", 9999);
+         V_FontWriteTextColored(
+            hud_overfont, s, CR_GREEN,
+            lag_column_end - V_FontStringWidth(hud_overfont, s), y
+         );
 
-      // [CG] Next line.
-      y += V_FontStringHeight(hud_overfont, s);
+         // [CG] Next line.
+         y += V_FontStringHeight(hud_overfont, s);
+      }
    }
-   */
 
    for(i = 0; i < num_players; i++)
    {
@@ -256,27 +246,19 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
       playernum = player - players;
 
       if(!playeringame[playernum])
-      {
          continue;
-      }
 
       client = &clients[playernum];
 
       // [CG] Don't list the server's spectator player, and don't list
       //      spectators yet (they're listed below playing players).
       if(playernum == 0 || client->spectating)
-      {
          continue;
-      }
 
       if(playernum == displayplayer)
-      {
          font_color  = CR_GRAY;
-      }
       else
-      {
          font_color = CR_GREEN;
-      }
 
       // [CG] Draw the player's name.
       V_FontWriteTextColored(
@@ -316,26 +298,20 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
       player = sortedplayers[i];
       playernum = player - players;
 
-      if(!playeringame[playernum])
-      {
+      if(playernum == 0 || !playeringame[playernum])
          continue;
-      }
 
       client = &clients[playernum];
 
-      if(playernum == displayplayer)
-      {
-         font_color = CR_GRAY;
-      }
-      else
-      {
-         font_color = CR_GREEN;
-      }
-
-      if(playernum == 0 || !client->spectating)
-      {
+      if(client->spectating)
          continue;
-      }
+
+      if(playernum == displayplayer)
+         font_color = CR_GRAY;
+      else if(client->afk)
+         font_color = CR_BROWN;
+      else
+         font_color = CR_GREEN;
 
       // [CG] Draw the player's name.
       psnprintf(s, sizeof(s), "%s%s", FC_TRANS, player->name);
@@ -376,7 +352,6 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
    int red_frags_column_end, blue_frags_column_end;
    byte white = (byte)GameModeInfo->whiteIndex;
    char s[91], level_time_s[11], level_timelimit_s[11];
-   int color_range;
    crange_idx_e font_color;
    player_t *player;
    client_t *client;
@@ -409,11 +384,10 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
 
    // [CG] Format the time properly.
    CS_FormatTicsAsTime(level_time_s, leveltime);
+
+   // [CG] levelTimeLimit is in minutes... I guess.
    if(levelTimeLimit)
-   {
-      // [CG] levelTimeLimit is in minutes... I guess.
       CS_FormatTime(level_timelimit_s, levelTimeLimit * 60);
-   }
 
    // [CG] Draw gamemode header
    if(GameType == gt_tdm)
@@ -440,13 +414,6 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
       );
       x = SCREEN_MIDDLE;
       V_FontWriteText(hud_overfont, s, x, y);
-      /*
-      psnprintf(s, sizeof(s), "%sScore Limit: %d || Time: %s/%s", FC_HI,
-         levelFragLimit,
-         level_time_s,
-         level_timelimit_s
-      );
-      */
    }
    else if(levelScoreLimit)
    {
@@ -500,14 +467,6 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
    // [CG] Calculate how wide the lag stat can possibly be in order to
    //      determine where to put frag stats.
    psnprintf(s, sizeof(s), "%3u", 999);
-   /*
-   psnprintf(s, sizeof(s), "--/%2u/%2u/%2u/%2u",
-      MAX_POSITIONS >> 1,                     // [CG] Client lag.
-      MAX_POSITIONS >> 1,                     // [CG] Server lag.
-      (MAX_POSITIONS >> 1) * (1.0 / TICRATE), // [CG] Transit lag.
-      100                                     // [CG] Packet loss.
-   );
-   */
    red_frags_column_end =
       red_score_column_end - V_FontStringWidth(hud_overfont, s);
    blue_frags_column_end =
@@ -527,40 +486,41 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
    red_y = blue_y = y;
 
    // [CG] This fills up the scoreboard for testing.
-   /*
-   for(i = num_players; i < 17; i++)
+   if(test_scoreboard)
    {
-      font_color = team_colors_to_font_colors[team_color_red];
-      color_range = team_colors_to_color_ranges[team_color_red];
-      name_x = scores_x;
-      frags_x = red_frags_column_end;
-      lag_x  = red_score_column_end;
-      stat_y = red_y;
-      red_y += V_FontStringHeight(hud_overfont, s);
+      for(i = num_players; i < 17; i++)
+      {
+         font_color = team_colors_to_font_colors[team_color_red];
+         name_x = scores_x;
+         frags_x = red_frags_column_end;
+         lag_x  = red_score_column_end;
+         stat_y = red_y;
+         red_y += V_FontStringHeight(hud_overfont, s);
 
-      // [CG] Draw the player's name.
-      V_FontWriteTextColored(
-         hud_overfont, "[FLS]PotentPotables", font_color, name_x, stat_y
-      );
+         // [CG] Draw the player's name.
+         V_FontWriteTextColored(
+            hud_overfont, "[FLS]PotentPotables", font_color, name_x, stat_y
+         );
 
-      // [CG] Draw the player's frags.
-      psnprintf(s, sizeof(s), "%d", -999);
-      V_FontWriteTextColored(
-         hud_overfont, s, font_color,
-         frags_x - (V_FontStringWidth(hud_overfont, s) + size_of_space), stat_y
-      );
+         // [CG] Draw the player's frags.
+         psnprintf(s, sizeof(s), "%d", -999);
+         V_FontWriteTextColored(
+            hud_overfont, s, font_color,
+            frags_x - (V_FontStringWidth(hud_overfont, s) + size_of_space),
+            stat_y
+         );
 
-      // [CG] Draw the player's lag.
-      psnprintf(s, sizeof(s), "%3u", 999);
-      V_FontWriteTextColored(
-         hud_overfont, s, font_color,
-         lag_x - V_FontStringWidth(hud_overfont, s), stat_y
-      );
+         // [CG] Draw the player's lag.
+         psnprintf(s, sizeof(s), "%3u", 999);
+         V_FontWriteTextColored(
+            hud_overfont, s, font_color,
+            lag_x - V_FontStringWidth(hud_overfont, s), stat_y
+         );
 
-      // [CG] Next line.
-      y += V_FontStringHeight(hud_overfont, s);
+         // [CG] Next line.
+         y += V_FontStringHeight(hud_overfont, s);
+      }
    }
-   */
 
    // [CG] Draw stat rows (names, etc.).
    for(i = 0; i < num_players; i++)
@@ -569,29 +529,19 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
       playernum = player - players;
 
       if(!playeringame[playernum])
-      {
          continue;
-      }
 
       client = &clients[playernum];
 
       // [CG] Don't list the server's spectator player, and don't list
       //      spectators yet (they're listed below playing players).
       if(playernum == 0 || client->spectating)
-      {
          continue;
-      }
 
       if(playernum == displayplayer)
-      {
          font_color = CR_GRAY;
-         color_range = TEXT_COLOR_GRAY;
-      }
       else
-      {
          font_color = team_colors_to_font_colors[client->team];
-         color_range = team_colors_to_color_ranges[client->team];
-      }
 
       if(client->team == team_color_red)
       {
@@ -638,27 +588,19 @@ static void display_team_scoreboard(unsigned int extra_top_margin)
       playernum = player - players;
 
       if(!playeringame[playernum])
-      {
          continue;
-      }
 
       client = &clients[playernum];
 
-      if(playernum == 0 || !client->spectating)
-      {
+      if((playernum == 0) || (!client->spectating))
          continue;
-      }
 
       if(playernum == displayplayer)
-      {
          font_color = CR_GRAY;
-         color_range = TEXT_COLOR_GRAY;
-      }
+      else if(client->afk)
+         font_color = CR_BROWN;
       else
-      {
          font_color = team_colors_to_font_colors[client->team];
-         color_range = team_colors_to_color_ranges[client->team];
-      }
 
       if(client->team == team_color_red)
       {
@@ -754,26 +696,6 @@ static void display_coop_scoreboard(unsigned int extra_top_margin)
    V_FontWriteTextColored(hud_font, s, CR_GOLD, x, y);
    y += (V_FontStringHeight(hud_font, s) + 2);
 
-   /*
-   CS_FormatTicsAsTime(level_time_s, leveltime);
-   if(levelTimeLimit)
-   {
-      CS_FormatTime(level_timelimit_s, levelTimeLimit * 60);
-      psnprintf(s, sizeof(s), "%sTime: %s/%s", FC_HI,
-         level_time_s,
-         level_timelimit_s
-      );
-   }
-   else
-   {
-      psnprintf(s, sizeof(s), "%sTime: %s", FC_HI, level_time_s);
-   }
-   x = (SCREENWIDTH - V_FontStringWidth(hud_overfont, s)) >> 1;
-   V_FontWriteText(hud_overfont, s, x, y);
-   y += (V_FontStringHeight(hud_overfont, s));
-
-   */
-
    // [CG] Draw column names.
    //      Basically the way this is done is we measure the width of the
    //      largest value we expect, and then we write the column name where the
@@ -845,36 +767,20 @@ static void display_coop_scoreboard(unsigned int extra_top_margin)
       player = &players[i];
       client = &clients[i];
 
+      // [CG] List spectators after playing players.
       if(!playeringame[i] || client->spectating)
-      {
-         // [CG] List spectators after playing players.
          continue;
-      }
 
       if(i == displayplayer)
-      {
          font_color  = CR_GRAY;
-      }
       else
-      {
          font_color = CR_GREEN;
-      }
 
       // [CG] Draw the player's name.
       V_FontWriteTextColored(
          hud_overfont, player->name, font_color,
          scores_x, y
       );
-
-      // [CG] Columns:
-      //
-      //   - Name
-      //   - Ammo (bullets, shells, rockets, cells)
-      //   - Health/Armor
-      //   - Kills
-      //   - Lives remaining
-      //   - Ping
-      //
 
       psnprintf(s, sizeof(s), "%d/%d/%d/%d",
          player->ammo[am_clip],
@@ -920,36 +826,22 @@ static void display_coop_scoreboard(unsigned int extra_top_margin)
       player = &players[i];
       client = &clients[i];
 
+      // [CG] List spectators after playing players.
       if(!playeringame[i] || !client->spectating)
-      {
-         // [CG] List spectators after playing players.
          continue;
-      }
 
       if(i == displayplayer)
-      {
          font_color  = CR_GRAY;
-      }
+      else if(client->afk)
+         font_color = CR_BROWN;
       else
-      {
          font_color = CR_GREEN;
-      }
 
       // [CG] Draw the player's name.
       psnprintf(s, sizeof(s), "%s%s", FC_TRANS, player->name);
       V_FontWriteTextColored(hud_overfont, s, font_color,
          scores_x, y
       );
-
-      // [CG] Columns:
-      //
-      //   - Name
-      //   - Ammo (bullets, shells, rockets, cells)
-      //   - Health/Armor
-      //   - Kills
-      //   - Lives remaining
-      //   - Ping
-      //
 
       psnprintf(s, sizeof(s), "%s%d/%d/%d/%d", FC_TRANS,
          player->ammo[am_clip],
@@ -994,7 +886,6 @@ static void display_coop_scoreboard(unsigned int extra_top_margin)
 
 void CS_DrawScoreboard(unsigned int extra_top_margin)
 {
-
    if(!DEATHMATCH)
       display_coop_scoreboard(extra_top_margin);
    else if(CS_TEAMS_ENABLED)
