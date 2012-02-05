@@ -114,7 +114,7 @@ public:
    void     freeBuffer();
 
    // Indexing operations
-   char  charAt(size_t idx);
+   char  charAt(size_t idx) const;
    char *bufferAt(size_t idx);
 
    // Concatenation and insertion/deletion
