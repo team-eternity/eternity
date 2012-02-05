@@ -458,12 +458,9 @@ void CS_ZeroClient(int clientnum)
       sc->command_world_index = 0;
       sc->received_command_for_current_map = 0;
       M_QueueFree(&sc->commands);
-      memset(
-         sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t)
-      );
-      memset(
-         sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t)
-      );
+      memset(sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t));
+      memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t));
+      memset(sc->player_states, 0, MAX_POSITIONS * sizeof(playerstate_t));
       memcpy(
          sc->weapon_preferences,
          weapon_preferences[1],

@@ -385,7 +385,7 @@ void P_DeathThink(player_t *player)
    // [CG] C/S adds a "death time limit" option where players can only remain
    //      dead for so long before they're either forcibly respawned or removed
    //      from the game.
-   if(player->cmd.buttons & BT_USE)
+   if(serverside && player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;
    else if(CS_SERVER && death_time_limit && GameType != gt_coop)
    {

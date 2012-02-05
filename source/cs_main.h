@@ -396,8 +396,10 @@ typedef struct
    mqueue_t commands;
    // [CG] The server stores player positions here for unlagged.
    cs_player_position_t positions[MAX_POSITIONS];
-   // [CG] The server stores miscellaneous player states here.
+   // [CG] The server stores miscellaneous player states here for unlagged.
    cs_misc_state_t misc_states[MAX_POSITIONS];
+   // [CG] The server stores player states here for unlagged.
+   playerstate_t player_states[MAX_POSITIONS];
    // [CG] Per-client preferred weapon order.
    weapontype_t weapon_preferences[NUMWEAPONS + 1];
    // [CG] Per-client weapon switch on weapon pickup preference.

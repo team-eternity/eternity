@@ -268,9 +268,13 @@ static void CS_checkSectionHasOption(Json::Value& section,
 void CS_ValidateOptions(Json::Value &options)
 {
    if(MAX_CLIENTS < MAXPLAYERS)
+   {
       check_int_option_range(options, max_players, 1, MAX_CLIENTS)
+   }
    else
+   {
       check_int_option_range(options, max_players, 1, MAXPLAYERS)
+   }
 
    check_int_option_range(options, max_players_per_team, 1, 16);
    check_int_option_range(options, dogs, 0, 3);

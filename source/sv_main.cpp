@@ -767,7 +767,7 @@ void SV_StartUnlag(int playernum)
          // [CG] If the target player was dead during this index, don't let
          //      let them take damage for the old actor at the old position.
          // [CG] FIXME: playerstate really shouldn't be in positions.
-         if(old_position->playerstate != PST_LIVE)
+         if(sc->player_states[command_index % MAX_POSITIONS] != PST_LIVE)
             a->flags4 |= MF4_NODAMAGE;
       }
    }
@@ -1343,6 +1343,7 @@ void SV_BroadcastPlayerPositions(void)
       ms = &sc->misc_states[sv_world_index % MAX_POSITIONS];
       CS_SavePlayerPosition(pos, i, sv_world_index);
       CS_SaveActorMiscState(ms, player->mo, sv_world_index);
+      sc->player_states[sv_world_index % MAX_POSITIONS] = player->playerstate;
 
       message.message_type = nm_playerposition;
       message.world_index = sv_world_index;

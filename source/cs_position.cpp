@@ -281,7 +281,6 @@ void CS_SetPlayerPosition(int playernum, cs_player_position_t *position)
    player->viewheight      = position->viewheight;
    player->deltaviewheight = position->deltaviewheight;
    player->jumptime        = position->jumptime;
-   player->playerstate     = position->playerstate;
    P_SetThingPosition(player->mo);
 }
 
@@ -302,8 +301,7 @@ bool CS_PlayerPositionEquals(int playernum, cs_player_position_t *position)
       player->viewz           == position->viewz           &&
       player->viewheight      == position->viewheight      &&
       player->deltaviewheight == position->deltaviewheight &&
-      player->jumptime        == position->jumptime        &&
-      player->playerstate     == position->playerstate)
+      player->jumptime        == position->jumptime)
    {
       return true;
    }
@@ -330,7 +328,6 @@ void CS_SavePlayerPosition(cs_player_position_t *position, int playernum,
    position->viewheight      = player->viewheight;
    position->deltaviewheight = player->deltaviewheight;
    position->jumptime        = player->jumptime;
-   position->playerstate     = player->playerstate;
 }
 
 bool CS_PlayerPositionChanged(int playernum)
@@ -358,8 +355,7 @@ bool CS_PlayerPositionsEqual(cs_player_position_t *position_one,
       position_one->viewz           == position_two->viewz           &&
       position_one->viewheight      == position_two->viewheight      &&
       position_one->deltaviewheight == position_two->deltaviewheight &&
-      position_one->jumptime        == position_two->jumptime        &&
-      position_one->playerstate     == position_two->playerstate)
+      position_one->jumptime        == position_two->jumptime)
    {
       return true;
    }
@@ -383,6 +379,5 @@ void CS_CopyPlayerPosition(cs_player_position_t *dest,
    dest->viewheight      = src->viewheight;
    dest->deltaviewheight = src->deltaviewheight;
    dest->jumptime        = src->jumptime;
-   dest->playerstate     = src->playerstate;
 }
 

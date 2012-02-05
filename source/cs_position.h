@@ -73,7 +73,6 @@ typedef struct
    int32_t viewheight;
    int32_t deltaviewheight;
    int32_t jumptime;
-   int32_t playerstate;
 } cs_player_position_t;
 
 // [CG] Same with miscellaneous state.
