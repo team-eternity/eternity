@@ -148,9 +148,10 @@ void qstring::freeBuffer()
 // Indexing function to access a character in a qstring. This is slower but 
 // more secure than using qstring::getBuffer with array indexing.
 //
-char qstring::charAt(size_t idx)
+char qstring::charAt(size_t idx) const
 {
-   checkBuffer();
+   if(!buffer)
+      return '\0';
 
    if(idx >= size)
       I_Error("qstring::charAt: index out of range\n");

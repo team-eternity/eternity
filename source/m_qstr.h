@@ -104,7 +104,7 @@ public:
    qstring    &clear();
    qstring    &clearOrCreate(size_t size);
    void        freeBuffer();
-   char        charAt(size_t idx);
+   char        charAt(size_t idx) const;
    char       *bufferAt(size_t idx);
    qstring    &Putc(char ch);
    qstring    &Delc();

@@ -211,6 +211,9 @@ public:
    int getNumber() const { return number; }
 };
 
+//
+// InputAction
+//
 class InputAction : public ZoneObject
 {
 protected:
@@ -218,6 +221,7 @@ protected:
    input_action_category_e category;
    bool repeatable;
    char *bound_keys_description;
+
 public:
    DLListItem<InputAction> links;
    ENCStringHashKey key;
@@ -296,13 +300,14 @@ public:
    }
 
 
-   char* getName() const { return hidden_name; }
+   char *getName() const { return hidden_name; }
    input_action_category_e const getCategory() { return category; }
    bool isRepeatable() const { return repeatable; }
    virtual void activate(event_t *ev) {}
    virtual void deactivate(event_t *ev) {}
+   virtual void print() const { C_Printf("%s\n", getName()); }
    virtual bool active() { return false; }
-   char* getDescription() const { return bound_keys_description; }
+   char *getDescription() const { return bound_keys_description; }
 
    void setDescription(const char *new_description)
    {
@@ -403,6 +408,8 @@ public:
       : InputAction(new_name, kac_command, new_repeatable) {}
 
    void activate(event_t *ev) { if(!consoleactive) C_RunTextCmd(getName()); }
+
+   void print() const { /* Do not print in the action list */ }
 };
 
 static InputKey *keys[NUM_KEYS];
@@ -659,12 +666,12 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
 //
 // Bind a key to one or more actions.
 //
-static void G_bindKeyToActions(const char *key_name, const char *action_names)
+static void G_bindKeyToActions(const char *key_name, const qstring &action_names)
 {
    unsigned short flags = 0;
    size_t key_name_length = strlen(key_name);
-   qstring buffer(strlen(action_names) + 1);
-   int i, j;
+   size_t actionLength;
+   qstring token;
    InputKey *key;
 
    if(!key_name_length)
@@ -693,33 +700,37 @@ static void G_bindKeyToActions(const char *key_name, const char *action_names)
       return;
    }
 
-   buffer = action_names;
-   buffer.LStrip('\"');
-   buffer.RStrip('\"');
-   if(!buffer.length())
+   actionLength = action_names.length();
+
+   if(!actionLength)
    {
-      C_Printf(FC_ERROR "empty action list.\n", key_name);
+      C_Printf(FC_ERROR "empty action list\n");
       return;
    }
 
-   for(i = 1, j = 0; i < (int)buffer.length(); i++)
+   for(size_t i = 0; i < actionLength; i++)
    {
-      if(buffer.charAt(i) == ';')
+      char c = action_names.charAt(i);
+
+      if(c == '\"')
+         continue;
+      
+      if(c == ';')
       {
-         if((i - j) > 1)
+         if(token.length())
          {
-            *buffer.bufferAt(i) = '\0';
-            G_bindKeyToAction(key, (const char *)buffer.bufferAt(j), flags);
-            *buffer.bufferAt(i) = ';';
+            G_bindKeyToAction(key, token.constPtr(), flags);
+            token.clear();
          }
-         j = i + 1;
       }
+      else
+         token += c;
    }
 
    // [CG] If the action list didn't end in a ";", then there is one more
    //      action to bind.
-   if(buffer.charAt(i - 1) != ';' && ((i - j) > 1))
-      G_bindKeyToAction(key, (const char *)buffer.bufferAt(j), flags);
+   if(token.length())
+      G_bindKeyToAction(key, token.constPtr(), flags);
 }
 
 //
@@ -740,78 +751,78 @@ void G_InitKeyBindings(void)
 
    // various names for different keys
    G_addKey(KEYD_RIGHTARROW, rightarrow);
-   G_addKey(KEYD_LEFTARROW, leftarrow);
-   G_addKey(KEYD_UPARROW, uparrow);
-   G_addKey(KEYD_DOWNARROW, downarrow);
-   G_addKey(KEYD_ESCAPE, escape);
-   G_addKey(KEYD_ENTER, enter);
-   G_addKey(KEYD_TAB, tab);
-   G_addKey(KEYD_F1, f1);
-   G_addKey(KEYD_F2, f2);
-   G_addKey(KEYD_F3, f3);
-   G_addKey(KEYD_F4, f4);
-   G_addKey(KEYD_F5, f5);
-   G_addKey(KEYD_F6, f6);
-   G_addKey(KEYD_F7, f7);
-   G_addKey(KEYD_F8, f8);
-   G_addKey(KEYD_F9, f9);
-   G_addKey(KEYD_F10, f10);
-   G_addKey(KEYD_F11, f11);
-   G_addKey(KEYD_F12, f12);
+   G_addKey(KEYD_LEFTARROW,  leftarrow);
+   G_addKey(KEYD_UPARROW,    uparrow);
+   G_addKey(KEYD_DOWNARROW,  downarrow);
+   G_addKey(KEYD_ESCAPE,     escape);
+   G_addKey(KEYD_ENTER,      enter);
+   G_addKey(KEYD_TAB,        tab);
+   G_addKey(KEYD_F1,         f1);
+   G_addKey(KEYD_F2,         f2);
+   G_addKey(KEYD_F3,         f3);
+   G_addKey(KEYD_F4,         f4);
+   G_addKey(KEYD_F5,         f5);
+   G_addKey(KEYD_F6,         f6);
+   G_addKey(KEYD_F7,         f7);
+   G_addKey(KEYD_F8,         f8);
+   G_addKey(KEYD_F9,         f9);
+   G_addKey(KEYD_F10,        f10);
+   G_addKey(KEYD_F11,        f11);
+   G_addKey(KEYD_F12,        f12);
 
-   G_addKey(KEYD_BACKSPACE, backspace);
-   G_addKey(KEYD_PAUSE, pause);
-   G_addKey(KEYD_MINUS, -);
-   G_addKey(KEYD_RSHIFT, shift);
-   G_addKey(KEYD_RCTRL, ctrl);
-   G_addKey(KEYD_RALT, alt);
-   G_addKey(KEYD_CAPSLOCK, capslock);
+   G_addKey(KEYD_BACKSPACE,  backspace);
+   G_addKey(KEYD_PAUSE,      pause);
+   G_addKey(KEYD_MINUS,      -);
+   G_addKey(KEYD_RSHIFT,     shift);
+   G_addKey(KEYD_RCTRL,      ctrl);
+   G_addKey(KEYD_RALT,       alt);
+   G_addKey(KEYD_CAPSLOCK,   capslock);
 
-   G_addKey(KEYD_INSERT, insert);
-   G_addKey(KEYD_HOME, home);
-   G_addKey(KEYD_END, end);
-   G_addKey(KEYD_PAGEUP, pgup);
-   G_addKey(KEYD_PAGEDOWN, pgdn);
+   G_addKey(KEYD_INSERT,     insert);
+   G_addKey(KEYD_HOME,       home);
+   G_addKey(KEYD_END,        end);
+   G_addKey(KEYD_PAGEUP,     pgup);
+   G_addKey(KEYD_PAGEDOWN,   pgdn);
    G_addKey(KEYD_SCROLLLOCK, scrolllock);
-   G_addKey(KEYD_SPACEBAR, space);
-   G_addKey(KEYD_NUMLOCK, numlock);
-   G_addKey(KEYD_DEL, delete);
+   G_addKey(KEYD_SPACEBAR,   space);
+   G_addKey(KEYD_NUMLOCK,    numlock);
+   G_addKey(KEYD_DEL,        delete);
 
-   G_addKey(KEYD_MOUSE1, mouse1);
-   G_addKey(KEYD_MOUSE2, mouse2);
-   G_addKey(KEYD_MOUSE3, mouse3);
-   G_addKey(KEYD_MOUSE4, mouse4);
-   G_addKey(KEYD_MOUSE5, mouse5);
-   G_addKey(KEYD_MWHEELUP, wheelup);
+   G_addKey(KEYD_MOUSE1,     mouse1);
+   G_addKey(KEYD_MOUSE2,     mouse2);
+   G_addKey(KEYD_MOUSE3,     mouse3);
+   G_addKey(KEYD_MOUSE4,     mouse4);
+   G_addKey(KEYD_MOUSE5,     mouse5);
+   G_addKey(KEYD_MWHEELUP,   wheelup);
    G_addKey(KEYD_MWHEELDOWN, wheeldown);
 
-   G_addKey(KEYD_JOY1, joy1);
-   G_addKey(KEYD_JOY2, joy2);
-   G_addKey(KEYD_JOY3, joy3);
-   G_addKey(KEYD_JOY4, joy4);
-   G_addKey(KEYD_JOY5, joy5);
-   G_addKey(KEYD_JOY6, joy6);
-   G_addKey(KEYD_JOY7, joy7);
-   G_addKey(KEYD_JOY8, joy8);
+   G_addKey(KEYD_JOY1,       joy1);
+   G_addKey(KEYD_JOY2,       joy2);
+   G_addKey(KEYD_JOY3,       joy3);
+   G_addKey(KEYD_JOY4,       joy4);
+   G_addKey(KEYD_JOY5,       joy5);
+   G_addKey(KEYD_JOY6,       joy6);
+   G_addKey(KEYD_JOY7,       joy7);
+   G_addKey(KEYD_JOY8,       joy8);
 
-   G_addKey(KEYD_KP0, kp_0);
-   G_addKey(KEYD_KP1, kp_1);
-   G_addKey(KEYD_KP2, kp_2);
-   G_addKey(KEYD_KP3, kp_3);
-   G_addKey(KEYD_KP4, kp_4);
-   G_addKey(KEYD_KP5, kp_5);
-   G_addKey(KEYD_KP6, kp_6);
-   G_addKey(KEYD_KP7, kp_7);
-   G_addKey(KEYD_KP8, kp_8);
-   G_addKey(KEYD_KP9, kp_9);
-   G_addKey(KEYD_KPPERIOD, kp_period);
-   G_addKey(KEYD_KPDIVIDE, kp_slash);
+   G_addKey(KEYD_KP0,        kp_0);
+   G_addKey(KEYD_KP1,        kp_1);
+   G_addKey(KEYD_KP2,        kp_2);
+   G_addKey(KEYD_KP3,        kp_3);
+   G_addKey(KEYD_KP4,        kp_4);
+   G_addKey(KEYD_KP5,        kp_5);
+   G_addKey(KEYD_KP6,        kp_6);
+   G_addKey(KEYD_KP7,        kp_7);
+   G_addKey(KEYD_KP8,        kp_8);
+   G_addKey(KEYD_KP9,        kp_9);
+   G_addKey(KEYD_KPPERIOD,   kp_period);
+   G_addKey(KEYD_KPDIVIDE,   kp_slash);
    G_addKey(KEYD_KPMULTIPLY, kp_star);
-   G_addKey(KEYD_KPMINUS, kp_minus);
-   G_addKey(KEYD_KPPLUS, kp_plus);
-   G_addKey(KEYD_KPENTER, kp_enter);
-   G_addKey(KEYD_KPEQUALS, kp_equals);
-   G_addKey('`', tilde);
+   G_addKey(KEYD_KPMINUS,    kp_minus);
+   G_addKey(KEYD_KPPLUS,     kp_plus);
+   G_addKey(KEYD_KPENTER,    kp_enter);
+   G_addKey(KEYD_KPEQUALS,   kp_equals);
+   G_addKey('`',             tilde);
 
    for(i = 0; i < NUM_KEYS; ++i)
    {
@@ -828,72 +839,83 @@ void G_InitKeyBindings(void)
       names_to_keys.addObject(*keys[i]);
    }
 
-   G_addVariableAction(forward, kac_player);
-   G_addVariableAction(backward, kac_player);
-   G_addVariableAction(left, kac_player);
-   G_addVariableAction(right, kac_player);
-   G_addVariableAction(moveleft, kac_player);
-   G_addVariableAction(moveright, kac_player);
-   G_addVariableAction(use, kac_player);
-   G_addVariableAction(strafe, kac_player);
-   G_addVariableAction(attack, kac_player);
-   G_addVariableAction(flip, kac_player);
-   G_addVariableAction(speed, kac_player);
-   G_addVariableAction(jump, kac_player);
-   G_addVariableAction(autorun, kac_player);
-   G_addVariableAction(mlook, kac_player);
-   G_addVariableAction(lookup, kac_player);
-   G_addVariableAction(lookdown, kac_player);
-   G_addVariableAction(center, kac_player);
-   G_addVariableAction(weapon1, kac_player);
-   G_addVariableAction(weapon2, kac_player);
-   G_addVariableAction(weapon3, kac_player);
-   G_addVariableAction(weapon4, kac_player);
-   G_addVariableAction(weapon5, kac_player);
-   G_addVariableAction(weapon6, kac_player);
-   G_addVariableAction(weapon7, kac_player);
-   G_addVariableAction(weapon8, kac_player);
-   G_addVariableAction(weapon9, kac_player);
+   // Player-class actions
+   G_addVariableAction(forward,    kac_player);
+   G_addVariableAction(backward,   kac_player);
+   G_addVariableAction(left,       kac_player);
+   G_addVariableAction(right,      kac_player);
+   G_addVariableAction(moveleft,   kac_player);
+   G_addVariableAction(moveright,  kac_player);
+   G_addVariableAction(use,        kac_player);
+   G_addVariableAction(strafe,     kac_player);
+   G_addVariableAction(attack,     kac_player);
+   G_addVariableAction(flip,       kac_player);
+   G_addVariableAction(speed,      kac_player);
+   G_addVariableAction(jump,       kac_player);
+   G_addVariableAction(autorun,    kac_player);
+   G_addVariableAction(mlook,      kac_player);
+   G_addVariableAction(lookup,     kac_player);
+   G_addVariableAction(lookdown,   kac_player);
+   G_addVariableAction(center,     kac_player);
+   G_addVariableAction(weapon1,    kac_player);
+   G_addVariableAction(weapon2,    kac_player);
+   G_addVariableAction(weapon3,    kac_player);
+   G_addVariableAction(weapon4,    kac_player);
+   G_addVariableAction(weapon5,    kac_player);
+   G_addVariableAction(weapon6,    kac_player);
+   G_addVariableAction(weapon7,    kac_player);
+   G_addVariableAction(weapon8,    kac_player);
+   G_addVariableAction(weapon9,    kac_player);
    G_addVariableAction(nextweapon, kac_player);
-   G_addVariableAction(weaponup, kac_player);
+   G_addVariableAction(weaponup,   kac_player);
    G_addVariableAction(weapondown, kac_player);
+
+   // HUD-class actions
    G_addVariableAction(frags, kac_hud);
-   G_addVariableAction(menu_toggle, kac_menu);
-   G_addVariableAction(menu_help, kac_menu);
-   G_addVariableAction(menu_setup, kac_menu);
-   G_addVariableAction(menu_up, kac_menu);
-   G_addVariableAction(menu_down, kac_menu);
-   G_addVariableAction(menu_confirm, kac_menu);
+
+   // Menu-class actions
+   G_addVariableAction(menu_toggle,   kac_menu);
+   G_addVariableAction(menu_help,     kac_menu);
+   G_addVariableAction(menu_setup,    kac_menu);
+   G_addVariableAction(menu_up,       kac_menu);
+   G_addVariableAction(menu_down,     kac_menu);
+   G_addVariableAction(menu_confirm,  kac_menu);
    G_addVariableAction(menu_previous, kac_menu);
-   G_addVariableAction(menu_left, kac_menu);
-   G_addVariableAction(menu_right, kac_menu);
-   G_addVariableAction(menu_pageup, kac_menu);
+   G_addVariableAction(menu_left,     kac_menu);
+   G_addVariableAction(menu_right,    kac_menu);
+   G_addVariableAction(menu_pageup,   kac_menu);
    G_addVariableAction(menu_pagedown, kac_menu);
    G_addVariableAction(menu_contents, kac_menu);
-   G_addRepeatableFunctionAction(map_right, kac_map, AM_HandlerRight);
-   G_addRepeatableFunctionAction(map_left, kac_map, AM_HandlerLeft);
-   G_addRepeatableFunctionAction(map_up, kac_map, AM_HandlerUp);
-   G_addRepeatableFunctionAction(map_down, kac_map, AM_HandlerDown);
-   G_addRepeatableFunctionAction(map_zoomin, kac_map, AM_HandlerZoomin);
+
+   // Automap-class actions
+   G_addRepeatableFunctionAction(map_right,   kac_map, AM_HandlerRight);
+   G_addRepeatableFunctionAction(map_left,    kac_map, AM_HandlerLeft);
+   G_addRepeatableFunctionAction(map_up,      kac_map, AM_HandlerUp);
+   G_addRepeatableFunctionAction(map_down,    kac_map, AM_HandlerDown);
+   G_addRepeatableFunctionAction(map_zoomin,  kac_map, AM_HandlerZoomin);
    G_addRepeatableFunctionAction(map_zoomout, kac_map, AM_HandlerZoomout);
    G_addVariableAction(map_toggle, kac_map);
-   G_addVariableAction(map_gobig, kac_map);
+   G_addVariableAction(map_gobig,  kac_map);
    G_addVariableAction(map_follow, kac_map);
-   G_addVariableAction(map_mark, kac_map);
-   G_addVariableAction(map_clear, kac_map);
-   G_addVariableAction(map_grid, kac_map);
-   G_addVariableAction(console_pageup, kac_console);
+   G_addVariableAction(map_mark,   kac_map);
+   G_addVariableAction(map_clear,  kac_map);
+   G_addVariableAction(map_grid,   kac_map);
+
+   // Console-class actions
+   G_addVariableAction(console_pageup,   kac_console);
    G_addVariableAction(console_pagedown, kac_console);
-   G_addVariableAction(console_toggle, kac_console);
-   G_addVariableAction(console_tab, kac_console);
-   G_addVariableAction(console_enter, kac_console);
-   G_addVariableAction(console_up, kac_console);
-   G_addVariableAction(console_down, kac_console);
+   G_addVariableAction(console_toggle,   kac_console);
+   G_addVariableAction(console_tab,      kac_console);
+   G_addVariableAction(console_enter,    kac_console);
+   G_addVariableAction(console_up,       kac_console);
+   G_addVariableAction(console_down,     kac_console);
    G_addRepeatableVariableAction(console_backspace, kac_console);
 
    for(i = 0; i < CMDCHAINS; i++)
+   {
       for(command = cmdroots[i]; command; command = command->next)
          G_addCommandAction(command->name);
+   }
 }
 
 //
@@ -1258,19 +1280,21 @@ void G_SaveDefaults(void)
    fclose(file);
 }
 
-//===========================================================================
+//=============================================================================
 //
 // Console Commands
 //
-//===========================================================================
 
+//
+// bind
+//
+// Bind a key to one or more actions.
+//
 CONSOLE_COMMAND(bind, 0)
 {
    if(Console.argc >= 2)
    {
-      G_bindKeyToActions(
-         Console.argv[0]->constPtr(), Console.argv[1]->constPtr()
-      );
+      G_bindKeyToActions(Console.argv[0]->constPtr(), *(Console.argv[1]));
    }
    else if(Console.argc == 1)
    {
@@ -1303,7 +1327,7 @@ CONSOLE_COMMAND(bind, 0)
       }
    }
    else
-      C_Printf("usage: bind key action\n");
+      C_Printf("usage: bind key <action>\n");
 }
 
 // haleyjd: utility functions
@@ -1312,7 +1336,7 @@ CONSOLE_COMMAND(listactions, 0)
    InputAction *action = NULL;
 
    while((action = names_to_actions.tableIterator(action)))
-      C_Printf("%s\n", action->getName());
+      action->print();
 }
 
 CONSOLE_COMMAND(listkeys, 0)
