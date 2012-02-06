@@ -55,6 +55,7 @@
 #include "hu_frags.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
+#include "in_lude.h"
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
@@ -86,7 +87,6 @@ extern const char* shiftxform;
 extern const char english_shiftxform[]; // haleyjd: forward declaration
 extern vfont_t *hud_overfont; // [CG] 09/15/11 Added for target names.
 extern vfont_t *in_bigfont; // [CG] 10/20/11 Added for enlarged center message
-extern const char *in_bigfontname;
 //boolean chat_on;
 bool chat_active = false;
 int obituaries = 0;

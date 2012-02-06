@@ -1578,7 +1578,7 @@ void A_LichFire(Mobj *actor)
 
    if(!serverside)
    {
-      S_StartSound(baseFire, frameNum);
+      S_StartSound(actor, frameNum);
       return;
    }
 

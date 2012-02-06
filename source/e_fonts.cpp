@@ -593,10 +593,12 @@ void E_LoadPatchFont(vfont_t *font)
 
    // init all to NULL at beginning
    // [CG] Try PU_RENDERER here.
-   // font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
+   /* [CG] E_ReplaceString probably handles this OK now.
    font->fontgfx = (patch_t **)(Z_Calloc(
       font->size, sizeof(patch_t *), PU_RENDERER, (void **)&font->fontgfx
    ));
+   */
+   font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
@@ -833,29 +835,6 @@ static void E_ProcessFont(cfg_t *sec)
 //
 static void E_ProcessFontVars(cfg_t *cfg)
 {
-   // [CG] These need to be free'd first if applicable, otherwise WAD reloads
-   //      will leak memory.
-   if(hud_fontname)
-      efree((void *)hud_fontname);
-   if(hud_overfontname)
-      efree((void *)hud_overfontname);
-   if(mn_fontname)
-      efree((void *)mn_fontname);
-   if(mn_bigfontname)
-      efree((void *)mn_bigfontname);
-   if(mn_normalfontname)
-      efree((void *)mn_normalfontname);
-   if(f_fontname)
-      efree((void *)f_fontname);
-   if(in_fontname)
-      efree((void *)in_fontname);
-   if(in_bigfontname)
-      efree((void *)in_bigfontname);
-   if(in_bignumfontname)
-      efree((void *)in_bignumfontname);
-   if(c_fontname)
-      efree((void *)c_fontname);
-
    // 02/25/09: set native module font names
    E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
    E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));

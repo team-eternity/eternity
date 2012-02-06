@@ -797,8 +797,12 @@ static void StartTexture(texture_t *tex, bool mask)
    
    // Static for now
    // [CG] Try PU_RENDERER here.
-   // tex->buffer = (byte *)(Z_Malloc(bufferlen, PU_STATIC, (void **)&tex->buffer));
-   tex->buffer = (byte *)(Z_Malloc(bufferlen, PU_RENDERER, (void **)&tex->buffer));
+   // tex->buffer = (byte *)(Z_Malloc(
+   //    bufferlen, PU_STATIC, (void **)&tex->buffer
+   // ));
+   tex->buffer = (byte *)(Z_Malloc(
+      bufferlen, PU_RENDERER, (void **)&tex->buffer
+   ));
    memset(tex->buffer, 0, sizeof(byte) * bufferlen);
    
    if((tempmask.mask = mask))
@@ -836,7 +840,9 @@ static texcol_t *NextTempCol(texcol_t *current)
    {
       // [CG] Try PU_RENDERER here.
       // return current->next = estructalloc(texcol_t, 1);
-      return current->next = estructalloctag(texcol_t, 1, PU_RENDERER);
+      return current->next = (texcol_t *)(Z_Calloc(
+         sizeof(texcol_t), 1, PU_RENDERER, (void **)&current->next
+      ));
    }
 
    return current->next;
