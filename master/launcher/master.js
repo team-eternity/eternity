@@ -618,10 +618,10 @@ function addServer(index, server) {
     $('<tr id=' + row_id + ' onclick="rowSelected(' + id_str + ')">' +
           '<td class="link_cell">' + link + '</td>' +
           '<td class="players_cell">' +
-           state.connected_clients + ' / ' + config.server.max_player_clients +
+               state.connected_clients + ' / ' + config.server.max_clients +
           '</td>' +
           '<td class="game_type_cell">' +
-              formatGameType(config.server.game_type) +
+               formatGameType(config.server.game_type) +
           '</td>' +
           '<td class="pwads_cell">' + pwads + '</td>' +
           '<td class="maps_cell">' + state.map + '</td>' +

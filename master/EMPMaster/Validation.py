@@ -48,12 +48,11 @@ def validate_server(server):
         ('game', isstr),
         ('game_type', isstr),
         ('hostname', isstr),
-        ('max_admin_clients', isint),
-        ('max_player_clients', isint),
+        ('max_clients', isint),
         ('port', isint),
         ('requires_player_password', isbool),
         ('requires_spectator_password', isbool),
-        ('spectator_time_limit', isint),
+        ('join_time_limit', isint),
         ('wad_repository', isstr)
     ]:
         if not validator(server[name]):
