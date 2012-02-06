@@ -117,6 +117,8 @@ const char *sv_administrator_password = NULL;
 const char *sv_access_list_filename = NULL;
 const char *sv_default_access_list_filename = NULL;
 
+static char *sv_user_agent = NULL;
+
 static void send_any_packet(int playernum, void *data, size_t data_size,
                             uint8_t flags, uint8_t channel_id)
 {
@@ -393,13 +395,16 @@ void SV_CleanUp(void)
 
 char* SV_GetUserAgent(void)
 {
-   qstring buffer;
-
-   buffer.Printf(16, "emp-server/%u.%u.%u-%u", version / 100,
-                                               version % 100,
-                                               (uint32_t)subversion,
-                                               cs_protocol_version);
-   return estrdup(buffer.constPtr());
+   if(!sv_user_agent)
+   {
+      qstring buffer;
+      buffer.Printf(16, "emp-server/%u.%u.%u-%u", version / 100,
+                                                  version % 100,
+                                                  (uint32_t)subversion,
+                                                  cs_protocol_version);
+      sv_user_agent = estrdup(buffer.constPtr());
+   }
+   return sv_user_agent;
 }
 
 ENetPeer* SV_GetPlayerPeer(int playernum)
