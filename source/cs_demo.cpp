@@ -60,22 +60,21 @@
 #include <io.h>
 #endif
 
+#include <json/json.h>
+#include <curl/curl.h>
+#include <archive.h>
+#include <archive_entry.h>
+
+#include "c_runcmd.h"
 #include "doomstat.h"
 #include "doomtype.h"
 #include "doomdef.h"
-#include "c_runcmd.h"
 #include "g_game.h"
 #include "i_system.h"
 #include "i_thread.h"
 #include "m_file.h"
 #include "m_misc.h"
 #include "version.h"
-#include "z_zone.h"
-
-#include <json/json.h>
-#include <curl/curl.h>
-#include <archive.h>
-#include <archive_entry.h>
 
 #include "cs_main.h"
 #include "cs_team.h"

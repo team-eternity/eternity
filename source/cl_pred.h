@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CL_PRED_H__
-#define __CL_PRED_H__
+#ifndef CL_PRED_H__
+#define CL_PRED_H__
 
 #include "cs_position.h"
 

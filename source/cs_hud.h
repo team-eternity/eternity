@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_HUD_H__
-#define __CS_HUD_H__
+#ifndef CS_HUD_H__
+#define CS_HUD_H__
 
 #include "d_event.h"
 #include "hu_stuff.h"

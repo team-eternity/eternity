@@ -24,12 +24,11 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_MASTER_H__
-#define __CS_MASTER_H__
+#ifndef CS_MASTER_H__
+#define CS_MASTER_H__
 
 #include "doomtype.h"
 
-#include <json/json-forwards.h>
 #include <curl/curl.h>
 
 enum

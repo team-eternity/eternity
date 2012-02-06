@@ -24,6 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
+// [CG] Required for JSON parsing routines.
 #include <string>
 #include <vector>
 
@@ -42,6 +43,9 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <json/json.h>
+#include <curl/curl.h>
 
 #include "c_io.h"
 #include "c_net.h"
@@ -74,9 +78,6 @@
 #include "cl_main.h"
 #include "sv_bans.h"
 #include "sv_main.h"
-
-#include <json/json.h>
-#include <curl/curl.h>
 
 // [CG] Zarg huge defines.
 
@@ -263,7 +264,7 @@ static void CS_checkSectionHasOption(Json::Value& section,
    }
 }
 
-void CS_ValidateOptions(Json::Value &options)
+static void CS_validateOptions(Json::Value &options)
 {
    if(MAX_CLIENTS < MAXPLAYERS)
    {
@@ -340,7 +341,7 @@ void CL_LoadConfig(void)
    CS_ApplyConfigSettings();
 }
 
-void SV_HandleMastersSection(Json::Value &masters)
+void SV_HandleMastersSection()
 {
    cs_master_t *master;
    unsigned int i;
@@ -349,6 +350,7 @@ void SV_HandleMastersSection(Json::Value &masters)
    std::vector<std::string> member_names;
    std::vector<std::string>::iterator it;
    qstring port_str;
+   Json::Value& masters = cs_json["masters"];
 
    master_servers =
       ecalloc(cs_master_t *, masters.size(), sizeof(cs_master_t));
@@ -451,7 +453,7 @@ void SV_LoadConfig(void)
 
    // [CG] Load master advertising information.
    if(!cs_json["masters"].empty())
-      SV_HandleMastersSection(cs_json["masters"]);
+      SV_HandleMastersSection();
 
    sv_spectator_password = NULL;
    sv_player_password = NULL;
@@ -562,10 +564,11 @@ void SV_LoadConfig(void)
    }
 }
 
-void CS_HandleResourcesSection(Json::Value &resources)
+void CS_HandleResourcesSection()
 {
    unsigned int i, j;
    const char *resource_name;
+   Json::Value& resources = cs_json["resources"];
 
    // [CG] Check for the IWAD first.
    for(i = 0; i < resources.size(); i++)
@@ -676,7 +679,7 @@ void CS_HandleResourcesSection(Json::Value &resources)
 
                for(j = 0; j < cs_json["resources"][i]["alternates"].size(); j++)
                {
-                  Json::Value alt = cs_json["resources"][i]["alternates"][j];
+                  Json::Value& alt = cs_json["resources"][i]["alternates"][j];
                   if(CS_AddWAD(alt.asCString()))
                      break;
                }
@@ -697,10 +700,11 @@ void CS_HandleResourcesSection(Json::Value &resources)
    }
 }
 
-void CS_HandleServerSection(Json::Value &server)
+void CS_HandleServerSection()
 {
    unsigned long public_address = 0;
    char *public_address_string;
+   Json::Value& server = cs_json["server"];
 #ifdef WIN32
    unsigned int i = 0;
    char hostname[256];
@@ -915,12 +919,13 @@ void CS_HandleServerSection(Json::Value &server)
    }
 }
 
-void CS_HandleMapsSection(Json::Value &maps)
+void CS_HandleMapsSection()
 {
    cs_resource_t *resource;
    unsigned int i, j, wads_count, overrides_count;
    unsigned int *resource_indices;
    const char *name, *wad_name;
+   Json::Value& maps = cs_json["maps"];
 
    for(i = 0; i < maps.size(); i++)
    {
@@ -943,7 +948,7 @@ void CS_HandleMapsSection(Json::Value &maps)
 
          if(!maps[i]["overrides"].empty())
          {
-            CS_ValidateOptions(maps[i]["overrides"]);
+            CS_validateOptions(maps[i]["overrides"]);
             overrides_count = maps[i]["overrides"].size();
          }
 
@@ -1042,16 +1047,16 @@ void CS_LoadConfig(void)
    if(cs_json["maps"].empty())
       I_Error("Required config section 'maps' missing.\n");
 
-   CS_HandleServerSection(cs_json["server"]);
-   CS_HandleOptionsSection(cs_json["options"]);
+   CS_HandleServerSection();
+   CS_HandleOptionsSection();
 }
 
 void CS_LoadWADs(void)
 {
    printf("CS_LoadWADs: Loading WADs.\n");
    
-   CS_HandleResourcesSection(cs_json["resources"]);
-   CS_HandleMapsSection(cs_json["maps"]);
+   CS_HandleResourcesSection();
+   CS_HandleMapsSection();
 }
 
 void CS_ReloadDefaults(void)
@@ -1308,10 +1313,12 @@ void CS_ApplyConfigSettings(void)
       dog_jumping = false;
 }
 
-void CS_HandleOptionsSection(Json::Value &options)
+void CS_HandleOptionsSection()
 {
+   Json::Value& options = cs_json["options"];
+
    // [CG] Validate the integer/string options here.
-   CS_ValidateOptions(options);
+   CS_validateOptions(options);
 
    // [CG] Non-boolean options
    set_int(options, max_players, 16);
@@ -1436,7 +1443,7 @@ void CS_LoadMapOverrides(unsigned int index)
    Json::Value overrides;
    // [CG] To ensure that map overrides are only valid for the given map,
    //      restore the original values first.
-   CS_HandleOptionsSection(cs_json["options"]);
+   CS_HandleOptionsSection();
 
    CS_ReloadDefaults();
 

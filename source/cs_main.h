@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_MAIN_H__
-#define __CS_MAIN_H__
+#ifndef CS_MAIN_H__
+#define CS_MAIN_H__
 
 #include "d_player.h"
 #include "doomdata.h"

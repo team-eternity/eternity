@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_CMD_H__
-#define __CS_CMD_H__
+#ifndef CS_CMD_H__
+#define CS_CMD_H__
 
 #include "doomtype.h"
 #include "d_ticcmd.h"

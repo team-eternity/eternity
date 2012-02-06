@@ -97,6 +97,7 @@
 #include "xl_scripts.h"
 
 #include "cs_announcer.h"
+#include "cs_config.h"
 #include "cs_demo.h"
 #include "cs_hud.h"
 #include "cs_main.h"
@@ -4191,8 +4192,8 @@ static void D_DoomInit(void)
 
          if(CS_SERVER)
          {
-            CS_HandleResourcesSection(cs_json["resources"]);
-            CS_HandleMapsSection(cs_json["maps"]);
+            CS_HandleResourcesSection();
+            CS_HandleMapsSection();
          }
       }
 
@@ -4370,8 +4371,8 @@ void D_DoomMain(void)
       I_UpdateSound();
       I_SubmitSound();
       Z_FreeAlloca();
-      CS_HandleResourcesSection(cs_json["resources"]);
-      CS_HandleMapsSection(cs_json["maps"]);
+      CS_HandleResourcesSection();
+      CS_HandleMapsSection();
       CL_Connect();
    }
 

@@ -24,13 +24,12 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_CONFIG_H__
-#define __CS_CONFIG_H__
+#ifndef CS_CONFIG_H__
+#define CS_CONFIG_H__
+
+#include <json/json-forwards.h>
 
 #include "doomtype.h"
-
-#include <enet/enet.h>
-#include <json/json.h>
 
 #define DEFAULT_CONFIG_FILENAME "server.json"
 
@@ -136,11 +135,11 @@ void SV_LoadConfig(void);
 bool CS_AddIWAD(const char *resource_name);
 bool CS_AddWAD(const char *resource_name);
 bool CS_AddDeHackEdFile(const char *resource_name);
-void CS_HandleMastersSection(Json::Value &masters);
-void CS_HandleResourcesSection(Json::Value &resources);
-void CS_HandleServerSection(Json::Value &server);
-void CS_HandleOptionsSection(Json::Value &options);
-void CS_HandleMapsSection(Json::Value &maps);
+void CS_HandleMastersSection();
+void CS_HandleResourcesSection();
+void CS_HandleServerSection();
+void CS_HandleOptionsSection();
+void CS_HandleMapsSection();
 void CS_LoadConfig(void);
 void CL_LoadConfig(void);
 void CS_LoadWADs(void);

@@ -25,8 +25,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_DEMO_H__
-#define __CS_DEMO_H__
+#ifndef CS_DEMO_H__
+#define CS_DEMO_H__
 
 #include <time.h>
 

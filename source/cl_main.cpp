@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -29,9 +29,11 @@
 #include <sstream>
 #include <iostream>
 
-
 #include "z_zone.h"
+
 #include <sys/stat.h>
+
+#include <json/json.h>
 
 #include "acs_intr.h"
 #include "a_common.h"
@@ -93,8 +95,6 @@
 #include "cl_pred.h"
 #include "cl_spec.h"
 
-#include <json/json.h>
-
 char *cs_server_url = NULL;
 char *cs_server_password = NULL;
 char *cs_client_password_file = NULL;
@@ -148,7 +148,7 @@ void CL_RunAllWorldUpdates(void)
    unsigned int old_world_index = cl_current_world_index;
    unsigned int new_world_index = cl_latest_world_index - 2;
    unsigned int old_commands_sent = cl_commands_sent;
-   
+
    new_world_index -= cl_packet_buffer.capacity();
 
    while(cl_current_world_index < new_world_index)

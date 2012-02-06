@@ -27,6 +27,8 @@
 #ifndef CL_BUF_H__
 #define CL_BUF_H__
 
+#include <list>
+
 class NetPacket
 {
 public:

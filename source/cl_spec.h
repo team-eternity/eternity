@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CL_SPEC_H__
-#define __CL_SPEC_H__
+#ifndef CL_SPEC_H__
+#define CL_SPEC_H__
 
 #include "p_spec.h"
 

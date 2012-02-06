@@ -29,8 +29,8 @@
 //      implementation varies significantly from this one, it's still the same
 //      fundamental design.  Thanks :) .
 
-#ifndef __CS_CTF_H__
-#define __CS_CTF_H__
+#ifndef CS_CTF_H__
+#define CS_CTF_H__
 
 #include "doomtype.h"
 #include "doomstat.h"

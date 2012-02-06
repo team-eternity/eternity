@@ -24,6 +24,7 @@
 //
 //----------------------------------------------------------------------------
 
+// [CG] Needed for JSON parsing routines.
 #include <string>
 #include <vector>
 

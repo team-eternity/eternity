@@ -24,6 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
+#ifndef CL_CMD_H__
+#define CL_CMD_H__
 
 extern bool cl_predict_shots;
 extern bool default_cl_predict_shots;
@@ -36,4 +38,6 @@ extern unsigned int default_damage_screen_cap;
 extern bool cl_debug_unlagged;
 
 void CL_AddCommands(void);
+
+#endif
 

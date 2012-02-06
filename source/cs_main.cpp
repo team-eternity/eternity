@@ -24,13 +24,14 @@
 //
 //----------------------------------------------------------------------------
 
-#include <list>
+// [CG] Needed for JSON serialization routines.
 #include <string>
 #include <fstream>
-#include <sstream>
-#include <iostream>
 
 #include "z_zone.h"
+
+#include <json/json.h>
+
 #include "acs_intr.h"
 #include "am_map.h"
 #include "c_io.h"
@@ -317,25 +318,22 @@ void CS_SetDisplayPlayer(int playernum)
 
 char* CS_IPToString(uint32_t ip_address)
 {
-   std::stringstream address_stream;
+   qstring buffer;
 
-   address_stream << ((ip_address)       & 0xff) << '.'
-                  << ((ip_address >>  8) & 0xff) << '.'
-                  << ((ip_address >> 16) & 0xff) << '.'
-                  << ((ip_address >> 24) & 0xff);
-
-   return estrdup(address_stream.str().c_str());
+   buffer.Printf(16, "%u.%u.%u.%u", ((ip_address       ) & 0xff),
+                                    ((ip_address  >>  8) & 0xff),
+                                    ((ip_address  >> 16) & 0xff),
+                                    ((ip_address  >> 24) & 0xff));
+   return estrdup(buffer.constPtr());
 }
 
 char* CS_VersionString(void)
 {
-   std::stringstream version_stream;
+   qstring buffer;
 
-   version_stream << (version / 100) << '.'
-                  << (version % 100) << '.'
-                  << (subversion);
+   buffer.Printf(12, "%u.%u.%u", version / 100, version % 100, subversion);
 
-   return estrdup(version_stream.str().c_str());
+   return estrdup(buffer.constPtr());
 }
 
 char* CS_GetSHA1HashFile(char *path)

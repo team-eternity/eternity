@@ -24,9 +24,9 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <string.h>
-#include <sstream>
+#include "z_zone.h"
+
+#include <json/json.h>
 
 #include "acs_intr.h"
 #include "am_map.h"
@@ -393,15 +393,13 @@ void SV_CleanUp(void)
 
 char* SV_GetUserAgent(void)
 {
-   std::stringstream user_agent_stream;
+   qstring buffer;
 
-   user_agent_stream << "emp-server"           << "/"
-                     << (version / 100)        << "."
-                     << (version % 100)        << "."
-                     << ((uint32_t)subversion) << "-"
-                     << (cs_protocol_version);
-
-   return estrdup(user_agent_stream.str().c_str());
+   buffer.Printf(16, "emp-server/%u.%u.%u-%u", version / 100,
+                                               version % 100,
+                                               (uint32_t)subversion,
+                                               cs_protocol_version);
+   return estrdup(buffer.constPtr());
 }
 
 ENetPeer* SV_GetPlayerPeer(int playernum)

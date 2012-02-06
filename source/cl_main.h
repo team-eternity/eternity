@@ -24,15 +24,13 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_CLIENT_H__
-#define __CS_CLIENT_H__
+#ifndef CL_MAIN_H__
+#define CL_MAIN_H__
 
 #include "e_mod.h"
 #include "p_spec.h"
 
 #include "cs_main.h"
-
-#include <json/json.h>
 
 #define CL_MAX_BUFFER_SIZE MAX_POSITIONS
 
