@@ -60,6 +60,7 @@
 #include "dstrings.h"
 #include "e_edf.h"
 #include "e_fonts.h"
+#include "e_lib.h"
 #include "e_player.h"
 #include "f_finale.h"
 #include "f_wipe.h"
@@ -1218,71 +1219,15 @@ static int D_VerifyGamePath(const char *path)
 }
 
 //
-// D_CheckGamePathParam
+// D_CheckGamePath
 //
-// haleyjd 08/18/07: This function checks for the -game command-line parameter.
-// If it is set, then its value is saved and gamepathset is asserted.
+// Ensures the specified game is valid.
 //
-static void D_CheckGamePathParam()
+void D_CheckGamePath(const char *game)
 {
-   int p;
-
-   if((p = M_CheckParm("-game")) && p < myargc - 1)
-   {
-      int gameresult, ugameresult;
-      char *gamedir  = M_SafeFilePath(basepath, myargv[p + 1]);
-      char *ugamedir = M_SafeFilePath(userpath, myargv[p + 1]);
-      
-      gamepathparm = p + 1;
-
-      gameresult  = D_VerifyGamePath(gamedir);
-      ugameresult = D_VerifyGamePath(ugamedir);
-
-      if(gameresult == BASE_ISGOOD && ugameresult == BASE_ISGOOD)
-      {
-         E_ReplaceString(basegamepath, gamedir);
-         E_ReplaceString(usergamepath, ugamedir);
-         gamepathset = true;
-      }
-      else if(gameresult != BASE_ISGOOD)
-      {
-         switch(gameresult)
-         {
-         case BASE_NOTDIR:
-            I_Error("Game path %s is not a directory.\n", gamedir);
-            break;
-         case BASE_NOTEXIST:
-            I_Error("Game path %s does not exist.\n", gamedir);
-            break;
-         }
-      }
-      else
-      {
-         switch(ugameresult)
-         {
-         case BASE_NOTDIR:
-            I_Error("Game path %s is not a directory.\n", ugamedir);
-            break;
-         case BASE_NOTEXIST:
-            I_Error("Game path %s does not exist.\n", ugamedir);
-            break;
-         }
-      }
-   }
-}
-
-//
-// D_SetGamePath
-//
-// haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
-// been determined by the IWAD in use.
-//
-static void D_SetGamePath()
-{
-   const char *mstr = GameModeInfo->missionInfo->gamePathName;
-   char *gamedir    = M_SafeFilePath(basepath, mstr);
-   char *ugamedir   = M_SafeFilePath(userpath, mstr);
    int gameresult, ugameresult;
+   char *gamedir  = M_SafeFilePath(basepath, game);
+   char *ugamedir = M_SafeFilePath(userpath, game);
 
    gameresult  = D_VerifyGamePath(gamedir);
    ugameresult = D_VerifyGamePath(ugamedir);
@@ -1291,6 +1236,12 @@ static void D_SetGamePath()
    {
       E_ReplaceString(basegamepath, gamedir);
       E_ReplaceString(usergamepath, ugamedir);
+
+      if(gamename)
+         efree(gamename);
+      gamename = estrdup(game);
+
+      gamepathset = true;
    }
    else if(gameresult != BASE_ISGOOD)
    {
@@ -1316,6 +1267,34 @@ static void D_SetGamePath()
          break;
       }
    }
+}
+
+//
+// D_CheckGamePathParam
+//
+// haleyjd 08/18/07: This function checks for the -game command-line parameter.
+// If it is set, then its value is saved and gamepathset is asserted.
+//
+static void D_CheckGamePathParam()
+{
+   int p;
+
+   if((p = M_CheckParm("-game")) && p < myargc - 1)
+   {
+      gamepathparm = p + 1;
+      D_CheckGamePath(myargv[gamepathparm]);
+   }
+}
+
+//
+// D_SetGamePath
+//
+// haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
+// been determined by the IWAD in use.
+//
+static void D_SetGamePath()
+{
+   D_CheckGamePath(GameModeInfo->missionInfo->gamePathName);
 }
 
 //

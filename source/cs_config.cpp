@@ -78,8 +78,6 @@
 #include <json/json.h>
 #include <curl/curl.h>
 
-void D_CheckGamePath(char *game);
-
 // [CG] Zarg huge defines.
 
 #define set_int(options, option_name, default_value)\

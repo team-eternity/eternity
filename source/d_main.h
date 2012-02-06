@@ -35,6 +35,7 @@
 extern skill_t startskill;
 extern char *startlevel;
 
+void D_CheckGamePath(const char *game);
 void D_ListWads(void);
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle);
