@@ -1189,14 +1189,14 @@ void G_LoadDefaults(void)
    DWFILE dwfile, *file = &dwfile;
    InputAction *action = NULL;
 
-   len = M_StringAlloca(&temp, 1, 18, basegamepath);
+   len = M_StringAlloca(&temp, 1, 18, usergamepath);
 
    // haleyjd 11/23/06: use basegamepath
    // haleyjd 08/29/09: allow use_doom_config override
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
-      psnprintf(temp, len, "%s/doom/keys.csc", basepath);
+      psnprintf(temp, len, "%s/doom/keys.csc", userpath);
    else
-      psnprintf(temp, len, "%s/keys.csc", basegamepath);
+      psnprintf(temp, len, "%s/keys.csc", usergamepath);
 
    cfg_file = estrdup(temp);
 

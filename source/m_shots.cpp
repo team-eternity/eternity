@@ -597,10 +597,10 @@ void M_ScreenShot(void)
    
    errno = 0;
 
-   len = M_StringAlloca(&path, 1, 6, basepath);
+   len = M_StringAlloca(&path, 1, 6, userpath);
 
-   // haleyjd 11/23/06: use basepath/shots
-   psnprintf(path, len, "%s/shots", basepath);
+   // haleyjd 11/23/06: use userpath/shots
+   psnprintf(path, len, "%s/shots", userpath);
    
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even

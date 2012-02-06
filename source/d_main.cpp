@@ -152,8 +152,11 @@ char    *basedefault  = NULL;     // default file
 char    *baseiwad     = NULL;     // jff 3/23/98: iwad directory
 char    *basesavegame = NULL;     // killough 2/16/98: savegame directory
 
-char    *basepath     = NULL;     // haleyjd 11/23/06: path of "base" directory
-char    *basegamepath = NULL;     // haleyjd 11/23/06: path of game directory
+char    *basepath = NULL;         // haleyjd 11/23/06: path of "base" directory
+char    *basegamepath = NULL;     // haleyjd 11/23/06: path of base/game directory
+
+char    *userpath = NULL;         // haleyjd 02/05/12: path of "user" directory
+char    *usergamepath = NULL;     // haleyjd 02/05/12: path of user/game directory
 
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
@@ -1034,6 +1037,153 @@ static void D_SetBasePath()
    printf("Base path set %s.\n", s);
 }
 
+//
+// D_CheckUserPath
+//
+// Checks a provided path to see that it both exists and that it is a directory
+// and not a plain file.
+//
+static int D_CheckUserPath(const char *pPath)
+{
+   int ret = -1;
+   struct stat sbuf;
+   qstring str;
+   const char *path;
+
+   str = pPath;
+   
+   // Rub out any ending slashes; stat does not like them.
+   str.rstrip('\\');
+   str.rstrip('/');
+
+   path = str.constPtr();
+
+   if(!stat(path, &sbuf)) // check for existence
+   {
+      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      {
+         DIR *dir;
+         int score = 0;
+         
+         if((dir = opendir(path)))
+         {
+            // directory should contain at least a /doom and /shots folder
+            dirent *ent;
+            while((ent = readdir(dir)))
+            {
+               if(!strcasecmp(ent->d_name, "doom"))
+                  ++score;
+               else if(!strcasecmp(ent->d_name, "shots"))
+                  ++score;
+            }
+            closedir(dir);
+
+            if(score >= 2)
+               ret = BASE_ISGOOD;    // Got it.
+            else
+               ret = BASE_NOTEEBASE; // Doesn't look like EE's user folder.
+         }
+         else
+            ret = BASE_CANTOPEN; // opendir failed
+      }
+      else
+         ret = BASE_NOTDIR; // S_ISDIR failed
+   }
+   else
+      ret = BASE_NOTEXIST; // stat failed
+   
+   return ret;
+}
+
+
+//
+// D_SetUserPath
+//
+// haleyjd 11/23/06: Sets the path to the "user" folder, where Eternity stores
+// all of its data.
+//
+static void D_SetUserPath()
+{
+   int p, res = BASE_NOTEXIST, source = BASE_NUMBASE;
+   const char *s;
+   char *userdir = NULL;
+
+   // Priority:
+   // 1. Command-line argument "-user"
+   // 2. Environment variable "ETERNITYUSER"
+   // 3. /user under working directory
+   // 4. /user under DoomExeDir
+
+   // check command-line
+   if((p = M_CheckParm("-user")) && p < myargc - 1)
+   {
+      userdir = D_ExpandTilde(myargv[p + 1]);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_CMDLINE;
+   }
+
+   // check environment
+   if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
+   {
+      userdir = D_ExpandTilde(s);
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_ENVIRON;
+   }
+
+   // check working dir
+   if(res != BASE_ISGOOD)
+   {
+      userdir = Z_Strdupa("./user");
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_WORKING;
+   }
+
+   // check exe dir
+   if(res != BASE_ISGOOD)
+   {
+      const char *exedir = D_DoomExeDir();
+
+      size_t len = M_StringAlloca(&userdir, 1, 6, exedir);
+
+      psnprintf(userdir, len, "%s/user", D_DoomExeDir());
+
+      if((res = D_CheckUserPath(userdir)) == BASE_ISGOOD)
+         source = BASE_EXEDIR;
+   }
+
+   // last straw: use base path - may not work as it is not guaranteed to be a
+   // writable location
+   if(res != BASE_ISGOOD)
+      userdir = basepath;
+
+   userpath = estrdup(userdir);
+   M_NormalizeSlashes(userpath);
+
+   switch(source)
+   {
+   case BASE_CMDLINE:
+      s = "by command line";
+      break;
+   case BASE_ENVIRON:
+      s = "by environment";
+      break;
+   case BASE_WORKING:
+      s = "to working directory";
+      break;
+   case BASE_EXEDIR:
+      s = "to executable directory";
+      break;
+   default:
+      s = "to base directory (warning: writes may fail!)"; // ???
+      break;
+   }
+
+   printf("User path set %s.\n", s);
+}
+
 // haleyjd 8/18/07: if true, the game path has been set
 bool gamepathset;
 
@@ -1045,33 +1195,26 @@ static int gamepathparm;
 static char *gamename = NULL;
 
 //
-// D_CheckGamePath
+// D_VerifyGamePath
 //
-// [CG] Ensures the specified game is valid.
+// haleyjd 02/05/12: Verifies one of the two gamepaths (under /base and /user)
 //
-void D_CheckGamePath(char *game)
+static int D_VerifyGamePath(const char *path)
 {
+   int ret;
    struct stat sbuf;
-   char *gamedir = NULL;
 
-   gamename = estrdup(game);
-   gamedir = M_SafeFilePath(basepath, gamename);
-
-   if(!stat(gamedir, &sbuf)) // check for existence
+   if(!stat(path, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
-      {
-         if(basegamepath != NULL)
-            efree(basegamepath);
-
-         basegamepath = estrdup(gamedir);
-         gamepathset = true;
-      }
+         ret = BASE_ISGOOD;
       else
-         I_Error("Game path %s is not a directory.\n", gamedir);
+         ret = BASE_NOTDIR;
    }
    else
-      I_Error("Game path %s does not exist.\n", gamedir);
+      ret = BASE_NOTEXIST;
+
+   return ret;
 }
 
 //
@@ -1080,26 +1223,99 @@ void D_CheckGamePath(char *game)
 // haleyjd 08/18/07: This function checks for the -game command-line parameter.
 // If it is set, then its value is saved and gamepathset is asserted.
 //
-static void D_CheckGamePathParam(void)
+static void D_CheckGamePathParam()
 {
    int p;
 
    if((p = M_CheckParm("-game")) && p < myargc - 1)
    {
-      D_CheckGamePath(myargv[p + 1]);
-      gamepathset = true;
+      int gameresult, ugameresult;
+      char *gamedir  = M_SafeFilePath(basepath, myargv[p + 1]);
+      char *ugamedir = M_SafeFilePath(userpath, myargv[p + 1]);
+      
+      gamepathparm = p + 1;
+
+      gameresult  = D_VerifyGamePath(gamedir);
+      ugameresult = D_VerifyGamePath(ugamedir);
+
+      if(gameresult == BASE_ISGOOD && ugameresult == BASE_ISGOOD)
+      {
+         E_ReplaceString(basegamepath, gamedir);
+         E_ReplaceString(usergamepath, ugamedir);
+         gamepathset = true;
+      }
+      else if(gameresult != BASE_ISGOOD)
+      {
+         switch(gameresult)
+         {
+         case BASE_NOTDIR:
+            I_Error("Game path %s is not a directory.\n", gamedir);
+            break;
+         case BASE_NOTEXIST:
+            I_Error("Game path %s does not exist.\n", gamedir);
+            break;
+         }
+      }
+      else
+      {
+         switch(ugameresult)
+         {
+         case BASE_NOTDIR:
+            I_Error("Game path %s is not a directory.\n", ugamedir);
+            break;
+         case BASE_NOTEXIST:
+            I_Error("Game path %s does not exist.\n", ugamedir);
+            break;
+         }
+      }
    }
 }
 
 //
 // D_SetGamePath
 //
-// haleyjd 11/23/06: Sets the game path under the base path when the gamemode
-// has been determined by the iwad in use.
+// haleyjd 11/23/06: Sets the game path under the base path when the gamemode has
+// been determined by the IWAD in use.
 //
-static void D_SetGamePath(void)
+static void D_SetGamePath()
 {
-   D_CheckGamePath((char *)GameModeInfo->missionInfo->gamePathName);
+   const char *mstr = GameModeInfo->missionInfo->gamePathName;
+   char *gamedir    = M_SafeFilePath(basepath, mstr);
+   char *ugamedir   = M_SafeFilePath(userpath, mstr);
+   int gameresult, ugameresult;
+
+   gameresult  = D_VerifyGamePath(gamedir);
+   ugameresult = D_VerifyGamePath(ugamedir);
+
+   if(gameresult == BASE_ISGOOD && ugameresult == BASE_ISGOOD)
+   {
+      E_ReplaceString(basegamepath, gamedir);
+      E_ReplaceString(usergamepath, ugamedir);
+   }
+   else if(gameresult != BASE_ISGOOD)
+   {
+      switch(gameresult)
+      {
+      case BASE_NOTDIR:
+         I_Error("Game path %s is not a directory.\n", gamedir);
+         break;
+      case BASE_NOTEXIST:
+         I_Error("Game path %s does not exist.\n", gamedir);
+         break;
+      }
+   }
+   else
+   {
+      switch(ugameresult)
+      {
+      case BASE_NOTDIR:
+         I_Error("Game path %s is not a directory.\n", ugamedir);
+         break;
+      case BASE_NOTEXIST:
+         I_Error("Game path %s does not exist.\n", ugamedir);
+         break;
+      }
+   }
 }
 
 //
@@ -2435,7 +2651,7 @@ static void D_InitPaths(void)
    if(GameModeInfo->type == Game_DOOM && use_doom_config)
    {
       // hack for DOOM modes: optional use of /doom config
-      size_t len = strlen(basepath) + strlen("/doom") +
+      size_t len = strlen(userpath) + strlen("/doom") +
                    strlen(D_DoomExeName()) + 8;
       if(basedefault != NULL)
          efree(basedefault);
@@ -2443,18 +2659,18 @@ static void D_InitPaths(void)
       basedefault = emalloc(char *, len);
 
       psnprintf(basedefault, len, "%s/doom/%s.cfg",
-                basepath, D_DoomExeName());
+                userpath, D_DoomExeName());
    }
    else
    {
-      size_t len = strlen(basegamepath) + strlen(D_DoomExeName()) + 8;
+      size_t len = strlen(usergamepath) + strlen(D_DoomExeName()) + 8;
 
       if(basedefault != NULL)
          efree(basedefault);
 
       basedefault = emalloc(char *, len);
 
-      psnprintf(basedefault, len, "%s/%s.cfg", basegamepath, D_DoomExeName());
+      psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
    }
 
    // haleyjd 11/23/06: set basesavegame here, and use basegamepath
@@ -3246,9 +3462,9 @@ static gfs_t *D_LooseGFS(void)
 static void D_LoadSysConfig(void)
 {
    char *filename = NULL;
-   size_t len = M_StringAlloca(&filename, 2, 2, basepath, "system.cfg");
+   size_t len = M_StringAlloca(&filename, 2, 2, userpath, "system.cfg");
 
-   psnprintf(filename, len, "%s/system.cfg", basepath);
+   psnprintf(filename, len, "%s/system.cfg", userpath);
 
    M_LoadSysConfig(filename);
 }
@@ -3322,8 +3538,9 @@ static void D_DoomInit(void)
 
    FindResponseFile(); // Append response file arguments to command-line
 
-   // haleyjd 08/18/07: set base path
+   // haleyjd 08/18/07: set base path and user path
    D_SetBasePath();
+   D_SetUserPath();
 
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();

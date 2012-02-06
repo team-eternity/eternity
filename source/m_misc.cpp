@@ -1568,9 +1568,9 @@ void M_SaveDefaultFile(defaultfile_t *df)
    if(!df->loaded || !df->fileName)
       return;
 
-   len = M_StringAlloca(&tmpfile, 2, 14, basepath, D_DoomExeName());
+   len = M_StringAlloca(&tmpfile, 2, 14, userpath, D_DoomExeName());
 
-   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", basepath, D_DoomExeName());
+   psnprintf(tmpfile, len, "%s/tmp%.5s.cfg", userpath, D_DoomExeName());
    M_NormalizeSlashes(tmpfile);
 
    errno = 0;
