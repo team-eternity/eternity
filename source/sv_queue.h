@@ -24,12 +24,12 @@
 //
 //----------------------------------------------------------------------------
 
-void         SV_UpdateQueueLevels();
-unsigned int SV_GetNewQueuePosition();
-void         SV_AssignQueuePosition(int playernum, unsigned int position);
-void         SV_AdvanceQueue(unsigned int queue_position);
-void         SV_PutPlayerInQueue(int playernum);
-void         SV_PutPlayerAtQueueEnd(int playernum);
-void         SV_RemovePlayerFromQueue(int playernum);
-void         SV_MarkQueuePlayersAFK();
+void SV_QueueSetClientRemoved(int clientnum);
+void SV_QueueSetClientWaiting(int clientnum, unsigned int position);
+void SV_QueueSetClientDoneWaiting(int clientnum);
+void SV_QueueSetClientCanJoin(int clientnum);
+void SV_QueueSetClientNotPlaying(int clientnum);
+void SV_QueueSetClientPlaying(int clientnum);
+void SV_PutClientInQueue(int clientnum);
+void SV_MarkQueueClientsAFK();
 

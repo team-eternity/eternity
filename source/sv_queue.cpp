@@ -30,171 +30,193 @@
 #include "sv_main.h"
 #include "sv_queue.h"
 
-void SV_UpdateQueueLevels()
+static void SV_updateQueueLevels()
 {
    unsigned int i;
    client_t *client;
    server_client_t *sc;
-   cs_queue_level_e new_queue_level;
-
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(!playeringame[i] || clients[i].queue_level == ql_none)
-         continue;
-
-      client = &clients[i];
-      sc = &server_clients[i];
-
-      if(client->queue_position == 0)
-      {
-         sc->finished_waiting_in_queue_tic = gametic;
-         new_queue_level = ql_can_join;
-      }
-      else
-         new_queue_level = ql_waiting;
-
-      if(client->queue_level != new_queue_level)
-      {
-         client->queue_level = new_queue_level;
-         SV_BroadcastPlayerScalarInfo(i, ci_queue_level);
-      }
-   }
-}
-
-unsigned int SV_GetNewQueuePosition()
-{
-   unsigned int i;
-   unsigned int playing_players = 0;
-   unsigned int max_queue_position = 0;
-   unsigned int tic_limit = sv_queue_wait_seconds * TICRATE;
-   client_t *client;
-
-   // [CG] First, ensure queue levels are as current as possible.
-   SV_UpdateQueueLevels();
-
-   // [CG] Next, count playing players.  If there is still room within
-   //      max_players then the player doesn't need to queue.
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(playeringame[i])
-      {
-         client = &clients[i];
-         server_client_t *sc = &server_clients[i];
-         unsigned int tics_waiting =
-            gametic - sc->finished_waiting_in_queue_tic;
-
-         if((client->queue_level == ql_playing) ||
-            (client->queue_level == ql_can_join && tics_waiting <= tic_limit))
-         {
-            if(client->queue_level == ql_playing)
-               printf("Client %s is playing.\n", players[i].name);
-            else
-            {
-               printf(
-                  "Client %s is under the limit (%d/%d).\n",
-                  players[i].name,
-                  tics_waiting,
-                  tic_limit
-               );
-            }
-            playing_players++;
-         }
-      }
-   }
-
-   printf(
-      "Playing players/Max players: %d/%d.\n",
-      playing_players,
-      cs_settings->max_players
-   );
-
-   if(playing_players < cs_settings->max_players)
-      return 0;
-
-   // [CG] At this point there are no more opening slots, so the player must
-   //      enter the queue.  Find the queue position at which they'll enter.
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      client = &clients[i];
-      if(playeringame[i] && client->queue_position >= max_queue_position)
-         max_queue_position = client->queue_position + 1;
-   }
-
-   return max_queue_position;
-}
-
-void SV_AssignQueuePosition(int playernum, unsigned int position)
-{
-   clients[playernum].queue_position = position;
-   SV_BroadcastPlayerScalarInfo(playernum, ci_queue_position);
-
-   if(clients[playernum].queue_level > 0)
-      clients[playernum].queue_level = ql_waiting;
-   else
-      clients[playernum].queue_level = ql_can_join;
-
-   SV_BroadcastPlayerScalarInfo(playernum, ci_queue_level);
-
-   printf("Assigned position %d to %d.\n", position, playernum);
-}
-
-void SV_AdvanceQueue(unsigned int clientnum)
-{
-   unsigned int i;
-
-   if(!playeringame[clientnum])
-      return;
-
-   if(clients[clientnum].queue_level == ql_none)
-      return;
-
-   for(i = 1; i < MAX_CLIENTS; i++)
-   {
-      if(!playeringame[i] || i == clientnum)
-         continue;
-
-      // [CG] Advance all clients behind this player in the queue.
-      if(clients[i].queue_position > clients[clientnum].queue_position)
-         SV_AssignQueuePosition(i, clients[i].queue_position - 1);
-   }
-}
-
-void SV_PutPlayerInQueue(int playernum)
-{
-   SV_AssignQueuePosition(playernum, SV_GetNewQueuePosition());
-   SV_UpdateQueueLevels();
-}
-
-void SV_PutPlayerAtQueueEnd(int playernum)
-{
-   SV_RemovePlayerFromQueue(playernum);
-   SV_PutPlayerInQueue(playernum);
-}
-
-void SV_RemovePlayerFromQueue(int playernum)
-{
-   SV_AdvanceQueue(playernum);
-   clients[playernum].queue_level = ql_none;
-   SV_BroadcastPlayerScalarInfo(playernum, ci_queue_level);
-   SV_UpdateQueueLevels();
-}
-
-void SV_MarkQueuePlayersAFK()
-{
-   unsigned int i, tics_waiting;
-   unsigned int tic_limit = sv_queue_wait_seconds * TICRATE;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
       if(!playeringame[i])
          continue;
 
-      if(clients[i].queue_position != ql_can_join)
+      client = &clients[i];
+      sc = &server_clients[i];
+
+      if(client->queue_level != ql_waiting)
+         continue;
+
+      if(client->queue_position != 0)
+         continue;
+
+      SV_QueueSetClientCanJoin(i);
+   }
+}
+
+static void SV_setQueueLevelAndPosition(int clientnum, cs_queue_level_e level,
+                                        unsigned int position)
+{
+   client_t *client = &clients[clientnum];
+   bool should_update = false;
+
+   if(client->queue_level != level)
+   {
+      clients[clientnum].queue_level = level;
+      SV_BroadcastPlayerScalarInfo(clientnum, ci_queue_level);
+      should_update = true;
+   }
+
+   if(client->queue_position != position)
+   {
+      clients[clientnum].queue_position = position;
+      SV_BroadcastPlayerScalarInfo(clientnum, ci_queue_position);
+      should_update = true;
+   }
+
+   if(should_update)
+      SV_updateQueueLevels();
+}
+
+static unsigned int SV_getNewQueuePosition()
+{
+   unsigned int i;
+   unsigned int playing_players = 0;
+   unsigned int max_queue_position = 0;
+   unsigned int tic_limit = sv_join_time_limit * TICRATE;
+   client_t *client;
+
+   // [CG] First, ensure queue levels are as current as possible.
+   SV_updateQueueLevels();
+
+   // [CG] Check to see if there is room inside max_players.
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(!playeringame[i])
+         continue;
+
+      client = &clients[i];
+
+      // [CG] Keep track of the maximum queue position to avoid looping twice
+      //      in the worst case.
+      if(client->queue_position >= max_queue_position)
+         max_queue_position = client->queue_position + 1;
+
+      if(client->queue_level < ql_can_join)
+         continue;
+
+      if(clients[i].afk)
+         continue;
+
+      if(client->queue_level == ql_playing)
+         playing_players++;
+      else if(server_clients[i].finished_waiting_in_queue_tic <= tic_limit)
+         playing_players++;
+   }
+
+   // [CG] If there was room inside max_players, then the player doesn't need
+   //      to wait.  Otherwise they enter at the back of the queue.
+   if(playing_players < cs_settings->max_players)
+      return 0;
+
+   return max_queue_position;
+}
+
+static void SV_advanceQueue(unsigned int clientnum)
+{
+   unsigned int i, queue_position;
+
+   if(clientnum)
+   {
+      if(!playeringame[clientnum])
+         return;
+
+      // [CG] Client wasn't in the queue, so there's no one waiting after them.
+      if(clients[clientnum].queue_level == ql_none)
+         return;
+   }
+
+   if(clientnum)
+      queue_position = clients[clientnum].queue_position;
+   else
+      queue_position = 0;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(!playeringame[i])
+         continue;
+      if(i == clientnum)
+         continue;
+      if(clients[i].queue_level != ql_waiting)
+         continue;
+      if(clients[i].queue_position <= queue_position)
+         continue;
+
+      if(!(--clients[i].queue_position))
+         SV_QueueSetClientDoneWaiting(i);
+      else
+         SV_BroadcastPlayerScalarInfo(i, ci_queue_position);
+   }
+}
+
+void SV_QueueSetClientRemoved(int clientnum)
+{
+   SV_advanceQueue(clientnum);
+   SV_setQueueLevelAndPosition(clientnum, ql_none, 0);
+}
+
+void SV_QueueSetClientWaiting(int clientnum, unsigned int position)
+{
+   SV_setQueueLevelAndPosition(clientnum, ql_waiting, position);
+}
+
+void SV_QueueSetClientDoneWaiting(int clientnum)
+{
+   SV_QueueSetClientCanJoin(clientnum);
+   server_clients[clientnum].finished_waiting_in_queue_tic = gametic;
+}
+
+void SV_QueueSetClientCanJoin(int clientnum)
+{
+   SV_setQueueLevelAndPosition(clientnum, ql_can_join, 0);
+}
+
+void SV_QueueSetClientNotPlaying(int clientnum)
+{
+   SV_QueueSetClientDoneWaiting(clientnum);
+   SV_advanceQueue(0);
+}
+
+void SV_QueueSetClientPlaying(int clientnum)
+{
+   unsigned int new_wait = gametic - ((sv_join_time_limit * TICRATE) + 1);
+
+   SV_setQueueLevelAndPosition(clientnum, ql_playing, 0);
+   server_clients[clientnum].finished_waiting_in_queue_tic = new_wait;
+}
+
+void SV_PutClientInQueue(int clientnum)
+{
+   SV_QueueSetClientWaiting(clientnum, SV_getNewQueuePosition());
+   SV_updateQueueLevels();
+}
+
+void SV_MarkQueueClientsAFK()
+{
+   unsigned int i, tics_waiting;
+   unsigned int tic_limit = sv_join_time_limit * TICRATE;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(!playeringame[i])
          continue;
 
       tics_waiting = gametic - server_clients[i].finished_waiting_in_queue_tic;
 
-      if((tics_waiting > tic_limit) && clients[i].afk)
+      if(clients[i].queue_level != ql_can_join)
+         continue;
+
+      if((tics_waiting > tic_limit) && (!clients[i].afk))
       {
          clients[i].afk = true;
          SV_BroadcastPlayerScalarInfo(i, ci_afk);

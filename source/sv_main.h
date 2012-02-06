@@ -46,7 +46,7 @@ extern bool sv_should_send_new_map;
 extern server_client_t server_clients[MAXPLAYERS];
 extern int sv_randomize_maps;
 extern bool sv_buffer_commands;
-extern unsigned int sv_queue_wait_seconds;
+extern unsigned int sv_join_time_limit;
 extern const char *sv_spectator_password;
 extern const char *sv_player_password;
 extern const char *sv_moderator_password;
@@ -95,6 +95,7 @@ void SV_ProcessPlayerCommand(int playernum);
 void SV_BroadcastUpdatedActorPositionsAndMiscState(void);
 
 // [CG] Misc. functions.
+bool SV_RoomInGame(unsigned int clientnum);
 void SV_AddClient(int playernum);
 void SV_AddNewClients(void);
 void SV_SetPlayerTeam(int playernum, teamcolor_t team);

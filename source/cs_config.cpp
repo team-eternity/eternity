@@ -864,11 +864,11 @@ void CS_HandleServerSection(Json::Value &server)
    }
    DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
 
-   sv_queue_wait_seconds = 5;
-   if(!server["seconds_to_join_game"].empty())
+   sv_join_time_limit = 5;
+   if(!server["join_time_limit"].empty())
    {
-      check_int_option_range(server, seconds_to_join_game, 0, 30)
-      sv_queue_wait_seconds = server["seconds_to_join_game"].asInt();
+      check_int_option_range(server, join_time_limit, 0, 30)
+      sv_join_time_limit = server["join_time_limit"].asInt();
    }
 
    sv_buffer_commands = false;

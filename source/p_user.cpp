@@ -399,12 +399,12 @@ void P_DeathThink(player_t *player)
          if(death_time_expired_action == DEATH_LIMIT_SPECTATE)
          {
             client->spectating = true;
-            player->frags[playernum]++;
-            SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
-            HU_FragsUpdate();
+            player->frags[playernum]++; // [CG] Costs a frag.
             client->afk = true;
+            HU_FragsUpdate();
+            SV_QueueSetClientNotPlaying(playernum);
+            SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
             SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
-            SV_RemovePlayerFromQueue(playernum);
             SV_BroadcastMessage(
                "%s was forced to leave the game.\n", player->name
             );

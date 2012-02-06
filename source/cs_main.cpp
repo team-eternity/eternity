@@ -802,16 +802,16 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          return;
       }
 
-      // [CG] In a team game, you can't switch to "no team at all", so default
-      //      to the red team here.
-      if(CS_SERVER && message->int_value == team_color_none)
-         message->int_value = team_color_red;
-
       // [CG] If the player is holding a flag, they must drop it.
       CS_DropFlag(playernum);
 
       client->team = message->int_value;
+
       CS_InitAnnouncer();
+
+      if(CS_SERVER)
+         SV_QueueSetClientNotPlaying(playernum);
+
       if(client->queue_level == ql_none)
       {
          if(playernum == consoleplayer)
@@ -824,7 +824,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          else
          {
             doom_printf(
-               "%s is now waiting on the %s team.",
+               "%s is now watching on the %s team.",
                player->name,
                team_color_names[client->team]
             );
@@ -879,7 +879,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       if(!message->boolean_value)
       {
          // [CG] The case where the player is attempting to join the game is
-         //      handled in P_RunPLayerCommand serverside and
+         //      handled in P_RunPlayerCommand serverside and
          //      CL_HandlePlayerSpawned clientside.  Receiving a false update
          //      for ci_spectating means the sending client is bugged somehow.
          if(CS_SERVER)
@@ -900,9 +900,9 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       {
          client->spectating = true;
          player->frags[playernum]++; // [CG] Spectating costs a frag.
-         SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
          HU_FragsUpdate();
-         SV_RemovePlayerFromQueue(playernum);
+         SV_BroadcastPlayerArrayInfo(playernum, ci_frags, playernum);
+         SV_QueueSetClientNotPlaying(playernum);
          respawn_player = true;
       }
       else
@@ -992,7 +992,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          client->queue_level = message->int_value;
          if(playernum == consoleplayer)
             CS_UpdateQueueMessage();
-         doom_printf("Got new queue level %d.\n", message->int_value);
       }
    }
    else if(message->info_type == ci_queue_position)
@@ -1002,7 +1001,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          client->queue_position = message->int_value;
          if(playernum == consoleplayer)
             CS_UpdateQueueMessage();
-         doom_printf("Got new queue position %d.\n", message->int_value);
       }
    }
    else if(message->info_type == ci_wsop)
@@ -1383,6 +1381,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
       for(i = 0; i < NUMCARDS; i++)
          player->cards[i] = true;
    }
+
    if(clientside && playernum == consoleplayer)
       ST_Start();
 

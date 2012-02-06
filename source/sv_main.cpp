@@ -108,7 +108,7 @@ bool sv_should_send_new_map = false;
 server_client_t server_clients[MAXPLAYERS];
 int sv_randomize_maps = false;
 bool sv_buffer_commands = false;
-unsigned int sv_queue_wait_seconds = 0;
+unsigned int sv_join_time_limit = 0;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -564,6 +564,37 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
    return spawn_point;
 }
 
+bool SV_RoomInGame(unsigned int clientnum)
+{
+   unsigned int i;
+   unsigned int playing_players = 0;
+   unsigned int tic_limit = sv_join_time_limit * TICRATE;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(!playeringame[i])
+         continue;
+
+      if(i == clientnum)
+         continue;
+
+      if(clients[i].queue_level < ql_can_join)
+         continue;
+
+      if(clients[i].afk)
+         continue;
+
+      if(clients[i].queue_level == ql_playing)
+         playing_players++;
+      else if(server_clients[i].finished_waiting_in_queue_tic <= tic_limit)
+         playing_players++;
+   }
+
+   if(playing_players < cs_settings->max_players)
+      return true;
+
+   return false;
+}
 
 // [CG] Both versions of SV_ConsoleTicker are from Odamex, licensed under the
 //      GPL.
@@ -899,6 +930,9 @@ void SV_SpawnPlayer(int playernum, bool as_spectator)
    Mobj *fog;
    mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(playernum, as_spectator);
 
+   if((!as_spectator) && (clients[playernum].queue_level != ql_playing))
+      SV_QueueSetClientPlaying(playernum);
+
    SV_BroadcastPlayerSpawned(spawn_point, playernum);
 
    // [CG] Only create spawn fog for non-spectators.
@@ -937,7 +971,7 @@ void SV_SendCurrentState(int playernum)
    size_t message_size;
 
    printf(
-      "SV_AddClient (%3u): Adding player %d.\n", sv_world_index, playernum
+      "SV_AddClient (%u): Adding player %d.\n", sv_world_index, playernum
    );
 
    clients[playernum].join_tic = gametic;
@@ -1003,7 +1037,7 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
    player_t *player = &players[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
 
-   SV_RemovePlayerFromQueue(playernum);
+   SV_QueueSetClientRemoved(playernum);
 
    if(reason > dr_max_reasons)
       I_Error("Invalid disconnection reason index %d.\n", reason);
@@ -1420,6 +1454,12 @@ bool SV_HandleJoinRequest(int playernum)
    player_t *player = &players[playernum];
    unsigned int team_player_count;
 
+   if(client->afk)
+   {
+      client->afk = false;
+      SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
+   }
+
    if(server_client->auth_level < cs_auth_player)
    {
       // [CG] Client has insufficient authorization.
@@ -1430,28 +1470,19 @@ bool SV_HandleJoinRequest(int playernum)
    // [CG] If the client isn't yet in the queue, put them there (assign them a 
    //      queue position and the attendant queue level).
    if(client->queue_level == ql_none)
-      SV_PutPlayerInQueue(playernum);
+      SV_PutClientInQueue(playernum);
 
    // [CG] If the client is still in line, they can't join the game yet.
-   if(client->queue_level == ql_waiting)
+   if(client->queue_level == ql_waiting || !SV_RoomInGame(playernum))
    {
       SV_SendHUDMessage(playernum, "No open player slots.");
       return false;
    }
 
-   printf(
-      "SV_HandleJoinRequest: Client %d queue level/position: %u/%u.\n",
-      playernum,
-      client->queue_level,
-      client->queue_position
-   );
-
    // [CG] If the client has gone through the queue (or there wasn't anyone
    //      else in line), then let them join the game.
    if(!CS_TEAMS_ENABLED)
    {
-      client->afk = false;
-      SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
       SV_BroadcastMessage("%s has entered the game!", player->name);
       return true;
    }
@@ -1474,9 +1505,6 @@ bool SV_HandleJoinRequest(int playernum)
       SV_SendHUDMessage(playernum, "Team is full.");
       return false;
    }
-
-   client->afk = false;
-   SV_BroadcastPlayerScalarInfo(playernum, ci_afk);
 
    // [CG] Joining the game on this team is a go.
    SV_BroadcastMessage(
@@ -2720,8 +2748,7 @@ void SV_TryRunTics(void)
          //      states haven't changed.  If this becomes ridiculous, saving
          //      and checking their state is simple enough.
          SV_BroadcastMapSpecialStatuses();
-         SV_UpdateQueueLevels();
-         SV_MarkQueuePlayersAFK();
+         SV_MarkQueueClientsAFK();
          // [CG] Now that the game loop has finished, servers can address
          //      new clients and map changes.
          SV_HandleClientRequests();
