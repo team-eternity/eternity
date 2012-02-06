@@ -227,9 +227,9 @@ void R_InitTranMap(int progress)
 
       // haleyjd 11/23/06: use basegamepath
       // haleyjd 12/06/06: use Z_Alloca for path length limit removal
-      fnamesize = M_StringAlloca(&fname, 1, 12, basegamepath);
+      fnamesize = M_StringAlloca(&fname, 1, 12, usergamepath);
 
-      psnprintf(fname, fnamesize, "%s/tranmap.dat", basegamepath);
+      psnprintf(fname, fnamesize, "%s/tranmap.dat", usergamepath);
       
       cachefp = fopen(fname, "r+b");
 

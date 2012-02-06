@@ -279,7 +279,7 @@ static defaultfile_t sysdeffile =
 //
 void M_LoadSysConfig(const char *filename)
 {
-   startupmsg("M_LoadSysConfig", "Loading base/system.cfg");
+   startupmsg("M_LoadSysConfig", "Loading system.cfg");
 
    sysdeffile.fileName = estrdup(filename);
 

@@ -308,7 +308,9 @@ extern int maxammo[];
 // File handling stuff.
 extern  char   *basedefault;
 extern  char   *basepath;
+extern  char   *userpath;
 extern  char   *basegamepath;
+extern  char   *usergamepath;
 
 // if true, load all graphics at level load
 extern  bool precache;
