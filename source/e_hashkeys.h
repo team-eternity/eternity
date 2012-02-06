@@ -43,10 +43,14 @@ unsigned int D_HashTableKeyCase(const char *str);
 // must adhere:
 // * They should expose the type of their basic literal key field in a 
 //   public typedef called basic_type.
-// * They should support an operator = accepting the same type for assignment
-//   purposes.
-// * They should define a hashCode method returning an unsigned int.
-// * They should be comparable via defining operators == and !=.
+// * They should expose the type of a secondary type that is comparable with
+//   the basic key type for use as the function parameter to EHashTable's
+//   objectForKey and chainForKey methods. This can be the same as the basic
+//   type, or different.
+// * They should define a HashCode method returning an unsigned int.
+// * They should define a Compare method taking two basic_type parameters
+//   and returning boolean value true if there is a match, and false
+//   otherwise.
 //
 // Specializations are provided here for integers, C strings, and case-
 // insensitive C strings.
@@ -59,27 +63,17 @@ class EIntHashKey
 {
 public:
    typedef int basic_type;
+   typedef int param_type;
 
-   int hashKey;
-
-   EIntHashKey &operator = (int key) { hashKey = key; return *this; }
-   
-   unsigned int hashCode() const 
-   { 
-      return (unsigned int)hashKey;
-   }
-
-   bool operator == (const EIntHashKey &other) const
-   { 
-      return (hashKey == other.hashKey);
-   }
-   
-   bool operator != (const EIntHashKey &other) const
+   static unsigned int HashCode(int input)
    {
-      return (hashKey != other.hashKey);
+      return (unsigned int)input;
    }
 
-   operator int () const { return hashKey; }
+   static bool Compare(int first, int second)
+   {
+      return (first == second);
+   }
 };
 
 //
@@ -88,28 +82,18 @@ public:
 class EStringHashKey
 {
 public: 
-   typedef const char * basic_type;
+   typedef const char *basic_type;
+   typedef const char *param_type;
 
-   const char *hashKey;
-
-   EStringHashKey &operator = (const char *key) { hashKey = key; return *this; }
-   
-   unsigned int hashCode() const
+   static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKeyCase(hashKey);
-   }
-   
-   bool operator == (const EStringHashKey &other) const
-   {
-      return !strcmp(hashKey, other.hashKey);
-   }
-   
-   bool operator != (const EStringHashKey &other) const
-   {
-      return (strcmp(hashKey, other.hashKey) != 0);
+      return D_HashTableKeyCase(input);
    }
 
-   operator const char * () const { return hashKey; }
+   static bool Compare(const char *first, const char *second)
+   {
+      return !strcmp(first, second);
+   }
 };
 
 // 
@@ -118,28 +102,18 @@ public:
 class ENCStringHashKey
 {
 public:
-   typedef const char * basic_type;
+   typedef const char *basic_type;
+   typedef const char *param_type;
 
-   ENCStringHashKey &operator = (const char *key) { hashKey = key; return *this; }
-
-   const char *hashKey;
-   
-   unsigned int hashCode() const
+   static unsigned int HashCode(const char *input)
    {
-      return D_HashTableKey(hashKey);
-   }
-   
-   bool operator == (const ENCStringHashKey &other) const
-   {
-      return !strcasecmp(hashKey, other.hashKey);
-   }
-   
-   bool operator != (const ENCStringHashKey &other) const
-   {
-      return (strcasecmp(hashKey, other.hashKey) != 0);
+      return D_HashTableKey(input);
    }
 
-   operator const char * () const { return hashKey; }
+   static bool Compare(const char *first, const char *second)
+   {
+      return !strcasecmp(first, second);
+   }
 };
 
 #endif

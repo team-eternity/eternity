@@ -109,8 +109,8 @@ const char* M_GetFileSystemErrorMessage(void)
    sprintf(
       (char *)error_message,
       "error %d: %s\n",
-      fs_error_code,
-      error_message_buffer
+      (int)fs_error_code,
+      (char *)error_message_buffer
    );
    should_free = true;
    return (const char *)error_message;

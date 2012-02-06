@@ -67,7 +67,7 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 struct manageddir_t
 {
    DLListItem<manageddir_t> links; // links
-   EStringHashKey           name;  // name
+   char                    *name;  // name
 
    WadDirectory  waddir; // directory
    wadlevel_t   *levels; // enumerated levels
@@ -80,7 +80,7 @@ struct manageddir_t
 
 // hash table
 static EHashTable<manageddir_t, EStringHashKey, 
-                  &manageddir_t::name, &manageddir_t::links> w_dirhash;
+                  &manageddir_t::name, &manageddir_t::links> w_dirhash(31);
 
 //=============================================================================
 //
@@ -95,10 +95,6 @@ static EHashTable<manageddir_t, EStringHashKey,
 static manageddir_t *W_addManagedDir(const char *filename)
 {
    manageddir_t *newdir = NULL;
-
-   // initialize hash table if first time
-   if(!w_dirhash.isInitialized())
-      w_dirhash.Initialize(31);
 
    // make sure there isn't one by this name already
    if(w_dirhash.objectForKey(filename))
@@ -134,10 +130,10 @@ static void W_delManagedDir(manageddir_t *dir)
    w_dirhash.removeObject(dir);
 
    // free directory filename
-   if(dir->name.hashKey)
+   if(dir->name)
    {
-      efree(const_cast<char *>(dir->name.hashKey)); // FIXME: ugh.
-      dir->name.hashKey = NULL;
+      efree(dir->name); 
+      dir->name = NULL;
    }
 
    // free list of levels

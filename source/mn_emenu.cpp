@@ -238,7 +238,7 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
       return NULL;
 
    // add one to itemCount for the it_end terminator
-   items = ecalloc(menuitem_t *, itemCount + 1, sizeof(menuitem_t));
+   items = estructalloc(menuitem_t, itemCount + 1);
 
    for(i = 0; i < itemCount; ++i)
    {
@@ -254,15 +254,16 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
          items[i].type = it_info; // default to information only
 
       // set description
-      items[i].description = estrdup(cfg_getstr(itemSec, ITEM_MNITEM_TEXT));
+      items[i].dyndescription = cfg_getstrdup(itemSec, ITEM_MNITEM_TEXT);
+      items[i].description = items[i].dyndescription;
 
       // set command
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_CMD)))
-         items[i].data = estrdup(tempstr);
+         items[i].data = items[i].dyndata = estrdup(tempstr);
 
       // set patch
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_PATCH)))
-         items[i].patch = estrdup(tempstr);
+         items[i].patch = items[i].dynpatch = estrdup(tempstr);
 
       // set flags
       if((tempstr = cfg_getstr(itemSec, ITEM_MNITEM_FLAGS)))
@@ -290,13 +291,12 @@ static void MN_ClearDynamicMenu(menu_t *menu)
       
       while(item->type != it_end)
       {
-         // FIXME: stupid constness problems...
-         if(item->description)
-            efree(const_cast<char *>(item->description));
-         if(item->data)
-            efree(const_cast<char *>(item->data));
-         if(item->patch)
-            efree(const_cast<char *>(item->patch));
+         if(item->dyndescription)
+            efree(item->dyndescription);
+         if(item->dyndata)
+            efree(item->dyndata);
+         if(item->dynpatch)
+            efree(item->dynpatch);
 
          ++item;
       }

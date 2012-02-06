@@ -55,6 +55,7 @@
 int NullStateNum;
 
 // Frame section keywords
+#define ITEM_FRAME_DECORATE  "decorate"
 #define ITEM_FRAME_SPRITE    "sprite"
 #define ITEM_FRAME_SPRFRAME  "spriteframe"
 #define ITEM_FRAME_FULLBRT   "fullbright"
@@ -94,6 +95,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
 cfg_opt_t edf_frame_opts[] =
 {
+   CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
    CFG_STR(ITEM_FRAME_CMP, 0, CFGF_NONE),
    FRAME_FIELDS
 };
@@ -114,10 +116,12 @@ cfg_opt_t edf_fdelta_opts[] =
 #define NUMSTATECHAINS 2003
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> state_namehash;
+static EHashTable<state_t, ENCStringHashKey, 
+                  &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey, &state_t::dehnum, &state_t::numlinks> state_numhash;
+static EHashTable<state_t, EIntHashKey, 
+                  &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
 
 //
 // E_StateNumForDEHNum
@@ -351,13 +355,6 @@ void E_CollectStates(cfg_t *cfg)
    state_t *statestructs = NULL;
    static bool firsttime = true;
 
-   // initialize hash tables if needed
-   if(!state_namehash.isInitialized())
-   {
-      state_namehash.Initialize(NUMSTATECHAINS);
-      state_numhash.Initialize(NUMSTATECHAINS);
-   }
-
    // get number of states defined by the cfg
    numstates = cfg_size(cfg, EDF_SEC_FRAME);
 
@@ -427,13 +424,8 @@ void E_CollectStates(cfg_t *cfg)
          // this is a new state
          state_t *st = states[curnewstate++];
 
-         // check name for validity
-         if(strlen(name) >= sizeof(st->namebuf))
-            E_EDFLoggedErr(2, "E_CollectStates: bad frame name '%s'\n", name);
-
          // initialize name
-         strncpy(st->namebuf, name, sizeof(st->namebuf));
-         st->name = st->namebuf;
+         st->name = estrdup(name);
 
          // add to name hash
          state_namehash.addObject(st);
@@ -570,13 +562,13 @@ static void E_AssignMiscThing(int *target, int thingnum)
 {
    // 09/19/03: add check for no dehacked number
    // 03/22/06: auto-allocate dehacked numbers where possible
-   if(mobjinfo[thingnum].dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
-      *target = mobjinfo[thingnum].dehnum;
+   if(mobjinfo[thingnum]->dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
+      *target = mobjinfo[thingnum]->dehnum;
    else
    {
       E_EDFLoggedWarning(2, 
                          "Warning: failed to auto-allocate DeHackEd number "
-                         "for thing %s\n", mobjinfo[thingnum].name);
+                         "for thing %s\n", mobjinfo[thingnum]->name);
       *target = UnknownThingType;
    }
 }
@@ -679,7 +671,7 @@ static void E_ParseMiscField(const char *value, int *target)
       case PREFIX_THING:
          {
             int thingnum = E_ThingNumForName(strval);
-            if(thingnum == NUMMOBJTYPES)
+            if(thingnum == -1)
             {
                E_EDFLoggedWarning(2, "Warning: invalid thing '%s' in misc field\n",
                                   strval);
@@ -762,7 +754,7 @@ static void E_ParseMiscField(const char *value, int *target)
          edf_string_t *str;
          deh_bexptr *dp;
          
-         if((temp = E_ThingNumForName(value)) != NUMMOBJTYPES) // thingtype?
+         if((temp = E_ThingNumForName(value)) != -1)           // thingtype?
             E_AssignMiscThing(target, temp);
          else if((temp = E_StateNumForName(value)) >= 0)       // frame?
             E_AssignMiscState(target, temp);
@@ -1195,8 +1187,21 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
    // In definitions only, see if the cmp field is defined. If so,
    // we go into it with E_ProcessCmpState above, and ignore most
    // other fields in the frame block.
+   // 01/01/12:
+   // In definitions only, see if this state is reserved for definition
+   // in a DECORATE state block by a thingtype.
    if(def)
    {
+      int decoratestate = cfg_getflag(framesec, ITEM_FRAME_DECORATE);
+
+      if(decoratestate)
+      {
+         states[i]->decorate = true;
+         goto hitdecorate; // skip most processing
+      }
+      else
+         states[i]->decorate = false;
+
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {
          tempstr = cfg_getstr(framesec, ITEM_FRAME_CMP);
@@ -1250,31 +1255,8 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
       E_StateNextFrame(tempstr, i);
    }
 
-   // process particle event
-   if(IS_SET(ITEM_FRAME_PTCLEVENT))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
-
-      E_StatePtclEvt(tempstr, i);
-   }
-
    // 03/30/05: the following fields are now also allowed in cmp frames
 hitcmp:
-      
-   // misc field parsing (complicated)
-
-   if(IS_SET(ITEM_FRAME_MISC1))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
-      E_ParseMiscField(tempstr, &(states[i]->misc1));
-   }
-
-   if(IS_SET(ITEM_FRAME_MISC2))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
-      E_ParseMiscField(tempstr, &(states[i]->misc2));
-   }
-
    // args field parsing (even more complicated, but similar)
    // Note: deltas can only set the entire args list at once, not
    // just parts of it.
@@ -1290,8 +1272,33 @@ hitcmp:
          tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
          
          E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
-      }
    }
+   }
+
+   // 01/01/12: the following fields are allowed when processing a 
+   // DECORATE-reserved state
+hitdecorate:
+   // misc field parsing (complicated)
+
+   if(IS_SET(ITEM_FRAME_MISC1))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
+      E_ParseMiscField(tempstr, &(states[i]->misc1));
+   }
+
+   if(IS_SET(ITEM_FRAME_MISC2))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
+      E_ParseMiscField(tempstr, &(states[i]->misc2));
+   }
+
+   // process particle event
+   if(IS_SET(ITEM_FRAME_PTCLEVENT))
+   {
+      tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
+
+      E_StatePtclEvt(tempstr, i);
+      }
 }
 
 //

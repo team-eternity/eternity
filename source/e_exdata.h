@@ -95,7 +95,7 @@ typedef struct maplinedefext_s
 
 // ExtraData sector structure
 
-typedef struct ETerrain_s *eterrainptr;
+struct ETerrain;
 
 typedef struct mapsectorext_s
 {
@@ -124,8 +124,8 @@ typedef struct mapsectorext_s
    unsigned int f_alpha;
    unsigned int c_alpha;
 
-   eterrainptr floorterrain;
-   eterrainptr ceilingterrain;
+   ETerrain *floorterrain;
+   ETerrain *ceilingterrain;
 
    // internal fields (used by ExtraData only)
    bool hasflags;

@@ -52,7 +52,7 @@ extern cfg_opt_t edf_tdelta_opts[];
 // For EDF Only:
 
 #ifdef NEED_EDF_DEFINITIONS
-void E_CollectThings(cfg_t *tcfg);
+void E_CollectThings(cfg_t *cfg);
 void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
 void E_ProcessThings(cfg_t *cfg);
 void E_ProcessThingDeltas(cfg_t *cfg);

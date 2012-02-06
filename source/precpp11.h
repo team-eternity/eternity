@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
+// Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 James Haley
@@ -17,36 +17,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//--------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//  Patch format verification and load-time processing code
+//    Stuff that will only be needed until Eternity has converted up to the
+//    C++11 standard.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef V_PATCHFMT_H__
-#define V_PATCHFMT_H__
+#ifndef PRECPP11_H__
+#define PRECPP11_H__
 
-#include "w_wad.h"
-
-struct patch_t;
-
-class PatchLoader : public WadLumpLoader
+namespace eeprestd
 {
-private:
-   static patch_t *GetDefaultPatch(int tag);
-
-public:
-   // A global instance of PatchLoader for passing to WadDirectory methods
-   static PatchLoader patchFmt;
-
-   virtual bool verifyData(const void *data, size_t size) const;
-   virtual bool formatData(void *data, size_t size) const;
-   virtual int  getErrorMode() const;
-
-   static patch_t *CacheName(WadDirectory &dir, const char *name, int tag);
-   static patch_t *CacheNum(WadDirectory &dir, int lumpnum, int tag);
-};
+  //
+  // remove_pointer
+  //
+  // This series of partially-specialized templates allows the "pointerism" of
+  // template parameters to be discarded, retrieving the base type for access
+  // to static methods and members, amongst other possible uses.
+  //
+  // Originally defined by the Boost library and then absorbed into C++11 as
+  // std::remove_pointer in the <type_traits> header.
+  //
+  template<typename T> struct remove_pointer           { typedef T type; };
+  template<typename T> struct remove_pointer<T *>      { typedef T type; };
+  template<typename T> struct remove_pointer<T *const> { typedef T type; };
+}
 
 #endif
 

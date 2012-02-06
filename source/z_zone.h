@@ -71,13 +71,8 @@
 // haleyjd: C++ headers
 #include <new>
 
-#if 0
-// [CG] Add cstdlib for old GNU C++ standard library versions that pull in way
-//      more than they should.
-#ifdef __GNUC__
-#include <cstdlib>
-#endif
-#endif
+// haleyjd: Stuff that C++11 will make unneeded
+#include "precpp11.h"
 
 // haleyjd: portable replacement function headers
 #include "psnprntf.h"
@@ -141,22 +136,27 @@ void  Z_SysFree(void *p);
 #define Z_CheckHeap()      (Z_CheckHeap)(        __FILE__,__LINE__)
 #define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
 
-template<typename T> inline T ecalloc_impl(size_t n1, size_t n2, const char *file, int line)
-{
-   return static_cast<T>((Z_Calloc)(n1, n2, PU_STATIC, 0, file, line));
-}
+#define emalloc(type, n) \
+   static_cast<type>((Z_Calloc)(1, n, PU_STATIC, 0, __FILE__, __LINE__))
 
-template<typename T> inline T erealloc_impl(void *p, size_t size, const char *file, int line)
-{
-   return static_cast<T>((Z_Realloc)(p, size, PU_STATIC, 0, file, line));
-}
+#define ecalloc(type, n1, n2) \
+   static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
 
-#define emalloc(type, n)      ecalloc_impl<type>(1,  n,  __FILE__, __LINE__)
-#define ecalloc(type, n1, n2) ecalloc_impl<type>(n1, n2, __FILE__, __LINE__)
-#define erealloc(type, p, n)  erealloc_impl<type>(p, n,  __FILE__, __LINE__)
-#define estructalloc(type, n) ecalloc_impl<type *>(n, sizeof(type), __FILE__, __LINE__)
-#define estrdup(s)            (Z_Strdup) (s,    PU_STATIC, 0, __FILE__, __LINE__)
-#define efree(p)              (Z_Free)   (p,                  __FILE__, __LINE__)
+#define ecalloctag(type, n1, n2, tag) \
+   static_cast<type>((Z_Calloc)(n1, n2, tag, 0, __FILE__, __LINE__))
+
+#define erealloc(type, p, n) \
+   static_cast<type>((Z_Realloc)(p, n, PU_STATIC, 0, __FILE__, __LINE__))
+
+#define estructalloc(type, n) \
+   static_cast<type *>((Z_Calloc)(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
+
+#define estructalloctag(type, n, tag) \
+   static_cast<type *>((Z_Calloc)(n, sizeof(type), tag, 0, __FILE__, __LINE__))
+
+#define estrdup(s) (Z_Strdup)(s, PU_STATIC, 0, __FILE__, __LINE__)
+
+#define efree(p)   (Z_Free)(p, __FILE__, __LINE__)
 
 // Doom-style printf
 void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));

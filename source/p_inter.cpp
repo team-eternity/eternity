@@ -2024,13 +2024,13 @@ void P_Whistle(Mobj *actor, int mobjtype)
          {
             fog = P_SpawnMobj(prevx, prevy, 
                                    prevz + GameModeInfo->teleFogHeight,
-                                   GameModeInfo->teleFogType);
+                                   E_SafeThingType(GameModeInfo->teleFogType));
             if(CS_SERVER)
                SV_BroadcastActorSpawned(fog);
             S_StartSound(fog, GameModeInfo->teleSound);
 
             fog = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
-                              GameModeInfo->teleFogType);
+                           E_SafeThingType(GameModeInfo->teleFogType));
             if(CS_SERVER)
                SV_BroadcastActorSpawned(fog);
             S_StartSound(fog, GameModeInfo->teleSound);

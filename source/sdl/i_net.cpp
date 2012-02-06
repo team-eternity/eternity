@@ -193,6 +193,30 @@ enum
    TCF_LOOK        = 0x00000040
 };
 
+// DEBUG
+
+void writesendpacket(void *data, int len)
+{
+   static FILE *sendfile;
+
+   if(!sendfile)
+      sendfile = fopen("sendlog.bin", "wb");
+
+   fwrite(data, 1, len, sendfile);
+   fflush(sendfile);
+}
+
+void writegetpacket(void *data, int len)
+{
+   static FILE *getfile;
+
+   if(!getfile)
+      getfile = fopen("getlog.bin", "wb");
+
+   fwrite(data, 1, len, getfile);
+   fflush(getfile);
+}
+
 
 //
 // PacketSend
@@ -246,7 +270,7 @@ bool PacketSend(void)
       for(c = 0; c < GAME_OPTION_SIZE; ++c)
          *rover++ = netbuffer->d.data[c];
       
-      packetsize = GAME_OPTION_SIZE;
+      packetsize += GAME_OPTION_SIZE;
    }
 
    // Go back and write the checksum at the beginning
@@ -256,6 +280,9 @@ bool PacketSend(void)
    
    packet->len     = packetsize;
    packet->address = sendaddress[doomcom->remotenode];
+
+   // DEBUG
+   writesendpacket(packet->data, packet->len);
 
    if(!SDLNet_UDP_Send(udpsocket, -1, packet))
    {
@@ -271,6 +298,7 @@ bool PacketSend(void)
 //
 bool PacketGet(void)
 {
+   uint32_t checksum;
    int i, c, packets_read;
    byte *rover;
    
@@ -284,6 +312,8 @@ bool PacketGet(void)
       doomcom->remotenode = -1;
       return true;
    }
+
+   writegetpacket(packet->data, packet->len);
    
    for(i = 0; i < doomcom->numnodes; ++i)
    {
@@ -305,12 +335,13 @@ bool PacketGet(void)
    
    rover = (byte *)packet->data;
 
-   netbuffer->checksum = NetToHost32(rover);
+   checksum = NetToHost32(rover);
    
    // haleyjd: verify checksum first; if fails, don't even read the rest
-   if((netbuffer->checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
+   if((checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
       return false;
    
+   netbuffer->checksum = checksum;
    rover += 4;
    
    netbuffer->player         = *rover++;
@@ -436,6 +467,9 @@ void I_InitNetwork(void)
       netgame = false;
       return;      
    }
+
+   if(i + 2 >= myargc)
+      I_Error("I_InitNetwork: insufficient parameters to -net\n");
    
    netsend = PacketSend;
    netget  = PacketGet;

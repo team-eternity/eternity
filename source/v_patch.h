@@ -52,10 +52,12 @@ enum
    PSTYLE_TLTRANSLUC,
    PSTYLE_ADD,
    PSTYLE_TLADD,
+   PSTYLE_TLATEDLIT,
    PSTYLE_NUMSTYLES
 };
 
 void V_SetPatchColrng(byte *colrng);
+void V_SetPatchLight(byte *lighttable);
 void V_SetPatchTL(unsigned int *fg, unsigned int *bg);
 void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer);
 
@@ -70,19 +72,20 @@ void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);
 void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data);
 
 // SoM: In my continual effort to weed out multiple column drawers I discovered
-// the new patch system is derrived from the old screen sprite code. I've 
+// the new patch system is derived from the old screen sprite code. I've 
 // cleaned it up a bit.
-typedef struct cb_patch_column_s
+
+struct cb_patch_column_t  // It's cardboard now, bitches!
 {
    int x;
    int y1, y2;
 
-   fixed_t frac, step;
+   fixed_t frac; 
+   fixed_t step;
 
-   byte *source, *translation;
-
-   // SoM: Let's see if we can get rid of this...
-   //fixed_t maxfrac;
+   byte   *source;
+   byte   *translation;
+   byte   *light;        // haleyjd 01/22/12: lighting
 
    VBuffer *buffer;
 
@@ -91,11 +94,14 @@ typedef struct cb_patch_column_s
    // haleyjd: translucency lookups
    unsigned int *fg2rgb;
    unsigned int *bg2rgb;
+}; 
 
-} cb_patch_column_t; // It's cardboard now, bitches!
+// Conversion routines
 
 byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
+
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag);
 
 #endif
 

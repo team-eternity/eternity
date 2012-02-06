@@ -820,7 +820,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    if(mobjInfoIndex < 0 || mobjInfoIndex >= NUMMOBJTYPES)
       return;
 
-   mi = &mobjinfo[mobjInfoIndex];
+   mi = mobjinfo[mobjInfoIndex];
 
    // haleyjd 07/05/03: field resolution adjusted for EDF
 
@@ -1222,7 +1222,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {
-         states[indexnum]->action = states[value]->oldaction;;
+         states[indexnum]->action = states[value]->oldaction;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
                        states[value]->oldaction, value, indexnum);
          

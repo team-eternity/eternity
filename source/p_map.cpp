@@ -758,14 +758,9 @@ bool PIT_CheckLine(line_t *ld)
 //
 bool P_Touched(Mobj *thing)
 {
-   static int painType = -1, skullType;   
-
    // EDF FIXME: temporary fix?
-   if(painType == -1)
-   {
-      painType  = E_ThingNumForDEHNum(MT_PAIN);
-      skullType = E_ThingNumForDEHNum(MT_SKULL);
-   }
+   int painType  = E_ThingNumForDEHNum(MT_PAIN); 
+   int skullType = E_ThingNumForDEHNum(MT_SKULL);
 
    if(thing->flags & MF_TOUCHY &&                  // touchy object
       clip.thing->flags & MF_SOLID &&              // solid object touches it
@@ -878,15 +873,9 @@ static bool PIT_CheckThing(Mobj *thing) // killough 3/26/98: make static
    int damage;
 
    // EDF FIXME: haleyjd 07/13/03: these may be temporary fixes
-   static int bruiserType = -1;
-   static int knightType  = -1;
+   int bruiserType = E_ThingNumForDEHNum(MT_BRUISER); 
+   int knightType  = E_ThingNumForDEHNum(MT_KNIGHT); 
 
-   if(bruiserType == -1)
-   {
-      bruiserType = E_ThingNumForDEHNum(MT_BRUISER);
-      knightType  = E_ThingNumForDEHNum(MT_KNIGHT);
-   }
-   
    // killough 11/98: add touchy things
    if(!(thing->flags & (MF_SOLID|MF_SPECIAL|MF_SHOOTABLE|MF_TOUCHY)))
       return true;
@@ -2145,13 +2134,11 @@ static bool P_CheckRadiusAttack(Mobj *thing)
    // fired by Cyberdemons, in which case it won't hurt Cybers.   
    // haleyjd 09/21/09: do this only in old demos because it really
    // doesn't make sense with our newer features.
+   // EDF3-FIXME: restore... make more intelligent?
 
    if(demo_version < 335 && theBomb->bombspot->flags & MF_BOUNCES)
    {
-      static int cyberType = -1;
-      
-      if(cyberType == -1)
-         cyberType = E_ThingNumForDEHNum(MT_CYBORG);
+      int cyberType = E_ThingNumForDEHNum(MT_CYBORG);
 
       if(thing->type == cyberType && theBomb->bombsource->type == cyberType)
          return true;

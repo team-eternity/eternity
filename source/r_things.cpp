@@ -1745,7 +1745,7 @@ void R_DrawPostBSP(void)
                if(drawsegs_xrange_size <= maxdrawsegs+1)
                {
                   // haleyjd: fix reallocation to track 2x size
-                  drawsegs_xrange_size =  2 * maxdrawsegs;
+                  drawsegs_xrange_size =  2 * (maxdrawsegs+1);
                   drawsegs_xrange = 
                      erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
                               drawsegs_xrange_size * sizeof(*drawsegs_xrange));

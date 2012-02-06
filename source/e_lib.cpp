@@ -43,6 +43,7 @@
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_qstr.h"
+#include "metaapi.h"
 #include "psnprntf.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -863,6 +864,32 @@ const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
 //
 
 //
+// E_ReplaceString
+//
+// haleyjd 12/31/11: Free a string if it's non-null and then give it the 
+// new value.
+//
+void E_ReplaceString(char *&dest, char *newvalue)
+{
+   if(dest)
+      efree(dest);
+
+   dest = newvalue;
+}
+
+//
+// E_MetaStringFromCfgString
+//
+// Utility function.
+// Adds a MetaString property to the passed-in table with the same name and
+// value as the cfg_t property.
+//
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
+{
+   meta->setString(prop, cfg_getstr(cfg, prop));
+}
+
+//
 // E_GetHeredocLine
 //
 // Finds the start of the next line in the string, and modifies the string with
@@ -1099,7 +1126,7 @@ static int E_GetTranslationToken(tr_pstate_t *pstate)
 //
 static void PushRange(tr_pstate_t *pstate)
 {
-   tr_range_t *newrange = ecalloc(tr_range_t *, 1, sizeof(tr_range_t));
+   tr_range_t *newrange = estructalloc(tr_range_t, 1);
 
    newrange->srcbegin = COLOR_CLAMP(pstate->srcbegin);
    newrange->srcend   = COLOR_CLAMP(pstate->srcend);
@@ -1180,7 +1207,7 @@ static void DoPStateColon(tr_pstate_t *pstate)
       // , or end-of-string here means the destination range is a single color;
       // duplicate the color, back up one character, and go to the end state.
       pstate->dstend = pstate->dstbegin;
-      if(pstate->inputpos > 0)
+      if(pstate->inputpos > 0 && tokentype != TR_TOKEN_END)
          --pstate->inputpos;
       pstate->state = TR_PSTATE_COMMAOREND;
    }
@@ -1305,11 +1332,11 @@ static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] =
 //
 // E_ParseTranslation
 //
-byte *E_ParseTranslation(const char *str)
+byte *E_ParseTranslation(const char *str, int tag)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = ecalloc(byte *, 1, 256);
+   byte *translation = ecalloctag(byte *, 1, 256, tag);
    tr_pstate_t parserstate;
 
    tokenbuf.initCreate();
@@ -1340,8 +1367,13 @@ byte *E_ParseTranslation(const char *str)
       while(range)
       {
          tr_range_t *next = range->next;
-         int numsrccolors = range->srcend - range->srcbegin + 1;
-         int numdstcolors = range->dstend - range->dstbegin + 1;
+         int numsrccolors = range->srcend - range->srcbegin;
+         int numdstcolors = range->dstend - range->dstbegin;
+
+         if(numsrccolors == 0)
+            translation[range->srcbegin] = range->dstbegin;
+         else
+         {
          fixed_t dst      = range->dstbegin * FRACUNIT;
          fixed_t deststep = (numdstcolors * FRACUNIT) / numsrccolors;
 
@@ -1350,6 +1382,7 @@ byte *E_ParseTranslation(const char *str)
          {
             translation[src] = RANGE_CLAMP(dst / FRACUNIT, range->dstend);
             dst += deststep;
+         }
          }
 
          // done with this range

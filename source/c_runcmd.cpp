@@ -42,6 +42,7 @@
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
+#include "d_dehtbl.h"
 #include "d_dwfile.h"
 #include "d_io.h"
 #include "doomdef.h"

@@ -1481,7 +1481,7 @@ void CL_HandleMissileExplodedMessage(nm_missileexploded_t *message)
 
    missile->momx = missile->momy = missile->momz = 0;
 
-   P_SetMobjState(missile, mobjinfo[missile->type].deathstate);
+   P_SetMobjState(missile, missile->info->deathstate);
    missile->tics = message->tics;
    missile->flags &= ~MF_MISSILE;
    S_StartSound(missile, missile->info->deathsound);

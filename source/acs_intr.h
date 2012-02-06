@@ -86,6 +86,8 @@ typedef struct acscript_s
 //
 class ACSThinker : public Thinker
 {
+   DECLARE_THINKER_TYPE(ACSThinker, Thinker)
+
 protected:
    // Data Members
    unsigned int triggerSwizzle; // Holds the swizzled target during loading
@@ -97,8 +99,7 @@ public:
    // Methods
    virtual void serialize(SaveArchive &arc);
    virtual void deSwizzle();
-   virtual const char *getClassName() const { return "ACSThinker"; }
-
+   
    // Data Members
    // thread links
    ACSThinker **prevthread;

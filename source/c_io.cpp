@@ -96,7 +96,7 @@ static VBuffer cback;
 static bool cbackneedfree = false;
 
 vfont_t *c_font;
-const char *c_fontname;
+char *c_fontname;
 
 /////////////////////////////////////////////////////////////////////////
 //

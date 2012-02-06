@@ -25,7 +25,10 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "e_things.h"
 #include "m_fixed.h"
+#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -42,7 +45,7 @@ IMPLEMENT_THINKER_TYPE(SectorThinker)
 //
 void SectorThinker::serialize(SaveArchive &arc)
 {
-   Thinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << sector;
 
@@ -67,6 +70,26 @@ void SectorThinker::serialize(SaveArchive &arc)
       default:
          break;
       }
+   }
+}
+
+//=============================================================================
+//
+// Sector Actions
+//
+
+//
+// P_NewSectorActionFromMobj
+//
+// Adds the Mobj's special to the sector
+//
+void P_NewSectorActionFromMobj(Mobj *actor)
+{
+   sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
+
+   if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+   {
+      // TODO
    }
 }
 

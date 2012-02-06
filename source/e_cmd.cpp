@@ -30,11 +30,14 @@
 #include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "e_args.h"
 #include "e_exdata.h"
 #include "e_sound.h"
+#include "e_states.h"
 #include "e_things.h"
 #include "info.h"
 #include "metaapi.h"
+#include "p_pspr.h"
 #include "s_sound.h"
 #include "v_misc.h"
 
@@ -54,9 +57,9 @@ CONSOLE_COMMAND(e_dumpthings, 0)
    {
       //  04/13/08: do not display auto-allocated dehnums
       C_Printf("%5d  %5d  %s\n", 
-               mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
-               mobjinfo[i].doomednum,
-               mobjinfo[i].name);
+               mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
+               mobjinfo[i]->doomednum,
+               mobjinfo[i]->name);
    }
 }
 
@@ -72,7 +75,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
 
    num = E_ThingNumForName(Console.argv[0]->constPtr());
 
-   if(num == NUMMOBJTYPES)
+   if(num == -1)
    {
       C_Printf("Thing type not found\n");
       return;
@@ -80,13 +83,11 @@ CONSOLE_COMMAND(e_thingtype, 0)
 
    C_Printf(FC_HI "Data for Thing Type %s:\n"
             FC_ERROR "ID Data:\n"
-            FC_HI "Next by name: " FC_NORMAL "%d\n"
             FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
-            FC_HI "Next by DeHackEd #: " FC_NORMAL "%d\n"
             FC_HI "DoomEd #: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].name, mobjinfo[num].namenext,
-            mobjinfo[num].dehnum, mobjinfo[num].dehnext,
-            mobjinfo[num].doomednum);
+            mobjinfo[num]->name, 
+            mobjinfo[num]->dehnum, 
+            mobjinfo[num]->doomednum);
 
    C_Printf(FC_ERROR "State Data:\n"
             FC_HI "Spawn state: " FC_NORMAL "%d\n"
@@ -98,11 +99,11 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "XDeath state: " FC_NORMAL "%d\n"
             FC_HI "Crash state: " FC_NORMAL "%d\n"
             FC_HI "Raise state: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].spawnstate, mobjinfo[num].seestate,
-            mobjinfo[num].meleestate, mobjinfo[num].missilestate,
-            mobjinfo[num].painstate, mobjinfo[num].deathstate,
-            mobjinfo[num].xdeathstate, mobjinfo[num].crashstate,
-            mobjinfo[num].raisestate);
+            mobjinfo[num]->spawnstate, mobjinfo[num]->seestate,
+            mobjinfo[num]->meleestate, mobjinfo[num]->missilestate,
+            mobjinfo[num]->painstate, mobjinfo[num]->deathstate,
+            mobjinfo[num]->xdeathstate, mobjinfo[num]->crashstate,
+            mobjinfo[num]->raisestate);
 
    C_Printf(FC_ERROR "Sound data:\n"
             FC_HI "See sound: " FC_NORMAL "%d\n"
@@ -110,9 +111,9 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Attack sound: " FC_NORMAL "%d\n"
             FC_HI "Pain sound: " FC_NORMAL "%d\n"
             FC_HI "Death sound: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].seesound, mobjinfo[num].activesound,
-            mobjinfo[num].attacksound, mobjinfo[num].painsound,
-            mobjinfo[num].deathsound);
+            mobjinfo[num]->seesound, mobjinfo[num]->activesound,
+            mobjinfo[num]->attacksound, mobjinfo[num]->painsound,
+            mobjinfo[num]->deathsound);
 
    C_Printf(FC_ERROR "Metrics:\n"
             FC_HI "Spawnhealth: " FC_NORMAL "%d\n"
@@ -123,10 +124,10 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Mass: " FC_NORMAL "%d\n"
             FC_HI "Speed: " FC_NORMAL "%d\n"
             FC_HI "Reaction time: " FC_NORMAL "%d\n\n",
-            mobjinfo[num].spawnhealth, mobjinfo[num].painchance,
-            mobjinfo[num].droptype, mobjinfo[num].radius >> FRACBITS,
-            mobjinfo[num].height >> FRACBITS, mobjinfo[num].mass,
-            mobjinfo[num].speed, mobjinfo[num].reactiontime);
+            mobjinfo[num]->spawnhealth, mobjinfo[num]->painchance,
+            mobjinfo[num]->droptype, mobjinfo[num]->radius >> FRACBITS,
+            mobjinfo[num]->height >> FRACBITS, mobjinfo[num]->mass,
+            mobjinfo[num]->speed, mobjinfo[num]->reactiontime);
 
    C_Printf(FC_ERROR "Damage data:\n"
             FC_HI "Damage: " FC_NORMAL "%d\n"
@@ -134,10 +135,10 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Means of Death: " FC_NORMAL "%d\n"
             FC_HI "Obituary: " FC_NORMAL "%s\n"
             FC_HI "Melee Obituary: " FC_NORMAL "%s\n\n",
-            mobjinfo[num].damage, mobjinfo[num].dmgspecial,
-            mobjinfo[num].mod,
-            mobjinfo[num].obituary ? mobjinfo[num].obituary : "none",
-            mobjinfo[num].meleeobit ? mobjinfo[num].meleeobit : "none");
+            mobjinfo[num]->damage, mobjinfo[num]->dmgspecial,
+            mobjinfo[num]->mod,
+            mobjinfo[num]->obituary ? mobjinfo[num]->obituary : "none",
+            mobjinfo[num]->meleeobit ? mobjinfo[num]->meleeobit : "none");
 
    C_Printf(FC_ERROR "Graphics data:\n"
             FC_HI "Skin sprite: " FC_NORMAL "%d\n"
@@ -145,17 +146,17 @@ CONSOLE_COMMAND(e_thingtype, 0)
             FC_HI "Color: " FC_NORMAL "%d\n"
             FC_HI "Particle FX: " FC_NORMAL "0x%08x\n"
             FC_HI "Translucency: " FC_NORMAL "%d%%\n\n",
-            mobjinfo[num].altsprite, mobjinfo[num].bloodcolor,
-            mobjinfo[num].colour, mobjinfo[num].particlefx,
-            mobjinfo[num].translucency*100/65536);
+            mobjinfo[num]->altsprite, mobjinfo[num]->bloodcolor,
+            mobjinfo[num]->colour, mobjinfo[num]->particlefx,
+            mobjinfo[num]->translucency*100/65536);
 
    C_Printf(FC_ERROR "Flags:\n"
             FC_HI "Flags 1: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 2: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 3: " FC_NORMAL "0x%08x\n"
             FC_HI "Flags 4: " FC_NORMAL "0x%08x\n",
-            mobjinfo[num].flags, mobjinfo[num].flags2,
-            mobjinfo[num].flags3, mobjinfo[num].flags4);
+            mobjinfo[num]->flags, mobjinfo[num]->flags2,
+            mobjinfo[num]->flags3, mobjinfo[num]->flags4);
 }
 
 //
@@ -177,15 +178,15 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
 
    num = E_ThingNumForName(Console.argv[0]->constPtr());
 
-   if(num == NUMMOBJTYPES)
+   if(num == -1)
    {
       C_Printf("Thing type not found\n");
       return;
    }
 
-   C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num].name);
+   C_Printf(FC_HI "Metadata for Thing Type %s:\n", mobjinfo[num]->name);
 
-   meta = mobjinfo[num].meta;
+   meta = mobjinfo[num]->meta;
 
    while((obj = meta->tableIterator(obj)))
    {
@@ -193,6 +194,65 @@ CONSOLE_COMMAND(e_dumpmeta, 0)
                FC_NORMAL "%s", 
                obj->getKey(), obj->getType(), obj->toString());
    }
+}
+
+//
+// e_dumpstate
+//
+// Displays information on one EDF state definition.
+//
+CONSOLE_COMMAND(e_dumpstate, 0)
+{
+   int num;
+   state_t *state;
+
+   if(!Console.argc)
+   {
+      C_Printf("usage: e_dumpstate mnemonic\n");
+      return;
+   }
+
+   num = E_StateNumForName(Console.argv[0]->constPtr());
+
+   if(num == -1)
+   {
+      C_Printf("State not found\n");
+      return;
+   }
+   
+   state = states[num];
+
+   C_Printf(FC_ERROR "Data for State %s:\n"
+            FC_HI "DeHackEd #: " FC_NORMAL "%d\n"
+            FC_HI "Index: "      FC_NORMAL "%d\n"
+            FC_HI "Decorate: "   FC_NORMAL "%s\n"
+            FC_HI "Sprite: "     FC_NORMAL "%d\n"
+            FC_HI "Frame: "      FC_NORMAL "%d\n"
+            FC_HI "Bright: "     FC_NORMAL "%s\n"
+            FC_HI "Tics: "       FC_NORMAL "%d\n"
+            FC_HI "Next State: " FC_NORMAL "%d\n"
+            FC_HI "Misc 1: "     FC_NORMAL "%d\n"
+            FC_HI "Misc 2: "     FC_NORMAL "%d\n"
+            FC_ERROR "Arguments:\n",
+            state->name, 
+            state->dehnum,
+            state->index,
+            state->decorate ? "true" : "false",
+            state->sprite, 
+            state->frame & FF_FRAMEMASK,
+            state->frame & FF_FULLBRIGHT ? "true" : "false",
+            state->tics,
+            state->nextstate,
+            state->misc1, 
+            state->misc2);
+
+   if(state->args)
+   {
+      for(int i = 0; i < state->args->numargs; i++)
+         C_Printf(FC_HI "%d: " FC_NORMAL "%s\n", i, state->args->args[i]);
+   }
+   else
+      C_Printf(FC_HI "No arguments defined\n");
 }
 
 //
@@ -210,12 +270,12 @@ CONSOLE_COMMAND(e_dumpitems, 0)
    for(i = 0; i < NUMMOBJTYPES; ++i)
    {
       // 04/13/08: do not display auto-allocated dehnums
-      if(mobjinfo[i].flags & MF_SPECIAL)
+      if(mobjinfo[i]->flags & MF_SPECIAL)
       {
          C_Printf("%5d  %5d  %s\n",
-                  mobjinfo[i].dehnum < 100000 ? mobjinfo[i].dehnum : -1,
-                  mobjinfo[i].doomednum,
-                  mobjinfo[i].name);
+                  mobjinfo[i]->dehnum < 100000 ? mobjinfo[i]->dehnum : -1,
+                  mobjinfo[i]->doomednum,
+                  mobjinfo[i]->name);
       }
    }
 }
@@ -395,6 +455,7 @@ void E_AddCommands(void)
    C_AddCommand(e_dumpthings);
    C_AddCommand(e_thingtype);
    C_AddCommand(e_dumpmeta);
+   C_AddCommand(e_dumpstate);
    C_AddCommand(e_dumpitems);
    C_AddCommand(e_playsound);
    C_AddCommand(e_listmapthings);

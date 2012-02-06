@@ -59,7 +59,7 @@ void P_FloorSequence(sector_t *s)
    if(s->sndSeqID >= 0)
       S_StartSectorSequence(s, SEQ_FLOOR);
    else
-      S_StartSectorSequenceName(s, "EEFloor", false);
+      S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -508,7 +508,7 @@ void FloorMoveThinker::Think()
          {
             type = genDelayStair;
             delayTimer = delayTime;
-            S_StopSectorSequence(sector, false);
+            S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
          }
          break;
       case genDelayStair:
@@ -536,7 +536,7 @@ void FloorMoveThinker::Think()
     
    if(res == pastdest)    // if destination height is reached
    {
-      S_StopSectorSequence(sector, false);
+      S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
 
       // haleyjd 10/13/05: stairs that wish to reset must wait
       // until their reset timer expires.
@@ -632,7 +632,7 @@ void FloorMoveThinker::Think()
 //
 void FloorMoveThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << crush << direction << special << texture 
        << floordestheight << speed << resetTime << resetHeight
@@ -707,7 +707,7 @@ void ElevatorThinker::Think()
     
    if(res == pastdest)            // if destination height acheived
    {
-      S_StopSectorSequence(sector, false);
+      S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;     //jff 2/22/98
       sector->ceilingdata = NULL;   //jff 2/22/98
       this->removeThinker();               // remove elevator from actives
@@ -724,7 +724,7 @@ void ElevatorThinker::Think()
 //
 void ElevatorThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << direction << floordestheight << ceilingdestheight 
        << speed;
@@ -752,7 +752,7 @@ void PillarThinker::Think()
    
    if(result)
    {
-      S_StopSectorSequence(sector, false);
+      S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;
       sector->ceilingdata = NULL;      
       // TODO: notify scripts
@@ -768,7 +768,7 @@ void PillarThinker::Think()
 //
 void PillarThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << ceilingSpeed << floorSpeed << floordest 
        << ceilingdest << direction << crush;
@@ -1771,7 +1771,7 @@ void FloorWaggleThinker::Think()
 //
 void FloorWaggleThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << originalHeight << accumulator << accDelta << targetScale
        << scale << scaleDelta << ticker << state;

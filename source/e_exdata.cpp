@@ -801,39 +801,37 @@ static unsigned int E_EDThingForRecordNum(int recnum)
 //
 static int E_ParseTypeField(const char *value)
 {
+   long num;
    int i;
    char prefix[16];
    const char *colonloc, *strval;
+   char *numpos = NULL;
+
+   num = strtol(value, &numpos, 0);
 
    memset(prefix, 0, 16);
-
    colonloc = E_ExtractPrefix(value, prefix, 16);
 
-   if(colonloc)
+   // If has a colon, or is otherwise not just a number...
+   if(colonloc || (numpos && *numpos != '\0'))
    {
+      if(colonloc) // allow a thing: prefix for compatibility
       strval = colonloc + 1;
+      else
+         strval = value; // use input directly
 
-      if(!strcasecmp(prefix, "thing"))
-      {
          // translate from EDF mnemonic to doomednum
-         int type = E_SafeThingName(strval);
-         int num = mobjinfo[type].doomednum;
-         
-         // don't return -1, use no-op zero in that case
-         // (this'll work even if somebody messed with 'Unknown')
-         return (num >= 0 ? num : 0);
+      i = mobjinfo[E_SafeThingName(strval)]->doomednum;
       }
- 
-      // invalid prefix
-      I_Error("E_ParseTypeField: invalid prefix %s\n", prefix);
-      return 0;
-   }
    else
    {
       // integer value
-      i = strtol(value, NULL, 0);
-      return (i >= 0 ? i : 0);
+      i = (int)num;
    }
+
+   // don't return -1, use no-op zero in that case
+   // (this'll work even if somebody messed with 'Unknown')
+      return (i >= 0 ? i : 0);
 }
 
 //
@@ -914,7 +912,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // ExtraData, but the error is tolerated by changing it to an 
       // "Unknown" thing
       if(EDThings[i].type == ED_CTRL_DOOMEDNUM)
-         EDThings[i].type = mobjinfo[UnknownThingType].doomednum;
+         EDThings[i].type = mobjinfo[UnknownThingType]->doomednum;
 
       // options
       tempstr = cfg_getstr(thingsec, FIELD_OPTIONS);
@@ -1726,7 +1724,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       return;
 
    // allocate the mapsectorext_t structures
-   EDSectors = (mapsectorext_t *)(Z_Calloc(numEDSectors, sizeof(mapsectorext_t), PU_LEVEL, NULL));
+   EDSectors = estructalloctag(mapsectorext_t, numEDSectors, PU_LEVEL);
 
    // initialize the hash chains
    for(i = 0; i < NUMSECCHAINS; ++i)
@@ -1815,6 +1813,8 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
 
       // sector colormaps
+      sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->topmap = R_ColormapNumForName(tempstr);
@@ -1835,12 +1835,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
       if(strcasecmp(tempstr, "@flat"))
          sec->ceilingterrain = E_TerrainForName(tempstr);
-      /*
-   CFG_STR(FIELD_SECTOR_PORTALFLAGS_F,     "",        CFGF_NONE),
-   CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
-   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB),
-   CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB),
-   */
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_F);
       if(*tempstr != '\0')
          sec->f_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
@@ -2067,8 +2062,11 @@ void E_LoadSectorExt(line_t *line)
    sector->ceilingbaseangle = (float)(edsector->ceilingangle * PI / 180.0f);
 
    // colormaps
+   if(edsector->topmap >= 0)
    sector->topmap    = edsector->topmap;
+   if(edsector->midmap >= 0)
    sector->midmap    = edsector->midmap;
+   if(edsector->bottommap >= 0)
    sector->bottommap = edsector->bottommap;
 
    // terrain overrides

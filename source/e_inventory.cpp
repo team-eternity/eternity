@@ -25,15 +25,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "i_system.h"
+
 #include "d_dehtbl.h" // for dehflags parsing
 #include "doomtype.h"
+#include "metaapi.h"
 
 #define NEED_EDF_DEFINITIONS
 
 #include "Confuse/confuse.h"
 #include "e_edf.h"
+#include "e_hash.h"
 #include "e_lib.h"
 #include "e_inventory.h"
+
+static unsigned int numInventoryDefs;
 
 // basic inventory flag values and mnemonics
 
@@ -57,9 +63,15 @@ static dehflagset_t inventory_flagset =
    0,              // mode
 };
 
+static const char *inventoryClassNames[INV_CLASS_NUMCLASSES] =
+{
+   "None",
+   "Health"
+};
+
 // Frame section keywords
-#define ITEM_INVENTORY_ID             "id"
 #define ITEM_INVENTORY_INHERITS       "inherits"
+#define ITEM_INVENTORY_CLASS          "class"
 #define ITEM_INVENTORY_AMOUNT         "amount"
 #define ITEM_INVENTORY_MAXAMOUNT      "maxamount"
 #define ITEM_INVENTORY_INTERHUBAMOUNT "interhubamount"
@@ -72,6 +84,9 @@ static dehflagset_t inventory_flagset =
 #define ITEM_INVENTORY_GIVEQUEST      "givequest"
 #define ITEM_INVENTORY_FLAGS          "flags"
 
+// Class-specific fields
+#define ITEM_INVENTORY_HEALTHLOW      "health.lowmessage"
+
 #define ITEM_DELTA_NAME               "name"
 
 //
@@ -79,18 +94,19 @@ static dehflagset_t inventory_flagset =
 //
 
 #define INVENTORY_FIELDS \
-   CFG_INT(ITEM_INVENTORY_ID,             -1, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_AMOUNT,          0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,       0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,  0, CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_ICON,           "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,  "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,    "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,    "", CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_USESOUND,       "", CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,     0, CFGF_NONE), \
-   CFG_INT(ITEM_INVENTORY_GIVEQUEST,      -1, CFGF_NONE), \
-   CFG_STR(ITEM_INVENTORY_FLAGS,          "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_CLASS,          "None", CFGF_NONE), \
+   CFG_INT(ITEM_INVENTORY_AMOUNT,              0, CFGF_NONE), \
+   CFG_INT(ITEM_INVENTORY_MAXAMOUNT,           0, CFGF_NONE), \
+   CFG_INT(ITEM_INVENTORY_INTERHUBAMOUNT,      0, CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_ICON,               "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_PICKUPMESSAGE,      "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_PICKUPSOUND,        "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_PICKUPFLASH,        "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_USESOUND,           "", CFGF_NONE), \
+   CFG_INT(ITEM_INVENTORY_RESPAWNTICS,         0, CFGF_NONE), \
+   CFG_INT(ITEM_INVENTORY_GIVEQUEST,          -1, CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_FLAGS,              "", CFGF_NONE), \
+   CFG_STR(ITEM_INVENTORY_HEALTHLOW,          "", CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_inv_opts[] =
@@ -107,15 +123,145 @@ cfg_opt_t edf_invdelta_opts[] =
 
 // Inventory Inheritance
 
-// inv_hitlist: keeps track of what inventory defs are initialized
-static byte *inv_hitlist = NULL;
-
 // inv_pstack: used by recursive E_ProcessInventory to track inheritance
-static int  *inv_pstack  = NULL;
-static int   inv_pindex  = 0;
+static inventory_t **inv_pstack  = NULL;
+static unsigned int inv_pindex  = 0;
 
-// global vars
-int NumInventoryDefs;
+//=============================================================================
+//
+// Inventory Hashing 
+//
+
+#define NUMINVCHAINS 307
+
+// hash by name
+static EHashTable<inventory_t, ENCStringHashKey,
+                  &inventory_t::name, &inventory_t::namelinks> inv_namehash(NUMINVCHAINS);
+
+// hash by ID number
+static EHashTable<inventory_t, EIntHashKey,
+                  &inventory_t::numkey, &inventory_t::numlinks> inv_numhash(NUMINVCHAINS);
+
+
+//
+// E_InventoryForID
+//
+// Get an inventory item by ID number.
+//
+inventory_t *E_InventoryForID(int idnum)
+{
+   return inv_numhash.objectForKey(idnum);
+}
+
+//
+// E_GetInventoryForID
+//
+// As above, but causes a fatal error if an inventory def is not found.
+//
+inventory_t *E_GetInventoryForID(int idnum)
+{
+   inventory_t *inv = E_InventoryForID(idnum);
+
+   if(!inv)
+      I_Error("E_GetInventoryForID: invalid inventory ID %d\n", idnum);
+
+   return inv;
+}
+
+//
+// E_InventoryForName
+//
+// Returns an inventory definition given its name. Returns NULL
+// if not found.
+//
+inventory_t *E_InventoryForName(const char *name)
+{
+   return inv_namehash.objectForKey(name);
+}
+
+//
+// E_GetInventoryForName
+//
+// As above, but causes a fatal error if the inventory def isn't found.
+//
+inventory_t *E_GetInventoryForName(const char *name)
+{
+   inventory_t *inv = E_InventoryForName(name);
+
+   if(!inv)
+      I_Error("E_GetInventoryForName: bad inventory item %s\n", name);
+
+   return inv;
+}
+
+//=============================================================================
+//
+// Pre-Processing
+//
+
+//
+// E_CollectInventory
+//
+// Pre-creates and hashes by name the inventory definitions, for purpose 
+// of mutual and forward references.
+//
+void E_CollectInventory(cfg_t *cfg)
+{
+   static int currentID = 1;
+   unsigned int i;
+   unsigned int numInventory;    // number of inventory defs defined by the cfg
+   inventory_t *newInvDefs  = NULL;
+
+   // get number of inventory definitions defined by the cfg
+   numInventory = cfg_size(cfg, EDF_SEC_INVENTORY);
+
+   // echo counts
+   E_EDFLogPrintf("\t\t%u inventory items defined\n", numInventory);
+
+   if(numInventory)
+   {
+      // allocate inventory structures for the new thingtypes
+      newInvDefs = estructalloc(inventory_t, numInventory);
+
+      numInventoryDefs += numInventory;
+
+      // create metatables
+      for(i = 0; i < numInventory; i++)
+         newInvDefs[i].meta = new MetaTable("inventory");
+   }
+
+   // build hash tables
+   E_EDFLogPuts("\t\tBuilding inventory hash tables\n");
+   
+   // cycle through the thingtypes defined in the cfg
+   for(i = 0; i < numInventory; i++)
+   {
+      cfg_t *invcfg = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      const char *name = cfg_title(invcfg);
+
+      // This is a new inventory, whether or not one already exists by this name
+      // in the hash table. For subsequent addition of EDF inventory defs at 
+      // runtime, the hash table semantics of "find newest first" take care of 
+      // overriding, while not breaking objects that depend on the original 
+      // definition of the inventory type for inheritance purposes.
+      inventory_t *inv = &newInvDefs[i];
+
+      // initialize name
+      inv->name = estrdup(name);
+
+      // add to name hash
+      inv_namehash.addObject(inv);
+
+      // create ID number and add to hash table
+      inv->numkey = currentID++;
+      inv_numhash.addObject(inv);
+   }
+}
+
+//=============================================================================
+//
+// Inheritance
+//
 
 //
 // E_CheckInventoryInherit
@@ -124,18 +270,16 @@ int NumInventoryDefs;
 // been inherited during the current inheritance chain. Returns false if the
 // check fails, and true if it succeeds.
 //
-static bool E_CheckInventoryInherit(int pnum)
+static bool E_CheckInventoryInherit(inventory_t *inv)
 {
-   int i;
-
-   for(i = 0; i < NumInventoryDefs; i++)
+   for(unsigned int i = 0; i < numInventoryDefs; i++)
    {
       // circular inheritance
-      if(inv_pstack[i] == pnum)
+      if(inv_pstack[i] == inv)
          return false;
 
       // found end of list
-      if(inv_pstack[i] == -1)
+      if(inv_pstack[i] == NULL)
          break;
    }
 
@@ -145,17 +289,17 @@ static bool E_CheckInventoryInherit(int pnum)
 //
 // E_AddInventoryToPStack
 //
-// Adds a type number to the inheritance stack.
+// Adds an inventory definition to the inheritance stack.
 //
-static void E_AddInventoryToPStack(int num)
+static void E_AddInventoryToPStack(inventory_t *inv)
 {
    // Overflow shouldn't happen since it would require cyclic inheritance as 
    // well, but I'll guard against it anyways.
    
-   if(inv_pindex >= NumInventoryDefs)
+   if(inv_pindex >= numInventoryDefs)
       E_EDFLoggedErr(2, "E_AddInventoryToPStack: max inheritance depth exceeded\n");
 
-   inv_pstack[inv_pindex++] = num;
+   inv_pstack[inv_pindex++] = inv;
 }
 
 //
@@ -164,12 +308,10 @@ static void E_AddInventoryToPStack(int num)
 // Resets the inventory inheritance stack, setting all the pstack
 // values to -1, and setting pindex back to zero.
 //
-static void E_ResetInventoryPStack(void)
+static void E_ResetInventoryPStack()
 {
-   int i;
-
-   for(i = 0; i < NumInventoryDefs; i++)
-      inv_pstack[i] = -1;
+   for(unsigned int i = 0; i < numInventoryDefs; i++)
+      inv_pstack[i] = NULL;
 
    inv_pindex = 0;
 }
@@ -179,20 +321,61 @@ static void E_ResetInventoryPStack(void)
 //
 // Copies one inventory definition into another.
 //
-static void E_CopyInventory(int num, int pnum)
+static void E_CopyInventory(inventory_t *child, inventory_t *parent)
 {
-   // TODO: save out fields that shouldn't be overwritten
+   // save out fields that shouldn't be overwritten
+   DLListItem<inventory_t> namelinks = child->namelinks;
+   DLListItem<inventory_t> numlinks  = child->numlinks;
+   char *name      = child->name;
+   int   numkey    = child->numkey;
+   bool  processed = child->processed;
+   MetaTable *meta = child->meta;
 
-   // TODO: copy from source to destination
+   // wipe out any dynamically allocated strings in inheriting inventory
+   if(child->icon)
+      efree(child->icon);
+   if(child->pickUpMessage)
+      efree(child->pickUpMessage);
+   if(child->pickUpSound)
+      efree(child->pickUpSound);
+   if(child->pickUpFlash)
+      efree(child->pickUpFlash);
+   if(child->useSound)
+      efree(child->useSound);
 
-   // TODO: normalize special fields
-   // * duplicate any mallocs
-   // * copy any metatables
+   // copy from source to destination
+   memcpy(child, parent, sizeof(inventory_t));
+
+   // restore saved fields
+   child->namelinks = namelinks;
+   child->numlinks  = numlinks;
+   child->name      = name;
+   child->numkey    = numkey;
+   child->processed = processed;
+   child->meta      = meta;
    
-   // TODO: restore saved fields
+   // normalize special fields
+   
+   // * duplicate mallocs
+   if(child->icon)
+      child->icon = estrdup(child->icon);
+   if(child->pickUpMessage)
+      child->pickUpMessage = estrdup(child->pickUpMessage);
+   if(child->pickUpSound)
+      child->pickUpSound = estrdup(child->pickUpSound);
+   if(child->pickUpFlash)
+      child->pickUpFlash = estrdup(child->pickUpFlash);
+   if(child->useSound)
+      child->useSound = estrdup(child->useSound);
 
-   // TODO: reset any uninherited fields to defaults
+   // * copy metatable
+   child->meta->copyTableFrom(parent->meta);
 }
+
+//=============================================================================
+//
+// Processing
+//
 
 // IS_SET: this macro tests whether or not a particular field should
 // be set. When applying deltas, we should not retrieve defaults.
@@ -203,68 +386,171 @@ static void E_CopyInventory(int num, int pnum)
 #define IS_SET(name) ((def && !inherits) || cfg_size(invsec, (name)) > 0)
 
 //
+// Inventory Subclass Field Processing Routines
+//
+
+//
+// None
+//
+// For the default inventory class type; does nothing special.
+//
+static void E_processNone(inventory_t *inv, cfg_t *invsec, bool def, bool inherits)
+{
+   // Do nothing.
+}
+
+//
+// Health
+//
+// Health inventory items are collected immediately and will add to the 
+// collector's health, up to the maxamount value.
+//
+static void E_processHealthProperties(inventory_t *inv, cfg_t *invsec, 
+                                      bool def, bool inherits)
+{
+   // "Hard-coded" initial properties for Health class:
+   if(def && !inherits)
+      inv->flags |= INVF_AUTOACTIVATE;
+
+   // lowmessage (may be a BEX string if prefixed with $)
+   if(IS_SET(ITEM_INVENTORY_HEALTHLOW))
+      E_MetaStringFromCfgString(inv->meta, invsec, ITEM_INVENTORY_HEALTHLOW);
+}
+
+typedef void (*SubClassFuncPtr)(inventory_t *, cfg_t *, bool, bool);
+
+static SubClassFuncPtr inventorySubClasses[INV_CLASS_NUMCLASSES] = 
+{
+   E_processNone,
+   E_processHealthProperties
+};
+
+//
 // E_ProcessInventory
 //
 // Generalized code to process the data for a single inventory definition
 // structure. Doubles as code for inventory and inventorydelta.
 //
-static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
+static void E_ProcessInventory(inventory_t *inv, cfg_t *invsec, cfg_t *pcfg, bool def)
 {
    //int tempint;
-   //const char *tempstr;
+   const char *tempstr;
    bool inherits = false;
+
+   // possible when inheriting from an inventory def of a previous EDF generation
+   if(!invsec) 
+      return;
 
    // Process inheritance (not in deltas)
    if(def)
    {
       // if this inventory is already processed via recursion due to
       // inheritance, don't process it again
-      if(inv_hitlist[i])
+      if(inv->processed)
          return;
       
       if(cfg_size(invsec, ITEM_INVENTORY_INHERITS) > 0)
       {
          cfg_t *parent_invsec;
          
-         // TODO: resolve parent inventory def
-         int pnum = -1; //E_GetInventoryNumForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
+         // resolve parent inventory def
+         inventory_t *parent = E_GetInventoryForName(cfg_getstr(invsec, ITEM_INVENTORY_INHERITS));
 
          // check against cyclic inheritance
-         if(!E_CheckInventoryInherit(pnum))
+         if(!E_CheckInventoryInherit(parent))
          {
             E_EDFLoggedErr(2, 
                "E_ProcessInventory: cyclic inheritance detected in inventory '%s'\n",
-               /*TODO: mobjinfo[i].name*/ "");
+               inv->name);
          }
          
          // add to inheritance stack
-         E_AddInventoryToPStack(pnum);
+         E_AddInventoryToPStack(parent);
 
          // process parent recursively
-         parent_invsec = cfg_getnsec(pcfg, EDF_SEC_INVENTORY, pnum);
-         E_ProcessInventory(pnum, parent_invsec, pcfg, true);
+         parent_invsec = cfg_gettsec(pcfg, EDF_SEC_INVENTORY, parent->name);
+         E_ProcessInventory(parent, parent_invsec, pcfg, true);
          
          // copy parent to this thing
-         E_CopyInventory(i, pnum);
+         E_CopyInventory(inv, parent);
 
-         // TODO: keep track of parent explicitly
-         // mobjinfo[i].parent = &mobjinfo[pnum];
+         // keep track of parent explicitly
+         inv->parent = parent;
          
          // we inherit, so treat defaults as no value
          inherits = true;
       }
       else
-        ; // TODO: mobjinfo[i].parent = NULL; // no parent.
+         inv->parent = NULL; // no parent.
 
       // mark this inventory def as processed
-      inv_hitlist[i] = 1;
+      inv->processed = true;
    }
 
-   // TODO: field processing
+   // field processing
+   
+   if(IS_SET(ITEM_INVENTORY_CLASS))
+   {
+      const char *classname = cfg_getstr(invsec, ITEM_INVENTORY_CLASS);
+      int classtype = E_StrToNumLinear(inventoryClassNames, INV_CLASS_NUMCLASSES, classname);
 
-   // output end message if processing a definition
-   if(def)
-      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", ""/*TODO:mobjinfo[i].name*/, i);
+      if(classtype == INV_CLASS_NUMCLASSES)
+      {
+         E_EDFLoggedWarning(2, "Warning: unknown inventory class %s\n", classname);
+         classtype = INV_CLASS_NONE;
+      }
+
+      inv->classtype = classtype;
+   }
+
+#ifdef RANGECHECK
+   if(inv->classtype < 0 || inv->classtype >= INV_CLASS_NUMCLASSES)
+      E_EDFLoggedErr(2, "E_ProcessInventory: internal error - bad classtype %d\n", inv->classtype);
+#endif
+
+   // process subclass fields
+   inventorySubClasses[inv->classtype](inv, invsec, def, inherits);
+
+   if(IS_SET(ITEM_INVENTORY_AMOUNT))
+      inv->amount = cfg_getint(invsec, ITEM_INVENTORY_AMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_MAXAMOUNT))
+      inv->maxAmount = cfg_getint(invsec, ITEM_INVENTORY_MAXAMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_INTERHUBAMOUNT))
+      inv->interHubAmount = cfg_getint(invsec, ITEM_INVENTORY_INTERHUBAMOUNT);
+
+   if(IS_SET(ITEM_INVENTORY_ICON))
+      E_ReplaceString(inv->icon, cfg_getstrdup(invsec, ITEM_INVENTORY_ICON));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPMESSAGE))
+      E_ReplaceString(inv->pickUpMessage, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPMESSAGE));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPSOUND))
+      E_ReplaceString(inv->pickUpSound, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPSOUND));
+
+   if(IS_SET(ITEM_INVENTORY_PICKUPFLASH))
+      E_ReplaceString(inv->pickUpFlash, cfg_getstrdup(invsec, ITEM_INVENTORY_PICKUPFLASH));
+
+   if(IS_SET(ITEM_INVENTORY_USESOUND))
+      E_ReplaceString(inv->useSound, cfg_getstrdup(invsec, ITEM_INVENTORY_USESOUND));
+
+   if(IS_SET(ITEM_INVENTORY_RESPAWNTICS))
+      inv->respawnTics = cfg_getint(invsec, ITEM_INVENTORY_RESPAWNTICS);
+
+   if(IS_SET(ITEM_INVENTORY_GIVEQUEST))
+      inv->giveQuest = cfg_getint(invsec, ITEM_INVENTORY_GIVEQUEST);
+
+   if(IS_SET(ITEM_INVENTORY_FLAGS))
+   {
+      tempstr = cfg_getstr(invsec, ITEM_INVENTORY_FLAGS);
+      if(*tempstr == '\0')
+         inv->flags = 0;
+      else
+         inv->flags = E_ParseFlags(tempstr, &inventory_flagset);
+   }
+   
+   // TODO: addflags/remflags   
 }
 
 //
@@ -274,30 +560,36 @@ static void E_ProcessInventory(int i, cfg_t *invsec, cfg_t *pcfg, bool def)
 //
 void E_ProcessInventoryDefs(cfg_t *cfg)
 {
-   int i;
+   unsigned int i, numInventory;
 
    E_EDFLogPuts("\t* Processing inventory data\n");
 
-   // allocate inheritance stack and hitlist
-   inv_hitlist = ecalloc(byte *, NumInventoryDefs, sizeof(byte));
-   inv_pstack  = ecalloc(int  *, NumInventoryDefs, sizeof(int));
+   if(!(numInventory = cfg_size(cfg, EDF_SEC_INVENTORY)))
+      return;
 
-   // TODO: Be sure to fully support additive defs like states.
-   for(i = 0; i < NumInventoryDefs; ++i)
+   // allocate inheritance stack and hitlist
+   inv_pstack = ecalloc(inventory_t **, numInventoryDefs, sizeof(inventory_t *));
+
+   // TODO: any first-time-only processing?
+
+   for(i = 0; i < numInventory; i++)
    {
-      cfg_t *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      cfg_t       *invsec = cfg_getnsec(cfg, EDF_SEC_INVENTORY, i);
+      const char  *name   = cfg_title(invsec);
+      inventory_t *inv    = E_InventoryForName(name);
 
       // reset the inheritance stack
       E_ResetInventoryPStack();
 
       // add this def to the stack
-      E_AddInventoryToPStack(i);
+      E_AddInventoryToPStack(inv);
 
-      E_ProcessInventory(i, invsec, cfg, true);
+      E_ProcessInventory(inv, invsec, cfg, true);
+
+      E_EDFLogPrintf("\t\tFinished inventory %s(#%d)\n", inv->name, inv->numkey);
    }
 
    // free tables
-   efree(inv_hitlist);
    efree(inv_pstack);
 }
 
@@ -320,21 +612,19 @@ void E_ProcessInventoryDeltas(cfg_t *cfg)
 
    for(i = 0; i < numdeltas; i++)
    {
-      const char *tempstr;
-      //int mobjType;
-      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_INVDELTA, i);
+      cfg_t       *deltasec = cfg_getnsec(cfg, EDF_SEC_INVDELTA, i);
+      inventory_t *inv;
 
       // get thingtype to edit
       if(!cfg_size(deltasec, ITEM_DELTA_NAME))
          E_EDFLoggedErr(2, "E_ProcessInventoryDeltas: inventorydelta requires name field\n");
 
-      tempstr = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      // TODO:mobjType = E_GetThingNumForName(tempstr);
+      inv = E_GetInventoryForName(cfg_getstr(deltasec, ITEM_DELTA_NAME));
 
-      E_ProcessInventory(0/*TODO:mobjType*/, deltasec, cfg, false);
+      E_ProcessInventory(inv, deltasec, cfg, false);
 
       E_EDFLogPrintf("\t\tApplied inventorydelta #%d to %s(#%d)\n",
-                     i, ""/*TODO:mobjinfo[mobjType].name*/, 0/*TODO:mobjType*/);
+                     i, inv->name, inv->numkey);
    }
 }
 

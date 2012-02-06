@@ -25,12 +25,36 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
+#include "d_gi.h"
 #include "m_swap.h"
 #include "r_patch.h"
+#include "v_patch.h"
 #include "v_patchfmt.h"
 
 // A global instance of PatchLoader for passing to WadDirectory methods
 PatchLoader PatchLoader::patchFmt;
+
+//
+// PatchLoader::GetDefaultPatch
+//
+// haleyjd 02/05/12: static, returns a default patch graphic to use in 
+// place of a missing patch.
+//
+patch_t *PatchLoader::GetDefaultPatch(int tag)
+{
+   static bool firsttime;
+   static byte patchdata[4];
+   
+   if(firsttime)
+   {
+      patchdata[0] = patchdata[3] = GameModeInfo->blackIndex;
+      patchdata[1] = patchdata[2] = GameModeInfo->whiteIndex;
+      firsttime = false;
+   }
+
+   return V_LinearToPatch(patchdata, 2, 2, NULL, tag);
+}
 
 //
 // PatchLoader::verifyData
@@ -74,18 +98,31 @@ int PatchLoader::getErrorMode() const
 }
 
 //
+// PatchLoader::CacheNum
+//
+// Static method to cache a lump as a patch_t, by number
+//
+patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
+{
+   return static_cast<patch_t *>(dir.CacheLumpNum(lumpnum, tag, &patchFmt));
+}
+
+//
 // PatchLoader::CacheName
 //
-// Static method to cache a lump as a patch_t
+// Static method to cache a lump as a patch_t, by name
 //
 patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag)
 {
-   return (patch_t *)(dir.CacheLumpName(name, tag, &patchFmt));
-}
+   int lumpnum;
+   patch_t *ret;
 
-patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
-{
-   return (patch_t *)(dir.CacheLumpNum(lumpnum, tag, &patchFmt));
+   if((lumpnum = dir.CheckNumForName(name)) >= 0)
+      ret = PatchLoader::CacheNum(dir, lumpnum, tag);
+   else
+      ret = GetDefaultPatch(tag);
+
+   return ret;
 }
 
 // EOF

@@ -30,7 +30,7 @@
 #define METAAPI_H__
 
 #include "z_zone.h"
-#include "e_hashkeys.h"
+#include "m_dllist.h"
 
 // A metatypename is just a string constant.
 typedef const char *metatypename_t;
@@ -59,8 +59,8 @@ class MetaObject : public ZoneObject
 protected:
    DLListItem<MetaObject> links;     // links by key
    DLListItem<MetaObject> typelinks; // links by type
-   EStringHashKey         type;      // type hash key
-   ENCStringHashKey       key;       // primary hash key
+   const char *type;                 // type hash key
+   const char *key;                  // primary hash key
    
    metatypename_t type_name; // storage pointer for type (static string)
    char *key_name;           // storage pointer for key  (alloc'd string)

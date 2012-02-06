@@ -30,7 +30,6 @@
 #define INFO_H__
 
 #include "m_dllist.h"
-#include "e_hashkeys.h"
 
 class MetaTable;
 
@@ -174,10 +173,10 @@ struct state_t
    struct arglist_s *args;             // haleyjd: state arguments
    
    // haleyjd: fields needed for EDF identification and hashing
-   ENCStringHashKey name;         // pointer to name of this state
-   char             namebuf[129]; // buffer for name (max 40 chars)
-   EIntHashKey      dehnum;       // DeHackEd number for fast access, comp.
+   char       *name;      // buffer for name
+   int         dehnum;    // DeHackEd number for fast access, comp.
    int              index;        // 06/12/09: number of state in states array
+   bool        decorate;  // 01/01/12: reserved for DECORATE definition
 };
 
 // these are in info.c
@@ -390,23 +389,24 @@ struct mobjinfo_t
    void (*nukespec)(Mobj *); // haleyjd 08/18/09: nukespec made a native property
    
    // haleyjd: fields needed for EDF identification and hashing
-   char name[129];    // name of this thing type (max 40 chars)
-   int dehnum;        // DeHackEd number for fast lookup and comparison
-   int namenext;      // next mobjinfo_t in name hash chain
-   int dehnext;       // next mobjinfo_t in DEH hash chain
+   DLListItem<mobjinfo_t> namelinks; // haleyjd 11/03/11: new hashing: by name
+   DLListItem<mobjinfo_t> numlinks;  // haleyjd 11/03/11: new hashing: by dehnum
+
+   char *name;         // buffer for name (max 128 chars)
+   int   dehnum;       // DeHackEd number for fast access, comp.
    int index;         // index in mobjinfo
+   int   generation;   // EDF generation number
 
    // 08/17/09: metatable
    MetaTable *meta;
 
    // 06/19/09: inheritance chain for DECORATE-like semantics where required
    mobjinfo_t *parent;
-
 };
 
 // See p_mobj_h for addition more technical info
 
-extern mobjinfo_t *mobjinfo;
+extern mobjinfo_t **mobjinfo;
 extern int NUMMOBJTYPES;
 
 #endif

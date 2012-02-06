@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 James Haley
+// Copyright(C) 2009 James Haley
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,27 +20,44 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   
-//  OpenGL Primitives
-//  haleyjd 05/15/11
+//
+//   MetaQString adapter class for storage of qstrings as metatable properites.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef GL_PRIMITIVES_H__
-#define GL_PRIMITIVES_H__
+#ifndef METAQSTRING_H__
+#define METAQSTRING_H__
 
-#ifdef EE_FEATURE_OPENGL
+#include "metaadapter.h"
+#include "m_qstr.h"
 
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                          GLfloat smax, GLfloat tmax);
+class MetaQString : public MetaAdapter<qstring>
+{
+public:
+   MetaQString(const char *key) : MetaAdapter<qstring>("MetaQString", key)
+   {
+   }
 
-void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                      GLfloat r, GLfloat b, GLfloat g);
+   MetaQString(const char *key, const qstring &initValue)
+      : MetaAdapter<qstring>("MetaQString", key, initValue)
+   {
+   }
 
+   MetaQString(const char *key, const char *value)
+      : MetaAdapter<qstring>("MetaQString", key)
+   {
+      containedObject = value;
+   }
 
-#endif
+   MetaQString(const MetaQString &other) : MetaAdapter<qstring>(other) {}
+
+   // Virtuals
+   MetaObject *clone()    const { return new MetaQString(*this);     }
+   const char *toString() const { return containedObject.constPtr(); }
+};
 
 #endif
 
 // EOF
+
 

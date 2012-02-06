@@ -29,7 +29,7 @@ void HU_WriteText(const char *s, int x, int y);
 int  HU_StringWidth(const char *s);
 int  HU_StringHeight(const char *s);
 
-extern const char *hud_overfontname;
+extern char *hud_overfontname;
 
     /************** overlay drawing ***************/
 

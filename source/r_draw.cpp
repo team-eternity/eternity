@@ -31,6 +31,7 @@
 
 #include "doomstat.h"
 #include "d_gi.h"
+#include "e_lib.h"
 #include "mn_engin.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -1004,33 +1005,25 @@ columndrawer_t r_normal_drawer =
 // Could be read from a lump instead.
 //
 
-typedef struct translat_s
+static const char *translations[TRANSLATIONCOLOURS] =
 {
-  int start;      // start of the sequence of colours
-  int number;     // number of colours
-} translat_t;
+   // Standard Doom Colors:
+   /*Indigo*/ "112:127=96:111",
+   /*Brown */ "112:127=64:79", 
+   /*Red   */ "112:127=32:47", 
 
-translat_t translations[TRANSLATIONCOLOURS] =
-{
-    {96,  16},     // indigo
-    {64,  16},     // brown
-    {32,  16},     // red
-  
-  /////////////////////////
-  // New colours
-  
-    {176, 16},     // tomato
-    {128, 16},     // dirt
-    {200, 8},      // blue
-    {160, 8},      // gold
-    {152, 8},      // felt?
-    {0,   1},      // bleeacckk!!
-    {250, 5},      // purple
-  //  {168, 8}, // bright pink, kinda
-    {216, 8},      // vomit yellow
-    {16,  16},     // pink
-    {56,  8},      // cream
-    {88,  8},      // white
+   // SMMU-compatible colors, re-designed by ptoing:
+   /*Tomato*/ "112:113=171,114=172,115:122=173:187,123:124=188:189,125:126=45:47,127=1",
+   /*Dirt  */ "112:117=128:133,118:120=135:137,121:123=139:143,124:125=237:239,126:127=1:2",
+   /*Blue  */ "112:121=197:206,122:127=240:245",
+   /*Gold  */ "112:113=160,114:119=161:166,120:123=236:239,124:125=1:2,126:127=7:8",
+   /*Sea   */ "112=91,113:114=94:95,115:122=152:159,123:126=9:12,127=8",
+   /*Black */ "112=101,113:121=103:111,122:125=5:8,126:127=0",
+   /*Purple*/ "112:113=4,114:115=170,116:117=250,118:119=251,120:121=252,122:123=253,124:125=254,126:127=46",
+   /*Vomit */ "112:119=209:216,120:121=218:220,122:124=69:75,125:127=237:239",
+   /*Pink  */ "112:113=16:17,114:117=19:25,118:119=27:28,120:124=30:38,125:126=41:43,127=46",
+   /*Cream */ "112=4,113:118=48:63,119=65,120:124=68:76,125:126=77:79,127=1",
+   /*White */ "112=4,113:115=80:82,116:117=84:86,118:120=89:93,121:127=96:108",
 };
 
 // 
@@ -1040,7 +1033,7 @@ translat_t translations[TRANSLATIONCOLOURS] =
 //
 void R_InitTranslationTables(void)
 {
-   int numtlumps, i, c;
+   int numtlumps, i;
    
    // count number of lumps
    firsttranslationlump = W_CheckNumForName("T_START");
@@ -1055,26 +1048,14 @@ void R_InitTranslationTables(void)
    numtranslations = TRANSLATIONCOLOURS + numtlumps;
 
    // allocate the array of pointers
-   translationtables = 
-      (byte **)(Z_Malloc(sizeof(byte *) * numtranslations, PU_RENDERER, 0));
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER);
    
    // build the internal player translations
-   for(i = 0; i < TRANSLATIONCOLOURS; ++i)
-   {
-      byte *transtbl;
-
-      transtbl = translationtables[i] = (byte *)(Z_Malloc(256, PU_RENDERER, 0));
-
-      for(c = 0; c < 256; ++c)
-      {
-         transtbl[c] =
-            (c < 0x70 || c > 0x7f) ? c : translations[i].start +
-             ((c & 0xf) * (translations[i].number-1))/15;
-      }
-   }
+   for(i = 0; i < TRANSLATIONCOLOURS; i++)
+      translationtables[i] = E_ParseTranslation(translations[i], PU_RENDERER);
 
    // read in the lumps, if any
-   for(i = TRANSLATIONCOLOURS; i < numtranslations; ++i)
+   for(; i < numtranslations; i++)
    {
       int lumpnum = (i - TRANSLATIONCOLOURS) + firsttranslationlump + 1;
 

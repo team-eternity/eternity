@@ -118,9 +118,7 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
             // [CG] Only servers spawn actors.
             if(serverside)
             {
-               Mobj *telefog;
-
-               telefog = P_SpawnMobj(
+               Mobj *telefog = P_SpawnMobj(
                   oldx,
                   oldy,
                   oldz + GameModeInfo->teleFogHeight, 
@@ -136,16 +134,14 @@ int EV_Teleport(line_t *line, int side, Mobj *thing)
                   m->x + 20 * finecosine[m->angle >> ANGLETOFINESHIFT],
                   m->y + 20 * finesine[m->angle >> ANGLETOFINESHIFT],
                   thing->z + GameModeInfo->teleFogHeight, 
-                  GameModeInfo->teleFogType
+                  E_SafeThingType(GameModeInfo->teleFogType)
                );
 
                if(CS_SERVER)
                   SV_BroadcastActorSpawned(telefog);
 
-               // spawn teleport fog and emit sound at destination
                S_StartSound(telefog, GameModeInfo->teleSound);
             }
-
             P_AdjustFloorClip(thing);
 
             // don't move for a bit // killough 10/98

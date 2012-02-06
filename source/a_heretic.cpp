@@ -195,10 +195,7 @@ void A_MummyAttack2(Mobj *actor)
 void A_MummySoul(Mobj *actor)
 {
    Mobj *mo;
-   static int soulType = -1;
-   
-   if(soulType == -1)
-      soulType = E_SafeThingType(MT_MUMMYSOUL);
+   int soulType = E_SafeThingType(MT_MUMMYSOUL);
    
    if(serverside)
    {
@@ -275,13 +272,13 @@ void A_HticDrop(Mobj *actor)
    A_Fall(actor);
 
    // haleyjd 07/05/03: adjusted for EDF
-   if(thingtype1 >= 0 && thingtype1 < NUMMOBJTYPES)
+   if(thingtype1 >= 0)
    {
       if(P_Random(pr_hdrop1) <= chance1)
          P_HticDrop(actor, drop1, thingtype1);
    }
 
-   if(thingtype2 >= 0 && thingtype2 < NUMMOBJTYPES)
+   if(thingtype2 >= 0)
    {
       if(P_Random(pr_hdrop2) <= chance2)
          P_HticDrop(actor, drop2, thingtype2);
@@ -426,10 +423,7 @@ void A_WizardAtk3(Mobj *actor)
    angle_t angle;
    fixed_t momz;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   static int wizfxType = -1;
-   
-   if(wizfxType == -1)
-      wizfxType = E_SafeThingType(MT_WIZFX1);
+   int wizfxType = E_SafeThingType(MT_WIZFX1);
    
    actor->flags3 &= ~MF3_GHOST;
    if(!actor->target)
@@ -486,13 +480,10 @@ void A_Srcr1Attack(Mobj *actor)
    fixed_t momz;
    angle_t angle;
    fixed_t mheight = actor->z + 48*FRACUNIT;
-   static int srcrfxType = -1;
+   int srcrfxType = E_SafeThingType(MT_SRCRFX1);
    
    if(!serverside)
       return;
-
-   if(srcrfxType == -1)
-      srcrfxType = E_SafeThingType(MT_SRCRFX1);
 
    if(!actor->target)
       return;
@@ -547,14 +538,11 @@ void A_Srcr1Attack(Mobj *actor)
 void A_SorcererRise(Mobj *actor)
 {
    Mobj *mo;
-   static int sorc2Type = -1;
+   int sorc2Type = E_SafeThingType(MT_SORCERER2);
    
    if(!serverside)
       return;
 
-   if(sorc2Type == -1)
-      sorc2Type = E_SafeThingType(MT_SORCERER2);
-   
    actor->flags &= ~MF_SOLID;
    mo = P_SpawnMobj(actor->x, actor->y, actor->z, sorc2Type);
    mo->angle = actor->angle;
@@ -594,14 +582,8 @@ MobjCollection sorcspots;
 
 void P_SpawnSorcSpots(void)
 {
-   int spotType = E_ThingNumForDEHNum(MT_DSPARILSPOT);
-
-   sorcspots.setMobjType(spotType);
+   sorcspots.setMobjType("DsparilTeleSpot");
    sorcspots.makeEmpty();
-
-   if(spotType == NUMMOBJTYPES)
-      return;
-
    sorcspots.collectThings();
 }
 
@@ -639,18 +621,12 @@ void A_Srcr2Attack(Mobj *actor)
 {
    int chance;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   static int sor2fx1Type = -1;
-   static int sor2fx2Type = -1;
+   int sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
+   int sor2fx2Type = E_SafeThingType(MT_SOR2FX2);
 
    if(!serverside)
       return;
 
-   if(sor2fx1Type == -1)
-   {
-      sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
-      sor2fx2Type = E_SafeThingType(MT_SOR2FX2);
-   }
-   
    if(!actor->target)
       return;
    
@@ -694,14 +670,11 @@ void A_BlueSpark(Mobj *actor)
 {
    int i;
    Mobj *mo;
-   static int sparkType = -1;
+   int sparkType = E_SafeThingType(MT_SOR2FXSPARK);
    
    if(!serverside)
       return;
 
-   if(sparkType == -1)
-      sparkType = E_SafeThingType(MT_SOR2FXSPARK);
-   
    for(i = 0; i < 2; ++i)
    {
       mo = P_SpawnMobj(actor->x, actor->y, actor->z, sparkType);
@@ -718,20 +691,14 @@ void A_GenWizard(Mobj *actor)
 {
    Mobj *mo;
    Mobj *fog;
-   static int wizType = -1;
-   static int fogType = -1;
+   int wizType = E_SafeThingType(MT_WIZARD);
+   int fogType = E_SafeThingType(MT_HTFOG);
 
    if(!serverside)
       return;
 
-   if(wizType == -1)
-   {
-      wizType = E_SafeThingType(MT_WIZARD);
-      fogType = E_SafeThingType(MT_HTFOG);
-   }
-   
    mo = P_SpawnMobj(actor->x, actor->y, 
-                    actor->z-mobjinfo[wizType].height/2, 
+                    actor->z-mobjinfo[wizType]->height/2, 
                     wizType);
 
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
@@ -763,7 +730,7 @@ void A_GenWizard(Mobj *actor)
 
    // set this missile object to die
    actor->momx = actor->momy = actor->momz = 0;
-   P_SetMobjState(actor, mobjinfo[actor->type].deathstate);
+   P_SetMobjState(actor, mobjinfo[actor->type]->deathstate);
    actor->flags &= ~MF_MISSILE;
    
    // spawn a telefog
@@ -926,14 +893,11 @@ void A_PodPain(Mobj *actor)
    int count;
    int chance;
    Mobj *goo;
-   static int gooType = -1;
+   int   gooType = E_SafeThingType(MT_PODGOO);
    
    if(!serverside)
       return;
 
-   if(gooType == -1)
-      gooType = E_SafeThingType(MT_PODGOO);
-   
    chance = P_Random(pr_podpain);
 
    if(chance < 128)
@@ -1037,7 +1001,7 @@ void A_MakePod(Mobj *actor)
 //
 void A_VolcanoBlast(Mobj *actor)
 {
-   static int ballType = -1;
+   int ballType = E_SafeThingType(MT_VOLCANOBLAST);
    int i, numvolcballs;
    Mobj *volcball;
    angle_t angle;
@@ -1045,9 +1009,6 @@ void A_VolcanoBlast(Mobj *actor)
    if(!serverside)
       return;
 
-   if(ballType == -1)
-      ballType = E_SafeThingType(MT_VOLCANOBLAST);
-   
    // spawn 1 to 3 volcano balls
    numvolcballs = (P_Random(pr_volcano) % 3) + 1;
    
@@ -1085,7 +1046,7 @@ void A_VolcanoBlast(Mobj *actor)
 //
 void A_VolcBallImpact(Mobj *actor)
 {
-   static int sballType = -1;
+   int sballType = E_SafeThingType(MT_VOLCANOTBLAST);
    int i;
    Mobj *svolcball;
    angle_t angle;
@@ -1093,9 +1054,6 @@ void A_VolcBallImpact(Mobj *actor)
    if(!serverside)
       return;
 
-   if(sballType == -1)
-      sballType = E_SafeThingType(MT_VOLCANOTBLAST);
-  
    // if the thing hit the floor, move it up so that the little
    // volcano balls don't hit the floor immediately
    if(actor->z <= actor->floorz)
@@ -1147,18 +1105,12 @@ void A_VolcBallImpact(Mobj *actor)
 //
 void A_KnightAttack(Mobj *actor)
 {
-   static int ghostType = -1, axeType = -1, redAxeType = -1;
+   int ghostType  = E_ThingNumForDEHNum(MT_KNIGHTGHOST);
+   int axeType    = E_SafeThingType(MT_KNIGHTAXE);
+   int redAxeType = E_SafeThingType(MT_REDAXE);
 
    if(!serverside)
       return;
-
-   // resolve thing types only once for max speed
-   if(ghostType == -1)
-   {
-      ghostType  = E_ThingNumForDEHNum(MT_KNIGHTGHOST);
-      axeType    = E_SafeThingType(MT_KNIGHTAXE);
-      redAxeType = E_SafeThingType(MT_REDAXE);
-   }
 
    if(!actor->target)
       return;
@@ -1456,14 +1408,11 @@ void A_MinotaurDecide(Mobj *actor)
 //
 void A_MinotaurCharge(Mobj *actor)
 {
-   static int puffType = -1;
+   int   puffType = E_SafeThingType(MT_PHOENIXPUFF);
    Mobj *puff;
    if(!serverside)
       return;
    
-   if(puffType == -1)
-      puffType = E_SafeThingType(MT_PHOENIXPUFF);
-
    if(actor->counters[0]) // test charge timer
    {
       // spawn some smoke and count down the charge
@@ -1490,14 +1439,11 @@ void A_MinotaurCharge(Mobj *actor)
 //
 void A_MinotaurAtk2(Mobj *actor)
 {
-   static int mntrfxType = -1;
+   int      mntrfxType = E_SafeThingType(MT_MNTRFX1);
    Mobj *mo;
    angle_t angle;
    fixed_t momz;
    
-   if(mntrfxType == -1)
-      mntrfxType = E_SafeThingType(MT_MNTRFX1);
-
    if(!actor->target)
       return;
 
@@ -1536,12 +1482,9 @@ void A_MinotaurAtk2(Mobj *actor)
 //
 void A_MinotaurAtk3(Mobj *actor)
 {
-   static int mntrfxType = -1;
+   int       mntrfxType = E_SafeThingType(MT_MNTRFX2);
    Mobj *mo;
    player_t *player;
-
-   if(mntrfxType == -1)
-      mntrfxType = E_SafeThingType(MT_MNTRFX2);
 
    if(!actor->target)
       return;
@@ -1559,8 +1502,10 @@ void A_MinotaurAtk3(Mobj *actor)
    {
       // floor fire attack
       if(serverside)
+      {
          mo = P_SpawnMissile(actor, actor->target, mntrfxType, ONFLOORZ);
-      S_StartSound(mo, sfx_minat1);
+         S_StartSound(mo, sfx_minat1);
+      }
    }
 
    if(P_Random(pr_minatk3) < 192 && actor->counters[1] == 0)
@@ -1578,15 +1523,12 @@ void A_MinotaurAtk3(Mobj *actor)
 //
 void A_MntrFloorFire(Mobj *actor)
 {
-   static int mntrfxType = -1;
+   int      mntrfxType = E_SafeThingType(MT_MNTRFX3);
    Mobj *mo;
    fixed_t x, y;
 
    if(!serverside)
       return;
-
-   if(mntrfxType == -1)
-      mntrfxType = E_SafeThingType(MT_MNTRFX3);
 
    // set actor to floor
    actor->z = actor->floorz;
@@ -1634,45 +1576,45 @@ void A_LichFire(Mobj *actor)
    if(!(target = actor->target))
       return;
 
-   if(serverside)
+   if(!serverside)
    {
-      // spawn the parent fireball
-      baseFire = P_SpawnMissile(actor, target, headfxType, 
-                                actor->z + DEFAULTMISSILEZ);
-      
-      // set it to S_HEADFX3_4 so that it doesn't grow
-      P_SetMobjState(baseFire, frameNum);
+      S_StartSound(baseFire, frameNum);
+      return;
    }
+
+   // spawn the parent fireball
+   baseFire = P_SpawnMissile(actor, target, headfxType, 
+                             actor->z + DEFAULTMISSILEZ);
+   
+   // set it to S_HEADFX3_4 so that it doesn't grow
+   P_SetMobjState(baseFire, frameNum);
 
    S_StartSound(actor, sfx_hedat1);
 
-   if(serverside)
+   for(i = 0; i < 5; ++i)
    {
-      for(i = 0; i < 5; ++i)
-      {
-         fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
-       
-         if(CS_SERVER)
-            SV_BroadcastActorSpawned(fire);
-         // pass on the lich as the originator
-         P_SetTarget<Mobj>(&fire->target, baseFire->target);
-         if(CS_SERVER)
-            SV_BroadcastActorTarget(fire, CS_AT_TARGET);
-         
-         // inherit the motion properties of the parent fireball
-         fire->angle = baseFire->angle;
-         fire->momx  = baseFire->momx;
-         fire->momy  = baseFire->momy;
-         fire->momz  = baseFire->momz;
-         
-         // start out with zero damage
-         fire->damage = 0;
+      fire = P_SpawnMobj(baseFire->x, baseFire->y, baseFire->z, headfxType);
+    
+      if(CS_SERVER)
+         SV_BroadcastActorSpawned(fire);
+      // pass on the lich as the originator
+      P_SetTarget<Mobj>(&fire->target, baseFire->target);
+      if(CS_SERVER)
+         SV_BroadcastActorTarget(fire, CS_AT_TARGET);
+      
+      // inherit the motion properties of the parent fireball
+      fire->angle = baseFire->angle;
+      fire->momx  = baseFire->momx;
+      fire->momy  = baseFire->momy;
+      fire->momz  = baseFire->momz;
+      
+      // start out with zero damage
+      fire->damage = 0;
 
-         // set a counter for growth
-         fire->counters[0] = (i + 1) << 1;
-         
-         P_CheckMissileSpawn(fire);
-      }
+      // set a counter for growth
+      fire->counters[0] = (i + 1) << 1;
+      
+      P_CheckMissileSpawn(fire);
    }
 }
 
@@ -1684,7 +1626,7 @@ void A_LichFire(Mobj *actor)
 //
 void A_LichWhirlwind(Mobj *actor)
 {
-   static int wwType = -1;
+   int wwType = E_SafeThingType(MT_WHIRLWIND);
    Mobj *mo, *target;
 
    if(!(target = actor->target))
@@ -1692,9 +1634,6 @@ void A_LichWhirlwind(Mobj *actor)
 
    if(serverside)
    {
-      if(wwType == -1)
-         wwType = E_SafeThingType(MT_WHIRLWIND);
-
       mo = P_SpawnMissile(actor, target, wwType, actor->z);
       
       // use mo->tracer to track target
@@ -1717,7 +1656,7 @@ void A_LichWhirlwind(Mobj *actor)
 //
 void A_LichAttack(Mobj *actor)
 {
-   static int fxType = -1;
+   int fxType = E_SafeThingType(MT_LICHFX1);
    Mobj *target;
    int randAttack, dist;
 
@@ -1729,9 +1668,6 @@ void A_LichAttack(Mobj *actor)
    // Fire column    40%   20%
    // Whirlwind      40% : 20%
 
-   if(fxType == -1)
-      fxType = E_SafeThingType(MT_LICHFX1);
-   
    if(!(target = actor->target))
       return;
 
@@ -1830,18 +1766,14 @@ void A_WhirlwindSeek(Mobj *actor)
 //
 void A_LichIceImpact(Mobj *actor)
 {
-   static int fxType = -1;
-   int i;
+   int      fxType = E_SafeThingType(MT_LICHFX2);
    angle_t angle;
    Mobj *shard;
 
    if(!serverside)
       return;
 
-   if(fxType == -1)
-      fxType = E_SafeThingType(MT_LICHFX2);
-   
-   for(i = 0; i < 8; ++i)
+   for(int i = 0; i < 8; ++i)
    {
       shard = P_SpawnMobj(actor->x, actor->y, actor->z, fxType);      
       if(CS_SERVER)
@@ -1934,13 +1866,10 @@ void A_ImpMeleeAtk(Mobj *actor)
 //
 void A_ImpMissileAtk(Mobj *actor)
 {
-   static int fxType = -1;
+   int fxType = E_SafeThingType(MT_IMPBALL);
 
    if(!actor->target)
       return;
-
-   if(fxType == -1)
-      fxType = E_SafeThingType(MT_IMPBALL);
 
    S_StartSound(actor, actor->info->attacksound);
 

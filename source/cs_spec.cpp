@@ -136,9 +136,9 @@ void CS_SaveCeilingData(cs_ceilingdata_t *cscd, ceilingdata_t *cd)
 
 void CS_SaveDoorData(cs_doordata_t *csdd, doordata_t *dd)
 {
-   csdd->delay_type     = dd->delay_type;
+   csdd->delay_type     = dd->delay_value;
    csdd->kind           = dd->kind;
-   csdd->speed_type     = dd->speed_type;
+   csdd->speed_type     = dd->speed_value;
    csdd->trigger_type   = dd->trigger_type;
    csdd->speed_value    = dd->speed_value;
    csdd->delay_value    = dd->delay_value;

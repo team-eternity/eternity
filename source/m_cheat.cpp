@@ -926,7 +926,7 @@ static void M_NukeMonsters(void)
          if(!(mo = thinker_cast<Mobj *>(th)))
             continue;
 
-         mi = &mobjinfo[mo->type];
+         mi = mobjinfo[mo->type];
 
          if(!(mo->flags & mask) && // killough 7/20/98
             (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))

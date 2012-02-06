@@ -139,6 +139,11 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
                            byte *outr, bool flipped);
 
+// V_DrawPatchTranslatedLit
+// As above, but with an additional lighttable remapping.
+void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
+                              byte *outr, byte *lighttable, bool flipped);
+
 // V_DrawPatchTL
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with the given opacity. If a color translation table is supplied

@@ -58,13 +58,13 @@ void P_CeilingSequence(sector_t *s, int noiseLevel)
       switch(noiseLevel)
       {
       case CNOISE_NORMAL:
-         S_StartSectorSequenceName(s, "EECeilingNormal", true);
+         S_StartSectorSequenceName(s, "EECeilingNormal", SEQ_ORIGIN_SECTOR_C);
          break;
       case CNOISE_SEMISILENT:
-         S_StartSectorSequenceName(s, "EECeilingSemiSilent", true);
+         S_StartSectorSequenceName(s, "EECeilingSemiSilent", SEQ_ORIGIN_SECTOR_C);
          break;
       case CNOISE_SILENT:
-         S_StartSectorSequenceName(s, "EECeilingSilent", true);
+         S_StartSectorSequenceName(s, "EECeilingSilent", SEQ_ORIGIN_SECTOR_C);
          break;
       }
    }
@@ -150,7 +150,7 @@ void CeilingThinker::Think()
             // crushers reverse direction at the top
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(sector, true))
+            if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case genSilentCrusher:
          case genCrusher:
@@ -190,7 +190,7 @@ void CeilingThinker::Think()
             // except generalized ones, reset speed, start back up
          case silentCrushAndRaise:
             // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(sector, true))
+            if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
                P_CeilingSequence(sector, CNOISE_SEMISILENT);
          case crushAndRaise: 
             speed = CEILSPEED;
@@ -257,7 +257,7 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   SectorThinker::serialize(arc);
+   Super::serialize(arc);
 
    arc << type << bottomheight << topheight << speed << oldspeed
        << crush << special << texture << direction << inStasis << tag 
@@ -478,7 +478,7 @@ int EV_CeilingCrushStop(line_t* line)
          ceiling->olddirection = ceiling->direction;
          ceiling->direction = plat_stop;
          ceiling->inStasis = true;
-         S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
+         S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
          rtn = 1;
       }
    }
@@ -516,7 +516,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 {
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
-   S_StopSectorSequence(ceiling->sector, true); // haleyjd 09/28/06
+   S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
    ceiling->removeThinker();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
