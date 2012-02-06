@@ -150,14 +150,7 @@
 ** "administrator_password" are required; the server will quit with an error if
 ** they are not defined.
 **
-** A quick note about "max_player_clients", "max_admin_clients" and
-** "max_players":
-**   - "max_player_clients" is the number of non-admin clients that can be
-**      connected to the server.
-**   - "max_admin_clients" is the number of admin client spots to reserve.
-**   - MAX_CLIENTS is the sum of "max_player_clients" and "max_admin_clients",
-**     and is the true maximum number of clients that can be connected at any
-**     given time.
+** A quick note about "max_clients" and "max_players":
 **   - "max_players" and "max_players_per_team" are map-specific options (can
 **     be changed on a per-map basis) and represent the maximum number of
 **     players that have "joined the game" or "joined the game on a team".
@@ -165,9 +158,9 @@
 **     section, they belong below in options and maps.
 **   - If a player has passed through the queue and is eligible to play, but is
 **     spectating, a timer will start to tick.  If the timer expires, the
-**     player is sent back to the end of the queue, and the queue advances.
-**     This time limit is configurable using "spectator_time_limit".  This does
-**     not affect spectators who are not yet eligible to play.
+**     player is marked as AFK and the queue advances.  This time limit is
+**     configurable using "join_time_limit".  This does not affect spectators
+**     who are not yet eligible to play.
 **
 ** The value for the "game" configuration option corresponds to a game folder
 ** found in the "base" folder, i.e. "plutonia", "heretic", "doom2", etc.
@@ -179,9 +172,8 @@
         "hostname": ":: Eternity Server :: Duel 1",
         "address": "public",
         "port": 10666,
-        "max_admin_clients": 2,
-        "max_player_clients": 30,
-        "spectator_time_limit": 30,
+        "max_clients": 32,
+        "join_time_limit": 5,
         "game": "doom2",
         "game_type": "duel",
         "buffer_client_commands": false,

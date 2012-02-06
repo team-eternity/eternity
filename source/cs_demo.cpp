@@ -1165,9 +1165,7 @@ bool CS_UpdateDemoSettings(void)
    map_info["settings"]["skill"] = cs_settings->skill;
    map_info["settings"]["game_type"] = cs_settings->game_type;
    map_info["settings"]["ctf"] = cs_settings->ctf;
-   map_info["settings"]["max_admin_clients"] = cs_settings->max_admin_clients;
-   map_info["settings"]["max_player_clients"] =
-      cs_settings->max_player_clients;
+   map_info["settings"]["max_clients"] = cs_settings->max_clients;
    map_info["settings"]["max_players"] = cs_settings->max_players;
    map_info["settings"]["max_players_per_team"] =
       cs_settings->max_players_per_team;

@@ -130,12 +130,12 @@ CONSOLE_COMMAND(team, cf_netonly)
    }
 
    team_buffer = Console.argv[0]->getBuffer();
-   if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
+   if(strncasecmp(team_buffer, team_color_names[team_color_none], 4) == 0)
+      CL_SendTeamRequest(team_color_none);
+   else if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
       CL_SendTeamRequest(team_color_red);
    else if(strncasecmp(team_buffer, team_color_names[team_color_blue], 4) == 0)
       CL_SendTeamRequest(team_color_blue);
-   else if(strncasecmp(team_buffer, team_color_names[team_color_none], 4) == 0)
-      doom_printf("Cannot switch off all teams in team games.\n");
    else
       doom_printf("Invalid team '%s'.\n", team_buffer);
 }
@@ -210,11 +210,18 @@ CONSOLE_COMMAND(spectate, cf_netonly)
 
 CONSOLE_COMMAND(afk, cf_netonly)
 {
+   if(clients[consoleplayer].afk)
+   {
+      doom_printf("You are already AFK.");
+      return;
+   }
+
    if(!clients[consoleplayer].spectating)
    {
       CS_SetDisplayPlayer(consoleplayer);
       CL_Spectate();
    }
+
    clients[consoleplayer].afk = true;
    CL_SendPlayerScalarInfo(ci_afk);
 }

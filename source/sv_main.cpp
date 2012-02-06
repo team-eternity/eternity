@@ -1463,7 +1463,7 @@ bool SV_HandleJoinRequest(int playernum)
    if(server_client->auth_level < cs_auth_player)
    {
       // [CG] Client has insufficient authorization.
-      SV_SendHUDMessage(playernum, "Insufficient authorization.\n");
+      SV_SendHUDMessage(playernum, "Unauthorized.");
       return false;
    }
 
@@ -1475,7 +1475,7 @@ bool SV_HandleJoinRequest(int playernum)
    // [CG] If the client is still in line, they can't join the game yet.
    if(client->queue_level == ql_waiting || !SV_RoomInGame(playernum))
    {
-      SV_SendHUDMessage(playernum, "No open player slots.");
+      SV_SendHUDMessage(playernum, "No open slots.");
       return false;
    }
 
@@ -1493,7 +1493,7 @@ bool SV_HandleJoinRequest(int playernum)
    // [CG] Can't join the game if not yet on a team.
    if(client->team == team_color_none)
    {
-      SV_SendHUDMessage(playernum, "Cannot join the game on this team.");
+      SV_SendHUDMessage(playernum, "Pick a team first.");
       return false;
    }
 

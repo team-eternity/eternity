@@ -104,8 +104,7 @@ struct event_t;
 #define MAX_NAME_SIZE 20
 
 // [CG] Convenience macro to return the functional maximum number of clients.
-#define MAX_CLIENTS (cs_original_settings->max_player_clients + \
-                     cs_original_settings->max_admin_clients)
+#define MAX_CLIENTS (cs_original_settings->max_clients)
 
 // [CG] Used in p_trace to determine whether or not puffs/blood should be
 //      spawned.

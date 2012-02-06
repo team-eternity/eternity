@@ -98,8 +98,7 @@ typedef struct
    int32_t  skill;
    int32_t  game_type;
    int8_t   ctf;
-   uint32_t max_admin_clients;
-   uint32_t max_player_clients;
+   uint32_t max_clients;
    uint32_t max_players;
    uint32_t max_players_per_team;
    uint32_t frag_limit;

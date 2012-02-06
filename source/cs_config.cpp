@@ -802,30 +802,11 @@ void CS_HandleServerSection(Json::Value &server)
    }
 
    // [CG] 2 for the server's spectator and at least 1 client.
-   cs_original_settings->max_player_clients = (MAXPLAYERS - 2);
-   if(!server["max_player_clients"].empty())
+   cs_original_settings->max_clients = MAXPLAYERS;
+   if(!server["max_clients"].empty())
    {
-      check_int_option_range(server, max_player_clients, 2, (MAXPLAYERS - 2))
-      cs_original_settings->max_player_clients =
-         server["max_player_clients"].asInt();
-   }
-
-   cs_original_settings->max_admin_clients = 2;
-   if(!server["max_admin_clients"].empty())
-   {
-      check_int_option_range(server, max_admin_clients, 2, (MAXPLAYERS >> 1))
-      cs_original_settings->max_admin_clients =
-         server["max_admin_clients"].asInt();
-   }
-
-   if(cs_original_settings->max_player_clients +
-      cs_original_settings->max_admin_clients > MAXPLAYERS)
-   {
-      I_Error(
-         "CS_LoadConfig: The total of 'max_player_clients' and "
-         "'max_admin_clients' cannot exceed %d.\n",
-         MAXPLAYERS
-      );
+      check_int_option_range(server, max_clients, 2, MAXPLAYERS)
+      cs_original_settings->max_clients = server["max_clients"].asInt();
    }
 
    cs_original_settings->game_type = gt_coop;
