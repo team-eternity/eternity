@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_POSITION_H__
-#define __CS_POSITION_H__
+#ifndef CS_POSITION_H__
+#define CS_POSITION_H__
 
 #include "tables.h"
 

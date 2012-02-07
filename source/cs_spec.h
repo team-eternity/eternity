@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_SPEC_H__
-#define __CS_SPEC_H__
+#ifndef CS_SPEC_H__
+#define CS_SPEC_H__
 
 #include "m_fixed.h"
 #include "p_spec.h"

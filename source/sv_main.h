@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_SERVER_H__
-#define __CS_SERVER_H__
+#ifndef SV_MAIN_H__
+#define SV_MAIN_H__
 
 #include "d_player.h"
 #include "doomdata.h"

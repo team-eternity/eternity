@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_TEAM_H__
-#define __CS_TEAM_H__
+#ifndef CS_TEAM_H__
+#define CS_TEAM_H__
 
 #include "doomdef.h"
 #include "doomdata.h"

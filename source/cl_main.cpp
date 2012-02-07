@@ -24,10 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#include <list>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+// [CG] Necessary for JSON parsing routines.
+#include <string>
 
 #include "z_zone.h"
 
@@ -241,15 +239,12 @@ void CL_InitPlayDemoMode(void)
 
 char* CL_GetUserAgent(void)
 {
-   std::stringstream user_agent_stream;
-
-   user_agent_stream << "emp-client"           << "/"
-                     << (version / 100)        << "."
-                     << (version % 100)        << "."
-                     << ((uint32_t)subversion) << "-"
-                     << (cs_protocol_version);
-
-   return estrdup(user_agent_stream.str().c_str());
+   qstring buffer;
+   buffer.Printf(28, "emp-client/%u.%u.%u-%u", version / 100,
+                                               version % 100,
+                                               (uint32_t)subversion,
+                                               cs_protocol_version);
+   return estrdup(buffer.constPtr());
 }
 
 void CL_Reset(void)

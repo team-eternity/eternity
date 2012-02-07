@@ -24,5 +24,10 @@
 //
 //----------------------------------------------------------------------------
 
+#ifndef SV_CMD_H__
+#define SV_CMD_H__
+
 void SV_AddCommands(void);
+
+#endif
 

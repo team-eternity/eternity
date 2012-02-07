@@ -51,15 +51,6 @@ public:
       memcpy(data, original.data, size);
    }
 
-   /*
-   explicit NetPacket(NetPacket& original)
-   {
-      size = original.size;
-      data = emalloc(char *, size);
-      memcpy(data, original.data, size);
-   }
-   */
-
    NetPacket& operator= (const NetPacket& other)
    {
       if(this != &other)

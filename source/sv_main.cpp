@@ -398,7 +398,7 @@ char* SV_GetUserAgent(void)
    if(!sv_user_agent)
    {
       qstring buffer;
-      buffer.Printf(16, "emp-server/%u.%u.%u-%u", version / 100,
+      buffer.Printf(28, "emp-server/%u.%u.%u-%u", version / 100,
                                                   version % 100,
                                                   (uint32_t)subversion,
                                                   cs_protocol_version);

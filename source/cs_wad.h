@@ -25,8 +25,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_WAD_H__
-#define __CS_WAD_H__
+#ifndef CS_WAD_H__
+#define CS_WAD_H__
 
 #include "doomtype.h"
 

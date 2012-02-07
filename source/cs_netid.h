@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,16 +24,15 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __CS_NETID_H__
-#define __CS_NETID_H__
+#ifndef CS_NETID_H__
+#define CS_NETID_H__
 
-#include <map>
-#include <queue>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stddef.h>
-
+#include "e_hash.h"
 #include "i_system.h"
+#include "m_queue.h"
+
+#define NUM_NETID_CHAINS 256
+#define MAX_NETID_LOAD_FACTOR 0.7
 
 class Mobj;
 #if 0
@@ -46,50 +45,83 @@ class FloorWaggleThinker;
 class PlatThinker;
 #endif
 
+struct NetID
+{
+   mqueueitem_t item;
+   uint32_t id;
+};
+
+template <typename T> struct NetIDToObject
+{
+   DLListItem<NetIDToObject> links;
+   int id;
+   T *object;
+};
+
 template <class T> class NetIDLookup
 {
 private:
    uint32_t netids_assigned;
-   std::queue<uint32_t> netid_queue;
-   std::map<uint32_t, T*> netid_map;
+   mqueue_t netid_queue;
+   EHashTable<NetIDToObject<T>, EIntHashKey, &NetIDToObject<T>::id,
+              &NetIDToObject<T>::links> netid_map;
 
 public:
    NetIDLookup()
+      : netids_assigned(0)
    {
-      netids_assigned = 0;
+      M_QueueInit(&netid_queue);
+      netid_map.initialize(NUM_NETID_CHAINS);
    }
 
    void add(T *x)
    {
-      uint32_t net_id;
+      NetIDToObject<T> *nito;
 
+      // [CG] Get a new Net ID.  If the thing came in with a Net ID, check that
+      //      it's not already in use (error if it is).  Otherwise check the
+      //      stack for a recently-released Net ID.  Finally resort to creating
+      //      a new one.
       if(x->net_id != 0)
       {
-         if(netid_map.count(x->net_id))
+         if(lookup(x->net_id))
             I_Error("Net ID %u has multiple owners, exiting.\n", x->net_id);
-         net_id = x->net_id;
       }
-      else if(netid_queue.empty())
+      else if(!M_QueueIsEmpty(&netid_queue))
       {
-         net_id = netids_assigned + 1;
+         NetID *ni = (NetID *)(M_QueuePop(&netid_queue));
+         x->net_id = ni->id;
+         efree(ni);
       }
       else
-      {
-         net_id = netid_queue.front();
-         netid_queue.pop();
-      }
+         x->net_id = netids_assigned + 1;
 
-      netid_map[net_id] = x;
-      x->net_id = net_id;
+      nito = estructalloc(NetIDToObject<T>, 1);
+      nito->id = x->net_id;
+      nito->object = x;
+      netid_map.addObject(nito);
       netids_assigned++;
+
+      if(netid_map.getLoadFactor() > MAX_NETID_LOAD_FACTOR)
+         netid_map.rebuild(netid_map.getNumChains() * 2);
    }
 
    void remove(T *x)
    {
       if(x->net_id != 0)
       {
-         netid_queue.push(x->net_id);
-         netid_map.erase(x->net_id);
+         NetID *ni = estructalloc(NetID, 1);
+         NetIDToObject<T> *nito = netid_map.objectForKey(x->net_id);
+
+         ni->id = x->net_id;
+         M_QueueInsert((mqueueitem_t *)(ni), &netid_queue);
+
+         if(nito)
+         {
+            netid_map.removeObject(nito);
+            efree(nito);
+         }
+
          x->net_id = 0;
          netids_assigned--;
       }
@@ -97,30 +129,26 @@ public:
 
    T* lookup(uint32_t net_id)
    {
-      typename std::map<uint32_t, T*>::iterator it = netid_map.find(net_id);
+      NetIDToObject<T> *nito = netid_map.objectForKey(net_id);
 
-      if(it == netid_map.end())
-         return NULL;
+      if(nito)
+         return nito->object;
 
-      return it->second;
+      return NULL;
    }
 
    void clear(void)
    {
+      NetIDToObject<T> *nito = NULL;
+
       netids_assigned = 0;
-      while(netid_queue.size())
-         netid_queue.pop();
-      netid_map.clear();
-   }
+      M_QueueFree(&netid_queue);
 
-   typename std::map<uint32_t, T*>::iterator begin(void)
-   {
-      return netid_map.begin();
-   }
-
-   typename std::map<uint32_t, T*>::iterator end(void)
-   {
-      return netid_map.end();
+      while((nito = netid_map.tableIterator(NULL)))
+      {
+         netid_map.removeObject(nito);
+         efree(nito);
+      }
    }
 
 };

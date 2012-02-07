@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __SV_SPEC_H__
-#define __SV_SPEC_H__
+#ifndef SV_SPEC_H__
+#define SV_SPEC_H__
 
 #include "cs_spec.h"
 

@@ -24,6 +24,9 @@
 //
 //----------------------------------------------------------------------------
 
+#ifndef SV_QUEUE_H__
+#define SV_QUEUE_H__
+
 void SV_QueueSetClientRemoved(int clientnum);
 void SV_QueueSetClientWaiting(int clientnum, unsigned int position);
 void SV_QueueSetClientDoneWaiting(int clientnum);
@@ -32,4 +35,6 @@ void SV_QueueSetClientNotPlaying(int clientnum);
 void SV_QueueSetClientPlaying(int clientnum);
 void SV_PutClientInQueue(int clientnum);
 void SV_MarkQueueClientsAFK();
+
+#endif
 

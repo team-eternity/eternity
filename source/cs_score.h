@@ -24,8 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __CS_SCORE_H__
-#define __CS_SCORE_H__
+#ifndef CS_SCORE_H__
+#define CS_SCORE_H__
 
 void CS_DrawScoreboard(unsigned int extra_top_margin);
 void CS_ShowScores(void);
