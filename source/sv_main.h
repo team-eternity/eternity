@@ -56,6 +56,7 @@ extern const char *sv_default_access_list_filename;
 
 // [CG] General stuff.
 void SV_Init(void);
+bool SV_ServerEmpty();
 void SV_CleanUp(void);
 char* SV_GetUserAgent(void);
 void SV_ConsoleTicker(void);

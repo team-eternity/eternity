@@ -810,6 +810,8 @@ void CS_HandleServerSection()
       check_int_option_range(server, max_clients, 2, MAXPLAYERS)
       cs_original_settings->max_clients = server["max_clients"].asInt();
    }
+   else
+      server["max_clients"] = cs_original_settings->max_clients;
 
    cs_original_settings->game_type = gt_coop;
    if(!server["game_type"].empty())
