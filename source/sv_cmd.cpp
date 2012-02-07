@@ -86,11 +86,13 @@ CONSOLE_COMMAND(ban, cf_server)
    char *address = NULL;
    const char *name = NULL;
    const char *reason = NULL;
+   int minutes = 0;
 
-   if(Console.argc < 2)
+   if(Console.argc < 2 || Console.argc > 3)
    {
-      C_Printf("usage: ban <playernum> <reason>\n"
-               " use playerinfo to find playernum\n");
+      C_Printf("usage: ban <playernum> <reason> <minutes>\n"
+               " use playerinfo to find playernum\n"
+               " minutes is optional\n");
       return;
    }
 
@@ -103,16 +105,30 @@ CONSOLE_COMMAND(ban, cf_server)
    reason = Console.argv[1]->constPtr();
    ip_address = server_clients[playernum].address.host;
    address = CS_IPToString(ip_address);
+   if(Console.argc == 3)
+      minutes = Console.argv[2]->toInt();
 
-   if(sv_access_list->addBanListEntry((const char *)address, name, reason))
+   if(sv_access_list->addBanListEntry(address, name, reason, minutes))
    {
       for(i = 1; i < MAX_CLIENTS; i++)
       {
          if(playeringame[i] &&
             server_clients[playernum].address.host == ip_address)
          {
-            SV_BroadcastMessage("%s was banned: %s", name, reason);
-            doom_printf("%s was banned: %s", name, reason);
+            if(minutes > 0)
+            {
+               SV_BroadcastMessage(
+                  "%s was banned for %d minutes: %s", name, minutes, reason
+               );
+               doom_printf(
+                  "%s was banned for %d minutes: %s", name, minutes, reason
+               );
+            }
+            else
+            {
+               SV_BroadcastMessage("%s was banned: %s", name, reason);
+               doom_printf("%s was banned: %s", name, reason);
+            }
             SV_DisconnectPlayer(i, dr_banned);
          }
       }

@@ -1208,8 +1208,6 @@ void G_LoadDefaults(void)
    else
       D_OpenFile(file, cfg_file, "r");
 
-   printf("Loaded keys from %s.\n", cfg_file);
-
    if(!D_IsOpen(file))
       I_Error("G_LoadDefaults: couldn't open default key bindings\n");
 

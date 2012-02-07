@@ -48,16 +48,22 @@ private:
 
    void setError(int error_code);
    void writeOutAccessList(void);
+   bool addressMatches(const char *address, std::string& ban);
+   bool banIsValid(Json::Value& ban);
 
 public:
    AccessList();
+   static bool  banIsTemporary(Json::Value *ban);
+   static bool  banIsTemporary(Json::Value& ban);
+   bool         addBanListEntry(const char *address, const char *name,
+                                const char *reason, int minutes);
    bool         addBanListEntry(const char *address, const char *name,
                                 const char *reason);
    bool         removeBanListEntry(const char *address);
    bool         addWhiteListEntry(const char *address, const char *name);
    bool         removeWhiteListEntry(const char *address);
+   Json::Value* getBan(const char *address);
    bool         isBanned(const char *address);
-   Json::Value& getBan(const char *address);
    const char*  getError(void);
    void         printBansToConsole(void);
    void         printWhiteListsToConsole(void);

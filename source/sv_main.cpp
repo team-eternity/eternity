@@ -852,7 +852,7 @@ void SV_EndUnlag(int playernum)
 int SV_HandleClientConnection(ENetPeer *peer)
 {
    unsigned int i;
-   Json::Value ban;
+   Json::Value *ban;
    server_client_t *server_client;
    char *address = CS_IPToString(peer->address.host);
 
@@ -882,17 +882,29 @@ int SV_HandleClientConnection(ENetPeer *peer)
          server_client->auth_level = cs_auth_spectator;
    }
 
-
-   if(sv_access_list->isBanned((const char *)address))
+   if((ban = sv_access_list->getBan(address)))
    {
-      Json::Value& ban = sv_access_list->getBan((const char *)address);
-      SV_SendMessage(
-         i,
-         "Banned: %s (%s): %s",
-         ban["name"].asCString(),
-         address,
-         ban["reason"].asCString()
-      );
+      if(AccessList::banIsTemporary(ban))
+      {
+         SV_SendMessage(
+            i,
+            "Temporarily banned for %d minutes: %s (%s): %s",
+            (*ban)["duration"].asInt(),
+            (*ban)["name"].asCString(),
+            address,
+            (*ban)["reason"].asCString()
+         );
+      }
+      else
+      {
+         SV_SendMessage(
+            i,
+            "Banned: %s (%s): %s",
+            (*ban)["name"].asCString(),
+            address,
+            (*ban)["reason"].asCString()
+         );
+      }
       enet_host_flush(net_host);
       CS_ZeroClient(i);
       efree(address);

@@ -77,7 +77,7 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
    int deaths_column_end, deaths_stat_position;
    int lag_column_end, lag_stat_position;
    byte white = (byte)GameModeInfo->whiteIndex;
-   char s[91], level_time_s[11], level_timelimit_s[11];
+   char s[91], level_time_s[11], level_timelimit_s[20];
    crange_idx_e font_color;
    player_t *player;
    client_t *client;

@@ -24,9 +24,8 @@
 //
 //----------------------------------------------------------------------------
 
-// [CG] Needed for JSON parsing routines.
-#include <string>
-#include <vector>
+#include <string> // [CG] Needed for JSON parsing routines.
+#include <ctime>  // [CG] Needed for ban expiration.
 
 #include <json/json.h>
 
@@ -53,6 +52,25 @@ AccessList::AccessList(void)
       CS_ReadJSON(json, sv_access_list_filename);
 }
 
+bool AccessList::banIsTemporary(Json::Value *ban)
+{
+   if((*ban)["expiration"].empty())
+      return false;
+
+   if(!(*ban)["expiration"].isInt())
+      return false;
+
+   if(!(*ban)["expiration"].asInt() <= 0)
+      return false;
+
+   return true;
+}
+
+bool AccessList::banIsTemporary(Json::Value& ban)
+{
+   return banIsTemporary(&ban);
+}
+
 void AccessList::setError(int error_code)
 {
    error = access_list_error_strings[error_code];
@@ -63,11 +81,49 @@ void AccessList::writeOutAccessList(void)
    CS_WriteJSON(sv_access_list_filename, json, true);
 }
 
+bool AccessList::addressMatches(const char *address, std::string& ban)
+{
+   size_t address_length = strlen(address);
+   size_t comparison_cutoff;
+
+   if((comparison_cutoff = ban.find('*')) == ban.npos)
+      comparison_cutoff = ban.length();
+
+   if(ban.compare(0, address_length, address, comparison_cutoff) == 0)
+      return true;
+
+   return false;
+}
+
+bool AccessList::banIsValid(Json::Value& ban)
+{
+   if(!ban.isObject())
+      return false;
+
+   if(ban["name"].empty() || !ban["name"].isString())
+      return false;
+
+   if(ban["reason"].empty() || !ban["reason"].isString())
+      return false;
+
+   if(!ban["expiration"].empty())
+   {
+      if(!ban["expiration"].isInt())
+         return false;
+
+      if(ban["expiration"].asInt() < 1)
+         return false;
+   }
+
+   return true;
+}
+
 bool AccessList::addBanListEntry(const char *address, const char *name,
-                                 const char *reason)
+                                 const char *reason, int minutes)
 {
    Json::Value entry;
    Json::Value& banlist = json["banlist"];
+   struct tm *ban_expiration;
    
    if(banlist.isMember(address))
    {
@@ -78,9 +134,23 @@ bool AccessList::addBanListEntry(const char *address, const char *name,
    entry["name"] = name;
    entry["reason"] = reason;
 
+   if(minutes > 0)
+   {
+      ban_expiration = localtime(NULL);
+      ban_expiration->tm_isdst = 0;
+      ban_expiration->tm_min += minutes;
+      entry["expiration"] = (int)mktime(ban_expiration);
+   }
+
    banlist[address] = entry;
    writeOutAccessList();
    return true;
+}
+
+bool AccessList::addBanListEntry(const char *address, const char *name,
+                                 const char *reason)
+{
+   return addBanListEntry(address, name, reason, 0);
 }
 
 bool AccessList::removeBanListEntry(const char *address)
@@ -127,58 +197,38 @@ bool AccessList::removeWhiteListEntry(const char *address)
    return true;
 }
 
-bool AccessList::isBanned(const char *address)
+Json::Value* AccessList::getBan(const char *address)
 {
-   unsigned int i;
-   size_t comparison_cutoff, address_length;
-   std::string ban;
-   std::vector<std::string> bans;
-   std::vector<std::string>::iterator it;
    Json::Value& banlist = json["banlist"];
    Json::Value& whitelist = json["whitelist"];
+   std::vector<std::string> addresses = banlist.getMemberNames();
+   std::vector<std::string>::iterator it;
 
    if(!whitelist.isMember(address))
    {
-      bans = banlist.getMemberNames();
-      address_length = strlen(address);
-
-      for(i = 0, it = bans.begin(); it != bans.end(); i++, it++)
+      for(it = addresses.begin(); it != addresses.end(); it++)
       {
-         ban = *it;
+         Json::Value& ban = banlist[*it];
 
-         if((comparison_cutoff = ban.find('*')) == ban.npos)
-            comparison_cutoff = ban.length();
+         if(!banIsValid(ban))
+            continue;
 
-         if(ban.compare(0, address_length, address, comparison_cutoff) == 0)
-            return true;
+         if(addressMatches(address, *it))
+            return &banlist[*it];
       }
    }
 
-   return false;
+   return NULL;
 }
 
-Json::Value& AccessList::getBan(const char *address)
+bool AccessList::isBanned(const char *address)
 {
-   unsigned int i;
-   size_t comparison_cutoff;
-   size_t address_length = strlen(address);
-   Json::Value& banlist = json["banlist"];
-   std::string ban;
-   std::vector<std::string> bans = banlist.getMemberNames();
-   std::vector<std::string>::iterator it;
+   Json::Value *ban = getBan(address);
 
-   for(i = 0, it = bans.begin(); it != bans.end(); i++, it++)
-   {
-      ban = *it;
-
-      if((comparison_cutoff = ban.find('*')) == ban.npos)
-         comparison_cutoff = ban.length();
-
-      if(ban.compare(0, address_length, address, comparison_cutoff) != 0)
-         continue;
-   }
-
-   return banlist[ban];
+   if(ban)
+      return true;
+   
+   return false;
 }
 
 const char* AccessList::getError(void)
@@ -194,12 +244,32 @@ void AccessList::printBansToConsole(void)
 
    for(it = addresses.begin(); it != addresses.end(); it++)
    {
-      doom_printf(
-         "%s#%s: %s",
-         (*it).c_str(),
-         banlist[*it]["name"].asCString(),
-         banlist[*it]["reason"].asCString()
-      );
+      Json::Value& ban = banlist[*it];
+
+      if(!banIsValid(ban))
+         continue;
+
+      if(banIsTemporary(ban))
+      {
+         int ban_expiration = ban["expires"].asInt();
+
+         doom_printf(
+            "%s#%s: %s (Expires %s)",
+            (*it).c_str(),
+            ban["name"].asCString(),
+            ban["reason"].asCString(),
+            ctime((time_t *)(&ban_expiration))
+         );
+      }
+      else
+      {
+         doom_printf(
+            "%s#%s: %s",
+            (*it).c_str(),
+            ban["name"].asCString(),
+            ban["reason"].asCString()
+         );
+      }
    }
 }
 
