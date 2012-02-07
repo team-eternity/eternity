@@ -1093,12 +1093,10 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          if(cl_show_sprees)
             HU_CenterMessage(console_frag_level_names[message->int_value]);
       }
-      else
-      {
-         doom_printf(
-            "%s is %s", player->name, frag_level_names[message->int_value]
-         );
-      }
+
+      doom_printf(
+         "%s is %s!", player->name, frag_level_names[message->int_value]
+      );
    }
    else if(message->info_type == ci_cfrag_level)
    {
