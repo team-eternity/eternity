@@ -1236,7 +1236,7 @@ void R_InitTextures(void)
    int *patchlookup;
    int errors = 0;
    int i, texnum = 0;   
-   
+
    texturelump_t *maptex1;
    texturelump_t *maptex2;
 

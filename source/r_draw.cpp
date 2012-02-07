@@ -1034,7 +1034,10 @@ static const char *translations[TRANSLATIONCOLOURS] =
 void R_InitTranslationTables(void)
 {
    int numtlumps, i;
-   
+
+   if(CS_HEADLESS)
+      return;
+
    // count number of lumps
    firsttranslationlump = W_CheckNumForName("T_START");
    lasttranslationlump  = W_CheckNumForName("T_END");

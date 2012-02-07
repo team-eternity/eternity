@@ -482,6 +482,9 @@ static void R_InitTextureMapping (void)
 void R_InitLightTables (void)
 {
    int i;
+
+   if(CS_HEADLESS)
+      return;
    
    // killough 4/4/98: dynamic colormaps
    // [CG] Try using PU_RENDERER for these.

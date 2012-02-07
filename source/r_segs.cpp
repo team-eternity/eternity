@@ -480,6 +480,9 @@ static void R_RenderSegLoop(void)
 //
 static void R_CheckDSAlloc(void)
 {
+   if(CS_HEADLESS)
+      return;
+
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
    {

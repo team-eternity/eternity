@@ -581,7 +581,7 @@ planehash_t *R_NewPlaneHash(int chaincount)
 {
    planehash_t*  ret;
    int           i;
-   
+
    // Make sure chaincount is a power of 2
    if((chaincount - 1) & chaincount)
    {

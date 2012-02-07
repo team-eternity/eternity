@@ -83,6 +83,9 @@ void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
+
+   if(CS_HEADLESS)
+      return;
    
    firstspritelump = W_GetNumForName("S_START") + 1;
    lastspritelump = W_GetNumForName("S_END") - 1;
@@ -126,6 +129,9 @@ void R_InitSpriteLumps(void)
 void R_InitColormaps(void)
 {
    int i;
+
+   if(CS_HEADLESS)
+      return;
 
    firstcolormaplump = W_GetNumForName("C_START");
    lastcolormaplump  = W_GetNumForName("C_END");
@@ -207,7 +213,12 @@ struct trmapcache_s
 //
 void R_InitTranMap(int progress)
 {
-   int lump = W_CheckNumForName("TRANMAP");
+   int lump;
+
+   if(CS_HEADLESS)
+      return;
+
+   lump = W_CheckNumForName("TRANMAP");
    
    // If a translucency filter map lump is present, use it
    
@@ -405,6 +416,9 @@ void R_PrecacheLevel(void)
       return;
    
    if(!r_precache)
+      return;
+
+   if(CS_HEADLESS)
       return;
 
    // SoM: Hey, you never know, it could happen....
