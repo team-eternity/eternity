@@ -1153,9 +1153,53 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
             if(source->player == target->player ||
                clients[source->player - players].team ==
                clients[target->player - players].team)
+            {
                team_scores[clients[source->player - players].team]--;
+               if(CS_SERVER)
+               {
+                  int playernum = target->player - players;
+                  server_client_t *sc = &server_clients[playernum];
+
+                  // [CG] If you suicide or team kill, all your sprees are
+                  //      over.
+                  sc->frags_this_life = 0;
+                  sc->frag_level = fl_none;
+                  sc->consecutive_frag_level = cfl_none;
+               }
+            }
             else
+            {
                team_scores[clients[source->player - players].team]++;
+
+               if(CS_SERVER)
+               {
+                  int playernum = target->player - players;
+                  server_client_t *sc = &server_clients[playernum];
+                  
+                  sc->frags_this_life++;
+
+                  if(sc->frag_level < (fl_max - 1))
+                  {
+                     unsigned int new_frag_level = sc->frags_this_life / 5;
+
+                     if((new_frag_level < fl_max) &&
+                        (sc->frag_level != new_frag_level))
+                     {
+                        sc->frag_level = new_frag_level;
+                        SV_BroadcastPlayerScalarInfo(playernum, ci_frag_level);
+                     }
+                  }
+
+                  if((gametic - sc->last_frag_tic) <= (3 * TICRATE))
+                  {
+                     if(sc->consecutive_frag_level < (cfl_max - 1))
+                        sc->consecutive_frag_level++;
+                     SV_BroadcastPlayerScalarInfo(playernum, ci_cfrag_level);
+                  }
+
+                  sc->last_frag_tic = gametic;
+               }
+            }
          }
          HU_FragsUpdate();
       }

@@ -263,6 +263,8 @@ typedef enum
    ci_weapon_speed,   // weapon_speed
    ci_buffering,
    ci_afk,
+   ci_frag_level,
+   ci_cfrag_level     // server_clients->consecutive_frag_level
 } client_info_e;
 
 typedef enum
@@ -364,9 +366,6 @@ typedef struct
 
 #pragma pack(pop)
 
-// [CG] Server clients are never sent over the wire, so they can stay as
-//      normal.
-
 typedef enum
 {
    scr_none,
@@ -375,6 +374,29 @@ typedef enum
    scr_sync,
 } cs_client_request_e;
 
+enum
+{
+   fl_none,
+   fl_killing_spree,
+   fl_rampage,
+   fl_dominating,
+   fl_unstoppable,
+   fl_godlike,
+   fl_max
+};
+
+enum
+{
+   cfl_none,
+   cfl_single_kill,
+   cfl_double_kill,
+   cfl_multi_kill,
+   cfl_ultra_kill,
+   cfl_monster_kill,
+   cfl_max
+};
+
+// [CG] Server clients are never sent over the wire, so they can stay normal.
 typedef struct
 {
    enet_uint32 connect_id;
@@ -416,9 +438,17 @@ typedef struct
    // [CG] Last misc state, used for unlagged.
    cs_misc_state_t saved_misc_state;
    // [CG] Whether or not a client is buffering incoming server messages.
-   uint8_t buffering;
+   bool buffering;
    // [CG] The TIC at which the client was able to join the game.
-   uint32_t finished_waiting_in_queue_tic;
+   unsigned int finished_waiting_in_queue_tic;
+   // [CG] Frags this life.
+   unsigned int frags_this_life;
+   // [CG] The TIC at which the client last fragged.
+   unsigned int last_frag_tic;
+   // [CG] The client's current frag level.
+   unsigned int frag_level;
+   // [CG] The client's current consecutive frag level.
+   unsigned int consecutive_frag_level;
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct
@@ -857,6 +887,8 @@ extern client_t *clients;
 extern enet_uint32 start_time;
 extern const char *disconnection_strings[dr_max_reasons];
 extern const char *network_message_names[nm_max_messages];
+extern const char *frag_level_names[fl_max];
+extern const char *consecutive_frag_level_names[cfl_max];
 extern unsigned int world_index;
 extern unsigned int cs_shooting_player;
 extern char *cs_state_file_path;

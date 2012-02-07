@@ -2470,6 +2470,11 @@ void G_DoReborn(int playernum)
       //      to spawn a player.
       if(CS_SERVER)
       {
+         server_clients[playernum].frags_this_life = 0;
+         server_clients[playernum].last_frag_tic = 0;
+         server_clients[playernum].frag_level = fl_none;
+         server_clients[playernum].consecutive_frag_level = cfl_none;
+
          if(clients[playernum].spectating)
             SV_SpawnPlayer(playernum, true);
          else

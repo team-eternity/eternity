@@ -61,6 +61,9 @@ unsigned int default_damage_screen_cap = NUMREDPALS;
 bool cl_debug_unlagged = false;
 bool default_cl_debug_unlagged = false;
 
+bool cl_show_sprees = false;
+bool default_cl_show_sprees = false;
+
 // [CG] Shot result prediction.
 VARIABLE_TOGGLE(cl_predict_shots, &default_cl_predict_shots, yesno);
 CONSOLE_VARIABLE(predict_shots, cl_predict_shots, cf_netonly) {}
@@ -111,6 +114,10 @@ CONSOLE_VARIABLE(debug_unlagged, cl_debug_unlagged, cf_netonly)
       }
    }
 }
+
+// [CG] Show double kills & killing sprees.
+VARIABLE_TOGGLE(cl_show_sprees, &default_cl_show_sprees, yesno);
+CONSOLE_VARIABLE(show_sprees, cl_show_sprees, cf_netonly) {}
 
 // [CG] Team.
 CONSOLE_COMMAND(team, cf_netonly)
@@ -242,5 +249,6 @@ void CL_AddCommands(void)
    C_AddCommand(password);
    C_AddCommand(spectate);
    C_AddCommand(afk);
+   C_AddCommand(show_sprees);
 }
 

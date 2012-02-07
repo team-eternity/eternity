@@ -36,6 +36,9 @@ extern unsigned int default_cl_packet_buffer_size;
 extern unsigned int damage_screen_cap;
 extern unsigned int default_damage_screen_cap;
 extern bool cl_debug_unlagged;
+extern bool default_cl_debug_unlagged;
+extern bool cl_show_sprees;
+extern bool default_cl_show_sprees;
 
 void CL_AddCommands(void);
 

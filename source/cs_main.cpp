@@ -162,6 +162,33 @@ const char *network_message_names[nm_max_messages] = {
 #endif
 };
 
+const char *frag_level_names[fl_max] = {
+   "",
+   "on a killing spree",
+   "on a rampage",
+   "dominating",
+   "unstoppable",
+   "God like"
+};
+
+const char *console_frag_level_names[fl_max] = {
+   "",
+   "Killing Spree!",
+   "Rampage!",
+   "Dominating!",
+   "Unstoppable!",
+   "God Like!"
+};
+
+const char *consecutive_frag_level_names[cfl_max] = {
+   "",
+   "",
+   "Double Kill!",
+   "Multi Kill!",
+   "Ultra Kill!",
+   "Monster Kill!"
+};
+
 unsigned int respawn_protection_time;
 unsigned int death_time_limit;
 unsigned int death_time_expired_action;
@@ -474,6 +501,10 @@ void CS_ZeroClient(int clientnum)
       memset(&sc->saved_misc_state, 0, sizeof(cs_misc_state_t));
       sc->buffering = false;
       sc->finished_waiting_in_queue_tic = 0;
+      sc->frags_this_life = 0;
+      sc->last_frag_tic = 0;
+      sc->frag_level = fl_none;
+      sc->consecutive_frag_level = cfl_none;
    }
 }
 
@@ -1045,6 +1076,45 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       }
       else
          client->afk = false;
+   }
+   else if(message->info_type == ci_frag_level)
+   {
+      if(message->int_value >= fl_max)
+      {
+         doom_printf("CS_HUPIM: got frag level message with invalid value.");
+         return;
+      }
+
+      if(message->int_value < fl_killing_spree)
+         return;
+
+      if(playernum == displayplayer)
+      {
+         if(cl_show_sprees)
+            HU_CenterMessage(console_frag_level_names[message->int_value]);
+      }
+      else
+      {
+         doom_printf(
+            "%s is %s", player->name, frag_level_names[message->int_value]
+         );
+      }
+   }
+   else if(message->info_type == ci_cfrag_level)
+   {
+      if(message->int_value >= cfl_max)
+      {
+         doom_printf(
+            "CS_HUPIM: got consecutive frag level message with invalid value."
+         );
+         return;
+      }
+
+      if(message->int_value < cfl_double_kill)
+         return;
+
+      if(playernum == displayplayer && cl_show_sprees)
+         HU_CenterMessage(consecutive_frag_level_names[message->int_value]);
    }
    else
    {

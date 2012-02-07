@@ -299,7 +299,7 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL(
       "debug_unlagged",
       &cl_debug_unlagged,
-      NULL,
+      &default_cl_debug_unlagged,
       false,
       default_t::wad_no,
       "debug unlagged"
@@ -323,6 +323,15 @@ static default_t sysdefaults[] =
       S_ANNOUNCER_UNREAL_TOURNAMENT,
       default_t::wad_no,
       "announcer type, 0 - none, 1 - quake, 2 - unreal tournament"
+   ),
+
+   DEFAULT_BOOL(
+      "show_sprees",
+      &cl_show_sprees,
+      &default_cl_show_sprees,
+      false,
+      default_t::wad_no,
+      "Show double kills & killing sprees"
    ),
 
    DEFAULT_STR(
