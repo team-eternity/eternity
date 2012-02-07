@@ -168,13 +168,13 @@ bool CS_CheckWADOverHTTP(const char *wad_name)
    char *url =
       ecalloc(char *, wad_name_size = wad_repository_size + 2, sizeof(char));
    char *wad_path =
-      ecalloc(char *, strlen(basepath) + wad_name_size + 7, sizeof(char));
+      ecalloc(char *, strlen(userpath) + wad_name_size + 7, sizeof(char));
    CURL *curl_handle;
    CURLcode res;
    long status_code;
 
    sprintf(url, "%s/%s", cs_wad_repository, wad_name);
-   sprintf(wad_path, "%s/wads/%s", basepath, wad_name);
+   sprintf(wad_path, "%s/wads/%s", userpath, wad_name);
 
    curl_handle = curl_easy_init();
    if(!curl_handle)
@@ -219,16 +219,16 @@ char* CS_DownloadWAD(const char *wad_name)
    char *url =
       ecalloc(char *, wad_name_size + wad_repository_size + 2, sizeof(char));
    char *wad_path =
-      ecalloc(char *, strlen(basepath) + wad_name_size + 7, sizeof(char));
+      ecalloc(char *, strlen(userpath) + wad_name_size + 7, sizeof(char));
    char *temp_path =
-      ecalloc(char *, strlen(basepath) + wad_name_size + 13, sizeof(char));
+      ecalloc(char *, strlen(userpath) + wad_name_size + 13, sizeof(char));
    CURL *curl_handle;
    CURLcode res;
    FILE *fobj;
 
    sprintf(url, "%s/%s", cs_wad_repository, wad_name);
-   sprintf(wad_path, "%s/wads/%s", basepath, wad_name);
-   sprintf(temp_path, "%s/wads/%s.temp", basepath, wad_name);
+   sprintf(wad_path, "%s/wads/%s", userpath, wad_name);
+   sprintf(temp_path, "%s/wads/%s.temp", userpath, wad_name);
 
    if(!M_CreateFile(temp_path))
    {
@@ -306,9 +306,9 @@ void CS_ClearTempWADDownloads(void)
    dirent *entry;
    size_t entry_length;
    char *wads_folder_path =
-      ecalloc(char *, strlen(basepath) + 7, sizeof(char));
+      ecalloc(char *, strlen(userpath) + 7, sizeof(char));
 
-   sprintf(wads_folder_path, "%s/wads", basepath);
+   sprintf(wads_folder_path, "%s/wads", userpath);
 
    if(!(folder = opendir(wads_folder_path)))
    {

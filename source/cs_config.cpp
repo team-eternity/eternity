@@ -424,10 +424,10 @@ void SV_LoadConfig(void)
    {
       config_path = ecalloc(
          char *,
-         strlen(basepath) + strlen(DEFAULT_CONFIG_FILENAME) + 2,
+         strlen(userpath) + strlen(DEFAULT_CONFIG_FILENAME) + 2,
          sizeof(char)
       );
-      sprintf(config_path, "%s/%s", basepath, DEFAULT_CONFIG_FILENAME);
+      sprintf(config_path, "%s/%s", userpath, DEFAULT_CONFIG_FILENAME);
       M_NormalizeSlashes(config_path);
       should_free = true;
    }
@@ -879,7 +879,7 @@ void CS_HandleServerSection()
    }
 
    sv_access_list_filename = sv_default_access_list_filename =
-      (const char *)M_PathJoin(basepath, DEFAULT_ACCESS_LIST_FILENAME);
+      (const char *)M_PathJoin(userpath, DEFAULT_ACCESS_LIST_FILENAME);
 
    if(!server["access_list"].empty() &&
        server["access_list"].asString().length())

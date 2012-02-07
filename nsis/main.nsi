@@ -3,8 +3,8 @@
 ;--------------------------------
 ; You must define these values
 
-  !define VERSION "3.40.17"
-  !define PATCH  "17"
+  !define VERSION "340"
+  !define PATCH  "22"
   !define INST_DIR "build"
 
 ;--------------------------------
@@ -32,7 +32,7 @@
 
   ;Name and file
   Name "Eternity Engine"
-  OutFile "eternity-engine-3.40.17_windows-x86.exe"
+  OutFile "eternity-engine-3.40.22_windows-x86.exe"
 
   ;Set compression
   SetCompressor /SOLID lzma
@@ -42,6 +42,7 @@
   !system 'copy "..\codeblocks\bin\Release\eternity.exe" "build"'
   !system 'copy "..\COPYING" "build"'
   !system 'xcopy /Y /Q /S /E /I "..\base" "build\base"'
+  !system 'xcopy /Y /Q /S /E /I "..\user" "build\user"'
   !system 'xcopy /Y /Q /S /E /I "..\docs\licenses" "build\licenses"'
   ReserveFile "wads.ini"
 
@@ -77,7 +78,7 @@ Var AR_RegFlags
   ;  This macro reads component installed flag from the registry and
   ;changes checked state of the section on the components page.
   ;Input: section index constant name specified in Section command.
-   
+
   ClearErrors
   ;Reading component status from registry
   ReadRegDWORD $AR_RegFlags HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Eternity Engine\Components\${SecName}" "Installed"
@@ -92,20 +93,20 @@ Var AR_RegFlags
   ; Note whether this component was installed before
   !insertmacro StoreVar ${SecName}_was_installed $AR_RegFlags
   IntOp $R0 $AR_RegFlags & $AR_RegFlags
-  
+
   ;Writing modified flags
   SectionSetFlags ${${SecName}} $AR_SecFlags
-  
+
  "default_${SecName}:"
  !insertmacro LoadSectionSelectedIntoVar ${SecName} ${SecName}_selected
 !macroend
- 
+
 !macro FinishSection SecName
   ;  This macro reads section flag set by user and removes the section
   ;if it is not selected.
   ;Then it writes component installed flag to registry
   ;Input: section index constant name specified in Section command.
- 
+
   SectionGetFlags ${${SecName}} $AR_SecFlags  ;Reading section flags
   ;Checking lowest bit:
   IntOp $AR_SecFlags $AR_SecFlags & ${SF_SELECTED}
@@ -116,20 +117,20 @@ Var AR_RegFlags
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Eternity Engine\Components\${SecName}" \
   "Installed" 0
     Goto "exit_${SecName}"
- 
+
  "leave_${SecName}:"
     ;Section is selected:
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Eternity Engine\Components\${SecName}" \
   "Installed" 1
- 
+
  "exit_${SecName}:"
 !macroend
- 
+
 !macro RemoveSection SecName
   ;  This macro is used to call section's Remove_... macro
   ;from the uninstaller.
   ;Input: section index constant name specified in Section command.
- 
+
   !insertmacro "Remove_${${SecName}}"
 !macroend
 
@@ -138,18 +139,18 @@ Var AR_RegFlags
   !insertmacro LoadVar ${SecName}_selected
   SectionGetFlags ${${SecName}} $R1
   IntOp $R1 $R1 & ${SF_SELECTED} ;Turn off all other bits
-  
+
   ; See if the status has changed:
   IntCmp $R0 $R1 "${SecName}_unchanged"
   !insertmacro LoadSectionSelectedIntoVar ${SecName} ${SecName}_selected
-  
+
   IntCmp $R1 ${SF_SELECTED} "${SecName}_was_selected"
   !insertmacro "Deselect_required_by_${SecName}"
   goto "${SecName}_unchanged"
-  
+
   "${SecName}_was_selected:"
   !insertmacro "Select_${SecName}_depends"
-  
+
   "${SecName}_unchanged:"
 !macroend
 ;--- End of Add/Remove macros ---
@@ -159,7 +160,7 @@ Var AR_RegFlags
 
   !define MUI_HEADERIMAGE
   !define MUI_ABORTWARNING
-    
+
 ;--------------------------------
 ; path functions
 
@@ -174,7 +175,7 @@ Var AR_RegFlags
 !include "WinMessages.NSH"
 !verbose 4
 ;====================================================
-; get_NT_environment 
+; get_NT_environment
 ;     Returns: the selected environment
 ;     Output : head of the stack
 ;====================================================
@@ -204,22 +205,22 @@ FunctionEnd
     !define WriteEnvStr_RegKey 'HKCU "Environment"'
   !endif
 !endif
- 
+
 ; AddToPath - Adds the given dir to the search path.
 ;        Input - head of the stack
 ;        Note - Win9x systems requires reboot
- 
+
 Function AddToPath
   Exch $0
   Push $1
   Push $2
   Push $3
- 
+
   # don't add if the path doesn't exist
   IfFileExists "$0\*.*" "" AddToPath_done
- 
+
   ReadEnvStr $1 PATH
-  ; if the path is too long for a NSIS variable NSIS will return a 0 
+  ; if the path is too long for a NSIS variable NSIS will return a 0
   ; length string.  If we find that, then warn and skip any path
   ; modification as it will trash the existing path.
   StrLen $2 $1
@@ -249,7 +250,7 @@ Function AddToPath
   Call StrStr
   Pop $2
   StrCmp $2 "" "" AddToPath_done
- 
+
   Call IsNT
   Pop $1
   StrCmp $1 1 AddToPath_NT
@@ -264,7 +265,7 @@ Function AddToPath
     FileClose $1
     SetRebootFlag true
     Goto AddToPath_done
- 
+
   AddToPath_NT:
     StrCmp $ADD_TO_PATH_ALL_USERS "1" ReadAllKey
       ReadRegStr $1 ${NT_current_env} "PATH"
@@ -285,7 +286,7 @@ Function AddToPath
         WriteRegExpandStr ${NT_all_env} "PATH" $0
       DoSend:
       SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
- 
+
   AddToPath_done:
     Pop $3
     Pop $2
@@ -293,10 +294,10 @@ Function AddToPath
     Pop $0
 FunctionEnd
 
- 
+
 ; RemoveFromPath - Remove a given dir from the path
 ;     Input: head of the stack
- 
+
 Function un.RemoveFromPath
   Exch $0
   Push $1
@@ -305,9 +306,9 @@ Function un.RemoveFromPath
   Push $4
   Push $5
   Push $6
- 
+
   IntFmt $6 "%c" 26 # DOS EOF
- 
+
   Call un.IsNT
   Pop $1
   StrCmp $1 1 unRemoveFromPath_NT
@@ -319,7 +320,7 @@ Function un.RemoveFromPath
     GetFullPathName /SHORT $0 $0
     StrCpy $0 "SET PATH=%PATH%;$0"
     Goto unRemoveFromPath_dosLoop
- 
+
     unRemoveFromPath_dosLoop:
       FileRead $1 $3
       StrCpy $5 $3 1 -1 # read last char
@@ -334,7 +335,7 @@ Function un.RemoveFromPath
       unRemoveFromPath_dosLoopRemoveLine:
         SetRebootFlag true
         Goto unRemoveFromPath_dosLoop
- 
+
     unRemoveFromPath_dosLoopEnd:
       FileClose $2
       FileClose $1
@@ -343,7 +344,7 @@ Function un.RemoveFromPath
       CopyFiles /SILENT $4 "$1\autoexec.bat"
       Delete $4
       Goto unRemoveFromPath_done
- 
+
   unRemoveFromPath_NT:
     StrCmp $ADD_TO_PATH_ALL_USERS "1" unReadAllKey
       ReadRegStr $1 ${NT_current_env} "PATH"
@@ -367,11 +368,11 @@ Function un.RemoveFromPath
       StrCpy $5 $1 -$4 # $5 is now the part before the path to remove
       StrCpy $6 $2 "" $3 # $6 is now the part after the path to remove
       StrCpy $3 $5$6
- 
+
       StrCpy $5 $3 1 -1 # copy last char
       StrCmp $5 ";" 0 +2 # if last char == ;
         StrCpy $3 $3 -1 # remove last char
- 
+
       StrCmp $ADD_TO_PATH_ALL_USERS "1" unWriteAllKey
         WriteRegExpandStr ${NT_current_env} "PATH" $3
         Goto unDoSend
@@ -379,7 +380,7 @@ Function un.RemoveFromPath
         WriteRegExpandStr ${NT_all_env} "PATH" $3
       unDoSend:
       SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
- 
+
   unRemoveFromPath_done:
     Pop $6
     Pop $5
@@ -389,7 +390,7 @@ Function un.RemoveFromPath
     Pop $1
     Pop $0
 FunctionEnd
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Uninstall sutff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -397,7 +398,7 @@ FunctionEnd
 ###########################################
 #            Utility Functions            #
 ###########################################
- 
+
 ;====================================================
 ; IsNT - Returns 1 if the current system is NT, 0
 ;        otherwise.
@@ -411,7 +412,7 @@ FunctionEnd
 ;   Call IsNT
 ;   Pop $R0
 ;  ($R0 at this point is 1 or 0)
- 
+
 !macro IsNT un
 Function ${un}IsNT
   Push $0
@@ -421,7 +422,7 @@ Function ${un}IsNT
   Pop $0
   Push 0
   Return
- 
+
   IsNT_yes:
     ; NT!!!
     Pop $0
@@ -430,7 +431,7 @@ FunctionEnd
 !macroend
 !insertmacro IsNT ""
 !insertmacro IsNT "un."
- 
+
 ; StrStr
 ; input, top of stack = string to search for
 ;        top of stack-1 = string to search in
@@ -443,7 +444,7 @@ FunctionEnd
 ;   Call StrStr
 ;   Pop $R0
 ;  ($R0 at this point is "ass string")
- 
+
 !macro StrStr un
 Function ${un}StrStr
 Exch $R1 ; st=haystack,old$R1, $R1=needle
@@ -487,7 +488,7 @@ Loop:
 	StrCmp "$R2" "$\r" RTrim
 	StrCmp "$R2" ";" RTrim
 	GoTo Done
-RTrim:	
+RTrim:
 	StrCpy $R1 "$R1" -1
 	Goto Loop
 Done:
@@ -522,7 +523,7 @@ Function DownloadFile
 
   try_again:
     NSISdl::download "$1/$0" "$INSTDIR\$0"
-    
+
     Pop $1
     StrCmp $1 "success" success
     StrCmp $1 "Cancelled" cancel
@@ -554,14 +555,14 @@ FunctionEnd
   !insertmacro MUI_PAGE_LICENSE "..\COPYING"
   Page custom InstallOptionsPage
   !insertmacro MUI_PAGE_DIRECTORY
-  
+
   ;Start Menu Folder Page Configuration
-  !define MUI_STARTMENUPAGE_REGISTRY_ROOT "SHCTX" 
-  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Team Eternity\Eternity Engine" 
+  !define MUI_STARTMENUPAGE_REGISTRY_ROOT "SHCTX"
+  !define MUI_STARTMENUPAGE_REGISTRY_KEY "Software\Team Eternity\Eternity Engine"
   !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
   !insertmacro MUI_PAGE_STARTMENU Application $STARTMENU_FOLDER
 
-  
+
   Page custom ShowWADsPage LeaveWADsPage "Configure WAD Folder"
   Function ShowWADsPage
     !insertmacro MUI_HEADER_TEXT_PAGE "Configure WAD Folders" "Add an additional WAD search path and download Freedoom"
@@ -571,7 +572,7 @@ FunctionEnd
 
   Function LeaveWADsPage
   FunctionEnd
-    
+
 
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
@@ -652,18 +653,24 @@ Section "-Core installation"
   ;Use the entire tree produced by the INSTALL target.  Keep the
   ;list of directories here in sync with the RMDir commands below.
   SetOutPath "$INSTDIR"
-  File /r "${INST_DIR}\*.*"
-  
+  SetOverwrite off
+  File /r ${INST_DIR}\user
+  SetOverwrite lastused
+  File /r ${INST_DIR}\licenses
+  File /r ${INST_DIR}\base
+  File ${INST_DIR}\eternity.exe
+  File ${INST_DIR}\COPYING
+
   ;Store installation folder
   WriteRegStr SHCTX "Software\Team Eternity\Eternity Engine" "" $INSTDIR
-  
+
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   Push "DisplayName"
   Push "Eternity Engine"
   Call ConditionalAddToRegisty
   Push "DisplayVersion"
-  Push "3.40.17"
+  Push "3.40.22"
   Call ConditionalAddToRegisty
   Push "Publisher"
   Push "Team Eternity"
@@ -674,7 +681,7 @@ Section "-Core installation"
   Push "NoRepair"
   Push "1"
   Call ConditionalAddToRegisty
-  
+
   !ifdef CPACK_NSIS_ADD_REMOVE
   ;Create add/remove functionality
   Push "ModifyPath"
@@ -685,7 +692,7 @@ Section "-Core installation"
   Push "1"
   Call ConditionalAddToRegisty
   !endif
-  
+
   ; Optional registration
   Push "DisplayIcon"
   Push "$INSTDIR\"
@@ -701,7 +708,7 @@ Section "-Core installation"
   Call ConditionalAddToRegisty
   !insertmacro MUI_INSTALLOPTIONS_READ $INSTALL_DESKTOP "NSIS.InstallOptions.ini" "Field 5" "State"
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-  
+
   ;Create shortcuts
   CreateDirectory "$SMPROGRAMS\$STARTMENU_FOLDER"
   CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Eternity Engine.lnk" "http://master.totaltrash.org" "" "$INSTDIR\eternity.exe"
@@ -770,15 +777,30 @@ Section "-Core installation"
     doNotExtract:
   doNotDownload:
 
+  Delete   "$INSTDIR\user\demos\delete.me"
+  Delete   "$INSTDIR\user\doom\delete.me"
+  Delete   "$INSTDIR\user\doom2\delete.me"
+  Delete   "$INSTDIR\user\hacx\delete.me"
+  Delete   "$INSTDIR\user\heretic\delete.me"
+  Delete   "$INSTDIR\user\plutonia\delete.me"
+  Delete   "$INSTDIR\user\shots\delete.me"
+  Delete   "$INSTDIR\user\tnt\delete.me"
+  Delete   "$INSTDIR\user\wads\delete.me"
+
+  RMDir /R "$INSTDIR\base\demos\.svn"
   RMDir /R "$INSTDIR\base\doom\.svn"
+  RMDir /R "$INSTDIR\base\doom2\.svn"
+  Delete   "$INSTDIR\base\doom2\delete.me"
+  RMDir /R "$INSTDIR\base\hacx\.svn"
+  Delete   "$INSTDIR\base\hacx\delete.me"
   RMDir /R "$INSTDIR\base\heretic\.svn"
   RMDir /R "$INSTDIR\base\plutonia\.svn"
-  RMDir /R "$INSTDIR\base\tnt\.svn"
+  Delete   "$INSTDIR\base\plutonia\delete.me"
   RMDir /R "$INSTDIR\base\shots\.svn"
-  RMDir /R "$INSTDIR\base\demos\.svn"
+  Delete   "$INSTDIR\base\shots\delete.me"
+  RMDir /R "$INSTDIR\base\tnt\.svn"
+  Delete   "$INSTDIR\base\tnt\delete.me"
   RMDir /R "$INSTDIR\base\wads\.svn"
-  RMDir /R "$INSTDIR\base\doom2\.svn"
-  RMDir /R "$INSTDIR\base\hacx\.svn"
   RMDir /R "$INSTDIR\base\.svn"
   RMDir /R "$INSTDIR\licenses\.svn"
 
@@ -787,7 +809,7 @@ SectionEnd
 Section "-Add to path"
   Push $INSTDIR
   StrCmp "ON" "ON" 0 doNotAddToPath
-  StrCmp $DO_NOT_ADD_TO_PATH "1" doNotAddToPath 0  
+  StrCmp $DO_NOT_ADD_TO_PATH "1" doNotAddToPath 0
     Call AddToPath
   doNotAddToPath:
 SectionEnd
@@ -818,12 +840,12 @@ Function un.onInit
     SetShellVarContext all
     ;MessageBox MB_OK 'User "$0" is in the Power Users group'
     Goto done
-    
+
   noLM:
     ;Get installation folder from registry if available
 
   done:
-    
+
 FunctionEnd
 
 ;--- Add/Remove callback functions: ---
@@ -832,25 +854,25 @@ FunctionEnd
   ;List all of your components in following manner here.
 
 !macroend
- 
+
 Section -FinishComponents
   ;Removes unselected components and writes component status to registry
   !insertmacro SectionList "FinishSection"
-  
-!ifdef CPACK_NSIS_ADD_REMOVE  
+
+!ifdef CPACK_NSIS_ADD_REMOVE
   ; Get the name of the installer executable
   System::Call 'kernel32::GetModuleFileNameA(i 0, t .R0, i 1024) i r1'
   StrCpy $R3 $R0
-  
+
   ; Strip off the last 13 characters, to see if we have AddRemove.exe
   StrLen $R1 $R0
   IntOp $R1 $R0 - 13
   StrCpy $R2 $R0 13 $R1
   StrCmp $R2 "AddRemove.exe" addremove_installed
-  
+
   ; We're not running AddRemove.exe, so install it
   CopyFiles $R3 $INSTDIR\AddRemove.exe
-  
+
   addremove_installed:
 !endif
 SectionEnd
@@ -882,7 +904,6 @@ Section "Uninstall"
 
 
   DeleteRegValue HKCR "eternity" ""
-    
 
   ;Remove files we installed.
   ;Keep the list of directories here in sync with the File commands above.
@@ -921,14 +942,23 @@ Section "Uninstall"
   RMDir "$INSTDIR\base\plutonia"
   RMDir "$INSTDIR\base\tnt"
   RMDir "$INSTDIR\base\shots"
-  RMDir "$INSTDIR\base\demos"
-  RMDir "$INSTDIR\base\wads"
   RMDir "$INSTDIR\base\doom2"
   RMDir "$INSTDIR\base\hacx"
   RMDir "$INSTDIR\base"
+
+  RMDir "$INSTDIR\user\doom"
+  RMDir "$INSTDIR\user\heretic"
+  RMDir "$INSTDIR\user\plutonia"
+  RMDir "$INSTDIR\user\tnt"
+  RMDir "$INSTDIR\user\shots"
+  RMDir "$INSTDIR\user\demos"
+  RMDir "$INSTDIR\user\wads"
+  RMDir "$INSTDIR\user\doom2"
+  RMDir "$INSTDIR\user\hacx"
+  RMDir "$INSTDIR\user"
   RMDir "$INSTDIR"
 
-!ifdef CPACK_NSIS_ADD_REMOVE  
+!ifdef CPACK_NSIS_ADD_REMOVE
   ;Remove the add/remove program
   Delete "$INSTDIR\AddRemove.exe"
 !endif
@@ -945,24 +975,24 @@ Section "Uninstall"
 
   ; Removes all optional components
   !insertmacro SectionList "RemoveSection"
-  
+
   !insertmacro MUI_STARTMENU_GETFOLDER Application $MUI_TEMP
-    
+
   Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
   Delete "$SMPROGRAMS\$MUI_TEMP\Eternity Engine.lnk"
 
 
-  
+
   ;Delete empty start menu parent diretories
   StrCpy $MUI_TEMP "$SMPROGRAMS\$MUI_TEMP"
- 
+
   startMenuDeleteLoop:
     ClearErrors
     RMDir $MUI_TEMP
     GetFullPathName $MUI_TEMP "$MUI_TEMP\.."
-    
+
     IfErrors startMenuDeleteLoopDone
-  
+
     StrCmp "$MUI_TEMP" "$SMPROGRAMS" startMenuDeleteLoopDone startMenuDeleteLoop
   startMenuDeleteLoopDone:
 
@@ -971,17 +1001,17 @@ Section "Uninstall"
   StrCpy $MUI_TEMP "$START_MENU"
   Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
 
-  
+
   ;Delete empty start menu parent diretories
   StrCpy $MUI_TEMP "$SMPROGRAMS\$MUI_TEMP"
- 
+
   secondStartMenuDeleteLoop:
     ClearErrors
     RMDir $MUI_TEMP
     GetFullPathName $MUI_TEMP "$MUI_TEMP\.."
-    
+
     IfErrors secondStartMenuDeleteLoopDone
-  
+
     StrCmp "$MUI_TEMP" "$SMPROGRAMS" secondStartMenuDeleteLoopDone secondStartMenuDeleteLoop
   secondStartMenuDeleteLoopDone:
 
@@ -1007,14 +1037,14 @@ Function .onInit
   ; Reads components status for registry
   !insertmacro SectionList "InitSection"
 
-  ; check to see if /D has been used to change 
-  ; the install directory by comparing it to the 
+  ; check to see if /D has been used to change
+  ; the install directory by comparing it to the
   ; install directory that is expected to be the
   ; default
   StrCpy $IS_DEFAULT_INSTALLDIR 0
   StrCmp "$INSTDIR" "$PROGRAMFILES\Eternity Engine" 0 +2
     StrCpy $IS_DEFAULT_INSTALLDIR 1
-  
+
   StrCpy $SV_ALLUSERS "JustMe"
   ; if default install dir then change the default
   ; if it is installed for JustMe
@@ -1037,7 +1067,7 @@ Function .onInit
     ;MessageBox MB_OK 'User "$0" is in the Power Users group'
     StrCpy $SV_ALLUSERS "AllUsers"
     Goto done
-    
+
   noLM:
     StrCpy $SV_ALLUSERS "AllUsers"
     ;Get installation folder from registry if available

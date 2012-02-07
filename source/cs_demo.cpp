@@ -676,16 +676,16 @@ static bool check_demo_folder(void)
       {
          efree(cs_demo_folder_path);
          cs_demo_folder_path =
-            ecalloc(char *, strlen(basepath) + 7, sizeof(char));
-         sprintf(cs_demo_folder_path, "%s/demos", basepath);
+            ecalloc(char *, strlen(userpath) + 7, sizeof(char));
+         sprintf(cs_demo_folder_path, "%s/demos", userpath);
       }
    }
 
    if(!cs_demo_folder_path)
    {
       cs_demo_folder_path =
-         ecalloc(char *, strlen(basepath) + 7, sizeof(char));
-      sprintf(cs_demo_folder_path, "%s/demos", basepath);
+         ecalloc(char *, strlen(userpath) + 7, sizeof(char));
+      sprintf(cs_demo_folder_path, "%s/demos", userpath);
    }
 
 

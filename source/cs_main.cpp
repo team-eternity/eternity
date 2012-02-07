@@ -197,10 +197,10 @@ static int build_save_buffer(byte **buffer)
 void CS_Init(void)
 {
    cs_state_file_path = ecalloc(
-      char *, strlen(basepath) + strlen("/cs.state") + 1, sizeof(char)
+      char *, strlen(userpath) + strlen("/cs.state") + 1, sizeof(char)
    );
 
-   sprintf(cs_state_file_path, "%s/cs.state", basepath);
+   sprintf(cs_state_file_path, "%s/cs.state", userpath);
    M_NormalizeSlashes(cs_state_file_path);
 
    if(CS_SERVER)

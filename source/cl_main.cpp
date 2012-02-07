@@ -193,9 +193,9 @@ void CL_Init(char *url)
       I_Error("Invalid URI [%s], exiting.\n", cs_server_url);
 
    cs_client_password_file = ecalloc(
-      char *, strlen(basepath) + strlen(PASSWORD_FILENAME) + 2, sizeof(char)
+      char *, strlen(userpath) + strlen(PASSWORD_FILENAME) + 2, sizeof(char)
    );
-   sprintf(cs_client_password_file, "%s/%s", basepath, PASSWORD_FILENAME);
+   sprintf(cs_client_password_file, "%s/%s", userpath, PASSWORD_FILENAME);
    M_NormalizeSlashes(cs_client_password_file);
 
    if(M_PathExists((const char *)cs_client_password_file))
