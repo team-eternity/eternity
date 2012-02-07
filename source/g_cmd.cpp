@@ -262,7 +262,7 @@ bool display_target_names = false;
 bool default_display_target_names = false;
 
 // [CG] Display target names (if target is a player) beneath crosshair.
-VARIABLE_BOOLEAN(display_target_names, &default_display_target_names, onoff);
+VARIABLE_TOGGLE(display_target_names, &default_display_target_names, onoff);
 CONSOLE_VARIABLE(display_target_names, display_target_names, 0) {}
 
 // [CG] Weapon switching.
