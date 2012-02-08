@@ -33,7 +33,7 @@
 #include "m_misc.h"
 #include "w_wad.h"
 
-extern char *basepath;
+extern char *userpath;
 
 //
 // M_FileExists
@@ -180,7 +180,7 @@ extern void CheckDOSDefaults(void);
 //
 static void BuildIWADDirList(void)
 {
-   char *base_wads;
+   char *user_wads;
    char *doomwaddir;
    
    if(iwad_dirs_built)
@@ -217,29 +217,29 @@ static void BuildIWADDirList(void)
    
 #endif
    
-   // [CG] Add base/wads.
+   // [CG] Add user/wads.
 
-   base_wads = ecalloc(char *, strlen(basepath) + 6, sizeof(char));
-   sprintf(base_wads, "%s/wads", basepath);
-   M_NormalizeSlashes(base_wads);
-   if(!M_PathExists(base_wads))
+   user_wads = ecalloc(char *, strlen(userpath) + 6, sizeof(char));
+   sprintf(user_wads, "%s/wads", userpath);
+   M_NormalizeSlashes(user_wads);
+   if(!M_PathExists(user_wads))
    {
-      if(!M_CreateFolder(base_wads))
+      if(!M_CreateFolder(user_wads))
       {
          I_Error(
-            "Error creating base WAD folder %s: %s.\n", 
-            base_wads,
+            "Error creating user WAD folder %s: %s.\n", 
+            user_wads,
             M_GetFileSystemErrorMessage()
          );
       }
    }
-   else if(!M_IsFolder(base_wads))
+   else if(!M_IsFolder(user_wads))
    {
       I_Error(
-         "Base WAD folder %s/wads exists, but is not a folder.\n", basepath
+         "Base WAD folder %s/wads exists, but is not a folder.\n", userpath
       );
    }
-   AddIWADDir(base_wads);
+   AddIWADDir(user_wads);
 
    // Don't run this function again.
    

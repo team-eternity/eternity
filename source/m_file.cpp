@@ -38,12 +38,24 @@ static const char *error_messages[FS_ERROR_MAX] = {
    "filesystem path not found."
 };
 
-static void set_error_code(void)
+static void set_windows_error_code(void)
 {
 #ifdef WIN32
    fs_error_code = GetLastError();
-#else
+#endif
+}
+
+static void set_sys_error_code(void)
+{
    fs_error_code = errno;
+}
+
+static void set_error_code(void)
+{
+#ifdef WIN32
+   set_windows_error_code();
+#else
+   set_sys_error_code();
 #endif
 }
 
@@ -476,7 +488,7 @@ bool M_RenamePath(const char *oldpath, const char *newpath)
 {
    if(rename(oldpath, newpath))
    {
-      set_error_code();
+      set_sys_error_code();
       return false;
    }
    return true;

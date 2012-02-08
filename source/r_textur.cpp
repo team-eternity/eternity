@@ -794,7 +794,10 @@ static void AddTexPatch(texture_t *tex, tcomponent_t *component)
 static void StartTexture(texture_t *tex, bool mask)
 {
    int bufferlen = tex->width * tex->height;
-   
+
+   if(CS_HEADLESS)
+      return;
+
    // Static for now
    // [CG] Try PU_RENDERER here.
    // tex->buffer = (byte *)(Z_Malloc(
@@ -859,6 +862,9 @@ static void FinishTexture(texture_t *tex)
    int        x, y, i, colcount;
    texcol_t   *col, *tcol;
    byte       *maskp;
+
+   if(CS_HEADLESS)
+      return;
    
    Z_ChangeTag(tex->buffer, PU_CACHE);
    
@@ -941,6 +947,9 @@ texture_t *R_CacheTexture(int num)
 {
    texture_t  *tex;
    int        i;
+
+   if(CS_HEADLESS)
+      return textures[num];
    
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
@@ -1155,7 +1164,7 @@ static void R_InitTextureHash(void)
    // entries, plus a few more for breathing room.
    walltable.initialize(wallstop - wallstart + 31);
    flattable.initialize(flatstop - flatstart + 31);
-   
+
    for(i = wallstart; i < wallstop; i++)
       walltable.addObject(textures[i]);
       
@@ -1262,7 +1271,7 @@ void R_InitTextures(void)
    // SoM: Add one more for the missing texture texture
    numwadtex = numwalls + numflats;
    texturecount = numwalls + numflats + 1;
-   
+
    // Allocate textures
    textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, NULL));
    memset(textures, 0, sizeof(texture_t *) * texturecount);
@@ -1305,7 +1314,7 @@ void R_InitTextures(void)
 
    // Create the bad texture texture
    R_MakeMissingTexture(texturecount - 1);
-   
+
    // initialize texture hashing
    R_InitTextureHash();
 }

@@ -2557,17 +2557,28 @@ char *FindIWADFile(void)
 //
 static void D_LoadResourceWad(void)
 {
-   char *filestr = NULL;
-   size_t len = M_StringAlloca(&filestr, 1, 20, basegamepath);
+   size_t basepath_len, basegamepath_len, max_len;
+   qstring buf;
 
-   psnprintf(filestr, len, "%s/eternity.wad", basegamepath);
+   basepath_len = strlen(basepath);
+   basegamepath_len = strlen(basegamepath);
+
+   if(basepath_len > basegamepath_len)
+      max_len = basepath_len + 20;
+   else
+      max_len = basegamepath_len + 20;
+
+   buf.Printf(max_len, "%s/eternity.wad", basegamepath);
 
    // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.wad
-   if(access(filestr, R_OK))
-      psnprintf(filestr, len, "%s/doom/eternity.wad", basepath);
+   if(access(buf.constPtr(), R_OK))
+      buf.Printf(max_len, "%s/doom/eternity.wad", basepath);
 
-   M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, 0);
+   if(access(buf.constPtr(), R_OK))
+      I_Error("Could not access resource WAD %s.\n", buf.constPtr());
+
+   buf.normalizeSlashes();
+   D_AddFile(buf.constPtr(), lumpinfo_t::ns_global, NULL, 0, 0);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
