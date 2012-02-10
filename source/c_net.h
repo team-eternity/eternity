@@ -98,7 +98,7 @@ enum
 };
 
 void C_InitPlayerName(void); // haleyjd
-void C_SendCmd(int dest, int, char *s,...);
+void C_SendCmd(int dest, int, const char *s, ...);
 void C_queueChatChar(unsigned char c);
 unsigned char C_dequeueChatChar(void);
 void C_NetTicker(void);

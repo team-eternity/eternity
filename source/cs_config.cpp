@@ -74,10 +74,12 @@
 #include "cs_main.h"
 #include "cs_config.h"
 #include "cs_master.h"
+#include "cs_vote.h"
 #include "cs_wad.h"
 #include "cl_main.h"
 #include "sv_bans.h"
 #include "sv_main.h"
+#include "sv_vote.h"
 
 // [CG] Zarg huge defines.
 
@@ -917,6 +919,127 @@ void CS_HandleServerSection()
          );
          efree((void *)sv_access_list_filename);
          sv_access_list_filename = sv_default_access_list_filename;
+      }
+   }
+
+   if(!server["vote_commands"].empty() && server["vote_commands"].isArray())
+   {
+      qstring buf;
+      size_t space_index;
+
+      for(i = 0; i < server["vote_commands"].size(); i++)
+      {
+         const char *command = NULL;
+         unsigned int duration = DEFAULT_VOTE_DURATION;
+         unsigned int threshold = DEFAULT_VOTE_THRESHOLD;
+         Json::Value& vote_command = server["vote_commands"][i];
+
+         if(vote_command.isObject())
+         {
+            if(!vote_command["name"].isString())
+            {
+               printf(
+                  "SV_LoadConfig: Name for vote command %d is not a string, "
+                  "skipping.\n", i + 1
+               );
+               continue;
+            }
+            command = vote_command["name"].asCString();
+
+            if(!vote_command["duration"].empty())
+            {
+               if(!vote_command["duration"].isInt())
+               {
+                  printf(
+                     "SV_LoadConfig: duration for vote command %d is not an "
+                     "integer, skipping.\n", i + 1
+                  );
+                  continue;
+               }
+
+               if(vote_command["duration"].asInt() < 1 ||
+                  vote_command["duration"].asInt() > 60)
+               {
+                  printf(
+                     "SV_LoadConfig: duration for vote command %d is not "
+                     "within 1 and 60, skipping.\n", i + 1
+                  );
+                  continue;
+               }
+
+               duration = vote_command["duration"].asUInt();
+            }
+
+            if(!vote_command["threshold"].empty())
+            {
+               if(!vote_command["threshold"].isInt())
+               {
+                  printf(
+                     "SV_LoadConfig: threshold for vote command %d is not an "
+                     "integer, skipping.\n", i + 1
+                  );
+                  continue;
+               }
+
+               if(vote_command["threshold"].asUInt() < 1 ||
+                  vote_command["threshold"].asUInt() > 100)
+               {
+                  printf(
+                     "SV_LoadConfig: threshold for vote command %d is not "
+                     "within 1%% and 100%%, skipping.\n", i + 1
+                  );
+                  continue;
+               }
+
+               threshold = vote_command["threshold"].asUInt();
+            }
+
+         }
+         else if(vote_command.isString())
+         {
+            command = vote_command.asCString();
+         }
+         else
+         {
+            printf(
+               "SV_LoadConfig: vote command %d is of unrecognized type, "
+               "skipping.\n", i + 1
+            );
+            continue;
+         }
+
+         buf.copy(command);
+         space_index = buf.findFirstOf(' ');
+
+         if(space_index != qstring::npos)
+            buf.truncate(space_index);
+
+         if(!C_GetCmdForName(buf.constPtr()))
+         {
+            printf(
+               "SV_LoadConfig: vote command %d (%s) is unrecognized, "
+               "skipping.\n", i, buf.constPtr()
+            );
+            continue;
+         }
+
+         duration *= TICRATE;
+         if(SV_AddVoteCommand(command, duration, ((double)threshold) / 100.0))
+         {
+            printf(
+               "SV_LoadConfig: Added vote command %s (%us, %u%%)\n",
+               command,
+               duration,
+               threshold
+            );
+         }
+         else
+         {
+            printf(
+               "SV_LoadConfig: vote command %d (%s) already added.\n",
+               i, command
+            );
+         }
       }
    }
 }

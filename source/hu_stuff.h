@@ -133,7 +133,7 @@ bool HU_AddWidgetToHash(hu_widget_t *widget);
 hu_widget_t* HU_WidgetForName(const char *name);
 void HU_UpdateEraseData(hu_textwidget_t *tw);
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
-                          char *message, int cleartic, int flags);
+                          const char *message, int cleartic, int flags);
 void HU_Init(void);
 void HU_Drawer(void);
 void HU_Ticker(void);

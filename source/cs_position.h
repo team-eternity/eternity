@@ -79,10 +79,10 @@ typedef struct
 typedef struct
 {
    uint32_t world_index;
-   int32_t flags;
-   int32_t flags2;
-   int32_t flags3;
-   int32_t flags4;
+   uint32_t flags;
+   uint32_t flags2;
+   uint32_t flags3;
+   uint32_t flags4;
    int32_t intflags;
    int32_t friction;
    int32_t movefactor;

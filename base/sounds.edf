@@ -223,6 +223,272 @@ sound RedTeamScores
     priority = 0
 }
 
+sound TeamAssist
+{
+    lump = "AC_ASSIS"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+// [CG] Generic announcer sounds
+
+sound RoundStarting
+{
+    lump = "AC_PREP"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RoundStart
+{
+    lump = "AC_FIGHT"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound ThreeFragsLeft
+{
+    lump = "AC_FRAG3"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound TwoFragsLeft
+{
+    lump = "AC_FRAG2"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound OneFragLeft
+{
+    lump = "AC_FRAG1"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound TeamKillOne
+{
+    lump = "AC_FRAT1"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound TeamKillTwo
+{
+    lump = "AC_FRAT2"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound TeamKillThree
+{
+    lump = "AC_FRAT3"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound SuicideDeathOne
+{
+    lump = "AC_SUI1"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound SuicideDeathTwo
+{
+    lump = "AC_SUI2"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound SuicideDeathThree
+{
+    lump = "AC_SUI3"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound BlowoutWin
+{
+    lump = "AC_HOLYS"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound HumiliatingWin
+{
+    lump = "AC_HUMIL"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound ImpressiveWin
+{
+    lump = "AC_IMPRE"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound LeadGained
+{
+    lump = "AC_LEADG"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound LeadLost
+{
+    lump = "AC_LEADL"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound LeadTied
+{
+    lump = "AC_LEADT"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RoundLost
+{
+    lump = "AC_LOSE"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RoundTied
+{
+    lump = "AC_TIE"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RoundWon
+{
+    lump = "AC_WIN"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound OneMinuteWarning
+{
+    lump = "AC_MIN1"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound FiveMinuteWarning
+{
+    lump = "AC_MIN5"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound DoubleKill
+{
+    lump = "AC_MULT2"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound MultiKill
+{
+    lump = "AC_MULT3"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound UltraKill
+{
+    lump = "AC_MULT4"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound MonsterKill
+{
+    lump = "AC_MULT5"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound KillingSpree
+{
+    lump = "AC_SPRE1"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound RampageSpree
+{
+    lump = "AC_SPRE2"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound DominatingSpree
+{
+    lump = "AC_SPRE3"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound UnstoppableSpree
+{
+    lump = "AC_SPRE4"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound GodLikeSpree
+{
+    lump = "AC_SPRE5"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
+sound WickedSickSpree
+{
+    lump = "AC_SPRE6"
+    clipping_dist = 1
+    close_dist = 2
+    priority = 0
+}
+
 // Default Sector Sound Sequences ----------------------------------------------
 
 // Door Opening Sequences

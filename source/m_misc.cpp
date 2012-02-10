@@ -1871,10 +1871,7 @@ void M_LoadDefaults(void)
       // [CG] Servers, on the other hand, need to ensure their settings aren't
       //      overwritten by EE's defaults here.
       if(CS_SERVER)
-      {
          CS_ReloadDefaults();
-         SV_AddCommands();
-      }
    }
 }
 

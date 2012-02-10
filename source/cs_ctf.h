@@ -78,7 +78,7 @@ typedef struct flag_s
    // player
    uint32_t net_id;
    // Integer representation of WHO has each flag (player id)
-   uint32_t carrier;
+   int32_t carrier;
    // [CG] Time at which the flag was picked up.
    uint32_t pickup_time;
    // Flag Timeout Counters

@@ -36,6 +36,9 @@ void  CL_SendCommand(void);
 void  CL_SendTeamRequest(teamcolor_t team);
 void  CL_SendSyncRequest(void);
 void  CL_SendSyncReceived(void);
+void  CL_SendVoteRequest(const char *command);
+void  CL_VoteYea();
+void  CL_VoteNay();
 
 void  CL_SendAuthMessage(const char *password);
 void  CL_SendRCONMessage(const char *command);
@@ -83,6 +86,8 @@ void CL_HandleMapSpecialRemovedMessage(nm_specialremoved_t *message);
 #endif
 void CL_HandleSectorPositionMessage(nm_sectorposition_t *message);
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message);
+void CL_HandleVoteMessage(nm_vote_t *message);
+void CL_HandleVoteResultMessage(nm_voteresult_t *message);
 
 #endif
 

@@ -182,6 +182,12 @@ void NetPacket::process()
    case nm_announcerevent:
       CL_HandleAnnouncerEventMessage((nm_announcerevent_t *)data);
       break;
+   case nm_vote:
+      CL_HandleVoteMessage((nm_vote_t *)data);
+      break;
+   case nm_voteresult:
+      CL_HandleVoteResultMessage((nm_voteresult_t *)data);
+      break;
    case nm_ticfinished:
       CL_SetLatestFinishedIndices(((nm_ticfinished_t *)data)->world_index);
       break;

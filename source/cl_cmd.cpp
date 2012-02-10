@@ -233,6 +233,27 @@ CONSOLE_COMMAND(afk, cf_netonly)
    CL_SendPlayerScalarInfo(ci_afk);
 }
 
+CONSOLE_COMMAND(callvote, cf_netonly)
+{
+   if(!Console.argc)
+   {
+      C_Printf("Usage: callvote <command>\n");
+      return;
+   }
+
+   CL_SendVoteRequest(Console.argv[0]->constPtr());
+}
+
+CONSOLE_COMMAND(vote_yes, cf_netonly)
+{
+   CL_VoteYea();
+}
+
+CONSOLE_COMMAND(vote_no, cf_netonly)
+{
+   CL_VoteNay();
+}
+
 void CL_AddCommands(void)
 {
    C_AddCommand(team);
@@ -250,5 +271,8 @@ void CL_AddCommands(void)
    C_AddCommand(spectate);
    C_AddCommand(afk);
    C_AddCommand(show_sprees);
+   C_AddCommand(callvote);
+   C_AddCommand(vote_yes);
+   C_AddCommand(vote_no);
 }
 

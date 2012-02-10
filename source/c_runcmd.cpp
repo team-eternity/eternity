@@ -973,7 +973,7 @@ static void C_SetVariable(command_t *command)
    variable_t* variable;
    int size = 0;
    double fs = 0.0;
-   char *errormsg;
+   const char *errormsg;
    const char *temp;
    int setflags;
    const char *varerror = NULL;

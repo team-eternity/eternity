@@ -42,8 +42,10 @@
 
 #include "cs_hud.h"
 #include "cs_main.h"
+#include "cs_vote.h"
 #include "cl_buf.h"
 #include "cl_main.h"
+#include "cl_vote.h"
 
 bool show_timer = false;
 bool default_show_timer = false;
@@ -65,6 +67,7 @@ static hu_widget_t *chat_widget = NULL;
 static hu_widget_t *timer_widget = NULL;
 static hu_widget_t *net_widget = NULL;
 static hu_widget_t *team_widget = NULL;
+static hu_widget_t *vote_widget = NULL;
 
 bool CS_ChatResponder(event_t *ev)
 {
@@ -387,11 +390,7 @@ void CS_UpdateQueueMessage(void)
 
 static void CS_NetWidgetTick(hu_widget_t *widget)
 {
-   int client_buffer_size = cl_latest_world_index - cl_current_world_index;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
-   if(client_buffer_size < 0)
-      client_buffer_size = 0;
 
    if(show_netstats)
    {
@@ -486,6 +485,154 @@ void CS_InitTeamWidget(void)
 
    tw = (hu_textwidget_t *)team_widget;
    tw->color = CR_GRAY + 1;
+   tw->flags |= TW_TRANS;
+   tw->bg_opacity = FRACUNIT >> 1;
+}
+
+static void CS_VoteWidgetTick(hu_widget_t *widget)
+{
+   char *index;
+   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+   ClientVote *vote = CL_GetCurrentVote();
+   unsigned int max_votes, blank_votes, blank_votes_left, blank_votes_right;
+   unsigned int saved_yeas, yea_votes, saved_nays, nay_votes;
+   bool changed_color = false;
+
+   static int max_width = 0;
+   static int min_width = 72;
+
+   if(!CS_CLIENT)
+      return;
+
+   if(gamestate != GS_LEVEL)
+      return;
+
+   if(!vote)
+   {
+      if(!widget->disabled)
+      {
+         widget->prevdisabled = widget->disabled;
+         widget->disabled = true;
+         tw->message[0] = 0;
+      }
+      max_width = 0;
+      return;
+   }
+   else if(widget->disabled)
+   {
+      if(!max_width)
+      {
+         qstring buf;
+         int max_stars = vote->getMaxVotes();
+         int star_width, command_width;
+
+         if(max_stars)
+         {
+            while(max_stars--)
+               buf += "*";
+            star_width = V_FontStringWidth(hud_font, buf.constPtr());
+         }
+         else
+            star_width = 0;
+
+         buf = vote->getCommand();
+         command_width = V_FontStringWidth(hud_font, buf.constPtr());
+
+         if(star_width > command_width)
+            max_width = star_width;
+         else
+            max_width = command_width;
+
+         if(max_width < min_width)
+            max_width = min_width;
+
+         tw->x = SCREENWIDTH - (max_width + 10);
+      }
+      widget->prevdisabled = widget->disabled;
+      widget->disabled = false;
+   }
+
+   max_votes = vote->getMaxVotes();
+   saved_yeas = yea_votes = vote->getYeaVotes();
+   saved_nays = nay_votes = vote->getNayVotes();
+   blank_votes = max_votes - (yea_votes + nay_votes);
+   blank_votes_left = blank_votes >> 1;
+   blank_votes_right = blank_votes - blank_votes_left;
+
+   index = tw->message;
+   index += sprintf(index, "%c", TEXT_COLOR_GRAY);
+   index += sprintf(index, "Vote (%u):\n", vote->timeRemaining());
+   index += sprintf(index, "%s\n", vote->getCommand());
+
+   if(blank_votes_left)
+   {
+      while(blank_votes_left--)
+         index += sprintf(index, "*");
+   }
+
+   if(yea_votes)
+   {
+      index += sprintf(index, "%c", TEXT_COLOR_GREEN);
+      changed_color = true;
+      while(yea_votes--)
+         index += sprintf(index, "*");
+   }
+
+   if(nay_votes)
+   {
+      index += sprintf(index, "%c", TEXT_COLOR_RED);
+      changed_color = true;
+      while(nay_votes--)
+         index += sprintf(index, "*");
+   }
+
+   if(changed_color)
+      index += sprintf(index, "%c", TEXT_COLOR_GRAY);
+
+   if(blank_votes_right)
+   {
+      while(blank_votes_right--)
+         index += sprintf(index, "*");
+   }
+
+   index += sprintf(index, "\nY: %u | N: %u", saved_yeas, saved_nays);
+   *index = 0;
+}
+
+void CS_InitVoteWidget(void)
+{
+   hu_textwidget_t *tw;
+   const char *xs = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
+
+   if(vote_widget != NULL)
+   {
+      efree(((hu_textwidget_t *)vote_widget)->message);
+      efree(vote_widget->name);
+      efree(vote_widget);
+      vote_widget = NULL;
+   }
+
+   HU_DynamicTextWidget(
+      "_HU_CSVoteWidget",
+      SCREENWIDTH - V_FontStringWidth(hud_font, xs),
+      ST_Y >> 1,
+      hud_font->num,
+      "Vote (999s):\n"
+      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"
+      "********************************\n"
+      "Y: 32 | N: 32"
+      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      0,
+      TW_NOCLEAR
+   );
+
+   vote_widget = HU_WidgetForName("_HU_CSVoteWidget");
+   vote_widget->prevdisabled = vote_widget->disabled;
+   vote_widget->disabled = false;
+   vote_widget->ticker = CS_VoteWidgetTick;
+
+   tw = (hu_textwidget_t *)vote_widget;
+   tw->color = 0;
    tw->flags |= TW_TRANS;
    tw->bg_opacity = FRACUNIT >> 1;
 }

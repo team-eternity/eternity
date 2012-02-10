@@ -63,7 +63,7 @@ typedef struct team_start_s
    teamcolor_t team_color;
 } team_start_t;
 
-extern char *team_color_names[team_color_max];
+extern const char *team_color_names[team_color_max];
 extern unsigned int team_colormaps[team_color_max];
 extern int team_scores[team_color_max];
 extern int team_start_counts_by_team[team_color_max];

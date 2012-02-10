@@ -38,7 +38,7 @@ int team_scores[team_color_max];
 int team_start_counts_by_team[team_color_max];
 mapthing_t **team_starts_by_team = NULL;
 
-char *team_color_names[team_color_max] = { "none", "red", "blue" };
+const char *team_color_names[team_color_max] = { "none", "red", "blue" };
 
 unsigned int team_colormaps[team_color_max] = { 0, 3, 6 };
 

@@ -154,12 +154,15 @@ const char *network_message_names[nm_max_messages] = {
    "cube spawned",
    "sector position",
    "announcer event",
-   "tic finished",
+   "vote request",
+   "vote",
+   "vote result",
 #if 0
    "special spawned",
    "special status",
    "special removed",
 #endif
+   "tic finished",
 };
 
 const char *frag_level_names[fl_max] = {
@@ -410,7 +413,7 @@ char* CS_GetSHA1Hash(const char *input, size_t input_size)
    ).digestToString();
 }
 
-void CS_SetPlayerName(player_t *player, char *name)
+void CS_SetPlayerName(player_t *player, const char *name)
 {
    bool initializing_name = false;
 

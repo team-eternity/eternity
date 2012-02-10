@@ -96,7 +96,8 @@ void SV_ProcessPlayerCommand(int playernum);
 void SV_BroadcastUpdatedActorPositionsAndMiscState(void);
 
 // [CG] Misc. functions.
-bool SV_RoomInGame(unsigned int clientnum);
+unsigned int SV_GetPlayingPlayerCount();
+bool SV_RoomInGame(int clientnum);
 void SV_AddClient(int playernum);
 void SV_AddNewClients(void);
 void SV_SetPlayerTeam(int playernum, teamcolor_t team);
@@ -174,6 +175,8 @@ void SV_BroadcastMapSpecialStatus(void *special, map_special_e special_type);
 void SV_BroadcastMapSpecialRemoved(unsigned int net_id,
                                    map_special_e special_type);
 void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source);
+void SV_BroadcastVote();
+void SV_BroadcastVoteResult();
 void SV_BroadcastTICFinished(void);
 
 // [CG] Handler functions.

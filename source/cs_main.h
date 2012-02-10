@@ -104,7 +104,7 @@ struct event_t;
 #define MAX_NAME_SIZE 20
 
 // [CG] Convenience macro to return the functional maximum number of clients.
-#define MAX_CLIENTS (cs_original_settings->max_clients)
+#define MAX_CLIENTS ((signed int)(cs_original_settings->max_clients))
 
 // [CG] Used in p_trace to determine whether or not puffs/blood should be
 //      spawned.
@@ -198,7 +198,10 @@ typedef enum
    nm_cubespawned,             // (s => c) 33, Boss brain cube spawned
    nm_sectorposition,          // (s => c) 34, Sector position
    nm_announcerevent,          // (s => c) 35, Announcer event
-   nm_ticfinished,             // (s => c) 36, TIC is finished
+   nm_voterequest,             // (c => s) 36, Vote request
+   nm_vote,                    // ( both ) 37, Client vote
+   nm_voteresult,              // (s => c) 38, Vote result
+   nm_ticfinished,             // (s => c) 39, TIC is finished
    // nm_specialspawned,          // (s => c) 32, Map special spawned
    // nm_specialstatus,           // (s => c) 33, Map special's status
    // nm_specialremoved,          // (s => c) 34, Map special removed
@@ -269,6 +272,7 @@ typedef enum
 
 typedef enum
 {
+   mr_vote,
    mr_auth,
    mr_rcon,
    mr_server,
@@ -349,7 +353,7 @@ typedef struct
    int32_t queue_level;
    // [CG] The client's current queue position, only relevant if queue_level is
    //      ql_waiting.
-   uint32_t queue_position;
+   int32_t queue_position;
    // [CG] The client's current floor status, whether or not they hit the floor
    //      and if they're now standing on a special surface, cs_floor_status_e.
    int32_t floor_status;
@@ -440,11 +444,11 @@ typedef struct
    // [CG] Whether or not a client is buffering incoming server messages.
    bool buffering;
    // [CG] The TIC at which the client was able to join the game.
-   unsigned int finished_waiting_in_queue_tic;
+   int finished_waiting_in_queue_tic;
    // [CG] Frags this life.
    unsigned int frags_this_life;
    // [CG] The TIC at which the client last fragged.
-   unsigned int last_frag_tic;
+   int last_frag_tic;
    // [CG] The client's current frag level.
    unsigned int frag_level;
    // [CG] The client's current consecutive frag level.
@@ -465,7 +469,7 @@ typedef struct
    uint32_t world_index;
    uint32_t map_number;
    uint32_t rngseed;
-   uint32_t player_number;
+   int32_t player_number;
    clientserver_settings_t settings;
 } nm_initialstate_t;
 
@@ -520,7 +524,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t client_number;
+   int32_t client_number;
    client_t client;
 } nm_clientinit_t;
 
@@ -548,10 +552,10 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    int32_t recipient_type; // [CG] message_recipient_e.
-   uint32_t sender_number;
+   int32_t sender_number;
    // [CG] If recipient is a player, this is that player's number.  Otherwise
    //      this is garbage.
-   uint32_t recipient_number;
+   int32_t recipient_number;
    uint64_t length;
 } nm_playermessage_t;
 
@@ -560,7 +564,7 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint32_t net_id;
-   uint32_t player_number;
+   int32_t player_number;
    uint8_t as_spectator;
    fixed_t x;
    fixed_t y;
@@ -574,7 +578,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
+   int32_t player_number;
    int32_t info_type; // [CG] client_info_e.
    int32_t array_index;
    union {
@@ -588,7 +592,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
+   int32_t player_number;
    int32_t psprite_position;
    int32_t weapon_state; // [CG] statenum_t.
 } nm_playerweaponstate_t;
@@ -604,7 +608,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t client_number;
+   int32_t client_number;
    uint32_t client_lag;
    uint32_t server_lag;
    uint32_t transit_lag;
@@ -615,7 +619,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
+   int32_t player_number;
    cs_player_position_t position;
    int32_t floor_status; // [CG] cs_floor_status_e.
    // [CG] Last client command index run.
@@ -628,7 +632,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
+   int32_t player_number;
    uint32_t thing_net_id;
 } nm_playertouchedspecial_t;
 
@@ -636,7 +640,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t player_number;
+   int32_t player_number;
    int32_t reason; // [CG] disconnection_reason_t.
 } nm_playerremoved_t;
 
@@ -864,6 +868,32 @@ typedef struct
    uint32_t event_index;
 } nm_announcerevent_t;
 
+// [CG] The command is appended to the end of this message.
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint64_t command_size;
+} nm_voterequest_t;
+
+// [CG] The command is appended to the end of this message.
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint64_t command_size;
+   uint32_t duration;
+   double threshold;
+   uint32_t max_votes;
+} nm_vote_t;
+
+typedef struct
+{
+   int32_t message_type;
+   uint32_t world_index;
+   uint8_t passed;
+} nm_voteresult_t;
+
 typedef struct
 {
    int32_t message_type;
@@ -903,7 +933,7 @@ char* CS_VersionString(void);
 char* CS_GetSHA1Hash(const char *input, size_t input_size);
 char* CS_GetSHA1HashFile(char *path);
 char* CS_GetPlayerName(player_t *player);
-void CS_SetPlayerName(player_t *player, char *name);
+void CS_SetPlayerName(player_t *player, const char *name);
 void CS_SetSkin(const char *skin_name, int playernum);
 void CS_InitPlayers(void);
 void CS_DisconnectPeer(ENetPeer *peer, enet_uint32 reason);

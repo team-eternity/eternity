@@ -200,7 +200,7 @@ void CS_GiveFlag(int playernum, flag_t *flag)
 
 void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
 {
-   unsigned int playernum = player - players;
+   int playernum = player - players;
    client_t *client = &clients[playernum];
    flag_t *flag = &cs_flags[color];
    teamcolor_t other_color = get_other_color(color);

@@ -32,8 +32,10 @@
 #include "c_runcmd.h"
 #include "d_net.h"
 #include "doomstat.h"
+#include "m_random.h"
 
 #include "cs_main.h"
+#include "cs_wad.h"
 #include "sv_bans.h"
 #include "sv_main.h"
 
@@ -81,7 +83,7 @@ CONSOLE_COMMAND(kick, cf_server)
 
 CONSOLE_COMMAND(ban, cf_server)
 {
-   unsigned int i, playernum;
+   int i, playernum;
    uint32_t ip_address;
    char *address = NULL;
    const char *name = NULL;
@@ -96,7 +98,7 @@ CONSOLE_COMMAND(ban, cf_server)
       return;
    }
 
-   playernum = (unsigned int)Console.argv[0]->toInt();
+   playernum = Console.argv[0]->toInt();
 
    if(!playeringame[playernum])
       return;
@@ -191,6 +193,21 @@ CONSOLE_COMMAND(unwhitelist, cf_server)
       C_Printf("Error: %s\n", sv_access_list->getError());
 }
 
+CONSOLE_COMMAND(coinflip, cf_server)
+{
+   if(M_Random() / 2)
+      SV_BroadcastHUDMessage("Coin flip result: Heads");
+   else
+      SV_BroadcastHUDMessage("Coin flip result: Tails");
+}
+
+CONSOLE_COMMAND(random_map_number, cf_server)
+{
+   SV_BroadcastHUDMessage(
+      "Random map number: %d.\n", M_Random() % cs_map_count
+   );
+}
+
 void SV_AddCommands(void)
 {
    C_AddCommand(kick);
@@ -200,5 +217,7 @@ void SV_AddCommands(void)
    C_AddCommand(whitelist);
    C_AddCommand(list_whitelists);
    C_AddCommand(unwhitelist);
+   C_AddCommand(coinflip);
+   C_AddCommand(random_map_number);
 }
 

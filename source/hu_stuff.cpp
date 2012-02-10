@@ -223,6 +223,7 @@ static void HU_InitNativeWidgets(void)
    CS_InitChatWidget();
    CS_InitQueueWidget();
    CS_InitTeamWidget();
+   CS_InitVoteWidget();
 }
 
 //
@@ -924,7 +925,7 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 // For scripting.
 // 
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
-                          char *message, int cleartic, int flags)
+                          const char *message, int cleartic, int flags)
 {
    hu_textwidget_t *newtw = ecalloc(hu_textwidget_t *, 1, sizeof(hu_textwidget_t));
 

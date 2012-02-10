@@ -1126,7 +1126,7 @@ void G_AddWeapPrefs(void)
 // haleyjd 03/13/06
 //
 
-static char *autoload_names[] =
+static const char *autoload_names[] =
 {
    "auto_wad_1",
    "auto_wad_2",

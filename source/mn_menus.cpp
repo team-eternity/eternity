@@ -3406,6 +3406,8 @@ static menuitem_t mn_clientserverkeys_items[] =
    {it_binding, "message server",       "message_server"},
    {it_binding, "rcon",                 "rcon"},
    {it_binding, "show scoreboard",      "scoreboard"},
+   {it_binding, "vote yes",             "vote_yes"},
+   {it_binding, "vote no",              "vote_no"},
    {it_end}
 };
 

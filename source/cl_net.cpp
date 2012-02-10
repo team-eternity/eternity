@@ -58,12 +58,14 @@
 #include "cs_main.h"
 #include "cs_netid.h"
 #include "cs_position.h"
+#include "cs_vote.h"
 #include "cs_wad.h"
 #include "cl_buf.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "cl_pred.h"
 #include "cl_spec.h"
+#include "cl_vote.h"
 
 extern unsigned int rngseed;
 extern int s_announcer_type;
@@ -129,7 +131,7 @@ static void send_message(message_recipient_e recipient_type,
       doom_printf("Authorizing...");
    else if(recipient_type == mr_rcon)
       doom_printf("RCON: %s", message);
-   else
+   else if(recipient_type != mr_vote)
    {
       S_StartSound(NULL, GameModeInfo->c_ChatSound);
       doom_printf("%s: %s", players[consoleplayer].name, message);
@@ -314,6 +316,36 @@ void CL_SendSyncRequest(void)
    message.request_type = scr_sync;
 
    send_packet(&message, sizeof(nm_clientrequest_t));
+}
+
+void CL_SendVoteRequest(const char *command)
+{
+   char *buf;
+   nm_voterequest_t *message;
+   size_t command_size = strlen(command);
+   size_t message_size = sizeof(nm_voterequest_t);
+   size_t total_size = message_size + command_size + 1;
+
+   buf = ecalloc(char *, 1, total_size);
+   message = (nm_voterequest_t *)buf;
+   message->message_type = nm_voterequest;
+   message->world_index = cl_latest_world_index;
+   message->command_size = command_size;
+   memcpy(buf + message_size, command, command_size);
+
+   send_packet(buf, total_size);
+
+   efree(message);
+}
+
+void CL_VoteYea()
+{
+   send_message(mr_vote, 0, "yea");
+}
+
+void CL_VoteNay()
+{
+   send_message(mr_vote, 0, "nay");
 }
 
 void CL_SendAuthMessage(const char *password)
@@ -608,7 +640,7 @@ void CL_HandleAuthResultMessage(nm_authresult_t *message)
 
 void CL_HandleClientInitMessage(nm_clientinit_t *message)
 {
-   unsigned int i = message->client_number;
+   int i = message->client_number;
 
    if(i >= MAX_CLIENTS || i >= MAXPLAYERS)
    {
@@ -624,7 +656,7 @@ void CL_HandleClientInitMessage(nm_clientinit_t *message)
 void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 {
    client_t *client;
-   unsigned int playernum = message->client_number;
+   int playernum = message->client_number;
 
    if(playernum > MAX_CLIENTS || !playeringame[playernum])
       return;
@@ -649,7 +681,7 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
 void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
 {
-   unsigned int playernum = message->player_number;
+   int playernum = message->player_number;
    client_t *client = &clients[playernum];
    player_t *player = &players[playernum];
 
@@ -827,6 +859,7 @@ void CL_HandleServerMessage(nm_servermessage_t *message)
 
 void CL_HandlePlayerMessage(nm_playermessage_t *message)
 {
+   player_t *player;
    char *player_message = CL_extractPlayerMessage(message);
 
    if(player_message == NULL)
@@ -835,17 +868,28 @@ void CL_HandlePlayerMessage(nm_playermessage_t *message)
       return;
    }
 
-   if(message->sender_number != consoleplayer)
+   player = &players[message->sender_number];
+
+   if(message->recipient_type == mr_vote)
+   {
+      if(!strncasecmp(player_message, "yea", 3))
+      {
+         if(CL_CastBallot(message->sender_number, Ballot::yea_vote))
+            doom_printf("%s voted yes.", player->name);
+      }
+      else if(!strncasecmp(player_message, "nay", 3))
+      {
+         if(CL_CastBallot(message->sender_number, Ballot::nay_vote))
+            doom_printf("%s voted no.", player->name);
+      }
+   }
+   else if(message->sender_number != consoleplayer)
    {
       // [CG] Don't print our own messages.  When a client sends a message,
       //      it's automatically printed to the screen (because delivery is
       //      guaranteed) so printing it here would be redundant.
       S_StartSound(NULL, GameModeInfo->c_ChatSound);
-      doom_printf(
-         "%s: %s",
-         players[message->sender_number].name,
-         player_message
-      );
+      doom_printf("%s: %s", player->name, player_message);
    }
 }
 
@@ -1741,10 +1785,9 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
 {
-   int i;
    Mobj *source;
    sfxinfo_t *sfx;
-   announcer_event_t *event;
+   AnnouncerEvent *event;
 
    if(!CS_AnnouncerEnabled())
       return;
@@ -1762,12 +1805,15 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
       return;
    }
 
+   /*
    switch(message->event_index)
    {
    case ae_flag_taken:
    case ae_flag_dropped:
    case ae_flag_returned:
    case ae_flag_captured:
+   {
+      int i;
       for(i = team_color_none; i < team_color_max; i++)
       {
          if(cs_flag_stands[i].net_id == message->source_net_id)
@@ -1780,11 +1826,13 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
          }
       }
       break;
+   }
    default:
       break;
    }
+   */
 
-   if((event = CS_GetAnnouncerEvent(message->event_index)) == NULL)
+   if(!(event = CS_GetAnnouncerEvent(message->event_index)))
    {
       doom_printf(
          "Received an announcer event message for an invalid announcer index "
@@ -1794,11 +1842,31 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
       return;
    }
 
-   if((sfx = E_SoundForName(event->sound_name)))
+   if((sfx = E_SoundForName(event->getSoundName())))
       S_StartSfxInfo(source, sfx, 127, ATTN_NONE, false, CHAN_AUTO);
 
-   if(strlen(event->message))
-      HU_CenterMessage(event->message);
+   if(event->getMessage() && strlen(event->getMessage()))
+      HU_CenterMessage(event->getMessage());
 }
 
+void CL_HandleVoteMessage(nm_vote_t *message)
+{
+   char *command = ((char *)message) + sizeof(nm_vote_t);
+   unsigned int duration  = message->duration;
+   double threshold       = message->threshold;
+   unsigned int max_votes = message->max_votes;
+
+   CL_CloseVote();
+   CL_NewVote(command, duration, threshold, max_votes);
+}
+
+void CL_HandleVoteResultMessage(nm_voteresult_t *message)
+{
+   if(message->passed)
+      doom_printf("Vote passed!");
+   else
+      doom_printf("Vote failed!");
+
+   CL_CloseVote();
+}
 

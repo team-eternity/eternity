@@ -32,7 +32,7 @@
 
 static void SV_updateQueueLevels()
 {
-   unsigned int i;
+   int i;
    client_t *client;
    server_client_t *sc;
 
@@ -55,7 +55,7 @@ static void SV_updateQueueLevels()
 }
 
 static void SV_setQueueLevelAndPosition(int clientnum, cs_queue_level_e level,
-                                        unsigned int position)
+                                        int position)
 {
    client_t *client = &clients[clientnum];
    bool should_update = false;
@@ -78,12 +78,12 @@ static void SV_setQueueLevelAndPosition(int clientnum, cs_queue_level_e level,
       SV_updateQueueLevels();
 }
 
-static unsigned int SV_getNewQueuePosition()
+static int SV_getNewQueuePosition()
 {
-   unsigned int i;
+   int i;
+   int tic_limit = sv_join_time_limit * TICRATE;
+   int max_queue_position = 0;
    unsigned int playing_players = 0;
-   unsigned int max_queue_position = 0;
-   unsigned int tic_limit = sv_join_time_limit * TICRATE;
    client_t *client;
 
    // [CG] First, ensure queue levels are as current as possible.
@@ -122,9 +122,9 @@ static unsigned int SV_getNewQueuePosition()
    return max_queue_position;
 }
 
-static void SV_advanceQueue(unsigned int clientnum)
+static void SV_advanceQueue(int clientnum)
 {
-   unsigned int i, queue_position;
+   int i, queue_position;
 
    if(clientnum)
    {
@@ -165,7 +165,7 @@ void SV_QueueSetClientRemoved(int clientnum)
    SV_setQueueLevelAndPosition(clientnum, ql_none, 0);
 }
 
-void SV_QueueSetClientWaiting(int clientnum, unsigned int position)
+void SV_QueueSetClientWaiting(int clientnum, int position)
 {
    SV_setQueueLevelAndPosition(clientnum, ql_waiting, position);
 }
@@ -189,7 +189,7 @@ void SV_QueueSetClientNotPlaying(int clientnum)
 
 void SV_QueueSetClientPlaying(int clientnum)
 {
-   unsigned int new_wait = gametic - ((sv_join_time_limit * TICRATE) + 1);
+   int new_wait = gametic - ((sv_join_time_limit * TICRATE) + 1);
 
    SV_setQueueLevelAndPosition(clientnum, ql_playing, 0);
    server_clients[clientnum].finished_waiting_in_queue_tic = new_wait;
@@ -203,8 +203,8 @@ void SV_PutClientInQueue(int clientnum)
 
 void SV_MarkQueueClientsAFK()
 {
-   unsigned int i, tics_waiting;
-   unsigned int tic_limit = sv_join_time_limit * TICRATE;
+   int i, tics_waiting;
+   int tic_limit = sv_join_time_limit * TICRATE;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {

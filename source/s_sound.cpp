@@ -121,6 +121,10 @@ int snd_MusicVolume = 15;
 // precache sounds ?
 int s_precache = 1;
 
+const char *s_announcer_type_names[] = {
+   "none", "quake", "unreal"
+};
+
 // [CG] Announcer
 int s_announcer_type = S_ANNOUNCER_NONE;
 int s_default_announcer_type = S_ANNOUNCER_NONE;
@@ -1483,10 +1487,6 @@ void S_UpdateMusic(const char *lumpname)
 // Console Commands
 //
 
-const char *s_announcer_type_names[S_ANNOUNCER_MAX] = {
-   "none", "quake", "unreal"
-};
-
 VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
 VARIABLE_INT(
@@ -1505,7 +1505,7 @@ VARIABLE_TOGGLE(s_hidefmusic,     NULL, onoff);
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(announcer_type, s_announcer_type, 0)
 {
-   CS_InitAnnouncer();
+   CS_SetAnnouncer(s_announcer_type_names[s_announcer_type]);
 }
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
 CONSOLE_VARIABLE(snd_channels, default_numChannels, 0) {}

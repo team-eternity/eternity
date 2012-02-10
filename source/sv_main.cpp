@@ -72,11 +72,14 @@
 #include "cs_position.h"
 #include "cs_team.h"
 #include "cs_demo.h"
+#include "cs_vote.h"
 #include "cs_wad.h"
 #include "sv_bans.h"
+#include "sv_cmd.h"
 #include "sv_main.h"
 #include "sv_queue.h"
 #include "sv_spec.h"
+#include "sv_vote.h"
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -176,6 +179,8 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
 #endif
    case nm_sectorposition:
    case nm_announcerevent:
+   case nm_vote:
+   case nm_voteresult:
    case nm_ticfinished:
       break;
    case nm_clientrequest:
@@ -228,6 +233,8 @@ static void send_any_packet(int playernum, void *data, size_t data_size,
 #endif
       // || message_type == nm_sectorposition
       || message_type == nm_announcerevent
+      || message_type == nm_vote
+      || message_type == nm_voteresult
       // || message_type == nm_ticfinished
       || LOG_ALL_NETWORK_MESSAGES
       )
@@ -265,7 +272,7 @@ static void send_unreliable_packet(int playernum, void *data, size_t data_size)
 
 static void send_packet_to_team(int playernum, void *data, size_t data_size)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       if(i != playernum && clients[i].team == clients[playernum].team)
@@ -274,7 +281,7 @@ static void send_packet_to_team(int playernum, void *data, size_t data_size)
 
 static void broadcast_packet(void *data, size_t data_size)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       send_packet(i, data, data_size);
@@ -282,7 +289,7 @@ static void broadcast_packet(void *data, size_t data_size)
 
 static void broadcast_unreliable_packet(void *data, size_t data_size)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       send_unreliable_packet(i, data, data_size);
@@ -291,7 +298,7 @@ static void broadcast_unreliable_packet(void *data, size_t data_size)
 static void broadcast_packet_excluding(int playernum, void *data,
                                        size_t data_size)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       if(i != playernum)
@@ -346,6 +353,7 @@ void SV_Init(void)
    if(enet_initialize() != 0)
       I_Error("Could not initialize networking.\n");
 
+   SV_AddCommands();
    SV_LoadConfig();
 
    net_host = enet_host_create(
@@ -432,7 +440,7 @@ unsigned int SV_GetPlayerNumberFromPeer(ENetPeer *peer)
 
 unsigned int SV_GetClientNumberFromAddress(ENetAddress *address)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -567,11 +575,25 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
    return spawn_point;
 }
 
-bool SV_RoomInGame(unsigned int clientnum)
+unsigned int SV_GetPlayingPlayerCount()
 {
-   unsigned int i;
+   int i;
    unsigned int playing_players = 0;
-   unsigned int tic_limit = sv_join_time_limit * TICRATE;
+
+   for(i = 1; i < MAX_CLIENTS; i++)
+   {
+      if(playeringame[i] && clients[i].queue_level == ql_playing)
+         playing_players++;
+   }
+
+   return playing_players;
+}
+
+bool SV_RoomInGame(int clientnum)
+{
+   int i;
+   int tic_limit = sv_join_time_limit * TICRATE;
+   unsigned int playing_players = 0;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -765,7 +787,7 @@ void SV_LoadCurrentPlayerMiscState(int playernum)
 //      on huge maps.
 void SV_StartUnlag(int playernum)
 {
-   unsigned int i;
+   int i;
    int j;
    unsigned int command_index = server_clients[playernum].command_world_index;
    unsigned int current_index = sv_world_index - 1;
@@ -811,7 +833,7 @@ void SV_StartUnlag(int playernum)
 
 void SV_EndUnlag(int playernum)
 {
-   unsigned int i;
+   int i;
    int j;
    server_client_t *server_client = &server_clients[playernum];
    unsigned int command_index = server_client->command_world_index;
@@ -851,7 +873,7 @@ void SV_EndUnlag(int playernum)
 
 int SV_HandleClientConnection(ENetPeer *peer)
 {
-   unsigned int i;
+   int i;
    Json::Value *ban;
    server_client_t *server_client;
    char *address = CS_IPToString(peer->address.host);
@@ -928,7 +950,7 @@ int SV_HandleClientConnection(ENetPeer *peer)
 
 bool SV_ServerEmpty()
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
       if(playeringame[i] || server_clients[i].current_request)
@@ -990,7 +1012,7 @@ void SV_BroadcastNewClient(int clientnum)
 
 void SV_SendCurrentState(int playernum)
 {
-   unsigned int i;
+   int i;
    nm_playerspawned_t spawn_message;
    mapthing_t *spawn_point;
    byte *buffer;
@@ -1350,7 +1372,7 @@ bool SV_AuthorizeClient(int playernum, const char *password)
 
 void SV_UpdateClientStatuses(void)
 {
-   unsigned int i;
+   int i;
 
    ENetPeer *peer;
    client_t *client;
@@ -1374,7 +1396,7 @@ void SV_UpdateClientStatuses(void)
 
 void SV_BroadcastPlayerPositions(void)
 {
-   unsigned int i;
+   int i;
    nm_playerposition_t message;
    cs_player_position_t *pos;
    cs_misc_state_t *ms;
@@ -1543,6 +1565,7 @@ bool SV_HandleJoinRequest(int playernum)
 
 void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum)
 {
+   player_t *player;
    client_t *client;
    server_client_t *server_client;
    bool authorization_successful = false;
@@ -1576,11 +1599,30 @@ void SV_HandlePlayerMessage(char *data, size_t data_length, int playernum)
 
    player_message->world_index = sv_world_index;
 
+   player = &players[playernum];
    client = &clients[playernum];
    server_client = &server_clients[playernum];
 
    switch(player_message->recipient_type)
    {
+   case mr_vote:
+      if(!strncasecmp(message, "yea", 3))
+      {
+         if(SV_CastBallot(playernum, Ballot::yea_vote))
+         {
+            doom_printf("%s voted yes.", player->name);
+            broadcast_packet(data, data_length);
+         }
+      }
+      else if(!strncasecmp(message, "nay", 3))
+      {
+         if(SV_CastBallot(playernum, Ballot::nay_vote))
+         {
+            doom_printf("%s voted no.", player->name);
+            broadcast_packet(data, data_length);
+         }
+      }
+      break;
    case mr_auth:
       doom_printf(
          "Received authorization request from player %d.\n", playernum
@@ -1631,8 +1673,8 @@ void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
                                       int playernum)
 {
    // [CG] This ensures that players can only send info updates for themselves.
-   nm_playerinfoupdated_t *info_message =
-      (nm_playerinfoupdated_t *)data;
+   nm_playerinfoupdated_t *info_message = (nm_playerinfoupdated_t *)data;
+
    if(info_message->player_number != playernum)
    {
       SV_SendMessage(
@@ -1861,6 +1903,47 @@ void SV_HandleClientRequestMessage(char *data, size_t data_length,
    cs_client_request_e request = (cs_client_request_e)message->request_type;
 
    server_clients[playernum].current_request = request;
+}
+
+void SV_HandleVoteRequestMessage(char *data, size_t data_length, int playernum)
+{
+   nm_voterequest_t *message = (nm_voterequest_t *)data;
+   char *command = data + sizeof(nm_voterequest_t);
+   size_t command_size;
+
+   if(message->command_size > 32)
+   {
+      SV_SendMessage(playernum, "Vote command too long.");
+      return;
+   }
+
+   command_size = pstrnlen(command, message->command_size);
+
+   if(command_size != message->command_size)
+   {
+      SV_SendMessage(playernum, "Error: corrupt vote command.");
+      return;
+   }
+
+   if((command_size + sizeof(nm_voterequest_t) + 1) != data_length)
+   {
+      SV_SendMessage(playernum, "Error: corrupt vote command.");
+      return;
+   }
+
+   if(SV_GetCurrentVote())
+   {
+      SV_SendMessage(playernum, "Vote already in progress.");
+      return;
+   }
+
+   if(!SV_NewVote(command))
+   {
+      SV_SendMessage(playernum, "No such vote command.");
+      return;
+   }
+
+   SV_BroadcastVote();
 }
 
 void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id)
@@ -2613,7 +2696,7 @@ void SV_BroadcastCubeSpawned(Mobj *cube)
 
 void SV_BroadcastClientStatuses(void)
 {
-   unsigned int i;
+   int i;
    nm_clientstatus_t status_message;
    ENetPeer *peer;
    client_t *client;
@@ -2650,11 +2733,52 @@ void SV_BroadcastClientStatuses(void)
    }
 }
 
+void SV_BroadcastVote()
+{
+   char *buf;
+   nm_vote_t *message;
+   size_t command_size;
+   size_t message_size = sizeof(nm_vote_t);
+   ServerVote *vote = SV_GetCurrentVote();
+
+   if(!vote)
+      return;
+
+   command_size = strlen(vote->getCommand());
+   buf = ecalloc(char *, 1, message_size + command_size + 1);
+
+   message = (nm_vote_t *)buf;
+   message->message_type = nm_vote;
+   message->world_index = sv_world_index;
+   message->command_size = command_size;
+   message->duration = vote->getDuration();
+   message->threshold = vote->getThreshold();
+   message->max_votes = vote->getMaxVotes();
+   memcpy(buf + message_size, vote->getCommand(), command_size);
+   broadcast_packet(buf, message_size + command_size + 1);
+
+   efree(message);
+}
+
+void SV_BroadcastVoteResult()
+{
+   nm_voteresult_t message;
+
+   message.message_type = nm_voteresult;
+   message.world_index = sv_world_index;
+   if(SV_GetCurrentVote()->passed())
+      message.passed = true;
+   else
+      message.passed = false;
+
+   broadcast_packet(&message, sizeof(nm_voteresult_t));
+}
+
 void SV_RunDemoTics(void) {}
 
 void SV_HandleClientRequests(void)
 {
-   unsigned int i;
+   int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
    {
@@ -2703,6 +2827,7 @@ void SV_TryRunTics(void)
    cs_cmd_t command;
    static int new_tic = 0;
    bool no_players;
+   ServerVote *vote = NULL;
    
    if((!CS_HEADLESS) || (!SV_ServerEmpty()))
       no_players = false;
@@ -2790,11 +2915,21 @@ void SV_TryRunTics(void)
 
             if(sv_should_send_new_map)
                SV_SendNewMap();
+
+            if((vote = SV_GetCurrentVote()) && vote->hasResult())
+            {
+               SV_BroadcastVoteResult();
+               if(vote->passed())
+                  C_RunTextCmd(vote->getCommand());
+               SV_CloseVote();
+            }
          }
 
          SV_BroadcastTICFinished();
          gametic++;
       }
+      else if((vote = SV_GetCurrentVote()))
+         SV_CloseVote();
 
       sv_world_index++;
 
@@ -2832,6 +2967,9 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
    case nm_playercommand:
       SV_HandlePlayerCommandMessage(data, data_length, playernum);
       break;
+   case nm_voterequest:
+      SV_HandleVoteRequestMessage(data, data_length, playernum);
+      break;
    case nm_currentstate:
    case nm_sync:
    case nm_mapstarted:
@@ -2867,6 +3005,7 @@ void SV_HandleMessage(char *data, size_t data_length, int playernum)
 #endif
    case nm_sectorposition:
    case nm_announcerevent:
+   case nm_voteresult:
    case nm_ticfinished:
       doom_printf(
          "Received invalid client message %s (%u)\n",

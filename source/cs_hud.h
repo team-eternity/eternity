@@ -55,6 +55,7 @@ void CS_InitChatWidget(void);
 void CS_InitQueueWidget(void);
 void CS_InitNetWidget(void);
 void CS_InitTeamWidget(void);
+void CS_InitVoteWidget(void);
 
 #endif
 

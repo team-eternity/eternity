@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

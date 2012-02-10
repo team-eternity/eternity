@@ -60,7 +60,7 @@ bool AccessList::banIsTemporary(Json::Value *ban)
    if(!(*ban)["expiration"].isInt())
       return false;
 
-   if(!(*ban)["expiration"].asInt() <= 0)
+   if((*ban)["expiration"].asInt() <= 0)
       return false;
 
    return true;

@@ -171,7 +171,7 @@ void D_DoAdvanceDemo(void);
 void V_InitBox(void);
 
 //sf:
-void startupmsg(char *func, char *desc)
+void startupmsg(const char *func, const char *desc)
 {
    // add colours in console mode
    usermsg(in_textmode ? "%s: %s" : FC_HI "%s: " FC_NORMAL "%s",
@@ -656,7 +656,7 @@ void D_DoAdvanceDemo(void)
    const demostate_t *state;
 
    players[consoleplayer].playerstate = PST_LIVE;  // not reborn
-   advancedemo = usergame = paused = false;
+   advancedemo = usergame = paused = (false);
    gameaction = ga_nothing;
 
    pagetic = GameModeInfo->pageTics;
@@ -4246,7 +4246,8 @@ static void D_DoomInit(void)
 
       // killough 12/98:
       // Support -loadgame with -record and reimplement -recordfrom.
-      if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
+      slot = M_CheckParm("-recordfrom");
+      if(slot && (p = slot+2) < myargc)
          G_RecordDemo(myargv[p]);
       else
       {

@@ -373,7 +373,7 @@ void SV_SetMasterRequestData(cs_master_request_t *request, const char *data)
 
 char* SV_GetStateJSON(void)
 {
-   unsigned int i, j, connected_clients;
+   int i, j, connected_clients;
    Json::Value server_json;
    Json::FastWriter writer;
 
@@ -571,7 +571,7 @@ void SV_MasterUpdate(void)
    multi_error = curl_multi_fdset(
       cs_master_multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd
    );
-   if(multi_error != CURLE_OK)
+   if(multi_error != CURLM_OK)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_fdset:\n\t%d %s.\n",
@@ -580,7 +580,7 @@ void SV_MasterUpdate(void)
    }
 
    multi_error = curl_multi_timeout(cs_master_multi_handle, &curl_timeout);
-   if(multi_error != CURLE_OK)
+   if(multi_error != CURLM_OK)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_timeout:\n\t%d %s.\n",
@@ -597,7 +597,7 @@ void SV_MasterUpdate(void)
       );
    } while(multi_error == CURLM_CALL_MULTI_PERFORM);
 
-   if(multi_error != CURLE_OK)
+   if(multi_error != CURLM_OK)
    {
       I_Error(
          "SV_MasterUpdate: Error running curl_multi_perform:\n\t%d %s.\n",
