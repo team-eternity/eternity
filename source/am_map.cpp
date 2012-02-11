@@ -725,7 +725,6 @@ void AM_Stop(void)
    automapactive = false;
    ST_AutomapEvent(AM_MSGEXITED);
    stopped = true;
-   redrawborder = true;  // sf: need redraw
 }
 
 //
@@ -747,7 +746,6 @@ void AM_Start(void)
    if(!stopped)
       AM_Stop();
 
-   redrawborder = true;  // sf: redraw needed
    stopped = false;
    
    // SoM: ANYRES

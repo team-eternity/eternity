@@ -53,7 +53,6 @@ extern bool nosfxparm;
 extern bool nomusicparm;
 
 extern int use_startmap;
-extern bool redrawborder;
 
 // Called by IO functions when input is detected.
 struct event_t;

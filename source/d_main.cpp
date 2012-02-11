@@ -222,8 +222,6 @@ gamestate_t wipegamestate = GS_DEMOSCREEN;
 void        R_ExecuteSetViewSize(void);
 camera_t    *camera;
 extern bool setsizeneeded;
-//bool        redrawsbar;      // sf: globaled - haleyjd 04/16/11: no more caching
-bool        redrawborder;    // sf: cleaned up border redraw
 int         wipewait;        // haleyjd 10/09/07
 
 bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
@@ -326,9 +324,6 @@ void D_Display(void)
       !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
 
-   if(inwipe || c_moving || menuactive)
-      redrawborder = true;   // redraw status bar and border
-
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
@@ -347,9 +342,7 @@ void D_Display(void)
          }
          else
          {
-            // see if the border needs to be updated to the screen
-            if(redrawborder)
-               R_DrawViewBorder();    // redraw border
+            R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
@@ -371,8 +364,6 @@ void D_Display(void)
          break;
       }
          
-      redrawborder = false;
-      
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
          I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
@@ -4093,10 +4084,7 @@ void D_DoomMain(void)
 
    // haleyjd 02/23/04: fix problems with -warp
    if(autostart)
-   {
       oldgamestate = GS_NOSTATE;
-      redrawborder = true;
-   }
 
    // killough 12/98: inlined D_DoomLoop
 
