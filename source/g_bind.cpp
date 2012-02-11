@@ -112,7 +112,7 @@ public:
 
    KeyBind(const char *new_key_name, const char *new_action_name,
            unsigned short new_flags)
-      : ZoneObject(), flags(new_flags), repeatable(false), pressed(false)
+      : ZoneObject(), repeatable(false), pressed(false), flags(new_flags)
    {
       hidden_key_name = estrdup(new_key_name);
       hidden_action_name = estrdup(new_action_name);
@@ -544,20 +544,6 @@ static void G_updateBoundKeyDescription(InputAction *action)
 }
 
 //
-// G_keyNumberForName
-//
-// Obtain a key's number from its name.
-//
-static int G_keyNumberForName(const char *name)
-{
-   InputKey *key;
-
-   if(!(key = names_to_keys.objectForKey(name)))
-      return -1;
-
-   return key->getNumber();
-}
-
 //
 // G_createBind
 //
@@ -567,7 +553,6 @@ static void G_createBind(InputKey *key, InputAction *action,
                          unsigned short flags)
 {
    KeyBind *kb = NULL;
-   const char *kname = key->getName();
    const char *aname = action->getName();
    size_t aname_len = strlen(aname);
 
@@ -872,8 +857,6 @@ void G_InitKeyBindings(void)
    G_addVariableAction(menu_toggle,   kac_menu);
    G_addVariableAction(menu_help,     kac_menu);
    G_addVariableAction(menu_setup,    kac_menu);
-   G_addVariableAction(menu_up,       kac_menu);
-   G_addVariableAction(menu_down,     kac_menu);
    G_addVariableAction(menu_confirm,  kac_menu);
    G_addVariableAction(menu_previous, kac_menu);
    G_addVariableAction(menu_left,     kac_menu);
@@ -881,6 +864,8 @@ void G_InitKeyBindings(void)
    G_addVariableAction(menu_pageup,   kac_menu);
    G_addVariableAction(menu_pagedown, kac_menu);
    G_addVariableAction(menu_contents, kac_menu);
+   G_addRepeatableVariableAction(menu_up,   kac_menu);
+   G_addRepeatableVariableAction(menu_down, kac_menu);
 
    // Automap-class actions
    G_addRepeatableFunctionAction(map_right,   kac_map, AM_HandlerRight);
@@ -1363,7 +1348,6 @@ static int G_allActionCategories()
 CONSOLE_COMMAND(unbind, 0)
 {
    int category = -1;
-   int category_flags;
    const char *kname;
    bool found_bind = false;
    bool ignored_console_or_menu_actions = false;
@@ -1382,6 +1366,8 @@ CONSOLE_COMMAND(unbind, 0)
    // allow specification of a binding category
    if(Console.argc == 2)
    {
+      int category_flags;
+
       category = Console.argv[1]->toInt();
       category_flags = 1 << category;
 
@@ -1423,12 +1409,7 @@ CONSOLE_COMMAND(unbind, 0)
 
       action_category = action->getCategory();
 
-      if(category != -1)
-      {
-         if(action_category != category_flags)
-            continue;
-      }
-      else if(action_category == kac_menu || action_category == kac_console)
+      if(action_category == kac_menu || action_category == kac_console)
       {
          ignored_console_or_menu_actions = true;
          continue;
