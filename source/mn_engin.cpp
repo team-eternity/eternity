@@ -1313,7 +1313,7 @@ bool MN_Responder(event_t *ev)
    }
 
    // are we inputting a new value into a variable?
-   if(input_command)
+   if(ev->type == ev_keydown && input_command)
    {
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
@@ -1763,7 +1763,7 @@ bool MN_Responder(event_t *ev)
    else
       ch = tolower(ev->data1);
    
-   if(ch >= 'a' && ch <= 'z')
+   if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should

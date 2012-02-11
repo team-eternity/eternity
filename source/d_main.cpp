@@ -2615,9 +2615,9 @@ static void D_InitPaths(void)
       psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
    }
 
-   // haleyjd 11/23/06: set basesavegame here, and use basegamepath
+   // haleyjd 11/23/06: set basesavegame here, and use usergamepath
    // set save path to -save parm or current dir
-   basesavegame = estrdup(basegamepath);
+   basesavegame = estrdup(usergamepath);
 
    if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
    {
