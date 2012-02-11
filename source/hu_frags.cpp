@@ -172,20 +172,7 @@ void HU_FragsUpdate(void)
    }
 }
 
-void HU_FragsErase(void)
-{
-   if(GameType != gt_dm)
-      return;
-
-   if(fragsdrawn)
-   {
-      // FIXME: SUBOPTIMAL
-      R_VideoErase(0, 0, SCREENWIDTH, SCREENHEIGHT);
-      fragsdrawn = false;
-   }
-}
-
-////////////////////////////////////
+//=============================================================================
 //
 // Console Commands
 //

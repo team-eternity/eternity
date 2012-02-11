@@ -1301,6 +1301,10 @@ bool MN_Responder(event_t *ev)
    if(ev->data1 == KEYD_RALT)
       altdown = (ev->type == ev_keydown);
 
+   // menu doesn't want keyup events
+   if(ev->type == ev_keyup)
+      return false;
+
    // are we displaying a widget?
    if(current_menuwidget)
    {

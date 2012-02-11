@@ -334,7 +334,6 @@ void D_Display(void)
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
-         HU_Erase();
          
          if(automapactive)
          {
