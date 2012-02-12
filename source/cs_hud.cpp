@@ -632,8 +632,8 @@ void CS_InitVoteWidget(void)
    );
 
    vote_widget = HU_WidgetForName("_HU_CSVoteWidget");
-   vote_widget->prevdisabled = vote_widget->disabled;
-   vote_widget->disabled = false;
+   vote_widget->prevdisabled = true;
+   vote_widget->disabled = true;
    vote_widget->ticker = CS_VoteWidgetTick;
 
    tw = (hu_textwidget_t *)vote_widget;

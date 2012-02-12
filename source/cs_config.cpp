@@ -714,8 +714,8 @@ void CS_HandleServerSection()
    unsigned long public_address = 0;
    char *public_address_string;
    Json::Value& server = cs_json["server"];
-#ifdef WIN32
    unsigned int i = 0;
+#ifdef WIN32
    char hostname[256];
    struct hostent *host;
    bool found_address = false;
