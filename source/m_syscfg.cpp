@@ -305,6 +305,15 @@ static default_t sysdefaults[] =
       "debug unlagged"
    ),
 
+   DEFAULT_BOOL(
+      "show_sprees",
+      &cl_show_sprees,
+      &default_cl_show_sprees,
+      false,
+      default_t::wad_no,
+      "Show double kills & killing sprees"
+   ),
+
    DEFAULT_INT(
       "damage_screen_cap",
       &damage_screen_cap,
@@ -320,18 +329,9 @@ static default_t sysdefaults[] =
       &s_default_announcer_type,
       S_ANNOUNCER_NONE,
       S_ANNOUNCER_NONE, 
-      S_ANNOUNCER_UNREAL_TOURNAMENT,
+      S_ANNOUNCER_UNREAL,
       default_t::wad_no,
       "announcer type, 0 - none, 1 - quake, 2 - unreal tournament"
-   ),
-
-   DEFAULT_BOOL(
-      "show_sprees",
-      &cl_show_sprees,
-      &default_cl_show_sprees,
-      false,
-      default_t::wad_no,
-      "Show double kills & killing sprees"
    ),
 
    DEFAULT_STR(

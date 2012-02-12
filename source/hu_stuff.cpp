@@ -169,23 +169,6 @@ inline static void HU_ToggleWidget(hu_widget_t *widget, bool disable)
 }
 
 //
-// HU_NeedsErase
-//
-// Returns true or false to indicate whether or not a widget needs
-// erasing. Sets prevdisabled to disabled to end erasing after the
-// first frame this is called for disabled widgets.
-//
-inline static bool HU_NeedsErase(hu_widget_t *widget)
-{
-   // needs erase if enabled, or if WAS enabled on last frame
-   bool ret = !widget->disabled || !widget->prevdisabled;
-
-   widget->prevdisabled = widget->disabled;
-
-   return ret;
-}
-
-//
 // Main HUD System Functions; Called externally.
 //
 
@@ -347,31 +330,6 @@ bool HU_Responder(event_t *ev)
 }
 
 //
-// HU_Erase
-// 
-// Called from D_Display to erase widgets displayed on the previous
-// frame. This clears up areas of the screen not redrawn each tick.
-//
-void HU_Erase(void)
-{
-   WidgetHash::iterator it;
-
-   if(!viewwindowx || automapactive)
-      return;
-
-   // call all widget erase functions
-   for(it = widgets.begin(); it != widgets.end(); it++)
-   {
-      if((*it).second->eraser && HU_NeedsErase((*it).second))
-         (*it).second->eraser((*it).second);
-   }
-
-   // HUD_FIXME: generalize?
-   // run indiv. module erasers
-   HU_FragsErase();
-}
-
-//
 // Normal Player Message Widget
 //
 
@@ -465,17 +423,6 @@ static void HU_MessageDraw(hu_widget_t *widget)
 }
 
 //
-// HU_MessageErase
-//
-// Erases the player message widget.
-//
-static void HU_MessageErase(hu_widget_t *widget)
-{
-   // haleyjd 06/04/05: added one to account for chat
-   R_VideoErase(0, 0, SCREENWIDTH, 8 * (hud_msg_lines + 1));
-}
-
-//
 // HU_MessageClear
 //
 // Sets the number of messages being displayed to zero.
@@ -500,7 +447,6 @@ static void HU_InitMsgWidget(void)
    // set up object virtuals
    msg_widget.widget.ticker = HU_MessageTick;
    msg_widget.widget.drawer = HU_MessageDraw;
-   msg_widget.widget.eraser = HU_MessageErase;
    msg_widget.widget.clear  = HU_MessageClear;
 
    // add to hash
@@ -563,56 +509,6 @@ static void HU_PatchWidgetDraw(hu_widget_t *widget)
 }
 
 //
-// HU_PatchWidgetErase
-//
-// Default erase function for patch widgets.
-//
-static void HU_PatchWidgetErase(hu_widget_t *widget)
-{
-   int x, x2, y, y2, w , h;
-   hu_patchwidget_t *pw = (hu_patchwidget_t *)widget;
-   patch_t *patch = pw->patch;
-
-   if(patch && pw->tl_level != 0)
-   {
-      // haleyjd 06/08/05: must adjust for patch offsets
-      x = pw->x - patch->leftoffset;
-      y = pw->y - patch->topoffset;
-      w = patch->width;
-      h = patch->height;
-      
-      x2 = x + w - 1;
-      y2 = y + h - 1;
-
-      // haleyjd 12/28/05: must clip to screen
-      if(x < 0)
-         x = 0;
-      if(x2 >= SCREENWIDTH)
-         x2 = SCREENWIDTH - 1;
-
-      w = x2 - x + 1;
-
-      // no width to erase?
-      if(w <= 0)
-         return;
-
-      if(y < 0)
-         y = 0;
-      if(y2 >= SCREENHEIGHT)
-         y2 = SCREENHEIGHT - 1;
-
-      h = y2 - y + 1;
-
-      // no height to erase?
-      if(h <= 0)
-         return;
-      
-      R_VideoErase((unsigned int)x, (unsigned int)y, 
-                   (unsigned int)w, (unsigned int)h);
-   }
-}
-
-//
 // HU_PatchWidgetDefaults
 //
 // Sets up default handler functions for a patch widget.
@@ -620,7 +516,6 @@ static void HU_PatchWidgetErase(hu_widget_t *widget)
 static void HU_PatchWidgetDefaults(hu_patchwidget_t *pw)
 {
    pw->widget.drawer = HU_PatchWidgetDraw;
-   pw->widget.eraser = HU_PatchWidgetErase;
    pw->widget.type   = WIDGET_PATCH;
 }
 
@@ -708,7 +603,6 @@ static void HU_InitWarnings(void)
    opensocket_widget.widget.type = WIDGET_PATCH;
 
    opensocket_widget.widget.drawer = HU_WarningsDrawer;
-   opensocket_widget.widget.eraser = HU_PatchWidgetErase;
 
    // add to hash
    HU_AddWidgetToHash((hu_widget_t *)&opensocket_widget);
@@ -772,100 +666,6 @@ static void HU_TextWidgetDraw(hu_widget_t *widget)
 }
 
 //
-// HU_ClearEraseData
-//
-// haleyjd 04/10/05: Sets the erase area data for a text widget to its 
-// initial state.  This is called after the erase area has been wiped, 
-// so that the area does not continue to grow in size indefinitely and 
-// take up the entire screen.
-//
-inline static void HU_ClearEraseData(hu_textwidget_t *tw)
-{
-   tw->erasedata.x1 = tw->erasedata.y1 =  D_MAXINT;
-   tw->erasedata.x2 = tw->erasedata.y2 = -D_MAXINT;
-}
-
-//
-// HU_UpdateEraseData
-//
-// haleyjd 04/10/05: Updates a text widget's erase data structure
-// by expanding the rect to include the boundaries of a new message. The
-// erase area must expand until an erasure actually occurs.
-//
-void HU_UpdateEraseData(hu_textwidget_t *tw)
-{
-   int x, y, w, h;
-
-   if(!tw->message)
-      return;
-
-   x = tw->x;
-   y = tw->y;
-   w = V_FontStringWidth (tw->font, tw->message);
-   h = V_FontStringHeight(tw->font, tw->message);
-
-   // haleyjd 10/08/05: boxed text support
-   if(tw->flags & TW_BOXED)
-   {
-      x -= 4;
-      y -= 4;
-      w += 8;
-      h += 8;
-   }
-
-   // haleyjd 02/12/06: use proper variables here (yikes!)
-   if(x < tw->erasedata.x1)
-      tw->erasedata.x1 = x;
-   if(y < tw->erasedata.y1)
-      tw->erasedata.y1 = y;
-   if(x + w - 1 > tw->erasedata.x2)
-      tw->erasedata.x2 = x + w - 1;
-   if(y + h - 1 > tw->erasedata.y2)
-      tw->erasedata.y2 = y + h - 1;
-
-   // haleyjd 12/29/05: must bound to screen edges
-   if(tw->erasedata.x1 < 0)
-      tw->erasedata.x1 = 0;
-   if(tw->erasedata.x2 >= SCREENWIDTH)
-      tw->erasedata.x2 = SCREENWIDTH - 1;
-   if(tw->erasedata.y1 < 0)
-      tw->erasedata.y1 = 0;
-   if(tw->erasedata.y2 >= SCREENHEIGHT)
-      tw->erasedata.y2 = SCREENHEIGHT - 1;
-}
-
-//
-// HU_TextWidgetErase
-//
-// haleyjd 04/10/05: Default function for erasing HUD text widgets. 
-//
-static void HU_TextWidgetErase(hu_widget_t *widget)
-{
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-   int w, h;
-
-   // is erasedata "empty" ?
-   if(tw->erasedata.x1 == D_MAXINT)
-      return;
-
-   // is area of zero width or height?
-   w = tw->erasedata.x2 - tw->erasedata.x1 + 1;
-   h = tw->erasedata.y2 - tw->erasedata.y1 + 1;
-
-   if(w <= 0 || h <= 0)
-      return;
-
-   // erase the largest rect the message widget has occupied since the
-   // last time it was cleared
-   R_VideoErase(tw->erasedata.x1, tw->erasedata.y1, w, h);
-
-   // do not keep erasing larger and larger portions of the screen when 
-   // it is totally unnecessary.
-   if(!tw->message || (tw->cleartic != 0 && leveltime > tw->cleartic + 1))
-      HU_ClearEraseData(tw);
-}
-
-//
 // HU_TextWidgetClear
 //
 // Default clear function for a text widget.
@@ -892,10 +692,7 @@ static void HU_TextWidgetClear(hu_widget_t *widget)
 //
 static void HU_TextWidgetDefaults(hu_textwidget_t *tw)
 {
-   HU_ClearEraseData(tw);
-
    tw->widget.drawer = HU_TextWidgetDraw;
-   tw->widget.eraser = HU_TextWidgetErase;
    tw->widget.clear  = HU_TextWidgetClear;
    tw->widget.type   = WIDGET_TEXT;
 
@@ -961,8 +758,6 @@ void HU_DynamicTextWidget(const char *name, int x, int y, int font,
 
    // set message
    newtw->message = newtw->alloc = estrdup(message);
-
-   HU_UpdateEraseData(newtw);
 }
 
 //
@@ -1028,8 +823,6 @@ void HU_CenterMessage(const char *s)
    tw->y = (SCREENHEIGHT - V_FontStringHeight(tw->font, s) -
             ((scaledviewheight == SCREENHEIGHT) ? 0 : st_height - 8)) / 2;
    tw->cleartic = leveltime + (message_timer * 35) / 1000;
-
-   HU_UpdateEraseData(tw);
    
    // print message to console also
    C_Printf("%s\n", s);
@@ -1407,7 +1200,6 @@ static void HU_ChatTick(hu_widget_t *widget)
    {
       psnprintf(tempchatmsg, sizeof(tempchatmsg), "%s_", chatinput);
       tw->message = tempchatmsg;
-      HU_UpdateEraseData(tw);
    }
    else
       tw->message = NULL;
@@ -1859,8 +1651,6 @@ static cell AMX_NATIVE_CALL sm_movewidget(AMX *amx, cell *params)
 
          tw->x = params[2];
          tw->y = params[3];
-
-         HU_UpdateEraseData(tw);
       }
       break;
    case WIDGET_PATCH:
@@ -2077,8 +1867,6 @@ static cell AMX_NATIVE_CALL sm_setwidgettext(AMX *amx, cell *params)
       tw->message = tw->alloc = estrdup(value);
 
       tw->cleartic = params[3] != 0 ? leveltime + params[3] : 0;
-
-      HU_UpdateEraseData(tw);
    }
 
    efree(name);

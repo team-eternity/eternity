@@ -229,6 +229,10 @@ int keylookspeed = 5;
 int cooldemo = false;
 int cooldemo_tics;      // number of tics until changing view
 
+bool announced_three_frags_left;
+bool announced_two_frags_left;
+bool announced_one_frag_left;
+
 void G_CoolViewPoint();
 
 //
@@ -2986,7 +2990,11 @@ void G_InitNew(skill_t skill, char *name)
    // to the default value.
    g_dir = d_dir ? d_dir : &wGlobalDir;
    d_dir = NULL;
-   
+
+   announced_three_frags_left = false;
+   announced_two_frags_left = false;
+   announced_one_frag_left = false;
+
    G_DoLoadLevel();
 }
 

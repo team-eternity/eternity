@@ -68,7 +68,7 @@ void CS_InitTeams(void)
 void CS_AddTeamStart(mapthing_t *team_start)
 {
    int thing_index;
-   teamcolor_t team_color;
+   int team_color;
 
    switch(team_start->type)
    {
@@ -100,7 +100,7 @@ void CS_AddTeamStart(mapthing_t *team_start)
    number_of_team_starts++;
 }
 
-unsigned int CS_GetTeamPlayerCount(teamcolor_t team_color)
+unsigned int CS_GetTeamPlayerCount(int team_color)
 {
    client_t *client;
    unsigned int i, playercount;

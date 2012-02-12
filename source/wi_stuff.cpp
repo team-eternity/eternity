@@ -54,6 +54,9 @@
 #include "w_levels.h"
 #include "w_wad.h"
 #include "wi_stuff.h"
+
+#include "cs_main.h" // [CG] 02/11/12
+#include "cs_announcer.h" // [CG] 02/10/12
 #include "cs_score.h" // [CG] 09/13/11
 
 extern vfont_t *in_bigfont;
@@ -1102,12 +1105,71 @@ static void WI_initDeathmatchStats(void)
 //
 static void WI_updateDeathmatchStats(void)
 {
+   // [CG] 0 loss, 1 normal, 2 impressive, 3 humiliation, 4 holy shit
+   static int strength_of_victory = 0;
+   // [CG] -1 loss, 0 tie, 1 win
+   static int outcome = 0;
    static int clientserver_tics = 0;
    int  i, j;    
    bool stillticking;
+   float hi_score, low_score, score_ratio;
 
-   if(clientserver_tics == 0)
+   if(clientserver && (clientserver_tics == 0))
+   {
       clientserver_tics = gametic + (10 * TICRATE);
+
+      if(CS_TEAMS_ENABLED &&
+         clients[consoleplayer].team != team_color_none &&
+         !clients[consoleplayer].spectating)
+      {
+         int home_team = clients[consoleplayer].team;
+         int other_team;
+
+         if(clients[consoleplayer].team == team_color_red)
+            other_team = team_color_blue;
+         else
+            other_team = team_color_red;
+
+         if(team_scores[home_team] < team_scores[other_team])
+         {
+            outcome = -1;
+            hi_score = team_scores[other_team];
+            low_score = team_scores[home_team];
+         }
+         else if(team_scores[home_team] == team_scores[other_team])
+         {
+            outcome = 0;
+            hi_score = low_score = team_scores[home_team];
+         }
+         else
+         {
+            outcome = 1;
+            low_score = team_scores[other_team];
+            hi_score = team_scores[home_team];
+         }
+
+         if(low_score && hi_score)
+            score_ratio = low_score / hi_score;
+         else
+            score_ratio = 0.0;
+
+         if(GameType == gt_ctf)
+         {
+            if((score_ratio <= 20.0) && ((hi_score - low_score) >= 4))
+               strength_of_victory = 4;
+            else if(score_ratio <= 40.0)
+               strength_of_victory = 3;
+            else if(score_ratio <= 60.0)
+               strength_of_victory = 2;
+         }
+         else if(score_ratio <= 50.0 && ((hi_score - low_score) >= 20))
+            strength_of_victory = 4;
+         else if(score_ratio <= 66.6)
+            strength_of_victory = 3;
+         else if(score_ratio <= 80.0)
+            strength_of_victory = 2;
+      }
+   }
 
    WI_updateAnimatedBack();
 
@@ -1125,8 +1187,11 @@ static void WI_updateDeathmatchStats(void)
       }
    }
    
-   if(acceleratestage && dm_state != 4)  // still ticking
+   if(clientserver || (acceleratestage && dm_state != 4))  // still ticking
    {
+      bool tie = false;
+      bool consoleplayer_won = false;
+      hi_score = low_score = 0.0;
       acceleratestage = 0;
       
       for(i = 0; i < MAXPLAYERS; ++i)
@@ -1140,10 +1205,49 @@ static void WI_updateDeathmatchStats(void)
             }
             
             dm_totals[i] = WI_fragSum(i);
+
+            if(dm_totals[i] == hi_score)
+               tie = true;
+
+            if(dm_totals[i] > hi_score)
+            {
+               low_score = hi_score;
+               hi_score = dm_totals[i];
+               tie = false;
+               if(i == consoleplayer)
+                  consoleplayer_won = true;
+               else
+                  consoleplayer_won = false;
+            }
+
          }
       }
-  
-      S_StartSound(NULL, sfx_barexp);  // bang
+
+      if(!CS_TEAMS_ENABLED)
+      {
+         if(low_score && hi_score)
+            score_ratio = low_score / hi_score;
+         else
+            score_ratio = 0.0;
+     
+         if(score_ratio <= 50.0 && ((hi_score - low_score) >= 20))
+            strength_of_victory = 4;
+         else if(score_ratio <= 66.6)
+            strength_of_victory = 3;
+         else if(score_ratio <= 80.0)
+            strength_of_victory = 2;
+
+         if(tie)
+            outcome = 0;
+         else if(consoleplayer_won)
+            outcome = 1;
+         else
+            outcome = -1;
+      }
+
+      if(!clientserver)
+         S_StartSound(NULL, sfx_barexp);  // bang
+
       dm_state = 4;  // we're done with all 4 (or all we have to do)
    }
     
@@ -1194,9 +1298,41 @@ static void WI_updateDeathmatchStats(void)
    }
    else if(dm_state == 4)
    {
-      if(acceleratestage || (clientserver && gametic == clientserver_tics))
-      {   
-         clientserver_tics = 0;
+      if(clientserver)
+      {
+         if((clientserver_tics - gametic) == 263)
+         {
+            if(outcome == 1)
+               CS_Announce(ae_round_won, NULL);
+            else if(outcome == 0)
+               CS_Announce(ae_round_tied, NULL);
+            else
+               CS_Announce(ae_round_lost, NULL);
+         }
+         else if((clientserver_tics - gametic) == 220)
+         {
+            if(strength_of_victory == 2)
+               CS_Announce(ae_impressive_win, NULL);
+            else if(strength_of_victory == 3)
+               CS_Announce(ae_humiliating_win, NULL);
+            else if(strength_of_victory == 4)
+               CS_Announce(ae_blowout_win, NULL);
+            strength_of_victory = 0;
+         }
+         else if((clientserver_tics - gametic) == 123)
+            CS_Announce(ae_round_starting, NULL);
+         else if(gametic == clientserver_tics)
+         {
+            clientserver_tics = 0;
+            CS_Announce(ae_round_started, NULL);
+            if(GameModeInfo->id == commercial)
+               WI_initNoState();
+            else
+               WI_initShowNextLoc();
+         }
+      }
+      else if(acceleratestage)
+      {
          S_StartSound(NULL, sfx_slop);
 
          if(GameModeInfo->id == commercial)

@@ -394,6 +394,12 @@ void SV_Init(void)
    sv_access_list = new AccessList();
 }
 
+void SV_InitAnnouncer()
+{
+   CS_InitAnnouncer();
+   CS_SetAnnouncer(s_announcer_type_names[s_announcer_type]);
+}
+
 // [CG] For atexit().
 void SV_CleanUp(void)
 {
@@ -539,7 +545,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
 {
    int i, j;
    fixed_t x, y;
-   teamcolor_t color;
+   int color;
    mapthing_t *spawn_point;
    bool remove_solid = false;
 
@@ -555,7 +561,7 @@ mapthing_t* SV_GetTeamSpawnPoint(int playernum)
       players[playernum].mo->flags |= MF_SOLID;
    }
 
-   color = (teamcolor_t)clients[playernum].team;
+   color = clients[playernum].team;
 
    for(i = 0; i < 20; i++)
    {
@@ -1059,7 +1065,7 @@ void SV_SendCurrentState(int playernum)
    }
 
    if(CS_TEAMS_ENABLED)
-      clients[playernum].team = team_color_red;
+      clients[playernum].team = team_color_none;
 
    // [CG] Send info on the new client to all the other clients.
    SV_BroadcastNewClient(playernum);
@@ -1468,7 +1474,7 @@ void SV_BroadcastUpdatedActorPositionsAndMiscState(void)
    }
 }
 
-void SV_SetPlayerTeam(int playernum, teamcolor_t team)
+void SV_SetPlayerTeam(int playernum, int team)
 {
    client_t *client = &clients[playernum];
 
@@ -1545,7 +1551,7 @@ bool SV_HandleJoinRequest(int playernum)
       return false;
    }
 
-   team_player_count = CS_GetTeamPlayerCount((teamcolor_t)client->team);
+   team_player_count = CS_GetTeamPlayerCount(client->team);
 
    // [CG] Check if there is room on the team.
    if(team_player_count > cs_settings->max_players_per_team)
@@ -2439,7 +2445,10 @@ void SV_BroadcastAnnouncerEvent(announcer_event_type_e event, Mobj *source)
 
    message.message_type = nm_announcerevent;
    message.world_index = sv_world_index;
-   message.source_net_id = source->net_id;
+   if(source)
+      message.source_net_id = source->net_id;
+   else
+      message.source_net_id = 0;
    message.event_index = event;
 
    broadcast_packet(&message, sizeof(nm_announcerevent_t));
@@ -2808,7 +2817,7 @@ void SV_SendNewMap(void)
 
    SV_BroadcastMapStarted();
 
-   for(color = team_color_red; color < team_color_max; color++)
+   for(color = team_color_none; color < team_color_max; color++)
    {
       if(!cs_flag_stands[color].net_id)
          continue;

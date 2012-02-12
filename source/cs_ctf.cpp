@@ -66,28 +66,31 @@ static void respawn_flag(flag_t *flag, fixed_t x, fixed_t y, fixed_t z,
    flag->net_id = flag_actor->net_id;
 }
 
-static teamcolor_t get_other_color(teamcolor_t color)
+static int get_other_color(int color)
 {
    if(color == team_color_blue)
       return team_color_red;
-
-   return team_color_blue;
+   else if(color == team_color_red)
+      return team_color_blue;
+   return team_color_none;
 }
 
-static const char* get_flag_name(teamcolor_t color)
+static const char* get_flag_name(int color)
 {
    if(color == team_color_red)
       return "RedFlag";
-
-   return "BlueFlag";
+   else if(color == team_color_blue)
+      return "BlueFlag";
+   return "Flag";
 }
 
-static const char* get_carried_flag_name(teamcolor_t color)
+static const char* get_carried_flag_name(int color)
 {
    if(color == team_color_red)
       return "CarriedRedFlag";
-
-   return "CarriedBlueFlag";
+   else if(color == team_color_blue)
+      return "CarriedBlueFlag";
+   return "CarriedFlag";
 }
 
 static void CS_setFlagPosition(Mobj* actor, fixed_t x, fixed_t y, fixed_t z)
@@ -114,7 +117,7 @@ void CS_RemoveFlagActor(flag_t *flag)
 
 void CL_SpawnFlag(flag_t *flag, uint32_t net_id)
 {
-   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   int color = flag - cs_flags;
    flag_stand_t *flag_stand = &cs_flag_stands[color];
    const char *flag_name = get_flag_name(color);
 
@@ -135,7 +138,7 @@ void CL_SpawnFlag(flag_t *flag, uint32_t net_id)
 
 void SV_SpawnFlag(flag_t *flag)
 {
-   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   int color = flag - cs_flags;
    flag_stand_t *flag_stand = &cs_flag_stands[color];
    const char *flag_name = get_flag_name(color);
 
@@ -160,7 +163,7 @@ void SV_SpawnFlag(flag_t *flag)
 
 void CS_ReturnFlag(flag_t *flag)
 {
-   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   int color = flag - cs_flags;
    flag_stand_t *flag_stand = &cs_flag_stands[color];
 
    respawn_flag(
@@ -175,7 +178,7 @@ void CS_ReturnFlag(flag_t *flag)
 
 void CS_GiveFlag(int playernum, flag_t *flag)
 {
-   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   int color = flag - cs_flags;
    player_t *player = &players[playernum];
    cs_actor_position_t position;
 
@@ -198,12 +201,12 @@ void CS_GiveFlag(int playernum, flag_t *flag)
    flag->state = flag_carried;
 }
 
-void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
+void CS_HandleFlagTouch(player_t *player, int color)
 {
    int playernum = player - players;
    client_t *client = &clients[playernum];
    flag_t *flag = &cs_flags[color];
-   teamcolor_t other_color = get_other_color(color);
+   int other_color = get_other_color(color);
 
    if(flag->state == flag_dropped)
    {
@@ -211,9 +214,24 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(
-               ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
-            );
+            if(color == team_color_red)
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_red_flag_returned, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
+            else if(color == team_color_blue)
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_blue_flag_returned, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
+            else
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
             SV_BroadcastMessage(
                "%s returned the %s flag", player->name, team_color_names[color]
             );
@@ -224,9 +242,24 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
       {
          if(CS_SERVER)
          {
-            SV_BroadcastAnnouncerEvent(
-               ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
-            );
+            if(color == team_color_red)
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_red_flag_taken, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
+            else if(color == team_color_blue)
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_blue_flag_taken, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
+            else
+            {
+               SV_BroadcastAnnouncerEvent(
+                  ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
+               );
+            }
             SV_BroadcastMessage(
                "%s picked up the %s flag",
                player->name,
@@ -236,46 +269,73 @@ void CS_HandleFlagTouch(player_t *player, teamcolor_t color)
          CS_GiveFlag(playernum, flag);
       }
    }
-   else
+   else if(client->team != color)
    {
-      if(client->team != color)
+      if(CS_SERVER)
       {
-         if(CS_SERVER)
+         if(color == team_color_red)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_red_flag_taken, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
+         else if(color == team_color_blue)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_blue_flag_taken, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
+         else
          {
             SV_BroadcastAnnouncerEvent(
                ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
             );
-            SV_BroadcastMessage(
-               "%s has taken the %s flag",
-               player->name,
-               team_color_names[color]
+         }
+         SV_BroadcastMessage(
+            "%s has taken the %s flag",
+            player->name,
+            team_color_names[color]
+         );
+      }
+      CS_GiveFlag(playernum, flag);
+   }
+   else if(cs_flags[other_color].carrier == playernum)
+   {
+      if(CS_SERVER)
+      {
+         if(other_color == team_color_red)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_red_flag_captured, CS_GetFlagStandActorForFlag(flag)
             );
          }
-         CS_GiveFlag(playernum, flag);
-      }
-      else if(cs_flags[other_color].carrier == playernum)
-      {
-         if(CS_SERVER)
+         else if(other_color == team_color_blue)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_blue_flag_captured, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
+         else
          {
             SV_BroadcastAnnouncerEvent(
                ae_flag_captured, CS_GetFlagStandActorForFlag(flag)
             );
-            SV_BroadcastMessage(
-               "%s captured the %s flag",
-               player->name,
-               team_color_names[other_color]
-            );
          }
-         CS_ReturnFlag(&cs_flags[other_color]);
-         team_scores[color]++;
+         SV_BroadcastMessage(
+            "%s captured the %s flag",
+            player->name,
+            team_color_names[other_color]
+         );
       }
+      CS_ReturnFlag(&cs_flags[other_color]);
+      team_scores[color]++;
    }
 }
 
 flag_t* CS_GetFlagCarriedByPlayer(int playernum)
 {
    client_t *client = &clients[playernum];
-   teamcolor_t other_color = get_other_color((teamcolor_t)client->team);
+   int other_color = get_other_color(client->team);
    flag_t *flag = &cs_flags[other_color];
 
    if(flag->carrier == playernum)
@@ -287,7 +347,7 @@ flag_t* CS_GetFlagCarriedByPlayer(int playernum)
 void CS_DropFlag(int playernum)
 {
    flag_t *flag = CS_GetFlagCarriedByPlayer(playernum);
-   teamcolor_t color = (teamcolor_t)(flag - cs_flags);
+   int color = flag - cs_flags;
    Mobj *corpse = players[playernum].mo;
    Mobj *flag_actor;
 
@@ -300,9 +360,24 @@ void CS_DropFlag(int playernum)
 
    if(CS_SERVER)
    {
-      SV_BroadcastAnnouncerEvent(
-         ae_flag_dropped, CS_GetFlagStandActorForFlag(flag)
-      );
+      if(color == team_color_red)
+      {
+         SV_BroadcastAnnouncerEvent(
+            ae_red_flag_dropped, CS_GetFlagStandActorForFlag(flag)
+         );
+      }
+      else if(color == team_color_blue)
+      {
+         SV_BroadcastAnnouncerEvent(
+            ae_blue_flag_dropped, CS_GetFlagStandActorForFlag(flag)
+         );
+      }
+      else
+      {
+         SV_BroadcastAnnouncerEvent(
+            ae_flag_dropped, CS_GetFlagStandActorForFlag(flag)
+         );
+      }
       SV_BroadcastMessage(
          "%s dropped the %s flag",
          players[playernum].name,
@@ -338,9 +413,24 @@ void CS_CTFTicker(void)
       {
          if((flag_actor = NetActors.lookup(flag->net_id)) == NULL)
             continue;
-         SV_BroadcastAnnouncerEvent(
-            ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
-         );
+         if(color == team_color_red)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_red_flag_returned, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
+         else if(color == team_color_blue)
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_blue_flag_returned, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
+         else
+         {
+            SV_BroadcastAnnouncerEvent(
+               ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
+            );
+         }
          SV_BroadcastMessage("%s flag returned", team_color_names[color]);
       }
    }

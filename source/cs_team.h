@@ -38,13 +38,13 @@
 // [CG] These are in order of max_teams, so max_teams = 2 means players can
 //      join the game on the red and blue teams, max_teams = 4 means players
 //      can join the game on the red, blue, green and white teams, and so on.
-typedef enum
+enum
 {
    team_color_none,
    team_color_red,
    team_color_blue,
    team_color_max,
-} teamcolor_t;
+};
 
 // 5080: Blue Start
 // 5081: Red Start
@@ -60,7 +60,7 @@ enum
 typedef struct team_start_s
 {
    mapthing_t *mthing;
-   teamcolor_t team_color;
+   int team_color;
 } team_start_t;
 
 extern const char *team_color_names[team_color_max];
@@ -71,7 +71,7 @@ extern mapthing_t **team_starts_by_team;
 
 void CS_InitTeams(void);
 void CS_AddTeamStart(mapthing_t *mthing);
-unsigned int CS_GetTeamPlayerCount(teamcolor_t team_color);
+unsigned int CS_GetTeamPlayerCount(int team_color);
 
 #endif
 

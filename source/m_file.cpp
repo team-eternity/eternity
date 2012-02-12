@@ -472,11 +472,7 @@ bool M_SetCurrentFolder(const char *path)
 const char* M_Basename(const char *path)
 {
    const char *basename;
-#ifdef WIN32
-   char path_sep = '\\';
-#else
-   char path_sep = '/';
-#endif
+   const char path_sep = '/';
 
    if((basename = strrchr(path, path_sep)) == NULL)
       return path;

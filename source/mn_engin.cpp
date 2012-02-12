@@ -1247,10 +1247,6 @@ void MN_Ticker(void)
 
 void MN_Drawer(void)
 { 
-   // redraw needed if menu hidden
-   if(hide_menu) 
-      redrawborder = true;
-   
    // activate menu if displaying widget
    if(current_menuwidget && !menuactive)
       MN_StartControlPanel();
@@ -1307,6 +1303,10 @@ bool MN_Responder(event_t *ev)
    if(ev->data1 == KEYD_RALT)
       altdown = (ev->type == ev_keydown);
 
+   // menu doesn't want keyup events
+   if(ev->type == ev_keyup)
+      return false;
+
    // are we displaying a widget?
    if(current_menuwidget)
    {
@@ -1315,7 +1315,7 @@ bool MN_Responder(event_t *ev)
    }
 
    // are we inputting a new value into a variable?
-   if(input_command)
+   if(ev->type == ev_keydown && input_command)
    {
       unsigned char ich = 0;
       variable_t *var = input_command->variable;
@@ -1767,7 +1767,7 @@ bool MN_Responder(event_t *ev)
    else
       ch = tolower(ev->data1);
    
-   if(ch >= 'a' && ch <= 'z')
+   if(ev->type == ev_keydown && ch >= 'a' && ch <= 'z')
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
@@ -1841,7 +1841,6 @@ void MN_StartMenu(menu_t *menu)
       current_menu = current_menu->curpage;
    
    menu_error_time = 0;      // clear error message
-   redrawborder = true;  // need redraw
 
    // haleyjd 11/12/09: custom menu open actions
    if(current_menu->open)
@@ -1866,7 +1865,6 @@ static void MN_PageMenu(menu_t *newpage)
       current_menu->rootpage->curpage = current_menu;
 
    menu_error_time = 0;
-   redrawborder = true;
 
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]);
 }
@@ -1884,7 +1882,7 @@ void MN_PrevMenu(void)
       current_menu = menu_history[menu_history_num];
    
    menu_error_time = 0;          // clear errors
-   redrawborder = true;  // need redraw
+
    S_StartSound(NULL, GameModeInfo->menuSounds[MN_SND_PREVIOUS]);
 }
 
@@ -1897,7 +1895,6 @@ void MN_ClearMenus(void)
 {
    Console.enabled = true; // haleyjd 03/11/06: re-enable console
    menuactive = false;
-   redrawborder = true;  // need redraw
 }
 
 CONSOLE_COMMAND(mn_clearmenus, 0)

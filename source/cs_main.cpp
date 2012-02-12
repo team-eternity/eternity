@@ -211,7 +211,7 @@ static void build_game_state(nm_currentstate_t *message)
 
    message->message_type = nm_currentstate;
    memcpy(message->flags, cs_flags, sizeof(flag_t) * team_color_max);
-   for(i = 0; i < team_color_max; i++)
+   for(i = team_color_none; i < team_color_max; i++)
       message->team_scores[i] = team_scores[i];
 
    for(i = 0; i < MAXPLAYERS; i++)
@@ -839,7 +839,18 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 
       client->team = message->int_value;
 
-      CS_InitAnnouncer();
+      if(CS_CLIENT && CS_TEAMS_ENABLED && playernum == consoleplayer)
+      {
+         // [CG] Set the announcer type to Unreal if the client isn't on a
+         //      team because it uses "red/blue team" and the Quake announcer
+         //      uses "your/enemy team", and "your/enemy" won't apply if you're
+         //      not on a team.
+         if(client->team == team_color_none)
+            CS_SetAnnouncer(s_announcer_type_names[S_ANNOUNCER_UNREAL]);
+         else
+            CS_SetAnnouncer(s_announcer_type_names[s_announcer_type]);
+         CS_UpdateTeamSpecificAnnouncers(client->team);
+      }
 
       if(CS_SERVER)
          SV_QueueSetClientNotPlaying(playernum);
@@ -1416,7 +1427,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
       action_scoreboard = 0;
 
    // [CG] Only set non-spectators' colormaps.
-   if(!as_spectator && CS_TEAMS_ENABLED && client->team != team_color_none)
+   if((!as_spectator) && CS_TEAMS_ENABLED && (client->team != team_color_none))
       player->colormap = team_colormaps[client->team];
 
    player->mo = P_SpawnMobj(x, y, z, player->pclass->type);

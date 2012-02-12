@@ -55,13 +55,14 @@ extern const char *sv_access_list_filename;
 extern const char *sv_default_access_list_filename;
 
 // [CG] General stuff.
-void SV_Init(void);
-bool SV_ServerEmpty();
-void SV_CleanUp(void);
+void  SV_Init(void);
+void  SV_InitAnnouncer();
+bool  SV_ServerEmpty();
+void  SV_CleanUp(void);
 char* SV_GetUserAgent(void);
-void SV_ConsoleTicker(void);
-void SV_RunDemoTics(void);
-void SV_TryRunTics(void);
+void  SV_ConsoleTicker(void);
+void  SV_RunDemoTics(void);
+void  SV_TryRunTics(void);
 
 // [CG] Unlagged functions.
 #if _UNLAG_DEBUG
@@ -100,7 +101,7 @@ unsigned int SV_GetPlayingPlayerCount();
 bool SV_RoomInGame(int clientnum);
 void SV_AddClient(int playernum);
 void SV_AddNewClients(void);
-void SV_SetPlayerTeam(int playernum, teamcolor_t team);
+void SV_SetPlayerTeam(int playernum, int team);
 void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason);
 void SV_SetWeaponPreference(int playernum, int slot, weapontype_t weapon);
 void SV_AdvanceMapList(void);

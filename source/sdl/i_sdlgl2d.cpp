@@ -561,7 +561,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-   
+
    // TODO: allow user selection of internal texture format
    glTexImage2D(GL_TEXTURE_2D, 0, texformat, (GLsizei)framebuffer_umax, 
                 (GLsizei)framebuffer_vmax, 0, GL_BGRA, GL_UNSIGNED_BYTE, 

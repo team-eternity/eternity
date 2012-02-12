@@ -548,6 +548,9 @@ void SV_LoadConfig(void)
    if(cs_server_config["server"].isMember("wad_folders"))
       cs_server_config["server"].removeMember("wad_folders");
 
+   if(cs_server_config["server"].isMember("vote_commands"))
+      cs_server_config["server"].removeMember("vote_commands");
+
    // [CG] Add password requirement information.
    cs_server_config["server"]["requires_spectator_password"] =
       requires_spectator_password;
@@ -562,6 +565,10 @@ void SV_LoadConfig(void)
       out["configuration"] = cs_server_config;
       CS_WriteJSON(
          cs_json["server"]["write_config_to"].asCString(), out, true
+      );
+      printf(
+         "SV_LoadConfig: Wrote config to %s.\n",
+         cs_json["server"]["write_config_to"].asCString()
       );
    }
 }
@@ -1029,7 +1036,7 @@ void CS_HandleServerSection()
             printf(
                "SV_LoadConfig: Added vote command %s (%us, %u%%)\n",
                command,
-               duration,
+               duration / TICRATE,
                threshold
             );
          }

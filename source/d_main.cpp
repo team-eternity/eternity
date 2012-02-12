@@ -104,6 +104,7 @@
 #include "cs_master.h"
 #include "cs_wad.h"
 #include "cl_main.h"
+#include "sv_main.h"
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -252,8 +253,6 @@ gamestate_t wipegamestate = GS_DEMOSCREEN;
 void        R_ExecuteSetViewSize(void);
 camera_t    *camera;
 extern bool setsizeneeded;
-//bool        redrawsbar;      // sf: globaled - haleyjd 04/16/11: no more caching
-bool        redrawborder;    // sf: cleaned up border redraw
 int         wipewait;        // haleyjd 10/09/07
 
 bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
@@ -356,9 +355,6 @@ void D_Display(void)
       !(wipegamestate == GS_CONSOLE && gamestate != GS_LEVEL))
       Wipe_StartScreen();
 
-   if(inwipe || c_moving || menuactive)
-      redrawborder = true;   // redraw status bar and border
-
    // haleyjd: optimization for fullscreen menu drawing -- no
    // need to do all this if the menus are going to cover it up :)
    if(!MN_CheckFullScreen())
@@ -369,7 +365,6 @@ void D_Display(void)
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
-         HU_Erase();
          
          if(automapactive)
          {
@@ -377,9 +372,7 @@ void D_Display(void)
          }
          else
          {
-            // see if the border needs to be updated to the screen
-            if(redrawborder)
-               R_DrawViewBorder();    // redraw border
+            R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
          
@@ -403,8 +396,6 @@ void D_Display(void)
          break;
       }
          
-      redrawborder = false;
-      
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
          I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
@@ -2664,12 +2655,12 @@ static void D_InitPaths(void)
       psnprintf(basedefault, len, "%s/%s.cfg", usergamepath, D_DoomExeName());
    }
 
-   // haleyjd 11/23/06: set basesavegame here, and use basegamepath
+   // haleyjd 11/23/06: set basesavegame here, and use usergamepath
    // set save path to -save parm or current dir
    if(basesavegame != NULL)
       efree(basesavegame);
 
-   basesavegame = estrdup(basegamepath);
+   basesavegame = estrdup(usergamepath);
 
    if((i = M_CheckParm("-save")) && i < myargc-1) //jff 3/24/98 if -save present
    {
@@ -3611,8 +3602,6 @@ static void D_DoomInit(void)
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
 
-   CS_InitAnnouncer();
-
    if(CS_DEMO)
    {
       if(!CS_PlayDemo(myargv[M_CheckParm("-csplaydemo") + 1]))
@@ -4197,6 +4186,11 @@ static void D_DoomInit(void)
 
    if(clientserver)
    {
+      if(CS_CLIENT)
+         CL_InitAnnouncer();
+      else if(!CS_HEADLESS)
+         SV_InitAnnouncer();
+
       if(!CS_DEMO)
       {
          printf("CS_LoadWADs: Loading WADs.\n");
@@ -4352,10 +4346,7 @@ void D_DoomMain(void)
 
    // haleyjd 02/23/04: fix problems with -warp
    if(autostart)
-   {
       oldgamestate = GS_NOSTATE;
-      redrawborder = true;
-   }
 
    // [CG] Servers should advertise and send a state update themselves at this
    //      point.

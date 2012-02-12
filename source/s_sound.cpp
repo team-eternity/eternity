@@ -1493,7 +1493,7 @@ VARIABLE_INT(
    s_announcer_type,
    &s_default_announcer_type,
    S_ANNOUNCER_NONE,
-   S_ANNOUNCER_UNREAL_TOURNAMENT,
+   S_ANNOUNCER_UNREAL,
    s_announcer_type_names
 );
 VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);

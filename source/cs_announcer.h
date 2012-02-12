@@ -28,8 +28,14 @@
 #define CS_ANNOUNCER_H__
 
 #include "z_zone.h"
+
+#include "doomstat.h"
 #include "e_hash.h"
+#include "e_sound.h"
+#include "hu_stuff.h"
 #include "i_system.h"
+#include "p_mobj.h"
+#include "s_sound.h"
 
 #include "cs_team.h"
 
@@ -39,13 +45,25 @@ typedef enum
 {
    ae_none,
    ae_flag_taken,
+   ae_friendly_flag_taken,
    ae_enemy_flag_taken,
+   ae_red_flag_taken,
+   ae_blue_flag_taken,
    ae_flag_dropped,
+   ae_friendly_flag_dropped,
    ae_enemy_flag_dropped,
+   ae_red_flag_dropped,
+   ae_blue_flag_dropped,
    ae_flag_returned,
+   ae_friendly_flag_returned,
    ae_enemy_flag_returned,
+   ae_red_flag_returned,
+   ae_blue_flag_returned,
    ae_flag_captured,
+   ae_friendly_flag_captured,
    ae_enemy_flag_captured,
+   ae_red_flag_captured,
+   ae_blue_flag_captured,
    ae_round_starting,
    ae_round_started,
    ae_three_frags_left,
@@ -80,32 +98,68 @@ typedef enum
 class AnnouncerEvent : public ZoneObject
 {
 private:
-   const char *name;
-   const char *sound_name;
-   const char *message;
+   char *name;
+   char *sound_name;
+   char *message;
+   bool has_message;
+   sfxinfo_t *sfx;
 
 public:
    DLListItem<AnnouncerEvent> links;
    int type;
 
-   AnnouncerEvent(int type, const char *new_sound_name)
-      : ZoneObject(), name(""), sound_name(new_sound_name), message("")
+   AnnouncerEvent(int new_type, const char *new_name,
+                  const char *new_sound_name)
+      : ZoneObject()
    {
-      if((type <= ae_none) || type >= ae_max)
-         I_Error("AnnouncerEvent: got invalid type %d.\n", type);
+      if((new_type <= ae_none) || new_type >= ae_max)
+         I_Error("AnnouncerEvent: got invalid type %d.\n", new_type);
+
+      type = new_type;
+      name = estrdup(new_name);
+      sound_name = estrdup(new_sound_name);
+      message = estrdup("");
+
+      if(strlen(message))
+         has_message = true;
+      else
+         has_message = false;
+
+      sfx = E_SoundForName(sound_name);
    }
 
-   AnnouncerEvent(int type, const char *new_name, const char *new_sound_name,
-                  const char *new_message)
-      : ZoneObject(), name(new_name), sound_name(new_sound_name),
-        message(new_message)
+   AnnouncerEvent(int new_type, const char *new_name,
+                  const char *new_sound_name, const char *new_message)
+      : ZoneObject()
    {
-      if((type <= ae_none) || type >= ae_max)
-         I_Error("AnnouncerEvent: got invalid type %d.\n", type);
+      if((new_type <= ae_none) || new_type >= ae_max)
+         I_Error("AnnouncerEvent: got invalid type %d.\n", new_type);
+
+      type = new_type;
+      name = estrdup(new_name);
+      sound_name = estrdup(new_sound_name);
+      message = estrdup(new_message);
+
+      if(strlen(message))
+         has_message = true;
+      else
+         has_message = false;
+
+      sfx = E_SoundForName(sound_name);
    }
 
+   ~AnnouncerEvent()
+   {
+      efree(name);
+      efree(sound_name);
+      efree(message);
+   }
+
+   const char* getName() { return name; }
    const char* getSoundName() { return sound_name; }
    const char* getMessage() { return message; }
+
+   void activate(Mobj *source);
 
 };
 
@@ -115,12 +169,12 @@ protected:
    bool enabled;
    EHashTable<AnnouncerEvent, EIntHashKey, &AnnouncerEvent::type,
               &AnnouncerEvent::links> events;
-   teamcolor_t team;
+   int team;
 public:
    DLListItem<Announcer> links;
    const char *name;
 
-   Announcer(const char *new_name, teamcolor_t new_team, bool new_enabled)
+   Announcer(const char *new_name, int new_team, bool new_enabled)
       : ZoneObject(), enabled(new_enabled), team(new_team), name(new_name)
    {
       events.initialize(INITIAL_ANNOUNCER_EVENT_COUNT);
@@ -132,121 +186,40 @@ public:
       events.initialize(INITIAL_ANNOUNCER_EVENT_COUNT);
    }
 
-   bool addEvent(AnnouncerEvent *ae)
-   {
-      AnnouncerEvent *existing_ae = NULL;
-
-      if((existing_ae = events.objectForKey(ae->type)))
-         return false;
-
-      events.addObject(ae);
-      return true;
-   }
-
-   bool addEvent(int type, const char *new_sound_name)
-   {
-      AnnouncerEvent *ae;
-      
-      ae = new AnnouncerEvent(type, new_sound_name);
-
-      if(!addEvent(ae))
-      {
-         delete ae;
-         return false;
-      }
-
-      return true;
-   }
-
-   bool addEvent(int type, const char *new_name, const char *new_sound_name,
-                 const char *new_message)
-   {
-      AnnouncerEvent *ae;
-      
-      ae = new AnnouncerEvent(type, new_name, new_sound_name, new_message);
-
-      if(!addEvent(ae))
-      {
-         delete ae;
-         return false;
-      }
-
-      return true;
-   }
-
-   virtual void setTeam(teamcolor_t new_team) {}
-
+   virtual AnnouncerEvent* getEvent(int type);
+   
    void enable() { enabled = true; }
    void disable() { enabled = false; }
    bool isEnabled() { if(enabled) return true; return false; }
    bool isDisabled() { if(enabled) return false; return true; }
-   AnnouncerEvent* getEvent(int type) { return events.objectForKey(type); }
+
+   void setTeam(int new_team);
+   bool addEvent(AnnouncerEvent *ae);
+   bool addEvent(int type, const char *new_name, const char *sound_name);
+   bool addEvent(int type, const char *new_name, const char *sound_name,
+                 const char *message);
 
 };
 
 class TeamSpecificAnnouncer : public Announcer
 {
-private:
-   void swapEventTypes(int t1, int t2, const char *n1, const char *n2)
-   {
-      AnnouncerEvent *friend_event, *enemy_event;
-
-      friend_event = events.objectForKey(t1);
-      enemy_event = events.objectForKey(t2);
-      if(!friend_event)
-         I_Error("TeamSpecificAnnouncer: missing %s event.\n", n1);
-      if(!enemy_event)
-         I_Error("TeamSpecificAnnouncer: missing %s event.\n", n2);
-      events.removeObject(friend_event);
-      events.removeObject(enemy_event);
-      friend_event->type = t2;
-      enemy_event->type = t1;
-      events.addObject(friend_event);
-      events.addObject(enemy_event);
-   }
 public:
 
    TeamSpecificAnnouncer(const char *new_name)
-      : Announcer(new_name, team_color_red, true) {}
+      : Announcer(new_name, team_color_none, true) {}
 
-   void setTeam(teamcolor_t new_team)
-   {
-      if((new_team == team) || new_team == team_color_none)
-         return;
+   AnnouncerEvent* getEvent(int type);
 
-      swapEventTypes(
-         ae_flag_taken, ae_enemy_flag_taken, "flag taken", "enemy_flag_taken"
-      );
-      swapEventTypes(
-         ae_flag_dropped,
-         ae_enemy_flag_dropped,
-         "flag dropped",
-         "enemy_flag_dropped"
-      );
-      swapEventTypes(
-         ae_flag_returned,
-         ae_enemy_flag_returned,
-         "flag returned",
-         "enemy_flag_returned"
-      );
-      swapEventTypes(
-         ae_flag_captured,
-         ae_enemy_flag_captured,
-         "flag captured",
-         "enemy_flag_captured"
-      );
-
-      team = new_team;
-   }
 };
 
 void            CS_EnableAnnouncer();
 void            CS_DisableAnnouncer();
 bool            CS_SetAnnouncer(const char *name);
 bool            CS_AnnouncerEnabled(void);
-void            CS_UpdateTeamSpecificAnnouncers(teamcolor_t color);
+void            CS_UpdateTeamSpecificAnnouncers(int color);
 void            CS_InitAnnouncer(void);
 AnnouncerEvent* CS_GetAnnouncerEvent(int event_type);
+void            CS_Announce(int event_type, Mobj *source);
 
 #endif
 

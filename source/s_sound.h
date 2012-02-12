@@ -77,12 +77,13 @@ enum
 {
    S_ANNOUNCER_NONE,
    S_ANNOUNCER_QUAKE,
-   S_ANNOUNCER_UNREAL_TOURNAMENT,
+   S_ANNOUNCER_UNREAL,
    S_ANNOUNCER_MAX
 };
 
 extern int s_announcer_type;
 extern int s_default_announcer_type;
+extern const char *s_announcer_type_names[];
 
 //
 // Start sound for thing at <origin>

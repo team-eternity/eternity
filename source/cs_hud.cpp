@@ -190,10 +190,7 @@ static void CS_TimerWidgetTick(hu_widget_t *widget)
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
    if(show_timer)
-   {
       CS_FormatTicsAsTime(tw->message, leveltime);
-      HU_UpdateEraseData(tw);
-   }
    else
       tw->message[0] = 0;
 }
@@ -233,7 +230,6 @@ static void CS_ChatTick(hu_widget_t *widget)
             cw->message, MAX_STRING_SIZE + 7, "%s> %s_", "SAY", cs_chat_input
          );
       }
-      HU_UpdateEraseData(cw);
    }
    else
       cw->message[0] = 0;
@@ -241,20 +237,20 @@ static void CS_ChatTick(hu_widget_t *widget)
 
 void CS_DrawChatWidget(void)
 {
-   hu_widget_t *tw;
+   hu_widget_t *w;
    
-   tw = HU_WidgetForName("_HU_CSChatWidget");
-   if(!tw->disabled)
+   w = HU_WidgetForName("_HU_CSChatWidget");
+   if(!w->disabled)
    {
-      tw->ticker(tw);
-      tw->drawer(tw);
+      w->ticker(w);
+      w->drawer(w);
    }
 
-   tw = HU_WidgetForName("_HU_MsgWidget");
-   if(!tw->disabled)
+   w = HU_WidgetForName("_HU_MsgWidget");
+   if(!w->disabled)
    {
-      tw->ticker(tw);
-      tw->drawer(tw);
+      w->ticker(w);
+      w->drawer(w);
    }
 }
 
@@ -400,7 +396,6 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
          clients[consoleplayer].server_lag,
          100 - clients[consoleplayer].packet_loss
       );
-      HU_UpdateEraseData(tw);
    }
    else
       tw->message[0] = 0;
@@ -440,24 +435,34 @@ void CS_InitNetWidget(void)
 
 static void CS_TeamWidgetTick(hu_widget_t *widget)
 {
-   teamcolor_t team = (teamcolor_t)clients[displayplayer].team;
+   int team = clients[displayplayer].team;
    hu_textwidget_t *tw = (hu_textwidget_t *)widget;
 
-   if(team == team_color_none || !(CS_TEAMS_ENABLED && show_team_widget))
+   if(!widget->disabled)
    {
-      tw->message[0] = 0;
+      if(team == team_color_none || !(CS_TEAMS_ENABLED && show_team_widget))
+      {
+         widget->prevdisabled = widget->disabled;
+         widget->disabled = true;
+         tw->message[0] = 0;
+         return;
+      }
+   }
+   else if((team != team_color_none) && CS_TEAMS_ENABLED && show_team_widget)
+   {
+      widget->prevdisabled = widget->disabled;
+      widget->disabled = false;
       return;
    }
 
    sprintf(tw->message, "%d", team_scores[team]);
-   HU_UpdateEraseData(tw);
 
    if(team == team_color_red)
       tw->color = CR_RED + 1;
    else if(team == team_color_blue)
       tw->color = CR_BLUE + 1;
    else
-      tw->color = CR_GRAY + 1;
+      tw->color = CR_GREEN + 1;
 }
 
 void CS_InitTeamWidget(void)

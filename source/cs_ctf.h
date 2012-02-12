@@ -94,11 +94,11 @@ extern flag_t cs_flags[team_color_max];
 
 void    CL_SpawnFlag(flag_t *flag, uint32_t net_id);
 void    SV_SpawnFlag(flag_t *flag);
-void    CS_PlayFlagSound(teamcolor_t flag_color);
+void    CS_PlayFlagSound(int flag_color);
 void    CS_RemoveFlagActor(flag_t *flag);
 void    CS_ReturnFlag(flag_t *flag);
 void    CS_GiveFlag(int playernum, flag_t *flag);
-void    CS_HandleFlagTouch(player_t *player, teamcolor_t color);
+void    CS_HandleFlagTouch(player_t *player, int color);
 flag_t* CS_GetFlagCarriedByPlayer(int playernum);
 void    CS_DropFlag(int playernum);
 void    CS_CTFTicker(void);

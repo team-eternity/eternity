@@ -938,7 +938,7 @@ default_t defaults[] =
       &s_default_announcer_type,
       S_ANNOUNCER_NONE,
       S_ANNOUNCER_NONE,
-      S_ANNOUNCER_UNREAL_TOURNAMENT,
+      S_ANNOUNCER_UNREAL,
       default_t::wad_no,
       "type of announcer, none, Quake style, or Unreal Tournament style"
    ),

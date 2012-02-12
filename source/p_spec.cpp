@@ -85,6 +85,8 @@
 
 #include "cs_main.h" // [CG] 09/18/11
 #include "cs_team.h" // [CG] 09/18/11
+#include "cs_announcer.h" // [CG] 02/10/12
+#include "sv_main.h"
 
 //
 // Animating textures and planes
@@ -2499,32 +2501,84 @@ void P_UpdateSpecials(void)
    int    pic;
    int    i;
 
-   // Downcount level timer, exit level if elapsed
-   if(levelTimeLimit && leveltime >= levelTimeLimit*35*60 )
-      G_ExitLevel();
-
-   // Check frag counters, if frag limit reached, exit level // Ty 03/18/98
-   //  Seems like the total frags should be kept in a simple
-   //  array somewhere, but until they are...
-   if(levelFragLimit)  // we used -frags so compare count
+   if(serverside)
    {
-      int pnum;
-      for(pnum = 0; pnum < MAXPLAYERS; pnum++)
-      {
-         if(!playeringame[pnum])
-            continue;
-          // sf: use hu_frags.c frag counter
-         if(players[pnum].totalfrags >= levelFragLimit)
-            break;
-      }
-      if(pnum < MAXPLAYERS)       // sf: removed exitflag (ugh)
-         G_ExitLevel();
-   }
 
-   if(levelScoreLimit)
-      for(i = team_color_red; i <= team_color_blue; i++)
-         if(team_scores[i] >= levelScoreLimit)
+      // Downcount level timer, exit level if elapsed
+      if(levelTimeLimit)
+      {
+         int time_left = (levelTimeLimit * TICRATE * 60) - leveltime;
+
+         if(time_left <= 0)
+         {
             G_ExitLevel();
+            return;
+         }
+
+         if(time_left == (5 * TICRATE * 60))
+            SV_BroadcastAnnouncerEvent(ae_five_minute_warning, NULL);
+         else if(time_left == (TICRATE * 60))
+            SV_BroadcastAnnouncerEvent(ae_one_minute_warning, NULL);
+      }
+
+      // Check frag counters, if frag limit reached, exit level // Ty 03/18/98
+      //  Seems like the total frags should be kept in a simple
+      //  array somewhere, but until they are...
+      if(levelFragLimit)  // we used -frags so compare count
+      {
+         int pnum;
+         for(pnum = 0; pnum < MAXPLAYERS; pnum++)
+         {
+            if(!playeringame[pnum])
+               continue;
+            // sf: use hu_frags.c frag counter
+            if(players[pnum].totalfrags >= levelFragLimit)
+            {
+               G_ExitLevel();
+               return;
+            }
+
+            if(players[pnum].totalfrags >= (levelFragLimit - 1))
+            {
+               if(!announced_one_frag_left)
+               {
+                  announced_three_frags_left = true;
+                  announced_two_frags_left = true;
+                  announced_one_frag_left = true;
+                  SV_BroadcastAnnouncerEvent(ae_one_frag_left, NULL);
+               }
+            }
+            else if(players[pnum].totalfrags >= (levelFragLimit - 2))
+            {
+               if(!announced_two_frags_left)
+               {
+                  announced_three_frags_left = true;
+                  announced_two_frags_left = true;
+                  SV_BroadcastAnnouncerEvent(ae_two_frags_left, NULL);
+               }
+            }
+            else if(players[pnum].totalfrags >= (levelFragLimit - 3))
+            {
+               if(!announced_three_frags_left)
+               {
+                  announced_three_frags_left = true;
+                  SV_BroadcastAnnouncerEvent(ae_three_frags_left, NULL);
+               }
+            }
+         }
+      }
+
+      if(levelScoreLimit)
+      {
+         if((team_scores[team_color_none] >= levelScoreLimit) ||
+            (team_scores[team_color_red]  >= levelScoreLimit) ||
+            (team_scores[team_color_blue] >= levelScoreLimit))
+         {
+            G_ExitLevel();
+            return;
+         }
+      }
+   }
 
    // Animate flats and textures globally
    for(anim = anims; anim < lastanim; ++anim)

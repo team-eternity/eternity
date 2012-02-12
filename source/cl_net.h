@@ -33,7 +33,7 @@ void  CL_SendPlayerStringInfo(client_info_e info_type);
 void  CL_SendPlayerArrayInfo(client_info_e info_type, int array_index);
 void  CL_SendPlayerScalarInfo(client_info_e info_type);
 void  CL_SendCommand(void);
-void  CL_SendTeamRequest(teamcolor_t team);
+void  CL_SendTeamRequest(int team);
 void  CL_SendSyncRequest(void);
 void  CL_SendSyncReceived(void);
 void  CL_SendVoteRequest(const char *command);

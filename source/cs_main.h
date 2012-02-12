@@ -332,7 +332,7 @@ typedef struct
    //      yet to be run), but this index refers to the client's command and
    //      position for this TIC.
    // uint32_t index;
-   // [CG] The client's current team, teamcolor_t.
+   // [CG] The client's current team.
    int32_t team;
    // [CG] This is the number of TICs between when a command was generated and
    //      when it was received again from the server.  This is only used

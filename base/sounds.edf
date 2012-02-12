@@ -95,7 +95,7 @@ sound Earthquake
 
 sound FriendlyFlagDropped
 {
-    lump = "dsffd"
+    lump = "dsefd"
     clipping_dist = 1
     close_dist = 2
     priority = 0
@@ -103,7 +103,7 @@ sound FriendlyFlagDropped
 
 sound FriendlyFlagTaken
 {
-    lump = "dsffg"
+    lump = "dsefg"
     clipping_dist = 1
     close_dist = 2
     priority = 0
@@ -111,7 +111,7 @@ sound FriendlyFlagTaken
 
 sound FriendlyFlagReturned
 {
-    lump = "dsffr"
+    lump = "dsefr"
     clipping_dist = 1
     close_dist = 2
     priority = 0
@@ -127,7 +127,7 @@ sound FriendlyFlagCaptured
 
 sound EnemyFlagDropped
 {
-    lump = "dsefd"
+    lump = "dsffd"
     clipping_dist = 1
     close_dist = 2
     priority = 0
@@ -135,7 +135,7 @@ sound EnemyFlagDropped
 
 sound EnemyFlagTaken
 {
-    lump = "dsefg"
+    lump = "dsffg"
     clipping_dist = 1
     close_dist = 2
     priority = 0
@@ -143,7 +143,7 @@ sound EnemyFlagTaken
 
 sound EnemyFlagReturned
 {
-    lump = "dsefr"
+    lump = "dsffr"
     clipping_dist = 1
     close_dist = 2
     priority = 0

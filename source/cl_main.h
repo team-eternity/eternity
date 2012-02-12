@@ -79,6 +79,7 @@ extern bool cl_setting_actor_state;
 extern cl_ghost_t cl_unlagged_ghosts[MAXPLAYERS];
 
 void  CL_Init(char *url);
+void  CL_InitAnnouncer();
 void  CL_InitPlayDemoMode(void);
 void  CL_InitNetworkMessageHash(void);
 void  CL_Reset(void);

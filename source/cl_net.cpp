@@ -284,7 +284,7 @@ void CL_SendPlayerScalarInfo(client_info_e info_type)
    send_packet(&update_message, sizeof(nm_playerinfoupdated_t));
 }
 
-void CL_SendTeamRequest(teamcolor_t team)
+void CL_SendTeamRequest(int team)
 {
    nm_playerinfoupdated_t update_message;
 
@@ -424,7 +424,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
       CS_SetPlayerName(&players[new_num], players[consoleplayer].name);
       CS_SetPlayerName(&players[0], SERVER_NAME);
       consoleplayer = displayplayer = message->player_number;
-      clients[consoleplayer].team = team_color_red;
+      clients[consoleplayer].team = team_color_none;
       CL_SendPlayerStringInfo(ci_name);
       CL_SendPlayerScalarInfo(ci_team);
       for(i = 0; i < NUMWEAPONS; i++)
@@ -499,7 +499,7 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    cl_spawning_actor_from_message = false;
    cl_removing_actor_from_message = false;
 
-   for(i = 1; i < team_color_max; i++)
+   for(i = team_color_none; i < team_color_max; i++)
    {
       cs_flags[i].net_id = message->flags[i].net_id;
       cs_flags[i].carrier = message->flags[i].carrier;
@@ -1010,7 +1010,7 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
            message->type == safe_carried_red_flag_type  ||
            message->type == safe_carried_blue_flag_type)
    {
-      teamcolor_t color = team_color_none;
+      int color = team_color_none;
 
       if(message->type == safe_red_flag_type         ||
          message->type == safe_dropped_red_flag_type ||
@@ -1786,67 +1786,35 @@ void CL_HandleSectorPositionMessage(nm_sectorposition_t *message)
 void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
 {
    Mobj *source;
-   sfxinfo_t *sfx;
-   AnnouncerEvent *event;
 
    if(!CS_AnnouncerEnabled())
+   {
+      printf("Announcer is not enabled.\n");
       return;
+   }
 
    // [CG] Ignore announcer events if we haven't received sync yet.
    if(!cl_packet_buffer.synchronized())
-      return;
-
-   if((source = NetActors.lookup(message->source_net_id)) == NULL)
    {
-      doom_printf(
-         "Received a announcer event message for an invalid source %u.\n",
-         message->source_net_id
-      );
+      printf("Buffer is not synchronized.\n");
       return;
    }
 
-   /*
-   switch(message->event_index)
+   if(message->source_net_id)
    {
-   case ae_flag_taken:
-   case ae_flag_dropped:
-   case ae_flag_returned:
-   case ae_flag_captured:
-   {
-      int i;
-      for(i = team_color_none; i < team_color_max; i++)
+      if(!(source = NetActors.lookup(message->source_net_id)))
       {
-         if(cs_flag_stands[i].net_id == message->source_net_id)
-         {
-            if((teamcolor_t)i != clients[consoleplayer].team)
-            {
-               message->event_index++;
-               break;
-            }
-         }
+         doom_printf(
+            "Received a announcer event message for an invalid source %u.\n",
+            message->source_net_id
+         );
+         return;
       }
-      break;
    }
-   default:
-      break;
-   }
-   */
+   else
+      source = NULL;
 
-   if(!(event = CS_GetAnnouncerEvent(message->event_index)))
-   {
-      doom_printf(
-         "Received an announcer event message for an invalid announcer index "
-         "%u.\n",
-         message->event_index
-      );
-      return;
-   }
-
-   if((sfx = E_SoundForName(event->getSoundName())))
-      S_StartSfxInfo(source, sfx, 127, ATTN_NONE, false, CHAN_AUTO);
-
-   if(event->getMessage() && strlen(event->getMessage()))
-      HU_CenterMessage(event->getMessage());
+   CS_Announce(message->event_index, source);
 }
 
 void CL_HandleVoteMessage(nm_vote_t *message)

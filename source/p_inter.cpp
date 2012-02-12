@@ -1145,20 +1145,31 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       }
       if(target->player)
       {
-         source->player->frags[target->player-players]++;
+         int sourcenum = source->player - players;
+         int targetnum = target->player - players;
+
+         source->player->frags[sourcenum]++;
+
          if(GameType == gt_tdm)
          {
             // [CG] Subtract 1 from the team's score for suicides and team
             //      kills.
             if(source->player == target->player ||
-               clients[source->player - players].team ==
-               clients[target->player - players].team)
+               clients[sourcenum].team == clients[targetnum].team)
             {
-               team_scores[clients[source->player - players].team]--;
+
+               if(sourcenum == consoleplayer)
+               {
+                  if(sourcenum == targetnum)
+                     CS_Announce(ae_suicide_death, NULL);
+                  else
+                     CS_Announce(ae_team_kill, NULL);
+               }
+
+               team_scores[clients[sourcenum].team]--;
                if(CS_SERVER)
                {
-                  int playernum = target->player - players;
-                  server_client_t *sc = &server_clients[playernum];
+                  server_client_t *sc = &server_clients[sourcenum];
 
                   // [CG] If you suicide or team kill, all your sprees are
                   //      over.
@@ -1169,12 +1180,11 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
             }
             else
             {
-               team_scores[clients[source->player - players].team]++;
+               team_scores[clients[sourcenum].team]++;
 
                if(CS_SERVER)
                {
-                  int playernum = target->player - players;
-                  server_client_t *sc = &server_clients[playernum];
+                  server_client_t *sc = &server_clients[sourcenum];
                   
                   sc->frags_this_life++;
 
@@ -1186,7 +1196,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
                         (sc->frag_level != new_frag_level))
                      {
                         sc->frag_level = new_frag_level;
-                        SV_BroadcastPlayerScalarInfo(playernum, ci_frag_level);
+                        SV_BroadcastPlayerScalarInfo(sourcenum, ci_frag_level);
                      }
                   }
 
@@ -1194,7 +1204,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
                   {
                      if(sc->consecutive_frag_level < (cfl_max - 1))
                         sc->consecutive_frag_level++;
-                     SV_BroadcastPlayerScalarInfo(playernum, ci_cfrag_level);
+                     SV_BroadcastPlayerScalarInfo(sourcenum, ci_cfrag_level);
                   }
 
                   sc->last_frag_tic = gametic;

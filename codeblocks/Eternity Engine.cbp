@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-directx -8in32 -nomusic -csjoin file://e:\Code\eecs\codeblocks\bin\Debug\test1.json" />
+				<Option parameters="-csserve" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -46,6 +46,7 @@
 			<Add option="-DHAVE_SCHED_SETAFFINITY" />
 			<Add option="-D_GNU_SOURCE" />
 			<Add option="-DEE_CDROM_SUPPORT" />
+			<Add option="-DEE_NO_SMALL_SUPPORT" />
 			<Add directory="..\source\textscreen" />
 			<Add directory="..\source\sdl" />
 			<Add directory="..\source\hal" />
@@ -186,6 +187,7 @@
 		<Unit filename="..\source\cl_net.cpp" />
 		<Unit filename="..\source\cl_pred.cpp" />
 		<Unit filename="..\source\cl_spec.cpp" />
+		<Unit filename="..\source\cl_vote.cpp" />
 		<Unit filename="..\source\cs_announcer.cpp" />
 		<Unit filename="..\source\cs_cmd.cpp" />
 		<Unit filename="..\source\cs_config.cpp" />
@@ -351,6 +353,7 @@
 		<Unit filename="..\source\sv_main.cpp" />
 		<Unit filename="..\source\sv_queue.cpp" />
 		<Unit filename="..\source\sv_spec.cpp" />
+		<Unit filename="..\source\sv_vote.cpp" />
 		<Unit filename="..\source\tables.cpp" />
 		<Unit filename="..\source\textscreen\txt_button.c">
 			<Option compilerVar="CC" />

@@ -78,13 +78,14 @@
 #include "version.h"
 #include "w_wad.h"
 
-#include "cs_hud.h"
-#include "cs_spec.h"
-#include "cs_main.h"
+#include "cs_announcer.h"
 #include "cs_config.h"
+#include "cs_demo.h"
+#include "cs_hud.h"
+#include "cs_main.h"
+#include "cs_spec.h"
 #include "cs_netid.h"
 #include "cs_position.h"
-#include "cs_demo.h"
 #include "cs_wad.h"
 #include "cl_buf.h"
 #include "cl_cmd.h"
@@ -134,8 +135,11 @@ void CL_RunWorldUpdate(void)
    if(displayplayer != consoleplayer && clients[displayplayer].spectating)
       CS_SetDisplayPlayer(consoleplayer);
 
-   if(gamestate == GS_LEVEL && cl_packet_buffer.synchronized() && !cs_demo_playback)
+   if(gamestate == GS_LEVEL && cl_packet_buffer.synchronized() &&
+      !cs_demo_playback)
+   {
       CL_SendCommand();
+   }
 
    G_Ticker();
    gametic++;
@@ -228,6 +232,14 @@ void CL_Init(char *url)
    CL_LoadConfig();
    CS_ClearTempWADDownloads();
    CS_InitSectorPositions();
+}
+
+void CL_InitAnnouncer()
+{
+   CS_InitAnnouncer();
+   CS_SetAnnouncer(s_announcer_type_names[s_announcer_type]);
+   if(CS_TEAMS_ENABLED)
+      CS_UpdateTeamSpecificAnnouncers(clients[consoleplayer].team);
 }
 
 void CL_InitPlayDemoMode(void)

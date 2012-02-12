@@ -140,6 +140,10 @@ extern bool sendpause;
 
 extern int novert; // haleyjd
 
+extern bool announced_three_frags_left;
+extern bool announced_two_frags_left;
+extern bool announced_one_frag_left;
+
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
