@@ -2470,15 +2470,19 @@ void G_DoReborn(int playernum)
       // first dissasociate the corpse
       players[playernum].mo->player = NULL;
 
+      // [CG] Clear the spree-related variables for this client.
+      if(clientserver)
+      {
+         clients[playernum].frags_this_life = 0;
+         clients[playernum].last_frag_tic = 0;
+         clients[playernum].frag_level = fl_none;
+         clients[playernum].consecutive_frag_level = cfl_none;
+      }
+
       // [CG] C/S servers use slightly different logic when determining where
       //      to spawn a player.
       if(CS_SERVER)
       {
-         server_clients[playernum].frags_this_life = 0;
-         server_clients[playernum].last_frag_tic = 0;
-         server_clients[playernum].frag_level = fl_none;
-         server_clients[playernum].consecutive_frag_level = cfl_none;
-
          if(clients[playernum].spectating)
             SV_SpawnPlayer(playernum, true);
          else

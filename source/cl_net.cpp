@@ -514,6 +514,8 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
 
 void CL_HandleSyncMessage(nm_sync_t *message)
 {
+   static bool first_time = true;
+
    gametic          = message->gametic;
    basetic          = message->basetic;
    leveltime        = message->leveltime;
@@ -526,6 +528,11 @@ void CL_HandleSyncMessage(nm_sync_t *message)
       cl_packet_buffer.enable();
 
    CS_UpdateQueueMessage();
+
+   if(first_time)
+      first_time = false;
+   else
+      CS_Announce(ae_round_started, NULL);
 }
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
@@ -715,8 +722,9 @@ void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
 
 void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 {
-   player_t *player = &players[message->player_number];
-   bool as_spectator;
+   player_t *player;
+   client_t *client;
+   bool was_spectating, as_spectator;
 
    if(message->player_number > MAX_CLIENTS)
    {
@@ -724,8 +732,13 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
       return;
    }
 
+   player = &players[message->player_number];
+   client = &clients[message->player_number];
+   was_spectating = client->spectating;
+
    playeringame[message->player_number] = true;
    player->playerstate = PST_REBORN;
+
    if(message->as_spectator)
       as_spectator = true;
    else
@@ -742,7 +755,49 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
    );
 
    if(message->player_number == consoleplayer)
+   {
       CS_UpdateQueueMessage();
+
+      if(was_spectating && !as_spectator)
+      {
+         if(CS_TEAMS_ENABLED)
+         {
+            int other_team = CS_GetOtherTeam(client->team);
+
+            if(team_scores[client->team] > team_scores[other_team])
+               CS_Announce(ae_lead_gained, NULL);
+            else if(team_scores[client->team] == team_scores[other_team])
+               CS_Announce(ae_lead_tied, NULL);
+            else if(team_scores[client->team] < team_scores[other_team])
+               CS_Announce(ae_lead_lost, NULL);
+         }
+         else
+         {
+            int i;
+            bool tie = false;
+
+            for(i = 1; i < MAX_CLIENTS; i++)
+            {
+               if(i == consoleplayer)
+                  continue;
+
+               if(players[i].totalfrags > player->totalfrags)
+               {
+                  CS_Announce(ae_lead_lost, NULL);
+                  return;
+               }
+
+               if(players[i].totalfrags == player->totalfrags)
+                  tie = true;
+            }
+
+            if(tie)
+               CS_Announce(ae_lead_tied, NULL);
+            else
+               CS_Announce(ae_lead_gained, NULL);
+         }
+      }
+   }
 }
 
 void CL_HandlePlayerWeaponStateMessage(nm_playerweaponstate_t *message)

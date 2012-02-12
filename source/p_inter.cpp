@@ -1143,72 +1143,36 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          if(target->flags & MF_COUNTKILL)
             source->player->killcount++;
       }
+
       if(target->player)
       {
          int sourcenum = source->player - players;
          int targetnum = target->player - players;
+         client_t *source_client = &clients[sourcenum];
+         client_t *target_client = &clients[targetnum];
+         int source_team = source_client->team;
+         int target_team = target_client->team;
+         bool team_kill = false;
+         bool suicide = false;
 
          source->player->frags[sourcenum]++;
 
-         if(GameType == gt_tdm)
+         if(clientserver)
          {
-            // [CG] Subtract 1 from the team's score for suicides and team
-            //      kills.
-            if(source->player == target->player ||
-               clients[sourcenum].team == clients[targetnum].team)
+            if(sourcenum == targetnum)
+               suicide = true;
+            else if(CS_TEAMS_ENABLED && (source_team == target_team))
+               team_kill = true;
+
+            CS_CheckSprees(sourcenum, targetnum, suicide, team_kill);
+
+            if(GameType == gt_tdm)
             {
-
-               if(sourcenum == consoleplayer)
-               {
-                  if(sourcenum == targetnum)
-                     CS_Announce(ae_suicide_death, NULL);
-                  else
-                     CS_Announce(ae_team_kill, NULL);
-               }
-
-               team_scores[clients[sourcenum].team]--;
-               if(CS_SERVER)
-               {
-                  server_client_t *sc = &server_clients[sourcenum];
-
-                  // [CG] If you suicide or team kill, all your sprees are
-                  //      over.
-                  sc->frags_this_life = 0;
-                  sc->frag_level = fl_none;
-                  sc->consecutive_frag_level = cfl_none;
-               }
-            }
-            else
-            {
-               team_scores[clients[sourcenum].team]++;
-
-               if(CS_SERVER)
-               {
-                  server_client_t *sc = &server_clients[sourcenum];
-                  
-                  sc->frags_this_life++;
-
-                  if(sc->frag_level < (fl_max - 1))
-                  {
-                     unsigned int new_frag_level = sc->frags_this_life / 5;
-
-                     if((new_frag_level < fl_max) &&
-                        (sc->frag_level != new_frag_level))
-                     {
-                        sc->frag_level = new_frag_level;
-                        SV_BroadcastPlayerScalarInfo(sourcenum, ci_frag_level);
-                     }
-                  }
-
-                  if((gametic - sc->last_frag_tic) <= (3 * TICRATE))
-                  {
-                     if(sc->consecutive_frag_level < (cfl_max - 1))
-                        sc->consecutive_frag_level++;
-                     SV_BroadcastPlayerScalarInfo(sourcenum, ci_cfrag_level);
-                  }
-
-                  sc->last_frag_tic = gametic;
-               }
+               // [CG] Suicides & team kills subtrace 1 from the team's score.
+               if(suicide || team_kill)
+                  team_scores[clients[sourcenum].team]--;
+               else
+                  team_scores[clients[sourcenum].team]++;
             }
          }
          HU_FragsUpdate();

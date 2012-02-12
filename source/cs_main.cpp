@@ -504,10 +504,6 @@ void CS_ZeroClient(int clientnum)
       memset(&sc->saved_misc_state, 0, sizeof(cs_misc_state_t));
       sc->buffering = false;
       sc->finished_waiting_in_queue_tic = 0;
-      sc->frags_this_life = 0;
-      sc->last_frag_tic = 0;
-      sc->frag_level = fl_none;
-      sc->consecutive_frag_level = cfl_none;
    }
 }
 
@@ -1091,43 +1087,6 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       else
          client->afk = false;
    }
-   else if(message->info_type == ci_frag_level)
-   {
-      if(message->int_value >= fl_max)
-      {
-         doom_printf("CS_HUPIM: got frag level message with invalid value.");
-         return;
-      }
-
-      if(message->int_value < fl_killing_spree)
-         return;
-
-      if(playernum == displayplayer)
-      {
-         if(cl_show_sprees)
-            HU_CenterMessage(console_frag_level_names[message->int_value]);
-      }
-
-      doom_printf(
-         "%s is %s!", player->name, frag_level_names[message->int_value]
-      );
-   }
-   else if(message->info_type == ci_cfrag_level)
-   {
-      if(message->int_value >= cfl_max)
-      {
-         doom_printf(
-            "CS_HUPIM: got consecutive frag level message with invalid value."
-         );
-         return;
-      }
-
-      if(message->int_value < cfl_double_kill)
-         return;
-
-      if(playernum == displayplayer && cl_show_sprees)
-         HU_CenterMessage(consecutive_frag_level_names[message->int_value]);
-   }
    else
    {
       doom_printf(
@@ -1356,6 +1315,80 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
          "CS_GetPlayerScalarInfo: Unsupported info type %d\n",
          info_type
       );
+   }
+}
+
+void CS_CheckSprees(int sourcenum, int targetnum, bool suicide, bool team_kill)
+{
+   client_t *source_client = &clients[sourcenum];
+   player_t *source_player = &players[sourcenum];
+   unsigned int latest_index;
+
+   if(CS_CLIENT)
+      latest_index = cl_latest_world_index;
+   else if(CS_SERVER)
+      latest_index = sv_world_index;
+   else
+      return;
+
+   if(CS_CLIENT || !CS_HEADLESS)
+   {
+      if(suicide && (sourcenum == consoleplayer))
+         CS_Announce(ae_suicide_death, NULL);
+      else if(team_kill)
+         CS_Announce(ae_team_kill, NULL);
+   }
+
+   if(suicide || team_kill)
+   {
+      // [CG] If you suicide or team kill, all your sprees are over.
+      source_client->frags_this_life = 0;
+      source_client->frag_level = fl_none;
+      source_client->consecutive_frag_level = 0;
+   }
+   else
+   {
+      source_client->frags_this_life++;
+
+      if(source_client->frag_level < (fl_max - 1))
+      {
+         unsigned int new_fl = source_client->frags_this_life / 5;
+
+         if((new_fl < fl_max) && (source_client->frag_level != new_fl))
+         {
+            source_client->frag_level = new_fl;
+
+            doom_printf(
+               "%s is %s!",
+               source_player->name,
+               frag_level_names[source_client->frag_level]
+            );
+
+            if((sourcenum == consoleplayer) && cl_show_sprees)
+            {
+               HU_CenterMessage(console_frag_level_names[
+                  source_client->frag_level
+               ]);
+            }
+         }
+      }
+
+      if((latest_index - source_client->last_frag_tic) <= (3 * TICRATE))
+      {
+         if(source_client->consecutive_frag_level < (cfl_max - 1))
+            source_client->consecutive_frag_level++;
+
+         if((sourcenum == consoleplayer) &&
+            cl_show_sprees &&
+            source_client->consecutive_frag_level > cfl_none)
+         {
+            HU_CenterMessage(consecutive_frag_level_names[
+               source_client->consecutive_frag_level
+            ]);
+         }
+      }
+
+      source_client->last_frag_tic = latest_index;
    }
 }
 

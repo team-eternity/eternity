@@ -118,3 +118,13 @@ unsigned int CS_GetTeamPlayerCount(int team_color)
    return playercount;
 }
 
+int CS_GetOtherTeam(int team_color)
+{
+   if(team_color == team_color_red)
+      return team_color_blue;
+   else if(team_color == team_color_blue)
+      return team_color_red;
+
+   return team_color_none;
+}
+

@@ -266,8 +266,6 @@ typedef enum
    ci_weapon_speed,   // weapon_speed
    ci_buffering,
    ci_afk,
-   ci_frag_level,
-   ci_cfrag_level     // server_clients->consecutive_frag_level
 } client_info_e;
 
 typedef enum
@@ -366,6 +364,14 @@ typedef struct
    uint32_t latest_position_index;
    // [CG] Whether or not a client is AFK
    uint8_t afk;
+   // [CG] Frags this life.
+   uint16_t frags_this_life;
+   // [CG] The TIC at which the client last fragged.
+   int32_t last_frag_tic;
+   // [CG] The client's current frag level.
+   uint8_t frag_level;
+   // [CG] The client's current consecutive frag level.
+   uint8_t consecutive_frag_level;
 } client_t;
 
 #pragma pack(pop)
@@ -445,14 +451,6 @@ typedef struct
    bool buffering;
    // [CG] The TIC at which the client was able to join the game.
    int finished_waiting_in_queue_tic;
-   // [CG] Frags this life.
-   unsigned int frags_this_life;
-   // [CG] The TIC at which the client last fragged.
-   int last_frag_tic;
-   // [CG] The client's current frag level.
-   unsigned int frag_level;
-   // [CG] The client's current consecutive frag level.
-   unsigned int consecutive_frag_level;
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct
@@ -964,7 +962,7 @@ void CS_BuildPlayerArrayInfoPacket(nm_playerinfoupdated_t *update_message,
                                    int array_index);
 void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
                                     int playernum, client_info_e info_type);
-
+void CS_CheckSprees(int sourcenum, int targetnum, bool suicide, bool team_kill);
 void CS_SetSpectator(int playernum, bool spectating);
 void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
                     angle_t angle, bool as_spectator);

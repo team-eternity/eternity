@@ -72,6 +72,7 @@ extern mapthing_t **team_starts_by_team;
 void CS_InitTeams(void);
 void CS_AddTeamStart(mapthing_t *mthing);
 unsigned int CS_GetTeamPlayerCount(int team_color);
+int CS_GetOtherTeam(int team_color);
 
 #endif
 
