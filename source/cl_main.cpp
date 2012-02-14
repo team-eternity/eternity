@@ -50,6 +50,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -362,6 +363,21 @@ void CL_SaveServerPassword(void)
 {
    cs_client_password_json[(const char *)cs_server_url] = cs_server_password;
    CS_WriteJSON(cs_client_password_file, cs_client_password_json, true);
+}
+
+void CL_MessageTeam(event_t *ev)
+{
+   CS_SetMessageMode(MESSAGE_MODE_TEAM);
+}
+
+void CL_MessageServer(event_t *ev)
+{
+   CS_SetMessageMode(MESSAGE_MODE_SERVER);
+}
+
+void CL_RCONMessage(event_t *ev)
+{
+   CS_SetMessageMode(MESSAGE_MODE_RCON);
 }
 
 void CL_SpawnLocalGhost(Mobj *actor)
@@ -709,6 +725,7 @@ void CL_TryRunTics(void)
    D_ProcessEvents();
    MN_Ticker();
    C_Ticker();
+   CS_ChatTicker();
    V_FPSTicker();
    CS_ReadFromNetwork(1);
 

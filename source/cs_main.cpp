@@ -46,6 +46,7 @@
 #include "doomstat.h"
 #include "e_player.h"
 #include "e_ttypes.h"
+#include "g_bind.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -1638,6 +1639,11 @@ char* CS_ExtractMessage(char *data, size_t data_length)
    // [CG] For debugging.
    // printf("CS_ExtractMessage: Message was cool.\n");
    return message;
+}
+
+void CS_MessageAll(event_t *ev)
+{
+   CS_SetMessageMode(MESSAGE_MODE_ALL);
 }
 
 void CS_FlushConnection(void)

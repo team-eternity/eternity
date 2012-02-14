@@ -66,6 +66,7 @@
 #include "version.h"
 
 #include "cs_config.h"
+#include "cs_hud.h"
 #include "cs_main.h"
 #include "cs_master.h"
 #include "cs_netid.h"
@@ -2871,6 +2872,7 @@ void SV_TryRunTics(void)
       {
          MN_Ticker();
          C_Ticker();
+         CS_ChatTicker();
       }
 
       SV_MasterUpdate();

@@ -92,6 +92,9 @@ void  CL_SpawnLocalGhost(Mobj *actor);
 void  CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
                           angle_t angle, unsigned int world_index);
 void  CL_SaveServerPassword(void);
+void  CL_MessageTeam(event_t *ev);
+void  CL_MessageServer(event_t *ev);
+void  CL_RCONMessage(event_t *ev);
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                    mobjtype_t type);
 void  CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,

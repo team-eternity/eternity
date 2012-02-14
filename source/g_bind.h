@@ -109,10 +109,6 @@ extern int action_console_enter;
 extern int action_console_up;
 extern int action_console_down;
 extern int action_console_backspace;
-extern int action_message_all;
-extern int action_message_team;
-extern int action_message_server;
-extern int action_rcon;
 
 #endif
 

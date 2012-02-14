@@ -37,6 +37,16 @@
                   clients[consoleplayer].queue_level == ql_none || \
                   clients[consoleplayer].spectating))
 
+typedef enum
+{
+   MESSAGE_MODE_NONE,
+   MESSAGE_MODE_ALL,
+   MESSAGE_MODE_TEAM,
+   MESSAGE_MODE_PLAYER,
+   MESSAGE_MODE_SERVER,
+   MESSAGE_MODE_RCON,
+} message_mode_type_e;
+
 extern bool show_timer;
 extern bool default_show_timer;
 extern bool show_netstats;
@@ -46,6 +56,7 @@ extern bool default_show_team_widget;
 
 extern bool cs_chat_active;
 
+void CS_ChatTicker();
 bool CS_ChatResponder(event_t *ev);
 void CS_UpdateQueueMessage(void);
 void CS_DrawChatWidget(void);
@@ -56,6 +67,7 @@ void CS_InitQueueWidget(void);
 void CS_InitNetWidget(void);
 void CS_InitTeamWidget(void);
 void CS_InitVoteWidget(void);
+void CS_SetMessageMode(message_mode_type_e new_message_mode);
 
 #endif
 

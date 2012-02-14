@@ -71,14 +71,46 @@ static hu_widget_t *net_widget = NULL;
 static hu_widget_t *team_widget = NULL;
 static hu_widget_t *vote_widget = NULL;
 
+static message_mode_type_e message_mode = MESSAGE_MODE_NONE;
+
+/*
+ * G_Responder
+ */
+
+void CS_ChatTicker()
+{
+   if(cs_chat_active || message_mode == MESSAGE_MODE_NONE)
+      return;
+
+   cs_chat_active = true;
+   cs_chat_input[0] = 0;
+
+   // [CG] TODO: Figure out player-to-player messaging, as in, how to choose
+   //            the receiving player.
+   if(message_mode == MESSAGE_MODE_RCON)
+      current_recipient = mr_rcon;
+   else if(message_mode == MESSAGE_MODE_SERVER)
+      current_recipient = mr_server;
+   else if(message_mode == MESSAGE_MODE_PLAYER)
+      current_recipient = mr_player;
+   else if(message_mode == MESSAGE_MODE_TEAM)
+      current_recipient = mr_team;
+   else if(message_mode == MESSAGE_MODE_ALL)
+      current_recipient = mr_all;
+
+}
+
 bool CS_ChatResponder(event_t *ev)
 {
    char ch = 0;
    char cmd_buffer[CHAT_BUFFER_SIZE];
    static bool shiftdown;
 
+   if(!cs_chat_active)
+      return false;
+
    // haleyjd 06/11/08: get HUD actions
-   G_KeyResponder(ev, kac_hud);
+   // G_KeyResponder(ev, kac_hud);
 
    if(ev->type != ev_keydown)
       return false;
@@ -86,49 +118,10 @@ bool CS_ChatResponder(event_t *ev)
    if(ev->data1 == KEYD_RSHIFT)
       shiftdown = true;
 
-   // [CG] TODO: Figure out player-to-player messaging, as in, how to choose
-   //            the receiving player.
-
-   if(!cs_chat_active)
-   {
-      // [CG] You can't bind a key to start chatting with a specific player
-      //      number, so there is no key_playerchat.
-      if(action_message_all    ||
-         action_message_team   ||
-         action_message_server ||
-         action_rcon)
-      {
-         cs_chat_active = true;
-         cs_chat_input[0] = 0;
-
-         if(action_rcon)
-         {
-            current_recipient = mr_rcon;
-            action_rcon = false;
-         }
-         else if(action_message_server)
-         {
-            current_recipient = mr_server;
-            action_message_server = false;
-         }
-         else if(action_message_team)
-         {
-            current_recipient = mr_team;
-            action_message_team = false;
-         }
-         else
-         {
-            current_recipient = mr_all;
-            action_message_all = false;
-         }
-         return true;
-      }
-      return false;
-   }
-
    if(ev->data1 == KEYD_ESCAPE)    // kill chat
    {
       cs_chat_active = false;
+      message_mode = MESSAGE_MODE_NONE;
       return true;
    }
 
@@ -142,30 +135,31 @@ bool CS_ChatResponder(event_t *ev)
    {
       if(current_recipient == mr_rcon)
       {
-         psnprintf(cmd_buffer, sizeof(cmd_buffer), "%s \"%s\"",
-            "rcon", cs_chat_input
+         psnprintf(
+            cmd_buffer, sizeof(cmd_buffer), "rcon \"%s\"", cs_chat_input
          );
       }
       else if(current_recipient == mr_server)
       {
-         psnprintf(cmd_buffer, sizeof(cmd_buffer), "%s \"%s\"",
-            "to_server", cs_chat_input
+         psnprintf(
+            cmd_buffer, sizeof(cmd_buffer), "to_server \"%s\"", cs_chat_input
          );
       }
       else if(current_recipient == mr_team)
       {
-         psnprintf(cmd_buffer, sizeof(cmd_buffer), "%s \"%s\"",
-            "to_team", cs_chat_input
+         psnprintf(
+            cmd_buffer, sizeof(cmd_buffer), "to_team \"%s\"", cs_chat_input
          );
       }
       else
       {
-         psnprintf(cmd_buffer, sizeof(cmd_buffer), "%s \"%s\"",
-            "say", cs_chat_input
+         psnprintf(
+            cmd_buffer, sizeof(cmd_buffer), "say \"%s\"", cs_chat_input
          );
       }
       C_RunTextCmd(cmd_buffer);
       cs_chat_active = false;
+      message_mode = MESSAGE_MODE_NONE;
       return true;
    }
 
@@ -187,17 +181,7 @@ bool CS_ChatResponder(event_t *ev)
    return false;
 }
 
-static void CS_TimerWidgetTick(hu_widget_t *widget)
-{
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
-
-   if(show_timer)
-      CS_FormatTicsAsTime(tw->message, leveltime);
-   else
-      tw->message[0] = 0;
-}
-
-static void CS_ChatTick(hu_widget_t *widget)
+static void CS_ChatWidgetTick(hu_widget_t *widget)
 {
    hu_textwidget_t *cw = (hu_textwidget_t *)widget;
 
@@ -256,6 +240,16 @@ void CS_DrawChatWidget(void)
    }
 }
 
+static void CS_TimerWidgetTick(hu_widget_t *widget)
+{
+   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+
+   if(show_timer)
+      CS_FormatTicsAsTime(tw->message, leveltime);
+   else
+      tw->message[0] = 0;
+}
+
 void CS_InitTimerWidget(void)
 {
    hu_textwidget_t *tw;
@@ -312,7 +306,7 @@ void CS_InitChatWidget(void)
    chat_widget = HU_WidgetForName("_HU_CSChatWidget");
    chat_widget->prevdisabled = chat_widget->disabled;
    chat_widget->disabled = false;
-   chat_widget->ticker = CS_ChatTick;
+   chat_widget->ticker = CS_ChatWidgetTick;
 
    cw = (hu_textwidget_t *)chat_widget;
    cw->color = CR_GREEN + 1;
@@ -717,5 +711,11 @@ void CS_InitVoteWidget(void)
    tw->color = 0;
    tw->flags |= TW_TRANS;
    tw->bg_opacity = FRACUNIT >> 1;
+}
+
+void CS_SetMessageMode(message_mode_type_e new_message_mode)
+{
+   if(message_mode == MESSAGE_MODE_NONE)
+      message_mode = new_message_mode;
 }
 

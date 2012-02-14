@@ -59,6 +59,9 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+#include "cs_main.h"
+#include "cl_main.h"
+
 extern vfont_t *menu_font_normal;
 
 #define NUM_KEYS 256
@@ -72,8 +75,8 @@ extern vfont_t *menu_font_normal;
 #define G_addVariableAction(n, c) \
    names_to_actions.addObject(new VariableInputAction(#n, c, &action_##n))
 
-#define G_addFunctionAction(n, c, f) \
-   names_to_actions.addObject(new FunctionInputAction(#n, c, &f))
+#define G_addOneShotFunctionAction(n, c, f) \
+   names_to_actions.addObject(new OneShotFunctionInputAction(#n, c, &f))
 
 #define G_addCommandAction(n) \
    names_to_actions.addObject(new CommandInputAction(n))
@@ -498,12 +501,6 @@ int action_console_up;
 int action_console_down;
 int action_console_backspace;
 
-// C/S Actions
-int action_message_all;
-int action_message_team;
-int action_message_server;
-int action_rcon;
-
 //
 // G_categoryIndex
 //
@@ -896,10 +893,11 @@ void G_InitKeyBindings(void)
    G_addVariableAction(console_up,       kac_console);
    G_addVariableAction(console_down,     kac_console);
    G_addRepeatableVariableAction(console_backspace, kac_console);
-   G_addVariableAction(message_all, kac_player);
-   G_addVariableAction(message_team, kac_player);
-   G_addVariableAction(message_server, kac_player);
-   G_addVariableAction(rcon, kac_player);
+
+   G_addOneShotFunctionAction(message_all,    kac_player, CS_MessageAll);
+   G_addOneShotFunctionAction(message_team,   kac_player, CL_MessageTeam);
+   G_addOneShotFunctionAction(message_server, kac_player, CL_MessageServer);
+   G_addOneShotFunctionAction(message_rcon,   kac_player, CL_RCONMessage);
 
    for(i = 0; i < CMDCHAINS; i++)
    {

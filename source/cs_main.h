@@ -978,6 +978,7 @@ void CS_ServiceNetwork(void);
 void CS_ReadFromNetwork(unsigned int timeout);
 void CS_TryRunTics(void);
 void CS_AddCommands(void);
+void CS_MessageAll(event_t *ev);
 
 #endif
 
