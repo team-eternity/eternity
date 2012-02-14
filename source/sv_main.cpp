@@ -2819,8 +2819,29 @@ void SV_SendNewMap(void)
    int color, i;
    Mobj *flag_actor;
 
+   sv_world_index = 0;
+
    for(i = 1; i < MAXPLAYERS; i++)
-      server_clients[i].received_command_for_current_map = false;
+   {
+      server_client_t *sc;
+      
+      if(!playeringame[i])
+         continue;
+
+      sc = &server_clients[i];
+      sc->command_buffer_filled = false;
+      sc->commands_dropped = 0;
+      sc->last_command_run_index = 0;
+      sc->last_command_run_world_index = 0;
+      sc->last_command_received_index = 0;
+      sc->command_world_index = 0;
+      sc->received_game_state = false;
+      sc->received_command_for_current_map = false;
+      M_QueueFree(&sc->commands);
+      memset(sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t));
+      memset(sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t));
+      memset(sc->player_states, 0, MAX_POSITIONS * sizeof(playerstate_t));
+   }
 
    SV_BroadcastMapStarted();
 

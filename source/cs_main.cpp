@@ -261,8 +261,6 @@ bool CS_CheckURI(char *uri)
 void CS_DoWorldDone(void)
 {
    unsigned int i;
-   client_t *client;
-   server_client_t *sc;
 
    idmusnum = -1;
    hub_changelevel = false;
@@ -272,28 +270,18 @@ void CS_DoWorldDone(void)
 
    for(i = 0; i < MAXPLAYERS; i++)
    {
+      clients[i].spectating = true;
+      clients[i].join_tic = gametic;
+
       if(playeringame[i])
       {
-         client = &clients[i];
-         client->spectating = true;
-         if(CS_SERVER)
-         {
-            sc = &server_clients[i];
-            client->join_tic = gametic;
-            sc->commands_dropped = 0;
-            sc->last_command_run_index = 0;
-            sc->received_game_state = false;
-            M_QueueFree(&sc->commands);
-            memset(
-               sc->positions, 0, MAX_POSITIONS * sizeof(cs_player_position_t)
-            );
-            memset(
-               sc->misc_states, 0, MAX_POSITIONS * sizeof(cs_misc_state_t)
-            );
-         }
-         cl_spawning_actor_from_message = true;
+         if(CS_CLIENT)
+            cl_spawning_actor_from_message = true;
+
          CS_SpawnPlayerCorrectly(i, true);
-         cl_spawning_actor_from_message = false;
+
+         if(CS_CLIENT)
+            cl_spawning_actor_from_message = false;
       }
    }
 

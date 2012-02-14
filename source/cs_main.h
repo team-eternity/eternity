@@ -823,7 +823,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   size_t sector_number;
+   uint32_t sector_number;
    sector_position_t sector_position;
 } nm_sectorposition_t;
 
@@ -835,8 +835,8 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    int32_t special_type; // [CG] map_special_e.
-   size_t line_number;
-   size_t sector_number;
+   uint32_t line_number;
+   uint32_t sector_number;
 } nm_specialspawned_t;
 
 // [CG] A map special's status is appended to the end of this message, the type

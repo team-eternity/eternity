@@ -580,6 +580,8 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 
    demo_map_number = cs_current_demo_map;
 
+   cl_latest_world_index = cl_current_world_index = 0;
+   cl_packet_buffer.setSynchronized(false);
    CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
    CS_ApplyConfigSettings();
