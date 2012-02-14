@@ -370,7 +370,7 @@ void P_DeathThink(player_t *player)
 
    // [CG] 09/18/11: Show scoreboard when dead.
    if(CS_CLIENT && player == &players[consoleplayer])
-      action_scoreboard = 1;
+      action_scoreboard++;
 
    // haleyjd 10/05/08:
    // handle looking slightly up when the player is attached to a non-player

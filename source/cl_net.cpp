@@ -509,6 +509,9 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       team_scores[i] = message->team_scores[i];
    }
 
+   if(clients[consoleplayer].team != team_color_none)
+      CL_SendPlayerScalarInfo(ci_team);
+
    CL_SendSyncRequest();
 }
 

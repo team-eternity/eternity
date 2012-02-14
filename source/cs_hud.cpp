@@ -106,11 +106,11 @@ bool CS_ChatResponder(event_t *ev)
    char cmd_buffer[CHAT_BUFFER_SIZE];
    static bool shiftdown;
 
+   // haleyjd 06/11/08: get HUD actions
+   G_KeyResponder(ev, kac_hud);
+
    if(!cs_chat_active)
       return false;
-
-   // haleyjd 06/11/08: get HUD actions
-   // G_KeyResponder(ev, kac_hud);
 
    if(ev->type != ev_keydown)
       return false;
