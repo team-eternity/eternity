@@ -303,7 +303,7 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
 
       client = &clients[playernum];
 
-      if(client->spectating)
+      if(!client->spectating)
          continue;
 
       if(playernum == displayplayer)
@@ -898,8 +898,12 @@ void CS_DrawScoreboard(unsigned int extra_top_margin)
 
 void CS_ShowScores(void)
 {
-   if(!show_scores || !action_scoreboard || automapactive || walkcam_active)
-      return;
+   // [CG] Show scoreboard when dead.
+   if(players[displayplayer].playerstate == PST_LIVE)
+   {
+      if(!show_scores || !action_scoreboard || automapactive || walkcam_active)
+         return;
+   }
 
    // [CG] Don't even try to draw the scoreboard in this case.
    if (viewwidth < 320 || viewwidth < 200)

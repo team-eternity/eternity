@@ -1443,11 +1443,6 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
 
    G_PlayerReborn(playernum);
 
-   // [CG] Stop perpetually displaying the scoreboard in c/s mode once we
-   //      respawn.
-   if((!CS_HEADLESS) && (playernum == consoleplayer) && (action_scoreboard))
-      action_scoreboard--;
-
    // [CG] Only set non-spectators' colormaps.
    if((!as_spectator) && CS_TEAMS_ENABLED && (client->team != team_color_none))
       player->colormap = team_colormaps[client->team];
