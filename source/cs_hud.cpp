@@ -36,8 +36,10 @@
 #include "psnprntf.h"
 #include "r_draw.h"
 #include "st_stuff.h"
+#include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
+#include "v_patchfmt.h"
 #include "v_video.h"
 
 #include "cs_hud.h"
@@ -433,65 +435,140 @@ void CS_InitNetWidget(void)
    tw->color = CR_GREEN + 1;
 }
 
-static void CS_TeamWidgetTick(hu_widget_t *widget)
+static void CS_TeamWidgetTick(hu_widget_t *widget) {}
+
+static void CS_TeamWidgetDraw(hu_widget_t *widget)
 {
-   int team = clients[displayplayer].team;
-   hu_textwidget_t *tw = (hu_textwidget_t *)widget;
+   int x;
+   hu_customwidget_t *cw;
+   patch_t *p;
+   static char score_buffer[5];
+   client_t *client;
+   byte red_font_color, blue_font_color;
 
-   if(!widget->disabled)
-   {
-      if(team == team_color_none || !(CS_TEAMS_ENABLED && show_team_widget))
-      {
-         widget->prevdisabled = widget->disabled;
-         widget->disabled = true;
-         tw->message[0] = 0;
-         return;
-      }
-   }
-   else if((team != team_color_none) && CS_TEAMS_ENABLED && show_team_widget)
-   {
-      widget->prevdisabled = widget->disabled;
-      widget->disabled = false;
+   if(widget->disabled || !show_team_widget)
       return;
+
+   cw = (hu_customwidget_t *)widget;
+   client = &clients[displayplayer];
+
+   if(cw->bg_opacity < FRACUNIT)
+   {
+      V_ColorBlockTLScaled(
+         &vbscreen,
+         cw->bg_color,
+         cw->x,
+         cw->y,
+         cw->width,
+         cw->height,
+         cw->bg_opacity
+      );
    }
 
-   sprintf(tw->message, "%d", team_scores[team]);
+   if(client->team == team_color_red)
+   {
+      V_ColorBlockScaled(
+         &vbscreen,
+         GameModeInfo->whiteIndex,
+         cw->x,
+         cw->y + 2,
+         2,
+         (cw->height >> 1) - 4
+      );
+   }
+   else if(client->team == team_color_blue)
+   {
+      V_ColorBlockScaled(
+         &vbscreen,
+         GameModeInfo->whiteIndex,
+         cw->x,
+         cw->y + 2 + (cw->height >> 1),
+         2,
+         (cw->height >> 1) - 4
+      );
+   }
 
-   if(team == team_color_red)
-      tw->color = CR_RED + 1;
-   else if(team == team_color_blue)
-      tw->color = CR_BLUE + 1;
+   x = cw->x + 2;
+
+   if(GameType == gt_ctf)
+   {
+      if((p = CS_GetFlagPatch(team_color_red)))
+         V_DrawPatch(cw->x + 4, cw->y + 2, &vbscreen, p);
+
+      if((p = CS_GetFlagPatch(team_color_blue)))
+         V_DrawPatch(cw->x + 4, cw->y + 3 + (cw->height >> 1), &vbscreen, p);
+
+      x += 16;
+   }
    else
-      tw->color = CR_GREEN + 1;
+      x += 2;
+
+   if(GameType == gt_ctf)
+      red_font_color = blue_font_color = CR_GRAY;
+   else
+   {
+      red_font_color = CR_RED;
+      blue_font_color = CR_BLUE;
+   }
+
+   sprintf(score_buffer, "%4d", team_scores[team_color_red] % 1000);
+   V_FontWriteTextColored(
+      hud_font,
+      score_buffer,
+      red_font_color,
+      x,
+      cw->y + 4
+   );
+
+   sprintf(score_buffer, "%4d", team_scores[team_color_blue] % 1000);
+   V_FontWriteTextColored(
+      hud_font,
+      score_buffer,
+      blue_font_color,
+      x,
+      cw->y + 5 + (cw->height >> 1)
+   );
 }
 
 void CS_InitTeamWidget(void)
 {
-   hu_textwidget_t *tw;
-
    if(team_widget != NULL)
    {
-      efree(((hu_textwidget_t *)team_widget)->message);
       efree(team_widget->name);
       efree(team_widget);
       team_widget = NULL;
    }
 
-   HU_DynamicTextWidget(
-      "_HU_CSTeamWidget",
-      SCREENWIDTH - V_FontStringWidth(hud_font, "9999"),
-      0, hud_font->num, "0", 0, TW_NOCLEAR
-   );
+   if(GameType == gt_ctf)
+   {
+      HU_DynamicCustomWidget(
+         "_HU_CSTeamWidget",
+         SCREENWIDTH - 48, ST_Y - 68,
+         48, 34,
+         GameModeInfo->blackIndex,
+         FRACUNIT >> 1
+      );
+   }
+   else
+   {
+      HU_DynamicCustomWidget(
+         "_HU_CSTeamWidget",
+         SCREENWIDTH - 36, ST_Y - 68,
+         36, 34,
+         GameModeInfo->blackIndex,
+         FRACUNIT >> 1
+      );
+   }
 
    team_widget = HU_WidgetForName("_HU_CSTeamWidget");
-   team_widget->prevdisabled = team_widget->disabled;
-   team_widget->disabled = false;
+   team_widget->drawer = CS_TeamWidgetDraw;
    team_widget->ticker = CS_TeamWidgetTick;
+   team_widget->prevdisabled = false;
 
-   tw = (hu_textwidget_t *)team_widget;
-   tw->color = CR_GRAY + 1;
-   tw->flags |= TW_TRANS;
-   tw->bg_opacity = FRACUNIT >> 1;
+   if(CS_TEAMS_ENABLED)
+      team_widget->disabled = false;
+   else
+      team_widget->disabled = true;
 }
 
 static void CS_VoteWidgetTick(hu_widget_t *widget)

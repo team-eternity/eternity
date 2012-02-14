@@ -36,6 +36,7 @@ enum
    WIDGET_MISC,
    WIDGET_PATCH,
    WIDGET_TEXT,
+   WIDGET_CUSTOM,
 };
 
 // haleyjd 06/04/05: HUD rewrite
@@ -98,6 +99,17 @@ typedef struct hu_patchwidget_s
    patch_t *patch;     // screen patch
 } hu_patchwidget_t;
 
+typedef struct hu_customwidget_s
+{
+   hu_widget_t widget;
+   int x;
+   int y;
+   int height;
+   int width;
+   int bg_color;
+   int bg_opacity;
+} hu_customwidget_t;
+
 // [CG] Added for c/s so the target's name (if any) can be stored in the
 //      crosshair itself.
 typedef struct hu_crosshairwidget_s
@@ -132,6 +144,8 @@ void HU_ClearWidgetHash(void);
 bool HU_AddWidgetToHash(hu_widget_t *widget);
 hu_widget_t* HU_WidgetForName(const char *name);
 void HU_UpdateEraseData(hu_textwidget_t *tw);
+void HU_DynamicCustomWidget(const char *name, int x, int y, int width,
+                            int height, int bg_color, int bg_opacity);
 void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                           const char *message, int cleartic, int flags);
 void HU_Init(void);

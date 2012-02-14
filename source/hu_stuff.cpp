@@ -716,6 +716,33 @@ static void HU_DynAutomapTick(hu_widget_t *widget)
 }
 
 //
+// HU_DynamicCustomWidget
+//
+// Adds a custom widget to the hash table.
+//
+void HU_DynamicCustomWidget(const char *name, int x, int y, int width,
+                            int height, int bg_color, int bg_opacity)
+{
+   hu_customwidget_t *cw = estructalloc(hu_customwidget_t, 1);
+
+   HU_SetWidgetName(&cw->widget, name);
+
+   if(!HU_AddWidgetToHash((hu_widget_t *)cw))
+   {
+      efree(cw);
+      return;
+   }
+
+   cw->widget.type = WIDGET_CUSTOM;
+   cw->x = x;
+   cw->y = y;
+   cw->width = width;
+   cw->height = height;
+   cw->bg_color = bg_color;
+   cw->bg_opacity = bg_opacity;
+}
+
+//
 // HU_DynamicTextWidget
 //
 // Adds a dynamically allocated text widget to the hash table.

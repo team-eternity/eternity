@@ -39,6 +39,7 @@
 #include "m_fixed.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "v_patchfmt.h"
 
 #include "cs_announcer.h"
 #include "cs_team.h"
@@ -100,6 +101,105 @@ static void CS_setFlagPosition(Mobj* actor, fixed_t x, fixed_t y, fixed_t z)
    actor->y = y;
    actor->z = z;
    P_SetThingPosition(actor);
+}
+
+static patch_t* CS_getRedFlagPatch()
+{
+   patch_t *patch = NULL;
+   int color = team_color_red;
+
+   if(cs_flags[color].state == flag_home)
+      patch = PatchLoader::CacheName(wGlobalDir, "RFLGH", PU_CACHE);
+   else if(cs_flags[color].state == flag_dropped)
+      patch = PatchLoader::CacheName(wGlobalDir, "FLGHDRP", PU_CACHE);
+   else
+   {
+      int holding_team = clients[cs_flags[color].carrier].team;
+
+      if(cs_flags[color].carrier == displayplayer)
+      {
+         if(holding_team == team_color_red)
+            patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCRP", PU_CACHE);
+         else if(holding_team == team_color_blue)
+            patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCBP", PU_CACHE);
+         else
+            patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCGP", PU_CACHE);
+      }
+      else if(holding_team == color)
+         patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCR", PU_CACHE);
+      else if(holding_team == team_color_blue)
+         patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCB", PU_CACHE);
+      else
+         patch = PatchLoader::CacheName(wGlobalDir, "RFLGHCW", PU_CACHE);
+   }
+
+   return patch;
+}
+
+static patch_t* CS_getBlueFlagPatch()
+{
+   patch_t *patch = NULL;
+   int color = team_color_blue;
+
+   if(cs_flags[color].state == flag_home)
+      patch = PatchLoader::CacheName(wGlobalDir, "BFLGH", PU_CACHE);
+   else if(cs_flags[color].state == flag_dropped)
+      patch = PatchLoader::CacheName(wGlobalDir, "FLGHDRP", PU_CACHE);
+   else
+   {
+      int holding_team = clients[cs_flags[color].carrier].team;
+
+      if(cs_flags[color].carrier == displayplayer)
+      {
+         if(holding_team == team_color_red)
+            patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCRP", PU_CACHE);
+         else if(holding_team == team_color_blue)
+            patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCBP", PU_CACHE);
+         else
+            patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCGP", PU_CACHE);
+      }
+      else if(holding_team == color)
+         patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCR", PU_CACHE);
+      else if(holding_team == team_color_blue)
+         patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCB", PU_CACHE);
+      else
+         patch = PatchLoader::CacheName(wGlobalDir, "BFLGHCW", PU_CACHE);
+   }
+
+   return patch;
+}
+
+static patch_t* CS_getGreenFlagPatch()
+{
+   patch_t *patch = NULL;
+   int color = team_color_none;
+
+   if(cs_flags[color].state == flag_home)
+      patch = PatchLoader::CacheName(wGlobalDir, "GFLGH", PU_CACHE);
+   else if(cs_flags[color].state == flag_dropped)
+      patch = PatchLoader::CacheName(wGlobalDir, "FLGHDRP", PU_CACHE);
+   else
+   {
+      int holding_team = clients[cs_flags[color].carrier].team;
+
+      if(cs_flags[color].carrier == displayplayer)
+      {
+         if(holding_team == team_color_red)
+            patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCRP", PU_CACHE);
+         else if(holding_team == team_color_blue)
+            patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCBP", PU_CACHE);
+         else
+            patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCGP", PU_CACHE);
+      }
+      else if(holding_team == color)
+         patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCR", PU_CACHE);
+      else if(holding_team == team_color_blue)
+         patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCB", PU_CACHE);
+      else
+         patch = PatchLoader::CacheName(wGlobalDir, "GFLGHCW", PU_CACHE);
+   }
+
+   return patch;
 }
 
 void CS_RemoveFlagActor(flag_t *flag)
@@ -499,5 +599,16 @@ bool CS_ActorIsCarriedFlag(Mobj *actor)
 Mobj* CS_GetFlagStandActorForFlag(flag_t *flag)
 {
    return NetActors.lookup(cs_flag_stands[flag - cs_flags].net_id);
+}
+
+patch_t* CS_GetFlagPatch(int flag_color)
+{
+   if(flag_color == team_color_red)
+      return CS_getRedFlagPatch();
+
+   if(flag_color == team_color_blue)
+      return CS_getBlueFlagPatch();
+
+   return CS_getGreenFlagPatch();
 }
 

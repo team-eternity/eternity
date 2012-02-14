@@ -1168,7 +1168,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
             if(GameType == gt_tdm)
             {
-               // [CG] Suicides & team kills subtrace 1 from the team's score.
+               // [CG] Suicides & team kills subtract 1 from the team's score.
                if(suicide || team_kill)
                   team_scores[clients[sourcenum].team]--;
                else

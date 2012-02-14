@@ -216,8 +216,6 @@ void NetPacketBuffer::startBufferingIndependently()
    if(m_buffering_independently)
       return;
 
-   printf("Start independent buffering.\n");
-
    m_buffering_independently = true;
    m_net_service_thread = I_CreateThread(CL_serviceNetwork, NULL);
    if(m_net_service_thread == NULL)
@@ -233,8 +231,6 @@ void NetPacketBuffer::stopBufferingIndependently()
 {
    m_buffering_independently = false;
    I_WaitThread(m_net_service_thread, NULL);
-
-   printf("Independent buffering complete.\n");
 }
 
 void NetPacketBuffer::setSynchronized(bool b)

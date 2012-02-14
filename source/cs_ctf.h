@@ -49,6 +49,8 @@
 //#define ID_TEAM3_FLAG 5133
 //#define ID_TEAM4_FLAG 5134
 
+struct patch_t;
+
 // flags can only be in one of these states
 typedef enum
 {
@@ -92,20 +94,21 @@ typedef struct flag_s
 extern flag_stand_t cs_flag_stands[team_color_max];
 extern flag_t cs_flags[team_color_max];
 
-void    CL_SpawnFlag(flag_t *flag, uint32_t net_id);
-void    SV_SpawnFlag(flag_t *flag);
-void    CS_PlayFlagSound(int flag_color);
-void    CS_RemoveFlagActor(flag_t *flag);
-void    CS_ReturnFlag(flag_t *flag);
-void    CS_GiveFlag(int playernum, flag_t *flag);
-void    CS_HandleFlagTouch(player_t *player, int color);
-flag_t* CS_GetFlagCarriedByPlayer(int playernum);
-void    CS_DropFlag(int playernum);
-void    CS_CTFTicker(void);
-void    CS_SnapCarriedFlagToCarrier(Mobj *flag_actor);
-void    CS_CheckCarriedFlagPosition(int playernum);
-bool    CS_ActorIsCarriedFlag(Mobj *actor);
-Mobj*   CS_GetFlagStandActorForFlag(flag_t *flag);
+void     CL_SpawnFlag(flag_t *flag, uint32_t net_id);
+void     SV_SpawnFlag(flag_t *flag);
+void     CS_PlayFlagSound(int flag_color);
+void     CS_RemoveFlagActor(flag_t *flag);
+void     CS_ReturnFlag(flag_t *flag);
+void     CS_GiveFlag(int playernum, flag_t *flag);
+void     CS_HandleFlagTouch(player_t *player, int color);
+flag_t*  CS_GetFlagCarriedByPlayer(int playernum);
+void     CS_DropFlag(int playernum);
+void     CS_CTFTicker(void);
+void     CS_SnapCarriedFlagToCarrier(Mobj *flag_actor);
+void     CS_CheckCarriedFlagPosition(int playernum);
+bool     CS_ActorIsCarriedFlag(Mobj *actor);
+Mobj*    CS_GetFlagStandActorForFlag(flag_t *flag);
+patch_t* CS_GetFlagPatch(int flag_color);
 
 #endif
 
