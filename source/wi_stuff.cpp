@@ -1324,7 +1324,6 @@ static void WI_updateDeathmatchStats(void)
          else if(gametic == clientserver_tics)
          {
             clientserver_tics = 0;
-            CS_Announce(ae_round_started, NULL);
             if(GameModeInfo->id == commercial)
                WI_initNoState();
             else

@@ -314,7 +314,7 @@ void CS_InitAnnouncer(void)
    while((ann = announcers.tableIterator(ann)))
    {
       ann->addEvent(ae_round_starting, "Round Starting", "RoundStarting");
-      ann->addEvent(ae_round_started, "Round Started", "RoundStarted");
+      ann->addEvent(ae_round_started, "Round Start", "RoundStart");
       ann->addEvent(ae_three_frags_left, "Three Frags Left", "ThreeFragsLeft");
       ann->addEvent(ae_two_frags_left, "Two Frags Left", "TwoFragsLeft");
       ann->addEvent(ae_one_frag_left, "One Frag Left", "OneFragLeft");
