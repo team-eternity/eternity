@@ -697,7 +697,7 @@ void CS_InitVoteWidget(void)
    HU_DynamicTextWidget(
       "_HU_CSVoteWidget",
       SCREENWIDTH - V_FontStringWidth(hud_font, xs),
-      ST_Y >> 1,
+      (ST_Y >> 1) - 30,
       hud_font->num,
       "Vote (999s):\n"
       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n"

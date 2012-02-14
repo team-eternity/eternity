@@ -1937,6 +1937,12 @@ void SV_HandleVoteRequestMessage(char *data, size_t data_length, int playernum)
       return;
    }
 
+   if(clients[playernum].spectating)
+   {
+      SV_SendMessage(playernum, "Spectators cannot call votes.");
+      return;
+   }
+
    if(SV_GetCurrentVote())
    {
       SV_SendMessage(playernum, "Vote already in progress.");
