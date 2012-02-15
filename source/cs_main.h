@@ -447,6 +447,7 @@ typedef struct
    bool buffering;
    // [CG] The TIC at which the client was able to join the game.
    int finished_waiting_in_queue_tic;
+   bool connecting;
 } server_client_t;
 
 // [CG] Below are all the network message structure definitions.  Each struct

@@ -886,7 +886,7 @@ int SV_HandleClientConnection(ENetPeer *peer)
    char *address = CS_IPToString(peer->address.host);
 
    for(i = 1; i < MAX_CLIENTS; i++)
-      if(!playeringame[i] && server_clients[i].current_request == scr_none)
+      if(!playeringame[i] && !server_clients[i].connecting)
          break;
 
    // [CG] No more client spots.
@@ -950,6 +950,7 @@ int SV_HandleClientConnection(ENetPeer *peer)
    );
    efree(address);
 
+   server_clients[i].connecting = true;
    server_clients[i].current_request = scr_initial_state;
 
    return i;
@@ -960,7 +961,7 @@ bool SV_ServerEmpty()
    int i;
 
    for(i = 1; i < MAX_CLIENTS; i++)
-      if(playeringame[i] || server_clients[i].current_request)
+      if(playeringame[i] || server_clients[i].connecting)
          return false;
 
    return true;
@@ -1026,7 +1027,7 @@ void SV_SendCurrentState(int playernum)
    size_t message_size;
 
    printf(
-      "SV_AddClient (%u): Adding player %d.\n", sv_world_index, playernum
+      "SV_SendCurrentState (%u): New player %d.\n", sv_world_index, playernum
    );
 
    clients[playernum].join_tic = gametic;
@@ -1202,6 +1203,8 @@ void SV_SayToPlayer(int playernum, const char *fmt, ...)
 void SV_SendSync(int playernum)
 {
    nm_sync_t message;
+
+   server_clients[playernum].connecting = false;
 
    message.message_type = nm_sync;
    message.world_index = sv_world_index;
@@ -2862,14 +2865,27 @@ void SV_TryRunTics(void)
    int current_tic;
    uint32_t realtics;
    cs_cmd_t command;
-   static int new_tic = 0;
-   bool no_players;
    ServerVote *vote = NULL;
-   
-   if((!CS_HEADLESS) || (!SV_ServerEmpty()))
-      no_players = false;
+   static int new_tic = 0;
+   static bool no_players = true;
+
+   if(CS_HEADLESS)
+   {
+      if(SV_ServerEmpty())
+      {
+         if(!no_players)
+         {
+            printf("Server empty, resetting map.\n");
+            G_DoCompleted(false);
+            CS_DoWorldDone();
+         }
+         no_players = true;
+      }
+      else
+         no_players = false;
+   }
    else
-      no_players = true;
+      no_players = false;
 
    if(d_fastrefresh)
       d_fastrefresh = false;

@@ -493,6 +493,7 @@ void CS_ZeroClient(int clientnum)
       memset(&sc->saved_misc_state, 0, sizeof(cs_misc_state_t));
       sc->buffering = false;
       sc->finished_waiting_in_queue_tic = 0;
+      sc->connecting = false;
    }
 }
 
