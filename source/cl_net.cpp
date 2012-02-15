@@ -534,7 +534,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
 
    if(first_time)
       first_time = false;
-   else
+   else if(GameType != gt_coop)
       CS_Announce(ae_round_started, NULL);
 }
 
@@ -993,7 +993,7 @@ void CL_HandleBloodSpawnedMessage(nm_bloodspawned_t *message)
    if((shooter = NetActors.lookup(message->shooter_net_id)) == NULL)
    {
       doom_printf(
-         "Received spawn puff message for invalid shooter %u, ignoring.\n",
+         "Received spawn blood message for invalid shooter %u, ignoring.\n",
          message->shooter_net_id
       );
       return;

@@ -452,7 +452,10 @@ void A_Tracer(Mobj *actor)
       return;
 
    // spawn a puff of smoke behind the rocket
-   P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
+   if(CS_SERVER)
+      CS_SpawnPuff(actor, actor->x, actor->y, actor->z, 0, 3, false);
+   else
+      P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
    
    th = P_SpawnMobj(actor->x - actor->momx,
                     actor->y - actor->momy,

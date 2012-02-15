@@ -1528,16 +1528,16 @@ void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
 {
    Mobj *puff = NULL;
 
-   if(serverside)
+   if(!clientserver)
+      return;
+
+   if(CS_SERVER)
    {
       puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
-      if(CS_SERVER)
-         SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
+      SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
    }
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
-   {
       puff = CL_SpawnPuff(0, x, y, z, angle, updown, ptcl);
-   }
 }
 
 void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
@@ -1545,16 +1545,16 @@ void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
 {
    Mobj *blood = NULL;
 
-   if(serverside)
+   if(!clientserver)
+      return;
+
+   if(CS_SERVER)
    {
       blood = P_SpawnBlood(x, y, z, angle, damage, target);
-      if(CS_SERVER)
-         SV_BroadcastBloodSpawned(blood, shooter, damage, target);
+      SV_BroadcastBloodSpawned(blood, shooter, damage, target);
    }
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
-   {
       blood = CL_SpawnBlood(0, x, y, z, angle, damage, target);
-   }
 }
 
 char* CS_ExtractMessage(char *data, size_t data_length)

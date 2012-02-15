@@ -114,10 +114,6 @@ struct event_t;
    ((shooter)->net_id == players[consoleplayer].mo->net_id) \
 ))
 
-#define CS_SHOULD_SHOW_SHOT(shooter) ( \
-   serverside || (!(shooter)->player) || (CL_SHOULD_PREDICT_SHOT((shooter))) \
-)
-
 #define CS_SPAWN_ACTOR_OK (\
    serverside || \
    cl_spawning_actor_from_message || \
