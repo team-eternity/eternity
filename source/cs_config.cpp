@@ -929,6 +929,12 @@ void CS_HandleServerSection()
       }
    }
 
+   if(!server["reset_if_no_players"].empty() &&
+      server["reset_if_no_players"].isBool())
+   {
+      sv_reset_if_no_players = server["reset_if_no_players"].asBool();
+   }
+
    if(!server["vote_commands"].empty() && server["vote_commands"].isArray())
    {
       qstring buf;

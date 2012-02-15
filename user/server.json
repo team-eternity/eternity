@@ -24,6 +24,7 @@
         "game_type": "duel",
         "buffer_client_commands": false,
         "randomize_maps": "no",
+        "reset_if_no_players": true,
         "spectator_password": "cookie",
         "player_password": "monster",
         "moderator_password": "omnomnom",
@@ -31,7 +32,11 @@
         "access_list": "/home/tumadre/ee/access_lists/duel1.json",
         "wad_folders": [ "/home/tumadre/ee/WADs" ],
         "wad_repository": "http://static.totaltrash.org/wads",
-        "write_config_to": "/home/tumadre/ee/configs/duel1.json"
+        "write_config_to": "/home/tumadre/ee/configs/duel1.json",
+        "vote_commands": [
+           "random_map_number",
+           {"name": "coinflip", "duration": 5}
+        ]
     },
 
     "options": {

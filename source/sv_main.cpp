@@ -113,6 +113,7 @@ server_client_t server_clients[MAXPLAYERS];
 int sv_randomize_maps = false;
 bool sv_buffer_commands = false;
 unsigned int sv_join_time_limit = 0;
+bool sv_reset_if_no_players = true;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -2873,7 +2874,7 @@ void SV_TryRunTics(void)
    {
       if(SV_ServerEmpty())
       {
-         if(!no_players)
+         if(sv_reset_if_no_players && !no_players)
          {
             printf("Server empty, resetting map.\n");
             G_DoCompleted(false);
