@@ -171,7 +171,7 @@ void CL_SendCommand(void)
 {
    char *buffer;
    nm_playercommand_t *command_message;
-   cs_cmd_t *command;
+   cs_cmd_t *command, *dest_command;
    ticcmd_t ticcmd;
    size_t buffer_size;
    uint32_t i, command_count;
@@ -222,35 +222,39 @@ void CL_SendCommand(void)
    CS_PrintCommand(command);
 #endif
 
-   buffer = ecalloc(
-      char *,
-      sizeof(char),
-      sizeof(nm_playercommand_t) + (sizeof(cs_cmd_t) * COMMAND_BUNDLE_SIZE)
-   );
-
-   if(cl_commands_sent < (COMMAND_BUNDLE_SIZE - 1))
+   if(cl_reliable_commands)
+      command_count = 1;
+   else if(cl_commands_sent < (COMMAND_BUNDLE_SIZE - 1))
       command_count = cl_commands_sent + 1;
    else
       command_count = COMMAND_BUNDLE_SIZE;
 
-   buffer_size = sizeof(nm_playercommand_t) +
-                (sizeof(cs_cmd_t) * command_count);
-   buffer = ecalloc(char *, sizeof(char), buffer_size);
+   buffer_size =
+      sizeof(nm_playercommand_t) + (sizeof(cs_cmd_t) * command_count);
 
+   buffer = ecalloc(char *, sizeof(char), buffer_size);
    command_message = (nm_playercommand_t *)(buffer);
-   command = (cs_cmd_t *)(buffer + sizeof(nm_playercommand_t));
+   dest_command = (cs_cmd_t *)(buffer + sizeof(nm_playercommand_t));
 
    command_message->message_type = nm_playercommand;
    command_message->command_count = command_count;
 
-   for(i = ((cl_commands_sent + 1) - command_count);
-       i <= cl_commands_sent;
-       i++, command++)
+   if(cl_reliable_commands)
    {
-      CS_CopyCommand(command, CL_GetCommandAtIndex(i));
+      CS_CopyCommand(dest_command, command);
+      send_packet(buffer, buffer_size);
+   }
+   else
+   {
+      for(i = ((cl_commands_sent + 1) - command_count);
+          i <= cl_commands_sent;
+          i++, dest_command++)
+      {
+         CS_CopyCommand(dest_command, CL_GetCommandAtIndex(i));
+      }
+      send_unreliable_packet(buffer, buffer_size);
    }
 
-   send_unreliable_packet(buffer, buffer_size);
    cl_commands_sent++;
    efree(buffer);
 }

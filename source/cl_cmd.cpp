@@ -55,6 +55,9 @@ bool default_cl_packet_buffer_enabled = false;
 unsigned int cl_packet_buffer_size = 0;
 unsigned int default_cl_packet_buffer_size = 0;
 
+bool cl_reliable_commands = false;
+bool default_cl_reliable_commands = false;
+
 unsigned int damage_screen_cap = NUMREDPALS;
 unsigned int default_damage_screen_cap = NUMREDPALS;
 
@@ -89,6 +92,10 @@ CONSOLE_VARIABLE(packet_buffer_size, cl_packet_buffer_size, cf_netonly)
 {
    cl_packet_buffer.setCapacity((uint32_t)cl_packet_buffer_size);
 }
+
+// [CG] Send commands reliably.
+VARIABLE_TOGGLE(cl_reliable_commands, &default_cl_reliable_commands, onoff);
+CONSOLE_VARIABLE(reliable_commands, cl_reliable_commands, cf_netonly) {}
 
 // [CG] Unlagged debugging.
 VARIABLE_TOGGLE(cl_debug_unlagged, &default_cl_debug_unlagged, yesno);
@@ -263,6 +270,7 @@ void CL_AddCommands(void)
    C_AddCommand(predict_shots);
    C_AddCommand(packet_buffer);
    C_AddCommand(packet_buffer_size);
+   C_AddCommand(reliable_commands);
    C_AddCommand(debug_unlagged);
    C_AddCommand(damage_screen_cap);
    C_AddCommand(disconnect);

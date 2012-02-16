@@ -286,7 +286,6 @@ static default_t sysdefaults[] =
       "buffer incoming packets"
    ),
 
-
    DEFAULT_INT(
       "packet_buffer_size",
       &cl_packet_buffer_size,
@@ -294,6 +293,15 @@ static default_t sysdefaults[] =
       2, 1, MAX_POSITIONS >> 1, default_t::wad_no,
       "how many TICs to buffer in the packet buffer, 0 - adaptive, other "
       "values are considered custom sizes"
+   ),
+
+   DEFAULT_BOOL(
+      "reliable_commands",
+      &cl_reliable_commands,
+      &default_cl_reliable_commands,
+      false,
+      default_t::wad_no,
+      "send commands reliably"
    ),
 
    DEFAULT_BOOL(

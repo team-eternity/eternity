@@ -1058,6 +1058,7 @@ static menuitem_t mn_player_items[] =
    {it_toggle,         "handedness",           "lefthanded"},
    {it_toggle,         "packet buffer",        "packet_buffer"},
    {it_variable,       "packet buffer size",   "packet_buffer_size"},
+   {it_toggle,         "reliable commands",    "reliable_commands"},
    {it_toggle,         "player skin",          "skin"},
    {it_runcmd,         "skin viewer...",       "skinviewer"},
    {it_gap},
