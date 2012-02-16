@@ -1868,6 +1868,9 @@ void SV_RunPlayerCommands(int playernum)
    //      extra commands until we get back to the normal size.
    do
    {
+      bufcmd = (cs_buffered_command_t *)M_QueuePeek(&sc->commands);
+      if(bufcmd->command.world_index > sv_world_index)
+         break;
       bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
       SV_RunPlayerCommand(playernum, bufcmd);
       efree(bufcmd);
@@ -1881,9 +1884,8 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
    nm_playercommand_t *message = (nm_playercommand_t *)data;
    cs_cmd_t *commands = (cs_cmd_t *)(data + sizeof(nm_playercommand_t));
    server_client_t *server_client = &server_clients[playernum];
-   uint32_t last_index = server_client->last_command_received_index;
    cs_buffered_command_t *bc;
-   cs_cmd_t *command;
+   cs_cmd_t *command = commands;
 
    // [CG] Don't accept commands if we're not in GS_LEVEL.
    if(gamestate != GS_LEVEL)
@@ -1891,14 +1893,12 @@ void SV_HandlePlayerCommandMessage(char *data, size_t data_length,
 
    server_client->received_command_for_current_map = true;
 
-   for(command = commands;
-       (command - commands) < message->command_count;
-       command++)
-   {
-      // [CG] Skip messages we've seen before.
-      if(command->index <= last_index)
-         continue;
+   // [CG] Skip commands we've seen before.
+   while(command->index <= server_client->last_command_received_index)
+      command++;
 
+   for(;(command - commands) < message->command_count; command++)
+   {
       // [CG] Queue this command to be run later.
       bc = ecalloc(cs_buffered_command_t *, 1, sizeof(cs_buffered_command_t));
       CS_CopyCommand(&bc->command, command);

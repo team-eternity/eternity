@@ -361,7 +361,10 @@ static bool P_ShootThing(intercept_t *in)
    if(trace.la_damage)
    {
       if(CS_CLIENT && th->player && cl_debug_unlagged)
+      {
          CL_SpawnLocalGhost(th);
+         CL_SpawnLocalGhost(shootthing);
+      }
 
       P_DamageMobj(th, shootthing, shootthing, trace.la_damage, 
                    shootthing->info->mod);

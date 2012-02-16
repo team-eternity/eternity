@@ -46,6 +46,7 @@ void          M_QueueInsert(mqueueitem_t *item, mqueue_t *queue);
 bool          M_QueueIsEmpty(mqueue_t *queue);
 mqueueitem_t* M_QueuePop(mqueue_t *queue);
 mqueueitem_t* M_QueueIterator(mqueue_t *queue);
+mqueueitem_t* M_QueuePeek(mqueue_t *queue);
 void          M_QueueResetIterator(mqueue_t *queue);
 void          M_QueueFree(mqueue_t *queue);
 

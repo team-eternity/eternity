@@ -44,6 +44,7 @@ void      CL_StoreLastServerPosition(cs_player_position_t *new_server_position,
                                      unsigned int index,
                                      unsigned int world_index);
 void      CL_LoadLastServerPosition(void);
+cs_player_position_t* CL_GetLastServerPosition();
 uint32_t  CL_GetLastServerPositionIndex(void);
 uint32_t  CL_GetLastServerCommandIndex(void);
 

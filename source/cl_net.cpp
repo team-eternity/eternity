@@ -194,7 +194,7 @@ void CL_SendCommand(void)
    {
       G_BuildTiccmd(&ticcmd);
       CS_CopyTiccmdToCommand(
-         command, &ticcmd, cl_commands_sent, cl_latest_world_index
+         command, &ticcmd, cl_commands_sent, cl_current_world_index
       );
    }
 
@@ -1244,6 +1244,8 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
 #if _UNLAG_DEBUG
    if(cl_debug_unlagged)
    {
+      cs_player_position_t *last_server_position = CL_GetLastServerPosition();
+
       CL_SpawnRemoteGhost(
          message->target_net_id,
          message->x,
@@ -1251,6 +1253,14 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
          message->z,
          message->angle,
          message->world_index
+      );
+      CL_SpawnRemoteGhost(
+         players[displayplayer].mo->net_id,
+         last_server_position->x,
+         last_server_position->y,
+         last_server_position->z,
+         last_server_position->angle,
+         last_server_position->world_index
       );
    }
 #endif

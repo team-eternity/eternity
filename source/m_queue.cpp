@@ -112,6 +112,16 @@ mqueueitem_t *M_QueueIterator(mqueue_t *queue)
 }
 
 //
+// M_QueuePeek
+//
+// Returns the first element of the queue.
+//
+mqueueitem_t* M_QueuePeek(mqueue_t *queue)
+{
+   return queue->head.next;
+}
+
+//
 // M_QueueResetIterator
 //
 // Returns the queue iterator to the beginning.

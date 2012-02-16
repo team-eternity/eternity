@@ -407,10 +407,14 @@ void CL_SpawnLocalGhost(Mobj *actor)
    cl_unlagged_ghosts[i].local_ghost->flags |= MF_NOCLIP;
    cl_unlagged_ghosts[i].local_ghost->flags |= MF_TRANSLUCENT;
    cl_unlagged_ghosts[i].local_ghost->flags &= ~MF_SHOOTABLE;
-   cl_unlagged_ghosts[i].local_ghost->colour = 4;
-   doom_printf(
-      "Local: (%u) %d/%d/%d/%d.",
-      cl_latest_world_index,
+   if(actor == players[displayplayer].mo)
+      cl_unlagged_ghosts[i].local_ghost->colour = 13;
+   else
+      cl_unlagged_ghosts[i].local_ghost->colour = 3;
+
+   printf(
+      "Local: (%u) %d/%d/%d/%d.\n",
+      cl_current_world_index,
       actor->x >> FRACBITS,
       actor->y >> FRACBITS,
       actor->z >> FRACBITS,
@@ -450,9 +454,12 @@ void CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
    cl_unlagged_ghosts[i].remote_ghost->flags |= MF_NOCLIP;
    cl_unlagged_ghosts[i].remote_ghost->flags |= MF_TRANSLUCENT;
    cl_unlagged_ghosts[i].remote_ghost->flags &= ~MF_SHOOTABLE;
-   cl_unlagged_ghosts[i].remote_ghost->colour = 5;
-   doom_printf(
-      "Remote: (%u) %d/%d/%d/%d.",
+   if(actor == players[displayplayer].mo)
+      cl_unlagged_ghosts[i].remote_ghost->colour = 1;
+   else
+      cl_unlagged_ghosts[i].remote_ghost->colour = 8;
+   printf(
+      "Remote: (%u) %d/%d/%d/%d.\n",
       world_index,
       x >> FRACBITS,
       y >> FRACBITS,

@@ -110,6 +110,11 @@ void CL_LoadLastServerPosition(void)
    clients[consoleplayer].floor_status = last_floor_status;
 }
 
+cs_player_position_t* CL_GetLastServerPosition()
+{
+   return &last_server_position;
+}
+
 uint32_t CL_GetLastServerPositionIndex(void)
 {
    return last_server_position.world_index;
