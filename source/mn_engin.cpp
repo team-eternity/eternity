@@ -1943,13 +1943,7 @@ void MN_StartControlPanel(void)
 
    // haleyjd 05/16/04: traditional DOOM main menu support
    // haleyjd 08/31/06: support for all of DOOM's original menus
-   if(GameModeInfo->flags & GIF_CLASSICMENUS && 
-      (traditional_menu || mn_classic_menus))
-   {
-      MN_StartMenu(&menu_old_main);
-   }
-   else
-      MN_StartMenu(GameModeInfo->mainMenu);
+   MN_StartMenu(GameModeInfo->mainMenu);
 }
 
 //=============================================================================
