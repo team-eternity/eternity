@@ -2771,7 +2771,10 @@ void P_ChangeThingHeights(void)
    {
       Mobj *mo;
       if((mo = thinker_cast<Mobj *>(th)))
-         mo->height = P_ThingInfoHeight(mo->info);
+      {
+         if(mo->height == mo->info->height || mo->height == mo->info->c3dheight)
+            mo->height = P_ThingInfoHeight(mo->info);
+      }
    }
 }
 
