@@ -269,7 +269,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
    {
       // hack -- cut off thy flesh consumed if not retail
       if(GameModeInfo->id != retail)
-         menu_episode.menuitems[5].type = it_end;
+         menu_episode.menuitems[3].type = it_end;
       
       MN_StartMenu(&menu_episode);
    }
@@ -309,29 +309,34 @@ CONSOLE_COMMAND(mn_quit, 0)
    MN_QuitDoom();
 }
 
-/////////////////////////////////////////////////////////
+//=============================================================================
 //
 // Episode Selection
 //
 
+static void MN_EpisodeDrawer()
+{
+   V_DrawPatch(54, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
+}
+
 static menuitem_t mn_episode_items[] =
 {
-   {it_title,  "which episode?",            NULL,            "M_EPISOD"},
-   {it_gap},
-   {it_runcmd, "knee deep in the dead",     "mn_episode 1",  "M_EPI1"},
-   {it_runcmd, "the shores of hell",        "mn_episode 2",  "M_EPI2"},
-   {it_runcmd, "inferno!",                  "mn_episode 3",  "M_EPI3"},
-   {it_runcmd, "thy flesh consumed",        "mn_episode 4",  "M_EPI4"},
-   {it_end}
+   { it_runcmd, "knee deep in the dead", "mn_episode 1",  "M_EPI1" },
+   { it_runcmd, "the shores of hell",    "mn_episode 2",  "M_EPI2" },
+   { it_runcmd, "inferno!",              "mn_episode 3",  "M_EPI3" },
+   { it_runcmd, "thy flesh consumed",    "mn_episode 4",  "M_EPI4" },
+   { it_end }
 };
 
 menu_t menu_episode =
 {
-   mn_episode_items,    // menu items
-   NULL, NULL, NULL,    // pages
-   40, 30,              // x, y offsets
-   2,                   // select episode 1
-   mf_skullmenu,        // skull menu
+   mn_episode_items,           // menu items
+   NULL, NULL, NULL,           // pages
+   48, 63,                     // x, y offsets
+   2,                          // select episode 1
+   mf_skullmenu | mf_emulated, // skull menu
+   MN_EpisodeDrawer            // drawer
 };
 
 // console command to select episode
@@ -355,7 +360,7 @@ CONSOLE_COMMAND(mn_episode, cf_notnet)
    MN_StartMenu(&menu_newgame);
 }
 
-//////////////////////////////////////////////////////////
+//=============================================================================
 //
 // New Game Menu: Skill Level Selection
 //
@@ -370,31 +375,38 @@ static void MN_openNewGameMenu(void)
    extern menu_t menu_newgame; // actually just right below...
    
    // start on defaultskill setting
-   menu_newgame.selected = (defaultskill - 1) + 4;
+   menu_newgame.selected = defaultskill - 1;
+}
+
+//
+// MN_DrawNewGame
+//
+static void MN_DrawNewGame()
+{
+   V_DrawPatch(96, 14, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_NEWG", PU_CACHE));
+   V_DrawPatch(54, 38, &vbscreen, 
+               PatchLoader::CacheName(wGlobalDir, "M_SKILL", PU_CACHE));
 }
 
 static menuitem_t mn_newgame_items[] =
 {
-   {it_title,  "new game",             NULL,                "M_NEWG"},
-   {it_gap},
-   {it_info,   "choose skill level",   NULL,                "M_SKILL"},
-   {it_gap},
-   {it_runcmd, "i'm too young to die", "newgame 0",         "M_JKILL"},
-   {it_runcmd, "hey, not too rough",   "newgame 1",         "M_ROUGH"},
-   {it_runcmd, "hurt me plenty.",      "newgame 2",         "M_HURT"},
-   {it_runcmd, "ultra-violence",       "newgame 3",         "M_ULTRA"},
-   {it_runcmd, "nightmare!",           "newgame 4",         "M_NMARE"},
-   {it_end}
+   { it_runcmd, "i'm too young to die", "newgame 0", "M_JKILL" },
+   { it_runcmd, "hey, not too rough",   "newgame 1", "M_ROUGH" },
+   { it_runcmd, "hurt me plenty.",      "newgame 2", "M_HURT"  },
+   { it_runcmd, "ultra-violence",       "newgame 3", "M_ULTRA" },
+   { it_runcmd, "nightmare!",           "newgame 4", "M_NMARE" },
+   { it_end }
 };
 
 menu_t menu_newgame =
 {
    mn_newgame_items,   // menu items
    NULL, NULL, NULL,   // pages
-   40, 15,             // x,y offsets
-   6,                  // starting item (overridden by open method)
-   mf_skullmenu,       // is a skull menu
-   NULL,               // drawer method
+   48, 63,             // x,y offsets
+   6,                        // starting item (overridden by open method)
+   mf_skullmenu|mf_emulated, // is a skull menu
+   MN_DrawNewGame,     // drawer method
    NULL, NULL,         // toc
    0,                  // gap override
    MN_openNewGameMenu, // open method
