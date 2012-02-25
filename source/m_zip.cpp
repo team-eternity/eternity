@@ -34,6 +34,8 @@
 #include <windows.h>
 #include <io.h>
 #include <direct.h>
+#else
+#include <utime.h>
 #endif
 
 #include "m_file.h"
@@ -65,7 +67,6 @@ static void M_setFileDate(const char *filename, uLong dosdate, tm_unz tmu_date)
    SetFileTime(hFile, &ftm, &ftLastAcc, &ftm);
    CloseHandle(hFile);
 #else
-#ifdef unix || __APPLE__
    struct utimbuf ut;
    struct tm newdate;
 
@@ -84,7 +85,6 @@ static void M_setFileDate(const char *filename, uLong dosdate, tm_unz tmu_date)
 
    ut.actime = ut.modtime = mktime(&newdate);
    utime(filename,&ut);
-#endif
 #endif
 }
 
@@ -105,7 +105,6 @@ static uLong M_getFileTime(const char *f, tm_zip *tmzip, uLong *dt)
       ret = 1;
    }
 #else
-#ifdef unix || __APPLE__
    struct stat s;
    struct tm* filedate;
    time_t tm_t = 0;
@@ -139,7 +138,6 @@ static uLong M_getFileTime(const char *f, tm_zip *tmzip, uLong *dt)
    tmzip->tm_mday = filedate->tm_mday;
    tmzip->tm_mon  = filedate->tm_mon ;
    tmzip->tm_year = filedate->tm_year;
-#endif
 #endif
    return ret;
 }

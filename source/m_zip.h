@@ -94,7 +94,7 @@ public:
         internal_zip_error(0), internal_unzip_error(0), iterator_index(0),
         current_compression_level(default_compression_level)
    {
-      path = estrdup(path);
+      path = estrdup(new_path);
       data_buffer = emalloc(char *, ZIP_CHUNK_SIZE);
       input_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);
       output_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);

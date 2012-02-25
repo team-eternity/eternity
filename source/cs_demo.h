@@ -250,7 +250,7 @@ private:
    bool loadZipFile();
    bool retrieveDemo(const char *url);
    void setError(int error_code);
-   void setCURLError(int error_code);
+   void setCURLError(long error_code);
 
 public:
 

@@ -671,7 +671,7 @@ bool SingleCSDemo::readHeader()
       );
    }
    else
-      printf("Map %d was already initialized.\n", map - cs_maps);
+      printf("Map %ld was already initialized.\n", map - cs_maps);
 
    if(!readFromDemo(&header_marker, sizeof(uint8_t), 1))
       return false;
@@ -683,7 +683,7 @@ bool SingleCSDemo::readHeader()
 
    iwad_loaded = true;
 
-   printf("load_current_map_demo: loaded demo for %d.\n", map - cs_maps);
+   printf("load_current_map_demo: loaded demo for %ld.\n", map - cs_maps);
 
    return true;
 }
@@ -1404,7 +1404,7 @@ bool CSDemo::retrieveDemo(const char *url)
    if(!(curl_handle = curl_easy_init()))
    {
       M_CloseFile(fobj);
-      setCURLError((int)curl_handle);
+      setCURLError((long)curl_handle);
       return false;
    }
 
@@ -1433,7 +1433,7 @@ void CSDemo::setError(int error_code)
    internal_error = error_code;
 }
 
-void CSDemo::setCURLError(int error_code)
+void CSDemo::setCURLError(long error_code)
 {
    internal_error = curl_error;
    internal_curl_error = error_code;
