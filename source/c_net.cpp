@@ -67,7 +67,7 @@ command_t *c_netcmds[NUMNETCMDS];
   address space to test the zone id, even if its not a ptr to a
   zone block.
 */
-char *default_name; // = "player";
+char *default_name = NULL; // = "player";
 int default_colour;
 
 // basic chat char stuff: taken from hu_stuff.c and renamed

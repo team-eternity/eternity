@@ -112,6 +112,7 @@ unsigned int SV_ClientCommandBufferSize(int playernum);
 void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd);
 void SV_RunPlayerCommands(int playernum);
 void SV_UpdateClientStatus(void);
+void SV_ArchiveServerClients(SaveArchive& arc);
 
 // [CG] Sending functions.
 void SV_SendNewClient(int playernum, int clientnum);

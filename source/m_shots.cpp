@@ -31,6 +31,7 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "m_buffer.h"
+#include "m_file.h"
 #include "m_misc.h"
 #include "p_skin.h"
 #include "s_sound.h"
@@ -578,6 +579,64 @@ static shotformat_t shotFormats[SHOT_NUMSHOTFORMATS] =
    { "tga", OutBuffer::LENDIAN, tga_Writer }, // Truevision TARGA
    { "png", OutBuffer::NENDIAN, png_Writer }, // Portable Network Graphics
 };
+
+//
+// M_SaveScreenShotAs
+//
+// [CG] Saves a screenshot to the specified file path.
+//
+bool M_SaveScreenShotAs(const char *path)
+{
+   OutBuffer ob;
+   shotformat_t *format = &shotFormats[screenshot_pcx];
+   
+   if(M_PathExists(path))
+      return false;
+
+   // haleyjd 05/23/02: corrected uses of access to use defined
+   // constants rather than integers, some of which were not even
+   // correct under DJGPP to begin with (it's a wonder it worked...)
+   if(access(path, W_OK))
+      return false;
+   
+   if(!ob.CreateFile(path, 512*1024, format->endian))
+   {
+      M_ReportFileSystemError();
+      return false;
+   }
+
+   // killough 4/18/98: make palette stay around
+   // (PU_CACHE could cause crash)         
+   byte *pal = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
+
+   // get screen graphics
+   V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
+                 vbscreen.width, vbscreen.height);
+   
+   I_BeginRead();
+
+   // killough 10/98: detect failure and remove file if error
+   if(!format->writer(&ob, backscreen2.data, (uint32_t)(backscreen2.width), 
+                                             (uint32_t)(backscreen2.height), 
+                                             pal))
+   {
+      M_ReportFileSystemError();
+      ob.Close();
+      M_DeleteFile(path);
+      I_EndRead();
+      return false;
+   }
+
+   // haleyjd: close the buffer
+   ob.Close();
+
+   I_EndRead();
+
+   // killough 4/18/98: now you can mark it PU_CACHE
+   Z_ChangeTag(pal, PU_CACHE);
+
+   return true;
+}
 
 //
 // M_ScreenShot

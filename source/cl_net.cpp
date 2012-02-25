@@ -29,6 +29,7 @@
 #include "z_zone.h"
 #include "a_common.h"
 #include "c_io.h"
+#include "c_net.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
 #include "d_main.h"
@@ -177,7 +178,7 @@ void CL_SendCommand(void)
    uint32_t i, command_count;
 
    // [CG] Ensure no commands are made during demo playback.
-   if(CS_DEMO)
+   if(CS_DEMOPLAY)
       I_Error("Error: made a command during demo playback.\n");
 
    // I_StartTic();
@@ -188,26 +189,26 @@ void CL_SendCommand(void)
    {
       memset(command, 0, sizeof(cs_cmd_t));
       command->index = cl_commands_sent;
-      command->world_index = cl_current_world_index;
+      command->world_index = cl_latest_world_index;
    }
    else
    {
       G_BuildTiccmd(&ticcmd);
       CS_CopyTiccmdToCommand(
-         command, &ticcmd, cl_commands_sent, cl_current_world_index
+         command, &ticcmd, cl_commands_sent, cl_latest_world_index
       );
    }
 
    // [CG] Save all sent commands in the demo if recording.
-   if(cs_demo_recording)
+   if(CS_DEMORECORD)
    {
-      if(!CS_WritePlayerCommandToDemo(command))
+      if(!cs_demo->write(command))
       {
          doom_printf(
-            "Demo error, recording aborted: %s", CS_GetDemoErrorMessage()
+            "Error writing player command to demo: %s", cs_demo->getError()
          );
-         if(!CS_StopDemo())
-            doom_printf("Error stopping demo: %s.", CS_GetDemoErrorMessage());
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.", cs_demo->getError());
       }
    }
 
@@ -425,7 +426,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
    {
       CS_InitPlayer(new_num);
       CS_ZeroClient(new_num);
-      CS_SetPlayerName(&players[new_num], players[consoleplayer].name);
+      CS_SetPlayerName(&players[new_num], default_name);
       CS_SetPlayerName(&players[0], SERVER_NAME);
       consoleplayer = displayplayer = message->player_number;
       clients[consoleplayer].team = team_color_none;
@@ -488,11 +489,15 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       return;
    }
 
-   M_WriteFile(
-      cs_state_file_path,
-      ((char *)message)+ sizeof(nm_currentstate_t),
-      (size_t)message->state_size
-   );
+   if(!M_WriteFile(cs_state_file_path,
+                   ((char *)message)+ sizeof(nm_currentstate_t),
+                   (size_t)message->state_size))
+   {
+      C_Printf("Error saving game state to disk, disconnecting.\n");
+      C_Printf("Error: %s.\n", M_GetFileSystemErrorMessage());
+      CL_Disconnect();
+      return;
+   }
 
    // [CG] FIXME WTF
    cl_setting_sector_positions = true;
@@ -561,23 +566,26 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
    else
       G_DoCompleted(false);
 
+   gameaction = ga_worlddone;
+
    cl_packet_buffer.disable();
 }
 
 void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
-   static unsigned int demo_map_number = 0;
+   static int demo_index = 0;
 
-   if(cs_demo_playback)
+   if(CS_DEMOPLAY)
    {
-      if(demo_map_number == cs_current_demo_map)
+      if(demo_index == cs_demo->getCurrentDemoIndex())
       {
-         if(!CS_LoadNextDemoMap())
+         if(!cs_demo->playNext())
          {
             doom_printf(
-               "Error during demo playback: %s.\n", CS_GetDemoErrorMessage()
+               "Error during demo playback: %s.\n", cs_demo->getError()
             );
-            CS_StopDemo();
+            if(!cs_demo->stop())
+               doom_printf("Error stopping demo: %s.\n", cs_demo->getError());
          }
          return;
       }
@@ -585,7 +593,7 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
          G_DoCompleted(false);
    }
 
-   demo_map_number = cs_current_demo_map;
+   demo_index = cs_demo->getCurrentDemoIndex();
 
    cl_latest_world_index = cl_current_world_index = 0;
    cl_packet_buffer.setSynchronized(false);
@@ -593,26 +601,30 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
    CS_ApplyConfigSettings();
 
-   /*
-   if(cs_demo_recording)
+   if(CS_DEMORECORD)
    {
       // [CG] Add a demo for the new map, then write the map started message to
       //      it.
-      if(!CS_AddNewMapToDemo() ||
-         !CS_WriteNetworkMessageToDemo(message, sizeof(nm_mapstarted_t), 0))
+      if(!cs_demo->addNewMap())
       {
          doom_printf(
-            "Demo error, recording aborted: %s\n", CS_GetDemoErrorMessage()
+            "Error adding new map to demo: %s.", cs_demo->getError()
          );
-         CS_StopDemo();
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.", cs_demo->getError());
+      }
+      else if(!cs_demo->write(message, sizeof(nm_mapstarted_t), 0))
+      {
+         doom_printf(
+            "Error writing player command to demo: %s", cs_demo->getError()
+         );
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.", cs_demo->getError());
       }
    }
-   */
 
    CS_DoWorldDone();
-
    CL_SendCurrentStateRequest();
-
    cl_commands_sent = 0;
 }
 
@@ -624,7 +636,7 @@ void CL_HandleAuthResultMessage(nm_authresult_t *message)
       return;
    }
 
-   if(!cs_demo_playback)
+   if(!CS_DEMOPLAY)
       CL_SaveServerPassword();
 
    doom_printf("Authorization succeeded.");
@@ -744,6 +756,12 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
    player = &players[message->player_number];
    client = &clients[message->player_number];
    was_spectating = client->spectating;
+
+   // [CG] Clear the spree-related variables for this client.
+   client->frags_this_life = 0;
+   client->last_frag_tic = 0;
+   client->frag_level = fl_none;
+   client->consecutive_frag_level = cfl_none;
 
    playeringame[message->player_number] = true;
    player->playerstate = PST_REBORN;
@@ -1031,7 +1049,7 @@ void CL_HandleActorSpawnedMessage(nm_actorspawned_t *message)
 {
    Mobj *actor;
    int safe_item_fog_type          = E_SafeThingType(MT_IFOG);
-   int safe_tele_fog_type          = GameModeInfo->teleFogType;
+   int safe_tele_fog_type          = E_SafeThingType(GameModeInfo->teleFogType);
    int safe_bfg_type               = E_SafeThingType(MT_BFG);
    int safe_spawn_fire_type        = E_SafeThingType(MT_SPAWNFIRE);
    int safe_sorcerer_teleport_type = E_SafeThingType(MT_SOR2TELEFADE);
@@ -1403,7 +1421,6 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
 {
    Mobj *actor;
    line_t *line;
-   cs_actor_position_t saved_position, line_position;
 
    actor = NetActors.lookup(message->actor_net_id);
    if(actor == NULL)
@@ -1443,27 +1460,12 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
       return;
    }
 
-   // [CG] Because some line activations depend on the position of the actor
-   //      at the time of activation, set the actor's position appropriately,
-   //      but save the old position so the actor can be returned there
-   //      afterwards.  This is sort of like unlagged for line activations.
-   CS_SaveActorPosition(&saved_position, actor, gametic);
-
-   CS_CopyActorPosition(&line_position, &saved_position);
-   line_position.x     = message->actor_x;
-   line_position.y     = message->actor_y;
-   line_position.z     = message->actor_z;
-   line_position.angle = message->actor_angle;
-   CS_SetActorPosition(actor, &line_position);
-
    if(message->activation_type == at_used)
       P_UseSpecialLine(actor, line, message->side);
    else if(message->activation_type == at_crossed)
       P_CrossSpecialLine(line, message->side, actor);
    else if(message->activation_type == at_shot)
       P_ShootSpecialLine(actor, line, message->side);
-
-   CS_SetActorPosition(actor, &saved_position);
 }
 
 void CL_HandleMonsterActiveMessage(nm_monsteractive_t *message)

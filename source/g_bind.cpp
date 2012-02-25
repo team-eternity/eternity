@@ -894,6 +894,7 @@ void G_InitKeyBindings(void)
    G_addVariableAction(console_down,     kac_console);
    G_addRepeatableVariableAction(console_backspace, kac_console);
 
+   // [CG] C/S messaging actions
    G_addOneShotFunctionAction(message_all,    kac_player, CS_MessageAll);
    G_addOneShotFunctionAction(message_team,   kac_player, CL_MessageTeam);
    G_addOneShotFunctionAction(message_server, kac_player, CL_MessageServer);

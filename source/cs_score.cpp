@@ -186,16 +186,16 @@ static void display_deathmatch_scoreboard(unsigned int extra_top_margin)
    psnprintf(s, sizeof(s), "%sms", "0000");
    lag_stat_position = lag_column_end - V_FontStringWidth(hud_overfont, s);
 
+   // [CG] Calculate frag stat position.
+   frags_column_end = lag_stat_position - size_of_space;
+   psnprintf(s, sizeof(s), "%s", "-0000");
+   frags_stat_position = frags_column_end - V_FontStringWidth(hud_overfont, s);
+
    // [CG] Calculate deaths stat position.
-   deaths_column_end = lag_stat_position - size_of_space;
+   deaths_column_end = frags_stat_position - size_of_space;
    psnprintf(s, sizeof(s), "%s", "0000");
    deaths_stat_position =
       deaths_column_end - V_FontStringWidth(hud_overfont, s);
-
-   // [CG] Calculate frag stat position.
-   frags_column_end = deaths_stat_position - size_of_space;
-   psnprintf(s, sizeof(s), "%s", "-0000");
-   frags_stat_position = frags_column_end - V_FontStringWidth(hud_overfont, s);
 
    // [CG] Draw separation line between headers and player stat rows.
    y += (V_FontStringHeight(hud_overfont, s));

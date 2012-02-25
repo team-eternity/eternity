@@ -2205,6 +2205,22 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    double x_delta, y_delta, z_delta;
    int damage = theBomb->bombdamage;
    double damagef = theBomb->bombdamage;
+   double rdamage, rselfdamage, rlift, rselflift;
+
+   if(clientserver)
+   {
+      rdamage     = cs_settings->radial_attack_damage;
+      rselfdamage = cs_settings->radial_attack_self_damage;
+      rlift       = cs_settings->radial_attack_lift;
+      rselflift   = cs_settings->radial_attack_self_lift;
+   }
+   else
+   {
+      rdamage     = radial_attack_damage;
+      rselfdamage = radial_attack_self_damage;
+      rlift       = radial_attack_lift;
+      rselflift   = radial_attack_self_lift;
+   }
 
    if(P_CheckRadiusAttack(thing))
       return true;
@@ -2274,10 +2290,10 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    if(damage <= 0)
       return true;
 
-   if(attacking_self && cs_settings->radial_attack_self_damage != 1.0)
-      damage = (int)(damagef * cs_settings->radial_attack_self_damage);
-   else if(!attacking_self && cs_settings->radial_attack_damage != 1.0)
-      damage = (int)(damagef * cs_settings->radial_attack_damage);
+   if(attacking_self && rselfdamage != 1.0)
+      damage = (int)(damagef * rselfdamage);
+   else if(!attacking_self && rdamage != 1.0)
+      damage = (int)(damagef * rdamage);
 
    P_DamageMobj(
       thing,
@@ -2305,10 +2321,10 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
 
    z_thrust = z_delta * thrust;
 
-   if(attacking_self && cs_settings->radial_attack_self_lift != 1.0)
-      z_thrust *= cs_settings->radial_attack_self_lift;
-   else if(!attacking_self && cs_settings->radial_attack_lift != 1.0)
-      z_thrust *= cs_settings->radial_attack_lift;
+   if(attacking_self && rselflift != 1.0)
+      z_thrust *= rselflift;
+   else if(!attacking_self && rlift != 1.0)
+      z_thrust *= rlift;
 
    thing->momz += M_DoubleToFixed(z_thrust);
 

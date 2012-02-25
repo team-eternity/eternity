@@ -30,6 +30,7 @@
 #include "doomtype.h"
 #include "d_ticcmd.h"
 #include "m_queue.h"
+
 #include "cs_position.h"
 
 // [CG] Commands are sent over the wire and stored in demos, and therefore must

@@ -32,6 +32,7 @@
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
+#include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
 #include "d_player.h"
@@ -45,7 +46,9 @@
 #include "g_game.h"
 #include "i_system.h"
 #include "info.h"
+#include "m_argv.h"
 #include "m_fixed.h"
+#include "m_qstr.h"
 #include "m_random.h"
 #include "mn_engin.h"
 #include "p_hubs.h"
@@ -82,7 +85,7 @@
 #include "sv_spec.h"
 #include "sv_vote.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -352,6 +355,14 @@ void SV_Init(void)
    char *address;
    unsigned int i;
 
+   if((M_CheckParm("-csplaydemo") || M_CheckParm("-record")) && CS_SERVER)
+   {
+      I_Error(
+         "Cannot record or playback demos from the command-line in c/s "
+         "server mode.\n"
+      );
+   }
+   
    if(enet_initialize() != 0)
       I_Error("Could not initialize networking.\n");
 
@@ -389,10 +400,6 @@ void SV_Init(void)
    atexit(SV_CleanUp);
 
    strncpy(players[0].name, SERVER_NAME, strlen(SERVER_NAME) + 1);
-   efree(default_name);
-   default_name = ecalloc(char *, 7, sizeof(char));
-   strncpy(default_name, "Player", 7);
-
    sv_access_list = new AccessList();
 }
 
@@ -650,7 +657,7 @@ bool SV_RoomInGame(int clientnum)
 //-----------------------------------------------------------------------------
 
 
-#ifdef WIN32
+#ifdef _WIN32
 void SV_ConsoleTicker(void)
 {
    char ch;
@@ -987,6 +994,12 @@ void SV_SpawnPlayer(int playernum, bool as_spectator)
    Mobj *fog;
    mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(playernum, as_spectator);
 
+   // [CG] Clear the spree-related variables for this client.
+   clients[playernum].frags_this_life = 0;
+   clients[playernum].last_frag_tic = 0;
+   clients[playernum].frag_level = fl_none;
+   clients[playernum].consecutive_frag_level = cfl_none;
+
    if((!as_spectator) && (clients[playernum].queue_level != ql_playing))
       SV_QueueSetClientPlaying(playernum);
 
@@ -1121,7 +1134,7 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
             player->mo->x,
             player->mo->y,
             player->mo->z + GameModeInfo->teleFogHeight,
-            GameModeInfo->teleFogType
+            E_SafeThingType(GameModeInfo->teleFogType)
          );
 
          flash->momx = player->mo->momx;
@@ -1868,9 +1881,6 @@ void SV_RunPlayerCommands(int playernum)
    //      extra commands until we get back to the normal size.
    do
    {
-      bufcmd = (cs_buffered_command_t *)M_QueuePeek(&sc->commands);
-      if(bufcmd->command.world_index > sv_world_index)
-         break;
       bufcmd = (cs_buffered_command_t *)M_QueuePop(&sc->commands);
       SV_RunPlayerCommand(playernum, bufcmd);
       efree(bufcmd);
@@ -2063,7 +2073,7 @@ void SV_BroadcastActorPosition(Mobj *actor, int tic)
 {
    int blood = E_SafeThingType(MT_BLOOD);
    int puff  = E_SafeThingType(MT_PUFF);
-   int fog   = GameModeInfo->teleFogType;
+   int fog   = E_SafeThingType(GameModeInfo->teleFogType);
    nm_actorposition_t position_message;
 
    // [CG] Information about actors with NET ID 0 never gets sent to clients.
@@ -2086,7 +2096,7 @@ void SV_BroadcastActorMiscState(Mobj *actor, int tic)
 {
    int blood = E_SafeThingType(MT_BLOOD);
    int puff  = E_SafeThingType(MT_PUFF);
-   int fog   = GameModeInfo->teleFogType;
+   int fog   = E_SafeThingType(GameModeInfo->teleFogType);
    nm_actormiscstate_t misc_state_message;
 
    // [CG] Information about actors with NET ID 0 never gets sent to clients.
@@ -2613,10 +2623,6 @@ static void build_line_packet(nm_lineactivated_t *line_message, Mobj *actor,
    line_message->world_index = sv_world_index;
    line_message->activation_type = activation_type;
    line_message->actor_net_id = actor->net_id;
-   line_message->actor_x = actor->x;
-   line_message->actor_y = actor->y;
-   line_message->actor_z = actor->z;
-   line_message->actor_angle = actor->angle;
    line_message->line_number = (line - lines);
    line_message->side = side;
 }
@@ -2861,6 +2867,166 @@ void SV_SendNewMap(void)
    sv_should_send_new_map = false;
 }
 
+void SV_ArchiveServerClients(SaveArchive& arc)
+{
+   int i, j;
+   server_client_t *sc;
+   cs_buffered_command_t *bc;
+   cs_player_position_t *position;
+   cs_misc_state_t *misc_state;
+
+   if(!SV_DEMO)
+      return;
+
+   for(i = 1; i < MAXPLAYERS; i++)
+   {
+      uint32_t connect_id, host;
+      uint16_t port;
+      int32_t auth_level, current_request;
+
+      sc = &server_clients[i];
+      connect_id = sc->connect_id;
+      host = sc->address.host;
+      port = sc->address.port;
+      auth_level = sc->auth_level;
+      current_request = sc->current_request;
+
+      arc << connect_id
+          << host
+          << port
+          << auth_level
+          << current_request
+          << sc->received_game_state
+          << sc->command_buffer_filled
+          << sc->last_auth_attempt
+          << sc->commands_dropped
+          << sc->last_command_run_index
+          << sc->last_command_run_world_index
+          << sc->last_command_received_index
+          << sc->command_world_index
+          << sc->received_command_for_current_map
+          << sc->weapon_switch_on_pickup
+          << sc->ammo_switch_on_pickup
+          << sc->buffering
+          << sc->finished_waiting_in_queue_tic
+          << sc->connecting;
+
+      if(arc.isLoading())
+      {
+         uint32_t k;
+         uint32_t command_count;
+
+         while(!M_QueueIsEmpty(&sc->commands))
+            efree(M_QueuePop(&sc->commands));
+
+         arc << command_count;
+
+         for(k = 0; k < command_count; k++)
+         {
+            bc = estructalloc(cs_buffered_command_t, 1);
+            arc << bc->command.index
+                << bc->command.world_index
+                << bc->command.forwardmove
+                << bc->command.sidemove
+                << bc->command.look
+                << bc->command.angleturn
+                << bc->command.buttons
+                << bc->command.actions;
+            M_QueueInsert((mqueueitem_t *)bc, &sc->commands);
+         }
+      }
+      else
+      {
+         arc << sc->commands.size;
+
+         while((bc = (cs_buffered_command_t *)M_QueueIterator(&sc->commands)))
+         {
+            arc << bc->command.index
+                << bc->command.world_index
+                << bc->command.forwardmove
+                << bc->command.sidemove
+                << bc->command.look
+                << bc->command.angleturn
+                << bc->command.buttons
+                << bc->command.actions;
+         }
+      }
+
+      for(j = 0; j < MAX_POSITIONS; j++)
+      {
+         position = &sc->positions[j];
+
+         arc << position->world_index
+             << position->x
+             << position->y
+             << position->z
+             << position->momx
+             << position->momy
+             << position->momz
+             << position->angle
+             << position->floatbob
+             << position->pitch
+             << position->bob
+             << position->viewz
+             << position->viewheight
+             << position->deltaviewheight
+             << position->jumptime;
+      }
+
+      for(j = 0; j < MAX_POSITIONS; j++)
+      {
+         misc_state = &sc->misc_states[j];
+
+         arc << misc_state->world_index
+             << misc_state->flags
+             << misc_state->flags2
+             << misc_state->flags3
+             << misc_state->flags4
+             << misc_state->intflags
+             << misc_state->friction
+             << misc_state->movefactor
+             << misc_state->reactiontime;
+      }
+
+      for(j = 0; j < MAX_POSITIONS; j++)
+         arc << sc->player_states[j];
+
+      for(j = 0; j < (NUMWEAPONS + 1); j++)
+         arc << sc->weapon_preferences[j];
+
+      arc << sc->options.player_bobbing
+          << sc->options.doom_weapon_toggles
+          << sc->options.autoaim
+          << sc->options.weapon_speed;
+
+      arc << sc->saved_position.world_index
+          << sc->saved_position.x
+          << sc->saved_position.y
+          << sc->saved_position.z
+          << sc->saved_position.momx
+          << sc->saved_position.momy
+          << sc->saved_position.momz
+          << sc->saved_position.angle
+          << sc->saved_position.floatbob
+          << sc->saved_position.pitch
+          << sc->saved_position.bob
+          << sc->saved_position.viewz
+          << sc->saved_position.viewheight
+          << sc->saved_position.deltaviewheight
+          << sc->saved_position.jumptime;
+
+      arc << sc->saved_misc_state.world_index
+          << sc->saved_misc_state.flags
+          << sc->saved_misc_state.flags2
+          << sc->saved_misc_state.flags3
+          << sc->saved_misc_state.flags4
+          << sc->saved_misc_state.intflags
+          << sc->saved_misc_state.friction
+          << sc->saved_misc_state.movefactor
+          << sc->saved_misc_state.reactiontime;
+   }
+}
+
 void SV_TryRunTics(void)
 {
    int current_tic;
@@ -2929,21 +3095,27 @@ void SV_TryRunTics(void)
          if(!consoleactive)
          {
             G_BuildTiccmd(&players[consoleplayer].cmd);
-            if(cs_demo_recording)
+
+            if(CS_DEMORECORD)
             {
                CS_CopyTiccmdToCommand(
                   &command, &players[consoleplayer].cmd, 0, sv_world_index
                );
 
-               if(!CS_WritePlayerCommandToDemo(&command))
+               if(!cs_demo->write(&command))
                {
                   doom_printf(
-                     "Demo error, recording aborted: %s\n",
-                     CS_GetDemoErrorMessage()
+                     "Error writing player command to demo: %s",
+                     cs_demo->getError()
                   );
-                  CS_StopDemo();
+                  if(!cs_demo->stop())
+                  {
+                     doom_printf(
+                        "Error stopping demo: %s.",
+                        cs_demo->getError()
+                     );
+                  }
                }
-
             }
          }
 

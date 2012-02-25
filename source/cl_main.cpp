@@ -136,11 +136,8 @@ void CL_RunWorldUpdate(void)
    if(displayplayer != consoleplayer && clients[displayplayer].spectating)
       CS_SetDisplayPlayer(consoleplayer);
 
-   if(gamestate == GS_LEVEL && cl_packet_buffer.synchronized() &&
-      !cs_demo_playback)
-   {
+   if(gamestate == GS_LEVEL && cl_packet_buffer.synchronized() && !CS_DEMOPLAY)
       CL_SendCommand();
-   }
 
    G_Ticker();
    gametic++;
@@ -168,6 +165,7 @@ void CL_RunAllWorldUpdates(void)
 
 void CL_Init(char *url)
 {
+   int p;
    size_t url_length;
    Json::Reader reader;
 
@@ -228,11 +226,34 @@ void CL_Init(char *url)
       }
    }
 
-   CL_InitPrediction();
-   CS_ZeroClients();
-   CL_LoadConfig();
-   CS_ClearTempWADDownloads();
-   CS_InitSectorPositions();
+   if((p = M_CheckParm("-csplaydemo")))
+   {
+      if(p >= (myargc - 2))
+         I_Error("CL_Init: No demo file specified.\n");
+
+      if(!cs_demo->play(myargv[p + 1]))
+      {
+         I_Error(
+            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
+         );
+      }
+      atexit(CS_StopDemo);
+   }
+   else if((M_CheckParm("-record")))
+   {
+      printf("CL_Init: Recording client/server demo.\n");
+
+      if(!cs_demo->record())
+         I_Error("Error recording demo: %s\n", cs_demo->getError());
+   }
+   else
+   {
+      CL_InitPrediction();
+      CS_ZeroClients();
+      CL_LoadConfig();
+      CS_ClearTempWADDownloads();
+      CS_InitSectorPositions();
+   }
 }
 
 void CL_InitAnnouncer()
@@ -324,10 +345,18 @@ void CL_Connect(void)
          );
       }
 
-      if(cs_demo_recording)
+      if(CS_DEMORECORD)
       {
-         CS_AddNewMapToDemo();
-         doom_printf("Recording demo.");
+         if(!cs_demo->addNewMap())
+         {
+            doom_printf(
+               "Error adding new map to demo: %s.", cs_demo->getError()
+            );
+            if(!cs_demo->stop())
+               doom_printf("Error stopping demo: %s.", cs_demo->getError());
+         }
+         else
+            doom_printf("Recording demo.");
       }
    }
    else
@@ -351,8 +380,8 @@ void CL_Disconnect(void)
    CS_DisconnectPeer(net_peer, dr_no_reason);
    net_peer = NULL;
 
-   if(cs_demo_recording && !CS_StopDemo())
-      printf("Error saving demo: %s\n", CS_GetDemoErrorMessage());
+   if(CS_DEMORECORD && !cs_demo->stop())
+      printf("Error saving demo: %s\n", cs_demo->getError());
 
    CL_Reset();
    C_SetConsole();
@@ -652,6 +681,7 @@ void CL_RunDemoTics(void)
    int current_tic;
    static int new_tic;
    static bool displayed_message = false;
+   unsigned int new_index;
 
    current_tic = new_tic;
    new_tic = I_GetTime();
@@ -666,14 +696,14 @@ void CL_RunDemoTics(void)
    //      - Read demo packets until cl_latest_world_index updates.
    //      - Sleep until next TIC.
 
-   if(CS_DemoFinished())
+   if(cs_demo->isFinished())
    {
       if(!displayed_message)
       {
          HU_CenterMessage("Demo playback complete.\n");
          displayed_message = true;
-         if(!CS_StopDemo())
-            doom_printf("Error stopping demo: %s.", CS_GetDemoErrorMessage());
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.", cs_demo->getError());
       }
       HU_Ticker();
    }
@@ -683,28 +713,36 @@ void CL_RunDemoTics(void)
 
       while(cl_latest_world_index <= cl_current_world_index)
       {
-         if(!CS_ReadDemoPacket())
+         if(!cs_demo->readPacket())
          {
-            bool is_finished = CS_DemoFinished();
+            bool is_finished = cs_demo->isFinished();
 
             if(is_finished)
                break;
 
-            doom_printf("Error reading demo: %s.\n", CS_GetDemoErrorMessage());
+            doom_printf("Error reading demo: %s.\n", cs_demo->getError());
+            if(!cs_demo->stop())
+               doom_printf("Error stopping demo: %s.", cs_demo->getError());
 
-            if(!CS_StopDemo())
-            {
-               doom_printf(
-                  "Error stopping demo: %s.", CS_GetDemoErrorMessage()
-               );
-            }
             return;
          }
       }
 
-      while(cl_latest_world_index > cl_current_world_index)
+      if(cs_demo_speed > cs_demo_speed_normal)
+         new_index = cl_current_world_index + (cs_demo_speed - 1);
+      else
+         new_index = cl_current_world_index;
+
+      while(cl_latest_world_index > new_index)
          CL_RunWorldUpdate();
    }
+
+   if(cs_demo_speed == cs_demo_speed_half)
+      current_tic += 1;
+   else if(cs_demo_speed == cs_demo_speed_quarter)
+      current_tic += 2;
+   else if(cs_demo_speed == cs_demo_speed_eighth)
+      current_tic += 3;
 
    do
    {

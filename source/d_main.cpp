@@ -3499,8 +3499,6 @@ static void D_StartupMessage(void)
         "infringement of US and international copyright laws.\n");
 }
 
-static void stop_demo_at_exit(void) { CS_StopDemo(); }
-
 //
 // D_DoomInit
 //
@@ -3540,13 +3538,19 @@ static void D_DoomInit(void)
       I_Error("Cannot specify both -csjoin and -csplaydemo");
    if(M_CheckParm("-csserve") && M_CheckParm("-csplaydemo"))
       I_Error("Cannot specify both -csserve and -csplaydemo");
+   if(M_CheckParm("-csplaydemo") && M_CheckParm("-record"))
+      I_Error("Cannot specify both -csplaydemo and -record.\n");
+
+   clientserver = false;
+   clientside = true;
+   serverside = true;
 
    if((p = M_CheckParm("-csjoin")) && p < myargc - 1)
    {
       printf("CS_Init: Initializing as c/s client.\n");
+      clientserver = true;
       clientside  = true;
       serverside  = false;
-      clientserver = true;
       // [CG] We can afford to be pretty dumb about things in CS_CLIENT mode
       dmflags = 0;
       dmflags2 = 0;
@@ -3565,54 +3569,34 @@ static void D_DoomInit(void)
       else
          printf("CS_Init: Initializing as headless c/s server.\n");
 
+      clientserver = true;
       clientside  = false;
       serverside  = true;
-      clientserver = true;
    }
    else if(M_CheckParm("-csplaydemo"))
    {
       printf("CS_Init: Initializing as c/s demo viewer.\n");
       clientserver = true;
-      cs_demo_playback = true;
       clientside = serverside = false; // [CG] This will be changed later.
    }
    else
-   {
       printf("CS_Init: Initializing as singleplayer client.\n");
-      clientside  = true;
-      serverside  = true;
-      clientserver = false;
-   }
+
+   clients = ecalloc(client_t *, MAXPLAYERS, sizeof(client_t));
 
    if(clientserver)
    {
       playeringame[0] = true;
-      clients = emalloc(client_t *, MAXPLAYERS * sizeof(client_t));
       consoleplayer = displayplayer = 0;
       clients[consoleplayer].spectating = true;
 
-      // [CG] Initialize libcurl.
-      CS_InitCurl();
-   }
-   else
-   {
-      clients = ecalloc(client_t *, MAXPLAYERS, sizeof(client_t));
+      CS_InitCurl(); // [CG] Initialize libcurl.
    }
 
    // haleyjd 03/05/09: load system config as early as possible
    D_LoadSysConfig();
 
-   if(CS_DEMO)
-   {
-      if(!CS_PlayDemo(myargv[M_CheckParm("-csplaydemo") + 1]))
-         I_Error("Error playing demo: %s\n", CS_GetDemoErrorMessage());
-
-      CL_InitPlayDemoMode();
-      atexit(stop_demo_at_exit); // [CG] Ensure we clean up after ourselves.
-   }
-
-   if(clientserver)
-      CS_Init();
+   CS_Init();
 
    // [CG] Can't use GFS or -game in c/s.
    if(!clientserver)
@@ -3675,7 +3659,7 @@ static void D_DoomInit(void)
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
-   if(!CS_DEMO)
+   if(!M_CheckParm("-csplaydemo"))
       IdentifyVersion();
 
    printf("\n"); // gap
@@ -4191,7 +4175,7 @@ static void D_DoomInit(void)
       else if(!CS_HEADLESS)
          SV_InitAnnouncer();
 
-      if(!CS_DEMO)
+      if(!M_CheckParm("-csplaydemo"))
       {
          printf("CS_LoadWADs: Loading WADs.\n");
 
@@ -4200,35 +4184,6 @@ static void D_DoomInit(void)
             CS_HandleResourcesSection();
             CS_HandleMapsSection();
          }
-      }
-
-      if(M_CheckParm("-csplaydemo") || M_CheckParm("-record"))
-      {
-         if(M_CheckParm("-csplaydemo") && M_CheckParm("-record"))
-            I_Error("Cannot specify both -csplaydemo and -record.\n");
-
-         if(CS_SERVER)
-         {
-            I_Error(
-               "Cannot record or playback demos from the command-line in c/s "
-               "server mode.\n"
-            );
-         }
-
-         if(M_CheckParm("-record"))
-         {
-            printf("CL_Init: Recording new c/s demo.\n");
-
-            if(!CS_RecordDemo())
-               I_Error("Error recording demo: %s\n", CS_GetDemoErrorMessage());
-         }
-         else if(p < myargc - 2)
-         {
-            cs_demo_archive_path = estrdup(myargv[p + 1]);
-            cs_demo_playback = true;
-         }
-         else
-            I_Error("CL_Init: No demo file specified.\n");
       }
    }
    else

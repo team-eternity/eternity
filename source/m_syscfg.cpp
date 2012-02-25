@@ -266,6 +266,52 @@ static default_t sysdefaults[] =
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 
+   // [CG] Added 3D radial attack options here.
+
+   DEFAULT_FLOAT(
+      "radial_attack_damage",
+      &radial_attack_damage,
+      NULL,
+      1.0,
+      0,
+      UL,
+      default_t::wad_no,
+      "Damage dealt to things by explosions."
+   ),
+
+   DEFAULT_FLOAT(
+      "radial_attack_self_damage",
+      &radial_attack_self_damage,
+      NULL,
+      1.0,
+      0,
+      UL,
+      default_t::wad_no,
+      "Damage dealt to you by your own explosions."
+   ),
+
+   DEFAULT_FLOAT(
+      "radial_attack_lift",
+      &radial_attack_lift,
+      NULL,
+      0.5,
+      0,
+      UL,
+      default_t::wad_no,
+      "Amount of lift applied to things by explosions."
+   ),
+
+   DEFAULT_FLOAT(
+      "radial_attack_self_lift",
+      &radial_attack_self_lift,
+      NULL,
+      0.8,
+      0,
+      UL,
+      default_t::wad_no,
+      "Amount of lift applied to you by your own explosions."
+   ),
+
    // [CG] These are c/s defaults.
 
    DEFAULT_BOOL(
@@ -345,10 +391,10 @@ static default_t sysdefaults[] =
    DEFAULT_STR(
       "clientserver_demo_folder",
       &cs_demo_folder_path,
-      NULL,
+      &default_cs_demo_folder_path,
       "",
       default_t::wad_no,
-      "folder in which to save client/server demos, defaults to base/demos"
+      "folder in which to save client/server demos, defaults to user/demos"
    ),
 
    // [CG] End c/s defaults.

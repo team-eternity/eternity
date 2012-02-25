@@ -31,6 +31,7 @@ extern int screenshot_pcx;                                   // killough 10/98
 extern int screenshot_gamma;                                 // haleyjd  03/06
 
 void M_ScreenShot(void);
+bool M_SaveScreenShotAs(const char *path);
 
 #endif
 

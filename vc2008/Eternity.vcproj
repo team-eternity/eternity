@@ -51,7 +51,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\libpng"
+				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\minizip;..\zlib;..\libpng"
 				PreprocessorDefinitions="NDEBUG;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;JSON_IS_AMALGAMATION;CURL_STATICLIB;LIBARCHIVE_STATIC;EE_NO_SMALL_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -148,7 +148,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\libpng;..\zlib"
+				AdditionalIncludeDirectories="&quot;..\json-cpp&quot;;..\eedeps\msvc\include;..\source\win32;..\libpng;..\minizip;..\zlib"
 				PreprocessorDefinitions="_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK;R_PORTALS;R_LINKEDPORTALS;WIN32;_CONSOLE;_SDL_VER;AMX_NODYNALOAD;EE_CDROM_SUPPORT;HAVE_SPCLIB;EE_FEATURE_OPENGL;HAVE_STDINT_H;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;JSON_IS_AMALGAMATION;CURL_STATICLIB;LIBARCHIVE_STATIC;EE_NO_SMALL_SUPPORT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -1712,6 +1712,10 @@
 			<Filter
 				Name="M_"
 				>
+				<File
+					RelativePath="..\source\m_zip.cpp"
+					>
+				</File>
 				<Filter
 					Name="M_ Source"
 					>
@@ -5386,6 +5390,30 @@
 				</File>
 				<File
 					RelativePath="..\source\metaqstring.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Zip"
+				>
+				<File
+					RelativePath="..\minizip\ioapi.c"
+					>
+				</File>
+				<File
+					RelativePath="..\minizip\iowin32.c"
+					>
+				</File>
+				<File
+					RelativePath="..\minizip\mztools.c"
+					>
+				</File>
+				<File
+					RelativePath="..\minizip\unzip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\minizip\zip.c"
 					>
 				</File>
 			</Filter>

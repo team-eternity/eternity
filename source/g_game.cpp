@@ -956,6 +956,8 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
+   { 340, 340 }, // comp_mouselook
+   { 340, 340 }, // comp_2dradatk
    { 0,   0   }
 };
 
@@ -1596,9 +1598,7 @@ void G_DoCompleted(bool enter_intermission)
       IN_Start(&wminfo);
    }
    else
-   {
       gamestate = GS_STARTUP;
-   }
 }
 
 static void G_DoWorldDone(void)
@@ -2469,15 +2469,6 @@ void G_DoReborn(int playernum)
       
       // first dissasociate the corpse
       players[playernum].mo->player = NULL;
-
-      // [CG] Clear the spree-related variables for this client.
-      if(clientserver)
-      {
-         clients[playernum].frags_this_life = 0;
-         clients[playernum].last_frag_tic = 0;
-         clients[playernum].frag_level = fl_none;
-         clients[playernum].consecutive_frag_level = cfl_none;
-      }
 
       // [CG] C/S servers use slightly different logic when determining where
       //      to spawn a player.

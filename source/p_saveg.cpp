@@ -64,7 +64,16 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
-#include "cs_netid.h" // [CG] 09/23/11
+#include "cs_netid.h"
+
+extern uint32_t cl_current_world_index;
+extern uint32_t cl_latest_world_index;
+extern uint32_t sv_world_index;
+
+void CS_ArchiveSettings(SaveArchive& arc);
+void CS_ArchiveTeams(SaveArchive& arc);
+void CS_ArchiveClients(SaveArchive& arc);
+void SV_ArchiveServerClients(SaveArchive& arc);
 
 // Pads save_p to a 4-byte boundary
 //  so that the load/save works on SGI&Gecko.
@@ -1395,8 +1404,28 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_DeNumberThinkers();
 
+      if(clientserver)
+      {
+         if(CS_CLIENT)
+         {
+            arc << cl_current_world_index;
+            arc << cl_latest_world_index;
+         }
+         else if(CS_SERVER)
+         {
+            arc << sv_world_index;
+            arc << sv_world_index;
+         }
+
+         CS_ArchiveSettings(arc);
+         CS_ArchiveTeams(arc);
+         CS_ArchiveClients(arc);
+         SV_ArchiveServerClients(arc);
+      }
+
       uint8_t cmarker = 0xE6; // consistency marker
       arc << cmarker; 
+
    }
    catch(BufferedIOException)
    {
@@ -1418,7 +1447,9 @@ void P_SaveCurrentLevel(char *filename, char *description)
    // Check the heap.
    Z_CheckHeap();
 
-   if(!hub_changelevel) // sf: no 'game saved' message for hubs
+   // sf: no 'game saved' message for hubs
+   // [CG] Nor for client/server.
+   if((!hub_changelevel) && (!clientserver))
       doom_printf("%s", DEH_String("GGSAVED"));  // Ty 03/27/98 - externalized
 }
 
@@ -1610,8 +1641,28 @@ void P_LoadGame(const char *filename)
 
       P_FreeThinkerTable();
 
+      if(clientserver)
+      {
+         if(CS_CLIENT)
+         {
+            arc << cl_current_world_index;
+            arc << cl_latest_world_index;
+         }
+         else if(CS_SERVER)
+         {
+            arc << sv_world_index;
+            arc << sv_world_index;
+         }
+
+         CS_ArchiveSettings(arc);
+         CS_ArchiveTeams(arc);
+         CS_ArchiveClients(arc);
+         SV_ArchiveServerClients(arc);
+      }
+
       uint8_t cmarker;
       arc << cmarker;
+
       if(cmarker != 0xE6)
          I_FatalError(I_ERR_KILL, "Bad savegame: last byte is 0x%x\n", cmarker);
 

@@ -94,6 +94,8 @@ enum
   netcmd_comp_25,   //          plane shooting
   netcmd_comp_26,   //          special failure
   netcmd_comp_27,   //          ninja spawn
+  netcmd_comp_28,   // [CG]     mouselook
+  netcmd_comp_29,   //          2D radius attacks
   NUMNETCMDS,
 };
 

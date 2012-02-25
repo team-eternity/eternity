@@ -55,9 +55,9 @@
 #include "v_misc.h"
 #include "w_wad.h"
 
-#include "cs_main.h" // [CG] 9/13/11
-#include "cs_demo.h" // [CG] 9/13/11
-#include "sv_main.h" // [CG] 9/13/11
+#include "cs_main.h"
+#include "cs_demo.h"
+#include "sv_main.h"
 
 static void C_EchoValue(command_t *command);
 static void C_SetVariable(command_t *command);
@@ -411,15 +411,16 @@ void C_RunCommand(command_t *command, const char *options)
    // do not run straight away, we might be in the middle of rendering
    C_BufferCommand(Console.cmdtype, command, options, Console.cmdsrc);
    
-   if(cs_demo_recording)
+   if(CS_DEMORECORD)
    {
-      if(!CS_WriteConsoleCommandToDemo(
-            Console.cmdtype, command, options, Console.cmdsrc))
+      if(!cs_demo->write(command, Console.cmdtype, options, Console.cmdsrc))
       {
          doom_printf(
-            "Demo error, recording aborted: %s\n", CS_GetDemoErrorMessage()
+            "Demo error, recording aborted: %s\n", cs_demo->getError()
          );
-         CS_StopDemo();
+
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s\n", cs_demo->getError());
       }
    }
 

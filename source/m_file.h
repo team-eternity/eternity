@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,20 +24,12 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef __M_FILE_H__
-#define __M_FILE_H__
+#ifndef M_FILE_H__
+#define M_FILE_H__
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include "z_zone.h"
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#else
-#include <errno.h>
+#ifndef _WIN32
 #include <unistd.h>
 #ifndef __USE_XOPEN_EXTENDED
 #define __USE_XOPEN_EXTENDED
@@ -48,32 +40,17 @@
 #include "doomtype.h"
 #include "i_system.h"
 
-// [CG] There are pre-defined error strings for errors that we want to handle
-//      at some point, but because Windows and POSIX systems don't share error
-//      code names or numbers there has to be some translation.  So this
-//      enumeration both maps error codes to pre-defined error strings, and
-//      maps expected Windows or POSIX error codes to internal EE error codes.
-enum
-{
-#ifdef WIN32
-   FS_ERROR_ALREADY_EXISTS = ERROR_ALREADY_EXISTS,
-   FS_ERROR_NOT_FOUND = ERROR_NOT_FOUND,
+#ifdef _WIN32
+typedef bool(*file_walker)(const char *path);
 #else
-   FS_ERROR_ALREADY_EXISTS = EEXIST,
-   FS_ERROR_NOT_FOUND = ENOENT,
-#endif
-   FS_ERROR_MAX,
-};
-
-#ifdef WIN32
-extern DWORD fs_error_code;
-#else
-extern int fs_error_code;
+typedef  int(*file_walker)(const char *path, const struct stat *stat_result,
+                           int flags, struct FTW *walker);
 #endif
 
 const char* M_GetFileSystemErrorMessage(void);
 bool        M_PathExists(const char *path);
 bool        M_DirnameIsFolder(const char *path);
+size_t      M_PathJoinBuf(const char *d, const char *f, char **buf, size_t s);
 char*       M_PathJoin(const char *one, const char *two);
 bool        M_IsFile(const char *path);
 bool        M_IsFileInFolder(const char *folder, const char *file);
@@ -84,11 +61,21 @@ bool        M_CreateFolder(const char *path);
 bool        M_DeleteFile(const char *path);
 bool        M_DeleteFileInFolder(const char *folder, const char *file);
 bool        M_DeleteFolder(const char *path);
+bool        M_WalkFiles(const char *path, file_walker walker);
 bool        M_DeleteFolderAndContents(const char *path);
-const char* M_GetCurrentFolder(void);
+char*       M_GetCurrentFolder(void);
 bool        M_SetCurrentFolder(const char *path);
 const char* M_Basename(const char *path);
 bool        M_RenamePath(const char *oldpath, const char *newpath);
+uint32_t    M_FileLength(FILE *f);
+FILE*       M_OpenFile(const char *path, const char *mode);
+size_t      M_ReadFromFile(void *ptr, size_t size, size_t count, FILE *f);
+size_t      M_WriteToFile(const void *ptr, size_t size, size_t count, FILE *f);
+long        M_GetFilePosition(FILE *f);
+bool        M_SeekFile(FILE *f, long int offset, int origin);
+bool        M_FlushFile(FILE *f);
+bool        M_CloseFile(FILE *f);
+void        M_ReportFileSystemError(void);
 
 #endif
 

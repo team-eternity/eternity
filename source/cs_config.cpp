@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #else
@@ -715,7 +715,7 @@ void CS_HandleServerSection()
    char *public_address_string;
    Json::Value& server = cs_json["server"];
    unsigned int i = 0;
-#ifdef WIN32
+#ifdef _WIN32
    char hostname[256];
    struct hostent *host;
    bool found_address = false;
@@ -736,7 +736,7 @@ void CS_HandleServerSection()
    {
       if(server_address->host == ENET_HOST_ANY)
       {
-#ifdef WIN32
+#ifdef _WIN32
          if(gethostname(hostname, 256) == SOCKET_ERROR)
             I_Error("Error getting hostname: %d.\n", WSAGetLastError());
          if((host = gethostbyname(hostname)) == 0)

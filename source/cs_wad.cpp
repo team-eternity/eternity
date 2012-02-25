@@ -73,8 +73,8 @@ void IdentifyVersion(void);
 
 static cs_map_t* get_current_map(void)
 {
-   if(cs_demo_playback)
-      return &cs_maps[cs_current_demo_map];
+   if(CS_DEMOPLAY)
+      return &cs_maps[cs_demo->getCurrentDemoIndex()];
 
    return &cs_maps[cs_current_map_number];
 }
@@ -547,8 +547,8 @@ void CS_InitNew(void)
 
    CS_LoadMap();
 
-   if(cs_demo_playback)
-      G_InitNew(skill, cs_maps[cs_current_demo_map].name);
+   if(CS_DEMOPLAY)
+      G_InitNew(skill, cs_maps[cs_demo->getCurrentDemoIndex()].name);
    else
       G_InitNew(skill, cs_maps[cs_current_map_number].name);
 }

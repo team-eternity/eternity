@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,55 +25,33 @@
 //
 //----------------------------------------------------------------------------
 
-// [CG] While not copied per se, a significant portion of this code comes from
-//      libarchive's example documentation at
-//      http://code.google.com/p/libarchive/wiki/Examples.  In the same vein,
-//      the small amount of cURL code used to download demo files located at a
-//      given URL is based on the "simple.c" example located at
-//      http://curl.haxx.se/libcurl/c/simple.html
+/******************************************************************************
+ ** [CG] TODO                                                                **
+ **      - Checkpoint location                                               **
+ *****************************************************************************/
 
-// [CG] There is a large amount of error handling here, and it's because demo
-//      operations don't generally require that the engine exit on error.
-//      However, it's very important that if something does go wrong, the user
-//      knows exactly what it is and is notified exactly when it happens so
-//      they can take appropriate action - usually start a new demo if possible
-//      and investigate the situation later.
-
-// [CG] It's probably worth making this into a class at some point, if only to
-//      drop all the scoping prefixes.
+// [CG] The small amount of cURL code used to download a demo file is based on
+//      the "simple.c" example at http://curl.haxx.se/libcurl/c/simple.html
 
 #include "z_zone.h"
 
-#include <list>
-#include <fstream>
-#include <iostream>
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <fcntl.h>
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <io.h>
-#endif
-
 #include <json/json.h>
 #include <curl/curl.h>
-#include <archive.h>
-#include <archive_entry.h>
 
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "doomtype.h"
 #include "doomdef.h"
+#include "e_lib.h"
 #include "g_game.h"
 #include "i_system.h"
 #include "i_thread.h"
 #include "m_file.h"
 #include "m_misc.h"
+#include "m_qstr.h"
+#include "m_shots.h"
+#include "m_zip.h"
+#include "p_saveg.h"
 #include "version.h"
 
 #include "cs_main.h"
@@ -87,681 +65,508 @@
 #include "cl_pred.h"
 #include "sv_main.h"
 
-#define TIMESTAMP_SIZE 26
-#define AR_BLOCK_SIZE 16384
-
-extern char gamemapname[9];
-
 void IdentifyVersion(void);
 
-bool cs_demo_recording = false;
-bool cs_demo_playback  = false;
+#define TIMESTAMP_SIZE 30
+#define MAX_DEMO_PATH_LENGTH 512
 
-char *cs_demo_folder_path = NULL;
-char *cs_demo_path = NULL;
-char *cs_demo_archive_path = NULL;
-unsigned int cs_current_demo_map = 0;
+const char* SingleCSDemo::base_data_file_name    = "demodata.bin";
+const char* SingleCSDemo::base_info_file_name    = "info.json";
+const char* SingleCSDemo::base_toc_file_name     = "toc.json";
+const char* SingleCSDemo::base_log_file_name     = "log.txt";
+const char* SingleCSDemo::base_save_format       = "save%d.sav";
+const char* SingleCSDemo::base_screenshot_format = "save%d.png";
 
-static bool first_map_loaded = false;
+const char* CSDemo::demo_extension      = ".ecd";
+const char* CSDemo::base_info_file_name = "info.json";
 
-static demo_error_t demo_error_code = DEMO_ERROR_NONE;
-static const char *demo_error_message = NULL;
+static bool iwad_loaded = false;
 
-static char *cs_demo_info_path = NULL;
-static char *current_demo_map_folder = NULL;
-static char *current_demo_info_path = NULL;
-static char *current_demo_data_path = NULL;
-static FILE *current_demo_data_file = NULL;
-
-static const char *demo_error_strings[MAX_DEMO_ERRORS] = {
-   "No error.",
-   "{DUMMY (errno)}",
-   "{DUMMY (file errno)}",
-   "Unknown error.",
-   "No demo folder defined.",
-   "Demo folder not found.",
-   "Demo folder exists, but is not a folder.",
-   "Demo already exists.",
-   "Demo not found.",
-   "Demo file exists, but is not a file.",
-   "Creating demo information failed.",
-   "Creating demo folder for new map failed."
-   "Creating demo information for new map failed.",
-   "Creating demo data for new map failed.",
-   "Opening demo data file for new map failed.",
-   "Writing demo header failed.",
-   "Writing demo data failed.",
-   "Reading demo data failed.",
-   "Could not start recording demo.",
-   "Creating new cURL handle to download demo file failed.",
-   "Could not save demo data to disk.",
-   "Invalid demo URL.",
-   "Unknown demo packet type.",
-   "Malformed demo file/folder structure.",
-   "Invalid demo map number.",
-   "First map is currently loaded.",
-   "Last map is currently loaded..",
+const char *cs_demo_speed_names[cs_demo_speed_fastest + 1] = {
+   "0.125x", "0.25x", "0.50x", "1x", "2x", "3x", "4x"
 };
 
-static void set_demo_error(demo_error_t error_type)
+CSDemo       *cs_demo = NULL;
+char         *default_cs_demo_folder_path = NULL;
+char         *cs_demo_folder_path = NULL;
+int           default_cs_demo_compression_level = 4;
+int           cs_demo_compression_level = 4;
+unsigned int  cs_demo_speed = cs_demo_speed_normal;
+
+static uint64_t getSecondsSinceEpoch()
 {
-   switch(error_type)
-   {
-   case DEMO_ERROR_ERRNO:
-      demo_error_code = DEMO_ERROR_ERRNO;
-      demo_error_message = strerror(errno);
-      break;
-   case DEMO_ERROR_FILE_ERRNO:
-      demo_error_code = DEMO_ERROR_FILE_ERRNO;
-      demo_error_message = M_GetFileSystemErrorMessage();
-      break;
-   case DEMO_ERROR_NONE:
-   case DEMO_ERROR_UNKNOWN:
-   case DEMO_ERROR_DEMO_FOLDER_NOT_DEFINED:
-   case DEMO_ERROR_DEMO_FOLDER_NOT_FOUND:
-   case DEMO_ERROR_DEMO_FOLDER_NOT_FOLDER:
-   case DEMO_ERROR_DEMO_ALREADY_EXISTS:
-   case DEMO_ERROR_DEMO_NOT_FOUND:
-   case DEMO_ERROR_DEMO_NOT_A_FILE:
-   case DEMO_ERROR_CREATING_TOP_LEVEL_INFO_FAILED:
-   case DEMO_ERROR_CREATING_NEW_MAP_FOLDER_FAILED:
-   case DEMO_ERROR_CREATING_PER_MAP_INFO_FAILED:
-   case DEMO_ERROR_CREATING_DEMO_DATA_FILE_FAILED:
-   case DEMO_ERROR_OPENING_DEMO_DATA_FILE_FAILED:
-   case DEMO_ERROR_WRITING_DEMO_HEADER_FAILED:
-   case DEMO_ERROR_WRITING_DEMO_DATA_FAILED:
-   case DEMO_ERROR_READING_DEMO_DATA_FAILED:
-   case DEMO_ERROR_CREATING_CURL_HANDLE_FAILED:
-   case DEMO_ERROR_SAVING_DEMO_DATA_FAILED:
-   case DEMO_ERROR_INVALID_DEMO_URL:
-   case DEMO_ERROR_UNKNOWN_DEMO_PACKET_TYPE:
-   case DEMO_ERROR_MALFORMED_DEMO_STRUCTURE:
-   case DEMO_ERROR_INVALID_MAP_NUMBER:
-   case DEMO_ERROR_NO_PREVIOUS_MAP:
-   case DEMO_ERROR_NO_NEXT_MAP:
-   case MAX_DEMO_ERRORS:
-   default:
-      if(error_type < MAX_DEMO_ERRORS)
-      {
-         demo_error_code = error_type;
-         demo_error_message = demo_error_strings[error_type];
-      }
-      else
-      {
-         demo_error_code = DEMO_ERROR_UNKNOWN;
-         demo_error_message = demo_error_strings[DEMO_ERROR_UNKNOWN];
-      }
-      break;
-   }
+   time_t t;
+
+   if(sizeof(time_t) > sizeof(uint64_t))
+      I_Error("getSecondsSinceEpoch: Timestamp larger than 64-bits.\n");
+
+   t = time(NULL);
+   if(t == -1)
+      I_Error("getSecondsSinceEpoch: Error getting current time.\n");
+
+   return (uint64_t)t;
 }
 
-static int copy_data(struct archive *ar, struct archive *aw)
+static void buildDemoTimestamps(char **demo_timestamp, char **iso_timestamp)
 {
-   int r;
-   const void *buf;
-   size_t size;
-   off_t offset;
+   *demo_timestamp = ecalloc(char *, sizeof(char), TIMESTAMP_SIZE);
+   *iso_timestamp  = ecalloc(char *, sizeof(char), TIMESTAMP_SIZE);
+#ifdef _WIN32
+   SYSTEMTIME stUTC, stLocal;
+   FILETIME ftUTC, ftLocal;
+   ULARGE_INTEGER utcInt, localInt;
+   LONGLONG delta = 0;
+   LONGLONG hour_offset = 0;
+   LONGLONG minute_offset = 0;
+   char *s;
+   bool negative = false;
 
-   while(1)
+   GetSystemTime(&stUTC);
+   SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &stLocal);
+
+   SystemTimeToFileTime(&stUTC, &ftUTC);
+   SystemTimeToFileTime(&stLocal, &ftLocal);
+
+   utcInt.LowPart = ftUTC.dwLowDateTime;
+   utcInt.HighPart = ftUTC.dwHighDateTime;
+   localInt.LowPart = ftLocal.dwLowDateTime;
+   localInt.HighPart = ftLocal.dwHighDateTime;
+
+   // [CG] utcInt and localInt are in 100s of nanoseconds, and there are 10
+   //      million of those per second, and there are 60 seconds in a minute,
+   //      so convert here.  Additionally, avoid any unsigned rollover problems
+   //      inside the 64-bit arithmetic.
+   if(localInt.QuadPart != utcInt.QuadPart)
    {
-      if((r = archive_read_data_block(ar, &buf, &size, &offset)) != ARCHIVE_OK)
+      if(localInt.QuadPart > utcInt.QuadPart)
       {
-         if(r == ARCHIVE_EOF)
-            return ARCHIVE_OK;
-
-         demo_error_message = archive_error_string(ar);
-         return r;
+         delta = (localInt.QuadPart - utcInt.QuadPart) / 600000000;
+         negative = false;
+      }
+      else if(localInt.QuadPart < utcInt.QuadPart)
+      {
+         delta = (utcInt.QuadPart - localInt.QuadPart) / 600000000;
+         negative = true;
       }
 
-      if((r = archive_write_data_block(aw, buf, size, offset)) != ARCHIVE_OK)
-      {
-         demo_error_message = archive_error_string(aw);
-         return r;
-      }
-   }
-}
-
-static bool open_current_demo_data_file(const char *mode)
-{
-   if(current_demo_data_file != NULL)
-   {
-      I_Error(
-         "Error: opened a new demo without closing the old one, exiting.\n"
-      );
+      hour_offset = delta / 60;
+      minute_offset = delta % 60;
    }
 
-   if((current_demo_data_file = fopen(current_demo_data_path, mode)) == NULL)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
+   s = *demo_timestamp;
+   s += psnprintf(s, 15, "%04d%02d%02d_%02d%02d%02d",
+      stLocal.wYear,
+      stLocal.wMonth,
+      stLocal.wDay,
+      stLocal.wHour,
+      stLocal.wMinute,
+      stLocal.wSecond
+   );
 
-   return true;
-}
-
-static bool close_current_demo_data_file(void)
-{
-   printf("close_current_demo_data_file: Closing.\n");
-
-   if(current_demo_data_file == NULL)
-      I_Error("Error: closed a demo when none are open, exiting.\n");
-
-   if(current_demo_data_file != NULL)
-   {
-      if(fclose(current_demo_data_file) == -1)
-      {
-         set_demo_error(DEMO_ERROR_ERRNO);
-         return false;
-      }
-      current_demo_data_file = NULL;
-   }
-
-   printf("close_current_demo_data_file: Done.\n");
-
-   return true;
-}
-
-static bool close_current_map_demo(void)
-{
-   printf("close_current_map_demo: Closing.\n");
-
-   if(cs_demo_recording)
-   {
-      if(!CS_UpdateDemoLength())
-         return false;
-   }
-
-   if(!close_current_demo_data_file())
-      return false;
-
-   if(current_demo_map_folder)
-   {
-      efree(current_demo_map_folder);
-      current_demo_map_folder = NULL;
-   }
-   if(current_demo_info_path)
-   {
-      efree(current_demo_info_path);
-      current_demo_info_path = NULL;
-   }
-   if(current_demo_data_path)
-   {
-      efree(current_demo_data_path);
-      current_demo_data_path = NULL;
-   }
-
-   printf("close_current_map_demo: Done.\n");
-
-   return true;
-}
-
-static void set_current_map_demo_paths(void)
-{
-   if(current_demo_map_folder == NULL)
-   {
-      current_demo_map_folder =
-         ecalloc(char *, strlen(cs_demo_path) + 6, sizeof(char));
-   }
+   if(negative)
+      psnprintf(s, 5, "-%02d%02d", hour_offset, minute_offset);
    else
-   {
-      memset(current_demo_map_folder, 0, strlen(cs_demo_path) + 6);
-   }
-   sprintf(
-      current_demo_map_folder, "%s/%d", cs_demo_path, cs_current_demo_map
+      psnprintf(s, 5, "+%02d%02d", hour_offset, minute_offset);
+
+   s = *iso_timestamp;
+   s += psnprintf(s, 19, "%04d-%02d-%02dT%02d:%02d:%02d",
+      stLocal.wYear,
+      stLocal.wMonth,
+      stLocal.wDay,
+      stLocal.wHour,
+      stLocal.wMinute,
+      stLocal.wSecond
    );
 
-   if(current_demo_info_path != NULL)
-      efree(current_demo_info_path);
+   if(negative)
+      psnprintf(s, 5, "-%02d%02d", hour_offset, minute_offset);
+   else
+      psnprintf(s, 5, "+%02d%02d", hour_offset, minute_offset);
+#else
+   const time_t current_time = time(NULL);
+   struct tm *current_tm = localtime(&current_time);
 
-   current_demo_info_path =
-      ecalloc(char *, strlen(current_demo_map_folder) + 10, sizeof(char));
-   sprintf(current_demo_info_path, "%s/info.txt", current_demo_map_folder);
-
-   if(current_demo_data_path != NULL)
-      efree(current_demo_data_path);
-
-   current_demo_data_path =
-      ecalloc(char *, strlen(current_demo_map_folder) + 14, sizeof(char));
-   sprintf(current_demo_data_path, "%s/demodata.bin", current_demo_map_folder);
+   strftime(*demo_timestamp, TIMESTAMP_SIZE, "%Y%m%d_%H%M%S%z", current_tm);
+   strftime(*iso_timestamp, TIMESTAMP_SIZE, "%Y-%m-%dT%H:%M:%S%z", current_tm);
+#endif
 }
 
-static bool add_entry_to_archive(struct archive *a,
-                                 struct archive_entry *entry, char *path)
+SingleCSDemo::SingleCSDemo(const char *new_base_path, int new_number,
+                           cs_map_t *new_map, int new_type)
+   : ZoneObject()
 {
-   struct stat stat_result;
-   char buf[AR_BLOCK_SIZE];
-   int r, fd, len;
+   qstring base_buf;
+   qstring sub_buf;
 
-   if((stat(path, &stat_result)) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
+   if(new_type == client_demo_type)
+      demo_type = client_demo_type;
+   else if(new_type == server_demo_type)
+      demo_type = server_demo_type;
+   else
+      I_Error("SingleCSDemo: Invalid demo type %d.\n", new_type);
 
-   archive_entry_set_pathname(entry, path + strlen(cs_demo_folder_path) + 1);
-   archive_entry_copy_stat(entry, &stat_result);
-   archive_entry_set_size(entry, stat_result.st_size);
-   archive_entry_set_filetype(entry, AE_IFREG);
-   archive_entry_set_perm(entry, 0600);
+   // [CG] TODO: Switch between client & server in these cases.  Switching
+   //            between client & server at all is a broader TODO, but this is
+   //            an area users are highly likely to wander into.
+   if(CS_CLIENT && demo_type == server_demo_type)
+      I_Error("Cannot load server demos in c/s client mode.\n");
 
-   if((r = archive_write_header(a, entry)) != ARCHIVE_OK)
-   {
-      demo_error_message = archive_error_string(a);
-      return false;
-   }
+   if(CS_SERVER && demo_type == client_demo_type)
+      I_Error("Cannot load client demos in c/s server mode.\n");
 
-#ifdef WIN32
-   if((fd = _open(path, O_RDONLY)) < 0)
-#else
-   if((fd = open(path, O_RDONLY)) < 0)
-#endif
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
+   number = new_number;
+   map = new_map;
 
-#ifdef WIN32
-   if((len = _read(fd, buf, AR_BLOCK_SIZE)) < 0)
-#else
-   if((len = read(fd, buf, AR_BLOCK_SIZE)) < 0)
-#endif
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
+   base_buf = new_base_path;
+   base_buf.Printf(5, "/%d", number);
+   base_buf.normalizeSlashes();
 
-   while(len > 0)
-   {
-      if((r = archive_write_data(a, buf, len)) < 0)
-         return false;
+   E_ReplaceString(base_path, estrdup(base_buf.constPtr()));
 
-#ifdef WIN32
-      if((len = _read(fd, buf, AR_BLOCK_SIZE)) < 0)
-#else
-      if((len = read(fd, buf, AR_BLOCK_SIZE)) < 0)
-#endif
-         return false;
-   }
+   sub_buf = base_buf;
+   sub_buf.Printf(base_data_file_name_length + 1, "/%s", base_data_file_name);
+   E_ReplaceString(data_path, estrdup(sub_buf.constPtr()));
 
-#ifdef WIN32
-   _close(fd);
-#else
-   close(fd);
-#endif
-   archive_entry_clear(entry);
+   sub_buf = base_buf;
+   sub_buf.Printf(base_info_file_name_length + 1, "/%s", base_info_file_name);
+   E_ReplaceString(info_path, estrdup(sub_buf.constPtr()));
 
-   return true;
-}
+   sub_buf = base_buf;
+   sub_buf.Printf(base_toc_file_name_length + 1, "/%s", base_toc_file_name);
+   E_ReplaceString(toc_path, estrdup(sub_buf.constPtr()));
 
-static bool close_current_demo(void)
-{
-   int r;
-   unsigned int old_cs_current_demo_map;
-   struct archive *a;
-   struct archive_entry *entry;
-   char *archive_file_path = NULL;
+   sub_buf = base_buf;
+   sub_buf.Printf(base_log_file_name_length + 1, "/%s", base_log_file_name);
+   E_ReplaceString(log_path, estrdup(sub_buf.constPtr()));
 
-   printf("close_current_demo: Closing.\n");
+   sub_buf = base_buf;
+   sub_buf.Printf(base_save_format_length + 1, "/%s", base_save_format);
+   E_ReplaceString(save_path_format, estrdup(sub_buf.constPtr()));
 
-   archive_file_path = ecalloc(char *, strlen(cs_demo_path) + 5, sizeof(char));
-   sprintf(archive_file_path, "%s.ecd", cs_demo_path);
-
-   if(!close_current_map_demo())
-      return false;
-   
-   if((a = archive_write_new()) == NULL)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      printf("Couldn't create archive write instance.\n");
-      return false;
-   }
-
-   r = archive_write_set_compression_bzip2(a);
-   archive_write_set_format_ustar(a);
-   // [CG] FIXME: Caused a symbol not found error linking in MSVC++?
-   // archive_write_set_options(a, "compression=9");
-
-   if((r = archive_write_open_filename(a, archive_file_path)) != ARCHIVE_OK)
-   {
-      demo_error_message = archive_error_string(a);
-      printf("Couldn't open new archive %s.\n", archive_file_path);
-      return false;
-   }
-
-   efree(archive_file_path);
-
-   if((entry = archive_entry_new()) == NULL)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      printf("Couldn't create new archive entry.\n");
-      return false;
-   }
-
-   if(!add_entry_to_archive(a, entry, cs_demo_info_path))
-   {
-      printf("Couldn't add entry to archive.\n");
-      return false;
-   }
-
-   old_cs_current_demo_map = cs_current_demo_map;
-   cs_current_demo_map = 0;
-   while(cs_current_demo_map <= old_cs_current_demo_map)
-   {
-      printf("Adding map demos for map %d.\n", cs_current_demo_map);
-      set_current_map_demo_paths();
-      if(!add_entry_to_archive(a, entry, current_demo_info_path))
-      {
-         printf("Couldn't add entry %s to archive.\n", current_demo_info_path);
-         return false;
-      }
-      if(!add_entry_to_archive(a, entry, current_demo_data_path))
-      {
-         printf("Couldn't add entry %s to archive.\n", current_demo_data_path);
-         return false;
-      }
-      cs_current_demo_map++;
-   }
-
-   archive_entry_free(entry);
-   archive_write_close(a);
-   archive_write_finish(a);
-
-   if(!M_DeleteFolderAndContents(cs_demo_path))
-   {
-      printf("Couldn't remove folder %s and its contents.", cs_demo_path);
-      set_demo_error(DEMO_ERROR_FILE_ERRNO);
-      return false;
-   }
-
-   printf("close_current_demo: Done.\n");
-
-   return true;
-}
-
-static bool retrieve_demo(char *url)
-{
-   CURL *curl_handle;
-   char *basename;
-   CURLcode res;
-   FILE *fobj;
-
-   if(!CS_CheckURI(url))
-   {
-      set_demo_error(DEMO_ERROR_INVALID_DEMO_URL);
-      return false;
-   }
-
-   if((basename = (char *)strrchr((const char *)url, '/')) == NULL)
-   {
-      set_demo_error(DEMO_ERROR_INVALID_DEMO_URL);
-      return false;
-   }
-
-   if(strlen(basename) < 2)
-   {
-      set_demo_error(DEMO_ERROR_INVALID_DEMO_URL);
-      return false;
-   }
-
-   basename++; // [CG] Skip preceding '/'.
-
-   cs_demo_archive_path = ecalloc(
-      char *,
-      strlen(cs_demo_folder_path) + strlen(basename) + 2,
-      sizeof(char)
+   sub_buf = base_buf;
+   sub_buf.Printf(
+      base_screenshot_format_length + 1, "/%s", base_screenshot_format
    );
+   E_ReplaceString(screenshot_path_format, estrdup(sub_buf.constPtr()));
 
-   sprintf(cs_demo_archive_path, "%s/%s", cs_demo_folder_path, basename);
+   demo_data_handle = NULL;
+   mode = mode_none;
+   internal_error = no_error;
 
-   if(!M_CreateFile(cs_demo_archive_path))
+   packet_buffer_size = 0;
+   packet_buffer = 0;
+}
+
+SingleCSDemo::~SingleCSDemo()
+{
+   if(base_path)
+      efree(base_path);
+
+   if(toc_path)
+      efree(toc_path);
+
+   if(log_path)
+      efree(log_path);
+
+   if(data_path)
+      efree(data_path);
+
+   if(save_path_format)
+      efree(save_path_format);
+
+   if(screenshot_path_format)
+      efree(screenshot_path_format);
+
+   if(demo_timestamp)
+      efree(demo_timestamp);
+
+   if(iso_timestamp)
+      efree(iso_timestamp);
+}
+
+void SingleCSDemo::setError(int error_code)
+{
+   internal_error = error_code;
+}
+
+bool SingleCSDemo::writeToDemo(void *data, size_t size, size_t count)
+{
+   if(mode != mode_recording)
    {
-      set_demo_error(DEMO_ERROR_FILE_ERRNO);
+      setError(not_open_for_recording);
       return false;
    }
 
-   if((fobj = fopen(cs_demo_archive_path, "wb")) == NULL)
+   if(!demo_data_handle)
    {
-      set_demo_error(DEMO_ERROR_SAVING_DEMO_DATA_FAILED);
+      setError(not_open);
       return false;
    }
 
-   curl_handle = curl_easy_init();
-   if(!curl_handle)
+   if(M_WriteToFile(data, size, count, demo_data_handle) != count)
    {
-      fclose(fobj);
-      set_demo_error(DEMO_ERROR_CREATING_CURL_HANDLE_FAILED);
+      setError(fs_error);
       return false;
    }
-
-   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fwrite);
-   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fobj);
-
-   if((res = curl_easy_perform(curl_handle)) != 0)
-   {
-      fclose(fobj);
-      demo_error_message = curl_easy_strerror(res);
-      return false;
-   }
-
-   fclose(fobj);
-
-   curl_easy_cleanup(curl_handle);
 
    return true;
 }
 
-static bool open_demo(char *path)
+bool SingleCSDemo::readFromDemo(void *buffer, size_t size, size_t count)
 {
-   struct archive *a;
-   struct archive *ext;
-   struct archive_entry *entry;
-   int flags;
-   int r;
-
-   flags = ARCHIVE_EXTRACT_TIME            |
-           ARCHIVE_EXTRACT_PERM            |
-           ARCHIVE_EXTRACT_ACL             |
-           ARCHIVE_EXTRACT_FFLAGS          |
-           ARCHIVE_EXTRACT_NO_OVERWRITE    |
-           ARCHIVE_EXTRACT_SECURE_SYMLINKS |
-           ARCHIVE_EXTRACT_SECURE_NODOTDOT;
-
-   if((a = archive_read_new()) == NULL)
+   if(mode != mode_playback)
    {
-      set_demo_error(DEMO_ERROR_ERRNO);
+      setError(not_open_for_playback);
       return false;
    }
 
-   archive_read_support_format_all(a);
-   archive_read_support_compression_all(a);
-
-   if((ext = archive_write_disk_new()) == NULL)
+   if(!demo_data_handle)
    {
-      set_demo_error(DEMO_ERROR_ERRNO);
+      setError(not_open);
       return false;
    }
 
-   archive_write_disk_set_options(ext, flags);
-   archive_write_disk_set_standard_lookup(ext);
-
-   if((r = archive_read_open_file(a, path, AR_BLOCK_SIZE)))
+   if(M_ReadFromFile(buffer, size, count, demo_data_handle) != count)
    {
-      demo_error_message = archive_error_string(a);
+      setError(fs_error);
       return false;
    }
 
-   while(1)
-   {
-      if((r = archive_read_next_header(a, &entry)) != ARCHIVE_OK)
-      {
-         if(r == ARCHIVE_EOF)
-            break;
+   return true;
+}
 
-         demo_error_message = archive_error_string(a);
+bool SingleCSDemo::writeHeader()
+{
+   unsigned int i;
+   uint32_t resource_name_size;
+   clientserver_settings_t *settings = cs_settings;
+   uint8_t eoh = end_of_header_packet;
+
+   header.version = version;
+   header.subversion = subversion;
+   header.cs_protocol_version = cs_protocol_version;
+   header.demo_type = demo_type;
+   memcpy(&header.settings, settings, sizeof(clientserver_settings_t));
+   header.local_options.player_bobbing = player_bobbing;
+   header.local_options.doom_weapon_toggles = doom_weapon_toggles;
+   header.local_options.autoaim = autoaim;
+   header.local_options.weapon_speed = weapon_speed;
+   header.timestamp = getSecondsSinceEpoch();
+   header.length = 0;
+   strncpy(header.map_name, map->name, 9);
+   header.resource_count = map->resource_count + 1;
+
+   if(!writeToDemo(&header, sizeof(demo_header_t), 1))
+      return false;
+
+   resource_name_size = (uint32_t)(strlen(cs_resources[0].name) + 1);
+   if(!writeToDemo(&resource_name_size, sizeof(uint32_t), 1))
+      return false;
+   if(!writeToDemo(cs_resources[0].name, sizeof(char), resource_name_size))
+      return false;
+   if(!writeToDemo(&cs_resources[0].type, sizeof(resource_type_t), 1))
+      return false;
+   if(!writeToDemo(&cs_resources[0].sha1_hash, sizeof(char), 41))
+      return false;
+
+   for(i = 0; i < map->resource_count; i++)
+   {
+      cs_resource_t *res = &cs_resources[map->resource_indices[i]];
+      resource_name_size = (uint32_t)(strlen(res->name) + 1);
+
+      if(!writeToDemo(&resource_name_size, sizeof(uint32_t), 1))
          return false;
-      }
-      if((r = archive_write_header(ext, entry)) != ARCHIVE_OK)
-      {
-         demo_error_message = archive_error_string(a);
+      if(!writeToDemo(res->name, sizeof(char), resource_name_size))
          return false;
-      }
-      if(archive_entry_size(entry) > 0)
-      {
-         if((r = copy_data(a, ext)) != ARCHIVE_OK)
-            return false;
-      }
-      if((r = archive_write_finish_entry(ext)) != ARCHIVE_OK)
-      {
-         demo_error_message = archive_error_string(a);
+      if(!writeToDemo(&res->type, sizeof(resource_type_t), 1))
          return false;
-      }
-
-      // [CG] If cs_demo_path is not yet set, set it now.
-      if(cs_demo_path == NULL)
-      {
-         char *entry_path_name = (char *)archive_entry_pathname(entry);
-         size_t basename_size = strchr(entry_path_name, '/') - entry_path_name;
-         size_t demo_path_size =
-            strlen(cs_demo_folder_path) + basename_size + 2;
-
-         cs_demo_path = ecalloc(char *, demo_path_size, sizeof(char));
-         sprintf(cs_demo_path, "%s/", cs_demo_folder_path);
-         strncat(cs_demo_path, entry_path_name, basename_size);
-         printf("cs_demo_path: %s.\n", cs_demo_path);
-      }
-      archive_entry_clear(entry);
+      if(!writeToDemo(res->sha1_hash, sizeof(char), 41))
+         return false;
    }
 
-   archive_read_close(a);
-   archive_read_finish(a);
-   archive_write_close(ext);
-   archive_write_finish(ext);
+   if(!writeToDemo(&eoh, sizeof(uint8_t), 1))
+      return false;
 
-   return true;
-}
-
-static bool write_to_demo(void *data, size_t data_size, size_t count)
-{
-   if(!fwrite((const void *)data, data_size, count, current_demo_data_file))
+   if(!M_FlushFile(demo_data_handle))
    {
-      set_demo_error(DEMO_ERROR_ERRNO);
+      setError(fs_error);
       return false;
    }
+
    return true;
 }
 
-static bool read_from_demo(void *buffer, size_t size, size_t count)
+bool SingleCSDemo::writeInfo()
 {
-   if(size == 0 || count == 0)
-      return true;
+   unsigned int i;
+   Json::Value map_info;
+   clientserver_settings_t *settings = cs_settings;
 
-   if(fread(buffer, size, count, current_demo_data_file) < count)
+   CS_ReadJSON(map_info, info_path);
+
+   map_info["name"] = map->name;
+   map_info["timestamp"] = iso_timestamp;
+   map_info["length"] = header.length;
+   map_info["iwad"] = cs_resources[0].name;
+   map_info["local_options"]["player_bobbing"] = player_bobbing;
+   map_info["local_options"]["doom_weapon_toggles"] = doom_weapon_toggles;
+   map_info["local_options"]["autoaim"] = autoaim;
+   map_info["local_options"]["weapon_speed"] = weapon_speed;
+   map_info["settings"]["skill"] = settings->skill;
+   map_info["settings"]["game_type"] = settings->game_type;
+   map_info["settings"]["ctf"] = settings->ctf;
+   map_info["settings"]["max_clients"] = settings->max_clients;
+   map_info["settings"]["max_players"] = settings->max_players;
+   map_info["settings"]["max_players_per_team"] =
+      settings->max_players_per_team;
+   map_info["settings"]["frag_limit"] = settings->frag_limit;
+   map_info["settings"]["time_limit"] = settings->time_limit;
+   map_info["settings"]["score_limit"] = settings->score_limit;
+   map_info["settings"]["dogs"] = settings->dogs;
+   map_info["settings"]["friend_distance"] = settings->friend_distance;
+   map_info["settings"]["bfg_type"] = settings->bfg_type;
+   map_info["settings"]["friendly_damage_percentage"] =
+      settings->friendly_damage_percentage;
+   map_info["settings"]["spectator_time_limit"] =
+      settings->spectator_time_limit;
+   map_info["settings"]["death_time_limit"] = settings->death_time_limit;
+
+   if(settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
+      map_info["settings"]["death_time_expired_action"] = "spectate";
+   else
+      map_info["settings"]["death_time_expired_action"] = "respawn";
+
+   map_info["settings"]["respawn_protection_time"] =
+      settings->respawn_protection_time;
+   map_info["settings"]["dmflags"] = settings->dmflags;
+   map_info["settings"]["dmflags2"] = settings->dmflags2;
+   map_info["settings"]["compatflags"] = settings->compatflags;
+   map_info["settings"]["compatflags2"] = settings->compatflags2;
+
+   for(i = 0; i < map->resource_count; i++)
    {
-      if(feof(current_demo_data_file))
-         printf("Reached end-of-file for %s.\n", current_demo_data_path);
-      else if(ferror(current_demo_data_file))
-         printf("Error reading %s.\n", current_demo_data_path);
-      set_demo_error(DEMO_ERROR_ERRNO);
+      cs_resource_t *res = &cs_resources[map->resource_indices[i]];
+
+      map_info["resources"][i]["name"] = res->name;
+      map_info["resources"][i]["sha1_hash"] = res->sha1_hash;
+   }
+
+   CS_WriteJSON(info_path, map_info, true);
+
+   return true;
+}
+
+bool SingleCSDemo::updateInfo()
+{
+   Json::Value map_info;
+   long current_demo_handle_position = M_GetFilePosition(demo_data_handle);
+
+   if(current_demo_handle_position == -1)
+   {
+      setError(fs_error);
       return false;
    }
+
+   if(!M_SeekFile(demo_data_handle, 0, SEEK_SET))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(!writeToDemo(&header, sizeof(demo_header_t), 1))
+      return false;
+
+   if(!M_SeekFile(demo_data_handle, current_demo_handle_position, SEEK_SET))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   CS_ReadJSON(map_info, info_path);
+
+   map_info["length"] = header.length;
+   map_info["settings"]["skill"] = cs_settings->skill;
+   map_info["settings"]["game_type"] = cs_settings->game_type;
+   map_info["settings"]["ctf"] = cs_settings->ctf;
+   map_info["settings"]["max_clients"] = cs_settings->max_clients;
+   map_info["settings"]["max_players"] = cs_settings->max_players;
+   map_info["settings"]["max_players_per_team"] =
+      cs_settings->max_players_per_team;
+   map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
+   map_info["settings"]["time_limit"] = cs_settings->time_limit;
+   map_info["settings"]["score_limit"] = cs_settings->score_limit;
+   map_info["settings"]["dogs"] = cs_settings->dogs;
+   map_info["settings"]["friend_distance"] = cs_settings->friend_distance;
+   map_info["settings"]["bfg_type"] = cs_settings->bfg_type;
+   map_info["settings"]["friendly_damage_percentage"] =
+      cs_settings->friendly_damage_percentage;
+   map_info["settings"]["spectator_time_limit"] =
+      cs_settings->spectator_time_limit;
+   map_info["settings"]["death_time_limit"] = cs_settings->death_time_limit;
+
+   if(cs_settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
+      map_info["settings"]["death_time_expired_action"] = "spectate";
+   else
+      map_info["settings"]["death_time_expired_action"] = "respawn";
+
+   map_info["settings"]["respawn_protection_time"] =
+      cs_settings->respawn_protection_time;
+   map_info["settings"]["dmflags"] = cs_settings->dmflags;
+   map_info["settings"]["dmflags2"] = cs_settings->dmflags2;
+   map_info["settings"]["compatflags"] = cs_settings->compatflags;
+   map_info["settings"]["compatflags2"] = cs_settings->compatflags2;
+
+   CS_WriteJSON(info_path, map_info, true);
+
    return true;
 }
 
-static bool check_demo_folder(void)
+bool SingleCSDemo::readHeader()
 {
-   if(cs_demo_folder_path != NULL)
-   {
-      if(!strlen(cs_demo_folder_path))
-      {
-         efree(cs_demo_folder_path);
-         cs_demo_folder_path =
-            ecalloc(char *, strlen(userpath) + 7, sizeof(char));
-         sprintf(cs_demo_folder_path, "%s/demos", userpath);
-      }
-   }
-
-   if(!cs_demo_folder_path)
-   {
-      cs_demo_folder_path =
-         ecalloc(char *, strlen(userpath) + 7, sizeof(char));
-      sprintf(cs_demo_folder_path, "%s/demos", userpath);
-   }
-
-
-   if(!M_IsFolder(cs_demo_folder_path))
-   {
-      if(!M_CreateFolder(cs_demo_folder_path))
-      {
-         set_demo_error(DEMO_ERROR_FILE_ERRNO);
-         return false;
-      }
-   }
-
-   return true;
-}
-
-static bool load_current_map_demo(void)
-{
-   demo_header_t demo_header;
-   demo_marker_t header_marker;
    unsigned int resource_index = 0;
    cs_resource_t resource;
    cs_resource_t *stored_resource;
-   size_t resource_name_size;
-   unsigned int resource_count;
+   uint32_t resource_name_size;
+   unsigned int resource_count = 0;
    unsigned int *resource_indices = NULL;
+   uint8_t header_marker;
 
-   set_current_map_demo_paths();
-
-   if(!open_current_demo_data_file("rb"))
+   if(!readFromDemo(&header, sizeof(demo_header_t), 1))
       return false;
 
-   if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   if(demo_header.demo_type == CLIENTSIDE_DEMO)
-   {
-      clientside = true;
-      serverside = false;
-   }
-   else if(demo_header.demo_type == SERVERSIDE_DEMO)
-   {
-      clientside = false;
-      serverside = true;
-   }
+   if(header.demo_type == client_demo)
+      demo_type = client_demo;
+   else if(header.demo_type == server_demo)
+      demo_type = server_demo;
    else
-   {
       I_Error("Unknown demo type, demo likely corrupt.\n");
-   }
 
-   memcpy(cs_settings, &demo_header.settings, sizeof(clientserver_settings_t));
+   memcpy(cs_settings, &header.settings, sizeof(clientserver_settings_t));
    memcpy(cs_original_settings, cs_settings, sizeof(clientserver_settings_t));
 
-   player_bobbing      = demo_header.local_options.player_bobbing;
-   doom_weapon_toggles = demo_header.local_options.doom_weapon_toggles;
-   autoaim             = demo_header.local_options.autoaim;
-   weapon_speed        = demo_header.local_options.weapon_speed;
+   player_bobbing      = header.local_options.player_bobbing;
+   doom_weapon_toggles = header.local_options.doom_weapon_toggles;
+   autoaim             = header.local_options.autoaim;
+   weapon_speed        = header.local_options.weapon_speed;
 
-   if(cs_maps[cs_current_demo_map].initialized == false)
+   if(!map->initialized)
    {
       resource.name = NULL;
-      resource_count = 0;
 
-      while(resource_index++ < demo_header.resource_count)
+      while(resource_index++ < header.resource_count)
       {
-         if(!read_from_demo(&resource_name_size, sizeof(size_t), 1))
+         if(!readFromDemo(&resource_name_size, sizeof(uint32_t), 1))
             return false;
 
          resource.name = erealloc(char *, resource.name, resource_name_size);
 
-         if(!read_from_demo(resource.name, sizeof(char), resource_name_size))
+         if(!readFromDemo(resource.name, sizeof(char), resource_name_size))
             return false;
 
-         if(!read_from_demo(&resource.type, sizeof(resource_type_t), 1))
+         if(!readFromDemo(&resource.type, sizeof(resource_type_t), 1))
             return false;
 
-         if(!read_from_demo(&resource.sha1_hash, sizeof(char), 41))
+         if(!readFromDemo(&resource.sha1_hash, sizeof(char), 41))
             return false;
 
          printf("load_current_map_demo: Loading resources.\n");
@@ -769,7 +574,7 @@ static bool load_current_map_demo(void)
          {
          case rt_iwad:
             printf("load_current_map_demo: Found an IWAD resource.\n");
-            if(!first_map_loaded)
+            if(!iwad_loaded)
             {
                if(!CS_AddIWAD(resource.name))
                {
@@ -792,9 +597,8 @@ static bool load_current_map_demo(void)
                );
             }
             else
-            {
                printf("load_current_map_demo: Skipping IWAD.\n");
-            }
+
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
                I_Error(
@@ -803,7 +607,7 @@ static bool load_current_map_demo(void)
             }
             break;
          case rt_deh:
-            if(!first_map_loaded)
+            if(!iwad_loaded)
             {
                if(!CS_AddDeHackEdFile(resource.name))
                {
@@ -863,775 +667,1709 @@ static bool load_current_map_demo(void)
          }
       }
       CS_AddMapAtIndex(
-         demo_header.map_name,
-         resource_count,
-         resource_indices,
-         cs_current_demo_map
+         header.map_name, resource_count, resource_indices, map - cs_maps
       );
    }
    else
-   {
-      printf("Map %d was already initialized.\n", cs_current_demo_map);
-   }
+      printf("Map %d was already initialized.\n", map - cs_maps);
 
-   // G_SetGameMap();
-
-   if(!read_from_demo(&header_marker, sizeof(demo_marker_t), 1))
+   if(!readFromDemo(&header_marker, sizeof(uint8_t), 1))
       return false;
 
-   if(header_marker != DEMO_PACKET_HEADER_END)
+   // [CG] FIXME: Doesn't deserve an I_Error here, should doom_printf and set
+   //             console.
+   if(header_marker != end_of_header_packet)
       I_Error("Malformed demo header, demo likely corrupt.\n");
 
-   first_map_loaded = true;
+   iwad_loaded = true;
 
-   printf("load_current_map_demo: loaded demo for %d.\n", cs_current_demo_map);
+   printf("load_current_map_demo: loaded demo for %d.\n", map - cs_maps);
 
    return true;
 }
 
-static bool handle_network_message_demo_packet(void)
+bool SingleCSDemo::handleNetworkMessageDemoPacket()
 {
-   int playernum;
-   size_t msg_size;
-   char *message;
+   int32_t player_number;
+   uint32_t message_size;
 
-   if(!read_from_demo(&playernum, sizeof(int), 1))
+   if(!readFromDemo(&player_number, sizeof(int32_t), 1))
+      return false;
+   if(!readFromDemo(&message_size, sizeof(uint32_t), 1))
       return false;
 
-   if(!read_from_demo(&msg_size, sizeof(size_t), 1))
+   if((!message_size) || message_size > 1000000)
+   {
+      setError(invalid_network_message_size);
+      return false;
+   }
+
+   if(packet_buffer_size < message_size)
+   {
+      packet_buffer_size = message_size;
+      packet_buffer = erealloc(char *, packet_buffer, packet_buffer_size);
+   }
+
+   if(!readFromDemo(packet_buffer, sizeof(char), message_size))
       return false;
 
-   message = ecalloc(char *, msg_size, sizeof(char));
-
-   if(!read_from_demo(message, sizeof(char), msg_size))
-      return false;
-
-   if(CS_CLIENTDEMO)
-      cl_packet_buffer.add(message, (uint32_t)msg_size);
-   else
-      SV_HandleMessage(message, msg_size, playernum);
+   if(demo_type == client_demo_type)
+      cl_packet_buffer.add(packet_buffer, message_size);
+   else if(demo_type == server_demo_type)
+      SV_HandleMessage(packet_buffer, message_size, player_number);
 
    return true;
 }
 
-static bool handle_player_command_demo_packet(void)
+bool SingleCSDemo::handlePlayerCommandDemoPacket()
 {
    cs_cmd_t command;
-   size_t command_size;
+   uint32_t command_size;
 
-   if(!read_from_demo(&command_size, sizeof(size_t), 1))
+   if(!readFromDemo(&command_size, sizeof(uint32_t), 1))
       return false;
 
-   if(!read_from_demo(&command, command_size, 1))
+   if(!readFromDemo(&command, command_size, 1))
       return false;
+
+   // [CG] This is always a command for consoleplayer.  Anything else is
+   //      handled by handleNetworkMessageDemoPacket (clients don't receive
+   //      commands from other players anyway).
 
    CS_CopyCommandToTiccmd(&players[consoleplayer].cmd, &command);
 
-   if(CS_CLIENTDEMO)
-      CS_CopyCommand(CL_GetCurrentCommand(), &command);
+   if(demo_type == client_demo_type)
+   {
+      cs_cmd_t *dest_command = CL_GetCommandAtIndex(cl_commands_sent);
+
+      memcpy(dest_command, &command, sizeof(cs_cmd_t));
+      cl_commands_sent = command.index + 1;
+   }
+
+   if(demo_type == server_demo_type)
+      CS_CopyCommandToTiccmd(&players[consoleplayer].cmd, &command);
 
    return true;
 }
 
-static bool handle_console_command_demo_packet(void)
+bool SingleCSDemo::handleConsoleCommandDemoPacket()
 {
-   int command_type, command_source;
-   size_t command_size, options_size;
-   char *command_name, *options;
+   int32_t type, src;
+   uint32_t command_size, options_size;
+   char *options;
    command_t *command;
 
-   if(!read_from_demo(&command_type, sizeof(int), 1))
+   if(!readFromDemo(&type, sizeof(int32_t), 1))
       return false;
 
-   if(!read_from_demo(&command_source, sizeof(int), 1))
+   if(!readFromDemo(&src, sizeof(int32_t), 1))
       return false;
 
-   if(!read_from_demo(&command_size, sizeof(size_t), 1))
+   if(!readFromDemo(&command_size, sizeof(uint32_t), 1))
       return false;
 
-   command_name = ecalloc(char *, command_size, sizeof(char));
+   if(packet_buffer_size < command_size)
+      packet_buffer = erealloc(char *, packet_buffer, command_size);
 
-   if(!read_from_demo(command_name, sizeof(char), command_size))
+   if(!readFromDemo(packet_buffer, sizeof(char), command_size))
       return false;
 
-   if(!read_from_demo(&options_size, sizeof(size_t), 1))
+   if(!(command = C_GetCmdForName((const char *)packet_buffer)))
+   {
+      doom_printf("unknown command: '%s'", packet_buffer);
+      return false;
+   }
+
+   if(!readFromDemo(&options_size, sizeof(uint32_t), 1))
       return false;
 
    options = ecalloc(char *, options_size, sizeof(char));
 
-   if(!read_from_demo(options, sizeof(char), options_size))
+   if(!readFromDemo(options, sizeof(char), options_size))
       return false;
 
-   if((command = C_GetCmdForName((const char *)command_name)) == NULL)
-   {
-      doom_printf("unknown command: '%s'\n", command_name);
-      return false;
-   }
-
-   C_BufferCommand(
-      command_type, command, (const char *)options, command_source
-   );
+   C_BufferCommand(type, command, (const char *)options, src);
 
    return true;
 }
 
-const char* CS_GetDemoErrorMessage(void)
-{
-   if(demo_error_message == NULL)
-      return (const char *)demo_error_strings[DEMO_ERROR_NONE];
 
-   return (const char *)demo_error_message;
+int SingleCSDemo::getNumber() const
+{
+   return number;
 }
 
-bool CS_SetDemoFolderPath(char *demo_folder_path)
+bool SingleCSDemo::openForPlayback()
 {
-   if(!M_PathExists((const char *)demo_folder_path))
+   if(mode != mode_none)
    {
-      set_demo_error(DEMO_ERROR_DEMO_FOLDER_NOT_FOUND);
+      setError(already_open);
       return false;
    }
 
-   if(!M_IsFolder((const char *)demo_folder_path))
+   if(demo_data_handle)
    {
-      set_demo_error(DEMO_ERROR_DEMO_FOLDER_NOT_FOLDER);
+      setError(already_open);
       return false;
    }
 
-   if(cs_demo_folder_path)
-      efree(cs_demo_folder_path);
+   demo_data_handle = M_OpenFile(data_path, "rb");
 
-   cs_demo_folder_path = estrdup(demo_folder_path);
+   if(!readHeader())
+      return false;
 
-   // [CG] Strip trailing '/' or '\'.
-   if(*(demo_folder_path + (strlen(demo_folder_path) - 1)) == '/')
-      demo_folder_path[strlen(demo_folder_path)] = '\0';
+   mode = mode_playback;
+   return true;
+}
+
+bool SingleCSDemo::openForRecording()
+{
+   if(mode != mode_none)
+   {
+      setError(already_open);
+      return false;
+   }
+
+   if(demo_data_handle)
+   {
+      setError(already_open);
+      return false;
+   }
+
+   if(M_PathExists(data_path))
+   {
+      setError(already_exists);
+      return false;
+   }
+
+   if(!(demo_data_handle = M_OpenFile(data_path, "wb")))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(!writeHeader())
+      return false;
+
+   if(!writeInfo())
+      return false;
+
+   if(!updateInfo())
+      return false;
+
+   mode = mode_recording;
 
    return true;
 }
 
-bool CS_RecordDemo(void)
+bool SingleCSDemo::write(void *message, uint32_t size, int32_t playernum)
 {
-   char timestamp[TIMESTAMP_SIZE];
-   Json::Value json;
-   Json::StyledStreamWriter writer;
-   std::ofstream demo_info_file;
-   const time_t current_time = time(NULL);
-   struct tm *local_current_time = localtime(&current_time);
-
-   if(cs_demo_path)
-      I_Error("Can't record a demo while already recording a demo (BUG).\n");
-
-   if(!check_demo_folder())
-      return false;
-
-   // [CG] Build the timestamp.  This is used for the demo's info as well as
-   //      a unique name for the demo; odds are extremely slim that a user will
-   //      attempt to create more than one demo in a second.  This is in ISO
-   //      8601 format, i.e. 2011-07-03T14:32:28-05:00.
-   strftime(
-      timestamp, TIMESTAMP_SIZE, "%Y-%m-%dT%H:%M:%S%z", local_current_time
-   );
-
-   // [CG] Build the demo's filename
-   cs_demo_path = ecalloc(
-      char *,
-      strlen(cs_demo_folder_path) + TIMESTAMP_SIZE + 2,
-      sizeof(char)
-   );
-   sprintf(cs_demo_path, "%s/%s", cs_demo_folder_path, timestamp);
-
-   // [CG] Demos start out as folders, and are only archived when demo
-   //      recording is stopped.  So a folder, rather than a file, is created
-   //      here.
-   if(!M_CreateFolder(cs_demo_path))
-   {
-      efree(cs_demo_path);
-      cs_demo_path = NULL;
-      set_demo_error(DEMO_ERROR_FILE_ERRNO);
-      return false;
-   }
-
-   cs_demo_info_path =
-      ecalloc(char *, strlen(cs_demo_path) + 10, sizeof(char));
-   sprintf(cs_demo_info_path, "%s/info.txt", cs_demo_path);
-
-   // [CG] Create the top-level info.txt file.
-   if(!M_CreateFile(cs_demo_info_path))
-   {
-      set_demo_error(DEMO_ERROR_CREATING_TOP_LEVEL_INFO_FAILED);
-      return false;
-   }
-
-   json["version"] = version;
-   json["subversion"] = subversion;
-   json["cs_protocol_version"] = cs_protocol_version;
-   json["name"] = "";
-   json["author"] = "";
-   json["date_recorded"] = timestamp;
-   demo_info_file.open(cs_demo_info_path);
-   writer.write(demo_info_file, json);
-
-   cs_demo_recording = true;
-
-   return true;
-}
-
-bool CS_UpdateDemoLength(void)
-{
-   demo_header_t demo_header;
-   long previous_demo_position = ftell(current_demo_data_file);
-   Json::Value map_info;
-
-   if(previous_demo_position == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   CS_ReadJSON(map_info, current_demo_info_path);
-   map_info["length"] = cl_latest_world_index / TICRATE;
-   CS_WriteJSON(current_demo_info_path, map_info, true);
-
-   if(fseek(current_demo_data_file, 0, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   demo_header.length = cl_latest_world_index / TICRATE;
-
-   if(fseek(current_demo_data_file, 0, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   if(fseek(current_demo_data_file, previous_demo_position, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   return true;
-}
-
-bool CS_UpdateDemoSettings(void)
-{
-   demo_header_t demo_header;
-   long previous_demo_position = ftell(current_demo_data_file);
-   Json::Value map_info;
-
-   CS_ReadJSON(map_info, current_demo_info_path);
-
-   if(previous_demo_position == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   if(fseek(current_demo_data_file, 0, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   if(!read_from_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   memcpy(&demo_header.settings, cs_settings, sizeof(clientserver_settings_t));
-
-   if(fseek(current_demo_data_file, 0, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   if(fseek(current_demo_data_file, previous_demo_position, SEEK_SET) == -1)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
-
-   map_info["settings"]["skill"] = cs_settings->skill;
-   map_info["settings"]["game_type"] = cs_settings->game_type;
-   map_info["settings"]["ctf"] = cs_settings->ctf;
-   map_info["settings"]["max_clients"] = cs_settings->max_clients;
-   map_info["settings"]["max_players"] = cs_settings->max_players;
-   map_info["settings"]["max_players_per_team"] =
-      cs_settings->max_players_per_team;
-   map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
-   map_info["settings"]["time_limit"] = cs_settings->time_limit;
-   map_info["settings"]["score_limit"] = cs_settings->score_limit;
-   map_info["settings"]["dogs"] = cs_settings->dogs;
-   map_info["settings"]["friend_distance"] = cs_settings->friend_distance;
-   map_info["settings"]["bfg_type"] = cs_settings->bfg_type;
-   map_info["settings"]["friendly_damage_percentage"] =
-      cs_settings->friendly_damage_percentage;
-   map_info["settings"]["spectator_time_limit"] =
-      cs_settings->spectator_time_limit;
-   map_info["settings"]["death_time_limit"] = cs_settings->death_time_limit;
-
-   if(cs_settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
-      map_info["settings"]["death_time_expired_action"] = "spectate";
-   else
-      map_info["settings"]["death_time_expired_action"] = "respawn";
-
-   map_info["settings"]["respawn_protection_time"] =
-      cs_settings->respawn_protection_time;
-   map_info["settings"]["dmflags"] = cs_settings->dmflags;
-   map_info["settings"]["dmflags2"] = cs_settings->dmflags2;
-   map_info["settings"]["compatflags"] = cs_settings->compatflags;
-   map_info["settings"]["compatflags2"] = cs_settings->compatflags2;
-
-   CS_WriteJSON(current_demo_info_path, map_info, false);
-
-   return true;
-}
-
-bool CS_AddNewMapToDemo(void)
-{
-   unsigned int i, resource_index;
-   cs_resource_t *res;
-   demo_header_t demo_header;
-   size_t resource_name_size;
-   cs_map_t *map = &cs_maps[cs_current_map_number];
-   demo_marker_t header_marker = DEMO_PACKET_HEADER_END;
-   Json::Value map_info;
-
-   if(current_demo_data_file != NULL)
-   {
-      if(!close_current_demo_data_file())
-         return false;
-      cs_current_demo_map++;
-   }
-
-   set_current_map_demo_paths();
-
-   // [CG] Create a folder for the first map inside the new demo folder.
-   if(!M_CreateFolder(current_demo_map_folder))
-   {
-      set_demo_error(DEMO_ERROR_CREATING_NEW_MAP_FOLDER_FAILED);
-      return false;
-   }
-
-   // [CG] Create the per-map info.txt file.
-   if(!M_CreateFile(current_demo_info_path))
-   {
-      set_demo_error(DEMO_ERROR_CREATING_PER_MAP_INFO_FAILED);
-      return false;
-   }
-
-   // [CG] Create the demo data file.
-   if(!M_CreateFile(current_demo_data_path))
-   {
-      set_demo_error(DEMO_ERROR_CREATING_DEMO_DATA_FILE_FAILED);
-      return false;
-   }
-
-   if(!open_current_demo_data_file("w+b"))
-      return false;
-
-   CS_UpdateDemoSettings();
-
-   CS_ReadJSON(map_info, current_demo_info_path);
-
-   map_info["version"] = version;
-   map_info["subversion"] = subversion;
-   map_info["cs_protocol_version"] = cs_protocol_version;
-
-   if(CS_CLIENT)
-      map_info["demo_type"] = "client";
-   else if(CS_SERVER)
-      map_info["demo_type"] = "server";
-
-   map_info["name"] = map->name;
-   map_info["timestamp"] = (uint32_t)time(NULL);
-   map_info["length"] = 0;
-   map_info["iwad"] = cs_resources[0].name;
-   map_info["local_options"]["player_bobbing"] = player_bobbing;
-   map_info["local_options"]["doom_weapon_toggles"] = doom_weapon_toggles;
-   map_info["local_options"]["autoaim"] = autoaim;
-   map_info["local_options"]["weapon_speed"] = weapon_speed;
-
-   for(i = 0; i < map->resource_count; i++)
-   {
-      resource_index = map->resource_indices[i];
-      res = &cs_resources[resource_index];
-      map_info["resources"][i]["name"] = res->name;
-      map_info["resources"][i]["sha1_hash"] = res->sha1_hash;
-   }
-
-   CS_WriteJSON(current_demo_info_path, map_info, false);
-
-   demo_header.version = version;
-   demo_header.subversion = subversion;
-   demo_header.cs_protocol_version = cs_protocol_version;
-   if(CS_CLIENT)
-      demo_header.demo_type = CLIENTSIDE_DEMO;
-   else
-      demo_header.demo_type = SERVERSIDE_DEMO;
-   memcpy(&demo_header.settings, cs_settings, sizeof(clientserver_settings_t));
-   demo_header.local_options.player_bobbing = player_bobbing;
-   demo_header.local_options.doom_weapon_toggles = doom_weapon_toggles;
-   demo_header.local_options.autoaim = autoaim;
-   demo_header.local_options.weapon_speed = weapon_speed;
-   time(&demo_header.timestamp);
-   demo_header.length = 0;
-   memset(demo_header.map_name, 0, 9);
-   strncpy(demo_header.map_name, map->name, 8);
-   demo_header.resource_count = map->resource_count + 1;
-
-   if(!write_to_demo(&demo_header, sizeof(demo_header_t), 1))
-      return false;
-
-   resource_name_size = strlen(cs_resources[0].name) + 1;
-   if(!write_to_demo(&resource_name_size, sizeof(size_t), 1))
-      return false;
-   if(!write_to_demo(cs_resources[0].name, sizeof(char), resource_name_size))
-      return false;
-   if(!write_to_demo(&cs_resources[0].type, sizeof(resource_type_t), 1))
-      return false;
-   if(!write_to_demo(&cs_resources[0].sha1_hash, sizeof(char), 41))
-      return false;
-
-   for(i = 0; i < map->resource_count; i++)
-   {
-      resource_index = map->resource_indices[i];
-      res = &cs_resources[resource_index];
-      resource_name_size = strlen(res->name) + 1;
-      if(!write_to_demo(&resource_name_size, sizeof(size_t), 1))
-         return false;
-      if(!write_to_demo(res->name, sizeof(char), resource_name_size))
-         return false;
-      if(!write_to_demo(&res->type, sizeof(resource_type_t), 1))
-         return false;
-      if(!write_to_demo(res->sha1_hash, sizeof(char), 41))
-         return false;
-   }
-
-   if(!write_to_demo(&header_marker, sizeof(demo_marker_t), 1))
-      return false;
-
-   fflush(current_demo_data_file);
-
-   return true;
-}
-
-bool CS_PlayDemo(char *url)
-{
-   char *test_folder = NULL;
-   const char *cwd = M_GetCurrentFolder();
-
-   cs_demo_playback = true;
-
-   if(cwd == NULL)
-   {
-      set_demo_error(DEMO_ERROR_ERRNO);
-      return false;
-   }
+   uint8_t demo_marker = network_message_packet;
+   int32_t player_number;
    
-   if(!check_demo_folder())
-      return false;
-
-   cs_settings =
-      emalloc(clientserver_settings_t *, sizeof(clientserver_settings_t));
-   cs_original_settings =
-      emalloc(clientserver_settings_t *, sizeof(clientserver_settings_t));
-
-   if(strncmp(url, "file://", 7) == 0)
-   {
-      // [CG] If the demo's URI is a file: URI, then we don't need to download
-      //      it, so just return success here (if the file exists).
-      if(!M_IsFile(url + 7))
-      {
-         set_demo_error(DEMO_ERROR_DEMO_NOT_FOUND);
-         return false;
-      }
-
-      if(M_IsAbsolutePath(url + 7))
-      {
-         cs_demo_archive_path = estrdup(url + 7);
-      }
-      else
-      {
-         cs_demo_archive_path = erealloc(
-            char *, cs_demo_archive_path, strlen(cwd) + strlen(url + 7) + 2
-         );
-         sprintf(cs_demo_archive_path, "%s/%s", cwd, url + 7);
-      }
-   }
-   else
-   {
-      if(strcmp(cs_demo_folder_path, cwd))
-      {
-         if(!M_SetCurrentFolder(cs_demo_folder_path))
-         {
-            set_demo_error(DEMO_ERROR_FILE_ERRNO);
-            return false;
-         }
-      }
-
-      if(!retrieve_demo(url))
-      {
-         M_SetCurrentFolder(cwd);
-         return false;
-      }
-
-      if(strcmp(cs_demo_folder_path, cwd))
-      {
-         if(!M_SetCurrentFolder(cwd))
-         {
-            set_demo_error(DEMO_ERROR_FILE_ERRNO);
-            return false;
-         }
-      }
-   }
-
-   if(strcmp(cs_demo_folder_path, cwd))
-   {
-      if(!M_SetCurrentFolder(cs_demo_folder_path))
-      {
-         set_demo_error(DEMO_ERROR_FILE_ERRNO);
-         return false;
-      }
-   }
-
-   if(!open_demo(cs_demo_archive_path))
-   {
-      M_SetCurrentFolder(cwd);
-      return false;
-   }
-
-   if(cs_maps)
-      CS_ClearMaps();
-   
-   cs_map_count = 0;
-   test_folder = ecalloc(char *, strlen(cs_demo_path) + 6, sizeof(char));
-   sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
-   while(M_IsFolder(test_folder))
-   {
-      cs_map_count++;
-      sprintf(test_folder, "%s/%d", cs_demo_path, cs_map_count);
-   }
-   efree(test_folder);
-   cs_maps = ecalloc(cs_map_t *, cs_map_count, sizeof(cs_map_t));
-
-   if(strcmp(cs_demo_folder_path, cwd))
-   {
-      if(!M_SetCurrentFolder(cwd))
-      {
-         set_demo_error(DEMO_ERROR_FILE_ERRNO);
-         return false;
-      }
-   }
-
-   cs_current_demo_map = 0;
-
-   if(!load_current_map_demo())
-      return false;
-
-   return true;
-}
-
-bool CS_LoadDemoMap(unsigned int map_number)
-{
-   if(map_number > cs_map_count)
-   {
-      set_demo_error(DEMO_ERROR_INVALID_MAP_NUMBER);
-      return false;
-   }
-
-   if(current_demo_data_file != NULL)
-   {
-      if(!close_current_map_demo())
-         return false;
-   }
-
-   cs_current_demo_map = cs_current_map_number = map_number;
-
-   if(!load_current_map_demo())
-      return false;
-
-   return true;
-}
-
-bool CS_LoadPreviousDemoMap(void)
-{
-   bool res = CS_LoadDemoMap(cs_current_demo_map - 1);
-
-   if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
-      set_demo_error(DEMO_ERROR_NO_PREVIOUS_MAP);
-
-   return res;
-}
-
-bool CS_LoadNextDemoMap(void)
-{
-   bool res = CS_LoadDemoMap(cs_current_demo_map + 1);
-
-   if(res == false && demo_error_code == DEMO_ERROR_INVALID_MAP_NUMBER)
-      set_demo_error(DEMO_ERROR_NO_NEXT_MAP);
-
-   return res;
-}
-
-bool CS_WriteNetworkMessageToDemo(void *network_message,
-                                     size_t message_size,
-                                     int playernum)
-{
-   demo_marker_t demo_marker = DEMO_PACKET_NETWORK_MESSAGE;
-   int player_number = playernum;
-
-   if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
-      return false;
-
    if(CS_CLIENT)
       player_number = 0;
+   else
+      player_number = playernum;
 
-   if(!write_to_demo(&player_number, sizeof(int32_t), 1))
+   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
       return false;
-
-   if(!write_to_demo(&message_size, sizeof(size_t), 1))
+   if(!writeToDemo(&player_number, sizeof(int32_t), 1))
       return false;
-
-   if(!write_to_demo(network_message, sizeof(char), message_size))
+   if(!writeToDemo(&size, sizeof(uint32_t), 1))
       return false;
-
-   return true;
-}
-
-bool CS_WritePlayerCommandToDemo(cs_cmd_t *player_command)
-{
-   demo_marker_t demo_marker = DEMO_PACKET_PLAYER_COMMAND;
-   size_t command_size = sizeof(cs_cmd_t);
-
-   if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
-      return false;
-
-   if(!write_to_demo(&command_size, sizeof(size_t), 1))
-      return false;
-
-   if(!write_to_demo(player_command, sizeof(cs_cmd_t), 1))
+   if(!writeToDemo(message, sizeof(char), size))
       return false;
 
    return true;
 }
 
-bool CS_WriteConsoleCommandToDemo(int cmdtype, command_t *command,
-                                     const char *options, int cmdsrc)
+bool SingleCSDemo::write(cs_cmd_t *command)
 {
-   demo_marker_t demo_marker = DEMO_PACKET_CONSOLE_COMMAND;
-   size_t command_size = strlen(command->name) + 1;
-   size_t options_size = strlen(options) + 1;
-
-   if(!write_to_demo(&demo_marker, sizeof(int32_t), 1))
+   uint8_t demo_marker = player_command_packet;
+   uint32_t command_size = (uint32_t)(sizeof(cs_cmd_t));
+   
+   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
       return false;
-
-   if(!write_to_demo(&cmdtype, sizeof(int32_t), 1))
+   if(!writeToDemo(&command_size, sizeof(uint32_t), 1))
       return false;
-
-   if(!write_to_demo(&cmdsrc, sizeof(int32_t), 1))
-      return false;
-
-   if(!write_to_demo(&command_size, sizeof(size_t), 1))
-      return false;
-
-   if(!write_to_demo((void *)command->name, sizeof(char), command_size))
-      return false;
-
-   if(!write_to_demo(&options_size, sizeof(size_t), 1))
-      return false;
-
-   if(!write_to_demo((void *)options, sizeof(char), options_size))
+   if(!writeToDemo(command, sizeof(cs_cmd_t), 1))
       return false;
 
    return true;
 }
 
-bool CS_ReadDemoPacket(void)
+bool SingleCSDemo::write(command_t *cmd, int type, const char *opts, int src)
 {
-   demo_marker_t type;
+   uint8_t demo_marker = console_command_packet;
+   uint32_t command_size = (uint32_t)(strlen(cmd->name) + 1);
+   uint32_t options_size = (uint32_t)(strlen(opts) + 1);
 
-   if(!read_from_demo((void *)&type, sizeof(int32_t), 1))
+   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
+      return false;
+   if(!writeToDemo(&type, sizeof(int32_t), 1))
+      return false;
+   if(!writeToDemo(&src, sizeof(int32_t), 1))
+      return false;
+   if(!writeToDemo(&command_size, sizeof(uint32_t), 1))
+      return false;
+   if(!writeToDemo((void *)cmd->name, sizeof(char), command_size))
+      return false;
+   if(!writeToDemo(&options_size, sizeof(uint32_t), 1))
+      return false;
+   if(!writeToDemo((void *)opts, sizeof(char), options_size))
       return false;
 
-   switch(type)
+   return true;
+}
+
+bool SingleCSDemo::saveCheckpoint()
+{
+   Json::Value toc;
+   Json::Value checkpoint = Json::Value(Json::objectValue);
+   qstring buf, checkpoint_name;
+   uint32_t index;
+   long byte_index;
+
+   if(CS_CLIENT)
+      index = cl_current_world_index;
+   else
+      index = sv_world_index;
+
+   buf.Printf(
+      strlen(screenshot_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
+      screenshot_path_format,
+      index
+   );
+   if(!M_SaveScreenShotAs(buf.constPtr()))
    {
-   case DEMO_PACKET_NETWORK_MESSAGE:
-      return handle_network_message_demo_packet();
-   case DEMO_PACKET_PLAYER_COMMAND:
-      return handle_player_command_demo_packet();
-   case DEMO_PACKET_CONSOLE_COMMAND:
-      return handle_console_command_demo_packet();
-   case DEMO_PACKET_HEADER_END:
-   default:
-      set_demo_error(DEMO_ERROR_UNKNOWN_DEMO_PACKET_TYPE);
+      setError(fs_error);
       return false;
    }
+
+   buf.clear().Printf(
+      strlen(save_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
+      save_path_format,
+      index
+   );
+   checkpoint_name.Printf(
+      11 + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE, "Checkpoint %d", index
+   );
+   P_SaveCurrentLevel(buf.getBuffer(), checkpoint_name.getBuffer());
+
+   if((byte_index = M_GetFilePosition(demo_data_handle)) == -1)
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(M_PathExists(toc_path))
+   {
+      if(!M_IsFile(toc_path))
+      {
+         setError(toc_is_not_file);
+         return false;
+      }
+      CS_ReadJSON(toc, toc_path);
+   }
+   else
+      toc = Json::Value(Json::objectValue);
+
+   checkpoint["byte_index"] = (uint32_t)(byte_index);
+   checkpoint["index"] = index;
+   buf.clear().Printf(base_save_format_length, base_save_format, index);
+   checkpoint["data_file"] = buf.constPtr();
+   buf.clear().Printf(
+      base_screenshot_format_length, base_screenshot_format, index
+   );
+   checkpoint["screenshot_file"] = buf.constPtr();
+   toc["checkpoints"].append(checkpoint);
+   CS_WriteJSON(toc_path, toc, true);
+
+   return true;
 }
 
-bool CS_DemoFinished(void)
+bool SingleCSDemo::loadCheckpoint(int checkpoint_index, uint32_t byte_index)
 {
-   if(!current_demo_data_file)
+   qstring buf;
+
+   buf.Printf(
+      strlen(save_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
+      save_path_format,
+      checkpoint_index
+   );
+
+   if(!M_PathExists(buf.constPtr()))
+   {
+      setError(checkpoint_save_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFile(buf.constPtr()))
+   {
+      setError(checkpoint_save_is_not_file);
+      return false;
+   }
+
+   if(!M_SeekFile(demo_data_handle, byte_index, SEEK_SET))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   P_LoadGame(buf.constPtr());
+
+   return true;
+}
+
+bool SingleCSDemo::loadCheckpoint(int checkpoint_index)
+{
+   Json::Value toc;
+   uint32_t byte_index;
+
+   if(!M_PathExists(toc_path))
+   {
+      setError(toc_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFile(toc_path))
+   {
+      setError(toc_is_not_file);
+      return false;
+   }
+
+   CS_ReadJSON(toc, toc_path);
+
+   if(toc["checkpoints"].empty())
+   {
+      setError(no_checkpoints);
+      return false;
+   }
+   
+   if(toc["checkpoints"][checkpoint_index].empty())
+   {
+      setError(checkpoint_index_not_found);
+      return false;
+   }
+
+   byte_index = toc["checkpoints"][checkpoint_index]["byte_index"].asUInt();
+
+   return loadCheckpoint(checkpoint_index, byte_index);
+}
+
+bool SingleCSDemo::loadCheckpointBefore(uint32_t index)
+{
+   Json::Value toc;
+   int i;
+   uint32_t checkpoint_index, best_index, best_byte_index;
+
+   if(!M_PathExists(toc_path))
+   {
+      setError(toc_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFile(toc_path))
+   {
+      setError(toc_is_not_file);
+      return false;
+   }
+
+   CS_ReadJSON(toc, toc_path);
+
+   if(toc["checkpoints"].empty())
+   {
+      setError(no_checkpoints);
+      return false;
+   }
+
+   index = best_index = best_byte_index = 0;
+   for(i = 0; toc["checkpoints"].isValidIndex(i); i++)
+   {
+      if(toc["checkpoints"][i].empty()                    ||
+         toc["checkpoints"][i]["byte_index"].empty()      ||
+         (!toc["checkpoints"][i]["byte_index"].isInt())   ||
+         toc["checkpoints"][i]["index"].empty()           ||
+         (!toc["checkpoints"][i]["index"].isInt())        ||
+         toc["checkpoints"][i]["data_file"].empty()       ||
+         (!toc["checkpoints"][i]["data_file"].isString()) ||
+         toc["checkpoints"][i]["screenshot_file"].empty() ||
+         (!toc["checkpoints"][i]["screenshot_file"].isString()))
+      {
+         setError(checkpoint_toc_corrupt);
+         return false;
+      }
+      checkpoint_index = toc["checkpoints"][i]["index"].asUInt();
+
+      if(checkpoint_index < index)
+      {
+         if((best_index == 0) || (index > best_index))
+         {
+            best_index = index;
+            best_byte_index = toc["checkpoints"][i]["byte_index"].asUInt();
+         }
+      }
+   }
+
+   if(best_index == 0)
+   {
+      setError(no_previous_checkpoint);
+      return false;
+   }
+
+   return loadCheckpoint(best_index, best_byte_index);
+}
+
+bool SingleCSDemo::loadPreviousCheckpoint()
+{
+   uint32_t current_index;
+
+   if(CS_CLIENT)
+      current_index = cl_current_world_index;
+   else
+      current_index = sv_world_index;
+
+   return loadCheckpointBefore(current_index);
+}
+
+bool SingleCSDemo::loadNextCheckpoint()
+{
+   Json::Value toc;
+   int i;
+   uint32_t index, current_index, best_index, best_byte_index;
+
+   if(!M_PathExists(toc_path))
+   {
+      setError(toc_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFile(toc_path))
+   {
+      setError(toc_is_not_file);
+      return false;
+   }
+
+   CS_ReadJSON(toc, toc_path);
+
+   if(toc["checkpoints"].empty())
+   {
+      setError(no_checkpoints);
+      return false;
+   }
+
+   if(CS_CLIENT)
+      current_index = cl_current_world_index;
+   else
+      current_index = sv_world_index;
+
+   for(i = 0, best_index = 0; toc["checkpoints"].isValidIndex(i); i++)
+   {
+      if(toc["checkpoints"][i].empty()                    ||
+         toc["checkpoints"][i]["byte_index"].empty()      ||
+         (!toc["checkpoints"][i]["byte_index"].isInt())   ||
+         toc["checkpoints"][i]["index"].empty()           ||
+         (!toc["checkpoints"][i]["index"].isInt())        ||
+         toc["checkpoints"][i]["data_file"].empty()       ||
+         (!toc["checkpoints"][i]["data_file"].isString()) ||
+         toc["checkpoints"][i]["screenshot_file"].empty() ||
+         (!toc["checkpoints"][i]["screenshot_file"].isString()))
+      {
+         setError(checkpoint_toc_corrupt);
+         return false;
+      }
+      index = toc["checkpoints"][i]["index"].asUInt();
+
+      if(index > current_index)
+      {
+         if((best_index == 0) || (index < best_index))
+         {
+            best_index = index;
+            best_byte_index = toc["checkpoints"][i]["byte_index"].asUInt();
+         }
+      }
+   }
+
+   if(best_index == 0)
+   {
+      setError(no_subsequent_checkpoint);
+      return false;
+   }
+
+   return loadCheckpoint(best_index, best_byte_index);
+}
+
+bool SingleCSDemo::readPacket()
+{
+   uint8_t packet_type;
+
+   if(!readFromDemo(&packet_type, sizeof(uint8_t), 1))
+      return false;
+
+   if(packet_type == network_message_packet)
+      return handleNetworkMessageDemoPacket();
+   if(packet_type == player_command_packet)
+      return handlePlayerCommandDemoPacket();
+   if(packet_type == console_command_packet)
+      return handleConsoleCommandDemoPacket();
+
+   setError(unknown_demo_packet_type);
+   return false;
+}
+
+bool SingleCSDemo::isFinished()
+{
+   if(!demo_data_handle)
       return true;
 
-   if(feof(current_demo_data_file) != 0)
+   if(feof(demo_data_handle))
       return true;
 
    return false;
 }
 
-bool CS_StopDemo(void)
+bool SingleCSDemo::close()
 {
-   // [CG] Check if demo is already stopped.
-   if(current_demo_data_file == NULL)
+   if(mode == mode_recording)
+   {
+      header.length = cl_current_world_index;
+      updateInfo();
+   }
+
+   if(!M_CloseFile(demo_data_handle))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool SingleCSDemo::hasError()
+{
+   if(internal_error != no_error)
       return true;
 
-   if(cs_demo_recording)
-   {
-      cs_demo_recording = false;
+   return false;
+}
 
-      if(!close_current_demo())
-         return false;
-   }
-   else if(cs_demo_playback)
-   {
-      if(!close_current_demo_data_file())
-         return false;
+void SingleCSDemo::clearError()
+{
+   internal_error = no_error;
+}
 
-      if(!M_DeleteFolderAndContents(cs_demo_path))
+const char* SingleCSDemo::getError()
+{
+   if(internal_error == fs_error)
+      return M_GetFileSystemErrorMessage();
+
+   if(internal_error == not_open_for_playback)
+      return "Demo is not open for playback";
+
+   if(internal_error == not_open_for_recording)
+      return "Demo is not open for recording";
+
+   if(internal_error == not_open)
+      return "Demo is not open";
+
+   if(internal_error == already_open)
+      return "Demo is already open";
+
+   if(internal_error == already_exists)
+      return "Demo already exists";
+
+   if(internal_error == demo_data_is_not_file)
+      return "Demo data file is not a file";
+
+   if(internal_error == unknown_demo_packet_type)
+      return "unknown demo packet type";
+
+   if(internal_error == invalid_network_message_size)
+      return "invalid network message size";
+
+   if(internal_error == toc_is_not_file)
+      return "table of contents file is not a file";
+
+   if(internal_error == toc_does_not_exist)
+      return "table of contents file not found";
+
+   if(internal_error == checkpoint_save_does_not_exist)
+      return "checkpoint data file not found";
+
+   if(internal_error == checkpoint_save_is_not_file)
+      return "checkpoint data file is not a file";
+
+   if(internal_error == no_checkpoints)
+      return "no checkpoints saved";
+
+   if(internal_error == checkpoint_index_not_found)
+      return "checkpoint index not found";
+
+   if(internal_error == checkpoint_toc_corrupt)
+      return "checkpoint table-of-contents file corrupt";
+
+   if(internal_error == no_previous_checkpoint)
+      return "no previous checkpoint";
+
+   if(internal_error == no_subsequent_checkpoint)
+      return "no subsequent checkpoint";
+
+   return "no_error";
+}
+
+CSDemo::CSDemo()
+   : ZoneObject(), mode(0), internal_error(no_error), internal_curl_error(0),
+                   current_demo_index(0), demo_count(0), folder_path(NULL)
+{
+   if((!default_cs_demo_folder_path) || (!strlen(default_cs_demo_folder_path)))
+      default_cs_demo_folder_path = M_PathJoin(userpath, "demos");
+   setFolderPath(default_cs_demo_folder_path);
+}
+
+CSDemo::~CSDemo()
+{
+   if(folder_path)
+      efree(folder_path);
+}
+
+bool CSDemo::loadZipFile()
+{
+   // [CG] Eat errors here.
+   if(current_zip_file)
+   {
+      if(!current_zip_file->close())
       {
-         set_demo_error(DEMO_ERROR_FILE_ERRNO);
+         setError(zip_error);
+         return false;
+      }
+
+      delete current_zip_file;
+   }
+
+   current_zip_file = new ZipFile(current_demo_archive_path);
+
+   return true;
+}
+
+bool CSDemo::retrieveDemo(const char *url)
+{
+   CURL *curl_handle;
+   const char *basename;
+   CURLcode res;
+   FILE *fobj;
+   qstring buf;
+
+   if(!CS_CheckURI(url))
+   {
+      setError(invalid_url);
+      return false;
+   }
+
+   if(!(basename = M_Basename(url)))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(strlen(basename) < 2)
+   {
+      setError(invalid_url);
+      return false;
+   }
+
+   buf.Printf(
+      strlen(folder_path) + strlen(basename) + 5,
+      "%s/%s",
+      folder_path,
+      basename
+   );
+
+   // [CG] If the file's already been downloaded, skip all the hard work below.
+   if(M_IsFile(buf.constPtr()))
+      return true;
+
+   if(!M_CreateFile(buf.constPtr()))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(!(fobj = M_OpenFile(buf.constPtr(), "wb")))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(!(curl_handle = curl_easy_init()))
+   {
+      M_CloseFile(fobj);
+      setCURLError((int)curl_handle);
+      return false;
+   }
+
+   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fwrite);
+   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fobj);
+
+   if((res = curl_easy_perform(curl_handle)) != 0)
+   {
+      M_CloseFile(fobj);
+      setCURLError(res);
+      return false;
+   }
+
+   M_CloseFile(fobj);
+
+   curl_easy_cleanup(curl_handle);
+
+   E_ReplaceString(current_demo_archive_path, estrdup(buf.constPtr()));
+
+   return true;
+}
+
+void CSDemo::setError(int error_code)
+{
+   internal_error = error_code;
+}
+
+void CSDemo::setCURLError(int error_code)
+{
+   internal_error = curl_error;
+   internal_curl_error = error_code;
+}
+
+int CSDemo::getCurrentDemoIndex() const
+{
+   return current_demo_index;
+}
+
+bool CSDemo::setFolderPath(const char *new_folder_path)
+{
+   if(!M_PathExists(new_folder_path))
+   {
+      setError(folder_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFolder(new_folder_path))
+   {
+      setError(folder_is_not_folder);
+      return false;
+   }
+
+   E_ReplaceString(folder_path, estrdup(new_folder_path));
+   return true;
+}
+
+bool CSDemo::record()
+{
+   qstring buf;
+   int demo_type;
+   Json::Value info;
+
+   if(mode == mode_playback)
+   {
+      setError(already_playing);
+      return false;
+   }
+
+   if(mode == mode_recording)
+   {
+      setError(already_recording);
+      return false;
+   }
+
+   if(!(strncmp(folder_path, cs_demo_folder_path, MAX_DEMO_PATH_LENGTH)))
+      setFolderPath(cs_demo_folder_path);
+
+   // [CG] Build demo timestamps.  The internal format is ISO 8601 format, but
+   //      because Windows won't allow colons in filenames (they are for drive-
+   //      specification only) we use a custom format for the folder/filename.
+
+   if(demo_timestamp)
+      efree(demo_timestamp);
+
+   if(iso_timestamp)
+      efree(iso_timestamp);
+
+   buildDemoTimestamps(&demo_timestamp, &iso_timestamp);
+
+   buf.Printf(MAX_DEMO_PATH_LENGTH, "%s/%s", folder_path, demo_timestamp);
+   buf.normalizeSlashes();
+
+   info["version"] = version;
+   info["subversion"] = subversion;
+   info["cs_protocol_version"] = cs_protocol_version;
+   info["name"] = "";
+   info["author"] = "";
+   info["date_recorded"] = iso_timestamp;
+
+   if(M_PathExists(buf.constPtr()))
+   {
+      setError(already_exists);
+      return false;
+   }
+
+   if(!M_CreateFolder(buf.constPtr()))
+   {
+      setError(fs_error);
+      return false;
+   }
+
+   if(CS_CLIENT)
+      demo_type = SingleCSDemo::client_demo_type;
+   else
+      demo_type = SingleCSDemo::server_demo_type;
+
+   current_demo = new SingleCSDemo(
+      buf.constPtr(),
+      current_demo_index,
+      &cs_maps[cs_current_map_index],
+      demo_type
+   );
+
+   if(current_demo->hasError())
+   {
+      setError(demo_error);
+      M_DeleteFolder(buf.constPtr());
+      return false;
+   }
+
+   if(!current_demo->openForRecording())
+   {
+      setError(demo_error);
+      M_DeleteFolderAndContents(buf.constPtr());
+      return false;
+   }
+
+   E_ReplaceString(current_demo_folder_path, estrdup(buf.constPtr()));
+   buf.clear().Printf(
+      MAX_DEMO_PATH_LENGTH,
+      "%s/%s",
+      current_demo_folder_path,
+      base_info_file_name
+   );
+   E_ReplaceString(current_demo_info_path, estrdup(buf.constPtr()));
+   buf.clear().Printf(
+      MAX_DEMO_PATH_LENGTH,
+      "%s%s",
+      current_demo_folder_path,
+      demo_extension
+   );
+   E_ReplaceString(current_demo_archive_path, estrdup(buf.constPtr()));
+
+   CS_WriteJSON(current_demo_info_path, info, true);
+
+   mode = mode_recording;
+
+   return true;
+}
+
+bool CSDemo::addNewMap()
+{
+   int demo_type;
+   qstring buf;
+
+   if(mode != mode_recording)
+   {
+      setError(not_open_for_recording);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->close())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   delete current_demo;
+
+   if(CS_CLIENT)
+      demo_type = SingleCSDemo::client_demo_type;
+   else
+      demo_type = SingleCSDemo::server_demo_type;
+
+   current_demo = new SingleCSDemo(
+      current_demo_folder_path,
+      current_demo_index + 1,
+      &cs_maps[cs_current_map_index],
+      demo_type
+   );
+
+   buf.Printf(
+      MAX_DEMO_PATH_LENGTH,
+      "%s/%s",
+      current_demo_folder_path,
+      current_demo_index + 1
+   );
+
+   if(current_demo->hasError())
+   {
+      setError(demo_error);
+      M_DeleteFolder(buf.constPtr());
+      return false;
+   }
+
+   if(!current_demo->openForRecording())
+   {
+      setError(demo_error);
+      M_DeleteFolderAndContents(buf.constPtr());
+      return false;
+   }
+
+   current_demo_index++;
+
+   return true;
+}
+
+bool CSDemo::play(const char *url)
+{
+   int demo_type;
+   qstring qbuf, saved_buf, test_folder_buf, path_buf;
+   Json::Value info;
+   char *buf = NULL;
+
+   if(mode == mode_playback)
+   {
+      setError(already_playing);
+      return false;
+   }
+
+   if(mode == mode_recording)
+   {
+      setError(already_recording);
+      return false;
+   }
+
+   if(!(strncmp(folder_path, cs_demo_folder_path, MAX_DEMO_PATH_LENGTH)))
+      setFolderPath(cs_demo_folder_path);
+
+   // [CG] If the demo's URI is a file: URI, then we don't need to download it.
+   //      Otherwise it must be downloaded.
+
+   if(strncmp(url, "file://", 7) == 0)
+   {
+      const char *cwd;
+
+      if(!M_IsFile(url + 7))
+      {
+         setError(demo_archive_not_found);
+         return false;
+      }
+
+      if(!M_IsAbsolutePath(url + 7))
+      {
+         if(!(cwd = M_GetCurrentFolder()))
+         {
+            setError(fs_error);
+            return false;
+         }
+         path_buf.Printf(strlen(cwd) + strlen(url), "%s/%s", cwd, url + 7);
+         path_buf.normalizeSlashes();
+         efree((void *)cwd);
+      }
+      else
+         path_buf = url;
+
+      E_ReplaceString(current_demo_archive_path, estrdup(path_buf.constPtr()));
+   }
+   else if(!retrieveDemo(url))
+      return false;
+
+   loadZipFile();
+
+   if(!current_zip_file->openForReading())
+   {
+      setError(zip_error);
+      return false;
+   }
+
+   while(current_zip_file->iterateFilenames(&buf))
+   {
+      qbuf = buf;
+      qbuf.normalizeSlashes();
+      qbuf.truncate(qbuf.findFirstOf('/'));
+
+      if(!saved_buf.getSize())
+      {
+         saved_buf = qbuf;
+         continue;
+      }
+
+      if(saved_buf != qbuf)
+      {
+         setError(invalid_demo_structure);
+         current_zip_file->resetFilenameIterator();
          return false;
       }
    }
+
+   if(current_zip_file->hasError())
+   {
+      setError(zip_error);
+      return false;
+   }
+
+   E_ReplaceString(current_demo_folder_path, estrdup(qbuf.constPtr()));
+
+   if(!current_zip_file->extractAllTo(folder_path))
+   {
+      setError(zip_error);
+      return false;
+   }
+
+   if(cs_maps)
+      CS_ClearMaps();
+
+   demo_count = cs_map_count = 0;
+
+   test_folder_buf.copy(qbuf).Printf(10, "/%d", cs_map_count);
+   while(M_IsFolder(test_folder_buf.constPtr()))
+   {
+      demo_count++;
+      cs_map_count++;
+      test_folder_buf.copy(qbuf).Printf(10, "/%d", cs_map_count);
+   }
+   cs_maps = ecalloc(cs_map_t *, cs_map_count, sizeof(cs_map_t));
+
+   if(CS_CLIENT)
+      demo_type = SingleCSDemo::client_demo_type;
    else
+      demo_type = SingleCSDemo::server_demo_type;
+
+   current_demo = new SingleCSDemo(
+      current_demo_folder_path,
+      current_demo_index,
+      &cs_maps[current_demo_index],
+      demo_type
+   );
+
+   qbuf.clear().Printf(
+      MAX_DEMO_PATH_LENGTH,
+      "%s/%s",
+      current_demo_folder_path,
+      current_demo_index
+   );
+
+   if(current_demo->hasError())
    {
-      return true;
+      setError(demo_error);
+      M_DeleteFolderAndContents(current_demo_folder_path);
+      return false;
    }
 
-   if(cs_demo_path)
-   {
-      efree(cs_demo_path);
-      cs_demo_path = NULL;
-   }
-   if(cs_demo_info_path)
-   {
-      efree(cs_demo_info_path);
-      cs_demo_info_path = NULL;
-   }
-   cs_current_demo_map = 0;
+   cs_settings = estructalloc(clientserver_settings_t, 1);
+   cs_original_settings = estructalloc(clientserver_settings_t, 1);
 
-   printf("CS_StopDemo: Demo stopped.\n");
+   if(!current_demo->openForPlayback())
+   {
+      setError(demo_error);
+      M_DeleteFolderAndContents(current_demo_folder_path);
+      return false;
+   }
+
+   qbuf.clear().Printf(
+      MAX_DEMO_PATH_LENGTH,
+      "%s/%s",
+      current_demo_folder_path,
+      base_info_file_name
+   );
+
+   E_ReplaceString(current_demo_info_path, estrdup(qbuf.constPtr()));
+
+   mode = mode_playback;
+
    return true;
+}
+
+bool CSDemo::setCurrentDemo(int new_demo_index)
+{
+   int demo_type;
+
+   if((new_demo_index < 0) || (new_demo_index > (demo_count - 1)))
+   {
+      setError(invalid_demo_index);
+      return false;
+   }
+
+   if(new_demo_index == current_demo_index)
+   {
+      setError(already_playing);
+      return false;
+   }
+
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo->close())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   delete current_demo;
+   current_demo_index++;
+
+   if(CS_CLIENT)
+      demo_type = SingleCSDemo::client_demo_type;
+   else
+      demo_type = SingleCSDemo::server_demo_type;
+
+   current_demo = new SingleCSDemo(
+      current_demo_folder_path,
+      current_demo_index,
+      &cs_maps[new_demo_index],
+      demo_type
+   );
+
+   if(current_demo->hasError())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   if(!current_demo->openForPlayback())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::playNext()
+{
+   if(current_demo_index >= (demo_count - 1))
+   {
+      setError(last_demo);
+      return false;
+   }
+
+   return setCurrentDemo(current_demo_index + 1);
+}
+
+bool CSDemo::playPrevious()
+{
+   if(current_demo_index <= 0)
+   {
+      setError(first_demo);
+      return false;
+   }
+
+   return setCurrentDemo(current_demo_index - 1);
+}
+
+bool CSDemo::stop()
+{
+   if((mode == mode_none) || (!current_demo))
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->close())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   delete current_demo;
+
+   return true;
+}
+
+bool CSDemo::close()
+{
+   if(current_demo_archive_path)
+      efree(current_demo_archive_path);
+
+   if(current_demo_folder_path)
+      efree(current_demo_folder_path);
+
+   if(current_demo_info_path)
+      efree(current_demo_info_path);
+
+   current_demo_index = 0;
+
+   if(mode == mode_recording)
+   {
+      loadZipFile();
+
+      if(!current_zip_file->createForWriting())
+      {
+         setError(zip_error);
+         return false;
+      }
+
+      if(!current_zip_file->addFolderRecursive(current_demo_folder_path,
+                                               cs_demo_compression_level))
+      {
+         setError(zip_error);
+         return false;
+      }
+
+      if(!current_zip_file->close())
+      {
+         setError(zip_error);
+         return false;
+      }
+
+      delete current_zip_file;
+   }
+   else if(mode == mode_playback)
+   {
+      if(!M_DeleteFolderAndContents(current_demo_folder_path))
+      {
+         setError(fs_error);
+         return false;
+      }
+   }
+
+   return true;
+}
+
+bool CSDemo::isRecording()
+{
+   if(mode == mode_recording)
+      return true;
+
+   return false;
+}
+
+bool CSDemo::isPlaying()
+{
+   if(mode == mode_playback)
+      return true;
+
+   return false;
+}
+
+bool CSDemo::write(void *message, uint32_t size, int32_t playernum)
+{
+   if(mode != mode_recording)
+   {
+      setError(not_open_for_recording);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->write(message, size, playernum))
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::write(cs_cmd_t *command)
+{
+   if(mode != mode_recording)
+   {
+      setError(not_open_for_recording);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->write(command))
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::write(command_t *cmd, int type, const char *opts, int src)
+{
+   if(mode != mode_recording)
+   {
+      setError(not_open_for_recording);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->write(cmd, type, opts, src))
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::saveCheckpoint()
+{
+   if(mode != mode_recording)
+   {
+      setError(not_open_for_recording);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->saveCheckpoint())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::loadCheckpoint(int checkpoint_index)
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->loadCheckpoint(checkpoint_index))
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::loadCheckpointBefore(uint32_t index)
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->loadCheckpointBefore(index))
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::loadPreviousCheckpoint()
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->loadPreviousCheckpoint())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::loadNextCheckpoint()
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->loadNextCheckpoint())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::rewind(uint32_t tic_count)
+{
+   uint32_t current_index;
+   unsigned int new_destination_index;
+   
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(CS_CLIENT)
+      current_index = cl_current_world_index;
+   else
+      current_index = sv_world_index;
+
+   if(tic_count > current_index)
+      new_destination_index = 0;
+   else
+      new_destination_index = current_index - tic_count;
+
+   if(!loadCheckpointBefore(new_destination_index))
+      return false;
+
+   while(true)
+   {
+      if(!cs_demo->readPacket())
+      {
+         if(cs_demo->isFinished())
+            return true;
+         else
+            return false;
+      }
+
+      if(CS_CLIENT)
+      {
+         if(cl_current_world_index > new_destination_index)
+            break;
+      }
+      else if(sv_world_index > new_destination_index)
+         break;
+   }
+   return true;
+}
+
+bool CSDemo::fastForward(uint32_t tic_count)
+{
+   unsigned int new_destination_index;
+   
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(CS_CLIENT)
+      new_destination_index = cl_current_world_index + tic_count;
+   else
+      new_destination_index = sv_world_index + tic_count;
+
+   while(true)
+   {
+      if(!cs_demo->readPacket())
+      {
+         if(cs_demo->isFinished())
+            return true;
+         else
+            return false;
+      }
+
+      if(CS_CLIENT)
+      {
+         if(cl_current_world_index > new_destination_index)
+            break;
+      }
+      else if(sv_world_index > new_destination_index)
+         break;
+   }
+   return true;
+}
+
+bool CSDemo::readPacket()
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   if(!current_demo->readPacket())
+   {
+      setError(demo_error);
+      return false;
+   }
+
+   return true;
+}
+
+bool CSDemo::isFinished()
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   return current_demo->isFinished();
+}
+
+const char* CSDemo::getBasename()
+{
+   return M_Basename(current_demo_archive_path);
+}
+
+const char* CSDemo::getError()
+{
+   if(internal_error == fs_error)
+      return M_GetFileSystemErrorMessage();
+
+   if(internal_error == zip_error)
+   {
+      if(current_zip_file && current_zip_file->hasError())
+         return current_zip_file->getError();
+   }
+
+   if(internal_error == demo_error)
+   {
+      if(current_demo && current_demo->hasError())
+         return current_demo->getError();
+   }
+
+   if(internal_error == curl_error)
+      return curl_easy_strerror((CURLcode)internal_curl_error);
+
+   if(internal_error == folder_does_not_exist)
+      return "demo folder does not exist";
+
+   if(internal_error == folder_is_not_folder)
+      return "demo folder is not a folder";
+
+   if(internal_error == not_open_for_playback)
+      return "demo is not open for playback";
+
+   if(internal_error == not_open_for_recording)
+      return "demo is not open for recording";
+
+   if(internal_error == already_playing)
+      return "demo is already playing";
+
+   if(internal_error == already_recording)
+      return "demo is already recording";
+
+   if(internal_error == already_exists)
+      return "demo already exists";
+
+   if(internal_error == not_open)
+      return "demo is not open";
+
+   if(internal_error == invalid_demo_structure)
+      return "invalid demo structure";
+
+   if(internal_error == demo_archive_not_found)
+      return "demo not found";
+
+   if(internal_error == invalid_demo_index)
+      return "invalid demo index";
+
+   if(internal_error == first_demo)
+      return "already at the first demo";
+
+   if(internal_error == last_demo)
+      return "already at the last demo";
+
+   if(internal_error == invalid_url)
+      return "invalid url";
+
+   return "no_error";
+}
+
+void CS_NewDemo()
+{
+   if(cs_demo)
+   {
+      if(cs_demo->isPlaying() || cs_demo->isRecording())
+      {
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.", cs_demo->getError());
+         else if(!cs_demo->close())
+            doom_printf("Error closing demo: %s.", cs_demo->getError());
+      }
+      delete cs_demo;
+   }
+
+   cs_demo = new CSDemo();
+}
+
+// [CG] For atexit.
+void CS_StopDemo()
+{
+   if(cs_demo)
+   {
+      if(cs_demo->isPlaying() || cs_demo->isRecording())
+      {
+         if(!cs_demo->stop())
+            printf("Error stopping demo: %s.\n", cs_demo->getError());
+         else if(!cs_demo->close())
+            printf("Error closing demo: %s.\n", cs_demo->getError());
+      }
+   }
 }
 

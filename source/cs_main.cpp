@@ -26,6 +26,9 @@
 
 // [CG] Needed for JSON serialization routines.
 #include <string>
+#include <iostream>
+#include <istream>
+#include <ostream>
 #include <fstream>
 
 #include "z_zone.h"
@@ -55,6 +58,7 @@
 #include "i_thread.h"
 #include "info.h"
 #include "m_argv.h"
+#include "m_file.h"
 #include "m_fixed.h"
 #include "m_hash.h"
 #include "m_misc.h"
@@ -221,36 +225,72 @@ static void build_game_state(nm_currentstate_t *message)
 
 static int build_save_buffer(byte **buffer)
 {
+   FILE *fobj;
+   size_t bytes_read;
+   unsigned int file_size;
+
    P_SaveCurrentLevel(cs_state_file_path, "cs");
-   return M_ReadFile(cs_state_file_path, buffer);
+
+   if(!(fobj = M_OpenFile(cs_state_file_path, "rb")))
+   {
+      I_Error(
+         "Error opening game state file: %s.\n", M_GetFileSystemErrorMessage()
+      );
+   }
+
+   file_size = M_FileLength(fobj);
+
+   if(!(*buffer))
+      (*buffer) = ecalloc(byte *, sizeof(byte), file_size);
+
+   if((bytes_read = M_ReadFromFile(*buffer, 1, file_size, fobj)) != file_size)
+   {
+      printf("State file: %s.\n", cs_state_file_path);
+      printf("File size/Bytes read: %u/%u.\n", file_size, bytes_read);
+      I_Error(
+         "Error reading game state file: %s.\n", M_GetFileSystemErrorMessage()
+      );
+   }
+
+   if(!M_CloseFile(fobj))
+   {
+      I_Error(
+         "Error closing game state file: %s.\n", M_GetFileSystemErrorMessage()
+      );
+   }
+
+   return file_size;
 }
 
 void CS_Init(void)
 {
    cs_state_file_path = ecalloc(
-      char *, strlen(userpath) + strlen("/cs.state") + 1, sizeof(char)
+      char *, sizeof(char), strlen(userpath) + strlen("/cs.state") + 1
    );
 
    sprintf(cs_state_file_path, "%s/cs.state", userpath);
    M_NormalizeSlashes(cs_state_file_path);
 
-   if(CS_SERVER)
-      SV_Init();
-   else
+   CS_NewDemo();
+
+   if(CS_CLIENT)
       CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
+   else if(CS_SERVER)
+      SV_Init();
 }
 
-bool CS_CheckURI(char *uri)
+bool CS_CheckURI(const char *uri)
 {
-   if((strncmp(uri, "http", 4)   == 0) || // [CG] Also works for "https".
-      (strncmp(uri, "file", 4)   == 0) ||
-      (strncmp(uri, "ftp", 4)    == 0) ||
-      (strncmp(uri, "gopher", 6) == 0) ||
-      (strncmp(uri, "scp", 4)    == 0) ||
-      (strncmp(uri, "sftp", 4)   == 0) ||
-      (strncmp(uri, "tftp", 4)   == 0) ||
-      (strncmp(uri, "telnet", 4) == 0) ||
-      (strncmp(uri, "dict", 4)   == 0))
+   if((strncmp(uri, "http://", 7)   == 0) ||
+      (strncmp(uri, "https://", 8)  == 0) ||
+      (strncmp(uri, "file://", 7)   == 0) ||
+      (strncmp(uri, "ftp://", 6)    == 0) ||
+      (strncmp(uri, "gopher://", 9) == 0) ||
+      (strncmp(uri, "scp://", 6)    == 0) ||
+      (strncmp(uri, "sftp://", 7)   == 0) ||
+      (strncmp(uri, "tftp://", 7)   == 0) ||
+      (strncmp(uri, "telnet://", 9) == 0) ||
+      (strncmp(uri, "dict://", 7)   == 0))
    {
       return true;
    }
@@ -520,7 +560,7 @@ void CS_ZeroClients(void)
 size_t CS_BuildGameState(int playernum, byte **buffer)
 {
    int state_size;
-   byte *savebuffer;
+   byte *savebuffer = NULL;
    nm_currentstate_t message;
 
    build_game_state(&message);
@@ -577,23 +617,16 @@ bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
 
 void CS_ReadJSON(Json::Value &json, const char *filename)
 {
-   byte *buffer = NULL;
-   std::string data;
+   std::ifstream in_file;
    Json::Reader reader;
 
-   if(M_ReadFile(filename, &buffer) == -1)
+   in_file.open(filename);
+
+   if(!reader.parse(in_file, json))
    {
       I_Error(
-         "CS_ReadJSON: Error reading file %s: %s.\n", filename, strerror(errno)
-      );
-   }
-
-   data = (char *)buffer;
-
-   if(!reader.parse(data, json))
-   {
-      I_Error(
-         "CS_ReadJSON: Error parsing JSON: %s.\n",
+         "CS_ReadJSON: Error parsing JSON in %s: %s.\n",
+         filename,
          reader.getFormattedErrorMessages().c_str()
       );
    }
@@ -1507,7 +1540,6 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
       }
       else
          spawn_point = SV_GetCoopSpawnPoint(playernum);
-      CS_SetSpectator(playernum, true);
    }
    else
       spawn_point = &playerstarts[0];
@@ -1530,13 +1562,16 @@ void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
    Mobj *puff = NULL;
 
    if(!clientserver)
-      return;
-
-   if(CS_SERVER)
    {
       puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
-      SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
+      return;
    }
+
+   if(serverside)
+      puff = P_SpawnPuff(x, y, z, angle, updown, ptcl);
+
+   if(CS_SERVER)
+      SV_BroadcastPuffSpawned(puff, shooter, updown, ptcl);
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
       puff = CL_SpawnPuff(0, x, y, z, angle, updown, ptcl);
 }
@@ -1547,15 +1582,90 @@ void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
    Mobj *blood = NULL;
 
    if(!clientserver)
-      return;
-
-   if(CS_SERVER)
    {
       blood = P_SpawnBlood(x, y, z, angle, damage, target);
-      SV_BroadcastBloodSpawned(blood, shooter, damage, target);
+      return;
    }
+
+   if(serverside)
+      blood = P_SpawnBlood(x, y, z, angle, damage, target);
+
+   if(CS_SERVER)
+      SV_BroadcastBloodSpawned(blood, shooter, damage, target);
    else if(shooter->player && CL_SHOULD_PREDICT_SHOT(shooter))
       blood = CL_SpawnBlood(0, x, y, z, angle, damage, target);
+}
+
+void CS_ArchiveSettings(SaveArchive& arc)
+{
+   arc << cs_settings->skill
+       << cs_settings->game_type
+       << cs_settings->ctf
+       << cs_settings->max_clients
+       << cs_settings->max_players
+       << cs_settings->max_players_per_team
+       << cs_settings->frag_limit
+       << cs_settings->time_limit
+       << cs_settings->score_limit
+       << cs_settings->dogs
+       << cs_settings->friend_distance
+       << cs_settings->bfg_type
+       << cs_settings->friendly_damage_percentage
+       << cs_settings->spectator_time_limit
+       << cs_settings->death_time_limit
+       << cs_settings->death_time_expired_action
+       << cs_settings->respawn_protection_time
+       << cs_settings->radial_attack_damage
+       << cs_settings->radial_attack_self_damage
+       << cs_settings->radial_attack_lift
+       << cs_settings->radial_attack_self_lift
+       << cs_settings->build_blockmap
+       << cs_settings->dmflags
+       << cs_settings->dmflags2
+       << cs_settings->compatflags
+       << cs_settings->compatflags2
+       << cs_settings->requires_spectator_password
+       << cs_settings->requires_player_password;
+}
+
+void CS_ArchiveTeams(SaveArchive& arc)
+{
+   int i;
+   flag_t *flag;
+
+   // [CG] FIXME: Need to record number of teams and indicate the color of each
+   //             serialized team here.
+
+   for(i = team_color_none; i < team_color_max; i++)
+      arc << team_scores[i];
+
+   for(i = team_color_none; i < team_color_max; i++)
+   {
+      flag = &cs_flags[i];
+
+      arc << flag->net_id << flag->carrier << flag->pickup_time
+          << flag->timeout << flag->state;
+   }
+}
+
+void CS_ArchiveClients(SaveArchive& arc)
+{
+   int i;
+   client_t *client;
+
+   for(i = 0; i < MAXPLAYERS; i++)
+   {
+      client = &clients[i];
+
+      arc << client->join_tic << client->spectating << client->team
+          << client->client_lag << client->server_lag << client->transit_lag
+          << client->packet_loss << client->queue_level
+          << client->queue_position << client->floor_status
+          << client->death_time << client->death_count
+          << client->latest_position_index << client->afk
+          << client->frags_this_life << client->last_frag_tic
+          << client->frag_level << client->consecutive_frag_level;
+   }
 }
 
 char* CS_ExtractMessage(char *data, size_t data_length)
@@ -1697,16 +1807,19 @@ void CS_ReadFromNetwork(unsigned int timeout)
             playernum = SV_GetPlayerNumberFromPeer(event.peer);
 
          // [CG] Save all received network messages in the demo if recording.
-         if(cs_demo_recording)
+         if(CS_DEMORECORD)
          {
-            if(!CS_WriteNetworkMessageToDemo(
-                  event.packet->data, event.packet->dataLength, playernum))
+            if(!cs_demo->write(
+               event.packet->data,
+               event.packet->dataLength,
+               playernum))
             {
                doom_printf(
-                  "Demo error, recording aborted: %s\n",
-                  CS_GetDemoErrorMessage()
+                  "Error writing network message to demo: %s",
+                  cs_demo->getError()
                );
-               CS_StopDemo();
+               if(!cs_demo->stop())
+                  doom_printf("Error stopping demo: %s.", cs_demo->getError());
             }
          }
 
@@ -1769,21 +1882,13 @@ void CS_ReadFromNetwork(unsigned int timeout)
 
 void CS_TryRunTics(void)
 {
-   if(CS_CLIENTDEMO)
+   if(CL_DEMO)
       CL_RunDemoTics();
-   else if(CS_SERVERDEMO)
+   else if(SV_DEMO)
       SV_RunDemoTics();
    else if(CS_CLIENT)
       CL_TryRunTics();
    else
       SV_TryRunTics();
-}
-
-VARIABLE_STRING(cs_demo_folder_path, NULL, 1024);
-CONSOLE_VARIABLE(demo_folder_path, cs_demo_folder_path, cf_netonly) {}
-
-void CS_AddCommands(void)
-{
-   C_AddCommand(demo_folder_path);
 }
 

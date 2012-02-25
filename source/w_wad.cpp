@@ -40,6 +40,7 @@
 #include "c_io.h"
 #include "m_argv.h"
 #include "m_collection.h"
+#include "m_file.h"
 #include "m_hash.h"
 #include "m_misc.h"
 #include "m_swap.h"

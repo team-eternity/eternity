@@ -183,8 +183,6 @@ extern  bool deathmatch;
 
 // [CG] Added some bools for c/s.
 extern bool clientserver;
-extern bool cs_demo_playback;
-extern bool cs_demo_recording;
 extern bool clientside;
 extern bool serverside;
 
@@ -195,11 +193,14 @@ extern bool CS_HEADLESS;
 
 // [CG] These #define's should be used more often then just plain clientside
 //      and serverside, so singleplayer isn't messed up.
-#define CS_DEMO       ((clientserver && cs_demo_playback))
-#define CS_CLIENT     ((clientserver && clientside))
-#define CS_SERVER     ((clientserver && serverside))
-#define CS_CLIENTDEMO ((CS_DEMO && clientside))
-#define CS_SERVERDEMO ((CS_DEMO && serverside))
+#define CS_CLIENT     ((clientserver) && (clientside))
+#define CS_SERVER     ((clientserver) && (serverside))
+#define CS_DEMO       ((clientserver) && (cs_demo) && \
+                       ((cs_demo->isPlaying()) || (cs_demo->isRecording())))
+#define CS_DEMOPLAY   ((clientserver) && (cs_demo) && (cs_demo->isPlaying()))
+#define CS_DEMORECORD ((clientserver) && (cs_demo) && (cs_demo->isRecording()))
+#define CL_DEMO       ((CS_DEMO) && (clientside))
+#define SV_DEMO       ((CS_DEMO) && (serverside))
 
 // [CG] Some c/s configuration options.
 enum
@@ -481,6 +482,15 @@ typedef enum
 extern gametype_t GameType, DefaultGameType;
 
 extern int markUnknowns;
+
+extern double radial_attack_damage;
+extern double default_radial_attack_damage;
+extern double radial_attack_self_damage;
+extern double default_radial_attack_self_damage;
+extern double radial_attack_lift;
+extern double default_radial_attack_lift;
+extern double radial_attack_self_lift;
+extern double default_radial_attack_self_lift;
 
 #endif
 

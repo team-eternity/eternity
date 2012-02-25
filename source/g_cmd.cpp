@@ -40,6 +40,7 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_main.h"
+#include "e_lib.h"
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_dmflag.h"
@@ -197,6 +198,32 @@ CONSOLE_VARIABLE(grenade_trails, drawgrenadetrails, 0) {}
 VARIABLE_BOOLEAN(drawbfgcloud, NULL, onoff);
 CONSOLE_VARIABLE(bfg_cloud, drawbfgcloud, 0) {}
 
+// [CG] 3D radial attack options
+double radial_attack_damage = 1.0;
+double default_radial_attack_damage = 1.0;
+double radial_attack_self_damage = 1.0;
+double default_radial_attack_self_damage = 1.0;
+double radial_attack_lift = 0.5;
+double default_radial_attack_lift = 0.5;
+double radial_attack_self_lift = 0.8;
+double default_radial_attack_self_lift = 0.8;
+
+VARIABLE_FLOAT(radial_attack_damage, &default_radial_attack_damage, 0.0, 10.0);
+CONSOLE_VARIABLE(radial_attack_damage, radial_attack_damage, 0) {}
+
+VARIABLE_FLOAT(
+   radial_attack_self_damage, &default_radial_attack_self_damage, 0.0, 10.0
+);
+CONSOLE_VARIABLE(radial_attack_self_damage, radial_attack_self_damage, 0) {}
+
+VARIABLE_FLOAT(radial_attack_lift, &default_radial_attack_lift, 0.0, 10.0);
+CONSOLE_VARIABLE(radial_attack_lift, radial_attack_lift, 0) {}
+
+VARIABLE_FLOAT(
+   radial_attack_self_lift, &default_radial_attack_self_lift, 0.0, 10.0
+);
+CONSOLE_VARIABLE(radial_attack_self_lift, radial_attack_self_lift, 0) {}
+
 // always mlook
 
 VARIABLE_BOOLEAN(automlook, NULL,           onoff);
@@ -337,90 +364,188 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 // C/S Demo Stuff
 //
 
-CONSOLE_COMMAND(playcsdemo, 0)
+VARIABLE_STRING(cs_demo_folder_path, NULL, 1024);
+CONSOLE_VARIABLE(cs_demo_folder_path, cs_demo_folder_path, 0) {}
+
+VARIABLE_INT(
+   cs_demo_compression_level, &default_cs_demo_compression_level, 0, 9, NULL
+);
+CONSOLE_VARIABLE(cs_demo_compression_level, cs_demo_compression_level, 0) {}
+
+CONSOLE_COMMAND(csdemoplay, 0)
 {
    if(!clientserver)
    {
-      C_Printf("C/S mode only.\n");
+      doom_printf("C/S mode only.");
       return;
    }
 
    if(Console.argc < 1)
-      C_Printf("Usage: playcsdemo demoname\n");
-
-   if(!CS_CLIENT)
    {
-      C_Printf("Client-only for now.\n");
+      doom_printf("Usage: playcsdemo demourl");
       return;
    }
 
    if(net_peer)
-   {
       CL_Disconnect();
-   }
-   else if(cs_demo_playback || cs_demo_recording)
-   {
-      if(!CS_StopDemo())
-         C_Printf("Error stopping demo: %s.\n", CS_GetDemoErrorMessage());
-   }
 
-   if(!CS_PlayDemo(Console.argv[0]->getBuffer()))
-      C_Printf("Error playing demo: %s.\n", CS_GetDemoErrorMessage());
+   CS_NewDemo();
+
+   if(!cs_demo->play(Console.argv[0]->constPtr()))
+      doom_printf("Error playing demo: %s.", cs_demo->getError());
    else
-      C_Printf("Playing demo %s.\n", Console.argv[0]->constPtr());
+      doom_printf("Playing demo %s.", Console.argv[0]->constPtr());
 }
 
-CONSOLE_COMMAND(recordcsdemo, 0)
+CONSOLE_COMMAND(csdemospeedup, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(cs_demo_speed == cs_demo_speed_fastest)
+   {
+      doom_printf("Demo running at fastest speed.");
+      return;
+   }
+
+   cs_demo_speed++;
+   doom_printf("Demo speed: %s.", cs_demo_speed_names[cs_demo_speed]);
+}
+
+CONSOLE_COMMAND(csdemoslowdown, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(cs_demo_speed == cs_demo_speed_slowest)
+   {
+      doom_printf("Demo running at slowest speed.");
+      return;
+   }
+
+   cs_demo_speed--;
+   doom_printf("Demo speed: %s.", cs_demo_speed_names[cs_demo_speed]);
+}
+
+CONSOLE_COMMAND(csdemoback15, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->rewind(15 * TICRATE))
+      doom_printf("Error rewinding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemoback30, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->rewind(30 * TICRATE))
+      doom_printf("Error rewinding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemoback60, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->rewind(60 * TICRATE))
+      doom_printf("Error rewinding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemoforward15, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->fastForward(15 * TICRATE))
+      doom_printf("Error fast-forwarding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemoforward30, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->fastForward(30 * TICRATE))
+      doom_printf("Error fast-forwarding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemoforward60, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->rewind(60 * TICRATE))
+      doom_printf("Error fast-forwarding demo: %s.", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemorecord, 0)
 {
    nm_sync_t sync_packet;
    byte *buffer = NULL;
    size_t buffer_size;
+   const char *base_demo_archive_name;
 
    if(!clientserver)
    {
-      C_Printf("C/S mode only.\n");
-      return;
-   }
-
-   if(!CS_CLIENT)
-   {
-      C_Printf("Currently clientside only.\n");
+      doom_printf("C/S mode only.");
       return;
    }
 
    if(!net_peer)
    {
-      C_Printf("Must be connected.\n");
+      doom_printf("Must be connected.");
       return;
    }
 
-   if(cs_demo_recording)
+   if(CS_DEMORECORD)
    {
-      C_Printf("Already recording.\n");
+      doom_printf("Already recording.");
       return;
    }
 
-   if(!CS_RecordDemo())
-   {
-      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
-      CS_StopDemo();
-      return;
-   }
+   CS_NewDemo();
 
-   if(!CS_AddNewMapToDemo())
+   if(!cs_demo->record())
    {
-      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
-      CS_StopDemo();
+      doom_printf("Error recording demo: %s.", cs_demo->getError());
       return;
    }
 
    buffer_size = CS_BuildGameState(consoleplayer, &buffer);
 
-   if(!CS_WriteNetworkMessageToDemo(buffer, buffer_size, 0))
+   if(!cs_demo->write(buffer, buffer_size, 0))
    {
-      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
+      doom_printf("Error recording demo: %s.", cs_demo->getError());
       efree(buffer);
-      CS_StopDemo();
+      if(!cs_demo->stop())
+         doom_printf("Error stopping demo: %s.", cs_demo->getError());
       return;
    }
 
@@ -438,43 +563,109 @@ CONSOLE_COMMAND(recordcsdemo, 0)
    sync_packet.basetic = basetic;
    sync_packet.leveltime = leveltime;
 
-   if(!CS_WriteNetworkMessageToDemo(&sync_packet, sizeof(nm_sync_t), 0))
+   if(!cs_demo->write(&sync_packet, sizeof(nm_sync_t), 0))
    {
-      C_Printf("Error: %s.\n", CS_GetDemoErrorMessage());
-      CS_StopDemo();
+      doom_printf("Error recording demo: %s.", cs_demo->getError());
+      if(!cs_demo->stop())
+         doom_printf("Error stopping demo: %s.", cs_demo->getError());
       return;
    }
 
-   C_Printf("Recording new demo %s.ecd.\n", cs_demo_path);
+   base_demo_archive_name = cs_demo->getBasename();
+   doom_printf("Recording new demo %s.", base_demo_archive_name);
 }
 
-CONSOLE_COMMAND(stopcsdemo, 0)
+CONSOLE_COMMAND(csdemosavecheckpoint, 0)
 {
    if(!clientserver)
    {
-      C_Printf("C/S mode only.\n");
+      doom_printf("C/S mode only.");
       return;
    }
 
-   if(!CS_CLIENT)
+   if(!CS_DEMO)
    {
-      C_Printf("Client-only for now.\n");
+      doom_printf("No current demo.");
       return;
    }
 
-   if(cs_demo_playback || cs_demo_recording)
+   if(!cs_demo->saveCheckpoint())
    {
-      if(!CS_StopDemo())
-         C_Printf("Error stopping demo: %s.\n", CS_GetDemoErrorMessage());
-      else if(cs_demo_playback)
-         C_Printf("Demo playback stopped.\n");
-      else if(cs_demo_recording)
-         C_Printf("Demo recording stopped.\n");
-      else
-         C_Printf("Demo stopped.\n");
+      doom_printf("%s", cs_demo->getError());
+      return;
    }
+
+   doom_printf("Checkpoint saved");
+}
+
+CONSOLE_COMMAND(csdemopreviouscheckpoint, 0)
+{
+   if(!clientserver)
+   {
+      doom_printf("C/S mode only.");
+      return;
+   }
+
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->loadPreviousCheckpoint())
+   {
+      doom_printf("%s", cs_demo->getError());
+      return;
+   }
+
+   doom_printf("Loaded previous checkpoint");
+}
+
+CONSOLE_COMMAND(csdemonextcheckpoint, 0)
+{
+   if(!clientserver)
+   {
+      doom_printf("C/S mode only.");
+      return;
+   }
+
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->loadNextCheckpoint())
+   {
+      doom_printf("%s", cs_demo->getError());
+      return;
+   }
+
+   doom_printf("Loaded next checkpoint");
+}
+
+CONSOLE_COMMAND(csdemostop, 0)
+{
+   if(!clientserver)
+   {
+      doom_printf("C/S mode only.");
+      return;
+   }
+
+   if(!CS_DEMO)
+   {
+      doom_printf("No current demo.");
+      return;
+   }
+
+   if(!cs_demo->stop())
+      doom_printf("Error stopping demo: %s.", cs_demo->getError());
+   else if(CS_DEMOPLAY)
+      doom_printf("Demo playback stopped.");
+   else if(CS_DEMORECORD)
+      doom_printf("Demo recording stopped.");
    else
-      C_Printf("No current demo.\n");
+      doom_printf("Demo stopped.");
 }
 
 //////////////////////////////////////
@@ -486,7 +677,7 @@ CONSOLE_COMMAND(playdemo, cf_notnet)
 {
    if(Console.argc < 1)
    {
-      C_Printf("usage: playdemo demoname\n");
+      doom_printf("usage: playdemo demoname\n");
       return;
    }
 
@@ -635,11 +826,9 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
    {
       int map_number;
 
-      // [CG] Clients may issue the map command while recording a demo, but we
-      //      don't want to honor that command while playing the demo back.  To
-      //      avoid an error message, silently quit without doing anything
-      //      here.
-      if(CS_DEMO)
+      // [CG] Don't switch maps during demo playback, we have other commands
+      //      for that.
+      if(CS_DEMOPLAY)
          return;
 
       if(!CS_SERVER)
@@ -662,22 +851,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
          return;
       }
 
-      if(CS_DEMO)
-      {
-         if(!CS_LoadDemoMap(map_number + 1))
-         {
-            C_Printf(
-               "Error during demo playback: %s.\n", CS_GetDemoErrorMessage()
-            );
-            CS_StopDemo();
-         }
-      }
-      else if(CS_SERVER)
+      if(CS_SERVER)
       {
          cs_current_map_number = map_number;
          SV_BroadcastMapCompleted(false);
+         G_SetGameMapName(cs_maps[cs_current_map_number].name);
          G_DoCompleted(false);
-         CS_DoWorldDone();
+         gameaction = ga_worlddone;
       }
       return;
    }
@@ -721,8 +901,8 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
       C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
-        // player name
-VARIABLE_STRING(default_name, NULL,             20);
+// player name
+VARIABLE_STRING(default_name, NULL, 20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 {
    int playernum;
@@ -736,7 +916,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(Console.argv[0]->length() <= 0)
    {
-      C_Printf("Cannot blank your name.\n");
+      doom_printf("Cannot blank your name.");
       return;
    }
    
@@ -746,12 +926,11 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(playernum == consoleplayer)
    {
-      efree(default_name);
-      default_name = Console.argv[0]->duplicate(PU_STATIC);
-   }
+      E_ReplaceString(default_name, Console.argv[0]->getBuffer());
 
-   if(CS_CLIENT)
-      CL_SendPlayerStringInfo(ci_name);
+      if(CS_CLIENT)
+         CL_SendPlayerStringInfo(ci_name);
+   }
 }
 
 // screenshot type
@@ -1216,6 +1395,8 @@ const char *comp_strings[] =
   "planeshoot", //          09/22/07: plane shooting
   "special",    //          08/29/09: special failure behavior
   "ninja",      //          04/18/10: ninja spawn
+  "mouselook",  // [CG]     02/20/12: abridged vertical mouselook range
+  "2dradatk",   //          02/20/12: radius attacks only thrust actors in 2D
 };
 
 static void Handler_CompTHeights(void)
@@ -1227,7 +1408,7 @@ void G_AddCompat(void)
 {
    int i;
 
-   for(i = 0; i <= comp_ninja; i++)   // haleyjd: update this regularly
+   for(i = 0; i <= comp_2dradatk; i++)   // haleyjd: update this regularly
    {
       variable_t *variable;
       command_t *command;
@@ -1348,14 +1529,36 @@ void G_AddCommands(void)
    C_AddCommand(master_levels_dir);
    C_AddCommand(use_doom_config);
 
+   // [CG] Radial attack options
+   C_AddCommand(radial_attack_damage);
+   C_AddCommand(radial_attack_self_damage);
+   C_AddCommand(radial_attack_lift);
+   C_AddCommand(radial_attack_self_lift);
+
    // [CG] More new stuff.
    C_AddCommand(maplist);
    C_AddCommand(weapon_switch_on_pickup);
    C_AddCommand(ammo_switch_on_pickup);
    C_AddCommand(display_target_names);
-   C_AddCommand(playcsdemo);
-   C_AddCommand(recordcsdemo);
-   C_AddCommand(stopcsdemo);
+
+
+   // [CG] C/S demo controls.
+   C_AddCommand(cs_demo_folder_path);
+   C_AddCommand(cs_demo_compression_level);
+   C_AddCommand(csdemoplay);
+   C_AddCommand(csdemospeedup);
+   C_AddCommand(csdemoslowdown);
+   C_AddCommand(csdemoback15);
+   C_AddCommand(csdemoback30);
+   C_AddCommand(csdemoback60);
+   C_AddCommand(csdemoforward15);
+   C_AddCommand(csdemoforward30);
+   C_AddCommand(csdemoforward60);
+   C_AddCommand(csdemorecord);
+   C_AddCommand(csdemosavecheckpoint);
+   C_AddCommand(csdemopreviouscheckpoint);
+   C_AddCommand(csdemonextcheckpoint);
+   C_AddCommand(csdemostop);
 
    G_AddChatMacros();
    G_AddWeapPrefs();

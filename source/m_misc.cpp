@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 // All configuration file code is redundant with the console variable
 // system. These systems sorely need to be integrated so that configuration
 // comes from a console script instead of a separate file format. Need
-// to do this without breaking config-in-wad capability, or need to 
+// to do this without breaking config-in-wad capability, or need to
 // come up with some other easy way for projects to override defaults.
 // ALL archived console variables need to be adjusted to have defaults,
 // and a way to set their value without changing the default must be
@@ -52,12 +52,14 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "doomstat.h"
+#include "e_lib.h"
 #include "f_wipe.h"
 #include "g_game.h"
 #include "hu_over.h"
 #include "hu_stuff.h"
 #include "i_sound.h"
 #include "i_video.h"
+#include "m_file.h"
 #include "mn_engin.h"
 #include "mn_files.h"
 #include "mn_menus.h"
@@ -131,7 +133,7 @@ extern int wipewait;
 
 // CONFIG_FIXME: need to restore lost features in future rewrite.
 
-default_t defaults[] = 
+default_t defaults[] =
 {
    DEFAULT_INT("colour", &default_colour, NULL, 0, 0, TRANSLATIONCOLOURS, default_t::wad_no,
                "the default player colour (green, indigo, brown, red...)"),
@@ -155,7 +157,7 @@ default_t defaults[] =
    // haleyjd 04/15/02: SDL joystick device number
    DEFAULT_INT("joystick_num", &i_SDLJoystickNum, NULL, -1, -1, UL, default_t::wad_no,
                "SDL joystick device number, -1 to disable"),
-    
+
    // joystick sensitivities
    DEFAULT_INT("joystickSens_x", &joystickSens_x, NULL, 0, -32768, 32767, default_t::wad_no,
                "SDL joystick horizontal sensitivity"),
@@ -166,11 +168,11 @@ default_t defaults[] =
 
    DEFAULT_INT("s_precache", &s_precache, NULL, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
-  
+
    // killough 10/98
-   DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("disk_icon", &disk_icon, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable flashing icon during disk IO"),
-  
+
    // killough 2/21/98
    DEFAULT_INT("pitched_sounds", &pitched_sounds, NULL, 0, 0, 1, default_t::wad_yes,
                "1 to enable variable pitch in sound effects (from id's original code)"),
@@ -194,7 +196,7 @@ default_t defaults[] =
    // killough 3/31/98
    DEFAULT_INT("demo_insurance", &default_demo_insurance, NULL, 2, 0, 2, default_t::wad_no,
                "1=take special steps ensuring demo sync, 2=only during recordings"),
-   
+
    // phares
    DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_yes,
                "1 to enable recoil from weapon fire"),
@@ -242,33 +244,33 @@ default_t defaults[] =
                "1 to enable monsters fighting against each other when provoked"),
 
    // killough 9/8/98
-   DEFAULT_INT("monster_backing", &default_monster_backing, &monster_backing, 
+   DEFAULT_INT("monster_backing", &default_monster_backing, &monster_backing,
                0, 0, 1, default_t::wad_yes, "1 to enable monsters backing away from targets"),
 
    //killough 9/9/98:
    DEFAULT_INT("monster_avoid_hazards", &default_monster_avoid_hazards, &monster_avoid_hazards,
                1, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
-   
+
    DEFAULT_INT("monkeys", &default_monkeys, &monkeys, 0, 0, 1, default_t::wad_yes,
                "1 to enable monsters to move up/down steep stairs"),
-   
+
    //killough 9/9/98:
    DEFAULT_INT("monster_friction", &default_monster_friction, &monster_friction,
                1, 0, 1, default_t::wad_yes, "1 to enable monsters to be affected by friction"),
-   
+
    //killough 9/9/98:
    DEFAULT_INT("help_friends", &default_help_friends, &help_friends, 1, 0, 1, default_t::wad_yes,
                "1 to enable monsters to help dying friends"),
-   
+
    // killough 7/19/98
    DEFAULT_INT("player_helpers", &default_dogs, &dogs, 0, 0, 3, default_t::wad_yes,
                "number of single-player helpers"),
-   
+
    // CONFIG_FIXME: 999?
    // killough 8/8/98
    DEFAULT_INT("friend_distance", &default_distfriend, &distfriend, 128, 0, 999, default_t::wad_yes,
                "distance friends stay away"),
-   
+
    // killough 10/98
    DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, default_t::wad_yes,
                "1 to enable dogs to jump"),
@@ -278,18 +280,18 @@ default_t defaults[] =
 
    DEFAULT_INT("p_markunknowns", &markUnknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
-   
+
    // no color changes on status bar
    DEFAULT_INT("sts_always_red", &sts_always_red, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to disable use of color on status bar"),
-   
+
    DEFAULT_INT("sts_pct_always_gray", &sts_pct_always_gray, NULL, 0, 0, 1, default_t::wad_yes,
                "1 to make percent signs on status bar always gray"),
-   
+
    // killough 2/28/98
    DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to disable doubled card and skull key display on status bar"),
-   
+
    // haleyjd 05/16/04: restored (see mn_menus.c); changed def. to 0
    // killough 4/17/98
    DEFAULT_INT("traditional_menu", &traditional_menu, NULL, 0, 0, 1, default_t::wad_yes,
@@ -349,12 +351,12 @@ default_t defaults[] =
    DEFAULT_INT("autorun", &autorun, NULL, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 
    // haleyjd 08/23/09: allow shift to cancel autorun
-   DEFAULT_INT("runiswalk", &runiswalk, NULL, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("runiswalk", &runiswalk, NULL, 0, 0, 1, default_t::wad_no,
                "1 to walk with shift when autorun is enabled"),
 
    // killough 2/21/98: default to 10
    // sf: removed screenblocks, screensize only now - changed values down 3
-   DEFAULT_INT("screensize", &screenSize, NULL, 7, 0, 8, default_t::wad_no, 
+   DEFAULT_INT("screensize", &screenSize, NULL, 7, 0, 8, default_t::wad_no,
                "initial play screen size"),
 
    //jff 3/6/98 fix erroneous upper limit in range
@@ -377,16 +379,16 @@ default_t defaults[] =
    // haleyjd: auto-loaded console scripts
    DEFAULT_STR("cscript_1", &csc_files[0], NULL, "", default_t::wad_no,
                "Console script executed at program startup"),
-  
+
    DEFAULT_STR("cscript_2", &csc_files[1], NULL, "", default_t::wad_no,
                "Console script executed at program startup"),
-  
+
    DEFAULT_INT("use_startmap", &use_startmap, NULL, -1, -1, 1, default_t::wad_yes,
                "use start map instead of menu"),
 
    // killough 10/98: compatibility vector:
 
-   DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie], 
+   DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie],
                0, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
 
    DEFAULT_INT("comp_infcheat", &default_comp[comp_infcheat], &comp[comp_infcheat],
@@ -444,28 +446,28 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Linedef effects work with sector tag = 0"),
 
    // haleyjd
-   DEFAULT_INT("comp_terrain", &default_comp[comp_terrain], &comp[comp_terrain], 
+   DEFAULT_INT("comp_terrain", &default_comp[comp_terrain], &comp[comp_terrain],
                1, 0, 1, default_t::wad_yes, "Terrain effects not activated on floor contact"),
-   
+
    // haleyjd
    DEFAULT_INT("comp_respawnfix", &default_comp[comp_respawnfix], &comp[comp_respawnfix],
                0, 0, 1, default_t::wad_yes, "Creatures with no spawnpoint respawn at (0,0)"),
-   
+
    // haleyjd
    DEFAULT_INT("comp_fallingdmg", &default_comp[comp_fallingdmg], &comp[comp_fallingdmg],
                1, 0, 1, default_t::wad_yes, "Players do not take falling damage"),
-   
+
    // haleyjd
    DEFAULT_INT("comp_soul", &default_comp[comp_soul], &comp[comp_soul],
                0, 0, 1, default_t::wad_yes, "Lost souls do not bounce on floors"),
-   
+
    // haleyjd 02/15/02: z checks (includes,supercedes comp_scratch)
    DEFAULT_INT("comp_overunder", &default_comp[comp_overunder], &comp[comp_overunder],
                1, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
-   
+
    DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
                1, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
-   
+
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
                1, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
 
@@ -474,7 +476,7 @@ default_t defaults[] =
 
    DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
-   
+
    DEFAULT_INT(
       "comp_mouselook",
       &default_comp[comp_mouselook],
@@ -508,27 +510,27 @@ default_t defaults[] =
 
    DEFAULT_INT("key_pause", &key_pause, NULL, KEYD_PAUSE, 0, 255, default_t::wad_no,
                "key to pause the game"),
-   
+
    DEFAULT_INT("key_chat", &key_chat, NULL, 't', 0, 255, default_t::wad_no,
                "key to enter a chat message"),
-   
+
    DEFAULT_INT("key_chatplayer1", &destination_keys[0], NULL, 'g', 0, 255, default_t::wad_no,
                "key to chat with player 1"),
-   
+
    // killough 11/98: fix 'i'/'b' reversal
    DEFAULT_INT("key_chatplayer2", &destination_keys[1], NULL, 'i', 0, 255, default_t::wad_no,
                "key to chat with player 2"),
-   
+
    // killough 11/98: fix 'i'/'b' reversal
    DEFAULT_INT("key_chatplayer3", &destination_keys[2], NULL, 'b', 0, 255, default_t::wad_no,
                "key to chat with player 3"),
-   
+
    DEFAULT_INT("key_chatplayer4", &destination_keys[3], NULL, 'r', 0, 255, default_t::wad_no,
                "key to chat with player 4"),
-   
-   DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no, 
+
+   DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to always mouselook"),
-   
+
    // [CG] Now defaults to off.
    DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert mouse during mouselooking"),
@@ -539,106 +541,106 @@ default_t defaults[] =
 
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable use of mouse"),
-   
+
    //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
    // haleyjd: rename these buttons on the user-side to prevent confusion
    DEFAULT_INT("mouseb_dblc1", &mousebstrafe, NULL, 1, -1, 2, default_t::wad_no,
                "1st mouse button to enable for double-click use action (-1 = disable)"),
-   
+
    DEFAULT_INT("mouseb_dblc2", &mousebforward, NULL, 2, -1, 2, default_t::wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
-   
+
    DEFAULT_INT("use_joystick", &usejoystick, NULL, 0, 0, 1, default_t::wad_no,
                "1 to enable use of joystick"),
-      
+
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, default_t::wad_yes,
                "chat string associated with 0 key"),
-   
+
    DEFAULT_STR("chatmacro1", &chat_macros[1], NULL, HUSTR_CHATMACRO1, default_t::wad_yes,
                "chat string associated with 1 key"),
-   
+
    DEFAULT_STR("chatmacro2", &chat_macros[2], NULL, HUSTR_CHATMACRO2, default_t::wad_yes,
-               "chat string associated with 2 key"),   
+               "chat string associated with 2 key"),
 
    DEFAULT_STR("chatmacro3", &chat_macros[3], NULL, HUSTR_CHATMACRO3, default_t::wad_yes,
                "chat string associated with 3 key"),
-   
+
    DEFAULT_STR("chatmacro4", &chat_macros[4], NULL, HUSTR_CHATMACRO4, default_t::wad_yes,
                "chat string associated with 4 key"),
-   
+
    DEFAULT_STR("chatmacro5", &chat_macros[5], NULL, HUSTR_CHATMACRO5, default_t::wad_yes,
                "chat string associated with 5 key"),
 
    DEFAULT_STR("chatmacro6", &chat_macros[6], NULL, HUSTR_CHATMACRO6, default_t::wad_yes,
                "chat string associated with 6 key"),
-   
+
    DEFAULT_STR("chatmacro7", &chat_macros[7], NULL, HUSTR_CHATMACRO7, default_t::wad_yes,
                "chat string associated with 7 key"),
-   
+
    DEFAULT_STR("chatmacro8", &chat_macros[8], NULL, HUSTR_CHATMACRO8, default_t::wad_yes,
                "chat string associated with 8 key"),
-   
+
    DEFAULT_STR("chatmacro9", &chat_macros[9], NULL, HUSTR_CHATMACRO9, default_t::wad_yes,
                "chat string associated with 9 key"),
-   
+
    //jff 1/7/98 defaults for automap colors
    //jff 4/3/98 remove -1 in lower range, 0 now disables new map features
    // black //jff 4/6/98 new black
    DEFAULT_INT("mapcolor_back", &mapcolor_back, NULL, 247, 0, 255, default_t::wad_yes,
                "color used as background for automap"),
-   
+
    // dk gray
    DEFAULT_INT("mapcolor_grid", &mapcolor_grid, NULL, 104, 0, 255, default_t::wad_yes,
                "color used for automap grid lines"),
-   
+
    // red-brown
    DEFAULT_INT("mapcolor_wall", &mapcolor_wall, NULL, 181, 0, 255, default_t::wad_yes,
                "color used for one side walls on automap"),
-   
+
    // lt brown
    DEFAULT_INT("mapcolor_fchg", &mapcolor_fchg, NULL, 166, 0, 255, default_t::wad_yes,
                "color used for lines floor height changes across"),
-   
+
    // orange
    DEFAULT_INT("mapcolor_cchg", &mapcolor_cchg, NULL, 231, 0, 255, default_t::wad_yes,
                "color used for lines ceiling height changes across"),
-   
+
    // white
    DEFAULT_INT("mapcolor_clsd", &mapcolor_clsd, NULL, 231, 0, 255, default_t::wad_yes,
                "color used for lines denoting closed doors, objects"),
-   
+
    // red
    DEFAULT_INT("mapcolor_rkey",&mapcolor_rkey, NULL, 175, 0, 255, default_t::wad_yes,
                "color used for red key sprites"),
-   
+
    // blue
    DEFAULT_INT("mapcolor_bkey",&mapcolor_bkey, NULL, 204, 0, 255, default_t::wad_yes,
                "color used for blue key sprites"),
-   
+
    // yellow
    DEFAULT_INT("mapcolor_ykey",&mapcolor_ykey, NULL, 231, 0, 255, default_t::wad_yes,
                "color used for yellow key sprites"),
-   
+
    // red
    DEFAULT_INT("mapcolor_rdor",&mapcolor_rdor, NULL, 175, 0, 255, default_t::wad_yes,
                "color used for closed red doors"),
-   
+
    // blue
    DEFAULT_INT("mapcolor_bdor",&mapcolor_bdor, NULL, 204, 0, 255, default_t::wad_yes,
                "color used for closed blue doors"),
-   
+
    // yellow
    DEFAULT_INT("mapcolor_ydor",&mapcolor_ydor, NULL, 231, 0, 255, default_t::wad_yes,
                "color used for closed yellow doors"),
-   
+
    // dk green
    DEFAULT_INT("mapcolor_tele",&mapcolor_tele, NULL, 119, 0, 255, default_t::wad_yes,
                "color used for teleporter lines"),
-   
+
    // purple
    DEFAULT_INT("mapcolor_secr",&mapcolor_secr, NULL, 176, 0, 255, default_t::wad_yes,
                "color used for lines around secret sectors"),
-   
+
    // none
    DEFAULT_INT("mapcolor_exit",&mapcolor_exit, NULL, 0, 0, 255, default_t::wad_yes,
                "color used for exit lines"),
@@ -646,60 +648,60 @@ default_t defaults[] =
    // dk gray
    DEFAULT_INT("mapcolor_unsn",&mapcolor_unsn, NULL, 96, 0, 255, default_t::wad_yes,
                "color used for lines not seen without computer map"),
-   
+
    // lt gray
    DEFAULT_INT("mapcolor_flat",&mapcolor_flat, NULL, 88, 0, 255, default_t::wad_yes,
                "color used for lines with no height changes"),
-   
+
    // green
    DEFAULT_INT("mapcolor_sprt",&mapcolor_sprt, NULL, 112, 0, 255, default_t::wad_yes,
                "color used as things"),
-   
+
    // white
    DEFAULT_INT("mapcolor_hair",&mapcolor_hair, NULL, 208, 0, 255, default_t::wad_yes,
                "color used for dot crosshair denoting center of map"),
-   
+
    // white
    DEFAULT_INT("mapcolor_sngl",&mapcolor_sngl, NULL, 208, 0, 255, default_t::wad_yes,
                "color used for the single player arrow"),
-   
+
    // green
    DEFAULT_INT("mapcolor_ply1",&mapcolor_plyr[0], NULL, 112, 0, 255, default_t::wad_yes,
                "color used for the green player arrow"),
-   
+
    // lt gray
    DEFAULT_INT("mapcolor_ply2",&mapcolor_plyr[1], NULL, 88, 0, 255, default_t::wad_yes,
                "color used for the gray player arrow"),
-   
+
    // brown
    DEFAULT_INT("mapcolor_ply3",&mapcolor_plyr[2], NULL, 64, 0, 255, default_t::wad_yes,
                "color used for the brown player arrow"),
-   
+
    // red
    DEFAULT_INT("mapcolor_ply4",&mapcolor_plyr[3], NULL, 176, 0, 255, default_t::wad_yes,
                "color used for the red player arrow"),
-   
+
    // purple                       // killough 8/8/98
    DEFAULT_INT("mapcolor_frnd",&mapcolor_frnd, NULL, 252, 0, 255, default_t::wad_yes,
                "color used for friends"),
-   
+
 
    DEFAULT_INT("mapcolor_prtl",&mapcolor_prtl, NULL, 109, 0, 255, default_t::wad_yes,
                "color for lines not in the player's portal area"),
-   
+
    DEFAULT_INT("mapportal_overlay",&mapportal_overlay, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to overlay different linked portal areas in the automap"),
-            
+
 
    DEFAULT_INT("map_point_coord", &map_point_coordinates, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to show automap pointer coordinates in non-follow mode"),
-   
+
    //jff 3/9/98 add option to not show secrets til after found
    // killough change default, to avoid spoilers and preserve Doom mystery
    // show secret after gotten
    DEFAULT_INT("map_secret_after",&map_secret_after, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to not show secret sectors till after entered"),
-   
+
    //jff 1/7/98 end additions for automap
 
    //jff 2/16/98 defaults for color ranges in hud and status
@@ -707,40 +709,40 @@ default_t defaults[] =
    // 1 line scrolling window
    DEFAULT_INT("hud_msg_lines",&hud_msg_lines, NULL, 1, 1, 16, default_t::wad_yes,
                "number of lines in review display"),
-   
+
    // killough 11/98
    DEFAULT_INT("hud_msg_scrollup",&hud_msg_scrollup, NULL, 1, 0, 1, default_t::wad_yes,
                "1 enables message review list scrolling upward"),
-   
+
    // killough 11/98
    DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, default_t::wad_no,
                "Duration of normal Doom messages (ms)"),
-   
+
    //sf : fullscreen hud style
    DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, default_t::wad_yes,
                "fullscreen hud style"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
                "fullscreen hud enabled"),
-   
+
    DEFAULT_INT("hud_hidestatus",&hud_hidestatus, NULL, 0, 0, 1, default_t::wad_yes,
                "hide kills/items/secrets info on fullscreen hud"),
-   
+
    DEFAULT_BOOL("hu_showtime", &hu_showtime, NULL, true, default_t::wad_yes,
                 "display current level time on automap"),
-   
+
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, NULL, true, default_t::wad_yes,
                 "display player/pointer coordinates on automap"),
-   
+
    DEFAULT_INT("hu_timecolor",&hu_timecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
                "color of automap level time widget"),
 
    DEFAULT_INT("hu_levelnamecolor",&hu_levelnamecolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
                "color of automap level name widget"),
-   
+
    DEFAULT_INT("hu_coordscolor",&hu_coordscolor, NULL, CR_RED, 0, CR_LIMIT-1, default_t::wad_yes,
                "color of automap coordinates widget"),
-   
+
    // below is red
    DEFAULT_INT("health_red",&health_red, NULL, 25, 0, 200, default_t::wad_yes,
                "amount of health for red to yellow transition"),
@@ -748,109 +750,109 @@ default_t defaults[] =
    // below is yellow
    DEFAULT_INT("health_yellow", &health_yellow, NULL, 50, 0, 200, default_t::wad_yes,
                "amount of health for yellow to green transition"),
-   
+
    // below is green, above blue
    DEFAULT_INT("health_green",&health_green, NULL, 100, 0, 200, default_t::wad_yes,
                "amount of health for green to blue transition"),
-   
+
    // below is red
    DEFAULT_INT("armor_red",&armor_red, NULL, 25, 0, 200, default_t::wad_yes,
                "amount of armor for red to yellow transition"),
-   
+
    // below is yellow
    DEFAULT_INT("armor_yellow",&armor_yellow, NULL, 50, 0, 200, default_t::wad_yes,
                "amount of armor for yellow to green transition"),
-   
+
    // below is green, above blue
    DEFAULT_INT("armor_green",&armor_green, NULL, 100, 0, 200, default_t::wad_yes,
                "amount of armor for green to blue transition"),
-   
+
    // below 25% is red
    DEFAULT_INT("ammo_red",&ammo_red, NULL, 25, 0, 100, default_t::wad_yes,
                "percent of ammo for red to yellow transition"),
-   
+
    // below 50% is yellow, above green
    DEFAULT_INT("ammo_yellow",&ammo_yellow, NULL, 50, 0, 100, default_t::wad_yes,
                "percent of ammo for yellow to green transition"),
 
    DEFAULT_INT("st_fsalpha", &st_fsalpha, NULL, 100, 0, 100, default_t::wad_yes,
                "fullscreen HUD translucency level"),
-   
+
    // killough 2/8/98: weapon preferences set by user:
    DEFAULT_INT("weapon_choice_1",&weapon_preferences[0][0], NULL, 6, 1, 9, default_t::wad_yes,
                "first choice for weapon (best)"),
-   
+
    DEFAULT_INT("weapon_choice_2",&weapon_preferences[0][1], NULL, 9, 1, 9, default_t::wad_yes,
                "second choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_3",&weapon_preferences[0][2], NULL, 4, 1, 9, default_t::wad_yes,
                "third choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_4",&weapon_preferences[0][3], NULL, 3, 1, 9, default_t::wad_yes,
                "fourth choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_5",&weapon_preferences[0][4], NULL, 2, 1, 9, default_t::wad_yes,
                "fifth choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_6",&weapon_preferences[0][5], NULL, 8, 1, 9, default_t::wad_yes,
                "sixth choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_7",&weapon_preferences[0][6], NULL, 5, 1, 9, default_t::wad_yes,
                "seventh choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_8",&weapon_preferences[0][7], NULL, 7, 1, 9, default_t::wad_yes,
                "eighth choice for weapon"),
-   
+
    DEFAULT_INT("weapon_choice_9",&weapon_preferences[0][8], NULL, 1, 1, 9, default_t::wad_yes,
                "ninth choice for weapon (worst)"),
-   
+
    DEFAULT_INT("c_speed",&c_speed, NULL, 10, 1, 200, default_t::wad_no,
                "console speed, pixels/tic"),
-   
+
    DEFAULT_INT("c_height",&c_height, NULL, 100, 0, 200, default_t::wad_no,
                "console height, pixels"),
-   
+
    DEFAULT_INT("obituaries",&obituaries, NULL, 0, 0, 1, default_t::wad_yes,
                "obituaries on/off"),
-   
+
    DEFAULT_INT("obcolour",&obcolour, NULL, 0, 0, CR_LIMIT-1, default_t::wad_no,
                "obituaries colour"),
-   
+
    DEFAULT_INT("draw_particles",&drawparticles, NULL, 0, 0, 1, default_t::wad_yes,
                "toggle particle effects on or off"),
-   
+
    DEFAULT_INT("particle_trans",&particle_trans, NULL, 1, 0, 2, default_t::wad_yes,
                "particle translucency (0 = none, 1 = smooth, 2 = general)"),
-   
+
    DEFAULT_INT("blood_particles",&bloodsplat_particle, NULL, 0, 0, 2, default_t::wad_yes,
                "use sprites, particles, or both for blood (sprites = 0)"),
-   
+
    DEFAULT_INT("bullet_particles",&bulletpuff_particle, NULL, 0, 0, 2, default_t::wad_yes,
                "use sprites, particles, or both for bullet puffs (sprites = 0)"),
-   
+
    DEFAULT_INT("rocket_trails",&drawrockettrails, NULL, 0, 0, 1, default_t::wad_yes,
                "draw particle rocket trails"),
 
    DEFAULT_INT("grenade_trails",&drawgrenadetrails, NULL, 0, 0, 1, default_t::wad_yes,
                "draw particle grenade trails"),
-   
+
    DEFAULT_INT("bfg_cloud",&drawbfgcloud, NULL, 0, 0, 1, default_t::wad_yes,
                "draw particle bfg cloud"),
-   
+
    DEFAULT_INT("pevent_rexpl",&(particleEvents[P_EVENT_ROCKET_EXPLODE].enabled), NULL,
                0, 0, 1, default_t::wad_yes, "draw particle rocket explosions"),
-   
+
    DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), NULL,
                0, 0, 1, default_t::wad_yes, "draw particle bfg explosions"),
 
    DEFAULT_INT("stretchsky", &stretchsky, NULL, 0, 0, 1, default_t::wad_yes,
                "stretch short sky textures for mlook"),
-   
+
    DEFAULT_INT("startnewmap", &startOnNewMap, NULL, 0, 0, 1, default_t::wad_yes,
                "start game on first new map (DOOM II only)"),
-   
 
-#ifdef _SDL_VER   
+
+#ifdef _SDL_VER
    DEFAULT_INT("showendoom", &showendoom, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to show ENDOOM at exit"),
 
@@ -860,67 +862,87 @@ default_t defaults[] =
 
    DEFAULT_INT("autoaim", &default_autoaim, &autoaim, 1, 0, 1, default_t::wad_yes,
                "1 to enable autoaiming"),
-   
+
    DEFAULT_INT("chasecam_height", &chasecam_height, NULL, 15, -31, 100, default_t::wad_no,
                "preferred height of chasecam above/below player viewheight"),
-   
+
    DEFAULT_INT("chasecam_speed", &chasecam_speed, NULL, 33, 1, 100, default_t::wad_no,
                "percentage of distance to target chasecam moves per gametic"),
-   
+
    DEFAULT_INT("chasecam_dist", &chasecam_dist, NULL, 112, 10, 1024, default_t::wad_no,
                "preferred distance from chasecam to player"),
-   
+
    DEFAULT_INT("allowmlook", &default_allowmlook, &allowmlook, 0, 0, 1, default_t::wad_yes,
                "1 to allow players to look up/down"),
-   
+
    DEFAULT_BOOL("menu_toggleisback", &menu_toggleisback, NULL, false, default_t::wad_no,
                 "1 to make menu toggle action back up one level (like zdoom)"),
-   
+
    DEFAULT_INT("mn_classic_menus", &mn_classic_menus, NULL, 0, 0, 1, default_t::wad_yes,
                "1 to enable use of full classic menu emulation"),
 
    DEFAULT_STR("mn_background", &mn_background, NULL, "default", default_t::wad_yes,
                "menu background"),
-   
+
    DEFAULT_STR("wad_directory", &wad_directory, NULL, ".", default_t::wad_no,
                "user's default wad directory"),
-   
-   DEFAULT_INT("r_columnengine",&r_column_engine_num, NULL, 
-               1, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
+
+   DEFAULT_INT("r_columnengine",&r_column_engine_num, NULL,
+               1, 0, NUMCOLUMNENGINES - 1, default_t::wad_no,
                "0 = normal, 1 = optimized quad cache"),
-   
+
    DEFAULT_INT("r_spanengine",&r_span_engine_num, NULL,
-               0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
+               0, 0, NUMSPANENGINES - 1, default_t::wad_no,
                "0 = high precision, 1 = low precision"),
-   
+
    DEFAULT_INT("r_vissprite_limit", &r_vissprite_limit, NULL, -1, -1, UL, default_t::wad_yes,
                "number of vissprites allowed per frame (-1 = no limit)"),
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, NULL, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_yes,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
-   
+
    DEFAULT_INT("spechits_emulation", &spechits_emulation, NULL, 0, 0, 2, default_t::wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),
 
    DEFAULT_BOOL("donut_emulation", &donut_emulation, NULL, false, default_t::wad_no,
                 "emulate undefined EV_DoDonut behavior"),
-   
+
    DEFAULT_INT("wipewait",&wipewait, NULL, 2, 0, 2, default_t::wad_no,
                "0 = never wait on screen wipes, 1 = always wait, 2 = wait when playing demos"),
-   
+
    DEFAULT_INT("wipetype",&wipetype, NULL, 1, 0, 2, default_t::wad_yes,
                "0 = none, 1 = melt, 2 = fade"),
-   
+
 #ifdef HAVE_SPCLIB
    DEFAULT_INT("snd_spcpreamp", &spc_preamp, NULL, 1, 1, 6, default_t::wad_yes,
                "preamp volume factor for SPC music"),
-   
+
    DEFAULT_INT("snd_spcbassboost", &spc_bass_boost, NULL, 8, 1, 31, default_t::wad_yes,
                "bass boost for SPC music (logarithmic scale, 8 = normal)"),
-   
+
 #endif
 
    // [CG] These are new defaults.
+
+   DEFAULT_STR(
+      "client/server demo folder",
+      &cs_demo_folder_path,
+      NULL,
+      "",
+      default_t::wad_no,
+      "user's default client/server demo folder"
+   ),
+
+   DEFAULT_INT(
+      "client/server demo compression level",
+      &cs_demo_compression_level,
+      &default_cs_demo_compression_level,
+      4,
+      0,
+      9,
+      default_t::wad_no,
+      "demo compression level; 0 = none, 4 = normal, 9 = ultra"
+   ),
 
    // [CG] Target names
    DEFAULT_BOOL(
@@ -963,7 +985,7 @@ default_t defaults[] =
       "how to switch weapons when one is picked up, 0 - always, 1 - use PWO, "
       "2 - never"
    ),
-   
+
    DEFAULT_INT(
       "ammo_switch_on_pickup",
       &ammo_switch_on_pickup,
@@ -986,7 +1008,7 @@ default_t defaults[] =
 //
 // haleyjd 06/29/09: Default Overrides
 //
-// The following tables are mapped through GameModeInfo and are used to 
+// The following tables are mapped through GameModeInfo and are used to
 // override selected defaults in the primary defaults array above by replacing
 // the default values specified there. This is the cleanest way to provide
 // gamemode-dependent default values for only some of the options that I can
@@ -1001,12 +1023,12 @@ default_or_t HereticDefaultORs[] =
    { "allowmlook",       1 }, // mlook defaults to on
    { "wipetype",         2 }, // use crossfade wipe by default
    { "hud_overlaystyle", 4 }, // use graphical HUD style
-   
+
    // compatibility
    { "comp_terrain",   0 }, // terrain active
    { "comp_soul",      1 }, // SKULLFLY objects do not bounce
    { "comp_overunder", 0 }, // 3D object clipping is on
-   
+
    // colors
    // TODO: player color
    // TODO: additional automap colors
@@ -1041,10 +1063,10 @@ static defaultfile_t maindefaults =
 static unsigned int default_hash(defaultfile_t *df, const char *name)
 {
    unsigned int hash = 0;
-   
+
    while(*name)
       hash = hash*2 + toupper(*name++);
-   
+
    return hash % df->numdefaults;
 }
 
@@ -1116,7 +1138,7 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Methods for different types of default items
 //
 
-// 
+//
 // Strings
 //
 
@@ -1129,7 +1151,7 @@ static bool M_writeDefaultHelpString(default_t *dp, FILE *f)
 // Write a string option key/value pair
 static bool M_writeDefaultString(default_t *dp, FILE *f)
 {
-   const char *value = 
+   const char *value =
       dp->modified ? dp->orig_default_s : *(const char **)dp->location;
 
    return (fprintf(f, "%-25s \"%s\"\n", dp->name, value) == EOF);
@@ -1219,20 +1241,20 @@ static bool M_writeDefaultHelpInt(default_t *dp, FILE *f)
    {
       if(dp->limit.max == UL)
          written = (fprintf(f, "[?-?(%d)]", dp->defaultvalue_i) == EOF);
-      else 
+      else
       {
-         written = (fprintf(f, "[?-%d(%d)]", dp->limit.max, 
+         written = (fprintf(f, "[?-%d(%d)]", dp->limit.max,
                             dp->defaultvalue_i) == EOF);
       }
    }
    else if(dp->limit.max == UL)
    {
-      written = (fprintf(f, "[%d-?(%d)]", dp->limit.min, 
+      written = (fprintf(f, "[%d-?(%d)]", dp->limit.min,
                          dp->defaultvalue_i) == EOF);
    }
    else
    {
-      written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max, 
+      written = (fprintf(f, "[%d-%d(%d)]", dp->limit.min, dp->limit.max,
                          dp->defaultvalue_i) == EOF);
    }
 
@@ -1245,7 +1267,7 @@ static bool M_writeDefaultInt(default_t *dp, FILE *f)
    int value = dp->modified ? dp->orig_default_i : *(int *)dp->location;
 
    return (fprintf(f, "%-25s %5i\n", dp->name,
-                   strncmp(dp->name, "key_", 4) ? value : 
+                   strncmp(dp->name, "key_", 4) ? value :
                    I_DoomCode2ScanCode(value)) == EOF);
 }
 
@@ -1482,7 +1504,7 @@ static void M_getDefaultBool(default_t *dp, void *dest)
 static default_i defaultInterfaces[] =
 {
    // dt_integer
-   { 
+   {
       M_writeDefaultHelpInt,
       M_writeDefaultInt,
       M_setDefaultValueInt,
@@ -1492,7 +1514,7 @@ static default_i defaultInterfaces[] =
       M_getDefaultInt
    },
    // dt_string
-   { 
+   {
       M_writeDefaultHelpString,
       M_writeDefaultString,
       M_setDefaultValueString,
@@ -1502,7 +1524,7 @@ static default_i defaultInterfaces[] =
       M_getDefaultString
    },
    // dt_float
-   { 
+   {
       M_writeDefaultHelpFloat,
       M_writeDefaultFloat,
       M_setDefaultValueFloat,
@@ -1512,7 +1534,7 @@ static default_i defaultInterfaces[] =
       M_getDefaultFloat
    },
    // dt_boolean
-   { 
+   {
       M_writeDefaultHelpBool,
       M_writeDefaultBool,
       M_setDefaultValueBool,
@@ -1607,7 +1629,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
             // yet, and this one isn't blank,
             // output a blank line for separation
 
-            if((!blanks && (blanks = 1, 
+            if((!blanks && (blanks = 1,
                             *(df->comments[line].text) != '\n' &&
                             putc('\n',f) == EOF)) ||
                fputs(df->comments[line].text, f) == EOF)
@@ -1642,7 +1664,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
             fprintf(f, " %s %s\n", dp->help, dp->wad_allowed ? "*" : "") == EOF)
          {
             M_defaultFileWriteError(df, tmpfile);
-            return;         
+            return;
          }
       }
 
@@ -1697,7 +1719,7 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
 {
    char name[80], strparm[100];
    default_t *dp;
-   
+
    while(isspace(*p))  // killough 10/98: skip leading whitespace
       p++;
 
@@ -1705,7 +1727,7 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    // killough 10/98: move to be made part of main test, add comment-handling
 
    if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !isalnum(*name) ||
-      !(dp = M_LookupDefault(df, name)) || 
+      !(dp = M_LookupDefault(df, name)) ||
       (*strparm == '"') == (dp->type != dt_string) ||
       (wad && !dp->wad_allowed))
    {
@@ -1725,7 +1747,7 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
 void M_LoadOptions(void)
 {
    int lump;
-   
+
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
       int size = W_LumpLength(lump), buflen = 0;
@@ -1779,7 +1801,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
       dp->methods->setDefault(dp);
 
    M_NormalizeSlashes(df->fileName);
-   
+
    // read the file in, overriding any set defaults
    //
    // killough 9/21/98: Print warning if file missing, and use fgets for reading
@@ -1798,7 +1820,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
          else
          {             // Remember comment lines
             const char *p = s;
-            
+
             while(isspace(*p))  // killough 10/98: skip leading whitespace
                p++;
 
@@ -1818,7 +1840,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
 
             if(df->numcomments >= df->numcommentsalloc)
             {
-               df->comments = 
+               df->comments =
                  erealloc(defaultfile_s::comment_s *,
                           df->comments, sizeof *(df->comments) *
                           (df->numcommentsalloc = df->numcommentsalloc ?
@@ -1832,7 +1854,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
    }
 
    df->loaded = true;            // killough 10/98
-   
+
    //jff 3/4/98 redundant range checks for hud deleted here
 }
 
@@ -1844,10 +1866,10 @@ void M_LoadDefaultFile(defaultfile_t *df)
 void M_LoadDefaults(void)
 {
    int p;
-   
+
    defaultfile_t *df = &maindefaults;
 
-   // check for a custom default file   
+   // check for a custom default file
    if(!df->fileName)
    {
       if((p = M_CheckParm("-config")) && p < myargc - 1)
@@ -1861,9 +1883,18 @@ void M_LoadDefaults(void)
 
    M_LoadDefaultFile(df);
 
+   // [CG] Check cs_demo_folder_path.
+   if((!cs_demo_folder_path) || (!strlen(cs_demo_folder_path)))
+      cs_demo_folder_path = estrdup(default_cs_demo_folder_path);
+   else if(!M_IsFolder(cs_demo_folder_path))
+   {
+      E_ReplaceString(
+         cs_demo_folder_path, estrdup(default_cs_demo_folder_path)
+      );
+   }
+
    if(clientserver)
    {
-      CS_AddCommands();
       // [CG] Once defaults are read, the client can add its commands.
       if(CS_CLIENT)
          CL_AddCommands();
@@ -1926,7 +1957,7 @@ static default_t *M_findCVarInDefaults(default_t *defaultset, variable_t *var)
 // M_FindDefaultForCVar
 //
 // haleyjd 07/04/10: Given a cvar, this function will try to find a matching
-// default object amongst the various default sets. This is a stopgap 
+// default object amongst the various default sets. This is a stopgap
 // implementation to create some coherence between the console and config
 // systems.
 //
@@ -1945,89 +1976,6 @@ default_t *M_FindDefaultForCVar(variable_t *var)
 //
 // File IO Routines
 //
-
-//
-// M_WriteFile
-//
-// killough 9/98: rewritten to use stdio and to flash disk icon
-//
-bool M_WriteFile(char const *name, void *source, unsigned int length)
-{
-   FILE *fp;
-   bool result;
-   
-   errno = 0;
-   
-   if(!(fp = fopen(name, "wb")))         // Try opening file
-      return 0;                          // Could not open file for writing
-   
-   I_BeginRead();                       // Disk icon on
-   result = (fwrite(source, 1, length, fp) == length);   // Write data
-   fclose(fp);
-   I_EndRead();                         // Disk icon off
-   
-   if(!result)                          // Remove partially written file
-      remove(name);
-   
-   return result;
-}
-
-//
-// M_ReadFile
-//
-// killough 9/98: rewritten to use stdio and to flash disk icon
-//
-int M_ReadFile(char const *name, byte **buffer)
-{
-   FILE *fp;
-   
-   errno = 0;
-   
-   if((fp = fopen(name, "rb")))
-   {
-      size_t length;
-
-      I_BeginRead();
-      fseek(fp, 0, SEEK_END);
-      length = ftell(fp);
-      fseek(fp, 0, SEEK_SET);
-
-      *buffer = ecalloc(byte *, 1, length);
-      
-      if(fread(*buffer, 1, length, fp) == length)
-      {
-         fclose(fp);
-         I_EndRead();
-         return length;
-      }
-      fclose(fp);
-   }
-
-   // sf: do not quit on file not found
-   //  I_Error("Couldn't read file %s: %s", name, 
-   //	  errno ? strerror(errno) : "(Unknown Error)");
-   
-   return -1;
-}
-
-// 
-// M_FileLength
-//
-// Gets the length of a file given its handle.
-// haleyjd 03/09/06: made global
-// haleyjd 01/04/10: use fseek/ftell
-//
-int M_FileLength(FILE *f)
-{
-   long curpos, len;
-
-   curpos = ftell(f);
-   fseek(f, 0, SEEK_END);
-   len = ftell(f);
-   fseek(f, curpos, SEEK_SET);
-
-   return (int)len;
-}
 
 //=============================================================================
 //
@@ -2164,7 +2112,7 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
    p = base + len - 1;
 
    strncpy(base, fn, len);
-   
+
    while(p >= base)
    {
       if(*p == '/' || *p == '\\')
@@ -2203,7 +2151,7 @@ void M_ExtractFileBase(const char *path, char *dest)
    const char *src = path + strlen(path) - 1;
    const char *filename;
    int length;
-   
+
    // back up until a \ or the start
    while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
          && *(src-1) != '\\'
@@ -2213,7 +2161,7 @@ void M_ExtractFileBase(const char *path, char *dest)
    }
 
    filename = src;
-   
+
    // copy up to eight characters
    // FIXME: insecure, does not ensure null termination of output string!
    memset(dest, 0, 8);
@@ -2260,7 +2208,7 @@ char *M_AddDefaultExtension(char *path, const char *ext)
 void M_NormalizeSlashes(char *str)
 {
    char *p;
-   
+
    // Convert all backslashes to slashes
    for(p = str; *p; p++)
    {
@@ -2303,18 +2251,18 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
    --numstrs;
 
    if(numstrs != 0)
-   {   
+   {
       va_start(args, str1);
-      
+
       while(numstrs != 0)
       {
          const char *argstr = va_arg(args, const char *);
-         
+
          len += strlen(argstr);
-         
+
          --numstrs;
       }
-      
+
       va_end(args);
    }
 
@@ -2328,8 +2276,8 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 //
 // M_SafeFilePath
 //
-// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure 
-// file path concatenation with automatic normalization on alloca-provided 
+// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure
+// file path concatenation with automatic normalization on alloca-provided
 // buffers.
 //
 char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)

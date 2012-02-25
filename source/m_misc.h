@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select   -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2000 James Haley
@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,7 +21,7 @@
 //
 // DESCRIPTION:
 //    Misc stuff - config file, screenshots
-//    
+//
 //-----------------------------------------------------------------------------
 
 #ifndef M_MISC_H__
@@ -39,7 +39,7 @@ void M_LoadOptions(void);                             // killough 11/98
 
 // haleyjd: Portable versions of common non-standard C functions, as well as
 // some misc string routines that really don't fit anywhere else. Some of these
-// default to the standard implementation if its existence is verifiable 
+// default to the standard implementation if its existence is verifiable
 // (see d_keywds.h)
 
 char *M_Strupr(char *string);
@@ -51,7 +51,6 @@ int   M_CountNumLines(const char *str);
 // haleyjd: moved a number of these here from w_wad module.
 
 void  M_GetFilePath(const char *fn, char *base, size_t len); // haleyjd
-int   M_FileLength(FILE *f);
 void  M_ExtractFileBase(const char *, char *);               // killough
 char *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void  M_NormalizeSlashes(char *);                            // killough 11/98
@@ -101,29 +100,29 @@ struct default_t
 
    void *const location;                     // default variable
    void *const current;                      // possible nondefault variable
-   
+
    int         defaultvalue_i;               // built-in default value
    const char *defaultvalue_s;
    double      defaultvalue_f;
    bool        defaultvalue_b;
 
    struct { int min, max; } const limit;       // numerical limits
-      
+
    enum { wad_no, wad_yes } const wad_allowed; // whether it's allowed in wads
    const char *const help;                     // description of parameter
-   
+
    // internal fields (initialized implicitly to 0) follow
-   
+
    default_t *first, *next;                  // hash table pointers
    int modified;                             // Whether it's been modified
-   
+
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
    double      orig_default_f;
    bool        orig_default_b;
 
    default_i  *methods;
-   
+
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 };
 
@@ -157,9 +156,9 @@ typedef struct defaultfile_s
    bool       loaded;      // if true, defaults are loaded
    bool       helpHeader;  // has help header?
    struct comment_s
-   { 
-      char *text; 
-      int line; 
+   {
+      char *text;
+      int line;
    } *comments;             // stored comments
    size_t numcomments;      // number of comments stored
    size_t numcommentsalloc; // number of comments allocated

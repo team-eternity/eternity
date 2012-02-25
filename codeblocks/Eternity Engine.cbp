@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-csserve" />
+				<Option parameters="-directx -8in32 -nomusic" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -53,12 +53,12 @@
 			<Add directory="..\source\gl" />
 			<Add directory="..\source\Confuse" />
 			<Add directory="..\source" />
-			<Add directory="..\eedeps\mingw\include" />
+			<Add directory="..\minizip" />
 			<Add directory="..\json-cpp" />
 			<Add directory="..\libpng" />
 			<Add directory="..\snes_spc" />
+			<Add directory="..\eedeps\mingw\include" />
 			<Add directory="..\eedeps\mingw\include\SDL" />
-			<Add directory="..\codeblocks" />
 		</Compiler>
 		<Linker>
 			<Add library="..\eedeps\mingw\lib\libenet.a" />
@@ -70,9 +70,6 @@
 			<Add library="..\eedeps\mingw\lib\libgpg-error.a" />
 			<Add library="..\eedeps\mingw\lib\libidn.a" />
 			<Add library="..\eedeps\mingw\lib\libcares.a" />
-			<Add library="..\eedeps\mingw\lib\libarchive.a" />
-			<Add library="..\eedeps\mingw\lib\libbz2.a" />
-			<Add library="..\eedeps\mingw\lib\liblzma.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL_mixer.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL_net.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL.a" />
@@ -147,6 +144,21 @@
 		</Unit>
 		<Unit filename="..\libpng\scripts\pngwin.rc">
 			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="..\minizip\ioapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\minizip\iowin32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\minizip\mztools.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\minizip\unzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\minizip\zip.c">
+			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\snes_spc\SNES_SPC.cpp" />
 		<Unit filename="..\snes_spc\SNES_SPC_misc.cpp" />
@@ -266,6 +278,8 @@
 		<Unit filename="..\source\m_strcasestr.cpp" />
 		<Unit filename="..\source\m_syscfg.cpp" />
 		<Unit filename="..\source\m_vector.cpp" />
+		<Unit filename="..\source\m_zip.cpp" />
+		<Unit filename="..\source\m_zip.h" />
 		<Unit filename="..\source\metaapi.cpp" />
 		<Unit filename="..\source\mn_emenu.cpp" />
 		<Unit filename="..\source\mn_engin.cpp" />

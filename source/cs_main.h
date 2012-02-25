@@ -761,10 +761,6 @@ typedef struct
    uint32_t world_index;
    int32_t activation_type; // [CG] activation_type_t.
    uint32_t actor_net_id;
-   fixed_t actor_x;
-   fixed_t actor_y;
-   fixed_t actor_z;
-   angle_t actor_angle;
    int32_t line_number;
    int32_t side;
 } nm_lineactivated_t;
@@ -922,7 +918,7 @@ void CS_Init(void);
 void CS_DoWorldDone(void);
 void CS_PrintTime(void);
 char* CS_IPToString(uint32_t ip_address);
-bool CS_CheckURI(char *uri);
+bool CS_CheckURI(const char *uri);
 float CS_VersionFloat(void);
 char* CS_VersionString(void);
 char* CS_GetSHA1Hash(const char *input, size_t input_size);
@@ -969,12 +965,14 @@ void CS_SpawnPuff(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
                   angle_t angle, int updown, bool ptcl);
 void CS_SpawnBlood(Mobj *shooter, fixed_t x, fixed_t y, fixed_t z,
                    angle_t angle, int damage, Mobj *target);
+void CS_ArchiveSettings(SaveArchive& arc);
+void CS_ArchiveTeams(SaveArchive& arc);
+void CS_ArchiveClients(SaveArchive& arc);
 char* CS_ExtractMessage(char *data, size_t data_length);
 void CS_FlushConnection(void);
 void CS_ServiceNetwork(void);
 void CS_ReadFromNetwork(unsigned int timeout);
 void CS_TryRunTics(void);
-void CS_AddCommands(void);
 void CS_MessageAll(event_t *ev);
 
 #endif

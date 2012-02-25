@@ -494,6 +494,23 @@ CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 // also access to camera angles
 //
 
+static const char *mn_demo_names[] =
+{
+   "demos",
+   "client/server demos",
+   NULL
+};
+
+extern menu_t menu_demos;
+extern menu_t menu_cs_demos;
+
+static menu_t *mn_demo_pages[] =
+{
+   &menu_demos,
+   &menu_cs_demos,
+   NULL
+};
+
 static menuitem_t mn_demos_items[] =
 {
    {it_title,      FC_GOLD "demos",          NULL,             "m_demos"},
@@ -516,13 +533,42 @@ static menuitem_t mn_demos_items[] =
    {it_end}
 };
 
+static menuitem_t mn_cs_demos_items[] =
+{
+   {it_title,    FC_GOLD"demos",               NULL, "m_demos"},
+   {it_gap},
+   {it_info,     FC_GOLD"client/server demos", NULL, NULL, MENUITEM_CENTERED },
+   {it_variable,        "demo folder",         "cs_demo_folder_path"},
+   {it_variable,        "compression level",   "cs_demo_compression_level"},
+   {it_end}
+};
+
 menu_t menu_demos = 
 {
    mn_demos_items,    // menu items
-   NULL, NULL, NULL,  // pages
+   NULL,              // previous page
+   &menu_cs_demos,    // next page
+   &menu_demos,       // rootpage
    200, 15,           // x,y
    3,                 // start item
    mf_background,     // full screen
+   NULL,              // no drawer
+   mn_demo_names,     // TOC stuff
+   mn_demo_pages,
+};
+
+menu_t menu_cs_demos = 
+{
+   mn_cs_demos_items, // menu items
+   &menu_demos,       // previous page
+   NULL,              // next page
+   &menu_demos,       // rootpage
+   200, 15,           // x,y
+   0,                 // start item
+   mf_background,     // full screen
+   NULL,              // no drawer
+   mn_demo_names,     // TOC stuff
+   mn_demo_pages,
 };
 
 VARIABLE_STRING(mn_demoname,     NULL,           12);
@@ -2848,6 +2894,7 @@ CONSOLE_COMMAND(mn_weapons, 0)
 extern menu_t menu_compat1;
 extern menu_t menu_compat2;
 extern menu_t menu_compat3;
+extern menu_t menu_compat4;
 
 // table of contents arrays
 
@@ -2856,6 +2903,7 @@ static const char *mn_compat_contents[] =
    "players / monster ai",
    "simulation",
    "maps",
+   "explosions",
    NULL
 };
 
@@ -2864,6 +2912,7 @@ static menu_t *mn_compat_pages[] =
    &menu_compat1,
    &menu_compat2,
    &menu_compat3,
+   &menu_compat4,
    NULL
 };
 
@@ -2905,6 +2954,7 @@ static menuitem_t mn_compat2_items[] =
    { it_toggle, "Doom actor heights are inaccurate",   "comp_theights"   },
    { it_toggle, "Bullets never hit floors & ceilings", "comp_planeshoot" },
    { it_toggle, "Respawns are sometimes silent in DM", "comp_ninja"      },
+   { it_toggle, "Use smaller mouselook range",         "comp_mouselook"  },
    { it_end }
 };
 
@@ -2920,6 +2970,19 @@ static menuitem_t mn_compat3_items[] =
    { it_toggle, "Use DOOM linedef trigger model",       "comp_model"     },
    { it_toggle, "Line effects work on sector tag 0",    "comp_zerotags"  },
    { it_toggle, "One-time line effects can break",      "comp_special"   },
+   { it_end }
+};
+
+static menuitem_t mn_compat4_items[] =
+{
+   { it_title,  FC_GOLD "Compatibility", NULL, "m_compat" },
+   { it_gap },
+   { it_info,     FC_GOLD "Explosions", NULL, NULL, MENUITEM_CENTERED         },
+   { it_toggle,   "Explosions only thrust in 2D",  "comp_2dradatk"            },
+   { it_variable, "Explosion damage factor",      "radial_attack_damage"      },
+   { it_variable, "Explosion self-damage factor", "radial_attack_self_damage" },
+   { it_variable, "Explosion lift factor",        "radial_attack_lift"        },
+   { it_variable, "Explosion self-lift factor",   "radial_attack_self_lift"   },
    { it_end }
 };
 
@@ -2953,9 +3016,23 @@ menu_t menu_compat2 =
 menu_t menu_compat3 =
 {
    mn_compat3_items,    // items
-   &menu_compat2, NULL, // pages
+   &menu_compat2,       // prev page
+   &menu_compat4,       // next page
    &menu_compat1,       // rootpage
    270, 5,              // x, y
+   3,                   // starting item
+   mf_background,       // full screen
+   NULL,                // no drawer
+   mn_compat_contents,  // TOC arrays
+   mn_compat_pages,
+};
+
+menu_t menu_compat4 =
+{
+   mn_compat4_items,    // items
+   &menu_compat3, NULL, // pages
+   &menu_compat1,       // rootpage
+   200, 5,              // x, y
    3,                   // starting item
    mf_background,       // full screen
    NULL,                // no drawer
@@ -3017,12 +3094,13 @@ static const char *mn_binding_contentnames[] =
    "basic movement",
    "advanced movement",
    "weapon keys",
-   "client/server keys",
    "environment",
    "game functions",
    "menu keys",
    "automap keys",
    "console keys",
+   "client/server keys",
+   "client/server demo keys",
    NULL
 };
 
@@ -3030,24 +3108,26 @@ static const char *mn_binding_contentnames[] =
 extern menu_t menu_movekeys;
 extern menu_t menu_advkeys;
 extern menu_t menu_weaponbindings;
-extern menu_t menu_clientserverkeys;
 extern menu_t menu_envbindings;
 extern menu_t menu_funcbindings;
 extern menu_t menu_menukeys;
 extern menu_t menu_automapkeys;
 extern menu_t menu_consolekeys;
+extern menu_t menu_clientserverkeys;
+extern menu_t menu_clientserverdemokeys;
 
 static menu_t *mn_binding_contentpages[] =
 {
    &menu_movekeys,
    &menu_advkeys,
    &menu_weaponbindings,
-   &menu_clientserverkeys,
    &menu_envbindings,
    &menu_funcbindings,
    &menu_menukeys,
    &menu_automapkeys,
    &menu_consolekeys,
+   &menu_clientserverkeys,
+   &menu_clientserverdemokeys,
    NULL
 };
 
@@ -3415,10 +3495,56 @@ static menuitem_t mn_clientserverkeys_items[] =
 menu_t menu_clientserverkeys =
 {
    mn_clientserverkeys_items,
-   &menu_consolekeys,       // previous page
+   &menu_consolekeys,          // previous page
+   &menu_clientserverdemokeys, // next page
+   &menu_movekeys,             // rootpage
+   150, 15,                    // x,y offsets
+   4,
+   mf_background,              // draw background: not a skull menu
+   NULL,                       // no drawer
+   mn_binding_contentnames,    // table of contents arrays
+   mn_binding_contentpages,
+};
+
+CONSOLE_COMMAND(mn_clientserverkeys, 0)
+{
+    MN_StartMenu(&menu_clientserverkeys);
+}
+
+//------------------------------------------------------------------------
+//
+// Key Bindings: Client/Server Demo Keys
+//
+
+static menuitem_t mn_clientserverdemokeys_items[] =
+{
+   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_gap},
+   {it_info,    FC_GOLD "client/server demos", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
+   {it_binding, "start recording",          "csdemorecord"            },
+   {it_binding, "stop playing/recording",   "csdemostop"              },
+   {it_binding, "speed up",                 "csdemospeedup"           },
+   {it_binding, "slow down",                "csdemoslowdown"          },
+   {it_binding, "save checkpoint",          "csdemosavecheckpoint"    },
+   {it_binding, "load previous checkpoint", "csdemopreviouscheckpoint"},
+   {it_binding, "load next checkpoint",     "csdemonextcheckpoint"    },
+   {it_binding, "rewind 15 seconds",        "csdemoback15"            },
+   {it_binding, "rewind 30 seconds",        "csdemoback30"            },
+   {it_binding, "rewind 60 seconds",        "csdemoback60"            },
+   {it_binding, "forward 15 seconds",       "csdemoforward15"         },
+   {it_binding, "forward 30 seconds",       "csdemoforward30"         },
+   {it_binding, "forward 60 seconds",       "csdemoforward60"         },
+   {it_end}
+};
+
+menu_t menu_clientserverdemokeys =
+{
+   mn_clientserverdemokeys_items,
+   &menu_clientserverkeys,  // previous page
    NULL,                    // next page
    &menu_movekeys,          // rootpage
-   150, 15,                 // x,y offsets
+   170, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
@@ -3426,9 +3552,9 @@ menu_t menu_clientserverkeys =
    mn_binding_contentpages,
 };
 
-CONSOLE_COMMAND(mn_clientserverkeys, 0)
+CONSOLE_COMMAND(mn_clientserverdemokeys, 0)
 {
-    MN_StartMenu(&menu_clientserverkeys);
+    MN_StartMenu(&menu_clientserverdemokeys);
 }
 
 //----------------------------------------------------------------------------
@@ -3903,6 +4029,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_automapkeys);
    C_AddCommand(mn_consolekeys);
    C_AddCommand(mn_clientserverkeys);
+   C_AddCommand(mn_clientserverdemokeys);
    C_AddCommand(newgame);
    
    // prompt messages

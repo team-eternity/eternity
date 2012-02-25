@@ -25,14 +25,14 @@ immediately follows.  So something like (overly simplified):
 
 Fundamentally, a demo is all network messages and local player input received
 during a single map as well as a header (described above).  However, demos can
-only be distributed as members of a "demo archive", which is a TAR file with a
+only be distributed as members of a "demo archive", which is a ZIP file with a
 very specific structure.  The expected structure is:
 
-  - 2011-01-02T17:52:01-05:00.emd
-    - info.txt
-    - 1
-      - info.txt
-      - toc.txt
+  - `20110102_175201-0500.ecd`
+    - info.json
+    - 0
+      - info.json
+      - toc.json
       - log.txt
       - demodata.bin
       - save1.sav
@@ -41,26 +41,26 @@ very specific structure.  The expected structure is:
       - save2.png
       - saveN.sav
       - saveN.png
-    - 2
+    - 1
       - ...
       - demodata.bin
       - ...
 
-The ISO 8601 timestamp in the filename is to ensure that demo files are not
-haphazardly overwritten, but it is not a requirement.  The archive splits up
-the demo so that there's 1 demo for each map, and these demos are stored in
-sequentially numbered folders.  The save games are used as checkpoints for
-quick rewinding and fast-forwarding, and the screenshots and log will be useful
-in various ways to users.
+The timestamp in the filename is to ensure that demo files are not haphazardly
+overwritten, but it is not a requirement.  The archive splits up the demo so
+that there's 1 demo for each map, and these demos are stored in sequentially
+numbered folders.  The save games are used as checkpoints for quick rewinding
+and fast-forwarding, and the screenshots and log will be useful in various ways
+to users.
 
-#### Top-Level info.txt Contents:
+#### Top-Level info.json Contents:
 
   - Version
   - Name
   - Author
   - Date Recorded
 
-#### Per-map info.txt Contents:
+#### Per-map info.json Contents:
 
   - Resources
     - name
@@ -71,49 +71,48 @@ in various ways to users.
 
 This format will be easy to extend, so any field can be added.
 
-##### toc.txt
+##### toc.json
 
-"toc.txt" maps savegames to indices.  The main purpose of this is so that a
+`toc.json` maps savegames to indices.  The main purpose of this is so that a
 viewer knows at what point in the demo the savegame refers to, but the reason
 for keeping the information separate is so that checkpoints can be added or
 deleted by a viewer.
 
 ##### log.txt
 
-"log.txt" contains the events that occurred during the game, such as
-`[UD]Ladna was splattered by [UD]Ralphis' super shotgun.`, although I imagine I
-might change exactly what these "events" are as time goes on, depending on what
-is useful; I'm considering a JSON event format.
+`log.txt` contains the events that occurred during the game, such as
+`[UD]Ladna was splattered by [UD]Ralphis' super shotgun.`.  When stat are
+added (likely in JSON format), they will be separate from this game log file.
 
-#### demo.bin:
+#### demodata.bin:
 
-"demo.bin" is the main demo file, and contains different things based on
+`demodata.bin` is the main demo file, and contains different things based on
 whether the demo is a serverside or clientside demo.
 
   - Header
-    - serverside or clientside (0, 1)
-    - WADs (ordered, names and SHA-1 hashes).
-    - Settings (`cs_settings` dump)
-    - Map name.
-    - Date/Time.
-    - Length (indices).
+    - clientside or serverside (1 or 2 respectively)
+    - WADs (ordered, names and SHA-1 hashes)
+    - Settings (`cs_current_settings` dump)
+    - Map name
+    - Date/Time
+    - Length (indices)
   - Index.
-    - Network Message.
-    - Local Player Input Command.
+    - Network Message
+    - Local Player Input Command
+    - Local Player Console Command
 
 #### Robustness
 
-Clients should handle the absence of files other than "demo.bin" as gracefully
-as possible; the only truly indispensible file is the demo itself - in fact,
-all the information (save that found in "info.txt") can be re-created from the
-demo.
+Clients should handle the absence of files other than `demodata.bin` as
+gracefully as possible; the only truly indispensible file is the demo itself -
+in fact, all the information can be re-created from the demo.
 
 #### Base Technologies (Archival/Compression)
 
-As noted above, demos are TAR files.  By default, EE compresses the TAR files
-using BZip2 compression, but any compression technology supported by libarchive
-is supported for playback.  However, the basic TAR format must be preserved, it
-cannot be replaced with ZIP or 7z, for example.
+As noted above, demos are ZIP files, readable by any compliant ZIP utility.
+This is intended to make demos more robust and more usable.  Users are free,
+for instance, to add whatever fields to the JSON info files.  ZIP is also a
+common format, readable in practically all popular programming languages.
 
 vim:tw=79 sw=4 ts=4 syntax=mkd et:
 
