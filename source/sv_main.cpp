@@ -1034,7 +1034,6 @@ void SV_BroadcastNewClient(int clientnum)
 
 void SV_SendCurrentState(int playernum)
 {
-   int i;
    nm_playerspawned_t spawn_message;
    mapthing_t *spawn_point;
    byte *buffer;
@@ -1066,12 +1065,17 @@ void SV_SendCurrentState(int playernum)
 
    // [CG] Now that we're ready for the client, send it the game's state.
    playeringame[playernum] = true;
+
+   if(CS_TEAMS_ENABLED)
+      clients[playernum].team = team_color_none;
+
    message_size = CS_BuildGameState(playernum, &buffer);
    send_packet(playernum, buffer, message_size);
    efree(buffer);
 
    server_clients[playernum].received_game_state = true;
 
+   /*
    // [CG] Send client initialization info for all connected clients to the new
    //      client.
    for(i = 1; i < MAX_CLIENTS; i++)
@@ -1079,9 +1083,7 @@ void SV_SendCurrentState(int playernum)
       if(playeringame[i] && i != playernum)
          SV_SendClientInfo(playernum, i);
    }
-
-   if(CS_TEAMS_ENABLED)
-      clients[playernum].team = team_color_none;
+   */
 
    // [CG] Send info on the new client to all the other clients.
    SV_BroadcastNewClient(playernum);
@@ -1765,17 +1767,6 @@ void SV_RestoreServerOptions(void)
    autoaim             = server_client->options.autoaim;
    weapon_speed        = server_client->options.weapon_speed;
 }
-
-#if 0
-void SV_BroadcastGameState(void)
-{
-   byte *buffer;
-   size_t message_size = CS_BuildGameState(0, &buffer);
-
-   broadcast_packet(buffer, message_size);
-   efree(buffer);
-}
-#endif
 
 void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum)
 {

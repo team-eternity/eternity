@@ -467,28 +467,6 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
 
 void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
 {
-   unsigned int i;
-
-   for(i = 0; i < MAXPLAYERS; i++)
-   {
-      if(message->playeringame[i])
-         playeringame[i] = true;
-      else
-         playeringame[i] = false;
-   }
-
-   // [CG] Have to be "in-game" at this point.  This should be sent over
-   //      in the game state message, so error out if not.
-   if(!playeringame[consoleplayer])
-   {
-      C_Printf(
-         "This player was not in game according to game state message, "
-         "disconnecting.\n"
-      );
-      CL_Disconnect();
-      return;
-   }
-
    if(!M_WriteFile(cs_state_file_path,
                    ((char *)message)+ sizeof(nm_currentstate_t),
                    (size_t)message->state_size))
@@ -508,14 +486,16 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
    cl_spawning_actor_from_message = false;
    cl_removing_actor_from_message = false;
 
-   for(i = team_color_none; i < team_color_max; i++)
+   // [CG] Have to be "in-game" at this point.  This should be sent over
+   //      in the game state message, so error out if not.
+   if(!playeringame[consoleplayer])
    {
-      cs_flags[i].net_id = message->flags[i].net_id;
-      cs_flags[i].carrier = message->flags[i].carrier;
-      cs_flags[i].pickup_time = message->flags[i].pickup_time;
-      cs_flags[i].timeout = message->flags[i].timeout;
-      cs_flags[i].state = message->flags[i].state;
-      team_scores[i] = message->team_scores[i];
+      C_Printf(
+         "This player was not in game according to game state message, "
+         "disconnecting.\n"
+      );
+      CL_Disconnect();
+      return;
    }
 
    if(clients[consoleplayer].team != team_color_none)
@@ -545,6 +525,7 @@ void CL_HandleSyncMessage(nm_sync_t *message)
       first_time = false;
    else if(GameType != gt_coop)
       CS_Announce(ae_round_started, NULL);
+
 }
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
@@ -1864,17 +1845,11 @@ void CL_HandleAnnouncerEventMessage(nm_announcerevent_t *message)
    Mobj *source;
 
    if(!CS_AnnouncerEnabled())
-   {
-      printf("Announcer is not enabled.\n");
       return;
-   }
 
    // [CG] Ignore announcer events if we haven't received sync yet.
    if(!cl_packet_buffer.synchronized())
-   {
-      printf("Buffer is not synchronized.\n");
       return;
-   }
 
    if(message->source_net_id)
    {

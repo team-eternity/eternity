@@ -210,19 +210,6 @@ void Handler_spectate(void);
 void Handler_spectate_next(void);
 void Handler_spectate_prev(void);
 
-static void build_game_state(nm_currentstate_t *message)
-{
-   unsigned int i;
-
-   message->message_type = nm_currentstate;
-   memcpy(message->flags, cs_flags, sizeof(flag_t) * team_color_max);
-   for(i = team_color_none; i < team_color_max; i++)
-      message->team_scores[i] = team_scores[i];
-
-   for(i = 0; i < MAXPLAYERS; i++)
-      message->playeringame[i] = playeringame[i];
-}
-
 static int build_save_buffer(byte **buffer)
 {
    FILE *fobj;
@@ -245,8 +232,6 @@ static int build_save_buffer(byte **buffer)
 
    if((bytes_read = M_ReadFromFile(*buffer, 1, file_size, fobj)) != file_size)
    {
-      printf("State file: %s.\n", cs_state_file_path);
-      printf("File size/Bytes read: %u/%u.\n", file_size, bytes_read);
       I_Error(
          "Error reading game state file: %s.\n", M_GetFileSystemErrorMessage()
       );
@@ -561,16 +546,16 @@ size_t CS_BuildGameState(int playernum, byte **buffer)
 {
    int state_size;
    byte *savebuffer = NULL;
-   nm_currentstate_t message;
+   nm_currentstate_t *message;
 
-   build_game_state(&message);
    state_size = build_save_buffer(&savebuffer);
 
-   message.state_size = state_size;
-
    *buffer = emalloc(byte *, sizeof(nm_currentstate_t) + state_size);
-   memcpy(*buffer, &message, sizeof(nm_currentstate_t));
-   memcpy(*buffer + sizeof(nm_currentstate_t), savebuffer, state_size);
+   message = (nm_currentstate_t *)(*buffer);
+   message->message_type = nm_currentstate;
+   message->world_index = sv_world_index;
+   message->state_size = state_size;
+   memcpy((*buffer) + sizeof(nm_currentstate_t), savebuffer, state_size);
 
    efree(savebuffer);
 
@@ -591,22 +576,30 @@ bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
       server_client = &server_clients[playernum];
 
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
+      {
          if(server_client->weapon_preferences[p1] == weapon_one)
             break;
+      }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
+      {
          if(server_client->weapon_preferences[p2] == weapon_two)
             break;
+      }
    }
    else
    {
       for(p1 = 0; p1 < NUMWEAPONS; p1++)
+      {
          if(weapon_preferences[0][p1] == weapon_one)
             break;
+      }
 
       for(p2 = 0; p2 < NUMWEAPONS; p2++)
+      {
          if(weapon_preferences[0][p2] == weapon_two)
             break;
+      }
    }
 
    if(p1 < p2)
@@ -1630,41 +1623,102 @@ void CS_ArchiveSettings(SaveArchive& arc)
 
 void CS_ArchiveTeams(SaveArchive& arc)
 {
-   int i;
+   int32_t i;
    flag_t *flag;
 
-   // [CG] FIXME: Need to record number of teams and indicate the color of each
-   //             serialized team here.
-
-   for(i = team_color_none; i < team_color_max; i++)
-      arc << team_scores[i];
-
-   for(i = team_color_none; i < team_color_max; i++)
+   if(arc.isSaving())
    {
-      flag = &cs_flags[i];
+      int32_t team_count = team_color_max - 1;
 
-      arc << flag->net_id << flag->carrier << flag->pickup_time
-          << flag->timeout << flag->state;
+      arc << team_count;
+
+      for(i = team_color_none; i <= team_count; i++)
+      {
+         arc << i;
+
+         flag = &cs_flags[i];
+
+         arc << team_scores[i] << flag->net_id << flag->carrier
+             << flag->pickup_time << flag->timeout << flag->state;
+
+      }
+   }
+   else
+   {
+      int32_t color, team_count;
+
+      arc << team_count;
+
+      if(team_count >= team_color_max)
+         I_Error("Insufficient space to load teams.\n");
+
+      for(i = team_color_none; i <= team_count; i++)
+      {
+         arc << color;
+
+         flag = &cs_flags[color];
+
+         arc << team_scores[color] << flag->net_id << flag->carrier
+             << flag->pickup_time << flag->timeout << flag->state;
+      }
    }
 }
 
 void CS_ArchiveClients(SaveArchive& arc)
 {
-   int i;
+   int32_t i, count;
    client_t *client;
 
-   for(i = 0; i < MAXPLAYERS; i++)
+   if(arc.isSaving())
    {
-      client = &clients[i];
+      for(i = 0, count = 0; i < MAXPLAYERS; i++)
+      {
+         if(playeringame[i])
+            count++;
+      }
 
-      arc << client->join_tic << client->spectating << client->team
-          << client->client_lag << client->server_lag << client->transit_lag
-          << client->packet_loss << client->queue_level
-          << client->queue_position << client->floor_status
-          << client->death_time << client->death_count
-          << client->latest_position_index << client->afk
-          << client->frags_this_life << client->last_frag_tic
-          << client->frag_level << client->consecutive_frag_level;
+      arc << count;
+
+      for(i = 0; i < MAXPLAYERS; i++)
+      {
+         if(!playeringame[i])
+            continue;
+
+         arc << i;
+
+         client = &clients[i];
+
+         arc << client->join_tic << client->spectating << client->team
+             << client->client_lag << client->server_lag << client->transit_lag
+             << client->packet_loss << client->queue_level
+             << client->queue_position << client->floor_status
+             << client->death_time << client->death_count
+             << client->latest_position_index << client->afk
+             << client->frags_this_life << client->last_frag_tic
+             << client->frag_level << client->consecutive_frag_level;
+      }
+   }
+   else
+   {
+      int32_t clientnum;
+
+      arc << count;
+
+      for(i = 0; i < count; i++)
+      {
+         arc << clientnum;
+
+         client = &clients[clientnum];
+
+         arc << client->join_tic << client->spectating << client->team
+             << client->client_lag << client->server_lag << client->transit_lag
+             << client->packet_loss << client->queue_level
+             << client->queue_position << client->floor_status
+             << client->death_time << client->death_count
+             << client->latest_position_index << client->afk
+             << client->frags_this_life << client->last_frag_tic
+             << client->frag_level << client->consecutive_frag_level;
+      }
    }
 }
 

@@ -474,9 +474,6 @@ typedef struct
    int32_t message_type;
    uint32_t world_index;
    uint64_t state_size;
-   flag_t flags[team_color_max];
-   int32_t team_scores[team_color_max];
-   uint8_t playeringame[MAXPLAYERS];
 } nm_currentstate_t;
 
 typedef struct
