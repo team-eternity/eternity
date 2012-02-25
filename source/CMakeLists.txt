@@ -35,6 +35,32 @@ IF(EE_STATIC_COMPILE)
     ADD_DEFINITIONS(-DCURL_STATICLIB -DLIBARCHIVE_STATIC)
 ENDIF(EE_STATIC_COMPILE)
 
+check_include_file(sys/types.h HAVE_SYS_TYPES_H)
+check_include_file(stdint.h    HAVE_STDINT_H)
+check_include_file(stddef.h    HAVE_STDDEF_H)
+
+# [CG] For ZIP files; from zlib/CMakeLists.txt (thanks DavidPH)
+SET(CMAKE_REQUIRED_DEFINITIONS -D_LARGEFILE64_SOURCE=1)
+IF(HAVE_SYS_TYPES_H)
+    LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_SYS_TYPES_H)
+ENDIF(HAVE_SYS_TYPES_H)
+IF(HAVE_STDINT_H)
+    LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_STDINT_H)
+ENDIF(HAVE_STDINT_H)
+IF(HAVE_STDDEF_H)
+    LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_STDDEF_H)
+ENDIF(HAVE_STDDEF_H)
+CHECK_TYPE_SIZE(off64_t OFF64_T)
+IF(HAVE_OFF64_T)
+    ADD_DEFINITIONS(-D_LARGEFILE64_SOURCE=1)
+ENDIF(HAVE_OFF64_T)
+SET(CMAKE_REQUIRED_DEFINITIONS)
+CHECK_FUNCTION_EXISTS(fseeko HAVE_FSEEKO)
+IF(NOT HAVE_FSEEKO)
+    ADD_DEFINITIONS(-DNO_FSEEKO)
+ENDIF(NOT HAVE_FSEEKO)
+CHECK_INCLUDE_FILE(unistd.h Z_HAVE_UNISTD_H)
+
 ## FIXME: Clarify with EE guys - does -DLINUX mean Linux, or does it really 
 ##        mean any *nix ?
 IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -106,6 +132,13 @@ IF(NOT WIN32)
     SET(SDL_SOURCES ${SDL_SOURCES} sdl/i_cpu_posix.cpp)
 ENDIF(NOT WIN32)
 
+SET(ZIP_SOURCES
+   ${CMAKE_SOURCE_DIR}/minizip/ioapi.c
+   ${CMAKE_SOURCE_DIR}/minizip/mztools.c
+   ${CMAKE_SOURCE_DIR}/minizip/unzip.c
+   ${CMAKE_SOURCE_DIR}/minizip/zip.c
+)
+
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
@@ -119,6 +152,7 @@ ADD_EXECUTABLE(eternity
     ${GL_SOURCES}
     ${SDL_SOURCES}
     ${JSON_SOURCES}
+    ${ZIP_SOURCES}
 )
 IF(EE_STATIC_COMPILE)
     IF(MINGW)

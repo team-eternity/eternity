@@ -464,6 +464,8 @@ INCLUDE_DIRECTORIES(${SDLNET_INCLUDE_DIR})
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/libpng)
 
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/minizip)
+
 ## [CG] Further checks are unnecessary if building statically; it's assumed
 ##      that the user has set up the dependencies properly.
 IF(NOT EE_STATIC_COMPILE)
