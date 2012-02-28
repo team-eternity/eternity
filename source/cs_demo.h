@@ -238,6 +238,7 @@ private:
 
    char *folder_path;
    char *current_demo_archive_path;
+   char *current_temp_demo_archive_path;
    char *current_demo_folder_path;
    char *current_demo_info_path;
 
@@ -248,6 +249,7 @@ private:
    SingleCSDemo *current_demo;
 
    bool loadZipFile();
+   bool loadTempZipFile();
    bool retrieveDemo(const char *url);
    void setError(int error_code);
    void setCURLError(long error_code);

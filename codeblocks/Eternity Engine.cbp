@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-directx -8in32 -nomusic" />
+				<Option parameters="-directx -8in32 -nomusic -geom 640x400wvh -csjoin file://e:\Code\eecs\codeblocks\bin\Debug\test1.json" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -21,7 +21,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-csserve" />
+				<Option parameters="-directx -8in32 -nomusic -geom 640x400wvh" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>

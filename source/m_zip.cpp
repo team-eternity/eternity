@@ -197,7 +197,7 @@ bool ZipFile::extractCurrentFileTo(const char *out_path)
    int error, bytes_read;
    unsigned int chunk_size = ZIP_CHUNK_SIZE;
    const char *basename;
-   char *unarchived_pathname;
+   const char *unarchived_pathname;
    unz_file_info64 ui;
 
    // [CG] Some checks are skipped here because it's assumed they're run in
@@ -214,9 +214,7 @@ bool ZipFile::extractCurrentFileTo(const char *out_path)
       return false;
    }
 
-   unarchived_pathname = input_filename_buffer;
-   while(((*unarchived_pathname) == '/') || ((*unarchived_pathname) == '\\'))
-      unarchived_pathname++;
+   unarchived_pathname = M_StripAbsolutePath(input_filename_buffer);
 
    M_PathJoinBuf(
       out_path,
@@ -295,6 +293,8 @@ bool ZipFile::openForReading()
       return false;
    }
 
+   mode = mode_reading;
+
    return true;
 }
 
@@ -317,6 +317,8 @@ bool ZipFile::createForWriting()
       setError(errno_error);
       return false;
    }
+
+   mode = mode_writing;
 
    return true;
 }
@@ -347,6 +349,8 @@ bool ZipFile::openForWriting()
       return false;
    }
 
+   mode = mode_writing;
+
    return true;
 }
 
@@ -355,7 +359,7 @@ bool ZipFile::addFile(const char *file_path)
    FILE *file;
    int error, bread;
    zip_fileinfo zi;
-   const char *archived_pathname = file_path;
+   const char *archived_pathname;
 
    if(mode != mode_writing)
    {
@@ -387,9 +391,10 @@ bool ZipFile::addFile(const char *file_path)
 
    M_getFileTime(file_path, &zi.tmz_date, &zi.dosDate);
 
-   // [CG] Files with absolute paths are dangerous, so strip leading slashes.
-   while(((*archived_pathname) == '\\') || ((*archived_pathname == '/')))
-      archived_pathname++;
+   // [CG] Files with absolute paths are dangerous, so make them relative here.
+   if(current_recursive_folder)
+      archived_pathname = file_path + strlen(current_recursive_folder);
+   archived_pathname = M_StripAbsolutePath(archived_pathname);
 
    error = zipOpenNewFileInZip64(
       zf,
@@ -407,7 +412,7 @@ bool ZipFile::addFile(const char *file_path)
       return false;
    }
 
-   if(!(file = M_OpenFile(archived_pathname, "rb")))
+   if(!(file = M_OpenFile(file_path, "rb")))
    {
       setError(fs_error);
       return false;
@@ -431,6 +436,13 @@ bool ZipFile::addFile(const char *file_path)
             M_CloseFile(file);
             return false;
          }
+
+         printf(
+            "ZipFile::addFile: Copied %d bytes from %s to %s.\n",
+            bread,
+            archived_pathname,
+            path
+         );
       }
    }
 
@@ -459,12 +471,29 @@ bool ZipFile::addFile(const char *file_path, int compression_level)
 
    current_compression_level = compression_level;
    return addFile(file_path);
+   current_compression_level = default_compression_level;
 }
 
 bool ZipFile::addFolderRecursive(const char *folder_path)
 {
-   hack_zf = this;
-   return M_WalkFiles(folder_path, M_addFileToZipFile);
+   bool out;
+
+   if((current_recursive_folder = M_Dirname(folder_path)))
+   {
+      hack_zf = this;
+      out = M_WalkFiles(folder_path, M_addFileToZipFile);
+      hack_zf = NULL;
+      efree(current_recursive_folder);
+      current_recursive_folder = NULL;
+   }
+   else
+   {
+      // [CG] Got a basename instead of a path, so just try adding the file
+      //      instead.
+      out = addFile(folder_path);
+   }
+
+   return out;
 }
 
 bool ZipFile::addFolderRecursive(const char *folder_path,
@@ -478,6 +507,7 @@ bool ZipFile::addFolderRecursive(const char *folder_path,
 
    current_compression_level = compression_level;
    return addFolderRecursive(folder_path);
+   current_compression_level = default_compression_level;
 }
 
 bool ZipFile::extractAllTo(const char *out_path)
@@ -573,6 +603,8 @@ bool ZipFile::close()
          return false;
       }
    }
+
+   mode = mode_none;
 
    return true;
 }

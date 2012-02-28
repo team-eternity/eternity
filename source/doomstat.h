@@ -200,7 +200,11 @@ extern bool CS_HEADLESS;
 #define CS_DEMOPLAY   ((clientserver) && (cs_demo) && (cs_demo->isPlaying()))
 #define CS_DEMORECORD ((clientserver) && (cs_demo) && (cs_demo->isRecording()))
 #define CL_DEMO       ((CS_DEMO) && (clientside))
+#define CL_DEMOPLAY   ((CS_CLIENT) && (cs_demo) && (cs_demo->isPlaying()))
+#define CL_DEMORECORD ((CS_CLIENT) && (cs_demo) && (cs_demo->isRecording()))
 #define SV_DEMO       ((CS_DEMO) && (serverside))
+#define SV_DEMOPLAY   ((CS_SERVER) && (cs_demo) && (cs_demo->isPlaying()))
+#define SV_DEMORECORD ((CS_SERVER) && (cs_demo) && (cs_demo->isRecording()))
 
 // [CG] Some c/s configuration options.
 enum

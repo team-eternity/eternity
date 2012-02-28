@@ -237,7 +237,6 @@ void CL_Init(char *url)
             "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
          );
       }
-      atexit(CS_StopDemo);
    }
    else if((M_CheckParm("-record")))
    {

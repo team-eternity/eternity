@@ -25,11 +25,6 @@
 //
 //----------------------------------------------------------------------------
 
-/******************************************************************************
- ** [CG] TODO                                                                **
- **      - Checkpoint location                                               **
- *****************************************************************************/
-
 // [CG] The small amount of cURL code used to download a demo file is based on
 //      the "simple.c" example at http://curl.haxx.se/libcurl/c/simple.html
 
@@ -64,6 +59,8 @@
 #include "cl_main.h"
 #include "cl_pred.h"
 #include "sv_main.h"
+
+extern int disk_icon;
 
 void IdentifyVersion(void);
 
@@ -217,37 +214,29 @@ SingleCSDemo::SingleCSDemo(const char *new_base_path, int new_number,
    number = new_number;
    map = new_map;
 
-   base_buf = new_base_path;
-   base_buf.Printf(5, "/%d", number);
+   base_buf.Printf(0, "%s/%d", new_base_path, number);
    base_buf.normalizeSlashes();
+   E_ReplaceString(base_path, base_buf.duplicate(PU_STATIC));
 
-   E_ReplaceString(base_path, estrdup(base_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_data_file_name);
+   E_ReplaceString(data_path, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(base_data_file_name_length + 1, "/%s", base_data_file_name);
-   E_ReplaceString(data_path, estrdup(sub_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_info_file_name);
+   E_ReplaceString(info_path, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(base_info_file_name_length + 1, "/%s", base_info_file_name);
-   E_ReplaceString(info_path, estrdup(sub_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_toc_file_name);
+   E_ReplaceString(toc_path, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(base_toc_file_name_length + 1, "/%s", base_toc_file_name);
-   E_ReplaceString(toc_path, estrdup(sub_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_log_file_name);
+   E_ReplaceString(log_path, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(base_log_file_name_length + 1, "/%s", base_log_file_name);
-   E_ReplaceString(log_path, estrdup(sub_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_save_format);
+   E_ReplaceString(save_path_format, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(base_save_format_length + 1, "/%s", base_save_format);
-   E_ReplaceString(save_path_format, estrdup(sub_buf.constPtr()));
+   sub_buf.Printf(0, "%s/%s", base_buf.constPtr(), base_screenshot_format);
+   E_ReplaceString(screenshot_path_format, sub_buf.duplicate(PU_STATIC));
 
-   sub_buf = base_buf;
-   sub_buf.Printf(
-      base_screenshot_format_length + 1, "/%s", base_screenshot_format
-   );
-   E_ReplaceString(screenshot_path_format, estrdup(sub_buf.constPtr()));
+   buildDemoTimestamps(&demo_timestamp, &iso_timestamp);
 
    demo_data_handle = NULL;
    mode = mode_none;
@@ -402,7 +391,8 @@ bool SingleCSDemo::writeInfo()
    Json::Value map_info;
    clientserver_settings_t *settings = cs_settings;
 
-   CS_ReadJSON(map_info, info_path);
+   if(M_PathExists(info_path))
+      CS_ReadJSON(map_info, info_path);
 
    map_info["name"] = map->name;
    map_info["timestamp"] = iso_timestamp;
@@ -801,6 +791,9 @@ int SingleCSDemo::getNumber() const
 
 bool SingleCSDemo::openForPlayback()
 {
+   // [CG] The disk icon causes severe renderer lag, so disable it.
+   disk_icon = 0;
+
    if(mode != mode_none)
    {
       setError(already_open);
@@ -824,6 +817,9 @@ bool SingleCSDemo::openForPlayback()
 
 bool SingleCSDemo::openForRecording()
 {
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   disk_icon = 0;
+
    if(mode != mode_none)
    {
       setError(already_open);
@@ -842,11 +838,22 @@ bool SingleCSDemo::openForRecording()
       return false;
    }
 
+   if(!M_PathExists(base_path))
+   {
+      if(!M_CreateFolder(base_path))
+      {
+         setError(fs_error);
+         return false;
+      }
+   }
+
    if(!(demo_data_handle = M_OpenFile(data_path, "wb")))
    {
       setError(fs_error);
       return false;
    }
+
+   mode = mode_recording;
 
    if(!writeHeader())
       return false;
@@ -857,8 +864,6 @@ bool SingleCSDemo::openForRecording()
    if(!updateInfo())
       return false;
 
-   mode = mode_recording;
-
    return true;
 }
 
@@ -866,7 +871,7 @@ bool SingleCSDemo::write(void *message, uint32_t size, int32_t playernum)
 {
    uint8_t demo_marker = network_message_packet;
    int32_t player_number;
-   
+
    if(CS_CLIENT)
       player_number = 0;
    else
@@ -888,7 +893,7 @@ bool SingleCSDemo::write(cs_cmd_t *command)
 {
    uint8_t demo_marker = player_command_packet;
    uint32_t command_size = (uint32_t)(sizeof(cs_cmd_t));
-   
+
    if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
       return false;
    if(!writeToDemo(&command_size, sizeof(uint32_t), 1))
@@ -936,25 +941,15 @@ bool SingleCSDemo::saveCheckpoint()
    else
       index = sv_world_index;
 
-   buf.Printf(
-      strlen(screenshot_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
-      screenshot_path_format,
-      index
-   );
+   buf.Printf(0, screenshot_path_format, index);
    if(!M_SaveScreenShotAs(buf.constPtr()))
    {
       setError(fs_error);
       return false;
    }
 
-   buf.clear().Printf(
-      strlen(save_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
-      save_path_format,
-      index
-   );
-   checkpoint_name.Printf(
-      11 + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE, "Checkpoint %d", index
-   );
+   buf.Printf(0, save_path_format, index);
+   checkpoint_name.Printf(0, "Checkpoint %d", index);
    P_SaveCurrentLevel(buf.getBuffer(), checkpoint_name.getBuffer());
 
    if((byte_index = M_GetFilePosition(demo_data_handle)) == -1)
@@ -977,11 +972,9 @@ bool SingleCSDemo::saveCheckpoint()
 
    checkpoint["byte_index"] = (uint32_t)(byte_index);
    checkpoint["index"] = index;
-   buf.clear().Printf(base_save_format_length, base_save_format, index);
+   buf.Printf(0, base_save_format, index);
    checkpoint["data_file"] = buf.constPtr();
-   buf.clear().Printf(
-      base_screenshot_format_length, base_screenshot_format, index
-   );
+   buf.Printf(0, base_screenshot_format, index);
    checkpoint["screenshot_file"] = buf.constPtr();
    toc["checkpoints"].append(checkpoint);
    CS_WriteJSON(toc_path, toc, true);
@@ -993,11 +986,7 @@ bool SingleCSDemo::loadCheckpoint(int checkpoint_index, uint32_t byte_index)
 {
    qstring buf;
 
-   buf.Printf(
-      strlen(save_path_format) + MAX_CS_DEMO_CHECKPOINT_INDEX_SIZE,
-      save_path_format,
-      checkpoint_index
-   );
+   buf.Printf(0, save_path_format, checkpoint_index);
 
    if(!M_PathExists(buf.constPtr()))
    {
@@ -1046,7 +1035,7 @@ bool SingleCSDemo::loadCheckpoint(int checkpoint_index)
       setError(no_checkpoints);
       return false;
    }
-   
+
    if(toc["checkpoints"][checkpoint_index].empty())
    {
       setError(checkpoint_index_not_found);
@@ -1243,6 +1232,8 @@ bool SingleCSDemo::close()
       return false;
    }
 
+   mode = mode_none;
+
    return true;
 }
 
@@ -1352,6 +1343,25 @@ bool CSDemo::loadZipFile()
    return true;
 }
 
+bool CSDemo::loadTempZipFile()
+{
+   // [CG] Eat errors here.
+   if(current_zip_file)
+   {
+      if(!current_zip_file->close())
+      {
+         setError(zip_error);
+         return false;
+      }
+
+      delete current_zip_file;
+   }
+
+   current_zip_file = new ZipFile(current_temp_demo_archive_path);
+
+   return true;
+}
+
 bool CSDemo::retrieveDemo(const char *url)
 {
    CURL *curl_handle;
@@ -1378,12 +1388,7 @@ bool CSDemo::retrieveDemo(const char *url)
       return false;
    }
 
-   buf.Printf(
-      strlen(folder_path) + strlen(basename) + 5,
-      "%s/%s",
-      folder_path,
-      basename
-   );
+   buf.Printf(0, "%s/%s", folder_path, basename);
 
    // [CG] If the file's already been downloaded, skip all the hard work below.
    if(M_IsFile(buf.constPtr()))
@@ -1423,7 +1428,10 @@ bool CSDemo::retrieveDemo(const char *url)
 
    curl_easy_cleanup(curl_handle);
 
-   E_ReplaceString(current_demo_archive_path, estrdup(buf.constPtr()));
+   E_ReplaceString(current_demo_archive_path, buf.duplicate(PU_STATIC));
+
+   buf.Printf(0, "%s/%s.temp", folder_path, basename);
+   E_ReplaceString(current_temp_demo_archive_path, buf.duplicate(PU_STATIC));
 
    return true;
 }
@@ -1495,7 +1503,7 @@ bool CSDemo::record()
 
    buildDemoTimestamps(&demo_timestamp, &iso_timestamp);
 
-   buf.Printf(MAX_DEMO_PATH_LENGTH, "%s/%s", folder_path, demo_timestamp);
+   buf.Printf(0, "%s/%s", folder_path, demo_timestamp);
    buf.normalizeSlashes();
 
    info["version"] = version;
@@ -1543,21 +1551,13 @@ bool CSDemo::record()
       return false;
    }
 
-   E_ReplaceString(current_demo_folder_path, estrdup(buf.constPtr()));
-   buf.clear().Printf(
-      MAX_DEMO_PATH_LENGTH,
-      "%s/%s",
-      current_demo_folder_path,
-      base_info_file_name
-   );
-   E_ReplaceString(current_demo_info_path, estrdup(buf.constPtr()));
-   buf.clear().Printf(
-      MAX_DEMO_PATH_LENGTH,
-      "%s%s",
-      current_demo_folder_path,
-      demo_extension
-   );
-   E_ReplaceString(current_demo_archive_path, estrdup(buf.constPtr()));
+   E_ReplaceString(current_demo_folder_path, buf.duplicate(PU_STATIC));
+   buf.Printf(0, "%s/%s", current_demo_folder_path, base_info_file_name);
+   E_ReplaceString(current_demo_info_path, buf.duplicate(PU_STATIC));
+   buf.Printf(0, "%s%s", current_demo_folder_path, demo_extension);
+   E_ReplaceString(current_demo_archive_path, buf.duplicate(PU_STATIC));
+   buf.Printf(0, "%s%s.temp", current_demo_folder_path, demo_extension);
+   E_ReplaceString(current_temp_demo_archive_path, buf.duplicate(PU_STATIC));
 
    CS_WriteJSON(current_demo_info_path, info, true);
 
@@ -1603,12 +1603,7 @@ bool CSDemo::addNewMap()
       demo_type
    );
 
-   buf.Printf(
-      MAX_DEMO_PATH_LENGTH,
-      "%s/%s",
-      current_demo_folder_path,
-      current_demo_index + 1
-   );
+   buf.Printf(0, "%s/%s", current_demo_folder_path, current_demo_index + 1);
 
    if(current_demo->hasError())
    {
@@ -1632,7 +1627,7 @@ bool CSDemo::addNewMap()
 bool CSDemo::play(const char *url)
 {
    int demo_type;
-   qstring qbuf, saved_buf, test_folder_buf, path_buf;
+   qstring qbuf, saved_buf, test_folder_buf;
    Json::Value info;
    char *buf = NULL;
 
@@ -1657,12 +1652,7 @@ bool CSDemo::play(const char *url)
    if(strncmp(url, "file://", 7) == 0)
    {
       const char *cwd;
-
-      if(!M_IsFile(url + 7))
-      {
-         setError(demo_archive_not_found);
-         return false;
-      }
+      qstring path_buf;
 
       if(!M_IsAbsolutePath(url + 7))
       {
@@ -1671,14 +1661,26 @@ bool CSDemo::play(const char *url)
             setError(fs_error);
             return false;
          }
-         path_buf.Printf(strlen(cwd) + strlen(url), "%s/%s", cwd, url + 7);
+         path_buf.Printf(0, "%s/%s", cwd, url + 7);
          path_buf.normalizeSlashes();
          efree((void *)cwd);
       }
       else
          path_buf = url;
 
-      E_ReplaceString(current_demo_archive_path, estrdup(path_buf.constPtr()));
+      E_ReplaceString(current_demo_archive_path, path_buf.duplicate(PU_STATIC));
+
+      if(!M_IsFile(current_demo_archive_path))
+      {
+         setError(demo_archive_not_found);
+         return false;
+      }
+
+      path_buf.Printf(0, "%s/%s.temp", cs_demo_folder_path, M_Basename(url));
+      E_ReplaceString(
+         current_temp_demo_archive_path, path_buf.duplicate(PU_STATIC)
+      );
+
    }
    else if(!retrieveDemo(url))
       return false;
@@ -1717,7 +1719,7 @@ bool CSDemo::play(const char *url)
       return false;
    }
 
-   E_ReplaceString(current_demo_folder_path, estrdup(qbuf.constPtr()));
+   E_ReplaceString(current_demo_folder_path, qbuf.duplicate(PU_STATIC));
 
    if(!current_zip_file->extractAllTo(folder_path))
    {
@@ -1730,12 +1732,12 @@ bool CSDemo::play(const char *url)
 
    demo_count = cs_map_count = 0;
 
-   test_folder_buf.copy(qbuf).Printf(10, "/%d", cs_map_count);
+   test_folder_buf.Printf(0, "%s/%d", qbuf.constPtr(), cs_map_count);
    while(M_IsFolder(test_folder_buf.constPtr()))
    {
       demo_count++;
       cs_map_count++;
-      test_folder_buf.copy(qbuf).Printf(10, "/%d", cs_map_count);
+      test_folder_buf.Printf(0, "%s/%d", qbuf.constPtr(), cs_map_count);
    }
    cs_maps = ecalloc(cs_map_t *, cs_map_count, sizeof(cs_map_t));
 
@@ -1751,12 +1753,7 @@ bool CSDemo::play(const char *url)
       demo_type
    );
 
-   qbuf.clear().Printf(
-      MAX_DEMO_PATH_LENGTH,
-      "%s/%s",
-      current_demo_folder_path,
-      current_demo_index
-   );
+   qbuf.Printf(0, "%s/%s", current_demo_folder_path, current_demo_index);
 
    if(current_demo->hasError())
    {
@@ -1775,14 +1772,9 @@ bool CSDemo::play(const char *url)
       return false;
    }
 
-   qbuf.clear().Printf(
-      MAX_DEMO_PATH_LENGTH,
-      "%s/%s",
-      current_demo_folder_path,
-      base_info_file_name
-   );
+   qbuf.Printf(0, "%s/%s", current_demo_folder_path, base_info_file_name);
 
-   E_ReplaceString(current_demo_info_path, estrdup(qbuf.constPtr()));
+   E_ReplaceString(current_demo_info_path, qbuf.duplicate(PU_STATIC));
 
    mode = mode_playback;
 
@@ -1885,25 +1877,26 @@ bool CSDemo::stop()
 
    delete current_demo;
 
+   mode = mode_none;
+
+   current_demo = NULL;
+
    return true;
 }
 
 bool CSDemo::close()
 {
-   if(current_demo_archive_path)
-      efree(current_demo_archive_path);
-
-   if(current_demo_folder_path)
-      efree(current_demo_folder_path);
-
    if(current_demo_info_path)
       efree(current_demo_info_path);
 
    current_demo_index = 0;
 
-   if(mode == mode_recording)
+   if(M_IsFolder(current_demo_folder_path))
    {
-      loadZipFile();
+      // [CG] Zip up folder to temp ZIP file, if successful overwrite the old
+      //      ZIP file with the temporary one.
+
+      loadTempZipFile();
 
       if(!current_zip_file->createForWriting())
       {
@@ -1924,16 +1917,31 @@ bool CSDemo::close()
          return false;
       }
 
-      delete current_zip_file;
-   }
-   else if(mode == mode_playback)
-   {
+      if(!M_RenamePath(current_temp_demo_archive_path,
+                       current_demo_archive_path))
+      {
+         setError(fs_error);
+         return false;
+      }
+
       if(!M_DeleteFolderAndContents(current_demo_folder_path))
       {
          setError(fs_error);
          return false;
       }
    }
+
+   delete current_zip_file;
+   current_zip_file = NULL;
+
+   if(current_temp_demo_archive_path)
+      efree(current_temp_demo_archive_path);
+
+   if(current_demo_archive_path)
+      efree(current_demo_archive_path);
+
+   if(current_demo_folder_path)
+      efree(current_demo_folder_path);
 
    return true;
 }
@@ -2142,7 +2150,7 @@ bool CSDemo::rewind(uint32_t tic_count)
 {
    uint32_t current_index;
    unsigned int new_destination_index;
-   
+
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
@@ -2192,7 +2200,7 @@ bool CSDemo::rewind(uint32_t tic_count)
 bool CSDemo::fastForward(uint32_t tic_count)
 {
    unsigned int new_destination_index;
-   
+
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
@@ -2349,9 +2357,11 @@ void CS_NewDemo()
       {
          if(!cs_demo->stop())
             doom_printf("Error stopping demo: %s.", cs_demo->getError());
-         else if(!cs_demo->close())
-            doom_printf("Error closing demo: %s.", cs_demo->getError());
       }
+
+      if(!cs_demo->close())
+         doom_printf("Error closing demo: %s.", cs_demo->getError());
+
       delete cs_demo;
    }
 
@@ -2367,9 +2377,10 @@ void CS_StopDemo()
       {
          if(!cs_demo->stop())
             printf("Error stopping demo: %s.\n", cs_demo->getError());
-         else if(!cs_demo->close())
-            printf("Error closing demo: %s.\n", cs_demo->getError());
       }
+
+      if(!cs_demo->close())
+         printf("Error closing demo: %s.\n", cs_demo->getError());
    }
 }
 

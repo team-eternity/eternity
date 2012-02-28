@@ -1855,7 +1855,7 @@ void SV_RunPlayerCommands(int playernum)
    cs_buffered_command_t *bufcmd;
    server_client_t *sc = &server_clients[playernum];
    uint32_t command_buffer_size = SV_ClientCommandBufferSize(playernum);
-   uint32_t commands_run = 0;
+   uint8_t commands_run = 0;
 
    if(M_QueueIsEmpty(&sc->commands))
       return;

@@ -82,6 +82,7 @@ private:
    char         *output_filename_buffer;
    unsigned int  iterator_index;
    int           current_compression_level;
+   const char   *current_recursive_folder;
 
    void setError(int error_code);
    void setZipError(int zip_error_code);
@@ -92,7 +93,8 @@ public:
    ZipFile(const char *new_path)
       : ZoneObject(), mode(mode_none), internal_error(0),
         internal_zip_error(0), internal_unzip_error(0), iterator_index(0),
-        current_compression_level(default_compression_level)
+        current_compression_level(default_compression_level),
+        current_recursive_folder(NULL)
    {
       path = estrdup(new_path);
       data_buffer = emalloc(char *, ZIP_CHUNK_SIZE);

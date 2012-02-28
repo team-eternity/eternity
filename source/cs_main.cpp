@@ -257,6 +257,7 @@ void CS_Init(void)
    M_NormalizeSlashes(cs_state_file_path);
 
    CS_NewDemo();
+   atexit(CS_StopDemo);
 
    if(CS_CLIENT)
       CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
@@ -1936,9 +1937,9 @@ void CS_ReadFromNetwork(unsigned int timeout)
 
 void CS_TryRunTics(void)
 {
-   if(CL_DEMO)
+   if(CL_DEMOPLAY)
       CL_RunDemoTics();
-   else if(SV_DEMO)
+   else if(SV_DEMOPLAY)
       SV_RunDemoTics();
    else if(CS_CLIENT)
       CL_TryRunTics();

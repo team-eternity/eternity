@@ -38,6 +38,7 @@
 #include <fcntl.h>
 
 #include "m_file.h"
+#include "m_qstr.h"
 #include "w_wad.h"
 
 static int fs_error_code = 0;
@@ -200,26 +201,61 @@ bool M_IsAbsolutePath(const char *path)
 {
    size_t path_size = strlen(path);
 
-#if !defined(_WIN32) || defined(__MINGW32__)
-   if(path_size && strncmp(path, "/", 1) == 0)
+   if(!path_size)
+      return false;
+
+#ifdef _WIN32
+   qstring buf;
+
+   buf = path;
+
+   if(buf.length() < 3)
+      return false;
+
+   buf.normalizeSlashes();
+
+   if(strncmp(buf.constPtr() + 1, ":/", 2) == 0) // [CG] Normal C: type path.
+      return true;
+   else if(strncmp(buf.constPtr(), "//", 2) == 0) // [CG] UNC path.
+      return true;
+   else if(strncmp(buf.constPtr(), "//?/", 4) == 0) // [CG] Long UNC path.
       return true;
 #else
-   if(path_size > 3)
-   {
-      // [CG] Normal C: type path.
-      if(strncmp(path + 1, ":\\", 2) == 0)
-         return true;
-
-      // [CG] UNC path.
-      if(strncmp(path, "\\\\", 2) == 0)
-         return true;
-
-      // [CG] Long UNC path.
-      if(strncmp(path, "\\\\?\\", 4) == 0)
-         return true;
-   }
+   if(path_size && ((*path) == '/'))
+      return true;
 #endif
    return false;
+}
+
+const char* M_StripAbsolutePath(const char *path)
+{
+   const char *relative_path = path;
+
+   if(!M_IsAbsolutePath(path))
+      return path;
+
+#ifdef _WIN32
+   qstring buf;
+
+   buf = path;
+
+   if(buf.length() < 3)
+      return path;
+
+   buf.normalizeSlashes();
+
+   if(strncmp(buf.constPtr() + 1, ":/", 2) == 0) // [CG] Normal C: type path.
+      relative_path = path + 2;
+   else if(strncmp(buf.constPtr(), "//?/", 4) == 0) // [CG] Long UNC path.
+      relative_path = path + 3;
+
+   while(((*relative_path) == '\\') || ((*relative_path) == '/'))
+#else
+   while((*relative_path) == '/')
+#endif
+      relative_path++;
+
+   return relative_path;
 }
 
 // [CG] Creates a folder.  On *NIX systems the folder is given 0700
@@ -301,62 +337,45 @@ bool M_WalkFiles(const char *path, file_walker walker)
 #ifdef _WIN32
    WIN32_FIND_DATA fdata;
    HANDLE folder_handle;
-   size_t path_length = strlen(path);
-   size_t entry_length, full_length;
-   char *folder_path = NULL;
-   char *star_path = NULL;
-   char *entry_path = NULL;
+   qstring path_buf, star_buf, entry_buf;
 
+   if(!M_IsFolder(path))
+      return false;
+
+   path_buf = path;
 
    // [CG] Check that the folder path has the minimum reasonable length.
-   if(path_length < 4)
+   if(path_buf.length() < 4)
       I_Error("M_WalkFiles: Invalid path: %s.\n", path);
 
    // [CG] Check that the folder path ends in a backslash, if not add it.  Then
    //      add an asterisk (apparently Windows needs this).
-   if((*(path + path_length)) - 1 != '\\')
-   {
-      folder_path = ecalloc(char *, path_length + 2, sizeof(char));
-      star_path = ecalloc(char *, path_length + 3, sizeof(char));
-      sprintf(folder_path, "%s\\", path);
-   }
-   else
-   {
-      folder_path = ecalloc(char *, path_length + 1, sizeof(char));
-      star_path = ecalloc(char *, path_length + 2, sizeof(char));
-      strncpy(folder_path, path, path_length);
-   }
-   sprintf(star_path, "%s*", folder_path);
+   path_buf.normalizeSlashes();
+   star_buf.Printf(0, "%s/*", path_buf.constPtr());
+   star_buf.normalizeSlashes();
 
-   folder_handle = FindFirstFile(star_path, &fdata);
+   folder_handle = FindFirstFile(star_buf.getBuffer(), &fdata);
 
    while(FindNextFile(folder_handle, &fdata))
    {
-      // [CG] Skip the "previous folder" entry.
-      if(strncmp(fdata.cFileName, "..", 2))
+      size_t entry_length = strlen(fdata.cFileName);
+
+      // [CG] Skip the "current folder" and "previous folder" entries.
+      if((entry_length == 1) && (!strcmp(fdata.cFileName, ".")))
+         continue;
+      else if((entry_length == 2) && (!strcmp(fdata.cFileName, "..")))
          continue;
 
-      entry_length = strlen(fdata.cFileName);
-      full_length = path_length + entry_length + 1;
-      entry_path = erealloc(char *, entry_path, full_length);
-      memset(entry_path, 0, full_length);
-      strncat(entry_path, folder_path, path_length);
-      strncat(entry_path, fdata.cFileName, entry_length);
+      entry_buf.Printf(0, "%s/%s", path_buf.constPtr(), fdata.cFileName);
+      entry_buf.normalizeSlashes();
+
       if(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
-         if(!M_WalkFiles(entry_path, walker))
-         {
-            efree(folder_path);
-            efree(star_path);
-            efree(entry_path);
+         if(!M_WalkFiles(entry_buf.constPtr(), walker))
             return false;
-         }
       }
-      else if(!walker(entry_path))
+      else if(!walker(entry_buf.constPtr()))
       {
-         efree(folder_path);
-         efree(star_path);
-         efree(entry_path);
          set_error_code();
          return false;
       }
@@ -364,10 +383,10 @@ bool M_WalkFiles(const char *path, file_walker walker)
 
    // [CG] FindNextFile returns false if there is an error, but running out of
    //      contents is considered an error so we need to check for that code to
-   //      determine if we successfully deleted all the contents.
+   //      determine if we successfully walked all the contents.
    if(GetLastError() == ERROR_NO_MORE_FILES)
    {
-      if(!M_DeleteFolder(path))
+      if(!walker(path))
          return false;
    }
    else
@@ -376,6 +395,9 @@ bool M_WalkFiles(const char *path, file_walker walker)
       return false;
    }
 #else
+   if(!M_IsFolder(path))
+      return false;
+
    if(nftw(path, walker, 64, FTW_CHDIR | FTW_DEPTH | FTW_PHYS) == -1)
    {
       set_error_code();
@@ -430,6 +452,20 @@ bool M_SetCurrentFolder(const char *path)
 #endif
       return false;
    return true;
+}
+
+char* M_Dirname(const char *path)
+{
+   char *dirname = NULL;
+   const char *basename = M_Basename(path);
+   
+   if(basename == path)
+      return NULL;
+
+   dirname = ecalloc(char *, sizeof(char), (basename - path) + 1);
+   strncpy(dirname, path, (basename - path));
+
+   return dirname;
 }
 
 const char* M_Basename(const char *path)
@@ -553,7 +589,7 @@ FILE* M_OpenFile(const char *path, const char *mode)
 size_t M_ReadFromFile(void *ptr, size_t size, size_t count, FILE *f)
 {
    size_t result;
-   
+
    I_BeginRead();
    result = fread(ptr, size, count, f);
    I_EndRead();
@@ -570,7 +606,7 @@ size_t M_ReadFromFile(void *ptr, size_t size, size_t count, FILE *f)
 size_t M_WriteToFile(const void *ptr, size_t size, size_t count, FILE *f)
 {
    size_t result;
-   
+
    I_BeginRead();
    result = fwrite(ptr, size, count, f);
    I_EndRead();
