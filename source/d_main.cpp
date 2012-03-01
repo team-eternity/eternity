@@ -3367,6 +3367,38 @@ static gfs_t *D_LooseGFS(void)
    return NULL;
 }
 
+//
+// D_LooseDemo
+//
+// Looks for a loose LMP file on the command line, to support
+// drag-and-drop for demos.
+//
+static const char *D_LooseDemo()
+{
+   int i;
+   const char *dot;
+   const char *ret = NULL;
+
+   for(i = 1; i < myargc; ++i)
+   {
+      // stop at first param with '-' or '@'
+      if(myargv[i][0] == '-' || myargv[i][0] == '@')
+         break;
+
+      // get extension (search from right end)
+      dot = strrchr(myargv[i], '.');
+
+      // check extension
+      if(!dot || strncasecmp(dot, ".lmp", 4))
+         continue;
+      
+      ret = myargv[i];
+      break; // process only the first demo found
+   }
+
+   return ret;
+}
+
 //=============================================================================
 //
 // Primary Initialization Routines
@@ -3614,16 +3646,22 @@ static void D_DoomInit(void)
          p = M_CheckParm("-timedemo");
    }
 
-   if(p && p < myargc - 1)
+   // haleyjd 02/29/2012: support a loose demo on the command line
+   const char *loosedemo = NULL;
+   if(!p)
+      loosedemo = D_LooseDemo();
+
+   if((p && p < myargc - 1) || loosedemo)
    {
+      const char *demosource = loosedemo ? loosedemo : myargv[p + 1];
       char *file = NULL;
-      size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+      size_t len = M_StringAlloca(&file, 1, 6, demosource);
          
-      strncpy(file, myargv[p + 1], len);
+      strncpy(file, demosource, len);
 
       M_AddDefaultExtension(file, ".lmp");     // killough
       D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
-      usermsg("Playing demo %s\n",file);
+      usermsg("Playing demo %s\n", file);
    }
 
    // get skill / episode / map from parms
@@ -4003,7 +4041,7 @@ static void D_DoomInit(void)
       }
    }
 
-   if((p = M_CheckParm ("-fastdemo")) && ++p < myargc)
+   if((p = M_CheckParm("-fastdemo")) && ++p < myargc)
    {                                 // killough
       fastdemo = true;                // run at fastest speed possible
       timingdemo = true;              // show stats after quit
@@ -4018,10 +4056,15 @@ static void D_DoomInit(void)
       G_DeferedPlayDemo(myargv[p]);
       singledemo = true;            // quit after one demo
    }
-   else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
+   else if((p = M_CheckMultiParm(playdemoparms, 1)) && ++p < myargc)
    {
       G_DeferedPlayDemo(myargv[p]);
       singledemo = true;          // quit after one demo
+   }
+   else if(loosedemo)
+   {
+      G_DeferedPlayDemo(loosedemo);
+      singledemo = true;
    }
 
    startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
