@@ -1873,23 +1873,12 @@ void G_Ticker(void)
    int i;
 
    // do player reborns if needed
-   // [CG] Do things slightly different in c/s.
    if(serverside)
    {
       for(i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i] && players[i].playerstate == PST_REBORN)
-         {
-            if(CS_SERVER)
-            {
-               if(clients[i].spectating)
-                  SV_SpawnPlayer(i, true);
-               else
-                  SV_SpawnPlayer(i, false);
-            }
-
             G_DoReborn(i);
-         }
       }
    }
 
