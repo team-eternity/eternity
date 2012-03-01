@@ -1886,6 +1886,12 @@ bool CSDemo::stop()
 
 bool CSDemo::close()
 {
+   if((mode != mode_none) && (current_demo))
+   {
+      if(!stop())
+         return false;
+   }
+
    if(current_demo_info_path)
       efree(current_demo_info_path);
 
@@ -2178,9 +2184,9 @@ bool CSDemo::rewind(uint32_t tic_count)
 
    while(true)
    {
-      if(!cs_demo->readPacket())
+      if(!readPacket())
       {
-         if(cs_demo->isFinished())
+         if(isFinished())
             return true;
          else
             return false;
@@ -2220,9 +2226,9 @@ bool CSDemo::fastForward(uint32_t tic_count)
 
    while(true)
    {
-      if(!cs_demo->readPacket())
+      if(!readPacket())
       {
-         if(cs_demo->isFinished())
+         if(isFinished())
             return true;
          else
             return false;
@@ -2353,12 +2359,6 @@ void CS_NewDemo()
 {
    if(cs_demo)
    {
-      if(cs_demo->isPlaying() || cs_demo->isRecording())
-      {
-         if(!cs_demo->stop())
-            doom_printf("Error stopping demo: %s.", cs_demo->getError());
-      }
-
       if(!cs_demo->close())
          doom_printf("Error closing demo: %s.", cs_demo->getError());
 
@@ -2373,12 +2373,6 @@ void CS_StopDemo()
 {
    if(cs_demo)
    {
-      if(cs_demo->isPlaying() || cs_demo->isRecording())
-      {
-         if(!cs_demo->stop())
-            printf("Error stopping demo: %s.\n", cs_demo->getError());
-      }
-
       if(!cs_demo->close())
          printf("Error closing demo: %s.\n", cs_demo->getError());
    }

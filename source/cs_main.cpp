@@ -624,6 +624,8 @@ void CS_ReadJSON(Json::Value &json, const char *filename)
          reader.getFormattedErrorMessages().c_str()
       );
    }
+
+   in_file.close();
 }
 
 void CS_WriteJSON(const char *filename, Json::Value &value, bool styled)
@@ -638,6 +640,8 @@ void CS_WriteJSON(const char *filename, Json::Value &value, bool styled)
       out_file << styled_writer.write(value);
    else
       out_file << fast_writer.write(value);
+
+   out_file.close();
 }
 
 void CS_HandleSpectateKey(event_t *ev)

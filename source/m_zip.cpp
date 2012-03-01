@@ -162,6 +162,35 @@ static int M_addFileToZipFile(const char *path, const struct stat *stat_result,
 }
 #endif
 
+ZipFile::ZipFile(const char *new_path)
+   : ZoneObject(), mode(mode_none), internal_error(0),
+     internal_zip_error(0), internal_unzip_error(0), iterator_index(0),
+     current_compression_level(default_compression_level),
+     current_recursive_folder(NULL)
+{
+   path = estrdup(new_path);
+   data_buffer = emalloc(char *, ZIP_CHUNK_SIZE);
+   input_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);
+   output_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);
+}
+
+ZipFile::~ZipFile()
+{
+   close();
+
+   if(path)
+      efree(path);
+
+   if(data_buffer)
+      efree(data_buffer);
+
+   if(input_filename_buffer)
+      efree(input_filename_buffer);
+
+   if(output_filename_buffer)
+      efree(output_filename_buffer);
+}
+
 void ZipFile::setError(int error_code)
 {
    internal_error = error_code;
@@ -394,6 +423,7 @@ bool ZipFile::addFile(const char *file_path)
    // [CG] Files with absolute paths are dangerous, so make them relative here.
    if(current_recursive_folder)
       archived_pathname = file_path + strlen(current_recursive_folder);
+
    archived_pathname = M_StripAbsolutePath(archived_pathname);
 
    error = zipOpenNewFileInZip64(
@@ -436,13 +466,6 @@ bool ZipFile::addFile(const char *file_path)
             M_CloseFile(file);
             return false;
          }
-
-         printf(
-            "ZipFile::addFile: Copied %d bytes from %s to %s.\n",
-            bread,
-            archived_pathname,
-            path
-         );
       }
    }
 
@@ -483,7 +506,6 @@ bool ZipFile::addFolderRecursive(const char *folder_path)
       hack_zf = this;
       out = M_WalkFiles(folder_path, M_addFileToZipFile);
       hack_zf = NULL;
-      efree(current_recursive_folder);
       current_recursive_folder = NULL;
    }
    else

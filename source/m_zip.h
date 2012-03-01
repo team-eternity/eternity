@@ -32,8 +32,20 @@
 #undef ZLIB_WINAPI
 #endif
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include <zip.h>
 #include <unzip.h>
+
+#ifdef _WIN32
+#ifdef CreateFile
+#undef CreateFile
+#endif
+#endif
 
 #define ZIP_CHUNK_SIZE 16384
 #define MAX_ZIP_MEMBER_NAME_LENGTH 512
@@ -90,34 +102,8 @@ private:
    bool extractCurrentFileTo(const char *out_path);
 
 public:
-   ZipFile(const char *new_path)
-      : ZoneObject(), mode(mode_none), internal_error(0),
-        internal_zip_error(0), internal_unzip_error(0), iterator_index(0),
-        current_compression_level(default_compression_level),
-        current_recursive_folder(NULL)
-   {
-      path = estrdup(new_path);
-      data_buffer = emalloc(char *, ZIP_CHUNK_SIZE);
-      input_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);
-      output_filename_buffer = emalloc(char *, MAX_ZIP_MEMBER_NAME_LENGTH);
-   }
-
-   ~ZipFile()
-   {
-      close();
-
-      if(path)
-         efree(path);
-
-      if(data_buffer)
-         efree(data_buffer);
-
-      if(input_filename_buffer)
-         efree(input_filename_buffer);
-
-      if(output_filename_buffer)
-         efree(output_filename_buffer);
-   }
+   ZipFile(const char *new_path);
+   ~ZipFile();
 
    bool        openForReading();
    bool        createForWriting();
@@ -134,7 +120,7 @@ public:
    void        resetFilenameIterator();
    bool        hasError();
    void        clearError();
-   const char *getError();
+   const char* getError();
 };
 
 #endif

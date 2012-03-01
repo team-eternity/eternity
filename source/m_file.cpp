@@ -29,10 +29,10 @@
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
-#include <direct.h> // [CG] What kind of sick, twisted API architect puts
-#include <io.h>     //      _mkdir in direct.h and _open in io.h?  Good god.
-#endif              //      What does "direct.h" even mean?
+#include <direct.h>
+#include <io.h>
 #endif
 
 #include <fcntl.h>
@@ -93,29 +93,15 @@ bool M_PathExists(const char *path)
 
 bool M_DirnameIsFolder(const char *path)
 {
-   char *buffer = NULL;
-   char *basename = NULL;
-   size_t dirname_size;
-   bool exists = false;
+   bool is_folder = false;
+   char *dirname = M_Dirname(path);
 
-   if(!M_IsAbsolutePath(path))
-      return false;
+   if((!dirname) || M_IsFolder(dirname))
+      is_folder = true;
 
-   if(!(basename = strrchr((char *)path, '/')))
-      return false;
+   efree(dirname);
 
-   if(path == basename)
-      return true;
-
-   dirname_size = (basename - path);
-   buffer = ecalloc(char *, 1, dirname_size + 1);
-   strncpy(buffer, path, dirname_size);
-   if(M_IsFolder((const char *)buffer))
-      exists = true;
-
-   efree(buffer);
-
-   return exists;
+   return is_folder;
 }
 
 size_t M_PathJoinBuf(const char *d, const char *f, char **buf, size_t s)
@@ -204,6 +190,9 @@ bool M_IsAbsolutePath(const char *path)
    if(!path_size)
       return false;
 
+   if((*path) == '/')
+      return true;
+
 #ifdef _WIN32
    qstring buf;
 
@@ -219,9 +208,6 @@ bool M_IsAbsolutePath(const char *path)
    else if(strncmp(buf.constPtr(), "//", 2) == 0) // [CG] UNC path.
       return true;
    else if(strncmp(buf.constPtr(), "//?/", 4) == 0) // [CG] Long UNC path.
-      return true;
-#else
-   if(path_size && ((*path) == '/'))
       return true;
 #endif
    return false;
@@ -297,6 +283,19 @@ bool M_CreateFile(const char *path)
    return true;
 }
 
+bool M_DeletePath(const char *path)
+{
+   if(!M_PathExists(path))
+      return false;
+
+   if(M_IsFile(path))
+      return M_DeleteFile(path);
+   else if(M_IsFolder(path))
+      return M_DeleteFolder(path);
+   else
+      return false;
+}
+
 bool M_DeleteFile(const char *path)
 {
    if(remove(path) != 0)
@@ -320,10 +319,20 @@ bool M_DeleteFileInFolder(const char *folder, const char *file)
 
 bool M_DeleteFolder(const char *path)
 {
-#if !defined(_WIN32) || defined(__MINGW32__)
-   if(rmdir(path) == -1)
-#else
+#ifdef _WIN32
+   int result;
+   DWORD attr = GetFileAttributes(path);
+
+   if(attr & FILE_ATTRIBUTE_READONLY)
+   {
+      attr &= ~FILE_ATTRIBUTE_READONLY;
+      if((result = SetFileAttributes(path, attr)) == 0)
+         return false;
+   }
+
    if(_rmdir(path) == -1)
+#else
+   if(rmdir(path) == -1)
 #endif
    {
       set_error_code();
@@ -334,13 +343,13 @@ bool M_DeleteFolder(const char *path)
 
 bool M_WalkFiles(const char *path, file_walker walker)
 {
+   if(!M_IsFolder(path))
+      return false;
+
 #ifdef _WIN32
    WIN32_FIND_DATA fdata;
    HANDLE folder_handle;
    qstring path_buf, star_buf, entry_buf;
-
-   if(!M_IsFolder(path))
-      return false;
 
    path_buf = path;
 
@@ -381,6 +390,8 @@ bool M_WalkFiles(const char *path, file_walker walker)
       }
    }
 
+   FindClose(folder_handle);
+
    // [CG] FindNextFile returns false if there is an error, but running out of
    //      contents is considered an error so we need to check for that code to
    //      determine if we successfully walked all the contents.
@@ -395,9 +406,6 @@ bool M_WalkFiles(const char *path, file_walker walker)
       return false;
    }
 #else
-   if(!M_IsFolder(path))
-      return false;
-
    if(nftw(path, walker, 64, FTW_CHDIR | FTW_DEPTH | FTW_PHYS) == -1)
    {
       set_error_code();
@@ -410,7 +418,7 @@ bool M_WalkFiles(const char *path, file_walker walker)
 bool M_DeleteFolderAndContents(const char *path)
 {
 #ifdef _WIN32
-   return M_WalkFiles(path, M_DeleteFile);
+   return M_WalkFiles(path, M_DeletePath);
 #else
    return M_WalkFiles(path, remover);
 #endif
@@ -456,16 +464,55 @@ bool M_SetCurrentFolder(const char *path)
 
 char* M_Dirname(const char *path)
 {
-   char *dirname = NULL;
-   const char *basename = M_Basename(path);
-   
-   if(basename == path)
-      return NULL;
+   qstring buf;
+   size_t dirname_size;
 
-   dirname = ecalloc(char *, sizeof(char), (basename - path) + 1);
-   strncpy(dirname, path, (basename - path));
+   buf = path;
+   buf.normalizeSlashes();
 
-   return dirname;
+   // [CG] Check for absolute root paths first, these have no dirname and
+   //      therefore return NULL.
+   switch(buf.length())
+   {
+      case 1:
+         return NULL;
+         break;
+      case 2:
+         if(buf.charAt(1) == '/')
+            return NULL;
+         break;
+#ifdef _WIN32
+      case 3:
+         if(strncmp(buf.constPtr() + 1, ":/", 2) == 0)
+            return NULL;
+         break;
+      case 4:
+         if(buf == "//?/")
+            return NULL;
+         break;
+#endif
+      default:
+         break;
+   }
+
+   // [CG] Remove trailing slashes
+   for(dirname_size = buf.length() - 1;
+       (dirname_size > 0 && buf.charAt(dirname_size) == '/');
+       dirname_size--);
+
+   // [CG] Find the position of the last slash.
+   while((dirname_size > 0) && (buf.charAt(dirname_size) != '/'))
+       dirname_size--;
+
+   // [CG] If there were no more slashes then only a basename was given, so
+   //      return NULL (basenames have no dirname by definition).
+   if(!dirname_size)
+      return estrdup("/");
+
+   // [CG] Truncate buffer to last slash index.
+   buf.truncate(dirname_size);
+
+   return buf.duplicate(PU_STATIC);
 }
 
 const char* M_Basename(const char *path)

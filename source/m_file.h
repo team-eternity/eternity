@@ -59,6 +59,7 @@ bool        M_IsAbsolutePath(const char *path);
 const char* M_StripAbsolutePath(const char *path);
 bool        M_CreateFile(const char *path);
 bool        M_CreateFolder(const char *path);
+bool        M_DeletePath(const char *path);
 bool        M_DeleteFile(const char *path);
 bool        M_DeleteFileInFolder(const char *folder, const char *file);
 bool        M_DeleteFolder(const char *path);
