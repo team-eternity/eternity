@@ -327,7 +327,7 @@ static default_t sysdefaults[] =
       "packet_buffer",
       &cl_packet_buffer_enabled,
       NULL,
-      true,
+      false,
       default_t::wad_no,
       "buffer incoming packets"
    ),

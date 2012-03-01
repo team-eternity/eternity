@@ -2503,7 +2503,6 @@ void P_UpdateSpecials(void)
 
    if(serverside)
    {
-
       // Downcount level timer, exit level if elapsed
       if(levelTimeLimit)
       {
@@ -2531,14 +2530,14 @@ void P_UpdateSpecials(void)
          {
             if(!playeringame[pnum])
                continue;
+
             // sf: use hu_frags.c frag counter
             if(players[pnum].totalfrags >= levelFragLimit)
             {
                G_ExitLevel();
                return;
             }
-
-            if(players[pnum].totalfrags >= (levelFragLimit - 1))
+            else if(players[pnum].totalfrags >= (levelFragLimit - 1))
             {
                if(!announced_one_frag_left)
                {

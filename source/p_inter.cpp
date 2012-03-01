@@ -1155,7 +1155,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          bool team_kill = false;
          bool suicide = false;
 
-         source->player->frags[sourcenum]++;
+         source->player->frags[targetnum]++;
 
          if(clientserver)
          {
@@ -1170,9 +1170,9 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
             {
                // [CG] Suicides & team kills subtract 1 from the team's score.
                if(suicide || team_kill)
-                  team_scores[clients[sourcenum].team]--;
+                  team_scores[source_team]--;
                else
-                  team_scores[clients[sourcenum].team]++;
+                  team_scores[source_team]++;
             }
          }
          HU_FragsUpdate();
@@ -1195,7 +1195,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       // count environment kills against you
       if(!source)
       {
-         target->player->frags[target->player-players]++;
+         target->player->frags[target->player - players]++;
 
          // [CG] Subtract 1 from the team's score for environment kills.
          if(GameType == gt_tdm)

@@ -355,7 +355,7 @@ typedef struct
    //      limit.
    uint32_t death_time;
    // [CG] The number of times this client has died.
-   uint32_t death_count;
+   int32_t death_count;
    // [CG] The world index of the latest received position.
    uint32_t latest_position_index;
    // [CG] Whether or not a client is AFK
