@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-directx -8in32 -nomusic -geom 640x400wvh -csjoin file://e:\Code\eecs\codeblocks\bin\Debug\test1.json" />
+				<Option parameters="-directx -8in32 -nomusic -geom 640x400wvh -warp 1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
