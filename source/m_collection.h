@@ -179,7 +179,7 @@ public:
       this->length = other.length;
       this->wrapiterator = other.wrapiterator;
       
-      if(this->length <= this->numalloc)
+      if(this->length >= this->numalloc)
          this->resize(this->length - oldlength);
 
       memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));

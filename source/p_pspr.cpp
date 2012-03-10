@@ -905,12 +905,13 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 {
    if(demo_version >= 203)
    {
+      // killough 8/2/98: make autoaiming prefer enemies
+      fixed_t slope = P_AimLineAttack(mo, angle, distance, MF_FRIEND);
+
       // autoaiming is disabled?
       if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
          return P_PlayerPitchSlope(mo->player);
 
-      // killough 8/2/98: make autoaiming prefer enemies
-      fixed_t slope = P_AimLineAttack(mo, angle, distance, MF_FRIEND);
       if(clip.linetarget)
          return slope;
    }
@@ -1228,6 +1229,7 @@ void P_BulletSlope(Mobj *mo)
    // haleyjd 08/09/11: allow autoaim disable
    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
    {
+      P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
       bulletslope = P_PlayerPitchSlope(mo->player);
       return;
    }
