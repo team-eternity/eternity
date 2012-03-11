@@ -1543,6 +1543,10 @@ static void WI_updateNetgameStats(void)
 {
    int i, fsum;    
    bool stillticking;
+   static int clientserver_tics = 0;
+
+   if(clientserver && (clientserver_tics == 0))
+      clientserver_tics = gametic + (10 * TICRATE);
    
    WI_updateAnimatedBack();
 
@@ -1689,8 +1693,10 @@ static void WI_updateNetgameStats(void)
    }
    else if(ng_state == 10)
    {
-      if(acceleratestage)
+      if((clientserver && (gametic == clientserver_tics)) || acceleratestage)
       {
+         clientserver_tics = 0;
+
          S_StartSound(NULL, sfx_sgcock);
          if(GameModeInfo->id == commercial)
             WI_initNoState();
@@ -2373,7 +2379,7 @@ static void WI_Start(wbstartstruct_t *wbstartstruct)
 {
    WI_initVariables(wbstartstruct);
    WI_loadData();
-   
+
    if(GameType == gt_dm)
       WI_initDeathmatchStats();
    else if(GameType == gt_coop)

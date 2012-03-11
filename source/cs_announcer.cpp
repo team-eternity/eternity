@@ -369,9 +369,6 @@ void CS_Announce(int event_type, Mobj *source)
 
    if(current_game_type->getID() == xgt_cooperative)
       return;
-
-   doom_printf("Current game type ID is %d.", current_game_type->getID());
-   doom_printf("Announcing event %d.", event_type);
    
    if((ev = CS_GetAnnouncerEvent(event_type)))
       ev->activate(source);

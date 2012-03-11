@@ -88,10 +88,10 @@ void LowResCoopScoreboard::display()
 
    left_border  = SCREEN_MIDDLE - (window_width >> 1);
    right_border = SCREEN_MIDDLE + (window_width >> 1);
-   window_x = WINDOW_MARGIN + m_y;
-   window_y = 0;
+   window_x = WINDOW_MARGIN + m_x;
+   window_y = WINDOW_MARGIN + m_y;
    scores_x = window_x + SCORES_MARGIN;
-   y = window_y + 4 + m_y;
+   y = window_y + (WINDOW_MARGIN * 2);
 
    // [CG] TODO: Add option to set the scoreboard's background opacity.
    if(m_y > 0)
