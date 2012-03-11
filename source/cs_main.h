@@ -39,7 +39,6 @@
 #include "cs_spec.h"
 #include "cs_team.h"
 #include "cs_position.h"
-#include "cs_ctf.h"
 #include "cs_config.h"
 
 struct event_t;
@@ -315,33 +314,36 @@ typedef struct
 
 typedef struct
 {
-   // [CG] The gametic at which the client joined the spectators for the first
-   //      time.
-   int32_t join_tic;
+   int32_t  join_tic;
+   uint32_t client_lag;
+   uint32_t server_lag;
+   uint32_t transit_lag;
+   uint8_t  packet_loss;
+   int32_t  score; // [CG] So we don't have to do funny things with frags.
+   uint32_t environment_deaths;
+   uint32_t monster_deaths;
+   uint32_t player_deaths;
+   uint32_t suicides;
+   uint32_t total_deaths;
+   uint32_t monster_kills;
+   uint32_t player_kills;
+   uint32_t team_kills;
+   uint32_t total_kills;
+   uint16_t frag_ratio;
+   uint32_t flag_touches;
+   uint32_t flag_captures;
+   uint16_t flag_capture_ratio;
+   uint32_t flag_picks;
+   uint32_t flag_carriers_fragged;
+   uint16_t average_damage;
+} client_stats_t;
+
+typedef struct
+{
    // [CG] Whether or not the client is spectating.
    uint8_t spectating;
-   // [CG] This the index of the client's current command and position, and
-   //      will always point to a valid one of both.  There may be commands or
-   //      positions past this index that are also "current" (as in, they have
-   //      yet to be run), but this index refers to the client's command and
-   //      position for this TIC.
-   // uint32_t index;
    // [CG] The client's current team.
    int32_t team;
-   // [CG] This is the number of TICs between when a command was generated and
-   //      when it was received again from the server.  This is only used
-   //      clientside.
-   uint32_t client_lag;
-   // [CG] This is the number of commands currently buffered by the server,
-   //      again only used clientside.
-   uint32_t server_lag;
-   // [CG] The amount of TICs it takes for a client's packet to reach the
-   //      server (one way, so this could apply vice-versa as well).
-   uint32_t transit_lag;
-   // [CG] Percentage of packets (as in, 100 is complete and total packet
-   //      loss) that have been lost over time.  This is an integer value, 1 is
-   //      1%, 100 is 100%.
-   uint8_t packet_loss;
    // [CG] The client's queue status: none, waiting or playing,
    //      cs_queue_level_t.
    int32_t queue_level;
@@ -354,20 +356,20 @@ typedef struct
    // [CG] The number of TICs the client's been dead; used for death time
    //      limit.
    uint32_t death_time;
-   // [CG] The number of times this client has died.
-   int32_t death_count;
    // [CG] The world index of the latest received position.
    uint32_t latest_position_index;
    // [CG] Whether or not a client is AFK
    uint8_t afk;
    // [CG] Frags this life.
    uint16_t frags_this_life;
-   // [CG] The TIC at which the client last fragged.
-   int32_t last_frag_tic;
+   // [CG] The index at which the client last fragged.
+   int32_t last_frag_index;
    // [CG] The client's current frag level.
    uint8_t frag_level;
    // [CG] The client's current consecutive frag level.
    uint8_t consecutive_frag_level;
+   // [CG] Various client statistics.
+   client_stats_t stats;
 } client_t;
 
 #pragma pack(pop)
@@ -387,7 +389,8 @@ enum
    fl_rampage,
    fl_dominating,
    fl_unstoppable,
-   fl_godlike,
+   fl_god_like,
+   fl_wicked_sick,
    fl_max
 };
 
@@ -925,13 +928,20 @@ void CS_SetPlayerName(player_t *player, const char *name);
 void CS_SetSkin(const char *skin_name, int playernum);
 void CS_InitPlayers(void);
 void CS_DisconnectPeer(ENetPeer *peer, enet_uint32 reason);
+void CS_ClearClientStats(int clientnum);
 void CS_ZeroClient(int clientnum);
 void CS_ZeroClients(void);
+void CS_SetClientTeam(int clientnum, int new_team_color);
 void CS_InitPlayer(int playernum);
 void CS_FormatTime(char *formatted_time, unsigned int seconds);
 void CS_FormatTicsAsTime(char *formatted_time, unsigned int tics);
 void CS_SetDisplayPlayer(int playernum);
+void CS_IncrementClientScore(int clientnum);
+void CS_DecrementClientScore(int clientnum);
+void CS_SetClientScore(int clientnum, int new_score);
+void CS_CheckClientSprees(int clientnum);
 size_t CS_BuildGameState(int playernum, byte **buffer);
+void CS_ResetClientSprees(int clientnum);
 void CS_PlayerThink(int playernum);
 void CS_ApplyCommandButtons(ticcmd_t *cmd);
 void CS_PlayerTicker(int playernum);

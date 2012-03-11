@@ -50,6 +50,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "in_lude.h"
@@ -90,7 +91,6 @@
 #include "cs_hud.h"
 #include "cs_main.h"
 #include "cs_netid.h"
-#include "cs_ctf.h"
 #include "cs_wad.h"
 #include "cl_main.h"
 #include "cl_spec.h"
@@ -650,6 +650,8 @@ void G_DoLoadLevel(void)
 {
    int i;
    
+   current_game_type->handleLoadLevel();
+
    levelstarttic = gametic; // for time calculation
    
    if(!demo_compatibility && demo_version < 203)   // killough 9/29/98
@@ -663,9 +665,6 @@ void G_DoLoadLevel(void)
 
       if(CS_TEAMS_ENABLED)
          memset(team_scores, 0, sizeof(int) * team_color_max);
-
-      for(i = team_color_none; i < team_color_max; i++)
-         CS_RemoveFlagActor(&cs_flags[i]);
 
       memset(cs_flags, 0, sizeof(flag_t) * team_color_max);
       memset(cs_flag_stands, 0, sizeof(flag_stand_t) * team_color_max);
@@ -681,11 +680,10 @@ void G_DoLoadLevel(void)
 
    if(serverside)
    {
-      if(GameType == gt_ctf)
+      for(i = team_color_none; i < team_color_max; i++)
       {
-         for(i = team_color_none; i < team_color_max; i++)
-            if(cs_flag_stands[i].net_id)
-               SV_SpawnFlag(&cs_flags[i]);
+         if(cs_flag_stands[i].net_id)
+            SV_SpawnFlag(&cs_flags[i]);
       }
    }
 
@@ -1423,6 +1421,8 @@ void G_ExitLevel(void)
 {
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
+
+   current_game_type->handleExitLevel();
 }
 
 //
@@ -2092,7 +2092,7 @@ void G_Ticker(void)
    if(gamestate == GS_LEVEL)
    {
       P_Ticker();
-      CS_CTFTicker(); // [CG] TODO: A more extensible way of adding tickers.
+      current_game_type->tick();
       G_CameraTicker(); // haleyjd: move cameras
       ST_Ticker(); 
       AM_Ticker(); 
@@ -2471,7 +2471,7 @@ void G_DoReborn(int playernum)
       }
 
       // spawn at random spot if in deathmatch
-      if(DEATHMATCH)
+      if(GameType == gt_dm)
       {
          G_DeathMatchSpawnPlayer(playernum);
          
@@ -2979,6 +2979,8 @@ void G_InitNew(skill_t skill, char *name)
    announced_two_frags_left = false;
    announced_one_frag_left = false;
 
+   current_game_type->handleNewLevel(skill, name);
+
    G_DoLoadLevel();
 }
 
@@ -3292,7 +3294,7 @@ static void G_BeginRecordingOld(void)
    *demo_p++ = gameskill;
    *demo_p++ = gameepisode;
    *demo_p++ = gamemap;
-   *demo_p++ = (DEATHMATCH);
+   *demo_p++ = (GameType == gt_dm);
    *demo_p++ = respawnparm;
    *demo_p++ = fastparm;
    *demo_p++ = nomonsters;

@@ -2120,7 +2120,7 @@ static void AM_drawPlayers(void)
       p = &players[i];
 
       // killough 9/29/98: use !demoplayback so internal demos are no different
-      if((DEATHMATCH && !demoplayback) && p != plr)
+      if((GameType == gt_dm && !demoplayback) && p != plr)
          continue;
 
       if(!playeringame[i])

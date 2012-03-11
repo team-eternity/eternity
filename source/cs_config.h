@@ -96,10 +96,12 @@ typedef struct
 {
    int32_t  skill;
    int32_t  game_type;
-   int8_t   ctf;
+   uint8_t  deathmatch;
+   uint8_t  teams;
    uint32_t max_clients;
    uint32_t max_players;
    uint32_t max_players_per_team;
+   uint32_t max_lives;
    uint32_t frag_limit;
    uint32_t time_limit;
    uint32_t score_limit;

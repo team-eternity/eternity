@@ -53,6 +53,7 @@
 
 #include "cs_position.h"
 #include "cs_main.h"  // [CG] 09/18/11
+#include "cs_score.h" // [CG] 03/09/11
 #include "cl_cmd.h"   // [CG] 10/19/11
 #include "cl_pred.h"  // [CG] 09/18/11
 #include "cl_main.h"  // [CG] 10/19/11
@@ -76,12 +77,131 @@ bool onground; // whether player is on ground or in air
 //
 void P_SetDisplayPlayer(int new_displayplayer)
 {
+   cs_scoreboard->setClientNeedsRepainted(displayplayer);
+   cs_scoreboard->setClientNeedsRepainted(new_displayplayer);
+
    displayplayer = new_displayplayer;
 
    ST_Start();
    HU_Start();
    S_UpdateSounds(players[displayplayer].mo);
    P_ResetChasecam();
+}
+
+//
+// P_IncrementPlayerEnvironmentDeaths
+//
+// Increments the player's environment death count.
+//
+void P_IncrementPlayerEnvironmentDeaths(int playernum)
+{
+   players[playernum].frags[playernum]++;
+
+   HU_FragsUpdate();
+
+   if(clientserver)
+   {
+      client_stats_t *stats = &clients[playernum].stats;
+
+      stats->environment_deaths++;
+      stats->total_deaths++;
+
+      cs_scoreboard->setClientNeedsRepainted(playernum);
+   }
+}
+
+//
+// P_IncrementPlayerMonsterDeaths
+//
+// Increments the player's monster death count.
+//
+void P_IncrementPlayerMonsterDeaths(int playernum)
+{
+   if(clientserver)
+   {
+      client_stats_t *stats = &clients[playernum].stats;
+
+      stats->monster_deaths++;
+      stats->total_deaths++;
+
+      cs_scoreboard->setClientNeedsRepainted(playernum);
+   }
+}
+
+//
+// P_IncrementPlayerMonsterKills
+//
+// Increments the player's monster kill count.
+//
+void P_IncrementPlayerMonsterKills(int playernum)
+{
+   players[playernum].killcount++;
+
+   if(clientserver)
+   {
+      client_stats_t *stats = &clients[playernum].stats;
+
+      stats->monster_kills++;
+      stats->total_kills++;
+
+      cs_scoreboard->setClientNeedsRepainted(playernum);
+   }
+}
+
+//
+// P_IncrementPlayerPlayerKills
+//
+// Increments the player's player kill count.
+//
+void P_IncrementPlayerPlayerKills(int sourcenum, int targetnum)
+{
+   players[sourcenum].frags[targetnum]++;
+
+   HU_FragsUpdate();
+
+   if(clientserver)
+   {
+      bool suicide = false;
+      bool team_kill = false;
+      client_t *source_client = &clients[sourcenum];
+      client_t *target_client = &clients[targetnum];
+      client_stats_t *source_stats = &source_client->stats;
+      client_stats_t *target_stats = &target_client->stats;
+
+      source_stats->player_kills++;
+      source_stats->total_kills++;
+      target_stats->player_deaths++;
+      target_stats->total_deaths++;
+
+      if(sourcenum == targetnum)
+         suicide = true;
+
+      if(source_client->team == target_client->team)
+         team_kill = true;
+
+      if(suicide || team_kill)
+      {
+         if(suicide)
+         {
+            if(sourcenum == displayplayer)
+               CS_Announce(ae_suicide_death, NULL);
+         }
+         else
+         {
+            CS_Announce(ae_team_kill, NULL);
+            CS_ResetClientSprees(sourcenum);
+         }
+
+      }
+      else
+      {
+         source_client->frags_this_life++;
+         CS_CheckClientSprees(sourcenum);
+      }
+
+      cs_scoreboard->setClientNeedsRepainted(sourcenum);
+      cs_scoreboard->setClientNeedsRepainted(targetnum);
+   }
 }
 
 //
@@ -379,8 +499,25 @@ void P_DeathThink(player_t *player)
    // [CG] C/S adds a "death time limit" option where players can only remain
    //      dead for so long before they're either forcibly respawned or removed
    //      from the game.
+   // [CG] Check that the client hasn't run out of lives as well.
    if(serverside && player->cmd.buttons & BT_USE)
-      player->playerstate = PST_REBORN;
+   {
+      int playernum = player - players;
+
+      if(!CS_SERVER)
+         player->playerstate = PST_REBORN;
+      else if(cs_settings->max_lives == 0)
+         player->playerstate = PST_REBORN;
+      else if(clients[playernum].stats.total_deaths < cs_settings->max_lives)
+         player->playerstate = PST_REBORN;
+      else
+      {
+         SV_SendHUDMessage(playernum, "No lives left");
+
+         if(!clients[playernum].spectating)
+            SV_SpawnPlayer(playernum, true);
+      }
+   }
    else if(CS_SERVER && death_time_limit && GameType != gt_coop)
    {
       int playernum = player - players;
@@ -403,9 +540,7 @@ void P_DeathThink(player_t *player)
                "%s was forced to leave the game.\n", player->name
             );
          }
-         if(client->spectating)
-            SV_SpawnPlayer(playernum, true);
-         else
+         if(!client->spectating)
             SV_SpawnPlayer(playernum, false);
       }
    }

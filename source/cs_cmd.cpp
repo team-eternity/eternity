@@ -33,7 +33,6 @@
 #include "p_user.h"
 
 #include "cs_cmd.h"
-#include "cs_ctf.h"
 #include "cs_position.h"
 
 void CS_PrintCommand(cs_cmd_t *command)

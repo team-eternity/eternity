@@ -330,7 +330,7 @@ static void ST_drawStatBar(void)
    // TODO: inventory stuff
 
    // draw frags or health
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
    {
       ST_drawInvNum(plyr->totalfrags, 88, 170);
    }

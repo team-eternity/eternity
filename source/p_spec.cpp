@@ -1400,6 +1400,8 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing)
    if(!P_CheckTag(line))  //jff 2/27/98 disallow zero tag on some types
       return;
 
+   current_game_type->handleActorCrossedSpecialLine(thing, line, side);
+
    // Dispatch on the line special value to the line's action routine
    // If a once only function, and successful, clear the line special
 
@@ -2362,6 +2364,8 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
       }
       break;
    }
+
+   current_game_type->handleActorShotSpecialLine(thing, line, side);
 }
 
         // sf: changed to enable_nuke for console
@@ -2378,6 +2382,8 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 void P_PlayerInSpecialSector(player_t *player)
 {
    sector_t *sector = player->mo->subsector->sector;
+
+   current_game_type->handlePlayerInSpecialSector(player);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
@@ -2503,8 +2509,15 @@ void P_UpdateSpecials(void)
 
    if(serverside)
    {
+      if(current_game_type->shouldExitLevel())
+      {
+         printf("Game type said to exit level, so we are.\n");
+         G_ExitLevel();
+         return;
+      }
+
       // Downcount level timer, exit level if elapsed
-      if(levelTimeLimit)
+      if((GameType != gt_coop) && levelTimeLimit)
       {
          int time_left = (levelTimeLimit * TICRATE * 60) - leveltime;
 
@@ -2523,7 +2536,9 @@ void P_UpdateSpecials(void)
       // Check frag counters, if frag limit reached, exit level // Ty 03/18/98
       //  Seems like the total frags should be kept in a simple
       //  array somewhere, but until they are...
-      if(levelFragLimit)  // we used -frags so compare count
+
+      // we used -frags so compare count
+      if((GameType != gt_coop) && levelFragLimit)
       {
          int pnum;
          for(pnum = 0; pnum < MAXPLAYERS; pnum++)
@@ -2564,17 +2579,6 @@ void P_UpdateSpecials(void)
                   SV_BroadcastAnnouncerEvent(ae_three_frags_left, NULL);
                }
             }
-         }
-      }
-
-      if(levelScoreLimit)
-      {
-         if((team_scores[team_color_none] >= levelScoreLimit) ||
-            (team_scores[team_color_red]  >= levelScoreLimit) ||
-            (team_scores[team_color_blue] >= levelScoreLimit))
-         {
-            G_ExitLevel();
-            return;
          }
       }
    }

@@ -26,10 +26,14 @@
 
 #include <list>
 
+#include "z_zone.h"
+
 #include "c_runcmd.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "doomstat.h"
 #include "g_bind.h"
+#include "g_ctf.h"
 #include "hu_stuff.h"
 #include "i_system.h"
 #include "i_thread.h"
@@ -61,6 +65,9 @@ extern vfont_t *hud_font;
 
 #define TIMER_SIZE 10
 #define CHAT_BUFFER_SIZE (MAX_STRING_SIZE + 15)
+#define TEAM_WIDGET_LINE_HEIGHT 14
+#define TEAM_WIDGET_HEIGHT \
+   (clientserver ? ((cs_settings->teams * TEAM_WIDGET_LINE_HEIGHT) + 4) : 0)
 
 static char cs_chat_input[MAX_STRING_SIZE];
 static message_recipient_e current_recipient;
@@ -224,7 +231,7 @@ static void CS_ChatWidgetTick(hu_widget_t *widget)
 void CS_DrawChatWidget(void)
 {
    hu_widget_t *w;
-   
+
    w = HU_WidgetForName("_HU_CSChatWidget");
    if(!w->disabled)
    {
@@ -387,10 +394,10 @@ static void CS_NetWidgetTick(hu_widget_t *widget)
    if(show_netstats)
    {
       psnprintf(tw->message, 21, "%5u/%3u/%3u/%3u%%",
-         clients[consoleplayer].client_lag,
+         clients[consoleplayer].stats.client_lag,
          cl_packet_buffer.size(),
-         clients[consoleplayer].server_lag,
-         100 - clients[consoleplayer].packet_loss
+         clients[consoleplayer].stats.server_lag,
+         100 - clients[consoleplayer].stats.packet_loss
       );
    }
    else
@@ -433,18 +440,27 @@ static void CS_TeamWidgetTick(hu_widget_t *widget) {}
 
 static void CS_TeamWidgetDraw(hu_widget_t *widget)
 {
-   int x;
+   int x, y, team;
    hu_customwidget_t *cw;
    patch_t *p;
    static char score_buffer[5];
    client_t *client;
-   byte red_font_color, blue_font_color;
+   byte font_color = CR_GRAY;
 
    if(widget->disabled || !show_team_widget)
       return;
 
    cw = (hu_customwidget_t *)widget;
    client = &clients[displayplayer];
+
+   if(current_game_type->usesFlagsAsScore())
+      cw->width = 48;
+   else
+      cw->width = 36;
+
+   cw->x = SCREENWIDTH - cw->width;
+   cw->y = ST_Y - (TEAM_WIDGET_HEIGHT + 4);
+   cw->height = (TEAM_WIDGET_HEIGHT - 1);
 
    if(cw->bg_opacity < FRACUNIT)
    {
@@ -459,69 +475,45 @@ static void CS_TeamWidgetDraw(hu_widget_t *widget)
       );
    }
 
-   if(client->team == team_color_red)
+
+   if(client->team != team_color_none)
    {
+      y = cw->y + 2 + (TEAM_WIDGET_LINE_HEIGHT * (client->team - 1));
+
       V_ColorBlockScaled(
-         &vbscreen,
-         GameModeInfo->whiteIndex,
-         cw->x,
-         cw->y + 2,
-         2,
-         (cw->height >> 1) - 4
-      );
-   }
-   else if(client->team == team_color_blue)
-   {
-      V_ColorBlockScaled(
-         &vbscreen,
-         GameModeInfo->whiteIndex,
-         cw->x,
-         cw->y + 2 + (cw->height >> 1),
-         2,
-         (cw->height >> 1) - 4
+         &vbscreen, GameModeInfo->whiteIndex, cw->x, y, 2,
+         TEAM_WIDGET_LINE_HEIGHT - 2
       );
    }
 
-   x = cw->x + 2;
+   x = cw->x + 4;
 
-   if(GameType == gt_ctf)
+   if(current_game_type->usesFlagsAsScore())
    {
-      if((p = CS_GetFlagPatch(team_color_red)))
-         V_DrawPatch(cw->x + 4, cw->y + 2, &vbscreen, p);
+      y = cw->y + 2;
+      for(team = team_color_red; team < team_color_max; team++)
+      {
+         if((p = CS_GetFlagPatch(team)))
+            V_DrawPatch(x, y, &vbscreen, p);
 
-      if((p = CS_GetFlagPatch(team_color_blue)))
-         V_DrawPatch(cw->x + 4, cw->y + 3 + (cw->height >> 1), &vbscreen, p);
-
-      x += 16;
-   }
-   else
-      x += 2;
-
-   if(GameType == gt_ctf)
-      red_font_color = blue_font_color = CR_GRAY;
-   else
-   {
-      red_font_color = CR_RED;
-      blue_font_color = CR_BLUE;
+         y += TEAM_WIDGET_LINE_HEIGHT;
+      }
+      x += 14;
    }
 
-   sprintf(score_buffer, "%4d", team_scores[team_color_red] % 1000);
-   V_FontWriteTextColored(
-      hud_font,
-      score_buffer,
-      red_font_color,
-      x,
-      cw->y + 4
-   );
+   y = cw->y + 4;
+   for(team = team_color_red; team < team_color_max; team++)
+   {
+      // [CG] Cap scores at [-999, 999].
+      sprintf(score_buffer, "%4d", team_scores[team] % 1000);
 
-   sprintf(score_buffer, "%4d", team_scores[team_color_blue] % 1000);
-   V_FontWriteTextColored(
-      hud_font,
-      score_buffer,
-      blue_font_color,
-      x,
-      cw->y + 5 + (cw->height >> 1)
-   );
+      if(!current_game_type->usesFlagsAsScore())
+         font_color = CS_GetTeamFontColor(team);
+
+      V_FontWriteTextColored(hud_font, score_buffer, font_color, x, y);
+      y += TEAM_WIDGET_LINE_HEIGHT;
+   }
+
 }
 
 void CS_InitTeamWidget(void)
@@ -533,12 +525,12 @@ void CS_InitTeamWidget(void)
       team_widget = NULL;
    }
 
-   if(GameType == gt_ctf)
+   if(current_game_type->usesFlagsAsScore())
    {
       HU_DynamicCustomWidget(
          "_HU_CSTeamWidget",
-         SCREENWIDTH - 48, ST_Y - 68,
-         48, 34,
+         SCREENWIDTH - 48, ST_Y - TEAM_WIDGET_HEIGHT,
+         48, TEAM_WIDGET_HEIGHT,
          GameModeInfo->blackIndex,
          FRACUNIT >> 1
       );
@@ -547,8 +539,8 @@ void CS_InitTeamWidget(void)
    {
       HU_DynamicCustomWidget(
          "_HU_CSTeamWidget",
-         SCREENWIDTH - 36, ST_Y - 68,
-         36, 34,
+         SCREENWIDTH - 36, ST_Y - TEAM_WIDGET_HEIGHT,
+         36, TEAM_WIDGET_HEIGHT,
          GameModeInfo->blackIndex,
          FRACUNIT >> 1
       );

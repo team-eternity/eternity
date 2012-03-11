@@ -142,7 +142,7 @@ void SV_BroadcastPlayerStringInfo(int playernum, client_info_e info_type);
 void SV_BroadcastPlayerArrayInfo(int playernum, client_info_e info_type,
                                  int array_index);
 void SV_BroadcastPlayerScalarInfo(int playernum, client_info_e info_type);
-void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id);
+void SV_BroadcastPlayerTouchedSpecial(int playernum, uint32_t thing_net_id);
 void SV_BroadcastPlayerWeaponState(int playernum, int position,
                                    statenum_t stnum);
 void SV_BroadcastPlayerRemoved(int playernum, disconnection_reason_e reason);

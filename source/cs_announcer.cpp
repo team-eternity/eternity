@@ -26,10 +26,10 @@
 
 #include "z_zone.h"
 
+#include "g_type.h"
 #include "p_mobj.h"
 
 #include "cs_announcer.h"
-#include "cs_ctf.h"
 #include "cs_team.h"
 #include "sv_main.h"
 
@@ -237,14 +237,6 @@ void CS_UpdateTeamSpecificAnnouncers(int color)
 
    while((ann = announcers.tableIterator(ann)))
       ann->setTeam(color);
-   /*
-   {
-      TeamSpecificAnnouncer *tsann;
-
-      if((tsann = dynamic_cast<TeamSpecificAnnouncer *>(ann)))
-         tsann->setTeam(color);
-   }
-   */
 }
 
 void CS_InitAnnouncer(void)
@@ -254,8 +246,8 @@ void CS_InitAnnouncer(void)
    TeamSpecificAnnouncer *unreal_announcer =
       new TeamSpecificAnnouncer("unreal");
 
-   // [CG] TODO: It would be better if these could be defined somewhere instead
-   //            of being hard-coded.
+   // [CG] TODO: It would be better if the messages could be defined somewhere
+   //            instead of being hard-coded.
 
    unreal_announcer->setTeam(team_color_none);
    unreal_announcer->addEvent(ae_red_flag_taken,
@@ -341,9 +333,7 @@ void CS_InitAnnouncer(void)
       ann->addEvent(ae_monster_kill, "Monster Kill", "MonsterKill");
       ann->addEvent(ae_killing_spree, "Killing Spree", "KillingSpree");
       ann->addEvent(ae_rampage_spree, "Rampage Spree", "RampageSpree");
-      ann->addEvent(ae_dominating_spree,
-         "Dominating Spree", "DominatingSpree"
-      );
+      ann->addEvent(ae_dominating_spree,"Dominating Spree", "DominatingSpree");
       ann->addEvent(ae_unstoppable_spree,
          "Unstoppable Spree", "UnstoppableSpree"
       );
@@ -376,6 +366,12 @@ void CS_Announce(int event_type, Mobj *source)
 
    if(!current_announcer)
       return;
+
+   if(current_game_type->getID() == xgt_cooperative)
+      return;
+
+   doom_printf("Current game type ID is %d.", current_game_type->getID());
+   doom_printf("Announcing event %d.", event_type);
    
    if((ev = CS_GetAnnouncerEvent(event_type)))
       ev->activate(source);

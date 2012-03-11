@@ -42,6 +42,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "i_system.h"
@@ -995,10 +996,7 @@ void SV_SpawnPlayer(int playernum, bool as_spectator)
    mapthing_t *spawn_point = CS_SpawnPlayerCorrectly(playernum, as_spectator);
 
    // [CG] Clear the spree-related variables for this client.
-   clients[playernum].frags_this_life = 0;
-   clients[playernum].last_frag_tic = 0;
-   clients[playernum].frag_level = fl_none;
-   clients[playernum].consecutive_frag_level = cfl_none;
+   CS_ResetClientSprees(playernum);
 
    if((!as_spectator) && (clients[playernum].queue_level != ql_playing))
       SV_QueueSetClientPlaying(playernum);
@@ -1043,7 +1041,7 @@ void SV_SendCurrentState(int playernum)
       "SV_SendCurrentState (%u): New player %d.\n", sv_world_index, playernum
    );
 
-   clients[playernum].join_tic = gametic;
+   clients[playernum].stats.join_tic = gametic;
 
    spawn_point = CS_SpawnPlayerCorrectly(playernum, true);
    spawn_message.message_type = nm_playerspawned;
@@ -1109,6 +1107,8 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
    player_t *player = &players[playernum];
    ENetPeer *peer = SV_GetPlayerPeer(playernum);
 
+   current_game_type->handleClientDisconnected(playernum);
+
    SV_QueueSetClientRemoved(playernum);
 
    if(reason > dr_max_reasons)
@@ -1125,8 +1125,6 @@ void SV_DisconnectPlayer(int playernum, disconnection_reason_e reason)
    }
 
    SV_BroadcastPlayerRemoved(playernum, reason);
-
-   CS_DropFlag(playernum);
 
    if(gamestate == GS_LEVEL && player->mo != NULL)
    {
@@ -1411,12 +1409,12 @@ void SV_UpdateClientStatuses(void)
 
       client = &clients[i];
 
-      client->transit_lag = peer->roundTripTime;
-      client->packet_loss =
+      client->stats.transit_lag = peer->roundTripTime;
+      client->stats.packet_loss =
          (int)((peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100);
 
-      if(client->packet_loss > 100)
-         client->packet_loss = 100;
+      if(client->stats.packet_loss > 100)
+         client->stats.packet_loss = 100;
    }
 }
 
@@ -1527,6 +1525,12 @@ bool SV_HandleJoinRequest(int playernum)
    server_client_t *server_client = &server_clients[playernum];
    player_t *player = &players[playernum];
    unsigned int team_player_count;
+
+   if(cs_settings->max_lives)
+   {
+      if(client->stats.total_deaths >= cs_settings->max_lives)
+         return false;
+   }
 
    if(client->afk)
    {
@@ -1830,10 +1834,11 @@ unsigned int SV_ClientCommandBufferSize(int playernum)
    if(!sv_buffer_commands)
       return 0;
 
-   if(!client->packet_loss)
+   if(!client->stats.packet_loss)
       return 0;
 
-   return (client->packet_loss / 2) + (client->transit_lag / 99) + 1;
+   return (client->stats.packet_loss / 2) +
+          (client->stats.transit_lag / 99) + 1;
 }
 
 void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd)
@@ -1964,7 +1969,7 @@ void SV_HandleVoteRequestMessage(char *data, size_t data_length, int playernum)
    SV_BroadcastVote();
 }
 
-void SV_BroadcastPlayerTouchedSpecial(int playernum, int thing_net_id)
+void SV_BroadcastPlayerTouchedSpecial(int playernum, uint32_t thing_net_id)
 {
    nm_playertouchedspecial_t touch_message;
 
@@ -2743,8 +2748,8 @@ void SV_BroadcastClientStatuses(void)
       else
          status_message.client_lag = 0;
       status_message.server_lag = server_client->commands.size;
-      status_message.transit_lag = client->transit_lag;
-      status_message.packet_loss = client->packet_loss;
+      status_message.transit_lag = client->stats.transit_lag;
+      status_message.packet_loss = client->stats.packet_loss;
 
       broadcast_packet(&status_message, sizeof(nm_clientstatus_t));
    }
@@ -3033,7 +3038,7 @@ void SV_TryRunTics(void)
       {
          if(sv_reset_if_no_players && !no_players)
          {
-            printf("Server empty, resetting map.\n");
+            doom_printf("Server empty, resetting map.");
             G_DoCompleted(false);
             CS_DoWorldDone();
          }

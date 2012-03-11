@@ -50,6 +50,7 @@
 #include "e_player.h"
 #include "e_ttypes.h"
 #include "g_bind.h"
+#include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -83,14 +84,14 @@
 
 #include "cs_team.h"
 #include "cs_config.h"
+#include "cs_demo.h"
 #include "cs_hud.h"
 #include "cs_main.h"
 #include "cs_master.h"
-#include "cs_position.h"
-#include "cs_ctf.h"
-#include "cs_demo.h"
-#include "cs_wad.h"
 #include "cs_netid.h"
+#include "cs_position.h"
+#include "cs_score.h"
+#include "cs_wad.h"
 #include "cl_buf.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
@@ -256,6 +257,7 @@ void CS_Init(void)
    sprintf(cs_state_file_path, "%s/cs.state", userpath);
    M_NormalizeSlashes(cs_state_file_path);
 
+   CS_InitScoreboard();
    CS_NewDemo();
    atexit(CS_StopDemo);
 
@@ -297,7 +299,7 @@ void CS_DoWorldDone(void)
    for(i = 0; i < MAXPLAYERS; i++)
    {
       clients[i].spectating = true;
-      clients[i].join_tic = gametic;
+      clients[i].stats.join_tic = gametic;
 
       if(playeringame[i])
       {
@@ -475,18 +477,57 @@ void CS_InitPlayers(void)
       CS_InitPlayer(i);
 }
 
+void CS_ClearClientStats(int clientnum)
+{
+   client_t *client = &clients[clientnum];
+
+   client->stats.join_tic = 0;
+   client->stats.client_lag = 0;
+   client->stats.server_lag = 0;
+   client->stats.transit_lag = 0;
+   client->stats.packet_loss = 0;
+   client->stats.score = 0;
+   client->stats.environment_deaths = 0;
+   client->stats.monster_deaths = 0;
+   client->stats.player_deaths = 0;
+   client->stats.suicides = 0;
+   client->stats.total_deaths = 0;
+   client->stats.monster_kills = 0;
+   client->stats.player_kills = 0;
+   client->stats.team_kills = 0;
+   client->stats.total_kills = 0;
+   client->stats.frag_ratio = 0;
+   client->stats.flag_touches = 0;
+   client->stats.flag_captures = 0;
+   client->stats.flag_capture_ratio = 0;
+   client->stats.flag_picks = 0;
+   client->stats.flag_carriers_fragged = 0;
+   client->stats.average_damage = 0;
+}
+
 void CS_ZeroClient(int clientnum)
 {
    client_t *client = &clients[clientnum];
-   server_client_t *sc;
 
-   memset(client, 0, sizeof(client_t));
    client->spectating = true;
+   client->team = team_color_none;
+   client->queue_level = ql_none;
+   client->queue_position = 0;
+   client->floor_status = cs_fs_none;
+   client->death_time = 0;
+   client->latest_position_index = 0;
+   client->afk = false;
+   client->frags_this_life = 0;
+   client->last_frag_index = 0;
+   client->frag_level = fl_none;
+   client->consecutive_frag_level = cfl_none;
 
-   if(CS_SERVER && server_clients != NULL)
+   CS_ClearClientStats(clientnum);
+
+   if(CS_SERVER && server_clients != NULL) // [CG] Clear the server client too.
    {
-      // [CG] Clear the server client too.
-      sc = &server_clients[clientnum];
+      server_client_t *sc = &server_clients[clientnum];
+
       sc->connect_id = 0;
       memset(&sc->address, 0, sizeof(ENetAddress));
       sc->auth_level = cs_auth_none;
@@ -541,6 +582,155 @@ void CS_ZeroClients(void)
       server_client->options.autoaim = autoaim;
       server_client->options.weapon_speed = weapon_speed;
    }
+}
+
+void CS_SetClientTeam(int clientnum, int new_team_color)
+{
+   if(!clientserver)
+      return;
+
+   if(clients[clientnum].team != new_team_color)
+   {
+      clients[clientnum].team = new_team_color;
+      cs_scoreboard->setClientNeedsRepainted(clientnum);
+   }
+}
+
+void CS_IncrementClientScore(int clientnum)
+{
+   if(clientserver)
+   {
+      clients[clientnum].stats.score++;
+
+      if(CS_TEAMS_ENABLED)
+         team_scores[clients[clientnum].team]++;
+
+      cs_scoreboard->setClientNeedsRepainted(clientnum);
+   }
+}
+
+void CS_DecrementClientScore(int clientnum)
+{
+   if(clientserver)
+   {
+      clients[clientnum].stats.score--;
+
+      if(CS_TEAMS_ENABLED)
+         team_scores[clients[clientnum].team]--;
+
+      cs_scoreboard->setClientNeedsRepainted(clientnum);
+   }
+}
+
+void CS_SetClientScore(int clientnum, int new_score)
+{
+   if(clientserver)
+   {
+      client_t *client = &clients[clientnum];
+      int delta = client->stats.score - new_score;
+
+      client->stats.score = new_score;
+
+      if(CS_TEAMS_ENABLED)
+         team_scores[client->team] += delta;
+
+      cs_scoreboard->setClientNeedsRepainted(clientnum);
+   }
+}
+
+void CS_CheckClientSprees(int clientnum)
+{
+   player_t *player = &players[clientnum];
+   client_t *client = &clients[clientnum];
+   uint32_t world_index = 0;
+
+   if(CS_CLIENT)
+      world_index = cl_latest_world_index;
+   else if(CS_SERVER)
+      world_index = sv_world_index;
+
+   if(client->frag_level < (fl_max - 1))
+   {
+      unsigned int new_fl = client->frags_this_life / 5;
+
+      if((new_fl < fl_max) && (client->frag_level != new_fl))
+      {
+         client->frag_level = new_fl;
+
+         doom_printf(
+            "%s is %s!", player->name, frag_level_names[client->frag_level]
+         );
+
+         if((clientnum == displayplayer) && cl_show_sprees)
+         {
+            switch(client->frag_level)
+            {
+            case fl_none:
+               break;
+            case fl_killing_spree:
+               CS_Announce(ae_killing_spree, NULL);
+               break;
+            case fl_rampage:
+               CS_Announce(ae_rampage_spree, NULL);
+               break;
+            case fl_dominating:
+               CS_Announce(ae_dominating_spree, NULL);
+               break;
+            case fl_unstoppable:
+               CS_Announce(ae_unstoppable_spree, NULL);
+               break;
+            case fl_god_like:
+               CS_Announce(ae_god_like_spree, NULL);
+               break;
+            case fl_wicked_sick:
+            default:
+               CS_Announce(ae_wicked_sick_spree, NULL);
+               break;
+            }
+         }
+      }
+   }
+
+   if((world_index - client->last_frag_index) <= (3 * TICRATE))
+   {
+      if(client->consecutive_frag_level < (cfl_max - 1))
+         client->consecutive_frag_level++;
+
+      if((clientnum == displayplayer) && cl_show_sprees)
+      {
+         switch(client->consecutive_frag_level)
+         {
+         case cfl_none:
+         case cfl_single_kill:
+            break;
+         case cfl_double_kill:
+            CS_Announce(ae_double_kill, NULL);
+            break;
+         case cfl_multi_kill:
+            CS_Announce(ae_multi_kill, NULL);
+            break;
+         case cfl_ultra_kill:
+            CS_Announce(ae_ultra_kill, NULL);
+            break;
+         case cfl_monster_kill:
+         default:
+            CS_Announce(ae_monster_kill, NULL);
+            break;
+         }
+      }
+   }
+
+   client->last_frag_index = world_index;
+}
+
+void CS_ResetClientSprees(int clientnum)
+{
+   client_t *client = &clients[clientnum];
+
+   client->consecutive_frag_level = cfl_none;
+   client->frags_this_life = 0;
+   client->frag_level = fl_none;
+   client->last_frag_index = 0;
 }
 
 size_t CS_BuildGameState(int playernum, byte **buffer)
@@ -851,8 +1041,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
          return;
       }
 
-      // [CG] If the player is holding a flag, they must drop it.
-      CS_DropFlag(playernum);
+      current_game_type->handleClientChangedTeam(playernum);
 
       client->team = message->int_value;
 
@@ -876,18 +1065,32 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       {
          if(playernum == consoleplayer)
          {
-            doom_printf(
-               "You are now watching on the %s team.",
-               team_color_names[client->team]
-            );
+            if(client->team == team_color_none)
+            {
+               doom_printf("You are no longer on a team.");
+            }
+            else
+            {
+               doom_printf(
+                  "You are now watching on the %s team.",
+                  team_color_names[client->team]
+               );
+            }
          }
          else
          {
-            doom_printf(
-               "%s is now watching on the %s team.",
-               player->name,
-               team_color_names[client->team]
-            );
+            if(client->team == team_color_none)
+            {
+               doom_printf("%s is no longer on a team.", player->name);
+            }
+            else
+            {
+               doom_printf(
+                  "%s is now watching on the %s team.",
+                  player->name,
+                  team_color_names[client->team]
+               );
+            }
          }
       }
       else if(client->queue_level == ql_waiting)
@@ -912,18 +1115,32 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       {
          if(playernum == consoleplayer)
          {
-            doom_printf(
-               "You are now on the %s team.",
-               team_color_names[client->team]
-            );
+            if(client->team == team_color_none)
+            {
+               doom_printf("You are no longer on a team.");
+            }
+            else
+            {
+               doom_printf(
+                  "You are now on the %s team.",
+                  team_color_names[client->team]
+               );
+            }
          }
          else
          {
-            doom_printf(
-               "%s is now on the %s team.",
-               player->name,
-               team_color_names[client->team]
-            );
+            if(client->team == team_color_none)
+            {
+               doom_printf("%s is no longer on a team.", player->name);
+            }
+            else
+            {
+               doom_printf(
+                  "%s is now on the %s team.",
+                  player->name,
+                  team_color_names[client->team]
+               );
+            }
          }
 
          if(CS_SERVER)
@@ -953,8 +1170,7 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
 
       // [CG] At this point, the player is attempting to spectate.
 
-      // [CG] If the player is holding a flag, they must drop it.
-      CS_DropFlag(playernum);
+      current_game_type->handleClientSpectated(playernum);
 
       if(CS_SERVER)
       {
@@ -1339,80 +1555,6 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
    }
 }
 
-void CS_CheckSprees(int sourcenum, int targetnum, bool suicide, bool team_kill)
-{
-   client_t *source_client = &clients[sourcenum];
-   player_t *source_player = &players[sourcenum];
-   unsigned int latest_index;
-
-   if(CS_CLIENT)
-      latest_index = cl_latest_world_index;
-   else if(CS_SERVER)
-      latest_index = sv_world_index;
-   else
-      return;
-
-   if(CS_CLIENT || !CS_HEADLESS)
-   {
-      if(suicide && (sourcenum == consoleplayer))
-         CS_Announce(ae_suicide_death, NULL);
-      else if(team_kill)
-         CS_Announce(ae_team_kill, NULL);
-   }
-
-   if(suicide || team_kill)
-   {
-      // [CG] If you suicide or team kill, all your sprees are over.
-      source_client->frags_this_life = 0;
-      source_client->frag_level = fl_none;
-      source_client->consecutive_frag_level = 0;
-   }
-   else
-   {
-      source_client->frags_this_life++;
-
-      if(source_client->frag_level < (fl_max - 1))
-      {
-         unsigned int new_fl = source_client->frags_this_life / 5;
-
-         if((new_fl < fl_max) && (source_client->frag_level != new_fl))
-         {
-            source_client->frag_level = new_fl;
-
-            doom_printf(
-               "%s is %s!",
-               source_player->name,
-               frag_level_names[source_client->frag_level]
-            );
-
-            if((sourcenum == consoleplayer) && cl_show_sprees)
-            {
-               HU_CenterMessage(console_frag_level_names[
-                  source_client->frag_level
-               ]);
-            }
-         }
-      }
-
-      if((latest_index - source_client->last_frag_tic) <= (3 * TICRATE))
-      {
-         if(source_client->consecutive_frag_level < (cfl_max - 1))
-            source_client->consecutive_frag_level++;
-
-         if((sourcenum == consoleplayer) &&
-            cl_show_sprees &&
-            source_client->consecutive_frag_level > cfl_none)
-         {
-            HU_CenterMessage(consecutive_frag_level_names[
-               source_client->consecutive_frag_level
-            ]);
-         }
-      }
-
-      source_client->last_frag_tic = latest_index;
-   }
-}
-
 void CS_SetSpectator(int playernum, bool spectating)
 {
    client_t *client = &clients[playernum];
@@ -1505,7 +1647,7 @@ void CS_SpawnPlayer(int playernum, fixed_t x, fixed_t y, fixed_t z,
 
    P_SetupPsprites(player);
 
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
    {
       for(i = 0; i < NUMCARDS; i++)
          player->cards[i] = true;
@@ -1529,7 +1671,7 @@ mapthing_t* CS_SpawnPlayerCorrectly(int playernum, bool as_spectator)
       // [CG] In order for clipping routines to work properly, the player can't
       //      be a spectator when we search for a spawn point.
       CS_SetSpectator(playernum, false);
-      if(DEATHMATCH)
+      if(GameType == gt_dm)
       {
          if(CS_TEAMS_ENABLED)
             spawn_point = SV_GetTeamSpawnPoint(playernum);
@@ -1598,10 +1740,12 @@ void CS_ArchiveSettings(SaveArchive& arc)
 {
    arc << cs_settings->skill
        << cs_settings->game_type
-       << cs_settings->ctf
+       << cs_settings->deathmatch
+       << cs_settings->teams
        << cs_settings->max_clients
        << cs_settings->max_players
        << cs_settings->max_players_per_team
+       << cs_settings->max_lives
        << cs_settings->frag_limit
        << cs_settings->time_limit
        << cs_settings->score_limit
@@ -1693,14 +1837,40 @@ void CS_ArchiveClients(SaveArchive& arc)
 
          client = &clients[i];
 
-         arc << client->join_tic << client->spectating << client->team
-             << client->client_lag << client->server_lag << client->transit_lag
-             << client->packet_loss << client->queue_level
-             << client->queue_position << client->floor_status
-             << client->death_time << client->death_count
-             << client->latest_position_index << client->afk
-             << client->frags_this_life << client->last_frag_tic
-             << client->frag_level << client->consecutive_frag_level;
+         arc << client->spectating
+             << client->team
+             << client->queue_level
+             << client->queue_position
+             << client->floor_status
+             << client->death_time
+             << client->latest_position_index
+             << client->afk
+             << client->frags_this_life
+             << client->last_frag_index
+             << client->frag_level
+             << client->consecutive_frag_level
+             << client->stats.join_tic
+             << client->stats.client_lag
+             << client->stats.server_lag
+             << client->stats.transit_lag
+             << client->stats.packet_loss
+             << client->stats.score
+             << client->stats.environment_deaths
+             << client->stats.monster_deaths
+             << client->stats.player_deaths
+             << client->stats.suicides
+             << client->stats.total_deaths
+             << client->stats.monster_kills
+             << client->stats.player_kills
+             << client->stats.team_kills
+             << client->stats.total_kills
+             << client->stats.frag_ratio
+             << client->stats.flag_touches
+             << client->stats.flag_captures
+             << client->stats.flag_capture_ratio
+             << client->stats.flag_picks
+             << client->stats.flag_carriers_fragged
+             << client->stats.average_damage;
       }
    }
    else
@@ -1715,14 +1885,40 @@ void CS_ArchiveClients(SaveArchive& arc)
 
          client = &clients[clientnum];
 
-         arc << client->join_tic << client->spectating << client->team
-             << client->client_lag << client->server_lag << client->transit_lag
-             << client->packet_loss << client->queue_level
-             << client->queue_position << client->floor_status
-             << client->death_time << client->death_count
-             << client->latest_position_index << client->afk
-             << client->frags_this_life << client->last_frag_tic
-             << client->frag_level << client->consecutive_frag_level;
+         arc << client->spectating
+             << client->team
+             << client->queue_level
+             << client->queue_position
+             << client->floor_status
+             << client->death_time
+             << client->latest_position_index
+             << client->afk
+             << client->frags_this_life
+             << client->last_frag_index
+             << client->frag_level
+             << client->consecutive_frag_level
+             << client->stats.join_tic
+             << client->stats.client_lag
+             << client->stats.server_lag
+             << client->stats.transit_lag
+             << client->stats.packet_loss
+             << client->stats.score
+             << client->stats.environment_deaths
+             << client->stats.monster_deaths
+             << client->stats.player_deaths
+             << client->stats.suicides
+             << client->stats.total_deaths
+             << client->stats.monster_kills
+             << client->stats.player_kills
+             << client->stats.team_kills
+             << client->stats.total_kills
+             << client->stats.frag_ratio
+             << client->stats.flag_touches
+             << client->stats.flag_captures
+             << client->stats.flag_capture_ratio
+             << client->stats.flag_picks
+             << client->stats.flag_carriers_fragged
+             << client->stats.average_damage;
       }
    }
 }

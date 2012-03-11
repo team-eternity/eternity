@@ -51,7 +51,6 @@
 
 #include "cs_main.h"
 #include "cs_team.h"
-#include "cs_ctf.h"
 #include "cs_wad.h"
 #include "cs_demo.h"
 #include "cs_config.h"
@@ -389,7 +388,6 @@ bool SingleCSDemo::writeInfo()
 {
    unsigned int i;
    Json::Value map_info;
-   clientserver_settings_t *settings = cs_settings;
 
    if(M_PathExists(info_path))
       CS_ReadJSON(map_info, info_path);
@@ -402,36 +400,38 @@ bool SingleCSDemo::writeInfo()
    map_info["local_options"]["doom_weapon_toggles"] = doom_weapon_toggles;
    map_info["local_options"]["autoaim"] = autoaim;
    map_info["local_options"]["weapon_speed"] = weapon_speed;
-   map_info["settings"]["skill"] = settings->skill;
-   map_info["settings"]["game_type"] = settings->game_type;
-   map_info["settings"]["ctf"] = settings->ctf;
-   map_info["settings"]["max_clients"] = settings->max_clients;
-   map_info["settings"]["max_players"] = settings->max_players;
+   map_info["settings"]["skill"] = cs_settings->skill;
+   map_info["settings"]["game_type"] = cs_settings->game_type;
+   map_info["settings"]["deathmatch"] = cs_settings->deathmatch;
+   map_info["settings"]["teams"] = cs_settings->teams;
+   map_info["settings"]["max_clients"] = cs_settings->max_clients;
+   map_info["settings"]["max_players"] = cs_settings->max_players;
    map_info["settings"]["max_players_per_team"] =
-      settings->max_players_per_team;
-   map_info["settings"]["frag_limit"] = settings->frag_limit;
-   map_info["settings"]["time_limit"] = settings->time_limit;
-   map_info["settings"]["score_limit"] = settings->score_limit;
-   map_info["settings"]["dogs"] = settings->dogs;
-   map_info["settings"]["friend_distance"] = settings->friend_distance;
-   map_info["settings"]["bfg_type"] = settings->bfg_type;
+      cs_settings->max_players_per_team;
+   map_info["settings"]["max_lives"] = cs_settings->max_lives;
+   map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
+   map_info["settings"]["time_limit"] = cs_settings->time_limit;
+   map_info["settings"]["score_limit"] = cs_settings->score_limit;
+   map_info["settings"]["dogs"] = cs_settings->dogs;
+   map_info["settings"]["friend_distance"] = cs_settings->friend_distance;
+   map_info["settings"]["bfg_type"] = cs_settings->bfg_type;
    map_info["settings"]["friendly_damage_percentage"] =
-      settings->friendly_damage_percentage;
+      cs_settings->friendly_damage_percentage;
    map_info["settings"]["spectator_time_limit"] =
-      settings->spectator_time_limit;
-   map_info["settings"]["death_time_limit"] = settings->death_time_limit;
+      cs_settings->spectator_time_limit;
+   map_info["settings"]["death_time_limit"] = cs_settings->death_time_limit;
 
-   if(settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
+   if(cs_settings->death_time_expired_action == DEATH_LIMIT_SPECTATE)
       map_info["settings"]["death_time_expired_action"] = "spectate";
    else
       map_info["settings"]["death_time_expired_action"] = "respawn";
 
    map_info["settings"]["respawn_protection_time"] =
-      settings->respawn_protection_time;
-   map_info["settings"]["dmflags"] = settings->dmflags;
-   map_info["settings"]["dmflags2"] = settings->dmflags2;
-   map_info["settings"]["compatflags"] = settings->compatflags;
-   map_info["settings"]["compatflags2"] = settings->compatflags2;
+      cs_settings->respawn_protection_time;
+   map_info["settings"]["dmflags"] = cs_settings->dmflags;
+   map_info["settings"]["dmflags2"] = cs_settings->dmflags2;
+   map_info["settings"]["compatflags"] = cs_settings->compatflags;
+   map_info["settings"]["compatflags2"] = cs_settings->compatflags2;
 
    for(i = 0; i < map->resource_count; i++)
    {
@@ -477,11 +477,13 @@ bool SingleCSDemo::updateInfo()
    map_info["length"] = header.length;
    map_info["settings"]["skill"] = cs_settings->skill;
    map_info["settings"]["game_type"] = cs_settings->game_type;
-   map_info["settings"]["ctf"] = cs_settings->ctf;
+   map_info["settings"]["deathmatch"] = cs_settings->deathmatch;
+   map_info["settings"]["teams"] = cs_settings->teams;
    map_info["settings"]["max_clients"] = cs_settings->max_clients;
    map_info["settings"]["max_players"] = cs_settings->max_players;
    map_info["settings"]["max_players_per_team"] =
       cs_settings->max_players_per_team;
+   map_info["settings"]["max_lives"] = cs_settings->max_lives;
    map_info["settings"]["frag_limit"] = cs_settings->frag_limit;
    map_info["settings"]["time_limit"] = cs_settings->time_limit;
    map_info["settings"]["score_limit"] = cs_settings->score_limit;
@@ -1126,7 +1128,8 @@ bool SingleCSDemo::loadNextCheckpoint()
 {
    Json::Value toc;
    int i;
-   uint32_t index, current_index, best_index, best_byte_index;
+   uint32_t index, current_index, best_index;
+   uint32_t best_byte_index = 0;
 
    if(!M_PathExists(toc_path))
    {
@@ -1180,7 +1183,7 @@ bool SingleCSDemo::loadNextCheckpoint()
       }
    }
 
-   if(best_index == 0)
+   if((best_index == 0) || (best_byte_index == 0))
    {
       setError(no_subsequent_checkpoint);
       return false;

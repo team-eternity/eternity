@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_sound.h"
 #include "e_things.h"
+#include "g_ctf.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -429,7 +430,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
       CS_SetPlayerName(&players[new_num], default_name);
       CS_SetPlayerName(&players[0], SERVER_NAME);
       consoleplayer = displayplayer = message->player_number;
-      clients[consoleplayer].team = team_color_none;
+      CS_SetClientTeam(consoleplayer, team_color_none);
       CL_SendPlayerStringInfo(ci_name);
       CL_SendPlayerScalarInfo(ci_team);
       for(i = 0; i < NUMWEAPONS; i++)
@@ -506,8 +507,6 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
 
 void CL_HandleSyncMessage(nm_sync_t *message)
 {
-   static bool first_time = true;
-
    gametic          = message->gametic;
    basetic          = message->basetic;
    leveltime        = message->leveltime;
@@ -521,11 +520,10 @@ void CL_HandleSyncMessage(nm_sync_t *message)
 
    CS_UpdateQueueMessage();
 
-   if(first_time)
-      first_time = false;
+   if(!cl_received_first_sync)
+      cl_received_first_sync = true;
    else if(GameType != gt_coop)
       CS_Announce(ae_round_started, NULL);
-
 }
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
@@ -672,20 +670,20 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
 
    client = &clients[playernum];
 
-   client->client_lag = message->client_lag;
-   client->server_lag = message->server_lag;
-   client->transit_lag = message->transit_lag;
+   client->stats.client_lag = message->client_lag;
+   client->stats.server_lag = message->server_lag;
+   client->stats.transit_lag = message->transit_lag;
    if(playernum == consoleplayer)
    {
-      client->packet_loss = (uint8_t)(
+      client->stats.packet_loss = (uint8_t)(
          (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100
       );
 
-      if(client->packet_loss > 100)
-         client->packet_loss = 100;
+      if(client->stats.packet_loss > 100)
+         client->stats.packet_loss = 100;
    }
    else
-      client->packet_loss = message->packet_loss;
+      client->stats.packet_loss = message->packet_loss;
 }
 
 void CL_HandlePlayerPositionMessage(nm_playerposition_t *message)
@@ -740,7 +738,7 @@ void CL_HandlePlayerSpawnedMessage(nm_playerspawned_t *message)
 
    // [CG] Clear the spree-related variables for this client.
    client->frags_this_life = 0;
-   client->last_frag_tic = 0;
+   client->last_frag_index = 0;
    client->frag_level = fl_none;
    client->consecutive_frag_level = cfl_none;
 
@@ -1268,6 +1266,10 @@ void CL_HandleActorDamagedMessage(nm_actordamaged_t *message)
    }
 #endif
 
+   current_game_type->handleActorDamaged(
+      target, inflictor, source, message->health_damage, message->mod
+   );
+
    // a dormant thing being destroyed gets restored to normal first
    if(target->flags2 & MF2_DORMANT)
    {
@@ -1442,7 +1444,14 @@ void CL_HandleLineActivatedMessage(nm_lineactivated_t *message)
    }
 
    if(message->activation_type == at_used)
-      P_UseSpecialLine(actor, line, message->side);
+   {
+      if(P_UseSpecialLine(actor, line, message->side))
+      {
+         current_game_type->handleActorUsedSpecialLine(
+            actor, line, message->side
+         );
+      }
+   }
    else if(message->activation_type == at_crossed)
       P_CrossSpecialLine(line, message->side, actor);
    else if(message->activation_type == at_shot)

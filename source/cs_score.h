@@ -27,8 +27,67 @@
 #ifndef CS_SCORE_H__
 #define CS_SCORE_H__
 
+#include "i_font.h"
+
+class BaseScoreboard : public ZoneObject
+{
+protected:
+   bool testing;
+   unsigned int m_x, m_y;
+
+public:
+   BaseScoreboard();
+   ~BaseScoreboard();
+
+   virtual void display();
+   virtual void setClientNeedsRepainted(int clientnum);
+
+   void         setX(unsigned int new_x);
+   void         setY(unsigned int new_y);
+   unsigned int getX() const;
+   unsigned int getY() const;
+   void         setTesting(bool new_testing);
+};
+
+class LowResCoopScoreboard : public BaseScoreboard
+{
+public:
+   void display();
+};
+
+class LowResDeathmatchScoreboard : public BaseScoreboard
+{
+public:
+   void display();
+};
+
+class LowResTeamDeathmatchScoreboard : public BaseScoreboard
+{
+public:
+   void display();
+};
+
+class HighResScoreboard : public BaseScoreboard
+{
+};
+
+class HighResCoopScoreboard : public HighResScoreboard
+{
+};
+
+class HighResDeathmatchScoreboard : public HighResScoreboard
+{
+};
+
+class HighResTeamDeathmatchScoreboard : public HighResScoreboard
+{
+};
+
+extern BaseScoreboard *cs_scoreboard;
+
+void CS_InitScoreboard();
 void CS_DrawScoreboard(unsigned int extra_top_margin);
-void CS_ShowScores(void);
+void CS_ShowScores();
 
 #endif
 

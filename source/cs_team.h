@@ -30,10 +30,7 @@
 #include "doomdef.h"
 #include "doomdata.h"
 
-#define CS_TEAMS_ENABLED (\
-   (GameType == gt_tdm) || \
-   (GameType == gt_ctf)\
-)
+#define CS_TEAMS_ENABLED ((clientserver) && (cs_original_settings->teams > 1))
 
 // [CG] These are in order of max_teams, so max_teams = 2 means players can
 //      join the game on the red and blue teams, max_teams = 4 means players
@@ -73,6 +70,7 @@ void CS_InitTeams(void);
 void CS_AddTeamStart(mapthing_t *mthing);
 unsigned int CS_GetTeamPlayerCount(int team_color);
 int CS_GetOtherTeam(int team_color);
+byte CS_GetTeamFontColor(int team_color);
 
 #endif
 

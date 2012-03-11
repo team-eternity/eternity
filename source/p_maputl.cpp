@@ -343,6 +343,8 @@ void P_UnsetThingPosition(Mobj *thing)
 {
    P_LogThingPosition(thing, "unset");
 
+   current_game_type->handleActorPositionUnset(thing);
+
    if(!(thing->flags & MF_NOSECTOR))
    {
       // invisible things don't need to be in sector list
@@ -406,6 +408,8 @@ void P_SetThingPosition(Mobj *thing)
 {
    // link into subsector
    subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
+
+   current_game_type->handleActorPositionSet(thing);
 
    P_LogThingPosition(thing, " set ");
 

@@ -422,9 +422,12 @@ bool ZipFile::addFile(const char *file_path)
 
    // [CG] Files with absolute paths are dangerous, so make them relative here.
    if(current_recursive_folder)
+   {
       archived_pathname = file_path + strlen(current_recursive_folder);
-
-   archived_pathname = M_StripAbsolutePath(archived_pathname);
+      archived_pathname = M_StripAbsolutePath(archived_pathname);
+   }
+   else
+      archived_pathname = file_path;
 
    error = zipOpenNewFileInZip64(
       zf,

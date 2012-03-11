@@ -61,7 +61,6 @@
 
 // [CG] 09/17/11 Added.
 #include "cs_main.h"
-#include "cs_ctf.h"
 #include "cl_cmd.h"
 #include "cl_main.h"
 #include "sv_main.h"
@@ -353,7 +352,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
       player->bonuscount += BONUSADD;
       player->weaponowned[weapon] = true;
       
-      P_GiveAmmo(player, weaponinfo[weapon].ammo, (DEATHMATCH) ? 5 : 2);
+      P_GiveAmmo(player, weaponinfo[weapon].ammo, (GameType == gt_dm) ? 5 : 2);
 
       if(!clientserver) // [CG] Probably needs demo-versioned.
       {
@@ -536,6 +535,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    const char *message = NULL;
    bool       removeobj = true;
    bool       pickup_fx = true; // haleyjd 04/14/03
+   bool       game_type_handled = false;
    fixed_t    delta = special->z - toucher->z;
 
    if(serverside && (delta > toucher->height || delta < -8*FRACUNIT))
@@ -558,6 +558,10 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    if(CS_SERVER)
       SV_BroadcastPlayerTouchedSpecial(player - players, special->net_id);
+
+   game_type_handled = current_game_type->handleActorTouchedSpecial(
+      special, toucher
+   );
 
    // Identify by sprite.
    switch(pickupfx[special->sprite])
@@ -1075,16 +1079,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       sound = sfx_getpow;
       break;
 
-   case PFX_BLUEFLAG:
-   case PFX_DROPPEDBLUEFLAG:
-      CS_HandleFlagTouch(player, team_color_blue);
-      return;
-
-   case PFX_REDFLAG:
-   case PFX_DROPPEDREDFLAG:
-      CS_HandleFlagTouch(player, team_color_red);
-      return;
-
    default:
       // I_Error("P_SpecialThing: Unknown gettable thing");
       return;      // killough 12/98: suppress error message
@@ -1096,10 +1090,18 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    // haleyjd 07/08/05: rearranged to avoid removing before
    // checking for COUNTITEM flag.
-   if(special->flags & MF_COUNTITEM)
+   if(serverside && (special->flags & MF_COUNTITEM))
+   {
       player->itemcount++;
 
-   if(serverside && removeobj)
+      if(CS_SERVER)
+         SV_BroadcastPlayerScalarInfo(player - players, ci_item_count);
+   }
+
+   // [CG] Game types will remove specials themselves if necessary, so this is
+   //      only required if the game type didn't already have the opportunity
+   //      to do it.
+   if(serverside && removeobj && (!game_type_handled))
    {
       if(CS_SERVER)
          SV_BroadcastActorRemoved(special);
@@ -1121,6 +1123,15 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    mobjtype_t item;
    Mobj     *mo;
+   int sourcenum = -1, targetnum = -1;
+
+   current_game_type->handleActorKilled(source, target, mod);
+
+   if(source && source->player)
+      sourcenum = source->player - players;
+
+   if(target && target->player)
+      targetnum = target->player - players;
 
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
@@ -1133,87 +1144,49 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // killough 8/29/98: remove from threaded list
    target->updateThinker();
-   
-   if(source && source->player)
+
+   current_game_type->handleActorKilled(source, target, mod);
+
+   if(source && source->player && target && target->player)
    {
+      // [CG] Player killed another player.
+      P_IncrementPlayerPlayerKills(sourcenum, targetnum);
+   }
+   else if(source && source->player && target && (!target->player))
+   {
+      // [CG] Player killed a monster.
       // count for intermission
       // killough 7/20/98: don't count friends
-      if(!(target->flags & MF_FRIEND))
-      {
-         if(target->flags & MF_COUNTKILL)
-            source->player->killcount++;
-      }
-
-      if(target->player)
-      {
-         int sourcenum = source->player - players;
-         int targetnum = target->player - players;
-         client_t *source_client = &clients[sourcenum];
-         client_t *target_client = &clients[targetnum];
-         int source_team = source_client->team;
-         int target_team = target_client->team;
-         bool team_kill = false;
-         bool suicide = false;
-
-         source->player->frags[targetnum]++;
-
-         if(clientserver)
-         {
-            if(sourcenum == targetnum)
-               suicide = true;
-            else if(CS_TEAMS_ENABLED && (source_team == target_team))
-               team_kill = true;
-
-            CS_CheckSprees(sourcenum, targetnum, suicide, team_kill);
-
-            if(GameType == gt_tdm)
-            {
-               // [CG] Suicides & team kills subtract 1 from the team's score.
-               if(suicide || team_kill)
-                  team_scores[source_team]--;
-               else
-                  team_scores[source_team]++;
-            }
-         }
-         HU_FragsUpdate();
-      }
+      if((!(target->flags & MF_FRIEND)) && (target->flags & MF_COUNTKILL))
+         P_IncrementPlayerMonsterKills(sourcenum);
    }
-   else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
+   else if(source && (!source->player) && target && target->player)
    {
-      // count all monster deaths,
-      // even those caused by other monsters
-      // killough 7/20/98: don't count friends
-      if(!(target->flags & MF_FRIEND))
-         players->killcount++;
+      // [CG] Monster killed a player.
+      P_IncrementPlayerMonsterDeaths(targetnum);
+   }
+   else if((!(source || source->player)) && target && target->player)
+   {
+      // [CG] The environment killed a player.
+      // count environment kills against you
+      P_IncrementPlayerEnvironmentDeaths(targetnum);
+   }
+   else if((!(source || source->player)) && target && (!target->player))
+   {
+      // [CG] Monster died either via another monster or the environment.  Use
+      //      player 0 in this case.
+      if((GameType == gt_single) && (target->flags & MF_COUNTKILL) &&
+                                    (!(target->flags & MF_FRIEND)))
+      {
+         P_IncrementPlayerMonsterKills(0);
+      }
    }
 
    if(target->player)
    {
-      // [CG] Keep track of deaths.
-      clients[target->player - players].death_count++;
-
-      // count environment kills against you
-      if(!source)
-      {
-         target->player->frags[target->player - players]++;
-
-         // [CG] Subtract 1 from the team's score for environment kills.
-         if(GameType == gt_tdm)
-            team_scores[clients[target->player - players].team]--;
-
-         HU_FragsUpdate();
-      }
-      // [CG] Drop the flag if the target was holding it.
-      if(GameType == gt_ctf)
-         CS_DropFlag(target->player - players);
-
       target->flags &= ~MF_SOLID;
       target->player->playerstate = PST_DEAD;
-
-      // [CG] Only drop the player's weapon if their actor still exists.
-      //      This check only occurs in c/s, because it is sync-critical.
-      if(!clientserver || target->player->mo)
-         P_DropWeapon(target->player);
+      P_DropWeapon(target->player);
 
       if(target->player == &players[consoleplayer] && automapactive)
       {
@@ -1224,7 +1197,9 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    if(target->health < -target->info->spawnhealth &&
       target->info->xdeathstate != NullStateNum)
+   {
       P_SetMobjState(target, target->info->xdeathstate);
+   }
    else
    {
       // haleyjd 06/05/08: damagetype death states
@@ -1572,7 +1547,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // [CG] This function is only run serverside.
    if(!serverside)
       return;
-   
+
+   current_game_type->handleActorDamaged(
+      target, inflictor, source, damage, mod
+   );
+
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
       return; // shouldn't happen...

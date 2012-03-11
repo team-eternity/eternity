@@ -815,7 +815,7 @@ static void HI_drawDMStats(void)
 
 static void HI_Ticker(void)
 {
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
    {      
       if(!(intertime % 3))
          blockcolor += blockfade;

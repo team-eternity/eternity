@@ -38,6 +38,12 @@ class  Mobj;
 
 #define INVERSECOLORMAP 32
 
+void P_IncrementPlayerEnvironmentDeaths(int playernum);
+void P_IncrementPlayerMonsterDeaths(int playernum);
+void P_IncrementPlayerMonsterKills(int playernum);
+void P_IncrementPlayerPlayerKills(int sourcenum, int targetnum);
+void P_Thrust(player_t *player, angle_t angle, fixed_t move);
+
 // bool P_SectorIsSpecial(sector_t *sector);
 void P_HereticCurrent(player_t *player);
 
@@ -47,7 +53,6 @@ void P_PlayerThink(player_t *player);
 void P_CalcHeight(player_t *player);
 void P_DeathThink(player_t *player);
 void P_MovePlayer(player_t *player);
-void P_Thrust(player_t *player, angle_t angle, fixed_t move);
 void P_SetPlayerAttacker(player_t *player, Mobj *attacker);
 void P_SetDisplayPlayer(int new_displayplayer);
 

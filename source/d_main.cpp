@@ -69,6 +69,7 @@
 #include "g_game.h"
 #include "g_gfs.h"
 #include "hu_stuff.h"
+#include "i_font.h"
 #include "i_system.h"
 #include "i_sound.h"
 #include "i_video.h"
@@ -3521,6 +3522,7 @@ static void D_DoomInit(void)
    // haleyjd 08/18/07: set base path and user path
    D_SetBasePath();
    D_SetUserPath();
+   I_InitFontPath(); // [CG] Initialize the font path once we've got userpath.
 
    // haleyjd 08/19/07: check for -game parameter first
    D_CheckGamePathParam();
@@ -3801,7 +3803,7 @@ static void D_DoomInit(void)
        }
 
        // haleyjd: deatchmatch-only options
-       if(DEATHMATCH)
+       if(GameType == gt_dm)
        {
           if((p = M_CheckParm("-timer")) && p < myargc-1)
           {
@@ -3999,6 +4001,10 @@ static void D_DoomInit(void)
       if(*startup5) puts(startup5);
    }
    // End new startup strings
+
+   // [CG] Set a default game type in singleplayer and p2p.
+   if(!clientserver)
+      G_NewGameType();
 
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();

@@ -402,13 +402,13 @@ char* SV_GetStateJSON(void)
             server_json["teams"][i]["players"][j - 1]["name"] =
                player->name;
             server_json["teams"][i]["players"][j - 1]["lag"] =
-               client->transit_lag;
+               client->stats.transit_lag;
             server_json["teams"][i]["players"][j - 1]["packet_loss"] =
-               client->packet_loss;
-            server_json["teams"][i]["players"][j - 1]["frags"] =
-               player->totalfrags;
+               client->stats.packet_loss;
+            server_json["teams"][i]["players"][j - 1]["score"] =
+               client->stats.score;
             server_json["teams"][i]["players"][j - 1]["time"] =
-               (gametic - client->join_tic) / TICRATE;
+               (gametic - client->stats.join_tic) / TICRATE;
             server_json["teams"][i]["players"][j - 1]["playing"] =
                !client->spectating;
          }
@@ -425,11 +425,12 @@ char* SV_GetStateJSON(void)
             continue;
 
          server_json["players"][i - 1]["name"] = player->name;
-         server_json["players"][i - 1]["lag"] = client->transit_lag;
-         server_json["players"][i - 1]["packet_loss"] = client->packet_loss;
-         server_json["players"][i - 1]["frags"] = player->totalfrags;
+         server_json["players"][i - 1]["lag"] = client->stats.transit_lag;
+         server_json["players"][i - 1]["packet_loss"] =
+            client->stats.packet_loss;
+         server_json["players"][i - 1]["score"] = client->stats.score;
          server_json["players"][i - 1]["time"] =
-            (gametic - client->join_tic) / TICRATE;
+            (gametic - client->stats.join_tic) / TICRATE;
          server_json["players"][i - 1]["playing"] = !client->spectating;
       }
    }

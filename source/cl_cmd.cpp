@@ -129,11 +129,12 @@ CONSOLE_VARIABLE(show_sprees, cl_show_sprees, cf_netonly) {}
 // [CG] Team.
 CONSOLE_COMMAND(team, cf_netonly)
 {
+   int new_team = -1;
    char *team_buffer;
 
    if(!CS_TEAMS_ENABLED)
    {
-      doom_printf("Cannot switch teams in non-team games.");
+      doom_printf("Cannot change teams in non-team games.");
       return;
    }
 
@@ -144,14 +145,18 @@ CONSOLE_COMMAND(team, cf_netonly)
    }
 
    team_buffer = Console.argv[0]->getBuffer();
+
    if(strncasecmp(team_buffer, team_color_names[team_color_none], 4) == 0)
-      CL_SendTeamRequest(team_color_none);
+      new_team = team_color_none;
    else if(strncasecmp(team_buffer, team_color_names[team_color_red], 3) == 0)
-      CL_SendTeamRequest(team_color_red);
+      new_team = team_color_red;
    else if(strncasecmp(team_buffer, team_color_names[team_color_blue], 4) == 0)
-      CL_SendTeamRequest(team_color_blue);
+      new_team = team_color_blue;
+
+   if((new_team < team_color_none) || (new_team > cs_settings->teams))
+      doom_printf("Invalid team '%s'.", team_buffer);
    else
-      doom_printf("Invalid team '%s'.\n", team_buffer);
+      CL_SendTeamRequest(new_team);
 }
 
 // [CG] Netstats.

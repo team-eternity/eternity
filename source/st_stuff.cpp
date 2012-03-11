@@ -640,7 +640,7 @@ static void ST_updateWidgets(void)
    st_armson = st_statusbaron && GameType != gt_dm;
 
    // used by w_frags widget
-   st_fragson = st_statusbaron && DEATHMATCH;
+   st_fragson = st_statusbaron && (GameType == gt_dm);
 
    st_fragscount = plyr->totalfrags;     // sf 15/10/99 use totalfrags
 }
@@ -774,7 +774,7 @@ static void ST_drawWidgets()
    st_armson = st_statusbaron && GameType != gt_dm;
 
    // used by w_frags widget
-   st_fragson = st_statusbaron && DEATHMATCH;
+   st_fragson = st_statusbaron && (GameType == gt_dm);
 
    // haleyjd: draw widgets common to status bar and fullscreen 
    ST_drawCommonWidgets(FRACUNIT);

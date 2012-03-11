@@ -72,9 +72,11 @@
 #include "version.h"
 #include "w_wad.h"
 
+#include "cs_hud.h"
 #include "cs_main.h"
 #include "cs_config.h"
 #include "cs_master.h"
+#include "cs_score.h"
 #include "cs_vote.h"
 #include "cs_wad.h"
 #include "cl_main.h"
@@ -279,6 +281,7 @@ static void CS_validateOptions(Json::Value &options)
    }
 
    check_int_option_range(options, max_players_per_team, 1, 16)
+   check_int_option_range(options, max_lives, 0, 100000)
    check_int_option_range(options, dogs, 0, 3)
    check_int_option_range(options, skill, 1, 5)
    check_int_option_range(options, frag_limit, 0, 100000)
@@ -813,6 +816,13 @@ void CS_HandleServerSection()
       server_address->port = server["port"].asInt();
    }
 
+   cs_original_settings->teams = 0;
+   if(!server["teams"].empty())
+   {
+      check_int_option_range(server, teams, 0, team_color_max - 1);
+      cs_original_settings->teams = server["teams"].asUInt();
+   }
+
    // [CG] 2 for the server's spectator and at least 1 client.
    cs_original_settings->max_clients = MAXPLAYERS;
    if(!server["max_clients"].empty())
@@ -823,41 +833,47 @@ void CS_HandleServerSection()
    else
       server["max_clients"] = cs_original_settings->max_clients;
 
-   cs_original_settings->game_type = gt_coop;
+   cs_original_settings->game_type = xgt_cooperative;
    if(!server["game_type"].empty())
    {
-      cs_original_settings->ctf = false;
       if(string_option_is(server["game_type"], "ctf") ||
          string_option_is(server["game_type"], "capture-the-flag") ||
          string_option_is(server["game_type"], "capture the flag"))
       {
-         cs_original_settings->game_type = gt_ctf;
+         cs_original_settings->game_type = xgt_capture_the_flag;
       }
-      else if(string_option_is(server["game_type"], "tdm") ||
-              string_option_is(server["game_type"], "teamdm") ||
-              string_option_is(server["game_type"], "team dm") ||
-              string_option_is(server["game_type"], "team deathmatch"))
-      {
-         cs_original_settings->game_type = gt_tdm;
-      }
-      else if(string_option_is(server["game_type"], "coop") &&
+      else if(string_option_is(server["game_type"], "coop") ||
               string_option_is(server["game_type"], "cooperative"))
       {
-         cs_original_settings->game_type = gt_coop;
+         cs_original_settings->game_type = xgt_cooperative;
+      }
+      else if(string_option_is(server["game_type"], "duel") ||
+              string_option_is(server["game_type"], "1v1")  ||
+              string_option_is(server["game_type"], "1on1") ||
+              string_option_is(server["game_type"], "1 on 1"))
+      {
+         if(cs_original_settings->teams > 1)
+            I_Error("Cannot enable teams in duel.\n");
+
+         cs_original_settings->max_players = 2;
+         cs_original_settings->game_type = xgt_duel;
       }
       else
       {
-         cs_original_settings->game_type = gt_dm;
-         if(string_option_is(server["game_type"], "duel") ||
-            string_option_is(server["game_type"], "1v1")  ||
-            string_option_is(server["game_type"], "1on1") ||
-            string_option_is(server["game_type"], "1 on 1"))
-         {
-            cs_original_settings->max_players = 2;
-         }
+         cs_original_settings->game_type = xgt_deathmatch;
       }
    }
-   DefaultGameType = GameType = (gametype_t)cs_original_settings->game_type;
+
+   G_SetGameType(cs_original_settings->game_type);
+
+   cs_original_settings->deathmatch = false;
+   if(!server["deathmatch"].empty())
+      cs_original_settings->deathmatch = server["deathmatch"].asBool();
+
+   if(cs_original_settings->deathmatch)
+      DefaultGameType = GameType = gt_dm;
+   else
+      DefaultGameType = GameType = gt_coop;
 
    sv_join_time_limit = 5;
    if(!server["join_time_limit"].empty())
@@ -1216,7 +1232,6 @@ void CS_ReloadDefaults(void)
 void CS_ApplyConfigSettings(void)
 {
    // [CG] Apply the settings.
-   GameType = DefaultGameType = (gametype_t)cs_settings->game_type;
    startskill = gameskill     = (skill_t)cs_settings->skill;
    dogs = default_dogs        = cs_settings->dogs;
    distfriend                 = cs_settings->friend_distance;
@@ -1450,6 +1465,8 @@ void CS_ApplyConfigSettings(void)
       dog_jumping = true;
    else
       dog_jumping = false;
+
+   CS_InitScoreboard();
 }
 
 void CS_HandleOptionsSection()
@@ -1462,6 +1479,7 @@ void CS_HandleOptionsSection()
    // [CG] Non-boolean options
    set_int(options, max_players, 16);
    set_int(options, max_players_per_team, 8);
+   set_int(options, max_lives, 0);
    set_int(options, dogs, 0);
    set_int(options, skill, 5); // [CG] Nightmare!!!!
    set_int(options, frag_limit, 0);

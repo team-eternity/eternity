@@ -541,7 +541,7 @@ static void D_ArbitrateNetStart(void)
          for(i = 0; i < doomcom->numnodes; ++i)
          {
             netbuffer->retransmitfrom = startskill;
-            if (DEATHMATCH)
+            if (GameType == gt_dm)
                netbuffer->retransmitfrom |= (1 << 6);
             if (nomonsters)
                netbuffer->retransmitfrom |= 0x20;

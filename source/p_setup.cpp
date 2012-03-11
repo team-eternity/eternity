@@ -2169,8 +2169,9 @@ static void P_ClearPlayerVars(void)
          players[i].playerstate = PST_REBORN;
 
       players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
+
       if(clientserver)
-         clients[i].death_count = 0;
+         CS_ClearClientStats(i);
 
       memset(players[i].frags, 0, sizeof(players[i].frags));
 
@@ -2303,7 +2304,7 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 //
 static void P_DeathMatchSpawnPlayers(void)
 {
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
    {
       int i;
 

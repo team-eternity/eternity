@@ -1,13 +1,12 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright (C) 2006-2010 by The Odamex Team.
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,22 +20,16 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    CTF Implementation
+//   Capture the flag game type.
 //
-//---------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 // [CG] Notably, CTF was largely written by Toke for Odamex, and although that
-//      implementation varies significantly from this one, it's still the same
+//      implementation differs significantly from this one, it's still the same
 //      fundamental design.  Thanks :) .
 
-#ifndef CS_CTF_H__
-#define CS_CTF_H__
-
-#include "doomtype.h"
-#include "doomstat.h"
-#include "d_player.h"
-#include "m_fixed.h"
-#include "p_mobj.h"
+#ifndef G_CTF_H__
+#define G_CTF_H__
 
 #include "cs_team.h"
 
@@ -49,7 +42,9 @@
 //#define ID_TEAM3_FLAG 5133
 //#define ID_TEAM4_FLAG 5134
 
+class Mobj;
 struct patch_t;
+struct player_t;
 
 // flags can only be in one of these states
 typedef enum
@@ -91,23 +86,30 @@ typedef struct flag_s
 
 #pragma pack(pop)
 
+class CTFGameType : public BaseGameType
+{
+public:
+   CTFGameType(const char *new_name);
+   int getStrengthOfVictory(float low_score, float high_score);
+   bool usesFlagsAsScore();
+   bool shouldExitLevel();
+   void handleActorKilled(Mobj *source, Mobj *target, emod_t *mod);
+   void handleActorRemoved(Mobj *actor);
+   void handleLoadLevel();
+   bool handleActorTouchedSpecial(Mobj *special, Mobj *toucher);
+   void handleClientSpectated(int clientnum);
+   void handleClientChangedTeam(int clientnum);
+   void handleClientDisconnected(int clientnum);
+   void tick();
+};
+
 extern flag_stand_t cs_flag_stands[team_color_max];
 extern flag_t cs_flags[team_color_max];
 
-void     CL_SpawnFlag(flag_t *flag, uint32_t net_id);
 void     SV_SpawnFlag(flag_t *flag);
-void     CS_PlayFlagSound(int flag_color);
-void     CS_RemoveFlagActor(flag_t *flag);
-void     CS_ReturnFlag(flag_t *flag);
-void     CS_GiveFlag(int playernum, flag_t *flag);
-void     CS_HandleFlagTouch(player_t *player, int color);
-flag_t*  CS_GetFlagCarriedByPlayer(int playernum);
-void     CS_DropFlag(int playernum);
-void     CS_CTFTicker(void);
 void     CS_SnapCarriedFlagToCarrier(Mobj *flag_actor);
 void     CS_CheckCarriedFlagPosition(int playernum);
 bool     CS_ActorIsCarriedFlag(Mobj *actor);
-Mobj*    CS_GetFlagStandActorForFlag(flag_t *flag);
 patch_t* CS_GetFlagPatch(int flag_color);
 
 #endif

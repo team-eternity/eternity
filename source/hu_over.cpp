@@ -430,7 +430,7 @@ void HU_OverlaySetup(void)
 
    // turn off frag counter or key display,
    // according to if we're in a deathmatch game or not
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
       overlay[ol_key].x = -1;
    else
       overlay[ol_frag].x = -1;
@@ -488,7 +488,7 @@ void HU_OverlaySetup(void)
       setol(ol_armor, SCREENWIDTH-138, 8);
       setol(ol_weap, SCREENWIDTH-138, 184);
       setol(ol_ammo, SCREENWIDTH-138, 192);
-      if(DEATHMATCH)  // if dm, put frags in place of keys
+      if(GameType == gt_dm)  // if dm, put frags in place of keys
       {
          setol(ol_frag, 0, 192);
       }

@@ -67,8 +67,8 @@ extern unsigned int cl_current_world_index;
 extern unsigned int cl_latest_world_index;
 extern unsigned int cl_commands_sent;
 
-extern bool cl_received_sync;
 extern bool cl_initial_spawn;
+extern bool cl_received_first_sync;
 extern bool cl_spawning_actor_from_message;
 extern bool cl_removing_actor_from_message;
 extern bool cl_setting_player_weapon_sprites;

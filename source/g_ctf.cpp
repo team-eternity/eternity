@@ -1,8 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright (C) 2006-2010 by The Odamex Team.
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,53 +20,80 @@
 //----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//   C/S CTF routines.
+//   Capture the flag game type.
 //
 //----------------------------------------------------------------------------
 
-// [CG] Notably, CTF was largely written by Toke for Odamex, and although that
-//      implementation varies significantly from this one, it's still the same
-//      fundamental design.  Thanks :) .
-
 #include "z_zone.h"
+
 #include "c_io.h"
-#include "doomtype.h"
-#include "doomstat.h"
 #include "d_player.h"
+#include "doomdef.h"
+#include "doomstat.h"
+#include "doomtype.h"
+#include "e_edf.h"
 #include "e_things.h"
-#include "g_game.h"
+#include "info.h"
 #include "m_fixed.h"
+#include "g_game.h"
+#include "g_type.h"
+#include "g_ctf.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "v_patchfmt.h"
 
 #include "cs_announcer.h"
 #include "cs_team.h"
-#include "cs_ctf.h"
 #include "cs_main.h"
 #include "cs_netid.h"
 #include "cl_main.h"
 #include "sv_main.h"
 
+extern int levelScoreLimit;
+
+/*
+ * [CG] TODO:
+ *      - Individual scores (CTF points system).  I don't think this will be
+ *        used by very many players, but nonetheless we need *some* value for
+ *        that column on the scoreboard.  Right now it's always 0.  Probably
+ *        this will be configurable.  I guess game types need a configuration
+ *        hook?
+ *      - Stats.  Currently none are kept.
+ */
+
 flag_stand_t cs_flag_stands[team_color_max];
 flag_t cs_flags[team_color_max];
 
-static void respawn_flag(flag_t *flag, fixed_t x, fixed_t y, fixed_t z,
-                         const char *type_name)
+static void CS_removeFlagActor(flag_t *flag)
+{
+   Mobj *flag_actor;
+
+   if(flag->net_id && ((flag_actor = NetActors.lookup(flag->net_id)) != NULL))
+   {
+      if(CS_SERVER)
+         SV_BroadcastActorRemoved(flag_actor);
+      flag_actor->removeThinker();
+   }
+
+   flag->net_id = 0;
+}
+
+static void CS_respawnFlag(flag_t *flag, fixed_t x, fixed_t y, fixed_t z,
+                           const char *type_name)
 {
    Mobj *flag_actor;
 
    if(!serverside)
       return;
 
-   CS_RemoveFlagActor(flag);
+   CS_removeFlagActor(flag);
    flag_actor = P_SpawnMobj(x, y, z, E_SafeThingName(type_name));
    if(CS_SERVER)
       SV_BroadcastActorSpawned(flag_actor);
    flag->net_id = flag_actor->net_id;
 }
 
-static int get_other_color(int color)
+static int CS_getOtherColor(int color)
 {
    if(color == team_color_blue)
       return team_color_red;
@@ -76,7 +102,7 @@ static int get_other_color(int color)
    return team_color_none;
 }
 
-static const char* get_flag_name(int color)
+static const char* CS_getFlagName(int color)
 {
    if(color == team_color_red)
       return "RedFlag";
@@ -85,7 +111,7 @@ static const char* get_flag_name(int color)
    return "Flag";
 }
 
-static const char* get_carried_flag_name(int color)
+static const char* CS_getCarriedFlagName(int color)
 {
    if(color == team_color_red)
       return "CarriedRedFlag";
@@ -202,72 +228,13 @@ static patch_t* CS_getGreenFlagPatch()
    return patch;
 }
 
-void CS_RemoveFlagActor(flag_t *flag)
-{
-   Mobj *flag_actor;
-
-   if(flag->net_id && ((flag_actor = NetActors.lookup(flag->net_id)) != NULL))
-   {
-      SV_BroadcastActorRemoved(flag_actor);
-      flag_actor->removeThinker();
-   }
-
-   flag->net_id = 0;
-}
-
-void CL_SpawnFlag(flag_t *flag, uint32_t net_id)
-{
-   int color = flag - cs_flags;
-   flag_stand_t *flag_stand = &cs_flag_stands[color];
-   const char *flag_name = get_flag_name(color);
-
-   CL_SpawnMobj(
-      net_id,
-      flag_stand->x,
-      flag_stand->y,
-      flag_stand->z,
-      E_SafeThingName(flag_name)
-   );
-
-   flag->net_id = net_id;
-   flag->carrier = 0;
-   flag->pickup_time = 0;
-   flag->timeout = 0;
-   flag->state = flag_home;
-}
-
-void SV_SpawnFlag(flag_t *flag)
-{
-   int color = flag - cs_flags;
-   flag_stand_t *flag_stand = &cs_flag_stands[color];
-   const char *flag_name = get_flag_name(color);
-
-   // [CG] This function is only called from G_DoLoadLevel in g_game.cpp.  It
-   //      cannot broadcast flag spawns because it will cause Net ID errors in
-   //      any connected clients.  This isn't a problem, because clients are
-   //      sent the flags when they request state each map anyway.
-
-   CS_RemoveFlagActor(flag);
-   flag->net_id = P_SpawnMobj(
-      flag_stand->x,
-      flag_stand->y,
-      flag_stand->z,
-      E_SafeThingName(flag_name)
-   )->net_id;
-
-   flag->carrier = 0;
-   flag->pickup_time = 0;
-   flag->timeout = 0;
-   flag->state = flag_home;
-}
-
-void CS_ReturnFlag(flag_t *flag)
+static void CS_returnFlag(flag_t *flag)
 {
    int color = flag - cs_flags;
    flag_stand_t *flag_stand = &cs_flag_stands[color];
 
-   respawn_flag(
-      flag, flag_stand->x, flag_stand->y, flag_stand->z, get_flag_name(color)
+   CS_respawnFlag(
+      flag, flag_stand->x, flag_stand->y, flag_stand->z, CS_getFlagName(color)
    );
 
    flag->carrier = 0;
@@ -276,7 +243,7 @@ void CS_ReturnFlag(flag_t *flag)
    flag->state = flag_home;
 }
 
-void CS_GiveFlag(int playernum, flag_t *flag)
+static void CS_giveFlag(int playernum, flag_t *flag)
 {
    int color = flag - cs_flags;
    player_t *player = &players[playernum];
@@ -284,8 +251,8 @@ void CS_GiveFlag(int playernum, flag_t *flag)
 
    CS_SaveActorPosition(&position, player->mo, 0);
 
-   respawn_flag(
-      flag, position.x, position.y, position.z, get_carried_flag_name(color)
+   CS_respawnFlag(
+      flag, position.x, position.y, position.z, CS_getCarriedFlagName(color)
    );
 
    flag->carrier = playernum;
@@ -301,12 +268,12 @@ void CS_GiveFlag(int playernum, flag_t *flag)
    flag->state = flag_carried;
 }
 
-void CS_HandleFlagTouch(player_t *player, int color)
+static void CS_handleFlagTouch(player_t *player, int color)
 {
    int playernum = player - players;
    client_t *client = &clients[playernum];
    flag_t *flag = &cs_flags[color];
-   int other_color = get_other_color(color);
+   int other_color = CS_getOtherColor(color);
 
    if(flag->state == flag_dropped)
    {
@@ -315,58 +282,36 @@ void CS_HandleFlagTouch(player_t *player, int color)
          if(CS_SERVER)
          {
             if(color == team_color_red)
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_red_flag_returned, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_red_flag_returned, NULL);
             else if(color == team_color_blue)
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_blue_flag_returned, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_blue_flag_returned, NULL);
             else
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_flag_returned, NULL);
+
             SV_BroadcastMessage(
                "%s returned the %s flag", player->name, team_color_names[color]
             );
          }
-         CS_ReturnFlag(flag);
+         CS_returnFlag(flag);
       }
       else
       {
          if(CS_SERVER)
          {
             if(color == team_color_red)
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_red_flag_taken, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_red_flag_taken, NULL);
             else if(color == team_color_blue)
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_blue_flag_taken, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_blue_flag_taken, NULL);
             else
-            {
-               SV_BroadcastAnnouncerEvent(
-                  ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
-               );
-            }
+               SV_BroadcastAnnouncerEvent(ae_flag_taken, NULL);
+
             SV_BroadcastMessage(
                "%s picked up the %s flag",
                player->name,
                team_color_names[color]
             );
          }
-         CS_GiveFlag(playernum, flag);
+         CS_giveFlag(playernum, flag);
       }
    }
    else if(client->team != color)
@@ -374,68 +319,46 @@ void CS_HandleFlagTouch(player_t *player, int color)
       if(CS_SERVER)
       {
          if(color == team_color_red)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_red_flag_taken, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_red_flag_taken, NULL);
          else if(color == team_color_blue)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_blue_flag_taken, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_blue_flag_taken, NULL);
          else
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_flag_taken, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_flag_taken, NULL);
+
          SV_BroadcastMessage(
             "%s has taken the %s flag",
             player->name,
             team_color_names[color]
          );
       }
-      CS_GiveFlag(playernum, flag);
+      CS_giveFlag(playernum, flag);
    }
    else if(cs_flags[other_color].carrier == playernum)
    {
       if(CS_SERVER)
       {
          if(other_color == team_color_red)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_red_flag_captured, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_red_flag_captured, NULL);
          else if(other_color == team_color_blue)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_blue_flag_captured, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_blue_flag_captured, NULL);
          else
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_flag_captured, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_flag_captured, NULL);
+
          SV_BroadcastMessage(
             "%s captured the %s flag",
             player->name,
             team_color_names[other_color]
          );
       }
-      CS_ReturnFlag(&cs_flags[other_color]);
+      CS_returnFlag(&cs_flags[other_color]);
       team_scores[color]++;
    }
 }
 
-flag_t* CS_GetFlagCarriedByPlayer(int playernum)
+static flag_t* CS_getFlagCarriedByPlayer(int playernum)
 {
    client_t *client = &clients[playernum];
-   int other_color = get_other_color(client->team);
+   int other_color = CS_getOtherColor(client->team);
    flag_t *flag = &cs_flags[other_color];
 
    if(flag->carrier == playernum)
@@ -444,40 +367,32 @@ flag_t* CS_GetFlagCarriedByPlayer(int playernum)
    return NULL;
 }
 
-void CS_DropFlag(int playernum)
+static void CS_dropFlag(int playernum)
 {
-   flag_t *flag = CS_GetFlagCarriedByPlayer(playernum);
+   flag_t *flag = CS_getFlagCarriedByPlayer(playernum);
    int color = flag - cs_flags;
    Mobj *corpse = players[playernum].mo;
    Mobj *flag_actor;
 
+   if(!playernum)
+      return;
+
    if(!flag || flag->carrier != playernum)
       return;
 
-   respawn_flag(flag, corpse->x, corpse->y, corpse->z, get_flag_name(color));
+   CS_respawnFlag(flag, corpse->x, corpse->y, corpse->z, CS_getFlagName(color));
 
    flag_actor = NetActors.lookup(flag->net_id);
 
    if(CS_SERVER)
    {
       if(color == team_color_red)
-      {
-         SV_BroadcastAnnouncerEvent(
-            ae_red_flag_dropped, CS_GetFlagStandActorForFlag(flag)
-         );
-      }
+         SV_BroadcastAnnouncerEvent(ae_red_flag_dropped, NULL);
       else if(color == team_color_blue)
-      {
-         SV_BroadcastAnnouncerEvent(
-            ae_blue_flag_dropped, CS_GetFlagStandActorForFlag(flag)
-         );
-      }
+         SV_BroadcastAnnouncerEvent(ae_blue_flag_dropped, NULL);
       else
-      {
-         SV_BroadcastAnnouncerEvent(
-            ae_flag_dropped, CS_GetFlagStandActorForFlag(flag)
-         );
-      }
+         SV_BroadcastAnnouncerEvent(ae_flag_dropped, NULL);
+
       SV_BroadcastMessage(
          "%s dropped the %s flag",
          players[playernum].name,
@@ -491,7 +406,118 @@ void CS_DropFlag(int playernum)
    flag->timeout = 0;
 }
 
-void CS_CTFTicker(void)
+CTFGameType::CTFGameType(const char *new_name)
+   : BaseGameType(new_name, xgt_capture_the_flag) {}
+
+int CTFGameType::getStrengthOfVictory(float low_score, float high_score)
+{
+   float score_ratio = 0.0;
+
+   if(low_score && high_score)
+      score_ratio = low_score / high_score;
+
+   if((score_ratio <= 20.0) && ((high_score - low_score) >= 4))
+      return sov_blowout;
+
+   if(score_ratio <= 40.0)
+      return sov_humiliation;
+
+   if(score_ratio <= 60.0)
+      return sov_impressive;
+
+   return sov_normal;
+}
+
+bool CTFGameType::usesFlagsAsScore()
+{
+   return true;
+}
+
+bool CTFGameType::shouldExitLevel()
+{
+   int i;
+
+   for(i = 0; i < cs_settings->teams; i++)
+   {
+      if(team_scores[i + 1] >= levelScoreLimit)
+         return true;
+   }
+
+   return false;
+}
+
+void CTFGameType::handleActorKilled(Mobj *source, Mobj *target, emod_t *mod)
+{
+   if(target->player)
+      CS_dropFlag(target->player - players);
+}
+
+void CTFGameType::handleActorRemoved(Mobj *actor)
+{
+   if(actor->player)
+      CS_dropFlag(actor->player - players);
+}
+
+void CTFGameType::handleLoadLevel()
+{
+   int i;
+
+   if(clientserver)
+   {
+      for(i = team_color_none; i < team_color_max; i++)
+         CS_removeFlagActor(&cs_flags[i]);
+   }
+}
+
+bool CTFGameType::handleActorTouchedSpecial(Mobj *special, Mobj *toucher)
+{
+   player_t *player;
+
+   // haleyjd: don't crash if a monster gets here.
+   if(!(player = toucher->player))
+      return false;
+   
+   // Dead thing touching.
+   // Can happen with a sliding player corpse.
+   if(toucher->health <= 0)
+      return false;
+
+   // haleyjd 05/11/03: EDF pickups modifications
+   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
+      return false;
+
+   switch(pickupfx[special->sprite])
+   {
+      case PFX_BLUEFLAG:
+      case PFX_DROPPEDBLUEFLAG:
+         CS_handleFlagTouch(player, team_color_blue);
+         return true;
+
+      case PFX_REDFLAG:
+      case PFX_DROPPEDREDFLAG:
+         CS_handleFlagTouch(player, team_color_red);
+         return true;
+   }
+
+   return false;
+}
+
+void CTFGameType::handleClientSpectated(int clientnum)
+{
+   CS_dropFlag(clientnum);
+}
+
+void CTFGameType::handleClientChangedTeam(int clientnum)
+{
+   CS_dropFlag(clientnum);
+}
+
+void CTFGameType::handleClientDisconnected(int clientnum)
+{
+   CS_dropFlag(clientnum);
+}
+
+void CTFGameType::tick()
 {
    int color;
    flag_t *flag;
@@ -507,30 +533,20 @@ void CS_CTFTicker(void)
       if(++flag->timeout <= (10 * TICRATE))
          continue;
 
-      CS_ReturnFlag(flag);
+      CS_returnFlag(flag);
 
       if(CS_SERVER)
       {
          if((flag_actor = NetActors.lookup(flag->net_id)) == NULL)
             continue;
+
          if(color == team_color_red)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_red_flag_returned, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_red_flag_returned, NULL);
          else if(color == team_color_blue)
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_blue_flag_returned, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_blue_flag_returned, NULL);
          else
-         {
-            SV_BroadcastAnnouncerEvent(
-               ae_flag_returned, CS_GetFlagStandActorForFlag(flag)
-            );
-         }
+            SV_BroadcastAnnouncerEvent(ae_flag_returned, NULL);
+
          SV_BroadcastMessage("%s flag returned", team_color_names[color]);
       }
    }
@@ -566,7 +582,7 @@ void CS_CheckCarriedFlagPosition(int playernum)
    Mobj *flag_actor = NULL;
    player_t *player = &players[playernum];
 
-   if((flag = CS_GetFlagCarriedByPlayer(playernum)) != NULL)
+   if((flag = CS_getFlagCarriedByPlayer(playernum)) != NULL)
    {
       if((flag_actor = NetActors.lookup(flag->net_id)) != NULL)
       {
@@ -596,11 +612,6 @@ bool CS_ActorIsCarriedFlag(Mobj *actor)
    return false;
 }
 
-Mobj* CS_GetFlagStandActorForFlag(flag_t *flag)
-{
-   return NetActors.lookup(cs_flag_stands[flag - cs_flags].net_id);
-}
-
 patch_t* CS_GetFlagPatch(int flag_color)
 {
    if(flag_color == team_color_red)
@@ -610,5 +621,30 @@ patch_t* CS_GetFlagPatch(int flag_color)
       return CS_getBlueFlagPatch();
 
    return CS_getGreenFlagPatch();
+}
+
+void SV_SpawnFlag(flag_t *flag)
+{
+   int color = flag - cs_flags;
+   flag_stand_t *flag_stand = &cs_flag_stands[color];
+   const char *flag_name = CS_getFlagName(color);
+
+   // [CG] This function is only called from G_DoLoadLevel in g_game.cpp.  It
+   //      cannot broadcast flag spawns because it will cause Net ID errors in
+   //      any connected clients.  This isn't a problem, because clients are
+   //      sent the flags when they request state each map anyway.
+
+   CS_removeFlagActor(flag);
+   flag->net_id = P_SpawnMobj(
+      flag_stand->x,
+      flag_stand->y,
+      flag_stand->z,
+      E_SafeThingName(flag_name)
+   )->net_id;
+
+   flag->carrier = 0;
+   flag->pickup_time = 0;
+   flag->timeout = 0;
+   flag->state = flag_home;
 }
 

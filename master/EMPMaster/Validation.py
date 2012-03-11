@@ -40,19 +40,40 @@ def validate_resources(resources):
         elif not isstr(resource):
             raise CE('Invalid data type in "resources" section.')
 
+def validate_vote_commands(vote_commands):
+    if not islist(vote_commands):
+        raise CE('"vote_commands" option is not a list.')
+    for x in vote_commands:
+        if isdict(x):
+            for y, z in x.items():
+                if y == 'name':
+                    if not isstr(z):
+                        raise CE('Vote command\'s name is not a string.')
+                elif y == 'duration':
+                    if not isint(z):
+                        raise CE('Vote command\'s duration is not an integer.')
+                else:
+                    raise CE('Invalid vote commmand option "%s".' % (y))
+        elif not isstr(x):
+            raise CE('Invalid data type in "vote_commands" option.')
+
 def validate_server(server):
     if not isdict(server):
         raise CE('"server" section is not an object.')
     for name, validator in [
         ('address', isstr),
+        ('buffer_client_commands', isbool),
+        ('deathmatch', isbool),
+        ('join_time_limit', isint),
         ('game', isstr),
         ('game_type', isstr),
         ('hostname', isstr),
         ('max_clients', isint),
         ('port', isint),
+        ('randomize_maps', isbool),
         ('requires_player_password', isbool),
         ('requires_spectator_password', isbool),
-        ('join_time_limit', isint),
+        ('teams', isint),
         ('wad_repository', isstr)
     ]:
         if not validator(server[name]):
@@ -60,6 +81,8 @@ def validate_server(server):
                 name,
                 validator_to_string(validator)
             ))
+    if 'vote_commands' in server:
+        validate_vote_commands(server['vote_commands'])
 
 def validate_options(options, section_name='options'):
     if not isdict(options):
@@ -113,6 +136,7 @@ def validate_options(options, section_name='options'):
         ('line_effects_work_on_sector_tag_zero', isbool),
         ('lost_souls_get_stuck_in_walls', isbool),
         ('lost_souls_never_bounce_on_floors', isbool),
+        ('max_lives', isint),
         ('max_players', isint),
         ('max_players_per_team', isint),
         ('monster_infighting', isbool),
@@ -215,4 +239,6 @@ def validate_state(state):
     #      definition everything is valid!  TODO!
     ###
     pass
+
+# vi:sw=4 ts=4 et:
 

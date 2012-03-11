@@ -105,6 +105,7 @@ unsigned int cl_latest_world_index  = 0;
 unsigned int cl_commands_sent = 0;
 
 bool cl_initial_spawn = true;
+bool cl_received_first_sync = false;
 bool cl_spawning_actor_from_message = false;
 bool cl_removing_actor_from_message = false;
 bool cl_setting_player_weapon_sprites = false;
@@ -259,6 +260,7 @@ void CL_InitAnnouncer()
 {
    CS_InitAnnouncer();
    CS_SetAnnouncer(s_announcer_type_names[s_announcer_type]);
+
    if(CS_TEAMS_ENABLED)
       CS_UpdateTeamSpecificAnnouncers(clients[consoleplayer].team);
 }
@@ -285,6 +287,8 @@ void CL_Reset(void)
    cl_current_world_index = 0;
    cl_latest_world_index = 0;
    cl_commands_sent = 0;
+   cl_initial_spawn = false;
+   cl_received_first_sync = false;
    cl_packet_buffer.setSynchronized(false);
    consoleplayer = displayplayer = 0;
    CS_InitPlayers();

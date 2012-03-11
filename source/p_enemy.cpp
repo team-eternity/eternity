@@ -557,8 +557,13 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       {
          if(P_UseSpecialLine(actor, clip.spechit[clip.numspechit], 0))
          {
+            current_game_type->handleActorUsedSpecialLine(
+               actor, clip.spechit[clip.numspechit], 0
+            );
+
             if(CS_SERVER)
                SV_BroadcastLineUsed(actor, clip.spechit[clip.numspechit], 0);
+
             good |= (clip.spechit[clip.numspechit] == clip.blockline ? 1 : 2);
          }
       }

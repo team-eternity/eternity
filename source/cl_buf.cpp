@@ -27,7 +27,9 @@
 #include <list>
 
 #include "z_zone.h"
+
 #include "doomdef.h"
+#include "doomstat.h"
 #include "g_game.h"
 #include "i_system.h"
 #include "i_thread.h"
@@ -269,10 +271,10 @@ uint32_t NetPacketBuffer::capacity(void)
 
    if(adaptive())
    {
-      if(clients[consoleplayer].transit_lag <= TICRATE)
+      if(clients[consoleplayer].stats.transit_lag <= TICRATE)
          return 2;
       else
-         return (clients[consoleplayer].transit_lag / TICRATE) * 2;
+         return (clients[consoleplayer].stats.transit_lag / TICRATE) * 2;
    }
 
    return c;

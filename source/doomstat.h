@@ -37,6 +37,7 @@
 
 // We need the player data structure as well.
 #include "d_player.h"
+#include "g_type.h"
 #include "p_tick.h"
 #include "tables.h"
 
@@ -180,6 +181,8 @@ extern  bool netgame;
 // Flag: true only if started as net deathmatch.
 // An enum might handle altdeath/cooperative better.
 extern  bool deathmatch;
+
+extern BaseGameType *current_game_type;
 
 // [CG] Added some bools for c/s.
 extern bool clientserver;
@@ -468,20 +471,15 @@ extern int startOnNewMap;
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags
 
+// [CG] These things now primarily determine fundamental game behavior such as
+//      whether or not to spawn an item.  Extensible game types based on code
+//      in g_type define more in-depth rules and behavior.
 typedef enum
 {
    gt_single,
    gt_coop,
    gt_dm,
-   gt_tdm,
-   gt_ctf,
 } gametype_t;
-
-#define DEATHMATCH ( \
-   (GameType == gt_dm)  || \
-   (GameType == gt_tdm) || \
-   (GameType == gt_ctf) \
-)
 
 extern gametype_t GameType, DefaultGameType;
 

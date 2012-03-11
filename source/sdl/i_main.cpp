@@ -34,6 +34,7 @@
 #include "../doomstat.h"
 #include "../m_argv.h"
 #include "../d_main.h"
+#include "../i_font.h"
 #include "../i_system.h"
 
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_WIN32_WCE)
@@ -124,6 +125,8 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
+
+   I_InitFonts();
 
    Z_Init();
    atexit(I_Quit);

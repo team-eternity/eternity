@@ -2233,7 +2233,7 @@ static bool PIT_3DRadiusAttack(Mobj *thing)
    bottom = M_FixedToDouble(thing->z);
    height = M_FixedToDouble(thing->height);
    top    = bottom + height;
-   middle = bottom + (height * .5);
+   middle = thing->z + DEFAULTMISSILEZ;
 
    bomb_v.x = M_FixedToDouble(theBomb->bombspot->x);
    bomb_v.y = M_FixedToDouble(theBomb->bombspot->y);

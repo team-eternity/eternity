@@ -36,6 +36,7 @@
 
 #include "z_zone.h"
 #include "c_io.h"
+#include "doomstat.h"
 #include "doomtype.h"
 #include "d_dehtbl.h"
 #include "d_iwad.h"

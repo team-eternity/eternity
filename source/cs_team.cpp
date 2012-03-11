@@ -25,10 +25,12 @@
 //----------------------------------------------------------------------------
 
 #include "z_zone.h"
+
 #include "doomdef.h"
 #include "doomdata.h"
 #include "doomstat.h"
 #include "i_system.h"
+#include "v_video.h"
 
 #include "cs_team.h"
 #include "cs_main.h"
@@ -128,3 +130,17 @@ int CS_GetOtherTeam(int team_color)
    return team_color_none;
 }
 
+byte CS_GetTeamFontColor(int team_color)
+{
+   switch(team_color)
+   {
+      case team_color_none:
+         return CR_GREEN;
+      case team_color_red:
+         return CR_RED;
+      case team_color_blue:
+         return CR_BLUE;
+      default:
+         return CR_GRAY;
+   }
+}

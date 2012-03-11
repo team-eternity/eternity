@@ -172,6 +172,7 @@
         "hostname": ":: Eternity Server :: Duel 1",
         "address": "public",
         "port": 10666,
+        "teams": 2,
         "max_clients": 32,
         "join_time_limit": 5,
         "game": "doom2",
@@ -207,6 +208,7 @@
         // General Features
         "max_players": 2,
         "max_players_per_team": 8,
+        "max_lives": 0,
         "dogs": 0,
         "skill": 5,
         "frag_limit": 50,

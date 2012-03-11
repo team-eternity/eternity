@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-directx -8in32 -nomusic -geom 640x400wvh -warp 1" />
+				<Option parameters="-directx -8in32 -nomusic -geom 1024x768wh" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -72,12 +72,14 @@
 			<Add library="..\eedeps\mingw\lib\libcares.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL_mixer.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL_net.a" />
+			<Add library="..\eedeps\mingw\lib\libSDL_ttf.a" />
 			<Add library="..\eedeps\mingw\lib\libSDL.a" />
 			<Add library="..\eedeps\mingw\lib\libSDLmain.a" />
 			<Add library="..\eedeps\mingw\lib\libmad.a" />
 			<Add library="..\eedeps\mingw\lib\libogg.a" />
 			<Add library="..\eedeps\mingw\lib\libvorbis.a" />
 			<Add library="..\eedeps\mingw\lib\libFLAC.a" />
+			<Add library="..\eedeps\mingw\lib\libfreetype.a" />
 			<Add library="..\eedeps\mingw\lib\libz.a" />
 			<Add library="pthread" />
 			<Add library="m" />
@@ -203,9 +205,10 @@
 		<Unit filename="..\source\cs_announcer.cpp" />
 		<Unit filename="..\source\cs_cmd.cpp" />
 		<Unit filename="..\source\cs_config.cpp" />
-		<Unit filename="..\source\cs_ctf.cpp" />
 		<Unit filename="..\source\cs_demo.cpp" />
+		<Unit filename="..\source\cs_hisb.cpp" />
 		<Unit filename="..\source\cs_hud.cpp" />
+		<Unit filename="..\source\cs_lowsb.cpp" />
 		<Unit filename="..\source\cs_main.cpp" />
 		<Unit filename="..\source\cs_master.cpp" />
 		<Unit filename="..\source\cs_netid.cpp" />
@@ -248,9 +251,13 @@
 		<Unit filename="..\source\f_wipe.cpp" />
 		<Unit filename="..\source\g_bind.cpp" />
 		<Unit filename="..\source\g_cmd.cpp" />
+		<Unit filename="..\source\g_coop.cpp" />
+		<Unit filename="..\source\g_ctf.cpp" />
+		<Unit filename="..\source\g_dmatch.cpp" />
 		<Unit filename="..\source\g_dmflag.cpp" />
 		<Unit filename="..\source\g_game.cpp" />
 		<Unit filename="..\source\g_gfs.cpp" />
+		<Unit filename="..\source\g_type.cpp" />
 		<Unit filename="..\source\gl\gl_init.cpp" />
 		<Unit filename="..\source\gl\gl_primitives.cpp" />
 		<Unit filename="..\source\gl\gl_projection.cpp" />
@@ -344,6 +351,7 @@
 		<Unit filename="..\source\r_voxels.cpp" />
 		<Unit filename="..\source\s_sndseq.cpp" />
 		<Unit filename="..\source\s_sound.cpp" />
+		<Unit filename="..\source\sdl\i_font.cpp" />
 		<Unit filename="..\source\sdl\i_input.cpp" />
 		<Unit filename="..\source\sdl\i_main.cpp" />
 		<Unit filename="..\source\sdl\i_net.cpp" />

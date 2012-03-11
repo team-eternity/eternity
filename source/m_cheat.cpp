@@ -772,7 +772,7 @@ bool M_FindCheats(int key)
    for(matchedbefore = i = 0; cheat[i].cheat; i++)
    {
       if((sr & cheat[i].mask) == cheat[i].code &&  // if match found & allowed
-         !(cheat[i].when & not_dm   && (netgame || clientserver) && DEATHMATCH && !demoplayback) &&
+         !(cheat[i].when & not_dm   && (netgame || clientserver) && (GameType == gt_dm) && !demoplayback) &&
          !(cheat[i].when & not_coop && (netgame || clientserver) && GameType == gt_coop) &&
          !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
          !(cheat[i].when & not_menu && menuactive) &&

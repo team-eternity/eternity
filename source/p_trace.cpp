@@ -667,7 +667,13 @@ static bool PTR_UseTraverse(intercept_t *in)
    {
       if(CS_SERVER)
          SV_BroadcastLineUsed(usething, in->d.line, side);
-      P_UseSpecialLine(usething, in->d.line, side);
+
+      if(P_UseSpecialLine(usething, in->d.line, side))
+      {
+         current_game_type->handleActorUsedSpecialLine(
+            usething, in->d.line, side
+         );
+      }
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag

@@ -40,6 +40,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -73,7 +74,6 @@
 
 #include "cs_main.h"  // [CG] 09/23/11
 #include "cs_netid.h" // [CG] 09/23/11
-#include "cs_ctf.h"   // [CG] 10/20/11
 #include "cl_buf.h"   // [CG] 10/20/11
 #include "cl_net.h"   // [CG] 09/23/11
 #include "cl_main.h"  // [CG] 09/23/11
@@ -305,22 +305,6 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          else if(mobj->net_id == 0 && ACTOR_IS_BLOOD_OR_PUFF(mobj))
             CL_RemoveMobj(mobj);
 
-         /*
-         if(CS_SERVER && sentient(mobj))
-         {
-            SV_BroadcastActorState(mobj, NullStateNum);
-            SV_BroadcastActorRemoved(mobj);
-         }
-
-         if(CS_CLIENT)
-         {
-            if(!sentient(mobj))
-               CL_RemoveMobj(mobj);
-         }
-         else
-            mobj->removeThinker();
-         */
-
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -366,6 +350,8 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    if(seenstates)
       P_FreeSeenStates(seenstates);
 
+   current_game_type->handleActorStateChanged(mobj, state, ret);
+
    return ret;
 }
 
@@ -394,6 +380,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
       if(CS_SERVER)
          SV_BroadcastActorRemoved(mobj);
       mobj->removeThinker();
+      current_game_type->handleActorStateChanged(mobj, state, false);
       return false;
    }
 
@@ -413,6 +400,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    if(CS_SERVER)
       SV_BroadcastActorState(mobj, state);
 
+   current_game_type->handleActorStateChanged(mobj, state, true);
    return true;
 }
 
@@ -1770,7 +1758,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    {
       mobj->flags &= ~(MF_BOUNCES | MF_FRIEND | MF_TOUCHY);
    }
-   else if(demo_version < 303 || !(DEATHMATCH))
+   else if(demo_version < 303 || !(GameType == gt_dm))
    {
       if(E_IsPlayerClassThingType(type)) // Except in old demos, players
          mobj->flags |= MF_FRIEND;       // are always friends.
@@ -1858,6 +1846,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    CS_SaveActorPosition(&mobj->old_position, mobj, gametic);
 
+   current_game_type->handleActorSpawned(x, y, z, type, mobj);
+
    return mobj;
 }
 
@@ -1877,6 +1867,8 @@ void Mobj::removeThinker()
    //      prevented).
    if(!CS_REMOVE_ACTOR_OK)
       I_Error("C/S clients cannot remove actors themselves, exiting.\n");
+
+   current_game_type->handleActorRemoved(this);
 
    if((this->flags3 & MF3_SUPERITEM) && (dmflags & DM_RESPAWNSUPER))
    {
@@ -2097,7 +2089,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // give all cards in death match mode
 
-   if(DEATHMATCH)
+   if(GameType == gt_dm)
    {
       for(i = 0 ; i < NUMCARDS ; i++)
          p->cards[i] = true;
@@ -2253,7 +2245,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    //jff 3/30/98 implement "not deathmatch" thing flag
 
-   if(DEATHMATCH && (mthing->options & MTF_NOTDM))
+   if(GameType == gt_dm && (mthing->options & MTF_NOTDM))
       return NULL; //sf
 
    //jff 3/30/98 implement "not cooperative" thing flag
@@ -2324,7 +2316,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // don't spawn keycards and players in deathmatch
 
-   if(DEATHMATCH && (mobjinfo[i]->flags & MF_NOTDMATCH))
+   if((GameType == gt_dm) && (mobjinfo[i]->flags & MF_NOTDMATCH))
       return NULL;        // sf
 
    // don't spawn any monsters if -nomonsters
