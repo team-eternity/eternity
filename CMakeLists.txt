@@ -71,8 +71,6 @@ SET(CPACK_DEBIAN_PACKAGE_DEPENDS
      libsdl1.2debian (>=1.2.14),
      libsdl-mixer1.2 (>=1.2.8),
      libsdl-net1.2 (>=1.2.7),
-     libbz2-1.0 (>=1.0.4),
-     libarchive1 (>=2.8.4),
      libc-ares2 (>=1.1.1-5.1),
      libcurl3-gnutls (>=7.21.0),
      libenet1a (>=1.3.0),
@@ -474,18 +472,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/minizip)
 ## [CG] Further checks are unnecessary if building statically; it's assumed
 ##      that the user has set up the dependencies properly.
 IF(NOT EE_STATIC_COMPILE)
-PKG_SEARCH_MODULE(PC_LIBARCHIVE REQUIRED libarchive>=2.8.0)
-INCLUDE_DIRECTORIES(${PC_LIBARCHIVE_INCLUDE_DIR})
-CHECK_LIBRARY_EXISTS(
-    ${PC_LIBARCHIVE_LIBRARIES}
-    archive_write_set_compression_bzip2
-    ""
-    HAVE_LIBARCHIVE_BZIP2_SUPPORT
-)
-
-## IF(NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
-##     MESSAGE(FATAL_ERROR "No BZip2 support found in libarchive.")
-## ENDIF(NOT HAVE_LIBARCHIVE_BZIP2_SUPPORT)
 
 PKG_SEARCH_MODULE(PC_CURL REQUIRED libcurl>=7.21.0)
 INCLUDE_DIRECTORIES(${PC_CURL_INCLUDE_DIR})
