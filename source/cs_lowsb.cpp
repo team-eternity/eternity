@@ -93,18 +93,13 @@ void LowResCoopScoreboard::display()
    scores_x = window_x + SCORES_MARGIN;
    y = window_y + (WINDOW_MARGIN * 2);
 
-   // [CG] TODO: Add option to set the scoreboard's background opacity.
+   // [CG] If we've moved the top down at all, then we can't just stop at where
+   //      the status bar would normally be.  Use as much of the screen as
+   //      possible in this case.
    if(m_y > 0)
-   {
-      // [CG] If we've moved the top down at all, then we can't just stop at
-      //      where the status bar would normally be.  Use as much of the
-      //      screen as possible in this case.
       window_height = SCREENHEIGHT - (WINDOW_MARGIN + m_y);
-   }
    else
-   {
       window_height = ST_Y - WINDOW_MARGIN;
-   }
 
    // [CG] TODO: Add option to set the scoreboard's background opacity.
    V_ColorBlockTLScaled(

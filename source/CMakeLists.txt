@@ -164,10 +164,6 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libseh.a
             ${EE_STATIC_DEPS}/lib/libenet.a
             ${EE_STATIC_DEPS}/lib/libcurl.a
-            ${EE_STATIC_DEPS}/lib/libarchive.a
-            # ${EE_STATIC_DEPS}/lib/libz.a
-            ${EE_STATIC_DEPS}/lib/libbz2.a
-            ${EE_STATIC_DEPS}/lib/liblzma.a
             ${EE_STATIC_DEPS}/lib/libgnutls-extra.a
             ${EE_STATIC_DEPS}/lib/libgnutls-openssl.a
             ${EE_STATIC_DEPS}/lib/libgnutls.a
@@ -201,10 +197,6 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libgpg-error.a
             ${EE_STATIC_DEPS}/lib/libidn.a
             ${EE_STATIC_DEPS}/lib/libcares.a
-            ${EE_STATIC_DEPS}/lib/libarchive.a
-            # ${EE_STATIC_DEPS}/lib/libz.a
-            ${EE_STATIC_DEPS}/lib/libbz2.a
-            ${EE_STATIC_DEPS}/lib/liblzma.a
             ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
             ${EE_STATIC_DEPS}/lib/libSDL_net.a
             ${EE_STATIC_DEPS}/lib/libSDL.a
@@ -228,10 +220,8 @@ ELSE(EE_STATIC_COMPILE)
         ${SDL_LIBRARY}
         ${SDLMIXER_LIBRARY}
         ${SDLNET_LIBRARY}
-        ${PC_LIBARCHIVE_LDFLAGS}
         ${PC_GNUTLS_LDFLAGS}
         ${PC_ENET_LDFLAGS}
-        # ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         ${GL_LIBRARY}
         png15_static
@@ -244,10 +234,8 @@ ELSE(EE_STATIC_COMPILE)
         ${SDL_LIBRARY}
         ${SDLMIXER_LIBRARY}
         ${SDLNET_LIBRARY}
-        ${PC_LIBARCHIVE_LDFLAGS}
         ${PC_GNUTLS_LDFLAGS}
         ${PC_ENET_LDFLAGS}
-        # ${PC_JSON_LDFLAGS}
         ${PC_CURL_LDFLAGS}
         png15_static
         zlib
