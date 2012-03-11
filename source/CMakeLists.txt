@@ -173,6 +173,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libidn.a
             ${EE_STATIC_DEPS}/lib/libcares.a
             ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
+            ${EE_STATIC_DEPS}/lib/libSDL_ttf.a
             ${EE_STATIC_DEPS}/lib/libSDL_net.a
             ${EE_STATIC_DEPS}/lib/libSDL.a
             ${EE_STATIC_DEPS}/lib/libSDLmain.a
@@ -181,6 +182,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
+            ${EE_STATIC_DEPS}/lib/libfreetype.a
             zlib
             png15_static
             snes_spc-static
@@ -199,6 +201,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libidn.a
             ${EE_STATIC_DEPS}/lib/libcares.a
             ${EE_STATIC_DEPS}/lib/libSDL_mixer.a
+            ${EE_STATIC_DEPS}/lib/libSDL_ttf.a
             ${EE_STATIC_DEPS}/lib/libSDL_net.a
             ${EE_STATIC_DEPS}/lib/libSDL.a
             ${EE_STATIC_DEPS}/lib/libSDLmain.a
@@ -207,6 +210,7 @@ IF(EE_STATIC_COMPILE)
             ${EE_STATIC_DEPS}/lib/libogg.a
             ${EE_STATIC_DEPS}/lib/libvorbis.a
             ${EE_STATIC_DEPS}/lib/libFLAC.a
+            ${EE_STATIC_DEPS}/lib/libfreetype.a
             ${GL_LIBRARY}
             png15_static
             zlib
