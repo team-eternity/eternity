@@ -113,6 +113,7 @@ FILE(GLOB JSON_SOURCES ${CMAKE_SOURCE_DIR}/json-cpp/*.cpp)
 ## *NIX specfic folder to turn this into a glob to catch new files.
 INCLUDE_DIRECTORIES(sdl/)
 SET(SDL_SOURCES
+    sdl/i_font.cpp
     sdl/i_input.cpp
     sdl/i_main.cpp
     sdl/i_net.cpp
