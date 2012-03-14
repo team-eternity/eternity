@@ -47,6 +47,7 @@
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "m_shots.h"
 #include "m_random.h"
 #include "m_syscfg.h"
@@ -765,9 +766,7 @@ CONSOLE_COMMAND(maplist, 0)
 {
    cs_map_t *map;
    unsigned int i, j;
-   size_t line_length;
-   char *buf = NULL;
-   char *buf_index = NULL;
+   qstring buf, pad;
 
    if(!clientserver)
    {
@@ -784,36 +783,31 @@ CONSOLE_COMMAND(maplist, 0)
          continue;
       }
 
-      // [CG] Calculate the length of the line and allocate a buffer.  Be
-      //      cautious and over-allocate (probably, unless there's 100,000 maps
-      //      or something...).
-      line_length = 10 + strlen(map->name);
-      for(j = 0; j < map->resource_count; j++)
-      {
-         line_length += strlen(cs_resources[map->resource_indices[j]].name);
-         if(j != (map->resource_count - 1))
-            line_length += 2;
-      }
+      // [CG] Create the left margin.
+      buf.Printf(0, "%d. %s: ", i + 1, map->name);
+      pad.createSize(buf.length());
+      for(j = 0; j < buf.length(); j++)
+         buf += " ";
 
-      buf = buf_index = erealloc(char *, buf, line_length * sizeof(char));
+      // [CG] Print the 1st line.
+      buf.Printf(0, "%d. %s: %s",
+         i + 1,
+         map->name,
+         cs_resources[map->resource_indices[j]].name
+      );
+      doom_printf("%s", buf.constPtr());
 
-      buf_index += sprintf(buf, "%d. %s: ", i + 1, map->name);
-      for(j = 0; j < map->resource_count; j++)
+      // [CG] Print the subsequent lines (if necessary).
+      for(j = 1; j < map->resource_count; j++)
       {
-         buf_index += sprintf(buf_index, "%s",
+         buf.Printf(0, "%d. %s: %s",
+            i + 1,
+            map->name,
             cs_resources[map->resource_indices[j]].name
          );
-         if(j < (map->resource_count - 1))
-            buf_index += sprintf(buf_index, ", ");
+         doom_printf("%s%s", pad.constPtr(), buf.constPtr());
       }
-      if(CS_HEADLESS)
-         C_Printf("%s\n", buf);
-      else
-         C_Printf("%s", buf);
    }
-
-   if(buf)
-      efree(buf);
 }
 
 // change level

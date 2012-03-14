@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -44,7 +44,7 @@
 
 // jff 3/30/98: option to output screenshot as pcx or bmp
 // haleyjd 12/28/09: selects from any number of formats now.
-int screenshot_pcx; 
+int screenshot_pcx;
 
 // haleyjd 11/16/04: allow disabling gamma correction in screenshots
 int screenshot_gamma;
@@ -93,7 +93,7 @@ typedef struct pcx_s
 //
 // pcx_Writer
 //
-static bool pcx_Writer(OutBuffer *ob, byte *data, 
+static bool pcx_Writer(OutBuffer *ob, byte *data,
                        uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i;
@@ -119,7 +119,7 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
    pcx.color_planes   = 1; // chunky image
    pcx.bytes_per_line = (uint16_t)width;
    pcx.palette_type   = 1; // not a gray scale
-   
+
    SafeWrite8( ob, pcx.manufacturer);
    SafeWrite8( ob, pcx.version);
    SafeWrite8( ob, pcx.encoding);
@@ -147,14 +147,14 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
       }
       else
       {
-         if(!ob->WriteUint8(0xc1) || 
+         if(!ob->WriteUint8(0xc1) ||
             !ob->WriteUint8(*data))
             return false;
          ++data;
       }
    }
 
-   // Write the palette   
+   // Write the palette
    SafeWrite8(ob, 0x0c); // palette ID byte
 
    // haleyjd 11/16/04: make gamma correction optional
@@ -172,7 +172,7 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
       palptr = palette;
 
    SafeWrite(ob, palptr, 768);
-     
+
    // Done!
    return true;
 }
@@ -219,7 +219,7 @@ typedef struct tagBITMAPINFOHEADER
 //
 // jff 3/30/98 Add capability to write a .BMP file (256 color uncompressed)
 //
-static bool bmp_Writer(OutBuffer *ob, byte *data, 
+static bool bmp_Writer(OutBuffer *ob, byte *data,
                        uint32_t width, uint32_t height, byte *palette)
 {
    unsigned int i, j, wid;
@@ -258,7 +258,7 @@ static bool bmp_Writer(OutBuffer *ob, byte *data,
    SafeWrite16(ob, bmfh.bfReserved1);
    SafeWrite16(ob, bmfh.bfReserved2);
    SafeWrite32(ob, bmfh.bfOffBits);
-      
+
    // Write the info header
    SafeWrite32(ob, bmih.biSize);
    SafeWrite32(ob, bmih.biWidth);
@@ -331,7 +331,7 @@ typedef struct tgaheader_s
 //
 // haleyjd 12/28/09
 //
-static bool tga_Writer(OutBuffer *ob, byte *data, 
+static bool tga_Writer(OutBuffer *ob, byte *data,
                        uint32_t width, uint32_t height, byte *palette)
 {
    tgaheader_t tga;
@@ -428,7 +428,7 @@ static void PNG_dataFlush(png_structp png_ptr)
    // No-op. We don't want to flush and override the buffering semantics.
 }
 
-// 
+//
 // PNG_handleError
 //
 // Error callback for libpng.
@@ -458,7 +458,7 @@ static void PNG_handleWarning(png_structp png_ptr, png_const_charp error_msg)
 // Some code derived from WadGen, copyright 2011 Samuel 'Kaiser' Villarreal
 // Used under GPLv2.0 or later.
 //
-static bool png_Writer(OutBuffer *ob, byte *data, 
+static bool png_Writer(OutBuffer *ob, byte *data,
                        uint32_t width, uint32_t height, byte *palette)
 {
    png_structp pngStruct;
@@ -472,7 +472,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    byte **row_pointers;
 
    // setup png structure pointer
-   if(!(pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, &pngIoData, 
+   if(!(pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, &pngIoData,
                                             PNG_handleError, PNG_handleWarning)))
    {
       return false;
@@ -484,7 +484,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
       png_destroy_write_struct(&pngStruct, NULL);
       return false;
    }
-   
+
    row_pointers = ecalloc(byte **, height, sizeof(byte *));
    pngPalette   = ecalloc(png_colorp, 256, png_sizeof(png_color));
 
@@ -495,8 +495,8 @@ static bool png_Writer(OutBuffer *ob, byte *data,
 
       // setup image header
       png_set_IHDR(pngStruct, pngInfo, width, height, 8, PNG_COLOR_TYPE_PALETTE,
-                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, 
-                   PNG_FILTER_TYPE_DEFAULT);      
+                   PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                   PNG_FILTER_TYPE_DEFAULT);
 
       // setup palette
       if(screenshot_gamma)
@@ -540,7 +540,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    {
       pngIoData.writeOK = false;
    }
-   
+
    // cleanup
    png_destroy_write_struct(&pngStruct, &pngInfo);
    efree(row_pointers);
@@ -589,16 +589,10 @@ bool M_SaveScreenShotAs(const char *path)
 {
    OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
-   
+
    if(M_PathExists(path))
       return false;
 
-   // haleyjd 05/23/02: corrected uses of access to use defined
-   // constants rather than integers, some of which were not even
-   // correct under DJGPP to begin with (it's a wonder it worked...)
-   if(access(path, W_OK))
-      return false;
-   
    if(!ob.CreateFile(path, 512*1024, format->endian))
    {
       M_ReportFileSystemError();
@@ -606,18 +600,18 @@ bool M_SaveScreenShotAs(const char *path)
    }
 
    // killough 4/18/98: make palette stay around
-   // (PU_CACHE could cause crash)         
+   // (PU_CACHE could cause crash)
    byte *pal = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
 
    // get screen graphics
-   V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
+   V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0,
                  vbscreen.width, vbscreen.height);
-   
+
    I_BeginRead();
 
    // killough 10/98: detect failure and remove file if error
-   if(!format->writer(&ob, backscreen2.data, (uint32_t)(backscreen2.width), 
-                                             (uint32_t)(backscreen2.height), 
+   if(!format->writer(&ob, backscreen2.data, (uint32_t)(backscreen2.width),
+                                             (uint32_t)(backscreen2.height),
                                              pal))
    {
       M_ReportFileSystemError();
@@ -653,18 +647,18 @@ void M_ScreenShot(void)
    size_t  len;
    OutBuffer ob;
    shotformat_t *format = &shotFormats[screenshot_pcx];
-   
+
    errno = 0;
 
    len = M_StringAlloca(&path, 1, 6, userpath);
 
    // haleyjd 11/23/06: use userpath/shots
    psnprintf(path, len, "%s/shots", userpath);
-   
+
    // haleyjd 05/23/02: corrected uses of access to use defined
    // constants rather than integers, some of which were not even
    // correct under DJGPP to begin with (it's a wonder it worked...)
-   
+
    if(!access(path, W_OK))
    {
       static int shot;
@@ -672,7 +666,7 @@ void M_ScreenShot(void)
       int tries = 10000;
 
       len = M_StringAlloca(&lbmname, 2, 16, path, format->extension);
-      
+
       do
       {
          // jff 3/30/98 pcx or bmp?
@@ -684,19 +678,19 @@ void M_ScreenShot(void)
       if(tries && ob.CreateFile(lbmname, 512*1024, format->endian))
       {
          // killough 4/18/98: make palette stay around
-         // (PU_CACHE could cause crash)         
+         // (PU_CACHE could cause crash)
          byte *pal = (byte *)wGlobalDir.CacheLumpName("PLAYPAL", PU_STATIC);
 
          // get screen graphics
-         V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0, 
+         V_BlitVBuffer(&backscreen2, 0, 0, &vbscreen, 0, 0,
                        vbscreen.width, vbscreen.height);
-         
+
          I_BeginRead();
 
          // killough 10/98: detect failure and remove file if error
-         success = format->writer(&ob, backscreen2.data, 
-                                  (uint32_t)(backscreen2.width), 
-                                  (uint32_t)(backscreen2.height), 
+         success = format->writer(&ob, backscreen2.data,
+                                  (uint32_t)(backscreen2.width),
+                                  (uint32_t)(backscreen2.height),
                                   pal);
 
          // haleyjd: close the buffer
@@ -719,7 +713,7 @@ void M_ScreenShot(void)
 
    // 1/18/98 killough: replace "SCREEN SHOT" acknowledgement with sfx
    // players[consoleplayer].message = "screen shot"
-   
+
    // killough 10/98: print error message and change sound effect if error
    if(!success)
    {

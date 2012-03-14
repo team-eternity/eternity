@@ -954,6 +954,12 @@ bool SingleCSDemo::saveCheckpoint()
    checkpoint_name.Printf(0, "Checkpoint %d", index);
    P_SaveCurrentLevel(buf.getBuffer(), checkpoint_name.getBuffer());
 
+   if(!M_FlushFile(demo_data_handle))
+   {
+      setError(fs_error);
+      return false;
+   }
+
    if((byte_index = M_GetFilePosition(demo_data_handle)) == -1)
    {
       setError(fs_error);
