@@ -80,6 +80,10 @@ const char* CSDemo::base_info_file_name = "info.json";
 
 static bool iwad_loaded = false;
 
+unsigned int cs_demo_speed_rates[cs_demo_speed_fastest + 1] = {
+   3, 2, 1, 0, 1, 2, 3
+};
+
 const char *cs_demo_speed_names[cs_demo_speed_fastest + 1] = {
    "0.125x", "0.25x", "0.50x", "1x", "2x", "3x", "4x"
 };
@@ -363,6 +367,7 @@ bool SingleCSDemo::writeHeader()
    header.length = 0;
    strncpy(header.map_name, map->name, 9);
    header.resource_count = map->resource_count + 1;
+   header.consoleplayer = consoleplayer;
 
    if(!writeToDemo(&header, sizeof(demo_header_t), 1))
       return false;
@@ -686,6 +691,8 @@ bool SingleCSDemo::readHeader()
       );
    }
 
+   consoleplayer = displayplayer = header.consoleplayer;
+
    if(!readFromDemo(&header_marker, sizeof(uint8_t), 1))
       return false;
 
@@ -709,7 +716,7 @@ bool SingleCSDemo::handleNetworkMessageDemoPacket()
    if(!readFromDemo(&message_size, sizeof(uint32_t), 1))
       return false;
 
-   if((!message_size) || message_size > 1000000)
+   if((!message_size) || (message_size > 1000000))
    {
       setError(invalid_network_message_size);
       return false;
@@ -735,12 +742,8 @@ bool SingleCSDemo::handleNetworkMessageDemoPacket()
 bool SingleCSDemo::handlePlayerCommandDemoPacket()
 {
    cs_cmd_t command;
-   uint32_t command_size;
 
-   if(!readFromDemo(&command_size, sizeof(uint32_t), 1))
-      return false;
-
-   if(!readFromDemo(&command, command_size, 1))
+   if(!readFromDemo(&command, sizeof(cs_cmd_t), 1))
       return false;
 
    // [CG] This is always a command for consoleplayer.  Anything else is
@@ -935,7 +938,7 @@ bool SingleCSDemo::write(void *message, uint32_t size, int32_t playernum)
    else
       player_number = playernum;
 
-   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
+   if(!writeToDemo(&demo_marker, sizeof(uint8_t), 1))
       return false;
    if(!writeToDemo(&player_number, sizeof(int32_t), 1))
       return false;
@@ -950,11 +953,8 @@ bool SingleCSDemo::write(void *message, uint32_t size, int32_t playernum)
 bool SingleCSDemo::write(cs_cmd_t *command)
 {
    uint8_t demo_marker = player_command_packet;
-   uint32_t command_size = (uint32_t)(sizeof(cs_cmd_t));
 
-   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
-      return false;
-   if(!writeToDemo(&command_size, sizeof(uint32_t), 1))
+   if(!writeToDemo(&demo_marker, sizeof(uint8_t), 1))
       return false;
    if(!writeToDemo(command, sizeof(cs_cmd_t), 1))
       return false;
@@ -968,7 +968,7 @@ bool SingleCSDemo::write(command_t *cmd, int type, const char *opts, int src)
    uint32_t command_size = (uint32_t)(strlen(cmd->name) + 1);
    uint32_t options_size = (uint32_t)(strlen(opts) + 1);
 
-   if(!writeToDemo(&demo_marker, sizeof(int32_t), 1))
+   if(!writeToDemo(&demo_marker, sizeof(uint8_t), 1))
       return false;
    if(!writeToDemo(&type, sizeof(int32_t), 1))
       return false;

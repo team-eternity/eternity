@@ -53,6 +53,7 @@ enum
    cs_demo_speed_fastest = cs_demo_speed_quadruple
 };
 
+extern unsigned int cs_demo_speed_rates[cs_demo_speed_fastest + 1];
 extern const char *cs_demo_speed_names[cs_demo_speed_fastest + 1];
 
 // [CG] Demo headers are written to disk and therefore must be packed and use
@@ -71,6 +72,7 @@ typedef struct demo_header_s
    uint32_t length;
    char map_name[9];
    uint32_t resource_count;
+   uint32_t consoleplayer;
 } demo_header_t;
 
 #pragma pack(pop)

@@ -714,7 +714,12 @@ void CL_RunDemoTics(void)
    {
       displayed_message = false;
 
-      while(cl_latest_world_index <= cl_current_world_index)
+      new_index = cl_current_world_index;
+      
+      if(cs_demo_speed > cs_demo_speed_normal)
+         new_index += cs_demo_speed_rates[cs_demo_speed];
+
+      while(cl_latest_world_index <= new_index)
       {
          if(!cs_demo->readPacket())
          {
@@ -731,21 +736,12 @@ void CL_RunDemoTics(void)
          }
       }
 
-      if(cs_demo_speed > cs_demo_speed_normal)
-         new_index = cl_current_world_index + (cs_demo_speed - 1);
-      else
-         new_index = cl_current_world_index;
-
-      while(cl_latest_world_index > new_index)
+      while(cl_current_world_index < cl_latest_world_index)
          CL_RunWorldUpdate();
-   }
 
-   if(cs_demo_speed == cs_demo_speed_half)
-      current_tic += 1;
-   else if(cs_demo_speed == cs_demo_speed_quarter)
-      current_tic += 2;
-   else if(cs_demo_speed == cs_demo_speed_eighth)
-      current_tic += 3;
+      if(cs_demo_speed < cs_demo_speed_normal)
+         current_tic += cs_demo_speed_rates[cs_demo_speed];
+   }
 
    do
    {
@@ -773,20 +769,17 @@ void CL_TryRunTics(void)
    D_ProcessEvents();
    MN_Ticker();
    C_Ticker();
-   CS_ChatTicker();
    V_FPSTicker();
+
+   if((!net_host) || (!net_peer))
+   {
+      while((!d_fastrefresh) && ((new_tic = I_GetTime()) == current_tic))
+         I_Sleep(1);
+      return;
+   }
+
+   CS_ChatTicker();
    CS_ReadFromNetwork(1);
-
-   // [CG] Because worlds may be skipped during buffer flushes, it's necessary
-   //      to pull damagecount and bonuscount decrementing out from the normal
-   //      game loop.
-   /*
-   if(consoleplayer && players[consoleplayer].damagecount)
-      players[consoleplayer].damagecount--;
-
-   if(consoleplayer && players[consoleplayer].bonuscount)
-      players[consoleplayer].bonuscount--;
-   */
 
    // [CG] The buffer absolutely cannot be flushed if we've not yet received
    //      sync, so only honor cl_packet_buffer.needsFlushing() if sync's been

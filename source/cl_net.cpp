@@ -673,7 +673,7 @@ void CL_HandleClientStatusMessage(nm_clientstatus_t *message)
    client->stats.client_lag = message->client_lag;
    client->stats.server_lag = message->server_lag;
    client->stats.transit_lag = message->transit_lag;
-   if(playernum == consoleplayer)
+   if((!CS_DEMOPLAY) && (playernum == consoleplayer))
    {
       client->stats.packet_loss = (uint8_t)(
          (net_peer->packetLoss / (float)ENET_PEER_PACKET_LOSS_SCALE) * 100

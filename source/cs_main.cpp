@@ -216,8 +216,13 @@ static int build_save_buffer(byte **buffer)
    FILE *fobj;
    size_t bytes_read;
    unsigned int file_size;
+   char description[24];
+   
+   memset(description, 0, 24);
+   description[0] = 'c';
+   description[1] = 's';
 
-   P_SaveCurrentLevel(cs_state_file_path, "cs");
+   P_SaveCurrentLevel(cs_state_file_path, description);
 
    if(!(fobj = M_OpenFile(cs_state_file_path, "rb")))
    {
@@ -738,19 +743,25 @@ size_t CS_BuildGameState(int playernum, byte **buffer)
    int state_size;
    byte *savebuffer = NULL;
    nm_currentstate_t *message;
+   size_t total_size;
+   size_t message_size = sizeof(nm_currentstate_t);
 
    state_size = build_save_buffer(&savebuffer);
+   total_size = message_size + state_size;
 
-   *buffer = emalloc(byte *, sizeof(nm_currentstate_t) + state_size);
+   *buffer = emalloc(byte *, total_size);
    message = (nm_currentstate_t *)(*buffer);
    message->message_type = nm_currentstate;
-   message->world_index = sv_world_index;
+   if(CS_CLIENT)
+      message->world_index = cl_latest_world_index;
+   else if(CS_SERVER)
+      message->world_index = sv_world_index;
    message->state_size = state_size;
-   memcpy((*buffer) + sizeof(nm_currentstate_t), savebuffer, state_size);
+   memcpy((*buffer) + message_size, savebuffer, state_size);
 
    efree(savebuffer);
 
-   return sizeof(nm_currentstate_t) + state_size;
+   return total_size;
 }
 
 bool CS_WeaponPreferred(int playernum, weapontype_t weapon_one,
