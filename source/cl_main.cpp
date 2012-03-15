@@ -747,7 +747,7 @@ void CL_RunDemoTics(void)
    {
       I_StartTic();
       D_ProcessEvents();
-   } while((new_tic = I_GetTime()) == current_tic);
+   } while((new_tic = I_GetTime()) <= current_tic);
 }
 
 void CL_TryRunTics(void)

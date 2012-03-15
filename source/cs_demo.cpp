@@ -566,13 +566,8 @@ bool SingleCSDemo::readHeader()
    else
       I_Error("Unknown demo type, demo likely corrupt.\n");
 
-   memcpy(cs_settings, &header.settings, sizeof(clientserver_settings_t));
-   memcpy(cs_original_settings, cs_settings, sizeof(clientserver_settings_t));
-
-   player_bobbing      = header.local_options.player_bobbing;
-   doom_weapon_toggles = header.local_options.doom_weapon_toggles;
-   autoaim             = header.local_options.autoaim;
-   weapon_speed        = header.local_options.weapon_speed;
+   if(!reloadSettings())
+      return false;
 
    if(!map->initialized)
    {
@@ -691,8 +686,6 @@ bool SingleCSDemo::readHeader()
       );
    }
 
-   consoleplayer = displayplayer = header.consoleplayer;
-
    if(!readFromDemo(&header_marker, sizeof(uint8_t), 1))
       return false;
 
@@ -802,7 +795,11 @@ bool SingleCSDemo::handleConsoleCommandDemoPacket()
    if(!readFromDemo(options, sizeof(char), options_size))
       return false;
 
-   C_BufferCommand(type, command, (const char *)options, src);
+   // [CG] Don't play menu commands back.
+   if(strncmp(packet_buffer, "mn_", 3) == 0)
+      efree(options);
+   else
+      C_BufferCommand(type, command, (const char *)options, src);
 
    return true;
 }
@@ -924,6 +921,23 @@ bool SingleCSDemo::openForRecording()
 
    if(!write(&sync_packet, sizeof(nm_sync_t), 0))
       return false;
+
+   return true;
+}
+
+bool SingleCSDemo::reloadSettings()
+{
+   memcpy(cs_settings, &header.settings, sizeof(clientserver_settings_t));
+   memcpy(cs_original_settings, cs_settings, sizeof(clientserver_settings_t));
+
+   player_bobbing      = header.local_options.player_bobbing;
+   doom_weapon_toggles = header.local_options.doom_weapon_toggles;
+   autoaim             = header.local_options.autoaim;
+   weapon_speed        = header.local_options.weapon_speed;
+
+   consoleplayer = displayplayer = header.consoleplayer;
+
+   CS_ApplyConfigSettings();
 
    return true;
 }
@@ -2041,6 +2055,23 @@ bool CSDemo::close()
       efree(current_demo_folder_path);
 
    return true;
+}
+
+bool CSDemo::reloadSettings()
+{
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!current_demo)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   return current_demo->reloadSettings();
 }
 
 bool CSDemo::isRecording()

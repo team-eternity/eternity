@@ -185,6 +185,7 @@ public:
    int         getNumber() const;
    bool        openForPlayback();
    bool        openForRecording();
+   bool        reloadSettings();
    bool        write(void *message, uint32_t size, int32_t playernum);
    bool        write(cs_cmd_t *command);
    bool        write(command_t *cmd, int type, const char *opts, int src);
@@ -271,6 +272,7 @@ public:
    bool        playPrevious();
    bool        stop();
    bool        close();
+   bool        reloadSettings();
    bool        isRecording();
    bool        isPlaying();
    bool        write(void *message, uint32_t size, int32_t playernum);

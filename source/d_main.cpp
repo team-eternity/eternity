@@ -3888,6 +3888,9 @@ static void D_DoomInit(void)
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
+   if(CS_DEMOPLAY) // [CG] Restore settings after M_LoadDefaults.
+      cs_demo->reloadSettings();
+
    // haleyjd 01/11/09: process affinity mask stuff
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) || defined(HAVE_SCHED_SETAFFINITY)
    {
