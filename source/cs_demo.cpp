@@ -28,6 +28,8 @@
 // [CG] The small amount of cURL code used to download a demo file is based on
 //      the "simple.c" example at http://curl.haxx.se/libcurl/c/simple.html
 
+// [CG] TODO: Recursively remove all folders found in cs_demo_folder_path.
+
 #include "z_zone.h"
 
 #include <json/json.h>
@@ -279,47 +281,65 @@ void SingleCSDemo::setError(int error_code)
 
 bool SingleCSDemo::writeToDemo(void *data, size_t size, size_t count)
 {
+   int saved_disk_icon = disk_icon;
+
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   disk_icon = 0;
+
    if(mode != mode_recording)
    {
       setError(not_open_for_recording);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(!demo_data_handle)
    {
       setError(not_open);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(M_WriteToFile(data, size, count, demo_data_handle) != count)
    {
       setError(fs_error);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
+   disk_icon = saved_disk_icon;
    return true;
 }
 
 bool SingleCSDemo::readFromDemo(void *buffer, size_t size, size_t count)
 {
+   int saved_disk_icon = disk_icon;
+
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   disk_icon = 0;
+
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(!demo_data_handle)
    {
       setError(not_open);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(M_ReadFromFile(buffer, size, count, demo_data_handle) != count)
    {
       setError(fs_error);
+      disk_icon = saved_disk_icon;
       return false;
    }
 
+   disk_icon = saved_disk_icon;
    return true;
 }
 
@@ -527,9 +547,17 @@ bool SingleCSDemo::readHeader()
       return false;
 
    if(header.demo_type == client_demo)
+   {
       demo_type = client_demo;
+      clientside = true;
+      serverside = false;
+   }
    else if(header.demo_type == server_demo)
+   {
       demo_type = server_demo;
+      clientside = false;
+      serverside = true;
+   }
    else
       I_Error("Unknown demo type, demo likely corrupt.\n");
 
@@ -662,8 +690,6 @@ bool SingleCSDemo::readHeader()
          header.map_name, resource_count, resource_indices, map - cs_maps
       );
    }
-   else
-      printf("Map %ld was already initialized.\n", map - cs_maps);
 
    if(!readFromDemo(&header_marker, sizeof(uint8_t), 1))
       return false;
@@ -674,8 +700,6 @@ bool SingleCSDemo::readHeader()
       I_Error("Malformed demo header, demo likely corrupt.\n");
 
    iwad_loaded = true;
-
-   printf("load_current_map_demo: loaded demo for %ld.\n", map - cs_maps);
 
    return true;
 }
@@ -808,20 +832,25 @@ bool SingleCSDemo::openForPlayback()
       return false;
    }
 
-   demo_data_handle = M_OpenFile(data_path, "rb");
-
-   if(!readHeader())
+   if(!(demo_data_handle = M_OpenFile(data_path, "rb")))
+   {
+      setError(fs_error);
       return false;
+   }
 
    mode = mode_playback;
+
+   if(!readHeader())
+   {
+      mode = mode_none;
+      return false;
+   }
+
    return true;
 }
 
 bool SingleCSDemo::openForRecording()
 {
-   // [CG] The Disk icon causes severe renderer lag, so disable it.
-   disk_icon = 0;
-
    if(mode != mode_none)
    {
       setError(already_open);
@@ -1675,7 +1704,7 @@ bool CSDemo::play(const char *url)
          efree((void *)cwd);
       }
       else
-         path_buf = url;
+         path_buf = (url + 7);
 
       E_ReplaceString(current_demo_archive_path, path_buf.duplicate(PU_STATIC));
 
@@ -1689,7 +1718,6 @@ bool CSDemo::play(const char *url)
       E_ReplaceString(
          current_temp_demo_archive_path, path_buf.duplicate(PU_STATIC)
       );
-
    }
    else if(!retrieveDemo(url))
       return false;
@@ -1702,11 +1730,22 @@ bool CSDemo::play(const char *url)
       return false;
    }
 
+   // [CG] Iterate through all the filenames in the ZIP file.  They should all
+   //      have a common basename (like "20120313_194207-0400"); if they don't
+   //      then the demo's structure is invalid and we must abort.
    while(current_zip_file->iterateFilenames(&buf))
    {
       qbuf = buf;
+
       qbuf.normalizeSlashes();
       qbuf.truncate(qbuf.findFirstOf('/'));
+
+      if(!qbuf.length())
+      {
+         setError(invalid_demo_structure);
+         current_zip_file->resetFilenameIterator();
+         return false;
+      }
 
       if(!saved_buf.getSize())
       {
@@ -1728,6 +1767,8 @@ bool CSDemo::play(const char *url)
       return false;
    }
 
+   qbuf.Printf(0, "%s/%s", folder_path, saved_buf.constPtr());
+   qbuf.normalizeSlashes();
    E_ReplaceString(current_demo_folder_path, qbuf.duplicate(PU_STATIC));
 
    if(!current_zip_file->extractAllTo(folder_path))
@@ -1762,7 +1803,7 @@ bool CSDemo::play(const char *url)
       demo_type
    );
 
-   qbuf.Printf(0, "%s/%s", current_demo_folder_path, current_demo_index);
+   qbuf.Printf(0, "%s/%d", current_demo_folder_path, current_demo_index);
 
    if(current_demo->hasError())
    {
@@ -1908,35 +1949,49 @@ bool CSDemo::close()
 
    if(M_IsFolder(current_demo_folder_path))
    {
-      // [CG] Zip up folder to temp ZIP file, if successful overwrite the old
-      //      ZIP file with the temporary one.
-
-      loadTempZipFile();
-
-      if(!current_zip_file->createForWriting())
+      // [CG] Don't re-ZIP the folder if there was a ZIP error, this could
+      //      potentially corrupt demos.  Just remove the demo folder instead.
+      if(internal_error != zip_error)
       {
-         setError(zip_error);
-         return false;
-      }
+         // [CG] Zip up folder to temp ZIP file, if successful overwrite the
+         //      old ZIP file with the temporary one.
 
-      if(!current_zip_file->addFolderRecursive(current_demo_folder_path,
-                                               cs_demo_compression_level))
-      {
-         setError(zip_error);
-         return false;
-      }
+         loadTempZipFile();
 
-      if(!current_zip_file->close())
-      {
-         setError(zip_error);
-         return false;
-      }
+         if(!current_zip_file->createForWriting())
+         {
+            setError(zip_error);
+            return false;
+         }
 
-      if(!M_RenamePath(current_temp_demo_archive_path,
-                       current_demo_archive_path))
-      {
-         setError(fs_error);
-         return false;
+         if(!current_zip_file->addFolderRecursive(current_demo_folder_path,
+                                                  cs_demo_compression_level))
+         {
+            setError(zip_error);
+            return false;
+         }
+
+         if(!current_zip_file->close())
+         {
+            setError(zip_error);
+            return false;
+         }
+
+         if(M_PathExists(current_demo_archive_path))
+         {
+            if(!M_DeleteFile(current_demo_archive_path))
+            {
+               setError(fs_error);
+               return false;
+            }
+         }
+
+         if(!M_RenamePath(current_temp_demo_archive_path,
+                          current_demo_archive_path))
+         {
+            setError(fs_error);
+            return false;
+         }
       }
 
       if(!M_DeleteFolderAndContents(current_demo_folder_path))

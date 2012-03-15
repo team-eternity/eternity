@@ -55,6 +55,7 @@ char*       M_PathJoin(const char *one, const char *two);
 bool        M_IsFile(const char *path);
 bool        M_IsFileInFolder(const char *folder, const char *file);
 bool        M_IsFolder(const char *path);
+bool        M_IsRootFolder(const char *path);
 bool        M_IsAbsolutePath(const char *path);
 const char* M_StripAbsolutePath(const char *path);
 bool        M_CreateFile(const char *path);

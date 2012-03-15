@@ -268,7 +268,7 @@ static void D_showDrawnFPS(void)
    static int lastfps;
    vfont_t *font;
    char msg[64];
-   
+
    accms += (curms = I_GetTicks()) - lastms;
    lastms = curms;
    ++frames;
@@ -313,14 +313,14 @@ static void D_showMemStats(void)
       total_memory += memorybytag[cachelevels[i].cachelevel];
    s = 100.0 / total_memory;
 
-   font = E_FontForName("ee_consolefont");   
+   font = E_FontForName("ee_consolefont");
    // draw the labels
    for(i = 0; i < NUMCACHELEVELSTOPRINT; i++)
    {
       int tag = cachelevels[i].cachelevel;
       if(tag != PU_MAX)
       {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
+         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
                    cachelevels[i].name,
                    memorybytag[tag], memorybytag[tag] * s);
          V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
@@ -366,7 +366,7 @@ void D_Display(void)
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen();    // draw the pattern into the back screen
-         
+
          if(automapactive)
          {
             AM_Drawer();
@@ -376,7 +376,7 @@ void D_Display(void)
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView (&players[displayplayer], camera);
          }
-         
+
          ST_Drawer(scaledviewheight == 200);  // killough 11/98
          HU_Drawer();
          break;
@@ -396,18 +396,18 @@ void D_Display(void)
       default:
          break;
       }
-         
+
       // clean up border stuff
       if(gamestate != oldgamestate && gamestate != GS_LEVEL)
          I_SetPalette((byte *)(wGlobalDir.CacheLumpName("PLAYPAL", PU_CACHE)));
-      
+
       oldgamestate = wipegamestate = gamestate;
-         
+
       // draw pause pic
       if(paused && !walkcam_active) // sf: not if walkcam active for
       {                             // frads taking screenshots
-         const char *lumpname = GameModeInfo->pausePatch; 
-         
+         const char *lumpname = GameModeInfo->pausePatch;
+
          // haleyjd 03/12/03: changed to work
          // in heretic, and with user pause patches
          patch_t *patch = PatchLoader::CacheName(wGlobalDir, lumpname, PU_CACHE);
@@ -415,27 +415,27 @@ void D_Display(void)
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
          int y = 4 + (automapactive ? 0 : scaledwindowy);
-         
+
          V_DrawPatch(x, y, &vbscreen, patch);
       }
 
       if(inwipe)
       {
          bool wait = (wipewait == 1 || (wipewait == 2 && demoplayback));
-         
-         // about to start wiping; if wipewait is enabled, save everything 
+
+         // about to start wiping; if wipewait is enabled, save everything
          // that was just drawn
          if(wait)
          {
             Wipe_SaveEndScreen();
-            
+
             do
             {
                int starttime = I_GetTime();
                int tics = 0;
-               
+
                Wipe_Drawer();
-               
+
                do
                {
                   tics = I_GetTime() - starttime;
@@ -444,16 +444,16 @@ void D_Display(void)
                   I_Sleep(1);
                }
                while(!tics);
-               
+
                Wipe_Ticker();
-               
+
                C_Drawer();
                MN_Drawer();
                NetUpdate();
                if(v_ticker)
                   V_FPSDrawer();
                I_FinishUpdate();
-               
+
                if(inwipe)
                   Wipe_BlitEndScreen();
             }
@@ -470,7 +470,7 @@ void D_Display(void)
    // menus go directly to the screen
    MN_Drawer();         // menu is drawn even on top of everything
    NetUpdate();         // send out any new accumulation
-   
+
    //sf : now system independent
    if(v_ticker)
       V_FPSDrawer();
@@ -482,10 +482,10 @@ void D_Display(void)
    if(printstats)
       D_showMemStats();
 #endif
-   
+
    // sf: wipe changed: runs alongside the rest of the game rather
    //     than in its own loop
-   
+
    I_FinishUpdate();              // page flip or blit buffer
 }
 
@@ -528,7 +528,7 @@ void D_PageDrawer(void)
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
-         V_DrawPatch(4, 160, &vbscreen, 
+         V_DrawPatch(4, 160, &vbscreen,
                      PatchLoader::CacheName(wGlobalDir, "ADVISOR", PU_CACHE));
       }
    }
@@ -838,12 +838,12 @@ static char *D_ExpandTilde(const char *basedir)
    {
       char *home = estrdup(getenv("HOME"));
       char *newalloc = NULL;
-      
+
       M_StringAlloca(&newalloc, 2, 0, home, basedir);
 
       strcpy(newalloc, home);
       strcpy(newalloc + strlen(home), basedir + 1);
-            
+
       if(home)
          efree(home);
 
@@ -878,7 +878,7 @@ static int D_CheckBasePath(const char *pPath)
    const char *path;
 
    str = pPath;
-   
+
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
    str.rstrip('/');
@@ -891,7 +891,7 @@ static int D_CheckBasePath(const char *pPath)
       {
          DIR *dir;
          int score = 0;
-         
+
          if((dir = opendir(path)))
          {
             // directory should contain at least startup.wad, root.edf, and /doom
@@ -920,7 +920,7 @@ static int D_CheckBasePath(const char *pPath)
    }
    else
       ret = BASE_NOTEXIST; // stat failed
-   
+
    return ret;
 }
 
@@ -983,7 +983,7 @@ static void D_SetBasePath()
    if(res != BASE_ISGOOD)
    {
       const char *exedir = D_DoomExeDir();
-      
+
       size_t len = M_StringAlloca(&basedir, 1, 6, exedir);
 
       psnprintf(basedir, len, "%s/base", D_DoomExeDir());
@@ -1045,7 +1045,7 @@ static int D_CheckUserPath(const char *pPath)
    const char *path;
 
    str = pPath;
-   
+
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
    str.rstrip('/');
@@ -1058,7 +1058,7 @@ static int D_CheckUserPath(const char *pPath)
       {
          DIR *dir;
          int score = 0;
-         
+
          if((dir = opendir(path)))
          {
             // directory should contain at least a /doom and /shots folder
@@ -1085,7 +1085,7 @@ static int D_CheckUserPath(const char *pPath)
    }
    else
       ret = BASE_NOTEXIST; // stat failed
-   
+
    return ret;
 }
 
@@ -1352,7 +1352,7 @@ static void D_EnumerateAutoloadDir(void)
       autoload_dirname = emalloc(char *, len);
 
       psnprintf(autoload_dirname, len, "%s/autoload", basegamepath);
-      
+
       autoloads = opendir(autoload_dirname);
    }
 }
@@ -1377,7 +1377,7 @@ static void D_GameAutoloadWads(void)
    if(autoloads)
    {
       struct dirent *direntry;
-      
+
       while((direntry = readdir(autoloads)))
       {
          if(strstr(direntry->d_name, ".wad"))
@@ -1386,7 +1386,7 @@ static void D_GameAutoloadWads(void)
             D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, 0);
          }
       }
-      
+
       rewinddir(autoloads);
    }
 }
@@ -1406,7 +1406,7 @@ static void D_GameAutoloadDEH(void)
 
       while((direntry = readdir(autoloads)))
       {
-         if(strstr(direntry->d_name, ".deh") || 
+         if(strstr(direntry->d_name, ".deh") ||
             strstr(direntry->d_name, ".bex"))
          {
             fn = M_SafeFilePath(autoload_dirname, direntry->d_name);
@@ -1631,7 +1631,7 @@ static void D_DiskMetaData(void)
 
    // construct the metadata filename
    M_StringAlloca(&name, 2, 1, wad.name, "metadata.txt");
-   
+
    if(!(slash = strrchr(wad.name, '\\')))
       return;
 
@@ -1691,10 +1691,10 @@ static void D_DiskMetaData(void)
          partime = qstr->toInt();
 
          // create a metainfo object for LevelInfo
-         P_CreateMetaInfo(levelnum, levelname, partime, musicname, 
+         P_CreateMetaInfo(levelnum, levelname, partime, musicname,
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
-                          levelnum == secretlevel - 1, 
+                          levelnum == secretlevel - 1,
                           (levelnum == secretlevel - 1) ? endtext : NULL);
          break;
       }
@@ -1716,7 +1716,7 @@ static void D_DiskMetaData(void)
 // DOOMWADPATH support
 //
 // haleyjd 12/31/10: A standard evolved later for DOOMWADPATH, in preference to
-// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is 
+// use of DOOMWADDIR, which could only specify a single path. DOOMWADPATH is
 // like the standard system path, except for wads. When looking for a file on
 // the DOOMWADPATH, the paths in the variable will be tried in the order they
 // are specified.
@@ -1817,7 +1817,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
    for(int i = 0; i < numdoomwadpaths; ++i)
    {
       struct stat sbuf;
-      
+
       qstr = doomwadpaths[i];
       qstr += '/';
       qstr += filename;
@@ -1836,7 +1836,7 @@ char *D_FindInDoomWadPath(const char *filename, const char *extension)
 
       // See if the file could benefit from having the default extension
       // added to it.
-      if(extension && (currext = qstr.bufferAt(qstr.length() - 4))) 
+      if(extension && (currext = qstr.bufferAt(qstr.length() - 4)))
       {
          if(strcasecmp(currext, extension)) // Doesn't already have it?
          {
@@ -1914,7 +1914,7 @@ static const char *D_DoIWADMenu(void)
    return iwadToUse;
 }
 
-// Match modes for iwadpathmatch 
+// Match modes for iwadpathmatch
 enum
 {
    MATCH_NONE,
@@ -1948,7 +1948,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_GAME, "hacx",      { &gi_path_hacx,   NULL,             NULL            } },
    { MATCH_GAME, "heretic",   { &gi_path_sosr,   &gi_path_hticreg, &gi_path_hticsw } },
 
-   // -iwad matches 
+   // -iwad matches
    { MATCH_IWAD, "doom2f",    { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
    { MATCH_IWAD, "doom2",     { &gi_path_doom2,  &gi_path_fdoom,   NULL            } },
    { MATCH_IWAD, "doomu",     { &gi_path_doomu,  &gi_path_fdoomu,  NULL            } },
@@ -1962,7 +1962,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "freedoom",  { &gi_path_fdoom,  NULL,             NULL            } },
    { MATCH_IWAD, "freedoomu", { &gi_path_fdoomu, NULL,             NULL            } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm, NULL,             NULL            } },
-   
+
    // Terminating entry
    { MATCH_NONE, NULL,        { NULL,            NULL,             NULL            } }
 };
@@ -1970,7 +1970,7 @@ static iwadpathmatch_t iwadMatchers[] =
 //
 // D_IWADPathForGame
 //
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a
 // -game parameter. Returns NULL if none found.
 //
 static char *D_IWADPathForGame(const char *game)
@@ -2002,16 +2002,16 @@ static char *D_IWADPathForGame(const char *game)
 //
 // D_IWADPathForIWADParam
 //
-// haleyjd 12/31/10: Return the best defined IWAD path variable for a 
+// haleyjd 12/31/10: Return the best defined IWAD path variable for a
 // -iwad parameter. Returns NULL if none found.
 //
 static char *D_IWADPathForIWADParam(const char *iwad_param)
 {
    iwadpathmatch_t *cur = iwadMatchers;
-   
+
    // If the name starts with a slash, step forward one
    char *tmpname = Z_Strdupa(*iwad_param == '/' ? iwad_param + 1 : iwad_param);
-   
+
    // Truncate at any extension
    char *dotpos = strrchr(tmpname, '.');
    if(dotpos)
@@ -2093,7 +2093,7 @@ static void CheckIWAD(const char *iwadname,
       strncmp(header.identification, "IWAD", 4))
    {
       // haleyjd 06/06/09: do not error out here, due to some bad tools
-      // resetting peoples' IWADs to PWADs. Only error if it is also 
+      // resetting peoples' IWADs to PWADs. Only error if it is also
       // not a PWAD.
       if(strncmp(header.identification, "PWAD", 4))
          I_Error("IWAD or PWAD tag not present: %s\n", iwadname);
@@ -2132,8 +2132,8 @@ static void CheckIWAD(const char *iwadname,
          ++tnt;
       else if(isMC(n))
          ++plut;
-      else if(!strncmp(n, "ADVISOR",  7) || 
-              !strncmp(n, "TINTTAB",  7) || 
+      else if(!strncmp(n, "ADVISOR",  7) ||
+              !strncmp(n, "TINTTAB",  7) ||
               !strncmp(n, "SNDCURVE", 8))
       {
          ++raven;
@@ -2346,14 +2346,14 @@ char *FindIWADFile(void)
    // specification was used, start off by trying base/game/game.wad
    if(gamepathset && !basename)
    {
-      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath, 
+      size_t len = M_StringAlloca(&gameiwad, 2, 8, basegamepath,
                                   myargv[gamepathparm]);
 
       psnprintf(gameiwad, len, "%s/%s.wad", basegamepath, myargv[gamepathparm]);
 
       if(!access(gameiwad, R_OK)) // only if the file exists do we try to use it.
          basename = gameiwad;
-      else                        
+      else
       {
          // haleyjd 12/31/10: base/game/game.wad doesn't exist;
          // try matching against appropriate configured IWAD path(s)
@@ -2362,7 +2362,7 @@ char *FindIWADFile(void)
             basename = cfgpath;
       }
    }
-      
+
    //jff 3/24/98 get -iwad parm if specified else use .
    if(basename)
    {
@@ -2370,7 +2370,7 @@ char *FindIWADFile(void)
       M_NormalizeSlashes(baseiwad);
 
       strcpy(buf, baseiwad);
-      
+
       if(WadFileStatus(buf, &isdir))
       {
          if(!isdir)
@@ -2870,7 +2870,7 @@ void FindResponseFile(void)
          char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          char *fname = NULL;
-         
+
          size_t len = M_StringAlloca(&fname, 1, 6, myargv[i]);
 
          strncpy(fname, &myargv[i][1], len);
@@ -2949,7 +2949,7 @@ void FindResponseFile(void)
                   *p = 0;
                   newargv[indexinfile++] = erealloc(char *, s, strlen(s)+1);
                }
-            } 
+            }
             while(size > 0);
          }
          efree(file);
@@ -3007,7 +3007,7 @@ static void D_ProcessDehCommandLine(void)
             {
                char *file; // killough
                M_StringAlloca(&file, 1, 6, myargv[p]);
-                  
+
                M_AddDefaultExtension(strcpy(file, myargv[p]), ".bex");
                if(access(file, F_OK))  // nope
                {
@@ -3113,7 +3113,7 @@ static void D_AutoExecScripts(void)
             {
                char *file = NULL;
                M_StringAlloca(&file, 1, 6, s);
-                  
+
                M_AddDefaultExtension(strcpy(file, s), ".csc");
                if(!access(file, R_OK))
                   C_RunScriptFromFile(file);
@@ -3600,6 +3600,16 @@ static void D_DoomInit(void)
 
    CS_Init();
 
+   if((p = M_CheckParm("-csplaydemo")) && p < (myargc - 1))
+   {
+      if(!cs_demo->play(myargv[p + 1]))
+      {
+         I_Error(
+            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
+         );
+      }
+   }
+
    // [CG] Can't use GFS or -game in c/s.
    if(!clientserver)
    {
@@ -3609,7 +3619,7 @@ static void D_DoomInit(void)
        {
           char *fn = NULL;
           M_StringAlloca(&fn, 1, 6, myargv[p + 1]);
-             
+
           // haleyjd 01/19/05: corrected use of AddDefaultExtension
           M_AddDefaultExtension(strcpy(fn, myargv[p + 1]), ".gfs");
           if(access(fn, F_OK))
@@ -3628,7 +3638,7 @@ static void D_DoomInit(void)
        {
           char *fn = NULL;
           size_t len = M_StringAlloca(&fn, 1, 14, basegamepath);
-             
+
           psnprintf(fn, len, "%s/default.gfs", basegamepath);
           if(!access(fn, R_OK))
           {
@@ -3677,10 +3687,9 @@ static void D_DoomInit(void)
       nomonsters  = clnomonsters  = !!M_CheckParm("-nomonsters");
       respawnparm = clrespawnparm = !!M_CheckParm("-respawn");
       fastparm    = clfastparm    = !!M_CheckParm("-fast");
+      DefaultGameType = gt_single;
    }
    // jff 1/24/98 end of set to both working and command line value
-
-   DefaultGameType = gt_single;
 
    // [CG] All this is handled during configuration parsing in c/s.
    if(!clientserver)
@@ -3773,7 +3782,7 @@ static void D_DoomInit(void)
        {
           char *file = NULL;
           size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
-             
+
           strncpy(file, myargv[p + 1], len);
 
           M_AddDefaultExtension(file, ".lmp");     // killough
@@ -4005,6 +4014,8 @@ static void D_DoomInit(void)
    // [CG] Set a default game type in singleplayer and p2p.
    if(!clientserver)
       G_NewGameType();
+   else if(CS_DEMO)
+      G_SetGameType(cs_original_settings->game_type);
 
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
@@ -4210,7 +4221,7 @@ static void D_DoomInit(void)
          const char *recordparms[] = { "-record", "-recorddemo", NULL };
 
          slot = M_CheckParm("-loadgame");
-    
+
          if((p = M_CheckMultiParm(recordparms, 1)) && ++p < myargc)
          {
             autostart = true;
@@ -4335,9 +4346,12 @@ void D_DoomMain(void)
       I_UpdateSound();
       I_SubmitSound();
       Z_FreeAlloca();
-      CS_HandleResourcesSection();
-      CS_HandleMapsSection();
-      CL_Connect();
+      if(!CS_DEMO)
+      {
+         CS_HandleResourcesSection();
+         CS_HandleMapsSection();
+         CL_Connect();
+      }
    }
 
    // killough 12/98: inlined D_DoomLoop
@@ -4465,11 +4479,11 @@ void usermsg(const char *s, ...)
 {
    static char msg[1024];
    va_list v;
-   
+
    va_start(v,s);
    pvsnprintf(msg, sizeof(msg), s, v); // print message in buffer
    va_end(v);
-   
+
    if(in_textmode)
    {
       puts(msg);
@@ -4497,7 +4511,7 @@ bool D_AddNewFile(const char *s)
 }
 
 //============================================================================
-// 
+//
 // Console Commands
 //
 

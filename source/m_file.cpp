@@ -183,15 +183,51 @@ bool M_IsFolder(const char *path)
    return false;
 }
 
-bool M_IsAbsolutePath(const char *path)
+bool M_IsRootFolder(const char *path)
 {
-   size_t path_size = strlen(path);
+   size_t path_size;
+
+   if((*path) == '/')
+      return true;
+
+   path_size = strlen(path);
 
    if(!path_size)
       return false;
 
+#ifdef _WIN32
+   qstring buf;
+
+   buf = path;
+
+   if(buf.length() < 2)
+      return false;
+
+   buf.normalizeSlashes();
+
+   if((buf.length() == 2) && (isalpha(buf.charAt(0))) && (buf.charAt(1) == ':'))
+      return true;
+   else if((buf.length() == 3) && (strncmp(buf.constPtr() + 1, ":/", 2) == 0))
+      return true;
+   else if((buf.length() == 2) && (strncmp(buf.constPtr(), "//", 2) == 0))
+      return true;
+   else if((buf.length() == 4) && (strncmp(buf.constPtr(), "//?/", 4) == 0))
+      return true;
+#endif
+   return false;
+}
+
+bool M_IsAbsolutePath(const char *path)
+{
+   size_t path_size;
+
    if((*path) == '/')
       return true;
+
+   path_size = strlen(path);
+
+   if(!path_size)
+      return false;
 
 #ifdef _WIN32
    qstring buf;
@@ -385,6 +421,7 @@ bool M_WalkFiles(const char *path, file_walker walker)
       }
       else if(!walker(entry_buf.constPtr()))
       {
+         FindClose(folder_handle);
          set_error_code();
          return false;
       }

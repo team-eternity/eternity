@@ -39,6 +39,7 @@
 #endif
 
 #include "m_file.h"
+#include "m_qstr.h"
 #include "m_zip.h"
 
 // [CG] Because of function pointer semantics, you can't pass a member function
@@ -252,6 +253,12 @@ bool ZipFile::extractCurrentFileTo(const char *out_path)
       MAX_ZIP_MEMBER_NAME_LENGTH
    );
 
+   if(M_PathExists(output_filename_buffer))
+   {
+      setError(new_file_already_exists);
+      return false;
+   }
+
    if((basename = M_Basename(output_filename_buffer)))
    {
       if((*basename) == '\0')
@@ -259,17 +266,53 @@ bool ZipFile::extractCurrentFileTo(const char *out_path)
          M_CreateFolder(output_filename_buffer);
          return true;
       }
-   }
+      else
+      {
+         char c;
+         size_t i, path_length;
+         qstring path, buf;
 
-   if(M_PathExists(output_filename_buffer))
-   {
-      setError(new_file_already_exists);
-      return false;
+         path = output_filename_buffer;
+         path_length = path.length();
+
+         for(i = 0; i < path_length; i++)
+         {
+            c = path.charAt(i);
+
+            if(c == '/' && buf.length())
+            {
+               if(M_IsRootFolder(buf.constPtr()))
+               {
+                  buf += c;
+                  continue;
+               }
+
+               if(M_PathExists(buf.constPtr()))
+               {
+                  buf += c;
+                  continue;
+               }
+
+               if(!M_CreateFolder(buf.constPtr()))
+               {
+                  setError(fs_error);
+                  return false;
+               }
+            }
+            buf += c;
+         }
+      }
    }
 
    if(!(file = M_OpenFile(output_filename_buffer, "wb")))
    {
       setError(fs_error);
+      return false;
+   }
+
+   if((error = unzOpenCurrentFile(uf)) != UNZ_OK)
+   {
+      setUnzipError(error);
       return false;
    }
 
@@ -565,22 +608,24 @@ bool ZipFile::extractAllTo(const char *out_path)
       return false;
    }
 
-   if((error = unzGoToFirstFile(uf)) != UNZ_OK)
-   {
-      setUnzipError(error);
-      return false;
-   }
-
    for(i = 0; i < gi.number_entry; i++)
    {
-      if(!extractCurrentFileTo(out_path))
-         return false;
-
-      if((error = unzGoToNextFile(uf)) != UNZ_OK)
+      if(i == 0)
+      {
+         if((error = unzGoToFirstFile(uf)) != UNZ_OK)
+         {
+            setUnzipError(error);
+            return false;
+         }
+      }
+      else if((error = unzGoToNextFile(uf)) != UNZ_OK)
       {
          setUnzipError(error);
          return false;
       }
+
+      if(!extractCurrentFileTo(out_path))
+         return false;
    }
 
    return true;
@@ -637,7 +682,6 @@ bool ZipFile::close()
 bool ZipFile::iterateFilenames(char **buf)
 {
    int error;
-   unsigned int i;
    unz_global_info64 gi;
    unz_file_info64 ui;
 
@@ -670,16 +714,6 @@ bool ZipFile::iterateFilenames(char **buf)
       return false;
    }
 
-   for(i = 0; i < iterator_index; i++)
-   {
-      if((error = unzGoToNextFile(uf)) != UNZ_OK)
-      {
-         iterator_index = 0;
-         setUnzipError(error);
-         return false;
-      }
-   }
-
    if((error = unzGetCurrentFileInfo64(
        uf, &ui, input_filename_buffer, MAX_ZIP_MEMBER_NAME_LENGTH,
        NULL, 0, NULL, 0)) != UNZ_OK)
@@ -690,6 +724,17 @@ bool ZipFile::iterateFilenames(char **buf)
    }
 
    *buf = input_filename_buffer;
+
+   if(iterator_index < (gi.number_entry - 1))
+   {
+      if((error = unzGoToNextFile(uf)) != UNZ_OK)
+      {
+         iterator_index = 0;
+         setUnzipError(error);
+         return false;
+      }
+   }
+   iterator_index++;
 
    return true;
 }
