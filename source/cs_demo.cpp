@@ -1708,6 +1708,7 @@ bool CSDemo::play(const char *url)
    int demo_type;
    qstring qbuf, saved_buf, test_folder_buf;
    Json::Value info;
+   size_t slash_index;
    char *buf = NULL;
 
    if(mode == mode_playback)
@@ -1779,13 +1780,18 @@ bool CSDemo::play(const char *url)
       qbuf = buf;
 
       qbuf.normalizeSlashes();
-      qbuf.truncate(qbuf.findFirstOf('/'));
+      slash_index = qbuf.findFirstOf('/');
 
-      if(!qbuf.length())
+      if(slash_index != qstring::npos)
       {
-         setError(invalid_demo_structure);
-         current_zip_file->resetFilenameIterator();
-         return false;
+         qbuf.truncate(slash_index);
+
+         if(!qbuf.length())
+         {
+            setError(invalid_demo_structure);
+            current_zip_file->resetFilenameIterator();
+            return false;
+         }
       }
 
       if(!saved_buf.getSize())
