@@ -4336,6 +4336,13 @@ void D_DoomMain(void)
    }
    else if(CS_CLIENT)
    {
+      bool playing_cs_demo;
+
+      if(CS_DEMOPLAY)
+         playing_cs_demo = true;
+      else
+         playing_cs_demo = false;
+
       C_SetConsole();
       D_StartTitle();
       gamestate = GS_DEMOSCREEN;
@@ -4346,7 +4353,8 @@ void D_DoomMain(void)
       I_UpdateSound();
       I_SubmitSound();
       Z_FreeAlloca();
-      if(!CS_DEMO)
+
+      if(!playing_cs_demo)
       {
          CS_HandleResourcesSection();
          CS_HandleMapsSection();

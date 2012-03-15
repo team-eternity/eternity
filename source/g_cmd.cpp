@@ -508,11 +508,6 @@ CONSOLE_COMMAND(csdemoforward60, 0)
 
 CONSOLE_COMMAND(csdemorecord, 0)
 {
-   nm_sync_t sync_packet;
-   byte *buffer = NULL;
-   size_t buffer_size;
-   const char *base_demo_archive_name;
-
    if(!clientserver)
    {
       doom_printf("C/S mode only.");
@@ -535,45 +530,11 @@ CONSOLE_COMMAND(csdemorecord, 0)
 
    if(!cs_demo->record())
    {
-      doom_printf("Error recording demo: %s.", cs_demo->getError());
+      doom_printf("Error recording: %s.", cs_demo->getError());
       return;
    }
 
-   buffer_size = CS_BuildGameState(consoleplayer, &buffer);
-
-   if(!cs_demo->write(buffer, buffer_size, 0))
-   {
-      doom_printf("Error recording demo: %s.", cs_demo->getError());
-      efree(buffer);
-      if(!cs_demo->stop())
-         doom_printf("Error stopping demo: %s.", cs_demo->getError());
-      return;
-   }
-
-   efree(buffer);
-
-   sync_packet.message_type = nm_sync;
-
-   if(CS_CLIENT)
-      sync_packet.world_index = cl_current_world_index;
-   else if(CS_SERVER)
-      sync_packet.world_index = sv_world_index;
-
-   sync_packet.gametic = gametic;
-   sync_packet.levelstarttic = levelstarttic;
-   sync_packet.basetic = basetic;
-   sync_packet.leveltime = leveltime;
-
-   if(!cs_demo->write(&sync_packet, sizeof(nm_sync_t), 0))
-   {
-      doom_printf("Error recording demo: %s.", cs_demo->getError());
-      if(!cs_demo->stop())
-         doom_printf("Error stopping demo: %s.", cs_demo->getError());
-      return;
-   }
-
-   base_demo_archive_name = cs_demo->getBasename();
-   doom_printf("Recording new demo %s.", base_demo_archive_name);
+   doom_printf("Recording %s.", cs_demo->getBasename());
 }
 
 CONSOLE_COMMAND(csdemosavecheckpoint, 0)

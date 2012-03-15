@@ -589,11 +589,9 @@ bool SingleCSDemo::readHeader()
          if(!readFromDemo(&resource.sha1_hash, sizeof(char), 41))
             return false;
 
-         printf("load_current_map_demo: Loading resources.\n");
          switch(resource.type)
          {
          case rt_iwad:
-            printf("load_current_map_demo: Found an IWAD resource.\n");
             if(!iwad_loaded)
             {
                if(!CS_AddIWAD(resource.name))
@@ -602,7 +600,6 @@ bool SingleCSDemo::readHeader()
                      "Error: Could not find IWAD %s, exiting.\n", resource.name
                   );
                }
-               printf("load_current_map_demo: Loading IWAD.\n");
                // [CG] Loads the IWAD and attendant GameModeInfo.
                IdentifyVersion();
             }
@@ -616,8 +613,6 @@ bool SingleCSDemo::readHeader()
                   resource.name
                );
             }
-            else
-               printf("load_current_map_demo: Skipping IWAD.\n");
 
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
@@ -851,6 +846,10 @@ bool SingleCSDemo::openForPlayback()
 
 bool SingleCSDemo::openForRecording()
 {
+   size_t buffer_size;
+   nm_sync_t sync_packet;
+   byte *buffer = NULL;
+
    if(mode != mode_none)
    {
       setError(already_open);
@@ -893,6 +892,34 @@ bool SingleCSDemo::openForRecording()
       return false;
 
    if(!updateInfo())
+      return false;
+
+   buffer_size = CS_BuildGameState(consoleplayer, &buffer);
+
+   if(!write(buffer, buffer_size, 0))
+      return false;
+
+   efree(buffer);
+
+   sync_packet.message_type = nm_sync;
+
+   if(demo_type == client_demo)
+      sync_packet.world_index = cl_current_world_index;
+   else if(demo_type == server_demo)
+      sync_packet.world_index = sv_world_index;
+   else
+   {
+      I_Error(
+         "SingleCSDemo::openForRecording: Invalid demo type %d.\n", demo_type
+      );
+   }
+
+   sync_packet.gametic = gametic;
+   sync_packet.levelstarttic = levelstarttic;
+   sync_packet.basetic = basetic;
+   sync_packet.leveltime = leveltime;
+
+   if(!write(&sync_packet, sizeof(nm_sync_t), 0))
       return false;
 
    return true;

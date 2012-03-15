@@ -2013,6 +2013,12 @@ void CS_ReadFromNetwork(unsigned int timeout)
    char *address;
    int playernum = 0;
 
+   if(!net_host)
+      return;
+
+   if(CS_CLIENT && (!net_peer))
+      return;
+
    while(enet_host_service(net_host, &event, timeout) > 0)
    {
       switch(event.type)
