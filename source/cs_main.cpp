@@ -263,6 +263,7 @@ void CS_Init(void)
    M_NormalizeSlashes(cs_state_file_path);
 
    CS_InitScoreboard();
+   CS_ClearOldDemos();
    CS_NewDemo();
    atexit(CS_StopDemo);
 

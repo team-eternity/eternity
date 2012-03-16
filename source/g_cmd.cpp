@@ -630,6 +630,42 @@ CONSOLE_COMMAND(csdemostop, 0)
       doom_printf("Demo stopped.");
 }
 
+CONSOLE_COMMAND(csdemopauseresume, 0)
+{
+   if(!clientserver)
+   {
+      doom_printf("C/S mode only.");
+      return;
+   }
+
+   if(!CS_DEMO)
+   {
+      doom_printf("No current demo.");
+      return;
+   }
+
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(cs_demo->isPaused())
+   {
+      if(!cs_demo->resume())
+         doom_printf("Error resuming demo: %s.", cs_demo->getError());
+      else
+         doom_printf("Demo resumed.");
+   }
+   else
+   {
+      if(!cs_demo->pause())
+         doom_printf("Error pausing demo: %s.", cs_demo->getError());
+      else
+         doom_printf("Demo paused.");
+   }
+}
+
 //////////////////////////////////////
 //
 // Demo Stuff
@@ -779,7 +815,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
    if(clientserver)
    {
-      int map_number;
+      int map_index;
 
       // [CG] Don't switch maps during demo playback, we have other commands
       //      for that.
@@ -798,19 +834,19 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
          return;
       }
 
-      map_number = Console.argv[0]->toInt() - 1;
+      map_index = Console.argv[0]->toInt() - 1;
 
-      if(map_number < 0 || (unsigned int)(map_number) >= cs_map_count)
+      if(map_index < 0 || (unsigned int)(map_index) >= cs_map_count)
       {
-         C_Printf("Invalid map number '%d'.\n", map_number + 1);
+         C_Printf("Invalid map number '%d'.\n", map_index + 1);
          return;
       }
 
       if(CS_SERVER)
       {
-         cs_current_map_number = map_number;
+         cs_current_map_index = map_index;
          SV_BroadcastMapCompleted(false);
-         G_SetGameMapName(cs_maps[cs_current_map_number].name);
+         G_SetGameMapName(cs_maps[cs_current_map_index].name);
          G_DoCompleted(false);
          gameaction = ga_worlddone;
       }
@@ -1514,6 +1550,7 @@ void G_AddCommands(void)
    C_AddCommand(csdemopreviouscheckpoint);
    C_AddCommand(csdemonextcheckpoint);
    C_AddCommand(csdemostop);
+   C_AddCommand(csdemopauseresume);
 
    G_AddChatMacros();
    G_AddWeapPrefs();

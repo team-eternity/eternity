@@ -465,7 +465,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t map_number;
+   uint32_t map_index;
    uint32_t rngseed;
    int32_t player_number;
    clientserver_settings_t settings;
@@ -511,7 +511,7 @@ typedef struct
 {
    int32_t message_type;
    uint32_t world_index;
-   uint32_t new_map_number;
+   uint32_t new_map_index;
    uint8_t enter_intermission;
 } nm_mapcompleted_t;
 

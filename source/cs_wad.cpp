@@ -68,7 +68,6 @@ unsigned int cs_map_count = 0;
 cs_resource_t *cs_resources = NULL;
 unsigned int cs_resource_count = 0;
 unsigned int cs_current_map_index = 0;
-unsigned int cs_current_map_number = 0;
 
 void IdentifyVersion(void);
 
@@ -77,7 +76,7 @@ static cs_map_t* get_current_map(void)
    if(CS_DEMOPLAY)
       return &cs_maps[cs_demo->getCurrentDemoIndex()];
 
-   return &cs_maps[cs_current_map_number];
+   return &cs_maps[cs_current_map_index];
 }
 
 static int console_progress(void *clientp, double dltotal, double dlnow,
@@ -122,6 +121,7 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
    D_ProcessEvents();
    C_Update();
    C_Ticker();
+
    return 0;
 }
 
@@ -135,7 +135,7 @@ static bool need_new_wad_dir(void)
    while(wadfiles[wads_loaded].filename != NULL)
       wads_loaded++;
 
-   if(map->resource_count != (wads_loaded - 2))
+   if(map->resource_count != (wads_loaded - 4))
       return true;
 
    for(i = 0, j = 2; i < map->resource_count; i++, j++)
@@ -345,7 +345,7 @@ void CS_ClearTempWADDownloads(void)
 bool CS_AddIWAD(const char *resource_name)
 {
    char *resource_path = D_FindWADByName((char *)resource_name);
-   
+
    if(resource_path == NULL)
       return false;
 
@@ -534,8 +534,6 @@ void CS_NewGame(void)
 {
    cs_map_t *map = get_current_map();
 
-   printf("CS_NewGame: Loading map %d.\n", cs_current_map_number);
-
    CS_LoadMap();
    G_DeferedInitNew((skill_t)cs_settings->skill, map->name);
 }
@@ -544,13 +542,11 @@ void CS_InitNew(void)
 {
    skill_t skill = (skill_t)cs_settings->skill;
 
-   printf("CS_InitNew: Loading map %d.\n", cs_current_map_number);
-
    CS_LoadMap();
 
    if(CS_DEMOPLAY)
       G_InitNew(skill, cs_maps[cs_demo->getCurrentDemoIndex()].name);
    else
-      G_InitNew(skill, cs_maps[cs_current_map_number].name);
+      G_InitNew(skill, cs_maps[cs_current_map_index].name);
 }
 

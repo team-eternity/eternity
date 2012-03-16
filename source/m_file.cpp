@@ -33,6 +33,8 @@
 #include <windows.h>
 #include <direct.h>
 #include <io.h>
+#else
+#include <dirent.h>
 #endif
 
 #include <fcntl.h>
@@ -374,6 +376,98 @@ bool M_DeleteFolder(const char *path)
       set_error_code();
       return false;
    }
+   return true;
+}
+
+bool M_IterateFiles(const char *path, file_iterator iterator)
+{
+   if(!M_IsFolder(path))
+      return false;
+
+#ifdef _WIN32
+   WIN32_FIND_DATA fdata;
+   HANDLE folder_handle;
+   qstring path_buf, star_buf, entry_buf;
+
+   path_buf = path;
+
+   // [CG] Check that the folder path has the minimum reasonable length.
+   if(path_buf.length() < 4)
+      I_Error("M_WalkFiles: Invalid path: %s.\n", path);
+
+   // [CG] Check that the folder path ends in a backslash, if not add it.  Then
+   //      add an asterisk (apparently Windows needs this).
+   path_buf.normalizeSlashes();
+   star_buf.Printf(0, "%s/*", path_buf.constPtr());
+   star_buf.normalizeSlashes();
+
+   folder_handle = FindFirstFile(star_buf.getBuffer(), &fdata);
+
+   while(FindNextFile(folder_handle, &fdata))
+   {
+      size_t entry_length = strlen(fdata.cFileName);
+
+      // [CG] Skip the "current folder" and "previous folder" entries.
+      if((entry_length == 1) && (!strcmp(fdata.cFileName, ".")))
+         continue;
+      else if((entry_length == 2) && (!strcmp(fdata.cFileName, "..")))
+         continue;
+
+      entry_buf.Printf(0, "%s/%s", path_buf.constPtr(), fdata.cFileName);
+      entry_buf.normalizeSlashes();
+
+      if(!iterator(entry_buf.constPtr()))
+      {
+         set_error_code();
+         FindClose(folder_handle);
+         return false;
+      }
+   }
+
+   FindClose(folder_handle);
+
+   // [CG] FindNextFile returns false if there is an error, but running out of
+   //      contents is considered an error so we need to check for that code to
+   //      determine if we successfully walked all the contents.
+   if(GetLastError() != ERROR_NO_MORE_FILES)
+   {
+      set_error_code();
+      return false;
+   }
+#else
+   DIR *d;
+   dirent *e;
+   qstring path_buf, entry_buf;
+
+   path_buf = path;
+   path_buf.normalizeSlashes();
+   
+   if(!(d = opendir(path)))
+   {
+      set_error_code();
+      return false;
+   }
+
+   while(d)
+   {
+      if(!(e = readdir(d)))
+      {
+         closedir(d);
+         set_error_code();
+         return false;
+      }
+
+      entry_buf.Printf(0, "%s/%s", path_buf.constPtr(), d->d_name);
+      entry_buf.normalizeSlashes();
+
+      if(!iterator(entry_buf.constPtr()))
+      {
+         set_error_code();
+         closedir(d);
+         return false;
+      }
+   }
+#endif
    return true;
 }
 

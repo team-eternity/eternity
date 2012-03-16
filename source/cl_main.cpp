@@ -710,7 +710,7 @@ void CL_RunDemoTics(void)
       }
       HU_Ticker();
    }
-   else
+   else if(!cs_demo->isPaused())
    {
       displayed_message = false;
 

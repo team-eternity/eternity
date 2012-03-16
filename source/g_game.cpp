@@ -661,7 +661,7 @@ void G_DoLoadLevel(void)
    {
       // [CG] Load map-specific configuration overrides if in c/s mode.
       if(CS_SERVER)
-         CS_LoadMapOverrides(cs_current_map_number);
+         CS_LoadMapOverrides(cs_current_map_index);
 
       if(CS_TEAMS_ENABLED)
          memset(team_scores, 0, sizeof(int) * team_color_max);
@@ -1909,7 +1909,7 @@ void G_Ticker(void)
             {
                SV_AdvanceMapList();
                SV_BroadcastMapCompleted(true);
-               G_SetGameMapName(cs_maps[cs_current_map_number].name);
+               G_SetGameMapName(cs_maps[cs_current_map_index].name);
             }
             G_DoCompleted(true);
          }

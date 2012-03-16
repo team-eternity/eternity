@@ -225,16 +225,19 @@ private:
    const static int first_demo = 16;
    const static int last_demo = 17;
    const static int invalid_url = 18;
+   const static int already_paused = 19;
+   const static int not_paused = 20;
 
    const static int mode_none      = 0;
    const static int mode_recording = 1;
    const static int mode_playback  = 2;
 
-   int mode;
-   int internal_error;
-   int internal_curl_error;
-   int current_demo_index;
-   int demo_count;
+   int  mode;
+   int  internal_error;
+   int  internal_curl_error;
+   int  current_demo_index;
+   int  demo_count;
+   bool paused;
 
    static const char *demo_extension;
    static const char *base_info_file_name;
@@ -267,6 +270,8 @@ public:
    bool        record();
    bool        addNewMap();
    bool        play(const char *url);
+   bool        pause();
+   bool        resume();
    bool        setCurrentDemo(int new_demo_index);
    bool        playNext();
    bool        playPrevious();
@@ -287,6 +292,7 @@ public:
    bool        rewind(uint32_t tic_count);
    bool        fastForward(uint32_t tic_count);
    bool        readPacket();
+   bool        isPaused();
    bool        isFinished();
    const char* getBasename();
    const char* getError();
@@ -296,6 +302,7 @@ extern CSDemo *cs_demo;
 
 void CS_NewDemo();
 void CS_StopDemo();
+void CS_ClearOldDemos();
 
 #endif
 

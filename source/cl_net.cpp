@@ -418,7 +418,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
    Thinker *th;
    unsigned int i;
    unsigned int new_num = message->player_number;
-   unsigned int mn = message->map_number;
+   unsigned int mi = message->map_index;
 
    // [CG] consoleplayer and displayplayer will both be zero at this point, so
    //      copy clients[0] and players[0] to "new_num" in their respective
@@ -444,8 +444,8 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
       CL_SendPlayerScalarInfo(ci_buffering);
    }
 
-   if(mn > cs_map_count)
-      I_Error("CL_HandleInitialStateMessage: Invalid map number %d.\n", mn);
+   if(mi > cs_map_count)
+      I_Error("CL_HandleInitialStateMessage: Invalid map number %d.\n", mi);
 
    for(th = thinkercap.next; th != &thinkercap; th = th->next)
    {
@@ -456,7 +456,7 @@ void CL_HandleInitialStateMessage(nm_initialstate_t *message)
          CL_RemoveMobj(mo);
    }
 
-   cs_current_map_number = message->map_number;
+   cs_current_map_index = message->map_index;
    rngseed = message->rngseed;
    CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
@@ -528,17 +528,16 @@ void CL_HandleSyncMessage(nm_sync_t *message)
 
 void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
 {
-   if(message->new_map_number > cs_map_count)
+   if(message->new_map_index > cs_map_count)
    {
       doom_printf(
          "Received map completed message containing invalid new map lump "
          "number %u, ignoring.\n",
-         message->new_map_number
+         message->new_map_index
       );
    }
 
-   cs_current_map_number = message->new_map_number;
-   // G_SetGameMapName(cs_maps[message->new_map_number].name);
+   cs_current_map_index = message->new_map_index;
 
    if(message->enter_intermission)
       G_DoCompleted(true);
@@ -552,27 +551,19 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
 
 void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
-   static int demo_index = 0;
-
    if(CS_DEMOPLAY)
    {
-      if(demo_index == cs_demo->getCurrentDemoIndex())
+      if(!cs_demo->playNext())
       {
-         if(!cs_demo->playNext())
-         {
-            doom_printf(
-               "Error during demo playback: %s.\n", cs_demo->getError()
-            );
-            if(!cs_demo->stop())
-               doom_printf("Error stopping demo: %s.\n", cs_demo->getError());
-         }
-         return;
+         doom_printf(
+            "Error during demo playback: %s.\n", cs_demo->getError()
+         );
+         if(!cs_demo->stop())
+            doom_printf("Error stopping demo: %s.\n", cs_demo->getError());
       }
-      else if(gamestate == GS_LEVEL)
-         G_DoCompleted(false);
-   }
 
-   demo_index = cs_demo->getCurrentDemoIndex();
+      return;
+   }
 
    cl_latest_world_index = cl_current_world_index = 0;
    cl_packet_buffer.setSynchronized(false);

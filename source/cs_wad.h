@@ -61,7 +61,6 @@ extern unsigned int cs_map_count;
 extern cs_resource_t *cs_resources;
 extern unsigned int cs_resource_count;
 extern unsigned int cs_current_map_index;
-extern unsigned int cs_current_map_number;
 
 void  CS_ClearTempWADDownloads(void);
 void  CS_ClearMaps(void);

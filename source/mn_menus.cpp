@@ -3524,6 +3524,7 @@ static menuitem_t mn_clientserverdemokeys_items[] =
    {it_gap},
    {it_binding, "start recording",          "csdemorecord"            },
    {it_binding, "stop playing/recording",   "csdemostop"              },
+   {it_binding, "pause/resume playback",    "csdemopauseresume"       },
    {it_binding, "speed up",                 "csdemospeedup"           },
    {it_binding, "slow down",                "csdemoslowdown"          },
    {it_binding, "save checkpoint",          "csdemosavecheckpoint"    },

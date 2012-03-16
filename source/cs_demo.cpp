@@ -193,6 +193,13 @@ static void buildDemoTimestamps(char **demo_timestamp, char **iso_timestamp)
 #endif
 }
 
+static bool CS_deleteIfFolder(const char *path)
+{
+   if((M_IsFolder(path)) && (!M_DeleteFolderAndContents(path)))
+      return false;
+   return true;
+}
+
 SingleCSDemo::SingleCSDemo(const char *new_base_path, int new_number,
                            cs_map_t *new_map, int new_type)
    : ZoneObject()
@@ -592,27 +599,26 @@ bool SingleCSDemo::readHeader()
          switch(resource.type)
          {
          case rt_iwad:
-            if(!iwad_loaded)
+            if(iwad_loaded)
             {
-               if(!CS_AddIWAD(resource.name))
+               if(strncmp(cs_resources[0].name, resource.name,
+                                                strlen(resource.name)))
                {
                   I_Error(
-                     "Error: Could not find IWAD %s, exiting.\n", resource.name
+                     "Cannot change IWADs during a demo (%s => %s), exiting.\n",
+                     cs_resources[0].name,
+                     resource.name
                   );
                }
-               // [CG] Loads the IWAD and attendant GameModeInfo.
-               IdentifyVersion();
             }
-            else if(strncmp(cs_resources[0].name,
-                            resource.name,
-                            strlen(resource.name)))
+            else if(!CS_AddIWAD(resource.name))
             {
                I_Error(
-                  "Cannot change IWADs during a demo (%s => %s), exiting.\n",
-                  cs_resources[0].name,
-                  resource.name
+                  "Error: Could not find IWAD %s, exiting.\n", resource.name
                );
             }
+
+            IdentifyVersion();
 
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
@@ -622,17 +628,7 @@ bool SingleCSDemo::readHeader()
             }
             break;
          case rt_deh:
-            if(!iwad_loaded)
-            {
-               if(!CS_AddDeHackEdFile(resource.name))
-               {
-                  I_Error(
-                     "Could not find DeHackEd patch %s, exiting.\n",
-                     resource.name
-                  );
-               }
-            }
-            else
+            if(iwad_loaded)
             {
                stored_resource = CS_GetResource(resource.name);
                if(stored_resource == NULL)
@@ -644,6 +640,14 @@ bool SingleCSDemo::readHeader()
                   );
                }
             }
+            else if(!CS_AddDeHackEdFile(resource.name))
+            {
+               I_Error(
+                  "Could not find DeHackEd patch %s, exiting.\n",
+                  resource.name
+               );
+            }
+
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
                I_Error(
@@ -1682,7 +1686,7 @@ bool CSDemo::addNewMap()
       demo_type
    );
 
-   buf.Printf(0, "%s/%s", current_demo_folder_path, current_demo_index + 1);
+   buf.Printf(0, "%s/%d", current_demo_folder_path, current_demo_index + 1);
 
    if(current_demo->hasError())
    {
@@ -1878,6 +1882,32 @@ bool CSDemo::play(const char *url)
    return true;
 }
 
+bool CSDemo::pause()
+{
+   if(this->paused)
+   {
+      setError(already_paused);
+      return false;
+   }
+
+   this->paused = true;
+
+   return true;
+}
+
+bool CSDemo::resume()
+{
+   if(!this->paused)
+   {
+      setError(not_paused);
+      return false;
+   }
+
+   this->paused = false;
+
+   return true;
+}
+
 bool CSDemo::setCurrentDemo(int new_demo_index)
 {
    int demo_type;
@@ -1931,6 +1961,14 @@ bool CSDemo::setCurrentDemo(int new_demo_index)
    {
       setError(demo_error);
       return false;
+   }
+
+   if(CS_CLIENT)
+   {
+      cl_latest_world_index = cl_current_world_index = 0;
+      cl_packet_buffer.setSynchronized(false);
+      CS_DoWorldDone();
+      cl_commands_sent = 0;
    }
 
    return true;
@@ -2396,6 +2434,14 @@ bool CSDemo::readPacket()
    return true;
 }
 
+bool CSDemo::isPaused()
+{
+   if(this->paused)
+      return true;
+
+   return false;
+}
+
 bool CSDemo::isFinished()
 {
    if(mode != mode_playback)
@@ -2480,6 +2526,12 @@ const char* CSDemo::getError()
    if(internal_error == invalid_url)
       return "invalid url";
 
+   if(internal_error == already_paused)
+      return "already paused";
+
+   if(internal_error == not_paused)
+      return "not paused";
+
    return "no_error";
 }
 
@@ -2504,5 +2556,10 @@ void CS_StopDemo()
       if(!cs_demo->close())
          printf("Error closing demo: %s.\n", cs_demo->getError());
    }
+}
+
+void CS_ClearOldDemos()
+{
+   M_IterateFiles(cs_demo_folder_path, CS_deleteIfFolder);
 }
 

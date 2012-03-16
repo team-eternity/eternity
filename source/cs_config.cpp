@@ -1169,7 +1169,7 @@ void CS_HandleMapsSection()
       CS_AddMap(name, wads_count, resource_indices);
    }
 
-   cs_current_map_index = cs_current_map_number = 0;
+   cs_current_map_index = 0;
 }
 
 void CS_LoadConfig(void)

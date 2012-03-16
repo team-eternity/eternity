@@ -1093,7 +1093,7 @@ void SV_SendInitialState(int playernum)
 
    message.message_type = nm_initialstate;
    message.world_index = sv_world_index;
-   message.map_number = cs_current_map_number;
+   message.map_index = cs_current_map_index;
    message.rngseed = rngseed;
    message.player_number = playernum;
    memcpy(&message.settings, cs_settings, sizeof(clientserver_settings_t));
@@ -1246,7 +1246,7 @@ void SV_BroadcastMapCompleted(bool enter_intermission)
 
    message.message_type = nm_mapcompleted;
    message.world_index = sv_world_index;
-   message.new_map_number = cs_current_map_number;
+   message.new_map_index = cs_current_map_index;
    message.enter_intermission = enter_intermission;
 
    broadcast_packet(&message, sizeof(nm_mapcompleted_t));
@@ -1420,7 +1420,7 @@ void SV_UpdateClientStatuses(void)
 
 void SV_BroadcastPlayerPositions(void)
 {
-   int i;
+   int i, j;
    nm_playerposition_t message;
    cs_player_position_t *pos;
    cs_misc_state_t *ms;
@@ -1452,10 +1452,13 @@ void SV_BroadcastPlayerPositions(void)
       message.last_index_run = sc->last_command_run_index;
       message.last_world_index_run = sc->last_command_run_world_index;
 
-      if(sc->buffering)
-         broadcast_packet(&message, sizeof(nm_playerposition_t));
-      else
-         broadcast_unreliable_packet(&message, sizeof(nm_playerposition_t));
+      for(j = 1; j < MAX_CLIENTS; j++)
+      {
+         if(server_clients[j].buffering)
+            send_packet(j, &message, sizeof(nm_playerposition_t));
+         else
+            send_unreliable_packet(j, &message, sizeof(nm_playerposition_t));
+      }
       client->floor_status = cs_fs_none;
    }
 }
@@ -1717,12 +1720,12 @@ void SV_HandleUpdatePlayerInfoMessage(char *data, size_t data_length,
    }
 }
 
-static void SV_findNextShuffledMap(void)
+static unsigned int SV_findNextShuffledMap(void)
 {
    static unsigned int count = 1;
    unsigned int i;
 
-   if(++count > cs_map_count)
+   if(++count > cs_map_count) // [CG] Reset used maps.
    {
       count = 1;
       for(i = 0; i < cs_map_count; i++)
@@ -1733,8 +1736,10 @@ static void SV_findNextShuffledMap(void)
 
    do
    {
-      cs_current_map_index = (M_Random() % cs_map_count);
-   } while (cs_maps[cs_current_map_index].used);
+      i = (M_Random() % cs_map_count);
+   } while (cs_maps[i].used);
+
+   return i;
 }
 
 void SV_AdvanceMapList(void)
@@ -1745,11 +1750,9 @@ void SV_AdvanceMapList(void)
    if(sv_randomize_maps == map_randomization_random)
       cs_current_map_index = (M_Random() % cs_map_count);
    else if(sv_randomize_maps == map_randomization_shuffle)
-      SV_findNextShuffledMap();
+      cs_current_map_index = SV_findNextShuffledMap();
    else if(++cs_current_map_index >= cs_map_count)
       cs_current_map_index = 0;
-
-   cs_current_map_number = cs_current_map_index;
 }
 
 void SV_LoadClientOptions(int playernum)

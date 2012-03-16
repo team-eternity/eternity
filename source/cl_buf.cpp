@@ -1,4 +1,4 @@
-// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3: 
+// Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2011 Charles Gunyon
@@ -34,6 +34,7 @@
 #include "i_system.h"
 #include "i_thread.h"
 
+#include "cs_demo.h"
 #include "cs_main.h"
 #include "cl_buf.h"
 #include "cl_cmd.h"
@@ -218,6 +219,9 @@ void NetPacketBuffer::startBufferingIndependently()
    if(m_buffering_independently)
       return;
 
+   if(CL_DEMOPLAY)
+      return;
+
    m_buffering_independently = true;
    m_net_service_thread = I_CreateThread(CL_serviceNetwork, NULL);
    if(m_net_service_thread == NULL)
@@ -231,6 +235,9 @@ void NetPacketBuffer::startBufferingIndependently()
 
 void NetPacketBuffer::stopBufferingIndependently()
 {
+   if(CL_DEMOPLAY)
+      return;
+
    m_buffering_independently = false;
    I_WaitThread(m_net_service_thread, NULL);
 }

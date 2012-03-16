@@ -40,6 +40,8 @@
 #include "doomtype.h"
 #include "i_system.h"
 
+typedef bool(*file_iterator)(const char *path);
+
 #ifdef _WIN32
 typedef bool(*file_walker)(const char *path);
 #else
@@ -64,6 +66,7 @@ bool        M_DeletePath(const char *path);
 bool        M_DeleteFile(const char *path);
 bool        M_DeleteFileInFolder(const char *folder, const char *file);
 bool        M_DeleteFolder(const char *path);
+bool        M_IterateFiles(const char *path, file_iterator iterator);
 bool        M_WalkFiles(const char *path, file_walker walker);
 bool        M_DeleteFolderAndContents(const char *path);
 char*       M_GetCurrentFolder(void);
