@@ -457,7 +457,7 @@ bool M_IterateFiles(const char *path, file_iterator iterator)
          return false;
       }
 
-      entry_buf.Printf(0, "%s/%s", path_buf.constPtr(), d->d_name);
+      entry_buf.Printf(0, "%s/%s", path_buf.constPtr(), e->d_name);
       entry_buf.normalizeSlashes();
 
       if(!iterator(entry_buf.constPtr()))
