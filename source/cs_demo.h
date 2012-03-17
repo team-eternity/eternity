@@ -124,13 +124,6 @@ private:
    static const char *base_save_format;
    static const char *base_screenshot_format;
 
-   const static int base_data_file_name_length    = 12;
-   const static int base_info_file_name_length    = 9;
-   const static int base_toc_file_name_length     = 8;
-   const static int base_log_file_name_length     = 7;
-   const static int base_save_format_length       = 20;
-   const static int base_screenshot_format_length = 20;
-
    const static uint8_t end_of_header_packet   = 1;
    const static uint8_t network_message_packet = 2;
    const static uint8_t player_command_packet  = 3;
@@ -166,6 +159,7 @@ private:
    void setError(int error_code);
    bool writeToDemo(void *data, size_t size, size_t count);
    bool readFromDemo(void *buffer, size_t size, size_t count);
+   bool skipForward(long int bytes);
    bool writeHeader();
    bool writeInfo();
    bool updateInfo();

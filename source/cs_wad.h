@@ -30,18 +30,18 @@
 
 #include "doomtype.h"
 
-typedef enum
+enum
 {
    rt_iwad,
    rt_pwad,
    rt_deh,
-} resource_type_t;
+};
 
 typedef struct cs_resource_s
 {
    char *name;
    char *path;
-   resource_type_t type;
+   int8_t type;
    char sha1_hash[41];
 } cs_resource_t;
 

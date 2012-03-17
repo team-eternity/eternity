@@ -434,6 +434,34 @@ CONSOLE_COMMAND(csdemoslowdown, 0)
    doom_printf("Demo speed: %s.", cs_demo_speed_names[cs_demo_speed]);
 }
 
+CONSOLE_COMMAND(csdemoprevious, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->hasPrevious())
+      doom_printf("Already at the first demo.");
+   else if(!cs_demo->playPrevious())
+      doom_printf("Error: %s.\n", cs_demo->getError());
+}
+
+CONSOLE_COMMAND(csdemonext, 0)
+{
+   if(!CS_DEMOPLAY)
+   {
+      doom_printf("No demo playing.");
+      return;
+   }
+
+   if(!cs_demo->hasNext())
+      doom_printf("Already at the last demo.");
+   else if(!cs_demo->playNext())
+      doom_printf("Error: %s.\n", cs_demo->getError());
+}
+
 CONSOLE_COMMAND(csdemoback15, 0)
 {
    if(!CS_DEMOPLAY)
@@ -1539,6 +1567,8 @@ void G_AddCommands(void)
    C_AddCommand(csdemoplay);
    C_AddCommand(csdemospeedup);
    C_AddCommand(csdemoslowdown);
+   C_AddCommand(csdemoprevious);
+   C_AddCommand(csdemonext);
    C_AddCommand(csdemoback15);
    C_AddCommand(csdemoback30);
    C_AddCommand(csdemoback60);

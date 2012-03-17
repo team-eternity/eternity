@@ -292,24 +292,23 @@ void SingleCSDemo::setError(int error_code)
 
 bool SingleCSDemo::writeToDemo(void *data, size_t size, size_t count)
 {
-   int saved_disk_icon = disk_icon;
-
-   // [CG] The Disk icon causes severe renderer lag, so disable it.
-   disk_icon = 0;
+   int saved_disk_icon;
 
    if(mode != mode_recording)
    {
       setError(not_open_for_recording);
-      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(!demo_data_handle)
    {
       setError(not_open);
-      disk_icon = saved_disk_icon;
       return false;
    }
+
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   disk_icon = 0;
+   saved_disk_icon = disk_icon;
 
    if(M_WriteToFile(data, size, count, demo_data_handle) != count)
    {
@@ -324,26 +323,56 @@ bool SingleCSDemo::writeToDemo(void *data, size_t size, size_t count)
 
 bool SingleCSDemo::readFromDemo(void *buffer, size_t size, size_t count)
 {
-   int saved_disk_icon = disk_icon;
-
-   // [CG] The Disk icon causes severe renderer lag, so disable it.
-   disk_icon = 0;
-
+   int saved_disk_icon;
+   
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
-      disk_icon = saved_disk_icon;
       return false;
    }
 
    if(!demo_data_handle)
    {
       setError(not_open);
+      return false;
+   }
+
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   saved_disk_icon = disk_icon;
+   disk_icon = 0;
+
+   if(M_ReadFromFile(buffer, size, count, demo_data_handle) != count)
+   {
+      setError(fs_error);
       disk_icon = saved_disk_icon;
       return false;
    }
 
-   if(M_ReadFromFile(buffer, size, count, demo_data_handle) != count)
+   disk_icon = saved_disk_icon;
+   return true;
+}
+
+bool SingleCSDemo::skipForward(long int bytes)
+{
+   int saved_disk_icon;
+   
+   if(mode != mode_playback)
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
+   if(!demo_data_handle)
+   {
+      setError(not_open);
+      return false;
+   }
+
+   // [CG] The Disk icon causes severe renderer lag, so disable it.
+   saved_disk_icon = disk_icon;
+   disk_icon = 0;
+
+   if(!M_SeekFile(demo_data_handle, bytes, SEEK_CUR))
    {
       setError(fs_error);
       disk_icon = saved_disk_icon;
@@ -384,7 +413,7 @@ bool SingleCSDemo::writeHeader()
       return false;
    if(!writeToDemo(cs_resources[0].name, sizeof(char), resource_name_size))
       return false;
-   if(!writeToDemo(&cs_resources[0].type, sizeof(resource_type_t), 1))
+   if(!writeToDemo(&cs_resources[0].type, sizeof(int8_t), 1))
       return false;
    if(!writeToDemo(&cs_resources[0].sha1_hash, sizeof(char), 41))
       return false;
@@ -398,7 +427,7 @@ bool SingleCSDemo::writeHeader()
          return false;
       if(!writeToDemo(res->name, sizeof(char), resource_name_size))
          return false;
-      if(!writeToDemo(&res->type, sizeof(resource_type_t), 1))
+      if(!writeToDemo(&res->type, sizeof(int8_t), 1))
          return false;
       if(!writeToDemo(res->sha1_hash, sizeof(char), 41))
          return false;
@@ -576,7 +605,17 @@ bool SingleCSDemo::readHeader()
    if(!reloadSettings())
       return false;
 
-   if(!map->initialized)
+   if(map->initialized)
+   {
+      while(resource_index++ < header.resource_count)
+      {
+         readFromDemo(&resource_name_size, sizeof(uint32_t), 1);
+         skipForward(sizeof(char) * resource_name_size); // [CG] name
+         skipForward(sizeof(int8_t));                    // [CG] type
+         skipForward(sizeof(char) * 41);                 // [CG] sha1_hash
+      }
+   }
+   else
    {
       resource.name = NULL;
 
@@ -590,7 +629,7 @@ bool SingleCSDemo::readHeader()
          if(!readFromDemo(resource.name, sizeof(char), resource_name_size))
             return false;
 
-         if(!readFromDemo(&resource.type, sizeof(resource_type_t), 1))
+         if(!readFromDemo(&resource.type, sizeof(int8_t), 1))
             return false;
 
          if(!readFromDemo(&resource.sha1_hash, sizeof(char), 41))
@@ -1944,7 +1983,6 @@ bool CSDemo::setCurrentDemo(int new_demo_index)
    }
 
    delete current_demo;
-   current_demo_index++;
 
    if(CS_CLIENT)
       demo_type = SingleCSDemo::client_demo_type;
@@ -1953,7 +1991,7 @@ bool CSDemo::setCurrentDemo(int new_demo_index)
 
    current_demo = new SingleCSDemo(
       current_demo_folder_path,
-      current_demo_index,
+      new_demo_index,
       &cs_maps[new_demo_index],
       demo_type
    );
@@ -1976,6 +2014,8 @@ bool CSDemo::setCurrentDemo(int new_demo_index)
       setError(demo_error);
       return false;
    }
+
+   current_demo_index = new_demo_index;
 
    CS_DoWorldDone();
 
@@ -2000,23 +2040,25 @@ bool CSDemo::hasNext()
 
 bool CSDemo::playNext()
 {
-   if(current_demo_index >= (demo_count - 1))
+   if(!hasNext())
    {
       setError(last_demo);
       return false;
    }
 
+   G_DoCompleted(false);
    return setCurrentDemo(current_demo_index + 1);
 }
 
 bool CSDemo::playPrevious()
 {
-   if(current_demo_index <= 0)
+   if(!hasPrevious())
    {
       setError(first_demo);
       return false;
    }
 
+   G_DoCompleted(false);
    return setCurrentDemo(current_demo_index - 1);
 }
 

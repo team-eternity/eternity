@@ -3101,6 +3101,7 @@ static const char *mn_binding_contentnames[] =
    "console keys",
    "client/server keys",
    "client/server demo keys",
+   "client/server demo checkpoint keys",
    NULL
 };
 
@@ -3115,6 +3116,7 @@ extern menu_t menu_automapkeys;
 extern menu_t menu_consolekeys;
 extern menu_t menu_clientserverkeys;
 extern menu_t menu_clientserverdemokeys;
+extern menu_t menu_clientserverdemocheckpointkeys;
 
 static menu_t *mn_binding_contentpages[] =
 {
@@ -3128,6 +3130,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_consolekeys,
    &menu_clientserverkeys,
    &menu_clientserverdemokeys,
+   &menu_clientserverdemocheckpointkeys,
    NULL
 };
 
@@ -3522,11 +3525,22 @@ static menuitem_t mn_clientserverdemokeys_items[] =
    {it_gap},
    {it_info,    FC_GOLD "client/server demos", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "start recording",          "csdemorecord"            },
-   {it_binding, "stop playing/recording",   "csdemostop"              },
-   {it_binding, "pause/resume playback",    "csdemopauseresume"       },
-   {it_binding, "speed up",                 "csdemospeedup"           },
-   {it_binding, "slow down",                "csdemoslowdown"          },
+   {it_binding, "start recording",          "csdemorecord"      },
+   {it_binding, "stop playing/recording",   "csdemostop"        },
+   {it_binding, "pause/resume playback",    "csdemopauseresume" },
+   {it_binding, "speed up",                 "csdemospeedup"     },
+   {it_binding, "slow down",                "csdemoslowdown"    },
+   {it_binding, "load previous map/demo",   "csdemoprevious"    },
+   {it_binding, "load next map/demo",       "csdemonext"        },
+   {it_end}
+};
+
+static menuitem_t mn_clientserverdemocheckpointkeys_items[] =
+{
+   {it_title,   FC_GOLD "key bindings", NULL, "M_KEYBND"},
+   {it_gap},
+   {it_info,    FC_GOLD "client/server demos", NULL, NULL, MENUITEM_CENTERED},
+   {it_gap},
    {it_binding, "save checkpoint",          "csdemosavecheckpoint"    },
    {it_binding, "load previous checkpoint", "csdemopreviouscheckpoint"},
    {it_binding, "load next checkpoint",     "csdemonextcheckpoint"    },
@@ -3542,20 +3556,39 @@ static menuitem_t mn_clientserverdemokeys_items[] =
 menu_t menu_clientserverdemokeys =
 {
    mn_clientserverdemokeys_items,
-   &menu_clientserverkeys,  // previous page
-   NULL,                    // next page
-   &menu_movekeys,          // rootpage
-   170, 15,                 // x,y offsets
+   &menu_clientserverkeys,               // previous page
+   &menu_clientserverdemocheckpointkeys, // next page
+   &menu_movekeys,                       // rootpage
+   170, 15,                              // x,y offsets
    4,
-   mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
-   mn_binding_contentnames, // table of contents arrays
+   mf_background,                        // draw background: not a skull menu
+   NULL,                                 // no drawer
+   mn_binding_contentnames,              // table of contents arrays
+   mn_binding_contentpages,
+};
+
+menu_t menu_clientserverdemocheckpointkeys = 
+{
+   mn_clientserverdemocheckpointkeys_items,
+   &menu_clientserverdemokeys,              // previous page
+   NULL,                                    // next page
+   &menu_movekeys,                          // rootpage
+   170, 15,                                 // x,y offsets
+   4,
+   mf_background,                           // draw background: not a skull menu
+   NULL,                                    // no drawer
+   mn_binding_contentnames,                 // table of contents arrays
    mn_binding_contentpages,
 };
 
 CONSOLE_COMMAND(mn_clientserverdemokeys, 0)
 {
     MN_StartMenu(&menu_clientserverdemokeys);
+}
+
+CONSOLE_COMMAND(mn_clientserverdemocheckpointkeys, 0)
+{
+    MN_StartMenu(&menu_clientserverdemocheckpointkeys);
 }
 
 //----------------------------------------------------------------------------
@@ -4031,6 +4064,7 @@ void MN_AddMenus(void)
    C_AddCommand(mn_consolekeys);
    C_AddCommand(mn_clientserverkeys);
    C_AddCommand(mn_clientserverdemokeys);
+   C_AddCommand(mn_clientserverdemocheckpointkeys);
    C_AddCommand(newgame);
    
    // prompt messages
