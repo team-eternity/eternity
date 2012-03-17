@@ -41,6 +41,8 @@
 
 bool cl_predicting = false;
 
+static bool prediction_enabled = true;
+
 static cs_cmd_t local_commands[MAX_POSITIONS];
 static cs_player_position_t last_server_position;
 static cs_floor_status_e last_floor_status;
@@ -65,15 +67,20 @@ cs_cmd_t* CL_GetCurrentCommand(void)
 void CL_PredictPlayerPosition(unsigned int command_index, bool think)
 {
    ticcmd_t ticcmd;
-   cs_cmd_t *command = CL_GetCommandAtIndex(command_index);
 
-   CS_CopyCommandToTiccmd(&ticcmd, command);
+   if(!prediction_enabled)
+      return;
+
+   CS_CopyCommandToTiccmd(&ticcmd, CL_GetCommandAtIndex(command_index));
    CS_RunPlayerCommand(consoleplayer, &ticcmd, think);
 }
 
 void CL_PredictFrom(unsigned int start, unsigned int end)
 {
    unsigned int i;
+
+   if(!prediction_enabled)
+      return;
 
    for(i = start; i < end; i++)
       CL_PredictPlayerPosition(i, true);
@@ -83,6 +90,9 @@ void CL_RePredict(unsigned int command_index, unsigned int position_index,
                   unsigned int count)
 {
    unsigned int i;
+
+   if(!prediction_enabled)
+      return;
 
    cl_predicting = true;
    for(i = 0; i < count; i++)

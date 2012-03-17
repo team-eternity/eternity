@@ -551,25 +551,13 @@ void CL_HandleMapCompletedMessage(nm_mapcompleted_t *message)
 
 void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
 {
-   if(CS_DEMOPLAY)
-   {
-      if(!cs_demo->playNext())
-      {
-         doom_printf(
-            "Error during demo playback: %s.\n", cs_demo->getError()
-         );
-         if(!cs_demo->stop())
-            doom_printf("Error stopping demo: %s.\n", cs_demo->getError());
-      }
-
-      return;
-   }
-
+   cl_commands_sent = 0;
    cl_latest_world_index = cl_current_world_index = 0;
    cl_packet_buffer.setSynchronized(false);
    CS_ReloadDefaults();
    memcpy(cs_settings, &message->settings, sizeof(clientserver_settings_t));
    CS_ApplyConfigSettings();
+   CS_DoWorldDone();
 
    if(CS_DEMORECORD)
    {
@@ -583,19 +571,9 @@ void CL_HandleMapStartedMessage(nm_mapstarted_t *message)
          if(!cs_demo->stop())
             doom_printf("Error stopping demo: %s.", cs_demo->getError());
       }
-      else if(!cs_demo->write(message, sizeof(nm_mapstarted_t), 0))
-      {
-         doom_printf(
-            "Error writing player command to demo: %s", cs_demo->getError()
-         );
-         if(!cs_demo->stop())
-            doom_printf("Error stopping demo: %s.", cs_demo->getError());
-      }
    }
 
-   CS_DoWorldDone();
    CL_SendCurrentStateRequest();
-   cl_commands_sent = 0;
 }
 
 void CL_HandleAuthResultMessage(nm_authresult_t *message)

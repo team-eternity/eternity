@@ -611,14 +611,18 @@ bool SingleCSDemo::readHeader()
                   );
                }
             }
-            else if(!CS_AddIWAD(resource.name))
+            else if(CS_AddIWAD(resource.name))
+            {
+               IdentifyVersion();
+               iwad_loaded = true;
+            }
+            else
             {
                I_Error(
                   "Error: Could not find IWAD %s, exiting.\n", resource.name
                );
             }
 
-            IdentifyVersion();
 
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
@@ -697,8 +701,6 @@ bool SingleCSDemo::readHeader()
    //             console.
    if(header_marker != end_of_header_packet)
       I_Error("Malformed demo header, demo likely corrupt.\n");
-
-   iwad_loaded = true;
 
    return true;
 }
@@ -1530,6 +1532,11 @@ void CSDemo::setCURLError(long error_code)
    internal_curl_error = error_code;
 }
 
+int CSDemo::getDemoCount() const
+{
+   return demo_count;
+}
+
 int CSDemo::getCurrentDemoIndex() const
 {
    return current_demo_index;
@@ -1957,21 +1964,38 @@ bool CSDemo::setCurrentDemo(int new_demo_index)
       return false;
    }
 
+   if(CS_CLIENT)
+   {
+      cl_commands_sent = 0;
+      cl_latest_world_index = cl_current_world_index = 0;
+      cl_packet_buffer.setSynchronized(false);
+   }
+
    if(!current_demo->openForPlayback())
    {
       setError(demo_error);
       return false;
    }
 
-   if(CS_CLIENT)
-   {
-      cl_latest_world_index = cl_current_world_index = 0;
-      cl_packet_buffer.setSynchronized(false);
-      CS_DoWorldDone();
-      cl_commands_sent = 0;
-   }
+   CS_DoWorldDone();
 
    return true;
+}
+
+bool CSDemo::hasPrevious()
+{
+   if(current_demo_index > 0)
+      return true;
+
+   return false;
+}
+
+bool CSDemo::hasNext()
+{
+   if(current_demo_index < (demo_count - 1))
+      return true;
+
+   return false;
 }
 
 bool CSDemo::playNext()

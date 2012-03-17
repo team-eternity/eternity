@@ -306,6 +306,7 @@ void CS_DoWorldDone(void)
    {
       clients[i].spectating = true;
       clients[i].stats.join_tic = gametic;
+      clients[i].latest_position_index = 0;
 
       if(playeringame[i])
       {
@@ -2082,17 +2083,26 @@ void CS_ReadFromNetwork(unsigned int timeout)
          // [CG] Save all received network messages in the demo if recording.
          if(CS_DEMORECORD)
          {
-            if(!cs_demo->write(
-               event.packet->data,
-               event.packet->dataLength,
-               playernum))
+            uint32_t message_type = *(uint32_t *)(event.packet->data);
+
+            // [CG] Don't write nm_mapstarted messages if clientside.
+            if((!CS_CLIENT) || (message_type != nm_mapstarted))
             {
-               doom_printf(
-                  "Error writing network message to demo: %s",
-                  cs_demo->getError()
-               );
-               if(!cs_demo->stop())
-                  doom_printf("Error stopping demo: %s.", cs_demo->getError());
+               if(!cs_demo->write(event.packet->data, event.packet->dataLength,
+                                                      playernum))
+               {
+                  doom_printf(
+                     "Error writing network message to demo: %s",
+                     cs_demo->getError()
+                  );
+
+                  if(!cs_demo->stop())
+                  {
+                     doom_printf(
+                        "Error stopping demo: %s.", cs_demo->getError()
+                     );
+                  }
+               }
             }
          }
 

@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -113,10 +113,10 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
    int oldammo;
    int playernum = player - players;
    int old_pending_weapon = player->pendingweapon;
-   
+
    if(ammo == am_noammo)
       return false;
-   
+
    // haleyjd: Part of the campaign to eliminate unnecessary
    //   I_Error bombouts for things that can be ignored safely
    if((unsigned int)ammo >= NUMAMMO)
@@ -139,10 +139,10 @@ bool P_GiveAmmo(player_t *player, ammotype_t ammo, int num)
 
    oldammo = player->ammo[ammo];
    player->ammo[ammo] += num;
-   
+
    if(player->ammo[ammo] > player->maxammo[ammo])
       player->ammo[ammo] = player->maxammo[ammo];
-   
+
    // If non zero ammo, don't change up weapons, player was lower on purpose.
    if(oldammo)
       return true;
@@ -342,7 +342,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
    int playernum = player - players;
    bool gaveweapon = false;
    bool gaveammo;
-   
+
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
@@ -351,7 +351,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
 
       player->bonuscount += BONUSADD;
       player->weaponowned[weapon] = true;
-      
+
       P_GiveAmmo(player, weaponinfo[weapon].ammo, (GameType == gt_dm) ? 5 : 2);
 
       if(!clientserver) // [CG] Probably needs demo-versioned.
@@ -360,7 +360,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
          S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
          return false;
       }
-      
+
       // [CG] Allow players to pick up weapons without switching to them.
       if(GET_WSOP(playernum) == WEAPON_SWITCH_ALWAYS ||
          (clientserver &&
@@ -401,7 +401,7 @@ bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped)
    // give one clip with a dropped weapon, two clips with a found weapon
    gaveammo = weaponinfo[weapon].ammo != am_noammo &&
       P_GiveAmmo(player, weaponinfo[weapon].ammo, dropped ? 1 : 2);
-   
+
    // haleyjd 10/4/11: de-Killoughized
    if(!player->weaponowned[weapon])
    {
@@ -425,9 +425,9 @@ bool P_GiveBody(player_t *player, int num)
    // haleyjd 11/14/09: compatibility fix.
    // The DeHackEd maxhealth setting was only supposed to affect health
    // potions, but when Ty replaced the MAXHEALTH define in this module,
-   // he replaced all uses of it, including here. We need to handle 
+   // he replaced all uses of it, including here. We need to handle
    // multiple cases for demo compatibility.
-   if(demo_version >= 200 && demo_version < 335) 
+   if(demo_version >= 200 && demo_version < 335)
       maxhealthtouse = maxhealth;
    else
       maxhealthtouse = 100;
@@ -456,10 +456,10 @@ bool P_GiveArmor(player_t *player, int armortype, bool htic)
 
    player->armortype = armortype;
    player->armorpoints = hits;
-   
+
    // haleyjd 10/10/02 -- TODO/FIXME: hack!
    player->hereticarmor = player->hereticarmor || htic;
-   
+
    return true;
 }
 
@@ -481,12 +481,12 @@ void P_GiveCard(player_t *player, card_t card)
 //
 bool P_GivePower(player_t *player, int power)
 {
-   static const int tics[NUMPOWERS] = 
+   static const int tics[NUMPOWERS] =
    {
       INVULNTICS,
       1,          /* strength */
       INVISTICS,
-      IRONTICS, 
+      IRONTICS,
       1,          /* allmap */
       INFRATICS,
       INVISTICS,  /* haleyjd: totalinvis */
@@ -519,7 +519,7 @@ bool P_GivePower(player_t *player, int power)
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   
+
    if(player->powers[power] >= 0)
       player->powers[power] = tics[power];
    return true;
@@ -546,7 +546,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    // haleyjd: don't crash if a monster gets here.
    if(!(player = toucher->player))
       return;
-   
+
    // Dead thing touching.
    // Can happen with a sliding player corpse.
    if(toucher->health <= 0)
@@ -600,7 +600,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       break;
 
       // sf: removed beta items
-      
+
    case PFX_SOULSPHERE:
       player->health += soul_health;
       if(player->health > max_soul)
@@ -651,7 +651,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       else
          removeobj = pickup_fx = (GameType == gt_single);
       break;
-      
+
    case PFX_BLUESKULL:
       if(!player->cards[it_blueskull])
          message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
@@ -1135,7 +1135,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
-   
+
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;
 
@@ -1165,13 +1165,13 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       // [CG] Monster killed a player.
       P_IncrementPlayerMonsterDeaths(targetnum);
    }
-   else if((!(source || source->player)) && target && target->player)
+   else if((!source) && target && target->player)
    {
       // [CG] The environment killed a player.
       // count environment kills against you
       P_IncrementPlayerEnvironmentDeaths(targetnum);
    }
-   else if((!(source || source->player)) && target && (!target->player))
+   else if(((!source) || (!source->player)) && target && (!target->player))
    {
       // [CG] Monster died either via another monster or the environment.  Use
       //      player 0 in this case.
@@ -1214,7 +1214,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // FIXME: make a flag? Also, probably not done in Heretic/Hexen.
    target->tics -= P_Random(pr_killtics) & 3;
-   
+
    if(target->tics < 1)
       target->tics = 1;
 
@@ -1255,7 +1255,7 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          mo->extradata.backpack->ammo[a] = target->player->ammo[a];
       mo->extradata.backpack->weapon = target->player->readyweapon;
       // set the backpack moving slightly faster than the player
-      
+
       // start it moving in a (fairly) random direction
       // i cant be bothered to create a new random number
       // class right now
@@ -1303,7 +1303,7 @@ static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 //
 // Implements obituaries based on the type of damage which killed a player.
 //
-void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, 
+void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
                     emod_t *mod)
 {
    bool friendly = false;
@@ -1342,7 +1342,7 @@ void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
             break;
          }
 
-         // if the monster didn't define the proper obit, try the 
+         // if the monster didn't define the proper obit, try the
          // obit defined by the mod of this attack
          if(!message)
             message = P_GetDeathMessageString(mod, false);
@@ -1405,17 +1405,17 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
    {
       angle_t angle;
       fixed_t thrust;
-      
-      // SoM: TODO figure out if linked portals needs to worry about this. It 
+
+      // SoM: TODO figure out if linked portals needs to worry about this. It
       // looks like target might not always be source->target
       angle = P_PointToAngle(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
       P_ThrustMobj(target, angle, thrust);
-      P_DamageMobj(target, NULL, NULL, 
-                   ((P_Random(pr_mincharge) & 7) + 1) * 6, 
+      P_DamageMobj(target, NULL, NULL,
+                   ((P_Random(pr_mincharge) & 7) + 1) * 6,
                    MOD_UNKNOWN);
-      
+
       if(target->player)
          target->reactiontime = 14 + (P_Random(pr_mincharge) & 7);
 
@@ -1434,11 +1434,11 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 {
    Mobj *target = dmgspec->target;
-   
+
    // toss the target around
-   
+
    target->angle += P_SubRandom(pr_whirlwind) << 20;
-   target->momx  += P_SubRandom(pr_whirlwind) << 10;   
+   target->momx  += P_SubRandom(pr_whirlwind) << 10;
    target->momy  += P_SubRandom(pr_whirlwind) << 10;
 
    // z momentum -- Bosses will not be tossed up.
@@ -1449,13 +1449,13 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 
       if(randVal > 160)
          randVal = 160;
-      
+
       target->momz += randVal << 10;
-      
+
       if(target->momz > 12*FRACUNIT)
          target->momz = 12*FRACUNIT;
    }
-   
+
    // do a small amount of damage (it adds up fast)
    if(!(leveltime & 7))
       P_DamageMobj(target, NULL, NULL, 3, MOD_UNKNOWN);
@@ -1469,7 +1469,7 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 // mobjinfo::dmgspecial is an index into this table. The index is checked for
 // validity during EDF processing. If the special returns true, P_DamageMobj
 // returns immediately, assuming that the special did its own damage. If it
-// returns false, P_DamageMobj continues, and the damage field of the 
+// returns false, P_DamageMobj continues, and the damage field of the
 // dmgspecdata_t structure is used to possibly modify the damage that will be
 // done.
 //
@@ -1535,7 +1535,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
 // haleyjd 07/13/03: added method of death flag
 // [CG] 09/17/11: Made some significant modifications to support c/s.
 //
-void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, 
+void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                   int damage, int mod)
 {
    int armor_damage = 0;
@@ -1555,11 +1555,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
       return; // shouldn't happen...
-   
+
    if(target->health <= 0)
       return;
-   
-   // haleyjd: 
+
+   // haleyjd:
    // Invulnerability -- telestomp can still kill to avoid getting stuck
    // Dormancy -- things are invulnerable until they are awakened
    // No Friend Damage -- some things aren't hurt by friends
@@ -1618,7 +1618,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    {
       MetaTable *meta = target->info->meta;
       double df = meta->getDouble(E_ModFieldName("damagefactor", emod), 1.0);
-         
+
       damage = (int)(damage * df);
    }
 
@@ -1645,12 +1645,12 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          if(inflictor->groupid == target->groupid ||
             !(link = P_GetLinkOffset(inflictor->groupid, target->groupid)))
          {
-            ang = P_PointToAngle (inflictor->x, inflictor->y, 
+            ang = P_PointToAngle (inflictor->x, inflictor->y,
                                    target->x, target->y);
          }
          else
          {
-            ang = P_PointToAngle(inflictor->x, inflictor->y, 
+            ang = P_PointToAngle(inflictor->x, inflictor->y,
                                   target->x + link->x, target->y + link->y);
          }
       }
@@ -1669,7 +1669,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
 
       P_ThrustMobj(target, ang, thrust);
-      
+
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)
          target->gear = 0;
@@ -1715,7 +1715,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
             armor_damage = player->armortype == 1 ? damage/2 : (damage*3)/4;
          else
             armor_damage = player->armortype == 1 ? damage/3 : damage/2;
-         
+
          if(player->armorpoints <= armor_damage)
          {
             // armor is used up
@@ -1731,10 +1731,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)
          player->health = 0;
-      
+
       P_SetPlayerAttacker(player, source);
       player->damagecount += damage;  // add damage after armor / invuln
-      
+
       if(player->damagecount > 100)
          player->damagecount = 100;  // teleport stomp does 10k points...
 
@@ -1743,21 +1743,21 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          player->damagecount = 0;
 
 #if 0
-      // killough 11/98: 
+      // killough 11/98:
       // This is unused -- perhaps it was designed for
       // a hand-connected input device or VR helmet,
       // to pinch the player when they're hurt :)
 
       // haleyjd: this was for the "CyberMan" 3D mouse ^_^
-      
+
       {
          int temp = damage < 100 ? damage : 100;
-         
+
          if(player == &players[consoleplayer])
             I_Tactile(40,10,40+temp*2);
       }
 #endif
-      
+
    }
 
    // do the damage
@@ -1844,7 +1844,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
                SV_BroadcastActorTarget(target, CS_AT_TARGET);
          }
       }
-      
+
       // killough 9/8/98:
       // If target's health is less than 50%, move it to the front of its list.
       // This will slightly increase the chances that enemies will choose to
@@ -1852,8 +1852,8 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
 
       if(target->health * 2 < target->info->spawnhealth)
       {
-         Thinker *cap = 
-            &thinkerclasscap[target->flags & MF_FRIEND ? 
+         Thinker *cap =
+            &thinkerclasscap[target->flags & MF_FRIEND ?
                              th_friends : th_enemies];
          (target->cprev->cnext = target->cnext)->cprev = target->cprev;
          (target->cnext = cap->cnext)->cprev = target;
@@ -1864,7 +1864,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
    if((cl_handling_damaged_actor && cl_handling_damaged_actor_and_justhit) ||
       (P_Random(pr_painchance) < target->info->painchance &&
       !(target->flags & MF_SKULLFLY)))
-   { 
+   {
       //killough 11/98: see below
       if(demo_version >= 203)
          justhit = true;
@@ -1885,7 +1885,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
          P_SetMobjState(target, st);
       }
    }
-   
+
    target->reactiontime = 0;           // we're awake now...
 
    // killough 9/9/98: cleaned up, made more consistent:
@@ -1912,7 +1912,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
    // * Things are not both friends while target is not a SUPERFRIEND
 
    // TODO: add fine-grained infighting control as metadata
-   
+
    if(source && source != target                                     // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
       && !bossignore                                                 // EDF_FIXME!
@@ -1950,7 +1950,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
 
       target->threshold = BASETHRESHOLD;
 
-      if(target->state == states[target->info->spawnstate] && 
+      if(target->state == states[target->info->spawnstate] &&
          target->info->seestate != NullStateNum)
       {
          P_SetMobjState(target, target->info->seestate);
@@ -1960,7 +1960,7 @@ bool P_HandleDamagedActor(Mobj *target, Mobj *source, int damage, int mod,
    // haleyjd 01/15/06: Fix for demo comp problem introduced in MBF
    // For MBF and above, set MF_JUSTHIT here
    // killough 11/98: Don't attack a friend, unless hit by that friend.
-   if(!demo_compatibility && justhit && 
+   if(!demo_compatibility && justhit &&
       (target->target == source || !target->target ||
        !(target->flags & target->target->flags & MF_FRIEND)))
    {
@@ -2016,10 +2016,10 @@ void P_Whistle(Mobj *actor, int mobjtype)
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
          Mobj *fog;
-         
+
          if(serverside)
          {
-            fog = P_SpawnMobj(prevx, prevy, 
+            fog = P_SpawnMobj(prevx, prevy,
                                    prevz + GameModeInfo->teleFogHeight,
                                    E_SafeThingType(GameModeInfo->teleFogType));
             if(CS_SERVER)
@@ -2064,11 +2064,11 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
       return -1;
    }
 
-   while((rover = P_FindMobjFromTID(params[1], rover, 
+   while((rover = P_FindMobjFromTID(params[1], rover,
                                     context->invocationData.trigger)))
    {
       int damage;
-      
+
       switch(params[2])
       {
       case 1: // telefrag damage
@@ -2078,7 +2078,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
          damage = rover->health;
          break;
       }
-      
+
       P_DamageMobj(rover, NULL, NULL, damage, MOD_UNKNOWN);
    }
 
@@ -2105,13 +2105,13 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 
    if(params[4] != 0)
    {
-      inflictor = P_FindMobjFromTID(params[4], inflictor, 
+      inflictor = P_FindMobjFromTID(params[4], inflictor,
                                     context->invocationData.trigger);
    }
 
    if(params[5] != 0)
    {
-      source = P_FindMobjFromTID(params[5], source, 
+      source = P_FindMobjFromTID(params[5], source,
                                  context->invocationData.trigger);
    }
 

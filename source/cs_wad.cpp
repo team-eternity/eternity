@@ -135,7 +135,7 @@ static bool need_new_wad_dir(void)
    while(wadfiles[wads_loaded].filename != NULL)
       wads_loaded++;
 
-   if(map->resource_count != (wads_loaded - 4))
+   if((map->resource_count + 2) != wads_loaded)
       return true;
 
    for(i = 0, j = 2; i < map->resource_count; i++, j++)

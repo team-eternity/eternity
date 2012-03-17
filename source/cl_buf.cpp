@@ -320,9 +320,7 @@ void NetPacketBuffer::add(char *data, uint32_t data_size)
       delete packet;
    }
    else
-   {
       packet_buffer.push_back(packet);
-   }
 }
 
 void NetPacketBuffer::processPacketsForIndex(uint32_t index)

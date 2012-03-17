@@ -349,11 +349,10 @@ void P_Ticker(void)
                unsigned int last_server_command_index =
                   CL_GetLastServerCommandIndex() + 1;
 
-               if(!cl_commands_sent)
-                  CL_LoadLastServerPosition();
-               else if((cl_commands_sent - 1) > last_server_command_index)
+               CL_LoadLastServerPosition();
+
+               if(cl_commands_sent > (last_server_command_index + 1))
                {
-                  CL_LoadLastServerPosition();
                   CL_RePredict(
                      last_server_command_index,
                      CL_GetLastServerPositionIndex() + 1,

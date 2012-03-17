@@ -265,6 +265,7 @@ public:
    CSDemo();
    ~CSDemo();
 
+   int         getDemoCount() const;
    int         getCurrentDemoIndex() const;
    bool        setFolderPath(const char *new_folder_path);
    bool        record();
@@ -273,6 +274,8 @@ public:
    bool        pause();
    bool        resume();
    bool        setCurrentDemo(int new_demo_index);
+   bool        hasNext();
+   bool        hasPrevious();
    bool        playNext();
    bool        playPrevious();
    bool        stop();

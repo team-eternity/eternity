@@ -701,7 +701,18 @@ void CL_RunDemoTics(void)
 
    if(cs_demo->isFinished())
    {
-      if(!displayed_message)
+      if(cs_demo->hasNext())
+      {
+         if(!cs_demo->playNext())
+         {
+            doom_printf(
+               "Error during demo playback: %s.\n", cs_demo->getError()
+            );
+            if(!cs_demo->stop())
+               doom_printf("Error stopping demo: %s.\n", cs_demo->getError());
+         }
+      }
+      else if(!displayed_message)
       {
          HU_CenterMessage("Demo playback complete.\n");
          displayed_message = true;

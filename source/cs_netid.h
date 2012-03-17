@@ -151,6 +151,8 @@ public:
       }
    }
 
+   uint32_t getNetIDsAssigned() const { return netids_assigned; }
+
 };
 
 extern NetIDLookup<Mobj>                NetActors;

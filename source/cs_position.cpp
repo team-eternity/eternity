@@ -241,16 +241,16 @@ void CS_CopyMiscState(cs_misc_state_t *dest, cs_misc_state_t *src)
 void CS_PrintPlayerPosition(cs_player_position_t *position)
 {
    printf(
-      "%u: %5d/%5d/%5d %5d/%5d/%5d %3d %3d",
+      "%u: %5d/%5d/%5d %5d/%5d/%5d %3d %5d",
       position->world_index,
-      position->x >> FRACBITS,
-      position->y >> FRACBITS,
-      position->z >> FRACBITS,
-      position->momx >> FRACBITS,
-      position->momy >> FRACBITS,
-      position->momz >> FRACBITS,
+      position->x     >> FRACBITS,
+      position->y     >> FRACBITS,
+      position->z     >> FRACBITS,
+      position->momx  >> FRACBITS,
+      position->momy  >> FRACBITS,
+      position->momz  >> FRACBITS,
       position->angle / ANGLE_1,
-      position->floatbob
+      position->pitch >> FRACBITS
    );
 }
 

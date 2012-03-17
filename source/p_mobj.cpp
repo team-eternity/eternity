@@ -123,7 +123,7 @@ fixed_t FloatBobDiffs[64] =
 };
 
 //=============================================================================
-// 
+//
 // PointThinker Methods
 //
 
@@ -342,7 +342,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          state = st->nextstate;
    }
    while(!mobj->tics && !P_CheckSeenState(state, seenstates));
-   
+
    if(ret && !mobj->tics)  // killough 4/9/98: detect state cycles
       doom_printf(FC_ERROR "Warning: State Cycle Detected");
 
@@ -389,7 +389,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 
    // haleyjd 09/29/09: don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
-   
+
    if(mobj->skin && st->sprite == mobj->info->defsprite)
       mobj->sprite = mobj->skin->sprite;
    else
@@ -690,10 +690,10 @@ void P_XYMovement(Mobj* mo)
    // no friction for missiles or skulls ever
    if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
       return;
-   
+
    // no friction when airborne
    // haleyjd: OVER_UNDER
-   if(mo->z > mo->floorz && 
+   if(mo->z > mo->floorz &&
       (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
       return;
 
@@ -722,7 +722,7 @@ void P_XYMovement(Mobj* mo)
       // killough 10/98:
       // Don't affect main player when voodoo dolls stop, except in old demos:
 
-      if(player && E_PlayerInWalkingState(player) && 
+      if(player && E_PlayerInWalkingState(player) &&
          (player->mo == mo || demo_version < 203))
          P_SetMobjState(player->mo, player->mo->info->spawnstate);
 
@@ -734,7 +734,7 @@ void P_XYMovement(Mobj* mo)
    }
    else
    {
-      // haleyjd 04/11/10: BOOM friction compatibility 
+      // haleyjd 04/11/10: BOOM friction compatibility
       if(demo_version <= 201)
       {
          // phares 3/17/98
@@ -750,7 +750,7 @@ void P_XYMovement(Mobj* mo)
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
          if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
-         { 
+         {
             // No. Use original friction. This allows you to not bob so much
             // if you're on ice, but keeps enough momentum around to break free
             // when you're mildly stuck in a wall.
@@ -758,7 +758,7 @@ void P_XYMovement(Mobj* mo)
             mo->momy = FixedMul(mo->momy, ORIG_FRICTION);
          }
          else
-         { 
+         {
             // Yes. Use stored friction.
             mo->momx = FixedMul(mo->momx,mo->friction);
             mo->momy = FixedMul(mo->momy,mo->friction);
@@ -1249,7 +1249,7 @@ static bool P_CheckPortalTeleport(Mobj *mobj)
          }
       }
    }
-   
+
    if(!ret && mobj->subsector->sector->c_pflags & PS_PASSABLE)
    {
       // Calculate the height at which the mobj should pass through the portal
@@ -1377,7 +1377,7 @@ void Mobj::Think()
                   (!player || !player->powers[pw_ironfeet]))
                {
                   P_DamageMobj(this, onmo, onmo,
-                               onmo->info->topdamage, 
+                               onmo->info->topdamage,
                                onmo->info->mod);
                }
             }
@@ -1512,7 +1512,7 @@ void Mobj::Think()
 
       if(can_respawn && movecount >= info->respawntime &&
          !(leveltime & 31) && P_Random(pr_respawn) <= info->respawnchance)
-      { 
+      {
          // check for nightmare respawn
          if(flags2 & MF2_REMOVEDEAD)
          {
@@ -1529,7 +1529,7 @@ void Mobj::Think()
 //
 // Mobj::serialize
 //
-// Handles saving and loading of mobjs through the thinker serialization 
+// Handles saving and loading of mobjs through the thinker serialization
 // mechanism.
 //
 void Mobj::serialize(SaveArchive &arc)
@@ -1539,7 +1539,7 @@ void Mobj::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    // Basic Properties
-   arc 
+   arc
       // Identity
       << type << tid
       // Position
@@ -1573,7 +1573,7 @@ void Mobj::serialize(SaveArchive &arc)
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
-   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
+   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
 
    if(arc.isSaving()) // Saving
    {
@@ -1598,9 +1598,9 @@ void Mobj::serialize(SaveArchive &arc)
 
       arc << temp; // State index
       state = states[temp];
-      
+
       // haleyjd 07/23/09: this must be before skin setting!
-      info = mobjinfo[type]; 
+      info = mobjinfo[type];
 
       arc << temp; // Player number
       if(temp)
@@ -1612,9 +1612,9 @@ void Mobj::serialize(SaveArchive &arc)
          // PCLASS_FIXME: Need to save and restore proper player class!
          // Temporary hack.
          players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
-         
+
          // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
-         // back to default for player class if non-existant. Note: must be 
+         // back to default for player class if non-existant. Note: must be
          // after player class is set.
          P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
       }
@@ -1675,14 +1675,14 @@ void Mobj::deSwizzle()
 //
 // haleyjd 11/22/10: Overrides Thinker::updateThinker.
 // Moved custom logic for mobjs out of what was P_UpdateThinker, to here.
-// 
+//
 void Mobj::updateThinker()
 {
    int tclass = th_misc;
 
    if(this->removed)
       tclass = th_delete;
-   else if(this->health > 0 && 
+   else if(this->health > 0 &&
            (this->flags & MF_COUNTKILL || this->flags3 & MF3_KILLABLE))
    {
       if(this->flags & MF_FRIEND)
@@ -1913,7 +1913,7 @@ void Mobj::removeThinker()
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = NULL; 
+      this->old_sectorlist = NULL;
    }
 
    // stop any playing sound
@@ -2341,7 +2341,7 @@ spawnit:
    mobj = P_SpawnMobj(x, y, z, i);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
-   
+
    // haleyjd 10/03/05: Hexen-style z positioning
    if(mthing->height && (z == ONFLOORZ || z == ONCEILINGZ))
    {
@@ -2654,7 +2654,7 @@ fixed_t P_MissileMomz(fixed_t dx, fixed_t dy, fixed_t dz, int speed)
 //
 // P_SpawnMissileEx
 //
-// haleyjd 08/08/11: Core shared missile firing logic, taking a structure as a 
+// haleyjd 08/08/11: Core shared missile firing logic, taking a structure as a
 // parameter to hold all possible information relevant to firing the missile.
 //
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
@@ -2689,12 +2689,12 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
          an += P_SubRandom(pr_shadow) << shamt;
       }
    }
-   
+
    mo->angle = an;
    an >>= ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);   
-   
+   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+
    if(missileinfo.flags & missileinfo_t::USEANGLE)
       mo->momz = missileinfo.momz;
    else
@@ -2800,7 +2800,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(source->player && source->player->powers[pw_silencer] &&
       P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
    {
-      S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
+      S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED,
                            ATTN_NORMAL, CHAN_AUTO);
    }
    else
@@ -2843,7 +2843,7 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
 // haleyjd 08/07/11: Ugly hack to solve a problem Lee created in A_Mushroom.
 //
 Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
-                             fixed_t srcz, 
+                             fixed_t srcz,
                              fixed_t destx, fixed_t desty, fixed_t destz)
 {
    missileinfo_t missileinfo;
@@ -3738,7 +3738,7 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
    return 0;
 }
 
-enum 
+enum
 {
    TELE_NORMAL,
    TELE_SILENT,
