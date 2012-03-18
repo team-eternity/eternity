@@ -721,7 +721,10 @@ void A_WeaponReady(Mobj *mo)
          !(P_GetReadyWeapon(player)->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = true;
-         P_FireWeapon(player);
+
+         // [CG] Don't actually fire if a spectator.
+         if((!CS_CLIENT) || (!clients[consoleplayer].spectating))
+            P_FireWeapon(player);
          return;
       }
    }
