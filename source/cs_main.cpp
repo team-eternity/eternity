@@ -269,7 +269,7 @@ void CS_Init(void)
 
    if(CS_SERVER)
       SV_Init();
-   else if(!cs_playingdemofromcommandline)
+   else if(CS_CLIENT && (!cs_playingdemofromcommandline))
       CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
 }
 
