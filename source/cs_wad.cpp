@@ -132,6 +132,9 @@ static bool need_new_wad_dir(void)
    unsigned int wads_loaded = 0;
    unsigned int i, j;
 
+   if(!wadfiles)
+      return true;
+
    while(wadfiles[wads_loaded].filename != NULL)
       wads_loaded++;
 
@@ -506,7 +509,10 @@ bool CS_LoadMap(void)
    S_StopMusic();
    wGlobalDir.Clear();
    Z_FreeTags(PU_CACHE, PU_CACHE);
-   D_ClearFiles();
+
+   if(wadfiles)
+      D_ClearFiles();
+
    IdentifyVersion();
 
    if(map->resource_count > 0)

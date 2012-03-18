@@ -227,33 +227,11 @@ void CL_Init(char *url)
       }
    }
 
-   if((p = M_CheckParm("-csplaydemo")))
-   {
-      if(p >= (myargc - 2))
-         I_Error("CL_Init: No demo file specified.\n");
-
-      if(!cs_demo->play(myargv[p + 1]))
-      {
-         I_Error(
-            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
-         );
-      }
-   }
-   else if((M_CheckParm("-record")))
-   {
-      printf("CL_Init: Recording client/server demo.\n");
-
-      if(!cs_demo->record())
-         I_Error("Error recording demo: %s\n", cs_demo->getError());
-   }
-   else
-   {
-      CL_InitPrediction();
-      CS_ZeroClients();
-      CL_LoadConfig();
-      CS_ClearTempWADDownloads();
-      CS_InitSectorPositions();
-   }
+   CL_InitPrediction();
+   CS_ZeroClients();
+   CL_LoadConfig();
+   CS_ClearTempWADDownloads();
+   CS_InitSectorPositions();
 }
 
 void CL_InitAnnouncer()
@@ -348,19 +326,8 @@ void CL_Connect(void)
          );
       }
 
-      if(CS_DEMORECORD)
-      {
-         if(!cs_demo->addNewMap())
-         {
-            doom_printf(
-               "Error adding new map to demo: %s.", cs_demo->getError()
-            );
-            if(!cs_demo->stop())
-               doom_printf("Error stopping demo: %s.", cs_demo->getError());
-         }
-         else
-            doom_printf("Recording demo.");
-      }
+      if(M_CheckParm("-record"))
+         CS_RecordDemo();
    }
    else
    {

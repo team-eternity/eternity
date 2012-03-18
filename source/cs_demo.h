@@ -264,7 +264,8 @@ public:
    bool        setFolderPath(const char *new_folder_path);
    bool        record();
    bool        addNewMap();
-   bool        play(const char *url);
+   bool        load(const char *url);
+   bool        play();
    bool        pause();
    bool        resume();
    bool        setCurrentDemo(int new_demo_index);
@@ -299,6 +300,8 @@ extern CSDemo *cs_demo;
 
 void CS_NewDemo();
 void CS_StopDemo();
+bool CS_PlayDemo(const char *url);
+bool CS_RecordDemo();
 void CS_ClearOldDemos();
 
 #endif

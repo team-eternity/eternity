@@ -1753,7 +1753,7 @@ bool CSDemo::addNewMap()
    return true;
 }
 
-bool CSDemo::play(const char *url)
+bool CSDemo::load(const char *url)
 {
    int demo_type;
    qstring qbuf, saved_buf, test_folder_buf;
@@ -1925,6 +1925,15 @@ bool CSDemo::play(const char *url)
 
    mode = mode_playback;
 
+   G_SetGameType(cs_original_settings->game_type);
+
+   return true;
+}
+
+bool CSDemo::play()
+{
+   CS_InitNew();
+   // G_InitNew((skill_t)cs_settings->skill, cs_maps[current_demo_index].name);
    return true;
 }
 
@@ -2622,6 +2631,45 @@ void CS_StopDemo()
       if(!cs_demo->close())
          printf("Error closing demo: %s.\n", cs_demo->getError());
    }
+}
+
+bool CS_PlayDemo(const char *url)
+{
+   if(CS_CLIENT && net_peer)
+      CL_Disconnect();
+
+   CS_NewDemo();
+
+   if(!cs_demo->load(Console.argv[0]->constPtr()))
+   {
+      doom_printf("Error loading demo: %s.", cs_demo->getError());
+      return false;
+   }
+
+   if(!cs_demo->play())
+   {
+      doom_printf("Error playing demo: %s.", cs_demo->getError());
+      return false;
+   }
+
+   doom_printf("Playing demo %s.", Console.argv[0]->constPtr());
+   return true;
+}
+
+bool CS_RecordDemo()
+{
+   CS_NewDemo();
+
+   if(!cs_demo->record())
+   {
+      doom_printf("Error recording demo: %s.", cs_demo->getError());
+      if(!cs_demo->stop())
+         doom_printf("Error stopping demo: %s.", cs_demo->getError());
+      return false;
+   }
+
+   doom_printf("Recording %s.", cs_demo->getBasename());
+   return true;
 }
 
 void CS_ClearOldDemos()

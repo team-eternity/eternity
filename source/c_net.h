@@ -110,7 +110,7 @@ void C_UpdateVar(command_t *command);
 
 struct command_t;
 extern command_t *c_netcmds[NUMNETCMDS];
-extern char* default_name;
+extern char default_name[20];
 extern int default_colour;
 
 #define CN_BROADCAST 128

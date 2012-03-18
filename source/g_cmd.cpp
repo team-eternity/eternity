@@ -383,19 +383,11 @@ CONSOLE_COMMAND(csdemoplay, 0)
 
    if(Console.argc < 1)
    {
-      doom_printf("Usage: playcsdemo demourl");
+      doom_printf("Usage: csdemoplay demourl");
       return;
    }
 
-   if(net_peer)
-      CL_Disconnect();
-
-   CS_NewDemo();
-
-   if(!cs_demo->play(Console.argv[0]->constPtr()))
-      doom_printf("Error playing demo: %s.", cs_demo->getError());
-   else
-      doom_printf("Playing demo %s.", Console.argv[0]->constPtr());
+   CS_PlayDemo(Console.argv[0]->constPtr());
 }
 
 CONSOLE_COMMAND(csdemospeedup, 0)
@@ -554,15 +546,7 @@ CONSOLE_COMMAND(csdemorecord, 0)
       return;
    }
 
-   CS_NewDemo();
-
-   if(!cs_demo->record())
-   {
-      doom_printf("Error recording: %s.", cs_demo->getError());
-      return;
-   }
-
-   doom_printf("Recording %s.", cs_demo->getBasename());
+   CS_RecordDemo();
 }
 
 CONSOLE_COMMAND(csdemosavecheckpoint, 0)
@@ -945,7 +929,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
    if(playernum == consoleplayer)
    {
-      E_ReplaceString(default_name, Console.argv[0]->getBuffer());
+      Console.argv[0]->copyInto(default_name, 20);
 
       if(CS_CLIENT)
          CL_SendPlayerStringInfo(ci_name);

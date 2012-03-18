@@ -67,7 +67,7 @@ command_t *c_netcmds[NUMNETCMDS];
   address space to test the zone id, even if its not a ptr to a
   zone block.
 */
-char *default_name = NULL; // = "player";
+char default_name[20]; // = "player";
 int default_colour;
 
 // basic chat char stuff: taken from hu_stuff.c and renamed
@@ -81,7 +81,8 @@ static int  tail = 0;
 // haleyjd: this must be called from start-up -- see above.
 void C_InitPlayerName(void)
 {
-   default_name = estrdup("player");
+   // default_name = estrdup("player");
+   // memset(default_name, 0, sizeof(default_name));
 }
 
 

@@ -3600,12 +3600,15 @@ static void D_DoomInit(void)
 
    CS_Init();
 
-   if((p = M_CheckParm("-csplaydemo")) && p < (myargc - 1))
+   if((p = M_CheckParm("-csplaydemo")))
    {
-      if(!cs_demo->play(myargv[p + 1]))
+      if(p >= (myargc - 1))
+         I_Error("No demo file specified.\n");
+
+      if(!cs_demo->load(myargv[p + 1]))
       {
          I_Error(
-            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
+            "Error loading demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
          );
       }
    }
@@ -3888,7 +3891,7 @@ static void D_DoomInit(void)
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
-   if(CS_DEMOPLAY) // [CG] Restore settings after M_LoadDefaults.
+   if(M_CheckParm("-csplaydemo")) // [CG] Restore settings after M_LoadDefaults.
       cs_demo->reloadSettings();
 
    // haleyjd 01/11/09: process affinity mask stuff
@@ -4017,8 +4020,6 @@ static void D_DoomInit(void)
    // [CG] Set a default game type in singleplayer and p2p.
    if(!clientserver)
       G_NewGameType();
-   else if(CS_DEMO)
-      G_SetGameType(cs_original_settings->game_type);
 
    startupmsg("V_InitMisc","Init miscellaneous video patches.");
    V_InitMisc();
@@ -4280,6 +4281,15 @@ static void D_DoomInit(void)
          }
          else
             D_StartTitle();                 // start up intro loop
+      }
+   }
+   else if(M_CheckParm("-csplaydemo"))
+   {
+      if(!cs_demo->play())
+      {
+         I_Error(
+            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
+         );
       }
    }
    else if(CS_SERVER)
