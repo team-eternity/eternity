@@ -560,6 +560,7 @@ void CS_ZeroClient(int clientnum)
       sc->weapon_switch_on_pickup = false;
       sc->ammo_switch_on_pickup = false;
       sc->options.player_bobbing = false;
+      sc->options.bobbing_intensity = 1.0f;
       sc->options.doom_weapon_toggles = false;
       sc->options.autoaim = false;
       sc->options.autoaim = 0;
@@ -585,6 +586,7 @@ void CS_ZeroClients(void)
       //      it can be restored later.
       server_client = &server_clients[consoleplayer];
       server_client->options.player_bobbing = player_bobbing;
+      server_client->options.bobbing_intensity = bobbing_intensity;
       server_client->options.doom_weapon_toggles = doom_weapon_toggles;
       server_client->options.autoaim = autoaim;
       server_client->options.weapon_speed = weapon_speed;
@@ -1307,6 +1309,11 @@ void CS_HandleUpdatePlayerInfoMessage(nm_playerinfoupdated_t *message)
       if(CS_SERVER)
          server_client->options.player_bobbing = message->boolean_value;
    }
+   else if(message->info_type == ci_bobbing_intensity)
+   {
+      if(CS_SERVER)
+         server_client->options.bobbing_intensity = message->float_value;
+   }
    else if(message->info_type == ci_weapon_toggle)
    {
       if(CS_SERVER)
@@ -1527,6 +1534,13 @@ void CS_BuildPlayerScalarInfoPacket(nm_playerinfoupdated_t *update_message,
          update_message->boolean_value = player_bobbing;
       else if(CS_SERVER)
          update_message->boolean_value = server_client->options.player_bobbing;
+   }
+   else if(info_type == ci_bobbing_intensity)
+   {
+      if(CS_CLIENT)
+         update_message->float_value = bobbing_intensity;
+      else if(CS_SERVER)
+         update_message->float_value = server_client->options.bobbing_intensity;
    }
    else if(info_type == ci_weapon_toggle)
    {

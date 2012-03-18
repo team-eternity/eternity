@@ -229,36 +229,37 @@ typedef enum
 {
    ci_team,
    ci_spectating,
-   ci_kill_count,     // killcount
-   ci_item_count,     // itemcount
-   ci_secret_count,   // secretcount
+   ci_kill_count,        // killcount
+   ci_item_count,        // itemcount
+   ci_secret_count,      // secretcount
    ci_colormap,
    ci_cheats,
    ci_health,
-   ci_armor_points,   // armorpoints
-   ci_armor_type,     // armortype
-   ci_ready_weapon,   // readyweapon
-   ci_pending_weapon, // pendingweapon
-   ci_frags,          // frags[], MAXPLAYERS
-   ci_power_enabled,  // powers[], NUMPOWERS
-   ci_owns_card,      // cards[], NUMCARDS
-   ci_owns_weapon,    // weaponowned[], NUMWEAPONS
-   ci_ammo_amount,    // ammo[], NUMAMMO
-   ci_max_ammo,       // maxammo[], NUMAMMO
-   ci_owns_backpack,  // backpack
-   ci_did_secret,     // didsecret
-   ci_name,           // name[20]
-   ci_skin,           // skin->skinname
-   ci_class,          // pclass->mnemonic[33]
+   ci_armor_points,      // armorpoints
+   ci_armor_type,        // armortype
+   ci_ready_weapon,      // readyweapon
+   ci_pending_weapon,    // pendingweapon
+   ci_frags,             // frags[], MAXPLAYERS
+   ci_power_enabled,     // powers[], NUMPOWERS
+   ci_owns_card,         // cards[], NUMCARDS
+   ci_owns_weapon,       // weaponowned[], NUMWEAPONS
+   ci_ammo_amount,       // ammo[], NUMAMMO
+   ci_max_ammo,          // maxammo[], NUMAMMO
+   ci_owns_backpack,     // backpack
+   ci_did_secret,        // didsecret
+   ci_name,              // name[20]
+   ci_skin,              // skin->skinname
+   ci_class,             // pclass->mnemonic[33]
    ci_queue_level,
    ci_queue_position,
-   ci_pwo,            // server_client->weapon_preferences[], NUMWEAPONS + 1
-   ci_wsop,           // server_client->weapon_switch_on_pickup
-   ci_asop,           // server_client->ammo_switch_on_pickup
-   ci_bobbing,        // player_bobbing
-   ci_weapon_toggle,  // doom_weapon_toggles
-   ci_autoaim,        // autoaim
-   ci_weapon_speed,   // weapon_speed
+   ci_pwo,               // server_client->weapon_preferences[], NUMWEAPONS + 1
+   ci_wsop,              // server_client->weapon_switch_on_pickup
+   ci_asop,              // server_client->ammo_switch_on_pickup
+   ci_bobbing,           // player_bobbing
+   ci_bobbing_intensity, // player_bobbing
+   ci_weapon_toggle,     // doom_weapon_toggles
+   ci_autoaim,           // autoaim
+   ci_weapon_speed,      // weapon_speed
    ci_buffering,
    ci_afk,
 } client_info_e;
@@ -307,6 +308,7 @@ typedef enum
 typedef struct
 {
    uint8_t player_bobbing;
+   double  bobbing_intensity;
    uint8_t doom_weapon_toggles;
    uint8_t autoaim;
    uint32_t weapon_speed;
@@ -577,9 +579,10 @@ typedef struct
    int32_t info_type; // [CG] client_info_e.
    int32_t array_index;
    union {
-      int32_t int_value;
+      int32_t  int_value;
       uint64_t string_size;
-      uint8_t boolean_value;
+      uint8_t  boolean_value;
+      double   float_value;
    };
 } nm_playerinfoupdated_t;
 

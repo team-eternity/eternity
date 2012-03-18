@@ -413,6 +413,11 @@ extern int default_weapon_recoil;
 extern int player_bobbing;  // whether player bobs or not   // phares 2/25/98
 extern int default_player_bobbing;  // killough 3/1/98: make local to each game
 
+// [CG] 03/18/2012: Allow players to modify the bobbing intensity if it's
+//                  enabled.
+extern double bobbing_intensity;
+extern double default_bobbing_intensity;
+
 // killough 7/19/98: Classic Pre-Beta BFG
 extern bfg_t bfgtype, default_bfgtype;
 

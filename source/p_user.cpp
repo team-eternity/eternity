@@ -312,6 +312,12 @@ void P_CalcHeight(player_t *player)
       return;
    }
 
+   if(clientserver && (dmflags2 & dmf_allow_movebob_change))
+   {
+      if(bobbing_intensity < 1.0)
+         player->bob *= bobbing_intensity;
+   }
+
    angle = (FINEANGLES / 20 * leveltime) & FINEMASK;
    bob   = FixedMul(player->bob / 2, finesine[angle]);
 

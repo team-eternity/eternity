@@ -396,6 +396,7 @@ bool SingleCSDemo::writeHeader()
    header.demo_type = demo_type;
    memcpy(&header.settings, settings, sizeof(clientserver_settings_t));
    header.local_options.player_bobbing = player_bobbing;
+   header.local_options.bobbing_intensity = bobbing_intensity;
    header.local_options.doom_weapon_toggles = doom_weapon_toggles;
    header.local_options.autoaim = autoaim;
    header.local_options.weapon_speed = weapon_speed;
@@ -458,6 +459,7 @@ bool SingleCSDemo::writeInfo()
    map_info["length"] = header.length;
    map_info["iwad"] = cs_resources[0].name;
    map_info["local_options"]["player_bobbing"] = player_bobbing;
+   map_info["local_options"]["bobbing_intensity"] = bobbing_intensity;
    map_info["local_options"]["doom_weapon_toggles"] = doom_weapon_toggles;
    map_info["local_options"]["autoaim"] = autoaim;
    map_info["local_options"]["weapon_speed"] = weapon_speed;
@@ -975,6 +977,7 @@ bool SingleCSDemo::reloadSettings()
    memcpy(cs_original_settings, cs_settings, sizeof(clientserver_settings_t));
 
    player_bobbing      = header.local_options.player_bobbing;
+   bobbing_intensity   = header.local_options.bobbing_intensity;
    doom_weapon_toggles = header.local_options.doom_weapon_toggles;
    autoaim             = header.local_options.autoaim;
    weapon_speed        = header.local_options.weapon_speed;

@@ -73,6 +73,9 @@ int  default_weapon_recoil;      // killough 3/1/98: make local to each game
 int player_bobbing;  // whether player bobs or not          // phares 2/25/98
 int default_player_bobbing;
 
+double bobbing_intensity = 1.0;
+double default_bobbing_intensity = 1.0;
+
 int monsters_remember=1;        // killough 3/1/98
 int default_monsters_remember=1;
 

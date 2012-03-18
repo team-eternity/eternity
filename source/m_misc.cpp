@@ -233,6 +233,11 @@ default_t defaults[] =
    DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_yes,
                "1 to enable player bobbing (view moving up/down slightly)"),
 
+   // [CG] 03/18/2012
+   DEFAULT_FLOAT("bobbing_intensity", &default_bobbing_intensity, NULL,
+                 1.0, 0.0, 1.0, default_t::wad_no,
+                 "amount of player bobbing to add, if enabled"),
+
    // killough 3/1/98
    DEFAULT_INT("monsters_remember", &default_monsters_remember, &monsters_remember,
                1, 0, 1, default_t::wad_yes,

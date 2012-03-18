@@ -1760,6 +1760,7 @@ void SV_LoadClientOptions(int playernum)
    server_client_t *server_client = &server_clients[playernum];
 
    player_bobbing      = server_client->options.player_bobbing;
+   bobbing_intensity   = server_client->options.bobbing_intensity;
    doom_weapon_toggles = server_client->options.doom_weapon_toggles;
    autoaim             = server_client->options.autoaim;
    weapon_speed        = server_client->options.weapon_speed;
@@ -1767,12 +1768,7 @@ void SV_LoadClientOptions(int playernum)
 
 void SV_RestoreServerOptions(void)
 {
-   server_client_t *server_client = &server_clients[consoleplayer];
-
-   player_bobbing      = server_client->options.player_bobbing;
-   doom_weapon_toggles = server_client->options.doom_weapon_toggles;
-   autoaim             = server_client->options.autoaim;
-   weapon_speed        = server_client->options.weapon_speed;
+   SV_LoadClientOptions(consoleplayer);
 }
 
 void SV_BroadcastPlayerSpawned(mapthing_t *spawn_point, int playernum)
@@ -2994,6 +2990,7 @@ void SV_ArchiveServerClients(SaveArchive& arc)
          arc << sc->weapon_preferences[j];
 
       arc << sc->options.player_bobbing
+          << sc->options.bobbing_intensity
           << sc->options.doom_weapon_toggles
           << sc->options.autoaim
           << sc->options.weapon_speed;

@@ -2827,6 +2827,7 @@ static menuitem_t mn_weapons_items[] =
    {it_gap},
    {it_toggle,     "bfg type",                       "bfgtype"},
    {it_toggle,     "bobbing",                        "bobbing"},
+   {it_variable,   "bobbing intensity",              "bobbing_intensity"},
    {it_toggle,     "recoil",                         "recoil"},
    {it_toggle,     "fist/ssg toggle",                "doom_weapon_toggles"},
    {it_toggle,     "autoaiming",                     "autoaim"},

@@ -279,6 +279,30 @@ CONSOLE_NETVAR(bobbing, player_bobbing, 0, netcmd_bobbing)
       doom_printf("for server only");
 }
 
+VARIABLE_FLOAT(bobbing_intensity, &default_bobbing_intensity, 0.0, 1.0);
+CONSOLE_VARIABLE(bobbing_intensity, bobbing_intensity, 0)
+{
+   if(!clientserver)
+   {
+      doom_printf("C/S mode only.");
+      return;
+   }
+
+   if(CS_CLIENT)
+   {
+      if(dmflags2 & dmf_allow_movebob_change)
+         CL_SendPlayerScalarInfo(ci_bobbing_intensity);
+      else
+         doom_printf("Changes to player bobbing disallowed.");
+   }
+
+   printf(
+      "Bobbing intensity: %g, %g.\n", 
+      bobbing_intensity,
+      default_bobbing_intensity
+   );
+}
+
 VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
 CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0)
 {
@@ -1469,6 +1493,7 @@ void G_AddCommands(void)
    C_AddCommand(shot_gamma);
    C_AddCommand(alwaysmlook);
    C_AddCommand(bobbing);
+   C_AddCommand(bobbing_intensity);
    C_AddCommand(doom_weapon_toggles);
    C_AddCommand(sens_horiz);
    C_AddCommand(sens_vert);
