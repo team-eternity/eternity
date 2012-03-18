@@ -478,14 +478,7 @@ void CL_HandleCurrentStateMessage(nm_currentstate_t *message)
       return;
    }
 
-   // [CG] FIXME WTF
-   cl_setting_sector_positions = true;
-   cl_spawning_actor_from_message = true;
-   cl_removing_actor_from_message = true;
-   P_LoadGame(cs_state_file_path);
-   cl_setting_sector_positions = false;
-   cl_spawning_actor_from_message = false;
-   cl_removing_actor_from_message = false;
+   CL_LoadGame(cs_state_file_path);
 
    // [CG] Have to be "in-game" at this point.  This should be sent over
    //      in the game state message, so error out if not.

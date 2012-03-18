@@ -95,6 +95,7 @@ void  CL_SaveServerPassword(void);
 void  CL_MessageTeam(event_t *ev);
 void  CL_MessageServer(event_t *ev);
 void  CL_RCONMessage(event_t *ev);
+void  CL_LoadGame(const char *path);
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                    mobjtype_t type);
 void  CL_SpawnPlayer(int playernum, uint32_t net_id, fixed_t x, fixed_t y,

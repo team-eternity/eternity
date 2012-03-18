@@ -154,7 +154,7 @@ private:
    const static int checkpoint_index_not_found = 15;
    const static int checkpoint_toc_corrupt = 16;
    const static int no_previous_checkpoint = 17;
-   const static int no_subsequent_checkpoint = 18;
+   const static int no_next_checkpoint = 18;
 
    void setError(int error_code);
    bool writeToDemo(void *data, size_t size, size_t count);

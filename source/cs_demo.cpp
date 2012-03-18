@@ -1069,10 +1069,13 @@ bool SingleCSDemo::saveCheckpoint()
    checkpoint_name.Printf(0, "Checkpoint %d", index);
    P_SaveCurrentLevel(buf.getBuffer(), checkpoint_name.getBuffer());
 
-   if(!M_FlushFile(demo_data_handle))
+   if(mode == mode_recording)
    {
-      setError(fs_error);
-      return false;
+      if(!M_FlushFile(demo_data_handle))
+      {
+         setError(fs_error);
+         return false;
+      }
    }
 
    if((byte_index = M_GetFilePosition(demo_data_handle)) == -1)
@@ -1129,7 +1132,12 @@ bool SingleCSDemo::loadCheckpoint(int checkpoint_index, uint32_t byte_index)
       return false;
    }
 
-   P_LoadGame(buf.constPtr());
+   CS_DoWorldDone();
+
+   if(CS_CLIENT)
+      CL_LoadGame(buf.constPtr());
+   else
+      P_LoadGame(buf.constPtr());
 
    return true;
 }
@@ -1196,7 +1204,7 @@ bool SingleCSDemo::loadCheckpointBefore(uint32_t index)
       return false;
    }
 
-   index = best_index = best_byte_index = 0;
+   best_index = best_byte_index = 0;
    for(i = 0; toc["checkpoints"].isValidIndex(i); i++)
    {
       if(toc["checkpoints"][i].empty()                    ||
@@ -1214,13 +1222,10 @@ bool SingleCSDemo::loadCheckpointBefore(uint32_t index)
       }
       checkpoint_index = toc["checkpoints"][i]["index"].asUInt();
 
-      if(checkpoint_index < index)
+      if((checkpoint_index < index) && (checkpoint_index > best_index))
       {
-         if((best_index == 0) || (index > best_index))
-         {
-            best_index = index;
-            best_byte_index = toc["checkpoints"][i]["byte_index"].asUInt();
-         }
+         best_index = checkpoint_index;
+         best_byte_index = toc["checkpoints"][i]["byte_index"].asUInt();
       }
    }
 
@@ -1306,7 +1311,7 @@ bool SingleCSDemo::loadNextCheckpoint()
 
    if((best_index == 0) || (best_byte_index == 0))
    {
-      setError(no_subsequent_checkpoint);
+      setError(no_next_checkpoint);
       return false;
    }
 
@@ -1427,8 +1432,8 @@ const char* SingleCSDemo::getError()
    if(internal_error == no_previous_checkpoint)
       return "no previous checkpoint";
 
-   if(internal_error == no_subsequent_checkpoint)
-      return "no subsequent checkpoint";
+   if(internal_error == no_next_checkpoint)
+      return "no next checkpoint";
 
    return "no_error";
 }
@@ -1933,7 +1938,6 @@ bool CSDemo::load(const char *url)
 bool CSDemo::play()
 {
    CS_InitNew();
-   // G_InitNew((skill_t)cs_settings->skill, cs_maps[current_demo_index].name);
    return true;
 }
 
@@ -2280,12 +2284,6 @@ bool CSDemo::write(command_t *cmd, int type, const char *opts, int src)
 
 bool CSDemo::saveCheckpoint()
 {
-   if(mode != mode_recording)
-   {
-      setError(not_open_for_recording);
-      return false;
-   }
-
    if(!current_demo)
    {
       setError(not_open);

@@ -166,7 +166,6 @@ void CL_RunAllWorldUpdates(void)
 
 void CL_Init(char *url)
 {
-   int p;
    size_t url_length;
    Json::Reader reader;
 
@@ -467,6 +466,17 @@ void CL_SpawnRemoteGhost(unsigned int net_id, fixed_t x, fixed_t y, fixed_t z,
    );
 }
 
+void CL_LoadGame(const char *path)
+{
+   // [CG] FIXME WTF
+   cl_setting_sector_positions = true;
+   cl_spawning_actor_from_message = true;
+   cl_removing_actor_from_message = true;
+   P_LoadGame(path);
+   cl_setting_sector_positions = false;
+   cl_spawning_actor_from_message = false;
+   cl_removing_actor_from_message = false;
+}
 
 Mobj* CL_SpawnMobj(uint32_t net_id, fixed_t x, fixed_t y, fixed_t z,
                    mobjtype_t type)
