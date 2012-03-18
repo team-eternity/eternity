@@ -189,6 +189,7 @@ public:
    bool        loadCheckpointBefore(uint32_t index);
    bool        loadPreviousCheckpoint();
    bool        loadNextCheckpoint();
+   bool        checkpointExistsAt(uint32_t index);
    bool        readPacket();
    bool        isFinished();
    bool        close();
@@ -292,6 +293,7 @@ public:
    bool        readPacket();
    bool        isPaused();
    bool        isFinished();
+   bool        hasError();
    const char* getBasename();
    const char* getError();
 };

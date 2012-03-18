@@ -1229,12 +1229,6 @@ bool SingleCSDemo::loadCheckpointBefore(uint32_t index)
       }
    }
 
-   if(best_index == 0)
-   {
-      setError(no_previous_checkpoint);
-      return false;
-   }
-
    return loadCheckpoint(best_index, best_byte_index);
 }
 
@@ -1937,7 +1931,29 @@ bool CSDemo::load(const char *url)
 
 bool CSDemo::play()
 {
+   uint32_t current_index;
+
+   if((!current_demo) || (mode != mode_playback))
+   {
+      setError(not_open_for_playback);
+      return false;
+   }
+
    CS_InitNew();
+
+   if(CS_CLIENT)
+      current_index = cl_current_world_index;
+   else
+      current_index = sv_world_index;
+
+   if(!current_demo->checkpointExistsAt(current_index))
+   {
+      if(current_demo->hasError())
+         return false;
+
+      saveCheckpoint();
+   }
+
    return true;
 }
 
@@ -2391,6 +2407,54 @@ bool CSDemo::loadNextCheckpoint()
    return true;
 }
 
+bool SingleCSDemo::checkpointExistsAt(uint32_t index)
+{
+   int i;
+   Json::Value toc;
+
+   if(!M_PathExists(toc_path))
+   {
+      setError(toc_does_not_exist);
+      return false;
+   }
+
+   if(!M_IsFile(toc_path))
+   {
+      setError(toc_is_not_file);
+      return false;
+   }
+
+   CS_ReadJSON(toc, toc_path);
+
+   if(toc["checkpoints"].empty())
+   {
+      setError(no_checkpoints);
+      return false;
+   }
+
+   for(i = 0; toc["checkpoints"].isValidIndex(i); i++)
+   {
+      if(toc["checkpoints"][i].empty()                    ||
+         toc["checkpoints"][i]["byte_index"].empty()      ||
+         (!toc["checkpoints"][i]["byte_index"].isInt())   ||
+         toc["checkpoints"][i]["index"].empty()           ||
+         (!toc["checkpoints"][i]["index"].isInt())        ||
+         toc["checkpoints"][i]["data_file"].empty()       ||
+         (!toc["checkpoints"][i]["data_file"].isString()) ||
+         toc["checkpoints"][i]["screenshot_file"].empty() ||
+         (!toc["checkpoints"][i]["screenshot_file"].isString()))
+      {
+         setError(checkpoint_toc_corrupt);
+         return false;
+      }
+
+      if(toc["checkpoints"][i]["index"].asUInt() == index)
+         return true;
+   }
+
+   return false;
+}
+
 bool CSDemo::rewind(uint32_t tic_count)
 {
    uint32_t current_index;
@@ -2530,6 +2594,14 @@ bool CSDemo::isFinished()
    }
 
    return current_demo->isFinished();
+}
+
+bool CSDemo::hasError()
+{
+   if(internal_error != no_error)
+      return true;
+
+   return false;
 }
 
 const char* CSDemo::getBasename()
