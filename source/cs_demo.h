@@ -222,6 +222,7 @@ private:
    const static int invalid_url = 18;
    const static int already_paused = 19;
    const static int not_paused = 20;
+   const static int demo_file_is_not_file = 21;
 
    const static int mode_none      = 0;
    const static int mode_recording = 1;
@@ -234,7 +235,6 @@ private:
    int  demo_count;
    bool paused;
 
-   static const char *demo_extension;
    static const char *base_info_file_name;
 
    char *folder_path;
@@ -256,6 +256,8 @@ private:
    void setCURLError(long error_code);
 
 public:
+
+   static const char *demo_extension;
 
    CSDemo();
    ~CSDemo();

@@ -267,10 +267,10 @@ void CS_Init(void)
    CS_NewDemo();
    atexit(CS_StopDemo);
 
-   if(CS_CLIENT)
-      CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
-   else if(CS_SERVER)
+   if(CS_SERVER)
       SV_Init();
+   else if(!cs_playingdemofromcommandline)
+      CL_Init(myargv[M_CheckParm("-csjoin") + 1]);
 }
 
 bool CS_CheckURI(const char *uri)

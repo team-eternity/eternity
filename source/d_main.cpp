@@ -165,6 +165,9 @@ char    *usergamepath = NULL;     // haleyjd 02/05/12: path of user/game directo
 // set from iwad: level to start new games from
 char firstlevel[9] = "";
 
+// [CG] Indicate that a demo was loaded from the command-line.
+extern bool cs_playingdemofromcommandline = false;
+
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
@@ -3547,17 +3550,37 @@ static void D_DoomInit(void)
    clientside = true;
    serverside = true;
 
-   if((p = M_CheckParm("-csjoin")) && p < myargc - 1)
+   if((p = M_CheckParm("-csjoin")))
    {
-      printf("CS_Init: Initializing as c/s client.\n");
-      clientserver = true;
-      clientside  = true;
-      serverside  = false;
-      // [CG] We can afford to be pretty dumb about things in CS_CLIENT mode
-      dmflags = 0;
-      dmflags2 = 0;
-      memset(comp, 0, sizeof(comp));
-      GameType = DefaultGameType = gt_coop;
+      char *url;
+      size_t url_size, ext_size;
+
+      if(p >= myargc - 1)
+         I_Error("No URL passed to -csjoin.\n");
+
+      url = myargv[M_CheckParm("-csjoin") + 1];
+      url_size = strlen(url);
+      ext_size = strlen(CSDemo::demo_extension);
+
+      if((url_size > ext_size) &&
+         (url_size >= 11)      &&
+         (strncmp(url + (url_size - ext_size), CSDemo::demo_extension,
+                                               ext_size) == 0))
+      {
+         cs_playingdemofromcommandline = true;
+      }
+      else
+      {
+         printf("CS_Init: Initializing as c/s client.\n");
+         clientserver = true;
+         clientside  = true;
+         serverside  = false;
+         // [CG] We can afford to be pretty dumb about things in CS_CLIENT mode
+         dmflags = 0;
+         dmflags2 = 0;
+         memset(comp, 0, sizeof(comp));
+         GameType = DefaultGameType = gt_coop;
+      }
    }
    else if(M_CheckParm("-csserve"))
    {
@@ -3577,12 +3600,17 @@ static void D_DoomInit(void)
    }
    else if(M_CheckParm("-csplaydemo"))
    {
+      cs_playingdemofromcommandline = true;
+   }
+   else
+      printf("CS_Init: Initializing as singleplayer client.\n");
+
+   if(cs_playingdemofromcommandline)
+   {
       printf("CS_Init: Initializing as c/s demo viewer.\n");
       clientserver = true;
       clientside = serverside = false; // [CG] This will be changed later.
    }
-   else
-      printf("CS_Init: Initializing as singleplayer client.\n");
 
    clients = ecalloc(client_t *, MAXPLAYERS, sizeof(client_t));
 
@@ -3592,7 +3620,12 @@ static void D_DoomInit(void)
       consoleplayer = displayplayer = 0;
       clients[consoleplayer].spectating = true;
 
-      CS_InitCurl(); // [CG] Initialize libcurl.
+#ifdef _WIN32
+      if(cs_playingdemofromcommandline)
+         CS_InitCurl(true);
+      else
+#endif
+      CS_InitCurl(false);
    }
 
    // haleyjd 03/05/09: load system config as early as possible
@@ -3600,11 +3633,18 @@ static void D_DoomInit(void)
 
    CS_Init();
 
-   if((p = M_CheckParm("-csplaydemo")))
+   if(cs_playingdemofromcommandline)
+      p = M_CheckParm("-csjoin");
+   else if((p = M_CheckParm("-csplaydemo")))
    {
-      if(p >= (myargc - 1))
+      if((p >= (myargc - 1)))
          I_Error("No demo file specified.\n");
+      else
+         cs_playingdemofromcommandline = true;
+   }
 
+   if(cs_playingdemofromcommandline)
+   {
       if(!cs_demo->load(myargv[p + 1]))
       {
          I_Error(
@@ -3674,7 +3714,7 @@ static void D_DoomInit(void)
 
    devparm = !!M_CheckParm("-devparm");         //sf: move up here
 
-   if(!M_CheckParm("-csplaydemo"))
+   if(!cs_playingdemofromcommandline)
       IdentifyVersion();
 
    printf("\n"); // gap
@@ -3891,7 +3931,8 @@ static void D_DoomInit(void)
    startupmsg("M_LoadDefaults", "Load system defaults.");
    M_LoadDefaults();              // load before initing other systems
 
-   if(M_CheckParm("-csplaydemo")) // [CG] Restore settings after M_LoadDefaults.
+   // [CG] Restore settings after M_LoadDefaults.
+   if(cs_playingdemofromcommandline)
       cs_demo->reloadSettings();
 
    // haleyjd 01/11/09: process affinity mask stuff
@@ -4196,7 +4237,7 @@ static void D_DoomInit(void)
       else if(!CS_HEADLESS)
          SV_InitAnnouncer();
 
-      if(!M_CheckParm("-csplaydemo"))
+      if(!cs_playingdemofromcommandline)
       {
          printf("CS_LoadWADs: Loading WADs.\n");
 
@@ -4283,7 +4324,7 @@ static void D_DoomInit(void)
             D_StartTitle();                 // start up intro loop
       }
    }
-   else if(M_CheckParm("-csplaydemo"))
+   else if(cs_playingdemofromcommandline)
    {
       if(!cs_demo->play())
       {

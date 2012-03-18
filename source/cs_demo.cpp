@@ -662,7 +662,6 @@ bool SingleCSDemo::readHeader()
                );
             }
 
-
             if(!CS_CheckResourceHash(resource.name, resource.sha1_hash))
             {
                I_Error(
@@ -1492,22 +1491,32 @@ bool CSDemo::retrieveDemo(const char *url)
    CURLcode res;
    FILE *fobj;
    qstring buf;
+   char *real_url = NULL;
 
-   if(!CS_CheckURI(url))
+   if(CS_CheckURI(url))
+      real_url = estrdup(url);
+   else if(strncmp(url, "eternity://", 11) == 0)
+   {
+      real_url = ecalloc(char *, strlen(url) + 1, sizeof(char));
+      sprintf(real_url, "http://%s", url + 11);
+   }
+   else
    {
       setError(invalid_url);
       return false;
    }
 
-   if(!(basename = M_Basename(url)))
+   if(!(basename = M_Basename(real_url)))
    {
       setError(fs_error);
+      efree(real_url);
       return false;
    }
 
    if(strlen(basename) < 2)
    {
       setError(invalid_url);
+      efree(real_url);
       return false;
    }
 
@@ -1515,17 +1524,22 @@ bool CSDemo::retrieveDemo(const char *url)
 
    // [CG] If the file's already been downloaded, skip all the hard work below.
    if(M_IsFile(buf.constPtr()))
+   {
+      efree(real_url);
       return true;
+   }
 
    if(!M_CreateFile(buf.constPtr()))
    {
       setError(fs_error);
+      efree(real_url);
       return false;
    }
 
    if(!(fobj = M_OpenFile(buf.constPtr(), "wb")))
    {
       setError(fs_error);
+      efree(real_url);
       return false;
    }
 
@@ -1533,10 +1547,11 @@ bool CSDemo::retrieveDemo(const char *url)
    {
       M_CloseFile(fobj);
       setCURLError((long)curl_handle);
+      efree(real_url);
       return false;
    }
 
-   curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+   curl_easy_setopt(curl_handle, CURLOPT_URL, real_url);
    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fwrite);
    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, fobj);
 
@@ -1544,6 +1559,7 @@ bool CSDemo::retrieveDemo(const char *url)
    {
       M_CloseFile(fobj);
       setCURLError(res);
+      efree(real_url);
       return false;
    }
 
@@ -1555,6 +1571,8 @@ bool CSDemo::retrieveDemo(const char *url)
 
    buf.Printf(0, "%s/%s.temp", folder_path, basename);
    E_ReplaceString(current_temp_demo_archive_path, buf.duplicate(PU_STATIC));
+
+   efree(real_url);
 
    return true;
 }
@@ -1810,8 +1828,34 @@ bool CSDemo::load(const char *url)
          current_temp_demo_archive_path, path_buf.duplicate(PU_STATIC)
       );
    }
-   else if(!retrieveDemo(url))
-      return false;
+   else
+   {
+      qstring path_buf;
+
+      path_buf.Printf(0, "%s/%s", cs_demo_folder_path, M_Basename(url));
+      path_buf.normalizeSlashes();
+
+      if(M_PathExists(path_buf.constPtr()))
+      {
+         // [CG] It would be way better to download the ZIP file into memory
+         //      instead of disk.  Then all this "what if it already exists?"
+         //      stuff can be removed.
+         if(!M_IsFile(path_buf.constPtr()))
+         {
+            setError(demo_file_is_not_file);
+            return false;
+         }
+      }
+      else if(!retrieveDemo(url))
+         return false;
+
+      E_ReplaceString(current_demo_archive_path, path_buf.duplicate(PU_STATIC));
+
+      path_buf.Printf(0, "%s/%s.temp", cs_demo_folder_path, M_Basename(url));
+      E_ReplaceString(
+         current_temp_demo_archive_path, path_buf.duplicate(PU_STATIC)
+      );
+   }
 
    loadZipFile();
 
@@ -2676,6 +2720,9 @@ const char* CSDemo::getError()
 
    if(internal_error == not_paused)
       return "not paused";
+
+   if(internal_error == demo_file_is_not_file)
+      return "demo is not a file";
 
    return "no_error";
 }

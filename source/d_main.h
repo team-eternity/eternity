@@ -72,6 +72,8 @@ extern char firstlevel[9];       // sf: first level of new wads
 struct wfileadd_t;
 extern wfileadd_t *wadfiles;     // killough 11/98
 
+extern bool cs_playingdemofromcommandline;
+
 //
 // BASE LEVEL
 //

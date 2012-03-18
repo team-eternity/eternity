@@ -74,7 +74,7 @@ extern int sv_master_server_count;
 extern Json::Value cs_server_config;
 
 // [CG] Initialization and cleanup functions.
-void CS_InitCurl(void);
+void CS_InitCurl(bool initialize_windows_networking);
 void SV_MultiInit(void);
 void SV_MasterCleanup(void);
 

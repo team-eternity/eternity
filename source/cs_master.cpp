@@ -51,11 +51,14 @@ CURLM *cs_master_multi_handle;
 
 extern char gamemapname[9];
 
-void CS_InitCurl(void)
+void CS_InitCurl(bool initialize_windows_networking)
 {
    CURLcode curl_errno;
 
-   curl_errno = curl_global_init(CURL_GLOBAL_NOTHING);
+   if(initialize_windows_networking)
+      curl_errno = curl_global_init(CURL_GLOBAL_WIN32);
+   else
+      curl_errno = curl_global_init(CURL_GLOBAL_NOTHING);
 
    if(curl_errno)
       I_Error("CS_InitCurl: %s\n", curl_easy_strerror(curl_errno));

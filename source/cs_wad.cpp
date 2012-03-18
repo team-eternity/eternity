@@ -245,7 +245,7 @@ char* CS_DownloadWAD(const char *wad_name)
       return NULL;
    }
 
-   if((fobj = fopen(temp_path, "wb")) == NULL)
+   if(!(fobj = M_OpenFile(temp_path, "wb")))
    {
       printf("Error opening PWAD file for writing.\n");
       C_Printf("Error opening PWAD file for writing.\n");
@@ -258,7 +258,7 @@ char* CS_DownloadWAD(const char *wad_name)
    curl_handle = curl_easy_init();
    if(!curl_handle)
    {
-      fclose(fobj);
+      M_CloseFile(fobj);
       printf("Error initializing curl.\n");
       C_Printf("Error initializing curl.\n");
       efree(url);
@@ -279,7 +279,7 @@ char* CS_DownloadWAD(const char *wad_name)
 
    if((res = curl_easy_perform(curl_handle)) != 0)
    {
-      fclose(fobj);
+      M_CloseFile(fobj);
       printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
       C_Printf("Error downloading WAD: %s.\n", curl_easy_strerror(res));
       efree(url);
@@ -288,7 +288,7 @@ char* CS_DownloadWAD(const char *wad_name)
       return NULL;
    }
 
-   fclose(fobj);
+   M_CloseFile(fobj);
    curl_easy_cleanup(curl_handle);
    if(!M_RenamePath((const char *)temp_path, (const char *)wad_path))
    {
@@ -379,6 +379,9 @@ bool CS_AddWAD(const char *resource_name)
    if(resource_path == NULL)
    {
       if(CS_SERVER)
+         return false;
+
+      if(!cs_wad_repository)
          return false;
 
       if((resource_path = CS_DownloadWAD(resource_name)) == NULL)
