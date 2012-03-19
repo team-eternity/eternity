@@ -56,6 +56,7 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
@@ -118,6 +119,8 @@ int sv_randomize_maps = false;
 bool sv_buffer_commands = false;
 unsigned int sv_join_time_limit = 0;
 bool sv_reset_if_no_players = true;
+unsigned int sv_cyberdemon_spawn_rate = 0;
+unsigned int sv_cyberdemon_spawn_limit = 1;
 
 const char *sv_spectator_password = NULL;
 const char *sv_player_password = NULL;
@@ -127,6 +130,7 @@ const char *sv_access_list_filename = NULL;
 const char *sv_default_access_list_filename = NULL;
 
 static char *sv_user_agent = NULL;
+static unsigned int sv_cyberdemons_spawned = 0;
 
 static void send_any_packet(int playernum, void *data, size_t data_size,
                             uint8_t flags, uint8_t channel_id)
@@ -363,7 +367,7 @@ void SV_Init(void)
          "server mode.\n"
       );
    }
-   
+
    if(enet_initialize() != 0)
       I_Error("Could not initialize networking.\n");
 
@@ -1548,7 +1552,7 @@ bool SV_HandleJoinRequest(int playernum)
       return false;
    }
 
-   // [CG] If the client isn't yet in the queue, put them there (assign them a 
+   // [CG] If the client isn't yet in the queue, put them there (assign them a
    //      queue position and the attendant queue level).
    if(client->queue_level == ql_none)
       SV_PutClientInQueue(playernum);
@@ -2795,6 +2799,53 @@ void SV_BroadcastVoteResult()
    broadcast_packet(&message, sizeof(nm_voteresult_t));
 }
 
+void SV_CheckCyberdemonSpawn(void)
+{
+   int i, type;
+   fixed_t x, y;
+   Mobj *cyberdemon = NULL;
+   mapthing_t *spawn_point = NULL;
+
+   if(!CS_SERVER)
+      return;
+
+   if(!sv_cyberdemon_spawn_rate)
+      return;
+
+   if(sv_cyberdemon_spawn_limit &&
+      (sv_cyberdemons_spawned >= sv_cyberdemon_spawn_limit))
+   {
+      return;
+   }
+
+   if((M_Random() % sv_cyberdemon_spawn_rate))
+      return;
+
+   if((type = E_ThingNumForName("cyberdemon")) != -1)
+   {
+      for(i = 0; i < 20; i++)
+      {
+         spawn_point = SV_GetDeathMatchSpawnPoint(0);
+         x = spawn_point->x << FRACBITS;
+         y = spawn_point->y << FRACBITS;
+
+         cyberdemon = P_SpawnMobj(x, y, ONFLOORZ, type);
+         cyberdemon->angle = spawn_point->angle;
+
+         if(P_CheckPosition3D(cyberdemon, x, y))
+         {
+            cyberdemon->flags &= ~MF_COUNTKILL;
+            cyberdemon->flags3 |= MF3_KILLABLE;
+            cyberdemon->updateThinker();
+            sv_cyberdemons_spawned++;
+            SV_BroadcastActorSpawned(cyberdemon);
+            return;
+         }
+         cyberdemon->removeThinker();
+      }
+   }
+}
+
 void SV_RunDemoTics(void) {}
 
 void SV_HandleClientRequests(void)
@@ -2829,7 +2880,7 @@ void SV_SendNewMap(void)
    for(i = 1; i < MAXPLAYERS; i++)
    {
       server_client_t *sc;
-      
+
       if(!playeringame[i])
          continue;
 
@@ -2860,6 +2911,7 @@ void SV_SendNewMap(void)
    }
 
    sv_should_send_new_map = false;
+   sv_cyberdemons_spawned = 0;
 }
 
 void SV_ArchiveServerClients(SaveArchive& arc)
@@ -3123,6 +3175,7 @@ void SV_TryRunTics(void)
 
          if(gamestate == GS_LEVEL)
          {
+            SV_CheckCyberdemonSpawn();
             SV_SaveSectorPositions();
             SV_BroadcastPlayerPositions();
             SV_BroadcastUpdatedActorPositionsAndMiscState();

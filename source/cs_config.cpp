@@ -1072,6 +1072,26 @@ void CS_HandleServerSection()
          }
       }
    }
+
+   sv_cyberdemon_spawn_rate = 0;
+   if(!server["random_cyberdemon_spawn_rate"].empty() &&
+       server["random_cyberdemon_spawn_rate"].isInt())
+   {
+      check_int_option_range(
+         server, random_cyberdemon_spawn_rate, 0, (6000 * TICRATE)
+      );
+      sv_cyberdemon_spawn_rate =
+         server["random_cyberdemon_spawn_rate"].asUInt();
+   }
+
+   sv_cyberdemon_spawn_limit = 0;
+   if(!server["random_cyberdemon_spawn_limit"].empty() &&
+       server["random_cyberdemon_spawn_limit"].isInt())
+   {
+      check_int_option_range(server, random_cyberdemon_spawn_limit, 0, 100);
+      sv_cyberdemon_spawn_limit =
+         server["random_cyberdemon_spawn_limit"].asUInt();
+   }
 }
 
 void CS_HandleMapsSection()

@@ -41,12 +41,14 @@ class Mobj;
 #define CONSOLE_INPUT_LENGTH 1024
 
 extern unsigned int sv_world_index;
+extern unsigned int sv_cyberdemon_spawn_rate;
+extern unsigned int sv_cyberdemon_spawn_limit;
+extern unsigned int sv_join_time_limit;
 extern unsigned long sv_public_address;
 extern bool sv_should_send_new_map;
 extern server_client_t server_clients[MAXPLAYERS];
 extern int sv_randomize_maps;
 extern bool sv_buffer_commands;
-extern unsigned int sv_join_time_limit;
 extern bool sv_reset_if_no_players;
 extern const char *sv_spectator_password;
 extern const char *sv_player_password;
@@ -113,6 +115,7 @@ void SV_RunPlayerCommand(int playernum, cs_buffered_command_t *bufcmd);
 void SV_RunPlayerCommands(int playernum);
 void SV_UpdateClientStatus(void);
 void SV_ArchiveServerClients(SaveArchive& arc);
+void SV_CheckCyberdemonSpawn(void);
 
 // [CG] Sending functions.
 void SV_SendNewClient(int playernum, int clientnum);
