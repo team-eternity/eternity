@@ -124,6 +124,12 @@ typedef struct
    uint32_t compatflags2;
    uint8_t  requires_spectator_password;
    uint8_t  requires_player_password;
+   uint8_t  use_zdoom_gravity;
+   uint8_t  use_zdoom_air_control;
+   uint8_t  use_zdoom_player_physics;
+   int32_t  zdoom_gravity;
+   fixed_t  zdoom_air_control;
+   fixed_t  zdoom_air_friction;
 } clientserver_settings_t;
 
 #pragma pack(pop)

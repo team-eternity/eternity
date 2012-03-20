@@ -1509,6 +1509,51 @@ void CS_HandleOptionsSection()
    set_int(options, respawn_protection_time, 0);
    set_int(options, friend_distance, 128);
 
+   // [CG] ZDoom options
+   set_int(options, zdoom_gravity, 800);
+   cs_original_settings->use_zdoom_gravity = false;
+   cs_original_settings->use_zdoom_air_control = false;
+   cs_original_settings->use_zdoom_player_physics = false;
+   cs_original_settings->zdoom_gravity = 800;
+   // [CG] "ZDoom" air control is 1/256 (0.00390625), but when ZDoom player
+   //      physics are enabled they use air control whether it's enabled or
+   //      not, so default to zero to avoid confusing users.
+   cs_original_settings->zdoom_air_control = 0;
+
+   if((!options["use_zdoom_gravity"].empty()) &&
+      (options["use_zdoom_gravity"].asBool()))
+   {
+      cs_original_settings->use_zdoom_gravity = true;
+   }
+
+   if((!options["use_zdoom_air_control"].empty()) &&
+      (options["use_zdoom_air_control"].asBool()))
+   {
+      cs_original_settings->use_zdoom_air_control = true;
+   }
+
+   if((!options["use_zdoom_player_physics"].empty()) &&
+      (options["use_zdoom_player_physics"].asBool()))
+   {
+      cs_original_settings->use_zdoom_player_physics = true;
+   }
+
+   if((!options["zdoom_gravity"].empty()) &&
+      (options["zdoom_gravity"].isInt()))
+   {
+      cs_original_settings->zdoom_gravity = options["zdoom_gravity"].asInt();
+   }
+
+   if((!options["zdoom_air_control"].empty()) &&
+      (options["zdoom_air_control"].isDouble()))
+   {
+      cs_original_settings->zdoom_air_control =
+         M_FloatToFixed(options["zdoom_air_control"].asFloat());
+   }
+
+   cs_original_settings->zdoom_air_friction =
+      CS_ZDoomAirControlToAirFriction(cs_original_settings->zdoom_air_control);
+
    // [CG] Float options
    cs_original_settings->radial_attack_damage =
       options.get("radial_attack_damage", 1.0).asFloat();
@@ -1742,6 +1787,48 @@ void CS_LoadMapOverrides(unsigned int index)
    override_int(overrides, frag_limit);
    override_int(overrides, score_limit);
    override_int(overrides, skill);
+
+   // [CG] ZDoom options
+   override_int(overrides, zdoom_gravity);
+   cs_settings->use_zdoom_gravity = false;
+   cs_settings->use_zdoom_air_control = false;
+   cs_settings->use_zdoom_player_physics = false;
+   cs_settings->zdoom_gravity = 800;
+   cs_settings->zdoom_air_control = 0;
+
+   if((!overrides["use_zdoom_gravity"].empty()) &&
+      (overrides["use_zdoom_gravity"].asBool()))
+   {
+      cs_settings->use_zdoom_gravity = true;
+   }
+
+   if((!overrides["use_zdoom_air_control"].empty()) &&
+      (overrides["use_zdoom_air_control"].asBool()))
+   {
+      cs_settings->use_zdoom_air_control = true;
+   }
+
+   if((!overrides["use_zdoom_player_physics"].empty()) &&
+      (overrides["use_zdoom_player_physics"].asBool()))
+   {
+      cs_settings->use_zdoom_player_physics = true;
+   }
+
+   if((!overrides["zdoom_gravity"].empty()) &&
+      (overrides["zdoom_gravity"].isDouble()))
+   {
+      cs_settings->zdoom_gravity = overrides["zdoom_gravity"].asFloat();
+   }
+
+   if((!overrides["zdoom_air_control"].empty()) &&
+      (overrides["zdoom_air_control"].isDouble()))
+   {
+      cs_settings->zdoom_air_control =
+         M_FloatToFixed(overrides["zdoom_air_control"].asFloat());
+   }
+
+   cs_settings->zdoom_air_friction =
+      CS_ZDoomAirControlToAirFriction(cs_settings->zdoom_air_control);
 
    override_float(overrides, radial_attack_damage);
    override_float(overrides, radial_attack_self_damage);

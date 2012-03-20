@@ -24,6 +24,9 @@
 //
 //-----------------------------------------------------------------------------
 
+// [CG] Various ZDoom physics additions were added from Odamex, Copyright (c)
+//      2012 The Odamex Team, under the terms of the GPL.
+
 #include <list>
 
 #include "z_zone.h"
@@ -695,7 +698,24 @@ void P_XYMovement(Mobj* mo)
    // haleyjd: OVER_UNDER
    if(mo->z > mo->floorz &&
       (comp[comp_overunder] || !(mo->intflags & MIF_ONMOBJ)))
+   {
+      // [CG] Add ZDoom air control
+      if(clientserver && cs_settings->use_zdoom_air_control)
+      {
+         if((player) && (cs_settings->zdoom_air_friction != FRACUNIT))
+         {
+            mo->momx = FixedMul(mo->momx, cs_settings->zdoom_air_friction);
+            mo->momy = FixedMul(mo->momy, cs_settings->zdoom_air_friction);
+
+            if(player->mo == mo) // Not voodoo dolls
+            {
+               mo->momx = FixedMul(mo->momx, cs_settings->zdoom_air_friction);
+               mo->momy = FixedMul(mo->momy, cs_settings->zdoom_air_friction);
+            }
+         }
+      }
       return;
+   }
 
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
@@ -802,7 +822,13 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
       spectating = true;
 
    mo->player->deltaviewheight = mo->momz >> 3;
-   mo->player->jumptime = 10;
+
+   // [CG] I'm not a huge fan of tying jumptime to ZDoom gravity, but I think
+   //      it kind of makes sense in this case.
+   if(clientserver && cs_settings->use_zdoom_gravity)
+      mo->player->jumptime = 7;
+   else
+      mo->player->jumptime = 10;
 
    // haleyjd 05/09/99 no oof when dead :)
    // [CG] 09/17/11: Disabled various sounds for spectating and predicting
@@ -814,18 +840,39 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
          // haleyjd: new features -- feet sound for normal hits,
          //          grunt for harder, falling damage for worse
 
-         if(mo->momz < -23*FRACUNIT)
+         // [CG] Add ZDoom gravity.
+         if(clientserver && cs_settings->use_zdoom_gravity)
+         {
+            if((mo->health > 0) && (!cl_predicting))
+            {
+               if(mo->momz < CS_GetExtraZDoomGravity())
+                  S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+
+               if(onthing)
+                  S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
+            }
+         }
+         else if(mo->momz < -23*FRACUNIT)
          {
             if(!mo->player->powers[pw_invulnerability] &&
                !(mo->player->cheats & CF_GODMODE))
+            {
                P_FallingDamage(mo->player);
+            }
             else if(!cl_predicting)
+            {
                S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
+            }
          }
-         else if(mo->momz < -12*FRACUNIT && !cl_predicting)
+         else if(mo->momz < -12*FRACUNIT && (!cl_predicting))
+         {
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         else if((onthing || !E_GetThingFloorType(mo, true)->liquid) && !cl_predicting)
+         }
+         else if((onthing || !E_GetThingFloorType(mo, true)->liquid) &&
+                 (!cl_predicting))
+         {
             S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
+         }
       }
       else if((onthing || !E_GetThingFloorType(mo, true)->liquid) && !cl_predicting)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
@@ -846,6 +893,30 @@ void P_ZMovement(Mobj* mo)
 
    // 10/13/05: fraggle says original DOOM has no bounce either,
    // so if gamemode != retail, no bounce.
+
+   // [CG] Add ZDoom gravity.
+   if(clientserver && cs_settings->use_zdoom_gravity)
+   {
+      if(mo->player &&
+         mo->player->mo == mo &&  // killough 5/12/98: exclude voodoo dolls
+         mo->z < mo->floorz)
+      {
+         mo->player->viewheight -= mo->floorz-mo->z;
+         mo->player->deltaviewheight =
+            (VIEWHEIGHT - mo->player->viewheight)>>3;
+      }
+
+      if(mo->z > mo->floorz && !(mo->flags & MF_NOGRAVITY))
+      {
+         if(mo->flags2 & MF2_LOGRAV)
+            mo->momz -= (fixed_t)(cs_settings->zdoom_gravity * 10.24);
+         else
+            mo->momz -= (fixed_t)(cs_settings->zdoom_gravity * 81.92);
+      }
+      //
+      // adjust altitude
+      mo->z += mo->momz;
+   }
 
    if(demo_compatibility) // v1.9 demos
    {
@@ -976,17 +1047,20 @@ void P_ZMovement(Mobj* mo)
 
    // check for smooth step up
 
-   if(mo->player &&
-      mo->player->mo == mo &&  // killough 5/12/98: exclude voodoo dolls
-      mo->z < mo->floorz)
+   if((!clientserver) || (!cs_settings->use_zdoom_gravity))
    {
-      mo->player->viewheight -= mo->floorz-mo->z;
-      mo->player->deltaviewheight =
-         (VIEWHEIGHT - mo->player->viewheight)>>3;
-   }
+      if(mo->player &&
+         mo->player->mo == mo &&  // killough 5/12/98: exclude voodoo dolls
+         mo->z < mo->floorz)
+      {
+         mo->player->viewheight -= mo->floorz-mo->z;
+         mo->player->deltaviewheight =
+            (VIEWHEIGHT - mo->player->viewheight)>>3;
+      }
 
-   // adjust altitude
-   mo->z += mo->momz;
+      // adjust altitude
+      mo->z += mo->momz;
+   }
 
 floater:
 
@@ -1027,7 +1101,39 @@ floater:
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
+         {
             P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
+         }
+         else if(clientserver && cs_settings->use_zdoom_gravity && mo->player)
+         {
+            // [CG] Add ZDoom gravity.
+            bool squat = false;
+            bool spectating = false;
+            client_t *client = &clients[mo->player - players];
+            fixed_t minmom = CS_GetZDoomGravity();
+            
+            if(client->spectating)
+               spectating = true;
+
+            if(mo->momz < minmom)
+               squat = true;
+
+            // [CG] I'm not a huge fan of tying jumptime to ZDoom gravity,
+            //      but I think it kind of makes sense in this case.
+            mo->player->jumptime = 7; // delay any jumping for a short while
+
+            if((squat) && (!spectating))
+            {
+               // Squat down.
+               // Decrease viewheight for a moment
+               // after hitting the ground (hard),
+               // and utter appropriate sound.
+
+               if(CS_SERVER)
+                  client->floor_status = cs_fs_hit;
+               P_PlayerHitFloor(mo, false);
+            }
+         }
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
                  mo->momz < -LevelInfo.gravity*8)
@@ -1053,7 +1159,6 @@ floater:
       if(!correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz;
 
-
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
@@ -1061,20 +1166,23 @@ floater:
          return;
       }
    }
-   else if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
+   else if((!clientserver) || (!cs_settings->use_zdoom_gravity))
    {
-      if(!mo->momz)
-         mo->momz = -(LevelInfo.gravity / 8) * 2;
-      else
-         mo->momz -= LevelInfo.gravity / 8;
-   }
-   else // still above the floor
-   {
-      if(!(mo->flags & MF_NOGRAVITY))
+      if(mo->flags2 & MF2_LOGRAV) // haleyjd 04/09/99
       {
          if(!mo->momz)
-            mo->momz = -LevelInfo.gravity;
-         mo->momz -= LevelInfo.gravity;
+            mo->momz = -(LevelInfo.gravity / 8) * 2;
+         else
+            mo->momz -= LevelInfo.gravity / 8;
+      }
+      else // still above the floor
+      {
+         if(!(mo->flags & MF_NOGRAVITY))
+         {
+            if(!mo->momz)
+               mo->momz = -LevelInfo.gravity;
+            mo->momz -= LevelInfo.gravity;
+         }
       }
    }
 
@@ -1382,7 +1490,22 @@ void Mobj::Think()
                }
             }
 
-            if(player && this == player->mo &&
+            if(clientserver && cs_settings->use_zdoom_gravity)
+            {
+               if(player && this == player->mo)
+               {
+                  if(momz < CS_GetZDoomGravity())
+                  {
+                     if(CS_SERVER)
+                     {
+                        client_t *client = &clients[player - players];
+                        client->floor_status = cs_fs_hit_on_thing;
+                     }
+                     P_PlayerHitFloor(this, true);
+                  }
+               }
+            }
+            else if(player && this == player->mo &&
                momz < -LevelInfo.gravity*8)
             {
                if(CS_SERVER)
@@ -2970,12 +3093,16 @@ void P_AdjustFloorClip(Mobj *thing)
       thing->floorclip = shallowestclip;
 
    // adjust the player's viewheight
-   if(thing->player && oldclip != thing->floorclip)
+   // [CG] Add ZDoom gravity.
+   if((!clientserver) || (!cs_settings->use_zdoom_gravity))
    {
-      player_t *p = thing->player;
+      if(thing->player && oldclip != thing->floorclip)
+      {
+         player_t *p = thing->player;
 
-      p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+         p->viewheight -= oldclip - thing->floorclip;
+         p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+      }
    }
 }
 

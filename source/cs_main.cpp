@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*- vi:sw=3 ts=3:
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2011 Charles Gunyon
+// Copyright(C) 2012 Charles Gunyon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 //   Client/Server routines for both clients and servers.
 //
 //----------------------------------------------------------------------------
+
+// [CG] Various ZDoom physics additions were added from Odamex, Copyright (c)
+//      2012 The Odamex Team, under the terms of the GPL.
 
 // [CG] Needed for JSON serialization routines.
 #include <string>
@@ -65,6 +68,7 @@
 #include "m_misc.h"
 #include "m_qstr.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_mobj.h"
@@ -740,6 +744,27 @@ void CS_ResetClientSprees(int clientnum)
    client->frags_this_life = 0;
    client->frag_level = fl_none;
    client->last_frag_index = 0;
+}
+
+fixed_t CS_GetExtraZDoomGravity()
+{
+   return LevelInfo.gravity * cs_settings->zdoom_gravity * -983.04f;
+}
+
+fixed_t CS_GetZDoomGravity()
+{
+   return LevelInfo.gravity * cs_settings->zdoom_gravity * -655.36f;
+}
+
+// [CG] Argh, ZDoom/Odamex!!!
+//      This code is from Odamex, Copyright 2012 (c) The Odamex Team, and
+//      licensed under the GPL.
+fixed_t CS_ZDoomAirControlToAirFriction(fixed_t air_control)
+{
+   if(air_control <= 256)
+      return FRACUNIT;
+
+   return (((float)air_control/65536.f) * -0.0941f + 1.0004f) * 65536.f;
 }
 
 size_t CS_BuildGameState(int playernum, byte **buffer)
@@ -1794,7 +1819,13 @@ void CS_ArchiveSettings(SaveArchive& arc)
        << cs_settings->compatflags
        << cs_settings->compatflags2
        << cs_settings->requires_spectator_password
-       << cs_settings->requires_player_password;
+       << cs_settings->requires_player_password
+       << cs_settings->use_zdoom_gravity
+       << cs_settings->zdoom_gravity
+       << cs_settings->use_zdoom_air_control
+       << cs_settings->zdoom_air_control
+       << cs_settings->zdoom_air_friction
+       << cs_settings->use_zdoom_player_physics;
 }
 
 void CS_ArchiveTeams(SaveArchive& arc)
