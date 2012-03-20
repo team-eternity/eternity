@@ -306,6 +306,10 @@ default_t defaults[] =
    DEFAULT_INT("leds_always_off", &leds_always_off, NULL, 0, 0, 1, default_t::wad_no,
                "1 to keep keyboard LEDs turned off"),
 
+   // [CG] Add turning speed.
+   DEFAULT_INT("turning_speed", &default_turning_speed, NULL, 100, 0, 1000, default_t::wad_no,
+               "turning speed as a percentage, 100 is normal"),
+
    //jff 4/3/98 allow unlimited sensitivity
    DEFAULT_FLOAT("mouse_sensitivity_horiz", &mouseSensitivity_horiz, NULL, 5.0, 0, UL, default_t::wad_no,
                "adjust horizontal (x) mouse sensitivity"),

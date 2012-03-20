@@ -360,6 +360,9 @@ extern  bool precache;
 //  to force a wipe on the next draw
 extern  gamestate_t     wipegamestate;
 
+extern  int             turning_speed;
+extern  int             default_turning_speed;
+
 extern  double          mouseSensitivity_horiz; // killough
 extern  double          mouseSensitivity_vert;
 extern  bool            mouseSensitivity_vanilla; // [CG] 01/20/12

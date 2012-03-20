@@ -305,14 +305,19 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
    else
    {
+      int16_t angle_turn_speed = (int16_t)pc->angleturn[tspeed];
+
+      if(turning_speed != 100)
+         angle_turn_speed *= (turning_speed / 100.0);
+
       if(action_right)
-         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
+         cmd->angleturn -= angle_turn_speed;
       if(action_left)
-         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
+         cmd->angleturn += angle_turn_speed;
       if(joyxmove > 0)
-         cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
+         cmd->angleturn -= angle_turn_speed;
       if(joyxmove < 0)
-         cmd->angleturn += (int16_t)pc->angleturn[tspeed];
+         cmd->angleturn += angle_turn_speed;
    }
 
    if(action_forward)

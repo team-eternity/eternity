@@ -225,6 +225,10 @@ VARIABLE_FLOAT(
 );
 CONSOLE_VARIABLE(radial_attack_self_lift, radial_attack_self_lift, 0) {}
 
+// [CG] Turning speed
+VARIABLE_INT(turning_speed, &default_turning_speed, 100, 1000, NULL);
+CONSOLE_VARIABLE(turning_speed, turning_speed, 0) {}
+
 // always mlook
 
 VARIABLE_BOOLEAN(automlook, NULL,           onoff);
@@ -1495,6 +1499,7 @@ void G_AddCommands(void)
    C_AddCommand(bobbing);
    C_AddCommand(bobbing_intensity);
    C_AddCommand(doom_weapon_toggles);
+   C_AddCommand(turning_speed);
    C_AddCommand(sens_horiz);
    C_AddCommand(sens_vert);
    C_AddCommand(sens_combined);

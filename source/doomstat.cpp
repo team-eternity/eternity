@@ -76,6 +76,9 @@ int default_player_bobbing;
 double bobbing_intensity = 1.0;
 double default_bobbing_intensity = 1.0;
 
+int turning_speed = 100;
+int default_turning_speed = 100;
+
 int monsters_remember=1;        // killough 3/1/98
 int default_monsters_remember=1;
 

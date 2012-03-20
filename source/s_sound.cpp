@@ -634,7 +634,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    if(origin &&
       (mo = thinker_cast<Mobj *>(origin)) &&
       mo->player &&
-      dmflags2 & dmf_use_oldschool_sound_cutoff)
+      (dmflags2 & dmf_use_oldschool_sound_cutoff))
    {
       S_StopSound(origin, CHAN_ALL);
    }

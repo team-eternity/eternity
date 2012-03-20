@@ -1608,10 +1608,10 @@ static menuitem_t mn_options_items[] =
    {it_title,  FC_GOLD "options",       NULL,             "M_OPTION"},
    {it_gap},
    {it_info,   FC_GOLD "input/output"},
-   {it_runcmd, "key bindings",          "mn_movekeys" },
-   {it_runcmd, "mouse / gamepad",       "mn_mouse"    },
-   {it_runcmd, "video options",         "mn_video"    },
-   {it_runcmd, "sound options",         "mn_sound"    },
+   {it_runcmd, "key bindings",               "mn_movekeys" },
+   {it_runcmd, "mouse / gamepad / keyboard", "mn_mouse"    },
+   {it_runcmd, "video options",              "mn_video"    },
+   {it_runcmd, "sound options",              "mn_sound"    },
    {it_gap},
    {it_info,   FC_GOLD "game options"},
    {it_runcmd, "compatibility",         "mn_compat"   },
@@ -2409,6 +2409,9 @@ static menuitem_t mn_joystick_items[] =
    {it_info,         FC_GOLD "sensitivity"},
    {it_variable,     "horizontal",                "joySens_x" },
    {it_variable,     "vertical",                  "joySens_y" },
+   {it_gap},
+   {it_info,         FC_GOLD "general options"},
+   {it_variable,     "turning speed",    "turning_speed" },
    {it_end}
 };
 
