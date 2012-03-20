@@ -81,6 +81,25 @@ bool ClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
 
 
+bool ClipEngine::tryZMove(Mobj *thing, fixed_t z)
+{
+   ClipContext *cc = getContext();
+   bool ret = tryZMove(thing, z, cc);
+   cc->done();
+   return ret;
+}
+
+
+
+bool ClipEngine::makeZMove(Mobj *thing, fixed_t z)
+{
+   ClipContext *cc = getContext();
+   bool ret = makeZMove(thing, z, cc);
+   cc->done();
+   return ret;
+}
+
+
 bool ClipEngine::checkPosition(Mobj *thing, fixed_t x, fixed_t y)
 {
    ClipContext *cc = getContext();
@@ -270,12 +289,19 @@ void ClipEngine::freeSecNodeList(void)
 }
 
 
+void ClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening)
+{
+   ClipContext *cc = getContext();
+   lineOpening(linedef, mo, opening, cc);
+   cc->done();
+}
+
 // ----------------------------------------------------------------------------
 // Tracer engine selection
 
 static DoomTraceEngine doomte = DoomTraceEngine();
 
-TracerEngine *trace = doomte;
+TracerEngine *trace = &doomte;
 
 
 
@@ -295,7 +321,7 @@ void P_SetClippingEngine(DoomClipper_e engine)
       case Doom3D:
       case Portal:
          clip = &doomen;
-         trace = doomte;
+         trace = &doomte;
          break;
    };
 }

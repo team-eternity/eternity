@@ -455,9 +455,9 @@ void A_BishopMissileWeave(Mobj *actor)
    
    clip->tryMove(actor, newX, newY, false);
    
-   actor->z -= FloatBobOffsets[weaveZ];
+   clip->makeZMove(actor, actor->z - FloatBobOffsets[weaveZ]);
    weaveZ    = (weaveZ + 2) & 63;   
-   actor->z += FloatBobOffsets[weaveZ];
+   clip->makeZMove(actor, actor->z + FloatBobOffsets[weaveZ]);
    
    actor->counters[1] = weaveZ + (weaveXY << 16);
 }
@@ -516,9 +516,9 @@ void A_SpawnBlur(Mobj *actor)
 //
 void A_BishopChase(Mobj *actor)
 {
-   actor->z -= FloatBobOffsets[actor->counters[1]] >> 1;
+   clip->makeZMove(actor, actor->z - FloatBobOffsets[actor->counters[1]] >> 1);
    actor->counters[1] = (actor->counters[1] + 4) & 63;
-   actor->z += FloatBobOffsets[actor->counters[1]] >> 1;
+   clip->makeZMove(actor, actor->z + FloatBobOffsets[actor->counters[1]] >> 1);
 }
 
 //
@@ -670,7 +670,7 @@ static bool P_RaiseMobj(Mobj *actor)
 //
 void A_WraithInit(Mobj *actor)
 {
-   actor->z += 48 * FRACUNIT;
+   clip->makeZMove(actor, actor->z + (48 * FRACUNIT));
    actor->counters[0] = 0;         // index into floatbob
 }
 
@@ -845,7 +845,7 @@ void A_WraithLook(Mobj *actor)
 void A_WraithChase(Mobj *actor)
 {
    int weaveindex = actor->counters[0];
-   actor->z += FloatBobOffsets[weaveindex];
+   clip->makeZMove(actor, actor->z + FloatBobOffsets[weaveindex]);
    actor->counters[0] = (weaveindex + 2) & 63;
 
    A_Chase(actor);
@@ -943,7 +943,7 @@ void A_AffritRocks(Mobj *actor)
 void A_SmBounce(Mobj *actor)
 {
    // give some more momentum (x,y,&z)
-   actor->z    = actor->floorz + FRACUNIT;
+   clip->makeZMove(actor, actor->floorz + FRACUNIT);
    actor->momz = 2*FRACUNIT + (P_Random(pr_smbounce) << 10);
    actor->momx = P_Random(pr_smbounce) % 3 << FRACBITS;
    actor->momy = P_Random(pr_smbounce) % 3 << FRACBITS;
@@ -1081,7 +1081,7 @@ void A_CheckFloor(Mobj *actor)
 {
    if(actor->z <= actor->floorz)
    {
-      actor->z = actor->floorz;
+      clip->makeZMove(actor, actor->floorz);
       actor->flags2 &= ~MF2_LOGRAV;
       P_SetMobjState(actor, actor->info->deathstate);
    }

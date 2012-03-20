@@ -88,3 +88,18 @@ void PortalClipEngine::freeContext(ClipContext *cc)
    cc->next = unused;
    unused = cc;
 }
+
+
+
+//
+// tryMove
+//
+// Attempt to move to a new position,
+// crossing special lines unless MF_TELEPORT is set.
+//
+// killough 3/15/98: allow dropoff as option
+//
+bool PortalClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc)
+{
+   return false;
+}

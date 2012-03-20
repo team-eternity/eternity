@@ -1520,7 +1520,7 @@ void Mobj::serialize(SaveArchive &arc)
             skin = NULL;
       }
 
-      P_SetThingPosition(this);
+      clip->setThingPosition(this);
       P_AddThingTID(this, tid);
 
       // create the deswizzle info structure
@@ -1667,7 +1667,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // set subsector and/or block links
 
-   P_SetThingPosition(mobj);
+   clip->setThingPosition(mobj);
 
    mobj->dropoffz =           // killough 11/98: for tracking dropoffs
       mobj->floorz = mobj->subsector->sector->floorheight;
@@ -1767,7 +1767,7 @@ void Mobj::removeThinker()
 
    // unlink from sector and block lists
 
-   P_UnsetThingPosition(this);
+   clip->unsetThingPosition(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)

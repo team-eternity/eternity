@@ -1029,7 +1029,7 @@ void A_Saw(Mobj *mo)
 
    // Use meleerange + 1 so that the puff doesn't skip the flash
    TracerContext *tc = trace->getContext();
-   slope = P_doAutoAim(mo, angle, MELEERANGE + 1);
+   slope = P_doAutoAim(tc, mo, angle, MELEERANGE + 1);
 
    trace->lineAttack(mo, angle, MELEERANGE+1, slope, damage);
    
@@ -1249,7 +1249,7 @@ void P_BulletSlope(Mobj *mo, TracerContext *tc)
    // haleyjd 08/09/11: allow autoaim disable
    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
    {
-      bulletslope = P_PlayerPitchSlope(mo->player);
+      tc->bulletslope = P_PlayerPitchSlope(mo->player);
       return;
    }
    
@@ -1985,7 +1985,7 @@ void A_CustomPlayerMelee(Mobj *mo)
       angle += P_SubRandom(pr_custompunch) << 18;
    
    TracerContext *tc = trace->getContext();
-   slope = P_doAutoAim(mo, angle, MELEERANGE);
+   slope = P_doAutoAim(tc, mo, angle, MELEERANGE);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.

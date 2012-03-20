@@ -40,6 +40,10 @@ class DoomClipEngine : public ClipEngine
       
       // killough 3/15/98: add fourth argument to P_TryMove
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
+      
+      virtual bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc);
+      virtual bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc);
+
 
       // killough 8/9/98: extra argument for telefragging
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss);
@@ -69,6 +73,11 @@ class DoomClipEngine : public ClipEngine
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc);
 
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc);
+      
+      // Utility functions
+      virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc);
+      virtual void unsetThingPosition(Mobj *mo);
+      virtual void setThingPosition(Mobj *mo);
       
       // Clipping contexts
       virtual ClipContext*  getContext();

@@ -44,6 +44,7 @@
 #include "doomstat.h"
 #include "d_io.h"       // SoM 3/14/2002: strncasecmp
 #include "g_game.h"
+#include "p_clipen.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
@@ -277,7 +278,7 @@ void P_RestorePlayerPosition(void)
    
    // restore position
    
-   P_UnsetThingPosition(save_player->mo);
+   clip->unsetThingPosition(save_player->mo);
    
    save_player->mo->x = sec->soundorg.x + save_xoffset;
    save_player->mo->y = sec->soundorg.y + save_yoffset;
@@ -287,7 +288,7 @@ void P_RestorePlayerPosition(void)
    save_player->mo->momx = save_mobj.momx;    // keep momentum
    save_player->mo->momy = save_mobj.momy;
    
-   P_SetThingPosition(save_player->mo);
+   clip->setThingPosition(save_player->mo);
 }
 
 // EOF

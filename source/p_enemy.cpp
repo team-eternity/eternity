@@ -164,7 +164,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
-      P_LineOpening(check, NULL, cc);
+      open_t opening;
+      clip->lineOpening(check, NULL, &opening, cc);
       
       if(opening.range <= 0)
          continue;       // closed door
@@ -490,13 +491,13 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
       if(try_ok)
       {
-         P_UnsetThingPosition(actor);
+         clip->unsetThingPosition(actor);
          actor->x = x;
          actor->y = y;
          actor->floorz = floorz;
          actor->ceilingz = ceilingz;
          actor->dropoffz = dropoffz;
-         P_SetThingPosition(actor);
+         clip->setThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;
          actor->momx += FixedMul(deltax, movefactor);
          actor->momy += FixedMul(deltay, movefactor);

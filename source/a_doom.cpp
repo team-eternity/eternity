@@ -723,11 +723,11 @@ void A_Fire(Mobj *actor)
    
    an = dest->angle >> ANGLETOFINESHIFT;
    
-   P_UnsetThingPosition(actor);
+   clip->unsetThingPosition(actor);
    actor->x = dest->x + FixedMul(24*FRACUNIT, finecosine[an]);
    actor->y = dest->y + FixedMul(24*FRACUNIT, finesine[an]);
    actor->z = dest->z;
-   P_SetThingPosition(actor);
+   clip->setThingPosition(actor);
 }
 
 //

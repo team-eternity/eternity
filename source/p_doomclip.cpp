@@ -290,7 +290,7 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // the move is ok,
    // so unlink from the old position & link into the new position
    
-   P_UnsetThingPosition(thing);
+   unsetThingPosition(thing);
    
    thing->floorz   = cc->floorz;
    thing->ceilingz = cc->ceilingz;
@@ -304,7 +304,7 @@ bool DoomClipEngine::teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    thing->x = x;
    thing->y = y;
    
-   P_SetThingPosition(thing);
+   setThingPosition(thing);
 
    freeContext(cc);   
    return true;
@@ -658,7 +658,8 @@ bool PIT_CheckLine(line_t *ld, MapContext *mc)
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
    
-   P_LineOpening(ld, cc->thing, cc);
+   open_t opening;
+   clip->lineOpening(ld, cc->thing, &opening, cc);
 
    // adjust floor & ceiling heights
    
@@ -1496,7 +1497,7 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
    // the move is ok,
    // so unlink from the old position and link into the new position
 
-   P_UnsetThingPosition (thing);
+   unsetThingPosition (thing);
    
    oldx = thing->x;
    oldy = thing->y;
@@ -1511,7 +1512,7 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
    thing->x = x;
    thing->y = y;
    
-   P_SetThingPosition(thing);
+   setThingPosition(thing);
 
    // haleyjd 08/07/04: new footclip system
    P_AdjustFloorClip(thing);
@@ -1552,6 +1553,34 @@ bool DoomClipEngine::tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, Cli
    
    return true;
 }
+
+
+
+bool DoomClipEngine::tryZMove(Mobj *thing, fixed_t z, ClipContext *cc)
+{
+   fixed_t savedz = thing->z;
+
+   thing->z = z;
+
+   // haleyjd: OVER_UNDER:
+   // [RH] Check to make sure there's nothing in the way of the float
+   if(!comp[comp_overunder] && !P_TestMobjZ(thing))
+   {
+      thing->z = savedz;
+      return false;
+   }
+
+   return true;
+}
+
+
+bool DoomClipEngine::makeZMove(Mobj *thing, fixed_t z, ClipContext *cc)
+{
+   thing->z = z;
+   return true;
+}
+
+
 
 //
 // PIT_ApplyTorque
@@ -1902,9 +1931,8 @@ static bool PTR_SlideTraverse(intercept_t *in, TracerContext *tc)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
-   ClipContext *cc = clip->getContext();
-   P_LineOpening(li, slidemo, cc);
-   cc->done();
+   open_t opening;
+   clip->lineOpening(li, slidemo, &opening);
    
    if(opening.range < slidemo->height)
       goto isblocking;  // doesn't fit
@@ -2596,6 +2624,294 @@ fixed_t DoomClipEngine::avoidDropoff(Mobj *actor, ClipContext *cc)
    
    // Non-zero if movement prescribed
    return dropoff_deltax | dropoff_deltay;
+}
+
+
+//
+// P_LineOpening
+//
+// Sets opentop and openbottom to the window
+// through a two sided line.
+// OPTIMIZE: keep this precalculated
+//
+void DoomClipEngine::lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc)
+{
+   fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+   // SoM: used for 3dmidtex
+   fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
+
+   if(linedef->sidenum[1] == -1)      // single sided line
+   {
+      opening->range = 0;
+      return;
+   }
+   
+   opening->frontsector = linedef->frontsector;
+   opening->backsector  = linedef->backsector;
+
+   // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
+   // z is if both sides of that line have the same portal.
+   {
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && 
+         opening->frontsector->c_pflags & PS_PASSABLE &&
+         opening->backsector->c_pflags & PS_PASSABLE && 
+         opening->frontsector->c_portal == opening->backsector->c_portal)
+      {
+         frontceilz = backceilz = opening->frontsector->ceilingheight + (1024 * FRACUNIT);
+      }
+      else
+#endif
+      {
+         frontceilz = opening->frontsector->ceilingheight;
+         backceilz  = opening->backsector->ceilingheight;
+      }
+      
+      frontcz = opening->frontsector->ceilingheight;
+      backcz  = opening->backsector->ceilingheight;
+   }
+
+
+   {
+#ifdef R_LINKEDPORTALS
+      if(mo && demo_version >= 333 && 
+         opening->frontsector->f_pflags & PS_PASSABLE &&
+         opening->backsector->f_pflags & PS_PASSABLE && 
+         opening->frontsector->f_portal == opening->backsector->f_portal)
+      {
+         frontfloorz = backfloorz = opening->frontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+      }
+      else 
+#endif
+      {
+         frontfloorz = opening->frontsector->floorheight;
+         backfloorz  = opening->backsector->floorheight;
+      }
+
+      frontfz = opening->frontsector->floorheight;
+      backfz = opening->backsector->floorheight;
+   }
+   
+   if(frontceilz < backceilz)
+      opening->top = frontceilz;
+   else
+      opening->top = backceilz;
+
+   
+   if(frontfloorz > backfloorz)
+   {
+      opening->bottom = frontfloorz;
+      opening->lowfloor = backfloorz;
+      // haleyjd
+      cc->floorpic = opening->frontsector->floorpic;
+   }
+   else
+   {
+      opening->bottom = backfloorz;
+      opening->lowfloor = frontfloorz;
+      // haleyjd
+      cc->floorpic = opening->backsector->floorpic;
+   }
+
+   if(frontcz < backcz)
+      otop = frontcz;
+   else
+      otop = backcz;
+
+   if(frontfz > backfz)
+      obot = frontfz;
+   else
+      obot = backfz;
+
+   opening->secfloor = opening->bottom;
+   opening->secceil  = opening->top;
+
+   // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
+   // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
+   if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) && 
+      sides[linedef->sidenum[0]].midtexture)
+   {
+      fixed_t textop, texbot, texmid;
+      side_t *side = &sides[linedef->sidenum[0]];
+      
+      if(linedef->flags & ML_DONTPEGBOTTOM)
+      {
+         texbot = side->rowoffset + obot;
+         textop = texbot + textures[side->midtexture]->heightfrac;
+      }
+      else
+      {
+         textop = otop + side->rowoffset;
+         texbot = textop - textures[side->midtexture]->heightfrac;
+      }
+      texmid = (textop + texbot)/2;
+
+      // SoM 9/7/02: use monster blocking line to provide better
+      // clipping
+      if((linedef->flags & ML_BLOCKMONSTERS) && 
+         !(mo->flags & (MF_FLOAT | MF_DROPOFF)) &&
+         D_abs(mo->z - textop) <= 24*FRACUNIT)
+      {
+         opening->top = opening->bottom;
+         opening->range = 0;
+         return;
+      }
+      
+      if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
+      {
+         if(texbot < opening->top)
+            opening->top = texbot;
+      }
+      else
+      {
+         if(textop > opening->bottom)
+            opening->bottom = textop;
+
+         // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
+         // SoM 01/12/06: let monsters walk over dropoffs
+         if(abs(mo->z - textop) <= 24*FRACUNIT)
+            cc->touch3dside = 1;
+      }
+   }
+
+   opening->range = opening->top - opening->bottom;
+}
+
+
+//
+// P_UnsetThingPosition
+// Unlinks a thing from block map and sectors.
+// On each position change, BLOCKMAP and other
+// lookups maintaining lists ot things inside
+// these structures need to be updated.
+//
+void DoomClipEngine::unsetThingPosition(Mobj *thing)
+{
+   P_LogThingPosition(thing, "unset");
+
+   if(!(thing->flags & MF_NOSECTOR))
+   {
+      // invisible things don't need to be in sector list
+      // unlink from subsector
+      
+      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+      // pointers, allows head node pointers to be treated like everything else
+      Mobj **sprev = thing->sprev;
+      Mobj  *snext = thing->snext;
+      if((*sprev = snext))  // unlink from sector list
+         snext->sprev = sprev;
+
+      // phares 3/14/98
+      //
+      // Save the sector list pointed to by touching_sectorlist.
+      // In P_SetThingPosition, we'll keep any nodes that represent
+      // sectors the Thing still touches. We'll add new ones then, and
+      // delete any nodes for sectors the Thing has vacated. Then we'll
+      // put it back into touching_sectorlist. It's done this way to
+      // avoid a lot of deleting/creating for nodes, when most of the
+      // time you just get back what you deleted anyway.
+      //
+      // If this Thing is being removed entirely, then the calling
+      // routine will clear out the nodes in sector_list.
+      
+      thing->old_sectorlist = thing->touching_sectorlist;
+      thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
+   }
+
+   if(!(thing->flags & MF_NOBLOCKMAP))
+   {
+      // inert things don't need to be in blockmap
+      
+      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+      // pointers, allows head node pointers to be treated like everything else
+      //
+      // Also more robust, since it doesn't depend on current position for
+      // unlinking. Old method required computing head node based on position
+      // at time of unlinking, assuming it was the same position as during
+      // linking.
+      
+      Mobj *bnext, **bprev = thing->bprev;
+      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
+         bnext->bprev = bprev;
+   }
+
+#ifdef R_LINKEDPORTALS
+   thing->groupid = R_NOGROUP;
+#endif
+}
+
+//
+// P_SetThingPosition
+// Links a thing into both a block and a subsector
+// based on it's x y.
+// Sets thing->subsector properly
+//
+// killough 5/3/98: reformatted, cleaned up
+//
+void DoomClipEngine::setThingPosition(Mobj *thing)
+{
+   // link into subsector
+   subsector_t *ss = thing->subsector = R_PointInSubsector(thing->x, thing->y);
+
+   P_LogThingPosition(thing, " set ");
+
+#ifdef R_LINKEDPORTALS
+   thing->groupid = ss->sector->groupid;
+#endif
+
+   if(!(thing->flags & MF_NOSECTOR))
+   {
+      // invisible things don't go into the sector links
+      
+      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+      // pointers, allows head nodes to be treated like everything else
+      
+      Mobj **link = &ss->sector->thinglist;
+      Mobj *snext = *link;
+      if((thing->snext = snext))
+         snext->sprev = &thing->snext;
+      thing->sprev = link;
+      *link = thing;
+
+      // phares 3/16/98
+      //
+      // If sector_list isn't NULL, it has a collection of sector
+      // nodes that were just removed from this Thing.
+      //
+      // Collect the sectors the object will live in by looking at
+      // the existing sector_list and adding new nodes and deleting
+      // obsolete ones.
+      //
+      // When a node is deleted, its sector links (the links starting
+      // at sector_t->touching_thinglist) are broken. When a node is
+      // added, new sector links are created.
+
+      thing->touching_sectorlist = clip->createSecNodeList(thing, thing->x, thing->y);
+      thing->old_sectorlist = NULL;
+   }
+
+   // link into blockmap
+   if(!(thing->flags & MF_NOBLOCKMAP))
+   {
+      // inert things don't need to be in blockmap
+      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
+      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
+      
+      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
+      {
+         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+         // pointers, allows head nodes to be treated like everything else
+
+         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
+         Mobj *bnext = *link;
+         if((thing->bnext = bnext))
+            bnext->bprev = &thing->bnext;
+         thing->bprev = link;
+         *link = thing;
+      }
+      else        // thing is off the map
+         thing->bnext = NULL, thing->bprev = NULL;
+   }
 }
 
 

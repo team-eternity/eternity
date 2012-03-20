@@ -762,7 +762,7 @@ void A_HticExplode(Mobj *actor)
       damage = 24;
       break;
    case 3: // 3 -- Time Bomb of the Ancients, special effects
-      actor->z += 32*FRACUNIT;
+      clip->makeZMove(actor, actor->z + 32*FRACUNIT);
       actor->translucency = FRACUNIT;
       break;
    default:
@@ -1007,7 +1007,7 @@ void A_VolcBallImpact(Mobj *actor)
    {
       actor->flags |= MF_NOGRAVITY;
       actor->flags2 &= ~MF2_LOGRAV;
-      actor->z += 28*FRACUNIT;
+      clip->makeZMove(actor, actor->z + 28*FRACUNIT);
    }
 
    // do some radius damage
@@ -1441,7 +1441,7 @@ void A_MntrFloorFire(Mobj *actor)
       mntrfxType = E_SafeThingType(MT_MNTRFX3);
 
    // set actor to floor
-   actor->z = actor->floorz;
+   clip->makeZMove(actor, actor->floorz);
    
    // determine spawn coordinates for small flame
    x = actor->x + (P_SubRandom(pr_mffire) << 10);
@@ -1690,7 +1690,7 @@ void A_LichFireGrow(Mobj *actor)
 {
    int frameNum = E_SafeState(S_LICHFX3_4);
 
-   actor->z += 9*FRACUNIT;
+   clip->makeZMove(actor, actor->z + 9*FRACUNIT);
    
    if(--actor->counters[0] == 0) // count down growth timer
    {

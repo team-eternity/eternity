@@ -2313,10 +2313,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\source\p_clipen.cpp"
-						>
-					</File>
-					<File
 						RelativePath="..\Source\p_cmd.cpp"
 						>
 						<FileConfiguration
@@ -2337,10 +2333,6 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\source\p_doomclip.cpp"
-						>
 					</File>
 					<File
 						RelativePath="..\Source\p_doors.cpp"
@@ -2541,28 +2533,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\Source\p_maputl.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\Source\p_mobj.cpp"
 						>
 						<FileConfiguration
@@ -2653,10 +2623,6 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\source\p_portalclip.cpp"
-						>
 					</File>
 					<File
 						RelativePath="..\Source\p_pspr.cpp"
@@ -3011,14 +2977,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\source\p_clipen.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\p_doomclip.h"
-						>
-					</File>
-					<File
 						RelativePath="..\Source\p_enemy.h"
 						>
 					</File>
@@ -3043,10 +3001,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\Source\p_maputl.h"
-						>
-					</File>
-					<File
 						RelativePath="..\Source\p_mobj.h"
 						>
 					</File>
@@ -3060,10 +3014,6 @@
 					</File>
 					<File
 						RelativePath="..\source\p_portal.h"
-						>
-					</File>
-					<File
-						RelativePath="..\source\p_portalclip.h"
 						>
 					</File>
 					<File
@@ -5135,6 +5085,72 @@
 					</File>
 					<File
 						RelativePath="..\source\gl\gl_vars.h"
+						>
+					</File>
+				</Filter>
+			</Filter>
+			<Filter
+				Name="Clip"
+				>
+				<Filter
+					Name="Interface"
+					>
+					<File
+						RelativePath="..\source\p_clipen.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_clipen.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Classic"
+					>
+					<File
+						RelativePath="..\source\p_doomclip.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_doomclip.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Source\p_maputl.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\Source\p_maputl.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Portal"
+					>
+					<File
+						RelativePath="..\source\p_portalclip.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\source\p_portalclip.h"
 						>
 					</File>
 				</Filter>

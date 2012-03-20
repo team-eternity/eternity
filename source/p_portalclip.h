@@ -40,6 +40,9 @@ class PortalClipEngine : public ClipEngine
       
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc);
 
+      virtual bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc);
+      virtual bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc);
+      
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss);
       virtual bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
       virtual bool portalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);

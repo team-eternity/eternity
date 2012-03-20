@@ -159,6 +159,7 @@ static bool PTR_AimTraverse(intercept_t *in, TracerContext *tc)
    {
       // shoot a line
       line_t *li = in->d.line;
+      open_t opening;
       
       // haleyjd 04/30/11: added 'block everything' lines
       if(!(li->flags & ML_TWOSIDED) || (li->extflags & EX_ML_BLOCKALL))
@@ -168,9 +169,7 @@ static bool PTR_AimTraverse(intercept_t *in, TracerContext *tc)
       // A two sided line will restrict
       // the possible target ranges.
       
-      ClipContext *cc = clip->getContext();
-      P_LineOpening(li, NULL, cc);
-      cc->done();
+      clip->lineOpening(li, NULL, &opening);
       
       if(opening.bottom >= opening.top)
          return false;   // stop
@@ -226,7 +225,7 @@ static bool PTR_AimTraverse(intercept_t *in, TracerContext *tc)
 //
 // Returns true if PTR_ShootTraverse should exit, and false otherwise.
 //
-static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist, TracerContext *tc)
+static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist, TracerContext *tc, open_t *opening)
 {
    // haleyjd: when allowing planes to be shot, we do not care if
    // the sector heights are the same; we must check against the
@@ -240,8 +239,8 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist, TracerContext *tc)
       (li->frontsector->ceilingheight == li->backsector->ceilingheight &&
        (demo_version < 333 || comp[comp_planeshoot]));
 
-   if((floorsame   || FixedDiv(opening.bottom - tc->z , dist) <= tc->aimslope) &&
-      (ceilingsame || FixedDiv(opening.top - tc->z , dist) >= tc->aimslope))
+   if((floorsame   || FixedDiv(opening->bottom - tc->z , dist) <= tc->aimslope) &&
+      (ceilingsame || FixedDiv(opening->top - tc->z , dist) >= tc->aimslope))
    {
       if(li->special && demo_version >= 329 && !comp[comp_planeshoot])
          P_ShootSpecialLine(tc->shootthing, li, side);
@@ -270,16 +269,16 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, TracerC
    if(li->flags & ML_TWOSIDED)
    {  
       // crosses a two sided (really 2s) line
-      ClipContext *cc = clip->getContext();
-      P_LineOpening(li, NULL, cc);
-      cc->done();
+      open_t      opening;
+      
+      clip->lineOpening(li, NULL, &opening);
       
       dist = FixedMul(tc->attackrange, in->frac);
       
       // killough 11/98: simplify
       // haleyjd 03/13/05: fixed bug that activates 2S line specials
       // when shots hit the floor
-      if(P_Shoot2SLine(li, lineside, dist, tc))
+      if(P_Shoot2SLine(li, lineside, dist, tc, &opening))
          ret = true;
    }
 
@@ -697,13 +696,12 @@ static bool PTR_UseTraverse(intercept_t *in, TracerContext *tc)
    }
    else
    {
+      open_t opening;
       if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
          opening.range = 0;
       else
       {
-         ClipContext *cc = clip->getContext();
-         P_LineOpening(in->d.line, NULL, cc);
-         cc->done();
+         clip->lineOpening(in->d.line, NULL, &opening);
       }
 
       if(opening.range <= 0)
@@ -734,14 +732,13 @@ static bool PTR_NoWayTraverse(intercept_t *in, TracerContext *tc)
 {
    line_t *ld = in->d.line;                       // This linedef
 
-   ClipContext *cc = clip->getContext();
+   open_t opening;
    bool res = ld->special ||                          // Ignore specials
-     !(ld->flags & ML_BLOCKING ||                 // Always blocking
-       (P_LineOpening(ld, NULL, cc),               // Find openings
+     !(ld->flags & ML_BLOCKING ||                     // Always blocking
+       (clip->lineOpening(ld, NULL, &opening),        // Find openings
         opening.range <= 0 ||                         // No opening
         opening.bottom > usething->z+24*FRACUNIT ||   // Too high it blocks
         opening.top < usething->z+usething->height)); // Too low it blocks
-   cc->done();
    return res;
 }
 

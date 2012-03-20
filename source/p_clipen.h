@@ -47,6 +47,21 @@ class  ClipContext;
 #define MAXRADIUS       (32*FRACUNIT)
 
 
+typedef struct 
+{
+   fixed_t    top;      // top of line opening
+   fixed_t    bottom;   // bottom of line opening
+   fixed_t    range;    // height of opening: top - bottom
+   fixed_t    lowfloor;     // lowest floorheight involved   
+   fixed_t    secfloor; // SoM 11/3/02: considering only sector floor
+   fixed_t    secceil;  // SoM 11/3/02: considering only sector ceiling
+
+   // moved front and back outside P_LineOpening and changed -- phares 3/7/98
+   // them to these so we can pick up the new friction value
+   // in PIT_CheckLine()
+   sector_t   *frontsector; // made global
+   sector_t   *backsector;  // made global
+} open_t;
 
 
 class ClipEngine
@@ -56,7 +71,13 @@ class ClipEngine
       
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
       virtual bool tryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, ClipContext *cc) = 0;
+      
+      virtual bool tryZMove(Mobj *thing, fixed_t z);
+      virtual bool tryZMove(Mobj *thing, fixed_t z, ClipContext *cc) = 0;
 
+      virtual bool makeZMove(Mobj *thing, fixed_t z);
+      virtual bool makeZMove(Mobj *thing, fixed_t z, ClipContext *cc) = 0;
+      
       virtual bool teleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss) = 0;
 
       virtual bool teleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss) = 0;
@@ -89,6 +110,12 @@ class ClipEngine
       virtual void radiusAttack(Mobj *spot, Mobj *source, int damage, int mod, ClipContext *cc) = 0;
 
       virtual fixed_t avoidDropoff(Mobj *actor, ClipContext *cc) = 0;
+      
+      // Utility functions
+      virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening);
+      virtual void lineOpening(line_t *linedef, Mobj *mo, open_t *opening, ClipContext *cc) = 0;
+      virtual void unsetThingPosition(Mobj *mo) = 0;
+      virtual void setThingPosition(Mobj *mo) = 0;
       
       // Clipping contexts
       virtual ClipContext*  getContext() = 0;

@@ -58,26 +58,6 @@ struct intercept_t
 };
 
 
-struct open_t
-{
-   // P_LineOpening
-   fixed_t    top;      // top of line opening
-   fixed_t    bottom;   // bottom of line opening
-   fixed_t    range;    // height of opening: top - bottom
-   fixed_t    lowfloor;     // lowest floorheight involved   
-   fixed_t    secfloor; // SoM 11/3/02: considering only sector floor
-   fixed_t    secceil;  // SoM 11/3/02: considering only sector ceiling
-
-   // moved front and back outside P_LineOpening and changed -- phares 3/7/98
-   // them to these so we can pick up the new friction value
-   // in PIT_CheckLine()
-   sector_t   *frontsector; // made global
-   sector_t   *backsector;  // made global
-};
-
-extern open_t opening;
-
-
 typedef bool (*traverser_t)(intercept_t *in);
 
 fixed_t P_AproxDistance (fixed_t dx, fixed_t dy);
@@ -87,16 +67,21 @@ void    P_MakeDivline (line_t *li, divline_t *dl);
 fixed_t P_InterceptVector (divline_t *v2, divline_t *v1);
 int     P_BoxOnLineSide (fixed_t *tmbox, line_t *ld);
 
-//SoM 9/2/02: added mo parameter for 3dside clipping
-void    P_LineOpening (line_t *linedef, Mobj *mo, ClipContext *cc);
-
-void P_UnsetThingPosition(Mobj *thing);
-void P_SetThingPosition(Mobj *thing);
 bool ThingIsOnLine(Mobj *t, line_t *l);  // killough 3/15/98
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 
-
+//
+// P_LogThingPosition
+//
+// haleyjd 04/15/2010: thing position logging for debugging demo problems.
+// Pass a NULL mobj to close the log.
+//
+#ifdef THING_LOGGING
+void P_LogThingPosition(Mobj *mo, const char *caller);
+#else
+#define P_LogThingPosition(a, b)
+#endif
 
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, MapContext *), MapContext *c);
 bool P_BlockThingsIterator(int x, int y, bool func(Mobj   *, MapContext *), MapContext *c);
