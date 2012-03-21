@@ -809,8 +809,10 @@ bool SingleCSDemo::handleConsoleCommandDemoPacket()
 {
    int32_t type, src;
    uint32_t command_size, options_size;
-   char *options;
    command_t *command;
+
+   static char *options = NULL;
+   static size_t current_options_size = 0;
 
    if(!readFromDemo(&type, sizeof(int32_t), 1))
       return false;
@@ -836,16 +838,19 @@ bool SingleCSDemo::handleConsoleCommandDemoPacket()
    if(!readFromDemo(&options_size, sizeof(uint32_t), 1))
       return false;
 
-   options = ecalloc(char *, options_size, sizeof(char));
+   if(options_size)
+   {
+      if(current_options_size < options_size)
+         options = erealloc(char *, options, options_size * sizeof(char));
 
-   if(!readFromDemo(options, sizeof(char), options_size))
-      return false;
+      if(!readFromDemo(options, sizeof(char), options_size))
+         return false;
 
-   // [CG] Don't play menu commands back.
-   if(strncmp(packet_buffer, "mn_", 3) == 0)
-      efree(options);
-   else
-      C_BufferCommand(type, command, (const char *)options, src);
+      if(strncmp(packet_buffer, "mn_", 3))
+         C_BufferCommand(type, command, options, src);
+   }
+   else if(strncmp(packet_buffer, "mn_", 3))
+      C_BufferCommand(type, command, "", src);
 
    return true;
 }
@@ -858,9 +863,6 @@ int SingleCSDemo::getNumber() const
 
 bool SingleCSDemo::openForPlayback()
 {
-   // [CG] The disk icon causes severe renderer lag, so disable it.
-   disk_icon = 0;
-
    if(mode != mode_none)
    {
       setError(already_open);

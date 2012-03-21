@@ -1214,6 +1214,62 @@ CONSOLE_COMMAND(spectate_self, 0)
 
 ////////////////////////////////////////////////////////////////
 //
+// Miscellaneous
+//
+
+CONSOLE_COMMAND(toggle, 0)
+{
+   command_t *command;
+   const char *command_name;
+
+   if(Console.argc != 1)
+   {
+      doom_printf("Usage: toggle <variable> %d", Console.argc);
+      return;
+   }
+
+   if(!(command = C_GetCmdForName(Console.argv[0]->constPtr())))
+   {
+      doom_printf("%s is not a console variable", Console.argv[0]->constPtr());
+      return;
+   }
+
+   command_name = Console.argv[0]->constPtr();
+
+   if(command->type != ct_variable)
+   {
+      doom_printf("%s is not a console variable", command_name);
+      return;
+   }
+
+   if(command->variable->type == vt_int)
+   {
+      if((command->variable->min != 0) || (command->variable->max != 1))
+      {
+         doom_printf("%s is not a toggleable variable", command_name);
+         doom_printf("%d, %d", command->variable->min, command->variable->max);
+      }
+      else if(*((int *)(command->variable->variable)))
+         C_RunCommand(command, "0");
+      else
+         C_RunCommand(command, "1");
+   }
+   else if(command->variable->type == vt_toggle)
+   {
+      if(*((bool *)(command->variable->variable)))
+         C_RunCommand(command, "0");
+      else
+         C_RunCommand(command, "1");
+   }
+   else
+   {
+      doom_printf("%s is not a toggleable variable", command_name);
+      doom_printf("%d", command->variable->type);
+   }
+}
+
+////////////////////////////////////////////////////////////////
+//
 // Chat Macros
 //
 
@@ -1614,7 +1670,7 @@ void G_AddCommands(void)
    C_AddCommand(weapon_switch_on_pickup);
    C_AddCommand(ammo_switch_on_pickup);
    C_AddCommand(display_target_names);
-
+   C_AddCommand(toggle);
 
    // [CG] C/S demo controls.
    C_AddCommand(cs_demo_folder_path);
