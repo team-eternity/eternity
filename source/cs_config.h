@@ -127,6 +127,7 @@ typedef struct
    uint8_t  use_zdoom_gravity;
    uint8_t  use_zdoom_air_control;
    uint8_t  use_zdoom_player_physics;
+   uint8_t  use_zdoom_sound_attenuation;
    int32_t  zdoom_gravity;
    fixed_t  zdoom_air_control;
    fixed_t  zdoom_air_friction;

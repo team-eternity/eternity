@@ -1530,6 +1530,7 @@ void CS_HandleOptionsSection()
    cs_original_settings->use_zdoom_gravity = false;
    cs_original_settings->use_zdoom_air_control = false;
    cs_original_settings->use_zdoom_player_physics = false;
+   cs_original_settings->use_zdoom_sound_attenuation = false;
    cs_original_settings->zdoom_gravity = 800;
    // [CG] "ZDoom" air control is 1/256 (0.00390625), but when ZDoom player
    //      physics are enabled they use air control whether it's enabled or
@@ -1552,6 +1553,12 @@ void CS_HandleOptionsSection()
       (options["use_zdoom_player_physics"].asBool()))
    {
       cs_original_settings->use_zdoom_player_physics = true;
+   }
+
+   if((!options["use_zdoom_sound_attenuation"].empty()) &&
+      (options["use_zdoom_sound_attenuation"].asBool()))
+   {
+      cs_original_settings->use_zdoom_sound_attenuation = true;
    }
 
    if((!options["zdoom_gravity"].empty()) &&
@@ -1809,6 +1816,7 @@ void CS_LoadMapOverrides(unsigned int index)
    cs_settings->use_zdoom_gravity = false;
    cs_settings->use_zdoom_air_control = false;
    cs_settings->use_zdoom_player_physics = false;
+   cs_settings->use_zdoom_sound_attenuation = false;
    cs_settings->zdoom_gravity = 800;
    cs_settings->zdoom_air_control = 0;
 
@@ -1828,6 +1836,12 @@ void CS_LoadMapOverrides(unsigned int index)
       (overrides["use_zdoom_player_physics"].asBool()))
    {
       cs_settings->use_zdoom_player_physics = true;
+   }
+
+   if((!overrides["use_zdoom_sound_attenuation"].empty()) &&
+      (overrides["use_zdoom_sound_attenuation"].asBool()))
+   {
+      cs_settings->use_zdoom_sound_attenuation = true;
    }
 
    if((!overrides["zdoom_gravity"].empty()) &&

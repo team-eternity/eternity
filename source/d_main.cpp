@@ -3968,6 +3968,7 @@ static void D_DoomInit(void)
 
    startupmsg("W_Init", "Init WADfiles.");
    wGlobalDir.InitMultipleFiles(wadfiles);
+   S_LoadSNDCURVELump();
    usermsg("");  // gap
 
    // [CG] I feel like it's fair that to play c/s Doom you need to either buy

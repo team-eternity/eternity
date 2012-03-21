@@ -1245,10 +1245,7 @@ CONSOLE_COMMAND(toggle, 0)
    if(command->variable->type == vt_int)
    {
       if((command->variable->min != 0) || (command->variable->max != 1))
-      {
          doom_printf("%s is not a toggleable variable", command_name);
-         doom_printf("%d, %d", command->variable->min, command->variable->max);
-      }
       else if(*((int *)(command->variable->variable)))
          C_RunCommand(command, "0");
       else
@@ -1262,10 +1259,7 @@ CONSOLE_COMMAND(toggle, 0)
          C_RunCommand(command, "1");
    }
    else
-   {
       doom_printf("%s is not a toggleable variable", command_name);
-      doom_printf("%d", command->variable->type);
-   }
 }
 
 ////////////////////////////////////////////////////////////////

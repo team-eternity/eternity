@@ -307,7 +307,13 @@
         "monsters_climb_tall_stairs": false,
         "rescue_dying_friends": false,
         "dogs_can_jump_down": false,
-        "build_blockmap": false
+        "build_blockmap": false,
+        "use_zdoom_gravity": false,
+        "use_zdoom_air_control": false,
+        "use_zdoom_player_physics": false,
+        "use_zdoom_sound_attenuation": false,
+        "zdoom_gravity": 800,
+        "zdoom_air_control": 0.0
     },
 
 /**** "maps"

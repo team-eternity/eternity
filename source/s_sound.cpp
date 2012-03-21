@@ -7,12 +7,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,6 +22,9 @@
 // DESCRIPTION:  Platform-independent sound code
 //
 //-----------------------------------------------------------------------------
+
+// [CG] ZDoom SNDCURVE lump processing was added from Odamex, Copyright (c)
+//      2012 The Odamex Team, licensed under the terms of the GPL.
 
 // killough 3/7/98: modified to allow arbitrary listeners in spy mode
 // killough 5/2/98: reindented, removed useless code, beautified
@@ -57,6 +60,7 @@
 #include "w_wad.h"
 
 #include "cs_announcer.h" // [CG] 09/24/11
+#include "cs_config.h"    // [CG] 03/21/12
 
 // haleyjd 07/13/05: redefined to use sound-specific attenuation params
 #define S_ATTENUATOR ((sfx->clipping_dist - sfx->close_dist) >> FRACBITS)
@@ -110,6 +114,10 @@ typedef struct channel_s
 
 // the set of channels available
 static channel_t *channels;
+
+// For ZDoom sound curve
+static byte *SoundCurve;
+static int   SoundCurveSize;
 
 // Maximum volume of a sound effect.
 // Internal default is max out of 0-15.
@@ -172,7 +180,7 @@ static void S_StopChannel(int cnum)
    {
       if(I_SoundIsPlaying(channels[cnum].handle))
          I_StopSound(channels[cnum].handle);      // stop the sound playing
-      
+
       // haleyjd 08/13/10: sound origins should count as thinker references
       if(demo_version >= 337 && channels[cnum].origin)
          P_SetTarget<PointThinker>(&(channels[cnum].origin), NULL);
@@ -192,12 +200,12 @@ static bool S_CheckSectorKill(const camera_t *ear, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
-   { 
+   {
       // are we in a killed-sound sector?
-      if(ear && 
+      if(ear &&
          R_PointInSubsector(ear->x, ear->y)->sector->flags & SECF_KILLSOUND)
          return true;
-      
+
       // source in a killed-sound sector?
       if(src &&
          R_PointInSubsector(src->x, src->y)->sector->flags & SECF_KILLSOUND)
@@ -225,8 +233,61 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    fixed_t adx = 0, ady = 0, dist = 0;
    angle_t angle;
    fixed_t sx, sy;
-   int attenuator = 0, basevolume;            // haleyjd
+   int attenuator = 0, basevolume, dist_int;  // haleyjd
    fixed_t close_dist = 0, clipping_dist = 0; // haleyjd
+
+   // [CG] SNDCURVE lump support from Odamex.
+   if(clientserver && SoundCurve && cs_settings->use_zdoom_sound_attenuation)
+   {
+      float vol_float = ((float)(snd_SfxVolume * chanvol)) / 15.f;
+
+      *vol = ((int)vol_float);
+      *sep = NORM_SEP;
+
+      if(!listener)
+      {
+         *vol = (int)(((SoundCurve[0] / 128.f) * vol_float));
+         *sep = NORM_SEP;
+      }
+      else
+      {
+         adx = abs(listener->x - source->x);
+         ady = abs(listener->y - source->y);
+         dist = adx + ady - ((adx < ady ? adx : ady) >> 1);
+         dist_int = (int)M_FixedToFloat(dist);
+
+         if(dist_int >= SoundCurveSize) // too far away to hear
+         {
+            *vol = 0;
+            return 0;
+         }
+
+         if(dist_int < 0)
+            dist_int = 0;
+
+         *vol = (int)(((SoundCurve[dist_int] / 128.f) * vol_float));
+
+         if(dist)
+         {
+            angle = R_PointToAngle2(
+               listener->x, listener->y, source->x, source->y
+            );
+
+            if(angle > listener->angle)
+               angle -= listener->angle;
+            else
+               angle += (0xffffffff - listener->angle);
+
+            angle >>= ANGLETOFINESHIFT;
+            *sep =
+               NORM_SEP - (FixedMul(S_STEREO_SWING, finesine[angle]) >> FRACBITS);
+         }
+         else
+            *sep = NORM_SEP;
+      }
+
+      return (*vol > 0);
+   }
 
    // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
    if(!listener)
@@ -237,7 +298,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    if(!source)
       I_Error("S_AdjustSoundParams: NULL source\n");
 #endif
-   
+
    // calculate the distance to sound origin
    //  and clip it if necessary
    //
@@ -246,8 +307,8 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    sx = source->x;
    sy = source->y;
-      
-   if(useportalgroups && listener->groupid != R_NOGROUP && 
+
+   if(useportalgroups && listener->groupid != R_NOGROUP &&
       source->groupid != R_NOGROUP && listener->groupid != source->groupid)
    {
       // The listener and the source are not in the same subspace, so offset
@@ -262,13 +323,13 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
    ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
-   
+
    if(ady > adx)
       dist = adx, adx = ady, ady = dist;
 
    dist = adx ? FixedDiv(adx, finesine[(tantoangle_acc[FixedDiv(ady,adx) >> DBITS]
-                                        + ANG90) >> ANGLETOFINESHIFT]) : 0;   
-   
+                                        + ANG90) >> ANGLETOFINESHIFT]) : 0;
+
    // haleyjd 05/29/06: allow per-channel volume scaling
    basevolume = (snd_SfxVolume * chanvol) / 15;
 
@@ -309,7 +370,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    // angle of source to listener
    // sf: use listenx, listeny
-   
+
    angle = R_PointToAngle2(listener->x, listener->y, sx, sy);
 
    if(angle <= listener->angle)
@@ -319,7 +380,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    // stereo separation
    *sep = NORM_SEP - FixedMul(S_STEREO_SWING >> FRACBITS, finesine[angle]);
-   
+
    // volume calculation
    *vol = dist < close_dist >> FRACBITS ? basevolume :
       basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
@@ -328,7 +389,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    // haleyjd 04/27/10: special treatment for priorities <= 0
    if(*pri > 0)
       *pri = *pri + (127 - *vol);
-   
+
    if(*pri > 255) // cap to 255
       *pri = 255;
 
@@ -376,7 +437,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
          break;
       }
    }
-   
+
    // Find an open channel
    if(cnum == numChannels)
    {
@@ -413,7 +474,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    if(cnum >= numChannels)
       I_Error("S_getChannel: handle %d out of range\n", cnum);
 #endif
-   
+
    return cnum;
 }
 
@@ -443,7 +504,7 @@ static int S_countChannels(void)
 // range from 0 to 127. Also added customizable attenuation types.
 // haleyjd 06/03/06: added ability to loop sound samples
 //
-void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx, 
+void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
                     int volumeScale, int attenuation, bool loop, int subchannel)
 {
    int sep = 0, pitch, singularity, cnum, handle, o_priority, priority, chancount;
@@ -457,7 +518,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    // haleyjd 09/03/03: allow NULL sounds to fall through
    if(!sfx)
       return;
-   
+
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
       return;
@@ -467,7 +528,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    // serve as alternate names for the same sounds, in contrast to links which
    // provide a way of playing the same sound with different parameters.
 
-   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
+   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to
    // other sounds, but we choose one at random.
 
    while(sfx->alias || sfx->randomsounds)
@@ -482,7 +543,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       }
    }
 
-   // haleyjd:  we must weed out degenMobj's before trying to 
+   // haleyjd:  we must weed out degenMobj's before trying to
    // dereference these fields -- a thinker check perhaps?
    if(origin && (mo = thinker_cast<Mobj *>(origin)))
    {
@@ -492,7 +553,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 
          // haleyjd: monster skins don't support sound replacements
          if(mo->skin && mo->skin->type == SKIN_PLAYER)
-         {         
+         {
             sndname = mo->skin->sounds[sfx->skinsound - 1];
             sfx = S_SfxInfoForName(sndname);
          }
@@ -505,8 +566,8 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       }
 
       // haleyjd: give local client sounds high priority
-      if(mo == players[displayplayer].mo || 
-         (mo->flags & MF_MISSILE && 
+      if(mo == players[displayplayer].mo ||
+         (mo->flags & MF_MISSILE &&
           mo->target == players[displayplayer].mo))
       {
          priority_boost = true;
@@ -535,7 +596,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       if(volumeScale > chancount)
          volumeScale -= chancount;
    }
-   
+
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value
    // haleyjd: allow priority boost for local client sounds
@@ -544,7 +605,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 
    // haleyjd: setup playercam
    if(gamestate == GS_LEVEL)
-   {     
+   {
       if(camera) // an external camera is active
       {
          playercam = *camera; // assign directly
@@ -558,8 +619,8 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
          // adjust sounds for a player that hasn't been spawned yet!
          if(pmo)
          {
-            playercam.x = pmo->x; 
-            playercam.y = pmo->y; 
+            playercam.x = pmo->x;
+            playercam.y = pmo->y;
             playercam.z = pmo->z;
             playercam.angle = pmo->angle;
             playercam.groupid = pmo->groupid;
@@ -579,7 +640,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    // Check to see if it is audible, modify the params
    // killough 3/7/98, 4/25/98: code rearranged slightly
    // haleyjd 08/12/04: add extcamera check
-   
+
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
@@ -590,7 +651,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
          volume = 127;
    }
    else
-   {     
+   {
       // use an external cam?
       if(!S_AdjustSoundParams(listener, origin, volumeScale, attenuation,
                               &volume, &sep, &pitch, &priority, sfx))
@@ -598,7 +659,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
       else if(origin->x == playercam.x && origin->y == playercam.y)
          sep = NORM_SEP;
    }
-  
+
    if(pitched_sounds)
    {
       switch(sfx->pitch_type)
@@ -624,7 +685,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 
       if(pitch < 0)
          pitch = 0;
-      
+
       if(pitch > 255)
          pitch = 255;
    }
@@ -669,7 +730,7 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
    if(handle >= 0)
    {
       channels[cnum].handle = handle;
-      
+
       // haleyjd 05/29/06: record volume scale value and attenuation type
       // haleyjd 06/03/06: record pitch too (wtf is going on here??)
       // haleyjd 09/27/06: store priority and singularity values (!!!)
@@ -696,10 +757,10 @@ void S_StartSfxInfo(PointThinker *origin, sfxinfo_t *sfx,
 // S_StartSoundAtVolume
 //
 // haleyjd 05/29/06: Actually, DOOM had a routine named this, but it was
-// removed, apparently by the BOOM team, because it was never used for 
+// removed, apparently by the BOOM team, because it was never used for
 // anything useful (it was always called with snd_SfxVolume...).
 //
-void S_StartSoundAtVolume(PointThinker *origin, int sfx_id, 
+void S_StartSoundAtVolume(PointThinker *origin, int sfx_id,
                           int volume, int attn, int subchannel)
 {
    // haleyjd: changed to use EDF DeHackEd number hashing,
@@ -731,11 +792,11 @@ void S_StartSound(PointThinker *origin, int sfx_id)
 //
 // haleyjd 05/29/06: as below, but allows volume scaling.
 //
-void S_StartSoundNameAtVolume(PointThinker *origin, const char *name, 
+void S_StartSoundNameAtVolume(PointThinker *origin, const char *name,
                               int volume, int attn, int subchannel)
 {
    sfxinfo_t *sfx;
-   
+
    // haleyjd 03/17/03: allow NULL sound names to fall through
    if(!name)
       return;
@@ -762,11 +823,11 @@ void S_StartSoundName(PointThinker *origin, const char *name)
 //
 // haleyjd 06/03/06: support playing looped sounds.
 //
-void S_StartSoundLooped(PointThinker *origin, char *name, int volume, 
+void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
                         int attn, int subchannel)
 {
    sfxinfo_t *sfx;
-   
+
    if(!name)
       return;
 
@@ -780,7 +841,7 @@ void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
 void S_StopSound(const PointThinker *origin, int subchannel)
 {
    int cnum;
-   
+
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
       return;
@@ -834,7 +895,7 @@ void S_UpdateSounds(const Mobj *listener)
    int cnum;
 
    // sf: a camera_t holding the information about the player
-   camera_t playercam = { 0 }; 
+   camera_t playercam = { 0 };
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -843,7 +904,7 @@ void S_UpdateSounds(const Mobj *listener)
    if(listener)
    {
       // haleyjd 08/12/04: fix possible bugs with external cameras
-      
+
       if(camera) // an external camera is active
       {
          playercam = *camera; // assign directly
@@ -855,7 +916,7 @@ void S_UpdateSounds(const Mobj *listener)
          playercam.z = listener->z;
          playercam.angle = listener->angle;
          playercam.groupid = listener->groupid;
-      }      
+      }
    }
 
    // now update each individual channel
@@ -930,7 +991,7 @@ bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
    int cnum;
 
    if(mo && sfx)
-   {   
+   {
       for(cnum = 0; cnum < numChannels; ++cnum)
       {
          if(channels[cnum].origin == mo && channels[cnum].sfxinfo == sfx)
@@ -940,7 +1001,7 @@ bool S_CheckSoundPlaying(PointThinker *mo, sfxinfo_t *sfx)
          }
       }
    }
-   
+
    return false;
 }
 
@@ -1001,8 +1062,8 @@ void S_SetSfxVolume(int volume)
 //
 
 sfxinfo_t *S_SfxInfoForName(const char *name)
-{   
-   // haleyjd 09/03/03: now calls down to master EDF sound hash   
+{
+   // haleyjd 09/03/03: now calls down to master EDF sound hash
    sfxinfo_t *sfx = E_SoundForName(name);
 
    // haleyjd 03/26/11: if not found, check for an implicit wad sound
@@ -1025,7 +1086,7 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 // S_Chgun
 //
 // Delinks the chgun sound effect when a DSCHGUN lump has been
-// detected. This allows the sound to be used separately without 
+// detected. This allows the sound to be used separately without
 // use of EDF.
 //
 void S_Chgun(void)
@@ -1083,14 +1144,14 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    // same as the one playing ?
    if(mus_playing == music)
-      return;  
+      return;
 
    // shutdown old music
    S_StopMusic();
 
    if(music->prefix)
    {
-      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+      psnprintf(namebuf, sizeof(namebuf), "%s%s",
                 GameModeInfo->musPrefix, music->name);
    }
    else
@@ -1106,12 +1167,12 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);   
+   music->data = wGlobalDir.CacheLumpNum(lumpnum, PU_STATIC);
 
    if(music->data)
    {
       music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
-      
+
       // play it
       if(music->handle)
       {
@@ -1139,15 +1200,15 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 void S_ChangeMusicNum(int musnum, int looping)
 {
    musicinfo_t *music;
-   
+
    if(musnum <= GameModeInfo->musMin || musnum >= GameModeInfo->numMusic)
    {
       doom_printf(FC_ERROR "Bad music number %d\n", musnum);
       return;
    }
-   
+
    music = &(GameModeInfo->s_music[musnum]);
-   
+
    S_ChangeMusic(music, looping);
 }
 
@@ -1167,9 +1228,9 @@ void S_StartMusic(int m_id)
 void S_ChangeMusicName(const char *name, int looping)
 {
    musicinfo_t *music;
-   
+
    music = S_MusicForName(name);
-   
+
    if(music)
       S_ChangeMusic(music, looping);
    else
@@ -1193,7 +1254,7 @@ void S_StopMusic(void)
    I_StopSong(mus_playing->handle);
    I_UnRegisterSong(mus_playing->handle);
    Z_Free(mus_playing->data);
-   
+
    mus_playing->data = NULL;
    mus_playing = NULL;
 }
@@ -1208,8 +1269,8 @@ void S_StopMusic(void)
 //
 // Doom
 //
-// Probably the most complicated music determination, between the 
-// original episodes and the addition of episode 4, which is all 
+// Probably the most complicated music determination, between the
+// original episodes and the addition of episode 4, which is all
 // over the place.
 //
 int S_MusicForMapDoom(void)
@@ -1226,9 +1287,9 @@ int S_MusicForMapDoom(void)
       mus_e2m5,     // Shawn        e4m8
       mus_e1m9      // Tim          e4m9
    };
-            
+
    // sf: simplified
-   return 
+   return
       gameepisode < 4 ?
          mus_e1m1 + (gameepisode-1)*9 + gamemap-1 :
          spmus[gamemap-1];
@@ -1253,14 +1314,14 @@ int S_MusicForMapHtic(void)
 {
    int gep = gameepisode;
    int gmp = gamemap;
-   
+
    // ensure bounds just for safety
    if(gep < 1) gep = 1;
    if(gep > 6) gep = 6;
-   
+
    if(gmp < 1) gmp = 1;
    if(gmp > 9) gmp = 9;
-   
+
    return H_Mus_Matrix[gep - 1][gmp - 1];
 }
 
@@ -1274,23 +1335,23 @@ int S_MusicForMapHtic(void)
 void S_Start(void)
 {
    int mnum;
-   
+
    S_StopSounds(false);
-   
+
    //jff 1/22/98 return if music is not enabled
    if(!mus_card || nomusicparm)
       return;
-   
+
    // start new music for the level
    mus_paused = 0;
-   
+
    if(!*LevelInfo.musicName && gamemap == 0)
    {
       // dont know what music to play
       // we need a default
       LevelInfo.musicName = GameModeInfo->defMusName;
    }
-   
+
    // sf: replacement music
    if(*LevelInfo.musicName)
       S_ChangeMusicName(LevelInfo.musicName, true);
@@ -1300,7 +1361,7 @@ void S_Start(void)
          mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
       else
          mnum = GameModeInfo->MusicForMap();
-         
+
       // start music
       S_ChangeMusicNum(mnum, true);
    }
@@ -1309,8 +1370,29 @@ void S_Start(void)
 static void S_HookMusic(musicinfo_t *);
 
 //
+// S_LoadSNDCurveLump
+//
+// [CG] SNDCURVE lump support from Odamex.
+//
+void S_LoadSNDCURVELump(void)
+{
+   int lump;
+
+   SoundCurve = NULL;
+   SoundCurveSize = 0;
+
+	if((lump = W_CheckNumForName("SNDCURVE")) < 0)
+      printf("S_Init: No SNDCURVE lump, ZDoom sound attenuation disabled.\n");
+   else
+      SoundCurve = (byte *)wGlobalDir.CacheLumpNum(lump, PU_STATIC);
+
+   if(SoundCurve)
+      SoundCurveSize = W_LumpLength(lump);
+}
+
+//
 // S_Init
-// 
+//
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
@@ -1348,7 +1430,7 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
-   
+
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
 
@@ -1365,12 +1447,12 @@ void S_Init(int sfxVolume, int musicVolume)
 static void S_HookMusic(musicinfo_t *music)
 {
    int hashslot;
-   
-   if(!music || !music->name) 
+
+   if(!music || !music->name)
       return;
-   
+
    hashslot = sound_hash(music->name);
-   
+
    music->next = musicinfos[hashslot];
    musicinfos[hashslot] = music;
 }
@@ -1395,9 +1477,9 @@ musicinfo_t *S_MusicForName(const char *name)
    tempname.toUpper(); // uppercase for insensitivity
 
    // If the gamemode-dependent music prefix is present, skip past it
-   if(prefixlen > 0 && namelen > prefixlen && 
+   if(prefixlen > 0 && namelen > prefixlen &&
       tempname.findSubStr(GameModeInfo->musPrefix) == tempname.constPtr())
-   {      
+   {
       nameToUse = name + prefixlen;
       nameHasPrefix = true;
    }
@@ -1410,7 +1492,7 @@ musicinfo_t *S_MusicForName(const char *name)
    tempname = nameToUse;
 
    hashnum = sound_hash(tempname.constPtr());
-  
+
    for(mus = musicinfos[hashnum]; mus; mus = mus->next)
    {
       if(!tempname.strCaseCmp(mus->name))
@@ -1437,7 +1519,7 @@ musicinfo_t *S_MusicForName(const char *name)
       else
          lumpHasPrefix = true;
    }
-   
+
    // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
@@ -1450,7 +1532,7 @@ musicinfo_t *S_MusicForName(const char *name)
       mus->prefix = (!nameHasPrefix && lumpHasPrefix);
       S_HookMusic(mus);
    }
-   
+
    return mus;
 }
 
@@ -1460,23 +1542,23 @@ void S_UpdateMusic(const char *lumpname)
    musicinfo_t *music;
    const char *musname;
    int prefixlen;
-   
+
    // haleyjd 04/10/11: rewritten completely
    prefixlen = strlen(GameModeInfo->musPrefix);
    if(prefixlen && strlen(lumpname) > prefixlen)
       musname = lumpname + prefixlen;
    else
       musname = lumpname;
-   
+
    // check if one already in the table first
    music = S_MusicForName(musname);
-   
+
    if(!music) // not found in list?
    {
       // build a new musicinfo_t
       music = ecalloc(musicinfo_t *, 1 ,sizeof(*music));
       music->name = estrdup(musname);
-      
+
       // hook into hash list
       S_HookMusic(music);
    }
@@ -1547,7 +1629,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    // is missing
    if(music->prefix)
    {
-      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+      psnprintf(namebuf, sizeof(namebuf), "%s%s",
                 GameModeInfo->musPrefix, music->name);
    }
    else
@@ -1555,7 +1637,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
 
    if(W_CheckNumForName(namebuf) < 0)
    {
-      C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
+      C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf,
                Console.argv[0]->constPtr());
       return;
    }
@@ -1631,7 +1713,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sector_t *sector = &sectors[secnum];
-      
+
       S_StartSoundName(&sector->soundorg, sndname);
    }
 
@@ -1653,11 +1735,11 @@ static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
    }
-   
+
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sector_t *sector = &sectors[secnum];
-      
+
       S_StartSound(&sector->soundorg, sndnum);
    }
 

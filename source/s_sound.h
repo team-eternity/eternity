@@ -49,6 +49,11 @@
 #define S_CLOSE_DIST (S_CLOSE_DIST_I << FRACBITS)
 
 //
+// [CG] Loads SNDCURVE lump (if present), from Odamex.
+//
+void S_LoadSNDCURVELump(void);
+
+//
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.

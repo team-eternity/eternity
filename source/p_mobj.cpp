@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------------------
 
 // [CG] Various ZDoom physics additions were added from Odamex, Copyright (c)
-//      2012 The Odamex Team, under the terms of the GPL.
+//      2012 The Odamex Team, licensed under the terms of the GPL.
 
 #include <list>
 

@@ -537,6 +537,7 @@ bool CS_LoadMap(void)
       }
    }
    wGlobalDir.InitMultipleFiles(wadfiles);
+   S_LoadSNDCURVELump();
    D_ReInitWadfiles();
 
    if(CS_CLIENT)

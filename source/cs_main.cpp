@@ -25,7 +25,7 @@
 //----------------------------------------------------------------------------
 
 // [CG] Various ZDoom physics additions were added from Odamex, Copyright (c)
-//      2012 The Odamex Team, under the terms of the GPL.
+//      2012 The Odamex Team, licensed under the terms of the GPL.
 
 // [CG] Needed for JSON serialization routines.
 #include <string>
@@ -1821,11 +1821,12 @@ void CS_ArchiveSettings(SaveArchive& arc)
        << cs_settings->requires_spectator_password
        << cs_settings->requires_player_password
        << cs_settings->use_zdoom_gravity
-       << cs_settings->zdoom_gravity
        << cs_settings->use_zdoom_air_control
+       << cs_settings->use_zdoom_player_physics
+       << cs_settings->use_zdoom_sound_attenuation
+       << cs_settings->zdoom_gravity
        << cs_settings->zdoom_air_control
-       << cs_settings->zdoom_air_friction
-       << cs_settings->use_zdoom_player_physics;
+       << cs_settings->zdoom_air_friction;
 }
 
 void CS_ArchiveTeams(SaveArchive& arc)
