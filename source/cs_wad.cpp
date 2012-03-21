@@ -514,7 +514,14 @@ bool CS_LoadMap(void)
    Z_FreeTags(PU_CACHE, PU_CACHE);
 
    if(wadfiles)
+   {
       D_ClearFiles();
+      if(CS_CLIENT && cs_iwad)
+      {
+         efree((void *)cs_iwad);
+         cs_iwad = NULL;
+      }
+   }
 
    IdentifyVersion();
 

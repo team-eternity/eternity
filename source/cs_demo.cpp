@@ -324,7 +324,7 @@ bool SingleCSDemo::writeToDemo(void *data, size_t size, size_t count)
 bool SingleCSDemo::readFromDemo(void *buffer, size_t size, size_t count)
 {
    int saved_disk_icon;
-   
+
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
@@ -355,7 +355,7 @@ bool SingleCSDemo::readFromDemo(void *buffer, size_t size, size_t count)
 bool SingleCSDemo::skipForward(long int bytes)
 {
    int saved_disk_icon;
-   
+
    if(mode != mode_playback)
    {
       setError(not_open_for_playback);
@@ -2174,7 +2174,7 @@ bool CSDemo::close()
 
    current_demo_index = 0;
 
-   if(M_IsFolder(current_demo_folder_path))
+   if(current_demo_folder_path && M_IsFolder(current_demo_folder_path))
    {
       // [CG] Don't re-ZIP the folder if there was a ZIP error, this could
       //      potentially corrupt demos.  Just remove the demo folder instead.
