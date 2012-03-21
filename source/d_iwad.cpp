@@ -270,7 +270,7 @@ char *D_FindWADByName(char *name)
    {
       buf.Printf(0, "%s/%s", iwad_dirs[i], name);
       buf.normalizeSlashes();
-      if(M_FileExists(buf))
+      if(M_FileExists(buf.constPtr()))
          return buf.duplicate(PU_STATIC);
    }
 

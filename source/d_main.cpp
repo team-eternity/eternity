@@ -166,7 +166,7 @@ char    *usergamepath = NULL;     // haleyjd 02/05/12: path of user/game directo
 char firstlevel[9] = "";
 
 // [CG] Indicate that a demo was loaded from the command-line.
-extern bool cs_playingdemofromcommandline = false;
+bool cs_playingdemofromcommandline = false;
 
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
