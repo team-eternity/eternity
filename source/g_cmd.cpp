@@ -226,7 +226,7 @@ VARIABLE_FLOAT(
 CONSOLE_VARIABLE(radial_attack_self_lift, radial_attack_self_lift, 0) {}
 
 // [CG] Turning speed
-VARIABLE_INT(turning_speed, &default_turning_speed, 100, 1000, NULL);
+VARIABLE_INT(turning_speed, &default_turning_speed, 0, 1000, NULL);
 CONSOLE_VARIABLE(turning_speed, turning_speed, 0) {}
 
 // always mlook
@@ -1260,6 +1260,8 @@ void G_AddChatMacros(void)
 
 extern int weapon_preferences[2][NUMWEAPONS+1];
 
+int weapon_numbers[NUMWEAPONS];
+
 void G_SetWeapPref(int prefnum, int newvalue)
 {
    int i;
@@ -1290,6 +1292,45 @@ void G_WeapPrefHandler(void)
       //      pickups, or when ammunition is exhausted.
       if(CS_CLIENT && net_peer != NULL)
          CL_SendPlayerArrayInfo(ci_pwo, prefnum);
+   }
+}
+
+void G_WeapSlotHandler(void)
+{
+}
+
+void G_AddWeapCommands(void)
+{
+   int i;
+
+   for(i = 0; i < NUMWEAPONS; i++)
+   {
+      variable_t *variable;
+      command_t *command;
+      char tempstr[16];
+
+      memset(tempstr, 0, 16);
+      weapon_numbers[i] = i;
+
+      variable = estructalloc(variable_t, 1);
+      variable->variable = &weapon_numbers[i];
+      variable->v_default = NULL;
+      variable->type = vt_int;
+      variable->min = 1;
+      variable->max = NUMWEAPONS;
+      variable->defines = weapon_str;
+
+      command = estructalloc(command_t, 1);
+
+      sprintf(tempstr, "weap%d", i + 1);
+      command->name = estrdup(tempstr);
+      command->type = ct_variable;
+      command->flags = cf_handlerset;
+      command->variable = variable;
+      command->handler = G_WeapSlotHandler;
+      command->netcmd = 0;
+
+      (C_AddCommand)(command); // hook into cmdlist
    }
 }
 

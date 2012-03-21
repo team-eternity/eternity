@@ -31,6 +31,7 @@
 #include "m_argv.h"
 #include "m_file.h"
 #include "m_misc.h"
+#include "m_qstr.h"
 #include "w_wad.h"
 
 extern char *userpath;
@@ -253,39 +254,27 @@ static void BuildIWADDirList(void)
 // 
 char *D_FindWADByName(char *name)
 {
-   char *buf;
    int i;
    bool exists;
-   
+   qstring buf;
+
    // Absolute path?
-   
+
    if(M_FileExists(name))
       return name;
 
    BuildIWADDirList();
-   
+
    // Search through all IWAD paths for a file with the given name.
-   
    for(i = 0; i < num_iwad_dirs; ++i)
    {
-      // Construct a string for the full path
-      
-      buf = emalloc(char *, strlen(iwad_dirs[i]) + strlen(name) + 5);
-      sprintf(buf, "%s/%s", iwad_dirs[i], name);
-
-      // haleyjd
-      M_NormalizeSlashes(buf);
-      
-      exists = M_FileExists(buf);
-      
-      if(exists)
-         return buf;
-      
-      efree(buf);
+      buf.Printf(0, "%s/%s", iwad_dirs[i], name);
+      buf.normalizeSlashes();
+      if(M_FileExists(buf))
+         return buf.duplicate(PU_STATIC);
    }
 
    // File not found
-   
    return NULL;
 }
 

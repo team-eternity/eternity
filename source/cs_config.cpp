@@ -606,16 +606,31 @@ void CS_HandleResourcesSection()
                I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
 
             resource_name = cs_json["resources"][i]["name"].asCString();
-            if(!CS_AddIWAD(resource_name) &&
-               !cs_json["resources"][i]["alternates"].empty())
+            if(!CS_AddIWAD(resource_name))
             {
-               for(j = 0; j < cs_json["resources"][i]["alternates"].size(); j++)
-               {
-                  resource_name =
-                     cs_json["resources"][i]["alternates"][j].asCString();
+               bool found_alternate = false;
 
-                  if(CS_AddIWAD(resource_name))
-                     break;
+               if(!cs_json["resources"][i]["alternates"].empty())
+               {
+                  for(j = 0; j < cs_json["resources"][i]["alternates"].size();
+                      j++)
+                  {
+                     resource_name =
+                        cs_json["resources"][i]["alternates"][j].asCString();
+
+                     if(CS_AddIWAD(resource_name))
+                     {
+                        found_alternate = true;
+                        break;
+                     }
+                  }
+               }
+
+               if(!found_alternate)
+               {
+                  I_Error(
+                     "CS_LoadConfig: Could not find IWAD %s.\n", resource_name
+                  );
                }
             }
          }

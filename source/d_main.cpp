@@ -3645,6 +3645,7 @@ static void D_DoomInit(void)
          I_Error("No demo file specified.\n");
       else
          cs_playingdemofromcommandline = true;
+      p++;
    }
 
    if(cs_playingdemofromcommandline)
