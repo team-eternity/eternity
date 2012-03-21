@@ -2341,7 +2341,7 @@ char *FindIWADFile(void)
    if(clientserver)
    {
       if(CS_CLIENT)
-         CS_HandleResourcesSection();
+         CS_FindIWADResource();
       basename = cs_iwad;
    }
    else if((i = M_CheckParm("-iwad")) && i < myargc - 1)
@@ -4245,12 +4245,8 @@ static void D_DoomInit(void)
       if(!cs_playingdemofromcommandline)
       {
          printf("CS_LoadWADs: Loading WADs.\n");
-
          if(CS_SERVER)
-         {
-            CS_HandleResourcesSection();
             CS_HandleMapsSection();
-         }
       }
    }
    else
@@ -4415,6 +4411,8 @@ void D_DoomMain(void)
 
       if(!playing_cs_demo)
       {
+         if(CS_CLIENT)
+            CS_HandleResourcesSection();
          CS_HandleMapsSection();
          CL_Connect();
       }

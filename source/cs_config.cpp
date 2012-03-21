@@ -408,54 +408,48 @@ void SV_HandleMastersSection()
 
 void SV_LoadConfig(void)
 {
-   char *config_path = NULL;
-   int position_of_config;
    unsigned int i;
+   qstring config_path;
+   int position_of_config;
    bool requires_spectator_password, requires_player_password,
-        requires_moderator_password, requires_administrator_password,
-        should_free;
+        requires_moderator_password, requires_administrator_password;
 
    requires_spectator_password = false;
    requires_player_password = false;
    requires_moderator_password = false;
    requires_administrator_password = false;
-   should_free = false;
 
-   position_of_config = M_CheckParm("-server-config");
-   if(position_of_config)
-   {
-      config_path = myargv[position_of_config + 1];
-   }
+   if((position_of_config = M_CheckParm("-server-config")))
+      config_path.Printf(0, "%s", myargv[position_of_config + 1]);
    else
+      config_path.Printf(0, "%s/%s", userpath, DEFAULT_CONFIG_FILENAME);
+
+   config_path.normalizeSlashes();
+
+   if(!M_PathExists(config_path.constPtr()))
    {
-      config_path = ecalloc(
-         char *,
-         strlen(userpath) + strlen(DEFAULT_CONFIG_FILENAME) + 2,
-         sizeof(char)
+      I_Error(
+         "CS_LoadConfig: Config file %s does not exist.\n",
+         config_path.constPtr()
       );
-      sprintf(config_path, "%s/%s", userpath, DEFAULT_CONFIG_FILENAME);
-      M_NormalizeSlashes(config_path);
-      should_free = true;
    }
 
-   if(!M_PathExists((const char *)config_path))
-      I_Error("CS_LoadConfig: Config file %s does not exist.\n", config_path);
-
-   if(!M_IsFile((const char *)config_path))
+   if(!M_IsFile(config_path.constPtr()))
    {
       I_Error(
          "CS_LoadConfig: Config file %s exists but is not a file.\n",
-         config_path
+         config_path.constPtr()
       );
    }
 
-   CS_ReadJSON(cs_json, (const char *)config_path);
-
-   if(should_free)
-      efree(config_path);
+   CS_ReadJSON(cs_json, config_path.constPtr());
 
    // [CG] Loads server and options sections.
    CS_LoadConfig();
+
+   // [CG] Load IWAD & other resources.
+   CS_FindIWADResource();
+   CS_HandleResourcesSection();
 
    // [CG] Load master advertising information.
    if(!cs_json["masters"].empty())
@@ -577,8 +571,9 @@ void SV_LoadConfig(void)
    }
 }
 
-void CS_HandleResourcesSection()
+void CS_FindIWADResource()
 {
+   bool found_alternate;
    unsigned int i, j;
    const char *resource_name;
    Json::Value& resources = cs_json["resources"];
@@ -586,56 +581,62 @@ void CS_HandleResourcesSection()
    // [CG] Check for the IWAD first.
    for(i = 0; i < resources.size(); i++)
    {
-      if(cs_json["resources"][i].isObject())
+      if(!cs_json["resources"][i].isObject())
+         continue;
+
+      if(cs_json["resources"][i]["name"].empty())
       {
-         if(cs_json["resources"][i]["name"].empty())
-         {
-            printf("CS_LoadConfig: Skipping resource entry with no name.\n");
-            continue;
-         }
+         printf("CS_LoadConfig: Skipping resource entry with no name.\n");
+         continue;
+      }
 
-         if(cs_json["resources"][i]["type"].empty())
-         {
-            printf("CS_LoadConfig: Skipping resource entry with no type.\n");
-            continue;
-         }
+      if(cs_json["resources"][i]["type"].empty())
+      {
+         printf("CS_LoadConfig: Skipping resource entry with no type.\n");
+         continue;
+      }
 
-         if(string_option_is(cs_json["resources"][i]["type"], "iwad"))
-         {
-            if(cs_iwad != NULL)
-               I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
+      if(!string_option_is(cs_json["resources"][i]["type"], "iwad"))
+         continue;
 
-            resource_name = cs_json["resources"][i]["name"].asCString();
-            if(!CS_AddIWAD(resource_name))
+      if(cs_iwad)
+         I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
+
+      resource_name = cs_json["resources"][i]["name"].asCString();
+
+      if(CS_AddIWAD(resource_name))
+         continue;
+      found_alternate = false;
+
+      if(!cs_json["resources"][i]["alternates"].empty())
+      {
+         size_t count = cs_json["resources"][i]["alternates"].size();
+         for(j = 0; j < count; j++)
+         {
+            resource_name =
+               cs_json["resources"][i]["alternates"][j].asCString();
+
+            if(CS_AddIWAD(resource_name))
             {
-               bool found_alternate = false;
-
-               if(!cs_json["resources"][i]["alternates"].empty())
-               {
-                  for(j = 0; j < cs_json["resources"][i]["alternates"].size();
-                      j++)
-                  {
-                     resource_name =
-                        cs_json["resources"][i]["alternates"][j].asCString();
-
-                     if(CS_AddIWAD(resource_name))
-                     {
-                        found_alternate = true;
-                        break;
-                     }
-                  }
-               }
-
-               if(!found_alternate)
-               {
-                  I_Error(
-                     "CS_LoadConfig: Could not find IWAD %s.\n", resource_name
-                  );
-               }
+               found_alternate = true;
+               break;
             }
          }
       }
+
+      if(!found_alternate)
+         I_Error("CS_LoadConfig: Could not find IWAD %s.\n", resource_name);
    }
+
+   if(cs_iwad == NULL)
+      I_Error("CS_LoadConfig: No IWAD specified.\n");
+}
+
+void CS_HandleResourcesSection()
+{
+   unsigned int i, j;
+   const char *resource_name;
+   Json::Value& resources = cs_json["resources"];
 
    if(cs_iwad == NULL)
       I_Error("CS_LoadConfig: No IWAD specified.\n");

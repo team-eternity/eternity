@@ -144,6 +144,7 @@ bool CS_AddIWAD(const char *resource_name);
 bool CS_AddWAD(const char *resource_name);
 bool CS_AddDeHackEdFile(const char *resource_name);
 void CS_HandleMastersSection();
+void CS_FindIWADResource();
 void CS_HandleResourcesSection();
 void CS_HandleServerSection();
 void CS_HandleOptionsSection();

@@ -116,7 +116,6 @@ static int console_progress(void *clientp, double dltotal, double dlnow,
          si_unit
       );
    }
-   // C_Printf("Downloading %s: %f%%\n", wad_name, fraction_downloaded);
    I_StartTic();
    D_ProcessEvents();
    C_Update();
@@ -516,7 +515,7 @@ bool CS_LoadMap(void)
    if(wadfiles)
    {
       D_ClearFiles();
-      if(CS_CLIENT && cs_iwad)
+      if(cs_iwad)
       {
          efree((void *)cs_iwad);
          cs_iwad = NULL;
