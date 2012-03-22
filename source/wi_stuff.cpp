@@ -1244,9 +1244,9 @@ static void WI_updateDeathmatchStats(void)
          if(tie)
             outcome = 0;
          else if(consoleplayer_won)
-            outcome = 1;
-         else
             outcome = -1;
+         else
+            outcome = 1;
       }
 
       if(!clientserver)
@@ -1315,12 +1315,31 @@ static void WI_updateDeathmatchStats(void)
          {
             if(should_announce)
             {
-               if(outcome == 1)
+               if(CS_TEAMS_ENABLED)
+               {
+                  if(outcome == -1)
+                  {
+                     if(clients[consoleplayer].team == team_color_red)
+                        CS_Announce(ae_round_won, NULL);
+                     else
+                        CS_Announce(ae_round_lost, NULL);
+                  }
+                  else if(outcome == 1)
+                  {
+                     if(clients[consoleplayer].team == team_color_red)
+                        CS_Announce(ae_round_lost, NULL);
+                     else
+                        CS_Announce(ae_round_won, NULL);
+                  }
+                  else if(outcome == 0)
+                     CS_Announce(ae_round_tied, NULL);
+               }
+               else if(outcome == -1)
                   CS_Announce(ae_round_won, NULL);
+               else if(outcome == 1)
+                  CS_Announce(ae_round_lost, NULL);
                else if(outcome == 0)
                   CS_Announce(ae_round_tied, NULL);
-               else
-                  CS_Announce(ae_round_lost, NULL);
             }
          }
          else if((clientserver_tics - gametic) == 220)

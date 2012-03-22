@@ -215,6 +215,12 @@ default_t defaults[] =
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, NULL, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
 
+   // [CG] 03/22/12
+   DEFAULT_BOOL("crosshair_pitch_adjustment", &adjust_crosshair_pitch, NULL,
+                false, default_t::wad_no,
+                "vertically adjust the crosshair when mouselooking if the "
+                "screen size is less than full"),
+
    // [CG] show_scores now defaults to on, because it's confusing otherwise ("I
    //      bound a key to "frags" but it doesn't show the scoreboard... help!")
    // sf

@@ -163,6 +163,7 @@ void HU_CenterMsgTimedColor(const char *s, const char *color, int tics);
 #define CROSSHAIRS 3
 extern int crosshairnum;       // 0= none
 extern bool crosshair_hilite;
+extern bool adjust_crosshair_pitch;
 
 // haleyjd 02/12/06: lost and new options
 extern bool hu_showtime;

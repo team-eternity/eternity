@@ -891,6 +891,7 @@ int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
+bool adjust_crosshair_pitch; // [CG] 03/22/12
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 //
@@ -980,7 +981,7 @@ static void HU_CrossHairDraw(hu_widget_t *widget)
    // haleyjd 04/09/05: this kludge moves the crosshair to within
    // a tolerable distance of the player's true vertical aim when
    // the screen size is less than full.
-   if(scaledviewheight != SCREENHEIGHT)
+   if((adjust_crosshair_pitch) && (scaledviewheight != SCREENHEIGHT))
    {
       // use 1/5 of the displayplayer's pitch angle in integer degrees
       int angle = players[displayplayer].pitch / (ANGLE_1*5);
@@ -1515,13 +1516,15 @@ VARIABLE_INT(hu_timecolor,          NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_INT(hu_levelnamecolor,     NULL, 0, CR_LIMIT-1,    textcolours);
 VARIABLE_INT(hu_coordscolor,        NULL, 0, CR_LIMIT-1,    textcolours);
 
-VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
-VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
+VARIABLE_BOOLEAN(hud_msg_scrollup,      NULL, yesno);
+VARIABLE_TOGGLE(crosshair_hilite,       NULL, onoff);
+VARIABLE_TOGGLE(adjust_crosshair_pitch, NULL, onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
+CONSOLE_VARIABLE(hu_adjust_crosshair_pitch, adjust_crosshair_pitch, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_VARIABLE(hu_center_mess_large, center_mess_large, 0)
@@ -1624,6 +1627,7 @@ void HU_AddCommands(void)
    C_AddCommand(hu_obitcolor);
    C_AddCommand(hu_crosshair);
    C_AddCommand(hu_crosshair_hilite);
+   C_AddCommand(hu_adjust_crosshair_pitch);
    C_AddCommand(hu_messages);
    C_AddCommand(hu_messagecolor);
    C_AddCommand(rcon);
