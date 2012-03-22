@@ -43,6 +43,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"

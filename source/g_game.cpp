@@ -50,6 +50,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"

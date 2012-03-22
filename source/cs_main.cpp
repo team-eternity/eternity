@@ -53,6 +53,7 @@
 #include "e_player.h"
 #include "e_ttypes.h"
 #include "g_bind.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"
@@ -507,10 +508,8 @@ void CS_ClearClientStats(int clientnum)
    client->stats.player_kills = 0;
    client->stats.team_kills = 0;
    client->stats.total_kills = 0;
-   client->stats.frag_ratio = 0;
    client->stats.flag_touches = 0;
    client->stats.flag_captures = 0;
-   client->stats.flag_capture_ratio = 0;
    client->stats.flag_picks = 0;
    client->stats.flag_carriers_fragged = 0;
    client->stats.average_damage = 0;
@@ -1923,10 +1922,8 @@ void CS_ArchiveClients(SaveArchive& arc)
              << client->stats.player_kills
              << client->stats.team_kills
              << client->stats.total_kills
-             << client->stats.frag_ratio
              << client->stats.flag_touches
              << client->stats.flag_captures
-             << client->stats.flag_capture_ratio
              << client->stats.flag_picks
              << client->stats.flag_carriers_fragged
              << client->stats.average_damage;
@@ -1971,10 +1968,8 @@ void CS_ArchiveClients(SaveArchive& arc)
              << client->stats.player_kills
              << client->stats.team_kills
              << client->stats.total_kills
-             << client->stats.frag_ratio
              << client->stats.flag_touches
              << client->stats.flag_captures
-             << client->stats.flag_capture_ratio
              << client->stats.flag_picks
              << client->stats.flag_carriers_fragged
              << client->stats.average_damage;

@@ -182,24 +182,22 @@ void P_IncrementPlayerPlayerKills(int sourcenum, int targetnum)
       if(source_client->team == target_client->team)
          team_kill = true;
 
-      if(suicide || team_kill)
-      {
-         if(suicide)
-         {
-            if(sourcenum == displayplayer)
-               CS_Announce(ae_suicide_death, NULL);
-         }
-         else
-         {
-            CS_Announce(ae_team_kill, NULL);
-            CS_ResetClientSprees(sourcenum);
-         }
-
-      }
-      else
+      if((!suicide) && (!team_kill))
       {
          source_client->frags_this_life++;
          CS_CheckClientSprees(sourcenum);
+      }
+      else if(suicide)
+      {
+         source_stats->suicides++;
+         if(sourcenum == displayplayer)
+            CS_Announce(ae_suicide_death, NULL);
+      }
+      else if(team_kill)
+      {
+         source_stats->team_kills++;
+         CS_Announce(ae_team_kill, NULL);
+         CS_ResetClientSprees(sourcenum);
       }
 
       cs_scoreboard->setClientNeedsRepainted(sourcenum);

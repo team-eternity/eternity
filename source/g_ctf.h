@@ -86,7 +86,7 @@ typedef struct flag_s
 
 #pragma pack(pop)
 
-class CTFGameType : public BaseGameType
+class CTFGameType : public DeathmatchGameType
 {
 public:
    CTFGameType(const char *new_name);

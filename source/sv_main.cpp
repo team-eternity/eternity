@@ -42,6 +42,7 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "g_dmflag.h"
 #include "g_game.h"

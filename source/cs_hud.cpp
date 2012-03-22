@@ -33,6 +33,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "g_bind.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "hu_stuff.h"
 #include "i_system.h"

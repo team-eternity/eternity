@@ -1145,8 +1145,6 @@ void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // killough 8/29/98: remove from threaded list
    target->updateThinker();
 
-   current_game_type->handleActorKilled(source, target, mod);
-
    if(source && source->player && target && target->player)
    {
       // [CG] Player killed another player.

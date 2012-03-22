@@ -31,9 +31,11 @@ class DeathmatchGameType : public BaseGameType
 {
 public:
    DeathmatchGameType(const char *new_name);
-   int getStrengthOfVictory(float low_score, float high_score);
-   bool shouldExitLevel();
-   void handleActorKilled(Mobj *source, Mobj *target, emod_t *mod);
+   DeathmatchGameType(const char *new_name, uint8_t new_type);
+
+   virtual int getStrengthOfVictory(float low_score, float high_score);
+   virtual bool shouldExitLevel();
+   virtual void handleActorKilled(Mobj *source, Mobj *target, emod_t *mod);
 };
 
 #endif

@@ -37,8 +37,14 @@
 
 #include "cs_main.h"
 
+extern int levelFragLimit;
+extern int levelScoreLimit;
+
 DeathmatchGameType::DeathmatchGameType(const char *new_name)
    : BaseGameType(new_name, xgt_deathmatch) {}
+
+DeathmatchGameType::DeathmatchGameType(const char *new_name, uint8_t new_type)
+   : BaseGameType(new_name, new_type) {}
 
 int DeathmatchGameType::getStrengthOfVictory(float low_score, float high_score)
 {
@@ -65,7 +71,15 @@ bool DeathmatchGameType::shouldExitLevel()
 
    for(i = 1; i < MAXPLAYERS; i++)
    {
-      if(playeringame[i] && clients[i].stats.score >= levelFragLimit)
+      if(!playeringame[i])
+         continue;
+
+      if(CS_TEAMS_ENABLED)
+      {
+         if(levelScoreLimit && (clients[i].stats.score >= levelScoreLimit))
+            return true;
+      }
+      else if(levelFragLimit && (clients[i].stats.score >= levelFragLimit))
          return true;
    }
 
@@ -75,14 +89,26 @@ bool DeathmatchGameType::shouldExitLevel()
 void DeathmatchGameType::handleActorKilled(Mobj *source, Mobj *target,
                                            emod_t *mod)
 {
+   int sourcenum, targetnum;
+   client_t *source_client, *target_client;
+
    // [CG] If a player killed another player (that isn't themselves), increase
    //      their score.
-   if(source && source->player && target && target->player)
-   {
-      if(source->player != target->player)
-         CS_IncrementClientScore(source->player - players);
-      else // [CG] Suicide
-         CS_DecrementClientScore(source->player - players);
-   }
+
+   if(!(source && source->player && target && target->player))
+      return;
+
+   sourcenum = source->player - players;
+   targetnum = target->player - players;
+   target_client = &clients[targetnum];
+   source_client = &clients[sourcenum];
+
+   // [CG] Suicides and team kills are -1.
+   if(sourcenum == targetnum)
+      CS_DecrementClientScore(sourcenum);
+   else if(CS_TEAMS_ENABLED && (source_client->team == target_client->team))
+      CS_DecrementClientScore(sourcenum);
+   else
+      CS_IncrementClientScore(sourcenum);
 }
 

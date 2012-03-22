@@ -331,10 +331,8 @@ typedef struct
    uint32_t player_kills;
    uint32_t team_kills;
    uint32_t total_kills;
-   uint16_t frag_ratio;
    uint32_t flag_touches;
    uint32_t flag_captures;
-   uint16_t flag_capture_ratio;
    uint32_t flag_picks;
    uint32_t flag_carriers_fragged;
    uint16_t average_damage;

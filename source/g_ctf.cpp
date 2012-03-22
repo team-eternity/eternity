@@ -35,6 +35,7 @@
 #include "e_things.h"
 #include "info.h"
 #include "m_fixed.h"
+#include "g_dmatch.h"
 #include "g_game.h"
 #include "g_type.h"
 #include "g_ctf.h"
@@ -311,6 +312,7 @@ static void CS_handleFlagTouch(player_t *player, int color)
                team_color_names[color]
             );
          }
+         client->stats.flag_picks++;
          CS_giveFlag(playernum, flag);
       }
    }
@@ -331,6 +333,7 @@ static void CS_handleFlagTouch(player_t *player, int color)
             team_color_names[color]
          );
       }
+      client->stats.flag_touches++;
       CS_giveFlag(playernum, flag);
    }
    else if(cs_flags[other_color].carrier == playernum)
@@ -352,6 +355,7 @@ static void CS_handleFlagTouch(player_t *player, int color)
       }
       CS_returnFlag(&cs_flags[other_color]);
       team_scores[color]++;
+      client->stats.flag_captures++;
    }
 }
 
@@ -407,7 +411,7 @@ static void CS_dropFlag(int playernum)
 }
 
 CTFGameType::CTFGameType(const char *new_name)
-   : BaseGameType(new_name, xgt_capture_the_flag) {}
+   : DeathmatchGameType(new_name, xgt_capture_the_flag) {}
 
 int CTFGameType::getStrengthOfVictory(float low_score, float high_score)
 {
@@ -437,9 +441,9 @@ bool CTFGameType::shouldExitLevel()
 {
    int i;
 
-   for(i = 0; i < cs_settings->teams; i++)
+   for(i = 1; i <= cs_settings->teams; i++)
    {
-      if(team_scores[i + 1] >= levelScoreLimit)
+      if(team_scores[i] >= levelScoreLimit)
          return true;
    }
 
@@ -448,13 +452,33 @@ bool CTFGameType::shouldExitLevel()
 
 void CTFGameType::handleActorKilled(Mobj *source, Mobj *target, emod_t *mod)
 {
-   if(target->player)
-      CS_dropFlag(target->player - players);
+   DeathmatchGameType::handleActorKilled(source, target, mod);
+
+   int targetnum;
+
+   if(!target || !target->player)
+      return;
+
+   targetnum = target->player - players;
+
+   if(source && source->player && (source != target))
+   {
+      int source_team = clients[source->player - players].team;
+      int target_team = clients[target->player - players].team;
+
+      if((!CS_TEAMS_ENABLED) || (source_team != target_team))
+      {
+         if(CS_getFlagCarriedByPlayer(targetnum))
+            clients[source->player - players].stats.flag_carriers_fragged++;
+      }
+   }
+
+   CS_dropFlag(targetnum);
 }
 
 void CTFGameType::handleActorRemoved(Mobj *actor)
 {
-   if(actor->player)
+   if(actor && actor->player)
       CS_dropFlag(actor->player - players);
 }
 

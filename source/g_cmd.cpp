@@ -301,7 +301,7 @@ CONSOLE_VARIABLE(bobbing_intensity, bobbing_intensity, 0)
    }
 
    printf(
-      "Bobbing intensity: %g, %g.\n", 
+      "Bobbing intensity: %g, %g.\n",
       bobbing_intensity,
       default_bobbing_intensity
    );
@@ -813,6 +813,8 @@ CONSOLE_COMMAND(maplist, 0)
 
    for(i = 0; i < cs_map_count; i++)
    {
+      size_t pad_size;
+
       map = &cs_maps[i];
       if(map->resource_count == 0)
       {
@@ -822,27 +824,27 @@ CONSOLE_COMMAND(maplist, 0)
 
       // [CG] Create the left margin.
       buf.Printf(0, "%d. %s: ", i + 1, map->name);
-      pad.createSize(buf.length());
-      for(j = 0; j < buf.length(); j++)
-         buf += " ";
+      pad_size = buf.length();
+      pad.createSize(pad_size);
+      for(j = 0; j < pad_size; j++)
+         pad += " ";
 
       // [CG] Print the 1st line.
-      buf.Printf(0, "%d. %s: %s",
+      doom_printf(
+         "%d. %s: %s",
          i + 1,
          map->name,
-         cs_resources[map->resource_indices[j]].name
+         cs_resources[map->resource_indices[0]].name
       );
-      doom_printf("%s", buf.constPtr());
 
       // [CG] Print the subsequent lines (if necessary).
       for(j = 1; j < map->resource_count; j++)
       {
-         buf.Printf(0, "%d. %s: %s",
-            i + 1,
-            map->name,
+         doom_printf(
+            "%s%s",
+            pad.constPtr(),
             cs_resources[map->resource_indices[j]].name
          );
-         doom_printf("%s%s", pad.constPtr(), buf.constPtr());
       }
    }
 }
@@ -950,7 +952,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
       doom_printf("Cannot blank your name.");
       return;
    }
-   
+
    playernum = Console.cmdsrc;
 
    Console.argv[0]->copyInto(players[playernum].name, 20);

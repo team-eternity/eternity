@@ -36,6 +36,7 @@
 #include "doomstat.h"
 #include "e_sound.h"
 #include "e_things.h"
+#include "g_dmatch.h"
 #include "g_ctf.h"
 #include "g_game.h"
 #include "hu_frags.h"
