@@ -772,7 +772,7 @@ Section "-Core installation"
     StrCmp $R0 "success" +3
       MessageBox MB_OK "Download failed: $R0"
       GOTO doNotExtract
-      nsisunz::UnzipToLog /noextractpath "$TEMP\freedoom-iwad-latest.zip" "$INSTDIR\base\wads"
+      nsisunz::UnzipToLog /noextractpath "$TEMP\freedoom-iwad-latest.zip" "$INSTDIR\user\wads"
       Delete $TEMP\freedoom-iwad-latest.zip
     doNotExtract:
   doNotDownload:
