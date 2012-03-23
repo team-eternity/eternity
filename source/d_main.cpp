@@ -159,7 +159,7 @@ void G_BuildTiccmd(ticcmd_t* cmd);
 void D_DoAdvanceDemo(void);
 
 //sf:
-void startupmsg(char *func, char *desc)
+void startupmsg(const char *func, const char *desc)
 {
    // add colours in console mode
    usermsg(in_textmode ? "%s: %s" : FC_HI "%s: " FC_NORMAL "%s",

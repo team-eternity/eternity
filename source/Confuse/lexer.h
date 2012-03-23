@@ -26,7 +26,7 @@
 #ifndef LEXER_H__
 #define LEXER_H__
 
-extern char *mytext; // haleyjd
+extern const char *mytext; // haleyjd
 struct DWFILE;
 
 int   mylex(cfg_t *cfg);

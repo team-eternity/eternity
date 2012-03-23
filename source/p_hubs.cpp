@@ -147,6 +147,7 @@ static hublevel_t *AddHublevel(char *levelname)
 
 static void SaveHubLevel(void)
 {
+   static char hubdesc[] = "smmu hubs";
    hublevel_t *hublevel;
    
    hublevel = HublevelForName(levelmapname);
@@ -159,7 +160,7 @@ static void SaveHubLevel(void)
    if(!hublevel->tmpfile)
       hublevel->tmpfile = temp_hubfile();
    
-   P_SaveCurrentLevel(hublevel->tmpfile, "smmu hubs");
+   P_SaveCurrentLevel(hublevel->tmpfile, hubdesc);
 }
 
 static void LoadHubLevel(char *levelname)

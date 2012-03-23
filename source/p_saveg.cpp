@@ -681,7 +681,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    }
    else
    {
-      char *className = "";
+      char *className = NULL;
       size_t len;
       unsigned int idx = 1; // Start at index 1, as 0 means NULL
       ThinkerType *thinkerType;
@@ -695,7 +695,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
       while(1)
       {
-         if(*className != '\0')
+         if(className)
             efree(className);
 
          // Get the next class name

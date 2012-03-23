@@ -824,7 +824,7 @@ int pvsnfmt_double(pvsnfmt_vars *info, double d)
     int precision = info->precision;
 
     /* Check for special values first */
-    char *special = 0;
+    const char *special = 0;
     if (ISSNAN(value))
         special = "NaN";
     else if (ISQNAN(value))

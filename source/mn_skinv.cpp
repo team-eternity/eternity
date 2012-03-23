@@ -325,7 +325,7 @@ extern vfont_t *menu_font_normal;
 //
 static void MN_SkinInstructions(void)
 {
-   char *msg = FC_GOLD "skin viewer";
+   const char *msg = FC_GOLD "skin viewer";
 
    void (*textfunc)(vfont_t *, const char *, int, int) = 
       GameModeInfo->flags & GIF_SHADOWTITLES ? 

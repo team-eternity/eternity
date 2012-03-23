@@ -302,6 +302,9 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 //
 static void E_initUnknownMod(void)
 {
+   static char name[] = "Unknown";
+   static char obituary[] = "OB_DEFAULT";
+
    static bool firsttime = true;
 
    if(firsttime) // only needed once
@@ -310,10 +313,10 @@ static void E_initUnknownMod(void)
 
       memset(&unknown_mod, 0, sizeof(emod_t));
 
-      unknown_mod.name = "Unknown";
+      unknown_mod.name = name;
       unknown_mod.num  = 0;
-      unknown_mod.obituary = "OB_DEFAULT";
-      unknown_mod.selfobituary = "OB_DEFAULT";
+      unknown_mod.obituary = obituary;
+      unknown_mod.selfobituary = obituary;
       unknown_mod.obitIsBexString = true;
       unknown_mod.selfObitIsBexString = true;
       unknown_mod.sourceless = false;
