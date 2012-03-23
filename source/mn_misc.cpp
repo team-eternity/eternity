@@ -65,8 +65,8 @@ extern vfont_t *menu_font_big;
 // behavior
 static bool popupMenuActive;
 
-static char  popup_message[1024];
-static char *popup_message_command; // console command to run
+static char        popup_message[1024];
+static const char *popup_message_command; // console command to run
 
 //
 // haleyjd 07/27/05: not all questions should have to run console
@@ -229,7 +229,7 @@ void MN_Alert(const char *message, ...)
 // question message
 // console command will be run if user responds with 'y'
 //
-void MN_Question(const char *message, char *command)
+void MN_Question(const char *message, const char *command)
 {
    // haleyjd 02/24/02: bug fix for menuactive state
    popupMenuActive = menuactive;

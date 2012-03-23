@@ -70,10 +70,10 @@ bool M_FileExists(const char *filename)
 #define MAX_IWAD_DIRS 128
 
 static bool iwad_dirs_built = false;
-static char *iwad_dirs[MAX_IWAD_DIRS];
+static const char *iwad_dirs[MAX_IWAD_DIRS];
 static int num_iwad_dirs = 0;
 
-void AddIWADDir(char *dir)
+void AddIWADDir(const char *dir)
 {
    if(num_iwad_dirs < MAX_IWAD_DIRS)
    {

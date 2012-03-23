@@ -79,12 +79,15 @@ int SDLIsInit;
 
 int main(int argc, char **argv)
 {
+   static char env_vidwinpos[] = "SDL_VIDEO_WINDOW_POS=center";
+   static char env_vidcenter[] = "SDL_VIDEO_CENTERED=1";
+
    myargc = argc;
    myargv = argv;
 
    // Set SDL video centering
-   putenv("SDL_VIDEO_WINDOW_POS=center");
-   putenv("SDL_VIDEO_CENTERED=1");
+   putenv(env_vidwinpos);
+   putenv(env_vidcenter);
    
    // SoM: From CHOCODOOM Thank you fraggle!!
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS

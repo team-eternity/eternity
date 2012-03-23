@@ -3439,6 +3439,38 @@ static gfs_t *D_LooseGFS(void)
    return NULL;
 }
 
+//
+// D_LooseDemo
+//
+// Looks for a loose LMP file on the command line, to support
+// drag-and-drop for demos.
+//
+static const char *D_LooseDemo()
+{
+   int i;
+   const char *dot;
+   const char *ret = NULL;
+
+   for(i = 1; i < myargc; ++i)
+   {
+      // stop at first param with '-' or '@'
+      if(myargv[i][0] == '-' || myargv[i][0] == '@')
+         break;
+
+      // get extension (search from right end)
+      dot = strrchr(myargv[i], '.');
+
+      // check extension
+      if(!dot || strncasecmp(dot, ".lmp", 4))
+         continue;
+      
+      ret = myargv[i];
+      break; // process only the first demo found
+   }
+
+   return ret;
+}
+
 //=============================================================================
 //
 // Primary Initialization Routines
@@ -3519,6 +3551,8 @@ static void D_DoomInit(void)
    int dmtype = 0;             // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
    gfs_t *gfs = NULL;
+   const char *loosedemo = NULL;
+   const char *playdemoparms[] = { "-playdemo", "-play", NULL };
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
 
@@ -3781,130 +3815,134 @@ static void D_DoomInit(void)
    // [CG] None of this applies in c/s.
    if(!clientserver)
    {
-       // haleyjd 03/10/03: Load GFS Wads
-       // 08/08/03: moved first, so that command line overrides
-       if(haveGFS)
-          D_ProcessGFSWads(gfs);
+      // haleyjd 03/10/03: Load GFS Wads
+      // 08/08/03: moved first, so that command line overrides
+      if(haveGFS)
+         D_ProcessGFSWads(gfs);
 
-       // haleyjd 11/22/03: look for loose wads (drag and drop)
-       D_LooseWads();
+      // haleyjd 11/22/03: look for loose wads (drag and drop)
+      D_LooseWads();
 
-       // add any files specified on the command line with -file wadfile
-       // to the wad list
+      // add any files specified on the command line with -file wadfile
+      // to the wad list
 
-       // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
+      // killough 1/31/98, 5/2/98: reload hack removed, -wart same as -warp now.
 
-       if((p = M_CheckParm("-file")))
-       {
-          // the parms after p are wadfile/lump names,
-          // until end of parms or another - preceded parm
-          // killough 11/98: allow multiple -file parameters
+      if((p = M_CheckParm("-file")))
+      {
+         // the parms after p are wadfile/lump names,
+         // until end of parms or another - preceded parm
+         // killough 11/98: allow multiple -file parameters
 
-          bool file = modifiedgame = true; // homebrew levels
-          while(++p < myargc)
-          {
-             if(*myargv[p] == '-')
-             {
-                file = !strcasecmp(myargv[p], "-file");
-             }
-             else
-             {
-                if(file)
-                   D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
-             }
-          }
-       }
+         bool file = modifiedgame = true; // homebrew levels
+         while(++p < myargc)
+         {
+            if(*myargv[p] == '-')
+            {
+               file = !strcasecmp(myargv[p], "-file");
+            }
+            else
+            {
+               if(file)
+                  D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, 0);
+            }
+         }
+      }
 
-       // haleyjd 01/17/11: allow -play also
-       const char *playdemoparms[] = { "-playdemo", "-play", NULL };
+      // haleyjd 01/17/11: allow -play also
+      if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
+      {
+         if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
+            fastdemo = true;            // run at fastest speed possible
+         else
+            p = M_CheckParm("-timedemo");
+      }
 
-       if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
-       {
-          if((p = M_CheckParm("-fastdemo")) && p < myargc-1)  // killough
-             fastdemo = true;            // run at fastest speed possible
-          else
-             p = M_CheckParm("-timedemo");
-       }
+      // haleyjd 02/29/2012: support a loose demo on the command line
+      if(!p)
+         loosedemo = D_LooseDemo();
 
-       if(p && p < myargc - 1)
-       {
-          char *file = NULL;
-          size_t len = M_StringAlloca(&file, 1, 6, myargv[p + 1]);
+      if((p && p < myargc - 1) || loosedemo)
+      {
+         const char *demosource = loosedemo ? loosedemo : myargv[p + 1];
+         char *file = NULL;
+         size_t len = M_StringAlloca(&file, 1, 6, demosource);
+            
+         strncpy(file, demosource, len);
 
-          strncpy(file, myargv[p + 1], len);
+         M_AddDefaultExtension(file, ".lmp");     // killough
+         D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
+         usermsg("Playing demo %s\n", file);
+      }
 
-          M_AddDefaultExtension(file, ".lmp");     // killough
-          D_AddFile(file, lumpinfo_t::ns_demos, NULL, 0, 0);
-          usermsg("Playing demo %s\n",file);
-       }
 
-       // get skill / episode / map from parms
+      // get skill / episode / map from parms
 
-       // jff 3/24/98 was sk_medium, just note not picked
-       startskill = sk_none;
-       startepisode = 1;
-       startmap = 1;
-       autostart = false;
+      // jff 3/24/98 was sk_medium, just note not picked
+      startskill = sk_none;
+      startepisode = 1;
+      startmap = 1;
+      autostart = false;
 
-       if((p = M_CheckParm("-skill")) && p < myargc - 1)
-       {
-          startskill = (skill_t)(myargv[p+1][0]-'1');
-          autostart = true;
-       }
+      if((p = M_CheckParm("-skill")) && p < myargc - 1)
+      {
+         startskill = (skill_t)(myargv[p+1][0]-'1');
+         autostart = true;
+      }
 
-       if((p = M_CheckParm("-episode")) && p < myargc - 1)
-       {
-          startepisode = myargv[p+1][0]-'0';
-          startmap = 1;
-          autostart = true;
-       }
+      if((p = M_CheckParm("-episode")) && p < myargc - 1)
+      {
+         startepisode = myargv[p+1][0]-'0';
+         startmap = 1;
+         autostart = true;
+      }
 
-       // haleyjd: deatchmatch-only options
-       if(GameType == gt_dm)
-       {
-          if((p = M_CheckParm("-timer")) && p < myargc-1)
-          {
-             int time = atoi(myargv[p+1]);
+      // haleyjd: deatchmatch-only options
+      if(GameType == gt_dm)
+      {
+         if((p = M_CheckParm("-timer")) && p < myargc-1)
+         {
+            int time = atoi(myargv[p+1]);
 
-             usermsg("Levels will end after %d minute%s.\n",
-                time, time > 1 ? "s" : "");
-             levelTimeLimit = time;
-          }
+            usermsg("Levels will end after %d minute%s.\n",
+               time, time > 1 ? "s" : "");
+            levelTimeLimit = time;
+         }
 
-          // sf: moved from p_spec.c
-          // See if -frags has been used
-          if((p = M_CheckParm("-frags")) && p < myargc-1)
-          {
-             int frags = atoi(myargv[p+1]);
+         // sf: moved from p_spec.c
+         // See if -frags has been used
+         if((p = M_CheckParm("-frags")) && p < myargc-1)
+         {
+            int frags = atoi(myargv[p+1]);
 
-             if(frags <= 0)
-                frags = 10;  // default 10 if no count provided
-             levelFragLimit = frags;
-          }
+            if(frags <= 0)
+               frags = 10;  // default 10 if no count provided
+            levelFragLimit = frags;
+         }
 
-          if((p = M_CheckParm("-avg")) && p < myargc-1)
-          {
-             levelTimeLimit = 20 * 60 * TICRATE;
-             usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
-          }
-       }
+         if((p = M_CheckParm("-avg")) && p < myargc-1)
+         {
+            levelTimeLimit = 20 * 60 * TICRATE;
+            usermsg("Austin Virtual Gaming: Levels will end after 20 minutes");
+         }
+      }
 
-       if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
-           (p = M_CheckParm("-wart"))) && p < myargc - 1)
-       {
-          // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-          if(GameModeInfo->flags & GIF_MAPXY)
-          {
-             startmap = atoi(myargv[p + 1]);
-             autostart = true;
-          }
-          else if(p < myargc - 2)
-          {
-             startepisode = atoi(myargv[++p]);
-             startmap = atoi(myargv[p + 1]);
-             autostart = true;
-          }
-       }
+      if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
+          (p = M_CheckParm("-wart"))) && p < myargc - 1)
+      {
+         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+         if(GameModeInfo->flags & GIF_MAPXY)
+         {
+            startmap = atoi(myargv[p + 1]);
+            autostart = true;
+         }
+         else if(p < myargc - 2)
+         {
+            startepisode = atoi(myargv[++p]);
+            startmap = atoi(myargv[p + 1]);
+            autostart = true;
+         }
+      }
    }
 
    // [CG] C/S servers default to -nosound, -nodraw and -noblit unless
@@ -4259,8 +4297,7 @@ static void D_DoomInit(void)
 
       // killough 12/98:
       // Support -loadgame with -record and reimplement -recordfrom.
-      slot = M_CheckParm("-recordfrom");
-      if(slot && (p = slot+2) < myargc)
+      if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
          G_RecordDemo(myargv[p]);
       else
       {
@@ -4268,7 +4305,7 @@ static void D_DoomInit(void)
          const char *recordparms[] = { "-record", "-recorddemo", NULL };
 
          slot = M_CheckParm("-loadgame");
-
+    
          if((p = M_CheckMultiParm(recordparms, 1)) && ++p < myargc)
          {
             autostart = true;
@@ -4276,7 +4313,7 @@ static void D_DoomInit(void)
          }
       }
 
-      if((p = M_CheckParm ("-fastdemo")) && ++p < myargc)
+      if((p = M_CheckParm("-fastdemo")) && ++p < myargc)
       {                                 // killough
          fastdemo = true;                // run at fastest speed possible
          timingdemo = true;              // show stats after quit
@@ -4291,15 +4328,17 @@ static void D_DoomInit(void)
          G_DeferedPlayDemo(myargv[p]);
          singledemo = true;            // quit after one demo
       }
-      else if((p = M_CheckParm("-playdemo")) && ++p < myargc)
+      else if((p = M_CheckMultiParm(playdemoparms, 1)) && ++p < myargc)
       {
          G_DeferedPlayDemo(myargv[p]);
          singledemo = true;          // quit after one demo
       }
-   }
+      else if(loosedemo)
+      {
+         G_DeferedPlayDemo(loosedemo);
+         singledemo = true;
+      }
 
-   if(!clientserver)
-   {
       startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
 
       if(slot && ++slot < myargc)
@@ -4326,18 +4365,21 @@ static void D_DoomInit(void)
             D_StartTitle();                 // start up intro loop
       }
    }
-   else if(cs_playingdemofromcommandline)
+
+   if(clientserver)
    {
-      if(!cs_demo->play())
+      if(cs_playingdemofromcommandline)
       {
-         I_Error(
-            "Error playing demo %s: %s.\n", myargv[p + 1], cs_demo->getError()
-         );
+         if(!cs_demo->play())
+         {
+            I_Error(
+               "Error playing demo %s: %s.\n", myargv[p + 1],
+               cs_demo->getError()
+            );
+         }
       }
-   }
-   else if(CS_SERVER)
-   {
-      CS_InitNew();
+      else if(CS_SERVER)
+         CS_InitNew();
    }
 
       /*

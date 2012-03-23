@@ -358,8 +358,8 @@ static exitrule_t DiskExitRules[] =
 {
    {  1, 31, 15, false }, // normal exit: MAP31 -> MAP16
    {  1, 32, 15, false }, // normal exit: MAP32 -> MAP16
-   {  1, 33, 02, false }, // normal exit: MAP33 -> MAP03
-   {  1, 02, 32, true  }, // secret exit: MAP02 -> MAP33
+   {  1, 33,  2, false }, // normal exit: MAP33 -> MAP03
+   {  1,  2, 32, true  }, // secret exit: MAP02 -> MAP33
    {  1, 15, 30, true  }, // secret exit: MAP15 -> MAP31
    {  1, 31, 31, true  }, // secret exit: MAP31 -> MAP32
    { -2 }
@@ -677,7 +677,6 @@ static missioninfo_t gmFinalTNT =
    0,                 // numEpisodesOR
    &gi_path_tnt,      // iwadPathOR
    &TNTFinale,        // finaleDataOR
-   NULL,              // mainMenuOR
    NULL,              // menuBackgroundOR
    NULL,              // creditBackgroundOR
    NULL,              // consoleBackOR
@@ -698,7 +697,6 @@ static missioninfo_t gmFinalPlutonia =
    0,                 // numEpisodesOR
    &gi_path_plut,     // iwadPathOR
    &PlutFinale,       // finaleDataOR
-   NULL,              // mainMenuOR
    NULL,              // menuBackgroundOR
    NULL,              // creditBackgroundOR
    NULL,              // consoleBackOR
@@ -719,7 +717,6 @@ static missioninfo_t gmDisk =
    0,               // numEpisodesOR
    NULL,            // iwadPathOR
    NULL,            // finaleDataOR
-   NULL,            // mainMenuOR
    NULL,            // menuBackgroundOR
    NULL,            // creditBackgroundOR
    CONBACK_DISK,    // consoleBackOR
@@ -742,7 +739,6 @@ static missioninfo_t gmHacx =
    0,               // numEpisodesOR
    &gi_path_hacx,   // iwadPathOR
    NULL,            // finaleDataOR
-   &menu_old_main,  // mainMenuOR
    HACXMENUBACK,    // menuBackgroundOR
    HACXCREDITBK,    // creditBackgroundOR
    CONBACK_DEFAULT, // consoleBackOR
@@ -1441,7 +1437,6 @@ void D_SetGameModeInfo(GameMode_t mode, GameMission_t mission)
    OVERRIDE(numEpisodes,         0);
    OVERRIDE(iwadPath,         NULL);
    OVERRIDE(finaleData,       NULL);
-   OVERRIDE(mainMenu,         NULL);
    OVERRIDE(menuBackground,   NULL);
    OVERRIDE(creditBackground, NULL);
    OVERRIDE(consoleBack,      NULL);

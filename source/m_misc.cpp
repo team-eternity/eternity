@@ -303,11 +303,6 @@ default_t defaults[] =
    DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, NULL, 1, 0, 1, default_t::wad_yes,
                "1 to disable doubled card and skull key display on status bar"),
 
-   // haleyjd 05/16/04: restored (see mn_menus.c); changed def. to 0
-   // killough 4/17/98
-   DEFAULT_INT("traditional_menu", &traditional_menu, NULL, 0, 0, 1, default_t::wad_yes,
-               "1 to emulate DOOM's main menu"),
-
    // killough 3/6/98
    DEFAULT_INT("leds_always_off", &leds_always_off, NULL, 0, 0, 1, default_t::wad_no,
                "1 to keep keyboard LEDs turned off"),

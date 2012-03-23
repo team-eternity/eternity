@@ -126,7 +126,7 @@ unsigned char C_dequeueChatChar(void)
    return c;
 }
 
-void C_SendCmd(int dest, int cmdnum, const char *s, ...)
+void C_SendCmd(int dest, int cmdnum, const char *s,...)
 {
    va_list args;
    char tempstr[500];

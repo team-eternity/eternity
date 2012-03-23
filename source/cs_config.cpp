@@ -249,7 +249,7 @@ extern int levelTimeLimit;
 extern int levelScoreLimit;
 extern bool gamepathset;
 
-extern void AddIWADDir(char *dir);
+extern void AddIWADDir(const char *dir);
 
 Json::Value cs_json;
 clientserver_settings_t *cs_original_settings = NULL;

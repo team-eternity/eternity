@@ -384,7 +384,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 typedef struct jumpinfo_s
 {
    mobjinfo_t *mi;  // mobjinfo the jump is relative to
-   char *statename; // state name or label
+   const char *statename; // state name or label
 } jumpinfo_t;
 
 //

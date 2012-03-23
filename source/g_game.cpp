@@ -2828,8 +2828,8 @@ public:
    int getNormalSpeed() const { return normalSpeed; }
    int getFastSpeed()   const { return fastSpeed;   }
 
-   int setNormalSpeed(int i)   { normalSpeed = i; }
-   int setFastSpeed(int i)     { fastSpeed   = i; }
+   void setNormalSpeed(int i)   { normalSpeed = i; }
+   void setFastSpeed(int i)     { fastSpeed   = i; }
    
    void setSpeeds(int normal, int fast) { normalSpeed = normal; fastSpeed = fast; }
 };

@@ -70,7 +70,7 @@ void ST_Start(void);
 // Called by startup code.
 void ST_Init(void);
 
-void ST_CacheFaces(patch_t **faces, char *facename);
+void ST_CacheFaces(patch_t **faces, const char *facename);
 
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 

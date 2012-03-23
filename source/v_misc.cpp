@@ -140,7 +140,7 @@ void V_InitBox(void)
 
 static int loading_amount = 0;
 static int loading_total = -1;
-static char *loading_message;
+static const char *loading_message;
 
 //
 // V_DrawLoading
@@ -189,7 +189,7 @@ void V_DrawLoading(void)
 //
 // V_SetLoading
 //
-void V_SetLoading(int total, char *mess)
+void V_SetLoading(int total, const char *mess)
 {
    loading_total = total ? total : 1;
    loading_amount = 0;

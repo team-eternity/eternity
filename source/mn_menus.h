@@ -26,10 +26,7 @@ void MN_InitMenus(void);
 void MN_LinkClassicMenus(int link);
 
 extern menu_t menu_main;
-extern menu_t menu_old_main; // haleyjd
 extern menu_t menu_newgame;
-
-extern int traditional_menu; // haleyjd
 
 extern int mn_classic_menus;
 

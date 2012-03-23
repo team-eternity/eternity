@@ -104,7 +104,7 @@ void V_DrawBox(int, int, int, int);
 //
 
 void V_DrawLoading();
-void V_SetLoading(int total, char *mess);
+void V_SetLoading(int total, const char *mess);
 void V_LoadingIncrease();
 void V_LoadingSetTo(int amount);
 

@@ -955,7 +955,7 @@ static void P_InfoDefaultLevelName(void)
 
 #define NUMMAPINFOSOUNDS 10
 
-static char *DefSoundNames[NUMMAPINFOSOUNDS] =
+static const char *DefSoundNames[NUMMAPINFOSOUNDS] =
 {
    "EE_DoorOpen",
    "EE_DoorClose",
