@@ -326,6 +326,7 @@ public:
    void rebuild(unsigned int newNumChains)
    {
       link_type    **oldchains    = chains;    // save current chains
+      link_type    **prevobjs     = NULL;
       unsigned int   oldNumChains = numChains;
       unsigned int   i;
 
@@ -336,10 +337,13 @@ public:
       chains = ecalloc(link_type **, newNumChains, sizeof(link_type *));
       numChains = newNumChains;
 
+      // allocate a temporary table of list end pointers, for each new chain
+      prevobjs = ecalloc(link_type **, newNumChains, sizeof(link_type *));
+
       // run down the old chains
       for(i = 0; i < oldNumChains; ++i)
       {
-         link_type *chain, *prevobj = NULL;
+         link_type *chain;
          unsigned int hashcode;
 
          // restart from beginning of old chain each time
@@ -355,9 +359,11 @@ public:
             // re-add to new hash at end of list
             hashcode = chain->dllData % numChains;
 
-            chain->insert(chain->dllObject, prevobj ? &(prevobj->dllNext) :
-                                                      &(chains[hashcode]));
-            prevobj = chain;
+            chain->insert(chain->dllObject, 
+                          prevobjs[hashcode] ? &(prevobjs[hashcode]->dllNext) :
+                                               &(chains[hashcode]));
+
+            prevobjs[hashcode] = chain;
          }
       }
 
@@ -366,6 +372,9 @@ public:
 
       // delete old chains
       efree(oldchains);
+
+      // delete temporary list end pointers
+      efree(prevobjs);
    }
 };
 
