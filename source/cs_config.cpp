@@ -571,6 +571,38 @@ void SV_LoadConfig(void)
    }
 }
 
+const char* CS_GetIWADResourceBasename()
+{
+   unsigned int i;
+   Json::Value& resources = cs_json["resources"];
+
+   // [CG] Check for the IWAD first.
+   for(i = 0; i < resources.size(); i++)
+   {
+      if(!resources[i].isObject())
+         continue;
+
+      if(resources[i]["name"].empty())
+      {
+         printf("CS_LoadConfig: Skipping resource entry with no name.\n");
+         continue;
+      }
+
+      if(resources[i]["type"].empty())
+      {
+         printf("CS_LoadConfig: Skipping resource entry with no type.\n");
+         continue;
+      }
+
+      if(!string_option_is(resources[i]["type"], "iwad"))
+         continue;
+
+      return resources[i]["name"].asCString();
+   }
+
+   return NULL;
+}
+
 void CS_FindIWADResource()
 {
    bool found_alternate;
@@ -599,13 +631,11 @@ void CS_FindIWADResource()
       if(!string_option_is(cs_json["resources"][i]["type"], "iwad"))
          continue;
 
-      if(cs_iwad)
-         I_Error("CS_LoadConfig: Cannot specify multiple IWAD files.\n");
-
       resource_name = cs_json["resources"][i]["name"].asCString();
 
       if(CS_AddIWAD(resource_name))
          continue;
+
       found_alternate = false;
 
       if(!cs_json["resources"][i]["alternates"].empty())
@@ -628,7 +658,7 @@ void CS_FindIWADResource()
          I_Error("CS_LoadConfig: Could not find IWAD %s.\n", resource_name);
    }
 
-   if(cs_iwad == NULL)
+   if(!GetIWAD())
       I_Error("CS_LoadConfig: No IWAD specified.\n");
 }
 
@@ -638,7 +668,7 @@ void CS_HandleResourcesSection()
    const char *resource_name;
    Json::Value& resources = cs_json["resources"];
 
-   if(cs_iwad == NULL)
+   if(!GetIWAD())
       I_Error("CS_LoadConfig: No IWAD specified.\n");
 
    for(i = 0; i < resources.size(); i++)

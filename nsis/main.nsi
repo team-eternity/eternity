@@ -751,7 +751,7 @@ Section "-Core installation"
   FileOpen $9 "$INSTDIR\eternity.bat" w
   FileWrite $9 '@echo off'
   FileWrite $9 "$\r$\n"
-  FileWrite $9 'SET DOOMWADPATH=%DOOMWADPATH%;$INSTDIR;$INSTDIR\base\wads'
+  FileWrite $9 'SET DOOMWADPATH=%DOOMWADPATH%;$INSTDIR;$INSTDIR\user\wads'
   StrCmp $ADDITIONAL_WAD_FOLDER "" +2 0
     FileWrite $9 ';$ADDITIONAL_WAD_FOLDER'
   FileWrite $9 "$\r$\n"
@@ -760,7 +760,7 @@ Section "-Core installation"
     FileWrite $9 "$\r$\n"
   FileWrite $9 '@echo on'
   FileWrite $9 "$\r$\n"
-  FileWrite $9 '"$INSTDIR\eternity.exe" -base "$INSTDIR\base" -directx -8in32 -nomusic -csjoin "%1"'
+  FileWrite $9 '"$INSTDIR\eternity.exe" -base "$INSTDIR\base" -user "$INSTDIR\use" -directx -8in32 -nomusic -csjoin "%1"'
   FileWrite $9 "$\r$\n"
   FileWrite $9 'pause'
   FileWrite $9 "$\r$\n"

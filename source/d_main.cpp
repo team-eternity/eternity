@@ -2310,7 +2310,7 @@ static const int nstandard_iwads = sizeof standard_iwads/sizeof*standard_iwads;
 //
 static char *iwad = NULL;
 
-static char* SetIWAD(const char *new_iwad)
+char* SetIWAD(const char *new_iwad)
 {
    static bool first_time = true;
 
@@ -2321,6 +2321,11 @@ static char* SetIWAD(const char *new_iwad)
 
    first_time = false;
 
+   return iwad;
+}
+
+const char* GetIWAD()
+{
    return iwad;
 }
 
@@ -2336,14 +2341,8 @@ char *FindIWADFile(void)
    static char buf[2048];
 
    //jff 3/24/98 get -iwad parm if specified else use .
-   // [CG] C/S clients and servers either have this configured in the
-   //      configuration file, or sent over the wire.
    if(clientserver)
-   {
-      if(CS_CLIENT)
-         CS_FindIWADResource();
-      basename = cs_iwad;
-   }
+      basename = CS_GetIWADResourceBasename();
    else if((i = M_CheckParm("-iwad")) && i < myargc - 1)
       basename = myargv[i + 1];
    else
@@ -2400,7 +2399,7 @@ char *FindIWADFile(void)
          M_AddDefaultExtension(strcat(strcpy(customiwad, "/"), buf), ".wad");
       }
    }
-   else if(!gamepathset) // try wad picker
+   else if((!clientserver) && (!gamepathset)) // try wad picker
    {
       const char *name = D_DoIWADMenu();
       if(name && *name)

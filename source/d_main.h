@@ -40,6 +40,8 @@ void D_ListWads(void);
 void D_ReInitWadfiles(void);
 void D_NewWadLumps(FILE *handle);
 bool D_AddNewFile(const char *s);
+char* SetIWAD(const char *new_iwad);
+const char* GetIWAD();
 void D_ClearFiles(void); // [CG] 09/22/11
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                int privatedir);

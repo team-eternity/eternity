@@ -923,7 +923,7 @@ bool CS_CheckURI(const char *uri);
 float CS_VersionFloat(void);
 char* CS_VersionString(void);
 char* CS_GetSHA1Hash(const char *input, size_t input_size);
-char* CS_GetSHA1HashFile(char *path);
+char* CS_GetSHA1HashFile(const char *path);
 char* CS_GetPlayerName(player_t *player);
 void CS_SetPlayerName(player_t *player, const char *name);
 void CS_SetSkin(const char *skin_name, int playernum);

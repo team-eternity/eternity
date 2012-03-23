@@ -395,7 +395,7 @@ char* CS_VersionString(void)
    return estrdup(buffer.constPtr());
 }
 
-char* CS_GetSHA1HashFile(char *path)
+char* CS_GetSHA1HashFile(const char *path)
 {
    HashData localHash = HashData(HashData::SHA1);
    size_t bytes_read = 0;

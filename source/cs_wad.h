@@ -54,7 +54,6 @@ typedef struct cs_map_s
    unsigned int *resource_indices;
 } cs_map_t;
 
-extern const char *cs_iwad;
 extern char *cs_wad_repository;
 extern cs_map_t *cs_maps;
 extern unsigned int cs_map_count;

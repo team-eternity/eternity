@@ -61,7 +61,6 @@
 extern wfileadd_t *wadfiles;
 extern int texturecount;
 
-const char *cs_iwad = NULL;
 char *cs_wad_repository = NULL;
 cs_map_t *cs_maps = NULL;
 unsigned int cs_map_count = 0;
@@ -346,33 +345,38 @@ void CS_ClearTempWADDownloads(void)
 
 bool CS_AddIWAD(const char *resource_name)
 {
+   char *sha1_hash = NULL;
    char *resource_path = D_FindWADByName((char *)resource_name);
 
    if(resource_path == NULL)
       return false;
 
-   cs_iwad = resource_path;
+   if(GetIWAD() && strcmp(GetIWAD(), resource_path))
+      I_Error("Cannot specify multiple IWADs.\n");
+
+   SetIWAD(resource_path);
+   efree(resource_path);
+   sha1_hash = CS_GetSHA1HashFile(GetIWAD());
 
    cs_resources = erealloc(
       cs_resource_t *,
       cs_resources,
       sizeof(cs_resource_t) * ++cs_resource_count
    );
+
    cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
    cs_resources[cs_resource_count - 1].type = rt_iwad;
-   cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
-   strncpy(
-      cs_resources[cs_resource_count - 1].sha1_hash,
-      CS_GetSHA1HashFile((char *)cs_iwad),
-      41
-   );
+   cs_resources[cs_resource_count - 1].path = estrdup(GetIWAD());
+   strncpy(cs_resources[cs_resource_count - 1].sha1_hash, sha1_hash, 41);
+
+   efree(sha1_hash);
 
    return true;
 }
 
 bool CS_AddWAD(const char *resource_name)
 {
-   bool do_strdup = true;
+   char *sha1_hash = NULL;
    char *resource_path = D_FindWADByName((char *)resource_name);
 
    if(resource_path == NULL)
@@ -385,54 +389,50 @@ bool CS_AddWAD(const char *resource_name)
 
       if((resource_path = CS_DownloadWAD(resource_name)) == NULL)
          return false;
-
-      do_strdup = false;
    }
+
+   sha1_hash = CS_GetSHA1HashFile(resource_path);
 
    cs_resources = erealloc(
       cs_resource_t *,
       cs_resources,
       sizeof(cs_resource_t) * ++cs_resource_count
    );
+
    cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
-
    cs_resources[cs_resource_count - 1].type = rt_pwad;
+   cs_resources[cs_resource_count - 1].path = resource_path;
+   strncpy(cs_resources[cs_resource_count - 1].sha1_hash, sha1_hash, 41);
 
-   if(do_strdup)
-      cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
-   else
-      cs_resources[cs_resource_count - 1].path = resource_path;
-
-   strncpy(
-      cs_resources[cs_resource_count - 1].sha1_hash,
-      CS_GetSHA1HashFile(resource_path),
-      41
-   );
+   efree(sha1_hash);
 
    return true;
 }
 
 bool CS_AddDeHackEdFile(const char *resource_name)
 {
+   char *sha1_hash = NULL;
    char *resource_path = D_FindWADByName((char *)resource_name);
 
    if(resource_path == NULL)
       return false;
 
    D_QueueDEH(resource_path, 0);
+
    cs_resources = erealloc(
       cs_resource_t *,
       cs_resources,
       sizeof(cs_resource_t) * ++cs_resource_count
    );
+
+   sha1_hash = CS_GetSHA1HashFile(resource_path);
+
    cs_resources[cs_resource_count - 1].name = estrdup(resource_name);
    cs_resources[cs_resource_count - 1].path = estrdup(resource_path);
    cs_resources[cs_resource_count - 1].type = rt_deh;
-   strncpy(
-      cs_resources[cs_resource_count - 1].sha1_hash,
-      CS_GetSHA1HashFile(resource_path),
-      41
-   );
+   strncpy(cs_resources[cs_resource_count - 1].sha1_hash, sha1_hash, 41);
+
+   efree(sha1_hash);
 
    return true;
 }
@@ -513,14 +513,7 @@ bool CS_LoadMap(void)
    Z_FreeTags(PU_CACHE, PU_CACHE);
 
    if(wadfiles)
-   {
       D_ClearFiles();
-      if(cs_iwad)
-      {
-         efree((void *)cs_iwad);
-         cs_iwad = NULL;
-      }
-   }
 
    IdentifyVersion();
 
