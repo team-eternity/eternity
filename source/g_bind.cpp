@@ -66,7 +66,7 @@ extern vfont_t *menu_font_normal;
 
 #define NUM_KEYS 256
 #define MAX_LOAD_FACTOR 0.7
-#define INITIAL_KEY_ACTION_CHAIN_SIZE 128
+#define INITIAL_KEY_ACTION_CHAIN_SIZE 127
 
 #define G_addKey(number, name) \
    keys[number] = new InputKey(number, #name); \
@@ -185,6 +185,22 @@ public:
    bool isReleaseOnly()
    {
       if(flags & release_only)
+         return true;
+
+      return false;
+   }
+
+   bool keyIs(const char *key_name)
+   {
+      if(!strcmp(hidden_key_name, key_name))
+         return true;
+
+      return false;
+   }
+
+   bool actionIs(const char *action_name)
+   {
+      if(!strcmp(hidden_action_name, action_name))
          return true;
 
       return false;
@@ -1016,15 +1032,24 @@ bool G_KeyResponder(event_t *ev, int categories)
       if(ev->type == ev_keyup)
       {
          if(kb->isPressOnly())
+         {
+            kb->release();
             continue;
+         }
       }
       else if(ev->type == ev_keydown)
       {
          if(kb->isPressed() && !kb->isRepeatable())
+         {
+            kb->press();
             continue;
+         }
 
          if(kb->isReleaseOnly())
+         {
+            kb->press();
             continue;
+         }
       }
 
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
@@ -1036,7 +1061,10 @@ bool G_KeyResponder(event_t *ev, int categories)
       if((categories & action->getCategory()) == 0)
          continue;
 
-      processed_event = action->handleEvent(ev, kb);
+      if(!processed_event)
+         processed_event = action->handleEvent(ev, kb);
+      else
+         action->handleEvent(ev, kb);
    }
 
    return processed_event;
@@ -1214,6 +1242,7 @@ void G_LoadDefaults(void)
 void G_SaveDefaults(void)
 {
    FILE *file;
+   bool in_bind;
    InputKey *key = NULL;
    KeyBind *kb = NULL;
 
@@ -1229,25 +1258,22 @@ void G_SaveDefaults(void)
    // write key bindings
    while((key = names_to_keys.tableIterator(key)))
    {
-      bool found_bind = false;
-
       // Skip uppercase alphabetical keys.
       if(strlen(key->getName()) == 1 && isalpha(*key->getName()) &&
                                         isupper(*key->getName()))
          continue;
 
+      // [CG] Write normal binds first.
+      in_bind = false;
       while((kb = keys_to_actions.keyIterator(kb, key->getName())))
       {
-         if(!found_bind)
-         {
-            if(kb->isPressOnly())
-               fprintf(file, "bind +%s \"", key->getName());
-            else if(kb->isReleaseOnly())
-               fprintf(file, "bind -%s \"", key->getName());
-            else
-               fprintf(file, "bind %s \"", key->getName());
+         if(kb->isPressOnly() || kb->isReleaseOnly())
+            continue;
 
-            found_bind = true;
+         if(!in_bind)
+         {
+            fprintf(file, "bind %s \"", key->getName());
+            in_bind = true;
          }
          else
             fprintf(file, ";");
@@ -1260,7 +1286,59 @@ void G_SaveDefaults(void)
             fprintf(file, "%s", kb->getActionName());
       }
 
-      if(found_bind)
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Now write press-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isPressOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind +%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
+         fprintf(file, "\"\n");
+
+      // [CG] Finally write release-only binds.
+      in_bind = false;
+      while((kb = keys_to_actions.keyIterator(kb, key->getName())))
+      {
+         if(!kb->isReleaseOnly())
+            continue;
+
+         if(!in_bind)
+         {
+            fprintf(file, "bind -%s \"", key->getName());
+            in_bind = true;
+         }
+         else
+            fprintf(file, ";");
+
+         if(kb->isActivateOnly())
+            fprintf(file, "+%s", kb->getActionName());
+         else if(kb->isDeactivateOnly())
+            fprintf(file, "-%s", kb->getActionName());
+         else
+            fprintf(file, "%s", kb->getActionName());
+      }
+
+      if(in_bind)
          fprintf(file, "\"\n");
    }
 
