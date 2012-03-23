@@ -125,8 +125,8 @@ public:
 
    KeyBind(const char *new_key_name, const char *new_action_name,
            unsigned short new_flags, bool new_repeatable)
-      : ZoneObject(), flags(new_flags), repeatable(new_repeatable),
-        pressed(false)
+      : ZoneObject(), repeatable(new_repeatable), pressed(false),
+        flags(new_flags)
    {
       hidden_key_name = estrdup(new_key_name);
       hidden_action_name = estrdup(new_action_name);
@@ -140,15 +140,15 @@ public:
       efree(hidden_action_name);
    }
 
-   char* getKeyName() const { return hidden_key_name; }
-   char* getActionName() const { return hidden_action_name; }
-   bool isRepeatable() const { return repeatable; }
-   bool isPressed() const { return pressed; }
+   const char* getKeyName() const { return hidden_key_name; }
+   const char* getActionName() const { return hidden_action_name; }
+   const bool isRepeatable() const { return repeatable; }
+   const bool isPressed() const { return pressed; }
    void press() { pressed = true; }
    void release() { pressed = false; }
    input_action_category_e getCategory() const { return category; }
    void setCategory(input_action_category_e new_cat) { category = new_cat; }
-   unsigned short getFlags() const { return flags; }
+   const unsigned short getFlags() const { return flags; }
 
    bool isNormal()
    {
@@ -630,15 +630,12 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
    char *real_action_name = (char *)action_name;
 
    if(action_name[0] == '+')
-   {
       flags |= KeyBind::activate_only;
-      real_action_name++;
-   }
    else if(action_name[0] == '-')
-   {
       flags |= KeyBind::deactivate_only;
+
+   if(flags & (KeyBind::activate_only | KeyBind::deactivate_only))
       real_action_name++;
-   }
 
    if(!(action = names_to_actions.objectForKey(real_action_name)))
    {
@@ -654,7 +651,8 @@ static void G_bindKeyToAction(InputKey *key, const char *action_name,
 //
 // Bind a key to one or more actions.
 //
-static void G_bindKeyToActions(const char *key_name, const qstring &action_names)
+static void G_bindKeyToActions(const char *key_name,
+                               const qstring &action_names)
 {
    unsigned short flags = 0;
    size_t key_name_length = strlen(key_name);
@@ -702,7 +700,7 @@ static void G_bindKeyToActions(const char *key_name, const qstring &action_names
 
       if(c == '\"')
          continue;
-      
+
       if(c == ';')
       {
          if(token.length())
@@ -1089,7 +1087,6 @@ bool G_BindResponder(event_t *ev)
    KeyBind *kb = NULL;
    InputAction *action = NULL;
    bool found_bind = false;
-   size_t action_name_length = strlen(binding_action);
    DLListItem<KeyBind> *binds = NULL;
 
    if(ev->type != ev_keydown)
@@ -1132,7 +1129,7 @@ bool G_BindResponder(event_t *ev)
       if(!(action = names_to_actions.objectForKey(kb->getActionName())))
          continue;
 
-      if(!(strncasecmp(binding_action, action->getName(), action_name_length)))
+      if(!(strcasecmp(binding_action, action->getName())))
       {
          found_bind = true;
          G_removeBind(&kb);
@@ -1234,6 +1231,7 @@ void G_SaveDefaults(void)
    {
       bool found_bind = false;
 
+      // Skip uppercase alphabetical keys.
       if(strlen(key->getName()) == 1 && isalpha(*key->getName()) &&
                                         isupper(*key->getName()))
          continue;
@@ -1281,18 +1279,13 @@ void G_SaveDefaults(void)
 //
 CONSOLE_COMMAND(bind, 0)
 {
-   if(Console.argc >= 2)
-   {
-      G_bindKeyToActions(Console.argv[0]->constPtr(), *(Console.argv[1]));
-   }
-   else if(Console.argc == 1)
+   if(Console.argc == 1)
    {
       InputKey *key = NULL;
       InputAction *action = NULL;
       KeyBind *kb = NULL;
       const char *key_name = Console.argv[0]->constPtr();
       bool found_bind = false;
-
 
       if(!(key = names_to_keys.objectForKey(key_name)))
       {
@@ -1314,7 +1307,12 @@ CONSOLE_COMMAND(bind, 0)
 
          found_bind = true;
       }
+
+      if(!found_bind)
+         C_Printf("%s is not bound.\n", key->getName());
    }
+   else if(Console.argc == 2)
+      G_bindKeyToActions(Console.argv[0]->constPtr(), *(Console.argv[1]));
    else
       C_Printf("usage: bind key <action>\n");
 }
